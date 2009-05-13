@@ -3,9 +3,9 @@
 
 #include "util/int.h"
 #include "logger/Logger.h"
-#include "Serializer.h"
+#include "scag/util/io/Serializer.h"
 #include "core/buffers/File.hpp"
-#include "scag/util/HexDump.h"
+#include "scag/util/io/HexDump.h"
 #include <cstring>
 #include <sstream>
 #include <iterator>

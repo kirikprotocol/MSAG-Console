@@ -6,7 +6,7 @@
 #include <cassert>
 #include "logger/Logger.h"
 #include "core/buffers/PageFile.hpp"
-#include "Serializer.h"
+#include "scag/util/io/Serializer.h"
 
 namespace scag {
 namespace util {

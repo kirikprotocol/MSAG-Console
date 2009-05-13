@@ -2,7 +2,7 @@
 #define _SCAG_SESSIONS_SESSIONKEY_H
 
 #include "util/int.h"
-#include "scag/util/storage/Serializer.h"
+#include "scag/util/io/Serializer.h"
 #include "logger/Logger.h"
 #include "sms/sms.h"  // for Address
 #include "core/synchronization/Mutex.hpp"

@@ -8,7 +8,7 @@
 #include <core/buffers/File.hpp>
 #include <core/buffers/Hash.hpp>
 
-#include "GlossaryBase.h"
+#include "scag/util/io/GlossaryBase.h"
 
 namespace scag { namespace util { namespace storage {
 

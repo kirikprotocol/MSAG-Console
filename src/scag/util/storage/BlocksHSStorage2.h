@@ -10,7 +10,7 @@
 #include <iterator>
 
 #include "util/int.h"
-#include "Serializer.h"
+#include "scag/util/io/Serializer.h"
 #include "DataFileManager.h"
 #include "HSPacker.h"
 #include "JournalFile.h"

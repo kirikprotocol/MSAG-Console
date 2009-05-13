@@ -3,7 +3,7 @@
 
 #include <sstream>
 #include "Histo.h"
-#include "scag/util/Print.h"
+#include "scag/util/io/Print.h"
 
 namespace scag2 {
 namespace util {

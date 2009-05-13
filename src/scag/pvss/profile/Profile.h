@@ -11,8 +11,8 @@
 #include <core/buffers/File.hpp>
 #include <core/buffers/Hash.hpp>
 #include <core/buffers/TmpBuf.hpp>
-#include "scag/util/storage/Serializer.h"
-#include "scag/util/storage/GlossaryBase.h"
+#include "scag/util/io/Serializer.h"
+#include "scag/util/io/GlossaryBase.h"
 #include "scag/util/storage/BlocksHSBackupData.h"
 
 #include "scag/pvss/data/Property.h"

@@ -1,5 +1,5 @@
 #include <cassert>
-#include "scag/util/HexDump.h"
+#include "scag/util/io/HexDump.h"
 #include "PvssConnection.h"
 #include "scag/pvss/base/PersClientException.h"
 #include "PvssStreamClient.h"

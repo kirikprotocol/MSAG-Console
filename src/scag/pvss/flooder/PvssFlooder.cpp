@@ -6,7 +6,7 @@
 #include "scag/pvss/data/ProfileKey.h"
 #include "scag/pvss/base/PersClientException.h"
 #include "util/debug.h"
-#include "scag/util/Drndm.h"
+#include "scag/util/io/Drndm.h"
 #include "scag/pvss/api/packets/BatchCommand.h"
 #include "scag/pvss/api/packets/DelCommand.h"
 #include "scag/pvss/api/packets/GetCommand.h"

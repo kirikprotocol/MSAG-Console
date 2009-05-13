@@ -16,6 +16,7 @@ scag/pvss                            pvss          \
         -lscag-pvss-common \
         -lscag-util-storage \
 	-lscag-util-multiplexer \
+        -lscag-util-io \
 	-lscag-util \
         -llicense-check \
         -lcore-network $(SOCKETLIB) -lnsl \
@@ -32,6 +33,7 @@ scag/tests/pvss-read-abonent-entry readEntry \
 	-lscag-pvss-profile \
         -lscag-pvss-data \
         -lscag-util-storage \
+        -lscag-util-io \
 	-lscag-util \
         -lcore-threads \
         @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \

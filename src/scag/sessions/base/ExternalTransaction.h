@@ -2,7 +2,7 @@
 #define _SCAG_SESSIONS_EXTERNALTRANSACTION_H
 
 #include "util/debug.h"
-#include "scag/util/storage/Serializer.h"
+#include "scag/util/io/Serializer.h"
 
 namespace scag2 {
 namespace sessions {

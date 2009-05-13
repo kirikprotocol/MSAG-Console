@@ -3,7 +3,7 @@
 #include <climits>
 #include <algorithm>
 #include "RequestGenerator.h"
-#include "scag/util/Drndm.h"
+#include "scag/util/io/Drndm.h"
 #include "scag/pvss/api/packets/GetCommand.h"
 #include "scag/pvss/api/packets/DelCommand.h"
 #include "scag/pvss/api/packets/SetCommand.h"

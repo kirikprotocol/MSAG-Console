@@ -3,7 +3,7 @@
 
 #include "scag/pvss/api/packets/Protocol.h"
 #include "Exceptions.h"
-#include "scag/util/HexDump.h"
+#include "scag/util/io/HexDump.h"
 #include <arpa/inet.h>  // htons
 
 namespace scag2 {

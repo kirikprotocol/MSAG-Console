@@ -10,7 +10,7 @@
 #include <util/crc32.h>
 #include "util/byteorder.h"
 #include "scag/exc/IOException.h"
-#include "scag/util/storage/Serializer.h"
+#include "scag/util/io/Serializer.h"
 
 namespace scag2 {
 namespace pvss {

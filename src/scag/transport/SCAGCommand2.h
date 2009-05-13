@@ -1,7 +1,7 @@
 #ifndef _SCAG_TRANSPORT_SCAGCOMMAND2_H
 #define _SCAG_TRANSPORT_SCAGCOMMAND2_H
 
-#include "scag/util/Print.h"
+#include "scag/util/io/Print.h"
 #include "TransportType.h"
 
 namespace scag2 {

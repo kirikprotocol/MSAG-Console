@@ -12,7 +12,9 @@ scag/pvss_flooder   flooder  \
     -lscag-pvss-data \
     -lscag-pvss-common \
     \
-    -lscag-util-storage -lscag-util-singleton -lscag-util -lscag-exc \
+    -lscag-util-storage -lscag-util-singleton \
+    -lscag-util-io \
+    -lscag-util -lscag-exc \
     \
     @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
     -llicense-check \
@@ -37,6 +39,7 @@ scag/pvss-flooder2  flooder2 \
     -lscag-pvss-data \
     -lscag-pvss-common \
     -lscag-util-storage \
+    -lscag-util-io \
     -lscag-util \
     -lutil-config \
     -lutil-xml $(XERCES_LIB) \

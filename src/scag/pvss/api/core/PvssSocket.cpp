@@ -1,5 +1,5 @@
 #include "PvssSocket.h"
-#include "scag/util/HexDump.h"
+#include "scag/util/io/HexDump.h"
 #include "scag/pvss/api/core/Core.h"
 
 namespace {

@@ -3,5 +3,6 @@ properties
 encodings
 storage
 memory
+io
 ?config
 ?multiplexer

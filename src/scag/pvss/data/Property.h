@@ -7,7 +7,7 @@
 #include <string>
 
 #include "scag/util/storage/SerialBuffer.h"
-#include "scag/util/storage/GlossaryBase.h"
+#include "scag/util/io/GlossaryBase.h"
 #include "scag/exc/IOException.h"
 
 namespace scag2 {

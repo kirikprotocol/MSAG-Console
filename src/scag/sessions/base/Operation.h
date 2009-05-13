@@ -4,7 +4,7 @@
 #include "core/synchronization/Mutex.hpp"
 #include "logger/Logger.h"
 #include "Session2.h"
-#include "scag/util/storage/Serializer.h"
+#include "scag/util/io/Serializer.h"
 
 namespace scag2 {
 namespace sessions {

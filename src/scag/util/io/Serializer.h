@@ -108,37 +108,15 @@ public:
     Serializer& operator << ( const std::string& );
     Serializer& operator << ( const Buf& );
 
-    inline void reset() {
-        if (buf_) {buf_->clear();}
-        wpos_ = 0;
-    }
-
-    inline size_t size() const {
-        return ( buf_ ? buf_->size() : bufSize_ );
-    }
-
-    inline void reserve( size_t sz ) {
-        if (buf_) {buf_->reserve(sz);}
-        else if (sz > bufSize_) {
-            throw SerializerException("reserve(%u) on memory chunk of sz=%u",
-                                      unsigned(sz), unsigned(bufSize_));
-        }
-    }
+    void reset();
+    size_t size() const;
+    void reserve( size_t sz );
 
     inline size_t wpos() const {
         return wpos_;
     }
 
-    inline void setwpos( size_t wp ) {
-        if ( wp > size() ) {
-            if (buf_) { buf_->resize(wp); }
-            else {
-                throw SerializerException("setwpos(%u) on memchunk of sz=%u",
-                                          unsigned(wp), unsigned(bufSize_) );
-            }
-        }
-        wpos_ = wp;
-    }
+    void setwpos( size_t wp );
 
     inline const unsigned char* data() const {
         return buf_ ? (buf_->size() ? &(buf_->front()) : 0) :

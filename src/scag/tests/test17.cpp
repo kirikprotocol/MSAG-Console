@@ -1,5 +1,5 @@
 #include "logger/Logger.h"
-#include "scag/util/Drndm.h"
+#include "scag/util/io/Drndm.h"
 
 using namespace smsc::logger;
 using namespace scag2::util;

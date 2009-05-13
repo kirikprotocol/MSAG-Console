@@ -74,6 +74,34 @@ Serializer& Serializer::operator << ( const Buf& i ) {
     return *this;
 }
 
+void Serializer::reset() {
+    if (buf_) {buf_->clear();}
+    wpos_ = 0;
+}
+
+size_t Serializer::size() const {
+    return ( buf_ ? buf_->size() : bufSize_ );
+}
+
+void Serializer::reserve( size_t sz ) {
+    if (buf_) {buf_->reserve(sz);}
+    else if (sz > bufSize_) {
+        throw SerializerException("reserve(%u) on memory chunk of sz=%u",
+                                  unsigned(sz), unsigned(bufSize_));
+    }
+}
+
+void Serializer::setwpos( size_t wp )
+{
+    if ( wp > size() ) {
+        if (buf_) { buf_->resize(wp); }
+        else {
+            throw SerializerException("setwpos(%u) on memchunk of sz=%u",
+                                      unsigned(wp), unsigned(bufSize_) );
+        }
+    }
+    wpos_ = wp;
+}
 
 void Serializer::write( uint32_t sz, const char* buf )
 {

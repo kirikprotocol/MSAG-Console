@@ -7,6 +7,15 @@ using namespace smsc::core::synchronization;
 
 Drndm Drndm::rnd;
 
+uint64_t Drndm::getNextNumber()
+{
+    kr = kr * kg;
+    if ( kr >= randmax() ) {
+        kr &= ~randmax();
+    }
+    return kr;
+}
+
 uint64_t Drndm::get()
 {
     MutexGuard mg(mtx_);

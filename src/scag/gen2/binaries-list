@@ -47,6 +47,7 @@ scag/msag           gwmain2        \
   -lscag-util-memory \
   -lscag-util-singleton \
   -lscag-util-encodings \
+  -lscag-util-io \
   -lscag-util \
   -lscag-exc \
   \

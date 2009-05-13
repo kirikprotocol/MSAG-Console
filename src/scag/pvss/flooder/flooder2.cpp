@@ -11,7 +11,7 @@
 #include "util/config/ConfigView.h"
 #include "util/config/Manager.h"
 #include "ConfigUtil.h"
-#include "scag/util/Drndm.h"
+#include "scag/util/io/Drndm.h"
 
 using namespace scag2::pvss::core::client;
 using namespace scag2::pvss::core;

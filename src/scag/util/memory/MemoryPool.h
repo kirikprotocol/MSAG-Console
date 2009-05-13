@@ -2,7 +2,7 @@
 #define _SCAG_UTIL_MEMORY_MEMORYPOOL_H
 
 #include <limits>
-#include "scag/util/Print.h"
+#include "scag/util/io/Print.h"
 #include "core/buffers/CyclicQueue.hpp"
 
 namespace scag {

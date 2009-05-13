@@ -5,7 +5,7 @@
 
 #include <vector>
 #include "logger/Logger.h"
-#include "scag/util/storage/Serializer.h"
+#include "scag/util/io/Serializer.h"
 
 namespace scag2 {
 namespace util {

@@ -1,7 +1,7 @@
 #include "PacketWriter.h"
 #include "Config.h"
 #include "Core.h"
-#include "scag/util/HexDump.h"
+#include "scag/util/io/HexDump.h"
 
 namespace scag2 {
 namespace pvss {

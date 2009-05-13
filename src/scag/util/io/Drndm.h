@@ -25,13 +25,7 @@ public:
     Drndm() : kr(1), kg(70369817985301ULL) {}
 
     /// NOTE: not a thread safe method
-    uint64_t getNextNumber() {
-        kr = kr * kg;
-        if ( kr >= randmax() ) {
-            kr &= ~randmax();
-        }
-        return kr;
-    }
+    uint64_t getNextNumber();
 
     /// syncronized access
     uint64_t get();

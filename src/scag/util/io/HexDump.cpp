@@ -22,49 +22,59 @@ namespace util {
 
 std::auto_ptr< char > HexDump::digits_;
 
-char* HexDump::hexdump( char* outbuf,
+char* HexDump::hexdump( register char* outbuf,
                         const void* inBuf,
                         size_t insize )
 {
-    const char* inbuf = reinterpret_cast<const char*>(inBuf);
+    register const unsigned char* inbuf = reinterpret_cast<const unsigned char*>(inBuf);
+    /*
     if ( ! digits_.get() ) {
         smsc::core::synchronization::MutexGuard mg(::mtx);
         digits_ = ::getDigits();
     }
-    char* digits = digits_.get();
-    for ( size_t i = insize; i > 0; --i ) {
-        unsigned char c = static_cast<unsigned char>(*(inbuf++));
-        memcpy( outbuf, digits + unsigned(c)*3, 3 );
-        outbuf += 3;
+     const char* digits = digits_.get();
+     */
+    const unsigned char* endbuf = inbuf + insize;
+    while ( inbuf < endbuf ) {
+        register unsigned char c = *inbuf;
+        ++inbuf;
+        register unsigned char d = c >> 4;
+        d += (d < 0xa) ? '0' : 0x57;
+        *outbuf = char(d);
+        d = c & 0xf;
+        d += (d < 0xa) ? '0' : 0x57;
+        *++outbuf = char(d);
+        *++outbuf = ' ';
+        ++outbuf;
     }
     return outbuf;
 }
 
 
-char* HexDump::strdump( char* outbuf,
+char* HexDump::strdump( register char* outbuf,
                         const void* inBuf,
                         size_t insize )
 {
-    const unsigned char* inbuf = reinterpret_cast<const unsigned char*>(inBuf);
-    unsigned char c;
-    for ( size_t i = insize; i > 0; --i ) {
-        c = *(inbuf++);
-        if ( c < 32 || c >= 127 ) c = '.';
+    register const unsigned char* inbuf = reinterpret_cast<const unsigned char*>(inBuf);
+    const unsigned char* endbuf = inbuf + insize;
+    while ( inbuf < endbuf ) {
+        register unsigned char c = *(inbuf++);
+        if ( c < 32 || c >= 127 ) { c = '.'; }
         *(outbuf++) = char(c);
     }
     return outbuf;
 }
 
 
-char* HexDump::utfdump( char* outbuf,
+char* HexDump::utfdump( register char* outbuf,
                         const void* inBuf,
                         size_t insize )
 {
-    const unsigned char* inbuf = reinterpret_cast<const unsigned char*>(inBuf);
-    unsigned char c;
-    for ( size_t i = insize; i > 0; --i ) {
-        c = *(inbuf++);
-        if ( c < 32 || c == 127 || c > 0xfd ) c = '.';
+    register const unsigned char* inbuf = reinterpret_cast<const unsigned char*>(inBuf);
+    const unsigned char* endbuf = inbuf + insize;
+    while ( inbuf < endbuf ) {
+        register unsigned char c = *(inbuf++);
+        if ( c < 32 || c == 127 || c > 0xfd ) {c = '.';}
         *(outbuf++) = char(c);
     }
     return outbuf;

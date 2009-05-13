@@ -5,7 +5,7 @@
 #include "JournalFile.h"
 #include "scag/util/PtrLess.h"
 #include "scag/util/PtrDestroy.h"
-#include "EndianConverter.h"
+#include "scag/util/io/EndianConverter.h"
 
 namespace {
 using namespace scag2::util::storage;

@@ -7,7 +7,7 @@
 #include <netinet/in.h>
 
 #include "DataBlock.h"
-#include "GlossaryBase.h"
+#include "scag/util/io/GlossaryBase.h"
 
 namespace scag { 
 namespace util {

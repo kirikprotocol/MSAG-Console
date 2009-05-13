@@ -6,7 +6,7 @@
 #include "util/int.h"
 #include "logger/Logger.h"
 #include "core/buffers/File.hpp"
-#include "scag/util/Drndm.h"
+#include "scag/util/io/Drndm.h"
 
 namespace scag2 {
 namespace util {

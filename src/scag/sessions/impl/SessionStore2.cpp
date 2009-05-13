@@ -6,7 +6,7 @@
 #include "scag/sessions/base/SessionFinalizer.h"
 #include "scag/sessions/base/SessionExpirationQueue.h"
 #include "scag/util/UnlockMutexGuard.h"
-#include "scag/util/Print.h"
+#include "scag/util/io/Print.h"
 #include "core/threads/Thread.hpp"
 
 namespace scag2 {

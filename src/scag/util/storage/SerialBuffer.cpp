@@ -2,7 +2,7 @@
 
 #include "SerialBuffer.h"
 #include "core/synchronization/Mutex.hpp"
-#include "scag/util/HexDump.h"
+#include "scag/util/io/HexDump.h"
 
 namespace {
 

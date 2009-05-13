@@ -19,13 +19,13 @@
 
 #include "core/buffers/File.hpp"
 #include "SerialBuffer.h"
-#include "GlossaryBase.h"
+#include "scag/util/io/GlossaryBase.h"
 #include "DataBlockBackup.h"
 #include "util/Exception.hpp"
 #include "util/Uint64Converter.h"
 #include "DataFileCreator.h"
 #include "FixupLogger.h"
-#include "EndianConverter.h"
+#include "scag/util/io/EndianConverter.h"
 
 
 namespace scag {
