@@ -28,6 +28,8 @@ protected:
   SCCPAddress   _dstAdr;
 
 public:
+  TDialogueHandlingPrimitive();
+
   TDialogueHandlingPrimitive(TCAPMessage & use_tmsg)
     : _dlgId(0), _msgTC(use_tmsg)
   { }
