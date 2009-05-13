@@ -243,6 +243,14 @@ private:
           smsc_log_debug(cmbpmbLogger, "key=%s property=%s", pf.getKey().c_str(), prop->toString().c_str());
           continue;
         }
+        if (prop->getType() < PropertyType::INT || prop->getType() > PropertyType::DATE) {
+          smsc_log_warn(logger, "unknown property type: %d, convert to INT. key=%s property=%s", prop->getType(), pf.getKey().c_str(), propkey);
+          prop->setIntValue(0);
+        }
+        if (prop->getTimePolicy() <= UNKNOWN || prop->getTimePolicy() > W_ACCESS) {
+          smsc_log_warn(logger, "unknown time policy: %d, convert to INFINIT. key=%s property=%s", prop->getTimePolicy(), pf.getKey().c_str(), propkey);
+          prop->setTimePolicy(INFINIT, 0, 0);
+        }
         if (sendToPers) {
           pc.SetPropertyPrepare(PT_ABONENT, key.toString().c_str(), *prop, batch);
         }
