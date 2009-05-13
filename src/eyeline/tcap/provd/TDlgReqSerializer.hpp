@@ -38,6 +38,16 @@ public:
   }
 };
 
+struct TReqSendResult {
+  enum ResultCode_e { SEND_OK = 0, INVALID_DATA, SCCP_ERROR, UNKNOWN_DIALOGUE_ID };
+
+  TReqSendResult(ResultCode_e aResultCode, unsigned int aLinkNum)
+    : resultCode(aResultCode), linkNum(aLinkNum)
+  {}
+
+  ResultCode_e resultCode;
+  unsigned int linkNum;
+};
 
 template <class _TArg /* pubic: TDialogueRequestPrimitive */>
 class TDlgRequestSerializerT {
@@ -58,18 +68,39 @@ public:
   ~TDlgRequestSerializerT()
   { }
 
-  //TODO: 2nd parameter: connect_num, etc
-  bool sendMessage(SuaApi * sua_iface) const
+  TReqSendResult
+  sendMessage(SuaApi * sua_iface) const
   {
     SUAUnitdataReq  udt;
-    SuaApi::ErrorCode_e rc = SuaApi::OK;
+
+    if (convertTReq2UDT(_tReq, udt)) {
+      SuaApi::CallResult rc = sua_iface->unitdata_req(udt.userData(), udt.userDataLen(),
+                                   udt.calledAddr(), udt.calledAddrLen(),
+                                   udt.callingAddr(), udt.callingAddrLen(),
+                                   udt.msgProperties());
+      return TReqSendResult(( rc.operationResult == SuaApi::OK ) ?
+                            TReqSendResult::SEND_OK : TReqSendResult::SCCP_ERROR,
+                            rc.suaConnectNum);
+    }
+
+    return TReqSendResult(TReqSendResult::INVALID_DATA, 0);
+  }
+
+  TReqSendResult
+  sendMessage(SuaApi * sua_iface, unsigned int linkNum) const
+  {
+    SUAUnitdataReq  udt;
+    SuaApi::CallResult rc(SuaApi::OK, linkNum);
     if (convertTReq2UDT(_tReq, udt)) {
       rc = sua_iface->unitdata_req(udt.userData(), udt.userDataLen(),
                                    udt.calledAddr(), udt.calledAddrLen(),
                                    udt.callingAddr(), udt.callingAddrLen(),
-                                   udt.msgProperties(), 0 /*TODO: */);
+                                   udt.msgProperties(), linkNum);
+      return TReqSendResult(( rc.operationResult == SuaApi::OK ) ?
+                            TReqSendResult::SEND_OK : TReqSendResult::SCCP_ERROR,
+                            linkNum);
     }
-    return rc ? false : true;
+    return TReqSendResult(TReqSendResult::INVALID_DATA, linkNum);
   }
 
   //These methods only for 1st response to T_Begin_Ind
