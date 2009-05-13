@@ -11,7 +11,7 @@ scag/pers_upload                         pers_upload     \
   -lscag-pvss-base \
   -lscag-util-encodings -lscag-exc -lscag-util-storage \
   -lscag-util-properties -lscag-util-singleton \
-  \
+  -lscag-util \
   -lcore-buffers \
   -lcore-network $(SOCKETLIB) -lnsl \
   -lcore-threads \
@@ -34,7 +34,7 @@ scag/pers_flooder                         pers_flooder     \
   -lscag-pvss-base \
   -lscag-util-encodings -lscag-exc -lscag-util-storage \
   -lscag-util-properties -lscag-util-singleton \
-  \
+  -lscag-util \
   -lcore-buffers \
   -lcore-network $(SOCKETLIB) -lnsl \
   -lcore-threads \
