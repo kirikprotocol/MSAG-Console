@@ -6,14 +6,12 @@
 #define __ELC_TCAP_INDICATIONS_DISPATCHER_HPP
 
 #include "eyeline/tcap/TDialogueIndicationPrimitives.hpp"
-#include "eyeline/tcap/TDlgHandlerIface.hpp"
 #include "eyeline/tcap/provd/SUAIndications.hpp"
+#include "eyeline/tcap/provd/TCAPIndicationsProcessor.hpp"
 
 namespace eyeline {
 namespace tcap {
 namespace provd {
-
-using eyeline::tcap::TDlgHandlerIface;
 
 //Basic abstract class for all indication dispatchers
 class TDlgIndicationDispatcherAC {
@@ -31,7 +29,7 @@ public:
   // -- TDlgIndicationDispatcherAC interface methods
   // -----------------------------------------------
   //calls appropriate dispatching method of TDlgHandler
-  virtual bool dispatchTInd(TDlgHandlerIface * use_hdl) = 0;
+  virtual bool dispatchTInd(TCAPIndicationsProcessor * use_hdl, unsigned int suaConnectNum) = 0;
   //
   virtual TDialogueIndicationPrimitive & TInd(void) = 0;
 };
@@ -55,9 +53,9 @@ public:
   // -----------------------------------------------
   // -- TDlgIndicationDispatcherAC interface methods
   // -----------------------------------------------
-  bool dispatchTInd(TDlgHandlerIface * use_hdl)
+  bool dispatchTInd(TCAPIndicationsProcessor * use_hdl, unsigned int suaConnectNum)
   {
-    return use_hdl->updateDialogue(_tInd);
+    return use_hdl->updateDialogue(_tInd, suaConnectNum);
   }
   TDialogueIndicationPrimitive & TInd(void) { return _tInd; }
 };
@@ -217,9 +215,9 @@ public:
   // NOTE: following methods should be called ONLY after one of
   // process*() methods was executed !
   // ------------------------------------------------------------
-  bool dispatchTInd(TDlgHandlerIface * use_hdl)
+  bool dispatchTInd(TCAPIndicationsProcessor * use_hdl)
   {
-    return _dsp.pAc ? _dsp.pAc->dispatchTInd(use_hdl) : false;
+    return _dsp.pAc ? _dsp.pAc->dispatchTInd(use_hdl, _msgSUA.suaConnectNum) : false;
   }
   //
   TDialogueIndicationPrimitive * TInd(void)
