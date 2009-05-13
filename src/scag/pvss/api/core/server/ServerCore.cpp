@@ -105,14 +105,8 @@ void ServerCore::contextProcessed(std::auto_ptr<ServerContext> context) // /* th
 
 void ServerCore::receivePacket( std::auto_ptr<Packet> packet, PvssSocket& channel )
 {
-    try {
-        if ( !packet.get() || !packet->isRequest() || !packet->isValid() )
-            throw PvssException(PvssException::BAD_REQUEST,"Received packet isnt valid PVAP request");
-    } catch ( PvssException& e ) {
-        // static unsigned counter = 0;
-        // if ( counter++ % 100 == 0 )
-        smsc_log_debug(loge_,"exception(%u): %s", __LINE__, e.what());
-        countExceptions( e.getType(), "receivePacket" );
+    if ( !packet.get() || !packet->isRequest() ) {
+        countExceptions(PvssException::BAD_REQUEST, "recvPacket" );
         return;
     }
 
@@ -394,19 +388,25 @@ int ServerCore::doExecute()
 void ServerCore::receiveContext( std::auto_ptr< ServerContext > ctx )
 {
     // FIXME: update channel activity should be here
-    uint8_t status = Response::OK;
     Request* req = ctx->getRequest().get();
+    PvssException exc("",PvssException::OK);
+
     if ( !req ) {
         // smsc_log_error( log_, "context does not contain request");
         countExceptions( PvssException::BAD_REQUEST, "recvNoReq" );
         return;
-    } else if ( !req->isValid() ) {
-        // smsc_log_error( log_, "request is not valid");
-        countExceptions( PvssException::BAD_REQUEST, "recvBadReq" );
-        return;
     }
 
-    {
+    uint32_t seqNum = req->getSeqNum();
+    const char* what = "recvGeneric"; // short string for statistics
+    try {
+
+        if ( !req->isValid() ) {
+            // smsc_log_error( log_, "request is not valid");
+            what = "recvBadReq";
+            throw PvssException(PvssException::BAD_REQUEST,"request is bad formed");
+        }
+
         PRVisitor prv;
         ProfileRequest* preq;
         if ( req->visit(prv) ) {
@@ -437,22 +437,17 @@ void ServerCore::receiveContext( std::auto_ptr< ServerContext > ctx )
         if ( needTiming ) {
             preq->startTiming();
         }
-    }
 
-    uint32_t seqNum = req->getSeqNum();
-    smsc_log_debug(log_,"packet received %p: %s", req, req->toString().c_str());
-    const char* what = "recvGeneric";
-    std::string ewhat;
-    try {
+        smsc_log_debug(log_,"packet received %p: %s", req, req->toString().c_str());
+
         if (!started_) {
-            status = Response::SERVER_SHUTDOWN;
             what = "recvAfterStop";
-            throw PvssException(PvssException::SERVER_BUSY,"Server is down");
+            throw PvssException(PvssException::SERVER_SHUTDOWN,"Server is down");
         }
 
         if ( req->isPing() ) {
-            seqNum = uint32_t(-1);
-            ctx->setResponse(new PingResponse(ctx->getSeqNum(),Response::OK));
+            what = "recvPingSend";
+            ctx->setResponse(new PingResponse(seqNum,Response::OK));
             sendResponse(ctx);
             return;
         }
@@ -461,38 +456,34 @@ void ServerCore::receiveContext( std::auto_ptr< ServerContext > ctx )
         if ( syncDispatcher_ ) {
             const int idx = syncDispatcher_->getIndex(*req);
             if ( idx > workers_.Count() ) {
-                status = Response::INVALID_KEY;
                 what = "recvNoWorker";
-                throw PvssException(PvssException::UNKNOWN,"cannot dispatch");
+                throw PvssException(PvssException::INVALID_KEY,"cannot dispatch");
             }
             Worker* worker = workers_[idx];
             queue = & worker->getQueue();
         } else if ( dispatcher_.get() ) {
             queue = & dispatcher_->getQueue();
         } else {
-            status = Response::CONFIG_INVALID;
             what = "recvNoDisptch";
-            throw PvssException(PvssException::UNKNOWN,"dispatcher is not found");
+            throw PvssException(PvssException::CONFIG_INVALID,"dispatcher is not found");
         }
 
-        status = Response::SERVER_BUSY;
-        // ctx->setRespQueue( *respQueue );
+        what = "recvToQueue";
         queue->requestReceived(ctx); // may throw server_busy
-        // seqNum = uint32_t(-1);
         return;
 
     } catch ( PvssException& e ) {
         smsc_log_debug(loge_, "exception(%u): %s",__LINE__, e.what());
         countExceptions( e.getType(), what );
-        ewhat = e.what();
+        exc = e;
     } catch (std::exception& e) {
         smsc_log_debug(loge_, "exception(%u): %s",__LINE__, e.what());
+        exc = PvssException(e.what(),PvssException::UNKNOWN);
         countExceptions( PvssException::UNKNOWN, what );
-        ewhat = e.what();
     }
 
     try {
-        ctx->setResponse(new ErrorResponse(seqNum,status,ewhat.c_str()));
+        ctx->setResponse(new ErrorResponse(seqNum,exc.getType(),exc.what()));
         sendResponse(ctx);
     } catch ( PvssException& e ) {
         smsc_log_debug(loge_,"exception(%u): %s", __LINE__, e.what());

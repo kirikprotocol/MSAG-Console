@@ -25,6 +25,10 @@ enum TimePolicy{
 };
 
 const char* timePolicyToString( TimePolicy tp );
+inline bool isTimePolicyValid( TimePolicy tp ) {
+    return (INFINIT <= tp && tp <= W_ACCESS);
+}
+
 
 /*
 static const char* TimePolicyStr[] = {
@@ -165,7 +169,7 @@ public:
     bool convertToInt();
 
     bool isValid() const {
-        return getType() != 0;
+        return getType() != 0 && isTimePolicyValid(time_policy);
     }
 
 protected:
