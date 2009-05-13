@@ -28,6 +28,15 @@ protected:
   SCCPAddress   _dstAdr;
 
 public:
+  enum PAbortCause_e {
+    p_unrecognizedMessageType = 0
+    , p_unrecognizedTransactionID = 1
+    , p_badlyFormattedTransactionPortion = 2
+    , p_incorrectTransactionPortion = 3
+    , p_resourceLimitation = 4
+    , p_genericError = 127  //That's a max value allowed by protocol
+  };
+
   TDialogueHandlingPrimitive();
 
   TDialogueHandlingPrimitive(TCAPMessage & use_tmsg)
