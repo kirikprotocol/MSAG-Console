@@ -263,8 +263,7 @@ private:
         pc.FinishPrepareBatch(prop_count, batch);
         pc.RunBatch(batch);
         smsc_log_debug(logger, "send %d properties to pers for profile key=%s", prop_count, pf.getKey().c_str());
-      }
-      if (sendToPers) {
+
         for (int i = 0; i < prop_count; ++i) {
           pc.SetPropertyResult(batch);
         }
