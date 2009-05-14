@@ -130,6 +130,8 @@ public:
     /// any of the modifying methods.
     bool writeRecord( const JournalRecord& record ); // throw
 
+    uint32_t getRecordSerial() const { return recordSerial_; }
+
 private:
     JournalRecord* loadJournalRecord( const char*& ptr,
                                       size_t       bufsize ); // throw

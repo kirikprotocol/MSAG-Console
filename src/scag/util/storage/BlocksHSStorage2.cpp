@@ -918,10 +918,11 @@ int BlocksHSStorage2::doOpen()
     }
 
     if (log_) {
-        smsc_log_info(log_,"storage has been opened: version=%x blockSize=%u/%x fileSize=%u/%x fszBytes=%llx fileCount=%u freeCount=%u ffb=%llx",
+        smsc_log_info(log_,"storage has been opened: version=%x blockSize=%u/%x fileSize=%u/%x fszBytes=%llx fileCount=%u freeCount=%u ffb=%llx recSerial=%x",
                       unsigned(version_), unsigned(packer_.blockSize()), unsigned(packer_.blockSize()),
                       unsigned(fileSize_), unsigned(fileSize_), fileSizeBytes_,
-                      unsigned(files_.size()), unsigned(freeCount_), idx2pos(freeChain_.front()));
+                      unsigned(files_.size()), unsigned(freeCount_), idx2pos(freeChain_.front()),
+                      unsigned(journalFile_.getRecordSerial()));
     }
     checkFreeCount(freeCount_);
     return 0;
@@ -964,10 +965,11 @@ int BlocksHSStorage2::doCreate()
         return FREE_CHAIN_BROKEN;
     }
     if (log_) {
-        smsc_log_info(log_,"storage has been created: version=%x blockSize=%u/%x fileSize=%u/%x fszBytes=%llx fileCount=%u freeCount=%u ffb=%llx",
+        smsc_log_info(log_,"storage has been created: version=%x blockSize=%u/%x fileSize=%u/%x fszBytes=%llx fileCount=%u freeCount=%u ffb=%llx recSerial=%x",
                       unsigned(version_), unsigned(packer_.blockSize()), unsigned(packer_.blockSize()),
                       unsigned(fileSize_), unsigned(fileSize_), fileSizeBytes_,
-                      unsigned(files_.size()), unsigned(freeCount_), idx2pos(freeChain_.front()));
+                      unsigned(files_.size()), unsigned(freeCount_), idx2pos(freeChain_.front()),
+                      unsigned(journalFile_.getRecordSerial()));
     }
     return 0;
 }

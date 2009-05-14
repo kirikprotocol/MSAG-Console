@@ -200,23 +200,31 @@ void JournalFile::open( bool readonly )
 
             // applying new states
             ::Applier applier(store_,true);
+            recordSerial_ = records.back()->getSerial();
+            journalFile_.Seek( records.back()->getEndsAt() );
             std::for_each( records.begin(), records.end(), applier );
             applier.setState( records.back() );
-            journalFile_.Seek( records.back()->getEndsAt() );
-            recordSerial_ = records.back()->getSerial();
 
         } catch ( std::exception& e ) {
             
+            // FIXME: copying the old file
+            /*
+            journalFile_.Rename( (fn + ".old").c_str() );
+            if ( readonly ) {
+                journalFile_.ROpen(fn.c_str());
+            } else {
+                journalFile_.RWOpen(fn.c_str());
+            }
+             */
             if (log_) {
                 smsc_log_info(log_,"new state failed: %s", e.what());
             }
 
             // trying with old
             ::Applier applier(store_,false);
+            recordSerial_ = 0;
             std::for_each( records.rbegin(), records.rend(), applier );
             applier.setState( records.front() );
-            // FIXME: rename the orig file
-            recordSerial_ = 0;
         }
 
     } catch ( ... ) {
@@ -293,6 +301,9 @@ bool JournalFile::writeRecord( const JournalRecord& record )
         // NOTE: we need truncate as the last entry may be rewritten
         journalFile_.Truncate(journalFile_.Pos());
         journalFile_.Seek( store_.journalHeaderSize() );
+    }
+    if ( needHeader ) {
+        journalFile_.Truncate(journalFile_.Pos());
     }
     recordSerial_ = serial;
     return lastRecord;
