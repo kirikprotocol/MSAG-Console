@@ -118,6 +118,60 @@ public:
         }
         return 0;
     }
+
+    bool getProfileData(int curFileNumber, File* dataFile, DataBlockHeader &hdr, SerialBuffer& data) {
+      try {
+        char* dataBuff;
+        data.setBuffLength(hdr.data_size);
+        dataBuff = data.ptr();
+        data.setLength(hdr.data_size);
+        if (hdr.total_blocks == 1) {
+          dataFile->Read((void*)dataBuff, hdr.data_size);
+          return true;
+        }
+        smsc_log_info(logger, "read long profile: pfkey=%s blocks:%d data size:%d",
+                               hdr.key.toString().c_str(), hdr.total_blocks, hdr.data_size);
+        long curBlockIndex = hdr.next_block;
+        long effectiveBlockSize = blockSize - sizeof(DataBlockHeader);
+        int i = 1;
+        File *f;
+        do {
+          std::auto_ptr<File> filePtr;
+          int file_number = curBlockIndex / blocksInFile;
+          if (file_number == curFileNumber) {
+            f = dataFile;
+          } else {
+            f = new File();
+            filePtr.reset(f);
+            f->ROpen(getFileName(file_number).c_str());
+          }
+
+          off_t offset = (curBlockIndex - file_number * blocksInFile) * blockSize;
+          f->Seek(offset, SEEK_SET);
+          DataBlockHeader curhdr;
+          f->Read((void*)&hdr, sizeof(DataBlockHeader));
+          if(hdr.block_used != BLOCK_USED) {
+              smsc_log_error(logger, "read long profile: block index=%d unused", curBlockIndex);
+              return false;
+          }
+          curBlockIndex = hdr.next_block;
+          size_t dataSize = curBlockIndex == -1 ? hdr.data_size - effectiveBlockSize*i : effectiveBlockSize;
+          f->Read((void*)(dataBuff+(i*effectiveBlockSize)), dataSize);
+          ++i;
+        } while (curBlockIndex != -1);
+        return true;
+      } catch (const FileException& ex) {
+        smsc_log_error(logger, "error reading profile: %s", ex.what());
+        return false;
+      }
+    }
+
+    string getFileName(int fileNumber) {
+      char	postfix[10];
+      string name = dbPath + '/' + dbName +'/' + dbName + "-data";
+      snprintf(postfix, 10, "-%.7d", fileNumber);
+      return name + postfix;
+    }
     
     int readDataFiles(int files_count, bool sendToPers) {
       if (!files_count) {
@@ -166,15 +220,13 @@ public:
               }
               ++profiles_count;
               smsc_log_debug(logger, "profile key=%s", hdr.key.toString().c_str());
-
               SerialBuffer data;
-              data.setBuffLength(hdr.data_size);
-              //data.setBuffLength(effectiveBlockSize);
-              data_buff = data.ptr();
-              //data.setLength(effectiveBlockSize);
-              data.setLength(hdr.data_size);
-              //dataFile.Read((void*)data_buff, effectiveBlockSize);
-              dataFile.Read((void*)data_buff, hdr.data_size);
+              if (!getProfileData(i, &dataFile, hdr, data)) {
+                smsc_log_error(logger, "error reding profile block number=%d pfkey=%s blocks:%d data size:%d",
+                               j, hdr.key.toString().c_str(), hdr.total_blocks, hdr.data_size);
+                continue;
+              }
+
               //status_profiles += restoreProfile(hdr.key, data, sendToPers);
               
               int matched = 0;
@@ -204,9 +256,9 @@ public:
             matched_total += matched_infile;
             total_count += profiles_count;
             total_status_profiles += status_profiles;
-            smsc_log_info(logger, "read profiles count = %d/%d in file %d/total", profiles_count, total_count, i + 1);
-            smsc_log_info(logger, "matched profiles count = %d/%d in file %d/total", matched_infile, matched_total, i + 1);
-            smsc_log_info(logger, "uploaded profiles count = %d/%d in file %d/total", status_profiles, total_status_profiles, i + 1);
+            smsc_log_info(logger, "read profiles count     = %d/%d   in file %d/total", profiles_count, total_count, i + 1);
+            smsc_log_info(logger, "matched profiles count  = %d/%d   in file %d/total", matched_infile, matched_total, i + 1);
+            smsc_log_info(logger, "uploaded profiles count = %d/%d   in file %d/total", status_profiles, total_status_profiles, i + 1);
             dataFile.Close();
           } catch (const FileException& ex) {
             smsc_log_error(logger, "Cannot open data file: %s", ex.what());
@@ -214,8 +266,8 @@ public:
           }
       }
       smsc_log_info(logger, "total read profiles count = %d in %d files", total_count, files_count);
-      smsc_log_info(logger, "total matched profiles = %d", matched_total);
-      smsc_log_info(logger, "total uploaded profiles = %d", total_status_profiles);
+      smsc_log_info(logger, "total matched profiles    = %d", matched_total);
+      smsc_log_info(logger, "total uploaded profiles   = %d", total_status_profiles);
       return 0;
     }
 private:
