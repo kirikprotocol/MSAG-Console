@@ -3,7 +3,9 @@
 #include "util/int.h"
 #include "system/status.h"
 #include "SmppManager2.h"
+#include "scag/util/io/HexDump.h"
 
+/*
 namespace {
 
 smsc::core::synchronization::Mutex digitmtx;
@@ -30,13 +32,14 @@ const std::string& digitstring()
 
 void bufdump( std::string& out, const unsigned char* inbuf, unsigned insize )
 {
-    out.reserve( out.size() + insize*digitlen + 10 );
+    out.reserve(out.size()+insize*digitlen+10 );
     const char* digits = digitstring().c_str();
     for ( ; insize-- > 0; ++inbuf ) {
         out.append( digits + ((*inbuf)*digitlen), digitlen );
     }
 }
 }
+ */
 
 namespace scag2 {
 namespace transport{
@@ -99,7 +102,9 @@ void SmppSocket::processInput()
   if(dump->isDebugEnabled())
   {
       std::string out;
-      ::bufdump( out, reinterpret_cast<const unsigned char*>(rdBuffer), rdToRead );
+      util::HexDump hd;
+      hd.hexdump(out,rdBuffer,rdToRead);
+      // ::bufdump( out, reinterpret_cast<const unsigned char*>(rdBuffer), rdToRead );
       dump->log(smsc::logger::Logger::LEVEL_DEBUG, "in from %s(%s): %s",
                 getPeer(), systemId.c_str(), out.c_str());
   }
@@ -272,7 +277,9 @@ void SmppSocket::sendData()
   if(dump->isDebugEnabled())
   {
       std::string out;
-      ::bufdump( out, reinterpret_cast<const unsigned char*>(wrBuffer), sz );
+      util::HexDump hd;
+      hd.hexdump(out,wrBuffer,sz);
+      // ::bufdump( out, reinterpret_cast<const unsigned char*>(wrBuffer), sz );
       dump->log(smsc::logger::Logger::LEVEL_DEBUG, "out to %s(%s),%d: %s",
                 getPeer(), systemId.c_str(), outQueue.Count(), out.c_str());
   }
