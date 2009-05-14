@@ -1306,34 +1306,41 @@ bool BlocksHSStorage2::attachNewFile()
     // write a new transaction
     Transaction trans(*this);
     files_.push_back(f);
+    const size_t oldFreeCount = freeCount_;
     const size_t freeChainSize = freeChain_.size();
     // overwrite the content of the last block in previous free chain
-    buffer_type oldBuf, newBuf;
-    if ( ! freeChain_.empty() ) {
-        // we have to overwrite the last free block pointer
-        const offset_type lastBlock = idx2pos(freeChain_.back());
-        oldBuf.resize(idxSize()+navSize());
-        BlockNavigation::saveIdx(&oldBuf[0],lastBlock);
-        BlockNavigation bn;
-        bn.setFreeCells(0);
-        bn.setNextBlock(packer_.notUsed());
-        bn.savePtr(&oldBuf[idxSize()]);
-        newBuf = oldBuf;
-        bn.setFreeCells(ct->fileSize());
-        bn.setNextBlock(idx2pos(ct->freeChain().front()));
-        bn.savePtr(&newBuf[idxSize()]);
-        trans.oldBuf = &oldBuf[0];
-        trans.newBuf = &newBuf[0];
-        trans.oldBufSize = trans.newBufSize = oldBuf.size();
-    }
-    freeChain_.insert(freeChain_.end(),
-                      ct->freeChain().begin(),
-                      ct->freeChain().end());
-    freeCount_ += ct->fileSize();
     bool rv = true;
     try {
-        trans.newState = StorageState(*this);
-        journalFile_.writeRecord( trans );
+
+        buffer_type oldBuf, newBuf;
+        if ( ! freeChain_.empty() ) {
+            // we have to overwrite the last free block pointer
+            const offset_type lastBlock = idx2pos(freeChain_.back());
+            oldBuf.resize(idxSize()+navSize());
+            BlockNavigation::saveIdx(&oldBuf[0],lastBlock);
+            BlockNavigation bn;
+            bn.setFreeCells(0);
+            bn.setNextBlock(packer_.notUsed());
+            bn.savePtr(&oldBuf[idxSize()]);
+            newBuf = oldBuf;
+            bn.setFreeCells(ct->fileSize());
+            bn.setNextBlock(idx2pos(ct->freeChain().front()));
+            bn.savePtr(&newBuf[idxSize()]);
+            trans.oldBuf = &oldBuf[0];
+            trans.newBuf = &newBuf[0];
+            trans.oldBufSize = trans.newBufSize = oldBuf.size();
+            rv = writeBlocks(&newBuf[0], newBuf.size());
+        }
+
+        if ( rv ) {
+            freeChain_.insert(freeChain_.end(),
+                              ct->freeChain().begin(),
+                              ct->freeChain().end());
+            freeCount_ += ct->fileSize();
+            trans.newState = StorageState(*this);
+            journalFile_.writeRecord( trans );
+        }
+
     } catch ( std::exception& e ) {
         if (log_) {
             smsc_log_warn(log_,"attachNewFile(#%u): %s", unsigned(files_.size())-1, e.what());
@@ -1343,7 +1350,7 @@ bool BlocksHSStorage2::attachNewFile()
     if ( ! rv ) {
         // recovery
         freeChain_.erase(freeChain_.begin()+freeChainSize,freeChain_.end());
-        freeCount_ -= ct->fileSize();
+        freeCount_ = oldFreeCount;
         files_.pop_back();
         delete f;
     }
