@@ -2,6 +2,8 @@
 # ident "@(#)$Id$"
 # define __EYELINE_TCAP_PROVD_TDIALOGUEID_HPP__
 
+# include <sys/types.h>
+
 namespace eyeline {
 namespace tcap {
 
