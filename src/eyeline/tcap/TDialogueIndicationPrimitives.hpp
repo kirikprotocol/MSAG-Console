@@ -12,6 +12,7 @@ namespace tcap {
 
 class TDialogueIndicationPrimitive : public TDialogueHandlingPrimitive {
 public:
+  TDialogueIndicationPrimitive();
   TDialogueIndicationPrimitive(TCAPMessage & use_tmsg)
     : TDialogueHandlingPrimitive(use_tmsg)
   { }
@@ -60,20 +61,37 @@ public:
 //
 class TC_PAbort_Ind : public TDialogueIndicationPrimitive {
 public:
+  TCAPMessage _fake_msg;
+
+  TC_PAbort_Ind()
+    : TDialogueIndicationPrimitive(_fake_msg)
+  { }
+
   TC_PAbort_Ind(TCAPMessage & use_tmsg)
     : TDialogueIndicationPrimitive(use_tmsg)
   { }
 
+  void setPAbortCause(PAbortCause_e cause);
   //TODO: getters for P_AbortCause
 };
 
 //
 class TC_Notice_Ind : public TDialogueIndicationPrimitive {
 public:
+  TCAPMessage _fake_msg;
+
+  TC_Notice_Ind()
+    : TDialogueIndicationPrimitive(_fake_msg)
+  { }
+
   TC_Notice_Ind(TCAPMessage & use_tmsg)
     : TDialogueIndicationPrimitive(use_tmsg)
   { }
 
+  enum ReportCause_e { INVALID_TCUSER_DATA, SCCP_ERROR };
+
+  void setReportCause(ReportCause_e cause);
+  ReportCause_e getReportCause();
   //TODO: getters for returnCause
 };
 
