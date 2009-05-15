@@ -1,0 +1,124 @@
+#include "eyeline/utilx/Exception.hpp"
+#include "eyeline/tcap/Exception.hpp"
+
+#include "TCAPIndicationsProcessor.hpp"
+#include "AppCtxSMRegistry.hpp"
+#include "TDlgReqSerializer.hpp"
+#include "TDialogueServiceDataRegistry.hpp"
+#include "P_U_AbortPrimitiveUtils.hpp"
+#include "TCAPLayer.hpp"
+
+namespace eyeline {
+namespace tcap {
+namespace provd {
+
+bool
+TCAPIndicationsProcessor::updateDialogue(TC_Begin_Ind& tcBeginInd, unsigned int srcLinkNum)
+{
+  try {
+    AppCtxSMRegistry::RegistryEntry regEntry =
+      AppCtxSMRegistry::getInstance().getDialogueHandler(*tcBeginInd.getAppCtx());
+
+    try {
+      TDialogueServiceDataRegistry::registry_element_ref_t tDlgSvcData =
+        TDialogueServiceDataRegistry::getInstance().createTDialogueServiceData(regEntry.dialogueHandler,
+                                                                               tcBeginInd.getTransactionId(),
+                                                                               regEntry.dialogueTimeout);
+      tDlgSvcData->setLinkNum(srcLinkNum);
+      tDlgSvcData->updateDialogueDataByIndication(&tcBeginInd);
+
+      return true;
+    } catch (std::exception& ex) {
+      formPAbortRequest(tcBeginInd.getTransactionId(), TDialogueHandlingPrimitive::p_resourceLimitation, srcLinkNum);
+
+      return false;
+    }
+  } catch (utilx::RegistryKeyNotFound& ex) {
+    formUAbortRequest(*tcBeginInd.getAppCtx(), tcBeginInd.getTransactionId());
+  }
+  return false;
+}
+
+bool
+TCAPIndicationsProcessor::updateDialogue(TC_Cont_Ind& tcContInd, unsigned int srcLinkNum)
+{
+  try {
+    TDialogueServiceDataRegistry::registry_element_ref_t tDlgSvcData = TDialogueServiceDataRegistry::getInstance().getTDialogueServiceData(tcContInd.getTransactionId());
+
+    tDlgSvcData->updateDialogueDataByIndication(&tcContInd);
+
+    return true;
+  } catch (UnknownDialogueException& ex) {
+    formPAbortRequest(tcContInd.getTransactionId(), TDialogueHandlingPrimitive::p_unrecognizedTransactionID, srcLinkNum);
+  } catch (std::exception& ex) {
+    formPAbortRequest(tcContInd.getTransactionId(), TDialogueHandlingPrimitive::p_resourceLimitation, srcLinkNum);
+  }
+
+  return false;
+}
+
+bool
+TCAPIndicationsProcessor::updateDialogue(TC_End_Ind& tcEndInd, unsigned int srcLinkNum)
+{
+  try {
+    TDialogueServiceDataRegistry::registry_element_ref_t tDlgSvcData = TDialogueServiceDataRegistry::getInstance().getTDialogueServiceData(tcEndInd.getTransactionId());
+
+    tDlgSvcData->updateDialogueDataByIndication(&tcEndInd);
+
+    return true;
+  } catch (UnknownDialogueException& ex) {
+  } catch (std::exception& ex) {
+  }
+
+  return false;
+}
+
+bool
+TCAPIndicationsProcessor::updateDialogue(TC_PAbort_Ind& tcPAbortInd, unsigned int srcLinkNum)
+{
+  try {
+    TDialogueServiceDataRegistry::registry_element_ref_t tDlgSvcData = TDialogueServiceDataRegistry::getInstance().getTDialogueServiceData(tcPAbortInd.getTransactionId());
+
+    tDlgSvcData->updateDialogueDataByIndication(&tcPAbortInd);
+
+    return true;
+  } catch (UnknownDialogueException& ex) {
+  } catch (std::exception& ex) {
+  }
+
+  return false;
+}
+
+bool
+TCAPIndicationsProcessor::updateDialogue(TC_UAbort_Ind& tcUAbortInd, unsigned int srcLinkNum)
+{
+  try {
+    TDialogueServiceDataRegistry::registry_element_ref_t tDlgSvcData = TDialogueServiceDataRegistry::getInstance().getTDialogueServiceData(tcUAbortInd.getTransactionId());
+
+    tDlgSvcData->updateDialogueDataByIndication(&tcUAbortInd);
+
+    return true;
+  } catch (UnknownDialogueException& ex) {
+  } catch (std::exception& ex) {
+  }
+
+  return false;
+}
+
+bool
+TCAPIndicationsProcessor::updateDialogue(TC_Notice_Ind& tcNoticeInd, unsigned int srcLinkNum)
+{
+  try {
+    TDialogueServiceDataRegistry::registry_element_ref_t tDlgSvcData = TDialogueServiceDataRegistry::getInstance().getTDialogueServiceData(tcNoticeInd.getTransactionId());
+
+    tDlgSvcData->updateDialogueDataByIndication(&tcNoticeInd);
+
+    return true;
+  } catch (UnknownDialogueException& ex) {
+  } catch (std::exception& ex) {
+  }
+
+  return false;
+}
+
+}}}
