@@ -1,10 +1,13 @@
-#pragma ident "$Id$"
+/* ************************************************************************** *
+ * Synchronization primitive(s): Mutex
+ * ************************************************************************** */
 #ifndef __SMSC_CORE_SYNCHRONIZATION_MUTEXGUARD_HPP__
+#ident "@(#)$Id$"
 #define __SMSC_CORE_SYNCHRONIZATION_MUTEXGUARD_HPP__
 
-namespace smsc{
-namespace core{
-namespace synchronization{
+namespace smsc {
+namespace core {
+namespace synchronization {
 
 template <class T>
 class MutexGuardTmpl{
@@ -47,7 +50,27 @@ public:
             lock.Unlock();
     }
 
-    inline bool tgtLocked(void) const { return isLocked; }
+    bool tgtLocked(void) const { return isLocked; }
+};
+
+template <class _MutexTArg/* : public Mutex*/>
+class ReverseMutexGuard_T {
+protected:
+    _MutexTArg & lock;
+
+    ReverseMutexGuard_T(const ReverseMutexGuard_T &);
+    void operator=(const ReverseMutexGuard_T &);
+
+public:
+    ReverseMutexGuard_T(_MutexTArg & use_lock)
+      : lock(use_lock)
+    {
+        lock.Unlock();
+    }
+    ~ReverseMutexGuard_T()
+    {
+        lock.Lock();
+    }
 };
 
 }//synchronization

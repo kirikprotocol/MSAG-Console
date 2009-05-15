@@ -58,6 +58,7 @@ public:
 
 typedef MutexGuardTmpl<Mutex> MutexGuard;
 typedef MutexTryGuard_T<Mutex> MutexTryGuard;
+typedef ReverseMutexGuard_T<Mutex> ReverseMutexGuard;
 
 }//synchronization
 }//core
