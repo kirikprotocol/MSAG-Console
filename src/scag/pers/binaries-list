@@ -7,6 +7,8 @@
 scag/pers                                pers            \
     -lscag-pers \
     -lscag-util-storage \
+    -lscag-util \
+    -lscag-util-io \
     -lutil-mirrorfile \
     -lutil-config -lutil-xml $(XERCES_LIB) \
     -lcore-network \
@@ -29,16 +31,31 @@ scag/client_test/pers_client_test        client_test     @liblogger.so \
    -lutil-templates -lutil-regexp -lsystem-common -lsystem-smppio  -lcore-threads \
    -lcore-buffers -lutil-config -lutil -lrt -ldl -lutil-xml $(XERCES_LIB) -lsms \
    -lcore-network -lnsl -lscag-util-encodings -lscag-exc -llicense-check $(SSL_LIB) \
-   -lscag-util-storage
+   -lscag-util-storage -lscag-util -lscag-util-io
 
 #scag/pers/heirarchic_test/hpers         hpers_test      -L$(SMSC_BUILDDIR)/bin -llogger -lscag-pers -lutil-mirrorfile -lcore-network -lrt -lutil -lutil-config -lutil-xml $(XERCES_LIB) $(SOCKETLIB) -lnsl -llogger -lscag-exc -llicense-check -lcore-threads
-scag/pvcp                                cpers           @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger -lscag-pers -lutil-mirrorfile -lcore-network -lrt -lutil -lutil-config -lutil-xml $(XERCES_LIB) $(SOCKETLIB) -lnsl -llogger -lscag-exc -llicense-check -lscag-util-storage
+scag/pvcp                                cpers           \
+  -lscag-pers \
+  -lscag-util-storage \
+  -lscag-util \
+  -lscag-util-io \
+  -lscag-exc \
+  -lutil-mirrorfile -lcore-network \
+  -lutil-config -lutil-xml \
+  $(XERCES_LIB) $(SOCKETLIB) -lnsl \
+  -llicense-check \
+  -lutil \
+  @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
+  $(__LIBRARIES) \
+  -lpthread -lrt -ldl $(LIBMALLOC)
+
 #scag/persconv                           conv            -L$(SMSC_BUILDDIR)/bin -llogger -lscag-pers -lutil-mirrorfile -lcore-network -lrt -lutil -lutil-config -lutil-xml $(XERCES_LIB) $(SOCKETLIB) -lnsl -llogger -llicense-check
 
 scag/pers-repairIntStorage     repairIntStorage \
   -lscag-pers \
   -lscag-util-storage \
   -lscag-util \
+  -lscag-util-io \
   -lcore-buffers \
   -lutil \
   @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \

@@ -15,7 +15,7 @@
 #include "Property.h"
 #include "AbntAddr.hpp"
 
-#include "scag/util/storage/Serializer.h"
+#include "scag/util/io/Serializer.h"
 #include "scag/pers/Glossary.h"
 
 

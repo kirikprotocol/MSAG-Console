@@ -59,10 +59,10 @@ public:
 template<class Key = char*>
 class FSDBProfiles: public FSDB<Key, Profile>
 {
-    typedef RBTreeHSAllocator<Key, long>    IndexAllocator;
-    typedef RBTree<Key, long>               IndexStorage;
-    typedef templRBTreeNode<Key, long>      IndexNode;
-    typedef IndexStorage::nodeptr_type      nodeptr_type;
+    typedef RBTreeHSAllocator<Key, long>        IndexAllocator;
+    typedef RBTree<Key, long>                   IndexStorage;
+    typedef templRBTreeNode<Key, long>          IndexNode;
+    typedef typename IndexStorage::nodeptr_type nodeptr_type;
 
 public:
 	FSDBProfiles():logger(smsc::logger::Logger::getInstance("FSDB")), indexAllocator(0) {}

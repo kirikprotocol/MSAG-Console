@@ -38,7 +38,8 @@ void SessionStore::init(const std::string& dir,SessionLoadCallback cb,void* data
   std::vector<unsigned char> data;
   while((idx=pfile.Read(idx,data,&ridx))!=0)
   {
-    Session s=Session(CSessionKey());
+    CSessionKey key;
+    Session s(key);
     SessionBuffer sb(data.size());
     sb.Append((char*)&data[0],data.size());
     s.Deserialize(sb);

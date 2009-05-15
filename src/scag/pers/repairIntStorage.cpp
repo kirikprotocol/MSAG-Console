@@ -8,7 +8,7 @@
 #include "Property.h"
 #include "VarRecSizeStore.h"
 #include "scag/util/storage/SerialBuffer.h"
-#include "scag/util/HexDump.h"
+#include "scag/util/io/HexDump.h"
 
 using namespace scag2::util::storage;
 using namespace scag2::util;

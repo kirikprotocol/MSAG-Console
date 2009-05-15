@@ -2,7 +2,7 @@
 # this file contains binaries definitions
 
 # binary name        source name    libraries         
-scag/scag            gwmain         $(XERCES_LIB) -lscag-util -lscag \
+scag/scag            gwmain         $(XERCES_LIB) -lscag \
    $(__LIBRARIES) -lscag-pers -lutil-mirrorfile -lscag-admin -lscag-transport \
    -ladmin-service $(SOCKETLIB) -lcore-network  -lscag-bill-infrastruct \
    -lscag-bill -lscag-bill-infrastruct $(XERCES_LIB) -lscag-config \
@@ -27,7 +27,10 @@ scag/scag            gwmain         $(XERCES_LIB) -lscag-util -lscag \
    \
    -lscag-config-lcm \
    -lscag-config-base \
-   -lscag-util-encodings -lutil-recoder-recode_dll -lutil-regexp -lscag-exc \
+   -lscag-util-encodings \
+   -lscag-util \
+   -lscag-util-io \
+   -lutil-recoder-recode_dll -lutil-regexp -lscag-exc \
    -lsms $(SOCKETLIB) -lcore-network -lnsl  $(XERCES_LIB) -lscag @liblogger.so \
    -L$(SMSC_BUILDDIR)/bin -llogger \
    -lutil-URCdb -lutil $(SSL_LIB)

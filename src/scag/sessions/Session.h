@@ -325,6 +325,10 @@ namespace scag { namespace sessions {
 
         std::list<SCAGCommand*> cmdQueue;
 
+        // copy ctor is forbidden
+        Session( const Session& s );
+        Session& operator = ( const Session& s );
+
         SCAGCommand* popCommand()
         {
             SCAGCommand* c = cmdQueue.front();
