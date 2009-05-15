@@ -32,8 +32,11 @@ public:
   void acceptDlgByUser(void)
   { /*TODO: */ }
   void rejectDlgByUser(proto::AssociateSourceDiagnostic::DlgSrvUser_e use_cause =
-                        proto::AssociateSourceDiagnostic::dsu_null)
+                       proto::AssociateSourceDiagnostic::dsu_null)
   { /*TODO: */  }
+
+  void setReturnOnError();
+  bool getReturnOnError() const;
 
   //TODO: request specific stuff
 };
@@ -44,6 +47,7 @@ public:
   TC_Begin_Req()
     : TDialogueRequestPrimitive(TCAPMessage::t_begin)
   { }
+
   //TODO: setters
 };
 //
