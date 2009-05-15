@@ -3,6 +3,10 @@
 
 #include <string>
 
+namespace scag {
+namespace util {
+
+/// A checker for existence of another instance of running process.
 class Inst 
 {
 public:
@@ -18,5 +22,14 @@ protected:
     bool IsProcDir(char* procdir);
     void check(const char* fname);
 };
+
+} // namespace util
+} // namespace scag
+
+namespace scag2 {
+namespace util {
+using scag::util::Inst;
+} // namespace util
+} // namespace scag2
 
 #endif

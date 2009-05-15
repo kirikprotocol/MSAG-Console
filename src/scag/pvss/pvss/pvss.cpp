@@ -10,6 +10,8 @@
 #include "util/config/Manager.h"
 #include "util/config/ConfigView.h"
 
+#include "scag/util/Inst.h"
+
 #include "scag/pvss/api/pvap/PvapProtocol.h"
 #include "scag/pvss/api/core/server/ServerCore.h"
 #include "scag/pvss/api/core/server/ServerContext.h"
@@ -313,6 +315,15 @@ int main(int argc, char* argv[]) {
       getAbntStorageConfig(abntCfg, diskConfig, nodeCfg, logger);
       ++nodeCfg.disksCount;
     }
+
+      // check instance
+      char filename[20];
+      sprintf(filename,"/tmp/pvss.%d",serverConfig.getPort());
+      scag::util::Inst inst(filename);
+      if ( !inst.run()) {
+          fprintf( stderr, "Instance is running already.\n");
+          exit(-1);
+      }
 
     PvssDispatcher pvssDispatcher(nodeCfg,abntCfg.fileSize/2);
 

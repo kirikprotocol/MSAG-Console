@@ -7,7 +7,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "scag/util/lltostr.h"
+#include "lltostr.h"
+
+namespace scag {
+namespace util {
 
 void Inst::check(const char* fname)
 {
@@ -43,3 +46,6 @@ bool Inst::IsProcDir(char* oldpid)
     
     return dp != NULL;
 }
+
+} // namespace util
+} // namespace scag

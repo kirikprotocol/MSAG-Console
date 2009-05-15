@@ -14,7 +14,7 @@
 #include "util/mirrorfile/mirrorfile.h"
 #include "scag/admin/SCAGSocketListener.h"
 #include "scag/config/ConfigManager.h"
-#include "scag/Inst.h"
+#include "scag/util/Inst.h"
 #include "scag/version.inc"
 
 static const int SHUTDOWN_SIGNAL = SIGTERM;
@@ -103,7 +103,7 @@ int main(int argc,char* argv[])
     // For instance control
     char filename[20];
     sprintf(filename, "/tmp/scag.%d", servicePort);
-    Inst inst(filename);
+    scag::util::Inst inst(filename);
     // Shutdown if there is instance allready.
     if(!inst.run()) {
         fprintf(stderr, "Instance is running already.\n");

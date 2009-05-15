@@ -7,7 +7,7 @@
 #include "admin/service/ServiceSocketListener.h"
 #include "core/buffers/File.hpp"
 #include "core/threads/Thread.hpp"
-#include "Inst.h"
+#include "scag/util/Inst.h"
 #include "scag2.h"
 #include "scag/admin/gen2/SCAGSocketListener2.h"
 #include "scag/config/impl/ConfigManager2.h"
@@ -141,7 +141,7 @@ int main( int argc, char* argv[] )
         // For instance control
         char filename[20];
         sprintf(filename, "/tmp/scag.%d", servicePort);
-        Inst inst(filename);
+        scag::util::Inst inst(filename);
         // Shutdown if there is instance allready.
         if(!inst.run()) {
             fprintf(stderr, "Instance is running already.\n");
