@@ -36,7 +36,7 @@ public:
         return buf;
     }
     virtual void clear() = 0;
-    virtual bool isValid() const { return true; }
+    virtual bool isValid( PvssException* = 0 ) const { return true; }
     virtual bool isPing() const { return false; }
 
     virtual bool visit( ResponseVisitor& visitor ) /* throw (PvapException) */  = 0;

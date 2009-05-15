@@ -20,13 +20,16 @@ BatchResponseTypeMatch responseMatch_;
 namespace scag2 {
 namespace pvss {
 
-bool BatchCommand::isValid() const 
+bool BatchCommand::isValid( PvssException* exc ) const
 {
-    if ( batchContent_.empty() ) return false;
+    if ( batchContent_.empty() ) {
+        if ( exc ) { *exc = PvssException("batch has no commands", PvssException::BAD_REQUEST); }
+        return false;
+    }
     for ( std::vector< BatchRequestComponent* >::const_iterator i = batchContent_.begin();
           i != batchContent_.end();
           ++i ) {
-        if ( ! (*i)->isValid() ) return false;
+        if ( ! (*i)->isValid(exc) ) return false;
     }
     return true;
 }

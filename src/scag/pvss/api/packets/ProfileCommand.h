@@ -34,7 +34,7 @@ public:
     inline bool isRequest() const { return true; }
 
     /// check if the command is valid (except seqnum field)
-    virtual bool isValid() const = 0;
+    virtual bool isValid( PvssException* exc = 0 ) const = 0;
 
     /// visitor pattern
     virtual bool visit( ProfileCommandVisitor& visitor ) /* throw (PvapException) */  = 0;

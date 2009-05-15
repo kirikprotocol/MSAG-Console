@@ -17,8 +17,13 @@ public:
     // IncCommand( uint32_t seqNum ) : AbstractPropertyCommand(seqNum) {}
     virtual ~IncCommand() { if (!inherited_) logDtor(); }
     
-    virtual bool isValid() const {
-        return AbstractPropertyCommand::isValid() && hasIntValue();
+    virtual bool isValid( PvssException* exc = 0 ) const {
+        if ( ! AbstractPropertyCommand::isValid(exc) ) { return false; }
+        if ( !hasIntValue() ) {
+            if (exc) { *exc = PvssException("inc has wrong type",PvssException::TYPE_INCONSISTENCE); }
+            return false;
+        }
+        return true;
     }
 
     virtual bool visit( ProfileCommandVisitor& visitor ) throw ( PvapException )

@@ -18,7 +18,7 @@ public:
     virtual ~PingRequest() { /*logDtor();*/ }
     
 public:
-    virtual bool isValid() const { return true; }
+    virtual bool isValid( PvssException* = 0 ) const { return true; }
     // virtual PingRequest* getCommand() { return this; }
     // virtual const PingRequest* getCommand() const { return this; }
     virtual const char* typeToString() const { return "ping"; }

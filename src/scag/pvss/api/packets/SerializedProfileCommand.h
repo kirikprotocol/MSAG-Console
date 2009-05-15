@@ -41,7 +41,7 @@ public:
     }
 
     /// check if the command is valid (except seqnum field)
-    virtual bool isValid() const { return true; }
+    virtual bool isValid( PvssException* = 0 ) const { return true; }
 
     /// visitor pattern
     virtual bool visit( ProfileCommandVisitor& visitor ) { return false; }

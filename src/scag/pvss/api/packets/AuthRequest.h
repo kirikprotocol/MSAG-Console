@@ -19,8 +19,27 @@ public:
 public:
     virtual ~AuthRequest() { logDtor(); }
 
-    virtual bool isValid() const {
-        return !login_.empty() && !password_.empty() && !name_.empty() && protocolVersion_ != 0;
+    virtual bool isValid( PvssException* exc = 0 ) const {
+        do {
+            if ( login_.empty() ) {
+                if ( exc ) { *exc = PvssException("login is empty",PvssException::BAD_REQUEST); }
+                break;
+            }
+            if ( password_.empty() ) {
+                if ( exc ) { *exc = PvssException("password is empty",PvssException::BAD_REQUEST); }
+                break;
+            }
+            if ( name_.empty() ) {
+                if ( exc ) { *exc = PvssException("name is empty",PvssException::BAD_REQUEST); }
+                break;
+            }
+            if ( protocolVersion_ == 0 ) {
+                if ( exc ) { *exc = PvssException("protocol version is not set",PvssException::BAD_REQUEST); }
+                break;
+            }
+            return true;
+        } while ( false );
+        return false;
     }
     /*
     virtual AuthRequest* getCommand() { return this; }

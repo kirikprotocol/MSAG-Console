@@ -33,8 +33,13 @@ public:
         // if ( property_ ) delete property_;
         property_ = prop;
     }
-    bool isValid() const {
-        return property_.isValid();
+    bool isValid( PvssException* exc = 0 ) const {
+        if ( ! property_.isValid() ) {
+            if ( exc ) *exc = PvssException(PvssException::BAD_REQUEST,
+                                            "property %s is invalid", property_.toString() );
+            return false;
+        }
+        return true;
     }
     void clear() {
         property_ = Property();

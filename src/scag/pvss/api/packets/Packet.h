@@ -9,6 +9,8 @@
 namespace scag2 {
 namespace pvss {
 
+class PvssException;
+
 ///
 /// abstract class Packet
 ///
@@ -52,7 +54,8 @@ public:
     virtual ~Packet() {}
 
     virtual bool isRequest() const = 0;
-    virtual bool isValid() const = 0;
+    /// if false exc will contain details
+    virtual bool isValid( PvssException* exc = 0 ) const = 0;
     virtual std::string toString() const = 0;
     virtual uint32_t  getSeqNum() const = 0;
     virtual void setSeqNum( uint32_t seqNum ) = 0;

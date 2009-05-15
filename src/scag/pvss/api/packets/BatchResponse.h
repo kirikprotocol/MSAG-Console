@@ -15,7 +15,9 @@ public:
     BatchResponse( uint8_t status ) : CommandResponse(status) { initLog(); }
     virtual ~BatchResponse() { logDtor(); clear(); }
 
-    virtual bool isValid() const { return CommandResponse::isValid() && !batchContent_.empty(); }
+    virtual bool isValid( PvssException* exc = 0 ) const {
+        return CommandResponse::isValid(exc);
+    }
 
     virtual bool visit( ProfileResponseVisitor& visitor ) /* throw (PvapException) */  {
         return visitor.visitBatchResponse(*this);

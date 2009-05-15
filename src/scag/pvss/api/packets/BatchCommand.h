@@ -20,7 +20,7 @@ public:
         clear();
     }
     
-    virtual bool isValid() const;
+    virtual bool isValid( PvssException* exc = 0 ) const;
     virtual std::string toString() const;
 
     bool isTransactional() {

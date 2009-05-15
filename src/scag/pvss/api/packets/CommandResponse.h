@@ -23,7 +23,7 @@ public:
     virtual ~CommandResponse() {}
 
     /// return true if the command content is valid.
-    virtual bool isValid() const { return true; }
+    virtual bool isValid( PvssException* = 0 ) const { return true; }
 
     /// dump command content.
     /// NOTE: this method should work even if isValid() == false

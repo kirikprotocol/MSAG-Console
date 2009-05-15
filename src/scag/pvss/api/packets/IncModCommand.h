@@ -13,7 +13,14 @@ public:
     // IncModCommand( uint32_t seqNum ) : IncCommand(seqNum), modulus_(0) {}
     virtual ~IncModCommand() { logDtor(); }
     
-    virtual bool isValid() const { return IncCommand::isValid() && modulus_ != 0; }
+    virtual bool isValid( PvssException* exc = 0 ) const {
+        if ( !IncCommand::isValid(exc) ) {return false;}
+        if ( modulus_ == 0 ) {
+            if (exc) { *exc = PvssException("incmod has mod=0",PvssException::BAD_REQUEST); }
+            return false;
+        }
+        return true;
+    }
     virtual std::string toString() const {
         char buf[32];
         sprintf(buf, " mod=%u", modulus_ );

@@ -40,8 +40,25 @@ public:
     
     virtual ProfileRequest* clone() const { return new ProfileRequest(*this); }
 
-    virtual bool isValid() const {
-        return profileKey_.isValid() && getCommand() && getCommand()->isValid();
+    virtual bool isValid( PvssException* exc = 0 ) const {
+        do {
+            if ( !profileKey_.isValid() ) {
+                if (exc) {*exc = PvssException("prof key is invalid",PvssException::BAD_REQUEST);}
+                break;
+            }
+            if ( ! getCommand() ) {
+                if (exc) {*exc = PvssException("prof has no command",PvssException::BAD_REQUEST);}
+                break;
+            }
+            if ( ! getCommand()->isValid() ) {
+                if (exc) {*exc = PvssException(PvssException::BAD_REQUEST,
+                                               "prof cmd %s is invalid",
+                                               getCommand()->toString().c_str());}
+                break;
+            }
+            return true;
+        } while (false);
+        return false;
     }
 
     virtual std::string toString() const {

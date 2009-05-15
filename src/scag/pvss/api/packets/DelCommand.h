@@ -14,7 +14,13 @@ public:
     // DelCommand( uint32_t seqNum ) : BatchRequestComponent(seqNum) {}
     virtual ~DelCommand() { logDtor(); }
     
-    virtual bool isValid() const { return !varName_.empty(); }
+    virtual bool isValid( PvssException* exc = 0 ) const {
+        if ( varName_.empty() ) {
+            if (exc) { *exc = PvssException("del has no name",PvssException::BAD_REQUEST); }
+            return false;
+        }
+        return true;
+    }
     virtual const char* typeToString() const { return "del"; }
     virtual std::string toString() const {
         return BatchRequestComponent::toString() + " var=\"" + varName_ + "\"";
