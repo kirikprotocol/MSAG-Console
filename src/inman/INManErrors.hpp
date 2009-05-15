@@ -1,8 +1,8 @@
-#pragma ident "$Id$"
 /* ************************************************************************* *
  * INMan error codes.
  * ************************************************************************* */
 #ifndef __SMSC_INMAN_ERRORS__
+#ident "@(#)$Id$"
 #define __SMSC_INMAN_ERRORS__
 
 #include "util/URCdb/URCRegistry.hpp"
@@ -21,6 +21,7 @@ struct INManErrorId {
         cfgInconsistency,
         logicTimedOut,
         brokenPipe,
+        srvInoperative,
         /* */
         internalError = 20 //this a max cap
     };
@@ -39,6 +40,7 @@ const char * rc2Txt_INManErrors(uint32_t err_code) { \
     case INManErrorId::cfgInconsistency:   return "config settings inconsistent or insufficient"; \
     case INManErrorId::logicTimedOut:   return "external operation is timed out"; \
     case INManErrorId::brokenPipe:      return "broken connection"; \
+    case INManErrorId::srvInoperative:  return "requested service is inoperative"; \
     case INManErrorId::internalError:   return "internal error"; \
     default:; } \
     return "unknown INMan error code"; \
