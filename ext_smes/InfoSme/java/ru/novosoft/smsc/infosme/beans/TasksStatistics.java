@@ -171,7 +171,7 @@ public class TasksStatistics extends InfoSmeBean
     private final static String TASK_STR      = "Task:";
     private final static String FROM_STR      = "From:";
     private final static String TILL_STR      = "Till:";
-    private final static String COL_CAP_STR   = "Date/Time,Generated,Delivered,Retried,Failed";
+    private final static String COL_CAP_STR   = "Date/Time;Generated;Delivered;Retried;Failed";
 
     public void exportStatistics(HttpServletRequest request, JspWriter out)
     {

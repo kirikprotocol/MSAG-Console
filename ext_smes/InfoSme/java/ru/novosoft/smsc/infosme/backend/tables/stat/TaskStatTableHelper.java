@@ -3,6 +3,7 @@ package ru.novosoft.smsc.infosme.backend.tables.stat;
 import ru.novosoft.smsc.jsp.util.helper.statictable.*;
 import ru.novosoft.smsc.jsp.util.helper.statictable.cell.StringCell;
 import ru.novosoft.smsc.jsp.util.helper.statictable.column.TextColumn;
+import ru.novosoft.smsc.util.LocaleMessages;
 
 import java.util.*;
 import java.io.Writer;
@@ -15,13 +16,13 @@ import java.text.SimpleDateFormat;
  */
 public class TaskStatTableHelper extends PagedStaticTableHelper {
 
-  private final Column task = new TextColumn("taskName", "infosme.label.task", true);
-  private final Column activityStart = new TextColumn("activityStart", "infosme.label.activityStart", true);
-  private final Column activityEnd = new TextColumn("activityEnd", "infosme.label.activityEnd", true);
-  private final Column generated = new TextColumn("generated", "infosme.label.generated", true);
-  private final Column delivered = new TextColumn("delivered", "infosme.label.delivered", true);
-  private final Column retried = new TextColumn("retried", "infosme.label.retried", true);
-  private final Column failed = new TextColumn("failed", "infosme.label.failed", true);
+  private final TextColumn task = new TextColumn("taskName", "infosme.label.task", true);
+  private final TextColumn activityStart = new TextColumn("activityStart", "infosme.label.activityStart", true);
+  private final TextColumn activityEnd = new TextColumn("activityEnd", "infosme.label.activityEnd", true);
+  private final TextColumn generated = new TextColumn("generated", "infosme.label.generated", true);
+  private final TextColumn delivered = new TextColumn("delivered", "infosme.label.delivered", true);
+  private final TextColumn retried = new TextColumn("retried", "infosme.label.retried", true);
+  private final TextColumn failed = new TextColumn("failed", "infosme.label.failed", true);
 
   private final StatisticsDataSource ds;
   private final StatQuery filter;
@@ -109,6 +110,26 @@ public class TaskStatTableHelper extends PagedStaticTableHelper {
   public void exportCsv(Writer os) throws IOException {
     Set sortedResults = getStatsMap();
     SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yy HH:mm");
+    Locale csvLocale = locale;
+    if (csvLocale == null)
+      csvLocale = new Locale(LocaleMessages.DEFAULT_PREFERRED_LANGUAGE);
+    ResourceBundle bundle = ResourceBundle.getBundle(LocaleMessages.SMSC_BUNDLE_NAME, csvLocale);
+    // Export header
+    os.write(bundle.getString(task.getTitle()));
+    os.write(";");
+    os.write(bundle.getString(activityStart.getTitle()));
+    os.write(";");
+    os.write(bundle.getString(activityEnd.getTitle()));
+    os.write(";");
+    os.write(bundle.getString(generated.getTitle()));
+    os.write(";");
+    os.write(bundle.getString(delivered.getTitle()));
+    os.write(";");
+    os.write(bundle.getString(retried.getTitle()));
+    os.write(";");
+    os.write(bundle.getString(failed.getTitle()));
+    os.write("\r\n");
+    // Export table
     for (Iterator iter = sortedResults.iterator(); iter.hasNext();) {
       Stat stat = (Stat) iter.next();
       os.write(stat.taskName);
@@ -125,7 +146,20 @@ public class TaskStatTableHelper extends PagedStaticTableHelper {
       os.write(";");
       os.write(String.valueOf(stat.failed));
       os.write("\r\n");
-    }    
+    }
+    // Export total data
+    os.write(bundle.getString("infosme.label.total"));
+    os.write(";");
+    os.write(";");
+    os.write(";");
+    os.write(String.valueOf(totalGenerated));
+    os.write(";");
+    os.write(String.valueOf(totalDelivered));
+    os.write(";");
+    os.write(String.valueOf(totalRetried));
+    os.write(";");
+    os.write(String.valueOf(totalFailed));
+    os.write("\r\n");
   }
 
   protected int calculateTotalSize() throws TableHelperException {
