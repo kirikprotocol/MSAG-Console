@@ -34,6 +34,7 @@ public:
     , p_badlyFormattedTransactionPortion = 2
     , p_incorrectTransactionPortion = 3
     , p_resourceLimitation = 4
+    , p_dialogueTimeout = 126
     , p_genericError = 127  //That's a max value allowed by protocol
   };
 
