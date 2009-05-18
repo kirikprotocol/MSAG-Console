@@ -32,16 +32,16 @@ void oneprint( const char* ptr )
     uint64_t utmp;
     memcpy(&utmp,ptr,8);
     HexDump hd;
-    std::string dump;
+    HexDump::string_type dump;
     hd.hexdump(dump,ptr,8);
-    dump.append(" str: ");
+    hd.addstr(dump," str: ");
     hd.strdump(dump,&utmp,8);
     printf("uint64: %llx, cvt16:%x, cvt32: %x, cvt64: %llx, dump: %s\n",
            utmp,
            EndianConverter::get16(ptr),
            EndianConverter::get32(ptr),
            EndianConverter::get64(ptr),
-           dump.c_str());
+           hd.c_str(dump));
 }
 
 int main()
