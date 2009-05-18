@@ -1,8 +1,10 @@
 #ifndef MOD_IDENT_OFF
-static char const ident[] = "$Id$";
+static char const ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_OFF */
 
 #include "inman/services/smbill/SmBilling.hpp"
+using smsc::inman::iaprvd::IAProvider;
+using smsc::inman::iaprvd::IAProviderITF;
 using smsc::inman::interaction::SerializerException;
 using smsc::inman::interaction::INPCSBilling;
 using smsc::inman::interaction::SPckChargeSmsResult;
@@ -21,7 +23,7 @@ using smsc::inman::smbill::_SMSubmitNO;
 #include "inman/comp/cap_sms/MOSM_RPCauses.hpp"
 using smsc::inman::comp::_RCS_MOSM_RPCause;
 
-#include "inman/INManErrors.hpp"
+//#include "inman/INManErrors.hpp"
 using smsc::inman::inap::_RCS_TC_Dialog;
 using smsc::inman::inap::TC_DlgError;
 
@@ -43,7 +45,22 @@ static const char *_chgPolicy[] = { "ON_SUBMIT", "ON_DELIVERY", "ON_DATA_COLLECT
 /* ************************************************************************** *
  * class SmBillManager implementation:
  * ************************************************************************** */
+//NOTE: _mutex SHOULD be locked upon entry!
+int SmBillManager::denyCharging(unsigned dlg_id, INManErrorId::Codes use_error)
+{
+    if (!_conn)
+        return -1;
 
+    SPckChargeSmsResult spck;
+    spck.Hdr().dlgId = dlg_id;
+    spck.Cmd().setValue(ChargeSmsResult::CHARGING_NOT_POSSIBLE);
+    spck.Cmd().setError(_RCS_INManErrors->mkhash(use_error),
+                        _RCS_INManErrors->explainCode(use_error).c_str());
+
+    smsc_log_debug(logger, "%s: <-- CHARGING_NOT_POSSIBLE (cause %u: %s)",
+                _logId, spck.Cmd().getError(), spck.Cmd().getMsg());
+    return _conn->sendPck(&spck);
+}
 /* -------------------------------------------------------------------------- *
  * ConnectListenerITF interface implementation:
  * -------------------------------------------------------------------------- */
@@ -57,45 +74,37 @@ void SmBillManager::onPacketReceived(Connect* conn, std::auto_ptr<SerializablePa
         smsc_log_error(logger, "%s: missed/unsupported cmd header", _logId);
         return;
     }
-    Billing* bill = NULL;
+    Billing * bill = NULL;
+    unsigned short  cmdId = (pck->pCmd())->Id();
     CsBillingHdr_dlg * srvHdr = static_cast<CsBillingHdr_dlg*>(pck->pHdr());
     {
         MutexGuard   grd(_mutex);
-        //delete died billings first
-        cleanUpWorkers();
         //assign command to Billing
         smsc_log_debug(logger, "%s: Cmd[0x%X] for Billing[%u] received", _logId,
-                       pck->pCmd()->Id(), srvHdr->dlgId);
-        
-        WorkersMap::iterator it = workers.find(srvHdr->dlgId);
-        if (it == workers.end()) {
-            if (workers.size() < _cfg.prm->maxBilling) {
-                bill = new Billing(srvHdr->dlgId, this, logger);
-                workers.insert(WorkersMap::value_type(srvHdr->dlgId, bill));
-            } else {
-                SPckChargeSmsResult spck;
-                spck.Cmd().setValue(ChargeSmsResult::CHARGING_NOT_POSSIBLE);
-                spck.Cmd().setError(
-                    _RCS_INManErrors->mkhash(INManErrorId::cfgLimitation),
-                    _RCS_INManErrors->explainCode(INManErrorId::cfgLimitation).c_str());
-                spck.Hdr().dlgId = srvHdr->dlgId;
-                _conn->sendPck(&spck);
-                smsc_log_warn(logger, "%s: maxBilling limit reached: %u", _logId,
-                              _cfg.prm->maxBilling);
+                       cmdId, srvHdr->dlgId);
 
+        if (!isRunning() && (cmdId == INPCSBilling::CHARGE_SMS_TAG)) {
+            denyCharging(srvHdr->dlgId, INManErrorId::srvInoperative); //ignore sending result here
+            return;
+        }
+
+        bill = (Billing *)getWorker(srvHdr->dlgId);
+        if (!bill) {
+            if (numWorkers() < _cfg.prm->maxBilling) {
+                insWorker(bill = new Billing(srvHdr->dlgId, this, logger));
+            } else {
+                denyCharging(srvHdr->dlgId, INManErrorId::cfgLimitation); //ignore sending result here
+                smsc_log_warn(logger, "%s: maxBilling limit reached: %u", _logId,
+                            _cfg.prm->maxBilling);
                 if (logger->isDebugEnabled()) {
                     std::string dump;
                     format(dump, "%s: Workers [%u of %u]: ", _logId,
-                           workers.size(), _cfg.prm->maxBilling);
-                    for (it = workers.begin(); it != workers.end(); ++it) {
-                        Billing* worker = (Billing*)(it->second);
-                        format(dump, "%u:%u, ", worker->getId(), worker->getState());
-                    }
+                           numWorkers(), _cfg.prm->maxBilling);
+                    dumpWorkers(dump);
                     smsc_log_debug(logger, dump.c_str());
                 }   
             }
-        } else
-            bill = (Billing*)(it->second);
+        }
     } //grd off
     if (bill)
         bill->handleCommand(pck);
@@ -110,6 +119,13 @@ Billing::~Billing()
     MutexGuard grd(_sync);
     doCleanUp();
     smsc_log_debug(logger, "%s: Deleted", _logId);
+}
+
+//Prints some information about worker state/status
+void Billing::logState(std::string & use_str) const
+{
+    MutexGuard grd(_sync);
+    format(use_str, "%u{%u}", _wId, state);
 }
 
 //returns true if required (depending on chargeMode) CDR data fullfilled
@@ -229,7 +245,7 @@ void Billing::handleCommand(INPPacketAC* pck)
 void Billing::Abort(const char * reason/* = NULL*/)
 {
     MutexGuard grd(_sync);
-    abortThis(reason,  false);
+    abortThis(reason);
 }
 
 /* ---------------------------------------------------------------------------------- *
@@ -290,7 +306,7 @@ unsigned Billing::writeCDR(void)
     return cnt;
 }
 
-void Billing::doFinalize(bool doReport/* = true*/)
+void Billing::doFinalize(void)
 {
     unsigned cdrs = 0;
     if (_cfg.prm->cdrMode && BillComplete() && _cfg.bfs.get())
@@ -304,14 +320,15 @@ void Billing::doFinalize(bool doReport/* = true*/)
             abNumber.getSignals(), abCsi.abRec.type2Str(), cdrs);
 
     doCleanUp();
-    if (doReport) {
-        state = bilComplete;
-        _mgr->workerDone(this);
-    }
-    return;
+    if (state != bilAborted)
+      state = bilComplete;
+    _mgr->workerDone(this);
 }
 
-void Billing::abortThis(const char * reason/* = NULL*/, bool doReport/* = true*/)
+//FSM switching:
+//  entry:  [ any state ]
+//  return: [ bilAborted, bilReported ]
+void Billing::abortThis(const char * reason/* = NULL*/)
 {
     smsc_log_error(logger, "%s: Aborting at state %u%s%s",
                    _logId, state, reason ? ", reason: " : "", reason ? reason : "");
@@ -319,8 +336,9 @@ void Billing::abortThis(const char * reason/* = NULL*/, bool doReport/* = true*/
         unrefCAPSmTask();
         abortCAPSmTask();
     }
-    state = Billing::bilAborted;
-    doFinalize(doReport);
+    if (state < bilReported)
+      state = Billing::bilAborted;
+    doFinalize();
 }
 
 

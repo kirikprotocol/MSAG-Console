@@ -1,16 +1,17 @@
-#pragma ident "$Id$"
 /* ************************************************************************* *
  * Abonent Detector service types and helpers definitions
  * ************************************************************************* */
 #ifndef __INMAN_ICS_ABNT_DETECTOR_DEFS__
+#ident "@(#)$Id$"
 #define __INMAN_ICS_ABNT_DETECTOR_DEFS__
 
 #include "inman/services/ICSrvDefs.hpp"
-using smsc::inman::ICSIdsSet;
 
 namespace smsc {
 namespace inman {
 namespace abdtcr {
+
+using smsc::inman::ICSIdsSet;
 
 //Abonent Detector service configuration parameters (from config.xml)
 struct AbntDetectorXCFG {

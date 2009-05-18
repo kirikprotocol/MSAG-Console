@@ -1,8 +1,9 @@
 #ifndef MOD_IDENT_OFF
-static char const ident[] = "$Id$";
+static char const ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_OFF */
 
 #include "inman/services/abdtcr/AbntDetector.hpp"
+using smsc::inman::iaprvd::IAProviderITF;
 using smsc::inman::interaction::SerializerException;
 using smsc::inman::interaction::INPCSAbntContract;
 using smsc::inman::interaction::SPckContractResult;
@@ -19,6 +20,21 @@ namespace abdtcr {
 /* ************************************************************************** *
  * class AbntDetectorManager implementation:
  * ************************************************************************** */
+//NOTE: _mutex SHOULD be locked upon entry!
+int AbntDetectorManager::denyRequest(unsigned dlg_id, INManErrorId::Codes use_error)
+{
+    if (!_conn)
+        return -1;
+
+    SPckContractResult spck;
+    spck.Hdr().dlgId = dlg_id;
+    spck.Cmd().setError(_RCS_INManErrors->mkhash(use_error),
+                        _RCS_INManErrors->explainCode(use_error).c_str());
+
+    smsc_log_debug(logger, "%s: <-- AbntDet[%u], errCode %u: %s",
+                   _logId, dlg_id, spck.Cmd().errorCode(), spck.Cmd().errorMsg());
+    return _conn->sendPck(&spck);
+}
 
 /* -------------------------------------------------------------------------- *
  * ConnectListenerITF interface implementation:
@@ -27,7 +43,6 @@ void AbntDetectorManager::onPacketReceived(Connect* conn,
                                 std::auto_ptr<SerializablePacketAC>& recv_cmd)
                                 /*throw(std::exception)*/
 {
-    //check service header
     INPPacketAC* pck = static_cast<INPPacketAC*>(recv_cmd.get());
     //check for header
     if (!pck->pHdr() || ((pck->pHdr())->Id() != INPCSAbntContract::HDR_DIALOG)) {
@@ -39,52 +54,39 @@ void AbntDetectorManager::onPacketReceived(Connect* conn,
     if (pck->pCmd()->Id() != INPCSAbntContract::ABNT_CONTRACT_REQUEST_TAG) {
         smsc_log_error(logger, "%s: illegal Cmd[0x%X] received", _logId,
                        pck->pCmd()->Id());
-
-        SPckContractResult spck;
-        spck.Hdr().dlgId = srvHdr->dlgId;
-        spck.Cmd().setError(
-            _RCS_INManErrors->mkhash(INManErrorId::protocolGeneralError),
-            _RCS_INManErrors->explainCode(INManErrorId::protocolGeneralError).c_str());
-
-        _conn->sendPck(&spck); //ignore sending failure here !!!
-    } else {
-        smsc_log_debug(logger, "%s: Cmd[0x%X] for AbntDet[%u] received", _logId,
-                       pck->pCmd()->Id(), srvHdr->dlgId);
+        denyRequest(srvHdr->dlgId, INManErrorId::protocolGeneralError);
+        //ignore sending failure here !!!
+        return;
     }
-
-    AbonentDetector* dtr = NULL;
+    AbonentDetector * dtr = NULL;
     {
         MutexGuard   grd(_mutex);
-        cleanUpWorkers();
-        
-        WorkersMap::iterator it = workers.find(srvHdr->dlgId);
-        if (it == workers.end()) {
-            if (workers.size() < _cfg.maxRequests) {
-                dtr = new AbonentDetector(srvHdr->dlgId, this, logger);
-                workers.insert(WorkersMap::value_type(srvHdr->dlgId, dtr));
+        smsc_log_debug(logger, "%s: Cmd[0x%X] for AbntDet[%u] received", _logId,
+                       pck->pCmd()->Id(), srvHdr->dlgId);
+        if (!isRunning()) {
+            denyRequest(srvHdr->dlgId, INManErrorId::srvInoperative); //ignore sending result here
+            return;
+        }
+
+        dtr = (AbonentDetector *)getWorker(srvHdr->dlgId);
+        if (!dtr) {
+            if (numWorkers() < _cfg.maxRequests) {
+                insWorker(dtr = new AbonentDetector(srvHdr->dlgId, this, logger));
             } else {
-                SPckContractResult spck;
-                spck.Cmd().setError(
-                    _RCS_INManErrors->mkhash(INManErrorId::cfgLimitation),
-                    _RCS_INManErrors->explainCode(INManErrorId::cfgLimitation).c_str());
-                spck.Hdr().dlgId = srvHdr->dlgId;
-                _conn->sendPck(&spck);
                 smsc_log_error(logger, "%s: maxRequests limit reached: %u", _logId,
-                              _cfg.maxRequests);
+                            _cfg.maxRequests);
+                denyRequest(srvHdr->dlgId, INManErrorId::cfgLimitation); //ignore sending result here
 
                 if (logger->isDebugEnabled()) {
                     std::string dump;
                     format(dump, "%s: Workers [%u of %u]: ", _logId,
-                           workers.size(), _cfg.maxRequests);
-                    for (it = workers.begin(); it != workers.end(); it++) {
-                        format(dump, "[%u], ", ((*it).second)->getId());
-                    }
+                           numWorkers(), _cfg.maxRequests);
+                    dumpWorkers(dump);
                     smsc_log_debug(logger, dump.c_str());
                 }   
             }
-        } else
-            dtr = (AbonentDetector*)(it->second);
-    }
+        }
+    } //grd off
     if (dtr)
         dtr->handleCommand(pck);
     return;
@@ -123,7 +125,14 @@ const char * AbonentDetector::State2Str(ADState st)
 /* -------------------------------------------------------------------------- *
  * WorkerAC interface implementation:
  * -------------------------------------------------------------------------- */
- //NOTE: it's the processing graph entry point, so locks Mutex !!!
+//Prints some information about worker state/status
+void AbonentDetector::logState(std::string & use_str) const
+{
+    MutexGuard grd(_mutex);
+    format(use_str, "%u{%u}", _wId, _state);
+}
+
+//NOTE: it's the processing graph entry point, so locks Mutex !!!
 void AbonentDetector::handleCommand(INPPacketAC* pck)
 {
     MutexGuard  grd(_mutex);

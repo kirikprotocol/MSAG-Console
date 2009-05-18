@@ -1,4 +1,3 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
  * Abonent Detector: implements abonent contract and gsmSCF parameters
  * determination logic:
@@ -6,26 +5,27 @@
  * 2) determination of IN platform and configuring its dialog parameters
  * ************************************************************************** */
 #ifndef __INMAN_ABNT_DETECTOR_HPP
+#ident "@(#)$Id$"
 #define __INMAN_ABNT_DETECTOR_HPP
 
+#include "inman/abprov/IAProvider.hpp"
+#include "inman/interaction/msgdtcr/MsgContract.hpp"
 #include "inman/services/abdtcr/AbntDtcrManager.hpp"
+
+namespace smsc {
+namespace inman {
+namespace abdtcr {
+
 using smsc::inman::tcpsrv::WorkerAC;
 using smsc::core::timers::TimerListenerITF;
 using smsc::core::timers::TimeWatcherITF;
 using smsc::core::timers::TimerHdl;
 using smsc::core::timers::OPAQUE_OBJ;
-
-#include "inman/abprov/IAProvider.hpp"
 using smsc::inman::iaprvd::IAPQueryListenerITF;
 using smsc::inman::iaprvd::AbonentSubscription;
-
-#include "inman/interaction/msgdtcr/MsgContract.hpp"
+using smsc::inman::interaction::INPPacketAC;
 using smsc::inman::interaction::AbntContractReqHandlerITF;
 using smsc::inman::interaction::AbntContractRequest;
-
-namespace smsc {
-namespace inman {
-namespace abdtcr {
 
 class AbonentDetector : public WorkerAC, IAPQueryListenerITF,
                      TimerListenerITF, AbntContractReqHandlerITF {
@@ -47,6 +47,7 @@ public:
     inline const char * State2Str(void) { return State2Str(_state); }
 
     //-- WorkerAC interface
+    void logState(std::string & use_str) const;
     void handleCommand(INPPacketAC* cmd);
     void Abort(const char * reason = NULL); //aborts billing due to fatal error
 

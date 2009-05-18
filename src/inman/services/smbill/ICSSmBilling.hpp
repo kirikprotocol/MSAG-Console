@@ -1,19 +1,20 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
  * SMS/USSD messages billing service.
  * ************************************************************************** */
 #ifndef __INMAN_ICS_SMBILLING_HPP
+#ident "@(#)$Id$"
 #define __INMAN_ICS_SMBILLING_HPP
 
 #include "inman/services/smbill/SmBillManager.hpp"
-using smsc::inman::ICServiceAC_T;
-using smsc::inman::tcpsrv::ConnServiceITF;
-using smsc::inman::tcpsrv::ConnectManagerAC;
-using smsc::inman::filestore::InFileStorageRoller;
 
 namespace smsc {
 namespace inman {
 namespace smbill {
+
+using smsc::inman::ICServiceAC_T;
+using smsc::inman::tcpsrv::ConnServiceITF;
+using smsc::inman::tcpsrv::ConnectManagerAC;
+using smsc::inman::filestore::InFileStorageRoller;
 
 //SMS/USSD messages billing service.
 class ICSSmBilling : public ICServiceAC_T<SmBillingXCFG>,
@@ -32,7 +33,7 @@ protected:
     // ---------------------------------
     // -- ICServiceAC interface methods
     // --------------------------------- 
-    inline Mutex & _icsSync(void) const { return _sync; }
+    Mutex & _icsSync(void) const { return _sync; }
     //Initializes service verifying that all dependent services are inited
     RCode _icsInit(void);
     //Starts service verifying that all dependent services are started
@@ -57,7 +58,7 @@ public:
     }
 
     //Returns ConnServiceITF
-    inline void * Interface(void) const { return (ConnServiceITF*)this; }
+    void * Interface(void) const { return (ConnServiceITF*)this; }
 
     // -------------------------------------
     // ConnServiceITF interface methods:

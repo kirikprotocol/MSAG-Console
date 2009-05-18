@@ -1,8 +1,9 @@
 #ifndef MOD_IDENT_OFF
-static char const ident[] = "$Id$";
+static char const ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_OFF */
 
 #include "inman/services/abdtcr/ICSAbntDtcr.hpp"
+using smsc::inman::iapmgr::IAPManagerITF;
 using smsc::core::timers::TimeWatchersRegistryITF;
 using smsc::inman::tcpsrv::TCPServerITF;
 

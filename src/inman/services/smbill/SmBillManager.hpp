@@ -1,38 +1,35 @@
-#pragma ident "$Id$"
 /* ************************************************************************* *
  * BillingManager: manages SM/USSD messages billing requests on given
  * Connect in asynchronous mode.
  * ************************************************************************* */
 #ifndef __INMAN_BILLING_MANAGER_HPP
+#ident "@(#)$Id$"
 #define __INMAN_BILLING_MANAGER_HPP
 
+#include "inman/INManErrors.hpp"
 #include "inman/storage/CDRStorage.hpp"
-using smsc::inman::filestore::InBillingFileStorage;
-
 #include "inman/incache/AbCacheDefs.hpp"
-using smsc::inman::cache::AbonentCacheITF;
-
 #include "inman/services/iapmgr/IAPMgrDefs.hpp"
-using smsc::inman::iapmgr::IAPManagerITF;
-using smsc::inman::iapmgr::AbonentPolicy;
-
 #include "inman/services/tcpsrv/TCPSrvDefs.hpp"
-using smsc::inman::tcpsrv::ConnectManagerT;
-
 #include "inman/services/tmwatch/TimeWatcher.hpp"
-using smsc::core::timers::TimeoutHDL;
-
 #include "inman/services/scheduler/TaskSchedulerDefs.hpp"
-using smsc::util::TaskSchedulerFactoryITF;
-
 #include "inman/services/smbill/SmBillDefs.hpp"
-
 #include "inman/inap/TCDspDefs.hpp"
-using smsc::inman::inap::TCAPDispatcherITF;
 
 namespace smsc   {
 namespace inman  {
 namespace smbill {
+
+using smsc::inman::INManErrorId;
+using smsc::inman::filestore::InBillingFileStorage;
+using smsc::inman::cache::AbonentCacheITF;
+using smsc::inman::iapmgr::AbonentPolicy;
+using smsc::inman::interaction::Connect;
+using smsc::inman::tcpsrv::ConnectManagerT;
+using smsc::core::timers::TimeoutHDL;
+using smsc::util::TaskSchedulerFactoryITF;
+using smsc::inman::inap::TCAPDispatcherITF;
+
 
 struct SmBillingCFG {
     std::auto_ptr<SmBillParams> prm; //core SM billing parameters
@@ -59,6 +56,11 @@ struct SmBillingCFG {
 };
 
 class SmBillManager: public ConnectManagerT<SmBillingCFG> {
+protected:
+    //Composes and sends ChargeSmsResult packet
+    //returns -1 on error, or number of total bytes sent
+    int denyCharging(unsigned dlg_id, INManErrorId::Codes use_error);
+
 public: 
     SmBillManager(const SmBillingCFG & cfg, unsigned cm_id,
                             Connect* conn, Logger * uselog = NULL)

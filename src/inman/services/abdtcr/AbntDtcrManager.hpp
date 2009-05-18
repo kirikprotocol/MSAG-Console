@@ -1,29 +1,28 @@
-#pragma ident "$Id$"
 /* ************************************************************************* *
  * AbntDetectorManager: manages abonent contract requests on given Connect
  * in asynchronous mode.
  * ************************************************************************* */
 #ifndef __INMAN_ABNT_DETECTOR_MGR_HPP
+#ident "@(#)$Id$"
 #define __INMAN_ABNT_DETECTOR_MGR_HPP
 
 #include "inman/incache/AbCacheDefs.hpp"
-using smsc::inman::cache::AbonentCacheITF;
-
 #include "inman/services/iapmgr/IAPMgrDefs.hpp"
-using smsc::inman::iapmgr::IAPManagerITF;
-using smsc::inman::iapmgr::AbonentPolicy;
-
 #include "inman/services/tcpsrv/TCPSrvDefs.hpp"
-using smsc::inman::tcpsrv::ConnectManagerT;
-
 #include "inman/services/tmwatch/TimeWatcher.hpp"
-using smsc::core::timers::TimeoutHDL;
-
 #include "inman/services/abdtcr/AbntDtcrDefs.hpp"
+#include "inman/INManErrors.hpp"
 
 namespace smsc {
 namespace inman {
 namespace abdtcr {
+
+using smsc::inman::INManErrorId;
+using smsc::inman::cache::AbonentCacheITF;
+using smsc::inman::iapmgr::AbonentPolicy;
+using smsc::inman::tcpsrv::ConnectManagerT;
+using smsc::inman::interaction::Connect;
+using smsc::core::timers::TimeoutHDL;
 
 struct AbonentDetectorCFG {
     bool                useCache;       //use abonents contract data cache
@@ -48,6 +47,11 @@ struct AbonentDetectorCFG {
 };
 
 class AbntDetectorManager: public ConnectManagerT<AbonentDetectorCFG> {
+protected:
+    //Composes and sends ContractResult packet
+    //returns -1 on error, or number of total bytes sent
+    int denyRequest(unsigned dlg_id, INManErrorId::Codes use_error);
+
 public: 
     AbntDetectorManager(const AbonentDetectorCFG & cfg, uint32_t cm_id,
                         Connect* use_conn, Logger * uselog)

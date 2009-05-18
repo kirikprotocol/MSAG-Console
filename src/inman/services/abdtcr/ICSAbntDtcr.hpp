@@ -1,21 +1,21 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
  * Abonent contract and gsmSCF parameters determination service.
  * ************************************************************************** */
 #ifndef __INMAN_ICS_ABNT_DETECTOR__
+#ident "@(#)$Id$"
 #define __INMAN_ICS_ABNT_DETECTOR__
 
 #include "inman/common/ObjRegistryT.hpp"
-using smsc::util::POBJRegistry_T;
-
 #include "inman/services/abdtcr/AbntDtcrManager.hpp"
-using smsc::inman::ICServiceAC_T;
-using smsc::inman::tcpsrv::ConnServiceITF;
-using smsc::inman::tcpsrv::ConnectManagerAC;
 
 namespace smsc {
 namespace inman {
 namespace abdtcr {
+
+using smsc::util::POBJRegistry_T;
+using smsc::inman::ICServiceAC_T;
+using smsc::inman::tcpsrv::ConnServiceITF;
+using smsc::inman::tcpsrv::ConnectManagerAC;
 
 //Abonent detector service
 class ICSAbntDetector : public ICServiceAC_T<AbntDetectorXCFG>,
@@ -33,11 +33,11 @@ protected:
     // ---------------------------------
     // -- ICServiceAC interface methods
     // --------------------------------- 
-    inline Mutex & _icsSync(void) const { return _sync; }
+    Mutex & _icsSync(void) const { return _sync; }
     //Initializes service verifying that all dependent services are inited
     RCode _icsInit(void);
     //Starts service verifying that all dependent services are started
-    inline RCode _icsStart(void) { return ICServiceAC::icsRcOk; }
+    RCode _icsStart(void) { return ICServiceAC::icsRcOk; }
     //Stops service
     void  _icsStop(bool do_wait = false);
 
@@ -57,7 +57,7 @@ public:
     }
 
     //Returns ConnServiceITF
-    inline void * Interface(void) const { return (ConnServiceITF*)this; }
+    void * Interface(void) const { return (ConnServiceITF*)this; }
 
     // -------------------------------------
     // ConnServiceITF interface methods:

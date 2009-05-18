@@ -1,23 +1,26 @@
 /* ************************************************************************* *
- * 
+ * ConnectManagerT: generalizes implementation of ConnectListenerITF for
+ * handling INMan asynchronous TCP protocols.
  * ************************************************************************* */
 #ifndef __SMSC_INMAN_CONNECT_MANAGER_HPP
 #ident "@(#)$Id$"
 #define __SMSC_INMAN_CONNECT_MANAGER_HPP
 
 #include "inman/interaction/connect.hpp"
-using smsc::inman::interaction::Connect;
-using smsc::inman::interaction::ConnectListenerITF;
-
 #include "inman/interaction/messages.hpp"
-using smsc::inman::interaction::INPPacketAC;
 
 namespace smsc {
 namespace inman {
 namespace tcpsrv {
 
+using smsc::inman::interaction::Connect;
+using smsc::inman::interaction::ConnectListenerITF;
+using smsc::inman::interaction::INPPacketAC;
+
 class ConnectManagerAC;
 
+//NOTE: worker MUST notify ConnectManagerAC about its completion by
+//      calling ConnectManagerAC::workerDone()
 class WorkerAC {
 protected:
     unsigned            _wId; //unique worker id
@@ -32,50 +35,106 @@ public:
 
     unsigned getId(void) const { return _wId; }
 
-    virtual void     handleCommand(INPPacketAC* cmd) = 0;
-    virtual void     Abort(const char * reason = NULL) = 0;
+    //Prints some information about worker state/status
+    virtual void    logState(std::string & use_str) const = 0;
+    //
+    virtual void    handleCommand(INPPacketAC* cmd) = 0;
+    //
+    virtual void    Abort(const char * reason = NULL) = 0;
 };
 
 #define MAX_CONNECT_MGR_NAME 50
 class ConnectManagerAC : public ConnectListenerITF {
-protected:
+private:
     typedef std::map<unsigned, WorkerAC*>   WorkersMap;
-    typedef std::list<WorkerAC*>            WorkerList;
+    typedef std::list<WorkerAC*>            WorkersList;
 
+    WorkersMap    _workers; //workers registry, may contain NULL !!!
+    WorkersList   _corpses; //died workers are to delete
+
+    volatile bool         _running;
+    WorkersMap::iterator  _itLocked; //node of workers registry that is locked
+                                     //(cann't be erased)
+
+    //NOTE: _mutex SHOULD NOT be locked upon entry!
+    void cleanUpWorkers(void)
+    {
+        MutexGuard grd(_mutex);
+        if (!_corpses.empty()) {
+          do {
+            WorkerAC * pWorker = _corpses.front();
+            _corpses.pop_front();
+            {
+              ReverseMutexGuard rGrd(_mutex);
+              delete pWorker;
+            }
+          } while (!_corpses.empty());
+        }
+    }
+
+protected:
     Mutex       _mutex;
     unsigned    _cmId;
     Connect*    _conn;
     Logger*     logger;
-    WorkersMap   workers;
-    WorkerList  corpses;
     //logging prefix, f.ex: "ConnectManagerAC[%u]"
     char        _logId[MAX_CONNECT_MGR_NAME + sizeof("[%u]") + sizeof(unsigned)*3 + 1];
 
-    inline void cleanUpWorkers(void)
+    bool isWIdLocked(unsigned w_id) const
     {
-        if (!corpses.empty()) {
-            for (WorkerList::iterator it = corpses.begin(); it != corpses.end(); ++it)
-                delete (*it);
-            corpses.clear();
-        }
+        return ((_itLocked != _workers.end()) && (w_id == _itLocked->first));
     }
+
+    unsigned numWorkers(void) const
+    {
+        return (unsigned)_workers.size();
+    }
+    //
+    void dumpWorkers(std::string & dump) const
+    {
+      for (WorkersMap::const_iterator it = _workers.begin(); it != _workers.end(); ++it) {
+          if (it->second) {
+              it->second->logState(dump);
+              dump += ", ";
+          }
+      }
+    }
+    //
+    WorkerAC * getWorker(unsigned w_id)
+    {
+        WorkersMap::iterator it = _workers.find(w_id);
+        return it != _workers.end() ? it->second : NULL;
+    }
+
+    bool insWorker(WorkerAC * p_worker)
+    {
+        std::pair<WorkersMap::iterator, bool> res = 
+          _workers.insert(WorkersMap::value_type(p_worker->getId(), p_worker));
+        return res.second;
+    }
+
+    bool isRunning(void) const { return _running; }
 
 public:
     ConnectManagerAC(unsigned cm_id, Connect* conn, Logger * uselog = NULL)
-        : _cmId(cm_id), _conn(conn), logger(uselog)
-    { _logId[0] = 0; }
+        : _running(true), _cmId(cm_id), _conn(conn), logger(uselog)
+    {
+      _logId[0] = 0;
+      _itLocked = _workers.end();
+    }
 
     virtual ~ConnectManagerAC()
     {
-        Abort("Connect destroyed"); //abort active workers
-        MutexGuard grd(_mutex);
-        cleanUpWorkers();   //delete died workers
+        Abort("Connect destroyed"); //abort active _workers
+        cleanUpWorkers();   //delete died _workers
     }
 
     unsigned cmId(void) const { return _cmId; }
 
     CustomException * connectError(void) const
-    { return _conn ? _conn->hasException() : NULL; }
+    {
+      return _conn ? _conn->hasException() : NULL;
+    }
 
     void Bind(Connect* use_conn)
     {
@@ -84,43 +143,46 @@ public:
     }
 
     //sends command, returns true on success
-    virtual bool sendCmd(INPPacketAC* cmd)
+    bool sendCmd(INPPacketAC* cmd)
     {
         MutexGuard  grd(_mutex);
         return (_conn ? (bool)(_conn->sendPck(cmd) > 0) : false);
     }
 
-    virtual void workerDone(WorkerAC* worker)
+    void workerDone(WorkerAC * p_worker)
     {
-        MutexGuard grd(_mutex);
         cleanUpWorkers();   //delete died workers first
 
-        unsigned int wId = worker->getId();
-        WorkersMap::iterator it = workers.find(wId);
-        if (it == workers.end())
+        MutexGuard grd(_mutex);
+        unsigned int wId = p_worker->getId();
+        WorkersMap::iterator it = _workers.find(wId);
+        if (it == _workers.end())
             smsc_log_error(logger, "%s: Attempt to free unregistered Worker[%u]",
                             _logId, wId);
+        else if (isWIdLocked(wId))
+            it->second = NULL;  //keep node intact, just mark it as unused
         else
-            workers.erase(it);
-        corpses.push_back(worker);
+            _workers.erase(it);
+        _corpses.push_back(p_worker);
         return;
     }
 
-    virtual void Abort(const char * reason = NULL)
+    void Abort(const char * reason = NULL)
     {
         MutexGuard grd(_mutex);
-        if (!workers.empty()) { //abort all active workers
-            if (reason && reason[0])
-                smsc_log_error(logger, "%s: aborting, reason: %s", _logId, reason);
-            else
-                smsc_log_error(logger, "%s: aborting ..", _logId);
+        _running = false; //no new worker will be created
+        if (reason && reason[0])
+            smsc_log_error(logger, "%s: aborting, reason: %s", _logId, reason);
+        else
+            smsc_log_error(logger, "%s: aborting ..", _logId);
 
-            for (WorkersMap::iterator it = workers.begin(); it != workers.end(); ++it) {
-                WorkerAC * worker = it->second;
-                worker->Abort(reason);
-                corpses.push_back(worker);
+        if (!_workers.empty()) { //abort all active _workers
+            for (_itLocked = _workers.begin(); _itLocked != _workers.end(); ++_itLocked) {
+                if (_itLocked->second) {
+                    ReverseMutexGuard rGrd(_mutex);
+                    _itLocked->second->Abort(reason);
+                }
             }
-            workers.clear();
         }
     }
 

@@ -5,6 +5,7 @@ static char const ident[] = "$Id$";
 #include "inman/services/smbill/ICSSmBilling.hpp"
 using smsc::core::timers::TimeWatchersRegistryITF;
 using smsc::inman::tcpsrv::TCPServerITF;
+using smsc::inman::iapmgr::IAPManagerITF;
 
 #include "inman/interaction/msgbill/MsgBilling.hpp"
 using smsc::inman::interaction::INPCSBilling;

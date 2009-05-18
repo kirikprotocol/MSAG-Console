@@ -43,6 +43,7 @@ using smsc::util::ScheduledTaskAC;
 using smsc::inman::iaprvd::IAPQueryListenerITF;
 using smsc::inman::iaprvd::AbonentSubscription;
 using smsc::inman::tcpsrv::WorkerAC;
+using smsc::inman::interaction::INPPacketAC;
 using smsc::inman::interaction::SMCAPSpecificInfo;
 
 
@@ -122,8 +123,8 @@ private:
     bool verifyChargeSms(void);
     void doCleanUp(void);
     unsigned writeCDR(void);
-    void doFinalize(bool doReport = true);
-    void abortThis(const char * reason = NULL, bool doReport = true);
+    void doFinalize(void);
+    void abortThis(const char * reason = NULL);
     RCHash startCAPSmTask(void);
     bool unrefCAPSmTask(bool wait_report = true);
     void abortCAPSmTask(void);
@@ -176,6 +177,7 @@ public:
     bool     BillComplete(void) const;
 
     //-- WorkerAC interface methods
+    void     logState(std::string & use_str) const;
     void     handleCommand(INPPacketAC* cmd);
     void     Abort(const char * reason = NULL); //aborts billing due to fatal error
 };
