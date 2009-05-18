@@ -45,13 +45,13 @@ namespace storage {
 
 std::string SerialBuffer::toString()
 {
-    std::string str;
     HexDump hd;
-    str.reserve(hd.hexdumpsize(length())+hd.strdumpsize(length())+2);
+    HexDump::string_type str;
+    str.reserve(hd.hexdumpsize(length())+hd.strdumpsize(length())+10);
     hd.hexdump(str,c_ptr(),length());
     hd.strdump(str,c_ptr(),length());
     // bufdump( str, c_ptr(), length() );
-    return str;
+    return hd.c_str(str);
 }
 
 

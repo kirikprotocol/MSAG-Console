@@ -12,17 +12,18 @@
 #include "core/synchronization/MutexGuard.hpp"
 #include "core/threads/Thread.hpp"
 #include "logger/Logger.h"
-#include "Serializer.h"
+#include "scag/util/io/Serializer.h"
 #include "StorageIface.h"
 #include "StorageNumbering.h"
-#include "GlossaryBase.h"
+#include "scag/util/io/GlossaryBase.h"
+#include "scag/pvss/profile/AbntAddr.hpp"
 
 // please comment out for BHS
 //#define USEPAGEFILE
 #ifdef USEPAGEFILE
 #include "PageFileDiskStorage.h"
 #else
-#include "BHDiskStorage.h"
+#include "BHDiskStorage2.h"
 #endif
 
 // please comment out for single storage
@@ -53,6 +54,7 @@ namespace {
 }
 
 
+#if 0
 /**
 * Файл содержит описание внутренней структуры данных для представления SMS
 * в системе SMS центра. Используется системой хранения.
@@ -361,7 +363,6 @@ public:
     Address abonentAddr;
 };
 
-
 Serializer& operator << ( Serializer& s, const CSessionKey& sk )
 {
     s << sk.abonentAddr.length << sk.abonentAddr.type << sk.abonentAddr.plan;
@@ -377,6 +378,9 @@ Deserializer& operator >> ( Deserializer& s, CSessionKey& sk )
     return s;
 }
 
+#endif // if 0
+
+typedef scag2::pvss::AbntAddr CSessionKey;
 
     class Session 
     {
@@ -395,11 +399,13 @@ Deserializer& operator >> ( Deserializer& s, CSessionKey& sk )
         void deserialize( Deserializer& pfb );
         const CSessionKey& getKey() const { return sessionKey; }
 
+/*
 #ifndef USEPAGEFILE
         // these two methods are necessary for BlocksHSStorage
         void Serialize( SerialBuffer& buf, bool = false, GlossaryBase* g = NULL ) const;
         void Deserialize( SerialBuffer& buf, bool = false, GlossaryBase* g = NULL );
 #endif
+ */
     
     private:
         Session( const Session& );
@@ -430,6 +436,7 @@ void Session::deserialize( Deserializer& pfb )
 }
 
 
+/*
 #ifndef USEPAGEFILE
 void Session::Serialize( SerialBuffer& buf, bool, GlossaryBase* g ) const
 {
@@ -445,6 +452,7 @@ void Session::Deserialize( SerialBuffer& buf, bool, GlossaryBase* g )
     deserialize( d );
 }
 #endif
+ */
 
     void Session::init()
     {
@@ -528,8 +536,8 @@ typedef ArrayedMemoryCache< CSessionKey, Session > MemStorage;
 typedef PageFileDiskStorage< CSessionKey, Session, DelayedPageFile > DiskDataStorage;
 #else
 // typedef HashedMemoryCache< CSessionKey, Session, DataBlockBackupTypeJuggling > MemStorage;
-typedef ArrayedMemoryCache< CSessionKey, Session, DataBlockBackupTypeJuggling > MemStorage;
-typedef BHDiskStorage< CSessionKey, Session > DiskDataStorage;
+typedef ArrayedMemoryCache< CSessionKey, Session, DataBlockBackupTypeJuggling2 > MemStorage;
+typedef BHDiskStorage2< CSessionKey, Session > DiskDataStorage;
 #endif
 typedef RBTreeIndexStorage< CSessionKey, DiskDataStorage::index_type > DiskIndexStorage;
 #ifdef USECOMPOSITE
@@ -542,6 +550,46 @@ typedef CachedDiskStorage< MemStorage, DiskStorage > SessionStorage;
 
 
 struct Config {
+
+    std::string helpMessage() const
+    {
+        char buf[10240];
+        snprintf
+            (buf,sizeof(buf),
+             "Usage: testrb\n"
+             "   The following envvars allowed:\n"
+             "mynode       specifies which node we work with among 5 (%u)\n"
+             "initrand     what is the initial random number (%u)\n"
+             "nocheck      =1 to skip initial check (%u)\n"
+             "indexgrowth  what is the size of the index file (%u)\n"
+             "cachesize    what is the size of cache (%u)\n"
+             "pagesize     what is the size of block in datafile (%u)\n"
+             "preallocate  what is the size of one data file in blocks (%u)\n"
+             "interval     what is the interval of abonents (%u)\n"
+             "pfdelay      the delay in pagefile, msec? (%u)\n"
+             "totalpasses  how many passes should be done (%u)\n"
+             "flushprob    the probability of flush (%u)\n"
+             "cleanprob    the probability of clean (%u)\n"
+             "minkilltime  the time after which kill may be issued (%u)\n"
+             "maxkilltime  the time before which kill may be issued (%u)\n",
+             unsigned(mynode),
+             unsigned(initrand),
+             unsigned(nocheck),
+             unsigned(indexgrowth),
+             unsigned(cachesize),
+             unsigned(pagesize),
+             unsigned(preallocate),
+             unsigned(interval),
+             unsigned(pfdelay),
+             unsigned(totalpasses),
+             unsigned(flushprob),
+             unsigned(cleanprob),
+             unsigned(minkilltime),
+             unsigned(maxkilltime) 
+             );
+        return buf;
+    }
+
 
     Config( smsc::logger::Logger* slogg ) {
 
@@ -729,6 +777,14 @@ int main( int argc, char** argv )
 
     Config cfg( slog );
 
+    if ( argc > 1 ) {
+        std::string sarg(argv[1]);
+        if ( sarg == "--help" ) {
+            fprintf( stderr, "%s\n", cfg.helpMessage().c_str() );
+        }
+        exit(-1);
+    }
+
     DataFileManager dataFileManager(4,400);
     std::auto_ptr< SessionStorage > store;
 
@@ -777,24 +833,31 @@ int main( int argc, char** argv )
                 pf->Create( fn, cfg.pagesize, cfg.preallocate );
             }
 #else
-            pf.reset( new DiskDataStorage::storage_type(dataFileManager,0,smsc::logger::Logger::getInstance("diskstore")) );
+            pf.reset( new DiskDataStorage::storage_type(dataFileManager,
+                                                        smsc::logger::Logger::getInstance("diskstore")) );
             int ret = -1;
             const std::string fn( cfg.storagename + storagesuffix + idxstr + "-data" );
             try {
-                ret = pf->Open( fn, cfg.storagepath );
+                // ret = pf->Open( fn, cfg.storagepath );
+                ret = pf->open( fn, cfg.storagepath );
             } catch (...) {
                 ret = -1;
             }
 
-            if ( ret < 0 ) pf->Create( fn,
-                                       cfg.storagepath,
-                                       cfg.preallocate,
-                                       cfg.pagesize );
+            if ( ret < 0 ) ret = pf->create( fn,
+                                             cfg.storagepath,
+                                             cfg.preallocate,
+                                             cfg.pagesize );
+            if ( ret < 0 ) {
+                smsc_log_fatal(slog,"cannot create storage %u",idx);
+                exit(-1);
+            }
 #endif
-            smsc_log_debug( slog, "pagefile storage %u is created", idx );
+            smsc_log_debug( slog, "storage %u is created", idx );
 
 
             dds.reset( new DiskDataStorage( pf.release(),
+                                            0, // glossary
                                             smsc::logger::Logger::getInstance("diskdata") ) );
             smsc_log_debug( slog, "data disk storage %u is created" );
 
@@ -815,7 +878,8 @@ int main( int argc, char** argv )
                                   cfg.cachesize ) );
         smsc_log_debug( slog, "memory storage is created" );
 
-        store.reset( new SessionStorage( ms.release(), ds.release() ) );
+        store.reset( new SessionStorage( ms.release(), ds.release(),
+                                         smsc::logger::Logger::getInstance("store" ) ) );
         smsc_log_debug( slog, "session storage is assembled" );
 
     } while ( false );
@@ -837,7 +901,7 @@ CSessionKey genKey( const Config& cfg )
         number = 89130000000ULL + random() % cfg.interval;
     } while ( StorageNumbering::instance().nodeByNumber(number) != cfg.mynode );
     int len = sprintf( buf, "%011llu", number );
-    return CSessionKey( Address(len,ton,npi,buf) );
+    return CSessionKey( len, ton, npi, buf );
 }
 
 
@@ -887,7 +951,7 @@ int testDiskIndexStorage( const Config& cfg, DiskIndexStorage* dis )
         if ( idx == 0 ) continue;
 
         // check index
-        DiskIndexStorage::index_type j = k.toIndex();
+        DiskIndexStorage::index_type j = k.getNumber(); // k.toIndex();
         ++filledcount;
         if ( idx != j ) {
             smsc_log_warn( slog, "WARNING: key-index mismatch: key=%s index=%lld",
@@ -938,7 +1002,7 @@ int testDiskIndexStorage( const Config& cfg, DiskIndexStorage* dis )
             // static_cast<long long>(sk.toIndex()) );
             // smsc_log_debug( slog, "adding key=%s idx=%lld", sk.toString().c_str(),
             // static_cast<long long>(sk.toIndex()) );
-            if ( dis->setIndex( sk, sk.toIndex() ) ) {
+            if ( dis->setIndex( sk, sk.getNumber() ) ) {
                 ++totalinserts;
             } else {
                 ++totalrestores;
@@ -1095,10 +1159,7 @@ unsigned int checkStorage( const Config& cfg, SessionStorage* store, bool& ok )
 #ifdef USEPAGEFILE
     Session& ss = s;
 #else
-    BlocksHSBackupData sd;
-    DataBlockBackup< Session > ss;
-    ss.value = &s;
-    ss.backup = &sd;
+    DataBlockBackup2< Session > ss( &s, new Serializer::Buf );
 #endif
 
     unsigned int count = 0;
@@ -1151,6 +1212,11 @@ unsigned int checkStorage( const Config& cfg, SessionStorage* store, bool& ok )
             ok = false;
         }
     }
+
+#ifndef USEPAGEFILE
+    ss.value = 0; // release val
+    ss.dealloc();
+#endif
 
     smsc_log_info( slog, "total items : %d", count );
 

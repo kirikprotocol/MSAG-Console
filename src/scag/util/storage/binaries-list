@@ -1,17 +1,29 @@
-scag/testrb	testrb	\
+scag/tests/testrb	testrb	\
+   -lscag-pvss-profile \
    -lscag-util-storage \
    -lscag-util \
+   -lscag-util-io \
    -lcore-buffers -lcore-threads \
    -lnsl \
    @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
    -lutil -lpthread -lrt -ldl
 
-scag/testlogger	testlogger	-lscag-util-storage -lcore-buffers -lnsl -L$(SMSC_BUILDDIR)/bin -llogger -lutil -lrt -ldl
-scag/pagefilecleanup pagefilecleanup -lscag-util-storage -lcore-buffers -lnsl -L$(SMSC_BUILDDIR)/bin -llogger -lutil -lrt -ldl
+scag/tests/testlogger	testlogger	\
+   -lscag-util-storage \
+   -lscag-util \
+   -lscag-util-io \
+   -lcore-buffers -lnsl -L$(SMSC_BUILDDIR)/bin -llogger -lutil -lrt -ldl
+
+scag/utils/pagefilecleanup pagefilecleanup \
+   -lscag-util-storage \
+   -lscag-util \
+   -lscag-util-io \
+   -lcore-buffers -lnsl -L$(SMSC_BUILDDIR)/bin -llogger -lutil -lrt -ldl
 
 scag/tests/test-blockshsstorage2  testbh2 \
    -lscag-util-storage \
    -lscag-util \
+   -lscag-util-io \
    -lcore-buffers -lcore-threads \
    @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
    -lutil -lpthread -lrt -ldl
@@ -21,6 +33,7 @@ scag/tests/test-blockshsstorage2  testbh2 \
    -lscag-pvss-data \
    -lscag-util-storage \
    -lscag-util \
+   -lscag-util-io \
    -lcore-buffers -lcore-threads \
    @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
    -lutil -lpthread -lrt -ldl

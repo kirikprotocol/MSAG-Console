@@ -244,9 +244,9 @@ public:
 
         if (log_ && log_->isDebugEnabled()) {
             HexDump hd;
-            std::string hex;
+            HexDump::string_type hex;
             hd.hexdump(hex,&buffer[initialPos],buffer.size()-initialPos);
-            std::string hdx;
+            HexDump::string_type hdx;
             if ( headers ) {
                 hd.hexdump(hdx,
                            &((*headers)[headers->size()-trailBlocks*navSize()]),
@@ -254,7 +254,7 @@ public:
             }
             smsc_log_debug(log_,"packBuffer buf: sz=%u %s hdr: %s",
                            unsigned(buffer.size()-initialPos),
-                           hex.c_str(), hdx.c_str() );
+                           hd.c_str(hex), hd.c_str(hdx) );
         }
 
         buffer.resize(oldSize+trailBlocks*navSize());
@@ -293,11 +293,11 @@ public:
 
         if (log_ && log_->isDebugEnabled()) {
             HexDump hd;
-            std::string hex;
+            HexDump::string_type hex;
             hd.hexdump(hex,&buffer[initialPos],buffer.size()-initialPos);
             smsc_log_debug(log_,"after pack: sz=%u %s",
                            unsigned(buffer.size()-initialPos),
-                           hex.c_str() );
+                           hd.c_str(hex) );
         }
     }
 
@@ -312,13 +312,13 @@ public:
 
         if (log_ && log_->isDebugEnabled()) {
             HexDump hd;
-            std::string hex;
+            HexDump::string_type hex;
             hd.hexdump(hex,&buffer[initialPos],buffer.size()-initialPos);
-            std::string hdx;
+            HexDump::string_type hdx;
             hd.hexdump(hdx,&headers[0],headers.size());
             smsc_log_debug(log_,"mergeHeaders buf: sz=%u %s hdr: %s",
                            unsigned(buffer.size()-initialPos),
-                           hex.c_str(), hdx.c_str() );
+                           hd.c_str(hex), hd.c_str(hdx) );
         }
 
         buffer_type::iterator optr = buffer.begin() + initialPos;
@@ -332,11 +332,11 @@ public:
 
         if (log_ && log_->isDebugEnabled()) {
             HexDump hd;
-            std::string hex;
+            HexDump::string_type hex;
             hd.hexdump(hex,&buffer[initialPos],buffer.size()-initialPos);
             smsc_log_debug(log_,"after merge: sz=%u %s",
                            unsigned(buffer.size()-initialPos),
-                           hex.c_str() );
+                           hd.c_str(hex) );
         }
     }
 
@@ -366,10 +366,11 @@ public:
 
         if (log_ && log_->isDebugEnabled()) {
             HexDump hd;
-            std::string hex;
+            HexDump::string_type hex;
             hd.hexdump(hex,&buffer[initialPos],buffer.size()-initialPos);
             smsc_log_debug(log_,"unpackBuffer buf: sz=%u %s", 
-                           unsigned(buffer.size()-initialPos), hex.c_str());
+                           unsigned(buffer.size()-initialPos),
+                           hd.c_str(hex));
         }
 
         buffer_type::iterator iptr = buffer.begin()+initialPos+idxSize()+trailBlocks*blockSize();
@@ -400,15 +401,15 @@ public:
 
         if (log_ && log_->isDebugEnabled()) {
             HexDump hd;
-            std::string hex;
+            HexDump::string_type hex;
             hd.hexdump(hex,&buffer[initialPos],buffer.size()-initialPos);
-            std::string hdx;
+            HexDump::string_type hdx;
             if ( headers ) {
                 hd.hexdump(hdx,&((*headers)[headers->size()-trailBlocks*navSize()]),trailBlocks*navSize());
             }
             smsc_log_debug(log_,"after unpack: buf: sz=%u %s hdr: %s",
                            unsigned(buffer.size()-initialPos),
-                           hex.c_str(), hdx.c_str() );
+                           hd.c_str(hex), hd.c_str(hdx) );
         }
     }
 
@@ -441,9 +442,9 @@ public:
 
         if (log_ && log_->isDebugEnabled()) {
             HexDump hd;
-            std::string hex;
+            HexDump::string_type hex;
             hd.hexdump(hex,buffer,bufferSize-initialPosition);
-            smsc_log_debug(log_,"extractBlocks buf: %s", hex.c_str());
+            smsc_log_debug(log_,"extractBlocks buf: %s", hd.c_str(hex));
         }
 
         offset_type headBlock = notUsed();
@@ -565,30 +566,32 @@ public:
         const size_t usedBlocks = countBlocks(dataSize);
         assert( offsets.size() > 0 && offsets.size() >= usedBlocks );
         // one index + nav per block + extra index if there is free blocks
-        posAndSize.resize( ( offsets.size() + 
-                             (( offsets.size() == usedBlocks ) ? 1 : 2) )*2 );
+        posAndSize.resize( ( offsets.size() +
+                             (usedBlocks == 0 ? 0 : 1) +    // if has used blocks
+                             ((offsets.size() == usedBlocks) ? 0 : 1) // if has free blocks
+                             ) * 2 );
         std::vector< offset_type >::iterator iter = posAndSize.begin();
         std::vector< offset_type >::const_iterator ofit = offsets.begin();
         if ( usedBlocks > 0 ) {
-            *iter = notUsed(); // skip index
-            *++iter = 0;
+            *iter++ = notUsed(); // skip index
+            *iter++ = 0;
             for ( ; dataSize > 0; ) {
-                *++iter = *ofit++;
+                *iter++ = *ofit++;
                 const size_t sz = std::min(dataSize,blockSize());
-                *++iter = sz;
+                *iter++ = sz;
                 dataSize -= sz;
             }
         }
         if ( ofit != offsets.end() ) {
             // free blocks
-            *++iter = notUsed(); // skip index
-            *++iter = 0;
+            *iter++ = notUsed(); // skip index
+            *iter++ = 0;
             for ( ; ofit != offsets.end(); ++ofit ) {
-                *++iter = *ofit;
-                *++iter = navSize();
+                *iter++ = *ofit;
+                *iter++ = navSize();
             }
         }
-        assert( ++iter == posAndSize.end() );
+        assert( iter == posAndSize.end() );
     }
 
 
@@ -636,9 +639,9 @@ public:
 
         if (log_ && log_->isDebugEnabled()) {
             HexDump hd;
-            std::string hex;
+            HexDump::string_type hex;
             if (headers.size()>0) { hd.hexdump(hex,&headers[0],headers.size()); }
-            smsc_log_debug( log_,"headers made: %s", hex.c_str());
+            smsc_log_debug( log_,"headers made: %s", hd.c_str(hex));
         }
     }
 
@@ -668,9 +671,9 @@ public:
         }
         if (log_ && log_->isDebugEnabled()) {
             HexDump hd;
-            std::string hex;
+            HexDump::string_type hex;
             hd.hexdump(hex,&profile[oldSize],profile.size()-oldSize);
-            smsc_log_debug( log_,"free chain made: %s", hex.c_str());
+            smsc_log_debug( log_,"free chain made: %s", hd.c_str(hex));
         }
         return newffb;
     }

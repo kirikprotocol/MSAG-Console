@@ -81,32 +81,56 @@ char* HexDump::utfdump( register char* outbuf,
 }
 
 
-void HexDump::hexdump( std::string& out, const void* inBuf, size_t insize )
-{
-    const size_t pos = out.size();
-    out.resize( out.size() + hexdumpsize(insize) );
-    hexdump( const_cast<char*>(out.c_str()) + pos, inBuf, insize );
-}
-
-void HexDump::strdump( std::string& out, const void* inBuf, size_t insize )
-{
-    const size_t pos = out.size();
-    out.resize( out.size() + strdumpsize(insize) );
-    strdump( const_cast<char*>(out.c_str()) + pos, inBuf, insize );
-}
-
-void HexDump::utfdump( std::string& out, const void* inBuf, size_t insize )
-{
-    const size_t pos = out.size();
-    out.resize( out.size() + utfdumpsize(insize) );
-    utfdump( const_cast<char*>(out.c_str()) + pos, inBuf, insize );
-}
-
 char* HexDump::addstr( char* outbuf, const char* cstring )
 {
     const size_t i = ::strlen( cstring );
     ::memcpy( outbuf, cstring, i );
     return outbuf + i;
+}
+
+
+void HexDump::hexdump( string_type& out, const void* inBuf, size_t insize )
+{
+    const size_t hexsz = hexdumpsize(insize) + 1;
+    size_t pos = out.size();
+    if ( pos > 0 && out.back() == '\0' ) {
+        --pos; // remove trailing zero
+    }
+    out.resize( pos + hexsz );
+    *hexdump( &out[pos], inBuf, insize ) = '\0';
+}
+
+void HexDump::strdump( string_type& out, const void* inBuf, size_t insize )
+{
+    const size_t strsz = strdumpsize(insize) + 1;
+    size_t pos= out.size();
+    if ( pos > 0 && out.back() == '\0' ) {
+        --pos; // remove trailing zero
+    }
+    out.resize( pos + strsz );
+    *strdump( &out[pos], inBuf, insize ) = '\0';
+}
+
+void HexDump::utfdump( string_type& out, const void* inBuf, size_t insize )
+{
+    const size_t utfsz = utfdumpsize(insize) + 1;
+    size_t pos= out.size();
+    if ( pos > 0 && out.back() == '\0' ) {
+        --pos; // remove trailing zero
+    }
+    out.resize( pos + utfsz );
+    utfdump( &out[pos], inBuf, insize );
+}
+
+void HexDump::addstr( string_type& out, const char* cstring )
+{
+    size_t pos = out.size();
+    if ( pos > 0 && out.back() == '\0' ) {
+        --pos;
+    }
+    const size_t i = ::strlen(cstring) + 1;
+    out.resize( pos + i );
+    ::memcpy( &out[pos], cstring, i ); // will copy \0 also
 }
 
 }

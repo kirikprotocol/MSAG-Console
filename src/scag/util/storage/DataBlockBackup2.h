@@ -11,22 +11,71 @@ namespace scag2 {
 namespace util {
 namespace storage {
 
-/// template backup class working in cooperation with BlocksHSStorage.
-/// It simply adds backup functionality to class Val.
-/// Requirements on Val: none
-template < class Val >
-struct DataBlockBackup2
+struct DataBlockBackup2Base
 {
-    typedef Val                 value_type;
-    typedef Serializer::Buf     backup_type;
-
-    DataBlockBackup2(value_type* v = NULL, backup_type* b = NULL) : value(v), backup(b) {}
+private:
+    static void initLog();
+    static smsc::logger::Logger* log_;
 
 public:
-    Val*                 value;
+    typedef Serializer::Buf     backup_type;
+
+    DataBlockBackup2Base( backup_type* b = 0 ) : backup(b) {}
+    /*
+     * default copying is ok
+    DataBlockBackup2Base( const DataBlockBackup2Base& b ) : backup(b.backup) {}
+    DataBlockBackup2Base& operator = ( const DataBlockBackup2Base& b ) {
+        backup = b.backup;
+        return *this;
+    }
+     */
+
+    inline static backup_type* allocBackup() {
+        initLog();
+        backup_type* bck = new backup_type;
+        smsc_log_debug(log_,"ctor %p", bck);
+        return bck;
+    }
+
+    inline static void deallocBackup( backup_type* bck ) {
+        initLog();
+        smsc_log_debug(log_,"dtor %p", bck);
+        delete bck;
+    }
+
+protected:
+    ~DataBlockBackup2Base() {}
+public:
     mutable backup_type* backup;
 };
 
+
+/// template backup class working in cooperation with BlocksHSStorage.
+/// It simply adds backup functionality to class Val.
+/// Requirements on Val: none
+template < class Val > struct DataBlockBackup2 : public DataBlockBackup2Base
+{
+    typedef Val                 value_type;
+
+    DataBlockBackup2(value_type* v = NULL, backup_type* b = NULL) : DataBlockBackup2Base(b), value(v) {}
+    // default copying is ok
+    // DataBlockBackup2( const DataBlockBackup2& b ) : DataBlockBackup2Base(b.backup), value(b.value) {}
+    /*
+    DataBlockBackup2& operator = ( const DataBlockBackup2& b ) {
+        backup = b.backup;
+        value = b.value;
+        return *this;
+    }
+     */
+
+    inline void dealloc() {
+        if (value) { delete value; value = 0; }
+        if (backup) { deallocBackup(backup); backup = 0; }
+    }
+
+public:
+    Val*                 value;
+};
 
 /// a policy for type juggling for use with HashedMemoryCache.
 /// Requirements on Val:
@@ -54,13 +103,12 @@ public:
 
     inline stored_type& store2ref( stored_type& v ) const {
         // make sure the backup is here
-        if (!v.backup) v.backup = new backup_type;
+        if (!v.backup) v.backup = stored_type::allocBackup();
         return v;
     }
 
     inline void dealloc( stored_type& v ) const {
-        if (v.value) { delete v.value; v.value = 0; }
-        if (v.backup) { delete v.backup; v.backup = 0; }
+        v.dealloc();
     }
 protected:
     inline void releaseval( stored_type& v ) const {

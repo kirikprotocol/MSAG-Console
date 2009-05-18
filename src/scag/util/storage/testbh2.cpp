@@ -1,8 +1,8 @@
 #include "BlocksHSStorage2.h"
-#include "scag/util/HexDump.h"
+#include "scag/util/io/HexDump.h"
 #include "logger/Logger.h"
 #include "HSPacker.h"
-#include "Serializer.h"
+#include "scag/util/io/Serializer.h"
 
 using namespace scag2::util::storage;
 using namespace scag2::util;
@@ -95,30 +95,30 @@ void testPackerRun( HSPacker& bhs, buffer_type& buf, size_t initialPos )
     buffer_type copybuf(buf);
     HexDump hd;
     {
-        std::string hex,hhex;
+        HexDump::string_type hex,hhex;
         hd.hexdump(hex,&buf[0],buf.size());
         hd.strdump(hex,&buf[0],buf.size());
         hd.hexdump(hhex,&headers[0],headers.size());
         hd.strdump(hhex,&headers[0],headers.size());
-        fprintf(stderr,"- buffer before packing: %s\n- headers before packing: %s\n\n", hex.c_str(), hhex.c_str());
+        fprintf(stderr,"- buffer before packing: %s\n- headers before packing: %s\n\n", hd.c_str(hex), hd.c_str(hhex));
     }
     bhs.packBuffer(buf,&headers,initialPos);
     {
-        std::string hex;
+        HexDump::string_type hex;
         hd.hexdump(hex,&buf[0],buf.size());
         hd.strdump(hex,&buf[0],buf.size());
-        fprintf(stderr,"- buffer after packing: %s\n\n", hex.c_str());
+        fprintf(stderr,"- buffer after packing: %s\n\n", hd.c_str(hex));
     }
     buffer_type newHeaders;
     bhs.unpackBuffer(buf,&newHeaders,initialPos);
     {
-        std::string hex,hhex;
+        HexDump::string_type hex,hhex;
         hd.hexdump(hex,&buf[0],buf.size());
         hd.strdump(hex,&buf[0],buf.size());
         hd.hexdump(hhex,&newHeaders[0],newHeaders.size());
         hd.strdump(hhex,&newHeaders[0],newHeaders.size());
         fprintf(stderr,"- buffer after unpack: %s\n- headers after unpack: %s\n\n- buf_equals=%d head_equals=%d\n",
-                hex.c_str(), hhex.c_str(),
+                hd.c_str(hex), hd.c_str(hhex),
                 buf == copybuf ? 1 : 0,
                 headers == newHeaders ? 1 : 0 );
     }

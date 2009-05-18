@@ -501,7 +501,7 @@ int BlocksHSStorage2::create( const std::string& dbname,
     dbname_ = dbname;
     dbpath_ = dbpath;
     readonly_ = false;
-    packer_ = HSPacker(blockSize,0,log_);
+    packer_ = HSPacker(blockSize,0/*,log_*/);
     fileSize_ = fileSize;
     fileSizeBytes_ = fileSize_ * blockSize;
     int ret = doCreate();
@@ -817,14 +817,14 @@ bool BlocksHSStorage2::popFreeBlocks( size_t       needBlocks,
         buffer->resize(oldBufSize+idxSize()+navSize()*needBlocks);
         std::vector< offset_type >::iterator iter = temp.begin();
         unsigned char* ptr = &(*buffer)[oldBufSize];
-        BlockNavigation::saveIdx(ptr,*iter);
+        BlockNavigation::saveIdx(ptr,*iter++);
         ptr += idxSize();
         BlockNavigation bn;
         size_t freeCount = freeCount_;
         while ( freeCount <= needBlocks ) { freeCount += fileSize_; }
         for ( size_t i = 0; i < needBlocks; ++i ) {
             bn.setFreeCells(--freeCount);
-            bn.setNextBlock(*++iter);
+            bn.setNextBlock(*iter++);
             bn.savePtr(ptr);
             ptr += navSize();
         }
@@ -875,17 +875,17 @@ bool BlocksHSStorage2::pushFreeBlocks( size_t freeStart,
         buffer->resize( oldBufSize + idxSize() + navSize()*returnedBlocks );
         std::vector< offset_type >::const_iterator iter = affectedBlocks.begin() + freeStart;
         unsigned char* ptr = &(*buffer)[oldBufSize];
-        BlockNavigation::saveIdx(ptr,*iter);
+        BlockNavigation::saveIdx(ptr,*iter++);
         ptr += idxSize();
         BlockNavigation bn;
         size_t freeCount = freeCount_;
         while ( freeCount <= returnedBlocks ) { freeCount += fileSize_; }
         for ( size_t i = 0; i < returnedBlocks; ++i ) {
             bn.setFreeCells(--freeCount);
-            if ( ++iter == affectedBlocks.end() ) {
+            if ( iter == affectedBlocks.end() ) {
                 bn.setNextBlock(idx2pos(freeChain_.front()));
             } else {
-                bn.setNextBlock(*++iter);
+                bn.setNextBlock(*iter++);
             }
             bn.savePtr(ptr);
             ptr += navSize();
@@ -1448,14 +1448,14 @@ void BlocksHSStorage2::applyJournalData( const JournalRecord& rec, bool takeNew 
     } catch ( std::exception& e ) {
         if (log_ && log_->isDebugEnabled()) {
             HexDump hd;
-            std::string dump;
+            HexDump::string_type dump;
             const void* buf = takeNew ? t.newBuf : t.oldBuf;
             const size_t bufSize = takeNew ? t.newBufSize : t.oldBufSize;
-            dump.reserve(hd.hexdumpsize(bufSize)+hd.strdumpsize(bufSize));
+            dump.reserve(hd.hexdumpsize(bufSize)+hd.strdumpsize(bufSize)+10);
             hd.hexdump(dump,buf,bufSize);
             hd.strdump(dump,buf,bufSize);
             smsc_log_debug(log_,"failed to apply %s: %s, buf=%s",
-                           takeNew ? "new" : "old", t.toString().c_str(), dump.c_str());
+                           takeNew ? "new" : "old", t.toString().c_str(), hd.c_str(dump));
         }
         throw smsc::util::Exception("failed to apply %s #%u: %s",
                                     takeNew ? "new" : "old",

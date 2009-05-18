@@ -38,7 +38,7 @@ public:
 
     ~BHDiskStorage2() {
         delete store_; 
-        delete buf_;
+        value_type::deallocBackup(buf_);
     }
 
 
@@ -58,7 +58,7 @@ public:
     {
         i_ = invalidIndex();
         v_ = const_cast<value_type*>(&v);
-        if ( !buf_ ) buf_ = new buffer_type;
+        if ( !buf_ ) buf_ = value_type::allocBackup();
         Serializer ser(*buf_,glossary_);
         ser.setVersion(store_->version());
         ser.reset();
@@ -82,8 +82,12 @@ public:
             blockIndex = store_->change(invalidIndex(),0,buf_);
             if ( blockIndex != invalidIndex() ) {
                 // successfully stored, now buf_ has fully functional
-                attachBackup(v_->backup,buf_);
+                attachBackup(*v_,buf_);
             }
+            if (log_) { smsc_log_debug(log_,"append: %s idx=%llx val=%p bck=%p",
+                                       key_.toString().c_str(),
+                                       uint64_t(blockIndex),
+                                       v_->value, v_->backup ); }
         } else {
             blockIndex = invalidIndex();
         }
@@ -95,7 +99,7 @@ public:
     {
         i_ = i;
         // v_ = 0;
-        if (!buf_) buf_ = new buffer_type;
+        if (!buf_) buf_ = value_type::allocBackup();
         buf_->clear();
         return store_->read(i,*buf_);
     }
@@ -105,7 +109,11 @@ public:
     {
         if ( !buf_ || buf_->empty() || !v.value ) return false;
         if ( ! deserializeBuffer(*v.value,*buf_) ) return false;
-        attachBackup(v.backup,buf_);
+        attachBackup(v,buf_);
+        if (log_) { smsc_log_debug(log_,"deser: %s idx=%llx val=%p bck=%p",
+                                   key_.toString().c_str(),
+                                   uint64_t(i_),
+                                   v.value, v.backup ); }
         return true;
     }
 
@@ -117,8 +125,12 @@ public:
             blockIndex = store_->change(i,v_->backup,buf_);
             if ( blockIndex != invalidIndex() ) {
                 // successfully stored, attach buf_ to v
-                attachBackup(v_->backup,buf_);
+                attachBackup(*v_,buf_);
             }
+            if (log_) { smsc_log_debug(log_,"update: %s idx=%llx val=%p bck=%p",
+                                       key_.toString().c_str(),
+                                       uint64_t(blockIndex),
+                                       v_->value, v_->backup ); }
         } else {
             blockIndex = invalidIndex();
         }
@@ -206,11 +218,11 @@ protected:
                     if ( buffer.size() > ipos ) {
                         const size_t bsz = buffer.size()-ipos;
                         HexDump hd;
-                        std::string dump;
-                        dump.reserve(hd.hexdumpsize(bsz)+hd.strdumpsize(bsz));
+                        HexDump::string_type dump;
+                        dump.reserve(hd.hexdumpsize(bsz)+hd.strdumpsize(bsz)+10);
                         hd.hexdump(dump,&buffer[ipos],bsz);
                         hd.strdump(dump,&buffer[ipos],bsz);
-                        smsc_log_debug(log_,"buf: %s", dump.c_str());
+                        smsc_log_debug(log_,"buf: %s", hd.c_str(dump));
                     }
                 }
             }
@@ -231,8 +243,12 @@ protected:
     inline void unpackBuffer( buffer_type& buf, buffer_type* hdr ) const {
         store_->unpackBuffer(buf,hdr);
     }
-    inline void attachBackup( buffer_type*& oldBuf, buffer_type*& newBuf ) const {
-        std::swap(oldBuf,newBuf);
+    inline void attachBackup( value_type& val, buffer_type*& newBuf ) const {
+        if (log_) {
+            smsc_log_debug(log_,"val @ %p { value=%p, backup=%p } w/ key=%s, buffer %p attached",
+                           &val, val.value, val.backup, key_.toString().c_str(), newBuf );
+        }
+        std::swap(val.backup,newBuf);
     }
 
 private:

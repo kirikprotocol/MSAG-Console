@@ -96,14 +96,22 @@ public:
 
     value_type* release( const key_type& k ) {
         if (cachelog_) smsc_log_debug( cachelog_, "clr: %s", k.toString().c_str() );
-        uint32_t index = getIndex(k);
+        const uint32_t index = getIndex(k);
         CacheItem* item = hash_.GetPtr(index);
-        if ( !item || !(item->key == k)) {
-          return NULL;
+        if ( !item ) {
+            if (cachelog_) { smsc_log_debug(cachelog_,"clr: item not found: %s",k.toString().c_str()); }
+            return 0;
+        } else if ( !(item->key == k) ) {
+            if (cachelog_) {
+                smsc_log_debug( cachelog_,"clr: item has diff key: %s != %s", k.toString().c_str(),
+                                item->key.toString().c_str() );
+            }
+            return 0;
         }
         stored_type v = item->vv;
         hash_.Delete( index );
         value_type* vvv = store2val(v);
+        if (cachelog_) { smsc_log_debug(cachelog_,"clr: item %s found: val=%p",k.toString().c_str(),vvv); }
         releaseval(v); // release value_type
         dealloc(v);    // and free all other resources
         return vvv;
@@ -130,27 +138,28 @@ private:
   }
 
 public:
+    /// NOTE: iterator may become invalidated by set, release, clean, etc.
     class Iterator 
     {
     protected:
-        Iterator( const hash_type& h ) : iter_(h), key_(0) {}
+        Iterator( const hash_type& h ) : iter_(h), ikey_(0), val_(0) {}
 
     public:
         ~Iterator() {}
         bool next() {
-            return iter_.Next( key_, val_ );
+            return iter_.Next( ikey_, val_ );
         }
         const key_type& key() const {
-            return val_.key;
+            return val_->key;
         }
         stored_type& value() {
-            return val_.vv;
+            return val_->vv;
         }
         friend class ArrayedMemoryCache<Key,Val,TypeJuggling,HF>;
     private:
         typename hash_type::Iterator iter_;
-        int                          key_;
-        CacheItem                    val_;
+        int                          ikey_;
+        CacheItem*                   val_;
     };
     typedef Iterator iterator_type;
 
