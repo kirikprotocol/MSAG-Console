@@ -6,6 +6,7 @@
 #ident "@(#)$Id$"
 #define __SMSC_TASK_SCHEDULER_DEFS_HPP
 
+#include <string>
 #include "inman/common/UtlPtr.hpp"
 
 namespace smsc {

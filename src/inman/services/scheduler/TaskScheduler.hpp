@@ -10,23 +10,19 @@
 #include <list>
 
 #include "core/threads/Thread.hpp"
-using smsc::core::threads::Thread;
-
 #include "core/synchronization/Event.hpp"
-using smsc::core::synchronization::Event;
-
 #include "core/synchronization/EventMonitor.hpp"
-using smsc::core::synchronization::EventMonitor;
-
-#include "logger/Logger.h"
-using smsc::logger::Logger;
-
 #include "inman/services/scheduler/TaskSchedulerDefs.hpp"
-
+#include "logger/Logger.h"
 #include "util/strlcpy.h"   // for strlcpy on linux
 
 namespace smsc {
 namespace util {
+
+using smsc::core::threads::Thread;
+using smsc::core::synchronization::Event;
+using smsc::core::synchronization::EventMonitor;
+using smsc::logger::Logger;
 
 class TaskSchedulerAC : public TaskSchedulerITF, Thread {
 private:
@@ -81,7 +77,7 @@ protected:
             : referee(use_ref), targeted(false), cancelled(false), ptr(p_task)
         { }
         virtual ~TaskDataAC()
-        { }
+        { cleanUp(); }
 
         //Cleans extra resources associated with task
         virtual void cleanUp(void) { return; }
@@ -164,69 +160,12 @@ protected:
     }
 
     //NOTE: _sync must be locked upon entry
-    bool releaseTask(TaskMap::iterator qIt)
-    {
-        TaskDataAC * pTask = qIt->second;
-        if (pTask->toDelete()) {
-            smsc_log_debug(logger, "%s: releasing %s", _logId, pTask->ptr->TaskName());
-            ScheduledTaskAC * pDel = pTask->ptr;
-            delete pTask;
-            qPool.erase(qIt);
-            _sync.Unlock();
-            pDel->Utilize();
-            _sync.Lock();
-            return true;
-        }
-        smsc_log_debug(logger, "%s: postponing release of %s", _logId, pTask->ptr->TaskName());
-        return false;
-    }
+    bool releaseTask(TaskMap::iterator qIt);
     //NOTE: _sync must be locked upon entry
-    void cleanUpReleased(void)
-    {
-        if (!qReleased.empty()) {   //Process released tasks
-            TaskQueue::iterator rit = qReleased.begin();
-            while (rit != qReleased.end()) {
-                TaskQueue::iterator cit = rit++;
-                TaskMap::iterator qIt = qPool.find(*cit);
-                if ((qIt == qPool.end()) || releaseTask(qIt))
-                    qReleased.erase(cit);
-            }
-        }
-    }
+    void cleanUpReleased(void);
 
     //-- Thread interface methods
-    int Execute(void)
-    {
-        bool doAbort = false;
-        smsc_log_debug(logger, "%s: started.", _logId);
-        _sync.Lock();
-        _state = schdRunning;
-        _sync.notify(); //if Start() waits for _sync, it will be awaked later
-        while (_state != schdStopped) {
-            cleanUpReleased();          //Free released tasks
-            if (!qSignaled.empty()) {   //Process tasks signals
-                do {
-                    processSignal();
-                } while (!qSignaled.empty());
-            }
-            if (_state == schdStopping) { //no signals can be scheduled!
-                if (qPool.empty() || doAbort)
-                    break;
-                if (!doAbort) { //abort remaining tasks
-                    doAbort = true;
-                    for (TaskMap::iterator it = qPool.begin(); it != qPool.end(); ++it)
-                        qSignaled.push_back(TaskSignal(it->first, sigAbort));
-                    continue;
-                }
-            }
-            _sync.wait(_TIMEOUT_STEP); //unlocks and waits
-        }
-        _state = schdStopped;
-        smsc_log_debug(logger, "%s: stopped, %u tasks pending", _logId, qPool.size());
-        _stopped.Signal();
-        _sync.Unlock();
-        return 0;
-    }
+    int Execute(void);
 
 public:
     static const unsigned _TIMEOUT_STEP = 100; //inactivity timeout, millisecs
@@ -240,160 +179,37 @@ public:
         strlcpy(_logId, log_id, sizeof(_logId));
     }
 
-    virtual ~TaskSchedulerAC()
-    {
-        Stop();
-        _sync.Lock();
-        if (!qPool.empty()) {
-            do {
-                TaskMap::iterator it = qPool.begin();
-                ScheduledTaskAC * pTask = it->second->ptr;
-                it->second->cleanUp();
-                delete it->second;
-                qPool.erase(it);
-                _sync.Unlock();
-                pTask->Utilize();
-                _sync.Lock();
-            } while (!qPool.empty());
-        }
-        _sync.Unlock();
-    }
+    virtual ~TaskSchedulerAC();
 
-    inline const char * Name(void) const { return _logId; }
+    const char * Name(void) const { return _logId; }
 
     // ---------------------------------------
     // -- TaskSchedulerITF interface methods
     // ---------------------------------------
-    bool Start(void)
-    {
-        {
-            MutexGuard  tmp(_sync);
-            if (_state == schdRunning)
-                return true;
-        }
-        Thread::Start();
-        {
-            MutexGuard  tmp(_sync);
-            if (_state == schdRunning)
-                return true;
-            _sync.wait(_TIMEOUT_STEP);
-            if (_state != schdRunning) {
-                smsc_log_fatal(logger, "%s: unable to start scheduler thread", _logId);
-                return false;
-            }
-        }
-        return true;
-    }
-
+    bool Start(void);
     //Stops scheduler: no new task will start, sigAbort is send to existing ones.
     //If timeout is not zero, then method blocks until scheduler thread will be completed.
-    void Stop(unsigned timeOut_ms = _SHUTDOWN_TIMEOUT)
-    {
-        {
-            MutexGuard  tmp(_sync);
-            if (_state == schdStopped)
-                return;
-            _state = schdStopping;
-            _sync.notify();
-            if (!timeOut_ms) {
-                smsc_log_debug(logger, "%s: stopping ..", _logId);
-                return;
-            }
-            smsc_log_debug(logger, "%s: stopping, timeout = %u ms ..",
-                           _logId, timeOut_ms);
-        }
-        _stopped.Wait(timeOut_ms);
-        {
-            MutexGuard  tmp(_sync);
-            if (_state != schdStopped) {
-                _state = schdStopped;
-                smsc_log_debug(logger, "%s: shutdown timeout expired, %u tasks pending",
-                               _logId, qPool.size());
-            }
-        }
-        Thread::WaitFor();
-    }
+    void Stop(unsigned timeOut_ms = _SHUTDOWN_TIMEOUT);
 
     //-- ***************************************************************
     //-- TaskSchedulerITF interface methods
     //-- ***************************************************************
 
     //Registers and schedules task. TaskId == 0 means failure.
-    TaskId StartTask(ScheduledTaskAC * use_task, TaskRefereeITF * use_ref = NULL)
-    {
-        MutexGuard  tmp(_sync);
-        if (_state != schdRunning)
-            return 0;
-
-        TaskId  tId;
-        unsigned cnt = _MAX_IDALLOC_ATTEMPT + 1;
-        do {
-            --cnt; tId = ++_lastId ? _lastId : ++_lastId;
-        } while ((qPool.find(tId) != qPool.end()) && cnt);
-        if (!cnt)   //unable to allocate task ID
-            return 0;
-
-        qPool[tId] = initTaskData(use_task, use_ref);
-        use_task->Init(tId, this);
-        qSignaled.push_back(TaskSignal(tId, sigProc));
-        _sync.notify();
-        return tId;
-    }
+    TaskId StartTask(ScheduledTaskAC * use_task, TaskRefereeITF * use_ref = NULL);
     //Enqueues signal for task scheduling, returns false if signal cann't be
     //scheduled for task (unknown id, scheduler is stopp[ed/ing], etc).
     //Note:
     // 1) not all signals accepts cmd_dat argument, rcBadArg is returned in that case
     // 2) in case of failure it's a caller responsibility to utilize cmd_dat
-    SchedulerRC SignalTask(TaskId task_id, PGSignal cmd = sigProc, UtilizableObjITF * cmd_dat = 0)
-    {
-        MutexGuard  tmp(_sync);
-        if (_state != schdRunning)
-            return TaskSchedulerITF::rcSchedNotRunning;
-
-        TaskMap::iterator it = qPool.find(task_id);
-        if (it == qPool.end())
-            return TaskSchedulerITF::rcUnknownTask;
-
-        qSignaled.push_back(TaskSignal(task_id, cmd, cmd_dat));
-        _sync.notify();
-        return TaskSchedulerITF::rcOk;
-    }
+    SchedulerRC SignalTask(TaskId task_id, PGSignal cmd = sigProc, UtilizableObjITF * cmd_dat = NULL);
     //Attempts to immediately abort given task
-    SchedulerRC AbortTask(TaskId task_id)
-    {
-        MutexGuard  tmp(_sync);
-        if (_state != schdRunning)
-            return TaskSchedulerITF::rcSchedNotRunning;
-
-        qSignaled.push_front(TaskSignal(task_id, sigAbort));
-        _sync.notify();
-        return TaskSchedulerITF::rcOk;
-    }
+    SchedulerRC AbortTask(TaskId task_id);
     //Sets referee for task, returns rcBadArg if other referee is already set
-    SchedulerRC RefTask(TaskId task_id, TaskRefereeITF * use_ref)
-    {
-        MutexGuard  tmp(_sync);
-        TaskMap::iterator it = qPool.find(task_id);
-        if (it == qPool.end())
-            return TaskSchedulerITF::rcUnknownTask;
-        _sync.notify();
-        return it->second->setReferee(use_ref) ? TaskSchedulerITF::rcOk
-                                                : TaskSchedulerITF::rcBadArg;
-    }
+    SchedulerRC RefTask(TaskId task_id, TaskRefereeITF * use_ref);
     //Cancels referee for task, returns false if given referee is already
     //targeted by task for reporting
-    bool   UnrefTask(TaskId task_id, TaskRefereeITF * use_ref)
-    {
-        MutexGuard  tmp(_sync);
-        TaskMap::iterator it = qPool.find(task_id);
-        if (it == qPool.end())
-            return true;
-        TaskDataAC * pTask = it->second;
-        if (!pTask->checkReferee(use_ref))
-            return true;    //task has another referee
-        _sync.notify();
-        return pTask->cancelReferee();
-    }
+    bool   UnrefTask(TaskId task_id, TaskRefereeITF * use_ref);
 };
 
 //shedMT (parallel mode) implementation of scheduler:
@@ -427,27 +243,12 @@ protected:
         TaskDataSEQ(ScheduledTaskAC * p_task, TaskRefereeITF * use_ref = NULL)
             : TaskDataAC(p_task, use_ref), pQueue(0)
         { }
-        ~TaskDataSEQ()
-        { }
 
-        //Cleans extra resources associated eith task: postponed sigProc data
-        void cleanUp(void)
-        {
-            if (!procData.empty()) {
-                do {
-                    UtilizableObjITF * pObj = procData.front();
-                    if (pObj)
-                        pObj->Utilize();
-                    procData.pop_front();
-                } while (!procData.empty());
-            }
-        }
-
-        inline bool hasProcData(void) const
+        bool hasProcData(void) const
         {
             return !procData.empty();
         }
-        inline void addProcData(UtilizableObjITF * use_dat)
+        void addProcData(UtilizableObjITF * use_dat)
         {
             procData.push_back(use_dat);
         }
@@ -459,6 +260,22 @@ protected:
                 procData.pop_front();
             }
             return pObj;
+        }
+
+        // --------------------------------
+        // -- TaskDataAC interface methods
+        // --------------------------------
+        //Cleans extra resources associated eith task: postponed sigProc data
+        void cleanUp(void)
+        {
+            if (!procData.empty()) {
+                do {
+                    UtilizableObjITF * pObj = procData.front();
+                    if (pObj)
+                        pObj->Utilize();
+                    procData.pop_front();
+                } while (!procData.empty());
+            }
         }
     };
 
