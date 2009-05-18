@@ -12,7 +12,7 @@ namespace inman {
 namespace inap  {
 
 #define MAX_BIND_TIMEOUT  5000  //maximum timeout on SSN bind request, units: millisecs
-#define MAX_CONN_TIMEOUT  4000  //maximum timeout on Unit reconnection 
+#define MAX_CONN_TIMEOUT  5000  //maximum timeout on Unit reconnection 
 
 #define RECV_TIMEOUT      300   //message receiving timeout, units: millisecs
 #define RECONNECT_TIMEOUT 800   //SS7 stack reconnection timeout, units: millisecs
@@ -94,9 +94,6 @@ TCAPDispatcher::TCAPDispatcher()
 {
     ApplicationContextRegistry::get();
     TCCbkLink::get(); //Link TC API Callbacks
-#ifdef EIN_HD
-    EINSS7CpMain_CpInit();
-#endif /* EIN_HD */
 }
 
 TCAPDispatcher::~TCAPDispatcher()
@@ -278,7 +275,7 @@ int TCAPDispatcher::Reconnect(void)
 //smsc_log_debug(logger, "%s: Reconnect(): state %u, connCounter: %u", _logId, _ss7State, connCounter);
     if ((connCounter >= MAX_UCONN_ATTEMPTS) || (bindCounter >= MAX_BIND_ATTEMPTS)) {
       smsc_log_error(logger, "%s: lingering connection troubles, reconnecting ..", _logId);
-      disconnectCP(ss7INITED);
+      disconnectCP(ss7None); //total reset (include CP static data)
       connCounter = bindCounter = 0;
     }
     if (_ss7State == ss7CONNECTED) {
