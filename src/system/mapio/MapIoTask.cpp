@@ -125,13 +125,15 @@ extern "C" {
             if( MapDialogContainer::boundLocalSSNs[INSTARG0(rinst)]&((uint64_t)1<<i) )
             {
               MapDialogContainer::boundLocalSSNs[INSTARG0(rinst)] &= ~((uint64_t)1<<i);
+              MapIoTask::ReconnectThread::reportDisconnect(INSTARG0(rinst));
+              /*
               __map_warn2__("%s: SSN %d rinst %d is unavailable trying to rebind",__func__,affectedSSN,INSTARG0(rinst));
               USHORT_T result = Et96MapBindReq(MY_USER_ID, lssn INSTARG(rinst));
               if (result!=ET96MAP_E_OK)
               {
                 __map_warn2__("%s: SSN %d Bind error 0x%hx",__func__,affectedSSN,result);
                 MapIoTask::ReconnectThread::reportDisconnect(INSTARG0(rinst));
-              }
+              }*/
             }
             break;
           }
@@ -626,6 +628,11 @@ void MapIoTask::dispatcher()
             continue;
           }
         }
+      }else
+      {
+        handleMessage(message);
+        EINSS7CpReleaseMsgBuffer(&message);
+        continue;
       }
 
     }
