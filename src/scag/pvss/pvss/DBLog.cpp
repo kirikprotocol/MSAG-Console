@@ -15,7 +15,7 @@ const string& DBLog::getLogMsg() const {
 }
 
 void DBLog::clear() {
-  logmsg_.clear();
+  string().swap(logmsg_);
 }
 
 void DBLog::createAddLogMsg(string const& key, string const& msg) {
