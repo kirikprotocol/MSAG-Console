@@ -35,9 +35,9 @@ void PersCall::handleResponse( std::auto_ptr< Request > request, std::auto_ptr< 
     resp_.reset( static_cast< ProfileResponse* >(response.release()));
     // continue lcm execution
     lcc_->initiator->continueExecution( lcc_, false );
-    // NOTE: we clear req and resp here in controlled manner
-    req_.reset(0);
-    resp_.reset(0);
+    // NOTE: we cannot clear req and resp here, as another thread may already destroy perscall
+    // req_.reset(0);
+    // resp_.reset(0);
 }
 
 void PersCall::handleError( const pvss::PvssException& exc, std::auto_ptr< pvss::Request > request )
@@ -46,7 +46,7 @@ void PersCall::handleError( const pvss::PvssException& exc, std::auto_ptr< pvss:
     setError( exc, request );
     // continue lcm execution
     lcc_->initiator->continueExecution( lcc_, false );
-    req_.reset(0);
+    // req_.reset(0);
 }
 
 

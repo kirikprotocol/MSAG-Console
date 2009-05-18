@@ -347,7 +347,7 @@ void Scag::shutdown()
     transport::smpp::SmppManager::Instance().shutdown();
     sessions::SessionManager::Instance().Stop();
 #ifdef SNMP
-    snmpthread_->Stop();
+    if (snmpthread_.get()) snmpthread_->Stop();
 #endif
     // stat::Statistics::Instance().Stop();
 }
