@@ -1,25 +1,24 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
  * IAPManager (abonent policies/providers manager) types, interfaces and
  * helpers definitions.
  * ************************************************************************** */
 #ifndef __INMAN_IAPMANAGER_DEFS_HPP__
+#ident "@(#)$Id$"
 #define __INMAN_IAPMANAGER_DEFS_HPP__
 
 #include "inman/common/RPCList.hpp"
-using smsc::inman::common::RPCList;
-
 #include "inman/common/ObjRegistryT.hpp"
-using smsc::util::STRKeyRegistry_T;
-
 #include "inman/abprov/IAProvider.hpp"
-using smsc::inman::iaprvd::IAProviderCreatorITF;
-using smsc::inman::iaprvd::IAProviderITF;
-using smsc::inman::iaprvd::IAProvider;
 
 namespace smsc  {
 namespace inman {
 namespace iapmgr {
+
+using smsc::inman::common::RPCList;
+using smsc::util::STRKeyRegistry_T;
+using smsc::inman::iaprvd::IAProviderCreatorITF;
+using smsc::inman::iaprvd::IAProviderITF;
+using smsc::inman::iaprvd::IAProvider;
 
 typedef std::map<std::string, const INScfCFG *> INScfsMAP;
 typedef STRKeyRegistry_T<INScfCFG> SCFRegistry;
@@ -50,8 +49,8 @@ public:
         return true;
     }
 
-    inline const char * Ident(void) const { return ident.c_str(); }
-    inline const INScfsMAP & ScfMap(void) const { return scfMap; }
+    const char * Ident(void) const { return ident.c_str(); }
+    const INScfsMAP & ScfMap(void) const { return scfMap; }
 
     bool useSS7(void) const
     {
@@ -69,22 +68,22 @@ public:
         return (it != scfMap.end()) ? it->second : NULL;
     }
 
-    inline IAProvider::Ability getIAPAbilities(void) const
+    IAProvider::Ability getIAPAbilities(void) const
     {
         return provAllc ? provAllc->ability() : IAProvider::abNone;
     }
 
-    inline IAProviderITF * getIAProvider(void) const
+    IAProviderITF * getIAProvider(void) const
     {
         return  provAllc ? provAllc->startProvider(svcHost) : NULL;
     }
 
-    inline bool startIAProvider(void) const
+    bool startIAProvider(void) const
     {
         return !provAllc ? true :
             (provAllc->startProvider(svcHost) != NULL);
     }
-    inline void stopIAProvider(bool do_wait = false) const
+    void stopIAProvider(bool do_wait = false) const
     {
         if (provAllc)
             provAllc->stopProvider(do_wait);
