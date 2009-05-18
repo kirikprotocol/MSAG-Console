@@ -570,8 +570,8 @@ inline scag::util::storage::Serializer& operator << ( scag::util::storage::Seria
     ser.setwpos(wpos+11); // 3 + 8
     unsigned char* ptr = ser.data() + wpos;
     *ptr = addr.getLength();
-    *++ptr = addr.getNumberingPlan();
     *++ptr = addr.getTypeOfNumber();
+    *++ptr = addr.getNumberingPlan();
     addr.pack(reinterpret_cast<char*>(++ptr));
     return ser; 
 };
@@ -581,14 +581,14 @@ inline scag::util::storage::Deserializer& operator >> ( scag::util::storage::Des
     const unsigned char* ptr = dsr.curpos();
     dsr.setrpos(dsr.rpos()+11); 
     uint8_t len = *ptr;
-    uint8_t plan = *++ptr;
     uint8_t type = *++ptr;
+    uint8_t plan = *++ptr;
     char val[30];
     scag2::pvss::AbntAddr::unpack(val,reinterpret_cast<const char*>(++ptr));
     if ( len > strlen(val) ) {
         throw scag::exceptions::IOException("wrong abntaddr: len=%u, val=%s", unsigned(len), val);
     }
-    addr.setValue( len, plan, type, val );
+    addr.setValue( len, type, plan, val );
     return dsr;
 };
 
