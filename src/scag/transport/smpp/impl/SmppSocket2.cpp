@@ -101,12 +101,12 @@ void SmppSocket::processInput()
   if(rdBufUsed<rdToRead)return;
   if(dump->isDebugEnabled())
   {
-      std::string out;
+      util::HexDump::string_type out;
       util::HexDump hd;
       hd.hexdump(out,rdBuffer,rdToRead);
       // ::bufdump( out, reinterpret_cast<const unsigned char*>(rdBuffer), rdToRead );
       dump->log(smsc::logger::Logger::LEVEL_DEBUG, "in from %s(%s): %s",
-                getPeer(), systemId.c_str(), out.c_str());
+                getPeer(), systemId.c_str(), hd.c_str(out));
   }
   SmppStream s;
   assignStreamWith(&s,rdBuffer,rdBufUsed,true);
@@ -276,12 +276,12 @@ void SmppSocket::sendData()
   }
   if(dump->isDebugEnabled())
   {
-      std::string out;
+      util::HexDump::string_type out;
       util::HexDump hd;
       hd.hexdump(out,wrBuffer,sz);
       // ::bufdump( out, reinterpret_cast<const unsigned char*>(wrBuffer), sz );
       dump->log(smsc::logger::Logger::LEVEL_DEBUG, "out to %s(%s),%d: %s",
-                getPeer(), systemId.c_str(), outQueue.Count(), out.c_str());
+                getPeer(), systemId.c_str(), outQueue.Count(), hd.c_str(out));
   }
   wrBufSent=0;
   wrBufUsed=sz;

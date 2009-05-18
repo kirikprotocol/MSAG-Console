@@ -80,10 +80,10 @@ void PvssSocket::send( const Packet* packet, bool isRequest, bool force ) /* thr
     if ( log_->isDebugEnabled() ) {
         smsc_log_debug(log_,"writing %s: %s", isRequest ? "request" : "response",
                        packet->toString().c_str());
-        std::string dump;
         util::HexDump hd;
+        util::HexDump::string_type dump;
         hd.hexdump( dump, writeContext->buffer.get(), packetSize );
-        smsc_log_debug( log_, "write length=%d data=%s", packetSize-4, dump.c_str() );
+        smsc_log_debug( log_, "write length=%d data=%s", packetSize-4, hd.c_str(dump) );
     }
 
     // should we check the queue limit again?
@@ -197,10 +197,10 @@ void PvssSocket::processInput()
     Protocol::Buffer readbuf(rdBuffer_.get()+4,rdBuflen_-4);
     readbuf.SetPos(rdBuflen_-4);
     if ( log_->isDebugEnabled() ) {
-        std::string dump;
         util::HexDump hd;
+        util::HexDump::string_type dump;
         hd.hexdump(dump,readbuf.get(),readbuf.GetPos());
-        smsc_log_debug(log_,"read length=%d data=%s",readbuf.GetPos(),dump.c_str());
+        smsc_log_debug(log_,"read length=%d data=%s",readbuf.GetPos(),hd.c_str(dump));
     }
     std::auto_ptr<Packet> packet;
     try {

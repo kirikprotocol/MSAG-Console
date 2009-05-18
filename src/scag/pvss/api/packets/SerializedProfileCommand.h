@@ -21,15 +21,16 @@ public:
     }
 
     virtual std::string toString() const {
-        std::string rv;
+        util::HexDump hd;
+        util::HexDump::string_type rv;
+        // std::string rv;
         rv.reserve(10+size_*3);
-        rv.append(typeToString());
+        hd.addstr(rv,typeToString());
         if ( data_.get() ) {
             rv.push_back(' ');
-            util::HexDump hd;
             hd.hexdump(rv,data_.get(),size_);
         }
-        return rv;
+        return hd.c_str(rv);
         // char buf[32];
         // sprintf( buf, "seqNum=%u %s", seqNum_, typeToString() );
         // return buf;

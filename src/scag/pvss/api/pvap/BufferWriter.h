@@ -93,9 +93,9 @@ public:
 
     std::string dump() const {
         util::HexDump hd;
-        std::string s;
+        util::HexDump::string_type s;
         hd.hexdump( s, buf_->get(), buf_->GetPos() );
-        return s;
+        return hd.c_str(s);
     }
 
 private:

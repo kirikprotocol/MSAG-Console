@@ -36,7 +36,7 @@ public:
     bool isValid( PvssException* exc = 0 ) const {
         if ( ! property_.isValid() ) {
             if ( exc ) *exc = PvssException(PvssException::BAD_REQUEST,
-                                            "property %s is invalid", property_.toString() );
+                                            "property %s is invalid", property_.toString().c_str() );
             return false;
         }
         return true;
