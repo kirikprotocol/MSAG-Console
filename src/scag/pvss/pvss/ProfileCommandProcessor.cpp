@@ -203,13 +203,13 @@ void ProfileCommandProcessor::addBatchComponentDBLog(const string& logmsg) {
 void ProfileCommandProcessor::flushLogs(Logger* logger) {
   if (!batchLogs_.empty()) {
     for (std::vector<string>::iterator i = batchLogs_.begin(); i != batchLogs_.end(); ++i) {
-      smsc_log_info(logger, (*i).c_str());
+      smsc_log_info(logger, "%s", (*i).c_str());
     }
-    batchLogs_.clear();
+    std::vector<string>().swap(batchLogs_);
     return;
   }
   if (!dblog_.getLogMsg().empty()) {
-    smsc_log_info(logger, dblog_.getLogMsg().c_str());
+    smsc_log_info(logger, "%s", dblog_.getLogMsg().c_str());
     dblog_.clear();
   }
 }
