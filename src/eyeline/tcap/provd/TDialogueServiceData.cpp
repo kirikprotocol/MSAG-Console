@@ -33,12 +33,14 @@ private:
 TDialogueServiceData::TDialogueServiceData(const TDialogueId& dialogueId,
                                            uint32_t localTrnId,
                                            TDlgHandlerIface* dlgHndlrIface,
-                                           unsigned int dialogueTimeout)
-  : _dialogueId(dialogueId), _trnFSM(localTrnId),
+                                           unsigned int dialogueTimeout,
+                                           const sccp::SCCPAddress& ownAddress)
+  : _dialogueId(dialogueId), _trnFSM(this, localTrnId),
     _tDlgHndlrIface(dlgHndlrIface), _needReleaseDlgHndlr(false),
     _isDialogueWasAcked(false), _applicationContext(NULL),
     _linkNum(0), _isSetLinkNum(false), _dialogueTimeout(dialogueTimeout),
-    _dialogueTimeoutId(0), _isSetDialogueTimeoutId(false)
+    _dialogueTimeoutId(0), _isSetDialogueTimeoutId(false), _srcAddr(ownAddress),
+    _isSetDstAddr(false), _isSetSrcAddr(false)
 {
   memset(reinterpret_cast<uint8_t*>(_operationTimers), 0, sizeof(_operationTimers));
 }
@@ -48,11 +50,11 @@ TDialogueServiceData::TDialogueServiceData(const TDialogueId& dialogueId,
                                            uint32_t remoteTrnId,
                                            TDlgHandlerIface* dlgHndlrIface,
                                            unsigned int dialogueTimeout)
-  : _dialogueId(dialogueId), _trnFSM(localTrnId, remoteTrnId),
+  : _dialogueId(dialogueId), _trnFSM(this, localTrnId, remoteTrnId),
     _tDlgHndlrIface(dlgHndlrIface), _needReleaseDlgHndlr(true),
     _isDialogueWasAcked(false), _applicationContext(NULL),
     _linkNum(0), _isSetLinkNum(false), _dialogueTimeout(dialogueTimeout),
-    _dialogueTimeoutId(0), _isSetDialogueTimeoutId(false)
+    _dialogueTimeoutId(0), _isSetDialogueTimeoutId(false), _isSetDstAddr(false), _isSetSrcAddr(false)
 {}
 
 TDialogueServiceData::~TDialogueServiceData()
@@ -65,12 +67,14 @@ void
 TDialogueServiceData::updateDialogueDataByRequest(TC_Begin_Req* beginReqPrimitive)
 {
   handleDialogueRequestPrimitive(beginReqPrimitive);
+  setDstAddr(beginReqPrimitive->getDestAddress());
 }
 
 void
 TDialogueServiceData::updateDialogueDataByRequest(TC_Cont_Req* contReqPrimitive)
 {
   handleDialogueRequestPrimitive(contReqPrimitive);
+  setSrcAddr(contReqPrimitive->getOrigAddress());
 }
 
 void
@@ -110,20 +114,22 @@ TDialogueServiceData::updateDialogueDataByRequest(TC_PAbort_Req* pAbortReqPrimit
 }
 
 void
-TDialogueServiceData::updateDialogueDataByIndication(TC_Begin_Ind* tcBeginIndPrimitive)
+TDialogueServiceData::updateDialogueDataByIndication(TC_Begin_Ind* tc_begin_ind_primitive)
 {
-  _trnFSM.updateTransaction(*tcBeginIndPrimitive);
+  _trnFSM.updateTransaction(*tc_begin_ind_primitive);
 
-  tcBeginIndPrimitive->setDialogueId(getDialogueId());
+  tc_begin_ind_primitive->setDialogueId(getDialogueId());
 
-  if ( tcBeginIndPrimitive->getAppCtx() ) {
+  if ( tc_begin_ind_primitive->getAppCtx() ) {
     smsc::core::synchronization::MutexGuard synchronize(_lock_forAppCtxUpdate);
-    _applicationContext = *tcBeginIndPrimitive->getAppCtx();
+    _applicationContext = *tc_begin_ind_primitive->getAppCtx();
   }
 
   setDialogueTimeoutId(TimeoutMonitor::getInstance().schedule(getDialogueTimeout(), new DialogueTimeoutHandler(this)));
 
-  notifyTCUser(tcBeginIndPrimitive);
+  setDstAddr(tc_begin_ind_primitive->getOrigAddress());
+
+  notifyTCUser(tc_begin_ind_primitive);
 }
 
 void
@@ -284,6 +290,36 @@ TDialogueServiceData::handleInvocationResults(ROSComponentsList& componentsList)
         cancelInvocationTimer(rosCompPrimitive->getInvokeId());
     }
   }
+}
+
+const sccp::SCCPAddress&
+TDialogueServiceData::getSrcAddr() const
+{
+  if ( _isSetSrcAddr )
+    return _srcAddr;
+  else
+    throw smsc::util::Exception("TDialogueServiceData::getSrcAddr::: source address is not set");
+}
+
+const sccp::SCCPAddress&
+TDialogueServiceData::getDstAddr() const
+{
+  if ( _isSetDstAddr )
+    return _dstAddr;
+  else
+    throw smsc::util::Exception("TDialogueServiceData::getDstAddr::: destination address is not set");
+}
+
+void
+TDialogueServiceData::setSrcAddr(const sccp::SCCPAddress & src_addr)
+{
+  _srcAddr = src_addr; _isSetSrcAddr = true;
+}
+
+void
+TDialogueServiceData::setDstAddr(const sccp::SCCPAddress & dst_addr)
+{
+  _dstAddr = dst_addr; _isSetDstAddr = true;
 }
 
 }}}

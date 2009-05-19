@@ -5,6 +5,8 @@
 # include "core/synchronization/Mutex.hpp"
 # include "core/synchronization/MutexGuard.hpp"
 # include "eyeline/asn1/EncodedOID.hpp"
+# include "eyeline/sccp/SCCPAddress.hpp"
+
 # include "eyeline/tcap/TDialogueId.hpp"
 # include "eyeline/tcap/TDialogueHandlingPrimitive.hpp"
 # include "eyeline/tcap/TDialogueRequestPrimitives.hpp"
@@ -26,7 +28,8 @@ public:
   TDialogueServiceData(const TDialogueId& dialogueId,
                        uint32_t trnId,
                        TDlgHandlerIface* dlgHndlrIface,
-                       unsigned int dialogueTimeout);
+                       unsigned int dialogueTimeout,
+                       const sccp::SCCPAddress& ownAddress);
 
   TDialogueServiceData(const TDialogueId& dialogueId,
                        uint32_t localTrnId,
@@ -54,6 +57,9 @@ public:
 
   unsigned int getLinkNum() const;
   void setLinkNum(unsigned int linkNum);
+
+  const sccp::SCCPAddress& getSrcAddr() const;
+  const sccp::SCCPAddress& getDstAddr() const;
 
   unsigned int getDialogueTimeout() const;
 
@@ -84,6 +90,10 @@ protected:
   template<class T_DIALOGUE_IND_PRIMITIVE>
   void notifyTCUser(T_DIALOGUE_IND_PRIMITIVE* tcIndPrimitive);
 
+  void setDstAddr(const sccp::SCCPAddress & dst_addr);
+  void setSrcAddr(const sccp::SCCPAddress & dst_addr);
+
+  friend class TrnFSM;
 private:
   TDialogueId _dialogueId;
 
@@ -96,6 +106,9 @@ private:
   unsigned int _dialogueTimeout;
   TimeoutMonitor::timeout_id_t _dialogueTimeoutId;
   bool _isSetDialogueTimeoutId;
+
+  sccp::SCCPAddress _dstAddr, _srcAddr;
+  bool _isSetDstAddr, _isSetSrcAddr;
 
   smsc::core::synchronization::Mutex _lock_forCallToTDlgHndlrIface;
   mutable smsc::core::synchronization::Mutex _lock_forAppCtxUpdate;
