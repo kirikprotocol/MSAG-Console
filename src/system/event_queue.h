@@ -62,7 +62,7 @@ class EventQueue
     //typedef std::list<CommandType> CmdList;
     //CmdList cmds;
     CommandType pool[8];
-    
+
     void clear()
     {
       locked=false;
@@ -72,7 +72,7 @@ class EventQueue
         pool[i]=CommandType();
       }
     }
-    
+
 
     Locker() : locked(false),enqueued(false){}
     ~Locker()
@@ -107,12 +107,13 @@ class EventQueue
           {
             pool[i]=CommandType();
             memmove(pool+i,pool+i+1,(8-i-1)*sizeof(CommandType));
+            pool[7]=CommandType();
           }
           return true;
         }
       }
       return false;
-       
+
     }
   };
 
@@ -189,7 +190,7 @@ class EventQueue
 
   typedef PriorityQueue<Locker*,CyclicQueue<Locker*>,0,31> LockerQueue;
   LockerQueue queue;
-  
+
   enum{
     LockersPageSize=4096
   };
@@ -201,11 +202,11 @@ class EventQueue
     {
     }
   };
-  
+
   LockersPoolPage firstPage;
   LockersPoolPage* curPage;
   Locker* firstFreeLocker;
-  
+
   Locker* newLocker()
   {
     if(firstFreeLocker)
@@ -225,7 +226,7 @@ class EventQueue
     curPage->count++;
     return curPage->pool;
   }
-  
+
   void deleteLocker(Locker* locker)
   {
     locker->clear();
@@ -242,7 +243,7 @@ public:
     firstFreeLocker=0;
   }
 
-  ~EventQueue() 
+  ~EventQueue()
   {
     LockersPoolPage* ptr=firstPage.next;
     while(ptr)
