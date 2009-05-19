@@ -285,7 +285,6 @@ void PersActionCommand::init( const SectionParams& params, PropertyObject proper
 void PersActionCommand::handleResponse( ActionContext& context,
                                         const pvss::CommandResponse& resp )
 {
-    // FIXME: if type is ErrorResponse, set attached message
     setStatus(context,resp.getStatus(),resp.statusToString(resp.getStatus()));
     if ( resp.getStatus() != PvssException::OK ) {
         return;
