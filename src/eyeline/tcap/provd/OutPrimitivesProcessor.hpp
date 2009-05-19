@@ -24,7 +24,10 @@ public:
   void updateDialogue(TC_UAbort_Req* uAbortReqPrimitive);
   void updateDialogue(TC_PAbort_Req* pAbortReqPrimitive);
 
-  void sendPrimitive(TC_PAbort_Req* pAbortReqPrimitive, unsigned int linkNum);
+  void sendPrimitive(TC_PAbort_Req* p_abort_req_primitive, unsigned int link_num,
+                     const SCCPAddress& src_addr, const SCCPAddress& dst_addr);
+  void sendPrimitive(TC_UAbort_Req* u_abort_req_primitive, unsigned int link_num,
+                     const SCCPAddress& src_addr, const SCCPAddress& dst_addr);
 protected:
   void noticeTCUser(TDialogueServiceDataRegistry::registry_element_ref_t& tDlgSvcData,
                     const TDialogueId& tDialogueId,

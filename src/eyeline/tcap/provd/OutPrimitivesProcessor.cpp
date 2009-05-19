@@ -17,7 +17,8 @@ OutPrimitivesProcessor::updateDialogue(TC_Begin_Req* beginReqPrimitive)
 
   TDlgRequestSerializerT<TC_Begin_Req> tPrimitiveSerializer(*beginReqPrimitive);
 
-  TReqSendResult callResult = tPrimitiveSerializer.sendMessage(_suaApi);
+  TReqSendResult callResult = tPrimitiveSerializer.sendMessage(_suaApi, tDlgSvcData->getSrcAddr(),
+                                                               tDlgSvcData->getDstAddr());
   if ( callResult.resultCode == TReqSendResult::SEND_OK ) {
     tDlgSvcData->activateDialogueTimer();
 
@@ -38,7 +39,9 @@ OutPrimitivesProcessor::updateDialogue(TC_Cont_Req* contReqPrimitive)
 
   TDlgRequestSerializerT<TC_Cont_Req> tPrimitiveSerializer(*contReqPrimitive);
 
-  TReqSendResult callResult = tPrimitiveSerializer.sendMessage(_suaApi, tDlgSvcData->getLinkNum());
+  TReqSendResult callResult = tPrimitiveSerializer.sendMessage(_suaApi, tDlgSvcData->getLinkNum(),
+                                                               tDlgSvcData->getSrcAddr(),
+                                                               tDlgSvcData->getDstAddr());
   if ( callResult.resultCode != TReqSendResult::SEND_OK &&
        contReqPrimitive->getReturnOnError() )
     noticeTCUser(tDlgSvcData, tDialogueId, callResult.resultCode);
@@ -59,7 +62,9 @@ OutPrimitivesProcessor::updateDialogue(TC_End_Req* endReqPrimitive)
   if ( endReqPrimitive->getTermination() == TC_End_Req::BASIC_END ) {
     TDlgRequestSerializerT<TC_End_Req> tPrimitiveSerializer(*endReqPrimitive);
 
-    TReqSendResult callResult = tPrimitiveSerializer.sendMessage(_suaApi, tDlgSvcData->getLinkNum());
+    TReqSendResult callResult = tPrimitiveSerializer.sendMessage(_suaApi, tDlgSvcData->getLinkNum(),
+                                                                 tDlgSvcData->getSrcAddr(),
+                                                                 tDlgSvcData->getDstAddr());
     if ( callResult.resultCode != TReqSendResult::SEND_OK &&
          endReqPrimitive->getReturnOnError())
       noticeTCUser(tDlgSvcData, tDialogueId, callResult.resultCode);
@@ -80,7 +85,9 @@ OutPrimitivesProcessor::updateDialogue(TC_UAbort_Req* uAbortReqPrimitive)
 
   TDlgRequestSerializerT<TC_UAbort_Req> tPrimitiveSerializer(*uAbortReqPrimitive);
 
-  TReqSendResult callResult = tPrimitiveSerializer.sendMessage(_suaApi, tDlgSvcData->getLinkNum());
+  TReqSendResult callResult = tPrimitiveSerializer.sendMessage(_suaApi, tDlgSvcData->getLinkNum(),
+                                                               tDlgSvcData->getSrcAddr(),
+                                                               tDlgSvcData->getDstAddr());
   if ( callResult.resultCode != TReqSendResult::SEND_OK &&
        uAbortReqPrimitive->getReturnOnError() )
     noticeTCUser(tDlgSvcData, tDialogueId, callResult.resultCode);
@@ -98,15 +105,26 @@ OutPrimitivesProcessor::updateDialogue(TC_PAbort_Req* pAbortReqPrimitive)
 
   TDlgRequestSerializerT<TC_PAbort_Req> tPrimitiveSerializer(*pAbortReqPrimitive);
 
-  tPrimitiveSerializer.sendMessage(_suaApi, tDlgSvcData->getLinkNum());
+  tPrimitiveSerializer.sendMessage(_suaApi, tDlgSvcData->getLinkNum(),
+                                   tDlgSvcData->getSrcAddr(), tDlgSvcData->getDstAddr());
 }
 
 void
-OutPrimitivesProcessor::sendPrimitive(TC_PAbort_Req* pAbortReqPrimitive, unsigned int linkNum)
+OutPrimitivesProcessor::sendPrimitive(TC_PAbort_Req* p_abort_req_primitive, unsigned int link_num,
+                                      const SCCPAddress& src_addr, const SCCPAddress& dst_addr)
 {
-  TDlgRequestSerializerT<TC_PAbort_Req> tPrimitiveSerializer(*pAbortReqPrimitive);
+  TDlgRequestSerializerT<TC_PAbort_Req> tPrimitiveSerializer(*p_abort_req_primitive);
 
-  tPrimitiveSerializer.sendMessage(_suaApi, linkNum);
+  tPrimitiveSerializer.sendMessage(_suaApi, link_num, src_addr, dst_addr);
+}
+
+void
+OutPrimitivesProcessor::sendPrimitive(TC_UAbort_Req* u_abort_req_primitive, unsigned int link_num,
+                                      const SCCPAddress& src_addr, const SCCPAddress& dst_addr)
+{
+  TDlgRequestSerializerT<TC_UAbort_Req> tPrimitiveSerializer(*u_abort_req_primitive);
+
+  tPrimitiveSerializer.sendMessage(_suaApi, link_num, src_addr, dst_addr);
 }
 
 void
