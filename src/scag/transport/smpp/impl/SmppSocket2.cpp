@@ -304,6 +304,14 @@ void SmppSocket::genEnquireLink(int to)
     outQueue.Push(SmppCommand::makeCommand(ENQUIRELINK,se?se->getNextSeq():1,0,0).release());
 }
 
+
+void SmppSocket::setSystemId( const char* regSysId )
+{
+    systemId = regSysId;
+    const std::string catname = "smpp.dmp." + systemId;
+    dump = smsc::logger::Logger::getInstance(catname.c_str());
+}
+
 }//smpp
 }//transport
 }//scag

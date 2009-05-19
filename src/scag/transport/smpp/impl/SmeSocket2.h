@@ -51,7 +51,7 @@ struct SmeSocket:SmppSocket{
       {
         case rarOk:
           bindType = bt;
-          systemId = sid;
+          setSystemId(sid);
           bindFailed_ = false;
           break;
         case rarFailed:code=St::BINDFAIL;break;

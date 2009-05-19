@@ -32,7 +32,7 @@ struct SmscSocket:SmppSocket{
   }
   void bind(const char* regSysId,const char* sysId,const char* pass,const char* addrRange,const char* sysType)
   {
-    systemId=regSysId;
+    setSystemId(regSysId);
     putCommand(SmppCommand::makeBindCommand(sysId,pass,addrRange,sysType));
   }
 

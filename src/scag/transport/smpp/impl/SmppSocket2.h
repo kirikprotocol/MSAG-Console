@@ -245,6 +245,8 @@ protected:
     SmppSocket(const SmppSocket&);
     void operator=(const SmppSocket&);
 
+    void setSystemId( const char* regSysId );
+
 protected:
     enum {DefaultBufferSize=4096};
 
@@ -261,7 +263,6 @@ protected:
     Mutex mtx;
     int refCount;
     bool connected;
-    std::string systemId;
     SmppBindType bindType;
     SmppEntityType sockType;
 
@@ -284,6 +285,9 @@ protected:
     smsc::logger::Logger* log;
     smsc::logger::Logger* dump;
 
+private:
+    /// we make it private to have controlled access
+    std::string systemId;
 };
 
 inline SmppSocket* getSmppSocket(Socket* sock)
