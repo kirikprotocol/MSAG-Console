@@ -113,7 +113,7 @@ int main(int argc, char* argv[])
             smsc_log_warn(logger, "Parameter <PersUpload.timeout> missed. Defaul value is %d", timeOut);
         }
 
-        smsc_log_warn(logger, "Parameter <PersUpload.AbntProfStorage.storagePath> = '%s'", storagePath.c_str());
+        smsc_log_info(logger, "Parameter <PersUpload.AbntProfStorage.storagePath> = '%s'", storagePath.c_str());
         std::string host = "phoenix";
         int port = 47880;
 
