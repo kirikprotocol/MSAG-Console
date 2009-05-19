@@ -2,16 +2,18 @@
  * Classes implementing structured TCAP dialogue requests.
  * ************************************************************************** */
 #ifndef __EYELINE_TCAP_PROVD_TDLGREQUESTPRIMITIVES_HPP__
-#ident "@(#)$Id$"
-#define __EYELINE_TCAP_PROVD_TDLGREQUESTPRIMITIVES_HPP__
+# ident "@(#)$Id$"
+# define __EYELINE_TCAP_PROVD_TDLGREQUESTPRIMITIVES_HPP__
 
-#include "eyeline/asn1/EncodedOID.hpp"
-#include "eyeline/tcap/TDialogueHandlingPrimitive.hpp"
-#include "eyeline/tcap/proto/TCAssociateDiagnostic.hpp"
+# include "eyeline/sccp/SCCPAddress.hpp"
+# include "eyeline/asn1/EncodedOID.hpp"
+# include "eyeline/tcap/TDialogueHandlingPrimitive.hpp"
+# include "eyeline/tcap/proto/TCAssociateDiagnostic.hpp"
 
 namespace eyeline {
 namespace tcap {
 
+using eyeline::sccp::SCCPAddress;
 using eyeline::asn1::EncodedOID;
 
 class TDialogueRequestPrimitive : public TDialogueHandlingPrimitive {
@@ -48,6 +50,12 @@ public:
     : TDialogueRequestPrimitive(TCAPMessage::t_begin)
   { }
 
+  void setOrigAddress(const SCCPAddress & use_adr);
+  const SCCPAddress & getOrigAddress(void) const;
+
+  void setDestAddress(const SCCPAddress & use_adr);
+  const SCCPAddress & getDestAddress(void) const;
+
   //TODO: setters
 };
 //
@@ -56,6 +64,9 @@ public:
   TC_Cont_Req()
     : TDialogueRequestPrimitive(TCAPMessage::t_continue)
   { }
+
+  void setOrigAddress(const SCCPAddress & use_adr);
+  const SCCPAddress & getOrigAddress(void) const;
   //TODO: setters
 };
 //
