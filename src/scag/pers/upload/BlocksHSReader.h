@@ -88,6 +88,7 @@ public:
                      blockSize(_blockSize), blocksInFile(_blocksInFile) { 
       logger = smsc::logger::Logger::getInstance("pers.up");
       cmbpmbLogger = smsc::logger::Logger::getInstance("cmbpmb");
+      propLogger = smsc::logger::Logger::getInstance("property");
       smsc_log_debug(logger, "dbName='%s' dbPath='%s' blockSize=%d blocksInFile=%d",
                      dbName.c_str(), dbPath.c_str(), blockSize, blocksInFile);
     }
@@ -125,8 +126,8 @@ public:
         data.setBuffLength(hdr.data_size);
         dataBuff = data.ptr();
         data.setLength(hdr.data_size);
+        dataFile->Read((void*)dataBuff, hdr.data_size);
         if (hdr.total_blocks == 1) {
-          dataFile->Read((void*)dataBuff, hdr.data_size);
           return true;
         }
         smsc_log_info(logger, "read long profile: pfkey=%s blocks:%d data size:%d",
@@ -214,11 +215,10 @@ public:
                 continue;
               }
               if (!hdr.head) {
-                smsc_log_error(logger, "long data block number=%d pfkey=%s blocks:%d data size:%d",
+                smsc_log_info(logger, "long data block number=%d pfkey=%s blocks:%d data size:%d",
                                 j, hdr.key.toString().c_str(), hdr.total_blocks, hdr.data_size);
                 continue;
               }
-              ++profiles_count;
               smsc_log_debug(logger, "profile key=%s", hdr.key.toString().c_str());
               SerialBuffer data;
               if (!getProfileData(i, &dataFile, hdr, data)) {
@@ -226,6 +226,7 @@ public:
                                j, hdr.key.toString().c_str(), hdr.total_blocks, hdr.data_size);
                 continue;
               }
+              ++profiles_count;
 
               //status_profiles += restoreProfile(hdr.key, data, sendToPers);
               
@@ -273,7 +274,7 @@ public:
 private:
   int restoreProfileCompletely(const Key& key, SerialBuffer& data, bool sendToPers, const std::vector<std::string>& matchNames, int& matched) {
     try {
-      Profile pf(key.toString());   
+      Profile pf(key.toString(), logger);   
       pf.Deserialize(data, true);
       SerialBuffer batch;
       
@@ -306,7 +307,7 @@ private:
         if (sendToPers) {
           pc.SetPropertyPrepare(PT_ABONENT, key.toString().c_str(), *prop, batch);
         }
-        smsc_log_debug(logger, "key=%s property=%s", pf.getKey().c_str(), prop->toString().c_str());
+        smsc_log_debug(propLogger, "key=%s property=%s", pf.getKey().c_str(), prop->toString().c_str());
         ++prop_count;
       }
       matched = prop_count > 0 ? 1 : 0;
@@ -429,6 +430,7 @@ private:
   int blocksInFile;
   smsc::logger::Logger* logger;
   smsc::logger::Logger* cmbpmbLogger;
+  smsc::logger::Logger* propLogger;
   string		dbName;
   string		dbPath;
   PersClient& pc;
