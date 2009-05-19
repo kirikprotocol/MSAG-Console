@@ -27,11 +27,13 @@ bool TDlgIndicationDispatcherAC::setAddresses(const SUAMessageIndAC & sua_ind,
 
   if (!adr.unpackOcts(sua_ind.callingAddr(), sua_ind.callingAddrLen()))
     return false;
-  t_ind.setOrigAddress(adr);
+  //t_ind.setOrigAddress(adr);
 
   if (!adr.unpackOcts(sua_ind.calledAddr(), sua_ind.calledAddrLen()))
     return false;
-  t_ind.setDestAddress(adr);
+  //t_ind.setDestAddress(adr);
+
+  // TODO:: Rewrite commented statements because destination and source addresses exist only in TC_Continue_ind and TC_Begin_ind primitives 
 
   return true;
 }
