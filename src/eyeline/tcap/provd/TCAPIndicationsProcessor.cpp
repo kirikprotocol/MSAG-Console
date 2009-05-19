@@ -7,34 +7,41 @@
 #include "TDialogueServiceDataRegistry.hpp"
 #include "P_U_AbortPrimitiveUtils.hpp"
 #include "TCAPLayer.hpp"
+#include "TCAPConfiguration.hpp"
 
 namespace eyeline {
 namespace tcap {
 namespace provd {
 
+TCAPIndicationsProcessor::TCAPIndicationsProcessor()
+  : _ownAddress(TCAPConfiguration::getInstance().getOwnAddress())
+{}
+
 bool
-TCAPIndicationsProcessor::updateDialogue(TC_Begin_Ind& tcBeginInd, unsigned int srcLinkNum)
+TCAPIndicationsProcessor::updateDialogue(TC_Begin_Ind& tc_begin_ind, unsigned int src_link_num)
 {
   try {
     AppCtxSMRegistry::RegistryEntry regEntry =
-      AppCtxSMRegistry::getInstance().getDialogueHandler(*tcBeginInd.getAppCtx());
+      AppCtxSMRegistry::getInstance().getDialogueHandler(*tc_begin_ind.getAppCtx());
 
     try {
       TDialogueServiceDataRegistry::registry_element_ref_t tDlgSvcData =
         TDialogueServiceDataRegistry::getInstance().createTDialogueServiceData(regEntry.dialogueHandler,
-                                                                               tcBeginInd.getTransactionId(),
+                                                                               tc_begin_ind.getTransactionId(),
                                                                                regEntry.dialogueTimeout);
-      tDlgSvcData->setLinkNum(srcLinkNum);
-      tDlgSvcData->updateDialogueDataByIndication(&tcBeginInd);
+      tDlgSvcData->setLinkNum(src_link_num);
+      tDlgSvcData->updateDialogueDataByIndication(&tc_begin_ind);
 
       return true;
     } catch (std::exception& ex) {
-      formPAbortRequest(tcBeginInd.getTransactionId(), TDialogueHandlingPrimitive::p_resourceLimitation, srcLinkNum);
+      formPAbortRequest(tc_begin_ind.getTransactionId(), TDialogueHandlingPrimitive::p_resourceLimitation,
+                        src_link_num, tc_begin_ind.getDestAddress(), tc_begin_ind.getOrigAddress());
 
       return false;
     }
   } catch (utilx::RegistryKeyNotFound& ex) {
-    formUAbortRequest(*tcBeginInd.getAppCtx(), tcBeginInd.getTransactionId());
+    formUAbortRequest(*tc_begin_ind.getAppCtx(), tc_begin_ind.getTransactionId(), src_link_num,
+                      tc_begin_ind.getDestAddress(), tc_begin_ind.getOrigAddress());
   }
   return false;
 }
@@ -49,9 +56,9 @@ TCAPIndicationsProcessor::updateDialogue(TC_Cont_Ind& tcContInd, unsigned int sr
 
     return true;
   } catch (UnknownDialogueException& ex) {
-    formPAbortRequest(tcContInd.getTransactionId(), TDialogueHandlingPrimitive::p_unrecognizedTransactionID, srcLinkNum);
+    formPAbortRequest(tcContInd.getTransactionId(), TDialogueHandlingPrimitive::p_unrecognizedTransactionID, srcLinkNum, tcContInd.getDestAddress(), tcContInd.getOrigAddress());
   } catch (std::exception& ex) {
-    formPAbortRequest(tcContInd.getTransactionId(), TDialogueHandlingPrimitive::p_resourceLimitation, srcLinkNum);
+    formPAbortRequest(tcContInd.getTransactionId(), TDialogueHandlingPrimitive::p_resourceLimitation, srcLinkNum, tcContInd.getDestAddress(), tcContInd.getOrigAddress());
   }
 
   return false;
