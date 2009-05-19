@@ -6,9 +6,12 @@
 # define __EYELINE_TCAP_TDIALOGUEINDICATIONPRIMITIVE_HPP__
 
 # include "eyeline/tcap/TDialogueHandlingPrimitive.hpp"
+# include "eyeline/sccp/SCCPAddress.hpp"
 
 namespace eyeline {
 namespace tcap {
+
+using eyeline::sccp::SCCPAddress;
 
 class TDialogueIndicationPrimitive : public TDialogueHandlingPrimitive {
 public:
@@ -29,6 +32,8 @@ public:
     : TDialogueIndicationPrimitive(use_tmsg)
   { }
 
+  const SCCPAddress & getOrigAddress(void) const;
+  const SCCPAddress & getDestAddress(void) const;
   //TODO: getters
 };
 //
@@ -37,7 +42,10 @@ public:
   TC_Cont_Ind(TCAPMessage & use_tmsg)
     : TDialogueIndicationPrimitive(use_tmsg)
   { }
-  
+
+  // TODO: original and destination addresses must be filled from corresponding fields of CLDT message
+  const SCCPAddress & getOrigAddress(void) const;
+  const SCCPAddress & getDestAddress(void) const;
   //TODO: getters
 };
 //
