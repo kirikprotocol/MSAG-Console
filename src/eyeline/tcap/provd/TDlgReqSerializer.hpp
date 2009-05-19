@@ -46,7 +46,9 @@ protected:
   const _TArg & _tReq;
 
   bool convertTReq2UDT(const _TArg & use_treq,
-                      SUAUnitdataReq & use_udt) const
+                       SUAUnitdataReq & use_udt,
+                       const SCCPAddress& src_addr,
+                       const SCCPAddress& dst_addr) const
   {
     //TODO: 
     return false;
@@ -60,15 +62,15 @@ public:
   { }
 
   TReqSendResult
-  sendMessage(SuaApi * sua_iface) const
+  sendMessage(SuaApi * sua_iface, const SCCPAddress& src_addr, const SCCPAddress& dst_addr) const
   {
     SUAUnitdataReq  udt;
 
-    if (convertTReq2UDT(_tReq, udt)) {
+    if (convertTReq2UDT(_tReq, udt, src_addr, dst_addr)) {
       SuaApi::CallResult rc = sua_iface->unitdata_req(udt.userData(), udt.userDataLen(),
-                                   udt.calledAddr(), udt.calledAddrLen(),
-                                   udt.callingAddr(), udt.callingAddrLen(),
-                                   udt.msgProperties());
+                                                      udt.calledAddr(), udt.calledAddrLen(),
+                                                      udt.callingAddr(), udt.callingAddrLen(),
+                                                      udt.msgProperties());
       return TReqSendResult(( rc.operationResult == SuaApi::OK ) ?
                             TReqSendResult::SEND_OK : TReqSendResult::SCCP_ERROR,
                             rc.suaConnectNum);
@@ -78,11 +80,12 @@ public:
   }
 
   TReqSendResult
-  sendMessage(SuaApi * sua_iface, unsigned int linkNum) const
+  sendMessage(SuaApi * sua_iface, unsigned int linkNum,
+              const SCCPAddress& src_addr, const SCCPAddress& dst_addr) const
   {
     SUAUnitdataReq  udt;
     SuaApi::CallResult rc(SuaApi::OK, linkNum);
-    if (convertTReq2UDT(_tReq, udt)) {
+    if (convertTReq2UDT(_tReq, udt, src_addr, dst_addr)) {
       rc = sua_iface->unitdata_req(udt.userData(), udt.userDataLen(),
                                    udt.calledAddr(), udt.calledAddrLen(),
                                    udt.callingAddr(), udt.callingAddrLen(),
