@@ -1,6 +1,7 @@
 #include "TDialogueServiceDataRegistry.hpp"
 #include "core/synchronization/MutexGuard.hpp"
 #include "eyeline/tcap/Exception.hpp"
+#include "TCAPConfiguration.hpp"
 
 namespace eyeline {
 namespace tcap {
@@ -20,7 +21,8 @@ TDialogueServiceDataRegistry::createTDialogueServiceData(TDlgHandlerIface* tIndi
   allocateDialogueIdAndLocalTransactionId(&localTrnId, &dlgId);
 
   registry_element_ref_t tDlgSvcData(new TDialogueServiceData(dlgId, localTrnId,
-                                                              tIndicationHandlers, dialogueTimeout));
+                                                              tIndicationHandlers, dialogueTimeout,
+                                                              TCAPConfiguration::getInstance().getOwnAddress()));
   setSearchKeys(proto::TransactionId(proto::TransactionId::orgLocal, localTrnId),
                 dlgId, registry_element_ref_t(tDlgSvcData));
 
