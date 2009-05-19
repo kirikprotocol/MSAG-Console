@@ -11,6 +11,7 @@ scag/pers_upload                         pers_upload     \
   -lscag-pvss-base \
   -lscag-util-encodings -lscag-exc -lscag-util-storage \
   -lscag-util-properties -lscag-util-singleton \
+  -lscag-util-io \
   -lscag-util \
   -lcore-buffers \
   -lcore-network $(SOCKETLIB) -lnsl \
@@ -34,6 +35,7 @@ scag/pers_flooder                         pers_flooder     \
   -lscag-pvss-base \
   -lscag-util-encodings -lscag-exc -lscag-util-storage \
   -lscag-util-properties -lscag-util-singleton \
+  -lscag-util-io \
   -lscag-util \
   -lcore-buffers \
   -lcore-network $(SOCKETLIB) -lnsl \
@@ -51,3 +53,28 @@ scag/pers_flooder                         pers_flooder     \
 
 scag/logger_test                         logger_test     \
   @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger -llogger-additional
+
+scag/upload-inf                         uploadIntStorage     \
+  @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger -llogger-additional \
+  -lscag-pers-upload \
+  -lscag-pers \
+  -lscag-pvss-data \
+  -lscag-pvss-base \
+  -lscag-util-encodings -lscag-exc -lscag-util-storage \
+  -lscag-util-properties -lscag-util-singleton \
+  -lscag-util-io \
+  -lscag-util \
+  -lcore-buffers \
+  -lcore-network $(SOCKETLIB) -lnsl \
+  -lcore-threads \
+  -lutil-mirrorfile \
+  -lutil-config \
+  -lutil-xml \
+  -lutil-regexp \
+  $(XERCES_LIB) \
+  @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
+  -lutil-URCdb -lutil \
+  $(__LIBRARIES) \
+  $(SSL_LIB) \
+  -lrt -ldl
+
