@@ -1,4 +1,5 @@
 #include "TrnFSM.hpp"
+#include "TDialogueServiceData.hpp"
 #include "eyeline/utilx/Exception.hpp"
 #include "core/synchronization/MutexGuard.hpp"
 
@@ -6,13 +7,13 @@ namespace eyeline {
 namespace tcap {
 namespace provd {
 
-TrnFSM::TrnFSM(uint32_t localTrnIdValue)
-  : _trnId(proto::TransactionId::orgLocal, localTrnIdValue),
+TrnFSM::TrnFSM(TDialogueServiceData* tDlgSvcData, uint32_t localTrnIdValue)
+  : _tDlgSvcData(tDlgSvcData), _trnId(proto::TransactionId::orgLocal, localTrnIdValue),
     _transactionState(IDLE)
 {}
 
-TrnFSM::TrnFSM(uint32_t localTrnIdValue, uint32_t remoteTrnIdValue)
-  : _trnId(proto::TransactionId::orgRemote, localTrnIdValue, remoteTrnIdValue),
+TrnFSM::TrnFSM(TDialogueServiceData* tDlgSvcData, uint32_t localTrnIdValue, uint32_t remoteTrnIdValue)
+  : _tDlgSvcData(tDlgSvcData), _trnId(proto::TransactionId::orgRemote, localTrnIdValue, remoteTrnIdValue),
     _transactionState(IDLE)
 {}
 
@@ -31,6 +32,10 @@ TrnFSM::updateTransaction(const TC_Cont_Req& dialogueRequestPrimitive)
   smsc::core::synchronization::MutexGuard synchronize(_transactionStateLock);
   if ( _transactionState != INIT_RECEIVED && _transactionState != ACTIVE )
     throw utilx::ProtocolException("TrnFSM::updateTransaction::: invalid state=[%s value=(%d)] for TC_Cont_Req primitive", stateToString(_transactionState), _transactionState);
+
+  if ( _transactionState == INIT_RECEIVED )
+    _tDlgSvcData->setSrcAddr(dialogueRequestPrimitive.getOrigAddress());
+
   _transactionState = ACTIVE;
 }
 
@@ -77,8 +82,10 @@ TrnFSM::updateTransaction(const TC_Cont_Ind& dialogueIndicationPrimitive)
   smsc::core::synchronization::MutexGuard synchronize(_transactionStateLock);
   if ( _transactionState != INIT_SENT && _transactionState != ACTIVE )
     throw utilx::ProtocolException("TrnFSM::updateTransaction::: invalid state=[%s value=(%d)] for TC_Cont_Ind primitive", stateToString(_transactionState), _transactionState);
-  if ( _transactionState == INIT_SENT )
+  if ( _transactionState == INIT_SENT ) {
     composeTrnId(dialogueIndicationPrimitive.getTransactionId());
+    _tDlgSvcData->setDstAddr(dialogueIndicationPrimitive.getOrigAddress());
+  }
   _transactionState = ACTIVE;
 }
 
