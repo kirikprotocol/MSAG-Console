@@ -41,7 +41,12 @@ public:
   virtual void closeDialogue(const TDialogueId& tDialogueId);
 
   void updateDialogue(TC_PAbort_Req* requestPrimitive);
-  void updateDialogue(TC_PAbort_Req* requestPrimitive, unsigned int linkNum);
+
+  void sendPrimitive(TC_PAbort_Req* requestPrimitive, unsigned int linkNum,
+                     const SCCPAddress& src_addr, const SCCPAddress& dst_addr);
+  void sendPrimitive(TC_UAbort_Req* requestPrimitive, unsigned int linkNum,
+                     const SCCPAddress& src_addr, const SCCPAddress& dst_addr);
+
 private:
   OutPrimitivesProcessor* _outPrimitivesProcessor;
   MsgReadersPool* _msgReaders;

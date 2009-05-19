@@ -100,9 +100,17 @@ TCAPLayer::updateDialogue(TC_PAbort_Req* requestPrimitive)
 }
 
 void
-TCAPLayer::updateDialogue(TC_PAbort_Req* requestPrimitive, unsigned int linkNum)
+TCAPLayer::sendPrimitive(TC_PAbort_Req* requestPrimitive, unsigned int linkNum,
+                         const SCCPAddress& src_addr, const SCCPAddress& dst_addr)
 {
-  _outPrimitivesProcessor->sendPrimitive(requestPrimitive, linkNum);
+  _outPrimitivesProcessor->sendPrimitive(requestPrimitive, linkNum, src_addr, dst_addr);
+}
+
+void
+TCAPLayer::sendPrimitive(TC_UAbort_Req* requestPrimitive, unsigned int linkNum,
+                         const SCCPAddress& src_addr, const SCCPAddress& dst_addr)
+{
+  _outPrimitivesProcessor->sendPrimitive(requestPrimitive, linkNum, src_addr, dst_addr);
 }
 
 void
