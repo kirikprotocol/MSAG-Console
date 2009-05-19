@@ -66,6 +66,11 @@ bool USSManService::start()
         smsc_log_error(_logger, "%s: TCAPDispatcher startup failure", _logId);
         return false;
     }
+    if (!(_cfg.ssnSess = _disp->openSSN(_cfg.tcUsr.ownSsn, _cfg.tcUsr.maxDlgId, _logger))) {
+        smsc_log_error(_logger, "%s: SSN[%u] initialization failure", _logId,
+                       (unsigned)_cfg.tcUsr.ownSsn);
+        return false;
+    }
     smsc_log_debug(_logger, "%s: Started.", _logId);
     return _running = true;
 }
@@ -77,18 +82,20 @@ void USSManService::stop(bool do_wait/* = false*/)
         MutexGuard guard(_mutex);
         if (!_running && !do_wait)
             return;
-    }
-    //notify threads about stopping
-    smsc_log_debug(_logger, "%s: Stopping TCP server ..", _logId);
-    _server->Stop(0); //after that ConnectListenerITF methods are called
-    smsc_log_debug(_logger, "%s: Stopping TCAP dispatcher ..", _logId);
-    _disp->Stop(false);
-    {
-        MutexGuard guard(_mutex);
+        if (_running) {
+          ReverseMutexGuard rGrd(_mutex);
+          //notify threads about stopping
+          smsc_log_debug(_logger, "%s: Notifying TCP server ..", _logId);
+          _server->Stop(0); //after that ConnectListenerITF methods are called
+          smsc_log_debug(_logger, "%s: Notifyings TCAP dispatcher ..", _logId);
+          _disp->Stop(false);
+        }
         _running = false;
     }
     if (do_wait) { //wait for threads
+        smsc_log_debug(_logger, "%s: Stopping TCP server ..", _logId);
         _server->Stop(); //after that ConnectListenerITF methods are called
+        smsc_log_debug(_logger, "%s: Stopping TCAP dispatcher ..", _logId);
         _disp->Stop(true);
         smsc_log_debug(_logger, "%s: Stopped.", _logId);
     }

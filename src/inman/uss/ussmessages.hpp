@@ -1,6 +1,8 @@
-#ident "$Id$"
-
+/* ************************************************************************** *
+ * USSMan USS request execution protocol PDUs definition.
+ * ************************************************************************** */
 #ifndef __SMSC_INMAN_USS_USSMESSAGES__
+#ident "$Id$"
 #define __SMSC_INMAN_USS_USSMESSAGES__
 
 #include <logger/Logger.h>
@@ -15,12 +17,6 @@ using smsc::inman::interaction::ObjectBuffer;
 using smsc::inman::interaction::SerializableObjectAC;
 using smsc::inman::interaction::SerializerITF;
 
-#include <sstream>
-#include <iomanip>
-#include <util/BinDump.hpp>
-
-//NOTE: USSman considers the USS request encoding with DCS == 0xF4 as plain LATIN1 text
-#define USSMAN_LATIN1_DCS 0xF4 // 1111 0100
 
 namespace smsc  {
 namespace inman {
@@ -113,11 +109,17 @@ typedef std::vector<unsigned char> USSDATA_T;
 //Abstract class for USSman commands
 class USSMessageAC : public SerializableObjectAC {
 public:
-  USSMessageAC(unsigned short msgTag) : SerializableObjectAC(msgTag),
-                                        _dCS(0),_flg(UNKNOWN_CODING),_dCS_wasRead(false),
-                                        _logger(smsc::logger::Logger::getInstance("smsc.ussbalance"))
-  {}
-  virtual ~USSMessageAC() {}
+  enum  DataFlag_e {
+    PREPARED_USS_REQ=0, LATIN1_USS_TEXT, UCS2_USS_TEXT, UNKNOWN_CODING=0XFF
+  };
+
+  USSMessageAC(unsigned short msgTag)
+    : SerializableObjectAC(msgTag)
+    , _dCS(0), _flg(UNKNOWN_CODING), _dCS_wasRead(false)
+    , _logger(smsc::logger::Logger::getInstance("smsc.ussman"))
+  { }
+  virtual ~USSMessageAC()
+  { }
 
   //SerializableObjectAC interface:
   virtual void load(ObjectBuffer &in) throw(SerializerException);
@@ -142,18 +144,8 @@ public:
   const TonNpiAddress& getMSISDNadr(void) const { return _msAdr; }
   unsigned char    getDCS(void) const     { return _dCS; }
 
-  virtual std::string toString() const {
-    std::ostringstream obuf;
-    obuf << "msAddr=[" << _msAdr.toString()
-         << "],flg=["  << (uint32_t)_flg;
-    if ( _dCS_wasRead )
-      obuf << "],dCS=[" << static_cast<uint32_t>(_dCS);
-    obuf << "],ussData=[" << smsc::util::DumpHex(_ussData.size(), &_ussData[0])
-         << "]";
-    return obuf.str();
-  }
-
-  typedef enum { PREPARED_USS_REQ=0, LATIN1_USS_TEXT, UCS2_USS_TEXT, UNKNOWN_CODING=0XFF } flg_values_t;
+  virtual std::string toString() const;
+  
 protected:
   unsigned char   _dCS, _flg;
   bool            _dCS_wasRead;
@@ -182,14 +174,7 @@ public:
 
   const std::string& getIMSI() const { return _imsi; }
 
-  virtual std::string toString() const {
-    std::ostringstream obuf;
-    obuf << USSMessageAC::toString()
-         << ",IN_SSN=[" << static_cast<uint32_t>(_inSSN)
-         << "],INAddr=[" << _inAddr.toString()
-         << "]";
-    return obuf.str();
-  }
+  virtual std::string toString() const;
 private:
   unsigned char _inSSN;
   TonNpiAddress _inAddr;
@@ -209,15 +194,7 @@ public:
   unsigned short   getStatus(void) const  { return _status; }
   void setStatus(const unsigned short& status) { _status = status; }
 
-  virtual std::string toString() const {
-    std::ostringstream obuf;
-    obuf << "status=[" << _status
-         << "]";
-    if ( !_status )
-      obuf << "," 
-           << USSMessageAC::toString();
-    return obuf.str();
-  }
+  virtual std::string toString() const;
 
 private:
   unsigned short  _status;

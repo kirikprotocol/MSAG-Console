@@ -1,4 +1,6 @@
+#ifndef MOD_IDENT_OFF
 static char const ident[] = "$Id$";
+#endif /* MOD_IDENT_OFF */
 
 #include <assert.h>
 #include <string>
@@ -6,6 +8,7 @@ static char const ident[] = "$Id$";
 
 #include "util/vformat.hpp"
 using smsc::util::format;
+#include "util/BinDump.hpp"
 
 #include "inman/uss/ussmessages.hpp"
 #include "inman/common/cvtutil.hpp"
@@ -27,7 +30,7 @@ SerializerUSS::SerializerUSS()
 {
   registerProduct(USS2CMD::PROCESS_USS_REQUEST_TAG, new ProducerT<USSRequestMessage>());
   registerProduct(USS2CMD::PROCESS_USS_RESULT_TAG, new ProducerT<USSResultMessage>());
-  _logger = smsc::logger::Logger::getInstance("smsc.ussman.ussbalance");
+  _logger = smsc::logger::Logger::getInstance("smsc.ussman");
 }
 
 SerializerUSS* SerializerUSS::getInstance()
@@ -91,7 +94,7 @@ SerializablePacketAC* SerializerUSS::deserialize(ObjectBuffer& in) const
   std::auto_ptr<SerializableObjectAC> obj(create(objectId));
   if (!obj.get())
     throw SerializerException("USSrlzr: illegal command", SerializerException::invObject);
-  smsc_log_debug(_logger, "SerializerUSS::deserialize::: load SerializableObjectAC");
+//  smsc_log_debug(_logger, "SerializerUSS::deserialize::: load SerializableObjectAC");
   obj->load(in);  //throws
 
   std::auto_ptr<USSPacketAC> pck(new USSPacketAC(reqId));
@@ -167,34 +170,28 @@ void USSMessageAC::setMSISDNadr(const char * adrStr) throw (CustomException)
     throw CustomException("invalid msisdn: %s", adrStr);
 }
 
-/* ************************************************************************** *
- * class USSResultMessage implementation:
- * ************************************************************************** */
-bool  USSResultMessage::getUSSDataAsLatin1Text(std::string & str)
+std::string USSMessageAC::toString() const
 {
-  CBS_DCS    parsedDCS;
-
-  if (parseCBS_DCS(_dCS, parsedDCS) == CBS_DCS::dcGSM7Bit) {
-    unsigned ussdLen = unpack7BitPadded2Text(&_ussData[0], _ussData.size(), str);
-    //skip language prefix
-    if (parsedDCS.lngPrefix == CBS_DCS::lng4GSM7Bit)
-      str.erase(0, 3);
-    return true;
-  }
-  return false;
+  return format("msAddr=[%s],flg=[%u]%s,ussData=[%s]",
+                _msAdr.toString().c_str(), (unsigned)_flg,
+                _dCS_wasRead ? format(",dCS=[%u]", (unsigned)_dCS).c_str(): "",
+                DumpHex(_ussData.size(), &_ussData[0]).c_str()
+                );
 }
 
+
+/* ************************************************************************** *
+ * class USSRequestMessage implementation:
+ * ************************************************************************** */
 void USSRequestMessage::load(ObjectBuffer& in) throw(SerializerException)
 {
-//  smsc_log_debug(_logger, "USSRequestMessage::load::: Enter it");
   USSMessageAC::load(in);
   in >> _inSSN;
-//  smsc_log_debug(_logger, "USSRequestMessage::load::: read inSSN=%d", _inSSN);
   std::string inSaddr;
   in >> inSaddr;
-//  smsc_log_debug(_logger, "USSRequestMessage::load::: read inSaddr=%s", inSaddr.c_str());
   if (!_inAddr.fromText(inSaddr.c_str()))
     throw SerializerException("invalid IN isdn" , SerializerException::invObjData, NULL);
+
   in >> _imsi;
   if ( _imsi.length() > 32 )
     throw SerializerException(format("invalid IMSI len=%d", _imsi.length()).c_str(), SerializerException::invObjData, NULL);
@@ -207,11 +204,34 @@ void USSRequestMessage::save(ObjectBuffer& out) const
   out << _inAddr.toString();
 }
 
+std::string USSRequestMessage::toString() const
+{
+  std::string obuf = USSMessageAC::toString();
+  format(obuf, ",IN_SSN=[%u],INAddr=[%s]", (unsigned)_inSSN, _inAddr.toString().c_str());
+  return obuf;
+}
+
+
+/* ************************************************************************** *
+ * class USSResultMessage implementation:
+ * ************************************************************************** */
+bool  USSResultMessage::getUSSDataAsLatin1Text(std::string & str)
+{
+  CBS_DCS    parsedDCS;
+
+  if (parseCBS_DCS(_dCS, parsedDCS) == CBS_DCS::dcGSM7Bit) {
+    unsigned ussdLen = unpack7BitPadded2Text(&_ussData[0], (unsigned)_ussData.size(), str);
+    //skip language prefix
+    if (parsedDCS.lngPrefix == CBS_DCS::lng4GSM7Bit)
+      str.erase(0, 3);
+    return true;
+  }
+  return false;
+}
+
 void USSResultMessage::load(ObjectBuffer& in) throw(SerializerException)
 {
-//  smsc_log_debug(_logger, "USSResultMessage::load::: enter it");
   in >> _status;
-//  smsc_log_debug(_logger, "USSResultMessage::load::: read status=%d", _status);
   if (_status)
     return;
   USSMessageAC::load(in);
@@ -224,6 +244,17 @@ void USSResultMessage::save(ObjectBuffer& out) const
     return;
   USSMessageAC::save(out);
 }
+
+std::string USSResultMessage::toString() const
+{
+  std::string obuf = format("status=[%u]", _status);
+  if (!_status) {
+    obuf += ",";
+    obuf += USSMessageAC::toString();
+  }
+  return obuf;
+}
+
 
 } //interaction
 } //inman

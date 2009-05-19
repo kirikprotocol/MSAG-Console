@@ -6,6 +6,7 @@
 static char const ident[] = "$Id$";
 #endif /* MOD_IDENT_OFF */
 
+#include "inman/uss/ussversion.hpp"
 #include "inman/common/XCFManager.hpp"
 using smsc::util::config::XCFManager;
 
@@ -38,20 +39,22 @@ static const char * const _ussSrv = "ussbalance";
 static const char * const _ussLogId = "USSBalance";
 int main(int argc, char** argv)
 {
+  int   rval = 0;
   const char * cfgFile = "config.xml";
 
   tzset();
   Logger::Init();
   Logger * logger = Logger::getInstance("smsc.ussman");
 
-  smsc_log_info(logger,"*******************************");
-  smsc_log_info(logger,"* SIBINCO %s MANAGER *", _ussLogId);
-  smsc_log_info(logger,"*******************************");
+  smsc_log_info(logger,"*****************************************");
+  smsc_log_info(logger,"* SIBINCO %s MANAGER v%u.%u.%u *", _ussLogId,
+                USSMAN_VER_HIGH, USSMAN_VER_LOW, USSMAN_VER_FIX);
+  smsc_log_info(logger,"*****************************************");
 
   if (argc > 1)
     cfgFile = argv[1];
   smsc_log_info(logger,"* Config file: %s", cfgFile);
-  smsc_log_info(logger,"*******************************");
+  smsc_log_info(logger,"*****************************************");
 
   URCRegistryGlobalInit();
   std::auto_ptr<UssService_CFG> cfg;
@@ -100,8 +103,9 @@ int main(int argc, char** argv)
     smsc_log_fatal(logger, "%s", error.what() );
     fprintf( stderr, "Fatal error: %s\n", error.what() );
     delete service;
-    return 1;
+    rval = 1;
   }
 
-  return(0);
+  smsc_log_info(logger, "%s shutdown complete", _ussLogId);
+  return rval;
 }

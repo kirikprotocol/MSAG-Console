@@ -1,8 +1,8 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
  * 
  * ************************************************************************** */
 #ifndef __SMSC_INMAN_USS_USSREQUESTPROCESSOR_HPP__
+#ident "@(#)$Id$"
 # define __SMSC_INMAN_USS_USSREQUESTPROCESSOR_HPP__ 1
 
 //# include "logger/Logger.h"
@@ -13,23 +13,27 @@
 # include "inman/inap/map_uss/DlgMapUSS.hpp"
 # include "inman/comp/map_uss/MapUSSComps.hpp"
 
-# include "UssServiceCfg.hpp"
-# include "ussmessages.hpp"
-# include "USSManConnect.hpp"
+# include "inman/uss/UssServiceCfg.hpp"
+# include "inman/uss/ussmessages.hpp"
+# include "inman/uss/USSManConnect.hpp"
 
 namespace smsc {
 namespace inman {
 namespace uss {
 
+using smsc::core::synchronization::Mutex;
+using smsc::inman::interaction::USSDATA_T;
+using smsc::inman::inap::uss::MapUSSDlg;
+
+
 class USSRequestProcessor : public smsc::inman::inap::uss::USSDhandlerITF {
 public:
-  USSRequestProcessor(smsc::inman::interaction::Connect* conn,
-                      const UssService_CFG& cfg,
-                      const USSProcSearchCrit& ussProcSearchCrit,
+  USSRequestProcessor(Connect * conn, const UssService_CFG & cfg,
+                      uint32_t dialog_id, const USSProcSearchCrit & ussProcSearchCrit,
                       Logger * use_log = NULL);
   ~USSRequestProcessor();
-  void setDialogId(uint32_t dialogId);
-  void handleRequest(const smsc::inman::interaction::USSRequestMessage* requestObject);
+
+  void handleRequest(const smsc::inman::interaction::USSRequestMessage * requestObject);
 
   virtual void onMapResult(smsc::inman::comp::uss::MAPUSS2CompAC* arg);
   //dialog finalization/error handling:
@@ -39,26 +43,22 @@ public:
 
 private:
   void sendNegativeResponse();
-  TCSessionSR * getMAPSession(uint8_t rmt_ssn, const TonNpiAddress & rnpi,
-                              const char * _logId);
+  TCSessionSR * getMAPSession(uint8_t rmt_ssn, const TonNpiAddress & rnpi);
 
-  smsc::inman::interaction::Connect* _conn;
-  smsc::logger::Logger*              _logger;
-  smsc::inman::inap::uss::MapUSSDlg* _mapDialog;
+  Mutex                     _callbackActivityLock;
+  Connect *                 _conn;
+  const UssService_CFG &    _cfg;
+  uint32_t                  _dialogId;
+  const USSProcSearchCrit   _ussProcSearchCrit;
+  Logger *                  _logger;
 
-  UssService_CFG                     _cfg;
-
+  char          _logId[sizeof("USSReq[%u:%u]") + sizeof(unsigned int)*3 + 1];
+  MapUSSDlg *   _mapDialog;
   TonNpiAddress _msISDNAddr;
-  uint32_t      _dialogId;
-
-  smsc::inman::interaction::USSDATA_T _resultUssData;
+  USSDATA_T     _resultUssData;
   std::string   _resultUssAsString;
   bool          _resultAsLatin1;
   unsigned char _dcs;
-
-  smsc::core::synchronization::Mutex _callbackActivityLock;
-
-  const USSProcSearchCrit _ussProcSearchCrit;
 };
 
 } //uss

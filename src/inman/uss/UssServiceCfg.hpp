@@ -1,8 +1,8 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
- * 
+ * USSMan service configuration structure.
  * ************************************************************************** */
 #ifndef __SMSC_INMAN_USS_USSSERVICE_CFG_HPP__
+#ident "@(#)$Id$"
 # define __SMSC_INMAN_USS_USSSERVICE_CFG_HPP__
 
 #include "inman/interaction/server.hpp"
@@ -17,8 +17,9 @@ struct UssService_CFG {
   smsc::inman::inap::TCDsp_CFG   ss7;
   smsc::inman::inap::TCAPUsr_CFG tcUsr;
   smsc::inman::inap::TCAPDispatcherITF * tcDisp;
+  smsc::inman::inap::SSNSession * ssnSess;
 
-  UssService_CFG() : tcDisp(0)
+  UssService_CFG() : tcDisp(0), ssnSess(0)
   { }
 };
 

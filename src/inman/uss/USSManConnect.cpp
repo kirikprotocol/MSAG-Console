@@ -55,7 +55,7 @@ USSManConnect::~USSManConnect()
 void USSManConnect::onPacketReceived(smsc::inman::interaction::Connect* conn, // указатель на объект, обслуживающий соединение с клиентом ussman'a
                                          std::auto_ptr<smsc::inman::interaction::SerializablePacketAC>& recv_cmd) throw(std::exception)
 {
-  smsc_log_debug(_logger, "USSManConnect::onPacketReceived: Enter it");
+//  smsc_log_debug(_logger, "USSManConnect::onPacketReceived: Enter it");
   smsc::inman::interaction::USSPacketAC* requestPacket =
     static_cast<smsc::inman::interaction::USSPacketAC*>(recv_cmd.get());
 
@@ -75,19 +75,18 @@ void USSManConnect::onPacketReceived(smsc::inman::interaction::Connect* conn, //
     return;
   }
   DuplicateRequestChecker::getInstance().registerRequest(ussProcSearchCrit);
-  USSRequestProcessor* ussReqProc = new USSRequestProcessor(conn, _cfg, ussProcSearchCrit, _logger);
-
-  ussReqProc->setDialogId(requestPacket->dialogId());
+  USSRequestProcessor* ussReqProc = new USSRequestProcessor(conn, _cfg,
+                                        requestPacket->dialogId(), ussProcSearchCrit, _logger);
   ussReqProc->handleRequest(requestObject);
 
-  smsc_log_debug(_logger, "USSManConnect::onPacketReceived: Leave it");
+//  smsc_log_debug(_logger, "USSManConnect::onPacketReceived: Leave it");
 }
 
 //##ModelId=45753514006F
 void USSManConnect::onConnectError(smsc::inman::interaction::Connect* conn, std::auto_ptr<CustomException>& p_exc)
 {
-  smsc_log_debug(_logger, "USSManConnect::onConnectError: Enter it");
-  smsc_log_debug(_logger, "USSManConnect::onConnectError: Leave it");
+  smsc_log_debug(_logger, "USSManConnect::onConnectError: %s",
+                 p_exc.get() ? p_exc->what() : "unspecified");
 }
 
 }

@@ -1,10 +1,10 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
  * USSMan service connect: handles USS requests coming from assigned TCP
  * connect in asynchronous mode, manages corresponding USSD dialogs using
  * TCAP layer.
  * ************************************************************************** */
 #ifndef __SMSC_INMAN_USSMAN_CONNECT_HPP__
+#ident "@(#)$Id$"
 # define __SMSC_INMAN_USSMAN_CONNECT_HPP__ 1
 
 # include <memory>
@@ -15,19 +15,20 @@
 # include "inman/interaction/serializer.hpp"
 # include "util/Singleton.hpp"
 
-# include "UssServiceCfg.hpp"
+# include "inman/uss/UssServiceCfg.hpp"
 
 namespace smsc {
 namespace inman {
 namespace uss {
 
+using smsc::inman::interaction::Connect;
+
 class USSProcSearchCrit {
 public:
-  USSProcSearchCrit(unsigned char ssn,
-                    const TonNpiAddress& addr,
-                    uint32_t dialogId,
-                    const smsc::inman::interaction::Connect* conn)
-    : _ssn(ssn), _addr(addr), _dialogId(dialogId), _conn(conn) {}
+  USSProcSearchCrit(uint8_t ssn, const TonNpiAddress & addr,
+                          uint32_t dialog_id, Connect * conn)
+    : _ssn(ssn), _addr(addr), _dialogId(dialog_id), _conn(conn)
+  { }
 
   bool operator<(const USSProcSearchCrit& rhs) const {
     if (_ssn != rhs._ssn)
@@ -44,8 +45,8 @@ public:
 private:
   unsigned char _ssn;
   TonNpiAddress _addr;
-  uint32_t _dialogId;
-  const smsc::inman::interaction::Connect* _conn;
+  uint32_t      _dialogId;
+  Connect *     _conn;
 };
 
 class DuplicateRequestChecker : public smsc::util::Singleton<DuplicateRequestChecker> {

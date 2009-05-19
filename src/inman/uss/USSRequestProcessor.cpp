@@ -6,27 +6,31 @@ static char const ident[] = "$Id$";
 #include <vector>
 
 #include "util/ObjectRegistry.hpp"
+#include "util/BinDump.hpp"
 
-#include "inman/inap/dispatcher.hpp"
 #include "inman/common/cvtutil.hpp"
+#include "inman/inap/dispatcher.hpp"
 #include "inman/comp/map_uss/MapUSSFactory.hpp"
 using smsc::inman::comp::_ac_map_networkUnstructuredSs_v2;
 using smsc::inman::inap::SSNBinding;
 
-#include "USSRequestProcessor.hpp"
+#include "inman/uss/USSRequestProcessor.hpp"
 
 namespace smsc {
 namespace inman {
 namespace uss {
 
-USSRequestProcessor::USSRequestProcessor(smsc::inman::interaction::Connect* conn,
-                                         const UssService_CFG& cfg,
+USSRequestProcessor::USSRequestProcessor(Connect* conn,
+                                         const UssService_CFG& cfg, uint32_t dialog_id,
                                          const USSProcSearchCrit& ussProcSearchCrit,
                                          Logger * use_log/* = NULL*/)
-  : _conn(conn), _logger(use_log ? use_log : Logger::getInstance("smsc.ussman.BalanceService")),
-    _mapDialog(NULL), _cfg(cfg), _dialogId(0), _resultAsLatin1(false), _dcs(0),
-    _ussProcSearchCrit(ussProcSearchCrit)
-{ }
+  : _conn(conn), _cfg(cfg), _dialogId(dialog_id)
+  , _mapDialog(NULL), _resultAsLatin1(false), _dcs(0)
+  , _ussProcSearchCrit(ussProcSearchCrit)
+  , _logger(use_log ? use_log : Logger::getInstance("smsc.ussman.BalanceService"))
+{
+    snprintf(_logId, sizeof(_logId)-1, "USSreq[%u:%u]", _conn->getId(), _dialogId);
+}
 
 USSRequestProcessor::~USSRequestProcessor()
 {
@@ -39,19 +43,12 @@ USSRequestProcessor::~USSRequestProcessor()
   } catch(...) {}
 }
 
-void
-USSRequestProcessor::setDialogId(uint32_t dialogId)
-{
-  _dialogId = dialogId;
-}
-
-void
-USSRequestProcessor::sendNegativeResponse()
+void USSRequestProcessor::sendNegativeResponse()
 {
   smsc::inman::interaction::SPckUSSResult resultPacket;
   resultPacket.Cmd().setStatus(smsc::inman::interaction::USS2CMD::STATUS_USS_REQUEST_FAILED);
 
-  smsc_log_debug(_logger, "USSRequestProcessor::sendNegativeResponse::: send negative response=[%s]",
+  smsc_log_debug(_logger, "%s: send negative response=[%s]", _logId,
                  resultPacket.Cmd().toString().c_str());
   resultPacket.setDialogId(_dialogId);
   if ( _conn && _conn->sendPck(&resultPacket) == -1 ) {
@@ -63,7 +60,7 @@ void
 USSRequestProcessor::handleRequest(const smsc::inman::interaction::USSRequestMessage* requestObject)
 {
   TCSessionSR * _mapSess = getMAPSession(requestObject->get_IN_SSN(),
-                    requestObject->get_IN_ISDNaddr(), "USSRequestProcessor::handleRequest");
+                                         requestObject->get_IN_ISDNaddr());
   if (!_mapSess) {
     sendNegativeResponse();
     return;
@@ -79,8 +76,8 @@ USSRequestProcessor::handleRequest(const smsc::inman::interaction::USSRequestMes
                             &(requestObject->getMSISDNadr()), requestObject->getIMSI().c_str());
 
     _msISDNAddr = requestObject->getMSISDNadr();
-  } catch (std::exception & ex) {
-    smsc_log_error(_logger, "USSRequestProcessor::handleRequest::: catch exception [%s]", ex.what());
+  } catch (const std::exception & ex) {
+    smsc_log_error(_logger, "%s: MapUSSDlg exception [%s]", _logId, ex.what());
     sendNegativeResponse();
     throw;
   }
@@ -91,13 +88,13 @@ void USSRequestProcessor::onMapResult(smsc::inman::comp::uss::MAPUSS2CompAC* arg
   smsc::core::synchronization::MutexGuard mg(_callbackActivityLock);
   if ( arg->getUSSDataAsLatin1Text(_resultUssAsString) ) {
     _resultAsLatin1 = true;
-    smsc_log_debug(_logger, "USSRequestProcessor::onMapResult::: got USSData=[%s]",
+    smsc_log_debug(_logger, "%s: onMapResult::: got USSData=[%s]", _logId,
                    _resultUssAsString.c_str());
   } else {
     _resultUssData = arg->getUSSData();
     _dcs = arg->getDCS();
 
-    smsc_log_debug(_logger, "USSRequestProcessor::onMapResult::: got USSData=[%s], _dcs=%d",
+    smsc_log_debug(_logger, "$s: onMapResult::: got USSData=[%s], _dcs=%d", _logId,
                    smsc::util::DumpHex(_resultUssData.size(), &_resultUssData[0]).c_str(), _dcs);
   }
 }
@@ -112,7 +109,8 @@ void USSRequestProcessor::onEndMapDlg(RCHash ercode/* =0*/)
     if (!ercode) {
       // success and send result 
       // process std::vector result
-      smsc_log_debug(_logger, "USSRequestProcessor::onEndMapDlg::: _dcs=%02X _resultAsLatin1=%d", _dcs, _resultAsLatin1);
+      smsc_log_debug(_logger, "%s: onEndMapDlg::: _dcs=%02X _resultAsLatin1=%d",
+                     _logId, _dcs, _resultAsLatin1);
       if ( _resultAsLatin1 )
         resultPacket.Cmd().setUSSData(_resultUssAsString.c_str(), (unsigned)_resultUssAsString.size());
       else {
@@ -120,7 +118,7 @@ void USSRequestProcessor::onEndMapDlg(RCHash ercode/* =0*/)
         if (smsc::cbs::parseCBS_DCS(_dcs, cbs) == smsc::cbs::CBS_DCS::dcUCS2 && 
             !cbs.compressed &&
             !cbs.UDHind ) {
-          smsc_log_debug(_logger, "USSRequestProcessor::onEndMapDlg::: got UCS2 encoded message response");
+          smsc_log_debug(_logger, "%s: onEndMapDlg::: got UCS2 encoded message response", _logId);
           if ( cbs.lngPrefix == smsc::cbs::CBS_DCS::lng4UCS2 )
             resultPacket.Cmd().setUCS2USSData(std::vector<uint8_t>(&_resultUssData[0]+2,
                                                                    &_resultUssData[0]+_resultUssData.size()));
@@ -132,12 +130,12 @@ void USSRequestProcessor::onEndMapDlg(RCHash ercode/* =0*/)
       resultPacket.Cmd().setStatus(smsc::inman::interaction::USS2CMD::STATUS_USS_REQUEST_OK);
       resultPacket.Cmd().setMSISDNadr(_msISDNAddr);
     } else {
-      smsc_log_error(_logger, "USSRequestProcessor::onEndMapDlg: error %u: %s",
+      smsc_log_error(_logger, "%s: onEndMapDlg: error %u: %s", _logId,
                      ercode, URCRegistry::explainHash(ercode).c_str());
       resultPacket.Cmd().setStatus(smsc::inman::interaction::USS2CMD::STATUS_USS_REQUEST_FAILED);
     }
 
-    smsc_log_debug(_logger, "USSRequestProcessor::onEndMapDlg::: send response object=[%s]",
+    smsc_log_debug(_logger, "%s: onEndMapDlg::: send response object=[%s]", _logId,
                    resultPacket.Cmd().toString().c_str());
     resultPacket.setDialogId(_dialogId);
     if ( _conn && _conn->sendPck(&resultPacket) == -1 ) {
@@ -154,23 +152,21 @@ void USSRequestProcessor::onEndMapDlg(RCHash ercode/* =0*/)
 }
 
 
-TCSessionSR * USSRequestProcessor::getMAPSession(uint8_t rmt_ssn, const TonNpiAddress & rnpi,
-                                        const char * _logId)
+TCSessionSR * USSRequestProcessor::getMAPSession(uint8_t rmt_ssn, const TonNpiAddress & rnpi)
 {
     if (_cfg.tcDisp->ss7State() != smsc::inman::inap::TCAPDispatcherITF::ss7CONNECTED) {
         smsc_log_error(_logger, "%s: TCAPDispatcher is not connected!", _logId);
         return NULL;
     }
-    SSNSession * ssnSess = _cfg.tcDisp->openSSN(_cfg.tcUsr.ownSsn, _cfg.tcUsr.maxDlgId, _logger);
-    if (!ssnSess || (ssnSess->bindStatus() < SSNBinding::ssnPartiallyBound)) {
+    if (!_cfg.ssnSess || (_cfg.ssnSess->bindStatus() < SSNBinding::ssnPartiallyBound)) {
         smsc_log_error(_logger, "%s: SSN[%u] is not available/bound!", _logId,
                        (unsigned)_cfg.tcUsr.ownSsn);
         return NULL;
     }
-    TCSessionSR * mapSess = ssnSess->newSRsession(_cfg.tcUsr.ownAddr,
+    TCSessionSR * mapSess = _cfg.ssnSess->newSRsession(_cfg.tcUsr.ownAddr,
                 _ac_map_networkUnstructuredSs_v2, rmt_ssn, rnpi, _cfg.tcUsr.fakeSsn);
     if (!mapSess) {
-        std::string sid = ssnSess->mkSignature(_cfg.tcUsr.ownAddr,
+        std::string sid = _cfg.ssnSess->mkSignature(_cfg.tcUsr.ownAddr,
                                      _ac_map_networkUnstructuredSs_v2, rmt_ssn, &rnpi);
         smsc_log_error(_logger, "%s: Unable to init TCSR session: %s", _logId, sid.c_str());
     } else
@@ -179,6 +175,7 @@ TCSessionSR * USSRequestProcessor::getMAPSession(uint8_t rmt_ssn, const TonNpiAd
     return mapSess;
 }
 
-}
-}
-}
+} //uss
+} //inman
+} //smsc
+
