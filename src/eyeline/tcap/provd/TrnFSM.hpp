@@ -13,10 +13,12 @@ namespace eyeline {
 namespace tcap {
 namespace provd {
 
+class TDialogueServiceData;
+
 class TrnFSM {
 public:
-  explicit TrnFSM(uint32_t localTrnIdValue);
-  TrnFSM(uint32_t localTrnIdValue, uint32_t remoteTrnIdValue);
+  TrnFSM(TDialogueServiceData* tDlgSvcData, uint32_t localTrnIdValue);
+  TrnFSM(TDialogueServiceData* tDlgSvcData, uint32_t localTrnIdValue, uint32_t remoteTrnIdValue);
 
   void updateTransaction(const TC_Begin_Req& dialogueRequestPrimitive);
   void updateTransaction(const TC_Cont_Req& dialogueRequestPrimitive);
@@ -38,6 +40,7 @@ private:
   proto::TransactionId _trnId;
   typedef enum { IDLE, INIT_SENT, INIT_RECEIVED, ACTIVE } transaction_state_t;
   transaction_state_t _transactionState;
+  TDialogueServiceData* _tDlgSvcData;
 
   smsc::core::synchronization::Mutex _transactionStateLock;
 
