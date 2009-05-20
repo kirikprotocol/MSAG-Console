@@ -413,19 +413,27 @@ int SessionManagerImpl::Execute()
 
             Thread::Yield();
 
+            unsigned storeTotal;
+            unsigned storeLoaded;
+            unsigned storeLocked;
+            store_->getSessionsCount(storeTotal,storeLoaded,storeLocked);
+
             // const unsigned tot = unsigned(expireMap_.size());
             // const unsigned act = activeSessions_;
-            smsc_log_info( log_, "expire/flush=%u/%u act/tot=%u/%u inc=%u tmAE=%d/%d limTS=%u/%u run=%u",
-                            unsigned(curset.size()),
-                            unsigned(flushset.size()),
-                            activeSessions_,
-                            unsigned(expireMap_.size()),
-                            increment,
-                            oldwait,
-                            next,
-                            flushLimitTime_,
-                            flushLimitSize_,
-                            started ? 1 : 0 );
+            smsc_log_info( log_, "expire/flush=%u/%u act/tot=%u/%u tot/load/lock=%u/%u/%u inc=%u tmAE=%d/%d limTS=%u/%u run=%u",
+                           unsigned(curset.size()),
+                           unsigned(flushset.size()),
+                           activeSessions_,
+                           unsigned(expireMap_.size()),
+                           storeTotal,
+                           storeLoaded,
+                           storeLocked,
+                           increment,
+                           oldwait,
+                           next,
+                           flushLimitTime_,
+                           flushLimitSize_,
+                           started ? 1 : 0 );
             alldone = store_->expireSessions( curset, flushset );
 
             /*
