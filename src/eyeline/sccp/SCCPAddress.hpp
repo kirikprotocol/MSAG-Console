@@ -111,7 +111,7 @@ public:
   //
   uint8_t getSSN(void) const { return _ssn; }
   //
-  uint8_t getSPC(void) const { return _spc; }
+  uint16_t getSPC(void) const { return _spc; }
   //
   Routing_e getRouting(void) const
   {
