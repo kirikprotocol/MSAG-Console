@@ -38,6 +38,7 @@ static bool MAP_dispatching = false;
 //static bool MAP_isAlive = false;
 static bool MAP_aborting = false;
 
+
 volatile bool MAP_connectedInst[10]={
 false,
 };
@@ -78,7 +79,7 @@ extern "C" {
     }
     if(!isBound)
     {
-      MapIoTask::ReconnectThread::reportDisconnect(INSTARG0(rinst));
+      MapIoTask::ReconnectThread::reportDisconnect(INSTARG0(rinst),true);
     }
 #ifdef SNMP
     const char* sid="MAP_PROXY";
@@ -125,7 +126,7 @@ extern "C" {
             if( MapDialogContainer::boundLocalSSNs[INSTARG0(rinst)]&((uint64_t)1<<i) )
             {
               MapDialogContainer::boundLocalSSNs[INSTARG0(rinst)] &= ~((uint64_t)1<<i);
-              MapIoTask::ReconnectThread::reportDisconnect(INSTARG0(rinst));
+              MapIoTask::ReconnectThread::reportDisconnect(INSTARG0(rinst),true);
               /*
               __map_warn2__("%s: SSN %d rinst %d is unavailable trying to rebind",__func__,affectedSSN,INSTARG0(rinst));
               USHORT_T result = Et96MapBindReq(MY_USER_ID, lssn INSTARG(rinst));
@@ -168,7 +169,7 @@ extern "C" uint16_t onBrokenConn(uint16_t fromID,
                         uint8_t inst)
 {
   __map_warn2__("broken conn:%d->%d,%d",fromID,toID,inst);
-  MapIoTask::ReconnectThread::reportDisconnect(inst);
+  MapIoTask::ReconnectThread::reportDisconnect(inst,false);
   /*MutexGuard mg(reconnectMon);
   MAP_connectedInstCount--;
   if(inst<10)
@@ -180,7 +181,8 @@ extern "C" uint16_t onBrokenConn(uint16_t fromID,
   return RETURN_OK;
 }
 
-bool MapIoTask::connect(unsigned timeout) {
+bool MapIoTask::ReconnectThread::connect()
+{
   USHORT_T result;
   __map_warn__("Connecting to MAP stack");
 //  result = MsgOpen(MY_USER_ID);
@@ -210,11 +212,7 @@ bool MapIoTask::connect(unsigned timeout) {
   {
     return false;
   }
-  if( timeout > 0 )
-  {
-    __map_warn__("pause self and wait map initialization");
-    sleep(timeout);
-  }
+  sleep(1);
   bool bindOk=false;
   __map_warn2__("Binding %d subsystems", MapDialogContainer::numLocalSSNs);
   for(int n=0;n<MapDialogContainer::remInstCount;n++)
@@ -241,10 +239,13 @@ bool MapIoTask::connect(unsigned timeout) {
 
 EventMonitor MapIoTask::ReconnectThread::reconnectMon;
 
-void MapIoTask::ReconnectThread::reportDisconnect(int rinst)
+void MapIoTask::ReconnectThread::reportDisconnect(int rinst,bool needRel)
 {
   MutexGuard mg(reconnectMon);
-  EINSS7CpMsgRelInst( MY_USER_ID, ETSIMAP_ID,rinst);
+  if(needRel)
+  {
+    EINSS7CpMsgRelInst( MY_USER_ID, ETSIMAP_ID,rinst);
+  }
   if(MAP_connectedInst[rinst])
   {
     MAP_connectedInstCount--;
@@ -270,6 +271,70 @@ protected:
 };
 
 
+void MapIoTask::ReconnectThread::init()
+{
+  reinit:
+  if( isStopping || smsc::system::Smsc::getInstance().getStopFlag()) return;
+#ifdef EIN_HD
+  EINSS7CpMain_CpInit();
+  USHORT_T err = EINSS7CpRegisterMPOwner(MY_USER_ID);
+  if (err != RETURN_OK)
+  {
+    __map_warn2__("Error at EINSS7CpRegisterMPOwner, code 0x%hx",err);
+    sleep(1);
+    MsgExit();
+    goto reinit;
+    //throw runtime_error("MsgInit error");
+  }
+  err=EINSS7CpRegisterRemoteCPMgmt(CP_MANAGER_ID, 0, (char*)MapDialogContainer::remoteMgmtAddress.c_str());
+  if ( err != RETURN_OK)
+  {
+    __map_warn2__("Error at EINSS7CpRegisterRemoteCPMgmt, host='%s', code 0x%hx",MapDialogContainer::remoteMgmtAddress.c_str(),err);
+    sleep(1);
+    MsgExit();
+    goto reinit;
+    //throw runtime_error("MsgInit error");
+  }
+#endif
+//  __pingPongWaitCounter = 0;
+
+  for(int i=0;i<MapDialogContainer::localInstCount;i++)
+  {
+    err = EINSS7CpMsgInitiate( MAXENTRIES, MapDialogContainer::localInst[i], FALSE );
+    /*
+       if( MapDialogContainer::GetNodesCount() > 1 ) {
+       if( MapDialogContainer::GetNodeNumber() == 2 ) MY_USER_ID = USER06_ID;
+       } else {
+       err = EINSS7CpMsgInitiate( MAXENTRIES INSTARG(MapDialogContainer::localInst[0]), FALSE );
+       }*/
+    if ( err != RETURN_OK )
+    {
+      __map_warn2__("Error at MsgInit, code 0x%hx",err);
+      sleep(1);
+      MsgExit();
+      goto reinit;
+      //throw runtime_error("MsgInit error");
+    }
+  }
+  err= EINSS7CpMsgPortOpen( MY_USER_ID, TRUE);
+  if ( err != RETURN_OK )
+  {
+    __map_warn2__("Error at MsgOpen, code 0x%hx",err);
+    sleep(1);
+    MsgExit();
+    goto reinit;
+  }
+
+  {
+    if(!connect())
+    {
+      sleep(1);
+      MsgExit();
+      goto reinit;
+    }
+  }
+}
+
 int MapIoTask::ReconnectThread::Execute()
 {
   USHORT_T result;
@@ -278,13 +343,29 @@ int MapIoTask::ReconnectThread::Execute()
     MutexGuard mg(reconnectMon);
     if(MAP_connectedInstCount==MapDialogContainer::remInstCount)
     {
-      reconnectMon.wait();
+      reconnectMon.wait(5000);
     }
     if(MAP_connectedInstCount==MapDialogContainer::remInstCount)
     {
       continue;
     }
+    if(isStopping)
+    {
+      break;
+    }
     sleep(1);
+
+    if(MAP_connectedInstCount==0)
+    {
+      if(!firstConnect)
+      {
+        disconnect();
+      }
+      firstConnect=false;
+      init();
+      continue;
+    }
+
     for(int n=0;n<MapDialogContainer::remInstCount;n++)
     {
       if(MAP_connectedInst[MapDialogContainer::remInst[n]])
@@ -346,70 +427,10 @@ void MapIoTask::init(unsigned timeout)
   {
     MapDialogContainer::boundLocalSSNs[i] = 0;
   }
-  reinit:
-  if( isStopping || smsc::system::Smsc::getInstance().getStopFlag()) return;
-#ifdef EIN_HD
-  EINSS7CpMain_CpInit();
-  err = EINSS7CpRegisterMPOwner(MY_USER_ID);
-  if (err != RETURN_OK)
-  {
-    __map_warn2__("Error at EINSS7CpRegisterMPOwner, code 0x%hx",err);
-    sleep(1);
-    MsgExit();
-    goto reinit;
-    //throw runtime_error("MsgInit error");
-  }
-  err=EINSS7CpRegisterRemoteCPMgmt(CP_MANAGER_ID, 0, (char*)MapDialogContainer::remoteMgmtAddress.c_str());
-  if ( err != RETURN_OK)
-  {
-    __map_warn2__("Error at EINSS7CpRegisterRemoteCPMgmt, host='%s', code 0x%hx",MapDialogContainer::remoteMgmtAddress.c_str(),err);
-    sleep(1);
-    MsgExit();
-    goto reinit;
-    //throw runtime_error("MsgInit error");
-  }
-#endif
-//  __pingPongWaitCounter = 0;
-
-  for(int i=0;i<MapDialogContainer::localInstCount;i++)
-  {
-    err = EINSS7CpMsgInitiate( MAXENTRIES, MapDialogContainer::localInst[i], FALSE );
-    /*
-       if( MapDialogContainer::GetNodesCount() > 1 ) {
-       if( MapDialogContainer::GetNodeNumber() == 2 ) MY_USER_ID = USER06_ID;
-       } else {
-       err = EINSS7CpMsgInitiate( MAXENTRIES INSTARG(MapDialogContainer::localInst[0]), FALSE );
-       }*/
-    if ( err != RETURN_OK )
-    {
-      __map_warn2__("Error at MsgInit, code 0x%hx",err);
-      sleep(1);
-      MsgExit();
-      goto reinit;
-      //throw runtime_error("MsgInit error");
-    }
-  }
-  err= EINSS7CpMsgPortOpen( MY_USER_ID, TRUE);
-  if ( err != RETURN_OK )
-  {
-    __map_warn2__("Error at MsgOpen, code 0x%hx",err);
-    sleep(1);
-    MsgExit();
-    goto reinit;
-  }
-
-  {
-    if(!connect(timeout))
-    {
-      sleep(1);
-      MsgExit();
-      goto reinit;
-    }
-  }
   __map_trace__("MAP proxy init complete");
 }
 
-void MapIoTask::disconnect()
+void MapIoTask::ReconnectThread::disconnect()
 {
 #ifdef SNMP
   smsc::system::SnmpCounter::SmeTrapSeverities smeTrpSvrt=smsc::system::SnmpCounter::getInstance().getSmeSeverities("MAP_PROXY");
@@ -448,6 +469,10 @@ void MapIoTask::disconnect()
 //  result = MsgRel(MY_USER_ID,ETSIMAP_ID);
   for(int i=0;i<MapDialogContainer::remInstCount;i++)
   {
+    if(!MAP_connectedInst[i])
+    {
+      continue;
+    }
     result = EINSS7CpMsgRelInst( MY_USER_ID, ETSIMAP_ID, MapDialogContainer::remInst[i]);
     if ( result != MSG_OK)
     {
@@ -468,16 +493,15 @@ void MapIoTask::disconnect()
   {
     MapDialogContainer::getInstance()->DropAllDialogs(MapDialogContainer::remInst[i]);
   }
+  MsgExit();
 }
 
-void MapIoTask::deinit( bool connected )
+void MapIoTask::deinit()
 {
   USHORT_T result;
   __map_warn__("deinitialize MAP_PROXY");
+  ReconnectThread::disconnect();
   MapDialogContainer::destroyInstance();
-  disconnect();
-
-  MsgExit();
 }
 
 struct ReceiveGuard{
@@ -797,6 +821,11 @@ void MapIoTask::Start()
       __map_warn2__("exception in mapio, restarting: %s",e.what());
       kill(getpid(),9);
     }
+    tp.startTask(new ReconnectThread());
+    do{
+      sleep(1);
+    }while(MAP_connectedInstCount==0);
+
     is_started = true;
     __trace2__("signal mapiotask start:%p",startevent);
     startevent->SignalAll();
@@ -805,7 +834,6 @@ void MapIoTask::Start()
     {
       tp.startTask(new DispatcherExecutor(this));
     }
-    tp.startTask(new ReconnectThread());
   } catch (exception& e) {
     __map_warn2__("exception in mapio: %s",e.what());
   }

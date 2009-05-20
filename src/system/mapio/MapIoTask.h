@@ -1508,7 +1508,7 @@ public:
   {
     isStopping=true;
     tp.Wait();
-    deinit(true);
+    deinit();
   }
   ~MapIoTask()
   {
@@ -1548,7 +1548,7 @@ protected:
 public:
   class ReconnectThread:public smsc::core::threads::ThreadedTask{
   public:
-    ReconnectThread():isStopping(false)
+    ReconnectThread():isStopping(false),firstConnect(true)
     {
     }
     virtual int Execute();
@@ -1557,9 +1557,13 @@ public:
       isStopping=true;
     }
     virtual const char* taskName() { return "MapIoTask::reconnect";}
-    static void reportDisconnect(int rinst);
+    static void reportDisconnect(int rinst,bool needRel);
+    void init();
+    bool connect();
+    static void disconnect();
   protected:
     bool isStopping;
+    bool firstConnect;
     static EventMonitor reconnectMon;
   };
 
@@ -1572,9 +1576,7 @@ private:
   bool is_started;
   void dispatcher();
   void init(unsigned timeout=0);
-  bool connect(unsigned timeout=0);
-  void deinit(bool connected);
-  void disconnect();
+  void deinit();
 
   void handleMessage(MSG_T& message);
 };
