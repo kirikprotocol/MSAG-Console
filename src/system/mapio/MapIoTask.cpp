@@ -187,6 +187,7 @@ bool MapIoTask::ReconnectThread::connect()
   __map_warn__("Connecting to MAP stack");
 //  result = MsgOpen(MY_USER_ID);
   MAP_connectedInstCount=0;
+  int attempt=0;
   while(!isStopping && MAP_connectedInstCount==0)
   {
     for(int n=0;n<MapDialogContainer::remInstCount;n++)
@@ -195,7 +196,7 @@ bool MapIoTask::ReconnectThread::connect()
       result = EINSS7CpMsgConnNotify(MY_USER_ID, ETSIMAP_ID, MapDialogContainer::remInst[n],onBrokenConn);
       if ( result != RETURN_OK )
       {
-        __map_warn2__("Error at MsgConn, code 0x%hx, sleep 1 sec and retry connect",result);
+        __map_warn2__("Error at MsgConn, code %hd, sleep 1 sec and retry connect",result);
       }else
       {
         MAP_connectedInstCount++;
@@ -206,6 +207,8 @@ bool MapIoTask::ReconnectThread::connect()
     {
       __map_warn__("No instancies are connected. Sleep 1 sec before reconnect attempt");
       sleep(1);
+      attempt++;
+      if(attempt==5)return false;
     }
   }
   if(isStopping)
@@ -358,6 +361,7 @@ int MapIoTask::ReconnectThread::Execute()
 
     if(MAP_connectedInstCount==0)
     {
+      MutexTempUnlock mung(reconnectMon);
       if(!firstConnect)
       {
         disconnect();
