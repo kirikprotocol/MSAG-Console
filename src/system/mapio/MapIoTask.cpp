@@ -275,9 +275,10 @@ void MapIoTask::ReconnectThread::init()
 {
   reinit:
   if( isStopping || smsc::system::Smsc::getInstance().getStopFlag()) return;
+  USHORT_T err;
 #ifdef EIN_HD
   EINSS7CpMain_CpInit();
-  USHORT_T err = EINSS7CpRegisterMPOwner(MY_USER_ID);
+  err = EINSS7CpRegisterMPOwner(MY_USER_ID);
   if (err != RETURN_OK)
   {
     __map_warn2__("Error at EINSS7CpRegisterMPOwner, code 0x%hx",err);
