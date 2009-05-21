@@ -39,14 +39,31 @@ public:
 
   virtual ErrorCode_e unbind(unsigned int suaConnectNum) = 0;
 
-  virtual ErrorCode_e unitdata_req(const uint8_t* message,
-                           uint16_t messageSize,
-                           const uint8_t* calledAddr,
-                           uint8_t calledAddrLen,
-                           const uint8_t* callingAddr,
-                           uint8_t callingAddrLen,
-                           const MessageProperties& msgProperties,
-                           unsigned int suaConnectNum) = 0;
+  struct CallResult {
+    CallResult(ErrorCode_e anOperationResult, unsigned int aSuaConnectNum)
+      : operationResult(anOperationResult), suaConnectNum(aSuaConnectNum)
+    {}
+
+    ErrorCode_e operationResult;
+    unsigned int suaConnectNum;
+  };
+
+  virtual CallResult unitdata_req(const uint8_t* message,
+                                  uint16_t messageSize,
+                                  const uint8_t* calledAddr,
+                                  uint8_t calledAddrLen,
+                                  const uint8_t* callingAddr,
+                                  uint8_t callingAddrLen,
+                                  const MessageProperties& msgProperties) = 0;
+
+  virtual CallResult unitdata_req(const uint8_t* message,
+                                  uint16_t messageSize,
+                                  const uint8_t* calledAddr,
+                                  uint8_t calledAddrLen,
+                                  const uint8_t* callingAddr,
+                                  uint8_t callingAddrLen,
+                                  const MessageProperties& msgProperties,
+                                  unsigned int suaConnectNum) = 0;
 
   virtual ErrorCode_e msgRecv(MessageInfo* msgInfo, uint32_t timeout=0) = 0;
 

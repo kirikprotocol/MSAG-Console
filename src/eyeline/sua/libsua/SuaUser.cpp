@@ -266,7 +266,23 @@ SuaUser::unbind(unsigned int suaConnectNum)
   }
 }
 
-SuaApi::ErrorCode_e
+SuaApi::CallResult
+SuaUser::unitdata_req(const uint8_t* message,
+                      uint16_t messageSize,
+                      const uint8_t* calledAddr,
+                      uint8_t calledAddrLen,
+                      const uint8_t* callingAddr,
+                      uint8_t callingAddrLen,
+                      const MessageProperties& msgProperties)
+{
+  unsigned int suaConnectNum = getConnNumByPolicy();
+
+  return unitdata_req(message, messageSize, calledAddr, calledAddrLen,
+                      callingAddr, callingAddrLen, msgProperties,
+                      suaConnectNum);
+}
+
+SuaApi::CallResult
 SuaUser::unitdata_req(const uint8_t* message,
                       uint16_t messageSize,
                       const uint8_t* calledAddr,
@@ -277,7 +293,7 @@ SuaUser::unitdata_req(const uint8_t* message,
                       unsigned int suaConnectNum)
 {
   if ( !_wasInitialized )
-    return SUA_NOT_INITIALIZED;
+    return SuaApi::CallResult(SUA_NOT_INITIALIZED, suaConnectNum);
 
   communication::libsua_messages::N_UNITDATA_REQ_Message unitdataReqMessage;
 
@@ -305,24 +321,24 @@ SuaUser::unitdata_req(const uint8_t* message,
     smsc::core::synchronization::MutexGuard synchronize(_lock);
 
     if ( suaConnectNum >= _knownLinks.size() )
-      return WRONG_CONNECT_NUM;
+      return SuaApi::CallResult(WRONG_CONNECT_NUM, suaConnectNum);
 
     LinkInfo& linkInfo = _knownLinks[suaConnectNum];
 
     if ( linkInfo.connectionState == linkBINDED ) {
       linkInfo.socket->getOutputStream()->write(tp.packetBody, tp.packetLen);
       smsc_log_info(_logger, "send message=[%s] to link=[%s], linkId=%d", utilx::hexdmp(tp.packetBody, tp.packetLen).c_str(), linkInfo.toString().c_str(), suaConnectNum);
-      return OK;
+      return SuaApi::CallResult(OK, suaConnectNum);
     } else {
       smsc_log_error(_logger, "SuaUser::unitdata_req::: connection for link=[%s] hasn't been binded, linkId=%d", linkInfo.toString().c_str(), suaConnectNum);
-      return NOT_BINDED;
+      return SuaApi::CallResult(NOT_BINDED, suaConnectNum);
     }
   } catch (smsc::util::SystemError& ex) {
     smsc_log_error(_logger, "SuaUser::unitdata_req::: catched SystemError exception=[%s]", ex.what());
-    return SYSTEM_ERROR;
+    return SuaApi::CallResult(SYSTEM_ERROR, suaConnectNum);
   } catch (smsc::util::Exception& ex) {
     smsc_log_error(_logger, "SuaUser::unitdata_req::: catched unexpected exception=[%s]", ex.what());
-    return SYSTEM_MALFUNCTION;
+    return SuaApi::CallResult(SYSTEM_MALFUNCTION, suaConnectNum);
   }
 }
 
@@ -361,7 +377,6 @@ SuaUser::msgRecv(MessageInfo* msgInfo, uint32_t timeout)
       if ( cacheEntry->expectedMessageSize == 0 || 
            cacheEntry->expectedMessageSize > cacheEntry->ringBuf.getSizeOfAvailData() )
         cacheEntry->ringBuf.load(iStream);
-	
 
       if ( cacheEntry->expectedMessageSize == 0 && cacheEntry->ringBuf.getSizeOfAvailData()>=4)
         cacheEntry->expectedMessageSize = cacheEntry->ringBuf.readUint32();

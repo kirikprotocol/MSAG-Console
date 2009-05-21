@@ -38,20 +38,29 @@ public:
 
   virtual ErrorCode_e unbind(unsigned int suaConnectNum);
 
-  virtual ErrorCode_e unitdata_req(const uint8_t* message,
-                           uint16_t messageSize,
-                           const uint8_t* calledAddr,
-                           uint8_t calledAddrLen,
-                           const uint8_t* callingAddr,
-                           uint8_t callingAddrLen,
-                           const MessageProperties& msgProperties,
-                           unsigned int suaConnectNum);
+  virtual CallResult unitdata_req(const uint8_t* message,
+                                  uint16_t messageSize,
+                                  const uint8_t* calledAddr,
+                                  uint8_t calledAddrLen,
+                                  const uint8_t* callingAddr,
+                                  uint8_t callingAddrLen,
+                                  const MessageProperties& msgProperties);
+
+  virtual CallResult unitdata_req(const uint8_t* message,
+                                  uint16_t messageSize,
+                                  const uint8_t* calledAddr,
+                                  uint8_t calledAddrLen,
+                                  const uint8_t* callingAddr,
+                                  uint8_t callingAddrLen,
+                                  const MessageProperties& msgProperties,
+                                  unsigned int suaConnectNum);
 
   virtual ErrorCode_e msgRecv(MessageInfo* msgInfo, uint32_t timeout=0);
 
   virtual size_t sua_getConnectsCount() const;
 protected:
   virtual int getConnNumByPolicy();
+
 private:
   enum LinkState_e { linkNOT_CONNECTED, linkCONNECTED, linkBINDED };
 
