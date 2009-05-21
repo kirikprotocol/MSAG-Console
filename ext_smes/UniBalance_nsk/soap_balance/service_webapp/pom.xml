@@ -60,6 +60,7 @@
       <groupId>org.codehaus.xfire</groupId>
       <artifactId>xfire-core</artifactId>
       <version>1.2.6</version>
+<!--
       <exclusions>
         <exclusion>
           <groupId>javax.activation</groupId>
@@ -86,22 +87,19 @@
           <artifactId>stax-api</artifactId>
         </exclusion>
         <exclusion>
-          <groupId>commons-codec</groupId>
-          <artifactId>commons-codec</artifactId>
-        </exclusion>
-        <exclusion><!-- ????????????? -->
           <groupId>org.apache.ws.commons</groupId>
           <artifactId>XmlSchema</artifactId>
         </exclusion>
-        <exclusion><!-- ?????????? -->
+        <exclusion>
           <groupId>org.codehaus.woodstox</groupId>
           <artifactId>wstx-asl</artifactId>
         </exclusion>
-        <exclusion><!-- ??????? -->
+        <exclusion>
           <groupId>commons-httpclient</groupId>
           <artifactId>commons-httpclient</artifactId>
         </exclusion>
       </exclusions>
+-->
     </dependency>
 
     <dependency>
