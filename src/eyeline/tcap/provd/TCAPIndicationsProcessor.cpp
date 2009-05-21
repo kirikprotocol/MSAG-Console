@@ -1,13 +1,17 @@
+#ifndef MOD_IDENT_OFF
+static char const ident[] = "@(#)$Id$";
+#endif /* MOD_IDENT_OFF */
+
 #include "eyeline/utilx/Exception.hpp"
 #include "eyeline/tcap/Exception.hpp"
 
-#include "TCAPIndicationsProcessor.hpp"
-#include "AppCtxSMRegistry.hpp"
-#include "TDlgReqSerializer.hpp"
-#include "TDialogueServiceDataRegistry.hpp"
-#include "P_U_AbortPrimitiveUtils.hpp"
-#include "TCAPLayer.hpp"
-#include "TCAPConfiguration.hpp"
+#include "eyeline/tcap/provd/TCAPIndicationsProcessor.hpp"
+#include "eyeline/tcap/provd/AppCtxSMRegistry.hpp"
+#include "eyeline/tcap/provd/TDlgReqSender.hpp"
+#include "eyeline/tcap/provd/TDialogueServiceDataRegistry.hpp"
+#include "eyeline/tcap/provd/P_U_AbortPrimitiveUtils.hpp"
+#include "eyeline/tcap/provd/TCAPLayer.hpp"
+#include "eyeline/tcap/provd/TCAPConfiguration.hpp"
 
 namespace eyeline {
 namespace tcap {

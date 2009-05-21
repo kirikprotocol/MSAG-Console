@@ -8,19 +8,22 @@
 #include "eyeline/tcap/TDialogueIndicationPrimitives.hpp"
 #include "eyeline/tcap/provd/SUAIndications.hpp"
 #include "eyeline/tcap/provd/TCAPIndicationsProcessor.hpp"
+#include "eyeline/tcap/proto/TCAPMessage.hpp"
 
 namespace eyeline {
 namespace tcap {
 namespace provd {
 
+using eyeline::tcap::proto::TCAPMessage;
+
 //Basic abstract class for all indication dispatchers
 class TDlgIndicationDispatcherAC {
 protected:
-  bool setAddresses(const SUAMessageIndAC & sua_ind,
-                       TDialogueIndicationPrimitive & t_ind);
+  TCAPMessage & _tMsg;
 
 public:
-  TDlgIndicationDispatcherAC()
+  TDlgIndicationDispatcherAC(TCAPMessage & use_tmsg)
+    : _tMsg(use_tmsg)
   { }
   virtual ~TDlgIndicationDispatcherAC()
   { }
@@ -30,8 +33,6 @@ public:
   // -----------------------------------------------
   //calls appropriate dispatching method of TDlgHandler
   virtual bool dispatchTInd(TCAPIndicationsProcessor * use_hdl, unsigned int suaConnectNum) = 0;
-  //
-  virtual TDialogueIndicationPrimitive & TInd(void) = 0;
 };
 
 template <class _TArg /* pubic: TDialogueIndicationPrimitive */>
@@ -39,17 +40,13 @@ class TDlgIndicationDispatcherT : public TDlgIndicationDispatcherAC {
 protected:
   _TArg _tInd;
 
-  bool unpackAddresses(const SUAMessageIndAC & sua_ind)
-  {
-    return setAddresses(sua_ind, _tInd);
-  }
-
 public:
   TDlgIndicationDispatcherT(TCAPMessage & use_tmsg)
-    : _tInd(use_tmsg)
+    : TDlgIndicationDispatcherAC(use_tmsg)
   { }
   virtual ~TDlgIndicationDispatcherT()
   { }
+
   // -----------------------------------------------
   // -- TDlgIndicationDispatcherAC interface methods
   // -----------------------------------------------
@@ -57,7 +54,7 @@ public:
   {
     return use_hdl->updateDialogue(_tInd, suaConnectNum);
   }
-  TDialogueIndicationPrimitive & TInd(void) { return _tInd; }
+
 };
 
 class TBeginIndDispatcher : public TDlgIndicationDispatcherT<TC_Begin_Ind> {
@@ -68,7 +65,8 @@ public:
   //
   bool bindSUAInd(const SUAUnitdataInd & sua_ind)
   {
-    return unpackAddresses(sua_ind);
+    //TODO: Compose TC_Begin_Ind
+    return false;
   }
 //  TC_Begin_Ind & TBeginInd(void) { return _tInd; }
 };
@@ -81,7 +79,8 @@ public:
   //
   bool bindSUAInd(const SUAUnitdataInd & sua_ind)
   {
-    return unpackAddresses(sua_ind);
+    //TODO: Compose TC_Cont_Ind 
+    return false;
   }
 //  TC_Cont_Ind & TContInd(void) { return _tInd; }
 };
@@ -94,7 +93,8 @@ public:
   //
   bool bindSUAInd(const SUAUnitdataInd & sua_ind)
   {
-    return unpackAddresses(sua_ind);
+    //TODO: Compose TC_End_Ind 
+    return false;
   }
 //  TC_End_Ind & TEndInd(void) { return _tInd; }
 };
@@ -107,7 +107,8 @@ public:
   //
   bool bindSUAInd(const SUAUnitdataInd & sua_ind)
   {
-    return unpackAddresses(sua_ind);
+    //TODO: Compose TC_PAbort_Ind 
+    return false;
   }
 //  TC_PAbort_Ind & TPAbortInd(void) { return _tInd; }
 };
@@ -120,7 +121,8 @@ public:
   //
   bool bindSUAInd(const SUAUnitdataInd & sua_ind)
   {
-    return unpackAddresses(sua_ind);
+    //TODO: Compose TC_UAbort_Ind 
+    return false;
   }
 //  TC_UAbort_Ind & TUAbortInd(void) { return _tInd; }
 };
@@ -133,8 +135,8 @@ public:
   //
   bool bindSUAInd(const SUANoticeInd & sua_ind)
   {
-    //TODO: process Notice_Ind specific stuff
-    return unpackAddresses(sua_ind);
+    //TODO: Compose TC_Notice_Ind 
+    return false;
   }
 //  TC_Notice_Ind & TNoticeInd(void) { return _tInd; }
 };
@@ -143,7 +145,7 @@ public:
 //TCAP dialogue indications dispatcher: implements functionality on creating
 //  TCAP dialogue indications from received SUA message and dispatching the
 //  former to appropriate TCAP dialogue handler.
-class TDlgIndicationDispatcher : public SUAIndHandlerIface {
+class TDlgIndicationDispatcher : SUAIndHandlerIface {
 public:
   enum IKind_e {
     indNone = 0, indTBegin, indTCont, indTEnd, indTPAbrt, indTUAbrt, indTNotice
@@ -181,6 +183,12 @@ protected:
 
   void Reset(IKind_e use_ikind = indNone);
 
+  // ----------------------------------------
+  // -- SUAIndHandlerIface interface methods
+  // ----------------------------------------
+  bool processSuaInd(const SUAUnitdataInd & sua_ind);
+  bool processSuaInd(const SUANoticeInd & sua_ind);
+
 public:
   TDlgIndicationDispatcher(IKind_e use_ikind = indNone)
     : _kind(use_ikind)
@@ -198,18 +206,11 @@ public:
 
   IKind_e indKind(void) const { return _kind; }
 
-  MessageInfo* suaMsgBuf(void) { return &_msgSUA; }
+  MessageInfo * suaMsgBuf(void) { return &_msgSUA; }
 
   //Parses SUA mesage buffer, decodes TCAP message, composes appropriate TCAP
   //Indication prinitive and creates its dispatcher (by calling processSuaInd())
   bool processSuaMsgBuf(void);
-
-  //TODO: may be there is a reason to move to protected section ?
-  // ----------------------------------------
-  // -- SUAIndHandlerIface interface methods
-  // ----------------------------------------
-  bool processSuaInd(const SUAUnitdataInd & sua_ind);
-  bool processSuaInd(const SUANoticeInd & sua_ind);
 
   // ------------------------------------------------------------
   // NOTE: following methods should be called ONLY after one of
@@ -218,11 +219,6 @@ public:
   bool dispatchTInd(TCAPIndicationsProcessor * use_hdl)
   {
     return _dsp.pAc ? _dsp.pAc->dispatchTInd(use_hdl, _msgSUA.suaConnectNum) : false;
-  }
-  //
-  TDialogueIndicationPrimitive * TInd(void)
-  {
-    return _dsp.pAc ? &(_dsp.pAc->TInd()) : 0;
   }
 };
 

@@ -5,7 +5,7 @@
 # include "eyeline/sua/libsua/SuaUser.hpp"
 # include "eyeline/tcap/TDialogueId.hpp"
 # include "eyeline/tcap/TDialogueRequestPrimitives.hpp"
-# include "eyeline/tcap/provd/TDlgReqSerializer.hpp"
+# include "eyeline/tcap/provd/TDlgReqSender.hpp"
 # include "eyeline/tcap/provd/TDialogueServiceDataRegistry.hpp"
 
 namespace eyeline {
@@ -34,7 +34,7 @@ protected:
                     TReqSendResult::ResultCode_e resultCode);
 
   void activateTimers(TDialogueServiceDataRegistry::registry_element_ref_t& tDlgSvcData,
-                      const ROSComponentsList& compList);
+                      const ROSComponentsList * compList);
 private:
   sua::libsua::SuaApi* _suaApi;
 };

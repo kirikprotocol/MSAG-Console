@@ -14,21 +14,23 @@ namespace eyeline {
 namespace tcap {
 
 using eyeline::sccp::SCCPAddress;
-using eyeline::asn1::EncodedOID;
+//using eyeline::asn1::EncodedOID;
 
 class TDialogueRequestPrimitive : public TDialogueHandlingPrimitive {
 protected:
-  TCAPMessage _msgTC;
+  bool                _retOnErr;
+  TDlgUserInfo        _usrInfo;
+  ROSComponentsList   _comps;
+  const EncodedOID *  _acOId;
 
 public:
-  TDialogueRequestPrimitive(TCAPMessage::TKind_e use_tkind = TCAPMessage::t_none)
-    : TDialogueHandlingPrimitive(_msgTC), _msgTC(use_tkind)
+  TDialogueRequestPrimitive()
+    : _retOnErr(false), _acOId(0)
   { }
   virtual ~TDialogueRequestPrimitive()
   { }
 
-  void setAppCtx(const EncodedOID & use_acid)
-  { /*TODO: _msgTC.setAppCtx() */ }
+  void setAppCtx(const EncodedOID & use_acid) { _acOId = &use_acid; }
 
   //These methods only for 1st response to T_Begin_Ind
   void acceptDlgByUser(void)
@@ -37,43 +39,53 @@ public:
                        proto::AssociateSourceDiagnostic::dsu_null)
   { /*TODO: */  }
 
-  void setReturnOnError();
-  bool getReturnOnError() const;
+  void setReturnOnError() { _retOnErr = true; }
+  bool getReturnOnError() const { return _retOnErr; }
 
-  //TODO: request specific stuff
+  // ------------------------------------------------
+  // -- TDialogueHandlingPrimitive interface methods
+  // ------------------------------------------------
+  virtual const EncodedOID * getAppCtx(void) const { return _acOId; }
+  virtual ROSComponentsList * CompList(void) { return &_comps; }
+  virtual TDlgUserInfo * UserInfo(void) { return &_usrInfo; }
 };
 
 //
 class TC_Begin_Req : public TDialogueRequestPrimitive {
+protected:
+  SCCPAddress   _orgAdr;
+  SCCPAddress   _dstAdr;
+
 public:
   TC_Begin_Req()
-    : TDialogueRequestPrimitive(TCAPMessage::t_begin)
   { }
 
-  void setOrigAddress(const SCCPAddress & use_adr);
-  const SCCPAddress & getOrigAddress(void) const;
+  void setOrigAddress(const SCCPAddress & use_adr) { _orgAdr = use_adr; }
+  const SCCPAddress & getOrigAddress(void) const { return _orgAdr; }
 
-  void setDestAddress(const SCCPAddress & use_adr);
-  const SCCPAddress & getDestAddress(void) const;
+  void setDestAddress(const SCCPAddress & use_adr) { _dstAdr = use_adr; }
+  const SCCPAddress & getDestAddress(void) const { return _dstAdr; }
 
   //TODO: setters
 };
 //
 class TC_Cont_Req : public TDialogueRequestPrimitive {
+protected:
+  SCCPAddress   _orgAdr;
+
 public:
   TC_Cont_Req()
-    : TDialogueRequestPrimitive(TCAPMessage::t_continue)
   { }
 
-  void setOrigAddress(const SCCPAddress & use_adr);
-  const SCCPAddress & getOrigAddress(void) const;
+  void setOrigAddress(const SCCPAddress & use_adr) { _orgAdr = use_adr; }
+  const SCCPAddress & getOrigAddress(void) const { return _orgAdr; }
+
   //TODO: setters
 };
 //
 class TC_End_Req : public TDialogueRequestPrimitive {
 public:
   TC_End_Req()
-    : TDialogueRequestPrimitive(TCAPMessage::t_end)
   { }
 
   typedef enum { PREARRANGED_END, BASIC_END } end_transaction_facility_t;
@@ -86,7 +98,6 @@ public:
 class TC_UAbort_Req : public TDialogueRequestPrimitive {
 public:
   TC_UAbort_Req()
-    : TDialogueRequestPrimitive(TCAPMessage::t_abort)
   { }
 
   //TODO: setters for TCAbrtPDU or TCExternal

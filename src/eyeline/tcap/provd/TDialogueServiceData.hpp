@@ -79,7 +79,7 @@ protected:
   template<class T_DIALOGUE_NOT_TERMINATION_IND_PRIMITIVE>
   void handleDialogueNotTerminationIndPrimitive(T_DIALOGUE_NOT_TERMINATION_IND_PRIMITIVE* tDlgNotTermIndPrimitive);
 
-  void handleInvocationResults(ROSComponentsList& componentsList);
+  void handleInvocationResults(const ROSComponentsList * componentsList);
 
   TimeoutMonitor::timeout_id_t getDialogueTimeoutId();
   void setDialogueTimeoutId(TimeoutMonitor::timeout_id_t timeoutId);

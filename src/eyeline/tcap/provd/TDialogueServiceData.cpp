@@ -278,9 +278,12 @@ TDialogueServiceData::cancelInvocationTimer(uint8_t invokeId)
 }
 
 void
-TDialogueServiceData::handleInvocationResults(ROSComponentsList& componentsList)
+TDialogueServiceData::handleInvocationResults(const ROSComponentsList * componentsList)
 {
-  for (ros::ROSComponentsList::const_iterator it = componentsList.begin(); it != componentsList.end(); ++it) {
+  if (!componentsList || componentsList->empty())
+    return;
+
+  for (ros::ROSComponentsList::const_iterator it = componentsList->begin(); it != componentsList->end(); ++it) {
     ros::ROSComponentPrimitive* rosCompPrimitive = it->get();
     if ( rosCompPrimitive ) {
       ros::ROSComponentPrimitive::Kind_e rosKind = rosCompPrimitive->rosKind();

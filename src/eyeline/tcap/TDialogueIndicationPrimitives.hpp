@@ -14,45 +14,72 @@ namespace tcap {
 using eyeline::sccp::SCCPAddress;
 
 class TDialogueIndicationPrimitive : public TDialogueHandlingPrimitive {
+protected:
+  const EncodedOID *  _acOId;
+  ROSComponentsList * _comps;
+  TDlgUserInfo *      _usrInfo;
+
 public:
-  TDialogueIndicationPrimitive();
-  TDialogueIndicationPrimitive(TCAPMessage & use_tmsg)
-    : TDialogueHandlingPrimitive(use_tmsg)
+  TDialogueIndicationPrimitive(const EncodedOID * use_ac = NULL,
+                               ROSComponentsList * use_comps = NULL,
+                               TDlgUserInfo * use_ui = NULL)
+    : _acOId(use_ac), _comps(use_comps), _usrInfo(use_ui)
   { }
   virtual ~TDialogueIndicationPrimitive()
   { }
+
+  // ------------------------------------------------
+  // -- TDialogueHandlingPrimitive interface methods
+  // ------------------------------------------------
+  virtual const EncodedOID * getAppCtx(void) const { return _acOId; }
+  virtual ROSComponentsList * CompList(void) { return _comps; }
+  virtual TDlgUserInfo * UserInfo(void) { return _usrInfo; }
 
   //TODO: indications specific stuff
 };
 
 //
 class TC_Begin_Ind : public TDialogueIndicationPrimitive {
+protected:
+  //TODO:  friend eyeline::tcap::provd::TBeginIndDispatcher;
+
+  SCCPAddress   _orgAdr;
+  SCCPAddress   _dstAdr;
+
 public:
-  TC_Begin_Ind(TCAPMessage & use_tmsg)
-    : TDialogueIndicationPrimitive(use_tmsg)
+  TC_Begin_Ind(const EncodedOID * use_ac = NULL,
+               ROSComponentsList * use_comps = NULL, TDlgUserInfo * use_ui = NULL)
+    : TDialogueIndicationPrimitive(use_ac, use_comps, use_ui)
   { }
 
-  const SCCPAddress & getOrigAddress(void) const;
-  const SCCPAddress & getDestAddress(void) const;
+  const SCCPAddress & getOrigAddress(void) const { return _orgAdr; }
+  const SCCPAddress & getDestAddress(void) const { return _dstAdr; }
   //TODO: getters
 };
 //
 class TC_Cont_Ind : public TDialogueIndicationPrimitive {
+protected:
+  //TODO: friend eyeline::tcap::provd::TContIndDispatcher;
+
+  SCCPAddress   _orgAdr;
+  SCCPAddress   _dstAdr;
+
 public:
-  TC_Cont_Ind(TCAPMessage & use_tmsg)
-    : TDialogueIndicationPrimitive(use_tmsg)
+  TC_Cont_Ind(const EncodedOID * use_ac = NULL,
+               ROSComponentsList * use_comps = NULL, TDlgUserInfo * use_ui = NULL)
+    : TDialogueIndicationPrimitive(use_ac, use_comps, use_ui)
   { }
 
-  // TODO: original and destination addresses must be filled from corresponding fields of CLDT message
-  const SCCPAddress & getOrigAddress(void) const;
-  const SCCPAddress & getDestAddress(void) const;
+  const SCCPAddress & getOrigAddress(void) const { return _orgAdr; }
+  const SCCPAddress & getDestAddress(void) const { return _dstAdr; }
   //TODO: getters
 };
 //
 class TC_End_Ind : public TDialogueIndicationPrimitive {
 public:
-  TC_End_Ind(TCAPMessage & use_tmsg)
-    : TDialogueIndicationPrimitive(use_tmsg)
+  TC_End_Ind(const EncodedOID * use_ac = NULL,
+               ROSComponentsList * use_comps = NULL, TDlgUserInfo * use_ui = NULL)
+    : TDialogueIndicationPrimitive(use_ac, use_comps, use_ui)
   { }
 
   //TODO: getters
@@ -60,47 +87,46 @@ public:
 //
 class TC_UAbort_Ind : public TDialogueIndicationPrimitive {
 public:
-  TC_UAbort_Ind(TCAPMessage & use_tmsg)
-    : TDialogueIndicationPrimitive(use_tmsg)
+  TC_UAbort_Ind(const EncodedOID * use_ac = NULL,
+                TDlgUserInfo * use_ui = NULL)
+    : TDialogueIndicationPrimitive(use_ac, 0, use_ui)
   { }
 
   //TODO: getters for TCAbrtPDU or TCExternal
 };
 //
 class TC_PAbort_Ind : public TDialogueIndicationPrimitive {
+protected:
+  PAbortCause_e _cause;
+
 public:
-  TCAPMessage _fake_msg;
-
-  TC_PAbort_Ind()
-    : TDialogueIndicationPrimitive(_fake_msg)
+  TC_PAbort_Ind(const EncodedOID * use_ac = NULL)
+    : TDialogueIndicationPrimitive(use_ac, 0, 0)
+    , _cause(TDialogueHandlingPrimitive::p_genericError)
   { }
 
-  TC_PAbort_Ind(TCAPMessage & use_tmsg)
-    : TDialogueIndicationPrimitive(use_tmsg)
-  { }
-
-  void setPAbortCause(PAbortCause_e cause);
-  //TODO: getters for P_AbortCause
+  void setPAbortCause(PAbortCause_e use_cause) { _cause = use_cause; }
+  PAbortCause_e getPAbortCause(void) const { return _cause; }
 };
 
 //
 class TC_Notice_Ind : public TDialogueIndicationPrimitive {
 public:
-  TCAPMessage _fake_msg;
-
-  TC_Notice_Ind()
-    : TDialogueIndicationPrimitive(_fake_msg)
-  { }
-
-  TC_Notice_Ind(TCAPMessage & use_tmsg)
-    : TDialogueIndicationPrimitive(use_tmsg)
-  { }
-
+  //TODO: enhance ReportCause_e to indicate most used 'real life' values
   enum ReportCause_e { INVALID_TCUSER_DATA, SCCP_ERROR };
 
-  void setReportCause(ReportCause_e cause);
-  ReportCause_e getReportCause();
-  //TODO: getters for returnCause
+protected:
+  ReportCause_e _cause;
+
+public:
+  TC_Notice_Ind(const EncodedOID * use_ac = NULL,
+               ROSComponentsList * use_comps = NULL, TDlgUserInfo * use_ui = NULL)
+    : TDialogueIndicationPrimitive(use_ac, use_comps, use_ui)
+    , _cause(INVALID_TCUSER_DATA)
+  { }
+
+  void setReportCause(ReportCause_e use_cause) { _cause = use_cause; }
+  ReportCause_e getReportCause(void) const { return _cause; }
 };
 
 } //tcap

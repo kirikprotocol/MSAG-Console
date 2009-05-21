@@ -7,7 +7,7 @@
 # include "eyeline/tcap/proto/TransactionId.hpp"
 # include "eyeline/tcap/TDialogueRequestPrimitives.hpp"
 # include "eyeline/tcap/TDialogueIndicationPrimitives.hpp"
-# include "eyeline/tcap/provd/TDlgReqSerializer.hpp"
+# include "eyeline/tcap/provd/TDlgPAbortReq.hpp"
 
 namespace eyeline {
 namespace tcap {

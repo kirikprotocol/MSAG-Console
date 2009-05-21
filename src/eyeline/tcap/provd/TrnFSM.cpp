@@ -1,11 +1,16 @@
-#include "TrnFSM.hpp"
-#include "TDialogueServiceData.hpp"
+#ifndef MOD_IDENT_OFF
+static char const ident[] = "@(#)$Id$";
+#endif /* MOD_IDENT_OFF */
+
+//#include "core/synchronization/MutexGuard.hpp"
 #include "eyeline/utilx/Exception.hpp"
-#include "core/synchronization/MutexGuard.hpp"
+//#include "eyeline/tcap/provd/TrnFSM.hpp"
+#include "eyeline/tcap/provd/TDialogueServiceData.hpp"
 
 namespace eyeline {
 namespace tcap {
 namespace provd {
+
 
 TrnFSM::TrnFSM(TDialogueServiceData* tDlgSvcData, uint32_t localTrnIdValue)
   : _tDlgSvcData(tDlgSvcData), _trnId(proto::TransactionId::orgLocal, localTrnIdValue),
