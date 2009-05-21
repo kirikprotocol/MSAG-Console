@@ -75,7 +75,7 @@ public:
     setASyntax(use_astyp, use_descr);
   }
   UIValue(uint32_t use_uid, const BITBuffer & use_enc, const char * use_descr = NULL)
-    :  kind(valNone)
+    :  _kind(valNone)
   {
     _pVal.ptr = 0;
     setEncoding(use_uid, use_enc, use_descr);
@@ -83,10 +83,10 @@ public:
 
   void setASyntax(const AbstractSyntaxRfp & use_astyp, const char * use_descr = NULL)
   {
-    resetObj(valAs);
-    _pVal.pAs = use_astyp;
+    resetObj(valAS);
+    *_pVal.pAs = use_astyp;
     if (use_descr)
-      descr = use_descr;
+      _descr = use_descr;
   }
   void setEncoding(uint32_t use_uid, const BITBuffer & use_enc, const char * use_descr = NULL)
   {
@@ -94,7 +94,7 @@ public:
     _pVal.pEnc->typeId = use_uid;
     _pVal.pEnc->typeEnc = use_enc;
     if (use_descr)
-      descr = use_descr;
+      _descr = use_descr;
   }
 
   ValueKind_e Kind(void) const { return _kind; }
