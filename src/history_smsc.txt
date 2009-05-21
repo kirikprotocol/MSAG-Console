@@ -315,3 +315,48 @@ B3101: Apr 08, 2009
     Inman	preserving special GT SMSX for FR on SMSX
     core	TimeSlotCounter IncDistr fix
     core	FixedLengthString init with null fix
+
+B3102: May 06, 2009
+    SMSC	reconnect to stack in separate thread
+    SMSC	reconnect for HD stack fix
+    SMSC	HD rinst & null dialog fix (SMSX core)
+    SMSC	unused mapMutex removed
+    SMSC	prevent possible deadlock on HD rinst logic
+    SMSC	static vars redesigned to avoid bug in CC for xeon processor in smeman, sms, mapproxy
+    SMSC	increased max of tasks to 64k
+    SMSC	fill source imsi in openreq from destRef
+    SMSC	imsi & msc clean in dialog on reuse
+    Inman	EIN SS7 HD autoreconnect support
+    Inman	fix for reconnection if no SSN opened for HD
+    Inman	Possible deadlock while stopping dispatcher is fixed
+    Inman	HD onDisconnect() handling is fixed
+    Inman	Deadlock on aborting timers while shutdowning is fixed
+    Inman	Infinite rescheduling in SchedulerSEQ is fixed
+    emailsme	mr in partitioned sms fix
+    Infosme	Show status in TaskWeeklyTableHelper
+    Infosme	Change delimiter in exported csv files from ',' to ';'
+    Infosme	Add Start and End columns in TaskStatTableHelper
+    Infosme	Add Export Without Texts button to Messages page
+    Infosme	Add posibility to add messages to existing task via 'infosme import file' command
+    Infosme	Add posibility to add text into ImageCell
+    Infosme	Russian localization for InfoSme
+    Infosme	Add Enable/Disable buttons to Tasks page
+    Infosme	Add 'Total' field in statistics
+    Infosme	Add 'Weekly' view to Tasks
+    Infosme	Add 'Tasks' view to Statistics
+    Infosme	Multithread MessageDataSource
+    Infosme	Use Visitor in MessageDataSource, StatDataSource and  TaskDataSource
+    Webadm	pauseAfterDisconnect and timeout added for emailsme config
+    core	owning thread identification upon return from wait() is fixed    
+
+B3103: May 21, 2009
+    SMSC	map reconnect fix
+    SMSC	MapIoTask.cpp, MapIoTask.h: reinit map connect from zero if all instancies are disconnected
+    SMSC	full locker queue fix for if sme push many commands on one msgid
+    SMSC	state ind reconnect fix bindconf and state ind dispatch under mutex
+    Ussman	proper SS7 SSNs initialization
+    Ussman	HD SS7 reconnect via ss7None state
+    Inman	Possible deadlock while Aborting ConnectManager is fixed
+    Inman	TaskSchedulerSEQ possible heap corruption is fixed
+    Inman	HD SS7 reconnect via ss7None state    
+    core	ReverseMutexGuard is added
