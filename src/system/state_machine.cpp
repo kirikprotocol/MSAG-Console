@@ -997,7 +997,7 @@ StateType StateMachine::submit(Tuple& t)
     );
     return ERROR_STATE;
   }
-  
+
   if(sms->hasIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM) &&
      (
        sms->getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM)<1 ||
@@ -1570,17 +1570,17 @@ StateType StateMachine::submit(Tuple& t)
   }
 
   SmeInfo dstSmeInfo=smsc->getSmeInfo(c.dest_proxy_index);
-  
+
 #ifdef SMSEXTRA
-  
+
   SmeInfo srcSmeInfo=smsc->getSmeInfo(c.src_proxy->getSystemId());
-  
+
   if(srcSmeInfo.SME_N==EXTRA_GROUPS)
   {
     smsc_log_debug(smsLog,"added EXTRA_GROUPS to SMSC_EXTRAFLAGS from smeN");
     sms->setIntProperty(Tag::SMSC_EXTRAFLAGS,sms->getIntProperty(Tag::SMSC_EXTRAFLAGS)|EXTRA_GROUPS);
   }
-  
+
   /*
   if((sms->getIntProperty(Tag::SMSC_EXTRAFLAGS)&EXTRA_NICK) &&
      (
@@ -1859,7 +1859,7 @@ StateType StateMachine::submit(Tuple& t)
     //__trace2__("SUBMIT_SM: dest_addr_subunit=%d",sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT));
 
     /*
-    //         
+    //
           .
     if(ri.smeSystemId=="MAP_PROXY" && sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)==0x03)
     {
@@ -2033,8 +2033,8 @@ StateType StateMachine::submit(Tuple& t)
         smsc->registerStatisticalEvent(StatEvents::etSubmitOk,sms);
       }
 
-      // sms   ,   Next Time,  
-      //    - ,      
+      // sms   ,   Next Time,
+      //    - ,
       //     sms  ,   ok.
       char buf[64];
       sprintf(buf,"%lld",t.msgId);
@@ -2227,8 +2227,8 @@ StateType StateMachine::submitChargeResp(Tuple& t)
       smsc->registerStatisticalEvent(StatEvents::etSubmitOk,sms);
     }
 
-    // sms   ,   Next Time,  
-    //    - ,      
+    // sms   ,   Next Time,
+    //    - ,
     //     sms  ,   ok.
     char buf[64];
     sprintf(buf,"%lld",t.msgId);
@@ -2438,12 +2438,12 @@ StateType StateMachine::submitChargeResp(Tuple& t)
         Descriptor d;
         __trace__("SUBMIT_SM: change state to enroute");
         changeSmsStateToEnroute(*sms,t.msgId,d,Status::SYSERR,rescheduleSms(*sms));
-        
+
       }catch(...)
       {
         __warning__("SUBMIT_SM: failed to change state to enroute");
       }
-      
+
       warn2(smsLog, "SBMDLV: failed to create task, seqnum=%d Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
             dialogId2,
             t.msgId,dialogId,
@@ -2452,13 +2452,13 @@ StateType StateMachine::submitChargeResp(Tuple& t)
             src_proxy->getSystemId(),
             sms->getDestinationSmeId()
             );
-      
+
       if(!isTransaction && !isDatagram)
       {
         smsc->registerStatisticalEvent(StatEvents::etDeliverErr,sms);
       }
       sendNotifyReport(*sms,t.msgId,"system failure");
-      
+
       return ENROUTE_STATE;
     }
   }catch(...)
@@ -3189,6 +3189,18 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
 
   SmeInfo dstSmeInfo=smsc->getSmeInfo(dest_proxy_index);
 
+  if(dstSmeInfo.systemId!=sms.getDestinationSmeId() || ri.routeId!=sms.getRouteId())
+  {
+    sms.setDestinationSmeId(dstSmeInfo.systemId.c_str());
+    sms.setRouteId(ri.routeId.c_str());
+    try{
+      store->replaceSms(t.msgId,sms);
+    }catch(...)
+    {
+      smsc_log_warn(smsLog,"Failed to replace smsId=%lld",t.msgId);
+    }
+  }
+
   if((dstSmeInfo.interfaceVersion&0xf0)==0x50 && sms.hasStrProperty(Tag::SMSC_RECIPIENTADDRESS))
   {
     sms.setOriginatingAddress(sms.getStrProperty(Tag::SMSC_RECIPIENTADDRESS).c_str());
@@ -3578,7 +3590,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
     if((sms.getValidTime()<=now) || //expired or
        RescheduleCalculator::calcNextTryTime(now,sms.getLastResult(),sms.getAttemptsCount())==-1 || //max attempts count reached or
        softLimit  //soft limit reached
-       ) 
+       )
     {
       sms.setLastResult(softLimit?Status::SCHEDULERLIMIT:Status::EXPIRED);
       //smsc->registerStatisticalEvent(StatEvents::etRescheduled,&sms);
