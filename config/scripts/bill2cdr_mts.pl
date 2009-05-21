@@ -4,6 +4,7 @@ use Text::CSV_XS;
 use IO::File;
 use strict;
 use File::Copy;
+use Fcntl ':flock';
 use Time::Local qw(timegm timelocal);
 
 BEGIN{
@@ -24,12 +25,16 @@ use CommaSeparated2;
 
 #use re 'debug';
 
-my $guard=FileGuard->new('/data/conf/scripts/bill2cdr.running');
-unless($guard->guard())
-{
-  print "bill2cdr already running\n";
-  exit;
-}
+#my $guard=FileGuard->new('/data/conf/scripts/bill2cdr.running');
+#unless($guard->guard())
+#{
+#  print "bill2cdr already running\n";
+#  exit;
+#}
+my $lock;
+open($lock,'>/data/conf/scripts/bill2cdr.running');
+flock($lock,LOCK_EX);
+
 
 $SIG{INT}=sub
 {
