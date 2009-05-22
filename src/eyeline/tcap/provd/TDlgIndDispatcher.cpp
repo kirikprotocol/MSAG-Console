@@ -19,7 +19,7 @@ typedef eyeline::asn1::ASTypeAC::DECResult DECResult;
 
 
 TC_Notice_Ind::ReportCause_e 
-  convertSuaApiError2TNoticeCause(SuaApi::ErrorCode_e sua_rc)
+convertSuaApiError2TNoticeCause(sua::libsua::SuaApi::ErrorCode_e sua_rc)
 {
   //TODO: 
   return eyeline::tcap::TC_Notice_Ind::errSCCPFailure;
