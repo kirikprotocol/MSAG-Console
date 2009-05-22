@@ -11,28 +11,22 @@ namespace provd {
 /* ************************************************************************* *
  * class TDlgRequestSenderAC implementation
  * ************************************************************************* */
-TReqSendResult
+SuaApi::CallResult
 TDlgRequestSenderAC::sendMessage(SuaApi * sua_iface) const
 {
-  SuaApi::CallResult rc = sua_iface->unitdata_req(_udt.userData(), _udt.userDataLen(),
-                                                  _udt.calledAddr(), _udt.calledAddrLen(),
-                                                  _udt.callingAddr(), _udt.callingAddrLen(),
-                                                  _udt.msgProperties());
-  return TReqSendResult(( rc.operationResult == SuaApi::OK ) ?
-                        TReqSendResult::SEND_OK : TReqSendResult::SCCP_ERROR,
-                        rc.suaConnectNum);
+  return sua_iface->unitdata_req(_udt.userData(), _udt.userDataLen(),
+                                 _udt.calledAddr(), _udt.calledAddrLen(),
+                                 _udt.callingAddr(), _udt.callingAddrLen(),
+                                 _udt.msgProperties());
 }
 
-TReqSendResult
+SuaApi::CallResult
 TDlgRequestSenderAC::sendMessage(SuaApi * sua_iface, unsigned int link_num) const
 {
-  SuaApi::CallResult rc = sua_iface->unitdata_req(_udt.userData(), _udt.userDataLen(),
-                                                  _udt.calledAddr(), _udt.calledAddrLen(),
-                                                  _udt.callingAddr(), _udt.callingAddrLen(),
-                                                  _udt.msgProperties(), link_num);
-  return TReqSendResult(( rc.operationResult == SuaApi::OK ) ?
-                        TReqSendResult::SEND_OK : TReqSendResult::SCCP_ERROR,
-                        rc.suaConnectNum);
+  return sua_iface->unitdata_req(_udt.userData(), _udt.userDataLen(),
+                                 _udt.calledAddr(), _udt.calledAddrLen(),
+                                 _udt.callingAddr(), _udt.callingAddrLen(),
+                                 _udt.msgProperties(), link_num);
 }
 
 

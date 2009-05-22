@@ -17,17 +17,6 @@ namespace provd {
 using eyeline::sua::libsua::SuaApi;
 using eyeline::tcap::proto::AssociateSourceDiagnostic;
 
-struct TReqSendResult {
-  enum ResultCode_e { SEND_OK = 0, INVALID_DATA, SCCP_ERROR, UNKNOWN_DIALOGUE_ID };
-
-  TReqSendResult(ResultCode_e aResultCode, unsigned int aLinkNum)
-    : resultCode(aResultCode), linkNum(aLinkNum)
-  {}
-
-  ResultCode_e resultCode;
-  unsigned int linkNum;
-};
-
 class TDlgRequestSenderAC {
 public:
   //NOTE: srlzBadComponentPortion error enforces TC_L_Reject_Ind,
@@ -58,9 +47,9 @@ public:
                                               const SCCPAddress & dst_addr) = 0;
 
   // ----------------------------------------------
-  TReqSendResult sendMessage(SuaApi * sua_iface) const;
+  SuaApi::CallResult sendMessage(SuaApi * sua_iface) const;
 
-  TReqSendResult sendMessage(SuaApi * sua_iface, unsigned int link_num) const;
+  SuaApi::CallResult sendMessage(SuaApi * sua_iface, unsigned int link_num) const;
 
   //These methods only for 1st response to T_Begin_Ind
   void rejectDlgByProvider(AssociateSourceDiagnostic::DlgSrvProvider_e use_cause =
