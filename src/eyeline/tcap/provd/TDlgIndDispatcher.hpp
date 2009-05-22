@@ -5,6 +5,7 @@
 #ident "@(#)$Id$"
 #define __ELC_TCAP_INDICATIONS_DISPATCHER_HPP
 
+#include "eyeline/sua/libsua/SuaApi.hpp"
 #include "eyeline/tcap/TDialogueIndicationPrimitives.hpp"
 #include "eyeline/tcap/provd/SUAIndications.hpp"
 #include "eyeline/tcap/provd/TCAPIndicationsProcessor.hpp"
@@ -17,7 +18,7 @@ namespace provd {
 using eyeline::tcap::proto::TCAPMessage;
 
 extern TC_Notice_Ind::ReportCause_e 
-            convertSuaApiError2TNoticeCause(SuaApi::ErrorCode_e sua_rc);
+convertSuaApiError2TNoticeCause(sua::libsua::SuaApi::ErrorCode_e sua_rc);
 
 //Basic abstract class for all indication dispatchers
 class TDlgIndicationDispatcherAC {
