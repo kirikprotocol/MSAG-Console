@@ -16,6 +16,9 @@ namespace provd {
 
 using eyeline::tcap::proto::TCAPMessage;
 
+extern TC_Notice_Ind::ReportCause_e 
+            convertSuaApiError2TNoticeCause(SuaApi::ErrorCode_e sua_rc);
+
 //Basic abstract class for all indication dispatchers
 class TDlgIndicationDispatcherAC {
 protected:
