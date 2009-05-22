@@ -19,4 +19,14 @@ hexdmp(const uchar_t* buf, size_t bufSz)
   return hexBuf.str();
 }
 
+char*
+hexdmp(char* dumpBuf, size_t dumpBufSz, const uchar_t* buf, size_t bufSz)
+{
+  int offset=0;
+  for (size_t i=0; i<bufSz; ++i)
+    offset = snprintf(dumpBuf + offset, dumpBufSz - offset, "%02X", buf[i]);
+
+  return dumpBuf;
+}
+
 }}

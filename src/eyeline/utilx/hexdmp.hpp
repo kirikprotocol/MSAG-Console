@@ -10,6 +10,9 @@ namespace utilx {
 std::string
 hexdmp(const uchar_t* buf, size_t bufSz);
 
+char*
+hexdmp(char* dumpBuf, size_t dumpBufSz, const uchar_t* buf, size_t bufSz);
+
 }}
 
 #endif
