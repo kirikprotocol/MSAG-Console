@@ -17,6 +17,7 @@ public:
 
   typedef uint8_t problem_code_t;
 
+  enum problem_code_e { BAD_COMPONENT_PROTION = 1, GENERAL_PROBLEM = 255 };
   void setProblemCode(problem_code_t problemCode) { _problemCode = problemCode; _isSetProblemCode = true; }
   problem_code_t getProblemCode() const {
     if ( _isSetProblemCode )
