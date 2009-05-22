@@ -2,7 +2,10 @@
 # ident "@(#)$Id$"
 # define __EYELINE_TCAP_TCOMPONENTHANDLINGPRIMITIVE_HPP__
 
+# include <sys/types.h>
+
 # include "eyeline/utilx/Exception.hpp"
+# include "eyeline/tcap/TDialogueId.hpp"
 
 namespace eyeline {
 namespace tcap {
