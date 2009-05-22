@@ -135,7 +135,7 @@ public:
   TC_Notice_Ind(const EncodedOID * use_ac = NULL,
                ROSComponentsList * use_comps = NULL, TDlgUserInfo * use_ui = NULL)
     : TDialogueIndicationPrimitive(use_ac, use_comps, use_ui)
-    , _cause(INVALID_TCUSER_DATA)
+    , _cause(errOk)
   { }
 
   void setReportCause(ReportCause_e use_cause) { _cause = use_cause; }
