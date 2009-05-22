@@ -19,6 +19,12 @@ public:
 
     virtual IncResponse* clone() const { return new IncResponse(*this); }
 
+    virtual std::string toString() const {
+        char buf[48];
+        snprintf(buf,sizeof(buf)," result=%u",unsigned(result_));
+        return BatchResponseComponent::toString() + buf;
+    }
+
     uint32_t getResult() const { return result_; }
     void setResult( uint32_t result ) { result_ = result; }
 

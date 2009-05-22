@@ -46,12 +46,12 @@ struct Statistics
         if ( e10ms <= 0 ) e10ms = 1;
         unsigned seconds = unsigned(elapsedTime/1000);
         snprintf(buf,sizeof(buf),
-                 "%02u:%02u:%02u  req/resp/err=%u/%u/%u sent/fail=%u/%u\n"
-                 "        speed(1/s): req/resp/err=%u/%u/%u sent/fail=%u/%u",
+                 "%02u:%02u:%02u  req/resp/err=%u/%u/%u ok/fail=%u/%u\n"
+                 "        speed(1/s): req/resp/err=%u/%u/%u ok/fail=%u/%u",
                  seconds/3600, (seconds/60) % 60, seconds % 60,
-                 requests, responses, errors, sent, failed,
+                 requests, responses, errors, successes, failures,
                  unsigned(requests*scale/e10ms), unsigned(responses*scale/e10ms), unsigned(errors*scale/e10ms),
-                 unsigned(sent*scale/e10ms), unsigned(failed*scale/e10ms)
+                 unsigned(successes*scale/e10ms), unsigned(failures*scale/e10ms)
                  );
         return buf;
     }
@@ -60,8 +60,8 @@ struct Statistics
     util::msectime_type startTime;
     util::msectime_type elapsedTime;
     unsigned            requests;     // requests
-    unsigned            sent;         // sent packets
-    unsigned            failed;       // failed to send
+    unsigned            successes;    // server: sent packets, client: good resps
+    unsigned            failures;     // server: failed to send, client: bad resps
     unsigned            responses;    // good responses
     unsigned            errors;       // errors
 };

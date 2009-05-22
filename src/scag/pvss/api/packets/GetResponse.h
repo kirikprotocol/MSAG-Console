@@ -20,6 +20,11 @@ public:
         property_ = prop;
     }
 
+    virtual std::string toString() const {
+        return BatchResponseComponent::toString() + " " + property_.toString();
+    }
+
+
     virtual bool visit( ProfileResponseVisitor& visitor ) /* throw (PvapException) */  {
         return visitor.visitGetResponse(*this);
     }

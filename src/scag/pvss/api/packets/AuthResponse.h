@@ -32,6 +32,14 @@ public:
 
 protected:
     virtual const char* typeToString() const { return "auth_resp"; }
+    virtual std::string statusHolderToString() const
+    {
+        char buf[100];
+        snprintf(buf,sizeof(buf),"status=%s clientType=%u sid=%u",
+                 statusToString(getStatus()), clientType_, sid_ );
+        return buf;
+    }
+
 
 private:
     AuthResponse( const AuthResponse& other ) :

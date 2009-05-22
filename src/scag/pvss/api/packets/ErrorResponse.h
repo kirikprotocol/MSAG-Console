@@ -24,16 +24,14 @@ public:
     void setStatusMessage( const std::string& msg ) { msg_ = msg; }
     const std::string& getStatusMessage() const { return msg_; }
 
-    virtual std::string toString() const {
-        std::string rv = AbstractNonProfileResponse::toString();
-        rv.reserve(rv.size()+10+msg_.size());
-        rv.append(" msg=");
-        rv.append(msg_);
-        return rv;
-    }
-
 protected:
     virtual const char* typeToString() const { return "err_resp"; }
+    virtual std::string statusHolderToString() const {
+        char buf[256];
+        snprintf(buf,sizeof(buf),"status=%s msg=%s",
+                 statusToString(getStatus()), msg_.c_str());
+        return buf;
+    }
 
 private:
     ErrorResponse( const ErrorResponse& other ) : AbstractNonProfileResponse(other) {

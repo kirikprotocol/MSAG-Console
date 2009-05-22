@@ -31,9 +31,10 @@ public:
 
     virtual std::string toString() const {
         char buf[64];
-        snprintf( buf, sizeof(buf), "seqNum=%d %s status=%s",
-                  seqNum_, typeToString(), statusToString(getStatus()) );
-        return buf;
+        snprintf( buf, sizeof(buf), "seqNum=%d %s ", seqNum_, typeToString());
+        // , statusHolderToString().c_str() );
+        // statusToString(getStatus()) );
+        return buf + statusHolderToString();
     }
     virtual void clear() = 0;
     virtual bool isValid( PvssException* = 0 ) const { return true; }
@@ -53,6 +54,11 @@ public:
     virtual void startTiming( const Request& ) {}
 
 protected:
+    virtual std::string statusHolderToString() const {
+        char buf[64];
+        snprintf(buf,sizeof(buf),"status=%s",statusToString(getStatus()));
+        return buf;
+    }
     virtual const char* typeToString() const = 0;
 
 protected:

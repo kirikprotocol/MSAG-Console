@@ -58,6 +58,9 @@ public:
 
 protected:
     virtual const char* typeToString() const { return "prof_resp"; }
+    virtual std::string statusHolderToString() const {
+        return getResponse() ? getResponse()->toString() : "";
+    }
 
 private:
     ProfileResponse( const ProfileResponse& other ) : Response(other), cmd_(other.cmd_?other.cmd_->clone():0) {

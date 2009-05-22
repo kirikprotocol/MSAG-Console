@@ -50,8 +50,8 @@ extern "C" void atExitHandler(void)
 class SyncLogicProcessor : public RequestVisitor, public ProfileCommandVisitor
 {
 public:
-    virtual bool visitPingRequest( PingRequest& req ) throw(PvapException) { return false; }
-    virtual bool visitAuthRequest( AuthRequest& req ) throw(PvapException) { return false; }
+    virtual bool visitPingRequest( PingRequest& req ) /* throw(PvapException) */ { return false; }
+    virtual bool visitAuthRequest( AuthRequest& req ) /* throw(PvapException) */ { return false; }
     virtual bool visitProfileRequest( ProfileRequest& req ) /* throw(PvapException) */  {
         if ( ! req.isValid() ) return false;
         ProfileCommand* cmd = req.getCommand();

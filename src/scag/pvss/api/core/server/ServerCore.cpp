@@ -564,8 +564,8 @@ void ServerCore::reportContext( std::auto_ptr<ServerContext> ctx )
     if ( ctx->getState() == ServerContext::SENT ) {
         {
             MutexGuard mg(statMutex_);
-            ++total_.sent;
-            ++last_.sent;
+            ++total_.successes;
+            ++last_.successes;
             checkStatistics();
         }
         if ( response->isPing() ) {
@@ -580,8 +580,8 @@ void ServerCore::reportContext( std::auto_ptr<ServerContext> ctx )
         // failure
         {
             MutexGuard mg(statMutex_);
-            ++total_.failed;
-            ++last_.failed;
+            ++total_.failures;
+            ++last_.failures;
             checkStatistics();
         }
         if ( response->isPing() ) {

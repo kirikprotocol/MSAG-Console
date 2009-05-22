@@ -59,10 +59,18 @@ void FlooderStat::handleResponse( std::auto_ptr< Request > request, std::auto_pt
         const Packet::Timing* timing = req->getTiming();
         if ( timing ) { processTime = timing->total; }
     }
+    const bool ok = StatusType::statusIsInfo(response->getStatus());
     {
         MutexGuard mg(mon_);
         ++total_.responses;
         ++last_.responses;
+        if ( ok ) {
+            ++total_.successes;
+            ++last_.successes;
+        } else {
+            ++total_.failures;
+            ++last_.failures;
+        }
         if ( processTime ) {
             totalHisto_.fill( processTime );
             lastHisto_.fill( processTime );
