@@ -113,7 +113,7 @@ public:
   enum ReturnCause_e { //8 bits values:
     errNoTranslationNoA = 0x0, errNoTranslationAdr = 0x01,
     errSSNConjestion = 0x02, errSSNFailure = 0x03, errUserUneqipped = 0x04,
-    errMTPFailure = 0x05, errNetworkConjestion = 0x06, errUnquilified = 0x07,
+    errMTPFailure = 0x05, errNetworkConjestion = 0x06, errUnqualified = 0x07,
     errMsgTransport = 0x08, errLocalProcessing = 0x09, errDstReassembly = 0x0A,
     errSCCPFailure = 0x0B, errHOPCounter = 0x0C, errSegmNotSupported = 0x0D,
     errSegmFailure = 0x0E, 
