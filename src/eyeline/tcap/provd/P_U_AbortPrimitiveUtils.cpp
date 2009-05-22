@@ -13,12 +13,12 @@ namespace eyeline {
 namespace tcap {
 namespace provd {
 
-void formPAbortRequest(const proto::TransactionId& trnId,
-                       TDialogueHandlingPrimitive::PAbortCause_e pAbortCause)
+void formPAbortRequest(const proto::TransactionId& trn_id,
+                       TDialogueHandlingPrimitive::PAbortCause_e p_abort_cause)
 {
   TC_PAbort_Req pAbortReqPrimitive;
-  pAbortReqPrimitive.setTransactionId(trnId);
-  pAbortReqPrimitive.setAbortCause(pAbortCause);
+  pAbortReqPrimitive.setTransactionId(trn_id);
+  pAbortReqPrimitive.setAbortCause(p_abort_cause);
   TCAPLayer::getInstance().updateDialogue(&pAbortReqPrimitive);
 }
 
@@ -43,6 +43,18 @@ void formPAbortIndication(const TDialogueId& dlg_id,
     pAbortIndPrimitive.setDialogueId(dlg_id);
     pAbortIndPrimitive.setPAbortCause(p_abort_cause);
     t_dlg_hndlr_iface->updateDialogue(pAbortIndPrimitive);
+  } catch (...) {}
+}
+
+void formPAbortIndication(const TDialogueId& dlg_id,
+                          TDialogueHandlingPrimitive::PAbortCause_e p_abort_cause,
+                          TDialogueServiceData* t_dlg_svc_data)
+{
+  try {
+    TC_PAbort_Ind pAbortIndPrimitive;
+    pAbortIndPrimitive.setDialogueId(dlg_id);
+    pAbortIndPrimitive.setPAbortCause(p_abort_cause);
+    t_dlg_svc_data->updateDialogueDataByIndication(&pAbortIndPrimitive);
   } catch (...) {}
 }
 

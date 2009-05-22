@@ -7,13 +7,14 @@
 # include "eyeline/tcap/TDlgHandlerIface.hpp"
 # include "eyeline/tcap/proto/TransactionId.hpp"
 # include "eyeline/tcap/TDialogueHandlingPrimitive.hpp"
+# include "eyeline/tcap/provd/TDialogueServiceData.hpp"
 
 namespace eyeline {
 namespace tcap {
 namespace provd {
 
-void formPAbortRequest(const proto::TransactionId& trnId,
-                       TDialogueHandlingPrimitive::PAbortCause_e pAbortCause);
+void formPAbortRequest(const proto::TransactionId& trn_id,
+                       TDialogueHandlingPrimitive::PAbortCause_e p_abort_cause);
 
 void formPAbortRequest(const proto::TransactionId& trn_id,
                        TDialogueHandlingPrimitive::PAbortCause_e p_abort_cause,
@@ -21,15 +22,19 @@ void formPAbortRequest(const proto::TransactionId& trn_id,
                        const sccp::SCCPAddress& src_addr,
                        const sccp::SCCPAddress& dst_addr);
 
-void formPAbortIndication(const TDialogueId& dlgId,
-                          TDialogueHandlingPrimitive::PAbortCause_e pAbortCause,
-                          TDlgHandlerIface* tDlgHndlrIface);
+void formPAbortIndication(const TDialogueId& dlg_id,
+                          TDialogueHandlingPrimitive::PAbortCause_e p_abort_cause,
+                          TDlgHandlerIface* t_dlg_hndlr_iface);
 
-void formUAbortRequest(const asn1::EncodedOID& appCtx,
-                       const proto::TransactionId& trnId,
-                       unsigned int srcLinkNum,
+void formPAbortIndication(const TDialogueId& dlg_id,
+                          TDialogueHandlingPrimitive::PAbortCause_e p_abort_cause,
+                          TDialogueServiceData* t_dlg_svc_data);
+
+void formUAbortRequest(const asn1::EncodedOID& app_ctx,
+                       const proto::TransactionId& trn_id,
+                       unsigned int src_link_num,
                        const sccp::SCCPAddress& src_addr,
-                       const sccp::SCCPAddress& dst_addr );
+                       const sccp::SCCPAddress& dst_addr);
 
 }}}
 
