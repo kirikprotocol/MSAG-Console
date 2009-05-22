@@ -52,7 +52,7 @@ protected:
     if (use_nick)
       _nick = use_nick;
     else
-      asnValue(_nick);
+      _nick = asnValue();
   }
 
 public:
@@ -87,11 +87,12 @@ public:
     return subId;
   }
 
-  std::string & asnValue(std::string & val) const
+  std::string asnValue() const
   {
     if (!length())
-      return val;
+      return "";
 
+    std::string val;
     char buf[3*sizeof(uint32_t)+2];
     uint16_t i = 1, numIds = numSubIds();
 
