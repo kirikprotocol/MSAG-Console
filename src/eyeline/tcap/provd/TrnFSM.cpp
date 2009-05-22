@@ -2,10 +2,11 @@
 static char const ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_OFF */
 
-//#include "core/synchronization/MutexGuard.hpp"
+#include "core/synchronization/MutexGuard.hpp"
 #include "eyeline/utilx/Exception.hpp"
-//#include "eyeline/tcap/provd/TrnFSM.hpp"
-#include "eyeline/tcap/provd/TDialogueServiceData.hpp"
+
+#include "TrnFSM.hpp"
+#include "TDialogueServiceData.hpp"
 
 namespace eyeline {
 namespace tcap {
