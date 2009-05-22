@@ -28,15 +28,15 @@ public:
 class TimeoutMonitor : public smsc::core::threads::Thread, 
                        public utilx::Singleton<TimeoutMonitor> {
 public:
-  explicit TimeoutMonitor(unsigned int maxTimeoutValue);
-
+  TimeoutMonitor();
   ~TimeoutMonitor();
 
   virtual int Execute();
 
   typedef unsigned int timeout_id_t;
 
-  //  timeout_id_t schedule(unsigned int timeoutValue, TDialogueServiceData* dlgSvcData);
+  void initialize(unsigned int maxTimeoutValue);
+
   timeout_id_t schedule(unsigned int timeoutValue, TimeoutHandler* timeoutHandler);
   void cancel(timeout_id_t timeoutId);
   void restart(unsigned int timeoutValue, timeout_id_t timeoutId);

@@ -9,22 +9,22 @@ namespace eyeline {
 namespace tcap {
 namespace provd {
 
-TimeoutMonitor::TimeoutMonitor(unsigned maxTimeoutValue)
-  : _logger(smsc::logger::Logger::getInstance("tmtmon")),
-    _isRunning(true), _maxTimeoutValue(maxTimeoutValue),
-    _timeoutIdSourceGenerator(1)
-{
-  _knownTimeouts = new TimeoutsEntryInfo[maxTimeoutValue];
-}
+TimeoutMonitor::TimeoutMonitor()
+  : _logger(smsc::logger::Logger::getInstance("tmtmon")), _isRunning(true),
+    _maxTimeoutValue(0), _timeoutIdSourceGenerator(1), _knownTimeouts(NULL)
+{}
 
 TimeoutMonitor::~TimeoutMonitor()
 {
   delete [] _knownTimeouts;
 }
 
-#if 0
-
-#endif
+void
+TimeoutMonitor::initialize(unsigned int maxTimeoutValue)
+{
+  _maxTimeoutValue = maxTimeoutValue;
+  _knownTimeouts = new TimeoutsEntryInfo[maxTimeoutValue];
+}
 
 int
 TimeoutMonitor::Execute()
