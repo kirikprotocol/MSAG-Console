@@ -150,10 +150,10 @@ void HttpEventHandler::newEvent( ActionContext& ctx )
 }
 
 
-void HttpEventHandler::process(SCAGCommand& command, Session& session, RuleStatus& rs, util::HRTiming* )
+void HttpEventHandler::process(SCAGCommand& command, Session& session, RuleStatus& rs, CommandProperty& cp, util::HRTiming*)
 {
     smsc_log_debug(logger, "Process HttpEventHandler...");
-
+/*
     HttpCommand& hc = (HttpCommand&)command;
     bill::Infrastructure& istr = bill::BillingManager::Instance().getInfrastructure();
     const smsc::sms::Address abonentAddr = session.sessionKey().address();
@@ -169,9 +169,9 @@ void HttpEventHandler::process(SCAGCommand& command, Session& session, RuleStatu
 
     smsc_log_debug(logger, "HttpEventHandler: Operator found. Id = %d", operatorId);
 
-/*    uint32_t providerId = istr.GetProviderID(hc.getServiceId());
-    if (providerId == 0) 
-        throw SCAGException("HttpEventHandler: Cannot find ProviderID for ServiceID=%d", hc.getServiceId());*/
+    //uint32_t providerId = istr.GetProviderID(hc.getServiceId());
+    //if (providerId == 0) 
+      //  throw SCAGException("HttpEventHandler: Cannot find ProviderID for ServiceID=%d", hc.getServiceId());
 
     smsc_log_debug(logger, "HttpEventHandler: Provider ID found. ID = %d", hc.getProviderId());
 
@@ -179,6 +179,8 @@ void HttpEventHandler::process(SCAGCommand& command, Session& session, RuleStatu
     routeId.setInt(hc.getRouteId());
     CommandProperty cp(&command, 0, abonentAddr, hc.getProviderId(), operatorId, hc.getServiceId(),
                         -1, CO_HTTP_DELIVERY, routeId);
+    */
+    HttpCommand& hc = (HttpCommand&)command;
     HttpCommandAdapter _command(hc);
 
     ActionContext* actionContext = 0;

@@ -30,6 +30,10 @@ using smsc::logger::Logger;
 
 class EventHandler;
 
+namespace actions {
+struct CommandProperty;
+}
+
 class Rule : public IParserHandler
 {
     Rule(const Rule &);
@@ -72,7 +76,7 @@ public:
      * @return  status      rule's handler execution status
      */
     virtual void process( SCAGCommand& command, sessions::Session& session,
-                          RuleStatus& rs, util::HRTiming* hrt = 0 );
+                          RuleStatus& rs, actions::CommandProperty& cp, util::HRTiming* hrt = 0 );
     virtual void processSession(sessions::Session& session, RuleStatus& rs);
 
     Rule(): useCounter(1), transportType(SMPP),logger(0) {logger = Logger::getInstance("scag.re");};

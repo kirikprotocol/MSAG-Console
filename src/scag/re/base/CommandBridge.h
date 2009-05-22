@@ -5,6 +5,8 @@
 #include "scag/transport/smpp/base/SmppCommand2.h"
 #include "scag/exc/SCAGExceptions.h"
 #include "scag/stat/base/Statistics2.h"
+#include "scag/re/base/ActionContext2.h"
+#include "scag/sessions/base/SessionKey.h"
 #include "EventHandlerType.h"
 // #include "CommandOperations.h"
 
@@ -24,6 +26,7 @@ using namespace scag::exceptions;
 using namespace stat;
 using namespace smsc::smpp::UssdServiceOpValue;
 using smsc::sms::Address;
+//using actions::CommandProperty;
 
 /*
 struct CSmppDescriptor
@@ -182,6 +185,18 @@ public:
 
         return 0;
     }*/
+
+    static actions::CommandProperty getCommandProperty(SCAGCommand& command, sessions::Session& session);
+
+    static void RegisterTrafficEvent( const actions::CommandProperty& commandProperty,
+                                      const sessions::SessionPrimaryKey& sessionPrimaryKey,
+                                      const std::string& messageBody,
+                                      const std::string* keywords,
+                                      util::HRTiming* hrt = 0 );
+    
+    static void RegisterAlarmEvent( uint32_t eventId, const std::string& addr, uint8_t protocol,
+                                    uint32_t serviceId, uint32_t providerId, uint32_t operatorId,
+                                    uint16_t commandStatus, const sessions::SessionPrimaryKey& sessionPrimaryKey, char dir );
 };
 
 

@@ -230,8 +230,18 @@ void RuleEngineImpl::process( SCAGCommand& command, Session& session, RuleStatus
 
             hrt.mark("re.sess");
         }
-        
-        if ( rulePtr ) rulePtr->process( command, session, rs, &hrt );
+
+        actions::CommandProperty cp = CommandBridge::getCommandProperty(command, session);
+        const bool newevent = ( !session.getLongCallContext().continueExec );
+        if ( rulePtr ) {
+           rulePtr->process( command, session, rs, cp, &hrt );
+        } else if (newevent) {
+          const std::string* kw = session.getCurrentOperation() ? session.getCurrentOperation()->getKeywords() : 0;
+          bool messageBody = (cp.handlerId == EH_SUBMIT_SM) || (cp.handlerId == EH_DELIVER_SM) || (cp.handlerId == EH_DATA_SM) ? true : false;
+          CommandBridge::RegisterTrafficEvent( cp, session.sessionPrimaryKey(),
+                                               messageBody ? CommandBridge::getMessageBody(static_cast<transport::smpp::SmppCommand&>(command)) : "",
+                                               kw, &hrt );
+        }
 
         hrt.mark("re.proc");
 

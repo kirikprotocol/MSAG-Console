@@ -12,14 +12,14 @@ namespace re {
 
 using namespace smpp;
 
-void SmppEventHandler::process( SCAGCommand& command, Session& session, RuleStatus& rs, util::HRTiming* inhrt )
+void SmppEventHandler::process( SCAGCommand& command, Session& session, RuleStatus& rs, CommandProperty& cp, util::HRTiming* inhrt )
 {
     // smsc_log_debug(logger, "Process EventHandler...");
     util::HRTiming hrt(inhrt);
 
     SmppCommand& smppcommand = static_cast<SmppCommand&>(command);
     SmppCommandAdapter _command(smppcommand);
-
+/*
     bill::Infrastructure& istr = bill::BillingManager::Instance().getInfrastructure();
 
     const Address abonentAddr( session.sessionKey().toString().c_str() );
@@ -46,8 +46,8 @@ void SmppEventHandler::process( SCAGCommand& command, Session& session, RuleStat
     SMS& sms = CommandBridge::getSMS(smppcommand);
     int msgRef = sms.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE) ? sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE):-1;
 
-    /*uint32_t commandStatus = (smppcommand->cmdid == DELIVERY_RESP || smppcommand->cmdid == SUBMIT_RESP || smppcommand->cmdid == DATASM_RESP) 
-			    ? smppcommand->get_resp()->status : smppcommand->status;*/
+    //uint32_t commandStatus = (smppcommand->cmdid == DELIVERY_RESP || smppcommand->cmdid == SUBMIT_RESP || smppcommand->cmdid == DATASM_RESP) 
+	//		    ? smppcommand->get_resp()->status : smppcommand->status;
     Property routeId;
     routeId.setStr(sms.getRouteId());
     CommandProperty commandProperty
@@ -55,7 +55,7 @@ void SmppEventHandler::process( SCAGCommand& command, Session& session, RuleStat
           smppcommand.getServiceId(), msgRef,
           transport::CommandOperation(session.getCurrentOperation()->type()),
           routeId );
-
+*/
     const bool newevent = ( !session.getLongCallContext().continueExec );
     
     ActionContext* actionContext = 0;
@@ -63,7 +63,7 @@ void SmppEventHandler::process( SCAGCommand& command, Session& session, RuleStat
     	actionContext = session.getLongCallContext().getActionContext();
     	if (actionContext) {
 	        actionContext->resetContext(&(RuleEngine::Instance().getConstants()), 
-	                    				&session, &_command, &commandProperty, &rs);
+	                    				&session, &_command, &cp, &rs);
     	} else {
 	        smsc_log_error(logger, "EventHandler cannot get actionContext to continue");
     	    rs.result = smsc::system::Status::SMDELIFERYFAILURE;
@@ -72,7 +72,7 @@ void SmppEventHandler::process( SCAGCommand& command, Session& session, RuleStat
     	}
     } else {
     	actionContext = new ActionContext(&(RuleEngine::Instance().getConstants()), 
-                    					  &session, &_command, &commandProperty, &rs);
+                    					  &session, &_command, &cp, &rs);
     	session.getLongCallContext().setActionContext(actionContext);
     }
     hrt.mark("ev.prep");
@@ -88,11 +88,12 @@ void SmppEventHandler::process( SCAGCommand& command, Session& session, RuleStat
     }
     hrt.mark("ev.run");
 
+    int hi = propertyObject.HandlerId;
     if ( newevent ) {
         const std::string* kw = 
             ( session.getCurrentOperation() ?
               session.getCurrentOperation()->getKeywords() : 0 );
-        RegisterTrafficEvent( commandProperty,
+        RegisterTrafficEvent( cp,
                               session.sessionPrimaryKey(),
                               (hi == EH_SUBMIT_SM) || 
                               (hi == EH_DELIVER_SM) ||

@@ -3,7 +3,13 @@
 #include "scag/sessions/base/Session2.h"
 #include "scag/transport/http/base/HttpCommandId.h"
 #include "scag/util/encodings/Encodings.h"
+#include "scag/util/HRTimer.h"
 #include "util/recoder/recode_dll.h"
+#include "scag/bill/base/BillingManager.h"
+#include "scag/transport/http/base/HttpCommand2.h"
+#include "scag/transport/smpp/base/SmppCommand2.h"
+#include "scag/re/base/SmppAdapter2.h"
+#include "scag/sessions/base/Operation.h"
 
 namespace scag2 {
 namespace re {
@@ -11,7 +17,7 @@ namespace re {
 // using namespace scag::transport::http;
 using namespace sessions;
 using namespace scag::util::encodings;
-
+//using actions::CommandProperty;
  /*
 namespace SMSTags 
 {
@@ -429,6 +435,133 @@ int CommandBridge::getProtocolForEvent(SCAGCommand& command)
     throw SCAGException("CommandBridge: Unknown command protocol");
 }                 
 
+
+actions::CommandProperty CommandBridge::getCommandProperty(SCAGCommand& command, sessions::Session& session) {
+  TransportType transport = command.getType();
+  bill::Infrastructure& istr = bill::BillingManager::Instance().getInfrastructure();
+  const smsc::sms::Address abonentAddr = session.sessionKey().address();
+  uint32_t operatorId = istr.GetOperatorID(abonentAddr);
+  if (transport != SMPP && transport != HTTP) {
+    throw SCAGException("getCommandProperty: unsupported transport type: %d. OperatorID=%d. Abonent addr=%s ",
+                         transport, abonentAddr.toString().c_str());
+  }
+
+  if (transport == HTTP) {
+    transport::http::HttpCommand& hc = (transport::http::HttpCommand&)command;
+    uint8_t hi = getHTTPHandlerType(command);
+    if (operatorId == 0) {
+        RegisterAlarmEvent( 1, abonentAddr.toString(), sessions::PROTOCOL_HTTP, hc.getServiceId(),
+                            hc.getProviderId(), 0, 0, session.sessionPrimaryKey(),
+                            hc.getCommandId() == transport::http::HTTP_RESPONSE ? 'O' : 'I');
+
+        throw SCAGException("getCommandProperty: Cannot find OperatorID for %s abonent", abonentAddr.toString().c_str());
+    }
+    Property routeId;
+    routeId.setInt(hc.getRouteId());
+    return actions::CommandProperty(&command, 0, abonentAddr, hc.getProviderId(), operatorId,
+                           hc.getServiceId(), -1, CO_HTTP_DELIVERY, routeId, hi);
+  } else { //(transport == SMPP)
+    transport::smpp::SmppCommand& smppcommand = static_cast<transport::smpp::SmppCommand&>(command);
+    smpp::SmppCommandAdapter _command(smppcommand);
+    int serviceId = command.getServiceId();
+    int providerId = istr.GetProviderID(serviceId);
+
+    if (providerId == 0) 
+    {
+        if ( smppcommand.isResp() ) session.closeCurrentOperation();
+        throw SCAGException("getCommandProperty: Cannot find ProviderID for ServiceID=%d", serviceId);
+    }
+
+    uint8_t hi = getSMPPHandlerType(command);
+    if (operatorId == 0) 
+    {
+        RegisterAlarmEvent(1, abonentAddr.toString(), getProtocolForEvent(smppcommand), serviceId,
+                           providerId, 0, 0, session.sessionPrimaryKey(),
+                           (hi == EH_SUBMIT_SM)||(hi == EH_DELIVER_SM) ? 'I' : 'O');
+        
+        if ( smppcommand.isResp() ) session.closeCurrentOperation();
+        throw SCAGException("getCommandProperty: Cannot find OperatorID for %s abonent", abonentAddr.toString().c_str());
+    }
+
+    SMS& sms = getSMS(smppcommand);
+    int msgRef = sms.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE) ? sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE):-1;
+    Property routeId;
+    routeId.setStr(sms.getRouteId());
+
+    return actions::CommandProperty( &command, smppcommand.get_status(), abonentAddr, providerId, operatorId,
+                            serviceId, msgRef,transport::CommandOperation(session.getCurrentOperation()->type()), routeId, hi );
+  }
+}
+
+
+void CommandBridge::RegisterTrafficEvent(const actions::CommandProperty& commandProperty,
+                                         const sessions::SessionPrimaryKey& sessionPrimaryKey,
+                                         const std::string& messageBody,
+                                         const std::string* keywords,
+                                         util::HRTiming* hrt )
+{
+    SaccTrafficInfoEvent* ev = new SaccTrafficInfoEvent();
+    if (hrt) hrt->mark("ev.newsacc");
+
+    uint8_t handlerId = commandProperty.handlerId; 
+
+    ev->Header.cCommandId = handlerId;
+    ev->Header.cProtocolId = commandProperty.protocol;
+    ev->Header.iServiceId = commandProperty.serviceId;
+    ev->Header.iServiceProviderId = commandProperty.providerId; 
+    
+    timeval tv;
+    gettimeofday(&tv,0);
+
+    ev->Header.lDateTime = (uint64_t)tv.tv_sec * 1000 + tv.tv_usec / 1000;
+
+    ev->Header.pAbonentNumber = commandProperty.abonentAddr.toString();
+    ev->Header.sCommandStatus = commandProperty.status;
+    ev->Header.iOperatorId = commandProperty.operatorId;
+    
+    if (handlerId == EH_SUBMIT_SM || handlerId == EH_DELIVER_SM || handlerId == EH_DATA_SM) {
+      ev->pMessageText.append(messageBody.data(), messageBody.size());
+    }
+
+    ev->Header.pSessionKey = sessionPrimaryKey.toString();
+
+    if (commandProperty.direction == dsdSc2Srv || handlerId == EH_HTTP_REQUEST || handlerId == EH_HTTP_DELIVERY) {
+      ev->cDirection = 'I';
+    } else {
+      ev->cDirection = 'O';
+    }
+
+    if ( keywords ) ev->keywords.append(keywords->data(),keywords->size());
+
+    if (hrt) hrt->mark("ev.fillsac");
+    Statistics::Instance().registerSaccEvent( ev );
+    if (hrt) hrt->mark("ev.regsac");
+}
+
+void CommandBridge::RegisterAlarmEvent(uint32_t eventId, const std::string& addr, uint8_t protocol,
+                                       uint32_t serviceId, uint32_t providerId, uint32_t operatorId,
+                                       uint16_t commandStatus, const sessions::SessionPrimaryKey& sessionPrimaryKey, char dir)
+{
+    SaccAlarmEvent* ev = new SaccAlarmEvent();
+
+    ev->Header.cCommandId = 3;
+    ev->Header.cProtocolId = protocol;
+    ev->Header.iServiceId = serviceId;
+    ev->Header.iServiceProviderId = providerId; 
+    ev->Header.pAbonentNumber = addr;
+    ev->Header.sCommandStatus = commandStatus;
+    ev->Header.iOperatorId = operatorId;
+    ev->iAlarmEventId = eventId;
+    
+    timeval tv;
+    gettimeofday(&tv,0);
+    ev->Header.lDateTime = (uint64_t)tv.tv_sec * 1000 + tv.tv_usec / 1000;
+
+    ev->Header.pSessionKey = sessionPrimaryKey.toString();
+    ev->cDirection = dir;
+
+    Statistics::Instance().registerSaccEvent(ev);
+}
 
 void AssignAddress(Address& address, const char * str)
 {

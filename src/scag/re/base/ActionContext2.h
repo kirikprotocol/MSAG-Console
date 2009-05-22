@@ -64,6 +64,7 @@ public:
         int operatorId;
         int msgRef;
         uint8_t commandId;
+        uint8_t handlerId;
         transport::CommandOperation cmdType;
         transport::smpp::DataSmDirection direction;
 
@@ -77,7 +78,8 @@ public:
                          int ServiceId,
                          int msgRef,
                          transport::CommandOperation CmdType,
-                         const Property& routeId );
+                         const Property& routeId,
+                         uint8_t hi );
     };
 
 

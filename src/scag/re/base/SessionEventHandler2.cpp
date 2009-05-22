@@ -10,7 +10,7 @@ namespace re {
 
 using namespace session;
 
-void SessionEventHandler::process(SCAGCommand& command, Session& session, RuleStatus& rs, util::HRTiming* ) { _process(session, rs); };
+void SessionEventHandler::process(SCAGCommand& command, Session& session, RuleStatus& rs, CommandProperty& cp, util::HRTiming* ) { _process(session, rs); };
 
 void SessionEventHandler::_process(Session& session, RuleStatus& rs)
 {
@@ -39,7 +39,7 @@ void SessionEventHandler::_process(Session& session, RuleStatus& rs)
     Property routeId;
     routeId.setInt(0);
     CommandProperty commandProperty(NULL, 0, abonentAddr, providerId, operatorId, key.serviceId,
-                                    0, transport::CO_NA, routeId);
+                                    0, transport::CO_NA, routeId, propertyObject.HandlerId);
     ActionContext* actionContext = 0;
     if(session.getLongCallContext().continueExec) {
 	actionContext = session.getLongCallContext().getActionContext();

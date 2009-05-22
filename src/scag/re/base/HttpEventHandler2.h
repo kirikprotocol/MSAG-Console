@@ -16,7 +16,7 @@ class HttpEventHandler : public EventHandler
     /// extends EventHandler::RunActions, adds traffic event registration if isnewevent is true
     void newEvent( ActionContext& ctx );
 public:
-    virtual void process(SCAGCommand& command, Session& session, RuleStatus& rs, util::HRTiming* hrt = 0 );
+    virtual void process(SCAGCommand& command, Session& session, RuleStatus& rs, CommandProperty& cp, util::HRTiming* hrt = 0 );
     //Method return HandlerId from hander type string
     virtual int StrToHandlerId(const std::string& str);
 };

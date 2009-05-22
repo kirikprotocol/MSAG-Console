@@ -10,6 +10,7 @@
 #include "SessionEventHandler2.h"
 #include "CommandBridge.h"
 #include "RuleEngine2.h"
+#include "ActionContext2.h"
 
 
 namespace scag2 {
@@ -32,7 +33,7 @@ Rule::~Rule()
 }
 
 
-void Rule::process( SCAGCommand& command, Session& session, RuleStatus& rs, util::HRTiming* inhrt )
+void Rule::process( SCAGCommand& command, Session& session, RuleStatus& rs, actions::CommandProperty& cp, util::HRTiming* inhrt)
 {
     // smsc_log_debug(logger,"Process Rule... (%d Event Handlers registered)", Handlers.Count());
 
@@ -55,7 +56,7 @@ void Rule::process( SCAGCommand& command, Session& session, RuleStatus& rs, util
         if(Handlers.Exist(handlerType)) 
         {
             EventHandler * eh = Handlers.Get(handlerType);
-            eh->process(command, session, rs, inhrt );
+            eh->process(command, session, rs, cp, inhrt);
             if(rs.status == STATUS_OK)
                 session.getLongCallContext().continueExec = false;
             return;

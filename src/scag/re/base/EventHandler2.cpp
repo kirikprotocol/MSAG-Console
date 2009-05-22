@@ -76,6 +76,8 @@ void EventHandler::RegisterTrafficEvent(const CommandProperty& commandProperty,
                                         const std::string* keywords,
                                         util::HRTiming* hrt )
 {
+  CommandBridge::RegisterTrafficEvent(commandProperty, sessionPrimaryKey, messageBody, keywords, hrt);
+  /*
     SaccTrafficInfoEvent* ev = new SaccTrafficInfoEvent();
     if (hrt) hrt->mark("ev.newsacc");
 
@@ -108,10 +110,13 @@ void EventHandler::RegisterTrafficEvent(const CommandProperty& commandProperty,
     if (hrt) hrt->mark("ev.fillsac");
     Statistics::Instance().registerSaccEvent( ev );
     if (hrt) hrt->mark("ev.regsac");
+    */
 }
 
 void EventHandler::RegisterAlarmEvent(uint32_t eventId, const std::string& addr, uint8_t protocol, uint32_t serviceId, uint32_t providerId, uint32_t operatorId, uint16_t commandStatus, const SessionPrimaryKey& sessionPrimaryKey, char dir)
 {
+  CommandBridge::RegisterAlarmEvent(eventId, addr, protocol, serviceId, providerId, operatorId, commandStatus, sessionPrimaryKey, dir);
+  /*
     SaccAlarmEvent* ev = new SaccAlarmEvent();
 
     ev->Header.cCommandId = 3;
@@ -131,6 +136,7 @@ void EventHandler::RegisterAlarmEvent(uint32_t eventId, const std::string& addr,
     ev->cDirection = dir;
 
     Statistics::Instance().registerSaccEvent(ev);
+    */
 }
 
 }}
