@@ -112,8 +112,21 @@ public:
 //
 class TC_Notice_Ind : public TDialogueIndicationPrimitive {
 public:
-  //TODO: enhance ReportCause_e to indicate most used 'real life' values
-  enum ReportCause_e { INVALID_TCUSER_DATA, SCCP_ERROR };
+  enum ReportCause_e {
+    errOk = 0
+    //SCCP/network related causes
+    , errNoAdrTranslation
+    , errSSNCongest
+    , errSSNFailure
+    , errUserUneqipped
+    , errNetworkConjestion
+    , errNetworkFailure
+    , errHOPCounter
+    , errSCCPFailure          //unqualified SCCP error
+    //TCAP related causes
+    , errDialoguePortion      //bad dialogue PDU data, usually a UserInfo
+    , errTCAPFailure          //unqualified TCAP error
+  };
 
 protected:
   ReportCause_e _cause;
