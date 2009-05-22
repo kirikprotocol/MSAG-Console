@@ -624,8 +624,8 @@ using smsc::snmp::SnmpAgent;
         else if (snmp_oid_compare(deliverTmpOid,OID_LENGTH(deliverTmpOid),
                              reginfo->rootoid, reginfo->rootoid_len) ==0)
         {
-          val.high = perf[perfBase+4] >> 32;
-          val.low  = perf[perfBase+4] & 0xffffffff;
+          val.high = perf[perfBase+6] >> 32;
+          val.low  = perf[perfBase+6] & 0xffffffff;
           snmp_set_var_typed_value(requests->requestvb, ASN_COUNTER64, (u_char *) &val, sizeof(val));
           smsc_log_debug(((smsc::logger::Logger*)agentlog), "deliverTEMP req");
         }
