@@ -107,7 +107,7 @@ class EventQueue
           {
             pool[i]=CommandType();
             memmove(pool+i,pool+i+1,(8-i-1)*sizeof(CommandType));
-            pool[7]=CommandType();
+            memset(pool+7,0,sizeof(CommandType));
           }
           return true;
         }
