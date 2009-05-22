@@ -42,6 +42,60 @@ public:
   }
 };
 
+class DeserializationException : public smsc::util::Exception {
+public:
+  DeserializationException(const char * fmt, ...)
+    : Exception()
+  {
+    SMSC_UTIL_EX_FILL(fmt);
+  }
+};
+
+class SerializationException : public smsc::util::Exception {
+public:
+  SerializationException(const char * fmt, ...)
+    : Exception()
+  {
+    SMSC_UTIL_EX_FILL(fmt);
+  }
+};
+
+class QueueOverflowException : public smsc::util::Exception {
+public:
+  QueueOverflowException(const char * fmt, ...)
+    : Exception()
+  {
+    SMSC_UTIL_EX_FILL(fmt);
+  }
+};
+
+class QueueUnderflowException : public smsc::util::Exception {
+public:
+  QueueUnderflowException(const char * fmt, ...)
+    : Exception()
+  {
+    SMSC_UTIL_EX_FILL(fmt);
+  }
+};
+
+class ProtocolException : public smsc::util::Exception {
+public:
+  ProtocolException(const char * fmt, ...)
+    : Exception()
+  {
+    SMSC_UTIL_EX_FILL(fmt);
+  }
+};
+
+class RegistryKeyNotFound : public smsc::util::Exception {
+public:
+  RegistryKeyNotFound(const char * fmt, ...)
+    : Exception()
+  {
+    SMSC_UTIL_EX_FILL(fmt);
+  }
+};
+
 }}
 
 #endif
