@@ -5,9 +5,9 @@ static char const ident[] = "@(#)$Id$";
 #include "eyeline/sua/libsua/SuaApi.hpp"
 #include "eyeline/tcap/Exception.hpp"
 #include "eyeline/tcap/TComponentIndicationPrimitives.hpp"
-#include "OutPrimitivesProcessor.hpp"
-#include "TimeoutMonitor.hpp"
-#include "TDlgIndDispatcher.hpp"
+#include "eyeline/tcap/provd/OutPrimitivesProcessor.hpp"
+#include "eyeline/tcap/provd/TimeoutMonitor.hpp"
+#include "eyeline/tcap/provd/TDlgPrimitivesUtils.hpp"
 
 namespace eyeline {
 namespace tcap {
