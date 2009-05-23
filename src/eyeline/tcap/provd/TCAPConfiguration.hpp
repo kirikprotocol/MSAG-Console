@@ -5,6 +5,9 @@
 # include "eyeline/sccp/SCCPAddress.hpp"
 # include "eyeline/utilx/Singleton.hpp"
 
+//TODO: get rid off ConfigView usage 
+# include "util/config/ConfigView.h"
+
 namespace eyeline {
 namespace tcap {
 namespace provd {
