@@ -138,6 +138,7 @@ EventSender::EventSender()
     QueueLength=10000;
     pdubuffer.resize(0xFFFF);
     queueIdx = 0;
+    enabled_ = false;
 }
 
 EventSender::~EventSender()
@@ -154,21 +155,25 @@ EventSender::~EventSender()
     } while ( queue->Count() > 0 );
 }
 
-void EventSender::init(std::string& host,int port,int timeout,int queuelen,/*,bool * bf,*/smsc::logger::Logger * lg)
+void EventSender::init(std::string& host,int port,int timeout,int queuelen,/*,bool * bf,*/smsc::logger::Logger * lg, bool enabled)
 {
- if(!lg) throw Exception("EventSender::init logger is 0");
+  if(!lg) throw Exception("EventSender::init logger is 0");
 
- QueueLength=queuelen;
+  QueueLength=queuelen;
 
- bStarted  = false;
- logger = lg;
- Host = host;
- Port= port;
- bConnected=false;
- Timeout=timeout*1000;
- lastOverflowNotify = 0;
- lastConnectTry = 0;
-    smsc_log_debug(logger,"EventSender::init confuration succsess.");
+  bStarted  = false;
+  logger = lg;
+  Host = host;
+  Port= port;
+  bConnected=false;
+  Timeout=timeout*1000;
+  lastOverflowNotify = 0;
+  lastConnectTry = 0;
+  enabled_ = enabled;
+  smsc_log_debug(logger,"EventSender::init confuration succsess.");
+  if (!enabled_) {
+    smsc_log_info(logger,"EventSender is disabled.");
+  }
 }
 
 
@@ -275,12 +280,18 @@ bool EventSender::connect(std::string host, int port,int timeout)
 
 void EventSender::Start()
 {
+  if (!enabled_) {
+    return;
+  }
     bStarted=true;
     Thread::Start();
 }
 
 void EventSender::Stop()
 {
+  if (!enabled_) {
+    return;
+  }
     bStarted = false;
     mtx.notifyAll();
 }
@@ -297,6 +308,13 @@ void EventSender::sendPing()
 
 void EventSender::PushEvent(SaccEvent* item)
 {
+  if (!enabled_) {
+    if (item) {
+      smsc_log_warn(logger,"EventSender is disabled, delete event: %s addr=0x%X", item->getName(), item);
+      delete item;
+    }
+    return;
+  }
     MutexGuard g(mtx);
     smsc_log_debug(logger,"EventSender::put %s addr=0x%X", item->getName(), item);
 

@@ -72,7 +72,7 @@ public:
 
     void Start();
     void Stop();
-    void init(std::string& host,int port,int timeout,int queuelen/*,bool * bf,*/,smsc::logger::Logger * lg);
+    void init(std::string& host,int port,int timeout,int queuelen/*,bool * bf,*/,smsc::logger::Logger * lg, bool enabled);
 
 private:
     bool checkQueue();
@@ -98,6 +98,7 @@ private:
     int QueueLength;
     int Port;
     SaccSerialBuffer pdubuffer;
+    bool enabled_;
 };
 
 }}}
