@@ -58,6 +58,7 @@ stat.perf_svc_applet.port=23984
 stat.perf_sc_port=23985
 stat.perf_sc_applet.port=23986
 
+stat.sacc_enabled=false
 stat.sacc_port=23700
 stat.sacc_host=127.0.0.1
 stat.sacc_connect_timeout=60
