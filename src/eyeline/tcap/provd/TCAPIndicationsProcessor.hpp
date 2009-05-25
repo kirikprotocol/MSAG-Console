@@ -3,9 +3,7 @@
 # define __EYELINE_TCAP_PROVD_TCAPINDICATIONSPROCESSOR_HPP__
 
 # include "eyeline/sccp/SCCPAddress.hpp"
-# include "eyeline/tcap/TDialogueHandlingPrimitive.hpp"
-# include "eyeline/tcap/TDialogueIndicationPrimitives.hpp"
-# include "eyeline/tcap/proto/TransactionId.hpp"
+# include "eyeline/tcap/provd/TDlgIndComposers.hpp"
 
 namespace eyeline {
 namespace tcap {
@@ -15,17 +13,19 @@ class TCAPIndicationsProcessor {
 public:
   TCAPIndicationsProcessor();
   virtual ~TCAPIndicationsProcessor() {}
-  virtual bool updateDialogue(TC_Begin_Ind& tcBeginInd, unsigned int srcLinkNum);
-  virtual bool updateDialogue(TC_Cont_Ind& tcContInd, unsigned int srcLinkNum);
-  virtual bool updateDialogue(TC_End_Ind& tcEndInd, unsigned int srcLinkNum);
-  virtual bool updateDialogue(TC_PAbort_Ind& tcPAbortInd, unsigned int srcLinkNum);
-  virtual bool updateDialogue(TC_UAbort_Ind& tcUAbortInd, unsigned int srcLinkNum);
 
-  virtual bool updateDialogue(TC_Notice_Ind& tcNoticeInd, unsigned int srcLinkNum);
+  virtual bool updateDialogue(TBeginIndComposer & tc_begin_ind, unsigned int src_link_num);
+  virtual bool updateDialogue(TContIndComposer & tc_cont_ind, unsigned int src_link_num);
+  virtual bool updateDialogue(TEndIndComposer & tc_end_ind, unsigned int src_link_num);
+  virtual bool updateDialogue(TPAbortIndComposer & tc_pAbort_ind, unsigned int src_link_num);
+  virtual bool updateDialogue(TUAbortIndComposer & tc_uAbort_ind, unsigned int src_link_num);
+  virtual bool updateDialogue(TNoticeIndComposer & tc_notice_ind, unsigned int src_link_num);
+
 private:
   sccp::SCCPAddress _ownAddress;
 };
 
 }}}
 
-#endif
+#endif /* __EYELINE_TCAP_PROVD_TCAPINDICATIONSPROCESSOR_HPP__ */
+

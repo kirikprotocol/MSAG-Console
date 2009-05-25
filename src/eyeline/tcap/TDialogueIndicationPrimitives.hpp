@@ -5,16 +5,29 @@
 # ident "@(#)$Id$"
 # define __EYELINE_TCAP_TDIALOGUEINDICATIONPRIMITIVE_HPP__
 
-# include "eyeline/tcap/TDialogueHandlingPrimitive.hpp"
+# include "eyeline/asn1/EncodedOID.hpp"
+# include "eyeline/ros/ROSCompList.hpp"
 # include "eyeline/sccp/SCCPAddress.hpp"
+# include "eyeline/tcap/TDialogueId.hpp"
+# include "eyeline/tcap/TDialogueDefs.hpp"
+# include "eyeline/tcap/TDlgUserInfo.hpp"
+# include "eyeline/tcap/proto/TransactionId.hpp"
 
 namespace eyeline {
 namespace tcap {
 
+using eyeline::asn1::EncodedOID;
+using eyeline::ros::ROSComponentsList;
 using eyeline::sccp::SCCPAddress;
+using eyeline::tcap::proto::TransactionId;
+using eyeline::tcap::PAbort;
 
-class TDialogueIndicationPrimitive : public TDialogueHandlingPrimitive {
+class TDialogueIndicationPrimitive {
 protected:
+  TDialogueId   _dlgId;
+  TransactionId _trId;
+  TDlgUserInfo  _usrInfo;
+
   const EncodedOID *  _acOId;
   ROSComponentsList * _comps;
 
@@ -26,13 +39,18 @@ public:
   virtual ~TDialogueIndicationPrimitive()
   { }
 
+  //
+  TDialogueId getDialogueId(void) const { return _dlgId; }
+  //
+  const TransactionId & getTransactionId(void) const  { return _trId; }
+  //
+  TDlgUserInfo & getUserInfo(void) { return _usrInfo; }
+
   // ------------------------------------------------
   // -- TDialogueHandlingPrimitive interface methods
   // ------------------------------------------------
   virtual const EncodedOID * getAppCtx(void) const { return _acOId; }
   virtual ROSComponentsList * CompList(void) { return _comps; }
-
-  //TODO: indications specific stuff
 };
 
 //
@@ -89,16 +107,15 @@ public:
 //
 class TC_PAbort_Ind : public TDialogueIndicationPrimitive {
 protected:
-  PAbortCause_e _cause;
+  PAbort::Cause_e _cause;
 
 public:
   TC_PAbort_Ind(const EncodedOID * use_ac = NULL)
     : TDialogueIndicationPrimitive(use_ac, 0)
-    , _cause(TDialogueHandlingPrimitive::p_genericError)
+    , _cause(PAbort::p_genericError)
   { }
 
-  void setPAbortCause(PAbortCause_e use_cause) { _cause = use_cause; }
-  PAbortCause_e getPAbortCause(void) const { return _cause; }
+  PAbort::Cause_e getPAbortCause(void) const { return _cause; }
 };
 
 //
@@ -130,7 +147,6 @@ public:
     , _cause(errOk)
   { }
 
-  void setReportCause(ReportCause_e use_cause) { _cause = use_cause; }
   ReportCause_e getReportCause(void) const { return _cause; }
 };
 

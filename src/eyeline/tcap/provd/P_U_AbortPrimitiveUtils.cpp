@@ -8,13 +8,14 @@ static char const ident[] = "@(#)$Id$";
 #include "eyeline/tcap/provd/P_U_AbortPrimitiveUtils.hpp"
 #include "eyeline/tcap/provd/TDlgPAbortReq.hpp"
 #include "eyeline/tcap/provd/TCAPLayer.hpp"
+#include "eyeline/tcap/provd/TDlgIndComposers.hpp"
 
 namespace eyeline {
 namespace tcap {
 namespace provd {
 
 void formPAbortRequest(const proto::TransactionId& trn_id,
-                       TDialogueHandlingPrimitive::PAbortCause_e p_abort_cause)
+                       PAbort::Cause_e p_abort_cause)
 {
   TC_PAbort_Req pAbortReqPrimitive;
   pAbortReqPrimitive.setTransactionId(trn_id);
@@ -23,7 +24,7 @@ void formPAbortRequest(const proto::TransactionId& trn_id,
 }
 
 void formPAbortRequest(const proto::TransactionId& trn_id,
-                       TDialogueHandlingPrimitive::PAbortCause_e p_abort_cause,
+                       PAbort::Cause_e p_abort_cause,
                        unsigned int src_link_num,
                        const sccp::SCCPAddress& src_addr,
                        const sccp::SCCPAddress& dst_addr)
@@ -35,26 +36,26 @@ void formPAbortRequest(const proto::TransactionId& trn_id,
 }
 
 void formPAbortIndication(const TDialogueId& dlg_id,
-                          TDialogueHandlingPrimitive::PAbortCause_e p_abort_cause,
+                          PAbort::Cause_e p_abort_cause,
                           TDlgHandlerIface* t_dlg_hndlr_iface)
 {
   try {
-    TC_PAbort_Ind pAbortIndPrimitive;
+    TPAbortIndComposer pAbortIndPrimitive;
     pAbortIndPrimitive.setDialogueId(dlg_id);
     pAbortIndPrimitive.setPAbortCause(p_abort_cause);
-    t_dlg_hndlr_iface->updateDialogue(pAbortIndPrimitive);
+    t_dlg_hndlr_iface->updateDialogue(pAbortIndPrimitive.TInd());
   } catch (...) {}
 }
 
 void formPAbortIndication(const TDialogueId& dlg_id,
-                          TDialogueHandlingPrimitive::PAbortCause_e p_abort_cause,
+                          PAbort::Cause_e p_abort_cause,
                           TDialogueServiceData* t_dlg_svc_data)
 {
   try {
-    TC_PAbort_Ind pAbortIndPrimitive;
+    TPAbortIndComposer pAbortIndPrimitive;
     pAbortIndPrimitive.setDialogueId(dlg_id);
     pAbortIndPrimitive.setPAbortCause(p_abort_cause);
-    t_dlg_svc_data->updateDialogueDataByIndication(&pAbortIndPrimitive);
+    t_dlg_svc_data->updateDialogueDataByIndication(pAbortIndPrimitive);
   } catch (...) {}
 }
 
@@ -67,9 +68,9 @@ void formUAbortRequest(const asn1::EncodedOID& app_ctx,
   TC_UAbort_Req uAbortRequestPrimitive;
   uAbortRequestPrimitive.setTransactionId(trn_id);
   if ( app_ctx == _ac_contextless_ops )
-    uAbortRequestPrimitive.rejectDlgByUser(proto::AssociateSourceDiagnostic::dsu_null);
+    uAbortRequestPrimitive.rejectDlgByUser(TDialogueAssociate::dsu_null);
   else {
-    uAbortRequestPrimitive.rejectDlgByUser(proto::AssociateSourceDiagnostic::dsu_ac_not_supported);
+    uAbortRequestPrimitive.rejectDlgByUser(TDialogueAssociate::dsu_ac_not_supported);
     uAbortRequestPrimitive.setAppCtx(app_ctx);
   }
 

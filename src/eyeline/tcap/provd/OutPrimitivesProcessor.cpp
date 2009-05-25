@@ -160,12 +160,12 @@ OutPrimitivesProcessor::noticeTCUser(TDialogueServiceData* t_dlg_svc_data,
                                      const TDialogueId& t_dialogue_id,
                                      TC_Notice_Ind::ReportCause_e r_cause)
 {
-  TC_Notice_Ind tcNoticeIndication;
+  TNoticeIndComposer tcNoticeIndication;
 
   tcNoticeIndication.setDialogueId(t_dialogue_id);
   tcNoticeIndication.setReportCause(r_cause);
 
-  t_dlg_svc_data->updateDialogueDataByIndication(&tcNoticeIndication);
+  t_dlg_svc_data->updateDialogueDataByIndication(tcNoticeIndication);
 }
 
 void
@@ -197,7 +197,7 @@ OutPrimitivesProcessor::analyzeFailureCauseAndNotifyTCUser(TDlgRequestSenderAC::
     if ( !return_on_error )
       return;
 
-    TC_Notice_Ind tcNoticeIndication;
+    TNoticeIndComposer tcNoticeIndication;
 
     tcNoticeIndication.setDialogueId(t_dialogue_id);
     if ( res_status == TDlgRequestSenderAC::srlzBadSrcAddr ||
@@ -210,7 +210,7 @@ OutPrimitivesProcessor::analyzeFailureCauseAndNotifyTCUser(TDlgRequestSenderAC::
     else
       tcNoticeIndication.setReportCause(TC_Notice_Ind::errTCAPFailure);
 
-    t_dlg_svc_data->updateDialogueDataByIndication(&tcNoticeIndication);
+    t_dlg_svc_data->updateDialogueDataByIndication(tcNoticeIndication);
   }
 }
 

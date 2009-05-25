@@ -13,21 +13,23 @@ namespace eyeline {
 namespace tcap {
 namespace provd {
 
-void formPAbortRequest(const proto::TransactionId& trn_id,
-                       TDialogueHandlingPrimitive::PAbortCause_e p_abort_cause);
+using eyeline::tcap::PAbort;
 
 void formPAbortRequest(const proto::TransactionId& trn_id,
-                       TDialogueHandlingPrimitive::PAbortCause_e p_abort_cause,
+                       PAbort::Cause_e p_abort_cause);
+
+void formPAbortRequest(const proto::TransactionId& trn_id,
+                       PAbort::Cause_e p_abort_cause,
                        unsigned int src_link_num,
                        const sccp::SCCPAddress& src_addr,
                        const sccp::SCCPAddress& dst_addr);
 
 void formPAbortIndication(const TDialogueId& dlg_id,
-                          TDialogueHandlingPrimitive::PAbortCause_e p_abort_cause,
+                          PAbort::Cause_e p_abort_cause,
                           TDlgHandlerIface* t_dlg_hndlr_iface);
 
 void formPAbortIndication(const TDialogueId& dlg_id,
-                          TDialogueHandlingPrimitive::PAbortCause_e p_abort_cause,
+                          PAbort::Cause_e p_abort_cause,
                           TDialogueServiceData* t_dlg_svc_data);
 
 void formUAbortRequest(const asn1::EncodedOID& app_ctx,

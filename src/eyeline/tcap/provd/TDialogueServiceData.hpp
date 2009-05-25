@@ -10,9 +10,9 @@
 # include "eyeline/tcap/TDialogueId.hpp"
 # include "eyeline/tcap/TDialogueHandlingPrimitive.hpp"
 # include "eyeline/tcap/TDialogueRequestPrimitives.hpp"
-# include "eyeline/tcap/TDialogueIndicationPrimitives.hpp"
 # include "eyeline/tcap/TDlgHandlerIface.hpp"
 
+# include "eyeline/tcap/provd/TDlgIndComposers.hpp"
 # include "eyeline/tcap/provd/TrnFSM.hpp"
 # include "eyeline/tcap/proto/TransactionId.hpp"
 # include "eyeline/tcap/provd/TimeoutMonitor.hpp"
@@ -48,12 +48,12 @@ public:
   void updateDialogueDataByRequest(TC_UAbort_Req* uAbortReqPrimitive);
   void updateDialogueDataByRequest(TC_PAbort_Req* pAbortReqPrimitive);
 
-  void updateDialogueDataByIndication(TC_Begin_Ind* tcBeginIndPrimitive);
-  void updateDialogueDataByIndication(TC_Cont_Ind* tcContIndPrimitive);
-  void updateDialogueDataByIndication(TC_End_Ind* tcEndIndPrimitive);
-  void updateDialogueDataByIndication(TC_PAbort_Ind* tcPAbortIndPrimitive);
-  void updateDialogueDataByIndication(TC_UAbort_Ind* tcUAbortIndPrimitive);
-  void updateDialogueDataByIndication(TC_Notice_Ind* tcNoticeIndPrimitive);
+  void updateDialogueDataByIndication(TBeginIndComposer & tc_begin_ind_primitive);
+  void updateDialogueDataByIndication(TContIndComposer & tc_cont_ind_primitive);
+  void updateDialogueDataByIndication(TEndIndComposer & tc_end_ind_primitive);
+  void updateDialogueDataByIndication(TPAbortIndComposer & tc_pAbort_ind_primitive);
+  void updateDialogueDataByIndication(TUAbortIndComposer & tc_uAbort_ind_primitive);
+  void updateDialogueDataByIndication(TNoticeIndComposer & tc_notice_ind_primitive);
 
   unsigned int getLinkNum() const;
   void setLinkNum(unsigned int linkNum);
@@ -74,10 +74,10 @@ public:
 
 protected:
   template<class T_DIALOGUE_TERMINATION_IND_PRIMITIVE>
-  void handleDialogueTerminationIndPrimitive(T_DIALOGUE_TERMINATION_IND_PRIMITIVE* tDlgTermIndPrimitive);
+  void handleDialogueTerminationIndPrimitive(T_DIALOGUE_TERMINATION_IND_PRIMITIVE & tind_term_primitive);
 
   template<class T_DIALOGUE_NOT_TERMINATION_IND_PRIMITIVE>
-  void handleDialogueNotTerminationIndPrimitive(T_DIALOGUE_NOT_TERMINATION_IND_PRIMITIVE* tDlgNotTermIndPrimitive);
+  void handleDialogueNotTerminationIndPrimitive(T_DIALOGUE_NOT_TERMINATION_IND_PRIMITIVE & tind_not_term_primitive);
 
   void handleInvocationResults(const ROSComponentsList * componentsList);
 
@@ -88,7 +88,7 @@ protected:
   void handleDialogueRequestPrimitive(T_DIALOGUE_REQUEST_PRIMITIVE* tDlgReqPrimitive);
 
   template<class T_DIALOGUE_IND_PRIMITIVE>
-  void notifyTCUser(T_DIALOGUE_IND_PRIMITIVE* tcIndPrimitive);
+  void notifyTCUser(T_DIALOGUE_IND_PRIMITIVE & tc_ind_primitive);
 
   void setDstAddr(const sccp::SCCPAddress & dst_addr);
   void setSrcAddr(const sccp::SCCPAddress & dst_addr);

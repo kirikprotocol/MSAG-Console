@@ -22,7 +22,7 @@ TCAPIndicationsProcessor::TCAPIndicationsProcessor()
 {}
 
 bool
-TCAPIndicationsProcessor::updateDialogue(TC_Begin_Ind& tc_begin_ind, unsigned int src_link_num)
+TCAPIndicationsProcessor::updateDialogue(TBeginIndComposer & tc_begin_ind, unsigned int src_link_num)
 {
   try {
     AppCtxSMRegistry::RegistryEntry regEntry =
@@ -34,11 +34,11 @@ TCAPIndicationsProcessor::updateDialogue(TC_Begin_Ind& tc_begin_ind, unsigned in
                                                                                tc_begin_ind.getTransactionId(),
                                                                                regEntry.dialogueTimeout);
       tDlgSvcData->setLinkNum(src_link_num);
-      tDlgSvcData->updateDialogueDataByIndication(&tc_begin_ind);
+      tDlgSvcData->updateDialogueDataByIndication(tc_begin_ind);
 
       return true;
     } catch (std::exception& ex) {
-      formPAbortRequest(tc_begin_ind.getTransactionId(), TDialogueHandlingPrimitive::p_resourceLimitation,
+      formPAbortRequest(tc_begin_ind.getTransactionId(), PAbort::p_resourceLimitation,
                         src_link_num, tc_begin_ind.getDestAddress(), tc_begin_ind.getOrigAddress());
 
       return false;
@@ -51,46 +51,30 @@ TCAPIndicationsProcessor::updateDialogue(TC_Begin_Ind& tc_begin_ind, unsigned in
 }
 
 bool
-TCAPIndicationsProcessor::updateDialogue(TC_Cont_Ind& tcContInd, unsigned int srcLinkNum)
+TCAPIndicationsProcessor::updateDialogue(TContIndComposer & tc_cont_ind, unsigned int src_link_num)
 {
   try {
-    TDialogueServiceDataRegistry::registry_element_ref_t tDlgSvcData = TDialogueServiceDataRegistry::getInstance().getTDialogueServiceData(tcContInd.getTransactionId());
+    TDialogueServiceDataRegistry::registry_element_ref_t tDlgSvcData = TDialogueServiceDataRegistry::getInstance().getTDialogueServiceData(tc_cont_ind.getTransactionId());
 
-    tDlgSvcData->updateDialogueDataByIndication(&tcContInd);
+    tDlgSvcData->updateDialogueDataByIndication(tc_cont_ind);
 
     return true;
   } catch (UnknownDialogueException& ex) {
-    formPAbortRequest(tcContInd.getTransactionId(), TDialogueHandlingPrimitive::p_unrecognizedTransactionID, srcLinkNum, tcContInd.getDestAddress(), tcContInd.getOrigAddress());
+    formPAbortRequest(tc_cont_ind.getTransactionId(), PAbort::p_unrecognizedTransactionID, src_link_num, tc_cont_ind.getDestAddress(), tc_cont_ind.getOrigAddress());
   } catch (std::exception& ex) {
-    formPAbortRequest(tcContInd.getTransactionId(), TDialogueHandlingPrimitive::p_resourceLimitation, srcLinkNum, tcContInd.getDestAddress(), tcContInd.getOrigAddress());
+    formPAbortRequest(tc_cont_ind.getTransactionId(), PAbort::p_resourceLimitation, src_link_num, tc_cont_ind.getDestAddress(), tc_cont_ind.getOrigAddress());
   }
 
   return false;
 }
 
 bool
-TCAPIndicationsProcessor::updateDialogue(TC_End_Ind& tcEndInd, unsigned int srcLinkNum)
+TCAPIndicationsProcessor::updateDialogue(TEndIndComposer & tc_end_ind, unsigned int src_link_num)
 {
   try {
-    TDialogueServiceDataRegistry::registry_element_ref_t tDlgSvcData = TDialogueServiceDataRegistry::getInstance().getTDialogueServiceData(tcEndInd.getTransactionId());
+    TDialogueServiceDataRegistry::registry_element_ref_t tDlgSvcData = TDialogueServiceDataRegistry::getInstance().getTDialogueServiceData(tc_end_ind.getTransactionId());
 
-    tDlgSvcData->updateDialogueDataByIndication(&tcEndInd);
-
-    return true;
-  } catch (UnknownDialogueException& ex) {
-  } catch (std::exception& ex) {
-  }
-
-  return false;
-}
-
-bool
-TCAPIndicationsProcessor::updateDialogue(TC_PAbort_Ind& tcPAbortInd, unsigned int srcLinkNum)
-{
-  try {
-    TDialogueServiceDataRegistry::registry_element_ref_t tDlgSvcData = TDialogueServiceDataRegistry::getInstance().getTDialogueServiceData(tcPAbortInd.getTransactionId());
-
-    tDlgSvcData->updateDialogueDataByIndication(&tcPAbortInd);
+    tDlgSvcData->updateDialogueDataByIndication(tc_end_ind);
 
     return true;
   } catch (UnknownDialogueException& ex) {
@@ -101,12 +85,12 @@ TCAPIndicationsProcessor::updateDialogue(TC_PAbort_Ind& tcPAbortInd, unsigned in
 }
 
 bool
-TCAPIndicationsProcessor::updateDialogue(TC_UAbort_Ind& tcUAbortInd, unsigned int srcLinkNum)
+TCAPIndicationsProcessor::updateDialogue(TPAbortIndComposer & tc_pAbort_ind, unsigned int src_link_num)
 {
   try {
-    TDialogueServiceDataRegistry::registry_element_ref_t tDlgSvcData = TDialogueServiceDataRegistry::getInstance().getTDialogueServiceData(tcUAbortInd.getTransactionId());
+    TDialogueServiceDataRegistry::registry_element_ref_t tDlgSvcData = TDialogueServiceDataRegistry::getInstance().getTDialogueServiceData(tc_pAbort_ind.getTransactionId());
 
-    tDlgSvcData->updateDialogueDataByIndication(&tcUAbortInd);
+    tDlgSvcData->updateDialogueDataByIndication(tc_pAbort_ind);
 
     return true;
   } catch (UnknownDialogueException& ex) {
@@ -117,12 +101,28 @@ TCAPIndicationsProcessor::updateDialogue(TC_UAbort_Ind& tcUAbortInd, unsigned in
 }
 
 bool
-TCAPIndicationsProcessor::updateDialogue(TC_Notice_Ind& tcNoticeInd, unsigned int srcLinkNum)
+TCAPIndicationsProcessor::updateDialogue(TUAbortIndComposer & tc_uAbort_ind, unsigned int src_link_num)
 {
   try {
-    TDialogueServiceDataRegistry::registry_element_ref_t tDlgSvcData = TDialogueServiceDataRegistry::getInstance().getTDialogueServiceData(tcNoticeInd.getTransactionId());
+    TDialogueServiceDataRegistry::registry_element_ref_t tDlgSvcData = TDialogueServiceDataRegistry::getInstance().getTDialogueServiceData(tc_uAbort_ind.getTransactionId());
 
-    tDlgSvcData->updateDialogueDataByIndication(&tcNoticeInd);
+    tDlgSvcData->updateDialogueDataByIndication(tc_uAbort_ind);
+
+    return true;
+  } catch (UnknownDialogueException& ex) {
+  } catch (std::exception& ex) {
+  }
+
+  return false;
+}
+
+bool
+TCAPIndicationsProcessor::updateDialogue(TNoticeIndComposer & tc_notice_ind, unsigned int src_link_num)
+{
+  try {
+    TDialogueServiceDataRegistry::registry_element_ref_t tDlgSvcData = TDialogueServiceDataRegistry::getInstance().getTDialogueServiceData(tc_notice_ind.getTransactionId());
+
+    tDlgSvcData->updateDialogueDataByIndication(tc_notice_ind);
 
     return true;
   } catch (UnknownDialogueException& ex) {

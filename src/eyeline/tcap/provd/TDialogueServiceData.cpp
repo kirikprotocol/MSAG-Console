@@ -114,54 +114,54 @@ TDialogueServiceData::updateDialogueDataByRequest(TC_PAbort_Req* pAbortReqPrimit
 }
 
 void
-TDialogueServiceData::updateDialogueDataByIndication(TC_Begin_Ind* tc_begin_ind_primitive)
+TDialogueServiceData::updateDialogueDataByIndication(TBeginIndComposer & tc_begin_ind_primitive)
 {
-  _trnFSM.updateTransaction(*tc_begin_ind_primitive);
+  _trnFSM.updateTransaction(tc_begin_ind_primitive.TInd());
 
-  tc_begin_ind_primitive->setDialogueId(getDialogueId());
+  tc_begin_ind_primitive.setDialogueId(getDialogueId());
 
-  if ( tc_begin_ind_primitive->getAppCtx() ) {
+  if ( tc_begin_ind_primitive.getAppCtx() ) {
     smsc::core::synchronization::MutexGuard synchronize(_lock_forAppCtxUpdate);
-    _applicationContext = *tc_begin_ind_primitive->getAppCtx();
+    _applicationContext = *tc_begin_ind_primitive.getAppCtx();
   }
 
   setDialogueTimeoutId(TimeoutMonitor::getInstance().schedule(getDialogueTimeout(), new DialogueTimeoutHandler(this)));
 
-  setDstAddr(tc_begin_ind_primitive->getOrigAddress());
+  setDstAddr(tc_begin_ind_primitive.getOrigAddress());
 
-  notifyTCUser(tc_begin_ind_primitive);
+  notifyTCUser(tc_begin_ind_primitive.TInd());
 }
 
 void
-TDialogueServiceData::updateDialogueDataByIndication(TC_Cont_Ind* tcContIndPrimitive)
+TDialogueServiceData::updateDialogueDataByIndication(TContIndComposer & tc_cont_ind_primitive)
 {
-  handleInvocationResults(tcContIndPrimitive->CompList());
-  handleDialogueNotTerminationIndPrimitive(tcContIndPrimitive);
+  handleInvocationResults(tc_cont_ind_primitive.CompList());
+  handleDialogueNotTerminationIndPrimitive(tc_cont_ind_primitive);
 }
 
 void
-TDialogueServiceData::updateDialogueDataByIndication(TC_End_Ind* tcEndIndPrimitive)
+TDialogueServiceData::updateDialogueDataByIndication(TEndIndComposer & tc_end_ind_primitive)
 {
-  handleInvocationResults(tcEndIndPrimitive->CompList());
-  handleDialogueTerminationIndPrimitive(tcEndIndPrimitive);
+  handleInvocationResults(tc_end_ind_primitive.CompList());
+  handleDialogueTerminationIndPrimitive(tc_end_ind_primitive);
 }
 
 void
-TDialogueServiceData::updateDialogueDataByIndication(TC_PAbort_Ind* tcPAbortIndPrimitive)
+TDialogueServiceData::updateDialogueDataByIndication(TPAbortIndComposer & tc_pAbort_ind_primitive)
 {
-  handleDialogueTerminationIndPrimitive(tcPAbortIndPrimitive);
+  handleDialogueTerminationIndPrimitive(tc_pAbort_ind_primitive);
 }
 
 void
-TDialogueServiceData::updateDialogueDataByIndication(TC_UAbort_Ind* tcUAbortIndPrimitive)
+TDialogueServiceData::updateDialogueDataByIndication(TUAbortIndComposer & tc_uAbort_ind_primitive)
 {
-  handleDialogueTerminationIndPrimitive(tcUAbortIndPrimitive);
+  handleDialogueTerminationIndPrimitive(tc_uAbort_ind_primitive);
 }
 
 void
-TDialogueServiceData::updateDialogueDataByIndication(TC_Notice_Ind* tcNoticeIndPrimitive)
+TDialogueServiceData::updateDialogueDataByIndication(TNoticeIndComposer & tc_notice_ind_primitive)
 {
-  handleDialogueNotTerminationIndPrimitive(tcNoticeIndPrimitive);
+  handleDialogueNotTerminationIndPrimitive(tc_notice_ind_primitive);
 }
 
 const proto::TransactionId&
@@ -231,10 +231,10 @@ TDialogueServiceData::cancelDialogueTimers()
 void
 TDialogueServiceData::notifyDialogueTimeoutExpiration()
 {
-  TC_PAbort_Ind pAbortInd;
+  TPAbortIndComposer pAbortInd;
 
   pAbortInd.setDialogueId(getDialogueId());
-  pAbortInd.setPAbortCause(TDialogueHandlingPrimitive::p_dialogueTimeout);
+  pAbortInd.setPAbortCause(PAbort::p_dialogueTimeout);
 
   try {
     smsc::core::synchronization::MutexGuard synchronize(_lock_forCallToTDlgHndlrIface);

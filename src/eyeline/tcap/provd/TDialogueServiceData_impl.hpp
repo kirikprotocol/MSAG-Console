@@ -1,28 +1,28 @@
 
 template<class T_DIALOGUE_TERMINATION_IND_PRIMITIVE>
 void
-TDialogueServiceData::handleDialogueTerminationIndPrimitive(T_DIALOGUE_TERMINATION_IND_PRIMITIVE* tDlgTermIndPrimitive)
+TDialogueServiceData::handleDialogueTerminationIndPrimitive(T_DIALOGUE_TERMINATION_IND_PRIMITIVE & tind_term_primitive)
 {
-  _trnFSM.updateTransaction(*tDlgTermIndPrimitive);
+  _trnFSM.updateTransaction(tind_term_primitive);
 
-  tDlgTermIndPrimitive->setDialogueId(getDialogueId());
+  tind_term_primitive.setDialogueId(getDialogueId());
 
   TimeoutMonitor::getInstance().cancel(getDialogueTimeoutId());
 
-  notifyTCUser(tDlgTermIndPrimitive);
+  notifyTCUser(tind_term_primitive);
 
-  TDialogueServiceDataRegistry::getInstance().destroyTDialogueServiceData(tDlgTermIndPrimitive->getDialogueId());
+  TDialogueServiceDataRegistry::getInstance().destroyTDialogueServiceData(tind_term_primitive.getDialogueId());
 }
 
 template<class T_DIALOGUE_NOT_TERMINATION_IND_PRIMITIVE>
 void
-TDialogueServiceData::handleDialogueNotTerminationIndPrimitive(T_DIALOGUE_NOT_TERMINATION_IND_PRIMITIVE* tDlgNotTermIndPrimitive)
+TDialogueServiceData::handleDialogueNotTerminationIndPrimitive(T_DIALOGUE_NOT_TERMINATION_IND_PRIMITIVE & tind_not_term_primitive)
 {
-  _trnFSM.updateTransaction(*tDlgNotTermIndPrimitive);
+  _trnFSM.updateTransaction(tind_not_term_primitive);
 
-  tDlgNotTermIndPrimitive->setDialogueId(getDialogueId());
+  tind_not_term_primitive.setDialogueId(getDialogueId());
 
-  notifyTCUser(tDlgNotTermIndPrimitive);
+  notifyTCUser(tind_not_term_primitive);
 }
 
 template<class T_DIALOGUE_REQUEST_PRIMITIVE>
@@ -45,15 +45,15 @@ TDialogueServiceData::handleDialogueRequestPrimitive(T_DIALOGUE_REQUEST_PRIMITIV
 
 template<class T_DIALOGUE_IND_PRIMITIVE>
 void
-TDialogueServiceData::notifyTCUser(T_DIALOGUE_IND_PRIMITIVE* tcIndPrimitive)
+TDialogueServiceData::notifyTCUser(T_DIALOGUE_IND_PRIMITIVE & tc_ind_primitive)
 {
   try {
     smsc::core::synchronization::MutexGuard synchronize(_lock_forCallToTDlgHndlrIface);
-    _tDlgHndlrIface->updateDialogue(*tcIndPrimitive);
-  } catch (std::exception& ex) {
-    formPAbortIndication(tcIndPrimitive->getDialogueId(), TDialogueHandlingPrimitive::p_resourceLimitation,
+    _tDlgHndlrIface->updateDialogue(tc_ind_primitive);
+  } catch (const std::exception& ex) {
+    formPAbortIndication(tc_ind_primitive.getDialogueId(), PAbort::p_resourceLimitation,
                          _tDlgHndlrIface);
-    formPAbortRequest(tcIndPrimitive->getTransactionId(), TDialogueHandlingPrimitive::p_resourceLimitation);
+    formPAbortRequest(tc_ind_primitive.getTransactionId(), PAbort::p_resourceLimitation);
   }
 }
 
