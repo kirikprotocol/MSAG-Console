@@ -19,7 +19,6 @@ using eyeline::sccp::SCCPAddress;
 class TDialogueRequestPrimitive : public TDialogueHandlingPrimitive {
 protected:
   bool                _retOnErr;
-  TDlgUserInfo        _usrInfo;
   ROSComponentsList   _comps;
   const EncodedOID *  _acOId;
 
@@ -47,7 +46,6 @@ public:
   // ------------------------------------------------
   virtual const EncodedOID * getAppCtx(void) const { return _acOId; }
   virtual ROSComponentsList * CompList(void) { return &_comps; }
-  virtual TDlgUserInfo * UserInfo(void) { return &_usrInfo; }
 };
 
 //

@@ -123,6 +123,10 @@ public:
   ~TDlgUserInfo()
   { }
 
+  void addUIValue(const UIValue & use_ui)
+  {
+    _listUI.push_back(use_ui);
+  }
   void addUIValue(const AbstractSyntaxRfp & use_astyp, const char * use_descr = NULL)
   {
     _listUI.push_back(UIValue(use_astyp, use_descr));

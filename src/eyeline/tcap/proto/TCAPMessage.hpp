@@ -199,25 +199,6 @@ public:
   //TCMsgAbortPortion * UAbortAC(const EncodedOID * sugg_ctx = 0);
   //
   //TCMsgAbortPortion * UAbort(/*TODO: add abort reason*/); 
-
-  // Adds value of type with direct reference (defined OID) to userInfo section
-  bool addUserInfo(const AbstractSyntaxRfp & use_asval)
-  {
-    TCUserInformation * pInfo = usrInfo();
-    if (!pInfo)
-      return false;
-    pInfo->addUIASyntax(use_asval);
-    return true;
-  }
-  // Adds encoding of arbitrary type to userInfo section
-  bool addUserInfo(uint32_t use_id, const BITBuffer & use_enc)
-  {
-    TCUserInformation * pInfo = usrInfo();
-    if (!pInfo)
-        return false;
-    pInfo->addUIEncoding(use_id, use_enc);
-    return true;
-  }
 };
 
 } //proto

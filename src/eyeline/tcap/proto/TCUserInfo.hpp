@@ -5,9 +5,9 @@
 #ident "@(#)$Id$"
 #define __TC_USRINFO_DEFS_HPP
 
-#include "eyeline/asn1/UniversalID.hpp"
-#include "eyeline/asn1/AbstractSyntax.hpp"
-#include <list>
+//#include <list>
+//#include "eyeline/asn1/AbstractSyntax.hpp"
+#include "eyeline/tcap/TDlgUserInfo.hpp"
 
 namespace eyeline {
 namespace tcap {
@@ -21,79 +21,59 @@ using eyeline::asn1::AbstractSyntax;
 using eyeline::asn1::AbstractSyntaxRfp;
 
 using eyeline::asn1::EncodedOID;
-using eyeline::asn1::UniversalID;
 using eyeline::asn1::BITBuffer;
 
+using eyeline::tcap::UIValue;
 
 //ASN.1 1997 EXTERNAL type adopted for TC.
 //keeps TC DialoguePDU or UniDialoguePDU in case of global(direct)
 //type reference, any type in case of local(indirect) reference.
-class TCExternal : public ASTypeAC {
-private:
-  struct {
-    AbstractSyntaxRfp   astype;   //set if typeRef is uidGlobal 
-    BITBuffer           encoding; //set if typeref is uidLocal
-  } value;
-  UniversalID     typeRef;
-  std::string     typeDescriptor; //OPTIONAL
-
+class TCExternal : public UIValue, public ASTypeAC {
 public:
   TCExternal()
     : ASTypeAC(ASTag::tagUniversal, 8)
   { }
+  TCExternal(const AbstractSyntaxRfp & use_astyp, const char * use_descr = NULL)
+    : UIValue(use_astyp, use_descr), ASTypeAC(ASTag::tagUniversal, 8)
+  { }
+  TCExternal(uint32_t use_uid, const BITBuffer & use_enc, const char * use_descr = NULL)
+    : UIValue(use_uid, use_enc, use_descr), ASTypeAC(ASTag::tagUniversal, 8)
+  { }
+  TCExternal(const UIValue & use_val)
+    : UIValue(use_val), ASTypeAC(ASTag::tagUniversal, 8)
+  { }
   ~TCExternal()
   { }
 
-  void setValueEncoding(uint32_t use_uid, const BITBuffer & use_enc)
-  {
-    typeRef.setLocal(use_uid);
-    value.encoding = use_enc;
-  }
-  void setValueASyntax(const AbstractSyntaxRfp & use_astyp)
-  {
-    typeRef.setGlobal(use_astyp->_asId);
-    value.astype = use_astyp;
-  }
-  void setValueDescriptor(const std::string use_descr) { typeDescriptor = use_descr; }
-
-  UniversalID::UIDKind ValueKind(void) const
-  {
-    return typeRef.uidKind();
-  }
-
-  const BITBuffer * ValueEncoding(void) const
-  {
-    return (typeRef.uidKind() == UniversalID::uidLocal) ? &value.encoding : 0;
-  }
-  const AbstractSyntaxRfp & ValueASyntax(void) const
-  {
-    return value.astype;
-  }
-  const std::string & ValueDescriptor(void) const { return typeDescriptor; }
+  static ENCResult EncodeUI(const UIValue & use_val, BITBuffer & use_buf,
+                          EncodingRule use_rule = ruleDER) /*throw ASN1CodecError*/;
 
   // ---------------------------------
   // -- ASTypeAC interface methods
   // ---------------------------------
-
   //REQ: if use_rule == valRule, presentation > valNone, otherwise presentation == valDecoded
-  ENCResult Encode(BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
-    /*throw ASN1CodecError*/;
+  virtual ENCResult Encode(BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
+  {
+    return EncodeUI(*this, use_buf, use_rule);
+  }
 
   //REQ: presentation == valNone
   //OUT: presentation (include all subcomponents) = valDecoded,
   //NOTE: in case of decMoreInput, stores decoding context 
-  DECResult Decode(const BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
+  virtual DECResult Decode(const BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
     /*throw ASN1CodecError*/;
 
   //REQ: presentation == valNone
   //OUT: presentation (include all subcomponents) = valMixed | valDecoded
   //NOTE: in case of valMixed keeps references to BITBuffer !!!
   //NOTE: in case of decMoreInput, stores decoding context 
-  DECResult DeferredDecode(const BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
+  virtual DECResult DeferredDecode(const BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
     /*throw ASN1CodecError*/;
+
 };
 
-class TCUserInformation : public ASTypeAC {
+
+class TCUserInformation : public ASTypeAC { // list of TCExternal
 protected:
   std::list<TCExternal> _extVals;
 
@@ -101,6 +81,19 @@ public:
   TCUserInformation()
     : ASTypeAC(ASTag::tagContextSpecific, 30)
   { }
+
+  unsigned export2TDlgUI(TDlgUserInfo & use_uil)
+  {
+    if (_extVals.empty())
+      return 0;
+
+    unsigned i = 0;
+    for (std::list<TCExternal>::const_iterator 
+         cit = _extVals.begin(); cit != _extVals.end(); ++cit, ++i) {
+      use_uil.addUIValue(*cit);
+    }
+    return i;
+  }
 
   class iterator {
   protected:
@@ -205,6 +198,16 @@ public:
     return const_iterator(_extVals.begin(), _extVals.end());
   }
 
+  iterator end(void)
+  {
+    return iterator(_extVals.end(), _extVals.end());
+  }
+
+  const_iterator end(void) const
+  {
+    return const_iterator(_extVals.end(), _extVals.end());
+  }
+
   unsigned size(void) const { return (unsigned)_extVals.size(); }
   bool empty(void) const { return _extVals.empty(); }
 
@@ -214,17 +217,13 @@ public:
   }
 
 
-  TCExternal & addUIASyntax(const AbstractSyntaxRfp & use_astyp)
+  void addUIValue(const AbstractSyntaxRfp & use_astyp, const char * use_descr = NULL)
   {
-    _extVals.push_back(TCExternal());
-    _extVals.back().setValueASyntax(use_astyp);
-    return _extVals.back();
+    _extVals.push_back(TCExternal(use_astyp, use_descr));
   }
-  TCExternal & addUIEncoding(uint32_t use_uid, const BITBuffer & use_enc)
+  void addUIValue(uint32_t use_uid, const BITBuffer & use_enc, const char * use_descr = NULL)
   {
-    _extVals.push_back(TCExternal());
-    _extVals.back().setValueEncoding(use_uid, use_enc);
-    return _extVals.back();
+    _extVals.push_back(TCExternal(use_uid, use_enc, use_descr));
   }
 
   // ---------------------------------

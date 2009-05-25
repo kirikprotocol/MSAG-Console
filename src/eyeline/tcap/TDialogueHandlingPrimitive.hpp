@@ -23,6 +23,7 @@ class TDialogueHandlingPrimitive {
 protected:
   TDialogueId   _dlgId;
   TransactionId _trId;
+  TDlgUserInfo  _usrInfo;
 
 public:
   enum PAbortCause_e {
@@ -46,13 +47,13 @@ public:
   void setTransactionId(const TransactionId & use_id) { _trId = use_id; }
   const TransactionId & getTransactionId(void) const  { return _trId; }
 
+  TDlgUserInfo & UserInfo(void) { return _usrInfo; }
+
   // ------------------------------------------------
   // -- TDialogueHandlingPrimitive interface methods
   // ------------------------------------------------
   virtual const EncodedOID * getAppCtx(void) const = 0;
   virtual ROSComponentsList * CompList(void) = 0;
-  virtual TDlgUserInfo * UserInfo(void) = 0;
-
 };
 
 } //tcap
