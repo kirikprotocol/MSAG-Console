@@ -43,23 +43,23 @@ public class Logging extends EditBean {
     public void process(final HttpServletRequest request, final HttpServletResponse response) throws SCAGJspException {
         logger.debug( "Logging.process() start" );
         super.process(request, response);
-        if (getMbSave() != null) {
-            logger.debug( "Logging.process() getMbSave()" );
+//        if (getMbSave() != null) {
+        if (getMbApply() != null) {
+            logger.debug( "Logging.process() getMbApply()" );
             apply(request.getParameterMap());
-            return;
+            init();
         } else if (getMbSavePermanent() != null) {
             logger.debug( "Logging.process() getMbSavePermanent()" );
             savePermanent(request.getParameterMap());
-            return;
+            init();
         } else if (getMbRead() != null) {
             logger.debug( "Logging.process() getMbRead()" );
             readFLF( true );
-            return;
         } else {
             logger.debug( "Logging.process() init()" );
             init();
         }
-
+//        init();
     }
 
     public class LoggerCategoryInfo implements Comparable {
@@ -240,12 +240,12 @@ public class Logging extends EditBean {
     }
 
     void readFLF( boolean full ) throws SCAGJspException {
-        logger.warn( "Loigging:readFLF() start" );
+        logger.warn( "Loigging.readFLF() start" );
         Map logCategoriesFF = null;
         Map logCategories = null;
         boolean exc = false;
         try {
-            logger.warn( "Loigging:readFLF() readFromLogFile()" );
+            logger.warn( "Loigging.readFLF() readFromLogFile()" );
             logCategoriesFF = appContext.getLoggingManager().readFromLogFile();
             if( !isConnected() ) setRunning( false );
             if( full && isRunning() ){
@@ -319,8 +319,7 @@ public class Logging extends EditBean {
 
     protected void apply(Map parameters) throws SCAGJspException {
         logger.info( "Logging.apply() start" );
-        Map cats = new HashMap();
-        cats = getLogsFromMap( parameters );
+        Map cats = getLogsFromMap( parameters );
         try {
             logger.info( "Logging.apply() setLogCategories" );
 
@@ -510,5 +509,15 @@ public class Logging extends EditBean {
 
     public void setRunning(boolean running) {
         this.running = running;
+    }
+
+    private String mbApply;
+
+    public String getMbApply() {
+        return mbApply;
+    }
+
+    public void setMbApply(String mbApply) {
+        this.mbApply = mbApply;
     }
 }
