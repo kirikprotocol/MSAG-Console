@@ -33,7 +33,6 @@ StatisticsLogger<Event, Buffer>::StatisticsLogger(const string& statDir, const s
     interval_(interval), lastFileTime_(0), logger_(Logger::getInstance("statlog")) {
   //TODO: check prefix size
   checkDir();
-  pdubuf_.resize(0xFFFF);
 };
 
 template<typename Event, typename Buffer>
@@ -47,14 +46,16 @@ void StatisticsLogger<Event, Buffer>::logEvent(Event* event) {
   if (!event) {
     return;
   }
-  pdubuf_.WriteNetInt32(0);
-  pdubuf_.setPos(static_cast<uint32_t>(sizeof(uint32_t)));
-  pdubuf_.WriteNetInt16(event->getEventType());
-  event->write(pdubuf_);
-  uint32_t bsize = pdubuf_.getPos();
-  pdubuf_.setPos(0);
-  pdubuf_.WriteNetInt32(bsize);
-  pdubuf_.setPos(0);
+  Buffer pdubuf;
+  pdubuf.resize(2048);
+  pdubuf.setPos(static_cast<uint32_t>(sizeof(uint32_t)));
+  pdubuf.WriteNetInt16(event->getEventType());
+  event->write(pdubuf);
+  uint32_t bsize = pdubuf.getPos();
+  pdubuf.setPos(0);
+  pdubuf.WriteNetInt32(bsize);
+  pdubuf.setPos(0);
+
   try {
     MutexGuard mg(mutex_);
     if (!file_.isOpened()) {
@@ -62,7 +63,7 @@ void StatisticsLogger<Event, Buffer>::logEvent(Event* event) {
       file_.WOpen(getFileName(statDir_, lastFileTime_).c_str());
       smsc_log_debug(logger_, "create stat file '%s'", getFileName(statDir_, lastFileTime_).c_str());
     }
-    file_.Write(pdubuf_.getBuffer(), bsize);
+    file_.Write(pdubuf.getBuffer(), bsize);
   } catch (const std::exception& ex) {
     smsc_log_warn(logger_, "write event to file error: %s", ex.what());
   }

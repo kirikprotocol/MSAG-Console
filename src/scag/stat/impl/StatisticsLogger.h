@@ -47,7 +47,6 @@ private:
   uint32_t interval_; 
   File file_;
   time_t lastFileTime_;
-  Buffer pdubuf_;
   Mutex mutex_;
   Logger* logger_;
 };
