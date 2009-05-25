@@ -11,18 +11,19 @@ namespace eyeline {
 namespace tcap {
 namespace provd {
 
+using eyeline::tcap::PAbort;
 //
 class TC_PAbort_Req : public eyeline::tcap::TDialogueRequestPrimitive {
 protected:
-  PAbortCause_e _cause;
+  PAbort::Cause_e _cause;
 
 public:
   TC_PAbort_Req()
     : TDialogueRequestPrimitive()
   { }
 
-  PAbortCause_e getAbortCause(void) const { return _cause; }
-  void setAbortCause(PAbortCause_e use_reason) { _cause = use_reason; }
+  PAbort::Cause_e getAbortCause(void) const { return _cause; }
+  void setAbortCause(PAbort::Cause_e use_reason) { _cause = use_reason; }
 };
 
 } //provd

@@ -15,7 +15,6 @@ namespace tcap {
 namespace provd {
 
 using eyeline::sua::libsua::SuaApi;
-using eyeline::tcap::proto::AssociateSourceDiagnostic;
 
 class TDlgRequestSenderAC {
 public:
@@ -52,8 +51,8 @@ public:
   SuaApi::CallResult sendMessage(SuaApi * sua_iface, unsigned int link_num) const;
 
   //These methods only for 1st response to T_Begin_Ind
-  void rejectDlgByProvider(AssociateSourceDiagnostic::DlgSrvProvider_e use_cause =
-                        AssociateSourceDiagnostic::dsp_null)
+  void rejectDlgByProvider(TDialogueAssociate::DiagnosticProvider_e use_cause =
+                           TDialogueAssociate::dsp_null)
   { /*TODO: */  }
 
 };

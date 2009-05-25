@@ -8,13 +8,14 @@
 # include "eyeline/sccp/SCCPAddress.hpp"
 # include "eyeline/asn1/EncodedOID.hpp"
 # include "eyeline/tcap/TDialogueHandlingPrimitive.hpp"
-# include "eyeline/tcap/proto/TCAssociateDiagnostic.hpp"
+# include "eyeline/tcap/TDialogueDefs.hpp"
 
 namespace eyeline {
 namespace tcap {
 
 using eyeline::sccp::SCCPAddress;
 //using eyeline::asn1::EncodedOID;
+using eyeline::tcap::TDialogueAssociate;
 
 class TDialogueRequestPrimitive : public TDialogueHandlingPrimitive {
 protected:
@@ -34,8 +35,8 @@ public:
   //These methods only for 1st response to T_Begin_Ind
   void acceptDlgByUser(void)
   { /*TODO: */ }
-  void rejectDlgByUser(proto::AssociateSourceDiagnostic::DlgSrvUser_e use_cause =
-                       proto::AssociateSourceDiagnostic::dsu_null)
+  void rejectDlgByUser(TDialogueAssociate::DiagnosticUser_e use_cause =
+                       TDialogueAssociate::dsu_null)
   { /*TODO: */  }
 
   void setReturnOnError() { _retOnErr = true; }
