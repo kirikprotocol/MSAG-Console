@@ -109,12 +109,12 @@ public:
     _result = dlgAccepted; _diagnostic.setPrvdDiagnostic();
   }
 
-  void rejectByUser(AssociateSourceDiagnostic::DlgSrvUser_e use_cause =
+  void rejectByUser(AssociateSourceDiagnostic::DiagnosticUser_e use_cause =
                         AssociateSourceDiagnostic::dsu_null)
   {
     _result = dlgRejectPermanent; _diagnostic.setUserDiagnostic(use_cause);
   }
-  void rejectByPrvd(AssociateSourceDiagnostic::DlgSrvProvider_e use_cause =
+  void rejectByPrvd(AssociateSourceDiagnostic::DiagnosticProvider_e use_cause =
                         AssociateSourceDiagnostic::dsp_null)
   {
     _result = dlgRejectPermanent; _diagnostic.setPrvdDiagnostic(use_cause);
