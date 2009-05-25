@@ -89,6 +89,11 @@ void ClientCore::startup() /* throw(PvssException) */
     MutexGuard mg(startMutex_);
     if (started_) return;
 
+    if (!getConfig().isEnabled() ) {
+        smsc_log_warn(logger,"PVSS Client is disabled from config, will not start");
+        return;
+    }
+
     smsc_log_info(logger,"Starting PVSS Client %s", getConfig().toString().c_str() );
 
     startupIO();

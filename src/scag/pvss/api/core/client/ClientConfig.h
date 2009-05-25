@@ -17,7 +17,14 @@ public:
     static const int MAX_CONNECTIONS_COUNT = 1000;
 
 public:
-    ClientConfig() : Config() {
+    ClientConfig() : Config(), enabled_(true), connectionsCount_(DEF_CONNECTIONS_COUNT) {
+    }
+
+    bool isEnabled() const {
+        return enabled_;
+    }
+    void setEnabled( bool val ) {
+        enabled_ = val;
     }
 
     int getConnectionsCount() const {
@@ -38,7 +45,8 @@ public:
     }
 
 protected:
-    int connectionsCount_;
+    bool enabled_;
+    int  connectionsCount_;
 };
 
 } // namespace client

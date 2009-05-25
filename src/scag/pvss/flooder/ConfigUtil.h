@@ -15,6 +15,12 @@ void readClientConfig( smsc::logger::Logger*                    logger,
 {
     smsc::util::config::ConfigView cview(manager,"PvssClient");
     try {
+        clientConfig.setEnabled( cview.getBool("enabled") );
+    } catch (...) {
+        smsc_log_warn(logger, "Parameter <PvssClient.enabled> missed. Default value is %d", clientConfig.isEnabled());
+    }
+
+    try {
         clientConfig.setHost( cview.getString("host") );
     } catch (...) {
         smsc_log_warn(logger, "Parameter <PvssClient.host> missed. Defaul value is %s", clientConfig.getHost().c_str());
