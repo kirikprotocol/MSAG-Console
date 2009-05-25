@@ -144,7 +144,8 @@ void StatisticsManager::configure(const StatManConfig& statManConfig)
     std::string saccHost = statManConfig.getSaccHost();
     int reconnect_timeout = statManConfig.getReconnectTimeout();
     int queuelen = statManConfig.getMaxQueueLength();
-    thrSaccSender.init(saccHost,saccPort,reconnect_timeout,queuelen,logger);
+    bool enabled = statManConfig.getEnabled();
+    thrSaccSender.init(saccHost, saccPort, reconnect_timeout, queuelen, logger, enabled);
     
     smsc_log_debug(logger, "StatisticsManager, perfSvcPort: %d\n", perfSvcPort);
 

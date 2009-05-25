@@ -18,7 +18,7 @@ StatManConfig::StatManConfig()
     filesPrefix = "events";
     rollingInterval = 10;
     saaDir = "";
-
+    enabled = false;
 }
 #ifdef TESTING
 /*
@@ -26,7 +26,7 @@ for testing only!
 created by 
 Gregory Panin green@sbingo.com
 */
-StatManConfig::StatManConfig(std::string& directory,std::string& host,int genp,int svcp,int scp, const std::string& saadir, int interval) throw(ConfigException)
+StatManConfig::StatManConfig(std::string& directory,std::string& host,int genp,int svcp,int scp, const std::string& saadir, int interval, bool _enabled) throw(ConfigException)
 {	    
 	try{
 	if(directory.length()==0)
@@ -42,6 +42,7 @@ StatManConfig::StatManConfig(std::string& directory,std::string& host,int genp,i
 	    perfScPort  = scp;	
         saaDir = saadir;
         rollingInterval = interval;
+        enabled = _enabled;
 
 	}
 	catch(ConfigException& e)
@@ -78,6 +79,7 @@ StatManConfig::StatManConfig(const ConfigView& cv)  throw(ConfigException)
         std::auto_ptr<char> saaDir_( cv.getString("saaDir") );
         saaDir = saaDir_.get();
         rollingInterval = cv.getInt("rollingInterval");
+        enabled = cv.getBool("saccEnabled");
 
     }
 	catch(ConfigException& e)
@@ -112,6 +114,7 @@ void StatManConfig::init(const ConfigView& cv) throw(ConfigException)
         std::auto_ptr<char> saaDir_( cv.getString("saaDir") );
         saaDir = saaDir_.get();
         rollingInterval = cv.getInt("rollingInterval");
+        enabled = cv.getBool("saccEnabled");
 
     }
 	catch(ConfigException& e)
@@ -147,6 +150,8 @@ bool StatManConfig::check(const ConfigView& cv)  throw(ConfigException)
             return false;
         if(rollingInterval  != cv.getInt("rollingInterval"))
             return false;
+        if(enabled  != cv.getBool("saccEnabled"))
+            return false;
 
         return true;
 
@@ -177,6 +182,7 @@ IntHash<std::string> StatManConfig::getEventFiler()const{return eventFilter;}
 std::string StatManConfig::getSaaDir() const { return saaDir; }
 std::string StatManConfig::getFilesPrefix() const { return filesPrefix; }
 int StatManConfig::getRollingInterval() const { return rollingInterval; }
+bool StatManConfig::getEnabled() const { return enabled; }
 
 }
 }

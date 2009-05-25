@@ -26,6 +26,7 @@ public:
     std::string getSaaDir() const;
     std::string getFilesPrefix() const;
     int getRollingInterval() const;
+    bool getEnabled() const;
 	
 	
 protected:
@@ -55,6 +56,7 @@ protected:
         std::string saaDir;
         std::string filesPrefix;
         int rollingInterval;
+        bool enabled;
 
 };
 
