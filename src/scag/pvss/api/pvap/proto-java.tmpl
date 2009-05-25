@@ -21,12 +21,16 @@ $-foreach$
     }
 
     Handler handler;
+    int     options;
     public $var protocol.name$() {
     }
 
     public $var protocol.name$(Handler handler) {
         this.handler = handler;
     }
+
+    public int getOptions() { return options; }
+    public void setOptions( int options ) { this.options = options; }
 
     // public void assignHandler(Handler newHandler) {
     // this.handler = newHandler;
