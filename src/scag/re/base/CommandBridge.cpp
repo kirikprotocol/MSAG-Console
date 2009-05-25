@@ -439,7 +439,7 @@ int CommandBridge::getProtocolForEvent(SCAGCommand& command)
 actions::CommandProperty CommandBridge::getCommandProperty(SCAGCommand& command, sessions::Session& session) {
   TransportType transport = command.getType();
   bill::Infrastructure& istr = bill::BillingManager::Instance().getInfrastructure();
-  const smsc::sms::Address abonentAddr = session.sessionKey().address();
+  const smsc::sms::Address& abonentAddr = session.sessionKey().address();
   uint32_t operatorId = istr.GetOperatorID(abonentAddr);
   if (transport != SMPP && transport != HTTP) {
     throw SCAGException("getCommandProperty: unsupported transport type: %d. OperatorID=%d. Abonent addr=%s ",
