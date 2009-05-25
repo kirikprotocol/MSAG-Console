@@ -18,7 +18,8 @@ StatManConfig::StatManConfig()
     filesPrefix = "events";
     rollingInterval = 10;
     saaDir = "";
-    enabled = false;
+    enabled = true;
+    logger = smsc::logger::Logger::getInstance("statman");
 }
 #ifdef TESTING
 /*
@@ -79,7 +80,11 @@ StatManConfig::StatManConfig(const ConfigView& cv)  throw(ConfigException)
         std::auto_ptr<char> saaDir_( cv.getString("saaDir") );
         saaDir = saaDir_.get();
         rollingInterval = cv.getInt("rollingInterval");
-        enabled = cv.getBool("saccEnabled");
+        try {
+          enabled = cv.getBool("saccEnabled");
+        } catch (ConfigException& e) {
+          smsc_log_warn(logger, "StatManConfig: %s Default value is %s", e.what(), enabled ? "true" : "false");
+        }
 
     }
 	catch(ConfigException& e)
@@ -114,8 +119,11 @@ void StatManConfig::init(const ConfigView& cv) throw(ConfigException)
         std::auto_ptr<char> saaDir_( cv.getString("saaDir") );
         saaDir = saaDir_.get();
         rollingInterval = cv.getInt("rollingInterval");
-        enabled = cv.getBool("saccEnabled");
-
+        try {
+          enabled = cv.getBool("saccEnabled");
+        } catch (ConfigException& e) {
+          smsc_log_warn(logger, "StatManConfig: %s Default value is %s", e.what(), enabled ? "true" : "false");
+        }
     }
 	catch(ConfigException& e)
 	{
@@ -150,8 +158,13 @@ bool StatManConfig::check(const ConfigView& cv)  throw(ConfigException)
             return false;
         if(rollingInterval  != cv.getInt("rollingInterval"))
             return false;
-        if(enabled  != cv.getBool("saccEnabled"))
+        try {
+          if(enabled  != cv.getBool("saccEnabled")) {
             return false;
+          }
+        } catch (ConfigException& e) {
+          smsc_log_warn(logger, "StatManConfig: %s Default value is %s", e.what(), enabled ? "true" : "false");
+        }
 
         return true;
 

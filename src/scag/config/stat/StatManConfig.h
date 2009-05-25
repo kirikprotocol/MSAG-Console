@@ -1,6 +1,7 @@
 #ifndef StatManConf_dot_h
 #define StatManConf_dot_h
 
+#include "logger/Logger.h"
 #include "scag/config/base/ConfigView.h"
 #include <core/buffers/IntHash.hpp>
 namespace scag {
@@ -57,6 +58,7 @@ protected:
         std::string filesPrefix;
         int rollingInterval;
         bool enabled;
+        smsc::logger::Logger* logger;
 
 };
 
