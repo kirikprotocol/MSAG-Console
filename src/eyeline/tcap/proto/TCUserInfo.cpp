@@ -14,7 +14,7 @@ namespace proto {
 
 //REQ: if use_rule == valRule, presentation > valNone, otherwise presentation == valDecoded
 ASTypeAC::ENCResult
-  TCExternal::Encode(BITBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
+  TCExternal::EncodeUI(const UIValue & use_val, BITBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
   /*throw ASN1CodecError*/
 {
   //TODO:
