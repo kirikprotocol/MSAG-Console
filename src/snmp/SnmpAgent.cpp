@@ -402,7 +402,7 @@ static char const ident[] = "$Id$";
     netsnmp_register_instance(reginfo);
     reginfo = netsnmp_create_handler_registration("deliverTEMP", smscStatsHandler, deliverTmpOid, OID_LENGTH(deliverTmpOid), HANDLER_CAN_RONLY);
     netsnmp_register_instance(reginfo);
-    
+
 
     reginfo = netsnmp_create_handler_registration("dlgInSRI", smscStatsHandler, mapStatDlgInSRIOid, OID_LENGTH(mapStatDlgInSRIOid), HANDLER_CAN_RONLY);
     netsnmp_register_instance(reginfo);
@@ -416,8 +416,8 @@ static char const ident[] = "$Id$";
     netsnmp_register_instance(reginfo);
     reginfo = netsnmp_create_handler_registration("dlgNIUSSD", smscStatsHandler, mapStatDlgNIUSSDOid, OID_LENGTH(mapStatDlgNIUSSDOid), HANDLER_CAN_RONLY);
     netsnmp_register_instance(reginfo);
-    
-    
+
+
     reginfo = netsnmp_create_handler_registration("status", smscStatusHandler, status_oid, OID_LENGTH(status_oid), HANDLER_CAN_RWRITE);
     netsnmp_register_instance(reginfo);
     reginfo = netsnmp_create_handler_registration("smscDescr", smscDescrHandler, smscDescrOid, OID_LENGTH(smscDescrOid), HANDLER_CAN_RONLY);
@@ -567,7 +567,7 @@ using smsc::snmp::SnmpAgent;
     struct counter64 val;
     uint64_t perf[smsc::system::performance::performanceCounters];
     ((smsc::system::Smsc*)smscptr)->getPerfData(perf);
-    
+
     int mapDlgStat[6];
     MapDialogContainer::getInstance()->getDlgStats(mapDlgStat);
 
@@ -624,8 +624,8 @@ using smsc::snmp::SnmpAgent;
         else if (snmp_oid_compare(deliverTmpOid,OID_LENGTH(deliverTmpOid),
                              reginfo->rootoid, reginfo->rootoid_len) ==0)
         {
-          val.high = perf[perfBase+6] >> 32;
-          val.low  = perf[perfBase+6] & 0xffffffff;
+          val.high = perf[perfBase+3] >> 32;
+          val.low  = perf[perfBase+3] & 0xffffffff;
           snmp_set_var_typed_value(requests->requestvb, ASN_COUNTER64, (u_char *) &val, sizeof(val));
           smsc_log_debug(((smsc::logger::Logger*)agentlog), "deliverTEMP req");
         }
