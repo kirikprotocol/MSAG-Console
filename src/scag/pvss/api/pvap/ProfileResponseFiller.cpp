@@ -1,4 +1,5 @@
 #include "ProfileResponseFiller.h"
+#include "scag/pvss/api/packets/SerializedCommandResponse.h"
 #include "scag/pvss/api/pvap/generated-cpp/PVAP.hpp"
 #include "scag/pvss/api/pvap/generated-cpp/PVAPPROF.hpp"
 
@@ -80,23 +81,36 @@ void ProfileResponseFiller::serialize( const PVAP&, BufferWriter& writer ) const
                                           "command response is not attached" );
     BufferFiller filler;
     if (!owner_->getResponse()->visit(filler)) {
-        throw PvapSerializationException( owner_->isRequest(), 
-                                          owner_->getSeqNum(),
-                                          "unknown command response: %s",
-                                          owner_->getResponse()->toString().c_str() );
+        SerializedCommandResponse* spc = dynamic_cast<SerializedCommandResponse*>(owner_->getResponse());
+        if ( spc ) {
+            Protocol::Buffer buf;
+            spc->setupBuffer(buf);
+            BufferWriter bw(buf);
+            writer.write(bw);
+        } else {
+            throw PvapSerializationException( owner_->isRequest(), 
+                                              owner_->getSeqNum(),
+                                              "unknown command response: %s",
+                                              owner_->getResponse()->toString().c_str() );
+        }
+    } else {
+        writer.write(filler.getWriter());
     }
-    writer.write(filler.getWriter());
 }
 
 
-void ProfileResponseFiller::deserialize( PVAP&, BufferReader& reader ) throw (PvapException)
+void ProfileResponseFiller::deserialize( PVAP& pvap, BufferReader& reader ) throw (PvapException)
 {
     try {
         BufferReader subreader;
-        ::Handler h(*this);
-        PVAPPROF subproto(&h);
         reader.read( subreader );
-        subproto.decodeMessage( subreader );
+        if ( (pvap.getOptions() & Protocol::PASSBUFFER) != 0 ) {
+            owner_->setResponse( new SerializedCommandResponse(subreader.getBuffer()) );
+        } else {
+            ::Handler h(*this);
+            PVAPPROF subproto(&h);
+            subproto.decodeMessage( subreader );
+        }
     } catch ( exceptions::IOException& e ) {
         throw PvapSerializationException( owner_->isRequest(),
                                           owner_->getSeqNum(),

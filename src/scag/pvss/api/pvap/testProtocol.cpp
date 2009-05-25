@@ -3,7 +3,7 @@
 
 #include "logger/Logger.h"
 #include "PvapProtocol.h"
-#include "scag/util/HexDump.h"
+#include "scag/util/io/HexDump.h"
 #include "scag/pvss/api/packets/BatchCommand.h"
 #include "scag/pvss/api/packets/SetCommand.h"
 #include "scag/pvss/api/packets/ProfileRequest.h"
@@ -35,16 +35,18 @@ int main()
 
     {
         HexDump hd;
-        std::string dump;
+        HexDump::string_type dump;
         dump.reserve( buf.GetPos()*5 );
         hd.hexdump(dump, buf.get(), buf.GetPos());
         hd.utfdump(dump, buf.get(), buf.GetPos());
-        printf( "dump: %s\n", dump.c_str() );
+        printf( "dump: %s\n", hd.c_str(dump) );
     }
 
     std::auto_ptr< Packet > pack(protocol.deserialize(buf));
     std::cout << pack->toString() << std::endl;
     
+    printf( "======================\n");
+    printf( "setting PASSBUFFER option\n");
     protocol.setOptions( Protocol::PASSBUFFER );
     std::auto_ptr< Packet > pack2(protocol.deserialize(buf));
     std::cout << pack2->toString() << std::endl;

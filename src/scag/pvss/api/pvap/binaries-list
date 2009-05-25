@@ -2,7 +2,10 @@ scag/tests/pvap-test-protocol testProtocol \
   -lscag-pvss-api-pvap \
   -lscag-pvss-api-packets \
   -lscag-pvss-data \
-  -lscag-util-storage -lscag-util \
+  -lscag-pvss-common \
+  -lscag-util-storage \
+  -lscag-util \
+  -lscag-util-io \
   @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
   $(__LIBRARIES) \
   -lpthread -lrt -ldl \
