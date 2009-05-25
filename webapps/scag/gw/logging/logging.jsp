@@ -11,6 +11,7 @@
 
         var headerElem = document.getElementById("sectionHeader_" + sectionId);
 //        var valueElem = opForm.all("sectionValue_" + sectionId);
+//        alert( "sectionValue_" + sectionId );
         var valueElem = document.getElementById("sectionValue_" + sectionId);
         if (valueElem.style.display != "none") {
             headerElem.className = "collapsing_tree_closed_logging";
@@ -34,9 +35,10 @@
             <c:if test="${tree.hasChilds}">
                 <c:set var="ch" value="${tree.childs}"/>
                 <c:forEach items="${ch}" var="catItem">
-                <c:if test="${!catItem.value.hasChilds}">
-                    <sm-l:select name="${catItem.value.name}" fullName="${catItem.value.fullName}" priority="${catItem.value.priority}"/>
-                </c:if>
+                    <c:if test="${!catItem.value.hasChilds}">
+                        <sm-l:select name="${catItem.value.name}" fullName="${catItem.value.fullName}"
+                                     priority="${catItem.value.priority}"/>
+                    </c:if>
                 </c:forEach>
                 <c:forEach items="${ch}" var="catItem">
                     <c:if test="${catItem.value.hasChilds}">
@@ -53,7 +55,7 @@
                                 </td>
                             </tr>
                         </table>
-                    <sm-l:section fullName="${catItem.value.fullName}"/>
+                        <sm-l:section fullName="${catItem.value.fullName}"/>
                     </c:if>
                 </c:forEach>
             </c:if>
@@ -64,16 +66,10 @@
 <c:choose>
     <c:when test="${bean.running}">
         <sm-pm:menu>
-            <sm-pm:item name="mbSave" value="logging.item.mbApply.value" enabled="true" title="logging.item.mbApply.title" onclick=""/>
+            <sm-pm:item name="mbApply" value="logging.item.mbApply.value" enabled="true" title="logging.item.mbApply.title" onclick=""/>
             <sm-pm:space/>
             <sm-pm:item name="mbSavePermanent" value="logging.item.mbWrite.value" enabled="true" title="logging.item.mbWrite.title" onclick=""/>
             <sm-pm:item name="mbRead" value="logging.item.mbRead.value" enabled="true" title="logging.item.mbRead.title" onclick=""/>
-<%--            <sm-pm:item name="mbSave" value="logging.item.mbApply.value" enabled="true" title="item.mbapply.title"/>--%>
-<%--            <sm-pm:item name="mbSavePermanent" value="logging.item.mbWrite.value" enabled="true"--%>
-<%--                        title="logging.item.save.permanent.title"--%>
-<%--                        onclick=""/>--%>
-<%--            <sm-pm:item name="mbSave" value="logging.item.mbRead.value" enabled="true" title="item.mbapply.title"/>--%>
-<%--            <sm-pm:space/>--%>
         </sm-pm:menu>
     </c:when>
     <c:otherwise>
