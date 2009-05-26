@@ -112,7 +112,7 @@ USSManService::onConnectOpening(smsc::inman::interaction::Server* srv,
 
   smsc_log_debug(_logger, "%s::onConnectOpened: got new connection request on socket=%d",
                  _logId, sock->getSocket());
-  USSManConnect *ussCon = new USSManConnect(_logger, _cfg);
+  USSManConnect *ussCon = new USSManConnect(conn->getId(), _logger, _cfg);
   if (ussCon) {
     smsc::core::synchronization::MutexGuard guard(_mutex);
     _ussConnects.insert(UssConnMap_t::value_type(sock->getSocket(), ussCon));

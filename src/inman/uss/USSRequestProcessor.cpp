@@ -27,7 +27,7 @@ USSRequestProcessor::USSRequestProcessor(Connect* conn,
   : _conn(conn), _cfg(cfg), _dialogId(dialog_id)
   , _mapDialog(NULL), _resultAsLatin1(false), _dcs(0)
   , _ussProcSearchCrit(ussProcSearchCrit)
-  , _logger(use_log ? use_log : Logger::getInstance("smsc.ussman.BalanceService"))
+  , _logger(use_log ? use_log : Logger::getInstance("smsc.ussman"))
 {
     snprintf(_logId, sizeof(_logId)-1, "USSreq[%u:%u]", _conn->getId(), _dialogId);
 }
@@ -48,7 +48,7 @@ void USSRequestProcessor::sendNegativeResponse()
   smsc::inman::interaction::SPckUSSResult resultPacket;
   resultPacket.Cmd().setStatus(smsc::inman::interaction::USS2CMD::STATUS_USS_REQUEST_FAILED);
 
-  smsc_log_debug(_logger, "%s: send negative response=[%s]", _logId,
+  smsc_log_warn(_logger, "%s: send negative response=%s", _logId,
                  resultPacket.Cmd().toString().c_str());
   resultPacket.setDialogId(_dialogId);
   if ( _conn && _conn->sendPck(&resultPacket) == -1 ) {
@@ -77,7 +77,7 @@ USSRequestProcessor::handleRequest(const smsc::inman::interaction::USSRequestMes
 
     _msISDNAddr = requestObject->getMSISDNadr();
   } catch (const std::exception & ex) {
-    smsc_log_error(_logger, "%s: MapUSSDlg exception [%s]", _logId, ex.what());
+    smsc_log_error(_logger, "%s: MapUSSDlg exception %s", _logId, ex.what());
     sendNegativeResponse();
     throw;
   }
@@ -135,7 +135,7 @@ void USSRequestProcessor::onEndMapDlg(RCHash ercode/* =0*/)
       resultPacket.Cmd().setStatus(smsc::inman::interaction::USS2CMD::STATUS_USS_REQUEST_FAILED);
     }
 
-    smsc_log_debug(_logger, "%s: onEndMapDlg::: send response object=[%s]", _logId,
+    smsc_log_info(_logger, "%s: send response=%s", _logId,
                    resultPacket.Cmd().toString().c_str());
     resultPacket.setDialogId(_dialogId);
     if ( _conn && _conn->sendPck(&resultPacket) == -1 ) {

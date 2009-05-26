@@ -63,7 +63,7 @@ private:
 //##ModelId=457534DE0050
 class USSManConnect : public smsc::inman::interaction::ConnectListenerITF {
 public:
-  USSManConnect(smsc::logger::Logger* logger, const UssService_CFG& cfg);
+  USSManConnect(unsigned conn_id, smsc::logger::Logger* logger, const UssService_CFG& cfg);
   ~USSManConnect();
   //##ModelId=4575350D008E
   void onPacketReceived(smsc::inman::interaction::Connect* conn,
@@ -74,6 +74,7 @@ public:
   void onConnectError(smsc::inman::interaction::Connect* conn, std::auto_ptr<CustomException>& p_exc);
 private:
   smsc::logger::Logger *_logger;
+  char          _logId[sizeof("Con[%u]") + sizeof(unsigned int)*3 + 1];
   const UssService_CFG& _cfg;
 
   typedef std::vector<USSProcSearchCrit>  CreatedSearchCritList_t;

@@ -36,10 +36,12 @@ DuplicateRequestChecker::unregisterRequest(const USSProcSearchCrit& ussProcSearc
 
 }
 
-USSManConnect::USSManConnect(smsc::logger::Logger* logger,
+USSManConnect::USSManConnect(unsigned conn_id, smsc::logger::Logger* logger,
                                      const UssService_CFG & cfg)
   : _logger(logger), _cfg(cfg)
-{ }
+{
+  snprintf(_logId, sizeof(_logId)-1, "Con[%u]", conn_id);
+}
 
 USSManConnect::~USSManConnect()
 {
@@ -55,13 +57,12 @@ USSManConnect::~USSManConnect()
 void USSManConnect::onPacketReceived(smsc::inman::interaction::Connect* conn, // указатель на объект, обслуживающий соединение с клиентом ussman'a
                                          std::auto_ptr<smsc::inman::interaction::SerializablePacketAC>& recv_cmd) throw(std::exception)
 {
-//  smsc_log_debug(_logger, "USSManConnect::onPacketReceived: Enter it");
   smsc::inman::interaction::USSPacketAC* requestPacket =
     static_cast<smsc::inman::interaction::USSPacketAC*>(recv_cmd.get());
 
   smsc::inman::interaction::USSRequestMessage* requestObject = 
     static_cast<smsc::inman::interaction::USSRequestMessage*>(requestPacket->pCmd());
-  smsc_log_debug(_logger, "USSManConnect::onPacketReceived: got request object=[%s]",
+  smsc_log_info(_logger, "%s: received request=%s", _logId,
                  requestObject->toString().c_str());
 
   USSProcSearchCrit ussProcSearchCrit(requestObject->get_IN_SSN(),
@@ -70,7 +71,7 @@ void USSManConnect::onPacketReceived(smsc::inman::interaction::Connect* conn, //
                                       conn);
 
   if ( DuplicateRequestChecker::getInstance().isRequestRegistered(ussProcSearchCrit) ) {
-    smsc_log_error(_logger, "USSManConnect::onPacketReceived: got request object [%s] with duplicate reqId",
+    smsc_log_error(_logger, "%s: received duplicate request=%s", _logId,
                    requestObject->toString().c_str());
     return;
   }
@@ -78,14 +79,12 @@ void USSManConnect::onPacketReceived(smsc::inman::interaction::Connect* conn, //
   USSRequestProcessor* ussReqProc = new USSRequestProcessor(conn, _cfg,
                                         requestPacket->dialogId(), ussProcSearchCrit, _logger);
   ussReqProc->handleRequest(requestObject);
-
-//  smsc_log_debug(_logger, "USSManConnect::onPacketReceived: Leave it");
 }
 
 //##ModelId=45753514006F
 void USSManConnect::onConnectError(smsc::inman::interaction::Connect* conn, std::auto_ptr<CustomException>& p_exc)
 {
-  smsc_log_debug(_logger, "USSManConnect::onConnectError: %s",
+  smsc_log_debug(_logger, "%s: connect error %s", _logId,
                  p_exc.get() ? p_exc->what() : "unspecified");
 }
 

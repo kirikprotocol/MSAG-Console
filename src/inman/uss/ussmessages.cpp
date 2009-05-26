@@ -172,9 +172,9 @@ void USSMessageAC::setMSISDNadr(const char * adrStr) throw (CustomException)
 
 std::string USSMessageAC::toString() const
 {
-  return format("msAddr=[%s],flg=[%u]%s,ussData=[%s]",
+  return format("adr=%s,flg=%u%s,ussData=%s",
                 _msAdr.toString().c_str(), (unsigned)_flg,
-                _dCS_wasRead ? format(",dCS=[%u]", (unsigned)_dCS).c_str(): "",
+                _dCS_wasRead ? format(",dCS=%u", (unsigned)_dCS).c_str(): "",
                 DumpHex(_ussData.size(), &_ussData[0]).c_str()
                 );
 }
@@ -207,7 +207,7 @@ void USSRequestMessage::save(ObjectBuffer& out) const
 std::string USSRequestMessage::toString() const
 {
   std::string obuf = USSMessageAC::toString();
-  format(obuf, ",IN_SSN=[%u],INAddr=[%s]", (unsigned)_inSSN, _inAddr.toString().c_str());
+  format(obuf, ",inSSN=%u,inAddr=%s", (unsigned)_inSSN, _inAddr.toString().c_str());
   return obuf;
 }
 
@@ -247,7 +247,7 @@ void USSResultMessage::save(ObjectBuffer& out) const
 
 std::string USSResultMessage::toString() const
 {
-  std::string obuf = format("status=[%u]", _status);
+  std::string obuf = format("status=%u", _status);
   if (!_status) {
     obuf += ",";
     obuf += USSMessageAC::toString();
