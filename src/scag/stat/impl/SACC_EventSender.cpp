@@ -13,36 +13,82 @@ namespace stat {
 void SaccSerialBuffer::writeStr(std::string& s, uint16_t maxLen)
 {
     uint16_t len = (s.length() > maxLen) ? maxLen : s.length() ;
-    WriteNetInt16(len);
-    Write(s.c_str(), len);
+    //WriteNetInt16(len);
+    //Write(s.c_str(), len);
+    buff_ << len;
+    buff_.Append(s.data(), len);
 }
 void SaccSerialBuffer::writeInt16(uint16_t i)
 {
-    WriteNetInt16(sizeof(uint16_t));
-    WriteNetInt16(i);
+    //WriteNetInt16(sizeof(uint16_t));
+    //WriteNetInt16(i);
+  uint16_t len = static_cast<uint16_t>(sizeof(uint16_t));
+  buff_ << len;
+  buff_ << i;
 }
+
+void SaccSerialBuffer::WriteNetInt16(uint16_t i) {
+  buff_ << i;
+}
+
 void SaccSerialBuffer::writeInt32(uint32_t i)
 {
-    WriteNetInt16(sizeof(uint32_t));
-    WriteNetInt32(i);
+    //WriteNetInt16(sizeof(uint32_t));
+    //WriteNetInt32(i);
+  uint16_t len = static_cast<uint16_t>(sizeof(uint32_t));
+  buff_ << len;
+  buff_ << i;
 }
+
+void SaccSerialBuffer::WriteNetInt32(uint32_t i) {
+  buff_ << i;
+}
+
 void SaccSerialBuffer::writeInt64(uint64_t i)
 {
-    WriteNetInt16(sizeof(uint64_t));
-    WriteNetInt64(i);
+    //WriteNetInt16(sizeof(uint64_t));
+    //WriteNetInt64(i);
+  uint16_t len = static_cast<uint16_t>(sizeof(uint64_t));
+  buff_ << len;
+  buff_ << i;
 }
 void SaccSerialBuffer::writeByte(uint8_t i)
 {
-    WriteNetInt16(sizeof(uint8_t));
-    WriteByte(i);
+    //WriteNetInt16(sizeof(uint8_t));
+    //WriteByte(i);
+  uint16_t len = static_cast<uint16_t>(sizeof(uint8_t));
+  buff_ << len;
+  buff_ << i;
 }
+
+void SaccSerialBuffer::writeFloat(float i) {
+  uint16_t len = static_cast<uint16_t>(sizeof(float));
+  buff_ << len;
+  buff_ << i;
+}
+
 bool SaccSerialBuffer::writeToSocket(Socket& sock)
 {
-    uint32_t bsize = getPos();
-    setPos(0);
-    WriteNetInt32(bsize);
-    setPos(0);
-    return sock.WriteAll(getBuffer() ,bsize) > 0;
+    //uint32_t bsize = getPos();
+    //setPos(0);
+    //WriteNetInt32(bsize);
+    //setPos(0);
+    //return sock.WriteAll(getBuffer() ,bsize) > 0;
+  uint32_t bsize = buff_.GetPos();
+  buff_.SetPos(0);
+  buff_ << bsize;
+  buff_.SetPos(0);
+  return sock.WriteAll(buff_.GetCurPtr() ,bsize) > 0;;
+}
+
+void * SaccSerialBuffer::getBuffer() {
+  return buff_.GetCurPtr();
+}
+uint32_t SaccSerialBuffer::getPos() {
+  return buff_.GetPos();
+}
+void SaccSerialBuffer::setPos(uint32_t newPos) {
+  buff_.SetPos(newPos);
 }
 
 void SaccEventHeader::write(SaccSerialBuffer& buf)
@@ -78,8 +124,9 @@ void SaccBillingInfoEvent::write(SaccSerialBuffer& buf)
     buf.writeInt32(iMediaResourceType);
     buf.writeInt32(iPriceCatId);
 
-    buf.WriteNetInt16(sizeof(float));
-    buf.Write(&fBillingSumm, sizeof(float));
+    //buf.Write(&fBillingSumm, sizeof(float));
+    //buf.Append(static_cast<char*>(&fBillingSumm), sizeof(float));
+    buf.writeFloat(fBillingSumm);
 
     buf.writeStr(pBillingCurrency, MAX_BILLING_CURRENCY_LENGTH);
 }
@@ -136,7 +183,7 @@ EventSender::EventSender()
     Port=0;
     Timeout=100;
     QueueLength=10000;
-    pdubuffer.resize(0xFFFF);
+    //pdubuffer.resize(0xFFFF);
     queueIdx = 0;
     enabled_ = false;
 }

@@ -47,7 +47,6 @@ void StatisticsLogger<Event, Buffer>::logEvent(Event* event) {
     return;
   }
   Buffer pdubuf;
-  pdubuf.resize(2048);
   pdubuf.setPos(static_cast<uint32_t>(sizeof(uint32_t)));
   pdubuf.WriteNetInt16(event->getEventType());
   event->write(pdubuf);

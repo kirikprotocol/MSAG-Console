@@ -7,7 +7,8 @@
 #include <sms/sms.h>
 #include "scag/transport/smpp/router/route_types.h"
 #include "scag/stat/sacc/SACC_Defs.h"
-#include <util/BufferSerialization.hpp>
+//#include <util/BufferSerialization.hpp>
+#include "scag/util/SerializeBuffer.h"
 #include "core/network/Socket.hpp"
 
 #include <inttypes.h>
@@ -18,16 +19,25 @@ namespace stat {
 using namespace scag::stat::sacc;
 
 using smsc::core::network::Socket;
+using scag::util::SerializeBuffer;
 
-    class SaccSerialBuffer : public SerializationBuffer
+    class SaccSerialBuffer //: public SerializationBuffer
     {
     public:
         void writeStr(std::string& s, uint16_t maxLen);
         void writeInt16(uint16_t i);
+        void WriteNetInt16(uint16_t i);
         void writeInt32(uint32_t i);
+        void WriteNetInt32(uint32_t i);
         void writeInt64(uint64_t i);
         void writeByte(uint8_t i);
+        void writeFloat(float i);
         bool writeToSocket(Socket& sock);
+        void* getBuffer();
+        uint32_t getPos();
+        void setPos(uint32_t newPos);
+    private:
+        SerializeBuffer buff_;
     };
 
     class SaccEvent
