@@ -151,26 +151,33 @@ SerializeBuffer& SerializeBuffer::operator>>(uint8_t& val)
 }
 
 SerializeBuffer& SerializeBuffer::operator<<(const float& val) {
-  if (sizeof(float) != 4) {
+  if (sizeof(float) != 4) {  
     throw smsc::util::Exception("Cannot serialize float, when sizeof(float)=%d. Not implemented yet.",sizeof(float));
   }
+ 
 #if BYTE_ORDER == BIG_ENDIAN
   this->Append((char*)&val,4);
   return *this;
 #else
-  throw smsc::util::Exception("Cannot serialize float, when BYTE_ORDER != BIG_ENDIAN. Not implemented yet.");
-#endif
+  const uint32_t *v = reinterpret_cast<const uint32_t*>(&val);
+  *this << *v;
+  return *this;
+#endif 
 }
 
 SerializeBuffer& SerializeBuffer::operator>>(float& val) {
-  if (sizeof(float) != 4) {
+  if (sizeof(float) != 4) {  
     throw smsc::util::Exception("Cannot deserialize float, when sizeof(float)=%d. Not implemented yet.",sizeof(float));
   }
+
 #if BYTE_ORDER == BIG_ENDIAN
   this->Read((char*)&val,4);
   return *this;
 #else
-  throw smsc::util::Exception("Cannot deserialize float, when BYTE_ORDER != BIG_ENDIAN. Not implemented yet.");
+  const uint32_t v; 
+  *this >> v;
+  val = reinterpret_cast<float>(val); 
+  return *this;
 #endif
 }
 
