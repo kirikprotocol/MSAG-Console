@@ -182,6 +182,8 @@ Targets:
     <chmod file="${DISTR_DIR}/services/SMSC/bin/agent" perm="755"/>
     <copy file="${BUILD_BIN}/inman/inman" todir="${DISTR_DIR}/services/INMan/bin"/>
     <chmod file="${DISTR_DIR}/services/INMan/bin/inman" perm="755"/>
+    <copy file="${BUILD_BIN}/inman/uss/ussbalance" todir="${DISTR_DIR}/services/INMan/bin"/>
+    <chmod file="${DISTR_DIR}/services/INMan/bin/ussbalance" perm="755"/>
     <copy todir="${DISTR_DIR}/services/INMan/bin">
       <fileset dir="${BUILD_BIN}/inman/ldlib" includes="*.so"/>
     </copy>
