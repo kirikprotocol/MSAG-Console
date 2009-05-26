@@ -68,6 +68,8 @@ public:
     SerializeBuffer& operator>>(uint16_t& val);
     SerializeBuffer& operator<<(const uint8_t& val);
     SerializeBuffer& operator>>(uint8_t& val);
+    SerializeBuffer& operator<<(const float& val);
+    SerializeBuffer& operator>>(float& val);
     SerializeBuffer() : TmpBuf<char,2048>(2048) {}
     SerializeBuffer(int size):TmpBuf<char,2048>(size){}
 
