@@ -116,7 +116,7 @@ TDialogueServiceData::updateDialogueDataByRequest(TC_PAbort_Req* pAbortReqPrimit
 void
 TDialogueServiceData::updateDialogueDataByIndication(TBeginIndComposer & tc_begin_ind_primitive)
 {
-  _trnFSM.updateTransaction(tc_begin_ind_primitive.TInd());
+  _trnFSM.updateTransaction(tc_begin_ind_primitive);
 
   tc_begin_ind_primitive.setDialogueId(getDialogueId());
 
@@ -129,7 +129,7 @@ TDialogueServiceData::updateDialogueDataByIndication(TBeginIndComposer & tc_begi
 
   setDstAddr(tc_begin_ind_primitive.getOrigAddress());
 
-  notifyTCUser(tc_begin_ind_primitive.TInd());
+  notifyTCUser(tc_begin_ind_primitive);
 }
 
 void

@@ -36,18 +36,18 @@ public:
 };
 
 
-template <class _TArg /* pubic: TDialogueIndicationComposerT<> */>
+template <class T_IND_COMPOSER_Arg /* pubic: TDialogueIndicationComposerT<> */>
 class TDlgIndicationDispatcherT : public TDlgIndicationDispatcherAC {
 protected:
-  _TArg _tInit; //indication composer
+  T_IND_COMPOSER_Arg _tInit;
 
 public:
   TDlgIndicationDispatcherT(TCAPMessage & use_tmsg)
     : TDlgIndicationDispatcherAC(use_tmsg)
-    , _tInit(use_tmsg.ACDefined(), use_tmsg.CompList().empty() ? NULL : &use_tmsg.CompList())
+    , _tInit(use_tmsg.ACDefined())
   {
     if (_tMsg.usrInfo() && !_tMsg.usrInfo()->empty())
-      _tMsg.usrInfo()->export2TDlgUI(_tInit.TInd().getUserInfo());
+      _tMsg.usrInfo()->export2TDlgUI(_tInit.getUserInfo());
   }
   virtual ~TDlgIndicationDispatcherT()
   { }
@@ -69,7 +69,10 @@ class TBeginIndDispatcher : public TDlgIndicationDispatcherT<TBeginIndComposer> 
 public:
   TBeginIndDispatcher(TCAPMessage & use_tmsg)
     : TDlgIndicationDispatcherT<TBeginIndComposer>(use_tmsg)
-  { }
+  {
+    if (!use_tmsg.CompList().empty())
+      _tInit.setCompList(&use_tmsg.CompList());
+  }
   //
   bool bindSUAInd(const SUAUnitdataInd & sua_ind)
   {
@@ -85,7 +88,10 @@ class TContIndDispatcher : public TDlgIndicationDispatcherT<TContIndComposer> {
 public:
   TContIndDispatcher(TCAPMessage & use_tmsg)
     : TDlgIndicationDispatcherT<TContIndComposer>(use_tmsg)
-  { }
+  {
+    if (!use_tmsg.CompList().empty())
+      _tInit.setCompList(&use_tmsg.CompList());
+  }
   //
   bool bindSUAInd(const SUAUnitdataInd & sua_ind)
   {
@@ -101,7 +107,10 @@ class TEndIndDispatcher : public TDlgIndicationDispatcherT<TEndIndComposer> {
 public:
   TEndIndDispatcher(TCAPMessage & use_tmsg)
     : TDlgIndicationDispatcherT<TEndIndComposer>(use_tmsg)
-  { }
+  {
+    if (!use_tmsg.CompList().empty())
+      _tInit.setCompList(&use_tmsg.CompList());
+  }
   //
   bool bindSUAInd(const SUAUnitdataInd & sua_ind)
   {
@@ -149,7 +158,10 @@ class TNoticeIndDispatcher : public TDlgIndicationDispatcherT<TNoticeIndComposer
 public:
   TNoticeIndDispatcher(TCAPMessage & use_tmsg)
     : TDlgIndicationDispatcherT<TNoticeIndComposer>(use_tmsg)
-  { }
+  {
+    if (!use_tmsg.CompList().empty())
+      _tInit.setCompList(&use_tmsg.CompList());
+  }
   //
   bool bindSUAInd(const SUANoticeInd & sua_ind)
   {

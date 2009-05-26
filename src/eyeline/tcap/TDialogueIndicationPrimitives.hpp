@@ -32,9 +32,8 @@ protected:
   ROSComponentsList * _comps;
 
 public:
-  TDialogueIndicationPrimitive(const EncodedOID * use_ac = NULL,
-                               ROSComponentsList * use_comps = NULL)
-    : _acOId(use_ac), _comps(use_comps)
+  TDialogueIndicationPrimitive(const EncodedOID * use_ac = NULL)
+    : _acOId(use_ac), _comps(NULL)
   { }
   virtual ~TDialogueIndicationPrimitive()
   { }
@@ -60,9 +59,8 @@ protected:
   SCCPAddress   _dstAdr;
 
 public:
-  TC_Begin_Ind(const EncodedOID * use_ac = NULL,
-               ROSComponentsList * use_comps = NULL)
-    : TDialogueIndicationPrimitive(use_ac, use_comps)
+  TC_Begin_Ind(const EncodedOID * use_ac = NULL)
+    : TDialogueIndicationPrimitive(use_ac)
   { }
 
   const SCCPAddress & getOrigAddress(void) const { return _orgAdr; }
@@ -76,9 +74,8 @@ protected:
   SCCPAddress   _dstAdr;
 
 public:
-  TC_Cont_Ind(const EncodedOID * use_ac = NULL,
-               ROSComponentsList * use_comps = NULL)
-    : TDialogueIndicationPrimitive(use_ac, use_comps)
+  TC_Cont_Ind(const EncodedOID * use_ac = NULL)
+    : TDialogueIndicationPrimitive(use_ac)
   { }
 
   const SCCPAddress & getOrigAddress(void) const { return _orgAdr; }
@@ -88,9 +85,8 @@ public:
 //
 class TC_End_Ind : public TDialogueIndicationPrimitive {
 public:
-  TC_End_Ind(const EncodedOID * use_ac = NULL,
-               ROSComponentsList * use_comps = NULL)
-    : TDialogueIndicationPrimitive(use_ac, use_comps)
+  TC_End_Ind(const EncodedOID * use_ac = NULL)
+    : TDialogueIndicationPrimitive(use_ac)
   { }
 
   //TODO: getters
@@ -99,7 +95,7 @@ public:
 class TC_UAbort_Ind : public TDialogueIndicationPrimitive {
 public:
   TC_UAbort_Ind(const EncodedOID * use_ac = NULL)
-    : TDialogueIndicationPrimitive(use_ac, 0)
+    : TDialogueIndicationPrimitive(use_ac)
   { }
 
   //TODO: getters for TCAbrtPDU or TCExternal
@@ -111,7 +107,7 @@ protected:
 
 public:
   TC_PAbort_Ind(const EncodedOID * use_ac = NULL)
-    : TDialogueIndicationPrimitive(use_ac, 0)
+    : TDialogueIndicationPrimitive(use_ac)
     , _cause(PAbort::p_genericError)
   { }
 
@@ -139,15 +135,19 @@ public:
 
 protected:
   ReportCause_e _cause;
+  SCCPAddress   _orgAdr;
+  SCCPAddress   _dstAdr;
 
 public:
-  TC_Notice_Ind(const EncodedOID * use_ac = NULL,
-               ROSComponentsList * use_comps = NULL)
-    : TDialogueIndicationPrimitive(use_ac, use_comps)
+  TC_Notice_Ind(const EncodedOID * use_ac = NULL)
+    : TDialogueIndicationPrimitive(use_ac)
     , _cause(errOk)
   { }
 
   ReportCause_e getReportCause(void) const { return _cause; }
+  //
+  const SCCPAddress & getOrigAddress(void) const { return _orgAdr; }
+  const SCCPAddress & getDestAddress(void) const { return _dstAdr; }
 };
 
 } //tcap

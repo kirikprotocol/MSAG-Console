@@ -43,7 +43,7 @@ void formPAbortIndication(const TDialogueId& dlg_id,
     TPAbortIndComposer pAbortIndPrimitive;
     pAbortIndPrimitive.setDialogueId(dlg_id);
     pAbortIndPrimitive.setPAbortCause(p_abort_cause);
-    t_dlg_hndlr_iface->updateDialogue(pAbortIndPrimitive.TInd());
+    t_dlg_hndlr_iface->updateDialogue(pAbortIndPrimitive);
   } catch (...) {}
 }
 
