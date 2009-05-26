@@ -117,8 +117,8 @@ bool SyncContext::processReadSocket(const time_t& now) {
                             this, e.getMessage().c_str(), inbuf_.GetSize(), inbuf_.GetPos(), inbuf_.toString().c_str());
     createErrorResponse(Response::NOT_SUPPORTED,e.what());
 
-  } catch (const PvapException& e) {
-    smsc_log_warn(logger_, "%p:PvapException: %s. buffer received len=%d curpos=%d data=%s",
+  } catch (const PvssException& e) {
+    smsc_log_warn(logger_, "%p:PvssException: %s. buffer received len=%d curpos=%d data=%s",
                             this, e.getMessage().c_str(), inbuf_.GetSize(), inbuf_.GetPos(), inbuf_.toString().c_str());
     createErrorResponse(e.getType(),e.what());
 
