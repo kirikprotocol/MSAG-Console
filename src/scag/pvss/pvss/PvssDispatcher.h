@@ -67,7 +67,7 @@ private:
   unsigned getErrorIndex() const { return static_cast<unsigned>(-1); }
 
 private:
-  NodeConfig nodeCfg_;
+  const NodeConfig nodeCfg_;
   uint16_t createdLocations_;
   unsigned infrastructIndex_;
   std::auto_ptr<InfrastructLogic> infrastructLogic_;

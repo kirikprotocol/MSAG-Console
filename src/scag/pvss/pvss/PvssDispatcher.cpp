@@ -31,7 +31,7 @@ using scag::util::storage::StorageNumbering;
 
 PvssDispatcher::PvssDispatcher(const NodeConfig& nodeCfg,
                                unsigned creationLimit ):
-nodeCfg_(nodeCfg), createdLocations_(0), infrastructIndex_(nodeCfg_.storagesCount),
+nodeCfg_(nodeCfg), createdLocations_(0), infrastructIndex_(nodeCfg_.locationsCount),
 logger_(Logger::getInstance("pvss.disp"))
 {
   StorageNumbering::setInstance(nodeCfg.nodesCount);
