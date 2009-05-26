@@ -55,7 +55,7 @@ public:
    
     struct CommandProperty
     {
-        const smsc::sms::Address& abonentAddr;
+        const smsc::sms::Address abonentAddr;
         int status;
         int protocol;
         int serviceId;
