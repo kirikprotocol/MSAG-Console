@@ -2864,16 +2864,37 @@ USHORT_T Et96MapOpenInd (
     dialog->hasIndAddress = false;
     if ( specificInfo_sp!=0 && specificInfo_sp->specificInfoLen >= 3 )
     {
-      if ( specificInfo_sp->specificData[0] == 0x82 )
+      unsigned char* ptr=specificInfo_sp->specificData;
+      unsigned len=specificInfo_sp->specificInfoLen;
+      while(len>3)
       {
-        unsigned x = specificInfo_sp->specificData[1];
-        if ( (((unsigned)specificInfo_sp->specificData[x+1] >> 4)&0x0f == 0xf ) )
-          x = (x-1)*2-1;
-        else
-          x = (x-1)*2;
-        memcpy(&dialog->m_msAddr,specificInfo_sp->specificData+1,specificInfo_sp->specificInfoLen-1);
-        dialog->m_msAddr.addressLength = x;
-        dialog->hasIndAddress = true;
+        if ( ptr[0] == 0x82 )
+        {
+          unsigned addrLen = ptr[1];
+          if ( (((unsigned)ptr[addrLen+1] >> 4)&0x0f == 0xf ) )
+            addrLen = (addrLen-1)*2-1;
+          else
+            addrLen = (addrLen-1)*2;
+          memcpy(&dialog->m_msAddr,ptr+1,ptr[1]+1);
+          dialog->m_msAddr.addressLength = addrLen;
+          dialog->hasIndAddress = true;
+        }
+        if(ptr[0]==0x83)
+        {
+          ET96MAP_ADDRESS_T msc;
+          Address addr;
+          unsigned addrLen = ptr[1];
+          if ( (((unsigned)ptr[addrLen+1] >> 4)&0x0f == 0xf ) )
+            addrLen = (addrLen-1)*2-1;
+          else
+            addrLen = (addrLen-1)*2;
+          memcpy(&msc,ptr+1,ptr[1]+1);
+          msc.addressLength = addrLen;
+          ConvAddrMSISDN2Smc(&msc,&addr);
+          dialog->s_msc=addr.toString();
+        }
+        len-=ptr[1]+2;
+        ptr+=ptr[1]+2;
       }
     }
 #ifdef MAP_R12
