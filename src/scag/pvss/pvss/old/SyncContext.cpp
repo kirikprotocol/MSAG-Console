@@ -23,7 +23,7 @@ SyncContext::SyncContext(Socket* sock, WriterTaskManager& writerManager, core::s
     SocketData::setContext(socket_, this);
   }
   logger_ = Logger::getInstance("synccontext");
-  smsc_log_info(logger_, "Connection accepted from %s", peerIp_.c_str());
+  smsc_log_info(logger_, "connection accepted: %s", peerName_.c_str());
 }
 
 void SyncContext::createErrorResponse(uint8_t status, const char* msg) {

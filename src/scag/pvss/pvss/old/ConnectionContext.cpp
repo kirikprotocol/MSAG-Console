@@ -40,6 +40,7 @@ void ConnectionContext::getPeerIp() {
   char peerNameBuf[32];
   socket_->GetPeer(peerNameBuf);
   peerIp_ = peerNameBuf;
+  peerName_ = peerIp_;
   string::size_type pos = peerIp_.find_first_of(':');
   if (pos != string::npos) {
     peerIp_.erase(pos);

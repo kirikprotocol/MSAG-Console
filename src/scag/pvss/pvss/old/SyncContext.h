@@ -13,7 +13,7 @@ class SyncContext : public ConnectionContext {
 
 public:
   SyncContext(Socket* sock, WriterTaskManager& writerManager, core::server::ServerCore& server, PersProtocol& protocol, bool perfCounterOn = false);
-  ~SyncContext() {};
+  ~SyncContext() { smsc_log_info(logger_, "connection closed: %s", peerName_.c_str()); };
   bool processReadSocket(const time_t& now);
   void sendResponse(const Response* resp);
 

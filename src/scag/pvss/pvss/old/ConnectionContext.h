@@ -102,6 +102,7 @@ protected:
   core::server::ServerCore& pvssServer_;
   Mutex mutex_;
   string peerIp_;
+  string peerName_;
   SerialBuffer inbuf_;
   Socket* socket_;
   Logger* logger_;
