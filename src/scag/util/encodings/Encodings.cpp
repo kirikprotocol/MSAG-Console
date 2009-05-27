@@ -88,7 +88,7 @@ void Convertor::UCS2ToUTF8(const unsigned short * ucs2buff, unsigned int ucs2len
 
 void Convertor::UCS2BEToUTF8(const unsigned short * ucs2buff, unsigned int ucs2len, std::string& utf8str)
 {
-    convert( "UCS2-BE", "UTF-8", (const char*)ucs2buff, ucs2len*2, utf8str );
+    convert( "UCS-2BE", "UTF-8", (const char*)ucs2buff, ucs2len*2, utf8str );
 }
 
 
