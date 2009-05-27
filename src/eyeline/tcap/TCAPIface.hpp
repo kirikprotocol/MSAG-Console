@@ -18,15 +18,15 @@ public:
   virtual TDialogueId openDialogue(TDlgHandlerIface* tIndicationHandlers,
                                    unsigned int dialogueTimeout) = 0;
 
-  virtual void updateDialogue(TC_Begin_Req* requestPrimitive) = 0;
-  virtual void updateDialogue(TC_Cont_Req* requestPrimitive) = 0;
-  virtual void updateDialogue(TC_End_Req* requestPrimitive) = 0;
-  virtual void updateDialogue(TC_UAbort_Req* requestPrimitive) = 0;
+  virtual void updateDialogue(const TC_Begin_Req & req_primitive) = 0;
+  virtual void updateDialogue(const TC_Cont_Req & req_primitive) = 0;
+  virtual void updateDialogue(const TC_End_Req & req_primitive) = 0;
+  virtual void updateDialogue(const TC_UAbort_Req & req_primitive) = 0;
 
   virtual void closeDialogue(const TDialogueId& tDialogueId) = 0;
 };
 
 }}
 
-#endif
+#endif /* __EYELINE_TCAP_TCAPIFACE_HPP__ */
 

@@ -25,22 +25,22 @@ TDialogueServiceData::handleDialogueNotTerminationIndPrimitive(T_DIALOGUE_NOT_TE
   notifyTCUser(tind_not_term_primitive);
 }
 
-template<class T_DIALOGUE_REQUEST_PRIMITIVE>
+template<class T_DLG_REQUEST_COMPOSER>
 void
-TDialogueServiceData::handleDialogueRequestPrimitive(T_DIALOGUE_REQUEST_PRIMITIVE* tDlgReqPrimitive)
+TDialogueServiceData::handleDialogueRequestPrimitive(T_DLG_REQUEST_COMPOSER & treq_composer)
 {
-  _trnFSM.updateTransaction(*tDlgReqPrimitive);
+  _trnFSM.updateTransaction(treq_composer.TReq());
 
-  tDlgReqPrimitive->setTransactionId(_trnFSM.getTransactionId());
+  treq_composer.setTransactionId(_trnFSM.getTransactionId());
 
   smsc::core::synchronization::MutexGuard synchronize(_lock_forAppCtxUpdate);
   if ( !_isDialogueWasAcked ) {
     _isDialogueWasAcked = true;
-    if ( tDlgReqPrimitive->getAppCtx() )
-      _applicationContext = *tDlgReqPrimitive->getAppCtx();
+    if ( treq_composer.getAppCtx() )
+      _applicationContext = *treq_composer.getAppCtx();
   }
   // What is the strangeness?!
-  tDlgReqPrimitive->setAppCtx(_applicationContext);
+  treq_composer.setAppCtx(_applicationContext);
 }
 
 template<class T_DIALOGUE_IND_PRIMITIVE>
@@ -53,7 +53,7 @@ TDialogueServiceData::notifyTCUser(T_DIALOGUE_IND_PRIMITIVE & tc_ind_primitive)
   } catch (const std::exception& ex) {
     formPAbortIndication(tc_ind_primitive.getDialogueId(), PAbort::p_resourceLimitation,
                          _tDlgHndlrIface);
-    formPAbortRequest(tc_ind_primitive.getTransactionId(), PAbort::p_resourceLimitation);
+    formPAbortRequest(tc_ind_primitive.getDialogueId(), PAbort::p_resourceLimitation);
   }
 }
 

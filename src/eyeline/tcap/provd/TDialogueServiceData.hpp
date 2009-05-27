@@ -4,15 +4,14 @@
 
 # include "core/synchronization/Mutex.hpp"
 # include "core/synchronization/MutexGuard.hpp"
+
 # include "eyeline/asn1/EncodedOID.hpp"
 # include "eyeline/sccp/SCCPAddress.hpp"
 
-# include "eyeline/tcap/TDialogueId.hpp"
-# include "eyeline/tcap/TDialogueHandlingPrimitive.hpp"
-# include "eyeline/tcap/TDialogueRequestPrimitives.hpp"
 # include "eyeline/tcap/TDlgHandlerIface.hpp"
 
 # include "eyeline/tcap/provd/TDlgIndComposers.hpp"
+# include "eyeline/tcap/provd/TDlgReqComposers.hpp"
 # include "eyeline/tcap/provd/TrnFSM.hpp"
 # include "eyeline/tcap/proto/TransactionId.hpp"
 # include "eyeline/tcap/provd/TimeoutMonitor.hpp"
@@ -42,18 +41,18 @@ public:
   const proto::TransactionId& getTransactionId() const;
   const TDialogueId& getDialogueId() const;
 
-  void updateDialogueDataByRequest(TC_Begin_Req* beginReqPrimitive);
-  void updateDialogueDataByRequest(TC_Cont_Req* contReqPrimitive);
-  void updateDialogueDataByRequest(TC_End_Req* endReqPrimitive);
-  void updateDialogueDataByRequest(TC_UAbort_Req* uAbortReqPrimitive);
-  void updateDialogueDataByRequest(TC_PAbort_Req* pAbortReqPrimitive);
+  void updateDialogueDataByRequest(TBeginReqComposer & treq_begin);
+  void updateDialogueDataByRequest(TContReqComposer & treq_cont);
+  void updateDialogueDataByRequest(TEndReqComposer & treq_end);
+  void updateDialogueDataByRequest(TUAbortReqComposer & treq_uAbort);
+  void updateDialogueDataByRequest(TPAbortReqComposer & treq_pAbort);
 
-  void updateDialogueDataByIndication(TBeginIndComposer & tc_begin_ind_primitive);
-  void updateDialogueDataByIndication(TContIndComposer & tc_cont_ind_primitive);
-  void updateDialogueDataByIndication(TEndIndComposer & tc_end_ind_primitive);
-  void updateDialogueDataByIndication(TPAbortIndComposer & tc_pAbort_ind_primitive);
-  void updateDialogueDataByIndication(TUAbortIndComposer & tc_uAbort_ind_primitive);
-  void updateDialogueDataByIndication(TNoticeIndComposer & tc_notice_ind_primitive);
+  void updateDialogueDataByIndication(TBeginIndComposer & tind_begin);
+  void updateDialogueDataByIndication(TContIndComposer & tind_cont);
+  void updateDialogueDataByIndication(TEndIndComposer & tind_end);
+  void updateDialogueDataByIndication(TPAbortIndComposer & tind_pAbort);
+  void updateDialogueDataByIndication(TUAbortIndComposer & tind_uAbort);
+  void updateDialogueDataByIndication(TNoticeIndComposer & tind_notice);
 
   unsigned int getLinkNum() const;
   void setLinkNum(unsigned int linkNum);
@@ -84,8 +83,8 @@ protected:
   TimeoutMonitor::timeout_id_t getDialogueTimeoutId();
   void setDialogueTimeoutId(TimeoutMonitor::timeout_id_t timeoutId);
 
-  template<class T_DIALOGUE_REQUEST_PRIMITIVE>
-  void handleDialogueRequestPrimitive(T_DIALOGUE_REQUEST_PRIMITIVE* tDlgReqPrimitive);
+  template<class T_DLG_REQUEST_COMPOSER>
+  void handleDialogueRequestPrimitive(T_DLG_REQUEST_COMPOSER & treq_composer);
 
   template<class T_DIALOGUE_IND_PRIMITIVE>
   void notifyTCUser(T_DIALOGUE_IND_PRIMITIVE & tc_ind_primitive);

@@ -7,7 +7,6 @@ static char const ident[] = "@(#)$Id$";
 
 #include "eyeline/tcap/provd/TCAPIndicationsProcessor.hpp"
 #include "eyeline/tcap/provd/AppCtxSMRegistry.hpp"
-#include "eyeline/tcap/provd/TDlgReqSender.hpp"
 #include "eyeline/tcap/provd/TDialogueServiceDataRegistry.hpp"
 #include "eyeline/tcap/provd/P_U_AbortPrimitiveUtils.hpp"
 #include "eyeline/tcap/provd/TCAPLayer.hpp"

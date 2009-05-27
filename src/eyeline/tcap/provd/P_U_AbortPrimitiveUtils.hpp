@@ -4,9 +4,9 @@
 
 # include "eyeline/sccp/SCCPAddress.hpp"
 # include "eyeline/tcap/TDialogueId.hpp"
+# include "eyeline/tcap/TDialogueDefs.hpp"
 # include "eyeline/tcap/TDlgHandlerIface.hpp"
 # include "eyeline/tcap/proto/TransactionId.hpp"
-# include "eyeline/tcap/TDialogueHandlingPrimitive.hpp"
 # include "eyeline/tcap/provd/TDialogueServiceData.hpp"
 
 namespace eyeline {
@@ -15,7 +15,7 @@ namespace provd {
 
 using eyeline::tcap::PAbort;
 
-void formPAbortRequest(const proto::TransactionId& trn_id,
+void formPAbortRequest(const TDialogueId & dlg_id,
                        PAbort::Cause_e p_abort_cause);
 
 void formPAbortRequest(const proto::TransactionId& trn_id,

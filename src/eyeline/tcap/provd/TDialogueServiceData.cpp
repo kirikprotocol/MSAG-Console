@@ -64,98 +64,98 @@ TDialogueServiceData::~TDialogueServiceData()
 }
 
 void
-TDialogueServiceData::updateDialogueDataByRequest(TC_Begin_Req* beginReqPrimitive)
+TDialogueServiceData::updateDialogueDataByRequest(TBeginReqComposer & treq_begin)
 {
-  handleDialogueRequestPrimitive(beginReqPrimitive);
-  setDstAddr(beginReqPrimitive->getDestAddress());
+  handleDialogueRequestPrimitive(treq_begin);
+  setDstAddr(treq_begin.TReq().getDestAddress());
 }
 
 void
-TDialogueServiceData::updateDialogueDataByRequest(TC_Cont_Req* contReqPrimitive)
+TDialogueServiceData::updateDialogueDataByRequest(TContReqComposer & treq_cont)
 {
-  handleDialogueRequestPrimitive(contReqPrimitive);
-  setSrcAddr(contReqPrimitive->getOrigAddress());
+  handleDialogueRequestPrimitive(treq_cont);
+  setSrcAddr(treq_cont.TReq().getOrigAddress());
 }
 
 void
-TDialogueServiceData::updateDialogueDataByRequest(TC_End_Req* endReqPrimitive)
+TDialogueServiceData::updateDialogueDataByRequest(TEndReqComposer & treq_end)
 {
   try {
-    handleDialogueRequestPrimitive(endReqPrimitive);
-    TDialogueServiceDataRegistry::getInstance().destroyTDialogueServiceData(endReqPrimitive->getDialogueId());
+    handleDialogueRequestPrimitive(treq_end);
+    TDialogueServiceDataRegistry::getInstance().destroyTDialogueServiceData(treq_end.TReq().getDialogueId());
   } catch (...) { 
-    TDialogueServiceDataRegistry::getInstance().destroyTDialogueServiceData(endReqPrimitive->getDialogueId());
+    TDialogueServiceDataRegistry::getInstance().destroyTDialogueServiceData(treq_end.TReq().getDialogueId());
     throw;
   }
 }
 
 void
-TDialogueServiceData::updateDialogueDataByRequest(TC_UAbort_Req* uAbortReqPrimitive)
+TDialogueServiceData::updateDialogueDataByRequest(TUAbortReqComposer & treq_uAbort)
 {
   try {
-    handleDialogueRequestPrimitive(uAbortReqPrimitive);
-    TDialogueServiceDataRegistry::getInstance().destroyTDialogueServiceData(uAbortReqPrimitive->getDialogueId());
+    handleDialogueRequestPrimitive(treq_uAbort);
+    TDialogueServiceDataRegistry::getInstance().destroyTDialogueServiceData(treq_uAbort.TReq().getDialogueId());
   } catch (...) { 
-    TDialogueServiceDataRegistry::getInstance().destroyTDialogueServiceData(uAbortReqPrimitive->getDialogueId());
+    TDialogueServiceDataRegistry::getInstance().destroyTDialogueServiceData(treq_uAbort.TReq().getDialogueId());
     throw;
   }
 }
 
 void
-TDialogueServiceData::updateDialogueDataByRequest(TC_PAbort_Req* pAbortReqPrimitive)
+TDialogueServiceData::updateDialogueDataByRequest(TPAbortReqComposer & treq_pAbort)
 {
   try {
-    handleDialogueRequestPrimitive(pAbortReqPrimitive);
-    TDialogueServiceDataRegistry::getInstance().destroyTDialogueServiceData(pAbortReqPrimitive->getDialogueId());
+    handleDialogueRequestPrimitive(treq_pAbort);
+    TDialogueServiceDataRegistry::getInstance().destroyTDialogueServiceData(treq_pAbort.TReq().getDialogueId());
   } catch (...) { 
-    TDialogueServiceDataRegistry::getInstance().destroyTDialogueServiceData(pAbortReqPrimitive->getDialogueId());
+    TDialogueServiceDataRegistry::getInstance().destroyTDialogueServiceData(treq_pAbort.TReq().getDialogueId());
     throw;
   }
 }
 
 void
-TDialogueServiceData::updateDialogueDataByIndication(TBeginIndComposer & tc_begin_ind_primitive)
+TDialogueServiceData::updateDialogueDataByIndication(TBeginIndComposer & tind_begin)
 {
-  _trnFSM.updateTransaction(tc_begin_ind_primitive);
+  _trnFSM.updateTransaction(tind_begin);
 
-  tc_begin_ind_primitive.setDialogueId(getDialogueId());
+  tind_begin.setDialogueId(getDialogueId());
 
-  if ( tc_begin_ind_primitive.getAppCtx() ) {
+  if ( tind_begin.getAppCtx() ) {
     smsc::core::synchronization::MutexGuard synchronize(_lock_forAppCtxUpdate);
-    _applicationContext = *tc_begin_ind_primitive.getAppCtx();
+    _applicationContext = *tind_begin.getAppCtx();
   }
 
   setDialogueTimeoutId(TimeoutMonitor::getInstance().schedule(getDialogueTimeout(), new DialogueTimeoutHandler(this)));
 
-  setDstAddr(tc_begin_ind_primitive.getOrigAddress());
+  setDstAddr(tind_begin.getOrigAddress());
 
-  notifyTCUser(tc_begin_ind_primitive);
+  notifyTCUser(tind_begin);
 }
 
 void
-TDialogueServiceData::updateDialogueDataByIndication(TContIndComposer & tc_cont_ind_primitive)
+TDialogueServiceData::updateDialogueDataByIndication(TContIndComposer & tind_cont)
 {
-  handleInvocationResults(tc_cont_ind_primitive.CompList());
-  handleDialogueNotTerminationIndPrimitive(tc_cont_ind_primitive);
+  handleInvocationResults(tind_cont.CompList());
+  handleDialogueNotTerminationIndPrimitive(tind_cont);
 }
 
 void
-TDialogueServiceData::updateDialogueDataByIndication(TEndIndComposer & tc_end_ind_primitive)
+TDialogueServiceData::updateDialogueDataByIndication(TEndIndComposer & tind_end)
 {
-  handleInvocationResults(tc_end_ind_primitive.CompList());
-  handleDialogueTerminationIndPrimitive(tc_end_ind_primitive);
+  handleInvocationResults(tind_end.CompList());
+  handleDialogueTerminationIndPrimitive(tind_end);
 }
 
 void
-TDialogueServiceData::updateDialogueDataByIndication(TPAbortIndComposer & tc_pAbort_ind_primitive)
+TDialogueServiceData::updateDialogueDataByIndication(TPAbortIndComposer & tind_pAbort)
 {
-  handleDialogueTerminationIndPrimitive(tc_pAbort_ind_primitive);
+  handleDialogueTerminationIndPrimitive(tind_pAbort);
 }
 
 void
-TDialogueServiceData::updateDialogueDataByIndication(TUAbortIndComposer & tc_uAbort_ind_primitive)
+TDialogueServiceData::updateDialogueDataByIndication(TUAbortIndComposer & tind_uAbort)
 {
-  handleDialogueTerminationIndPrimitive(tc_uAbort_ind_primitive);
+  handleDialogueTerminationIndPrimitive(tind_uAbort);
 }
 
 void

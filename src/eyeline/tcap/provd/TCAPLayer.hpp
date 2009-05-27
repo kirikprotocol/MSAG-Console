@@ -30,22 +30,23 @@ public:
                       TDlgHandlerIfaceFactory* indHndlrsFactory,
                       unsigned int dialogueTimeout);
 
+  // ----------------------------------
+  // -- TCAPIface interface methods
+  // ----------------------------------
   virtual TDialogueId openDialogue(TDlgHandlerIface* tIndicationHandlers,
                                    unsigned int dialogueTimeout);
-
-  virtual void updateDialogue(TC_Begin_Req* requestPrimitive);
-  virtual void updateDialogue(TC_Cont_Req* requestPrimitive);
-  virtual void updateDialogue(TC_End_Req* requestPrimitive);
-  virtual void updateDialogue(TC_UAbort_Req* requestPrimitive);
-
+  virtual void updateDialogue(const TC_Begin_Req & req_primitive);
+  virtual void updateDialogue(const TC_Cont_Req & req_primitive);
+  virtual void updateDialogue(const TC_End_Req & req_primitive);
+  virtual void updateDialogue(const TC_UAbort_Req & req_primitive);
   virtual void closeDialogue(const TDialogueId& tDialogueId);
+  // ----------------------------------
+  void updateDialogue(const TC_PAbort_Req & req_primitive);
 
-  void updateDialogue(TC_PAbort_Req* requestPrimitive);
-
-  void sendPrimitive(TC_PAbort_Req* requestPrimitive, unsigned int linkNum,
-                     const SCCPAddress& src_addr, const SCCPAddress& dst_addr);
-  void sendPrimitive(TC_UAbort_Req* requestPrimitive, unsigned int linkNum,
-                     const SCCPAddress& src_addr, const SCCPAddress& dst_addr);
+  void sendPrimitive(const TPAbortReqComposer & req_composer, unsigned int link_num,
+                     const SCCPAddress& src_addr, const SCCPAddress& dst_addr) const;
+  void sendPrimitive(const TUAbortReqComposer & req_composer, unsigned int link_num,
+                     const SCCPAddress& src_addr, const SCCPAddress& dst_addr) const;
 
 private:
   OutPrimitivesProcessor* _outPrimitivesProcessor;

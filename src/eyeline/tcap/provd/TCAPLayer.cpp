@@ -70,47 +70,47 @@ TCAPLayer::openDialogue(TDlgHandlerIface* tIndicationHandlers, unsigned int dial
 }
 
 void
-TCAPLayer::updateDialogue(TC_Begin_Req* requestPrimitive)
+TCAPLayer::updateDialogue(const TC_Begin_Req & req_primitive)
 {
-  _outPrimitivesProcessor->updateDialogue(requestPrimitive);
+  _outPrimitivesProcessor->updateDialogue(req_primitive);
 }
 
 void
-TCAPLayer::updateDialogue(TC_Cont_Req* requestPrimitive)
+TCAPLayer::updateDialogue(const TC_Cont_Req & req_primitive)
 {
-  _outPrimitivesProcessor->updateDialogue(requestPrimitive);
+  _outPrimitivesProcessor->updateDialogue(req_primitive);
 }
 
 void
-TCAPLayer::updateDialogue(TC_End_Req* requestPrimitive)
+TCAPLayer::updateDialogue(const TC_End_Req & req_primitive)
 {
-  _outPrimitivesProcessor->updateDialogue(requestPrimitive);
+  _outPrimitivesProcessor->updateDialogue(req_primitive);
 }
 
 void
-TCAPLayer::updateDialogue(TC_UAbort_Req* requestPrimitive)
+TCAPLayer::updateDialogue(const TC_UAbort_Req & req_primitive)
 {
-  _outPrimitivesProcessor->updateDialogue(requestPrimitive);
+  _outPrimitivesProcessor->updateDialogue(req_primitive);
 }
 
 void
-TCAPLayer::updateDialogue(TC_PAbort_Req* requestPrimitive)
+TCAPLayer::updateDialogue(const TC_PAbort_Req & req_primitive)
 {
-  _outPrimitivesProcessor->updateDialogue(requestPrimitive);
+  _outPrimitivesProcessor->updateDialogue(req_primitive);
 }
 
 void
-TCAPLayer::sendPrimitive(TC_PAbort_Req* requestPrimitive, unsigned int linkNum,
-                         const SCCPAddress& src_addr, const SCCPAddress& dst_addr)
+TCAPLayer::sendPrimitive(const TPAbortReqComposer & req_composer, unsigned int link_num,
+                         const SCCPAddress& src_addr, const SCCPAddress& dst_addr) const
 {
-  _outPrimitivesProcessor->sendPrimitive(requestPrimitive, linkNum, src_addr, dst_addr);
+  _outPrimitivesProcessor->sendPrimitive(req_composer, link_num, src_addr, dst_addr);
 }
 
 void
-TCAPLayer::sendPrimitive(TC_UAbort_Req* requestPrimitive, unsigned int linkNum,
-                         const SCCPAddress& src_addr, const SCCPAddress& dst_addr)
+TCAPLayer::sendPrimitive(const TUAbortReqComposer & req_composer, unsigned int link_num,
+                         const SCCPAddress& src_addr, const SCCPAddress& dst_addr) const
 {
-  _outPrimitivesProcessor->sendPrimitive(requestPrimitive, linkNum, src_addr, dst_addr);
+  _outPrimitivesProcessor->sendPrimitive(req_composer, link_num, src_addr, dst_addr);
 }
 
 void

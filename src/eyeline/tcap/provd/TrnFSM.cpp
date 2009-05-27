@@ -49,7 +49,7 @@ void
 TrnFSM::updateTransaction(const TC_End_Req& dialogueRequestPrimitive)
 {
   smsc::core::synchronization::MutexGuard synchronize(_transactionStateLock);
-  if ( dialogueRequestPrimitive.getTermination() == TC_End_Req::PREARRANGED_END &&  _transactionState == IDLE )
+  if ( dialogueRequestPrimitive.getTermination() == TC_End_Req::endPREARRANGED &&  _transactionState == IDLE )
     throw utilx::ProtocolException("TrnFSM::updateTransaction::: invalid state=[IDLE] for TC_End_Req primitive in prearranged end of transaction");
   else if ( _transactionState != INIT_RECEIVED && _transactionState != ACTIVE )
     throw utilx::ProtocolException("TrnFSM::updateTransaction::: invalid state=[%s value=(%d)] for TC_End_Req primitive");
