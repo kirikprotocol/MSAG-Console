@@ -4,6 +4,7 @@
 # include <sys/types.h>
 # include <sys/uio.h>
 # include <eyeline/corex/io/IOExceptions.hpp>
+# include <eyeline/corex/io/IOObject.hpp>
 
 namespace eyeline {
 namespace corex {
@@ -15,6 +16,7 @@ class InputStream {
 public:
   virtual ~InputStream() {}
   virtual ssize_t read(uint8_t *buf, size_t bufSz) = 0;
+  virtual ssize_t readv(const struct iovec *iov, int iovcnt) = 0;
   virtual IOObject* getOwner() = 0;
 };
 
@@ -30,6 +32,7 @@ class GenericInputStream : public InputStream {
 public:
   GenericInputStream(IOObject* owner, int fd);
   virtual ssize_t read(uint8_t *buf, size_t bufSz);
+  virtual ssize_t readv(const struct iovec *iov, int iovcnt);
   virtual IOObject* getOwner();
 private:
   IOObject* _owner;
