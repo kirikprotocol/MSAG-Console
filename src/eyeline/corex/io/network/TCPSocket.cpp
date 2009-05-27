@@ -120,8 +120,12 @@ void TCPSocket::connect()
 
     throw smsc::util::Exception("TCPSocket::connect::: can't establish connect");
   } else {
-    if ( ::connect(_sockfd, (sockaddr*)&_server_addr, static_cast<int>(sizeof(_server_addr))) < 0 )
-      throw smsc::util::SystemError("TCPSocket::connect::: can't establish connect");
+    if ( ::connect(_sockfd, (sockaddr*)&_server_addr, static_cast<int>(sizeof(_server_addr))) < 0 ) {
+      if ( errno == ECONNREFUSED)
+        throw corex::io::ConnectionFailedException("TCPSocket::connect::: connection refused");
+      else
+        throw smsc::util::SystemError("TCPSocket::connect::: call to connect() failed");
+    }
     fillToStringInfo();
     _inputStream = new GenericInputStream(this, _sockfd); _outputStream = new GenericOutputStream(this, _sockfd);
   }
