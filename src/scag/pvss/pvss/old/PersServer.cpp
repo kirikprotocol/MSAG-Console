@@ -41,7 +41,7 @@ int PersServer::Execute()
       Performance perf = readers_.getPerformance();
       averPerf.inc(perf);
       if ( perf.accepted != 0 || perf.processed != 0 ) {
-          smsc_log_info(logger, "current performance %d:%d req/sec", perf.accepted, perf.processed);
+          smsc_log_info(logger, "current performance %d:%d req/sec. sync connections: %d", perf.accepted, perf.processed, perf.connections);
       }
       lastTime = now;
       continue;
@@ -53,7 +53,7 @@ int PersServer::Execute()
         Performance perf = readers_.getPerformance();
         averPerf.inc(perf);
         if ( perf.accepted != 0 || perf.processed != 0 ) {
-            smsc_log_info(logger, "current performance %d:%d req/sec", perf.accepted, perf.processed);
+            smsc_log_info(logger, "current performance %d:%d req/sec. sync connections: %d", perf.accepted, perf.processed, perf.connections);
         }
         lastTime = now;
       }

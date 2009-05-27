@@ -211,6 +211,7 @@ Performance MTPersReader::getPerformance() {
     smsc_log_info(logger, "context:%p socket:%p current performance %d:%d", cx, s, accepted, processed);
     perf.inc(accepted, processed);
   }
+  perf.connections += mpcount;
   return perf;
 }
 

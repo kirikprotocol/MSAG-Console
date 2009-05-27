@@ -37,13 +37,14 @@ private:
 };
 
 struct Performance {
-  Performance():processed(0), accepted(0), incCount(0) {};
+  Performance():processed(0), accepted(0), incCount(0), connections(0) {};
   void inc(const Performance& performance) {
     processed += performance.processed;
     accepted += performance.accepted;
     if (performance.processed > 0 || performance.accepted > 0) {
       ++incCount;
     }
+    connections += performance.connections;
   }
   void inc(PerfCounter& perfCounter) {
     int proc = perfCounter.getProcessed();
@@ -75,6 +76,7 @@ struct Performance {
   int processed;
   int accepted;
   int incCount;
+  int connections;
 };
 
 }//pvss
