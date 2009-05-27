@@ -44,12 +44,10 @@ public:
   const TransactionId & getTransactionId(void) const  { return _trId; }
   //
   TDlgUserInfo & getUserInfo(void) { return _usrInfo; }
-
-  // ------------------------------------------------
-  // -- TDialogueHandlingPrimitive interface methods
-  // ------------------------------------------------
-  virtual const EncodedOID * getAppCtx(void) const { return _acOId; }
-  virtual ROSComponentsList * CompList(void) { return _comps; }
+  //
+  const EncodedOID * getAppCtx(void) const { return _acOId; }
+  //
+  ROSComponentsList * CompList(void) { return _comps; }
 };
 
 //
