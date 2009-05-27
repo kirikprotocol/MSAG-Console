@@ -67,6 +67,14 @@ private:
   const OutputStream* _sourceOutputStream;
 };
 
+class ConnectionFailedException : public IOException {
+public:
+  ConnectionFailedException(const char * fmt, ...)
+  {
+    SMSC_UTIL_EX_FILL(fmt);
+  }
+};
+
 }}}
 
 #endif
