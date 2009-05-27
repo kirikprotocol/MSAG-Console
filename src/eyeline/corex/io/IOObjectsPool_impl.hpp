@@ -64,7 +64,7 @@ IOObjectsPool_tmpl<LOCK>::listen(uint32_t timeout)
   } else if ( !st )
     return TIMEOUT;
 
-  smsc::core::synchronization::MutexGuard guard(_lock);
+  smsc::core::synchronization::MutexGuardTmpl<LOCK> guard(_lock);
   for (int j=0; j<_socketsCount; ++j) {
     int readyFd;
     if ( (readyFd = _snaphots_fds[j].fd) > -1 && _snaphots_fds[j].revents ) {
@@ -106,7 +106,7 @@ IOObjectsPool_tmpl<LOCK>::insert(InputStream* iStream)
 {
   int fd = iStream->getOwner()->getDescriptor();
   int idx;
-  smsc::core::synchronization::MutexGuard guard(_lock);
+  smsc::core::synchronization::MutexGuardTmpl<LOCK> guard(_lock);
 
   if ( (idx=_used_fds[fd]) == -1 ) {
     if ( _socketsCount == _maxPoolSize )
@@ -128,7 +128,7 @@ IOObjectsPool_tmpl<LOCK>::insert(OutputStream* oStream)
 {
   int fd = oStream->getOwner()->getDescriptor();
   int idx;
-  smsc::core::synchronization::MutexGuard guard(_lock);
+  smsc::core::synchronization::MutexGuardTmpl<LOCK> guard(_lock);
   if ( (idx=_used_fds[fd]) == -1 ) {
     if ( _socketsCount == _maxPoolSize )
       throw smsc::util::Exception("IOObjectsPool_tmpl::insert(oStream=%p)::: exceeded max pool size", oStream);
@@ -147,7 +147,7 @@ IOObjectsPool_tmpl<LOCK>::insert(corex::io::network::ServerSocket* socket)
 {
   int fd = socket->getDescriptor();
 
-  smsc::core::synchronization::MutexGuard guard(_lock);
+  smsc::core::synchronization::MutexGuardTmpl<LOCK> guard(_lock);
   if ( _used_fds[fd] == -1 ) {
     if ( _socketsCount == _maxPoolSize )
       throw smsc::util::Exception("IOObjectsPool_tmpl::insert(serverSocket=%p)::: exceeded max pool size", socket);
@@ -184,7 +184,7 @@ IOObjectsPool_tmpl<LOCK>::remove(InputStream* iStream)
 {
   int fd = iStream->getOwner()->getDescriptor();
 
-  smsc::core::synchronization::MutexGuard guard(_lock);
+  smsc::core::synchronization::MutexGuardTmpl<LOCK> guard(_lock);
   _inMask.erase(fd);
   updatePollIndexes(fd);
 }
@@ -195,7 +195,7 @@ IOObjectsPool_tmpl<LOCK>::remove(OutputStream* oStream)
 {
   int fd = oStream->getOwner()->getDescriptor();
 
-  smsc::core::synchronization::MutexGuard guard(_lock);
+  smsc::core::synchronization::MutexGuardTmpl<LOCK> guard(_lock);
   _outMask.erase(fd);
   updatePollIndexes(fd);
 }
@@ -206,7 +206,7 @@ IOObjectsPool_tmpl<LOCK>::remove(IOObject* streamsOwner)
 {
   int fd = streamsOwner->getDescriptor();
 
-  smsc::core::synchronization::MutexGuard guard(_lock);
+  smsc::core::synchronization::MutexGuardTmpl<LOCK> guard(_lock);
   _inMask.erase(fd);
   _outMask.erase(fd);
   updatePollIndexes(fd);
@@ -218,7 +218,7 @@ IOObjectsPool_tmpl<LOCK>::remove(corex::io::network::ServerSocket* socket)
 {
   int fd = socket->getDescriptor();
 
-  smsc::core::synchronization::MutexGuard guard(_lock);
+  smsc::core::synchronization::MutexGuardTmpl<LOCK> guard(_lock);
   _acceptMask.erase(fd);
   updatePollIndexes(fd);
 }
@@ -227,7 +227,7 @@ template <class LOCK>
 OutputStream*
 IOObjectsPool_tmpl<LOCK>::getNextReadyOutputStream()
 {
-  smsc::core::synchronization::MutexGuard guard(_lock);
+  smsc::core::synchronization::MutexGuardTmpl<LOCK> guard(_lock);
   if ( _outputEventsReady.empty() ) return NULL;
   else {
     OutputStream* oStream = _outputEventsReady.front();
@@ -240,7 +240,7 @@ template <class LOCK>
 InputStream*
 IOObjectsPool_tmpl<LOCK>::getNextReadyInputStream()
 {
-  smsc::core::synchronization::MutexGuard guard(_lock);
+  smsc::core::synchronization::MutexGuardTmpl<LOCK> guard(_lock);
   if ( _inputEventsReady.empty() ) return NULL;
   else {
     InputStream* iStream = _inputEventsReady.front();
@@ -253,7 +253,7 @@ template <class LOCK>
 corex::io::network::ServerSocket*
 IOObjectsPool_tmpl<LOCK>::getNextReadyServerSocket()
 {
-  smsc::core::synchronization::MutexGuard guard(_lock);
+  smsc::core::synchronization::MutexGuardTmpl<LOCK> guard(_lock);
   if ( _newConnectionEventsReady.empty() ) return NULL;
   else {
     corex::io::network::ServerSocket* socket = _newConnectionEventsReady.front();
