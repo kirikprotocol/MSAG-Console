@@ -174,9 +174,9 @@ SerializeBuffer& SerializeBuffer::operator>>(float& val) {
   this->Read((char*)&val,4);
   return *this;
 #else
-  const uint32_t v; 
+  uint32_t v; 
   *this >> v;
-  val = reinterpret_cast<float>(val); 
+  val = *(reinterpret_cast<float*>(&v)); 
   return *this;
 #endif
 }
