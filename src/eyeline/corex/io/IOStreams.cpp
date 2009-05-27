@@ -20,6 +20,18 @@ GenericInputStream::read(uint8_t *buf, size_t bufSz)
   return result;
 }
 
+ssize_t
+GenericInputStream::readv(const struct iovec *iov, int iovcnt)
+{
+  ssize_t result = ::readv(_fd, iov, iovcnt);
+  if ( result < 0 )
+    throw smsc::util::SystemError("GenericInputStream::readv::: call to readv() failed");
+  if ( !result )
+    throw EOFException("GenericInputStream::readv::: connection closed by remote side");
+
+  return result;
+}
+
 IOObject*
 GenericInputStream::getOwner() { return _owner; }
 
