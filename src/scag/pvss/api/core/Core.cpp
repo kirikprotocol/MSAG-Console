@@ -22,7 +22,9 @@ smsc::logger::Logger* Core::logger = 0;
 Core::~Core()
 {
     // shutdownIO();
-    waitUntilReleased();
+    if ( !released() && isStarted() ) {
+        waitUntilReleased();
+    }
     delete protocol;
     delete config;
     smsc_log_info(logger,"dtor: core");
