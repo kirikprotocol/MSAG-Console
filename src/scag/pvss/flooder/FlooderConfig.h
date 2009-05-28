@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
+#include "scag/pvss/common/ScopeType.h"
+
 namespace scag2 {
 namespace pvss {
 namespace flooder {
@@ -13,7 +15,7 @@ class FlooderConfig
 public:
     FlooderConfig() :
     asyncMode_(false), speed_(10), addressesCount_(100), flooderThreads_(1), commands_("s0g0"),
-    oneCommandPerAbonent_(false), maxSpeed_(false) {
+    oneCommandPerAbonent_(false), maxSpeed_(false), scopeType_(SCOPE_ABONENT) {
         patterns_.push_back("\"test0\" INT: 1 TIME_POLICY: FIXED FINAL_DATE: 2009/03/16 09:52:55 LIFE_TIME: 123");
     }
 
@@ -39,6 +41,9 @@ public:
     const std::string& getAddressFormat() const { return addressFormat_; }
     void setAddressFormat( const std::string& af ) { addressFormat_ = af; }
 
+    ScopeType getScopeType() const { return scopeType_; }
+    void setScopeType( ScopeType st ) { scopeType_ = st; }
+
     int getRequested() const { return 0; /* unlimited */ }
 
     bool getMaxSpeed() const { return maxSpeed_;  }
@@ -55,6 +60,7 @@ private:
     std::string                addressFormat_;
     bool    oneCommandPerAbonent_;
     bool    maxSpeed_;
+    ScopeType scopeType_;
 };
 
 } // namespace flooder

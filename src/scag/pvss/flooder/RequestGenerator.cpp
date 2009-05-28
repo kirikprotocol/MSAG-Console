@@ -39,7 +39,8 @@ RequestGenerator::RequestGenerator() :
 abonents_(1),
 addressFormat_(".1.1.791%08u"),
 profileKeys_(0),
-abonentIdx_(0)
+abonentIdx_(0),
+scopeType_(SCOPE_ABONENT)
 {}
 
 
@@ -56,10 +57,12 @@ RequestGenerator::~RequestGenerator() {
 
 void RequestGenerator::randomizeProfileKeys( const std::string& addressFormat,
                                              unsigned abonents,
-                                             unsigned skip )
+                                             unsigned skip,
+                                             ScopeType stype )
 {
     abonents_ = abonents;
     addressFormat_ = addressFormat;
+    scopeType_ = stype;
 
     delete profileKeys_;
     profileKeys_ = 0;
@@ -197,10 +200,20 @@ ProfileKey RequestGenerator::getProfileKey()
             key = unsigned(::myrand(abonents_));
         }
     }
-    char buf[40];
-    snprintf( buf, sizeof(buf), addressFormat_.c_str(), key );
     ProfileKey pk;
-    pk.setAbonentKey( buf );
+    if ( scopeType_ == SCOPE_ABONENT ) {
+        char buf[40];
+        snprintf( buf, sizeof(buf), addressFormat_.c_str(), key );
+        pk.setAbonentKey( buf );
+    } else if ( scopeType_ == SCOPE_OPERATOR ) {
+        pk.setOperatorKey(key);
+    } else if ( scopeType_ == SCOPE_PROVIDER ) {
+        pk.setProviderKey(key);
+    } else if ( scopeType_ == SCOPE_SERVICE ) {
+        pk.setServiceKey(key);
+    } else {
+        throw std::runtime_error("wrong scope type");
+    }
     return pk;
 }
 

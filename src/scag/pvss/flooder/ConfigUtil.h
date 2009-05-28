@@ -6,6 +6,7 @@
 #include "util/config/Config.h"
 #include "scag/pvss/api/core/client/ClientConfig.h"
 #include "FlooderConfig.h"
+#include "scag/pvss/common/ScopeType.h"
 
 namespace {
 
@@ -141,6 +142,17 @@ void readFlooderConfig( smsc::logger::Logger* logger,
         smsc_log_warn(logger, "Parameter <Flooder.addressPrefix> missed or wrong. Default value is %s", flooderConfig.getAddressFormat().c_str());
     }
 
+    try {
+        std::string stype = fview.getString("scopeType");
+        scag2::pvss::ScopeType st = scag2::pvss::scopeTypeFromString(stype.c_str());
+        if ( st == scag2::pvss::ScopeType(0) ) {
+            throw std::runtime_error("wrong scopeType");
+        } else {
+            flooderConfig.setScopeType(st);
+        }
+    } catch (...) {
+        smsc_log_warn(logger, "Parameter <Flooder.scopeType> missed or wrong. Default value is %s", scopeTypeToString(flooderConfig.getScopeType()) );
+    }
 }
 
 }

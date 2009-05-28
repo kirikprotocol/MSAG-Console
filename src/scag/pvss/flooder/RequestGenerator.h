@@ -25,7 +25,8 @@ public:
     /// randomize profile keys
     void randomizeProfileKeys( const std::string& addressFormat,
                                unsigned abonents,
-                               unsigned skip = unsigned(-1) );
+                               unsigned skip = unsigned(-1),
+                               ScopeType stype = SCOPE_ABONENT );
 
     /// add a variable pattern
     void addPropertyPattern( unsigned idx, Property* prop ) /* throw (exceptions::IOException) */ ;
@@ -55,6 +56,7 @@ private:
     unsigned*                                 profileKeys_;  // owned
     smsc::core::synchronization::Mutex        keyMtx_;
     unsigned                                  abonentIdx_;
+    ScopeType                                 scopeType_;
 };
 
 } // namespace flooder
