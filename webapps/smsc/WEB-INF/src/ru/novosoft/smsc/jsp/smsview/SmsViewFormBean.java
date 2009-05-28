@@ -202,10 +202,13 @@ public class SmsViewFormBean extends IndexBean {
     totalRowsCount = 0;
     checkedRows.removeAllElements();
     try {
-      if ((query.getStorageType() == SmsQuery.SMS_ARCHIVE_STORAGE_TYPE) &&
-              (!hostsManager.getServiceInfo(Constants.ARCHIVE_DAEMON_SVC_ID).isOnline())) {
-        clearQuery();
-        throw new AdminException("Archive Daemon is not running. ");
+      if ((query.getStorageType() == SmsQuery.SMS_ARCHIVE_STORAGE_TYPE)) {
+        if (!hostsManager.getServiceInfo(Constants.ARCHIVE_DAEMON_SVC_ID).isOnline()) {
+          clearQuery();
+          throw new AdminException("Archive Daemon is not running. ");
+        }
+        if (query.getRowsMaximum() > 5000)
+          query.setRowsMaximum(5000);
       }
 
       if (!exactRowsCount) {

@@ -133,7 +133,8 @@
             <option value="500" <%= (rowsMaximum == 500) ? "selected" : ""%>>500</option>
             <option value="1000" <%= (rowsMaximum == 1000) ? "selected" : ""%>>1000</option>
             <option value="2000" <%= (rowsMaximum == 2000) ? "selected" : ""%>>2000</option>
-            <option value="5000" <%= (rowsMaximum >= 5000) ? "selected" : ""%>>5000</option>
+            <option value="5000" <%= (rowsMaximum == 5000) ? "selected" : ""%>>5000</option>
+            <option value="<%=Integer.MAX_VALUE%>" <%= (rowsMaximum > 5000) ? "selected" : ""%>>ALL</option>
         </select>&nbsp;/&nbsp;<select name="pageSize"><%int rowsToDisplay = bean.getPageSizeInt();%>
         <option value="5" <%= (rowsToDisplay < 10) ? "selected" : ""%>>5</option>
         <option value="10" <%= (rowsToDisplay == 10) ? "selected" : ""%>>10</option>

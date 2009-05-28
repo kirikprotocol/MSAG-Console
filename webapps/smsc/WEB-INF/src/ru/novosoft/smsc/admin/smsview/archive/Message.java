@@ -179,6 +179,14 @@ public abstract class Message
     return readString(is, (int) readUInt32(is));
   }
 
+  public static void skip(InputStream is, int bytesToSkip) throws IOException {
+    long read = 0;
+    while (read < bytesToSkip) {
+      long result = is.skip(bytesToSkip - read);
+      read += result;
+    }
+  }
+
   protected Message(byte type)
   {
     this.type = type;

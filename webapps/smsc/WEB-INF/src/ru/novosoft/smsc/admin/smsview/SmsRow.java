@@ -17,48 +17,48 @@ public class SmsRow {
   public static int MSG_STATE_DELETED = 4;
   private static String states[] = {"ENROUTE", "DELIVERED", "EXPIRED", "UNDELIVERABLE", "DELETED"};
 
-  private long id;
-  private Date submitTime = new Date();
-  private Date validTime;
-  private int attempts;
-  private int lastResult = 0;
-  private Date lastTryTime;
-  private Date nextTryTime;
-  private String originatingAddress = "originatingAddress";
-  private String destinationAddress = "destinationAddress";
-  private String dealiasedDestinationAddress = "dealiasedDestinationAddress";
-  private int messageReference;
-  private String serviceType;
-  private boolean needArchivate;
-  private short deliveryReport;
-  private short billingRecord;
-  private SmsDescriptor originatingDescriptor;
-  private SmsDescriptor destinationDescriptor;
-  private String routeId;
-  private int serviceId;
-  private int priority;
-  private String srcSmeId;
-  private String dstSmeId;
-  private short concatMsgRef;
-  private short concatSeqNum;
-  private long pointer = 0;
-  private int bodyLen;
-  private Mask originatingAddressMask;
-  private Mask destinationAddressMask;
-  private Mask dealiasedDestinationAddressMask;
+  protected long id;
+  protected Date submitTime = null;
+  protected  Date validTime;
+  protected  Integer attempts;
+  protected  Integer lastResult;
+  protected  Date lastTryTime;
+  protected  Date nextTryTime;
+  protected  String originatingAddress = "originatingAddress";
+  protected  String destinationAddress = "destinationAddress";
+  protected  String dealiasedDestinationAddress = "dealiasedDestinationAddress";
+  protected  Integer messageReference;
+  protected  String serviceType;
+  protected  boolean needArchivate;
+  protected  Short deliveryReport;
+  protected  Short billingRecord;
+  protected  SmsDescriptor originatingDescriptor;
+  protected  SmsDescriptor destinationDescriptor;
+  protected  String routeId;
+  protected  Integer serviceId;
+  protected  Integer priority ;
+  protected  String srcSmeId;
+  protected  String dstSmeId;
+  protected  Short concatMsgRef;
+  protected  Short concatSeqNum;
+  protected  Long pointer;
+  protected  Integer bodyLen;
+  protected  Mask originatingAddressMask;
+  protected  Mask destinationAddressMask;
+  protected  Mask dealiasedDestinationAddressMask;
 
-  private int status = 0;
+  protected  Integer status;
 
 
-  private String originalText = null;
-  private String text = "";
-  private boolean textEncoded = false;
-  private byte arc;
+  protected  String originalText = null;
+  protected  String text = "";
+  protected  boolean textEncoded = false;
+  protected  byte arc = -1;
 
   private boolean marked = false;
 
-  private Hashtable parameters = new Hashtable();
-  byte body[] = null;
+  private Hashtable parameters;
+  protected byte body[] = null;
 
   public void setId(long id) {
     this.id = id;
@@ -73,7 +73,7 @@ public class SmsRow {
   ;
 
   public String getIdString() {
-    return Long.toHexString(id).toUpperCase();
+    return Long.toHexString(getId()).toUpperCase();
   }
 
   ;
@@ -137,17 +137,17 @@ public class SmsRow {
   }
 
   public String getToString() {
-    return ((dealiasedDestinationAddress == null || dealiasedDestinationAddress.length() == 0 ||
-            destinationAddress.equalsIgnoreCase(dealiasedDestinationAddress)) ? destinationAddress : (destinationAddress + " (" + dealiasedDestinationAddress + ")"));
+    return ((getDealiasedDestinationAddress() == null || getDealiasedDestinationAddress().length() == 0 ||
+            getDestinationAddress().equalsIgnoreCase(getDealiasedDestinationAddress())) ? getDestinationAddress() : (getDestinationAddress() + " (" + getDealiasedDestinationAddress() + ")"));
   }
 
   public String getDateString() {
     SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
-    return formatter.format(submitTime);
+    return formatter.format(getSubmitTime());
   }
 
   public Date getSubmitTime() {
-    return submitTime;
+    return submitTime == null ? new Date() : submitTime;
   }
 
   public void setSubmitTime(Date submitTime) {
@@ -159,23 +159,23 @@ public class SmsRow {
   }
 
   public String getStatus() {
-    return getStatusString(status);
+    return getStatusString(getStatusInt());
   }
 
   public int getStatusInt() {
-    return status;
+    return status == null ? 0 : status.intValue();
   }
 
   public void setStatus(int status) {
-    this.status = status;
+    this.status = new Integer(status);
   }
 
   public int getLastResult() {
-    return lastResult;
+    return lastResult == null ? 0 : lastResult.intValue();
   }
 
   public void setLastResult(int lastResult) {
-    this.lastResult = lastResult;
+    this.lastResult = new Integer(lastResult);
   }
 
   public String getText() {
@@ -199,23 +199,23 @@ public class SmsRow {
   }
 
   public int getAttempts() {
-    return attempts;
+    return attempts == null ? 0 : attempts.intValue();
   }
 
   public short getBillingRecord() {
-    return billingRecord;
+    return billingRecord == null ? 0 : billingRecord.shortValue();
   }
 
   public short getConcatMsgRef() {
-    return concatMsgRef;
+    return concatMsgRef == null ? 0 : concatMsgRef.shortValue();
   }
 
   public short getConcatSeqNum() {
-    return concatSeqNum;
+    return concatSeqNum == null ? 0 : concatSeqNum.shortValue();
   }
 
   public short getDeliveryReport() {
-    return deliveryReport;
+    return deliveryReport == null ? 0 : deliveryReport.shortValue();
   }
 
   public SmsDescriptor getDestinationDescriptor() {
@@ -231,7 +231,7 @@ public class SmsRow {
   }
 
   public int getMessageReference() {
-    return messageReference;
+    return messageReference == null ? 0 : messageReference.intValue();
   }
 
   public boolean isNeedArchivate() {
@@ -247,7 +247,7 @@ public class SmsRow {
   }
 
   public int getPriority() {
-    return priority;
+    return priority == null ? 0 : priority.intValue();
   }
 
   public String getRouteId() {
@@ -255,7 +255,7 @@ public class SmsRow {
   }
 
   public int getServiceId() {
-    return serviceId;
+    return serviceId == null ? 0 : serviceId.intValue();
   }
 
   public String getServiceType() {
@@ -272,27 +272,27 @@ public class SmsRow {
 
   public String getValidString() {
     SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
-    return formatter.format(validTime);
+    return formatter.format(getValidTime());
   }
 
   public void setAttempts(int attempts) {
-    this.attempts = attempts;
+    this.attempts = new Integer(attempts);
   }
 
   public void setBillingRecord(short billingRecord) {
-    this.billingRecord = billingRecord;
+    this.billingRecord = new Short(billingRecord);
   }
 
   public void setConcatMsgRef(short concatMsgRef) {
-    this.concatMsgRef = concatMsgRef;
+    this.concatMsgRef = new Short(concatMsgRef);
   }
 
   public void setConcatSeqNum(short concatSeqNum) {
-    this.concatSeqNum = concatSeqNum;
+    this.concatSeqNum = new Short(concatSeqNum);
   }
 
   public void setDeliveryReport(short deliveryReport) {
-    this.deliveryReport = deliveryReport;
+    this.deliveryReport = new Short(deliveryReport);
   }
 
   public void setDestinationDescriptor(SmsDescriptor destinationDescriptor) {
@@ -308,7 +308,7 @@ public class SmsRow {
   }
 
   public void setMessageReference(int messageReference) {
-    this.messageReference = messageReference;
+    this.messageReference = new Integer(messageReference);
   }
 
   public void setNeedArchivate(boolean needArchivate) {
@@ -324,7 +324,7 @@ public class SmsRow {
   }
 
   public void setPriority(int priority) {
-    this.priority = priority;
+    this.priority = new Integer(priority);
   }
 
   public void setRouteId(String routeId) {
@@ -332,7 +332,7 @@ public class SmsRow {
   }
 
   public void setServiceId(int serviceId) {
-    this.serviceId = serviceId;
+    this.serviceId = new Integer(serviceId);
   }
 
   public void setServiceType(String serviceType) {
@@ -368,15 +368,16 @@ public class SmsRow {
   }
 
   public void addBodyParameter(short tag, Object value) {
+    if (parameters == null)
+      parameters = new Hashtable();
     parameters.put(String.valueOf(tag), value);
   }
 
   public Hashtable getBodyParameters() {
-    if (body != null) {
+    byte[] body = getBody();
+    if (body != null)
       SmsSource.parseBody(new ByteArrayInputStream(body, 0, body.length), this);
-      body = null;
-    }
-    return parameters;
+    return parameters == null ? new Hashtable() : parameters;
   }
 
   public boolean equals(Object obj) {
@@ -387,11 +388,11 @@ public class SmsRow {
   }
 
   public long getPointer() {
-    return pointer;
+    return pointer == null ? 0 : pointer.longValue();
   }
 
   public void setPointer(long pointer) {
-    this.pointer = pointer;
+    this.pointer = new Long(pointer);
   }
 
   public byte[] getBody() {
@@ -403,11 +404,11 @@ public class SmsRow {
   }
 
   public int getBodyLen() {
-    return bodyLen;
+    return bodyLen == null ? 0 : bodyLen.intValue();
   }
 
   public void setBodyLen(int bodyLen) {
-    this.bodyLen = bodyLen;
+    this.bodyLen = new Integer(bodyLen);
   }
 
   public byte getArc() {
