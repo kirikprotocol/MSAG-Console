@@ -386,7 +386,7 @@ public:
       key.Write(f);
       value.Write(f);
       f.Flush();
-      count++;
+      if (created) count++;
       isChanged=true;
       return created;
     }
