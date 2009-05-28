@@ -480,7 +480,7 @@ public:
         for ( uint32_t hc = 0; hc < size; ++hc ) {
             const uint32_t idx = hc * recsize;
             f.Seek(DiskHashHeader::Size()+idx);
-            const uint16_t fl = f.ReadNet16();
+            const uint16_t fl = f.ReadNetInt16();
             if ( fl == flagUsed ) {
                 ++newCount;
             }
