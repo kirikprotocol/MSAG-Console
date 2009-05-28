@@ -106,8 +106,10 @@ public:
     bool setIndex( const key_type& k, index_type i ) {
         IndexNode* node = getNode( k );
         if ( node ) {
-            index_.setNodeValue( cacheaddr_, i );
-            if ( i == invalid_ ) --goodNodesCount_;
+            if ( node->value != i ) {
+                index_.setNodeValue( cacheaddr_, i );
+                if ( i == invalid_ ) --goodNodesCount_;
+            }
         } else {
             // the tree may be changed by reallocation
             invalidateCache();
@@ -124,7 +126,7 @@ public:
         if ( node ) {
             index_type i = node->value;
             index_.setNodeValue( cacheaddr_, invalid_ );
-            --goodNodesCount_;
+            if ( i != invalid_ ) --goodNodesCount_;
             return i;
         }
         return invalid_;

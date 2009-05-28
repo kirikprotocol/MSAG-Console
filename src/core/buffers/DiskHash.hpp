@@ -471,6 +471,23 @@ public:
         uint32_t  hc_;
     };
 
+
+    /// NOTE: this method is a measure to fight with bug consequences
+    /// which gave a growth on count.  Someday it may disappear.
+    void recalcCount()
+    {
+        unsigned newCount = 0;
+        for ( uint32_t hc = 0; hc < size; ++hc ) {
+            const uint32_t idx = hc * recsize;
+            f.Seek(DiskHashHeader::Size()+idx);
+            const uint16_t fl = f.ReadNet16();
+            if ( fl == flagUsed ) {
+                ++newCount;
+            }
+        }
+        count = newCount;
+    }
+
 };
 
 } //namespace buffers

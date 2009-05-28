@@ -69,6 +69,9 @@ public:
         return index_.Count();
     }
 
+    void recalcSize() {
+        index_.recalcCount();
+    }
 
   void setInvalidIndex(index_type i) {
     invalid_ = i;

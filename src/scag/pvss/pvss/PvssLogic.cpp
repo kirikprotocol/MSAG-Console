@@ -544,6 +544,8 @@ InfrastructLogic::InfrastructStorage* InfrastructLogic::initStorage(const Infras
   smsc_log_debug(logger_, "%s data storage is created", cfg.dbName.c_str());
 
   std::auto_ptr< DiskIndexStorage > index(new DiskIndexStorage(cfg.dbName, cfg.dbPath, cfg.recordCount));
+  // FIX: mandatory size recalculation
+  index->recalcSize();
   smsc_log_debug(logger_, "%s index storage is created", cfg.dbName.c_str());
 
   std::auto_ptr< DiskStorage > ds (new DiskStorage(index.release(), data.release()));
