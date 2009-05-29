@@ -14,7 +14,7 @@
 # include "inman/interaction/connect.hpp"
 # include "inman/interaction/serializer.hpp"
 # include "util/Singleton.hpp"
-
+# include "core/synchronization/Mutex.hpp"
 # include "inman/uss/UssServiceCfg.hpp"
 
 namespace smsc {
@@ -85,6 +85,8 @@ private:
 
   typedef std::set<USSRequestProcessor*> active_req_processes_t;
   active_req_processes_t _activeReqProcessors;
+
+  core::synchronization::Mutex _activeReqProcLock;
 };
 
 
