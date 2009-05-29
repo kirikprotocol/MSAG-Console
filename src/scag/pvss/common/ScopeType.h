@@ -1,7 +1,7 @@
 #ifndef _SCAG_PVSS_COMMON_SCOPETYPE_H
 #define _SCAG_PVSS_COMMON_SCOPETYPE_H
 
-#include <cstring>
+#include <string.h>
 
 namespace scag2 {
 namespace pvss {
