@@ -45,7 +45,7 @@ USSManConnect::USSManConnect(unsigned conn_id, logger::Logger* logger,
 
 USSManConnect::~USSManConnect()
 {
-  MutexGuard synchronize(_activeReqProcLock);
+  core::synchronization::MutexGuard synchronize(_activeReqProcLock);
   while(!_activeReqProcessors.empty()) {
     active_req_processes_t::iterator iter = _activeReqProcessors.begin();
     iter->markConnectAsClosed();
@@ -79,7 +79,7 @@ void USSManConnect::onPacketReceived(interaction::Connect* conn, // указатель на
     new USSRequestProcessor(this, conn, _cfg,
                             requestPacket->dialogId(), ussProcSearchCrit, _logger);
   {
-    MutexGuard synchronize(_activeReqProcLock);
+    core::synchronization::MutexGuard synchronize(_activeReqProcLock);
     _activeReqProcessors.insert(ussReqProc);
   }
 
@@ -94,7 +94,7 @@ void USSManConnect::onConnectError(interaction::Connect* conn, std::auto_ptr<Cus
 
 void USSManConnect::markReqProcessorAsCompleted(USSRequestProcessor* ussReqProc)
 {
-  MutexGuard synchronize(_activeReqProcLock);
+  core::synchronization::MutexGuard synchronize(_activeReqProcLock);
   _activeReqProcessors.erase(ussReqProc);
 }
 
