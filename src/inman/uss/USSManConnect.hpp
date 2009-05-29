@@ -23,6 +23,8 @@ namespace uss {
 
 using smsc::inman::interaction::Connect;
 
+class USSRequestProcessor;
+
 class USSProcSearchCrit {
 public:
   USSProcSearchCrit(uint8_t ssn, const TonNpiAddress & addr,
@@ -39,7 +41,7 @@ public:
       return _dialogId < rhs._dialogId;
     else if (_conn != rhs._conn)
       return _conn < rhs._conn;
-    else 
+    else
       return false;
   }
 private:
@@ -60,18 +62,19 @@ private:
   mutable smsc::core::synchronization::Mutex _lock;
 };
 
-//##ModelId=457534DE0050
 class USSManConnect : public smsc::inman::interaction::ConnectListenerITF {
 public:
   USSManConnect(unsigned conn_id, smsc::logger::Logger* logger, const UssService_CFG& cfg);
   ~USSManConnect();
-  //##ModelId=4575350D008E
-  void onPacketReceived(smsc::inman::interaction::Connect* conn,
-                         std::auto_ptr<smsc::inman::interaction::SerializablePacketAC>& recv_cmd)
-    throw(std::exception);
 
-  //##ModelId=45753514006F
+  void onPacketReceived(smsc::inman::interaction::Connect* conn,
+                        std::auto_ptr<smsc::inman::interaction::SerializablePacketAC>& recv_cmd);
+
+
   void onConnectError(smsc::inman::interaction::Connect* conn, std::auto_ptr<CustomException>& p_exc);
+  smsc::inman::interaction::Connect* getRealConnect();
+
+  void markReqProcessorAsCompleted(USSRequestProcessor* ussReqProc);
 private:
   smsc::logger::Logger *_logger;
   char          _logId[sizeof("Con[%u]") + sizeof(unsigned int)*3 + 1];
@@ -79,6 +82,9 @@ private:
 
   typedef std::vector<USSProcSearchCrit>  CreatedSearchCritList_t;
   CreatedSearchCritList_t _searchCritForCreatedReqProcessors;
+
+  typedef std::set<USSRequestProcessor*> active_req_processes_t;
+  active_req_processes_t _activeReqProcessors;
 };
 
 
