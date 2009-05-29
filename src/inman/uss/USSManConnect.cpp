@@ -48,8 +48,8 @@ USSManConnect::~USSManConnect()
   core::synchronization::MutexGuard synchronize(_activeReqProcLock);
   while(!_activeReqProcessors.empty()) {
     active_req_processes_t::iterator iter = _activeReqProcessors.begin();
-    iter->markConnectAsClosed();
-    _activeReqProcessors.erase(iter)
+    (*iter)->markConnectAsClosed();
+    _activeReqProcessors.erase(iter);
   }
 }
 

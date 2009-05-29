@@ -46,7 +46,6 @@ private:
   void sendNegativeResponse();
   TCSessionSR * getMAPSession(uint8_t rmt_ssn, const TonNpiAddress & rnpi);
   void sendPacket(inman::interaction::SPckUSSResult* resultPacket);
-  void markConnectAsClosed();
 
   Mutex                     _callbackActivityLock;
   USSManConnect*            _ussManConn;

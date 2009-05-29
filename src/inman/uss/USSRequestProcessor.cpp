@@ -30,7 +30,7 @@ USSRequestProcessor::USSRequestProcessor(USSManConnect* ussManConn, Connect* con
   , _logger(use_log ? use_log : Logger::getInstance("smsc.ussman"))
 {
   core::synchronization::MutexGuard synchronize(_connLock);
-  snprintf(_logId, sizeof(_logId)-1, "USSreq[%u:%u]", _conn->getRealConnect()->getId(), _dialogId);
+  snprintf(_logId, sizeof(_logId)-1, "USSreq[%u:%u]", _conn->getId(), _dialogId);
 }
 
 USSRequestProcessor::~USSRequestProcessor()
@@ -192,7 +192,6 @@ USSRequestProcessor::markConnectAsClosed()
   _conn=NULL;
 }
 
-}
 } //uss
 } //inman
 } //smsc
