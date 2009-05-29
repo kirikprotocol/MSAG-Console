@@ -1,5 +1,5 @@
 /* ************************************************************************** *
- * 
+ *
  * ************************************************************************** */
 #ifndef __SMSC_INMAN_USS_USSREQUESTPROCESSOR_HPP__
 #ident "@(#)$Id$"
@@ -7,7 +7,7 @@
 
 //# include "logger/Logger.h"
 //# include "util/TonNpiAddress.hpp"
-//# include "core/synchronization/Mutex.hpp" 
+//# include "core/synchronization/Mutex.hpp"
 # include "inman/interaction/connect.hpp"
 # include "inman/inap/HDSSnSession.hpp"
 # include "inman/inap/map_uss/DlgMapUSS.hpp"
@@ -28,7 +28,7 @@ using smsc::inman::inap::uss::MapUSSDlg;
 
 class USSRequestProcessor : public smsc::inman::inap::uss::USSDhandlerITF {
 public:
-  USSRequestProcessor(Connect * conn, const UssService_CFG & cfg,
+  USSRequestProcessor(USSManConnect* ussManConn, Connect * conn, const UssService_CFG & cfg,
                       uint32_t dialog_id, const USSProcSearchCrit & ussProcSearchCrit,
                       Logger * use_log = NULL);
   ~USSRequestProcessor();
@@ -41,11 +41,15 @@ public:
   //NOTE: MAP dialog may be deleted only from this callback !!!
   virtual void onEndMapDlg(RCHash ercode = 0);
 
+  void markConnectAsClosed();
 private:
   void sendNegativeResponse();
   TCSessionSR * getMAPSession(uint8_t rmt_ssn, const TonNpiAddress & rnpi);
+  void sendPacket(inman::interaction::SPckUSSResult* resultPacket);
+  void markConnectAsClosed();
 
   Mutex                     _callbackActivityLock;
+  USSManConnect*            _ussManConn;
   Connect *                 _conn;
   const UssService_CFG &    _cfg;
   uint32_t                  _dialogId;
@@ -59,6 +63,7 @@ private:
   std::string   _resultUssAsString;
   bool          _resultAsLatin1;
   unsigned char _dcs;
+  core::synchronization::Mutex _connLock;
 };
 
 } //uss
