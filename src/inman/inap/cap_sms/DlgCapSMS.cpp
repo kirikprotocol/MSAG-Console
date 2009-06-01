@@ -15,6 +15,9 @@ using smsc::inman::comp::SMSRequestReportEventArg;
 using smsc::inman::comp::SMSResetTimerArg;
 using smsc::inman::comp::SMSEventReportArg;
 
+#include "inman/comp/cap_sms/MOSM_RPCauses.hpp"
+using smsc::inman::comp::MOSM_RPCause;
+
 using smsc::inman::comp::_RCS_CAPOpErrors;
 using smsc::inman::comp::CAPServiceRC;
 using smsc::inman::comp::_RCS_CAPService;
@@ -323,9 +326,15 @@ void CapSMSDlg::onDialogInvoke(Invoke* op, bool lastComp)
                 if (_tDPs.front() == EventTypeSMS_sms_CollectedInfo) {
                     _capState.s.smsRlse = 1;
                     SMSReleaseArg * arg = static_cast<SMSReleaseArg*>(op->getParam());
-                    rPCause = arg->rPCause();
-                    smsc_log_debug(logger, "%s: <-- %s: ReleaseSMS { RP cause: %u }",
-                                    _logId, nmScf, (unsigned)rPCause);
+                    if (arg->rPCause()) {
+                      rPCause = arg->rPCause();
+                      smsc_log_debug(logger, "%s: <-- %s: ReleaseSMS { RP cause: %u }",
+                                      _logId, nmScf, (unsigned)rPCause);
+                    } else {
+                      rPCause = MOSM_RPCause::transferReject;
+                      smsc_log_warn(logger, "%s: <-- %s: ReleaseSMS { RP cause: 0, assuming: %u }",
+                                      _logId, nmScf, (unsigned)rPCause);
+                    }
                     doReport = doEnd = true;
                     _fsmState = SMS_SSF_Fsm::fsmDone;
                     _relation = SMS_SSF_Fsm::relNone;
@@ -511,6 +520,8 @@ void CapSMSDlg::endCapSMS(void)
     if (_fsmState == SMS_SSF_Fsm::fsmMonitoring) {
         if (eventReportSMS(false))
             endTCap(true); //send U_ABORT to SCF
+        else if (reportType == MessageType_notification)
+            endTCap(); //Prearranged end scenario
     } else if ((_fsmState == SMS_SSF_Fsm::fsmWaitInstr) && !_capState.s.smsReport)
         endTCap(true); //send U_ABORT to SCF
 }
