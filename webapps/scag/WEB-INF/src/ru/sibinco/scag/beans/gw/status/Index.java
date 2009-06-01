@@ -31,6 +31,7 @@ public class Index extends TabledBeanImpl {
     public void process(final HttpServletRequest request, final HttpServletResponse response) throws SCAGJspException {
 
         super.process(request, response);
+        if( !appContext.isCluster() ){
         final Daemon scagDaemon = appContext.getScagDaemon();
         try {
             scagDaemon.refreshServices(appContext.getSmppManager());
@@ -39,7 +40,9 @@ public class Index extends TabledBeanImpl {
             throw new SCAGJspException(Constants.errors.status.COULDNT_REFRESH_SERVICES);
         } catch (NullPointerException e) {
             logger.error("Could not get GW daemon");
-            throw new SCAGJspException(Constants.errors.status.COULDNT_GET_DAEMON);
+//            if( !getAppContext().isCluster() ){
+                throw new SCAGJspException(Constants.errors.status.COULDNT_GET_DAEMON);
+//            }
         }
 
         final ServiceInfo info = scagDaemon.getServiceInfo(appContext.getScag().getId());
@@ -58,6 +61,7 @@ public class Index extends TabledBeanImpl {
             stop();
             super.process(request, response);
         }
+        }
     }
 
     protected void delete() throws SCAGJspException {
@@ -65,6 +69,7 @@ public class Index extends TabledBeanImpl {
     }
 
     private void stop() throws SCAGJspException {
+        if( !appContext.isCluster() ){
         try {
             appContext.getScagDaemon().shutdownService(appContext.getScag().getId());
         } catch (SibincoException e) {
@@ -73,9 +78,11 @@ public class Index extends TabledBeanImpl {
         }
         StatusManager.getInstance().addStatMessages(new StatMessage(getLoginedPrincipal().getName(),
                 "Status MSAG", "Service MSAG stoped"));
+        }
     }
 
     private void start() throws SCAGJspException {
+        if( !appContext.isCluster() ){
         try {
             appContext.getScagDaemon().startService(appContext.getScag().getId());
         } catch (SibincoException e) {
@@ -84,6 +91,7 @@ public class Index extends TabledBeanImpl {
         }
         StatusManager.getInstance().addStatMessages(new StatMessage(getLoginedPrincipal().getName(),
                 "Status MSAG", "Service MSAG started"));
+        }
     }
 
     public boolean isConfigChanged() {
