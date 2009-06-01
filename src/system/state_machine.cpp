@@ -1732,7 +1732,7 @@ StateType StateMachine::submit(Tuple& t)
   int pres=psSingle;
 
 
-  if(sms->getValidTime()==0 || sms->getValidTime()>now+maxValidTime)
+  if((sms->getValidTime()==0 || sms->getValidTime()>now+maxValidTime) && !sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
   {
     sms->setValidTime(now+maxValidTime);
     debug2(smsLog,"maxValidTime=%d",maxValidTime);
@@ -3723,11 +3723,15 @@ StateType StateMachine::deliveryResp(Tuple& t)
       if(status==1179 || status==1044)
       {
         try{
-          smsc->getScheduler()->registerSetDpf(
-            sms.getDealiasedDestinationAddress(),
-            sms.getOriginatingAddress(),
-            status,
-            sms.getSourceSmeId());
+          if(!smsc->getScheduler()->registerSetDpf(
+              sms.getDealiasedDestinationAddress(),
+              sms.getOriginatingAddress(),
+              status,
+              sms.getValidTime(),
+              sms.getSourceSmeId()))
+          {
+            sms.setIntProperty(Tag::SMPP_SET_DPF,0);
+          }
         /*
           sms.lastTime=time(NULL);
           sms.setNextTime(rescheduleSms(sms));
@@ -3749,6 +3753,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
         }catch(std::exception& e)
         {
           warn2(smsLog,"Failed to create dpf sms:%s",e.what());
+          sms.setIntProperty(Tag::SMPP_SET_DPF,0);
         }
       }else
       {

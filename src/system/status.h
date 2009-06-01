@@ -78,6 +78,7 @@ static const int NOCONNECTIONTOINMAN=1043; // failed to connect to inman
 static const int MSMEMCAPACITYFULL=1044;  // mobile station cannot receive sms due to memory limit
 static const int MAPINTERNALFAILURE=1045;  // map internal exception
 static const int SCHEDULERLIMIT=1046;     //either soft or hard scheduler limit reached
+static const int DPFSMENOTCONNECTED=1047; //failed to send alert notification, sme not connected. pseudoerror.
 
 
 static const int MAP_UR_NO_REASON=1109;

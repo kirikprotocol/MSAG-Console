@@ -1,5 +1,6 @@
 #include "dpfTracker.hpp"
 #include "system/smsc.hpp"
+#include "system/common/rescheduler.hpp"
 
 namespace smsc{
 namespace system{
@@ -213,11 +214,22 @@ void DpfTracker::ApplyChanges(const std::string &fileName)
 }
 
 
-void DpfTracker::registerSetDpf(const smsc::sms::Address &abonent,const smsc::sms::Address &smeAddr, int errCode, const char* smeId)
+bool DpfTracker::registerSetDpf(const smsc::sms::Address &abonent,const smsc::sms::Address &smeAddr, int errCode,time_t validTime,const char* smeId,int attempt)
 {
   smsc_log_info(log,"register abonent=%s, errCode=%d, sme=%s",abonent.toString().c_str(),errCode,smeId);
   sync::MutexGuard mg(mon);
-  time_t expValue=time(NULL)+errCode==1179?timeOut1179:timeOut1044;
+  time_t expValue;
+  if(validTime==0)
+  {
+    expValue=time(NULL)+errCode==1179?timeOut1179:timeOut1044;
+  }else
+  {
+    expValue=validTime-time(NULL);
+    if(expValue>(errCode==1179?timeOut1179:timeOut1044))
+    {
+      return false;
+    }
+  }
   uint64_t abnId;
   sscanf(abonent.value,"%lld",&abnId);
   AbonentsSet::iterator it=abonents.find(abnId);
@@ -226,6 +238,7 @@ void DpfTracker::registerSetDpf(const smsc::sms::Address &abonent,const smsc::sm
   req.expiration=errCode==1179?time(NULL)+timeOut1179:time(NULL)+timeOut1044;
   req.smeId=smeId;
   req.addr=smeAddr;
+  req.attempt=attempt;
   SaveChange(Change(abnId,req.expiration,smeId,smeAddr));
   if(it==abonents.end())
   {
@@ -262,6 +275,7 @@ void DpfTracker::registerSetDpf(const smsc::sms::Address &abonent,const smsc::sm
     }
   }
   mon.notify();
+  return true;
 }
 
 void DpfTracker::hlrAlert(const smsc::sms::Address &abonent)
@@ -303,6 +317,7 @@ int DpfTracker::Execute()
   SystemIdStr smeId;
   smsc::sms::Address smeAddr;
   bool needToSendAlert=false;
+  int attempt;
   while(!isStopping)
   {
     try
@@ -365,6 +380,7 @@ int DpfTracker::Execute()
         smsc_log_info(log,"request for abonent=%lld smeIdx=%s expired",rec->abonent,smeId.c_str());
         abonent=rec->abonent;
         smeAddr=it->addr;
+        attempt=it->attempt;
         needToSendAlert=true;
         rec->requests.erase(it);
         if(rec->requests.empty())
@@ -384,16 +400,22 @@ int DpfTracker::Execute()
     }
     if(needToSendAlert)
     {
-      sendAlertNotify(abonent,smeAddr,smeId,2);
+      if(!sendAlertNotify(abonent,smeAddr,smeId,2))
+      {
+        char buf[64];
+        sprintf(buf,"%lld",abonent);
+        time_t expTime=RescheduleCalculator::calcNextTryTime(time(NULL),Status::DPFSMENOTCONNECTED,attempt);
+        registerSetDpf(buf,smeAddr,1179,expTime,smeId,attempt+1);
+      }
       needToSendAlert=false;
     }
   }
   return 0;
 }
 
-void DpfTracker::sendAlertNotify(uint64_t abonent, const smsc::sms::Address &smeAddr,const SystemIdStr& smeId, int status)
+bool DpfTracker::sendAlertNotify(uint64_t abonent, const smsc::sms::Address &smeAddr,const SystemIdStr& smeId, int status)
 {
-  
+
   try{
     Smsc& smsc=Smsc::getInstance();
     SmeProxy* proxy=smsc.getSmeProxy(smeId);
@@ -411,6 +433,7 @@ void DpfTracker::sendAlertNotify(uint64_t abonent, const smsc::sms::Address &sme
           status
         )
       );
+      return true;
     }else
     {
       smsc_log_warn(log,"Sme %s requested dpf, but not connected at the moment",smeId.c_str());
@@ -419,7 +442,7 @@ void DpfTracker::sendAlertNotify(uint64_t abonent, const smsc::sms::Address &sme
   {
     smsc_log_warn(log,"Failed to send AlertNotification to sme %s:'%s'",smeId.c_str(),e.what());
   }
-  
+  return false;
 }
 
 void DpfTracker::SaveChange(const Change &c)

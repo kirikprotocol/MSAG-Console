@@ -31,7 +31,7 @@ public:
   }
 
   void Init(const char* argStoreLocation,int to1179,int to1044,int mxch,int ctm);
-  void registerSetDpf(const Address& abonent,const Address &smeAddr,int errCode,const char* smeId);
+  bool registerSetDpf(const Address& abonent,const Address &smeAddr,int errCode,time_t validTime,const char* smeId,int attempt=0);
   void hlrAlert(const Address& abonent);
 
   int Execute();
@@ -58,9 +58,13 @@ protected:
   typedef buf::FixedLengthString<32> SystemIdStr;
 
   struct ReqRecord{
+    ReqRecord():attempt(0)
+    {
+    }
     time_t expiration;
     SystemIdStr smeId;
     smsc::sms::Address addr;
+    int attempt;
 
     static void WriteAddr(File& f,const Address& addr)
     {
@@ -307,7 +311,7 @@ protected:
     typedef std::set<SmallRecord,SmallRecordComparator> RecSet;
   };
 
-  void sendAlertNotify(uint64_t abonent,const smsc::sms::Address& smeAddr,const SystemIdStr& smeId,int status);
+  bool sendAlertNotify(uint64_t abonent,const smsc::sms::Address& smeAddr,const SystemIdStr& smeId,int status);
 
   AbonentsSet abonents;
   ExpirationsSet expirations;

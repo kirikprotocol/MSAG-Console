@@ -166,7 +166,7 @@ int main(int argc,char* argv[])
       }
 
       Manager::deinit();
-
+      smsc_log_info(logger,"Smsc shutdown completed.");
       //fprintf(stderr,"smsc finished\n");
     }
 

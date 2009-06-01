@@ -538,7 +538,7 @@ public:
       smsBuf=new char[smsBufSize];
       memcpy(smsBuf,buf.get(),smsBufSize);
     }
-    
+
     void CopyBuf(BufOps::SmsBuffer& buf)
     {
       if(smsBuf)
@@ -563,7 +563,7 @@ public:
       smsBufSize=argBufSize;
       locked=false;
     }
-    
+
     StoreData(BufOps::SmsBuffer& buf,int argSeq=0):seq(argSeq)
     {
       smsBufSize=(int)buf.GetPos();
@@ -589,13 +589,13 @@ public:
     protected:
       StoreData(const StoreData&){}
   };
-  
+
   struct SDLockGuard{
     Mutex& mtx;
     StoreData* sd;
     SDLockGuard(Mutex& argMtx):mtx(argMtx),sd(0)
     {
-      
+
     }
     void Lock(StoreData* argSd)
     {
@@ -693,7 +693,7 @@ public:
       sd=*ptr;
       lg.Lock(sd);
     }
-    
+
     localFileStore.Save(id,(sd)->seq,(sd)->smsBuf,(sd)->smsBufSize);
   }
 
@@ -818,9 +818,9 @@ public:
           dpfTracker.Init(storeLocation,to1179,to1044,mxch,mxt);
         }
 
-        void registerSetDpf(const smsc::sms::Address& abonent,const smsc::sms::Address &smeAddr,int errCode,const char* smeId)
+        bool registerSetDpf(const smsc::sms::Address& abonent,const smsc::sms::Address &smeAddr,int errCode,time_t expTime,const char* smeId)
         {
-          dpfTracker.registerSetDpf(abonent,smeAddr,errCode,smeId);
+          return dpfTracker.registerSetDpf(abonent,smeAddr,errCode,expTime,smeId);
         }
 
         int getDpfCount()
