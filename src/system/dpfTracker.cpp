@@ -221,11 +221,11 @@ bool DpfTracker::registerSetDpf(const smsc::sms::Address &abonent,const smsc::sm
   time_t expValue;
   if(validTime==0)
   {
-    expValue=time(NULL)+errCode==1179?timeOut1179:timeOut1044;
+    expValue=time(NULL)+(errCode==1179?timeOut1179:timeOut1044);
   }else
   {
-    expValue=validTime-time(NULL);
-    if(expValue>(errCode==1179?timeOut1179:timeOut1044))
+    expValue=validTime;
+    if(expValue-time(NULL)>(errCode==1179?timeOut1179:timeOut1044))
     {
       return false;
     }
@@ -235,7 +235,7 @@ bool DpfTracker::registerSetDpf(const smsc::sms::Address &abonent,const smsc::sm
   AbonentsSet::iterator it=abonents.find(abnId);
   Record* rec;
   ReqRecord req;
-  req.expiration=errCode==1179?time(NULL)+timeOut1179:time(NULL)+timeOut1044;
+  req.expiration=expValue;
   req.smeId=smeId;
   req.addr=smeAddr;
   req.attempt=attempt;
