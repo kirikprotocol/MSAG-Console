@@ -121,13 +121,6 @@ Billing::~Billing()
     smsc_log_debug(logger, "%s: Deleted", _logId);
 }
 
-//Prints some information about worker state/status
-void Billing::logState(std::string & use_str) const
-{
-    MutexGuard grd(_sync);
-    format(use_str, "%u{%u}", _wId, state);
-}
-
 //returns true if required (depending on chargeMode) CDR data fullfilled
 bool Billing::CDRComplete(void) const
 {
@@ -145,6 +138,14 @@ bool Billing::BillComplete(void) const
 /* -------------------------------------------------------------------------- *
  * WorkerAC interface implementation:
  * -------------------------------------------------------------------------- */
+//Prints some information about worker state/status
+//NOTE: it's the processing graph entry point, so locks _sync !!!
+void Billing::logState(std::string & use_str) const
+{
+    MutexGuard grd(_sync);
+    format(use_str, "%u{%u}", _wId, state);
+}
+
 static const char * const _nm_cmd[] = {
     "", "CHARGE_SMS", "CHARGE_SMS_RESULT", "DELIVERY_SMS_RESULT", "DELIVERED_SMS_DATA"
 };
@@ -245,7 +246,12 @@ void Billing::handleCommand(INPPacketAC* pck)
 void Billing::Abort(const char * reason/* = NULL*/)
 {
     MutexGuard grd(_sync);
-    abortThis(reason);
+    if ((state != bilAborted) && (state != bilComplete)) {
+      abortThis(reason);
+    } else {
+      smsc_log_warn(logger, "%s: Abort requested at state %u%s%s",
+                     _logId, state, reason ? ", reason: " : "", reason ? reason : "");
+    }
 }
 
 /* ---------------------------------------------------------------------------------- *
@@ -824,7 +830,7 @@ TimeWatcherITF::SignalResult
             //CapSMTask suspends while awaiting Continue/Release from SCF
             bool doCharge = ((billMode = billPrio->second) 
                                     == ChargeParm::billOFF) ? false : true;
-            smsc_log_error(logger, "%s: %s%s is timed out (ERSM)", _logId, 
+            smsc_log_error(logger, "%s: %s%s is timed out (RRSM)", _logId, 
                            doCharge ? "switching to CDR mode: " : "", capName.c_str());
 
             unrefCAPSmTask();

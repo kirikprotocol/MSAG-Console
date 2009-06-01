@@ -49,12 +49,13 @@ private:
     typedef std::map<unsigned, WorkerAC*>   WorkersMap;
     typedef std::list<WorkerAC*>            WorkersList;
 
-    WorkersMap    _workers; //workers registry, may contain NULL !!!
+    WorkersMap    _workers; //workers registry, may NOT contain NULL !!!
     WorkersList   _corpses; //died workers are to delete
 
     volatile bool         _running;
     WorkersMap::iterator  _itLocked; //node of workers registry that is locked
-                                     //(cann't be erased)
+                                     //(cann't be changed or erased)
+    WorkersMap::iterator  _itToErase;  //node of workers registry is to erase
 
     //NOTE: _mutex SHOULD NOT be locked upon entry!
     void cleanUpWorkers(void)
@@ -80,11 +81,6 @@ protected:
     //logging prefix, f.ex: "ConnectManagerAC[%u]"
     char        _logId[MAX_CONNECT_MGR_NAME + sizeof("[%u]") + sizeof(unsigned)*3 + 1];
 
-    bool isWIdLocked(unsigned w_id) const
-    {
-        return ((_itLocked != _workers.end()) && (w_id == _itLocked->first));
-    }
-
     unsigned numWorkers(void) const
     {
         return (unsigned)_workers.size();
@@ -93,10 +89,8 @@ protected:
     void dumpWorkers(std::string & dump) const
     {
       for (WorkersMap::const_iterator it = _workers.begin(); it != _workers.end(); ++it) {
-          if (it->second) {
-              it->second->logState(dump);
-              dump += ", ";
-          }
+        it->second->logState(dump);
+        dump += ", ";
       }
     }
     //
@@ -120,7 +114,7 @@ public:
         : _running(true), _cmId(cm_id), _conn(conn), logger(uselog)
     {
       _logId[0] = 0;
-      _itLocked = _workers.end();
+      _itLocked = _itToErase = _workers.end();
     }
 
     virtual ~ConnectManagerAC()
@@ -156,14 +150,15 @@ public:
         MutexGuard grd(_mutex);
         unsigned int wId = p_worker->getId();
         WorkersMap::iterator it = _workers.find(wId);
-        if (it == _workers.end())
-            smsc_log_error(logger, "%s: Attempt to free unregistered Worker[%u]",
-                            _logId, wId);
-        else if (isWIdLocked(wId))
-            it->second = NULL;  //keep node intact, just mark it as unused
-        else
-            _workers.erase(it);
-        _corpses.push_back(p_worker);
+        if (it == _workers.end()) {
+          smsc_log_error(logger, "%s: Attempt to free unregistered Worker[%u]",
+                          _logId, wId);
+        } else if (_itLocked == it) {
+          _itToErase = it; //keep node intact, just mark it as target to erase
+        } else {
+          _workers.erase(it);
+          _corpses.push_back(p_worker);
+        }
         return;
     }
 
@@ -177,12 +172,20 @@ public:
             smsc_log_error(logger, "%s: aborting ..", _logId);
 
         if (!_workers.empty()) { //abort all active _workers
-            for (_itLocked = _workers.begin(); _itLocked != _workers.end(); ++_itLocked) {
-                if (_itLocked->second) {
-                    ReverseMutexGuard rGrd(_mutex);
-                    _itLocked->second->Abort(reason);
-                }
+          _itLocked = _workers.begin();
+          do {
+            {
+              ReverseMutexGuard rGrd(_mutex);
+              _itLocked->second->Abort(reason); //may set _itToErase
             }
+            if (_itLocked == _itToErase) {
+              ++_itLocked;
+              _corpses.push_back(_itToErase->second);
+              _workers.erase(_itToErase);
+              _itToErase = _workers.end();
+            } else
+              ++_itLocked;
+          } while (_itLocked != _workers.end());
         }
     }
 

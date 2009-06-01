@@ -114,10 +114,10 @@ AbonentDetector::~AbonentDetector()
 
 const char * AbonentDetector::State2Str(ADState st)
 {
-    static const char *_nm_state[] = { "adIdle",
-        "adIAPQuering", "adIAPQueried",
-        "adTimedOut", "adCompleted",
-        "adReported", "adAborted"
+    static const char *_nm_state[] = {
+        "adIdle", "adIAPQuering"
+      , "adTimedOut", "adDetermined"
+      , "adCompleted", "adAborted"
     };
     return _nm_state[st];
 }
@@ -160,10 +160,15 @@ void AbonentDetector::handleCommand(INPPacketAC* pck)
 void AbonentDetector::Abort(const char * reason/* = NULL*/)
 {
     MutexGuard  grd(_mutex);
-    _state = adAborted;
-    smsc_log_error(logger, "%s: Aborting %s%s", _logId,
-                   reason ? ", reason: " : "..", reason ? reason : "");
-    doCleanUp();
+    if (_state < adCompleted) {
+      smsc_log_error(logger, "%s: Aborting at state: %u%s%s", _logId, _state,
+                     reason ? ", reason: " : "..", reason ? reason : "");
+      _state = adAborted;
+      reportAndExit();
+    } else {
+      smsc_log_warn(logger, "%s: Aborting at state: %u%s%s", _logId, _state,
+                     reason ? ", reason: " : "..", reason ? reason : "");
+    }
 }
 
 /* -------------------------------------------------------------------------- *
@@ -188,7 +193,7 @@ bool AbonentDetector::onContractReq(AbntContractRequest* req, uint32_t req_id)
         _cfg.abCache->getAbonentInfo(abNumber, &abRec, _cfg.cacheTmo);
     
     if (abRec.ab_type == AbonentContractInfo::abtPostpaid) {
-        _state = adCompleted;
+        _state = adDetermined;
         return true;
     }
         
@@ -212,7 +217,7 @@ bool AbonentDetector::onContractReq(AbntContractRequest* req, uint32_t req_id)
     }
     //lookup config.xml for extra SCF parms (serviceKey, RPC lists)
     ConfigureSCF();
-    _state = adCompleted;
+    _state = adDetermined;
     return true;
 }
 
@@ -228,7 +233,7 @@ void AbonentDetector::onIAPQueried(const AbonentId & ab_number, const AbonentSub
         smsc_log_warn(logger, "%s: IAPQueried() at state: %s", State2Str());
         return;
     }
-    _state = adIAPQueried;
+//    _state = adIAPQueried;
     providerQueried = false;
     StopTimer();
     if (qry_status) {
@@ -242,6 +247,7 @@ void AbonentDetector::onIAPQueried(const AbonentId & ab_number, const AbonentSub
     if (abRec.ab_type == AbonentContractInfo::abtPrepaid)
         //lookup config.xml for extra SCF parms (serviceKey, RPC lists)
         ConfigureSCF();
+    _state = adDetermined;
     reportAndExit();
 }
 
@@ -302,6 +308,68 @@ void AbonentDetector::ConfigureSCF(void)
     }
 }
 
+bool AbonentDetector::StartTimer(void)
+{
+    iapTimer.reset(new TimerHdl(_cfg.abtTimeout.CreateTimer(this)));
+    TimeWatcherITF::Error tErr = TimeWatcherITF::errBadTimer;
+    if (iapTimer->Id() && ((tErr = iapTimer->Start()) == TimeWatcherITF::errOk)) {
+        smsc_log_debug(logger, "%s: started timer[%s]", _logId, iapTimer->IdStr());
+        return true;
+    }
+    smsc_log_error(logger, "%s: failed to start timer[%s], code: %u",
+                   _logId, iapTimer->IdStr(), tErr);
+    return false;
+}
+void AbonentDetector::StopTimer(void)
+{
+    if (iapTimer.get()) {
+        smsc_log_debug(logger, "%s: releasing timer[%s]", _logId, iapTimer->IdStr());
+        iapTimer->Stop();
+        iapTimer.reset();
+    }
+}
+
+bool AbonentDetector::sendResult(void)
+{
+  std::string dstr;
+  format(dstr, "%s: <-- RESULT, abonent(%s) type %s", _logId,
+         abNumber.getSignals(), AbonentContractInfo::type2Str(abRec.ab_type));
+
+  if (abRec.ab_type == AbonentContractInfo::abtUnknown) {
+      format(dstr, ", errCode %u", _wErr);
+      if (_wErr) {
+          dstr += ": "; dstr += URCRegistry::explainHash(_wErr);
+      }
+  } else {
+      if (abRec.ab_type == AbonentContractInfo::abtPrepaid) {
+          GsmSCFinfo          smScf;
+          const GsmSCFinfo *  p_scf = abRec.getSCFinfo(TDPCategory::dpMO_SM);
+
+          if (!p_scf) { //check if SCF for MO-BC may be used
+              p_scf = abRec.getSCFinfo(TDPCategory::dpMO_BC);
+              smScf.scfAddress = p_scf->scfAddress;
+          } else 
+              smScf = *p_scf;
+          format(dstr, ", SCF %s", smScf.toString().c_str());
+      }
+
+      if (abRec.getImsi()) {
+          dstr += ", IMSI: "; dstr += abRec.getImsi();
+      }
+  }
+  smsc_log_info(logger, dstr.c_str());
+  SPckContractResult spck;
+  spck.Hdr().dlgId = _wId;
+  if (_wErr)
+      spck.Cmd().setError(_wErr, URCRegistry::explainHash(_wErr).c_str());
+  else {
+      spck.Cmd().setContractInfo(abRec);
+      if (_cfg.iaPol)
+          spck.Cmd().setPolicy(_cfg.iaPol->Ident());
+  }
+  return _mgr->sendCmd(&spck);
+}
+
 void AbonentDetector::doCleanUp(void)
 {
     if (providerQueried) {  //check for pending query to AbonentProvider
@@ -312,47 +380,17 @@ void AbonentDetector::doCleanUp(void)
     return;
 }
 
+
 void AbonentDetector::reportAndExit(void)
 {
     doCleanUp();
-    std::string dstr;
-    format(dstr, "%s: <-- RESULT, abonent(%s) type %s", _logId,
-           abNumber.getSignals(), AbonentContractInfo::type2Str(abRec.ab_type));
-
-    if (abRec.ab_type == AbonentContractInfo::abtUnknown) {
-        format(dstr, ", errCode %u", _wErr);
-        if (_wErr) {
-            dstr += ": "; dstr += URCRegistry::explainHash(_wErr);
-        }
-    } else {
-        if (abRec.ab_type == AbonentContractInfo::abtPrepaid) {
-            GsmSCFinfo          smScf;
-            const GsmSCFinfo *  p_scf = abRec.getSCFinfo(TDPCategory::dpMO_SM);
-
-            if (!p_scf) { //check if SCF for MO-BC may be used
-                p_scf = abRec.getSCFinfo(TDPCategory::dpMO_BC);
-                smScf.scfAddress = p_scf->scfAddress;
-            } else 
-                smScf = *p_scf;
-            format(dstr, ", SCF %s", smScf.toString().c_str());
-        }
-
-        if (abRec.getImsi()) {
-            dstr += ", IMSI: "; dstr += abRec.getImsi();
-        }
+    if (!sendResult()) {
+      const char * reason = _mgr->connectError()->what();
+      smsc_log_error(logger, "%s: result sending failure%s%s", _logId,
+                    reason ? ", reason: " : " ..", reason ? reason : "");
     }
-    smsc_log_info(logger, dstr.c_str());
-    SPckContractResult spck;
-    spck.Hdr().dlgId = _wId;
-    if (_wErr)
-        spck.Cmd().setError(_wErr, URCRegistry::explainHash(_wErr).c_str());
-    else {
-        spck.Cmd().setContractInfo(abRec);
-        if (_cfg.iaPol)
-            spck.Cmd().setPolicy(_cfg.iaPol->Ident());
-    }
-    _mgr->sendCmd(&spck);
-    _state = adReported;
+    if (_state < adCompleted)
+      _state = adCompleted;
     /**/
     _mgr->workerDone(this);
 }

@@ -33,10 +33,9 @@ public:
     typedef enum {
         adIdle = 0,
         adIAPQuering,
-        adIAPQueried,
         adTimedOut,
-        adCompleted,
-        adReported,    // AD -> SMSC : AbntContractResult
+        adDetermined,
+        adCompleted,    // AD -> SMSC : AbntContractResult
         adAborted
     } ADState;
 
@@ -77,30 +76,13 @@ private:
     //-- AbntContractReqHandlerITF interface methods:
     bool onContractReq(AbntContractRequest* req, uint32_t req_id);
 
+    bool sendResult(void);
     void doCleanUp(void);
     void ConfigureSCF(void);
     void reportAndExit(void);
 
-    bool StartTimer(void)
-    {
-        iapTimer.reset(new TimerHdl(_cfg.abtTimeout.CreateTimer(this)));
-        TimeWatcherITF::Error tErr = TimeWatcherITF::errBadTimer;
-        if (iapTimer->Id() && ((tErr = iapTimer->Start()) == TimeWatcherITF::errOk)) {
-            smsc_log_debug(logger, "%s: started timer[%s]", _logId, iapTimer->IdStr());
-            return true;
-        }
-        smsc_log_error(logger, "%s: failed to start timer[%s], code: %u",
-                       _logId, iapTimer->IdStr(), tErr);
-        return false;
-    }
-    void StopTimer(void)
-    {
-        if (iapTimer.get()) {
-            smsc_log_debug(logger, "%s: releasing timer[%s]", _logId, iapTimer->IdStr());
-            iapTimer->Stop();
-            iapTimer.reset();
-        }
-    }
+    bool StartTimer(void);
+    void StopTimer(void);
     void SetState(ADState new_state)
     {
         _mutex.Lock();
