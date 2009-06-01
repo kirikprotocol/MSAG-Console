@@ -5,8 +5,9 @@
  %><jsp:useBean id="bean" class="ru.sibinco.scag.beans.gw.status.Status"
  />status
 <%
-  bean.process(request, response);  
+  bean.process(request, response);
   String label = LocaleMessages.getInstance().getMessage(session,"status.unknown");
+    if( !bean.getAppContext().isCluster() ){
   switch(bean.getScagStatus())
   {
     case ServiceInfo.STATUS_RUNNING:
@@ -29,4 +30,8 @@
       out.print("<img src='content/images/ic_unknown.gif' width=10 height=10 title='"+label+"'> "+label);
       break;
   }
+    }else{
+        System.out.println("SCAG STATUS UNK");
+        out.print("<img src='content/images/ic_unknown.gif' width=10 height=10 title='"+label+"'> "+label);
+    }
 %>

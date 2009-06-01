@@ -44,7 +44,7 @@
         String sId = (String) i.next();
         CenterStatus centerStatus = (CenterStatus) status2.get(sId);
         result += "<span ";
-        if (centerStatus != null && status != null) {
+        if( !bean.getAppContext().isCluster() && centerStatus != null && status != null) {
             if (centerStatus.getConnStatus().equals("yes")) {
                 label = LocaleMessages.getInstance().getMessage(session,"centers.index.table.names.connected");
                 result += "><img src='content/images/ic_internal.gif' width='10' height='10' title='"+label+"'></span>";
@@ -56,6 +56,7 @@
                 result += "><img src='content/images/ic_unknown3.bmp' width='10' height='10' title='"+label+"'></span>";
             }
         } else {
+            System.out.println("CENTER STATUS UNK");
             result += " class=C000>unknown</span>";
         }
         if (i.hasNext()) {
