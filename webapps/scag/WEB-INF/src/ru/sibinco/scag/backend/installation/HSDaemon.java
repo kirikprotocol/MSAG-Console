@@ -1,7 +1,6 @@
 package ru.sibinco.scag.backend.installation;
 
 import ru.sibinco.lib.SibincoException;
-import ru.sibinco.scag.beans.rules.applet.MiscUtilities;
 
 import java.util.Arrays;
 import java.io.*;
@@ -21,7 +20,8 @@ public class HSDaemon {
 
   private static final String typeSingle = "single";
   private static final String typeHS = "HS";
-  private static final String types[] = new String[]{typeSingle,typeHS};
+  public static final String typeCluster = "cluster";
+  private static final String types[] = new String[]{typeSingle,typeHS,typeCluster};
 
   public static final byte UPDATEORADD = 0;
   public static final byte REMOVE = 1;
@@ -36,7 +36,7 @@ public class HSDaemon {
   }
 
   public void store(final File configFile) throws SibincoException {
-    doOperation(configFile,UPDATEORADD,new CommonSaver(configFile));
+    doOperation(configFile, UPDATEORADD,new CommonSaver(configFile));
   }
 
   public void store(final File folder, final String fileName) throws SibincoException {
@@ -44,7 +44,7 @@ public class HSDaemon {
   }
 
   public void store(final File configFile, SavingStrategy saver) throws SibincoException {
-    doOperation(configFile,UPDATEORADD,saver);
+    doOperation(configFile, UPDATEORADD,saver);
   }
 //1
   public void doOperation(final File configFile, final byte operationType) throws SibincoException {
@@ -53,23 +53,27 @@ public class HSDaemon {
   }
 //2
   private synchronized void doOperation(final File configFile, final byte operationType, final SavingStrategy saver) throws SibincoException {
-    logger.info("HSDaemon:doOperation()2");
+    logger.info( "HSDaemon:doOperation()2 type=" + type );
     if (type.equals(typeSingle)){
-        logger.info("HSDaemon:doOperation()2:typeSingle");
+        logger.info( "HSDaemon.doOperation()2 typeSingle");
+        return;
+    }
+    else if (type.equals(typeCluster)) {
+        logger.info( "HSDaemon.doOperation()2 typeCluster" );
         return;
     }
     else if (type.equals(typeHS)) {
-      logger.info("HSDaemon:doOperation()2:typeHS");
+      logger.info( "HSDaemon:doOperation()2 typeHS" );
       checkOperationType(operationType);
       File mirrorFile = getMirrorFile(configFile);
       switch(operationType)
       {
         case UPDATEORADD:
-          logger.info("HSDaemon:doOperation()2:typeHS:UPDATEORADD");
+          logger.info( "HSDaemon.doOperation()2:typeHS:UPDATEORADD" );
           saver.storeToMirror(mirrorFile);
           break;
        case REMOVE:
-          logger.info("HSDaemon:doOperation()2:typeHS:REMOVE");
+          logger.info( "HSDaemon:doOperation()2:typeHS:REMOVE" );
           remove(mirrorFile);
           break;
       }
@@ -94,9 +98,14 @@ public class HSDaemon {
         }
   }
 
+    boolean isCluster = false;
+
   private void checkType(final String type) throws SibincoException {
     for(int i=0;i<types.length;i++) {
-      if (types[i].equals(type)) return;
+      if (types[i].equals(type)){
+          if( type.equals(typeCluster) ) isCluster = true;
+          return;
+      }
     }
     logger.error("webapp config - parameter \"type\" in the section \"installation\" doesn't correspond to enumeration: "+Arrays.asList(types));
     throw new SibincoException("webapp config - parameter \"type\" in the section \"installation\" doesn't correspond to enumeration: "+Arrays.asList(types));
