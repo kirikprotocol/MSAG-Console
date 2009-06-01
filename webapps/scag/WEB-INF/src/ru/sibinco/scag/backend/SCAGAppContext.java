@@ -72,6 +72,11 @@ public class SCAGAppContext {
     private Journal journal = new Journal();
     private static File scagConfFolder = null;
 
+    private boolean isCluster = false;
+
+    public boolean isCluster() {
+        return isCluster;
+    }
 
     private SCAGAppContext(final String config_filename) throws Throwable, ParserConfigurationException, SAXException, Config.WrongParamTypeException,
             Config.ParamNotFoundException, SibincoException {
@@ -88,9 +93,12 @@ public class SCAGAppContext {
             configManager = new ConfigManager(gwConfigFile,gwConfig);
             tMatrixManager = new TariffMatrixManager();
             String gwDaemonHost = config.getString("gw daemon.host");
-
-
             connectionPool = null;
+
+            String instType = config.getString("installation.type");
+            System.out.println("  ***  instType='" + instType + "'" );
+            if( instType.equals(HSDaemon.typeCluster) ) { isCluster = true; }
+
             hsDaemon = new HSDaemon(config.getString("installation.type"), config.getString("installation.mirrorpath"));
             loggingManager = new LoggingManager(config.getString("logger.properties_file"),hsDaemon);
             userManager = new UserManager(config.getString("users_config_file"),hsDaemon);
@@ -107,12 +115,28 @@ public class SCAGAppContext {
             String xslFolder = gwConfigFolder + config.getString("gw location.xsl_folder");
             resourceManager = new ResourceManager(scagConfFolder);
             localeManager = new LocaleManager(config.getString("locales_file"));
-            scagDaemon = new Daemon(gwDaemonHost, (int) config.getInt("gw daemon.port"), smppManager, config.getString("gw daemon.folder"));
-            final ServiceInfo scagServiceInfo = (ServiceInfo) scagDaemon.getServices().get(config.getString("gw name"));
+            
+//            scagDaemon = new Daemon(gwDaemonHost, (int) config.getInt("gw daemon.port"), smppManager, config.getString("gw daemon.folder"));
+//            final ServiceInfo scagServiceInfo = (ServiceInfo) scagDaemon.getServices().get(config.getString("gw name"));
+
+            ServiceInfo scagServiceInfo = null;
+            if( instType.equals(HSDaemon.typeCluster) ) { ;
+//                scagDaemon = new Daemon(gwDaemonHost, (int) config.getInt("gw daemon.port"), smppManager, config.getString("gw daemon.folder"));
+                scagDaemon = null;
+                scagServiceInfo = null;
+            }else{
+                scagDaemon = new Daemon(gwDaemonHost, (int) config.getInt("gw daemon.port"), smppManager, config.getString("gw daemon.folder"));
+                scagServiceInfo = (ServiceInfo) scagDaemon.getServices().get(config.getString("gw name"));
+            }
+
             if (scagServiceInfo != null) {
                 scag = new Scag(scagServiceInfo, (int) gwConfig.getInt("admin.port"));
             } else {
-                scag = new Scag(gwDaemonHost, (int) gwConfig.getInt("admin.port"));
+                if( isCluster() ){
+                    scag = new Scag(gwDaemonHost, (int) gwConfig.getInt("admin.port"));
+                } else {
+                    scag = new Scag(gwDaemonHost, (int) gwConfig.getInt("admin.port"));
+                }
             }
             ruleManager = new RuleManager(new File(rulesFolder), new File(xsdFolder), new File(xslFolder), scag, hsDaemon);
             ruleManager.init();
