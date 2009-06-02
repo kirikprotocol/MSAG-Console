@@ -42,6 +42,7 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
     private boolean archived;
     private boolean active;
     private boolean transit;
+    private boolean saa;
     private String[] slicingTypes = new String[]{"NONE","SAR","UDH8", "UDH16"};
     private String[] slicingTypesTitles = new String[]{"NO/OFF","Via SAR Fields", "Via UDH8 encoding", "Via UDH16 encoding"};
     private String slicing;
@@ -70,13 +71,14 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
     private HttpSession session;
     private boolean emptyDestinations = false;
 
-        public String getId() {
+    public String getId() {
         return id;
     }
 
 
     public void process(final HttpServletRequest request, final HttpServletResponse response) throws SCAGJspException {
-        logger.debug("routing/routes/Edit:process():start:\ngetSrcMasks()=" + getSrcMasks().toString() + "\ngetSrcSubjs()=" + getSrcSubjs().toString());
+        logger.debug("routing/routes/Edit:process():start" );
+        logger.debug("routing/routes/Edit process() saa='" + saa + "'");
         path = request.getContextPath();
         appContext = getAppContext();
         session = request.getSession();
@@ -224,7 +226,6 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
                 throw new SCAGJspException(Constants.errors.routing.routes.COULD_NOT_CREATE_DESTINATION, e);
             }
         }
-        logger.debug("Edit.java:process(): (getMbSave() != null) before");
         if (getMbSave() != null) {
             logger.debug("routing/routes/Edit:process():getMbSave()");
             storeToSessionParentGetFlag(request, Constants.GSP_TRUE);
@@ -296,6 +297,7 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
             archived = route.isArchived();
             active = route.isActive();
             transit = route.isTransit();
+            saa = route.isSaa();
             slicing = route.getSlicing();
             slicedRespPolicy= route.getSlicedRespPolicy();
             srcSmeId = route.getSrcSmeId();
@@ -305,15 +307,16 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
                 serviceName = route.getService().getName();
             }
         }
-        logger.debug("routing/routes/Edit:load():after");
+        logger.debug("routing/routes/Edit.load() saa='"+ saa + +"end");
         if (isAdd()) {
             enabled = true;
             active = true;
+            saa = true;
         }
     }
 
     protected void save() throws SCAGJspException {
-        logger.debug("routing/routes/Edit:save():start");
+        logger.debug("routing/routes/Edit:save():start saa='" + saa + "'");
         final Map routes = appContext.getScagRoutingManager().getRoutes();
         String messagetxt = "";
         try {
@@ -344,7 +347,7 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
 //                routes.put( id, new Route(id, sources, destinations, isArchived(), isEnabled(), isActive(),
 //                                         getSlicing(), getSlicedRespPolicy(), srcSmeId, serviceObj, notes) );
                 routes.put( id, new Route(id, sources, destinations, isArchived(), isEnabled(), isActive(),
-                                         getSlicing(), getSlicedRespPolicy(), srcSmeId, serviceObj, notes, transit) );
+                                         getSlicing(), getSlicedRespPolicy(), srcSmeId, serviceObj, notes, transit, saa ) );
                 messagetxt = "Added new route: " + id + " ";
             } else {
                 if (!getEditId().equals(id) && routes.containsKey(id)){
@@ -354,7 +357,7 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
 //                routes.put( id, new Route(id, sources, destinations, archived, enabled, active,
 //                                         getSlicing(), getSlicedRespPolicy(), srcSmeId, serviceObj, notes) );
                 routes.put( id, new Route(id, sources, destinations, archived, enabled, active,
-                                         getSlicing(), getSlicedRespPolicy(), srcSmeId, serviceObj, notes, transit) );
+                                         getSlicing(), getSlicedRespPolicy(), srcSmeId, serviceObj, notes, transit, saa ) );
                 messagetxt = "Changed route: " + id + " ";
             }
         } catch (SibincoException e) {
@@ -683,5 +686,13 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
 
     public void setTransit(final boolean transit) {
         this.transit = transit;
+    }
+
+    public boolean isSaa() {
+        return saa;
+    }
+
+    public void setSaa(final boolean saa) {
+        this.saa = saa;
     }
 }
