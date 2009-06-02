@@ -41,6 +41,7 @@ public class Route {
     private boolean archived;
     private boolean enabled = true;
     private boolean transit = true;
+    private boolean saa = false;
     private boolean active = true;
     private String slicing;
     private String slicedRespPolicy;
@@ -101,6 +102,34 @@ public class Route {
 
     }
 
+    public Route( final String routeName, final Map sources, final Map destinations, final boolean archived,
+                 final boolean enabled, final boolean active, final String slicing, final String slicedRespPolicy,
+                 final String srcSmeId, final Service service, final String notes, final boolean transit, boolean saa ) {
+        if (routeName == null)
+            throw new NullPointerException("Route name is null");
+        if (routeName.length() > Constants.ROUTE_ID_MAXLENGTH)
+            throw new IllegalArgumentException("Route name is too long");
+        if (sources == null)
+            throw new NullPointerException("Sources list is null");
+        if (destinations == null)
+            throw new NullPointerException("Destinations list is null");
+
+        this.name = routeName;
+        this.sources = sources;
+        this.destinations = destinations;
+        this.archived = archived;
+        this.enabled = enabled;
+        this.transit = transit;
+        this.saa = saa;
+        this.active = active;
+        this.slicing = slicing;
+        this.slicedRespPolicy = slicedRespPolicy;
+        this.srcSmeId = srcSmeId;
+        this.service = service;
+        this.notes = notes;
+
+    }
+
     public Route(String routeName) {
         if (routeName == null)
             throw new NullPointerException("Route name is null");
@@ -135,7 +164,20 @@ public class Route {
         destinations = loadDestinations(routeElem, subjects, smppManager);
         archived = routeElem.getAttribute("archived").equalsIgnoreCase("true");
         enabled = routeElem.getAttribute("enabled").equalsIgnoreCase("true");
+
+        String trStr = routeElem.getAttribute("transit");
         transit = routeElem.getAttribute("transit").equalsIgnoreCase("true");
+
+        String saaStr = routeElem.getAttribute("saa");
+        if( !trStr.equals("") && saaStr.equals("") ){
+            if( trStr.equals("true") )
+                saa = false;
+            else
+                saa= true;
+        } else {
+            saa = routeElem.getAttribute("saa").equalsIgnoreCase("true");
+        }
+
         active = routeElem.getAttribute("active").equalsIgnoreCase("true");
         slicing = routeElem.getAttribute("slicing");
         slicedRespPolicy = routeElem.getAttribute("slicedRespPolicy");
@@ -226,6 +268,7 @@ public class Route {
                     + "\" enabled=\"" + isEnabled()
                     + "\" active=\"" + isActive()
                     + "\" transit=\"" + isTransit()
+                    + "\" saa=\"" + isSaa()
                     + "\" slicing=\"" + StringEncoderDecoder.encode(getSlicing())
                     + "\" slicedRespPolicy=\"" + StringEncoderDecoder.encode(getSlicedRespPolicy())
                     + "\" srcSmeId=\"" + StringEncoderDecoder.encode(getSrcSmeId())
@@ -319,6 +362,14 @@ public class Route {
 
     public void setTransit(final boolean transit) {
         this.transit = transit;
+    }
+
+    public boolean isSaa() {
+        return saa;
+    }
+
+    public void setSaa(boolean saa) {
+        this.saa = saa;
     }
 
     public boolean isActive() {
