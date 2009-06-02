@@ -1,5 +1,5 @@
 /* ************************************************************************** *
- * 
+ * EIN HD SS7 reconnection test
  * ************************************************************************** */
 #ifndef _EINHD_RECONNECT_TEST_HPP
 #ident "@(#)$Id$"
@@ -154,7 +154,7 @@ public:
       unsigned ss7_mpUserId : 1;
 #ifdef EIN_HD
       unsigned ss7_rcpMgrAdr : 1;
-      unsigned ss7_rcpMgrInstId : 1;
+      unsigned ss7_rcpMgrInstId : 1; //has default
 #endif /* EIN_HD */
       unsigned ss7_instIds : 1;
       unsigned tst_tgtState : 1;
@@ -187,7 +187,7 @@ public:
     tmp.val = 0;
     tmp.bit.ss7_mpUserId = tmp.bit.ss7_instIds = 1;
 #ifdef EIN_HD
-    tmp.bit.ss7_rcpMgrAdr = tmp.bit.ss7_rcpMgrInstId = 1;
+    tmp.bit.ss7_rcpMgrAdr = 1;
 #endif /* EIN_HD */
     tmp.bit.tst_tgtState = 1;
     /**/
