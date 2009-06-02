@@ -399,7 +399,7 @@ public class SmppManager extends Manager {
                 messageText = "Added new service point: ";
                 appContext.getScag().invokeCommand("addSvc", svc, appContext, this, configFilename);
             } else {
-                logger.error("SmppManager.createUpdateServicePoint() !isAdd");
+                logger.error("SmppManager.createUpdateServicePoint() Update");
                 messageText = "Changed service point: ";
                 appContext.getScag().invokeCommand("updateSvc", svc, appContext, this, configFilename);
             }
