@@ -115,7 +115,7 @@ class GroupEditProcessor implements GroupAddCmd.Receiver,
       DistrList dl = listsDS.createDistrList(name, owner, maxElements);
       if (owner != null) {
         dl.addSubmitter(owner);
-        dl.addMember(owner);
+//        dl.addMember(owner);    Do not include owner into group members by default
       }
 
     } catch (DataSourceException e) {

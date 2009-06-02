@@ -65,7 +65,7 @@ class GroupSendProcessor implements GroupSendCmd.Receiver,
     this.executor = new ThreadPoolExecutor(1, 10, 60, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(100), new ThreadFactoryWithCounter("Group-Executor-"));
   }
 
-  private long groupSend(GroupSendCommand cmd, DistrList dl) throws CommandExecutionException {
+  private long groupSend(GroupSendCommand cmd, DistrList dl, boolean includeSubmitter, boolean includeOwner) throws CommandExecutionException {
     try {
       if (dl == null)
         throw new CommandExecutionException("Group does not exists", GroupSendCmd.ERR_UNKNOWN_GROUP);
@@ -74,7 +74,10 @@ class GroupSendProcessor implements GroupSendCmd.Receiver,
         throw new CommandExecutionException("Unknown submitter: " + cmd.getSubmitter(), GroupSendCmd.ERR_UNKNOWN_SUBMITTER);
 
       ArrayList<String> members = new ArrayList<String>(dl.members());
-      members.remove(cmd.getSubmitter());
+      if (!includeSubmitter)
+        members.remove(cmd.getSubmitter());
+      if (includeOwner)
+        members.add(dl.getOwner());
 
       DeliveryStatus[] deliveryStatuses = new DeliveryStatus[members.size()];
       int msgId = -1;
@@ -151,7 +154,7 @@ class GroupSendProcessor implements GroupSendCmd.Receiver,
 
     try {
       DistrList dl = listsDS.getDistrList(cmd.getGroupName(), cmd.getOwner());
-      return groupSend(cmd, dl);
+      return groupSend(cmd, dl, true, false);
     } catch (CommandExecutionException e) {
       throw e;
     } catch (Throwable e) {
@@ -170,7 +173,8 @@ class GroupSendProcessor implements GroupSendCmd.Receiver,
         throw new CommandExecutionException("Reply group for " + cmd.getSubmitter() + " not found.", GroupReplyCmd.ERR_UNKNOWN_GROUP);
 
       DistrList dl = listsDS.getDistrList(listId);
-      return groupSend(cmd, dl);
+      boolean submitterIsOwner = cmd.getSubmitter().equals(dl.getOwner());
+      return groupSend(cmd, dl, submitterIsOwner, !submitterIsOwner); 
     } catch (CommandExecutionException e) {
       throw e;
     } catch (Exception e) {
@@ -265,12 +269,34 @@ class GroupSendProcessor implements GroupSendCmd.Receiver,
           log.error("Unable to execute task", e);
         }
       }
+      checkMessagesStatus();
+    }
+
+    private void checkMessagesStatus() {
+      // Check all messages have been sent
+      for (DeliveryStatus m : statuses) {
+        if (m == null || m.status == DeliveryStatus.ACCEPTED)
+          return;
+      }
+
+      // If all messages have been sent, update status
+      try {
+        executor.execute(new Runnable() {
+          public void run() {
+            cmd.setDeliveryStatuses(statuses);
+            cmd.update(GroupSendCmd.STATUS_SUCCESS);
+          }
+        });
+      } catch (Throwable e) {
+        log.error(e, e);
+      }
     }
 
     @Override
     protected void handleResponse(final PDU pdu) {
       if (pdu.getStatusClass() == PDU.STATUS_CLASS_PERM_ERROR) {
         handleSendError();
+        return;
       } else if (pdu.getStatusClass() == PDU.STATUS_CLASS_NO_ERROR && isFinished()) {
         statuses[index].status = DeliveryStatus.SENT;
 
@@ -301,23 +327,7 @@ class GroupSendProcessor implements GroupSendCmd.Receiver,
         }
       }
 
-      // Check all messages have been sent
-      for (DeliveryStatus m : statuses) {
-        if (m == null || m.status == DeliveryStatus.ACCEPTED)
-          return;
-      }
-
-      // If all messages have been sent, update status
-      try {
-        executor.execute(new Runnable() {
-          public void run() {
-            cmd.setDeliveryStatuses(statuses);
-            cmd.update(GroupSendCmd.STATUS_SUCCESS);
-          }
-        });
-      } catch (Throwable e) {
-        log.error(e, e);
-      }
+      checkMessagesStatus();
     }
   }
 }
