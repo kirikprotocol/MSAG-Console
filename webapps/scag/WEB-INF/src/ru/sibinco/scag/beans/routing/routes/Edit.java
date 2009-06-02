@@ -307,7 +307,7 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
                 serviceName = route.getService().getName();
             }
         }
-        logger.debug("routing/routes/Edit.load() saa='"+ saa + +"end");
+        logger.debug("routing/routes/Edit.load() saa='"+ saa + "' end");
         if (isAdd()) {
             enabled = true;
             active = true;
