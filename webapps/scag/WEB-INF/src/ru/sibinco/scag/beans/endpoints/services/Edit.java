@@ -67,6 +67,7 @@ public class Edit extends EditBean {
 
         userProviderId = user.getProviderId();
         administrator = (userProviderId == ALL_PROVIDERS);
+        
         if (administrator) {
             Map providers = context.getProviderManager().getProviders();
             ArrayList ids = new ArrayList(100);
@@ -171,8 +172,7 @@ public class Edit extends EditBean {
 
     public void process(HttpServletRequest request, HttpServletResponse response) throws SCAGJspException {
         Map map = request.getParameterMap();
-        listParameters( map );
-
+//        listParameters( map );
         super.process(request, response);
         this.init();
     }
