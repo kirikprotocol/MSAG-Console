@@ -319,6 +319,7 @@
                   <sm-ep:check title="routes.edit.check.enabled" name="enabled"/>
 <%--                  <sm-ep:check title="routes.edit.check.archived" name="archived"/>--%>
                   <sm-ep:check title="routes.edit.check.transit" name="transit"/>
+                  <sm-ep:check title="routes.edit.check.saa" name="saa"/>
               </sm-ep:properties>
           </td>
       </tr>
