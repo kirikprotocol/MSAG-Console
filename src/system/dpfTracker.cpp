@@ -216,7 +216,7 @@ void DpfTracker::ApplyChanges(const std::string &fileName)
 
 bool DpfTracker::registerSetDpf(const smsc::sms::Address &abonent,const smsc::sms::Address &smeAddr, int errCode,time_t validTime,const char* smeId,int attempt)
 {
-  smsc_log_info(log,"register abonent=%s, errCode=%d, sme=%s",abonent.toString().c_str(),errCode,smeId);
+  smsc_log_info(log,"register abonent=%s, errCode=%d, sme=%s, valid=%d",abonent.toString().c_str(),errCode,smeId,validTime);
   sync::MutexGuard mg(mon);
   time_t expValue;
   if(validTime==0)
@@ -227,6 +227,7 @@ bool DpfTracker::registerSetDpf(const smsc::sms::Address &abonent,const smsc::sm
     expValue=validTime;
     if(expValue-time(NULL)>(errCode==1179?timeOut1179:timeOut1044))
     {
+      smsc_log_info(log,"registration denied for, too long valid time");
       return false;
     }
   }
