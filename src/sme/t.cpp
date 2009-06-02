@@ -2496,6 +2496,10 @@ int main(int argc,char* argv[])
       char imsi[]="";
       s.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
       s.setValidTime(validTime?time(NULL)+validTime:0);
+      if(dataSm && validTime)
+      {
+        s.setIntProperty(Tag::SMPP_QOS_TIME_TO_LIVE,validTime);
+      }
       s.setIntProperty(Tag::SMPP_ESM_CLASS,(esmclass&(~0x3))|mode);
       s.setDeliveryReport(0);
       s.setArchivationRequested(false);
@@ -2711,7 +2715,11 @@ int main(int argc,char* argv[])
       {
         if(resp)
         {
-          CmdOut("Wasn't accepted: %08X\n",resp->get_commandStatus());
+          CmdOut("Wasn't accepted: %d\n",resp->get_commandStatus());
+          if(setDpf && resp->get_commandId()==SmppCommandSet::DATA_SM_RESP)
+          {
+            CmdOut("Dpf result=%d\n",((PduDataSmResp*)resp)->get_optional().get_dpfResult());
+          }
         }else
         {
           if(asyncsend || vcmode)
