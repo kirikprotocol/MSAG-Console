@@ -5,6 +5,7 @@ static char const ident[] = "$Id$";
 #include "i97tcapapi.h"
 
 #include "einhd_test.hpp"
+#include "einhd_utl.hpp"
 
 const char* rc2Txt_SS7_CP(uint32_t code) {
     switch(code) {
@@ -163,19 +164,17 @@ TCAPConnector::TCAPConnector()
     , _rcpMgrAdr(NULL)
 #endif /* EIN_HD */
     , _logId("TCCon"), logger(NULL)
-{
-#ifdef EIN_HD
-//    EINSS7CpMain_CpInit();
-#endif /* EIN_HD */
-}
+{ }
 
 TCAPConnector::~TCAPConnector()
 {
-    disconnectCP(ss7None);
-#ifdef EIN_HD
-    delete [] _rcpMgrAdr;
-#endif /* EIN_HD */
-    smsc_log_info(logger, "%s: SS7 stack disconnected", _logId);
+  if (logger) {
+      disconnectCP(ss7None);
+  #ifdef EIN_HD
+      delete [] _rcpMgrAdr;
+  #endif /* EIN_HD */
+      smsc_log_info(logger, "%s: SS7 stack disconnected", _logId);
+  }
 }
     
 void TCAPConnector::Init(const TCAPHD_CFG & use_cfg, Logger * use_log/* = NULL*/)
@@ -204,13 +203,11 @@ void TCAPConnector::Init(const TCAPHD_CFG & use_cfg, Logger * use_log/* = NULL*/
 
 void TCAPConnector::onDisconnect(unsigned char inst_id)
 {
-//  MutexGuard grd(_sync);
   SS7UnitInstance * pInst = _cfg.instIds.getInstance(inst_id);
   if (pInst && (pInst->connStatus == SS7UnitInstance::uconnOk)) {
     pInst->connStatus = SS7UnitInstance::uconnError;
     smsc_log_error(logger, "%s: connection broken userId=%u -> TCAP[instId = %u]",
                     _logId, _cfg.mpUserId, inst_id);
-//    _sync.notify();
   } else
     smsc_log_debug(logger, "%s: connection broken userId=%u -> TCAP[instId = %u]",
                   _logId, _cfg.mpUserId, inst_id);
@@ -247,7 +244,6 @@ unsigned TCAPConnector::disconnectedUnits(bool * is_all/* = NULL*/) const
 
 //Connects currently disconnected TCAP BE instances.
 //Returns number of new instances succesfully connected
-//NOTE: _sync MUST be locked upon entry!
 unsigned TCAPConnector::connectUnits(void)
 {
   unsigned cnt = 0;
@@ -258,10 +254,8 @@ unsigned TCAPConnector::connectUnits(void)
     if (it->second.connStatus >= SS7UnitInstance::uconnAwaited)
       continue;
     it->second.connStatus = SS7UnitInstance::uconnAwaited;
-//    _sync.Unlock();
     USHORT_T result = EINSS7CpMsgConnNotify(_cfg.mpUserId, TCAP_ID, it->second.instId,
                                             onEINSS7CpConnectBroken);
-//    _sync.Lock();
     if (result != 0) {
       smsc_log_error(logger, "%s: MsgConn(TCAP instId = %u) failed: %s (code %u)",
                   _logId, (unsigned)it->second.instId, rc2Txt_SS7_CP(result), result);
@@ -278,15 +272,12 @@ unsigned TCAPConnector::connectUnits(void)
 }
 
 //Disconnects all TCAP BE instances.
-//NOTE: _sync MUST be locked upon entry! 
 void TCAPConnector::disconnectUnits(void)
 {
   SS7UnitInstsMap::iterator it = _cfg.instIds.begin();
   for (; it != _cfg.instIds.end(); ++it) {
     if (it->second.connStatus == SS7UnitInstance::uconnOk) {
-//      _sync.Unlock();
       USHORT_T result = EINSS7CpMsgRelInst(_cfg.mpUserId, TCAP_ID, it->second.instId);
-//      _sync.Lock();
       if (result) 
           smsc_log_error(logger, "%s: MsgRel(TCAP instId = %u) failed: %s (code %u)",
                       _logId, (unsigned)it->second.instId, rc2Txt_SS7_CP(result), result);
@@ -302,7 +293,6 @@ void TCAPConnector::disconnectUnits(void)
 
 
 //Returns:  (-1) - failed to connect, 0 - already connected, 1 - successfully connected
-//NOTE: _sync MUST be locked upon entry!
 int TCAPConnector::connectCP(SS7State_e upTo/* = ss7CONNECTED*/)
 {
     if (_ss7State >= upTo)
@@ -389,7 +379,7 @@ int TCAPConnector::connectCP(SS7State_e upTo/* = ss7CONNECTED*/)
     }
     return rval;
 }
-//NOTE: _sync MUST be locked upon entry!
+//
 void TCAPConnector::disconnectCP(SS7State_e downTo/* = ss7None*/)
 {
     if (_ss7State > downTo)
@@ -431,8 +421,220 @@ void TCAPConnector::disconnectCP(SS7State_e downTo/* = ss7None*/)
 
 
 /* ************************************************************************** *
+ * Utility functions
+ * ************************************************************************** */
+#include <stdarg.h>
+unsigned vpformat(const char* fmt, va_list arg_list, char ** p_buf,
+                 unsigned buf_sz/* = 1024*/)
+{
+    char * vbuf = new char[buf_sz];
+    int n = vsnprintf(vbuf, buf_sz - 1, fmt, arg_list);
+    if (n >= buf_sz) {
+        buf_sz = n + 2; // + '\0'
+        delete [] vbuf;
+        vbuf = new char[buf_sz];
+        n = vsnprintf(vbuf, buf_sz - 1, fmt, arg_list);
+    }
+    vbuf[(n >= 0) ? n : 0] = 0; //vsnprintf() may return -1 on error
+    *p_buf = vbuf;
+    return n;
+}
+
+std::string & vformat(std::string & fstr, const char* fmt, va_list arg_list)
+{
+    char abuf[1024]; abuf[0] = 0;
+    int n = vsnprintf(abuf, sizeof(abuf) - 1, fmt, arg_list);
+    if (n >= sizeof(abuf)) {
+        char * vbuf = NULL;
+        n = vpformat(fmt, arg_list, &vbuf, n + 2);
+        fstr += vbuf;
+        delete [] vbuf;
+    } else if (n > 0)
+        fstr += abuf;
+    return fstr;
+}
+
+std::string & format(std::string & fstr, const char* fmt, ...)
+{
+    va_list arg_list;
+    va_start(arg_list, fmt);
+    vformat(fstr, fmt, arg_list);
+    va_end(arg_list);
+    return fstr;
+}
+
+/* ************************************************************************** *
  * 
  * ************************************************************************** */
+bool readConfig(FILE * fd_cfg, TST_CFG & use_cfg, Logger * use_logger)
+{
+  char buf[256];
+  smsc_log_info(use_logger, "reading config ..\n");
+
+  while (fgets(buf, (int)sizeof(buf), fd_cfg)) {
+    CSVList  cmd('=');
+    if (cmd.init(buf) < 2) {
+      if (cmd.empty() || (cmd[0].c_str()[0] == '#')) {
+        continue; //skip blank line or comment
+      }
+      smsc_log_error(use_logger, "Invalid config parameter: %s", buf);
+      return false;
+    }
+
+    if (!strcmp("mpUserId", cmd[0].c_str())) {
+      int itmp = atoi(cmd[1].c_str());
+      if ((itmp <= 0) || (itmp > 19)) {
+        smsc_log_error(use_logger, "%s illegal value: %s",
+                       cmd[0].c_str(), cmd[1].c_str());
+        return false;
+      }
+      use_cfg.ss7.mpUserId = (uint8_t)itmp;
+      smsc_log_info(use_logger, "%s : %u", cmd[0].c_str(),
+                    (unsigned)use_cfg.ss7.mpUserId);
+      /**/
+      use_cfg.mask.bit.ss7_mpUserId = 1;
+      continue;
+    }
+
+#ifdef EIN_HD
+    if (!strcmp("rcpMgrAdr", cmd[0].c_str())) {
+      CSVList  adr(',');
+      if (adr.init(cmd[1].c_str()) < 1) {
+        smsc_log_error(use_logger, "%s illegal value: %s",
+                       cmd[0].c_str(), cmd[1].c_str());
+        return false;
+      }
+      for (unsigned i = 0; i < adr.size(); ++i) {
+        CSVList hp(':');
+        if (hp.init(adr[i].c_str()) < 2) {
+          smsc_log_error(use_logger, "%s illegal value: %s",
+                         cmd[0].c_str(), adr[i].c_str());
+          return false;
+        }
+      }
+      use_cfg.ss7.rcpMgrAdr = adr.print(false);
+      smsc_log_info(use_logger, "%s : %s", cmd[0].c_str(),
+                    use_cfg.ss7.rcpMgrAdr.c_str());
+      /**/
+      use_cfg.mask.bit.ss7_rcpMgrAdr = 1;
+      continue;
+    }
+    if (!strcmp("rcpMgrInstId", cmd[0].c_str())) {
+      errno = 0;
+      int itmp = atoi(cmd[1].c_str());
+      if ((!itmp && errno) || (itmp > 255) || (itmp < 0)) {
+        smsc_log_error(use_logger, "%s illegal value: %s",
+                       cmd[0].c_str(), cmd[1].c_str());
+        return false;
+      }
+      use_cfg.ss7.rcpMgrInstId = (uint8_t)itmp;
+      smsc_log_info(use_logger, "%s : %u", cmd[0].c_str(),
+                    (unsigned)use_cfg.ss7.rcpMgrInstId);
+      /**/
+      use_cfg.mask.bit.ss7_rcpMgrInstId = 1;
+      continue;
+    }
+#endif /* EIN_HD */
+    if (!strcmp("instIds", cmd[0].c_str())) {
+      CSVList  inst(',');
+      if (inst.init(cmd[1].c_str()) < 1) {
+        smsc_log_error(use_logger, "%s illegal value: %s",
+                       cmd[0].c_str(), cmd[1].c_str());
+        return false;
+      }
+#ifdef EIN_HD
+      for (unsigned i = 0; i < inst.size(); ++i) {
+        int itmp = atoi(inst[i].c_str());
+        if (!itmp || (itmp > 255)) {
+          smsc_log_error(use_logger, "%s illegal value: %s",
+                         cmd[0].c_str(), inst[i].c_str());
+          return false;
+        }
+        use_cfg.ss7.instIds.addInstance((uint8_t)itmp);
+      }
+      smsc_log_info(use_logger, "%s : %s", cmd[0].c_str(),
+                    inst.print(false).c_str());
+#else  /* EIN_HD */
+      smsc_log_info(use_logger, "%s default value used: 0",
+                     cmd[0].c_str());
+      use_cfg.ss7.instIds.addInstance(0);
+#endif /* EIN_HD */
+      /**/
+      use_cfg.mask.bit.ss7_instIds = 1;
+      continue;
+    }
+    if (!strcmp("tgtState", cmd[0].c_str())) {
+      if (!strcmp("ss7INITED", cmd[1].c_str())) {
+        use_cfg.tgtState = TCAPConnector::ss7INITED;
+      } else if (!strcmp("ss7REGISTERED", cmd[1].c_str())) {
+        use_cfg.tgtState = TCAPConnector::ss7REGISTERED;
+      } else if (!strcmp("ss7OPENED", cmd[1].c_str())) {
+        use_cfg.tgtState = TCAPConnector::ss7OPENED;
+      } else if (!strcmp("ss7CONNECTED", cmd[1].c_str())) {
+        use_cfg.tgtState = TCAPConnector::ss7CONNECTED;
+      } else {
+        smsc_log_error(use_logger, "%s illegal value: %s",
+                       cmd[0].c_str(), cmd[1].c_str());
+        return false;
+      }
+      smsc_log_info(use_logger, "%s : %s(%u)", cmd[0].c_str(),
+                    cmd[1].c_str(), use_cfg.tgtState);
+      /**/
+      use_cfg.mask.bit.tst_tgtState = 1;
+      continue;
+    }
+    if (!strcmp("numAttempts", cmd[0].c_str())) {
+      int itmp = atoi(cmd[1].c_str());
+      if (itmp <= 0) {
+        smsc_log_error(use_logger, "%s illegal value: %s",
+                       cmd[0].c_str(), cmd[1].c_str());
+        return false;
+      }
+      use_cfg.numAttemts = (unsigned)itmp;
+      smsc_log_info(use_logger, "%s : %u", cmd[0].c_str(),
+                    use_cfg.numAttemts);
+      /**/
+      use_cfg.mask.bit.tst_numAttempts = 1;
+      continue;
+    }
+    if (!strcmp("tmoReconn", cmd[0].c_str())) {
+      int itmp = atoi(cmd[1].c_str());
+      if (itmp <= 0) {
+        smsc_log_error(use_logger, "%s illegal value: %s",
+                       cmd[0].c_str(), cmd[1].c_str());
+        return false;
+      }
+      use_cfg.tmoReconn = (unsigned)itmp;
+      smsc_log_info(use_logger, "%s : %u", cmd[0].c_str(),
+                    use_cfg.tmoReconn);
+      /**/
+      use_cfg.mask.bit.tst_numAttempts = 1;
+      continue;
+    }
+    if (!strcmp("maxFaults", cmd[0].c_str())) {
+      int itmp = atoi(cmd[1].c_str());
+      if (itmp <= 0) {
+        smsc_log_error(use_logger, "%s illegal value: %s",
+                       cmd[0].c_str(), cmd[1].c_str());
+        return false;
+      }
+      use_cfg.maxFaults = (unsigned)itmp;
+      smsc_log_info(use_logger, "%s : %u", cmd[0].c_str(),
+                    use_cfg.maxFaults);
+      /**/
+      use_cfg.mask.bit.tst_maxFaults = 1;
+      continue;
+    }
+  }
+  /**/
+  return use_cfg.isInited();
+}
+
+/* ************************************************************************** *
+ * main():
+ * ************************************************************************** */
+const char _help[] = "USAGE: einhd_test cfg_file\n";
+
 TCAPConnector _tcCon;
 
 /* function to be called when a connection is broken */
@@ -444,84 +646,68 @@ extern "C" unsigned short
   return 0;
 }
 
-/* ************************************************************************** *
- * main():
- * ************************************************************************** */
 
-#define MAX_FAILED_ATTEMPTS 4
-#define MAX_ATTEMPTS 80
-#define RECONNECT_TIMEOUT 600   //SS7 stack reconnection timeout, units: millisecs
-
-const char _help[] = "USAGE: einhd_test max_attempt_num [ss7_state{0..3}]\n";
 int main(int argc, char ** argv)
 {
-  unsigned      _maxAtt = MAX_ATTEMPTS;
-  TCAPConnector::SS7State_e tgtState = TCAPConnector::ss7None;
-
-  if (argc > 2) { //tagret ss7 state given
-//    errno = 0;
-    int itmp = atoi(argv[2]);
-    if ((!itmp && errno) || (itmp > 3) || (itmp < 0)) {
-      fprintf(stderr, _help);
-      return -2;
-    }
-    tgtState = static_cast<TCAPConnector::SS7State_e>(itmp);
+  if (argc == 1) {
+    fprintf(stderr, _help);
+    return 0;
   }
-  if (argc > 1) {
-    int numAtt = atoi(argv[1]);
-    if (numAtt <= 0) {
-      fprintf(stderr, "USAGE: einhd_test max_attempt_num [ss7_state[0..3]]\n");
-      return -1;
-    }
-    _maxAtt = (unsigned)numAtt;
+
+  FILE * fdCfg;
+  if (!(fdCfg = fopen(argv[1], "r"))) {
+    fprintf(stderr, "E: Failed to open file: %s\n", argv[1]);
+    return -1;
   }
 
 #ifdef USE_PRIVATE_LOGGER
   Logger::Init();
+  Logger * _logger =  Logger::getInstance(LOGGER_CATEGORY);
+#else /* USE_PRIVATE_LOGGER */
+  Logger * _logger = stdout;
 #endif /* USE_PRIVATE_LOGGER */
 
-  TCAPHD_CFG    _cfg;
-  /* ************************************************************************** *
-  * NOTE: fill in configuration with your own values:
-  * ************************************************************************** */
-  _cfg.mpUserId = 2; // USER02_ID
-  _cfg.maxMsgNum = 256;
-#ifdef EIN_HD
-  _cfg.rcpMgrAdr = "localhost:6669";
-  _cfg.instIds.addInstance(1);  //TCAP BE #1
-  _cfg.instIds.addInstance(2);  //TCAP BE #2
-#else /* EIN_HD */
-  _cfg.instIds.addInstance(0);  //SINGLE TCAP BE #0
-#endif /* EIN_HD */
+  TST_CFG _cfg;
+  if (!readConfig(fdCfg, _cfg, _logger)) {
+    fclose(fdCfg);
+    smsc_log_error(_logger, "configuration is incomplete\n");
+    return -2;
+  }
+  smsc_log_info(_logger, "configuration is valid\n");
 
-  _tcCon.Init(_cfg);
+  /**/
+  _tcCon.Init(_cfg.ss7, _logger);
   unsigned errAtt = 0;
-  for (unsigned i = 0; i < _maxAtt; ++i) {
+  for (unsigned i = 0; i < _cfg.numAttemts; ++i) {
+    smsc_log_info(_logger, "run(%u) ..", i);
     if (_tcCon.connectCP(TCAPConnector::ss7CONNECTED) < 0) {
       ++errAtt;
     }
-    usleep(RECONNECT_TIMEOUT*1000);
-    if (errAtt > MAX_FAILED_ATTEMPTS) {
-      smsc_log_info(_tcCon.getLogger(), "\nrun(%u): %u failed reconnect attempts -> full disconnect", i, errAtt);
+    usleep(_cfg.tmoReconn*1000);
+    if (errAtt > _cfg.maxFaults) {
+      smsc_log_info(_logger, "run(%u): %u failed reconnect attempts -> full disconnect", i, errAtt);
       _tcCon.disconnectCP(TCAPConnector::ss7None);
       errAtt = 0;
     } else
-      _tcCon.disconnectCP(tgtState);
-    usleep(RECONNECT_TIMEOUT*1000);
+      _tcCon.disconnectCP(_cfg.tgtState);
+    usleep(_cfg.tmoReconn*1000);
+
     char  nmFile[256];
     strcpy(nmFile, "ehdXXXXXX");
     int fd = mkstemp(nmFile);
     if (fd >= 0) {
-      smsc_log_info(_tcCon.getLogger(), "\nrun(%u): opened file \'%s\', fd : %d", i, nmFile, fd);
+      smsc_log_info(_logger, "run(%u): opened file \'%s\', fd : %d", i, nmFile, fd);
       close(fd);
       unlink(nmFile);
     } else {
-      smsc_log_error(_tcCon.getLogger(), "\nrun(%u): unable to open file: %s (%d)",
+      smsc_log_error(_logger, "run(%u): unable to open file: %s (%d)",
                      i, strerror(errno), errno);
       break;
     }
   }
   _tcCon.disconnectCP(TCAPConnector::ss7None);
+  /**/
+  fclose(fdCfg);
   return 0;
 }
 
