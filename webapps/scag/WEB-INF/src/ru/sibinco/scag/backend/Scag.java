@@ -423,17 +423,19 @@ public class Scag extends Proxy {
         File temporary = Functions.createTempFilename(configFile.getName(),".old",configFile.getParentFile());
         Functions.RenameFile(configFile,temporary);
        //3.save config
-        logger.debug( "Scag:invokeCommand:store file , manager '" + manager + "'" );
+        logger.debug( "Scag:invokeCommand:store file , manager '" + manager.getClass().getName() + "'" );
         manager.store();
 //moved from end
-        logger.debug("Scag:invokeCommand:store file:daemon");
+        logger.debug("Scag.invokeCommand().store file hsDaemon");
         appContext.getHSDaemon().store(configFile);
 
        //3.1 parse method used to localy validate saved config
         try {
+            logger.debug("Scag.invokeCommand() parse" );
             manager.parse();
         } catch (Throwable e) {
             Functions.renameNewSavedFileToOriginal(temporary,configFile,true);
+            logger.error("Scag.invokeCommand() Throwable" );
             throw new SibincoException(e);
         }
        //4.send command
@@ -451,14 +453,17 @@ public class Scag extends Proxy {
                   commandMethod.invoke(appContext.getScag(),new Object[]{paramsObject});
               }
           } catch (NoSuchMethodException e) {
-              logger.error("Scag:invokeCommand:scag doesn't support command "+commandName,e);
+              logger.error("Scag.invokeCommand NoSuchMethodException! scag doesn't support command "+commandName,e);
               e.printStackTrace();
           } catch (IllegalAccessException e) {
+              logger.error("Scag.invokeCommand IllegalAccessException! scag doesn't support command "+commandName,e);
               e.printStackTrace();
           } catch (InvocationTargetException e) {
+              logger.error("Scag.invokeCommand InvocationTargetException! scag doesn't support command "+commandName,e);
               throw (SibincoException)e.getTargetException();
           }
-        } catch (SibincoException se) {
+        }
+        catch (SibincoException se) {
             //5. does service started?
             if (getStatus() == STATUS_DISCONNECTED) {
               //5. N0(service isn't started)
@@ -466,14 +471,14 @@ public class Scag extends Proxy {
               //10. delete smpp.xml.old
             //          Functions.SavedFileToBackup(temporary,".old");
             //          appContext.getHSDaemon().store(configFile);
-                logger.error("Scag:invokeCommand1:SibincoException:(getStatus() == STATUS_DISCONNECTED)");
+                logger.error("Scag.invokeCommand1 SibincoException:(getStatus() == STATUS_DISCONNECTED)");
                 appContext.getHSDaemon().store(Functions.ReturnSavedFileToBackup(temporary,".old"));
                 throw new StatusDisconnectedException(host,port);
             } else {
                 //5. YES(service is started)
                 //6. service return error
                 //7. Restore config from temporary file(smpp.xml.new -> smpp.xml)
-                logger.error("Scag:invokeCommand1:SibincoException:(getStatus() != STATUS_DISCONNECTED)");
+                logger.error("Scag.invokeCommand1 SibincoException:(getStatus() != STATUS_DISCONNECTED)");
                 Functions.renameNewSavedFileToOriginal(temporary,configFile,true);
                 appContext.getHSDaemon().store(configFile);
                 //Paint error on the screen by throwing exception(next string)
