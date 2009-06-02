@@ -28,13 +28,17 @@ public:
             //erase leading blanks
             std::string::size_type 
                 bpos = use_str.find_first_not_of(pattern);
-            if (bpos && (bpos != use_str.npos))
-                use_str.erase(0, bpos);
-
-            //erase ending blanks
-            bpos = use_str.find_last_not_of(pattern);
-            if (bpos != use_str.npos)
-                use_str.erase(bpos + 1, use_str.npos);
+            if (bpos == use_str.npos) { //string contains only blank chars
+              use_str.clear();
+            } else {
+              if (bpos)
+                  use_str.erase(0, bpos);
+  
+              //erase ending blanks
+              bpos = use_str.find_last_not_of(pattern);
+              if (bpos != use_str.npos)
+                  use_str.erase(bpos + 1, use_str.npos);
+            }
         }
         return use_str;
     }
@@ -70,8 +74,8 @@ public:
              return 0;
 
         STDString csv_list(str);
-        if (_cutBS)
-            csv_list.cutBlanks();
+        if (_cutBS && csv_list.cutBlanks().empty())
+            return 0;
 
         std::string::size_type pos = 0, dlmPos;
         do {
