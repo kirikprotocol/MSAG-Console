@@ -85,6 +85,9 @@
             <param name="connectionsPerIp" type="int">100</param>
             <param name="ipBlockingTime" type="int">60</param> <!-- time to block ip when failed to bind (sec) -->
             <param name="maxRWMultiplexersCount" type="int">100</param> <!-- max number of R/W multiplexers -->
+            <section name="whitelist">
+                <param name="127.0.0.1" type="string"></param>
+            </section>
         </section>
     </section>
 
@@ -107,7 +110,8 @@
         <param name="connectionTimeout" type="int">100</param>
     </section>
 
-    <section name="Personalization">
+    <section name="PvssClient">
+        <param name="enabled" type="bool">true</param>
         <param name="host" type="string">@pvss.connect_host@</param>
         <param type="int" name="port">@pvss.port@</param>
         <param name="ioTimeout" type="int">@pers_client.io_timeout@</param> <!--in miliseconds-->
@@ -115,6 +119,7 @@
         <param name="reconnectTimeout" type="int">@pers_client.reconnect_timeout@</param> <!--in seconds-->
         <param name="maxWaitingRequestsCount" type="int">@pers_client.max_waiting_requests_count@</param>
         <param name="connections" type="int">@pers_client.connections@</param> <!-- a number of connections -->
+        <param name="connPerThread" type="int">@pers_client.conn_per_thread@</param>
         <param name="async" type="bool">@pers_client.async@</param> <!-- a number of connections -->
     </section>
 
