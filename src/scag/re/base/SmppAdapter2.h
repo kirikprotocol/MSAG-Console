@@ -17,11 +17,10 @@ using smsc::core::buffers::IntHash;
 using bill::infrastruct::TariffRec;
 using re::actions::CommandAccessor;
 
-
-    class SmppCommandAdapter : public CommandAccessor
+class SmppCommandAdapter : public CommandAccessor
+{
+    enum AdditionTag
     {
-        enum AdditionTag
-        {
             OA                      = 100,
             DA                      = 101,
 
@@ -115,112 +114,119 @@ using re::actions::CommandAccessor;
 
         };
 
-        //bool m_hasPayloadText;
+public:
+    static AccessType CheckAccess(int handlerType,const std::string& name);
 
-        bool IsShortSize(int size) {return (size <= 254);}
-        AdapterProperty * getMessageBodyProperty(SMS& data, std::string name);
+    SmppCommandAdapter( SmppCommand& _command ) :
+    command(_command), src_sme_id(0), dst_sme_id(0)
+    {
+    }
 
+    virtual ~SmppCommandAdapter();
 
-        AdapterProperty * getSubmitProperty(SMS& data,const std::string& name,int FieldId);
-        AdapterProperty * getDeliverProperty(SMS& data,const std::string& name,int FieldId);
-        AdapterProperty * getDataSmProperty(SmsCommand& data,const std::string& name,int FieldId);
-        AdapterProperty * getRespProperty(SMS& data, const std::string& name,int FieldId);
-        AdapterProperty * getDataSmRespProperty(const std::string& name, int fieldId);
-        AdapterProperty*  getSlicingProperty(SMS& data, const std::string& name, int fieldId);
+    virtual void changed(AdapterProperty& property);
+    virtual Property* getProperty(const std::string& name);
+    //virtual void fillChargeOperation(smsc::inman::interaction::ChargeSms& op, TariffRec& tariffRec);
+    //virtual void fillRespOperation(smsc::inman::interaction::DeliverySmsResult& op, TariffRec& tariffRec);
 
-        AdapterProperty * Get_ESM_BIT_Property(SMS& data, const std::string& name,int FieldId);
-        AdapterProperty * Get_RD_BIT_Property(SMS& data, const std::string& name,int FieldId);
-        AdapterProperty * Get_DC_BIT_Property(SMS& data, const std::string& name,int FieldId);
-        AdapterProperty * Get_USSD_BOOL_Property(SMS& data, const std::string& name,int FieldId);
-        AdapterProperty * Get_Unknown_Property(SMS& data, const std::string& name,int FieldId);
-
-        void Set_DC_BIT_Property(SMS& data, int FieldId, bool value);
-        void SetBitMask(SMS& data, int tag, int mask);
-
-
-        AdapterProperty * GetStrBitFromMask(SMS& data,const std::string& name,int tag,int mask);
-
-        void WriteDeliveryField(SMS& data,int FieldId,AdapterProperty& property);
-        void WriteSubmitField(SMS& data,int FieldId,AdapterProperty& property);
-        void WriteDataSmField(SMS& data,int FieldId,AdapterProperty& property);
-        void WriteDataSmRespField(int fieldId, AdapterProperty& property);
-
-        static IntHash<AccessType> SubmitFieldsAccess;
-        static IntHash<AccessType> DeliverFieldsAccess;
-        static IntHash<AccessType> DataSmFieldsAccess;
-        static IntHash<AccessType> RespFieldsAccess;
-        static IntHash<AccessType> DataSmRespFieldsAccess;
-
-        static Hash<int> SubmitFieldNames;
-        static Hash<int> DeliverFieldNames;
-        static Hash<int> DataSmFieldNames;
-        static Hash<int> RespFieldNames;
-        static Hash<int> DataSmRespFieldNames;
-
-        static Hash<int> InitSubmitFieldNames();
-        static Hash<int> InitDeliverFieldNames();
-
-        static Hash<int> InitDataSmFieldNames();
-
-        static Hash<int> InitRespFieldNames();
-        static Hash<int> InitDataSmRespFieldNames();
-
-        static IntHash<AccessType> InitSubmitAccess();
-        static IntHash<AccessType> InitDeliverAccess();
-        static IntHash<AccessType> InitDataSmAccess();
-        static IntHash<AccessType> InitRespAccess();
-        static IntHash<AccessType> InitDataSmRespAccess();
-                                                            
-    public:
-
-        SmppCommandAdapter( SmppCommand& _command ) :
-        command(_command), src_sme_id(0), dst_sme_id(0) 
-        {
-        }
-
-        virtual void changed(AdapterProperty& property);
-        virtual Property* getProperty(const std::string& name);
-        //virtual void fillChargeOperation(smsc::inman::interaction::ChargeSms& op, TariffRec& tariffRec);
-        //virtual void fillRespOperation(smsc::inman::interaction::DeliverySmsResult& op, TariffRec& tariffRec);
-
-
-        virtual transport::SCAGCommand& getSCAGCommand() { return command; }
+    virtual transport::SCAGCommand& getSCAGCommand() { return command; }
         
-        virtual ~SmppCommandAdapter();
-        static AccessType CheckAccess(int handlerType,const std::string& name);
-        //virtual SMS& getSMS();
+    bool hasServiceOp()
+    {
+        return CommandBridge::getSMS(command).hasIntProperty(Tag::SMPP_USSD_SERVICE_OP);
+    }
 
-        bool hasServiceOp()
-        {
-            return CommandBridge::getSMS(command).hasIntProperty(Tag::SMPP_USSD_SERVICE_OP);
-        }
+    int getServiceOp()
+    {
+        return CommandBridge::getSMS(command).getIntProperty(Tag::SMPP_USSD_SERVICE_OP);
+    }
 
-        int getServiceOp()
-        {
-            return CommandBridge::getSMS(command).getIntProperty(Tag::SMPP_USSD_SERVICE_OP);
-        }
+    void setServiceOp(int value)
+    {
+        CommandBridge::getSMS(command).setIntProperty(Tag::SMPP_USSD_SERVICE_OP, value);
+    }
 
-        void setServiceOp(int value)
-        {
-            CommandBridge::getSMS(command).setIntProperty(Tag::SMPP_USSD_SERVICE_OP, value);
-        }
+    void setOA(Address& addr)
+    {
+        CommandBridge::getSMS(command).setOriginatingAddress(addr);
+    }
 
-        void setOA(Address& addr)
-        {
-            CommandBridge::getSMS(command).setOriginatingAddress(addr);
-        }
+    void setDA(Address& addr)
+    {
+        CommandBridge::getSMS(command).setDestinationAddress(addr);
+    }
 
-        void setDA(Address& addr)
-        {
-            CommandBridge::getSMS(command).setDestinationAddress(addr);
-        }
+private:
 
-    private:
-        SmppCommand&    command;
-        IntHash<AdapterProperty *>  PropertyPul;
-        AdapterProperty *src_sme_id, *dst_sme_id;
+    // invoked from getProperty
+    AdapterProperty* getDeliverProperty(SMS& data,const std::string& name,int FieldId);
+    AdapterProperty* getSubmitProperty(SMS& data,const std::string& name,int FieldId);
+    AdapterProperty* getDataSmProperty(SmsCommand& data,const std::string& name,int FieldId);
+    AdapterProperty* getRespProperty(SMS& data, const std::string& name,int FieldId);
+    AdapterProperty* getDataSmRespProperty(const std::string& name, int fieldId);
 
-    };
+    AdapterProperty* getGenericProperty(SMS& data, const std::string& name, int fieldId );
+
+    // low level getters
+    AdapterProperty* getESMBitProperty(SMS& data, const std::string& name,int FieldId);
+    AdapterProperty* getRDBitProperty(SMS& data, const std::string& name,int FieldId);
+    AdapterProperty* getDCBitProperty(SMS& data, const std::string& name,int FieldId);
+    AdapterProperty* getUSSDBoolProperty(SMS& data, const std::string& name,int FieldId);
+    AdapterProperty* getUnknownProperty(SMS& data, const std::string& name,int FieldId);
+    AdapterProperty* getMessageBodyProperty(SMS& data, std::string name);
+    AdapterProperty* getSlicingProperty(SMS& data, const std::string& name, int fieldId);
+
+    AdapterProperty* getStrBitFromMask(int data,const std::string& name,int maskVal);
+
+    // invoked from changed
+    void writeSubmitField(SMS& data,int FieldId,AdapterProperty& property);
+    void writeDataSmField(SMS& data,int FieldId,AdapterProperty& property);
+    void writeDeliveryField( SMS& data, int fieldId, AdapterProperty& property);
+    void writeDataSmRespField(int fieldId, AdapterProperty& property);
+
+    bool isShortSize(int size) {return (size <= 254);}
+
+    // void Set_DC_BIT_Property(SMS& data, int FieldId, bool value);
+    // void SetBitMask(SMS& data, int tag, int mask);
+    void setBitField(SMS& data, int smppTag, bool value, int tag);
+
+private:
+    // static fields
+    static IntHash<AccessType> SubmitFieldsAccess;
+    static IntHash<AccessType> DeliverFieldsAccess;
+    static IntHash<AccessType> DataSmFieldsAccess;
+    static IntHash<AccessType> RespFieldsAccess;
+    static IntHash<AccessType> DataSmRespFieldsAccess;
+
+    static Hash<int> SubmitFieldNames;
+    static Hash<int> DeliverFieldNames;
+    static Hash<int> DataSmFieldNames;
+    static Hash<int> RespFieldNames;
+    static Hash<int> DataSmRespFieldNames;
+
+    // 16-bits values in hash: mask (8msb) + value (8lsb).
+    static IntHash<int> tagToMaskAndValue;
+
+    // field initializers
+    static Hash<int> InitSubmitFieldNames();
+    static Hash<int> InitDeliverFieldNames();
+    static Hash<int> InitDataSmFieldNames();
+    static Hash<int> InitRespFieldNames();
+    static Hash<int> InitDataSmRespFieldNames();
+
+    static IntHash<AccessType> InitSubmitAccess();
+    static IntHash<AccessType> InitDeliverAccess();
+    static IntHash<AccessType> InitDataSmAccess();
+    static IntHash<AccessType> InitRespAccess();
+    static IntHash<AccessType> InitDataSmRespAccess();
+
+    static IntHash<int> initTagToMaskAndValue();
+
+private:
+    SmppCommand&    command;
+    IntHash<AdapterProperty *>  PropertyPul;
+    AdapterProperty *src_sme_id, *dst_sme_id;
+};
 
 }}}
 
