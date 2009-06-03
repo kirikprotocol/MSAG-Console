@@ -61,21 +61,21 @@ public class Index extends TabledBeanImpl {
     }
 
     public void process(HttpServletRequest request, HttpServletResponse response) throws SCAGJspException {
-        logger.debug("routes.Index.process():start");
+        logger.debug("routes.Index.process() start");
         sort = "time";
         super.process(request, response);
-        logger.debug("routes.Index.process()\n"
-                + "mbRestoreHttp:'" + mbRestoreHttp +"'\n"
-                + "mbRestore:'" + mbRestore+"'\n"
-                + "mbApplyHttp:'" + mbApplyHttp +"'\n"
-                + "mbApply:'" + mbApply +"'\n"
-                + "mbLoadSaved:'" + mbLoadSaved +"'\n"
-                + "mbLoadSavedHttp:'" + mbLoadSavedHttp +"'\n"
-                + "mbLoad:'" + mbLoad +"'\n"
-                + "mbLoadHttp:'" + mbLoadHttp +"'\n"
-                + "mbSave:'" + mbSave +"'\n"
-                + "mbSaveHttp:'" + mbSaveHttp +"'\n"
-        );
+//        logger.debug("routes.Index.process()\n"
+//                + "mbRestoreHttp:'" + mbRestoreHttp +"'\n"
+//                + "mbRestore:'" + mbRestore+"'\n"
+//                + "mbApplyHttp:'" + mbApplyHttp +"'\n"
+//                + "mbApply:'" + mbApply +"'\n"
+//                + "mbLoadSaved:'" + mbLoadSaved +"'\n"
+//                + "mbLoadSavedHttp:'" + mbLoadSavedHttp +"'\n"
+//                + "mbLoad:'" + mbLoad +"'\n"
+//                + "mbLoadHttp:'" + mbLoadHttp +"'\n"
+//                + "mbSave:'" + mbSave +"'\n"
+//                + "mbSaveHttp:'" + mbSaveHttp +"'\n"
+//        );
         if (mbRestoreHttp != null){
             restoreHttpRoutes();
         }
