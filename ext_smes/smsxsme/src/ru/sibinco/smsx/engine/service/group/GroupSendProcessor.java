@@ -74,6 +74,7 @@ class GroupSendProcessor implements GroupSendCmd.Receiver,
         throw new CommandExecutionException("Unknown submitter: " + cmd.getSubmitter(), GroupSendCmd.ERR_UNKNOWN_SUBMITTER);
 
       ArrayList<String> members = new ArrayList<String>(dl.members());
+      int membersSize = members.size();
       if (!includeSubmitter)
         members.remove(cmd.getSubmitter());
       if (includeOwner && !members.contains(dl.getOwner()))
@@ -85,7 +86,7 @@ class GroupSendProcessor implements GroupSendCmd.Receiver,
         msgId = ds.insert(members);
 
       if (!members.isEmpty()) {
-        String replyInvintationText = repliesInvintation.replace("{size}", String.valueOf(members.size()));
+        String replyInvintationText = repliesInvintation.replace("{size}", String.valueOf(membersSize));
 
         int i = 0;
         for (String member : members) {
