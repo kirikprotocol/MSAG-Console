@@ -7,6 +7,9 @@
 #include "logger/Logger.h"
 #include "scag/lcm/base/LongCallManager2.h"
 #include "scag/re/base/RuleEngine2.h"
+#include "scag/re/base/ActionContext2.h"
+#include "scag/re/base/CommandBridge.h"
+#include "scag/sessions/base/Operation.h"
 #include "scag/sessions/base/SessionManager2.h"
 #include "scag/stat/base/Statistics2.h"
 #include "scag/util/lltostr.h"
@@ -15,6 +18,7 @@ namespace scag2 {
 namespace transport {
 namespace http {
 
+using scag2::re::actions::CommandProperty;
 /*
 HttpProcessor& HttpProcessor::Instance()
 {
@@ -373,10 +377,25 @@ int HttpProcessorImpl::processRequest(HttpRequest& request)
                 request.trc.result = 404;
                 return  scag::re::STATUS_FAILED;
             }
+
+            request.setStatistics(r.statistics);
             
             if(r.id && !request.getAbonent().length())
             {
                 smsc_log_info(logger, "Transit request served");
+                if (r.statistics) {
+                  //TODO: register traffic info event for transit route
+                  //TODO: how we can create SessionKey if request.getAbonent().length() == 0
+                  smsc_log_debug(logger, "process request: register traffic info event for transit route not implemented");
+                  /*
+                  CommandProperty cp(scag2::re::CommandBridge::getCommandProperty(request, sessionKey.address(),
+                                                                                  static_cast<uint8_t>(request.getOperationId())));
+                  SessionPrimaryKey primaryKey(sessionKey);
+                  timeval tv = { time(0), 0 };
+                  primaryKey.setBornTime(tv);
+                  scag2::re::CommandBridge::RegisterTrafficEvent(cp, primaryKey, "", 0);
+                  */
+                }
                 registerEvent(stat::events::http::REQUEST_OK, request);            
                 return scag::re::STATUS_OK;
             }
@@ -403,13 +422,19 @@ int HttpProcessorImpl::processRequest(HttpRequest& request)
         }
             
 
-        const SessionKey sk( request.getAddress() );
+        const SessionKey sessionKey( request.getAddress() );
         SCAGCommand* reqptr(&request);
-        se = SessionManager::Instance().getSession( sk, reqptr );
+        se = SessionManager::Instance().getSession( sessionKey, reqptr );
 
         if (se.get())
         {
-            re::RuleEngine::Instance().process(request, *se.get(), rs);
+            CommandProperty cp(scag2::re::CommandBridge::getCommandProperty(request, sessionKey.address(), static_cast<uint8_t>(request.getOperationId())));
+            re::RuleEngine::Instance().process(request, *se.get(), rs, cp);
+            if (r.statistics && !se->getLongCallContext().continueExec) {
+              smsc_log_debug(logger, "process request: register traffic info event");
+              const std::string *kw = se->getCurrentOperation() ? se->getCurrentOperation()->getKeywords() : 0;
+              scag2::re::CommandBridge::RegisterTrafficEvent(cp, se->sessionPrimaryKey(), "", kw);
+            }
             HttpCommandRelease rel(request);
             
             if (rs.status == re::STATUS_LONG_CALL)
@@ -460,6 +485,9 @@ int HttpProcessorImpl::processResponse(HttpResponse& response)
     if(!response.getAbonent().length())
     {
         smsc_log_debug(logger, "Transit response served");
+        if (response.getStatistics()) {
+          smsc_log_debug(logger, "process response: register traffic info event for transit route not implemented");
+        }
         return re::STATUS_OK;
     }
 
@@ -481,13 +509,20 @@ int HttpProcessorImpl::processResponse(HttpResponse& response)
          */
         const SessionKey sk(response.getAddress());
         SCAGCommand* rescmd(&response);
+        CommandProperty cp(scag2::re::CommandBridge::getCommandProperty(response, sk.address(), static_cast<uint8_t>(response.getOperationId())));
+
         se = SessionManager::Instance().getSession( sk, rescmd, false );
 
         re::RuleStatus rs;
         if ( se.get() )
         {
             HttpCommandRelease rel(response);
-            re::RuleEngine::Instance().process(response, *se.get(), rs);
+            re::RuleEngine::Instance().process(response, *se.get(), rs, cp);
+            if (!se->getLongCallContext().continueExec && response.getStatistics()) {
+              smsc_log_debug(logger, "process response: register traffic info event");
+              const std::string *kw = se->getCurrentOperation() ? se->getCurrentOperation()->getKeywords() : 0;
+              scag2::re::CommandBridge::RegisterTrafficEvent(cp, se->sessionPrimaryKey(), "", kw);
+            }
 
             if (rs.status == re::STATUS_OK )
             {
@@ -554,7 +589,10 @@ int HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
              
     if(!response.getAbonent().length())
     {
-        smsc_log_debug(logger, "Transit response served");
+        smsc_log_debug(logger, "Transit status response served");
+        if (response.getStatistics()) {
+          smsc_log_debug(logger, "process status response: register traffic info event for transit route not implemented");
+        }
         return re::STATUS_OK;
     }
 
@@ -575,6 +613,7 @@ int HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
         const SessionKey sk( response.getAddress() );
         SCAGCommand* rescmd(&response);
         se = SessionManager::Instance().getSession(sk, rescmd, false);
+        CommandProperty cp(scag2::re::CommandBridge::getCommandProperty(response, sk.address(), static_cast<uint8_t>(response.getOperationId())));
 
         re::RuleStatus rs;
         if (se.get())
@@ -582,7 +621,12 @@ int HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
             HttpCommandRelease rel(response);
             response.setCommandId(HTTP_DELIVERY);
             response.setDelivered(delivered);
-            re::RuleEngine::Instance().process(response, *se.get(), rs);
+            re::RuleEngine::Instance().process(response, *se.get(), rs, cp);
+            if (!se->getLongCallContext().continueExec && response.getStatistics()) {
+              smsc_log_debug(logger, "process status response: register traffic info event");
+              const std::string *kw = se->getCurrentOperation() ? se->getCurrentOperation()->getKeywords() : 0;
+              scag2::re::CommandBridge::RegisterTrafficEvent(cp, se->sessionPrimaryKey(), "", kw);
+            }
             
             if(rs.status == re::STATUS_OK && delivered)
             {

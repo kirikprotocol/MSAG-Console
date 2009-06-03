@@ -38,7 +38,7 @@ log_(logger)
 
 
 
-void SmppOperationMaker::process( re::RuleStatus& st, util::HRTiming* inhrt )
+void SmppOperationMaker::process( re::RuleStatus& st, scag2::re::actions::CommandProperty& cp, util::HRTiming* inhrt )
 {
     util::HRTiming hrt(inhrt);
     const char* where;
@@ -48,15 +48,14 @@ void SmppOperationMaker::process( re::RuleStatus& st, util::HRTiming* inhrt )
             setupOperation( st );
             hrt.mark("opmk.mkop");
             if ( st.status == re::STATUS_OK ) {
-        
                 smsc_log_debug(log_, "%s: RuleEngine processing...", where_ );            
                 where = "process";
-                re::RuleEngine::Instance().process( *cmd_.get(), *session_.get(), st, &hrt );
+                re::RuleEngine::Instance().process( *cmd_.get(), *session_.get(), st, cp, &hrt );
                 hrt.mark("opmk.exec");
                 smsc_log_debug(log_, "%s: RuleEngine processed: st.status=%d st.result=%d cmd.stat=%d",
                                where_, st.status, st.result, cmd_->get_status() );
-
             }
+
             where = "post";
             postProcess( st );
             hrt.mark("opmk.post");

@@ -1,11 +1,11 @@
 #include <cassert>
-
 #include "SmppManager2.h"
 #include "SmppStateMachine2.h"
 #include "scag/transport/smpp/common/SmppUtil.h"
 #include "scag/transport/smpp/common/SmsSplit.h"
 #include "core/buffers/XHash.hpp"
 #include "scag/re/base/RuleEngine2.h"
+#include "scag/re/base/ActionContext2.h"
 #include "scag/sessions/base/SessionManager2.h"
 #include "scag/sessions/base/Operation.h"
 #include "scag/stat/base/Statistics2.h"
@@ -14,6 +14,8 @@
 #include "scag/config/route/RouteStructures.h"
 #include "SmppOperationMaker.h"
 #include "scag/util/HRTimer.h"
+#include "scag/re/base/CommandBridge.h"
+#include "scag/re/base/EventHandlerType.h"
 
 namespace scag2 {
 namespace transport {
@@ -24,6 +26,7 @@ using namespace sessions;
 using namespace stat;
 using namespace scag::transport::smpp;
 using namespace smsc::core::buffers;
+using scag2::re::actions::CommandProperty;
 
 std::vector<int> StateMachine::allowedUnknownOptionals;
 
@@ -388,7 +391,6 @@ void StateMachine::processSmResp( std::auto_ptr<SmppCommand> aucmd,
     re::RuleStatus st;
     st.status = re::STATUS_OK;
     st.result = 0;
-
     DataSmDirection dir; // direction of the original command
     const char* where;
     switch (cmd->getCommandId()) {
@@ -428,6 +430,8 @@ void StateMachine::processSmResp( std::auto_ptr<SmppCommand> aucmd,
                        cmd->getOperationId() != invalidOpId() ? ", continued..." : ""
                        );
 
+        router::RouteInfo ri = router::RouteInfo();
+        bool keyisdest = ( dir == dsdSrv2Sc || dir == dsdSrv2Srv ) ? true : false;
         if ( cmd->getOperationId() == invalidOpId() )
         {
             SmppCommand* orgCmd;
@@ -490,9 +494,21 @@ void StateMachine::processSmResp( std::auto_ptr<SmppCommand> aucmd,
             cmd->setDstEntity(dst);
             cmd->set_dialogId( smscmd.get_orgDialogId() );
 
+            smscmd.getRouteInfo(ri);
+
             // orgcmd->operation is not set in case of transit route
             if ( orgCmd->getOperationId() == invalidOpId() ) {
                 smsc_log_debug(log_, "%s: orgcmd has no operation, transit route?", where );
+                if (ri.statistics) {
+                  const Address& address =  keyisdest ? sms->getDestinationAddress() : sms->getOriginatingAddress();
+                  const SessionKey key( address );
+                  CommandProperty cp(scag2::re::CommandBridge::getCommandProperty(*cmd, address, static_cast<uint8_t>(cmd->getOperationId())));
+                  SessionPrimaryKey primaryKey(key);
+                  timeval tv = { time(0), 0 };
+                  primaryKey.setBornTime(tv);
+                  smsc_log_debug(log_, "%s: register traffic info event for transit route", where);
+                  scag2::re::CommandBridge::RegisterTrafficEvent(cp, primaryKey, "", 0);
+                }
                 break;
             }
 
@@ -542,8 +558,15 @@ void StateMachine::processSmResp( std::auto_ptr<SmppCommand> aucmd,
         // session should be here
 
         // create operation
+        CommandProperty cp(scag2::re::CommandBridge::getCommandProperty(*cmd, session->sessionKey().address(), static_cast<uint8_t>(cmd->getOperationId())));
         SmppOperationMaker opmaker( where, aucmd, session, log_ );
-        opmaker.process( st );
+        opmaker.process( st, cp );
+        if (ri.statistics && !session->getLongCallContext().continueExec) {
+          const string* kw = session->getCurrentOperation() ? session->getCurrentOperation()->getKeywords() : 0;
+          smsc_log_debug(log_, "%s: register traffic info event", where);
+          scag2::re::CommandBridge::RegisterTrafficEvent(cp, session->sessionPrimaryKey(), "", kw);
+        }
+        //register traffic info event
         if ( st.status == re::STATUS_LONG_CALL ) return;
 
     } while ( false ); // fake loop
@@ -740,17 +763,36 @@ void StateMachine::processSm( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* 
                        routeId.c_str(),
                        ri.transit ? "(transit)" : "");
 
+        if ( ! routeset ) smscmd.setRouteInfo( ri );
+        bool keyisdest = ( cmd->getCommandId() == SUBMIT ? true :
+                           ( cmd->getCommandId() == DELIVERY ? false :
+                             ( src->info.type == etService ? true : false )));
+        const Address& address =  keyisdest ? sms.getDestinationAddress() : sms.getOriginatingAddress();
+        const SessionKey key( address );
+
+        CommandProperty cp(scag2::re::CommandBridge::getCommandProperty(*cmd, address, static_cast<uint8_t>(cmd->getOperationId())));
+
         if ( ri.transit ) {
-            hrt.stop();
-            break;
+          if (ri.statistics) {
+            SessionPrimaryKey primaryKey(key);
+            timeval tv = { time(0), 0 };
+            primaryKey.setBornTime(tv);
+            smsc_log_debug(log_, "%s: register traffic info event fro transit route", where);
+            scag2::re::CommandBridge::RegisterTrafficEvent(cp, primaryKey, scag2::re::CommandBridge::getMessageBody(*cmd), 0, &hrt);
+          }
+          hrt.stop();
+          break;
         }
 
         if ( ! session.get() ) {
+          /*
             if ( ! routeset ) smscmd.setRouteInfo( ri ); // in case session is locked
+            
             bool keyisdest = ( cmd->getCommandId() == SUBMIT ? true :
                                ( cmd->getCommandId() == DELIVERY ? false :
                                  ( src->info.type == etService ? true : false )));
             const SessionKey key( keyisdest ? sms.getDestinationAddress() : sms.getOriginatingAddress() );
+            */
             session = sm.getSession( key, aucmd, ! routeset ); // NOTE: create session only if not from longcall
             if ( ! session.get() ) {
                 __require__( ! routeset );
@@ -762,7 +804,12 @@ void StateMachine::processSm( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* 
         hrt.mark( "stm.getsess" );
 
         SmppOperationMaker opmaker( where, aucmd, session, log_ );
-        opmaker.process( st, &hrt );
+        opmaker.process( st, cp, &hrt );
+        if (ri.statistics && !session->getLongCallContext().continueExec) {
+          const string* kw = session->getCurrentOperation() ? session->getCurrentOperation()->getKeywords() : 0;
+          smsc_log_debug(log_, "%s: register traffic info event", where);
+          scag2::re::CommandBridge::RegisterTrafficEvent(cp, session->sessionPrimaryKey(), scag2::re::CommandBridge::getMessageBody(*cmd), kw, &hrt);
+        }
         if ( st.status == re::STATUS_LONG_CALL ) {
             smscmd.setRouteInfo( ri );
             hrt.stop();

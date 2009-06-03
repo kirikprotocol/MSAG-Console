@@ -221,7 +221,8 @@ struct HttpRoute
     PlacementKindArray inPlace;
     PlacementKindArray outPlace;
     std::string addressPrefix;
-    Site defSite;    
+    Site defSite;
+    bool statistics;
 
     HttpRoute():
     enabled(true),
@@ -229,7 +230,8 @@ struct HttpRoute
     transit(false),
     service_id(0),
     provider_id(0),
-    id(0)
+    id(0),
+    statistics(true)
     {}
 
     HttpRoute(const HttpRoute& cp)
@@ -248,6 +250,7 @@ struct HttpRoute
         transit = cp.transit;
         addressPrefix = cp.addressPrefix;
         defSite = cp.defSite;
+        statistics = cp.statistics;
     }
 };
 

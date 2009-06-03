@@ -4,6 +4,7 @@
 #include <cassert>
 #include "scag/transport/CommandOperation.h"
 #include "scag/re/base/RuleStatus2.h"
+#include "scag/re/base/ActionContext2.h"
 
 namespace scag2 {
 
@@ -45,7 +46,7 @@ public:
     /// 3. preprocess command/operation before RE execution;
     /// 4. invoke RE;
     /// 5. postprocess command/operation.
-    void process( re::RuleStatus& st, util::HRTiming* hrt = 0 );
+    void process( re::RuleStatus& st, scag2::re::actions::CommandProperty& cp, util::HRTiming* hrt = 0 );
 
     /// the reason of failure in case of STATUS_FAILED.
     inline const char* what() const {

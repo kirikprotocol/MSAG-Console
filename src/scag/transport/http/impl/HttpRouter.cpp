@@ -64,7 +64,8 @@ void HttpRouterImpl::routeInfo(HttpRouteInt* r, std::vector<std::string>& trace)
     
     trace.push_back("Route info:");
 
-    snprintf(buf, sizeof(buf), "RouteName:%s;RouteId:%d;ServiceId:%d;Enabled:%s;Default:%s;Transit:%s", r->name.c_str(), r->id, r->service_id, r->enabled ? "true" : "false", r->def ? "true" : "false", r->transit ? "true" : "false");
+    snprintf(buf, sizeof(buf), "RouteName:%s;RouteId:%d;ServiceId:%d;Enabled:%s;Default:%s;Transit:%s;SAA:%s",
+              r->name.c_str(), r->id, r->service_id, r->enabled ? "true" : "false", r->def ? "true" : "false", r->transit ? "true" : "false", r->statistics ? "true" : "false");
     trace[0] = buf;
 
     trace.push_back("Masks:");

@@ -163,6 +163,7 @@ void XMLBasicHandler::startElement(const XMLCh* const nm, AttributeList& attrs)
         route.enabled = getBool(attrs, "enabled", true);
         route.def = getBool(attrs, "default", false);
         route.transit = getBool(attrs, "transit", false);
+        route.statistics = getBool(attrs, "saa", true);
     }
     else if((route.id || subj_id.length()) && !strcmp(qname, "address"))
     {
@@ -276,6 +277,7 @@ void XMLBasicHandler::endElement(const XMLCh* const nm)
         route.addressPrefix = "";
         route.service_id = 0;
         route.transit = route.def = false;
+        route.statistics = true;
         route.enabled = true;
         route.masks.Empty();
         route.sites.Empty();

@@ -48,6 +48,7 @@ struct TransactionContext {
     // uint16_t usr;
 
     int result;
+    bool statistics;
 
     TransactionContext() {
         operationId = invalidOpId();
@@ -59,6 +60,7 @@ struct TransactionContext {
         status = 503;
         sitePort = 80;
         result = 0;
+        statistics = true;
     }
 /*    TransactionContext(TransactionContext& cp) {
         operationId = cp.operationId;
@@ -232,6 +234,13 @@ public:
     }
     void setStatus(int s) {
         trc.status = s;
+    }
+
+    void setStatistics(bool statistics) {
+      trc.statistics = statistics;
+    }
+    bool getStatistics() const {
+      return trc.statistics;
     }
 
     // ---------- Command context methods (end) ----------    
