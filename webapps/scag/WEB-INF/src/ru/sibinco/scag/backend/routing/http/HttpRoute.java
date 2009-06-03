@@ -33,6 +33,7 @@ public class HttpRoute {
     private boolean enabled = false;
     private boolean defaultRoute = false;
     private boolean transit = false;
+    private boolean saa = true;
 
     private Abonent abonent;
     private RouteSite routeSite;
@@ -58,6 +59,28 @@ public class HttpRoute {
         this.routeSite = routeSite;
     }
 
+    public HttpRoute(final Long id, final String routeName, final Service service, final boolean enabled, final boolean defaultRoute, final boolean transit,
+                     final Abonent abonent, final RouteSite routeSite, boolean saa) {
+        if (routeName == null)
+            throw new NullPointerException("Http route name is null");
+        if (routeName.length() > Constants.ROUTE_ID_MAXLENGTH)
+            throw new IllegalArgumentException("Http route name is too long");
+        if (abonent == null)
+            throw new NullPointerException("Abonents list is null");
+        if (routeSite == null)
+            throw new NullPointerException("Sites list is null");
+
+        this.id = id;
+        this.name = routeName;
+        this.service = service;
+        this.enabled = enabled;
+        this.defaultRoute = defaultRoute;
+        this.transit = transit;
+        this.abonent = abonent;
+        this.routeSite = routeSite;
+        this.saa = saa;
+    }
+
     public HttpRoute(Long id, String routeName) {
         if (routeName == null)
             throw new NullPointerException("Http route name is null");
@@ -71,6 +94,7 @@ public class HttpRoute {
         this.enabled = false;
         this.defaultRoute = false;
         this.transit = false;
+        this.saa = true;
     }
 
     public HttpRoute(final Long id, final Element routeElement, final Map subjects, final ServiceProvidersManager serviceProvidersManager)
@@ -82,7 +106,20 @@ public class HttpRoute {
 
         this.enabled = routeElement.getAttribute("enabled").equalsIgnoreCase("true");
         this.defaultRoute = routeElement.getAttribute("default").equalsIgnoreCase("true");
+
+        String trStr = routeElement.getAttribute("transit");
         this.transit = routeElement.getAttribute("transit").equalsIgnoreCase("true");
+
+        String saaStr = routeElement.getAttribute("saa"); 
+        if( !trStr.equals("") && saaStr.equals("") ){
+            if( trStr.equalsIgnoreCase("true") ){
+                this.saa = false;
+            } else {
+                this.saa = true;
+            }
+        } else {
+            this.saa = saaStr.equalsIgnoreCase("true");
+        }
         final Long serviceId = Long.decode(routeElement.getAttribute("serviceId"));
         this.service = serviceProvidersManager.getServiceById(serviceId);
         abonent = loadAbonent(routeElement, subjects);
@@ -106,7 +143,14 @@ public class HttpRoute {
     public PrintWriter store(PrintWriter out) {
         String name = StringEncoderDecoder.encode(getName());
         try {
-            out.println("  <route id=\"" + id + "\" serviceId=\"" + service.getId() + "\" enabled=\"" + isEnabled() + "\" default=\""+ isDefaultRoute() + "\" name=\"" + name + "\" transit=\"" + isTransit() + "\">");
+            out.println("  <route id=\"" + id +
+                    "\" serviceId=\"" + service.getId() +
+                    "\" enabled=\"" + isEnabled() +
+                    "\" default=\""+ isDefaultRoute() +
+                    "\" name=\"" + name +
+                    "\" transit=\"" + isTransit() +
+                    "\" saa=\"" + isSaa() +
+                    "\">");
             abonent.store(out);
             routeSite.store(out);
             out.println("  </route>");
@@ -177,5 +221,13 @@ public class HttpRoute {
 
     public void setRouteSite(final RouteSite routeSite) {
         this.routeSite = routeSite;
+    }
+
+    public boolean isSaa() {
+        return saa;
+    }
+
+    public void setSaa(boolean saa) {
+        this.saa = saa;
     }
 }

@@ -52,6 +52,7 @@ public class Edit extends EditBean {
     private boolean enabled;
     private boolean defaultRoute;
     private boolean transit;
+    private boolean saa;
     private String path = "";
     private String parentId;
     private String serviceName = null;
@@ -248,6 +249,7 @@ public class Edit extends EditBean {
             enabled = route.isEnabled();
             defaultRoute = route.isDefaultRoute();
             transit = route.isTransit();
+            saa = route.isSaa();
             if (null != route.getService()) {
                 serviceName = route.getService().getName();
             }
@@ -276,14 +278,16 @@ public class Edit extends EditBean {
             final RouteSite routeSite = createRouteSite();
             final Service serviceObj = appContext.getServiceProviderManager().getServiceById(Long.decode(getParentId()));
             if (isAdd()) {
-                HttpRoute route = appContext.getHttpRoutingManager().createRoute(name, serviceObj, enabled, defaultRoute, transit, abonent, routeSite);
+                HttpRoute route = appContext.getHttpRoutingManager().createRoute(
+                        name, serviceObj, enabled, defaultRoute, transit, abonent, routeSite, saa);
                 routes.put(route.getId().toString(), route);
                 messageText = "Added new route: " + name + " ";
             } else {
                 if (!getEditId().equals(id) && routes.containsKey(id))
                     throw new SCAGJspException(Constants.errors.routing.routes.ROUTE_ALREADY_EXISTS, id);
                 routes.remove(getEditId());
-                routes.put(id, new HttpRoute(Long.valueOf(id), name, serviceObj, enabled, defaultRoute, transit, abonent, routeSite));
+                routes.put(id, new HttpRoute(Long.valueOf(id), name, serviceObj, enabled, defaultRoute,
+                        transit, abonent, routeSite, saa));
                 messageText = "Changed route: " + name + " ";
 
             }
@@ -702,5 +706,13 @@ public class Edit extends EditBean {
 
     public void setSiteServiceIdType(String[] siteServiceIdType) {
         this.siteServiceIdType = siteServiceIdType;
+    }
+
+    public boolean isSaa() {
+        return saa;
+    }
+
+    public void setSaa(boolean saa) {
+        this.saa = saa;
     }
 }

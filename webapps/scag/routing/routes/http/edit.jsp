@@ -36,6 +36,7 @@
                 <sm-ep:check title="routes.edit.check.enabled" name="enabled"/>
                 <sm-ep:check title="routes.edit.check.default" name="defaultRoute" disabled="true"/>
                 <sm-ep:check title="routes.edit.check.transit" name="transit"/>
+                <sm-ep:check title="routes.edit.check.saa" name="saa"/>
                 <sm-pm:space/>
             </sm-ep:properties>
         </td>
