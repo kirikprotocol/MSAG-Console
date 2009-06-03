@@ -76,7 +76,7 @@ class GroupSendProcessor implements GroupSendCmd.Receiver,
       ArrayList<String> members = new ArrayList<String>(dl.members());
       if (!includeSubmitter)
         members.remove(cmd.getSubmitter());
-      if (includeOwner)
+      if (includeOwner && !members.contains(dl.getOwner()))
         members.add(dl.getOwner());
 
       DeliveryStatus[] deliveryStatuses = new DeliveryStatus[members.size()];
