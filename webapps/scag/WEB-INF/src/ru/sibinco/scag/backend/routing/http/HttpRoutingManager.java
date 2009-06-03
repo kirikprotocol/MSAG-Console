@@ -157,8 +157,14 @@ public class HttpRoutingManager extends Manager{
         }
     }
 
-    public HttpRoute createRoute(String name, Service serviceObj, boolean enabled, boolean defaultRoute, boolean transit, Abonent abonent, RouteSite routeSite) throws SibincoException {
+    public HttpRoute createRoute(String name, Service serviceObj, boolean enabled, boolean defaultRoute,
+                                 boolean transit, Abonent abonent, RouteSite routeSite) throws SibincoException {
       return new HttpRoute(new Long(++lastUsedHttpRouteId), name, serviceObj, enabled, defaultRoute, transit, abonent, routeSite);
+    }
+
+    public HttpRoute createRoute(String name, Service serviceObj, boolean enabled, boolean defaultRoute,
+                                 boolean transit, Abonent abonent, RouteSite routeSite, boolean saa) throws SibincoException {
+      return new HttpRoute(new Long(++lastUsedHttpRouteId), name, serviceObj, enabled, defaultRoute, transit, abonent, routeSite, saa);
     }
 
     private HttpRoute createRoute(String id, Element routeElem, Map subjects) throws SibincoException {
@@ -189,7 +195,7 @@ public class HttpRoutingManager extends Manager{
     private String getParamXmlText() {
         StringBuffer buffer = new StringBuffer();
         buffer.append("   <param name=\"" + PARAM_NAME_LAST_USED_HTTP_ROUTE_ID + "\" type=\"int\">").
-              append(lastUsedHttpRouteId).append("</param>").append("\n");
+               append(lastUsedHttpRouteId).append("</param>").append("\n");
         return buffer.toString();
     }
 
@@ -264,7 +270,7 @@ public class HttpRoutingManager extends Manager{
           appContext.getScag().invokeCommand("applyHttpRoutes",null,appContext,this,new File(msagConfFolder, HTTP_ROUTES_PRIMARY_CONFIG).getAbsolutePath());
       } catch (SibincoException e) {
           if (!(e instanceof StatusDisconnectedException)) {
-              logger.debug("Couldn't apply http routes", e);
+              logger.error("SibincoException Couldn't apply http routes", e);
               throw new SCAGJspException(Constants.errors.routing.routes.COULDNT_APPLY_HTTP_ROUTES, e);
           }
       }
