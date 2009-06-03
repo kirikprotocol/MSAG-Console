@@ -20,10 +20,11 @@ struct RuleStatus
     bool temporal;
     //RuleStatus() : result(false),hasErrors(false) {};
     RuleStatus() : result(0), status(STATUS_OK),temporal(false) {};
-    ~RuleStatus() {}
-private:
-    RuleStatus(const RuleStatus& cp) {};
-    RuleStatus& operator=(const RuleStatus& cp) { return *this; };
+
+    // defaults are ok
+    // ~RuleStatus() {}
+    // RuleStatus& operator=(const RuleStatus& cp) { return *this; };
+    // RuleStatus(const RuleStatus& cp) {};
 };
 
 }}
