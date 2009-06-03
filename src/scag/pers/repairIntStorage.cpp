@@ -62,12 +62,12 @@ void extractPageFile( smsc::logger::Logger* logger, PageFile& pf,
                 }
             }
 
-            std::string dump;
+            HexDump::string_type dump;
+            HexDump hd;
             {
-                HexDump hd;
-                unsigned dumpsize = std::min(unsigned(data.size()),unsigned(256));
+                const unsigned dumpsize = std::min(unsigned(data.size()),unsigned(256));
                 hd.hexdump(dump,(const char*)&data[0],dumpsize);
-                dump += ": ";
+                hd.addstr(dump,": ");
                 hd.strdump(dump,(const char*)&data[0],dumpsize);
             }
 
@@ -76,7 +76,7 @@ void extractPageFile( smsc::logger::Logger* logger, PageFile& pf,
                           static_cast<long long>(realIndex),
                           long(data.size()),
                           pkey,
-                          dump.c_str() );
+                          hd.c_str(dump) );
             pageIndex = nextIndex;
 
             SerialBuffer sb(data.size());
