@@ -341,15 +341,22 @@ void Scag::shutdown()
     // __trace__("shutting down");
     smsc_log_info( log, "SCAG is shutting down\n\n");
     lcm::LongCallManager::Instance().pvssClient().shutdown();
+    smsc_log_debug(log,"pvssclient notified");
     bill::BillingManager::Instance().Stop();     // to prevent dangling longcalls
+    smsc_log_debug(log,"billman notified");
     lcm::LongCallManager::Instance().shutdown(); // to prevent dangling longcalls
+    smsc_log_debug(log,"lcm notified");
     transport::http::HttpManager::Instance().shutdown();
+    smsc_log_debug(log,"httpman notified");
     transport::smpp::SmppManager::Instance().shutdown();
+    smsc_log_debug(log,"smppman notified");
     sessions::SessionManager::Instance().Stop();
+    smsc_log_debug(log,"sessman notified");
 #ifdef SNMP
     if (snmpthread_.get()) snmpthread_->Stop();
 #endif
     // stat::Statistics::Instance().Stop();
+    smsc_log_info(log,"All components are stopped");
 }
 
 } //scag
