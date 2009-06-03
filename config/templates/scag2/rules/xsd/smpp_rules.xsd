@@ -152,6 +152,10 @@
                 <enumeration value="#src_sme_id"/>
                 <enumeration value="#dst_sme_id"/>
 		
+                <enumeration value="#slicing_total_segments"/>
+                <enumeration value="#slicing_ref_num"/>
+                <enumeration value="#slicing_segment_seqnum"/>
+                
 		<enumeration value="#delivery_failure_reason"/>
 		<enumeration value="#network_error_code"/>
 		<enumeration value="#additional_status_info"/>
