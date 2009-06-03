@@ -22,7 +22,7 @@ void HttpEventHandler::processRequest(HttpRequest& command, ActionContext& conte
     Session& session = context.getSession();
 
     try{
-        if ( command.getOperationId() != SCAGCommand::invalidOpId() ) {
+        if ( command.getOperationId() != invalidOpId() ) {
             // if(session.getLongCallContext().continueExec)
             session.setCurrentOperation(command.getOperationId());
             // else if (command.isInitial())

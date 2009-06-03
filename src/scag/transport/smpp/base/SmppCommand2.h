@@ -426,89 +426,11 @@ namespace SmppCommandFlags
 struct SmppEntity;
 struct SmsResp;
 
-/*
-struct _SmppCommand
-{
-  ~_SmppCommand();
-
-  _SmppCommand() : ref_count(0), dta(0), status(0), ent(0), dst_ent(0), priority(ScagCommandDefaultPriority), opId(-1), usr(0), flags(0), sliceCount(1), slicedRespSent(false)
-  {
-    if(!logger)
-    {
-        MutexGuard mt(loggerMutex);
-        if(!logger) logger = Logger::getInstance("smppMan");
-    }
-
-    if(logger->isLogLevelEnabled(smsc::logger::Logger::LEVEL_DEBUG))
-    {
-        uint32_t sc = 0;
-        {
-            MutexGuard mtxx(cntMutex);
-            sc = ++commandCounter;
-            uid = ++stuid;
-        }
-        // smsc_log_debug(logger, "Command create: count=%d, addr=%s, usr=%d, uid=%d", sc, session.Get() ? session->getSessionKey().abonentAddr.toString().c_str() : "", session.Get() ?  session->getSessionKey().USR : 0, uid);
-    }
-  }
-
-    // uint32_t get_orgDialogId() const { return orgDialogId; }
-    // void set_orgDialogId(uint32_t dlgId) { orgDialogId=dlgId; }
-
-  SMS* get_sms()
-  {
-    __require__(cmdid==SUBMIT || cmdid==DELIVERY || cmdid==DATASM);
-    return &((SmsCommand*)dta)->sms;
-  }
-  SmsCommand& get_smsCommand()
-  {
-    __require__(cmdid==SUBMIT || cmdid==DELIVERY || cmdid==DATASM);
-    return *((SmsCommand*)dta);
-  }
-  const ReplaceSm& get_replaceSm(){return *(ReplaceSm*)dta;}
-  const QuerySm& get_querySm(){return *(QuerySm*)dta;}
-  const CancelSm& get_cancelSm(){return *(CancelSm*)dta;}
-  SmsResp* get_resp() const
-  {
-    __require__(cmdid==DELIVERY_RESP || cmdid==SUBMIT_RESP || cmdid==DATASM_RESP);
-    return (SmsResp*)dta;
-  }
-  uint32_t getCommandStatus() const;
-  SubmitMultiResp* get_MultiResp() { return (SubmitMultiResp*)dta;}
-  SubmitMultiSm* get_Multi() { return (SubmitMultiSm*)dta;}
-
-  int get_priority(){return priority;};
-  void set_priority(int newprio){priority=newprio;}
-
-    // const Address& get_address() { return *(Address*)dta; }
-    // void set_address(const Address& addr) { *(Address*)dta = addr; }
-
-  //SmppHeader* get_smppPdu(){return (SmppHeader*)dta;}
-
-  BindCommand& get_bindCommand(){return *((BindCommand*)dta);}
-
-  AlertNotification& get_alertNotification()
-  {
-      return *((AlertNotification*)dta);
-  }
-
-    // int get_smeIndex(){return VoidPtr2Int(dta);}
-
-  void set_status(int st){status=st;}
-  int get_status(){return status;} // for enquirelink and unbind
-
- // int get_mode()
- // {
- // return VoidPtr2Int(dta);
- // }
-
-};
- */
-
 class _SmppCommand
 {
 protected:
     _SmppCommand() : cmdid_(UNKNOWN), serviceId_(-1),
-    opId_( SCAGCommand::invalidOpId() ),
+    opId_( invalidOpId() ),
     session_(0),
     src_ent_(0), dst_ent_(0),
     shared_(&keep_), dta_(0) {}
@@ -574,6 +496,12 @@ public:
     static std::auto_ptr<SmppCommand> makeCommand(CommandId cmdId,uint32_t dialogId,uint32_t status,void* data);
 
     static void makeSMSBody( SMS* sms, const SmppHeader* pdu, bool forceDC );
+
+    static std::string getMessageBody( SMS& sms );
+    /// NOTE: the udh (or NULL) is returned.
+    /// The first byte is the total length of udh.
+    static const char* getUDH( SMS& sms );
+    static void getSlicingParameters( SMS& sms, int& sarmr, int& currentIndex, int& lastIndex );
 
 protected:
     static std::auto_ptr<SmppCommand> makeCommandSmResp(CommandId cmdid, const char* messageId, uint32_t dialogId, uint32_t status, bool dataSm=false );

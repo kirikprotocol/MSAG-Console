@@ -25,7 +25,7 @@ const uint32_t SERVICE_INITIATED_USSD_DIALOG = 1;
 const uint32_t RECEIVED_ALL_PARTS            = 2;
 const uint32_t RECEIVED_ALL_RESPS            = 4;
 const uint32_t RECEIVED_ALL                  = RECEIVED_ALL_PARTS | RECEIVED_ALL_RESPS;
-const uint32_t WAIT_RECEIPT                  = 0x10;
+// const uint32_t WAIT_RECEIPT                  = 0x10;
 const uint32_t PERSISTENT                    = 0x20;
 const uint32_t NEXTUSSDISSUBMIT              = 0x40; // if set next ussd should be submit
 }
@@ -35,9 +35,7 @@ class Operation
 {
 public:
     Operation( Session* owner = 0, uint8_t type = transport::CO_NA );
-    ~Operation() {
-        if (keywords_) delete keywords_;
-    }
+    ~Operation();
 
     uint8_t type() const { return type_; }
 
@@ -62,8 +60,14 @@ public:
 
     /// ussd reference number (-1 -- invalid, 0 -- pending).
     /// this field is only valid if optype is CO_USSD_DIALOG
-    void setUSSDref( int32_t umr ) throw (exceptions::SCAGException);
+    void setUSSDref( int32_t umr ) /* throw (exceptions::SCAGException) */;
     inline int32_t getUSSDref() const { return umr_; }
+
+    /// used for segmented messages
+    int32_t getSARref() const;
+    void setSARref( int32_t sar );
+    const re::RuleStatus& getSARstatus() const;
+    void setSARstatus( const re::RuleStatus& );
 
     const std::string* getKeywords() const {
         return keywords_;
@@ -74,7 +78,7 @@ public:
         else keywords_ = new std::string( kw );
     }
 
-    void print( util::Print& p, opid_type opid = SCAGCommand::invalidOpId() ) const;
+    void print( util::Print& p, opid_type opid = invalidOpId() ) const;
 
     util::storage::Serializer& serialize( util::storage::Serializer& s ) const;
     util::storage::Deserializer& deserialize( util::storage::Deserializer& s ) throw (DeserializerException);
@@ -88,6 +92,9 @@ private:
     static Mutex                 loggerMutex_;
 
 private:
+    struct Segmentation;
+
+private:
     Session*            owner_;
     int                 receivedParts_;
     int                 receivedResps_;
@@ -97,6 +104,7 @@ private:
     int32_t             ctxid_;
     int32_t             umr_;     // used for USSD
     std::string*        keywords_;
+    Segmentation*       segmentation_; // owned
 };
 
 } // namespace sessions

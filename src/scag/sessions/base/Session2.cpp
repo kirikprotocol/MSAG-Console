@@ -17,7 +17,8 @@ using namespace scag2::util::storage;
 
 namespace {
 
-uint32_t serializationVersion = 1;
+// uint32_t serializationVersion = 1;
+const uint32_t serializationVersion = 2; // support for sar fields in operations
 
 smsc::logger::Logger*              log_ = 0;
 smsc::logger::Logger*              logc_ = 0; // for ctor/dtor
@@ -46,8 +47,10 @@ Hash<int> InitReadOnlyPropertiesHash()
     // hs["USR"]               = PROPERTY_USR;
 
     // operation scope
-    hs["%ICC_STATUS"]        = 1; // PROPERTY_ICC_STATUS;
-    hs["%operation_id"]      = 1;
+    hs["%ICC_STATUS"]             = 1; // PROPERTY_ICC_STATUS;
+    hs["%operation_id"]           = 1;
+    hs["%slicing_parts_received"] = 1;
+    hs["%slicing_resps_received"] = 1;
 
     // global scope
     hs["$abonent"]           = 1; // PROPERTY_ABONENT;
@@ -67,6 +70,8 @@ std::set< std::string > initOperationScopeSet()
 {
     std::set< std::string > res;
     res.insert( "ICC_STATUS" );
+    res.insert( "slicing_parts_received" );
+    res.insert( "slicing_resps_received" );
     res.insert( "operation_id" );
     return res;
 }
@@ -102,14 +107,26 @@ protected:
     {
         AdapterProperty** p = properties_.GetPtr( name.c_str() );
         AdapterProperty* np = 0;
-        if ( name == "ICC_STATUS" ) {
+        if ( name == "ICC_STATUS" ||
+             name == "slicing_parts_received" ||
+             name == "slicing_resps_received" ) {
 
             Operation* op = session_->getCurrentOperation();
-            const int opstat = op ? op->getStatus() : 0;
+            int opval = 0;
+            if ( op ) {
+                if (name == "ICC_STATUS") opval = op->getStatus();
+                else if ( name == "slicing_parts_received" ) opval = op->parts();
+                else if ( name == "slicing_resps_received" ) opval = op->resps();
+                else {
+                    throw SCAGException( "logic error in SessionPropertyScope:processReadonly, unregistered name='%s' is requested",
+                                         name.c_str() );
+                }
+            }
+
             if ( !p ) {
-                np = new AdapterProperty( name.c_str(), session_, opstat );
+                np = new AdapterProperty( name.c_str(), session_, opval );
             } else {
-                (*p)->setInt( opstat );
+                (*p)->setInt( opval );
             }
 
         } else if ( name == "abonent" ) {
@@ -183,7 +200,7 @@ using namespace scag::exceptions;
 
 
 // statics
-opid_type              Session::newopid_ = SCAGCommand::invalidOpId();
+opid_type Session::newopid_ = invalidOpId();
 
 
 SessionPropertyScope::SessionPropertyScope( Session* patron ) :
@@ -317,8 +334,8 @@ expirationTime_(lastAccessTime_+defaultLiveTime()),
 expirationTimeAtLeast_(lastAccessTime_),
 needsflush_(false),
 command_(0),        // unlocked
-currentOperationId_(SCAGCommand::invalidOpId()),
-ussdOperationId_(SCAGCommand::invalidOpId()),
+currentOperationId_(invalidOpId()),
+ussdOperationId_(invalidOpId()),
 currentOperation_(0),
 transactions_(0),
 nextContextId_(0),
@@ -359,6 +376,8 @@ Session::~Session()
 
 Serializer& Session::serialize( Serializer& s ) const
 {
+    const int32_t oldVersion = s.version();
+    s.setVersion(::serializationVersion);
     s << ::serializationVersion;
     key_.serialize( s );
     const timeval& tv( pkey_.bornTime() );
@@ -391,9 +410,9 @@ Serializer& Session::serialize( Serializer& s ) const
         int key;
         Operation* value;
         for ( IntHash< Operation* >::Iterator i(operations_); i.Next(key,value); --count ) {
-            if ( ! value ) key = int(SCAGCommand::invalidOpId());
+            if ( ! value ) key = int(invalidOpId());
             s << opid_type(key);
-            if ( opid_type(key) != SCAGCommand::invalidOpId() )
+            if ( opid_type(key) != invalidOpId() )
                 value->serialize( s );
         }
         assert( count == 0 );
@@ -421,6 +440,8 @@ Serializer& Session::serialize( Serializer& s ) const
     serializeScopeHash( s, serviceScopes_ );
     serializeScopeHash( s, contextScopes_ );
     serializeScopeHash( s, operationScopes_ );
+
+    s.setVersion(oldVersion);
     return s;
 }
 
@@ -473,7 +494,7 @@ Deserializer& Session::deserialize( Deserializer& s ) throw (DeserializerExcepti
         for ( ; count > 0; --count ) {
             opid_type key;
             s >> key;
-            if ( key != SCAGCommand::invalidOpId() ) {
+            if ( key != invalidOpId() ) {
                 Operation* op = new Operation( this, CO_NA );
                 op->deserialize( s );
                 operations_.Insert( key, op );
@@ -534,8 +555,8 @@ void Session::clear()
 
     { // clear operations
 
-        currentOperationId_ = SCAGCommand::invalidOpId();
-        ussdOperationId_ = SCAGCommand::invalidOpId();
+        currentOperationId_ = invalidOpId();
+        ussdOperationId_ = invalidOpId();
         currentOperation_ = 0;
 
         int opkey;
@@ -595,7 +616,7 @@ void Session::print( util::Print& p ) const
              unsigned(initrulekeys_.size()),
              unsigned(operationsCount()),
              unsigned(transactions_ ? transactions_->GetCount() : 0),
-             ussdOperationId_ == SCAGCommand::invalidOpId() ? "" : " hasUssd" );
+             ussdOperationId_ == invalidOpId() ? "" : " hasUssd" );
     Operation* curop = getCurrentOperation();
     if ( curop ) curop->print( p, getCurrentOperationId() );
     int opid;
@@ -656,7 +677,7 @@ Operation* Session::setCurrentOperation( opid_type opid )
 {
     do {
 
-        if ( opid == SCAGCommand::invalidOpId() ) {
+        if ( opid == invalidOpId() ) {
             currentOperationId_ = opid;
             return currentOperation_ = 0;
         }
@@ -672,7 +693,7 @@ Operation* Session::setCurrentOperation( opid_type opid )
     } while ( false );
 
     if ( ! currentOperation_ ) {
-        currentOperationId_ = SCAGCommand::invalidOpId();
+        currentOperationId_ = invalidOpId();
         smsc_log_warn( log_, "session=%p/%s cannot find operation id=%u",
                        this,
                        sessionKey().toString().c_str(),
@@ -697,10 +718,13 @@ Operation* Session::createOperation( SCAGCommand& cmd, int operationType )
 {
     std::auto_ptr< Operation > auop( new Operation(this, operationType) );
     Operation* op = auop.get();
-    opid_type opid = getNewOperationId();
+    opid_type opid;
+    do {
+        opid = getNewOperationId();
+    } while ( operations_.Exist(opid) );
     if ( operationType == transport::CO_USSD_DIALOG ) {
         // if the operation is already there, replace it
-        if ( ussdOperationId_ != SCAGCommand::invalidOpId() ) {
+        if ( ussdOperationId_ != invalidOpId() ) {
             smsc_log_info( log_, "session=%p/%s old USSD operation will be replaced",
                            this, sessionKey().toString().c_str() );
             setCurrentOperation( ussdOperationId_ );
@@ -760,9 +784,9 @@ void Session::closeCurrentOperation()
     delete currentOperation_;
     currentOperation_ = 0;
     if ( ussdOperationId_ == currentOperationId_ ) {
-        ussdOperationId_ = SCAGCommand::invalidOpId();
+        ussdOperationId_ = invalidOpId();
     }
-    currentOperationId_ = SCAGCommand::invalidOpId();
+    currentOperationId_ = invalidOpId();
     // changed_ = true;
     const unsigned opcount = operationsCount();
     if ( opcount == 0 ) {
@@ -1073,7 +1097,7 @@ void Session::clearScopeHash( IntHash< SessionPropertyScope* >* s )
 opid_type Session::getNewOperationId() const
 {
     MutexGuard mg(::sessionopidmutex);
-    if ( ++newopid_ == SCAGCommand::invalidOpId() ) ++newopid_;
+    if ( ++newopid_ == invalidOpId() ) ++newopid_;
     return newopid_;
 }
 

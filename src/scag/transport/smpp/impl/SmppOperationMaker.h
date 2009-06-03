@@ -26,6 +26,8 @@ class SmppCommand;
 struct SmppOperationMaker
 {
 public:
+    class SarRegistry;
+
     SmppOperationMaker( const char*                 where,
                         std::auto_ptr<SmppCommand>& thecmd,
                         sessions::ActiveSession&    thesession,
@@ -83,6 +85,9 @@ private:
     const char*                  what_;
     bool                         postproc_;
     smsc::logger::Logger*        log_;
+    int                          currentIndex_; // parameters of the sms
+    int                          lastIndex_;    // parameters of the sms
+    int                          sarmr_;
 };
 
 } // namespace smpp

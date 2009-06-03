@@ -50,7 +50,7 @@ struct TransactionContext {
     int result;
 
     TransactionContext() {
-        operationId = SCAGCommand::invalidOpId();
+        operationId = invalidOpId();
         serviceId = 0;
         providerId = 0;
         ruleId = 0;

@@ -2,6 +2,7 @@
 #define _SCAG_TRANSPORT_SCAGCOMMAND2_H
 
 #include "scag/util/io/Print.h"
+#include "OpId.h"
 #include "TransportType.h"
 
 namespace scag2 {
@@ -16,10 +17,6 @@ namespace transport {
 
 using namespace scag::transport;
 using namespace scag2::sessions;
-
-/// operation id type
-/// NOTE: opid_type(0) denotes invalid operation
-typedef uint32_t opid_type;
 
 class SCAGCommand
 {
@@ -36,9 +33,11 @@ public:
     // initially set to invalidOpId()
     virtual opid_type getOperationId() const = 0;
     virtual void setOperationId( opid_type op) = 0;
+    /*
     static inline opid_type invalidOpId() {
         return 0;
     }
+     */
 
     virtual uint8_t getCommandId() const = 0;
       

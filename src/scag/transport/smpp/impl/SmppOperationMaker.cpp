@@ -7,6 +7,7 @@
 #include "core/synchronization/Mutex.hpp"
 #include "SmppManager2.h"
 #include "scag/util/HRTimer.h"
+#include "scag/util/io/HexDump.h"
 
 namespace scag2 {
 namespace transport {
@@ -27,6 +28,12 @@ postproc_(false),
 log_(logger)
 {
     assert( cmd_.get() && session_.get() );
+    SMS* sms = cmd_->get_sms();
+    if ( !sms ) {
+        smsc_log_debug(log_,"sms not found in command %p", cmd_.get());
+    } else {
+        SmppCommand::getSlicingParameters(*sms,sarmr_,currentIndex_,lastIndex_);
+    }
 }
 
 
@@ -34,22 +41,29 @@ log_(logger)
 void SmppOperationMaker::process( re::RuleStatus& st, util::HRTiming* inhrt )
 {
     util::HRTiming hrt(inhrt);
+    const char* where;
     try {
         do {
+            where = "setup";
             setupOperation( st );
             hrt.mark("opmk.mkop");
-            if ( st.status != re::STATUS_OK ) break;
+            if ( st.status == re::STATUS_OK ) {
         
-            smsc_log_debug(log_, "%s: RuleEngine processing...", where_ );            
-            re::RuleEngine::Instance().process( *cmd_.get(), *session_.get(), st, &hrt );
-            hrt.mark("opmk.exec");
-            smsc_log_debug(log_, "%s: RuleEngine processed: st.status=%d st.result=%d cmd.stat=%d",
-                           where_, st.status, st.result, cmd_->get_status() );
+                smsc_log_debug(log_, "%s: RuleEngine processing...", where_ );            
+                where = "process";
+                re::RuleEngine::Instance().process( *cmd_.get(), *session_.get(), st, &hrt );
+                hrt.mark("opmk.exec");
+                smsc_log_debug(log_, "%s: RuleEngine processed: st.status=%d st.result=%d cmd.stat=%d",
+                               where_, st.status, st.result, cmd_->get_status() );
+
+            }
+            where = "post";
             postProcess( st );
             hrt.mark("opmk.post");
 
             if ( st.status == re::STATUS_LONG_CALL ) {
                 smsc_log_debug( log_, "%s: long call initiate", where_ );
+                where = "longcall";
                 if ( SmppManager::Instance().makeLongCall(cmd_, session_) ) return;
                 fail( "could not make long call", st, smsc::system::Status::SYSERR );
                 return;
@@ -70,11 +84,11 @@ void SmppOperationMaker::process( re::RuleStatus& st, util::HRTiming* inhrt )
         } while ( false );
 
     } catch ( std::exception& e ) {
-        // smsc_log_warn( log_, "%s: exception in opmaker: %s", where, e.what() );
+        smsc_log_warn( log_, "%s: exception in opmaker: %s", where, e.what() );
         fail( e.what(), st, smsc::system::Status::SYSERR );
         
     } catch (...) {
-        // smsc_log_warn( log_, "%s: unknown exception in opmaker", where );
+        smsc_log_warn( log_, "%s: unknown exception in opmaker", where );
         fail( "unknown exception in opmaker", st, smsc::system::Status::SYSERR );
 
     }
@@ -93,7 +107,7 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st )
     }
 
     Operation* op = 0;
-    if ( cmd_->getOperationId() != SCAGCommand::invalidOpId() ) {
+    if ( cmd_->getOperationId() != invalidOpId() ) {
 
         // cmd has just returned from long call, or was rerouted
         op = session_->setCurrentOperation( cmd_->getOperationId() );
@@ -113,10 +127,12 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st )
 
     const CommandId cmdid = CommandId(cmd_->getCommandId());
 
+    /*
     int receiptMessageId = 0;
     if ( cmdid == DELIVERY || cmdid == DELIVERY_RESP ) {
         receiptMessageId = atoi(sms->getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str());
     }
+     */
 
     optype_ = CO_NA;
     bool wantOpenUSSD = false;
@@ -132,9 +148,9 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st )
     {
     case DELIVERY:
 
-        if (receiptMessageId)
+        /* if (receiptMessageId)
             optype_ = CO_RECEIPT;
-        else if ( ussd_op != -1 )
+        else */ if ( ussd_op != -1 )
         {
             optype_ = CO_USSD_DIALOG;
             if ( ussd_op == smsc::smpp::UssdServiceOpValue::PSSR_INDICATION ) {
@@ -207,7 +223,7 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st )
         // NOTE: as we have SMS we already have the original command,
         // so skip any checking here!
         opid_type opid = cmd_->get_resp()->getOrgCmd()->getOperationId();
-        if ( opid == SCAGCommand::invalidOpId() ) {
+        if ( opid == invalidOpId() ) {
             fail( "resp->orgCmd opid is not set", st,
                   smsc::system::Status::SYSERR );
             return;
@@ -231,22 +247,40 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st )
     
     int32_t umr = -1;
 
-    // multipart sms
-    // set slicing
-    int lastIndex = 0;
-    int currentIndex = 0;
-    if ( sms->hasIntProperty(Tag::SMPP_SAR_MSG_REF_NUM) &&
-         sms->hasIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS) &&
-         sms->hasIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM) ) {
-
-        // FIXME: restore the operation for multipart SMS
-        lastIndex = sms->getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
-        currentIndex = sms->getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
+    if ( ! op ) {
+        if ( sarmr_ != -1 ) {
+            // multipart sms
+            const opid_type opid = cmd_->getEntity()->getSarMapping(sarmr_);
+            if ( opid != invalidOpId() ) {
+                // restore from session
+                op = session_->setCurrentOperation(opid);
+                smsc_log_debug(log_,"multipart op %sfound: cmd=%p sess=%p/%s opid=%u type=%d(%s) sarmr/idx/tot=%d/%d/%d",
+                               op ? "":"NOT ",
+                               cmd_.get(), session_.get(), 
+                               session_->sessionKey().toString().c_str(),
+                               opid, optype_, commandOpName(optype_),
+                               sarmr_, currentIndex_, lastIndex_ );
+                if (op) {
+                    if ( op->getSARref() != sarmr_ ) {
+                        smsc_log_warn(log_,"multipart op sarmr=%d mismatch (in op:%d), old one will be replaced", sarmr_, op->getSARref() );
+                        op = 0;
+                    } else {
+                        cmd_->setOperationId(opid);
+                    }
+                }
+            }
+        }
     }
 
     if ( ! op ) {
 
         if ( optype_ == CO_USSD_DIALOG ) {
+
+            if ( sarmr_ != -1 ) {
+                fail( "USSD: SAR fields found", st,
+                      smsc::system::Status::USSDMSGTOOLONG );
+                return;
+            }
 
             if ( sms->hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE) ) {
                 umr = sms->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
@@ -255,12 +289,12 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st )
                       smsc::system::Status::USSDDLGREFMISM );
                 return;
             }
-            
+
             opid_type found_ussd = session_->getUSSDOperationId();
 
             if ( wantOpenUSSD ) {
 
-                if ( session_->getUSSDOperationId() != SCAGCommand::invalidOpId() ) {
+                if ( session_->getUSSDOperationId() != invalidOpId() ) {
                     op = session_->setCurrentOperation( found_ussd );
                     smsc_log_info( log_, "current USSD dialog op=%p opid=%u is replaced",
                                    op, found_ussd );
@@ -275,7 +309,7 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st )
                 op->setUSSDref( umr );
                 if ( cmdid == DELIVERY ) op->setFlag(OperationFlags::NEXTUSSDISSUBMIT);
 
-            } else if ( found_ussd == SCAGCommand::invalidOpId() ) {
+            } else if ( found_ussd == invalidOpId() ) {
                 // ussd operation not found
                 fail( "USSD: dialog not found", st, 
                       smsc::system::Status::USSDDLGREFMISM );
@@ -289,6 +323,7 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st )
                           smsc::system::Status::SYSERR );
                     return;
                 }
+                cmd_->setOperationId( found_ussd );
 
                 if ( umr != op->getUSSDref() ) {
                     // umr mismatch
@@ -324,8 +359,21 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st )
             } // if ussd op exists
 
         } else {
+            // not USSD
 
             op = session_->createOperation( *cmd_.get(), optype_ );
+            if ( sarmr_ != -1 ) {
+                op->setSARref( sarmr_ );
+                const opid_type opid = session_->getCurrentOperationId();
+                if ( cmd_->getEntity()->setSarMapping(sarmr_,opid) ) {
+                    smsc_log_warn(log_,"multipart op sarmr/idx/tot=%d/%d/%d opid=%u replaced the old one on %s",
+                                  sarmr_, currentIndex_, lastIndex_,
+                                  opid, cmd_->getEntity()->getSystemId() );
+                } else {
+                    smsc_log_debug(log_,"multipart op mapping sarmr/idx/tot=%d/%d/%d opid=%u created on %s",
+                                   sarmr_, currentIndex_, lastIndex_, opid, cmd_->getEntity()->getSystemId() );
+                }
+            }
 
         }
 
@@ -338,6 +386,7 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st )
 
     // operation is created
 
+    /*
     { // setting waitReceipt
         bool transact = false;
         bool req_receipt = false;
@@ -359,6 +408,7 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st )
             op->setFlag( OperationFlags::WAIT_RECEIPT );
         }
     }
+     */
 
     // preprocess operation
     if ( cmd_->isResp() ) {
@@ -367,8 +417,8 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st )
         case CO_SUBMIT:
         case CO_DATA_SC_2_SME:
         case CO_DATA_SME_2_SC:
-        case CO_RECEIPT:
-            op->receiveNewResp( currentIndex, lastIndex );
+        // case CO_RECEIPT:
+            op->receiveNewResp( currentIndex_, lastIndex_ );
             break;
         case CO_USSD_DIALOG:
             break;
@@ -384,15 +434,17 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st )
 
         case CO_DELIVER:
         case CO_DATA_SC_2_SME:
-            op->receiveNewPart( currentIndex, lastIndex );
+            op->receiveNewPart( currentIndex_, lastIndex_ );
             break;
         case CO_SUBMIT:
         case CO_DATA_SME_2_SC:
-            op->receiveNewPart( currentIndex, lastIndex );
+            op->receiveNewPart( currentIndex_, lastIndex_ );
             break;
+            /*
         case CO_RECEIPT:
             op->receiveNewResp( currentIndex, lastIndex );
             break;
+             */
         case CO_USSD_DIALOG:
             // none
             break;
@@ -403,15 +455,23 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st )
 
     } // not resp
 
-    smsc_log_debug( log_, "op=%p preprocd opid=%u type=%d(%s) umr=%d stat=%d(%s) flags=%u parts=%d/%d",
+    smsc_log_debug( log_, "op=%p preprocd opid=%u type=%d(%s) umr=%d sarmr/idx/tot=%d/%d/%d stat=%d(%s) flags=%u parts/resps=%d/%d",
                     op, session_->getCurrentOperationId(),
                     op->type(), commandOpName(op->type()),
-                    umr,
+                    umr, sarmr_, currentIndex_, lastIndex_,
                     op->getStatus(), op->getNamedStatus(),
                     op->flags(), op->parts(), op->resps() );
-
-    st.status = re::STATUS_OK;
-    st.result = 0;
+    if ( sarmr_ != -1 && 
+         op->getSARref() == sarmr_ &&
+         op->getSARstatus().status == re::STATUS_FAILED ) {
+        // we should fix multipart messages.
+        // NOTE: resps should be fixed also to prevent their entering RE. 
+        st = op->getSARstatus();
+        smsc_log_debug(log_, "multipart has failed previously: res=%d", st.result );
+    } else {
+        st.status = re::STATUS_OK;
+        st.result = 0;
+    }
     return;
 }
 
@@ -420,39 +480,78 @@ void SmppOperationMaker::postProcess( re::RuleStatus& st )
 {
     postproc_ = true;
 
-    if ( st.status == re::STATUS_FAILED ) {
-        session_->closeCurrentOperation();
-        return;
-    } else if ( st.status == re::STATUS_LONG_CALL ) {
-        return;
-    }
+    const char* what = "";
+    const opid_type opid = cmd_->getOperationId();
+    do { // fake loop
 
-    Operation* op = session_->getCurrentOperation();
-    if ( ! op ) {
-        st.status = re::STATUS_FAILED;
-        st.result = smsc::system::Status::SYSERR;
-        what_ = "Logic error: no current operation is set";
-        return;
-    }
-
-    if ( op->type() == CO_USSD_DIALOG ) {
-
-        if ( op->getStatus() == OPERATION_COMPLETED && cmd_->isResp() ) {
-            session_->closeCurrentOperation();
+        Operation* op = session_->getCurrentOperation();
+        if ( st.status == re::STATUS_LONG_CALL ) {
+            what = "gone to longcall";
+            break;
         }
 
-    } else {
-
-        const bool waitreceipt = op->flagSet(OperationFlags::WAIT_RECEIPT);
-        if ( op->getStatus() == OPERATION_COMPLETED )
-            session_->closeCurrentOperation();
-        if ( waitreceipt ) {
-            session_->createOperation( *cmd_.get(), CO_RECEIPT );
-            // make sure receipt is not a current operation
-            session_->setCurrentOperation( SCAGCommand::invalidOpId() );
+        if ( ! op ) {
+            st.status = re::STATUS_FAILED;
+            st.result = smsc::system::Status::SYSERR;
+            what_ = "Logic error: no current operation is set";
+            what = "no op is set";
+            break;
         }
 
-    }
+        if ( st.status == re::STATUS_FAILED ) {
+            // generate a resp back to a submitter
+            op->receiveNewResp(currentIndex_,lastIndex_);
+            if ( sarmr_ != -1 ) {
+                // multipart
+                if ( op->getStatus() == OPERATION_COMPLETED ) {
+                    cmd_->getEntity()->setSarMapping(sarmr_,invalidOpId());
+                    session_->closeCurrentOperation();
+                    what = "fail, multi closed";
+                } else {
+                    op->setSARstatus(st);
+                    session_->setCurrentOperation(invalidOpId());
+                    what = "fail, multi, not all parts";
+                }
+            } else {
+                session_->closeCurrentOperation();
+                what = "fail, closed";
+            }
+            break;
+        }
+
+        if ( op->type() == CO_USSD_DIALOG ) {
+
+            if ( op->getStatus() == OPERATION_COMPLETED && cmd_->isResp() ) {
+                what = "ussd completed, closed on resp";
+                session_->closeCurrentOperation();
+            }
+
+        } else {
+
+            // const bool waitreceipt = op->flagSet(OperationFlags::WAIT_RECEIPT);
+            if ( op->getStatus() == OPERATION_COMPLETED ) {
+                // all parts and resps received
+                if ( op->getSARref() != -1 ) {
+                    cmd_->getEntity()->setSarMapping(sarmr_,invalidOpId());
+                    what = "multipart completed, closed";
+                } else {
+                    what = "completed, closed";
+                }
+                session_->closeCurrentOperation();
+            }
+            /*
+            if ( waitreceipt ) {
+                session_->createOperation( *cmd_.get(), CO_RECEIPT );
+                // make sure receipt is not a current operation
+                session_->setCurrentOperation( invalidOpId() );
+            }
+             */
+        }
+
+    } while ( false ); // fake loop
+    smsc_log_debug(log_,"postproc: sess=%p/%s opid=%u %s",
+                   session_.get(), session_->sessionKey().toString().c_str(),
+                   opid, what);
 }
 
 } //smpp

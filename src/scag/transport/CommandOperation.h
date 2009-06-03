@@ -12,7 +12,7 @@ enum CommandOperation
     //SMS
     CO_DELIVER = 0,
     CO_SUBMIT = 1,
-    CO_RECEIPT = 2,
+    // CO_RECEIPT = 2,
     CO_DATA_SC_2_SME = 3,
     CO_DATA_SC_2_SC = 4,
     CO_DATA_SME_2_SME = 5,

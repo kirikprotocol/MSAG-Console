@@ -70,17 +70,6 @@ class Operation;
 ///
 class Session : public Changeable
 {
-private:
-    // why we need this?
-    /*
-    enum ReadOnlyProperties
-    {
-        // PROPERTY_USR = 1,
-        PROPERTY_ICC_STATUS = 2,
-        PROPERTY_ABONENT = 3
-    };
-     */
-
 public:
     /// return the default live time of the session
     static unsigned defaultLiveTime();
@@ -137,7 +126,7 @@ public:
 
 
     /// === operations methods
-    /// NOTE: opid_type(0) denotes invalid operation
+    /// NOTE: invalidOpId() denotes invalid operation
     inline opid_type getCurrentOperationId() const {
         return currentOperationId_;
     }
@@ -145,10 +134,10 @@ public:
         return currentOperation_;
     }
 
-    /// set an existing operation by id and return it.
+    /// set an existing operation as current by id and return it.
     Operation* setCurrentOperation( opid_type opid );
 
-    /// return ussd operation id or -1
+    /// return ussd operation id or invalidOpId()
     opid_type getUSSDOperationId() const {
         return ussdOperationId_;
     }

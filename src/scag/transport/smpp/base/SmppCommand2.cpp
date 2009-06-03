@@ -1,7 +1,8 @@
 #include <cassert>
 #include "SmppCommand2.h"
 #include "SmppEntity2.h"
-// #include "scag/sessions/Session2.h"
+#include "scag/util/encodings/Encodings.h"
+#include "scag/util/io/HexDump.h"
 
 namespace scag2 {
 namespace transport {
@@ -293,6 +294,152 @@ void SmppCommand::makeSMSBody(SMS* sms,const SmppHeader* pdu,bool forceDC)
 }
 
 
+std::string SmppCommand::getMessageBody( SMS& data )
+{
+    unsigned len = 0;
+    const char * buff = 0;
+    std::string str;
+
+    if (data.hasBinProperty(Tag::SMPP_SHORT_MESSAGE)) 
+        buff = data.getBinProperty(Tag::SMPP_SHORT_MESSAGE, &len);
+    if (!len && data.hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD)) 
+        buff = data.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
+
+    if (!buff || !len) return str;
+
+    if (data.hasIntProperty(Tag::SMPP_ESM_CLASS)) {
+        const int esm = data.getIntProperty(Tag::SMPP_ESM_CLASS);
+        if ( (esm & 0x40) ) {
+            // udh is present, skip it
+            const unsigned udhl = (unsigned(buff[0]) & 0xff)+1;
+            if (udhl>=len) throw Exception("udh message is broken: len=%u udhl=%u", len, udhl);
+            buff += udhl;
+            len -= udhl;
+        }
+    }
+
+    int code = smsc::smpp::DataCoding::SMSC7BIT;
+
+    if (data.hasIntProperty(Tag::SMPP_DATA_CODING)) 
+        code = data.getIntProperty(Tag::SMPP_DATA_CODING);
+
+    switch (code) 
+    {
+    case smsc::smpp::DataCoding::SMSC7BIT:
+        util::encodings::Convertor::GSM7BitToUTF8(buff,len,str);
+        break;
+    case smsc::smpp::DataCoding::LATIN1:
+        util::encodings::Convertor::KOI8RToUTF8(buff, len, str);
+        break;
+    case smsc::smpp::DataCoding::UCS2:
+        util::encodings::Convertor::UCS2BEToUTF8((unsigned short *)buff, len / 2, str);
+        break;
+    default:
+        util::encodings::Convertor::GSM7BitToUTF8(buff,len,str);
+    }
+    /*
+    if (log_->isDebugEnabled()) {
+        util::HexDump hd;
+        util::HexDump::string_type dump;
+        dump.reserve(len*7+20);
+        hd.hexdump(dump,buff,len);
+        hd.addstr(dump,"-> ");
+        hd.hexdump(dump,str.c_str(),str.size());
+        smsc_log_debug(log_,"msg body (%u)->(%u): %s", len, str.size(), hd.c_str(dump));
+    }
+     */
+    return str;
+}
+
+
+const char* SmppCommand::getUDH( SMS& data )
+{
+    unsigned len = 0;
+    const char* buff = 0;
+
+    do {
+        if (data.hasBinProperty(Tag::SMPP_SHORT_MESSAGE)) 
+            buff = data.getBinProperty(Tag::SMPP_SHORT_MESSAGE, &len);
+        if (!len && data.hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD)) 
+            buff = data.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
+
+        if (!len) {buff = 0;}
+        if (!buff) {break;}
+
+        if ( data.hasIntProperty(Tag::SMPP_ESM_CLASS) ) {
+            int esm = data.getIntProperty(Tag::SMPP_ESM_CLASS);
+            if ( (esm & 0x40) ) {
+                break;
+            }
+        }
+        buff = 0;
+
+    } while (false);
+    return buff;
+}
+
+
+void SmppCommand::getSlicingParameters( SMS& sms, int& sarmr, int& currentIndex, int& lastIndex )
+{
+    sarmr = -1;
+    currentIndex = 0;
+    lastIndex = 0;
+
+    do {
+
+        if ( sms.hasIntProperty(Tag::SMPP_SAR_MSG_REF_NUM) &&
+             sms.hasIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS) &&
+             sms.hasIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM) ) {
+            currentIndex = sms.getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
+            lastIndex = sms.getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
+            sarmr = (sms.getIntProperty(Tag::SMPP_SAR_MSG_REF_NUM) & 0xffff);
+            smsc_log_debug(log_,"sar fields found: ref/idx/tot=%u/%u/%u",
+                           sarmr, currentIndex, lastIndex );
+            break;
+        }
+
+        const unsigned char* udh = 
+            reinterpret_cast<const unsigned char*>(getUDH(sms));
+        if (!udh) {break;}
+        const unsigned udhl = (unsigned(udh[0]) & 0xff)+1;
+        if ( log_->isDebugEnabled() ) {
+            util::HexDump hd;
+            util::HexDump::string_type dump;
+            hd.hexdump(dump,udh,udhl);
+            smsc_log_debug(log_,"msg w/ udh: %s",hd.c_str(dump));
+        }
+        // FIXME: impl comprehensive parsing
+        if ( 0x00 == udh[1] ) {
+            // udh8
+            if ( udh[2] != 3 ) {
+                smsc_log_warn(log_,"msg w/ udh8: wrong len: %u", udh[2]);
+                break;
+            }
+            sarmr = udh[3];
+            lastIndex = udh[4];
+            currentIndex = udh[5];
+        } else if ( 0x08 == udh[1] ) {
+            // udh16
+            if ( udh[2] != 4 ) {
+                smsc_log_warn(log_,"msg w/ udh16: wrong len: %u", udh[2]);
+                break;
+            }
+            sarmr = (unsigned(udh[3]) << 8) | udh[4] ;
+            lastIndex = udh[5];
+            currentIndex = udh[6];
+        } else {
+            util::HexDump hd;
+            util::HexDump::string_type dump;
+            hd.hexdump(dump,udh,udhl);
+            smsc_log_warn(log_,"udh bit is found but header has is weird: %s", hd.c_str(dump) );
+            break;
+        }
+        smsc_log_debug(log_,"udh ref/idx/tot=%u/%u/%u",
+                       sarmr,currentIndex,lastIndex);
+    } while ( false );
+}
+
+
 // --- non-static
 
 
@@ -305,9 +452,10 @@ void SmppCommand::print( util::Print& p ) const
     case DELIVERY:
     case DATASM: {
         SmsCommand& sc = that->get_smsCommand();
-        p.print( "smppcmd=%p session=%p type=%d(%s) serial=%d svc=%d opid=%d dlg/org=%d/%d %s(%s)->%s",
+        p.print( "smppcmd=%p session=%p type=%d(%s) serial=%d svc=%d opid=%d seq/org=%d/%d %s(%s)->%s",
                  this, session_, cmdid_, commandIdName(cmdid_), shared_->uid,
-                 serviceId_, opId_, shared_->dialogId,
+                 serviceId_, opId_,
+                 shared_->dialogId,
                  sc.get_orgDialogId(),
                  sc.orgSrc.toString().c_str(),
                  src_ent_->getSystemId(),
@@ -322,7 +470,7 @@ void SmppCommand::print( util::Print& p ) const
         SmppCommand* orgcmd = r->getOrgCmd();
         if ( orgcmd ) {
             SmsCommand& sc = orgcmd->get_smsCommand();
-            p.print( "smppcmd=%p session=%p type=%d(%s) serial=%d svc=%d opid=%d orgcmd=%p dlg/org=%d/%d %s(%s)->%s",
+            p.print( "smppcmd=%p session=%p type=%d(%s) serial=%d svc=%d opid=%d orgcmd=%p seq/org=%d/%d %s(%s)->%s",
                      this, session_, cmdid_, commandIdName(cmdid_),
                      shared_->uid,
                      serviceId_, opId_, orgcmd,
@@ -331,7 +479,7 @@ void SmppCommand::print( util::Print& p ) const
                      src_ent_->getSystemId(),
                      sc.orgDst.toString().c_str() );
         } else {
-            p.print( "smppcmd=%p session=%p type=%d(%s) serial=%d svc=%d opid=%d orgcmd=%p dlg=%d ?(%s)->?",
+            p.print( "smppcmd=%p session=%p type=%d(%s) serial=%d svc=%d opid=%d orgcmd=%p seq=%d ?(%s)->?",
                      this, session_, cmdid_, commandIdName(cmdid_),
                      shared_->uid,
                      serviceId_, opId_, orgcmd,
@@ -341,7 +489,7 @@ void SmppCommand::print( util::Print& p ) const
         break;
     }
     default:
-        p.print( "smppcmd=%p session=%p type=%d(%s) serial=%d svc=%d opid=%d dlg=%d ?(%s)->?",
+        p.print( "smppcmd=%p session=%p type=%d(%s) serial=%d svc=%d opid=%d seq=%d ?(%s)->?",
                  this, session_, cmdid_, commandIdName(cmdid_), shared_->uid,
                  serviceId_, opId_, shared_->dialogId,
                  src_ent_->getSystemId() );
@@ -890,9 +1038,11 @@ SCAGCommand(c), _SmppCommand(c)
     }
     const unsigned clones = get_smsCommand().ref();
     // no need to assign uid
-    smsc_log_debug( log_, "Command create (clone): cmd=%p, type=%d(%s), serial=%u, clones=%u",
+    smsc_log_debug( log_, "Command create (clone): cmd=%p, type=%d(%s), serial=%u, seq=%d, clones=%u",
                     this, cmdid_, commandIdName(cmdid_),
-                    shared_->uid, clones );
+                    shared_->uid,
+                    shared_->dialogId,
+                    clones );
     session_ = 0;
 }
 
@@ -902,10 +1052,11 @@ void SmppCommand::dispose()
     if ( cmdid_ == DELIVERY || cmdid_ == SUBMIT || cmdid_ == DATASM ) {
         if ( !dta_ ) return;
         const uint32_t uid = shared_->uid;
+        const uint32_t dialogId = shared_->dialogId;
         const unsigned clones = get_smsCommand().unref();
         if ( clones ) {
-            smsc_log_debug(log_, "Command destroy: cmd=%p, type=%d(%s), serial=%u, %u clones still exist",
-                           this, cmdid_, commandIdName(cmdid_), uid, clones );
+            smsc_log_debug(log_, "Command destroy: cmd=%p, type=%d(%s), serial=%u, seq=%u, %u clones still exist",
+                           this, cmdid_, commandIdName(cmdid_), uid, dialogId, clones );
             return;
         }
     }
@@ -920,8 +1071,8 @@ void SmppCommand::dispose()
                 sc = --commandCounter;
             }
             if ( cmdid_ != PROCESSEXPIREDRESP )
-                smsc_log_debug(log_, "Command destroy: cmd=%p, type=%d(%s), count=%u, serial=%u",
-                               this, cmdid_, commandIdName(cmdid_), sc, shared_->uid);
+                smsc_log_debug(log_, "Command destroy: cmd=%p, type=%d(%s), count=%u, serial=%u, seq=%u",
+                               this, cmdid_, commandIdName(cmdid_), sc, shared_->uid, shared_->dialogId );
         }
     }
 
@@ -1001,8 +1152,8 @@ void SmppCommand::postfix()
     // if ( ++stuid == uint32_t(-1) ) ++stuid;
     shared_->uid = makeSerial();
     if ( cmdid_ != PROCESSEXPIREDRESP )
-        smsc_log_debug( log_, "Command create: cmd=%p, type=%d(%s), count=%u, serial=%u",
-                        this, cmdid_, commandIdName(cmdid_), commandCounter, shared_->uid );
+        smsc_log_debug( log_, "Command create: cmd=%p, type=%d(%s), count=%u, serial=%u, seq=%u",
+                        this, cmdid_, commandIdName(cmdid_), commandCounter, shared_->uid, shared_->dialogId );
 }
 
 

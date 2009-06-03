@@ -8,6 +8,7 @@
 #include "core/buffers/Hash.hpp"
 #include "SmppManagerAdmin2.h"
 #include "util/timeslotcounter.hpp"
+#include "scag/transport/OpId.h"
 
 namespace scag2 {
 namespace transport {
@@ -24,22 +25,9 @@ struct UMRUSR
 };
  */
 
+
 struct SmppEntity
 {
-  SmppEntityInfo info;
-  SmppBindType bt;
-  Mutex mtx;
-  SmppChannel* channel;
-  SmppChannel* recvChannel;
-  SmppChannel* transChannel;
-  Mutex seqMtx;
-  int seq;
-  uint16_t slicingSeq;
-  bool connected;
-  smsc::util::TimeSlotCounter<> incCnt;
-  Mutex cntMtx;
-  int queueCount;
-
   SmppEntity():incCnt(5)
   {
     bt=btNone;
@@ -67,7 +55,7 @@ struct SmppEntity
   {
       // delMapping();
   }
-
+    
     /*
   int getUSR(const Address& abonent, int umr)
   {
@@ -247,18 +235,52 @@ struct SmppEntity
     queueCount--;
   }
 
+    /// return existing mapping or invalidOpId().
+    opid_type getSarMapping( int sarmr ) {
+        MutexGuard mg(sarMutex_);
+        opid_type* ptr = sarMapping_.GetPtr(sarmr);
+        if (!ptr) return invalidOpId();
+        return *ptr;
+    }
+
+    /// NOTE: use opid = invalidOpId() to delete mapping
+    /// \return true if mapping was replaced.
+    bool setSarMapping( int sarmr, opid_type opid ) {
+        MutexGuard mg(sarMutex_);
+        if (opid == invalidOpId()) {
+            sarMapping_.Delete(sarmr);
+        } else {
+            opid_type* ptr = sarMapping_.GetPtr(sarmr);
+            if (ptr) {
+                *ptr = opid;
+            } else {
+                sarMapping_.Insert(sarmr,opid);
+                return false;
+            }
+        }
+        return true;
+    }
+
+public:
+  SmppEntityInfo info;
+  SmppBindType bt;
+  Mutex mtx;
+  SmppChannel* channel;
+  SmppChannel* recvChannel;
+  SmppChannel* transChannel;
+  int seq;
+  uint16_t slicingSeq;
+  bool connected;
+  smsc::util::TimeSlotCounter<> incCnt;
+
 protected:
+  Mutex seqMtx;
+  Mutex cntMtx;
+  int queueCount;
 
-    /*
-  inline void delMapping()
-  {
-    MutexGuard guard(mappingLock);
-    mapping.Empty();
-  }
-     */
-
-  // Mutex    mappingLock;
-  // Hash<UMRUSR> mapping;
+    /// mapping of sar -> opid
+    smsc::core::synchronization::Mutex        sarMutex_;
+    smsc::core::buffers::IntHash< opid_type > sarMapping_;
 };
 
 }//smpp
