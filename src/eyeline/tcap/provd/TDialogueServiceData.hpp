@@ -2,6 +2,8 @@
 # ident "@(#)$Id$"
 # define __EYELINE_TCAP_PROVD_TDIALOGUESERVICEDATA_HPP__
 
+# include "logger/Logger.h"
+
 # include "core/synchronization/Mutex.hpp"
 # include "core/synchronization/MutexGuard.hpp"
 
@@ -71,6 +73,8 @@ public:
   void activateInvocationTimer(uint16_t invokeTimeout, uint8_t invokeId);
   void cancelInvocationTimer(uint8_t invokeId);
 
+  template<class T_COMP_IND_PRIMITIVE>
+  void notifyTCUserLocally(T_COMP_IND_PRIMITIVE & tc_comp_primitive);
 protected:
   template<class T_DIALOGUE_TERMINATION_IND_PRIMITIVE>
   void handleDialogueTerminationIndPrimitive(T_DIALOGUE_TERMINATION_IND_PRIMITIVE & tind_term_primitive);
@@ -92,8 +96,11 @@ protected:
   void setDstAddr(const sccp::SCCPAddress & dst_addr);
   void setSrcAddr(const sccp::SCCPAddress & dst_addr);
 
+  void checkAndProcessFirstDialogueResponse(TDlgRequestComposerAC* tc_req);
+
   friend class TrnFSM;
 private:
+  smsc::logger::Logger* _logger;
   TDialogueId _dialogueId;
 
   TrnFSM _trnFSM;
@@ -114,6 +121,9 @@ private:
 
   smsc::core::synchronization::Mutex _lock_forOperationTimers;
   TimeoutMonitor::timeout_id_t _operationTimers[256];
+
+  smsc::core::synchronization::Mutex _lock_firstIncomingDlrRsp;
+  bool _isFirstResponseToIncomingDialogue;
 };
 
 # include "eyeline/tcap/provd/TDialogueServiceData_impl.hpp"

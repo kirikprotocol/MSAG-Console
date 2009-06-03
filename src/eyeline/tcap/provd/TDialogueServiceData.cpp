@@ -1,5 +1,6 @@
 #include "util/Exception.hpp"
 #include "TDialogueServiceData.hpp"
+#include "TCompIndComposers.hpp"
 
 namespace eyeline {
 namespace tcap {
@@ -35,12 +36,13 @@ TDialogueServiceData::TDialogueServiceData(const TDialogueId& dialogueId,
                                            TDlgHandlerIface* dlgHndlrIface,
                                            unsigned int dialogueTimeout,
                                            const sccp::SCCPAddress& ownAddress)
-  : _dialogueId(dialogueId), _trnFSM(this, localTrnId),
+  : _logger(smsc::logger::Logger::getInstance("tcap.provd")),
+    _dialogueId(dialogueId), _trnFSM(this, localTrnId),
     _tDlgHndlrIface(dlgHndlrIface), _needReleaseDlgHndlr(false),
     _isDialogueWasAcked(false), _applicationContext(NULL),
     _linkNum(0), _isSetLinkNum(false), _dialogueTimeout(dialogueTimeout),
     _dialogueTimeoutId(0), _isSetDialogueTimeoutId(false), _srcAddr(ownAddress),
-    _isSetDstAddr(false), _isSetSrcAddr(false)
+    _isSetDstAddr(false), _isSetSrcAddr(false), _isFirstResponseToIncomingDialogue(false)
 {
   memset(reinterpret_cast<uint8_t*>(_operationTimers), 0, sizeof(_operationTimers));
 }
@@ -50,11 +52,13 @@ TDialogueServiceData::TDialogueServiceData(const TDialogueId& dialogueId,
                                            uint32_t remoteTrnId,
                                            TDlgHandlerIface* dlgHndlrIface,
                                            unsigned int dialogueTimeout)
-  : _dialogueId(dialogueId), _trnFSM(this, localTrnId, remoteTrnId),
+  : _logger(smsc::logger::Logger::getInstance("tcap.provd")),
+    _dialogueId(dialogueId), _trnFSM(this, localTrnId, remoteTrnId),
     _tDlgHndlrIface(dlgHndlrIface), _needReleaseDlgHndlr(true),
     _isDialogueWasAcked(false), _applicationContext(NULL),
     _linkNum(0), _isSetLinkNum(false), _dialogueTimeout(dialogueTimeout),
-    _dialogueTimeoutId(0), _isSetDialogueTimeoutId(false), _isSetDstAddr(false), _isSetSrcAddr(false)
+    _dialogueTimeoutId(0), _isSetDialogueTimeoutId(false),
+    _isSetDstAddr(false), _isSetSrcAddr(false), _isFirstResponseToIncomingDialogue(true)
 {}
 
 TDialogueServiceData::~TDialogueServiceData()
@@ -67,6 +71,7 @@ void
 TDialogueServiceData::updateDialogueDataByRequest(TBeginReqComposer & treq_begin)
 {
   handleDialogueRequestPrimitive(treq_begin);
+  checkAndProcessFirstDialogueResponse(&treq_begin);
   setDstAddr(treq_begin.TReq().getDestAddress());
 }
 
@@ -82,8 +87,9 @@ TDialogueServiceData::updateDialogueDataByRequest(TEndReqComposer & treq_end)
 {
   try {
     handleDialogueRequestPrimitive(treq_end);
+    treq_end.setDialogueResponse();
     TDialogueServiceDataRegistry::getInstance().destroyTDialogueServiceData(treq_end.TReq().getDialogueId());
-  } catch (...) { 
+  } catch (...) {
     TDialogueServiceDataRegistry::getInstance().destroyTDialogueServiceData(treq_end.TReq().getDialogueId());
     throw;
   }
@@ -95,7 +101,7 @@ TDialogueServiceData::updateDialogueDataByRequest(TUAbortReqComposer & treq_uAbo
   try {
     handleDialogueRequestPrimitive(treq_uAbort);
     TDialogueServiceDataRegistry::getInstance().destroyTDialogueServiceData(treq_uAbort.TReq().getDialogueId());
-  } catch (...) { 
+  } catch (...) {
     TDialogueServiceDataRegistry::getInstance().destroyTDialogueServiceData(treq_uAbort.TReq().getDialogueId());
     throw;
   }
@@ -107,7 +113,7 @@ TDialogueServiceData::updateDialogueDataByRequest(TPAbortReqComposer & treq_pAbo
   try {
     handleDialogueRequestPrimitive(treq_pAbort);
     TDialogueServiceDataRegistry::getInstance().destroyTDialogueServiceData(treq_pAbort.TReq().getDialogueId());
-  } catch (...) { 
+  } catch (...) {
     TDialogueServiceDataRegistry::getInstance().destroyTDialogueServiceData(treq_pAbort.TReq().getDialogueId());
     throw;
   }
@@ -245,9 +251,10 @@ TDialogueServiceData::notifyDialogueTimeoutExpiration()
 void
 TDialogueServiceData::notifyInvocationTimeoutExpiration(uint8_t invokeId)
 {
-  TC_L_Cancel_Ind tcLCancel;
-  tcLCancel.setDialogueId(getDialogueId());
-  tcLCancel.setInvokeId(invokeId);
+  TC_L_Cancel_Ind_Composer tcLCancelComposer;
+
+  tcLCancelComposer.setDialogueId(getDialogueId());
+  tcLCancelComposer.setInvokeId(invokeId);
 
   {
     smsc::core::synchronization::MutexGuard synchronize(_lock_forOperationTimers);
@@ -256,7 +263,7 @@ TDialogueServiceData::notifyInvocationTimeoutExpiration(uint8_t invokeId)
 
   try {
     smsc::core::synchronization::MutexGuard synchronize(_lock_forCallToTDlgHndlrIface);
-    _tDlgHndlrIface->updateDialogue(tcLCancel);
+    _tDlgHndlrIface->updateDialogue(tcLCancelComposer);
   } catch (...) {}
 }
 
@@ -323,6 +330,16 @@ void
 TDialogueServiceData::setDstAddr(const sccp::SCCPAddress & dst_addr)
 {
   _dstAddr = dst_addr; _isSetDstAddr = true;
+}
+
+void
+TDialogueServiceData::checkAndProcessFirstDialogueResponse(TDlgRequestComposerAC* tc_req)
+{
+  smsc::core::synchronization::MutexGuard synchronize(_lock_firstIncomingDlrRsp);
+  if ( _isFirstResponseToIncomingDialogue ) {
+    _isFirstResponseToIncomingDialogue = false;
+    tc_req->setDialogueResponse();
+  }
 }
 
 }}}
