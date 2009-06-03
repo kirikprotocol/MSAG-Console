@@ -5,6 +5,7 @@
 //#include <scag/re/actions/ActionFactory.h>
 #include "scag/transport/SCAGCommand2.h"
 #include "RuleStatus2.h"
+#include "ActionContext2.h"
 #include "RuleKey2.h"
 #include "scag/util/properties/Properties2.h"
 
@@ -32,7 +33,7 @@ public:
     // static void Init(const std::string& dir);
     static RuleEngine& Instance();
 
-    virtual void process(SCAGCommand& command, Session& session, RuleStatus& rs, util::HRTiming* hrt = 0 ) = 0;
+    virtual void process(SCAGCommand& command, Session& session, RuleStatus& rs, actions::CommandProperty& cp, util::HRTiming* hrt = 0 ) = 0;
 
     /// NOTE: this method is invoked (directly) for session destruction only!
     virtual void processSession(Session& session, RuleStatus& rs) = 0;
