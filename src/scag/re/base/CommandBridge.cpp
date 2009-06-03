@@ -132,58 +132,18 @@ EventHandlerType CommandBridge::getHandlerType(const SCAGCommand& command)
     return handlerType;
 }
 
+
 bool CommandBridge::hasMSB(const char* data, int len)
 {
     while(len-- && !(data[len] & 0x80));
     return len >= 0;
 }
 
+
 std::string CommandBridge::getMessageBody(SmppCommand& command)
 {
-    unsigned len = 0;
-
-    const char * buff = 0;
-
-    std::string str;
-    // char ucs2buff[2048];
-    /*
-        static const uint8_t SMSC7BIT             = 0;
-        static const uint8_t LATIN1               = 3;
-        static const uint8_t BINARY               = BIT(2);
-        static const uint8_t UCS2                 = BIT(3);
-    */
-    SMS& data = getSMS(command);
-
-    if (data.hasBinProperty(Tag::SMPP_SHORT_MESSAGE)) 
-        buff = data.getBinProperty(Tag::SMPP_SHORT_MESSAGE, &len);
-    if (!len && data.hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD)) 
-        buff = data.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
-
-    if (!buff || !len) return str;
-
-    int code = smsc::smpp::DataCoding::SMSC7BIT;
-
-    if (data.hasIntProperty(Tag::SMPP_DATA_CODING)) 
-        code = data.getIntProperty(Tag::SMPP_DATA_CODING);
-
-    switch (code) 
-    {
-    case smsc::smpp::DataCoding::SMSC7BIT:
-        Convertor::GSM7BitToUTF8(buff,len,str);
-        break;
-    case smsc::smpp::DataCoding::LATIN1:
-        Convertor::KOI8RToUTF8(buff, len, str);
-        break;
-    case smsc::smpp::DataCoding::UCS2:
-        Convertor::UCS2BEToUTF8((unsigned short *)buff, len / 2, str);
-        break;
-    default:
-        Convertor::GSM7BitToUTF8(buff,len,str);
-    }
-
-    return str;
+    return SmppCommand::getMessageBody(getSMS(command));
 }
-
 
 
 DataSmDirection CommandBridge::getPacketDirection(const SCAGCommand& command)
