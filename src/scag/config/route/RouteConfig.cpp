@@ -208,6 +208,7 @@ throw (SubjectNotFoundException)
                                     getAttribBool(elem, "enabled"),
                                     getAttribBool(elem, "active"),
                                     getAttribBool(elem, "transit"),
+                                    getAttribBool(elem, "saa"),
                                     getAttribStr(elem, "srcSmeId"),
                                     getAttribInt(elem, "serviceId"),
                                     getAttribStr(elem, "slicing"),
@@ -321,6 +322,8 @@ RouteConfig::status RouteConfig::store(const char * const filename) const
       out << "  <route id=\""  << encode(r->getId())
       << "\" archiving=\""     << (r->isArchiving() ? "true" : "false")
       << "\" enabling=\""      << (r->isEnabling() ? "true" : "false")
+      << "\" transit=\""       << (r->isTransit() ? "true" : "false")
+      << "\" saa=\""           << (r->hasStatistics() ? "true" : "false")
       << "\">" << std::endl;
 
       Source src;
