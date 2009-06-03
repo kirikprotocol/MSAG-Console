@@ -154,7 +154,8 @@ class GroupSendProcessor implements GroupSendCmd.Receiver,
 
     try {
       DistrList dl = listsDS.getDistrList(cmd.getGroupName(), cmd.getOwner());
-      return groupSend(cmd, dl, true, false);
+      boolean submitterIsOwner = cmd.getSubmitter().equals(dl.getOwner());
+      return groupSend(cmd, dl, submitterIsOwner, !submitterIsOwner);
     } catch (CommandExecutionException e) {
       throw e;
     } catch (Throwable e) {
