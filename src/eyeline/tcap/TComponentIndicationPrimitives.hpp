@@ -2,23 +2,47 @@
 # ident "@(#)$Id$"
 # define __EYELINE_TCAP_TCOMPONENTINDICATIONPRIMITIVES_HPP__
 
-# include "eyeline/tcap/TComponentHandlingPrimitive.hpp"
+# include "eyeline/utilx/Exception.hpp"
+# include "eyeline/tcap/TDialogueId.hpp"
+# include "eyeline/tcap/TComponentDefs.hpp"
 
 namespace eyeline {
 namespace tcap {
 
-class TC_L_Cancel_Ind : public TComponentHandlingPrimitive {
+class TComponentIndicationPrimitive {
+public:
+  TComponentIndicationPrimitive()
+    : _isSetDlgId(false), _isSetInvokeId(false) {}
+
+  TDialogueId getDialogueId(void) const {
+    if ( _isSetDlgId )
+      return _dlgId;
+    else
+      throw utilx::FieldNotSetException("TComponentIndicationPrimitive::getDialogueId::: dialogueId is not set");
+  }
+
+  InvokeId getInvokeId(void) const {
+    if ( _isSetInvokeId )
+      return _invokeId;
+    else
+      throw utilx::FieldNotSetException("TComponentIndicationPrimitive::getInvokeId::: invokeId is not set");
+  }
+
+protected:
+  TDialogueId _dlgId;
+  InvokeId _invokeId;
+  bool _isSetDlgId, _isSetInvokeId;
 };
 
-class TC_L_Reject_Ind : public TComponentHandlingPrimitive {
+
+class TC_L_Cancel_Ind : public TComponentIndicationPrimitive {
+};
+
+class TC_L_Reject_Ind : public TComponentIndicationPrimitive {
 public:
   TC_L_Reject_Ind()
     : _isSetProblemCode(false) {}
 
-  typedef uint8_t problem_code_t;
-
-  enum problem_code_e { BAD_COMPONENT_PROTION = 1, GENERAL_PROBLEM = 255 };
-  void setProblemCode(problem_code_t problemCode) { _problemCode = problemCode; _isSetProblemCode = true; }
   problem_code_t getProblemCode() const {
     if ( _isSetProblemCode )
       return _problemCode;
@@ -26,7 +50,7 @@ public:
       throw utilx::FieldNotSetException("TC_L_Reject_Ind::getProblemCode::: problemCode is not set");
   }
 
-private:
+protected:
   problem_code_t _problemCode;
   bool _isSetProblemCode;
 };
