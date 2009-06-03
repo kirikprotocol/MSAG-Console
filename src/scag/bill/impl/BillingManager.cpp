@@ -487,7 +487,9 @@ void BillingManagerImpl::Stop()
     {
         m_bStarted = false;
         socket->Close();
+        smsc_log_debug(logger,"inman socket closed");
         connectEvent.Signal();
+        smsc_log_debug(logger,"connectEvent signal sent, waiting on exitEvent");
         exitEvent.Wait();
     }
     #endif
@@ -519,6 +521,10 @@ int BillingManagerImpl::Execute()
             else
             {
                 connectEvent.Wait(10000);
+                if ( ! isStarted() ) {
+                    smsc_log_debug(logger,"not started after connectEvent wait");
+                    break; 
+                }
                 // smsc_log_debug(logger,"billman rolling");
                 if(lastReconnect + m_ReconnectTimeout < time(NULL))
                 {
