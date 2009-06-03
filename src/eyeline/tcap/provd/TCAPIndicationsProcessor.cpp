@@ -17,7 +17,8 @@ namespace tcap {
 namespace provd {
 
 TCAPIndicationsProcessor::TCAPIndicationsProcessor()
-  : _ownAddress(TCAPConfiguration::getInstance().getOwnAddress())
+  : _logger(smsc::logger::Logger::getInstance("tcap.provd")),
+    _ownAddress(TCAPConfiguration::getInstance().getOwnAddress())
 {}
 
 bool

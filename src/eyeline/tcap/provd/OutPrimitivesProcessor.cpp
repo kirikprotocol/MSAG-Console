@@ -7,6 +7,7 @@ static char const ident[] = "@(#)$Id$";
 #include "eyeline/tcap/provd/OutPrimitivesProcessor.hpp"
 #include "eyeline/tcap/provd/TimeoutMonitor.hpp"
 #include "eyeline/tcap/provd/TDlgPrimitivesUtils.hpp"
+#include "TCompIndComposers.hpp"
 
 namespace eyeline {
 namespace tcap {
@@ -34,10 +35,15 @@ OutPrimitivesProcessor::updateDialogue(const TC_Begin_Req & begin_req_primitive)
       activateTimers(tDlgSvcData.Get(), &begin_req_primitive.CompList());
 
       tDlgSvcData->setLinkNum(rc.suaConnectNum);
-    } else if ( begin_req_primitive.getReturnOnError() )
-      noticeTCUser(tDlgSvcData.Get(), tDialogueId, convertSuaApiError2TNoticeCause(rc.operationResult));
-  } else
+    } else {
+      smsc_log_error(_logger, "OutPrimitivesProcessor::updateDialogue::: TC_Begin_Req primitive sending error=[%d]", rc.operationResult);
+      if ( begin_req_primitive.getReturnOnError() )
+        noticeTCUser(tDlgSvcData.Get(), tDialogueId, convertSuaApiError2TNoticeCause(rc.operationResult));
+    }
+  } else {
+    smsc_log_error(_logger, "OutPrimitivesProcessor::updateDialogue::: TC_Begin_Req primitive serialization error=[%d]", srlzResult);
     analyzeFailureCauseAndNotifyTCUser(srlzResult, tDialogueId, tDlgSvcData.Get(), begin_req_primitive.getReturnOnError());
+  }
 }
 
 void
@@ -53,13 +59,24 @@ OutPrimitivesProcessor::updateDialogue(const TC_Cont_Req & cont_req_primitive)
   SUAUnitdataReq  reqUDT;
   TDlgRequestComposerAC::SerializationResult_e srlzResult =
     tReqComposer.serialize2UDT(reqUDT, tDlgSvcData->getSrcAddr(), tDlgSvcData->getDstAddr());
-  //TODO: analyze srlzResult and generate appropriate indication
 
-  SuaApi::CallResult rc = sendMessage(reqUDT, tDlgSvcData->getLinkNum());
-  if ( (rc.operationResult != SuaApi::OK) && cont_req_primitive.getReturnOnError() )
-    noticeTCUser(tDlgSvcData.Get(), tDialogueId, convertSuaApiError2TNoticeCause(rc.operationResult));
-  else
-    activateTimers(tDlgSvcData.Get(), &cont_req_primitive.CompList());
+  if ( srlzResult == TDlgRequestComposerAC::srlzOk ) {
+    SuaApi::CallResult rc = sendMessage(reqUDT, tDlgSvcData->getLinkNum());
+    if ( rc.operationResult == SuaApi::OK ) {
+      tDlgSvcData->activateDialogueTimer();
+
+      activateTimers(tDlgSvcData.Get(), &cont_req_primitive.CompList());
+
+      tDlgSvcData->setLinkNum(rc.suaConnectNum);
+    } else {
+      smsc_log_error(_logger, "OutPrimitivesProcessor::updateDialogue::: TC_Cont_Req primitive sending error=[%d]", rc.operationResult);
+      if ( cont_req_primitive.getReturnOnError() )
+        noticeTCUser(tDlgSvcData.Get(), tDialogueId, convertSuaApiError2TNoticeCause(rc.operationResult));
+    }
+  } else {
+    smsc_log_error(_logger, "OutPrimitivesProcessor::updateDialogue::: TC_Cont_Req primitive serialization error=[%d]", srlzResult);
+    analyzeFailureCauseAndNotifyTCUser(srlzResult, tDialogueId, tDlgSvcData.Get(), cont_req_primitive.getReturnOnError());
+  }
 }
 
 void
@@ -78,13 +95,16 @@ OutPrimitivesProcessor::updateDialogue(const TC_End_Req & end_req_primitive)
 
     TDlgRequestComposerAC::SerializationResult_e srlzResult =
       tReqComposer.serialize2UDT(reqUDT, tDlgSvcData->getSrcAddr(), tDlgSvcData->getDstAddr());
-    //TODO: analyze srlzResult and generate appropriate indication
 
-    SuaApi::CallResult rc = sendMessage(reqUDT, tDlgSvcData->getLinkNum());
-    if ( (rc.operationResult != SuaApi::OK) && end_req_primitive.getReturnOnError() )
-      noticeTCUser(tDlgSvcData.Get(), tDialogueId, convertSuaApiError2TNoticeCause(rc.operationResult));
-    else
-      activateTimers(tDlgSvcData.Get(), &end_req_primitive.CompList());
+    if ( srlzResult == TDlgRequestComposerAC::srlzOk ) {
+      SuaApi::CallResult rc = sendMessage(reqUDT, tDlgSvcData->getLinkNum());
+      if ( rc.operationResult != SuaApi::OK ) {
+        smsc_log_error(_logger, "OutPrimitivesProcessor::updateDialogue::: TC_End_Req primitive sending error=[%d]", rc.operationResult);
+      }
+    } else {
+      smsc_log_error(_logger, "OutPrimitivesProcessor::updateDialogue::: TC_End_Req primitive serialization error=[%d]", srlzResult);
+      analyzeFailureCauseAndNotifyTCUser(srlzResult, tDialogueId, tDlgSvcData.Get(), end_req_primitive.getReturnOnError());
+    }
   }
 }
 
@@ -102,11 +122,16 @@ OutPrimitivesProcessor::updateDialogue(const TC_UAbort_Req & u_abort_req_primiti
   SUAUnitdataReq  reqUDT;
   TDlgRequestComposerAC::SerializationResult_e srlzResult =
     tReqComposer.serialize2UDT(reqUDT, tDlgSvcData->getSrcAddr(), tDlgSvcData->getDstAddr());
-  //TODO: analyze srlzResult and generate appropriate indication
 
-  SuaApi::CallResult rc = sendMessage(reqUDT, tDlgSvcData->getLinkNum());
-  if ( (rc.operationResult != SuaApi::OK) && u_abort_req_primitive.getReturnOnError() )
-    noticeTCUser(tDlgSvcData.Get(), tDialogueId, convertSuaApiError2TNoticeCause(rc.operationResult));
+  if ( srlzResult == TDlgRequestComposerAC::srlzOk ) {
+    SuaApi::CallResult rc = sendMessage(reqUDT, tDlgSvcData->getLinkNum());
+    if ( rc.operationResult != SuaApi::OK ) {
+      smsc_log_error(_logger, "OutPrimitivesProcessor::updateDialogue::: TC_UAbort_Req primitive sending error=[%d]", rc.operationResult);
+    }
+  } else {
+    smsc_log_error(_logger, "OutPrimitivesProcessor::updateDialogue::: TC_UAbort_Req primitive serialization error=[%d]", srlzResult);
+    analyzeFailureCauseAndNotifyTCUser(srlzResult, tDialogueId, tDlgSvcData.Get(), u_abort_req_primitive.getReturnOnError());
+  }
 }
 
 void
@@ -123,9 +148,15 @@ OutPrimitivesProcessor::updateDialogue(const TC_PAbort_Req & p_abort_req_primiti
   SUAUnitdataReq  reqUDT;
   TDlgRequestComposerAC::SerializationResult_e srlzResult =
     tReqComposer.serialize2UDT(reqUDT, tDlgSvcData->getSrcAddr(), tDlgSvcData->getDstAddr());
-  //TODO: analyze srlzResult and generate appropriate indication
 
-  sendMessage(reqUDT, tDlgSvcData->getLinkNum());
+  if ( srlzResult == TDlgRequestComposerAC::srlzOk ) {
+    SuaApi::CallResult rc = sendMessage(reqUDT, tDlgSvcData->getLinkNum());
+    if ( rc.operationResult != SuaApi::OK )
+      smsc_log_error(_logger, "OutPrimitivesProcessor::updateDialogue::: TC_PAbort_Req primitive sending error=[%d]", rc.operationResult);
+  } else {
+    smsc_log_error(_logger, "OutPrimitivesProcessor::updateDialogue::: TC_PAbort_Req primitive serialization error=[%d]", srlzResult);
+    analyzeFailureCauseAndNotifyTCUser(srlzResult, tDialogueId, tDlgSvcData.Get(), p_abort_req_primitive.getReturnOnError());
+  }
 }
 
 void
@@ -135,9 +166,12 @@ OutPrimitivesProcessor::sendPrimitive(const TPAbortReqComposer & p_abort_req, un
   SUAUnitdataReq  reqUDT;
   TDlgRequestComposerAC::SerializationResult_e srlzResult =
       p_abort_req.serialize2UDT(reqUDT, src_addr, dst_addr);
-  //TODO: analyze srlzResult and generate appropriate indication
-
-  sendMessage(reqUDT, link_num);
+  if ( srlzResult == TDlgRequestComposerAC::srlzOk ) {
+    SuaApi::CallResult rc = sendMessage(reqUDT, link_num);
+    if ( rc.operationResult != SuaApi::OK )
+      smsc_log_error(_logger, "OutPrimitivesProcessor::sendPrimitive::: TC_PAbort_Req primitive sending error=[%d]", rc.operationResult);
+  } else
+    smsc_log_error(_logger, "OutPrimitivesProcessor::sendPrimitive::: TC_PAbort_Req primitive serialization error=[%d]", srlzResult);
 }
 
 void
@@ -147,9 +181,12 @@ OutPrimitivesProcessor::sendPrimitive(const TUAbortReqComposer & u_abort_req, un
   SUAUnitdataReq  reqUDT;
   TDlgRequestComposerAC::SerializationResult_e srlzResult =
       u_abort_req.serialize2UDT(reqUDT, src_addr, dst_addr);
-  //TODO: analyze srlzResult and generate appropriate indication
-
-  sendMessage(reqUDT, link_num);
+  if ( srlzResult == TDlgRequestComposerAC::srlzOk ) {
+    SuaApi::CallResult rc = sendMessage(reqUDT, link_num);
+    if ( rc.operationResult != SuaApi::OK )
+      smsc_log_error(_logger, "OutPrimitivesProcessor::sendPrimitive::: TC_UAbort_Req primitive sending error=[%d]", rc.operationResult);
+  } else
+    smsc_log_error(_logger, "OutPrimitivesProcessor::sendPrimitive::: TC_UAbort_Req primitive serialization error=[%d]", srlzResult);
 }
 
 void
@@ -189,7 +226,7 @@ OutPrimitivesProcessor::analyzeFailureCauseAndNotifyTCUser(TDlgRequestComposerAC
                                                            bool return_on_error)
 {
   if ( res_status == TDlgRequestComposerAC::srlzBadComponentPortion )
-    rejectComponent(t_dlg_svc_data, t_dialogue_id, TC_L_Reject_Ind::BAD_COMPONENT_PROTION);
+    rejectComponent(t_dlg_svc_data, t_dialogue_id, BAD_COMPONENT_PORTION);
   else {
     if ( !return_on_error )
       return;
@@ -214,14 +251,13 @@ OutPrimitivesProcessor::analyzeFailureCauseAndNotifyTCUser(TDlgRequestComposerAC
 void
 OutPrimitivesProcessor::rejectComponent(TDialogueServiceData* t_dlg_svc_data,
                                         const TDialogueId& t_dialogue_id,
-                                        TC_L_Reject_Ind::problem_code_e problem_code)
+                                        problem_code_e problem_code)
 {
-  TC_L_Reject_Ind tcLRejectIndication;
-
+  TC_L_Reject_Ind_Composer tcLRejectIndication;
   tcLRejectIndication.setDialogueId(t_dialogue_id);
   tcLRejectIndication.setProblemCode(problem_code);
 
-  //tDlgSvcData->updateDialogueDataByIndication(&tcLRejectIndication);
+  t_dlg_svc_data->notifyTCUserLocally(tcLRejectIndication);
 }
 
 }}}

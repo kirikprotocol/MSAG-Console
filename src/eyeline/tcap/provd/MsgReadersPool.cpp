@@ -7,7 +7,8 @@ namespace provd {
 
 MsgReadersPool::MsgReadersPool(unsigned maxNumOfMsgReaders,
                                sua::libsua::SuaApi* libSuaApi)
-  : _maxNumOfMsgReaders(maxNumOfMsgReaders), _libSuaApi(libSuaApi)
+  : _logger(smsc::logger::Logger::getInstance("tcap.provd")),
+    _maxNumOfMsgReaders(maxNumOfMsgReaders), _libSuaApi(libSuaApi)
 {}
 
 void

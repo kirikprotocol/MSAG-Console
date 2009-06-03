@@ -4,6 +4,7 @@
 
 # include <map>
 
+# include "logger/Logger.h"
 # include "eyeline/asn1/EncodedOID.hpp"
 # include "eyeline/utilx/Singleton.hpp"
 # include "eyeline/tcap/TDlgHandlerIface.hpp"
@@ -15,6 +16,10 @@ namespace provd {
 
 class AppCtxSMRegistry : public utilx::Singleton<AppCtxSMRegistry> {
 public:
+  AppCtxSMRegistry()
+    : _logger(smsc::logger::Logger::getInstance("tcap.provd"))
+  {}
+
   struct RegistryEntry {
     RegistryEntry(TDlgHandlerIface* aDialogueHandler,
                   unsigned int aDialogueTimeout)
@@ -34,6 +39,7 @@ public:
   // Not MT-safe
   void unregisterDialogueHandlerFactory(const asn1::EncodedOID& ctx);
 private:
+  smsc::logger::Logger* _logger;
   struct RegistryEntry_impl {
     RegistryEntry_impl(TDlgHandlerIfaceFactory* aDialogueHandlerFactory,
                        unsigned int aDialogueTimeout)

@@ -2,6 +2,7 @@
 # ident "@(#)$Id$"
 # define __EYELINE_TCAP_PROVD_TCAPINDICATIONSPROCESSOR_HPP__
 
+# include "logger/Logger.h"
 # include "eyeline/sccp/SCCPAddress.hpp"
 # include "eyeline/tcap/provd/TDlgIndComposers.hpp"
 
@@ -22,6 +23,7 @@ public:
   virtual bool updateDialogue(TNoticeIndComposer & tc_notice_ind, unsigned int src_link_num);
 
 private:
+  smsc::logger::Logger* _logger;
   sccp::SCCPAddress _ownAddress;
 };
 

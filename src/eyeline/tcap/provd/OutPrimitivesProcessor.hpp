@@ -2,6 +2,7 @@
 # ident "@(#)$Id$"
 # define __EYELINE_TCAP_PROVD_OUTPRIMITIVESPROCESSOR_HPP__
 
+# include "logger/Logger.h"
 # include "eyeline/sua/libsua/SuaApi.hpp"
 # include "eyeline/tcap/provd/TDlgReqComposers.hpp"
 # include "eyeline/tcap/provd/TDialogueServiceDataRegistry.hpp"
@@ -15,7 +16,7 @@ using sua::libsua::SuaApi;
 class OutPrimitivesProcessor {
 public:
   explicit OutPrimitivesProcessor(SuaApi* sua_api)
-    : _suaApi(sua_api)
+    : _logger(smsc::logger::Logger::getInstance("tcap.provd")), _suaApi(sua_api)
   {}
 
   void updateDialogue(const TC_Begin_Req & begin_req_primitive);
@@ -43,7 +44,7 @@ protected:
 
   void rejectComponent(TDialogueServiceData* t_dlg_svc_data,
                        const TDialogueId& t_dialogue_id,
-                       TC_L_Reject_Ind::problem_code_e problem_code);
+                       problem_code_e problem_code);
 
   SuaApi::CallResult sendMessage(const SUAUnitdataReq & use_udt) const
   {
@@ -62,6 +63,7 @@ protected:
   }
 
 private:
+  smsc::logger::Logger* _logger;
   SuaApi * _suaApi;
 };
 
