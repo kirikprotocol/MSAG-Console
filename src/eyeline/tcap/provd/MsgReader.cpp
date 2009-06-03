@@ -8,7 +8,7 @@ namespace tcap {
 namespace provd {
 
 MsgReader::MsgReader(unsigned msgReaderNum, sua::libsua::SuaApi* libSuaApi)
-  : _logger(smsc::logger::Logger::getInstance("msgRdr")), _libSuaApi(libSuaApi)
+  : _logger(smsc::logger::Logger::getInstance("tcap.provd")), _libSuaApi(libSuaApi)
 {
   snprintf(_taskName, sizeof(_taskName), "MsgReader_%u", msgReaderNum);
 }

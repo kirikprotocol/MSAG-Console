@@ -10,7 +10,7 @@ namespace tcap {
 namespace provd {
 
 TimeoutMonitor::TimeoutMonitor()
-  : _logger(smsc::logger::Logger::getInstance("tmtmon")), _isRunning(true),
+  : _logger(smsc::logger::Logger::getInstance("tcap.provd")), _isRunning(true),
     _maxTimeoutValue(0), _timeoutIdSourceGenerator(1), _knownTimeouts(NULL)
 {}
 

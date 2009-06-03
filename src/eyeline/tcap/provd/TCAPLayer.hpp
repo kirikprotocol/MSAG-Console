@@ -49,6 +49,7 @@ public:
                      const SCCPAddress& src_addr, const SCCPAddress& dst_addr) const;
 
 private:
+  smsc::logger::Logger* _logger;
   OutPrimitivesProcessor* _outPrimitivesProcessor;
   MsgReadersPool* _msgReaders;
 

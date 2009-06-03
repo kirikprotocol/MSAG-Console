@@ -9,7 +9,8 @@ namespace tcap {
 namespace provd {
 
 TCAPLayer::TCAPLayer()
-  : _outPrimitivesProcessor(NULL), _msgReaders(NULL), _wasInitialized(false),
+  : _logger(smsc::logger::Logger::getInstance("tcap.provd")),
+    _outPrimitivesProcessor(NULL), _msgReaders(NULL), _wasInitialized(false),
     _maxDialoguesCount(0), _dialogueTimeout(0), _rosTimeout(0), _suaApi(NULL)
 {}
 
