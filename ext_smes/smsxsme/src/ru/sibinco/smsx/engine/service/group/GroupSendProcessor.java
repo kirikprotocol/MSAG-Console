@@ -114,7 +114,7 @@ class GroupSendProcessor implements GroupSendCmd.Receiver,
           o.setMessage(m);
 
           String operator = operators.getOperatorByAddress(member);
-          if (dl.containsSubmitter(member) && operator != null) {
+          if (dl.containsSubmitter(member) && !member.equals(cmd.getSubmitter()) && operator != null) {
             replies.put(member, dl.getId());
 
             Message invintation = new Message();
