@@ -337,6 +337,10 @@ Hash<int> SmppCommandAdapter::InitDataSmFieldNames()
 
 //    hs["whoisd_phone_model"]     = OPTIONAL_PHONE_MODEL;
 
+    hs["slicing_ref_num"]               = SLICING_REF_NUM;
+    hs["slicing_total_segments"]        = SLICING_TOTAL_SEGMENTS;
+    hs["slicing_segment_seqnum"]        = SLICING_SEGMENT_SEQNUM;
+
     return hs;
 }
 
@@ -497,6 +501,10 @@ Tag::SMPP_USSD_SERVICE_OP //mask +
 
     //Setting submit command fields access
 
+    hs["slicing_ref_num"]               = SLICING_REF_NUM;
+    hs["slicing_total_segments"]        = SLICING_TOTAL_SEGMENTS;
+    hs["slicing_segment_seqnum"]        = SLICING_SEGMENT_SEQNUM;
+
     return hs;
 }
 
@@ -633,6 +641,10 @@ Hash<int> SmppCommandAdapter::InitDeliverFieldNames()
     hs["ussd_dialog"]                   = USSD_DIALOG;
 
 //    hs["whoisd_phone_model"]     = OPTIONAL_PHONE_MODEL;
+
+    hs["slicing_ref_num"]               = SLICING_REF_NUM;
+    hs["slicing_total_segments"]        = SLICING_TOTAL_SEGMENTS;
+    hs["slicing_segment_seqnum"]        = SLICING_SEGMENT_SEQNUM;
 
     return hs;
 }
@@ -1057,7 +1069,8 @@ AdapterProperty * SmppCommandAdapter::getSubmitProperty(SMS& data,const std::str
         //property->setPureInt(data.getState());
     else if ((FieldId >= OPTIONAL_CHARGING)&&(FieldId <= OPTIONAL_EXPECTED_MESSAGE_CONTENT_TYPE))
         property = Get_Unknown_Property(data, name, FieldId);
-    else
+    else if ((FieldId >= SLICING_REF_NUM) && (FieldId<=SLICING_SEGMENT_SEQNUM))
+        property = getSlicingProperty(data,name,FieldId);
     switch (FieldId) 
     {
     case PACKET_DIRECTION:
@@ -1159,6 +1172,8 @@ AdapterProperty * SmppCommandAdapter::getDeliverProperty(SMS& data,const std::st
     {
         property = new AdapterProperty(name.c_str(),this,data.getState());
         //property->setPureInt(data.getState());
+    } else if ((FieldId >= SLICING_REF_NUM) && (FieldId<=SLICING_SEGMENT_SEQNUM)) {
+            property = getSlicingProperty(data,name,FieldId);
     } else
     switch (FieldId) 
     {
@@ -1197,6 +1212,30 @@ AdapterProperty * SmppCommandAdapter::getDeliverProperty(SMS& data,const std::st
             property = new AdapterProperty(name.c_str(), this, data.hasIntProperty(FieldId) ? data.getIntProperty(FieldId) : 0);
     } 
           
+    return property;
+}
+
+
+AdapterProperty* SmppCommandAdapter::getSlicingProperty( SMS& data,
+                                                         const std::string& name,
+                                                         int FieldId )
+{
+    AdapterProperty* property = 0;
+    int sarmr;
+    int lastIndex;
+    int currentIndex;
+    SmppCommand::getSlicingParameters(data,sarmr,currentIndex,lastIndex);
+    switch (FieldId) {
+    case SLICING_REF_NUM :
+        property = new AdapterProperty(name.c_str(),this,sarmr);
+        break;
+    case SLICING_TOTAL_SEGMENTS :
+        property = new AdapterProperty(name.c_str(),this,lastIndex);
+        break;
+    case SLICING_SEGMENT_SEQNUM :
+        property = new AdapterProperty(name.c_str(),this,currentIndex);
+        break;
+    }
     return property;
 }
 

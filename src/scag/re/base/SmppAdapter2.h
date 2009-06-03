@@ -99,6 +99,9 @@ using re::actions::CommandAccessor;
             SMPP_ADDITIONAL_STATUS_INFO_TEXT = 164,
             SMPP_DPF_RESULT                  = 165,
 
+            SLICING_REF_NUM                  = 166,
+            SLICING_TOTAL_SEGMENTS           = 167,
+            SLICING_SEGMENT_SEQNUM           = 168,
 
             //Binary tags
             OPTIONAL_CHARGING                           = 0x4901,
@@ -123,6 +126,7 @@ using re::actions::CommandAccessor;
         AdapterProperty * getDataSmProperty(SmsCommand& data,const std::string& name,int FieldId);
         AdapterProperty * getRespProperty(SMS& data, const std::string& name,int FieldId);
         AdapterProperty * getDataSmRespProperty(const std::string& name, int fieldId);
+        AdapterProperty*  getSlicingProperty(SMS& data, const std::string& name, int fieldId);
 
         AdapterProperty * Get_ESM_BIT_Property(SMS& data, const std::string& name,int FieldId);
         AdapterProperty * Get_RD_BIT_Property(SMS& data, const std::string& name,int FieldId);
