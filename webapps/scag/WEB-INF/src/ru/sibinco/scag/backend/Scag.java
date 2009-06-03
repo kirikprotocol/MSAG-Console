@@ -459,7 +459,7 @@ public class Scag extends Proxy {
               logger.error("Scag.invokeCommand IllegalAccessException! scag doesn't support command "+commandName,e);
               e.printStackTrace();
           } catch (InvocationTargetException e) {
-              logger.error("Scag.invokeCommand InvocationTargetException! scag doesn't support command "+commandName,e);
+              logger.error("Scag.invokeCommand InvocationTargetException! scag doesn't support command " + commandName, e);
               throw (SibincoException)e.getTargetException();
           }
         }
@@ -471,14 +471,14 @@ public class Scag extends Proxy {
               //10. delete smpp.xml.old
             //          Functions.SavedFileToBackup(temporary,".old");
             //          appContext.getHSDaemon().store(configFile);
-                logger.error("Scag.invokeCommand1 SibincoException:(getStatus() == STATUS_DISCONNECTED)");
+                logger.error("Scag.invokeCommand1 SibincoException (getStatus() == STATUS_DISCONNECTED)\n NEW DATA STORED ONLY IN FILE\t");
                 appContext.getHSDaemon().store(Functions.ReturnSavedFileToBackup(temporary,".old"));
                 throw new StatusDisconnectedException(host,port);
             } else {
                 //5. YES(service is started)
                 //6. service return error
                 //7. Restore config from temporary file(smpp.xml.new -> smpp.xml)
-                logger.error("Scag.invokeCommand1 SibincoException:(getStatus() != STATUS_DISCONNECTED)");
+                logger.error("Scag.invokeCommand1 SibincoException (getStatus() != STATUS_DISCONNECTED)\nRETURN OLD FILE\t");
                 Functions.renameNewSavedFileToOriginal(temporary,configFile,true);
                 appContext.getHSDaemon().store(configFile);
                 //Paint error on the screen by throwing exception(next string)
