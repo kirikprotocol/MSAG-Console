@@ -186,7 +186,7 @@ std::string RuleEngineImpl::CreateRuleFileName(const std::string& dir,const Rule
 }
 
 void RuleEngineImpl::process( SCAGCommand& command, Session& session, RuleStatus& rs,
-                              util::HRTiming* inhrt )
+                              actions::CommandProperty& cp, util::HRTiming* inhrt)
 {
     util::HRTiming hrt(inhrt);
 
@@ -231,17 +231,21 @@ void RuleEngineImpl::process( SCAGCommand& command, Session& session, RuleStatus
             hrt.mark("re.sess");
         }
 
-        actions::CommandProperty cp = CommandBridge::getCommandProperty(command, session);
+        //actions::CommandProperty cp = CommandBridge::getCommandProperty(command, session);
+        //sessions::Operation* currentOp = session.getCurrentOperation();
+        //actions::CommandProperty cp = CommandBridge::getCommandProperty(command, session.sessionKey().address(), session.sessionPrimaryKey(),
+          //                                                              currentOp ? currentOp->type() : 0, &session);
+        CommandBridge::CheckCommandProperty(command, cp, session.sessionPrimaryKey(), &session);
         const bool newevent = ( !session.getLongCallContext().continueExec );
         if ( rulePtr ) {
            rulePtr->process( command, session, rs, cp, &hrt );
-        } else if (newevent) {
-          const std::string* kw = session.getCurrentOperation() ? session.getCurrentOperation()->getKeywords() : 0;
-          bool messageBody = (cp.handlerId == EH_SUBMIT_SM) || (cp.handlerId == EH_DELIVER_SM) || (cp.handlerId == EH_DATA_SM) ? true : false;
-          CommandBridge::RegisterTrafficEvent( cp, session.sessionPrimaryKey(),
-                                               messageBody ? CommandBridge::getMessageBody(static_cast<transport::smpp::SmppCommand&>(command)) : "",
-                                               kw, &hrt );
-        }
+        } //else if (newevent) {
+          //const std::string* kw = currentOp ? currentOp->getKeywords() : 0;
+          //bool messageBody = (cp.handlerId == EH_SUBMIT_SM) || (cp.handlerId == EH_DELIVER_SM) || (cp.handlerId == EH_DATA_SM) ? true : false;
+          //CommandBridge::RegisterTrafficEvent( cp, session.sessionPrimaryKey(),
+            //                                   messageBody ? CommandBridge::getMessageBody(static_cast<transport::smpp::SmppCommand&>(command)) : "",
+            //                                   kw, &hrt );
+        //}
 
         hrt.mark("re.proc");
 
