@@ -39,8 +39,18 @@ TDialogueServiceData::handleDialogueRequestPrimitive(T_DLG_REQUEST_COMPOSER & tr
     if ( treq_composer.getAppCtx() )
       _applicationContext = *treq_composer.getAppCtx();
   }
-  // What is the strangeness?!
   treq_composer.setAppCtx(_applicationContext);
+}
+
+template<class T_COMP_IND_PRIMITIVE>
+void
+TDialogueServiceData::notifyTCUserLocally(T_COMP_IND_PRIMITIVE & tcomp_ind_primitive)
+{
+  try {
+    smsc::core::synchronization::MutexGuard synchronize(_lock_forCallToTDlgHndlrIface);
+    _tDlgHndlrIface->updateDialogue(tcomp_ind_primitive);
+  } catch (const std::exception& ex) {
+  }
 }
 
 template<class T_DIALOGUE_IND_PRIMITIVE>
