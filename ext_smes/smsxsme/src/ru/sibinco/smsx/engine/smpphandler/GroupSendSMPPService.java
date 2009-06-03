@@ -72,10 +72,11 @@ public class GroupSendSMPPService extends AbstractSMPPService {
       public void update(AsyncCommand command) {
         if (command.getStatus() == AsyncCommand.STATUS_SUCCESS) {
           DeliveryStatus[] statuses = ((GroupSendCommand)command).getDeliveryStatuses();
+          int total = ((GroupSendCommand)command).getGroupSize();
           int sent = 0;
           for (DeliveryStatus status : statuses)
             if (status.getStatus() > 0) sent++;
-          sendMessage(m.getDestinationAddress(), m.getSourceAddress(), sendReport.replace("{actual}", String.valueOf(sent)).replace("{total}", String.valueOf(statuses.length)));
+          sendMessage(m.getDestinationAddress(), m.getSourceAddress(), sendReport.replace("{actual}", String.valueOf(sent)).replace("{total}", String.valueOf(total)));
         }
       }
     });

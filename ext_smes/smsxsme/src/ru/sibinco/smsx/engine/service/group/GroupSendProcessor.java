@@ -75,6 +75,7 @@ class GroupSendProcessor implements GroupSendCmd.Receiver,
 
       ArrayList<String> members = new ArrayList<String>(dl.members());
       int membersSize = members.size();
+      cmd.setGroupSize(membersSize);
       if (!includeSubmitter)
         members.remove(cmd.getSubmitter());
       if (includeOwner && !members.contains(dl.getOwner()))

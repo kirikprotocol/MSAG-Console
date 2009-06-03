@@ -23,6 +23,7 @@ public class GroupSendCommand extends AsyncCommand {
 
   // Results
   private DeliveryStatus[] deliveryStatuses;
+  private int groupSize;
 
   public DeliveryStatus[] getDeliveryStatuses() {
     return deliveryStatuses;
@@ -30,6 +31,14 @@ public class GroupSendCommand extends AsyncCommand {
 
   public void setDeliveryStatuses(DeliveryStatus[] deliveryStatuses) {
     this.deliveryStatuses = deliveryStatuses;
+  }
+
+  public int getGroupSize() {
+    return groupSize;
+  }
+
+  public void setGroupSize(int groupSize) {
+    this.groupSize = groupSize;
   }
 
   public String getMessage() {
