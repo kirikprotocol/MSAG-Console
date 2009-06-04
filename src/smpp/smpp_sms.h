@@ -271,6 +271,8 @@ inline void fetchOptionals(SmppOptional& optional,SMS* sms,bool forceDC=false)
 
   if ( optional.has_receiptedMessageId() )
   {
+    // FIXME: do we still need this check?
+    /*
     smsc::sms::SMSId id = 0;
     if ( !sscanf(optional.get_receiptedMessageId(),"%lld",&id) )
     {
@@ -278,9 +280,17 @@ inline void fetchOptionals(SmppOptional& optional,SMS* sms,bool forceDC=false)
       __watch__(optional.get_receiptedMessageId());
     }
     //sms->setReceiptSmsId(id);
-    char buffer[64];
-    snprintf(buffer,64,"%lld",id);
-    sms->setStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID,buffer);
+     */
+    const char* ptr = optional.get_receiptedMessageId();
+    char buffer[65];
+    if (strlen(ptr) >= sizeof(buffer)) {
+        // make sure the length is 64+1 bytes
+        strncpy(buffer,ptr,sizeof(buffer));
+        buffer[sizeof(buffer)-1] = '\0';
+        ptr = buffer;
+    }
+    // snprintf(buffer,64,"%lld",id);
+    sms->setStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID,ptr);
   }
   else
   {
