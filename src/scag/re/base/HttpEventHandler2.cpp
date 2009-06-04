@@ -1,11 +1,9 @@
 #include "HttpEventHandler2.h"
 #include "HttpAdapter2.h"
 #include "ActionContext2.h"
-// #include "scag/sessions/base/SessionManager2.h"
 #include "scag/sessions/base/Operation.h"
 #include "RuleEngine2.h"
 #include "EventHandlerType.h"
-#include "scag/bill/base/BillingManager.h"
 
 namespace scag2 {
 namespace re {
@@ -36,7 +34,7 @@ void HttpEventHandler::processRequest(HttpRequest& command, ActionContext& conte
         RunActions(context);
         if ( isnewevent ) {
             isnewevent = false;
-            newEvent( context );
+            setKeywords( context );
         }
         if(rs.status == STATUS_FAILED) session.closeCurrentOperation();
 
@@ -58,7 +56,7 @@ void HttpEventHandler::processRequest(HttpRequest& command, ActionContext& conte
    
     if ( isnewevent ) {
         isnewevent = false;
-        newEvent( context );
+        setKeywords( context );
     }
 
     session.closeCurrentOperation();
@@ -80,7 +78,7 @@ void HttpEventHandler::processResponse(HttpResponse& command, ActionContext& con
         RunActions(context);
         if ( isnewevent ) {
             isnewevent = false;
-            newEvent( context );
+            setKeywords( context );
         }
         if(rs.status == STATUS_FAILED) session.closeCurrentOperation();
 
@@ -93,7 +91,7 @@ void HttpEventHandler::processResponse(HttpResponse& command, ActionContext& con
 
     if ( isnewevent ) {
         isnewevent = false;
-        newEvent( context );
+        setKeywords( context );
     }
 
     session.closeCurrentOperation();
@@ -115,7 +113,7 @@ void HttpEventHandler::processDelivery(HttpResponse& command, ActionContext& con
         RunActions(context);
         if ( isnewevent ) {
             isnewevent = false;
-            newEvent( context );
+            setKeywords( context );
         }
 
         if (rs.status != STATUS_LONG_CALL) {
@@ -131,7 +129,7 @@ void HttpEventHandler::processDelivery(HttpResponse& command, ActionContext& con
 
     if ( isnewevent ) {
         isnewevent = false;
-        newEvent( context );
+        setKeywords( context );
     }
     session.closeCurrentOperation();
 
@@ -141,67 +139,37 @@ void HttpEventHandler::processDelivery(HttpResponse& command, ActionContext& con
 }
 
 
-void HttpEventHandler::newEvent( ActionContext& ctx )
+void HttpEventHandler::setKeywords( ActionContext& ctx )
 {
-    Operation* op = ctx.getSession().getCurrentOperation();
-    const std::string* kw = op ? op->getKeywords() : 0;
-    RegisterTrafficEvent( ctx.getCommandProperty(),
-                          ctx.getSession().sessionPrimaryKey(), "", kw );
+    const std::string* kw = ctx.getSession().getCurrentOperation() ? ctx.getSession().getCurrentOperation()->getKeywords() : 0;
+    ctx.getCommandProperty().keywords = kw ? *kw : "";
 }
 
 
 void HttpEventHandler::process(SCAGCommand& command, Session& session, RuleStatus& rs, CommandProperty& cp, util::HRTiming*)
 {
     smsc_log_debug(logger, "Process HttpEventHandler...");
-/*
-    HttpCommand& hc = (HttpCommand&)command;
-    bill::Infrastructure& istr = bill::BillingManager::Instance().getInfrastructure();
-    const smsc::sms::Address abonentAddr = session.sessionKey().address();
-
-    uint32_t operatorId = istr.GetOperatorID(abonentAddr);
-    if (operatorId == 0) {
-        RegisterAlarmEvent( 1, abonentAddr.toString(), PROTOCOL_HTTP, hc.getServiceId(),
-                            hc.getProviderId(), 0, 0, session.sessionPrimaryKey(),
-                            hc.getCommandId() == HTTP_RESPONSE ? 'O' : 'I');
-        
-        throw SCAGException("HttpEventHandler: Cannot find OperatorID for %s abonent", abonentAddr.toString().c_str());
-    }
-
-    smsc_log_debug(logger, "HttpEventHandler: Operator found. Id = %d", operatorId);
-
-    //uint32_t providerId = istr.GetProviderID(hc.getServiceId());
-    //if (providerId == 0) 
-      //  throw SCAGException("HttpEventHandler: Cannot find ProviderID for ServiceID=%d", hc.getServiceId());
-
-    smsc_log_debug(logger, "HttpEventHandler: Provider ID found. ID = %d", hc.getProviderId());
-
-    Property routeId;
-    routeId.setInt(hc.getRouteId());
-    CommandProperty cp(&command, 0, abonentAddr, hc.getProviderId(), operatorId, hc.getServiceId(),
-                        -1, CO_HTTP_DELIVERY, routeId);
-    */
     HttpCommand& hc = (HttpCommand&)command;
     HttpCommandAdapter _command(hc);
 
     ActionContext* actionContext = 0;
     bool isnewevent = false;
     if(session.getLongCallContext().continueExec) {
-	actionContext = session.getLongCallContext().getActionContext();
-	if (actionContext) {
-	    actionContext->resetContext(&(RuleEngine::Instance().getConstants()), 
-					&session, &_command, &cp, &rs);
-	} else {
-	    smsc_log_error(logger, "EventHandler cannot get actionContext to continue");
-    	    rs.result = -1;
-    	    rs.status = STATUS_FAILED;
-    	    return;
-	}
+      actionContext = session.getLongCallContext().getActionContext();
+      if (actionContext) {
+          actionContext->resetContext(&(RuleEngine::Instance().getConstants()), 
+                      &session, &_command, &cp, &rs);
+      } else {
+          smsc_log_error(logger, "EventHandler cannot get actionContext to continue");
+              rs.result = -1;
+              rs.status = STATUS_FAILED;
+              return;
+      }
     } else {
-	actionContext = new ActionContext(&(RuleEngine::Instance().getConstants()), 
-					  &session, &_command, &cp, &rs);
-	session.getLongCallContext().setActionContext(actionContext);
-        isnewevent = true;
-	// RegisterTrafficEvent(cp, session.sessionPrimaryKey(), "");
+      actionContext = new ActionContext(&(RuleEngine::Instance().getConstants()), 
+                        &session, &_command, &cp, &rs);
+      session.getLongCallContext().setActionContext(actionContext);
+      isnewevent = true;
     }
 
     switch(hc.getCommandId())

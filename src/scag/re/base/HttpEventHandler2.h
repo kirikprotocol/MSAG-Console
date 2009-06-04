@@ -14,7 +14,7 @@ class HttpEventHandler : public EventHandler
     void processResponse(transport::http::HttpResponse& command, ActionContext& context, bool isnewevent );
     void processDelivery(transport::http::HttpResponse& command, ActionContext& context, bool isnewevent );
     /// extends EventHandler::RunActions, adds traffic event registration if isnewevent is true
-    void newEvent( ActionContext& ctx );
+    void setKeywords( ActionContext& ctx );
 public:
     virtual void process(SCAGCommand& command, Session& session, RuleStatus& rs, CommandProperty& cp, util::HRTiming* hrt = 0 );
     //Method return HandlerId from hander type string

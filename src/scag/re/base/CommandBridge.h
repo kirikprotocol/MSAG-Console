@@ -192,7 +192,6 @@ public:
     static void RegisterTrafficEvent( const actions::CommandProperty& commandProperty,
                                       const sessions::SessionPrimaryKey& sessionPrimaryKey,
                                       const std::string& messageBody,
-                                      const std::string* keywords,
                                       util::HRTiming* hrt = 0 );
     
     static void RegisterAlarmEvent( uint32_t eventId, const std::string& addr, uint8_t protocol,

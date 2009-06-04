@@ -4,7 +4,6 @@
 #include "CommandBridge.h"
 #include "RuleEngine2.h"
 #include "scag/sessions/base/Operation.h"
-#include "scag/bill/base/BillingManager.h"
 #include "scag/util/HRTimer.h"
 
 namespace scag2 {
@@ -19,45 +18,7 @@ void SmppEventHandler::process( SCAGCommand& command, Session& session, RuleStat
 
     SmppCommand& smppcommand = static_cast<SmppCommand&>(command);
     SmppCommandAdapter _command(smppcommand);
-/*
-    bill::Infrastructure& istr = bill::BillingManager::Instance().getInfrastructure();
 
-    const Address abonentAddr( session.sessionKey().toString().c_str() );
-    // CSmppDescriptor smppDescriptor = CommandBridge::getSmppDescriptor(smppcommand);
-
-    int providerId = istr.GetProviderID(command.getServiceId());
-    if (providerId == 0) 
-    {
-        if ( smppcommand.isResp() ) session.closeCurrentOperation();
-        throw SCAGException("SmppEventHandler: Cannot find ProviderID for ServiceID=%d", command.getServiceId());
-    }
-
-    int operatorId = istr.GetOperatorID(abonentAddr), hi = propertyObject.HandlerId;
-    if (operatorId == 0) 
-    {
-        RegisterAlarmEvent(1, abonentAddr.toString(), CommandBridge::getProtocolForEvent(smppcommand), command.getServiceId(),
-                           providerId, 0, 0, session.sessionPrimaryKey(),
-                           (hi == EH_SUBMIT_SM)||(hi == EH_DELIVER_SM) ? 'I' : 'O');
-        
-        if ( smppcommand.isResp() ) session.closeCurrentOperation();
-        throw SCAGException("SmppEventHandler: Cannot find OperatorID for %s abonent", abonentAddr.toString().c_str());
-    }
-
-    SMS& sms = CommandBridge::getSMS(smppcommand);
-    int msgRef = sms.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE) ? sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE):-1;
-
-    //uint32_t commandStatus = (smppcommand->cmdid == DELIVERY_RESP || smppcommand->cmdid == SUBMIT_RESP || smppcommand->cmdid == DATASM_RESP) 
-	//		    ? smppcommand->get_resp()->status : smppcommand->status;
-    Property routeId;
-    routeId.setStr(sms.getRouteId());
-    CommandProperty commandProperty
-        ( &command, smppcommand.get_status(), abonentAddr, providerId, operatorId,
-          smppcommand.getServiceId(), msgRef,
-          transport::CommandOperation(session.getCurrentOperation()->type()),
-          routeId );
-*/
-    const bool newevent = ( !session.getLongCallContext().continueExec );
-    
     ActionContext* actionContext = 0;
     if(session.getLongCallContext().continueExec) {
     	actionContext = session.getLongCallContext().getActionContext();
@@ -88,19 +49,9 @@ void SmppEventHandler::process( SCAGCommand& command, Session& session, RuleStat
     }
     hrt.mark("ev.run");
 
-    int hi = propertyObject.HandlerId;
-    if ( newevent ) {
-        const std::string* kw = 
-            ( session.getCurrentOperation() ?
-              session.getCurrentOperation()->getKeywords() : 0 );
-        RegisterTrafficEvent( cp,
-                              session.sessionPrimaryKey(),
-                              (hi == EH_SUBMIT_SM) || 
-                              (hi == EH_DELIVER_SM) ||
-                              (hi == EH_DATA_SM) ?
-                              CommandBridge::getMessageBody(smppcommand) : "",
-                              kw,
-                              &hrt );
+    if (!session.getLongCallContext().continueExec) {
+      const std::string* kw = session.getCurrentOperation() ? session.getCurrentOperation()->getKeywords() : 0;
+      cp.keywords = kw ? *kw : "";
     }
 
     if ( smppcommand.get_status() > 0) {

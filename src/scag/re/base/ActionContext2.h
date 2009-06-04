@@ -69,6 +69,7 @@ public:
         transport::smpp::DataSmDirection direction;
 
         Property routeId;
+        std::string keywords;
 
         CommandProperty( SCAGCommand* command,
                          int commandStatus,

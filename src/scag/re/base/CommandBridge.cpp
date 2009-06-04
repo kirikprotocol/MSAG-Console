@@ -459,7 +459,6 @@ void CommandBridge::CheckCommandProperty(SCAGCommand& command, const actions::Co
 void CommandBridge::RegisterTrafficEvent(const actions::CommandProperty& commandProperty,
                                          const sessions::SessionPrimaryKey& sessionPrimaryKey,
                                          const std::string& messageBody,
-                                         const std::string* keywords,
                                          util::HRTiming* hrt )
 {
     SaccTrafficInfoEvent* ev = new SaccTrafficInfoEvent();
@@ -493,7 +492,9 @@ void CommandBridge::RegisterTrafficEvent(const actions::CommandProperty& command
       ev->cDirection = 'O';
     }
 
-    if ( keywords ) ev->keywords.append(keywords->data(),keywords->size());
+    if ( !commandProperty.keywords.empty() ) {
+      ev->keywords.append(commandProperty.keywords.data(), commandProperty.keywords.size());
+    }
 
     if (hrt) hrt->mark("ev.fillsac");
     Statistics::Instance().registerSaccEvent( ev );
