@@ -1,12 +1,9 @@
 #include "EventHandler2.h"
-#include "scag/stat/base/Statistics2.h"
-#include "CommandBridge.h"
 #include "scag/util/HRTimer.h"
 
 namespace scag2 {
 namespace re {
 
-using namespace stat;
 using namespace util::properties;
 using namespace lcm;
 
@@ -67,76 +64,6 @@ void EventHandler::RunActions(ActionContext& context)
     longCallContext.ActionStack.push(sv);
 
     RunActionVector(context, longCallContext, actions, logger);
-}
-
-
-void EventHandler::RegisterTrafficEvent(const CommandProperty& commandProperty,
-                                        const SessionPrimaryKey& sessionPrimaryKey,
-                                        const std::string& messageBody,
-                                        const std::string* keywords,
-                                        util::HRTiming* hrt )
-{
-  CommandBridge::RegisterTrafficEvent(commandProperty, sessionPrimaryKey, messageBody, keywords, hrt);
-  /*
-    SaccTrafficInfoEvent* ev = new SaccTrafficInfoEvent();
-    if (hrt) hrt->mark("ev.newsacc");
-
-    ev->Header.cCommandId = propertyObject.HandlerId;
-    ev->Header.cProtocolId = commandProperty.protocol;
-    ev->Header.iServiceId = commandProperty.serviceId;
-    ev->Header.iServiceProviderId = commandProperty.providerId; 
-    
-    timeval tv;
-    gettimeofday(&tv,0);
-
-    ev->Header.lDateTime = (uint64_t)tv.tv_sec * 1000 + tv.tv_usec / 1000;
-
-    ev->Header.pAbonentNumber = commandProperty.abonentAddr.toString();
-    ev->Header.sCommandStatus = commandProperty.status;
-    ev->Header.iOperatorId = commandProperty.operatorId;
-    
-    if ((propertyObject.HandlerId == EH_SUBMIT_SM)||(propertyObject.HandlerId == EH_DELIVER_SM)||(propertyObject.HandlerId == EH_DATA_SM))
-        ev->pMessageText.append(messageBody.data(), messageBody.size());
-
-    ev->Header.pSessionKey = sessionPrimaryKey.toString();
-
-    if ((commandProperty.direction == dsdSc2Srv) || (propertyObject.HandlerId == EH_HTTP_REQUEST) || (propertyObject.HandlerId == EH_HTTP_DELIVERY))
-        ev->cDirection = 'I';
-    else
-        ev->cDirection = 'O';
-
-    if ( keywords ) ev->keywords.append(keywords->data(),keywords->size());
-
-    if (hrt) hrt->mark("ev.fillsac");
-    Statistics::Instance().registerSaccEvent( ev );
-    if (hrt) hrt->mark("ev.regsac");
-    */
-}
-
-void EventHandler::RegisterAlarmEvent(uint32_t eventId, const std::string& addr, uint8_t protocol, uint32_t serviceId, uint32_t providerId, uint32_t operatorId, uint16_t commandStatus, const SessionPrimaryKey& sessionPrimaryKey, char dir)
-{
-  CommandBridge::RegisterAlarmEvent(eventId, addr, protocol, serviceId, providerId, operatorId, commandStatus, sessionPrimaryKey, dir);
-  /*
-    SaccAlarmEvent* ev = new SaccAlarmEvent();
-
-    ev->Header.cCommandId = 3;
-    ev->Header.cProtocolId = protocol;
-    ev->Header.iServiceId = serviceId;
-    ev->Header.iServiceProviderId = providerId; 
-    ev->Header.pAbonentNumber = addr;
-    ev->Header.sCommandStatus = commandStatus;
-    ev->Header.iOperatorId = operatorId;
-    ev->iAlarmEventId = eventId;
-    
-    timeval tv;
-    gettimeofday(&tv,0);
-    ev->Header.lDateTime = (uint64_t)tv.tv_sec * 1000 + tv.tv_usec / 1000;
-
-    ev->Header.pSessionKey = sessionPrimaryKey.toString();
-    ev->cDirection = dir;
-
-    Statistics::Instance().registerSaccEvent(ev);
-    */
 }
 
 }}
