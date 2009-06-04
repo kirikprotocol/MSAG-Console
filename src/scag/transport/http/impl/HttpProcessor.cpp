@@ -432,8 +432,7 @@ int HttpProcessorImpl::processRequest(HttpRequest& request)
             re::RuleEngine::Instance().process(request, *se.get(), rs, cp);
             if (r.statistics && !se->getLongCallContext().continueExec) {
               smsc_log_debug(logger, "process request: register traffic info event");
-              const std::string *kw = se->getCurrentOperation() ? se->getCurrentOperation()->getKeywords() : 0;
-              scag2::re::CommandBridge::RegisterTrafficEvent(cp, se->sessionPrimaryKey(), "", kw);
+              scag2::re::CommandBridge::RegisterTrafficEvent(cp, se->sessionPrimaryKey(), "");
             }
             HttpCommandRelease rel(request);
             
@@ -520,8 +519,7 @@ int HttpProcessorImpl::processResponse(HttpResponse& response)
             re::RuleEngine::Instance().process(response, *se.get(), rs, cp);
             if (!se->getLongCallContext().continueExec && response.getStatistics()) {
               smsc_log_debug(logger, "process response: register traffic info event");
-              const std::string *kw = se->getCurrentOperation() ? se->getCurrentOperation()->getKeywords() : 0;
-              scag2::re::CommandBridge::RegisterTrafficEvent(cp, se->sessionPrimaryKey(), "", kw);
+              scag2::re::CommandBridge::RegisterTrafficEvent(cp, se->sessionPrimaryKey(), "");
             }
 
             if (rs.status == re::STATUS_OK )
@@ -624,8 +622,7 @@ int HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
             re::RuleEngine::Instance().process(response, *se.get(), rs, cp);
             if (!se->getLongCallContext().continueExec && response.getStatistics()) {
               smsc_log_debug(logger, "process status response: register traffic info event");
-              const std::string *kw = se->getCurrentOperation() ? se->getCurrentOperation()->getKeywords() : 0;
-              scag2::re::CommandBridge::RegisterTrafficEvent(cp, se->sessionPrimaryKey(), "", kw);
+              scag2::re::CommandBridge::RegisterTrafficEvent(cp, se->sessionPrimaryKey(), "");
             }
             
             if(rs.status == re::STATUS_OK && delivered)

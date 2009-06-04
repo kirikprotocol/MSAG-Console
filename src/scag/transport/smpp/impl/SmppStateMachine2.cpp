@@ -507,7 +507,7 @@ void StateMachine::processSmResp( std::auto_ptr<SmppCommand> aucmd,
                   timeval tv = { time(0), 0 };
                   primaryKey.setBornTime(tv);
                   smsc_log_debug(log_, "%s: register traffic info event for transit route", where);
-                  scag2::re::CommandBridge::RegisterTrafficEvent(cp, primaryKey, "", 0);
+                  scag2::re::CommandBridge::RegisterTrafficEvent(cp, primaryKey, "");
                 }
                 break;
             }
@@ -562,9 +562,8 @@ void StateMachine::processSmResp( std::auto_ptr<SmppCommand> aucmd,
         SmppOperationMaker opmaker( where, aucmd, session, log_ );
         opmaker.process( st, cp );
         if (ri.statistics && !session->getLongCallContext().continueExec) {
-          const string* kw = session->getCurrentOperation() ? session->getCurrentOperation()->getKeywords() : 0;
-          smsc_log_debug(log_, "%s: register traffic info event", where);
-          scag2::re::CommandBridge::RegisterTrafficEvent(cp, session->sessionPrimaryKey(), "", kw);
+          smsc_log_debug(log_, "%s: register traffic info event, keywords='%s'", where, cp.keywords.c_str());
+          scag2::re::CommandBridge::RegisterTrafficEvent(cp, session->sessionPrimaryKey(), "");
         }
         //register traffic info event
         if ( st.status == re::STATUS_LONG_CALL ) return;
@@ -777,8 +776,8 @@ void StateMachine::processSm( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* 
             SessionPrimaryKey primaryKey(key);
             timeval tv = { time(0), 0 };
             primaryKey.setBornTime(tv);
-            smsc_log_debug(log_, "%s: register traffic info event fro transit route", where);
-            scag2::re::CommandBridge::RegisterTrafficEvent(cp, primaryKey, scag2::re::CommandBridge::getMessageBody(*cmd), 0, &hrt);
+            smsc_log_debug(log_, "%s: register traffic info event for transit route", where);
+            scag2::re::CommandBridge::RegisterTrafficEvent(cp, primaryKey, scag2::re::CommandBridge::getMessageBody(*cmd), &hrt);
           }
           hrt.stop();
           break;
@@ -806,9 +805,8 @@ void StateMachine::processSm( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* 
         SmppOperationMaker opmaker( where, aucmd, session, log_ );
         opmaker.process( st, cp, &hrt );
         if (ri.statistics && !session->getLongCallContext().continueExec) {
-          const string* kw = session->getCurrentOperation() ? session->getCurrentOperation()->getKeywords() : 0;
-          smsc_log_debug(log_, "%s: register traffic info event", where);
-          scag2::re::CommandBridge::RegisterTrafficEvent(cp, session->sessionPrimaryKey(), scag2::re::CommandBridge::getMessageBody(*cmd), kw, &hrt);
+          smsc_log_debug(log_, "%s: register traffic info event, keywords='%s'", where, cp.keywords.c_str());
+          scag2::re::CommandBridge::RegisterTrafficEvent(cp, session->sessionPrimaryKey(), scag2::re::CommandBridge::getMessageBody(*cmd), &hrt);
         }
         if ( st.status == re::STATUS_LONG_CALL ) {
             smscmd.setRouteInfo( ri );
