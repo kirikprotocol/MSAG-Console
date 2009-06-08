@@ -390,11 +390,11 @@ Response * CommandTraceSmppRoute::CreateResponse(scag::Scag * ScagApp)
 
         snprintf(routeText, sizeof(routeText),
                            "route id:%s;source address:%s;destination address:%s;"
-                           "sme system id:%s;source sme system id:%s;archiving:%s;"
+                           "sme system id:%s;source sme system id:%s;archiving:no;"
                            "enabling:%s",
                 encRouteId.get(), encSrcAddressText.get(), encDstAddressText.get(),
                 encSmeSystemId.get(), encSrcSmeSystemId.get(),
-                (info.archived) ? "yes":"no",
+                // (info.archived) ? "yes":"no",
                 (info.enabled) ? "yes":"no");
         smsc_log_info(logger, "routeText: %s", routeText);
 

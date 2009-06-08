@@ -269,7 +269,7 @@ RouteConfig::status RouteConfig::load(const char * const filename)
       try
       {
         std::auto_ptr<Route> route(createRoute(*elem2, subjects));
-        if (route->isActive())
+        // if (route->isActive())
           routes.push_back(route.release());
       }
       catch (SubjectNotFoundException &ex)
@@ -320,7 +320,7 @@ RouteConfig::status RouteConfig::store(const char * const filename) const
     {
       Route *r = *i;
       out << "  <route id=\""  << encode(r->getId())
-      << "\" archiving=\""     << (r->isArchiving() ? "true" : "false")
+      // << "\" archiving=\""     << (r->isArchiving() ? "true" : "false")
       << "\" enabling=\""      << (r->isEnabling() ? "true" : "false")
       << "\" transit=\""       << (r->isTransit() ? "true" : "false")
       << "\" saa=\""           << (r->hasStatistics() ? "true" : "false")

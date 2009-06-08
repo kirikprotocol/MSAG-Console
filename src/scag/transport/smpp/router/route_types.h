@@ -43,7 +43,7 @@ struct RouteInfo
   FixedLengthString<smsc::sms::MAX_ROUTE_ID_TYPE_LENGTH> routeId;
 
   bool enabled;
-  bool archived;
+  // bool archived;
   bool transit;
   bool statistics;
   uint8_t slicing, slicingRespPolicy;

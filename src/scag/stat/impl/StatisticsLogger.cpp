@@ -129,7 +129,7 @@ bool StatisticsLogger<Event, Buffer>::checkDir() {
       //TODO: del invalid files
       continue;
     }
-    if (curTime - ftime <= interval_) {
+    if (curTime - ftime <= int(interval_)) {
       smsc_log_info(logger_, "open statistics file: %s", (*i).c_str());
       file_.WOpen(string(statDir_+ '/' + *i).c_str());
       lastFileTime_ = ftime;
@@ -158,7 +158,7 @@ template<typename Event, typename Buffer>
 string StatisticsLogger<Event, Buffer>::getFileName(const string& path, time_t curTime) const {
   char buf[STAT_FILE_NAME_MAXSIZE];
   memset(buf, 0, STAT_FILE_NAME_MAXSIZE);
-  snprintf(buf, STAT_FILE_NAME_MAXSIZE, "%s.%d", prefix_.c_str(), curTime);
+  snprintf(buf, STAT_FILE_NAME_MAXSIZE, "%s.%d", prefix_.c_str(), int(curTime));
   return path + '/' + string(buf);
 }
 
