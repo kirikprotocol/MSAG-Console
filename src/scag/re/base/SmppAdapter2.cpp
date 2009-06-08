@@ -212,7 +212,7 @@ void SmppCommandAdapter::changed(AdapterProperty& property)
     CommandId cmdid = CommandId(command.getCommandId());
 
     int * pFieldId = 0;
-    int receiptMessageId;
+    // int receiptMessageId;
 
     const Property::string_type& name = property.getName();
 
@@ -225,10 +225,12 @@ void SmppCommandAdapter::changed(AdapterProperty& property)
         pFieldId = DeliverFieldNames.GetPtr(name.c_str());
         if (!pFieldId) return;
 
+        /*
         //TODO: ensure
         receiptMessageId = atoi(sms->getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str());
         //TODO: check - what we must to do?
-        if (receiptMessageId) return; 
+        if (receiptMessageId) return;
+         */
         
         writeDeliveryField(*sms,*pFieldId,property);
         break;
@@ -900,6 +902,7 @@ IntHash<AccessType> SmppCommandAdapter::InitSubmitAccess()
     hs.Insert(Tag::SMPP_DESTINATION_PORT, atReadWrite);
     hs.Insert(Tag::SMPP_USER_RESPONSE_CODE, atReadWrite);
     hs.Insert(Tag::SMPP_LANGUAGE_INDICATOR, atReadWrite);
+    hs.Insert(Tag::SMPP_ITS_SESSION_INFO, atReadWrite);
     return hs;
 }
 
@@ -960,6 +963,7 @@ IntHash<AccessType> SmppCommandAdapter::InitDeliverAccess()
     hs.Insert(Tag::SMPP_DESTINATION_PORT, atReadWrite);
     hs.Insert(Tag::SMPP_USER_RESPONSE_CODE, atReadWrite);
     hs.Insert(Tag::SMPP_LANGUAGE_INDICATOR, atReadWrite);
+    hs.Insert(Tag::SMPP_ITS_SESSION_INFO, atReadWrite);
     return hs;
 }
 
@@ -1021,6 +1025,7 @@ IntHash<AccessType> SmppCommandAdapter::InitDataSmAccess()
     hs.Insert(Tag::SMPP_DESTINATION_PORT, atReadWrite);
     hs.Insert(Tag::SMPP_USER_RESPONSE_CODE, atReadWrite);
     hs.Insert(Tag::SMPP_LANGUAGE_INDICATOR, atReadWrite);
+    hs.Insert(Tag::SMPP_ITS_SESSION_INFO, atReadWrite);
     return hs;
 }
 
@@ -1096,6 +1101,7 @@ Hash<int> SmppCommandAdapter::InitSubmitFieldNames()
     hs["ms_validity"]                   = Tag::SMPP_MS_VALIDITY; 
     hs["number_of_messages"]            = Tag::SMPP_NUMBER_OF_MESSAGES; 
     hs["language_indicator"]            = Tag::SMPP_LANGUAGE_INDICATOR; // *
+    hs["its_session_info"]              = Tag::SMPP_ITS_SESSION_INFO;
 
     //hs[""] = Tag::SMPP_USSD_SERVICE_OP //mask +
     hs["ussd_dialog"]                   = USSD_DIALOG;
@@ -1257,6 +1263,7 @@ Hash<int> SmppCommandAdapter::InitDataSmFieldNames()
     hs["ms_validity"]                   = Tag::SMPP_MS_VALIDITY; 
     hs["number_of_messages"]            = Tag::SMPP_NUMBER_OF_MESSAGES; 
     hs["language_indicator"]            = Tag::SMPP_LANGUAGE_INDICATOR; // *
+    hs["its_session_info"]              = Tag::SMPP_ITS_SESSION_INFO;
 
     //hs[""] = Tag::SMPP_USSD_SERVICE_OP //mask +
 
@@ -1380,6 +1387,7 @@ Hash<int> SmppCommandAdapter::InitDeliverFieldNames()
     hs["user_response_code"]            = Tag::SMPP_USER_RESPONSE_CODE; //*
     hs["payload_type"]                  = Tag::SMPP_PAYLOAD_TYPE; 
     hs["language_indicator"]            = Tag::SMPP_LANGUAGE_INDICATOR; //*
+    hs["its_session_info"]              = Tag::SMPP_ITS_SESSION_INFO;
 
     //mask
     hs["st_enroute"]                    = ST_ENROUTE;
@@ -1390,6 +1398,8 @@ Hash<int> SmppCommandAdapter::InitDeliverFieldNames()
     hs["st_accepted"]                   = ST_ACCEPTED;
     hs["st_unknown"]                    = ST_UNKNOWN;
     hs["st_rejected"]                   = ST_REJECTED;
+
+    hs["receipted_message_id"]          = Tag::SMPP_RECEIPTED_MESSAGE_ID;
 
     hs["ussd_dialog"]                   = USSD_DIALOG;
     hs["ussd_pssd_ind"]                 = USSD_PSSD_IND;

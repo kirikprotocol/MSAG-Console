@@ -70,11 +70,9 @@ int SmppEventHandler::StrToHandlerId(const std::string& str)
     if (str == "submit_sm_resp")        return EH_SUBMIT_SM_RESP;
     if (str == "deliver_sm")            return EH_DELIVER_SM;
     if (str == "deliver_sm_resp")       return EH_DELIVER_SM_RESP;
-    if (str == "receipt")               return EH_RECEIPT;
-
+    // if (str == "receipt")               return EH_RECEIPT;
     if (str == "data_sm")               return EH_DATA_SM;
     if (str == "data_sm_resp")          return EH_DATA_SM_RESP;
-
     return UNKNOWN; 
 }
 

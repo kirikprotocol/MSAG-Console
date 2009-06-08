@@ -69,17 +69,18 @@ EventHandlerType CommandBridge::getSMPPHandlerType(const SCAGCommand& command)
     if (!smppCommand) throw SCAGException("Command Bridge Error: SCAGCommand is not smpp-type");
 
     
-    SMS& sms = getSMS(*smppCommand);
+    // SMS& sms = getSMS(*smppCommand);
     CommandId cmdid = CommandId(smppCommand->getCommandId());
 
-//    CSmppDiscriptor SmppDiscriptor;
-    int receiptMessageId = 0;
+    //    CSmppDiscriptor SmppDiscriptor;
+    // int receiptMessageId = 0;
 
     switch (cmdid) 
     {
     case DELIVERY:
-        receiptMessageId = atoi(sms.getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str());
-        handlerType = receiptMessageId ? EH_RECEIPT : EH_DELIVER_SM;
+        // receiptMessageId = atoi(sms.getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str());
+        // handlerType = receiptMessageId ? EH_RECEIPT : EH_DELIVER_SM;
+        handlerType = EH_DELIVER_SM;
         break;
 
     case SUBMIT:
@@ -87,8 +88,9 @@ EventHandlerType CommandBridge::getSMPPHandlerType(const SCAGCommand& command)
         break;
 
     case DELIVERY_RESP:
-        receiptMessageId = atoi(sms.getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str());
-        handlerType = receiptMessageId ? EH_RECEIPT : EH_DELIVER_SM_RESP;
+        // receiptMessageId = atoi(sms.getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str());
+        // handlerType = receiptMessageId ? EH_RECEIPT : EH_DELIVER_SM_RESP;
+        handlerType = EH_DELIVER_SM_RESP;
         break;
 
     case SUBMIT_RESP:
@@ -106,7 +108,6 @@ EventHandlerType CommandBridge::getSMPPHandlerType(const SCAGCommand& command)
     default:
         handlerType = EH_UNKNOWN;
     }
-
     return handlerType;
 }
 
@@ -172,205 +173,6 @@ DataSmDirection CommandBridge::getPacketDirection(const SCAGCommand& command)
 
     return dsdUnknown;
 }
-
-
-#if 0
-CSmppDescriptor CommandBridge::getSmppDescriptor(const SCAGCommand& command)
-{
-
-    SCAGCommand& _command = const_cast<SCAGCommand&>(command);
-
-    SmppCommand * smppCommand = dynamic_cast<SmppCommand *>(&_command);
-    if (!smppCommand) throw SCAGException("Command Bridge Error: Cannot get SmppDescriptor - SCAGCommand is not smpp-type");
-
-
-    SMS& sms = getSMS(*smppCommand);
-
-    CommandId cmdid = CommandId(smppCommand->getCommandId());
-
-    CSmppDescriptor SmppDescriptor;
-    int receiptMessageId = 0;
-    SmsResp * smsResp = 0;
-
-    bool transact = false;
-    bool req_receipt = false;
-
-    if (sms.hasIntProperty(Tag::SMPP_ESM_CLASS))
-    {
-        //узнаём транзакционная или нет доставка
-        int esm_class = sms.getIntProperty(Tag::SMPP_ESM_CLASS);
-        transact = ((esm_class&2) == 2);
-    }
-
-    if (sms.hasIntProperty(Tag::SMPP_REGISTRED_DELIVERY))
-    {
-        //узнаём заказал ли сервис отчёт о доставке
-        int reg_delivery = sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY);
-        req_receipt = ((reg_delivery&3) > 0);
-    } 
-
-    SmppDescriptor.m_waitReceipt = ((!transact)&&(req_receipt));
-    
-    switch (cmdid) 
-    {
-    case DELIVERY:
-        receiptMessageId = atoi(sms.getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str());
-
-        //TODO: ensure
-        if (receiptMessageId) SmppDescriptor.cmdType = CO_RECEIPT;
-        else if (sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP)) 
-        {
-            SmppDescriptor.cmdType = CO_USSD_DIALOG;
-            SmppDescriptor.wantOpenUSSD = 
-                (uint32_t(smsc::smpp::UssdServiceOpValue::PSSR_INDICATION) == sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP));
-        }
-        else SmppDescriptor.cmdType = CO_DELIVER;
-
-        if (sms.hasIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS)) 
-            SmppDescriptor.lastIndex = sms.getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
-
-        if (sms.hasIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM)) 
-            SmppDescriptor.currentIndex = sms.getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
-
-        break;
-    case SUBMIT:
-
-        if (sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP)) 
-        {
-            SmppDescriptor.cmdType = CO_USSD_DIALOG;
-            SmppDescriptor.wantOpenUSSD = smppCommand->flagSet(SmppCommandFlags::SERVICE_INITIATED_USSD_DIALOG);
-        }
-        else SmppDescriptor.cmdType = CO_SUBMIT;
-
-        if (sms.hasIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS)) 
-            SmppDescriptor.lastIndex = sms.getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
-
-        if (sms.hasIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM)) 
-            SmppDescriptor.currentIndex = sms.getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
-
-        break;
-    case DELIVERY_RESP:
-
-        receiptMessageId = atoi(sms.getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str());
-
-        if (sms.hasIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS)) 
-            SmppDescriptor.lastIndex = sms.getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
-
-        if (sms.hasIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM)) 
-            SmppDescriptor.currentIndex = sms.getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
-
-        SmppDescriptor.isResp = true;
-
-        if (receiptMessageId) SmppDescriptor.cmdType = CO_RECEIPT;
-        else if (sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP)) 
-        {
-            SmppDescriptor.cmdType = CO_USSD_DIALOG;
-//            SmppDescriptor.isUSSDClosed = ((sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) == PSSR_RESPONSE)||((sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) == USSN_REQUEST)));
-            SmppDescriptor.isUSSDClosed = 
-                (sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) == uint32_t(USSN_CONFIRM));
-        }
-        else SmppDescriptor.cmdType = CO_DELIVER;
-
-        break;
-    case SUBMIT_RESP:
-        SmppDescriptor.isResp = true;
-
-        if (sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP)) 
-        {
-            SmppDescriptor.cmdType = CO_USSD_DIALOG;
-            SmppDescriptor.isUSSDClosed = 
-                (sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) == uint32_t(PSSR_RESPONSE));
-        }
-        else SmppDescriptor.cmdType = CO_SUBMIT;
-
-        if (sms.hasIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS)) 
-            SmppDescriptor.lastIndex = sms.getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
-
-        if (sms.hasIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM)) 
-            SmppDescriptor.currentIndex = sms.getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
-        break;
-
-    case DATASM:
-
-        switch (smppCommand->get_smsCommand().dir)
-        {
-        case dsdSc2Sc:
-            SmppDescriptor.cmdType = CO_DATA_SC_2_SC;
-            break;
-        case dsdSc2Srv:
-            SmppDescriptor.cmdType = CO_DATA_SC_2_SME;
-            break;
-        case dsdSrv2Sc:
-            SmppDescriptor.cmdType = CO_DATA_SME_2_SC;
-            break;
-        case dsdSrv2Srv:
-            SmppDescriptor.cmdType = CO_DATA_SME_2_SME;
-            break;
-        case dsdUnknown:
-        default:
-            throw SCAGException("Command Bridge: cannot identify DATA_SM direction");
-            break;
-
-        }
-
-        if (sms.hasIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS)) 
-            SmppDescriptor.lastIndex = sms.getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
-
-        if (sms.hasIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM)) 
-            SmppDescriptor.currentIndex = sms.getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
-
-        break;
-
-    case DATASM_RESP:
-        smsResp = smppCommand->get_resp();
-        if (!smsResp) throw SCAGException("Command Bridge: cannot get SmsCommand from DATA_SM");
-        SmppDescriptor.isResp = true;
-
-        switch (smsResp->get_dir()) 
-        {
-        case dsdSc2Sc:
-            SmppDescriptor.cmdType = CO_DATA_SC_2_SC;
-            break;
-        case dsdSc2Srv:
-            SmppDescriptor.cmdType = CO_DATA_SC_2_SME;
-            break;
-        case dsdSrv2Sc:
-            SmppDescriptor.cmdType = CO_DATA_SME_2_SC;
-            break;
-        case dsdSrv2Srv:
-            SmppDescriptor.cmdType = CO_DATA_SME_2_SME;
-            break;
-        case dsdUnknown:
-        default:
-            throw SCAGException("Command Bridge: cannot identify DATA_SM direction");
-            break;
-
-        }
-        if (sms.hasIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS)) 
-            SmppDescriptor.lastIndex = sms.getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
-
-        if (sms.hasIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM)) 
-            SmppDescriptor.currentIndex = sms.getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
-
-        break;
-  /*  case PROCESSEXPIREDRESP:
-        SmppDescriptor.isResp = true;
-        SmppDescriptor.
-
-        break;*/
-    default:
-        break;
-    } // switch
-        /*
-        if (sms == 0) throw SCAGException("Command Bridge Error: Unknown SCAGCommand data");
-
-        SmppDescriptor.lastIndex = sms->getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
-        SmppDescriptor.currentIndex = sms->getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
-          */
-
-    return SmppDescriptor;
-}
-#endif
 
 
 int CommandBridge::getProtocolForEvent(SCAGCommand& command)

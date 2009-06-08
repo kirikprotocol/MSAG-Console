@@ -29,9 +29,9 @@ abonentAddr(addr),
 protocol(-1),
 serviceId(-1),
 commandId(-1),
+handlerId(hi),
 direction(dsdUnknown),
-routeId(_routeId),
-handlerId(hi)
+routeId(_routeId)
 {
     cmdType = opType;
 

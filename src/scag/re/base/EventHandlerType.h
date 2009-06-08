@@ -11,7 +11,7 @@ enum EventHandlerType
     EH_SUBMIT_SM_RESP = 2,
     EH_DELIVER_SM = 3,
     EH_DELIVER_SM_RESP = 4,
-    EH_RECEIPT = 5,
+    // EH_RECEIPT = 5,
 
     EH_HTTP_REQUEST = 6,
     EH_HTTP_RESPONSE = 7,
