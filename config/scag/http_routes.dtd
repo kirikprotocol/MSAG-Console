@@ -13,7 +13,6 @@
     default (true|false) #IMPLIED
     name CDATA #REQUIRED
     transit (true|false) #IMPLIED
-    saa (true|false) "true"
 >
 
 <!ELEMENT options (abonents, sites)>
