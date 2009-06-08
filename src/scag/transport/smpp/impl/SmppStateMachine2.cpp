@@ -347,12 +347,14 @@ uint32_t StateMachine::putCommand(CommandId cmdType, SmppEntity* src, SmppEntity
             stripUnknownSmppOptionals( sms,allowedUnknownOptionals );
 
             uint32_t cnt;
+            const bool sliced = isSliced(sms);
+
             if( ri.slicing != router::SlicingType::NONE && 
-                !isSliced(sms) && (cnt = getPartsCount(sms)) > 1)
+                !sliced && (cnt = getPartsCount(sms)) > 1)
             {
                 smsc_log_debug(log_, "%s: slicing message, type=%d, parts=%d, resppolicy=%d", cmdName, ri.slicing, cnt, ri.slicingRespPolicy);
                 cmd->get_smsCommand().setSlicingParams(ri.slicingRespPolicy, cnt);
-                uint32_t seq = 0, refNum = dst->getNextSlicingSeq();
+                uint32_t seq = 0, refNum = dst->getNextSlicingSeq(ri.slicing);
 
                 SMS partSms;
                 uint8_t udhType = ri.slicing > router::SlicingType::SAR ?
@@ -361,7 +363,7 @@ uint32_t StateMachine::putCommand(CommandId cmdType, SmppEntity* src, SmppEntity
                 {
                     int newSeq=dst->getNextSeq();
                     std::auto_ptr<SmppCommand> partCmd( SmppCommand::makeCommandSm(cmdType, partSms, newSeq) );
-                    if (!reg_.Register(dst->getUid(), newSeq, aucmd.get(), seq == 1))
+                    if (!reg_.Register(dst->getUid(), newSeq, cmd, seq == 1))
                         throw Exception("%s: Register cmd for uid=%d, seq=%d failed", cmdName, dst->getUid(), newSeq);
                     dst->putCommand(partCmd);
                 }
@@ -369,7 +371,15 @@ uint32_t StateMachine::putCommand(CommandId cmdType, SmppEntity* src, SmppEntity
             else
             {
                 int newSeq=dst->getNextSeq();
-                if (!reg_.Register(dst->getUid(), newSeq, aucmd.get()))
+                if ( sliced ) {
+                    // we have to replace sms slicing refnum, to allow several
+                    // sources to come into one destination.
+                    uint32_t newsarmr = src->countSlicedOnOutput(dst,cmd);
+                    // remember the original slicing ref num
+                    // sms.setConcatMsgRef(uint16_t(sliceRefNum));
+                    SmppCommand::changeSliceRefNum(sms,newsarmr);
+                }
+                if (!reg_.Register(dst->getUid(), newSeq, cmd))
                     throw Exception("%s: Register cmd for uid=%d, seq=%d failed", cmdName, dst->getUid(), newSeq);
                 dst->putCommand(aucmd);
             }
@@ -565,7 +575,6 @@ void StateMachine::processSmResp( std::auto_ptr<SmppCommand> aucmd,
           smsc_log_debug(log_, "%s: register traffic info event, keywords='%s'", where, cp.keywords.c_str());
           scag2::re::CommandBridge::RegisterTrafficEvent(cp, session->sessionPrimaryKey(), "");
         }
-        //register traffic info event
         if ( st.status == re::STATUS_LONG_CALL ) return;
 
     } while ( false ); // fake loop

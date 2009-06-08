@@ -368,13 +368,25 @@ void SmppManagerImpl::Init(const char* cfgFile)
     try {
         ConfigView cv(*ConfigManager::Instance().getConfig(),"smpp.core.whitelist");
         typedef std::set< std::string > CStrSet;
-        CStrSet* hostset = cv.getStrParamNames();
-        if ( hostset ) {
+        std::auto_ptr<CStrSet> hostset(cv.getStrParamNames());
+        bool hostok = false;
+        if ( hostset.get() ) {
             for ( CStrSet::const_iterator i = hostset->begin();
                   i != hostset->end();
                   ++i ) {
-                sm.addWhiteIp( i->c_str() );
+                std::string hostip;
+                try {
+                    std::auto_ptr<char> hostip(cv.getString(i->c_str()));
+                    sm.addWhiteIp(hostip.get());
+                    hostok = true;
+                } catch ( ConfigException&) {
+                    smsc_log_warn(log,"cannot add whitelisted host: %s", i->c_str());
+                }
+                // sm.addWhiteIp( i->c_str() );
             }
+        }
+        if ( ! hostok ) {
+            sm.addWhiteIp("127.0.0.1");
         }
     } catch (std::exception& e) {
         smsc_log_info(log,"whitelist exc: %s", e.what());
@@ -707,12 +719,16 @@ void SmppManagerImpl::deleteSmppEntity(const char* sysId)
     sm.getSmscConnectorAdmin()->deleteSmscConnect(sysId);
   }
 
+    ent.reset();
+    ent.info.type = etUnknown;
+    /*
   ent.bt=btNone;
   ent.channel=0;
   ent.transChannel=0;
   ent.recvChannel=0;
   ent.seq=0;
   ent.info.type=etUnknown;
+     */
 }
 
 SmppEntityAdminInfoList * SmppManagerImpl::getEntityAdminInfoList(SmppEntityType entType)

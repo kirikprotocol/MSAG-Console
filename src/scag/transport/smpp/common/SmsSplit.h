@@ -8,6 +8,7 @@ namespace scag { namespace transport { namespace smpp
 
 using namespace smsc::sms;
 
+/// returns (slicingType*0x10000 + slicingRefNum) or 0.
 bool isSliced(SMS& sms);
 
 uint32_t getPartsCount(SMS& orgSms);

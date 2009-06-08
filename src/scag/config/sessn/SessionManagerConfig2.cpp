@@ -36,6 +36,7 @@ namespace config {
         std::auto_ptr<ConfigView> locs( cv.getSubConfig( "locations" ) );
         std::auto_ptr<config::CStrSet> names(locs->getStrParamNames());
         std::vector< std::string > newlocs;
+        newlocs.reserve(names->size());
         for ( config::CStrSet::const_iterator i = names->begin();
               i != names->end();
               ++i ) {

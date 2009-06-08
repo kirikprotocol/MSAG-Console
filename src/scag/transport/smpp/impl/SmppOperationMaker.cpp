@@ -25,6 +25,7 @@ session_(thesession),
 optype_(CO_NA),
 what_(0),
 postproc_(false),
+currentTime_(time(0)),
 log_(logger)
 {
     assert( cmd_.get() && session_.get() );
@@ -247,9 +248,9 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st )
     int32_t umr = -1;
 
     if ( ! op ) {
-        if ( sarmr_ != -1 ) {
+        if ( sarmr_ != 0 ) {
             // multipart sms
-            const opid_type opid = cmd_->getEntity()->getSarMapping(sarmr_);
+            const opid_type opid = cmd_->getEntity()->getSarMappingOpid(sarmr_,currentTime_);
             if ( opid != invalidOpId() ) {
                 // restore from session
                 op = session_->setCurrentOperation(opid);
@@ -275,7 +276,7 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st )
 
         if ( optype_ == CO_USSD_DIALOG ) {
 
-            if ( sarmr_ != -1 ) {
+            if ( sarmr_ != 0 ) {
                 fail( "USSD: SAR fields found", st,
                       smsc::system::Status::USSDMSGTOOLONG );
                 return;
@@ -361,11 +362,11 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st )
             // not USSD
 
             op = session_->createOperation( *cmd_.get(), optype_ );
-            if ( sarmr_ != -1 ) {
+            if ( sarmr_ != 0 ) {
                 op->setSARref( sarmr_ );
                 const opid_type opid = session_->getCurrentOperationId();
-                if ( cmd_->getEntity()->setSarMapping(sarmr_,opid) ) {
-                    smsc_log_warn(log_,"multipart op sarmr/idx/tot=%d/%d/%d opid=%u replaced the old one on %s",
+                if ( cmd_->getEntity()->setSarMappingOpid(sarmr_,opid) ) {
+                    smsc_log_warn(log_,"multipart op sarmr/idx/tot=%x/%d/%d opid=%u replaced the old one on %s",
                                   sarmr_, currentIndex_, lastIndex_,
                                   opid, cmd_->getEntity()->getSystemId() );
                 } else {
@@ -460,7 +461,7 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st )
                     umr, sarmr_, currentIndex_, lastIndex_,
                     op->getStatus(), op->getNamedStatus(),
                     op->flags(), op->parts(), op->resps() );
-    if ( sarmr_ != -1 && 
+    if ( sarmr_ != 0 &&
          op->getSARref() == sarmr_ &&
          op->getSARstatus().status == re::STATUS_FAILED ) {
         // we should fix multipart messages.
@@ -499,11 +500,11 @@ void SmppOperationMaker::postProcess( re::RuleStatus& st )
 
         if ( st.status == re::STATUS_FAILED ) {
             // generate a resp back to a submitter
-            op->receiveNewResp(currentIndex_,lastIndex_);
-            if ( sarmr_ != -1 ) {
+            if ( !cmd_->isResp() ) {op->receiveNewResp(currentIndex_,lastIndex_);}
+            if ( sarmr_ != 0 ) {
                 // multipart
                 if ( op->getStatus() == OPERATION_COMPLETED ) {
-                    cmd_->getEntity()->setSarMapping(sarmr_,invalidOpId());
+                    cmd_->getEntity()->delSarMapping(sarmr_);
                     session_->closeCurrentOperation();
                     what = "fail, multi closed";
                 } else {
@@ -527,11 +528,32 @@ void SmppOperationMaker::postProcess( re::RuleStatus& st )
 
         } else {
 
+            // not long call, not fail
+            if ( sarmr_ != 0 && st.status == re::STATUS_OK && !cmd_->isResp() ) {
+                // check that command is directed to the same destination
+                SmppEntity* dst = cmd_->getDstEntity();
+                if ( !cmd_->getEntity()->checkSlicedDestination(sarmr_,dst,currentTime_) ) {
+                    st.status = re::STATUS_FAILED;
+                    st.result = smsc::system::Status::NOROUTE;
+                    op->receiveNewResp(currentIndex_,lastIndex_);
+                    if ( op->getStatus() == OPERATION_COMPLETED ) {
+                        cmd_->getEntity()->delSarMapping(sarmr_);
+                        session_->closeCurrentOperation();
+                        what = "dst mismatch, fail, multi closed";
+                    } else {
+                        op->setSARstatus(st);
+                        session_->setCurrentOperation(invalidOpId());
+                        what = "dst mismatch, fail, not all parts";
+                    }
+                    break;
+                }
+            }
+
             // const bool waitreceipt = op->flagSet(OperationFlags::WAIT_RECEIPT);
             if ( op->getStatus() == OPERATION_COMPLETED ) {
                 // all parts and resps received
-                if ( op->getSARref() != -1 ) {
-                    cmd_->getEntity()->setSarMapping(sarmr_,invalidOpId());
+                if ( sarmr_ != 0 ) {
+                    cmd_->getEntity()->delSarMapping(sarmr_);
                     what = "multipart completed, closed";
                 } else {
                     what = "completed, closed";

@@ -202,7 +202,8 @@ std::auto_ptr<SmppCommand> SmppCommand::makeReplaceSmResp(uint32_t dialogId,uint
 }
 
 std::auto_ptr<SmppCommand> SmppCommand::makeQuerySmResp( uint32_t dialogId,uint32_t status,
-                                                         SMSId id,time_t findate,uint8_t state,uint8_t netcode)
+                                                         const char* id,
+                                                         time_t findate,uint8_t state,uint8_t netcode)
 {
     std::auto_ptr<SmppCommand> cmd(new SmppCommand);
     cmd->cmdid_ = QUERY_RESP;
@@ -381,9 +382,10 @@ const char* SmppCommand::getUDH( SMS& data )
 
 void SmppCommand::getSlicingParameters( SMS& sms, int& sarmr, int& currentIndex, int& lastIndex )
 {
-    sarmr = -1;
+    sarmr = 0;
     currentIndex = 0;
     lastIndex = 0;
+    uint8_t slicingType = router::SlicingType::NONE;
 
     do {
 
@@ -393,8 +395,7 @@ void SmppCommand::getSlicingParameters( SMS& sms, int& sarmr, int& currentIndex,
             currentIndex = sms.getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
             lastIndex = sms.getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
             sarmr = (sms.getIntProperty(Tag::SMPP_SAR_MSG_REF_NUM) & 0xffff);
-            smsc_log_debug(log_,"sar fields found: ref/idx/tot=%u/%u/%u",
-                           sarmr, currentIndex, lastIndex );
+            slicingType = router::SlicingType::SAR;
             break;
         }
 
@@ -418,6 +419,7 @@ void SmppCommand::getSlicingParameters( SMS& sms, int& sarmr, int& currentIndex,
             sarmr = udh[3];
             lastIndex = udh[4];
             currentIndex = udh[5];
+            slicingType = router::SlicingType::UDH8;
         } else if ( 0x08 == udh[1] ) {
             // udh16
             if ( udh[2] != 4 ) {
@@ -427,6 +429,7 @@ void SmppCommand::getSlicingParameters( SMS& sms, int& sarmr, int& currentIndex,
             sarmr = (unsigned(udh[3]) << 8) | udh[4] ;
             lastIndex = udh[5];
             currentIndex = udh[6];
+            slicingType = router::SlicingType::UDH16;
         } else {
             util::HexDump hd;
             util::HexDump::string_type dump;
@@ -434,11 +437,97 @@ void SmppCommand::getSlicingParameters( SMS& sms, int& sarmr, int& currentIndex,
             smsc_log_warn(log_,"udh bit is found but header has is weird: %s", hd.c_str(dump) );
             break;
         }
-        smsc_log_debug(log_,"udh ref/idx/tot=%u/%u/%u",
-                       sarmr,currentIndex,lastIndex);
     } while ( false );
+
+    if ( slicingType != router::SlicingType::NONE ) {
+        if ( sms.getConcatMsgRef() != 0 ) {
+            smsc_log_debug(log_,"original sar taken from sms: %u -> %u", sarmr, sms.getConcatMsgRef() );
+            sarmr = sms.getConcatMsgRef();
+        }
+        smsc_log_debug(log_,"sar/udh fields found: type/ref/idx/tot=%u/%x/%u/%u",
+                       slicingType, sarmr, currentIndex, lastIndex );
+        sarmr += slicingType * 0x10000;
+    }
 }
 
+
+void SmppCommand::changeSliceRefNum( SMS& sms, uint32_t sarmr )
+{
+    const uint16_t slicingType(sarmr/0x10000);
+    switch ( uint8_t(slicingType) ) {
+    case router::SlicingType::SAR : {
+        sms.setConcatMsgRef(sms.getIntProperty(Tag::SMPP_SAR_MSG_REF_NUM));
+        sms.setIntProperty(Tag::SMPP_SAR_MSG_REF_NUM,sarmr & 0xffff);
+        break;
+    }
+    case router::SlicingType::UDH8:
+    case router::SlicingType::UDH16: {
+        // get original message
+        const char* buff;
+        unsigned len;
+        uint16_t field;
+        if (sms.hasBinProperty(Tag::SMPP_SHORT_MESSAGE)) {
+            field = Tag::SMPP_SHORT_MESSAGE;
+            buff = sms.getBinProperty(Tag::SMPP_SHORT_MESSAGE, &len);
+        }
+        if (!len && sms.hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD)) {
+            field = Tag::SMPP_MESSAGE_PAYLOAD;
+            buff = sms.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
+        }
+        std::auto_ptr<unsigned char> newbuf(new unsigned char[len]);
+        memcpy(newbuf.get(),buff,len);
+        unsigned char* udh = newbuf.get();
+        const size_t udhl = unsigned(newbuf.get()[0]) + 1;
+        if ( udhl < 6 ) {
+            smsc_log_warn(log_,"cannot change too small udh: sz=%u", udhl);
+            break;
+        }
+        if ( log_->isDebugEnabled() ) {
+            util::HexDump hd;
+            util::HexDump::string_type dump;
+            hd.hexdump(dump,udh,udhl);
+            smsc_log_debug(log_,"changing udh: %s",hd.c_str(dump));
+        }
+        // drop properties
+        sms.dropProperty(Tag::SMPP_MESSAGE_PAYLOAD);
+        sms.dropProperty(Tag::SMSC_RAW_PAYLOAD);
+        sms.dropProperty(Tag::SMPP_SHORT_MESSAGE);
+        sms.dropProperty(Tag::SMSC_RAW_SHORTMESSAGE);
+        // FIXME: find position in udh
+        uint16_t oldRefNum;
+        if ( udh[1] == 0x00 && slicingType == router::SlicingType::UDH8 ) {
+            if ( udh[2] != 3 ) {
+                smsc_log_warn(log_,"wrong udh8 size in message: udh[2]=%u", udh[2] );
+                break;
+            }
+            oldRefNum = udh[3];
+            udh[3] = sarmr & 0xff;
+        } else if ( udh[1] == 0x08 && slicingType == router::SlicingType::UDH16 ) {
+            if ( udh[2] != 4 ) {
+                smsc_log_warn(log_,"wrong udh16 size in message: udh[2]=%u", udh[2] );
+                break;
+            }
+            oldRefNum = (uint16_t(udh[3]) << 8) + udh[4];
+            udh[3] = (sarmr >> 8) & 0xff;
+            udh[4] = sarmr & 0xff;
+        } else {
+            smsc_log_warn(log_,"wrong/mismatched udh header: type=%u udh[1]=%u", slicingType, udh[1]);
+            break;
+        }
+        if ( log_->isDebugEnabled() ) {
+            util::HexDump hd;
+            util::HexDump::string_type dump;
+            hd.hexdump(dump,udh,udhl);
+            smsc_log_debug(log_,"udh changed: %s",hd.c_str(dump));
+        }
+        sms.setConcatMsgRef(oldRefNum);
+        sms.setBinProperty(field,reinterpret_cast<const char*>(newbuf.get()),len);
+        break;
+    } // udh case
+    default :
+        smsc_log_warn(log_,"change slicing: cannot be here");
+    }
+}
 
 // --- non-static
 
@@ -516,12 +605,12 @@ SCAGCommand(), _SmppCommand()
             {
                 cmdid_ = QUERY_RESP;
                 PduQuerySmResp* resp = reinterpret_cast<PduQuerySmResp*>(pdu);
-                uint64_t id = 0;
-                if (resp->messageId.size()) sscanf(resp->messageId.cstr(),"%lld",&id);
+                // uint64_t id = 0;
+                // if (resp->messageId.size()) sscanf(resp->messageId.cstr(),"%lld",&id);
                 time_t findate=0;
                 if (resp->finalDate.size()) findate=smppTime2CTime(resp->finalDate);
                 set_status(resp->get_header().get_commandStatus());
-                dta_ = new QuerySmResp(id,findate,resp->get_messageState(),resp->get_errorCode());
+                dta_ = new QuerySmResp(resp->messageId.cstr(),findate,resp->get_messageState(),resp->get_errorCode());
                 goto end_construct;
             }
         case SmppCommandSet::DATA_SM:
@@ -1179,7 +1268,7 @@ networkErrorCode(0)
 
 SmsResp::~SmsResp()
 {
-    if ( messageId ) delete messageId;
+    if ( messageId ) delete [] messageId;
     // if ( sms ) delete sms;
     if ( orgCmd ) delete orgCmd;
 }

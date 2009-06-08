@@ -164,10 +164,13 @@ struct QuerySmResp
     uint8_t        messageState;
     uint8_t        networkCode;
     // int            commandStatus; // use generic status
+
+    // NOTE: deprecated ctor
+    /*
     QuerySmResp(SMSId id,time_t findate,int state,int netcode)
     {
         // commandStatus=cmdStatus;
-        messageId=auto_ptr<char>(new char[22]);
+        messageId = auto_ptr<char>(new char[22]);
         sprintf(messageId.get(),"%lld",id);
         if(findate==0)
         {
@@ -181,6 +184,30 @@ struct QuerySmResp
         messageState=(uint8_t)state;
         networkCode=(uint8_t)netcode;
     }
+     */
+    
+    // id must be digits
+    QuerySmResp(const char* id, time_t findate, int state, int netcode)
+    {
+        assert(id);
+        const size_t idlen = strlen(id);
+        assert( idlen > 0 && idlen < 65 );
+        assert( idlen == strspn(id,"0123456789") );
+        messageId.reset( new char[65] );
+        strcpy(messageId.get(),id);
+        if(findate==0)
+        {
+            finalDate=auto_ptr<char>(new char[1]);
+            finalDate.get()[0]=0;
+        }else
+        {
+            finalDate=auto_ptr<char>(new char[18]);
+            cTime2SmppTime(findate,finalDate.get());
+        }
+        messageState=(uint8_t)state;
+        networkCode=(uint8_t)netcode;
+    }
+
     void fillPdu(PduQuerySmResp* pdu)
     {
         pdu->set_messageId(messageId.get());
@@ -488,22 +515,23 @@ public:
     static std::auto_ptr<SmppCommand> makeUnbindResp(uint32_t dialogId,uint32_t status,void* data);
     static std::auto_ptr<SmppCommand> makeReplaceSmResp(uint32_t dialogId,uint32_t status);
     static std::auto_ptr<SmppCommand> makeQuerySmResp(uint32_t dialogId,uint32_t status,
-                                                      SMSId id,time_t findate,uint8_t state,uint8_t netcode);
+                                                      const char* messageId,time_t findate,uint8_t state,uint8_t netcode);
     static std::auto_ptr<SmppCommand> makeCancelSmResp(uint32_t dialogId,uint32_t status);
     static std::auto_ptr<SmppCommand> makeCancel(SMSId id,const Address& oa,const Address& da);
     static std::auto_ptr<SmppCommand> makeCancel(SMSId id);
     static std::auto_ptr<SmppCommand> makeBindCommand(const char* sysId,const char* pwd,const char* addrRange,const char* sysType);
     static std::auto_ptr<SmppCommand> makeCommand(CommandId cmdId,uint32_t dialogId,uint32_t status,void* data);
 
-    static void makeSMSBody( SMS* sms, const SmppHeader* pdu, bool forceDC );
-
     static std::string getMessageBody( SMS& sms );
     /// NOTE: the udh (or NULL) is returned.
     /// The first byte is the total length of udh.
     static const char* getUDH( SMS& sms );
     static void getSlicingParameters( SMS& sms, int& sarmr, int& currentIndex, int& lastIndex );
+    static void changeSliceRefNum( SMS& sms, uint32_t sarmr );
 
 protected:
+    static void makeSMSBody( SMS* sms, const SmppHeader* pdu, bool forceDC );
+
     static std::auto_ptr<SmppCommand> makeCommandSmResp(CommandId cmdid, const char* messageId, uint32_t dialogId, uint32_t status, bool dataSm=false );
 
 public:
@@ -674,7 +702,7 @@ public:
     void set_messageId(const char* msgid)
     {
         if(!msgid)return;
-        if ( messageId ) delete( messageId);
+        if ( messageId ) { delete [] messageId; }
         messageId = new char[strlen(msgid)+1];
         strcpy(messageId,msgid);
     }
@@ -745,7 +773,7 @@ public:
 
     const char* get_messageId()const
     {
-        return messageId?messageId:"";
+        return messageId ? messageId: "";
     }
 
     void set_dataSm()

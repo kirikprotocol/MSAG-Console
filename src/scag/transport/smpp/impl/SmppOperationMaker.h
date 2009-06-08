@@ -85,6 +85,7 @@ private:
     CommandOperation             optype_;
     const char*                  what_;
     bool                         postproc_;
+    time_t                       currentTime_;
     smsc::logger::Logger*        log_;
     int                          currentIndex_; // parameters of the sms
     int                          lastIndex_;    // parameters of the sms
