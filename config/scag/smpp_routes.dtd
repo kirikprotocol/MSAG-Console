@@ -3,11 +3,9 @@
 <!ELEMENT route (notes*, source+, destination+)>
 <!ATTLIST route
 	id CDATA #REQUIRED
-	archived (true | false) "false"
+	archived (true | false) #REQUIRED
 	enabled  (true | false) "true"
 	active   (true | false) "true"
-    transit  (true | false) "false"
-    saa      (true | false) "true"
 	slicing  (NONE | SAR | UDH8 | UDH16) "NONE"
     slicedRespPolicy (ALL | ANY) "ALL"
 	srcSmeId CDATA #IMPLIED
