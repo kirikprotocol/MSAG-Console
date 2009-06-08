@@ -8,6 +8,8 @@
 #include <string>
 #include <map>
 
+std::string logTimestamp(void);
+
 #ifdef USE_PRIVATE_LOGGER
 # include "logger/Logger.h"
   using smsc::logger::Logger;
@@ -15,11 +17,11 @@
 #else
 # include <stdio.h>
 # define Logger          FILE
-# define smsc_log_debug(logger, ...) fprintf(logger, "D: "),fprintf(logger, __VA_ARGS__), fprintf(logger, "\n"), fflush(logger)
-# define smsc_log_info(logger, ...)  fprintf(logger, "I: "),fprintf(logger, __VA_ARGS__), fprintf(logger, "\n"), fflush(logger)
-# define smsc_log_warn(logger, ...)  fprintf(logger, "W: "),fprintf(logger, __VA_ARGS__), fprintf(logger, "\n"), fflush(logger)
-# define smsc_log_error(logger, ...) fprintf(logger, "E: "),fprintf(logger, __VA_ARGS__), fprintf(logger, "\n"), fflush(logger)
-# define smsc_log_fatal(logger, ...) fprintf(logger, "F: "),fprintf(logger, __VA_ARGS__), fprintf(logger, "\n"), fflush(logger)
+# define smsc_log_debug(logger, ...) fprintf(logger, "D: %s", logTimestamp().c_str()),fprintf(logger, __VA_ARGS__), fprintf(logger, "\n"), fflush(logger)
+# define smsc_log_info(logger, ...)  fprintf(logger, "I: %s", logTimestamp().c_str()),fprintf(logger, __VA_ARGS__), fprintf(logger, "\n"), fflush(logger)
+# define smsc_log_warn(logger, ...)  fprintf(logger, "W: %s", logTimestamp().c_str()),fprintf(logger, __VA_ARGS__), fprintf(logger, "\n"), fflush(logger)
+# define smsc_log_error(logger, ...) fprintf(logger, "E: %s", logTimestamp().c_str()),fprintf(logger, __VA_ARGS__), fprintf(logger, "\n"), fflush(logger)
+# define smsc_log_fatal(logger, ...) fprintf(logger, "F: %s", logTimestamp().c_str()),fprintf(logger, __VA_ARGS__), fprintf(logger, "\n"), fflush(logger)
 #endif /* USE_PRIVATE_LOGGER */
 
 /* function to be called when a connection is broken */

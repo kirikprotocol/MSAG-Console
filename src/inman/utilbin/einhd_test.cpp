@@ -2,6 +2,7 @@
 static char const ident[] = "$Id$";
 #endif /* MOD_IDENT_OFF */
 
+#include <time.h>
 #include "i97tcapapi.h"
 
 #include "einhd_test.hpp"
@@ -463,8 +464,26 @@ std::string & format(std::string & fstr, const char* fmt, ...)
     return fstr;
 }
 
+std::string logTimestamp(void)
+{
+  struct timeval tp;
+  gettimeofday(&tp, 0);
+
+  struct tm lcltm;
+  localtime_r(&tp.tv_sec, &lcltm);
+
+  char timeStr[32];
+  size_t timeStrLength = strftime(timeStr, sizeof(timeStr)/sizeof(timeStr[0]),
+                                  "%d-%m %H:%M:%S", &lcltm);
+  timeStr[timeStrLength] = 0;
+
+  char buffer[64];
+  size_t length = snprintf(buffer, sizeof(buffer)-1, "%s,%3.3u ", timeStr, tp.tv_usec/1000);
+
+  return buffer;
+}
 /* ************************************************************************** *
- * 
+ * Reads and verifies test configuration file.
  * ************************************************************************** */
 bool readConfig(FILE * fd_cfg, TST_CFG & use_cfg, Logger * use_logger)
 {
