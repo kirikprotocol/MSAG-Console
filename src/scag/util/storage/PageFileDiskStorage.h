@@ -42,7 +42,7 @@ public:
 
     PageFileDiskStorage( PF* pf,
                          smsc::logger::Logger* thelog = 0,
-                         GlossaryBase* g = NULL ) :
+                         io::GlossaryBase* g = NULL ) :
     pf_(pf), disklog_(thelog), glossary_(g)
     {
         if ( ! pf_ )
@@ -70,7 +70,7 @@ public:
     /// serialize the value into an internal buffer
     void serialize( const value_type& v ) {
         buf.resize(0);
-        Serializer s( buf, glossary_ );
+        io::Serializer s( buf, glossary_ );
         s << v;
         // assert( (buf.size() < 10000) && (buf.buffer().capacity() < 10000) );
         // key_ = v.getKey().toString();
@@ -119,10 +119,10 @@ public:
     /// @return true if successfully deserialized, otherwise v is broken
     bool deserialize( value_type& v ) const {
         try {
-            Deserializer s( buf, glossary_ );
+            io::Deserializer s( buf, glossary_ );
             s >> v;
             // key_ = "destroyed";
-        } catch ( DeserializerException& e ) {
+        } catch ( io::DeserializerException& e ) {
             if (disklog_) 
                 smsc_log_error( disklog_, "exception occurred: %s", e.what() );
             return false;
@@ -146,7 +146,7 @@ private:
     PF* pf_;                            // owned
     // mutable std::string key_;
     smsc::logger::Logger* disklog_;
-    GlossaryBase* glossary_;
+    io::GlossaryBase* glossary_;
 };
 
 } // namespace storage

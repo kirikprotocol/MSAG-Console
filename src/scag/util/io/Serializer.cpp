@@ -5,7 +5,7 @@
 
 namespace scag {
 namespace util {
-namespace storage {
+namespace io {
 
 uint32_t SerializerBase::dochecksum( const unsigned char* buf, size_t pos1, size_t pos2 ) const
 {
@@ -239,6 +239,6 @@ void Deserializer::readbuf( unsigned char* ptr, size_t sz ) throw ( Deserializer
 }
  */
 
-} // namespace storage
+} // namespace io
 } // namespace util
 } // namespace scag

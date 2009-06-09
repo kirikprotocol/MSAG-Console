@@ -560,8 +560,8 @@ private:
 } //scag2
 
 
-inline scag::util::storage::Serializer& operator << ( scag::util::storage::Serializer& ser, 
-                                                      const scag2::pvss::AbntAddr& addr) { 
+inline scag::util::io::Serializer& operator << ( scag::util::io::Serializer& ser,
+                                                 const scag2::pvss::AbntAddr& addr) { 
   //uint8_t len = addr.getLength() & 0x1F;
   //uint8_t plan = (addr.getNumberingPlan() & 0x07) << 5;
   //uint8_t res = len | plan;
@@ -576,8 +576,8 @@ inline scag::util::storage::Serializer& operator << ( scag::util::storage::Seria
     return ser; 
 };
 
-inline scag::util::storage::Deserializer& operator >> ( scag::util::storage::Deserializer& dsr,
-                                                        scag2::pvss::AbntAddr& addr) { 
+inline scag::util::io::Deserializer& operator >> ( scag::util::io::Deserializer& dsr,
+                                                   scag2::pvss::AbntAddr& addr) { 
     const unsigned char* ptr = dsr.curpos();
     dsr.setrpos(dsr.rpos()+11); 
     uint8_t len = *ptr;

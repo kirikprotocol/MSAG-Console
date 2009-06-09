@@ -12,8 +12,8 @@ class ExternalBillingTransaction;
 class ExternalTransaction 
 {
 public:
-    static ExternalTransaction* createAndDeserialize( util::storage::Deserializer& s ) 
-        throw ( util::storage::DeserializerException );
+    static ExternalTransaction* createAndDeserialize( util::io::Deserializer& s ) 
+        /* throw ( util::io::DeserializerException ) */;
 
 public:
     virtual ~ExternalTransaction() {
@@ -28,9 +28,9 @@ public:
         return 0;
     }
 
-    virtual util::storage::Serializer& serialize( util::storage::Serializer& s ) const = 0;
-    virtual util::storage::Deserializer& deserialize( util::storage::Deserializer& s )
-        throw ( util::storage::DeserializerException ) = 0;
+    virtual util::io::Serializer& serialize( util::io::Serializer& s ) const = 0;
+    virtual util::io::Deserializer& deserialize( util::io::Deserializer& s )
+        /* throw ( util::io::DeserializerException ) */ = 0;
 
 protected:
     ExternalTransaction() : active_(true) {}

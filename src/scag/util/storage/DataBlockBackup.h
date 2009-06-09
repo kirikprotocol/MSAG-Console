@@ -24,7 +24,7 @@ struct DataBlockBackup
 
     DataBlockBackup(value_type* v = NULL, backup_type* b = NULL) : value(v), backup(b) {}
 
-    bool recoverFromBackup( GlossaryBase* gloss ) {
+    bool recoverFromBackup( io::GlossaryBase* gloss ) {
         if (!value || !backup) return false;
         try {
             value->deserialize( *backup, gloss );
@@ -86,7 +86,7 @@ protected:
 
 
 template < class T >
-inline scag::util::storage::Serializer& operator << (scag::util::storage::Serializer& ser, 
+inline scag::util::io::Serializer& operator << (scag::util::io::Serializer& ser,
                                                      const scag::util::storage::DataBlockBackup < T > &dataBlock) { 
     size_t start = ser.size();
     ser << *(dataBlock.value);
@@ -97,7 +97,7 @@ inline scag::util::storage::Serializer& operator << (scag::util::storage::Serial
 };
 
 template < class T >
-inline scag::util::storage::Deserializer& operator >> (scag::util::storage::Deserializer& deser,
+inline scag::util::io::Deserializer& operator >> (scag::util::io::Deserializer& deser,
                                                  scag::util::storage::DataBlockBackup < T > &dataBlock) { 
     uint32_t size = 0;
     const char* buf = deser.read(size);

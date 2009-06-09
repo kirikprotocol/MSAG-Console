@@ -80,8 +80,8 @@ public:
 
     void print( util::Print& p, opid_type opid = invalidOpId() ) const;
 
-    util::storage::Serializer& serialize( util::storage::Serializer& s ) const;
-    util::storage::Deserializer& deserialize( util::storage::Deserializer& s ) throw (DeserializerException);
+    util::io::Serializer& serialize( util::io::Serializer& s ) const;
+    util::io::Deserializer& deserialize( util::io::Deserializer& s ) /* throw (DeserializerException) */;
 
 private:
     Operation& operator = ( const Operation& );

@@ -89,7 +89,7 @@ public:
     char preamble[PREAMBULE_SIZE];
     char Reserved[RESERVED_SIZE];
 
-    void deserialize(Deserializer& deser) {
+    void deserialize(io::Deserializer& deser) {
       deser.setrpos(0);
       uint32_t val = 0;
       const char* buf = deser.readAsIs(PREAMBULE_SIZE);
@@ -123,7 +123,7 @@ public:
       //memcpy(Reserved, buf, RESERVED_SIZE);
     }
 
-    void serialize(Serializer& ser) const {
+    void serialize(io::Serializer& ser) const {
       ser.writeAsIs(PREAMBULE_SIZE, preamble);
       ser << (uint32_t)version;
       ser << (uint32_t)files_count;
@@ -139,7 +139,7 @@ public:
     static uint32_t persistentSize() {
         if ( ! size_ ) {
             std::vector< unsigned char > buf;
-            Serializer ser(buf);
+            io::Serializer ser(buf);
             DescriptionFile df;
             df.serialize( ser );
             size_ = static_cast<uint32_t>(ser.size());
@@ -156,7 +156,7 @@ private:
     static uint32_t size_;
 public:
   typedef DescriptionFile::index_type index_type;
-  void deserialize(Deserializer& deser) {
+    void deserialize(io::Deserializer& deser) {
     deser.setrpos(0);
     uint64_t val;
     deser >> val;
@@ -170,7 +170,7 @@ public:
 
     deser >> key;
   }
-  void serialize(Serializer& ser) const {
+  void serialize(io::Serializer& ser) const {
     ser << (uint64_t)blocksCount;
     ser << (uint64_t)dataSize;
     ser << (uint64_t)curBlockIndex;
@@ -181,7 +181,7 @@ public:
     static uint32_t persistentSize() {
         if ( ! size_ ) {
             std::vector< unsigned char > buf;
-            Serializer ser(buf);
+            io::Serializer ser(buf);
             templBackupHeader<Key> df;
             df.serialize( ser );
             size_ = ser.size();
@@ -219,7 +219,7 @@ public:
     Key        key;
     bool       head;
 
-    void deserialize(Deserializer& deser) {
+    void deserialize(io::Deserializer& deser) {
       deser.setrpos(0);
       uint64_t val;
       deser >> val;
@@ -241,7 +241,7 @@ public:
       head = (bool)boolval;
     }
 
-    void serialize(Serializer& ser) const {
+    void serialize(io::Serializer& ser) const {
       ser << (uint64_t)next_free_block;
       ser << key;
       ser << (uint64_t)total_blocks;
@@ -254,7 +254,7 @@ public:
     static uint32_t persistentSize() {
         if ( ! size_ ) {
             std::vector< unsigned char > buf;
-            Serializer ser(buf);
+            io::Serializer ser(buf);
             templDataBlockHeader<Key> hdr;
             hdr.serialize(ser);
             size_ = ser.size();
@@ -311,7 +311,7 @@ public:
     static const int defaultFileSize = 100; // in blocks 
     static const int64_t BLOCK_USED	= int64_t(1) << 63;
 
-    BlocksHSStorage(DataFileManager& manager, GlossaryBase* g = NULL,
+    BlocksHSStorage(DataFileManager& manager, io::GlossaryBase* g = NULL,
                     smsc::logger::Logger* thelog = 0): glossary_(g), running(false), deserBuf_(0), dataFileCreator_(manager, thelog)
     {
         /*
@@ -652,7 +652,7 @@ private:
             }
             fixup_.reset(new FixupLogger(bhs_.dbPath + '/' + bhs_.dbName + ".fixup"));
             std::vector< unsigned char > buf;
-            Serializer ser(buf);
+            io::Serializer ser(buf);
             df_.serialize(ser);
             fixup_->makeComment(2,ser.size(),ser.data());
             lastFreeBlock_ = df_.first_free_block = bhs_.invalidIndex();
@@ -708,7 +708,7 @@ private:
             int fn = bhs_.getFileNumber(blockIndex);
             off_t offset = bhs_.getOffset(blockIndex);
             char cvtbuf[8];
-            EndianConverter::set64(cvtbuf,uint64_t(saved_next_free_block));
+            io::EndianConverter::set64(cvtbuf,uint64_t(saved_next_free_block));
             fixup_->save(offset,8,cvtbuf);
             File* f = bhs_.dataFile_f[fn];
             f->Seek(offset);
@@ -847,7 +847,7 @@ private:
           deserBuf_ = new unsigned char[deserBufSize_ = needsize];
       }
       f->Read( (void*)deserBuf_, needsize );
-      Deserializer ds( deserBuf_, needsize );
+      io::Deserializer ds( deserBuf_, needsize );
       hdr.deserialize(ds);
   }
 
@@ -872,7 +872,7 @@ private:
          */
         size_t bufSize = hdrSize + curBlockSize;
         // memset(&(serHdrBuf_[0]), 0, DataBlockHeader::persistentSize());
-        Serializer ser(serHdrBuf_);
+        io::Serializer ser(serHdrBuf_);
         hdr.serialize(ser);
         memcpy(writeBuf, ser.data(), ser.size());
         memcpy(writeBuf + ser.size(), data, curBlockSize);
@@ -1053,7 +1053,7 @@ private:
         try {
             if (logger) smsc_log_debug(logger, "Change description file");
             descrFile_f.Seek(0, SEEK_SET);        
-            Serializer ser(serDescrBuf_);
+            io::Serializer ser(serDescrBuf_);
             descrFile.serialize(ser);
             descrFile_f.Write(ser.data(), ser.size());
             printDescrFile();
@@ -1068,7 +1068,7 @@ private:
             tmpFile.RWCreate(name.c_str());
             tmpFile.SetUnbuffered();
             tmpFile.Seek(0, SEEK_SET);
-            Serializer ser(serDescrBuf_);
+            io::Serializer ser(serDescrBuf_);
             descrFile.serialize(ser);
             tmpFile.Write(ser.data(), ser.size());
             if (logger) smsc_log_error(logger, "Last description data saved in file '%s'", name.c_str());
@@ -1261,9 +1261,9 @@ private:
     void writeBackup(File& f, const DescriptionFile& _descrFile, const char* backupData) {
 
         // serialization
-        Serializer descrser(serDescrBuf_);
+        io::Serializer descrser(serDescrBuf_);
         _descrFile.serialize(descrser);
-        Serializer backupser(serBackupBuf_);
+        io::Serializer backupser(serBackupBuf_);
         backupHeader.serialize(backupser);
 
         const size_t backupSize = sizeof(TRX_INCOMPLETE) + descrser.size() + 
@@ -1530,7 +1530,7 @@ private:
 private:
 
   Logger* logger;
-  GlossaryBase* glossary_;
+  io::GlossaryBase* glossary_;
   bool running;
   string dbName;
   string dbPath;

@@ -7,6 +7,7 @@
 namespace scag2 {
 namespace sessions {
 
+using namespace util::storage;
 using smsc::core::threads::Thread;
 
 CompositeSessionStore::CompositeSessionStore( smsc::logger::Logger* thelog,

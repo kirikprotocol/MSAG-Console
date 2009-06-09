@@ -4,7 +4,7 @@
 namespace scag2 {
 namespace sessions {
 
-using namespace util::storage;
+using namespace util::io;
 
 Serializer& ExternalBillingTransaction::serialize( Serializer& s ) const
 {    
@@ -15,7 +15,7 @@ Serializer& ExternalBillingTransaction::serialize( Serializer& s ) const
 }
 
 
-Deserializer& ExternalBillingTransaction::deserialize( Deserializer& s ) throw (DeserializerException)
+Deserializer& ExternalBillingTransaction::deserialize( Deserializer& s ) /* throw (DeserializerException) */
 {
     uint32_t i;
     s >> i;

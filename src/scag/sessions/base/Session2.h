@@ -43,9 +43,9 @@ public:
     SessionPropertyScope( Session* patron );
     virtual ~SessionPropertyScope();
     virtual Property* getProperty( const std::string& name );
-    util::storage::Serializer& serialize( util::storage::Serializer& s ) const;
-    util::storage::Deserializer& deserialize( util::storage::Deserializer& s ) 
-        throw (util::storage::DeserializerException);
+    util::io::Serializer& serialize( util::io::Serializer& s ) const;
+    util::io::Deserializer& deserialize( util::io::Deserializer& s ) 
+        /* throw (util::io::DeserializerException) */; 
 
     // clear the scope
     void clear();
@@ -83,9 +83,9 @@ public:
 
     virtual ~Session();
 
-    util::storage::Serializer& serialize( util::storage::Serializer& s ) const;
-    util::storage::Deserializer& deserialize( util::storage::Deserializer& s )
-        throw (util::storage::DeserializerException);
+    util::io::Serializer& serialize( util::io::Serializer& s ) const;
+    util::io::Deserializer& deserialize( util::io::Deserializer& s )
+        /* throw (util::io::DeserializerException) */;
 
     /// notification when property is changed
     virtual void changed( AdapterProperty& prop );
@@ -305,14 +305,14 @@ private: // methods
 
     typedef SessionPropertyScope* (*Opmaker)( Session* );
 
-    void serializeScope( util::storage::Serializer& o, const SessionPropertyScope* s ) const;
-    void deserializeScope( util::storage::Deserializer& o, SessionPropertyScope*& s, Opmaker opmaker )
-        throw (util::storage::DeserializerException);
-    void serializeScopeHash( util::storage::Serializer& o, const IntHash< SessionPropertyScope* >* s ) const;
-    void deserializeScopeHash( util::storage::Deserializer& o,
+    void serializeScope( util::io::Serializer& o, const SessionPropertyScope* s ) const;
+    void deserializeScope( util::io::Deserializer& o, SessionPropertyScope*& s, Opmaker opmaker )
+        /* throw (util::io::DeserializerException) */;
+    void serializeScopeHash( util::io::Serializer& o, const IntHash< SessionPropertyScope* >* s ) const;
+    void deserializeScopeHash( util::io::Deserializer& o,
                                IntHash< SessionPropertyScope* >*& s,
                                Opmaker opmaker )
-        throw (util::storage::DeserializerException);
+        /* throw (util::io::DeserializerException) */;
     void clearScopeHash( IntHash< SessionPropertyScope* >* s );
     opid_type getNewOperationId() const;
 
@@ -452,11 +452,11 @@ private:
 } // namespace sessions
 } // namespace scag
 
-inline scag2::util::storage::Serializer& operator << ( scag2::util::storage::Serializer& o, const scag2::sessions::Session& s )
+inline scag2::util::io::Serializer& operator << ( scag2::util::io::Serializer& o, const scag2::sessions::Session& s )
 {
     return s.serialize(o);
 }
-inline scag2::util::storage::Deserializer& operator >> ( scag2::util::storage::Deserializer& o, scag2::sessions::Session& s )
+inline scag2::util::io::Deserializer& operator >> ( scag2::util::io::Deserializer& o, scag2::sessions::Session& s )
 {
     return s.deserialize(o);
 }

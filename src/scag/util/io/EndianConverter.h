@@ -8,7 +8,7 @@
 
 namespace scag {
 namespace util {
-namespace storage {
+namespace io {
 
 /// NOTE: code in this class is moved into .cpp as we would like to
 /// compile it with high optimization level.
@@ -30,8 +30,8 @@ struct EndianConverter
 
 namespace scag2 {
 namespace util {
-namespace storage {
-using namespace scag::util::storage;
+namespace io {
+using namespace scag::util::io;
 }
 }
 }

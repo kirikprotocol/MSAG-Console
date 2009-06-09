@@ -41,24 +41,24 @@ template < typename Key >
     class RBTreeSerializer
 {
 public:
-    inline void serialize( Serializer& s, const Key& k ) {
+    inline void serialize( io::Serializer& s, const Key& k ) {
         s << k;
     }
-    inline void deserialize( Deserializer& d, Key& k ) {
+    inline void deserialize( io::Deserializer& d, Key& k ) {
         d >> k;
     }
 };
 
 // partial specialization for long
-template <> inline void RBTreeSerializer< long >::serialize( Serializer& s, const long& k ) {
+template <> inline void RBTreeSerializer< long >::serialize( io::Serializer& s, const long& k ) {
     const size_t wpos = s.wpos();
     s.setwpos(wpos+8);
-    EndianConverter::set64(s.data()+wpos,uint64_t(k));
+    io::EndianConverter::set64(s.data()+wpos,uint64_t(k));
 }
-template <> inline void RBTreeSerializer< long >::deserialize( Deserializer& d, long& k ) {
+template <> inline void RBTreeSerializer< long >::deserialize( io::Deserializer& d, long& k ) {
     const unsigned char* ptr = d.curpos();
     d.setrpos(d.rpos()+8);
-    k = long(EndianConverter::get64(ptr));
+    k = long(io::EndianConverter::get64(ptr));
 }
 
 
@@ -89,25 +89,25 @@ private:
 
         void load( const void* p ) {
             const uint32_t* ptr = reinterpret_cast<const uint32_t*>(p);
-            version = EndianConverter::get32(ptr);
-            cells_count = EndianConverter::get32(++ptr);
-            cells_used = EndianConverter::get32(++ptr);
-            cells_free = EndianConverter::get32(++ptr);
-            root_cell = nodeptr_type(EndianConverter::get32(++ptr));
-            first_free_cell = nodeptr_type(EndianConverter::get32(++ptr));
-            nil_cell = nodeptr_type(EndianConverter::get32(++ptr));
-            growth = int32_t(EndianConverter::get32(++ptr));
+            version = io::EndianConverter::get32(ptr);
+            cells_count = io::EndianConverter::get32(++ptr);
+            cells_used = io::EndianConverter::get32(++ptr);
+            cells_free = io::EndianConverter::get32(++ptr);
+            root_cell = nodeptr_type(io::EndianConverter::get32(++ptr));
+            first_free_cell = nodeptr_type(io::EndianConverter::get32(++ptr));
+            nil_cell = nodeptr_type(io::EndianConverter::get32(++ptr));
+            growth = int32_t(io::EndianConverter::get32(++ptr));
         }
         void save( void* p ) const {
             uint32_t* ptr = reinterpret_cast<uint32_t*>(p);
-            EndianConverter::set32(ptr,version);
-            EndianConverter::set32(++ptr,cells_count);
-            EndianConverter::set32(++ptr,cells_used);
-            EndianConverter::set32(++ptr,cells_free);
-            EndianConverter::set32(++ptr,uint32_t(root_cell));
-            EndianConverter::set32(++ptr,uint32_t(first_free_cell));
-            EndianConverter::set32(++ptr,uint32_t(nil_cell));
-            EndianConverter::set32(++ptr,growth);
+            io::EndianConverter::set32(ptr,version);
+            io::EndianConverter::set32(++ptr,cells_count);
+            io::EndianConverter::set32(++ptr,cells_used);
+            io::EndianConverter::set32(++ptr,cells_free);
+            io::EndianConverter::set32(++ptr,uint32_t(root_cell));
+            io::EndianConverter::set32(++ptr,uint32_t(first_free_cell));
+            io::EndianConverter::set32(++ptr,uint32_t(nil_cell));
+            io::EndianConverter::set32(++ptr,growth);
         }
 
         inline size_t preambuleSize() const {
@@ -135,7 +135,7 @@ private:
         }
 
 
-        void serializeCell( Serializer& s, const RBTreeNode* node ) const 
+        void serializeCell( io::Serializer& s, const RBTreeNode* node ) const 
         {
             // for version 1
             if ( s.version() != 1 && s.version() != 2 ) {
@@ -144,16 +144,16 @@ private:
             const size_t wpos = s.wpos();
             s.setwpos(s.wpos()+13); // 4 * 3 + 1
             unsigned char* ptr = s.data() + wpos;
-            EndianConverter::set32(ptr,node->parent);
-            EndianConverter::set32(ptr+4,node->left);
-            EndianConverter::set32(ptr+8,node->right);
+            io::EndianConverter::set32(ptr,node->parent);
+            io::EndianConverter::set32(ptr+4,node->left);
+            io::EndianConverter::set32(ptr+8,node->right);
             ptr += 12;
             *ptr = node->color;
             KS ks; ks.serialize(s,node->key);
             VS vs; vs.serialize(s,node->value);
         }
 
-        void deserializeCell( Deserializer& d, RBTreeNode* node ) const {
+        void deserializeCell( io::Deserializer& d, RBTreeNode* node ) const {
             if ( d.version() != 1 && d.version() != 2 ) {
                 throw smsc::util::Exception( "version %d is not implemented in rbtree", d.version() );
             }
@@ -163,13 +163,13 @@ private:
             const char* fail = 0;
             uint32_t i;
             do {
-                i = EndianConverter::get32(ptr); ptr += 4;
+                i = io::EndianConverter::get32(ptr); ptr += 4;
                 if ( i >= cells_count ) { fail = "parent"; break; }
                 node->parent = i;
-                i = EndianConverter::get32(ptr); ptr += 4;
+                i = io::EndianConverter::get32(ptr); ptr += 4;
                 if ( i >= cells_count ) { fail = "left"; break; }
                 node->left = i;
-                i = EndianConverter::get32(ptr); ptr += 4;
+                i = io::EndianConverter::get32(ptr); ptr += 4;
                 if ( i >= cells_count ) { fail = "right"; break; }
                 node->right = i;
             } while ( false );
@@ -188,9 +188,9 @@ private:
             if ( cellSize_ > 0 ) return;
             RBTreeNode n;
             memset(&n,0,sizeof(RBTreeNode));
-            Serializer::Buf buf;
+            io::Serializer::Buf buf;
             buf.reserve(100);
-            Serializer ser(buf);
+            io::Serializer ser(buf);
             ser.setVersion(version);
             serializeCell(ser,&n);
             cellSize_ = ser.size();
@@ -238,7 +238,7 @@ private:
             const char* ptr = buffer;
             head.load(ptr);
             ptr += head.dataSize();
-            const size_t nodes = EndianConverter::get32(ptr);
+            const size_t nodes = io::EndianConverter::get32(ptr);
             ptr += 4;
             if ( ptr + (4+head.cellSize())*nodes != buffer + bufsize ) {
                 throw smsc::util::Exception("buffer size mismatch in Trans::load(), bufsz=%u headsz=%u cells=%u cellsz=%u",
@@ -263,18 +263,18 @@ private:
                 bufferSize = savedDataSize();
                 hdr.save(ptr);
                 ptr += hdr.dataSize();
-                EndianConverter::set32(ptr,nodes_.size());
+                io::EndianConverter::set32(ptr,nodes_.size());
                 ptr += 4;
                 if ( ! nodes_.empty() ) {
                     uint32_t* uptr = reinterpret_cast<uint32_t*>(ptr);
                     for ( typename std::vector< nodeptr_type >::const_iterator i = nodes_.begin();
                           i != nodes_.end();
                           ++i ) {
-                        EndianConverter::set32(uptr,uint32_t(*i));
+                        io::EndianConverter::set32(uptr,uint32_t(*i));
                         ++uptr;
                     }
                     ptr = reinterpret_cast<char*>(uptr);
-                    Serializer ser(ptr, nodes_.size()*hdr.cellSize());
+                    io::Serializer ser(ptr, nodes_.size()*hdr.cellSize());
                     ser.setVersion( hdr.version );
                     for ( typename std::vector< nodeptr_type >::const_iterator i = nodes_.begin();
                           i != nodes_.end();
@@ -411,8 +411,8 @@ public:
             }
         }
         // write header
-        Serializer::Buf buffer;
-        Serializer ser(buffer);
+        io::Serializer::Buf buffer;
+        io::Serializer ser(buffer);
         serializeRbtHeader(ser,header_);
         rbtree_f.Seek(0, SEEK_SET);
         rbtree_f.Write(&buffer[0],buffer.size());
@@ -685,8 +685,8 @@ private:
 
         if ( creation ) {
             rbtree_f.Seek(0, SEEK_SET);
-            Serializer::Buf buffer;
-            Serializer ser(buffer);
+            io::Serializer::Buf buffer;
+            io::Serializer ser(buffer);
             ser.reserve(header_.fullSavedSize());
             serializeRbtHeader(ser,header_);
             rbtree_f.Write(&buffer[0], buffer.size());
@@ -718,7 +718,7 @@ private:
     {
         std::vector< unsigned char > buf;
         buf.reserve(header_.cellSize()*realgrowth);
-        Serializer ss(buf);
+        io::Serializer ss(buf);
         ss.setVersion(header_.version);
         rbtree_f.Seek(header_.fullSavedSize() + header_.cellSize()*startcell, SEEK_SET);
         for ( nodeptr_type i = 0; i < nodeptr_type(realgrowth); ++i ) {
@@ -847,10 +847,10 @@ private:
             }
             std::auto_ptr<unsigned char> p(new unsigned char[buflen]);
             rbtree_f.Read(p.get(),buflen);
-            Deserializer ds(p.get(),buflen);
+            io::Deserializer ds(p.get(),buflen);
             deserializeRbtHeader(ds,header_);
-            Serializer::Buf buffer;
-            Serializer ser(buffer);
+            io::Serializer::Buf buffer;
+            io::Serializer ser(buffer);
             serializeRbtHeader(ser,header_);
             assert( ds.rpos() == buffer.size() );
             const off_t expectedLen = off_t(buffer.size() + header_.cells_count*header_.cellSize());
@@ -871,7 +871,7 @@ private:
                 // setting file position, prepare the buffer to read a chunk in one sweep
                 rbtree_f.Seek( buffer.size() );
                 std::auto_ptr<unsigned char> chunkBuf(new unsigned char[growth*header_.cellSize()]);
-                Deserializer dds(chunkBuf.get(),growth*header_.cellSize());
+                io::Deserializer dds(chunkBuf.get(),growth*header_.cellSize());
                 dds.setVersion( header_.version );
 
                 // allocating chunks/reading cells
@@ -1130,7 +1130,7 @@ private:
     }
      */
 
-    void serializeRbtHeader( Serializer& s, const RbtFileHeader& hdr ) {
+    void serializeRbtHeader( io::Serializer& s, const RbtFileHeader& hdr ) {
         const bool first = ( s.size() == 0 );
         if ( first ) s.writeAsIs( hdr.preambuleSize(), "RBTREE_FILE_STORAGE!" );
         else s.setwpos(hdr.preambuleSize());
@@ -1153,14 +1153,14 @@ private:
                          "abcdefghiklmnopqrstuvwxyz" );
     }
 
-    void deserializeRbtHeader( Deserializer& d, RbtFileHeader& hdr ) {
+    void deserializeRbtHeader( io::Deserializer& d, RbtFileHeader& hdr ) {
         const char* p = d.readAsIs(20);
         if ( strncmp(p, "RBTREE_FILE_STORAGE!", 20) ) {
             // strings differ
             if (logger) {
                 smsc_log_error( logger, "Wrong rbtree index prefix" );
             }
-            throw DeserializerException::stringMismatch();
+            throw io::DeserializerException::stringMismatch();
         }
         const size_t rpos = d.rpos();
         hdr.load(d.curpos());
@@ -1238,7 +1238,7 @@ private:
         }
         const Transaction& t = static_cast<const Transaction&>(rec);
         const char* ptr = t.buffer + header_.dataSize();
-        size_t nodes = EndianConverter::get32(ptr);
+        size_t nodes = io::EndianConverter::get32(ptr);
         ptr += 4;
         if ( ptr + nodes*(4+header_.cellSize()) != t.buffer + t.bufferSize ) {
             throw smsc::util::Exception("buffer size mismatch");
@@ -1246,7 +1246,7 @@ private:
         const uint32_t* uptr = reinterpret_cast<const uint32_t*>(ptr);
         ptr = ptr + nodes*4;
         for ( ; nodes > 0; ) {
-            nodeptr_type addr = EndianConverter::get32(uptr++);
+            nodeptr_type addr = io::EndianConverter::get32(uptr++);
             rbtree_f.Seek( header_.fullSavedSize() + addr*header_.cellSize());
             rbtree_f.Write( ptr, header_.cellSize());
             ptr += header_.cellSize();

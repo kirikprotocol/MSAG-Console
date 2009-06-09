@@ -55,8 +55,8 @@ class Serializable
 {
 public:
     virtual ~Serializable() {}
-    virtual void Serialize(SerialBuffer &sb, bool toFSDB = false, GlossaryBase* glossary = NULL) const = 0;
-    virtual void Deserialize(SerialBuffer &sb, bool fromFSDB = false, GlossaryBase* glossary = NULL) = 0;
+    virtual void Serialize(SerialBuffer &sb, bool toFSDB = false, io::GlossaryBase* glossary = NULL) const = 0;
+    virtual void Deserialize(SerialBuffer &sb, bool fromFSDB = false, io::GlossaryBase* glossary = NULL) = 0;
 };
 
 } // namespace storage

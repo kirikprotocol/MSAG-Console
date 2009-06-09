@@ -10,7 +10,7 @@
 namespace scag2 {
 namespace sessions {
 
-using namespace scag::util::storage;
+using namespace scag::util::io;
 
 class StoredSessionKey
 {

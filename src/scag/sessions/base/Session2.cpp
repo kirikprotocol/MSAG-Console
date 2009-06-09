@@ -13,7 +13,7 @@
 #include "SessionStore2.h"
 #include "scag/transport/CommandOperation.h"
 
-using namespace scag2::util::storage;
+using namespace scag2::util::io;
 
 namespace {
 
@@ -248,7 +248,7 @@ Serializer& SessionPropertyScope::serialize( Serializer& o ) const
 }
 
 
-Deserializer& SessionPropertyScope::deserialize( Deserializer& o ) throw (DeserializerException)
+Deserializer& SessionPropertyScope::deserialize( Deserializer& o ) /* throw (DeserializerException) */
 {
     uint32_t sz;
     o >> sz;
@@ -446,7 +446,7 @@ Serializer& Session::serialize( Serializer& s ) const
 }
 
 
-Deserializer& Session::deserialize( Deserializer& s ) throw (DeserializerException)
+Deserializer& Session::deserialize( Deserializer& s ) /* throw (DeserializerException) */
 {
     clear();
     try {
@@ -1034,7 +1034,7 @@ void Session::serializeScope( Serializer& o, const SessionPropertyScope* s ) con
 
 void Session::deserializeScope( Deserializer& o,
                                 SessionPropertyScope*& s,
-                                Opmaker opmaker ) throw (DeserializerException)
+                                Opmaker opmaker ) /* throw (DeserializerException) */
 {
     const size_t rpos = o.rpos();
     uint32_t sz;
@@ -1064,7 +1064,7 @@ void Session::serializeScopeHash( Serializer& o, const IntHash< SessionPropertyS
 
 void Session::deserializeScopeHash( Deserializer& o,
                                     IntHash< SessionPropertyScope* >*& s,
-                                    Opmaker opmaker ) throw (DeserializerException)
+                                    Opmaker opmaker ) /* throw (DeserializerException) */
 {
     uint32_t sz;
     o >> sz;

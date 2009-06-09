@@ -3,7 +3,7 @@
 
 #include <string>
 
-namespace scag { namespace util { namespace storage {
+namespace scag { namespace util { namespace io {
 
 class GlossaryBase {
 public:
@@ -25,9 +25,17 @@ public:
 
 };
 
-}//storage
+}//io
 }//util
 }//scag
+
+namespace scag2 {
+namespace util {
+namespace io {
+using scag::util::io::GlossaryBase;
+}
+}
+}
 
 #endif
 

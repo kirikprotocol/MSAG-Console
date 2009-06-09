@@ -33,9 +33,9 @@ public:
         return this;
     }
 
-    virtual util::storage::Serializer& serialize( util::storage::Serializer& s ) const;
-    virtual util::storage::Deserializer& deserialize( util::storage::Deserializer& s )
-        throw ( util::storage::DeserializerException );
+    virtual util::io::Serializer& serialize( util::io::Serializer& s ) const;
+    virtual util::io::Deserializer& deserialize( util::io::Deserializer& s )
+        /* throw ( util::io::DeserializerException ) */;
 
 
     virtual void info( bill::BillingInfoStruct& bis,

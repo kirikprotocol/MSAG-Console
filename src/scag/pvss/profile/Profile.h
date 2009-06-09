@@ -28,7 +28,7 @@ using std::vector;
 using scag::util::storage::SerialBuffer;
 using scag::util::storage::SerialBufferOutOfBounds;
 using scag::util::storage::Serializable;
-using scag::util::storage::GlossaryBase;
+using scag::util::io::GlossaryBase;
 using scag::util::storage::BlocksHSBackupData;
 using smsc::core::buffers::File;
 
@@ -138,15 +138,15 @@ private:
 }//pvss
 }//scag2
 
-inline scag::util::storage::Serializer& operator << (scag::util::storage::Serializer& ser, 
-                                                     const scag2::pvss::Profile& pf) { 
+inline scag::util::io::Serializer& operator << (scag::util::io::Serializer& ser,
+                                                const scag2::pvss::Profile& pf) { 
   scag::util::storage::SerialBuffer buf;
   pf.Serialize(buf, true, ser.getGlossary());
   ser.write(buf.GetSize(), buf.c_ptr());
   return ser; 
 };
 
-inline scag::util::storage::Deserializer& operator >> (scag::util::storage::Deserializer& deser,
+inline scag::util::io::Deserializer& operator >> (scag::util::io::Deserializer& deser,
                                                  scag2::pvss::Profile& pf) { 
   uint32_t size = 0;
   const char* buf = deser.read(size);

@@ -29,7 +29,7 @@ using std::vector;
 using scag::util::storage::SerialBuffer;
 using scag::util::storage::SerialBufferOutOfBounds;
 using scag::util::storage::Serializable;
-using scag::util::storage::GlossaryBase;
+using scag::util::io::GlossaryBase;
 using smsc::core::buffers::File;
 
 typedef Hash<Property*> PropertyHash;

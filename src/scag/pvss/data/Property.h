@@ -163,8 +163,8 @@ public:
 
     void assign(const char *nm, const char* str, TimePolicy policy, time_t fd, uint32_t lt);
 
-    void Serialize(util::storage::SerialBuffer& buf, bool fromFSDB = false, util::storage::GlossaryBase* glossary = NULL) const;
-    void Deserialize(util::storage::SerialBuffer& buf, bool toFSDB = false, util::storage::GlossaryBase* glossary = NULL);
+    void Serialize(util::storage::SerialBuffer& buf, bool fromFSDB = false, util::io::GlossaryBase* glossary = NULL) const;
+    void Deserialize(util::storage::SerialBuffer& buf, bool toFSDB = false, util::io::GlossaryBase* glossary = NULL);
 
     bool convertToInt();
 

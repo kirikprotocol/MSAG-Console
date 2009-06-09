@@ -40,10 +40,10 @@ struct SessionAllocator {
 class SessionStoreImpl : public SessionStore
 {
 public:
-    typedef HashedMemoryCache< SessionKey, Session > MemStorage;
-    typedef PageFileDiskStorage< SessionKey, Session > DiskDataStorage;
-    typedef RBTreeIndexStorage< SessionKey, DiskDataStorage::index_type, StoredSessionKey > DiskIndexStorage;
-    typedef IndexedStorage< DiskIndexStorage, DiskDataStorage, smsc::core::synchronization::Mutex > EltDiskStorage;
+    typedef util::storage::HashedMemoryCache< SessionKey, Session > MemStorage;
+    typedef util::storage::PageFileDiskStorage< SessionKey, Session > DiskDataStorage;
+    typedef util::storage::RBTreeIndexStorage< SessionKey, DiskDataStorage::index_type, StoredSessionKey > DiskIndexStorage;
+    typedef util::storage::IndexedStorage< DiskIndexStorage, DiskDataStorage, smsc::core::synchronization::Mutex > EltDiskStorage;
     // typedef IndexedStorage< DiskIndexStorage, DiskDataStorage, SlowMutex > EltDiskStorage;
     // typedef CompositeDiskStorage< EltDiskStorage > DiskStorage;
     typedef EltDiskStorage DiskStorage;

@@ -368,7 +368,7 @@ void Property::setDate(const char *nm, time_t t, TimePolicy policy, time_t fd, u
     setTimePolicy(policy, fd, lt);
 }
 
-void Property::Serialize( util::storage::SerialBuffer& buf, bool toFSDB, util::storage::GlossaryBase* glossary) const
+void Property::Serialize( util::storage::SerialBuffer& buf, bool toFSDB, util::io::GlossaryBase* glossary) const
 {
     buf.WriteInt8((uint8_t)type);
     buf.WriteInt8((uint8_t)time_policy);
@@ -376,7 +376,7 @@ void Property::Serialize( util::storage::SerialBuffer& buf, bool toFSDB, util::s
     buf.WriteInt32(life_time);
     if(toFSDB) {
         int i_name;
-        if(util::storage::GlossaryBase::NO_VALUE == (i_name = glossary->GetValueByKey(name))) {
+        if(util::io::GlossaryBase::NO_VALUE == (i_name = glossary->GetValueByKey(name))) {
             i_name = glossary->Add(name);
         }
     	buf.WriteInt32(i_name);
@@ -392,7 +392,7 @@ void Property::Serialize( util::storage::SerialBuffer& buf, bool toFSDB, util::s
     }
 }
 
-void Property::Deserialize(util::storage::SerialBuffer& buf, bool fromFSDB, util::storage::GlossaryBase* glossary)
+void Property::Deserialize(util::storage::SerialBuffer& buf, bool fromFSDB, util::io::GlossaryBase* glossary)
 {
     invalidateCache();
     type = (PropertyType)buf.ReadInt8();
@@ -401,7 +401,7 @@ void Property::Deserialize(util::storage::SerialBuffer& buf, bool fromFSDB, util
     life_time = buf.ReadInt32();
     if (fromFSDB) {
         int i_name = buf.ReadInt32();
-        if(util::storage::GlossaryBase::SUCCESS != glossary->GetKeyByValue(i_name, name)) {
+        if(util::io::GlossaryBase::SUCCESS != glossary->GetKeyByValue(i_name, name)) {
             char buff[32];
             snprintf(buff, 32, "%d", i_name);
             setPropertyName(buff);

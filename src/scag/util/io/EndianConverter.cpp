@@ -2,7 +2,7 @@
 
 namespace scag {
 namespace util {
-namespace storage {
+namespace io {
 
 uint16_t EndianConverter::get16( const void* buf ) {
     register const uint8_t* p = reinterpret_cast<const uint8_t*>(buf);

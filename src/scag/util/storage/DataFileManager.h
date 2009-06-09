@@ -60,5 +60,13 @@ private:
 }
 }
 
+namespace scag2 {
+namespace util {
+namespace storage {
+using namespace scag::util::storage;
+}
+}
+}
+
 #endif
 

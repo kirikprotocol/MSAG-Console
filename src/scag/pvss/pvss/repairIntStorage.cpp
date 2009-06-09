@@ -90,7 +90,7 @@ void extractPageFile( smsc::logger::Logger* logger,
             pageIndex = nextIndex;
 
             try {
-                Deserializer dsr(&data[0],data.size(),glossary);
+                io::Deserializer dsr(&data[0],data.size(),glossary);
                 dsr >> prof;
             } catch ( std::exception& e ) {
                 smsc_log_warn(logger,"exception: %s", e.what());

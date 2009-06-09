@@ -10,7 +10,7 @@ namespace scag2 {
 namespace sessions {
 
 using namespace scag::exceptions;
-using namespace util::storage;
+using namespace util::io;
 
 smsc::logger::Logger* Operation::log_ = 0;
 Mutex Operation::loggerMutex_;
@@ -191,7 +191,7 @@ Serializer& Operation::serialize( Serializer& s ) const
 }
 
 
-Deserializer& Operation::deserialize( Deserializer& s ) throw ( DeserializerException )
+Deserializer& Operation::deserialize( Deserializer& s ) /* throw ( DeserializerException ) */
 {
     uint32_t x;
     uint8_t y;

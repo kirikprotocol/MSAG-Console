@@ -245,17 +245,17 @@ struct BlocksHSStorage2::StorageState
 
     char* saveData( char* ptr ) const
     {
-        EndianConverter::set32(ptr,fileCount);
-        EndianConverter::set32(ptr+4,freeCount);
-        EndianConverter::set32(ptr+8,ffb);
+        io::EndianConverter::set32(ptr,fileCount);
+        io::EndianConverter::set32(ptr+4,freeCount);
+        io::EndianConverter::set32(ptr+8,ffb);
         return ptr+12;
     }
 
     const char* loadData( const char* ptr )
     {
-        fileCount = EndianConverter::get32(ptr);
-        freeCount = EndianConverter::get32(ptr+4);
-        ffb = EndianConverter::get32(ptr+8);
+        fileCount = io::EndianConverter::get32(ptr);
+        freeCount = io::EndianConverter::get32(ptr+4);
+        ffb = io::EndianConverter::get32(ptr+8);
         return ptr+12;
     }
 
@@ -286,14 +286,14 @@ public:
         const char* endptr = ptr + bufsize;
         ptr = oldState.loadData(ptr);
         ptr = newState.loadData(ptr);
-        oldBufSize = EndianConverter::get32(ptr);
+        oldBufSize = io::EndianConverter::get32(ptr);
         ptr += 4;
         if ( ptr + oldBufSize > endptr ) {
             throw smsc::util::Exception("buffer underrun");
         }
         oldBuf = ptr;
         ptr += oldBufSize;
-        newBufSize = EndianConverter::get32(ptr);
+        newBufSize = io::EndianConverter::get32(ptr);
         ptr += 4;
         if ( ptr + newBufSize != endptr ) {
             throw smsc::util::Exception("buffer size mismatch");
@@ -304,13 +304,13 @@ public:
         char* ptr = reinterpret_cast<char*>(p);
         ptr = oldState.saveData(ptr);
         ptr = newState.saveData(ptr);
-        EndianConverter::set32(ptr,oldBufSize);
+        io::EndianConverter::set32(ptr,oldBufSize);
         ptr += 4;
         if ( oldBufSize > 0 ) {
             memcpy(ptr,oldBuf,oldBufSize);
             ptr += oldBufSize;
         }
-        EndianConverter::set32(ptr,newBufSize);
+        io::EndianConverter::set32(ptr,newBufSize);
         ptr += 4;
         if ( newBufSize > 0 ) {
             memcpy(ptr,newBuf,newBufSize);
@@ -1373,22 +1373,22 @@ void BlocksHSStorage2::saveJournalHeader( void* p ) const
 {
     // make the header
     register char* ptr = reinterpret_cast<char*>(p);
-    EndianConverter::set32(ptr,version_);
-    EndianConverter::set32(ptr+4,packer_.blockSize());
-    EndianConverter::set32(ptr+8,fileSize_);
+    io::EndianConverter::set32(ptr,version_);
+    io::EndianConverter::set32(ptr+4,packer_.blockSize());
+    io::EndianConverter::set32(ptr+8,fileSize_);
 }
 
 
 size_t BlocksHSStorage2::loadJournalHeader( const void* p )
 {
     register const char* ptr = reinterpret_cast<const char*>(p);
-    version_ = EndianConverter::get32(ptr);
+    version_ = io::EndianConverter::get32(ptr);
     if ( version_ != 0x80000002 ) {
         throw smsc::util::Exception("wrong version %u", version_);
     }
-    uint32_t bsz = EndianConverter::get32(ptr+4);
+    uint32_t bsz = io::EndianConverter::get32(ptr+4);
     packer_ = HSPacker(bsz,0/*,log_*/);
-    fileSize_ = EndianConverter::get32(ptr+8);
+    fileSize_ = io::EndianConverter::get32(ptr+8);
     fileSizeBytes_ = offset_type(fileSize_) * packer_.blockSize();
     if (log_) {
         smsc_log_debug(log_,"journal header has been loaded: blockSize=%u/%x fileSize=%u/%x fszBytes=%llx",

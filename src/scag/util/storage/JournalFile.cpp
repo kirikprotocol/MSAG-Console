@@ -283,9 +283,9 @@ bool JournalFile::writeRecord( const JournalRecord& record )
     } while ( csum == 0 );
     ptr = mempcpy(ptr,store_.journalRecordMark().c_str(),store_.journalRecordMark().size());
     const char* ptr0 = ptr; // remember position
-    EndianConverter::set32(ptr,jnlSize);
+    io::EndianConverter::set32(ptr,jnlSize);
     ptr = mempcpy(ptr+4,&csum,8);
-    EndianConverter::set32(ptr,serial);
+    io::EndianConverter::set32(ptr,serial);
     ptr += 4;
     record.save(ptr);
     ptr += record.savedDataSize();
@@ -318,7 +318,7 @@ JournalRecord* JournalFile::loadJournalRecord( const char*& iptr, size_t bufsize
     }
     // loading size
     const char* ptr = iptr;
-    const uint32_t jnlSize = EndianConverter::get32(ptr);
+    const uint32_t jnlSize = io::EndianConverter::get32(ptr);
     const char* endptr = ptr+jnlSize;
     if ( bufsize < jnlSize ) {
         throw smsc::util::Exception("record size %u, buffer size is too small = %u",
@@ -333,8 +333,8 @@ JournalRecord* JournalFile::loadJournalRecord( const char*& iptr, size_t bufsize
         throw smsc::util::Exception("control sums do not match");
     }
     std::auto_ptr< JournalRecord > jr( store_.createJournalRecord() );
-    jr->setControlSum( EndianConverter::get64(ptr) );
-    jr->setSerial( EndianConverter::get32(ptr+8) );
+    jr->setControlSum( io::EndianConverter::get64(ptr) );
+    jr->setSerial( io::EndianConverter::get32(ptr+8) );
     jr->load(ptr+12,jnlSize-constantRecordSize());
     iptr = endptr;
     return jr.release();

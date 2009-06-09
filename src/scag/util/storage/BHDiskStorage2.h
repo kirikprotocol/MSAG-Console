@@ -25,7 +25,7 @@ public:
     typedef typename storage_type::buffer_type buffer_type;
 
     BHDiskStorage2( storage_type* hs,
-                    GlossaryBase* glossary = 0,
+                    io::GlossaryBase* glossary = 0,
                     smsc::logger::Logger* logger = 0 ) :
     store_(hs), glossary_(glossary), v_(0), buf_(0), log_(logger)
     {
@@ -59,7 +59,7 @@ public:
         i_ = invalidIndex();
         v_ = const_cast<value_type*>(&v);
         if ( !buf_ ) buf_ = value_type::allocBackup();
-        Serializer ser(*buf_,glossary_);
+        io::Serializer ser(*buf_,glossary_);
         ser.setVersion(store_->version());
         ser.reset();
         ser.setwpos( headerSize()+extraSize() );
@@ -166,7 +166,7 @@ public:
 
         virtual void recoverIndex( index_type idx, buffer_type& buffer ) {
             dstore_.unpackBuffer(buffer,0);
-            Deserializer dsr(buffer);
+            io::Deserializer dsr(buffer);
             dsr.setVersion(dstore_.store_->version());
             dsr.setrpos(dstore_.headerSize()+dstore_.extraSize());
             typename DiskIndexStorage::key_type key;
@@ -187,7 +187,7 @@ protected:
         if (buffer.empty()) return false;
         buffer_type headers;
         unpackBuffer(buffer,&headers);
-        Deserializer dsr(buffer,glossary_);
+        io::Deserializer dsr(buffer,glossary_);
         dsr.setVersion(store_->version());
         bool rv = false;
         key_type key;
@@ -253,7 +253,7 @@ protected:
 
 private:
     storage_type*            store_; // owned
-    GlossaryBase*            glossary_; // not owned
+    io::GlossaryBase*        glossary_; // not owned
     mutable key_type         key_;
     mutable index_type       i_;
     mutable value_type*      v_;     // not owned

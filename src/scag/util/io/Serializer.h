@@ -13,7 +13,7 @@
 
 namespace scag {
 namespace util {
-namespace storage {
+namespace io {
 
 class DeserializerException : public std::exception {
 private:
@@ -240,8 +240,8 @@ private:
 
 namespace scag2 {
 namespace util {
-namespace storage {
-using namespace scag::util::storage;
+namespace io {
+using namespace scag::util::io;
 }
 }
 }

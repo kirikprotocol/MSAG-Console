@@ -17,7 +17,7 @@ using std::vector;
 using smsc::core::buffers::Hash;
 using smsc::logger::Logger;
 
-class Glossary: public GlossaryBase {
+class Glossary: public io::GlossaryBase {
 public:
   Glossary() : logger(Logger::getInstance("gloss")), glossFile(0), currentIndex(0), opened(false) {};
   ~Glossary() { Close(); };

@@ -18,7 +18,7 @@ private:
     static smsc::logger::Logger* log_;
 
 public:
-    typedef Serializer::Buf     backup_type;
+    typedef io::Serializer::Buf     backup_type;
 
     DataBlockBackup2Base( backup_type* b = 0 ) : backup(b) {}
     /*

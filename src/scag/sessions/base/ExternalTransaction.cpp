@@ -4,9 +4,9 @@
 namespace scag2 {
 namespace sessions {
 
-using namespace util::storage;
+using namespace util::io;
 
-ExternalTransaction* ExternalTransaction::createAndDeserialize( Deserializer& s ) throw (DeserializerException)
+ExternalTransaction* ExternalTransaction::createAndDeserialize( Deserializer& s ) /* throw (DeserializerException) */
 {
     ExternalTransaction* e = 0;
     uint32_t i;

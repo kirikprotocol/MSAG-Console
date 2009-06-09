@@ -102,11 +102,11 @@ public:
 
     /// helper: load index from memory
     static inline offset_type loadIdx( const void* wher ) {
-        return (EndianConverter::get64(wher) & navBits());
+        return (io::EndianConverter::get64(wher) & navBits());
     }
 
     static inline void saveIdx( void* wher, offset_type idx ) {
-        EndianConverter::set64(wher,idx & navBits());
+        io::EndianConverter::set64(wher,idx & navBits());
     }
 
     /// load from a block of memory, considering it has been filled
@@ -115,31 +115,31 @@ public:
         const uint8_t state = *where;
         used_ = state & USED_BIT;
         head_ = state & HEAD_BIT;
-        next_ = EndianConverter::get64(where) & navBits();
+        next_ = io::EndianConverter::get64(where) & navBits();
         where += idxSize();
         pack_ = *where;
-        ref_ = EndianConverter::get64(where) & navBits();
+        ref_ = io::EndianConverter::get64(where) & navBits();
     }
 
     /// save to a block of memory, which should be at least NAV_SIZE in length
     void savePtr( void* wher ) const {
         register uint8_t* where = reinterpret_cast<uint8_t*>(wher);
-        EndianConverter::set64(where,next_);
+        io::EndianConverter::set64(where,next_);
         *where = (used_ ? USED_BIT : 0) | (head_ ? HEAD_BIT : 0);
         where += idxSize();
-        EndianConverter::set64(where,ref_);
+        io::EndianConverter::set64(where,ref_);
         *where = pack_;
     }
 
     // helper methods to load from different sources
-    inline void load( Deserializer& dsr ) {
+    inline void load( io::Deserializer& dsr ) {
         const uint8_t* cp = dsr.curpos();
         dsr.setrpos(dsr.rpos()+navSize()); // check that it has enough data
         loadPtr(cp);
     }
 
     // save to serializer
-    void save( Serializer& ser ) const {
+    void save( io::Serializer& ser ) const {
         register size_t wpos = ser.wpos();
         ser.setwpos(wpos+navSize());
         savePtr(ser.data()+wpos);
@@ -198,7 +198,7 @@ class HSPacker
 public:
     typedef BlockNavigation::offset_type offset_type;
     typedef uint64_t                     index_type;
-    typedef Serializer::Buf              buffer_type;
+    typedef io::Serializer::Buf          buffer_type;
 
 public:
     HSPacker( size_t blockSize, uint8_t packType, smsc::logger::Logger* logger = 0 ) :
@@ -435,7 +435,7 @@ public:
                                size_t initialPosition = 0 )
     {
         blocks.clear();
-        Deserializer dsr(buffer,bufferSize);
+        io::Deserializer dsr(buffer,bufferSize);
         dsr.setrpos(initialPosition);
         bool isUsed = true;
         offset_type nextBlock = notUsed();
@@ -609,7 +609,7 @@ public:
         headers.clear();
         headers.reserve(needBlocks*navSize()+idxSize());
 
-        Serializer ser(headers);
+        io::Serializer ser(headers);
         std::vector< offset_type >::const_iterator iter = offsets.begin();
         const offset_type firstBlock = *iter++;
         ser << firstBlock;
@@ -656,7 +656,7 @@ public:
         profile.reserve( oldSize + (offsets.size() - startPos)*navSize()+idxSize() );
         BlockNavigation bn;
         bn.setFreeCells( notUsed() );
-        Serializer ser(profile);
+        io::Serializer ser(profile);
         ser.setwpos(profile.size());
         std::vector< offset_type >::const_iterator iter = offsets.begin() + startPos;
         const offset_type newffb = *iter++;
