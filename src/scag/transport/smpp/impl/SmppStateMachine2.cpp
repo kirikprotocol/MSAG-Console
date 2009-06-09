@@ -28,7 +28,7 @@ using namespace scag::transport::smpp;
 using namespace smsc::core::buffers;
 using scag2::re::actions::CommandProperty;
 
-std::vector<int> StateMachine::allowedUnknownOptionals;
+// std::vector<int> StateMachine::allowedUnknownOptionals;
 
 const uint32_t MAX_REDIRECT_CNT = 10;
 const unsigned TIMINGFREQ = 10000;
@@ -344,7 +344,7 @@ uint32_t StateMachine::putCommand(CommandId cmdType, SmppEntity* src, SmppEntity
             }
         else
         {
-            stripUnknownSmppOptionals( sms,allowedUnknownOptionals );
+            // stripUnknownSmppOptionals( sms,allowedUnknownOptionals );
 
             uint32_t cnt;
             const bool sliced = isSliced(sms);

@@ -30,11 +30,13 @@ public:
     const char* taskName(){return "StateMachine";}
     int Execute();
 
+    /*
     static void addTransitOptional(int tag)
     {
         allowedUnknownOptionals.push_back(tag);
         smsc_log_debug(smsc::logger::Logger::getInstance("smpp.stm"), "Transitional tag added: %x", tag);
     }
+     */
 
 protected:
     void processSmResp( std::auto_ptr<SmppCommand> aucmd,

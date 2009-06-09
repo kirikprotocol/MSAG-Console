@@ -422,6 +422,7 @@ void SmppManagerImpl::Init(const char* cfgFile)
     smsc_log_warn(log,"smpp.queueLimit not found! Using default(%d)",queueLimit);
   }
 
+  /*
   try{
     const char* tags=ConfigManager::Instance().getConfig()->getString("smpp.transitOptionalTags");
     size_t n=0;
@@ -454,6 +455,7 @@ void SmppManagerImpl::Init(const char* cfgFile)
   {
     smsc_log_warn(log, "smpp.transitOptionalTags not found in config");
   }
+   */
 
   smsc_log_info(log,"Starting %d state machines",stmCnt);
   for(int i=0;i<stmCnt;i++)
