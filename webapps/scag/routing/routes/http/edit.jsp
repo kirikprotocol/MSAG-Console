@@ -36,7 +36,7 @@
                 <sm-ep:check title="routes.edit.check.enabled" name="enabled"/>
                 <sm-ep:check title="routes.edit.check.default" name="defaultRoute" disabled="true"/>
                 <sm-ep:check title="routes.edit.check.transit" name="transit"/>
-                <sm-ep:check title="routes.edit.check.saa" name="saa"/>
+                <sm-ep:check title="routes.edit.check.statistic_saa" name="saa"/>
                 <sm-pm:space/>
             </sm-ep:properties>
         </td>
@@ -56,7 +56,7 @@
             <td style="cursor:pointer;text-align:left" onClick="toggleVisible('pgs_http','cgs_http');">
                 <div align="left" id="pgs_http" class="collapsing_list_closed">
                     <div class="page_subtitle">
-                        <u><font size="2"><fmt:message>options.item.title.address.usr</fmt:message></font></u>
+                        <u><font size="2"><fmt:message>options.item.title.address</fmt:message></font></u>
                     </div>
                 </div>
              </td>
@@ -71,133 +71,133 @@
         </table>
         <br>
         <table id="cgs_http2" style="display:none" width="100%" cellpadding="0" cellspacing="0" border=0>
-            <tr>
-              <td width="45%">
-                <div class="page_subtitle">USR place:</div>
-                <br>
-                <table id="abon_usr_tbl" class="properties_list" cellpadding="0" cellspacing="0">
-                    <c:set var="rowN" value="0"/>
-                    <c:forEach items="${bean.abonentUsr}" var="pls">
-                        <tr class="row${rowN%3}" id="abon_usr_place_${pls.name}_${rowN}">
-                            <td width="7%"><select id="abonUsrSelect_${pls.name}_${rowN}"
-                                                   name="abonUsrSelect_${pls.name}_${rowN}" class="txt">
-                                <c:forEach items="${bean.optionTypes}" var="i">
-                                    <c:choose>
-                                        <c:when test="${pls.type==i}">
-                                            <option value="${fn:escapeXml(i)}" selected="true">${fn:escapeXml(i)}</option>
-                                        </c:when>
-                                        <c:otherwise>
-                                            <option value="${fn:escapeXml(i)}">${fn:escapeXml(i)}</option>
-                                        </c:otherwise>
-                                    </c:choose>
-                                </c:forEach>
-                            </select>
-                            </td>
-                            <td>&nbsp;</td>
+            <%--<tr>--%>
+              <%--<td width="45%">--%>
+                <%--<div class="page_subtitle">USR place:</div>--%>
+                <%--<br>--%>
+                <%--<table id="abon_usr_tbl" class="properties_list" cellpadding="0" cellspacing="0">--%>
+                    <%--<c:set var="rowN" value="0"/>--%>
+                    <%--<c:forEach items="${bean.abonentUsr}" var="pls">--%>
+                        <%--<tr class="row${rowN%3}" id="abon_usr_place_${pls.name}_${rowN}">--%>
+                            <%--<td width="7%"><select id="abonUsrSelect_${pls.name}_${rowN}"--%>
+                                                   <%--name="abonUsrSelect_${pls.name}_${rowN}" class="txt">--%>
+                                <%--<c:forEach items="${bean.optionTypes}" var="i">--%>
+                                    <%--<c:choose>--%>
+                                        <%--<c:when test="${pls.type==i}">--%>
+                                            <%--<option value="${fn:escapeXml(i)}" selected="true">${fn:escapeXml(i)}</option>--%>
+                                        <%--</c:when>--%>
+                                        <%--<c:otherwise>--%>
+                                            <%--<option value="${fn:escapeXml(i)}">${fn:escapeXml(i)}</option>--%>
+                                        <%--</c:otherwise>--%>
+                                    <%--</c:choose>--%>
+                                <%--</c:forEach>--%>
+                            <%--</select>--%>
+                            <%--</td>--%>
+                            <%--<td>&nbsp;</td>--%>
                                 <%--<td width="43%">Priority:&nbsp;${pls.name}</td>--%>
-                            <td>
-                                <input type="text" size="45" style="color:black;" value="${pls.name}"
-                                       readonly="true"/>
-                                <input type="hidden" name="abonentUsrName" value="${pls.name}">
-                                <input type="hidden" name="abonentUsrType" value="${pls.name}_${rowN}">
-                            </td>
+                            <%--<td>--%>
+                                <%--<input type="text" size="45" style="color:black;" value="${pls.name}"--%>
+                                       <%--readonly="true"/>--%>
+                                <%--<input type="hidden" name="abonentUsrName" value="${pls.name}">--%>
+                                <%--<input type="hidden" name="abonentUsrType" value="${pls.name}_${rowN}">--%>
+                            <%--</td>--%>
 
-                            <td width="65%"><img src="content/images/but_del.gif" alt=""
+                            <%--<td width="65%"><img src="content/images/but_del.gif" alt=""--%>
 <%--                                                 onClick="removeRow(opForm.all.abon_usr_tbl, 'abon_usr_place_${pls.name}_${rowN}');"--%>
-                                                 onClick="removeRow('abon_usr_tbl', 'abon_usr_place_${pls.name}_${rowN}');"
-                                                 style="cursor:pointer;"></td>
-                        </tr>
-                        <c:set var="rowN" value="${rowN+1}"/>
-                    </c:forEach>
-                </table>
-        <!--<br>-->
-            <hr width="50%" align="left"/>
-            <table width="50%" class="properties_list" cellpadding="0" cellspacing="0">
-                <col width="40%" align="left">
-                <col width="50%" align="left">
-                <col width="0%" align="left">
-                <tr valign="top">
-                    <td width="7%"><select id="typeAbonSelectUsr" name="typeAbonSelectUsr" class="txt">
-                        <c:forEach items="${bean.optionTypes}" var="i">
-                            <option value="${fn:escapeXml(i)}">${fn:escapeXml(i)}</option>
-                        </c:forEach>
-                    </select>
-                    </td>
-                    <td width="25%">
-                        <input id="new_abon_usr" class="txt" size="50" name="new_abon_usr">
-                    </td>
-                    <td width="68%"><img src="content/images/but_add.gif" alt="Add new Abonent USR"
+                                                 <%--onClick="removeRow('abon_usr_tbl', 'abon_usr_place_${pls.name}_${rowN}');"--%>
+                                                 <%--style="cursor:pointer;"></td>--%>
+                        <%--</tr>--%>
+                        <%--<c:set var="rowN" value="${rowN+1}"/>--%>
+                    <%--</c:forEach>--%>
+                <%--</table>--%>
+        <%--<!--<br>-->--%>
+            <%--<hr width="50%" align="left"/>--%>
+            <%--<table width="50%" class="properties_list" cellpadding="0" cellspacing="0">--%>
+                <%--<col width="40%" align="left">--%>
+                <%--<col width="50%" align="left">--%>
+                <%--<col width="0%" align="left">--%>
+                <%--<tr valign="top">--%>
+                    <%--<td width="7%"><select id="typeAbonSelectUsr" name="typeAbonSelectUsr" class="txt">--%>
+                        <%--<c:forEach items="${bean.optionTypes}" var="i">--%>
+                            <%--<option value="${fn:escapeXml(i)}">${fn:escapeXml(i)}</option>--%>
+                        <%--</c:forEach>--%>
+                    <%--</select>--%>
+                    <%--</td>--%>
+                    <%--<td width="25%">--%>
+                        <%--<input id="new_abon_usr" class="txt" size="50" name="new_abon_usr">--%>
+                    <%--</td>--%>
+                    <%--<td width="68%"><img src="content/images/but_add.gif" alt="Add new Abonent USR"--%>
 <%--                             onclick="addAbonDefaultUSRplace(opForm.all.new_abon_usr, opForm.all.typeAbonSelectUsr.options[typeAbonSelectUsr.selectedIndex].value)"--%>
-                             onclick="addAbonDefaultUSRplace('new_abon_usr', 'typeAbonSelectUsr')"
-                             style="cursor:pointer;"></td>
-                    <td>&nbsp;</td>
-                </tr>
-            </table>
-        </td>
-        <td width="473">
-        <div class="page_subtitle">USR place:</div>
-        <br>
-            <table id="site_usr_tbl" class="properties_list" cellpadding="0" cellspacing="0">
-                <c:set var="rowN" value="0"/>
-                <c:forEach items="${bean.siteUsr}" var="pls">
-                    <tr class="row${rowN%3}" id="site_usr_place_${pls.name}_${rowN}">
-                        <td width="7%"><select id="siteUsrSelect_${pls.name}_${rowN}"
-                                               name="siteUsrSelect_${pls.name}_${rowN}" class="txt">
-                            <c:forEach items="${bean.optionTypes}" var="i">
-                                <c:choose>
-                                    <c:when test="${pls.type==i}">
-                                        <option value="${fn:escapeXml(i)}" selected="true">${fn:escapeXml(i)}</option>
-                                    </c:when>
-                                    <c:otherwise>
-                                        <option value="${fn:escapeXml(i)}">${fn:escapeXml(i)}</option>
-                                    </c:otherwise>
-                                </c:choose>
-                            </c:forEach>
-                        </select>
-                        </td>
-                        <td>&nbsp;</td>
+                             <%--onclick="addAbonDefaultUSRplace('new_abon_usr', 'typeAbonSelectUsr')"--%>
+                             <%--style="cursor:pointer;"></td>--%>
+                    <%--<td>&nbsp;</td>--%>
+                <%--</tr>--%>
+            <%--</table>--%>
+        <!--</td>-->
+        <!--<td width="473">-->
+        <!--<div class="page_subtitle">USR place:</div>-->
+        <%--<br>--%>
+            <%--<table id="site_usr_tbl" class="properties_list" cellpadding="0" cellspacing="0">--%>
+                <%--<c:set var="rowN" value="0"/>--%>
+                <%--<c:forEach items="${bean.siteUsr}" var="pls">--%>
+                    <%--<tr class="row${rowN%3}" id="site_usr_place_${pls.name}_${rowN}">--%>
+                        <%--<td width="7%"><select id="siteUsrSelect_${pls.name}_${rowN}"--%>
+                                               <%--name="siteUsrSelect_${pls.name}_${rowN}" class="txt">--%>
+                            <%--<c:forEach items="${bean.optionTypes}" var="i">--%>
+                                <%--<c:choose>--%>
+                                    <%--<c:when test="${pls.type==i}">--%>
+                                        <%--<option value="${fn:escapeXml(i)}" selected="true">${fn:escapeXml(i)}</option>--%>
+                                    <%--</c:when>--%>
+                                    <%--<c:otherwise>--%>
+                                        <%--<option value="${fn:escapeXml(i)}">${fn:escapeXml(i)}</option>--%>
+                                    <%--</c:otherwise>--%>
+                                <%--</c:choose>--%>
+                            <%--</c:forEach>--%>
+                        <%--</select>--%>
+                        <%--</td>--%>
+                        <%--<td>&nbsp;</td>--%>
                             <%--<td width="43%">Priority:&nbsp;${pls.name}</td>--%>
-                        <td>
-                            <input type="text" size="45" style="color:black;" value="${pls.name}"
-                                   readonly="true"/>
-                            <input type="hidden" name="siteUsrName" value="${pls.name}">
-                            <input type="hidden" name="siteUsrType" value="${pls.name}_${rowN}">
-                        </td>
+                        <%--<td>--%>
+                            <%--<input type="text" size="45" style="color:black;" value="${pls.name}"--%>
+                                   <%--readonly="true"/>--%>
+                            <%--<input type="hidden" name="siteUsrName" value="${pls.name}">--%>
+                            <%--<input type="hidden" name="siteUsrType" value="${pls.name}_${rowN}">--%>
+                        <%--</td>--%>
                             <%--<td>Priority:&nbsp;${pls.priority}</td>--%>
-                        <td width="65%"><img src="content/images/but_del.gif" alt=""
+                        <%--<td width="65%"><img src="content/images/but_del.gif" alt=""--%>
 <%--                                             onClick="removeRow(opForm.all.site_usr_tbl, 'site_usr_place_${pls.name}_${rowN}');"--%>
-                                             onClick="removeRow('site_usr_tbl', 'site_usr_place_${pls.name}_${rowN}');"
-                                             style="cursor:pointer;"></td>
-                    </tr>
-                    <c:set var="rowN" value="${rowN+1}"/>
-                </c:forEach>
-            </table>
+                                             <%--onClick="removeRow('site_usr_tbl', 'site_usr_place_${pls.name}_${rowN}');"--%>
+                                             <%--style="cursor:pointer;"></td>--%>
+                    <%--</tr>--%>
+                    <%--<c:set var="rowN" value="${rowN+1}"/>--%>
+                <%--</c:forEach>--%>
+            <%--</table>--%>
         <!--<br>-->
-            <hr width="50%" align="left"/>
-            <table width="50%" class="properties_list" cellpadding="0" cellspacing="0">
-                <col width="40%" align="left">
-                <col width="50%" align="left">
-                <col width="0%" align="left">
-                <tr valign="top">
-                    <td width="7%"><select id="typeSelectUsrSite" class="txt">
-                        <c:forEach items="${bean.optionTypes}" var="i">
-                            <option value="${fn:escapeXml(i)}">${fn:escapeXml(i)}</option>
-                        </c:forEach>
-                    </select>
-                    </td>
-                    <td width="25%">
-                        <input id="new_site_usr" class="txt" size="50" name="new_site_usr">
-                    </td>
-                    <td width="68%"><img src="content/images/but_add.gif" alt="Add new Site"
+            <%--<hr width="50%" align="left"/>--%>
+            <%--<table width="50%" class="properties_list" cellpadding="0" cellspacing="0">--%>
+                <%--<col width="40%" align="left">--%>
+                <%--<col width="50%" align="left">--%>
+                <%--<col width="0%" align="left">--%>
+                <%--<tr valign="top">--%>
+                    <%--<td width="7%"><select id="typeSelectUsrSite" class="txt">--%>
+                        <%--<c:forEach items="${bean.optionTypes}" var="i">--%>
+                            <%--<option value="${fn:escapeXml(i)}">${fn:escapeXml(i)}</option>--%>
+                        <%--</c:forEach>--%>
+                    <%--</select>--%>
+                    <%--</td>--%>
+                    <%--<td width="25%">--%>
+                        <%--<input id="new_site_usr" class="txt" size="50" name="new_site_usr">--%>
+                    <%--</td>--%>
+                    <%--<td width="68%"><img src="content/images/but_add.gif" alt="Add new Site"--%>
     <%--                         onclick="addSiteDefaultUSRplace(opForm.all.new_site_usr, opForm.all.typeSelectUsrSite.options[typeSelectUsrSite.selectedIndex].value)"--%>
     <%--                         onclick="addSiteDefaultUSRplace(opForm.all.new_site_usr, opForm.all.typeSelectUsrSite.options[typeSelectUsrSite.selectedIndex].value)"--%>
-                             onclick="addSiteDefaultUSRplace('new_site_usr', 'typeSelectUsrSite')"
-                             style="cursor:pointer;"></td>
-                    <td>&nbsp;</td>
-                </tr>
-            </table>
-            </td>
-          </tr>
+                             <%--onclick="addSiteDefaultUSRplace('new_site_usr', 'typeSelectUsrSite')"--%>
+                             <%--style="cursor:pointer;"></td>--%>
+                    <%--<td>&nbsp;</td>--%>
+                <%--</tr>--%>
+            <%--</table>--%>
+            <!--</td>-->
+          <!--</tr>-->
         </table>
     <br>
     <!------------------------ address prefix| address place---------------->
