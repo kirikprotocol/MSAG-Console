@@ -125,12 +125,12 @@
                 }
 
                function fireRulesState(){
-                  var fr = getElementByIdUni("rulesFrame");
+                 var fr = getElementByIdUni("rulesFrame");
 //                  alert("rulesFrame.contentDocument=" + rulesFrame.contentDocument);
-                var rules;
-                if( isMSIE() ){
-                  rules = window.rulesFrame.rulesState;
-                } else{
+                 var rules;
+                 if( isMSIE() ){
+                     rules = window.rulesFrame.rulesState;
+                 } else{
                   rules = getRules();
                 }
                   var rulesTable = document.getElementById("rulesT");
@@ -243,9 +243,12 @@
 
             <div class=page_subtitle>&nbsp;</div>
             <div class=page_subtitle><fmt:message>service.edit.label.smpp.routes_list</fmt:message></div>
-            <sm:table columns="checkbox,id,active,enabled,archived,notes"
-                      names="c,service.edit.table.names.id,service.edit.table.names.active,service.edit.table.names.enabled,service.edit.table.names.archived,service.edit.table.names.notes"
-                      widths="1,60,20,20,39,59" child="/routing/routes" parentId="${bean.parentId}" edit="id" targetElemId="mbDelete"/>
+            <sm:table columns="checkbox,id,enabled,transit,saa,notes"
+                      names="c,service.edit.table.names.id,service.edit.table.names.enabled,
+                             service.edit.table.names.transit,service.edit.table.names.statistic_saa,
+                             service.edit.table.names.notes"
+                      widths="1,60,20,20,39,59" child="/routing/routes" parentId="${bean.parentId}" edit="id"
+                      targetElemId="mbDelete" ali="center"/>
             <div class=page_subtitle>&nbsp;</div>
             <sm-pm:menu>
                 <sm-pm:item name="mbAddSmppRoute" value="service.edit.item.mbaddchild.value" title="service.edit.item.mbaddchild.title"/>
@@ -255,8 +258,12 @@
             </sm-pm:menu>
             <div class=page_subtitle>&nbsp;</div>
             <div class=page_subtitle><fmt:message>service.edit.label.http.routes_list</fmt:message></div>
-            <sm:http_route columns="checkbox,name,id,enabled,defaultRoute,transit" names="c,service.edit.table.http_route.name,service.edit.table.http_route.id,service.edit.table.http_route.enabled,service.edit.table.http_route.default,service.edit.table.http_route.transit" widths="1,60,20,20,39,59"
-                           child="/routing/routes/http" parentId="${bean.parentId}" edit="name" targetElemId="mbDeleteHttpRoute" defaultItemId="mbDefaultHttpRoute"/>
+            <sm:http_route columns="checkbox,name,id,enabled,defaultRoute,transit,saa"
+                           names="c,service.edit.table.http_route.name,service.edit.table.http_route.id,
+                                  service.edit.table.http_route.enabled,service.edit.table.http_route.default,
+                                  service.edit.table.http_route.transit, service.edit.table.names.statistic_saa"
+                           widths="1,60,20,20,39,59" child="/routing/routes/http" parentId="${bean.parentId}"
+                           edit="name" targetElemId="mbDeleteHttpRoute" defaultItemId="mbDefaultHttpRoute" ali="center"/>
             <div class=page_subtitle>&nbsp;</div>
             <sm-pm:menu>
                 <sm-pm:item name="mbAddHttpRoute" value="service.edit.item.mbaddchild.value" title="service.edit.item.mbaddchild.title"/>
