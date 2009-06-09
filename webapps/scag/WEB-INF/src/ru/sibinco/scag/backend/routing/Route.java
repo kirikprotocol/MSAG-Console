@@ -266,7 +266,7 @@ public class Route {
             out.println("  <route id=\"" + name
 //                    + "\" archived=\"" + isArchived()
                     + "\" enabled=\"" + isEnabled()
-                    + "\" active=\"" + isActive()
+//                    + "\" active=\"" + isActive()
                     + "\" transit=\"" + isTransit()
                     + "\" saa=\"" + isSaa()
                     + "\" slicing=\"" + StringEncoderDecoder.encode(getSlicing())
