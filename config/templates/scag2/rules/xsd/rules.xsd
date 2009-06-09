@@ -89,11 +89,11 @@
     </simpleType>
     
     
-    <simpleType name="TransportOperation">
+    <!-- simpleType name="TransportOperation">
         <restriction base="string">
 	    <enumeration value="DELIVER" />
 	    <enumeration value="SUBMIT" />
-	    <enumeration value="RECEIPT" />
+            <enumeration value="RECEIPT" />
 	    <enumeration value="USSD_DIALOG" />
 	    <enumeration value="HTTP_DELIVERY" />
 	    <enumeration value="DATA_SC_2_SME" />
@@ -101,7 +101,7 @@
 	    <enumeration value="DATA_SME_2_SME" />
 	    <enumeration value="DATA_SME_2_SC" />
         </restriction>
-    </simpleType>
+    </simpleType -->
     
     
     <attributeGroup name="Test">

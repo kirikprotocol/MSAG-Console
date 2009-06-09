@@ -151,7 +151,7 @@
                 <enumeration value="#message_text"/>
                 <enumeration value="#src_sme_id"/>
                 <enumeration value="#dst_sme_id"/>
-		
+
                 <enumeration value="#slicing_total_segments"/>
                 <enumeration value="#slicing_ref_num"/>
                 <enumeration value="#slicing_segment_seqnum"/>

@@ -86,7 +86,7 @@
             <param name="ipBlockingTime" type="int">60</param> <!-- time to block ip when failed to bind (sec) -->
             <param name="maxRWMultiplexersCount" type="int">100</param> <!-- max number of R/W multiplexers -->
             <section name="whitelist">
-                <param name="127.0.0.1" type="string"></param>
+                <param name="1" type="string">127.0.0.1</param>
             </section>
         </section>
     </section>

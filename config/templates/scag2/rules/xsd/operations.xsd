@@ -10,14 +10,14 @@
     <group name="Actions">
         <choice>
             <element name="make_persistent" />
-            <element name="wait">
+            <!-- element name="wait">
                 <complexType>
                     <attribute name="type" type="scag:TransportOperation" use="required"/>
                     <attribute name="time" type="scag:Value" use="required"/>
                 </complexType>
-            </element>
+            </element -->
         
-            <element name="bill_wait">
+            <!-- element name="bill_wait">
                 <complexType>
                     <attribute name="type" type="scag:TransportOperation" use="required"/>
                     <attribute name="time" type="scag:Value" use="required"/>
@@ -30,16 +30,16 @@
                     <attribute name="bill_id" type="scag:Var" use="optional" />
                     <attribute name="result_number" type="scag:Var" use="optional" />
                 </complexType>
-            </element>
+            </element -->
         
-            <element name="bill_move_wait">
+            <!-- element name="bill_move_wait">
                 <complexType>
                     <attribute name="type" type="scag:TransportOperation" use="required"/>
                     <attribute name="time" type="scag:Value" use="required"/>
                     <attribute name="status" type="scag:Var" use="required" />
                     <attribute name="msg" type="scag:Var" use="optional" />
                 </complexType>
-            </element>
+            </element -->
        
         </choice>    
     </group>
