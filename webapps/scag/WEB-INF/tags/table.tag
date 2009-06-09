@@ -10,6 +10,7 @@
         attribute name="child" required="false"%><%@
         attribute name="parentId" required="false"%><%@
         attribute name="subjType" required="false"%><%@
+        attribute name="ali" required="false"%><%@
         attribute name="targetElemId" required="false"%>
 <c:set var="columns" value="${fn:split(columns, ',')}"/>
 <c:set var="names" value="${fn:split(names, ',')}"/>
@@ -98,7 +99,7 @@ function edit(idToEdit, child, parentId) {
           <c:when test="${fn:substringBefore('name',column) == fn:substringBefore('name',column)}">
             <c:set var="Id" value="${ user['id']}"/>
             <c:set var="itemValue" value="${empty user[column] ? '&nbsp;' : fn:escapeXml(user[column])}"/>
-            <td>
+            <td align="${ali}">
                 <c:choose>
                     <c:when test="${edit == column}">
                         <a href="#" onClick="return edit('${Id}','${child}','${parentId}');">${itemValue}</a>
@@ -121,7 +122,7 @@ function edit(idToEdit, child, parentId) {
           </c:when>
           <c:otherwise>
             <c:set var="itemValue" value="${empty user[column] ? '&nbsp;' : fn:escapeXml(user[column])}"/>
-            <td><c:if test="${edit == column}"><a href="#" onClick="return edit('${itemValue}','${child}','${parentId}');"></c:if>
+            <td align="${ali}"><c:if test="${edit == column}"><a href="#" onClick="return edit('${itemValue}','${child}','${parentId}');"></c:if>
               <c:choose >
                 <c:when test="${smf:isBoolean(user[column])}">
                   <c:choose>
