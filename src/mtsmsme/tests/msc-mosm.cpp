@@ -38,10 +38,10 @@ using smsc::mtsmsme::processor::util::dump;
 static char msca[] = "791398600223"; // MSC address
 static char vlra[] = "79139860004"; //VLR address
 static char hlra[] = "79139860004"; //HLR address
-static char sca[]  = "79139869990"; // service center address
+static char sca[]  = "79139869982"; // service center address
 static char rndmsto_pattern[]   = "791398600222%04d";
 static char rndmsfrom_pattern[] = "791398600221%04d";
-static int speed = 600;
+static int speed = 300;
 
 
 namespace smsc{namespace mtsmsme{namespace processor{
@@ -82,26 +82,54 @@ class TrafficShaper: public SccpSender {
     int delay;
     int overdelay;
     hrtime_t msgstart;
+    bool slowstartmode;
+    int slowstartperiod; //in seconds
+    int speed;
+    struct timeval slow_start;
+    void adjustdelay()
+    {
+      if (slowstartmode)
+      {
+        timeval now;
+        if (!slow_start.tv_sec)
+          gettimeofday(&slow_start,NULL);
+        gettimeofday(&now,NULL);
+        if (slow_start.tv_sec + slowstartperiod < now.tv_sec)
+        {
+          slowstartmode = false;
+          delay = 1000000/speed;
+        }
+        else
+        {
+          delay = 1000000/(1+(speed-1)*(now.tv_sec-slow_start.tv_sec)/slowstartperiod);
+        }
+      }
+    }
     void shape()
     {
+      adjustdelay();
       hrtime_t msgproc=gethrtime()-msgstart;
-      msgproc/=1000000;
+      msgproc/=1000;
       if(delay>msgproc+overdelay)
       {
+        int toSleep=delay-msgproc-overdelay;
         msgstart=gethrtime();
-        millisleep(delay-msgproc-overdelay);
-        overdelay=(gethrtime()-msgstart)/1000000-(delay-msgproc-overdelay);
+        millisleep(toSleep/1000);
+        overdelay=(gethrtime()-msgstart)/1000-toSleep;
       }else
       {
-        overdelay-=delay;
-        if(overdelay<0)overdelay=0;
+        overdelay-=delay-(int)msgproc;
       }
     }
   public:
-    TrafficShaper(SccpSender* _adaptee, int _speed) :
-      adaptee(_adaptee)
+    TrafficShaper(SccpSender* _adaptee, int _speed,int _slowstartperiod) :
+      adaptee(_adaptee),slowstartmode(false),slowstartperiod(_slowstartperiod),
+      overdelay(0)
     {
-      delay=1000/_speed; overdelay = 0;
+      if (slowstartperiod) slowstartmode = true;
+      slow_start.tv_sec = 0;
+      delay = 1000000/_speed;
+      speed = _speed;
     }
     void send(uint8_t cdlen, uint8_t *cd, uint8_t cllen, uint8_t *cl,
         uint16_t ulen, uint8_t *udp)
@@ -163,7 +191,7 @@ int main(int argc, char** argv)
     GopotaListener listener(&mtsms, &fakeHLR);
 
     //inject traffic shaper
-    TrafficShaper shaper((SccpSender*)&listener, speed);
+    TrafficShaper shaper((SccpSender*)&listener, speed,120);
     mtsms.setSccpSender((SccpSender*)&shaper);
 
     listener.configure(43, 191, Address(strlen(msca), 1, 1, msca),
