@@ -1,0 +1,4 @@
+# Available installiation type
+#1. 'single'
+#2. 'HS'
+#3. 'cluster'
