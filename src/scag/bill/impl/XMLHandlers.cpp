@@ -240,7 +240,8 @@ void XMLTariffMatrixHandler::characters(const XMLCh *const chrs, const unsigned 
         bill_service_number = str;
     else if(bill_tag == 6)
 //        bill_price = atof(str);
-        bill_price = str_to_double(str);        
+        //bill_price = str_to_double(str);        
+        bill_price = str;
     else if(bill_tag == 7)
         bill_currency = str;
 }
@@ -356,8 +357,8 @@ void XMLTariffMatrixHandler::endElement(const XMLCh* const nm)
                     bill_service_number.length() == 0 || bill_currency.length() == 0 || !bill_operator_id)
                     throw Exception("Invalid XML 'billing' record");
 
-                if(bill_price == 0)
-                    smsc_log_warn(logger, "Zero price in tariff matrix. ServiceNumber=%s, CategoryId=%d, MediaTypeId=%d, billType=%d", bill_service_number.c_str(), bill_category_id, bill_media_type_id, bill_type);
+                //if(bill_price == 0)
+                    //smsc_log_warn(logger, "Zero price in tariff matrix. ServiceNumber=%s, CategoryId=%d, MediaTypeId=%d, billType=%d", bill_service_number.c_str(), bill_category_id, bill_media_type_id, bill_type);
 
                 TariffRec tr(bill_service_number, bill_price, bill_currency, bill_category_id, bill_media_type_id, bill_type);
 
@@ -376,14 +377,14 @@ void XMLTariffMatrixHandler::endElement(const XMLCh* const nm)
                 id |= (mt & 0x1FF) << 14;
                 id |= bill_operator_id & 0xFFF;
 
-                smsc_log_debug(logger,"end_billing: store ci:%d, mt:%d, sn:%s, price:%lf, op_id:%d, curr:%s, mt_idx:%d, cat_idx:%d, bill_type: %d", bill_category_id, bill_media_type_id, bill_service_number.c_str(), bill_price, bill_operator_id, bill_currency.c_str(), media_type_idx, category_idx, bill_type);
+                smsc_log_debug(logger,"end_billing: store ci:%d, mt:%d, sn:%s, price:%s, op_id:%d, curr:%s, mt_idx:%d, cat_idx:%d, bill_type: %d", bill_category_id, bill_media_type_id, bill_service_number.c_str(), bill_price.c_str(), bill_operator_id, bill_currency.c_str(), media_type_idx, category_idx, bill_type);
 
                 tariff_hash->Insert(id, tr);
 
                 bill_category_id = 0;
                 bill_media_type_id = 0;
                 bill_service_number = "";
-                bill_price = 0;
+                bill_price = "";
                 bill_currency = "";
                 bill_type = 0;
             } else if(i == 1)

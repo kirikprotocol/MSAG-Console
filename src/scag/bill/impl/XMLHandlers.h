@@ -66,7 +66,7 @@ class XMLTariffMatrixHandler : public HandlerBase
     XMLCh chars[1024];
     uint8_t media_type_tag, category_tag, bill_tag;
     uint32_t bill_category_id, bill_media_type_id, bill_operator_id, bill_type;
-    double bill_price;
+    std::string bill_price;
     std::string bill_currency, bill_service_number;
 
     void characters(const XMLCh *const chrs, const unsigned int length);
