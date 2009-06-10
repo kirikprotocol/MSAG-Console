@@ -36,7 +36,7 @@ namespace PlacementType{
 #define PLACEMENT_KIND_COUNT 4
 namespace PlacementKind{
     const uint32_t UNKNOWN = 255;
-    const uint32_t USR = 0;
+    // const uint32_t USR = 0;
     const uint32_t ADDR = 1;
     const uint32_t ROUTE_ID = 2;
     const uint32_t SERVICE_ID = 3;

@@ -70,8 +70,8 @@ uint32_t XMLBasicHandler::getKind(const std::string& s)
 {
     if(!s.compare("address_place"))
         return PlacementKind::ADDR;
-    else if(!s.compare("usr_place"))
-        return PlacementKind::USR;
+    // else if(!s.compare("usr_place"))
+    // return PlacementKind::USR;
     else if(!s.compare("route_id_place"))
         return PlacementKind::ROUTE_ID;
     else if(!s.compare("service_id_place"))
