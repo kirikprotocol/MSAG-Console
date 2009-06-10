@@ -117,8 +117,8 @@ bool BillActionOpen::RunBeforePostpone( ActionContext& context )
         return false;
     }
 
-    if (tariffRec->Price == 0)
-        smsc_log_warn(logger, "Zero price in tariff matrix. ServiceNumber=%s, CategoryId=%d, MediaTypeId=%d", tariffRec->ServiceNumber.c_str(), tariffRec->CategoryId, tariffRec->MediaTypeId);
+    //if (tariffRec->Price == 0)
+      //  smsc_log_warn(logger, "Zero price in tariff matrix. ServiceNumber=%s, CategoryId=%d, MediaTypeId=%d", tariffRec->ServiceNumber.c_str(), tariffRec->CategoryId, tariffRec->MediaTypeId);
 
 #ifdef MSAG_INMAN_BILL
     if( tariffRec->billType == infrastruct::INMAN )
