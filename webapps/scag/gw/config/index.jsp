@@ -68,6 +68,8 @@
                            onchanged="configChanged();"/>
                 <sm-et:txt title="Billing Time Out" name="BillingTimeOut" validation="nonEmpty"
                            onchanged="configChanged();"/>
+                <sm-et:txt title="Billing Reconnect Time Out" name="BillingReconnectTimeOut" validation="nonEmpty"
+                           onchanged="configChanged();"/>
         </table>
 <%--        </sm-ep:properties>--%>
     </sm-et:section>
@@ -93,7 +95,7 @@
 <%--            </td></tr>--%>
 <%--            <sm-et:txt title="Location" name="location" type="string" onchanged="configChanged();"/>--%>
 <%--            <sm-et:txt title="Name" name="name" type="string" onchanged="configChanged();"/>--%>
-            <sm-et:txt title="ExpireInterval"    name="expireInterval"     type="int"  onchanged="configChanged();"/>
+            <sm-et:txt title="ExpireInterval"    name="expireInterval"      type="int"  onchanged="configChanged();"/>
             <sm-et:txt title="IndexGrowth"        name="indexGrowth"        type="int"  onchanged="configChanged();"/>
             <sm-et:txt title="Pagesize"           name="pagesize"           type="int"  onchanged="configChanged();"/>
             <sm-et:txt title="Prealloc"           name="prealloc"           type="int"  onchanged="configChanged();"/>
@@ -108,7 +110,32 @@
 <%--                        <sm-et:txt title="Name" name="name" type="string" onchanged="configChanged();"/>--%>
 <%--                    </sm-ep:properties>--%>
 <%--                </sm-et:section>--%>
-
+            <tr><td colspan=2>
+                <sm-et:section title="Locations" name="Locations" type="table">
+                    <sm-ep:properties id="Locations" display="none">
+                        <sm-et:txt title="location1"  name="location1"   onchanged="configChanged();"/>
+                        <sm-et:txt title="location2"  name="location2"   onchanged="configChanged();"/>
+                        <sm-et:txt title="location3"  name="location3"   onchanged="configChanged();"/>
+                        <sm-et:txt title="location4"  name="location4"   onchanged="configChanged();"/>
+                        <sm-et:txt title="location5"  name="location5"   onchanged="configChanged();"/>
+                        <sm-et:txt title="location6"  name="location6"   onchanged="configChanged();"/>
+                        <sm-et:txt title="location7"  name="location7"   onchanged="configChanged();"/>
+                        <sm-et:txt title="location8"  name="location8"   onchanged="configChanged();"/>
+                        <sm-et:txt title="location9"  name="location9"   onchanged="configChanged();"/>
+                        <sm-et:txt title="location10" name="location10"  onchanged="configChanged();"/>
+                        <sm-et:txt title="location11" name="location11"  onchanged="configChanged();"/>
+                        <sm-et:txt title="location12" name="location12"  onchanged="configChanged();"/>
+                        <sm-et:txt title="location13" name="location13"  onchanged="configChanged();"/>
+                        <sm-et:txt title="location14" name="location14"  onchanged="configChanged();"/>
+                        <sm-et:txt title="location15" name="location15"  onchanged="configChanged();"/>
+                        <sm-et:txt title="location16" name="location16"  onchanged="configChanged();"/>
+                        <sm-et:txt title="location17" name="location17"  onchanged="configChanged();"/>
+                        <sm-et:txt title="location18" name="location18"  onchanged="configChanged();"/>
+                        <sm-et:txt title="location19" name="location19"  onchanged="configChanged();"/>
+                        <sm-et:txt title="location20" name="location20"  onchanged="configChanged();"/>
+                    </sm-ep:properties>
+                </sm-et:section>
+            </td></tr>
         </sm-ep:properties>
     </sm-et:section>
 
@@ -116,16 +143,18 @@
     <sm-et:section title="Statistics Manager" name="StatisticsManager" type="table">
         <sm-ep:properties id="StatisticsManager" display="none">
 <%--        <table id="StatisticsManager" style="display:none">--%>
-            <sm-et:txt title="statistics Dir" name="statisticsDir" validation="nonEmpty" onchanged="configChanged();"/>
-            <sm-et:txt title="Perf. Host" name="perfHost" validation="nonEmpty" onchanged="configChanged();"/>
-            <sm-et:txt title="Perf. Gen Port" name="perfGenPort" validation="port" onchanged="configChanged();"/>
-            <sm-et:txt title="Perf. Svc Port" name="perfSvcPort" validation="port" onchanged="configChanged();"/>
-            <sm-et:txt title="Perf. Sc Port" name="perfScPort" validation="port" onchanged="configChanged();"/>
-            <sm-et:txt title="Sacc Port" name="saccPort" validation="port" onchanged="configChanged();"/>
-            <sm-et:txt title="Sacc Host" name="saccHost" validation="nonEmpty"/>
-            <sm-et:txt title="Connect Timeout" name="connect_timeout" validation="nonEmpty"
-                       onchanged="configChanged();"/>
-            <sm-et:txt title="Queue Length" name="queue_length" validation="nonEmpty" onchanged="configChanged();"/>
+            <sm-et:txt title="statistics Dir"   name="statisticsDir"   validation="nonEmpty" onchanged="configChanged();"/>
+            <sm-et:txt title="Perf. Host"       name="perfHost"        validation="nonEmpty" onchanged="configChanged();"/>
+            <sm-et:txt title="Perf. Gen Port"   name="perfGenPort"     validation="port" onchanged="configChanged();"/>
+            <sm-et:txt title="Perf. Svc Port"   name="perfSvcPort"     validation="port" onchanged="configChanged();"/>
+            <sm-et:txt title="Perf. Sc Port"    name="perfScPort"      validation="port" onchanged="configChanged();"/>
+            <sm-et:checkin title="Sacc enabled" name="saccEnabled"                       onchanged="configChanged();"/>
+            <sm-et:txt title="Sacc Port"        name="saccPort"        validation="port" onchanged="configChanged();"/>
+            <sm-et:txt title="Sacc Host"        name="saccHost"        validation="nonEmpty" onchanged="configChanged();"/>
+            <sm-et:txt title="Connect Timeout"  name="connect_timeout" validation="nonEmpty" onchanged="configChanged();"/>
+            <sm-et:txt title="Queue Length"     name="queue_length"    validation="nonEmpty" onchanged="configChanged();"/>
+            <sm-et:txt title="Saa Dir"          name="saaDir"          validation="nonEmpty" onchanged="configChanged();"/>
+            <sm-et:txt title="Rolling Interval" name="rollingInterval" validation="nonEmpty" onchanged="configChanged();"/>
 <%--        </table>--%>
         </sm-ep:properties>
     </sm-et:section>
@@ -164,12 +193,37 @@
                         <sm-et:txt title="Protocol Id"              name="protocol_id"            type="int" onchanged="configChanged();"/>
                         <sm-et:txt title="State Machines Count"     name="state_machines_count"   type="int" onchanged="configChanged();"/>
                         <sm-et:txt title="Ussd Transaction Timeout" name="ussdTransactionTimeout" type="int" onchanged="configChanged();"/>
-
                         <sm-et:txt title="bindWaitTimeout (sec)"    name="bindWaitTimeout"        type="int" onchanged="configChanged();"/>
                         <sm-et:txt title="connectionsPerIp"         name="connectionsPerIp"       type="int" onchanged="configChanged();"/>
                         <sm-et:txt title="ipBlockingTime (sec)"     name="ipBlockingTime"         type="int" onchanged="configChanged();"/>
                         <sm-et:txt title="maxRWMultiplexersCount"   name="maxRWMultiplexersCount" type="int" onchanged="configChanged();"/>
                         <sm-et:txt title="socketsPerMultiplexer"    name="socketsPerMultiplexer"  type="int" onchanged="configChanged();"/>
+            <tr><td colspan=2>
+                <sm-et:section title="White List" name="whiteList" type="table">
+                    <sm-ep:properties id="whiteList" display="none">
+                        <sm-et:txt title="addr1"  name="addr1"   onchanged="configChanged();"/>
+                        <sm-et:txt title="addr2"  name="addr2"   onchanged="configChanged();"/>
+                        <sm-et:txt title="addr3"  name="addr3"   onchanged="configChanged();"/>
+                        <sm-et:txt title="addr4"  name="addr4"   onchanged="configChanged();"/>
+                        <sm-et:txt title="addr5"  name="addr5"   onchanged="configChanged();"/>
+                        <sm-et:txt title="addr6"  name="addr6"   onchanged="configChanged();"/>
+                        <sm-et:txt title="addr7"  name="addr7"   onchanged="configChanged();"/>
+                        <sm-et:txt title="addr8"  name="addr8"   onchanged="configChanged();"/>
+                        <sm-et:txt title="addr9"  name="addr9"   onchanged="configChanged();"/>
+                        <sm-et:txt title="addr10" name="addr10"  onchanged="configChanged();"/>
+                        <sm-et:txt title="addr11" name="addr11"  onchanged="configChanged();"/>
+                        <sm-et:txt title="addr12" name="addr12"  onchanged="configChanged();"/>
+                        <sm-et:txt title="addr13" name="addr13"  onchanged="configChanged();"/>
+                        <sm-et:txt title="addr14" name="addr14"  onchanged="configChanged();"/>
+                        <sm-et:txt title="addr15" name="addr15"  onchanged="configChanged();"/>
+                        <sm-et:txt title="addr16" name="addr16"  onchanged="configChanged();"/>
+                        <sm-et:txt title="addr17" name="addr17"  onchanged="configChanged();"/>
+                        <sm-et:txt title="addr18" name="addr18"  onchanged="configChanged();"/>
+                        <sm-et:txt title="addr19" name="addr19"  onchanged="configChanged();"/>
+                        <sm-et:txt title="addr20" name="addr20"  onchanged="configChanged();"/>
+                    </sm-ep:properties>
+                </sm-et:section>
+            </td></tr>
                     </sm-ep:properties>
                 </sm-et:section>
             </td></tr>
@@ -190,15 +244,30 @@
         </sm-ep:properties>
     </sm-et:section>
 
-    <sm-et:section title="Personalization" name="Personalization" type="table" >
-        <sm-ep:properties id="Personalization" display="none">
+    <%--<sm-et:section title="Personalization" name="Personalization" type="table" >--%>
+        <%--<sm-ep:properties id="Personalization" display="none">--%>
+            <%--<sm-et:txt name="host"                    type="string" onchanged="configChanged();"/>--%>
+            <%--<sm-et:txt name="port"  validation="port" type="int"    onchanged="configChanged();"/>--%>
+            <%--<sm-et:txt name="pingTimeout"             type="int"    onchanged="configChanged();"/>--%>
+            <%--<sm-et:txt name="ioTimeout"               type="int"    onchanged="configChanged();"/>--%>
+            <%--<sm-et:txt name="reconnectTimeout"        type="int"    onchanged="configChanged();"/>--%>
+            <%--<sm-et:txt name="maxWaitingRequestsCount" type="int"    onchanged="configChanged();"/>--%>
+            <%--<sm-et:txt name="connections"             type="int"    onchanged="configChanged();"/>--%>
+        <%--</sm-ep:properties>--%>
+    <%--</sm-et:section>--%>
+
+    <sm-et:section title="PvssClient" name="PvssClient" type="table" >
+        <sm-ep:properties id="PvssClient" display="none">
+            <sm-et:checkin title="enabled" name="enabled" onchanged="configChanged();"/>
             <sm-et:txt name="host"                    type="string" onchanged="configChanged();"/>
             <sm-et:txt name="port"  validation="port" type="int"    onchanged="configChanged();"/>
-            <sm-et:txt name="pingTimeout"             type="int"    onchanged="configChanged();"/>
             <sm-et:txt name="ioTimeout"               type="int"    onchanged="configChanged();"/>
+            <sm-et:txt name="pingTimeout"             type="int"    onchanged="configChanged();"/>
             <sm-et:txt name="reconnectTimeout"        type="int"    onchanged="configChanged();"/>
             <sm-et:txt name="maxWaitingRequestsCount" type="int"    onchanged="configChanged();"/>
             <sm-et:txt name="connections"             type="int"    onchanged="configChanged();"/>
+            <sm-et:txt name="connPerThread"           type="int"    onchanged="configChanged();"/>
+            <sm-et:checkin title="async" name="async" onchanged="configChanged();"/>
         </sm-ep:properties>
     </sm-et:section>
 
