@@ -248,7 +248,7 @@
                              service.edit.table.names.transit,service.edit.table.names.statistic_saa,
                              service.edit.table.names.notes"
                       widths="1,60,20,20,39,59" child="/routing/routes" parentId="${bean.parentId}" edit="id"
-                      targetElemId="mbDelete" ali="center"/>
+                      targetElemId="mbDelete" ali="center" exc="id"/>
             <div class=page_subtitle>&nbsp;</div>
             <sm-pm:menu>
                 <sm-pm:item name="mbAddSmppRoute" value="service.edit.item.mbaddchild.value" title="service.edit.item.mbaddchild.title"/>
@@ -263,7 +263,8 @@
                                   service.edit.table.http_route.enabled,service.edit.table.http_route.default,
                                   service.edit.table.http_route.transit, service.edit.table.names.statistic_saa"
                            widths="1,60,20,20,39,59" child="/routing/routes/http" parentId="${bean.parentId}"
-                           edit="name" targetElemId="mbDeleteHttpRoute" defaultItemId="mbDefaultHttpRoute" ali="center"/>
+                           edit="name" targetElemId="mbDeleteHttpRoute" defaultItemId="mbDefaultHttpRoute"
+                           ali="center" exc="name"/>
             <div class=page_subtitle>&nbsp;</div>
             <sm-pm:menu>
                 <sm-pm:item name="mbAddHttpRoute" value="service.edit.item.mbaddchild.value" title="service.edit.item.mbaddchild.title"/>
