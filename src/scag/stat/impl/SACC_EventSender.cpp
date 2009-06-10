@@ -126,7 +126,9 @@ void SaccBillingInfoEvent::write(SaccSerialBuffer& buf)
 
     //buf.Write(&fBillingSumm, sizeof(float));
     //buf.Append(static_cast<char*>(&fBillingSumm), sizeof(float));
-    buf.writeFloat(fBillingSumm);
+    //buf.writeFloat(fBillingSumm);
+    std::string billingSumm = fBillingSumm.empty() ? "0.0" : fBillingSumm;
+    buf.writeStr(billingSumm, MAX_BILLING_SUMM_LENGTH);
 
     buf.writeStr(pBillingCurrency, MAX_BILLING_CURRENCY_LENGTH);
 }

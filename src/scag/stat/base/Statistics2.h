@@ -116,14 +116,15 @@ using scag::util::SerializeBuffer;
 
         uint32_t iMediaResourceType;
         uint32_t iPriceCatId;
-        float    fBillingSumm;
+        //float    fBillingSumm;
+        std::string  fBillingSumm;
         std::string  pBillingCurrency;
 
         SaccBillingInfoEvent() : SaccEvent(sec_bill)
         {
             iMediaResourceType=0;
             iPriceCatId=0;
-            fBillingSumm=0.00000;
+            fBillingSumm="";
         }
         SaccBillingInfoEvent(const SaccBillingInfoEvent & src) : SaccEvent(src), Header(src.Header)
         {
