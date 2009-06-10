@@ -56,7 +56,7 @@
             <td style="cursor:pointer;text-align:left" onClick="toggleVisible('pgs_http','cgs_http');">
                 <div align="left" id="pgs_http" class="collapsing_list_closed">
                     <div class="page_subtitle">
-                        <u><font size="2"><fmt:message>options.item.title.address</fmt:message></font></u>
+                        <u><font size="2"><fmt:message>options.item.title.address.usr</fmt:message></font></u>
                     </div>
                 </div>
              </td>
