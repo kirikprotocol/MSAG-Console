@@ -130,10 +130,10 @@ int parse(int fdR, int fdW)
     if (status = ReadBuff(fdR, buff, 9)) return status;
     if (status = ReadInt16(fdR, int16)) return status;
     
-    if (strcmp(buff, "SMSC.STAT") || int16 != 1) {
+    /*if (strcmp(buff, "SMSC.STAT") || int16 != 1) {
 	printf("File is not SMSC statistics file (1.0 version)\n");
 	return -5;
-    }
+    }*/
     
     if (status = WriteBuff(fdW, buff, 9)) return status;
     if (status = WriteInt16(fdW, int16)) return status;
@@ -148,7 +148,7 @@ int parse(int fdR, int fdW)
     {
 	//printf("offR=%lld\n", offR);
 	if (status = ReadInt32(fdR, sz1)) return status;
-	if (!sz1 || sz1 >= maxOffR-offR || sz1 >= MAX_FILEREC_SIZE) { // skip 1 byte
+	if (!sz1 || sz1 < 1200 || sz1 > 8192 || sz1 >= maxOffR-offR || sz1 >= MAX_FILEREC_SIZE) { // skip 1 byte
 	    printf("sz1=%d isn't seems to be valid, off=%lld\n", sz1, offR);
 	    dumpSkipped(false);
 	    skip[bytesSkipped++] = (uint8_t)((htonl(sz1)>>24)&0x00000000000000ff);
@@ -169,7 +169,7 @@ int parse(int fdR, int fdW)
 	if (status = WriteBuff(fdW, buff, sz1)) return status;
 	if (status = WriteInt32(fdW, sz2)) return status;
 	offR += (8 + sz1); recordsRestored++;
-	printf("Record restored, count=%d\n", recordsRestored);
+	printf("Record restored, count=%d (size=%d)\n", recordsRestored, sz1);
     }
 
     dumpSkipped(true);
