@@ -67,6 +67,8 @@ private:
     SS7Unit_CFG *   _unitCfg;   //TCAP Unit(s) configuration
 #ifdef EIN_HD
     char *          _rcpMgrAdr; //remote CP Manager addresses
+#else
+    Mutex           _msgRecvLock;
 #endif /* EIN_HD */
     SSNmap_T        _sessions;
     const char *    _logId;     //logging prefix

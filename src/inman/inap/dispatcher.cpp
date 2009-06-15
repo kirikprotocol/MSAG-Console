@@ -233,17 +233,25 @@ void TCAPDispatcher::Stop(bool do_wait/* = false*/)
 bool TCAPDispatcher::msgListeningOn(void) const
 {
   MutexGuard grd(_sync);
-  return (_dspState != dspStopped) && !_sessions.empty()
-          && (_ss7State == ss7CONNECTED);
+  return (_dspState != dspStopped) && (_ss7State == ss7CONNECTED);
 }
 
+//This method is always called from MsgListener thread
 unsigned short TCAPDispatcher::dispatchMsg(void)
 {
   MSG_T msg;
   memset(&msg, 0, sizeof(MSG_T));
   msg.receiver = _cfg.mpUserId;
 
+#ifdef EIN_HD
   USHORT_T result = EINSS7CpMsgRecv_r(&msg, RECV_TIMEOUT);
+#else  /* EIN_HD */
+  USHORT_T result = 0;
+  {
+    MutexGuard  tmp(_msgRecvLock);
+    result = EINSS7CpMsgRecv_r(&msg, RECV_TIMEOUT);
+  }
+#endif /* EIN_HD */
   if (MSG_TIMEOUT != result) {
     if (!result) {
       if (msg.sender == TCAP_ID)
@@ -401,7 +409,15 @@ void TCAPDispatcher::disconnectUnits(void)
   for (; it != _unitCfg->instIds.end(); ++it) {
     if (it->second.connStatus == SS7UnitInstance::uconnOk) {
       _sync.Unlock();
+#ifdef EIN_HD
       USHORT_T result = EINSS7CpMsgRelInst(_cfg.mpUserId, TCAP_ID, it->second.instId);
+#else  /* EIN_HD */
+      USHORT_T result = 0;
+      { //NOTE: wait for CpMsgRecv completion, in order to avoid EIN SS7 internal deadlock
+        MutexGuard  grd(_msgRecvLock);
+        result = EINSS7CpMsgRelInst(_cfg.mpUserId, TCAP_ID, it->second.instId);
+      }
+#endif /* EIN_HD */
       _sync.Lock();
       if (result)
           smsc_log_error(logger, "%s: MsgRel(TCAP instId = %u) failed: %s (code %u)",
