@@ -136,6 +136,8 @@ public:
     int  connectCP(SS7State_e upTo = ss7CONNECTED);
     void disconnectCP(SS7State_e downTo = ss7None);
 
+    unsigned short receiveMsg(short use_tmo);
+
     //Notifies dispatcher that broken connection is detected, the connection
     //to given TCAP BE instance will be automatically reestablished.
     void    onDisconnect(unsigned short fromUsrID,
@@ -168,14 +170,14 @@ public:
 
   static const unsigned _dfltNumAttempts = 40;
   static const unsigned _dfltMaxFaults = 5;
-  static const unsigned _dfltTimeout = 600;
+  static const unsigned short _dfltTimeout = 600;
 
   TCAPHD_CFG  ss7;
   TCAPConnector::SS7State_e tgtState;
   unsigned    numAttemts; //number of test runs to execute
   unsigned    maxFaults;  //maximum number of failed reconnect attempts,
                           //that forces the total reconnect
-  unsigned    tmoReconn;  //reconnect timeout, units millisecs
+  unsigned short tmoReconn;  //reconnect timeout, units millisecs
               
 
   TST_CFG()

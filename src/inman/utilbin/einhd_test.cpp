@@ -292,6 +292,30 @@ void TCAPConnector::disconnectUnits(void)
   return;
 }
 
+unsigned short TCAPConnector::receiveMsg(short use_tmo)
+{
+  MSG_T msg;
+  memset(&msg, 0, sizeof(MSG_T));
+  msg.receiver = _cfg.mpUserId;
+
+  USHORT_T result = EINSS7CpMsgRecv_r(&msg, use_tmo);
+
+  if (MSG_TIMEOUT != result) {
+    if (!result)
+      smsc_log_warn(logger, "%s: msg[%u] received from unit[%u], ",
+                      _logId, (unsigned)msg.primitive, (unsigned)msg.sender);
+
+    EINSS7CpReleaseMsgBuffer(&msg);
+
+    if ((MSG_BROKEN_CONNECTION == result) || (MSG_NOT_CONNECTED == result))
+      result = MSG_TIMEOUT;
+    else if (result)
+      smsc_log_error(logger, "%s: MsgRecv() failed with code %u (%s)", _logId,
+                      result, rc2Txt_SS7_CP(result));
+  }
+  return result;
+}
+
 
 //Returns:  (-1) - failed to connect, 0 - already connected, 1 - successfully connected
 int TCAPConnector::connectCP(SS7State_e upTo/* = ss7CONNECTED*/)
@@ -618,7 +642,7 @@ bool readConfig(FILE * fd_cfg, TST_CFG & use_cfg, Logger * use_logger)
     }
     if (!strcmp("tmoReconn", cmd[0].c_str())) {
       int itmp = atoi(cmd[1].c_str());
-      if (itmp <= 0) {
+      if ((itmp <= 0) || (itmp > (unsigned short)(-1))) {
         smsc_log_error(use_logger, "%s illegal value: %s",
                        cmd[0].c_str(), cmd[1].c_str());
         return false;
@@ -701,8 +725,10 @@ int main(int argc, char ** argv)
     smsc_log_info(_logger, "run(%u) ..", i);
     if (_tcCon.connectCP(TCAPConnector::ss7CONNECTED) < 0) {
       ++errAtt;
-    }
-    usleep(_cfg.tmoReconn*1000);
+      usleep(_cfg.tmoReconn*1000);
+    } else //receiveMsg() initiates HB being sent over connect
+      _tcCon.receiveMsg((short)_cfg.tmoReconn);
+
     if (errAtt > _cfg.maxFaults) {
       smsc_log_info(_logger, "run(%u): %u failed reconnect attempts -> full disconnect", i, errAtt);
       _tcCon.disconnectCP(TCAPConnector::ss7None);
