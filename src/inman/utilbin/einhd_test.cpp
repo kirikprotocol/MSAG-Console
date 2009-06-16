@@ -312,7 +312,9 @@ unsigned short TCAPConnector::receiveMsg(short use_tmo)
     else if (result)
       smsc_log_error(logger, "%s: MsgRecv() failed with code %u (%s)", _logId,
                       result, rc2Txt_SS7_CP(result));
-  }
+  } else
+    smsc_log_error(logger, "%s: MsgRecv() is timed out", _logId);
+
   return result;
 }
 
