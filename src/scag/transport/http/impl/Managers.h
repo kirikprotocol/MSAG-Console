@@ -64,6 +64,8 @@ public:
     void continueExecution(lcm::LongCallContextBase* context, bool dropped);
 
     void queueLen(uint32_t& reqLen, uint32_t& respLen, uint32_t& lcmLen);
+
+    unsigned pushSessionCommand( HttpCommand* cmd, int action );
     
 protected:
     ThreadPool pool;
@@ -78,6 +80,7 @@ protected:
     
     unsigned int queueLength[4];
     unsigned int scagQueueLimit;
+    unsigned int queuedCmdCount;
     bool waitQueueShrinkage;
     void deleteQueue(HttpContext* pcx);
 };
@@ -228,6 +231,8 @@ public:
     bool isLicenseExpired();
     bool licenseThroughputLimitExceed();
     void incLicenseCounter();
+
+    unsigned pushSessionCommand( HttpCommand* cmd, int action );
     
 public:
     config::HttpManagerConfig cfg;

@@ -382,7 +382,7 @@ int HttpProcessorImpl::processRequest(HttpRequest& request)
             
             if(r.id && !request.getAbonent().length())
             {
-                smsc_log_info(logger, "Transit request served");
+                smsc_log_debug(logger, "Transit request served");
                 if (r.statistics) {
                   //TODO: register traffic info event for transit route
                   //TODO: how we can create SessionKey if request.getAbonent().length() == 0
@@ -454,8 +454,10 @@ int HttpProcessorImpl::processRequest(HttpRequest& request)
             if (rs.status == re::STATUS_FAILED) {
                 request.trc.result = rs.result;
             }
-        } else
-            smsc_log_error( logger, "session not found for addr=%s", request.getAddress().c_str());
+        } else {
+            smsc_log_debug( logger, "session is locked for addr=%s", request.getAddress().c_str());
+            return re::STATUS_PROCESS_LATER;
+        }
     }
     catch(RouteNotFoundException& e)
     {
@@ -508,13 +510,13 @@ int HttpProcessorImpl::processResponse(HttpResponse& response)
          */
         const SessionKey sk(response.getAddress());
         SCAGCommand* rescmd(&response);
-        CommandProperty cp(scag2::re::CommandBridge::getCommandProperty(response, sk.address(), static_cast<uint8_t>(response.getOperationId())));
 
         se = SessionManager::Instance().getSession( sk, rescmd, false );
 
         re::RuleStatus rs;
         if ( se.get() )
         {
+            CommandProperty cp(scag2::re::CommandBridge::getCommandProperty(response, sk.address(), static_cast<uint8_t>(response.getOperationId())));
             HttpCommandRelease rel(response);
             re::RuleEngine::Instance().process(response, *se.get(), rs, cp);
             if (!se->getLongCallContext().continueExec && response.getStatistics()) {
@@ -540,11 +542,9 @@ int HttpProcessorImpl::processResponse(HttpResponse& response)
 
         } else {
 
-            smsc_log_error( logger, "http_response session not found abonent=%s", response.getAddress().c_str());
-            
             if ( ! rescmd ) {
                 // session is locked by another command
-                smsc_log_error( logger, "http_response session is locked for abonent=%s", response.getAddress().c_str());
+                smsc_log_debug( logger, "http_response session is locked for abonent=%s", response.getAddress().c_str());
                 return re::STATUS_PROCESS_LATER;
             } else {
                 // session is not found
@@ -611,11 +611,11 @@ int HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
         const SessionKey sk( response.getAddress() );
         SCAGCommand* rescmd(&response);
         se = SessionManager::Instance().getSession(sk, rescmd, false);
-        CommandProperty cp(scag2::re::CommandBridge::getCommandProperty(response, sk.address(), static_cast<uint8_t>(response.getOperationId())));
 
         re::RuleStatus rs;
         if (se.get())
         {
+            CommandProperty cp(scag2::re::CommandBridge::getCommandProperty(response, sk.address(), static_cast<uint8_t>(response.getOperationId())));
             HttpCommandRelease rel(response);
             response.setCommandId(HTTP_DELIVERY);
             response.setDelivered(delivered);
@@ -639,8 +639,18 @@ int HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
                 return rs.status;
             }
         }
-        else
-            smsc_log_error( logger, "http_status_response session not found abonent=%s", response.getAddress().c_str());
+        else {
+          if ( ! rescmd ) {
+              // session is locked by another command
+              smsc_log_debug( logger, "http_response session is locked for abonent=%s", response.getAddress().c_str());
+              return re::STATUS_PROCESS_LATER;
+          } else {
+              // session is not found
+              smsc_log_error( logger, "http_response session not found abonent=%s", response.getAddress().c_str());
+              // return re::STATUS_FAILED;
+              rs.status = re::STATUS_FAILED;
+          }
+        }
     }
     catch(Exception& e)
     {

@@ -2,12 +2,14 @@
 #define _SCAG_TRANSPORT_HTTP_BASE_HTTPMANAGER_H
 
 #include "scag/config/http/HttpManagerConfig.h"
+#include "scag/transport/SCAGCommand2.h"
 
 namespace scag2 {
 namespace transport {
 namespace http {
 
 class HttpContext;
+class HttpCommand;
 
 class HttpManager
 {
@@ -23,6 +25,8 @@ public:
     virtual config::HttpManagerConfig& getConfig() = 0;
     virtual void getQueueLen(uint32_t& reqLen, uint32_t& respLen, uint32_t& lcmLen) = 0;
     virtual bool isLicenseExpired() = 0;
+
+    virtual unsigned pushSessionCommand( HttpCommand* cmd, int action = SCAGCommandQueue::PUSH ) = 0;
 
 protected:
     HttpManager();

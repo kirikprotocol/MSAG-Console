@@ -1,4 +1,5 @@
 #include <limits.h>
+#include "scag/exc/SCAGExceptions.h"
 #include "Managers.h"
 #include "scag/transport/http/base/HttpContext.h"
 #include "IOTasks.h"
@@ -107,9 +108,44 @@ void HttpManagerImpl::incLicenseCounter() {
     licenseCounter.Inc();
 }
 
+unsigned HttpManagerImpl::pushSessionCommand( HttpCommand* cmd, int action = SCAGCommandQueue::PUSH ) { 
+  return scags.pushSessionCommand( cmd, action );
+}
 
+unsigned ScagTaskManager::pushSessionCommand( HttpCommand* cmd, int action = SCAGCommandQueue::PUSH ) { 
+  smsc_log_debug(logger,"pushSessionCommand: push %p command, action=%d", cmd, action);
 
-ScagTaskManager::ScagTaskManager(HttpManagerImpl& m) : manager(m)
+  if ( ! cmd ) {
+      smsc_log_error(logger,"cmd = (null) is passed to httpmanager::pushSessionCommand");
+      ::abort();
+      return unsigned(-1);
+  }
+
+  if ( action == SCAGCommandQueue::PUSH ) {
+      smsc_log_error(logger, "ScagTaskManager::pushSessionCommand is intended for session queue commands, so RESERVE/MOVE should be used");
+      throw scag::exceptions::SCAGException("ScagTaskManager::pushSessionCommand is intended for session queue commands, so RESERVE/MOVE should be used" );
+  }
+
+  {
+    MutexGuard mg(procMut);
+    if ( action == SCAGCommandQueue::RESERVE ) {
+        ++queuedCmdCount;
+        smsc_log_debug(logger, "reserve place for a cmd=%p, queuedCmdCount=%u", cmd, queuedCmdCount);
+        // FIXME: should we return -1 when stopped ?
+        return queuedCmdCount;
+    }
+  
+    assert( action == SCAGCommandQueue::MOVE );
+  
+    // action MOVE
+    if ( queuedCmdCount > 0 ) --queuedCmdCount;
+  }
+  smsc_log_debug( logger, "reserved cmd=%p moved onto queue, queuedCmdCount=%u", cmd, queuedCmdCount );
+  process(cmd->getContext(), false);
+  return queuedCmdCount;
+}
+
+ScagTaskManager::ScagTaskManager(HttpManagerImpl& m) : manager(m), queuedCmdCount(0)
 {
 }
 
@@ -255,7 +291,8 @@ bool ScagTaskManager::canStop()
 {
     MutexGuard g(procMut);
     
-    return headContext[PROCESS_REQUEST] == NULL && headContext[PROCESS_RESPONSE] == NULL && headContext[PROCESS_STATUS_RESPONSE] == NULL;
+    return headContext[PROCESS_REQUEST] == NULL && headContext[PROCESS_RESPONSE] == NULL &&
+           headContext[PROCESS_STATUS_RESPONSE] == NULL && queuedCmdCount == 0;
 }
 
 IOTask* ReaderTaskManager::newTask()
