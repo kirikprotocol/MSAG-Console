@@ -360,3 +360,11 @@ B3103: May 21, 2009
     Inman	TaskSchedulerSEQ possible heap corruption is fixed
     Inman	HD SS7 reconnect via ss7None state    
     core	ReverseMutexGuard is added
+
+B3104: May 26, 2009
+    SMSC	Provide MSC from 83 tag from specific info in OpenInd, in case when SRI disabled for ussd code
+    Ussman	logging improvements
+    Ussman	deadlock on shutdown fix
+    Webadm	I/O optimizations in operative store reading
+    Webadm 	Add maxRowsCount and calcTotalCount support for operative store reader
+    Webadm	Wait for operative store rolling will be finished before read operative store
