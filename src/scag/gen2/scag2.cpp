@@ -58,7 +58,7 @@ public:
         }
 
         default : {
-            throw std::runtime_error("transports other than SMPP is not implemented yet");
+            throw std::runtime_error("transports other than SMPP and HTTP is not implemented yet");
         }
         } // switch
         return unsigned(-1);
