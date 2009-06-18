@@ -36,6 +36,7 @@ namespace {
 using namespace scag2;
 using namespace scag2::transport;
 using namespace scag2::transport::smpp;
+using namespace scag2::transport::http;
 
 class FromSessionQueue : public SCAGCommandQueue
 {
@@ -49,6 +50,11 @@ public:
         case SMPP: {
             return SmppManager::Instance().pushSessionCommand
                 ( static_cast<SmppCommand*>(cmd), action );
+        }
+
+        case HTTP: {
+          return HttpManager::Instance().pushSessionCommand
+              ( static_cast<HttpCommand*>(cmd), action );
         }
 
         default : {
