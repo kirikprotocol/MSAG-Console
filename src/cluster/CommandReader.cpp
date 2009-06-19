@@ -115,36 +115,29 @@ Command* CommandReader::readCommand(Socket * socket)
 
 void CommandReader::read(Socket * socket, void* buffer, int size)
 {
-    try {
-        if(!socket) throw Exception("Command read failed. Socket pointer is NULL.");
-        int toRead = size;
-        char* readBuffer = (char *)buffer;
-        while (toRead > 0)
-        {
-          int read = socket->canRead(60);
-          if (read == 0)
-          {
-            continue;
-          }
-          else
-          if (read > 0)
-          {
-            read = socket->Read(readBuffer, toRead);
-            if (read > 0)
-            {
-              readBuffer+=read;
-              toRead-=read;
-              continue;
-            }
-          }
-          throw Exception("Command read failed. Socket closed. %s", strerror(errno));
-        }
-
-    }catch(Exception e){
-        throw Exception("%s", e.what());
-    }catch(...){
-        throw Exception("Command read failed. Unexpected error.");
+  if(!socket) throw Exception("Command read failed. Socket pointer is NULL.");
+  int toRead = size;
+  char* readBuffer = (char *)buffer;
+  while (toRead > 0)
+  {
+    int read = socket->canRead(60);
+    if (read == 0)
+    {
+      continue;
     }
+    else
+      if (read > 0)
+      {
+        read = socket->Read(readBuffer, toRead);
+        if (read > 0)
+        {
+          readBuffer+=read;
+          toRead-=read;
+          continue;
+        }
+      }
+    throw Exception("Command read failed. Socket closed. %s", strerror(errno));
+  }
 }
 
 void CommandReader::writeRole(Socket* socket, Command *cmd)
