@@ -93,11 +93,11 @@ void DpfTracker::Init(const char *argStoreLocation, int to1179, int to1044,int m
       rec->expIter=expirations.insert(rec);
     }
   }
-  if(File::Exists(joldFile.c_str()))
+  if(buf::File::Exists(joldFile.c_str()))
   {
     ApplyChanges(joldFile);
   }
-  if(File::Exists(jFile.c_str()))
+  if(buf::File::Exists(jFile.c_str()))
   {
     ApplyChanges(jFile);
     changesStore.Append(jFile.c_str());
@@ -111,7 +111,7 @@ void DpfTracker::Init(const char *argStoreLocation, int to1179, int to1044,int m
 
 void DpfTracker::ApplyChanges(const std::string &fileName)
 {
-  File f;
+  buf::File f;
   openJFile(f,fileName);
   buf::File::offset_type sz=f.Size();
   Change c(0);
@@ -125,6 +125,10 @@ void DpfTracker::ApplyChanges(const std::string &fileName)
       smsc_log_info(log,"reading changes:%d(%lld/%lld)",changesCount,f.Pos(),sz);
     }
     c.Read(f);
+    if(!c.validate())
+    {
+      smsc_log_warn(log,"Invalid change record detected at %ld",f.Pos());
+    }
     if(c.ct==ctRegisterSme)
     {
       AbonentsSet::iterator it=abonents.find(c.abonent);
@@ -419,7 +423,7 @@ bool DpfTracker::sendAlertNotify(uint64_t abonent, const smsc::sms::Address &sme
 
   try{
     Smsc& smsc=Smsc::getInstance();
-    SmeProxy* proxy=smsc.getSmeProxy(smeId);
+    SmeProxy* proxy=smsc.getSmeProxy(smeId.c_str());
     smsc_log_debug(log,"Sending AlertNotification for abonent=%lld to sme='%s' status=%d",abonent,smeId.c_str(),status);
     if(proxy!=0)
     {
@@ -509,7 +513,7 @@ int DpfTracker::CompactingThread::Execute()
         needCompacting=false;
       }
       smsc_log_info(log,"starting compactification");
-      File f;
+      buf::File f;
       RecSet rs;
       SmallRecord sr;
       if(buf::File::Exists(binFile.c_str()))

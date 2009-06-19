@@ -66,7 +66,7 @@ protected:
     smsc::sms::Address addr;
     int attempt;
 
-    static void WriteAddr(File& f,const Address& addr)
+    static void WriteAddr(buf::File& f,const Address& addr)
     {
       f.WriteByte(addr.type);
       f.WriteByte(addr.plan);
@@ -74,7 +74,7 @@ protected:
       f.Write(addr.value,addr.length);
     }
 
-    static void ReadAddr(File& f,Address& addr)
+    static void ReadAddr(buf::File& f,Address& addr)
     {
       addr.type=f.ReadByte();
       addr.plan=f.ReadByte();
@@ -83,14 +83,14 @@ protected:
       addr.value[addr.length]=0;
     }
 
-    static void WriteString(File& f,const SystemIdStr& str)
+    static void WriteString(buf::File& f,const SystemIdStr& str)
     {
       uint8_t l=(uint8_t)str.length();
       f.WriteByte(l);
       f.Write(str.c_str(),l);
     }
 
-    static void ReadString(File& f,SystemIdStr& str)
+    static void ReadString(buf::File& f,SystemIdStr& str)
     {
       uint8_t l=f.ReadByte();
       if(l>=32)
@@ -101,13 +101,13 @@ protected:
       str.str[l]=0;
     }
 
-    void Write(File& f)const
+    void Write(buf::File& f)const
     {
       f.WriteNetInt64(expiration);
       WriteString(f,smeId);
       WriteAddr(f,addr);
     }
-    void Read(File& f)
+    void Read(buf::File& f)
     {
       expiration=f.ReadNetInt64();
       ReadString(f,smeId);
@@ -140,7 +140,7 @@ protected:
     time_t expiration;
     ExpirationsSet::iterator expIter;
 
-    void Write(File& f)const
+    void Write(buf::File& f)const
     {
       f.WriteNetInt64(abonent);
       f.WriteNetInt16((uint16_t)requests.size());
@@ -150,7 +150,7 @@ protected:
         it->Write(f);
       }
     }
-    void Read(File& f)
+    void Read(buf::File& f)
     {
       abonent=f.ReadNetInt64();
       uint16_t reqCnt=f.ReadNetInt16();
@@ -186,6 +186,22 @@ protected:
     Change(uint64_t argAbonent,SystemIdStr argSme):ct(ctRemoveSme),abonent(argAbonent),smeId(argSme)
     {
     }
+    bool validate()
+    {
+      if(ct==ctRegisterSme)
+      {
+        return abonent!=0 && expiration!=0 && smeId.length()!=0 && addr.length!=0;
+      }else if(ct==ctRemoveAbonent)
+      {
+        return abonent!=0;
+      }else if(ct==ctRemoveSme)
+      {
+        return abonent!=0 && smeId.length()!=0 && addr.length!=0;
+      }else
+      {
+        return false;
+      }
+    }
     ReqRecord asReqRecord()const
     {
       ReqRecord req;
@@ -194,7 +210,7 @@ protected:
       req.addr=addr;
       return req;
     }
-    void Write(File& f)const
+    void Write(buf::File& f)const
     {
       f.WriteByte(ct);
       if(ct==ctRegisterSme)
@@ -212,7 +228,7 @@ protected:
         ReqRecord::WriteString(f,smeId);
       }
     }
-    void Read(File& f)
+    void Read(buf::File& f)
     {
       ct=(ChangeType)f.ReadByte();
       if(ct==ctRegisterSme)
@@ -270,7 +286,7 @@ protected:
       typedef std::set<ReqRecord,ReqRequestSmeIdComparator> ReqSet;
       mutable ReqSet requests;
 
-      void Write(File& f)const
+      void Write(buf::File& f)const
       {
         f.WriteNetInt64(abonent);
         f.WriteNetInt16((uint16_t)requests.size());
@@ -281,7 +297,7 @@ protected:
         }
       }
 
-      void Read(File& f)
+      void Read(buf::File& f)
       {
         abonent=f.ReadNetInt64();
         uint16_t reqCnt=f.ReadNetInt16();
@@ -319,7 +335,7 @@ protected:
   bool isStopping;
   CompactingThread cthread;
 
-  File changesStore;
+  buf::File changesStore;
   int changesCount;
   int maxChangesCount;
   time_t lastCompact;
