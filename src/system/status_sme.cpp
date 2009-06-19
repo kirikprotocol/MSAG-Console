@@ -238,6 +238,17 @@ int StatusSme::Execute()
       {
         answer="Chain not found or in processing";
       }
+    }else if (request=="setmaxsms")
+    {
+      int val=atoi(arg.c_str());
+      if(val>smsc->license.maxsms)
+      {
+        val=smsc->license.maxsms;
+      }
+      smsc->maxSmsPerSecond=val;
+      char buf[64];
+      sprintf(buf,"maxSmsPerSecond=%d",smsc->maxSmsPerSecond);
+      answer=buf;
     }
     else
     {
