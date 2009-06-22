@@ -133,7 +133,7 @@ public:
     MutexGuard mg(regMtx);
     if(metaRegistry.Exists(info.systemId.c_str()))
     {
-      throw Exception("Duplicate meta entity:%s",info.systemId.c_str());
+        throw smsc::util::Exception("Duplicate meta entity:%s",info.systemId.c_str());
     }
     MetaEntity* ptr=new MetaEntity;
     ptr->info=info;
@@ -146,7 +146,7 @@ public:
     MetaEntity** ptr=metaRegistry.GetPtr(info.systemId.c_str());
     if(!ptr)
     {
-      throw Exception("updateMetaEntity::Meta entity not found:%s",info.systemId.c_str());
+        throw smsc::util::Exception("updateMetaEntity::Meta entity not found:%s",info.systemId.c_str());
     }
     (*ptr)->info=info;
   }
@@ -157,11 +157,11 @@ public:
     MetaEntity** ptr=metaRegistry.GetPtr(id);
     if(!ptr)
     {
-      throw Exception("deleteMetaEntity::Meta entity not found:%s",id);
+        throw smsc::util::Exception("deleteMetaEntity::Meta entity not found:%s",id);
     }
     if(!(*ptr)->ents.empty())
     {
-      throw Exception("deleteMetaEntity::Meta entity isn't empty:%s",id);
+        throw smsc::util::Exception("deleteMetaEntity::Meta entity isn't empty:%s",id);
     }
     metaRegistry.Delete(id);
   }
@@ -172,17 +172,17 @@ public:
     MetaEntity** mptr=metaRegistry.GetPtr(metaId);
     if(!mptr)
     {
-      throw Exception("addMetaEndPoint::Meta entity not found:%s",metaId);
+        throw smsc::util::Exception("addMetaEndPoint::Meta entity not found:%s",metaId);
     }
     SmppEntity** sptr=registry.GetPtr(sysId);
     if(!sptr)
     {
-      throw Exception("addMetaEndPoint::Smpp entity not found:%s",sysId);
+        throw smsc::util::Exception("addMetaEndPoint::Smpp entity not found:%s",sysId);
     }
     if(((*mptr)->info.type==mtMetaService && (*sptr)->info.type!=etService)||
        ((*mptr)->info.type==mtMetaSmsc && (*sptr)->info.type!=etSmsc))
     {
-      throw Exception("addMetaEndPoint::incompatible type '%s' and '%s'",metaId,sysId);
+        throw smsc::util::Exception("addMetaEndPoint::incompatible type '%s' and '%s'",metaId,sysId);
     }
     MetaEntity &me=**mptr;
     MetaEntity::MetaEntsVector::iterator it;
@@ -190,7 +190,7 @@ public:
     {
       if(it->ptr==*sptr)
       {
-        throw Exception("addMetaEndPoint::duplicate entity '%s' in meta entity '%s'",sysId,metaId);
+          throw smsc::util::Exception("addMetaEndPoint::duplicate entity '%s' in meta entity '%s'",sysId,metaId);
       }
     }
     MetaEntity::MetaInfo mi;
@@ -204,12 +204,12 @@ public:
     MetaEntity** mptr=metaRegistry.GetPtr(metaId);
     if(!mptr)
     {
-      throw Exception("removeMetaEndPoint::Meta entity not found:%s",metaId);
+        throw smsc::util::Exception("removeMetaEndPoint::Meta entity not found:%s",metaId);
     }
     SmppEntity** sptr=registry.GetPtr(sysId);
     if(!sptr)
     {
-      throw Exception("removeMetaEndPoint::Smpp entity not found:%s",sysId);
+        throw smsc::util::Exception("removeMetaEndPoint::Smpp entity not found:%s",sysId);
     }
     MetaEntity& me=**mptr;
     MetaEntity::MetaEntsVector::iterator it;
@@ -221,7 +221,7 @@ public:
         return;
       }
     }
-    throw Exception("removeMetaEndPoint::unexpected error - smpp entity not found in meta entity :(");
+      throw smsc::util::Exception("removeMetaEndPoint::unexpected error - smpp entity not found in meta entity :(");
   }
 
   bool LoadEntityFromConfig(SmppEntityInfo& info,const char* sysId,SmppEntityType et);

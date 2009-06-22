@@ -289,7 +289,7 @@ void SmppCommand::makeSMSBody(SMS* sms,const SmppHeader* pdu,bool forceDC)
         }
         if(len==0 || *data>len)
         {
-            throw Exception("SmppCommand: Invalid pdu (udhi length > message length)");
+            throw smsc::util::Exception("SmppCommand: Invalid pdu (udhi length > message length)");
         }
     }
 }
@@ -313,7 +313,7 @@ std::string SmppCommand::getMessageBody( SMS& data )
         if ( (esm & 0x40) ) {
             // udh is present, skip it
             const unsigned udhl = (unsigned(buff[0]) & 0xff)+1;
-            if (udhl>=len) throw Exception("udh message is broken: len=%u udhl=%u", len, udhl);
+            if (udhl>=len) throw smsc::util::Exception("udh message is broken: len=%u udhl=%u", len, udhl);
             buff += udhl;
             len -= udhl;
         }
@@ -619,7 +619,7 @@ SCAGCommand(), _SmppCommand()
                 PduDataSm* dsm = reinterpret_cast<PduDataSm*>(pdu);
                 dta_ = new SmsCommand;
                 if ( !fetchSmsFromDataSmPdu( dsm, get_sms(), forceDC) )
-                    throw Exception("Invalid data coding");
+                    throw smsc::util::Exception("Invalid data coding");
                 get_sms()->setIntProperty(Tag::SMPP_DATA_SM,1);
                 shared_ = & get_smsCommand();
                 goto end_construct;
@@ -745,7 +745,7 @@ SCAGCommand(), _SmppCommand()
                 sm->number_of_dests = uu;
                 goto end_construct;
             }
-        default: throw Exception("Unsupported command id %08X",pdu->commandId);
+        default: throw smsc::util::Exception("Unsupported command id %08X",pdu->commandId);
         }
         //__unreachable__("command id is not processed");
 

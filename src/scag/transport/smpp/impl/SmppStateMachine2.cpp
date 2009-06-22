@@ -364,7 +364,7 @@ uint32_t StateMachine::putCommand(CommandId cmdType, SmppEntity* src, SmppEntity
                     int newSeq=dst->getNextSeq();
                     std::auto_ptr<SmppCommand> partCmd( SmppCommand::makeCommandSm(cmdType, partSms, newSeq) );
                     if (!reg_.Register(dst->getUid(), newSeq, cmd, seq == 1))
-                        throw Exception("%s: Register cmd for uid=%d, seq=%d failed", cmdName, dst->getUid(), newSeq);
+                        throw smsc::util::Exception("%s: Register cmd for uid=%d, seq=%d failed", cmdName, dst->getUid(), newSeq);
                     dst->putCommand(partCmd);
                 }
             }
@@ -380,7 +380,7 @@ uint32_t StateMachine::putCommand(CommandId cmdType, SmppEntity* src, SmppEntity
                     SmppCommand::changeSliceRefNum(sms,newsarmr);
                 }
                 if (!reg_.Register(dst->getUid(), newSeq, cmd))
-                    throw Exception("%s: Register cmd for uid=%d, seq=%d failed", cmdName, dst->getUid(), newSeq);
+                    throw smsc::util::Exception("%s: Register cmd for uid=%d, seq=%d failed", cmdName, dst->getUid(), newSeq);
                 dst->putCommand(aucmd);
             }
             registerEvent( stat::events::smpp::ACCEPTED, src, dst, (char*)ri.routeId, -1 );
@@ -1939,7 +1939,7 @@ void StateMachine::sendReceipt(std::auto_ptr<SmppCommand> aucmd)
       {
         int newSeq=dst->getNextSeq();
         if(!reg_.Register(dst->getUid(), newSeq, aucmd.get()))
-          throw Exception("MSAG Receipt: Register cmd for uid=%d, seq=%d failed", dst->getUid(), newSeq);
+              throw smsc::util::Exception("MSAG Receipt: Register cmd for uid=%d, seq=%d failed", dst->getUid(), newSeq);
         dst->putCommand(aucmd);
       }
   } catch(std::exception& e)

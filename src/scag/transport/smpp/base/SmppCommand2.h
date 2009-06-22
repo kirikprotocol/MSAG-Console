@@ -34,7 +34,6 @@ using smsc::sms::Descriptor;
 using smsc::core::synchronization::Mutex;
 using smsc::logger::Logger;
 using smsc::core::synchronization::MutexGuard;
-using smsc::util::Exception;
 using std::string;
 
 const int ScagCommandDefaultPriority = 16;
@@ -116,7 +115,7 @@ struct ReplaceSm
         fillField(messageId,repl->get_messageId());
         if(!messageId.get() || !messageId.get()[0])
         {
-            throw Exception("REPLACE: non empty messageId required");
+            throw smsc::util::Exception("REPLACE: non empty messageId required");
         }
         fillSmppAddr(sourceAddr,repl->get_source());
         scheduleDeliveryTime=

@@ -184,7 +184,7 @@ public:
     switch(bt)
     {
       case btNone:
-        throw Exception("Attempt to putCommand to unbound enitity '%s'",info.systemId.c_str());
+        throw smsc::util::Exception("Attempt to putCommand to unbound enitity '%s'",info.systemId.c_str());
       case btReceiver:
         recvChannel->putCommand(cmd);
         break;
@@ -208,7 +208,7 @@ public:
     switch(bt)
     {
       case btNone:
-        throw Exception("Failed to set uid of unbound entity '%s'",info.systemId.c_str());
+        throw smsc::util::Exception("Failed to set uid of unbound entity '%s'",info.systemId.c_str());
       case btReceiver:
         recvChannel->setUid(argUid);
         break;
@@ -230,7 +230,7 @@ public:
     switch(bt)
     {
       case btNone:
-        throw Exception("Failed to get uid of unbound entity '%s'",info.systemId.c_str());
+        throw smsc::util::Exception("Failed to get uid of unbound entity '%s'",info.systemId.c_str());
       case btReceiver:
         return recvChannel->getUid();
       case btTransmitter:
@@ -240,7 +240,7 @@ public:
       case btTransceiver:
         return channel->getUid();
     }
-      throw Exception("unknown bt=%d in getUid of '%s'", bt, info.systemId.c_str() );
+      throw smsc::util::Exception("unknown bt=%d in getUid of '%s'", bt, info.systemId.c_str() );
   }
 
   int getNextSeq()

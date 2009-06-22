@@ -10,6 +10,8 @@ namespace scag2 {
 namespace transport {
 namespace http {
 
+using smsc::util::Exception;
+
 HttpManagerImpl::HttpManagerImpl() :
 config::ConfigListener(config::HTTPMAN_CFG),
 scags(*this),
