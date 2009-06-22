@@ -191,7 +191,7 @@ inline bool provErrCodeFatal( ET96MAP_PROV_ERR_T p ) {
   (p > 0x0a && p <= 0x10)); // unxpected component end other
 }
 
-struct SMS_SUMBMIT_FORMAT_HEADER{
+/*struct SMS_SUMBMIT_FORMAT_HEADER{
   union{
     struct{
       unsigned char reply_path:1;
@@ -205,10 +205,11 @@ struct SMS_SUMBMIT_FORMAT_HEADER{
   }u;
   unsigned char mr;
 };
+*/
 
 struct MAP_SMS_ADDRESS{
   unsigned char len;
-  
+
 //  union{
 //    struct{
 //      unsigned char reserved_1:1;
@@ -469,7 +470,7 @@ extern void CloseAndRemoveDialog(ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T 
 extern void AbortAndRemoveDialog(ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T dialogId);
 
 inline void ConvAddrMap2Smc(const MAP_SMS_ADDRESS* ma,Address* sa){
-  //sa->setTypeOfNumber(ma->st.ton);                                                                                              
+  //sa->setTypeOfNumber(ma->st.ton);
   int ton=(ma->tonnpi&0x70)>>4;
   sa->setTypeOfNumber(ton);
   int npi=ma->tonnpi&0x0f;

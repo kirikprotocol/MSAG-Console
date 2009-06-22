@@ -923,14 +923,20 @@ static void AttachSmsToDialog(MapDialog* dialog,ET96MAP_SM_RP_UI_T *ud,ET96MAP_S
   SMS& sms = *_sms.get();
   sms.setBinProperty(Tag::SMSC_MO_PDU, (const char *)ud->signalInfo, ud->signalInfoLen );
   Address dest_addr;
-  SMS_SUMBMIT_FORMAT_HEADER* ssfh = (SMS_SUMBMIT_FORMAT_HEADER*)ud->signalInfo;
+  //SMS_SUMBMIT_FORMAT_HEADER* ssfh = (SMS_SUMBMIT_FORMAT_HEADER*)ud->signalInfo;
+  uint8_t hdr=ud->signalInfo[0];
+  uint8_t tp_vp=(hdr>>3)&0x3;
+  bool udhi=(hdr&0x40)!=0;
+  bool reply_path=(hdr&0x80)!=0;
+  bool srr=(hdr&0x20)!=0;
+
   MAP_SMS_ADDRESS* msa = (MAP_SMS_ADDRESS*)(ud->signalInfo+2);
   if( msa->len > 20 ) throw runtime_error( "Address length is invalid in received PDU" );
   unsigned msa_len = msa->len/2+msa->len%2+2;
   unsigned char protocol_id = *(unsigned char*)(ud->signalInfo+2+msa_len);
   unsigned char user_data_coding = *(unsigned char*)(ud->signalInfo+2+msa_len+1);
   sms.setIntProperty(Tag::SMSC_ORIGINAL_DC,user_data_coding);
-  unsigned tpvpLen = (ssfh->u.head.tp_vp==0)?0:(ssfh->u.head.tp_vp==2)?1:7;
+  unsigned tpvpLen = (tp_vp==0)?0:(tp_vp==2)?1:7;
   unsigned char user_data_len = *(unsigned char*)(ud->signalInfo+2+tpvpLen+msa_len+2);
 
 /*  if( smsc::logger::_map_cat->isDebugEnabled() )
@@ -951,18 +957,18 @@ static void AttachSmsToDialog(MapDialog* dialog,ET96MAP_SM_RP_UI_T *ud,ET96MAP_S
   }*/
   unsigned max_data_len = (ud->signalInfoLen-(2+tpvpLen+msa_len+2+1) );
   unsigned char* user_data = (unsigned char*)(ud->signalInfo+2+tpvpLen+msa_len+2+1);
-  if ( ssfh->u.head.tp_vp != 0 )
+  if ( tp_vp != 0 )
   {
     unsigned char* tvp = (unsigned char*)(ud->signalInfo+2+msa_len+1+1);
 //    __map_trace2__("TVP = 0x%x , first octet 0x%x",(unsigned)ssfh->u.head.tp_vp,(unsigned)*tvp);
     time_t timeValue = time(0);
-    if ( ssfh->u.head.tp_vp == 2 ){
+    if ( tp_vp == 2 ){
 parse_tvp_scheme1:
       if ( *tvp <= 143 ) timeValue+=(*tvp+1)*(5*60);
       else if ( *tvp <= 167 ) timeValue+=(12*60*60)+((*tvp-143)*(30*60));
       else if ( *tvp <= 196 ) timeValue+=(*tvp-166)*(60*60*24);
       else /*if ( *tvp <= 255 )*/ timeValue+=(*tvp-192)*(60*60*24*7);
-    }else if (ssfh->u.head.tp_vp == 1 ){
+    }else if (tp_vp == 1 ){
       if (tpvpLen!=7)
         throw runtime_error(FormatText("%s:incorrect tpvp data",__func__));
 parse_tvp_scheme2:
@@ -988,7 +994,7 @@ parse_tvp_scheme2:
       if ( !(timeValue != -1) ) throw runtime_error("invalid time");
       timeValue -= timeZoneX*900;
       timeValue -= timezone;
-    }else if (ssfh->u.head.tp_vp == 3 ){
+    }else if (tp_vp == 3 ){
       unsigned char tags = *tvp;
       unsigned valForm = tags&0x7;
       unsigned char* dta = tvp;
@@ -1081,7 +1087,7 @@ none_validity:;
     unsigned octet_data_len = (user_data_len+1)*7/8;
     if ( octet_data_len > max_data_len )
       throw runtime_error(FormatText("bad user_data_len %d must be <= %d, PDU len=%d",octet_data_len,max_data_len,ud->signalInfoLen));
-    if ( ssfh->u.head.udhi){
+    if ( udhi){
       unsigned udh_len = ((unsigned)*user_data)&0x0ff;
       if ( udh_len >= octet_data_len )
         throw runtime_error(FormatText("octet_data_len %d, but udhi_len %d",octet_data_len,udh_len));
@@ -1091,7 +1097,7 @@ none_validity:;
   {
     if ( user_data_len > max_data_len )
       throw runtime_error(FormatText("bad user_data_len %d must be <= %d, PDU len=%d",user_data_len,max_data_len,ud->signalInfoLen));
-    if ( ssfh->u.head.udhi){
+    if ( udhi){
       unsigned udh_len = ((unsigned)*user_data)&0x0ff;
       if ( udh_len >= user_data_len )
         throw runtime_error(FormatText("user_data_len %d, but udhi_len %d",user_data_len,udh_len));
@@ -1100,7 +1106,7 @@ none_validity:;
 
   {
     if (  encoding == MAP_OCTET7BIT_ENCODING ){
-      if ( ssfh->u.head.udhi){
+      if ( udhi){
         MicroString ms;
         auto_ptr<unsigned char> b(new unsigned char[255*2]);
         unsigned udh_len = ((unsigned)*user_data)&0x0ff;
@@ -1130,7 +1136,7 @@ none_validity:;
   }
   {
     unsigned INVALIDVALUE = (unsigned)-1;
-    if ( ssfh->u.head.udhi )
+    if ( udhi )
     {
       unsigned ref = INVALIDVALUE;
       unsigned msgNum = INVALIDVALUE;
@@ -1176,13 +1182,13 @@ none_validity:;
     }
   }
   unsigned esm_class = 0;
-  esm_class |= (ssfh->u.head.udhi?0x40:0);
-  esm_class |= (ssfh->u.head.reply_path?0x80:0);
+  esm_class |= (udhi?0x40:0);
+  esm_class |= (reply_path?0x80:0);
   sms.setIntProperty(Tag::SMPP_ESM_CLASS,esm_class);
   //sms.setIntProperty(Tag::SMPP_SM_LENGTH,user_data_len);
   sms.setIntProperty(Tag::SMPP_PROTOCOL_ID,protocol_id);
-  sms.setMessageReference(ssfh->mr);
-  if ( ssfh->u.head.srr ) sms.setIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST,1);
+  sms.setMessageReference(ud->signalInfo[1]);
+  if ( srr ) sms.setIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST,1);
   sms.setOriginatingAddress(src_addr);
   ConvAddrMap2Smc(msa,&dest_addr);
   sms.setDestinationAddress(dest_addr);

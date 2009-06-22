@@ -1,6 +1,6 @@
 #include "system/common/TimeZoneMan.hpp"
 
-struct SMS_DELIVERY_FORMAT_HEADER{
+/*struct SMS_DELIVERY_FORMAT_HEADER{
   union{
     struct{
       unsigned char reply_path:1;
@@ -13,6 +13,7 @@ struct SMS_DELIVERY_FORMAT_HEADER{
     unsigned char _val_01;
   }uu;
 };
+*/
 
 void fillPduTime(MAP_TIMESTAMP* pdu_tm,struct tm* tms,int atz)
 {
@@ -47,12 +48,19 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
   memset(pdu,0,sizeof(ET96MAP_SM_RP_UI_T));
   int esm=sms->getIntProperty(Tag::SMPP_ESM_CLASS);
   int isrcpt=(esm&0x3c)==4 || (esm&0x3c)==0x20;
-  SMS_DELIVERY_FORMAT_HEADER* header = (SMS_DELIVERY_FORMAT_HEADER*)pdu->signalInfo;
-  header->uu.s.mg_type_ind = isrcpt?2:0;
+  //SMS_DELIVERY_FORMAT_HEADER* header = (SMS_DELIVERY_FORMAT_HEADER*)pdu->signalInfo;
+
+  pdu->signalInfo[0]=0;
+  pdu->signalInfo[0]&=(isrcpt?2:0);
+  pdu->signalInfo[0]&=(mms?0:1)<<2;
+  pdu->signalInfo[0]&=(esm&0x40?1:0)<<6;
+
+  /*header->uu.s.mg_type_ind = isrcpt?2:0;
   header->uu.s.mms = !mms;
   header->uu.s.reply_path = (esm&0x80)?1:0;;
   header->uu.s.srri = 0;
   header->uu.s.udhi = (esm&0x40)?1:0;
+  */
   unsigned char *pdu_ptr = pdu->signalInfo+1;
   MAP_SMS_ADDRESS* oa;
   Address addr;
@@ -290,7 +298,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
         {
           text=(const unsigned char*)sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&text_len);
         }
-        if ( header->uu.s.udhi ){
+        if ( (esm&0x40) ){
           // pdu_ptr points to ud_len,ud
           unsigned udh_len = (unsigned)*text;
           memcpy(pdu_ptr+1,text,udh_len+1);
