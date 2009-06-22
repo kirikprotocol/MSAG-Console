@@ -8,6 +8,8 @@ scag/msag           gwmain2        \
   -lscag-sessions-impl \
   \
   -lscag-bill-impl \
+  -lscag-bill-ewallet-client \
+  -lscag-bill-ewallet-proto \
   -lscag-stat-impl \
   -lscag-re-impl \
   -lscag-re-actions-impl \
@@ -19,6 +21,7 @@ scag/msag           gwmain2        \
   -lscag-pvss-api-core \
   -lscag-pvss-api-pvap \
   \
+  -lscag-bill-ewallet \
   -lscag-sessions-base \
   -lscag-lcm-base \
   -lscag-bill-base \

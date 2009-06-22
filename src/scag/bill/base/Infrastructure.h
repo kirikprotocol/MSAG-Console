@@ -1,7 +1,7 @@
 /* $Id$ */
 
-#ifndef SCAG_BILL_INFRASTRUCTURE_BASE
-#define SCAG_BILL_INFRASTRUCTURE_BASE
+#ifndef SCAG_BILL_BASE_INFRASTRUCTURE
+#define SCAG_BILL_BASE_INFRASTRUCTURE
 
 #include "sms/sms.h"
 
@@ -11,12 +11,13 @@ namespace infrastruct {
 
 using namespace smsc::sms;
 
-enum {
+enum { // bill type
     STAT,
     NONE,
     INMAN,
-    INMANSYNC
-};
+    INMANSYNC,
+    EWALLET
+}; // bill type
 
 
 class TariffRec
@@ -72,4 +73,4 @@ public:
 
 }}}
 
-#endif // SCAG_BILL_INFRASTRUCTURE
+#endif // SCAG_BILL_BASE_INFRASTRUCTURE

@@ -1,12 +1,13 @@
 #include "SCAGExceptions.h"
 
-namespace scag { namespace exceptions {
+namespace scag {
+namespace exceptions {
 
 const char* ConvertException::message     = "Failed to convert '%s' to type %s";
 const char* ConstantSetException::message = "Failed to assign value to constant";
 
 
-SCAGException::SCAGException(const char* fmt,...) : Exception() 
+SCAGException::SCAGException(const char* fmt,...) : smsc::util::Exception()
 { 
     SMSC_UTIL_EX_FILL(fmt); 
 }

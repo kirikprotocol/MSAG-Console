@@ -12,6 +12,7 @@
 #include "scag/config/bill/BillingManagerConfig.h"
 #include "scag/stat/base/Statistics2.h"
 #include "Infrastructure.h"
+#include "scag/bill/ewallet/Client.h"
 
 #ifdef MSAG_INMAN_BILL
 #include "inman/interaction/connect.hpp"
@@ -89,6 +90,8 @@ public config::ConfigListener
     int max_t, min_t, billcount;
     time_t start_t;
     InfrastructureImpl infrastruct;
+    std::auto_ptr<ewallet::Client> ewalletClient_;
+
 
     #ifdef MSAG_INMAN_BILL
     Socket * socket;
@@ -164,8 +167,7 @@ public:
     virtual void Start();
     virtual void Stop();        
 
-    virtual unsigned int Open( BillingInfoStruct& billingInfoStruct,
-                               TariffRec& tariffRec,
+    virtual unsigned int Open( BillOpenCallParams& openCallParams,
                                lcm::LongCallContext* lcmCtx = NULL);
     virtual void Commit( int billId, lcm::LongCallContext* lcmCtx = NULL);
     virtual void Rollback( int billId, bool timeout, lcm::LongCallContext* lcmCtx = NULL );

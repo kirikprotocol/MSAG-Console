@@ -8,6 +8,7 @@
 #include "scag/pvss/base/Types.h"
 #include "scag/re/base/ActionContext2.h"
 #include "scag/re/base/PersCallParams.h"
+#include "scag/bill/ewallet/Exception.h"
 
 namespace scag2 {
 namespace lcm {
@@ -111,23 +112,29 @@ bool LongCallManagerImpl::call(LongCallContextBase* context)
             try {
                 if(context->callCommandId == BILL_OPEN)
                 {
-                    BillOpenCallParams * bp = (BillOpenCallParams*)context->getParams();
-                    bill::BillingManager::Instance().Open(bp->billingInfoStruct, bp->tariffRec, (LongCallContext*)context);
+                    bill::BillCallParams* bcp = static_cast<bill::BillCallParams*>(context->getParams());
+                    bill::BillOpenCallParams * bp = bcp->getOpen();
+                    bill::BillingManager::Instance().Open( *bp, (LongCallContext*)context);
                 }
                 else if(context->callCommandId == BILL_COMMIT)
                 {
-                    BillCloseCallParams * bp = (BillCloseCallParams*)context->getParams();
-                    bill::BillingManager::Instance().Commit(bp->BillId, (LongCallContext*)context);
+                    bill::BillCallParams* bcp = static_cast<bill::BillCallParams*>(context->getParams());
+                    bill::BillCloseCallParams * bp = bcp->getClose();
+                    bill::BillingManager::Instance().Commit(bp->getBillId(), (LongCallContext*)context);
                 }
                 else if(context->callCommandId == BILL_ROLLBACK)
                 {
-                    BillCloseCallParams * bp = (BillCloseCallParams*)context->getParams();
-                    bill::BillingManager::Instance().Rollback(bp->BillId, (LongCallContext*)context);
+                    bill::BillCallParams* bcp = static_cast<bill::BillCallParams*>(context->getParams());
+                    bill::BillCloseCallParams * bp = bcp->getClose();
+                    bill::BillingManager::Instance().Rollback(bp->getBillId(), (LongCallContext*)context);
                 }
-            }
-            catch(SCAGException& e)
-            {
-                LongCallParams *lp = (LongCallParams*)context->getParams();            
+            } catch( bill::ewallet::Exception& e ) {
+                bill::EwalletCallParams* lp = 
+                    static_cast<bill::EwalletCallParams*>(context->getParams());
+                lp->setStatus( e.getStatus(), e.what() );
+                break;
+            } catch(SCAGException& e) {
+                LongCallParams *lp = (LongCallParams*)context->getParams();
                 lp->exception = e.what();
                 // NOTE: we should not do continueExecution if longcall has failed!
                 // This is because the initiator->continueExecution will typically put

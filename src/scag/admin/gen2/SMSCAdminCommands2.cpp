@@ -5,6 +5,7 @@
 namespace scag2 {
 namespace admin {
 
+using namespace smsc::util;
 using namespace smsc::util::xml;
 
 //================================================================

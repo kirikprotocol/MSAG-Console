@@ -1,22 +1,19 @@
 #ifndef _SCAG_EXCEPTIONS_
 #define _SCAG_EXCEPTIONS_
 
-
 #include <util/Exception.hpp>
 
 namespace scag {
 namespace exceptions {
 
-using smsc::util::Exception;
-
-class SCAGException : public Exception
+class SCAGException : public smsc::util::Exception
 {
 public:
 
-    SCAGException(const Exception& exc) : Exception(exc) {}
-    SCAGException() : Exception() {};
+    SCAGException(const smsc::util::Exception& exc) : smsc::util::Exception(exc) {}
+    SCAGException() : smsc::util::Exception() {};
     SCAGException(const char* fmt,...);
-    SCAGException(const std::string& exc) : Exception() {
+    SCAGException(const std::string& exc) : smsc::util::Exception() {
         message = exc;
     }
     virtual ~SCAGException() throw() {};

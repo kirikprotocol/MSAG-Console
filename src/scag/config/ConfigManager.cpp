@@ -34,7 +34,6 @@ using namespace smsc::util::xml;
 using smsc::core::buffers::IntHash;
 using smsc::core::buffers::Array;
 using namespace scag::util::singleton;
-using smsc::util::findConfigFile;
 
 class ConfigManagerImpl : public ConfigManager
 {
@@ -565,8 +564,8 @@ void ConfigManagerImpl::checkLicenseFile()
 {
   if(licenseFile.length()==0)
   {
-    licenseFile=::findConfigFile("license.ini");
-    licenseSig=::findConfigFile("license.sig");
+      licenseFile=smsc::util::findConfigFile("license.ini");
+      licenseSig=smsc::util::findConfigFile("license.sig");
   }
   struct stat fst;
   if(::stat(licenseFile.c_str(),&fst)!=0)

@@ -130,6 +130,7 @@ bool PvssSocket::wantToSend( util::msectime_type currentTime )
         ctx = expired.front();
         expired.pop_front();
         core_.reportPacket(ctx->seqNum,*socket(),Core::EXPIRED);
+        delete ctx;
     }
     return result;
 }

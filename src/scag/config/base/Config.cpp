@@ -13,6 +13,7 @@ namespace config {
 
 using namespace xercesc;
 using namespace std;
+using namespace smsc::util;
 using namespace smsc::util::xml;
 using smsc::core::buffers::TmpBuf;
 

@@ -45,8 +45,16 @@ struct BillingInfoStruct
     int providerId;
     int operatorId;
     int msgRef;
+    std::string walletType;  // subdivision (empty -- not used)
+    int timeout;             // 0 -- not used
+    std::string description; // description (empty -- not used)
+    std::string externalId;  // external id (empty -- not used)
 
     timeval SessionBornMicrotime;
+
+    BillingInfoStruct() :
+    timeout(0)
+    {}
 
     const BillingInfoStruct& operator=(const BillingInfoStruct& cp)
     {

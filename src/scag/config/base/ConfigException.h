@@ -6,16 +6,13 @@
 namespace scag {
 namespace config {
 
-using smsc::util::Exception;
-
-class ConfigException	: public Exception
+class ConfigException : public smsc::util::Exception
 {
 public:
 /*	ConfigException(const char * const exceptionMessage)
 		: Exception(exceptionMessage)
 	{}*/
-	ConfigException(const char * const exceptionMessage, ...)
-		: Exception()
+	ConfigException(const char * const exceptionMessage, ...) : smsc::util::Exception()
 	{SMSC_UTIL_EX_FILL(exceptionMessage);}
 };
 

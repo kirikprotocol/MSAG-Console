@@ -5,6 +5,9 @@
 #include "scag/config/base/ConfigManager2.h"
 #include "scag/stat/base/Statistics2.h"
 #include "scag/util/lltostr.h"
+#include "scag/bill/ewallet/Open.h"
+#include "scag/bill/ewallet/client/ClientCore.h"
+#include "scag/bill/ewallet/stream/StreamerImpl.h"
 
 #ifdef MSAG_INMAN_BILL
 #include "inman/services/smbill/SmBillDefs.hpp"
@@ -24,6 +27,12 @@ void BillingManagerImpl::init( config::BillingManagerConfig& cfg )
 {
     MutexGuard guard(inUseLock);
     smsc_log_info(logger, "BillingManager start initing...");
+
+    // ewallet
+    std::auto_ptr< ewallet::proto::Config > econfig( new ewallet::proto::Config );
+    ewalletClient_.reset( new ewallet::client::ClientCore
+                          ( econfig.release(),
+                            new ewallet::stream::StreamerImpl()) );
 
     if (cfg.MaxThreads < 1) throw SCAGException("BillingManager: cant start service with %d allowed threads", cfg.MaxThreads);
 
@@ -105,7 +114,7 @@ void BillingManagerImpl::processAsyncResult(BillingManagerImpl::SendTransaction*
         if( lcmCtx->callCommandId == lcm::BILL_OPEN )
         {
             BillOpenCallParams* bp = (BillOpenCallParams*)lcmCtx->getParams();
-            bp->BillId = bt->billId;
+            bp->setBillId(bt->billId);
 
             opRes.Cmd().setResultValue(1);
             opRes.Cmd().setFinal(false); // To skip CDR creation
@@ -194,16 +203,17 @@ uint32_t BillingManagerImpl::genBillId()
     return ++m_lastBillId;
 }
 
-unsigned int BillingManagerImpl::Open( BillingInfoStruct& billingInfoStruct,
-                                       TariffRec& tariffRec,
+unsigned int BillingManagerImpl::Open( BillOpenCallParams& openCallParams,
                                        lcm::LongCallContext* lcmCtx)
 {
     uint32_t billId = genBillId();
 
-    smsc_log_debug(logger, "Opening billId=%d...", billId);
+    smsc_log_debug(logger, "Opening billId=%d for params %p...", billId, &openCallParams );
 
     auto_ptr<BillTransaction> p(new BillTransaction());
 
+    BillingInfoStruct& billingInfoStruct(*openCallParams.billingInfoStruct());
+    TariffRec& tariffRec(*openCallParams.tariffRec());
     p->tariffRec = tariffRec;
     p->billingInfoStruct = billingInfoStruct;
     p->billId = billId;
@@ -232,10 +242,28 @@ unsigned int BillingManagerImpl::Open( BillingInfoStruct& billingInfoStruct,
             opRes.Cmd().setFinal(false); // To skip CDR creation
             sendCommand(opRes);
         }
-    }
-    else
-    #endif
+    } else
+#endif
+    if (tariffRec.billType == bill::infrastruct::EWALLET)
+    {
+        EwalletOpenCallParams& eOpenParams = static_cast< EwalletOpenCallParams& >(openCallParams);
+        smsc_log_debug(logger,"ewallet params: %p", &eOpenParams );
+        if (lcmCtx) {
+            // async
+            std::auto_ptr<ewallet::Request> pck( new ewallet::Open );
+            // FIXME: fill all fields
+            ewalletClient_->processRequest( pck, eOpenParams );
+            smsc_log_debug(logger,"ewallet request is sent");
+            return 0;
+        } else {
+            // sync
+            smsc_log_error(logger,"sync mode ewallet operations are not implemented");
+            abort();
+        }
+    } else
+    {
         p->status = TRANSACTION_VALID;
+    }
 
     ProcessResult("open", TRANSACTION_OPEN, p.get());
 
@@ -331,6 +359,7 @@ void BillingManagerImpl::makeBillEvent( BillingTransactionEvent billCommand,
     sprintf(buff,"%s/%ld%d",billingInfo.AbonentNumber.c_str(), billingInfo.SessionBornMicrotime.tv_sec, int(billingInfo.SessionBornMicrotime.tv_usec / 1000));
     ev->Header.pSessionKey.append(buff);
 }
+
 
 #ifdef MSAG_INMAN_BILL
 void BillingManagerImpl::fillChargeSms(smsc::inman::interaction::ChargeSms& op, BillingInfoStruct& billingInfoStruct, TariffRec& tariffRec)

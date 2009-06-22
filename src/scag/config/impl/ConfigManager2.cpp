@@ -431,8 +431,8 @@ void ConfigManagerImpl::checkLicenseFile()
 {
   if(licenseFile.length()==0)
   {
-    licenseFile=::findConfigFile("license.ini");
-    licenseSig=::findConfigFile("license.sig");
+      licenseFile=smsc::util::findConfigFile("license.ini");
+      licenseSig=smsc::util::findConfigFile("license.sig");
   }
   struct stat fst;
   if(::stat(licenseFile.c_str(),&fst)!=0)
