@@ -19,7 +19,6 @@
 namespace scag2 {
 namespace re { 
 
-using namespace smsc::util;
 using smsc::core::buffers::Hash;
 
 class IParserHandler;

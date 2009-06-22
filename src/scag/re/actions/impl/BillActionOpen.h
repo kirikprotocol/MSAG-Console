@@ -52,6 +52,27 @@ private:
     FieldType       mediaTypeFieldType_;
     int             mediaTypeId_;
     
+    bool            hasAbonent_;
+    std::string     abonentName_;
+    FieldType       abonentType_;
+
+    bool            hasWalletType_;
+    std::string     walletTypeName_;
+    FieldType       walletTypeType_;
+
+    bool            hasDescription_;
+    std::string     descriptionName_;
+    FieldType       descriptionType_;
+
+    bool            hasExternalId_;
+    std::string     externalIdName_;
+    FieldType       externalIdType_;
+
+    bool            hasTimeout_;
+    std::string     timeoutFieldName_;
+    FieldType       timeoutFieldType_;
+    int             timeout_;
+
     // --- output properties
 
     std::string     resultFieldName_;

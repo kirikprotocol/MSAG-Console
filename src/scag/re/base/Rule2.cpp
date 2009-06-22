@@ -18,6 +18,7 @@ namespace re {
 
 using namespace actions;
 using namespace scag::transport::smpp;
+using smsc::util::Exception;
 // using namespace scag::transport::http;
 // using namespace scag::re::http;
 

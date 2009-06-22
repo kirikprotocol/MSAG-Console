@@ -4,6 +4,7 @@
 #include "scag/bill/base/BillingManager.h"
 #include "scag/stat/base/Statistics2.h"
 #include "scag/sessions/base/ExternalBillingTransaction.h"
+#include "scag/util/Time.h"
 
 namespace scag2 {
 namespace re {
@@ -43,9 +44,10 @@ bool BillActionOpen::RunBeforePostpone( ActionContext& context )
     // Statistics& statistics = Statistics::Instance();
     BillingManager& bm = BillingManager::Instance();
 
-    auto_ptr<BillOpenCallParams> bp(new BillOpenCallParams());
+    auto_ptr<BillOpenCallParamsData> bpd(new BillOpenCallParamsData());
 
-    context.getBillingInfoStruct(bp->billingInfoStruct);
+    BillingInfoStruct& billingInfoStruct = bpd->billingInfoStruct;
+    context.getBillingInfoStruct(billingInfoStruct);
 
     if ( mediaTypeFieldType_ != ftUnknown )
     {
@@ -59,13 +61,13 @@ bool BillActionOpen::RunBeforePostpone( ActionContext& context )
             return false;
         }
         if (!isContentType_)
-            bp->billingInfoStruct.mediaType = property->getStr().c_str();
+            billingInfoStruct.mediaType = property->getStr().c_str();
 
         mt = isContentType_ ? int(property->getInt()) :
-        bm.getInfrastructure().GetMediaTypeID( bp->billingInfoStruct.mediaType );
+        bm.getInfrastructure().GetMediaTypeID( billingInfoStruct.mediaType );
 
     } else if ( !isContentType_ ) {
-        bp->billingInfoStruct.mediaType = mediaTypeFieldName_;
+        billingInfoStruct.mediaType = mediaTypeFieldName_;
     }
 
     if (categoryFieldType_ != ftUnknown)
@@ -80,12 +82,12 @@ bool BillActionOpen::RunBeforePostpone( ActionContext& context )
             return false;
         }
         if( !isCategory_ )
-            bp->billingInfoStruct.category = property->getStr().c_str();
+            billingInfoStruct.category = property->getStr().c_str();
 
         cat = isCategory_ ? int(property->getInt()) :
-        bm.getInfrastructure().GetCategoryID( bp->billingInfoStruct.category );
+        bm.getInfrastructure().GetCategoryID( billingInfoStruct.category );
     } else if( !isCategory_ ) {
-        bp->billingInfoStruct.category = categoryFieldName_;
+        billingInfoStruct.category = categoryFieldName_;
     }
 
     if (!cat || !mt)
@@ -99,7 +101,7 @@ bool BillActionOpen::RunBeforePostpone( ActionContext& context )
     try {
         tariffRec = context.getTariffRec(cat, mt);
         if (!tariffRec) throw SCAGException("TariffRec is not valid, cat=%d, mt=%u", cat, mt );
-        bp->tariffRec = *tariffRec;
+        bpd->tariffRec = *tariffRec;
     } catch (SCAGException& e)
     {
         smsc_log_warn(logger,"Action '%s' cannot process. Delails: %s", opname(), e.what());
@@ -117,24 +119,133 @@ bool BillActionOpen::RunBeforePostpone( ActionContext& context )
         return false;
     }
 
-    //if (tariffRec->Price == 0)
-      //  smsc_log_warn(logger, "Zero price in tariff matrix. ServiceNumber=%s, CategoryId=%d, MediaTypeId=%d", tariffRec->ServiceNumber.c_str(), tariffRec->CategoryId, tariffRec->MediaTypeId);
+    if (tariffRec->Price.empty()) {
+        smsc_log_warn(logger, "Zero price in tariff matrix. ServiceNumber=%s, CategoryId=%d, MediaTypeId=%d", tariffRec->ServiceNumber.c_str(),
+                      tariffRec->CategoryId, tariffRec->MediaTypeId);
+    }
 
+    if (tariffRec->billType == infrastruct::EWALLET)
+    {
+        // filling other fields, essential for EWALLET
+        if ( !hasAbonent_ || !hasWalletType_ ) {
+            smsc_log_warn(logger,"Action '%s' cannot process. Billing type EWALLET must have abonent and walletType", opname());
+            setBillingStatus( context, "abonent and walletType missing", false );
+            setTariffStatus( context, 0 );
+            return false;
+        }
+
+        if ( abonentType_ == ftUnknown ) {
+            billingInfoStruct.AbonentNumber = abonentName_;
+        } else {
+            Property * property = context.getProperty(abonentName_);
+            if (!property) {
+                setBillingStatus( context, "Invalid property for abonent", false );
+                setTariffStatus( context, 0 );
+                smsc_log_error(logger,"Action '%s' :: Invalid property %s for abonent",
+                               opname(), abonentName_.c_str() );
+                return false;
+            }
+            billingInfoStruct.AbonentNumber = property->getStr().c_str();
+        }
+        
+        // wallet type
+        if ( walletTypeType_ == ftUnknown ) {
+            billingInfoStruct.walletType = walletTypeName_;
+        } else {
+            Property * property = context.getProperty(walletTypeName_);
+            if (!property) {
+                setBillingStatus( context, "Invalid property for walletType", false );
+                setTariffStatus( context, 0 );
+                smsc_log_error(logger,"Action '%s' :: Invalid property %s for walletType",
+                               opname(), walletTypeName_.c_str() );
+                return false;
+            }
+            billingInfoStruct.walletType = property->getStr().c_str();
+        }
+
+        // description
+        if ( hasDescription_ ) {
+            if ( descriptionType_ == ftUnknown ) {
+                billingInfoStruct.description = descriptionName_;
+            } else {
+                Property * property = context.getProperty(descriptionName_);
+                if (!property) {
+                    setBillingStatus( context, "Invalid property for description", false );
+                    setTariffStatus( context, 0 );
+                    smsc_log_error(logger,"Action '%s' :: Invalid property %s for description",
+                                   opname(), descriptionName_.c_str() );
+                    return false;
+                }
+                billingInfoStruct.description = property->getStr().c_str();
+            }
+        }
+
+        // externalId
+        if ( hasExternalId_ ) {
+            if ( externalIdType_ == ftUnknown ) {
+                billingInfoStruct.externalId = externalIdName_;
+            } else {
+                Property * property = context.getProperty(externalIdName_);
+                if (!property) {
+                    setBillingStatus( context, "Invalid property for externalId", false );
+                    setTariffStatus( context, 0 );
+                    smsc_log_error(logger,"Action '%s' :: Invalid property %s for externalId",
+                                   opname(), externalIdName_.c_str() );
+                    return false;
+                }
+                billingInfoStruct.externalId = property->getStr().c_str();
+            }
+        } else {
+            char buf[100];
+            const util::msectime_type currentTime = util::currentTimeMillis();
+            snprintf(buf,sizeof(buf),"msag-%llu-%u-%s",
+                     static_cast<unsigned long long>(currentTime),
+                     billingInfoStruct.serviceId,
+                     billingInfoStruct.AbonentNumber.c_str() );
+            billingInfoStruct.externalId = buf;
+        }
+
+        // timeout
+        if ( hasTimeout_ ) {
+            if ( timeoutFieldType_ == ftUnknown ) {
+                billingInfoStruct.timeout = timeout_;
+            } else {
+                Property * property = context.getProperty(timeoutFieldName_);
+                if (!property) {
+                    setBillingStatus( context, "Invalid property for timeout", false );
+                    setTariffStatus( context, 0 );
+                    smsc_log_error(logger,"Action '%s' :: Invalid property %s for timeout",
+                                   opname(), timeoutFieldName_.c_str() );
+                    return false;
+                }
+                billingInfoStruct.timeout = property->getInt();
+            }
+        }
+
+        LongCallContext& lcmCtx = context.getSession().getLongCallContext();
+        lcmCtx.callCommandId = BILL_OPEN;
+        EwalletOpenCallParams* eocp = new EwalletOpenCallParams(bpd.release(),&lcmCtx);
+        smsc_log_debug(logger,"eocp created @ %p, bocp=%p, lcp=%p",
+                       eocp->getOpen(), static_cast<lcm::LongCallParams*>(eocp) );
+        lcmCtx.setParams(eocp);
+        smsc_log_debug(logger,"lcm ewallet params created: %p", lcmCtx.getParams() );
+        return true;
+    } else
 #ifdef MSAG_INMAN_BILL
     if( tariffRec->billType == infrastruct::INMAN )
     {
         LongCallContext& lcmCtx = context.getSession().getLongCallContext();
         lcmCtx.callCommandId = BILL_OPEN;
-        lcmCtx.setParams( bp.release() );
+        lcmCtx.setParams( new InmanOpenCallParams(bpd.release()) );
         return true;
-    }
-    else
-    {
+    } else
 #endif
+    {
         try 
         {
-            int bi = bm.Open(bp->billingInfoStruct, bp->tariffRec);
-            processResult( context, bi, &bp->tariffRec );
+            InmanOpenCallParams bp(bpd.release());
+            int bi = bm.Open( bp );
+            processResult( context, bi, bp.tariffRec() );
         }
         catch (SCAGException& e)
         {
@@ -143,16 +254,14 @@ bool BillActionOpen::RunBeforePostpone( ActionContext& context )
             setBillingStatus(context, e.what(), false );
             setTariffStatus(context,0);
         }
-#ifdef MSAG_INMAN_BILL
     }
-#endif
     return false;
 }
 
 
 void BillActionOpen::ContinueRunning(ActionContext& context)
 {
-    BillOpenCallParams *bp = (BillOpenCallParams*)context.getSession().getLongCallContext().getParams();
+    BillCallParams *bp = (BillCallParams*)context.getSession().getLongCallContext().getParams();
     if (bp->exception.length())
     {
         smsc_log_warn(logger, "Action '%s' unable to process. Delails: %s",
@@ -161,7 +270,8 @@ void BillActionOpen::ContinueRunning(ActionContext& context)
         setTariffStatus(context,0);
         return;
     }
-    processResult( context, bp->BillId, &bp->tariffRec );
+    BillOpenCallParams* bop = bp->getOpen();
+    processResult( context, bop->billId(), bop->tariffRec() );
 }
 
 
@@ -232,6 +342,52 @@ void BillActionOpen::init( const SectionParams& params,
         if (!mediaTypeId_) throw SCAGException("Action '%s': content-type should be integer or variable",
                                                opname() );
     }
+
+    // --- special input parameters for ewallet
+
+    abonentType_ = CheckParameter( params, 
+                                   propertyObject, 
+                                   opname(), "abonent",
+                                   false, true,
+                                   abonentName_,
+                                   hasAbonent_ );
+    if ( hasAbonent_ && (abonentType_ == ftUnknown) ) {
+        // address
+        smsc::sms::Address temp(abonentName_.c_str());
+        abonentName_ = temp.toString();
+    }
+
+    walletTypeType_ = CheckParameter( params, 
+                                      propertyObject, 
+                                      opname(), "walletType",
+                                      false, true,
+                                      walletTypeName_,
+                                      hasWalletType_ );
+    timeoutFieldType_ = CheckParameter( params, 
+                                        propertyObject, 
+                                        opname(), "timeout",
+                                        false, true,
+                                        timeoutFieldName_,
+                                        hasTimeout_ );
+    timeout_ = 0;
+    if ( hasTimeout_ && (timeoutFieldType_ == ftUnknown) ) {
+        timeout_ = atoi(timeoutFieldName_.c_str());
+        if (!timeout_) throw SCAGException("Action '%s': timeout should be integer or variable",
+                                           opname() );
+    }
+
+    externalIdType_ = CheckParameter( params,
+                                      propertyObject,
+                                      opname(), "externalId",
+                                      false, true,
+                                      externalIdName_,
+                                      hasExternalId_ );
+    descriptionType_ = CheckParameter( params,
+                                       propertyObject,
+                                       opname(), "description",
+                                       false, true,
+                                       descriptionName_,
+                                       hasDescription_ );
 
     // --- output fields
 

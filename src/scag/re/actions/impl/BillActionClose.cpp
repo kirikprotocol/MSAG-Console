@@ -51,8 +51,8 @@ bool BillActionClose::RunBeforePostpone(ActionContext& context)
 #ifdef MSAG_INMAN_BILL
         if ( tr.billType == bill::infrastruct::INMAN )
         {
-            bill::BillCloseCallParams* bp = new bill::BillCloseCallParams();
-            bp->BillId = trans->billId();
+            bill::InmanCloseCallParams* bp = new bill::InmanCloseCallParams(trans->billId());
+            // bp->BillId = trans->billId();
             LongCallContext& lcmCtx = context.getSession().getLongCallContext();
             lcmCtx.callCommandId = actionCommit_ ? BILL_COMMIT : BILL_ROLLBACK;
             lcmCtx.setParams(bp);
@@ -87,8 +87,8 @@ void BillActionClose::ContinueRunning( ActionContext& context )
 {
     smsc_log_debug(logger, "ContinueExecution Action '%s'...", opname());
     
-    bill::BillCloseCallParams *bp = 
-        (bill::BillCloseCallParams*)context.getSession().getLongCallContext().getParams();
+    bill::BillCallParams *bp = 
+        static_cast<bill::BillCallParams*>(context.getSession().getLongCallContext().getParams());
 
     if ( bp->exception.length() )
     {        

@@ -9,6 +9,7 @@ namespace scag2 {
 namespace re {
 namespace actions {
 
+using smsc::util::Exception;
 
 void PostActionReceipt::run()
 {
