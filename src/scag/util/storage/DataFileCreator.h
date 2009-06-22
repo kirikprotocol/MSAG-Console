@@ -162,11 +162,11 @@ public:
       lastBlock = lastBlock > 0 ? 1 : 0;
       if ( !newFormat_ ) {
           for (int i = 0; i < blocksCount - lastBlock; ++i) {
-              uint64_t ni = Uint64Converter::toNetworkOrder(startIndex++);
+              uint64_t ni = smsc::util::Uint64Converter::toNetworkOrder(startIndex++);
               memcpy(writeBlock + (i * blockSize_), &ni, sizeof(ni));
           }
           if (lastBlock > 0) {
-              uint64_t ni = Uint64Converter::toNetworkOrder(-1);
+              uint64_t ni = smsc::util::Uint64Converter::toNetworkOrder(-1);
               memcpy(writeBlock + ((blocksCount - 1) * blockSize_), &ni, sizeof(ni));
           }
       } else {
