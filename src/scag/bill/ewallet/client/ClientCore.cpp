@@ -1,0 +1,528 @@
+#include "ClientCore.h"
+#include "ClientContext.h"
+#include "scag/bill/ewallet/Exception.h"
+#include "scag/util/RelockMutexGuard.h"
+#include "scag/bill/ewallet/Ping.h"
+
+namespace scag2 {
+namespace bill {
+namespace ewallet {
+namespace client {
+
+ClientCore::ClientCore( proto::Config* config, Streamer* streamer ) :
+Core(config,streamer),
+started_(false),
+seqNum_(0)
+{
+}
+
+
+ClientCore::~ClientCore()
+{
+    shutdown();
+}
+
+
+void ClientCore::startup()
+{
+    if (started_) return;
+    MutexGuard mg(startMutex_);
+    if (started_) return;
+
+    if ( !getConfig().isEnabled() ) {
+        smsc_log_warn(log_,"ewallet is disabled from config");
+        return;
+    }
+
+    smsc_log_info(log_,"Starting Ewallet Client %s", getConfig().toString().c_str() );
+
+    startupIO();
+    try {
+        connector_.reset( new Connector(*this) );
+        threadPool_.startTask( connector_.get(), false );
+    } catch ( Exception& exc ) {
+        smsc_log_error(log_,"connector start error: %s", exc.what() );
+        shutdownIO( false );
+        throw exc;
+    }
+
+    started_ = true;
+    try {
+        smsc_log_info( log_, "creating connections..." );
+        for ( size_t i = 0; i < getConfig().getConnectionsCount(); ++i ) {
+            createSocket();
+        }
+    } catch ( Exception& exc ) {
+        started_ = false;
+        connector_->shutdown();
+        closeAllSockets();
+        shutdownIO( false );
+        throw exc;
+    }
+    threadPool_.startTask(this,false);
+    smsc_log_info(log_,"Ewallet client started");
+}
+
+
+void ClientCore::shutdown()
+{
+    if (!started_) return;
+    MutexGuard mg(startMutex_);
+    if (!started_) return;
+
+    smsc_log_info(log_,"Ewallet client is shutting down...");
+    started_ = false;
+    connector_->shutdown();
+    closeAllSockets();
+    shutdownIO( false );
+    stop();
+    {
+        MutexGuard mgr(socketMon_);
+        socketMon_.notify();
+    }
+    waitUntilReleased();
+    smsc_log_info(log_,"client thread is stopped, destroying all dead channels");
+    destroyDeadSockets();
+}
+
+
+bool ClientCore::canProcessRequest( Exception* exc )
+{
+    // FIXME
+    return false;
+}
+
+
+void ClientCore::processRequest( std::auto_ptr< Request > request, ResponseHandler& handler )
+{
+    std::auto_ptr< proto::Context > context( new ClientContext(request.release(),&handler) );
+    // try {
+        sendRequest(context);
+    /*
+    } catch ( Exception e ) {
+        handler.handleError(context->getRequest(),e);
+        throw;
+    } catch ( std::exception e ) {
+        handler.handleError(context->getRequest(),Exception(e.what(),Status::UNKNOWN));
+        throw;
+    } catch (...) {
+        handler.handleError(context->getRequest(),Exception("unknown exception",Status::UNKNOWN));
+        throw;
+    }
+     */
+}
+
+
+void ClientCore::receivePacket( proto::Socket& socket, std::auto_ptr< Packet > packet )
+{
+    std::auto_ptr< ClientContext > context;
+    uint32_t seqNum;
+    try {
+        if ( packet.get() == 0 ) {
+            throw Exception( "null packet received", Status::BAD_RESPONSE );
+        } else if ( packet->isRequest() ) {
+            throw Exception( "not a response received", Status::BAD_RESPONSE );
+        }
+
+        socket.updateActivity();
+
+        if ( !packet->isValid() ) {
+            throw Exception( "invalid response received", Status::BAD_RESPONSE );
+        }
+
+        // look for a request in registry
+        std::auto_ptr<Response> response(static_cast<Response*>(packet.release()));
+
+        {
+            RegistrySet::Ptr ptr = regSet_.get(&socket);
+            if ( !ptr ) {
+                throw Exception( Status::IO_ERROR, "registry for socket %p is not found", &socket );
+            }
+            uint32_t seqNum = packet->getSeqNum();
+            RegistrySet::Ctx ctx(ptr->get(seqNum));
+            if ( ! ctx ) {
+                throw Exception( Status::TIMEOUT, "seqnum=%u is not found in registry for socket %p, timeouted?", seqNum, &socket );
+            }
+            if ( ctx->getState() == proto::Context::SENDING ) {
+                // we are too fast
+                context->getResponse().reset(static_cast<Response*>(packet.release()));
+                ctx->setState( proto::Context::RECEIVED );
+                return;
+            }
+            if ( ctx->getState() != proto::Context::SENT ) {
+                // wrong state
+                smsc_log_error(log_,"wrong state: %u in receivePacket", ctx->getState());
+                abort();
+            }
+            context.reset(ptr->pop(ctx));
+        }
+        context->getResponse().reset(static_cast<Response*>(packet.release()));
+
+    } catch ( Exception& exc ) {
+        smsc_log_error(log_, "exception: %s", exc.what() );
+        return;
+    }
+
+    reportPacket(socket,seqNum,context.release(),proto::Context::DONE);
+}
+
+
+void ClientCore::reportPacket( proto::Socket&  socket, 
+                               uint32_t        seqNum,
+                               proto::Context* context,
+                               proto::Context::ContextState    state )
+{
+    std::auto_ptr<ClientContext> clientContext(static_cast<ClientContext*>(context));
+
+    switch ( state ) {
+    case proto::Context::SENDING : {
+        if ( !context ) {
+            smsc_log_error(log_,"sending should have non-null context");
+            return;
+        }
+        RegistrySet::Ptr ptr(regSet_.get(&socket));
+        if ( !ptr ) {
+            smsc_log_error(log_,"registry for socket %p is not found", &socket);
+            state = proto::Context::FAILED;
+            break; // return to core
+        }
+        if ( ptr->exists(seqNum) ) {
+            smsc_log_warn(log_,"seqnum=%u already exists in registry %p", seqNum, &socket );
+            return;
+        }
+        clientContext->setState( proto::Context::SENDING );
+        ptr->push(clientContext.release());
+        break;
+    }
+    case proto::Context::SENT : {
+        if ( context ) {
+            smsc_log_error(log_,"'sent' should not have context");
+            abort();
+        }
+        RegistrySet::Ptr ptr(regSet_.get(&socket));
+        if ( !ptr ) {
+            smsc_log_error(log_,"registry for socket %p is not found", &socket);
+            return;
+        }
+        RegistrySet::Ctx ctx(ptr->get(seqNum));
+        if ( ! ctx ) {
+            smsc_log_error(log_,"seqnum=%u already deleted from registry %p", seqNum, &socket );
+            return;
+        }
+        ClientContext* foundContext = ctx.getContext();
+        if ( foundContext->getState() == proto::Context::RECEIVED ) {
+            // extract context and process it
+            clientContext.reset( ptr->pop(ctx) );
+            state = proto::Context::DONE;
+            break;
+        } else if ( foundContext->getState() != proto::Context::SENDING ) {
+            smsc_log_error(log_,"seqnum=%u context found in registry %p has wrong state %u", seqNum, &socket, foundContext->getState() );
+            abort();
+        }
+
+        foundContext->setState( proto::Context::SENT );
+        return;
+    }
+    case proto::Context::DONE : {
+        if ( !context ) {
+            smsc_log_error(log_,"done should have non-null context");
+            return;
+        }
+        break;
+    }
+    case proto::Context::EXPIRED : {
+        if ( !context ) {
+            smsc_log_error(log_,"expired should have non-null context");
+            return;
+        }
+        break;
+    }
+    case proto::Context::FAILED : {
+        if ( !context ) {
+            // context is not passed, it must be in registry
+            RegistrySet::Ptr ptr(regSet_.get(&socket));
+            if ( !ptr ) {
+                smsc_log_error(log_,"registry for socket %p is not found", &socket);
+                return;
+            }
+            RegistrySet::Ctx ctx(ptr->get(seqNum));
+            if ( ! ctx ) {
+                smsc_log_error(log_,"seqnum=%u already deleted from registry %p", seqNum, &socket );
+                return;
+            }
+            clientContext.reset(ptr->pop(ctx));
+        }
+        break;
+    }
+    default : {
+        smsc_log_error(log_,"state %u should not be passed to reportPacket", state);
+        abort();
+        break;
+    }
+    }
+        
+    // now we have a context with one of the states: DONE, FAILED, EXPIRED
+    context->setState( state );
+}
+
+
+void ClientCore::handleError( proto::Socket& socket, const Exception& exc )
+{
+    smsc_log_error(log_,"exception on socket %p: %s", &socket, exc.what() );
+    closeSocket( socket );
+}
+
+
+bool ClientCore::registerSocket( proto::Socket& socket )
+{
+    if ( Core::registerSocket(socket) ) {
+        activeSockets_.push_back(&socket);
+        return true;
+    }
+    return false;
+}
+
+
+int ClientCore::doExecute()
+{
+    const int minTimeToSleep = 10; // 10 msec
+
+    util::msectime_type timeToSleep = getConfig().getProcessTimeout();
+    util::msectime_type currentTime = util::currentTimeMillis();
+    util::msectime_type nextWakeupTime = currentTime + timeToSleep;
+
+    smsc_log_info(log_,"Client started");
+    while (!isStopping)
+    {
+        // smsc_log_debug(logger,"cycling clientCore");
+        currentTime = util::currentTimeMillis();
+        int timeToWait = int(nextWakeupTime-currentTime);
+
+        SocketList currentSockets;
+        {
+            MutexGuard mgc(socketMon_);
+            if ( timeToWait > 0 ) {
+                if ( timeToWait < minTimeToSleep ) timeToWait = minTimeToSleep;
+                socketMon_.wait(timeToWait);
+                if (isStopping) break;
+            }
+            std::copy( activeSockets_.begin(), activeSockets_.end(),
+                       std::back_inserter(currentSockets));
+        }
+        currentTime = util::currentTimeMillis();
+        nextWakeupTime = currentTime + timeToSleep;
+
+        for ( SocketList::const_iterator j = currentSockets.begin();
+              j != currentSockets.end(); ++j ) {
+            
+            proto::Socket* socket = *j;
+            RegistrySet::ContextList list;
+            {
+                RegistrySet::Ptr ptr = regSet_.get(socket);
+                if (!ptr) continue;
+                util::msectime_type t = ptr->popExpired(list,currentTime,timeToSleep);
+                if ( t < nextWakeupTime ) nextWakeupTime = t;
+            }
+            // process those items in list
+            for ( RegistrySet::ContextList::iterator i = list.begin();
+                  i != list.end();
+                  ++i ) {
+                // expired
+                ClientContext* ctx = *i;
+                if ( ! ctx->getRequest().get() ) {
+                    assert(ctx->getResponse().get());
+                    smsc_log_warn( log_,"Context w/o request found, resp:%s, created: %d ms ago",
+                                   ctx->getResponse()->toString().c_str(),
+                                   int(currentTime - ctx->getCreationTime()) );
+                } else {
+                    if ( Request::isPing(*ctx->getRequest().get()) ) {
+                        smsc_log_warn(log_,"PING failed, timeout");
+                        closeSocket(*socket);
+                    } else {
+                        ctx->setError(Exception("timeout",Status::TIMEOUT));
+                    }
+                }
+                delete ctx;
+            }
+        }
+    }
+    smsc_log_info( log_, "ClientCore::Execute finished" );
+    return 0;
+}
+
+
+void ClientCore::inactivityTimeout( proto::Socket& socket )
+{
+    smsc_log_debug(log_,"sending Ping");
+    try {
+        std::auto_ptr<proto::Context> context(new ClientContext(new Ping,0));
+        socket.send( context, true );
+    } catch ( Exception& e ) {
+        smsc_log_warn(log_,"PING send failed: %s", e.what() );
+    }
+}
+
+
+void ClientCore::sendRequest( std::auto_ptr< proto::Context >& context )
+{
+    if ( stopping() )
+        throw Exception( "client deactivated", Status::NOT_CONNECTED );
+    uint32_t seqNum = getNextSeqNum();
+    context->setSeqNum(seqNum);
+    proto::Socket& socket = getNextSocket( context->getRequest().get() );
+    /*
+    const Request* packet = context->getRequest().get();
+    if ( ! packet ) {
+        throw Exception( "request is null", Status::BAD_REQUEST );
+    } else if ( packet->isValid() ) {
+        throw Exception( "request is bad formed", Status::BAD_REQUEST );
+    }
+     */
+    socket.send( context, true );
+}
+
+
+void ClientCore::createSocket( util::msectime_type oldac ) // throw
+{
+    if ( !started_ ) return;
+    proto::Socket* socket(new proto::Socket(*this,oldac));
+    smsc_log_info(log_,"creating a socket %p on %s:%d tmo=%d", socket,
+                  getConfig().getHost().c_str(), getConfig().getPort(),
+                  getConfig().getConnectTimeout()/1000 );
+    regSet_.create(socket);
+    {
+        MutexGuard mg(socketMon_);
+        sockets_.push_back(socket);
+    }
+    socket->attach(taskName());
+    connector_->connectSocket(*socket);
+}
+
+
+uint32_t ClientCore::getNextSeqNum()
+{
+    MutexGuard mg(seqMutex_);
+    uint32_t result = ++seqNum_;
+    if ( !result ) result = ++seqNum_;
+    return result;
+}
+
+
+proto::Socket& ClientCore::getNextSocket( const Request* request )
+{
+    util::RelockMutexGuard mg(socketMon_);
+    if ( sockets_.empty() ) {
+        mg.Unlock();
+        throw Exception("no socket available", Status::NOT_CONNECTED );
+    } else {
+        for ( SocketList::iterator i = sockets_.begin(); i != sockets_.end();
+              ++i ) {
+            if ( (*i)->isConnected() ) {
+                proto::Socket* socket = *i;
+                sockets_.erase(i);
+                sockets_.push_back(socket);
+                return *socket;
+            }
+        }
+        mg.Unlock();
+        throw Exception("sockets are not connected", Status::NOT_CONNECTED );
+    }
+}
+
+
+void ClientCore::closeAllSockets()
+{
+    assert(connector_->released());
+    MutexGuard mg(socketMon_);
+    for ( SocketList::iterator i = sockets_.begin(); i != sockets_.end(); ++i ) {
+        proto::Socket* socket = *i;
+        Core::closeSocket(*socket);
+        smsc_log_debug(log_,"pushing socket %p to dead", socket);
+        deadSockets_.push_back(socket);
+    }
+    sockets_.clear();
+}
+
+
+void ClientCore::closeSocket( proto::Socket& socket )
+{
+    Core::closeSocket(socket);
+    connector_->unregisterSocket(socket);
+    bool found = false;
+    util::msectime_type oldac;
+    {
+        MutexGuard mgc(socketMon_);
+        SocketList::iterator i = std::find( sockets_.begin(),
+                                            sockets_.end(),
+                                            &socket );
+        if ( i != sockets_.end() ) {
+            found = true;
+            oldac = socket.getLastActivity();
+            sockets_.erase(i);
+            deadSockets_.push_back(&socket);
+        }
+    }
+    if ( found ) {
+        smsc_log_debug(log_,"pushing socket %p to dead", &socket );
+        destroyDeadSockets();
+        if ( started_ ) {
+            smsc_log_debug(log_,"recreating socket... with time=%llu",
+                           static_cast<unsigned long long>(oldac));
+            try {
+                createSocket(oldac);
+            } catch ( Exception& exc ) {
+                smsc_log_warn(log_,"socket recreation %p, details: %s", exc.what() );
+            }
+        }
+    }
+}
+
+
+void ClientCore::destroyDeadSockets()
+{
+    SocketList trulyDead;
+    {
+        MutexGuard mg(socketMon_);
+        for ( SocketList::iterator i = deadSockets_.begin();
+              i != deadSockets_.end();
+              ) {
+            if ( (*i)->attachCount() <= 1 ) {
+                trulyDead.push_back(*i);
+                i = deadSockets_.erase(i);
+            } else {
+                ++i;
+            }
+        }
+    }
+    for ( SocketList::iterator i = trulyDead.begin();
+          i != trulyDead.end();
+          ++i ) {
+        proto::Socket* socket = *i;
+
+        // destroying all contexts on closed channel
+        Exception exc = Exception("channel is closed", Status::IO_ERROR);
+        RegistrySet::ContextList pl;
+        do {
+            RegistrySet::Ptr ptr = regSet_.get(socket);
+            if (!ptr) break;
+            ptr->popAll(pl);
+        } while (false);
+
+        while ( !pl.empty() ) {
+            ClientContext* ctx = static_cast<ClientContext*>(pl.front());
+            pl.pop_front();
+            ctx->setError(exc);
+            delete ctx;
+        }
+
+        regSet_.destroy(socket);
+        socket->detach(taskName()); // it will destroy the socket
+
+    }
+}
+
+
+} // namespace client
+} // namespace ewallet
+} // namespace bill
+} // namespace scag2

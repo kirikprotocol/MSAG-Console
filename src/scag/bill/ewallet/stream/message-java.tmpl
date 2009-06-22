@@ -1,0 +1,215 @@
+package $var package$.stream.pdu;
+
+import $var package$.stream.*;
+import $var package$.EwalletException;
+import $var package$.Status;
+
+$macro type$$pack$
+$select %1$
+$case byte$byte
+$case uint16$short
+$case int32$int
+$case int64$long
+$case ascii$String
+$case utf8$String
+$case bool$boolean
+$-select$
+$-pack$$-macro$
+
+public class $var message.name$
+{
+$foreach field$
+    protected static final int $var field.name$Tag = $var field.tag$;
+$-foreach$
+
+$if options.hasSeqNum$
+    private int seqNum_;
+$-if$
+
+$foreach field$
+    $expand type field.type$ $var field.name$;
+$-foreach$
+$foreach field$
+    boolean $var field.name$Flag;
+$-foreach$
+
+    // ---
+
+    public $var message.name$() {
+$foreach field$
+        $var field.name$Flag = false;
+$-foreach$
+    }
+
+    public void clear()
+    {
+$foreach field$
+        $var field.name$Flag=false;
+$-foreach$
+    }
+  
+    public String toString()
+    {
+        StringBuilder sb = new StringBuilder();
+        sb.append("$var message.name$");
+$if options.hasSeqNum$
+        sb.append(" seq=" + seqNum_);
+$-if$
+$foreach field$
+        if ( $var field.name$Flag ) {
+            sb.append(" $var field.name$=");
+            $select field.type$
+$case bool$sb.append($var field.name$ ? "1" : "0");
+$case ascii$sb.append("\"" + $var field.name$ + "\"");
+$case utf8$sb.append("\"" + $var field.name$ + "\"");
+$default$sb.append($var field.name$);
+$-select$
+        }
+$-foreach$
+        return sb.toString();
+    }
+
+$foreach field$
+    public boolean has$var field.name:ucf$() {
+        return $var field.name$Flag;
+    }
+    public $expand type field.type$ get$var field.name$() $if options.throwOnUnsetGet$throws EwalletException$-if${
+$if options.throwOnUnsetGet$
+        if (!$var field.name$Flag) {
+            throw new EwalletException( excType(), "$var message.name$ has no field $var field.name$");
+        }
+$-if$
+        return $var field.name$;
+    }
+    public void set$var field.name:ucf$( $expand type field.type$ v ) {
+        this.$var field.name$Flag = true;
+        this.$var field.name$ = v;
+    }
+$-foreach$
+
+    public void serialize( $var protocol.name:ucf$ proto, BufferWriter writer ) throws EwalletException
+    {
+        checkFields();
+        // mandatory fields
+$foreach field$
+$if field.mandatory$
+        // System.out.println("write pos=" + writer.getPos() + " field=" + $var field.name$Tag);
+        writer.writeTag($var field.name$Tag);
+        $select field.type$
+$case ascii$try {
+            writer.writeAsciiLV($var field.name$);
+        } catch ( java.io.IOException e ) {
+            throw new EwalletException( excType(), "writing ascii field $var field.name$ in $var message.name$:" + e.getMessage());
+        }
+$case utf8$try {
+            writer.writeUTFLV($var field.name$);
+        } catch ( java.io.IOException e ) {
+            throw new EwalletException( excType(), "writing utf8 field $var field.name$ in $var message.name$:" + e.getMessage());
+        }
+$case byte$writer.writeByteLV($var field.name$);
+$case uint16$writer.writeShortLV($var field.name$);
+$case int32$writer.writeIntLV($var field.name$);
+$case int64$writer.writeLongLV($var field.name$);
+$case bool$writer.writeBoolLV($var field.name$);
+$-select$
+$-if$
+$-foreach$
+        // optional fields
+$foreach field$
+$if field.optional$
+        if ( $var field.name$Flag ) {
+            // System.out.println("write pos=" + writer.getPos() + " field=" + $var field.name$Tag);
+            writer.writeTag($var field.name$Tag);
+            $select field.type$
+$case ascii$try {
+                writer.writeAsciiLV($var field.name$);
+            } catch ( java.io.IOException e ) {
+                throw new EwalletException( excType(), "writing ascii field $var field.name$ in $var message.name$:" + e.getMessage());
+            }
+$case utf8$try {
+                writer.writeUTFLV($var field.name$);
+            } catch ( java.io.IOException e ) {
+                throw new EwalletException( excType(), "writing utf8 field $var field.name$ in $var message.name$:" + e.getMessage());
+            }
+$case byte$writer.writeByteLV($var field.name$);
+$case uint16$writer.writeShortLV($var field.name$);
+$case int32$writer.writeIntLV($var field.name$);
+$case int64$writer.writeLongLV($var field.name$);
+$case bool$writer.writeBoolLV($var field.name$);
+$-select$
+        }
+$-if$
+$-foreach$
+    }
+
+    public void deserialize( $var protocol.name:ucf$ proto, BufferReader reader ) throws EwalletException
+    {
+        clear();
+        int tag = -1;
+        try {
+            do {
+                // int pos = reader.getPos();
+                tag = reader.readTag();
+                // System.out.println("read pos=" + pos + " field=" + tag);
+                if ( tag == -1 ) break;
+                switch( tag ) {
+$foreach field$
+                case $var field.name$Tag: {
+                    if ( $var field.name$Flag ) {
+                        throw new EwalletException(excType(),"duplicate field $var field.name$ of $var message.name$ seq=" + getSeqNum());
+                    }
+                    $select field.type$
+$case ascii$$var field.name$ = reader.readAsciiLV();
+$case utf8$$var field.name$ = reader.readUTFLV();
+$case byte$$var field.name$ = reader.readByteLV();
+$case uint16$$var field.name$ = reader.readShortLV();
+$case int32$$var field.name$ = reader.readIntLV();
+$case int64$$var field.name$ = reader.readLongLV();
+$case bool$$var field.name$ = reader.readBoolLV();
+$-select$
+                    $var field.name$Flag = true;
+                    break;
+                }
+$-foreach$
+                default:
+                    throw new EwalletException( excType(),
+                                                "invalid field in $var message.name$ seq=" + getSeqNum() + " tag=" + tag);
+                }
+            } while ( true );
+        } catch ( java.io.IOException e ) {
+            throw new EwalletException( excType(), "reading field tag=" + tag + " of $var message.name$ seq=" + getSeqNum() + " :" + e.getMessage());
+        }
+        // checking integrity
+        checkFields();
+    }
+
+$if options.hasSeqNum$
+    public int getSeqNum() { return seqNum_; }
+    public void setSeqNum( int seqNum ) { seqNum_ = seqNum; }
+$-if$
+
+    public boolean isValid() {
+$foreach field$
+$if field.mandatory$
+        if ( !$var field.name$Flag ) { return false; }
+$-if$
+$-foreach$
+        return true;
+    }
+
+    protected void checkFields() throws EwalletException
+    {
+$foreach field$
+$if field.mandatory$
+        if ( !$var field.name$Flag ) {
+            throw new EwalletException( excType(),
+                                        "message $var message.name$ does not have required field $var field.name$" );
+        }
+$-if$
+$-foreach$
+    }
+
+    private Status excType() {
+        return $if message.isRequest$Status.BAD_REQUEST$-if$$if !message.isRequest$Status.BAD_RESPONSE$-if$;
+    }
+}

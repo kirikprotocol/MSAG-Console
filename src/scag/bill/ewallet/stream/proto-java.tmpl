@@ -1,0 +1,82 @@
+package $var package$.stream.pdu;
+
+import $var package$.stream.*;
+import $var package$.EwalletException;
+import $var package$.Status;
+
+/**
+ * This protocol has header: len (4 oct), seq (4 oct), tag ( 2 oct.), message body
+ */
+public class $var protocol.name:ucf$
+{
+$foreach message$
+    static final int tag_$var message.name:ucf$ = $var message.tag$;
+$-foreach$
+
+    public static interface Handler {
+$foreach message$
+        public void handle( $var message.name$ object ) throws EwalletException;
+$-foreach$
+    }
+
+    Handler handler;
+    // int     options;
+
+    public $var protocol.name$() {
+    }
+
+    public $var protocol.name$(Handler handler) {
+        this.handler = handler;
+    }
+
+    // public int getOptions() { return options; }
+    // public void setOptions( int options ) { this.options = options; }
+
+    public void decodeMessage( BufferReader reader ) throws EwalletException
+    {
+        int seqNum = -1;
+        try {
+$if options.hasSeqNum$
+            seqNum = reader.readInt();
+$-if$
+            int tag = reader.readTag();
+            switch( tag ) {
+$foreach message$
+            case tag_$var message.name:ucf$: {
+                $var message.name$ object = new $var message.name$();
+$if options.hasSeqNum$
+                object.setSeqNum(seqNum);
+$-if$
+                object.deserialize(this,reader);
+                handler.handle(object);
+                break;
+            }
+$-foreach$
+            default: throw new EwalletException(Status.IO_ERROR,"unknown message type: seq=" + seqNum + " tag=" + tag);
+            }
+        } catch ( java.io.IOException e ) {
+            throw new EwalletException(Status.IO_ERROR, "decodeMessage: seq=" + seqNum + " fail=" + e.getMessage() );
+        }
+    }
+$foreach message$
+
+    public byte[] encodeMessage( $var message.name$ object, BufferWriter writer ) throws EwalletException
+    {
+//        try {
+$if options.hasSeqNum$
+            writer.writeInt(object.getSeqNum());
+$-if$
+            writer.writeTag(tag_$var message.name:ucf$);
+            object.serialize(this,writer);
+/*
+        } catch ( EwalletException e ) {
+$if options.hasSeqNum$
+            e.setSeqNum(object.getSeqNum());
+$-if$
+            throw e;
+        }
+ */
+        return writer.getData();
+    }
+$-foreach$
+}

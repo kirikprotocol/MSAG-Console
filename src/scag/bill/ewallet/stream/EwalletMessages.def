@@ -1,0 +1,178 @@
+include types.def
+
+// Statuses returned in Resp messages:
+// 0x00 -- ok
+//     range 0x01 .. 0x0f -- info
+//     range 0x10 .. 0x1f -- warn
+// 0x10 -- BAD_REQUEST 
+// 0x11 -- BAD_RESPONSE
+// 0x12 -- IO_TIMEOUT
+//     range 0x20 .. 0x2f -- err
+// 0x20 -- IO_ERROR
+// 0x21 -- NOT_SUPPORTED
+// 0x22 -- NOT_CONNECTED
+// 0x23 -- CLIENT_BUSY
+//     everything else is mapped to:
+// 0xff -- UNKNOWN
+
+message Ping
+    version 1.0
+    property isRequest=true
+end
+
+message PingResp
+    version 1.0
+    property isRequest=false
+    byte statusValue 1
+end
+
+message Auth
+    version 1.0
+    property isRequest=true
+    byte   protocolVersion 2
+    ascii  login           3
+    ascii  password        4
+    ascii  name            5
+end
+
+message AuthResp
+    version 1.0
+    property isRequest=false
+    byte     statusValue 1
+    int32    processingTimeout 13   // the processing timeout, used by server
+end
+
+message Open
+    version 1.0
+    property isRequest=true
+    int32    agentId     6
+    ascii    sourceId    14 opt
+    ascii    userId      7
+    ascii    walletType  8
+    ascii    description 9
+    int32    amount      10
+    ascii    externalId  18 opt
+    int32    timeout     11
+end
+
+message OpenResp
+    version 1.0
+    property isRequest=false
+    byte     statusValue     1  // other fields will be filled if statusValue=0x00
+    int32    transId         12 opt
+    int32    amount          10 opt
+    int32    chargeThreshold 19 opt
+end
+
+message Commit
+    version 1.0
+    property isRequest=true
+    int32    agentId     6
+    ascii    sourceId    14 opt
+    ascii    userId      7
+    ascii    walletType  8
+    ascii    externalId  18 opt
+    int32    transId     12 opt
+    int32    amount      10
+end
+
+message CommitResp
+    version 1.0
+    property isRequest=false
+    byte     statusValue 1
+end
+
+message Rollback
+    version 1.0
+    property isRequest=true
+    int32    agentId     6
+    ascii    sourceId    14 opt
+    ascii    userId      7
+    ascii    walletType  8
+    ascii    externalId  18 opt
+    int32    transId     12 opt
+end
+
+message RollbackResp
+    version 1.0
+    property isRequest=false
+    byte     statusValue 1
+end
+
+message Info
+    version 1.0
+    property isRequest=true
+    int32    agentId     6
+    ascii    userId      7
+    ascii    walletType  8
+end
+
+message InfoResp
+    version 1.0
+    property isRequest=false
+    byte     statusValue     1
+    int32    amount          10 opt
+    int32    chargeThreshold 16 opt
+end
+
+message Transfer
+    version 1.0
+    property isRequest=true
+    int32    agentId       6
+    ascii    sourceId      14 opt
+    ascii    userId        7
+    ascii    srcWalletType 8
+    ascii    dstWalletType 17
+    ascii    externalId    18 opt
+    int32    amount        10
+    ascii    description   9
+end
+
+message TransferResp
+    version 1.0
+    property isRequest=false
+    byte     statusValue     1
+    int32    amount          10 opt
+    int32    chargeThreshold 19 opt
+end
+
+message Check
+    version 1.0
+    property isRequest=true
+    int32    agentId     6
+    ascii    userId      7
+    ascii    walletType  8
+    ascii    externalId  18 opt
+    int32    transId     12 opt
+end
+
+message CheckResp
+    version 1.0
+    property isRequest=false
+    byte     statusValue 1
+    int32    transStatus 20 opt
+    ascii    sourceId    14 opt
+    int32    amount      10 opt
+    int64    enddate     15 opt // in seconds since Epoch
+end
+
+message TransferCheck
+    version 1.0
+    property isRequest=true
+    int32    agentId     6
+    ascii    userId      7
+    ascii    externalId  18 opt
+end
+
+message TransferCheckResp
+    version 1.0
+    property isRequest=false
+    byte     statusValue 1
+    ascii    srcWalletType 8  opt
+    ascii    dstWalletType 17 opt
+    ascii    externalId    18 opt
+    int32    amount        10 opt
+    ascii    description   9  opt
+    int32    transStatus   20 opt
+    int64    enddate     15 opt // in seconds since Epoch
+end

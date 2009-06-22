@@ -1,0 +1,3 @@
+scag/tests/ewallet-proto-test test \
+  -lscag-util-io \
+  -lutil
