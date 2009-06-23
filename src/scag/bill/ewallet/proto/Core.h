@@ -34,15 +34,15 @@ public:
 
     /// receive a packet from network.
     /// invoked from reader.
-    virtual void receivePacket( Socket& socket, std::auto_ptr< Packet > packet ) = 0;
+    virtual void receivePacket( SocketBase& socket, std::auto_ptr< Packet > packet ) = 0;
 
     /// report when a packet is sent.
     /// invoked from writer.
     /// context gets owned.
-    virtual void reportPacket( Socket& socket, uint32_t seqNum, Context* context, Context::ContextState state ) = 0;
+    virtual void reportPacket( SocketBase& socket, uint32_t seqNum, Context* context, Context::ContextState state ) = 0;
 
     /// handle error occured at socket.
-    virtual void handleError( Socket& socket, const Exception& exc ) = 0;
+    virtual void handleError( SocketBase& socket, const Exception& exc ) = 0;
 
     /// close socket and detach from it.
     virtual void closeSocket( Socket& socket );

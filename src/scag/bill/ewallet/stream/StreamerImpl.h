@@ -7,8 +7,13 @@
 #include "scag/bill/ewallet/stream/generated-cpp/Protocol.hpp"
 
 #include "scag/bill/ewallet/Ping.h"
-#include "scag/bill/ewallet/PingResp.h"
 #include "scag/bill/ewallet/Open.h"
+#include "scag/bill/ewallet/Commit.h"
+#include "scag/bill/ewallet/Rollback.h"
+#include "scag/bill/ewallet/PingResp.h"
+#include "scag/bill/ewallet/OpenResp.h"
+#include "scag/bill/ewallet/CommitResp.h"
+#include "scag/bill/ewallet/RollbackResp.h"
 
 namespace scag2 {
 namespace bill {
@@ -44,35 +49,77 @@ private:
         virtual bool visitOpen( ewallet::Open& o ) {
             stream::Open p;
             p.setSeqNum(o.getSeqNum());
+            p.setSourceId(o.getSourceId());
             p.setAgentId(o.getAgentId());
             p.setUserId(o.getUserId());
             p.setWalletType(o.getWalletType());
             p.setDescription(o.getDescription());
             p.setAmount(o.getAmount());
+            p.setExternalId(o.getExternalId());
             p.setTimeout(o.getTimeout());
             proto_.encodeMessage(p,writer_);
             return true;
         }
         virtual bool visitCommit( ewallet::Commit& o ) {
-            return false;
+            stream::Commit p;
+            p.setSeqNum(o.getSeqNum());
+            p.setSourceId(o.getSourceId());
+            p.setAgentId(o.getAgentId());
+            p.setUserId(o.getUserId());
+            p.setWalletType(o.getWalletType());
+            p.setAmount(o.getAmount());
+            p.setExternalId(o.getExternalId());
+            p.setTransId(o.getTransId());
+            proto_.encodeMessage(p,writer_);
+            return true;
         }
         virtual bool visitRollback( ewallet::Rollback& o ) {
-            return false;
+            stream::Rollback p;
+            p.setSeqNum(o.getSeqNum());
+            p.setSourceId(o.getSourceId());
+            p.setAgentId(o.getAgentId());
+            p.setUserId(o.getUserId());
+            p.setWalletType(o.getWalletType());
+            p.setExternalId(o.getExternalId());
+            p.setTransId(o.getTransId());
+            proto_.encodeMessage(p,writer_);
+            return true;
         }
         virtual bool visitPingResp( ewallet::PingResp& o ) {
-            return false;
+            stream::PingResp p;
+            p.setSeqNum(o.getSeqNum());
+            p.setStatusValue(o.getStatus());
+            proto_.encodeMessage(p,writer_);
+            return true;
         }
+        /*
         virtual bool visitAuthResp( ewallet::AuthResp& o ) {
             return false;
         }
+         */
         virtual bool visitOpenResp( ewallet::OpenResp& o ) {
-            return false;
+            stream::OpenResp p;
+            p.setSeqNum(o.getSeqNum());
+            p.setStatusValue(o.getStatus());
+            p.setTransId(o.getTransId());
+            p.setAmount(o.getAmount());
+            p.setChargeThreshold(o.getChargeThreshold());
+            proto_.encodeMessage(p,writer_);
+            return true;
         }
         virtual bool visitCommitResp( ewallet::CommitResp& o ) {
-            return false;
+            stream::CommitResp p;
+            p.setSeqNum(o.getSeqNum());
+            p.setStatusValue(o.getStatus());
+            proto_.encodeMessage(p,writer_);
+            return true;
         }
         virtual bool visitRollbackResp( ewallet::RollbackResp& o ) {
-            return false;
+            stream::RollbackResp p;
+            p.setSeqNum(o.getSeqNum());
+            p.setStatusValue(o.getStatus());
+            proto_.encodeMessage(p,writer_);
+            return true;
         }
 
     private:

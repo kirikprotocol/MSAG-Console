@@ -15,7 +15,7 @@ class RequestVisitor
 {
 public:
     virtual bool visitPing( Ping& ) = 0;
-    virtual bool visitAuth( Auth& ) = 0;
+    // virtual bool visitAuth( Auth& ) = 0;
     virtual bool visitOpen( Open& ) = 0;
     virtual bool visitCommit( Commit& ) = 0;
     virtual bool visitRollback( Rollback& ) = 0;

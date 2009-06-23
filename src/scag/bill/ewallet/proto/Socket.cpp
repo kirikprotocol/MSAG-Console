@@ -8,16 +8,10 @@
 
 using namespace smsc::core::synchronization;
 
-namespace {
-smsc::core::synchronization::Mutex logMtx;
-}
-
 namespace scag2 {
 namespace bill {
 namespace ewallet {
 namespace proto {
-
-smsc::logger::Logger* Socket::log_ = 0;
 
 Socket* Socket::fromSocket( smsc::core::network::Socket& sock )
 {
@@ -26,10 +20,8 @@ Socket* Socket::fromSocket( smsc::core::network::Socket& sock )
 
 
 Socket::Socket( Core& core, util::msectime_type ac ) :
-core_(core),
+SocketBase(core),
 sock_( new smsc::core::network::Socket ),
-refCount_(0),
-queue_(new smsc::core::buffers::CyclicQueue< WriteContext* >),
 rdBuflen_(0),
 writer_(0),
 lastActivity_(ac)
@@ -83,13 +75,14 @@ void Socket::send( std::auto_ptr< Context >& context, bool sendRequest )
     core_.getStreamer().serialize( *packet, writeContext->buffer );
 
     { // pushing to the queue, checking its size again
-        MutexGuard mgq(queueMutex_);
+        MutexGuard mgq(queueMon_);
         if ( sendRequest && size_t(queue_->Count()) > core_.getConfig().getSocketQueueSizeLimit() ) {
             throw Exception("queue size limit exceeded", Status::CLIENT_BUSY);
         }
         writeContext->setContext( context.release() );
         queue_->Push( writeContext.release() );
-        // queueMon_.notify();
+        // actually, this is not necessary, as writer has its own monitor
+        queueMon_.notify();
     }
     writer_->wakeup();
 }
@@ -106,7 +99,7 @@ bool Socket::wantToSend( util::msectime_type currentTime )
     WriteContext* ctx;
     std::list< WriteContext* > expired;
     {
-        MutexGuard mg(queueMutex_);
+        MutexGuard mg(queueMon_);
         while( true ) {
             if ( !queue_ ) break;
             if ( !queue_->Pop(ctx) ) break;
@@ -218,7 +211,7 @@ void Socket::processInput()
     // So we have to check it here.
     do {
         if ( packet->isRequest() ) break;
-        MutexGuard mg(queueMutex_);
+        MutexGuard mg(queueMon_);
         if ( ! wrContext_.get() ) break;
         Context* ctx = wrContext_->getContext();
         if ( ! ctx ) break;
@@ -236,40 +229,6 @@ void Socket::processInput()
 
     } while ( false );
     core_.receivePacket(*this,packet);
-}
-
-
-/// attach/detach a socket: refcounting
-void Socket::attach( const char* who )
-{
-    smsc_log_debug(log_,"attaching socket %p to %s", this, who);
-    MutexGuard mg(refMutex_);
-    ++refCount_;
-}
-
-
-void Socket::detach( const char* who )
-{
-    smsc_log_debug(log_,"detaching socket %p from %s", this, who);
-    bool destroy;
-    {
-        MutexGuard mg(refMutex_);
-        if (refCount_ > 0) {
-            --refCount_;
-        } else {
-            smsc_log_warn(log_,"logics failure: refcount=0 before detach of %p", this);
-        }
-        destroy = ( refCount_ == 0 );
-    }
-    if ( destroy ) {
-        delete this;
-    }
-}
-
-
-unsigned Socket::attachCount() {
-    MutexGuard mg(refMutex_);
-    return refCount_;
 }
 
 
@@ -316,27 +275,11 @@ Socket::~Socket()
     assert( wrContext_.get() == 0 );
     assert( writer_ == 0 );
     assert( ! isConnected() );
-    smsc::core::buffers::CyclicQueue< WriteContext* >* prevQueue = 0;
-    {
-        MutexGuard mg(queueMutex_);
-        std::swap(queue_,prevQueue);
-    }
-    // cleanup
-    WriteContext* ctx;
-    while ( prevQueue->Pop(ctx) ) {
-        core_.reportPacket(*this, ctx->getSeqNum(), ctx->popContext(), Context::FAILED);
-        delete ctx;
-    }
-    delete prevQueue;
 }
 
 
 void Socket::init()
 {
-    if ( !log_ ) {
-        MutexGuard mg(::logMtx);
-        if (!log_) log_ = smsc::logger::Logger::getInstance("ewall.sock");
-    }
     sock_->setData(0,this);
 }
 

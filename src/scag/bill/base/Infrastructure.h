@@ -23,29 +23,39 @@ enum { // bill type
 class TariffRec
 {
 public:
-    std::string Price;
     std::string ServiceNumber;
     std::string Currency;
     uint32_t MediaTypeId;
     uint32_t CategoryId;
     uint32_t billType;
 
-    TariffRec() {};
-    TariffRec(const std::string& sn, const std::string& pr, const std::string& c, uint32_t ci, uint32_t mti, uint32_t bt):Price(pr), ServiceNumber(sn), Currency(c), MediaTypeId(mti), CategoryId(ci), billType(bt) {};
+    TariffRec() : fPrice(0) {}
+    TariffRec(const std::string& sn, const std::string& pr, const std::string& c,
+              uint32_t ci, uint32_t mti, uint32_t bt) :
+    ServiceNumber(sn), Currency(c), MediaTypeId(mti), CategoryId(ci), billType(bt), sPrice(pr), fPrice(0) {
+        fPrice = atof(pr.c_str());
+    }
     
     TariffRec(const TariffRec& sm) { operator=(sm); };
 
     TariffRec& operator=(const TariffRec& sm)
     {
-        Price = sm.Price;
+        sPrice = sm.sPrice;
+        fPrice = sm.fPrice;
         ServiceNumber = sm.ServiceNumber;
         Currency = sm.Currency;
         CategoryId = sm.CategoryId;
         MediaTypeId = sm.MediaTypeId;
         billType = sm.billType;
-
         return *this;
-    };
+    }
+
+    const std::string& getPrice() const { return sPrice; }
+    double             getFloatPrice() const { return fPrice; }
+
+private:
+    std::string sPrice;
+    double      fPrice;
 };
 
 

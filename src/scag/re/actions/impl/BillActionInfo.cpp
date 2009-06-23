@@ -114,7 +114,7 @@ bool BillActionInfo::run( ActionContext& context )
         case 7: {
             //char bufp[20];
             //snprintf(bufp, sizeof(bufp), "%.3lf", tr.Price);
-            p->setStr(tr.Price.c_str());
+            p->setStr(tr.getPrice().c_str());
             break;
         }
         case 8: p->setStr(tr.Currency.c_str()); break;

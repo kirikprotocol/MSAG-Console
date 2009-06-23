@@ -250,9 +250,23 @@ unsigned int BillingManagerImpl::Open( BillOpenCallParams& openCallParams,
         smsc_log_debug(logger,"ewallet params: %p", &eOpenParams );
         if (lcmCtx) {
             // async
-            std::auto_ptr<ewallet::Request> pck( new ewallet::Open );
-            // FIXME: fill all fields
-            ewalletClient_->processRequest( pck, eOpenParams );
+            std::auto_ptr<ewallet::Open> pck( new ewallet::Open );
+            pck->setSourceId("msag");
+            pck->setAgentId(billingInfoStruct.serviceId);
+            pck->setUserId(billingInfoStruct.AbonentNumber);
+            if (!billingInfoStruct.description.empty()) {
+                pck->setDescription(billingInfoStruct.description);
+            }
+            pck->setWalletType(tariffRec.Currency);
+            pck->setAmount( int(tariffRec.getFloatPrice()+0.5) );
+            if (!billingInfoStruct.externalId.empty()) {
+                pck->setExternalId(billingInfoStruct.externalId);
+            }
+            if (billingInfoStruct.timeout > 0) {
+                pck->setTimeout(billingInfoStruct.timeout);
+            }
+            std::auto_ptr<ewallet::Request> req(pck.release());
+            ewalletClient_->processRequest( req, eOpenParams );
             smsc_log_debug(logger,"ewallet request is sent");
             return 0;
         } else {
@@ -351,7 +365,7 @@ void BillingManagerImpl::makeBillEvent( BillingTransactionEvent billCommand,
     ev->Header.iOperatorId = billingInfo.operatorId;
 
     ev->iPriceCatId = tariffRec.CategoryId;
-    ev->fBillingSumm = tariffRec.Price;
+    ev->fBillingSumm = tariffRec.getPrice();
     ev->iMediaResourceType = tariffRec.MediaTypeId;
     ev->pBillingCurrency = tariffRec.Currency;
 

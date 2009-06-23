@@ -93,9 +93,7 @@ class EwalletOpenCallParams : public EwalletCallParams, public BillOpenCallParam
 public:
     EwalletOpenCallParams( BillOpenCallParamsData* data, lcm::LongCallContext* lcmCtx ) :
     EwalletCallParams(lcmCtx), data_(data) {}
-    virtual void setResponse( ewallet::Response& resp ) {
-        // fixme;
-    }
+    virtual void setResponse( ewallet::Response& resp );
     virtual TariffRec* tariffRec() const { return data_.get() ? &(data_->tariffRec) : 0; }
     virtual BillingInfoStruct* billingInfoStruct() const { return data_.get() ? &(data_->billingInfoStruct) : 0; }
     virtual int billId() const { return data_.get() ? data_->BillId : 0; }

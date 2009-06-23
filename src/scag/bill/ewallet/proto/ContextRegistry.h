@@ -166,7 +166,7 @@ private:
 template < class Context > class ContextRegistrySet 
 {
 public:
-    typedef proto::Socket* key_type;
+    typedef proto::SocketBase* key_type;
     typedef ContextRegistry< Context > Registry;
     typedef typename Registry::Ptr         Ptr;
     typedef typename Registry::Ctx         Ctx;

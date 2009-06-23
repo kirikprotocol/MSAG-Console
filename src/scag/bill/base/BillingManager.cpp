@@ -52,6 +52,13 @@ void EwalletCallParams::continueExecution()
 }
 
 
+void EwalletOpenCallParams::setResponse( ewallet::Response& resp )
+{
+    // status is ok
+    // FIXME
+}
+
+
 BillingManager& BillingManager::Instance()
 {
     if ( ! inited ) {

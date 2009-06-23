@@ -119,7 +119,7 @@ bool BillActionOpen::RunBeforePostpone( ActionContext& context )
         return false;
     }
 
-    if (tariffRec->Price.empty()) {
+    if (tariffRec->getPrice().empty()) {
         smsc_log_warn(logger, "Zero price in tariff matrix. ServiceNumber=%s, CategoryId=%d, MediaTypeId=%d", tariffRec->ServiceNumber.c_str(),
                       tariffRec->CategoryId, tariffRec->MediaTypeId);
     }

@@ -49,9 +49,13 @@ void ClientCore::startup()
     started_ = true;
     try {
         smsc_log_info( log_, "creating connections..." );
+        loopback_.reset( new Loopback(*this) );
+        threadPool_.startTask( loopback_->getProcessor(), false );
+        /*
         for ( size_t i = 0; i < getConfig().getConnectionsCount(); ++i ) {
             createSocket();
         }
+         */
     } catch ( Exception& exc ) {
         started_ = false;
         connector_->shutdown();
@@ -59,6 +63,7 @@ void ClientCore::startup()
         shutdownIO( false );
         throw exc;
     }
+
     threadPool_.startTask(this,false);
     smsc_log_info(log_,"Ewallet client started");
 }
@@ -97,7 +102,7 @@ void ClientCore::processRequest( std::auto_ptr< Request > request, ResponseHandl
 {
     std::auto_ptr< proto::Context > context( new ClientContext(request.release(),&handler) );
     // try {
-        sendRequest(context);
+    sendRequest(context);
     /*
     } catch ( Exception e ) {
         handler.handleError(context->getRequest(),e);
@@ -113,7 +118,7 @@ void ClientCore::processRequest( std::auto_ptr< Request > request, ResponseHandl
 }
 
 
-void ClientCore::receivePacket( proto::Socket& socket, std::auto_ptr< Packet > packet )
+void ClientCore::receivePacket( proto::SocketBase& socket, std::auto_ptr< Packet > packet )
 {
     std::auto_ptr< ClientContext > context;
     uint32_t seqNum;
@@ -167,8 +172,8 @@ void ClientCore::receivePacket( proto::Socket& socket, std::auto_ptr< Packet > p
 }
 
 
-void ClientCore::reportPacket( proto::Socket&  socket, 
-                               uint32_t        seqNum,
+void ClientCore::reportPacket( proto::SocketBase& socket,
+                               uint32_t           seqNum,
                                proto::Context* context,
                                proto::Context::ContextState    state )
 {
@@ -266,10 +271,12 @@ void ClientCore::reportPacket( proto::Socket&  socket,
 }
 
 
-void ClientCore::handleError( proto::Socket& socket, const Exception& exc )
+void ClientCore::handleError( proto::SocketBase& socket, const Exception& exc )
 {
     smsc_log_error(log_,"exception on socket %p: %s", &socket, exc.what() );
-    closeSocket( socket );
+    proto::Socket* realSocket = socket.castToSocket();
+    if (realSocket) closeSocket(*realSocket);
+    else socket.close();
 }
 
 
@@ -369,16 +376,12 @@ void ClientCore::sendRequest( std::auto_ptr< proto::Context >& context )
         throw Exception( "client deactivated", Status::NOT_CONNECTED );
     uint32_t seqNum = getNextSeqNum();
     context->setSeqNum(seqNum);
-    proto::Socket& socket = getNextSocket( context->getRequest().get() );
-    /*
-    const Request* packet = context->getRequest().get();
-    if ( ! packet ) {
-        throw Exception( "request is null", Status::BAD_REQUEST );
-    } else if ( packet->isValid() ) {
-        throw Exception( "request is bad formed", Status::BAD_REQUEST );
-    }
-     */
-    socket.send( context, true );
+
+    // FIXME: temporary sent to a loopback queue
+    if ( loopback_.get() ) loopback_->send( context, true );
+
+    // proto::Socket& socket = getNextSocket( context->getRequest().get() );
+    // socket.send( context, true );
 }
 
 

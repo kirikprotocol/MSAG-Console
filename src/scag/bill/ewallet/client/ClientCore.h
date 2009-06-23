@@ -5,6 +5,7 @@
 #include "scag/bill/ewallet/proto/Core.h"
 #include "ClientContext.h"
 #include "Connector.h"
+#include "Loopback.h"
 #include "scag/bill/ewallet/proto/ContextRegistry.h"
 
 namespace scag2 {
@@ -31,14 +32,14 @@ public:
     /// handler must live until the request is processed (or failed).
     virtual void processRequest( std::auto_ptr<Request> request, ResponseHandler& handler );
 
-    virtual void receivePacket( proto::Socket& socket, std::auto_ptr< Packet > packet );
+    virtual void receivePacket( proto::SocketBase& socket, std::auto_ptr< Packet > packet );
     /// report context state change.
     /// NOTE: \param context may be NULL, in which case context should be searched in internal registry.
-    virtual void reportPacket( proto::Socket& socket,
+    virtual void reportPacket( proto::SocketBase& socket,
                                uint32_t seqNum, 
                                proto::Context* context,
                                proto::Context::ContextState state );
-    virtual void handleError( proto::Socket& socket, const Exception& exc );
+    virtual void handleError( proto::SocketBase& socket, const Exception& exc );
 
     virtual bool registerSocket( proto::Socket& socket );
 
@@ -85,6 +86,7 @@ private:
     std::auto_ptr< Connector >              connector_;
 
     RegistrySet                             regSet_;
+    std::auto_ptr< Loopback >               loopback_;
 };
 
 } // namespace client
