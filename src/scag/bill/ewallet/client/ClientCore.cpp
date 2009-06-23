@@ -60,6 +60,7 @@ void ClientCore::startup()
         started_ = false;
         connector_->shutdown();
         closeAllSockets();
+        if ( loopback_.get() ) loopback_->close();
         shutdownIO( false );
         throw exc;
     }
@@ -79,6 +80,7 @@ void ClientCore::shutdown()
     started_ = false;
     connector_->shutdown();
     closeAllSockets();
+    if ( loopback_.get() ) loopback_->close();
     shutdownIO( false );
     stop();
     {

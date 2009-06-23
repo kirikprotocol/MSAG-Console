@@ -571,11 +571,15 @@ void StateMachine::processSmResp( std::auto_ptr<SmppCommand> aucmd,
         CommandProperty cp(scag2::re::CommandBridge::getCommandProperty(*cmd, session->sessionKey().address(), static_cast<uint8_t>(cmd->getOperationId())));
         SmppOperationMaker opmaker( where, aucmd, session, log_ );
         opmaker.process( st, cp );
-        if (ri.statistics && !session->getLongCallContext().continueExec) {
+
+        // NOTE: long call will grab the session!
+        if ( st.status == re::STATUS_LONG_CALL ) return;
+
+        // if (ri.statistics && !session->getLongCallContext().continueExec) {
+        if ( ri.statistics ) {
           smsc_log_debug(log_, "%s: register traffic info event, keywords='%s'", where, cp.keywords.c_str());
           scag2::re::CommandBridge::RegisterTrafficEvent(cp, session->sessionPrimaryKey(), "");
         }
-        if ( st.status == re::STATUS_LONG_CALL ) return;
 
     } while ( false ); // fake loop
 
@@ -813,14 +817,15 @@ void StateMachine::processSm( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* 
 
         SmppOperationMaker opmaker( where, aucmd, session, log_ );
         opmaker.process( st, cp, &hrt );
-        if (ri.statistics && !session->getLongCallContext().continueExec) {
-          smsc_log_debug(log_, "%s: register traffic info event, keywords='%s'", where, cp.keywords.c_str());
-          scag2::re::CommandBridge::RegisterTrafficEvent(cp, session->sessionPrimaryKey(), scag2::re::CommandBridge::getMessageBody(*cmd), &hrt);
-        }
         if ( st.status == re::STATUS_LONG_CALL ) {
             smscmd.setRouteInfo( ri );
             hrt.stop();
             return;
+        }
+
+        if (ri.statistics) {
+          smsc_log_debug(log_, "%s: register traffic info event, keywords='%s'", where, cp.keywords.c_str());
+          scag2::re::CommandBridge::RegisterTrafficEvent(cp, session->sessionPrimaryKey(), scag2::re::CommandBridge::getMessageBody(*cmd), &hrt);
         }
 
         if ( hrt.mark("stm.rerule") > 100000 ) hrt.comment("/HRTWARN");

@@ -512,20 +512,22 @@ void BillingManagerImpl::onConnectError(Connect* conn, std::auto_ptr<CustomExcep
 
 void BillingManagerImpl::Start()
 {
-    #ifdef MSAG_INMAN_BILL
     MutexGuard guard(stopLock);
+    #ifdef MSAG_INMAN_BILL
     if (!m_bStarted)
     {
         m_bStarted = true;
         Thread::Start();
     }
     #endif
+    if (ewalletClient_.get()) { ewalletClient_->startup(); }
 }
 
 void BillingManagerImpl::Stop()
 {
-    #ifdef MSAG_INMAN_BILL
     MutexGuard guard(stopLock);
+    if (ewalletClient_.get()) { ewalletClient_->shutdown(); }
+    #ifdef MSAG_INMAN_BILL
     if(m_bStarted)
     {
         m_bStarted = false;
