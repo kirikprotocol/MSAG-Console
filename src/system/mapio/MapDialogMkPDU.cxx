@@ -51,10 +51,11 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
   //SMS_DELIVERY_FORMAT_HEADER* header = (SMS_DELIVERY_FORMAT_HEADER*)pdu->signalInfo;
 
   pdu->signalInfo[0]=0;
-  pdu->signalInfo[0]&=(isrcpt?2:0);
-  pdu->signalInfo[0]&=(mms?0:1)<<2;
-  pdu->signalInfo[0]&=(esm&0x40?1:0)<<6;
-
+  pdu->signalInfo[0]|=(isrcpt?2:0);
+  pdu->signalInfo[0]|=(mms?0:1)<<2;
+  pdu->signalInfo[0]|=((esm&0x40)?1:0)<<6;
+	pdu->signalInfo[0]|=((esm&0x80)?1:0)<<7;
+			
   /*header->uu.s.mg_type_ind = isrcpt?2:0;
   header->uu.s.mms = !mms;
   header->uu.s.reply_path = (esm&0x80)?1:0;;
