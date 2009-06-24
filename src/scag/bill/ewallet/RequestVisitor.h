@@ -5,8 +5,8 @@ namespace scag2 {
 namespace bill {
 namespace ewallet {
 
-class Ping;
-class Auth;
+// class Ping;
+// class Auth;
 class Open;
 class Commit;
 class Rollback;
@@ -14,7 +14,7 @@ class Rollback;
 class RequestVisitor
 {
 public:
-    virtual bool visitPing( Ping& ) = 0;
+    // virtual bool visitPing( Ping& ) = 0;
     // virtual bool visitAuth( Auth& ) = 0;
     virtual bool visitOpen( Open& ) = 0;
     virtual bool visitCommit( Commit& ) = 0;

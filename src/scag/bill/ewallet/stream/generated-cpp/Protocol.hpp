@@ -7,10 +7,6 @@
 #include <memory>
 #include "scag/bill/ewallet/stream/BufferReader.h"
 #include "scag/bill/ewallet/stream/BufferWriter.h"
-#include "Ping.hpp"
-#include "PingResp.hpp"
-#include "Auth.hpp"
-#include "AuthResp.hpp"
 #include "Open.hpp"
 #include "OpenResp.hpp"
 #include "Commit.hpp"
@@ -35,10 +31,6 @@ class Protocol
 {
 public:
     enum {
-        tag_Ping=1,
-        tag_PingResp=32769,
-        tag_Auth=2,
-        tag_AuthResp=32770,
         tag_Open=3,
         tag_OpenResp=32771,
         tag_Commit=4,
@@ -59,10 +51,6 @@ public:
     class Handler
     {
     public:
-        virtual void handle( Ping& obj ) = 0;
-        virtual void handle( PingResp& obj ) = 0;
-        virtual void handle( Auth& obj ) = 0;
-        virtual void handle( AuthResp& obj ) = 0;
         virtual void handle( Open& obj ) = 0;
         virtual void handle( OpenResp& obj ) = 0;
         virtual void handle( Commit& obj ) = 0;
@@ -93,38 +81,6 @@ public:
         // if ( ! handler->hasSeqNum(seqNum) ) throw UnexpectedSeqNumException(seqNum);
         int tag = ss.readTag();
         switch(tag) {
-        case tag_Ping: {
-            // printf( "tag %d (%s)\n", tag, "Ping" );
-            Ping msg;
-            msg.setSeqNum(seqNum);
-            msg.deserialize(*this,ss);
-            handler->handle(msg);
-            break;
-        }
-        case tag_PingResp: {
-            // printf( "tag %d (%s)\n", tag, "PingResp" );
-            PingResp msg;
-            msg.setSeqNum(seqNum);
-            msg.deserialize(*this,ss);
-            handler->handle(msg);
-            break;
-        }
-        case tag_Auth: {
-            // printf( "tag %d (%s)\n", tag, "Auth" );
-            Auth msg;
-            msg.setSeqNum(seqNum);
-            msg.deserialize(*this,ss);
-            handler->handle(msg);
-            break;
-        }
-        case tag_AuthResp: {
-            // printf( "tag %d (%s)\n", tag, "AuthResp" );
-            AuthResp msg;
-            msg.setSeqNum(seqNum);
-            msg.deserialize(*this,ss);
-            handler->handle(msg);
-            break;
-        }
         case tag_Open: {
             // printf( "tag %d (%s)\n", tag, "Open" );
             Open msg;
@@ -240,34 +196,6 @@ public:
         default:
             throw Exception(Status::IO_ERROR,"unknown message type: seq=%u tag=%u",seqNum,tag);
         }
-    }
-
-    void encodeMessage( const Ping& msg, BufferWriter& ss ) const /* throw (PvapException) */
-    {
-        ss.writeInt(msg.getSeqNum());
-        ss.writeTag(tag_Ping);
-        msg.serialize(*this,ss);
-    }
-
-    void encodeMessage( const PingResp& msg, BufferWriter& ss ) const /* throw (PvapException) */
-    {
-        ss.writeInt(msg.getSeqNum());
-        ss.writeTag(tag_PingResp);
-        msg.serialize(*this,ss);
-    }
-
-    void encodeMessage( const Auth& msg, BufferWriter& ss ) const /* throw (PvapException) */
-    {
-        ss.writeInt(msg.getSeqNum());
-        ss.writeTag(tag_Auth);
-        msg.serialize(*this,ss);
-    }
-
-    void encodeMessage( const AuthResp& msg, BufferWriter& ss ) const /* throw (PvapException) */
-    {
-        ss.writeInt(msg.getSeqNum());
-        ss.writeTag(tag_AuthResp);
-        msg.serialize(*this,ss);
     }
 
     void encodeMessage( const Open& msg, BufferWriter& ss ) const /* throw (PvapException) */

@@ -1,10 +1,10 @@
 include EwalletMessages.def
 
 protocol Protocol
-    Ping               0x0001
-    PingResp           0x8001
-    Auth               0x0002
-    AuthResp           0x8002
+//    Ping               0x0001
+//    PingResp           0x8001
+//    Auth               0x0002
+//    AuthResp           0x8002
     Open               0x0003
     OpenResp           0x8003
     Commit             0x0004

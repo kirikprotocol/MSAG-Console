@@ -2,7 +2,7 @@
 #include "ClientContext.h"
 #include "scag/bill/ewallet/Exception.h"
 #include "scag/util/RelockMutexGuard.h"
-#include "scag/bill/ewallet/Ping.h"
+// #include "scag/bill/ewallet/Ping.h"
 
 namespace scag2 {
 namespace bill {
@@ -352,12 +352,13 @@ int ClientCore::doExecute()
                                    ctx->getResponse()->toString().c_str(),
                                    int(currentTime - ctx->getCreationTime()) );
                 } else {
+                    /*
                     if ( Request::isPing(*ctx->getRequest().get()) ) {
                         smsc_log_warn(log_,"PING failed, timeout");
                         closeSocket(*socket);
                     } else {
-                        ctx->setError(Exception("timeout",Status::TIMEOUT));
-                    }
+                     */
+                    ctx->setError(Exception("timeout",Status::TIMEOUT));
                 }
                 delete ctx;
             }
@@ -370,6 +371,7 @@ int ClientCore::doExecute()
 
 void ClientCore::inactivityTimeout( proto::Socket& socket )
 {
+    /*
     smsc_log_debug(log_,"sending Ping");
     try {
         std::auto_ptr<proto::Context> context(new ClientContext(new Ping,0));
@@ -377,6 +379,7 @@ void ClientCore::inactivityTimeout( proto::Socket& socket )
     } catch ( Exception& e ) {
         smsc_log_warn(log_,"PING send failed: %s", e.what() );
     }
+     */
 }
 
 

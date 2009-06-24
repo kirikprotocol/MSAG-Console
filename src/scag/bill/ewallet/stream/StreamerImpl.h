@@ -6,11 +6,11 @@
 #include "scag/bill/ewallet/ResponseVisitor.h"
 #include "scag/bill/ewallet/stream/generated-cpp/Protocol.hpp"
 
-#include "scag/bill/ewallet/Ping.h"
+// #include "scag/bill/ewallet/Ping.h"
 #include "scag/bill/ewallet/Open.h"
 #include "scag/bill/ewallet/Commit.h"
 #include "scag/bill/ewallet/Rollback.h"
-#include "scag/bill/ewallet/PingResp.h"
+// #include "scag/bill/ewallet/PingResp.h"
 #include "scag/bill/ewallet/OpenResp.h"
 #include "scag/bill/ewallet/CommitResp.h"
 #include "scag/bill/ewallet/RollbackResp.h"
@@ -26,6 +26,7 @@ private:
     struct DeserializeHandler : public stream::Protocol::Handler
     {
         DeserializeHandler() : streamer(this) {}
+        /*
         virtual void handle( stream::Ping& o   ) {
             ewallet::Ping* p = new ewallet::Ping;
             packet.reset(p);
@@ -42,6 +43,7 @@ private:
         virtual void handle( stream::AuthResp& obj ) {
             throw Exception( "authresp is not supported", Status::NOT_SUPPORTED );
         }
+         */
         virtual void handle( stream::Open& o ) {
             ewallet::Open* p = new ewallet::Open;
             packet.reset(p);
@@ -132,6 +134,7 @@ private:
     {
     public:
         SerializeVisitor( stream::Protocol& p, Buffer& b ) : proto_(p), writer_(b) {}
+        /*
         virtual bool visitPing( ewallet::Ping& o ) {
             stream::Ping p;
             p.setSeqNum(o.getSeqNum());
@@ -139,14 +142,9 @@ private:
             return true;
         }
         virtual bool visitAuth( ewallet::Auth& o ) {
-            /*
-            stream::Auth p;
-            p.setSeqNum(o.getSeqNum());
-            p.
-            proto_.encodeMessage(p,writer_);
-             */
             return false;
         }
+         */
         virtual bool visitOpen( ewallet::Open& o ) {
             stream::Open p;
             p.setSeqNum(o.getSeqNum());
@@ -186,6 +184,7 @@ private:
             proto_.encodeMessage(p,writer_);
             return true;
         }
+        /*
         virtual bool visitPingResp( ewallet::PingResp& o ) {
             stream::PingResp p;
             p.setSeqNum(o.getSeqNum());
@@ -193,6 +192,7 @@ private:
             proto_.encodeMessage(p,writer_);
             return true;
         }
+         */
         /*
         virtual bool visitAuthResp( ewallet::AuthResp& o ) {
             return false;

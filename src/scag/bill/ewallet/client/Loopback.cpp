@@ -1,11 +1,11 @@
 #include "Loopback.h"
 #include "ClientCore.h"
 #include "scag/bill/ewallet/RequestVisitor.h"
-#include "scag/bill/ewallet/Ping.h"
+// #include "scag/bill/ewallet/Ping.h"
 #include "scag/bill/ewallet/Open.h"
 #include "scag/bill/ewallet/Commit.h"
 #include "scag/bill/ewallet/Rollback.h"
-#include "scag/bill/ewallet/PingResp.h"
+// #include "scag/bill/ewallet/PingResp.h"
 #include "scag/bill/ewallet/OpenResp.h"
 #include "scag/bill/ewallet/CommitResp.h"
 #include "scag/bill/ewallet/RollbackResp.h"
@@ -16,12 +16,14 @@ using namespace scag2::bill::ewallet;
 class ReqProcessor : public RequestVisitor
 {
 public:
+    /*
     virtual bool visitPing( Ping& req ) {
         resp_.reset( new PingResp() );
         resp_->setSeqNum(req.getSeqNum());
         resp_->setStatus(Status::OK);
         return true;
     }
+     */
     /*
     virtual bool visitAuth( Auth& ) {
         resp_.reset( new AuthResp(req.getSeqNum()) );

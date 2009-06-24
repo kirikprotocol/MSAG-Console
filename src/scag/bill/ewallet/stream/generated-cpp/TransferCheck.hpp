@@ -196,7 +196,7 @@ public:
                              "reading field tag=%u of TransferCheck: %s",
                              tag, e.what() );
         }
-        printf( "deserialized %s\n", toString().c_str() );
+        // printf( "deserialized %s\n", toString().c_str() );
         checkFields();
     }
 

@@ -11,8 +11,8 @@ class RequestVisitor;
 
 class Request: public Packet
 {
-public:
-    static bool isPing( const Request& req );
+// public:
+//   static bool isPing( const Request& req );
 
 public:
     virtual ~Request() {}

@@ -15,32 +15,32 @@ include types.def
 //     everything else is mapped to:
 // 0xff -- UNKNOWN
 
-message Ping
-    version 1.0
-    property isRequest=true
-end
+// message Ping
+//     version 1.0
+//     property isRequest=true
+// end
 
-message PingResp
-    version 1.0
-    property isRequest=false
-    byte statusValue 1
-end
+// message PingResp
+//     version 1.0
+//     property isRequest=false
+//     byte statusValue 1
+// end
 
-message Auth
-    version 1.0
-    property isRequest=true
-    byte   protocolVersion 2
-    ascii  login           3
-    ascii  password        4
-    ascii  name            5
-end
+// message Auth
+//     version 1.0
+//     property isRequest=true
+//     byte   protocolVersion 2
+//     ascii  login           3
+//     ascii  password        4
+//     ascii  name            5
+// end
 
-message AuthResp
-    version 1.0
-    property isRequest=false
-    byte     statusValue 1
-    int32    processingTimeout 13   // the processing timeout, used by server
-end
+// message AuthResp
+//     version 1.0
+//     property isRequest=false
+//     byte     statusValue 1
+//     int32    processingTimeout 13   // the processing timeout, used by server
+// end
 
 message Open
     version 1.0
