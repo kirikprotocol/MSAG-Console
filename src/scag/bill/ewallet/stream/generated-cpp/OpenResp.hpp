@@ -131,7 +131,7 @@ public:
     template < class DataStream >
         void serialize( const Protocol& proto, DataStream& writer ) const
     {
-        printf( "serializing %s\n", toString().c_str() );
+        // printf( "serializing %s\n", toString().c_str() );
         checkFields();
         // mandatory fields
         try {

@@ -19,6 +19,7 @@ public:
     virtual bool visitPing( Ping& req ) {
         resp_.reset( new PingResp() );
         resp_->setSeqNum(req.getSeqNum());
+        resp_->setStatus(Status::OK);
         return true;
     }
     /*
@@ -28,18 +29,25 @@ public:
     }
      */
     virtual bool visitOpen( Open& req ) {
-        resp_.reset( new OpenResp(req.getSeqNum()) );
-        resp_->setSeqNum(req.getSeqNum());
+        OpenResp* o = new OpenResp();
+        resp_.reset(o);
+        o->setStatus(Status::OK);
+        o->setSeqNum(req.getSeqNum());
+        o->setTransId(10);
+        o->setAmount(120);
+        o->setChargeThreshold(90);
         return true;
     }
     virtual bool visitCommit( Commit& req ) {
-        resp_.reset( new CommitResp(req.getSeqNum()) );
+        resp_.reset( new CommitResp() );
         resp_->setSeqNum(req.getSeqNum());
+        resp_->setStatus(Status::OK);
         return true;
     }
     virtual bool visitRollback( Rollback& req ) {
-        resp_.reset( new RollbackResp(req.getSeqNum()) );
+        resp_.reset( new RollbackResp() );
         resp_->setSeqNum(req.getSeqNum());
+        resp_->setStatus(Status::OK);
         return true;
     }
 
@@ -133,6 +141,7 @@ void Loopback::send( std::auto_ptr< proto::Context >& context, bool sendRequest 
         ( new WriteContext( sendRequest ? util::currentTimeMillis() : 0 ) );
 
     // serialization
+    smsc_log_debug(log_,"serializing %s",packet->toString().c_str());
     core_.getStreamer().serialize( *packet, writeContext->buffer );
 
     { // pushing to the queue, checking its size again
@@ -190,7 +199,7 @@ int Loopback::Processor::doExecute()
                  loopback_->core_.getConfig().getIOTimeout() >= currentTime ) {
                 // sending
                 loopback_->core_.reportPacket(*loopback_,ctx->getSeqNum(),ctx->popContext(),proto::Context::SENDING);
-                processBuffer( ctx->buffer.get(), ctx->buffer.GetPos() );
+                processBuffer( ctx->getSeqNum(), ctx->buffer.get(), ctx->buffer.GetPos() );
             } else {
                 loopback_->core_.reportPacket(*loopback_,ctx->getSeqNum(),ctx->popContext(),proto::Context::EXPIRED);
             }
@@ -206,27 +215,39 @@ int Loopback::Processor::doExecute()
 }
 
 
-void Loopback::Processor::processBuffer( char* buffer, size_t buflen )
+void Loopback::Processor::processBuffer( uint32_t seqNum, char* buffer, size_t buflen )
 {
-    if (log_->isDebugEnabled()) {
-        util::HexDump hd;
-        util::HexDump::string_type dump;
-        hd.hexdump(dump,buffer,buflen);
-        smsc_log_debug(log_,"buffer to send: %s",hd.c_str(dump));
-    }
-    std::auto_ptr< Packet > packet;
-    try {
-        Streamer::Buffer buf(buffer,buflen);
-        packet.reset( loopback_->core_.getStreamer().deserialize(buf) );
-    } catch ( std::exception& e ) {
-        smsc_log_error(log_,"exc on buffer input on server-side: %s", e.what());
-        return;
-    }
-
-    smsc_log_debug(log_,"packet %s is received by server",packet->toString().c_str());
+    std::auto_ptr<Packet> resp;
     do {
+
+        if (log_->isDebugEnabled()) {
+            util::HexDump hd;
+            util::HexDump::string_type dump;
+            hd.hexdump(dump,buffer,buflen);
+            smsc_log_debug(log_,"buffer to send: %s",hd.c_str(dump));
+        }
+
+        // packet is sent
+        loopback_->core_.reportPacket(*loopback_,seqNum,0,proto::Context::SENT);
+        
+        std::auto_ptr< Packet > packet;
+        try {
+            Streamer::Buffer buf(buffer,buflen);
+            buf.SetPos(buflen);
+            packet.reset( loopback_->core_.getStreamer().deserialize(buf) );
+        } catch ( std::exception& e ) {
+            smsc_log_error(log_,"exc on buffer input on server-side: %s", e.what());
+            break;
+        }
+
+        if ( ! packet.get() ) {
+            smsc_log_error(log_,"deserialized packet is NULL");
+            break;
+        }
+
+        smsc_log_debug(log_,"packet %s is received by server",packet->toString().c_str());
         if ( ! packet->isRequest() ) {
-            smsc_log_error(log_,"packet is not request");
+            smsc_log_error(log_,"packet is not a request");
             break;
         }
         if ( ! packet->isValid() ) {
@@ -242,7 +263,8 @@ void Loopback::Processor::processBuffer( char* buffer, size_t buflen )
             break;
         }
 
-        std::auto_ptr<Packet> resp(proc.popResponse());
+        resp.reset(proc.popResponse());
+
         if ( ! resp.get() ) {
             smsc_log_warn(log_,"response is not filled");
             break;
@@ -270,9 +292,12 @@ void Loopback::Processor::processBuffer( char* buffer, size_t buflen )
             break;
         }
 
+    } while ( false );
+
+    if ( resp.get() ) {
         // response is received
         loopback_->core_.receivePacket( *loopback_, resp );
-    } while ( false );
+    }
 }
 
 } // namespace client

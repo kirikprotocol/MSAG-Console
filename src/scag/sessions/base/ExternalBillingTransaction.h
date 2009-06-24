@@ -10,10 +10,12 @@ namespace sessions {
 class ExternalBillingTransaction : public ExternalTransaction
 {
 public:
-    static const uint32_t id = 1;
+    typedef bill::billid_type billid_type;
+
+    static const uint32_t id = 1; // is used to deserialize back
 
 public:
-    explicit ExternalBillingTransaction( int billid ) :
+    explicit ExternalBillingTransaction( billid_type billid ) :
     billid_(billid), keywords_(0) {}
 
     virtual ~ExternalBillingTransaction() {
@@ -44,7 +46,7 @@ public:
         bill::BillingManager::Instance().Info( billid_, bis, tr );
     }
 
-    int billId() const {
+    billid_type billId() const {
         return billid_;
     }
 
@@ -59,7 +61,7 @@ public:
     }
 
 private:
-    int          billid_;
+    billid_type  billid_;
     std::string* keywords_;
 };
 

@@ -8,6 +8,8 @@
 #include "BillingInfoStruct.h"
 #include "scag/bill/ewallet/Client.h"
 #include "scag/bill/ewallet/Status.h"
+#include "scag/util/Time.h"
+#include "logger/Logger.h"
 
 namespace scag2 {
 namespace bill {
@@ -15,12 +17,14 @@ namespace bill {
 using namespace smsc::sms;
 using namespace infrastruct;
 
+typedef util::msectime_type billid_type;
+
 class BillOpenCallParamsData
 {
 public:
     BillingInfoStruct billingInfoStruct;
     TariffRec         tariffRec;
-    int               BillId;            // returned
+    billid_type       BillId;            // returned
 };
 
 
@@ -30,8 +34,8 @@ public:
     virtual ~BillOpenCallParams() {}
     virtual TariffRec* tariffRec() const = 0;
     virtual BillingInfoStruct* billingInfoStruct() const = 0;
-    virtual int billId() const = 0;
-    virtual void setBillId( int bi ) = 0;
+    virtual billid_type billId() const = 0;
+    virtual void setBillId( billid_type bi ) = 0;
 };
 
 
@@ -39,17 +43,20 @@ class BillCloseCallParams
 {
 public:
     virtual ~BillCloseCallParams() {}
-    virtual int getBillId() const = 0;
+    virtual billid_type getBillId() const = 0;
 private:
-    int billId;
+    billid_type billId;
 };
 
 
 class BillCallParams : public lcm::LongCallParams
 {
 public:
+    BillCallParams();
     virtual BillOpenCallParams* getOpen() = 0;
     virtual BillCloseCallParams* getClose() = 0;
+protected:
+    static smsc::logger::Logger* log_;
 };
 
 
@@ -59,8 +66,8 @@ public:
     InmanOpenCallParams( BillOpenCallParamsData* data ) : data_(data) {}
     virtual TariffRec* tariffRec() const { return data_.get() ? &(data_->tariffRec) : 0; }
     virtual BillingInfoStruct* billingInfoStruct() const { return data_.get() ? &(data_->billingInfoStruct) : 0; }
-    virtual int billId() const { return data_.get() ? data_->BillId : 0; }
-    virtual void setBillId( int bi ) { if (data_.get()) data_->BillId = bi; }
+    virtual billid_type billId() const { return data_.get() ? data_->BillId : 0; }
+    virtual void setBillId( billid_type bi ) { if (data_.get()) data_->BillId = bi; }
     virtual BillOpenCallParams* getOpen() { return this; }
     virtual BillCloseCallParams* getClose() { return 0; }
 private:
@@ -96,8 +103,8 @@ public:
     virtual void setResponse( ewallet::Response& resp );
     virtual TariffRec* tariffRec() const { return data_.get() ? &(data_->tariffRec) : 0; }
     virtual BillingInfoStruct* billingInfoStruct() const { return data_.get() ? &(data_->billingInfoStruct) : 0; }
-    virtual int billId() const { return data_.get() ? data_->BillId : 0; }
-    virtual void setBillId( int bi ) { if (data_.get()) data_->BillId = bi; }
+    virtual billid_type billId() const { return data_.get() ? data_->BillId : 0; }
+    virtual void setBillId( billid_type bi ) { if (data_.get()) data_->BillId = bi; }
     virtual BillOpenCallParams* getOpen() { return this; }
     virtual BillCloseCallParams* getClose() { return 0; }
 private:
@@ -108,24 +115,24 @@ private:
 class InmanCloseCallParams : public BillCallParams, public BillCloseCallParams
 {
 public:
-    InmanCloseCallParams( int billid ) : billId_(billid) {}
+    InmanCloseCallParams( billid_type billid ) : billId_(billid) {}
     virtual BillOpenCallParams* getOpen() { return 0; }
     virtual BillCloseCallParams* getClose() { return this; }
-    virtual int getBillId() const { return billId_; }
+    virtual billid_type getBillId() const { return billId_; }
 private:
-    int billId_;
+    billid_type billId_;
 };
 
 
 class BillingManager
 {
 public:
-    virtual unsigned int Open( BillOpenCallParams& openCallParams,
-                               lcm::LongCallContext* lcmCtx = NULL) = 0;
-    virtual void Commit( int billId, lcm::LongCallContext* lcmCtx = NULL ) = 0;
-    virtual void Rollback( int billId, bool timeout = false,
+    virtual billid_type Open( BillOpenCallParams& openCallParams,
+                              lcm::LongCallContext* lcmCtx = NULL) = 0;
+    virtual void Commit( billid_type billId, lcm::LongCallContext* lcmCtx = NULL ) = 0;
+    virtual void Rollback( billid_type billId, bool timeout = false,
                            lcm::LongCallContext* lcmCtx = NULL) = 0;
-    virtual void Info(int billId, BillingInfoStruct& bis,
+    virtual void Info(billid_type billId, BillingInfoStruct& bis,
                       TariffRec& tariffRec) = 0;
     virtual void Stop() = 0;
 

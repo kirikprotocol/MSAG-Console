@@ -34,7 +34,7 @@ public:
 
     /// receive a packet from network.
     /// invoked from reader.
-    virtual void receivePacket( SocketBase& socket, std::auto_ptr< Packet > packet ) = 0;
+    virtual void receivePacket( SocketBase& socket, std::auto_ptr<Packet> packet ) = 0;
 
     /// report when a packet is sent.
     /// invoked from writer.

@@ -18,7 +18,6 @@ public:
     virtual bool isRequest() const { return false; }
     uint8_t getStatus() const { return status_; }
     void setStatus( uint8_t status ) { status_ = status; }
-    virtual std::string toString() const = 0;
     virtual const char* typeToString() const = 0;
     virtual bool visit( ResponseVisitor& visitor ) = 0;
 

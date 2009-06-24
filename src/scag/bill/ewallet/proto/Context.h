@@ -60,7 +60,7 @@ public:
     std::auto_ptr<Response>&  getResponse() { return resp_; }
 
     ContextState getState() const { return state_; }
-    void setState( ContextState state ) { state_ = state; }
+    virtual void setState( ContextState state ) { state_ = state; }
 
 private:
     util::msectime_type       creationTime_;

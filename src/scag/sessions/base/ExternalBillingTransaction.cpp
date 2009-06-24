@@ -9,7 +9,7 @@ using namespace util::io;
 Serializer& ExternalBillingTransaction::serialize( Serializer& s ) const
 {    
     s << id;
-    s << uint32_t(billid_);
+    s << uint64_t(billid_);
     s << (keywords_ ? *keywords_ : std::string());
     return s;
 }
@@ -20,8 +20,9 @@ Deserializer& ExternalBillingTransaction::deserialize( Deserializer& s ) /* thro
     uint32_t i;
     s >> i;
     assert( i == id );
-    s >> i;
-    billid_ = int(i);
+    uint64_t ib;
+    s >> ib;
+    billid_ = ib;
     std::string kw;
     s >> kw;
     setKeywords( kw );

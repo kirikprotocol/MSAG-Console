@@ -12,7 +12,29 @@ class Open: public Request
 {
 public:
     virtual ~Open() {}
-    virtual std::string toString() const { return "open"; }
+    virtual std::string toString() const {
+        std::string res;
+        res.reserve(100);
+        res.append( Request::toString() );
+        char buf[100];
+        snprintf(buf,sizeof(buf)," sourceId=\"%s\"",sourceId_.c_str());
+        res.append(buf);
+        snprintf(buf,sizeof(buf)," agentId=%u", agentId_ );
+        res.append(buf);
+        snprintf(buf,sizeof(buf)," userId=\"%s\"", userId_.c_str() );
+        res.append(buf);
+        snprintf(buf,sizeof(buf)," walletType=\"%s\"", walletType_.c_str() );
+        res.append(buf);
+        snprintf(buf,sizeof(buf)," description=\"%s\"", description_.c_str() );
+        res.append(buf);
+        snprintf(buf,sizeof(buf)," amount=%d", amount_ );
+        res.append(buf);
+        snprintf(buf,sizeof(buf)," externalId=\"%s\"", externalId_.c_str() );
+        res.append(buf);
+        snprintf(buf,sizeof(buf)," timeout=%d", timeout_ );
+        res.append(buf);
+        return res;
+    }
     virtual const char* typeToString() const { return "open"; }
     virtual bool isValid() const {
         return ( agentId_ != 0 ) && !userId_.empty() && (amount_!=0);

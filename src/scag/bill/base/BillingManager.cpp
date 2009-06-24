@@ -13,6 +13,7 @@ namespace {
 typedef SingletonHolder< BillingManager, OuterCreation > Single;
 bool inited = false;
 Mutex mtx;
+Mutex logMutex;
 
 /// BillingManager is required for sessionmanager.
 inline unsigned GetLongevity( BillingManager* ) { return 251; }
@@ -22,13 +23,26 @@ inline unsigned GetLongevity( BillingManager* ) { return 251; }
 namespace scag2 {
 namespace bill {
 
+smsc::logger::Logger* BillCallParams::log_ = 0;
+
+BillCallParams::BillCallParams()
+{
+    if ( ! log_ ) {
+        MutexGuard mg(logMutex);
+        if ( ! log_ ) log_ = smsc::logger::Logger::getInstance("bill.param");
+    }
+}
+
+
 EwalletCallParams::EwalletCallParams( lcm::LongCallContext* lcmCtx ) :
 lcmCtx_(lcmCtx), status_(ewallet::Status::OK) {}
 
 
 void EwalletCallParams::handleResponse( std::auto_ptr< ewallet::Request > request, 
-                                            std::auto_ptr< ewallet::Response > response )
+                                        std::auto_ptr< ewallet::Response > response )
 {
+    smsc_log_debug(log_,"ewallet handle response: req=%s resp=%s",
+                   request->toString().c_str(), response->toString().c_str() );
     if ( response.get() && response->getStatus() != ewallet::Status::OK ) {
         setStatus( response->getStatus(), "text message to be filled oneday" );
     } else {
@@ -41,6 +55,8 @@ void EwalletCallParams::handleResponse( std::auto_ptr< ewallet::Request > reques
 void EwalletCallParams::handleError( std::auto_ptr< ewallet::Request > request,
                                      const ewallet::Exception& error )
 {
+    smsc_log_debug(log_,"ewallet handle error: req=%s err=%s stat=%u",
+                   request->toString().c_str(), error.what(), unsigned(error.getStatus()) );
     setStatus( error.getStatus(), error.what() );
     continueExecution();
 }

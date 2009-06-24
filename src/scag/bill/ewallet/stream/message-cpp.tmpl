@@ -103,7 +103,7 @@ $-foreach$
     template < class DataStream >
         void serialize( const $var protocol.name:ucf$& proto, DataStream& writer ) const
     {
-        printf( "serializing %s\n", toString().c_str() );
+        // printf( "serializing %s\n", toString().c_str() );
         checkFields();
         // mandatory fields
 $foreach field$

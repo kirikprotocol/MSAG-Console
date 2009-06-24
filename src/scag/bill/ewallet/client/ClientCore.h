@@ -32,7 +32,7 @@ public:
     /// handler must live until the request is processed (or failed).
     virtual void processRequest( std::auto_ptr<Request> request, ResponseHandler& handler );
 
-    virtual void receivePacket( proto::SocketBase& socket, std::auto_ptr< Packet > packet );
+    virtual void receivePacket( proto::SocketBase& socket, std::auto_ptr<Packet> packet );
     /// report context state change.
     /// NOTE: \param context may be NULL, in which case context should be searched in internal registry.
     virtual void reportPacket( proto::SocketBase& socket,

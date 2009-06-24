@@ -50,6 +50,9 @@ void ClientCore::startup()
     try {
         smsc_log_info( log_, "creating connections..." );
         loopback_.reset( new Loopback(*this) );
+        // register a connection
+        regSet_.create(loopback_.get());
+
         threadPool_.startTask( loopback_->getProcessor(), false );
         /*
         for ( size_t i = 0; i < getConfig().getConnectionsCount(); ++i ) {
@@ -120,7 +123,7 @@ void ClientCore::processRequest( std::auto_ptr< Request > request, ResponseHandl
 }
 
 
-void ClientCore::receivePacket( proto::SocketBase& socket, std::auto_ptr< Packet > packet )
+void ClientCore::receivePacket( proto::SocketBase& socket, std::auto_ptr<Packet> packet )
 {
     std::auto_ptr< ClientContext > context;
     uint32_t seqNum;
@@ -137,6 +140,8 @@ void ClientCore::receivePacket( proto::SocketBase& socket, std::auto_ptr< Packet
             throw Exception( "invalid response received", Status::BAD_RESPONSE );
         }
 
+        seqNum = packet->getSeqNum();
+
         // look for a request in registry
         std::auto_ptr<Response> response(static_cast<Response*>(packet.release()));
 
@@ -145,14 +150,13 @@ void ClientCore::receivePacket( proto::SocketBase& socket, std::auto_ptr< Packet
             if ( !ptr ) {
                 throw Exception( Status::IO_ERROR, "registry for socket %p is not found", &socket );
             }
-            uint32_t seqNum = packet->getSeqNum();
             RegistrySet::Ctx ctx(ptr->get(seqNum));
             if ( ! ctx ) {
                 throw Exception( Status::TIMEOUT, "seqnum=%u is not found in registry for socket %p, timeouted?", seqNum, &socket );
             }
             if ( ctx->getState() == proto::Context::SENDING ) {
                 // we are too fast
-                context->getResponse().reset(static_cast<Response*>(packet.release()));
+                ctx->getResponse().reset(response.release());
                 ctx->setState( proto::Context::RECEIVED );
                 return;
             }
@@ -163,7 +167,7 @@ void ClientCore::receivePacket( proto::SocketBase& socket, std::auto_ptr< Packet
             }
             context.reset(ptr->pop(ctx));
         }
-        context->getResponse().reset(static_cast<Response*>(packet.release()));
+        context->getResponse().reset(response.release());
 
     } catch ( Exception& exc ) {
         smsc_log_error(log_, "exception: %s", exc.what() );
@@ -180,6 +184,8 @@ void ClientCore::reportPacket( proto::SocketBase& socket,
                                proto::Context::ContextState    state )
 {
     std::auto_ptr<ClientContext> clientContext(static_cast<ClientContext*>(context));
+
+    smsc_log_debug(log_,"reporting seq=%u ctx=%p on socket=%p state=%u", seqNum, context, &socket, unsigned(state) );
 
     switch ( state ) {
     case proto::Context::SENDING : {
@@ -199,8 +205,9 @@ void ClientCore::reportPacket( proto::SocketBase& socket,
         }
         clientContext->setState( proto::Context::SENDING );
         ptr->push(clientContext.release());
-        break;
+        return;
     }
+
     case proto::Context::SENT : {
         if ( context ) {
             smsc_log_error(log_,"'sent' should not have context");
@@ -264,11 +271,12 @@ void ClientCore::reportPacket( proto::SocketBase& socket,
     default : {
         smsc_log_error(log_,"state %u should not be passed to reportPacket", state);
         abort();
-        break;
+        return;
     }
     }
         
     // now we have a context with one of the states: DONE, FAILED, EXPIRED
+    smsc_log_debug(log_,"setting state %u to context %p", unsigned(state), context);
     context->setState( state );
 }
 

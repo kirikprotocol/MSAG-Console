@@ -16,7 +16,11 @@ public:
     virtual bool isRequest() const = 0;
     virtual uint32_t getSeqNum() const { return seqNum_; }
     virtual void setSeqNum( uint32_t seq ) { seqNum_ = seq; }
-    virtual std::string toString() const = 0;
+    virtual std::string toString() const {
+        char buf[40];
+        snprintf(buf,sizeof(buf),"%s seqNum=%u",typeToString(),seqNum_);
+        return buf;
+    }
     virtual const char* typeToString() const = 0;
     virtual bool isValid() const = 0;
 

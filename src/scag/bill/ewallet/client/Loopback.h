@@ -24,7 +24,7 @@ private:
         virtual const char* taskName() { return "ewall.lbp"; }
     protected:
         virtual int doExecute();
-        void processBuffer( char* buffer, size_t buflen );
+        void processBuffer( uint32_t seqNum, char* buffer, size_t buflen );
     private:
         Loopback* loopback_;
     };

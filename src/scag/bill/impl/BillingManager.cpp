@@ -176,39 +176,56 @@ void BillingManagerImpl::processAsyncResult(BillingManagerImpl::SendTransaction*
 }
 #endif
 
-void BillingManagerImpl::logEvent(const char *tp, bool success, BillingInfoStruct& b, int billID)
+void BillingManagerImpl::logEvent(const char *tp, bool success, BillingInfoStruct& b, billid_type billID)
 {
-    smsc_log_info(logger, "bill %s: %s billId=%d, abonent=%s, opId=%d, sId=%d, providerId=%d",
-        tp, success ? "success" : "failed", billID, b.AbonentNumber.c_str(), b.operatorId, b.serviceId, b.providerId);
+    smsc_log_info(logger, "bill %s: %s billId=%lld, abonent=%s, opId=%d, sId=%d, providerId=%d",
+                  tp, success ? "success" : "failed", 
+                  static_cast<long long>(billID), b.AbonentNumber.c_str(), b.operatorId, b.serviceId, b.providerId);
 }
 
-BillingManagerImpl::BillTransaction* BillingManagerImpl::getBillTransaction(uint32_t billId)
+
+int BillingManagerImpl::makeInmanId( billid_type billid )
+{
+    MutexGuard mg(inUseLock);
+    return ++lastDlgId;
+}
+
+
+BillingManagerImpl::BillTransaction* BillingManagerImpl::getBillTransaction(billid_type billId)
 {
     MutexGuard mg(inUseLock);
     BillTransaction** pp = BillTransactionHash.GetPtr(billId);
-    if (!pp || !*pp) throw SCAGException("Cannot find transaction for billId=%d", billId);
+    if (!pp || !*pp) throw SCAGException("Cannot find transaction for billId=%lld",
+                                         static_cast<long long>(billId));
     BillTransactionHash.Delete(billId);
     return *pp;
 }
 
-void BillingManagerImpl::putBillTransaction(uint32_t billId, BillTransaction* p)
+void BillingManagerImpl::putBillTransaction(billid_type billId, BillTransaction* p)
 {
     MutexGuard mg(inUseLock);
     BillTransactionHash.Insert(billId, p);
 }
 
-uint32_t BillingManagerImpl::genBillId()
+billid_type BillingManagerImpl::genBillId()
 {
+    billid_type ret = util::currentTimeMillis();
     MutexGuard mg(inUseLock);
-    return ++m_lastBillId;
+    if ( ret > m_lastBillId ) {
+        m_lastBillId = ret;
+    } else {
+        ret = ++m_lastBillId;
+    }
+    return ret;
 }
 
-unsigned int BillingManagerImpl::Open( BillOpenCallParams& openCallParams,
-                                       lcm::LongCallContext* lcmCtx)
+billid_type BillingManagerImpl::Open( BillOpenCallParams& openCallParams,
+                                      lcm::LongCallContext* lcmCtx)
 {
-    uint32_t billId = genBillId();
+    billid_type billId = genBillId();
 
-    smsc_log_debug(logger, "Opening billId=%d for params %p...", billId, &openCallParams );
+    smsc_log_debug(logger, "Opening billId=%lld for params %p...",
+                   static_cast<long long>(billId), &openCallParams );
 
     auto_ptr<BillTransaction> p(new BillTransaction());
 
@@ -223,7 +240,8 @@ unsigned int BillingManagerImpl::Open( BillOpenCallParams& openCallParams,
     if(tariffRec.billType == bill::infrastruct::INMAN || tariffRec.billType == bill::infrastruct::INMANSYNC)
     {
         fillChargeSms(p->ChargeOperation.Cmd(), billingInfoStruct, tariffRec);
-        p->ChargeOperation.Hdr().dlgId = billId;
+        const uint32_t dlgId = makeInmanId(billId);
+        p->ChargeOperation.Hdr().dlgId = dlgId;
 
         if(lcmCtx)
         {
@@ -232,12 +250,12 @@ unsigned int BillingManagerImpl::Open( BillOpenCallParams& openCallParams,
             return 0;
         }
 
-        smsc_log_debug(logger, "Send sync inman command billid=%d", billId);
+        smsc_log_debug(logger, "Send sync inman command billid=%d", dlgId);
         p->status = sendCommandAndWaitAnswer(p->ChargeOperation);
         if(p->status == TRANSACTION_VALID)
         {
             SPckDeliverySmsResult opRes;
-            opRes.Hdr().dlgId = billId;
+            opRes.Hdr().dlgId = p->ChargeOperation.Hdr().dlgId;
             opRes.Cmd().setResultValue(1);
             opRes.Cmd().setFinal(false); // To skip CDR creation
             sendCommand(opRes);
@@ -286,9 +304,9 @@ unsigned int BillingManagerImpl::Open( BillOpenCallParams& openCallParams,
     return billId;
 }
 
-void BillingManagerImpl::Commit(int billId, lcm::LongCallContext* lcmCtx)
+void BillingManagerImpl::Commit(billid_type billId, lcm::LongCallContext* lcmCtx)
 {
-    smsc_log_debug(logger, "Commiting billId=%d...", billId);
+    smsc_log_debug(logger, "Commiting billId=%lld...", billId);
 
     auto_ptr<BillTransaction> p(getBillTransaction(billId));
 
@@ -305,7 +323,7 @@ void BillingManagerImpl::Commit(int billId, lcm::LongCallContext* lcmCtx)
         if(p->status == TRANSACTION_VALID)
         {
             SPckDeliverySmsResult op;
-            op.Hdr().dlgId = billId;
+            op.Hdr().dlgId = p->ChargeOperation.Hdr().dlgId;
             sendCommand(op);
         }
     }
@@ -316,9 +334,9 @@ void BillingManagerImpl::Commit(int billId, lcm::LongCallContext* lcmCtx)
     ProcessResult("commit", TRANSACTION_COMMITED, p.get());
 }
 
-void BillingManagerImpl::Rollback(int billId, bool timeout, lcm::LongCallContext* lcmCtx)
+void BillingManagerImpl::Rollback(billid_type billId, bool timeout, lcm::LongCallContext* lcmCtx)
 {
-    smsc_log_debug(logger, "Rolling back billId=%d...", billId);
+    smsc_log_debug(logger, "Rolling back billId=%lld...", billId);
 
     auto_ptr<BillTransaction> p(getBillTransaction(billId));
 
@@ -336,11 +354,11 @@ void BillingManagerImpl::Rollback(int billId, bool timeout, lcm::LongCallContext
             timeout ? TRANSACTION_TIME_OUT : TRANSACTION_CALL_ROLLBACK, p.get());
 }
 
-void BillingManagerImpl::Info(int billId, BillingInfoStruct& bis, TariffRec& tariffRec)
+void BillingManagerImpl::Info(billid_type billId, BillingInfoStruct& bis, TariffRec& tariffRec)
 {
     MutexGuard mg(inUseLock);
     BillTransaction** p = BillTransactionHash.GetPtr(billId);
-    if (!p || !*p) throw SCAGException("Cannot find transaction for billId=%d", billId);
+    if (!p || !*p) throw SCAGException("Cannot find transaction for billId=%lld", billId);
     bis = (*p)->billingInfoStruct;
     tariffRec = (*p)->tariffRec;
 }
@@ -396,7 +414,7 @@ void BillingManagerImpl::onChargeSmsResult(ChargeSmsResult* result, CsBillingHdr
     SendTransaction **p = SendTransactionHash.GetPtr(hdr->dlgId);
     if(!p)
     {
-        smsc_log_error(logger, "Cannot find transaction for billId=%d", hdr->dlgId);
+        smsc_log_error(logger, "Cannot find transaction for dlgId=%d", hdr->dlgId);
         //TODO: do what we must to do
         return;
     }
@@ -441,7 +459,7 @@ void BillingManagerImpl::sendCommandAsync(BillTransaction *bt, lcm::LongCallCont
 
     st->lcmCtx = lcmCtx;
     st->billTransaction = bt;
-    insertSendTransaction(bt->billId, st.release());
+    insertSendTransaction(bt->ChargeOperation.Hdr().dlgId, st.release());
     if(pipe->sendPck(&bt->ChargeOperation) <= 0)
     {
         MutexGuard mg(sendLock);
@@ -587,7 +605,7 @@ int BillingManagerImpl::Execute()
                 {
                     smsc_log_debug(logger, "Processing expired inman transactions. Total: %d", SendTransactionHash.Count());
                     int key;
-                    for(IntHash <SendTransaction *>::Iterator it = SendTransactionHash.First(); it.Next(key, st);)
+                    for(IntHash<SendTransaction *>::Iterator it = SendTransactionHash.First(); it.Next(key, st);)
                         if(st->lcmCtx && st->startTime + m_Timeout < prevCheck)
                             processAsyncResult(st);
                 }

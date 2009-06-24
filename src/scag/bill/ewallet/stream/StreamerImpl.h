@@ -25,6 +25,107 @@ class StreamerImpl : public ewallet::Streamer
 private:
     struct DeserializeHandler : public stream::Protocol::Handler
     {
+        DeserializeHandler() : streamer(this) {}
+        virtual void handle( stream::Ping& o   ) {
+            ewallet::Ping* p = new ewallet::Ping;
+            packet.reset(p);
+            p->setSeqNum(o.getSeqNum());
+        }
+        virtual void handle( stream::PingResp& o ) {
+            ewallet::PingResp* p = new ewallet::PingResp;
+            packet.reset(p);
+            p->setSeqNum(o.getSeqNum());
+        }
+        virtual void handle( stream::Auth& obj ) {
+            throw Exception( "auth is not supported", Status::NOT_SUPPORTED );
+        }
+        virtual void handle( stream::AuthResp& obj ) {
+            throw Exception( "authresp is not supported", Status::NOT_SUPPORTED );
+        }
+        virtual void handle( stream::Open& o ) {
+            ewallet::Open* p = new ewallet::Open;
+            packet.reset(p);
+            p->setSeqNum(o.getSeqNum());
+            p->setSourceId(o.getSourceId());
+            p->setAgentId(o.getAgentId());
+            p->setUserId(o.getUserId());
+            p->setWalletType(o.getWalletType());
+            p->setDescription(o.getDescription());
+            p->setAmount(o.getAmount());
+            p->setExternalId(o.getExternalId());
+            p->setTimeout(o.getTimeout());
+        }
+        virtual void handle( stream::OpenResp& o ) {
+            ewallet::OpenResp* p = new ewallet::OpenResp;
+            packet.reset(p);
+            p->setSeqNum(o.getSeqNum());
+            p->setStatus(o.getStatusValue());
+            p->setTransId(o.getTransId());
+            p->setAmount(o.getAmount());
+            p->setChargeThreshold(o.getChargeThreshold());
+        }
+        virtual void handle( stream::Commit& o ) {
+            ewallet::Commit* p = new ewallet::Commit;
+            packet.reset(p);
+            p->setSeqNum(o.getSeqNum());
+            p->setSourceId(o.getSourceId());
+            p->setAgentId(o.getAgentId());
+            p->setUserId(o.getUserId());
+            p->setWalletType(o.getWalletType());
+            p->setAmount(o.getAmount());
+            p->setExternalId(o.getExternalId());
+            p->setTransId(o.getTransId());
+        }
+        virtual void handle( stream::CommitResp& o ) {
+            ewallet::CommitResp* p = new ewallet::CommitResp;
+            packet.reset(p);
+            p->setSeqNum(o.getSeqNum());
+            p->setStatus(o.getStatusValue());
+        }
+        virtual void handle( stream::Rollback& o ) {
+            ewallet::Rollback* p = new ewallet::Rollback;
+            packet.reset(p);
+            p->setSeqNum(o.getSeqNum());
+            p->setSourceId(o.getSourceId());
+            p->setAgentId(o.getAgentId());
+            p->setUserId(o.getUserId());
+            p->setWalletType(o.getWalletType());
+            p->setExternalId(o.getExternalId());
+            p->setTransId(o.getTransId());
+        }
+        virtual void handle( stream::RollbackResp& o ) {
+            ewallet::RollbackResp* p = new ewallet::RollbackResp;
+            packet.reset(p);
+            p->setSeqNum(o.getSeqNum());
+            p->setStatus(o.getStatusValue());
+        }
+        virtual void handle( stream::Info& o ) {
+            throw Exception( "info is not supported", Status::NOT_SUPPORTED );
+        }
+        virtual void handle( stream::InfoResp& o ) {
+            throw Exception( "inforesp is not supported", Status::NOT_SUPPORTED );
+        }
+        virtual void handle( stream::Transfer& o ) {
+            throw Exception( "transfer is not supported", Status::NOT_SUPPORTED );
+        }
+        virtual void handle( stream::TransferResp& o ) {
+            throw Exception( "transferresp is not supported", Status::NOT_SUPPORTED );
+        }
+        virtual void handle( stream::Check& o ) {
+            throw Exception( "check is not supported", Status::NOT_SUPPORTED );
+        }
+        virtual void handle( stream::CheckResp& o ) {
+            throw Exception( "checkresp is not supported", Status::NOT_SUPPORTED );
+        }
+        virtual void handle( stream::TransferCheck& o ) {
+            throw Exception( "transfercheck is not supported", Status::NOT_SUPPORTED );
+        }
+        virtual void handle( stream::TransferCheckResp& o ) {
+            throw Exception( "transfercheckresp is not supported", Status::NOT_SUPPORTED );
+        }
+
+        stream::Protocol      streamer;
+        std::auto_ptr<Packet> packet;
     };
 
     struct SerializeVisitor : public ewallet::RequestVisitor, public ewallet::ResponseVisitor
@@ -138,13 +239,10 @@ public:
         }
     }
     virtual Packet* deserialize( Buffer& buf ) {
-        /*
         DeserializeHandler dh;
-        stream::Streamer p(&dh);
-        p.decodeMessage(buf);
-        return dh.packet;
-         */
-        return 0;
+        BufferReader reader(buf);
+        dh.streamer.decodeMessage(reader);
+        return dh.packet.release();
     }
 
 private:

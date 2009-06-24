@@ -17,7 +17,6 @@ public:
 public:
     virtual ~Request() {}
     virtual bool isRequest() const { return true; }
-    virtual std::string toString() const = 0;
     virtual const char* typeToString() const = 0;
     virtual bool visit( RequestVisitor& visitor ) = 0;
 };

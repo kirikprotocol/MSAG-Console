@@ -197,6 +197,7 @@ void Socket::processInput()
         hd.hexdump(dump,readbuf.get(),readbuf.GetPos());
         smsc_log_debug(log_,"read length=%d data=%s",readbuf.GetPos(),hd.c_str(dump));
     }
+
     std::auto_ptr<Packet> packet;
     try {
         packet.reset( core_.getStreamer().deserialize(readbuf) );

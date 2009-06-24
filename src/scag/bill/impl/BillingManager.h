@@ -6,7 +6,8 @@
 #include <core/synchronization/Mutex.hpp>
 #include <core/synchronization/Event.hpp>
 #include <core/threads/Thread.hpp>
-#include <core/buffers/IntHash.hpp>
+#include "core/buffers/IntHash.hpp"
+#include "core/buffers/IntHash64.hpp"
 #include "core/network/Socket.hpp"
 #include "scag/config/base/ConfigListener2.h"
 #include "scag/config/bill/BillingManagerConfig.h"
@@ -48,7 +49,7 @@ public config::ConfigListener
         #ifdef MSAG_INMAN_BILL
         smsc::inman::interaction::SPckChargeSms ChargeOperation;
         #endif
-        unsigned int billId;
+        billid_type billId;
         stat::SaccBillingInfoEvent billEvent;
         BillingInfoStruct billingInfoStruct;
         BillTransaction() : status(TRANSACTION_NOT_STARTED) {}
@@ -64,12 +65,14 @@ public config::ConfigListener
         BillTransaction* billTransaction;
         SendTransaction() : status(TRANSACTION_WAIT_ANSWER), lcmCtx(NULL), startTime(time(NULL)), billTransaction(NULL) {}
     };
-    IntHash <SendTransaction *> SendTransactionHash;
+    // by dialog number
+    IntHash<SendTransaction *> SendTransactionHash;
     #endif
 
     Logger *logger;
 
-    IntHash <BillTransaction *> BillTransactionHash;
+    // by trans number
+    IntHash64<BillTransaction *> BillTransactionHash;
 
     Event connectEvent;
     Mutex stopLock;
@@ -78,7 +81,9 @@ public config::ConfigListener
 
     bool m_bStarted;
 
-    unsigned int m_lastBillId;
+    billid_type m_lastBillId;
+    int lastDlgId;
+
     int m_ReconnectTimeout, m_Timeout;
 
     bool m_Connected;
@@ -127,18 +132,18 @@ public config::ConfigListener
     void makeBillEvent(BillingTransactionEvent billCommand, BillingCommandStatus commandStatus, TariffRec& tariffRec, BillingInfoStruct& billingInfo,
                        stat::SaccBillingInfoEvent* ev);
 
-    uint32_t genBillId();
-    BillTransaction* getBillTransaction(uint32_t billId);
-    void putBillTransaction(uint32_t billId, BillTransaction* p);
+    billid_type genBillId();
+    BillTransaction* getBillTransaction(billid_type billId);
+    void putBillTransaction(billid_type billId, BillTransaction* p);
     void ClearTransactions()
     {
-        int key;
 
 #ifdef MSAG_INMAN_BILL
         {
             MutexGuard mg1(sendLock);
+            int key;
             SendTransaction *st;
-            for(IntHash <SendTransaction *>::Iterator it = SendTransactionHash.First(); it.Next(key, st);)
+            for(IntHash<SendTransaction *>::Iterator it = SendTransactionHash.First(); it.Next(key, st);)
             {
                 if(st->lcmCtx)
                 {
@@ -153,12 +158,15 @@ public config::ConfigListener
 
         BillTransaction *value;
         MutexGuard mg(inUseLock);
-        for (IntHash <BillTransaction *>::Iterator it = BillTransactionHash.First(); it.Next(key, value);)
+        billid_type key;
+        for (IntHash64<BillTransaction *>::Iterator it = BillTransactionHash.First(); it.Next(key, value);)
             delete value;
 
         BillTransactionHash.Empty();
     }
-    void logEvent(const char *type, bool success, BillingInfoStruct& b, int billID);
+    void logEvent(const char *type, bool success, BillingInfoStruct& b, billid_type billID);
+
+    int makeInmanId( billid_type billid );
 
 public:
     void init( config::BillingManagerConfig& cfg );
@@ -167,11 +175,11 @@ public:
     virtual void Start();
     virtual void Stop();        
 
-    virtual unsigned int Open( BillOpenCallParams& openCallParams,
+    virtual billid_type Open( BillOpenCallParams& openCallParams,
                                lcm::LongCallContext* lcmCtx = NULL);
-    virtual void Commit( int billId, lcm::LongCallContext* lcmCtx = NULL);
-    virtual void Rollback( int billId, bool timeout, lcm::LongCallContext* lcmCtx = NULL );
-    virtual void Info( int billId, BillingInfoStruct& bis, TariffRec& tariffRec);
+    virtual void Commit( billid_type billId, lcm::LongCallContext* lcmCtx = NULL);
+    virtual void Rollback( billid_type billId, bool timeout, lcm::LongCallContext* lcmCtx = NULL );
+    virtual void Info( billid_type billId, BillingInfoStruct& bis, TariffRec& tariffRec);
 
     virtual Infrastructure& getInfrastructure() { return infrastruct; };
 
@@ -181,7 +189,8 @@ public:
     ConfigListener(config::BILLMAN_CFG),
     logger(0),
     m_bStarted(false),
-    m_lastBillId(0)
+    m_lastBillId(util::currentTimeMillis()),
+    lastDlgId(0)
 #ifdef MSAG_INMAN_BILL
         , socket(0), pipe(0)
 #endif
