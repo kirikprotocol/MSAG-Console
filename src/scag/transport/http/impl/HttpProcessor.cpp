@@ -431,10 +431,6 @@ int HttpProcessorImpl::processRequest(HttpRequest& request)
         {
             CommandProperty cp(scag2::re::CommandBridge::getCommandProperty(request, sessionKey.address(), static_cast<uint8_t>(request.getOperationId())));
             re::RuleEngine::Instance().process(request, *se.get(), rs, cp);
-            if (r.statistics && !se->getLongCallContext().continueExec) {
-              smsc_log_debug(logger, "process request: register traffic info event");
-              scag2::re::CommandBridge::RegisterTrafficEvent(cp, se->sessionPrimaryKey(), "");
-            }
             HttpCommandRelease rel(request);
             
             if (rs.status == re::STATUS_LONG_CALL)
@@ -442,6 +438,11 @@ int HttpProcessorImpl::processRequest(HttpRequest& request)
                 makeLongCall(request, se);
                 rel.leaveLocked();
                 return rs.status;
+            }
+
+            if (r.statistics) {
+              smsc_log_debug(logger, "process request: register traffic info event");
+              scag2::re::CommandBridge::RegisterTrafficEvent(cp, se->sessionPrimaryKey(), "");
             }
 
             if (rs.status == re::STATUS_OK)
@@ -520,7 +521,15 @@ int HttpProcessorImpl::processResponse(HttpResponse& response)
             CommandProperty cp(scag2::re::CommandBridge::getCommandProperty(response, sk.address(), static_cast<uint8_t>(response.getOperationId())));
             HttpCommandRelease rel(response);
             re::RuleEngine::Instance().process(response, *se.get(), rs, cp);
-            if (!se->getLongCallContext().continueExec && response.getStatistics()) {
+
+            if (rs.status == re::STATUS_LONG_CALL)
+            {
+                makeLongCall(response, se);
+                rel.leaveLocked();
+                return rs.status;
+            }
+
+            if (response.getStatistics()) {
               smsc_log_debug(logger, "process response: register traffic info event");
               scag2::re::CommandBridge::RegisterTrafficEvent(cp, se->sessionPrimaryKey(), "");
             }
@@ -534,12 +543,6 @@ int HttpProcessorImpl::processResponse(HttpResponse& response)
                 return rs.status;
             }
 
-            if (rs.status == re::STATUS_LONG_CALL)
-            {
-                makeLongCall(response, se);
-                rel.leaveLocked();
-                return rs.status;
-            }
 
         } else {
 
@@ -621,7 +624,15 @@ int HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
             response.setCommandId(HTTP_DELIVERY);
             response.setDelivered(delivered);
             re::RuleEngine::Instance().process(response, *se.get(), rs, cp);
-            if (!se->getLongCallContext().continueExec && response.getStatistics()) {
+
+            if(rs.status == re::STATUS_LONG_CALL)
+            {
+                makeLongCall(response, se);
+                rel.leaveLocked();
+                return rs.status;
+            }
+
+            if (response.getStatistics()) {
               smsc_log_debug(logger, "process status response: register traffic info event");
               scag2::re::CommandBridge::RegisterTrafficEvent(cp, se->sessionPrimaryKey(), "");
             }
@@ -633,12 +644,6 @@ int HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
                 return rs.status;
             }
 
-            if(rs.status == re::STATUS_LONG_CALL)
-            {
-                makeLongCall(response, se);
-                rel.leaveLocked();
-                return rs.status;
-            }
         }
         else {
           if ( ! rescmd ) {
