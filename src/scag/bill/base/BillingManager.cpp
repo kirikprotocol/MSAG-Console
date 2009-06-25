@@ -3,6 +3,7 @@
 #include "BillingManager.h"
 #include "scag/bill/ewallet/Request.h"
 #include "scag/bill/ewallet/Response.h"
+#include "scag/bill/ewallet/OpenResp.h"
 #include "scag/bill/ewallet/Exception.h"
 
 using namespace scag2::bill;
@@ -34,8 +35,8 @@ BillCallParams::BillCallParams()
 }
 
 
-EwalletCallParams::EwalletCallParams( lcm::LongCallContext* lcmCtx ) :
-lcmCtx_(lcmCtx), status_(ewallet::Status::OK) {}
+EwalletCallParams::EwalletCallParams( bool transit, lcm::LongCallContext* lcmCtx ) :
+lcmCtx_(lcmCtx), registrator_(0), transit_(transit), transId_(0), status_(ewallet::Status::OK) {}
 
 
 void EwalletCallParams::handleResponse( std::auto_ptr< ewallet::Request > request, 
@@ -43,10 +44,11 @@ void EwalletCallParams::handleResponse( std::auto_ptr< ewallet::Request > reques
 {
     smsc_log_debug(log_,"ewallet handle response: req=%s resp=%s",
                    request->toString().c_str(), response->toString().c_str() );
-    if ( response.get() && response->getStatus() != ewallet::Status::OK ) {
+    if ( !response.get() || response->getStatus() != ewallet::Status::OK ) {
         setStatus( response->getStatus(), "text message to be filled oneday" );
     } else {
         setResponse( *response.get() );
+        if (registrator_) registrator_->processAsyncResult(*this);
     }
     continueExecution();
 }
@@ -71,7 +73,16 @@ void EwalletCallParams::continueExecution()
 void EwalletOpenCallParams::setResponse( ewallet::Response& resp )
 {
     // status is ok
-    // FIXME
+    ewallet::OpenResp& oResp = static_cast< ewallet::OpenResp& >(resp);
+    setTransId( oResp.getTransId() );
+    // FIXME: amount and chargeThreshold
+}
+
+
+void EwalletCloseCallParams::setResponse( ewallet::Response& resp )
+{
+    // status is ok
+    // delete the transaction (will be done in billing manager and session)
 }
 
 

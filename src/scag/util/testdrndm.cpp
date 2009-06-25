@@ -1,5 +1,5 @@
 #include <cstdio>
-#include "Drndm.h"
+#include "scag/util/io/Drndm.h"
 
 int main()
 {

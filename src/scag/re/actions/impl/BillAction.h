@@ -18,8 +18,6 @@ protected:
                                                 const ActionFactory& factory );
     virtual bool FinishXMLSubSection(const std::string& name);
 
-
-
     std::string getTransId( ActionContext& ctx );
 
     void setBillingStatus( ActionContext& context,
@@ -28,10 +26,16 @@ protected:
 
     virtual const char* opname() const = 0;
 
+    // by default is false
+    bool isTransit() const { return transit_; }
+    bool hasMessage() const { return hasMessage_; }
+
 private:
     // -- input
     FieldType       transIdFieldType_;
     std::string     transIdFieldName_;
+
+    bool            transit_;
 
     // -- output
 

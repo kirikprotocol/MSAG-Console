@@ -36,7 +36,8 @@ using smsc::core::network::Socket;
 class BillingManagerImpl :
 public BillingManager,
 public Thread,
-public config::ConfigListener
+public config::ConfigListener,
+public EwalletCallParams::TransactionRegistrator
 #ifdef MSAG_INMAN_BILL
     , public smsc::inman::interaction::SMSCBillingHandlerITF
     , public smsc::inman::interaction::ConnectListenerITF
@@ -52,7 +53,9 @@ public config::ConfigListener
         billid_type billId;
         stat::SaccBillingInfoEvent billEvent;
         BillingInfoStruct billingInfoStruct;
-        BillTransaction() : status(TRANSACTION_NOT_STARTED) {}
+
+        uint32_t ewalletTransId; // used to identify an Ewallet transaction
+        BillTransaction() : status(TRANSACTION_NOT_STARTED), ewalletTransId(0) {}
     };
 
     #ifdef MSAG_INMAN_BILL
@@ -125,6 +128,7 @@ public config::ConfigListener
 
     void sendCommandAsync( BillTransaction *bt, lcm::LongCallContext* lcmCtx );
     void processAsyncResult(BillingManagerImpl::SendTransaction* pst);
+
     #endif /* MSAG_INMAN_BILL */
 
     void ProcessResult(const char* eventName, BillingTransactionEvent billingTransactionEvent, BillTransaction * billTransaction);
@@ -167,6 +171,7 @@ public config::ConfigListener
     void logEvent(const char *type, bool success, BillingInfoStruct& b, billid_type billID);
 
     int makeInmanId( billid_type billid );
+    virtual void processAsyncResult( EwalletCallParams& params );
 
 public:
     void init( config::BillingManagerConfig& cfg );

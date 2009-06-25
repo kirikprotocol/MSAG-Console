@@ -15,6 +15,30 @@ void BillAction::init( const SectionParams& params,
                                        transIdFieldName_,
                                        bExist );
 
+    std::string transitValue;
+    bool hasTransit;
+    FieldType transitType = CheckParameter( params,
+                                            propertyObject,
+                                            opname(),
+                                            "transit",
+                                            false, true,
+                                            transitValue,
+                                            hasTransit );
+    if ( hasTransit ) {
+        if ( transitType != ftUnknown ) {
+            throw SCAGException( "Action '%s': transit field must be a bool constant", opname());
+        }
+        if ( transitValue == "yes" || transitValue == "true" || transitValue == "1" ) {
+            transit_ = true;
+        } else if ( transitValue == "no" || transitValue == "false" || transitValue == "0" ) {
+            transit_ = false;
+        } else {
+            throw SCAGException( "Action '%s': transit field must be a bool constant", opname());
+        }
+    } else {
+        transit_ = false;
+    }
+
     // --- output fields
 
     CheckParameter( params, propertyObject, 

@@ -8,7 +8,7 @@
 #include "BillingInfoStruct.h"
 #include "scag/bill/ewallet/Client.h"
 #include "scag/bill/ewallet/Status.h"
-#include "scag/util/Time.h"
+// #include "scag/util/Time.h"
 #include "logger/Logger.h"
 
 namespace scag2 {
@@ -17,14 +17,14 @@ namespace bill {
 using namespace smsc::sms;
 using namespace infrastruct;
 
-typedef util::msectime_type billid_type;
+// typedef util::msectime_type billid_type;
 
 class BillOpenCallParamsData
 {
 public:
     BillingInfoStruct billingInfoStruct;
     TariffRec         tariffRec;
-    billid_type       BillId;            // returned
+    // billid_type       BillId;            // moved to billingInfoStruct
 };
 
 
@@ -44,8 +44,6 @@ class BillCloseCallParams
 public:
     virtual ~BillCloseCallParams() {}
     virtual billid_type getBillId() const = 0;
-private:
-    billid_type billId;
 };
 
 
@@ -66,9 +64,9 @@ public:
     InmanOpenCallParams( BillOpenCallParamsData* data ) : data_(data) {}
     virtual TariffRec* tariffRec() const { return data_.get() ? &(data_->tariffRec) : 0; }
     virtual BillingInfoStruct* billingInfoStruct() const { return data_.get() ? &(data_->billingInfoStruct) : 0; }
-    virtual billid_type billId() const { return data_.get() ? data_->BillId : 0; }
-    virtual void setBillId( billid_type bi ) { if (data_.get()) data_->BillId = bi; }
-    virtual BillOpenCallParams* getOpen() { return this; }
+    virtual billid_type billId() const { return data_.get() ? data_->billingInfoStruct.billId : 0; }
+    virtual void setBillId( billid_type bi ) { if (data_.get()) data_->billingInfoStruct.billId = bi; }
+    virtual InmanOpenCallParams* getOpen() { return this; }
     virtual BillCloseCallParams* getClose() { return 0; }
 private:
     std::auto_ptr<BillOpenCallParamsData> data_;
@@ -78,7 +76,13 @@ private:
 class EwalletCallParams : public BillCallParams, public ewallet::Client::ResponseHandler
 {
 public:
-    EwalletCallParams( lcm::LongCallContext* lcmCtx );
+    class TransactionRegistrator {
+    public:
+        virtual ~TransactionRegistrator() {}
+        virtual void processAsyncResult( EwalletCallParams& params ) = 0;
+    };
+
+    EwalletCallParams( bool isTransit, lcm::LongCallContext* lcmCtx );
     virtual void handleResponse( std::auto_ptr< ewallet::Request > request, 
                                  std::auto_ptr< ewallet::Response > response );
     virtual void handleError( std::auto_ptr< ewallet::Request > request,
@@ -87,37 +91,63 @@ public:
         status_ = stat;
         exception = msg;
     }
+    void setRegistrator( TransactionRegistrator* reg ) { registrator_ = reg; }
     virtual void setResponse( ewallet::Response& resp ) = 0;
     virtual void continueExecution();
+
+    /// identifies a transaction on Ewallet server
+    uint32_t getTransId() const { return transId_; }
+    void setTransId( uint32_t ti ) { transId_ = ti; }
+
+    bool isTransit() const { return transit_; }
+
 private:
-    lcm::LongCallContext* lcmCtx_;
-    uint8_t               status_;
+    lcm::LongCallContext*   lcmCtx_;
+    TransactionRegistrator* registrator_;
+    bool                    transit_;
+    uint32_t                transId_;
+    uint8_t                 status_;
 };
 
 
 class EwalletOpenCallParams : public EwalletCallParams, public BillOpenCallParams
 {
 public:
-    EwalletOpenCallParams( BillOpenCallParamsData* data, lcm::LongCallContext* lcmCtx ) :
-    EwalletCallParams(lcmCtx), data_(data) {}
+    EwalletOpenCallParams( bool transit,
+                           BillOpenCallParamsData* data,
+                           lcm::LongCallContext* lcmCtx ) :
+    EwalletCallParams(transit, lcmCtx), data_(data) {}
     virtual void setResponse( ewallet::Response& resp );
     virtual TariffRec* tariffRec() const { return data_.get() ? &(data_->tariffRec) : 0; }
     virtual BillingInfoStruct* billingInfoStruct() const { return data_.get() ? &(data_->billingInfoStruct) : 0; }
-    virtual billid_type billId() const { return data_.get() ? data_->BillId : 0; }
-    virtual void setBillId( billid_type bi ) { if (data_.get()) data_->BillId = bi; }
-    virtual BillOpenCallParams* getOpen() { return this; }
+    virtual billid_type billId() const { return data_.get() ? data_->billingInfoStruct.billId : 0; }
+    virtual void setBillId( billid_type bi ) { if (data_.get()) data_->billingInfoStruct.billId = bi; }
+    virtual EwalletOpenCallParams* getOpen() { return this; }
     virtual BillCloseCallParams* getClose() { return 0; }
 private:
     std::auto_ptr<BillOpenCallParamsData> data_;
 };
 
 
+class EwalletCloseCallParams : public EwalletCallParams, public BillCloseCallParams
+{
+public:
+    EwalletCloseCallParams( billid_type billid, lcm::LongCallContext* lcmCtx ) :
+    EwalletCallParams(false,lcmCtx), billId_(billid) {}
+    virtual void setResponse( ewallet::Response& resp );
+    virtual BillOpenCallParams* getOpen() { return 0; }
+    virtual EwalletCloseCallParams* getClose() { return this; }
+    virtual billid_type getBillId() const { return billId_; }
+private:
+    billid_type billId_;
+};
+
 class InmanCloseCallParams : public BillCallParams, public BillCloseCallParams
 {
 public:
     InmanCloseCallParams( billid_type billid ) : billId_(billid) {}
     virtual BillOpenCallParams* getOpen() { return 0; }
-    virtual BillCloseCallParams* getClose() { return this; }
+    virtual InmanCloseCallParams* getClose() { return this; }
     virtual billid_type getBillId() const { return billId_; }
 private:
     billid_type billId_;

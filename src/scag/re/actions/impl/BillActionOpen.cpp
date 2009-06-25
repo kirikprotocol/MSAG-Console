@@ -25,20 +25,23 @@ bool BillActionOpen::RunBeforePostpone( ActionContext& context )
 
     smsc_log_debug( logger,"Run Action '%s', catid=%d mediaid=%d...", opname(), cat, mt );
 
-    // check bill id
-    const std::string transId = getTransId( context );
-    if ( transId.empty() ) {
-        setTariffStatus( context, 0 );
-        return false;
-    }
+    if ( ! isTransit() ) {
 
-    if ( context.getSession().getTransaction( transId.c_str() ) ) {
-        // transaction is already active
-        setBillingStatus( context, "Transaction already active", false );
-        setTariffStatus( context, 0 );
-        smsc_log_warn( logger, "Action '%s': transaction '%s' is already found",
-                       opname(), transId.c_str() );
-        return false;
+        // check bill id
+        const std::string transId = getTransId( context );
+        if ( transId.empty() ) {
+            setTariffStatus( context, 0 );
+            return false;
+        }
+
+        if ( context.getSession().getTransaction( transId.c_str() ) ) {
+            // transaction is already active
+            setBillingStatus( context, "Transaction already active", false );
+            setTariffStatus( context, 0 );
+            smsc_log_warn( logger, "Action '%s': transaction '%s' is already found",
+                           opname(), transId.c_str() );
+            return false;
+        }
     }
 
     // Statistics& statistics = Statistics::Instance();
@@ -127,9 +130,9 @@ bool BillActionOpen::RunBeforePostpone( ActionContext& context )
     if (tariffRec->billType == infrastruct::EWALLET)
     {
         // filling other fields, essential for EWALLET
-        if ( !hasAbonent_ || !hasWalletType_ ) {
-            smsc_log_warn(logger,"Action '%s' cannot process. Billing type EWALLET must have abonent and walletType", opname());
-            setBillingStatus( context, "abonent and walletType missing", false );
+        if ( !hasAbonent_ ) {
+            smsc_log_warn(logger,"Action '%s' cannot process. Billing type EWALLET must have abonent", opname());
+            setBillingStatus( context, "abonent is missing", false );
             setTariffStatus( context, 0 );
             return false;
         }
@@ -148,7 +151,8 @@ bool BillActionOpen::RunBeforePostpone( ActionContext& context )
             billingInfoStruct.AbonentNumber = property->getStr().c_str();
         }
         
-        // wallet type
+        // wallet type -- will be taken from tarif matrix
+        /*
         if ( walletTypeType_ == ftUnknown ) {
             billingInfoStruct.walletType = walletTypeName_;
         } else {
@@ -162,6 +166,7 @@ bool BillActionOpen::RunBeforePostpone( ActionContext& context )
             }
             billingInfoStruct.walletType = property->getStr().c_str();
         }
+         */
 
         // description
         if ( hasDescription_ ) {
@@ -195,6 +200,8 @@ bool BillActionOpen::RunBeforePostpone( ActionContext& context )
                 }
                 billingInfoStruct.externalId = property->getStr().c_str();
             }
+        } else if ( isTransit() ) {
+            throw SCAGException("Action '%s': transit but externalId is not found",opname());
         } else {
             char buf[100];
             const util::msectime_type currentTime = util::currentTimeMillis();
@@ -224,7 +231,8 @@ bool BillActionOpen::RunBeforePostpone( ActionContext& context )
 
         LongCallContext& lcmCtx = context.getSession().getLongCallContext();
         lcmCtx.callCommandId = BILL_OPEN;
-        EwalletOpenCallParams* eocp = new EwalletOpenCallParams(bpd.release(),&lcmCtx);
+        EwalletOpenCallParams* eocp = 
+            new EwalletOpenCallParams(isTransit(),bpd.release(),&lcmCtx);
         smsc_log_debug(logger,"eocp created @ %p, bocp=%p, lcp=%p",
                        eocp->getOpen(), static_cast<lcm::LongCallParams*>(eocp) );
         lcmCtx.setParams(eocp);
@@ -234,6 +242,10 @@ bool BillActionOpen::RunBeforePostpone( ActionContext& context )
 #ifdef MSAG_INMAN_BILL
     if( tariffRec->billType == infrastruct::INMAN )
     {
+        if ( isTransit() ) {
+            throw SCAGException("Action '%s': transit is not allowed for non-ewallet type", opname());
+        }
+
         LongCallContext& lcmCtx = context.getSession().getLongCallContext();
         lcmCtx.callCommandId = BILL_OPEN;
         lcmCtx.setParams( new InmanOpenCallParams(bpd.release()) );
@@ -241,10 +253,14 @@ bool BillActionOpen::RunBeforePostpone( ActionContext& context )
     } else
 #endif
     {
+        if ( isTransit() ) {
+            throw SCAGException("Action '%s': transit is not allowed for non-ewallet type", opname());
+        }
+
         try 
         {
             InmanOpenCallParams bp(bpd.release());
-            int bi = bm.Open( bp );
+            billid_type bi = bm.Open( bp );
             processResult( context, bi, bp.tariffRec() );
         }
         catch (SCAGException& e)
@@ -261,8 +277,8 @@ bool BillActionOpen::RunBeforePostpone( ActionContext& context )
 
 void BillActionOpen::ContinueRunning(ActionContext& context)
 {
-    BillCallParams *bp = (BillCallParams*)context.getSession().getLongCallContext().getParams();
-    if (bp->exception.length())
+    BillCallParams *bp = static_cast<BillCallParams*>(context.getSession().getLongCallContext().getParams());
+    if ( ! bp->exception.empty() )
     {
         smsc_log_warn(logger, "Action '%s' unable to process. Delails: %s",
                       opname(), bp->exception.c_str());
@@ -271,7 +287,17 @@ void BillActionOpen::ContinueRunning(ActionContext& context)
         return;
     }
     BillOpenCallParams* bop = bp->getOpen();
-    processResult( context, bop->billId(), bop->tariffRec() );
+    if ( ! isTransit() ) {
+        processResult( context, bop->billId(), bop->tariffRec() );
+    } else {
+        // transit
+        assert( bop->tariffRec()->billType == infrastruct::EWALLET );
+        EwalletCallParams* ecp = static_cast<EwalletCallParams*>(bp);
+        char buf[30];
+        sprintf(buf,"%u",ecp->getTransId());
+        setBillingStatus(context,buf,true);
+        setTariffStatus(context,bop->tariffRec());
+    }
 }
 
 
@@ -357,12 +383,14 @@ void BillActionOpen::init( const SectionParams& params,
         abonentName_ = temp.toString();
     }
 
+    /*
     walletTypeType_ = CheckParameter( params, 
                                       propertyObject, 
                                       opname(), "walletType",
                                       false, true,
                                       walletTypeName_,
                                       hasWalletType_ );
+     */
     timeoutFieldType_ = CheckParameter( params, 
                                         propertyObject, 
                                         opname(), "timeout",
@@ -382,6 +410,9 @@ void BillActionOpen::init( const SectionParams& params,
                                       false, true,
                                       externalIdName_,
                                       hasExternalId_ );
+    if ( isTransit() && ! hasExternalId_ ) {
+        throw SCAGException("Action '%s': transit action requires 'externalId'", opname());
+    }
     descriptionType_ = CheckParameter( params,
                                        propertyObject,
                                        opname(), "description",
@@ -397,6 +428,10 @@ void BillActionOpen::init( const SectionParams& params,
                     false, false,
                     resultFieldName_,
                     hasResult_ );
+
+    if ( isTransit() && ! hasMessage() ) {
+        throw SCAGException("Action '%s': transit action requires 'msg' to save transId", opname());
+    }
 
     // if (m_waitOperation) InitParameters(params, propertyObject, logger);
     smsc_log_debug(logger,"Action '%s' init...", opname() );
@@ -420,17 +455,17 @@ void BillActionOpen::setTariffStatus( ActionContext&   context,
 
 
 void BillActionOpen::processResult( ActionContext& context,
-                                    int billId, 
+                                    billid_type billId, 
                                     const infrastruct::TariffRec* tariffRec)
 {
     std::string transId = getTransId( context );
-    smsc_log_debug( logger, "Action '%s': process result trans-id='%s' billid=%d", 
+    smsc_log_debug( logger, "Action '%s': process result trans-id='%s' billid=%llu", 
                     opname(), transId.c_str(), billId );
     std::auto_ptr<ExternalTransaction> trans( new sessions::ExternalBillingTransaction( billId ) );
     if ( ! context.getSession().addTransaction( transId.c_str(), trans ) ) {
         smsc_log_error( logger, "Action '%s': cannot put transaction '%s' in session",
                         opname(), transId.c_str() );
-        setBillingStatus( context, "Session::addTranaction failed", false);
+        setBillingStatus( context, "Session::addTransaction failed", false);
         setTariffStatus( context, 0 );
         return;
     }
@@ -475,7 +510,7 @@ void BillActionOpen::processResult( ActionContext& context,
 
     setBillingStatus( context, "", true );
     setTariffStatus( context, tariffRec );
-    smsc_log_debug( logger, "Action '%s' transaction '%s' successfully opened (billId=%d)",
+    smsc_log_debug( logger, "Action '%s' transaction '%s' successfully opened (billId=%llu)",
                     opname(), transId.c_str(), billId );
     return;
 }

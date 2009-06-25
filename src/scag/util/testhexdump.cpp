@@ -1,6 +1,6 @@
 #include <iostream>
-#include "HexDump.h"
-#include "Drndm.h"
+#include "scag/util/io/HexDump.h"
+#include "scag/util/io/Drndm.h"
 
 using namespace scag2::util;
 
@@ -20,11 +20,11 @@ int main()
         }
 
         HexDump hd;
-        std::string dump;
-        dump.reserve(hd.hexdumpsize(datalen) + hd.strdumpsize(datalen));
+        HexDump::string_type dump;
+        dump.reserve(hd.hexdumpsize(datalen) + hd.strdumpsize(datalen) + 10);
         hd.hexdump(dump,&data[0],datalen);
         hd.strdump(dump,&data[0],datalen);
-        std::cout << "dump: " << dump << std::endl;
+        std::cout << "dump: " << hd.c_str(dump) << std::endl;
     }
     return 0;
 }

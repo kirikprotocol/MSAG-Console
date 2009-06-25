@@ -6,6 +6,7 @@
 #include "scag/stat/base/Statistics2.h"
 #include "scag/util/lltostr.h"
 #include "scag/bill/ewallet/Open.h"
+#include "scag/bill/ewallet/Commit.h"
 #include "scag/bill/ewallet/client/ClientCore.h"
 #include "scag/bill/ewallet/stream/StreamerImpl.h"
 
@@ -191,6 +192,36 @@ int BillingManagerImpl::makeInmanId( billid_type billid )
 }
 
 
+void BillingManagerImpl::processAsyncResult( EwalletCallParams& params )
+{
+    smsc_log_debug(logger,"processing async result on params %p", &params);
+    if ( params.getOpen() ) {
+
+        // open call params
+        EwalletOpenCallParams* eo = static_cast<EwalletOpenCallParams*>(params.getOpen());
+        if ( ! eo->isTransit() ) {
+            // registering a new transaction
+            std::auto_ptr< BillTransaction > p(new BillTransaction());
+            p->tariffRec = *eo->tariffRec();
+            p->billingInfoStruct = *eo->billingInfoStruct();
+            p->ewalletTransId = params.getTransId();
+            putBillTransaction(eo->billId(),p.release());
+        }
+
+    } else if ( params.getClose() ) {
+        // close call params
+        EwalletCloseCallParams* co = static_cast<EwalletCloseCallParams*>(params.getClose());
+        try {
+            delete getBillTransaction(co->getBillId());
+        } catch ( std::exception& e ) {
+            smsc_log_warn(logger,"exc in transaction %lld: %s", co->getBillId());
+        }
+    } else {
+        smsc_log_error(logger,"ewallet params %p does not provide open/close parts", &params);
+    }
+}
+
+
 BillingManagerImpl::BillTransaction* BillingManagerImpl::getBillTransaction(billid_type billId)
 {
     MutexGuard mg(inUseLock);
@@ -203,6 +234,7 @@ BillingManagerImpl::BillTransaction* BillingManagerImpl::getBillTransaction(bill
 
 void BillingManagerImpl::putBillTransaction(billid_type billId, BillTransaction* p)
 {
+    smsc_log_debug(logger,"registering transaction %llu", static_cast<unsigned long long>(billId));
     MutexGuard mg(inUseLock);
     BillTransactionHash.Insert(billId, p);
 }
@@ -226,19 +258,23 @@ billid_type BillingManagerImpl::Open( BillOpenCallParams& openCallParams,
 
     smsc_log_debug(logger, "Opening billId=%lld for params %p...",
                    static_cast<long long>(billId), &openCallParams );
-
-    auto_ptr<BillTransaction> p(new BillTransaction());
-
+    openCallParams.setBillId( billId );
     BillingInfoStruct& billingInfoStruct(*openCallParams.billingInfoStruct());
     TariffRec& tariffRec(*openCallParams.tariffRec());
-    p->tariffRec = tariffRec;
-    p->billingInfoStruct = billingInfoStruct;
-    p->billId = billId;
+
+    auto_ptr<BillTransaction> p;
+    // (new BillTransaction());
+
+    // p->billId = billId;
 //    makeBillEvent(TRANSACTION_OPEN, COMMAND_SUCCESSFULL, tariffRec, billingInfoStruct, p->billEvent);
 
     #ifdef MSAG_INMAN_BILL
     if(tariffRec.billType == bill::infrastruct::INMAN || tariffRec.billType == bill::infrastruct::INMANSYNC)
     {
+        p.reset(new BillTransaction());
+        p->tariffRec = tariffRec;
+        p->billingInfoStruct = billingInfoStruct;
+
         fillChargeSms(p->ChargeOperation.Cmd(), billingInfoStruct, tariffRec);
         const uint32_t dlgId = makeInmanId(billId);
         p->ChargeOperation.Hdr().dlgId = dlgId;
@@ -250,7 +286,7 @@ billid_type BillingManagerImpl::Open( BillOpenCallParams& openCallParams,
             return 0;
         }
 
-        smsc_log_debug(logger, "Send sync inman command billid=%d", dlgId);
+        smsc_log_debug(logger, "Send sync inman command dlgId=%d", dlgId);
         p->status = sendCommandAndWaitAnswer(p->ChargeOperation);
         if(p->status == TRANSACTION_VALID)
         {
@@ -268,6 +304,7 @@ billid_type BillingManagerImpl::Open( BillOpenCallParams& openCallParams,
         smsc_log_debug(logger,"ewallet params: %p", &eOpenParams );
         if (lcmCtx) {
             // async
+            eOpenParams.setRegistrator(this);
             std::auto_ptr<ewallet::Open> pck( new ewallet::Open );
             pck->setSourceId("msag");
             pck->setAgentId(billingInfoStruct.serviceId);
@@ -285,7 +322,7 @@ billid_type BillingManagerImpl::Open( BillOpenCallParams& openCallParams,
             }
             std::auto_ptr<ewallet::Request> req(pck.release());
             ewalletClient_->processRequest( req, eOpenParams );
-            smsc_log_debug(logger,"ewallet request is sent");
+            smsc_log_debug(logger,"ewallet open request is sent");
             return 0;
         } else {
             // sync
@@ -294,6 +331,9 @@ billid_type BillingManagerImpl::Open( BillOpenCallParams& openCallParams,
         }
     } else
     {
+        p.reset(new BillTransaction());
+        p->tariffRec = tariffRec;
+        p->billingInfoStruct = billingInfoStruct;
         p->status = TRANSACTION_VALID;
     }
 
@@ -329,6 +369,27 @@ void BillingManagerImpl::Commit(billid_type billId, lcm::LongCallContext* lcmCtx
     }
     else
     #endif
+    if (p->tariffRec.billType == bill::infrastruct::EWALLET ) {
+        if ( lcmCtx ) {
+            std::auto_ptr<ewallet::Commit> pck(new ewallet::Commit);
+            BillingInfoStruct& billingInfoStruct(p->billingInfoStruct);
+            TariffRec& tariffRec(p->tariffRec);
+            pck->setSourceId("msag");
+            pck->setAgentId(billingInfoStruct.serviceId);
+            pck->setUserId(billingInfoStruct.AbonentNumber);
+            pck->setWalletType(tariffRec.Currency);
+            pck->setAmount( int(tariffRec.getFloatPrice()+0.5) );
+            if (!billingInfoStruct.externalId.empty()) {
+                pck->setExternalId(billingInfoStruct.externalId);
+            }
+            pck->setTransId(p->ewalletTransId);
+            std::auto_ptr<ewallet::Request> req(pck.release());
+            EwalletCloseCallParams* closeParams = static_cast<EwalletCloseCallParams*>(lcmCtx->getParams());
+            ewalletClient_->processRequest( req, *closeParams );
+            smsc_log_debug(logger,"ewallet commit request is sent");
+            return;
+        }
+    } else
         p->status = TRANSACTION_VALID;
 
     ProcessResult("commit", TRANSACTION_COMMITED, p.get());

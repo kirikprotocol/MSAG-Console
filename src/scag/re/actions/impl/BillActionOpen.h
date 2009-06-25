@@ -31,7 +31,7 @@ private:
                           const bill::infrastruct::TariffRec* tariff );
 
     void processResult( ActionContext& ctx,
-                        int            billid,
+                        bill::billid_type     billid,
                         const bill::infrastruct::TariffRec* tariff );
 
     virtual const char* opname() const {
@@ -56,9 +56,9 @@ private:
     std::string     abonentName_;
     FieldType       abonentType_;
 
-    bool            hasWalletType_;
-    std::string     walletTypeName_;
-    FieldType       walletTypeType_;
+    // bool            hasWalletType_;
+    // std::string     walletTypeName_;
+    // FieldType       walletTypeType_;
 
     bool            hasDescription_;
     std::string     descriptionName_;

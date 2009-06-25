@@ -1,3 +1,4 @@
 -scag/tests/testtimer testtimer -lscag-util -lrt -ldl
-scag/tests/testdrndm testdrndm -lscag-util
-scag/tests/testhexdump testhexdump -lscag-util
+scag/tests/testdrndm testdrndm -lscag-util-io
+scag/tests/testhexdump testhexdump -lscag-util-io
+scag/tests/printMsecTime printMsecTime -lscag-util

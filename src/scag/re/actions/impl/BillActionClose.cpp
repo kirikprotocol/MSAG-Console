@@ -36,13 +36,13 @@ bool BillActionClose::RunBeforePostpone(ActionContext& context)
         bill::BillingInfoStruct bis;
         bill::infrastruct::TariffRec tr;
 
-        smsc_log_debug( logger, "Action '%s': transid=%s billid=%d",
+        smsc_log_debug( logger, "Action '%s': transid=%s billid=%lld",
                         opname(), transId.c_str(), trans->billId() );
 
         try {
             trans->info(bis, tr);
         } catch (SCAGException& e) {
-            smsc_log_error(logger,"Action '%s': No transaction '%s' billid=%d in BM. Error: %s",
+            smsc_log_error(logger,"Action '%s': No transaction '%s' billid=%lld in BM. Error: %s",
                            opname(), transId.c_str(), trans->billId(), e.what() );
             setBillingStatus( context, e.what(), false );
             return false;
@@ -58,9 +58,16 @@ bool BillActionClose::RunBeforePostpone(ActionContext& context)
             lcmCtx.setParams(bp);
             return true;
         }
-        else
-        {
+        else 
 #endif
+        if ( tr.billType == bill::infrastruct::EWALLET ) {
+            LongCallContext& lcmCtx = context.getSession().getLongCallContext();
+            lcmCtx.callCommandId = actionCommit_ ? BILL_COMMIT : BILL_ROLLBACK;
+            bill::EwalletCloseCallParams* bp = 
+                new bill::EwalletCloseCallParams(trans->billId(),&lcmCtx);
+            lcmCtx.setParams(bp);
+            return true;
+        } else {
             try {
                 if (actionCommit_)
                     trans->commit();
@@ -73,9 +80,7 @@ bool BillActionClose::RunBeforePostpone(ActionContext& context)
                 return false;
             }
         }
-#ifdef MSAG_INMAN_BILL
     }
-#endif
     setBillingStatus(context,"", true);
     // if (op && op->getBillId() == bid) op->detachBill();
     context.getSession().releaseTransaction( transId.c_str() );
@@ -90,7 +95,7 @@ void BillActionClose::ContinueRunning( ActionContext& context )
     bill::BillCallParams *bp = 
         static_cast<bill::BillCallParams*>(context.getSession().getLongCallContext().getParams());
 
-    if ( bp->exception.length() )
+    if ( !bp->exception.empty() )
     {        
         smsc_log_error( logger, "BillAction '%s' error. Delails: %s",
                         opname(), bp->exception.c_str());
