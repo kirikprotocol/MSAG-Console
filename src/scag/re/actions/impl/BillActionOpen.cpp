@@ -12,162 +12,18 @@ namespace actions {
 
 using namespace bill;
 
-BillActionOpen::BillActionOpen() :
-categoryId_(0),mediaTypeId_(0)
+BillActionOpen::BillActionOpen( bool transit ) :
+BillActionPreOpen( transit )
 {
 }
 
 
-bool BillActionOpen::RunBeforePostpone( ActionContext& context )
+BillOpenCallParamsData* BillActionOpen::postFillParamsData( BillOpenCallParamsData* data, ActionContext& context )
 {
-    int cat = categoryId_;
-    int mt = mediaTypeId_;
+    std::auto_ptr< BillOpenCallParamsData > bpd(data);
+    if ( bpd->tariffRec.billType == infrastruct::EWALLET ) {
 
-    smsc_log_debug( logger,"Run Action '%s', catid=%d mediaid=%d...", opname(), cat, mt );
-
-    if ( ! isTransit() ) {
-
-        // check bill id
-        const std::string transId = getTransId( context );
-        if ( transId.empty() ) {
-            setTariffStatus( context, 0 );
-            return false;
-        }
-
-        if ( context.getSession().getTransaction( transId.c_str() ) ) {
-            // transaction is already active
-            setBillingStatus( context, "Transaction already active", false );
-            setTariffStatus( context, 0 );
-            smsc_log_warn( logger, "Action '%s': transaction '%s' is already found",
-                           opname(), transId.c_str() );
-            return false;
-        }
-    }
-
-    // Statistics& statistics = Statistics::Instance();
-    BillingManager& bm = BillingManager::Instance();
-
-    auto_ptr<BillOpenCallParamsData> bpd(new BillOpenCallParamsData());
-
-    BillingInfoStruct& billingInfoStruct = bpd->billingInfoStruct;
-    context.getBillingInfoStruct(billingInfoStruct);
-
-    if ( mediaTypeFieldType_ != ftUnknown )
-    {
-        Property * property = context.getProperty(mediaTypeFieldName_);
-        if (!property)
-        {
-            setBillingStatus( context, "Invalid property for content-type", false );
-            setTariffStatus( context, 0 );
-            smsc_log_error(logger,"Action '%s' :: Invalid property %s for content-type",
-                           opname(), mediaTypeFieldName_.c_str() );
-            return false;
-        }
-        if (!isContentType_)
-            billingInfoStruct.mediaType = property->getStr().c_str();
-
-        mt = isContentType_ ? int(property->getInt()) :
-        bm.getInfrastructure().GetMediaTypeID( billingInfoStruct.mediaType );
-
-    } else if ( !isContentType_ ) {
-        billingInfoStruct.mediaType = mediaTypeFieldName_;
-    }
-
-    if (categoryFieldType_ != ftUnknown)
-    {
-        Property * property = context.getProperty(categoryFieldName_);
-        if (!property) 
-        {
-            setBillingStatus( context, "Invalid property for category", false );
-            setTariffStatus( context, 0 );
-            smsc_log_error(logger,"Action '%s' :: Invalid property %s for category",
-                           opname(), categoryFieldName_.c_str() );
-            return false;
-        }
-        if( !isCategory_ )
-            billingInfoStruct.category = property->getStr().c_str();
-
-        cat = isCategory_ ? int(property->getInt()) :
-        bm.getInfrastructure().GetCategoryID( billingInfoStruct.category );
-    } else if( !isCategory_ ) {
-        billingInfoStruct.category = categoryFieldName_;
-    }
-
-    if (!cat || !mt)
-    {
-        smsc_log_warn(logger,"Action '%s' cannot process. Empty category or content-type",
-                      opname() );
-        return false;
-    }
-
-    TariffRec * tariffRec = 0;
-    try {
-        tariffRec = context.getTariffRec(cat, mt);
-        if (!tariffRec) throw SCAGException("TariffRec is not valid, cat=%d, mt=%u", cat, mt );
-        bpd->tariffRec = *tariffRec;
-    } catch (SCAGException& e)
-    {
-        smsc_log_warn(logger,"Action '%s' cannot process. Delails: %s", opname(), e.what());
-        setBillingStatus( context, e.what(), false );
-        setTariffStatus( context, 0 );
-        return false;
-    }
-
-    if (tariffRec->billType == bill::infrastruct::NONE)
-    {
-        smsc_log_warn(logger, "Billing desabled for this tariff entry. ServiceNumber=%s, CategoryId=%d, MediaTypeId=%d",
-                      tariffRec->ServiceNumber.c_str(), tariffRec->CategoryId,
-                      tariffRec->MediaTypeId );
-        // FIXME: how to (should we?) report disabled billing ?
-        return false;
-    }
-
-    if (tariffRec->getPrice().empty()) {
-        smsc_log_warn(logger, "Zero price in tariff matrix. ServiceNumber=%s, CategoryId=%d, MediaTypeId=%d", tariffRec->ServiceNumber.c_str(),
-                      tariffRec->CategoryId, tariffRec->MediaTypeId);
-    }
-
-    if (tariffRec->billType == infrastruct::EWALLET)
-    {
-        // filling other fields, essential for EWALLET
-        if ( !hasAbonent_ ) {
-            smsc_log_warn(logger,"Action '%s' cannot process. Billing type EWALLET must have abonent", opname());
-            setBillingStatus( context, "abonent is missing", false );
-            setTariffStatus( context, 0 );
-            return false;
-        }
-
-        if ( abonentType_ == ftUnknown ) {
-            billingInfoStruct.AbonentNumber = abonentName_;
-        } else {
-            Property * property = context.getProperty(abonentName_);
-            if (!property) {
-                setBillingStatus( context, "Invalid property for abonent", false );
-                setTariffStatus( context, 0 );
-                smsc_log_error(logger,"Action '%s' :: Invalid property %s for abonent",
-                               opname(), abonentName_.c_str() );
-                return false;
-            }
-            billingInfoStruct.AbonentNumber = property->getStr().c_str();
-        }
-        
-        // wallet type -- will be taken from tarif matrix
-        /*
-        if ( walletTypeType_ == ftUnknown ) {
-            billingInfoStruct.walletType = walletTypeName_;
-        } else {
-            Property * property = context.getProperty(walletTypeName_);
-            if (!property) {
-                setBillingStatus( context, "Invalid property for walletType", false );
-                setTariffStatus( context, 0 );
-                smsc_log_error(logger,"Action '%s' :: Invalid property %s for walletType",
-                               opname(), walletTypeName_.c_str() );
-                return false;
-            }
-            billingInfoStruct.walletType = property->getStr().c_str();
-        }
-         */
-
+        BillingInfoStruct& billingInfoStruct = bpd->billingInfoStruct;
         // description
         if ( hasDescription_ ) {
             if ( descriptionType_ == ftUnknown ) {
@@ -179,37 +35,10 @@ bool BillActionOpen::RunBeforePostpone( ActionContext& context )
                     setTariffStatus( context, 0 );
                     smsc_log_error(logger,"Action '%s' :: Invalid property %s for description",
                                    opname(), descriptionName_.c_str() );
-                    return false;
+                    return 0;
                 }
                 billingInfoStruct.description = property->getStr().c_str();
             }
-        }
-
-        // externalId
-        if ( hasExternalId_ ) {
-            if ( externalIdType_ == ftUnknown ) {
-                billingInfoStruct.externalId = externalIdName_;
-            } else {
-                Property * property = context.getProperty(externalIdName_);
-                if (!property) {
-                    setBillingStatus( context, "Invalid property for externalId", false );
-                    setTariffStatus( context, 0 );
-                    smsc_log_error(logger,"Action '%s' :: Invalid property %s for externalId",
-                                   opname(), externalIdName_.c_str() );
-                    return false;
-                }
-                billingInfoStruct.externalId = property->getStr().c_str();
-            }
-        } else if ( isTransit() ) {
-            throw SCAGException("Action '%s': transit but externalId is not found",opname());
-        } else {
-            char buf[100];
-            const util::msectime_type currentTime = util::currentTimeMillis();
-            snprintf(buf,sizeof(buf),"msag-%llu-%u-%s",
-                     static_cast<unsigned long long>(currentTime),
-                     billingInfoStruct.serviceId,
-                     billingInfoStruct.AbonentNumber.c_str() );
-            billingInfoStruct.externalId = buf;
         }
 
         // timeout
@@ -223,12 +52,22 @@ bool BillActionOpen::RunBeforePostpone( ActionContext& context )
                     setTariffStatus( context, 0 );
                     smsc_log_error(logger,"Action '%s' :: Invalid property %s for timeout",
                                    opname(), timeoutFieldName_.c_str() );
-                    return false;
+                    return 0;
                 }
                 billingInfoStruct.timeout = property->getInt();
             }
         }
+    }
+    return bpd.release();
+}
 
+
+bool BillActionOpen::RunBeforePostpone( ActionContext& context )
+{
+    auto_ptr<BillOpenCallParamsData> bpd(makeParamsData(context));
+    if ( ! bpd.get() ) return false;
+
+    if ( bpd->tariffRec.billType == infrastruct::EWALLET ) {
         LongCallContext& lcmCtx = context.getSession().getLongCallContext();
         lcmCtx.callCommandId = BILL_OPEN;
         EwalletOpenCallParams* eocp = 
@@ -240,7 +79,7 @@ bool BillActionOpen::RunBeforePostpone( ActionContext& context )
         return true;
     } else
 #ifdef MSAG_INMAN_BILL
-    if( tariffRec->billType == infrastruct::INMAN )
+    if( bpd->tariffRec.billType == infrastruct::INMAN )
     {
         if ( isTransit() ) {
             throw SCAGException("Action '%s': transit is not allowed for non-ewallet type", opname());
@@ -260,7 +99,7 @@ bool BillActionOpen::RunBeforePostpone( ActionContext& context )
         try 
         {
             InmanOpenCallParams bp(bpd.release());
-            billid_type bi = bm.Open( bp );
+            billid_type bi = BillingManager::Instance().Open(bp);
             processResult( context, bi, bp.tariffRec() );
         }
         catch (SCAGException& e)
@@ -277,20 +116,15 @@ bool BillActionOpen::RunBeforePostpone( ActionContext& context )
 
 void BillActionOpen::ContinueRunning(ActionContext& context)
 {
+    if ( ! preContinueRunning(context) ) return;
+
     BillCallParams *bp = static_cast<BillCallParams*>(context.getSession().getLongCallContext().getParams());
-    if ( ! bp->exception.empty() )
-    {
-        smsc_log_warn(logger, "Action '%s' unable to process. Delails: %s",
-                      opname(), bp->exception.c_str());
-        setBillingStatus(context, bp->exception.c_str(), false);
-        setTariffStatus(context,0);
-        return;
-    }
     BillOpenCallParams* bop = bp->getOpen();
     if ( ! isTransit() ) {
         processResult( context, bop->billId(), bop->tariffRec() );
     } else {
         // transit
+        smsc_log_debug(logger,"Action '%s': not registering session transaction %llu as it is transit", bop->billId());
         assert( bop->tariffRec()->billType == infrastruct::EWALLET );
         EwalletCallParams* ecp = static_cast<EwalletCallParams*>(bp);
         char buf[30];
@@ -301,96 +135,9 @@ void BillActionOpen::ContinueRunning(ActionContext& context)
 }
 
 
-void BillActionOpen::init( const SectionParams& params,
-                           PropertyObject propertyObject )
+void BillActionOpen::postInit( const SectionParams& params,
+                               PropertyObject propertyObject )
 {
-    BillAction::init( params, propertyObject );
-
-    bool bExist;
-
-    // --- input fields
-
-    categoryFieldType_ = CheckParameter( params,
-                                         propertyObject,
-                                         opname(),
-                                         "category",
-                                         false,      // required
-                                         true,       // readonly
-                                         categoryFieldName_,
-                                         isCategory_ );
-    if ( !isCategory_ )
-    {
-        categoryFieldType_ = CheckParameter( params,
-                                             propertyObject,
-                                             opname(),
-                                             "category-str",
-                                             false,
-                                             true, 
-                                             categoryFieldName_,
-                                             bExist );
-        if (!bExist) throw SCAGException( "Action '%s': category or category-str should be present",
-                                          opname() );
-    }
-
-    if ( categoryFieldType_ == ftUnknown )
-    {
-        // numerical constant
-        categoryId_ = isCategory_ ? atoi(categoryFieldName_.c_str()) :
-        BillingManager::Instance().getInfrastructure().GetCategoryID(categoryFieldName_);
-        if (!categoryId_) throw SCAGException("Action '%s': category should be integer or variable",
-                                              opname() );
-    }
-
-
-    mediaTypeFieldType_ = CheckParameter( params, 
-                                          propertyObject, 
-                                          opname(), "content-type",
-                                          false, true,
-                                          mediaTypeFieldName_,
-                                          isContentType_ );
-    if (!isContentType_)
-    {
-        mediaTypeFieldType_ = CheckParameter( params,
-                                              propertyObject,
-                                              opname(),
-                                              "content-type-str",
-                                              false, true,
-                                              mediaTypeFieldName_,
-                                              bExist );
-        if (!bExist) throw SCAGException("Action '%s': content-type or content-type-str should be present",
-                                         opname() );
-    }
-    if ( mediaTypeFieldType_ == ftUnknown)
-    {
-        // numerical constant
-        mediaTypeId_ = isContentType_ ? atoi(mediaTypeFieldName_.c_str()) :
-        BillingManager::Instance().getInfrastructure().GetMediaTypeID(mediaTypeFieldName_);
-        if (!mediaTypeId_) throw SCAGException("Action '%s': content-type should be integer or variable",
-                                               opname() );
-    }
-
-    // --- special input parameters for ewallet
-
-    abonentType_ = CheckParameter( params, 
-                                   propertyObject, 
-                                   opname(), "abonent",
-                                   false, true,
-                                   abonentName_,
-                                   hasAbonent_ );
-    if ( hasAbonent_ && (abonentType_ == ftUnknown) ) {
-        // address
-        smsc::sms::Address temp(abonentName_.c_str());
-        abonentName_ = temp.toString();
-    }
-
-    /*
-    walletTypeType_ = CheckParameter( params, 
-                                      propertyObject, 
-                                      opname(), "walletType",
-                                      false, true,
-                                      walletTypeName_,
-                                      hasWalletType_ );
-     */
     timeoutFieldType_ = CheckParameter( params, 
                                         propertyObject, 
                                         opname(), "timeout",
@@ -404,21 +151,16 @@ void BillActionOpen::init( const SectionParams& params,
                                            opname() );
     }
 
-    externalIdType_ = CheckParameter( params,
-                                      propertyObject,
-                                      opname(), "externalId",
-                                      false, true,
-                                      externalIdName_,
-                                      hasExternalId_ );
-    if ( isTransit() && ! hasExternalId_ ) {
-        throw SCAGException("Action '%s': transit action requires 'externalId'", opname());
-    }
     descriptionType_ = CheckParameter( params,
                                        propertyObject,
                                        opname(), "description",
                                        false, true,
                                        descriptionName_,
                                        hasDescription_ );
+
+    if ( isTransit() && ! hasMessage() ) {
+        throw SCAGException("Action '%s': transit action requires 'msg' to save transId", opname());
+    }
 
     // --- output fields
 
@@ -428,13 +170,6 @@ void BillActionOpen::init( const SectionParams& params,
                     false, false,
                     resultFieldName_,
                     hasResult_ );
-
-    if ( isTransit() && ! hasMessage() ) {
-        throw SCAGException("Action '%s': transit action requires 'msg' to save transId", opname());
-    }
-
-    // if (m_waitOperation) InitParameters(params, propertyObject, logger);
-    smsc_log_debug(logger,"Action '%s' init...", opname() );
 }
 
 
@@ -469,44 +204,6 @@ void BillActionOpen::processResult( ActionContext& context,
         setTariffStatus( context, 0 );
         return;
     }
-
-
-    /*
-    Operation * operation = context.getSession().getCurrentOperation();
-    if (!operation)
-    {
-        smsc_log_error(logger,"Action '%s': Fatal error in action - operation from ActionContext is invalid", opname );
-        setBillingStatus(context, "operation is invalid", false, 0);
-        return;
-    }
-
-    try 
-    {
-        if (m_waitOperation) 
-            RegisterPending(context, logger, billId);
-        else
-            operation->attachBill(billId);
-    }
-    catch (SCAGException& e)
-    {
-        smsc_log_warn(logger, "Action '%s' unable to process. Delails: %s", m_ActionName.c_str(), e.what());
-        SetBillingStatus(context, e.what(), false, 0);
-        if (!m_waitOperation) operation->detachBill();
-
-        BillingManager::Instance().Rollback(billId);
-        return;
-    }
-
-    if(m_BillIdExist) 
-    {
-        Property * p = context.getProperty(m_sBillId);
-
-        if (!p)
-            smsc_log_debug(logger,"Action '%s' :: Invalid property %s for BillID", m_ActionName.c_str(), m_sBillId.c_str());
-        else
-            p->setInt(billId);
-    }
-     */
 
     setBillingStatus( context, "", true );
     setTariffStatus( context, tariffRec );

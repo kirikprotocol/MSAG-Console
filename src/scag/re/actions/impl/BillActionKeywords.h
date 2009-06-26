@@ -18,7 +18,7 @@ using sessions::ExternalBillingTransaction;
 
 class BillActionSetKeywords : public BillAction {
 public:
-  BillActionSetKeywords():keywordsType_(ftUnknown) {};
+  BillActionSetKeywords() : BillAction(false), keywordsType_(ftUnknown) {};
   virtual ~BillActionSetKeywords() {};
   virtual bool run(ActionContext &context);
 

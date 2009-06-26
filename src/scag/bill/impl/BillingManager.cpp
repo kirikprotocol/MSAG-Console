@@ -206,6 +206,8 @@ void BillingManagerImpl::processAsyncResult( EwalletCallParams& params )
             p->billingInfoStruct = *eo->billingInfoStruct();
             p->ewalletTransId = params.getTransId();
             putBillTransaction(eo->billId(),p.release());
+        } else {
+            smsc_log_debug(logger,"not registering a transaction %llu as it is transit",eo->billId());
         }
 
     } else if ( params.getClose() ) {
@@ -343,6 +345,7 @@ billid_type BillingManagerImpl::Open( BillOpenCallParams& openCallParams,
 
     return billId;
 }
+
 
 void BillingManagerImpl::Commit(billid_type billId, lcm::LongCallContext* lcmCtx)
 {

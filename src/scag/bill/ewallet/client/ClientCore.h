@@ -61,7 +61,7 @@ private:
     void createSocket( util::msectime_type oldac = 0 ); // throw
 
     uint32_t getNextSeqNum();
-    proto::Socket& getNextSocket( const Request* request ); // throw
+    proto::SocketBase& getNextSocket( const Request* request ); // throw
 
     void closeAllSockets();
     void destroyDeadSockets();

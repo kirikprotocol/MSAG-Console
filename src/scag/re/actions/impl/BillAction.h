@@ -10,6 +10,9 @@ namespace actions {
 class BillAction : public Action
 {
 protected:
+    BillAction( bool transit );
+    
+protected:
     // action iface
     virtual void init( const SectionParams& params,
                        PropertyObject propertyObject );
@@ -29,6 +32,9 @@ protected:
     // by default is false
     bool isTransit() const { return transit_; }
     bool hasMessage() const { return hasMessage_; }
+
+private:
+    BillAction();
 
 private:
     // -- input

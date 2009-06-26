@@ -1,20 +1,19 @@
-#ifndef _SCAG_RE_ACTIONS_IMPL_BILLACTIONCLOSE_H
-#define _SCAG_RE_ACTIONS_IMPL_BILLACTIONCLOSE_H
+#ifndef _SCAG_RE_ACTIONS_IMPL_BILLACTIONCLOSETRANSIT_H
+#define _SCAG_RE_ACTIONS_IMPL_BILLACTIONCLOSETRANSIT_H
 
 #include "scag/re/base/LongCallAction2.h"
-#include "BillAction.h"
+#include "BillActionPreOpen.h"
 
 namespace scag2 {
 namespace re {
 namespace actions {
 
-class BillActionClose : public BillAction, public ActionLongCallInterface
+class BillActionCloseTransit : public BillActionPreOpen, public ActionLongCallInterface
 {
 public:
-    BillActionClose() : BillAction(false) {}
+    BillActionCloseTransit() : BillActionPreOpen(true) {}
 
 protected:
-
     // long call interface
     virtual bool RunBeforePostpone(ActionContext& context);
     virtual void ContinueRunning(ActionContext& context);
@@ -23,11 +22,11 @@ protected:
     virtual bool run( ActionContext& ctx ) {
         return dorun( ctx );
     }
-    virtual void init( const SectionParams& params,
-                       PropertyObject propertyObject );
+    virtual void postInit( const SectionParams& params,
+                           PropertyObject propertyObject );
 
     virtual const char* opname() const {
-        return "bill:close";
+        return "bill:close-transit";
     }
 
 private:

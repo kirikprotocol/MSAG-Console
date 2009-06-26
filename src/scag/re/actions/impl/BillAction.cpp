@@ -4,6 +4,8 @@ namespace scag2 {
 namespace re {
 namespace actions {
 
+BillAction::BillAction( bool transit ) : transit_(transit) {}
+
 void BillAction::init( const SectionParams& params,
                        PropertyObject propertyObject )
 {
@@ -15,6 +17,7 @@ void BillAction::init( const SectionParams& params,
                                        transIdFieldName_,
                                        bExist );
 
+    /*
     std::string transitValue;
     bool hasTransit;
     FieldType transitType = CheckParameter( params,
@@ -38,6 +41,7 @@ void BillAction::init( const SectionParams& params,
     } else {
         transit_ = false;
     }
+     */
 
     // --- output fields
 

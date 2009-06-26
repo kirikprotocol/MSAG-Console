@@ -10,7 +10,7 @@ namespace actions {
 class BillActionInfo : public BillAction
 {
 public:
-    BillActionInfo() {}
+    BillActionInfo() : BillAction(false) {}
 
 protected:
 

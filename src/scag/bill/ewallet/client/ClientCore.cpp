@@ -49,16 +49,14 @@ void ClientCore::startup()
     started_ = true;
     try {
         smsc_log_info( log_, "creating connections..." );
-        loopback_.reset( new Loopback(*this) );
         // register a connection
-        regSet_.create(loopback_.get());
-
-        threadPool_.startTask( loopback_->getProcessor(), false );
-        /*
+        // FIXME: temporary loopback connection
+        // loopback_.reset( new Loopback(*this) );
+        // regSet_.create(loopback_.get());
+        // threadPool_.startTask( loopback_->getProcessor(), false );
         for ( size_t i = 0; i < getConfig().getConnectionsCount(); ++i ) {
             createSocket();
         }
-         */
     } catch ( Exception& exc ) {
         started_ = false;
         connector_->shutdown();
@@ -391,10 +389,10 @@ void ClientCore::sendRequest( std::auto_ptr< proto::Context >& context )
     context->setSeqNum(seqNum);
 
     // FIXME: temporary sent to a loopback queue
-    if ( loopback_.get() ) loopback_->send( context, true );
+    // if ( loopback_.get() ) loopback_->send( context, true );
 
-    // proto::Socket& socket = getNextSocket( context->getRequest().get() );
-    // socket.send( context, true );
+    proto::SocketBase& socket = getNextSocket( context->getRequest().get() );
+    socket.send( context, true );
 }
 
 
@@ -424,8 +422,10 @@ uint32_t ClientCore::getNextSeqNum()
 }
 
 
-proto::Socket& ClientCore::getNextSocket( const Request* request )
+proto::SocketBase& ClientCore::getNextSocket( const Request* request )
 {
+    if ( loopback_.get() ) return *loopback_.get();
+
     util::RelockMutexGuard mg(socketMon_);
     if ( sockets_.empty() ) {
         mg.Unlock();

@@ -31,6 +31,7 @@
 
 #include "BillActionOpen.h"
 #include "BillActionClose.h"
+#include "BillActionCloseTransit.h"
 #include "BillActionInfo.h"
 #include "BillActionKeywords.h"
 
@@ -127,8 +128,10 @@ Action * MainActionFactory::CreateAction( const std::string& name ) const
         // if ( name == "longcalltest" ) return new LongCallTestAction();
 
         if ( 0 == strncmp(name.c_str(), "bill:", 5 ) ) {
-            if ( name == "bill:open" ) return new BillActionOpen();
+            if ( name == "bill:open" ) return new BillActionOpen(false);
+            if ( name == "bill:open-transit" ) return new BillActionOpen(true);
             if ( name == "bill:close" ) return new BillActionClose();
+            // if ( name == "bill:close-transit" ) return new BillActionCloseTransit();
             if ( name == "bill:info" ) return new BillActionInfo();
             if ( name == "bill:set_keywords" ) return new BillActionSetKeywords();
             if ( name == "bill:add_keywords" ) return new BillActionAddKeywords();

@@ -142,6 +142,21 @@ private:
     billid_type billId_;
 };
 
+
+class EwalletCloseTransitParams : public EwalletCallParams, public BillCloseCallParams
+{
+public:
+    EwalletCloseTransitParams( BillOpenCallParamsData* data, lcm::LongCallContext* lcmCtx ) :
+    EwalletCallParams(true,lcmCtx), data_(data) {}
+    virtual void setResponse( ewallet::Response& resp );
+    virtual BillOpenCallParams* getOpen() { return 0; }
+    virtual EwalletCloseTransitParams* getClose() { return this; }
+    virtual billid_type getBillId() const { return 0; }
+private:
+    std::auto_ptr< BillOpenCallParamsData > data_;
+};
+
+
 class InmanCloseCallParams : public BillCallParams, public BillCloseCallParams
 {
 public:

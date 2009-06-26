@@ -2,17 +2,16 @@
 #define _SCAG_RE_ACTIONS_IMPL_BILLACTIONOPEN_H
 
 #include "scag/re/base/LongCallAction2.h"
-#include "scag/bill/base/Infrastructure.h"
-#include "BillAction.h"
+#include "BillActionPreOpen.h"
 
 namespace scag2 {
 namespace re {
 namespace actions {
 
-class BillActionOpen : public BillAction, ActionLongCallInterface
+class BillActionOpen : public BillActionPreOpen, public ActionLongCallInterface
 {
 public:
-    BillActionOpen();
+    BillActionOpen(bool transit);
 
 protected:
     /// long call interface
@@ -20,53 +19,33 @@ protected:
     virtual void ContinueRunning( ActionContext& ctx );
 
     /// xml-handler iface
-    virtual void init( const SectionParams& params,
-                       PropertyObject propertyObject );
     virtual bool run( ActionContext& ctx ) {
         return dorun( ctx );
     }
 
+    virtual bill::BillOpenCallParamsData* postFillParamsData( bill::BillOpenCallParamsData* data, ActionContext& context );
+    virtual void postInit(const SectionParams& params, PropertyObject propertyObject );
+
 private:
-    void setTariffStatus( ActionContext&   ctx,
-                          const bill::infrastruct::TariffRec* tariff );
+    virtual void setTariffStatus( ActionContext&   ctx,
+                                  const bill::infrastruct::TariffRec* tariff );
 
     void processResult( ActionContext& ctx,
                         bill::billid_type     billid,
                         const bill::infrastruct::TariffRec* tariff );
 
     virtual const char* opname() const {
-        return "bill:open";
+        return isTransit() ? "bill:open-transit" : "bill:open";
     }
 
+    BillActionOpen();
 private:
 
     // --- input properties
 
-    bool            isCategory_;        // flag: true=category, false=category-str
-    std::string     categoryFieldName_; // the name of category or category-str parameter
-    FieldType       categoryFieldType_; // the type of the field
-    int             categoryId_;        // the id of the category
-    
-    bool            isContentType_;
-    std::string     mediaTypeFieldName_;
-    FieldType       mediaTypeFieldType_;
-    int             mediaTypeId_;
-    
-    bool            hasAbonent_;
-    std::string     abonentName_;
-    FieldType       abonentType_;
-
-    // bool            hasWalletType_;
-    // std::string     walletTypeName_;
-    // FieldType       walletTypeType_;
-
     bool            hasDescription_;
     std::string     descriptionName_;
     FieldType       descriptionType_;
-
-    bool            hasExternalId_;
-    std::string     externalIdName_;
-    FieldType       externalIdType_;
 
     bool            hasTimeout_;
     std::string     timeoutFieldName_;
@@ -77,7 +56,6 @@ private:
 
     std::string     resultFieldName_;
     bool            hasResult_;
-
 
 };
 
