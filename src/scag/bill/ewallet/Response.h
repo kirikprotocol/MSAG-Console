@@ -16,6 +16,12 @@ public:
     Response( uint8_t status = Status::UNKNOWN ) : status_(status) {}
     virtual ~Response() {}
     virtual bool isRequest() const { return false; }
+    virtual std::string toString() const {
+        char buf[50];
+        snprintf(buf,sizeof(buf),"%s status=%u/%s",
+                 Packet::toString().c_str(),unsigned(status_),Status::statusToString(status_));
+        return buf;
+    }
     uint8_t getStatus() const { return status_; }
     void setStatus( uint8_t status ) { status_ = status; }
     virtual const char* typeToString() const = 0;

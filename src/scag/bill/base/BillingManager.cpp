@@ -44,8 +44,10 @@ void EwalletCallParams::handleResponse( std::auto_ptr< ewallet::Request > reques
 {
     smsc_log_debug(log_,"ewallet handle response: req=%s resp=%s",
                    request->toString().c_str(), response->toString().c_str() );
-    if ( !response.get() || response->getStatus() != ewallet::Status::OK ) {
-        setStatus( response->getStatus(), "text message to be filled oneday" );
+    if ( !response.get() ) {
+        setStatus( ewallet::Status::BAD_RESPONSE, "response is missing");
+    } else if ( response->getStatus() != ewallet::Status::OK ) {
+        setStatus( response->getStatus(), ewallet::Status::statusToString(response->getStatus()) );
     } else {
         setResponse( *response.get() );
         if (registrator_) registrator_->processAsyncResult(*this);

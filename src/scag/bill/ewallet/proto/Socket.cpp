@@ -183,12 +183,12 @@ void Socket::processInput()
         // lastActivity_ = util::currentTimeMillis();
         rdBuffer_.SetPos(rdBuffer_.GetPos()+res);
         if ( rdBuffer_.GetPos() >= 4 ) {
-            rdBuflen_ = ntohl(*reinterpret_cast<const uint32_t*>(rdBuffer_.get()))+4;
+            rdBuflen_ = ntohl(*reinterpret_cast<const uint32_t*>(rdBuffer_.get()));
             if ( rdBuflen_ > 70000 ) {
                 core_.handleError(*this,Exception(Status::IO_ERROR, "too large packet: %d",rdBuflen_));
                 return;
             }
-            smsc_log_debug(log_,"read packet size:%d",rdBuflen_-4);
+            smsc_log_debug(log_,"read packet size:%d",rdBuflen_);
             rdBuffer_.reserve(rdBuflen_);
         }
         return;
@@ -200,21 +200,25 @@ void Socket::processInput()
         core_.handleError(*this,Exception("error reading packet data", Status::IO_ERROR));
         return;
     }
-    // lastActivity_ = util::currentTimeMillis();
     rdBuffer_.SetPos(rdBuffer_.GetPos()+res);
+    smsc_log_debug(log_,"reading %u data bytes, buflen=%u",res,unsigned(rdBuffer_.GetPos()));
+    // lastActivity_ = util::currentTimeMillis();
     if ( rdBuffer_.GetPos() < rdBuflen_ ) return;
-    Streamer::Buffer readbuf(rdBuffer_.get()+4,rdBuflen_-4);
-    readbuf.SetPos(rdBuflen_-4);
+    // Streamer::Buffer readbuf(rdBuffer_.get()+4,rdBuflen_-4);
+    // readbuf.SetPos(rdBuflen_-4);
     if ( log_->isDebugEnabled() ) {
         util::HexDump hd;
         util::HexDump::string_type dump;
-        hd.hexdump(dump,readbuf.get(),readbuf.GetPos());
-        smsc_log_debug(log_,"read length=%d data=%s",readbuf.GetPos(),hd.c_str(dump));
+        dump.reserve(hd.hexdumpsize(rdBuflen_)+hd.strdumpsize(rdBuflen_)+10);
+        hd.hexdump(dump,rdBuffer_.get(),rdBuflen_);
+        hd.strdump(dump,rdBuffer_.get(),rdBuflen_);
+        smsc_log_debug(log_,"read len=%u data=%s",unsigned(rdBuflen_),hd.c_str(dump));
     }
 
     std::auto_ptr<Packet> packet;
     try {
-        packet.reset( core_.getStreamer().deserialize(readbuf) );
+        packet.reset( core_.getStreamer().deserialize(rdBuffer_) );
+        smsc_log_debug(log_,"packet received: %s", packet->toString().c_str());
     } catch (Exception& e) {
         core_.handleError(*this,e);
         return;

@@ -252,13 +252,11 @@ public:
         DeserializeHandler dh;
         BufferReader reader(buf);
         const size_t buflen = buf.GetPos();
-        assert(buflen>=4);
-        const size_t rbuflen = util::io::EndianConverter::get32(buf.get());
+        const size_t rbuflen = reader.readInt();
         if (buflen != rbuflen) {
             throw Exception(Status::IO_ERROR,"buffer size mismatch: len=%u readlen=%u",
                             unsigned(buflen),unsigned(rbuflen));
         }
-        buf.SetPos(4);
         dh.streamer.decodeMessage(reader);
         return dh.packet.release();
     }

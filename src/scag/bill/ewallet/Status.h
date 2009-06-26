@@ -28,6 +28,8 @@ public:
 
         UNKNOWN      = 0xff
     };
+
+    static const char* statusToString( uint8_t );
 };
 
 } // namespace ewallet
