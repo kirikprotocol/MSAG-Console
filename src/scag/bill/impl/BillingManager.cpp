@@ -323,6 +323,7 @@ billid_type BillingManagerImpl::Open( BillOpenCallParams& openCallParams,
                 pck->setTimeout(billingInfoStruct.timeout);
             }
             std::auto_ptr<ewallet::Request> req(pck.release());
+            smsc_log_debug(logger,"passing ewallet open request to client");
             ewalletClient_->processRequest( req, eOpenParams );
             smsc_log_debug(logger,"ewallet open request is sent");
             return 0;

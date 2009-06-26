@@ -117,7 +117,17 @@ bool Socket::wantToSend( util::msectime_type currentTime )
     if ( result ) {
         // report sending
         core_.reportPacket(*this,ctx->getSeqNum(),ctx->popContext(),Context::SENDING);
-        wrBuffer_.setExtBuf( const_cast<char*>(ctx->buffer.get()), ctx->buffer.GetPos() );
+        Streamer::Buffer& buffer = ctx->buffer;
+        const size_t buflen = buffer.GetPos();
+        wrBuffer_.setExtBuf(const_cast<char*>(buffer.get()), buflen);
+        if (log_->isDebugEnabled()) {
+            util::HexDump hd;
+            util::HexDump::string_type dump;
+            dump.reserve(hd.hexdumpsize(buflen)+hd.strdumpsize(buflen)+10);
+            hd.hexdump(dump,buffer.get(),buflen);
+            hd.strdump(dump,buffer.get(),buflen);
+            smsc_log_debug(log_,"packet to send: %s",hd.c_str(dump));
+        }
     }
 
     // report expired
@@ -154,7 +164,7 @@ void Socket::sendData()
 }
 
 
-/// invoked from reader when there in some data on input.
+/// invoked from reader when there is some data on input.
 /// NOTE: not thread-safe.
 void Socket::processInput()
 {
@@ -162,8 +172,12 @@ void Socket::processInput()
         // reading length
         int res;
         res = sock_->Read(rdBuffer_.get()+rdBuffer_.GetPos(),4-rdBuffer_.GetPos());
-        if (res <= 0) {
+        if (res < 0) {
             core_.handleError(*this,Exception("error reading packet length", Status::IO_ERROR));
+            return;
+        } else if (res == 0) {
+            smsc_log_debug(log_,"peer has closed connection");
+            core_.closeSocket(*this);
             return;
         }
         // lastActivity_ = util::currentTimeMillis();

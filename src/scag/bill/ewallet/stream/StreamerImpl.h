@@ -14,6 +14,7 @@
 #include "scag/bill/ewallet/OpenResp.h"
 #include "scag/bill/ewallet/CommitResp.h"
 #include "scag/bill/ewallet/RollbackResp.h"
+#include "scag/util/io/EndianConverter.h"
 
 namespace scag2 {
 namespace bill {
@@ -48,13 +49,13 @@ private:
             ewallet::Open* p = new ewallet::Open;
             packet.reset(p);
             p->setSeqNum(o.getSeqNum());
-            p->setSourceId(o.getSourceId());
+            if (o.hasSourceId()) p->setSourceId(o.getSourceId());
             p->setAgentId(o.getAgentId());
             p->setUserId(o.getUserId());
             p->setWalletType(o.getWalletType());
             p->setDescription(o.getDescription());
             p->setAmount(o.getAmount());
-            p->setExternalId(o.getExternalId());
+            if (o.hasExternalId()) p->setExternalId(o.getExternalId());
             p->setTimeout(o.getTimeout());
         }
         virtual void handle( stream::OpenResp& o ) {
@@ -148,13 +149,13 @@ private:
         virtual bool visitOpen( ewallet::Open& o ) {
             stream::Open p;
             p.setSeqNum(o.getSeqNum());
-            p.setSourceId(o.getSourceId());
+            if (!o.getSourceId().empty()) p.setSourceId(o.getSourceId());
             p.setAgentId(o.getAgentId());
             p.setUserId(o.getUserId());
             p.setWalletType(o.getWalletType());
             p.setDescription(o.getDescription());
             p.setAmount(o.getAmount());
-            p.setExternalId(o.getExternalId());
+            if (!o.getExternalId().empty()) p.setExternalId(o.getExternalId());
             p.setTimeout(o.getTimeout());
             proto_.encodeMessage(p,writer_);
             return true;
@@ -223,6 +224,13 @@ private:
             return true;
         }
 
+        void fixLength( Buffer& buf )
+        {
+            size_t buflen = buf.GetPos();
+            if (buflen<4) return;
+            util::io::EndianConverter::set32(buf.get(),buflen);
+        }
+
     private:
         stream::Protocol& proto_;
         BufferWriter     writer_;
@@ -232,15 +240,25 @@ public:
     virtual ~StreamerImpl() {}
     virtual void serialize( const Packet& packet, Buffer& buf ) {
         SerializeVisitor sv(proto_,buf);
+        buf.SetPos(4);
         if ( packet.isRequest() ) {
             const_cast<Request&>(static_cast<const Request&>(packet)).visit(sv);
         } else {
             const_cast<Response&>(static_cast<const Response&>(packet)).visit(sv);
         }
+        sv.fixLength(buf);
     }
     virtual Packet* deserialize( Buffer& buf ) {
         DeserializeHandler dh;
         BufferReader reader(buf);
+        const size_t buflen = buf.GetPos();
+        assert(buflen>=4);
+        const size_t rbuflen = util::io::EndianConverter::get32(buf.get());
+        if (buflen != rbuflen) {
+            throw Exception(Status::IO_ERROR,"buffer size mismatch: len=%u readlen=%u",
+                            unsigned(buflen),unsigned(rbuflen));
+        }
+        buf.SetPos(4);
         dh.streamer.decodeMessage(reader);
         return dh.packet.release();
     }

@@ -60,8 +60,10 @@ bool Core::registerSocket( Socket& socket )
         if ( reader->sockets() >= config_->getMaxReaderSocketCount() ) {
             throw Exception(Status::CLIENT_BUSY, "maximum count of reader sockets exceeded");
         }
+        writer->registerSocket(socket);
+        reader->registerSocket(socket);
 
-        tracker_->registerSocket(socket);
+        if (tracker_.get()) tracker_->registerSocket(socket);
 
     } catch ( Exception& exc ) {
         smsc_log_error( log_, "failed to register new socket: %s", exc.what() );
@@ -108,8 +110,9 @@ void Core::startupIO()
             }
         }
     }
-    tracker_.reset( new SocketInactivityTracker(*this) );
-    threadPool_.startTask( tracker_.get(),false);
+    // we don't need a tracker
+    // tracker_.reset( new SocketInactivityTracker(*this) );
+    // threadPool_.startTask( tracker_.get(),false);
     smsc_log_info(log_, "IO tasks started");
 }
 
@@ -134,7 +137,7 @@ void Core::shutdownIO( bool serverLike )
         }
     }
 
-    tracker_->shutdown();
+    if (tracker_.get()) tracker_->shutdown();
 
     // destroyDeadTasks();
     std::vector< SocketTask* > deadtasks;

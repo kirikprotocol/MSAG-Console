@@ -309,7 +309,7 @@ int ClientCore::doExecute()
     smsc_log_info(log_,"Client started");
     while (!isStopping)
     {
-        // smsc_log_debug(logger,"cycling clientCore");
+        smsc_log_debug(log_,"cycling %s", taskName());
         currentTime = util::currentTimeMillis();
         int timeToWait = int(nextWakeupTime-currentTime);
 
@@ -383,16 +383,23 @@ void ClientCore::inactivityTimeout( proto::Socket& socket )
 
 void ClientCore::sendRequest( std::auto_ptr< proto::Context >& context )
 {
-    if ( stopping() )
-        throw Exception( "client deactivated", Status::NOT_CONNECTED );
-    uint32_t seqNum = getNextSeqNum();
-    context->setSeqNum(seqNum);
+    try {
+        if ( stopping() )
+            throw Exception( "client deactivated", Status::NOT_CONNECTED );
+        uint32_t seqNum = getNextSeqNum();
+        context->setSeqNum(seqNum);
 
-    // FIXME: temporary sent to a loopback queue
-    // if ( loopback_.get() ) loopback_->send( context, true );
+        // FIXME: temporary sent to a loopback queue
+        // if ( loopback_.get() ) loopback_->send( context, true );
 
-    proto::SocketBase& socket = getNextSocket( context->getRequest().get() );
-    socket.send( context, true );
+        smsc_log_debug(log_,"setting seqnum %u to context",seqNum);
+        proto::SocketBase& socket = getNextSocket( context->getRequest().get() );
+        smsc_log_debug(log_,"socket received: %p",&socket);
+        socket.send( context, true );
+    } catch ( Exception& e ) {
+        smsc_log_warn(log_,"exc in sendRequest(req=%p): %s", context->getRequest().get(), e.what());
+        throw;
+    }
 }
 
 

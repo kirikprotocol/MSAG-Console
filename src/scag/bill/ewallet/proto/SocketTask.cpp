@@ -67,7 +67,7 @@ int SocketTask::doExecute()
     smsc_log_info(log_,"Starting %s", taskName());
 
     while ( ! isStopping ) {
-        // smsc_log_debug(log_,"cycling %s",taskName());
+        smsc_log_debug(log_,"cycling %s",taskName());
         try {
             util::msectime_type currentTime = util::currentTimeMillis();
             wakeupTime_ = currentTime + 200;

@@ -23,8 +23,8 @@ public:
     maxReaderSocketCount_(5),
     readersCount_(1),
     writersCount_(1),
-    host_("127.0.0.1"),
-    port_(23881),
+    host_("phoenix"),
+    port_(7990),
     enabled_(true) {}
 
     util::msectime_type getIOTimeout() const { return ioTimeout_; }
