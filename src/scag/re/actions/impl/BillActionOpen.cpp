@@ -124,7 +124,7 @@ void BillActionOpen::ContinueRunning(ActionContext& context)
         processResult( context, bop->billId(), bop->tariffRec() );
     } else {
         // transit
-        smsc_log_debug(logger,"Action '%s': not registering session transaction %llu as it is transit", bop->billId());
+        smsc_log_debug(logger,"Action '%s': not registering session transaction %llu as it is transit", opname(), bop->billId());
         assert( bop->tariffRec()->billType == infrastruct::EWALLET );
         EwalletCallParams* ecp = static_cast<EwalletCallParams*>(bp);
         char buf[30];

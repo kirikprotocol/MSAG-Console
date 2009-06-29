@@ -10,10 +10,32 @@ bool BillActionCloseTransit::RunBeforePostpone(ActionContext& context)
     if (!bpd.get()) return false;
 
     if (bpd->tariffRec.billType == bill::infrastruct::EWALLET ) {
+
         LongCallContext& lcmCtx = context.getSession().getLongCallContext();
         lcmCtx.callCommandId = actionCommit_ ? BILL_COMMIT : BILL_ROLLBACK;
-        bill::EwalletCloseTransitParams* ectp =
-            new bill::EwalletCloseTransitParams(bpd.release(),&lcmCtx);
+        bill::BillCloseTransitParamsData* bctpd = new bill::BillCloseTransitParamsData;
+        bctpd->data.reset(bpd.release());
+
+        // fill transid
+        if ( ewalletTransType_ == ftUnknown ) {
+            bctpd->transId = ewalletTransId_;
+        } else {
+
+            Property * property = context.getProperty(ewalletTransName_);
+            if (!property)
+            {
+                setBillingStatus(context, "Invalid property for transId", false);
+                // setTariffStatus( context, 0 );
+                smsc_log_error(logger,"Action '%s' :: Invalid property %s for transId",
+                               opname(), ewalletTransName_.c_str() );
+                return false;
+            }
+            bctpd->transId = unsigned(property->getInt());
+            
+        }
+
+        bill::EwalletCloseCallParams* ectp =
+            new bill::EwalletCloseCallParams(bctpd,&lcmCtx);
         lcmCtx.setParams(ectp);
         return true;
     } else {
@@ -33,6 +55,19 @@ void BillActionCloseTransit::ContinueRunning( ActionContext& context )
 void BillActionCloseTransit::postInit(const SectionParams& params,
                                       PropertyObject propertyObject)
 {
+    bool bExist;
+    ewalletTransType_ = CheckParameter( params,
+                                        propertyObject,
+                                        opname(),
+                                        "transId",
+                                        true,      // required
+                                        true,       // readonly
+                                        ewalletTransName_,
+                                        bExist );
+    if ( ewalletTransType_ == ftUnknown ) {
+        ewalletTransId_ = atoi(ewalletTransName_.c_str());
+    }
+
     /*
     BillAction::init( params, propertyObject );
 

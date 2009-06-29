@@ -9,13 +9,15 @@ BillAction::BillAction( bool transit ) : transit_(transit) {}
 void BillAction::init( const SectionParams& params,
                        PropertyObject propertyObject )
 {
-    bool bExist;
-    transIdFieldType_ = CheckParameter( params,
-                                       propertyObject, 
-                                       opname(), "id",
-                                       true, true,
-                                       transIdFieldName_,
-                                       bExist );
+    if ( ! transit_ ) {
+        bool bExist;
+        transIdFieldType_ = CheckParameter( params,
+                                            propertyObject, 
+                                            opname(), "id",
+                                            true, true,
+                                            transIdFieldName_,
+                                            bExist );
+    }
 
     /*
     std::string transitValue;
@@ -77,6 +79,10 @@ bool BillAction::FinishXMLSubSection( const std::string& )
 std::string BillAction::getTransId( ActionContext& context )
 {
     std::string transId;
+    if ( transit_ ) {
+        smsc_log_error(logger,"logic error: transId requested for transit action '%s'", opname());
+        return transId;
+    }
     if ( transIdFieldType_ != ftUnknown ) {
         Property* property = context.getProperty( transIdFieldName_ );
         if ( ! property ) {

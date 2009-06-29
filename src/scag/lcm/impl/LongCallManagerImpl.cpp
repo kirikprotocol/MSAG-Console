@@ -120,13 +120,23 @@ bool LongCallManagerImpl::call(LongCallContextBase* context)
                 {
                     bill::BillCallParams* bcp = static_cast<bill::BillCallParams*>(context->getParams());
                     bill::BillCloseCallParams * bp = bcp->getClose();
-                    bill::BillingManager::Instance().Commit(bp->getBillId(), (LongCallContext*)context);
+                    if ( bp->getTransitData() ) {
+                        // transit
+                        bill::BillingManager::Instance().CommitTransit(*bp,static_cast<LongCallContext*>(context));
+                    } else {
+                        bill::BillingManager::Instance().Commit(bp->getBillId(), (LongCallContext*)context);
+                    }
                 }
                 else if(context->callCommandId == BILL_ROLLBACK)
                 {
                     bill::BillCallParams* bcp = static_cast<bill::BillCallParams*>(context->getParams());
                     bill::BillCloseCallParams * bp = bcp->getClose();
-                    bill::BillingManager::Instance().Rollback(bp->getBillId(), (LongCallContext*)context);
+                    if ( bp->getTransitData() ) {
+                        // transit
+                        bill::BillingManager::Instance().RollbackTransit(*bp,static_cast<LongCallContext*>(context));
+                    } else {
+                        bill::BillingManager::Instance().Rollback(bp->getBillId(), (LongCallContext*)context);
+                    }
                 }
             } catch( bill::ewallet::Exception& e ) {
                 bill::EwalletCallParams* lp = 

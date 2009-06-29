@@ -13,6 +13,11 @@ include types.def
 // 0x22 -- NOT_CONNECTED
 // 0x23 -- CLIENT_BUSY
 //     everything else is mapped to:
+//
+// 0x41 -- NOT_ENOUGH
+// 0x42 -- NO_ACCESS
+// 0x43 -- TRANS_NOT_FOUND
+//
 // 0xff -- UNKNOWN
 
 // message Ping

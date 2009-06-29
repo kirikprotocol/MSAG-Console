@@ -181,7 +181,7 @@ void Scag::init( unsigned mynode )
     try {
 
         bill::BillingManagerImpl* bm = new bill::BillingManagerImpl;
-        bm->init( cfg.getBillManConfig() );
+        bm->init( cfg );
         bm->Start();
 
     }catch(...)

@@ -28,6 +28,14 @@ public:
 };
 
 
+class BillCloseTransitParamsData
+{
+public:
+    uint32_t                              transId;
+    std::auto_ptr<BillOpenCallParamsData> data;
+};
+
+
 class BillOpenCallParams
 {
 public:
@@ -44,6 +52,7 @@ class BillCloseCallParams
 public:
     virtual ~BillCloseCallParams() {}
     virtual billid_type getBillId() const = 0;
+    virtual BillCloseTransitParamsData* getTransitData() { return 0; }
 };
 
 
@@ -132,28 +141,22 @@ private:
 class EwalletCloseCallParams : public EwalletCallParams, public BillCloseCallParams
 {
 public:
+    // non-transit ctor
     EwalletCloseCallParams( billid_type billid, lcm::LongCallContext* lcmCtx ) :
     EwalletCallParams(false,lcmCtx), billId_(billid) {}
+
+    // transit ctor
+    EwalletCloseCallParams( BillCloseTransitParamsData* data, lcm::LongCallContext* lcmCtx ) :
+    EwalletCallParams(true,lcmCtx), billId_(0), data_(data) {}
+
     virtual void setResponse( ewallet::Response& resp );
     virtual BillOpenCallParams* getOpen() { return 0; }
     virtual EwalletCloseCallParams* getClose() { return this; }
     virtual billid_type getBillId() const { return billId_; }
+    virtual BillCloseTransitParamsData* getTransitData() { return data_.get(); }
 private:
     billid_type billId_;
-};
-
-
-class EwalletCloseTransitParams : public EwalletCallParams, public BillCloseCallParams
-{
-public:
-    EwalletCloseTransitParams( BillOpenCallParamsData* data, lcm::LongCallContext* lcmCtx ) :
-    EwalletCallParams(true,lcmCtx), data_(data) {}
-    virtual void setResponse( ewallet::Response& resp );
-    virtual BillOpenCallParams* getOpen() { return 0; }
-    virtual EwalletCloseTransitParams* getClose() { return this; }
-    virtual billid_type getBillId() const { return 0; }
-private:
-    std::auto_ptr< BillOpenCallParamsData > data_;
+    std::auto_ptr<BillCloseTransitParamsData> data_;
 };
 
 
@@ -174,9 +177,14 @@ class BillingManager
 public:
     virtual billid_type Open( BillOpenCallParams& openCallParams,
                               lcm::LongCallContext* lcmCtx = NULL) = 0;
-    virtual void Commit( billid_type billId, lcm::LongCallContext* lcmCtx = NULL ) = 0;
-    virtual void Rollback( billid_type billId, bool timeout = false,
+    virtual void Commit( billid_type billId,
+                         lcm::LongCallContext* lcmCtx = NULL ) = 0;
+    virtual void Rollback( billid_type billId,
                            lcm::LongCallContext* lcmCtx = NULL) = 0;
+    virtual void CommitTransit( BillCloseCallParams& closeCallParams,
+                                lcm::LongCallContext* lcmCtx = NULL ) = 0;
+    virtual void RollbackTransit( BillCloseCallParams& closeCallParams,
+                                  lcm::LongCallContext* lcmCtx = NULL ) = 0;
     virtual void Info(billid_type billId, BillingInfoStruct& bis,
                       TariffRec& tariffRec) = 0;
     virtual void Stop() = 0;

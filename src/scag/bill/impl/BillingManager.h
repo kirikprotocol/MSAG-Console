@@ -10,7 +10,7 @@
 #include "core/buffers/IntHash64.hpp"
 #include "core/network/Socket.hpp"
 #include "scag/config/base/ConfigListener2.h"
-#include "scag/config/bill/BillingManagerConfig.h"
+#include "scag/config/base/ConfigManager2.h"
 #include "scag/stat/base/Statistics2.h"
 #include "Infrastructure.h"
 #include "scag/bill/ewallet/Client.h"
@@ -174,7 +174,7 @@ public EwalletCallParams::TransactionRegistrator
     virtual void processAsyncResult( EwalletCallParams& params );
 
 public:
-    void init( config::BillingManagerConfig& cfg );
+    void init( config::ConfigManager& cfg );
 
     virtual int Execute();
     virtual void Start();
@@ -183,7 +183,12 @@ public:
     virtual billid_type Open( BillOpenCallParams& openCallParams,
                                lcm::LongCallContext* lcmCtx = NULL);
     virtual void Commit( billid_type billId, lcm::LongCallContext* lcmCtx = NULL);
-    virtual void Rollback( billid_type billId, bool timeout, lcm::LongCallContext* lcmCtx = NULL );
+    virtual void Rollback( billid_type billId, lcm::LongCallContext* lcmCtx = NULL );
+    virtual void CommitTransit( BillCloseCallParams& closeCallParams,
+                                lcm::LongCallContext* lcmCtx = NULL );
+    virtual void RollbackTransit( BillCloseCallParams& closeCallParams,
+                                  lcm::LongCallContext* lcmCtx = NULL );
+
     virtual void Info( billid_type billId, BillingInfoStruct& bis, TariffRec& tariffRec);
 
     virtual Infrastructure& getInfrastructure() { return infrastruct; };

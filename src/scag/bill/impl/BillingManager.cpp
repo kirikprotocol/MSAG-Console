@@ -9,6 +9,7 @@
 #include "scag/bill/ewallet/Commit.h"
 #include "scag/bill/ewallet/client/ClientCore.h"
 #include "scag/bill/ewallet/stream/StreamerImpl.h"
+#include "scag/config/base/ConfigView.h"
 
 #ifdef MSAG_INMAN_BILL
 #include "inman/services/smbill/SmBillDefs.hpp"
@@ -24,13 +25,114 @@ using namespace smsc::inman::interaction;
 using namespace scag::exceptions;
 
 
-void BillingManagerImpl::init( config::BillingManagerConfig& cfg )
+void BillingManagerImpl::init( config::ConfigManager& mgr )
 {
+    config::BillingManagerConfig& cfg(mgr.getBillManConfig());
+
     MutexGuard guard(inUseLock);
     smsc_log_info(logger, "BillingManager start initing...");
 
     // ewallet
     std::auto_ptr< ewallet::proto::Config > econfig( new ewallet::proto::Config );
+    do {
+
+        config::ConfigView cview(*mgr.getConfig(),"BillingManager.ewallet");
+
+        try {
+            econfig->setEnabled(cview.getBool("enabled"));
+        } catch (...) {
+            econfig->setEnabled(false);
+            break;
+        }
+
+        try {
+            econfig->setLoopback(cview.getBool("loopback"));
+        } catch (...) {
+            econfig->setLoopback(false);
+        }
+
+        if ( ! econfig->isLoopback() ) {
+
+            try {
+                econfig->setHost(cview.getString("host"));
+            } catch (...) {
+                smsc_log_warn(logger,"ewallet host parameter missing. disabling");
+                econfig->setEnabled(false);
+                break;
+            }
+
+            try {
+                econfig->setPort(cview.getInt("port"));
+            } catch (...) {
+                smsc_log_warn(logger,"ewallet port parameter missing. disabling");
+                econfig->setEnabled(false);
+                break;
+            }
+
+            try {
+                econfig->setConnectTimeout(cview.getInt("connectTimeout"));
+            } catch (...) {
+                smsc_log_warn(logger,"ewallet connectTimeout parameter missing. using %u", unsigned(econfig->getConnectTimeout()));
+            }
+
+            /*
+             try {
+             econfig->setInactivityTimeout(cview.getInt("inactivityTimeout"));
+             } catch (...) {
+             smsc_log_warn(logger,"ewallet connectTimeout parameter missing. using %u", unsigned(econfig->getConnectTimeout()));
+             }
+             */
+
+            try {
+                econfig->setConnectionsCount(cview.getInt("connectionsCount"));
+            } catch (...) {
+                smsc_log_warn(logger,"ewallet connectionsCount parameter missing. using %u", unsigned(econfig->getConnectionsCount()));
+            }
+
+            try {
+                econfig->setMaxWriterSocketCount(cview.getInt("maxWriterSocketCount"));
+            } catch (...) {
+                smsc_log_warn(logger,"ewallet maxWriterSocketCount parameter missing. using %u", unsigned(econfig->getMaxWriterSocketCount()));
+            }
+
+            try {
+                econfig->setMaxReaderSocketCount(cview.getInt("maxReaderSocketCount"));
+            } catch (...) {
+                smsc_log_warn(logger,"ewallet maxReaderSocketCount parameter missing. using %u", unsigned(econfig->getMaxReaderSocketCount()));
+            }
+
+            try {
+                econfig->setWritersCount(cview.getInt("writersCount"));
+            } catch (...) {
+                smsc_log_warn(logger,"ewallet writersCount parameter missing. using %u", unsigned(econfig->getWritersCount()));
+            }
+
+            try {
+                econfig->setReadersCount(cview.getInt("readersCount"));
+            } catch (...) {
+                smsc_log_warn(logger,"ewallet readersCount parameter missing. using %u", unsigned(econfig->getReadersCount()));
+            }
+        } // not loopback
+
+        try {
+            econfig->setIOTimeout(cview.getInt("ioTimeout"));
+        } catch (...) {
+            smsc_log_warn(logger,"ewallet ioTimeout parameter missing. using %u", unsigned(econfig->getIOTimeout()));
+        }
+        
+        try {
+            econfig->setProcessTimeout(cview.getInt("processTimeout"));
+        } catch (...) {
+            smsc_log_warn(logger,"ewallet processTimeout parameter missing. using %u", unsigned(econfig->getProcessTimeout()));
+        }
+
+        try {
+            econfig->setSocketQueueSizeLimit(cview.getInt("socketQueueSizeLimit"));
+        } catch (...) {
+            smsc_log_warn(logger,"ewallet socketQueueSizeLimit parameter missing. using %u", unsigned(econfig->getSocketQueueSizeLimit()));
+        }
+
+    } while ( false );
     ewalletClient_.reset( new ewallet::client::ClientCore
                           ( econfig.release(),
                             new ewallet::stream::StreamerImpl()) );
@@ -59,7 +161,7 @@ void BillingManagerImpl::configChanged()
 {
     MutexGuard guard(inUseLock);
     Stop();
-    init(config::ConfigManager::Instance().getBillManConfig());
+    init(config::ConfigManager::Instance());
     Start();
 }
 
@@ -392,6 +494,8 @@ void BillingManagerImpl::Commit(billid_type billId, lcm::LongCallContext* lcmCtx
             ewalletClient_->processRequest( req, *closeParams );
             smsc_log_debug(logger,"ewallet commit request is sent");
             return;
+        } else {
+            throw SCAGException("Cannot process ewallet commit w/o lcmCtx");
         }
     } else
         p->status = TRANSACTION_VALID;
@@ -399,7 +503,8 @@ void BillingManagerImpl::Commit(billid_type billId, lcm::LongCallContext* lcmCtx
     ProcessResult("commit", TRANSACTION_COMMITED, p.get());
 }
 
-void BillingManagerImpl::Rollback(billid_type billId, bool timeout, lcm::LongCallContext* lcmCtx)
+
+void BillingManagerImpl::Rollback(billid_type billId, lcm::LongCallContext* lcmCtx)
 {
     smsc_log_debug(logger, "Rolling back billId=%lld...", billId);
 
@@ -415,9 +520,49 @@ void BillingManagerImpl::Rollback(billid_type billId, bool timeout, lcm::LongCal
     }
     #endif
 */
-    ProcessResult(timeout ? "rollback(timeout)" : "rollback", 
-            timeout ? TRANSACTION_TIME_OUT : TRANSACTION_CALL_ROLLBACK, p.get());
+    ProcessResult( "rollback", 
+                   TRANSACTION_CALL_ROLLBACK, p.get());
 }
+
+
+void BillingManagerImpl::CommitTransit( BillCloseCallParams& params, lcm::LongCallContext* lcmCtx )
+{
+    BillCloseTransitParamsData* data = params.getTransitData();
+    if ( ! data || ! data->data.get() ) {
+        throw SCAGException("cannot process transit commit w/o data");
+    }
+    BillingInfoStruct& billingInfoStruct = data->data->billingInfoStruct;
+    TariffRec& tariffRec = data->data->tariffRec;
+    if ( tariffRec.billType != infrastruct::EWALLET ) {
+        throw SCAGException("transit commit type is not ewallet");
+    }
+    if ( ! lcmCtx ) {
+        throw SCAGException("transit commit requires lcmCtx");
+    }
+
+    EwalletCloseCallParams* eCloseParams = 
+        static_cast<EwalletCloseCallParams*>(lcmCtx->getParams());
+    eCloseParams->setRegistrator(this);
+    std::auto_ptr<ewallet::Commit> pck( new ewallet::Commit );
+    pck->setSourceId("msag");
+    pck->setAgentId(billingInfoStruct.serviceId);
+    pck->setUserId(billingInfoStruct.AbonentNumber);
+    pck->setWalletType(tariffRec.Currency);
+    pck->setAmount( int(tariffRec.getFloatPrice()+0.5) );
+    if (!billingInfoStruct.externalId.empty()) {
+        pck->setExternalId(billingInfoStruct.externalId);
+    }
+    std::auto_ptr<ewallet::Request> req(pck.release());
+    smsc_log_debug(logger,"passing ewallet commit request to client");
+    ewalletClient_->processRequest( req, *eCloseParams );
+    smsc_log_debug(logger,"ewallet commit request is sent");
+}
+
+
+void BillingManagerImpl::RollbackTransit( BillCloseCallParams& params, lcm::LongCallContext* lcmCtx )
+{
+}
+
 
 void BillingManagerImpl::Info(billid_type billId, BillingInfoStruct& bis, TariffRec& tariffRec)
 {

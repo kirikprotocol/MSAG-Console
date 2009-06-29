@@ -49,13 +49,16 @@ void ClientCore::startup()
     started_ = true;
     try {
         smsc_log_info( log_, "creating connections..." );
-        // register a connection
-        // FIXME: temporary loopback connection
-        // loopback_.reset( new Loopback(*this) );
-        // regSet_.create(loopback_.get());
-        // threadPool_.startTask( loopback_->getProcessor(), false );
-        for ( size_t i = 0; i < getConfig().getConnectionsCount(); ++i ) {
-            createSocket();
+        if ( getConfig().isLoopback() ) {
+            // use a loopback connection
+            loopback_.reset( new Loopback(*this) );
+            regSet_.create(loopback_.get());
+            threadPool_.startTask( loopback_->getProcessor(), false );
+        } else {
+            // use real network connections
+            for ( size_t i = 0; i < getConfig().getConnectionsCount(); ++i ) {
+                createSocket();
+            }
         }
     } catch ( Exception& exc ) {
         started_ = false;

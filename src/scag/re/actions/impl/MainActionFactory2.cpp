@@ -131,7 +131,7 @@ Action * MainActionFactory::CreateAction( const std::string& name ) const
             if ( name == "bill:open" ) return new BillActionOpen(false);
             if ( name == "bill:open-transit" ) return new BillActionOpen(true);
             if ( name == "bill:close" ) return new BillActionClose();
-            // if ( name == "bill:close-transit" ) return new BillActionCloseTransit();
+            if ( name == "bill:close-transit" ) return new BillActionCloseTransit();
             if ( name == "bill:info" ) return new BillActionInfo();
             if ( name == "bill:set_keywords" ) return new BillActionSetKeywords();
             if ( name == "bill:add_keywords" ) return new BillActionAddKeywords();
