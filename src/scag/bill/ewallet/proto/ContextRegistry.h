@@ -102,11 +102,14 @@ public:
     }
 
     bool empty() const {
-        return list_.empty();
+        return list_.empty() && list0_.empty();
     }
 
     void push( Context* ctx ) {
-        typename ContextList::iterator i = list_.insert( list_.end(), ctx );
+        typename ContextList::iterator i = 
+            ( ctx->creationTime() == 0 ?
+              list0_.insert(list0_.end(),ctx) :
+              list_.insert( list_.end(), ctx) );
         map_.Insert( ctx->getSeqNum(), i );
     }
 
@@ -119,7 +122,11 @@ public:
         Context* ret = ptr.getContext();
         if ( ret ) {
             map_.Delete(ret->getSeqNum());
-            list_.erase(*ptr.i);
+            if (ret->creationTime()==0) {
+                list0_.erase(*ptr.i);
+            } else {
+                list_.erase(*ptr.i);
+            }
         }
         ptr.i = 0;
         return ret;
@@ -129,6 +136,7 @@ public:
     void popAll( ContextList& rv ) {
         rv.clear();
         rv.swap(list_);
+        rv.splice(rv.end(), list0_);
         map_.Empty();
     }
 
@@ -157,6 +165,7 @@ public:
 
 private:
     ContextList                               list_;
+    ContextList                               list0_; // those w/o expiration
     ContextMap                                map_;
     smsc::core::synchronization::EventMonitor mon_;
 };

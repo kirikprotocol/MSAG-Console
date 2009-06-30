@@ -13,7 +13,6 @@ class CommitResp: public Response
 public:
     CommitResp( uint8_t status = Status::UNKNOWN ) : Response(status) {}
     virtual ~CommitResp() {}
-    virtual std::string toString() const { return "commitresp"; }
     virtual const char* typeToString() const { return "commitresp"; }
     virtual bool isValid() const { return true; }
     virtual bool visit( ResponseVisitor& visitor ) { return visitor.visitCommitResp(*this); }

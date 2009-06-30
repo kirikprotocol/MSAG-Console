@@ -294,6 +294,7 @@ void ClientCore::handleError( proto::SocketBase& socket, const Exception& exc )
 bool ClientCore::registerSocket( proto::Socket& socket )
 {
     if ( Core::registerSocket(socket) ) {
+        MutexGuard mg(socketMon_);
         activeSockets_.push_back(&socket);
         return true;
     }
@@ -543,7 +544,6 @@ void ClientCore::destroyDeadSockets()
 
         regSet_.destroy(socket);
         socket->detach(taskName()); // it will destroy the socket
-
     }
 }
 

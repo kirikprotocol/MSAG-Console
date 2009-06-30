@@ -63,9 +63,11 @@ private:
             packet.reset(p);
             p->setSeqNum(o.getSeqNum());
             p->setStatus(o.getStatusValue());
-            p->setTransId(o.getTransId());
-            p->setAmount(o.getAmount());
-            p->setChargeThreshold(o.getChargeThreshold());
+            if ( p->getStatus() == Status::OK ) {
+                p->setTransId(o.getTransId());
+                p->setAmount(o.getAmount());
+                p->setChargeThreshold(o.getChargeThreshold());
+            }
         }
         virtual void handle( stream::Commit& o ) {
             ewallet::Commit* p = new ewallet::Commit;
@@ -203,9 +205,11 @@ private:
             stream::OpenResp p;
             p.setSeqNum(o.getSeqNum());
             p.setStatusValue(o.getStatus());
-            p.setTransId(o.getTransId());
-            p.setAmount(o.getAmount());
-            p.setChargeThreshold(o.getChargeThreshold());
+            if ( o.getStatus() == Status::OK ) {
+                p.setTransId(o.getTransId());
+                p.setAmount(o.getAmount());
+                p.setChargeThreshold(o.getChargeThreshold());
+            }
             proto_.encodeMessage(p,writer_);
             return true;
         }

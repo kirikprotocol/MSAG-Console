@@ -28,26 +28,30 @@ queue_(new smsc::core::buffers::CyclicQueue< WriteContext* >)
 /// attach/detach a socket: refcounting
 void SocketBase::attach( const char* who )
 {
-    smsc_log_debug(log_,"attaching socket %p to %s", this, who);
-    MutexGuard mg(refMutex_);
-    ++refCount_;
+    unsigned ref;
+    {
+        MutexGuard mg(refMutex_);
+        ref = ++refCount_;
+    }
+    smsc_log_debug(log_,"attaching socket %p to %s, ref=%u", this, who, ref);
 }
 
 
 void SocketBase::detach( const char* who )
 {
-    smsc_log_debug(log_,"detaching socket %p from %s", this, who);
-    bool destroy;
+    unsigned ref;
     {
         MutexGuard mg(refMutex_);
         if (refCount_ > 0) {
-            --refCount_;
+            ref = --refCount_;
         } else {
             smsc_log_warn(log_,"logics failure: refcount=0 before detach of %p", this);
+            ref = 0;
         }
-        destroy = ( refCount_ == 0 );
     }
-    if ( destroy ) {
+    smsc_log_debug(log_,"detaching socket %p from %s, ref=%u%s", this, who, ref,
+                   ref ? "" : ", dtor");
+    if ( ! ref ) {
         delete this;
     }
 }

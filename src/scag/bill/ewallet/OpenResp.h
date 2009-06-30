@@ -14,11 +14,15 @@ public:
     OpenResp( uint8_t status = Status::UNKNOWN ) : Response(status) {}
     virtual ~OpenResp() {}
     virtual std::string toString() const {
-        char buf[100];
-        snprintf(buf,sizeof(buf),"%s transId=%u amount=%d chargeThreshold=%d",
-                 Response::toString().c_str(),
-                 transId_, amount_, threshold_ );
-        return buf;
+        if ( getStatus() != Status::OK ) {
+            return Response::toString();
+        } else {
+            char buf[100];
+            snprintf(buf,sizeof(buf),"%s transId=%u amount=%d chargeThreshold=%d",
+                     Response::toString().c_str(),
+                     transId_, amount_, threshold_ );
+            return buf;
+        }
     }
     virtual const char* typeToString() const { return "openresp"; }
     virtual bool isValid() const { return true; }
