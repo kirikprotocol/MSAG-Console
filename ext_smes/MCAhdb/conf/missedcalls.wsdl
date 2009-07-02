@@ -1,107 +1,79 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<wsdl:definitions xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:axis2="http://ws.apache.org/axis2" xmlns:ns1="http://org.apache.axis2/xsd" xmlns:ns="http://tempuri.org/" xmlns:wsaw="http://www.w3.org/2006/05/addressing/wsdl" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" xmlns:ax21="http://missedcallservice.soap.mcahdb.eyeline.mobi/xsd" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" targetNamespace="http://ws.apache.org/axis2">
-    <wsdl:types>
-        <xs:schema attributeFormDefault="qualified" elementFormDefault="unqualified" targetNamespace="http://missedcallservice.soap.mcahdb.eyeline.mobi/xsd">
-            <xs:complexType name="GetMissedCalls">
-                <xs:sequence>
-                    <xs:element minOccurs="0" name="phoneNumber" nillable="true" type="xs:string"/>
-                </xs:sequence>
-            </xs:complexType>
-            <xs:complexType name="GetMissedCallsResponse">
-                <xs:sequence>
-                    <xs:element minOccurs="0" name="getMissedCallsResult" nillable="true" type="ax21:ArrayOfMissedCall"/>
-                </xs:sequence>
-            </xs:complexType>
-            <xs:complexType name="ArrayOfMissedCall">
-                <xs:sequence>
-                    <xs:element maxOccurs="unbounded" minOccurs="0" name="missedCall" nillable="true" type="ax21:MissedCall"/>
-                </xs:sequence>
-            </xs:complexType>
-            <xs:complexType name="MissedCall">
-                <xs:sequence>
-                    <xs:element minOccurs="0" name="callDate" nillable="true" type="xs:string"/>
-                    <xs:element minOccurs="0" name="messageStatus" type="xs:long"/>
-                    <xs:element minOccurs="0" name="missedCalls" type="xs:int"/>
-                    <xs:element minOccurs="0" name="phoneNumber" nillable="true" type="xs:string"/>
-                    <xs:element minOccurs="0" name="processDate" nillable="true" type="xs:string"/>
-                </xs:sequence>
-            </xs:complexType>
-        </xs:schema>
-        <xs:schema xmlns:ax22="http://missedcallservice.soap.mcahdb.eyeline.mobi/xsd" attributeFormDefault="qualified" elementFormDefault="unqualified" targetNamespace="http://tempuri.org/">
-            <xs:import namespace="http://missedcallservice.soap.mcahdb.eyeline.mobi/xsd"/>
-            <xs:element name="GetMissedCalls">
-                <xs:complexType>
-                    <xs:sequence>
-                        <xs:element minOccurs="0" name="req" nillable="true" type="ax22:GetMissedCalls"/>
-                    </xs:sequence>
-                </xs:complexType>
-            </xs:element>
-            <xs:element name="GetMissedCallsResponse">
-                <xs:complexType>
-                    <xs:sequence>
-                        <xs:element minOccurs="0" name="return" nillable="true" type="ax22:GetMissedCallsResponse"/>
-                    </xs:sequence>
-                </xs:complexType>
-            </xs:element>
-        </xs:schema>
-    </wsdl:types>
-    <wsdl:message name="GetMissedCallsRequest">
-        <wsdl:part name="parameters" element="ns:GetMissedCalls"/>
-    </wsdl:message>
-    <wsdl:message name="GetMissedCallsResponse">
-        <wsdl:part name="parameters" element="ns:GetMissedCallsResponse"/>
-    </wsdl:message>
-    <wsdl:portType name="MissedCallsPortType">
-        <wsdl:operation name="GetMissedCalls">
-            <wsdl:input message="axis2:GetMissedCallsRequest" wsaw:Action="urn:GetMissedCalls"/>
-            <wsdl:output message="axis2:GetMissedCallsResponse" wsaw:Action="urn:GetMissedCallsResponse"/>
-        </wsdl:operation>
-    </wsdl:portType>
-    <wsdl:binding name="MissedCallServiceSkeletonSoap11Binding" type="axis2:MissedCallsPortType">
-        <soap:binding transport="http://schemas.xmlsoap.org/soap/http" style="document"/>
-        <wsdl:operation name="GetMissedCalls">
-            <soap:operation soapAction="urn:GetMissedCalls" style="document"/>
-            <wsdl:input>
-                <soap:body use="literal"/>
-            </wsdl:input>
-            <wsdl:output>
-                <soap:body use="literal"/>
-            </wsdl:output>
-        </wsdl:operation>
-    </wsdl:binding>
-    <wsdl:binding name="MissedCallServiceSkeletonSoap12Binding" type="axis2:MissedCallsPortType">
-        <soap12:binding transport="http://schemas.xmlsoap.org/soap/http" style="document"/>
-        <wsdl:operation name="GetMissedCalls">
-            <soap12:operation soapAction="urn:GetMissedCalls" style="document"/>
-            <wsdl:input>
-                <soap12:body use="literal"/>
-            </wsdl:input>
-            <wsdl:output>
-                <soap12:body use="literal"/>
-            </wsdl:output>
-        </wsdl:operation>
-    </wsdl:binding>
-    <wsdl:binding name="MissedCallServiceSkeletonHttpBinding" type="axis2:MissedCallsPortType">
-        <http:binding verb="POST"/>
-        <wsdl:operation name="GetMissedCalls">
-            <http:operation location="MissedCalls/GetMissedCalls"/>
-            <wsdl:input>
-                <mime:content type="text/xml" part="GetMissedCalls"/>
-            </wsdl:input>
-            <wsdl:output>
-                <mime:content type="text/xml" part="GetMissedCalls"/>
-            </wsdl:output>
-        </wsdl:operation>
-    </wsdl:binding>
-    <wsdl:service name="MissedCalls">
-        <wsdl:port name="MissedCallServiceSkeletonHttpSoap11Endpoint" binding="axis2:MissedCallServiceSkeletonSoap11Binding">
-            <soap:address location="http://192.168.2.213:8088/mca/services/MissedCalls.MissedCallServiceSkeletonHttpSoap11Endpoint"/>
-        </wsdl:port>
-        <wsdl:port name="MissedCallServiceSkeletonHttpSoap12Endpoint" binding="axis2:MissedCallServiceSkeletonSoap12Binding">
-            <soap12:address location="http://192.168.2.213:8088/mca/services/MissedCalls.MissedCallServiceSkeletonHttpSoap12Endpoint"/>
-        </wsdl:port>
-        <wsdl:port name="MissedCallServiceSkeletonHttpEndpoint" binding="axis2:MissedCallServiceSkeletonHttpBinding">
-            <http:address location="http://192.168.2.213:8088/mca/services/MissedCalls.MissedCallServiceSkeletonHttpEndpoint"/>
-        </wsdl:port>
-    </wsdl:service>
+<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="http://tempuri.org/" xmlns:s="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" targetNamespace="http://tempuri.org/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:types>
+    <s:schema elementFormDefault="qualified" targetNamespace="http://tempuri.org/">
+      <s:element name="GetMissedCalls">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="phoneNumber" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="GetMissedCallsResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="GetMissedCallsResult" type="tns:ArrayOfMissedCall" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="ArrayOfMissedCall">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="MissedCall" nillable="true" type="tns:MissedCall" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="MissedCall">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="PhoneNumber" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="CallDate" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="ProcessDate" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="MissedCalls" type="s:int" />
+          <s:element minOccurs="1" maxOccurs="1" name="MessageStatus" type="s:long" />
+        </s:sequence>
+      </s:complexType>
+    </s:schema>
+  </wsdl:types>
+  <wsdl:message name="GetMissedCallsSoapIn">
+    <wsdl:part name="parameters" element="tns:GetMissedCalls" />
+  </wsdl:message>
+  <wsdl:message name="GetMissedCallsSoapOut">
+    <wsdl:part name="parameters" element="tns:GetMissedCallsResponse" />
+  </wsdl:message>
+  <wsdl:portType name="MissedCallServiceSoap">
+    <wsdl:operation name="GetMissedCalls">
+      <wsdl:input message="tns:GetMissedCallsSoapIn" />
+      <wsdl:output message="tns:GetMissedCallsSoapOut" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="MissedCallServiceSoap" type="tns:MissedCallServiceSoap">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="GetMissedCalls">
+      <soap:operation soapAction="http://tempuri.org/GetMissedCalls" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:binding name="MissedCallServiceSoap12" type="tns:MissedCallServiceSoap">
+    <soap12:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="GetMissedCalls">
+      <soap12:operation soapAction="http://tempuri.org/GetMissedCalls" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="MissedCallService">
+    <wsdl:port name="MissedCallServiceSoap" binding="tns:MissedCallServiceSoap">
+      <soap:address location="http://localhost/MissedCalls.wsdl" />
+    </wsdl:port>
+    <wsdl:port name="MissedCallServiceSoap12" binding="tns:MissedCallServiceSoap12">
+      <soap12:address location="http://localhost/MissedCalls.wsdl" />
+    </wsdl:port>
+  </wsdl:service>
 </wsdl:definitions>

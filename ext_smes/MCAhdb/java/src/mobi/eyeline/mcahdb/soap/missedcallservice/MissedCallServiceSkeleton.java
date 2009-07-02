@@ -1,39 +1,59 @@
-package mobi.eyeline.mcahdb.soap.missedcallservice;
+
+/**
+ * MissedCallServiceSkeleton.java
+ *
+ * This file was auto-generated from WSDL
+ * by the Apache Axis2 version: 1.4.1  Built on : Aug 13, 2008 (05:03:35 LKT)
+ */
+    package mobi.eyeline.mcahdb.soap.missedcallservice;
+
+import org.tempuri.GetMissedCallsResponse;
+import org.tempuri.ArrayOfMissedCall;
+import org.tempuri.MissedCall;
+import org.apache.log4j.Category;
+
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 import mobi.eyeline.mcahdb.soap.ServiceContext;
 import mobi.eyeline.mcahdb.engine.event.ds.Event;
 
-import java.util.*;
-import java.text.SimpleDateFormat;
-
-import org.apache.log4j.Category;
-
 /**
  *  MissedCallServiceSkeleton java skeleton for the axisService
  */
-public class MissedCallServiceSkeleton {
+public class MissedCallServiceSkeleton{
 
   private static final Category log = Category.getInstance(MissedCallServiceSkeleton.class);
 
   private static final int MESSAGE_STATUS_CALL = 0;
   private static final int MESSAGE_STATUS_ALERT = 1;
   private static final int MESSAGE_STATUS_ALERT_FAILED = 2;
+        
+         
+  /**
+   * Auto generated method signature
+   *
+   * @param getMissedCalls
+   */
+        
+  public org.tempuri.GetMissedCallsResponse GetMissedCalls(org.tempuri.GetMissedCalls getMissedCalls) {
 
-  public GetMissedCallsResponse GetMissedCalls(GetMissedCalls req) {
     long start = 0;
     if (log.isDebugEnabled()) {
-      log.debug("Get missed call req: addr=" + req.getPhoneNumber());
+      log.debug("Get missed call req: addr=" + getMissedCalls.getPhoneNumber());
       start = System.nanoTime();
     }
 
     GetMissedCallsResponse resp = new GetMissedCallsResponse();
-
     try {
+      String phoneNumber = getMissedCalls.getPhoneNumber().trim();
+      if (phoneNumber.charAt(0) != '+')
+        phoneNumber = '+' + phoneNumber;
       SimpleDateFormat df = ServiceContext.getInstance().getDf();
       int fetchInterval = ServiceContext.getInstance().getEventsFetchInterval();
 
       List<Event> events = new ArrayList<Event>(100);
-      ServiceContext.getInstance().getEventsFetcher().getEvents(req.getPhoneNumber(), new Date(System.currentTimeMillis() - 3600000 * fetchInterval), new Date(), events);
+      ServiceContext.getInstance().getEventsFetcher().getEvents(phoneNumber, new Date(System.currentTimeMillis() - 3600000 * fetchInterval), new Date(), events);
       ArrayOfMissedCall missedCalls = new ArrayOfMissedCall();
 
       final Map<String, MissedCall> calls = new HashMap<String, MissedCall>(events.size()/2);
@@ -86,9 +106,10 @@ public class MissedCallServiceSkeleton {
     }
 
     if (log.isDebugEnabled())
-      log.debug("Get missed call req for " + req.getPhoneNumber() + " processed in " + (System.nanoTime() - start) + " nanosec.");
+      log.debug("Get missed call getMissedCalls for " + getMissedCalls.getPhoneNumber() + " processed in " + (System.nanoTime() - start) + " nanosec.");
 
     return resp;
   }
+     
 }
     
