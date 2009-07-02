@@ -10,6 +10,7 @@ namespace ewallet {
 class Open;
 class Commit;
 class Rollback;
+class Check;
 
 class RequestVisitor
 {
@@ -19,6 +20,7 @@ public:
     virtual bool visitOpen( Open& ) = 0;
     virtual bool visitCommit( Commit& ) = 0;
     virtual bool visitRollback( Rollback& ) = 0;
+    virtual bool visitCheck( Check& ) = 0;
 };
 
 } // namespace ewallet

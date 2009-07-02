@@ -4,6 +4,7 @@
 #include "scag/bill/ewallet/Request.h"
 #include "scag/bill/ewallet/Response.h"
 #include "scag/bill/ewallet/OpenResp.h"
+#include "scag/bill/ewallet/CheckResp.h"
 #include "scag/bill/ewallet/Exception.h"
 
 using namespace scag2::bill;
@@ -85,6 +86,13 @@ void EwalletCloseCallParams::setResponse( ewallet::Response& resp )
 {
     // status is ok
     // delete the transaction (will be done in billing manager and session)
+}
+
+
+void EwalletCheckCallParams::setResponse( ewallet::Response& resp )
+{
+    ewallet::CheckResp& cResp = static_cast< ewallet::CheckResp& >(resp);
+    transStatus_ = cResp.getTransStatus();
 }
 
 

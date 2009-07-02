@@ -320,8 +320,11 @@ void BillingManagerImpl::processAsyncResult( EwalletCallParams& params )
         } catch ( std::exception& e ) {
             smsc_log_warn(logger,"exc in transaction %lld: %s", co->getBillId());
         }
+    } else if ( params.getCheck() ) {
+        EwalletCheckCallParams* co = static_cast<EwalletCheckCallParams*>(params.getCheck());
+        smsc_log_debug(logger,"check parameter received, what to do?");
     } else {
-        smsc_log_error(logger,"ewallet params %p does not provide open/close parts", &params);
+        smsc_log_error(logger,"ewallet params %p does not provide open/close/check parts", &params);
     }
 }
 
@@ -527,7 +530,7 @@ void BillingManagerImpl::Rollback(billid_type billId, lcm::LongCallContext* lcmC
 
 void BillingManagerImpl::CommitTransit( BillCloseCallParams& params, lcm::LongCallContext* lcmCtx )
 {
-    BillCloseTransitParamsData* data = params.getTransitData();
+    BillTransitParamsData* data = params.getTransitData();
     if ( ! data || ! data->data.get() ) {
         throw SCAGException("cannot process transit commit w/o data");
     }
@@ -552,6 +555,9 @@ void BillingManagerImpl::CommitTransit( BillCloseCallParams& params, lcm::LongCa
     if (!billingInfoStruct.externalId.empty()) {
         pck->setExternalId(billingInfoStruct.externalId);
     }
+    if (data->transId != 0 ) {
+        pck->setTransId(data->transId);
+    }
     std::auto_ptr<ewallet::Request> req(pck.release());
     smsc_log_debug(logger,"passing ewallet commit request to client");
     ewalletClient_->processRequest( req, *eCloseParams );
@@ -561,6 +567,75 @@ void BillingManagerImpl::CommitTransit( BillCloseCallParams& params, lcm::LongCa
 
 void BillingManagerImpl::RollbackTransit( BillCloseCallParams& params, lcm::LongCallContext* lcmCtx )
 {
+    BillTransitParamsData* data = params.getTransitData();
+    if ( ! data || ! data->data.get() ) {
+        throw SCAGException("cannot process transit rollback w/o data");
+    }
+    BillingInfoStruct& billingInfoStruct = data->data->billingInfoStruct;
+    TariffRec& tariffRec = data->data->tariffRec;
+    if ( tariffRec.billType != infrastruct::EWALLET ) {
+        throw SCAGException("transit rollback type is not ewallet");
+    }
+    if ( ! lcmCtx ) {
+        throw SCAGException("transit rollback requires lcmCtx");
+    }
+
+    EwalletCloseCallParams* eCloseParams = 
+        static_cast<EwalletCloseCallParams*>(lcmCtx->getParams());
+    eCloseParams->setRegistrator(this);
+    std::auto_ptr<ewallet::Rollback> pck( new ewallet::Rollback );
+    pck->setSourceId("msag");
+    pck->setAgentId(billingInfoStruct.serviceId);
+    pck->setUserId(billingInfoStruct.AbonentNumber);
+    pck->setWalletType(tariffRec.Currency);
+    // pck->setAmount( int(tariffRec.getFloatPrice()+0.5) );
+    if (!billingInfoStruct.externalId.empty()) {
+        pck->setExternalId(billingInfoStruct.externalId);
+    }
+    if (data->transId != 0 ) {
+        pck->setTransId(data->transId);
+    }
+    std::auto_ptr<ewallet::Request> req(pck.release());
+    smsc_log_debug(logger,"passing ewallet rollback request to client");
+    ewalletClient_->processRequest( req, *eCloseParams );
+    smsc_log_debug(logger,"ewallet rollback request is sent");
+}
+
+
+void BillingManagerImpl::Check( BillCheckCallParams& params, lcm::LongCallContext* lcmCtx )
+{
+    BillTransitParamsData* data = params.getTransitData();
+    if ( ! data || ! data->data.get() ) {
+        throw SCAGException("cannot process check w/o data");
+    }
+    BillingInfoStruct& billingInfoStruct = data->data->billingInfoStruct;
+    TariffRec& tariffRec = data->data->tariffRec;
+    if ( tariffRec.billType != infrastruct::EWALLET ) {
+        throw SCAGException("check type is not ewallet");
+    }
+    if ( ! lcmCtx ) {
+        throw SCAGException("check requires lcmCtx");
+    }
+
+    EwalletCheckCallParams* eCheckParams =
+        static_cast<EwalletCheckCallParams*>(lcmCtx->getParams());
+    eCheckParams->setRegistrator(this);
+    std::auto_ptr<ewallet::Check> pck( new ewallet::Check );
+    // pck->setSourceId("msag");
+    pck->setAgentId(billingInfoStruct.serviceId);
+    pck->setUserId(billingInfoStruct.AbonentNumber);
+    pck->setWalletType(tariffRec.Currency);
+    // pck->setAmount( int(tariffRec.getFloatPrice()+0.5) );
+    if (!billingInfoStruct.externalId.empty()) {
+        pck->setExternalId(billingInfoStruct.externalId);
+    }
+    if (data->transId != 0 ) {
+        pck->setTransId(data->transId);
+    }
+    std::auto_ptr<ewallet::Request> req(pck.release());
+    smsc_log_debug(logger,"passing check request to client");
+    ewalletClient_->processRequest( req, *eCheckParams );
+    smsc_log_debug(logger,"ewallet check request is sent");
 }
 
 

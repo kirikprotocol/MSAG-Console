@@ -1,8 +1,61 @@
 #include "ClientCore.h"
 #include "ClientContext.h"
 #include "scag/bill/ewallet/Exception.h"
+#include "scag/bill/ewallet/RequestVisitor.h"
+#include "scag/bill/ewallet/Open.h"
+#include "scag/bill/ewallet/Commit.h"
+#include "scag/bill/ewallet/Rollback.h"
 #include "scag/util/RelockMutexGuard.h"
 // #include "scag/bill/ewallet/Ping.h"
+
+namespace {
+
+using namespace scag2::bill::ewallet;
+
+class SeqNumCollector : public RequestVisitor
+{
+public:
+    SeqNumCollector() {
+        seqNums_.reserve(40);
+    }
+    virtual bool visitOpen( Open& o ) {
+        seqNums_.push_back(o.getSeqNum());
+        return true;
+    }
+    virtual bool visitCommit( Commit& o ) {
+        seqNums_.push_back(o.getSeqNum());
+        return true;
+    }
+    virtual bool visitRollback( Rollback& o ) {
+        seqNums_.push_back(o.getSeqNum());
+        return true;
+    }
+    virtual bool visitCheck( Check& o ) {
+        return false;
+    }
+
+    void reportVisited( smsc::logger::Logger* logger )
+    {
+        if ( seqNums_.empty() ) return;
+        std::string res;
+        res.reserve(seqNums_.size()*10);
+        char buf[20];
+        for ( std::vector<uint32_t>::const_iterator i = seqNums_.begin();
+              i != seqNums_.end();
+              ++i ) {
+            sprintf(buf," %u",*i);
+            res.append(buf);
+        }
+        smsc_log_debug(logger,"contexts to wait for %u:%s",
+                       unsigned(seqNums_.size()),res.c_str());
+    }
+
+private:
+    std::vector<uint32_t> seqNums_;
+};
+
+}
+
 
 namespace scag2 {
 namespace bill {
@@ -313,7 +366,7 @@ int ClientCore::doExecute()
     smsc_log_info(log_,"Client started");
     while (!isStopping)
     {
-        smsc_log_debug(log_,"cycling %s", taskName());
+        // smsc_log_debug(log_,"cycling %s", taskName());
         currentTime = util::currentTimeMillis();
         int timeToWait = int(nextWakeupTime-currentTime);
 
@@ -336,12 +389,38 @@ int ClientCore::doExecute()
             
             proto::Socket* socket = *j;
             RegistrySet::ContextList list;
+            // SeqNumCollector seqNumCollector;
             {
                 RegistrySet::Ptr ptr = regSet_.get(socket);
                 if (!ptr) continue;
                 util::msectime_type t = ptr->popExpired(list,currentTime,timeToSleep);
                 if ( t < nextWakeupTime ) nextWakeupTime = t;
+
+                // it is strange, but we are going to process the contexts until we die.
+                // To do that, we move contexts to the non-expirable part of the registry
+                // and send check commands.
+                // NOT ANYMORE!
+                /*
+                for ( RegistrySet::ContextList::iterator i = list.begin();
+                      i != list.end();
+                      ) {
+                    ClientContext* ctx = *i;
+                    if ( ctx->getHandler() && ctx->getRequest().get() ) {
+                        if ( ctx->getRequest()->visit(seqNumCollector) ) {
+                            // leave the context in non-expirable part of the registry
+                            i = list.erase(i);
+                            ctx->makeNonExpirable();
+                            ptr->push(ctx);
+                            continue;
+                        }
+                    }
+                    ++i;
+                }
+                 */
             }
+            
+            // seqNumCollector.reportVisited(log_);
+
             // process those items in list
             for ( RegistrySet::ContextList::iterator i = list.begin();
                   i != list.end();
@@ -466,6 +545,7 @@ void ClientCore::closeAllSockets()
         Core::closeSocket(*socket);
         smsc_log_debug(log_,"pushing socket %p to dead", socket);
         deadSockets_.push_back(socket);
+        regSet_.destroy(socket);
     }
     sockets_.clear();
 }
@@ -491,6 +571,7 @@ void ClientCore::closeSocket( proto::Socket& socket )
     }
     if ( found ) {
         smsc_log_debug(log_,"pushing socket %p to dead", &socket );
+        regSet_.destroy( &socket );
         destroyDeadSockets();
         if ( started_ ) {
             smsc_log_debug(log_,"recreating socket... with time=%llu",
@@ -526,6 +607,8 @@ void ClientCore::destroyDeadSockets()
           ++i ) {
         proto::Socket* socket = *i;
 
+        /*
+         * moved to ContextRegistry
         // destroying all contexts on closed channel
         Exception exc = Exception("channel is closed", Status::IO_ERROR);
         RegistrySet::ContextList pl;
@@ -543,6 +626,7 @@ void ClientCore::destroyDeadSockets()
         }
 
         regSet_.destroy(socket);
+         */
         socket->detach(taskName()); // it will destroy the socket
     }
 }

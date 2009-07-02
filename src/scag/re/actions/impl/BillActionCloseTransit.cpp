@@ -13,7 +13,7 @@ bool BillActionCloseTransit::RunBeforePostpone(ActionContext& context)
 
         LongCallContext& lcmCtx = context.getSession().getLongCallContext();
         lcmCtx.callCommandId = actionCommit_ ? BILL_COMMIT : BILL_ROLLBACK;
-        bill::BillCloseTransitParamsData* bctpd = new bill::BillCloseTransitParamsData;
+        std::auto_ptr<bill::BillTransitParamsData> bctpd(new bill::BillTransitParamsData);
         bctpd->data.reset(bpd.release());
 
         // fill transid
@@ -35,7 +35,7 @@ bool BillActionCloseTransit::RunBeforePostpone(ActionContext& context)
         }
 
         bill::EwalletCloseCallParams* ectp =
-            new bill::EwalletCloseCallParams(bctpd,&lcmCtx);
+            new bill::EwalletCloseCallParams(bctpd.release(),&lcmCtx);
         lcmCtx.setParams(ectp);
         return true;
     } else {

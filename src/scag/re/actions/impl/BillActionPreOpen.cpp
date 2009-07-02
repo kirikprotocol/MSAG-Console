@@ -184,16 +184,11 @@ BillOpenCallParamsData* BillActionPreOpen::makeParamsData( ActionContext& contex
                 }
                 billingInfoStruct.externalId = property->getStr().c_str();
             }
-        } else if ( isTransit() ) {
-            throw SCAGException("Action '%s': transit but externalId is not found",opname());
         } else {
-            char buf[100];
-            const util::msectime_type currentTime = util::currentTimeMillis();
-            snprintf(buf,sizeof(buf),"msag-%llu-%u-%s",
-                     static_cast<unsigned long long>(currentTime),
-                     billingInfoStruct.serviceId,
-                     billingInfoStruct.AbonentNumber.c_str() );
-            billingInfoStruct.externalId = buf;
+            // no external id
+            if ( isTransit() ) {
+                throw SCAGException("Action '%s': transit but externalId is not found",opname());
+            }
         }
 
     } else {

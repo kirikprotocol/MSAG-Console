@@ -10,10 +10,12 @@
 #include "scag/bill/ewallet/Open.h"
 #include "scag/bill/ewallet/Commit.h"
 #include "scag/bill/ewallet/Rollback.h"
+#include "scag/bill/ewallet/Check.h"
 // #include "scag/bill/ewallet/PingResp.h"
 #include "scag/bill/ewallet/OpenResp.h"
 #include "scag/bill/ewallet/CommitResp.h"
 #include "scag/bill/ewallet/RollbackResp.h"
+#include "scag/bill/ewallet/CheckResp.h"
 #include "scag/util/io/EndianConverter.h"
 
 namespace scag2 {
@@ -117,10 +119,26 @@ private:
             throw Exception( "transferresp is not supported", Status::NOT_SUPPORTED );
         }
         virtual void handle( stream::Check& o ) {
-            throw Exception( "check is not supported", Status::NOT_SUPPORTED );
+            ewallet::Check* p = new ewallet::Check;
+            packet.reset(p);
+            p->setSeqNum(o.getSeqNum());
+            p->setAgentId(o.getAgentId());
+            p->setUserId(o.getUserId());
+            p->setWalletType(o.getWalletType());
+            if (o.hasExternalId()) p->setExternalId(o.getExternalId());
+            if (o.hasTransId()) p->setTransId(o.getTransId());
         }
         virtual void handle( stream::CheckResp& o ) {
-            throw Exception( "checkresp is not supported", Status::NOT_SUPPORTED );
+            ewallet::CheckResp* p = new ewallet::CheckResp;
+            packet.reset(p);
+            p->setSeqNum(o.getSeqNum());
+            p->setStatus(o.getStatusValue());
+            if ( p->getStatus() == Status::OK ) {
+                p->setTransStatus(o.getTransStatus());
+                p->setSourceId(o.getSourceId());
+                p->setAmount(o.getAmount());
+                p->setEnddate(o.getEnddate());
+            }
         }
         virtual void handle( stream::TransferCheck& o ) {
             throw Exception( "transfercheck is not supported", Status::NOT_SUPPORTED );
@@ -187,6 +205,17 @@ private:
             proto_.encodeMessage(p,writer_);
             return true;
         }
+        virtual bool visitCheck( ewallet::Check& o ) {
+            stream::Check p;
+            p.setSeqNum(o.getSeqNum());
+            p.setAgentId(o.getAgentId());
+            p.setUserId(o.getUserId());
+            p.setWalletType(o.getWalletType());
+            if (!o.getExternalId().empty()) p.setExternalId(o.getExternalId());
+            if (o.getTransId()!=0) p.setTransId(o.getTransId());
+            proto_.encodeMessage(p,writer_);
+            return true;
+        }
         /*
         virtual bool visitPingResp( ewallet::PingResp& o ) {
             stream::PingResp p;
@@ -224,6 +253,19 @@ private:
             stream::RollbackResp p;
             p.setSeqNum(o.getSeqNum());
             p.setStatusValue(o.getStatus());
+            proto_.encodeMessage(p,writer_);
+            return true;
+        }
+        virtual bool visitCheckResp( ewallet::CheckResp& o ) {
+            stream::CheckResp p;
+            p.setSeqNum(o.getSeqNum());
+            p.setStatusValue(o.getStatus());
+            if ( o.getStatus() == Status::OK ) {
+                p.setTransStatus(o.getTransStatus());
+                if (! o.getSourceId().empty()) p.setSourceId(o.getSourceId());
+                p.setAmount(o.getAmount());
+                if (o.getEnddate()!=0) p.setEnddate(o.getEnddate());
+            }
             proto_.encodeMessage(p,writer_);
             return true;
         }

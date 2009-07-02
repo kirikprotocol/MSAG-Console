@@ -121,16 +121,18 @@ void BillActionOpen::ContinueRunning(ActionContext& context)
     BillCallParams *bp = static_cast<BillCallParams*>(context.getSession().getLongCallContext().getParams());
     BillOpenCallParams* bop = bp->getOpen();
     if ( ! isTransit() ) {
-        processResult( context, bop->billId(), bop->tariffRec() );
+        if ( !processResult( context, bop->billId(), bop->tariffRec()) ) return;
     } else {
         // transit
         smsc_log_debug(logger,"Action '%s': not registering session transaction %llu as it is transit", opname(), bop->billId());
-        assert( bop->tariffRec()->billType == infrastruct::EWALLET );
+        setTariffStatus(context,bop->tariffRec());
+    }
+
+    if ( bop->tariffRec()->billType == infrastruct::EWALLET ) {
         EwalletCallParams* ecp = static_cast<EwalletCallParams*>(bp);
         char buf[30];
         sprintf(buf,"%u",ecp->getTransId());
         setBillingStatus(context,buf,true);
-        setTariffStatus(context,bop->tariffRec());
     }
 }
 
@@ -189,7 +191,7 @@ void BillActionOpen::setTariffStatus( ActionContext&   context,
 }
 
 
-void BillActionOpen::processResult( ActionContext& context,
+bool BillActionOpen::processResult( ActionContext& context,
                                     billid_type billId, 
                                     const infrastruct::TariffRec* tariffRec)
 {
@@ -202,14 +204,14 @@ void BillActionOpen::processResult( ActionContext& context,
                         opname(), transId.c_str() );
         setBillingStatus( context, "Session::addTransaction failed", false);
         setTariffStatus( context, 0 );
-        return;
+        return false;
     }
 
     setBillingStatus( context, "", true );
     setTariffStatus( context, tariffRec );
     smsc_log_debug( logger, "Action '%s' transaction '%s' successfully opened (billId=%llu)",
                     opname(), transId.c_str(), billId );
-    return;
+    return true;
 }
 
 }}}

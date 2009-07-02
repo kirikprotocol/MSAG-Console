@@ -11,6 +11,8 @@ namespace ewallet {
 class Rollback: public Request
 {
 public:
+    Rollback() : agentId_(0), transId_(0) {}
+
     virtual ~Rollback() {}
     virtual std::string toString() const {
         std::string res;
@@ -31,7 +33,7 @@ public:
         }
         snprintf(buf,sizeof(buf)," transId=%u", transId_ );
         res.append(buf);
-        return buf;
+        return res;
     }
     virtual const char* typeToString() const { return "rollback"; }
     virtual bool isValid() const {

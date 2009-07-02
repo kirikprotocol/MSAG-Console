@@ -30,7 +30,8 @@ private:
     virtual void setTariffStatus( ActionContext&   ctx,
                                   const bill::infrastruct::TariffRec* tariff );
 
-    void processResult( ActionContext& ctx,
+    /// return true if transaction successfully registered
+    bool processResult( ActionContext& ctx,
                         bill::billid_type     billid,
                         const bill::infrastruct::TariffRec* tariff );
 

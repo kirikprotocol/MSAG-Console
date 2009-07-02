@@ -18,7 +18,8 @@ enum LongCallCommandId
     PERS_BATCH,
     BILL_OPEN,
     BILL_COMMIT,
-    BILL_ROLLBACK
+    BILL_ROLLBACK,
+    BILL_CHECK
 };
 
 class LongCallParams

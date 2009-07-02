@@ -107,7 +107,7 @@ public:
 
     void push( Context* ctx ) {
         typename ContextList::iterator i = 
-            ( ctx->creationTime() == 0 ?
+            ( ctx->getCreationTime() == 0 ?
               list0_.insert(list0_.end(),ctx) :
               list_.insert( list_.end(), ctx) );
         map_.Insert( ctx->getSeqNum(), i );
@@ -122,7 +122,7 @@ public:
         Context* ret = ptr.getContext();
         if ( ret ) {
             map_.Delete(ret->getSeqNum());
-            if (ret->creationTime()==0) {
+            if (ret->getCreationTime()==0) {
                 list0_.erase(*ptr.i);
             } else {
                 list_.erase(*ptr.i);
@@ -234,6 +234,7 @@ public:
 
 
     void destroy( key_type key ) {
+        smsc_log_debug(log_,"destroy %p invoked", key);
         ContextList pl;
         {
             MutexGuard mg(createMon_);
@@ -251,10 +252,12 @@ public:
         }
         if ( !pl.empty() ) {
             smsc_log_warn(log_,"destroying all %u contexts from non-empty registry", unsigned(pl.size()));
+            Exception exc("channel is closed", Status::IO_ERROR);
             while ( !pl.empty() ) {
                 Context* c = pl.front();
-                delete c;
                 pl.pop_front();
+                c->setError(exc);
+                delete c;
             }
         }
     }

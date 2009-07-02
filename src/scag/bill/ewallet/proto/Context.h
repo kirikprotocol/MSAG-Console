@@ -62,8 +62,9 @@ public:
     ContextState getState() const { return state_; }
     virtual void setState( ContextState state ) { state_ = state; }
 
-private:
+protected:
     util::msectime_type       creationTime_;
+private:
     std::auto_ptr< Request >  req_;
     std::auto_ptr< Response > resp_;
     uint32_t                  seqnum_;

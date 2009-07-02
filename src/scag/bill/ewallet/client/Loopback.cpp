@@ -5,10 +5,12 @@
 #include "scag/bill/ewallet/Open.h"
 #include "scag/bill/ewallet/Commit.h"
 #include "scag/bill/ewallet/Rollback.h"
+#include "scag/bill/ewallet/Check.h"
 // #include "scag/bill/ewallet/PingResp.h"
 #include "scag/bill/ewallet/OpenResp.h"
 #include "scag/bill/ewallet/CommitResp.h"
 #include "scag/bill/ewallet/RollbackResp.h"
+#include "scag/bill/ewallet/CheckResp.h"
 
 namespace {
 using namespace scag2::bill::ewallet;
@@ -50,6 +52,13 @@ public:
         resp_.reset( new RollbackResp() );
         resp_->setSeqNum(req.getSeqNum());
         resp_->setStatus(Status::OK);
+        return true;
+    }
+    virtual bool visitCheck( Check& req ) {
+        CheckResp* o = new CheckResp();
+        resp_.reset(o);
+        o->setStatus(Status::NOT_SUPPORTED);
+        o->setSeqNum(req.getSeqNum());
         return true;
     }
 

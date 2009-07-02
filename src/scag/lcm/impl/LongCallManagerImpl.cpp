@@ -107,7 +107,8 @@ bool LongCallManagerImpl::call(LongCallContextBase* context)
 
         if ( context->callCommandId == BILL_OPEN ||
              context->callCommandId == BILL_COMMIT ||
-             context->callCommandId == BILL_ROLLBACK ) {
+             context->callCommandId == BILL_ROLLBACK ||
+             context->callCommandId == BILL_CHECK ) {
 
             try {
                 if(context->callCommandId == BILL_OPEN)
@@ -137,13 +138,19 @@ bool LongCallManagerImpl::call(LongCallContextBase* context)
                     } else {
                         bill::BillingManager::Instance().Rollback(bp->getBillId(), (LongCallContext*)context);
                     }
+                } else if ( context->callCommandId == BILL_CHECK ) {
+                    bill::BillCallParams* bcp = static_cast<bill::BillCallParams*>(context->getParams());
+                    bill::BillCheckCallParams* bp = bcp->getCheck();
+                    bill::BillingManager::Instance().Check(*bp,static_cast<LongCallContext*>(context));
                 }
             } catch( bill::ewallet::Exception& e ) {
+                smsc_log_warn(logger,"exc: %s type=%s", e.what(), bill::ewallet::Status::statusToString(e.getStatus()));
                 bill::EwalletCallParams* lp = 
                     static_cast<bill::EwalletCallParams*>(context->getParams());
                 lp->setStatus( e.getStatus(), e.what() );
                 break;
             } catch(SCAGException& e) {
+                smsc_log_warn(logger,"exc: %s", e.what());
                 LongCallParams *lp = (LongCallParams*)context->getParams();
                 lp->exception = e.what();
                 // NOTE: we should not do continueExecution if longcall has failed!

@@ -188,6 +188,8 @@ public:
                                 lcm::LongCallContext* lcmCtx = NULL );
     virtual void RollbackTransit( BillCloseCallParams& closeCallParams,
                                   lcm::LongCallContext* lcmCtx = NULL );
+    virtual void Check( BillCheckCallParams& checkCallParams,
+                        lcm::LongCallContext* lcmCtx );
 
     virtual void Info( billid_type billId, BillingInfoStruct& bis, TariffRec& tariffRec);
 

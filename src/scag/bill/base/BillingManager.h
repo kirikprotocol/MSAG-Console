@@ -19,6 +19,8 @@ using namespace infrastruct;
 
 // typedef util::msectime_type billid_type;
 
+
+// --- params data
 class BillOpenCallParamsData
 {
 public:
@@ -27,13 +29,16 @@ public:
     // billid_type       BillId;            // moved to billingInfoStruct
 };
 
-
-class BillCloseTransitParamsData
+class BillTransitParamsData
 {
 public:
+    BillTransitParamsData() : transId(0) {}
     uint32_t                              transId;
     std::auto_ptr<BillOpenCallParamsData> data;
 };
+
+
+// --- interfaces for different types of calls
 
 
 class BillOpenCallParams
@@ -52,8 +57,19 @@ class BillCloseCallParams
 public:
     virtual ~BillCloseCallParams() {}
     virtual billid_type getBillId() const = 0;
-    virtual BillCloseTransitParamsData* getTransitData() { return 0; }
+    virtual BillTransitParamsData* getTransitData() { return 0; }
 };
+
+
+class BillCheckCallParams
+{
+public:
+    virtual ~BillCheckCallParams() {}
+    virtual BillTransitParamsData* getTransitData() { return 0; }
+};
+
+
+// --- actual hierarchy of call params (inherited from lcm::LongCallParams)
 
 
 class BillCallParams : public lcm::LongCallParams
@@ -62,6 +78,7 @@ public:
     BillCallParams();
     virtual BillOpenCallParams* getOpen() = 0;
     virtual BillCloseCallParams* getClose() = 0;
+    virtual BillCheckCallParams* getCheck() = 0;
 protected:
     static smsc::logger::Logger* log_;
 };
@@ -77,6 +94,7 @@ public:
     virtual void setBillId( billid_type bi ) { if (data_.get()) data_->billingInfoStruct.billId = bi; }
     virtual InmanOpenCallParams* getOpen() { return this; }
     virtual BillCloseCallParams* getClose() { return 0; }
+    virtual BillCheckCallParams* getCheck() { return 0; }
 private:
     std::auto_ptr<BillOpenCallParamsData> data_;
 };
@@ -133,6 +151,7 @@ public:
     virtual void setBillId( billid_type bi ) { if (data_.get()) data_->billingInfoStruct.billId = bi; }
     virtual EwalletOpenCallParams* getOpen() { return this; }
     virtual BillCloseCallParams* getClose() { return 0; }
+    virtual BillCheckCallParams* getCheck() { return 0; }
 private:
     std::auto_ptr<BillOpenCallParamsData> data_;
 };
@@ -146,17 +165,38 @@ public:
     EwalletCallParams(false,lcmCtx), billId_(billid) {}
 
     // transit ctor
-    EwalletCloseCallParams( BillCloseTransitParamsData* data, lcm::LongCallContext* lcmCtx ) :
+    EwalletCloseCallParams( BillTransitParamsData* data, lcm::LongCallContext* lcmCtx ) :
     EwalletCallParams(true,lcmCtx), billId_(0), data_(data) {}
 
     virtual void setResponse( ewallet::Response& resp );
     virtual BillOpenCallParams* getOpen() { return 0; }
     virtual EwalletCloseCallParams* getClose() { return this; }
+    virtual BillCheckCallParams* getCheck() { return 0; }
     virtual billid_type getBillId() const { return billId_; }
-    virtual BillCloseTransitParamsData* getTransitData() { return data_.get(); }
+    virtual BillTransitParamsData* getTransitData() { return data_.get(); }
 private:
     billid_type billId_;
-    std::auto_ptr<BillCloseTransitParamsData> data_;
+    std::auto_ptr<BillTransitParamsData> data_;
+};
+
+
+class EwalletCheckCallParams : public EwalletCallParams, public BillCheckCallParams
+{
+public:
+    // transit ctor
+    EwalletCheckCallParams( BillTransitParamsData* data, lcm::LongCallContext* lcmCtx ) :
+    EwalletCallParams(true,lcmCtx), data_(data), transStatus_(0) {}
+
+    virtual void setResponse( ewallet::Response& resp );
+    virtual BillOpenCallParams* getOpen() { return 0; }
+    virtual BillCloseCallParams* getClose() { return 0; }
+    virtual EwalletCheckCallParams* getCheck() { return this; }
+    virtual BillTransitParamsData* getTransitData() { return data_.get(); }
+    int getTransStatus() const { return transStatus_; }
+private:
+    std::auto_ptr<BillTransitParamsData> data_;
+    // returned values
+    int  transStatus_;
 };
 
 
@@ -166,10 +206,12 @@ public:
     InmanCloseCallParams( billid_type billid ) : billId_(billid) {}
     virtual BillOpenCallParams* getOpen() { return 0; }
     virtual InmanCloseCallParams* getClose() { return this; }
+    virtual BillCheckCallParams* getCheck() { return 0; }
     virtual billid_type getBillId() const { return billId_; }
 private:
     billid_type billId_;
 };
+
 
 
 class BillingManager
@@ -185,6 +227,8 @@ public:
                                 lcm::LongCallContext* lcmCtx = NULL ) = 0;
     virtual void RollbackTransit( BillCloseCallParams& closeCallParams,
                                   lcm::LongCallContext* lcmCtx = NULL ) = 0;
+    virtual void Check( BillCheckCallParams& checkCallParams,
+                        lcm::LongCallContext* lcmCtx ) = 0;
     virtual void Info(billid_type billId, BillingInfoStruct& bis,
                       TariffRec& tariffRec) = 0;
     virtual void Stop() = 0;

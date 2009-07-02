@@ -37,6 +37,10 @@ public:
         }
     }
 
+    void makeNonExpirable() {
+        creationTime_ = 0;
+    }
+
 private:
     Client::ResponseHandler* handler_;
 };

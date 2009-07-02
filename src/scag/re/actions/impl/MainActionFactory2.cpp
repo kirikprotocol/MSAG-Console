@@ -33,6 +33,8 @@
 #include "BillActionClose.h"
 #include "BillActionCloseTransit.h"
 #include "BillActionInfo.h"
+#include "BillActionMkid.h"
+#include "BillActionCheck.h"
 #include "BillActionKeywords.h"
 
 #include "scag/pvss/api/packets/DelCommand.h"
@@ -128,6 +130,8 @@ Action * MainActionFactory::CreateAction( const std::string& name ) const
         // if ( name == "longcalltest" ) return new LongCallTestAction();
 
         if ( 0 == strncmp(name.c_str(), "bill:", 5 ) ) {
+            if ( name == "bill:mkid" ) return new BillActionMkid();
+            if ( name == "bill:check" ) return new BillActionCheck();
             if ( name == "bill:open" ) return new BillActionOpen(false);
             if ( name == "bill:open-transit" ) return new BillActionOpen(true);
             if ( name == "bill:close" ) return new BillActionClose();

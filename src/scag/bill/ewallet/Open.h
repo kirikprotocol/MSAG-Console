@@ -11,6 +11,8 @@ namespace ewallet {
 class Open: public Request
 {
 public:
+    Open() : agentId_(0), amount_(0), timeout_(0) {}
+
     virtual ~Open() {}
     virtual std::string toString() const {
         std::string res;
