@@ -11,6 +11,7 @@ class Open;
 class Commit;
 class Rollback;
 class Check;
+class Transfer;
 
 class RequestVisitor
 {
@@ -21,6 +22,7 @@ public:
     virtual bool visitCommit( Commit& ) = 0;
     virtual bool visitRollback( Rollback& ) = 0;
     virtual bool visitCheck( Check& ) = 0;
+    virtual bool visitTransfer( Transfer& ) = 0;
 };
 
 } // namespace ewallet

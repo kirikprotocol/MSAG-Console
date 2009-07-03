@@ -7,6 +7,9 @@
 #include "scag/util/lltostr.h"
 #include "scag/bill/ewallet/Open.h"
 #include "scag/bill/ewallet/Commit.h"
+#include "scag/bill/ewallet/Rollback.h"
+#include "scag/bill/ewallet/Check.h"
+#include "scag/bill/ewallet/Transfer.h"
 #include "scag/bill/ewallet/client/ClientCore.h"
 #include "scag/bill/ewallet/stream/StreamerImpl.h"
 #include "scag/config/base/ConfigView.h"
@@ -191,7 +194,10 @@ void BillingManagerImpl::ProcessResult(const char *eventName, BillingTransaction
     stat::Statistics::Instance().registerSaccEvent(billEvent);
     logEvent(eventName, i == COMMAND_SUCCESSFULL, b->billingInfoStruct, b->billId);
     if(i != COMMAND_SUCCESSFULL)
-        throw SCAGException("Transaction billId=%d %s", b->billId, p);
+        throw SCAGException("Transaction billId=%lld %s", 
+                            static_cast<long long>(b->billId), p);
+    smsc_log_debug(logger,"end of ProcessResult(%s,%lld)",
+                   eventName,static_cast<long long>(b->billId));
 }
 #ifdef MSAG_INMAN_BILL
 void BillingManagerImpl::processAsyncResult(BillingManagerImpl::SendTransaction* pst)
@@ -636,6 +642,36 @@ void BillingManagerImpl::Check( BillCheckCallParams& params, lcm::LongCallContex
     smsc_log_debug(logger,"passing check request to client");
     ewalletClient_->processRequest( req, *eCheckParams );
     smsc_log_debug(logger,"ewallet check request is sent");
+}
+
+
+void BillingManagerImpl::Transfer( BillTransferCallParams& callParams,
+                                   lcm::LongCallContext* lcmCtx )
+{
+    if ( ! lcmCtx ) {
+        throw SCAGException("transfer requires lcmCtx");
+    }
+
+    EwalletTransferCallParams* tParams =
+        static_cast<EwalletTransferCallParams*>(lcmCtx->getParams());
+    tParams->setRegistrator(this);
+    std::auto_ptr<ewallet::Transfer> pck( new ewallet::Transfer );
+    pck->setSourceId("msag");
+    pck->setAgentId(tParams->getAgentId());
+    pck->setUserId(tParams->getUserId());
+    pck->setSrcWalletType(tParams->getSrcWalletType());
+    pck->setDstWalletType(tParams->getDstWalletType());
+    pck->setAmount(tParams->getAmount());
+    if (!tParams->getExternalId().empty()) {
+        pck->setExternalId(tParams->getExternalId());
+    }
+    if (!tParams->getDescription().empty()) {
+        pck->setDescription(tParams->getDescription());
+    }
+    std::auto_ptr<ewallet::Request> req(pck.release());
+    smsc_log_debug(logger,"passing transfer request to client");
+    ewalletClient_->processRequest( req, *tParams );
+    smsc_log_debug(logger,"ewallet transfer request is sent");
 }
 
 

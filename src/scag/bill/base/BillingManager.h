@@ -69,6 +69,20 @@ public:
 };
 
 
+class BillTransferCallParams
+{
+public:
+    virtual ~BillTransferCallParams() {}
+
+    virtual int getAgentId() const = 0;
+    virtual const std::string& getUserId() const = 0;
+    virtual const std::string& getSrcWalletType() const = 0;
+    virtual const std::string& getDstWalletType() const = 0;
+    virtual const std::string& getExternalId() const = 0;
+    virtual int getAmount() const = 0;
+    virtual const std::string& getDescription() const = 0;
+};
+
 // --- actual hierarchy of call params (inherited from lcm::LongCallParams)
 
 
@@ -79,6 +93,7 @@ public:
     virtual BillOpenCallParams* getOpen() = 0;
     virtual BillCloseCallParams* getClose() = 0;
     virtual BillCheckCallParams* getCheck() = 0;
+    virtual BillTransferCallParams* getTransfer() { return 0; }
 protected:
     static smsc::logger::Logger* log_;
 };
@@ -200,6 +215,45 @@ private:
 };
 
 
+class EwalletTransferCallParams : public EwalletCallParams, public BillTransferCallParams
+{
+public:
+    EwalletTransferCallParams( lcm::LongCallContext* ctx ) :
+    EwalletCallParams(true,ctx) {}
+
+    virtual void setResponse( ewallet::Response& resp );
+    virtual BillOpenCallParams* getOpen() { return 0; }
+    virtual BillCloseCallParams* getClose() { return 0; }
+    virtual BillCheckCallParams* getCheck() { return 0; }
+    virtual EwalletTransferCallParams* getTransfer() { return this; }
+
+    void setAgentId( int v ) { agentId_ = v; }
+    void setUserId( const std::string& v ) { userId_ = v; }
+    void setSrcWalletType( const std::string& v ) { srcWalletType_ = v; }
+    void setDstWalletType( const std::string& v ) { dstWalletType_ = v; }
+    void setExternalId( const std::string& v ) { externalId_ = v; }
+    void setAmount( int v ) { amount_ = v; }
+    void setDescription( const std::string& v ) { description_ = v; }
+
+    virtual int getAgentId() const { return agentId_; }
+    virtual const std::string& getUserId() const { return userId_; }
+    virtual const std::string& getSrcWalletType() const { return srcWalletType_; }
+    virtual const std::string& getDstWalletType() const { return dstWalletType_; }
+    virtual const std::string& getExternalId() const { return externalId_; }
+    virtual int getAmount() const { return amount_; }
+    virtual const std::string& getDescription() const { return description_; }
+
+private:
+    int         agentId_;
+    std::string userId_;
+    std::string srcWalletType_;
+    std::string dstWalletType_;
+    std::string externalId_;
+    int         amount_;
+    std::string description_;
+};
+
+
 class InmanCloseCallParams : public BillCallParams, public BillCloseCallParams
 {
 public:
@@ -231,6 +285,8 @@ public:
                         lcm::LongCallContext* lcmCtx ) = 0;
     virtual void Info(billid_type billId, BillingInfoStruct& bis,
                       TariffRec& tariffRec) = 0;
+    virtual void Transfer( BillTransferCallParams& transferParams,
+                           lcm::LongCallContext* lcmCtx ) = 0;
     virtual void Stop() = 0;
 
     static BillingManager& Instance();

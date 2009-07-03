@@ -8,16 +8,23 @@ const char* Status::statusToString( uint8_t status )
 {
 #define STATUSTOSTRING(x) case (x) : return #x
     switch (status) {
-        STATUSTOSTRING(OK            );
-        STATUSTOSTRING(BAD_REQUEST   );
-        STATUSTOSTRING(BAD_RESPONSE  );
-        STATUSTOSTRING(TIMEOUT       );
-        STATUSTOSTRING(IO_ERROR      );
-        STATUSTOSTRING(NOT_SUPPORTED );
-        STATUSTOSTRING(NOT_CONNECTED );
-        STATUSTOSTRING(CLIENT_BUSY   );
-        STATUSTOSTRING(CONFIG_INVALID);
-        STATUSTOSTRING(UNKNOWN       );
+        STATUSTOSTRING(OK             );
+
+        STATUSTOSTRING(BAD_REQUEST    );
+        STATUSTOSTRING(BAD_RESPONSE   );
+        STATUSTOSTRING(TIMEOUT        );
+
+        STATUSTOSTRING(IO_ERROR       );
+        STATUSTOSTRING(NOT_SUPPORTED  );
+        STATUSTOSTRING(NOT_CONNECTED  );
+        STATUSTOSTRING(CLIENT_BUSY    );
+        STATUSTOSTRING(CONFIG_INVALID );
+
+        STATUSTOSTRING(NOT_ENOUGH     );
+        STATUSTOSTRING(NO_ACCESS      );
+        STATUSTOSTRING(TRANS_NOT_FOUND);
+
+        STATUSTOSTRING(UNKNOWN        );
     default: return "???";
     }
 #undef STATUSTOSTRING

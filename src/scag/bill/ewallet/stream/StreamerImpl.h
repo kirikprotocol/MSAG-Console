@@ -11,11 +11,13 @@
 #include "scag/bill/ewallet/Commit.h"
 #include "scag/bill/ewallet/Rollback.h"
 #include "scag/bill/ewallet/Check.h"
+#include "scag/bill/ewallet/Transfer.h"
 // #include "scag/bill/ewallet/PingResp.h"
 #include "scag/bill/ewallet/OpenResp.h"
 #include "scag/bill/ewallet/CommitResp.h"
 #include "scag/bill/ewallet/RollbackResp.h"
 #include "scag/bill/ewallet/CheckResp.h"
+#include "scag/bill/ewallet/TransferResp.h"
 #include "scag/util/io/EndianConverter.h"
 
 namespace scag2 {
@@ -113,10 +115,27 @@ private:
             throw Exception( "inforesp is not supported", Status::NOT_SUPPORTED );
         }
         virtual void handle( stream::Transfer& o ) {
-            throw Exception( "transfer is not supported", Status::NOT_SUPPORTED );
+            ewallet::Transfer* p = new ewallet::Transfer;
+            packet.reset(p);
+            p->setSeqNum(o.getSeqNum());
+            if (o.hasSourceId()) p->setSourceId(o.getSourceId());
+            p->setAgentId(o.getAgentId());
+            p->setUserId(o.getUserId());
+            p->setSrcWalletType(o.getSrcWalletType());
+            p->setDstWalletType(o.getDstWalletType());
+            p->setDescription(o.getDescription());
+            p->setAmount(o.getAmount());
+            if (o.hasExternalId()) p->setExternalId(o.getExternalId());
         }
         virtual void handle( stream::TransferResp& o ) {
-            throw Exception( "transferresp is not supported", Status::NOT_SUPPORTED );
+            ewallet::TransferResp* p = new ewallet::TransferResp;
+            packet.reset(p);
+            p->setSeqNum(o.getSeqNum());
+            p->setStatus(o.getStatusValue());
+            if ( p->getStatus() == Status::OK ) {
+                p->setAmount(o.getAmount());
+                p->setChargeThreshold(o.getChargeThreshold());
+            }
         }
         virtual void handle( stream::Check& o ) {
             ewallet::Check* p = new ewallet::Check;
@@ -216,6 +235,20 @@ private:
             proto_.encodeMessage(p,writer_);
             return true;
         }
+        virtual bool visitTransfer( ewallet::Transfer& o ) {
+            stream::Transfer p;
+            p.setSeqNum(o.getSeqNum());
+            if (!o.getSourceId().empty()) p.setSourceId(o.getSourceId());
+            p.setAgentId(o.getAgentId());
+            p.setUserId(o.getUserId());
+            p.setSrcWalletType(o.getSrcWalletType());
+            p.setDstWalletType(o.getDstWalletType());
+            p.setDescription(o.getDescription());
+            p.setAmount(o.getAmount());
+            if (!o.getExternalId().empty()) p.setExternalId(o.getExternalId());
+            proto_.encodeMessage(p,writer_);
+            return true;
+        }
         /*
         virtual bool visitPingResp( ewallet::PingResp& o ) {
             stream::PingResp p;
@@ -265,6 +298,17 @@ private:
                 if (! o.getSourceId().empty()) p.setSourceId(o.getSourceId());
                 p.setAmount(o.getAmount());
                 if (o.getEnddate()!=0) p.setEnddate(o.getEnddate());
+            }
+            proto_.encodeMessage(p,writer_);
+            return true;
+        }
+        virtual bool visitTransferResp( ewallet::TransferResp& o ) {
+            stream::TransferResp p;
+            p.setSeqNum(o.getSeqNum());
+            p.setStatusValue(o.getStatus());
+            if ( o.getStatus() == Status::OK ) {
+                p.setAmount(o.getAmount());
+                p.setChargeThreshold(o.getChargeThreshold());
             }
             proto_.encodeMessage(p,writer_);
             return true;

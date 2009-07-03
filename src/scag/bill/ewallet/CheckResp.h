@@ -27,7 +27,7 @@ public:
                 res.append(buf);
             }
             if ( amount_ != 0 ) {
-                snprintf(buf,sizeof(buf)," amount=%u", amount_);
+                snprintf(buf,sizeof(buf)," amount=%d", amount_);
                 res.append(buf);
             }
             if ( enddate_ != 0 ) {

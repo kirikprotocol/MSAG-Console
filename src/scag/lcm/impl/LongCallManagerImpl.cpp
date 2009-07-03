@@ -108,7 +108,8 @@ bool LongCallManagerImpl::call(LongCallContextBase* context)
         if ( context->callCommandId == BILL_OPEN ||
              context->callCommandId == BILL_COMMIT ||
              context->callCommandId == BILL_ROLLBACK ||
-             context->callCommandId == BILL_CHECK ) {
+             context->callCommandId == BILL_CHECK ||
+             context->callCommandId == BILL_TRANSFER ) {
 
             try {
                 if(context->callCommandId == BILL_OPEN)
@@ -142,6 +143,10 @@ bool LongCallManagerImpl::call(LongCallContextBase* context)
                     bill::BillCallParams* bcp = static_cast<bill::BillCallParams*>(context->getParams());
                     bill::BillCheckCallParams* bp = bcp->getCheck();
                     bill::BillingManager::Instance().Check(*bp,static_cast<LongCallContext*>(context));
+                } else if ( context->callCommandId == BILL_TRANSFER ) {
+                    bill::BillCallParams* bcp = static_cast<bill::BillCallParams*>(context->getParams());
+                    bill::BillTransferCallParams* bp = bcp->getTransfer();
+                    bill::BillingManager::Instance().Transfer(*bp,static_cast<LongCallContext*>(context));
                 }
             } catch( bill::ewallet::Exception& e ) {
                 smsc_log_warn(logger,"exc: %s type=%s", e.what(), bill::ewallet::Status::statusToString(e.getStatus()));
