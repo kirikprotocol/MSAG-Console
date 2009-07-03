@@ -60,14 +60,18 @@ public class MissedCallServiceSkeleton{
 
       for (Event e : events) {
 
-        MissedCall call = calls.get(e.getCaller());
+        String caller = e.getCaller();
+        if (caller.charAt(0)=='+')
+          caller = caller.substring(1);
+
+        MissedCall call = calls.get(caller);
         if (call == null) {
           call = new MissedCall();
           call.setCallDate(df.format(e.getDate()));
-          call.setPhoneNumber(e.getCaller());
+          call.setPhoneNumber(caller);
           call.setMessageStatus(MESSAGE_STATUS_CALL);
           call.setMissedCalls(0);
-          calls.put(e.getCaller(), call);
+          calls.put(caller, call);
         }
 
         switch (e.getType()) {
@@ -80,7 +84,7 @@ public class MissedCallServiceSkeleton{
             call.setMessageStatus(MESSAGE_STATUS_ALERT);
             call.setProcessDate(df.format(e.getDate()));
             missedCalls.addMissedCall(call);
-            calls.remove(e.getCaller());
+            calls.remove(caller);
             break;
           case MissedCallAlertFail:
             if (call.getMissedCalls() == 0)
@@ -88,7 +92,7 @@ public class MissedCallServiceSkeleton{
             call.setMessageStatus(MESSAGE_STATUS_ALERT_FAILED);
             call.setProcessDate(df.format(e.getDate()));
             missedCalls.addMissedCall(call);
-            calls.remove(e.getCaller());
+            calls.remove(caller);
             break;
           default:
             log.warn("Unknown event type " + e.getType());
