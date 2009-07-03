@@ -1,7 +1,7 @@
 #ifndef __SMSC_CORE_BUFFERS_INTHASH64_HPP__
 #define __SMSC_CORE_BUFFERS_INTHASH64_HPP__
 
-#define INTHASH_MAX_CHAIN_LENGTH 32
+#define INTHASH64_MAX_CHAIN_LENGTH 32
 
 #include <string.h>
 #include <string>
@@ -120,7 +120,7 @@ public:
       //AddRef(idx,attempt);
       refcounts[idx]++;
       attempt++;
-      if(attempt>=INTHASH_MAX_CHAIN_LENGTH)
+      if(attempt>=INTHASH64_MAX_CHAIN_LENGTH)
       {
         //printf("rehash\n");fflush(stdout);
         Rehash();
