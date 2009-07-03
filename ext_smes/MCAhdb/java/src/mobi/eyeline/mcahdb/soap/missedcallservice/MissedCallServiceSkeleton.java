@@ -13,6 +13,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 import mobi.eyeline.mcahdb.soap.ServiceContext;
+import org.tempuri.*;
 import mobi.eyeline.mcahdb.engine.event.ds.Event;
 
 /**
