@@ -7,9 +7,6 @@
  */
     package mobi.eyeline.mcahdb.soap.missedcallservice;
 
-import org.tempuri.GetMissedCallsResponse;
-import org.tempuri.ArrayOfMissedCall;
-import org.tempuri.MissedCall;
 import org.apache.log4j.Category;
 
 import java.text.SimpleDateFormat;
@@ -36,7 +33,7 @@ public class MissedCallServiceSkeleton{
    * @param getMissedCalls
    */
         
-  public org.tempuri.GetMissedCallsResponse GetMissedCalls(org.tempuri.GetMissedCalls getMissedCalls) {
+  public GetMissedCallsResponse GetMissedCalls(GetMissedCalls getMissedCalls) {
 
     long start = 0;
     if (log.isDebugEnabled()) {
