@@ -17,6 +17,40 @@
 
     <group name="Actions">
         <choice>
+            <element name="mkid">
+                <complexType>
+                    <attribute name="externalId" type="scag:Var" use="required"/>
+                </complexType>
+            </element>
+
+            <element name="check">
+                <complexType>
+                    <attribute name="category" type="scag:Value" use="optional"/>
+                    <attribute name="content-type" type="scag:Value" use="optional"/>
+                    <attribute name="category-str" type="scag:Value" use="optional"/>
+                    <attribute name="content-type-str" type="scag:Value" use="optional"/>
+                    <attribute name="status" type="scag:Var" use="optional" />
+                    <attribute name="msg" type="scag:Var" use="optional" />
+                    <!-- for ewallet -->
+                    <attribute name="transId" type="scag:Value" use="optional"/>
+                    <attribute name="abonent" type="scag:Value" use="required"/>
+                    <attribute name="externalId" type="scag:Value" use="required"/>
+               </complexType>
+            </element>
+
+            <element name="transfer">
+                <complexType>
+                    <attribute name="abonent" type="scag:Value" use="required"/>
+                    <attribute name="srcWalletType" type="scag:Value" use="required"/>
+                    <attribute name="dstWalletType" type="scag:Value" use="required"/>
+                    <attribute name="externalId" type="scag:Value" use="optional"/>
+                    <attribute name="amount" type="scag:Value" use="required"/>
+                    <attribute name="description" type="scag:Value" use="optional"/>
+                    <attribute name="status" type="scag:Var" use="optional" />
+                    <attribute name="msg" type="scag:Var" use="optional" />
+               </complexType>
+            </element>
+
             <element name="open">
                 <complexType>
                     <attribute name="id" type="scag:Value" use="required" />
@@ -28,9 +62,24 @@
                     <attribute name="msg" type="scag:Var" use="optional" />
                     <attribute name="result_number" type="scag:Var" use="optional" />
                     <!-- for ewallet -->
-                    <attribute name="transit" type="scag:Value" use="optional"/>
                     <attribute name="abonent" type="scag:Value" use="optional"/>
                     <attribute name="externalId" type="scag:Value" use="optional"/>
+                    <attribute name="timeout" type="scag:Value" use="optional"/>
+               </complexType>
+            </element>
+
+            <element name="open-transit">
+                <complexType>
+                    <attribute name="category" type="scag:Value" use="optional"/>
+                    <attribute name="content-type" type="scag:Value" use="optional"/>
+                    <attribute name="category-str" type="scag:Value" use="optional"/>
+                    <attribute name="content-type-str" type="scag:Value" use="optional"/>
+                    <attribute name="status" type="scag:Var" use="optional" />
+                    <attribute name="msg" type="scag:Var"/>
+                    <attribute name="result_number" type="scag:Var" use="optional" />
+                    <!-- for ewallet -->
+                    <attribute name="abonent" type="scag:Value" use="optional"/>
+                    <attribute name="externalId" type="scag:Value" use="required"/>
                     <attribute name="timeout" type="scag:Value" use="optional"/>
                </complexType>
             </element>
@@ -44,6 +93,21 @@
                 </complexType>
             </element>
 
+            <element name="close-transit">
+                <complexType>
+                    <attribute name="action" type="bill:BillActions" use="required" />
+                    <attribute name="category" type="scag:Value" use="optional"/>
+                    <attribute name="content-type" type="scag:Value" use="optional"/>
+                    <attribute name="category-str" type="scag:Value" use="optional"/>
+                    <attribute name="content-type-str" type="scag:Value" use="optional"/>
+                    <attribute name="status" type="scag:Var" use="optional" />
+                    <attribute name="msg" type="scag:Var" use="optional"/>
+                    <attribute name="abonent" type="scag:Value" use="required"/>
+                    <attribute name="externalId" type="scag:Value" use="required"/>
+                    <attribute name="transId" type="scag:Value" use="required"/>
+               </complexType>
+            </element>
+        
             <element name="info">
                 <complexType>
                     <attribute name="id" type="scag:Value" use="required"/>
