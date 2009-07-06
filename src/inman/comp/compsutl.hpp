@@ -1,23 +1,19 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
  * Various helper functions for use in ROS component encoding/decoding.
  * ************************************************************************** */
 #ifndef __SMSC_INMAN_INAP_COMPS_UTL_HPP__
+#ident "@(#)$Id$"
 #define __SMSC_INMAN_INAP_COMPS_UTL_HPP__
 
+#include "logger/Logger.h"
+
 #include "util/TonNpiAddress.hpp"
-using smsc::util::TonNpiAddress;
 
 #include "inman/comp/compdefs.hpp"
-using smsc::inman::comp::ASN1DecodeError;
-using smsc::inman::comp::ASN1EncodeError;
-
 #include "inman/asn1rt/constr_TYPE.h"
 #include "inman/asn1rt/OCTET_STRING.h"
-extern "C" int print2vec(const void *buffer, size_t size, void *app_key);
 
-#include "logger/Logger.h"
-using smsc::logger::Logger;
+extern "C" int print2vec(const void *buffer, size_t size, void *app_key);
 
 #define ASNCODEC_LOG_ENC(er, asnDef, compId)	if (er.encoded == -1) { \
 	smsc_log_error(compLogger, \
@@ -34,6 +30,13 @@ using smsc::logger::Logger;
 namespace smsc {
 namespace inman {
 namespace comp {
+
+using smsc::logger::Logger;
+using smsc::util::TonNpiAddress;
+
+using smsc::inman::comp::ASN1DecodeError;
+using smsc::inman::comp::ASN1EncodeError;
+
 
 extern std::string printType2String(asn_TYPE_descriptor_t * def, void * tStruct);
 

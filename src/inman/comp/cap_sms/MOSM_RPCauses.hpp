@@ -1,16 +1,17 @@
-#pragma ident "$Id$"
 /* ************************************************************************* *
  * 3GPP TS 24.011 Annex E-2: RP-cause definition mobile originating SM-transfer.
  * ************************************************************************* */
 #ifndef _SMSC_INMAN_COMP_CAPSMS_RP_CAUSES_HPP
+#ident "@(#)$Id$"
 #define _SMSC_INMAN_COMP_CAPSMS_RP_CAUSES_HPP
 
 #include "util/URCdb/URCRegistry.hpp"
-using smsc::util::URCSpacePTR;
 
 namespace smsc {
 namespace inman {
 namespace comp {
+
+using smsc::util::URCSpacePTR;
 
 struct MOSM_RPCause {
     enum Codes {

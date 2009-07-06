@@ -1,21 +1,15 @@
-#pragma ident "$Id$"
 /* ************************************************************************* *
  * MAP Network Unstructured Supplementary Service v2 Components definition.
  * ************************************************************************* */
 #ifndef __SMSC_INMAN_MAPUSS_COMPS_HPP__
+#ident "@(#)$Id$"
 #define __SMSC_INMAN_MAPUSS_COMPS_HPP__
 
 #include "logger/Logger.h"
-using smsc::logger::Logger;
-
 #include "util/TonNpiAddress.hpp"
-using smsc::util::TonNpiAddress;
 
 #include "inman/comp/compdefs.hpp"
-using smsc::inman::comp::Component;
-
 #include "inman/comp/MapOpErrors.hpp"
-using smsc::inman::comp::MAPOpErrorId;
 
 #define MAP_MAX_USSD_StringLength   160 //encoded or GSM 7bit packed
 #define MAX_USSD_TEXT8_LENGTH        90
@@ -25,6 +19,12 @@ namespace smsc {
 namespace inman {
 namespace comp {
 namespace uss {
+
+using smsc::logger::Logger;
+using smsc::util::TonNpiAddress;
+
+using smsc::inman::comp::Component;
+using smsc::inman::comp::MAPOpErrorId;
 
 // Alerting categories are defined in GSM 02.07
 typedef enum AlertingPattern {

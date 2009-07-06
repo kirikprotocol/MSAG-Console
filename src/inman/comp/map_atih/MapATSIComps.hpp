@@ -1,19 +1,15 @@
-#pragma ident "$Id$"
 /* ************************************************************************* *
  * MAP ATIH AnyTimeSubscriptionInterrogation Components definition.
  * ************************************************************************* */
 #ifndef __SMSC_INMAN_MAPATSI_COMPS_HPP__
+#ident "@(#)$Id$"
 #define __SMSC_INMAN_MAPATSI_COMPS_HPP__
 
 #include "logger/Logger.h"
-using smsc::logger::Logger;
 
 #include "inman/common/adrutil.hpp"
 #include "inman/comp/compdefs.hpp"
-using smsc::inman::comp::Component;
-
 #include "inman/comp/MapOpErrors.hpp"
-using smsc::inman::comp::MAPOpErrorId;
 
 /* GVR NOTE: while linking the below enums are taken from generated *
  * asn1/c codec, so they should not have namespace prefix.          */
@@ -36,6 +32,11 @@ namespace smsc {
 namespace inman {
 namespace comp {
 namespace atih {
+
+using smsc::logger::Logger;
+
+using smsc::inman::comp::Component;
+using smsc::inman::comp::MAPOpErrorId;
 
 //MAP anyTimeInfohandling service
 struct MAPATIH_OpCode {

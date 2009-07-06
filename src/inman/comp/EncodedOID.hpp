@@ -1,8 +1,8 @@
-#pragma ident "$Id$"
 /* ************************************************************************* *
  * Encoded ASN.1 Object Identificator.
  * ************************************************************************* */
 #ifndef __INMAN_INAP_COMP_EOID_HPP
+#ident "@(#)$Id$"
 #define __INMAN_INAP_COMP_EOID_HPP
 
 #include <inttypes.h>

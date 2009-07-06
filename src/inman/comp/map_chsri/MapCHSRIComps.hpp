@@ -1,8 +1,8 @@
-#pragma ident "$Id$"
 /* ************************************************************************* *
  * MAP CallHandling service SEND_ROUTING_INFO (v3) Components definition.
  * ************************************************************************* */
 #ifndef __SMSC_INMAN_MAPCHSRI_COMPS_HPP__
+#ident "@(#)$Id$"
 #define __SMSC_INMAN_MAPCHSRI_COMPS_HPP__
 
 #include "logger/Logger.h"
@@ -10,15 +10,15 @@
 #include "inman/comp/compdefs.hpp"
 #include "inman/comp/MapOpErrors.hpp"
 
-using smsc::logger::Logger;
-using smsc::inman::comp::Component;
-using smsc::inman::comp::MAPComponent;
-using smsc::inman::comp::MAPOpErrorId;
-
 namespace smsc {
 namespace inman {
 namespace comp {
 namespace chsri {
+
+using smsc::logger::Logger;
+using smsc::inman::comp::Component;
+using smsc::inman::comp::MAPComponent;
+using smsc::inman::comp::MAPOpErrorId;
 
 struct MAP_CH_SRI_OpCode {
     enum {

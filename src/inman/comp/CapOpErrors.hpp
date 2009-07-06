@@ -1,16 +1,18 @@
-#pragma ident "$Id$"
 /* ************************************************************************* *
  * CAP operations error codes according to inman/codec_inc/cap_err_codes.asn
  * ************************************************************************* */
 #ifndef __SMSC_INMAN_INAP_CAP_OPS_ERRORS__
+#ident "@(#)$Id$"
 #define __SMSC_INMAN_INAP_CAP_OPS_ERRORS__
 
 #include "util/URCdb/URCRegistry.hpp"
-using smsc::util::URCSpacePTR;
 
 namespace smsc {
 namespace inman {
 namespace comp {
+
+using smsc::util::URCSpacePTR;
+
 /* ------------------------------------------------------------------------- *
  * CAP operations error codes.
  * ------------------------------------------------------------------------- */

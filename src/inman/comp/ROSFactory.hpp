@@ -1,14 +1,13 @@
-#pragma ident "$Id$"
 /* ************************************************************************* *
  * ROS Operations Components factory(ARGUMENT, RESULT, ERRORS).
  * ************************************************************************* */
 #ifndef __INMAN_COMP_ROSFACTORY_HPP
+#ident "@(#)$Id$"
 #define __INMAN_COMP_ROSFACTORY_HPP
 
 #include <stdarg.h>
 
 #include "logger/Logger.h"
-using smsc::logger::Logger;
 
 #include "util/Factory.hpp"
 #include "inman/comp/compdefs.hpp"
@@ -17,6 +16,8 @@ using smsc::logger::Logger;
 namespace smsc {
 namespace inman {
 namespace comp {
+
+using smsc::logger::Logger;
 
 typedef smsc::util::FactoryXArg_T<unsigned, Component, Logger> CompFactory;
 typedef CompFactory::ProducerITF CompProducer;
@@ -47,18 +48,18 @@ public:
             _plant[i].eraseAll();
     }
 
-    inline const EncodedOID & acOID(void) const { return _acOID; }
+    const EncodedOID & acOID(void) const { return _acOID; }
 
     //calling rule: registerArg(opcode1, new CompFactory::ProducerT<ArgType1>());
-    inline bool registerArg(unsigned opcode, CompProducer* alloc)
+    bool registerArg(unsigned opcode, CompProducer* alloc)
     {
         return _plant[rosArg].registerProduct(opcode, alloc);
     }
-    inline bool registerRes(unsigned opcode, CompProducer* alloc)
+    bool registerRes(unsigned opcode, CompProducer* alloc)
     {
         return _plant[rosRes].registerProduct(opcode, alloc);
     }
-    inline bool registerErr(unsigned errcode, CompProducer* alloc)
+    bool registerErr(unsigned errcode, CompProducer* alloc)
     {
         return _plant[rosErr].registerProduct(errcode, alloc);
     }
@@ -76,27 +77,27 @@ public:
         errMap.insert(ROSErrors::value_type(opcode, verr));
     }
 
-    inline Component * createArg(unsigned opcode, Logger * use_log = NULL) const
+    Component * createArg(unsigned opcode, Logger * use_log = NULL) const
     {
         return _plant[rosArg].create(opcode, use_log); 
     }
-    inline Component * createRes(unsigned opcode, Logger * use_log = NULL) const
+    Component * createRes(unsigned opcode, Logger * use_log = NULL) const
     {
         return _plant[rosRes].create(opcode, use_log);
     }
-    inline Component * createErr(unsigned errcode, Logger * use_log = NULL) const
+    Component * createErr(unsigned errcode, Logger * use_log = NULL) const
     {
         return _plant[rosErr].create(errcode, use_log);
     }
 
 
     //returns TRUE if OPERATION has RESULT defined
-    inline bool hasResult(unsigned opcode) const
+    bool hasResult(unsigned opcode) const
     {
         return _plant[rosRes].getProducer(opcode) ? true : false;
     }
     //returns number of ERRORS defined for OPERATION
-    inline unsigned hasErrors(unsigned opcode) const
+    unsigned hasErrors(unsigned opcode) const
     {
         ROSErrors::const_iterator it = errMap.find(opcode);
         return (it == errMap.end()) ? 0 : (unsigned)(it->second->size());

@@ -1,18 +1,19 @@
-#pragma ident "$Id$"
 /* ************************************************************************* *
  * ROS Operations Component interface definition.
  * ************************************************************************* */
 #ifndef __SMSC_INMAN_COMP_DEFS_HPP__
+#ident "@(#)$Id$"
 #define __SMSC_INMAN_COMP_DEFS_HPP__
 
 #include <vector>
 
 #include "util/Exception.hpp"
-using smsc::util::CustomException;
 
 namespace smsc {
 namespace inman {
 namespace comp {
+
+using smsc::util::CustomException;
 
 class ASN1EncodeError : public CustomException {
 public:

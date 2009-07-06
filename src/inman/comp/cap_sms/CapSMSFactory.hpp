@@ -1,8 +1,8 @@
-#pragma ident "$Id$"
 /* ************************************************************************* *
  * ROS Components factory for CAMEL phase 3 SMS service.
  * ************************************************************************* */
 #ifndef __SMSC_INMAN_CAPSMS_COMFACTORY__
+#ident "@(#)$Id$"
 #define __SMSC_INMAN_CAPSMS_COMFACTORY__
 
 #include "inman/comp/ROSFactory.hpp"
