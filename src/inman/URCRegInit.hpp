@@ -1,8 +1,8 @@
-#pragma ident "$Id$"
 /* ************************************************************************* *
- * 
+ * INMan Unified
  * ************************************************************************* */
 #ifndef __SMSC_INMAN_URCREGISTRY_INIT_HPP
+#ident "@(#)$Id$"
 #define __SMSC_INMAN_URCREGISTRY_INIT_HPP
 
 #include "inman/INManErrors.hpp"

@@ -1,8 +1,8 @@
-#ident "$Id$"
 /* ************************************************************************** *
  * Helpers: Formatted output to std::string.
  * ************************************************************************** */
 #ifndef __SMSC_FORMAT_UTIL_HPP__
+#ident "@(#)$Id$"
 #define __SMSC_FORMAT_UTIL_HPP__
 
 #include <stdarg.h>

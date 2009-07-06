@@ -1,8 +1,8 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
  * Generic factories templates.
  * ************************************************************************** */
 #ifndef __SMSC_UTIL_FACTORYT_HPP__
+#ident "@(#)$Id$"
 #define __SMSC_UTIL_FACTORYT_HPP__
 
 #include <map>
