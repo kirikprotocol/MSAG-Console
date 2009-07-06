@@ -1,23 +1,23 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
  * Helper classes for operations with RPCauses (Reject Processing Cause)
  * ************************************************************************** */
 #ifndef __SMSC_INMAN_RPCLIST__
+#ident "@(#)$Id$"
 #define __SMSC_INMAN_RPCLIST__
 
 #include <list>
 #include <stdlib.h>
 
 #include "util/Exception.hpp"
-using smsc::util::format;
-using smsc::util::CustomException;
-
 #include "inman/common/CSVList.hpp"
-using smsc::util::CSVList;
 
 namespace smsc   {
 namespace inman  {
 namespace common {
+
+using smsc::util::format;
+using smsc::util::CustomException;
+using smsc::util::CSVList;
 
 //Ordinary list of RPCauses
 class RPCList : public std::list<unsigned char> {

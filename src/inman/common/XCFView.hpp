@@ -1,9 +1,9 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
  * XML Configuration File View - lightweight implementation of section view
  * (only read access to parameters/elements).
  * ************************************************************************** */
 #ifndef __UTIL_XCONFIG_VIEW_HPP__
+#ident "@(#)$Id$"
 #define __UTIL_XCONFIG_VIEW_HPP__
 
 #include "util/config/Config.h"
@@ -38,8 +38,8 @@ public:
     ~XConfigView()
     { }
 
-    inline const char * relSection(void) const { return nmSec.c_str(); }
-    inline Config &     relConfig(void)  const { return config; }
+    const char * relSection(void) const { return nmSec.c_str(); }
+    Config &     relConfig(void)  const { return config; }
 
     bool    findSubSection(const char * const subs_nm) const
     {
@@ -56,23 +56,23 @@ public:
         return new XConfigView(config, subsNm.c_str());
     }
 
-    inline CStrSet * getSectionNames(void) const
+    CStrSet * getSectionNames(void) const
     {
         return config.getChildSectionNames(relSection());
     }
-    inline CStrSet * getShortSectionNames(void) const
+    CStrSet * getShortSectionNames(void) const
     {
         return config.getChildShortSectionNames(relSection());
     }
-    inline CStrSet * getIntParamNames(void) const
+    CStrSet * getIntParamNames(void) const
     {
         return config.getChildIntParamNames(relSection());
     }
-    inline CStrSet * getBoolParamNames(void) const
+    CStrSet * getBoolParamNames(void) const
     {
         return config.getChildBoolParamNames(relSection());
     }
-    inline CStrSet * getStrParamNames(void) const
+    CStrSet * getStrParamNames(void) const
     {
         return config.getChildStrParamNames(relSection());
     }

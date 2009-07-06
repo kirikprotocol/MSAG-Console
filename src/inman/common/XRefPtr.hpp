@@ -1,8 +1,8 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
  * Various reference counting pointer classes for multithread environment.
  * ************************************************************************** */
 #ifndef __MT_REFPTR_HPP__
+#ident "@(#)$Id$"
 #define __MT_REFPTR_HPP__
 
 #include "core/synchronization/Mutex.hpp"
@@ -56,7 +56,7 @@ public:
     virtual ObjectRefereeAC_T<TArg> * Resemble(TArg * use_obj) const = 0;
 
     //Returns pointer to designated object
-    inline TArg * operator->() const { return get(); }
+    TArg * operator->() const { return get(); }
 };
 
 // ********************************************************************
@@ -123,7 +123,7 @@ public:
         return ObjectRefereeAC_T<TArg>::refCount;
     }
     //Creates a new referee for given object
-    inline ObjectRefereeAC_T<TArg> * Resemble(TArg * use_obj) const
+    ObjectRefereeAC_T<TArg> * Resemble(TArg * use_obj) const
     {
         return new MTObjectReferee_T(use_obj);
     }
@@ -147,7 +147,7 @@ public:
     ~ObjectUtilizatorDFL_T()
     { }
 
-    inline void utilize(TArg *use_obj) { delete use_obj; }
+    void utilize(TArg *use_obj) { delete use_obj; }
 };
 
 template <class TArg>
@@ -220,7 +220,7 @@ public:
         return ObjectRefereeAC_T<TArg>::refCount;
     }
     //Creates a new referee for given object that uses the same utilizator.
-    inline ObjectRefereeAC_T<TArg> * Resemble(TArg * use_obj) const
+    ObjectRefereeAC_T<TArg> * Resemble(TArg * use_obj) const
     {
         return new UTZObjectReferee_T(use_obj, pUtz != &dflUtz ? pUtz : NULL);
     }
@@ -261,7 +261,7 @@ public:
         Unref();
     }
 
-    inline TArg* get(void) const { return objData->get(); }
+    TArg* get(void) const { return objData->get(); }
     unsigned  RefCount(void) const { return objData->RefCount(); }
 
     XRefPtr_T & operator=(ObjectRefereeAC_T<TArg> * use_referee)
@@ -285,15 +285,15 @@ public:
         return *this;
     }
 
-    inline bool operator==(const XRefPtr_T & ref2) const
+    bool operator==(const XRefPtr_T & ref2) const
     {
         return (objData == ref2.objData) ? true : false;
     }
 
     //NOTE: it's a caller responsibility to check for NULL
     //condition prior to accessing the designated object
-    inline TArg & operator*() const { return *(objData->get()); }
-    inline TArg * operator->() const { return objData->get(); }
+    TArg & operator*() const { return *(objData->get()); }
+    TArg * operator->() const { return objData->get(); }
 };
 
 
@@ -333,7 +333,7 @@ public:
         return *this;
     }
 
-    inline bool operator== (const URefPtr_T & ref2) const
+    bool operator== (const URefPtr_T & ref2) const
     {
         return (XRefPtr_T<TArg>::objData == ref2.objData) ? true : false;
     }
@@ -375,7 +375,7 @@ public:
         return *this;
     }
 
-    inline bool operator== (const MTRefPtr_T & ref2) const
+    bool operator== (const MTRefPtr_T & ref2) const
     {
         return (XRefPtr_T<TArg>::objData == ref2.objData) ? true : false;
     }
@@ -390,8 +390,8 @@ class OBJRefGuard_T {
 protected:
     ObjectRefereeAC_T<TArg> * objData;
 
-    inline void Unref(void) { if (objData) objData->UnRef(); }
-    inline void Ref(void)   { if (objData) objData->Ref(); }
+    void Unref(void) { if (objData) objData->UnRef(); }
+    void Ref(void)   { if (objData) objData->Ref(); }
 public:
     OBJRefGuard_T(ObjectRefereeAC_T<TArg> * use_referee)
         : objData(use_referee)
@@ -403,8 +403,8 @@ public:
         Unref();
     }
 
-    inline TArg * get(void) const { return objData ? objData->get() : NULL; }
-    inline TArg * operator->() const { return get(); }
+    TArg * get(void) const { return objData ? objData->get() : NULL; }
+    TArg * operator->() const { return get(); }
 
     OBJRefGuard_T & operator=(ObjectRefereeAC_T<TArg> * use_referee)
     {

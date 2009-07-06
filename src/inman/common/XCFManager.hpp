@@ -1,8 +1,8 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
  * XML Configuration Files Manager: lightweight implementation.
  * ************************************************************************** */
 #ifndef __UTIL_XCFG_MANAGER_HPP__
+#ident "@(#)$Id$"
 #define __UTIL_XCFG_MANAGER_HPP__
 
 #include <sys/stat.h>
@@ -13,13 +13,13 @@
 
 #include "util/xml/init.h"
 #include "util/xml/DOMTreeReader.h"
-using smsc::util::xml::DOMTreeReader;
-using smsc::util::xml::ParseException;
 
 namespace smsc {
 namespace util {
 namespace config {
 
+using smsc::util::xml::DOMTreeReader;
+using smsc::util::xml::ParseException;
 
 class XCFManager {
 private:
@@ -46,7 +46,7 @@ public:
         return instance;
     }
 
-    inline void addPath(const char * use_path)
+    void addPath(const char * use_path)
     {
         std::string fn(use_path);
         std::string::size_type bpos = fn.find_last_of('/');

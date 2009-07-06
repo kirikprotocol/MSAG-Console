@@ -8,15 +8,17 @@
 #include <map>
 
 #include "util/TonNpiAddress.hpp"
-using smsc::util::TonNpiAddress;
-using smsc::util::GsmSCFinfo;
-
 #include "inman/common/RPCList.hpp"
-using smsc::inman::common::RPCList;
-using smsc::inman::common::RPCListATT;
 
 namespace smsc  {
 namespace inman {
+
+using smsc::util::TonNpiAddress;
+using smsc::util::GsmSCFinfo;
+using smsc::util::format;
+using smsc::inman::common::RPCList;
+using smsc::inman::common::RPCListATT;
+
 
 //Defines category of trigger DPs from various State Models
 struct TDPCategory {
@@ -125,9 +127,9 @@ public:
     { }
 
     //SKAlgorithmAC methods implementation
-    inline SKAlgorithmAC::Type Id(void) const { return SKAlgorithmAC::algSKVal; }
-    inline uint32_t getSKey(void * arg) const { return skVal; }
-    inline std::string toString(void) const
+    SKAlgorithmAC::Type Id(void) const { return SKAlgorithmAC::algSKVal; }
+    uint32_t getSKey(void * arg) const { return skVal; }
+    std::string toString(void) const
     {
         char buf[sizeof("val: %u") + sizeof(uint32_t)*3];
         snprintf(buf, sizeof(buf)-1, "val: %u", skVal);
@@ -145,15 +147,15 @@ public:
         : SKAlgorithmAC(tgt_tdp), argTDP(arg_tdp)
     { }
 
-    inline TDPCategory::Id argType(void) const { return argTDP; }
-    inline void insert(uint32_t skey_idx, uint32_t skey_val)
+    TDPCategory::Id argType(void) const { return argTDP; }
+    void insert(uint32_t skey_idx, uint32_t skey_val)
     {
         skMap.insert(SKeyMAP::value_type(skey_idx, skey_val));
     }
-    inline SKeyMAP::size_type size(void) { return skMap.size(); }
+    SKeyMAP::size_type size(void) { return skMap.size(); }
 
     //SKAlgorithmAC methods implementation
-    inline SKAlgorithmAC::Type Id(void) const { return SKAlgorithmAC::algSKMap; }
+    SKAlgorithmAC::Type Id(void) const { return SKAlgorithmAC::algSKMap; }
     uint32_t getSKey(void * use_arg = NULL) const //arg is type of uint32_t
     {
         if (!use_arg)
@@ -212,7 +214,7 @@ public:         //SwitchingCenter, SMS Center, INMan
         skAlg.clear();
     }
 
-    inline const char * Ident(void) const
+    const char * Ident(void) const
     {
         return _ident.size() ? _ident.c_str() : scfAdr.getSignals();
     }

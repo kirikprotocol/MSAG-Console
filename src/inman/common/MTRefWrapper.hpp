@@ -1,8 +1,8 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
  * 
  * ************************************************************************** */
 #ifndef __MT_REFWRAPPER_HPP__
+#ident "@(#)$Id$"
 #define __MT_REFWRAPPER_HPP__
 
 #include <pthread.h>
@@ -37,8 +37,8 @@ public:
         first = use_ref;  second = 0;
     }
 
-    inline _TArg * get(void) const { return first; }
-    inline _TArg * operator->() const { return first; }
+    _TArg * get(void) const { return first; }
+    _TArg * operator->() const { return first; }
 
     _TArg * Lock(void)
     {
