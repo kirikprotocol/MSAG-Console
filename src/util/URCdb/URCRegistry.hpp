@@ -1,10 +1,10 @@
-#ident "$Id$"
 /* ************************************************************************* *
  * Global Rerturn Codes Registry.
  * Provides transformation from pair { retrunCodeSpace,errcode} to uint32_t
  * hash and vice versa. 
  * ************************************************************************* */
 #ifndef _SMSC_RETCODES_REGISTRY_HPP
+#ident "@(#)$Id$"
 #define _SMSC_RETCODES_REGISTRY_HPP
 
 #include <inttypes.h>
@@ -76,8 +76,8 @@ protected:
 
     public:
         // -- URCSpaceITF methods implementation
-        inline RCSpaceIdx   Idx(void) const { return idx; }
-        inline const char * Ident(void) const { return name->c_str(); }
+        RCSpaceIdx   Idx(void) const { return idx; }
+        const char * Ident(void) const { return name->c_str(); }
 
         RCHash mkhash(uint32_t ret_code) const
         {
@@ -106,22 +106,22 @@ protected:
             return URCRegistry::_errUndefined;
         }
 
-        inline const char * code2Txt(uint32_t ret_code) const
+        const char * code2Txt(uint32_t ret_code) const
         {
             return fpDescr(ret_code);
         }
-        inline const char * hash2Txt(RCHash rc_hash) const
+        const char * hash2Txt(RCHash rc_hash) const
         {
             uint32_t ret_code = unhash(rc_hash);
             return fpDescr(ret_code);
         }
 
         //format sample: "errOk::23 (undefined error)"
-        inline std::string explainCode(uint32_t ret_code) const
+        std::string explainCode(uint32_t ret_code) const
         {
             return format("%s::%d (%s)", Ident(), ret_code, fpDescr(ret_code));
         }
-        inline std::string explainHash(RCHash rc_hash) const
+        std::string explainHash(RCHash rc_hash) const
         {
             uint32_t ret_code = unhash(rc_hash);
             return format("%s::%d (%s)", Ident(), ret_code, fpDescr(ret_code));
