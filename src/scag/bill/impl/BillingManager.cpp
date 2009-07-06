@@ -303,6 +303,7 @@ int BillingManagerImpl::makeInmanId( billid_type billid )
 void BillingManagerImpl::processAsyncResult( EwalletCallParams& params )
 {
     smsc_log_debug(logger,"processing async result on params %p", &params);
+    // FIXME: send statistics
     if ( params.getOpen() ) {
 
         // open call params

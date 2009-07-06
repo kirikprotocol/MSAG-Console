@@ -83,8 +83,10 @@ private:
 private:
     std::auto_ptr< smsc::core::network::Socket > sock_;
 
-    std::auto_ptr< WriteContext >                wrContext_;
+    std::auto_ptr< WriteContext >                wrContext_; // accessed via queueMon_
     Streamer::Buffer                             wrBuffer_;
+    // we use external size as TmpBuf has a feature with size=0
+    size_t                                       wrBufferSize_;
     
     unsigned                                     rdBuflen_;
     Streamer::Buffer                             rdBuffer_;

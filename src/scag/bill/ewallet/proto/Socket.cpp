@@ -22,6 +22,7 @@ Socket* Socket::fromSocket( smsc::core::network::Socket& sock )
 Socket::Socket( Core& core, util::msectime_type ac ) :
 SocketBase(core),
 sock_( new smsc::core::network::Socket ),
+wrBufferSize_(0),
 rdBuflen_(0),
 writer_(0),
 lastActivity_(ac)
@@ -94,7 +95,7 @@ void Socket::send( std::auto_ptr< Context >& context, bool sendRequest )
 bool Socket::wantToSend( util::msectime_type currentTime )
 {
     if ( !isConnected() ) return false;
-    if ( wrContext_.get() && wrBuffer_.GetPos() < wrBuffer_.getSize() ) { return true; }
+    if ( wrBuffer_.GetPos() < wrBufferSize_ ) { return true; }
     bool result = false;
     WriteContext* ctx;
     std::list< WriteContext* > expired;
@@ -120,6 +121,7 @@ bool Socket::wantToSend( util::msectime_type currentTime )
         Streamer::Buffer& buffer = ctx->buffer;
         const size_t buflen = buffer.GetPos();
         wrBuffer_.setExtBuf(const_cast<char*>(buffer.get()), buflen);
+        wrBufferSize_ = buflen;
         if (log_->isDebugEnabled()) {
             util::HexDump hd;
             util::HexDump::string_type dump;
@@ -144,10 +146,10 @@ bool Socket::wantToSend( util::msectime_type currentTime )
 /// send data and notify core when a packet is sent.
 void Socket::sendData()
 {
-    assert( wrContext_.get() );
-    if ( wrBuffer_.GetPos() < wrBuffer_.getSize() ) {
-        int res = wrBuffer_.getSize() - wrBuffer_.GetPos();
-        smsc_log_debug(log_,"writing %d/%d bytes",res,wrBuffer_.getSize());
+    // assert( wrContext_.get() );
+    if ( wrBuffer_.GetPos() < wrBufferSize_ ) {
+        int res = wrBufferSize_ - wrBuffer_.GetPos();
+        smsc_log_debug(log_,"writing %d/%d bytes",res,wrBufferSize_);
         res = sock_->Write( wrBuffer_.get()+wrBuffer_.GetPos(), res );
         if (res<=0) {
             smsc_log_warn(log_,"sendData: write failed: %d", res);
@@ -158,7 +160,7 @@ void Socket::sendData()
         // lastActivity_ = util::currentTimeMillis();
         wrBuffer_.SetPos( wrBuffer_.GetPos() + res );
 
-        if ( wrBuffer_.GetPos() < wrBuffer_.getSize() ) return;
+        if ( wrBuffer_.GetPos() < wrBufferSize_ ) return;
     }
     reportPacket(Context::SENT);
 }
@@ -230,9 +232,12 @@ void Socket::processInput()
     // So we have to check it here.
     do {
         if ( packet->isRequest() ) break;
-        MutexGuard mg(queueMon_);
-        if ( ! wrContext_.get() ) break;
-        Context* ctx = wrContext_->getContext();
+        Context* ctx;
+        {
+            MutexGuard mg(queueMon_);
+            if ( ! wrContext_.get() ) break;
+            ctx = wrContext_->getContext();
+        }
         if ( ! ctx ) break;
         uint32_t seqNum = ctx->getSeqNum();
         if ( seqNum != packet->getSeqNum() || !ctx->getRequest().get() ) break;
@@ -290,6 +295,8 @@ void Socket::connect()
 Socket::~Socket()
 {
     // checking precondition!
+    smsc_log_info(log_,"socket %p dtor",this);
+    MutexGuard mg(queueMon_);
     assert( refCount_ == 0 );
     assert( wrContext_.get() == 0 );
     assert( writer_ == 0 );
@@ -305,6 +312,7 @@ void Socket::init()
 
 void Socket::reportPacket( int state )
 {
+    MutexGuard mg(queueMon_);
     core_.reportPacket(*this,wrContext_->getSeqNum(),wrContext_->popContext(),Context::ContextState(state));
     wrContext_.reset(0);
 }

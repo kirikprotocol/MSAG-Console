@@ -330,8 +330,8 @@ void ClientCore::reportPacket( proto::SocketBase& socket,
     }
         
     // now we have a context with one of the states: DONE, FAILED, EXPIRED
-    smsc_log_debug(log_,"setting state %u to context %p", unsigned(state), context);
-    context->setState( state );
+    smsc_log_debug(log_,"setting state %u to context %p", unsigned(state), clientContext.get());
+    clientContext->setState( state );
 }
 
 
