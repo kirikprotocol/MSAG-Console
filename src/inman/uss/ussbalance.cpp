@@ -3,7 +3,7 @@
  * balance requests.
  * ************************************************************************** */
 #ifndef MOD_IDENT_OFF
-static char const ident[] = "$Id$";
+static char const ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_OFF */
 
 #include "inman/uss/ussversion.hpp"
@@ -46,15 +46,22 @@ int main(int argc, char** argv)
   Logger::Init();
   Logger * logger = Logger::getInstance("smsc.ussman");
 
-  smsc_log_info(logger,"*****************************************");
-  smsc_log_info(logger,"* SIBINCO %s MANAGER v%u.%u.%u *", _ussLogId,
-                USSMAN_VER_HIGH, USSMAN_VER_LOW, USSMAN_VER_FIX);
-  smsc_log_info(logger,"*****************************************");
-
   if (argc > 1)
     cfgFile = argv[1];
-  smsc_log_info(logger,"* Config file: %s", cfgFile);
-  smsc_log_info(logger,"*****************************************");
+
+  std::string prodVer(_getProductVersionStr());
+  {
+    char * delim = new char[prodVer.length() + 4 + 1];
+    memset(delim, '*', prodVer.length() + 4);
+
+    smsc_log_info(logger, delim);
+    smsc_log_info(logger,"* %s *", prodVer.c_str());
+    smsc_log_info(logger, delim);
+    smsc_log_info(logger,"* Config file: %s", cfgFile);
+    smsc_log_info(logger, delim);
+
+    delete [] delim;
+  }
 
   URCRegistryGlobalInit();
   std::auto_ptr<UssService_CFG> cfg;
@@ -106,6 +113,6 @@ int main(int argc, char** argv)
     rval = 1;
   }
 
-  smsc_log_info(logger, "%s shutdown complete", _ussLogId);
+  smsc_log_info(logger, "%s shutdown complete", USSMAN_PRODUCT_NAME);
   return rval;
 }
