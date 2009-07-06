@@ -1,16 +1,17 @@
-#pragma ident "$Id$"
 /* ************************************************************************* *
  * Abonent Provider query status definition and description.
  * ************************************************************************* */
 #ifndef __SMSC_INMAN_IAPRVD_ERRORS__
+#ident "@(#)$Id$"
 #define __SMSC_INMAN_IAPRVD_ERRORS__
 
 #include "util/URCdb/URCRegistry.hpp"
-using smsc::util::URCSpacePTR;
 
 namespace smsc {
 namespace inman {
 namespace iaprvd { //(I)NMan (A)bonent (P)roviders
+
+using smsc::util::URCSpacePTR;
 
 struct IAPQStatus {
     enum Code {

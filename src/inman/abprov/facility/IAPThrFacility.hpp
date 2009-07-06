@@ -1,27 +1,27 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
  * Threaded Abonent Provider facility.
  * In order to use IAProviderThreaded functionlity implement IAPQueryAC and
  * IAPQueryFactoryITF.
  * ************************************************************************** */
 #ifndef SMSC_INMAN_IAP_THREADED_FACILITY_HPP
+#ident "@(#)$Id$"
 #define SMSC_INMAN_IAP_THREADED_FACILITY_HPP
 
-#include "inman/abprov/IAProvider.hpp"
-
-#include "core/threads/ThreadPool.hpp"
-using smsc::core::threads::ThreadedTask;
-using smsc::core::threads::ThreadPool;
-
 #include "logger/Logger.h"
-using smsc::logger::Logger;
-
+#include "core/threads/ThreadPool.hpp"
 #include "core/synchronization/EventMonitor.hpp"
-using smsc::core::synchronization::EventMonitor;
+
+#include "inman/abprov/IAProvider.hpp"
 
 namespace smsc {
 namespace inman {
 namespace iaprvd { //(I)NMan (A)bonent (P)roviders
+
+using smsc::core::threads::ThreadedTask;
+using smsc::core::threads::ThreadPool;
+using smsc::core::synchronization::EventMonitor;
+
+using smsc::logger::Logger;
 
 /* ************************************************************************** *
  * AbonentProvider as a Thread Pool of IAPQueriesAC implementations:
@@ -58,7 +58,7 @@ protected:
     std::string         _exc;   //query error/exception message
 
     //Composes taskName, it's recommended to call it in successors constructor
-    inline void mkTaskName(void)
+    void mkTaskName(void)
     {
         char buf[sizeof("[%u:%lu]") + sizeof(_qId)*3 + sizeof(usage)*3];
         snprintf(buf, sizeof(buf)-1, "[%u:%lu]", _qId, usage);
@@ -78,13 +78,13 @@ public:
     virtual const char * taskType(void) const = 0;
     //virtual int Execute(void) = 0;
 
-    inline const char *             taskName(void)                { return tName.c_str(); }
-    inline const AbonentSubscription & getAbonentInfo(void) const { return abInfo; }
-    inline const AbonentId &        getAbonentId(void)      const { return abonent; }
-    inline unsigned                 getId(void)             const { return _qId; }
-    inline unsigned long            Usage(void)             const { return usage; }
-    inline IAPQStatus::Code         Status(void)            const { return _qStatus; }
-    inline RCHash                   Error(void)             const { return _qError; }
+    const char *             taskName(void)                { return tName.c_str(); }
+    const AbonentSubscription & getAbonentInfo(void) const { return abInfo; }
+    const AbonentId &        getAbonentId(void)      const { return abonent; }
+    unsigned                 getId(void)             const { return _qId; }
+    unsigned long            Usage(void)             const { return usage; }
+    IAPQStatus::Code         Status(void)            const { return _qStatus; }
+    RCHash                   Error(void)             const { return _qError; }
     std::string                     Status2Str(void)        const;
 
 protected:

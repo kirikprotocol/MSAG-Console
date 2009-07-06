@@ -1,4 +1,3 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
  * HLR(SRI) Abonent Provider: implements functionality for quering the HLR 
  * for abonent Camel Subscription Information via SEND_ROUTING_INFO service,
@@ -18,31 +17,32 @@
  *  </section>
  * ************************************************************************** */
 #ifndef SMSC_INMAN_IAPROVIDER_HLR_SRI_HPP
+#ident "@(#)$Id$"
 #define SMSC_INMAN_IAPROVIDER_HLR_SRI_HPP
 
 #include "inman/abprov/IAProvider.hpp"
-using smsc::inman::iaprvd::IAProvider;
-using smsc::inman::iaprvd::IAProviderCreatorITF;
-using smsc::inman::iaprvd::IAProviderITF;
-
 #include "inman/abprov/facility/IAPThrFacility.hpp"
-using smsc::inman::iaprvd::IAPQueryAC;
-using smsc::inman::iaprvd::IAPQueryManagerITF;
-using smsc::core::synchronization::Mutex;
-using smsc::core::synchronization::MutexGuard;
-
 #include "inman/inap/TCDspDefs.hpp"
-using smsc::inman::inap::TCAPUsr_CFG;
-
 #include "inman/inap/map_chsri/DlgMapCHSRI.hpp"
-using smsc::inman::inap::chsri::MapCHSRIDlg;
-using smsc::inman::inap::chsri::CHSRIhandlerITF;
-
 
 namespace smsc {
 namespace inman {
 namespace iaprvd {
 namespace sri { // (S)end (R)outing (I)nfo
+
+using smsc::core::synchronization::Mutex;
+using smsc::core::synchronization::MutexGuard;
+
+using smsc::inman::iaprvd::IAProvider;
+using smsc::inman::iaprvd::IAProviderCreatorITF;
+using smsc::inman::iaprvd::IAProviderITF;
+using smsc::inman::iaprvd::IAPQueryAC;
+using smsc::inman::iaprvd::IAPQueryManagerITF;
+
+using smsc::inman::inap::TCAPUsr_CFG;
+using smsc::inman::inap::chsri::MapCHSRIDlg;
+using smsc::inman::inap::chsri::CHSRIhandlerITF;
+
 
 struct IAPQuerySRI_CFG {
     unsigned        mapTimeout;
@@ -72,7 +72,7 @@ protected:
     //if ercode != 0, dialog is aborted by reason = errcode
     void onEndMapDlg(RCHash ercode = 0);
     //
-    inline void Awake(void) { _mutex.notify(); }
+    void Awake(void) { _mutex.notify(); }
 
 
     IAPQuerySRI_CFG _cfg;
@@ -122,10 +122,10 @@ public:
     // ****************************************
     // -- IAProviderCreatorITF interface
     // ****************************************
-    inline IAProvider::Type    type(void)      const { return IAProvider::iapHLR; }
-    inline IAProvider::Ability ability(void)   const { return IAProvider::abContractSCF; }
-    inline const char *        ident(void)     const { return "iapHLR_SRI"; }
-    inline const ICSIdsSet &   ICSDeps(void) const { return icsDeps; }
+    IAProvider::Type    type(void)      const { return IAProvider::iapHLR; }
+    IAProvider::Ability ability(void)   const { return IAProvider::abContractSCF; }
+    const char *        ident(void)     const { return "iapHLR_SRI"; }
+    const ICSIdsSet &   ICSDeps(void) const { return icsDeps; }
     //
     void                logConfig(Logger * use_log = NULL) const;
     //Ensures the provider is properly initialized and returns its interface

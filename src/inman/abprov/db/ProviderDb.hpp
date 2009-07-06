@@ -1,4 +1,3 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
  * DB Abonent Provider: implements functionality for quering Oracle DB
  * for abonent contract.
@@ -31,26 +30,30 @@
  *  </section>
  * ************************************************************************** */
 #ifndef SMSC_INMAN_IAPROVIDER_DB_HPP
+#ident "@(#)$Id$"
 #define SMSC_INMAN_IAPROVIDER_DB_HPP
 
-#include "inman/abprov/IAProvider.hpp"
-using smsc::inman::iaprvd::IAProvider;
-using smsc::inman::iaprvd::IAProviderCreatorITF;
-using smsc::inman::iaprvd::IAProviderITF;
-
-#include "inman/abprov/facility/IAPThrFacility.hpp"
-using smsc::inman::iaprvd::IAPQueryAC;
-using smsc::inman::iaprvd::IAPQueryManagerITF;
-using smsc::core::synchronization::Mutex;
-using smsc::core::synchronization::MutexGuard;
-
 #include "db/DataSource.h"
-using smsc::db::DataSource;
+
+#include "inman/abprov/IAProvider.hpp"
+#include "inman/abprov/facility/IAPThrFacility.hpp"
 
 namespace smsc {
 namespace inman {
 namespace iaprvd {
 namespace db { 
+
+using smsc::core::synchronization::Mutex;
+using smsc::core::synchronization::MutexGuard;
+
+using smsc::db::DataSource;
+
+using smsc::inman::iaprvd::IAProvider;
+using smsc::inman::iaprvd::IAProviderCreatorITF;
+using smsc::inman::iaprvd::IAProviderITF;
+using smsc::inman::iaprvd::IAPQueryAC;
+using smsc::inman::iaprvd::IAPQueryManagerITF;
+
 
 struct IAPQueryDB_CFG {
     DataSource *    ds;
@@ -60,8 +63,8 @@ struct IAPQueryDB_CFG {
 
     IAPQueryDB_CFG() : ds(0), timeOut_secs(0)
     { }
-    inline const char * rtId(void) const { return sqlRtId.c_str(); }
-    inline const char * rtKey(void) const { return sqlRtKey.c_str(); }
+    const char * rtId(void) const { return sqlRtId.c_str(); }
+    const char * rtKey(void) const { return sqlRtKey.c_str(); }
 };
 
 class IAPQueryDB : public IAPQueryAC {
@@ -120,10 +123,10 @@ public:
     // ****************************************
     // -- IAProviderCreatorITF interface
     // ****************************************
-    inline IAProvider::Type    type(void)      const { return IAProvider::iapDB; }
-    inline IAProvider::Ability ability(void)   const { return IAProvider::abContract; }
-    inline const char *        ident(void)     const { return "iapDB_OCI"; }
-    inline const ICSIdsSet &   ICSDeps(void)   const { return icsDeps; }
+    IAProvider::Type    type(void)      const { return IAProvider::iapDB; }
+    IAProvider::Ability ability(void)   const { return IAProvider::abContract; }
+    const char *        ident(void)     const { return "iapDB_OCI"; }
+    const ICSIdsSet &   ICSDeps(void)   const { return icsDeps; }
     //
     void                logConfig(Logger * use_log = NULL) const;
     //Ensures the provider is properly initialized and returns its interface

@@ -1,27 +1,26 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
  * Abonent Providers interfaces definitions.
  * ************************************************************************** */
 #ifndef SMSC_INMAN_IAPROVIDER_HPP
+#ident "@(#)$Id$"
 #define SMSC_INMAN_IAPROVIDER_HPP
 
-#include "inman/abprov/IAPErrors.hpp"
-using smsc::util::RCHash;
-
 //#include "logger/Logger.h"
-//using smsc::logger::Logger;
-
+#include "inman/abprov/IAPErrors.hpp"
 #include "inman/AbntContract.hpp"
-using smsc::inman::AbonentId;
-using smsc::inman::AbonentRecord;
-
 #include "inman/services/ICSrvDefs.hpp"
-using smsc::inman::ICSIdsSet;
-using smsc::inman::ICServicesHostITF;
 
 namespace smsc {
 namespace inman {
 namespace iaprvd { //(I)NMan (A)bonent (P)roviders
+
+//using smsc::logger::Logger;
+using smsc::util::RCHash;
+using smsc::inman::AbonentId;
+using smsc::inman::AbonentRecord;
+using smsc::inman::ICSIdsSet;
+using smsc::inman::ICServicesHostITF;
+
 
 struct IAProvider {
     enum Type {
@@ -40,7 +39,7 @@ struct AbonentSubscription {
     void reset(void)
         { abRec.reset(); vlrNum.clear(); }
 
-    inline const TonNpiAddress * getVLRNum(void) const
+    const TonNpiAddress * getVLRNum(void) const
         { return vlrNum.length ? &vlrNum : NULL; }
 
     std::string vlr2Str(void) const 
