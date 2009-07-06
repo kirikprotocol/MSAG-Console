@@ -76,7 +76,7 @@
                     <attribute name="category-str" type="scag:Value" use="optional"/>
                     <attribute name="content-type-str" type="scag:Value" use="optional"/>
                     <attribute name="status" type="scag:Var" use="optional" />
-                    <attribute name="msg" type="scag:Var"/ use="required">
+                    <attribute name="msg" type="scag:Var" use="required"/>
                     <attribute name="result_number" type="scag:Var" use="optional" />
                     <!-- for ewallet -->
                     <attribute name="abonent" type="scag:Value" use="optional"/>
