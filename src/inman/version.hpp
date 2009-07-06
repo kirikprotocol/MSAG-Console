@@ -2,9 +2,30 @@
 #ident "@(#)$Id$"
 #define __SMSC_INMAN_VERSION__
 
-const unsigned INMAN_VER_HIGH    = 0;    //major verison
-const unsigned INMAN_VER_LOW     = 7;    //minor version
-const unsigned INMAN_VER_FIX     = 9;    //bug fix version
+/* -- NOTE: these defines must be set by release builder -- */
+#define INMAN_BUILD_NUM   3105
+#define INMAN_BUILD_DATE  "Jun 18 2009"
+/* -- -------------------------------------------------- -- */
+
+/* -- NOTE: these defines are set by developers -- */
+#define INMAN_VER_MAJOR     0    //major verison
+#define INMAN_VER_MINOR     7    //minor version
+#define INMAN_VER_FIX       9    //bug fix version
+/* -- ----------------------------------------- -- */
+
+#define INMAN_VENDOR        "Sibinco"
+#define INMAN_PRODUCT_NAME  "IN Manager"
+
+#ifdef __cplusplus
+#define EXTERN extern "C"
+#else
+#define EXTERN extern 
+#endif
+
+//version string in format that 'what' utility understands
+EXTERN const char * _what_product_version;
+//
+EXTERN const char * _getProductVersionStr(void);
 
 #endif /* __SMSC_INMAN_VERSION__ */
 

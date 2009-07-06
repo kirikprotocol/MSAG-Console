@@ -1,5 +1,5 @@
 #ifndef MOD_IDENT_OFF
-static char const ident[] = "$Id$";
+static char const ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_OFF */
 
 #include <assert.h>
@@ -43,14 +43,22 @@ int main(int argc, char** argv)
     Logger::Init();
     inmanLogger = Logger::getInstance("smsc.inman");
 
-    smsc_log_info(inmanLogger,"******************************");
-    smsc_log_info(inmanLogger,"* SIBINCO IN MANAGER v%u.%u.%u *",
-                  INMAN_VER_HIGH, INMAN_VER_LOW, INMAN_VER_FIX);
-    smsc_log_info(inmanLogger,"******************************");
     if (argc > 1)
         cfgFile = argv[1];
-    smsc_log_info(inmanLogger,"* Config file: %s", cfgFile);
-    smsc_log_info(inmanLogger,"******************************");
+
+    std::string prodVer(_getProductVersionStr());
+    {
+      char * delim = new char[prodVer.length() + 4 + 1];
+      memset(delim, '*', prodVer.length() + 4);
+
+      smsc_log_info(inmanLogger, delim);
+      smsc_log_info(inmanLogger,"* %s *", prodVer.c_str());
+      smsc_log_info(inmanLogger, delim);
+      smsc_log_info(inmanLogger,"* Config file: %s", cfgFile);
+      smsc_log_info(inmanLogger, delim);
+
+      delete [] delim;
+    }
 
     try {
         std::auto_ptr<Config> config(XCFManager::getInstance().getConfig(cfgFile));
@@ -91,7 +99,7 @@ int main(int argc, char** argv)
     }
     if (_svcHost)
         delete _svcHost;
-    smsc_log_info(inmanLogger, "IN MANAGER shutdown complete");
+    smsc_log_info(inmanLogger, "%s shutdown complete", INMAN_PRODUCT_NAME);
     return rval;
 }
 
