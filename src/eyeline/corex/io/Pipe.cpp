@@ -1,6 +1,6 @@
-#include <eyeline/corex/io/Pipe.hpp>
 #include <unistd.h>
 #include <stdio.h>
+#include "eyeline/corex/io/Pipe.hpp"
 
 namespace eyeline {
 namespace corex {
@@ -15,7 +15,7 @@ UnnamedPipe::UnnamedPipe()
 }
 
 UnnamedPipe::~UnnamedPipe()
-{ 
+{
   close();
 }
 
@@ -54,7 +54,9 @@ UnnamedPipe::toString() const
 }
 
 UnnamedPipe::PipeEnd::PipeEnd(UnnamedPipe* creator, int fd)
-  : _creator(creator), _fd(fd), _inputStream(this, _fd), _outputStream(this, _fd)
+  : _creator(creator), _fd(fd),
+    _inputStream(new GenericInputStream(this, _fd)),
+    _outputStream(new GenericOutputStream(this, _fd))
 {}
 
 UnnamedPipe::PipeEnd::~PipeEnd()
@@ -81,15 +83,15 @@ UnnamedPipe::PipeEnd::setNonBlocking(bool on)
 }
 
 InputStream*
-UnnamedPipe::PipeEnd::getInputStream()
+UnnamedPipe::PipeEnd::getInputStream() const
 {
-  return &_inputStream;
+  return _inputStream;
 }
 
 OutputStream*
-UnnamedPipe::PipeEnd::getOutputStream()
+UnnamedPipe::PipeEnd::getOutputStream() const
 {
-  return &_outputStream;
+  return _outputStream;
 }
 
 std::string
@@ -103,6 +105,9 @@ UnnamedPipe::PipeEnd::toString() const
 int
 UnnamedPipe::PipeEnd::_getDescriptor()
 {
+  if ( _fd == -1 )
+    throw smsc::util::Exception("UnnamedPipe::PipeEnd::_getDescriptor::: pipe closed");
+
   return _fd;
 }
 
