@@ -73,6 +73,24 @@ public:
   {
     SMSC_UTIL_EX_FILL(fmt);
   }
+protected:
+  ConnectionFailedException() {}
+};
+
+class ConnectionTimedoutException : public ConnectionFailedException {
+public:
+  ConnectionTimedoutException(const char * fmt, ...)
+  {
+    SMSC_UTIL_EX_FILL(fmt);
+  }
+};
+
+class PollException : public IOException {
+public:
+  PollException(const char * fmt, ...)
+  {
+    SMSC_UTIL_EX_FILL(fmt);
+  }
 };
 
 }}}
