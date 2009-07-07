@@ -1,29 +1,30 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
  * Simple console application testing MAP Any Time Subscription Interrogation
  * service of HLR.
  * ************************************************************************** */
 #ifndef __SMSC_INMAN_ATIH_SERVICE__
+#ident "@(#)$Id$"
 #define __SMSC_INMAN_ATIH_SERVICE__
 
 #include <map>
 
-#include "inman/inap/dispatcher.hpp"
-using smsc::inman::inap::TCAPDispatcher;
-
 #include "inman/comp/map_atih/MapATSIComps.hpp"
-using smsc::inman::comp::atih::ATSIRes;
-using smsc::inman::comp::atih::ATSIArg;
-
 #include "inman/inap/map_atih/DlgMapATSI.hpp"
-using smsc::inman::inap::atih::ATSIhandlerITF;
-using smsc::inman::inap::atih::MapATSIDlg;
+#include "inman/inap/dispatcher.hpp"
 
 #include "inman/utilbin/MAPUsrCfg.hpp"
-using smsc::inman::inap::MAPUsr_CFG;
 
 namespace smsc  {
 namespace inman {
+
+using smsc::inman::comp::atih::ATSIRes;
+using smsc::inman::comp::atih::ATSIArg;
+
+using smsc::inman::inap::TCAPDispatcher;
+using smsc::inman::inap::MAPUsr_CFG;
+
+using smsc::inman::inap::atih::ATSIhandlerITF;
+using smsc::inman::inap::atih::MapATSIDlg;
 
 class ATCSIListener {
 public:

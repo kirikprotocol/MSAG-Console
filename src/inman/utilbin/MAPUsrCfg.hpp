@@ -1,8 +1,8 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
- * 
+ * MAP user XML config parser.
  * ************************************************************************** */
 #ifndef __INMAN_MAPUSER_CFG_READER_HPP__
+#ident "@(#)$Id$"
 #define __INMAN_MAPUSER_CFG_READER_HPP__
 
 #include "inman/inap/TCXCfgParser.hpp"
@@ -56,8 +56,8 @@ public:
         dspParser.readConfig(root_sec, stCfg->ss7); //throws
     }
 
-    inline MAPUsr_CFG * rlseConfig(void) { return stCfg.release(); }
-    inline MAPUsr_CFG * getConfig(void) const { return stCfg.get(); }
+    MAPUsr_CFG * rlseConfig(void) { return stCfg.release(); }
+    MAPUsr_CFG * getConfig(void) const { return stCfg.get(); }
 };
 
 } //inap

@@ -1,8 +1,8 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
- * 
+ * Helpers: AbonentInfo registry.
  * ************************************************************************** */
 #ifndef __INMAN_ABONENTS_DB_HPP__
+#ident "@(#)$Id$"
 #define __INMAN_ABONENTS_DB_HPP__
 
 #include "util/TonNpiAddress.hpp"
@@ -55,7 +55,7 @@ public:
         return instance;
     }
 
-    inline unsigned size(void) const { return (unsigned)_known.size(); }
+    unsigned size(void) const { return (unsigned)_known.size(); }
     const AbonentISDN * get(void) const { return &(_known[0]); }
 };
 
@@ -101,12 +101,12 @@ public:
         return (unsigned)registry.size();
     }
 
-    inline unsigned Init(void)
+    unsigned Init(void)
     {
         return Init(KnownAbonents::getInstance().size(),
                     KnownAbonents::getInstance().get());
     }
-    inline unsigned getMaxAbId(void) const { return lastAbnId; }
+    unsigned getMaxAbId(void) const { return lastAbnId; }
 
     unsigned addAbonent(TonNpiAddress * p_isdn, char * p_imsi)
     {

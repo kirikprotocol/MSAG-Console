@@ -1,10 +1,9 @@
-#pragma ident "$Id$"
 /* ************************************************************************* *
  * Global return codes registry initialization for MAP services.
  * ************************************************************************* */
 #ifndef __INMAN_URCREGISTRY_INIT_MAP_HPP
+#ident "@(#)$Id$"
 #define __INMAN_URCREGISTRY_INIT_MAP_HPP
-
 
 #ifdef URCREGISTRY_GLOBAL_INIT
 #include "inman/inap/SS7MsgErrors.hpp"

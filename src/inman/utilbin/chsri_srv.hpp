@@ -1,29 +1,30 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
  * Simple console application testing MAP Send Routing Info (Call Handling)
  * service of HLR.
  * ************************************************************************** */
 #ifndef __SMSC_INMAN_CHSRI_SERVICE__
+#ident "@(#)$Id$"
 #define __SMSC_INMAN_CHSRI_SERVICE__
 
-//#include <map>
-
-#include "inman/inap/dispatcher.hpp"
-using smsc::inman::inap::TCAPDispatcher;
+#include <map>
 
 #include "inman/comp/map_chsri/MapCHSRIComps.hpp"
-using smsc::inman::comp::chsri::CHSendRoutingInfoRes;
-using smsc::inman::comp::chsri::CHSendRoutingInfoArg;
-
 #include "inman/inap/map_chsri/DlgMapCHSRI.hpp"
-using smsc::inman::inap::chsri::CHSRIhandlerITF;
-using smsc::inman::inap::chsri::MapCHSRIDlg;
+#include "inman/inap/dispatcher.hpp"
 
 #include "inman/utilbin/MAPUsrCfg.hpp"
-using smsc::inman::inap::MAPUsr_CFG;
 
 namespace smsc  {
 namespace inman {
+
+using smsc::inman::comp::chsri::CHSendRoutingInfoRes;
+using smsc::inman::comp::chsri::CHSendRoutingInfoArg;
+
+using smsc::inman::inap::TCAPDispatcher;
+using smsc::inman::inap::MAPUsr_CFG;
+
+using smsc::inman::inap::chsri::CHSRIhandlerITF;
+using smsc::inman::inap::chsri::MapCHSRIDlg;
 
 class SRI_CSIListener {
 public:

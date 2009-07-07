@@ -1,14 +1,7 @@
-<<<<<<< ussman_emulator.cpp
 #ifndef MOD_IDENT_OFF
-static char const ident[] = "$Id$";
+static char const ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_OFF */
 
-=======
-#ifndef MOD_IDENT_OFF
-static char const ident[] = "$Id$";
-#endif /* MOD_IDENT_OFF */
-
->>>>>>> 1.2
 #include <util/config/Manager.h>
 #include <util/config/ConfigView.h>
 
