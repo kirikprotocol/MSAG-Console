@@ -1,5 +1,5 @@
-#pragma ident "$Id$"
 #ifndef _INMANEMU_BILL_BILLING_SERVER_
+#ident "@(#)$Id$"
 #define _INMANEMU_BILL_BILLING_SERVER_
 
 #include <logger/Logger.h>
@@ -53,5 +53,5 @@ public:
 
 }}
 
-#endif
+#endif /* _INMANEMU_BILL_BILLING_SERVER_ */
 
