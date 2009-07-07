@@ -1,18 +1,19 @@
-#pragma ident "$Id$"
 /* ************************************************************************* *
  * Abonents Cache service types, interfaces and helpers definitions
  * ************************************************************************* */
 #ifndef __INMAN_ABONENTS_CACHE_DEFS_HPP
+#ident "@(#)$Id$"
 #define __INMAN_ABONENTS_CACHE_DEFS_HPP
 
 #include "inman/AbntContract.hpp"
-using smsc::inman::AbonentContractInfo;
-using smsc::inman::AbonentRecord;
-using smsc::inman::AbonentId;
 
 namespace smsc {
 namespace inman {
 namespace cache {
+
+using smsc::inman::AbonentContractInfo;
+using smsc::inman::AbonentRecord;
+using smsc::inman::AbonentId;
 
 struct AbonentCacheCFG {
     static const uint32_t   _MAX_CACHE_INTERVAL = 65535; //minutes >= 45 days
