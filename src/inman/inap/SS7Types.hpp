@@ -1,8 +1,8 @@
-#pragma ident "$Id$"
 /* ************************************************************************* *
  * Common Types used by SS7 releated stuff.
  * ************************************************************************* */
 #ifndef __SMSC_SS7_COMMON_TYPES__
+#ident "@(#)$Id$"
 #define __SMSC_SS7_COMMON_TYPES__
 
 #include <inttypes.h>

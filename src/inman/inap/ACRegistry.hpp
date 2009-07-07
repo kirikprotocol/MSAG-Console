@@ -1,23 +1,24 @@
-#pragma ident "$Id$"
 /* ************************************************************************* *
  * Application Context registry - facility of ROS operations factories.
  * ************************************************************************* */
 /* NOTE: ApplicationContextRegistry initialization is not a threadsafe one!! */
 #ifndef __INMAN_INAP_ACREGISTRY_HPP
+#ident "@(#)$Id$"
 #define __INMAN_INAP_ACREGISTRY_HPP
 
 #include "core/synchronization/Mutex.hpp"
-using smsc::core::synchronization::Mutex;
-using smsc::core::synchronization::MutexGuard;
 
 #include "inman/common/ObjRegistryT.hpp"
-using smsc::util::POBJRegistry_T;
-
 #include "inman/inap/ACRegDefs.hpp"
 
 namespace smsc {
 namespace inman {
 namespace inap {
+
+using smsc::core::synchronization::Mutex;
+using smsc::core::synchronization::MutexGuard;
+using smsc::util::POBJRegistry_T;
+
 
 class ApplicationContextRegistry : public ApplicationContextRegistryITF,
                                 POBJRegistry_T<EncodedOID, ROSComponentsFactory> {

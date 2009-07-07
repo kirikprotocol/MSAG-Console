@@ -1,18 +1,20 @@
-#pragma ident "$Id$"
 /* ************************************************************************* *
  * EINSS7 Common parts error codes descriptions(Release 5)
  * ************************************************************************* */
 #ifndef __SMSC_INMAN_INAP_SS7_MSG_ERRORS__
+#ident "@(#)$Id$"
 #define __SMSC_INMAN_INAP_SS7_MSG_ERRORS__
 
 #include "ss7cp.h"
 
 #include "util/URCdb/URCRegistry.hpp"
-using smsc::util::URCSpacePTR;
 
 namespace smsc {
 namespace inman {
 namespace inap {
+
+using smsc::util::URCSpacePTR;
+
 /* -------------------------------------------------------------------------- *
  * EINSS7 Common parts error codes descriptions(Release 5):
  * -------------------------------------------------------------------------- */

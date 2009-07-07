@@ -1,18 +1,19 @@
-#pragma ident "$Id$"
 /* ************************************************************************* *
  * Application Context registry interface and definitions.
  * ************************************************************************* */
 #ifndef __INMAN_INAP_ACREGISTRY_DEFS_HPP
+#ident "@(#)$Id$"
 #define __INMAN_INAP_ACREGISTRY_DEFS_HPP
 
 #include "inman/comp/ROSFactory.hpp"
-using smsc::inman::comp::ROSFactoryProducer;
-using smsc::inman::comp::ROSComponentsFactory;
-using smsc::inman::comp::EncodedOID;
 
 namespace smsc {
 namespace inman {
 namespace inap {
+
+using smsc::inman::comp::ROSFactoryProducer;
+using smsc::inman::comp::ROSComponentsFactory;
+using smsc::inman::comp::EncodedOID;
 
 class ApplicationContextRegistryITF {
 public:

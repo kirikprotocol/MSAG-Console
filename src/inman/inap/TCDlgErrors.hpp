@@ -1,16 +1,17 @@
-#pragma ident "$Id$"
 /* ************************************************************************* *
  * TCAP dialog error codes.
  * ************************************************************************* */
 #ifndef __SMSC_INMAN_INAP_TCDIALOG_ERR__
+#ident "@(#)$Id$"
 #define __SMSC_INMAN_INAP_TCDIALOG_ERR__
 
 #include "util/URCdb/URCRegistry.hpp"
-using smsc::util::URCSpacePTR;
 
 namespace smsc {
 namespace inman {
 namespace inap {
+
+using smsc::util::URCSpacePTR;
 
 struct TC_DlgError {
     enum Codes {

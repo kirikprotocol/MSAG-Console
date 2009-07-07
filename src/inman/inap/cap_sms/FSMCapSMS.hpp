@@ -1,18 +1,19 @@
-#ident "$Id$"
 /* ************************************************************************* *
  * SSF (Service Switching Function) FSM for CAP3Sms
  * 3GPP TS 23.078 version 6.x.x Release 6, clause 7.5.5
  * 3GPP TS 29.078 version 6.x.x Release 6, clause 12
  * ************************************************************************* */
 #ifndef __SMSC_INMAN_INAP_CAP3SMS_FSM__
+#ident "@(#)$Id$"
 #define __SMSC_INMAN_INAP_CAP3SMS_FSM__
 
 #include "inman/comp/cap_sms/CapSMSComps.hpp"
-using smsc::inman::comp::SMSEventDPs;
 
 namespace smsc {
 namespace inman {
 namespace inap {
+
+using smsc::inman::comp::SMSEventDPs;
 
 /* cap3SMS CONTRACT:    CapSMSDlg(SSF) <-> In-platform(SCF)
 

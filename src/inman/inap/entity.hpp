@@ -1,17 +1,17 @@
-#pragma ident "$Id$"
 /* ************************************************************************* *
  * Transaction Component with local operation tag (no objId as opcode).
  * ************************************************************************* */
 #ifndef __SMSC_INMAN_TCAP_ENTITY__
+#ident "@(#)$Id$"
 #define __SMSC_INMAN_TCAP_ENTITY__
 
 #include "inman/comp/compdefs.hpp"
 
-using smsc::inman::comp::Component;
-
 namespace smsc  {
 namespace inman {
 namespace inap  {
+
+using smsc::inman::comp::Component;
 
 typedef std::vector<unsigned char> RawBuffer;
 
@@ -27,14 +27,14 @@ public:
 
     virtual ~TcapEntity() { if (ownComp) delete param; }
 
-    inline TCEntityKind kind() const           { return ekind; }
-    inline uint8_t     getId() const           { return id; }
-    inline uint8_t     getOpcode() const       { return opcode; }
-    inline Component*  getParam() const        { return param; }
+    TCEntityKind kind() const           { return ekind; }
+    uint8_t     getId() const           { return id; }
+    uint8_t     getOpcode() const       { return opcode; }
+    Component*  getParam() const        { return param; }
     //sets 'param' without passing ownership, it's caller responsibility to free Component
-    inline void        setParam(Component* p)  { param = p; ownComp = false; }
+    void        setParam(Component* p)  { param = p; ownComp = false; }
     //grands the ownership of 'param', Component will be freed by ~TcapEntity()
-    inline void        ownParam(Component* p)  { param = p; ownComp = true; }
+    void        ownParam(Component* p)  { param = p; ownComp = true; }
 
     //throws CustomException
     void encode(RawBuffer& operation, RawBuffer& params) const throw(CustomException)

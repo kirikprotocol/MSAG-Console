@@ -1,12 +1,13 @@
-#pragma ident "$Id$"
 /* ************************************************************************* *
  * Transaction Component: ROS::Invoke
  * ************************************************************************* */
 #ifndef __SMSC_INMAN_TCAP_INVOKE__
+#ident "@(#)$Id$"
 #define __SMSC_INMAN_TCAP_INVOKE__
 
-#include "inman/inap/entity.hpp"
 #include <string>
+
+#include "inman/inap/entity.hpp"
 
 namespace smsc  {
 namespace inman {
@@ -28,15 +29,15 @@ public:
     ~Invoke()
     {}
 
-    inline void           setStatus(InvokeStatus use_st) { _status = use_st; }
-    inline InvokeStatus   getStatus(void) const { return _status; }
-    inline InvokeResponse getResultType(void) const { return _respType; }
+    void           setStatus(InvokeStatus use_st) { _status = use_st; }
+    InvokeStatus   getStatus(void) const { return _status; }
+    InvokeResponse getResultType(void) const { return _respType; }
     
-    inline void  linkTo(Invoke * linkedInv) { _linkedTo = linkedInv; }
-    inline const Invoke * getLinkedTo(void) const { return _linkedTo; }
+    void  linkTo(Invoke * linkedInv) { _linkedTo = linkedInv; }
+    const Invoke * getLinkedTo(void) const { return _linkedTo; }
 
-    inline void setTimeout(uint16_t timeOut) { _timeout = timeOut; }
-    inline uint16_t getTimeout(void) const   { return _timeout; }
+    void setTimeout(uint16_t timeOut) { _timeout = timeOut; }
+    uint16_t getTimeout(void) const   { return _timeout; }
 
     std::string strStatus(void)
     {
