@@ -1,6 +1,7 @@
 #include <algorithm>
-#include <util/Exception.hpp>
-#include <eyeline/utilx/Exception.hpp>
+#include <utility>
+#include "util/Exception.hpp"
+#include "eyeline/utilx/Exception.hpp"
 
 namespace eyeline {
 namespace corex {
@@ -68,10 +69,23 @@ IOObjectsPool_tmpl<LOCK>::listen(uint32_t timeout)
   for (int j=0; j<_socketsCount; ++j) {
     int readyFd;
     if ( (readyFd = _snaphots_fds[j].fd) > -1 && _snaphots_fds[j].revents ) {
+      if ( _snaphots_fds[j].revents & POLLNVAL ) {
+        in_mask_t::iterator in_iter = _inMask.find(readyFd);
+        if ( in_iter != _inMask.end() ) {
+          updatePollIndexes(readyFd, POLLRDNORM);
+          _inMask.erase(in_iter);
+        }
+        out_mask_t::iterator out_iter = _outMask.find(readyFd);
+        if ( out_iter != _outMask.end() ) {
+          updatePollIndexes(readyFd, POLLWRNORM);
+          _outMask.erase(out_iter);
+        }
+        throw PollException("IOObjectsPool_tmpl::listen::: descriptor [=%d] has been closed", readyFd);
+      }
       if ( _snaphots_fds[j].revents & POLLRDNORM ) {
         in_mask_t::iterator in_iter = _inMask.find(readyFd);
         if ( in_iter != _inMask.end() )
-          _inputEventsReady.push_back(in_iter->second);
+          _inputEventsReady.insert(std::make_pair(in_iter->first, in_iter->second));
         else {
           accept_mask_t::iterator accept_iter = _acceptMask.find(readyFd);
           if ( accept_iter != _acceptMask.end() )
@@ -81,7 +95,7 @@ IOObjectsPool_tmpl<LOCK>::listen(uint32_t timeout)
       if ( _snaphots_fds[j].revents & POLLWRNORM ) {
         out_mask_t::iterator out_iter = _outMask.find(readyFd);
         if ( out_iter != _outMask.end() )
-          _outputEventsReady.push_back(out_iter->second);
+          _outputEventsReady.insert(std::make_pair(out_iter->first, out_iter->second));
       }
       --st;
     }
@@ -110,7 +124,8 @@ IOObjectsPool_tmpl<LOCK>::insert(InputStream* iStream)
 
   if ( (idx=_used_fds[fd]) == -1 ) {
     if ( _socketsCount == _maxPoolSize )
-      throw smsc::util::Exception("IOObjectsPool_tmpl::insert(iStream=%p)::: exceeded max pool size", iStream);
+      throw smsc::util::Exception("IOObjectsPool_tmpl::insert(iStream=%p)::: exceeded max pool size",
+                                  iStream);
     _fds[_socketsCount].events = POLLRDNORM;
     _fds[_socketsCount].fd = fd;
 
@@ -131,10 +146,14 @@ IOObjectsPool_tmpl<LOCK>::insert(OutputStream* oStream)
   smsc::core::synchronization::MutexGuardTmpl<LOCK> guard(_lock);
   if ( (idx=_used_fds[fd]) == -1 ) {
     if ( _socketsCount == _maxPoolSize )
-      throw smsc::util::Exception("IOObjectsPool_tmpl::insert(oStream=%p)::: exceeded max pool size", oStream);
+      throw smsc::util::Exception("IOObjectsPool_tmpl::insert(oStream=%p)::: exceeded max pool size",
+                                  oStream);
     _fds[_socketsCount].events = POLLWRNORM;
+    _fds[_socketsCount].fd = fd;
+
     _used_fds[fd] = _socketsCount++;
     _outMask.insert(std::make_pair(fd, oStream));
+
   } else {
     _fds[idx].events |= POLLWRNORM;
     _outMask.insert(std::make_pair(fd, oStream));
@@ -159,23 +178,41 @@ IOObjectsPool_tmpl<LOCK>::insert(corex::io::network::ServerSocket* socket)
 }
 
 template <class LOCK>
-void
-IOObjectsPool_tmpl<LOCK>::updatePollIndexes(int fd)
+bool
+IOObjectsPool_tmpl<LOCK>::updatePollIndexes(int fd, short event)
 {
   int idx = _used_fds[fd];
+
+  assert( idx < _maxPoolSize);
+  if ( idx < 0 ) return false;
+
+  assert(_socketsCount>=1);
+
   if ( idx == _socketsCount-1 ) {
-    _fds[idx].fd = -1;
-    _fds[idx].events = 0;
-    --_socketsCount;
-    _used_fds[fd] = -1;
+    if ( event )
+      _fds[idx].events &= ~event;
+    else
+      _fds[idx].events = 0;
+    if ( !_fds[idx].events ) {
+      --_socketsCount;
+      _used_fds[fd] = -1;
+      _fds[idx].fd = -1;
+    }
   } else {
-    _used_fds[fd] = -1;
-    _fds[idx] = _fds[_socketsCount-1];
-    _used_fds[_fds[idx].fd] = idx;
-    _fds[_socketsCount-1].fd = -1;
-    _fds[_socketsCount-1].events = 0;
-    --_socketsCount;
+    if ( event )
+      _fds[idx].events &= ~event;
+    else
+      _fds[idx].events = 0;
+    if ( !_fds[idx].events ) {
+      _used_fds[fd] = -1;
+      _fds[idx] = _fds[_socketsCount-1];
+      _used_fds[_fds[idx].fd] = idx;
+      _fds[_socketsCount-1].fd = -1;
+      _fds[_socketsCount-1].events = 0;
+      --_socketsCount;
+    }
   }
+  return true;
 }
 
 template <class LOCK>
@@ -185,8 +222,11 @@ IOObjectsPool_tmpl<LOCK>::remove(InputStream* iStream)
   int fd = iStream->getOwner()->getDescriptor();
 
   smsc::core::synchronization::MutexGuardTmpl<LOCK> guard(_lock);
+  if ( !updatePollIndexes(fd, POLLRDNORM) )
+    return;
+
+  _inputEventsReady.erase(fd);
   _inMask.erase(fd);
-  updatePollIndexes(fd);
 }
 
 template <class LOCK>
@@ -196,8 +236,11 @@ IOObjectsPool_tmpl<LOCK>::remove(OutputStream* oStream)
   int fd = oStream->getOwner()->getDescriptor();
 
   smsc::core::synchronization::MutexGuardTmpl<LOCK> guard(_lock);
+  if ( !updatePollIndexes(fd, POLLWRNORM) )
+    return;
+
+  _outputEventsReady.erase(fd);
   _outMask.erase(fd);
-  updatePollIndexes(fd);
 }
 
 template <class LOCK>
@@ -207,9 +250,13 @@ IOObjectsPool_tmpl<LOCK>::remove(IOObject* streamsOwner)
   int fd = streamsOwner->getDescriptor();
 
   smsc::core::synchronization::MutexGuardTmpl<LOCK> guard(_lock);
+  if ( !updatePollIndexes(fd) )
+    return;
+
+  _inputEventsReady.erase(fd);
+  _outputEventsReady.erase(fd);
   _inMask.erase(fd);
   _outMask.erase(fd);
-  updatePollIndexes(fd);
 }
 
 template <class LOCK>
@@ -219,8 +266,10 @@ IOObjectsPool_tmpl<LOCK>::remove(corex::io::network::ServerSocket* socket)
   int fd = socket->getDescriptor();
 
   smsc::core::synchronization::MutexGuardTmpl<LOCK> guard(_lock);
+  if ( !updatePollIndexes(fd) )
+    return;
+
   _acceptMask.erase(fd);
-  updatePollIndexes(fd);
 }
 
 template <class LOCK>
@@ -230,8 +279,9 @@ IOObjectsPool_tmpl<LOCK>::getNextReadyOutputStream()
   smsc::core::synchronization::MutexGuardTmpl<LOCK> guard(_lock);
   if ( _outputEventsReady.empty() ) return NULL;
   else {
-    OutputStream* oStream = _outputEventsReady.front();
-    _outputEventsReady.pop_front();
+    out_events_t::iterator iter = _outputEventsReady.begin();
+    OutputStream* oStream = iter->second;
+    _outputEventsReady.erase(iter);
     return oStream;
   }
 }
@@ -243,8 +293,9 @@ IOObjectsPool_tmpl<LOCK>::getNextReadyInputStream()
   smsc::core::synchronization::MutexGuardTmpl<LOCK> guard(_lock);
   if ( _inputEventsReady.empty() ) return NULL;
   else {
-    InputStream* iStream = _inputEventsReady.front();
-    _inputEventsReady.pop_front();
+    in_events_t::iterator iter = _inputEventsReady.begin();
+    InputStream* iStream = iter->second;
+    _inputEventsReady.erase(iter);
     return iStream;
   }
 }
