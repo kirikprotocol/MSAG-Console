@@ -1,8 +1,9 @@
-#include "SCTPSocket.hpp"
 #include <string.h>
 #include <netdb.h>
 #include <unistd.h>
-#include <eyeline/utilx/Exception.hpp>
+
+#include "eyeline/utilx/Exception.hpp"
+#include "SCTPSocket.hpp"
 
 namespace eyeline {
 namespace corex {
@@ -50,12 +51,7 @@ SCTPSocket::SCTPSocket(int sockfd)
     throw smsc::util::SystemError("SCTPSocket::SCTPSocket::: input socket fd value is less than 0");
 
   _inputStream = new SctpInputStream(this, sockfd);
-  if ( !_inputStream )
-    throw smsc::util::SystemError("SCTPSocket::SCTPSocket::: can't allocate memory for InputStream");
-
   _outputStream = new SctpOutputStream(this, sockfd);
-  if ( !_outputStream )
-    throw smsc::util::SystemError("SCTPSocket::SCTPSocket::: can't allocate memory for OutputStream");
 
   struct sctp_event_subscribe evnts;
 
@@ -72,8 +68,8 @@ SCTPSocket::SCTPSocket(int sockfd)
 
 SCTPSocket::~SCTPSocket()
 {
-  close();
   delete _inputStream; delete _outputStream;
+  close();
 }
 
 void
@@ -118,14 +114,14 @@ SCTPSocket::fillToStringInfo()
 }
 
 SctpInputStream*
-SCTPSocket::getInputStream()
+SCTPSocket::getInputStream() const
 {
   if ( !_inputStream ) throw corex::io::NotConnected("SCTPSocket::getInputStream::: socket not connected");
   return _inputStream;
 }
 
 SctpOutputStream*
-SCTPSocket::getOutputStream()
+SCTPSocket::getOutputStream() const
 {
   if ( !_outputStream ) throw corex::io::NotConnected("SCTPSocket::getOutputStream::: socket not connected");
   return _outputStream;
@@ -172,7 +168,7 @@ SCTPSocket::setSoLinger(bool on, int timeout)
     throw smsc::util::SystemError("SCTPSocket::setSoLinger::: call to setsockopt(SO_LINGER) failed");
 }
 
-void 
+void
 SCTPSocket::connect()
 {
   if ( _dst_host == "" )
@@ -236,6 +232,8 @@ SCTPSocket::toString() const
 int
 SCTPSocket::_getDescriptor()
 {
+  if ( _sockfd == -1 )
+      throw smsc::util::Exception("SCTPSocket::_getDescriptor::: socket closed");
   return _sockfd;
 }
 
@@ -307,7 +305,9 @@ SctpOutputStream::writev(const struct iovec *iov, int iovcnt) const
 
 IOObject*
 SctpOutputStream::getOwner()
-{ return _owner; }
+{
+  return _owner;
+}
 
 SctpInputStream::SctpInputStream(IOObject* owner, int fd)
   : _owner(owner), _fd(fd)
@@ -328,14 +328,14 @@ SctpInputStream::read(uint8_t *buf, size_t bufSz)
 
     if ( msg_flags & MSG_NOTIFICATION ) {
       sctp_notification* snp = (sctp_notification*)buf;
-      
+
       if ( snp->sn_header.sn_type == SCTP_PEER_ADDR_CHANGE ) {
         const sctp_paddr_change& sac = snp->sn_paddr_change;
         char ip_address[32]={0};
-        
+
         if ( sac.spc_aaddr.ss_family == AF_INET ) {
           struct sockaddr_in* sin_addr = (struct sockaddr_in* )&sac.spc_aaddr;
-          
+
           inet_ntop(AF_INET, &sin_addr->sin_addr, ip_address, static_cast<int>(sizeof(ip_address)));
         }
       }
@@ -354,9 +354,17 @@ SctpInputStream::read(uint8_t *buf, size_t bufSz)
   return result;
 }
 
+ssize_t
+SctpInputStream::readv(const struct iovec *iov, int iovcnt)
+{
+  throw smsc::util::SystemError("SctpInputStream::readv::: not implemented");
+}
+
 IOObject*
 SctpInputStream::getOwner()
-{ return _owner; }
+{
+  return _owner;
+}
 
 uint16_t
 SctpInputStream::getStreamNo() const
