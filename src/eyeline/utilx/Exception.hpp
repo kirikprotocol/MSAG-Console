@@ -1,7 +1,7 @@
 #ifndef __EYELINE_UTILX_EXCEPTION_HPP__
 # define __EYELINE_UTILX_EXCEPTION_HPP__
 
-# include <util/Exception.hpp>
+# include "util/Exception.hpp"
 
 namespace eyeline {
 namespace utilx {
@@ -90,6 +90,15 @@ public:
 class RegistryKeyNotFound : public smsc::util::Exception {
 public:
   RegistryKeyNotFound(const char * fmt, ...)
+    : Exception()
+  {
+    SMSC_UTIL_EX_FILL(fmt);
+  }
+};
+
+class DuplicatedRegistryKeyException  : public smsc::util::Exception {
+public:
+  DuplicatedRegistryKeyException(const char * fmt, ...)
     : Exception()
   {
     SMSC_UTIL_EX_FILL(fmt);
