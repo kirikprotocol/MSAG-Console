@@ -1,8 +1,8 @@
 #ifndef __EYELINE_COREX_NETWORK_SERVERSOCKET_HPP__
 # define __EYELINE_COREX_NETWORK_SERVERSOCKET_HPP__
 
-# include <eyeline/corex/io/network/Socket.hpp>
 # include <string>
+# include "eyeline/corex/io/network/Socket.hpp"
 
 template <class LOCK>
 class eyeline::corex::io::IOObjectsPool_tmpl;

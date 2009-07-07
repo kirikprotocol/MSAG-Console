@@ -1,8 +1,8 @@
 #ifndef __EYELINE_COREX_NETWORK_TCPSERVERSOCKET_HPP__
 # define __EYELINE_COREX_NETWORK_TCPSERVERSOCKET_HPP__
 
-# include <eyeline/corex/io/network/ServerSocket.hpp>
-# include <eyeline/corex/io/network/TCPSocket.hpp>
+# include "eyeline/corex/io/network/ServerSocket.hpp"
+# include "eyeline/corex/io/network/TCPSocket.hpp"
 
 namespace eyeline {
 namespace corex {

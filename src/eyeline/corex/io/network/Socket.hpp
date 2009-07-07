@@ -4,9 +4,10 @@
 # include <sys/types.h>
 # include <netinet/in.h>
 # include <string>
-# include <util/Exception.hpp>
-# include <eyeline/corex/io/IOStreams.hpp>
-# include <eyeline/corex/io/IOObject.hpp>
+
+# include "util/Exception.hpp"
+# include "eyeline/corex/io/IOStreams.hpp"
+# include "eyeline/corex/io/IOObject.hpp"
 
 namespace eyeline {
 namespace corex {

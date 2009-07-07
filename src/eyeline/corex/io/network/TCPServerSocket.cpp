@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <util/Exception.hpp>
 
+#include "util/Exception.hpp"
 #include "TCPServerSocket.hpp"
 
 namespace eyeline {
