@@ -1,20 +1,22 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
  * Configurable Services Host config file parsing.
  * ************************************************************************** */
 #ifndef __INMAN_TCPSERVER_CONFIG_PARSING__
+#ident "@(#)$Id$"
 #define __INMAN_TCPSERVER_CONFIG_PARSING__
 
 #include "inman/interaction/server.hpp"
-using smsc::inman::interaction::ServSocketCFG;
 
 #include "inman/services/ICSCfgReader.hpp"
-using smsc::inman::ICSIdent;
-using smsc::inman::ICSrvCfgReaderAC_T;
 
 namespace smsc {
 namespace inman {
 namespace tcpsrv {
+
+using smsc::inman::ICSIdent;
+using smsc::inman::ICSrvCfgReaderAC_T;
+
+using smsc::inman::interaction::ServSocketCFG;
 
 class ICSTcpSrvCfgReader : public ICSrvCfgReaderAC_T<ServSocketCFG> {
 protected:

@@ -1,32 +1,32 @@
-#ident "$Id$"
 /* ************************************************************************** *
  * Sockets listening server: checks registered sockets for incoming data and
  * calls ConnectAC methods.
  * ************************************************************************** */
 #ifndef __SMSC_INMAN_CONN_SERVER__
+#ident "@(#)$Id$"
 #define __SMSC_INMAN_CONN_SERVER__
 
 #include <string>
 #include <map>
 
 #include "core/threads/Thread.hpp"
-using smsc::core::threads::Thread;
-
 #include "core/synchronization/Event.hpp"
-using smsc::core::synchronization::Event;
 #include "core/synchronization/EventMonitor.hpp"
-using smsc::core::synchronization::EventMonitor;
-using smsc::core::synchronization::Mutex;
-
 #include "logger/Logger.h"
-using smsc::logger::Logger;
 
 #include "inman/interaction/ConnectDefs.hpp"
-using smsc::inman::interaction::ConnectAC;
 
 namespace smsc  {
 namespace inman {
 namespace interaction  {
+
+using smsc::core::threads::Thread;
+using smsc::core::synchronization::Event;
+using smsc::core::synchronization::EventMonitor;
+using smsc::core::synchronization::Mutex;
+using smsc::logger::Logger;
+
+using smsc::inman::interaction::ConnectAC;
 
 class ConnectSupervisorITF {
 public:

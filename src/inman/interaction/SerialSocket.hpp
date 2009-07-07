@@ -1,23 +1,23 @@
-#ident "$Id$"
 /* ************************************************************************** *
  * Serializable Connect: directly reads from/sends to a socket serializable
  * objects. Designed mainly for testing purposes.
  * ************************************************************************** */
 #ifndef __SMSC_INMAN_SRLZ_CONNECT_HPP
+#ident "@(#)$Id$"
 #define __SMSC_INMAN_SRLZ_CONNECT_HPP
 
 #include "logger/Logger.h"
-using smsc::logger::Logger;
-
 #include "core/network/Socket.hpp"
-using smsc::core::network::Socket;
 
 #include "inman/interaction/serializer.hpp"
-using smsc::inman::interaction::SerializablePacketAC;
 
 namespace smsc  {
 namespace inman {
 namespace interaction {
+
+using smsc::logger::Logger;
+using smsc::core::network::Socket;
+using smsc::inman::interaction::SerializablePacketAC;
 
 typedef struct {
     unsigned int  bufSndSz; //default buffer size for sending packet

@@ -1,9 +1,11 @@
-#pragma ident "$Id$"
+/* ************************************************************************* *
+ * INMan Protocols: generic packet definition, packet serialization.
+ * ************************************************************************* */
 #ifndef __SMSC_INMAN_INTERACTION_MESSAGES__
+#ident "@(#)$Id$"
 #define __SMSC_INMAN_INTERACTION_MESSAGES__
 
 #include "util/Factory.hpp"
-using smsc::util::FactoryT;
 
 #include "inman/interaction/serializer.hpp"
 #include "inman/interaction/INPMsgDefs.hpp"
@@ -11,6 +13,8 @@ using smsc::util::FactoryT;
 namespace smsc  {
 namespace inman {
 namespace interaction {
+
+using smsc::util::FactoryT;
 
 //INMan Protocol CommandSet: factory of commands and their subobjects
 class INPCommandSetAC;
@@ -76,7 +80,7 @@ protected:
     typedef FactoryT<uint32_t, INPPacketAC> PckFactory;
     PckFactory  pckFct;
 
-    inline uint32_t 
+    uint32_t 
         mkPckIdx(unsigned short cmd_id, unsigned short hdr_frm) const
     {
         return ((cmd_id << 16) | (hdr_frm & 0xFFFF));
@@ -99,15 +103,15 @@ public:
     virtual INPLoadMode loadMode(unsigned short cmd_id) const = 0;
 
     //creates solid packet (header + command)
-    inline INPPacketAC * 
+    INPPacketAC * 
         createPck(unsigned short cmd_id, unsigned short hdr_frm) const
     {
         return pckFct.create(mkPckIdx(cmd_id, hdr_frm));
     }
 
-//    inline INPHeaderAC * createHdr(unsigned short hdr_frm) const
+//    INPHeaderAC * createHdr(unsigned short hdr_frm) const
 //        { return hdrFct.create(hdr_frm); }
-//    inline INPCommandAC * createCmd(unsigned short cmd_id) const
+//    INPCommandAC * createCmd(unsigned short cmd_id) const
 //        { return cmdFct.create(obj_id); }
 };
 
@@ -133,7 +137,7 @@ public:
     virtual ~INPSerializer()
     { }
 
-    inline bool registerCmdSet(const INPCommandSetAC * p_cs)
+    bool registerCmdSet(const INPCommandSetAC * p_cs)
     {
         std::pair<INPCsMap::iterator, bool> res =
             cmdSets.insert(INPCsMap::value_type(p_cs->CsId(), p_cs));

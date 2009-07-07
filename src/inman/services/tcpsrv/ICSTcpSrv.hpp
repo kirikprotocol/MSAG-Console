@@ -1,25 +1,30 @@
-#pragma ident "$Id$"
 /* ************************************************************************* *
  * TCP Server service.
  * ************************************************************************* */
 #ifndef __INMAN_ICS_TCPSERVER_HPP
+#ident "@(#)$Id$"
 #define __INMAN_ICS_TCPSERVER_HPP
 
 #include "inman/interaction/server.hpp"
-using smsc::inman::interaction::ServSocketCFG;
-using smsc::inman::interaction::Server;
-using smsc::inman::interaction::ServerListenerITF;
-
 #include "inman/services/ICSrvDefs.hpp"
-using smsc::inman::ICServiceAC_T;
-
 #include "inman/services/tcpsrv/TCPSrvDefs.hpp"
-using smsc::inman::interaction::INProtocol;
-using smsc::inman::interaction::INPSerializer;
 
 namespace smsc {
 namespace inman {
 namespace tcpsrv {
+
+using smsc::inman::ICServiceAC_T;
+
+using smsc::inman::interaction::INProtocol;
+using smsc::inman::interaction::INPCommandSetAC;
+using smsc::inman::interaction::INPSerializer;
+using smsc::inman::interaction::ServSocketCFG;
+using smsc::inman::interaction::Server;
+using smsc::inman::interaction::ServerListenerITF;
+
+using smsc::inman::interaction::Connect;
+using smsc::inman::interaction::ConnectAC;
+
 
 class ICSTcpServer : public ICServiceAC_T<ServSocketCFG>, public TCPServerITF,
                     ServerListenerITF, ConnectListenerITF {
@@ -35,7 +40,7 @@ private:
             : type(bindSockId), sId(0), conn(use_conn), connSrv(0), pCs(use_Cs)
         { }
 
-        inline void rlseConnManager(void)
+        void rlseConnManager(void)
         {
             connSrv->rlseConnManager(sId); connSrv = NULL;
         }
@@ -59,7 +64,7 @@ protected:
     // ---------------------------------
     // -- ICServiceAC interface methods
     // --------------------------------- 
-    inline Mutex & _icsSync(void) const { return _sync; }
+    Mutex & _icsSync(void) const { return _sync; }
     //Initializes service verifying that all dependent services are inited
     RCode _icsInit(void)
     {
@@ -70,12 +75,12 @@ protected:
         return ICServiceAC::icsRcOk;
     }
     //Starts service verifying that all dependent services are started
-    inline RCode _icsStart(void)
+    RCode _icsStart(void)
     {
         return tcpSrv->Start() ? ICServiceAC::icsRcOk : ICServiceAC::icsRcError;
     }
     //Stops service
-    inline void  _icsStop(bool do_wait = false)
+    void  _icsStop(bool do_wait = false)
     {
         _sync.Unlock();
         try { tcpSrv->Stop(do_wait ? Server::_SHUTDOWN_TMO_MS : 0);
@@ -122,7 +127,7 @@ public:
     }
 
     //Returns TCPServerITF
-    inline void * Interface(void) const { return (TCPServerITF*)this; }
+    void * Interface(void) const { return (TCPServerITF*)this; }
 
     // ----------------------------------
     // -- TCPServerITF interafce methods

@@ -1,8 +1,8 @@
-#pragma ident "$Id$"
 /* ************************************************************************* *
- * //INMan Protocols definition.
+ * INMan Protocols definition.
  * ************************************************************************* */
 #ifndef __SMSC_INMAN_INTERACTION_PROTOCOLS__
+#ident "@(#)$Id$"
 #define __SMSC_INMAN_INTERACTION_PROTOCOLS__
 
 namespace smsc  {

@@ -1,8 +1,8 @@
-#pragma ident "$Id$"
 /* ************************************************************************* *
  * TCP Server service producer.
  * ************************************************************************* */
 #ifndef __INMAN_ICS_TCPSERVER_PRODUCER_HPP
+#ident "@(#)$Id$"
 #define __INMAN_ICS_TCPSERVER_PRODUCER_HPP
 
 #include "inman/services/tcpsrv/ICSTcpSrv.hpp"

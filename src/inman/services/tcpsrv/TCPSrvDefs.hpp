@@ -1,16 +1,17 @@
-#pragma ident "$Id$"
 /* ************************************************************************* *
- * 
+ * TCP Server service interface definitions.
  * ************************************************************************* */
 #ifndef __INMAN_TCPSERVER_DEFS_HPP
+#ident "@(#)$Id$"
 #define __INMAN_TCPSERVER_DEFS_HPP
 
 #include "inman/services/tcpsrv/ConnManager.hpp"
-using smsc::inman::interaction::INPCommandSetAC;
 
 namespace smsc {
 namespace inman {
 namespace tcpsrv {
+
+using smsc::inman::interaction::INPCommandSetAC;
 
 class ConnServiceITF {
 public:

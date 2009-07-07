@@ -5,8 +5,8 @@
 #ident "@(#)$Id$"
 #define __INMAN_TCAP_DISPATCHER_DEFS_HPP
 
+#include "logger/Logger.h"
 #include "util/TonNpiAddress.hpp"
-using smsc::util::TonNpiAddress;
 
 #include "inman/inap/ACRegDefs.hpp"
 #include "inman/inap/SS7HDCfgDefs.hpp"
@@ -15,6 +15,8 @@ namespace smsc  {
 namespace inman {
 namespace inap  {
 
+using smsc::logger::Logger;
+using smsc::util::TonNpiAddress;
 
 #ifdef EIN_HD
 typedef SS7HD_CFG TCDsp_CFG; //SS7 TCAP dispatcher

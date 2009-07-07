@@ -1,30 +1,32 @@
-#ident "$Id$"
+/* ************************************************************************** *
+ * TCP Server: manages client's connections creation, listens for sockets,
+ * notifies associated connect listeners if data arrives.
+ * ************************************************************************** */
 #ifndef __SMSC_INMAN_TCP_SERVER__
+#ident "@(#)$Id$"
 #define __SMSC_INMAN_TCP_SERVER__
 
 #include <string>
 #include <list>
 
 #include "core/threads/Thread.hpp"
-using smsc::core::threads::Thread;
-
 #include "core/synchronization/Event.hpp"
-using smsc::core::synchronization::Mutex;
-using smsc::core::synchronization::Event;
-
 #include "logger/Logger.h"
-using smsc::logger::Logger;
 
 #include "inman/common/Observatory.hpp"
-using smsc::util::GRDObservatoryOfT;
-
 #include "inman/interaction/ConnectDefs.hpp"
-using smsc::inman::interaction::ConnectAC;
-
 
 namespace smsc  {
 namespace inman {
 namespace interaction  {
+
+using smsc::core::threads::Thread;
+using smsc::core::synchronization::Mutex;
+using smsc::core::synchronization::Event;
+using smsc::logger::Logger;
+
+using smsc::util::GRDObservatoryOfT;
+using smsc::inman::interaction::ConnectAC;
 
 struct ServSocketCFG {
     std::string     host;
