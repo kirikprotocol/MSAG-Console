@@ -2,11 +2,12 @@
 # define __EYELINE_UTILX_PREALLOCATEDMEMORYMANAGER_HPP__
 
 # include <pthread.h>
-# include <util/Singleton.hpp>
-# include <util/Exception.hpp>
 # include <sys/types.h>
 # include <pthread.h>
 # include <errno.h>
+
+# include "util/Singleton.hpp"
+# include "util/Exception.hpp"
 
 namespace eyeline {
 namespace utilx {
@@ -18,7 +19,7 @@ typedef struct {
 
 class PreallocatedMemoryManager : smsc::util::Singleton<PreallocatedMemoryManager> {
 public:
-  typedef enum { MEM_FOR_EVENT=1, MEM_FOR_MESSAGE=2, MEM_FOR_PACKET=3, MEM_FOR_ENCAPSULATED_MESSAGE=4 } mem_type_t;
+  typedef enum { MEM_FOR_EVENT=1, MEM_FOR_MESSAGE=2, MEM_FOR_PACKET=3, MEM_FOR_ENCAPSULATED_MESSAGE=4, MEM_FOR_HANDLER=5 } mem_type_t;
   template<mem_type_t MEMTYPE> alloc_mem_desc_t* getMemory();
 
 private:
