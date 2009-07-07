@@ -3,8 +3,9 @@
 
 # include <sys/types.h>
 # include <sys/uio.h>
-# include <eyeline/corex/io/IOExceptions.hpp>
-# include <eyeline/corex/io/IOObject.hpp>
+
+# include "eyeline/corex/io/IOExceptions.hpp"
+# include "eyeline/corex/io/IOObject.hpp"
 
 namespace eyeline {
 namespace corex {
