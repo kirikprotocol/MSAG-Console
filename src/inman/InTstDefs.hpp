@@ -6,31 +6,33 @@
 #ident "$Id$"
 
 #include "core/synchronization/Event.hpp"
-using smsc::core::synchronization::Event;
-using smsc::core::synchronization::Mutex;
-using smsc::core::synchronization::MutexGuard;
 
 #include "inman/AbntContract.hpp"
-using smsc::inman::AbonentImsi;
-using smsc::inman::AbonentContractInfo;
 
 #include "inman/interaction/ConnSrv.hpp"
-using smsc::inman::interaction::ConnectSrv;
-using smsc::inman::interaction::ConnectSupervisorITF;
-
 #include "inman/interaction/connect.hpp"
-using smsc::inman::interaction::Connect;
-using smsc::inman::interaction::ConnectListenerITF;
-
 #include "inman/interaction/messages.hpp"
-using smsc::inman::interaction::ObjectBuffer;
-using smsc::inman::interaction::SerializerException;
-using smsc::inman::interaction::INPPacketAC;
-using smsc::inman::interaction::INPSerializer;
 
 namespace smsc  {
 namespace inman {
 namespace test {
+
+using smsc::core::synchronization::Event;
+using smsc::core::synchronization::Mutex;
+using smsc::core::synchronization::MutexGuard;
+
+using smsc::inman::AbonentImsi;
+using smsc::inman::AbonentContractInfo;
+
+using smsc::inman::interaction::ConnectSrv;
+using smsc::inman::interaction::ConnectSupervisorITF;
+using smsc::inman::interaction::Connect;
+using smsc::inman::interaction::ConnectAC;
+using smsc::inman::interaction::ConnectListenerITF;
+using smsc::inman::interaction::ObjectBuffer;
+using smsc::inman::interaction::SerializerException;
+using smsc::inman::interaction::INPPacketAC;
+using smsc::inman::interaction::INPSerializer;
 
 /* ************************************************************************** *
  * class TSTFacadeAC: 

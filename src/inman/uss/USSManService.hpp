@@ -1,9 +1,9 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
  * USSMan service: handles USS requests coming from several TCP connects in
  * asynchronous mode, manages corresponding USSD dialogs using TCAP layer.
  * ************************************************************************** */
 #ifndef USSMAN_SERVICE_HPP_HEADER_INCLUDED_BA8AF0D8
+#ident "@(#)$Id$"
 # define USSMAN_SERVICE_HPP_HEADER_INCLUDED_BA8AF0D8
 
 //# include <map>

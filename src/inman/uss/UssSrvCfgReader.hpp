@@ -1,22 +1,27 @@
 /* ************************************************************************** *
- * 
+ * USSMan XML config file parser
  * ************************************************************************** */
 #ifndef __SMSC_USSMAN_CFG_READER_HPP__
 #ident "@(#)$Id$"
 # define __SMSC_USSMAN_CFG_READER_HPP__
 
-#include "UssServiceCfg.hpp"
+#include "logger/Logger.h"
+#include "inman/uss/UssServiceCfg.hpp"
 #include "inman/inap/TCXCfgParser.hpp"
-using smsc::inman::inap::TCDspCfgParser;
-using smsc::inman::inap::TCAPUsrCfgParser;
 
 namespace smsc  {
 namespace inman {
 namespace uss  {
 
+using smsc::logger::Logger;
+
 using smsc::util::config::Config;
 using smsc::util::config::XConfigView;
 using smsc::util::config::ConfigException;
+
+using smsc::inman::inap::TCDspCfgParser;
+using smsc::inman::inap::TCAPUsrCfgParser;
+
 
 class USSSrvCfgReader {
 private:

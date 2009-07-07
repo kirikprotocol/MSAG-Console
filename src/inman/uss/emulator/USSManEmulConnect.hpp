@@ -1,10 +1,10 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
  * USSMan service connect: handles USS requests coming from assigned TCP
  * connect in asynchronous mode, manages corresponding USSD dialogs using
  * TCAP layer.
  * ************************************************************************** */
 #ifndef __SMSC_INMAN_USS_EMULATOR_USSMANEMULCONNECT_HPP__
+#ident "@(#)$Id$"
 # define __SMSC_INMAN_USS_EMULATOR_USSMANEMULCONNECT_HPP__
 
 # include <memory>

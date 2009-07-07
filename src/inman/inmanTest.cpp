@@ -26,6 +26,9 @@ using smsc::inman::test::INDialogCfg;
 #include "inman/InTstDtcr.hpp"
 using smsc::inman::test::DtcrFacade;
 
+using smsc::inman::AbonentContractInfo;
+using smsc::inman::interaction::ConnectSrv;
+
 /* ************************************************************************** *
  * 
  * ************************************************************************** */

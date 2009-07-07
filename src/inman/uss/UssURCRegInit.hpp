@@ -1,8 +1,8 @@
-#pragma ident "$Id$"
 /* ************************************************************************* *
  * USSMan global return codes registry initialization
  * ************************************************************************* */
 #ifndef __SMSC_USSMAN_URCREGISTRY_INIT_HPP
+#ident "@(#)$Id$"
 #define __SMSC_USSMAN_URCREGISTRY_INIT_HPP
 
 #ifdef URCREGISTRY_GLOBAL_INIT
