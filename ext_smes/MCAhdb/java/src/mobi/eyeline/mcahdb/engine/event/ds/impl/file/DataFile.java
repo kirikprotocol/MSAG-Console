@@ -175,6 +175,7 @@ class DataFile {
       case MissedCall:          bytes[pos] = 0; break;
       case MissedCallAlert:     bytes[pos] = 1; break;
       case MissedCallAlertFail: bytes[pos] = 2; break;
+      case MissedCallRemove:    bytes[pos] = 3; break;
       default:
         throw new DataSourceException("Unknown event type: " + e.getType());
     }
@@ -204,6 +205,7 @@ class DataFile {
       case 0 : e.setType(Event.Type.MissedCall); break;
       case 1 : e.setType(Event.Type.MissedCallAlert); break;
       case 2 : e.setType(Event.Type.MissedCallAlertFail); break;
+      case 3 : e.setType(Event.Type.MissedCallRemove); break;
       default:
         throw new DataSourceException("Unknown event type: " + e.getType());
     }

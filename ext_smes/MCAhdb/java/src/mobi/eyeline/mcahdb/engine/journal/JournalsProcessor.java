@@ -88,6 +88,7 @@ public class JournalsProcessor {
             events.add(createEvent(e));
             break;
           case MissedCallRemove:
+            events.add(createEvent(e));
             scheduler.missedCallError(e.getCaller(), e.getCalled());
             break;
           case ProfileChaged:
@@ -111,6 +112,7 @@ public class JournalsProcessor {
     switch (e.getType()) {
       case MissedCall: event.setType(Event.Type.MissedCall); break;
       case MissedCallAlert: event.setType(Event.Type.MissedCallAlert); break;
+      case MissedCallRemove: event.setType(Event.Type.MissedCallRemove); break;
       default: event.setType(Event.Type.MissedCallAlertFail);
     }
     event.setCaller(e.getCaller());

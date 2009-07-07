@@ -65,6 +65,6 @@ public class Event {
   }
 
   public enum Type {
-    MissedCall, MissedCallAlert, MissedCallAlertFail
+    MissedCall, MissedCallAlert, MissedCallAlertFail, MissedCallRemove
   }
 }

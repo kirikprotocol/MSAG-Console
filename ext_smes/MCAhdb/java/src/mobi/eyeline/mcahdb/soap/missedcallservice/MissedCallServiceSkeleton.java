@@ -23,8 +23,8 @@ public class MissedCallServiceSkeleton{
 
   private static final Category log = Category.getInstance(MissedCallServiceSkeleton.class);
 
-  private static final int MESSAGE_STATUS_CALL = 0;
-  private static final int MESSAGE_STATUS_ALERT = 1;
+  private static final int MESSAGE_STATUS_CALL = 1;
+  private static final int MESSAGE_STATUS_ALERT = 0;
   private static final int MESSAGE_STATUS_ALERT_FAILED = 2;
         
          
@@ -85,6 +85,12 @@ public class MissedCallServiceSkeleton{
             calls.remove(caller);
             break;
           case MissedCallAlertFail:
+            if (call.getMissedCalls() == 0)
+              call.setMissedCalls(1);
+            call.setMessageStatus(MESSAGE_STATUS_ALERT_FAILED);
+            call.setProcessDate(df.format(e.getDate()));
+            break;
+          case MissedCallRemove:
             if (call.getMissedCalls() == 0)
               call.setMissedCalls(1);
             call.setMessageStatus(MESSAGE_STATUS_ALERT_FAILED);
