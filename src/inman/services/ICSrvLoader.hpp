@@ -1,17 +1,18 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
  * INMan configurable service shared library loader
  * ************************************************************************** */
 #ifndef __INMAN_ICSERVICE_LOADER_HPP__
+#ident "@(#)$Id$"
 #define __INMAN_ICSERVICE_LOADER_HPP__
 
 #include "util/config/ConfigException.h"
-using smsc::util::config::ConfigException;
 
 #include "inman/services/ICSrvDefs.hpp"
 
 namespace smsc  {
 namespace inman {
+
+using smsc::util::config::ConfigException;
 
 //This is the Inman Configurable Service dynamic library entry point
 extern "C" ICSProducerAC * loadupICService(void);

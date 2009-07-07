@@ -1,19 +1,20 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
  * Abonent Provider shared library loader.
  * ************************************************************************** */
 #ifndef SMSC_INMAN_IAPLOADER_HPP
+#ident "@(#)$Id$"
 #define SMSC_INMAN_IAPLOADER_HPP
 
 #include "inman/common/XCFView.hpp"
-using smsc::util::config::XConfigView;
-using smsc::util::config::ConfigException;
 
 #include "inman/abprov/IAProvider.hpp"
 
 namespace smsc {
 namespace inman {
 namespace iaprvd { //(I)NMan (A)bonent (P)roviders
+
+using smsc::util::config::XConfigView;
+using smsc::util::config::ConfigException;
 
 extern const char * const _IAPTypes[];      //according to IAProviderType
 extern const char * const _IAPAbilities[];  //according to IAProviderAbility_e

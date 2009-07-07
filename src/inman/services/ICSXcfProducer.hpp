@@ -1,8 +1,8 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
  * ICService producer that supports service configuration by XML file.
  * ************************************************************************** */
 #ifndef __INMAN_ICSERVICE_XCFPRODUCER_DEFS_HPP__
+#ident "@(#)$Id$"
 #define __INMAN_ICSERVICE_XCFPRODUCER_DEFS_HPP__
 
 #include "inman/services/ICSCfgReader.hpp"
@@ -28,7 +28,7 @@ public:
     // ICSProducerAC interface methods:
     // -------------------------------------
     //Returns true if service supports configuration by XML file
-    inline bool isConfigurable(void) const { return true; }
+    bool isConfigurable(void) const { return true; }
 };
 
 
@@ -59,7 +59,7 @@ public:
         return xcfReader.get();
     }
     //Returns current XML config parser
-    inline ICSrvCfgReaderAC * getCfgReader(void) const
+    ICSrvCfgReaderAC * getCfgReader(void) const
     {
         return xcfReader.get();
     }

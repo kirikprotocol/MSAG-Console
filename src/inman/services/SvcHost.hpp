@@ -1,8 +1,8 @@
-#pragma ident "$Id$"
 /* ************************************************************************* *
  * INMan Configurable Services Host types, interfaces and helpers definitions
  * ************************************************************************* */
 #ifndef __INMAN_SERVICES_HOST_HPP
+#ident "@(#)$Id$"
 #define __INMAN_SERVICES_HOST_HPP
 
 #include "inman/services/SvcHostDefs.hpp"
@@ -24,7 +24,7 @@ protected:
     // ---------------------------------
     // -- ICServiceAC interface methods
     // --------------------------------- 
-    inline Mutex & _icsSync(void) const { return _sync; }
+    Mutex & _icsSync(void) const { return _sync; }
     //Initializes service verifying that all dependent services are inited
     RCode _icsInit(void);
     //Starts service verifying that all dependent services are started
@@ -54,7 +54,7 @@ public:
     // -------------------------------------
     // -- ICServicesHostITF interface mthods
     // -------------------------------------
-    inline ICServiceAC * getICService(ICSUId srv_id) const
+    ICServiceAC * getICService(ICSUId srv_id) const
     {
         MutexGuard  grd(_sync);
         return _cfg->srvReg.find(srv_id);
@@ -65,7 +65,7 @@ public:
         ICServiceAC * pSrv = _cfg->srvReg.find(srv_id);
         return pSrv ? pSrv->Interface() : NULL;
     }
-    inline ICSState getICSrvState(ICSUId srv_id) const
+    ICSState getICSrvState(ICSUId srv_id) const
     {
         ICServiceAC * pSrv = getICService(srv_id);
         return pSrv ? pSrv->icsState() : ICServiceAC::icsStIdle;

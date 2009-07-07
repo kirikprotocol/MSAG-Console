@@ -1,8 +1,8 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
  * INMan configurable services ids. 
  * ************************************************************************** */
 #ifndef __INMAN_CONFIGURABLE_SERVICES_IDS_HPP__
+#ident "@(#)$Id$"
 #define __INMAN_CONFIGURABLE_SERVICES_IDS_HPP__
 
 #include <string>
@@ -86,7 +86,7 @@ typedef ICSIdent::UId       ICSUId;
 //set of ICSUIds sorted starting from basic up to complex ones
 class ICSIdsSet : public std::set<ICSUId> {
 public:
-    inline bool exist(ICSUId use_uid)
+    bool exist(ICSUId use_uid)
     {
         return (find(use_uid) != end()) ? true : false;
     }
