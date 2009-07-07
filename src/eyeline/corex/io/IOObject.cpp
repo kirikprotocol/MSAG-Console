@@ -3,8 +3,8 @@
 #include <fcntl.h>
 #include <signal.h>
 
-#include <util/Exception.hpp>
-#include <eyeline/corex/io/IOObject.hpp>
+#include "util/Exception.hpp"
+#include "eyeline/corex/io/IOObject.hpp"
 
 namespace eyeline {
 namespace corex {
@@ -39,6 +39,18 @@ int
 IOObject::getDescriptor()
 {
   return _getDescriptor();
+}
+
+const std::string&
+IOObject::getId() const
+{
+  return _id;
+}
+
+void
+IOObject::setId(const std::string& id)
+{
+  _id = id;
 }
 
 }}}
