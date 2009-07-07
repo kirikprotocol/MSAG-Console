@@ -1,13 +1,14 @@
 #ifndef __EYELINE_COREX_NETWORK_IOOBJECTSPOOL_HPP__
 # define __EYELINE_COREX_NETWORK_IOOBJECTSPOOL_HPP__
 
-# include <eyeline/corex/io/network/Socket.hpp>
-# include <eyeline/corex/io/network/ServerSocket.hpp>
-# include <eyeline/corex/io/IOStreams.hpp>
 # include <deque>
 # include <map>
 # include <poll.h>
 # include <limits.h>
+
+# include "eyeline/corex/io/network/Socket.hpp"
+# include "eyeline/corex/io/network/ServerSocket.hpp"
+# include "eyeline/corex/io/IOStreams.hpp"
 
 namespace eyeline {
 namespace corex {
@@ -37,7 +38,7 @@ public:
 
   corex::io::network::ServerSocket* getNextReadyServerSocket();
 private:
-  void updatePollIndexes(int fd);
+  bool updatePollIndexes(int fd, short event=0);
 
   struct pollfd *_fds, *_snaphots_fds;
   int* _used_fds;
@@ -53,8 +54,8 @@ private:
   out_mask_t _outMask;
   accept_mask_t _acceptMask;
 
-  typedef std::deque<InputStream*> in_events_t;
-  typedef std::deque<OutputStream*> out_events_t;
+  typedef std::map<int, InputStream*> in_events_t;
+  typedef std::map<int, OutputStream*> out_events_t;
   typedef std::deque<corex::io::network::ServerSocket*> accept_events_t;
 
   in_events_t _inputEventsReady;
