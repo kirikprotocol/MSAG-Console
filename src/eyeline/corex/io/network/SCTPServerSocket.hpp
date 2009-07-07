@@ -2,8 +2,9 @@
 # define __EYELINE_COREX_IO_NETWORK_SCTPSERVERSOCKET_HPP__
 
 # include <string>
-# include <eyeline/corex/io/network/ServerSocket.hpp>
-# include <eyeline/corex/io/network/SCTPSocket.hpp>
+
+# include "eyeline/corex/io/network/ServerSocket.hpp"
+# include "eyeline/corex/io/network/SCTPSocket.hpp"
 
 namespace eyeline {
 namespace corex {
