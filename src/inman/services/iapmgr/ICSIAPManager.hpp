@@ -1,8 +1,8 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
  * IAPManager (abonent policies/providers manager) service.
  * ************************************************************************** */
 #ifndef __INMAN_ICS_IAP_MANAGER__
+#ident "@(#)$Id$"
 #define __INMAN_ICS_IAP_MANAGER__
 
 #include "inman/services/ICSrvDefs.hpp"
@@ -22,9 +22,9 @@ protected:
     // ---------------------------------
     // -- ICServiceAC interface methods
     // --------------------------------- 
-    inline Mutex & _icsSync(void) const { return _sync; }
+    Mutex & _icsSync(void) const { return _sync; }
     //Initializes service verifying that all dependent services are inited
-    inline RCode _icsInit(void)
+    RCode _icsInit(void)
     {
         //bind policies to IAProvider allocators
         return  _cfg->polReg.Init(*(_cfg->prvdReg.get()), _icsHost) ?
@@ -40,7 +40,7 @@ protected:
         return failed ? ICServiceAC::icsRcError : ICServiceAC::icsRcOk;
     }
     //Stops service
-    inline void  _icsStop(bool do_wait = false)
+    void  _icsStop(bool do_wait = false)
     {
         PoliciesCfgReg::const_iterator it = _cfg->polReg.begin();
         for (; it != _cfg->polReg.end(); ++it)
@@ -64,7 +64,7 @@ public:
     }
 
     //Returns IAPManagerITF
-    inline void * Interface(void) const { return (IAPManagerITF*)this; }
+    void * Interface(void) const { return (IAPManagerITF*)this; }
 
     // -------------------------------------
     // IAPManagerITF interface methods:

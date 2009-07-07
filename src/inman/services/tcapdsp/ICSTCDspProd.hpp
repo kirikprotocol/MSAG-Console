@@ -1,20 +1,21 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
  * TCAP Dispatcher service producer.
  * ************************************************************************** */
 #ifndef __INMAN_ICS_TCAPDISP_PRODUCER_HPP
+#ident "@(#)$Id$"
 #define __INMAN_ICS_TCAPDISP_PRODUCER_HPP
 
 #include "inman/services/tcapdsp/ICSTCDsp.hpp"
 #include "inman/services/tcapdsp/TCDspCfgReader.hpp"
 
 #include "inman/services/ICSXcfProducer.hpp"
-using smsc::inman::ICSProducerXcfAC_T;
-using smsc::inman::ICSIdent;
 
 namespace smsc {
 namespace inman {
 namespace inap {
+
+using smsc::inman::ICSIdent;
+using smsc::inman::ICSProducerXcfAC_T;
 
 //TCAP Dispatcher service producer.
 class ICSProdTCAPDispatcher : public 

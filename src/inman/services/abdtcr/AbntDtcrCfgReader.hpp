@@ -1,22 +1,23 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
  * Abonent contract detector service config file parsing.
  * ************************************************************************** */
 #ifndef __INMAN_ABDTCR_CFG_PARSING__
+#ident "@(#)$Id$"
 #define __INMAN_ABDTCR_CFG_PARSING__
 
 #include "inman/incache/AbCacheDefs.hpp"
-using smsc::inman::cache::AbonentCacheCFG;
-
 #include "inman/services/ICSCfgReader.hpp"
-using smsc::inman::ICSIdent;
-using smsc::inman::ICSrvCfgReaderAC_T;
-
 #include "inman/services/abdtcr/AbntDtcrDefs.hpp"
 
 namespace smsc {
 namespace inman {
 namespace abdtcr {
+
+using smsc::inman::ICSIdent;
+using smsc::inman::ICSrvCfgReaderAC_T;
+
+using smsc::inman::cache::AbonentCacheCFG;
+
 
 class ICSAbntDetectorCfgReader : public ICSrvCfgReaderAC_T<AbntDetectorXCFG> {
 protected:

@@ -1,8 +1,8 @@
-#pragma ident "$Id$"
 /* ************************************************************************* *
  * SMS/USSD messages billing service types and helpers definitions
  * ************************************************************************* */
 #ifndef __INMAN_SMBILLING_DEFS_HPP
+#ident "@(#)$Id$"
 #define __INMAN_SMBILLING_DEFS_HPP
 
 #include <map>
@@ -10,11 +10,11 @@
 #include "inman/inap/TCDspDefs.hpp"
 #include "inman/services/ICSrvIDs.hpp"
 
-using smsc::inman::inap::TCAPUsr_CFG;
-
 namespace smsc    {
 namespace inman   {
 namespace smbill  {
+
+using smsc::inman::inap::TCAPUsr_CFG;
 
 //_smsXSrvs bits to mask, i.e. exclude from processing logic
 #define SMSX_NOCHARGE_SRV  0x80000000   //SMSX Extra service free of charge

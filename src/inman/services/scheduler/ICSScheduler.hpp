@@ -1,23 +1,26 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
  * Signalling Task Sheduler service.
  * ************************************************************************** */
 #ifndef __INMAN_ICS_SCHEDULER_HPP
+#ident "@(#)$Id$"
 #define __INMAN_ICS_SCHEDULER_HPP
+
+#include "inman/common/ObjRegistryT.hpp"
 
 #include "inman/services/ICSrvDefs.hpp"
 #include "inman/services/scheduler/TaskScheduler.hpp"
+
+namespace smsc {
+namespace inman {
+
+using smsc::util::POBJRegistry_T;
+
 using smsc::util::TaskSchedulerITF;
 using smsc::util::TaskSchedulerAC;
 using smsc::util::TaskSchedulerMT;
 using smsc::util::TaskSchedulerSEQ;
 using smsc::util::TaskSchedulerFactoryITF;
 
-#include "inman/common/ObjRegistryT.hpp"
-using smsc::util::POBJRegistry_T;
-
-namespace smsc {
-namespace inman {
 
 //Signalling Task Sheduler service.
 class ICSTaskScheduler : public ICServiceAC, public TaskSchedulerFactoryITF {
@@ -30,13 +33,13 @@ protected:
     // ---------------------------------
     // -- ICServiceAC interface methods
     // --------------------------------- 
-    inline Mutex & _icsSync(void) const { return _sync; }
+    Mutex & _icsSync(void) const { return _sync; }
     //Initializes service verifying that all dependent services are inited
-    inline RCode _icsInit(void) { return ICServiceAC::icsRcOk; }
+    RCode _icsInit(void) { return ICServiceAC::icsRcOk; }
     //Starts service verifying that all dependent services are started
-    inline RCode _icsStart(void)  { return ICServiceAC::icsRcOk; }
+    RCode _icsStart(void)  { return ICServiceAC::icsRcOk; }
     //Stops service
-    inline void  _icsStop(bool do_wait = false)
+    void  _icsStop(bool do_wait = false)
     {
         unsigned i = 0, iMax = do_wait ? 2 : 1;
         do {
@@ -58,7 +61,7 @@ public:
     }
 
     //Returns TaskSchedulerFactoryITF
-    inline void * Interface(void) const
+    void * Interface(void) const
     {
         return (TaskSchedulerFactoryITF*)this;
     }

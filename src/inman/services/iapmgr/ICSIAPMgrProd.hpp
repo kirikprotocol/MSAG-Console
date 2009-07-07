@@ -1,20 +1,21 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
  * IAPManager (abonent policies/providers manager) service producer.
  * ************************************************************************** */
 #ifndef __INMAN_ICS_IAPMGR_PRODUCER_HPP
+#ident "@(#)$Id$"
 #define __INMAN_ICS_IAPMGR_PRODUCER_HPP
 
 #include "inman/services/iapmgr/ICSIAPManager.hpp"
 #include "inman/services/iapmgr/IAPMgrCfgReader.hpp"
 
 #include "inman/services/ICSXcfProducer.hpp"
-using smsc::inman::ICSProducerXcfAC_T;
-using smsc::inman::ICSIdent;
 
 namespace smsc {
 namespace inman {
 namespace iapmgr {
+
+using smsc::inman::ICSIdent;
+using smsc::inman::ICSProducerXcfAC_T;
 
 //IAPManager service producer. Supports XML file configuration.
 class ICSProdIAPManager : public 

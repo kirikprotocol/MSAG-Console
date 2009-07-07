@@ -1,20 +1,20 @@
-#pragma ident "$Id$"
 /* ************************************************************************** *
  * Abonents Cache service config file parsing.
  * ************************************************************************** */
 #ifndef __INMAN_ABCACHE_CONFIG_PARSING__
+#ident "@(#)$Id$"
 #define __INMAN_ABCACHE_CONFIG_PARSING__
 
 #include "inman/incache/AbCacheDefs.hpp"
-//using smsc::inman::cache::AbonentCacheCFG;
 
 #include "inman/services/ICSCfgReader.hpp"
-using smsc::inman::ICSIdent;
-using smsc::inman::ICSrvCfgReaderAC_T;
 
 namespace smsc {
 namespace inman {
 namespace cache {
+
+using smsc::inman::ICSIdent;
+using smsc::inman::ICSrvCfgReaderAC_T;
 
 class ICSAbCacheCfgReader : public ICSrvCfgReaderAC_T<AbonentCacheCFG> {
 protected:

@@ -1,8 +1,8 @@
-#pragma ident "$Id$"
 /* ************************************************************************* *
  * TimeWatchers service producer.
  * ************************************************************************* */
 #ifndef __INMAN_ICS_TMWATCHER_PRODUCER_HPP
+#ident "@(#)$Id$"
 #define __INMAN_ICS_TMWATCHER_PRODUCER_HPP
 
 #include "inman/services/tmwatch/ICSTMWatcher.hpp"
@@ -23,9 +23,9 @@ public:
     // -- ICSProducerAC interafce methods
     // -----------------------------------
     //Returns true if service supports configuration by XML file
-    inline bool isConfigurable(void) const { return false; }
+    bool isConfigurable(void) const { return false; }
     //Creates service basing on Config parsed by ICSrvCfgReaderAC
-    inline ICServiceAC * 
+    ICServiceAC * 
         newService(ICServicesHostITF * svc_host, Logger * use_log = NULL)
     { return new ICSTMWatcher(svc_host, use_log); }
 };
