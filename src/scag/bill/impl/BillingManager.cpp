@@ -304,6 +304,17 @@ void BillingManagerImpl::processAsyncResult( EwalletCallParams& params )
 {
     smsc_log_debug(logger,"processing async result on params %p", &params);
     // FIXME: send statistics
+
+    // holds a transaction extracted from registry in commit operation for the
+    // time of sacc invocation.
+    std::auto_ptr< BillTransaction > bt;
+
+    const char *eventName;
+    BillingTransactionEvent event;
+    TariffRec* tariffRec;
+    BillingInfoStruct* billingInfoStruct;
+    billid_type billId;
+
     if ( params.getOpen() ) {
 
         // open call params
@@ -319,20 +330,63 @@ void BillingManagerImpl::processAsyncResult( EwalletCallParams& params )
             smsc_log_debug(logger,"not registering a transaction %llu as it is transit",eo->billId());
         }
 
+        eventName = "open";
+        event = TRANSACTION_OPEN;
+        billId = eo->billId();
+        tariffRec = eo->tariffRec();
+        billingInfoStruct = eo->billingInfoStruct();
+
     } else if ( params.getClose() ) {
+
         // close call params
         EwalletCloseCallParams* co = static_cast<EwalletCloseCallParams*>(params.getClose());
-        try {
-            delete getBillTransaction(co->getBillId());
-        } catch ( std::exception& e ) {
-            smsc_log_warn(logger,"exc in transaction %lld: %s", co->getBillId());
+        if ( co->isCommit() ) {
+            eventName = "commit";
+            event = TRANSACTION_COMMITED;
+        } else {
+            eventName = "rollback";
+            event = TRANSACTION_CALL_ROLLBACK;
         }
+
+        billId = co->billId();
+        if ( co->getTransitData() ) {
+            // transit
+            tariffRec = &co->getTransitData()->data->tariffRec;
+            billingInfoStruct = &co->getTransitData()->data->billingInfoStruct;
+        } else {
+            smsc_log_warn(logger,"transit data is not attached to billclose, not logged");
+            return;
+        }
+
     } else if ( params.getCheck() ) {
-        EwalletCheckCallParams* co = static_cast<EwalletCheckCallParams*>(params.getCheck());
+        // EwalletCheckCallParams* co = static_cast<EwalletCheckCallParams*>(params.getCheck());
         smsc_log_debug(logger,"check parameter received, what to do?");
+        return;
     } else {
         smsc_log_error(logger,"ewallet params %p does not provide open/close/check parts", &params);
+        return;
     }
+
+    // logging
+    BillingCommandStatus i;
+    const uint8_t status = params.getStatus();
+    if ( status == ewallet::Status::OK ) {
+        i = COMMAND_SUCCESSFULL;
+    } else if ( status == ewallet::Status::TIMEOUT ) {
+        i = SERVER_NOT_RESPONSE;
+    } else if ( status == ewallet::Status::CLIENT_BUSY ||
+                status == ewallet::Status::NO_ACCESS ) {
+        i = REJECTED_BY_SERVER;
+    } else if ( status == ewallet::Status::TRANS_NOT_FOUND ) {
+        i = INVALID_TRANSACTION;
+    } else {
+        i = EXTERNAL_ERROR;
+    }
+    stat::SaccBillingInfoEvent* billEvent = new stat::SaccBillingInfoEvent();
+    makeBillEvent( event, i, *tariffRec, *billingInfoStruct, billEvent );
+    stat::Statistics::Instance().registerSaccEvent(billEvent);
+    logEvent( eventName, status == ewallet::Status::OK,
+              *billingInfoStruct, billId );
 }
 
 
@@ -501,6 +555,13 @@ void BillingManagerImpl::Commit(billid_type billId, lcm::LongCallContext* lcmCtx
             pck->setTransId(p->ewalletTransId);
             std::auto_ptr<ewallet::Request> req(pck.release());
             EwalletCloseCallParams* closeParams = static_cast<EwalletCloseCallParams*>(lcmCtx->getParams());
+            BillTransitParamsData* paramsData = new BillTransitParamsData;
+            paramsData->transId = p->ewalletTransId;
+            paramsData->data.reset( new BillOpenCallParamsData );
+            paramsData->data->billingInfoStruct = billingInfoStruct;
+            paramsData->data->tariffRec = tariffRec;
+            closeParams->setTransitData( paramsData );
+            closeParams->setRegistrator(this);
             ewalletClient_->processRequest( req, *closeParams );
             smsc_log_debug(logger,"ewallet commit request is sent");
             return;

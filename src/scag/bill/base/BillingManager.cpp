@@ -52,8 +52,8 @@ void EwalletCallParams::handleResponse( std::auto_ptr< ewallet::Request > reques
         setStatus( response->getStatus(), ewallet::Status::statusToString(response->getStatus()) );
     } else {
         setResponse( *response.get() );
-        if (registrator_) registrator_->processAsyncResult(*this);
     }
+    if (registrator_) registrator_->processAsyncResult(*this);
     continueExecution();
 }
 
@@ -87,6 +87,12 @@ void EwalletCloseCallParams::setResponse( ewallet::Response& resp )
 {
     // status is ok
     // delete the transaction (will be done in billing manager and session)
+}
+
+
+bool EwalletCloseCallParams::isCommit() const
+{
+    return lcmCtx_->callCommandId == lcm::BILL_COMMIT;
 }
 
 

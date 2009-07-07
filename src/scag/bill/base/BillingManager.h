@@ -56,7 +56,7 @@ class BillCloseCallParams
 {
 public:
     virtual ~BillCloseCallParams() {}
-    virtual billid_type getBillId() const = 0;
+    virtual billid_type billId() const = 0;
     virtual BillTransitParamsData* getTransitData() { return 0; }
 };
 
@@ -133,6 +133,8 @@ public:
         status_ = stat;
         exception = msg;
     }
+    uint8_t getStatus() const { return status_; }
+
     void setRegistrator( TransactionRegistrator* reg ) { registrator_ = reg; }
     virtual void setResponse( ewallet::Response& resp ) = 0;
     virtual void continueExecution();
@@ -144,7 +146,11 @@ public:
     bool isTransit() const { return transit_; }
 
 private:
+    EwalletCallParams();
+
+protected:
     lcm::LongCallContext*   lcmCtx_;
+private:
     TransactionRegistrator* registrator_;
     bool                    transit_;
     uint32_t                transId_;
@@ -183,12 +189,17 @@ public:
     EwalletCloseCallParams( BillTransitParamsData* data, lcm::LongCallContext* lcmCtx ) :
     EwalletCallParams(true,lcmCtx), billId_(0), data_(data) {}
 
+    void setTransitData( BillTransitParamsData* data ) {
+        data_.reset(data);
+    }
+
     virtual void setResponse( ewallet::Response& resp );
     virtual BillOpenCallParams* getOpen() { return 0; }
     virtual EwalletCloseCallParams* getClose() { return this; }
     virtual BillCheckCallParams* getCheck() { return 0; }
-    virtual billid_type getBillId() const { return billId_; }
+    virtual billid_type billId() const { return billId_; }
     virtual BillTransitParamsData* getTransitData() { return data_.get(); }
+    bool isCommit() const;
 private:
     billid_type billId_;
     std::auto_ptr<BillTransitParamsData> data_;
@@ -261,7 +272,7 @@ public:
     virtual BillOpenCallParams* getOpen() { return 0; }
     virtual InmanCloseCallParams* getClose() { return this; }
     virtual BillCheckCallParams* getCheck() { return 0; }
-    virtual billid_type getBillId() const { return billId_; }
+    virtual billid_type billId() const { return billId_; }
 private:
     billid_type billId_;
 };
