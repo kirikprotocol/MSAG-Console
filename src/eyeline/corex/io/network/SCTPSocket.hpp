@@ -9,9 +9,10 @@
 
 # include <string>
 # include <vector>
-# include <eyeline/corex/io/network/Socket.hpp>
-# include <eyeline/corex/io/IOStreams.hpp>
-# include <eyeline/corex/io/IOObject.hpp>
+
+# include "eyeline/corex/io/network/Socket.hpp"
+# include "eyeline/corex/io/IOStreams.hpp"
+# include "eyeline/corex/io/IOObject.hpp"
 
 namespace eyeline {
 namespace corex {
@@ -24,6 +25,7 @@ class SctpInputStream : public InputStream {
 public:
   SctpInputStream(IOObject* owner, int fd);
   virtual ssize_t read(uint8_t *buf, size_t bufSz);
+  virtual ssize_t readv(const struct iovec *iov, int iovcnt);
   virtual IOObject* getOwner();
   uint16_t getStreamNo() const; //sinfo->sinfo_stream;
 private:
@@ -48,11 +50,11 @@ public:
   SCTPSocket(const std::string& dst_host, in_port_t port);
 
   virtual ~SCTPSocket();
-  virtual void connect();
+  void connect();
   virtual void close();
 
-  virtual SctpInputStream* getInputStream();
-  virtual SctpOutputStream* getOutputStream();
+  virtual SctpInputStream* getInputStream() const;
+  virtual SctpOutputStream* getOutputStream() const;
 
   using IOObject::setNonBlocking;
 
