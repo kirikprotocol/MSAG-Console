@@ -2,9 +2,10 @@
 # define __EYELINE_COREX_IO_NETWORK_TCPSOCKET_HPP__
 
 # include <string>
-# include <eyeline/corex/io/network/Socket.hpp>
-# include <eyeline/corex/io/IOStreams.hpp>
-# include <eyeline/corex/io/IOObject.hpp>
+
+# include "eyeline/corex/io/network/Socket.hpp"
+# include "eyeline/corex/io/IOStreams.hpp"
+# include "eyeline/corex/io/IOObject.hpp"
 
 namespace eyeline {
 namespace corex {
@@ -18,11 +19,11 @@ public:
   TCPSocket(const std::string& host, in_port_t port);
 
   virtual ~TCPSocket();
-  virtual void connect();
+  void connect(unsigned connect_timeout=0);
   virtual void close();
 
-  virtual corex::io::InputStream* getInputStream();
-  virtual corex::io::OutputStream* getOutputStream();
+  virtual InputStream* getInputStream() const;
+  virtual OutputStream* getOutputStream() const;
 
   using IOObject::setNonBlocking;
 
@@ -44,6 +45,9 @@ protected:
 
   virtual int _getDescriptor();
 
+  void openSocket();
+  int tryConnectWithTimeout(int connect_timeout);
+
   int _sockfd;
   sockaddr_in _server_addr;
 
@@ -54,8 +58,8 @@ protected:
   mutable bool _toString_buf_init;
   mutable char _toString_buf[128];
 
-  corex::io::GenericInputStream* _inputStream;
-  corex::io::GenericOutputStream* _outputStream;
+  InputStream* _inputStream;
+  OutputStream* _outputStream;
 
   bool _reverseSourceDestinationAddresses;
 };
