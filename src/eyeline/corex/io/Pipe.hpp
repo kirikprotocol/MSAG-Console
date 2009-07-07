@@ -1,10 +1,10 @@
 #ifndef __EYELINE_COREX_IO_PIPE_HPP__
 # define __EYELINE_COREX_IO_PIPE_HPP__
 
-# include <util/Exception.hpp>
-# include <eyeline/corex/io/IOStreams.hpp>
-# include <eyeline/corex/io/IOObject.hpp>
-# include <logger/Logger.h>
+# include "util/Exception.hpp"
+# include "eyeline/corex/io/IOStreams.hpp"
+# include "eyeline/corex/io/IOObject.hpp"
+# include "logger/Logger.h"
 
 namespace eyeline {
 namespace corex {
@@ -48,8 +48,8 @@ private:
 
     virtual void setNonBlocking(bool on);
 
-    virtual InputStream* getInputStream();
-    virtual OutputStream* getOutputStream();
+    virtual InputStream* getInputStream() const;
+    virtual OutputStream* getOutputStream() const;
 
     virtual std::string toString() const;
   protected:
@@ -61,8 +61,8 @@ private:
 
     UnnamedPipe* _creator;
     int _fd;
-    GenericInputStream _inputStream;
-    GenericOutputStream _outputStream;
+    InputStream* _inputStream;
+    OutputStream* _outputStream;
   };
 
   void halfClose(int fd);
