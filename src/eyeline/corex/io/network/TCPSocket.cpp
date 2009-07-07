@@ -1,4 +1,5 @@
 #include <sys/types.h>
+#include <sys/time.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/socket.h>
@@ -6,24 +7,32 @@
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
 #include <netdb.h>
-#include <util/Exception.hpp>
-#include <eyeline/corex/io/network/TCPSocket.hpp>
-#include <eyeline/corex/io/IOExceptions.hpp>
+
+#include "util/Exception.hpp"
+#include "eyeline/corex/io/network/TCPSocket.hpp"
+#include "eyeline/corex/io/IOExceptions.hpp"
 
 namespace eyeline {
 namespace corex {
 namespace io {
 namespace network {
 
+void
+TCPSocket::openSocket()
+{
+  _sockfd = socket(AF_INET, SOCK_STREAM, 0);
+  if ( _sockfd < 0 ) throw smsc::util::SystemError("TCPSocket::openSocket::: call to socket() failed");
+}
+
 TCPSocket::TCPSocket(in_port_t port)
-  : _toString_buf_init(false), _inputStream(NULL), _outputStream(NULL), _reverseSourceDestinationAddresses(false)
+  : _toString_buf_init(false), _inputStream(NULL), _outputStream(NULL),
+    _reverseSourceDestinationAddresses(false)
 {
   memset(_l_ip_address, 0, sizeof(_l_ip_address));
   memset(_r_ip_address, 0, sizeof(_r_ip_address));
   _l_port = port; _r_port = 0;
 
-  _sockfd = socket(AF_INET, SOCK_STREAM, 0);
-  if ( _sockfd < 0 ) throw smsc::util::SystemError("TCPSocket::TCPSocket::: call to socket() failed");
+  openSocket();
 
   memset((uint8_t*)&_server_addr, 0, sizeof(_server_addr));
   _server_addr.sin_family = AF_INET;
@@ -34,16 +43,16 @@ TCPSocket::TCPSocket(in_port_t port)
 }
 
 TCPSocket::TCPSocket(const std::string& host, in_port_t port)
-  : _toString_buf_init(false), _inputStream(NULL), _outputStream(NULL), _reverseSourceDestinationAddresses(false)
+  : _toString_buf_init(false), _inputStream(NULL), _outputStream(NULL),
+    _reverseSourceDestinationAddresses(false)
 {
   memset(_l_ip_address, 0, sizeof(_l_ip_address));
   memset(_r_ip_address, 0, sizeof(_r_ip_address));
   _l_port = 0; _r_port = 0;
 
-  _sockfd = socket(AF_INET, SOCK_STREAM, 0);
-  if ( _sockfd < 0 ) throw smsc::util::SystemError("TCPSocket::TCPSocket::: call to socket() failed");
-  _host = host;
+  openSocket();
 
+  _host = host;
   memset((uint8_t*)&_server_addr, 0, sizeof(_server_addr));
   _server_addr.sin_family = AF_INET;
   _server_addr.sin_port = htons(port);
@@ -74,12 +83,7 @@ TCPSocket::TCPSocket(int sockfd)
     throw smsc::util::SystemError("TCPSocket::TCPSocket::: input socket fd value is less than 0");
 
   _inputStream = new GenericInputStream(this, sockfd);
-  if ( !_inputStream )
-    throw smsc::util::SystemError("TCPSocket::TCPSocket::: can't allocate memory for InputStream");
-
   _outputStream = new GenericOutputStream(this, sockfd);
-  if ( !_outputStream )
-    throw smsc::util::SystemError("TCPSocket::TCPSocket::: can't allocate memory for OutputStream");
 
   _reverseSourceDestinationAddresses = true;
   fillToStringInfo();
@@ -90,7 +94,7 @@ TCPSocket::~TCPSocket() {
   close();
 }
 
-void TCPSocket::connect()
+void TCPSocket::connect(unsigned connect_timeout)
 {
   if ( inet_pton(AF_INET, _host.c_str(), &_server_addr.sin_addr) < 1 ) {
     struct hostent *hp;
@@ -109,26 +113,101 @@ void TCPSocket::connect()
     if ( hp->h_addrtype != AF_INET )
       throw smsc::util::Exception("TCPSocket::connect::: gethostbyname() returned unsupported addrtype [%d]", hp->h_addrtype);
 
+    bool connRefused = false;
     for(char** pptr = hp->h_addr_list; *pptr; ++pptr) {
       memcpy(&_server_addr.sin_addr, *pptr, sizeof(_server_addr.sin_addr));
-      if ( ::connect(_sockfd, (sockaddr*)&_server_addr, static_cast<int>(sizeof(_server_addr))) == 0 ) {
-        fillToStringInfo();
-        _inputStream = new GenericInputStream(this, _sockfd); _outputStream = new GenericOutputStream(this, _sockfd);
-        return;
+      if (connect_timeout)  {
+        if ( tryConnectWithTimeout(connect_timeout) == 0 ) {
+          fillToStringInfo();
+          _inputStream = new GenericInputStream(this, _sockfd); _outputStream = new GenericOutputStream(this, _sockfd);
+          return;
+        }
+        if ( errno == ETIMEDOUT ) {
+          close(); // interrupt connection establishing attempts
+          openSocket();
+        } else
+          connRefused = true;
+      } else {
+        if ( ::connect(_sockfd, (sockaddr*)&_server_addr, static_cast<int>(sizeof(_server_addr))) == 0 ) {
+          fillToStringInfo();
+          _inputStream = new GenericInputStream(this, _sockfd); _outputStream = new GenericOutputStream(this, _sockfd);
+          return;
+        }
+        if ( errno = ECONNREFUSED )
+          connRefused = true;
       }
     }
-
-    throw smsc::util::Exception("TCPSocket::connect::: can't establish connect");
+    if ( connRefused)
+      throw ConnectionFailedException("TCPSocket::connect::: connection refused");
+    else
+      throw smsc::util::Exception("TCPSocket::connect::: can't establish connect");
   } else {
-    if ( ::connect(_sockfd, (sockaddr*)&_server_addr, static_cast<int>(sizeof(_server_addr))) < 0 ) {
-      if ( errno == ECONNREFUSED)
-        throw corex::io::ConnectionFailedException("TCPSocket::connect::: connection refused");
-      else
-        throw smsc::util::SystemError("TCPSocket::connect::: call to connect() failed");
+    if (connect_timeout) {
+      if ( tryConnectWithTimeout(connect_timeout) < 0 ) {
+        if ( errno == ETIMEDOUT ) {
+          close();
+          throw ConnectionTimedoutException("TCPSocket::connect::: connection attempt timed out");
+        } else
+          throw ConnectionFailedException("TCPSocket::connect::: connection refused: errno = %d", errno);
+      }
+    } else {
+      if ( ::connect(_sockfd, (sockaddr*)&_server_addr, static_cast<int>(sizeof(_server_addr))) < 0 ) {
+        if ( errno == ECONNREFUSED )
+          throw ConnectionFailedException("TCPSocket::connect::: connection refused");
+        else
+          throw smsc::util::SystemError("TCPSocket::connect::: call to connect() failed");
+      }
     }
     fillToStringInfo();
     _inputStream = new GenericInputStream(this, _sockfd); _outputStream = new GenericOutputStream(this, _sockfd);
   }
+}
+
+int
+TCPSocket::tryConnectWithTimeout(int connect_timeout)
+{
+  setNonBlocking(_sockfd, true);
+  errno=0;
+  if ( ::connect(_sockfd, (sockaddr*)&_server_addr, static_cast<int>(sizeof(_server_addr))) < 0 ) {
+    if ( errno == ECONNREFUSED )
+      throw ConnectionFailedException("TCPSocket::connect::: connection (connect_timeout=%d) refused",
+                                      connect_timeout);
+    else if ( errno != EINPROGRESS ) {
+      setNonBlocking(_sockfd, false);
+      char errMsg[128];
+      sprintf(errMsg, "TCPSocket::tryConnectWithTimeout::: call to connect(connect_timeout=%d) failed",
+              connect_timeout);
+      throw smsc::util::SystemError(errMsg);
+    }
+    fd_set rset, wset;
+    FD_ZERO(&rset); FD_SET(_sockfd, &rset);
+    wset = rset;
+    struct timeval timeout;
+    timeout.tv_sec = connect_timeout; timeout.tv_usec = 0;
+    int st = ::select(_sockfd+1, &rset, &wset, NULL, &timeout);
+    int error = errno;
+    setNonBlocking(_sockfd, false);
+    if ( st < 0 )
+      throw smsc::util::SystemError("TCPSocket::tryConnectWithTimeout::: call to select failed", error);
+
+    if ( !st ) {
+      errno = ETIMEDOUT;
+      return -1;
+    }
+    if ( FD_ISSET(_sockfd, &wset) ) {
+      if ( FD_ISSET(_sockfd, &rset) ) {
+        int len = sizeof(error);
+        error = 0;
+        if ( getsockopt(_sockfd, SOL_SOCKET, SO_ERROR, &error, &len) < 0 )
+          throw smsc::util::SystemError("TCPSocket::connect::: call to getsockopt() failed");
+
+        errno = error;
+        return -1;
+      }
+    }
+  }
+
+  return 0;
 }
 
 void
@@ -140,17 +219,17 @@ TCPSocket::close()
   }
 }
 
-corex::io::InputStream*
-TCPSocket::getInputStream()
+InputStream*
+TCPSocket::getInputStream() const
 {
-  if ( !_inputStream ) throw corex::io::NotConnected("TCPSocket::getInputStream::: socket not connected");
+  if ( !_inputStream ) throw NotConnected("TCPSocket::getInputStream::: socket not connected");
   return _inputStream;
 }
 
-corex::io::OutputStream*
-TCPSocket::getOutputStream()
+OutputStream*
+TCPSocket::getOutputStream() const
 {
-  if ( !_outputStream ) throw corex::io::NotConnected("TCPSocket::getOutputStream::: socket not connected");
+  if ( !_outputStream ) throw NotConnected("TCPSocket::getOutputStream::: socket not connected");
   return _outputStream;
 }
 
@@ -211,6 +290,9 @@ TCPSocket::toString() const
 int
 TCPSocket::_getDescriptor()
 {
+  if ( _sockfd == -1 )
+    throw smsc::util::Exception("TCPSocket::_getDescriptor::: socket closed");
+
   return _sockfd;
 }
 
