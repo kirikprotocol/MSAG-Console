@@ -257,7 +257,8 @@ void Scag::init( unsigned mynode )
         const bool enabled = cfg.getConfig()->getBool("snmp.enabled");
         if ( enabled ) {
             const std::string socket = cfg.getConfig()->getString("snmp.socket");
-            if ( socket.size() > 0 ) {
+            if ( ! socket.empty() ) {
+                smsc_log_info(log,"creating snmpwrapper @ %s", socket.c_str());
                 snmp_.reset(new snmp::SnmpWrapper(socket));
                 snmpthread_.reset(new snmp::SnmpTrapThread(snmp_.get()));
                 snmpthread_->Start();

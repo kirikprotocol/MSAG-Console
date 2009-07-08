@@ -45,12 +45,14 @@ log_(0)
     init_agent( ::msagnamed );  // initialize the agent library
     ::init_msag();             // initialize mib code
     init_snmp( ::msagname );   // read .conf files
+    smsc_log_info(log_,"snmp wrapper inited");
 }
 
 
 SnmpWrapper::~SnmpWrapper()
 {
     snmp_shutdown( ::msagnamed );
+    smsc_log_info(log_,"snmp wrapper shutdowned");
 }
 
 
