@@ -163,6 +163,13 @@ If you have it somewhere, you may specify it on command line via -DPROTOGEN=full
         <property name="SETUP_MAKE_PVAP" value="true"/>
     </target>
 
+    <target name="ewalletp"
+            description="-&gt; generation of ewallet PDUs via protogen"
+            depends="-check.protogen">
+        <fail if="SETUP_DONE" message="You should specify 'ewalletp' before any actions"/>
+        <property name="SETUP_MAKE_EWALLETP" value="true"/>
+    </target>
+
     <target name="pvss.flooder"
             description="-&gt; flooder for personalization server ">
         <fail if="SETUP_DONE" message="You should specify 'pvss.flooder' before any actions"/>
@@ -212,6 +219,7 @@ If you have it somewhere, you may specify it on command line via -DPROTOGEN=full
                 <isset property="SETUP_MAKE_PERS"/>
                 <isset property="SETUP_MAKE_PERS_UPLOAD"/>
                 <isset property="SETUP_MAKE_PVAP"/>
+                <isset property="SETUP_MAKE_EWALLETP"/>
                 <isset property="SETUP_MAKE_PVSS"/>
                 <isset property="SETUP_MAKE_PVSS_FLOODER"/>
                 <isset property="SETUP_MAKE_PVGW"/>
@@ -433,6 +441,35 @@ If you have it somewhere, you may specify it on command line via -DPROTOGEN=full
         </exec>
     </target>
 
+    <target name="-make.ewalletp" if="SETUP_MAKE_EWALLETP">
+        <echo>Generating EWALLETP protocol</echo>
+        <delete failonerror="false">
+            <fileset dir="${SRC_DIR}/scag/bill/ewallet/stream/generated-cpp" includes="*.hpp"/>
+            <fileset dir="${SRC_DIR}/scag/bill/ewallet/stream/generated-cpp" includes="*.cpp"/>
+        </delete>
+        <symlink action="delete"
+                 link="${SRC_DIR}/scag/bill/ewallet/stream/generated-java"
+                 failonerror="false"/>
+        <delete failonerror="false">
+            <fileset dir="${SMSC_DIR}/../whoisd/ewallet/src/com/eyelinecom/whoisd/ewallet/stream/pdu" includes="*.java"/>
+        </delete>
+        <mkdir dir="${SMSC_DIR}/../whoisd/ewallet/src/com/eyelinecom/whoisd/ewallet/stream/pdu"/>
+        <mkdir dir="${SRC_DIR}/scag/bill/ewallet/stream/generated-cpp"/>
+        <exec executable="ln" dir="${SRC_DIR}/scag/bill/ewallet/stream">
+            <arg value="-s"/>
+            <arg value="${SMSC_DIR}/../whoisd/ewallet/src/com/eyelinecom/whoisd/ewallet/stream/pdu"/>
+            <arg value="generated-java"/>
+        </exec>
+
+        <echo>Running protogen on EWALLET protocol definition files...</echo>
+        <exec executable="${PROTOGEN}" dir="${SRC_DIR}/scag/bill/ewallet/stream" failonerror="true">
+            <arg value="ewallet.cgp"/>
+        </exec>
+        <!-- exec executable="${PROTOGEN}" dir="${SRC_DIR}/scag/pvss/api/pvap" failonerror="true">
+            <arg value="pvapbc2.0.cgp"/>
+        </exec -->
+    </target>
+
     <target name="-make.pvgw" depends="makedeps" if="SETUP_MAKE_PVGW">
         <echo>Building pvgw</echo>
         <ant antfile="${SRC_DIR}/conf/make.xml" dir="${SRC_DIR}">
@@ -555,7 +592,7 @@ If you have it somewhere, you may specify it on command line via -DPROTOGEN=full
     </target>
 
     <target name="make" 
-            depends="-setupdone, -make.pvap, -make.scag, -make.msag, -make.pers, -make.pers.upload, -make.pvss, -make.pvss.flooder, -make.pvgw, -make.pvcp, -make.admin, -make.webapp, -make.jedit, -make.src"
+            depends="-setupdone, -make.pvap, -make.ewalletp, -make.scag, -make.msag, -make.pers, -make.pers.upload, -make.pvss, -make.pvss.flooder, -make.pvgw, -make.pvcp, -make.admin, -make.webapp, -make.jedit, -make.src"
             unless="MAKE_DONE">
         <!-- description="Action: Compile previously selected targets" -->
         <!-- antcall target="makedeps"/ -->
@@ -649,7 +686,7 @@ If you have it somewhere, you may specify it on command line via -DPROTOGEN=full
               preservelastmodified="yes"
               flatten="yes">
             <fileset dir="${SMSC_DIR}/config"
-                     includes="scag2/smpp.dtd scag/operators.dtd scag/tariffs.dtd scag/services.dtd scag2/smpp_routes.dtd scag/http_routes.dtd"/>
+                     includes="scag2/smpp.dtd scag/operators.dtd scag2/tariffs.dtd scag/services.dtd scag2/smpp_routes.dtd scag/http_routes.dtd"/>
         </copy>
         <copy todir="${DISTR_DIR}/services/msag/conf/rules/"
               preservelastmodified="yes"
