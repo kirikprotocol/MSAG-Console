@@ -26,6 +26,7 @@ public:
     virtual bool run(ActionContext& context);
 
     ActionIndexof() {};
+    virtual const char* opname() const { return "strings:indexof"; }
     virtual void init(const SectionParams& params,PropertyObject propertyObject);
 };
 

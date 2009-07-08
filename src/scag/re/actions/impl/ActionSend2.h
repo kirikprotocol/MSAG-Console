@@ -18,9 +18,19 @@ class ActionSend : public Action
 public:
     enum SendLevel{Info = 0, Notify = 1, Warning = 2, Alarm = 3};
 
+    virtual const char* opname() const { return opname_.c_str(); }
     virtual void init(const SectionParams& params,PropertyObject propertyObject);
     virtual bool run(ActionContext& context);
-    ActionSend (SendLevel l){ level = l; }
+    ActionSend (SendLevel l) {
+        level = l; 
+        switch (l) {
+        case Info : opname_ = "send:info"; break;
+        case Notify : opname_ = "send:notify"; break;
+        case Warning : opname_ = "send:warn"; break;
+        case Alarm : opname_ = "send:alarm"; break;
+        default: opname_ = "send:???"; break;
+        }
+    }
 
     virtual ~ActionSend();
 
@@ -37,6 +47,7 @@ protected:
     FieldType ftDestPort, ftEsmClass, ftSrcPort, ftPacketType;
 
     SendLevel level;
+    std::string opname_;
 
     PropertyObject propertyObject;
 

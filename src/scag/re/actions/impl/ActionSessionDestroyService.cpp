@@ -1,9 +1,5 @@
 #include "ActionSessionDestroyService.h"
 
-namespace {
-const char* opname = "session:destroy_service";
-}
-
 namespace scag2 {
 namespace re {
 namespace actions {
@@ -11,15 +7,15 @@ namespace actions {
 void ActionSessionDestroyService::init( const SectionParams& params,
                                         PropertyObject propobj )
 {
-    smsc_log_debug( logger, "Action '%s': init", opname );
-    haswait_ = wait_.init( params, propobj, opname, "wait", false, true );
+    smsc_log_debug( logger, "Action '%s': init", opname() );
+    wait_.init(params,propobj);
 }
 
 
 bool ActionSessionDestroyService::run( ActionContext& context )
 {
-    smsc_log_debug( logger,"Action '%s': run", opname );
-    context.setDestroyService( haswait_ ? wait_.getTime(opname, context) : 0 );
+    smsc_log_debug( logger,"Action '%s': run", opname() );
+    context.setDestroyService( wait_.isFound() ? wait_.getSeconds(context) : 0 );
     return true;
 }
 
@@ -28,7 +24,7 @@ IParserHandler * ActionSessionDestroyService::StartXMLSubSection( const std::str
                                                                   const SectionParams&,
                                                                   const ActionFactory& )
 {
-    throw SCAGException( "Action '%s' cannot include child objects", opname );
+    throw SCAGException( "Action '%s' cannot include child objects", opname() );
 }
 
 

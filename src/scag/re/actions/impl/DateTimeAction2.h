@@ -165,6 +165,7 @@ protected:
 class CurrentDateTimeAction: public DateTimeAction {
 public:
   CurrentDateTimeAction() {};
+    virtual const char* opname() const { return "datetime:current"; }
   virtual void init(const SectionParams &params, PropertyObject propertyObject);
   virtual bool run(ActionContext &context);
   virtual const char* getActionName() const;
@@ -178,6 +179,7 @@ private:
 class ChangeDateTimeAction: public DateTimeAction {
 public:
   ChangeDateTimeAction() {};
+    virtual const char* opname() const { return "datetime:change"; }
   virtual void init(const SectionParams &params, PropertyObject propertyObject);
   virtual bool run(ActionContext &context);
   virtual const char* getActionName() const;
@@ -189,6 +191,7 @@ private:
 class AddDateTimeAction: public DateTimeAction {
 public:
   AddDateTimeAction():sign(1) {};
+    virtual const char* opname() const { return "datetime:add"; }
   virtual void init(const SectionParams &params, PropertyObject propertyObject);
   virtual bool run(ActionContext &context);
   virtual const char* getActionName() const;
@@ -202,6 +205,7 @@ private:
 class DecDateTimeAction: public DateTimeAction {
 public:
   DecDateTimeAction():sign(-1) {};
+    virtual const char* opname() const { return "datetime:dec"; }
   virtual void init(const SectionParams &params, PropertyObject propertyObject);
   virtual bool run(ActionContext &context);
   virtual const char* getActionName() const;

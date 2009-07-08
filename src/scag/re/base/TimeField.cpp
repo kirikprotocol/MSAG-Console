@@ -4,6 +4,7 @@ namespace scag2 {
 namespace re {
 namespace actions {
 
+/*
 bool TimeField::init( const SectionParams& params,
                       PropertyObject& propertyObject,
                       const char* actionName,
@@ -14,13 +15,13 @@ bool TimeField::init( const SectionParams& params,
     bool bExist;
     wait_ = 0;
     type_ = Action::CheckParameter( params,
-                                   propertyObject,
-                                   actionName,
-                                   paramName,
-                                   required, 
-                                   readonly,
-                                   name_,
-                                   bExist );
+                                    propertyObject,
+                                    actionName,
+                                    paramName,
+                                    required, 
+                                    readonly,
+                                    name_,
+                                    bExist );
     if ( ! bExist ) return false;
 
     if ( type_ == ftUnknown ) {
@@ -56,7 +57,9 @@ bool TimeField::init( const SectionParams& params,
     }
     return true;
 }
+ */
 
+/*
 unsigned TimeField::getTime( const char* actionName, ActionContext& context ) const
 {
     unsigned tmo = wait_;
@@ -71,6 +74,43 @@ unsigned TimeField::getTime( const char* actionName, ActionContext& context ) co
         tmo = unsigned(property->getInt());
     }
     return tmo;
+}
+ */
+
+// conversion from string to time (seconds)
+int64_t TimeField::getTimeValue( const char* tv ) const
+{
+    size_t len = ::strlen(tv);
+    if ( ! len ) {
+        throw SCAGException("Action: '%s' should have non-empty %s field",
+                            action_->opname(), paramName_.c_str() );
+    }
+
+    static const char* formats[] = {
+        "%u:%u:%u", "%u:%u", "%u", 0
+    };
+
+    for ( unsigned i = 0; ; ++i ) {
+
+        const char* fmt = formats[i];
+        if ( ! fmt ) {
+            throw SCAGException( "Action: '%s' wrong %s field: %s",
+                                 action_->opname(), paramName_.c_str(), tv );
+        }
+
+        unsigned elts[3];
+        elts[0] = elts[1] = elts[2] = 0;
+
+        int nelts = sscanf( tv, fmt, &(elts[0]), &(elts[1]), &(elts[2]) );
+        if ( nelts != int(3-i) ) continue;
+
+        int64_t timeValue = 0;
+        for ( unsigned j = 0; j < 3-i; ++j ) {
+            timeValue = timeValue*60 + elts[j];
+        }
+        return timeValue;
+    }
+    return 0;
 }
 
 }

@@ -22,6 +22,7 @@ public:
     virtual bool run(ActionContext& context);
 
     ActionConcat()  {};
+    virtual const char* opname() const { return "strings:concat"; }
     virtual void init(const SectionParams& params,PropertyObject propertyObject);
 };
 

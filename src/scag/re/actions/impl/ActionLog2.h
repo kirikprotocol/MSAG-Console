@@ -20,10 +20,19 @@ public:
         lgInfo
     };
 
-
+    virtual const char* opname() const { return opname_.c_str(); }
     virtual void init(const SectionParams& params,PropertyObject propertyObject);
     virtual bool run(ActionContext& context);
-    ActionLog (LogLevel l){ level = l; }
+    ActionLog (LogLevel l) {
+        level = l; 
+        switch (l) {
+        case lgWarning : opname_ = "log:warn"; break;
+        case lgError   : opname_ = "log:error"; break;
+        case lgDebug   : opname_ = "log:debug"; break;
+        case lgInfo    : opname_ = "log:info"; break;
+        default : opname_ = "???";
+        }
+    }
 
     virtual ~ActionLog();
 
@@ -34,6 +43,7 @@ protected:
     std::string strMsg;
 
     LogLevel level;
+    std::string opname_;
     FieldType ftCategory,ftMessage;
 
     std::string ttToStr(TransportType t);

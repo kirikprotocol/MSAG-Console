@@ -25,6 +25,7 @@ class ActionTLV : public Action
     static Hash<int> typesHash;
     bool byTag;
     FieldType ftVar, ftTag, ftTLVType;
+    std::string opname_;
 
 protected:
 
@@ -56,7 +57,16 @@ public:
 
     virtual bool run(ActionContext& context);
 
-    ActionTLV(int t) : type(t) {};
+    ActionTLV(int t) : type(t) {
+        switch (t) {
+        case TLV_SET : opname_ = "smpp:set_tlv"; break;
+        case TLV_GET : opname_ = "smpp:get_tlv"; break;
+        case TLV_DEL : opname_ = "smpp:del_tlv"; break;
+        case TLV_EXIST : opname_ = "smpp:exist_tlv"; break;
+        default: opname_ = "smpp:???_tlv";
+        }
+    }
+    virtual const char* opname() const { return opname_.c_str(); }
     virtual void init(const SectionParams& params,PropertyObject propertyObject);
 
     static Hash<int> InitNames();

@@ -13,6 +13,7 @@ class ActionOperationMakePersistent : public Action
 public:
     ActionOperationMakePersistent() {}
 
+    virtual const char* opname() const { return "operation:make_persistent"; }
     virtual void init( const SectionParams& params, PropertyObject propertyObject );
     virtual bool run( ActionContext& context );
 

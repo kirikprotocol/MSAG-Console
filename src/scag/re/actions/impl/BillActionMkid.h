@@ -2,6 +2,7 @@
 #define _SCAG_RE_ACTIONS_IMPL_BILLACTIONMKID_H
 
 #include "scag/re/base/Action2.h"
+#include "scag/re/base/StringField.h"
 
 namespace scag2 {
 namespace re {
@@ -10,7 +11,7 @@ namespace actions {
 class BillActionMkid : public Action
 {
 public:
-    BillActionMkid() {}
+    BillActionMkid() : id_(*this,"externalId",true,false) {}
 
 protected:
     // Action iface
@@ -25,8 +26,9 @@ protected:
     }
 
 private:
-    FieldType   idtype_;
-    std::string idname_;
+    StringField id_;
+    // FieldType   idtype_;
+    // std::string idname_;
 };
 
 }}}

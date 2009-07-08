@@ -24,6 +24,7 @@ public:
     virtual bool run(ActionContext& context);
 
     ActionRedirect()  {};
+    virtual const char* opname() const { return "smpp:redirect"; }
     virtual void init(const SectionParams& params,PropertyObject propertyObject);
 };
 

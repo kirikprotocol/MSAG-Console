@@ -23,10 +23,14 @@ protected:
     virtual IParserHandler * StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory);
     virtual bool FinishXMLSubSection(const std::string& name);
     virtual int processOperation(int variable, int value) = 0;
+
+    ActionBinOperation( const char* opname, bool valueRequired = false ) :
+    m_ActionName(opname), m_hasValue(false), m_valueRequired(valueRequired) {}
+
 public:
-    ActionBinOperation() :m_hasValue(false), m_valueRequired(false) {}
     virtual bool run(ActionContext& context);
 
+    virtual const char* opname() const { return m_ActionName.c_str(); }
     virtual void init(const SectionParams& params,PropertyObject propertyObject);
 };
 
@@ -41,7 +45,7 @@ protected:
         return (variable + value);
     }
 public:
-    ActionInc() {m_ActionName = "inc";}
+    ActionInc() : ActionBinOperation("inc") {}
 };
 
 class ActionDec : public ActionBinOperation
@@ -52,7 +56,7 @@ protected:
         return (variable - value);
     }
 public:
-    ActionDec() {m_ActionName = "dec";}
+    ActionDec() : ActionBinOperation("dec") {}
 };
 
 
@@ -64,7 +68,7 @@ protected:
         return (variable * value);
     }
 public:
-    ActionMul() {m_ActionName = "mul"; m_valueRequired = true;}
+    ActionMul() : ActionBinOperation("mul",true) {}
 };
 
 
@@ -83,7 +87,7 @@ protected:
         return (variable % value);
     }
 public:
-    ActionMod() {m_ActionName = "mod"; m_valueRequired = true;}
+    ActionMod() : ActionBinOperation("mod",true) {}
 };
 
 
@@ -101,7 +105,7 @@ protected:
         return (variable / value);
     }
 public:
-    ActionDiv() {m_ActionName = "div"; m_valueRequired = true;}
+    ActionDiv() : ActionBinOperation("div",true) {}
 };
 
 

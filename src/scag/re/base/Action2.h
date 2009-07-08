@@ -18,8 +18,15 @@ protected:
 public:
     Action() : logger(0) { logger = Logger::getInstance("re.actions"); };
     virtual ~Action() {};
+
+    /// the name of the action
+    virtual const char* opname() const = 0;
+
     virtual void init(const SectionParams& params,PropertyObject propertyObject) = 0;
     virtual bool run(ActionContext& context) = 0;
+
+    /// NOTE: this static method is obsolete, used only for backward compat.
+    /// Please, use *Field classes.
     static FieldType CheckParameter( const SectionParams& params,
                                      PropertyObject& propertyObject,
                                      const char * actionName,

@@ -43,6 +43,7 @@ public:
 
     ActionReceipt() {};
     virtual void init(const SectionParams& params,PropertyObject propertyObject);
+    virtual const char* opname() const { return "smpp:receipt"; }
 };
 
 

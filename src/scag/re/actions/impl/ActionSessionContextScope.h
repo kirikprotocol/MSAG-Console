@@ -20,6 +20,7 @@ public:
     ActionSessionContextScope( ActionType tp );
     virtual void init( const SectionParams& params, PropertyObject propertyObject );
     virtual bool run( ActionContext& context );
+    virtual const char* opname() const { return opname_.c_str(); }
 
 protected:
     virtual IParserHandler * StartXMLSubSection( const std::string& name,
@@ -28,11 +29,11 @@ protected:
     virtual bool FinishXMLSubSection( const std::string& name );
 
 private:
-    const char* actionname() const;
     void setstatus( ActionContext& ctx, bool st );
 
 private:
     ActionType   type_;
+    std::string  opname_;
     std::string  idfieldname_;  // name of variable to get/set scope id into
     std::string  statusfieldname_;
     bool         hasstatus_;

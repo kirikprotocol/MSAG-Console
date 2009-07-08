@@ -144,20 +144,20 @@ Action * MainActionFactory::CreateAction( const std::string& name ) const
             break;
         }
         if ( 0 == strncmp(name.c_str(), "profile:", 8 ) ) {
-            if (name=="profile:set") return new PersAction(new pvss::SetCommand);
-            if (name=="profile:get") return new PersAction(new pvss::GetCommand);
-            if (name=="profile:del") return new PersAction(new pvss::DelCommand);
-            if (name=="profile:inc") return new PersAction(new pvss::IncCommand);
-            if (name=="profile:inc-mod") return new PersAction(new pvss::IncModCommand);
+            if (name=="profile:set") return new PersAction(new pvss::SetCommand,"profile:set");
+            if (name=="profile:get") return new PersAction(new pvss::GetCommand,"profile:get");
+            if (name=="profile:del") return new PersAction(new pvss::DelCommand,"profile:del");
+            if (name=="profile:inc") return new PersAction(new pvss::IncCommand,"profile:inc");
+            if (name=="profile:inc-mod") return new PersAction(new pvss::IncModCommand,"profile:inc-mod");
             if (name=="profile:batch") return new BatchAction();
             break;
         }
         if ( 0 == strncmp(name.c_str(), "batch:", 6 ) ) {
-            if (name=="batch:set") return new PersActionCommand(new pvss::SetCommand);
-            if (name=="batch:get") return new PersActionCommand(new pvss::GetCommand);
-            if (name=="batch:del") return new PersActionCommand(new pvss::DelCommand);
-            if (name=="batch:inc") return new PersActionCommand(new pvss::IncCommand);
-            if (name=="batch:inc-mod") return new PersActionCommand(new pvss::IncModCommand);
+            if (name=="batch:set") return new PersActionCommand(new pvss::SetCommand,"batch:set");
+            if (name=="batch:get") return new PersActionCommand(new pvss::GetCommand,"batch:get");
+            if (name=="batch:del") return new PersActionCommand(new pvss::DelCommand,"batch:del");
+            if (name=="batch:inc") return new PersActionCommand(new pvss::IncCommand,"batch:inc");
+            if (name=="batch:inc-mod") return new PersActionCommand(new pvss::IncModCommand,"batch:inc-mod");
             break;
         }
         if ( 0 == strncmp(name.c_str(), "stat:", 5 ) ) {

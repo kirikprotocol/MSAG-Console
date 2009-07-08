@@ -24,6 +24,7 @@ protected:
     virtual bool FinishXMLSubSection(const std::string& name);
 
 public:
+    virtual const char* opname() const { return "return"; }
     virtual void init(const SectionParams& params,PropertyObject propertyObject);
     virtual bool run(ActionContext& context);
 

@@ -40,6 +40,7 @@ public:
   AddKeywordsAction() {};
   virtual void init(const SectionParams &params, PropertyObject propertyObject);
   virtual bool run(ActionContext &context);
+    virtual const char* opname() const { return actionName(); }
 
 protected:
   typedef AddKeywords< ActionContext, Operation > AddKeywordsType;
@@ -51,6 +52,7 @@ public:
   SetKeywordsAction() {};
   virtual void init(const SectionParams &params, PropertyObject propertyObject);
   virtual bool run(ActionContext &context);
+    virtual const char* opname() const { return actionName(); }
 
 protected:
   typedef SetKeywords< ActionContext, Operation > SetKeywordsType;
@@ -62,6 +64,7 @@ public:
   GetKeywordsAction() {};
   virtual void init(const SectionParams &params, PropertyObject propertyObject);
   virtual bool run(ActionContext &context);
+    virtual const char* opname() const { return actionName(); }
 
 protected:
   const char* actionName() const { return "stat:get_keywords"; }

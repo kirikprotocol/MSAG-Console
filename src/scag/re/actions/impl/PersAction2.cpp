@@ -177,15 +177,15 @@ void PersActionCommand::init( const SectionParams& params, PropertyObject proper
 {
     bool bExist = false;
     std::string temp;
-    ftVar = CheckParameter(params, propertyObject, name(), "var", true, true, temp, bExist);
+    ftVar = CheckParameter(params, propertyObject, opname(), "var", true, true, temp, bExist);
     var.assign( temp.data(), temp.size() );
 
     /////////////////////////////////////////////
     bool statusExist = false;
-    CheckParameter(params, propertyObject, name(), "status", false, false,
+    CheckParameter(params, propertyObject, opname(), "status", false, false,
                    status, statusExist);
     bool msgExist = false;
-    CheckParameter(params, propertyObject, name(), "msg", false, false,
+    CheckParameter(params, propertyObject, opname(), "msg", false, false,
                    msg, msgExist);
 
     const unsigned cmdType = getCommandType( cmdType_.get() );
@@ -200,7 +200,7 @@ void PersActionCommand::init( const SectionParams& params, PropertyObject proper
     if (cmdType == CMDINCMOD || cmdType == CMDINC) {
         sValue = params.Exists("inc") ? params["inc"] : "1";
         bool resultExist = false;
-        CheckParameter(params, propertyObject, name(), "result", false, false, sResult, resultExist);
+        CheckParameter(params, propertyObject, opname(), "result", false, false, sResult, resultExist);
     }
     else
     {
@@ -256,7 +256,7 @@ void PersActionCommand::init( const SectionParams& params, PropertyObject proper
     if(policy == pvss::FIXED && params.Exists("finaldate"))
     {
 
-        ftFinalDate = CheckParameter(params, propertyObject, name(), "finaldate", true, true, sFinalDate, bExist);
+        ftFinalDate = CheckParameter(params, propertyObject, opname(), "finaldate", true, true, sFinalDate, bExist);
         if(ftFinalDate == ftUnknown)
         {
             finalDate = parseFinalDate(sFinalDate.c_str());
@@ -268,7 +268,7 @@ void PersActionCommand::init( const SectionParams& params, PropertyObject proper
         return;
     }
 
-    lifetime_.init(params, propertyObject, name(), "lifetime", true, true);
+    lifetime_.init(params, propertyObject);
     /*
     if(ftLifeTime == ftUnknown)
     {
@@ -383,7 +383,7 @@ BatchRequestComponent* PersActionCommand::makeCommand( ActionContext& context )
 
         // --- time policy
         time_t fd = finalDate;
-        uint32_t lt = lifetime_.getTime( name(), context );
+        uint32_t lt = lifetime_.getSeconds( context );
         if (ftFinalDate != ftUnknown)  {
             REProperty *rp = context.getProperty(sFinalDate);
             if (!rp || !(fd = parseFinalDate(rp->getStr().c_str()))) {

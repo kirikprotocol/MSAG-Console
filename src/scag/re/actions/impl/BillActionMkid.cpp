@@ -7,6 +7,8 @@ namespace actions {
 void BillActionMkid::init( const SectionParams& params,
                            PropertyObject propertyObject )
 {
+    id_.init(params,propertyObject);
+    /*
     bool bExist;
     idtype_ = CheckParameter( params,
                               propertyObject, 
@@ -14,6 +16,7 @@ void BillActionMkid::init( const SectionParams& params,
                               true, false,
                               idname_,
                               bExist );
+     */
 }
 
 IParserHandler * BillActionMkid::StartXMLSubSection( const std::string&,
@@ -32,9 +35,9 @@ bool BillActionMkid::FinishXMLSubSection( const std::string& )
 
 bool BillActionMkid::run( ActionContext& context )
 {
-    Property * property = context.getProperty(idname_);
+    Property* property = id_.getProperty(context);
     if (!property) {
-        throw SCAGException("Action '%s': Invalid property for externalId", opname());
+        throw SCAGException("Action '%s': Invalid property for %s", opname(),id_.getName());
     }
     const unsigned long long msec = static_cast<unsigned long long>(util::currentTimeMillis());
     CommandProperty& prop = context.getCommandProperty();

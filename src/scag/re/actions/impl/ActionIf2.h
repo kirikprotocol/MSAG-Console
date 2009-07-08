@@ -89,6 +89,7 @@ protected:
 public:
 
     ActionIf();
+    virtual const char* opname() const { return "if"; }
     virtual void init(const SectionParams& params,PropertyObject _propertyObject);
     virtual ~ActionIf();
     virtual bool run(ActionContext& context);

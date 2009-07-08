@@ -6,7 +6,14 @@ namespace re {
 namespace actions {
 
 ActionSessionContextScope::ActionSessionContextScope( ActionType tp ) :
-type_(tp) {}
+type_(tp) {
+    switch ( type_ ) {
+    case NEW : opname_ = "session:new_context"; break;
+    case SET : opname_ = "session:set_context"; break;
+    case DEL : opname_ = "session:del_context"; break;
+    default  : opname_ = "session:???_context"; break;
+    }
+}
 
 
 void ActionSessionContextScope::init( const SectionParams& params,
@@ -15,26 +22,26 @@ void ActionSessionContextScope::init( const SectionParams& params,
     FieldType ft;
     bool bExist;
 
-    ft = CheckParameter( params, propertyObject, actionname(), "id",
+    ft = CheckParameter( params, propertyObject, opname(), "id",
                          true, (type_ == NEW ? false : true),
                          idfieldname_, bExist );
 
-    CheckParameter( params, propertyObject, actionname(), "status",
+    CheckParameter( params, propertyObject, opname(), "status",
                     false, true, statusfieldname_, hasstatus_ );
 
     // m_valueFieldType = CheckParameter(params, propertyObject, "set", "value", true, true, m_strValue, bExist);
-    smsc_log_debug( logger, "Action '%s': init", actionname() );
+    smsc_log_debug( logger, "Action '%s': init", opname() );
 }
 
 
 bool ActionSessionContextScope::run( ActionContext& context )
 {
-    smsc_log_debug( logger,"Action '%s': run", actionname() );
+    smsc_log_debug( logger,"Action '%s': run", opname() );
     Property * property = context.getProperty(idfieldname_);
 
     if (!property) 
     {
-        smsc_log_warn(logger,"Action '%s': invalid property '%s'", actionname(), idfieldname_.c_str() );
+        smsc_log_warn(logger,"Action '%s': invalid property '%s'", opname(), idfieldname_.c_str() );
         setstatus(context,false);
         return true;
     }
@@ -46,7 +53,7 @@ bool ActionSessionContextScope::run( ActionContext& context )
         const int ctx = context.getSession().createContextScope();
         property->setInt( ctx );
         context.setContextScope( ctx );
-        smsc_log_debug(logger,"Action '%s': property '%s' new scope_id='%d'", actionname(), idfieldname_.c_str(), ctx );
+        smsc_log_debug(logger,"Action '%s': property '%s' new scope_id='%d'", opname(), idfieldname_.c_str(), ctx );
         setstatus(context,true);
         break;
 
@@ -58,9 +65,9 @@ bool ActionSessionContextScope::run( ActionContext& context )
         SessionPropertyScope* scope = context.getSession().getContextScope( ctx );
         if ( scope ) {
             context.setContextScope( ctx );
-            smsc_log_debug(logger,"Action '%s': property '%s' set scope_id='%d' scope=%p", actionname(), idfieldname_.c_str(), ctx, scope );
+            smsc_log_debug(logger,"Action '%s': property '%s' set scope_id='%d' scope=%p", opname(), idfieldname_.c_str(), ctx, scope );
         } else {
-            smsc_log_warn(logger,"Action '%s': property '%s' cannot set scope_id='%d' - not found", actionname(), idfieldname_.c_str(), ctx );
+            smsc_log_warn(logger,"Action '%s': property '%s' cannot set scope_id='%d' - not found", opname(), idfieldname_.c_str(), ctx );
         }
         setstatus( context,scope );
         break;
@@ -73,12 +80,12 @@ bool ActionSessionContextScope::run( ActionContext& context )
             const bool reset = ( context.getContextScope() == ctx );
             if ( reset ) context.setContextScope(0);
             smsc_log_debug(logger,"Action '%s': property '%s', context scope %d deleted%s",
-                           actionname(), idfieldname_.c_str(), ctx,
+                           opname(), idfieldname_.c_str(), ctx,
                            reset ? " (reset also)" : "");
             setstatus(context,true);
         } else {
             smsc_log_warn(logger,"Action '%s': property '%s' cannot delete session scope %d - not found",
-                          actionname(), idfieldname_.c_str(), ctx );
+                          opname(), idfieldname_.c_str(), ctx );
             setstatus(context,false);
         }
         break;
@@ -97,23 +104,13 @@ IParserHandler * ActionSessionContextScope::StartXMLSubSection( const std::strin
                                                                 const SectionParams& params,
                                                                 const ActionFactory& factory )
 {
-    throw SCAGException( "Action '%s' cannot include child objects", actionname() );
+    throw SCAGException( "Action '%s' cannot include child objects", opname() );
 }
 
 
 bool ActionSessionContextScope::FinishXMLSubSection( const std::string& name )
 {
     return true;
-}
-
-const char* ActionSessionContextScope::actionname() const
-{
-    switch ( type_ ) {
-    case NEW : return "session:new_context";
-    case SET : return "session:set_context";
-    case DEL : return "session:del_context";
-    default  : return "session:???_context";
-    }
 }
 
 
@@ -123,7 +120,7 @@ void ActionSessionContextScope::setstatus( ActionContext& context, bool st )
     Property * property = context.getProperty(statusfieldname_);
     if ( ! property ) {
         smsc_log_warn( logger,"Action '%s': property '%s' not found",
-                       actionname(), statusfieldname_.c_str() );
+                       opname(), statusfieldname_.c_str() );
         return;
     }
     property->setBool( st );

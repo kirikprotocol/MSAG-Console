@@ -16,6 +16,7 @@ public:
     virtual ~CookieAction() {}
     virtual bool run(ActionContext& context);
     virtual void init(const SectionParams& params,PropertyObject propertyObject);
+    virtual const char* opname() const { return set ? "http:set-cookie" : "http:get-cookie"; }
 
 protected:
     virtual IParserHandler * StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory);

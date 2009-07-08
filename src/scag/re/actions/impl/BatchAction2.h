@@ -11,6 +11,7 @@ class BatchAction : public PersActionBase, public PersActionResultRetriever
 public:
     BatchAction() : PersActionBase(), transactMode_(false) {}
     virtual ~BatchAction();
+    virtual const char* opname() const { return "profile:batch"; }
     virtual void init(const SectionParams& params,PropertyObject propertyObject);
     virtual bool RunBeforePostpone( ActionContext& context );
 

@@ -6,7 +6,7 @@
 #include "scag/re/base/Action2.h"
 #include "scag/re/base/LongCallAction2.h"
 #include "PersCall.h"
-#include "TimeField.h"
+#include "scag/re/base/TimeField.h"
 #include "scag/pvss/api/packets/ProfileCommandVisitor.h"
 #include "scag/pvss/api/packets/BatchRequestComponent.h"
 #include "scag/pvss/api/packets/CommandResponse.h"
@@ -36,15 +36,21 @@ protected:
 class PersActionCommand : public Action, public PersActionResultRetriever
 {
 public:
-    PersActionCommand( pvss::ProfileCommand* c = 0 ) :
+    PersActionCommand( pvss::ProfileCommand* c, const char* opname ) :
     cmdType_(c),
     mod(0),
     policy(pvss::UNKNOWN),
     ftFinalDate(ftUnknown),
-    finalDate(-1)
+    finalDate(-1),
+    lifetime_(*this,"lifetime",true,true),
+    opname_(opname)
     {}
 
     virtual ~PersActionCommand() {}
+
+    virtual const char* opname() const {
+        return opname_.c_str();
+    }
 
     virtual void init( const SectionParams& params, PropertyObject propertyObject );
 
@@ -74,9 +80,6 @@ private:
     virtual IParserHandler* StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory);
     virtual bool FinishXMLSubSection(const std::string& name);
 
-    inline const char* name() const { return "PersAction"; }
-
-    // not used
     virtual bool run( ActionContext& context ) { return true; }
 
     pvss::TimePolicy getPolicyFromStr( const std::string& str );
@@ -136,6 +139,8 @@ private:
     TimeField lifetime_;
     // --- variable name for inc and inc_mod result
     std::string sResult;
+
+    std::string opname_;
 };
 
 
@@ -175,11 +180,12 @@ protected:
 class PersAction : public PersActionBase 
 {
 public:
-    PersAction() : PersActionBase() {}
-    PersAction(pvss::ProfileCommand* c) : PersActionBase(), persCommand(c) {}
+    PersAction() : PersActionBase(), persCommand(0,"???") {}
+    PersAction(pvss::ProfileCommand* c, const char* opname ) : PersActionBase(), persCommand(c,opname) {}
     virtual ~PersAction() {}
     virtual void init(const SectionParams& params, PropertyObject propertyObject);
     virtual bool RunBeforePostpone(ActionContext& context);
+    virtual const char* opname() const { return persCommand.opname(); }
 
 protected:
     virtual IParserHandler * StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory);

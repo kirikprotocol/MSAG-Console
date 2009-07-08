@@ -28,6 +28,7 @@ protected:
     virtual IParserHandler * StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory);
     virtual bool FinishXMLSubSection(const std::string& name);
 public:
+    virtual const char* opname() const { return "strings:substr"; }
     virtual bool run(ActionContext& context);
 
     ActionSubstr() : beginIndex(-1), endIndex(-1) {};
