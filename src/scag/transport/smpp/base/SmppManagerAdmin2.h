@@ -60,7 +60,7 @@ struct SmppEntityInfo {
     inQueueLimit=0;
     outQueueLimit=0;
     enabled=false;
-    snmpTracking=false;
+    snmpTracking=true;
   }
 };
 
