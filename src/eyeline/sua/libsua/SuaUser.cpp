@@ -292,21 +292,22 @@ SuaUser::unitdata_req(const uint8_t* message,
                       const MessageProperties& msgProperties,
                       unsigned int suaConnectNum)
 {
+  //TODO: avoid excessive memcpy() in serialization
   if ( !_wasInitialized )
     return SuaApi::CallResult(SUA_NOT_INITIALIZED, suaConnectNum);
 
   communication::libsua_messages::N_UNITDATA_REQ_Message unitdataReqMessage;
 
-  if ( msgProperties.fieldsMask & MessageProperties::SET_SEQUENCE_CONTROL )
-    unitdataReqMessage.setSequenceControl(msgProperties.sequenceControlValue);
+  if (msgProperties.hasSequenceControl())
+    unitdataReqMessage.setSequenceControl(msgProperties.getSequenceControl());
 
-  unitdataReqMessage.setReturnOption(msgProperties.returnOnError);
+  unitdataReqMessage.setReturnOption(msgProperties.getReturnOnError());
 
-  if ( msgProperties.fieldsMask & MessageProperties::SET_IMPORTANCE )
-    unitdataReqMessage.setImportance(msgProperties.importance);
+  if (msgProperties.hasImportance())
+    unitdataReqMessage.setImportance(msgProperties.getImportance());
 
-  if ( msgProperties.fieldsMask & MessageProperties::SET_HOP_COUNT )
-    unitdataReqMessage.setHopCounter(msgProperties.hopCount);
+  if (msgProperties.hasHopCount())
+    unitdataReqMessage.setHopCounter(msgProperties.getHopCount());
 
   unitdataReqMessage.setCalledAddress(calledAddr, calledAddrLen);
 

@@ -1,29 +1,57 @@
+/* ************************************************************************** *
+ * SUA Message properties: SCCP transmission parameters
+ * ************************************************************************** */
 #ifndef __EYELINE_SUA_LIBSUA_MESSAGEPROPERTIES_HPP__
+#ident "@(#)$Id$"
 # define __EYELINE_SUA_LIBSUA_MESSAGEPROPERTIES_HPP__
 
-# include <sys/types.h>
+#include <inttypes.h>
 
 namespace eyeline {
 namespace sua {
 namespace libsua {
 
-struct MessageProperties
-{
-  MessageProperties();
+class MessageProperties {
+protected:
+  enum FieldMaskBit_e {
+    bit_SEQUENCE_CONTROL = 0x01, bit_IMPORTANCE = 0x02, bit_HOP_COUNT = 0x04
+  };
 
-  bool returnOnError;
+  uint8_t _fieldsMask;
+  bool    _returnOnError;   //mandatory, by default is true
+  uint8_t _importance;      //optional, by default not used
+  uint8_t _hopCount;        //optional, by default not used
+  uint32_t _sequenceControlValue; //optional, used to indicate that
+                                  //'in-sequence delivery' is required and
+                                  //select appropriate SLS
 
-  uint32_t sequenceControlValue;
+public:
+  MessageProperties()
+    : _fieldsMask(0), _returnOnError(true), _importance(0), _hopCount(0)
+    , _sequenceControlValue(0)
+  { }
 
-  uint8_t importance;
+  bool getReturnOnError(void) const { return _returnOnError; }
+  void setReturnOnError(bool do_return = true) { _returnOnError = do_return; }
 
-  uint8_t hopCount;
+  bool hasHopCount(void) const { return (_fieldsMask & bit_HOP_COUNT) != 0; }
+  uint8_t getHopCount(void) const { return _hopCount; }
+  
+  bool hasImportance(void) const { return (_fieldsMask & bit_IMPORTANCE) != 0; }
+  uint8_t getImportance(void) const { return _hopCount; }
 
-  typedef enum {SET_SEQUENCE_CONTROL = 0x01, SET_IMPORTANCE = 0x02, SET_HOP_COUNT = 0x04} field_mask_t;
+  bool hasSequenceControl(void) const { return (_fieldsMask & bit_SEQUENCE_CONTROL) != 0; }
+  uint32_t getSequenceControl(void) const { return _hopCount; }
 
-  uint32_t fieldsMask;
+  void setHopCount(uint8_t use_count) { _hopCount = use_count; _fieldsMask |= bit_HOP_COUNT; }
+  void setImportance(uint8_t use_count) { _hopCount = use_count; _fieldsMask |= bit_IMPORTANCE; }
+  void setSequenceControl(uint32_t use_val)
+  {
+    _sequenceControlValue = use_val; _fieldsMask |= bit_SEQUENCE_CONTROL;
+  }
 };
 
 }}}
 
-#endif
+#endif /* __EYELINE_SUA_LIBSUA_MESSAGEPROPERTIES_HPP__ */
+
