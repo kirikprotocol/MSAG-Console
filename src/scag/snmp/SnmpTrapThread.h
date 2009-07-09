@@ -38,6 +38,7 @@ public:
     inline TrapRecordQueue* getQueue() { return this; }
 
 private:
+    void Start(int) { Start(); }
     SnmpTrapThread();
 
 private:
