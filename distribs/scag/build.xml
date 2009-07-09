@@ -24,7 +24,17 @@ The possible SELECTIONS are listed below under Main targets.
             <isset property="BUILD_DIR"/>
         </not>
     </condition>
-    <condition property="CATALINA_BASE" value="${DISTR_DIR}">
+    <condition property="WEBBUILD_DIR" value="${BUILD_DIR}">
+        <not>
+            <isset property="WEBBUILD_DIR"/>
+        </not>
+    </condition>
+    <condition property="WEBDISTR_DIR" value="${DISTR_DIR}">
+        <not>
+            <isset property="WEBDISTR_DIR"/>
+        </not>
+    </condition>
+    <condition property="CATALINA_BASE" value="${WEBDISTR_DIR}">
         <not>
             <isset property="CATALINA_BASE"/>
         </not>
@@ -59,7 +69,7 @@ The possible SELECTIONS are listed below under Main targets.
     <property name="TEMPL_DIR" value="${SMSC_DIR}/config/templates"/>
     <property name="WEBSRC_DIR" value="${SMSC_DIR}/webapps"/>
     <property name="JEDIT_DIR" value="${SMSC_DIR}/webapps/jedit"/>
-    <property name="EXPLODED_DIR" location="${BUILD_DIR}/exploded/msag"/>
+    <property name="EXPLODED_DIR" location="${WEBBUILD_DIR}/exploded/msag"/>
     <property name="WEBINF_DIR" value="webapps/msag/WEB-INF"/>
     <property name="xmlcommon_lib" location="${JEDIT_DIR}/lib/xml-commons-resolver.jar"/>
     <property name="htmlparser_lib" location="${JEDIT_DIR}/lib/htmlparser.jar"/>
@@ -491,17 +501,17 @@ If you have it somewhere, you may specify it on command line via -DPROTOGEN=full
 
     <target name="-make.jedit" if="SETUP_MAKE_JEDIT">
         <echo>Building jedit</echo>
-        <mkdir dir="${BUILD_DIR}/jedit"/>
-        <unjar src="${htmlparser_lib}" dest="${BUILD_DIR}/jedit"/>
+        <mkdir dir="${WEBBUILD_DIR}/jedit"/>
+        <unjar src="${htmlparser_lib}" dest="${WEBBUILD_DIR}/jedit"/>
         <javac   srcdir="${JEDIT_DIR}/src"
-                 destdir="${BUILD_DIR}/jedit"
+                 destdir="${WEBBUILD_DIR}/jedit"
                  deprecation="on"
                  includeJavaRuntime="no"
                  debug="yes" 
                  encoding="UTF8"
                  source="1.4"
                  target="1.4"
-                 classpath="${BUILD_DIR}/jedit">
+                 classpath="${WEBBUILD_DIR}/jedit">
             <include name="bsh/**/*.java"/>
             <include name="com/microstar/xml/*.java"/>
             <include name="errorlist/*.java"/>
@@ -512,10 +522,10 @@ If you have it somewhere, you may specify it on command line via -DPROTOGEN=full
             <include name="xml/**/*.java"/>
         </javac>
 
-        <jar jarfile="${BUILD_DIR}/jedit/jedit.jar"
+        <jar jarfile="${WEBBUILD_DIR}/jedit/jedit.jar"
              manifest="${JEDIT_DIR}/src/org/gjt/sp/jedit/jedit.manifest"
              compress="true">
-            <fileset dir="${BUILD_DIR}/jedit">
+            <fileset dir="${WEBBUILD_DIR}/jedit">
                 <include name="bsh/**/*.class"/>
                 <include name="com/**/*.class"/>
                 <include name="errorlist/*.class"/>
@@ -588,7 +598,7 @@ If you have it somewhere, you may specify it on command line via -DPROTOGEN=full
      </dname>
     </genkey-->
 
-        <signjar jar="${BUILD_DIR}/jedit/jedit.jar" alias="msag" storepass="password" keystore="${JEDIT_DIR}/src/.keystore"/>
+        <signjar jar="${WEBBUILD_DIR}/jedit/jedit.jar" alias="msag" storepass="password" keystore="${JEDIT_DIR}/src/.keystore"/>
     </target>
 
     <target name="make" 
@@ -773,12 +783,12 @@ If you have it somewhere, you may specify it on command line via -DPROTOGEN=full
     </target>
 
     <target name="-update.jedit" if="SETUP_MAKE_JEDIT">
-        <mkdir dir="${DISTR_DIR}/applet"/>
-        <mkdir dir="${DISTR_DIR}/webapps"/>
-        <copy todir="${DISTR_DIR}/applet">
+        <mkdir dir="${WEBDISTR_DIR}/applet"/>
+        <mkdir dir="${WEBDISTR_DIR}/webapps"/>
+        <copy todir="${WEBDISTR_DIR}/applet">
             <fileset dir="${WEBSRC_DIR}/jedit/dirs" includes="**/*"/>
         </copy>
-        <copy todir="${DISTR_DIR}/webapps/scag/rules/rules" preservelastmodified="yes">
+        <copy todir="${WEBDISTR_DIR}/webapps/scag/rules/rules" preservelastmodified="yes">
             <fileset dir="${JEDIT_DIR}/build" includes="jedit.jar" />
         </copy>
     </target>
@@ -794,9 +804,13 @@ If you have it somewhere, you may specify it on command line via -DPROTOGEN=full
 
     <target name="-install.clean">
         <echo>Cleanup the distribution</echo>
-        <exec executable="rm">
+        <exec executable="rm" failonerror="false">
             <arg value="-r"/>
             <arg file="${DISTR_DIR}"/>
+        </exec>
+        <exec executable="rm" failonerror="false">
+            <arg value="-r"/>
+            <arg file="${WEBDISTR_DIR}"/>
         </exec>
     </target>
 
@@ -807,22 +821,24 @@ If you have it somewhere, you may specify it on command line via -DPROTOGEN=full
         <property name="INSTALL_TREE" value="true"/>
     </target>
 
-    <target name="-install.tomcat" depends="-update.tree" if="SETUP_MAKE_WEBAPP">
+    <target name="-install.tomcat" if="SETUP_MAKE_WEBAPP">
         <!-- install tomcat sources into distribution dir -->
         <!-- it is ugly, because it is required for -make.webapp -->
-        <mkdir dir="${DISTR_DIR}/tomcat"/>
-        <mkdir dir="${DISTR_DIR}/tomcat/common/lib"/>
-        <mkdir dir="${DISTR_DIR}/tomcat/server/lib"/>
-        <mkdir dir="${DISTR_DIR}/tomcat/shared/lib"/>
-        <mkdir dir="${DISTR_DIR}/tomcat/shared/classes"/>
+        <mkdir dir="${WEBDISTR_DIR}"/>
+        <mkdir dir="${WEBDISTR_DIR}/conf"/>
+        <mkdir dir="${WEBDISTR_DIR}/tomcat"/>
+        <mkdir dir="${WEBDISTR_DIR}/tomcat/common/lib"/>
+        <mkdir dir="${WEBDISTR_DIR}/tomcat/server/lib"/>
+        <mkdir dir="${WEBDISTR_DIR}/tomcat/shared/lib"/>
+        <mkdir dir="${WEBDISTR_DIR}/tomcat/shared/classes"/>
         <untar compression="gzip"
                src="${SMSC_DIR}/config/tomcat/tomcat5.tar.gz"
-               dest="${DISTR_DIR}/tomcat"/>
+               dest="${WEBDISTR_DIR}/tomcat"/>
         <chmod perm="775">
-            <fileset dir="${DISTR_DIR}/tomcat/bin" includes="*.sh"/>
+            <fileset dir="${WEBDISTR_DIR}/tomcat/bin" includes="*.sh"/>
         </chmod>
         <copy file="${SMSC_DIR}/config/tomcat/xalan.jar"
-              todir="${DISTR_DIR}/tomcat/common/endorsed"/>
+              todir="${WEBDISTR_DIR}/tomcat/common/endorsed"/>
         <property name="INSTALL_TOMCAT" value="true"/>
     </target>
 
@@ -1050,31 +1066,31 @@ If you have it somewhere, you may specify it on command line via -DPROTOGEN=full
     <target name="-install.webapp" depends="-install.tomcat" if="SETUP_MAKE_WEBAPP">
         <ant antfile="${WEBSRC_DIR}/build-scag.xml" dir="${WEBSRC_DIR}" target="install"/>
 
-        <copy todir="${DISTR_DIR}/conf" flatten="yes" >
+        <copy todir="${WEBDISTR_DIR}/conf" flatten="yes" >
             <fileset dir="${TEMPL_DIR}">
                 <include name="scag/tomcat/*"/>
             </fileset>
             <filterset filtersfile="${TEMPLATE_PROPS}"/>
         </copy>
-        <copy todir="${DISTR_DIR}/${WEBINF_DIR}/classes/" file="${TEMPL_DIR}/log4j.properties" flatten="yes" >
+        <copy todir="${WEBDISTR_DIR}/${WEBINF_DIR}/classes/" file="${TEMPL_DIR}/log4j.properties" flatten="yes" >
             <filterset filtersfile="${TEMPLATE_PROPS}"/>
         </copy>
-        <symlink resource="../${WEBINF_DIR}/classes/log4j.properties" link="${DISTR_DIR}/conf"/>
-        <copy todir="${DISTR_DIR}" flatten="yes">
+        <symlink resource="../${WEBINF_DIR}/classes/log4j.properties" link="${WEBDISTR_DIR}/conf"/>
+        <copy todir="${WEBDISTR_DIR}" flatten="yes">
             <fileset dir="${TEMPL_DIR}" includes="start_tomcat.sh stop_tomcat.sh"/>
             <filterset filtersfile="${TEMPLATE_PROPS}"/>
         </copy>
-        <copy tofile="${DISTR_DIR}/tomcat/tomcat_runner.sh" file="${TEMPL_DIR}/tomcat_runner.sh">
+        <copy tofile="${WEBDISTR_DIR}/tomcat/tomcat_runner.sh" file="${TEMPL_DIR}/tomcat_runner.sh">
             <filterset filtersfile="${TEMPLATE_PROPS}"/>
         </copy>
         <chmod perm="755">
-            <fileset dir="${DISTR_DIR}" includes="start_tomcat.sh stop_tomcat.sh tomcat/tomcat_runner.sh"/>
+            <fileset dir="${WEBDISTR_DIR}" includes="start_tomcat.sh stop_tomcat.sh tomcat/tomcat_runner.sh"/>
         </chmod>
-        <copy tofile="${DISTR_DIR}/conf/webconfig.xml"
+        <copy tofile="${WEBDISTR_DIR}/conf/webconfig.xml"
               file="${TEMPL_DIR}/scag/webapp.xml">
             <filterset filtersfile="${TEMPLATE_PROPS}"/>
         </copy>
-        <copy tofile="${DISTR_DIR}/${WEBINF_DIR}/web.xml"
+        <copy tofile="${WEBDISTR_DIR}/${WEBINF_DIR}/web.xml"
               file="${TEMPL_DIR}/scag/web.xml">
             <filterset filtersfile="${TEMPLATE_PROPS}"/>
         </copy>

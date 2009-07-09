@@ -2,15 +2,35 @@
   <property file="../build.properties"/>
   <property environment="env"/>
   <property name="java_src" location="${basedir}/WEB-INF/src"/>
-  <property name="java_out" location="${BUILD_DIR}/classes/smppgw"/>
-  <property name="exploded" location="${BUILD_DIR}/exploded/smppgw"/>
+    <condition property="WEBBUILD_DIR" value="${BUILD_DIR}">
+        <not>
+            <isset property="WEBBUILD_DIR"/>
+        </not>
+    </condition>
+    <condition property="WEBDISTR_DIR" value="${DISTR_DIR}">
+        <not>
+            <isset property="WEBDISTR_DIR"/>
+        </not>
+    </condition>
+    <condition property="CATALINA_BASE" value="${WEBDISTR_DIR}">
+        <not>
+            <isset property="CATALINA_BASE"/>
+        </not>
+    </condition>
+    <condition property="CATALINA_HOME" value="${CATALINA_BASE}/tomcat">
+        <not>
+            <isset property="CATALINA_HOME"/>
+        </not>
+    </condition>
+  <property name="java_out" location="${WEBBUILD_DIR}/classes/smppgw"/>
+  <property name="exploded" location="${WEBBUILD_DIR}/exploded/smppgw"/>
   <property name="java_lib" location="${exploded}/WEB-INF/lib"/>
   <property name="perfmon_path" value="ru/sibinco/smppgw/perfmon"/>
   <property name="perfmon_src" location="${java_src}/${perfmon_path}"/>
   <property name="perfmon_out" location="${java_out}/${perfmon_path}"/>
 
-  <property name="sibinco_lib" location="${BUILD_DIR}/jars/sibinco_lib.jar"/>
-  <property name="tomcat_auth_lib" location="${BUILD_DIR}/jars/sibinco_tomcat_auth.jar"/>
+  <property name="sibinco_lib" location="${WEBBUILD_DIR}/jars/sibinco_lib.jar"/>
+  <property name="tomcat_auth_lib" location="${WEBBUILD_DIR}/jars/sibinco_tomcat_auth.jar"/>
   <property name="log4j_jar" location="WEB-INF/lib/log4j.jar"/>
   <property name="servlet_jar" location="${CATALINA_HOME}/common/lib/servlet-api.jar"/>
 

@@ -2,10 +2,30 @@
 
   <property file="../build.properties"/>
   <property environment="env"/>
+  <condition property="WEBBUILD_DIR" value="${BUILD_DIR}">
+        <not>
+            <isset property="WEBBUILD_DIR"/>
+        </not>
+  </condition>
+  <condition property="WEBDISTR_DIR" value="${DISTR_DIR}">
+        <not>
+            <isset property="WEBDISTR_DIR"/>
+        </not>
+  </condition>
+    <condition property="CATALINA_BASE" value="${WEBDISTR_DIR}">
+        <not>
+            <isset property="CATALINA_BASE"/>
+        </not>
+    </condition>
+    <condition property="CATALINA_HOME" value="${CATALINA_BASE}/tomcat">
+        <not>
+            <isset property="CATALINA_HOME"/>
+        </not>
+    </condition>
   <property name="jmx_jar" location="${CATALINA_HOME}/bin/jmx.jar"/>
   <property name="catalina_jar" location="${CATALINA_HOME}/server/lib/catalina.jar"/>
-  <property name="java_out" location="${BUILD_DIR}/tomcat_auth_lib/classes/"/>
-  <property name="jar_out" location="${BUILD_DIR}/jars/"/>
+  <property name="java_out" location="${WEBBUILD_DIR}/tomcat_auth_lib/classes/"/>
+  <property name="jar_out" location="${WEBBUILD_DIR}/jars/"/>
 
   <target name="init">
     <tstamp/>
