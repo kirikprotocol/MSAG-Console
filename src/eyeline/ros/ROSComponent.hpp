@@ -7,6 +7,7 @@
 #define __ROS_COMPONENT_DEFS_HPP
 
 #include "eyeline/asn1/AbstractSyntax.hpp"
+#include "eyeline/ros/ROSRejectProblem.hpp"
 
 namespace eyeline {
 namespace ros {
@@ -199,70 +200,6 @@ public:
 };
 
 
-class RejectProblem {
-public:
-  enum ProblemKind {
-    rejGeneral = 0, rejInvoke = 1, rejResult = 2, rejError = 3
-  };
-  enum GeneralProblem {
-    rjg_unrecognizedPDU = 0, rjg_mistypedPDU = 1, rjg_badlyStructuredPDU = 2
-  };
-  enum InvokeProblem {    //invocation problems
-      rji_duplicateInvocation = 0, rji_unrecognizedOperation = 1
-    , rji_mistypedArgument = 2, rji_resourceLimitation = 3
-    , rji_releaseInProgress = 4, rji_unrecognizedLinkedId = 5
-    , rji_linkedResponseUnexpected = 6, rji_unexpectedLinkedOperation = 7
-  };
-  enum RResultProblem {   //returnResult(NL) problems
-      rjr_unrecognizedInvocation = 0, rjr_resultResponseUnexpected = 1
-    , rjr_mistypedResult = 2
-  };
-  enum RErrorProblem {    //returnError problems
-      rje_unrecognizedInvocation = 0, rje_errorResponseUnexpected =1
-    , rje_unrecognizedError = 2, rje_unexpectedError = 3
-    , rje_mistypedParameter = 4
-  };
-
-protected:
-  const ProblemKind rejKind;
-
-  union {
-    GeneralProblem  general;
-    InvokeProblem   invoke;
-    RResultProblem  rResult;
-    RErrorProblem   rError;
-  } rejCode;
-
-public:
-  RejectProblem(GeneralProblem rjg_code)
-      : rejKind(rejGeneral)
-  {
-    rejCode.general = rjg_code;
-  }
-  RejectProblem(InvokeProblem rji_code)
-      : rejKind(rejInvoke)
-  {
-    rejCode.invoke = rji_code;
-  }
-  RejectProblem(RResultProblem rjr_code)
-      : rejKind(rejResult)
-  {
-    rejCode.rResult = rjr_code;
-  }
-  RejectProblem(RErrorProblem rje_code)
-      : rejKind(rejError)
-  {
-    rejCode.rError = rje_code;
-  }
-
-  ProblemKind     rejectKind(void) const { return rejKind; }
-
-  GeneralProblem  generalProblem(void) const { return rejCode.general; }
-  InvokeProblem   invokeProblem(void) const { return rejCode.invoke; }
-  RResultProblem  rresultProblem(void) const { return rejCode.rResult; }
-  RErrorProblem   rerrorProblem(void) const { return rejCode.rError; }
-};
-
 class ROSReject : public ROSComponentPrimitive {
 protected:
   RejectProblem   _problem;
@@ -272,19 +209,19 @@ public:
     : ROSComponentPrimitive(ROSComponentPrimitive::rosReject, (uint8_t)RejectProblem::rejGeneral, 0)
     , _problem(RejectProblem::rjg_unrecognizedPDU)
   { }
-  ROSReject(RejectProblem::GeneralProblem rjg_code)
+  ROSReject(RejectProblem::GeneralProblem_e rjg_code)
     : ROSComponentPrimitive(ROSComponentPrimitive::rosReject, (uint8_t)RejectProblem::rejGeneral, 0)
     , _problem(rjg_code)
   { }
-  ROSReject(RejectProblem::RejectProblem::InvokeProblem rji_code)
+  ROSReject(RejectProblem::InvokeProblem_e rji_code)
     : ROSComponentPrimitive(ROSComponentPrimitive::rosReject, (uint8_t)RejectProblem::rejInvoke, 0)
     , _problem(rji_code)
   { }
-  ROSReject(RejectProblem::RResultProblem rjr_code)
+  ROSReject(RejectProblem::RResultProblem_e rjr_code)
     : ROSComponentPrimitive(ROSComponentPrimitive::rosReject, (uint8_t)RejectProblem::rejResult, 0)
     , _problem(rjr_code)
   { }
-  ROSReject(RejectProblem::RErrorProblem rje_code)
+  ROSReject(RejectProblem::RErrorProblem_e rje_code)
     : ROSComponentPrimitive(ROSComponentPrimitive::rosReject, (uint8_t)RejectProblem::rejError, 0)
     , _problem(rje_code)
   { }
