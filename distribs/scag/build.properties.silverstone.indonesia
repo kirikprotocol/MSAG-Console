@@ -1,0 +1,13 @@
+TEMPLATE_PROPS=msag.properties.silverstone.indonesia
+
+# Uncomment it to create usual build
+# Comment it to create date separated build (to track external installations)
+BUILD_DIR=/home/msag/distribs/upload.v2/msag/build
+
+# Change it for building external installations
+# DISTR_DIR=/home/msag/distribs/msag
+# Change it for building updates for external installations
+DISTR_DIR=/home/msag/distribs/upload.v2/msag/distr
+
+SMSC_DIR=/home/msag/distribs/upload.v2/msag/build
+MAKE_ARGS=CXX=CC DEBUG=YES VERBOSE=NO TRACE=YES DISABLE_SMPP_CHECKS=YES UNICODE=YES MSAG_FAKE_STAT=NO MSAG_INMAN_BILL=NO LEAKTRACE=NO LOGGER_TIMED_CONFIG_RELOAD=NO USECOLORS=YES XTARGET="-m64 -xtarget=opteron -Kpic" B64=YES SNMP=YES
