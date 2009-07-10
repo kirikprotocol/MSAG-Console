@@ -8,6 +8,13 @@ namespace protocols {
 namespace smpp {
 
 void
+SMPPIOProcessor::removeLinkSet(const io_subsystem::LinkId& link_set_id)
+{
+  _binder.removeBindingInfo(link_set_id);
+  IOProcessor::removeLinkSet(link_set_id);
+}
+
+void
 SMPPIOProcessor::removeIncomingLink(const io_subsystem::LinkId& link_id)
 {
   SmeRegistry::getInstance().deleteSmeInfo(link_id);

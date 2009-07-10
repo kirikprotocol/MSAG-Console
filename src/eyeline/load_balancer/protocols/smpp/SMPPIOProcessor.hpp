@@ -24,6 +24,7 @@ public:
   {}
 
   virtual void removeIncomingLink(const io_subsystem::LinkId& link_id);
+  virtual void removeLinkSet(const io_subsystem::LinkId& link_set_id);
 
   virtual io_subsystem::TimeoutEvent*
   createBindResponseWaitTimeoutEvent(const io_subsystem::LinkId& link_id,
