@@ -72,7 +72,7 @@ int main(int argc, char** argv)
 
     ioSubsystem.stop();
   } catch(std::exception& ex) {
-    smsc_log_error(logger, "catched unexpected exception [%s]. Terminate.", ex.what());
+    smsc_log_error(logger, "caught unexpected exception [%s]. Terminate.", ex.what());
     return 1;
   }
   return 0;
