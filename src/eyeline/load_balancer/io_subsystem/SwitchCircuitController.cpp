@@ -2,6 +2,7 @@
 
 # include "eyeline/corex/io/IOExceptions.hpp"
 # include "eyeline/load_balancer/io_subsystem/IOProcessor.hpp"
+# include "eyeline/load_balancer/io_subsystem/types.hpp"
 
 namespace eyeline {
 namespace load_balancer {
@@ -36,17 +37,16 @@ SwitchCircuitController::activateConnection(corex::io::network::TCPSocket* new_s
 {
   smsc_log_info(_logger, "SwitchCircuitController::activateConnection::: try activate outcoming connections for incoming connection=[%s], IOProcessor's id=%d",
                 new_socket->toString().c_str(), io_processor.getId());
-  LinkSet* linkSet = createLinkSet();
+  LinkSetRefPtr linkSet(createLinkSet());
   smsc_log_debug(_logger, "SwitchCircuitController::activateConnection::: linkSet with id='%s' has been created",
                  linkSet->getLinkId().toString().c_str());
   std::auto_ptr<SetOfFailedConnections> failedConns;
   std::auto_ptr<SetOfNotBindedConnections> notBindedConns;
   for(known_links_t::const_iterator iter = _knownLinks.begin(), end_iter = _knownLinks.end();
       iter != end_iter; ++iter) {
-    Link* link =
-      createOutcomingLink((*iter)._peerHost, (*iter)._peerPort,
-                          (*iter)._connectTimeout, (*iter)._bindRespWaitTimeout,
-                          (*iter)._unbindRespWaitTimeout);
+    LinkRefPtr link(createOutcomingLink((*iter)._peerHost, (*iter)._peerPort,
+                                        (*iter)._connectTimeout, (*iter)._bindRespWaitTimeout,
+                                        (*iter)._unbindRespWaitTimeout));
     try {
       smsc_log_debug(_logger, "SwitchCircuitController::activateConnection::: try connect to '%s:%d'",
                      (*iter)._peerHost.c_str(), (*iter)._peerPort);
@@ -57,7 +57,7 @@ SwitchCircuitController::activateConnection(corex::io::network::TCPSocket* new_s
 
       if ( !notBindedConns.get() )
         notBindedConns.reset(new SetOfNotBindedConnections(io_processor, linkSet->getLinkId()));
-      notBindedConns->addLink(link);
+      notBindedConns->addLink(link->getLinkId());
       io_processor.addLink(link);
       linkSet->addLink(link);
     } catch (corex::io::ConnectionFailedException& ex) {
@@ -78,7 +78,7 @@ SwitchCircuitController::activateConnection(corex::io::network::TCPSocket* new_s
     if ( failedConns.get() )
       io_processor.getReconnector().addFailedConnections(failedConns.release());
 
-    Link* newIncomingLink = createIncomingLink(new_socket);
+    LinkRefPtr newIncomingLink(createIncomingLink(new_socket));
     _switchTable.insertSwitching(newIncomingLink->getLinkId(),
                                  linkSet->getLinkId());
     io_processor.addLink(newIncomingLink);
