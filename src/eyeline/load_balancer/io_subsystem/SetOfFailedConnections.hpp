@@ -22,7 +22,7 @@ public:
                          const LinkId& link_set_id);
   ~SetOfFailedConnections();
 
-  void addLink(Link* link);
+  void addLink(LinkRefPtr& link);
   SetOfNotBindedConnections* reestablishConnections();
   bool isEmpty() const;
   const LinkId& getLinkSetId() const;
@@ -35,7 +35,7 @@ private:
   smsc::logger::Logger* _logger;
   IOProcessor& _ioProcessor;
   LinkId _relatedLinkSetId;
-  typedef std::list<Link*> failed_conns_t;
+  typedef std::list<LinkRefPtr> failed_conns_t;
   failed_conns_t _failedConnections;
 };
 
