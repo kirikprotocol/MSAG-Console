@@ -123,7 +123,7 @@ int main()
 
     printf("FAILED: resultString='%s'\n", resultString);
   } catch (std::exception& ex) {
-    printf("OK: catched exception: [%s]\n", ex.what());
+    printf("OK: caught exception: [%s]\n", ex.what());
   }
 
   try {
@@ -140,7 +140,7 @@ int main()
 
     printf("OK: empty resultString='%s'\n", resultString);
   } catch (std::exception& ex) {
-    printf("FAILED: catched exception: [%s]\n", ex.what());
+    printf("FAILED: caught exception: [%s]\n", ex.what());
   }
 
   try {
@@ -157,7 +157,7 @@ int main()
 
     printf("OK: fixed resultString='%s'\n", resultString);
   } catch (std::exception& ex) {
-    printf("FAILED: fixed catched exception: [%s]\n", ex.what());
+    printf("FAILED: fixed caught exception: [%s]\n", ex.what());
   }
 
   try {
@@ -174,7 +174,7 @@ int main()
 
     printf("FAILED: fixed resultString='%s'\n", resultString);
   } catch (std::exception& ex) {
-    printf("OK: fixed catched exception: [%s]\n", ex.what());
+    printf("OK: fixed caught exception: [%s]\n", ex.what());
   }
 
   try {
@@ -191,7 +191,7 @@ int main()
 
     printf("FAILED: fixed resultString='%s'\n", resultString);
   } catch (std::exception& ex) {
-    printf("OK: fixed catched exception: [%s]\n", ex.what());
+    printf("OK: fixed caught exception: [%s]\n", ex.what());
   }
 
   try {
@@ -208,7 +208,7 @@ int main()
 
     printf("OK: fixed empty resultString='%s'\n", resultString);
   } catch (std::exception& ex) {
-    printf("FAILED: fixed catched exception: [%s]\n", ex.what());
+    printf("FAILED: fixed caught exception: [%s]\n", ex.what());
   }
 
   try {
@@ -222,7 +222,7 @@ int main()
     else
       printf("addOCteteString('1','2','3') FAILED\n");
   } catch (std::exception& ex) {
-    printf("addOCteteString('1','2','3') FAILED: fixed catched exception: [%s]\n", ex.what());
+    printf("addOCteteString('1','2','3') FAILED: fixed caught exception: [%s]\n", ex.what());
   }
 
   try {
@@ -236,7 +236,7 @@ int main()
     else
       printf("addOCteteString('1','2',0,'4') FAILED\n");
   } catch (std::exception& ex) {
-    printf("addOCteteString('1','2',0,'4') FAILED: fixed catched exception: [%s]\n", ex.what());
+    printf("addOCteteString('1','2',0,'4') FAILED: fixed caught exception: [%s]\n", ex.what());
   }
 
   try {
@@ -250,7 +250,7 @@ int main()
     else
       printf("addOCteteString(\"123\") FAILED\n");
   } catch (std::exception& ex) {
-    printf("addOCteteString(\"123\") FAILED: fixed catched exception: [%s]\n", ex.what());
+    printf("addOCteteString(\"123\") FAILED: fixed caught exception: [%s]\n", ex.what());
   }
 
   return 0;
