@@ -14,8 +14,8 @@ namespace balancers {
 
 class MSAGLinkSet : public io_subsystem::LinkSet {
 public:
-  MSAGLinkSet(const io_subsystem::LinkId& link_id, unsigned total_number_of_links)
-    : io_subsystem::LinkSet(link_id, total_number_of_links) {}
+  MSAGLinkSet(const io_subsystem::LinkId& link_set_id, unsigned total_number_of_links)
+    : io_subsystem::LinkSet(link_set_id, total_number_of_links) {}
 
   using io_subsystem::LinkSet::send;
   virtual io_subsystem::LinkId send(const io_subsystem::Message& message);
