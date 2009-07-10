@@ -54,7 +54,7 @@ public class MissedCallServiceSkeleton{
       ServiceContext.getInstance().getEventsFetcher().getEvents(phoneNumber, new Date(System.currentTimeMillis() - 3600000 * fetchInterval), new Date(), events);
       ArrayOfMissedCall missedCalls = new ArrayOfMissedCall();
 
-      final Map<String, MissedCall> calls = new HashMap<String, MissedCall>(events.size()/2);
+      final Map<String, List<MissedCall>> caller2calls = new HashMap<String, List<MissedCall>>(events.size()/2);
 
       for (Event e : events) {
 
@@ -62,49 +62,56 @@ public class MissedCallServiceSkeleton{
         if (caller.charAt(0)=='+')
           caller = caller.substring(1);
 
-        MissedCall call = calls.get(caller);
-        if (call == null) {
-          call = new MissedCall();
-          call.setCallDate(df.format(e.getDate()));
-          call.setPhoneNumber(caller);
-          call.setMessageStatus(MESSAGE_STATUS_CALL);
-          call.setMissedCalls(0);
-          calls.put(caller, call);
+        List<MissedCall> calls = caller2calls.get(caller);
+        if (calls == null) {
+          calls = new ArrayList<MissedCall>(10);
+          caller2calls.put(caller, calls);
         }
 
         switch (e.getType()) {
-          case MissedCall:
-            call.setMissedCalls(call.getMissedCalls() + 1);
+          case MissedCall: {
+            MissedCall call = new MissedCall();
+            call.setCallDate(df.format(e.getDate()));
+            call.setPhoneNumber(caller);
+            call.setMissedCalls(1);
+            call.setProcessDate("");
+            call.setMessageStatus(MESSAGE_STATUS_CALL);
+            calls.add(call);
             break;
-          case MissedCallAlert:
-            if (call.getMissedCalls() == 0)
-              call.setMissedCalls(1);
-            call.setMessageStatus(MESSAGE_STATUS_ALERT);
-            call.setProcessDate(df.format(e.getDate()));
-            missedCalls.addMissedCall(call);
-            calls.remove(caller);
+          }
+          case MissedCallAlert: {
+            for (MissedCall call : calls) {
+              call.setMessageStatus(MESSAGE_STATUS_ALERT);
+              call.setProcessDate(df.format(e.getDate()));
+              missedCalls.addMissedCall(call);
+            }
+            caller2calls.remove(caller);
             break;
-          case MissedCallAlertFail:
-            if (call.getMissedCalls() == 0)
-              call.setMissedCalls(1);
-            call.setMessageStatus(MESSAGE_STATUS_ALERT_FAILED);
-            call.setProcessDate(df.format(e.getDate()));
+          }
+          case MissedCallAlertFail: {
+            for (MissedCall call : calls) {
+              call.setMessageStatus(MESSAGE_STATUS_ALERT_FAILED);
+              call.setProcessDate(df.format(e.getDate()));
+            }
             break;
-          case MissedCallRemove:
-            if (call.getMissedCalls() == 0)
-              call.setMissedCalls(1);
-            call.setMessageStatus(MESSAGE_STATUS_ALERT_FAILED);
-            call.setProcessDate(df.format(e.getDate()));
-            missedCalls.addMissedCall(call);
-            calls.remove(caller);
+          }
+          case MissedCallRemove: {
+            for (MissedCall call : calls) {
+              call.setMessageStatus(MESSAGE_STATUS_ALERT_FAILED);
+              call.setProcessDate(df.format(e.getDate()));
+              missedCalls.addMissedCall(call);
+            }
+            caller2calls.remove(caller);
             break;
+          }
           default:
             log.warn("Unknown event type " + e.getType());
         }
       }
 
-      for (MissedCall c : calls.values())
-        missedCalls.addMissedCall(c);
+      for (List<MissedCall> c : caller2calls.values())
+        for (MissedCall m : c)
+          missedCalls.addMissedCall(m);
 
       resp.setGetMissedCallsResult(missedCalls);
 
