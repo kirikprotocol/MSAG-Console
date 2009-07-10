@@ -54,9 +54,11 @@ private:
     : _linksetId(linkset_id), _color(color)
     {}
     bool operator< (const specific_switch_key& rhs) const {
-      if ( _linksetId < rhs._linksetId ) return true;
-      if ( _linksetId == rhs._linksetId &&
-           _color < rhs._color ) return true;
+      if ( _linksetId != rhs._linksetId )
+        return _linksetId < rhs._linksetId;
+      if ( _color != rhs._color )
+        return _color < rhs._color;
+
       return false;
     }
     LinkId _linksetId;
