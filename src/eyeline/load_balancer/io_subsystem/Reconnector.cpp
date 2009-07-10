@@ -51,6 +51,9 @@ Reconnector::Execute()
       waitForPeriodAndGetNewFailedConnections(sleepInfinitiy);
     } catch (std::exception& ex) {
       smsc_log_error(_logger, "Reconnector::Execute::: caught exception [%s]", ex.what());
+      failed_conn_info& nextFailedConnSetInfo = _failedSetsInProcessing.front();
+      delete nextFailedConnSetInfo.failedConns;
+      _failedSetsInProcessing.pop_front();
     }
   }
   return 0;
@@ -63,8 +66,8 @@ Reconnector::tryReconnect(failed_conn_info& next_failed_connset_info)
     next_failed_connset_info.failedConns->reestablishConnections();
 
   if ( establishedAndNotBindedConnections ) {
-    _ioProcessor.getBinder().addSetOfNotBindedConnections(establishedAndNotBindedConnections);
-    _ioProcessor.getBinder().rebind(establishedAndNotBindedConnections->getLinkSetId());
+    LinkId linkSetId = _ioProcessor.getBinder().addSetOfNotBindedConnections(establishedAndNotBindedConnections);
+    _ioProcessor.getBinder().rebind(linkSetId);
   }
 
   if ( next_failed_connset_info.failedConns->isEmpty() ) {
