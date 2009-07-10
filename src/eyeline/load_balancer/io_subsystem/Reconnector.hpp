@@ -28,7 +28,7 @@ public:
 
 protected:
   struct failed_conn_info {
-    failed_conn_info(SetOfFailedConnections* a_failed_conns)
+    failed_conn_info(SetOfFailedConnections* a_failed_conns=NULL)
       : failedConns(a_failed_conns), scheduledProcessingTime(time(NULL))
     {}
     SetOfFailedConnections* failedConns;
