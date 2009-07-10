@@ -52,7 +52,7 @@ SmeRegistry::deleteSmeInfo(const io_subsystem::LinkId& link_id_to_sme)
 {
   smsc::core::synchronization::MutexGuard synchronize(_lock);
   active_sme_refs_t::iterator iter = _activeSmeRefs.find(link_id_to_sme);
-  if ( iter == _activeSmes.end() )
+  if ( iter == _activeSmeRefs.end() )
     return;
 
   smsc_log_debug(_logger, "SmeRegistry::deleteSmeInfo::: delete sme info for link with id='%s'",
