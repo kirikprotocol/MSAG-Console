@@ -12,7 +12,7 @@ Binder::Binder(IOProcessor& io_processor)
   : _ioProcessor(io_processor), _logger(smsc::logger::Logger::getInstance("bindr"))
 {}
 
-void
+LinkId
 Binder::addSetOfNotBindedConnections(SetOfNotBindedConnections* established_and_not_binded_connections)
 {
   smsc::core::synchronization::MutexGuard synchronize(_knownSetsOfNotBindedConnsLock);
@@ -30,6 +30,7 @@ Binder::addSetOfNotBindedConnections(SetOfNotBindedConnections* established_and_
     smsc_log_debug(_logger, "Binder::addSetOfNotBindedConnections::: merge two SetOfNotBindedConnections instances");
     delete established_and_not_binded_connections;
   }
+  return linkSetIdToSmsc;
 }
 
 bool
@@ -43,10 +44,6 @@ Binder::commitBindResponse(const LinkId& link_id_to_smsc)
 
   if ( searchRes.notBindedLinks ) {
     bool result = searchRes.notBindedLinks->commitBindedConnection(link_id_to_smsc);
-    if ( searchRes.notBindedLinks->isEmpty() ) {
-      delete searchRes.notBindedLinks;
-      _knownSetsOfNotBindedConns.erase(searchRes.iter);
-    }
     return result;
   } else
     return false;
@@ -64,10 +61,6 @@ Binder::processFailedBindResponse(const LinkId& link_id_to_smsc)
 
   if ( searchRes.notBindedLinks ) {
     bool result = searchRes.notBindedLinks->processFailedBindResponse(link_id_to_smsc);
-    if ( searchRes.notBindedLinks->isEmpty() ) {
-      delete searchRes.notBindedLinks;
-      _knownSetsOfNotBindedConns.erase(searchRes.iter);
-    }
     return result;
   } else
     return false;
@@ -82,6 +75,23 @@ Binder::getSetOfNotBindedConnectionsContainingThisLink(const LinkId& link_id_to_
       return NotbindedLinksSearchInfo(iter->second, iter);
   }
   return NotbindedLinksSearchInfo();
+}
+
+void
+Binder::removeBindingInfo(const LinkId& link_set_id_to_smsc)
+{
+  smsc::core::synchronization::MutexGuard synchronize(_knownSetsOfNotBindedConnsLock);
+  linksetid_to_notbinded_conns_map_t::iterator iter =
+    _knownSetsOfNotBindedConns.find(link_set_id_to_smsc);
+
+  if ( iter == _knownSetsOfNotBindedConns.end() )
+    return;
+
+  smsc_log_debug(_logger, "Binder::removeBindingInfo(link_set_id_to_smsc='%s'), delete SetOfNotBindedConnections=%p",
+                 link_set_id_to_smsc.toString().c_str(), iter->second);
+
+  delete iter->second;
+  _knownSetsOfNotBindedConns.erase(iter);
 }
 
 }}}
