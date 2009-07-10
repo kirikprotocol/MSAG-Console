@@ -11,6 +11,7 @@
 # include "eyeline/load_balancer/io_subsystem/Connection.hpp"
 # include "core/synchronization/RWLock.hpp"
 # include "eyeline/load_balancer/io_subsystem/Link.hpp"
+# include "eyeline/load_balancer/io_subsystem/types.hpp"
 
 namespace eyeline {
 namespace load_balancer {
@@ -24,7 +25,7 @@ public:
   virtual ~LinkSet() {
     delete [] _arrayOfLinks;
   }
-  void addLink(Link* link);
+  void addLink(LinkRefPtr& link);
   bool removeLink(const LinkId& link_id);
 
   class LinkSetIterator;
@@ -49,7 +50,7 @@ protected:
   unsigned _totalNumberOfLinks;
   LinkId *_arrayOfLinks;
   unsigned _actualNumOfLinks;
-  typedef std::map<LinkId, Link*> links_t;
+  typedef std::map<LinkId, LinkRefPtr> links_t;
   links_t _links;
   mutable smsc::core::synchronization::RWLock _lock;
 
