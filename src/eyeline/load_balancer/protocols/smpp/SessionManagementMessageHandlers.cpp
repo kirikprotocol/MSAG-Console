@@ -83,12 +83,15 @@ SessionManagementMessageHandlers::handle(const Unbind& message,
     throw smsc::util::Exception("SessionManagementMessageHandlers::handle::: there isn't link for id=%s",
                                 src_link_id.toString().c_str());
 
-  link->send(message.makeResponse(ESME_ROK));
-  SmeRegistry::getInstance().deleteSmeInfo(src_link_id);
-  io_processor.removeIncomingLink(src_link_id);
   io_subsystem::LinkId smscLinksetId;
   io_subsystem::SwitchingTable::getInstance().removeSwitching(src_link_id, &smscLinksetId);
   io_processor.getReconnector().cancelReconnectionAttempts(smscLinksetId);
+  io_processor.getBinder().removeBindingInfo(smscLinksetId);
+
+  link->send(message.makeResponse(ESME_ROK));
+  SmeRegistry::getInstance().deleteSmeInfo(src_link_id);
+  io_processor.removeIncomingLink(src_link_id);
+
   io_subsystem::LinkSetRefPtr linkSet = io_processor.getLinkSet(smscLinksetId);
   if ( !linkSet.Get() )
     throw smsc::util::Exception("SessionManagementMessageHandlers::handle::: there isn't linkset for id=%s",
