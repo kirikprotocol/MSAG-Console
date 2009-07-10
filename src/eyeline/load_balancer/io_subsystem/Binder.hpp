@@ -16,7 +16,7 @@ class IOProcessor;
 class Binder {
 public:
   explicit Binder(IOProcessor& io_processor);
-  void addSetOfNotBindedConnections(SetOfNotBindedConnections* established_and_not_binded_connections);
+  LinkId addSetOfNotBindedConnections(SetOfNotBindedConnections* established_and_not_binded_connections);
 
   template <class BIND_REQUEST>
   void bind(const LinkId& link_set_id_to_smsc, const BIND_REQUEST& bindRequest);
@@ -25,6 +25,8 @@ public:
 
   bool commitBindResponse(const LinkId& link_id_to_smsc);
   bool processFailedBindResponse(const LinkId& link_id_to_smsc);
+
+  void removeBindingInfo(const LinkId& link_set_id_to_smsc);
 
 protected:
   typedef std::map<LinkId, SetOfNotBindedConnections*> linksetid_to_notbinded_conns_map_t;
@@ -48,6 +50,9 @@ private:
 
   linksetid_to_notbinded_conns_map_t _knownSetsOfNotBindedConns;
   smsc::core::synchronization::Mutex _knownSetsOfNotBindedConnsLock;
+
+  Binder(const Binder& rhs);
+  Binder& operator=(const Binder& rhs);
 };
 
 # include "eyeline/load_balancer/io_subsystem/Binder_impl.hpp"
