@@ -14,40 +14,32 @@ SetOfNotBindedConnections::SetOfNotBindedConnections(IOProcessor& io_processor,
     _ioProcessor(io_processor), _relatedLinkSetId(link_set_id),
     _positiveBindResponseHasNotBeenGotYet(true),
     _totalLinks(0), _numOfBindFailedLinks(0)
-{}
-
-SetOfNotBindedConnections::~SetOfNotBindedConnections()
 {
-  while( !_notBindedConnections.empty() ) {
-    not_binded_conns_t::iterator iter = _notBindedConnections.begin();
-    smsc_log_debug(_logger, "SetOfNotBindedConnections::~SetOfNotBindedConnections::: delete link with id='%s'",
-                   iter->second->getLinkId().toString().c_str());
-    delete iter->second;
-    _notBindedConnections.erase(iter);
-  }
+  smsc_log_debug(_logger, "SetOfNotBindedConnections::SetOfNotBindedConnections::: this=%p, _relatedLinkSetId='%s'",
+                 this, _relatedLinkSetId.toString().c_str());
 }
 
 void
-SetOfNotBindedConnections::addLink(Link* link)
+SetOfNotBindedConnections::addLink(LinkId linkId)
 {
   smsc_log_debug(_logger, "SetOfNotBindedConnections::addLink::: add link with id='%s'",
-                 link->getLinkId().toString().c_str());
-  _notBindedConnections.insert(std::make_pair(link->getLinkId(), link));
+                 linkId.toString().c_str());
+  _notBindedConnections.insert(linkId);
   ++_totalLinks;
 }
 
 void
 SetOfNotBindedConnections::addLinks(SetOfNotBindedConnections* another_not_binded_conns)
 {
-  smsc_log_debug(_logger, "SetOfNotBindedConnections::addLinks::: process new links");
-
+  smsc_log_debug(_logger, "SetOfNotBindedConnections::addLinks::: process new links, this=%p, _relatedLinkSetId='%s'",
+                 this, _relatedLinkSetId.toString().c_str());
   while (!another_not_binded_conns->_notBindedConnections.empty()) {
     not_binded_conns_t::iterator iter = another_not_binded_conns->_notBindedConnections.begin();
-    Link* link = iter->second;
+    addLink(*iter);
     another_not_binded_conns->_notBindedConnections.erase(iter);
-    addLink(iter->second);
   }
-  smsc_log_debug(_logger, "SetOfNotBindedConnections::addLinks::: new links added");
+  smsc_log_debug(_logger, "SetOfNotBindedConnections::addLinks::: new links added, this=%p, _relatedLinkSetId=[%s]",
+                   this, _relatedLinkSetId.toString().c_str());
 }
 
 LinkId
@@ -112,6 +104,9 @@ SetOfNotBindedConnections::isEmpty() const
 bool
 SetOfNotBindedConnections::isLinkBelongToLinkSet(const LinkId& linkIdToSmsc)
 {
+  smsc_log_debug(_logger, "SetOfNotBindedConnections::isLinkBelongToLinkSet(linkIdToSmsc=%s), this=%p, _relatedLinkSetId='%s'",
+                 linkIdToSmsc.toString().c_str(), this, _relatedLinkSetId.toString().c_str());
+
   if ( _notBindedConnections.find(linkIdToSmsc) == _notBindedConnections.end() )
     return false;
   else
