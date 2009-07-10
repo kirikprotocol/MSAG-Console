@@ -17,7 +17,7 @@ LinkSet::LinkSet(const LinkId& link_id, unsigned total_number_of_links)
 }
 
 void
-LinkSet::addLink(Link* link)
+LinkSet::addLink(LinkRefPtr& link)
 {
   smsc::core::synchronization::WriteLockGuard synchronize(_lock);
   _links.insert(std::make_pair(link->getLinkId(), link));
