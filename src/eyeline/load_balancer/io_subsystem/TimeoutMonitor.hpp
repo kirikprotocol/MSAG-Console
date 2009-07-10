@@ -48,7 +48,13 @@ private:
     {}
 
     bool operator< (const TimeoutEntry& rhs) const {
-      return timeToExpire < rhs.timeToExpire;
+      if ( timeToExpire != rhs.timeToExpire )
+        return timeToExpire < rhs.timeToExpire;
+
+      if ( timeoutId != rhs.timeoutId )
+        return timeoutId < rhs.timeoutId;
+
+      return false;
     }
 
     time_t timeToExpire;
