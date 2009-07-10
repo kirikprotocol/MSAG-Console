@@ -24,8 +24,8 @@ namespace protocols {
 namespace smpp {
 
 SMPPConnection::SMPPConnection(corex::io::network::TCPSocket* socket)
-  : _logger(smsc::logger::Logger::getInstance("smpp")), _socket(socket),
-    _memForSocket(NULL), _peerPort(0), _isConnectionIncoming(true),
+  : _logger(smsc::logger::Logger::getInstance("smpp")),
+    _socket(socket), _memForSocket(NULL), _peerPort(0), _isConnectionIncoming(true),
     _protocolStateCtrl(SMPP_Connected::getInstance())
 {
   setLinkId(io_subsystem::LinkId(_socket->toString()));
@@ -39,8 +39,8 @@ SMPPConnection::SMPPConnection(const std::string& peer_host,
                                unsigned int bind_resp_wait_timeout,
                                unsigned int unbind_resp_wait_timeout)
   : io_subsystem::Link(connect_timeout, bind_resp_wait_timeout, unbind_resp_wait_timeout),
-    _logger(smsc::logger::Logger::getInstance("smpp")), _socket(NULL),
-    _peerHost(peer_host), _peerPort(peer_port),
+    _logger(smsc::logger::Logger::getInstance("smpp")),
+    _socket(NULL), _peerHost(peer_host), _peerPort(peer_port),
     _isConnectionIncoming(false), _protocolStateCtrl(SMPP_NotConnected::getInstance())
 {
   if ( !unbind_resp_wait_timeout )
@@ -78,12 +78,7 @@ SMPPConnection::establish()
     throw;
   }
   _socket = socket;
-  /*
-  std::auto_ptr<corex::io::network::TCPSocket> socket(new corex::io::network::TCPSocket(_peerHost, _peerPort));
-  socket->connect(_connectTimeout);
 
-  _socket = socket.release();
-  */
   checkProtocolState(utilx::prot_fsm::TcpEstablishInd());
   setLinkId(io_subsystem::LinkId(_socket->toString()));
   _socket->setId(_socket->toString());

@@ -62,8 +62,10 @@ TimeoutMonitor::scheduleTimeout(timeout_id_t timeout_id,
 
     time_t timeToExpire = time(0) + timeout_value;
     char strBuf[128];
+    ctime_r(&timeToExpire, strBuf);
+    strBuf[strlen(strBuf)-1] = 0;
     smsc_log_debug(_logger, "TimeoutMonitor::scheduleTimeout::: try schedule timeout event on '%s', tineout_id='%s'",
-                   ctime_r(&timeToExpire, strBuf), timeout_id.c_str());
+                   strBuf, timeout_id.c_str());
 
     std::pair<timeouts_sched_time_t::iterator, bool> ins_res =
       _timeoutExpirationTimes.insert(TimeoutEntry(timeToExpire, timeout_event, timeout_id));
