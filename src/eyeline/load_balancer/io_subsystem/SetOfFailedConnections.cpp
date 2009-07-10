@@ -16,11 +16,13 @@ SetOfFailedConnections::SetOfFailedConnections(IOProcessor& io_processor,
 
 SetOfFailedConnections::~SetOfFailedConnections()
 {
-  cleanup();
+  try {
+    cleanup();
+  } catch (...) {}
 }
 
 void
-SetOfFailedConnections::addLink(Link* link)
+SetOfFailedConnections::addLink(LinkRefPtr& link)
 {
   _failedConnections.push_back(link);
 }
@@ -41,17 +43,27 @@ SetOfFailedConnections::reestablishConnections()
       smsc_log_debug(_logger, "SetOfFailedConnections::reestablishConnections::: try establish connection to [%s]",
                      (*iter)->getPeerInfoString().c_str());
       (*iter)->establish();
+      LinkRefPtr& linkPtr = *iter;
       smsc_log_info(_logger, "SetOfFailedConnections::reestablishConnections::: connection to [%s] established",
-                     (*iter)->getPeerInfoString().c_str());
-      _ioProcessor.addLink(*iter);
+                     linkPtr->getPeerInfoString().c_str());
       if ( !notBindedLinks.get() )
         notBindedLinks.reset(new SetOfNotBindedConnections(_ioProcessor, _relatedLinkSetId));
-      notBindedLinks->addLink(*iter);
+      notBindedLinks->addLink(linkPtr->getLinkId());
+
+      LinkSetRefPtr linkSet = _ioProcessor.getLinkSet(_relatedLinkSetId);
+      if ( !linkSet.Get() )
+        throw smsc::util::Exception("SetOfFailedConnections::reestablishConnections::: there isn't linkset with id='%s'",
+                                    _relatedLinkSetId.toString().c_str());
+      _ioProcessor.addLink(linkPtr);
+      linkSet->addLink(linkPtr);
       _failedConnections.erase(iter++);
     } catch (corex::io::ConnectionFailedException& ex) {
       smsc_log_debug(_logger, "SetOfFailedConnections::reestablishConnections::: connection to [%s] failed, (reason: %s)",
                      (*iter)->getPeerInfoString().c_str(), ex.what());
       ++iter;
+    } catch (...) {
+      _failedConnections.erase(iter);
+      throw;
     }
   }
 
@@ -73,11 +85,8 @@ SetOfFailedConnections::getLinkSetId() const
 void
 SetOfFailedConnections::cleanup()
 {
-  while (!_failedConnections.empty()) {
-    failed_conns_t::iterator iter = _failedConnections.begin();
-    delete *iter;
-    _failedConnections.erase(iter);
-  }
+  while (!_failedConnections.empty())
+    _failedConnections.pop_front();
 }
 
 LinkSetRefPtr
