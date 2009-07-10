@@ -1,6 +1,7 @@
 #ifndef __EYELINE_LOADBALANCER_IOSUBSYSTEM_SETOFNOTBINDEDCONNECTIONS_HPP__
 # define __EYELINE_LOADBALANCER_IOSUBSYSTEM_SETOFNOTBINDEDCONNECTIONS_HPP__
 
+# include <set>
 # include "logger/Logger.h"
 # include "eyeline/load_balancer/io_subsystem/Link.hpp"
 # include "eyeline/load_balancer/io_subsystem/types.hpp"
@@ -19,9 +20,8 @@ class SetOfNotBindedConnections {
 public:
   SetOfNotBindedConnections(IOProcessor& io_processor,
                             const LinkId& link_set_id);
-  ~SetOfNotBindedConnections();
 
-  void addLink(Link* link);
+  void addLink(LinkId linkId);
   void addLinks(SetOfNotBindedConnections* another_not_binded_conns);
 
   LinkId getLinkSetId() const;
@@ -42,7 +42,7 @@ private:
   IOProcessor& _ioProcessor;
   LinkId _relatedLinkSetId;
   bool _positiveBindResponseHasNotBeenGotYet;
-  typedef std::map<LinkId, Link*> not_binded_conns_t;
+  typedef std::set<LinkId> not_binded_conns_t;
   not_binded_conns_t _notBindedConnections;
   unsigned int _totalLinks, _numOfBindFailedLinks;
 };
