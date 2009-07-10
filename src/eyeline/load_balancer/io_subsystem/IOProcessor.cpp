@@ -31,9 +31,9 @@ IOProcessor::shutdown()
 }
 
 LinkId
-IOProcessor::addLink(Link* link)
+IOProcessor::addLink(LinkRefPtr& link)
 {
-  std::auto_ptr<Link> linkPtrGuard(link);
+  //std::auto_ptr<Link> linkPtrGuard(link);
   smsc_log_debug(_logger, "IOProcessor::addLink::: add link with id='%s'",
                  link->getLinkId().toString().c_str());
   smsc::core::synchronization::MutexGuard synchronize(_activeLinksLock);
@@ -50,15 +50,14 @@ IOProcessor::addLink(Link* link)
   link->assignPacketWriter(&_packetWriter);
 
   std::pair<active_links_t::iterator, bool> ins_res =
-    _activeLinks.insert(std::make_pair(link->getLinkId(),
-                                       LinkRefPtr(linkPtrGuard.release())));
+    _activeLinks.insert(std::make_pair(link->getLinkId(), link));
   ++_numOfActiveLinks;
 
   return link->getLinkId();
 }
 
 LinkId
-IOProcessor::addLinkSet(LinkSet* link_set)
+IOProcessor::addLinkSet(LinkSetRefPtr& link_set)
 {
   smsc_log_debug(_logger, "IOProcessor::addLinkSet::: add linkset with id='%s'",
                  link_set->getLinkId().toString().c_str());
@@ -66,7 +65,7 @@ IOProcessor::addLinkSet(LinkSet* link_set)
   smsc::core::synchronization::MutexGuard synchronize(_activeLinkSetsLock);
 
   std::pair<active_linksets_t::iterator, bool> ins_res =
-    _activeLinkSets.insert(std::make_pair(link_set->getLinkId(), LinkSetRefPtr(link_set)));
+    _activeLinkSets.insert(std::make_pair(link_set->getLinkId(), link_set));
 
   if ( !ins_res.second )
     throw smsc::util::Exception("IOProcessor::addLinkSet::: linkset with id='%s' has been already registered",
@@ -151,10 +150,15 @@ IOProcessor::removeOutcomingLink(const LinkId& link_id, bool no_need_reconnect)
   smsc_log_debug(_logger, "IOProcessor::removeOutcomingLink::: try remove out Link with id='%s', no_need_reconnect flag=%d",
                  link_id.toString().c_str(), no_need_reconnect);
 
+  LinkId linkSetId = getLinkSetIdOwnerForThisLink(link_id);
   LinkRefPtr terminatedLink;
   terminateConnection(link_id, &terminatedLink);
 
-  LinkId linkSetId = getLinkSetIdOwnerForThisLink(link_id);
+  TimeoutMonitor::timeout_id_t timeoutId = "BND:" + link_id.toString();
+  TimeoutMonitor::getInstance().cancelTimeout(timeoutId);
+  timeoutId = "UNBND:" + link_id.toString();
+  TimeoutMonitor::getInstance().cancelTimeout(timeoutId);
+
   LinkId emptyLinkId;
   if ( linkSetId != emptyLinkId ) {
     smsc_log_debug(_logger, "IOProcessor::removeOutcomingLink::: for Link with id='%s' related linkSetId='%s'",
@@ -182,7 +186,7 @@ IOProcessor::scheduleConnectionForRestoring(const LinkId& linkset_id,
                  linkset_id.toString().c_str());
   SetOfFailedConnections* failedConnsSet =
     new SetOfFailedConnections(*this, linkset_id);
-  failedConnsSet->addLink(terminated_link->createNewOutLink());
+  failedConnsSet->addLink(LinkRefPtr(terminated_link->createNewOutLink()));
   _reconnector.addFailedConnections(failedConnsSet);
 }
 
