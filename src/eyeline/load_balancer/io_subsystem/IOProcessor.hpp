@@ -45,15 +45,15 @@ public:
   void startup();
   void shutdown();
 
-  LinkId addLink(Link* link);
-  LinkId addLinkSet(LinkSet* link_set);
+  LinkId addLink(LinkRefPtr& link);
+  LinkId addLinkSet(LinkSetRefPtr& link_set);
 
   LinkRefPtr getLink(const LinkId& link_id) const;
   LinkSetRefPtr getLinkSet(const LinkId& link_set_id) const;
 
   virtual void removeIncomingLink(const LinkId& link_id);
   LinkId removeOutcomingLink(const LinkId& link_id, bool no_need_reconnect = false);
-  void removeLinkSet(const LinkId& link_set_id);
+  virtual void removeLinkSet(const LinkId& link_set_id);
   void cleanUpConnection(const LinkId& link_id);
 
   unsigned getId() const {
