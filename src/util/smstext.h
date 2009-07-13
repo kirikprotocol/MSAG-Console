@@ -116,6 +116,12 @@ static inline int getPduText(PduXSm* pdu,char* buf,size_t bufsize)
     }
     udhi=pdu->get_message().get_esmClass()&0x40;
   }
+	
+  if(len==0)
+  {
+    buf[0]=0;
+    return 0;
+  }
 
   if(udhi)
   {
