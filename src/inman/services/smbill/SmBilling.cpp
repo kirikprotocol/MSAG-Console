@@ -507,6 +507,16 @@ bool Billing::verifyChargeSms(void)
     billPrio = cdr._chargeType ? _cfg.prm->mt_billMode.modeFor(msgType) : 
                                     _cfg.prm->mo_billMode.modeFor(msgType);
     billMode = billPrio->first;
+
+    //according to #B2501:
+    if (msgType == ChargeParm::msgSMS) {
+      //only bill2CDR & billOFF allowed for ordinary SMS
+      cdr._smsXMask &= ~SMSX_INCHARGE_SRV;
+      if (billMode == ChargeParm::bill2IN) {
+        smsc_log_error(logger, "%s: incompatible billingMode and messageType", _logId);
+        return false; 
+      }
+    }
     return true;
 }
 
