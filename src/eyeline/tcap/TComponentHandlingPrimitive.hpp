@@ -6,6 +6,7 @@
 
 # include "eyeline/utilx/Exception.hpp"
 # include "eyeline/tcap/TDialogueId.hpp"
+# include "eyeline/tcap/TComponentDefs.hpp"
 
 namespace eyeline {
 namespace tcap {
@@ -19,18 +20,16 @@ public:
   TDialogueId getDialogueId(void) const {
     if ( _isSetDlgId )
       return _dlgId;
-    else
-      throw utilx::FieldNotSetException("TComponentHandlingPrimitive::getDialogueId::: dialogueId is not set");
-  }
 
-  typedef uint8_t InvokeId;
+    throw utilx::FieldNotSetException("TComponentHandlingPrimitive::getDialogueId::: dialogueId is not set");
+  }
 
   void setInvokeId(InvokeId invokeId) { _invokeId = invokeId; _isSetInvokeId = true; }
   InvokeId getInvokeId(void) const {
     if ( _isSetInvokeId )
       return _invokeId;
-    else
-      throw utilx::FieldNotSetException("TComponentHandlingPrimitive::getInvokeId::: invokeId is not set");
+
+    throw utilx::FieldNotSetException("TComponentHandlingPrimitive::getInvokeId::: invokeId is not set");
   }
 
 private:

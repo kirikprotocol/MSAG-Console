@@ -9,6 +9,8 @@
 namespace eyeline {
 namespace tcap {
 
+using eyeline::ros::RejectProblem;
+
 class TComponentIndicationPrimitive {
 public:
   TComponentIndicationPrimitive()
@@ -17,15 +19,15 @@ public:
   TDialogueId getDialogueId(void) const {
     if ( _isSetDlgId )
       return _dlgId;
-    else
-      throw utilx::FieldNotSetException("TComponentIndicationPrimitive::getDialogueId::: dialogueId is not set");
+
+    throw utilx::FieldNotSetException("TComponentIndicationPrimitive::getDialogueId::: dialogueId is not set");
   }
 
   InvokeId getInvokeId(void) const {
     if ( _isSetInvokeId )
       return _invokeId;
-    else
-      throw utilx::FieldNotSetException("TComponentIndicationPrimitive::getInvokeId::: invokeId is not set");
+
+    throw utilx::FieldNotSetException("TComponentIndicationPrimitive::getInvokeId::: invokeId is not set");
   }
 
 protected:
@@ -39,22 +41,17 @@ class TC_L_Cancel_Ind : public TComponentIndicationPrimitive {
 };
 
 class TC_L_Reject_Ind : public TComponentIndicationPrimitive {
+protected:
+  RejectProblem   _rejProblem;
+
 public:
   TC_L_Reject_Ind()
-    : _isSetProblemCode(false) {}
+  { }
 
-  problem_code_t getProblemCode() const {
-    if ( _isSetProblemCode )
-      return _problemCode;
-    else
-      throw utilx::FieldNotSetException("TC_L_Reject_Ind::getProblemCode::: problemCode is not set");
-  }
-
-protected:
-  problem_code_t _problemCode;
-  bool _isSetProblemCode;
+  const RejectProblem & getProblem(void) const { return _rejProblem; }
 };
 
 }}
 
-#endif
+#endif /* __EYELINE_TCAP_TCOMPONENTINDICATIONPRIMITIVES_HPP__ */
+
