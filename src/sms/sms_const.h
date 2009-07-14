@@ -23,6 +23,7 @@ const int BILLING_NONE     = 0;
 const int BILLING_NORMAL   = 1;
 const int BILLING_MT       = 2;
 const int BILLING_FINALREP = 3;
+const int BILLING_ONSUBMIT = 4;
 
 const int MAX_ESERVICE_TYPE_LENGTH = 5;
 const int MAX_SMESYSID_TYPE_LENGTH = 15;
@@ -52,7 +53,7 @@ const uint8_t SMSC_TRANSACTION_MSG_MODE     = 2;
 const uint8_t SMSC_STOREANDFORWARD_MSG_MODE = 3;
 
 /**
-* Множество состояний SMS в контексте SMS центра
+* я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜тво я┐╜я┐╜я┐╜яния┐╜ SMS я┐╜ я┐╜я┐╜я┐╜текя┐╜я┐╜ SMS ценя┐╜я┐╜
 *
 * @see SMS
 */
