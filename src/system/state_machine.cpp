@@ -25,8 +25,6 @@
 
 #ident "@(#)$Id$"
 
-//   ,    autodetect :)
-
 namespace smsc{
 namespace system{
 
@@ -1493,7 +1491,7 @@ StateType StateMachine::submit(Tuple& t)
   }
 
 #ifdef SMSEXTRA
-  if(c.ri.billing==2)
+  if(c.ri.billing==smsc::sms::BILLING_MT)
   {
     sms->setIntProperty(Tag::SMSC_CHARGINGPOLICY,Smsc::chargeOnSubmit);
     sms->setIntProperty(Tag::SMSC_EXTRAFLAGS,sms->getIntProperty(Tag::SMSC_EXTRAFLAGS)|EXTRA_INCHARGE);
@@ -3873,7 +3871,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
           smsc->FullReportDelivery(t.msgId,sms);
         }
 #else
-        if(sms.billingRecord==BILLING_FINALREP)
+        if(sms.billingRecord==BILLING_FINALREP || sms.billingRecord==BILLING_ONSUBMIT)
         {
           smsc->FullReportDelivery(t.msgId,sms);
         }
