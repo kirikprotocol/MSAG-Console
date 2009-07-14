@@ -1409,7 +1409,7 @@ struct SMS
 
   inline bool billingRequired()
   {
-    return billingRecord==BILLING_NORMAL || billingRecord==BILLING_MT;
+    return billingRecord==BILLING_NORMAL || billingRecord==BILLING_MT || billingRecord==BILLING_ONSUBMIT;
   }
 
   /**
