@@ -17,11 +17,6 @@ namespace provd {
 using eyeline::tcap::proto::TransactionId;
 
 class TDlgRequestComposerAC {
-protected:
-  bool            _dlgResp; //request is a response to a T_Begin
-  TransactionId   _trId;
-  const EncodedOID * _acOId;
-
 public:
   //NOTE: srlzBadComponentPortion error enforces TC_L_Reject_Ind,
   //      all other errors enforce TC_Notice_Ind
@@ -31,10 +26,24 @@ public:
     , srlzBadSrcAddr              //
     , srlzBadDstAddr              //
     , srlzBadTransactionPortion   //
-    , srlzBadDialoguePortion      //
-    , srlzBadComponentPortion     //enforces TC_L_Reject_Ind
+    , srlzBadDialoguePortion      //either UserInfo serialization error or
+                                  //UserInfo data is too large
+    , srlzBadComponentPortion     //Component serialization error,
+                                  //enforces TC_L_Reject_Ind
+    , srlzTooMuchComponents       //too much components in T_Begin|T_End,
+                                  //enforces TC_L_Reject_Ind
   };
 
+protected:
+  bool            _dlgResp; //request is a response to a T_Begin
+  TransactionId   _trId;
+  const EncodedOID * _acOId;
+
+  SerializationResult_e
+    initUDT(SUAUnitdataReq & use_udt, const TDialogueRequestPrimitive & use_req,
+            const SCCPAddress & src_addr, const SCCPAddress & dst_addr) const;
+
+public:
   TDlgRequestComposerAC(const EncodedOID * use_acid = NULL)
     : _acOId(use_acid)
   { }

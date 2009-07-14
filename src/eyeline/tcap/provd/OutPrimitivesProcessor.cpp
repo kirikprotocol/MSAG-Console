@@ -18,12 +18,15 @@ OutPrimitivesProcessor::updateDialogue(const TC_Begin_Req & begin_req_primitive)
 {
   const TDialogueId& tDialogueId = begin_req_primitive.getDialogueId();
 
-  TDialogueServiceDataRegistry::registry_element_ref_t tDlgSvcData = TDialogueServiceDataRegistry::getInstance().getTDialogueServiceData(tDialogueId);
+  TDialogueServiceDataRegistry::registry_element_ref_t 
+  tDlgSvcData = TDialogueServiceDataRegistry::getInstance().getTDialogueServiceData(tDialogueId);
 
   TBeginReqComposer tReqComposer(begin_req_primitive);
-  tDlgSvcData->updateDialogueDataByRequest(tReqComposer);
+  tDlgSvcData->updateDialogueDataByRequest(tReqComposer); //sets TransactionId
 
-  SUAUnitdataReq  reqUDT;
+  //TODO: get SCCP standard from config and initialize SUAUnitdataReq accordingly.
+  //For now just use SCCPStandard::itut93
+  SUAUnitdataReq  reqUDT(SCCPStandard::itut93);
   TDlgRequestComposerAC::SerializationResult_e srlzResult =
     tReqComposer.serialize2UDT(reqUDT, tDlgSvcData->getSrcAddr(), tDlgSvcData->getDstAddr());
 
@@ -54,9 +57,11 @@ OutPrimitivesProcessor::updateDialogue(const TC_Cont_Req & cont_req_primitive)
   TDialogueServiceDataRegistry::registry_element_ref_t tDlgSvcData = TDialogueServiceDataRegistry::getInstance().getTDialogueServiceData(tDialogueId);
 
   TContReqComposer tReqComposer(cont_req_primitive);
-  tDlgSvcData->updateDialogueDataByRequest(tReqComposer);
+  tDlgSvcData->updateDialogueDataByRequest(tReqComposer); //sets TransactionId
 
-  SUAUnitdataReq  reqUDT;
+  //TODO: get SCCP standard from config and initialize SUAUnitdataReq accordingly.
+  //For now just use SCCPStandard::itut93
+  SUAUnitdataReq  reqUDT(SCCPStandard::itut93);
   TDlgRequestComposerAC::SerializationResult_e srlzResult =
     tReqComposer.serialize2UDT(reqUDT, tDlgSvcData->getSrcAddr(), tDlgSvcData->getDstAddr());
 
@@ -87,12 +92,13 @@ OutPrimitivesProcessor::updateDialogue(const TC_End_Req & end_req_primitive)
   TDialogueServiceDataRegistry::registry_element_ref_t tDlgSvcData = TDialogueServiceDataRegistry::getInstance().getTDialogueServiceData(tDialogueId);
 
   TEndReqComposer tReqComposer(end_req_primitive);
-  tDlgSvcData->updateDialogueDataByRequest(tReqComposer);
+  tDlgSvcData->updateDialogueDataByRequest(tReqComposer); //sets TransactionId
   tDlgSvcData->cancelDialogueTimers();
 
   if ( end_req_primitive.getTermination() == TC_End_Req::endBASIC ) {
-    SUAUnitdataReq  reqUDT;
-
+    //TODO: get SCCP standard from config and initialize SUAUnitdataReq accordingly.
+    //For now just use SCCPStandard::itut93
+    SUAUnitdataReq  reqUDT(SCCPStandard::itut93);
     TDlgRequestComposerAC::SerializationResult_e srlzResult =
       tReqComposer.serialize2UDT(reqUDT, tDlgSvcData->getSrcAddr(), tDlgSvcData->getDstAddr());
 
@@ -116,10 +122,12 @@ OutPrimitivesProcessor::updateDialogue(const TC_UAbort_Req & u_abort_req_primiti
   TDialogueServiceDataRegistry::registry_element_ref_t tDlgSvcData = TDialogueServiceDataRegistry::getInstance().getTDialogueServiceData(tDialogueId);
 
   TUAbortReqComposer tReqComposer(u_abort_req_primitive);
-  tDlgSvcData->updateDialogueDataByRequest(tReqComposer);
+  tDlgSvcData->updateDialogueDataByRequest(tReqComposer); //sets TransactionId
   tDlgSvcData->cancelDialogueTimers();
 
-  SUAUnitdataReq  reqUDT;
+  //TODO: get SCCP standard from config and initialize SUAUnitdataReq accordingly.
+  //For now just use SCCPStandard::itut93
+  SUAUnitdataReq  reqUDT(SCCPStandard::itut93);
   TDlgRequestComposerAC::SerializationResult_e srlzResult =
     tReqComposer.serialize2UDT(reqUDT, tDlgSvcData->getSrcAddr(), tDlgSvcData->getDstAddr());
 
@@ -142,10 +150,12 @@ OutPrimitivesProcessor::updateDialogue(const TC_PAbort_Req & p_abort_req_primiti
   TDialogueServiceDataRegistry::registry_element_ref_t tDlgSvcData = TDialogueServiceDataRegistry::getInstance().getTDialogueServiceData(tDialogueId);
 
   TPAbortReqComposer tReqComposer(p_abort_req_primitive);
-  tDlgSvcData->updateDialogueDataByRequest(tReqComposer);
+  tDlgSvcData->updateDialogueDataByRequest(tReqComposer); //sets TransactionId
   tDlgSvcData->cancelDialogueTimers();
 
-  SUAUnitdataReq  reqUDT;
+  //TODO: get SCCP standard from config and initialize SUAUnitdataReq accordingly.
+  //For now just use SCCPStandard::itut93
+  SUAUnitdataReq  reqUDT(SCCPStandard::itut93);
   TDlgRequestComposerAC::SerializationResult_e srlzResult =
     tReqComposer.serialize2UDT(reqUDT, tDlgSvcData->getSrcAddr(), tDlgSvcData->getDstAddr());
 
@@ -163,9 +173,12 @@ void
 OutPrimitivesProcessor::sendPrimitive(const TPAbortReqComposer & p_abort_req, unsigned int link_num,
                                       const SCCPAddress& src_addr, const SCCPAddress& dst_addr) const
 {
-  SUAUnitdataReq  reqUDT;
+  //TODO: get SCCP standard from config and initialize SUAUnitdataReq accordingly.
+  //For now just use SCCPStandard::itut93
+  SUAUnitdataReq  reqUDT(SCCPStandard::itut93);
   TDlgRequestComposerAC::SerializationResult_e srlzResult =
       p_abort_req.serialize2UDT(reqUDT, src_addr, dst_addr);
+
   if ( srlzResult == TDlgRequestComposerAC::srlzOk ) {
     SuaApi::CallResult rc = sendMessage(reqUDT, link_num);
     if ( rc.operationResult != SuaApi::OK )
@@ -178,9 +191,12 @@ void
 OutPrimitivesProcessor::sendPrimitive(const TUAbortReqComposer & u_abort_req, unsigned int link_num,
                                       const SCCPAddress& src_addr, const SCCPAddress& dst_addr) const
 {
-  SUAUnitdataReq  reqUDT;
+  //TODO: get SCCP standard from config and initialize SUAUnitdataReq accordingly.
+  //For now just use SCCPStandard::itut93
+  SUAUnitdataReq  reqUDT(SCCPStandard::itut93);
   TDlgRequestComposerAC::SerializationResult_e srlzResult =
       u_abort_req.serialize2UDT(reqUDT, src_addr, dst_addr);
+
   if ( srlzResult == TDlgRequestComposerAC::srlzOk ) {
     SuaApi::CallResult rc = sendMessage(reqUDT, link_num);
     if ( rc.operationResult != SuaApi::OK )
@@ -226,8 +242,10 @@ OutPrimitivesProcessor::analyzeFailureCauseAndNotifyTCUser(TDlgRequestComposerAC
                                                            bool return_on_error)
 {
   if ( res_status == TDlgRequestComposerAC::srlzBadComponentPortion )
-    rejectComponent(t_dlg_svc_data, t_dialogue_id, BAD_COMPONENT_PORTION);
-  else {
+    rejectComponent(t_dlg_svc_data, t_dialogue_id, RejectProblem(RejectProblem::rjg_mistypedPDU));
+  else if ( res_status == TDlgRequestComposerAC::srlzTooMuchComponents ) {
+    rejectComponent(t_dlg_svc_data, t_dialogue_id, RejectProblem(RejectProblem::rjg_badlyStructuredPDU));
+  } else {
     if ( !return_on_error )
       return;
 
@@ -251,11 +269,11 @@ OutPrimitivesProcessor::analyzeFailureCauseAndNotifyTCUser(TDlgRequestComposerAC
 void
 OutPrimitivesProcessor::rejectComponent(TDialogueServiceData* t_dlg_svc_data,
                                         const TDialogueId& t_dialogue_id,
-                                        problem_code_e problem_code)
+                                        const RejectProblem & rej_problem)
 {
   TC_L_Reject_Ind_Composer tcLRejectIndication;
   tcLRejectIndication.setDialogueId(t_dialogue_id);
-  tcLRejectIndication.setProblemCode(problem_code);
+  tcLRejectIndication.setProblem(rej_problem);
 
   t_dlg_svc_data->notifyTCUserLocally(tcLRejectIndication);
 }

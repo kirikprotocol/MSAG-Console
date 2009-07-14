@@ -21,7 +21,10 @@ using eyeline::sccp::SCCPAddress;
 
 class TDialogueRequestPrimitive {
 protected:
+  //Next two parameters composes TCAP dialogue 'quality of service' parameter
   bool          _retOnErr;
+  bool          _inSeqDelivery;
+  //
   TDialogueId   _dlgId;
   TDlgUserInfo  _usrInfo;
 
@@ -30,7 +33,7 @@ protected:
 
 public:
   TDialogueRequestPrimitive()
-    : _retOnErr(false), _acOId(0)
+    : _retOnErr(false), _inSeqDelivery(false), _acOId(0)
   { }
   virtual ~TDialogueRequestPrimitive()
   { }
@@ -42,8 +45,11 @@ public:
   void setAppCtx(const EncodedOID & use_acid) { _acOId = &use_acid; }
   const EncodedOID * getAppCtx(void) const { return _acOId; }
   //
-  void setReturnOnError() { _retOnErr = true; }
-  bool getReturnOnError() const { return _retOnErr; }
+  void setReturnOnError(bool ret_on_error = true) { _retOnErr = ret_on_error; }
+  bool getReturnOnError(void) const { return _retOnErr; }
+  //
+  void setInSequenceDelivery(void) { _inSeqDelivery = true; }
+  bool getInSequenceDelivery(void) const { return _inSeqDelivery; }
 
   //
   void addUIValue(const UIValue & use_ui) { _usrInfo.addUIValue(use_ui); }

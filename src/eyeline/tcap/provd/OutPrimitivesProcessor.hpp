@@ -3,6 +3,7 @@
 # define __EYELINE_TCAP_PROVD_OUTPRIMITIVESPROCESSOR_HPP__
 
 # include "logger/Logger.h"
+# include "eyeline/ros/ROSRejectProblem.hpp"
 # include "eyeline/sua/libsua/SuaApi.hpp"
 # include "eyeline/tcap/provd/TDlgReqComposers.hpp"
 # include "eyeline/tcap/provd/TDialogueServiceDataRegistry.hpp"
@@ -12,6 +13,7 @@ namespace tcap {
 namespace provd {
 
 using sua::libsua::SuaApi;
+using eyeline::ros::RejectProblem;
 
 class OutPrimitivesProcessor {
 public:
@@ -44,14 +46,14 @@ protected:
 
   void rejectComponent(TDialogueServiceData* t_dlg_svc_data,
                        const TDialogueId& t_dialogue_id,
-                       problem_code_e problem_code);
+                       const RejectProblem & rej_problem);
 
   SuaApi::CallResult sendMessage(const SUAUnitdataReq & use_udt) const
   {
     return _suaApi->unitdata_req(use_udt.userData(), use_udt.userDataLen(),
                                  use_udt.calledAddr(), use_udt.calledAddrLen(),
                                  use_udt.callingAddr(), use_udt.callingAddrLen(),
-                                 use_udt.msgProperties());
+                                 use_udt);
   }
 
   SuaApi::CallResult sendMessage(const SUAUnitdataReq & use_udt, unsigned int link_num) const
@@ -59,7 +61,7 @@ protected:
     return _suaApi->unitdata_req(use_udt.userData(), use_udt.userDataLen(),
                                  use_udt.calledAddr(), use_udt.calledAddrLen(),
                                  use_udt.callingAddr(), use_udt.callingAddrLen(),
-                                 use_udt.msgProperties(), link_num);
+                                 use_udt, link_num);
   }
 
 private:

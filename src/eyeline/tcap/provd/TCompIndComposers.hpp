@@ -15,6 +15,9 @@ namespace eyeline {
 namespace tcap {
 namespace provd {
 
+using eyeline::ros::InvokeId;
+using eyeline::ros::RejectProblem;
+
 template <class T_COMP_IND_Arg /* pubic: TComponentIndicationPrimitive */>
 class TCompIndicationComposerT : public T_COMP_IND_Arg {
 public:
@@ -28,11 +31,10 @@ class TC_L_Cancel_Ind_Composer : public TCompIndicationComposerT<TC_L_Cancel_Ind
 
 class TC_L_Reject_Ind_Composer : public TCompIndicationComposerT<TC_L_Reject_Ind> {
 public:
-  void setProblemCode(problem_code_t problemCode) {
-    _problemCode = problemCode; _isSetProblemCode = true;
-  }
+  void setProblem(const RejectProblem & rej_problem) { _rejProblem = rej_problem; }
 };
 
 }}}
 
-#endif
+#endif /* __EYELINE_TCAP_PROVD_TCOMPINDCOMPOSERS_HPP__ */
+
