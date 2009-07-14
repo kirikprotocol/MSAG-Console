@@ -34,7 +34,7 @@ public:
   };
 
 protected:
-  const ProblemKind_e rejKind;
+  ProblemKind_e rejKind;
 
   union {
     GeneralProblem_e  general;
