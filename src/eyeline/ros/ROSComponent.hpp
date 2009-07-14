@@ -18,6 +18,8 @@ using eyeline::asn1::ASTypeAC;
 using eyeline::asn1::ASTypeRfp;
 using eyeline::asn1::BITBuffer;
 
+typedef uint8_t InvokeId;
+
 //Base class for component of ROS OPERATION identified by local tag (uint8_t)
 class ROSComponentPrimitive : public ASTypeAC {
 public: 
@@ -35,8 +37,8 @@ public:
   };
 
 protected:
-  uint8_t             _invId;  //related Invocation id
-  const Kind_e        _kind;
+  InvokeId            _invId;  //related Invocation id
+  const Kind_e        _kind;   //
   const uint8_t       _opCode; //component opcode or RejectProblem::ProblemKind
                                //in case of rosReject
   const EncodedOID *  _appCtx; //operation AC if defined, optional
@@ -52,8 +54,8 @@ public:
   uint8_t opCode(void) const { return _opCode; }
   const EncodedOID *  appContext(void) const { return _appCtx; }
 
-  uint8_t getInvokeId(void) const { return _invId; }
-  void setInvokeId(uint8_t inv_id) { _invId = inv_id; }
+  InvokeId getInvokeId(void) const { return _invId; }
+  void setInvokeId(InvokeId inv_id) { _invId = inv_id; }
   void setParam(const ASTypeRfp & ref_param) { _param = ref_param; }
 
   //Merges component paramater if it's was splitted to several
@@ -66,8 +68,8 @@ public:
 
 class ROSInvoke : public ROSComponentPrimitive {
 private:
-  uint8_t _linkedId;
-  bool    _linked;
+  InvokeId  _linkedId;
+  bool      _linked;
 
 public:
   ROSInvoke(uint8_t op_code, const EncodedOID * app_ctx = 0)
@@ -75,7 +77,7 @@ public:
       , _linked(false), _linkedId(0)
   { }
 
-  void setLinked(uint8_t linked_id)
+  void setLinked(InvokeId linked_id)
   {
       _linked = true; _linkedId = linked_id;
   }
@@ -87,7 +89,7 @@ public:
   bool hasLinked(void) const { return _linked; } 
   //NOTE: it's user responsibility to check for linked Invoke
   //status before using this method !
-  uint8_t getLinked(void) const { return _linkedId; }
+  InvokeId getLinked(void) const { return _linkedId; }
 
   uint16_t getTimeout() const;
   void setTimeout(uint16_t timeout);
