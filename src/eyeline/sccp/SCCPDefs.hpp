@@ -35,6 +35,13 @@ struct UDTParms {
     : _kind(UDT_88), _segmDataSz(0), _numSegm(1)
   { }
 
+  //Calculates the maximum size of user data that may be transferred by
+  //most large UDT message defined by specified SCCP standard.
+  //Returns 0 if specified optional parameters are incompatible with requested
+  //SCCP standard; 
+  static uint16_t calculateMaxDataSz(SCCPStandard::Kind_e use_std,
+                        uint8_t optionals_mask /* OR-ed Optionals_e values */,
+                        uint8_t called_addrLen, uint8_t calling_addrLen);
 
   //Checks if the specified number of bytes of user data may be transferred by
   //UDT message defined by ITU-T 88 standard (UDT_88).

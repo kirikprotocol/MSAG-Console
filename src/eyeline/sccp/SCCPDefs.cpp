@@ -10,6 +10,35 @@ static char const ident[] = "@(#)$Id$";
 namespace eyeline {
 namespace sccp {
 
+//Calculates the maximum size of user data that may be transferred by
+//most large UDT message defined by specified SCCP standard.
+uint16_t UDTParms::calculateMaxDataSz(SCCPStandard::Kind_e use_std,
+                      uint8_t optionals_mask /* OR-ed Optionals_e values */,
+                      uint8_t called_addrLen, uint8_t calling_addrLen)
+{
+  { //check for compliance of optional parameters 
+    SCCPStandard::Kind_e minStd = SCCPStandard::itut88;
+
+    if (optionals_mask & UDTParms::has_IMPORTANCE)
+      minStd = SCCPStandard::itut96;
+    else if (optionals_mask & UDTParms::has_HOPCOUNT)
+      minStd = SCCPStandard::itut93;
+
+    if (minStd > use_std)
+      return 0;
+  }
+  if (use_std == SCCPStandard::itut96) { //max is LUDT_96
+    return (uint16_t)4072 + ((optionals_mask & UDTParms::has_IMPORTANCE) ? 0 : 4)
+            - called_addrLen - calling_addrLen;
+  }
+  if (use_std == SCCPStandard::itut93) { //max is XUDT_93_MS*16
+    return (uint16_t)16*((260-7) - called_addrLen - calling_addrLen);
+  }
+  //default: SCCPStandard::itut88, max is UDT_88
+  return (uint16_t)262 - called_addrLen - calling_addrLen;
+}
+
+
 //Checks if the specified number of bytes of user data may be transferred by
 //UDT message defined by ITU-T 88 standard (UDT_88).
 //Returns false if user data cann't be fitted into UDT_88 message.
