@@ -190,6 +190,7 @@ uint8_t StrToBill(const char* str)
   if(strcmp(str,"true")==0)return smsc::sms::BILLING_NORMAL;
   if(strcmp(str,"mt")==0)return smsc::sms::BILLING_MT;
   if(strcmp(str,"fr")==0)return smsc::sms::BILLING_FINALREP;
+  if(strcmp(str,"onsubmit")==0)return smsc::sms::BILLING_ONSUBMIT;
   return smsc::sms::BILLING_NONE;
 }
 
