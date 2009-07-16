@@ -211,7 +211,8 @@ public class PerfSnap {
         sessionCount = in.readInt();
         sessionLoadedCount = in.readInt();
 	    sessionLockedCount = in.readInt();
-        System.out.println("PerfSnap.read()\nsessionCount=" + sessionCount + "\nsessionLoadedCount=" + sessionLoadedCount + "\nsessionLockedCount=" + sessionLockedCount + "\n---------------------");
+        
+//        System.out.println("new PerfSnap.read()\nsessionCount=" + sessionCount + "\nsessionLoadedCount=" + sessionLoadedCount + "\nsessionLockedCount=" + sessionLockedCount + "\n---------------------");
 
         smppReqQueueLen = in.readInt();
 	    smppResQueueLen = in.readInt();
@@ -244,7 +245,8 @@ public class PerfSnap {
         sessionCount = in.readNetworkInt();
         sessionLoadedCount = in.readNetworkInt();
 	    sessionLockedCount = in.readNetworkInt();
-        System.out.println("PerfSnap.init()\nsessionCount=" + sessionCount + "\nsessionLoadedCount=" + sessionLoadedCount + "\nsessionLockedCount=" + sessionLockedCount + "\n---------------------");
+//        System.out.println("PerfSnap new.init()\nsessionCount=" + sessionCount + "\nsessionLoadedCount=" + sessionLoadedCount + "\nsessionLockedCount=" + sessionLockedCount + "\n---------------------");
+//        System.out.println( "---------------------" );
 
         smppReqQueueLen = in.readNetworkInt();
 	    smppResQueueLen = in.readNetworkInt();

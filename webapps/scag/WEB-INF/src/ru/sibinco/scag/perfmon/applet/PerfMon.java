@@ -1,23 +1,25 @@
 package ru.sibinco.scag.perfmon.applet;
 
+import org.apache.log4j.Logger;
 import ru.sibinco.lib.backend.applet.AdvancedLabel;
 import ru.sibinco.lib.backend.applet.LabelGroup;
 import ru.sibinco.scag.perfmon.PerfSnap;
 import ru.sibinco.scag.util.RemoteResourceBundle;
 
 import javax.swing.*;
-import javax.swing.event.ChangeListener;
 import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import java.applet.Applet;
 import java.awt.*;
 import java.awt.event.*;
-import java.applet.*;
-import java.util.*;
-import java.text.*;
+import java.io.*;
 import java.net.Socket;
-import java.io.DataInputStream;
-import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Locale;
 
 public class PerfMon extends Applet implements Runnable, MouseListener, ActionListener, ItemListener {
+
+    private final Logger logger = Logger.getLogger(this.getClass());
 
     public static final int VIEWMODE_IO = 0;
     public static final int VIEWMODE_SEPARATE = 1;
@@ -109,67 +111,85 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
     public static boolean viewDeliveredHTTPEnabled = true;
     public static boolean viewFailedHTTPEnabled = true;
 
+    String test;
+
     public void init() {
-        System.out.println("PerfMon:init():Initing...");
-        localeText = new RemoteResourceBundle(getCodeBase(),getParameter("resource_servlet_uri"));
-        locale=localeText.getLocale();
-        dateFormat = new SimpleDateFormat(localeText.getString("sctime"),locale);
-        gridFormat = new SimpleDateFormat(localeText.getString("gridtime"),locale);
-
-        //http
-        try {
-            pixPerSecond = Integer.valueOf(getParameter("http.pixPerSecond")).intValue();
-        } catch (Exception ex) {
-        }
-        try {
-            scale = Integer.valueOf(getParameter("http.scale")).intValue();
-        } catch (Exception ex) {
-        }
-        try {
-            block = Integer.valueOf(getParameter("http.block")).intValue();
-        } catch (Exception ex) {
-        }
-        contextInfo = new ContextInfo();
-        contextInfo.initHttp();
-
-        //smpp
-        try {
-            pixPerSecond = Integer.valueOf(getParameter("smpp.pixPerSecond")).intValue();
-        } catch (Exception ex) {
-        }
-        try {
-            scale = Integer.valueOf(getParameter("smpp.scale")).intValue();
-        } catch (Exception ex) {
-        }
-        try {
-            block = Integer.valueOf(getParameter("smpp.block")).intValue();
-        } catch (Exception ex) {
-        }
-
-        contextInfo.initSmpp();
-        try {
-            vLightGrid = Integer.valueOf(getParameter("vLightGrid")).intValue();
-        } catch (Exception ex) {
-        }
-
-        try {
-            vMinuteGrid = Integer.valueOf(getParameter("vMinuteGrid")).intValue();
-        } catch (Exception ex) {
-        }
-
-        setFont(new Font("dialog", Font.BOLD, 12));
-        setLayout(new GridBagLayout());
-        setBackground(SystemColor.control);
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.fill = GridBagConstraints.BOTH;
-
-        connectingLabel = new Label(localeText.getString("connecting"));
-        add(connectingLabel, gbc);
-
-        validate();
+//        try {
+//            System.setOut( new PrintStream( new FileOutputStream("outfile.txt") ));
+//        } catch (FileNotFoundException e) {
+//            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+//        }
+        System.out.println("new PerfMon.init() Initing...");
+//        logger.debug("PerfMon.init() Initing...");
+//        localeText = new RemoteResourceBundle(getCodeBase(),getParameter("resource_servlet_uri"));
+//        locale=localeText.getLocale();
+//        dateFormat = new SimpleDateFormat(localeText.getString("sctime"),locale);
+//        gridFormat = new SimpleDateFormat(localeText.getString("gridtime"),locale);
+//
+//        //http
+//        try {
+//            pixPerSecond = Integer.valueOf(getParameter("http.pixPerSecond")).intValue();
+//        } catch (Exception ex) {
+//        }
+//        try {
+//            scale = Integer.valueOf(getParameter("http.scale")).intValue();
+//        } catch (Exception ex) {
+//        }
+//        try {
+//            block = Integer.valueOf(getParameter("http.block")).intValue();
+//        } catch (Exception ex) {
+//        }
+//        contextInfo = new ContextInfo();
+//        contextInfo.initHttp();
+//
+//        //smpp
+//        try {
+//            pixPerSecond = Integer.valueOf(getParameter("smpp.pixPerSecond")).intValue();
+//        } catch (Exception ex) {
+//        }
+//        try {
+//            scale = Integer.valueOf(getParameter("smpp.scale")).intValue();
+//        } catch (Exception ex) {
+//        }
+//        try {
+//            block = Integer.valueOf(getParameter("smpp.block")).intValue();
+//        } catch (Exception ex) {
+//        }
+//
+//        contextInfo.initSmpp();
+//        try {
+//            vLightGrid = Integer.valueOf(getParameter("vLightGrid")).intValue();
+//        } catch (Exception ex) {
+//        }
+//
+//        try {
+//            vMinuteGrid = Integer.valueOf(getParameter("vMinuteGrid")).intValue();
+//        } catch (Exception ex) {
+//        }
+//
+//        test = "qwe";
+//        try {
+//            test = getParameter("test");
+//        } catch (Exception ex) {
+//        }
+//
+//        System.out.println( "PerfMon.init() test='" + test + "'" );
+//
+//        setFont(new Font("dialog", Font.BOLD, 12));
+//        setLayout(new GridBagLayout());
+//        setBackground(SystemColor.control);
+//        GridBagConstraints gbc = new GridBagConstraints();
+//        gbc.fill = GridBagConstraints.BOTH;
+//
+//        connectingLabel = new Label(localeText.getString("connecting"));
+//        add(connectingLabel, gbc);
+//
+//        validate();
+        
     }
 
     protected void gotFirstSnap(PerfSnap snap) {
+
         System.out.println("gotFirstSnap() start");
         remove(connectingLabel);
 
@@ -302,6 +322,7 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
         Panel p = new Panel(new GridLayout(2, 2));
 // uptime
         LabelGroup lg = new LabelGroup(localeText.getString("lab.uptime"), LabelGroup.NORTHWEST);
+        lg = new LabelGroup( test, LabelGroup.NORTHWEST); 
         lg.setLayout(new BorderLayout());
         lg.add(uptimeLabel, BorderLayout.CENTER);
         p.add(lg);
@@ -475,6 +496,7 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
     boolean isStopping = false;
 
     public void run() {
+        if( true ) return;
         Socket sock = null;
         DataInputStream is = null;
         isStopping = false;
@@ -482,7 +504,7 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
             while (!isStopping) {
                 try {
                     sock = new Socket(getParameter("host"), Integer.valueOf(getParameter("port")).intValue());
-                    System.out.println( "PerfMon:run():host=" + getParameter("host") + " port=" + Integer.valueOf(getParameter("port")).intValue() );
+//                    System.out.println( "PerfMon:run():host=" + getParameter("host") + " port=" + Integer.valueOf(getParameter("port")).intValue() );
                     is = new DataInputStream( sock.getInputStream() );
                     PerfSnap snap = new PerfSnap();
                     snap.read(is);
