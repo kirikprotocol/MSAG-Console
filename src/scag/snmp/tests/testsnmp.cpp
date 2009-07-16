@@ -8,12 +8,15 @@
 using namespace scag2::snmp;
 #endif
 
-int main()
+int main( int argc, char** argv )
 {
     smsc::logger::Logger::Init();
 
 #ifdef SNMP
-    const std::string socket = "tcp:localhost:2705";
+    std::string socket = "tcp:217.73.202.90:162";
+    if ( argc > 1 ) {
+        socket = argv[1];
+    }
     SnmpWrapper snmp( socket );
 
     TrapRecord trap;
