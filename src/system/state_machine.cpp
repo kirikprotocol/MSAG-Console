@@ -4397,7 +4397,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
           }
         }
       }
-      if(sms.billingRecord==BILLING_FINALREP)
+      if(sms.billingRecord==BILLING_FINALREP  || sms.billingRecord==BILLING_ONSUBMIT)
       {
         smsc->FullReportDelivery(t.msgId,sms);
       }
@@ -4444,7 +4444,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
       smsc->FullReportDelivery(t.msgId,sms);
     }
 #else
-    if(sms.billingRecord==BILLING_FINALREP)
+    if(sms.billingRecord==BILLING_FINALREP  || sms.billingRecord==BILLING_ONSUBMIT)
     {
       smsc->FullReportDelivery(t.msgId,sms);
     }
