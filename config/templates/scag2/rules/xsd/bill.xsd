@@ -33,6 +33,7 @@
                     <attribute name="msg" type="scag:Var" use="optional" />
                     <!-- for ewallet -->
                     <attribute name="transId" type="scag:Value" use="optional"/>
+                    <attribute name="walletType" type="scag:Value" use="optional"/>
                     <attribute name="abonent" type="scag:Value" use="required"/>
                     <attribute name="externalId" type="scag:Value" use="required"/>
                </complexType>
@@ -64,8 +65,11 @@
                     <!-- for ewallet -->
                     <attribute name="abonent" type="scag:Value" use="optional"/>
                     <attribute name="externalId" type="scag:Value" use="optional"/>
-                    <attribute name="description" type="scag:Value" use="optional"/>
                     <attribute name="timeout" type="scag:Value" use="optional"/>
+                    <attribute name="description" type="scag:Value" use="optional"/>
+                    <attribute name="walletType" type="scag:Value" use="optional"/>
+                    <attribute name="resultAmount" type="scag:Var" use="optional"/>
+                    <attribute name="resultChargeThreshold" type="scag:Var" use="optional"/>
                </complexType>
             </element>
 
@@ -82,6 +86,9 @@
                     <attribute name="abonent" type="scag:Value" use="optional"/>
                     <attribute name="externalId" type="scag:Value" use="required"/>
                     <attribute name="timeout" type="scag:Value" use="optional"/>
+                    <attribute name="walletType" type="scag:Value" use="optional"/>
+                    <attribute name="resultAmount" type="scag:Var" use="optional"/>
+                    <attribute name="resultChargeThreshold" type="scag:Var" use="optional"/>
                </complexType>
             </element>
         
@@ -104,6 +111,7 @@
                     <attribute name="status" type="scag:Var" use="optional" />
                     <attribute name="msg" type="scag:Var" use="optional"/>
                     <attribute name="abonent" type="scag:Value" use="required"/>
+                    <attribute name="walletType" type="scag:Value" use="optional"/>
                     <attribute name="externalId" type="scag:Value" use="required"/>
                     <attribute name="transId" type="scag:Value" use="required"/>
                </complexType>
