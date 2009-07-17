@@ -82,10 +82,9 @@ SwitchCircuitController::activateConnection(corex::io::network::TCPSocket* new_s
     _switchTable.insertSwitching(newIncomingLink->getLinkId(),
                                  linkSet->getLinkId());
     io_processor.addLink(newIncomingLink);
-  }
-
-  smsc_log_info(_logger, "SwitchCircuitController::activateConnection::: out connections has been established for incoming connection=[%s], IOProcessor's id=%d",
+    smsc_log_info(_logger, "SwitchCircuitController::activateConnection::: out connections has been established for incoming connection=[%s], IOProcessor's id=%d",
                   new_socket->toString().c_str(), io_processor.getId());
+  }
 }
 
 void
