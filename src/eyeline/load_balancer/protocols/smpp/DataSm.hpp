@@ -2,6 +2,7 @@
 # define __EYELINE_LOADBALANCER_PROTOCOLS_SMPP_DATASM_HPP__
 
 # include "eyeline/load_balancer/protocols/smpp/SMPPMessage.hpp"
+# include "eyeline/load_balancer/protocols/smpp/DataSmResp.hpp"
 
 namespace eyeline {
 namespace load_balancer {
@@ -25,6 +26,8 @@ public:
 
   uint8_t getSarSegmentSeqNum() const;
   bool isSetSarSegmentSeqNum() const { return _isSetSarSegmentSeqNum; }
+
+  DataSmResp* makeResponse(uint32_t command_status) const;
 
   static const uint32_t _MSGCODE = 0x00000103;
 

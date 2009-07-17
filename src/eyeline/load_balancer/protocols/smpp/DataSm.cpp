@@ -104,6 +104,16 @@ DataSm::getSarSegmentSeqNum() const
   return _sarSegmentSeqNum;
 }
 
+DataSmResp*
+DataSm::makeResponse(uint32_t command_status) const
+{
+  DataSmResp* dataSmResp = new DataSmResp();
+  dataSmResp->setCommandStatus(command_status);
+  dataSmResp->setSequenceNumber(getSequenceNumber());
+  dataSmResp->setEmptyMessageId();
+  return dataSmResp;
+}
+
 uint32_t
 DataSm::calculateCommandBodyLength() const
 {

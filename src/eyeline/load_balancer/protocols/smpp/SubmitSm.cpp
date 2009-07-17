@@ -112,6 +112,16 @@ SubmitSm::getSarSegmentSeqNum() const
   return _sarSegmentSeqNum;
 }
 
+SubmitSmResp*
+SubmitSm::makeResponse(uint32_t command_status) const
+{
+  SubmitSmResp* submitSmResp = new SubmitSmResp();
+  submitSmResp->setCommandStatus(command_status);
+  submitSmResp->setSequenceNumber(getSequenceNumber());
+
+  return submitSmResp;
+}
+
 uint32_t
 SubmitSm::calculateCommandBodyLength() const
 {
