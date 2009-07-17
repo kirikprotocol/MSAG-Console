@@ -6,6 +6,8 @@
 # include "eyeline/load_balancer/io_subsystem/IOProcessor.hpp"
 # include "eyeline/load_balancer/io_subsystem/SwitchingTable.hpp"
 
+# include "eyeline/load_balancer/protocols/smpp/Exception.hpp"
+
 namespace eyeline {
 namespace load_balancer {
 namespace protocols {
