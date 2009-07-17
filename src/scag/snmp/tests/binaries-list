@@ -3,4 +3,5 @@ scag/tests/testsnmp	testsnmp	\
    $(__LIBRARIES) \
    $(if $(filter YES,$(SNMP)),-lscag-snmp) \
    $(SNMP_LIBS_CORE) \
-   -lrt -ldl $(LIBMALLOC)
+  $(SSL_LIB) \
+   -lpthread -lrt -ldl $(LIBMALLOC)
