@@ -2,6 +2,7 @@
 #define _SCAG_RE_ACTIONS_IMPL_BILLACTIONOPEN_H
 
 #include "scag/re/base/LongCallAction2.h"
+#include "scag/re/base/StringField.h"
 #include "BillActionPreOpen.h"
 
 namespace scag2 {
@@ -57,6 +58,8 @@ private:
 
     std::string     resultFieldName_;
     bool            hasResult_;
+    StringField     totalAmount_;
+    StringField     chargeThreshold_;
 
 };
 

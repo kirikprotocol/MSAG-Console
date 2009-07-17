@@ -14,7 +14,8 @@ namespace actions {
 using namespace bill;
 
 BillActionPreOpen::BillActionPreOpen( bool transit ) :
-BillAction(transit), categoryId_(0), mediaTypeId_(0)
+BillAction(transit), categoryId_(0), mediaTypeId_(0),
+walletType_(*this,"walletType",false,true)
 {
 }
 
@@ -106,6 +107,7 @@ BillOpenCallParamsData* BillActionPreOpen::makeParamsData( ActionContext& contex
         tariffRec = context.getTariffRec(cat, mt);
         if (!tariffRec) throw SCAGException("TariffRec is not valid, cat=%d, mt=%u", cat, mt );
         bpd->tariffRec = *tariffRec;
+        tariffRec = &(bpd->tariffRec);
     } catch (SCAGException& e)
     {
         smsc_log_warn(logger,"Action '%s' cannot process. Delails: %s", opname(), e.what());
@@ -136,6 +138,11 @@ BillOpenCallParamsData* BillActionPreOpen::makeParamsData( ActionContext& contex
             setBillingStatus( context, "abonent is missing", false );
             setTariffStatus( context, 0 );
             return 0;
+        }
+
+        // wallet type override
+        if ( walletType_.isFound() ) {
+            bpd->tariffRec.Currency = walletType_.getValue(context);
         }
 
         if ( abonentType_ == ftUnknown ) {
@@ -307,6 +314,8 @@ void BillActionPreOpen::init( const SectionParams& params,
     if ( isTransit() && ! hasExternalId_ ) {
         throw SCAGException("Action '%s': transit action requires 'externalId'", opname());
     }
+
+    walletType_.init(params,propertyObject);
 
     postInit( params, propertyObject );
     smsc_log_debug(logger,"Action '%s' init...", opname() );

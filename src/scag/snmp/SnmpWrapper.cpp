@@ -6,7 +6,7 @@
 
 namespace {
 
-const char* msagnamed = "msag";
+const char* msagnamed = "msagd";
 const char* msagname = "msag";
 
 oid snmptrap_oid[] = {1, 3, 6, 1, 6, 3, 1, 1, 4, 1, 0};

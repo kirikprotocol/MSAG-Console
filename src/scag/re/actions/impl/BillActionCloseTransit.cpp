@@ -14,6 +14,7 @@ bool BillActionCloseTransit::RunBeforePostpone(ActionContext& context)
         LongCallContext& lcmCtx = context.getSession().getLongCallContext();
         lcmCtx.callCommandId = actionCommit_ ? BILL_COMMIT : BILL_ROLLBACK;
         std::auto_ptr<bill::BillTransitParamsData> bctpd(new bill::BillTransitParamsData);
+
         bctpd->data.reset(bpd.release());
 
         // fill transid

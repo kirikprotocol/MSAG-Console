@@ -13,7 +13,9 @@ namespace actions {
 using namespace bill;
 
 BillActionOpen::BillActionOpen( bool transit ) :
-BillActionPreOpen( transit )
+BillActionPreOpen( transit ),
+totalAmount_(*this,"resultAmount",false,false),
+chargeThreshold_(*this,"resultChargeThreshold",false,false)
 {
 }
 
@@ -57,7 +59,8 @@ BillOpenCallParamsData* BillActionOpen::postFillParamsData( BillOpenCallParamsDa
                 billingInfoStruct.timeout = property->getInt();
             }
         }
-    }
+
+    } // ewallet type
     return bpd.release();
 }
 
@@ -129,10 +132,20 @@ void BillActionOpen::ContinueRunning(ActionContext& context)
     }
 
     if ( bop->tariffRec()->billType == infrastruct::EWALLET ) {
-        EwalletCallParams* ecp = static_cast<EwalletCallParams*>(bp);
+        EwalletOpenCallParams* ecp = static_cast<EwalletOpenCallParams*>(bp);
         char buf[30];
         sprintf(buf,"%u",ecp->getTransId());
         setBillingStatus(context,buf,true);
+
+        // resultAmount and resultChargeThreshold
+        if ( totalAmount_.isFound() ) {
+            Property* p = totalAmount_.getProperty(context);
+            if (p) p->setInt(ecp->getResultAmount());
+        }
+        if ( chargeThreshold_.isFound() ) {
+            Property* p = chargeThreshold_.getProperty(context);
+            if (p) p->setInt(ecp->getChargeThreshold());
+        }
     }
 }
 
@@ -152,6 +165,10 @@ void BillActionOpen::postInit( const SectionParams& params,
         if (!timeout_) throw SCAGException("Action '%s': timeout should be integer or variable",
                                            opname() );
     }
+
+    // optional fields
+    totalAmount_.init(params,propertyObject);
+    chargeThreshold_.init(params,propertyObject);
 
     descriptionType_ = CheckParameter( params,
                                        propertyObject,

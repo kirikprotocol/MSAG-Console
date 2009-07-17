@@ -164,7 +164,7 @@ public:
     EwalletOpenCallParams( bool transit,
                            BillOpenCallParamsData* data,
                            lcm::LongCallContext* lcmCtx ) :
-    EwalletCallParams(transit, lcmCtx), data_(data) {}
+    EwalletCallParams(transit, lcmCtx), data_(data), resultAmount_(0), chargeThreshold_(0) {}
     virtual void setResponse( ewallet::Response& resp );
     virtual TariffRec* tariffRec() const { return data_.get() ? &(data_->tariffRec) : 0; }
     virtual BillingInfoStruct* billingInfoStruct() const { return data_.get() ? &(data_->billingInfoStruct) : 0; }
@@ -173,8 +173,16 @@ public:
     virtual EwalletOpenCallParams* getOpen() { return this; }
     virtual BillCloseCallParams* getClose() { return 0; }
     virtual BillCheckCallParams* getCheck() { return 0; }
+
+    int32_t getResultAmount() const { return resultAmount_; }
+    void setResultAmount( int32_t v ) { resultAmount_ = v; }
+    int32_t getChargeThreshold() const { return chargeThreshold_; }
+    void setChargeThreshold( int32_t v ) { chargeThreshold_ = v; }
+
 private:
     std::auto_ptr<BillOpenCallParamsData> data_;
+    int32_t                 resultAmount_;
+    int32_t                 chargeThreshold_;
 };
 
 

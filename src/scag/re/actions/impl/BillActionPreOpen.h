@@ -2,6 +2,7 @@
 #define _SCAG_RE_ACTIONS_IMPL_BILLACTIONPREOPEN_H
 
 #include "scag/bill/base/BillingManager.h"
+#include "scag/re/base/StringField.h"
 #include "BillAction.h"
 
 namespace scag2 {
@@ -55,6 +56,7 @@ private:
     std::string     externalIdName_;
     FieldType       externalIdType_;
 
+    StringField     walletType_;
 };
 
 } // namespace actions

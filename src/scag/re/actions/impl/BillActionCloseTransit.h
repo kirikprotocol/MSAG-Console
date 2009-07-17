@@ -35,7 +35,6 @@ private:
     std::string ewalletTransName_;
     FieldType   ewalletTransType_;
     uint32_t    ewalletTransId_;
-
 };
 
 }}}

@@ -79,7 +79,8 @@ void EwalletOpenCallParams::setResponse( ewallet::Response& resp )
     // status is ok
     ewallet::OpenResp& oResp = static_cast< ewallet::OpenResp& >(resp);
     setTransId( oResp.getTransId() );
-    // FIXME: amount and chargeThreshold
+    setResultAmount( oResp.getAmount() );
+    setChargeThreshold( oResp.getChargeThreshold() );
 }
 
 
