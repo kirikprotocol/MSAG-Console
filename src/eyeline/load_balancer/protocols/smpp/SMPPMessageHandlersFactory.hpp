@@ -38,6 +38,8 @@ protected:
     MESSAGE* message = new (ptrDescForMessage->allocated_memory) MESSAGE();
     message->deserialize(packet);
 
+    smsc_log_debug(_logger, "SMPPMessageHandlersFactory::instantiateMessageHandler::: create handler for message=[%s]",
+                   message->toString().c_str());
     utilx::alloc_mem_desc_t *ptrDescForHandler =
       utilx::PreallocatedMemoryManager::getInstance().getMemory<utilx::PreallocatedMemoryManager::MEM_FOR_HANDLER>();
 
