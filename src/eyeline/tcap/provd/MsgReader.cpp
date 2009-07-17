@@ -29,7 +29,7 @@ MsgReader::Execute()
     } catch (corex::io::EOFException& ex) {
       // TODO: generate something indication
     } catch (std::exception& ex) {
-      smsc_log_error(_logger, "MsgReader::Execute:: catched exception [%s]", ex.what());
+      smsc_log_error(_logger, "MsgReader::Execute:: caught exception [%s]", ex.what());
     }
   }
   return 0;
