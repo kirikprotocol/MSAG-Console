@@ -50,7 +50,7 @@ MessageForwardingHelper::forwardMultipartMessageToSmsc(const MESSAGE& message,
         throw smsc::util::Exception("MessageForwardingHelper::forwardMultipartMessageToSmsc::: there isn't linkset for id=%s",
                                     dstLinkSetId.toString().c_str());
     } else if ( message.getSarSegmentSeqNum() > message.getSarTotalSegments() ) {
-      throw smsc::util::Exception("MessageForwardingHelper::forwardMultipartMessageToSmsc::: invalid message data: sar_segment_seq_num(=%d) > sar_total_tegments(=%d)",
+      throw InvalidMessageParamException("MessageForwardingHelper::forwardMultipartMessageToSmsc::: invalid message data: sar_segment_seq_num(=%d) > sar_total_tegments(=%d)",
                                   message.getSarSegmentSeqNum(), message.getSarTotalSegments());
     } else {
       io_subsystem::LinkId idOfUsedLink =
@@ -61,8 +61,8 @@ MessageForwardingHelper::forwardMultipartMessageToSmsc(const MESSAGE& message,
       if ( dstLink.Get() )
         dstLink->send(message);
       else
-        throw smsc::util::Exception("MessageForwardingHelper::forwardMultipartMessageToSmsc::: there isn't link for id=%s",
-                                    idOfUsedLink.toString().c_str());
+        throw InvalidMessageParamException("MessageForwardingHelper::forwardMultipartMessageToSmsc::: there isn't link for id=%s, sar_msg_ref_num parameter value='%d' may be invalid)",
+                                                       idOfUsedLink.toString().c_str(), message.getSarMsgRefNum());
 
       if ( message.getSarSegmentSeqNum() == message.getSarTotalSegments() )
         switchingTable.removeSpecificSwitching(dstLinkSetId,
