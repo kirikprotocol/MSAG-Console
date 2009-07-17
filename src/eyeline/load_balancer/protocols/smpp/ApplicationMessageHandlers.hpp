@@ -1,6 +1,7 @@
 #ifndef __EYELINE_LOADBALANCER_IOSUBSYSTEM_PROTOCOLS_SMPPP_APPLICATIONMESSAGEHANDLERS_HPP__
 # define __EYELINE_LOADBALANCER_IOSUBSYSTEM_PROTOCOLS_SMPPP_APPLICATIONMESSAGEHANDLERS_HPP__
 
+# include "logger/Logger.h"
 # include "eyeline/load_balancer/io_subsystem/types.hpp"
 # include "eyeline/load_balancer/io_subsystem/LinkId.hpp"
 # include "eyeline/load_balancer/io_subsystem/IOProcessor.hpp"
@@ -23,6 +24,10 @@ namespace smpp {
 
 class ApplicationMessageHandlers : private MessageForwardingHelper {
 public:
+  ApplicationMessageHandlers()
+  : _logger(smsc::logger::Logger::getInstance("smpp"))
+  {}
+
   virtual void handle(const SubmitMulti& message,
                       const io_subsystem::LinkId& src_link_id,
                       io_subsystem::IOProcessor& io_processor);
@@ -54,6 +59,8 @@ public:
   virtual void handle(const DataSmResp& message,
                       const io_subsystem::LinkId& src_link_id,
                       io_subsystem::IOProcessor& io_processor);
+private:
+  smsc::logger::Logger* _logger;
 };
 
 }}}}
