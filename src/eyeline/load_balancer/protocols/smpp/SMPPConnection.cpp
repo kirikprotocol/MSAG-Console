@@ -53,11 +53,11 @@ SMPPConnection::SMPPConnection(const std::string& peer_host,
 
 SMPPConnection::~SMPPConnection()
 {
-  smsc_log_debug(_logger, "SMPPConnection::~SMPPConnection::: remove socket [%s]",
-                 _socket->toString().c_str());
-  if ( _socket )
+  if ( _socket ) {
+    smsc_log_debug(_logger, "SMPPConnection::~SMPPConnection::: remove socket [%s]",
+                   _socket->toString().c_str());
     delete _socket;
-  else if ( _memForSocket )
+  } else if ( _memForSocket )
     operator delete (_memForSocket);
 }
 
