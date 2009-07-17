@@ -44,7 +44,7 @@
         String sId = (String) i.next();
         CenterStatus centerStatus = (CenterStatus) status2.get(sId);
         result += "<span ";
-        if( !bean.getAppContext().isCluster() && centerStatus != null && status != null) {
+        if( centerStatus != null && status != null) {
             if (centerStatus.getConnStatus().equals("yes")) {
                 label = LocaleMessages.getInstance().getMessage(session,"centers.index.table.names.connected");
                 result += "><img src='content/images/ic_internal.gif' width='10' height='10' title='"+label+"'></span>";
