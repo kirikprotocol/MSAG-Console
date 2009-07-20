@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <algorithm>
 #include <utility>
 #include "util/Exception.hpp"
