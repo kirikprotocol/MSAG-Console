@@ -114,13 +114,7 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
     String test;
 
     public void init() {
-//        try {
-//            System.setOut( new PrintStream( new FileOutputStream("outfile.txt") ));
-//        } catch (FileNotFoundException e) {
-//            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-//        }
         System.out.println("new PerfMon.init() Initing...");
-//        logger.debug("PerfMon.init() Initing...");
         localeText = new RemoteResourceBundle(getCodeBase(),getParameter("resource_servlet_uri"));
         locale=localeText.getLocale();
         dateFormat = new SimpleDateFormat(localeText.getString("sctime"),locale);
@@ -185,11 +179,9 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
         add(connectingLabel, gbc);
 
         validate();
-        
     }
 
     protected void gotFirstSnap(PerfSnap snap) {
-
         System.out.println("gotFirstSnap() start");
         remove(connectingLabel);
 
@@ -322,7 +314,7 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
         Panel p = new Panel(new GridLayout(2, 2));
 // uptime
         LabelGroup lg = new LabelGroup(localeText.getString("lab.uptime"), LabelGroup.NORTHWEST);
-        lg = new LabelGroup( test, LabelGroup.NORTHWEST); 
+//        lg = new LabelGroup( test, LabelGroup.NORTHWEST);
         lg.setLayout(new BorderLayout());
         lg.add(uptimeLabel, BorderLayout.CENTER);
         p.add(lg);
@@ -496,7 +488,6 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
     boolean isStopping = false;
 
     public void run() {
-        if( true ) return;
         Socket sock = null;
         DataInputStream is = null;
         isStopping = false;
