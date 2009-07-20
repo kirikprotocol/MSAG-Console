@@ -68,6 +68,7 @@ private:
   public:
     LinkInputStream(corex::io::InputStream* iStream, unsigned int connectNum);
     virtual ssize_t read(uint8_t *buf, size_t bufSz);
+    virtual ssize_t readv(const struct iovec *iov, int iovcnt);
     virtual corex::io::IOObject* getOwner();
     unsigned int getConnectNum() const;
   private:

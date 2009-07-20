@@ -387,20 +387,18 @@ SuaUser::msgRecv(MessageInfo* msgInfo, uint32_t timeout)
       if ( cacheEntry->expectedMessageSize!=0 && cacheEntry->expectedMessageSize <= cacheEntry->ringBuf.getSizeOfAvailData() ) {
         uint32_t lenField = htonl(cacheEntry->expectedMessageSize);
 
-        msgInfo->msgData.reset(cacheEntry->expectedMessageSize + sizeof(cacheEntry->expectedMessageSize));
+        msgInfo->msgData.reset(static_cast<unsigned>(cacheEntry->expectedMessageSize +
+                                                     sizeof(cacheEntry->expectedMessageSize)));
         msgInfo->messageType = cacheEntry->ringBuf.readUint32();
 
         uint32_t msgTypeField = htonl(msgInfo->messageType);
 
-        msgInfo->msgData.Append(reinterpret_cast<uint8_t*>(&lenField), sizeof(lenField));
-//        memcpy(msgInfo->msgData.getCurPtr(), reinterpret_cast<uint8_t*>(&lenField), sizeof(lenField));
-//        msgInfo->msgData.setPos(msgInfo->msgData.getPos() + sizeof(lenField));
-        msgInfo->msgData.Append(reinterpret_cast<uint8_t*>(&msgTypeField), sizeof(msgTypeField));
-//        memcpy(msgInfo->msgData.getCurPtr(), reinterpret_cast<uint8_t*>(&msgTypeField), sizeof(msgTypeField));
-//        msgInfo->msgData.setPos(msgInfo->msgData.getPos() + sizeof(msgTypeField));
+        msgInfo->msgData.Append(reinterpret_cast<uint8_t*>(&lenField), static_cast<unsigned>(sizeof(lenField)));
+        msgInfo->msgData.Append(reinterpret_cast<uint8_t*>(&msgTypeField), static_cast<unsigned>(sizeof(msgTypeField)));
 
         cacheEntry->ringBuf.readArray(msgInfo->msgData.getCurPtr(), cacheEntry->expectedMessageSize - sizeof(msgInfo->messageType));
-        msgInfo->msgData.setPos(msgInfo->msgData.getPos() + cacheEntry->expectedMessageSize - sizeof(msgInfo->messageType));
+        msgInfo->msgData.setPos(static_cast<unsigned>(msgInfo->msgData.getPos() +
+                                cacheEntry->expectedMessageSize - sizeof(msgInfo->messageType)));
         msgInfo->suaConnectNum = static_cast<LinkInputStream*>(iStream)->getConnectNum();
 
         //delete cacheEntry;
@@ -450,7 +448,7 @@ SuaUser::getConnNumByPolicy()
     return _lastUsedConnIdx;
   } else if ( _trafficMode = LOADSHARE ) {
     smsc::core::synchronization::MutexGuard synchronize(_lastUsedConnIdxLock);
-    _lastUsedConnIdx = (_lastUsedConnIdx + 1) % _knownLinks.size();
+    _lastUsedConnIdx = static_cast<unsigned>((_lastUsedConnIdx + 1) % _knownLinks.size());
     return _lastUsedConnIdx;
   } else
     throw SuaLibException("SuaUser::getConnNumByPolicy::: invalid traffic mode=[%d]", _trafficMode);
@@ -484,6 +482,12 @@ ssize_t
 SuaUser::LinkInputStream::read(uint8_t *buf, size_t bufSz)
 {
   return _iStream->read(buf, bufSz);
+}
+
+ssize_t
+SuaUser::LinkInputStream::readv(const struct iovec *iov, int iovcnt)
+{
+  return _iStream->readv(iov, iovcnt);
 }
 
 corex::io::IOObject*
