@@ -158,7 +158,7 @@
                 
 		<enumeration value="#delivery_failure_reason"/>
 		<enumeration value="#network_error_code"/>
-		<enumeration value="#additional_status_info"/>
+		<enumeration value="#additional_status_info_text"/>
 		<enumeration value="#dpf_result"/>
             </restriction>    
         </simpleType>
