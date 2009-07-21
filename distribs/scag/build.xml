@@ -218,6 +218,7 @@ If you have it somewhere, you may specify it on command line via -DPROTOGEN=full
     <!-- target name="jedit"
             description="Target specification: web iface rule editor">
         <fail if="SETUP_DONE" message="You should specify 'jedit' before any actions"/>
+        <property name="SETUP_MAKE_JEDIT" value="true"/>
     </target -->
     
     <target name="-checksetup" unless="SETUP_MAKE_DONE">
@@ -788,8 +789,8 @@ If you have it somewhere, you may specify it on command line via -DPROTOGEN=full
         <copy todir="${WEBDISTR_DIR}/applet">
             <fileset dir="${WEBSRC_DIR}/jedit/dirs" includes="**/*"/>
         </copy>
-        <copy todir="${WEBDISTR_DIR}/webapps/scag/rules/rules" preservelastmodified="yes">
-            <fileset dir="${JEDIT_DIR}/build" includes="jedit.jar" />
+        <copy todir="${WEBDISTR_DIR}/webapps/msag/rules/rules" preservelastmodified="yes">
+            <fileset dir="${WEBBUILD_DIR}/jedit" includes="jedit.jar" />
         </copy>
     </target>
 
