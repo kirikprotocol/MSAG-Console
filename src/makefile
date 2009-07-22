@@ -182,7 +182,7 @@ endif
 
 ifeq ($(SNMP),YES)
 ifeq ($(CXX),CC)
-SNMP_LIBS_CORE = -lnetsnmpagent -lnetsnmphelpers -lnetsnmpmibs -lnetsnmp -lkstat -ladm
+SNMP_LIBS_CORE = -lnetsnmpagent -lnetsnmphelpers -lnetsnmpmibs -lnetsnmp -lkstat -ladm -lpicl
 ifeq ($(SFW),YES)
 SNMP_LIBS_CORE += -lpkcs11
 endif
