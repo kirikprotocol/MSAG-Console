@@ -15,6 +15,7 @@ import java.util.Locale;
 public class RemoteResourceBundle {
   private HashMap properties;
   private URL resource_url;
+
   public RemoteResourceBundle(URL codebase, String resource_uri) {
     properties = new HashMap();
     try {
@@ -26,16 +27,18 @@ public class RemoteResourceBundle {
     }
   }
   public String getString(String key) {
+    System.out.println( "RRB.getString() KEY='" + key + "'" );
     final String codePage = "cp1251";
     String message = "undefined";
     message = (String)properties.get(key);
+    System.out.println( "RRB.getString() MSG='" + message + "'" );
     if (message!=null) return message;
     BufferedReader br = null;
     try {
-        System.out.println("RRB.getString() STRING for url:'" + resource_url.toString() + "key=" + key + "'");
+        System.out.println("RRB.getString() STRING for url:'" + resource_url.toString() + " key=" + key + "'");
         URL url = new URL(resource_url.toString() + "key="+key);
         System.out.println("RRB.getString() URL: host=" + url.getHost() + " protocol=" + url.getProtocol() + " path=" + url.getHost() + " port=" + url.getPort());
-        InputStream s =url.openStream();
+        InputStream s = url.openStream();
         byte[] mess = new byte[s.available()];
         s.read( mess );
         message = new String(mess, codePage);
