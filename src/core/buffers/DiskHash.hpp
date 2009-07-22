@@ -83,7 +83,7 @@ protected:
     static uint32_t fldcrc(uint32_t crc,uint32_t fld)
     {
       uint32_t no=htonl(fld);
-      return crc32(crc,&no,4);
+      return util::crc32(crc,&no,4);
     }
 
     uint32_t CalcHdrCrc()

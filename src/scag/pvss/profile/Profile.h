@@ -7,10 +7,11 @@
 #include <string>
 #include <vector>
 
-#include <logger/Logger.h>
-#include <core/buffers/File.hpp>
-#include <core/buffers/Hash.hpp>
-#include <core/buffers/TmpBuf.hpp>
+#include "util/crc32.h"
+#include "logger/Logger.h"
+#include "core/buffers/File.hpp"
+#include "core/buffers/Hash.hpp"
+#include "core/buffers/TmpBuf.hpp"
 #include "scag/util/io/Serializer.h"
 #include "scag/util/io/GlossaryBase.h"
 #include "scag/util/storage/BlocksHSBackupData.h"
@@ -65,8 +66,8 @@ class IntProfileKey
 
     uint32_t HashCode(uint32_t attempt)const
     {
-        uint32_t res = crc32(0, &key, sizeof(key));
-        for(; attempt > 0; attempt--) res = crc32(res, &key, sizeof(key));
+        uint32_t res = smsc::util::crc32(0, &key, sizeof(key));
+        for(; attempt > 0; attempt--) res = smsc::util::crc32(res, &key, sizeof(key));
         return res;
     }
     const uint32_t* getKey() const {
@@ -74,7 +75,7 @@ class IntProfileKey
     }
 
     static uint32_t CalcHash(IntProfileKey pk) {
-      return  crc32(0, pk.getKey(), IntProfileKey::Size());
+        return smsc::util::crc32(0, pk.getKey(), IntProfileKey::Size());
     }
 };
 
