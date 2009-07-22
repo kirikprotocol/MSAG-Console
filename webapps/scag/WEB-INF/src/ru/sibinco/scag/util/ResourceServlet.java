@@ -16,11 +16,13 @@ import java.io.ObjectOutputStream;
  */
 public class ResourceServlet extends HttpServlet{
     public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-      //System.out.println("key = "+req.getParameter("key"));
+      System.out.print( "ResourceServlet KEY=" + req.getParameter("key") );
       String line = req.getParameter("key");
       if (line!=null) {
         resp.setCharacterEncoding("Cp1251");
-        resp.getWriter().write(LocaleMessages.getInstance().getMessage(req.getSession(),line));
+            String value = LocaleMessages.getInstance().getMessage(req.getSession(),line);
+            System.out.println( " VALUE=" + value );
+        resp.getWriter().write( value );
       }
       else {
         ObjectOutputStream out = new ObjectOutputStream(resp.getOutputStream());
