@@ -1,6 +1,7 @@
 #ifndef __EYELINE_LOADBALANCER_IOSUBSYSTEM_PROTOCOLS_SMPPP_MESSAGEFORWARDINGHELPER_HPP__
 # define __EYELINE_LOADBALANCER_IOSUBSYSTEM_PROTOCOLS_SMPPP_MESSAGEFORWARDINGHELPER_HPP__
 
+# include "logger/Logger.h"
 # include "eyeline/load_balancer/io_subsystem/types.hpp"
 # include "eyeline/load_balancer/io_subsystem/LinkId.hpp"
 # include "eyeline/load_balancer/io_subsystem/IOProcessor.hpp"
@@ -15,6 +16,9 @@ namespace smpp {
 
 class MessageForwardingHelper {
 protected:
+  MessageForwardingHelper()
+  : _log(smsc::logger::Logger::getInstance("smpp"))
+  {}
 
   template <class MESSAGE>
   void
@@ -45,6 +49,8 @@ protected:
   forwardServiceRequestToConcreteSmsc(const MESSAGE& message,
                                       const io_subsystem::LinkId& src_link_id,
                                       io_subsystem::IOProcessor& io_processor);
+private:
+  smsc::logger::Logger* _log;
 };
 
 # include "eyeline/load_balancer/protocols/smpp/MessageForwardingHelper_impl.hpp"
