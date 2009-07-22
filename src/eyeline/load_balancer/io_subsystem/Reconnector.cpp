@@ -18,7 +18,7 @@ Reconnector::Reconnector(IOProcessor& io_processor,
 int
 Reconnector::Execute()
 {
-  smsc_log_info(_logger, "Reconnector::Execute::: thread stared");
+  smsc_log_debug(_logger, "Reconnector::Execute::: thread stared");
   while (!_shutdownInProgress) {
     try {
       bool sleepInfinitiy = false;

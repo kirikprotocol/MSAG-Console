@@ -77,14 +77,14 @@ IOSubsystem::initialize(const smsc::util::config::ConfigView& smpp_cfg_entry)
 void
 IOSubsystem::start()
 {
-  smsc_log_info(_logger, "IOSubsystem::start::: try start IOProcessorMgr objects");
+  smsc_log_debug(_logger, "IOSubsystem::start::: try start IOProcessorMgr objects");
   IOProcessorMgrRegistry::Iterator ioProcMgrIter =
     IOProcessorMgrRegistry::getInstance().getIterator();
   while (ioProcMgrIter.hasElement()) {
     ioProcMgrIter.getCurrentElement()->startup();
     ioProcMgrIter.next();
   }
-  smsc_log_info(_logger, "IOSubsystem::start::: try start TimeoutMonitor objects");
+  smsc_log_debug(_logger, "IOSubsystem::start::: try start TimeoutMonitor objects");
   TimeoutMonitor::getInstance().Start();
 }
 

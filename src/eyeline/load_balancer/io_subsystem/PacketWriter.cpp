@@ -26,6 +26,7 @@ PacketWriter::PacketWriter(IOProcessor& io_processor,
 int
 PacketWriter::Execute()
 {
+  smsc_log_debug(_logger, "PacketWriter::Execute::: thread stared");
   while (!_shutdownInProgress) {
     try {
       int listenStatus = _signallingAndWritableObjectsPool.listen();
@@ -116,15 +117,13 @@ PacketWriter::_addOutputStream(const LinkId& link_id)
   }
 
   _usedLinks.insert(std::make_pair(link_id, link));
-  smsc_log_debug(_logger, "PacketWriter::_addOutputStream::: output stream for link with id='%s' has been added",
+  smsc_log_info(_logger, "PacketWriter::_addOutputStream::: output stream for link with id='%s' has been added",
                  link_id.toString().c_str());
 }
 
 void
 PacketWriter::_removeOutputStream(const LinkId& link_id)
 {
-  smsc_log_debug(_logger, "PacketWriter::_removeOutputStream::: try remove output stream for link with id='%s'",
-                 link_id.toString().c_str());
   corex::io::OutputStream* oStream;
   {
     smsc::core::synchronization::MutexGuard synchronize(_lockForKnownOStreams);
@@ -137,8 +136,8 @@ PacketWriter::_removeOutputStream(const LinkId& link_id)
   _packetsInCache.removePacketsFromCache(oStream);
   _signallingAndWritableObjectsPool.remove(oStream);
   _usedLinks.erase(link_id);
-  smsc_log_debug(_logger, "PacketWriter::_removeOutputStream::: output stream for link with id='%s' has been removed",
-                 link_id.toString().c_str());
+  smsc_log_info(_logger, "PacketWriter::_removeOutputStream::: output stream for link with id='%s' has been removed",
+                link_id.toString().c_str());
 }
 
 void

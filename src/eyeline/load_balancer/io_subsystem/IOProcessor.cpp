@@ -33,7 +33,6 @@ IOProcessor::shutdown()
 LinkId
 IOProcessor::addLink(LinkRefPtr& link)
 {
-  //std::auto_ptr<Link> linkPtrGuard(link);
   smsc_log_debug(_logger, "IOProcessor::addLink::: add link with id='%s'",
                  link->getLinkId().toString().c_str());
   smsc::core::synchronization::MutexGuard synchronize(_activeLinksLock);
@@ -112,7 +111,7 @@ void
 IOProcessor::terminateConnection(const LinkId& link_id,
                                  LinkRefPtr* terminated_link_ref)
 {
-  smsc_log_error(_logger, "IOProcessor::terminateConnection::: try terminate Link with id='%s'",
+  smsc_log_debug(_logger, "IOProcessor::terminateConnection::: try terminate Link with id='%s'",
                  link_id.toString().c_str());
   LinkRefPtr removingLink; // to delay object destruction until the end of scope this variable
   {
@@ -134,8 +133,8 @@ IOProcessor::terminateConnection(const LinkId& link_id,
   _packetReader.removeInputStream(link_id);
   _packetWriter.removeOutputStream(link_id);
 
-  smsc_log_error(_logger, "IOProcessor::terminateConnection::: Link with id='%s' has been terminated",
-                 link_id.toString().c_str());
+  smsc_log_info(_logger, "IOProcessor::terminateConnection::: Link with id='%s' has been terminated",
+                link_id.toString().c_str());
 }
 
 void

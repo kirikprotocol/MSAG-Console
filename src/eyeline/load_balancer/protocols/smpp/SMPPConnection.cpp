@@ -120,8 +120,8 @@ SMPPConnection::receive()
 io_subsystem::LinkId
 SMPPConnection::send(const io_subsystem::Message& message)
 {
-  smsc_log_debug(_logger, "SMPPConnection::send::: Try send message [%s] over connection with id='%s'",
-                 message.toString().c_str(), getLinkId().toString().c_str());
+  smsc_log_info(_logger, "SMPPConnection::send::: Try send message [%s] over connection with id='%s'",
+                message.toString().c_str(), getLinkId().toString().c_str());
   checkProtocolState(message.getMsgCode());
 
   io_subsystem::Packet* packet = _packetFormatter.prepareToSend(message);

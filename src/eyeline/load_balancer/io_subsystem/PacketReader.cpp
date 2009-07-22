@@ -25,7 +25,7 @@ PacketReader::PacketReader(IOProcessor& io_processor,
 int
 PacketReader::Execute()
 {
-  smsc_log_info(_logger, "PacketReader::Execute::: thread stared");
+  smsc_log_debug(_logger, "PacketReader::Execute::: thread stared");
   while (!_shutdownInProgress) {
     try {
       int listenStatus = _readableIOObjectsPool.listen();
@@ -72,8 +72,8 @@ PacketReader::addInputStream(const LinkId& link_id)
     }
   }
 
-  smsc_log_info(_logger, "PacketReader::addInputStream::: try add input stream for link with id='%s'",
-                link_id.toString().c_str());
+  smsc_log_debug(_logger, "PacketReader::addInputStream::: try add input stream for link with id='%s'",
+                 link_id.toString().c_str());
   scheduleTask(TaskType(ADD_ISTREAM, link_id));
 }
 
