@@ -51,6 +51,15 @@ public:
     }
 
 
+    void restoreSession( ActiveSession& session, SCAGCommand* cmd )
+    {
+        if ( session.get() || !cmd || !cmd->getSession() ) return;
+        if ( cmd->getSession()->currentCommand() == cmd->getSerial() ) {
+            session = getSession(cmd->getSession()->sessionKey(), cmd, false);
+        }
+    }
+
+
     /// get some statistics
     virtual void getSessionsCount( uint32_t& sessionsCount,
                                    uint32_t& sessionsLoadedCount,

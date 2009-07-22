@@ -425,6 +425,9 @@ void StateMachine::processSmResp( std::auto_ptr<SmppCommand> aucmd,
         return;
     }
 
+    // fix for session lockup
+    SessionManager::Instance().restoreSession(session,cmd);
+
     SmppEntity *dst, *src;
     SMS* sms;
 
@@ -671,6 +674,9 @@ void StateMachine::processSm( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* 
     SmsCommand& smscmd = cmd->get_smsCommand();
     SessionManager& sm = SessionManager::Instance();
     smscmd.set_orgDialogId(cmd->get_dialogId());
+
+    // fix for session lockup
+    SessionManager::Instance().restoreSession(session,cmd);
 
     int ussd_op = -1;
     do {
