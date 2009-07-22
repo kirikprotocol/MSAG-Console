@@ -7,6 +7,7 @@
 
 #include <map>
 
+#include "util/TonNpiAddress.hpp"
 #include "inman/inap/TCDspDefs.hpp"
 #include "inman/services/ICSrvIDs.hpp"
 
@@ -26,7 +27,7 @@ struct XSmsService {
     std::string     name;
     uint32_t        mask;
     uint32_t        svcCode; //actually it's a serviceId
-    TonNpiAddress   adr;
+    util::TonNpiAddress   adr;
     bool            chargeBearer;
 
     XSmsService(const char * use_name = NULL, uint32_t use_mask = 0)
