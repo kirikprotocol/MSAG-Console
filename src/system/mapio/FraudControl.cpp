@@ -81,6 +81,7 @@ void FraudControl::Reload()
     if(n->getNodeType() == DOMNode::ELEMENT_NODE)
     {
       XmlStr value(n->getAttributes()->getNamedItem(XmlStr("value"))->getNodeValue());
+      __trace2__("fraud:white list %s",value.c_str());
       h->Insert(value.c_str(),1);
     }
   }

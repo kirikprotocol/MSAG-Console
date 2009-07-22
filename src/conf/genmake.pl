@@ -261,14 +261,14 @@ sub srcrule{
   my $cflags=readstring($dirname.'/.cflags');
   if($srcname=~/\.cpp/)
   {
-    print $mkf "\t\$(PFX)\$(CCXX) \$(CXXFLAGS) $cppflags \$(COMPFLAGS) -c -o \$\@ \$<\n";
+    print $mkf "\t\$(PFX)\$(CCXX) \$(COMPFLAGS) \$(CXXFLAGS) $cppflags -c -o \$\@ \$<\n";
     print $mkf "\t\@mkdir -p \$(SMSC_BUILDDIR)/deps/$dirname\n";
     print $mkf "\t\@".($cppflags?"CXXFLAGS=\"\$(CXXFLAGS) $cppflags\" ":'')."conf/mkdeps.sh $objdir $dirname/$basename .cpp\n\n";
     print $mkf "-include \$(SMSC_BUILDDIR)/deps/$dirname/$basename.dep\n\n";
     
   }else
   {
-    print $mkf "\t\$(PFX)\$(CCC) \$(CFLAGS) $cflags \$(C_COMPFLAGS) -c -o \$\@ \$<\n";
+    print $mkf "\t\$(PFX)\$(CCC) \$(C_COMPFLAGS) \$(CFLAGS) $cflags -c -o \$\@ \$<\n";
     print $mkf "\t\@mkdir -p \$(SMSC_BUILDDIR)/deps/$dirname\n";
     print $mkf "\t\@".($cflags?"CFLAGS=\"\$(CFLAGS) $cflags\" ":'')."conf/mkdeps.sh $objdir $dirname/$basename .c\n\n";
     print $mkf "-include \$(SMSC_BUILDDIR)/deps/$dirname/$basename.dep\n\n";

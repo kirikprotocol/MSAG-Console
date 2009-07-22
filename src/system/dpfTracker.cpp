@@ -131,7 +131,9 @@ void DpfTracker::ApplyChanges(const std::string &fileName)
     }
     if(c.ct==ctRegisterSme)
     {
-      AbonentsSet::iterator it=abonents.find(c.abonent);
+      Record frec;
+      frec.abonent=c.abonent;
+      AbonentsSet::iterator it=abonents.find(&frec);
       ReqRecord req=c.asReqRecord();
       if(now-req.expiration<5*60)
       {
@@ -172,7 +174,9 @@ void DpfTracker::ApplyChanges(const std::string &fileName)
       }
     }else if(c.ct==ctRemoveAbonent)
     {
-      AbonentsSet::iterator it=abonents.find(c.abonent);
+      Record frec;
+      frec.abonent=c.abonent;
+      AbonentsSet::iterator it=abonents.find(&frec);
       if(it==abonents.end())
       {
         smsc_log_warn(log,"remove abonent %lld request found in journal, but abonent already removed",c.abonent);
@@ -185,7 +189,9 @@ void DpfTracker::ApplyChanges(const std::string &fileName)
       }
     }else if(c.ct==ctRemoveSme)
     {
-      AbonentsSet::iterator it=abonents.find(c.abonent);
+      Record frec;
+      frec.abonent=c.abonent;
+      AbonentsSet::iterator it=abonents.find(&frec);
       if(it==abonents.end())
       {
         smsc_log_warn(log,"remove request of abonent %lld sme %s found in journal, but abonent already removed",c.abonent,c.smeId.c_str());
@@ -237,7 +243,9 @@ bool DpfTracker::registerSetDpf(const smsc::sms::Address &abonent,const smsc::sm
   }
   uint64_t abnId;
   sscanf(abonent.value,"%lld",&abnId);
-  AbonentsSet::iterator it=abonents.find(abnId);
+  Record frec;
+  frec.abonent=abnId;
+  AbonentsSet::iterator it=abonents.find(&frec);
   Record* rec;
   ReqRecord req;
   req.expiration=expValue;
@@ -290,7 +298,9 @@ void DpfTracker::hlrAlert(const smsc::sms::Address &abonent)
     sync::MutexGuard mg(mon);
     uint64_t abnId;
     sscanf(abonent.value,"%lld",&abnId);
-    AbonentsSet::iterator it=abonents.find(abnId);
+    Record frec;
+    frec.abonent=abnId;
+    AbonentsSet::iterator it=abonents.find(&frec);
     if(it==abonents.end())
     {
       smsc_log_debug(log,"record for abonent=%lld not found",abnId);

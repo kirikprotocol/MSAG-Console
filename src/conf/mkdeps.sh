@@ -3,9 +3,9 @@
 function mkdeps()
 {
   if [ $ext == '.cpp' ] ; then
-  $CXX $CXXFLAGS $COMPFLAGS $depflags $file.cpp 2>/dev/null | perl -e 'print (index($_,":")>-1 ? "$ENV{SMSC_BUILDDIR}/obj/$ENV{dir}/$_" : "$_") for(<>)' > $SMSC_BUILDDIR/deps/$file.depx 
+  $CXX $CXXFLAGS $COMPFLAGS $depflags $file.cpp 2>/dev/null | perl -e 'print (index($_,":")>-1 ? "$ENV{SMSC_BUILDDIR}/obj/$ENV{dir}/$_" : "$_") for(grep(!/\/opt\/stdcxx/,<>))' > $SMSC_BUILDDIR/deps/$file.depx 
   else
-  $CC $CFLAGS $C_COMPFLAGS $depflags $file.c 2>/dev/null | perl -e 'print (index($_,":")>-1 ? "$ENV{SMSC_BUILDDIR}/obj/$ENV{dir}/$_" : "$_") for(<>)' > $SMSC_BUILDDIR/deps/$file.depx 
+  $CC $CFLAGS $C_COMPFLAGS $depflags $file.c 2>/dev/null | perl -e 'print (index($_,":")>-1 ? "$ENV{SMSC_BUILDDIR}/obj/$ENV{dir}/$_" : "$_") for(grep(!/\/opt\/stdcxx/,<>))' > $SMSC_BUILDDIR/deps/$file.depx 
   fi
 }
 

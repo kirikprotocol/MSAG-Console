@@ -3,6 +3,7 @@
 
 #include "smeman_structures.h"
 #include <vector>
+#include <ostream>
 
 namespace smsc {
 namespace util {

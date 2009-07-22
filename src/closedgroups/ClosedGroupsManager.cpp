@@ -32,7 +32,8 @@ void ClosedGroupsManager::Load(const char* filename)
   {
     DOMNode *group = list->item(i);
     std::auto_ptr<Group> grp(new Group);
-    grp->id=AttrGetIntValue(group->getAttributes(),"id");
+    int id=AttrGetIntValue(group->getAttributes(),"id");
+    grp->id=id;
     AttrFillStringValue(group->getAttributes(),"name",grp->name);
     for(DOMNode *node = group->getFirstChild(); node != 0; node = node->getNextSibling())
     {
@@ -45,7 +46,7 @@ void ClosedGroupsManager::Load(const char* filename)
       AttrFillStringValue(node->getAttributes(),"value",addr);
       grp->addresses.insert(smsc::sms::Address(addr));
     }
-    groups.insert(GroupsMap::value_type(grp->id,grp.release()));
+    groups.insert(GroupsMap::value_type(id,grp.release()));
   }
 
 }
