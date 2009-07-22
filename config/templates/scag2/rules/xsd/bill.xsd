@@ -86,6 +86,7 @@
                     <attribute name="abonent" type="scag:Value" use="optional"/>
                     <attribute name="externalId" type="scag:Value" use="required"/>
                     <attribute name="timeout" type="scag:Value" use="optional"/>
+                    <attribute name="description" type="scag:Value" use="optional"/>
                     <attribute name="walletType" type="scag:Value" use="optional"/>
                     <attribute name="resultAmount" type="scag:Var" use="optional"/>
                     <attribute name="resultChargeThreshold" type="scag:Var" use="optional"/>
