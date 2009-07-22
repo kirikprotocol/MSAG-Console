@@ -35,7 +35,7 @@ public:
   void setParameters(const IOParameters& ioParameters);
   IOProcessor* getVacantIOProcessor();
 protected:
-  bool checkIfNeedCreateIOProcessor() const;
+  void _shutdown();
 
   IOProcessor* registerIOProcessor(IOProcessor* io_processor);
   virtual IOProcessor* createNewIOProcessor() = 0;
@@ -49,11 +49,12 @@ private:
   bool _shutdownInProgress;
 
   corex::io::network::TCPServerSocket* _listeningIface;
-  IOProcessor* _currentVacantIOProcessor;
+
   MessagePublisher _newConnEventsPublisher;
   InputEventProcessorsPool _newConnEventsProcessor;
   typedef std::map<unsigned, IOProcessor*> registered_ioprocs_t;
   registered_ioprocs_t _ioProcessors;
+  registered_ioprocs_t::iterator _currentVacantIOProcessorIter;
 
   IOParameters _ioParameters;
   bool _ioParametersWasSet;

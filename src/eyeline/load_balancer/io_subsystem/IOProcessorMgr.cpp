@@ -16,11 +16,11 @@ IOProcessorMgr::IOProcessorMgr(unsigned io_proc_mgr_id,
                                unsigned max_new_conn_events_queue_sz)
 : _ioProcMgrId(io_proc_mgr_id), _ioProcId(0),
   _shutdownInProgress(false), _switchCircuitCtrl(switch_circuit_controller),
-  _currentVacantIOProcessor(NULL),
+  _logger(smsc::logger::Logger::getInstance("io_subsystem")),
   _listeningIface(new corex::io::network::TCPServerSocket(listening_host, listening_port)),
   _newConnEventsPublisher(max_new_conn_events_queue_sz),
   _newConnEventsProcessor("NewConnEventProcPool", max_newconn_event_handlers, _newConnEventsPublisher),
-  _ioParametersWasSet(false), _logger(smsc::logger::Logger::getInstance("io_subsystem"))
+  _currentVacantIOProcessorIter(_ioProcessors.begin()), _ioParametersWasSet(false)
 {
   smsc_log_debug(_logger, "IOProcessorMgr::IOProcessorMgr::: _ioProcMgrId=%d, listen on host='%s', port=%d",
                  _ioProcMgrId, listening_host.c_str(), listening_port);
@@ -42,7 +42,6 @@ IOProcessorMgr::Execute()
       smsc_log_debug(_logger, "IOProcessorMgr::Execute::: accept returned new socket=[%s]",
                      newSocket->toString().c_str());
       IOProcessor* vacantIOProcessor = getVacantIOProcessor();
-      const IOParameters& ioParams = getParameters();
       _newConnEventsPublisher.publish(new AcceptNewConnectionEvent(*vacantIOProcessor,
                                                                    *_switchCircuitCtrl,
                                                                    newSocket));
@@ -52,6 +51,7 @@ IOProcessorMgr::Execute()
     }
   }
 
+  _shutdown();
   return 0;
 }
 
@@ -69,13 +69,21 @@ IOProcessorMgr::shutdown()
   smsc_log_debug(_logger, "IOProcessorMgr::shutdown::: try shutdown IOProcessorMgr with id=%d",
                  _ioProcMgrId);
   _shutdownInProgress = true;
+}
+
+void
+IOProcessorMgr::_shutdown()
+{
   _listeningIface->close();
   _newConnEventsProcessor.shutdown();
   while ( !_ioProcessors.empty() ) {
     registered_ioprocs_t::iterator iter = _ioProcessors.begin();
     smsc_log_debug(_logger, "IOProcessorMgr::shutdown::: try shutdown IOProcessor with id=%d",
                      iter->second->getId());
-    iter->second->shutdown();
+    try {
+      iter->second->shutdown();
+    } catch (...) {}
+
     delete iter->second;
     _ioProcessors.erase(iter);
   }
@@ -102,12 +110,25 @@ IOProcessorMgr::getParameters() const
 IOProcessor*
 IOProcessorMgr::getVacantIOProcessor()
 {
-  if ( _currentVacantIOProcessor->canProcessNewSocket() ) {
-    smsc_log_debug(_logger, "IOProcessorMgr::getVacantIOProcessor::: return free IOProcessor with id=%d",
-                   _currentVacantIOProcessor->getId());
-    return _currentVacantIOProcessor;
-  } else
-    return createNewIOProcessor();
+  if ( _currentVacantIOProcessorIter != _ioProcessors.end() ) {
+    if ( _currentVacantIOProcessorIter->second->canProcessNewSocket() ) {
+      smsc_log_debug(_logger, "IOProcessorMgr::getVacantIOProcessor::: return free IOProcessor with id=%d",
+                     _currentVacantIOProcessorIter->second->getId());
+      return _currentVacantIOProcessorIter->second;
+    } else {
+      if ( ++_currentVacantIOProcessorIter == _ioProcessors.end() )
+        _currentVacantIOProcessorIter = _ioProcessors.begin();
+      while ( _currentVacantIOProcessorIter != _ioProcessors.end() ) {
+        if ( _currentVacantIOProcessorIter->second->canProcessNewSocket() ) {
+          smsc_log_debug(_logger, "IOProcessorMgr::getVacantIOProcessor::: return free IOProcessor with id=%d",
+                         _currentVacantIOProcessorIter->second->getId());
+          return _currentVacantIOProcessorIter->second;
+        }
+        ++_currentVacantIOProcessorIter;
+      }
+    }
+  }
+  return createNewIOProcessor();
 }
 
 IOProcessor*
@@ -116,11 +137,12 @@ IOProcessorMgr::registerIOProcessor(IOProcessor* io_processor)
   std::pair<registered_ioprocs_t::iterator, bool> res = _ioProcessors.insert(std::make_pair(io_processor->getId(), io_processor));
   if ( !res.second )
     throw smsc::util::Exception("IOProcessorMgr::registerIOProcessor::: IOProcessor with id = [%d] already registered", io_processor->getId());
-  _currentVacantIOProcessor = io_processor;
+  //_currentVacantIOProcessor = io_processor;
+  _currentVacantIOProcessorIter = res.first;
 
   smsc_log_debug(_logger, "IOProcessorMgr::registerIOProcessor::: new IOProcessor with id=%d has been registered",
                  io_processor->getId());
-  return _currentVacantIOProcessor;
+  return io_processor;
 }
 
 }}}
