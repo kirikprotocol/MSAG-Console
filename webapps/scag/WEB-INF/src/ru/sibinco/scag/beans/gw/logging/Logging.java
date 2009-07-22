@@ -76,7 +76,7 @@ public class Logging extends EditBean {
         }
 
         public void addChild(String childFullName, String childPriority) {
-            logger.debug(new StringBuffer().append("Adding child isRoot:'" + isRoot() + "' : name=\"").append(fullName).
+            logger.debug(new StringBuffer().append("Logging.addChild() Adding child isRoot:'" + isRoot() + "' : name=\"").append(fullName).
                     append("\" priority=").append(priority).append(", childName=\"").append(childFullName).
                     append("\" childPriority=").append(childPriority).toString());
             if (isRoot()) {
@@ -167,7 +167,6 @@ public class Logging extends EditBean {
 //        String rootPriority = null;
         try {
             logCategories = appContext.getScag().getLogCategories();
-
         } catch (SibincoException e) {
             logger.warn( "Loigging.init() SibincoException" );
 //            setRunning(false);
@@ -222,7 +221,7 @@ public class Logging extends EditBean {
                 throw new SCAGJspException(Constants.errors.logging.COULDNT_GET_LOGCATS, e);
             }
         }else{
-            logger.warn( "Logging:init() MSAG Disconnected" );
+            logger.warn( "Logging,init() MSAG Disconnected" );
             setRunning(false);
             exc = true;
         }
@@ -328,10 +327,10 @@ public class Logging extends EditBean {
             parseMap( cats );
 
         } catch (SibincoException e) {
-            logger.error( "Logging:apply():SibincoException" );
+            logger.error( "Logging.apply():SibincoException" );
             if( e instanceof StatusDisconnectedException ){
                 setRunning(false);
-                logger.error( "Logging:apply():Disconnected" );
+                logger.error( "Logging.apply():Disconnected" );
                 readFLF( true );
             }
             throw new SCAGJspException(Constants.errors.logging.COULDNT_SET_LOGCATS, e);
@@ -349,15 +348,15 @@ public class Logging extends EditBean {
         logger.warn( "Loigging:apply() appContext.getScag().getStatus()=" + appContext.getScag().getStatus() );
         if( isConnected() ){
             try {
-                logger.warn( "Loigging:apply() Connected" );
-                logger.info( "Logging.apply() setLogCategories" );
+                logger.warn( "Loigging.apply() Connected" );
+                logger.info( "Logging.pply() setLogCategories" );
                 appContext.getScag().setLogCategories(cats);
                 logger.info( "Logging.apply() getLogCategories" );
                 cats = appContext.getScag().getLogCategories();
             } catch (SibincoException e) {
-                logger.error( "Logging:apply():SibincoException" );
+                logger.error( "Logging.apply():SibincoException" );
                 if( e instanceof StatusDisconnectedException ){
-                    logger.error( "Logging:apply():Disconnected" );
+                    logger.error( "Logging.apply():Disconnected" );
                 }
                 throw new SCAGJspException(Constants.errors.logging.COULDNT_SET_LOGCATS, e);
             }finally{
@@ -472,7 +471,7 @@ public class Logging extends EditBean {
     private void getLoggerCategoryInfos(LoggerCategoryInfo rootCategory, Map map) {
         map.put(rootCategory.getFullName(),rootCategory);
         if (rootCategory.hasChilds()) {
-            logger.error( "Logging:getLoggerCategoryInfos:rootCategory=" + rootCategory.getFullName() + "|" + rootCategory.getName() );
+            logger.error( "Logging.getLoggerCategoryInfos() rootCategory=" + rootCategory.getFullName() + "|" + rootCategory.getName() );
             for (Iterator i = rootCategory.getChilds().values().iterator(); i.hasNext();) {
                 LoggerCategoryInfo child = (Logging.LoggerCategoryInfo) i.next();
                 map.put(child.getFullName(),child);
