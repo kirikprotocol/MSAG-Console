@@ -13,6 +13,9 @@ MessageForwardingHelper::forwardMessageToSmsc(const MESSAGE& message,
     if ( !isSrcLinkIncoming )
       throw smsc::util::Exception("MessageForwardingHelper::forwardMessageToSmsc::: link with id=%s is not link to sme",
                                   src_link_id.toString().c_str());
+    smsc_log_info(_log, "MessageForwardingHelper::forwardMessageToSmsc::: forward message=[%s] gotten from link='%s' to linkset='%s'",
+                  message.toString().c_str(), src_link_id.toString().c_str(), dstLinkSetId.toString().c_str());
+
     io_subsystem::LinkSetRefPtr dstLinkSet = io_processor.getLinkSet(dstLinkSetId);
     if ( dstLinkSet.Get() )
       dstLinkSet->send(message);
@@ -40,6 +43,8 @@ MessageForwardingHelper::forwardMultipartMessageToSmsc(const MESSAGE& message,
                                   src_link_id.toString().c_str());
 
     if (message.getSarSegmentSeqNum() == 1 ) {
+      smsc_log_info(_log, "MessageForwardingHelper::forwardMultipartMessageToSmsc::: forward first part of multipart message=[%s] gotten from link='%s' to linkset='%s'",
+                    message.toString().c_str(), src_link_id.toString().c_str(), dstLinkSetId.toString().c_str());
       io_subsystem::LinkSetRefPtr dstLinkSet = io_processor.getLinkSet(dstLinkSetId);
       if ( dstLinkSet.Get() ) {
         io_subsystem::LinkId idOfUsedLink = dstLinkSet->send(message);
@@ -56,6 +61,8 @@ MessageForwardingHelper::forwardMultipartMessageToSmsc(const MESSAGE& message,
       io_subsystem::LinkId idOfUsedLink =
         switchingTable.getSpecificSwitching(dstLinkSetId,
                                             message.getSarMsgRefNum());
+      smsc_log_info(_log, "MessageForwardingHelper::forwardMultipartMessageToSmsc::: forward next part of multipart message=[%s] gotten from link='%s' to link='%s'",
+                    message.toString().c_str(), src_link_id.toString().c_str(), idOfUsedLink.toString().c_str());
 
       io_subsystem::LinkRefPtr dstLink = io_processor.getLink(idOfUsedLink);
       if ( dstLink.Get() )
@@ -92,6 +99,8 @@ MessageForwardingHelper::forwardMessageToSme(const MESSAGE& message,
     if ( isSrcLinkIncoming )
       throw smsc::util::Exception("MessageForwardingHelper::forwardMessageToSme::: wrong entry in switching table (source linkSetId=%s)- invalid configuration",
                                   linkSetId.toString().c_str());
+    smsc_log_info(_log, "MessageForwardingHelper::forwardMessageToSme::: forward message=[%s] gotten from link='%s' to sme over link='%s'",
+                  message.toString().c_str(), src_link_id.toString().c_str(), linkIdToSme.toString().c_str());
 
     io_subsystem::LinkRefPtr linkToSme = io_processor.getLink(linkIdToSme);
     if ( linkToSme.Get() )
@@ -108,6 +117,8 @@ MessageForwardingHelper::forwardSmppResponseToSmsc(const MESSAGE& message,
                                                    const io_subsystem::LinkId& src_link_id,
                                                    io_subsystem::IOProcessor& io_processor)
 {
+  smsc_log_info(_log, "MessageForwardingHelper::forwardSmppResponseToSmsc::: forward message=[%s] gotten from link='%s'",
+                message.toString().c_str(), src_link_id.toString().c_str());
   io_subsystem::LinkId dstLinkSetId;
   bool isSrcLinkIncoming;
   if ( !io_subsystem::SwitchingTable::getInstance().getSwitching(src_link_id, &dstLinkSetId, &isSrcLinkIncoming) )
@@ -132,6 +143,8 @@ MessageForwardingHelper::forwardServiceRequestToConcreteSmsc(const MESSAGE& mess
                                                              const io_subsystem::LinkId& src_link_id,
                                                              io_subsystem::IOProcessor& io_processor)
 {
+  smsc_log_info(_log, "MessageForwardingHelper::forwardServiceRequestToConcreteSmsc::: forward message=[%s] gotten from link='%s'",
+                message.toString().c_str(), src_link_id.toString().c_str());
   io_subsystem::LinkId dstLinkSetId;
   bool isSrcLinkIncoming;
   if ( !io_subsystem::SwitchingTable::getInstance().getSwitching(src_link_id, &dstLinkSetId, &isSrcLinkIncoming) )
