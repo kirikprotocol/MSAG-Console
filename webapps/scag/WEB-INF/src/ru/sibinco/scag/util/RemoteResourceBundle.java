@@ -6,6 +6,7 @@ import java.net.URL;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Locale;
+import java.util.Date;
 
 /**
  * Created by IntelliJ IDEA.
@@ -18,7 +19,7 @@ public class RemoteResourceBundle {
   private HashMap properties;
   private URL resource_url;
 
-    protected Logger logger = Logger.getLogger(this.getClass());
+//  protected Logger logger = Logger.getLogger(this.getClass());
 
   public RemoteResourceBundle(URL codebase, String resource_uri) {
     properties = new HashMap();
@@ -30,6 +31,7 @@ public class RemoteResourceBundle {
       e.printStackTrace();
     }
   }
+
   public String getString(String key) {
     System.out.println( "RRB.getString() KEY='" + key + "'" );
     final String codePage = "cp1251";
@@ -38,21 +40,31 @@ public class RemoteResourceBundle {
     System.out.println( "RRB.getString() MSG='" + message + "'" );
     if (message!=null) return message;
     BufferedReader br = null;
+      InputStream s = null;
     try {
-        System.out.println("RRB.getString() STRING for url:'" + resource_url.toString() + " key=" + key + "'");
-        logger.debug("***RRB.getString() STRING for url:'" + resource_url.toString() + " key=" + key + "'");
+        System.out.println("RRB.getString() STRING for url:'" + resource_url.toString() + " key=" + key + "' " );
+//        logger.debug("***RRB.getString() STRING for url:'" + resource_url.toString() + " key=" + key + "'");
         URL url = new URL(resource_url.toString() + "key="+key);
         System.out.println("RRB.getString() URL: host=" + url.getHost() + " protocol=" + url.getProtocol() + " path=" + url.getHost() + " port=" + url.getPort());
-        InputStream s = url.openStream();
+        System.out.println("RRB.getString() 1 " + System.currentTimeMillis() );
+        s = url.openStream();
         byte[] mess = new byte[s.available()];
         s.read( mess );
         message = new String(mess, codePage);
+        System.out.println("RRB.getString() 2 " + System.currentTimeMillis() );
         System.out.println("RRB.getString message='" + message + "'\n--------------");
         properties.put(key,message);
     } catch(Exception e) {
       e.printStackTrace();
     } finally {
-      if (br!=null)
+        if( s != null){
+            try{
+                s.close();
+            }catch( IOException e ){
+                e.printStackTrace();
+            }
+        }
+        if (br!=null)
         try {
           br.close();
         } catch (IOException e) {e.printStackTrace();}
