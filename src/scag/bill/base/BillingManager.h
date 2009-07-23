@@ -94,6 +94,7 @@ public:
     virtual BillCloseCallParams* getClose() = 0;
     virtual BillCheckCallParams* getCheck() = 0;
     virtual BillTransferCallParams* getTransfer() { return 0; }
+    virtual int getStatus() const = 0;
 protected:
     static smsc::logger::Logger* log_;
 };
@@ -110,6 +111,9 @@ public:
     virtual InmanOpenCallParams* getOpen() { return this; }
     virtual BillCloseCallParams* getClose() { return 0; }
     virtual BillCheckCallParams* getCheck() { return 0; }
+    virtual int getStatus() const {
+        return exception.empty() ? ewallet::Status::OK : ewallet::Status::UNKNOWN;
+    }
 private:
     std::auto_ptr<BillOpenCallParamsData> data_;
 };
@@ -133,7 +137,7 @@ public:
         status_ = stat;
         exception = msg;
     }
-    uint8_t getStatus() const { return status_; }
+    virtual int getStatus() const { return int(status_); }
 
     void setRegistrator( TransactionRegistrator* reg ) { registrator_ = reg; }
     virtual void setResponse( ewallet::Response& resp ) = 0;
@@ -281,6 +285,9 @@ public:
     virtual InmanCloseCallParams* getClose() { return this; }
     virtual BillCheckCallParams* getCheck() { return 0; }
     virtual billid_type billId() const { return billId_; }
+    virtual int getStatus() const {
+        return exception.empty() ? ewallet::Status::OK : ewallet::Status::UNKNOWN;
+    }
 private:
     billid_type billId_;
 };

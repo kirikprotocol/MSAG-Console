@@ -1,4 +1,5 @@
 #include "BillAction.h"
+#include "scag/bill/ewallet/Status.h"
 
 namespace scag2 {
 namespace re {
@@ -107,7 +108,17 @@ std::string BillAction::getTransId( ActionContext& context )
 
 void BillAction::setBillingStatus( ActionContext& context,
                                    const char*    errmsg,
-                                   bool           ok )
+                                   bool           isok )
+{
+    setBillingStatus( context,errmsg,isok ?
+                      bill::ewallet::Status::OK :
+                      bill::ewallet::Status::UNKNOWN );
+}
+
+
+void BillAction::setBillingStatus( ActionContext& context,
+                                   const char*    errmsg,
+                                   int            statCode )
 {
     if ( hasStatus_ ) {
         Property* propertyStatus = context.getProperty(statusFieldName_);
@@ -117,7 +128,7 @@ void BillAction::setBillingStatus( ActionContext& context,
                             opname(), statusFieldName_.c_str());
             return;
         }
-        propertyStatus->setInt(!ok);
+        propertyStatus->setInt(statCode);
     }
 
     if (hasMessage_)

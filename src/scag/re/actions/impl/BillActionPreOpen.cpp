@@ -217,7 +217,7 @@ bool BillActionPreOpen::preContinueRunning(ActionContext& context)
     {
         smsc_log_warn(logger, "Action '%s' unable to process. Delails: %s",
                       opname(), bp->exception.c_str());
-        setBillingStatus(context, bp->exception.c_str(), false);
+        setBillingStatus(context, bp->exception.c_str(), bp->getStatus() );
         setTariffStatus(context,0);
         return false;
     }

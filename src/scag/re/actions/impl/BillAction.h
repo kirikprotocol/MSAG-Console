@@ -27,6 +27,10 @@ protected:
                            const char* errmsg,
                            bool isok );
 
+    void setBillingStatus( ActionContext& context,
+                           const char* errmsg,
+                           int statCode );
+
     virtual const char* opname() const = 0;
 
     // by default is false
