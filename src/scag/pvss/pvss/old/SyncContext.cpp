@@ -57,7 +57,8 @@ void SyncContext::sendResponse(const Response* resp) {
     return;
   }
   core::Core::PacketState state = sendResponse(*resp) ? core::Core::SENT : core::Core::FAILED;
-  pvssServer_.reportPacket(resp->getSeqNum(), *getSocket(), state);
+  const uint32_t seqNum = resp->getSeqNum();
+  pvssServer_.reportPacket(seqNum, *getSocket(), state);
 }
 
 bool SyncContext::processReadSocket(const time_t& now) {

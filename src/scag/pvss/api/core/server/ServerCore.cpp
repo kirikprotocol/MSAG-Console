@@ -144,8 +144,13 @@ void ServerCore::reportPacket(uint32_t seqNum, smsc::core::network::Socket& chan
             return;
         }
         response = i.getContext()->getResponse().get();
-        assert(response);
         ctx.reset(static_cast<ServerContext*>(ptr->pop(i)));
+        if ( ! response ) {
+            // cannot be: response must be present
+            smsc_log_error(loge_, "packet seqNum=%d on channel %p reported as %s, but no resp in context found");
+            countExceptions( PvssException::UNKNOWN, "reportMissResp");
+            return;
+        }
         switch (state) {
         case SENT : ctx->setState( ServerContext::SENT ); break;
         case EXPIRED : ctx->setState( ServerContext::FAILED ); break;
