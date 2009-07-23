@@ -69,7 +69,10 @@
                     <a href="javascript:setSort('user')" <%=bean.getSort().endsWith("user") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%>
                        title="<%=getLocString("common.sortmodes.userHint")%>"><%=getLocString("common.sortmodes.user")%></a>
                 </th>
-                <%--th><a href="javascript:setSort('sessionId')" <%=bean.getSort().endsWith("sessionId") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by session">session ID</a></th--%>
+                <th>
+                    <a href="javascript:setSort('sessionId')" <%=bean.getSort().endsWith("sessionId") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%>
+                       title="Sort by IP">IP</a>
+                </th>
                 <th>
                     <a href="javascript:setSort('subjectType')" <%=bean.getSort().endsWith("subjectType") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%>
                        title="<%=getLocString("common.sortmodes.subjectTypeHint")%>"><%=getLocString("common.sortmodes.subjectType")%></a>
@@ -95,7 +98,7 @@
             %><tr class=row<%=(row++) & 1%>>
             <td<%=rowspan%> nowrap><%=StringEncoderDecoder.encode(dateFormat.format(action.getTimestamp()))%></td>
             <td<%=rowspan%>><%=StringEncoderDecoder.encode(action.getUser())%></td>
-            <%--td<%=rowspan%>><%=StringEncoderDecoder.encode(action.getSessionId())%></td--%>
+            <td<%=rowspan%>><%=StringEncoderDecoder.encode(action.getSessionId())%></td>
             <td<%=rowspan%>><%=StringEncoderDecoder.encode(SubjectTypes.typeToString(action.getSubjectType()))%></td>
             <td<%=rowspan%>><%=StringEncoderDecoder.encode(action.getSubjectId())%></td>
             <td<%=rowspan%>><%=StringEncoderDecoder.encode(Actions.actionToString(action.getAction()))%></td>
