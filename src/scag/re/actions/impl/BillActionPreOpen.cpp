@@ -143,6 +143,8 @@ BillOpenCallParamsData* BillActionPreOpen::makeParamsData( ActionContext& contex
         // wallet type override
         if ( walletType_.isFound() ) {
             bpd->tariffRec.Currency = walletType_.getValue(context);
+            smsc_log_debug(logger,"Action '%s': session wallet type %s",
+                           opname(), bpd->tariffRec.Currency.c_str() );
         }
 
         if ( abonentType_ == ftUnknown ) {
