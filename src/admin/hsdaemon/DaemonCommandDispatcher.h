@@ -40,7 +40,7 @@ public:
   static void startAllServices();
   static void stopAllServices(unsigned int timeout_in_seconds);
 
-  static void init(config::Manager * confManager) throw ();
+  static void init(smsc::util::config::Manager * confManager) throw ();
 
   DaemonCommandDispatcher(Socket * admSocket);
 
@@ -57,7 +57,7 @@ public:
 protected:
   smsc::logger::Logger *logger;
   static ServicesList services;
-  static config::Manager *configManager;
+  static smsc::util::config::Manager *configManager;
   static unsigned int shutdownTimeout;
 
   static Mutex servicesListMutex;

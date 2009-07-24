@@ -8,6 +8,7 @@
 namespace smsc {
 namespace sms{
 
+using smsc::util::Exception;
 using smsc::core::buffers::TmpBuf;
 
 int Body::getRequiredBufferSize() const
