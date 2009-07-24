@@ -7,7 +7,7 @@
       <param name="autostart" type="bool">false</param>
     </section>
     <section name="msag">
-      <param name="args" type="string">@scag2.service.args@</param>
+      <param name="args" type="string">@msag.service.args@</param>
       <param name="autostart" type="bool">false</param>
     </section>
     <section name="pers">
