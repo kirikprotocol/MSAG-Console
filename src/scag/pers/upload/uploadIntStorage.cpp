@@ -199,9 +199,9 @@ void extractPageFile( smsc::logger::Logger* logger, PageFile& pf,
             }
             ++readProfiles;
             if (prof.getProperties().GetCount() > 0) {
-              if (type == PT_SERVICE && pkey != 135 && pkey != 140) {
-                continue;
-              }
+              //if (type == PT_SERVICE && pkey != 135 && pkey != 140) {
+                //continue;
+              //}
               ++notEmptyProfiles;
             }
             if (send) {
@@ -214,11 +214,11 @@ void extractPageFile( smsc::logger::Logger* logger, PageFile& pf,
     } catch ( std::exception& e ) {
         smsc_log_error(logger,"exception: %s", e.what());
     }
-    if (type == PT_SERVICE) {
-      smsc_log_info(logger,"read profiles: %d, matched profiles: %d, uploaded profiles: %d", readProfiles, notEmptyProfiles, uploadProfiles);
-    } else {
+    //if (type == PT_SERVICE) {
+      //smsc_log_info(logger,"read profiles: %d, matched profiles: %d, uploaded profiles: %d", readProfiles, notEmptyProfiles, uploadProfiles);
+    //} else {
       smsc_log_info(logger,"read profiles: %d, not empty profiles: %d, uploaded profiles: %d", readProfiles, notEmptyProfiles, uploadProfiles);
-    }
+    //}
 }
 
 
