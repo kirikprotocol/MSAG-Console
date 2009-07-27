@@ -19,9 +19,9 @@ IOEventProcessor::Execute() {
     smsc_log_info(_logger, "IOEventProcessor::Execute::: leave it");
     return 0;
   } catch (std::exception& ex) {
-    smsc_log_info(_logger, "IOEventProcessor::Execute::: catched exception [%s]", ex.what());
+    smsc_log_info(_logger, "IOEventProcessor::Execute::: caught exception [%s]", ex.what());
   } catch (...) {
-    smsc_log_info(_logger, "IOEventProcessor::Execute::: catched unexpected exception [...]");
+    smsc_log_info(_logger, "IOEventProcessor::Execute::: caught unexpected exception [...]");
   }
   return 1;
 }
