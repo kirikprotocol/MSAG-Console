@@ -304,7 +304,7 @@
                 <%= StringEncoderDecoder.encode(errMessage == null ? "" : errMessage)%>
             </td>
         </tr>
-        <% if (bean.isAllowToShowSmsText(request)) {%>
+        <% if (bean.isAllowToShowSmsText(request, row)) {%>
             <tr class=row<%=rowN&1%>1>
                 <td colspan=8><%= (row.getText() != null && row.isTextEncoded()) ? row.getText() : StringEncoderDecoder.encode(row.getText())%>
                     &nbsp;</td>

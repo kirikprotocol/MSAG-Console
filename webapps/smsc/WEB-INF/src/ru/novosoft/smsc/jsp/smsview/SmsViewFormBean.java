@@ -607,7 +607,10 @@ public class SmsViewFormBean extends IndexBean {
     this.mbSave = mbSave;
   }
 
-  public boolean isAllowToShowSmsText(HttpServletRequest request) {
-    return request.isUserInRole("smsView_smstext");
+  public boolean isAllowToShowSmsText(HttpServletRequest request, SmsRow row) {
+    if (row.getSrcSmeId().equalsIgnoreCase("MAP_PROXY") && row.getDstSmeId().equals("MAP_PROXY"))
+      return request.isUserInRole("smsView_smstext_p2p");
+    else
+      return request.isUserInRole("smsView_smstext_content");
   }
 }

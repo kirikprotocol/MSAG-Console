@@ -140,7 +140,7 @@
             <td valign=top><%= (row.getText() != null && row.isTextEncoded()) ? odesc : StringEncoderDecoder.encode(odesc)%>
                 &nbsp;</td>
         </tr>
-        <% if (bean.isAllowToShowSmsText(request)) {%>
+        <% if (bean.isAllowToShowSmsText(request, row)) {%>
         <tr class=row<%=rowN++&1%>0>
             <th width="1%" nowrap valign=top><%=getLocString("smsview.decodedMessage")%></th>
             <td valign=top><%= (row.getText() != null && row.isTextEncoded()) ? row.getText() : StringEncoderDecoder.encode(row.getText())%>
@@ -162,8 +162,8 @@
             <th width="1%" nowrap valign=top><%
                 String keyMsg = getLocString("sms.body.tag." + key);
                 if (keyMsg == null) keyMsg = key;
-                if (!bean.isAllowToShowSmsText(request) && keyMsg.equals("SMSC_RAW_PAYLOAD")) continue;
-                if (!bean.isAllowToShowSmsText(request) && keyMsg.equals("SMSC_RAW_SHORTMESSAGE")) continue;
+                if (!bean.isAllowToShowSmsText(request, row) && keyMsg.equals("SMSC_RAW_PAYLOAD")) continue;
+                if (!bean.isAllowToShowSmsText(request, row) && keyMsg.equals("SMSC_RAW_SHORTMESSAGE")) continue;
             %><%= keyMsg%></th>
             <td valign=top><%
                 String valMsg;
