@@ -187,6 +187,7 @@
               <option value=<%=Route.BILLING_FALSE%> <%=bean.getBilling() == Route.BILLING_FALSE ? "SELECTED" : ""%>>off</option>
               <option value=<%=Route.BILLING_MT%> <%=bean.getBilling() == Route.BILLING_MT ? "SELECTED" : ""%>>MT</option>
               <option value=<%=Route.BILLING_FR%> <%=bean.getBilling() == Route.BILLING_FR ? "SELECTED" : ""%>>FR</option>
+              <option value=<%=Route.BILLING_ON_SUBMIT%> <%=bean.getBilling() == Route.BILLING_ON_SUBMIT ? "SELECTED" : ""%>>on submit</option>
             </select>
           </td>
           <td><label for=billing style="padding-left:4px;"><%=getLocString("routes.billing")%></label></td>

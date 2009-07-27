@@ -29,6 +29,7 @@ public class Route
   public static final byte BILLING_TRUE = 1;
   public static final byte BILLING_MT = 2;
   public static final byte BILLING_FR = 3;
+  public static final byte BILLING_ON_SUBMIT = 4;
 
   private String name = null;
   private SourceList src = null;
@@ -141,6 +142,8 @@ public class Route
       billing = BILLING_FR;
     else if (billingAttr.equalsIgnoreCase("mt"))
       billing = BILLING_MT;
+    else if (billingAttr.equalsIgnoreCase("onsubmit"))
+      billing = BILLING_ON_SUBMIT;
     else
       billing = BILLING_FALSE;
     transit = routeElem.getAttribute("transit").equalsIgnoreCase("true");
@@ -299,6 +302,7 @@ public class Route
       case BILLING_TRUE: return "true";
       case BILLING_MT: return "mt";
       case BILLING_FR: return "fr";
+      case BILLING_ON_SUBMIT: return "onsubmit";
       default: return "false";
     }
   }

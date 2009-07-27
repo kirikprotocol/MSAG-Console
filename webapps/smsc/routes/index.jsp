@@ -342,6 +342,8 @@
           MT
         <%} else if(billing == Route.BILLING_FR) {%>
           FR
+        <%} else if(billing == Route.BILLING_ON_SUBMIT) {%>
+          SBMT
         <%} else {%>
           &nbsp;
         <%}%>
