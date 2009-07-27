@@ -43,7 +43,6 @@ public class ConsoleInteraction extends Thread {
       keepAliveInterval = 5000;
       logger.warn("console.keepalive invalid or not specified, using default 5000");
     }
-    connect();
     start();
   }
 
