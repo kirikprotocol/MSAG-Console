@@ -51,6 +51,8 @@ SuaStackSubsystem::stop()
         smsc_log_info(_logger, "SuaStackSubsystem::stop::: link is not in INACTIVE state, remove link");
         io_dispatcher::LinkPtr linkPtr = io_dispatcher::ConnectMgr::getInstance().removeLink(linkId, false);
       }
+    } catch (std::exception& ex) {
+      smsc_log_error(_logger, "SuaStackSubsystem::stop::: caught exception [%s]", ex.what());
     }
   }
 }
