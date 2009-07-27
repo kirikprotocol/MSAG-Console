@@ -31,7 +31,7 @@ MessageHandlers::handle(const communication::libsua_messages::BindMessage& messa
     } else
       _cMgr.send(linkId, communication::libsua_messages::BindConfirmMessage(communication::libsua_messages::BindConfirmMessage::UNKNOWN_APP_ID_VALUE));
   } catch (std::exception& ex) {
-    smsc_log_error(_logger, "MessageHandlers::handle::: catched unexpected exception [%s]", ex.what());
+    smsc_log_error(_logger, "MessageHandlers::handle::: caught unexpected exception [%s]", ex.what());
     _cMgr.send(linkId, communication::libsua_messages::BindConfirmMessage(communication::libsua_messages::BindConfirmMessage::SYSTEM_MALFUNCTION));
   }
 }
@@ -108,10 +108,10 @@ MessageHandlers::handle(const communication::libsua_messages::N_UNITDATA_REQ_Mes
       _cMgr.send(outLinkSetId, cldtMmessage);
     }
   } catch (messages_router::TranslationFailure& ex) {
-    smsc_log_error(_logger, "MessageHandlers::handle::: catched exception [%s], send N_NOTICE_IND_Message to messages's originator", ex.what());
+    smsc_log_error(_logger, "MessageHandlers::handle::: caught exception [%s], send N_NOTICE_IND_Message to messages's originator", ex.what());
     _cMgr.send(linkId, communication::libsua_messages::N_NOTICE_IND_Message(message, ex.getFailureCode()));
   } catch (smsc::util::Exception& ex) {
-    smsc_log_error(_logger, "MessageHandlers::handle::: catched unexpected exception [%s], send N_NOTICE_IND_Message to messages's originator", ex.what());
+    smsc_log_error(_logger, "MessageHandlers::handle::: caught unexpected exception [%s], send N_NOTICE_IND_Message to messages's originator", ex.what());
     _cMgr.send(linkId, communication::libsua_messages::N_NOTICE_IND_Message(message, communication::libsua_messages::N_NOTICE_IND_Message::UNQUALIFIED));
   }
 }

@@ -13,7 +13,7 @@ IOEventProcessor::Execute() {
       try {
         event->handle(); // message processing being made inside method handle()
       } catch (smsc::util::Exception& ex) {
-        smsc_log_error(_logger, "IOEventProcessor::Execute::: catched exception [%s]", ex.what());
+        smsc_log_error(_logger, "IOEventProcessor::Execute::: caught exception [%s]", ex.what());
       }
     }
     smsc_log_info(_logger, "IOEventProcessor::Execute::: leave it");

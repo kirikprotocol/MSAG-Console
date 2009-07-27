@@ -59,10 +59,10 @@ InputCommandProcessor::process(const std::string& inputCommandLine) {
 
     return userPromptString;
   } catch(InvalidCommandLineException& ex) {
-    smsc_log_error(_logger, "InputCommandProcessor::process::: catched exception=[%s]", ex.what());
+    smsc_log_error(_logger, "InputCommandProcessor::process::: caught exception=[%s]", ex.what());
     return std::string("Error: Invalid input\n") + commandInterpreter->getPromptString();
   } catch(utilx::runtime_cfg::InconsistentConfigCommandException& ex) {
-    smsc_log_error(_logger, "Error: InputCommandProcessor::process::: catched exception=[%s]", ex.what());
+    smsc_log_error(_logger, "Error: InputCommandProcessor::process::: caught exception=[%s]", ex.what());
     if ( ex.needPopUpCurrentCommandInterpreter() ) {
       if ( !_commandInterpreters.empty() )
         _commandInterpreters.pop_back();

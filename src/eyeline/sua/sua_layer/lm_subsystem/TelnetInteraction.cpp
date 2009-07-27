@@ -65,9 +65,9 @@ TelnetInteraction::Execute()
       threadSafeCloseSocket();
     }
   } catch (std::exception& ex) {
-    smsc_log_error(_logger, "TelnetInteraction::Execute::: catched exception=[%s]", ex.what());
+    smsc_log_error(_logger, "TelnetInteraction::Execute::: caught exception=[%s]", ex.what());
   } catch (...) {
-    smsc_log_error(_logger, "TelnetInteraction::Execute::: catched unexpected exception=[...]");
+    smsc_log_error(_logger, "TelnetInteraction::Execute::: caught unexpected exception=[...]");
   }
   return 0;
 }
