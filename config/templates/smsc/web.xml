@@ -381,6 +381,7 @@
     </web-resource-collection>
     <auth-constraint>
       <role-name>services</role-name>
+      <role-name>service_operator</role-name>	
     </auth-constraint>
     <user-data-constraint>
       <transport-guarantee>NONE</transport-guarantee>
