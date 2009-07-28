@@ -20,10 +20,7 @@ public:
 
   void load(corex::io::InputStream* buf);
 private:
-  uint8_t deque();
-  void enque(uint8_t val);
-
-  uint32_t _head, _tail, _count;
+  unsigned _head, _tail, _count;
   uint8_t _buffer[BUFSZ];
 };
 
