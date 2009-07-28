@@ -368,3 +368,25 @@ B3104: May 26, 2009
     Webadm	I/O optimizations in operative store reading
     Webadm 	Add maxRowsCount and calcTotalCount support for operative store reader
     Webadm	Wait for operative store rolling will be finished before read operative store
+
+B3105: Jun 18, 2009
+    Ussman	workaround for non HD stack deadlock on reconnect logic
+
+B3106: Jul 27,2009
+    Webadm	Divide role "smsView_smstext" to "smsView_smstext_p2p" and "smsView_smstext_content"
+    Webadm	Allow service_operator access to services page
+    Webadm	Add new billing mode "on submit"
+    Webadm	Show SessionId at journal page
+    Profsync	Reconnect logic fix, several clients allowed
+    Inman	last roll time init fix 
+    Inman	billing ON_SUBMIT for ordinary SMS
+    SMSC	new billing mode support ON_SUBMIT, should be used with charging policy onsubmit
+    SMSC	empty body & esm class with udhi fix
+    SMSC	MT sms on x86 header bits fix
+    SMSC	some transliteration fixes to sync with MTC docs
+    SMSC	DPF tracker stop changes loading if record validation fails
+    mcahdb	return status for every calls, disable grouping
+    mcahdb	Save events with status 'E' to events store.  'E' and 'D' are final states of event. 'F' is not final state.
+    mcahdb	Fix messages package
+    mcahdb	Remove + from MSISDN in SOAP response
+    ussman	fixed bug in using of already destroyed connection    
