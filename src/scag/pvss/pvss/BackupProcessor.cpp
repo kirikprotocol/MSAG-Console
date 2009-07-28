@@ -361,7 +361,7 @@ int BackupProcessor::BackupProcessingTask::Execute()
 
 void BackupProcessor::BackupProcessingTask::readDir( std::vector< std::string >& files )
 {
-    std::string format(filename_ + "%[^\n]");
+    std::string format(filename_ + ".%[0123456789-].log");
     DIR* dir = opendir( dirname_.c_str() );
     if ( !dir ) {
         smsc_log_debug(log_,"cannot open dir %s", dirname_.c_str());
