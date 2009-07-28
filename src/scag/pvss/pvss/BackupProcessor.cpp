@@ -167,6 +167,7 @@ void BackupProcessor::setFileProcessed( ScopeType scope, const char* fname )
         smsc_log_warn(log_,"cannot create file %s",fullname.c_str());
     }
     processedFiles_[idx]->insert(fname);
+    smsc_log_info(log_,"file %s has been processed",fname);
 }
 
 
@@ -363,7 +364,7 @@ void BackupProcessor::BackupProcessingTask::readDir( std::vector< std::string >&
     std::string format(filename_ + "%[^\n]");
     DIR* dir = opendir( dirname_.c_str() );
     if ( !dir ) {
-        smsc_log_warn(log_,"cannot open dir %s", dirname_.c_str());
+        smsc_log_debug(log_,"cannot open dir %s", dirname_.c_str());
         return;
     }
     struct dirent entry, *result;
