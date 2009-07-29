@@ -49,7 +49,8 @@ bool RollingIntervalAppender::findLastFile(time_t dat, size_t suffixSize, std::s
   if(!dirp) return false;
   std::string fname_ = fileName + suffixFormat;
   size_t lastFileNameSize = fileName.size() + suffixSize;
-  long curInterval = interval;
+  // making curInterval a very big number to prevent losing a previous file after restart
+  long curInterval = 86400*365*10; // 10 years
   lastFileName.clear();
   bool result = false;
   tm rtm;
@@ -67,9 +68,10 @@ bool RollingIntervalAppender::findLastFile(time_t dat, size_t suffixSize, std::s
         rtm.tm_isdst = -1;
         time_t fdate = mktime(&rtm);
 
-        lastFileName = dp->d_name;
         if(dat - fdate < curInterval)
         {
+            lastFileName = dp->d_name;
+            lastIntervalStart = fdate;
             curInterval = dat - fdate;
             result = true;
         } 
