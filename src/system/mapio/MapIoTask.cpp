@@ -10,9 +10,10 @@
 #include "snmp/SnmpAgent.hpp"
 #include "system/snmp/SnmpCounter.hpp"
 #endif
+#include "system/smsc.hpp"
 
 
-#define MAXENTRIES 8192
+#define MAXENTRIES 40000
 
 USHORT_T MY_USER_ID=USER01_ID;//!!
 
@@ -34,7 +35,7 @@ using namespace std;
 
 //#define SMSC_FORWARD_RESPONSE 0x001
 
-static bool MAP_dispatching = false;
+//static bool MAP_dispatching = false;
 //static bool MAP_isAlive = false;
 static bool MAP_aborting = false;
 
@@ -320,6 +321,7 @@ void MapIoTask::ReconnectThread::init()
       //throw runtime_error("MsgInit error");
     }
   }
+  EINSS7CpCreateMessagePool(5000,65535);
   err= EINSS7CpMsgPortOpen( MY_USER_ID, TRUE);
   if ( err != RETURN_OK )
   {
@@ -432,6 +434,14 @@ void MapIoTask::init(unsigned timeout)
   {
     MapDialogContainer::boundLocalSSNs[i] = 0;
   }
+  for(int n=0;n<MapDialogContainer::remInstCount;n++)
+  {
+    for(int i=0;i<MapDialogContainer::numLocalSSNs;i++)
+    {
+      widxMap[MapDialogContainer::remInst[n]][MapDialogContainer::localSSNs[i]]=new unsigned char[65536];
+      memset(widxMap[MapDialogContainer::remInst[n]][MapDialogContainer::localSSNs[i]],255,65536);
+    }
+  }
   __map_trace__("MAP proxy init complete");
 }
 
@@ -509,7 +519,7 @@ void MapIoTask::deinit()
   MapDialogContainer::destroyInstance();
 }
 
-struct ReceiveGuard{
+/*struct ReceiveGuard{
   EventMonitor& mon;
   bool& inReceive;
   bool& isStopping;
@@ -538,34 +548,59 @@ struct ReceiveGuard{
   {
     active=false;
   }
-};
+};*/
 
 void warnMapReq(USHORT_T result, const char* func);
 
-void MapIoTask::dispatcher()
+void MapIoTask::killOverflow()
+{
+  MSG_T message;
+  EINSS7INSTANCE_T rinst=0;
+  int idx=mapIoTaskCount;
+  while(!isStopping)
+  {
+    {
+      MutexGuard mg(monitors[idx]);
+      MsgQueue& q=queues[idx];
+      while(!isStopping && q.Count()==0)
+      {
+        monitors[idx].wait(1000);
+      }
+      if(isStopping || q.Count()==0)
+      {
+        continue;
+      }
+      q.Pop(message);
+    }
+    if(message.primitive==MAP_OPEN_IND)
+    {
+      ET96MAP_DIALOGUE_ID_T dlgId=((ET96MAP_DIALOGUE_ID_T)message.msg_p[2])|(((ET96MAP_DIALOGUE_ID_T)message.msg_p[3])<<8);
+        //(message.msg_p[2]<<8)| message.msg_p[3];
+      ET96MAP_LOCAL_SSN_T lssn=message.msg_p[1];
+#ifdef EIN_HD
+      rinst=message.remoteInstance;
+#endif
+      ET96MAP_REFUSE_REASON_T reason = ET96MAP_NO_REASON;
+      warnMapReq( Et96MapOpenResp(lssn INSTARG(rinst),dlgId,ET96MAP_RESULT_NOT_OK,&reason,0,0,0), __func__);
+      warnMapReq( Et96MapCloseReq(lssn INSTARG(rinst),dlgId,ET96MAP_NORMAL_RELEASE,0,0,0), __func__);
+      smsc::system::Smsc::getInstance().incRejected();
+    }
+    EINSS7CpReleaseMsgBuffer(&message);
+  }
+}
+
+void MapIoTask::dispatcher(int idx)
 {
   MSG_T message;
   USHORT_T result;
   EINSS7INSTANCE_T rinst=0;
 
-  //struct timeval utime, curtime;
+  
+  std::vector<MSG_T> tokill;
+  tokill.reserve(120);
 
-  //smsc::logger::Logger *time_logger = smsc::logger::Logger::getInstance("map.itime");
-
-  message.receiver = MY_USER_ID;
   for (;;)
   {
-//    MAP_isAlive = true;
-    if ( isStopping )
-    {
-      return;
-    }
-
-    while(!isStopping && MAP_connectedInstCount==0)
-    {
-      usleep(100);
-    }
-
     if ( isStopping )
     {
       return;
@@ -573,97 +608,90 @@ void MapIoTask::dispatcher()
 
     DialogRefGuard dlg;
     {
-      MutexGuard mg(receiveMon);
-      MAP_dispatching = true;
-
-      result = EINSS7CpMsgRecv_r(&message,1000);
-
-      //if ( time_logger->isDebugEnabled() ) gettimeofday( &utime, 0 );
-
-      MAP_dispatching = false;
-
-      if ( result != MSG_OK )
+      MutexGuard mg(monitors[idx]);
+      MsgQueue& q=queues[idx];
+      while(!isStopping && q.Count()==0)
       {
-        if( result != MSG_TIMEOUT )
-        {
-          __map_warn2__("Error at MsgRecv with code %d",result);
-        }
+        monitors[idx].wait(1000);
+      }
+      if(isStopping || q.Count()==0)
+      {
         continue;
       }
+      q.Pop(message);
+    }
+    
+    __map_trace2__("MsgRecv receive msg with receiver 0x%hx sender 0x%hx prim 0x%hx size %d",message.receiver,message.sender,message.primitive,message.size);
+    if ( smsc::logger::_mapmsg_cat->isDebugEnabled() && message.size <= 2048)
+    {
+      char text[8193];
+      int k = 0;
+      for ( int i=0; i<message.size; i++)
+      {
+        k+=sprintf(text+k,"%02x ",(unsigned)message.msg_p[i]);
+      }
+      text[k]=0;
+      __log2__(smsc::logger::_mapmsg_cat,smsc::logger::Logger::LEVEL_DEBUG, "MsgRecv[inst=%d] msg: %s",INSTARG0(message.remoteInstance), text);
+    }
+    if ( message.primitive == 0x8b && message.msg_p[6] >= 0x04 )
+    {
+      __map_trace__("MsgRecv hatching msg to reset priority order " );
+      message.msg_p[6] = 0;
+    } else if ( message.primitive == 0x8d && message.msg_p[4] >= 0x04 )
+    {
+      __map_trace__("MsgRecv hatching msg to reset priority order " );
+      message.msg_p[4] = 0;
+    }
+    /*
+    else if ( message.primitive == 0xa3 && message.size == 8 && message.msg_p[5] == 0x22 )
+    {
+      __map_trace__("MsgRecv hatching msg to fix sysfailure cause in ForwardMTConf " );
+      message.msg_p[5] = 0x24;
+    } else if ( message.primitive == 0x9f && message.size == 11 && message.msg_p[8] == 0x22 )
+    {
+      __map_trace__("MsgRecv hatching msg to fix sysfailure cause in SendRinfoForSmConf " );
+      message.msg_p[8] = 0x24;
+    }
+    */
 
-      __map_trace2__("MsgRecv receive msg with receiver 0x%hx sender 0x%hx prim 0x%hx size %d",message.receiver,message.sender,message.primitive,message.size);
-      if ( smsc::logger::_mapmsg_cat->isDebugEnabled() && message.size <= 2048)
-      {
-        char text[8193];
-        int k = 0;
-        for ( int i=0; i<message.size; i++)
-        {
-          k+=sprintf(text+k,"%02x ",(unsigned)message.msg_p[i]);
-        }
-        text[k]=0;
-        __log2__(smsc::logger::_mapmsg_cat,smsc::logger::Logger::LEVEL_DEBUG, "MsgRecv[inst=%d] msg: %s",INSTARG0(message.remoteInstance), text);
-      }
-      if ( message.primitive == 0x8b && message.msg_p[6] >= 0x04 )
-      {
-        __map_trace__("MsgRecv hatching msg to reset priority order " );
-        message.msg_p[6] = 0;
-      } else if ( message.primitive == 0x8d && message.msg_p[4] >= 0x04 )
-      {
-        __map_trace__("MsgRecv hatching msg to reset priority order " );
-        message.msg_p[4] = 0;
-      }
-      /*
-      else if ( message.primitive == 0xa3 && message.size == 8 && message.msg_p[5] == 0x22 )
-      {
-        __map_trace__("MsgRecv hatching msg to fix sysfailure cause in ForwardMTConf " );
-        message.msg_p[5] = 0x24;
-      } else if ( message.primitive == 0x9f && message.size == 11 && message.msg_p[8] == 0x22 )
-      {
-        __map_trace__("MsgRecv hatching msg to fix sysfailure cause in SendRinfoForSmConf " );
-        message.msg_p[8] = 0x24;
-      }
-      */
-
-      if(message.primitive!=MAP_BIND_CONF && message.primitive!=MAP_STATE_IND &&
-         message.primitive!=MAP_GET_AC_VERSION_CONF)
-      {
-        ET96MAP_DIALOGUE_ID_T dlgId=((ET96MAP_DIALOGUE_ID_T)message.msg_p[2])|(((ET96MAP_DIALOGUE_ID_T)message.msg_p[3])<<8);
-          //(message.msg_p[2]<<8)| message.msg_p[3];
-        ET96MAP_LOCAL_SSN_T lssn=message.msg_p[1];
+    if(message.primitive!=MAP_BIND_CONF && message.primitive!=MAP_STATE_IND &&
+       message.primitive!=MAP_GET_AC_VERSION_CONF)
+    {
+      ET96MAP_DIALOGUE_ID_T dlgId=((ET96MAP_DIALOGUE_ID_T)message.msg_p[2])|(((ET96MAP_DIALOGUE_ID_T)message.msg_p[3])<<8);
+        //(message.msg_p[2]<<8)| message.msg_p[3];
+      ET96MAP_LOCAL_SSN_T lssn=message.msg_p[1];
 #ifdef EIN_HD
-        rinst=message.remoteInstance;
+      rinst=message.remoteInstance;
 #endif
-        if(message.primitive==MAP_OPEN_IND)
+      if(message.primitive==MAP_OPEN_IND)
+      {
+        try{
+          bool isUSSD=message.msg_p[4]==0x13 || message.msg_p[4]==0x14;
+          dlg.assign(MapDialogContainer::getInstance()->createLockedDialog(dlgId,lssn,rinst,message.msg_p[5],isUSSD));
+        }
+        catch(std::exception& e)
         {
-          try{
-            bool isUSSD=message.msg_p[4]==0x13 || message.msg_p[4]==0x14;
-            dlg.assign(MapDialogContainer::getInstance()->createLockedDialog(dlgId,lssn,rinst,message.msg_p[5],isUSSD));
-          }
-          catch(std::exception& e)
-          {
-            __map_warn2__("%s: dialogid 0x%x %s",__func__,dlgId,e.what());
-            ET96MAP_REFUSE_REASON_T reason = ET96MAP_NO_REASON;
-            warnMapReq( Et96MapOpenResp(lssn INSTARG(rinst),dlgId,ET96MAP_RESULT_NOT_OK,&reason,0,0,0), __func__);
-            warnMapReq( Et96MapCloseReq(lssn INSTARG(rinst),dlgId,ET96MAP_NORMAL_RELEASE,0,0,0), __func__);
-            // dailog limit reached - have to drop message
-            EINSS7CpReleaseMsgBuffer(&message);
-            continue;
-          }
-        }else
-        {
-          dlg.assign(MapDialogContainer::getInstance()->getLockedDialogOrEnqueue(dlgId,lssn,rinst,message));
-          if(dlg.isnull())
-          {
-            continue;
-          }
+          __map_warn2__("%s: dialogid 0x%x %s",__func__,dlgId,e.what());
+          ET96MAP_REFUSE_REASON_T reason = ET96MAP_NO_REASON;
+          warnMapReq( Et96MapOpenResp(lssn INSTARG(rinst),dlgId,ET96MAP_RESULT_NOT_OK,&reason,0,0,0), __func__);
+          warnMapReq( Et96MapCloseReq(lssn INSTARG(rinst),dlgId,ET96MAP_NORMAL_RELEASE,0,0,0), __func__);
+          // dailog limit reached - have to drop message
+          EINSS7CpReleaseMsgBuffer(&message);
+          continue;
         }
       }else
       {
-        handleMessage(message);
-        EINSS7CpReleaseMsgBuffer(&message);
-        continue;
+        dlg.assign(MapDialogContainer::getInstance()->getLockedDialogOrEnqueue(dlgId,lssn,rinst,message));
+        if(dlg.isnull())
+        {
+          continue;
+        }
       }
-
+    }else
+    {
+      handleMessage(message);
+      EINSS7CpReleaseMsgBuffer(&message);
+      continue;
     }
 
     handleMessage(message);
@@ -837,11 +865,93 @@ void MapIoTask::Start()
     if( isStopping || smsc::system::Smsc::getInstance().getStopFlag()) return;
     for(int i=0;i<mapIoTaskCount;i++)
     {
-      tp.startTask(new DispatcherExecutor(this));
+      tp.startTask(new DispatcherExecutor(this,i));
     }
+    tp.startTask(new OverflowKiller(this));
+    Thread::Start();
   } catch (exception& e) {
     __map_warn2__("exception in mapio: %s",e.what());
   }
+}
+
+int MapIoTask::Execute()
+{
+  MSG_T message;
+  USHORT_T result;
+  EINSS7INSTANCE_T rinst=0;
+  int didx=0;
+  int didxRoundRobin=0;
+  message.receiver = MY_USER_ID;
+  while(!isStopping)
+  {
+    while(!isStopping && MAP_connectedInstCount==0)
+    {
+      usleep(100);
+    }
+    result = EINSS7CpMsgRecv_r(&message,1000);
+    if ( result != MSG_OK )
+    {
+      if( result != MSG_TIMEOUT )
+      {
+        __map_warn2__("Error at MsgRecv with code %d",result);
+      }
+      continue;
+    }
+    didx=255;
+    if(message.primitive!=MAP_BIND_CONF && message.primitive!=MAP_STATE_IND &&
+       message.primitive!=MAP_GET_AC_VERSION_CONF)
+    {
+      ET96MAP_DIALOGUE_ID_T dlgId=((ET96MAP_DIALOGUE_ID_T)message.msg_p[2])|(((ET96MAP_DIALOGUE_ID_T)message.msg_p[3])<<8);
+        //(message.msg_p[2]<<8)| message.msg_p[3];
+      ET96MAP_LOCAL_SSN_T lssn=message.msg_p[1];
+#ifdef EIN_HD
+      rinst=message.remoteInstance;
+#endif
+      unsigned char* widxPtr=widxMap[rinst][lssn];
+      didx=widxPtr?widxPtr[dlgId]:255;
+      if(didx==255)
+      {
+        didx=didxRoundRobin++;
+        if(didxRoundRobin>=mapIoTaskCount)
+        {
+          didxRoundRobin=0;
+        }
+      }
+      if(widxPtr)
+      {
+        if(queues[didx].Count()>200 && message.primitive==MAP_OPEN_IND)
+	{
+          monitors[mapIoTaskCount].Lock();
+          queues[mapIoTaskCount].Push(message);
+          monitors[mapIoTaskCount].notify();
+          monitors[mapIoTaskCount].Unlock();
+	  widxPtr[dlgId]=mapIoTaskCount;
+	  continue;
+	}else
+	{
+	  if(didx==mapIoTaskCount && message.primitive==MAP_DELIMIT_IND)
+	  {
+	    widxPtr[dlgId]=255;
+	  }else
+	  {
+            widxPtr[dlgId]=didx;
+	  }
+	}
+      }
+    }else
+    {
+      didx=didxRoundRobin++;
+      if(didxRoundRobin>=mapIoTaskCount)
+      {
+        didxRoundRobin=0;
+      }
+    }
+    monitors[didx].Lock();
+    queues[didx].Push(message);
+    monitors[didx].notify();
+    monitors[didx].Unlock();
+  }
+  return 0;
 }
 
 string MapDialogContainer::SC_ADRESS_VALUE = "79029869999";

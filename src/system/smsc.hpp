@@ -261,6 +261,13 @@ public:
   SmeAdministrator* getSmeAdmin(){return &smeman;}
 
   void RejectSms(const SmscCommand&);
+  
+  void incRejected()
+  {
+    MutexGuard g(perfMutex);
+    msu_submitErrCounter++;
+    submitErrCounter++;
+  }
 
   void registerMsuStatEvent(int eventType,const SMS* sms)
   {

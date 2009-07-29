@@ -39,6 +39,7 @@
 #include "sms/sms_const.h"
 #include "sms/sms_tags.h"
 #include "sms/sms_buf.h"
+#include "core/buffers/FixedLengthString.hpp"
 
 namespace smsc {
 
@@ -302,7 +303,7 @@ struct Address
     vl[length]=0;
     return snprintf(buf,buflen,".%d.%d.%s",type,plan,vl);
   }
-  inline std::string toString()const
+  inline smsc::core::buffers::FixedLengthString<32> toString()const
   {
     if(length>32)abort();
     char vl[32];

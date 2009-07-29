@@ -41,6 +41,7 @@ static inline unsigned GetLockedByMODelay() { return MapDialogContainer::getLock
 static void SendRInfo(MapDialog* dialog);
 static bool SendSms(MapDialog* dialog);
 
+
 struct XMOMAPLocker {
   ET96MAP_ADDRESS_T m_msAddr;
   unsigned long startTime;
@@ -92,10 +93,10 @@ struct UssdProcessingGuard{
 static Mutex x_momap_lock;
 static XMOMAP x_momap;
 
-static void ContinueImsiReq(MapDialog* dialog,const string& s_imsi,const string& s_msc, const unsigned routeErr);
+static void ContinueImsiReq(MapDialog* dialog,const String32& s_imsi,const String32& s_msc, const unsigned routeErr);
 static void PauseOnImsiReq(MapDialog* map);
-static const string SC_ADDRESS() { return MapDialogContainer::GetSCAdress(); }
-static const string USSD_ADDRESS() { return MapDialogContainer::GetUSSDAdress(); }
+static const string& SC_ADDRESS() { return MapDialogContainer::GetSCAdress(); }
+static const string& USSD_ADDRESS() { return MapDialogContainer::GetUSSDAdress(); }
 static bool NeedNotifyHLR(MapDialog* dialog);
 static void ResponseAlertSC(MapDialog* dialog);
 static void SendErrToSmsc(unsigned dialogid,unsigned code);
@@ -192,39 +193,50 @@ void AbortMapDialog(unsigned dialogid,unsigned ssn, EINSS7INSTANCE_T rinst)
   warnMapReq( Et96MapUAbortReq(ssn INSTARG(rinst),dialogid,0,0,0,0), __func__);
 }
 
-string ImsiToString(const ET96MAP_IMSI_T* imsi)
+String32 ImsiToString(const ET96MAP_IMSI_T* imsi)
 {
   unsigned n = imsi->imsiLen;
-  ostringstream ost;
-  unsigned i = 0;
-  for ( ;i < n; ++i ) {
+  String32 rv;
+  unsigned i = 0,idx=0;
+  for ( ;i < n && idx<31; ++i ) {
     unsigned x0 = ((unsigned int)imsi->imsi[i])&0x0f;
     unsigned x1 = (((unsigned int)imsi->imsi[i])>>4)&0x0f;
-    if ( x0 <= 9 ) ost << x0;
+    if ( x0 <= 9 ) 
+    {
+      rv[idx++]=x0+'0';
+    }
     else break;
-    if ( x1 <= 9 ) ost << x1;
+    if ( x1 <= 9 )
+    {
+      rv[idx++]=x1+'0';
+    }
     else break;
   }
-  string result = ost.str();
-//  __map_trace2__("IMSI: %s",result.c_str());
-  return result;
+  rv[idx]=0;
+  return rv;
 }
 
-string MscToString(const ET96MAP_ADDRESS_T* msc)
+String32 MscToString(const ET96MAP_ADDRESS_T* msc)
 {
   unsigned bytes = (msc->addressLength+1)/2;
-  ostringstream ost;
-  for ( unsigned i=0; i<bytes; ++i) {
+  String32 rv;
+  int idx=0;
+  for ( unsigned i=0; i<bytes && idx<31; ++i) {
     unsigned x0 = ((unsigned int)msc->address[i])&0x0f;
     unsigned x1 = (((unsigned int)msc->address[i])>>4)&0x0f;
-    if ( x0 <= 9 ) ost << x0;
+    if ( x0 <= 9 ) 
+    {
+      rv[idx++]=x0+'0';
+    }
     else break;
-    if ( x1 <= 9 ) ost << x1;
+    if ( x1 <= 9 )
+    {
+      rv[idx++]=x1+'0';
+    }
     else break;
   }
-  string result = ost.str();
-//  __map_trace2__("MSC: %s",result.c_str());
-  return result;
+  rv[idx]=0;
+  return rv;
 }
 
 
@@ -245,7 +257,7 @@ bool FixedAddrCompare(const std::string& addr1,const std::string& addr2,int igno
   return true;
 }
 
-string SS7AddressToString(const ET96MAP_SS7_ADDR_T* addr)
+String32 SS7AddressToString(const ET96MAP_SS7_ADDR_T* addr)
 {
   if(addr==0 || addr->ss7AddrLen==0)return "";
 
@@ -298,14 +310,15 @@ string SS7AddressToString(const ET96MAP_SS7_ADDR_T* addr)
     default:return "";
   }
 
-  std::string rv;
+  String32 rv;
+  int idx=0;
   for ( ; ptr!=end; ptr++)
   {
     unsigned x0 = *ptr&0x0f;
     unsigned x1 = (*ptr>>4)&0x0f;
     if ( x0 <= 9 )
     {
-      rv+=x0+'0';
+      rv[idx++]=x0+'0';
     }
     else
     {
@@ -313,36 +326,43 @@ string SS7AddressToString(const ET96MAP_SS7_ADDR_T* addr)
     }
     if ( x1 <= 9 )
     {
-      rv+=x1+'0';
+      rv[idx++]=x1+'0';
     }
     else
     {
       break;
     }
   }
-  if((rv.length()&1)==0 && isOdd)
+  if((idx&1)==0 && isOdd)
   {
-    rv.erase(rv.length()-1);
+    idx--;
   }
+  rv[idx]=0;
   return rv;
 }
 
 
-string LocationInfoToString(const ET96MAP_LOCATION_INFO_T* msc)
+smsc::core::buffers::FixedLengthString<32> LocationInfoToString(const ET96MAP_LOCATION_INFO_T* msc)
 {
   unsigned bytes = (msc->addressLength+1)/2;
-  ostringstream ost;
-  for ( unsigned i=0; i<bytes; ++i) {
+  smsc::core::buffers::FixedLengthString<32> rv;
+  int idx=0;
+  for ( unsigned i=0; i<bytes && idx<31; ++i) {
     unsigned x0 = ((unsigned int)msc->address[i])&0x0f;
     unsigned x1 = (((unsigned int)msc->address[i])>>4)&0x0f;
-    if ( x0 <= 9 ) ost << x0;
+    if ( x0 <= 9 ) 
+    {
+      rv[idx++]=x0+'0';
+    }
     else break;
-    if ( x1 <= 9 ) ost << x1;
+    if ( x1 <= 9 )
+    {
+      rv[idx++]=x1+'0';
+    }
     else break;
   }
-  string result = ost.str();
-//  __map_trace2__("MSC: %s",result.c_str());
-  return result;
+  rv[idx]=0;
+  return rv;
 }
 
 static unsigned MakeMrRef()
@@ -396,7 +416,10 @@ static void CloseMapDialog(unsigned dialogid,unsigned dialog_ssn,int rinst)
 }
 
 static void TryDestroyDialog(unsigned,bool send_error,unsigned err_code,unsigned ssn,EINSS7INSTANCE_T rinst);
-static string RouteToString(MapDialog*);
+
+typedef smsc::core::buffers::FixedLengthString<64> String64;
+
+static String64 RouteToString(MapDialog*);
 
 static void QueryHlrVersion(MapDialog*);
 static void QueryMcsVersion(MapDialog*);
@@ -1204,8 +1227,10 @@ static void SendSubmitCommand(MapDialog* dialog)
   desc.setImsi((uint8_t)dialog->s_imsi.length(),dialog->s_imsi.c_str());
   desc.setMsc((uint8_t)dialog->s_msc.length(),dialog->s_msc.c_str());
   dialog->sms->setOriginatingDescriptor(desc);
-  if ( dialog->isUSSD ) {
-    istringstream(dialog->sms->getOriginatingAddress().value)>>dialog->ussdSequence;
+  if ( dialog->isUSSD )
+  {
+    //istringstream(dialog->sms->getOriginatingAddress().value)>>dialog->ussdSequence;
+    sscanf(dialog->sms->getOriginatingAddress().value,"%lld",&dialog->ussdSequence);
     {
       MutexGuard ussd_map_guard( ussd_map_lock );
       ussd_map[dialog->ussdSequence] = (dialog->instanceId<<24)|(((unsigned)dialog->ssn)<<16)|dialog->dialogid_map;
@@ -1293,23 +1318,21 @@ static void TryDestroyDialog(unsigned dialogid,bool send_error,unsigned err_code
   DropMapDialog(dialog.get());
 }
 
-static string RouteToString(MapDialog* dialog)
+static String64 RouteToString(MapDialog* dialog)
 {
-  static string skiped("<unknown> -> <unknown>");
+  static String64 skiped("<unknown> -> <unknown>");
   if ( dialog->sms.get() == 0 ) return skiped;
   //auto_ptr<char> b(new char[1024]);
   //memset(b.get(),0,1024);
-  char b[1024]={
-    0,
-  };
-  snprintf(b,1024,"%d.%d.%s -> %d.%d.%s",
+  String64 rv;
+  snprintf(rv.str,64,"%d.%d.%s -> %d.%d.%s",
     dialog->sms->getOriginatingAddress().getTypeOfNumber(),
     dialog->sms->getOriginatingAddress().getNumberingPlan(),
     dialog->sms->getOriginatingAddress().value,
     dialog->sms->getDestinationAddress().getTypeOfNumber(),
     dialog->sms->getDestinationAddress().getNumberingPlan(),
     dialog->sms->getDestinationAddress().value);
-  return string(b);
+  return rv;
 }
 
 #define MAP_TRY  try {
@@ -1680,7 +1703,8 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
   if( !dialog->id_opened )
   {
     bool dlg_found = false;
-    istringstream(string(dialog->sms->getDestinationAddress().value))>>dialog->ussdSequence;
+    //istringstream(string(dialog->sms->getDestinationAddress().value))>>dialog->ussdSequence;
+    sscanf(dialog->sms->getDestinationAddress().value,"%lld",&dialog->ussdSequence);
     {
       MutexGuard mg(ussd_map_lock);
       USSD_MAP::iterator it = ussd_map.find(dialog->ussdSequence);
@@ -1774,9 +1798,9 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
     } else {
       dialog->state = MAPST_WaitUSSDNotifyOpenConf;
     }
-    string subsystem = ".5.0.ussd:";
-    subsystem += dialog->sms->getOriginatingAddress().value;
-    dialog->subsystem = subsystem;
+    String64 subsystem = ".5.0.ussd:";
+    strcat(subsystem.str,dialog->sms->getOriginatingAddress().value);
+    dialog->subsystem = subsystem.c_str();
     dialog->invokeId=0;
     ET96MAP_ADDRESS_T origRef;
     mkMapAddress( &origRef, dialog->sms->getOriginatingAddress() );
@@ -1828,13 +1852,14 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
         { // DELIVERY ussd operation
           unsigned serviceOp = cmd->get_sms()->getIntProperty(Tag::SMPP_USSD_SERVICE_OP );
           __map_trace2__("putCommand dialogid_smsc /0x%x USSD OP %d",dialogid_smsc, serviceOp);
-          string s_seq(cmd->get_sms()->getDestinationAddress().value);
-          if (s_seq.length()==0) throw MAPDIALOG_FATAL_ERROR("MAP::PutCommand: empty destination address");
-          long long sequence;
-          istringstream(s_seq) >> sequence;
+          //string s_seq(cmd->get_sms()->getDestinationAddress().value);
+          //if (s_seq.length()==0) throw MAPDIALOG_FATAL_ERROR("MAP::PutCommand: empty destination address");
+          int64_t sequence=0;
+	  sscanf(cmd->get_sms()->getDestinationAddress().value,"%lld",&sequence);
+          //istringstream(s_seq) >> sequence;
           if ( sequence == 0 )
             throw MAPDIALOG_FATAL_ERROR(
-              FormatText("PutCommand: invalid sequence %s",s_seq.c_str()));
+              FormatText("PutCommand: invalid sequence %lld",sequence));
           try
           {
             bool dlg_found = false;
@@ -1851,7 +1876,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                 {
                   if ( !dialog->isUSSD )
                     throw MAPDIALOG_FATAL_ERROR(
-                      FormatText("putCommand: Found dialog is not USSD for smsc_id:0x%x, ussd_seq: %s",dialogid_smsc,s_seq.c_str()));
+                      FormatText("putCommand: Found dialog is not USSD for smsc_id:0x%x, ussd_seq: %lld",dialogid_smsc,sequence));
                   __require__(dialog->ssn == dialog_ssn);
                   dlg_found = true;
                   ussdGuard.lockProcessing(dialog.get());
@@ -1867,7 +1892,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
               if ( !dlg_found )
               {
                 SendErrToSmsc(cmd->get_dialogId(),MAKE_ERRORCODE(CMD_ERR_FATAL,Status::USSDDLGNFOUND));
-                throw MAPDIALOG_FATAL_ERROR( FormatText("putCommand: USSD dialog not found for smsc_id:0x%x ussd_seq: %s",dialogid_smsc,s_seq.c_str()));
+                throw MAPDIALOG_FATAL_ERROR( FormatText("putCommand: USSD dialog not found for smsc_id:0x%x ussd_seq: %lld",dialogid_smsc,sequence));
               }
               {
                 unsigned mr = cmd->get_sms()->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE)&0x0ffff;
@@ -1952,7 +1977,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
               } else {
                 if( cmd->get_sms()->hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE) ) {
                   SendErrToSmsc(cmd->get_dialogId(),MAKE_ERRORCODE(CMD_ERR_FATAL,Status::USSDDLGNFOUND));
-                  throw MAPDIALOG_FATAL_ERROR( FormatText("putCommand: There is no USSD dialog for MR %d smsc_dlg 0x%x seq: %s",cmd->get_sms()->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE), dialogid_smsc,s_seq.c_str()), Status::USSDDLGNFOUND);
+                  throw MAPDIALOG_FATAL_ERROR( FormatText("putCommand: There is no USSD dialog for MR %d smsc_dlg 0x%x seq: %lld",cmd->get_sms()->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE), dialogid_smsc,sequence), Status::USSDDLGNFOUND);
                 }
                 __map_trace2__("%s: trying to create USSD network intiated session dialogid_smsc 0x%x",__func__,dialogid_smsc);
                 try{
@@ -2584,7 +2609,7 @@ static USHORT_T  Et96MapVxSendRInfoForSmConf_Impl(
           // extract msc number
           if( version == 1 ) {
             if( locationInfo_sp != 0 ) {
-              dialog->s_msc = LocationInfoToString(locationInfo_sp);
+              dialog->s_msc = LocationInfoToString(locationInfo_sp).c_str();
               __map_trace2__( "LocationInfo addr type: %s address: %s", locationInfo_sp->typeOfNumber==0x01?"roaming":"msc", dialog->s_msc.c_str() );
               mkSS7GTAddress( &dialog->destMscAddr, locationInfo_sp, 8 );
             } else {
@@ -2592,14 +2617,14 @@ static USHORT_T  Et96MapVxSendRInfoForSmConf_Impl(
             }
           } else {
             if( mscNumber_sp != 0 ) {
-              dialog->s_msc = MscToString(mscNumber_sp);
+              dialog->s_msc = MscToString(mscNumber_sp).c_str();
               mkSS7GTAddress( &dialog->destMscAddr, mscNumber_sp, 8 );
             } else {
               dialog->s_msc = "";
             }
           }
           if( imsi_sp != 0 ) {
-            dialog->s_imsi = ImsiToString(imsi_sp);
+            dialog->s_imsi = ImsiToString(imsi_sp).c_str();
             dialog->smRpDa.typeOfAddress = ET96MAP_ADDRTYPE_IMSI;
             dialog->smRpDa.addrLen = imsi_sp->imsiLen;
             memcpy( dialog->smRpDa.addr, imsi_sp->imsi, imsi_sp->imsiLen );
@@ -2897,7 +2922,7 @@ USHORT_T Et96MapOpenInd (
           memcpy(&msc,ptr+1,ptr[1]+1);
           msc.addressLength = addrLen;
           ConvAddrMSISDN2Smc(&msc,&addr);
-          dialog->s_msc=addr.toString();
+          dialog->s_msc=addr.toString().c_str();
         }
         len-=ptr[1]+2;
         ptr+=ptr[1]+2;
@@ -2916,8 +2941,8 @@ USHORT_T Et96MapOpenInd (
       dialog->s_imsi=imsi.value;
     }
 #endif
-    dialog->origAddress=SS7AddressToString(ss7OrigAddr_sp);
-    dialog->destAddress=SS7AddressToString(ss7DestAddr_sp);
+    dialog->origAddress=SS7AddressToString(ss7OrigAddr_sp).c_str();
+    dialog->destAddress=SS7AddressToString(ss7DestAddr_sp).c_str();
     dialog->state = MAPST_WaitSms;
   }
   catch(exception& e)
@@ -3414,7 +3439,7 @@ unsigned char  lll_8bit_2_7bit[256] = {
 0x54,0x7d,0x08,0x54,0x54,0x54,0x7c,0x54,
 0x0c,0x06,0x54,0x54,0x7e,0x54,0x54,0x54};
 
-static void ContinueImsiReq(MapDialog* dialog,const string& s_imsi,const string& s_msc, const unsigned routeErr )
+static void ContinueImsiReq(MapDialog* dialog,const String32& s_imsi,const String32& s_msc, const unsigned routeErr )
 {
   using namespace smsc::system::mapio;
   __map_trace2__("%s: ismsi %s, msc: %s, state: %d, code: %d",__func__,s_imsi.c_str(),s_msc.c_str(), dialog->state, routeErr);
@@ -3509,7 +3534,7 @@ static void PauseOnImsiReq(MapDialog* map)
   }MAP_CATCH(dialogid_map,0,localSsn,dialog->instanceId);
 }
 
-static string GetUSSDSubsystem(
+static String32 GetUSSDSubsystem(
   const char* text,
   unsigned length)
 {
@@ -3519,7 +3544,9 @@ static string GetUSSDSubsystem(
   const char* sBegin = p;
   for ( ; p < pEnd; ++p ) if ( (*p == '#') || (*p == '*') ) break;
   const char* sEnd = p;
-  return string(sBegin,sEnd);
+  String32 rv;
+  rv.assign(sBegin,sEnd-sBegin);
+  return rv;
 }
 
 static string GetUSSDRequestString(
@@ -3592,7 +3619,7 @@ USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
       MicroString ms;
       unsigned chars = ussdString_s.ussdStrLen*8/7;
       Convert7BitToSMSC7Bit(ussdString_s.ussdStr,chars/*ussdString_s.ussdStrLen*/,&ms,0);
-      subsystem = GetUSSDSubsystem(ms.bytes,ms.len);
+      subsystem = GetUSSDSubsystem(ms.bytes,ms.len).c_str();
       string ussdStr = GetUSSDRequestString(ms.bytes, ms.len);
       sms.setIntProperty(Tag::SMPP_DATA_CODING,dataCoding);
       sms.setBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,ussdStr.c_str(),(unsigned)ussdStr.length());
@@ -4107,7 +4134,7 @@ USHORT_T Et96MapV1ProcessUnstructuredSSDataInd(
     sms.setIntProperty(Tag::SMSC_ORIGINAL_DC, smsc::smpp::DataCoding::LATIN1 );
     unsigned esm_class = 2; // Transaction mode
     sms.setIntProperty(Tag::SMPP_ESM_CLASS,esm_class);
-    string subsystem = GetUSSDSubsystem((const char*)ssUserData_s.ssUserDataStr,ssUserData_s.ssUserDataStrLen);
+    string subsystem = GetUSSDSubsystem((const char*)ssUserData_s.ssUserDataStr,ssUserData_s.ssUserDataStrLen).c_str();
     string ussdStr = GetUSSDRequestString((const char*)ssUserData_s.ssUserDataStr,ssUserData_s.ssUserDataStrLen);
     sms.setIntProperty(Tag::SMPP_DATA_CODING,smsc::smpp::DataCoding::LATIN1);
     sms.setBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,ussdStr.c_str(),(unsigned)ussdStr.length());

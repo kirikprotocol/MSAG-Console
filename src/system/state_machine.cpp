@@ -2615,7 +2615,13 @@ StateType StateMachine::submitChargeResp(Tuple& t)
     if(prio>=32)prio=31;
     delivery->set_priority(prio);
     try{
+      hrtime_t putCommandStart=gethrtime();
       dest_proxy->putCommand(delivery);
+      hrtime_t putCommandTime=(gethrtime()-putCommandStart)/1000000;
+      if(putCommandTime>20)
+      {
+        smsc_log_warn(smsLog,"put command time=%lld",putCommandTime);
+      }
       deliveryOk=true;
     }catch(InvalidProxyCommandException& e)
     {

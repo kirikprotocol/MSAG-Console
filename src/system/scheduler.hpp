@@ -493,9 +493,12 @@ public:
     }
     string dump()const
     {
-      return org.toString()+"/"+
-             dst.toString()+"/"+
-             esvctype.c_str();
+      std::string rv=org.toString().c_str();
+      rv+="/";
+      rv+=dst.toString().c_str();
+      rv+="/";
+      rv+=esvctype.c_str();
+      return rv;
     }
     bool operator<(const ReplaceIfPresentKey& rhs)const
     {

@@ -18,6 +18,7 @@
 #include "MapLimits.hpp"
 #include "system/status.h"
 #include "smeman/smsccmd.h"
+#include "core/buffers/FixedLengthString.hpp"
 
 using namespace std;
 using namespace smsc::sms;
@@ -241,6 +242,7 @@ struct DialogCommand{
 };
 */
 
+typedef smsc::core::buffers::FixedLengthString<32> String32;
 
 /**
   \class MapDialog
@@ -288,8 +290,8 @@ struct MapDialog{
   list<SmscCommand> chain;
   unsigned version;
   unsigned hlrVersion;
-  string s_imsi;
-  string s_msc;
+  String32 s_imsi;
+  String32 s_msc;
   MapDialog* associate;
   ET96MAP_LOCAL_SSN_T ssn;
   long long ussdSequence;
@@ -731,9 +733,9 @@ public:
   static void SetNodeNumber(const int n) { nodeNumber = n; }
   static int GetNodesCount() { return nodesCount; }
   static void SetNodesCount(const int n) { nodesCount = n; }
-  static string GetSCAdress() { return SC_ADRESS_VALUE; }
+  static const string& GetSCAdress() { return SC_ADRESS_VALUE; }
   static void SetSCAdress(const string& scAddr) { SC_ADRESS_VALUE = scAddr; }
-  static string GetUSSDAdress() { return USSD_ADRESS_VALUE; }
+  static const string& GetUSSDAdress() { return USSD_ADRESS_VALUE; }
   static void SetUSSDAdress(const string& scAddr) { USSD_ADRESS_VALUE = scAddr; }
   static ET96MAP_LOCAL_SSN_T GetUSSDSSN() { return ussdSSN; }
   static void SetUSSDSSN(int ssn, const string& addUssdSSN)
@@ -1016,7 +1018,7 @@ public:
             }
           } else
           {
-            if ( item->chain.size() > 25 )
+            if ( item->chain.size() > 4 )
             {
               __mapdlg_trace2__("chain is vely long in dlg 0x%x (%d)",item->dialogid_map,item->chain.size());
               throw ChainIsVeryLong("chain is very long");
@@ -1140,7 +1142,7 @@ public:
         newCLevel=MapLimits::getInstance().incDlgCounter(dlg->s_msc.c_str());
         if(newCLevel==-1)
         {
-          throw MAPDIALOG_ERROR(MAKE_ERRORCODE(CMD_ERR_TEMP,smsc::system::Status::THROTTLED),"out dlg limit reached for msc "+dlg->s_msc);
+          throw MAPDIALOG_ERROR(MAKE_ERRORCODE(CMD_ERR_TEMP,smsc::system::Status::THROTTLED),std::string("out dlg limit reached for msc ")+dlg->s_msc);
         }
       }
       if ( dialogId_pool[ssn][rinst].empty() )
@@ -1411,7 +1413,7 @@ public:
 
 /*
 */
-class MapIoTask{
+class MapIoTask:public smsc::core::threads::Thread{
 public:
 
   bool isStarted() {return is_started;}
@@ -1510,6 +1512,7 @@ public:
     tp.Wait();
     deinit();
   }
+  int Execute();
   ~MapIoTask()
   {
     __mapdlg_trace__("Destroying MapIoTask");
@@ -1521,7 +1524,7 @@ protected:
   friend class MapIoTask::DispatcherExecutor;
   class DispatcherExecutor:public smsc::core::threads::ThreadedTask{
   public:
-    DispatcherExecutor(MapIoTask* mit):mapIoTask(mit)
+    DispatcherExecutor(MapIoTask* argMapIoTask,int argIdx):mapIoTask(argMapIoTask),idx(argIdx)
     {
     }
     virtual int Execute()
@@ -1529,7 +1532,7 @@ protected:
       while(!mapIoTask->isStopping)
       {
         try{
-          mapIoTask->dispatcher();
+          mapIoTask->dispatcher(idx);
         }catch(std::exception& e)
         {
           __map_warn2__("Exception in dispatcher:'%s'",e.what());
@@ -1542,6 +1545,31 @@ protected:
       mapIoTask->isStopping=true;
     }
     virtual const char* taskName() { return "MapIoTask::dispatcher";}
+  protected:
+    MapIoTask* mapIoTask;
+    int idx;
+  };
+  class OverflowKiller;
+  friend class MapIoTask::OverflowKiller;
+  class OverflowKiller:public smsc::core::threads::ThreadedTask{
+  public:
+    OverflowKiller(MapIoTask* argMapIoTask):mapIoTask(argMapIoTask)
+    {
+    }
+    int Execute()
+    {
+      while(!mapIoTask->isStopping)
+      {
+        try{
+	  mapIoTask->killOverflow();
+	}catch(std::exception& e)
+	{
+	  __map_warn2__("Exception in overflow killer:%s",e.what());
+	}
+      }
+      return 0;
+    }
+    virtual const char* taskName() { return "MapIoTask::overflowKiller";}
   protected:
     MapIoTask* mapIoTask;
   };
@@ -1569,12 +1597,18 @@ public:
 
 private:
   int mapIoTaskCount;
+  enum{MAXIOTASKS=128};
+  typedef smsc::core::buffers::CyclicQueue<MSG_T> MsgQueue;
+  MsgQueue queues[MAXIOTASKS];
+  smsc::core::synchronization::EventMonitor monitors[MAXIOTASKS];
+  unsigned char* widxMap[10][256];
   smsc::core::threads::ThreadPool tp;
   Event* startevent;
   EventMonitor receiveMon;
   bool isStopping;
   bool is_started;
-  void dispatcher();
+  void dispatcher(int idx);
+  void killOverflow();
   void init(unsigned timeout=0);
   void deinit();
 

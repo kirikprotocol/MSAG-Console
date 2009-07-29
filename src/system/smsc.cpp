@@ -830,14 +830,14 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
   distlstsme->assignAliaser(aliaser);
 
   try{
-    distlstsme->originatingAddress=Address(cfg.cfgman->getString("distrList.originatingAddress")).toString();
+    distlstsme->originatingAddress=Address(cfg.cfgman->getString("distrList.originatingAddress")).toString().c_str();
   }catch(...)
   {
     //optional parameter
   }
 
   try{
-    distlstsme->originatingAddressForSme=Address(cfg.cfgman->getString("distrList.originatingAddressForSme")).toString();
+    distlstsme->originatingAddressForSme=Address(cfg.cfgman->getString("distrList.originatingAddressForSme")).toString().c_str();
   }catch(...)
   {
     //optional parameter
@@ -1470,7 +1470,7 @@ void Smsc::run()
     __trace__("Smsc::SNMP state to OPER changed");
 #endif
 
-  // некоторые действия до основного цикла
+  //     
 
   MainLoopRunner *mlr=new MainLoopRunner[mainLoopsCount];
   try{
@@ -1496,7 +1496,7 @@ void Smsc::run()
     __trace__("Smsc::SNMP state to SHUT changed");
 #endif
 
-  // и после него
+  //   
   //shutdown();
   }catch(exception& e)
   {

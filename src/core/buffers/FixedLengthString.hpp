@@ -123,6 +123,10 @@ struct FixedLengthString{
   {
     return strlen(str);
   }
+  void clear()
+  {
+    str[0]=0;
+  }
 };
 
 }//namespace buffers

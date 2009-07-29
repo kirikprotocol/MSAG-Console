@@ -4,6 +4,7 @@
 #include "smeman/smeproxy.h"
 #include "logger/Logger.h"
 #include "core/buffers/Array.hpp"
+#include "core/buffers/CyclicQueue.hpp"
 #include "core/synchronization/Mutex.hpp"
 #include "core/synchronization/EventMonitor.hpp"
 #include "smeman/smsccmd.h"
@@ -35,7 +36,8 @@ namespace mapio{
 using namespace smsc::smeman;
 using namespace smsc::core::synchronization;
 
-typedef smsc::core::buffers::Array<SmscCommand> MapIOQueue;
+//typedef smsc::core::buffers::Array<SmscCommand> MapIOQueue;
+typedef smsc::core::buffers::CyclicQueue<SmscCommand> MapIOQueue;
 
 class MapProxy:public SmeProxy{
 public:
@@ -68,7 +70,7 @@ public:
   {
     MutexGuard g(mutex);
     if(inqueue.Count()==0)return false;
-    inqueue.Shift(cmd);
+    inqueue.Pop(cmd);
     return true;
   }
 
@@ -84,7 +86,7 @@ public:
     SmscCommand cmd;
     for(int i=0;i<cnt;i++)
     {
-      inqueue.Shift(cmd);
+      inqueue.Pop(cmd);
       cmds.push_back(cmd);
       cmd.setProxy(prx);
     }
@@ -97,7 +99,7 @@ public:
   {
     {
       MutexGuard g(mutex);
-      if( cmd->get_commandId() == SUBMIT && inqueue.Count()==MAP_PROXY_QUEUE_LIMIT )
+      if( cmd->get_commandId() == SUBMIT && inqueue.Count()>=MAP_PROXY_QUEUE_LIMIT )
       {
         __mapproxy_trace__("putIncomingCommand: proxy queue limit exceded");
         throw ProxyQueueLimitException(inqueue.Count(),MAP_PROXY_QUEUE_LIMIT);
@@ -111,7 +113,7 @@ public:
   {
     MutexGuard g(mutex);
     SmscCommand cmd;
-    outqueue.Shift(cmd);
+    outqueue.Pop(cmd);
     return cmd;
   }
 

@@ -454,15 +454,16 @@ inline void ConvAddrIMSI2Smc(const ET96MAP_IMSI_T* ma,Address* sa)
   sa->setValue((uint8_t)(sa_ptr-sa_val),sa_val);
 }
 
-inline void ConvAddrIMSIorMSISDN2String(const ET96MAP_IMSI_OR_MSISDN_T* ma,std::string &s)
+inline void ConvAddrIMSIorMSISDN2String(const ET96MAP_IMSI_OR_MSISDN_T* ma,String32 &s)
 {
-  s.clear();
+  int idx=0;
   if ( ma->imsiOrMsisdnLen == 0 ) return;
-  for ( int i = 1;i<(ma->imsiOrMsisdnLen);i++){
-    s += ((ma->imsiOrMsisdn[i]&0x0f)+0x30);
+  for ( int i = 1;i<(ma->imsiOrMsisdnLen) && idx<31;i++){
+    s[idx++]=((ma->imsiOrMsisdn[i]&0x0f)+0x30);
     if( (ma->imsiOrMsisdn[i]&0xF0) == 0xF0 ) break;
-    s += (((ma->imsiOrMsisdn[i]>>4)&0x0f)+0x30);
+    s[idx++]= (((ma->imsiOrMsisdn[i]>>4)&0x0f)+0x30);
   }
+  s[idx]=0;
 }
 
 extern void CloseDialog(ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T dialogId);

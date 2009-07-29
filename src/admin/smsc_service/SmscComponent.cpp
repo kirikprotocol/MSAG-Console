@@ -1120,7 +1120,10 @@ Variant SmscComponent::traceRoute(const Arguments &args)
         string dealiasText="There are no aliases for this address";
         if(smsc_app_runner->getApp()->AliasToAddress(Address(dstAddr),dealiased))
         {
-          dealiasText="Address "+Address(dstAddr).toString()+" was dealiased to "+dealiased.toString();
+          dealiasText="Address ";
+          dealiasText+=Address(dstAddr).toString().c_str();
+          dealiasText+=" was dealiased to ";
+          dealiasText+=dealiased.toString().c_str();
           dealiased.toString(addrBuf,sizeof(addrBuf));
           dstAddr=addrBuf;
         }
@@ -2226,7 +2229,7 @@ Variant SmscComponent::dlGetPrincipal(const Arguments & args) throw (AdminExcept
   BEGINMETHOD
   {
     Principal prc=dladmin->getPrincipal(address);
-    result.appendValueToStringList(prc.address.toString());
+    result.appendValueToStringList(prc.address.toString().c_str());
     char buf[32];
     sprintf(buf,"%d",prc.maxLst);
     result.appendValueToStringList(buf);
@@ -2298,7 +2301,7 @@ Variant SmscComponent::dlGetMembers(const Arguments & args) throw (AdminExceptio
     Array<Address> members=dladmin->members(dlname);
     for(int i=0;i<members.Count();i++)
     {
-      result.appendValueToStringList(members[i].toString());
+      result.appendValueToStringList(members[i].toString().c_str());
     }
   }
   ENDMETHOD
@@ -2677,7 +2680,7 @@ Variant SmscComponent::cgmListAbonents(const Arguments & args)
     cgm->ListAbonents(id,list);
     for(std::vector<Address>::iterator it=list.begin();it!=list.end();it++)
     {
-      result.appendValueToStringList(it->toString());
+      result.appendValueToStringList(it->toString().c_str());
     }
   }
   ENDMETHOD
