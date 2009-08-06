@@ -236,8 +236,8 @@ bool StatisticsManager::createStorageDir(const std::string loc)
       return false;
 
     size_t direclen = dirlen + 1;
-    TmpBuf<char, 512> tmpBuff(direclen);
-    char * dir = tmpBuff.get();
+    TmpBuf<char, 512> dirTmpBuff(direclen);
+    char * dir = dirTmpBuff.get();
     memcpy(dir, buff, dirlen);
     dir[dirlen] = 0;
     dirs.push_back(std::string(dir));
