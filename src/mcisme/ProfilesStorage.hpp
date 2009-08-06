@@ -35,16 +35,24 @@ typedef DiskHash<StrKey<28>,AbntProfKey> AddrDiskHash;
 class ProfilesStorage
 {
 public:
-
-  static void Open(const string& path)
+  static void Open(const string& path, const string& file_name="", bool need_logstore=true)
   {
     MutexGuard lock(mutex);
     logger = smsc::logger::Logger::getInstance("mci.ProfStor");
-    string file = path + "abntprof.hsh";
+    string file, real_path;
+    if ( *(path.rbegin()) != '/' )
+      real_path = path + '/';
+    else
+      real_path = path;
+    if ( file_name.empty() )
+      file = real_path + "abntprof.hsh";
+    else
+      file = real_path + file_name;
     if(!File::Exists(file.c_str()))
       profiles.Create(file.c_str(), 1000000, false);
     profiles.Open(file.c_str());
     _isOpen = true;
+    _needLogstore = need_logstore;
   }
 
   static void Close(void)
@@ -81,6 +89,7 @@ public:
     MutexGuard lock(mutex);
     if(_isOpen)	_Set(abnt, prof);
   }
+
   bool Get(const AbntAddr& abnt, AbonentProfile& prof)
   {
     MutexGuard lock(mutex);
@@ -88,6 +97,7 @@ public:
       return _Get(abnt, prof);
     return false;
   }
+
   void Delete(const AbntAddr& abnt)
   {
     MutexGuard lock(mutex);
@@ -108,7 +118,8 @@ private:
   void store_P_Event_in_logstore(const std::string& abonent,
                                  unsigned int notifyFlag)
   {
-    MCAEventsStorageRegister::getMCAEventsStorage().addEvent(Event_ChangeAbonentProfile(abonent, notifyFlag));
+    if (_needLogstore )
+      MCAEventsStorageRegister::getMCAEventsStorage().addEvent(Event_ChangeAbonentProfile(abonent, notifyFlag));
   }
 
   void _Set(const AbntAddr& abnt, const AbonentProfile& prof)
@@ -119,6 +130,7 @@ private:
     profiles.Delete(key);
     profiles.Insert(key, value);
   }
+
   bool _Get(const AbntAddr& abnt, AbonentProfile& prof)
   {
     StrKey<28>	key = abnt.toString().c_str();
@@ -135,6 +147,7 @@ private:
     }
     return res;
   }
+
   void _Delete(const AbntAddr& abnt)
   {
     StrKey<28>	key = abnt.toString().c_str();
@@ -144,10 +157,11 @@ private:
   {}
 
   static ProfilesStorage* pInstance;
-  static AddrDiskHash	profiles;
+  static AddrDiskHash profiles;
   static Mutex	mutex;
-  static bool		_isOpen;
+  static bool  _isOpen;
   static smsc::logger::Logger *logger;
+  static bool _needLogstore;
 };
 
 }	//  namespace msisme

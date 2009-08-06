@@ -104,18 +104,8 @@ BEProtocolV1SimpleClient::prepareBannerReqCmd(util::SerializationBuffer* req, Ba
   req->WriteNetInt32(static_cast<uint32_t>(sizeof(par->transportType)));
   req->WriteNetInt32(par->transportType);
 
-  uint32_t bannerLen;
-  switch (par->transportType)
-  {
-  case TRANSPORT_TYPE_SMS : bannerLen = TRANSPORT_LEN_SMS;  break;
-  case TRANSPORT_TYPE_USSD: bannerLen = TRANSPORT_LEN_USSD; break;
-  case TRANSPORT_TYPE_HTTP: bannerLen = TRANSPORT_LEN_HTTP; break;
-  case TRANSPORT_TYPE_MMS : bannerLen = TRANSPORT_LEN_MMS;  break;
-  }
-
-  req->WriteNetInt32(static_cast<uint32_t>(sizeof(bannerLen)));
-  req->WriteNetInt32(bannerLen);
-
+  req->WriteNetInt32(static_cast<uint32_t>(sizeof(par->maxBannerSize)));
+  req->WriteNetInt32(par->maxBannerSize);
   //charSet
   req->WriteNetInt32(static_cast<uint32_t>(sizeof(par->charSet)));
   req->WriteNetInt32(par->charSet);

@@ -36,6 +36,7 @@ struct BannerRequest
   std::string serviceName;
   std::string banner; // filled by Advertising module
   int         transportType;
+  uint32_t    maxBannerSize;
   uint32_t    charSet;
   uint32_t bannerId, ownerId, rotatorId;
   /**
@@ -48,10 +49,10 @@ struct BannerRequest
    * @param   _dispatcher      pointer to BannerDispatcher struct
    *
    */
-  BannerRequest(const std::string& _abonent, const std::string& _serviceName,
-                int _transportType, uint32_t _charSet)
-    : abonent(_abonent), serviceName(_serviceName), banner(""),
-      transportType(_transportType), charSet(_charSet),
+  BannerRequest(const std::string& an_abonent, const std::string& service_name,
+                int transport_type, uint32_t char_set, uint32_t max_banner_size)
+    : abonent(an_abonent), serviceName(service_name), banner(""),
+      transportType(transport_type), maxBannerSize(max_banner_size), charSet(char_set),
       bannerId(-1), ownerId(0), rotatorId(0),
       id(getNextId()) {}
 
@@ -115,10 +116,11 @@ public:
    * @return int            0 (if success) or error code
    */
   virtual uint32_t getBanner(const std::string& abonent,
-                             const std::string& serviceName,
-                             uint32_t transportType, uint32_t charSet,
+                             const std::string& service_name,
+                             uint32_t transport_type, uint32_t char_set,
                              std::string* banner,
-                             BannerResponseTrace* bannerRespTrace) = 0;
+                             BannerResponseTrace* banner_resp_trace,
+                             size_t max_banner_size) = 0;
 
   virtual void rollbackBanner(uint32_t transactionId,
                               uint32_t bannerId,

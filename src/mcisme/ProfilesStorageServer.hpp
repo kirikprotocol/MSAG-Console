@@ -72,7 +72,6 @@ public:
   {
     sock = admSocket;
     smsc_log_debug(logger, "Command dispatcher created.");
-    printf("sizeof(ProfileMessage) = %d", sizeof(ProfileMessage));
   }
 
   virtual ~ProfStorageCommandDispatcher()

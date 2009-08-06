@@ -138,9 +138,6 @@ int main(int argc, char** argv)
   {
     printf("Exception\n");
   }
-  
-  //    dsStatConnection = ds->getConnection();
-  ProfilesStorage::Close();
-  
+
   return 0;
 }

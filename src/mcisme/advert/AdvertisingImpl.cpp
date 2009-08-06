@@ -35,7 +35,7 @@ AdvertisingImpl::init(int connectTimeout)
 
   _socket.setConnectTimeout(connectTimeout);
 
-  if ( _socket.Connect() )
+  if ( _socket.connect() )
     throw util::Exception("AdvertisingImpl::init::: can't establish connection to %s - '%s'", toString().c_str(), strerror(errno));
 
   _isConnected = true;
@@ -46,7 +46,7 @@ AdvertisingImpl::reinit(int connectTimeout)
 {
   _socket.setConnectTimeout(connectTimeout);
 
-  if ( _socket.Connect() ) {
+  if ( _socket.connect() ) {
     smsc_log_error(_logger, "AdvertisingImpl::reinit::: can't establish connection to %s - %s", toString().c_str(), strerror(errno));
     return false;
   }
@@ -116,15 +116,16 @@ AdvertisingImpl::prepareHeader(uint32_t cmndType, uint32_t reqBodyLen, util::Ser
 
 uint32_t
 AdvertisingImpl::getBanner(const std::string& abonent,
-                           const std::string& serviceName,
-                           uint32_t transportType, uint32_t charSet,
+                           const std::string& service_name,
+                           uint32_t transport_type, uint32_t char_set,
                            std::string* banner,
-                           BannerResponseTrace* bannerRespTrace)
+                           BannerResponseTrace* banner_resp_trace,
+                           size_t max_banner_size)
 {
   if ( !_isConnected ) return ERR_ADV_NOT_CONNECTED;
 
-  BannerRequest req(abonent, serviceName, transportType, charSet);
-  uint32_t rc = getBanner(req, bannerRespTrace);
+  BannerRequest req(abonent, service_name, transport_type, char_set, max_banner_size);
+  uint32_t rc = getBanner(req, banner_resp_trace);
   *banner = req.banner;
   return  rc;
 }

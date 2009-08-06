@@ -54,10 +54,11 @@ public:
   virtual bool reinit(int connectTimeout=0);
 
   virtual uint32_t getBanner(const std::string& abonent,
-                             const std::string& serviceName,
-                             uint32_t transportType, uint32_t charSet,
+                             const std::string& service_name,
+                             uint32_t transport_type, uint32_t char_set,
                              std::string* banner,
-                             BannerResponseTrace* bannerRespTrace);
+                             BannerResponseTrace* banner_resp_trace,
+                             size_t max_banner_size);
 
   virtual void rollbackBanner(uint32_t transactionId,
                               uint32_t bannerId,

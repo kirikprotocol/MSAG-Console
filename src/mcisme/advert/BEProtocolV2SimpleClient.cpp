@@ -213,21 +213,21 @@ BEProtocolV2SimpleClient::prepareBannerReqCmd(util::SerializationBuffer* req /* 
   req->WriteNetInt32(static_cast<uint32_t>(par->abonent.length()));
   req->Write(par->abonent.c_str(), par->abonent.length());
 
-  uint32_t bannerLen;
   switch (par->transportType)
   {
-  case TRANSPORT_TYPE_SMS : bannerLen = TRANSPORT_LEN_SMS;  break;
-  case TRANSPORT_TYPE_USSD: bannerLen = TRANSPORT_LEN_USSD; break;
-  case TRANSPORT_TYPE_HTTP: bannerLen = TRANSPORT_LEN_HTTP; break;
-  case TRANSPORT_TYPE_MMS : bannerLen = TRANSPORT_LEN_MMS;  break;
+  case TRANSPORT_TYPE_SMS:
+  case TRANSPORT_TYPE_USSD:
+  case TRANSPORT_TYPE_HTTP:
+  case TRANSPORT_TYPE_MMS:
+    break;
   default:
     throw util::Exception("BEProtocolV2SimpleClient::prepareBannerReqCmd::: invalid transportType=%d", par->transportType);
   }
 
   // banner max length
   req->WriteNetInt32(BANNER_MAX_LEN_TAG);
-  req->WriteNetInt32(static_cast<uint32_t>(sizeof(bannerLen)));
-  req->WriteNetInt32(bannerLen);
+  req->WriteNetInt32(static_cast<uint32_t>(sizeof(par->maxBannerSize)));
+  req->WriteNetInt32(par->maxBannerSize);
 
   //charSet
   req->WriteNetInt32(CHARSET_TAG);

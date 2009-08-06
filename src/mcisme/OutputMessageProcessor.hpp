@@ -26,7 +26,10 @@ public:
       _advertising(advertising), _logger(logger::Logger::getInstance("outputprc")) {}
   virtual ~SendMessageEventHandler() {}
   virtual void handle() = 0;
-  std::string getBanner(const AbntAddr& abnt, BannerResponseTrace* bannerRespTrace, bool needBannerInTranslit);
+  std::string getBanner(const AbntAddr& abnt,
+                        BannerResponseTrace* banner_resp_trace,
+                        bool need_banner_in_translit,
+                        uint32_t max_banner_size);
   void rollbackBanner(const BannerResponseTrace& bannerRespTrace);
 protected:
   TaskProcessor& _taskProcessor;

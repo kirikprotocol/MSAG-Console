@@ -9,7 +9,7 @@ namespace smsc {
 namespace mcisme {
 
 int
-Socket::Connect()
+Socket::connect()
 {
   Close();
 
@@ -23,7 +23,7 @@ Socket::Connect()
   if(connectTimeout)
     setNonBlocking(1);
 
-  if(connect(sock,(sockaddr*)&sockAddr,(unsigned)sizeof(sockAddr)) && errno != EINPROGRESS)
+  if(::connect(sock,(sockaddr*)&sockAddr,(unsigned)sizeof(sockAddr)) && errno != EINPROGRESS)
   {
     closesocket(sock);
     sock=INVALID_SOCKET;

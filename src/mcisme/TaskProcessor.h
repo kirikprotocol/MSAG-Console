@@ -160,6 +160,8 @@ class TaskProcessor : public Thread, public MissedCallListener, public AdminInte
   bool _originatingAddressIsMCIAddress;
   time_t _sendAbntOnlineNotificationPeriod; // expressed in seconds
 
+  size_t _maxMessageSize;
+
   OutputMessageProcessorsDispatcher* _outputMessageProcessorsDispatcher;
 
   void openInQueue();
@@ -236,6 +238,9 @@ public:
 
   void Run();             // outQueue processing
   virtual int Execute();  // inQueue processing
+
+  using Thread::Start;
+
   void Start(); void Stop();
   void Pause(void);
 

@@ -179,16 +179,24 @@ SendMissedCallMessageEventHandler::formOutputMessageAndSendIt(const AbntAddr& ab
 }
 
 string
-SendMessageEventHandler::getBanner(const AbntAddr& abnt, BannerResponseTrace* bannerRespTrace, bool needBannerInTranslit)
+SendMessageEventHandler::getBanner(const AbntAddr& abnt,
+                                   BannerResponseTrace* banner_resp_trace,
+                                   bool need_banner_in_translit,
+                                   uint32_t max_banner_size)
 {
   string banner, ret, ret1;
+
+  if ( !max_banner_size ) {
+    smsc_log_info(_logger, "SendMessageEventHandler::getBanner::: max_banner_size=0 for abonent '%s', won't call BE", abnt.getText().c_str());
+    return "";
+  }
 
   smsc_log_debug(_logger, "SendMessageEventHandler::getBanner::: call to BE for abonent '%s'", abnt.getText().c_str());
   try {
     uint32_t bannerCharSet = UTF16BE;
-    if ( needBannerInTranslit )
+    if ( need_banner_in_translit )
       bannerCharSet = ASCII_TRANSLIT;
-    int rc = _advertising->getBanner(abnt.toString(), _taskProcessor.getSvcTypeForBE(), SMPP_SMS, bannerCharSet, &ret, bannerRespTrace);
+    int rc = _advertising->getBanner(abnt.toString(), _taskProcessor.getSvcTypeForBE(), SMPP_SMS, bannerCharSet, &ret, banner_resp_trace, max_banner_size);
     if(rc == 0)
     {
       if ( bannerCharSet == UTF16BE ) {

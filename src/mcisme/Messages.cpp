@@ -55,10 +55,8 @@ const char* findMessageTemplateKey(const char* key) throw(AdapterException)
 
 void addBanner(Message& message, const string& banner)
 {
+  if ( banner.empty() ) return;
   message.message += " " + banner;
-  int hibit = hasHighBit(message.message.c_str(), message.message.length()); 
-  if(message.message.length() > MAX_MSG_LENS[hibit])
-    message.message.resize(MAX_MSG_LENS[hibit]);
 }
 
 bool MessageFormatter::canAdd(const MissedCallEvent& event)
@@ -166,7 +164,7 @@ MessageFormatter::createMCEventOut(MCEventOut* forSend,
                                    const std::string& reportMsgForClient,
                                    unsigned int maxMsgLen)
 {
-/*  if ( originatingAddressIsMciSmeAddress ) {
+  if ( originatingAddressIsMciSmeAddress ) {
     if ( forSend->msg.length() + reportMsgForClient.length() < maxMsgLen ) {
       forSend->msg += reportMsgForClient;
       forSend->srcEvents.push_back(eventFromStorage);
@@ -180,14 +178,14 @@ MessageFormatter::createMCEventOut(MCEventOut* forSend,
       }
       return true;
     }
-  } else {*/
+  } else {
     const std::string& messageToClient = ( reportMsgForClient.length() < maxMsgLen ) ? reportMsgForClient : reportMsgForClient.substr(0, maxMsgLen);
     MCEventOut outEvent(messageOriginatingAddress, messageToClient);
     outEvent.srcEvents.push_back(eventFromStorage);
     *forSend = outEvent;
 
     return true;
-/*  }*/
+  }
 }
 
 std::string
