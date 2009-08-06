@@ -56,8 +56,9 @@ protected:
 public:
         
   virtual int Execute();
-  virtual void Start();
-  virtual void Stop();
+  using Thread::Start;
+  void Start();
+  void Stop();
 
   virtual void flushStatistics();
   virtual EventsStat getStatistics();
