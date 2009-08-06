@@ -55,6 +55,8 @@ public:
 
   TimeoutMonitor(TaskProcessor* _processor);
   virtual int Execute();
+
+  using Thread::Start;
   void Start();
   void Stop();
 };
