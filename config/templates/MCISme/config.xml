@@ -40,6 +40,7 @@
         <param name="routesFileLocation" type="string">@routesFileLocation@</param>
 			
         <param name="OriginatingAddressIsMCIAddress" type="bool">true</param>
+        <param name="maxAbonentMessageLenInOctets" type="int">140</param>
         <param name="HasStackEmulator" type="bool">false</param>
         <param name="StackEmulatorHost" type="string">127.0.0.1</param>
         <param name="StackEmulatorPort" type="int">37000</param>
