@@ -236,7 +236,9 @@ public:
 
   ~DiskHash()
   {
-    Close();
+    try {
+      Close();
+    } catch (...) {}
   }
 
   void Open(const char* file,bool readonly=false,bool cached=false)
