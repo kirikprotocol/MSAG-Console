@@ -46,6 +46,8 @@
         <param name="StackEmulatorPort" type="int">37000</param>
 
         <param name="SendAbntOnlineNotificationPeriod" type="int">12</param>
+        <!-- QosTimeToLive expressed in seconds -->
+        <param name="QosTimeToLive" type="int">90</param>
 
         <section name="MCAEventStorage">
            <param name="location" type="string">@mcisme.mcastorage.location@</param>
