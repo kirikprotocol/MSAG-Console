@@ -351,6 +351,8 @@ public:
       sm.get_optional().set_messagePayload(out, outLen);
       sm.get_optional().set_setDpf(1);
 
+      sm.get_optional().set_qosTimeToLive(processor.getQosTimeToLive());
+
       sm.get_header().set_commandLength(sm.size());
       sm.get_header().set_commandId(SmppCommandSet::DATA_SM);
       sm.get_header().set_commandStatus(0);
