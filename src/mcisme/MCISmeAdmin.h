@@ -33,11 +33,11 @@ struct RuntimeStat
 struct AdminInterface
 {
   virtual void flushStatistics() = 0;
-  virtual EventsStat getStatistics() = 0;
+  virtual EventsStat getStatistics() const = 0;
 
-  virtual int getActiveTasksCount() = 0;
-  virtual int getInQueueSize()  = 0;
-  virtual int getOutQueueSize() = 0;
+  virtual int getActiveTasksCount() const = 0;
+  virtual int getInQueueSize() const = 0;
+  virtual int getOutQueueSize() const = 0;
   virtual std::string getSchedItem(const std::string& Abonent) = 0;
   virtual std::string getSchedItems(void) = 0;
 

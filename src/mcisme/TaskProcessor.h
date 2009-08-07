@@ -102,19 +102,20 @@ class TaskProcessor : public Thread, public MissedCallListener, public AdminInte
 
   smsc::logger::Logger *logger;
 
-  int              protocolId, daysValid;
-  std::string      svcType, svcTypeOnLine, svcTypeForBe, address;
+  int          protocolId, daysValid;
+  std::string  svcType, svcTypeOnLine, svcTypeForBe, address;
 
-  int              releaseCallsStrategy;
-  int              stkTemplateId;
+  uint32_t _qosTimeToLive; //in minutes
+  int      releaseCallsStrategy;
+  int      stkTemplateId;
 
   Storage*         pStorage;
   DeliveryQueue*   pDeliveryQueue;
 
   TemplateManager* templateManager;
-  MCIModule*     mciModule;
+  MCIModule*       mciModule;
 
-  Mutex          messageSenderLock;
+  mutable Mutex    messageSenderLock;
   MessageSender* messageSender;
 
   Advertising*   advertising;
@@ -127,10 +128,10 @@ class TaskProcessor : public Thread, public MissedCallListener, public AdminInte
   Hash<bool>      lockedSmscIds;
 
   IntHash<sms_info*> smsInfo;
-  Mutex	             smsInfoMutex;
+  mutable Mutex	     smsInfoMutex;
 
   IntHash<BannerResponseTrace> _bannerInNotificationRegistry;
-  Mutex _bannerInNotificationRegistryLock;
+  mutable Mutex _bannerInNotificationRegistryLock;
 
   void insertBannerInfo(int seqNum, const BannerResponseTrace& bannerRespTrace) {
     core::synchronization::MutexGuard synchronize(_bannerInNotificationRegistryLock);
@@ -152,9 +153,9 @@ class TaskProcessor : public Thread, public MissedCallListener, public AdminInte
   Mutex   startLock;
   Event   exitedEvent;
   bool    bStarted, bInQueueOpen, bOutQueueOpen, bStopProcessing;
-  int                             maxInQueueSize;
-  EventMonitor                    inQueueMonitor;
-  CyclicQueue<MissedCallEvent>    inQueue;
+  int maxInQueueSize;
+  mutable EventMonitor inQueueMonitor;
+  CyclicQueue<MissedCallEvent> inQueue;
 
   bool _isUseWantNotifyPolicy;
   bool _originatingAddressIsMCIAddress;
@@ -218,8 +219,10 @@ public:
                                    const AbonentProfile& profile,
                                    SendMessageEventHandler* bannerEngineProxy=NULL);
 
-  int getDaysValid()       { return daysValid;  }
-  int getProtocolId()      { return protocolId; }
+  int getDaysValid() const { return daysValid;  }
+  int getProtocolId() const { return protocolId; }
+
+  uint32_t getQosTimeToLive() const { return _qosTimeToLive; }
 
   const char* getSvcType() const { return (svcType != "") ? svcType.c_str():"MCISme"; }
   const char* getSvcTypeOnLine() const { return (svcTypeOnLine != "") ? svcTypeOnLine.c_str():"MCISme"; }
@@ -231,7 +234,7 @@ public:
     MutexGuard guard(messageSenderLock);
     messageSender = sender;
   }
-  bool isMessageSenderAssigned() {
+  bool isMessageSenderAssigned() const {
     MutexGuard guard(messageSenderLock);
     return (messageSender != 0);
   }
@@ -259,20 +262,20 @@ public:
   virtual void flushStatistics() {
     if (statistics) statistics->flushStatistics();
   }
-  virtual EventsStat getStatistics() {
+  virtual EventsStat getStatistics() const {
     return (statistics) ? statistics->getStatistics():EventsStat(0,0,0,0);
   }
 
-  virtual int getActiveTasksCount() {
+  virtual int getActiveTasksCount() const {
     if(pDeliveryQueue)
       return pDeliveryQueue->GetAbntCount();
     return 0;
   }
-  virtual int getInQueueSize() {
+  virtual int getInQueueSize() const {
     MutexGuard guard(inQueueMonitor);
     return inQueue.Count();
   }
-  virtual int getOutQueueSize() {
+  virtual int getOutQueueSize() const {
     if(pDeliveryQueue)
       return pDeliveryQueue->GetQueueSize();
     return 0;

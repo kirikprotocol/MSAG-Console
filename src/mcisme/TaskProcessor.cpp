@@ -124,6 +124,12 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     daysValid = 1;
   }
 
+  try {
+    _qosTimeToLive = config->getInt("QosTimeToLive");
+  } catch(ConfigException& exc) {
+    _qosTimeToLive = 90; // in minutes
+  }
+
   std::string callingMask = config->getString("CallingMask");
   std::string calledMask = config->getString("CalledMask");
 
