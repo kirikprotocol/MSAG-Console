@@ -12,6 +12,7 @@
 #include "core/buffers/Hash.hpp"
 #include "core/buffers/IntHash.hpp"
 #include "util/timeslotcounter.hpp"
+#include "util/Uint64Converter.h"
 
 namespace smsc{
 namespace system{
@@ -274,7 +275,7 @@ public:
       high=(int)(ld.counters[i].total>>32);
       ld.counters[i].total=(((uint64_t)htonl(high))<<32) | htonl(low);
       */
-      uint64_t tmp=ld.counters[i].total;
+      /*uint64_t tmp=ld.counters[i].total;
       unsigned char *ptr=(unsigned char *)&ld.counters[i].total;
       ptr[0]=(unsigned char)(tmp>>56);
       ptr[1]=(unsigned char)(tmp>>48)&0xFF;
@@ -283,11 +284,12 @@ public:
       ptr[4]=(unsigned char)(tmp>>24)&0xFF;
       ptr[5]=(unsigned char)(tmp>>16)&0xFF;
       ptr[6]=(unsigned char)(tmp>>8)&0xFF;
-      ptr[7]=(unsigned char)(tmp&0xFF);
+      ptr[7]=(unsigned char)(tmp&0xFF);*/
+      ld.counters[i].total=smsc::util::Uint64Converter::toNetworkOrder(ld.counters[i].total);
     }
 
-    ld.uptime=htonl((uint32_t)ld.uptime);
-    ld.now=htonl((uint32_t)ld.now);
+    ld.uptime=smsc::util::Uint64Converter::toNetworkOrder(ld.uptime);
+    ld.now=smsc::util::Uint64Converter::toNetworkOrder(ld.now);
     ld.eventQueueSize=htonl(ld.eventQueueSize);
     ld.inProcessingCount=htonl(ld.inProcessingCount);
     ld.inScheduler=htonl(ld.inScheduler);
@@ -340,7 +342,7 @@ protected:
   Mutex mtx;
 };
 
-class PerformanceServer:public ThreadedTask{
+class PerformanceServer:public smsc::core::threads::ThreadedTask{
 public:
   PerformanceServer(const char* h,int p,PerformanceDataDispatcher* disp):
     disp(disp),host(h),port(p)
@@ -376,7 +378,7 @@ public:
 protected:
   Socket srv;
   PerformanceDataDispatcher* disp;
-  string host;
+  std::string host;
   int port;
 };
 
