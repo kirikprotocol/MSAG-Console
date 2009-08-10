@@ -31,7 +31,7 @@ char* ConfigView::prepareSubSection(const char* sub) const
     return section;
 }
 ConfigView::ConfigView(const Config& config_, const char* cat)
-    : log(Logger::getInstance("scag.onfig.ConfigView")),
+    : log(Logger::getInstance("scag.config.ConfigView")),
         config(config_), category(0)
 {
     if (cat)

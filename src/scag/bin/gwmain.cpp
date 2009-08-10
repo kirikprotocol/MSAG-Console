@@ -74,7 +74,7 @@ int main(int argc,char* argv[])
   registerSignalHandlers();
 
   try {
-    smsc::logger::Logger *logger = Logger::getInstance("scagmain");
+    smsc::logger::Logger *logger = Logger::getInstance("scag.main");
 
 //    smsc_log_info(logger,  "SCAG configuration loading..." );
     scag::config::ConfigManager::Init();
