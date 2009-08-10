@@ -1831,7 +1831,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
   unsigned dialogid_smsc = cmd->get_dialogId();
   unsigned dialogid_map = 0;
   unsigned dialog_ssn = 0;
-  EINSS7INSTANCE_T rinst;
+  EINSS7INSTANCE_T rinst = 0;
   DialogRefGuard dialog;
   UssdProcessingGuard ussdGuard;
     MAP_TRY {
