@@ -151,7 +151,7 @@ bool GetBoolValue(DOMNamedNodeMap* attr)
 
 static void FillEntity(SmppEntityInfo& entity,DOMNode* record)
 {
-  smsc::logger::Logger* log=smsc::logger::Logger::getInstance("smppMan");
+  smsc::logger::Logger* log=smsc::logger::Logger::getInstance("smpp.man");
   for(DOMNode *node = record->getFirstChild(); node != 0; node = node->getNextSibling())
   {
     //DOMNode *node = children->item(i);
@@ -318,7 +318,7 @@ SmppManagerImpl::SmppManagerImpl( snmp::TrapRecordQueue* snmpqueue ) :
 ConfigListener(SMPPMAN_CFG), sm(this,this), licenseCounter(10,20), testRouter_(0),
 snmpqueue_(snmpqueue)
 {
-  log=smsc::logger::Logger::getInstance("smppMan");
+  log=smsc::logger::Logger::getInstance("smpp.man");
   limitsLog=smsc::logger::Logger::getInstance("smpp.lmt");
   running=false;
   lastUid=0;

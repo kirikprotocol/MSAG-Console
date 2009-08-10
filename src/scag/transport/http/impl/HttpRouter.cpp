@@ -19,7 +19,7 @@ using bill::BillingManager;
 //-----------------------------------------------------------------------------
 HttpRouterImpl::HttpRouterImpl()
 {
-    logger = smsc::logger::Logger::getInstance("httprouter");
+    logger = smsc::logger::Logger::getInstance("scag.http.router");
     routes = NULL;
     routeIdMap = NULL;
     serviceIdMap = NULL;
