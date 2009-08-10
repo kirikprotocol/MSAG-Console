@@ -809,7 +809,7 @@ public:
 
   MapDialog* newDialog(ET96MAP_DIALOGUE_ID_T dialogueid,ET96MAP_LOCAL_SSN_T lssn, EINSS7INSTANCE_T inst, unsigned version)
   {
-    if(!dlgPool[lssn][inst])
+    if(inst>9 || !dlgPool[lssn][inst])
     {
       throw Exception("DialogContainer: unsupported lssn/inst:%d,%d",lssn,inst);
     }
@@ -827,7 +827,7 @@ public:
 
   MapDialog* newLockedDialogAndRef(ET96MAP_DIALOGUE_ID_T dialogueid,ET96MAP_LOCAL_SSN_T lssn,EINSS7INSTANCE_T inst,unsigned version,int dlgType)
   {
-    if(!dlgPool[lssn][inst])
+    if(inst>9 || !dlgPool[lssn][inst])
     {
       throw Exception("DialogContainer: unsupported lssn/inst:%d,%d",lssn,inst);
     }
@@ -847,7 +847,7 @@ public:
 
   MapDialog* getDialog(ET96MAP_DIALOGUE_ID_T dialogueid,ET96MAP_LOCAL_SSN_T lssn,EINSS7INSTANCE_T inst)
   {
-    if(dlgPool[lssn][inst]==0)
+    if(inst>9 || dlgPool[lssn][inst]==0)
     {
       throw Exception("getDialog: unsupported ssn/inst:%d,%d",lssn,inst);
     }
@@ -860,7 +860,7 @@ public:
       MutexGuard g(sync);
       MAPSTATS_Update(MAPSTATS_GSMRECV);
     }
-    if(dlgPool[lssn][inst]==0)
+    if(inst>9 || dlgPool[lssn][inst]==0)
     {
       EINSS7CpReleaseMsgBuffer(&msg);
       throw Exception("getLockedDialogOrEnqueue: unsupported ssn/inst:%d,%d",lssn,inst);
@@ -1111,7 +1111,7 @@ public:
   USHORT_T reAssignDialog(int rinst,unsigned did,unsigned oldssn,unsigned ssn,ReAssignDialogType dlgType)
   {
     MapDialog* dlg = 0;
-    if(dlgPool[oldssn][rinst]!=0)
+    if(rinst<=9 && dlgPool[oldssn][rinst]!=0)
     {
       dlg = dlgPool[oldssn][rinst][did];
       bool isAllocated;
@@ -1127,9 +1127,9 @@ public:
     {
       throw Exception("MAP:: reassign dialog: there is no dialog for did=0x%x/%x",did,oldssn);
     }
-    if(!dlgPool[ssn][rinst])
+    if(rinst>9 || !dlgPool[ssn][rinst])
     {
-      throw Exception("Unsupported ssn:%d",ssn);
+      throw Exception("Unsupported ssn/rinst:%d/%d",ssn,rinst);
     }
     ET96MAP_DIALOGUE_ID_T dialogid_map;
     {
