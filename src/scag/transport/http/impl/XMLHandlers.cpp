@@ -14,7 +14,7 @@ using namespace smsc::util;
 
 XMLBasicHandler::XMLBasicHandler(RouteArray* r, PlacementKindArray* inap, PlacementKindArray* outap)
 {
-    logger = Logger::getInstance("scag.http.xml");
+    logger = Logger::getInstance("http.xml");
     routes = r;
     in_options = in_sites = in_abonents = false;
     inPlace = inap;

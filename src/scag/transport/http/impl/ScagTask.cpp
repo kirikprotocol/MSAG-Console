@@ -8,7 +8,7 @@ namespace http {
 
 ScagTask::ScagTask(HttpManagerImpl& m, HttpProcessor& p) : manager(m), processor(p)
 {
-    logger = Logger::getInstance("scag.http.scag");
+    logger = Logger::getInstance("http.scag");
 }
 
 int ScagTask::Execute()

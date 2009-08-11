@@ -23,7 +23,7 @@ licenseFileCheckHour(0),
 licenseExpired(false),
 acceptor(*this)
 {
-    logger = Logger::getInstance("scag.http.manager");
+    logger = Logger::getInstance("http.manager");
     lastLicenseExpTest = 0;
 }
 
@@ -39,8 +39,8 @@ void HttpManagerImpl::init(HttpProcessorImpl& p, const config::HttpManagerConfig
     processor_ = &p;
     p.setScagTaskManager( scags );
 
-    readers.init(cfg.readerPoolSize, cfg.readerSockets, "scag.http.reader");
-    writers.init(cfg.writerPoolSize, cfg.writerSockets, "scag.http.writer");
+    readers.init(cfg.readerPoolSize, cfg.readerSockets, "http.reader");
+    writers.init(cfg.writerPoolSize, cfg.writerSockets, "http.writer");
     scags.init(cfg.scagPoolSize, cfg.scagQueueLimit, p);
     acceptor.init(cfg.host.c_str(), cfg.port);
     smsc_log_info(logger, "Http manager inited host=%s:%d", cfg.host.c_str(), cfg.port);
@@ -227,7 +227,7 @@ void ScagTaskManager::init(int maxThreads, int scagQueueLim, HttpProcessor& p)
     headContext[PROCESS_STATUS_RESPONSE] = NULL;
     headContext[PROCESS_LCM] = NULL;    
 
-    logger = Logger::getInstance("scag.http.scag");
+    logger = Logger::getInstance("http.scag");
 
     pool.setMaxThreads(maxThreads);
 

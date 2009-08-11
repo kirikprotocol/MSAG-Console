@@ -693,7 +693,7 @@ int HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
 void HttpProcessorImpl::init(const std::string& cfg)
 {
     scagmgr_ = 0;
-    logger = Logger::getInstance("scag.http.proc");
+    logger = Logger::getInstance("http.proc");
     router.init(cfg + "/http_routes.xml");
     ReloadRoutes();
 }

@@ -507,13 +507,13 @@ void IOTask::stop() {
 HttpWriterTask::HttpWriterTask(HttpManagerImpl& m, IOTaskManager& iom, const int timeout) :
         IOTask(m, iom, timeout)
 {
-    logger = Logger::getInstance("scag.http.writer");
+    logger = Logger::getInstance("http.writer");
 }
 
 HttpReaderTask::HttpReaderTask(HttpManagerImpl& m, IOTaskManager& iom, const int timeout) :
         IOTask(m, iom, timeout)
 {
-    logger = Logger::getInstance("scag.http.reader");
+    logger = Logger::getInstance("http.reader");
 }
 
 }}}

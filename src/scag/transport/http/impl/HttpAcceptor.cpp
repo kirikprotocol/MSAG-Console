@@ -68,7 +68,7 @@ void HttpAcceptor::init(const char *host, int port)
 {
     isStopping = false;
 
-    logger = Logger::getInstance("scag.http.acceptor");
+    logger = Logger::getInstance("http.acceptor");
 
     try {
         if (masterSocket.InitServer(host, port, 0, 0) == -1) {          
