@@ -16,7 +16,7 @@ class Action : public IParserHandler
 protected:
     Logger * logger;
 public:
-    Action() : logger(0) { logger = Logger::getInstance("re.actions"); };
+    Action() : logger(0) { logger = Logger::getInstance("scag.re.actions"); };
     virtual ~Action() {};
 
     /// the name of the action

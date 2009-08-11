@@ -60,10 +60,10 @@ public:
     }
   }
   ActionProperty():type(ftUnknown), intValue(0) { 
-    logger = Logger::getInstance("re.actions"); 
+    logger = Logger::getInstance("scag.re.actions"); 
   };
     ActionProperty(FieldType _type, const Property::string_type& _value):type(_type), value(_value) {
-    logger = Logger::getInstance("re.actions");
+    logger = Logger::getInstance("scag.re.actions");
   };
 
     bool setValue(const std::string& _value, bool isInt = true) {
@@ -98,7 +98,7 @@ protected:
 class DateTimeModifier {
 public:
     DateTimeModifier(FieldType _type, const Property::string_type& _value):property(_type, _value) {
-    logger = Logger::getInstance("re.actions");
+    logger = Logger::getInstance("scag.re.actions");
   };
   virtual bool change(ActionContext &context, Hash<ActionProperty>& properties, const char* actionName) = 0;
   virtual bool add(ActionContext &context, Hash<ActionProperty>& properties, const char* actionName, int sign) = 0;
