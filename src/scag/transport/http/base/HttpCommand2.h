@@ -401,6 +401,8 @@ public:
     bool isFailedBeforeSessionCreate() const { return failedBeforeSessionCreate; };
     void setFailedBeforeSessionCreate(bool failed) { failedBeforeSessionCreate = failed; };
 
+    bool getPostParams(std::string& params);
+
 protected:
     void serializeQuery(std::string& s);
 

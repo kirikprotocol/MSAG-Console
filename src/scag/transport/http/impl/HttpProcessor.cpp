@@ -344,7 +344,13 @@ int HttpProcessorImpl::processRequest(HttpRequest& request)
 
         if ( !request.getSession() )
         {
-            smsc_log_debug(logger, "SERIALIZED REQUEST BEFORE PROCESSING: %s", request.serialize().c_str());
+            if (logger->isDebugEnabled()) {
+                smsc_log_debug(logger, "SERIALIZED REQUEST BEFORE PROCESSING:\n%s", request.serialize().c_str());
+                std::string params;
+                if (request.getPostParams(params)) {
+                  smsc_log_debug(logger, "POST params: '%s'", params.c_str());
+                }
+            }
                 
             // NOTE (bukind): we have to fetch site path into a local variable
             // as it will be passed by reference into parsePath
@@ -449,7 +455,13 @@ int HttpProcessorImpl::processRequest(HttpRequest& request)
             {
                 registerEvent(stat::events::http::REQUEST_OK, request);
                 setFields(request, r);
-                smsc_log_debug(logger, "SERIALIZED REQUEST AFTER PROCESSING: %s", request.serialize().c_str());
+                if (logger->isDebugEnabled()) {
+                  smsc_log_debug(logger, "SERIALIZED REQUEST AFTER PROCESSING:\n%s", request.serialize().c_str());
+                  std::string params;
+                  if (request.getPostParams(params)) {
+                    smsc_log_debug(logger, "POST params: '%s'", params.c_str());
+                  }
+                }
                 return rs.status;
             }
 
@@ -681,7 +693,7 @@ int HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
 void HttpProcessorImpl::init(const std::string& cfg)
 {
     scagmgr_ = 0;
-    logger = Logger::getInstance("httpProc");
+    logger = Logger::getInstance("scag.http.proc");
     router.init(cfg + "/http_routes.xml");
     ReloadRoutes();
 }

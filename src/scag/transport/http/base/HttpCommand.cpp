@@ -7,6 +7,8 @@
 #include "scag/exc/SCAGExceptions.h"
 #include "scag/util/lltostr.h"
 
+#include "util/debug.h"
+
 #define ICONV_BLOCK_SIZE 32
 #define CRLF "\r\n"
 #define SP ' '
@@ -392,6 +394,14 @@ void HttpRequest::serializeQuery(std::string& s)
         HttpParser::urlEncode(val);
         s += val;
     }
+}
+
+bool HttpRequest::getPostParams(std::string& params) {
+  if (httpMethod == POST) {
+    serializeQuery(params);
+    return true;
+  }
+  return false;
 }
 
 const std::string& HttpRequest::serialize()
