@@ -10,22 +10,11 @@
 
 #include <mcisme/Exceptions.hpp>
 
-#include <sstream>
-#include <iomanip>
 namespace smsc {
 namespace mcisme {
 
-std::string
-hexdmp(const uchar_t* buf, size_t bufSz)
-{
-  std::ostringstream hexBuf;
-  hexBuf.fill('0');
-  hexBuf << std::hex;
-  for (size_t i=0; i<bufSz; ++i)
-    hexBuf << std::setw(2) << (uint32_t) buf[i];
-
-  return hexBuf.str();
-}
+extern std::string
+hexdmp(const uchar_t* buf, size_t bufSz);
 
 void
 AdvertisingImpl::init(int connectTimeout)
