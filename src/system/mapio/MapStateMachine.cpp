@@ -375,12 +375,15 @@ static inline void eraseUssdLock(MapDialog *dialog, const char* function)
   MutexGuard mg(ussd_map_lock);
   USSD_MAP::iterator it=ussd_map.find(dialog->ussdSequence);
   uint32_t val=dialog->dialogid_map|(dialog->ssn<<16)|(dialog->instanceId<<24);
-  if(it==ussd_map.end()){
+  if(it==ussd_map.end())
+  {
     __map_warn2__("%s: ussd lock not found for ussd dialog for %lld dlg 0x%x", function, dialog->ussdSequence, dialog->dialogid_map );
-  }else if(it->second == val ) {
+  }else if(it->second == val )
+  {
     __map_trace2__("%s: erase ussd lock for %lld dlg 0x%x", function, dialog->ussdSequence, it->second);
     ussd_map.erase(it);
-  } else {
+  } else
+  {
     __map_warn2__("%s: could not erase ussd lock, dialog for %lld already reassigned to dlg 0x%x but requested dlg 0x%x", function, dialog->ussdSequence, it->second, dialog->dialogid_map );
   }
 }
@@ -1834,239 +1837,170 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
   EINSS7INSTANCE_T rinst = 0;
   DialogRefGuard dialog;
   UssdProcessingGuard ussdGuard;
-    MAP_TRY {
-    if( MAP_connectedInstCount==0 || !isMapBound() )
+
+  if( MAP_connectedInstCount==0 || !isMapBound() )
+  {
+    __map_warn__("MAP is not bound yet");
+    if(cmd->get_commandId()==DELIVERY)
     {
-      throw runtime_error("MAP is not bound yet");
+      SendErrToSmsc(cmd->get_dialogId(),MAKE_ERRORCODE(CMD_ERR_FATAL,Status::SMENOTCONNECTED));
     }
+    return;
+  }
+
+
+  MAP_TRY {
     if ( cmd->get_commandId() != SUBMIT_RESP )
     {
       if ( cmd->get_commandId() != DELIVERY && cmd->get_commandId() != QUERYABONENTSTATUS)
       {
-        throw MAPDIALOG_BAD_STATE("putCommand: must be DELIVERY or QUERYABONENTSTATUS");
+        __map_warn__("putCommand: must be DELIVERY or QUERYABONENTSTATUS");
+        return;
       }
       // this is deliver command
-      try
-      {
-        if ( cmd->get_commandId() == DELIVERY  && cmd->get_sms()->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP ) )
-        { // DELIVERY ussd operation
-          unsigned serviceOp = cmd->get_sms()->getIntProperty(Tag::SMPP_USSD_SERVICE_OP );
-          __map_trace2__("putCommand dialogid_smsc /0x%x USSD OP %d",dialogid_smsc, serviceOp);
-          //string s_seq(cmd->get_sms()->getDestinationAddress().value);
-          //if (s_seq.length()==0) throw MAPDIALOG_FATAL_ERROR("MAP::PutCommand: empty destination address");
-          int64_t sequence=0;
-	  sscanf(cmd->get_sms()->getDestinationAddress().value,"%lld",&sequence);
-          //istringstream(s_seq) >> sequence;
-          if ( sequence == 0 )
-            throw MAPDIALOG_FATAL_ERROR(
-              FormatText("PutCommand: invalid sequence %lld",sequence));
-          try
+      if ( cmd->get_commandId() == DELIVERY  && cmd->get_sms()->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP ) )
+      { // DELIVERY ussd operation
+        unsigned serviceOp = cmd->get_sms()->getIntProperty(Tag::SMPP_USSD_SERVICE_OP );
+        __map_trace2__("putCommand dialogid_smsc /0x%x USSD OP %d",dialogid_smsc, serviceOp);
+        int64_t sequence=0;
+        sscanf(cmd->get_sms()->getDestinationAddress().value,"%lld",&sequence);
+        if ( sequence == 0 )
+        {
+          __map_warn2__("PutCommand: invalid dest addr for ussd='%s'",cmd->get_sms()->getDestinationAddress().value);
+          SendErrToSmsc(cmd->get_dialogId(),MAKE_ERRORCODE(CMD_ERR_FATAL,Status::INVDSTADR));
+          return;
+        }
+        bool dlg_found = false;
+        {
+          MutexGuard mg(ussd_map_lock);
+          USSD_MAP::iterator it = ussd_map.find(sequence);
+          if ( it != ussd_map.end() )
           {
-            bool dlg_found = false;
+            dialogid_map = it->second&0xFFFF; // low short value is dlgid
+            dialog_ssn = (it->second>>16)&0xFF; //high short value is ssn
+            rinst=(it->second>>24)&0xFF;
+            dialog.assign(MapDialogContainer::getInstance()->getDialog(dialogid_map,dialog_ssn,rinst));
+            if( !dialog.isnull() )
             {
-              MutexGuard mg(ussd_map_lock);
-              USSD_MAP::iterator it = ussd_map.find(sequence);
-              if ( it != ussd_map.end() )
+              if ( !dialog->isUSSD )
+                throw MAPDIALOG_FATAL_ERROR(
+                    FormatText("putCommand: Found dialog is not USSD for smsc_id:0x%x, ussd_seq: %lld",dialogid_smsc,sequence));
+              __require__(dialog->ssn == dialog_ssn);
+              dlg_found = true;
+              ussdGuard.lockProcessing(dialog.get());
+            } else
+            {
+              __map_trace2__("%s: ussd lock found for %lld dialogid 0x%x but no dialog exists, erase ussd lock", __func__,sequence,dialogid_map);
+              ussd_map.erase(sequence);
+            }
+          }
+        }
+        if(serviceOp == USSD_USSR_REQ || serviceOp == USSD_USSN_REQ || serviceOp == USSD_PSSR_RESP)
+        {
+          if( dlg_found )
+          {
+            {
+              unsigned mr = cmd->get_sms()->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE)&0x0ffff;
+              if ( dialog->ussdMrRef != mr )
               {
-                dialogid_map = it->second&0xFFFF; // low short value is dlgid
-                dialog_ssn = (it->second>>16)&0xFF; //high short value is ssn
-                rinst=(it->second>>24)&0xFF;
-                dialog.assign(MapDialogContainer::getInstance()->getDialog(dialogid_map,dialog_ssn,rinst));
-                if( !dialog.isnull() )
-                {
-                  if ( !dialog->isUSSD )
-                    throw MAPDIALOG_FATAL_ERROR(
-                      FormatText("putCommand: Found dialog is not USSD for smsc_id:0x%x, ussd_seq: %lld",dialogid_smsc,sequence));
-                  __require__(dialog->ssn == dialog_ssn);
-                  dlg_found = true;
-                  ussdGuard.lockProcessing(dialog.get());
-                } else
-                {
-                  __map_trace2__("%s: ussd lock found for %lld dialogid 0x%x but no dialog exists, erase ussd lock", __func__,sequence,dialogid_map);
-                  ussd_map.erase(sequence);
-                }
+                SendErrToSmsc(cmd->get_dialogId(),MAKE_ERRORCODE(CMD_ERR_FATAL,Status::USSDDLGREFMISM));
+                __map_warn2__("putCommand: dlgId:0x%x bad message_reference 0x%x, must be 0x%x",
+                    dialog->dialogid_map,mr,dialog->ussdMrRef);
+                return;
               }
             }
-            if ( serviceOp == USSD_PSSR_RESP )
+            dialog->id_opened = true;
+            dialog->dialogid_smsc = dialogid_smsc;
+            if (dialog->state == MAPST_WaitSubmitCmdConf || dialog->state == MAPST_WaitSubmitUSSDRequestConf )
             {
-              if ( !dlg_found )
+              // Seems deliver goes earlier than submitResp
+              MutexGuard mg(dialog->mutex);
+              if(!dialog->isDropping)
+              {
+                if(!dialog->chain.empty())
+                {
+                  __map_warn2__("Attempt to chain 2nd command(smscid=%d) to ussd dialog dlgId=%x",dialogid_smsc,dialog->dialogid_map);
+                  SendErrToSmsc(dialogid_smsc,MAKE_ERRORCODE(CMD_ERR_TEMP,Status::USSDDLGREFMISM));
+                  return;
+                }
+                __map_trace2__("%s: dialogid 0x%x deliver earlier then submit resp for USSD dlg, deliver was chained", __func__,dialog->dialogid_map);
+                dialog->chain.insert(dialog->chain.begin(), cmd);
+              }else
               {
                 SendErrToSmsc(cmd->get_dialogId(),MAKE_ERRORCODE(CMD_ERR_FATAL,Status::USSDDLGNFOUND));
-                throw MAPDIALOG_FATAL_ERROR( FormatText("putCommand: USSD dialog not found for smsc_id:0x%x ussd_seq: %lld",dialogid_smsc,sequence));
+                __map_warn2__("putCommand: dlgId:0x%x isDropping while trying to chain new command",
+                    dialog->dialogid_map);
               }
-              {
-                unsigned mr = cmd->get_sms()->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE)&0x0ffff;
-                if ( dialog->ussdMrRef != mr )
-                {
-                  SendErrToSmsc(cmd->get_dialogId(),MAKE_ERRORCODE(CMD_ERR_FATAL,Status::USSDDLGREFMISM));
-                  throw MAPDIALOG_FATAL_ERROR(
-                    FormatText("putCommand: Bad message_reference for dlgId:0x%x - 0x%x must be 0x%x",
-                      dialog->dialogid_map,mr,dialog->ussdMrRef));
-                }
-              }
-              if (dialog->state == MAPST_WaitSubmitCmdConf || dialog->state == MAPST_WaitSubmitUSSDRequestConf) {
-                // Seems PSSR_RESP goes earlier than submitResp
-                MutexGuard mg(dialog->mutex);
-                if(!dialog->isDropping)
-                {
-                  if(!dialog->chain.empty())
-                  {
-                    SendErrToSmsc(dialogid_smsc,MAKE_ERRORCODE(CMD_ERR_TEMP,Status::INVOPTPARAMVAL));
-                    __map_warn2__("Attempt to chain 2nd command(smscid=%d) to ussd dialog dlgId=%x",dialogid_smsc,dialog->dialogid_map);
-                    return;
-                  }
-                  __map_trace2__("%s: dialogid 0x%x deliver earlier then submit resp for USSD dlg, deliver was chained", __func__,dialog->dialogid_map);
-                  dialog->chain.insert(dialog->chain.begin(), cmd);
-                }else
-                {
-                  throw MAPDIALOG_FATAL_ERROR(
-                    FormatText("putCommand: dlgId:0x%x isDropping while trying to chain new command",
-                      dialog->dialogid_map));
-                }
-                return;
-              } else if ( !(dialog->state == MAPST_ReadyNextUSSDCmd || dialog->state == MAPST_USSDWaitResponce )) {
-                throw MAPDIALOG_BAD_STATE(FormatText("putCommand:  ussd resp bad state %d, dialogid 0x%x, SMSC.did 0x%x",dialog->state,dialog->dialogid_map,dialog->dialogid_smsc));
-              }
-              dialog->dialogid_smsc = dialogid_smsc;
-              dialog->isQueryAbonentStatus = false;
-              dialog->AssignSms(cmd->get_sms_and_forget());
-              DoUSSRUserResponce(dialog.get());
               return;
-            } else if(serviceOp == USSD_USSR_REQ || serviceOp == USSD_USSN_REQ) {
-              if( dlg_found ) {
-                {
-                  unsigned mr = cmd->get_sms()->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE)&0x0ffff;
-                  if ( dialog->ussdMrRef != mr ) {
-                    SendErrToSmsc(cmd->get_dialogId(),MAKE_ERRORCODE(CMD_ERR_FATAL,Status::USSDDLGREFMISM));
-                    throw MAPDIALOG_FATAL_ERROR(
-                      FormatText("putCommand: dlgId:0x%x bad message_reference 0x%x, must be 0x%x",
-                        dialog->dialogid_map,mr,dialog->ussdMrRef));
-                  }
-                }
-                dialog->id_opened = true;
-                dialog->dialogid_smsc = dialogid_smsc;
-                if (dialog->state == MAPST_WaitSubmitCmdConf || dialog->state == MAPST_WaitSubmitUSSDRequestConf )
-                {
-                  // Seems deliver goes earlier than submitResp
-                  MutexGuard mg(dialog->mutex);
-                  if(!dialog->isDropping)
-                  {
-                    if(!dialog->chain.empty())
-                    {
-                      __map_warn2__("Attempt to chain 2nd command(smscid=%d) to ussd dialog dlgId=%x",dialogid_smsc,dialog->dialogid_map);
-                      SendErrToSmsc(dialogid_smsc,MAKE_ERRORCODE(CMD_ERR_TEMP,Status::INVOPTPARAMVAL));
-                      return;
-                    }
-                    __map_trace2__("%s: dialogid 0x%x deliver earlier then submit resp for USSD dlg, deliver was chained", __func__,dialog->dialogid_map);
-                    dialog->chain.insert(dialog->chain.begin(), cmd);
-                  }else
-                  {
-                    throw MAPDIALOG_FATAL_ERROR(
-                      FormatText("putCommand: dlgId:0x%x isDropping while trying to chain new command",
-                        dialog->dialogid_map));
-                  }
-                  return;
-                } else if ( !(dialog->state == MAPST_ReadyNextUSSDCmd || dialog->state == MAPST_USSDWaitResponce)) {
-                  throw MAPDIALOG_BAD_STATE(
-                    FormatText("putCommand: ussd req/notify bad state %d, MAP.did 0x%x, SMSC.did 0x%x",dialog->state,dialog->dialogid_map,dialog->dialogid_smsc));
-                }
-                dialog->isQueryAbonentStatus = false;
-                dialog->AssignSms(cmd->get_sms_and_forget());
-                DoUSSDRequestOrNotifyReq(dialog.get());
-                return;
-              } else {
-                if( cmd->get_sms()->hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE) ) {
-                  SendErrToSmsc(cmd->get_dialogId(),MAKE_ERRORCODE(CMD_ERR_FATAL,Status::USSDDLGNFOUND));
-                  throw MAPDIALOG_FATAL_ERROR( FormatText("putCommand: There is no USSD dialog for MR %d smsc_dlg 0x%x seq: %lld",cmd->get_sms()->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE), dialogid_smsc,sequence), Status::USSDDLGNFOUND);
-                }
-                __map_trace2__("%s: trying to create USSD network intiated session dialogid_smsc 0x%x",__func__,dialogid_smsc);
-                try{
-                  if( !dialog2 ) { // not chained dialog
-                    try {
-                      /*
-                      MutexGuard mg(ussd_map_lock);
-                      USSD_MAP::iterator it=ussd_map.find(sequence);
-                      if(it!=ussd_map.end())
-                      {
-                        __map_warn2__("putCommand: dlgId:0x%x ussd_lock %d already exists for NIUSSD",
-                                     dialogid_smsc,sequence);
-                        SendErrToSmsc(dialogid_smsc,MAKE_ERRORCODE(CMD_ERR_TEMP,Status::SYSERR));
-                        return;
-                      }
-                      */
-
-                      dialog.assign(MapDialogContainer::getInstance()->
-                              createOrAttachSMSCUSSDDialog(
-                                dialogid_smsc,
-                                SSN,
-                                string(cmd->get_sms()->getDestinationAddress().value),
-                                cmd));
-                      uint32_t val=(((uint32_t)dialog->ssn)<<16)|dialog->dialogid_map;
-                      //ussd_map.insert(USSD_MAP::value_type(sequence,val));
-                      //ussdGuard.lockProcessing(dialog.get());
-                    } catch (exception& e) {
-                      __map_trace2__("%s: %s ",__func__,e.what());
-                      SendErrToSmsc(dialogid_smsc,MAKE_ERRORCODE(CMD_ERR_TEMP,Status::THROTTLED));
-                      return;//throw MAPDIALOG_TEMP_ERROR("MAP::PutCommand: can't create dialog");
-                    }
-                    if ( dialog.isnull() ) {
-                      //throw MAPDIALOG_TEMP_ERROR("Can't create or attach dialog");
-                      //SendRescheduleToSmsc(dialogid_smsc);
-                      __map_trace2__("%s: was scheduled (state:NONE) dialogid_smsc 0x%x",__func__, dialogid_smsc);
-                      return;
-                    }
-                  } else {
-                    // command taken from chain
-                    __map_warn__("putCommand: chained command for NIUSSD. Shoudn't happen.");
-                    SendErrToSmsc(dialogid_smsc,MAKE_ERRORCODE(CMD_ERR_TEMP,Status::SYSERR));
-                    return;
-
-                    /*
-                    dialog_ssn = SSN;
-                    dialog.assign(dialog2->AddRef());
-                    dialogid_map = dialog->dialogid_map;
-                    dialogid_map = MapDialogContainer::getInstance()->reAssignDialog(dialog->dialogid_map,dialog->ssn,SSN);
-                    __require__(dialog->ssn == dialog_ssn);
-                    dialog->id_opened = false;
-                    dialog->dialogid_smsc = dialogid_smsc;
-                    dialog->dropChain = false;
-                    */
-                  }
-                }catch(MAPDIALOG_ERROR& e){
-                  throw;
-                }catch(exception& e){
-                  __map_warn2__("putCommand: exception when create dialog. <exception>:%s",e.what());
-                  throw MAPDIALOG_FATAL_ERROR("putCommand: can't create dialog");
-                }
-                if( dialog.isnull() ) {
-                  __map_warn__("putCommand: can't create SMSC->MS ussd dialog. Shouldn't happen.");
-                  // command has bean attached by dialog container
-                } else {
-
-                  dialog->dropChain = false;
-                  dialog->wasDelivered = false;
-                  dialog->hlrWasNotified = false;
-                  dialogid_map = dialog->dialogid_map;
-                  dialog->state = MAPST_START;
-                  __map_trace2__("%s: dialogid 0x%x  (state %d)",__func__,dialog->dialogid_map,dialog->state);
-                  StartDialogProcessing(dialog.get(),cmd);
-                  return;
-                }
-              }
-            } else {
-              SendErrToSmsc(cmd->get_dialogId(),MAKE_ERRORCODE(CMD_ERR_FATAL,Status::USSDDLGNFOUND));
-              throw MAPDIALOG_FATAL_ERROR(
-                FormatText("putCommand: invaid USSD code 0x%x",serviceOp));
+            } else if ( !(dialog->state == MAPST_ReadyNextUSSDCmd || dialog->state == MAPST_USSDWaitResponce))
+            {
+              throw MAPDIALOG_BAD_STATE(
+                  FormatText("putCommand: ussd req/notify bad state %d, MAP.did 0x%x, SMSC.did 0x%x",dialog->state,dialog->dialogid_map,dialog->dialogid_smsc));
             }
-          }
-          catch(...)
+            dialog->isQueryAbonentStatus = false;
+            dialog->AssignSms(cmd->get_sms_and_forget());
+            if(serviceOp == USSD_PSSR_RESP)
+            {
+              DoUSSRUserResponce(dialog.get());
+            }else
+            {
+              DoUSSDRequestOrNotifyReq(dialog.get());
+            }
+            return;
+          } else
           {
-            MutexGuard ussd_map_guard( ussd_map_lock );
-            __map_warn2__("MAP:putCommand: unexpected exception in ussd msg processing, erase ussd lock for %lld", sequence);
-            ussd_map.erase(sequence);
-            throw;
+            if ( serviceOp == USSD_PSSR_RESP )
+            {
+              SendErrToSmsc(cmd->get_dialogId(),MAKE_ERRORCODE(CMD_ERR_FATAL,Status::USSDDLGNFOUND));
+              __map_warn2__("putCommand: USSD dialog not found for smsc_id:0x%x ussd_seq: %lld",dialogid_smsc,sequence);
+              return;
+            }
+
+            if( cmd->get_sms()->hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE) )
+            {
+              SendErrToSmsc(cmd->get_dialogId(),MAKE_ERRORCODE(CMD_ERR_FATAL,Status::INVOPTPARAMVAL));
+              __map_warn2__("putCommand: There is no USSD dialog for MR %d smsc_dlg 0x%x seq: %lld",cmd->get_sms()->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE), dialogid_smsc,sequence);
+              return;
+            }
+            __map_trace2__("%s: trying to create USSD network intiated session dialogid_smsc 0x%x",__func__,dialogid_smsc);
+            if( !dialog2 )
+            { // not chained dialog
+              try {
+                dialog.assign(MapDialogContainer::getInstance()->
+                    createOrAttachSMSCUSSDDialog(
+                        dialogid_smsc,
+                        SSN,
+                        string(cmd->get_sms()->getDestinationAddress().value),
+                        cmd));
+              } catch (exception& e)
+              {
+                __map_trace2__("%s: %s ",__func__,e.what());
+                SendErrToSmsc(dialogid_smsc,MAKE_ERRORCODE(CMD_ERR_TEMP,Status::THROTTLED));
+                return;
+              }
+            } else
+            {
+              // command taken from chain
+              __map_warn__("putCommand: chained command for NIUSSD. Shoudn't happen.");
+              SendErrToSmsc(dialogid_smsc,MAKE_ERRORCODE(CMD_ERR_TEMP,Status::SYSERR));
+              return;
+            }
+            dialog->dropChain = false;
+            dialog->wasDelivered = false;
+            dialog->hlrWasNotified = false;
+            dialogid_map = dialog->dialogid_map;
+            dialog->state = MAPST_START;
+            __map_trace2__("%s: dialogid 0x%x  (state %d)",__func__,dialog->dialogid_map,dialog->state);
+            StartDialogProcessing(dialog.get(),cmd);
+            return;
           }
-        }else
+        } else
+        {
+          SendErrToSmsc(cmd->get_dialogId(),MAKE_ERRORCODE(CMD_ERR_FATAL,Status::USSDDLGNFOUND));
+          __map_warn2__("putCommand: invaid USSD code 0x%x",serviceOp);
+          return;
+        }
+      }else
         if ( !dialog2  )
         { // end of DELIVERY ussd operation
           // DELIVERY SMS no chained dialog
@@ -2075,11 +2009,11 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
             if ( cmd->get_commandId() == DELIVERY )
             {
               dialog.assign(MapDialogContainer::getInstance()->
-                        createOrAttachSMSCDialog(
-                          dialogid_smsc,
-                          SSN,
-                          string(cmd->get_sms()->getDestinationAddress().value),
-                          cmd));
+                  createOrAttachSMSCDialog(
+                      dialogid_smsc,
+                      SSN,
+                      string(cmd->get_sms()->getDestinationAddress().value),
+                      cmd));
               if(!dialog.isnull())
               {
                 rinst=dialog->instanceId;
@@ -2088,7 +2022,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
             {
               // QUERYABONENTSTATUS
               dialog.assign(MapDialogContainer::getInstance()->createOrAttachSMSCDialog(
-                          dialogid_smsc,SSN,"",cmd));
+                  dialogid_smsc,SSN,"",cmd));
             }
           } catch (ChainIsVeryLong& e) {
             __map_trace2__("%s: %s ",__func__,e.what());
@@ -2123,13 +2057,6 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
           dialog->dropChain = false;
           rinst=dialog->instanceId;
         }
-      }catch(MAPDIALOG_ERROR& e){ // try for delivery command
-        throw;
-      }catch(exception& e){
-        __map_warn2__("putCommand: exception when create dialog. <exception>:%s",e.what());
-        //throw MAPDIALOG_TEMP_ERROR("MAP::PutCommand: can't create dialog");
-        throw MAPDIALOG_FATAL_ERROR("putCommand: can't create dialog");
-      }
       if ( dialog.isnull() )
       {
         __map_trace__("putCommand: can't create SMSC->MS dialog (locked), request has bean attached");
