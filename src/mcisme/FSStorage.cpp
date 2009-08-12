@@ -175,7 +175,7 @@ bool FSStorage::getEvents(const AbntAddr& CalledNum, vector<MCEvent>& events)
 
     LoadAbntEvents(CalledNum, &AbntEvents);
 
-    smsc_log_debug(logger, "FSStorage::getEvents::: loaded data_cell: schedTime=%x,eventCount=%d,lastError=%d,calledNum=%s,recordIsActive=%d", AbntEvents.schedTime, AbntEvents.eventCount,AbntEvents.lastError,AbntAddr(&AbntEvents.calledNum).getText().c_str(), AbntEvents.recordIsActive);
+    //    smsc_log_debug(logger, "FSStorage::getEvents::: loaded data_cell: schedTime=%x,eventCount=%d,lastError=%d,calledNum=%s,recordIsActive=%d", AbntEvents.schedTime, AbntEvents.eventCount,AbntEvents.lastError,AbntAddr(&AbntEvents.calledNum).getText().c_str(), AbntEvents.recordIsActive);
     if(KillExpiredEvents(&AbntEvents))
       if(AbntEvents.eventCount == 0)
       {
@@ -194,7 +194,7 @@ bool FSStorage::getEvents(const AbntAddr& CalledNum, vector<MCEvent>& events)
       e.callCount = AbntEvents.events[i].callCount;
       memcpy((void*)&(e.caller), (void*)&(AbntEvents.events[i].callingNum), sizeof(e.caller));
       events.push_back(e);
-      smsc_log_debug(logger, "FSStorage::getEvents::: AbntEvents.events[%d].id=%d,AbntEvents.events[%d].date=%x,AbntEvents.events[%d].callingNum=%s,AbntEvents.events[%d].callCount=%d,AbntEvents.events[%d].flags=%d",i,AbntEvents.events[i].id,i,AbntEvents.events[i].date,i,AbntAddr(&AbntEvents.events[i].callingNum).getText().c_str(),i,AbntEvents.events[i].callCount,AbntEvents.events[i].flags);
+      //      smsc_log_debug(logger, "FSStorage::getEvents::: AbntEvents.events[%d].id=%d,AbntEvents.events[%d].date=%x,AbntEvents.events[%d].callingNum=%s,AbntEvents.events[%d].callCount=%d,AbntEvents.events[%d].flags=%d",i,AbntEvents.events[i].id,i,AbntEvents.events[i].date,i,AbntAddr(&AbntEvents.events[i].callingNum).getText().c_str(),i,AbntEvents.events[i].callCount,AbntEvents.events[i].flags);
     }
     return 1;
   }
@@ -306,7 +306,7 @@ int FSStorage::CreateAbntEvents(const AbntAddr& CalledNum, const MCEvent& event,
   dat.events[0].callCount = 1;
   dat.events[0].flags = event.missCallFlags;
 
-  smsc_log_debug(logger, "FSStorage::CreateAbntEvents::: called addr=[%s], insert event into idx=0, event_cell.date=0x%x,event_cell.id=%d,event_cell.callingNum=%s,event_cell.callCount=%d,event_cell.flags=0x%x", AbntAddr(&dat.calledNum).getText().c_str(), dat.events[0].date, dat.events[0].id, AbntAddr(&dat.events[0].callingNum).getText().c_str(), dat.events[0].callCount, dat.events[0].flags);
+  //  smsc_log_debug(logger, "FSStorage::CreateAbntEvents::: called addr=[%s], insert event into idx=0, event_cell.date=0x%x,event_cell.id=%d,event_cell.callingNum=%s,event_cell.callCount=%d,event_cell.flags=0x%x", AbntAddr(&dat.calledNum).getText().c_str(), dat.events[0].date, dat.events[0].id, AbntAddr(&dat.events[0].callingNum).getText().c_str(), dat.events[0].callCount, dat.events[0].flags);
   if(freeCells.Empty())
     IncrStorage(bdFilesIncr);
 
@@ -395,7 +395,7 @@ FSStorage::findAndUpdateEventDateAndCallCount(dat_file_cell* pAbntEvents,
       strncpy(dateAsString, ctime(&bakCell.date), sizeof(dateAsString));
       dateAsString[strlen(dateAsString)-1]=0;
 
-      smsc_log_debug(logger, "FSStorage::findAndUpdateEventDateAndCallCount::: callingNum=[%s] was found in events[], found idx=%d, new time for updatable cell=%x(%s)", AbntAddr(&event.caller).getText().c_str(), i, bakCell.date, dateAsString);
+      //smsc_log_debug(logger, "FSStorage::findAndUpdateEventDateAndCallCount::: callingNum=[%s] was found in events[], found idx=%d, new time for updatable cell=%x(%s)", AbntAddr(&event.caller).getText().c_str(), i, bakCell.date, dateAsString);
       int updatedEventIdx;
       for(updatedEventIdx=i+1; updatedEventIdx < pAbntEvents->eventCount; updatedEventIdx++) {
         if ( pAbntEvents->events[updatedEventIdx].date >= bakCell.date )
@@ -404,7 +404,7 @@ FSStorage::findAndUpdateEventDateAndCallCount(dat_file_cell* pAbntEvents,
 
       memcpy(&pAbntEvents->events[i], &pAbntEvents->events[i+1], (updatedEventIdx - i - 1)*sizeof(event_cell));
       pAbntEvents->events[updatedEventIdx - 1] = bakCell;
-      smsc_log_debug(logger, "FSStorage::findAndUpdateEventDateAndCallCount::: updated event moved to array element with idx=%d: event_cell.date=%x,event_cell.id=%d,event_cell.callingNum=%s,event_cell.callCount=%d", updatedEventIdx - 1, pAbntEvents->events[updatedEventIdx - 1].date, pAbntEvents->events[updatedEventIdx - 1].id,  AbntAddr(&pAbntEvents->events[updatedEventIdx - 1].callingNum).getText().c_str(), pAbntEvents->events[updatedEventIdx - 1].callCount);
+      //smsc_log_debug(logger, "FSStorage::findAndUpdateEventDateAndCallCount::: updated event moved to array element with idx=%d: event_cell.date=%x,event_cell.id=%d,event_cell.callingNum=%s,event_cell.callCount=%d", updatedEventIdx - 1, pAbntEvents->events[updatedEventIdx - 1].date, pAbntEvents->events[updatedEventIdx - 1].id,  AbntAddr(&pAbntEvents->events[updatedEventIdx - 1].callingNum).getText().c_str(), pAbntEvents->events[updatedEventIdx - 1].callCount);
 
       return true;
     }
@@ -436,7 +436,7 @@ void
 FSStorage::AddAbntEvent(dat_file_cell* pAbntEvents,
                         const MCEvent& event)
 {
-  smsc_log_debug(logger, "FSStorage::AddAbntEvent::: try add event for callingNum=%s, data_file_cell.eventCount=%d", AbntAddr(&event.caller).getText().c_str() , pAbntEvents->eventCount);
+//  smsc_log_debug(logger, "FSStorage::AddAbntEvent::: try add event for callingNum=%s, data_file_cell.eventCount=%d", AbntAddr(&event.caller).getText().c_str() , pAbntEvents->eventCount);
 
   if ( findAndUpdateEventDateAndCallCount(pAbntEvents, event) )
     return;
@@ -467,7 +467,7 @@ FSStorage::insertEventIntoPosition(dat_file_cell* pAbntEvents,
   memcpy((void*)&(pAbntEvents->events[idx].callingNum), (void*)&(event.caller.full_addr), sizeof(pAbntEvents->events[idx].callingNum));
   pAbntEvents->events[idx].callCount = 1;
   pAbntEvents->events[idx].flags = event.missCallFlags;
-  smsc_log_debug(logger, "FSStorage::insertEventIntoPosition::: called addr=[%s], insert event into idx=%d, event_cell.date=0x%x,event_cell.id=%d,event_cell.callingNum=%s,event_cell.callCount=%d,event_cell.flags=0x%x", AbntAddr(&pAbntEvents->calledNum).getText().c_str(), idx, pAbntEvents->events[idx].date, pAbntEvents->events[idx].id,  AbntAddr(&pAbntEvents->events[idx].callingNum).getText().c_str(), pAbntEvents->events[idx].callCount,pAbntEvents->events[idx].flags);
+//  smsc_log_debug(logger, "FSStorage::insertEventIntoPosition::: called addr=[%s], insert event into idx=%d, event_cell.date=0x%x,event_cell.id=%d,event_cell.callingNum=%s,event_cell.callCount=%d,event_cell.flags=0x%x", AbntAddr(&pAbntEvents->calledNum).getText().c_str(), idx, pAbntEvents->events[idx].date, pAbntEvents->events[idx].id,  AbntAddr(&pAbntEvents->events[idx].callingNum).getText().c_str(), pAbntEvents->events[idx].callCount,pAbntEvents->events[idx].flags);
 }
 
 void
@@ -485,7 +485,7 @@ void
 FSStorage::RemoveEvent(dat_file_cell* pAbntEvents,
                        const MCEvent& event)
 {
-  smsc_log_debug(logger, "FSStorage::RemoveEvent::: removable event: event.id=%d, pAbntEvents->eventCount=%d, pAbntEvents->calledNum=%s", event.id, pAbntEvents->eventCount, AbntAddr(&pAbntEvents->calledNum).getText().c_str());
+  //  smsc_log_debug(logger, "FSStorage::RemoveEvent::: removable event: event.id=%d, pAbntEvents->eventCount=%d, pAbntEvents->calledNum=%s", event.id, pAbntEvents->eventCount, AbntAddr(&pAbntEvents->calledNum).getText().c_str());
   int	event_num;
   for(event_num = 0; event_num < pAbntEvents->eventCount; event_num++) {
     smsc_log_debug(logger, "FSStorage::RemoveEvent::: next bypassed event in storage: id=%d",pAbntEvents->events[event_num].id);
