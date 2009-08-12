@@ -24,7 +24,7 @@ USSRequestProcessor::USSRequestProcessor(USSManConnect* ussManConn, Connect* con
                                          const UssService_CFG& cfg, uint32_t dialog_id,
                                          const USSProcSearchCrit& ussProcSearchCrit,
                                          Logger * use_log/* = NULL*/)
-  : _ussManConn(ussManConn), _conn(conn), _cfg(cfg), _dialogId(dialog_id)
+  : _isRunning(true), _ussManConn(ussManConn), _conn(conn), _cfg(cfg), _dialogId(dialog_id)
   , _mapDialog(NULL), _resultAsLatin1(false), _dcs(0)
   , _ussProcSearchCrit(ussProcSearchCrit)
   , _logger(use_log ? use_log : Logger::getInstance("smsc.ussman"))
@@ -35,14 +35,24 @@ USSRequestProcessor::USSRequestProcessor(USSManConnect* ussManConn, Connect* con
 
 USSRequestProcessor::~USSRequestProcessor()
 {
+  {
+    core::synchronization::MutexGuard synchronize(_statusLock);
+    _isRunning = false;
+  }
+
   try {
     smsc::core::synchronization::MutexGuard mg(_callbackActivityLock);
+
     if ( _mapDialog) {
       _mapDialog->endMapDlg();
       delete _mapDialog;
     }
   } catch(...) {}
-  _ussManConn->markReqProcessorAsCompleted(this);
+
+  core::synchronization::MutexGuard synchronize(_connLock);
+  if ( _ussManConn ) {
+    _ussManConn->markReqProcessorAsCompleted(this);
+  }
 }
 
 void USSRequestProcessor::sendNegativeResponse()
@@ -85,7 +95,12 @@ USSRequestProcessor::handleRequest(const smsc::inman::interaction::USSRequestMes
 
 void USSRequestProcessor::onMapResult(smsc::inman::comp::uss::MAPUSS2CompAC* arg)
 {
-  smsc::core::synchronization::MutexGuard mg(_callbackActivityLock);
+  {
+    core::synchronization::MutexGuard synchronize(_statusLock);
+    if ( _isRunning == false )
+      return;
+  }
+  core::synchronization::MutexGuard mg(_callbackActivityLock);
   if ( arg->getUSSDataAsLatin1Text(_resultUssAsString) ) {
     _resultAsLatin1 = true;
     smsc_log_debug(_logger, "%s: onMapResult::: got USSData=[%s]", _logId,
@@ -103,6 +118,12 @@ void USSRequestProcessor::onMapResult(smsc::inman::comp::uss::MAPUSS2CompAC* arg
 //if ercode != 0, no result has been got from MAP service
 void USSRequestProcessor::onEndMapDlg(RCHash ercode/* =0*/)
 {
+  {
+    core::synchronization::MutexGuard synchronize(_statusLock);
+    if ( _isRunning == false )
+      return;
+  }
+
   {
     core::synchronization::MutexGuard mg(_callbackActivityLock);
     inman::interaction::SPckUSSResult resultPacket;
@@ -188,8 +209,14 @@ USSRequestProcessor::sendPacket(inman::interaction::SPckUSSResult* resultPacket)
 void
 USSRequestProcessor::markConnectAsClosed()
 {
+  {
+    core::synchronization::MutexGuard synchronize(_statusLock);
+    if ( _isRunning == false )
+      return;
+  }
+
   core::synchronization::MutexGuard synchronize(_connLock);
-  _conn=NULL;
+  _conn=NULL; _ussManConn=NULL;
 }
 
 } //uss
