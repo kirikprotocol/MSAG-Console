@@ -47,7 +47,7 @@ private:
   TCSessionSR * getMAPSession(uint8_t rmt_ssn, const TonNpiAddress & rnpi);
   void sendPacket(inman::interaction::SPckUSSResult* resultPacket);
 
-  Mutex                     _callbackActivityLock;
+  bool _isRunning;
   USSManConnect*            _ussManConn;
   Connect *                 _conn;
   const UssService_CFG &    _cfg;
@@ -62,7 +62,7 @@ private:
   std::string   _resultUssAsString;
   bool          _resultAsLatin1;
   unsigned char _dcs;
-  core::synchronization::Mutex _connLock;
+  core::synchronization::Mutex _statusLock, _callbackActivityLock, _connLock;
 };
 
 } //uss
