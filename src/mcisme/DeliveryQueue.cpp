@@ -277,7 +277,6 @@ bool DeliveryQueue::Get(AbntAddr& abnt)
     }
     else
     {
-      smsc_log_warn(logger, "Abonent %s is not exists in the hash.", strAbnt.c_str());
       return false;
     }
   }
