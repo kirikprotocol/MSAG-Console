@@ -482,7 +482,7 @@ bool Task::beginGeneration(Statistics* statistics)
                 }
               }
               Message msg;
-              msg.abonent=addr.toString();
+              msg.abonent=addr.toString().c_str();
               msg.message=message;
               const smsc::util::config::region::Region* foundRegion = smsc::util::config::region::RegionFinder::getInstance().findRegionByAddress(addr.toString());
               if ( foundRegion )

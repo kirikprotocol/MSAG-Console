@@ -1644,8 +1644,8 @@ public:
       smsc_log_info(log,"Starting concat for %d/%s[num=%d]",mr,sms.getOriginatingAddress().toString().c_str(),num);
       ConcatRecord rec;
       rec.fileIdx=lastIdx++;
-      rec.oa=sms.getOriginatingAddress().toString();
-      rec.da=sms.getDestinationAddress().toString();
+      rec.oa=sms.getOriginatingAddress().toString().c_str();
+      rec.da=sms.getDestinationAddress().toString().c_str();
       rec.num=num;
       rec.mr=mr;
       ConcatRecord::Part part(idx,"");
