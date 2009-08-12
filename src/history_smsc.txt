@@ -390,3 +390,11 @@ B3106: Jul 27,2009
     mcahdb	Fix messages package
     mcahdb	Remove + from MSISDN in SOAP response
     ussman	fixed bug in using of already destroyed connection    
+
+B3107: Aug 11, 2009
+    SMSC	byte order fix for time for monitors on x86
+    SMSC	address.toString and mapio optimization, avoid using of std::string
+    SMSC	MapProxy PutCommand ussd processing redesigned to avoid using exceptions - cause core dump on Xeon, probably compiler bug
+    MCISme	QosTimeToLive parameter was added, to support new DPF scheme expiration date
+    MCISme	Warn about incorrect addresses in events instead of core dump
+    MCISme	maxAbonentMessageLenInOctets parameter was added, requested banner length now depends on how message filled
