@@ -5,9 +5,10 @@
 #ident "@(#)$Id$"
 #define __SMSC_INMAN_INAP_SS7_MSG_ERRORS__
 
-#include "ss7cp.h"
 
 #include "util/URCdb/URCRegistry.hpp"
+
+#include "ss7cp.h"
 
 namespace smsc {
 namespace inman {

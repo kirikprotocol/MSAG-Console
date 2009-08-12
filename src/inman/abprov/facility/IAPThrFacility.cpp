@@ -3,6 +3,7 @@ static const char ident[] = "$Id$";
 #endif /* MOD_IDENT_OFF */
 
 #include "inman/abprov/facility/IAPThrFacility.hpp"
+#include <algorithm>
 
 namespace smsc {
 namespace inman {

@@ -81,7 +81,7 @@ public:
 
     bool haveMessages()
     {
-      return curMsg!=msgMap.end();
+      return curMsg!=timeMap.end();
     }
 
     std::string fileName()

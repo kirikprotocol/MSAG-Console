@@ -13,6 +13,7 @@
 #include <util/crc32.h>
 
 #include <iomanip>
+#include <ios>
 #include <sstream>
 #include <iostream>
 
@@ -69,8 +70,8 @@ SimpleFileDispatcher<V>::writeNbytesToFile(IOPage& ioPage, uchar_t* buf, size_t 
   smsc_log_debug(_logger, "SimpleFileDispatcher<V>::writeNbytesToFile::: wrote data to page, buf=[%s],st=%d",hexdmp(buf, st).c_str(),st);
   sz = st;
   ioPage.commitMemory();
-  // Запись может не влезть целиком в страницу, поэтому
-  // предусматриваем запись в несколько последовательных страниц
+  // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+  // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
   while ( sz != bufSz ) {
     if ( !_ioPageDispatcher->haveNextPage(ioPage) )
       ioPage = _ioPageDispatcher->createNewIOPage();
