@@ -16,12 +16,17 @@
 #include <vector>
 #include <sstream>
 
+#include "util/Exception.hpp"
+
 namespace smsc {
 namespace mcisme {
 
 using std::string;
 using sms::Address;
 using sms::AddressValue;
+
+std::string
+hexdmp(const uchar_t* buf, size_t bufSz);
 
 union	AbntAddrValue
 {
@@ -35,6 +40,14 @@ union	AbntAddrValue
   } addr_content;
 };
 
+class BadAddrException : public util::Exception {
+public:
+  BadAddrException(const char * fmt, ...)
+  : Exception()
+  {
+    SMSC_UTIL_EX_FILL(fmt);
+  }
+};
 
 class AbntAddr
 {
@@ -43,6 +56,7 @@ class AbntAddr
 public:
 
   AbntAddr(){memset((void*)&value, 0x00, sizeof(value));}
+
   AbntAddr(uint8_t _len, uint8_t _type, uint8_t _plan, const char* _value)
   {
     value.addr_content.type = _type;
@@ -54,12 +68,14 @@ public:
   {
     __require__(_full_addr);
     memcpy((void*)&value.full_addr, (void*)_full_addr, sizeof(value.full_addr));
+    checkAddrValueValidity(value.addr_content.signals, sizeof(value.addr_content.signals));
   };
 
   AbntAddr(const uint8_t* _full_addr)
   {
     __require__(_full_addr);
     memcpy((void*)&value.full_addr, (void*)_full_addr, sizeof(value.full_addr));
+    checkAddrValueValidity(value.addr_content.signals, sizeof(value.addr_content.signals));
   };
 
   AbntAddr(const AbntAddr& addr)
@@ -157,14 +173,18 @@ public:
     {
       sig1 = _value[i*2] - 0x30;
       sig2 = _value[i*2+1] - 0x30;
+      if ( sig1 > 9 || sig2 > 9 )
+        throw BadAddrException("AbntAddr::setValue::: invalid input address value [%s]", _value);
       value.addr_content.signals[i] = (sig2 << 4) | sig1;
     }
-    if( ((_len>>1)<<1) != _len)
-      value.addr_content.signals[i] = 0xF0 | (uint8_t)(_value[i*2] - 0x30);
-
+    if( _len & 0x01 ) {
+      sig1 = _value[i*2] - 0x30;
+      if ( sig1 > 9 )
+        throw BadAddrException("AbntAddr::setValue::: invalid input address value [%s]", _value);
+      value.addr_content.signals[i] = 0xF0 | sig1;
+    }
     value.addr_content.length = _len;
-
-  };
+  }
 
   const uint8_t* getAddrSig(void) const
   {
@@ -200,27 +220,27 @@ public:
   inline uint8_t getLength() const
   {
     return value.addr_content.length;
-  };
+  }
 
   inline void setTypeOfNumber(uint8_t _type)
   {
     value.addr_content.type = _type;
-  };
+  }
 
   inline uint8_t getTypeOfNumber() const
   {
     return value.addr_content.type;
-  };
+  }
 
   inline void setNumberingPlan(uint8_t _plan)
   {
     value.addr_content.plan = _plan;
-  };
+  }
 
   inline uint8_t getNumberingPlan() const
   {
     return value.addr_content.plan;
-  };
+  }
 
   //inline int getText(char* buf,int buflen)const
   //{
@@ -237,7 +257,7 @@ public:
   Address getAddress(void) const
   {
     return Address(getText().c_str());
-  };
+  }
 
   inline std::string getText(void) const
   {
@@ -290,6 +310,15 @@ public:
   static uint32_t CalcHash(AbntAddr key)
   {
       return  crc32(0, key.value.full_addr, sizeof(key.value.full_addr));
+  }
+
+  void checkAddrValueValidity(uint8_t* addr_signals, size_t addr_signals_sz) {
+    for(unsigned i=0; i<addr_signals_sz; ++i) {
+      uint8_t sig1 = (addr_signals[i] >> 4) & 0x0F;
+      uint8_t sig2 = addr_signals[i] & 0x0F;
+      if ( sig1 > 9 || sig2 > 9 )
+        throw BadAddrException("AbntAddr::setValue::: invalid input address value [%s]", hexdmp(addr_signals, addr_signals_sz).c_str());
+    }
   }
 };
 
