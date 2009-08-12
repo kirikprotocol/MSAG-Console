@@ -398,3 +398,4 @@ B3107: Aug 11, 2009
     MCISme	QosTimeToLive parameter was added, to support new DPF scheme expiration date
     MCISme	Warn about incorrect addresses in events instead of core dump
     MCISme	maxAbonentMessageLenInOctets parameter was added, requested banner length now depends on how message filled
+    Ussman	deadlock (in calling to markConnectAsClosed() and destructor from different threads) was fixed
