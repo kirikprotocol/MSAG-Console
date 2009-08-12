@@ -37,7 +37,7 @@ DuplicateRequestChecker::unregisterRequest(const USSProcSearchCrit& ussProcSearc
 }
 
 USSManConnect::USSManConnect(unsigned conn_id, logger::Logger* logger,
-                                     const UssService_CFG & cfg)
+                             const UssService_CFG & cfg)
   : _logger(logger), _cfg(cfg)
 {
   snprintf(_logId, sizeof(_logId)-1, "Con[%u]", conn_id);
