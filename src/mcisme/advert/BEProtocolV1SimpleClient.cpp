@@ -24,7 +24,7 @@ BEProtocolV1SimpleClient::readPacket(core::buffers::TmpBuf<char, MAX_PACKET_LEN>
   buf->SetPos(len);
 
   uint32_t word = ntohl(s[0]);
-  if (word != CMD_GET_BANNER_WITH_ID_RSP)   // тип должен быть ответом на запрос баннера
+  if (word != CMD_GET_BANNER_WITH_ID_RSP && word != CMD_BANNER_RSP )   // тип должен быть ответом на запрос баннера
   {
     smsc_log_warn(_logger, "BEProtocolV1SimpleClient::readPacket::: incorrect packet type %d", word);
     generateUnrecoveredProtocolError();
