@@ -77,14 +77,15 @@ BEProtocolV1SimpleClient::extractBanner(core::buffers::TmpBuf<char, MAX_PACKET_L
   util::SerializationBuffer buf4parsing;
   buf4parsing.setExternalBuffer(incomingPacketBuf.get() + BANNER_ID_OFFSET_IN_PACKET, static_cast<uint32_t>(incomingPacketBuf.GetPos() - BANNER_ID_OFFSET_IN_PACKET));
 
-  uint32_t bannerIdParamLen = buf4parsing.ReadNetInt32();
-  if ( bannerIdParamLen != BANNER_ID_LEN_SIZE ) {
-    smsc_log_warn(_logger, "BEProtocolV1SimpleClient::extractBanner::: bad banner id length (%d), expected (%d)", bannerIdParamLen, BANNER_ID_LEN_SIZE);
-    generateUnrecoveredProtocolError();
-  }
+  if ( _waitingForGetBannerWithIdRSP && bannerId ) {
+    uint32_t bannerIdParamLen = buf4parsing.ReadNetInt32();
+    if ( bannerIdParamLen != BANNER_ID_LEN_SIZE ) {
+      smsc_log_warn(_logger, "BEProtocolV1SimpleClient::extractBanner::: bad banner id length (%d), expected (%d)", bannerIdParamLen, BANNER_ID_LEN_SIZE);
+      generateUnrecoveredProtocolError();
+    }
 
-  if ( _waitingForGetBannerWithIdRSP && bannerId )
     *bannerId = buf4parsing.ReadNetInt32();
+  }
 
   buf4parsing.ReadString<uint32_t>(*banner);
 
