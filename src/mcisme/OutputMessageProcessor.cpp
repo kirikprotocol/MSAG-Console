@@ -74,7 +74,7 @@ OutputMessageProcessor::OutputMessageProcessor(TaskProcessor& taskProcessor,
   try {
     _advertising->init(connectTimeout);
   } catch (std::exception& ex) {
-    smsc_log_error(_logger, "OutputMessageProcessor::OutputMessageProcessor::: advertising client can't be initialized - catched exception '%s'", ex.what());
+    smsc_log_error(_logger, "OutputMessageProcessor::OutputMessageProcessor::: advertising client can't be initialized - caught exception '%s'", ex.what());
     _reconnectorThread.scheduleBrokenConnectionToReestablishing(_advertising);
   }
 }
@@ -103,9 +103,9 @@ OutputMessageProcessor::Execute()
         _messagesProcessorsDispatcher.markMessageProcessorAsFree(this);
       }
     } catch (std::exception& ex) {
-      smsc_log_error(_logger, "OutputMessageProcessor::Execute::: catched unexpected exception '%s'", ex.what());
+      smsc_log_error(_logger, "OutputMessageProcessor::Execute::: caught unexpected exception '%s'", ex.what());
     } catch (...) {
-      smsc_log_error(_logger, "OutputMessageProcessor::Execute::: catched unexpected exception '...'");
+      smsc_log_error(_logger, "OutputMessageProcessor::Execute::: caught unexpected exception '...'");
     }
   }
 
@@ -218,10 +218,10 @@ SendMessageEventHandler::getBanner(const AbntAddr& abnt,
     else
       smsc_log_debug(_logger, "getBanner Error. Error code = %d", rc);
   } catch (NetworkException& ex) {
-    smsc_log_error(_logger, "SendMessageEventHandler::getBanner::: catched NetworkException '%s'", ex.what());
+    smsc_log_error(_logger, "SendMessageEventHandler::getBanner::: caught NetworkException '%s'", ex.what());
     _reconnectorThread.scheduleBrokenConnectionToReestablishing(_advertising);
   } catch (UnrecoveredProtocolError& ex) {
-    smsc_log_error(_logger, "SendMessageEventHandler::getBanner::: catched UnrecoveredProtocolError");
+    smsc_log_error(_logger, "SendMessageEventHandler::getBanner::: caught UnrecoveredProtocolError");
     _reconnectorThread.scheduleBrokenConnectionToReestablishing(_advertising);
   }
 
@@ -235,10 +235,10 @@ SendMessageEventHandler::rollbackBanner(const BannerResponseTrace& bannerRespTra
   try {
     _advertising->rollbackBanner(bannerRespTrace.transactionId, bannerRespTrace.bannerId, bannerRespTrace.ownerId, bannerRespTrace.rotatorId);
   } catch (NetworkException& ex) {
-    smsc_log_error(_logger, "SendMessageEventHandler::rollbackBanner::: catched NetworkException '%s'", ex.what());
+    smsc_log_error(_logger, "SendMessageEventHandler::rollbackBanner::: caught NetworkException '%s'", ex.what());
     _reconnectorThread.scheduleBrokenConnectionToReestablishing(_advertising);
   } catch (UnrecoveredProtocolError& ex) {
-    smsc_log_error(_logger, "SendMessageEventHandler::rollbackBanner::: catched UnrecoveredProtocolError");
+    smsc_log_error(_logger, "SendMessageEventHandler::rollbackBanner::: caught UnrecoveredProtocolError");
     _reconnectorThread.scheduleBrokenConnectionToReestablishing(_advertising);
   }
 
