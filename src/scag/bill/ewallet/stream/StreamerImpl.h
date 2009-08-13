@@ -82,8 +82,8 @@ private:
             p->setUserId(o.getUserId());
             p->setWalletType(o.getWalletType());
             p->setAmount(o.getAmount());
-            p->setExternalId(o.getExternalId());
-            p->setTransId(o.getTransId());
+            if (o.hasExternalId()) p->setExternalId(o.getExternalId());
+            if (o.hasTransId()) p->setTransId(o.getTransId());
         }
         virtual void handle( stream::CommitResp& o ) {
             ewallet::CommitResp* p = new ewallet::CommitResp;
@@ -99,8 +99,8 @@ private:
             p->setAgentId(o.getAgentId());
             p->setUserId(o.getUserId());
             p->setWalletType(o.getWalletType());
-            p->setExternalId(o.getExternalId());
-            p->setTransId(o.getTransId());
+            if (o.hasExternalId()) p->setExternalId(o.getExternalId());
+            if (o.hasTransId()) p->setTransId(o.getTransId());
         }
         virtual void handle( stream::RollbackResp& o ) {
             ewallet::RollbackResp* p = new ewallet::RollbackResp;
@@ -207,8 +207,8 @@ private:
             p.setUserId(o.getUserId());
             p.setWalletType(o.getWalletType());
             p.setAmount(o.getAmount());
-            p.setExternalId(o.getExternalId());
-            p.setTransId(o.getTransId());
+            if (!o.getExternalId().empty()) p.setExternalId(o.getExternalId());
+            if (o.getTransId() != 0) p.setTransId(o.getTransId());
             proto_.encodeMessage(p,writer_);
             return true;
         }
@@ -219,8 +219,8 @@ private:
             p.setAgentId(o.getAgentId());
             p.setUserId(o.getUserId());
             p.setWalletType(o.getWalletType());
-            p.setExternalId(o.getExternalId());
-            p.setTransId(o.getTransId());
+            if (!o.getExternalId().empty()) p.setExternalId(o.getExternalId());
+            if (o.getTransId() != 0) p.setTransId(o.getTransId());
             proto_.encodeMessage(p,writer_);
             return true;
         }
