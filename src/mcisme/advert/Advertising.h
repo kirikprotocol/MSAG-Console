@@ -85,15 +85,17 @@ protected:
 
 struct BannerResponseTrace {
   BannerResponseTrace()
-    : transactionId(0), bannerId(0), ownerId(0), rotatorId(0) {}
+    : transactionId(0), bannerId(0), ownerId(0), rotatorId(0), bannerIdIsNotUsed(false) {}
     
   uint32_t transactionId, bannerId, ownerId, rotatorId;
+  bool bannerIdIsNotUsed;
 
   bool operator != (const BannerResponseTrace& rhs) {
     if ( transactionId != rhs.transactionId ||
          bannerId != rhs.bannerId ||
          ownerId != rhs.ownerId ||
-         rotatorId != rhs.rotatorId )
+         rotatorId != rhs.rotatorId ||
+         bannerIdIsNotUsed != rhs.bannerIdIsNotUsed)
       return true;
     else
       return false;
