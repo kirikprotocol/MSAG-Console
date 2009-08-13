@@ -101,6 +101,8 @@ void EwalletCheckCallParams::setResponse( ewallet::Response& resp )
 {
     ewallet::CheckResp& cResp = static_cast< ewallet::CheckResp& >(resp);
     transStatus_ = cResp.getTransStatus();
+    txAmount_ = cResp.getAmount();
+    txEndDate_ = cResp.getEnddate();
 }
 
 

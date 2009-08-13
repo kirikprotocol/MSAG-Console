@@ -51,9 +51,21 @@ void BillActionCheck::ContinueRunning( ActionContext& context )
     if ( ! preContinueRunning(context) ) return;
     // success
     bill::EwalletCheckCallParams* bp = static_cast<bill::EwalletCheckCallParams*>(context.getSession().getLongCallContext().getParams());
-    char buf[30];
-    sprintf(buf,"%u",bp->getTransStatus());
-    setBillingStatus(context,buf,true);
+    // char buf[30];
+    // sprintf(buf,"%u",bp->getTransStatus());
+    setBillingStatus(context,"",true);
+    if ( txStatus_.isFound() ) {
+        Property* p = txStatus_.getProperty(context);
+        if (p) p->setInt(bp->getTransStatus());
+    }
+    if ( txAmount_.isFound() ) {
+        Property* p = txAmount_.getProperty(context);
+        if (p) p->setInt(bp->getTxAmount());
+    }
+    if ( txEndDate_.isFound() ) {
+        Property* p = txEndDate_.getProperty(context);
+        if (p) p->setDate(time_t(bp->getTxEndDate()));
+    }
 }
 
 

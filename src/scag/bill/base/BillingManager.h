@@ -223,7 +223,8 @@ class EwalletCheckCallParams : public EwalletCallParams, public BillCheckCallPar
 public:
     // transit ctor
     EwalletCheckCallParams( BillTransitParamsData* data, lcm::LongCallContext* lcmCtx ) :
-    EwalletCallParams(true,lcmCtx), data_(data), transStatus_(0) {}
+    EwalletCallParams(true,lcmCtx), data_(data),
+    transStatus_(0), txAmount_(0), txEndDate_(0) {}
 
     virtual void setResponse( ewallet::Response& resp );
     virtual BillOpenCallParams* getOpen() { return 0; }
@@ -231,10 +232,14 @@ public:
     virtual EwalletCheckCallParams* getCheck() { return this; }
     virtual BillTransitParamsData* getTransitData() { return data_.get(); }
     int getTransStatus() const { return transStatus_; }
+    int getTxAmount() const { return txAmount_; }
+    int64_t getTxEndDate() const { return txEndDate_; }
 private:
     std::auto_ptr<BillTransitParamsData> data_;
     // returned values
     int  transStatus_;
+    int  txAmount_;
+    int64_t txEndDate_;
 };
 
 

@@ -69,9 +69,6 @@ void BillActionCloseTransit::postInit(const SectionParams& params,
         ewalletTransId_ = atoi(ewalletTransName_.c_str());
     }
 
-    /*
-    BillAction::init( params, propertyObject );
-
     if ( !params.Exists("action") )
         throw SCAGException( "Action '%s': missing 'action' parameter.", opname() );
 
@@ -82,6 +79,9 @@ void BillActionCloseTransit::postInit(const SectionParams& params,
     if ( !actionCommit_ && (str!="rollback") )
         throw SCAGException( "Action '%s': unrecognised 'action' parameter: '%s'",
                              opname(), str.c_str() );
+
+    /*
+    BillAction::init( params, propertyObject );
 
     smsc_log_debug(logger,"Action '%s' init...", opname());
      */

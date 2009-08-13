@@ -551,8 +551,9 @@ void BillingManagerImpl::Commit(billid_type billId, lcm::LongCallContext* lcmCtx
             pck->setAmount( int(tariffRec.getFloatPrice()+0.5) );
             if (!billingInfoStruct.externalId.empty()) {
                 pck->setExternalId(billingInfoStruct.externalId);
+            } else {
+                pck->setTransId(p->ewalletTransId);
             }
-            pck->setTransId(p->ewalletTransId);
             std::auto_ptr<ewallet::Request> req(pck.release());
             EwalletCloseCallParams* closeParams = static_cast<EwalletCloseCallParams*>(lcmCtx->getParams());
             BillTransitParamsData* paramsData = new BillTransitParamsData;
@@ -622,8 +623,7 @@ void BillingManagerImpl::CommitTransit( BillCloseCallParams& params, lcm::LongCa
     pck->setAmount( int(tariffRec.getFloatPrice()+0.5) );
     if (!billingInfoStruct.externalId.empty()) {
         pck->setExternalId(billingInfoStruct.externalId);
-    }
-    if (data->transId != 0 ) {
+    } else {
         pck->setTransId(data->transId);
     }
     std::auto_ptr<ewallet::Request> req(pck.release());
@@ -659,8 +659,7 @@ void BillingManagerImpl::RollbackTransit( BillCloseCallParams& params, lcm::Long
     // pck->setAmount( int(tariffRec.getFloatPrice()+0.5) );
     if (!billingInfoStruct.externalId.empty()) {
         pck->setExternalId(billingInfoStruct.externalId);
-    }
-    if (data->transId != 0 ) {
+    } else {
         pck->setTransId(data->transId);
     }
     std::auto_ptr<ewallet::Request> req(pck.release());
@@ -696,8 +695,7 @@ void BillingManagerImpl::Check( BillCheckCallParams& params, lcm::LongCallContex
     // pck->setAmount( int(tariffRec.getFloatPrice()+0.5) );
     if (!billingInfoStruct.externalId.empty()) {
         pck->setExternalId(billingInfoStruct.externalId);
-    }
-    if (data->transId != 0 ) {
+    } else {
         pck->setTransId(data->transId);
     }
     std::auto_ptr<ewallet::Request> req(pck.release());
