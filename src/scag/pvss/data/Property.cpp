@@ -21,13 +21,14 @@ const char* DATE_PREF = "DATE: ";
 const char* TIMEFORMAT = "%Y/%m/%d %H:%M:%S";
 const char* FINALDATE = " FINAL_DATE: %Y/%m/%d %H:%M:%S";
 const char* LIFETIME = " LIFE_TIME: ";
-#define TIMEPOLPREF "TIME_POLICY: "
+#define TIMEPOLPREF " TIME_POLICY: "
 
-size_t timePolicyFromString( const std::string& from, TimePolicy& tp )
+size_t timePolicyFromString( const std::string& from, TimePolicy& tp, size_t* start = 0 )
 {
-    size_t tpos = from.find(TIMEPOLPREF);
-    if ( tpos == std::string::npos ) return tpos;
-    tpos += strlen(TIMEPOLPREF);
+    size_t startpos = from.find(TIMEPOLPREF);
+    if ( start ) *start = startpos;
+    if ( startpos == std::string::npos ) return startpos;
+    size_t tpos = startpos + strlen(TIMEPOLPREF);
 #define TIMEPOLCMP(x) ( from.substr(tpos,strlen(#x)) == #x ) { tp = x; return tpos + strlen(#x); }
     if TIMEPOLCMP(INFINIT)
         else if TIMEPOLCMP(FIXED)
@@ -180,7 +181,7 @@ const std::string& Property::toString() const
             break;
     }
 
-    propertyStr_.append(" ");
+    // propertyStr_.append(" ");
     propertyStr_.append(timePolicyToString(time_policy));
 
     if(time_policy != INFINIT)
@@ -265,9 +266,17 @@ void Property::fromString( const std::string& input ) /* throw (exceptions::IOEx
     // parse time policy
     {
         TimePolicy tp;
-        size_t next = timePolicyFromString( from, tp );
+        size_t startpos;
+        size_t next = timePolicyFromString( from, tp, &startpos );
         if ( next == std::string::npos ) throw exceptions::IOException("cannot read time policy type: %s", from.c_str());
         time_policy = tp;
+        size_t lastquote;
+        if ( type == STRING && startpos > 1 && (lastquote = from.rfind("\"",startpos)) != std::string::npos ) {
+            // string value contains a quote
+            s_val.reserve( s_val.size() + 2 + lastquote );
+            s_val.push_back('"');
+            s_val.append(from.substr(0,lastquote));
+        }
         from.erase(0,next);
     }
 

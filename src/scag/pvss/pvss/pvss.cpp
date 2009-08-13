@@ -258,9 +258,9 @@ int main(int argc, char* argv[]) {
         if ( sarg != "--help" ) {
             if (extraMsg.empty()) extraMsg = "Unknown option " + sarg + "\n";
         }
-        fprintf(stderr,"%sUsage: %s [--recovery] [--check-index] [--backup YYYY-MM-DD-HH]\n",
+        fprintf(stderr,"%sUsage: %s [--recovery] [--check-index] [--backup]\n",
                 extraMsg.c_str(), argv[0]);
-        smsc_log_error(logger,"%sUsage: %s [--recovery] [--check-index]",
+        smsc_log_error(logger,"%sUsage: %s [--recovery] [--check-index] [--backup]",
                        extraMsg.c_str(), argv[0]);
         ::exit(1);
     }

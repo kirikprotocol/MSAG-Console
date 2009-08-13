@@ -4,6 +4,7 @@
 #include "scag/pvss/data/ProfileKey.h"
 #include "scag/pvss/data/Property.h"
 #include "scag/pvss/api/packets/SetCommand.h"
+#include "scag/pvss/api/packets/DelCommand.h"
 #include "scag/pvss/api/packets/ProfileRequest.h"
 #include "scag/pvss/api/core/server/Server.h"
 #include "scag/util/PtrDestroy.h"
@@ -252,13 +253,11 @@ int BackupProcessor::BackupProcessingTask::Execute()
             try {
                 fd.ROpen(fullname.c_str());
 
-                std::string line;
+                std::string line, prevline;
                 line.reserve(200);
-                std::auto_ptr<char> prop;
-                size_t proplen = 0;
                 while ( fd.ReadLine(line) ) {
 
-                    if ( isStopping ) break;
+                    if ( isStopping && prevline.empty() ) break;
 
                     // processing one line
 
@@ -266,34 +265,46 @@ int BackupProcessor::BackupProcessingTask::Execute()
                     unsigned day, month, year, hour, minute, second, msec, thread;
                     int ikey;
                     char cat[30], skey[60];
-                    {
-                        const size_t ls = line.size()+1;
-                        if ( proplen < ls ) {
-                            prop.reset(new char[ls]);
-                            proplen = ls;
-                        }
-                    }
+                    int propstart;
                     
-                    int sc;
-                    if ( scope_ == SCOPE_ABONENT ) {
-                        sc = sscanf(line.c_str(), 
-                                    "%c %02u-%02u-%04u %02u:%02u:%02u,%03u %u %s %c key=%s property=%[^\n]",
-                                    &logLevel,&day,&month,&year,&hour,&minute,&second,&msec,&thread,
-                                    cat, &act, skey, prop.get() );
-                    } else {
-                        sc = sscanf(line.c_str(), 
-                                    "%c %02u-%02u-%04u %02u:%02u:%02u,%03u %u %s %c key=%u property=%[^\n]",
-                                    &logLevel,&day,&month,&year,&hour,&minute,&second,&msec,&thread,
-                                    cat, &act, &ikey, prop.get() );
-                    }
-                    if ( sc <= 0 ) {
-                        smsc_log_warn(log_,"cannot sscanf(%s): %d",line.c_str(),sc);
-                        continue;
-                    }
-                    // smsc_log_debug(log_,"sc   = %d",sc);
-                    // smsc_log_debug(log_,"cat  = %s",cat);
-                    // smsc_log_debug(log_,"prop = %s",prop.get());
-                        
+                    bool scanfok = false;
+                    do {
+
+                        int sc;
+                        if ( scope_ == SCOPE_ABONENT ) {
+                            sc = sscanf(line.c_str(), 
+                                        "%c %02u-%02u-%04u %02u:%02u:%02u,%03u %u %s %c key=%s %n",
+                                        &logLevel,&day,&month,&year,&hour,&minute,&second,&msec,&thread,
+                                        cat, &act, skey, &propstart );
+                        } else {
+                            sc = sscanf(line.c_str(), 
+                                        "%c %02u-%02u-%04u %02u:%02u:%02u,%03u %u %s %c key=%u %n",
+                                        &logLevel,&day,&month,&year,&hour,&minute,&second,&msec,&thread,
+                                        cat, &act, &ikey, &propstart );
+                        }
+                        if ( sc < 12 ) {
+                            smsc_log_warn(log_,"cannot sscanf(%s): %d",line.c_str(),sc);
+                            if ( ! prevline.empty() ) {
+                                // trying to combine with prevline
+                                prevline.reserve(prevline.size() + line.size() + 2);
+                                prevline.push_back('\n');
+                                prevline.append(line);
+                                line.swap(prevline);
+                                prevline.clear();
+                                continue;
+                            }
+                        } else {
+                            scanfok = true;
+                            if ( ! prevline.empty() ) {
+                                smsc_log_warn(log_,"scanf ok while prevline=%s", prevline.c_str());
+                                prevline.clear();
+                            }
+                        }
+
+                        break;
+                    } while ( true );
+                    if ( ! scanfok ) { continue; }
+
                     ProfileKey profileKey;
                     switch (scope_) {
                     case (SCOPE_ABONENT) : profileKey.setAbonentKey(skey); break;
@@ -302,17 +313,57 @@ int BackupProcessor::BackupProcessingTask::Execute()
                     case (SCOPE_PROVIDER) : profileKey.setProviderKey(ikey); break;
                     default: throw smsc::util::Exception("cannot set profile key of unknown scope %u", scope_);
                     }
-                        
-                    Property property;
-                    try {
-                        property.fromString(prop.get());
-                    } catch (...) {
-                        smsc_log_warn(log_,"cannot parse property: %s", prop.get());
+
+                    ProfileCommand* cmd = 0;
+                    switch (act) {
+                    case 'A' :
+                    case 'U' :
+                    case 'E' : {
+                        int shift;
+                        int sc = sscanf( line.c_str()+propstart,"property=%n", &shift );
+                        if ( sc < 0 ) {
+                            smsc_log_warn(log_,"cannot scanf property: %s", line.c_str()+propstart);
+                            prevline = line;
+                            continue;
+                        }
+                        propstart += shift;
+                        Property property;
+                        try {
+                            property.fromString( line.c_str() + propstart );
+                        } catch (...) {
+                            smsc_log_warn(log_,"cannot parse property: %s", line.c_str() + propstart );
+                            prevline = line;
+                            continue;
+                        }
+                        if ( act != 'E' ) {
+                            SetCommand* kmd = new SetCommand();
+                            kmd->setProperty(property);
+                            cmd = kmd;
+                        } else {
+                            DelCommand* kmd = new DelCommand();
+                            kmd->setVarName(property.getName());
+                            cmd = kmd;
+                        }
+                        break;
+                    }
+                    case 'D' : {
+                        int shift;
+                        int sc = sscanf( line.c_str()+propstart,"name=%n", &shift );
+                        if ( sc < 0 ) {
+                            smsc_log_warn(log_,"cannot scanf property name: %s", line.c_str()+propstart);
+                            prevline = line;
+                            continue;
+                        }
+                        DelCommand* kmd = new DelCommand();
+                        kmd->setVarName( line.c_str() + propstart + shift );
+                        cmd = kmd;
+                        break;
+                    }
+                    default:
+                        smsc_log_warn(log_,"unknown action '%c' in %s",act,line.c_str());
                         continue;
                     }
 
-                    SetCommand* cmd = new SetCommand();
-                    cmd->setProperty(property);
                     ProfileRequest request( profileKey, cmd );
 
                     // passing an entry to a pvss dispatcher
