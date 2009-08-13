@@ -10,8 +10,10 @@ namespace mcisme {
 
 class BEProtocolV1SimpleClient : public AdvertisingImpl {
 public:
-  BEProtocolV1SimpleClient(const std::string& host, int port, int timeout);
+  BEProtocolV1SimpleClient(const std::string& host, int port, int timeout,
+                           bool use_get_banner_with_id_req = true);
 
+  static const unsigned int OLD_PROTOCOL_VERSION = 0;
   static const unsigned int PROTOCOL_VERSION = 1;
 protected:
   virtual uint32_t readAdvert(advertising_item* advItem,
@@ -29,7 +31,7 @@ protected:
   uint32_t readPacket(core::buffers::TmpBuf<char, MAX_PACKET_LEN>* buf);
 
   int extractBanner(core::buffers::TmpBuf<char, MAX_PACKET_LEN>& incomingPacketBuf,
-                    std::string* banner, uint32_t* bannerId);
+                    std::string* banner, uint32_t* bannerId=NULL);
 
   virtual void sendErrorInfo(const BannerRequest& banReq,
                              int rc,
@@ -59,7 +61,8 @@ protected:
     BANNER_RESPONSE_TIMEOUT = 1,
     BANNER_OTHER_ERROR = 100
   };
-
+private:
+  bool _waitingForGetBannerWithIdRSP;
 };
 
 }}
