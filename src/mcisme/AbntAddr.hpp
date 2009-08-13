@@ -316,8 +316,8 @@ public:
     for(unsigned i=0; i<addr_signals_sz; ++i) {
       uint8_t sig1 = (addr_signals[i] >> 4) & 0x0F;
       uint8_t sig2 = addr_signals[i] & 0x0F;
-      if ( sig1 > 9 || sig2 > 9 )
-        throw BadAddrException("AbntAddr::setValue::: invalid input address value [%s]", hexdmp(addr_signals, addr_signals_sz).c_str());
+      if ( (sig1 > 9 && sig1 != 0x0f) || (sig2 > 9 && sig2 != 0x0f) )
+        throw BadAddrException("AbntAddr::checkAddrValueValidity::: invalid input address value [%s]", hexdmp(addr_signals, addr_signals_sz).c_str());
     }
   }
 };
