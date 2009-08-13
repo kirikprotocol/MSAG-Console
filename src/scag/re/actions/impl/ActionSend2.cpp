@@ -180,9 +180,9 @@ bool ActionSend::run(ActionContext& context)
             if(s3.length())
             {
                 Address a1(s3.c_str());
-                s3 = a1.toString();
+                s3 = a1.toString().c_str();
             }
-            ev->pAbonentsNumbers += a.toString();
+            ev->pAbonentsNumbers += a.toString().c_str();
             if(s3.length())
                 ev->pAbonentsNumbers += "," + s3;
             ev->pAbonentsNumbers += ";";

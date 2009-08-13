@@ -304,7 +304,7 @@ void BillActionPreOpen::init( const SectionParams& params,
     if ( hasAbonent_ && (abonentType_ == ftUnknown) ) {
         // address
         smsc::sms::Address temp(abonentName_.c_str());
-        abonentName_ = temp.toString();
+        abonentName_ = temp.toString().c_str();
     }
 
     externalIdType_ = CheckParameter( params,

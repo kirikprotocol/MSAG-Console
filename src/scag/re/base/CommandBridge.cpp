@@ -278,7 +278,7 @@ void CommandBridge::RegisterTrafficEvent(const actions::CommandProperty& command
 
     ev->Header.lDateTime = (uint64_t)tv.tv_sec * 1000 + tv.tv_usec / 1000;
 
-    ev->Header.pAbonentNumber = commandProperty.abonentAddr.toString();
+    ev->Header.pAbonentNumber = commandProperty.abonentAddr.toString().c_str();
     ev->Header.sCommandStatus = commandProperty.status;
     ev->Header.iOperatorId = commandProperty.operatorId;
     

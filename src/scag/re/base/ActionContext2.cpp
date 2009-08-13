@@ -179,7 +179,7 @@ Property* ActionContext::getProperty( const std::string& var )
 
 void ActionContext::getBillingInfoStruct( bill::BillingInfoStruct& bis )
 {
-    bis.AbonentNumber = commandProperty_->abonentAddr.toString();
+    bis.AbonentNumber = commandProperty_->abonentAddr.toString().c_str();
     bis.serviceId = commandProperty_->serviceId;
     bis.protocol = commandProperty_->protocol;
     bis.providerId = commandProperty_->providerId;

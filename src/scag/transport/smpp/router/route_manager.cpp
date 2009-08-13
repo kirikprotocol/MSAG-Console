@@ -230,9 +230,9 @@ RouteRecord* findInSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* r,int& xcm
     res.reserve(128);
     res=!xcmp?(strong?"strong":"weak  "):"none  ";
     res+=" matching by dest address with tuple {";
-    res+=node->record->info.source.toString();
+    res+=node->record->info.source.toString().c_str();
     res+="} -> {";
-    res+=node->record->info.dest.toString();
+    res+=node->record->info.dest.toString().c_str();
     res+='}';
   }
   if ( xcmp == 0 )
@@ -242,7 +242,7 @@ RouteRecord* findInSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* r,int& xcm
       __trace__("weak eqaul");
       RouteRecord* rec;
       int left = 1;
-      int right = node->child.size();
+      int right = int(node->child.size());
       __trace2__("+childs :%d",right);
 
       //for ( int i=0; i < right; ++i ) print(node->child[i]->record,"+@SRC@");
@@ -285,9 +285,9 @@ RouteRecord* findInTreeRecurse(RouteTreeNode* node,RouteRecord* r,int& xcmp,vect
     res.reserve(128);
     res=!xcmp?(strong?"strong":"weak  "):"none  ";
     res+=" matching by dest address with tuple {";
-    res+=node->record->info.source.toString();
+    res+=node->record->info.source.toString().c_str();
     res+="} -> {";
-    res+=node->record->info.dest.toString();
+    res+=node->record->info.dest.toString().c_str();
     res+='}';
     trace_->push_back(res);
   }
@@ -300,7 +300,7 @@ RouteRecord* findInTreeRecurse(RouteTreeNode* node,RouteRecord* r,int& xcmp,vect
       // find by dest
       RouteRecord* rec;
       int left = 1;
-      int right = node->child.size();
+      int right = int(node->child.size());
 
       __trace2__("dest child: %d",right);
       //for ( int i=0; i < right; ++i ) print(node->child[i]->record,"@DST@");
@@ -333,7 +333,7 @@ find_by_source:
     {
       RouteRecord* rec;
       int left = 1;
-      int right = node->sources.size();
+      int right = int(node->sources.size());
      // for ( int i=0; i < right; ++i ) print(node->sources[i]->record,"@SRC@");
       __require__ ( right > 0 );
       __trace2__("sorces: %d",right);
@@ -423,13 +423,13 @@ int addRouteIntoSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* rec,vector<st
         res="duplicated route '";
         res+=node->record->info.routeId.c_str();
         res+="':\n    ";
-        res+=node->record->info.source.toString();
+        res+=node->record->info.source.toString().c_str();
         res+='(';
         res+=node->record->info.srcSmeSystemId.c_str();
         res+=") [";
         res+=node->record->info.srcSubj.c_str();
         res+="] ->\n    ";
-        res+=node->record->info.dest.toString();
+        res+=node->record->info.dest.toString().c_str();
         res+='(';
         res+=node->record->info.smeSystemId.c_str();
         res+=") [";
@@ -439,13 +439,13 @@ int addRouteIntoSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* rec,vector<st
         res="  exists as '";
         res+=rec->info.routeId.c_str();
         res+="':\n    ";
-        res+=rec->info.source.toString();
+        res+=rec->info.source.toString().c_str();
         res+='(';
         res+=rec->info.srcSmeSystemId.c_str();
         res+=") [";
         res+=rec->info.srcSubj.c_str();
         res+="]  ->\n    ";
-        res+=rec->info.dest.toString();
+        res+=rec->info.dest.toString().c_str();
         res+='(';
         res+=rec->info.smeSystemId.c_str();
         res+=") [";
@@ -458,7 +458,7 @@ int addRouteIntoSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* rec,vector<st
     {
       __trace__("week equal");
       int left = 1;
-      int right = node->child.size();
+      int right = int(node->child.size());
       if ( right > 0 ) for(;right>=left;)
       {
         int ptr = (right+left) >> 1;
@@ -501,7 +501,7 @@ int addRouteIntoTreeRecurse(RouteTreeNode* node,RouteRecord* rec,vector<string>*
     if ( strong )
     {
       int left = 1;
-      int right = node->sources.size();
+      int right = int(node->sources.size());
       //if ( right > 0 )
       __require__(right>0);
       for(;right >= left;)
@@ -533,7 +533,7 @@ int addRouteIntoTreeRecurse(RouteTreeNode* node,RouteRecord* rec,vector<string>*
     }
   find_child:
     int left = 1;
-    int right = node->child.size();
+    int right = int(node->child.size());
     if ( right > 0 ) for(;right>=left;)
     {
       int ptr = (right+left) >> 1;
@@ -701,11 +701,11 @@ bool RouteManager::lookup(SmeIndex srcidx, const Address& source, const Address&
     std::string res;
     res.reserve(128);
     res="route found, ";
-    res+=rec->info.source.toString();
+    res+=rec->info.source.toString().c_str();
     res+='(';
     res+=rec->info.srcSmeSystemId.c_str();
     res+=") -> ";
-    res+=rec->info.dest.toString();
+    res+=rec->info.dest.toString().c_str();
     res+='(';
     res+=rec->info.smeSystemId.c_str();
     res+=')';

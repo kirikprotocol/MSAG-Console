@@ -134,10 +134,10 @@ namespace scag { namespace sessions {
             gettimeofday(&tv,0);
             BornMicrotime = tv;
 
-            sAddr =  addr.toString();
+            sAddr = addr.toString().c_str();
 
             char buff[128];
-            sprintf(buff,"/%ld%d", BornMicrotime.tv_sec, BornMicrotime.tv_usec / 1000);
+            sprintf(buff,"/%ld%ld", BornMicrotime.tv_sec, BornMicrotime.tv_usec / 1000);
             sAddr.append(buff);
         }
 
