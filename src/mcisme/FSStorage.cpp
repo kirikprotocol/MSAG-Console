@@ -54,7 +54,7 @@ FSStorage::FSStorage(): logger(smsc::logger::Logger::getInstance("mci.fsStor")),
 FSStorage::~FSStorage()
 {
   CloseFiles();
-  smsc_log_debug(logger, "FSStorage: Destroed.\n");
+  smsc_log_debug(logger, "FSStorage: Destroed.");
 }
 
 int FSStorage::Init(ConfigView* storageConfig, DeliveryQueue* pDeliveryQueue)
@@ -238,7 +238,7 @@ FSStorage::OpenFiles(void)
   }
   catch(FileException ex)
   {
-    smsc_log_debug(logger, "FSStorage: error dat_file - %s\n", ex.what());
+    smsc_log_debug(logger, "FSStorage: error dat_file - %s", ex.what());
     return 1;
   }
 
@@ -252,7 +252,7 @@ void FSStorage::CloseFiles(void)
 
 int FSStorage::LoadEvents(DeliveryQueue* pDeliveryQueue)
 {
-  smsc_log_info(logger, "FSStorage: Loading DataBase from files.......\n");
+  smsc_log_info(logger, "FSStorage: Loading DataBase from files.......");
 
   unsigned int cell_num=0;
 
@@ -268,10 +268,12 @@ int FSStorage::LoadEvents(DeliveryQueue* pDeliveryQueue)
         freeCells.AddCell(cell_num);
       else
       {
-        AbntAddr calledAbnt(&abntEvent.calledNum);
-        hashAbnt.Insert(calledAbnt, cell_num);
-        if ( pDeliveryQueue )
-          pDeliveryQueue->Schedule(calledAbnt, false, abntEvent.schedTime, abntEvent.lastError);
+        try {
+          AbntAddr calledAbnt(&abntEvent.calledNum);
+          hashAbnt.Insert(calledAbnt, cell_num);
+          if ( pDeliveryQueue )
+            pDeliveryQueue->Schedule(calledAbnt, false, abntEvent.schedTime, abntEvent.lastError);
+        } catch (BadAddrException& ex) {}
       }
       cell_num++;
     }
@@ -319,7 +321,7 @@ int FSStorage::CreateAbntEvents(const AbntAddr& CalledNum, const MCEvent& event,
   }
   catch(FileException ex)
   {
-    smsc_log_debug(logger, "FSStorage: Error in CreateAbntEvents - %s\n", ex.what());
+    smsc_log_debug(logger, "FSStorage: Error in CreateAbntEvents - %s", ex.what());
     return 1;
   }
   hashAbnt.Insert(CalledNum, cell);
@@ -337,7 +339,7 @@ int FSStorage::DestroyAbntEvents(const AbntAddr& CalledNum)
     dat_file_cell destroyedCell={0};
     _dat_file.Write((void*)&destroyedCell, sizeof(destroyedCell));
   } catch(FileException ex) {
-    smsc_log_debug(logger, "FSStorage: DestroyAbntEvents: !! Error !! - %s\n", ex.what());
+    smsc_log_debug(logger, "FSStorage: DestroyAbntEvents: !! Error !! - %s", ex.what());
     return 1;
   }
 
@@ -358,7 +360,7 @@ int FSStorage::SaveAbntEvents(const AbntAddr& CalledNum, const dat_file_cell* pA
   }
   catch(FileException ex)
   {
-    smsc_log_debug(logger, "FSStorage: Error in SaveAbntEvents - %s\n", ex.what());
+    smsc_log_debug(logger, "FSStorage: Error in SaveAbntEvents - %s", ex.what());
     return 1;
   }
   return 0;
@@ -375,7 +377,7 @@ int FSStorage::LoadAbntEvents(const AbntAddr& CalledNum, dat_file_cell* pAbntEve
   }
   catch(FileException ex)
   {
-    smsc_log_debug(logger, "FSStorage: Error in LoadAbntEvents - %s\n", ex.what());
+    smsc_log_debug(logger, "FSStorage: Error in LoadAbntEvents - %s", ex.what());
     return 1;
   }
   return 0;
@@ -558,7 +560,7 @@ int FSStorage::IncrDatFile(const uint32_t& num_cells)
     smsc_log_debug(logger, "FSStorage::IncrDatFile::: extending completed");
   } catch(FileException ex) {
     delete[] buf;
-    smsc_log_debug(logger, "FSStorage: Error in IncrDatFile - %s\n", ex.what());
+    smsc_log_debug(logger, "FSStorage: Error in IncrDatFile - %s", ex.what());
     return 2;
   } catch(...) {
     delete[] buf;
