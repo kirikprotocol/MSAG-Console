@@ -818,7 +818,8 @@ bool TaskProcessor::invokeProcessDataSmResp(int cmdId, int status, int seqNum)
     _outputMessageProcessorsDispatcher->dispatchSendAbntOnlineNotifications(pInfo.release(), abntProfile);
   } else {
     BannerResponseTrace emptyBannerRespTrace;
-    if ( pInfo->bannerRespTrace != emptyBannerRespTrace )
+    if ( pInfo->bannerRespTrace != emptyBannerRespTrace &&
+         pInfo->bannerRespTrace.bannerIdIsNotUsed  == false )
       _outputMessageProcessorsDispatcher->dispatchBERollbackRequest(pInfo->bannerRespTrace);
 
     statistics->incFailed(static_cast<unsigned>(pInfo->events.size()));
@@ -843,8 +844,9 @@ TaskProcessor::invokeProcessSubmitSmResp(int cmdId, int status, int seqNum)
   BannerResponseTrace bannerRespTrace = deleteBannerInfo(seqNum);
   BannerResponseTrace emptyBannerRespTrace;
 
-  if(status != smsc::system::Status::OK &&
-     bannerRespTrace != emptyBannerRespTrace)
+  if (status != smsc::system::Status::OK &&
+      bannerRespTrace != emptyBannerRespTrace &&
+      bannerRespTrace.bannerIdIsNotUsed  == false)
   {
     _outputMessageProcessorsDispatcher->dispatchBERollbackRequest(bannerRespTrace);
   }
@@ -896,7 +898,8 @@ void TaskProcessor::invokeProcessDataSmTimeout(void)
     seqNum = (*iter).first; pInfo = (*iter).second;
     try {
       BannerResponseTrace emptyBannerRespTrace;
-      if ( pInfo->bannerRespTrace != emptyBannerRespTrace )
+      if ( pInfo->bannerRespTrace != emptyBannerRespTrace &&
+           pInfo->bannerRespTrace.bannerIdIsNotUsed  == false )
         _outputMessageProcessorsDispatcher->dispatchBERollbackRequest(pInfo->bannerRespTrace);
 
       time_t schedTime = pDeliveryQueue->Reschedule(pInfo->abnt);
