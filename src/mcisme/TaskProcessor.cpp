@@ -634,9 +634,9 @@ int TaskProcessor::Execute()
       }
       else
         smsc_log_debug(logger, "Event: for abonent %s skipped (userMask=%02X, eventCause=%02X)", to.getText().c_str(), profile.eventMask, event.cause);
-    }
-    catch(...)
-    {
+    } catch (BadAddrException& ex) {
+      smsc_log_error(logger, "TaskProcessor::Execute::: caught BadAddrException [%s]", ex.what());
+    } catch (...) {
       smsc_log_error(logger, "Exception in TaskProcessor::Execute()");
     }
   }
