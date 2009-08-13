@@ -106,7 +106,8 @@ public:
       }
     }else
     {
-      rv=me.getEntity();
+      const time_t now = time(0);
+      rv=me.getEntity(now);
     }
     if(rv)
     {
@@ -297,9 +298,8 @@ protected:
             it->second.toit=timeMap.insert(TimeoutsMap::value_type(time(NULL)+expirationTimeout,it));
         }
 
-        void expireMappings()
+        void expireMappings(time_t now)
         {
-            time_t now=time(NULL);
             TimeoutsMap::iterator it;
             while(!timeMap.empty() && now>(it=timeMap.begin())->first)
             {
@@ -310,13 +310,14 @@ protected:
 
         SmppEntity* getEntity(const Address& addr)
         {
+            const time_t now = time(0);
             smsc::core::synchronization::MutexGuard mg(mtx);
             SmppEntity* ptr=getStoredMapping(addr);
             if(!ptr)
             {
                 mtx.Unlock();
                 try{
-                    ptr=getEntity();
+                    ptr=getEntity(now);
                     createStoredMapping(addr,ptr);
                 }catch(...)
                     {
@@ -324,11 +325,11 @@ protected:
                     }
                 mtx.Lock();
             }
-            expireMappings();
+            expireMappings(now);
             return ptr;
         }
 
-        SmppEntity* getEntity()
+        SmppEntity* getEntity(time_t now)
         {
             smsc::core::synchronization::MutexGuard mg(mtx);
             if(info.policy==bpRandom)
