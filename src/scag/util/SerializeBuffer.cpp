@@ -22,7 +22,7 @@ SerializeBuffer& SerializeBuffer::operator >> (std::string& str)
 
 SerializeBuffer& SerializeBuffer::operator << (std::string& str)
 {
-    uint8_t len = str.size();
+    uint8_t len = uint8_t(str.size());
     if (len>255) throw smsc::util::Exception("Attempt to write %d byte in buffer with size %d",(int)len,255);
         
     this->Append((char*)&len,1);
@@ -52,7 +52,7 @@ SerializeBuffer& SerializeBuffer::operator>>(Address& addr)
 
 SerializeBuffer& SerializeBuffer::operator<<(const char* str)
 {
-    uint8_t len=strlen(str);
+    uint8_t len=uint8_t(strlen(str));
     this->Append((char*)&len,1);
     this->Append(str,len);
     return *this;
@@ -110,7 +110,7 @@ SerializeBuffer& SerializeBuffer::operator>>(uint64_t& val)
 
 SerializeBuffer& SerializeBuffer::operator<<(time_t val)
 {
-    uint32_t tmp=ntohl(val);
+    uint32_t tmp=uint32_t(ntohl(val));
     this->Append((char*)&tmp,4);
     return *this;
 }

@@ -208,10 +208,10 @@ private:
 
     void makeFreeChain()
     {
-        unsigned freeChainSize = std::min(fileSize_,size_t(20000U));
+        unsigned freeChainSize = unsigned(std::min(fileSize_,size_t(20000U)));
         freeChain_.reserve(freeChainSize);
         unsigned iend = unsigned(fileCount_*fileSize_+freeChainSize);
-        for ( unsigned i = fileCount_ * fileSize_; i < iend; ++i ) {
+        for ( unsigned i = unsigned(fileCount_ * fileSize_); i < iend; ++i ) {
             freeChain_.push_back(i);
         }
     }
@@ -237,9 +237,9 @@ struct BlocksHSStorage2::StorageState
     StorageState() {}
 
     StorageState( const BlocksHSStorage2& bhs ) :
-    fileCount(bhs.files_.size()),
-    freeCount(bhs.freeCount_),
-    ffb(bhs.freeChain_.empty() ? bhs.packer_.invalidIndex() : bhs.freeChain_.front()) {}
+    fileCount(unsigned(bhs.files_.size())),
+    freeCount(unsigned(bhs.freeCount_)),
+    ffb(unsigned(bhs.freeChain_.empty() ? bhs.packer_.invalidIndex() : bhs.freeChain_.front())) {}
 
     static size_t dataSize() { return 12; }
 
@@ -304,13 +304,13 @@ public:
         char* ptr = reinterpret_cast<char*>(p);
         ptr = oldState.saveData(ptr);
         ptr = newState.saveData(ptr);
-        io::EndianConverter::set32(ptr,oldBufSize);
+        io::EndianConverter::set32(ptr,uint32_t(oldBufSize));
         ptr += 4;
         if ( oldBufSize > 0 ) {
             memcpy(ptr,oldBuf,oldBufSize);
             ptr += oldBufSize;
         }
-        io::EndianConverter::set32(ptr,newBufSize);
+        io::EndianConverter::set32(ptr,uint32_t(newBufSize));
         ptr += 4;
         if ( newBufSize > 0 ) {
             memcpy(ptr,newBuf,newBufSize);
@@ -1083,7 +1083,7 @@ int BlocksHSStorage2::doRecover( IndexRescuer* indexRescuer )
     // writing free chain information
     freeCount_ = freeChainer.freeCount();
     freeChain_.clear();
-    if (freeCount_ > 0) freeChain_.push_back(freeChainer.ffb());
+    if (freeCount_ > 0) freeChain_.push_back(unsigned(freeChainer.ffb()));
     Transaction trans(*this);
     trans.newState = StorageState(*this);
     try {
@@ -1218,7 +1218,7 @@ bool BlocksHSStorage2::readFreeBlocks( size_t needBlocks, bool allowNewFile )
         // FIXME: add a check for freeCells()
         
         lastBlock = bn.nextBlock();
-        freeChain_.push_back(pos2idx(lastBlock));
+        freeChain_.push_back(unsigned(pos2idx(lastBlock)));
         if ( --counter == 0 ) {
             rv = true;
             break;
@@ -1374,8 +1374,8 @@ void BlocksHSStorage2::saveJournalHeader( void* p ) const
     // make the header
     register char* ptr = reinterpret_cast<char*>(p);
     io::EndianConverter::set32(ptr,version_);
-    io::EndianConverter::set32(ptr+4,packer_.blockSize());
-    io::EndianConverter::set32(ptr+8,fileSize_);
+    io::EndianConverter::set32(ptr+4,uint32_t(packer_.blockSize()));
+    io::EndianConverter::set32(ptr+8,uint32_t(fileSize_));
 }
 
 

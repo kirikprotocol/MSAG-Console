@@ -176,10 +176,10 @@ void JournalFile::open( bool readonly )
                 ++i;
             }
             // shifting back
-            for ( RecordList::const_iterator i = records.begin();
-                  i != records.end();
-                  ++i ) {
-                (*i)->setSerial( (*i)->getSerial() - serialShift );
+            for ( RecordList::const_iterator ir = records.begin();
+                  ir != records.end();
+                  ++ir ) {
+                (*ir)->setSerial( (*ir)->getSerial() - serialShift );
             }
         }
 
@@ -266,7 +266,7 @@ bool JournalFile::writeRecord( const JournalRecord& record )
     const bool lastRecord = ( serial % maxRecords_ ) == 0;
     // record.setSerial( serial );
 
-    const uint32_t jnlSize = constantRecordSize() + record.savedDataSize();
+    const uint32_t jnlSize = uint32_t(constantRecordSize() + record.savedDataSize());
     journal_.resize( ( needHeader ? store_.journalHeaderSize() : 0 ) +
                      store_.journalRecordMark().size() +
                      jnlSize +

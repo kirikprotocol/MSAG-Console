@@ -38,7 +38,7 @@ namespace {
 
 void dump( const char* what, const char* s, size_t sz )
 {
-    fprintf( stderr, "%s has %u bytes:", what, sz );
+    fprintf( stderr, "%s has %llu bytes:", what, static_cast<unsigned long long>(sz) );
     unsigned cnt = 0;
     const char* p = s;
     for ( ; sz-- > 0 ; ++p ) {
