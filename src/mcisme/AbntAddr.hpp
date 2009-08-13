@@ -205,8 +205,14 @@ public:
 
     if (value.addr_content.length)
     {
-      for(int i=0; i<value.addr_content.length; i++)
-        _value[i] = "0123456789"[i%2 ? value.addr_content.signals[i/2] >> 4 :value.addr_content.signals[i/2] & 0x0F];
+      for(int i=0; i<value.addr_content.length; i++) {
+        uint8_t sig = i%2 ? value.addr_content.signals[i/2] >> 4
+                          : value.addr_content.signals[i/2] & 0x0F;
+        if ( sig < 0x0a )
+          _value[i] = "0123456789"[sig];
+        else
+          _value[i] = 'f';
+      }
       _value[value.addr_content.length] = '\0';
     }
     return value.addr_content.length;
