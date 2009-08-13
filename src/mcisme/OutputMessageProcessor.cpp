@@ -58,6 +58,9 @@ OutputMessageProcessor::OutputMessageProcessor(TaskProcessor& taskProcessor,
   try {
     int bannerEngineProtocolVersion = advertCfg->getInt("BEProtocolVersion");
     switch (bannerEngineProtocolVersion) {
+    case BEProtocolV1SimpleClient::OLD_PROTOCOL_VERSION:
+      _advertising = new BEProtocolV1SimpleClient(advertServer, advertPort, advertTimeout, false);
+      break;
     case BEProtocolV1SimpleClient::PROTOCOL_VERSION:
       _advertising = new BEProtocolV1SimpleClient(advertServer, advertPort, advertTimeout);
       break;
@@ -68,7 +71,7 @@ OutputMessageProcessor::OutputMessageProcessor(TaskProcessor& taskProcessor,
       throw util::Exception("OutputMessageProcessor::OutputMessageProcessor::: invalid Advertising.BEProtocolVersion value [%d]", bannerEngineProtocolVersion);
     }
   } catch (ConfigException& ex) {
-    _advertising = new BEProtocolV1SimpleClient(advertServer, advertPort, advertTimeout);
+    _advertising = new BEProtocolV1SimpleClient(advertServer, advertPort, advertTimeout, false);
   }
 
   try {
