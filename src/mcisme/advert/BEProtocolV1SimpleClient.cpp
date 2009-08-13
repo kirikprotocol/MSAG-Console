@@ -5,8 +5,9 @@
 namespace smsc {
 namespace mcisme {
 
-BEProtocolV1SimpleClient::BEProtocolV1SimpleClient(const std::string& host, int port, int timeout)
-  : AdvertisingImpl(host, port, timeout)
+BEProtocolV1SimpleClient::BEProtocolV1SimpleClient(const std::string& host, int port,
+                                                   int timeout, bool use_get_banner_with_id_req)
+  : AdvertisingImpl(host, port, timeout), _waitingForGetBannerWithIdRSP(use_get_banner_with_id_req)
 {}
 
 uint32_t
@@ -55,13 +56,17 @@ BEProtocolV1SimpleClient::readAdvert(advertising_item* advItem,
     while( (gotTransactId = readPacket(&incomingPacketBuf)) != advItem->TransactID )
       smsc_log_error(_logger, "BEProtocolV1SimpleClient::readAdvert::: wrong transactionId value=[%d], expected value=[%d]", gotTransactId, advItem->TransactID);
   } catch (TimeoutException& ex) {
-    smsc_log_error(_logger, "BEProtocolV1SimpleClient::readAdvert::: catched TimeoutException [%s]", ex.what());
+    smsc_log_error(_logger, "BEProtocolV1SimpleClient::readAdvert::: caught TimeoutException [%s]", ex.what());
     return ERR_ADV_TIMEOUT;
   }
 
   bannerRespTrace->transactionId = advItem->TransactID;
-  extractBanner(incomingPacketBuf, &advItem->banReq->banner, &bannerRespTrace->bannerId);
-
+  if ( _waitingForGetBannerWithIdRSP )
+    extractBanner(incomingPacketBuf, &advItem->banReq->banner, &bannerRespTrace->bannerId);
+  else {
+    extractBanner(incomingPacketBuf, &advItem->banReq->banner);
+    bannerRespTrace->bannerIdIsNotUsed = true;
+  }
   return 0;
 }
 
@@ -77,7 +82,10 @@ BEProtocolV1SimpleClient::extractBanner(core::buffers::TmpBuf<char, MAX_PACKET_L
     smsc_log_warn(_logger, "BEProtocolV1SimpleClient::extractBanner::: bad banner id length (%d), expected (%d)", bannerIdParamLen, BANNER_ID_LEN_SIZE);
     generateUnrecoveredProtocolError();
   }
-  *bannerId = buf4parsing.ReadNetInt32();
+
+  if ( _waitingForGetBannerWithIdRSP && bannerId )
+    *bannerId = buf4parsing.ReadNetInt32();
+
   buf4parsing.ReadString<uint32_t>(*banner);
 
   return 0;
@@ -86,7 +94,11 @@ BEProtocolV1SimpleClient::extractBanner(core::buffers::TmpBuf<char, MAX_PACKET_L
 uint32_t
 BEProtocolV1SimpleClient::prepareBannerReqCmd(util::SerializationBuffer* req, BannerRequest* par)
 {
-  uint32_t totalPacketSize = prepareHeader(CMD_GET_BANNER_WITH_ID_REQ, static_cast<uint32_t>(GET_BANNER_REQ_LEN + par->abonent.length() + par->serviceName.length()), req);
+  uint32_t totalPacketSize;
+  if ( _waitingForGetBannerWithIdRSP )
+    totalPacketSize = prepareHeader(CMD_GET_BANNER_WITH_ID_REQ, static_cast<uint32_t>(GET_BANNER_REQ_LEN + par->abonent.length() + par->serviceName.length()), req);
+  else
+    totalPacketSize = prepareHeader(CMD_BANNER_REQ, static_cast<uint32_t>(GET_BANNER_REQ_LEN + par->abonent.length() + par->serviceName.length()), req);
 
   //TransactId
   req->WriteNetInt32(static_cast<uint32_t>(sizeof(uint32_t))); //Param length
