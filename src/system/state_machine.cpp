@@ -25,6 +25,8 @@
 
 #ident "@(#)$Id$"
 
+
+
 namespace smsc{
 namespace system{
 
@@ -1730,7 +1732,8 @@ StateType StateMachine::submit(Tuple& t)
   int pres=psSingle;
 
 
-  if((sms->getValidTime()==0 || sms->getValidTime()>now+maxValidTime) && !sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
+  if((sms->getValidTime()==0 || sms->getValidTime()>now+maxValidTime) && !sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) &&
+     (sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)!=0x2)
   {
     sms->setValidTime(now+maxValidTime);
     debug2(smsLog,"maxValidTime=%d",maxValidTime);
@@ -3587,7 +3590,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
   bool firstPart=false;
   bool multiPart=sms.hasBinProperty(Tag::SMSC_CONCATINFO);
 
-  if(GET_STATUS_TYPE(t.command->get_resp()->get_status())!=CMD_OK)
+  if(GET_STATUS_TYPE(t.command->get_resp()->get_status())!=CMD_OK && !dgortr)
   {
     time_t now=time(NULL);
     bool softLimit=smsc->checkSchedulerSoftLimit();
@@ -3601,15 +3604,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
       smsc->registerStatisticalEvent(StatEvents::etUndeliverable,&sms);
       try{
         smsc->getScheduler()->InvalidSms(t.msgId);
-        if(dgortr)
-        {
-          sms.state=EXPIRED;
-          finalizeSms(t.msgId,sms);
-          return EXPIRED_STATE;
-        }else
-        {
-          store->changeSmsStateToExpired(t.msgId);
-        }
+        store->changeSmsStateToExpired(t.msgId);
       }catch(...)
       {
         __warning__("DLVRSP: failed to change state to expired");
@@ -3832,12 +3827,15 @@ StateType StateMachine::deliveryResp(Tuple& t)
         }
 
         sendNotifyReport(sms,t.msgId,"subscriber busy");
-        smsc->registerStatisticalEvent(StatEvents::etDeliverErr,&sms);
         if(dgortr)
         {
+          smsc->registerStatisticalEvent(StatEvents::etUndeliverable,&sms);
           sms.state=UNDELIVERABLE;
           finalizeSms(t.msgId,sms);
           return UNDELIVERABLE_STATE;
+        }else
+        {
+          smsc->registerStatisticalEvent(StatEvents::etDeliverErr,&sms);
         }
         return UNKNOWN_STATE;
       }break;
@@ -3869,7 +3867,10 @@ StateType StateMachine::deliveryResp(Tuple& t)
         sendFailureReport(sms,t.msgId,UNDELIVERABLE_STATE,"permanent error");
         smsc->registerStatisticalEvent(StatEvents::etUndeliverable,&sms);
 
-        smsc->getScheduler()->InvalidSms(t.msgId);
+        if(!dgortr)
+        {
+          smsc->getScheduler()->InvalidSms(t.msgId);
+        }
 
 #ifdef SMSEXTRA
         if((sms.billingRecord!=BILLING_NONE && sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY)==Smsc::chargeOnSubmit) || sms.billingRecord==BILLING_FINALREP)
@@ -4614,9 +4615,11 @@ StateType StateMachine::alert(Tuple& t)
     }
   }
 
+  bool dgortr=(sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==1 || (sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==2;
+
   time_t now=time(NULL);
-  if((sms.getValidTime()<=now) || //expired or
-     RescheduleCalculator::calcNextTryTime(now,sms.getLastResult(),sms.getAttemptsCount())==-1) //max attempts count reached
+  if( !dgortr && ((sms.getValidTime()<=now) || //expired or
+     RescheduleCalculator::calcNextTryTime(now,sms.getLastResult(),sms.getAttemptsCount())==-1)) //max attempts count reached
   {
     sms.setLastResult(Status::EXPIRED);
     smsc->registerStatisticalEvent(StatEvents::etRescheduled,&sms);
@@ -4645,8 +4648,7 @@ StateType StateMachine::alert(Tuple& t)
   {
     try{
       smsc->ReportDelivery(ad.inDlgId,sms,
-       (sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==1 ||
-       (sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==2,
+       dgortr,
        Smsc::chargeOnDelivery
        );
     }catch(std::exception& e)
@@ -4667,8 +4669,7 @@ StateType StateMachine::alert(Tuple& t)
   sms.getDestinationAddress().toString(bufdst,sizeof(bufdst));
   info2(smsLog, "ALERT: delivery timed out(%s->%s), msgId=%lld",bufsrc,bufdst,t.msgId);
 
-  if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==1 ||
-     (sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==2)
+  if(dgortr)
   {
 #ifdef SNMP
     SnmpCounter::getInstance().incCounter(SnmpCounter::cntRejected,sms.getDestinationSmeId());
@@ -5441,7 +5442,20 @@ void StateMachine::finalizeSms(SMSId id,SMS& sms)
 {
   if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x2)//forward mode (transaction)
   {
-    smsc->registerStatisticalEvent(sms.lastResult==0?StatEvents::etSubmitOk:StatEvents::etSubmitErr,&sms);
+    if(sms.lastResult==0)
+    {
+      smsc->registerStatisticalEvent(StatEvents::etSubmitOk,&sms);
+    }else
+    {
+      if(sms.hasIntProperty(Tag::SMPP_SET_DPF))
+      {
+        smsc->registerStatisticalEvent(StatEvents::etDeliverErr,&sms);
+      }else
+      {
+        smsc->registerStatisticalEvent(StatEvents::etUndeliverable,&sms);
+      }
+    }
+    //smsc->registerStatisticalEvent(sms.lastResult==0?StatEvents::etSubmitOk:StatEvents::etSubmitErr,&sms);
     //smsc->registerStatisticalEvent(StatEvents::etSubmitOk,&sms);
     SmeProxy *src_proxy=smsc->getSmeProxy(sms.srcSmeId);
     if(src_proxy)
