@@ -52,6 +52,13 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs, const char * node_)
       logger(Logger::getInstance("smsc.admin.smsc_service.SmscComponent")),
     node(node_)
 {
+  using smsc::admin::service::StringType;
+  using smsc::admin::service::StringListType;
+  using smsc::admin::service::LongType;
+  using smsc::admin::service::BooleanType;
+  using smsc::admin::service::Parameter;
+  using smsc::admin::service::Parameters;
+  using smsc::admin::service::Method;
   /*********************** parameters ***************************************/
   Parameters empty_params;
   Parameters lookup_params;
