@@ -2,6 +2,7 @@
 #include "logger/Logger.h"
 #include <sys/types.h>
 #include <sys/time.h>
+#include <stdlib.h>
 #include <signal.h>
 #include <time.h>
 #include "core/buffers/TmpBuf.hpp"
@@ -277,7 +278,19 @@ protected:
 
 void MapIoTask::ReconnectThread::init()
 {
+#ifndef EIH_HD
+  int reinitCount=0;
+#endif
   reinit:
+#ifndef EIH_HD
+  reinitCount++;
+  const int SLEEPTIME=5;
+  if(reinitCount>90/SLEEPTIME)
+  {
+    __map_warn2__("Reconnect count=%d, exiting!",reinitCount);
+    exit(1);
+  }
+#endif
   if( isStopping || smsc::system::Smsc::getInstance().getStopFlag()) return;
   USHORT_T err;
 #ifdef EIN_HD
@@ -286,7 +299,7 @@ void MapIoTask::ReconnectThread::init()
   if (err != RETURN_OK)
   {
     __map_warn2__("Error at EINSS7CpRegisterMPOwner, code 0x%hx",err);
-    sleep(1);
+    sleep(SLEEPTIME);
     MsgExit();
     goto reinit;
     //throw runtime_error("MsgInit error");
@@ -295,7 +308,7 @@ void MapIoTask::ReconnectThread::init()
   if ( err != RETURN_OK)
   {
     __map_warn2__("Error at EINSS7CpRegisterRemoteCPMgmt, host='%s', code 0x%hx",MapDialogContainer::remoteMgmtAddress.c_str(),err);
-    sleep(1);
+    sleep(SLEEPTIME);
     MsgExit();
     goto reinit;
     //throw runtime_error("MsgInit error");
@@ -315,7 +328,7 @@ void MapIoTask::ReconnectThread::init()
     if ( err != RETURN_OK )
     {
       __map_warn2__("Error at MsgInit, code 0x%hx",err);
-      sleep(1);
+      sleep(SLEEPTIME);
       MsgExit();
       goto reinit;
       //throw runtime_error("MsgInit error");
@@ -326,7 +339,7 @@ void MapIoTask::ReconnectThread::init()
   if ( err != RETURN_OK )
   {
     __map_warn2__("Error at MsgOpen, code 0x%hx",err);
-    sleep(1);
+    sleep(SLEEPTIME);
     MsgExit();
     goto reinit;
   }
@@ -334,7 +347,7 @@ void MapIoTask::ReconnectThread::init()
   {
     if(!connect())
     {
-      sleep(1);
+      sleep(SLEEPTIME);
       MsgExit();
       goto reinit;
     }
@@ -857,7 +870,7 @@ void MapIoTask::Start()
     tp.startTask(new ReconnectThread());
     do{
       sleep(1);
-    }while(MAP_connectedInstCount==0);
+    }while(MAP_connectedInstCount==0 && !isStopping);
 
     is_started = true;
     __trace2__("signal mapiotask start:%p",startevent);
