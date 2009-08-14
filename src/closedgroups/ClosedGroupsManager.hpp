@@ -160,7 +160,7 @@ protected:
     }
   };
   struct Group;
-  friend Group;
+  friend struct Group;
   struct Group{
     int id;
     buf::FixedLengthString<64> name;
