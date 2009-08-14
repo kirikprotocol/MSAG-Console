@@ -276,6 +276,11 @@ ifneq ($(CXX),CC)
 CXXFLAGS := $(CXXFLAGS) -DTEMPINST
 endif
 
+ifdef EIN_HD
+CXXFLAGS+=-DEIN_HD=$(EIN_HD)
+CFLAGS+=-DEIN_HD=$(EIN_HD)
+endif
+
 export CXXFLAGS
 export CFLAGS
 export LDFLAGS
