@@ -2,6 +2,7 @@
 #include <eyeline/sua/libsua/MessageProperties.hpp>
 #include <eyeline/sua/libsua/MessageInfo.hpp>
 #include <eyeline/sua/libsua/messages/N_UNITDATA_IND_Message.hpp>
+#include <eyeline/sua/libsua/messages/N_NOTICE_IND_Message.hpp>
 #include "core/threads/Thread.hpp"
 #include "mtsmsme/processor/SccpSender.hpp"
 #include "mtsmsme/processor/TCO.hpp"
@@ -47,9 +48,9 @@ class SuaListener : public Thread {
       while (going)
       {
         result = api.msgRecv(&message,1000);
-        if (result == libsua::SOCKET_TIMEOUT)
+        if (result == libsua::SuaApi::SOCKET_TIMEOUT)
           continue;
-        if (result != libsua::OK)
+        if (result != libsua::SuaApi::OK)
         {
           smsc_log_error(logger,"MsgRecv failed: %d", result);
           going = 0;
@@ -57,17 +58,17 @@ class SuaListener : public Thread {
         }
         smsc_log_debug(logger,
                          "got new message type=%d data[%d]={%s} from connection=%d",
-                         message.messageType,message.msgData.GetPos(),
-                         dump(message.msgData.GetPos(),message.msgData.get()).c_str(),
+                         message.messageType,message.msgData.getPos(),
+                         dump(message.msgData.getPos(),message.msgData.get()).c_str(),
                          message.suaConnectNum);
         {
           switch ((int)message.messageType)
           {
-            case libsua::N_UNITDATA_IND_MSGCODE :
+            case libsua::SUAMessageId::N_UNITDATA_IND_MSGCODE :
             {
               //decode with libsua
               libsua::N_UNITDATA_IND_Message ind;
-              ind.deserialize(message.msgData.get(), message.msgData.GetPos());
+              ind.deserialize(message.msgData.get(), message.msgData.getPos());
               tco.NUNITDATA(ind.getCalledAddress().dataLen,
                             (uint8_t*)ind.getCalledAddress().data,
                             ind.getCallingAddress().dataLen,
@@ -91,7 +92,7 @@ class SuaListener : public Thread {
             }
           }
         }
-        message.msgData.SetPos(0);
+        message.msgData.setPos(0);
       }
       smsc_log_info(logger, "listener finished");
       return 0;
@@ -108,15 +109,15 @@ class SuaSender : public SccpSender {
               uint16_t ulen, uint8_t *udp)
     {
       libsua::MessageProperties msgProperties;
-      msgProperties.returnOnError = true;
-      msgProperties.hopCount = 2;
-      msgProperties.fieldsMask = libsua::MessageProperties::SET_HOP_COUNT;
+      msgProperties.setReturnOnError(true);
+      msgProperties.setHopCount(2);
       libsua::SuaApi& suaApi = libsua::SuaApiFactory::getSuaApiIface();
-      int res = suaApi.unitdata_req(udp, ulen,
+      libsua::SuaApi::CallResult res =
+          suaApi.unitdata_req(udp, ulen,
                                     cd, cdlen,
                                     cl, cllen,
                                     msgProperties, 0);
-      smsc_log_info(logger, "unitdata_req  with code %d",res);
+      smsc_log_info(logger, "unitdata_req  with code %d",res.operationResult);
     }
 };
 int main(int argc, char** argv)
