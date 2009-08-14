@@ -257,6 +257,7 @@ int EventSender::Execute()
             }
             if ( !bConnected ) {
                 MutexGuard mg(mtx);
+                if (!bStarted) break;
                 mtx.wait(Timeout);
                 continue;
             }
@@ -341,6 +342,7 @@ void EventSender::Stop()
   if (!enabled_) {
     return;
   }
+    MutexGuard mg(mtx);
     bStarted = false;
     mtx.notifyAll();
 }
