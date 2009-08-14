@@ -75,6 +75,17 @@ void TCO::fixCalledAddress(uint8_t cdlen, uint8_t* cd)
                   getAddressDescription(cdlen,cd).c_str());
   }
 }
+void TCO::NNOTICE(uint8_t cdlen, uint8_t *cd, /* called party address  */
+                  uint8_t cllen, uint8_t *cl, /* calling party address */
+                  uint16_t ulen, uint8_t *udp /* user data             */
+                  )
+{
+    smsc_log_debug(logger,
+                    "TCO::NNOTICE Cd(%s) Cl(%s)\ndata[%d]={%s}",
+                    getAddressDescription(cdlen,cd).c_str(),
+                    getAddressDescription(cllen,cl).c_str(),
+                    ulen,dump(ulen,udp).c_str());
+}
 void TCO::NUNITDATA(uint8_t cdlen, uint8_t *cd, /* called party address  */
                     uint8_t cllen, uint8_t *cl, /* calling party address */
                     uint16_t ulen, uint8_t *udp /* user data             */

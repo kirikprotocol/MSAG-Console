@@ -27,6 +27,10 @@ class SccpUser {
         uint8_t cdlen, uint8_t *cd, /* called party address  */
         uint8_t cllen, uint8_t *cl, /* calling party address */
         uint16_t ulen, uint8_t *udp /* user data             */) = 0;
+    virtual void NNOTICE(
+        uint8_t cdlen, uint8_t *cd, /* called party address  */
+        uint8_t cllen, uint8_t *cl, /* calling party address */
+        uint16_t ulen, uint8_t *udp /* user data             */) = 0;
 };
 struct TrIdHash{
   static inline unsigned int CalcHash(TrId id){
@@ -41,6 +45,10 @@ class TCO: public SccpUser
     ~TCO();
     TSM* TC_BEGIN(AC& appcntx);
     void NUNITDATA(
+        uint8_t cdlen, uint8_t *cd, /* called party address  */
+        uint8_t cllen, uint8_t *cl, /* calling party address */
+        uint16_t ulen, uint8_t *udp /* user data             */);
+    virtual void NNOTICE(
         uint8_t cdlen, uint8_t *cd, /* called party address  */
         uint8_t cllen, uint8_t *cl, /* calling party address */
         uint16_t ulen, uint8_t *udp /* user data             */);
