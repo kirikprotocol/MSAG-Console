@@ -8,7 +8,7 @@ static char const ident[] = "$Id$";
 #include <eyeline/sua/libsua/MessageProperties.hpp>
 #include <eyeline/sua/libsua/MessageInfo.hpp>
 #include <eyeline/sua/libsua/messages/N_UNITDATA_IND_Message.hpp>
-#include <eyeline/sua/libsua/types.hpp>
+#include <eyeline/sua/libsua/messages/N_NOTICE_IND_Message.hpp>
 
 using namespace std;
 namespace smsc{
@@ -116,16 +116,16 @@ static void suaHandleInd(libsua::MessageInfo& message, SccpUser& listener)
 {
   smsc_log_debug(logger,
                  "got new message type=%d data[%d]={%s} from connection=%d",
-                 message.messageType,message.msgData.GetPos(),
-                 dump(message.msgData.GetPos(),message.msgData.get()).c_str(),
+                 message.messageType,message.msgData.getPos(),
+                 dump(message.msgData.getPos(),message.msgData.get()).c_str(),
                  message.suaConnectNum);
   switch ((int)message.messageType)
   {
-    case libsua::N_UNITDATA_IND_MSGCODE :
+    case libsua::SUAMessageId::N_UNITDATA_IND_MSGCODE :
     {
       //decode with libsua
       libsua::N_UNITDATA_IND_Message ind;
-      ind.deserialize(message.msgData.get(), message.msgData.GetPos());
+      ind.deserialize(message.msgData.get(), message.msgData.getPos());
       listener.NUNITDATA(ind.getCalledAddress().dataLen,
                          (uint8_t*)ind.getCalledAddress().data,
                          ind.getCallingAddress().dataLen,
@@ -147,9 +147,17 @@ static void suaHandleInd(libsua::MessageInfo& message, SccpUser& listener)
       listener.NUNITDATA(cdlen,cd,cllen,cl,ulen,udp);
       break;
     }
-    case libsua::N_NOTICE_IND_MSGCODE :
+    case libsua::SUAMessageId::N_NOTICE_IND_MSGCODE :
     {
-      smsc_log_info(logger,"N_NOTICE_IND_MSGCODE");
+      libsua::N_NOTICE_IND_Message ind;
+      ind.deserialize(message.msgData.get(), message.msgData.getPos());
+      smsc_log_info(logger,"N_NOTICE_IND_MSGCODE REASON=%d",ind.getReasonForReturn());
+      listener.NNOTICE(ind.getCalledAddress().dataLen,
+                         (uint8_t*)ind.getCalledAddress().data,
+                         ind.getCallingAddress().dataLen,
+                         (uint8_t*)ind.getCallingAddress().data,
+                         ind.getUserData().dataLen,
+                         (uint8_t*)ind.getUserData().data);
     }break;
   }
 }
@@ -200,16 +208,16 @@ int SuaProcessor::Run()
         break;
     }
     result = suaApi.msgRecv(&message,1000);
-    if (result == libsua::SOCKET_TIMEOUT)
+    if (result == libsua::SuaApi::SOCKET_TIMEOUT)
       continue;
-    if (result != libsua::OK)
+    if (result != libsua::SuaApi::OK)
     {
       smsc_log_error(logger,"MsgRecv failed: %d", result);
       going = 0;
       break;
     }
     suaHandleInd(message,*coordinator);
-    message.msgData.SetPos(0);//release buffer
+    message.msgData.setPos(0);//release buffer
     //smsc_log_debug(logger, "got new message=[%s]", dump(message.msgData.GetPos(),message.msgData.get()).c_str());
   }
   for(int i=0; i < suaApi.sua_getConnectsCount(); ++i)
@@ -227,18 +235,18 @@ void SuaProcessor::send(uint8_t cdlen, uint8_t *cd,
                         uint16_t ulen, uint8_t *udp)
 {
   libsua::MessageProperties msgProperties;
-  msgProperties.returnOnError = true;
+  msgProperties.setReturnOnError(true);
   //msgProperties.hopCount = 2;
   //msgProperties.fieldsMask = libsua::MessageProperties::SET_HOP_COUNT;
   libsua::SuaApi& suaApi = libsua::SuaApiFactory::getSuaApiIface();
-  int result;
-  result = suaApi.unitdata_req(udp, ulen,
+  libsua::SuaApi::CallResult result =
+      suaApi.unitdata_req(udp, ulen,
                                cd, cdlen,
                                cl, cllen,
                                msgProperties, 0);
-  if (result != 0)
+  if (result.operationResult != libsua::SuaApi::OK)
     smsc_log_error(logger,
-                   "libSuaTest::unitdat_req failed with code %d",result);
+                   "libSuaTest::unitdat_req failed with code %d",result.operationResult);
 }
 }//namespace processor
 }//namespace mtsmsme
