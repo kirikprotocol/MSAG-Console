@@ -274,12 +274,12 @@ struct MapDialog{
   unsigned dialogid_smsc;
   ET96MAP_INVOKE_ID_T invokeId;
   ET96MAP_INVOKE_ID_T origInvokeId;
-  string abonent;
-  string subsystem;
-  string origAddress;
-  string destAddress;
-  auto_ptr<SMS> sms;
-  auto_ptr<ET96MAP_SM_RP_UI_T> auto_ui;
+  std::string abonent;
+  std::string subsystem;
+  std::string origAddress;
+  std::string destAddress;
+  std::auto_ptr<SMS> sms;
+  std::auto_ptr<ET96MAP_SM_RP_UI_T> auto_ui;
   ET96MAP_ADDRESS_T m_msAddr;
   ET96MAP_ADDRESS_T m_scAddr;
   ET96MAP_SS7_ADDR_T scAddr;
