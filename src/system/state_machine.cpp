@@ -5449,10 +5449,10 @@ void StateMachine::finalizeSms(SMSId id,SMS& sms)
     {
       if(sms.hasIntProperty(Tag::SMPP_SET_DPF))
       {
-        smsc->registerStatisticalEvent(StatEvents::etDeliverErr,&sms);
+        smsc->registerStatisticalEvent(StatEvents::etRescheduled,&sms);
       }else
       {
-        smsc->registerStatisticalEvent(StatEvents::etUndeliverable,&sms);
+        smsc->registerStatisticalEvent(StatEvents::etSubmitOk,&sms);
       }
     }
     //smsc->registerStatisticalEvent(sms.lastResult==0?StatEvents::etSubmitOk:StatEvents::etSubmitErr,&sms);
