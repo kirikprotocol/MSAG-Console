@@ -169,7 +169,8 @@ void PvssSocket::processInput()
         int res;
         res = sock_->Read(rdBuffer_.get()+rdBuffer_.GetPos(),4-rdBuffer_.GetPos());
         if (res <= 0) {
-            core_.handleError(PvssException(PvssException::IO_ERROR,"error reading packet length"), *this);
+            core_.handleError(PvssException(PvssException::IO_ERROR,"error reading packet length res=%d, conn=%d",
+                                            res,sock_->isConnected() ? 1 : 0), *this);
             return;
         }
         lastActivity_ = util::currentTimeMillis();

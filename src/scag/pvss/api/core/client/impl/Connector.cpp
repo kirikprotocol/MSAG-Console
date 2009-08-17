@@ -103,7 +103,7 @@ void Connector::processEvents()
         int res = channel.socket()->Read(reinterpret_cast<char*>(&serverStatus),2);
         // may it be so that less than 2 bytes is read in an attempt ?
         if ( res != 2 ) {
-            smsc_log_warn(log_,"cannot read status data", ready[i]);
+            smsc_log_warn(log_,"cannot read status data on channel %p", ready[i]);
             core_->handleError(PvssException(PvssException::IO_ERROR,"cannot read server status data, res=%d",res),channel);
             continue;
         }
@@ -111,6 +111,7 @@ void Connector::processEvents()
         if ( serverStatus == Packet::CONNECT_RESPONSE_SERVER_BUSY ) {
             core_->handleError(PvssException(PvssException::SERVER_BUSY,"server busy on connect"),channel);
         } else if ( serverStatus == Packet::CONNECT_RESPONSE_OK ) {
+            smsc_log_debug(log_,"server ok has been read on channel %p", ready[i]);
             core_->registerChannel(channel,util::currentTimeMillis());
             unregisterChannel(channel);
         } else {

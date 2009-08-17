@@ -26,13 +26,13 @@ bool IOTask::setupSockets(util::msectime_type currentTime)
             }
         }
     } while ( false );
-    // smsc_log_debug( log_, "setup sockets: %d sockets ready", res );
+    // smsc_log_debug( log_, "setup sockets: %d sockets ready", ready );
     return ready > 0;
 }
 
 void IOTask::processEvents()
 {
-    // smsc_log_debug( log_, "process sockets: error=%d ready=%d", error_.Count(), ready_.Count() );
+    smsc_log_debug( log_, "process sockets: error=%d ready=%d", error_.Count(), ready_.Count() );
     for ( int i = 0; i < error_.Count(); ++i ) {
         // smsc_log_warn( log_, "error on socket %p", error_[i] );
         core_->closeChannel( *error_[i] );

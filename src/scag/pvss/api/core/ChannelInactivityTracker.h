@@ -75,6 +75,8 @@ public:
         util::msectime_type timeToSleep = inactivityTime;
         util::msectime_type nextWakeupTime = util::currentTimeMillis() + timeToSleep;
 
+        smsc_log_info(log_,"starting inactivity time tracker, tmo=%llu ms",timeToSleep);
+
         started = true;
         while (started)
         {
@@ -104,6 +106,8 @@ public:
                     const util::msectime_type nextPingTime = *entry + inactivityTime;
                     if (currentTime >= nextPingTime) {
                         // expired
+                        smsc_log_debug(log_,"channel %p was last active on %llu, need ping on %llu, cur=%llu, so expired",
+                                       sock, *entry, nextPingTime, currentTime );
                         *entry = currentTime;
                         expiredList.push_back( sock );
                         // listener.inactivityTimeoutExpired(*sock);
