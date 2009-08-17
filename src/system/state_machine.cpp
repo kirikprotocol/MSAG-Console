@@ -3829,7 +3829,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
         sendNotifyReport(sms,t.msgId,"subscriber busy");
         if(dgortr)
         {
-          smsc->registerStatisticalEvent(StatEvents::etUndeliverable,&sms);
+          smsc->registerStatisticalEvent(StatEvents::etDeliverErr,&sms);
           sms.state=UNDELIVERABLE;
           finalizeSms(t.msgId,sms);
           return UNDELIVERABLE_STATE;
@@ -5449,10 +5449,10 @@ void StateMachine::finalizeSms(SMSId id,SMS& sms)
     {
       if(sms.hasIntProperty(Tag::SMPP_SET_DPF))
       {
-        smsc->registerStatisticalEvent(StatEvents::etRescheduled,&sms);
+        smsc->registerStatisticalEvent(StatEvents::etSubmitOk,&sms);
       }else
       {
-        smsc->registerStatisticalEvent(StatEvents::etSubmitOk,&sms);
+        smsc->registerStatisticalEvent(StatEvents::etSubmitErr,&sms);
       }
     }
     //smsc->registerStatisticalEvent(sms.lastResult==0?StatEvents::etSubmitOk:StatEvents::etSubmitErr,&sms);
