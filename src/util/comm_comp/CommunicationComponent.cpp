@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <iomanip>
+#include <ios>
 
 #include "CommunicationComponent.hpp"
 
