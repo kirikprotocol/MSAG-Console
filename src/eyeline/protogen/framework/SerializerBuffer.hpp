@@ -138,7 +138,7 @@ public:
 
   void writeStrLV(const std::string& value)
   {
-    writeLength(value.length()*2);
+    writeLength((LengthType)value.length()*2);
     writeStr(value);
   }
   
@@ -173,7 +173,7 @@ public:
   }
   static LengthType fieldSize(const std::string& value)
   {
-    return value.length()*2;
+    return (LengthType)value.length()*2;
   }
 
   static LengthType fieldSize(const std::vector<std::string>& value)
@@ -189,7 +189,7 @@ public:
   template <typename T>
   static LengthType fieldSize(const std::vector<T>& value)
   {
-    return value.empty()?0:value.size()*fieldSize(value.front());
+    return (LengthType)(value.empty()?0:value.size()*fieldSize(value.front()));
     /*LengthType rv=0;
     for(typename std::vector<T>::const_iterator it=value.begin(),end=value.end();it!=end;it++)
     {
