@@ -1,9 +1,9 @@
 static char const ident[] = "$Id$";
-#include "ss7cp.h"
-#include "mgmtapi.h"
 #include "logger/Logger.h"
 #include "snmp/sctp/SctpMonitor.hpp"
 #include "snmp/sctp/util.hpp"
+#include "ss7cp.h"
+#include "mgmtapi.h"
 
 namespace smsc{
 namespace snmp{
