@@ -18,7 +18,7 @@ public:
     tag_GetServicesStatus=1,
     tag_GetServicesStatusResp=2,
     tag_DisconnectService=3,
-    tag_DisconnectServiceResp=4,
+    tag_DisconnectServiceResp=4
   };
  
   ClusterLoadBalancerProtocol():handler(0)
