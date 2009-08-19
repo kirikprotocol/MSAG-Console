@@ -1003,7 +1003,7 @@ TaskProcessor::SendAbntOnlineNotifications(const sms_info* pInfo,
       addBanner(msg, bannerEngineProxy->getBanner(pInfo->abnt, &bannerRespTrace, needBannerInTranslit,
                                                   static_cast<uint32_t>(_maxMessageSize - messageSize)));
 
-    smsc_log_debug(logger, "Notify message = %s to %s from %s", msg.message.c_str(), msg.abonent.c_str(), msg.caller_abonent.c_str());
+    smsc_log_info(logger, "Notify message = %s to %s from %s", msg.message.c_str(), msg.abonent.c_str(), msg.caller_abonent.c_str());
 
     int seqNum = getMessageSender()->getSequenceNumber();
     insertBannerInfo(seqNum, bannerRespTrace);
