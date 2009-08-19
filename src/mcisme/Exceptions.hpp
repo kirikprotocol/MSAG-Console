@@ -30,6 +30,14 @@ class UnrecoveredProtocolError : public util::Exception {
 public:
 };
 
+class BE_v0_UnsupportedCharsetException : public util::Exception {
+public:
+  BE_v0_UnsupportedCharsetException(const char * fmt, ...)
+  {
+    SMSC_UTIL_EX_FILL(fmt);
+  }
+};
+
 }}
 
 #endif
