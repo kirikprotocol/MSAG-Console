@@ -952,13 +952,6 @@ TaskProcessor::SendAbntOnlineNotifications(const sms_info* pInfo,
 
   if ( !needNotify(profile, pInfo) ) return;
 
-  smsc_log_info(logger, "_sendAbntOnlineNotificationPeriod=%d, pInfo->lastCallingTime=%d,time(0) - pInfo->lastCallingTime=%d",_sendAbntOnlineNotificationPeriod,pInfo->lastCallingTime,  time(0) - pInfo->lastCallingTime);
-  if ( time(0) - pInfo->lastCallingTime > _sendAbntOnlineNotificationPeriod ) {
-    char lastCallingTimeStr[32];
-    smsc_log_info(logger, "last calling time=[%s], notificationPeriod was expired. Cancel sending online notification to calling abonents", cTime(&pInfo->lastCallingTime, lastCallingTimeStr, sizeof(lastCallingTimeStr)));
-    return;
-  }
-
   size_t events_count = pInfo->events.size();
 
   NotifyTemplateFormatter* formatter = templateManager->getNotifyFormatter(profile.notifyTemplateId);
@@ -969,8 +962,14 @@ TaskProcessor::SendAbntOnlineNotifications(const sms_info* pInfo,
   for(int i = 0; i < events_count; i++)
   {
     Message msg;
-
     AbntAddr caller(&pInfo->events[i].caller);
+    if ( time(0) - pInfo->events[i].dt > _sendAbntOnlineNotificationPeriod ) {
+      char lastCallingTimeStr[32];
+      smsc_log_info(logger, "last calling time=[%s] for caller '%s' to '%s', notificationPeriod was expired. Cancel sending online notification to calling abonents",
+                    cTime(&pInfo->events[i].dt, lastCallingTimeStr, sizeof(lastCallingTimeStr)),
+                    caller.getText().c_str(), abnt.c_str());
+      return;
+    }
 
     if ( _isUseWantNotifyPolicy ) {
       AbonentProfile callerProfile;
