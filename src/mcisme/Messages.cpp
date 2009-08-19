@@ -166,8 +166,6 @@ MessageFormatter::formatMessage(const AbntAddr& abnt,
     }
   }
 
-  for_send->lastCallingTime = mc_events[i].dt;
-
   return true;
 }
 
