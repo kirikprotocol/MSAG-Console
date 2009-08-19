@@ -149,21 +149,6 @@ private:
   Array<MissedCallEvent>      events;
 
   bool isLastFromCaller(int index);
-
-  bool createMCEventOut(MCEventOut* forSend,
-                        const MCEvent& eventFromStorage,
-                        bool originatingAddressIsMciSmeAddress,
-                        const std::string& messageOriginatingAddress,
-                        const std::string& reportMsgForClient,
-                        unsigned int maxMsgLen);
-
-  std::string produceMessageForAbonent(const std::string& toAbnt,
-                                       const std::string& fromAbnt,
-                                       uint16_t callCount,
-                                       time_t convertedTime,
-                                       int* total,
-                                       ContextEnvironment* ctx
-                                       );
 public:
 
   MessageFormatter(InformTemplateFormatter* _formatter) : formatter(_formatter), logger(Logger::getInstance("mci.msgfmt")) {};
