@@ -722,7 +722,6 @@ TaskProcessor::sendMessage(const AbntAddr& abnt, const Message& msg,
 
   pInfo->sending_time = time(0);
   pInfo->abnt = abnt;
-  pInfo->lastCallingTime = outEvent.lastCallingTime;
   pInfo->events = outEvent.srcEvents;
   pInfo->bannerRespTrace = bannerRespTrace;
   insertSmsInfo(seqNum, pInfo);
