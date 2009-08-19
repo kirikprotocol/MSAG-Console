@@ -79,7 +79,6 @@ struct sms_info
 {
   time_t          sending_time;
   AbntAddr        abnt;
-  time_t          lastCallingTime;
   vector<MCEvent> events;
   BannerResponseTrace bannerRespTrace;
 };
