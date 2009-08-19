@@ -201,18 +201,18 @@ void TCAPDispatcher::Stop(bool do_wait/* = false*/)
   }
   if (do_wait) {
     { //delete all sessions
-      _sync.Lock();
+      MutexGuard grd(_sync);
       if (!_sessions.empty()) {
         do {
           SSNSession * pSession = _sessions.begin()->second;
           unbindSSN(pSession);
           _sessions.erase(_sessions.begin());
-          _sync.Unlock();
-          delete pSession;
-          _sync.Lock();
+          {
+            ReverseMutexGuard rgrd(_sync);
+            delete pSession;
+          }
         } while (!_sessions.empty());
       }
-      _sync.Unlock();
     }
     //wait for Autoconnection and Listener threads
     Thread::WaitFor();
@@ -317,9 +317,17 @@ void TCAPDispatcher::onDisconnect(unsigned char inst_id)
     pInst->connStatus = SS7UnitInstance::uconnError;
     smsc_log_error(logger, "%s: connection broken userId=%u -> TCAP[instId = %u]",
                     _logId, _cfg.mpUserId, inst_id);
-    for (SSNmap_T::iterator it = _sessions.begin(); it != _sessions.end(); ++it)
-      it->second->ResetUnit(inst_id, UNITStatus::unitError);
-    _sync.notify();
+    for (SSNmap_T::iterator it = _sessions.begin(); it != _sessions.end(); ++it) {
+      SSNSession * pSess = it->second;
+      pSess->ResetUnit(inst_id, UNITStatus::unitError);
+      if (pSess->bindStatus() < SSNBinding::ssnPartiallyBound)
+        smsc_log_error(logger, "%s: SSN[%u] has been disbound!", _logId, (unsigned)pSess->getSSN());
+    }
+    //check for last instance disconnection
+    bool allBroken = false;
+    if (disconnectedUnits(&allBroken) && allBroken && (_ss7State == ss7CONNECTED))
+      _ss7State = ss7OPENED; //forbid message listening
+    _sync.notify(); //awake reconnector thread
   } else
     smsc_log_debug(logger, "%s: connection broken userId=%u -> TCAP[instId = %u]",
                   _logId, _cfg.mpUserId, inst_id);
@@ -382,10 +390,20 @@ unsigned TCAPDispatcher::connectUnits(void)
     if (it->second.connStatus >= SS7UnitInstance::uconnAwaited)
       continue;
     it->second.connStatus = SS7UnitInstance::uconnAwaited;
-    _sync.Unlock();
-    USHORT_T result = EINSS7CpMsgConnNotify(_cfg.mpUserId, TCAP_ID, it->second.instId,
+    USHORT_T result = 0;
+    {
+      ReverseMutexGuard rgrd(_sync);
+#ifdef EIN_HD
+      result = EINSS7CpMsgConnNotify(_cfg.mpUserId, TCAP_ID, it->second.instId,
                                             onEINSS7CpConnectBroken);
-    _sync.Lock();
+#else  /* EIN_HD */
+      {
+        MutexGuard  tmp(_msgRecvLock);
+        result = EINSS7CpMsgConnNotify(_cfg.mpUserId, TCAP_ID, it->second.instId,
+                                    onEINSS7CpConnectBroken);
+      }
+#endif /* EIN_HD */
+    }
     if (result != 0) {
       smsc_log_error(logger, "%s: MsgConn(TCAP instId = %u) failed: %s (code %u)",
                   _logId, (unsigned)it->second.instId, rc2Txt_SS7_CP(result), result);
@@ -408,17 +426,19 @@ void TCAPDispatcher::disconnectUnits(void)
   SS7UnitInstsMap::iterator it = _unitCfg->instIds.begin();
   for (; it != _unitCfg->instIds.end(); ++it) {
     if (it->second.connStatus == SS7UnitInstance::uconnOk) {
-      _sync.Unlock();
-#ifdef EIN_HD
-      USHORT_T result = EINSS7CpMsgRelInst(_cfg.mpUserId, TCAP_ID, it->second.instId);
-#else  /* EIN_HD */
       USHORT_T result = 0;
-      { //NOTE: wait for CpMsgRecv completion, in order to avoid EIN SS7 internal deadlock
-        MutexGuard  grd(_msgRecvLock);
+      {
+        ReverseMutexGuard rgrd(_sync);
+  #ifdef EIN_HD
         result = EINSS7CpMsgRelInst(_cfg.mpUserId, TCAP_ID, it->second.instId);
+  #else  /* EIN_HD */
+
+        { //NOTE: wait for CpMsgRecv completion, in order to avoid EIN SS7 internal deadlock
+          MutexGuard  grd(_msgRecvLock);
+          result = EINSS7CpMsgRelInst(_cfg.mpUserId, TCAP_ID, it->second.instId);
+        }
+  #endif /* EIN_HD */
       }
-#endif /* EIN_HD */
-      _sync.Lock();
       if (result)
           smsc_log_error(logger, "%s: MsgRel(TCAP instId = %u) failed: %s (code %u)",
                       _logId, (unsigned)it->second.instId, rc2Txt_SS7_CP(result), result);
@@ -484,14 +504,16 @@ bool TCAPDispatcher::bindSSN(SSNSession * p_session) const
       if (unit.bindStatus == UNITStatus::unitError)
         p_session->ResetUnit(unit.instId);
 
-      _sync.Unlock();
-      USHORT_T  result = EINSS7_I97TBindReq(p_session->getSSN(), _cfg.mpUserId,
-                                            unit.instId, EINSS7_I97TCAP_WHITE_USER
-#if EIN_HD >= 101
-                                            , 0
-#endif /* EIN_HD >= 101 */
-                                            );
-      _sync.Lock();
+      USHORT_T result = 0;
+      {
+        ReverseMutexGuard rgrd(_sync);
+        result = EINSS7_I97TBindReq(p_session->getSSN(), _cfg.mpUserId,
+                                              unit.instId, EINSS7_I97TCAP_WHITE_USER
+  #if EIN_HD >= 101
+                                              , 0
+  #endif /* EIN_HD >= 101 */
+                                              );
+      }
       if (result) {
         smsc_log_error(logger, "%s: TBindReq(SSN=%u, userId=%u,"
                                " instId=%u) failed with code %u (%s)", _logId,
@@ -534,10 +556,11 @@ void TCAPDispatcher::unbindSSN(SSNSession * p_session) const
                                         cit != tcUnits.end(); ++cit) {
       const UNITStatus & unit = *cit;
       if (unit.bindStatus == UNITStatus::unitBound) {
-        _sync.Unlock();
-        USHORT_T  result = EINSS7_I97TUnBindReq(p_session->getSSN(),
-                                                _cfg.mpUserId, unit.instId);
-        _sync.Lock();
+        USHORT_T result = 0;
+        {
+          ReverseMutexGuard rgrd(_sync);
+          result = EINSS7_I97TUnBindReq(p_session->getSSN(), _cfg.mpUserId, unit.instId);
+        }
         if (!result)
           smsc_log_debug(logger, "%s: TUnBindReq(SSN=%u, userId=%u, instId=%u)", _logId,
                          p_session->getSSN(), _cfg.mpUserId, (unsigned)unit.instId);
