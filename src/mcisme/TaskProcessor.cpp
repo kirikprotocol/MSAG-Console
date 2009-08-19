@@ -338,7 +338,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
 
   bool bDefaultWantNotifyMe;
   try {
-    bDefaultWantNotifyMe = config->getBool("defaultWantNotifyMe ");
+    bDefaultWantNotifyMe = config->getBool("defaultWantNotifyMe");
   } catch (...) {
     bDefaultWantNotifyMe = false;
     smsc_log_warn(logger, "Parameter <MCISme.defaultWantNotifyMe> missed. Default profile wantNotifyMe flag is off");
