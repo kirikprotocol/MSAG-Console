@@ -16,24 +16,25 @@ BEProtocolV1SimpleClient::readPacket(core::buffers::TmpBuf<char, MAX_PACKET_LEN>
   buf->SetPos(0);
   uint32_t *s = (uint32_t*)buf->GetCurPtr();
 
-  int len = CMD_HEADER_SIZE + TRANSACTION_ID_LV_SIZE + BANNER_ID_LV_SIZE + BANNER_LEN_SIZE;
+  int len = CMD_HEADER_SIZE;
 
-  // читаем в буфер заголовок
   readFromSocket(buf->GetCurPtr(), len, "BEProtocolV1SimpleClient::readPacket");
 
   buf->SetPos(len);
 
   uint32_t word = ntohl(s[0]);
-  if (word != CMD_GET_BANNER_WITH_ID_RSP && word != CMD_BANNER_RSP )   // тип должен быть ответом на запрос баннера
+  if (word != CMD_GET_BANNER_WITH_ID_RSP && word != CMD_BANNER_RSP )
   {
-    smsc_log_warn(_logger, "BEProtocolV1SimpleClient::readPacket::: incorrect packet type %d", word);
+    smsc_log_warn(_logger, "BEProtocolV1SimpleClient::readPacket::: incorrect packet type %d, expected packet type=%d or packet type=%d",
+                  word, CMD_GET_BANNER_WITH_ID_RSP, CMD_BANNER_RSP);
     generateUnrecoveredProtocolError();
   }
 
-  uint32_t pak_len = ntohl(s[1]) + static_cast<uint32_t>(CMD_HEADER_SIZE);   // длина всего пакета
+  uint32_t pak_len = ntohl(s[1]) + static_cast<uint32_t>(CMD_HEADER_SIZE);
   if (pak_len > MAX_PACKET_LEN)
   {
-    smsc_log_warn(_logger, "BEProtocolV1SimpleClient::readPacket::: bad packet length");
+    smsc_log_warn(_logger, "BEProtocolV1SimpleClient::readPacket::: too large packet=%d, max expected packet size=%d",
+                  pak_len, MAX_PACKET_LEN);
     generateUnrecoveredProtocolError();
   }
 
@@ -41,7 +42,7 @@ BEProtocolV1SimpleClient::readPacket(core::buffers::TmpBuf<char, MAX_PACKET_LEN>
 
   buf->SetPos(pak_len);
 
-  return ntohl(s[3]);   //  значение TransactID
+  return ntohl(s[3]);
 }
 
 uint32_t
