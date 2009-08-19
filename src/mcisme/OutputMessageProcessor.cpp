@@ -226,6 +226,8 @@ SendMessageEventHandler::getBanner(const AbntAddr& abnt,
   } catch (UnrecoveredProtocolError& ex) {
     smsc_log_error(_logger, "SendMessageEventHandler::getBanner::: caught UnrecoveredProtocolError");
     _reconnectorThread.scheduleBrokenConnectionToReestablishing(_advertising);
+  } catch (BE_v0_UnsupportedCharsetException& ex) {
+    smsc_log_info(_logger, "SendMessageEventHandler::getBanner::: caught BE_v0_UnsupportedCharsetException: [%s]", ex.what());
   }
 
   return banner;
