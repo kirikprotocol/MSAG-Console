@@ -377,7 +377,6 @@ struct MCEventOut {
   std::string caller;
   std::string msg;
   std::vector<MCEvent> srcEvents;
-  time_t lastCallingTime;
 
   std::string toString() const {
     std::ostringstream result;
