@@ -88,6 +88,8 @@ AdvertisingImpl::readFromSocket(char *dataBuf, int bytesToRead, const std::strin
     smsc_log_debug(_logger, "AdvertisingImpl::readFromSocket: _socket.read returned %d",res);
     rd+=res;
   }
+  smsc_log_debug(_logger, "AdvertisingImpl::readFromSocket: dump of data gotten from socket %s",
+                 hexdmp((uint8_t*)dataBuf, bytesToRead).c_str());
 }
 
 uint32_t
