@@ -938,7 +938,7 @@ TaskProcessor::needNotify(const AbonentProfile& profile, const sms_info* pInfo) 
   if(forceNotify || profile.notify)
     return true;
   else
-    smsc_log_debug(logger, "Notify is off for Abonent %s", pInfo->abnt.toString().c_str());
+    smsc_log_info(logger, "Notify is off for Abonent %s", pInfo->abnt.toString().c_str());
   return false;
 }
 
@@ -964,7 +964,7 @@ TaskProcessor::SendAbntOnlineNotifications(const sms_info* pInfo,
     AbntAddr caller(&pInfo->events[i].caller);
     if ( time(0) - pInfo->events[i].dt > _sendAbntOnlineNotificationPeriod ) {
       char lastCallingTimeStr[32];
-      smsc_log_info(logger, "last calling time=[%s] for caller '%s' to '%s', notificationPeriod was expired. Cancel sending online notification to calling abonents",
+      smsc_log_info(logger, "SendAbntOnlineNotifications: last calling time=[%s] for caller '%s' to '%s', notificationPeriod was expired. Cancel sending online notification to calling abonents",
                     cTime(&pInfo->events[i].dt, lastCallingTimeStr, sizeof(lastCallingTimeStr)),
                     caller.getText().c_str(), abnt.c_str());
       return;
@@ -973,7 +973,11 @@ TaskProcessor::SendAbntOnlineNotifications(const sms_info* pInfo,
     if ( _isUseWantNotifyPolicy ) {
       AbonentProfile callerProfile;
       profileStorage->Get(caller, callerProfile);
-      if ( !callerProfile.wantNotifyMe ) continue;
+      if ( !callerProfile.wantNotifyMe ) {
+        smsc_log_info(logger, "SendAbntOnlineNotifications: useWantNotifyPolicy=true, profile's wantNotifyMe flag=false for abonent=%s, won't send notification to abonent",
+                      caller.getText().c_str());
+        continue;
+      }
     }
 
     msg.abonent = caller.getText();
