@@ -80,7 +80,7 @@ struct SchedParam
   time_t      lastAttempt;
 };
 
-char* cTime(const time_t* clock);		// функция возвращает на статический буфер. Не потокобезопасная.
+char* cTime(const time_t* clock, char* buff, size_t bufSz);
 
 class DeliveryQueue
 {
