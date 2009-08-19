@@ -1,7 +1,6 @@
 #include <mcisme/Exceptions.hpp>
 #include "BEProtocolV1SimpleClient.hpp"
 #include "AdvertErrors.h"
-#include "util/recoder/recode_dll.h"
 
 namespace smsc {
 namespace mcisme {
@@ -67,15 +66,6 @@ BEProtocolV1SimpleClient::readAdvert(advertising_item* advItem,
     extractBanner(incomingPacketBuf, &advItem->banReq->banner, &bannerRespTrace->bannerId);
   else {
     extractBanner(incomingPacketBuf, &advItem->banReq->banner);
-    if ( advItem->banReq->charSet == ASCII_TRANSLIT ) {
-      char convertedStr[4096];
-      size_t bannerSz = advItem->banReq->banner.size();
-      if ( bannerSz > sizeof(convertedStr) )
-        bannerSz = sizeof(convertedStr);
-      ConvertSMSC7BitToLatin1(advItem->banReq->banner.c_str(), bannerSz,
-                              convertedStr);
-      advItem->banReq->banner = convertedStr;
-    }
     bannerRespTrace->bannerIdIsNotUsed = true;
   }
   return 0;
@@ -132,10 +122,10 @@ BEProtocolV1SimpleClient::prepareBannerReqCmd(util::SerializationBuffer* req, Ba
   req->WriteNetInt32(par->maxBannerSize);
   //charSet
   req->WriteNetInt32(static_cast<uint32_t>(sizeof(par->charSet)));
-  uint32_t charSet = par->charSet;
-  if ( !_waitingForGetBannerWithIdRSP && charSet == ASCII_TRANSLIT )
-    charSet = GSMSMS;
-  req->WriteNetInt32(charSet);
+
+  if ( !_waitingForGetBannerWithIdRSP && par->charSet == ASCII_TRANSLIT )
+    throw BE_v0_UnsupportedCharsetException("BEProtocolV1SimpleClient::prepareBannerReqCmd::: char set=ASCII_TRANSLIT isn't supported in BannerRequest to BE version 0");
+  req->WriteNetInt32(par->charSet);
 
   return totalPacketSize;
 }
