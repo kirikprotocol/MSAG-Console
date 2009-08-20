@@ -15,6 +15,7 @@ public:
 	AdminException(const char * const exceptionMessage, ...)
 		: Exception()
 	{SMSC_UTIL_EX_FILL(exceptionMessage);}
+	~AdminException()throw(){}
 };
 
 }

@@ -15,14 +15,14 @@ using smsc::core::network::Socket;
 class ResponseWriter
 {
 public:
-	ResponseWriter(Socket * admSocket);
-	~ResponseWriter();
-	void write(Response& response) throw (AdminException);
+  ResponseWriter(Socket * admSocket);
+  ~ResponseWriter();
+  void write(Response& response) throw (AdminException);
 
 protected:
-	void writeBuf(const void * const buf, size_t len) throw (AdminException);
-	void writeLength(size_t length) throw (AdminException);
-	Socket * sock;
+  void writeBuf(const void * const buf, size_t len) throw (AdminException);
+  void writeLength(size_t length) throw (AdminException);
+  Socket * sock;
 
 private:
 };
