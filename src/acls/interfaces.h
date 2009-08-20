@@ -5,12 +5,19 @@
 #include <vector>
 #include <algorithm>
 #include <functional>
-#include "util/config/Manager.h"
+//#include "util/config/Manager.h"
 #include "util/int.h"
 
 //#include "db/DataSource.h"
 
 namespace smsc {
+
+namespace util{
+namespace config{
+class Manager;
+}
+}
+
 namespace acls {
 
 typedef std::string    AclPhoneNumber;
