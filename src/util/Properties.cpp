@@ -38,7 +38,7 @@ Properties::~Properties()
   char * key;
   PropertiesValue val;
   int count=0;
-  for (Iterator i = getIterator(); i.Next(key, val); ) {
+  for (Iterator i (this); i.Next(key, val); ) {
     keys[count++] = key;
   }
 
@@ -58,7 +58,7 @@ std::auto_ptr<Properties> Properties::getSection(const char * const prefix) cons
 
   char * key;
   PropertiesValue val;
-  for (Iterator i = getIterator(); i.Next(key, val); ) {
+  for (Iterator i (this); i.Next(key, val); ) {
     if (strlen(key) > prefixLength && startsWith(key, prefix) && key[prefixLength] == '.') {
       result->Insert(key+prefixLength+1, cStringCopy(val));
     }
