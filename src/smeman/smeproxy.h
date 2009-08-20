@@ -74,6 +74,7 @@ public:
   {
     return msg;
   }
+  ~ProxyLimitException()throw(){}
 };
 
 
@@ -86,6 +87,7 @@ public:
   ProxyQueueLimitException(int c,int m):ProxyLimitException("PXQLimit",c,m)
   {
   }
+  ~ProxyQueueLimitException()throw(){}
 };
 
 class ProxyShapeLimitException:public ProxyLimitException
@@ -97,12 +99,14 @@ public:
   ProxyShapeLimitException(int c,int m):ProxyLimitException("PXSLimit",c,m)
   {
   }
+  ~ProxyShapeLimitException()throw(){}
 };
 
 class InvalidProxyCommandException: public std::exception
 {
 public:
   virtual const char* what() const throw() {return "Invalid bind state";}
+  ~InvalidProxyCommandException()throw(){}
 };
 
 // abstract

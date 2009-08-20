@@ -18,6 +18,7 @@ public:
 	ConfigException(const char * const exceptionMessage, ...)
 		: Exception()
 	{SMSC_UTIL_EX_FILL(exceptionMessage);}
+	~ConfigException()throw(){}
 };
 
 }

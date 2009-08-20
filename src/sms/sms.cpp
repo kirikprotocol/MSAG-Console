@@ -442,7 +442,7 @@ void Body::Print(FILE* f)
   }
 }
 
-SmsPropertyBuf OptionalProperty::nullStr("");
+SmsPropertyBuf* OptionalProperty::nullStr=new SmsPropertyBuf("");
 
 }//sms
 }//smsc

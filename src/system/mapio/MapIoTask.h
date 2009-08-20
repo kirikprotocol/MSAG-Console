@@ -542,10 +542,12 @@ MKDID(ET96MAP_DIALOGUE_ID_T dialogueid,ET96MAP_LOCAL_SSN_T lssn)
 
 struct ChainIsVeryLong : public runtime_error {
   ChainIsVeryLong(const char* s) : runtime_error(s) {}
+  ~ChainIsVeryLong()throw(){}
 };
 
 struct NextMMSPartWaiting : public runtime_error {
   NextMMSPartWaiting(const char* s) : runtime_error(s) {}
+  ~NextMMSPartWaiting()throw(){}
 };
 
 enum ReAssignDialogType{
@@ -593,13 +595,7 @@ class MapDialogContainer{
   int    processTimeout;
   int    processLimit;
 
-  MapDialogContainer()
-  {
-    memset(dlgPool,0,sizeof(dlgPool));
-    last_dump_time=0;
-    dialogsCount=0;
-    rinstIdx=0;
-  }
+  MapDialogContainer();
 
   void Dump()
   {

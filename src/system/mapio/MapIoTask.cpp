@@ -183,6 +183,15 @@ extern "C" uint16_t onBrokenConn(uint16_t fromID,
   return RETURN_OK;
 }
 
+MapDialogContainer::MapDialogContainer()
+{
+  memset(dlgPool,0,sizeof(dlgPool));
+  last_dump_time=0;
+  dialogsCount=0;
+  rinstIdx=0;
+}
+
+
 bool MapIoTask::ReconnectThread::connect()
 {
   USHORT_T result;

@@ -545,7 +545,7 @@ struct Descriptor
 struct OptionalProperty{
   uint16_t isSetVal;
   uint16_t type;
-  static SmsPropertyBuf nullStr;
+  static SmsPropertyBuf* nullStr;
   union{
     SmsPropertyBuf* sValue;
     SmsPropertyBuf* bValue;
@@ -645,7 +645,7 @@ struct OptionalProperty{
   const SmsPropertyBuf& getStr()const
   {
     if(isSetVal==1)return *sValue;
-    else return nullStr;
+    else return *nullStr;
   }
   const char* getBin(unsigned* len)const
   {
