@@ -9,6 +9,7 @@
 #include "sms/sms_const.h"
 #include "util/xml/DOMTreeReader.h"
 #include <list>
+#include <set>
 
 namespace smsc {
 namespace util {
