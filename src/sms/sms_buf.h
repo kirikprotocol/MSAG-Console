@@ -40,6 +40,10 @@ public:
   {
     if(buf)delete [] buf;
   }
+  bool operator==(const char* str)const
+  {
+    return buf && str && strcmp(buf,str)==0;
+  }
   void assign(const char* str,size_t len)
   {
     if(len>=size)
