@@ -46,7 +46,7 @@ public:
   //////////////////////////  static //////////////////////////
 
   /*!
-  * Деинициализирует logger. После этого его можно снова инициализировать.
+  * пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ logger. пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
   */
   static void Shutdown();
 
@@ -70,7 +70,7 @@ public:
   static Logger * getInstance(const char * const logCategoryName);
 
   /**
-  * Возвращает map CatName -> DebugLevel.
+  * пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ map CatName -> DebugLevel.
   */
   static const LogLevels * getLogLevels();
   static void setLogLevels(const LogLevels & newLogCats);
@@ -147,7 +147,10 @@ public:
     {
       va_list args;
       va_start(args, stringFormat);
-      logva_(_logLevel, stringFormat, args);
+      timeval tv;
+      timedConfigReload(tv.tv_sec);
+      gettimeofday(&tv,0);
+      logva_(tv,_logLevel, stringFormat, args);
       va_end(args);
     }
   }
@@ -161,7 +164,11 @@ public:
   inline void logva(const LogLevel _logLevel, const char * const stringFormat, va_list args) throw()
   {
     if (isLogLevelEnabled(_logLevel))
-      logva_(logLevel, stringFormat, args);
+    {
+      timeval tv;
+      gettimeofday(&tv,0);
+      logva_(tv,logLevel, stringFormat, args);
+    }
   }
 
   /**
@@ -188,7 +195,7 @@ public:
   * in the log file.
   * @param ... The arguments for stringFormat
   **/
-  void logva_(const LogLevel logLevel, const char * const stringFormat, va_list args) throw();
+  void logva_(timeval tv,const LogLevel logLevel, const char * const stringFormat, va_list args) throw();
 
 #ifdef SMSC_DEBUG
   static void printDebugInfo();
@@ -224,10 +231,11 @@ private:
 
   static uint32_t reloadConfigInterval;
   static time_t lastReloadConfigCheck;
+  static time_t lastConfigMTime;
   
-  static void timedConfigReload()
+  static void timedConfigReload(time_t now)
   {
-    if(reloadConfigInterval && time_t(lastReloadConfigCheck + reloadConfigInterval) < time(NULL))
+    if(reloadConfigInterval && time_t(lastReloadConfigCheck + reloadConfigInterval) < now)
     {
         MutexGuard guard(static_mutex);
         if(time_t(lastReloadConfigCheck + reloadConfigInterval) >= time(NULL)) return;
@@ -235,8 +243,11 @@ private:
         const char * logFileName = getenv("SMSC_LOGGER_PROPERTIES");
         if(!logFileName) logFileName = "logger.properties";
         if(::stat(logFileName, &st)) return;
-        if(st.st_mtime > lastReloadConfigCheck)
-            smsc::logger::Logger::reconfigure(logFileName);
+        if(st.st_mtime != lastConfigMTime)
+        {
+          smsc::logger::Logger::reconfigure(logFileName);
+          lastConfigMTime=st.st_mtime;
+        }
         lastReloadConfigCheck = time(NULL);
     }
   }

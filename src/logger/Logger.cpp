@@ -75,6 +75,7 @@ Properties            Logger::cats2appenders;
 Mutex                 Logger::static_mutex;
 uint32_t              Logger::reloadConfigInterval = 0;
 time_t                Logger::lastReloadConfigCheck = time(NULL);
+time_t                Logger::lastConfigMTime = 0;
 ConfigReader          Logger::configReader;
 
 Logger *_trace_cat = NULL;
@@ -369,6 +370,11 @@ void Logger::configure(const char * const configFileName) throw (Exception)
   if(props.Exists("configReloadInterval"))
     reloadConfigInterval = atoi(props["configReloadInterval"]);
 
+  struct ::stat st={0,};
+  ::stat((const char*)configFileName, &st);
+  lastConfigMTime=st.st_mtime;
+
+
   configReader.init(props);
   configureAppenders(configReader);
   configureCatAppenders(configReader);
@@ -514,13 +520,13 @@ Logger & Logger::operator = (const Logger & other)
 ////////////////////// public methods
 void Logger::log_(const LogLevel _logLevel, const std::string &message) throw()
 {
-#ifdef LOGGER_TIMED_CONFIG_RELOAD
-    timedConfigReload();
-#endif
+  timeval tv;
+  gettimeofday(&tv,0);
+  timedConfigReload(tv.tv_sec);
 
   if (isInitialized()) {
     try {
-      appender->log(logChars[_logLevel], this->name, message.c_str());
+      appender->log(tv,logChars[_logLevel], this->name, message.c_str());
     } catch (...) {
     }
   } else {
@@ -531,18 +537,18 @@ void Logger::log_(const LogLevel _logLevel, const std::string &message) throw()
 
 void Logger::log_(const LogLevel _logLevel, const char * const stringFormat, ...) throw()
 {
-#ifdef LOGGER_TIMED_CONFIG_RELOAD
-    timedConfigReload();
-#endif
+  timeval tv;
+  gettimeofday(&tv,0);
+  timedConfigReload(tv.tv_sec);
 
   va_list args;
   va_start(args, stringFormat);
-  logva_(_logLevel, stringFormat, args);
+  logva_(tv,_logLevel, stringFormat, args);
   va_end(args);
 }
 
 
-void Logger::logva_(const LogLevel _logLevel, const char * const stringFormat, va_list args) throw()
+void Logger::logva_(timeval tv,const LogLevel _logLevel, const char * const stringFormat, va_list args) throw()
 {
   char buf[2048];
   char* msg=vform(stringFormat, args,buf,sizeof(buf));
@@ -550,7 +556,7 @@ void Logger::logva_(const LogLevel _logLevel, const char * const stringFormat, v
   if (isInitialized())
   {
     try{
-      appender->log(logChars[_logLevel], this->name, msg);
+      appender->log(tv,logChars[_logLevel], this->name, msg);
     }catch(...)
     {
     }

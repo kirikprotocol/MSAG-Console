@@ -21,7 +21,7 @@ class RollingIntervalAppender : public Appender
 {
 public:
   RollingIntervalAppender(const char * const name, const Properties & properties, const char* suffix = NULL);
-  virtual void log(const char logLevelName, const char * const category, const char * const message) throw();
+  virtual void log(timeval tv,const char logLevelName, const char * const category, const char * const message) throw();
 private:
   void clearLogDir(time_t dat);
   smsc::core::synchronization::Mutex mutex;

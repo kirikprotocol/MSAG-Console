@@ -182,26 +182,14 @@ void RollingIntervalAppender::rollover(time_t dat, bool useLast) throw()
   file.WOpen(p.c_str());
 }
 
-void RollingIntervalAppender::log(const char logLevelName, const char * const category, const char * const message) throw()
+void RollingIntervalAppender::log(timeval tp,const char logLevelName, const char * const category, const char * const message) throw()
 {
   //D dd-mm hh:mm:ss,sss TTT CatLast___:message
-#ifdef _WIN32
-  DWORD thrId=GetCurrentThreadId();
-  time_t dat=time(NULL);
-  struct tm ltm=*localtime(&dat);
-  SYSTEMTIME stm;
-  GetLocalTime(&stm);
-  int msec=stm.wMilliseconds;
-
-#else
-  ::timeval tp;
-  ::gettimeofday(&tp, 0);
   ::tm ltm;
   time_t dat = tp.tv_sec;
   ::localtime_r(&tp.tv_sec, &ltm);
   pthread_t thrId=::pthread_self();
   long msec=tp.tv_usec/1000;
-#endif
 
   smsc::core::synchronization::MutexGuard guard(mutex);
 

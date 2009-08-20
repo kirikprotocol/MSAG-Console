@@ -18,7 +18,7 @@ class RollingFileAppender : public Appender
 public:
   RollingFileAppender(const char * const name, const Properties & properties);
 
-  virtual void log(const char logLevelName, const char * const category, const char * const message) throw();
+  virtual void log(timeval tv,const char logLevelName, const char * const category, const char * const message) throw();
 
 private:
   smsc::core::synchronization::Mutex mutex;

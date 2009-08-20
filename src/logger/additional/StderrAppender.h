@@ -12,7 +12,7 @@ class StderrAppender : public Appender
 public:
   StderrAppender(const char * const name);
 
-  virtual void log(const char logLevelName, const char * const category, const char * const message) throw();
+  virtual void log(timeval tv,const char logLevelName, const char * const category, const char * const message) throw();
 
 private:
   smsc::core::synchronization::Mutex mutex;
