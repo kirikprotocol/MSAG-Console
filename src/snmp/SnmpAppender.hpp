@@ -14,15 +14,15 @@ class SnmpAgent;
 
 class SnmpAppender : public smsc::logger::Appender {
 public:
-	SnmpAppender(const char * const _name, SnmpAgent *_agent)
-		: Appender(_name), agent(_agent)
-	{}
-	virtual ~SnmpAppender() {};
-  
- 	virtual void log(const char logLevelName, const char * const category, const char * const message) throw();
+  SnmpAppender(const char * const _name, SnmpAgent *_agent)
+  : Appender(_name), agent(_agent)
+    {}
+  virtual ~SnmpAppender() {};
+
+  virtual void log(timeval tv,const char logLevelName, const char * const category, const char * const message) throw();
 
 private:
-	SnmpAgent *agent;
+  SnmpAgent *agent;
 };
 
 }
