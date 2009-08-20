@@ -4,7 +4,6 @@
 #include <string>
 #include "smetypes.h"
 #include "smeproxy.h"
-#include "util/debug.h"
 
 #if !defined __Cpp_Header__smeman_smeinfo_h__
 #define __Cpp_Header__smeman_smeinfo_h__
