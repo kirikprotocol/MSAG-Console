@@ -36,7 +36,7 @@ void ConfigReader::init(Properties const & properties)
   std::auto_ptr<Properties> appendersSection(properties.getSection("appender"));
   char * key;
   PropertiesValue value;
-  for (Properties::Iterator i = appendersSection->getIterator(); i.Next(key, value); )
+  for (Properties::Iterator i (appendersSection.get()); i.Next(key, value); )
   {
     char * name = NULL;
     std::auto_ptr<char> nm(cStringCopy(key));
@@ -53,7 +53,7 @@ void ConfigReader::init(Properties const & properties)
   }
 
   std::auto_ptr<Properties> catsSection(properties.getSection("cat"));
-  for (Properties::Iterator i = catsSection->getIterator(); i.Next(key, value); )
+  for (Properties::Iterator i (catsSection.get()); i.Next(key, value); )
   {
     cats.Insert(key, new CatInfo(key, value));
   }
@@ -108,9 +108,9 @@ void ConfigReader::serialize(std::string& str)
     char * key, *prop;
         PropertiesValue value;
     AppenderInfo * val;
-    for (AppenderInfos::Iterator i = appenders.getIterator(); i.Next(key, val);)
+    for (AppenderInfos::Iterator i (&appenders); i.Next(key, val);)
         {
-          for (Properties::Iterator i1 = val->params->getIterator(); i1.Next(prop, value); )
+          for (Properties::Iterator i1 ( val->params.get()); i1.Next(prop, value); )
             {
                 str += "appender.";
                 str += val->name.get();
@@ -127,7 +127,7 @@ void ConfigReader::serialize(std::string& str)
   {
     char * key;
     CatInfo * val;
-    for (CatInfos::Iterator i = cats.getIterator(); i.Next(key, val); )
+    for (CatInfos::Iterator i (& cats); i.Next(key, val); )
         {
             if(!strcmp(val->level.get(), "NOTSET") && !*val->appender.get()) continue;
             str += "cat.";
@@ -155,14 +155,14 @@ void ConfigReader::clear()
   {
     char * key;
     CatInfo * val;
-    for (CatInfos::Iterator i = cats.getIterator(); i.Next(key, val); )
+    for (CatInfos::Iterator i (&cats); i.Next(key, val); )
       delete val;
     cats.Empty();
   }
   {
     char * key;
     AppenderInfo * val;
-    for (AppenderInfos::Iterator i = appenders.getIterator(); i.Next(key, val); )
+    for (AppenderInfos::Iterator i (&appenders); i.Next(key, val); )
       delete val;
     appenders.Empty();
   }
@@ -175,10 +175,10 @@ ConfigReader::~ConfigReader()
 
 ConfigReader::AppenderInfo* ConfigReader::createAppender(const char * const name, const Properties & ap)
 {
-  // хуерага
+  // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
   char * k;
   const char * v;
-  Properties::Iterator i = ap.getIterator();
+  Properties::Iterator i (&ap);
   if (i.Next(k, v))
   {
     std::auto_ptr<char> t(cStringCopy(k));

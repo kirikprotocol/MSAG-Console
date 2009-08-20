@@ -511,7 +511,7 @@ public:
 
   Iterator getIterator()const
   {
-    return Iterator(this);
+    return this;
   }
 
   int Next(phashstr& key,T& value)

@@ -23,7 +23,7 @@ using namespace smsc::core::buffers;
 
 time_t RollingIntervalAppender::roundTime(time_t dat, struct ::tm* rtm)
 {
-  struct ::tm t;
+  struct ::tm t={0,};
 #ifdef _WIN32
   t=*localtime(&dat);
 #else
@@ -44,7 +44,7 @@ time_t RollingIntervalAppender::roundTime(time_t dat, struct ::tm* rtm)
 
 bool RollingIntervalAppender::findLastFile(time_t dat, size_t suffixSize, std::string& lastFileName)
 {
-  dirent *dp;
+  dirent *dp=0;
   DIR *dirp = opendir(path.c_str());
   if(!dirp) return false;
   std::string fname_ = fileName + suffixFormat;
@@ -59,27 +59,25 @@ bool RollingIntervalAppender::findLastFile(time_t dat, size_t suffixSize, std::s
     if (strlen(dp->d_name) != lastFileNameSize) {
       continue;
     }
-
     memset(&rtm, 0, sizeof(rtm));
     if(sscanf(dp->d_name, fname_.c_str(), &rtm.tm_year, &rtm.tm_mon, &rtm.tm_mday, &rtm.tm_hour, &rtm.tm_min, &rtm.tm_sec) == numFieldsInSuffix)
     {
-        rtm.tm_year -= 1900;
-        rtm.tm_mon--;
-        rtm.tm_isdst = -1;
-        time_t fdate = mktime(&rtm);
+      rtm.tm_year -= 1900;
+      rtm.tm_mon--;
+      rtm.tm_isdst = -1;
+      time_t fdate = mktime(&rtm);
 
-        if(dat - fdate < curInterval)
-        {
-            lastFileName = dp->d_name;
-            lastIntervalStart = fdate;
-            curInterval = dat - fdate;
-            result = true;
-        } 
-        else
-        {
-            result = false;
-        }
-
+      if(dat - fdate < curInterval)
+      {
+        lastFileName = dp->d_name;
+        lastIntervalStart = fdate;
+        curInterval = dat - fdate;
+        result = true;
+      }
+      else
+      {
+        result = false;
+      }
     }
   }
   closedir(dirp);

@@ -173,13 +173,13 @@ const Logger::LogLevels * Logger::getLogLevels()
   std::auto_ptr<LogLevels> ls(new LogLevels());
   char *k;
   LogLevel ll;
-  for (LogLevels::Iterator i = logLevels.getIterator(); i.Next(k, ll); )
+  for (LogLevels::Iterator i (& logLevels); i.Next(k, ll); )
   {
     ls->Insert(k, ll);
   }
 
   Logger * l;
-  for (LoggersHash::Iterator i = loggers.getIterator(); i.Next(k, l); )
+  for (LoggersHash::Iterator i (&loggers); i.Next(k, l); )
   {
     if (!logLevels.Exists(k))
     {
@@ -200,7 +200,7 @@ void Logger::setLogLevels(const Logger::LogLevels & _logLevels)
       char* k;
       LogLevel l;
       logLevels.Empty();
-      for (LogLevels::Iterator i = _logLevels.getIterator(); i.Next(k, l); )
+      for (LogLevels::Iterator i (&_logLevels); i.Next(k, l); )
       {
           if (_logLevels[k] != LEVEL_NOTSET)
               logLevels[k] = l;
@@ -216,7 +216,7 @@ void Logger::setLogLevels(const Logger::LogLevels & _logLevels)
     {
       char* k;
       Logger* l;
-      for (LoggersHash::Iterator i = loggers.getIterator(); i.Next(k, l); )
+      for (LoggersHash::Iterator i (& loggers); i.Next(k, l); )
       {
         l->setLogLevel(Logger::findDebugLevel(l->getName()));
       }
@@ -259,7 +259,7 @@ void Logger::clear() throw(Exception)
   {
     char* key;
     Logger* val;
-    for (LoggersHash::Iterator i=loggers.getIterator(); i.Next(key,val);)
+    for (LoggersHash::Iterator i(&loggers); i.Next(key,val);)
     {
       if (val != NULL)
         delete val;
@@ -270,7 +270,7 @@ void Logger::clear() throw(Exception)
   {
     char* key;
     Appender* val;
-    for (AppendersHash::Iterator i=appenders.getIterator(); i.Next(key,val);)
+    for (AppendersHash::Iterator i(&appenders); i.Next(key,val);)
     {
       if (val != NULL)
         delete val;
@@ -281,7 +281,7 @@ void Logger::clear() throw(Exception)
   {
     char* key;
     const char* val;
-    for (Properties::Iterator i=cats2appenders.getIterator(); i.Next(key,val);)
+    for (Properties::Iterator i(&cats2appenders); i.Next(key,val);)
     {
       if (val != NULL)
         delete val;
@@ -302,7 +302,7 @@ void Logger::configureAppenders(const ConfigReader & configs) throw (Exception)
   char * key;
   ConfigReader::AppenderInfo * info;
 
-  for (ConfigReader::AppenderInfos::Iterator i = configs.appenders.getIterator(); i.Next(key, info); )
+  for (ConfigReader::AppenderInfos::Iterator i (& configs.appenders); i.Next(key, info); )
   {
     if (strcasecmp(info->type.get(), "stderr") == 0) {
       appenders.Insert(key, new StderrAppender(key));
@@ -328,7 +328,7 @@ void Logger::configureCatAppenders(const ConfigReader & configs) throw (Exceptio
 {
   char * key;
   ConfigReader::CatInfo* catInfo;
-  for (ConfigReader::CatInfos::Iterator i = configs.cats.getIterator(); i.Next(key, catInfo); )
+  for (ConfigReader::CatInfos::Iterator i (& configs.cats); i.Next(key, catInfo); )
   {
     if (catInfo->appender.get() != NULL && strlen(catInfo->appender.get()) > 0)
       cats2appenders.Insert(catInfo->name.get(), cStringCopy(catInfo->appender.get()));
@@ -394,7 +394,7 @@ void Logger::reconfigure(const char * const configFileName) throw (Exception)
 
   char * key;
   ConfigReader::CatInfo* catInfo;
-  for (ConfigReader::CatInfos::Iterator i = configReader.cats.getIterator(); i.Next(key, catInfo); )
+  for (ConfigReader::CatInfos::Iterator i (& configReader.cats); i.Next(key, catInfo); )
   {
     if (catInfo->level.get() != NULL && strlen(catInfo->level.get()) > 0)
     {
@@ -408,7 +408,7 @@ void Logger::reconfigure(const char * const configFileName) throw (Exception)
   {
     char* k;
     Logger* l;
-    for (LoggersHash::Iterator i = loggers.getIterator(); i.Next(k, l); )
+    for (LoggersHash::Iterator i (& loggers); i.Next(k, l); )
       l->setLogLevel(Logger::findDebugLevel(l->getName()));
   }
 }
@@ -419,7 +419,7 @@ void Logger::storeConfig(const char * const configFileName) throw (Exception)
     configReader.serialize(str);
     char* k;
     LogLevel l;
-    for (LogLevels::Iterator i = logLevels.getIterator(); i.Next(k, l); )
+    for (LogLevels::Iterator i (& logLevels); i.Next(k, l); )
     {
         ConfigReader::CatInfo** ci = configReader.cats.GetPtr(k);
         if(!ci && *k)
