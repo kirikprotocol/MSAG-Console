@@ -6,7 +6,7 @@
 
 
 #include <xercesc/sax/HandlerBase.hpp>
-//#include <xercesc/framework/XMLFormatter.hpp>
+#include <xercesc/framework/XMLFormatter.hpp>
 
 #include <util/Exception.hpp>
 
