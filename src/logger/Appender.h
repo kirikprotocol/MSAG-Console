@@ -2,7 +2,7 @@
 #define SMSC_LOGGER_APPENDER_HEADER
 
 #include <memory>
-#include <time.h>
+#include <sys/time.h>
 
 namespace smsc {
 namespace logger {
