@@ -367,11 +367,12 @@ export USECOLORS
 gen: $(SMSC_BUILDDIR_LIST)
 	@echo Generating makefile.inc
 	@perl conf/genmake.pl
-        
+
 deps:
-	@echo make deps is depricated. use make gen instead
+	@echo make deps is deprecated. use make gen instead
 	@echo Generating makefile.inc
 	@perl conf/genmake.pl
         
+ifneq ($(filter-out deps gen,$(MAKECMDGOALS)),)
 -include makefile.inc
-
+endif
