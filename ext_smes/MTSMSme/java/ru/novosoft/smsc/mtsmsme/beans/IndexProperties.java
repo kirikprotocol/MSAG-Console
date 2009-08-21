@@ -34,6 +34,7 @@ public abstract class IndexProperties extends MTSMSmeBean
   private String sccpVlrGt = "";
 
   private String mapping_new_address = null;
+  private String mapping_new_reg_type = null;
   private String mapping_new_alias = null;
   private String mapping_new_mgt = null;
   private String mapping_new_msisdn = null;
@@ -227,9 +228,13 @@ public abstract class IndexProperties extends MTSMSmeBean
     return getConfig().getInt(paramName);
   }
   public String getString(String paramName)
-      throws Config.ParamNotFoundException, Config.WrongParamTypeException
+      throws Config.WrongParamTypeException
   {
-    return getConfig().getString(paramName);
+    try {
+      return getConfig().getString(paramName);
+    } catch (Config.ParamNotFoundException e) {
+      return null;
+    }
   }
   public boolean getBool(String paramName)
       throws Config.ParamNotFoundException, Config.WrongParamTypeException
@@ -259,7 +264,7 @@ public abstract class IndexProperties extends MTSMSmeBean
     for (Iterator i = requestParams.keySet().iterator(); i.hasNext();)
     {
       String paramName = (String) i.next();
-      if (paramName.startsWith(PREFIX) && (paramName.endsWith("address") || paramName.endsWith("alias") || paramName.endsWith("mgt") || paramName.endsWith("msisdn")))
+      if (paramName.startsWith(PREFIX) && (paramName.endsWith("address") || paramName.endsWith("alias") || paramName.endsWith("mgt") || paramName.endsWith("msisdn") || paramName.endsWith("reg_type")))
       {
         final String paramValue = getParamValue(requestParams.get(paramName));
         if (paramValue != null) getConfig().setString(paramName, paramValue);
@@ -276,6 +281,7 @@ public abstract class IndexProperties extends MTSMSmeBean
     }
 
     if (mapping_new_address != null && mapping_new_address.length() > 0 &&
+        mapping_new_reg_type != null && mapping_new_reg_type.length() > 0 &&
         mapping_new_alias != null && mapping_new_alias.length() > 0 &&
         mapping_new_mgt != null && mapping_new_mgt.length() > 0 &&
         mapping_new_msisdn != null && mapping_new_msisdn.length() > 0 &&
@@ -285,6 +291,7 @@ public abstract class IndexProperties extends MTSMSmeBean
 //      String section = mapping_new_address.replace('.', '_');
       String section = mapping_new_address.substring(i >=0 ? i : 0);
       getConfig().setString(PREFIX + section + ".address", mapping_new_address);
+      getConfig().setString(PREFIX + section + ".reg_type", mapping_new_reg_type);
       getConfig().setString(PREFIX + section + ".alias", mapping_new_alias);
       getConfig().setString(PREFIX + section + ".mgt", mapping_new_mgt);
       getConfig().setString(PREFIX + section + ".msisdn", mapping_new_msisdn);
@@ -327,6 +334,14 @@ public abstract class IndexProperties extends MTSMSmeBean
     } catch (NumberFormatException e) {
       this.mapping_new_period = -1;
     }
+  }
+
+  public String getMapping_new_reg_type() {
+    return mapping_new_reg_type;
+  }
+
+  public void setMapping_new_reg_type(String mapping_new_reg_type) {
+    this.mapping_new_reg_type = mapping_new_reg_type;
   }
 
   protected abstract int apply();

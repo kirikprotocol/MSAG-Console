@@ -86,6 +86,7 @@ checkStartStop();
 function clickAddMapping()
 {
 	var addressElem = document.getElementById('mapping_new_address');
+  var regTypeElem   = document.getElementById('mapping_new_reg_type');
   var aliasElem   = document.getElementById('mapping_new_alias');
   var mgtElem   = document.getElementById('mapping_new_mgt');
   var msisdnElem   = document.getElementById('mapping_new_msisdn');
@@ -101,6 +102,10 @@ function clickAddMapping()
   if (i < 0) i = -1;
   var newSection = addressElem.value.substring(i + 1, addressElem.value.length);
 	newCell.innerHTML = "<input class=txtW name=\"<%=Index.MAPPING_SECTION_NAME%>." + newSection + ".address\" value=\"" + addressElem.value + "\">";
+	newRow.appendChild(newCell);
+
+  newCell = document.createElement("td");
+	newCell.innerHTML = "<select class=selectW  name=\"<%=Index.MAPPING_SECTION_NAME%>." + newSection + ".reg_type\"><option value=\"external\"" + ((regTypeElem.value == "external") ? "SELECTED" : "") + ">external</option><option value=\"internal\"" + ((regTypeElem.value == "internal") ? "SELECTED" : "") + ">internal</option></select>";
 	newRow.appendChild(newCell);
 
   newCell = document.createElement("td");
@@ -120,10 +125,11 @@ function clickAddMapping()
 	newRow.appendChild(newCell);
 
   newCell = document.createElement("td");
-	newCell.innerHTML = "<img src=\"/images/but_del.gif\" class=button jbuttonName=\"mbRemove\" jbuttonValue=\"common.buttons.remove\" title=\"mtsmsme.hint.remove_mapping\" jbuttonOnclick=\"return clickRemoveMapping('" + newRow.id + "');\">";
+	newCell.innerHTML = "<img src=\"/images/but_del.gif\" class=button jbuttonName=\"mbRemove\" jbuttonValue=\"common.buttons.remove\" title=\"mtsmsme.hint.remove_mapping\" onClick=\"return clickRemoveMapping('" + newRow.id + "');\">";
 	newRow.appendChild(newCell);
 
 	addressElem.value = "";
+	regTypeElem.value = "";
 	aliasElem.value = "";
 	mgtElem.value = "";
 	msisdnElem.value = "";
@@ -141,13 +147,15 @@ function clickRemoveMapping(id_to_remove)
 </script>
 <table class=list cellspacing=0 id=mapping_table_id width="100%">
 <col width=20%>
-<col width=30%>
+<col width=10%>
+<col width=20%>
 <col width=20%>
 <col width=20%>
 <col width=10%>
 <col width=1%>
 <tr>
 	<th>address</th>
+	<th>regType</th>
 	<th>alias</th>
 	<th>mgt</th>
 	<th>msisdn</th>
@@ -162,8 +170,13 @@ function clickRemoveMapping(id_to_remove)
 		final String mgt   = bean.getString(section + ".mgt");
 		final String msisdn   = bean.getString(section + ".msisdn");
 		final int period   = bean.getInt(section + ".period");
+		final String regType = bean.getString(section + ".reg_type");
 		%><tr class=row<%=(rowN++)&1%> id=mapping_row_<%=StringEncoderDecoder.encode(address)%>>
 			<td><input class=txtW  name="<%=section%>.address" value="<%=address%>"></td>
+			<td><select class=selectW  name="<%=section%>.reg_type">
+            <option value="external" <%=regType != null && regType.equals("external") ? "SELECTED" : ""%>>external</option>
+            <option value="internal" <%=regType != null && regType.equals("internal") ? "SELECTED" : ""%>>internal</option>
+			</select></td>
 			<td><input class=txtW name="<%=section%>.alias"   value="<%=alias%>"></td>
 			<td><input class=txtW name="<%=section%>.mgt"   value="<%=mgt%>"></td>
 			<td><input class=txtW name="<%=section%>.msisdn"   value="<%=msisdn%>"></td>
@@ -174,6 +187,10 @@ function clickRemoveMapping(id_to_remove)
 %>
 <tr id=mapping_new class=row<%=(rowN+1)&1%>>
 	<td><input class=txtW  id="mapping_new_address" name="mapping_new_address"></td>
+	<td><select class=selectW  id="mapping_new_reg_type" name="mapping_new_reg_type">
+            <option value="external">external</option>
+            <option value="internal">internal</option>
+			</select></td>
 	<td><input class=txtW id="mapping_new_alias"   name="mapping_new_alias"  ></td>
 	<td><input class=txtW id="mapping_new_mgt"   name="mapping_new_mgt"  ></td>
 	<td><input class=txtW id="mapping_new_msisdn"   name="mapping_new_msisdn"  ></td>
