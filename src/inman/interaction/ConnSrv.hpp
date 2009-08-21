@@ -29,6 +29,10 @@ using smsc::logger::Logger;
 using smsc::inman::interaction::ConnectAC;
 
 class ConnectSupervisorITF {
+protected:
+    virtual ~ConnectSupervisorITF() //forbid interface destruction
+    { }
+
 public:
     //Returns true if ConnectAC should be utilized by ConnectSrv
     virtual bool onConnectClosed(ConnectAC * conn) = 0;
@@ -60,7 +64,7 @@ public:
     bool     Start(void);
     void     Stop(unsigned timeOut_msecs = 400);
     SrvState State(void);
-    inline void WaitFor(void) { Thread::WaitFor(); }
+    void WaitFor(void) { Thread::WaitFor(); }
 
 protected:
     struct ConnectInfo {

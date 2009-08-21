@@ -30,6 +30,10 @@ using smsc::logger::Logger;
 class IAPQueryAC;
 
 class IAPQueryManagerITF {
+protected:
+    virtual ~IAPQueryManagerITF() //forbid interface destruction
+    { }
+
 public:
     virtual void releaseQuery(IAPQueryAC * query) = 0;
     virtual bool hasListeners(const AbonentId & ab_number) = 0;
@@ -40,6 +44,10 @@ class IAPQueryFactoryITF {
 public:
     virtual IAPQueryAC * newQuery(unsigned q_id, IAPQueryManagerITF * owner,
                                   Logger * use_log = NULL);
+
+    //NOTE: special case: explicitly allow interface destruction
+    virtual ~IAPQueryFactoryITF() 
+    { }
 };
 
 class IAPQueryAC : public ThreadedTask {

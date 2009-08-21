@@ -92,6 +92,10 @@ class Connect;
 //NOTE: it's assumed that if Connect has exception set upon return from these callbacks,
 //the controlling TCP server destroys this Connect.
 class ConnectListenerITF {
+protected:
+    virtual ~ConnectListenerITF() //forbid interface destruction
+    { }
+
 public:
     //NOTE: if listener takes ownership of packet, remaining listeners will not be notified.
     virtual void onPacketReceived(Connect* conn, std::auto_ptr<SerializablePacketAC>& recv_cmd)

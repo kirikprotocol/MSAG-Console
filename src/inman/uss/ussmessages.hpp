@@ -210,6 +210,10 @@ typedef USSSolidPacketT<USSResultMessage>   SPckUSSResult;
 // USSman command handler interface:
 // --------------------------------------------------------- //
 class USSCommandHandlerITF {
+protected:
+    virtual ~USSCommandHandlerITF() //forbid interface destruction
+    { }
+
 public:
     virtual void onProcessUSSRequest(USSRequestMessage* req) = 0;
     virtual void onDenyUSSRequest(USSRequestMessage* req) = 0;

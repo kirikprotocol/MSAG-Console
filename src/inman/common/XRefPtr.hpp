@@ -135,6 +135,10 @@ public:
 // ********************************************************************
 template <class TArg>
 class ObjectUtilizatorITF_T { //generic object utilizator interface
+protected:
+    virtual ~ObjectUtilizatorITF_T() //forbid interface destruction
+    { }
+
 public:
     virtual void utilize(TArg *use_obj) = 0;
 };

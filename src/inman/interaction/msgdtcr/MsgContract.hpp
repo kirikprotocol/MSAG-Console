@@ -20,12 +20,12 @@ using smsc::inman::AbonentContractInfo;
 // -------------------------------------------------------------------- //
 class INPCSAbntContract : public INPCommandSetAC {
 public:
-    typedef enum {
+    enum CommandTag {
         ABNT_CONTRACT_REQUEST_TAG  = 6,    // AbntContractRequest  ( SMSC --> INMAN )
         ABNT_CONTRACT_RESULT_TAG   = 7     // AbntContractResult   ( SMSC <-- INMAN )
-    } CommandTag;
+    };
 
-    typedef enum { HDR_DIALOG = 1 } HeaderFrm;
+    enum HeaderFrm { HDR_DIALOG = 1 };
 
     INPCSAbntContract();
 
@@ -153,11 +153,19 @@ typedef INPSolidPacketT<CSAbntContractHdr_dlg, AbntContractResult>   SPckContrac
 // Abonent Contract detection command handlers:
 // --------------------------------------------------------- //
 class AbntContractReqHandlerITF {
+protected:
+    virtual ~AbntContractReqHandlerITF() //forbid interface destruction
+    { }
+
 public:
     virtual bool onContractReq(AbntContractRequest* req, uint32_t req_id) = 0;
 };
 
 class AbntContractResHandlerITF {
+protected:
+    virtual ~AbntContractResHandlerITF() //forbid interface destruction
+    { }
+
 public:
     virtual void onContractResult(AbntContractResult* res, uint32_t req_id) = 0;
 };

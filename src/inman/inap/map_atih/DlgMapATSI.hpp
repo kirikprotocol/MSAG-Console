@@ -25,6 +25,10 @@ namespace inap {
 namespace atih {
 
 class ATSIhandlerITF { // SCF <- HLR */
+protected:
+    virtual ~ATSIhandlerITF() //forbid interface destruction
+    { }
+
 public: 
     virtual void onATSIResult(ATSIRes* arg) = 0;
     //dialog finalization/error handling:
@@ -75,7 +79,7 @@ protected:
     void onInvokeResultNL(InvokeRFP pInv, TcapEntity* res) { }
     void onInvokeLCancel(InvokeRFP pInv);
     //
-    inline void Awake(void) { _sync.notify(); }
+    void Awake(void) { _sync.notify(); }
 
 private:
     EventMonitor    _sync;

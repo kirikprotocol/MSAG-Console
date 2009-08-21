@@ -31,6 +31,10 @@ namespace inap {
 typedef smsc::core::synchronization::URefPtr_T<Invoke> InvokeRFP;
 
 class TCDialogUserITF {
+protected:
+    virtual ~TCDialogUserITF() //forbid interface destruction
+    { }
+
 public:
     // -- Transaction layer indications 
     virtual void onDialogInvoke(Invoke*, bool lastComp) = 0;

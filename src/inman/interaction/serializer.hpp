@@ -347,6 +347,10 @@ public:
 
 //Serializer interface:
 class SerializerITF {
+protected:
+    virtual ~SerializerITF() //forbid interface destruction
+    { }
+
 public:
     virtual SerializablePacketAC*
             deserialize(ObjectBuffer& in) const throw(SerializerException) = 0;

@@ -14,6 +14,10 @@ namespace tcpsrv {
 using smsc::inman::interaction::INPCommandSetAC;
 
 class ConnServiceITF {
+protected:
+    virtual ~ConnServiceITF() //forbid interface destruction
+    { }
+
 public:
     virtual ConnectManagerAC *
         getConnManager(uint32_t sess_id, Connect * use_conn) = 0;
@@ -22,6 +26,10 @@ public:
 };
 
 class TCPServerITF {
+protected:
+    virtual ~TCPServerITF() //forbid interface destruction
+    { }
+
 public:
     virtual bool registerProtocol(const INPCommandSetAC * cmd_set, ConnServiceITF * conn_srv) = 0;
 };

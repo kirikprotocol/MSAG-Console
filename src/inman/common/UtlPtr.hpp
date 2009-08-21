@@ -9,6 +9,10 @@ namespace smsc {
 namespace util {
 
 class UtilizableObjITF {
+protected:
+    virtual ~UtilizableObjITF() //forbid interface destruction
+    { }
+
 public:
     virtual void Utilize(void) = 0;
 };

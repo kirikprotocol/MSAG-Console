@@ -47,6 +47,10 @@ struct AbonentSubscription {
 };
 
 class IAPQueryListenerITF {
+protected:
+    virtual ~IAPQueryListenerITF() //forbid interface destruction
+    { }
+
 public:
     virtual void onIAPQueried(const AbonentId & ab_number,
                               const AbonentSubscription & ab_info,
@@ -54,6 +58,10 @@ public:
 };
 
 class IAProviderITF {
+protected:
+    virtual ~IAProviderITF() //forbid interface destruction
+    { }
+
 public:
     //Starts query and binds listener to it.
     //Returns true if query succesfully started, false otherwise
@@ -74,6 +82,7 @@ public:
     virtual IAProviderITF *     startProvider(const ICServicesHostITF * use_host) = 0;
     virtual void                stopProvider(bool do_wait = false) = 0;
 
+    //NOTE: special case: explicitly allow interface destruction
     virtual ~IAProviderCreatorITF()
     { }
 };

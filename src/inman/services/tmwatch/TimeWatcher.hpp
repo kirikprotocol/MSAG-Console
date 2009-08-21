@@ -108,6 +108,10 @@ public:
 
 
 class SWQueueITF {
+protected:
+    virtual ~SWQueueITF() //forbid interface destruction
+    { }
+
 public:
     class SWIdTime {
     public:
@@ -586,6 +590,10 @@ public:
 
 
 class TimeWatchersRegistryITF {
+protected:
+    virtual ~TimeWatchersRegistryITF() //forbid interface destruction
+    { }
+
 public:
     //Returns generic TimeWatcher (optionally started)
     virtual TimeWatcher *

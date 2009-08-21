@@ -46,6 +46,10 @@ namespace inap {
 
 //3GPP TS 23.078 version 6.x.x Release 6, clause 7.5.5)
 class CapSMS_SSFhandlerITF { //SSF <- CapSMSDlg <- SCF
+protected:
+    virtual ~CapSMS_SSFhandlerITF() //forbid interface destruction
+    { }
+
 public:
     //Stands for following signals to MSC/SGSN:
     //  Int_ReleaseSMS, Int_ConnectSMS, Int_ContinueSMS
@@ -59,6 +63,10 @@ public:
 };
 
 class CapSMS_SCFContractorITF { //SSF -> CapSMSDlg --> SCF
+protected:
+    virtual ~CapSMS_SCFContractorITF() //forbid interface destruction
+    { }
+
 public:
     // initiates capSMS dialog
     virtual void initialDPSMS(SMSInitialDPArg* arg) throw(CustomException) = 0;

@@ -63,8 +63,8 @@ public:
       //calls ICSStop(true);
     }
 
-    inline ICSUId icsUId(void) const { return _icsUid; }
-    inline State  icsState(void) const { return _icsState; }
+    ICSUId icsUId(void) const { return _icsUid; }
+    State  icsState(void) const { return _icsState; }
 
     //Initializes service verifying that all dependent services are inited
     RCode ICSInit(void);
@@ -91,6 +91,10 @@ public:
 
 //Inman Configurable Services Host interface
 class ICServicesHostITF {
+protected:
+    virtual ~ICServicesHostITF() //forbid interface destruction
+    { }
+
 public:
     virtual ICServiceAC * getICService(ICSUId srv_id) const = 0;
     virtual void *   getInterface(ICSUId srv_id) const = 0;
@@ -110,7 +114,7 @@ public:
     virtual ~ICSProducerAC()
     { }
 
-    inline ICSUId icsUId(void) const { return icsId; }
+    ICSUId icsUId(void) const { return icsId; }
 
     //Returns service dependencies
     virtual const ICSIdsSet *  Deps(void)

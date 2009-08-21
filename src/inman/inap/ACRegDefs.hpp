@@ -16,6 +16,10 @@ using smsc::inman::comp::ROSComponentsFactory;
 using smsc::inman::comp::EncodedOID;
 
 class ApplicationContextRegistryITF {
+protected:
+    virtual ~ApplicationContextRegistryITF() //forbid interface destruction
+    { }
+
 public:
     virtual bool regFactory(ROSFactoryProducer fif) = 0;
     virtual const ROSComponentsFactory * getFactory(const EncodedOID & ac_oid) const = 0;

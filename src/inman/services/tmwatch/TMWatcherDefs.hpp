@@ -13,6 +13,10 @@ namespace core {
 namespace timers {
 
 class TimeWatcherITF {
+protected:
+    virtual ~TimeWatcherITF() //forbid interface destruction
+    { }
+
 //NOTE1: It's assumed that interface implementations do not expose
 //below methods, but possess method like following
 //virtual TimerHdl CreateTimer(TimerListenerITF * listener, ...) = 0;
@@ -108,6 +112,10 @@ struct OPAQUE_OBJ {
 };
 
 class TimerListenerITF {
+protected:
+    virtual ~TimerListenerITF() //forbid interface destruction
+    { }
+
 public:
     //NOTE: TimerListener shouldn't block while this call! It's recommended
     //to return TimeWatcherITF::evtResignal instead.

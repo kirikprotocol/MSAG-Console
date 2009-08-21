@@ -33,6 +33,10 @@ struct AbonentCacheCFG {
 };
 
 class AbonentCacheITF {
+protected:
+    virtual ~AbonentCacheITF() //forbid interface destruction
+    { }
+
 public:
     virtual AbonentContractInfo::ContractType
             getAbonentInfo(const AbonentId & ab_number,

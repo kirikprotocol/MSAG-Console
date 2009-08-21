@@ -102,6 +102,10 @@ public:
 };
 
 class IAPManagerITF {
+protected:
+    virtual ~IAPManagerITF() //forbid interface destruction
+    { }
+
 public:
     virtual const AbonentPolicy * getPolicy(const std::string & nm_pol) const = 0;
 };

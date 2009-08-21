@@ -27,7 +27,11 @@ namespace uss {
 
 //USS Dialog Handler
 class USSDhandlerITF { //  <- gsmSCF */
-public: 
+protected:
+    virtual ~USSDhandlerITF() //forbid interface destruction
+    { }
+
+public:
     virtual void onMapResult(MAPUSS2CompAC* arg) = 0;
     //dialog finalization/error handling:
     //if ercode != 0, no result has been got from MAP service,

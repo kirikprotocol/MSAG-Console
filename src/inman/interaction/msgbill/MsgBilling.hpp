@@ -18,14 +18,15 @@ namespace interaction {
 // -------------------------------------------------------------------- //
 class INPCSBilling : public INPCommandSetAC {
 public:
-    typedef enum {
+    enum CommandTag {
         CHARGE_SMS_TAG          = 1,    // 1. ChargeSms         ( SMSC --> INMAN )
         CHARGE_SMS_RESULT_TAG   = 2,    // 2. ChargeSmsResult   ( SMSC <-- INMAN )
         DELIVERY_SMS_RESULT_TAG = 3,    // 3. DeliverySmsResult ( SMSC --> INMAN )
         DELIVERED_SMS_DATA_TAG  = 4     // 1. DeliveredSmsData  ( SMSC --> INMAN )
-    } CommandTag;
-
-    typedef enum { HDR_DIALOG = 1, HDR_SESSIONED_DLG = 2 } HeaderFrm;
+    };
+    enum HeaderFrm {
+        HDR_DIALOG = 1, HDR_SESSIONED_DLG = 2
+    } HeaderFrm;
 
     INPCSBilling();
 
@@ -89,51 +90,51 @@ public:
     ChargeSms(); //by default: charging policy is ON_DELIVERY, charging type is MO
     virtual ~ChargeSms() { }
 
-    inline void setMTcharge(void)
+    void setMTcharge(void)
         { mtBill = true; }
-    inline void setChargeOnSubmit(void)
+    void setChargeOnSubmit(void)
         { chrgPolicy = CDRRecord::ON_SUBMIT; }
-    inline void setSmsXSrvs(uint32_t srv_ids)
+    void setSmsXSrvs(uint32_t srv_ids)
         { smsXSrvsId = srv_ids; }
     //data for CDR generation & CAP interaction
-    inline void setDestinationSubscriberNumber(const std::string& dst_adr)
+    void setDestinationSubscriberNumber(const std::string& dst_adr)
         { dstSubscriberNumber = dst_adr; }
-    inline void setCallingPartyNumber(const std::string& src_adr)
+    void setCallingPartyNumber(const std::string& src_adr)
         { callingPartyNumber = src_adr; }
-    inline void setCallingIMSI(const std::string& imsi)
+    void setCallingIMSI(const std::string& imsi)
         { callingImsi = imsi; }
-    inline void setSubmitTimeTZ(time_t tmVal)
+    void setSubmitTimeTZ(time_t tmVal)
         { submitTimeTZ = tmVal; }
-    inline void setLocationInformationMSC(const std::string& src_msc)
+    void setLocationInformationMSC(const std::string& src_msc)
         { locationInformationMSC = src_msc; }
-    inline void setCallingSMEid(const std::string & sme_id)
+    void setCallingSMEid(const std::string & sme_id)
         { callingSMEid = sme_id; }
-    inline void setRouteId(const std::string & route_id)
+    void setRouteId(const std::string & route_id)
         { routeId = route_id; }
-    inline void setServiceId(int32_t service_id)   { serviceId = service_id; }
+    void setServiceId(int32_t service_id)   { serviceId = service_id; }
     //sets SMPP DATA_SM service type
-    inline void setServiceType(const std::string & service_type)
+    void setServiceType(const std::string & service_type)
                                                    { dsmSrvType = service_type; }
-    inline void setUserMsgRef(uint32_t msg_ref)    { userMsgRef = msg_ref; }
-    inline void setMsgId(uint64_t msg_id)          { msgId = msg_id; }
-    inline void setServiceOp(int32_t service_op)   { ussdServiceOp = service_op; }
-    inline void setPartsNum(uint8_t parts_num)     { partsNum = parts_num; }
-    inline void setMsgLength(uint16_t msg_len)     { msgLen = msg_len; }
+    void setUserMsgRef(uint32_t msg_ref)    { userMsgRef = msg_ref; }
+    void setMsgId(uint64_t msg_id)          { msgId = msg_id; }
+    void setServiceOp(int32_t service_op)   { ussdServiceOp = service_op; }
+    void setPartsNum(uint8_t parts_num)     { partsNum = parts_num; }
+    void setMsgLength(uint16_t msg_len)     { msgLen = msg_len; }
     //data for CAP3 InitialDP OPERATION
-    inline void setSMSCAddress(const std::string& smsc_adr)
+    void setSMSCAddress(const std::string& smsc_adr)
         { csInfo.smscAddress = smsc_adr; }
-    inline void setTPShortMessageSpecificInfo(unsigned char sm_info)
+    void setTPShortMessageSpecificInfo(unsigned char sm_info)
         { csInfo.tpShortMessageSpecificInfo = sm_info; }
-    inline void setTPProtocolIdentifier(unsigned char prot_id)
+    void setTPProtocolIdentifier(unsigned char prot_id)
         { csInfo.tpProtocolIdentifier = prot_id; }
-    inline void setTPDataCodingScheme(unsigned char dcs)
+    void setTPDataCodingScheme(unsigned char dcs)
         { csInfo.tpDataCodingScheme = dcs; }
-    inline void setTPValidityPeriod(time_t vpVal)
+    void setTPValidityPeriod(time_t vpVal)
         { csInfo.tpValidityPeriod = vpVal; }
 
     void export2CDR(CDRRecord & cdr) const;
     void exportCAPInfo(SMCAPSpecificInfo & csi) const { csi = csInfo; }
-    inline uint32_t getSmsXSrvs(void) const { return smsXSrvsId; }
+    uint32_t getSmsXSrvs(void) const { return smsXSrvsId; }
 
 protected:
     //SerializableObject interface
@@ -174,13 +175,13 @@ public:
     
     virtual ~ChargeSmsResult() { }
 
-    inline ChargeSmsResult_t GetValue(void) const { return value; }
-    inline CDRRecord::ContractType getContract(void) const { return contract; }
-    inline uint32_t          getError(void) const { return errCode; }
-    inline const char *      getMsg(void)   const { return errMsg.c_str(); }
+    ChargeSmsResult_t GetValue(void) const { return value; }
+    CDRRecord::ContractType getContract(void) const { return contract; }
+    uint32_t          getError(void) const { return errCode; }
+    const char *      getMsg(void)   const { return errMsg.c_str(); }
 
-    inline void   setValue(ChargeSmsResult_t res = CHARGING_NOT_POSSIBLE) { value = res; }
-    inline void   setContract(CDRRecord::ContractType abn_contract) { contract = abn_contract; }
+    void   setValue(ChargeSmsResult_t res = CHARGING_NOT_POSSIBLE) { value = res; }
+    void   setContract(CDRRecord::ContractType abn_contract) { contract = abn_contract; }
     void   setError(uint32_t err_code, const char * err_msg = NULL)
     {
         errCode = err_code;
@@ -241,55 +242,55 @@ public:
     DeliveredSmsData(uint32_t res = 0); //by default: charging type is MO
     virtual ~DeliveredSmsData(void) { }
 
-    inline void setMTcharge(void)
+    void setMTcharge(void)
         { mtBill = true; }
     //data for CDR generation & CAP interaction
-    inline void setDestinationSubscriberNumber(const std::string& dst_adr)
+    void setDestinationSubscriberNumber(const std::string& dst_adr)
         { dstSubscriberNumber = dst_adr; }
-    inline void setCallingPartyNumber(const std::string& src_adr)
+    void setCallingPartyNumber(const std::string& src_adr)
         { callingPartyNumber = src_adr; }
-    inline void setCallingIMSI(const std::string& imsi)
+    void setCallingIMSI(const std::string& imsi)
         { callingImsi = imsi; }
-    inline void setSubmitTimeTZ(time_t tmVal)
+    void setSubmitTimeTZ(time_t tmVal)
         { submitTimeTZ = tmVal; }
-    inline void setLocationInformationMSC(const std::string& src_msc)
+    void setLocationInformationMSC(const std::string& src_msc)
         { locationInformationMSC = src_msc; }
-    inline void setCallingSMEid(const std::string & sme_id)
+    void setCallingSMEid(const std::string & sme_id)
         { callingSMEid = sme_id; }
-    inline void setRouteId(const std::string & route_id)
+    void setRouteId(const std::string & route_id)
         { routeId = route_id; }
-    inline void setServiceId(int32_t service_id)   { serviceId = service_id; }
+    void setServiceId(int32_t service_id)   { serviceId = service_id; }
     //sets SMPP DATA_SM service type
-    inline void setServiceType(const std::string & service_type)
+    void setServiceType(const std::string & service_type)
                                                    { dsmSrvType = service_type; }
-    inline void setUserMsgRef(uint32_t msg_ref)    { userMsgRef = msg_ref; }
-    inline void setMsgId(uint64_t msg_id)          { msgId = msg_id; }
-    inline void setServiceOp(int32_t service_op)   { ussdServiceOp = service_op; }
-    inline void setPartsNum(uint8_t parts_num)     { partsNum = parts_num; }
-    inline void setMsgLength(uint16_t msg_len)     { msgLen = msg_len; }
+    void setUserMsgRef(uint32_t msg_ref)    { userMsgRef = msg_ref; }
+    void setMsgId(uint64_t msg_id)          { msgId = msg_id; }
+    void setServiceOp(int32_t service_op)   { ussdServiceOp = service_op; }
+    void setPartsNum(uint8_t parts_num)     { partsNum = parts_num; }
+    void setMsgLength(uint16_t msg_len)     { msgLen = msg_len; }
     //data for CAP3 InitialDP OPERATION
-    inline void setSMSCAddress(const std::string& smsc_adr)
+    void setSMSCAddress(const std::string& smsc_adr)
         { csInfo.smscAddress = smsc_adr; }
-    inline void setTPShortMessageSpecificInfo(unsigned char sm_info)
+    void setTPShortMessageSpecificInfo(unsigned char sm_info)
         { csInfo.tpShortMessageSpecificInfo = sm_info; }
-    inline void setTPProtocolIdentifier(unsigned char prot_id)
+    void setTPProtocolIdentifier(unsigned char prot_id)
         { csInfo.tpProtocolIdentifier = prot_id; }
-    inline void setTPDataCodingScheme(unsigned char dcs)
+    void setTPDataCodingScheme(unsigned char dcs)
         { csInfo.tpDataCodingScheme = dcs; }
-    inline void setTPValidityPeriod(time_t vpVal)
+    void setTPValidityPeriod(time_t vpVal)
         { csInfo.tpValidityPeriod = vpVal; }
 
     void setSmsXSrvs(uint32_t srv_ids)     { extCode |= 0x80; smsXSrvsId = srv_ids; }
 
     //Delivery report data setters  ..
-    inline void setResultValue(uint32_t res)               { dlvrRes = res; }
-    inline void setDestIMSI(const std::string& imsi)       { destImsi = imsi; }
-    inline void setDestMSC(const std::string& msc)         { destMSC = msc; }
-    inline void setDestSMEid(const std::string& sme_id)    { destSMEid = sme_id; }
-    inline void setDivertedAdr(const std::string& dvrt_adr) { divertedAdr = dvrt_adr; }
-    inline void setDeliveryTime(time_t final_tm)           { finalTimeTZ = final_tm; }
+    void setResultValue(uint32_t res)               { dlvrRes = res; }
+    void setDestIMSI(const std::string& imsi)       { destImsi = imsi; }
+    void setDestMSC(const std::string& msc)         { destMSC = msc; }
+    void setDestSMEid(const std::string& sme_id)    { destSMEid = sme_id; }
+    void setDivertedAdr(const std::string& dvrt_adr) { divertedAdr = dvrt_adr; }
+    void setDeliveryTime(time_t final_tm)           { finalTimeTZ = final_tm; }
 
-    inline uint32_t getResult(void) const { return dlvrRes; }
+    uint32_t getResult(void) const { return dlvrRes; }
 
     void export2CDR(CDRRecord & cdr) const;
     void exportCAPInfo(SMCAPSpecificInfo & csi) const { csi = csInfo; }
@@ -344,6 +345,10 @@ typedef INPSolidPacketT<CsBillingHdr_dlg, DeliveredSmsData>  SPckDeliveredSmsDat
 // Billing command handlers:
 // --------------------------------------------------------- //
 class INPBillingHandlerITF {
+protected:
+    virtual ~INPBillingHandlerITF() //forbid interface destruction
+    { }
+
 public:
     virtual bool onChargeSms(ChargeSms* sms, CsBillingHdr_dlg *hdr) = 0;
     virtual void onDeliverySmsResult(DeliverySmsResult* sms_res, CsBillingHdr_dlg *hdr) = 0;
@@ -351,6 +356,10 @@ public:
 };
 
 class SMSCBillingHandlerITF {
+protected:
+    virtual ~SMSCBillingHandlerITF() //forbid interface destruction
+    { }
+
 public:
     virtual void onChargeSmsResult(ChargeSmsResult* chg_res, CsBillingHdr_dlg *hdr) = 0;
 };

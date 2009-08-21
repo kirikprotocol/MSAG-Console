@@ -20,6 +20,10 @@ class TaskRefereeITF;
 
 
 class TaskSchedulerITF {
+protected:
+    virtual ~TaskSchedulerITF() //forbid interface destruction
+    { }
+
 public:
     enum SchedulerType {
         schedMT = 0, //parallel mode: all tasks are executed simultaneously
@@ -77,11 +81,19 @@ public:
 };
 
 class TaskRefereeITF {
+protected:
+    virtual ~TaskRefereeITF() //forbid interface destruction
+    { }
+
 public:
     virtual void onTaskReport(TaskSchedulerITF * sched, const ScheduledTaskAC * task) = 0;
 };
 
 class TaskSchedulerFactoryITF {
+protected:
+    virtual ~TaskSchedulerFactoryITF() //forbid interface destruction
+    { }
+
 public:
     virtual TaskSchedulerITF * getScheduler(TaskSchedulerITF::SchedulerType sched_type) = 0;
 };

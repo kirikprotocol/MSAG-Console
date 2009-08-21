@@ -24,7 +24,11 @@ namespace inap {
 namespace chsri {
 
 class CHSRIhandlerITF { // GMSC/SCF <- HLR
-public: 
+protected:
+    virtual ~CHSRIhandlerITF() //forbid interface destruction
+    { }
+
+public:
     virtual void onMapResult(CHSendRoutingInfoRes* arg) = 0;
     //Dialog finalization/error handling:
     //if ercode != 0, no result has been got from MAP service,

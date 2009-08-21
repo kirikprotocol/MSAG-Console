@@ -80,6 +80,10 @@ struct TCAPUsr_CFG { //TCAP User configuration
 class SSNSession;
 
 class TCAPDispatcherITF {
+protected:
+    virtual ~TCAPDispatcherITF() //forbid interface destruction
+    { }
+
 public:
     enum DSPState_e {
       dspStopped = 0, dspStopping, dspRunning
@@ -99,7 +103,7 @@ public:
     //Binds SSN and initializes SSNSession (TCAP dialogs registry/factory)
     virtual SSNSession *
         openSSN(uint8_t ssn_id, uint16_t max_dlg_id = 2000,
-                                        Logger * uselog = NULL);
+                                        Logger * uselog = NULL) = 0;
     //
     virtual SSNSession* findSession(uint8_t ssn) const = 0;
     //

@@ -90,6 +90,10 @@ protected:
 };
 
 class ServerListenerITF {
+protected:
+    virtual ~ServerListenerITF() //forbid interface destruction
+    { }
+
 public:
     //Listener creates its own ConnectAC implementation
     virtual ConnectAC* onConnectOpening(Server* srv, Socket* sock) = 0;

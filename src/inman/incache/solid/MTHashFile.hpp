@@ -46,6 +46,10 @@ namespace inman {
 namespace cache {
 
 class HashFileEntityITF {
+protected:
+    virtual ~HashFileEntityITF() //forbid interface destruction
+    { }
+
 public:
     //Reads serialized entity content from File,
     //Returns bumber of bytes red
@@ -59,6 +63,10 @@ public:
 typedef HashFileEntityITF HashFileValueITF;
 
 class HashFileKeyITF : public HashFileEntityITF {
+protected:
+    virtual ~HashFileKeyITF() //forbid interface destruction
+    { }
+
 public:
     virtual uint32_t HashCode(uint32_t attempt = 0) const = 0;
     //implements operator== functionality for successors
@@ -152,7 +160,7 @@ struct HashFileHeader : public HashFileCFG {
         f.WriteNetInt32(crcSumm);
     }
 
-    inline uint32_t add2crc(uint32_t crc, uint32_t fld)
+    uint32_t add2crc(uint32_t crc, uint32_t fld)
     {
         uint32_t no = htonl(fld);
         return crc32(crc, &no, 4);
@@ -234,7 +242,7 @@ public:
     ~HFRecordHdr_T()
     { }
 
-    inline uint32_t Size(void) const
+    uint32_t Size(void) const
     {
         return (maxKeySzTA >= 0x3F) ? 6 : 5; // 1+4 [+1]
     }
@@ -246,7 +254,7 @@ template < class HFKeyTA, /* : public HashFileKeyITF */
     uint16_t maxValSzTA /* <= HFRecordHdrAC::_maxValSzTA */
 > class HFRecord_T { //HFRecord: (header + key [+ value])
 protected:
-    inline uint16_t readValSz(File& fh, uint16_t & valSz) _THROWS_HFE
+    uint16_t readValSz(File& fh, uint16_t & valSz) _THROWS_HFE
     {
         uint16_t rv = 1;
         valSz = fh.ReadByte();
@@ -259,7 +267,7 @@ protected:
         return rv;
     }
 
-    inline uint16_t writeValSz(File& fh, uint16_t valSz) const _THROWS_HFE
+    uint16_t writeValSz(File& fh, uint16_t valSz) const _THROWS_HFE
     {
         if (valSz > maxValSzTA)
             throw Exception("HFRcd<%u,%u>: Illegal value size: %u",
@@ -288,17 +296,17 @@ public:
     ~HFRecord_T()
     { }
 
-    inline uint32_t HdrSize(void) const { return hdr.Size(); }
-    inline uint32_t RcdSize(void) const
+    uint32_t HdrSize(void) const { return hdr.Size(); }
+    uint32_t RcdSize(void) const
     {
         return hdr.Size() + maxKeySzTA + maxValSzTA
                 + ((maxValSzTA >= 0xFF) ? 2 : 1);
     }
 
-//    inline uint32_t setHashCode(uint32_t attempt_num = 0)
+//    uint32_t setHashCode(uint32_t attempt_num = 0)
 //    { return hdr.hashCode = key.HashCode(hcAttempt = attempt_num); }
 
-    inline void setHashKey(const HFKeyTA & use_key)
+    void setHashKey(const HFKeyTA & use_key)
     { key = use_key; hdr.keySz = use_key.Size(); }
 
     //reads record header at current file position,
@@ -375,6 +383,10 @@ public:
     typedef HFRecord_T<HFKeyTA, maxKeySzTA, maxValSzTA> HFRecord;
 
     class HFRehashAcquirerITF {
+    protected:
+      virtual ~HFRehashAcquirerITF() //forbid interface destruction
+      { }
+
     public:
         virtual void onRehashDone(MTHashFileT * new_hf, const char * error = NULL) _THROWS_NONE  = 0;
     };
@@ -399,7 +411,7 @@ protected:
     }
 
     //NOTE: r_num starts from 1
-    inline void    SeekRcd(const uint32_t & r_num) _THROWS_HFE
+    void    SeekRcd(const uint32_t & r_num) _THROWS_HFE
     {
         if (!r_num || (r_num > hfHdr.size))
             throw Exception("Invalid record number: %u", r_num);
@@ -443,7 +455,7 @@ protected:
         rcd.r_num = r_num;
         return rcd.hdr.rType;
     }
-    inline void WriteRecord(const HFRecord & rcd, const HFValueTA *p_val) _THROWS_HFE
+    void WriteRecord(const HFRecord & rcd, const HFValueTA *p_val) _THROWS_HFE
     {
         SeekRcd(rcd.r_num);
         rcd.Write(fHdl, p_val);
@@ -497,18 +509,18 @@ public:
         try { do_close(); } catch (...) { }
     }
 
-    inline uint32_t Size(void) const { return hfHdr.size; }
-    inline uint32_t Used(void) const { return hfHdr.used; }
-    inline uint8_t  Usage(void) const { return (uint8_t)((((1000L*hfHdr.used)/hfHdr.size) + 5)/10); }
+    uint32_t Size(void) const { return hfHdr.size; }
+    uint32_t Used(void) const { return hfHdr.used; }
+    uint8_t  Usage(void) const { return (uint8_t)((((1000L*hfHdr.used)/hfHdr.size) + 5)/10); }
 
-    inline void     getCFG(HashFileHeader & hf_hdr) const { hf_hdr = hfHdr; }
-    inline uint16_t RcdSize(void) const { return rcdSz; }
-    inline uint32_t MaxSize(void) const { return maxSz; }
-    inline bool     isOpened(void) const { return fHdl.isOpened(); }
+    void     getCFG(HashFileHeader & hf_hdr) const { hf_hdr = hfHdr; }
+    uint16_t RcdSize(void) const { return rcdSz; }
+    uint32_t MaxSize(void) const { return maxSz; }
+    bool     isOpened(void) const { return fHdl.isOpened(); }
 
-    inline const std::string & FileName(void) const { return fHdl.getFileName(); }
+    const std::string & FileName(void) const { return fHdl.getFileName(); }
 
-    inline bool rehashAllowed(void) const
+    bool rehashAllowed(void) const
     {
         return ((hfHdr.curColl < hfHdr.maxColl) || (hfHdr.size < maxSz));
     }
@@ -617,7 +629,7 @@ public:
     }
 
     //Returns number of record, zero - failure, hashFile should be rehashed
-    inline uint32_t Insert(const HFKeyTA & key, const HFValueTA * value, bool update = false) _THROWS_HFE
+    uint32_t Insert(const HFKeyTA & key, const HFValueTA * value, bool update = false) _THROWS_HFE
     {
         MutexGuard  grd(_fSync);
         HFRecord srcd = searchRcd(key, update ? SEARCH_BOTH : SEARCH_EMPTY);
