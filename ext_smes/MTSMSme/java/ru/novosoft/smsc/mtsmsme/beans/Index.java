@@ -42,6 +42,7 @@ public class Index extends IndexProperties
   {
     try {
       getMTSMSmeContext().resetConfig();
+      reload();
     } catch (Throwable e) {
       logger.debug("Couldn't reload MTSM Sme config", e);
       return error("mtsmsme.error.config_reload", e);

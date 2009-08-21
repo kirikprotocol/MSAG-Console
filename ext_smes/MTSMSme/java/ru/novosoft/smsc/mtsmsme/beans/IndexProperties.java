@@ -32,6 +32,7 @@ public abstract class IndexProperties extends MTSMSmeBean
   private int sccpUserSsn = 0;
   private String sccpMscGt = "";
   private String sccpVlrGt = "";
+  private String sccpHlrGt = "";
 
   private String mapping_new_address = null;
   private String mapping_new_reg_type = null;
@@ -52,7 +53,14 @@ public abstract class IndexProperties extends MTSMSmeBean
 
     if (!initialized)
     {
-      try
+      result = reload();
+    }
+
+    return result;
+  }
+
+  protected int reload() {
+    try
       {
         smscHost = getConfig().getString("MTSMSme.SMSC.host");
         smscPort = getConfig().getInt("MTSMSme.SMSC.port");
@@ -64,14 +72,13 @@ public abstract class IndexProperties extends MTSMSmeBean
         sccpUserSsn = getConfig().getInt("MTSMSme.SCCP.user_ssn");
         sccpMscGt = getConfig().getString("MTSMSme.SCCP.msc_gt");
         sccpVlrGt = getConfig().getString("MTSMSme.SCCP.vlr_gt");
+        sccpHlrGt = getConfig().getString("MTSMSme.SCCP.hlr_gt");
 
       } catch (Exception e) {
         logger.error(e);
         return error("mtsmsme.error.config_load_failed", e);
       }
-    }
-
-    return result;
+    return RESULT_OK;
   }
 
   public int process(HttpServletRequest request)
@@ -108,6 +115,7 @@ public abstract class IndexProperties extends MTSMSmeBean
     getConfig().setInt("MTSMSme.SCCP.user_ssn", sccpUserSsn);
     getConfig().setString("MTSMSme.SCCP.msc_gt", sccpMscGt);
     getConfig().setString("MTSMSme.SCCP.vlr_gt", sccpVlrGt);
+    getConfig().setString("MTSMSme.SCCP.hlr_gt", sccpHlrGt);
 
     return RESULT_DONE;
   }
@@ -217,6 +225,13 @@ public abstract class IndexProperties extends MTSMSmeBean
     this.sccpVlrGt = sccpVlrGt;
   }
 
+  public String getSccpHlrGt() {
+    return sccpHlrGt;
+  }
+
+  public void setSccpHlrGt(String sccpHlrGt) {
+    this.sccpHlrGt = sccpHlrGt;
+  }
 
   public List getMappingSectionNames() {
     return new SortedList(getConfig().getSectionChildSectionNames(MAPPING_SECTION_NAME));

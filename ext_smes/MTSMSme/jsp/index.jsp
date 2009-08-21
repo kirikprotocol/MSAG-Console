@@ -78,6 +78,10 @@ checkStartStop();
   <th>SCCP VLR GT</th>
   <td><input class=txt name=sccpVlrGt value="<%=StringEncoderDecoder.encode(bean.getSccpVlrGt())%>"></td>
 </tr>
+  <tr class=row<%=rowN++&1%>>
+  <th>SCCP HLR GT</th>
+  <td><input class=txt name=sccpHlrGt value="<%=StringEncoderDecoder.encode(bean.getSccpHlrGt())%>"></td>
+</tr>
 </table><br/>
 
 
