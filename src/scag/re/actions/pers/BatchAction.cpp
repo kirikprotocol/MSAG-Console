@@ -85,7 +85,7 @@ bool BatchAction::RunBeforePostpone(ActionContext& context)
     } else {
       if(profile == PT_ABONENT)
       {
-          skey = cp.abonentAddr.toString();
+          skey = cp.abonentAddr.toString().c_str();
           pk.skey = skey.c_str();
       }
       else

@@ -154,7 +154,7 @@ namespace scag { namespace re { namespace actions
 
         void getBillingInfoStruct(BillingInfoStruct& billingInfoStruct)
         {
-            billingInfoStruct.AbonentNumber = commandProperty->abonentAddr.toString();
+            billingInfoStruct.AbonentNumber = commandProperty->abonentAddr.toString().c_str();
             billingInfoStruct.serviceId = commandProperty->serviceId;
             billingInfoStruct.protocol = commandProperty->protocol;
             billingInfoStruct.providerId = commandProperty->providerId;

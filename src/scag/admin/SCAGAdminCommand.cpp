@@ -24,6 +24,7 @@
 #include <sms/sms.h>
 #include <sms/sms_const.h>
 #include "util/Exception.hpp"
+#include "util/config/ConfigException.h"
 #include "admin/service/Type.h"
 
 #include "scag/config/route/RouteStructures.h"

@@ -472,7 +472,7 @@ bool PersAction::RunBeforePostpone(ActionContext& context)
       params->ikey = optionalIkey;
     } else {
       if(params->pt == PT_ABONENT)
-          params->skey = cp.abonentAddr.toString();
+          params->skey = cp.abonentAddr.toString().c_str();
       else
           params->ikey = getKey(cp, profile);
     }
