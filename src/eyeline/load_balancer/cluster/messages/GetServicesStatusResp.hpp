@@ -101,7 +101,7 @@ public:
     rv+=DataStream::tagTypeSize;
     return rv;
   }
-  Response getResp()const
+  const Response& getResp()const
   {
     if(!respFlag)
     {
@@ -109,7 +109,7 @@ public:
     }
     return resp;
   }
-  void setResp(Response value)
+  void setResp(const Response& value)
   {
     resp=value;
     respFlag=true;
