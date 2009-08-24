@@ -2,6 +2,7 @@
 static char const ident[] = "$Id$";
 #endif /* MOD_IDENT_OFF */
 
+#include <memory>
 #include "util/ObjectRegistry.hpp"
 #include "core/buffers/RefPtr.hpp"
 
@@ -75,15 +76,16 @@ void USSManConnect::onPacketReceived(interaction::Connect* conn, // указатель на
     return;
   }
   DuplicateRequestChecker::getInstance().registerRequest(ussProcSearchCrit);
-  USSRequestProcessor* ussReqProc =
+  std::auto_ptr<USSRequestProcessor> ussReqProc(
     new USSRequestProcessor(this, conn, _cfg,
-                            requestPacket->dialogId(), ussProcSearchCrit, _logger);
+                            requestPacket->dialogId(), ussProcSearchCrit, _logger)
+    );
   {
     core::synchronization::MutexGuard synchronize(_activeReqProcLock);
-    _activeReqProcessors.insert(ussReqProc);
+    _activeReqProcessors.insert(ussReqProc.get());
   }
-
   ussReqProc->handleRequest(requestObject);
+  ussReqProc.release();
 }
 
 void USSManConnect::onConnectError(interaction::Connect* conn, std::auto_ptr<CustomException>& p_exc)
