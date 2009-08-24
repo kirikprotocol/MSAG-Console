@@ -1,7 +1,7 @@
 source=ControllerLoadBalancerProtocol.def
 
-search.path=../../../cluster/controller/protocol/tmpl/
-search.path=../../../cluster/controller/protocol/def/
+search.path=../../clustercontroller/protocol/tmpl/
+search.path=../../clustercontroller/protocol/def/
 
 out.dir=messages
 
