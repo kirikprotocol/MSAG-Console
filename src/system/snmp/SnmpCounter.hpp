@@ -198,10 +198,10 @@ protected:
           if(cntQueue.Pop(evt))
           {
             totalCnt.values[evt.id]++;
-            Counters* ptr=smeCnt.GetPtr(evt.sysId);
+            Counters* ptr=smeCnt.GetPtr(evt.sysId.c_str());
             if(!ptr)
             {
-              ptr=smeCnt.SetItem(evt.sysId,Counters());
+              ptr=smeCnt.SetItem(evt.sysId.c_str(),Counters());
             }
             ptr->values[evt.id]++;
           }

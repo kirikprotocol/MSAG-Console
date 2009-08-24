@@ -62,6 +62,11 @@ struct FixedLengthString{
     return !strcmp(str,argStr);
   }
 
+  bool operator==(const std::string& argStr)const
+  {
+    return argStr==str;
+  }
+
   bool operator!=(const char* argStr)const
   {
     return strcmp(str,argStr)!=0;
@@ -79,14 +84,14 @@ struct FixedLengthString{
     return strcmp(str,argStr)<0;
   }
 
-  operator char*()
+  /*operator char*()
   {
     return str;
   }
   operator const char*()const
   {
     return str;
-  }
+  }*/
 
   char operator[](size_t index)const
   {

@@ -44,7 +44,7 @@ void ClosedGroupsManager::Load(const char* filename)
       }
       buf::FixedLengthString<32> addr;
       AttrFillStringValue(node->getAttributes(),"value",addr);
-      grp->addresses.insert(smsc::sms::Address(addr));
+      grp->addresses.insert(smsc::sms::Address(addr.c_str()));
     }
     groups.insert(GroupsMap::value_type(id,grp.release()));
   }

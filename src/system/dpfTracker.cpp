@@ -420,7 +420,7 @@ int DpfTracker::Execute()
         char buf[64];
         sprintf(buf,"%lld",abonent);
         time_t expTime=RescheduleCalculator::calcNextTryTime(time(NULL),Status::DPFSMENOTCONNECTED,attempt);
-        registerSetDpf(buf,smeAddr,1179,expTime,smeId,attempt+1);
+        registerSetDpf(buf,smeAddr,1179,expTime,smeId.c_str(),attempt+1);
       }
       needToSendAlert=false;
     }

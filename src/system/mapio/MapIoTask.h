@@ -1138,7 +1138,7 @@ public:
         newCLevel=MapLimits::getInstance().incDlgCounter(dlg->s_msc.c_str());
         if(newCLevel==-1)
         {
-          throw MAPDIALOG_ERROR(MAKE_ERRORCODE(CMD_ERR_TEMP,smsc::system::Status::THROTTLED),std::string("out dlg limit reached for msc ")+dlg->s_msc);
+          throw MAPDIALOG_ERROR(MAKE_ERRORCODE(CMD_ERR_TEMP,smsc::system::Status::THROTTLED),std::string("out dlg limit reached for msc ")+dlg->s_msc.c_str());
         }
       }
       if ( dialogId_pool[ssn][rinst].empty() )
