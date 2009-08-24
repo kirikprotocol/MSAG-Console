@@ -220,7 +220,7 @@ void Profiler::remove(const Address& address)
   std::string matchAddr;
   Profile& profRef=profiles->findEx(address,matchType,matchAddr);
   if(matchType==ProfilerMatchType::mtExact ||
-     (matchType==ProfilerMatchType::mtMask && matchAddr==address.toString())
+     (matchType==ProfilerMatchType::mtMask && matchAddr==address.toString().c_str())
     )
   {
     using namespace smsc::cluster;
