@@ -529,7 +529,7 @@ int main(int argc,char* argv[])
   if(argc!=3)
   {
     printf("Profiler storage file convertation utility\n");
-    printf("Usage: %0 infile outfile\n",argv[0]);
+    printf("Usage: %s infile outfile\n",argv[0]);
     return 1;
   }
   std::string inFileName=argv[1];

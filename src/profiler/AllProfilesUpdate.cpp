@@ -227,7 +227,7 @@ int main(int argc,char* argv[])
       if(n=="prefix")
       {
         Address a(v.c_str());
-        prefix=a.toString();
+        prefix=a.toString().c_str();
         continue;
       }
       if(n=="abonents")
@@ -339,7 +339,7 @@ int main(int argc,char* argv[])
         {
           if(prefix.length())
           {
-            if(addr.toString().find(prefix)==0)
+            if(std::string(addr.toString().c_str()).find(prefix)==0)
             {
               if(!argsVector.empty())
               {

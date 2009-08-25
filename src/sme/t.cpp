@@ -2436,7 +2436,7 @@ int main(int argc,char* argv[])
         if(answerMode)
         {
           s.setDestinationAddress(answerAddress);
-          lastAddr=answerAddress.toString();
+          lastAddr=answerAddress.toString().c_str();
         }else
         {
           try{

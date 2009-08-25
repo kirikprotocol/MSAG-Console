@@ -11,7 +11,7 @@ int main(int argc,char* argv[])
 {
   if(argc<3)
   {
-    printf("Usage: %0 {profilestorefile} {addressesmappingfile} [{addressesmappingfile}...]\n",argv[0]);
+    printf("Usage: %s {profilestorefile} {addressesmappingfile} [{addressesmappingfile}...]\n",argv[0]);
     return 1;
   }
   const char sig[]="SMSCPROF";
@@ -57,7 +57,7 @@ int main(int argc,char* argv[])
       printf("Exception:%s\n",e.what());
     }
   }
-  printf("Loaded %d addresses\n",remap.size());
+  printf("Loaded %lu addresses\n",remap.size());
   try{
     store.RWOpen(argv[1]);
     char filesig[9]={

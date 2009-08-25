@@ -47,7 +47,7 @@ int main(int argc,char* argv[])
 {
   if(argc<2)
   {
-    printf("Usage: %0 {profilestorefile}\n",argv[0]);
+    printf("Usage: %s {profilestorefile}\n",argv[0]);
     return 1;
   }
   const char sig[]="SMSCPROF";
