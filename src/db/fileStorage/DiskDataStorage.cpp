@@ -1,3 +1,16 @@
+#ifdef __DBENTITYSTORAGE_DISKDATASTORAGE_HPP__
+// inclusion via .hpp (templates only)
+# define __DBENTITYSTORAGE_DISKDATASTORAGE_CPP__ 0
+#else
+# ifndef TEMPINST
+// library compilation w/ templates (i.e. everything)
+#  define __DBENTITYSTORAGE_DISKDATASTORAGE_CPP__ 1
+# else
+// library compilation w/o templates
+#  define __DBENTITYSTORAGE_DISKDATASTORAGE_CPP__ 2
+# endif
+#endif
+
 #include <stdio.h>
 
 #include <sys/types.h>
@@ -20,6 +33,7 @@
 //#include "LinearIOPageDispatcher.hpp"
 #include "CyclicIOPageDispatcher.hpp"
 
+#if __DBENTITYSTORAGE_DISKDATASTORAGE_CPP__ > 0
 // for debug
 std::string
 hexdmp(uchar_t* buf, uint32_t bufSz)
@@ -32,9 +46,11 @@ hexdmp(uchar_t* buf, uint32_t bufSz)
 
   return hexBuf.str();
 }
+#endif
 
 
 // end for debug
+#if __DBENTITYSTORAGE_DISKDATASTORAGE_CPP__ < 2
 
 template <class V>
 int
@@ -215,7 +231,7 @@ SimpleFileDispatcher<V>::extractRecord(V* record, const typename DataStorage_Fil
   IOPage ioPage=_ioPageDispatcher->getIOPage(rid);
 
   StorableRecord readbleRecord;
-  DataStorage_FileDispatcher<V>::operation_status_t 
+  operation_status_t 
     opRes = readbleRecord.unmarshal(ioPage, *this);
 
   if ( opRes == DataStorage_FileDispatcher<V>::OPERATION_OK )
@@ -274,15 +290,15 @@ SimpleFileDispatcher<V>::extractFirstRecord(V* record, typename DataStorage_File
   IOPage ioPage=_ioPageDispatcher->getFirstIOPage();
 
   StorableRecord readbleRecord;
-  DataStorage_FileDispatcher<V>::operation_status_t opRes;
-  typename DataStorage_FileDispatcher<V>::rid_t firstRecordRid;
+  operation_status_t opRes;
+  rid_t firstRecordRid;
   do {
     firstRecordRid = ioPage.getAbsolutPosition();
     opRes = checkEndStorageMarker(ioPage);
     if ( opRes != DataStorage_FileDispatcher<V>::OPERATION_OK )
       return opRes;
     opRes = readbleRecord.unmarshal(ioPage, *this);
-  } while( opRes == RECORD_DELETED );
+  } while( opRes == DataStorage_FileDispatcher<V>::RECORD_DELETED );
 
   if ( opRes == DataStorage_FileDispatcher<V>::OPERATION_OK ) {
     *record = *(readbleRecord.getReadRecord());
@@ -300,8 +316,8 @@ SimpleFileDispatcher<V>::extractNextRecord(V* record, typename DataStorage_FileD
   IOPage ioPage=_ioPageDispatcher->getIOPage(*nextRid);
 
   StorableRecord readbleRecord;
-  DataStorage_FileDispatcher<V>::operation_status_t opRes;
-  typename DataStorage_FileDispatcher<V>::rid_t nextRecordRid;
+  operation_status_t opRes;
+  rid_t nextRecordRid;
 
   ioPage.setPosition(*nextRid, SEEK_SET);
   do {
@@ -311,7 +327,7 @@ SimpleFileDispatcher<V>::extractNextRecord(V* record, typename DataStorage_FileD
       return opRes;
 
     opRes = readbleRecord.unmarshal(ioPage, *this);
-  } while( opRes == RECORD_DELETED );
+  } while( opRes == DataStorage_FileDispatcher<V>::RECORD_DELETED );
 
   if ( opRes == DataStorage_FileDispatcher<V>::OPERATION_OK ) {
     *record = *(readbleRecord.getReadRecord());
@@ -328,7 +344,7 @@ SimpleFileDispatcher<V>::deleteRecord(const typename DataStorage_FileDispatcher<
 {
   IOPage ioPage=_ioPageDispatcher->getIOPage(rid);
 
-  typename DataStorage_FileDispatcher<V>::rid_t old_rid;
+  rid_t old_rid;
   old_rid=ioPage.getAbsolutPosition();
   if ( old_rid < 0 )
     return DataStorage_FileDispatcher<V>::FATAL;
@@ -338,7 +354,7 @@ SimpleFileDispatcher<V>::deleteRecord(const typename DataStorage_FileDispatcher<
 
   IOPage saveIoPage=ioPage;
 
-  typename DataStorage_FileDispatcher<V>::operation_status_t 
+  operation_status_t 
     opResult = checkEndStorageMarker(ioPage);
   if ( opResult != DataStorage_FileDispatcher<V>::OPERATION_OK )
     return opResult;
@@ -361,7 +377,7 @@ SimpleFileDispatcher<V>::replaceRecord(const V& record, const typename DataStora
 {
   IOPage ioPage=_ioPageDispatcher->getIOPage(rid);
 
-  typename DataStorage_FileDispatcher<V>::rid_t old_rid;
+  rid_t old_rid;
   old_rid=ioPage.getAbsolutPosition();
   if ( old_rid < 0 )
     return DataStorage_FileDispatcher<V>::FATAL;
@@ -371,7 +387,7 @@ SimpleFileDispatcher<V>::replaceRecord(const V& record, const typename DataStora
 
   IOPage saveIoPage=ioPage;
 
-  typename DataStorage_FileDispatcher<V>::operation_status_t 
+  operation_status_t 
     opResult = checkEndStorageMarker(ioPage);
   if ( opResult != DataStorage_FileDispatcher<V>::OPERATION_OK )
     return opResult;
@@ -487,3 +503,5 @@ SimpleFileDispatcher<V>::StorableRecord::unmarshal(IOPage& ioPage, SimpleFileDis
     return DataStorage_FileDispatcher<V>::OPERATION_OK;
   }
 }
+
+#endif // templates only

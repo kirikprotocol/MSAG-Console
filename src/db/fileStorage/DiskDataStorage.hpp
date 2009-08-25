@@ -7,6 +7,22 @@
 # include <string>
 # include <string.h>
 # include <util/BufferSerialization.hpp>
+
+#ifdef __GNUC__
+typedef unsigned char uchar_t;
+#endif
+
+
+extern std::string hexdmp( uchar_t* buf, uint32_t bufsz );
+
+
+struct DataStorage_FileDispatcher_Status {
+  typedef enum { OPERATION_OK=0, STORAGE_CLOSED, NO_SUCH_FILE, STORAGE_ALREADY_EXISTS,
+                 NO_RECORD_FOUND=100, RECORD_DELETED, REPLACEMENT_NOT_ALLOWED,
+                 FILE_DAMAGED=200, INVALID_FILE_VERSION,
+                 FATAL=255 } operation_status_t;
+};
+
 /*
 ** Класс описывает интерфейс абстракции диспетчера файлов хранилища данных.
 ** Классы, реализующие данный интерфейс, ответственны за хранение записей в 
@@ -20,12 +36,8 @@
 ** записи V::calcCrc().
 */
 template<typename V>
-class DataStorage_FileDispatcher {
+  class DataStorage_FileDispatcher : public DataStorage_FileDispatcher_Status {
 public:
-  typedef enum { OPERATION_OK=0, STORAGE_CLOSED, NO_SUCH_FILE, STORAGE_ALREADY_EXISTS,
-                 NO_RECORD_FOUND=100, RECORD_DELETED, REPLACEMENT_NOT_ALLOWED,
-                 FILE_DAMAGED=200, INVALID_FILE_VERSION,
-                 FATAL=255 } operation_status_t;
   typedef off_t rid_t;
 
   // Конструктор создает объект, соответствующий хранилищу данных с именем файла,
@@ -90,21 +102,24 @@ public:
   explicit SimpleFileDispatcher(const std::string& fileName) : DataStorage_FileDispatcher<V>(fileName), _fd(-1), _ioPageDispatcher(0),_logger(smsc::logger::Logger::getInstance("dbstrg")) {}
   virtual ~SimpleFileDispatcher();
 
-  virtual typename DataStorage_FileDispatcher<V>::operation_status_t open();
+  typedef typename DataStorage_FileDispatcher<V>::rid_t rid_t;
+  typedef typename DataStorage_FileDispatcher<V>::operation_status_t operation_status_t;
 
-  virtual typename DataStorage_FileDispatcher<V>::operation_status_t create();
+  virtual operation_status_t open();
 
-  virtual typename DataStorage_FileDispatcher<V>::operation_status_t close();
+  virtual operation_status_t create();
 
-  virtual typename DataStorage_FileDispatcher<V>::operation_status_t drop();
+  virtual operation_status_t close();
 
-  virtual typename DataStorage_FileDispatcher<V>::operation_status_t extractRecord(V* record, const typename DataStorage_FileDispatcher<V>::rid_t& rid);
-  virtual typename DataStorage_FileDispatcher<V>::operation_status_t extractFirstRecord(V* record, rid_t* rid, rid_t* nextRid);
-  virtual typename DataStorage_FileDispatcher<V>::operation_status_t extractNextRecord(V* record, rid_t* rid, rid_t* nextRid);
-  virtual typename DataStorage_FileDispatcher<V>::operation_status_t replaceRecord(const V& record, const typename DataStorage_FileDispatcher<V>::rid_t& rid);
-  virtual typename DataStorage_FileDispatcher<V>::operation_status_t addRecord(const V& record, typename DataStorage_FileDispatcher<V>::rid_t* rid);
+  virtual operation_status_t drop();
 
-  virtual typename DataStorage_FileDispatcher<V>::operation_status_t deleteRecord(const typename DataStorage_FileDispatcher<V>::rid_t& rid);
+  virtual operation_status_t extractRecord(V* record, const rid_t& rid);
+  virtual operation_status_t extractFirstRecord(V* record, rid_t* rid, rid_t* nextRid);
+  virtual operation_status_t extractNextRecord(V* record, rid_t* rid, rid_t* nextRid);
+  virtual operation_status_t replaceRecord(const V& record, const rid_t& rid);
+  virtual operation_status_t addRecord(const V& record, rid_t* rid);
+
+  virtual operation_status_t deleteRecord(const rid_t& rid);
 
   virtual void flush() {}
 
@@ -147,8 +162,8 @@ private:
   };
   int _fd;
 
-  typename DataStorage_FileDispatcher<V>::operation_status_t
-  SimpleFileDispatcher<V>::checkEndStorageMarker(const IOPage& ioPage);
+  operation_status_t
+  checkEndStorageMarker(const IOPage& ioPage);
 
   int readNbytesFromFile(IOPage& ioPage, uchar_t* buf, size_t bufSz);
   int writeNbytesToFile(IOPage& ioPage, uchar_t* buf, size_t bufSz);
@@ -158,5 +173,11 @@ private:
 
   smsc::logger::Logger* _logger;
 };
+
+#ifdef TEMPINST
+#ifndef __DBENTITYSTORAGE_DISKDATASTORAGE_CPP__
+#include "DiskDataStorage.cpp"
+#endif
+#endif
 
 #endif
