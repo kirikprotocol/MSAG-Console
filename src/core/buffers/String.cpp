@@ -69,7 +69,7 @@ String::String(int num)
 
 String::~String()
 {
-  delete _str;
+  delete [] _str;
   _str=0;
   _length=0;
   _size=0;
@@ -79,7 +79,7 @@ String::~String()
 void String::SetSize(int newsize)
 {
   if(newsize<_size)return;
-  delete _str;
+  delete [] _str;
   _size=newsize+newsize/4+1;
   _str=new char[_size];
   _length=0;
@@ -92,7 +92,7 @@ int String::Resize(int newsize)
   char *tmpstr=new char[newsize+newsize/4+1];
   if(!tmpstr)return 0;
   if(_str)xmemcpy(tmpstr,_str,_length);
-  delete _str;
+  delete [] _str;
   _str=tmpstr;
   _size=newsize+newsize/4+1;
   _str[_length]=0;
@@ -728,7 +728,7 @@ int String::AppendSprintf(const char *fmt,...)
 
 void String::Clean()
 {
-  delete _str;
+  delete [] _str;
   _str=0;
   _size=0;
   _length=0;
