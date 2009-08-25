@@ -399,3 +399,7 @@ B3107: Aug 11, 2009
     MCISme	Warn about incorrect addresses in events instead of core dump
     MCISme	maxAbonentMessageLenInOctets parameter was added, requested banner length now depends on how message filled
     Ussman	deadlock (in calling to markConnectAsClosed() and destructor from different threads) was fixed
+
+B3108: Aug 20, 2009
+    core	logger automatic config reload categories levels now can be reconfigured at runtime
+    SMSC	some changes to excpetions handling to avoid X86 compiler bug
