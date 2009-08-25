@@ -451,6 +451,8 @@ struct MapDialog{
       sms = auto_ptr<SMS>(0);
       auto_ui = auto_ptr<ET96MAP_SM_RP_UI_T>(0);
       chain.clear();
+      s_imsi.clear();
+      s_msc.clear();
       isLocked=false;
       while(cmdQueue.Count())
       {
