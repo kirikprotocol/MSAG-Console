@@ -909,7 +909,7 @@ static void ForwardMO(MapDialog* dialog) {
     }
     text[k]=0;
     __log2__(smsc::logger::_map_cat,smsc::logger::Logger::LEVEL_WARN, "ui: %s",text);
-    delete text;
+    delete [] text;
    }
   }
 
@@ -3742,7 +3742,7 @@ static void SendAlertToSMSC(MapDialog* dialog,ET96MAP_ADDRESS_T *mapAddr)
       text[k]=0;
       __log2__(smsc::logger::_map_cat,smsc::logger::Logger::LEVEL_DEBUG,
         "%s: mapaddress len=%d, type=%x, val=%s",__func__, mapAddr->addressLength, mapAddr->typeOfAddress, text);
-      delete text;
+      delete [] text;
      }
     }
 
@@ -3864,12 +3864,13 @@ USHORT_T Et96MapV2InformSCInd (
        char *text = new char[len*4+1];
        unsigned char* buf = (unsigned char*)msisdnAlert_sp;
        int k = 0;
-       for ( int i=0; i<len; i++) {
-     k+=sprintf(text+k,"%02x ",(unsigned)buf[i]);
+       for ( int i=0; i<len; i++)
+       {
+         k+=sprintf(text+k,"%02x ",(unsigned)buf[i]);
        }
        text[k]=0;
        __log2__(smsc::logger::_map_cat,smsc::logger::Logger::LEVEL_DEBUG, "msisdnAlert_s: %s",text);
-       delete text;
+       delete [] text;
     }
     if( mwdStatus_sp && smsc::logger::_map_cat->isDebugEnabled() )
     {
@@ -3877,12 +3878,13 @@ USHORT_T Et96MapV2InformSCInd (
        char *text = new char[len*4+1];
        unsigned char* buf = (unsigned char*)mwdStatus_sp;
        int k = 0;
-       for ( int i=0; i<len; i++){
-     k+=sprintf(text+k,"%02x ",(unsigned)buf[i]);
+       for ( int i=0; i<len; i++)
+       {
+         k+=sprintf(text+k,"%02x ",(unsigned)buf[i]);
        }
        text[k]=0;
        __log2__(smsc::logger::_map_cat,smsc::logger::Logger::LEVEL_DEBUG, "mwdStatus_s: %s",text);
-       delete text;
+       delete [] text;
     }
     switch( dialog->state ){
     case MAPST_WaitRInfoClose:

@@ -136,7 +136,7 @@ static inline int getPduText(PduXSm* pdu,char* buf,size_t bufsize)
     char *tmp=new char[len+1];
     UCS_ntohs(tmp,data,len,0);
     ConvertUCS2ToMultibyte((const short*)tmp,len,buf,bufsize,CONV_ENCODING_CP1251);
-    delete tmp;
+    delete [] tmp;
     len/=2;
   }else if(coding==DataCoding::SMSC7BIT)
   {
