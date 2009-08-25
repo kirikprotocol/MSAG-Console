@@ -18,7 +18,21 @@ if($ENV{VERBOSE} eq 'YES')
 sub readmodules{
   my $fn=shift;
   open(my $f,$fn) || die "Failed to open $fn:'$!'";
-  my @rv=grep!/^\s*(?:#|$)/,map{s/[\x0d\x0a]//g;/^([\w\?]+)/;$1}<$f>;
+  my @ml=grep!/^\s*(?:#|$)/,map{s/[\x0d\x0a]//g;/^([\w\?\!]+)/;$1}<$f>;
+  my @rv;
+  for(@ml)
+  {
+    if(/(\w+)\?(!)?(\w+)/)
+    {
+      if((exists($ENV{$3}) && $2 ne '!') || (!exists($ENV{$3}) && $2 eq '!' ))
+      {
+        push @rv,$1;
+      }
+    }else
+    {
+       push @rv,$_;
+    }
+  }
   return \@rv;
 }
 
