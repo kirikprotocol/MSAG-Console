@@ -522,8 +522,8 @@ void HttpRouterImpl::ReloadRoutes()
         delete mh;
         delete hh;
         delete ph;
-        delete inap;
-        delete outap;
+        delete[] inap;
+        delete[] outap;
         throw; 
     }
 
