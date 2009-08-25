@@ -403,3 +403,7 @@ B3107: Aug 11, 2009
 B3108: Aug 20, 2009
     core	logger automatic config reload categories levels now can be reconfigured at runtime
     SMSC	some changes to excpetions handling to avoid X86 compiler bug
+
+B3109: Aug 25, 2009
+    SMSC	clean imsi and msc when reusing dialog. Important for nosri enabled ussd codes.
+    Ussman	correct destroy request processor and MAP dialog, when disconnected state detected.
