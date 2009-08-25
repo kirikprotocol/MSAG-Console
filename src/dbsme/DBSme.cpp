@@ -651,10 +651,8 @@ int main(void)
                 Manager::reinit();
 
                 DataSourceLoader::unload();
-                ConfigView dsConfig(Manager::getInstance(), "StartupLoader");
                 DataSourceLoader::loadup(&dsConfig);
 
-                ConfigView cpConfig(Manager::getInstance(), "DBSme");
                 initDataCoding(&cpConfig);
                 processor.init(&cpConfig);
 

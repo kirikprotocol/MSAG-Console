@@ -478,8 +478,8 @@ void DataProvider::changeJob(const char* jobId, ConfigView* jobConfig)
             allJobs.Delete(jobId);
             
             oldJob->finalize();
-            if (this->ds) {
-                std::string queryId = this->id; queryId += '.'; queryId += jobId;
+            if (this->ds)
+            {
                 this->ds->closeRegisteredQueries(queryId.c_str());
             }
         }
