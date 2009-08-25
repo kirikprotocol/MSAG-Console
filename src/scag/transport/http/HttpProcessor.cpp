@@ -16,6 +16,7 @@
 
 namespace scag { namespace transport { namespace http {
 
+using namespace smsc::util;
 using namespace scag::util::singleton;
 using namespace scag::sessions;
 using namespace scag::re;

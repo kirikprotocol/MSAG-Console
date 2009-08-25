@@ -5,6 +5,7 @@
 using namespace scag::transport::http;
 
 using namespace smsc::logger;
+using namespace smsc::util;
 
 int main(int argc, char* argv[])
 {

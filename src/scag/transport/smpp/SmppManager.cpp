@@ -90,7 +90,7 @@ public:
       if(!ref->lookup(srcidx,source,dest,info))return 0;
     }
     MutexGuard mg(regMtx);
-    SmppEntity** ptr=registry.GetPtr(info.smeSystemId);
+    SmppEntity** ptr=registry.GetPtr(info.smeSystemId.c_str());
     if(ptr)
     {
       if((*ptr)->info.enabled)
@@ -101,7 +101,7 @@ public:
         return 0;
       }
     }
-    MetaEntity** pme=metaRegistry.GetPtr(info.smeSystemId);
+    MetaEntity** pme=metaRegistry.GetPtr(info.smeSystemId.c_str());
     if(!pme)return 0;
     MetaEntity& me=**pme;
     SmppEntity* rv=0;
@@ -514,11 +514,11 @@ SmppBindType GetBindType(DOMNamedNodeMap* attr)
 {
   buf::FixedLengthString<16> bindTypeName;
   FillStringValue(attr,bindTypeName);
-  size_t len=strlen(bindTypeName);
+  size_t len=strlen(bindTypeName.c_str());
   for(size_t i=0;i<len;i++)bindTypeName[i]=tolower(bindTypeName[i]);
-  if     (!strcmp(bindTypeName,"rx")) return btReceiver;
-  else if(!strcmp(bindTypeName,"tx")) return btTransmitter;
-  else if(!strcmp(bindTypeName,"trx"))return btTransceiver;
+  if     (!strcmp(bindTypeName.c_str(),"rx")) return btReceiver;
+  else if(!strcmp(bindTypeName.c_str(),"tx")) return btTransmitter;
+  else if(!strcmp(bindTypeName.c_str(),"trx"))return btTransceiver;
   throw smsc::util::Exception("Unknown bind mode:%s",bindTypeName.c_str());
 }
 
@@ -894,7 +894,7 @@ void SmppManagerImpl::addSmppEntity(const SmppEntityInfo& info)
 {
   smsc_log_debug(log,"addSmppEntity:%s",info.systemId.c_str());
   sync::MutexGuard mg(regMtx);
-  SmppEntity** ptr=registry.GetPtr(info.systemId);
+  SmppEntity** ptr=registry.GetPtr(info.systemId.c_str());
   if(ptr)
   {
     if((**ptr).info.type!=etUnknown)
@@ -904,7 +904,7 @@ void SmppManagerImpl::addSmppEntity(const SmppEntityInfo& info)
     (**ptr).info=info;
   }else
   {
-    registry.Insert(info.systemId,new SmppEntity(info));
+    registry.Insert(info.systemId.c_str(),new SmppEntity(info));
   }
   if(info.type==etSmsc && info.enabled)
   {
@@ -926,7 +926,7 @@ void SmppManagerImpl::updateSmppEntity(const SmppEntityInfo& info)
 {
   smsc_log_debug(log,"updateSmppEntity:%s",info.systemId.c_str());
   sync::MutexGuard mg(regMtx);
-  SmppEntity** ptr=registry.GetPtr(info.systemId);
+  SmppEntity** ptr=registry.GetPtr(info.systemId.c_str());
   if(!ptr)
   {
     throw smsc::util::Exception("updateSmppEntity:Enitity with systemId='%s' not found",info.systemId.c_str());

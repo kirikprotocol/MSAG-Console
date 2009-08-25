@@ -14,6 +14,7 @@
 
 using namespace std;
 using namespace smsc::logger;
+using namespace smsc::util;
 using namespace scag::pers::client;
 using namespace scag::pers;
 using namespace scag::config;

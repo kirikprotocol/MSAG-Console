@@ -5,9 +5,11 @@
 #include "ScagTask.h"
 #include <scag/util/singleton/Singleton.h>
 
+
 namespace scag { namespace transport { namespace http
 {
 
+using namespace smsc::util;
 using namespace scag::util::singleton;
 
 bool HttpManager::inited = false;

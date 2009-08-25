@@ -296,12 +296,12 @@ void StateMachine::registerEvent( int event, SmppEntity* src, SmppEntity* dst,
         smsc_log_error(log_,"SmppStateMachine: no src passed! The event is lost.");
         return;
     }
-    src_id = (char*)src->info.systemId;
+    src_id = (char*)src->info.systemId.c_str();
     srcType = src->info.type == etSmsc;
 
     if(dst)
     {
-        dst_id = (char*)dst->info.systemId;
+        dst_id = (char*)dst->info.systemId.c_str();
         dstType = dst->info.type == etSmsc;
     }
 
@@ -383,7 +383,7 @@ uint32_t StateMachine::putCommand(CommandId cmdType, SmppEntity* src, SmppEntity
                     throw smsc::util::Exception("%s: Register cmd for uid=%d, seq=%d failed", cmdName, dst->getUid(), newSeq);
                 dst->putCommand(aucmd);
             }
-            registerEvent( stat::events::smpp::ACCEPTED, src, dst, (char*)ri.routeId, -1 );
+            registerEvent( stat::events::smpp::ACCEPTED, src, dst, ri.routeId.c_str(), -1 );
         }
     } catch (std::exception& e) {
         failed = smsc::system::Status::SYSFAILURE;
@@ -751,7 +751,7 @@ void StateMachine::processSm( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* 
             }
             routeId = ri.routeId;
             cmd->setDstEntity(dst);
-            sms.setRouteId(ri.routeId);
+            sms.setRouteId(ri.routeId.c_str());
             sms.setSourceSmeId(src->getSystemId());
             sms.setDestinationSmeId(dst->getSystemId());
             cmd->setServiceId(ri.serviceId);
@@ -869,7 +869,7 @@ void StateMachine::processSm( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* 
             break;
         }
         if (resp.get()) src->putCommand( resp );
-        registerEvent( statevent, src, dst, (char*)routeId, st.result );
+        registerEvent( statevent, src, dst, routeId.c_str(), st.result );
         if ( session.get() ) session->closeCurrentOperation();
         hrt.stop();
         return;

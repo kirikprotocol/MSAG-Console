@@ -19,8 +19,8 @@ namespace stat {
 
 using smsc::core::network::Socket;
 
-    class SaccSerialBuffer : public SerializationBuffer
-    {
+class SaccSerialBuffer : public smsc::util::SerializationBuffer
+{
     public:
         void writeStr(std::string& s, uint16_t maxLen);
         void writeInt16(uint16_t i);

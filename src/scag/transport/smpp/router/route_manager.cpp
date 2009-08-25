@@ -197,7 +197,7 @@ void RouteManager::addRoute(const RouteInfo& routeInfo)
   r->proxyIdx = 0;
   if ( r->info.smeSystemId.length() != 0 )
   {
-    r->proxyIdx = r->info.smeSystemId;
+    r->proxyIdx = r->info.smeSystemId.c_str();
   }
   if(r->info.srcSmeSystemId.length()==0)
   {
@@ -205,10 +205,10 @@ void RouteManager::addRoute(const RouteInfo& routeInfo)
     new_first_record = r.release();
   }else
   {
-    SmeRoute* ptr=smeRoutes.GetPtr(r->info.srcSmeSystemId);
+    SmeRoute* ptr=smeRoutes.GetPtr(r->info.srcSmeSystemId.c_str());
     if(!ptr)
     {
-      ptr=smeRoutes.SetItem(r->info.srcSmeSystemId,SmeRoute());
+      ptr=smeRoutes.SetItem(r->info.srcSmeSystemId.c_str(),SmeRoute());
     }
     r->next=ptr->new_first_record;
     ptr->new_first_record=r.release();

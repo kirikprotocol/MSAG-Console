@@ -100,7 +100,7 @@ public:
   }
   const char* getSystemId()const
   {
-    return info.systemId;
+    return info.systemId.c_str();
   }
   void putCommand( std::auto_ptr<SmppCommand>& cmd )
   {

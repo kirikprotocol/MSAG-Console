@@ -146,7 +146,7 @@ struct SmppEntity
   }
   const char* getSystemId()const
   {
-    return info.systemId;
+    return info.systemId.c_str();
   }
   void putCommand(const SmppCommand& cmd)
   {

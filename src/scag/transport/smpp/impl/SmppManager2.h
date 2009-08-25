@@ -80,7 +80,7 @@ public:
       if(!ref->lookup(srcidx,source,dest,info))return 0;
     }
     MutexGuard mg(regMtx);
-    SmppEntity** ptr=registry.GetPtr(info.smeSystemId);
+    SmppEntity** ptr=registry.GetPtr(info.smeSystemId.c_str());
     if(ptr)
     {
       if((*ptr)->info.enabled)
@@ -91,7 +91,7 @@ public:
         return 0;
       }
     }
-    MetaEntity** pme=metaRegistry.GetPtr(info.smeSystemId);
+    MetaEntity** pme=metaRegistry.GetPtr(info.smeSystemId.c_str());
     if(!pme)return 0;
     MetaEntity& me=**pme;
     SmppEntity* rv=0;

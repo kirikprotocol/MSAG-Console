@@ -84,11 +84,11 @@ protected:
     uint32_t HashCode(uint32_t attempt)const
     {
       uint32_t res=(addr.type+addr.plan)*umr;
-      res=crc32(res,addr.value,addr.length);
+      res=smsc::util::crc32(res,addr.value,addr.length);
       for(;attempt>0;attempt--)
       {
         res+=umr;
-        res=crc32(res,addr.value,addr.length);
+        res=smsc::util::crc32(res,addr.value,addr.length);
       }
       return res;
     }
