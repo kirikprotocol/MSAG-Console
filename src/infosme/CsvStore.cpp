@@ -454,7 +454,7 @@ bool CsvStore::CsvFile::Open(bool cancreate)
       return false;
     }
     f.RWCreate(fileName.c_str());
-    const char* header="STATE,DATE,ABONENT,REGION,MESSAGE\n";
+    const char* header="STATE,DATE,ABONENT,REGION,MESSAGE,USERDATA\n";
     f.Write(header,strlen(header));
   }
   return true;
@@ -583,12 +583,39 @@ void CsvStore::CsvFile::ReadRecord(buf::File &f, CsvStore::CsvFile::Record& rec)
       {
         rec.msg.message+=(char)c;
       }
-    }else
-    {
+    }else if (c==0xa) {
+        throw smsc::util::Exception("Corrupted store file:'%s' at %lld",f.getFileName().c_str(),f.Pos()-1);
+    } else {
       rec.msg.message+=(char)c;
     }
   }
   c=f.ReadByte();
+  rec.msg.userData="";
+  if (c==',') {
+      // user data specified
+      if (f.ReadByte()!='"') {
+          throw smsc::util::Exception("Corrupted store file:'%s' at %lld",f.getFileName().c_str(),f.Pos()-1);
+      }
+      while((c=f.ReadByte())!='"')
+      {
+          if(c=='\\')
+          {
+              c=f.ReadByte();
+              if(c=='n')
+              {
+                  rec.msg.userData+="\n";
+              }else
+              {
+                  rec.msg.userData+=(char)c;
+              }
+          }else if (c==0xa) {
+              throw smsc::util::Exception("Corrupted store file:'%s' at %lld",f.getFileName().c_str(),f.Pos()-1);
+          }else {
+              rec.msg.userData+=(char)c;
+          }
+      }
+      c=f.ReadByte();
+  }
   if(c==0x0d)
   {
     if(f.ReadByte()!=0x0a)
@@ -668,6 +695,10 @@ uint64_t CsvStore::CsvFile::AppendRecord(uint8_t state,time_t fdate,const Messag
   localtime_r(&fdate,&t);
   sprintf(timestamp,"%02d%02d%02d%02d%02d%02d",t.tm_year%100,t.tm_mon+1,t.tm_mday,t.tm_hour,t.tm_min,t.tm_sec);
   std::string escapedMsg=escapeMessage(message.message.c_str());
+    std::string escapedData;
+    if (!message.userData.empty()) {
+        escapedData=escapeMessage(message.userData.c_str());
+    }
   f.WriteByte('0'+state);
   f.WriteByte(',');
   f.Write(timestamp,12);
@@ -679,6 +710,12 @@ uint64_t CsvStore::CsvFile::AppendRecord(uint8_t state,time_t fdate,const Messag
   f.WriteByte('"');
   f.Write(escapedMsg.c_str(),escapedMsg.length());
   f.WriteByte('"');
+  if (!message.userData.empty()) {
+      f.WriteByte(',');
+      f.WriteByte('"');
+      f.Write(escapedData.c_str(),escapedData.length());
+      f.WriteByte('"');
+  }
   f.WriteByte('\n');
   f.Flush();
   readAll=false;

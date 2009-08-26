@@ -34,6 +34,7 @@ namespace infosme{
       std::string abonent;
       std::string message;
       std::string regionId;
+      std::string userData;  // optional user data
 
       Message():id(0),date(0)
       {
