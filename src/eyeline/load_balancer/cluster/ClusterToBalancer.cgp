@@ -25,10 +25,7 @@ out.extension=cpp
 out.extension=hpp
 out.extension=cpp
 
-idxoption:srvmode=true
-idxoption:srvmode=true
-idxoption:srvmode=true
-idxoption:srvmode=true
+option:ccmode=false
 
 option:options.throwOnUnsetGet=true
 

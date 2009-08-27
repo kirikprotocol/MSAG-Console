@@ -1,7 +1,5 @@
 #ifndef __EYELINE_LOAD_BALANCER_CLUSTER_CLUSTERLOADBALANCERPROTOCOL_HPP__
 #define __EYELINE_LOAD_BALANCER_CLUSTER_CLUSTERLOADBALANCERPROTOCOL_HPP__ 1
-
-
 #include "eyeline/protogen/framework/SerializerBuffer.hpp"
 #include "eyeline/protogen/framework/Exceptions.hpp"
 #include "eyeline/load_balancer/cluster/ClusterControllerMsgsHndlr.hpp"
@@ -16,8 +14,8 @@ class ClusterLoadBalancerProtocol{
 public:
   enum{
     tag_GetServicesStatus=63,
-    tag_GetServicesStatusResp=1063,
     tag_DisconnectService=64,
+    tag_GetServicesStatusResp=1063,
     tag_DisconnectServiceResp=1064
   };
  
