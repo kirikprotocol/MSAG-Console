@@ -43,8 +43,6 @@ void ClusterLoadBalancerProtocol::decodeAndHandleMessage(protogen::framework::Se
   }
 }
 
-
-
 void ClusterLoadBalancerProtocol::encodeMessage(const messages::GetServicesStatusResp& msg,protogen::framework::SerializerBuffer* ss)
 {
   ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
@@ -52,8 +50,6 @@ void ClusterLoadBalancerProtocol::encodeMessage(const messages::GetServicesStatu
   ss->writeInt32(msg.getSeqNum());
   msg.serialize(*ss);
 }
-
-
 void ClusterLoadBalancerProtocol::encodeMessage(const messages::DisconnectServiceResp& msg,protogen::framework::SerializerBuffer* ss)
 {
   ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
