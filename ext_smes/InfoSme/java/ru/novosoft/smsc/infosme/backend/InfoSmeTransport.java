@@ -414,6 +414,10 @@ public class InfoSmeTransport extends Service
     final List list = new ArrayList(messages.size());
     for (Iterator iter = messages.iterator(); iter.hasNext();) {
       Message m = (Message)iter.next();
+        // FIXME: temporary adding userData to test new functionality
+        // if ( m.getUserData() == null ) {
+        //     m.setUserData(String.valueOf(System.currentTimeMillis()));
+        // }
       list.add(messageToString(m));
     }
 
@@ -457,7 +461,13 @@ public class InfoSmeTransport extends Service
 
   private static String messageToString(Message m) {
     StringBuffer b = new StringBuffer(100);
-    b.append(m.getState().getId()).append('|').append(m.getAbonent()).append('|').append(dateToString(m.getSendDate())).append('|').append(m.getMessage());
+    b.append(m.getState().getId()).append('|')
+            .append(m.getAbonent()).append('|')
+            .append(dateToString(m.getSendDate())).append('|');
+    if (m.getUserData() != null ) {
+        b.append(m.getUserData()).append('|');
+    }
+    b.append(m.getMessage());
     return b.toString();
   }
 

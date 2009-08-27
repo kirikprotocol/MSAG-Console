@@ -855,7 +855,8 @@ bool Task::isReady(time_t time, bool checkActivePeriod)
 bool Task::insertDeliveryMessage(uint8_t msgState,
                                  const std::string& address,
                                  time_t messageDate,
-                                 const std::string& msg)
+                                 const std::string& msg,
+                                 const std::string& userData )
 {
   smsc::sms::Address parsedAddr(address.c_str());
   smsc_log_debug(logger, "Task::insertDeliveryMessage::: try map telephone number [%s] to Region", address.c_str());
@@ -865,7 +866,7 @@ bool Task::insertDeliveryMessage(uint8_t msgState,
   else
     throw Exception("Task::insertDeliveryMessage::: Wrong configuraiton - can't find region definition");
 
-  if (msg.length() > 0)
+  if (! msg.empty())
   {
     time_t now=time(NULL);
     if(messageDate<now+60)
@@ -877,6 +878,7 @@ bool Task::insertDeliveryMessage(uint8_t msgState,
     message.message=msg;
     message.date=messageDate;
     message.regionId=foundRegion->getId();
+    if (!userData.empty()) message.userData = userData;
     store.createMessage(messageDate,message);
   }
 

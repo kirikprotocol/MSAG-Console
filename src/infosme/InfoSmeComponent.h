@@ -49,7 +49,7 @@ namespace smsc { namespace infosme
       
       void splitMessageToFields(const std::string& messageDescription, long* messageState,
                                 std::string* address, std::string* messageDate,
-                                std::string* messageText);
+                                std::string* messageText, std::string* userData );
       
       bool getParameterIfExistsAndNotNull(const Arguments& args, const char* argumentId,
                                           std::string& argumentValue);

@@ -164,7 +164,24 @@ public class LoadDeliveriesFileThread extends Thread {
     boolean admin = user.getRoles().contains(InfoSmeBean.INFOSME_ADMIN_ROLE);
 
     DeliveriesFile defaultFile = split ? null : new DeliveriesFile(-1, Functions.createNewFilenameForSave(new File(WebAppFolders.getWorkFolder(), "INFO_SME_abonents.region_ALL.list")));
-
+    /* FIXME: It was a workaround for empty regions list
+    log.debug("initiateRadixTree: regions.length()=" + regions.size() );
+    if ( regions.size() == 0 && !split ) {
+        StringBuffer sb = new StringBuffer();
+        String delim = "";
+        for ( int i = 0; i < 20; ++i ) {
+            sb.append(delim);
+            sb.append("+");
+            for ( int j = 0; j <= i; ++j ) {
+                sb.append("?");
+            }
+            delim = " ";
+        }
+        MaskList ml = new MaskList(sb.toString());
+        tree.add( ml.getNames(), defaultFile );
+        return;
+    }
+    */
     Region r;
     for (Iterator regionsIter = regions.iterator(); regionsIter.hasNext();) {
       r = (Region)regionsIter.next();

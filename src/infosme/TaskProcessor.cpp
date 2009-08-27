@@ -1135,12 +1135,13 @@ void TaskProcessor::addDeliveryMessages(uint32_t taskId,
                                         uint8_t msgState,
                                         const std::string& abonentAddress,
                                         time_t messageDate,
-                                        const std::string& msg)
+                                        const std::string& msg,
+                                        const std::string& userData )
 {
   TaskGuard taskGuard = getTask(taskId);
   Task* task = taskGuard.get();
   if (!task) throw Exception("TaskProcessor::addDeliveryMessages::: can't get task by taskId='%d'", taskId);
-  task->insertDeliveryMessage(msgState, abonentAddress, messageDate, msg);
+  task->insertDeliveryMessage(msgState, abonentAddress, messageDate, msg, userData);
   statistics->incGenerated(taskId);
 }
 

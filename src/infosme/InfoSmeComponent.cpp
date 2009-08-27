@@ -518,7 +518,7 @@ void InfoSmeComponent::deleteEscapeSymbols(std::string* message)
 
 void InfoSmeComponent::splitMessageToFields(const std::string& messageDescription, long* messageState,
                                             std::string* address, std::string* messageDate,
-                                            std::string* messageText)
+                                            std::string* messageText, std::string* userData )
 {
   std::string::size_type prevPos = 0;
   std::string::size_type pos = messageDescription.find('|');
@@ -540,7 +540,14 @@ void InfoSmeComponent::splitMessageToFields(const std::string& messageDescriptio
 
   *messageDate = messageDescription.substr(prevPos, pos-prevPos);
 
-  *messageText = std::string(messageDescription, pos+1);
+  prevPos = pos + 1;
+  pos = messageDescription.find('|',prevPos);
+  if ( pos != std::string::npos ) {
+      // we have user data
+      *userData = messageDescription.substr(prevPos,pos-prevPos);
+      prevPos = pos + 1;
+  }
+  *messageText = std::string(messageDescription, prevPos);
 }
 
 /*
@@ -570,9 +577,9 @@ void InfoSmeComponent::addDeliveryMessages(const Arguments& args)
     smsc_log_info(logger, "InfoSmeComponent::addDeliveryMessages::: taskId=[%s], num. of new messages=[%d]",taskId.c_str(), list.size());
     for (StringList::const_iterator it=list.begin(); it != list.end(); it++) {
       long messageState;
-      std::string address, messageDate, messageText;
+      std::string address, messageDate, messageText, userData;
 
-      splitMessageToFields(*it, &messageState, &address, &messageDate, &messageText);
+      splitMessageToFields(*it, &messageState, &address, &messageDate, &messageText, &userData);
 
       if (address == "")
         error("addDeliveryMessages", ARGUMENT_ADDRESS);
@@ -583,7 +590,10 @@ void InfoSmeComponent::addDeliveryMessages(const Arguments& args)
         error("addDeliveryMessages", ARGUMENT_DATE);
 
       deleteEscapeSymbols(&messageText);
-      admin.addDeliveryMessages(atoi(taskId.c_str()), (uint8_t)messageState, address, unixTime, messageText);
+      if (!userData.empty()) {
+          deleteEscapeSymbols(&userData);
+      }
+      admin.addDeliveryMessages(atoi(taskId.c_str()), (uint8_t)messageState, address, unixTime, messageText, userData);
     }
     smsc_log_info(logger, "InfoSmeComponent::addDeliveryMessages::: messages have been loaded");
   } catch (std::exception& exc) {

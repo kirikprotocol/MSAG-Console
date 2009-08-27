@@ -33,11 +33,12 @@ public class MessageDataSource extends AbstractDataSource {
   public static final String MSISDN = "msisdn";
   public static final String REGION = "region";
   public static final String MESSAGE = "message";
+    public static final String USERDATA = "userdata";
   public static final String ID = "id";
   public static final String TASK_ID = "taskId";
 
   public MessageDataSource(String storeDir) {
-    super(new String[]{STATE, DATE, MSISDN, REGION, MESSAGE});
+    super(new String[]{STATE, DATE, MSISDN, REGION, USERDATA, MESSAGE});
     this.storeDir = storeDir;
   }
 
@@ -438,9 +439,29 @@ public class MessageDataSource extends AbstractDataSource {
             i = line.indexOf(',', k);
             String region = line.substring(k, i);
 
-            String message = prepareMessage(line.substring(i + 2, line.length() - 1));
+              i += 1;
+              char c = line.charAt(i);
+              String userData = null;
+              String message = null;
+              if ( c == ',' ) {
+                  // userData field is empty
+                  message = prepareMessage(line.substring(i+2,line.length()-1));
+              } else if ( c != '"' ) {
+                  throw new ParseException(line,i);
+              } else {
+                  // either user data or message
+                  k = line.indexOf('"',i+1);
+                  if ( k+1 == line.length() ) {
+                      // only message is specified (old format)
+                      message = prepareMessage(line.substring(i+1,k));
+                  } else if ( line.charAt(k+1) == ',' && line.charAt(k+2) == '"' ) {
+                      // both userData and message are specified
+                      userData = line.substring(i+1,k);
+                      message = line.substring(k+3,line.length()-1);
+                  }
+              }
 
-            MessageDataItem item = new MessageDataItem(lineObj.id, filter.getTaskId(), state, msgDateFormat.parse(dateStr), msisdn, region, message);
+            MessageDataItem item = new MessageDataItem(lineObj.id, filter.getTaskId(), state, msgDateFormat.parse(dateStr), msisdn, region, message, userData);
             if (!visitor.visit(item))
               break;
           }

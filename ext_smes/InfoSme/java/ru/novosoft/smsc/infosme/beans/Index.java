@@ -121,7 +121,7 @@ public class Index extends IndexProperties
     if (isToStart("sme")) {
       try {
         getAppContext().getHostsManager().startService(getSmeId());
-        try { // из-за долгого старта InfoSme
+        try { // because of long start of InfoSme
           Thread.sleep(5000);
         } catch (InterruptedException e) {
           //do nothing

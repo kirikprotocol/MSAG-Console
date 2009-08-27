@@ -251,7 +251,8 @@ namespace infosme
         bool insertDeliveryMessage(uint8_t msgState,
                                    const std::string& address,
                                    time_t messageDate,
-                                   const std::string& msg);
+                                   const std::string& msg,
+                                   const std::string& userData );
 
         bool changeDeliveryMessageInfoByRecordId(uint8_t msgState,
                                                  time_t unixTime,

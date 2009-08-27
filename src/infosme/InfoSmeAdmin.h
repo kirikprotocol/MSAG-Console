@@ -59,7 +59,8 @@ namespace smsc { namespace infosme
                                          uint8_t msgState,
                                          const std::string& address,
                                          time_t messageDate,
-                                         const std::string& msg) = 0;
+                                         const std::string& msg,
+                                         const std::string& userData ) = 0;
 
         virtual void changeDeliveryMessageInfoByRecordId(uint32_t taskId,
                                                          uint8_t messageState,

@@ -28,6 +28,7 @@ public class Message
   private String message = null;
   private Date sendDate = null;
   private State state = null;
+    private String userData = null;
 //  public byte status = MESSAGE_UNDEFINED_STATE;
 
   public Message() {
@@ -56,6 +57,22 @@ public class Message
   public void setMessage(String message) {
     this.message = message;
   }
+
+    public String getUserData() {
+        return userData;
+    }
+
+    public void setUserData(String userData) {
+        if ( userData != null &&
+             ( userData.indexOf('|') != -1 ||
+               userData.indexOf(',') != -1 ||
+             userData.indexOf('"') != -1 ||
+             userData.indexOf('\\') != -1 ||
+             userData.indexOf('\n') != -1 ) ) {
+            throw new IllegalArgumentException("user data shall not contain chars: '|\\\",' and <CR>");
+        }
+        this.userData = userData;
+    }
 
   public Date getSendDate() {
     return sendDate;

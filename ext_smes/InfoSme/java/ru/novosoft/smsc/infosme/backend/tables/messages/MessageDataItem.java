@@ -13,13 +13,14 @@ import java.util.Date;
 
 public class MessageDataItem extends AbstractDataItem {
 
-  public MessageDataItem(long id, String taskId, int state, Date date, String msisdn, String region, String message) {
+  public MessageDataItem(long id, String taskId, int state, Date date, String msisdn, String region, String message, String userData) {
     values.put(MessageDataSource.ID, new Long(id));
     values.put(MessageDataSource.TASK_ID, taskId);
     values.put(MessageDataSource.STATE, Message.State.getById(state));
     values.put(MessageDataSource.DATE, date);
     values.put(MessageDataSource.MSISDN, msisdn);
     values.put(MessageDataSource.REGION, region);
+      values.put(MessageDataSource.USERDATA, userData );
     values.put(MessageDataSource.MESSAGE, message);
   }
 
