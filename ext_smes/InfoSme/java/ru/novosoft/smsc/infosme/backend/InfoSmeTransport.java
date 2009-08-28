@@ -412,12 +412,14 @@ public class InfoSmeTransport extends Service
       throw new AdminException("Message s list is null");
 
     final List list = new ArrayList(messages.size());
+    // boolean putData = true;
     for (Iterator iter = messages.iterator(); iter.hasNext();) {
       Message m = (Message)iter.next();
         // FIXME: temporary adding userData to test new functionality
-        // if ( m.getUserData() == null ) {
+        // if ( m.getUserData() == null && putData ) {
         //     m.setUserData(String.valueOf(System.currentTimeMillis()));
         // }
+        // putData = !putData;
       list.add(messageToString(m));
     }
 

@@ -190,9 +190,9 @@ public class MessageDataSource extends AbstractDataSource {
   private static String prepareMessage(String m) {
     String message = m;
     message = message.trim();
+    message = message.replaceAll("\"\"","\"");
     message = message.replaceAll("\\\\n", "\n");
-    message = message.replaceAll("\\\\\"", "\"");
-
+    message = message.replaceAll("\\\\\"", "\""); // for backward compatibility only
     return message;
   }
 
@@ -447,18 +447,13 @@ public class MessageDataSource extends AbstractDataSource {
                   // userData field is empty
                   message = prepareMessage(line.substring(i+2,line.length()-1));
               } else if ( c != '"' ) {
-                  throw new ParseException(line,i);
+                  // user data specified
+                  k = line.indexOf(',',i);
+                  userData = line.substring(i,k);
+                  message = prepareMessage(line.substring(k+2,line.length()-1));
               } else {
-                  // either user data or message
-                  k = line.indexOf('"',i+1);
-                  if ( k+1 == line.length() ) {
-                      // only message is specified (old format)
-                      message = prepareMessage(line.substring(i+1,k));
-                  } else if ( line.charAt(k+1) == ',' && line.charAt(k+2) == '"' ) {
-                      // both userData and message are specified
-                      userData = line.substring(i+1,k);
-                      message = line.substring(k+3,line.length()-1);
-                  }
+                  // user data field is not present (old format)
+                  message = prepareMessage(line.substring(i+1,line.length()-1));
               }
 
             MessageDataItem item = new MessageDataItem(lineObj.id, filter.getTaskId(), state, msgDateFormat.parse(dateStr), msisdn, region, message, userData);
