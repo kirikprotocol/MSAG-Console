@@ -36,7 +36,9 @@ void OutputFormatter::format(std::string& output,
     for (int i=0; i<entities.Count(); i++)
     {
         FormatEntity* entity = entities[i];
-        if (entity && entity->type >= 0 && entity->type < ioEntityTypesNumber)
+        if ( !entity )
+          throw FormattingException("Entity with idx=%d is NULL!", i);
+        if (entity->type >= 0 && entity->type < ioEntityTypesNumber)
         {
             const char* entityTypeStr = ioEntityTypeStrings[entity->type];
             __trace2__("Formatting arg of type %d '%s'",
@@ -47,7 +49,8 @@ void OutputFormatter::format(std::string& output,
                 "Formatter for type %d '%s' not defined !",
                 entity->type, entityTypeStr);
         }
-        else throw FormattingException("Entity type %d is invalid !", i);
+        else throw FormattingException("Invalid entity type=%d for entity with idx=%d!",
+                                       entity->type, i);
     }
 }
 
