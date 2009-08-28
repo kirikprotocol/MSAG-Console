@@ -43,7 +43,7 @@ public:
 class IAPQueryFactoryITF {
 public:
     virtual IAPQueryAC * newQuery(unsigned q_id, IAPQueryManagerITF * owner,
-                                  Logger * use_log = NULL);
+                                  Logger * use_log = NULL) = 0;
 
     //NOTE: special case: explicitly allow interface destruction
     virtual ~IAPQueryFactoryITF() 
