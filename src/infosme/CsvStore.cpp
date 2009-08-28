@@ -1,3 +1,4 @@
+#include "util/csv/CsvRecord.h"
 #include "CsvStore.hpp"
 #include <memory>
 #include <algorithm>
@@ -263,7 +264,7 @@ void CsvStore::removeCanClose(CsvFile &file)
 }
 
 
-void CsvStore::setMsgState(uint64_t msgId, uint8_t state)
+void CsvStore::setMsgState(uint64_t msgId, uint8_t state, Message* msg)
 {
   sync::MutexGuard mg(mtx);
   smsc_log_debug(log,"setMsgState: state=%d msgId=#%llx",state,msgId);
@@ -287,7 +288,15 @@ void CsvStore::setMsgState(uint64_t msgId, uint8_t state)
   {
     file.Open();
   }
-  file.setState(msgId,state);
+  CsvFile::Record& rec = file.setState(msgId,state);
+  if ( msg ) {
+      msg->id = rec.msg.id;
+      msg->date = rec.msg.date;
+      msg->abonent = rec.msg.abonent;
+      msg->message = rec.msg.message;
+      msg->regionId = rec.msg.regionId;
+      msg->userData = rec.msg.userData;
+  }
   //all records are read and all messages are in final state
   //file can be closed
   if(file.readAll && file.openMessages==0)
@@ -399,7 +408,7 @@ void CsvStore::enrouteMessage(uint64_t msgId)
   file.setState(msgId,ENROUTE);
 }
 
-void CsvStore::finalizeMsg(uint64_t msgId, time_t fdate, uint8_t state)
+void CsvStore::finalizeMsg(uint64_t msgId, time_t fdate, uint8_t state, Message* msg )
 {
   sync::MutexGuard mg(mtx);
   uint64_t off;
@@ -408,7 +417,15 @@ void CsvStore::finalizeMsg(uint64_t msgId, time_t fdate, uint8_t state)
   {
     file.Open();
   }
-  file.setStateAndDate(msgId,state,fdate);
+  CsvFile::Record& rec = file.setStateAndDate(msgId,state,fdate);
+  if ( msg ) {
+      msg->id = rec.msg.id;
+      msg->date = rec.msg.date;
+      msg->abonent = rec.msg.abonent;
+      msg->message = rec.msg.message;
+      msg->regionId = rec.msg.regionId;
+      msg->userData = rec.msg.userData;
+  }
   if(file.readAll && file.openMessages==0)
   {
     canClose(file);
@@ -568,77 +585,34 @@ void CsvStore::CsvFile::ReadRecord(buf::File &f, CsvStore::CsvFile::Record& rec)
 
   rec.msg.message="";
   rec.msg.userData="";
-  c=f.ReadByte();
-  bool userDataSkipped = false;
-  if (c == ',') {
-      userDataSkipped = true;
-      c=f.ReadByte();
-  }
-  if(c!='"') {
-    throw smsc::util::Exception("Corrupted store file:'%s' at %lld",f.getFileName().c_str(),f.Pos()-1);
-  }
-  while((c=f.ReadByte())!='"')
-  {
-    if(c=='\\')
-    {
-      c=f.ReadByte();
-      if(c=='n')
-      {
-        rec.msg.message+="\n";
-      }else
-      {
-        rec.msg.message+=(char)c;
-      }
-    }else if (c==0xa) {
+    TmpBuf<char,256> buf;
+    while ( (c=f.ReadByte()) != '\n' ) {
+        buf.Append((char*)&c,1);
+    }
+    if ( buf.GetPos() > 0 && buf.get()[buf.GetPos()-1] == '\r' ) {
+        buf.SetPos(buf.GetPos()-1);
+    }
+
+    util::csv::CsvRecord csv(buf.get(),buf.GetPos(),true);
+    if ( csv.isNextFieldSimple() ) {
+        // user data specified
+        csv.parseSimpleField(rec.msg.userData);
+        if ( csv.isEOL() ) {
+            // user data was actuall skipped and the last field was message
+            rec.msg.message = rec.msg.userData;
+            rec.msg.userData.clear();
+            return;
+        }
+    } else if ( csv.isEOL() ) {
+        // end of record
         throw smsc::util::Exception("Corrupted store file:'%s' at %lld",f.getFileName().c_str(),f.Pos()-1);
-    } else {
-      rec.msg.message+=(char)c;
     }
-  }
-  c=f.ReadByte();
-  if (!userDataSkipped) {
-      if (c==',') {
-          // user data specified
-          rec.msg.userData=rec.msg.message;
-          rec.msg.message="";
-          if (f.ReadByte()!='"') {
-              throw smsc::util::Exception("Corrupted store file:'%s' at %lld",f.getFileName().c_str(),f.Pos()-1);
-          }
-          while((c=f.ReadByte())!='"')
-          {
-              if(c=='\\')
-              {
-                  c=f.ReadByte();
-                  if(c=='n')
-                  {
-                      rec.msg.message+="\n";
-                  }else
-                  {
-                      rec.msg.message+=(char)c;
-                  }
-              }else if (c==0xa) {
-                  throw smsc::util::Exception("Corrupted store file:'%s' at %lld",f.getFileName().c_str(),f.Pos()-1);
-              }else {
-                  rec.msg.message+=(char)c;
-              }
-          }
-          c=f.ReadByte();
-      }
-  }
-  if(c==0x0d)
-  {
-    if(f.ReadByte()!=0x0a)
-    {
-      throw smsc::util::Exception("Corrupted store file:'%s' at %lld",f.getFileName().c_str(),f.Pos()-1);
-    }
-  }else if(c!=0x0a)
-  {
-    throw smsc::util::Exception("Corrupted store file:'%s' at %lld",f.getFileName().c_str(),f.Pos()-1);
-  }
+    // message
+    csv.parseField(rec.msg.message);
 }
 
 
-void CsvStore::CsvFile::setState(uint64_t msgId, uint8_t state)
+CsvStore::CsvFile::Record& CsvStore::CsvFile::setState(uint64_t msgId, uint8_t state)
 {
   Record& rec=findRecord(msgId);
   if(rec.state<=ENROUTE && state>ENROUTE)
@@ -653,6 +627,7 @@ void CsvStore::CsvFile::setState(uint64_t msgId, uint8_t state)
   f.Seek(off);
   f.WriteByte(state+'0');
   f.Flush();
+  return rec;
 }
 
 static std::string escapeMessage(const char* msg)
@@ -710,11 +685,11 @@ uint64_t CsvStore::CsvFile::AppendRecord(uint8_t state,time_t fdate,const Messag
   struct tm t;
   localtime_r(&fdate,&t);
   sprintf(timestamp,"%02d%02d%02d%02d%02d%02d",t.tm_year%100,t.tm_mon+1,t.tm_mday,t.tm_hour,t.tm_min,t.tm_sec);
-  std::string escapedMsg=escapeMessage(message.message.c_str());
-    std::string escapedData;
-    if (!message.userData.empty()) {
-        escapedData=escapeMessage(message.userData.c_str());
-    }
+    std::string record;
+    record.reserve(message.message.size()+message.userData.size()+30);
+    util::csv::CsvRecord csv("\n\r");
+    csv.addSimpleField(record,message.userData.c_str(),message.userData.size());
+    csv.addField(record,message.message.c_str(),message.message.size());
   f.WriteByte('0'+state);
   f.WriteByte(',');
   f.Write(timestamp,12);
@@ -722,18 +697,8 @@ uint64_t CsvStore::CsvFile::AppendRecord(uint8_t state,time_t fdate,const Messag
   f.Write(message.abonent.c_str(),message.abonent.length());
   f.WriteByte(',');
   f.Write(message.regionId.c_str(),message.regionId.length());
-  if (!message.userData.empty()) {
-      f.WriteByte(',');
-      f.WriteByte('"');
-      f.Write(escapedData.c_str(),escapedData.length());
-      f.WriteByte('"');
-  } else {
-      f.WriteByte(',');
-  }
   f.WriteByte(',');
-  f.WriteByte('"');
-  f.Write(escapedMsg.c_str(),escapedMsg.length());
-  f.WriteByte('"');
+  f.Write(record.c_str(),record.size());
   f.WriteByte('\n');
   f.Flush();
   readAll=false;
@@ -747,7 +712,7 @@ uint8_t CsvStore::CsvFile::getState(uint64_t msgId)
   return rec.state;
 }
 
-void CsvStore::CsvFile::setStateAndDate(uint64_t msgId,uint8_t state, time_t fdate)
+CsvStore::CsvFile::Record& CsvStore::CsvFile::setStateAndDate(uint64_t msgId,uint8_t state, time_t fdate)
 {
   Record& rec=findRecord(msgId);
   uint8_t oldState=rec.state;
@@ -768,6 +733,7 @@ void CsvStore::CsvFile::setStateAndDate(uint64_t msgId,uint8_t state, time_t fda
   {
     openMessages--;
   }
+  return rec;
 }
 
 bool CsvStore::FullScan::Next(uint8_t &state, Message &msg)

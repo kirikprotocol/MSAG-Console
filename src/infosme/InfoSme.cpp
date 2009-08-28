@@ -380,7 +380,7 @@ public:
       }else
       {
         msg.set_dataCoding(DataCoding::LATIN1);
-        sbm.get_optional().set_messagePayload(txt.c_str(),txt.length());
+        sbm.get_optional().set_messagePayload(txt.c_str(),int(txt.length()));
       }
       sbm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
       sbm.get_header().set_sequenceNumber(getSequenceNumber());

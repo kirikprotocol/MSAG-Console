@@ -51,6 +51,8 @@ namespace infosme
     using namespace smsc::util::templates;
 
 
+class FinalStateSaver;
+
     class Task
     {
     friend class TaskGuard;
@@ -58,7 +60,7 @@ namespace infosme
 
         smsc::logger::Logger *logger;
         OutputFormatter*   formatter;
-
+        FinalStateSaver*   finalStateSaver_;
 
         Event       usersCountEvent;
         Mutex       usersCountLock;
@@ -106,8 +108,11 @@ namespace infosme
 
         int         currentPriorityFrameCounter;
 
-        Task(ConfigView* config, uint32_t taskId, std::string location,
-             DataSource* dsOwn);
+        Task(ConfigView* config,
+             uint32_t taskId,
+             std::string location,
+             DataSource* dsOwn,
+             FinalStateSaver* finalStateSaver );
 
         void update(ConfigView* config);
 

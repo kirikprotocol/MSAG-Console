@@ -21,7 +21,7 @@ namespace sync=smsc::core::synchronization;
 //0xYYmmddhhFILEOFFS
 class CsvStore{
 public:
-  CsvStore(const std::string& argLoc):location(argLoc)
+  CsvStore( const std::string& argLoc ) : location(argLoc)
   {
     if(location.length())
     {
@@ -39,12 +39,13 @@ public:
   uint32_t Delete(bool onlynew);
 
   bool getNextMessage(Message& message);
-  void setMsgState(uint64_t msgId,uint8_t state);
   uint64_t createMessage(time_t date,const Message& message,uint8_t state=NEW);
   void enrouteMessage(uint64_t msgId);
   void loadMessage(uint64_t msgId,Message& message,uint8_t& state);
-  void finalizeMsg(uint64_t msgId,time_t date,uint8_t state);
-
+  // if msg is passed it is filled with fields of actual message
+  void setMsgState(uint64_t msgId,uint8_t state, Message* msg = 0);
+  void finalizeMsg(uint64_t msgId,time_t date,uint8_t state, Message* msg = 0);
+    
   void closeAllFiles();
 
   struct Directory;
@@ -109,8 +110,8 @@ public:
     static void ReadRecord(buf::File& f,Record& rec);
     Record& findRecord(uint64_t msgId);
     uint64_t AppendRecord(uint8_t state,time_t date,const Message& message);
-    void setState(uint64_t msgId,uint8_t state);
-    void setStateAndDate(uint64_t msgId,uint8_t state,time_t date);
+    Record& setState(uint64_t msgId,uint8_t state);
+    Record& setStateAndDate(uint64_t msgId,uint8_t state,time_t date);
     uint8_t getState(uint64_t msgId);
   };
 

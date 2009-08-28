@@ -51,7 +51,7 @@ namespace infosme{
       bool        enabled;
       int         priority;
 
-      bool    retryOnFail, replaceIfPresent, trackIntegrity, transactionMode, keepHistory;
+      bool    retryOnFail, replaceIfPresent, trackIntegrity, transactionMode, keepHistory, saveFinalState;
       bool    flash;
 
       time_t  endDate;            // full date/time
@@ -77,7 +77,9 @@ namespace infosme{
       TaskInfo()
           : uid(0), enabled(true), priority(0),
             retryOnFail(false), replaceIfPresent(false),
-            trackIntegrity(false), transactionMode(false), keepHistory(false),flash(false),
+            trackIntegrity(false), transactionMode(false), keepHistory(false),
+            saveFinalState(true), // FIXME: change to false
+            flash(false),
             endDate(-1), validityPeriod(-1), validityDate(-1),
             activePeriodStart(-1), activePeriodEnd(-1), activeWeekDays(0),
             dsTimeout(0), dsUncommitedInProcess(1), dsUncommitedInGeneration(1),

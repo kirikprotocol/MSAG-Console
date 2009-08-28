@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <inttypes.h>
+#include <memory>
 
 #include "logger/Logger.h"
 
@@ -77,6 +78,8 @@ namespace smsc { namespace infosme
     using smsc::util::config::Manager;
     using smsc::util::config::ConfigView;
     using smsc::util::config::ConfigException;
+
+    class FinalStateSaver;
 
     typedef enum { beginGenerationMethod, endGenerationMethod, dropAllMessagesMethod } TaskMethod;
 
@@ -296,6 +299,7 @@ namespace smsc { namespace infosme
     private:
 
         smsc::logger::Logger *logger;
+        std::auto_ptr< FinalStateSaver > finalStateSaver_;
 
         ThreadManager taskManager;
         ThreadManager eventManager;

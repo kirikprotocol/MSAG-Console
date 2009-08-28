@@ -1,4 +1,5 @@
 #include "TaskProcessor.h"
+#include "FinalStateSaver.h"
 #include <exception>
 #include <list>
 #include <sstream>
@@ -96,6 +97,8 @@ TaskProcessor::TaskProcessor(ConfigView* config)
       }
     }
 
+    finalStateSaver_.reset( new FinalStateSaver(storeLocation) );
+
     for (std::set<std::string>::iterator i=set->begin();i!=set->end();i++)
     {
         try
@@ -131,7 +134,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
                                           dsId, taskId);
             }
             uint32_t taskIdVal=atoi(taskId);
-            Task* task = new Task(taskConfig, taskIdVal, location,taskDs );
+            Task* task = new Task(taskConfig, taskIdVal, location, taskDs, finalStateSaver_.get() );
             if (task && !putTask(task)) {
                 task->finalize();
                 throw ConfigException("Failed to add task. Task with id '%s' already registered.",
@@ -305,6 +308,7 @@ int TaskProcessor::Execute()
     while (!bNeedExit)
     {
         time_t currentTime = time(NULL);
+        finalStateSaver_->checkRoll(currentTime);
         
         {
             MutexGuard guard(tasksLock);
@@ -884,7 +888,7 @@ void TaskProcessor::addTask(uint32_t taskId)
           buf::File::MkDir(location.c_str());
         }
 
-        task = new Task(&taskConfig, taskId, location, taskDs);
+        task = new Task(&taskConfig, taskId, location, taskDs, finalStateSaver_.get() );
         if (!task) 
             throw Exception("New task create failed");
         if (!addTask(task))

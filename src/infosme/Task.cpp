@@ -1,4 +1,5 @@
 #include "Task.h"
+#include "FinalStateSaver.h"
 #include "SQLAdapters.h"
 #include "TaskLock.hpp"
 #include <time.h>
@@ -15,9 +16,13 @@ extern bool isMSISDNAddress(const char* string);
 namespace smsc { namespace infosme 
 {
 
-Task::Task(ConfigView* config, uint32_t taskId, std::string location, 
-           DataSource* _dsOwn)
+Task::Task( ConfigView* config,
+            uint32_t taskId,
+            std::string location, 
+            DataSource* _dsOwn,
+            FinalStateSaver* finalStateSaver )
     : logger(Logger::getInstance("smsc.infosme.Task")), formatter(0),
+      finalStateSaver_(finalStateSaver),
       usersCount(0), bFinalizing(false), bSelectedAll(false), dsOwn(_dsOwn),store(location),
       bInProcess(false), bInGeneration(false), bGenerationSuccess(true),
       infoSme_T_storageWasDestroyed(false), lastMessagesCacheEmpty(0), currentPriorityFrameCounter(0)
@@ -648,15 +653,20 @@ bool Task::finalizeMessage(uint64_t msgId, MessageState state)
     bool result = false;
     try
     {
+      time_t now = time(0);
+      Message msg;
       if (info.keepHistory)
       {
-        store.finalizeMsg(msgId,time(NULL),state);
+        store.finalizeMsg(msgId,now,state,info.saveFinalState ? &msg : 0);
       }
       else
       {
-        store.setMsgState(msgId,DELETED);
+        store.setMsgState(msgId,DELETED,info.saveFinalState ? &msg : 0);
       }
-      
+      if ( info.saveFinalState ) {
+          finalStateSaver_->save(now,info,msg,state);
+      }
+
       result = true;
     }
     catch (std::exception& exc) {
