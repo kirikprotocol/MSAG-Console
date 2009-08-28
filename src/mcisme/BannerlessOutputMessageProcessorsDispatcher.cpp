@@ -5,7 +5,8 @@ namespace smsc {
 namespace mcisme {
 
 BannerlessOutputMessageProcessorsDispatcher::BannerlessOutputMessageProcessorsDispatcher(TaskProcessor& taskProcessor)
-  : _taskProcessor(taskProcessor) {}
+  : _taskProcessor(taskProcessor),
+    _logger(logger::Logger::getInstance("bannless"))  {}
 
 void
 BannerlessOutputMessageProcessorsDispatcher::dispatchSendMissedCallNotification(const AbntAddr& abnt)
@@ -17,8 +18,13 @@ void
 BannerlessOutputMessageProcessorsDispatcher::dispatchSendAbntOnlineNotifications(const sms_info* pInfo, const AbonentProfile& abntProfile)
 {
   std::auto_ptr<const sms_info> autoPtrSmsInfo(pInfo);
-  _taskProcessor.SendAbntOnlineNotifications(autoPtrSmsInfo.get(), abntProfile);
-  _taskProcessor.commitMissedCallEvents(autoPtrSmsInfo.get(), abntProfile);
+  try {
+    _taskProcessor.SendAbntOnlineNotifications(autoPtrSmsInfo.get(), abntProfile);
+    _taskProcessor.commitMissedCallEvents(autoPtrSmsInfo.get(), abntProfile);
+  } catch(std::exception& ex) {
+    smsc_log_error(_logger, "BannerlessOutputMessageProcessorsDispatcher::dispatchSendAbntOnlineNotifications::: caught exception '%s'",
+                   ex.what());
+  }
 }
 
 }}
