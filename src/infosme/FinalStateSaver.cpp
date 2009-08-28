@@ -1,7 +1,5 @@
-#include <sys/types.h>
-#include <dirent.h>
 #include <time.h>
-#include <list>
+#include <vector>
 
 #include "TaskTypes.hpp"
 #include "FinalStateSaver.h"
@@ -93,37 +91,22 @@ void FinalStateSaver::checkRollUnsync( time_t now )
 
 void FinalStateSaver::rollOrphans()
 {
-    DIR* dir = opendir(path_.c_str());
-    if ( ! dir ) {
-        smsc_log_warn(log_,"cannot opendir %s", path_.c_str());
+    std::vector< std::string > entries;
+    try {
+        smsc::core::buffers::File::ReadDir(path_.c_str(),entries);
+    } catch ( std::exception& e ) {
+        smsc_log_warn(log_,"exc: %s",e.what());
         return;
     }
-    std::list< std::string > entries;
-    smsc::core::buffers::TmpBuf<char,512> buf(sizeof(dirent)+pathconf(path_.c_str(),_PC_NAME_MAX)+1);
-    struct dirent* ent = (struct dirent*)buf.get();
-    while ( true ) {
-        struct dirent* res;
-        int rc = readdir_r(dir,ent,&res);
-        if ( rc != 0 ) {
-            smsc_log_warn(log_,"cannot readdir %s: rc=%u",path_.c_str(),rc);
-            break;
-        } else if ( !res ) {
-            break;
-        }
-        smsc_log_debug(log_,"processing entry: %s",ent->d_name);
-        const size_t sz = ::strlen(ent->d_name);
-        if ( sz > ::workingExtension.size() &&
-             0 == strcmp(ent->d_name + sz - ::workingExtension.size(),::workingExtension.c_str()) ) {
-            std::string tmp(ent->d_name,sz);
-            entries.push_back(tmp);
-        }
-    }
-    closedir(dir);
+
     // renaming
-    for ( std::list< std::string >::const_iterator i = entries.begin();
+    for ( std::vector< std::string >::const_iterator i = entries.begin();
           i != entries.end();
           ++i ) {
-        rollFile( path_ + *i );
+        if ( i->size() > ::workingExtension.size() &&
+             0 == strcmp(i->c_str() + i->size() - ::workingExtension.size(),::workingExtension.c_str()) ) {
+            rollFile( path_ + *i );
+        }
     }
 }
 
