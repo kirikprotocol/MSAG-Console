@@ -3,6 +3,7 @@
 
 # include <core/threads/Thread.hpp>
 # include <util/config/ConfigView.h>
+# include <logger/Logger.h>
 
 # include <mcisme/TaskProcessor.h>
 # include <mcisme/OutputMessageProcessorsDispatcher.hpp>
@@ -21,6 +22,7 @@ public:
   virtual void deleteMessageProcessor(OutputMessageProcessor* terminatedMessageProcessor) {}
 private:
   TaskProcessor& _taskProcessor;
+  logger::Logger* _logger;
 };
 
 }}
