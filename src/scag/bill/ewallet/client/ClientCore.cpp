@@ -160,20 +160,18 @@ bool ClientCore::canProcessRequest( Exception* exc )
 void ClientCore::processRequest( std::auto_ptr< Request > request, ResponseHandler& handler )
 {
     std::auto_ptr< proto::Context > context( new ClientContext(request.release(),&handler) );
-    // try {
-    sendRequest(context);
-    /*
-    } catch ( Exception e ) {
+    try {
+        sendRequest(context);
+    } catch ( Exception& e ) {
         handler.handleError(context->getRequest(),e);
-        throw;
-    } catch ( std::exception e ) {
+        // throw;
+    } catch ( std::exception& e ) {
         handler.handleError(context->getRequest(),Exception(e.what(),Status::UNKNOWN));
-        throw;
+        // throw;
     } catch (...) {
         handler.handleError(context->getRequest(),Exception("unknown exception",Status::UNKNOWN));
-        throw;
+        // throw;
     }
-     */
 }
 
 
