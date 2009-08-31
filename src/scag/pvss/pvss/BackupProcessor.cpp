@@ -208,9 +208,9 @@ void BackupProcessor::loadJournalDir( ScopeType scope )
         }
     }
     std::vector< std::string > entries;
+    entries.reserve(50);
     smsc::core::buffers::File::ReadDir( fulldir.c_str(), entries );
-    theset->reserve(entries.size());
-    std::copy( entries.begin(), entries.end(), std::back_inserter(*theset) );
+    theset->insert( entries.begin(), entries.end() );
 }
 
 
