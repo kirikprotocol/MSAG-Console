@@ -271,6 +271,10 @@ public class InfoSmeConfig {
     return taskManager.getTask(id);
   }
 
+    public Task getTaskByName(String name) throws AdminException {
+        return taskManager.getTaskByName(name);
+    }
+
   public List getTasks(String owner) {
     return taskManager.getTasks(owner);
   }

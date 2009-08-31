@@ -127,6 +127,16 @@ public class TaskManager {
     return (Task)tasks.get(id);
   }
 
+    public synchronized Task getTaskByName( String name ) throws AdminException {
+        for (Iterator iter = tasks.values().iterator(); iter.hasNext(); ) {
+            Task task = (Task)iter.next();
+            if ( task.getName().equals(name) ) {
+                return task;
+            }
+        }
+        throw new AdminException("task " + name + " not found");
+    }
+
   public synchronized List getTasks(String owner) {
     List result = new ArrayList(tasks.size());
     for (Iterator iter = tasks.values().iterator(); iter.hasNext();) {
