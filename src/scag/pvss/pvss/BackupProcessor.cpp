@@ -9,7 +9,6 @@
 #include "scag/pvss/api/core/server/Server.h"
 #include "scag/util/PtrDestroy.h"
 #include "PvssDispatcher.h"
-#include <dirent.h>
 #include <algorithm>
 
 namespace scag2 {
@@ -208,17 +207,10 @@ void BackupProcessor::loadJournalDir( ScopeType scope )
             exit(-1);
         }
     }
-    DIR* dir = opendir( fulldir.c_str() );
-    if ( !dir ) {
-        smsc_log_error(log_,"cannot opendir %s", fulldir.c_str());
-        fprintf(stderr,"cannot opendir %s\n", fulldir.c_str());
-        exit(-1);
-    }
-    struct dirent entry, *result;
-    while ( 0 == readdir_r(dir,&entry,&result) && result != 0 ) {
-        theset->insert(result->d_name);
-    }
-    closedir(dir);
+    std::vector< std::string > entries;
+    smsc::core::buffers::File::ReadDir( fulldir.c_str(), entries );
+    theset->reserve(entries.size());
+    std::copy( entries.begin(), entries.end(), std::back_inserter(*theset) );
 }
 
 
