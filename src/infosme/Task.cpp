@@ -82,6 +82,7 @@ void Task::init(ConfigView* config, uint32_t taskId)
   info.transactionMode = config->getBool("transactionMode");
   info.trackIntegrity = config->getBool("trackIntegrity");
   info.keepHistory = config->getBool("keepHistory");
+  info.saveFinalState = config->getBool("saveFinalState");
   try
   {
     info.flash = config->getBool("flash");
@@ -204,6 +205,7 @@ void Task::update(ConfigView *config)
   newinfo.transactionMode = config->getBool("transactionMode");
   newinfo.trackIntegrity = config->getBool("trackIntegrity");
   newinfo.keepHistory = config->getBool("keepHistory");
+  newinfo.saveFinalState = config->getBool("saveFinalState");
   try
   {
     newinfo.flash = config->getBool("flash");

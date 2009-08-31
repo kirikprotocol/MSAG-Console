@@ -61,6 +61,7 @@ public class Task extends Observable
   private int messagesCacheSleep = 0;
   private boolean transactionMode = false;
   private boolean keepHistory = false;
+  private boolean saveFinalState = false;
   private boolean flash = false;
   private int uncommitedInGeneration = 0;
   private int uncommitedInProcess = 0;
@@ -126,6 +127,7 @@ public class Task extends Observable
     uncommitedInProcess = config.getInt(prefix + ".uncommitedInProcess");
     trackIntegrity = config.getBool(prefix + ".trackIntegrity");
     keepHistory = config.getBool(prefix + ".keepHistory");
+    saveFinalState = config.getBool(prefix + ".saveFinalState");
     messagesHaveLoaded = config.getBool(prefix + ".messagesHaveLoaded");
 
     delivery  = config.containsParameter(prefix + ".delivery") && config.getBool(prefix + ".delivery");
@@ -183,6 +185,7 @@ public class Task extends Observable
     config.setInt(prefix + ".uncommitedInProcess", uncommitedInProcess);
     config.setBool(prefix + ".trackIntegrity", trackIntegrity);
     config.setBool(prefix + ".keepHistory", keepHistory);
+    config.setBool(prefix + ".saveFinalState", saveFinalState );
     config.setBool(prefix + ".flash", flash);
     config.setString(prefix + ".activeWeekDays", Functions.collectionToString(activeWeekDaysSet, ","));
     config.setBool(prefix + ".messagesHaveLoaded", messagesHaveLoaded);
@@ -221,6 +224,7 @@ public class Task extends Observable
               && this.uncommitedInProcess == task.uncommitedInProcess
               && this.trackIntegrity == task.trackIntegrity
               && this.keepHistory == task.keepHistory
+              && this.saveFinalState == task.saveFinalState
               && this.activeWeekDaysSet.equals(task.activeWeekDaysSet)
               && this.retryPolicy.equals(task.retryPolicy)
               && this.secret == task.secret
@@ -262,6 +266,7 @@ public class Task extends Observable
     sb.append(", messagesCacheSleep=").append(messagesCacheSleep);
     sb.append(", transactionMode=").append(transactionMode);
     sb.append(", keepHistory=").append(keepHistory);
+    sb.append(", saveFinalState=").append(saveFinalState);
     sb.append(", flash=").append(flash);
     sb.append(", uncommitedInGeneration=").append(uncommitedInGeneration);
     sb.append(", uncommitedInProcess=").append(uncommitedInProcess);
@@ -512,6 +517,14 @@ public class Task extends Observable
     this.keepHistory = keepHistory;
     modified = true;
   }
+
+    public boolean isSaveFinalState() {
+        return saveFinalState;
+    }
+
+    public void setSaveFinalState(boolean saveFinalState) {
+        this.saveFinalState = saveFinalState;
+    }
 
   public Collection getActiveWeekDays() {
     return activeWeekDaysSet;
