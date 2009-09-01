@@ -46,7 +46,7 @@ public class SmsMailParamsResultSet implements ResultSet {
       siebelTask.setCreated(new Date(sqlResult.getTimestamp(sql.getProperty("task.created")).getTime()));
       siebelTask.setStatus(SiebelTask.Status.valueOf(
           sqlResult.getString(sql.getProperty("task.ctrl.status"))));
-      siebelTask.setExpPeriod(sqlResult.getInt(sql.getProperty("task.exp.period")));
+      siebelTask.setExpPeriod(new Integer(sqlResult.getInt(sql.getProperty("task.exp.period"))));
       siebelTask.setFlash(sqlResult.getString(sql.getProperty("task.flash")).equals("Y"));
       siebelTask.setPriority(sqlResult.getInt(sql.getProperty("task.priority")));
       siebelTask.setSave(sqlResult.getString(sql.getProperty("task.save")).equals("Y"));

@@ -9,7 +9,7 @@ import java.util.Properties;
 
 import ru.novosoft.smsc.infosme.backend.siebel.ResultSet;
 import ru.novosoft.smsc.infosme.backend.siebel.SiebelMessage;
-import ru.novosoft.smsc.infosme.backend.siebel.IntegrationDataSourceException;
+import ru.novosoft.smsc.infosme.backend.siebel.SiebelDataProviderException;
 
 /**
  * author: alkhal
@@ -29,31 +29,31 @@ public class SmsMailResultSet implements ResultSet{
     this.sql = sql;
   }
 
-  public boolean next() throws IntegrationDataSourceException {
+  public boolean next() throws SiebelDataProviderException {
     try {
       return sqlResult.next();
     } catch (SQLException e) {
-      throw new IntegrationDataSourceException("Unable to move resultset cursor", e);
+      throw new SiebelDataProviderException("Unable to move resultset cursor", e);
     }
   }
 
-  public Object get() throws IntegrationDataSourceException {
+  public Object get() throws SiebelDataProviderException {
     SiebelMessage siebelMessage = new SiebelMessage();
     try {
-      siebelMessage.setClcId(sqlResult.getString(sql.getProperty("sms.mail.clc.id")));
-      siebelMessage.setCreated(new java.sql.Date(sqlResult.getTimestamp(sql.getProperty("sms.mail.created")).getTime()));
-      siebelMessage.setLastUpd(new java.sql.Date(sqlResult.getTimestamp(sql.getProperty("sms.mail.last.upd")).getTime()));
-      siebelMessage.setMessage(sqlResult.getString(sql.getProperty("sms.mail.message")));
-      String ms = sqlResult.getString(sql.getProperty("sms.mail.message.state"));
+      siebelMessage.setClcId(sqlResult.getString(sql.getProperty("message.clc.id")));
+      siebelMessage.setCreated(new java.sql.Date(sqlResult.getTimestamp(sql.getProperty("message.created")).getTime()));
+      siebelMessage.setLastUpd(new java.sql.Date(sqlResult.getTimestamp(sql.getProperty("message.last.upd")).getTime()));
+      siebelMessage.setMessage(sqlResult.getString(sql.getProperty("message.message")));
+      String ms = sqlResult.getString(sql.getProperty("message.message.state"));
       if(ms != null) {
         siebelMessage.setMessageState(SiebelMessage.State.valueOf(ms));
       }
-      siebelMessage.setMsisdn(sqlResult.getString(sql.getProperty("sms.mail.msisdn")));
-      siebelMessage.setSmscCode(sqlResult.getString(sql.getProperty("sms.mail.smsc.stat.code")));
-      siebelMessage.setSmscValue(sqlResult.getString(sql.getProperty("sms.mail.smsc.stat.val")));
-      siebelMessage.setWaveId(sqlResult.getString(sql.getProperty("sms.mail.wave.id")));
+      siebelMessage.setMsisdn(sqlResult.getString(sql.getProperty("message.msisdn")));
+      siebelMessage.setSmscCode(sqlResult.getString(sql.getProperty("message.smsc.stat.code")));
+      siebelMessage.setSmscValue(sqlResult.getString(sql.getProperty("message.smsc.stat.val")));
+      siebelMessage.setWaveId(sqlResult.getString(sql.getProperty("message.wave.id")));
     } catch (Throwable e) {
-      throw new IntegrationDataSourceException("Unable to get SiebelMessage from the dataBase ", e);
+      throw new SiebelDataProviderException("Unable to get SiebelMessage from the dataBase ", e);
     }
     return siebelMessage;
   }
