@@ -483,6 +483,7 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
         prepStatement.addBatch();
         count++;
         if(count == 1000) {
+          count = 0;
           prepStatement.executeBatch();
         }
       }
