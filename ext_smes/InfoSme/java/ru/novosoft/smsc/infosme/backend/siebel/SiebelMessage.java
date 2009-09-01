@@ -6,7 +6,7 @@ import java.util.Date;
  * author: alkhal
  */
 
-public class SmsMail {
+public class SiebelMessage {
   private String clcId;  //unique
   private Date created;
   private Date lastUpd;
@@ -14,7 +14,7 @@ public class SmsMail {
   private String msisdn;
   private String message;
 
-  private MessageState messageState;
+  private State state;
   private String smscCode;
   private String smscValue;
 
@@ -66,12 +66,12 @@ public class SmsMail {
     this.message = message;
   }
 
-  public MessageState getMessageState() {
-    return messageState;
+  public State getMessageState() {
+    return state;
   }
 
-  public void setMessageState(MessageState messageState) {
-    this.messageState = messageState;
+  public void setMessageState(State state) {
+    this.state = state;
   }
 
   public String getSmscCode() {
@@ -90,12 +90,11 @@ public class SmsMail {
     this.smscValue = smscValue;
   }
 
-  @Override
   public String toString() {
-    return "SmsMail{" +
+    return "SiebelMessage{" +
         "smscValue='" + smscValue + '\'' +
         ", smscCode='" + smscCode + '\'' +
-        ", messageState=" + messageState +
+        ", state=" + state +
         ", message='" + message + '\'' +
         ", msisdn='" + msisdn + '\'' +
         ", waveId='" + waveId + '\'' +
@@ -105,30 +104,29 @@ public class SmsMail {
         '}';
   }
 
-  public static class MessageState {
+  public static class State {
 
-    public static MessageState ENROUTE = new MessageState("ENROUTE");
-    public static MessageState DELIVERED = new MessageState("DELIVERED");
-    public static MessageState EXPIRED = new MessageState("EXPIRED");
-    public static MessageState DELETED = new MessageState("DELETED");
-    public static MessageState UNDELIVERABLE = new MessageState("UNDELIVERABLE");
-    public static MessageState ACCEPTED = new MessageState("ACCEPTED");
-    public static MessageState UNKNOWN = new MessageState("UNKNOWN");
-    public static MessageState REJECTED = new MessageState("REJECTED");
-    public static MessageState ERROR = new MessageState("ERROR");
+    public static State ENROUTE = new State("ENROUTE");
+    public static State DELIVERED = new State("DELIVERED");
+    public static State EXPIRED = new State("EXPIRED");
+    public static State DELETED = new State("DELETED");
+    public static State UNDELIVERABLE = new State("UNDELIVERABLE");
+    public static State ACCEPTED = new State("ACCEPTED");
+    public static State UNKNOWN = new State("UNKNOWN");
+    public static State REJECTED = new State("REJECTED");
+    public static State ERROR = new State("ERROR");
 
 
     private String value;
-    private MessageState(String value) {
+    private State(String value) {
       this.value = value;
     }
 
-    @Override
     public String toString() {
       return value;
     }
 
-    public static MessageState valueOf(String st) {
+    public static State valueOf(String st) {
       if(ENROUTE.value.equals(st)) {
         return ENROUTE;
       } else if(DELIVERED.value.equals(st)) {
@@ -152,12 +150,11 @@ public class SmsMail {
       }
     }
 
-    @Override
     public boolean equals(Object o) {
       if (this == o) return true;
       if (o == null || getClass() != o.getClass()) return false;
 
-      MessageState state = (MessageState) o;
+      State state = (State) o;
 
       if (value != null ? !value.equals(state.value) : state.value != null) return false;
 
@@ -165,4 +162,42 @@ public class SmsMail {
     }
   }
 
+  public static class SmppState {
+    private String code;
+    private String value;
+
+    public String getCode() {
+      return code;
+    }
+
+    public String getValue() {
+      return value;
+    }
+
+    public void setCode(String code) {
+      this.code = code;
+    }
+
+    public void setValue(String value) {
+      this.value = value;
+    }
+  }
+
+  public static class DeliveryState {
+    private final State state;
+    private final SmppState smppState;
+
+    public DeliveryState(State state, SmppState smppState) {
+      this.state = state;
+      this.smppState = smppState;
+    }
+
+    public State getState() {
+      return state;
+    }
+
+    public SmppState getSmppState() {
+      return smppState;
+    }
+  }
 }

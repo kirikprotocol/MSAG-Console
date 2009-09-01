@@ -8,7 +8,7 @@ import java.sql.SQLException;
 import java.util.Properties;
 
 import ru.novosoft.smsc.infosme.backend.siebel.ResultSet;
-import ru.novosoft.smsc.infosme.backend.siebel.SmsMail;
+import ru.novosoft.smsc.infosme.backend.siebel.SiebelMessage;
 import ru.novosoft.smsc.infosme.backend.siebel.IntegrationDataSourceException;
 
 /**
@@ -38,24 +38,24 @@ public class SmsMailResultSet implements ResultSet{
   }
 
   public Object get() throws IntegrationDataSourceException {
-    SmsMail smsMail = new SmsMail();
+    SiebelMessage siebelMessage = new SiebelMessage();
     try {
-      smsMail.setClcId(sqlResult.getString(sql.getProperty("sms.mail.clc.id")));
-      smsMail.setCreated(new java.sql.Date(sqlResult.getTimestamp(sql.getProperty("sms.mail.created")).getTime()));
-      smsMail.setLastUpd(new java.sql.Date(sqlResult.getTimestamp(sql.getProperty("sms.mail.last.upd")).getTime()));
-      smsMail.setMessage(sqlResult.getString(sql.getProperty("sms.mail.message")));
+      siebelMessage.setClcId(sqlResult.getString(sql.getProperty("sms.mail.clc.id")));
+      siebelMessage.setCreated(new java.sql.Date(sqlResult.getTimestamp(sql.getProperty("sms.mail.created")).getTime()));
+      siebelMessage.setLastUpd(new java.sql.Date(sqlResult.getTimestamp(sql.getProperty("sms.mail.last.upd")).getTime()));
+      siebelMessage.setMessage(sqlResult.getString(sql.getProperty("sms.mail.message")));
       String ms = sqlResult.getString(sql.getProperty("sms.mail.message.state"));
       if(ms != null) {
-        smsMail.setMessageState(SmsMail.MessageState.valueOf(ms));
+        siebelMessage.setMessageState(SiebelMessage.State.valueOf(ms));
       }
-      smsMail.setMsisdn(sqlResult.getString(sql.getProperty("sms.mail.msisdn")));
-      smsMail.setSmscCode(sqlResult.getString(sql.getProperty("sms.mail.smsc.stat.code")));
-      smsMail.setSmscValue(sqlResult.getString(sql.getProperty("sms.mail.smsc.stat.val")));
-      smsMail.setWaveId(sqlResult.getString(sql.getProperty("sms.mail.wave.id")));
+      siebelMessage.setMsisdn(sqlResult.getString(sql.getProperty("sms.mail.msisdn")));
+      siebelMessage.setSmscCode(sqlResult.getString(sql.getProperty("sms.mail.smsc.stat.code")));
+      siebelMessage.setSmscValue(sqlResult.getString(sql.getProperty("sms.mail.smsc.stat.val")));
+      siebelMessage.setWaveId(sqlResult.getString(sql.getProperty("sms.mail.wave.id")));
     } catch (Throwable e) {
-      throw new IntegrationDataSourceException("Unable to get SmsMail from the dataBase ", e);
+      throw new IntegrationDataSourceException("Unable to get SiebelMessage from the dataBase ", e);
     }
-    return smsMail;
+    return siebelMessage;
   }
 
   public void close() {

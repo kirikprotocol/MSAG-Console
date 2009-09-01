@@ -1,7 +1,7 @@
 package ru.novosoft.smsc.infosme.backend.siebel.impl;
 
 import ru.novosoft.smsc.infosme.backend.siebel.ResultSet;
-import ru.novosoft.smsc.infosme.backend.siebel.SmsMailParams;
+import ru.novosoft.smsc.infosme.backend.siebel.SiebelTask;
 import ru.novosoft.smsc.infosme.backend.siebel.IntegrationDataSourceException;
 import org.apache.log4j.Logger;
 
@@ -38,23 +38,23 @@ public class SmsMailParamsResultSet implements ResultSet {
   }
 
   public Object get() throws IntegrationDataSourceException {
-    SmsMailParams smsMailParams = new SmsMailParams();
+    SiebelTask siebelTask = new SiebelTask();
     try {
-      smsMailParams.setLastUpdate(new Date(sqlResult.getTimestamp(sql.getProperty("sms.mail.params.last.upd")).getTime()));
-      smsMailParams.setBeep(sqlResult.getString(sql.getProperty("sms.mail.params.beep")).equals("Y"));
-      smsMailParams.setCampaignId(sqlResult.getString(sql.getProperty("sms.mail.params.campaign.id")));
-      smsMailParams.setCreated(new Date(sqlResult.getTimestamp(sql.getProperty("sms.mail.params.created")).getTime()));
-      smsMailParams.setCtrlStatus(SmsMailParams.CtrlStatus.valueOf(
+      siebelTask.setLastUpdate(new Date(sqlResult.getTimestamp(sql.getProperty("sms.mail.params.last.upd")).getTime()));
+      siebelTask.setBeep(sqlResult.getString(sql.getProperty("sms.mail.params.beep")).equals("Y"));
+      siebelTask.setCampaignId(sqlResult.getString(sql.getProperty("sms.mail.params.campaign.id")));
+      siebelTask.setCreated(new Date(sqlResult.getTimestamp(sql.getProperty("sms.mail.params.created")).getTime()));
+      siebelTask.setCtrlStatus(SiebelTask.CtrlStatus.valueOf(
           sqlResult.getString(sql.getProperty("sms.mail.params.ctrl.status"))));
-      smsMailParams.setExpPeriod(sqlResult.getInt(sql.getProperty("sms.mail.params.exp.period")));
-      smsMailParams.setFlash(sqlResult.getString(sql.getProperty("sms.mail.params.flash")).equals("Y"));
-      smsMailParams.setPriority(sqlResult.getInt(sql.getProperty("sms.mail.params.priority")));
-      smsMailParams.setSave(sqlResult.getString(sql.getProperty("sms.mail.params.save")).equals("Y"));
-      smsMailParams.setWaveId(sqlResult.getString(sql.getProperty("sms.mail.params.wave.id")));
+      siebelTask.setExpPeriod(sqlResult.getInt(sql.getProperty("sms.mail.params.exp.period")));
+      siebelTask.setFlash(sqlResult.getString(sql.getProperty("sms.mail.params.flash")).equals("Y"));
+      siebelTask.setPriority(sqlResult.getInt(sql.getProperty("sms.mail.params.priority")));
+      siebelTask.setSave(sqlResult.getString(sql.getProperty("sms.mail.params.save")).equals("Y"));
+      siebelTask.setWaveId(sqlResult.getString(sql.getProperty("sms.mail.params.wave.id")));
     } catch (Throwable e) {
-      throw new IntegrationDataSourceException("Unable to get SmsMailParams from the dataBase ", e);
+      throw new IntegrationDataSourceException("Unable to get SiebelTask from the dataBase ", e);
     }
-    return smsMailParams;
+    return siebelTask;
   }
 
   public void close() {

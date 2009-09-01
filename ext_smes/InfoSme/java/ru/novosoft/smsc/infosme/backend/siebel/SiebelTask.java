@@ -6,7 +6,7 @@ import java.util.Date;
  * author: alkhal
  */
 
-public class SmsMailParams {
+public class SiebelTask {
 
   private String waveId;   //unique
   private String campaignId;
@@ -125,7 +125,6 @@ public class SmsMailParams {
       this.value = value;
     }
 
-    @Override
     public String toString() {
       return value;
     }
@@ -146,7 +145,6 @@ public class SmsMailParams {
       }
     }
     
-    @Override
     public boolean equals(Object o) {
       if (this == o) return true;
       if (o == null || getClass() != o.getClass()) return false;
@@ -159,9 +157,8 @@ public class SmsMailParams {
     }
   }
 
-  @Override
   public String toString() {
-    return "SmsMailParams{" +
+    return "SiebelTask{" +
         "waveId='" + waveId + '\'' +
         ", campaignId='" + campaignId + '\'' +
         ", created=" + created +

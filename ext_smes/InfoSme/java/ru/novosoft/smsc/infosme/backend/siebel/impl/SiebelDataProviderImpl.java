@@ -11,6 +11,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.Properties;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
 import ru.sibinco.util.conpool.ConnectionPool;
@@ -19,15 +20,15 @@ import ru.novosoft.smsc.infosme.backend.siebel.*;
 /**
  * author: alkhal
  */
-public class IntegrationDataSourceImpl implements IntegrationDataSource {
+public class SiebelDataProviderImpl implements SiebelDataProvider {
 
-  private static final Logger logger = Logger.getLogger(IntegrationDataSourceImpl.class);
+  private static final Logger logger = Logger.getLogger(SiebelDataProviderImpl.class);
 
   private final ConnectionPool pool;
   private final Properties sql;
 
 
-  public IntegrationDataSourceImpl(String config) throws IntegrationDataSourceException {
+  public SiebelDataProviderImpl(String config) throws IntegrationDataSourceException {
     InputStream in = null;
     try{
       Properties jdbcProp = new Properties();
@@ -63,11 +64,11 @@ public class IntegrationDataSourceImpl implements IntegrationDataSource {
     return sql.getProperty(string);
   }
 
-  public SmsMail getSmsMail(String clcId) throws IntegrationDataSourceException {
+  public SiebelMessage getMessage(String clcId) throws IntegrationDataSourceException {
     if (clcId == null) {
       throw new IntegrationDataSourceException("Argument is null");
     }
-    SmsMail smsMail = null;
+    SiebelMessage siebelMessage = null;
     Connection connection = null;
     PreparedStatement prepStatement = null;
     java.sql.ResultSet sqlResult = null;
@@ -82,36 +83,36 @@ public class IntegrationDataSourceImpl implements IntegrationDataSource {
       sqlResult = prepStatement.executeQuery();
 
       if (sqlResult.next()) {
-        smsMail = new SmsMail();
-        smsMail.setClcId(clcId);
-        smsMail.setCreated(new Date(sqlResult.getTimestamp(sql.getProperty("sms.mail.created")).getTime()));
-        smsMail.setLastUpd(new Date(sqlResult.getTimestamp(sql.getProperty("sms.mail.last.upd")).getTime()));
-        smsMail.setMessage(sqlResult.getString(sql.getProperty("sms.mail.message")));
+        siebelMessage = new SiebelMessage();
+        siebelMessage.setClcId(clcId);
+        siebelMessage.setCreated(new Date(sqlResult.getTimestamp(sql.getProperty("sms.mail.created")).getTime()));
+        siebelMessage.setLastUpd(new Date(sqlResult.getTimestamp(sql.getProperty("sms.mail.last.upd")).getTime()));
+        siebelMessage.setMessage(sqlResult.getString(sql.getProperty("sms.mail.message")));
         String ms = sqlResult.getString(sql.getProperty("sms.mail.message.state"));
         if(ms != null) {
-          smsMail.setMessageState(SmsMail.MessageState.valueOf(ms));
+          siebelMessage.setMessageState(SiebelMessage.State.valueOf(ms));
         }
-        smsMail.setMsisdn(sqlResult.getString(sql.getProperty("sms.mail.msisdn")));
-        smsMail.setSmscCode(sqlResult.getString(sql.getProperty("sms.mail.smsc.stat.code")));
-        smsMail.setSmscValue(sqlResult.getString(sql.getProperty("sms.mail.smsc.stat.val")));
-        smsMail.setWaveId(sqlResult.getString(sql.getProperty("sms.mail.wave.id")));
+        siebelMessage.setMsisdn(sqlResult.getString(sql.getProperty("sms.mail.msisdn")));
+        siebelMessage.setSmscCode(sqlResult.getString(sql.getProperty("sms.mail.smsc.stat.code")));
+        siebelMessage.setSmscValue(sqlResult.getString(sql.getProperty("sms.mail.smsc.stat.val")));
+        siebelMessage.setWaveId(sqlResult.getString(sql.getProperty("sms.mail.wave.id")));
       }
 
       if (logger.isDebugEnabled()) {
-        logger.debug("Succesful get smsMail " + smsMail);
+        logger.debug("Succesful get siebelMessage " + siebelMessage);
       }
     } catch (Throwable exc) {
-      logger.error("Unable to get SmsMail from the dataBase with clcId: " + clcId, exc);
-      throw new IntegrationDataSourceException("Unable to get SmsMail from the dataBase with clcId: " + clcId, exc);
+      logger.error("Unable to get SiebelMessage from the dataBase with clcId: " + clcId, exc);
+      throw new IntegrationDataSourceException("Unable to get SiebelMessage from the dataBase with clcId: " + clcId, exc);
 
     } finally {
       closeConn(connection, prepStatement, sqlResult);
     }
-    return smsMail;
+    return siebelMessage;
   }
 
 
-  public ResultSet listSmsMail(String waveId) throws IntegrationDataSourceException {
+  public ResultSet getMessages(String waveId) throws IntegrationDataSourceException {
     if (waveId == null) {
       throw new IntegrationDataSourceException("Argument is null");
     }
@@ -139,11 +140,11 @@ public class IntegrationDataSourceImpl implements IntegrationDataSource {
     return new SmsMailResultSet(sqlResult, connection, prepStatement, sql);
   }
 
-  public SmsMailParams getSmsMailParams(String waveId) throws IntegrationDataSourceException {
+  public SiebelTask getTask(String waveId) throws IntegrationDataSourceException {
     if (waveId == null) {
       throw new IntegrationDataSourceException("Argument is null");
     }
-    SmsMailParams smsMailParams = null;
+    SiebelTask siebelTask = null;
     Connection connection = null;
     PreparedStatement prepStatement = null;
     java.sql.ResultSet sqlResult = null;
@@ -158,35 +159,35 @@ public class IntegrationDataSourceImpl implements IntegrationDataSource {
       sqlResult = prepStatement.executeQuery();
 
       if (sqlResult.next()) {
-        smsMailParams = new SmsMailParams();
-        smsMailParams = new SmsMailParams();
-        smsMailParams.setLastUpdate(new java.util.Date(sqlResult.getTimestamp(sql.getProperty("sms.mail.params.last.upd")).getTime()));
-        smsMailParams.setBeep(sqlResult.getString(sql.getProperty("sms.mail.params.beep")).equals("Y"));
-        smsMailParams.setCampaignId(sqlResult.getString(sql.getProperty("sms.mail.params.campaign.id")));
-        smsMailParams.setCreated(new java.util.Date(sqlResult.getTimestamp(sql.getProperty("sms.mail.params.created")).getTime()));
-        smsMailParams.setCtrlStatus(SmsMailParams.CtrlStatus.valueOf(
+        siebelTask = new SiebelTask();
+        siebelTask = new SiebelTask();
+        siebelTask.setLastUpdate(new java.util.Date(sqlResult.getTimestamp(sql.getProperty("sms.mail.params.last.upd")).getTime()));
+        siebelTask.setBeep(sqlResult.getString(sql.getProperty("sms.mail.params.beep")).equals("Y"));
+        siebelTask.setCampaignId(sqlResult.getString(sql.getProperty("sms.mail.params.campaign.id")));
+        siebelTask.setCreated(new java.util.Date(sqlResult.getTimestamp(sql.getProperty("sms.mail.params.created")).getTime()));
+        siebelTask.setCtrlStatus(SiebelTask.CtrlStatus.valueOf(
             sqlResult.getString(sql.getProperty("sms.mail.params.ctrl.status"))));
-        smsMailParams.setExpPeriod(new Integer(sqlResult.getInt(sql.getProperty("sms.mail.params.exp.period"))));
-        smsMailParams.setFlash(sqlResult.getString(sql.getProperty("sms.mail.params.flash")).equals("Y"));
-        smsMailParams.setPriority(sqlResult.getInt(sql.getProperty("sms.mail.params.priority")));
-        smsMailParams.setSave(sqlResult.getString(sql.getProperty("sms.mail.params.save")).equals("Y"));
-        smsMailParams.setWaveId(waveId);
+        siebelTask.setExpPeriod(new Integer(sqlResult.getInt(sql.getProperty("sms.mail.params.exp.period"))));
+        siebelTask.setFlash(sqlResult.getString(sql.getProperty("sms.mail.params.flash")).equals("Y"));
+        siebelTask.setPriority(sqlResult.getInt(sql.getProperty("sms.mail.params.priority")));
+        siebelTask.setSave(sqlResult.getString(sql.getProperty("sms.mail.params.save")).equals("Y"));
+        siebelTask.setWaveId(waveId);
       }
 
       if (logger.isDebugEnabled()) {
-        logger.debug("Succesful get smsMailParams " + smsMailParams);
+        logger.debug("Succesful get siebelTask " + siebelTask);
       }
     } catch (Throwable exc) {
-      logger.error("Unable to get SmsMailParams from the dataBase with waveId: " + waveId, exc);
-      throw new IntegrationDataSourceException("Unable to get SmsMailParams from the dataBase with waveId: " + waveId, exc);
+      logger.error("Unable to get SiebelTask from the dataBase with waveId: " + waveId, exc);
+      throw new IntegrationDataSourceException("Unable to get SiebelTask from the dataBase with waveId: " + waveId, exc);
 
     } finally {
       closeConn(connection, prepStatement, sqlResult);
     }
-    return smsMailParams;
+    return siebelTask;
   }
 
-  public ResultSet listSmsMailParams(Date fromUpdate) throws IntegrationDataSourceException {
+  public ResultSet getTasks(Date fromUpdate) throws IntegrationDataSourceException {
     if (fromUpdate == null) {
       throw new IntegrationDataSourceException("Argument is null");
     }
@@ -214,7 +215,7 @@ public class IntegrationDataSourceImpl implements IntegrationDataSource {
     return new SmsMailParamsResultSet(sqlResult, connection, prepStatement, sql);
   }
 
-  public ResultSet listSmsMailParams() throws IntegrationDataSourceException {
+  public ResultSet getTasks() throws IntegrationDataSourceException {
     Connection connection = null;
     PreparedStatement prepStatement = null;
     java.sql.ResultSet sqlResult = null;
@@ -238,7 +239,7 @@ public class IntegrationDataSourceImpl implements IntegrationDataSource {
     return new SmsMailParamsResultSet(sqlResult, connection, prepStatement, sql);
   }
 
-  public void setCtrlStatus(String waveId, SmsMailParams.CtrlStatus status) throws IntegrationDataSourceException {
+  public void setTaskStatus(String waveId, SiebelTask.CtrlStatus status) throws IntegrationDataSourceException {
     if (status == null || waveId == null) {
       throw new IntegrationDataSourceException("Some arguments are null");
     }
@@ -254,7 +255,7 @@ public class IntegrationDataSourceImpl implements IntegrationDataSource {
       int rowsUpdated = prepStatement.executeUpdate();
 
       if(rowsUpdated == 0) {
-        throw new IntegrationDataSourceException("SmsMailParams not found for waveId="+waveId);
+        throw new IntegrationDataSourceException("SiebelTask not found for waveId="+waveId);
       }
 
       if (logger.isDebugEnabled()) {
@@ -268,14 +269,14 @@ public class IntegrationDataSourceImpl implements IntegrationDataSource {
     }
   }
 
-  public SmsMailParams.CtrlStatus getCtrlStatus(String waveId) throws IntegrationDataSourceException {
+  public SiebelTask.CtrlStatus getTaskStatus(String waveId) throws IntegrationDataSourceException {
     if (waveId == null) {
       throw new IntegrationDataSourceException("Argument is null");
     }
     Connection connection = null;
     PreparedStatement prepStatement = null;
     java.sql.ResultSet sqlResult = null;
-    SmsMailParams.CtrlStatus status = null;
+    SiebelTask.CtrlStatus status = null;
 
     try {
       connection = pool.getConnection();
@@ -290,7 +291,7 @@ public class IntegrationDataSourceImpl implements IntegrationDataSource {
         String st =
             sqlResult.getString(sql.getProperty("sms.mail.params.ctrl.status"));
         if(st != null) {
-          status = SmsMailParams.CtrlStatus.valueOf(st);
+          status = SiebelTask.CtrlStatus.valueOf(st);
         }
       }
 
@@ -307,7 +308,7 @@ public class IntegrationDataSourceImpl implements IntegrationDataSource {
     return status;
   }
 
-  public void setSmsMailState(String clcId, SmsMail.MessageState state) throws IntegrationDataSourceException {
+  public void setMessageState(String clcId, SiebelMessage.State state) throws IntegrationDataSourceException {
     if (state == null || clcId== null) {
       throw new IntegrationDataSourceException("Some arguments are null");
     }
@@ -316,14 +317,14 @@ public class IntegrationDataSourceImpl implements IntegrationDataSource {
     PreparedStatement prepStatement = null;
 
     try {
-      connection = pool.getConnection();
+      connection = pool.getConnection();        
       prepStatement = connection.prepareStatement(getSql("sms.mail.set.status"));
       prepStatement.setString(1, state.toString());
       prepStatement.setString(2, clcId);
       int rowsUpdated = prepStatement.executeUpdate();
 
       if(rowsUpdated == 0) {
-        throw new IntegrationDataSourceException("SmsMail not found for clcId="+clcId);
+        throw new IntegrationDataSourceException("SiebelMessage not found for clcId="+clcId);
       }
 
       if (logger.isDebugEnabled()) {
@@ -337,14 +338,14 @@ public class IntegrationDataSourceImpl implements IntegrationDataSource {
     }
   }
 
-  public SmsMail.MessageState getSmsMailState(String clcId) throws IntegrationDataSourceException {
+  public SiebelMessage.State getMessageState(String clcId) throws IntegrationDataSourceException {
     if (clcId == null) {
       throw new IntegrationDataSourceException("Argument is null");
     }
     Connection connection = null;
     PreparedStatement prepStatement = null;
     java.sql.ResultSet sqlResult = null;
-    SmsMail.MessageState state = null;
+    SiebelMessage.State state = null;
 
     try {
       connection = pool.getConnection();
@@ -359,7 +360,7 @@ public class IntegrationDataSourceImpl implements IntegrationDataSource {
         String st =
             sqlResult.getString(sql.getProperty("sms.mail.message.state"));
         if(st != null) {
-          state = SmsMail.MessageState.valueOf(st);
+          state = SiebelMessage.State.valueOf(st);
         }
       }
 
@@ -367,8 +368,8 @@ public class IntegrationDataSourceImpl implements IntegrationDataSource {
         logger.debug("Succesful get SmsMailParam's state " + state);
       }
     } catch (Throwable exc) {
-      logger.error("Unable to get SmsMail state with clcId: " + clcId, exc);
-      throw new IntegrationDataSourceException("Unable to get SmsMail state with clcId: " + clcId, exc);
+      logger.error("Unable to get SiebelMessage state with clcId: " + clcId, exc);
+      throw new IntegrationDataSourceException("Unable to get SiebelMessage state with clcId: " + clcId, exc);
 
     } finally {
       closeConn(connection, prepStatement, sqlResult);
@@ -376,8 +377,10 @@ public class IntegrationDataSourceImpl implements IntegrationDataSource {
     return state;
   }
 
-  public void setSmsMailSmscState(String clcId, String code, String value) throws IntegrationDataSourceException {
-    if (clcId == null || code== null) {
+
+
+  public void setMessageSmppState(String clcId, SiebelMessage.SmppState state) throws IntegrationDataSourceException {
+    if (clcId == null || state== null) {
       throw new IntegrationDataSourceException("Some arguments are null");
     }
 
@@ -387,34 +390,34 @@ public class IntegrationDataSourceImpl implements IntegrationDataSource {
     try {
       connection = pool.getConnection();
       prepStatement = connection.prepareStatement(getSql("sms.mail.set.status.smsc"));
-      prepStatement.setString(1, code);
-      prepStatement.setString(2, value);
+      prepStatement.setString(1, state.getCode());
+      prepStatement.setString(2, state.getValue());
       prepStatement.setString(3, clcId);
       int rowsUpdated = prepStatement.executeUpdate();
 
       if(rowsUpdated == 0) {
-        throw new IntegrationDataSourceException("SmsMail not found for clcId="+clcId);
+        throw new IntegrationDataSourceException("SiebelMessage not found for clcId="+clcId);
       }
 
       if (logger.isDebugEnabled()) {
-        logger.debug("Succesful setting smscState='" + code +" "+ value +"' for clcId="+clcId);
+        logger.debug("Succesful setting smscState='" + state.getCode() +" "+ state.getValue() +"' for clcId="+clcId);
       }
     } catch (SQLException exc) {
-      logger.error("Unable to set smscState=" + code +" "+ value +"' for clcId="+clcId);
-      throw new IntegrationDataSourceException("Unable to set smscState=" + code +" "+ value +"' for clcId="+clcId);
+      logger.error("Unable to set smscState=" + state.getCode() +" "+ state.getValue() +"' for clcId="+clcId);
+      throw new IntegrationDataSourceException("Unable to set smscState=" + state.getCode() +" "+ state.getValue() +"' for clcId="+clcId);
     } finally {
       closeConn(connection, prepStatement, null);
     }
   }
 
-  public SmsMailSmscState getSmsMailSmscState(String clcId) throws IntegrationDataSourceException {
+  public SiebelMessage.SmppState getMessageSmppState(String clcId) throws IntegrationDataSourceException {
     if (clcId == null) {
       throw new IntegrationDataSourceException("Argument is null");
     }
     Connection connection = null;
     PreparedStatement prepStatement = null;
     java.sql.ResultSet sqlResult = null;
-    SmsMailSmscState state = null;
+    SiebelMessage.SmppState state = null;
 
     try {
       connection = pool.getConnection();
@@ -426,7 +429,7 @@ public class IntegrationDataSourceImpl implements IntegrationDataSource {
       sqlResult = prepStatement.executeQuery();
 
       if (sqlResult.next()) {
-        state = new SmsMailSmscState(clcId);
+        state = new SiebelMessage.SmppState();
         state.setCode(
             sqlResult.getString(sql.getProperty("sms.mail.smsc.stat.code"))
         );
@@ -436,16 +439,20 @@ public class IntegrationDataSourceImpl implements IntegrationDataSource {
       }
 
       if (logger.isDebugEnabled()) {
-        logger.debug("Succesful get SmsMail smsc state " + state);
+        logger.debug("Succesful get SiebelMessage smsc state " + state);
       }
     } catch (Throwable exc) {
-      logger.error("Unable to get SmsMail smsc state for clcId: " + clcId, exc);
-      throw new IntegrationDataSourceException("Unable to get SmsMail smsc state for clcId: " + clcId, exc);
+      logger.error("Unable to get SiebelMessage smsc state for clcId: " + clcId, exc);
+      throw new IntegrationDataSourceException("Unable to get SiebelMessage smsc state for clcId: " + clcId, exc);
 
     } finally {
       closeConn(connection, prepStatement, sqlResult);
     }
     return state;
+  }
+
+  public void updateDeliveryStates(Map deliveryStates) {
+    //todo
   }
 
   public void shutdown() {
