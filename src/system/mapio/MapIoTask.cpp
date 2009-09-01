@@ -287,22 +287,11 @@ protected:
 
 void MapIoTask::ReconnectThread::init()
 {
-#ifndef EIH_HD
-  int reinitCount=0;
-#endif
-  reinit:
-#ifndef EIH_HD
-  reinitCount++;
   const int SLEEPTIME=5;
-  if(reinitCount>90/SLEEPTIME)
-  {
-    __map_warn2__("Reconnect count=%d, exiting!",reinitCount);
-    exit(1);
-  }
-#endif
+#ifdef EIN_HD
+  reinit:
   if( isStopping || smsc::system::Smsc::getInstance().getStopFlag()) return;
   USHORT_T err;
-#ifdef EIN_HD
   EINSS7CpMain_CpInit();
   err = EINSS7CpRegisterMPOwner(MY_USER_ID);
   if (err != RETURN_OK)
@@ -311,7 +300,6 @@ void MapIoTask::ReconnectThread::init()
     sleep(SLEEPTIME);
     MsgExit();
     goto reinit;
-    //throw runtime_error("MsgInit error");
   }
   err=EINSS7CpRegisterRemoteCPMgmt(CP_MANAGER_ID, 0, (char*)MapDialogContainer::remoteMgmtAddress.c_str());
   if ( err != RETURN_OK)
@@ -322,25 +310,16 @@ void MapIoTask::ReconnectThread::init()
     goto reinit;
     //throw runtime_error("MsgInit error");
   }
-#endif
-//  __pingPongWaitCounter = 0;
 
   for(int i=0;i<MapDialogContainer::localInstCount;i++)
   {
     err = EINSS7CpMsgInitiate( MAXENTRIES, MapDialogContainer::localInst[i], FALSE );
-    /*
-       if( MapDialogContainer::GetNodesCount() > 1 ) {
-       if( MapDialogContainer::GetNodeNumber() == 2 ) MY_USER_ID = USER06_ID;
-       } else {
-       err = EINSS7CpMsgInitiate( MAXENTRIES INSTARG(MapDialogContainer::localInst[0]), FALSE );
-       }*/
     if ( err != RETURN_OK )
     {
       __map_warn2__("Error at MsgInit, code 0x%hx",err);
       sleep(SLEEPTIME);
       MsgExit();
       goto reinit;
-      //throw runtime_error("MsgInit error");
     }
   }
   EINSS7CpCreateMessagePool(5000,65535);
@@ -361,6 +340,48 @@ void MapIoTask::ReconnectThread::init()
       goto reinit;
     }
   }
+#else
+  int reinitCount=0;
+  reinit:
+  reinitCount++;
+  if(reinitCount>90/SLEEPTIME)
+  {
+    __map_warn2__("Reconnect count=%d, exiting!",reinitCount);
+    exit(1);
+  }
+  if( isStopping || smsc::system::Smsc::getInstance().getStopFlag()) return;
+  USHORT_T err;
+
+  for(int i=0;i<MapDialogContainer::localInstCount;i++)
+  {
+    err = EINSS7CpMsgInitiate( MAXENTRIES, MapDialogContainer::localInst[i], FALSE );
+    if ( err != RETURN_OK )
+    {
+      __map_warn2__("Error at MsgInit, code 0x%hx",err);
+      MsgClose(MY_USER_ID);
+      sleep(SLEEPTIME);
+      goto reinit;
+    }
+  }
+  EINSS7CpCreateMessagePool(5000,65535);
+  err= EINSS7CpMsgPortOpen( MY_USER_ID, TRUE);
+  if ( err != RETURN_OK )
+  {
+    __map_warn2__("Error at MsgOpen, code 0x%hx",err);
+    MsgClose(MY_USER_ID);
+    sleep(SLEEPTIME);
+    goto reinit;
+  }
+
+  {
+    if(!connect())
+    {
+      MsgClose(MY_USER_ID);
+      sleep(SLEEPTIME);
+      goto reinit;
+    }
+  }
+#endif
 }
 
 int MapIoTask::ReconnectThread::Execute()
@@ -503,7 +524,6 @@ void MapIoTask::ReconnectThread::disconnect()
     MapDialogContainer::boundLocalSSNs[MapDialogContainer::remInst[n]]=0;
   }
 
-//  result = MsgRel(MY_USER_ID,ETSIMAP_ID);
   for(int i=0;i<MapDialogContainer::remInstCount;i++)
   {
     if(!MAP_connectedInst[i])
@@ -514,23 +534,22 @@ void MapIoTask::ReconnectThread::disconnect()
     if ( result != MSG_OK)
     {
       __map_warn2__("error at MsgRel errcode 0x%hx",result);
-      //    if ( !isStopping ) kill(getpid(),17);
-      //    return;
     }
   }
 
-  result = MsgClose(MY_USER_ID);
-  if ( result != MSG_OK)
-  {
-    __map_warn2__("error at MsgClose errcode 0x%hx",result);
-//    if ( !isStopping ) kill(getpid(),17);
-//    return;
-  }
   for(int i=0;i<MapDialogContainer::remInstCount;i++)
   {
     MapDialogContainer::getInstance()->DropAllDialogs(MapDialogContainer::remInst[i]);
   }
+
+#ifdef EIN_HD
+  result = MsgClose(MY_USER_ID);
+  if ( result != MSG_OK)
+  {
+    __map_warn2__("error at MsgClose errcode 0x%hx",result);
+  }
   MsgExit();
+#endif
 }
 
 void MapIoTask::deinit()
@@ -538,6 +557,14 @@ void MapIoTask::deinit()
   USHORT_T result;
   __map_warn__("deinitialize MAP_PROXY");
   ReconnectThread::disconnect();
+#ifndef EIN_HD
+  result = MsgClose(MY_USER_ID);
+  if ( result != MSG_OK)
+  {
+    __map_warn2__("error at MsgClose errcode 0x%hx",result);
+  }
+  MsgExit();
+#endif
   MapDialogContainer::destroyInstance();
 }
 
@@ -617,7 +644,7 @@ void MapIoTask::dispatcher(int idx)
   USHORT_T result;
   EINSS7INSTANCE_T rinst=0;
 
-  
+
   std::vector<MSG_T> tokill;
   tokill.reserve(120);
 
@@ -642,7 +669,7 @@ void MapIoTask::dispatcher(int idx)
       }
       q.Pop(message);
     }
-    
+
     __map_trace2__("MsgRecv receive msg with receiver 0x%hx sender 0x%hx prim 0x%hx size %d",message.receiver,message.sender,message.primitive,message.size);
     if ( smsc::logger::_mapmsg_cat->isDebugEnabled() && message.size <= 2048)
     {
@@ -864,7 +891,7 @@ MapDialogContainer* MapDialogContainer::container = 0;
 smsc::logger::Logger* MapDialogContainer::loggerStatDlg = 0;
 smsc::logger::Logger* MapDialogContainer::loggerMapPdu = 0;
 
-void MapIoTask::Start()
+void MapIoTask::StartMap()
 {
   try
   {

@@ -1499,7 +1499,7 @@ public:
   }
 #endif
 
-  void Start();
+  void StartMap();
   void setMapIoTaskCount(int newcnt)
   {
     mapIoTaskCount=newcnt;
