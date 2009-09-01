@@ -285,7 +285,7 @@ protected:
 };
 
 
-void MapIoTask::ReconnectThread::init()
+void MapIoTask::ReconnectThread::init(bool firstTime)
 {
   const int SLEEPTIME=5;
 #ifdef EIN_HD
@@ -352,13 +352,12 @@ void MapIoTask::ReconnectThread::init()
   if( isStopping || smsc::system::Smsc::getInstance().getStopFlag()) return;
   USHORT_T err;
 
-  for(int i=0;i<MapDialogContainer::localInstCount;i++)
+  if(firstTime)
   {
-    err = EINSS7CpMsgInitiate( MAXENTRIES, MapDialogContainer::localInst[i], FALSE );
+    err = EINSS7CpMsgInitiate( MAXENTRIES, 0, FALSE );
     if ( err != RETURN_OK )
     {
       __map_warn2__("Error at MsgInit, code 0x%hx",err);
-      MsgClose(MY_USER_ID);
       sleep(SLEEPTIME);
       goto reinit;
     }
@@ -368,7 +367,6 @@ void MapIoTask::ReconnectThread::init()
   if ( err != RETURN_OK )
   {
     __map_warn2__("Error at MsgOpen, code 0x%hx",err);
-    MsgClose(MY_USER_ID);
     sleep(SLEEPTIME);
     goto reinit;
   }
@@ -411,8 +409,8 @@ int MapIoTask::ReconnectThread::Execute()
       {
         disconnect();
       }
+      init(firstConnect);
       firstConnect=false;
-      init();
       continue;
     }
 

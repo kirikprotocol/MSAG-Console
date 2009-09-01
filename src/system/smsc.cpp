@@ -273,7 +273,7 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
       if(strcmp(mode, "hs") == 0 || strcmp(mode, "ha") == 0){
 
           ishs = true;
-        
+
           const char* nodes[] = { imConfig.get()->getString("host1"), imConfig.get()->getString("host2")};
           smsc_log_info(log, "host1: %s, host2: %s", nodes[0], nodes[1] );
           int port[] = { imConfig.get()->getInt("port1"), imConfig.get()->getInt("port2") };
@@ -334,7 +334,7 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
         }catch(...){
           throw Exception("Exception atoi");
         }
-        
+
         nodeIndex=num1;
         FakeInterconnect::init();
       }
@@ -1414,7 +1414,7 @@ void Smsc::run()
     mapio->setCPMgmtAddress(CPMgmtAddress);
 #endif
     mapio->setMapIoTaskCount(mapIOTasksCount);
-    mapio->Start();
+    mapio->StartMap();
     mapiostarted.Wait();
     __trace__("MAPIO started");
     if(!acc->isStarted()||!mapio->isStarted())
@@ -1449,7 +1449,7 @@ void Smsc::run()
 
   // start rescheduler created in init
   // start on thread pool 2 to shutdown it after state machines
- 
+
   scheduler->InitMsgId(&smsc::util::config::Manager::getInstance());
   tp2.startTask(scheduler);
 
@@ -1470,7 +1470,7 @@ void Smsc::run()
     __trace__("Smsc::SNMP state to OPER changed");
 #endif
 
-  //     
+  //
 
   MainLoopRunner *mlr=new MainLoopRunner[mainLoopsCount];
   try{
@@ -1496,7 +1496,7 @@ void Smsc::run()
     __trace__("Smsc::SNMP state to SHUT changed");
 #endif
 
-  //   
+  //
   //shutdown();
   }catch(exception& e)
   {
@@ -1794,7 +1794,7 @@ void Smsc::InitLicense()
   {
     return;
   }
- 
+
   licenseFileModTime=st.st_mtime;
 
   static const char *lkeys[]=

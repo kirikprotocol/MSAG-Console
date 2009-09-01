@@ -1584,7 +1584,7 @@ public:
     }
     virtual const char* taskName() { return "MapIoTask::reconnect";}
     static void reportDisconnect(int rinst,bool needRel);
-    void init();
+    void init(bool firstTime);
     bool connect();
     static void disconnect();
   protected:
