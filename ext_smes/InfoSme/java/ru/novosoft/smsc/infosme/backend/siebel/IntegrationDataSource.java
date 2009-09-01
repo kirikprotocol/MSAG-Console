@@ -25,6 +25,8 @@ public interface IntegrationDataSource {
   public void setSmsMailSmscState(String clcId, String code, String value) throws IntegrationDataSourceException;
   public SmsMailSmscState getSmsMailSmscState(String clcId) throws IntegrationDataSourceException;
 
+  public void shutdown();
+
   public static class SmsMailSmscState{
     private String clcId;
     private String code;

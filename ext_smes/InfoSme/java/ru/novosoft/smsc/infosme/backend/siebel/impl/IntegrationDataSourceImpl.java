@@ -4,6 +4,7 @@ import ru.novosoft.smsc.infosme.backend.siebel.ResultSet;
 
 import java.io.InputStream;
 import java.io.IOException;
+import java.io.FileInputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -12,7 +13,7 @@ import java.util.Date;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
-import ru.sibinco.util.DBConnectionManager;
+import ru.sibinco.util.conpool.ConnectionPool;
 import ru.novosoft.smsc.infosme.backend.siebel.*;
 
 /**
@@ -22,14 +23,25 @@ public class IntegrationDataSourceImpl implements IntegrationDataSource {
 
   private static final Logger logger = Logger.getLogger(IntegrationDataSourceImpl.class);
 
-  private final DBConnectionManager pool;
+  private final ConnectionPool pool;
   private final Properties sql;
-  
-  private static final String POOL_NAME = "default";
 
-  public IntegrationDataSourceImpl() throws IntegrationDataSourceException {
+
+  public IntegrationDataSourceImpl(String config) throws IntegrationDataSourceException {
+    InputStream in = null;
     try{
-      pool = DBConnectionManager.getInstance();
+      Properties jdbcProp = new Properties();
+      try{
+        in = new FileInputStream(config);
+        jdbcProp.load(in);
+      }finally {
+        if(in != null) {
+          try{
+            in.close();
+          }catch (IOException e) {}
+        }
+      }
+      pool = new ConnectionPool(jdbcProp);
       InputStream is = this.getClass().getResourceAsStream("db.properties");
       sql = new Properties();
       try {
@@ -48,7 +60,7 @@ public class IntegrationDataSourceImpl implements IntegrationDataSource {
   }
 
   private String getSql(java.lang.String string) throws IntegrationDataSourceException {
-      return sql.getProperty(string);
+    return sql.getProperty(string);
   }
 
   public SmsMail getSmsMail(String clcId) throws IntegrationDataSourceException {
@@ -61,7 +73,7 @@ public class IntegrationDataSourceImpl implements IntegrationDataSource {
     java.sql.ResultSet sqlResult = null;
 
     try {
-      connection = pool.getConnectionFromPool(POOL_NAME);
+      connection = pool.getConnection();
 
       prepStatement = connection.prepareStatement(getSql("sms.mail.get"), java.sql.ResultSet.CONCUR_READ_ONLY);
       prepStatement.setFetchSize(Integer.MIN_VALUE);
@@ -108,7 +120,7 @@ public class IntegrationDataSourceImpl implements IntegrationDataSource {
     java.sql.ResultSet sqlResult = null;
 
     try {
-      connection = pool.getConnectionFromPool(POOL_NAME);
+      connection = pool.getConnection();
 
       prepStatement = connection.prepareStatement(getSql("sms.mail.list"), java.sql.ResultSet.CONCUR_READ_ONLY);
       prepStatement.setFetchSize(Integer.MIN_VALUE);
@@ -137,7 +149,7 @@ public class IntegrationDataSourceImpl implements IntegrationDataSource {
     java.sql.ResultSet sqlResult = null;
 
     try {
-      connection = pool.getConnectionFromPool(POOL_NAME);
+      connection = pool.getConnection();
 
       prepStatement = connection.prepareStatement(getSql("sms.mail.params.get"), java.sql.ResultSet.CONCUR_READ_ONLY);
       prepStatement.setFetchSize(Integer.MIN_VALUE);
@@ -154,7 +166,7 @@ public class IntegrationDataSourceImpl implements IntegrationDataSource {
         smsMailParams.setCreated(new java.util.Date(sqlResult.getTimestamp(sql.getProperty("sms.mail.params.created")).getTime()));
         smsMailParams.setCtrlStatus(SmsMailParams.CtrlStatus.valueOf(
             sqlResult.getString(sql.getProperty("sms.mail.params.ctrl.status"))));
-        smsMailParams.setExpPeriod(sqlResult.getInt(sql.getProperty("sms.mail.params.exp.period")));
+        smsMailParams.setExpPeriod(new Integer(sqlResult.getInt(sql.getProperty("sms.mail.params.exp.period"))));
         smsMailParams.setFlash(sqlResult.getString(sql.getProperty("sms.mail.params.flash")).equals("Y"));
         smsMailParams.setPriority(sqlResult.getInt(sql.getProperty("sms.mail.params.priority")));
         smsMailParams.setSave(sqlResult.getString(sql.getProperty("sms.mail.params.save")).equals("Y"));
@@ -183,7 +195,7 @@ public class IntegrationDataSourceImpl implements IntegrationDataSource {
     java.sql.ResultSet sqlResult = null;
 
     try {
-      connection = pool.getConnectionFromPool(POOL_NAME);
+      connection = pool.getConnection();
 
       prepStatement = connection.prepareStatement(getSql("sms.mail.params.list.from.update"), java.sql.ResultSet.CONCUR_READ_ONLY);
       prepStatement.setFetchSize(Integer.MIN_VALUE);
@@ -208,7 +220,7 @@ public class IntegrationDataSourceImpl implements IntegrationDataSource {
     java.sql.ResultSet sqlResult = null;
 
     try {
-      connection = pool.getConnectionFromPool(POOL_NAME);
+      connection = pool.getConnection();
 
       prepStatement = connection.prepareStatement(getSql("sms.mail.params.list"), java.sql.ResultSet.CONCUR_READ_ONLY);
       prepStatement.setFetchSize(Integer.MIN_VALUE);
@@ -235,7 +247,7 @@ public class IntegrationDataSourceImpl implements IntegrationDataSource {
     PreparedStatement prepStatement = null;
 
     try {
-      connection = pool.getConnectionFromPool(POOL_NAME);
+      connection = pool.getConnection();
       prepStatement = connection.prepareStatement(getSql("sms.mail.params.set.status"));
       prepStatement.setString(1, status.toString());
       prepStatement.setString(2, waveId);
@@ -266,7 +278,7 @@ public class IntegrationDataSourceImpl implements IntegrationDataSource {
     SmsMailParams.CtrlStatus status = null;
 
     try {
-      connection = pool.getConnectionFromPool(POOL_NAME);
+      connection = pool.getConnection();
 
       prepStatement = connection.prepareStatement(getSql("sms.mail.params.get.status"), java.sql.ResultSet.CONCUR_READ_ONLY);
       prepStatement.setFetchSize(Integer.MIN_VALUE);
@@ -304,7 +316,7 @@ public class IntegrationDataSourceImpl implements IntegrationDataSource {
     PreparedStatement prepStatement = null;
 
     try {
-      connection = pool.getConnectionFromPool(POOL_NAME);
+      connection = pool.getConnection();
       prepStatement = connection.prepareStatement(getSql("sms.mail.set.status"));
       prepStatement.setString(1, state.toString());
       prepStatement.setString(2, clcId);
@@ -335,7 +347,7 @@ public class IntegrationDataSourceImpl implements IntegrationDataSource {
     SmsMail.MessageState state = null;
 
     try {
-      connection = pool.getConnectionFromPool(POOL_NAME);
+      connection = pool.getConnection();
 
       prepStatement = connection.prepareStatement(getSql("sms.mail.get.status"), java.sql.ResultSet.CONCUR_READ_ONLY);
       prepStatement.setFetchSize(Integer.MIN_VALUE);
@@ -373,7 +385,7 @@ public class IntegrationDataSourceImpl implements IntegrationDataSource {
     PreparedStatement prepStatement = null;
 
     try {
-      connection = pool.getConnectionFromPool(POOL_NAME);
+      connection = pool.getConnection();
       prepStatement = connection.prepareStatement(getSql("sms.mail.set.status.smsc"));
       prepStatement.setString(1, code);
       prepStatement.setString(2, value);
@@ -405,7 +417,7 @@ public class IntegrationDataSourceImpl implements IntegrationDataSource {
     SmsMailSmscState state = null;
 
     try {
-      connection = pool.getConnectionFromPool(POOL_NAME);
+      connection = pool.getConnection();
 
       prepStatement = connection.prepareStatement(getSql("sms.mail.get.status.smsc"), java.sql.ResultSet.CONCUR_READ_ONLY);
       prepStatement.setFetchSize(Integer.MIN_VALUE);
@@ -436,7 +448,16 @@ public class IntegrationDataSourceImpl implements IntegrationDataSource {
     return state;
   }
 
-  private static void closeConn(Connection connection, PreparedStatement preparedStatement, java.sql.ResultSet resultSet) {
+  public void shutdown() {
+    if(pool != null) {
+      try {
+        pool.shutdown();
+      } catch (SQLException e) {}
+    }
+  }
+
+  private static void closeConn(Connection connection, PreparedStatement preparedStatement,
+                                java.sql.ResultSet resultSet) {
     try {
       if (connection != null) {
         connection.close();
