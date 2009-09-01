@@ -162,55 +162,34 @@ public class SiebelMessage {
     }
   }
 
-  public static class SmppState {
-    private String code;
-    private String value;
-
-    public String getCode() {
-      return code;
-    }
-
-    public String getValue() {
-      return value;
-    }
-
-    public void setCode(String code) {
-      this.code = code;
-    }
-
-    public void setValue(String value) {
-      this.value = value;
-    }
-
-    public String toString() {
-      return "SmppState{" +
-          "code='" + code + '\'' +
-          ", value='" + value + '\'' +
-          '}';
-    }
-  }
-
   public static class DeliveryState {
     private final State state;
-    private final SmppState smppState;
+    private final String smppCode;
+    private final String smppCodeDescription;
 
-    public DeliveryState(State state, SmppState smppState) {
+    public DeliveryState(State state, String smppCode, String smppCodeDescription) {
       this.state = state;
-      this.smppState = smppState;
+      this.smppCode = smppCode;
+      this.smppCodeDescription = smppCodeDescription;
     }
 
     public State getState() {
       return state;
     }
 
-    public SmppState getSmppState() {
-      return smppState;
+    public String getSmppCode() {
+      return smppCode;
+    }
+
+    public String getSmppCodeDescription() {
+      return smppCodeDescription;
     }
 
     public String toString() {
       return "DeliveryState{" +
           "state=" + state +
-          ", smppState=" + smppState +
+          ", smppCode='" + smppCode + '\'' +
+          ", smppCodeDescription='" + smppCodeDescription + '\'' +
           '}';
     }
   }

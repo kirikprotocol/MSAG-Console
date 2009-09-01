@@ -16,9 +16,10 @@ public interface SiebelDataProvider {
   public void setMessageState(String clcId, SiebelMessage.State state) throws SiebelDataProviderException;
   public SiebelMessage.State getMessageState(String clcId) throws SiebelDataProviderException;
 
-  public void setMessageSmppState(String clcId, SiebelMessage.SmppState smppState) throws SiebelDataProviderException;
-  public SiebelMessage.SmppState getMessageSmppState(String clcId) throws SiebelDataProviderException;
-
+  /**
+   * @param deliveryStates - map, where key is String with message Id, value is instance of SiebelMessage.DeliveryState
+   * @throws SiebelDataProviderException
+   */
   public void updateDeliveryStates(Map deliveryStates) throws SiebelDataProviderException;
 
   public SiebelTask getTask(String waveId) throws SiebelDataProviderException;

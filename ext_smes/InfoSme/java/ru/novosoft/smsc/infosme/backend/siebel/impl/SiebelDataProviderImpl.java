@@ -377,81 +377,6 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
     return state;
   }
 
-
-
-  public void setMessageSmppState(String clcId, SiebelMessage.SmppState state) throws SiebelDataProviderException {
-    if (clcId == null || state== null) {
-      throw new SiebelDataProviderException("Some arguments are null");
-    }
-
-    Connection connection = null;
-    PreparedStatement prepStatement = null;
-
-    try {
-      connection = pool.getConnection();
-      prepStatement = connection.prepareStatement(getSql("message.set.status.smsc"));
-      prepStatement.setString(1, state.getCode());
-      prepStatement.setString(2, state.getValue());
-      prepStatement.setTimestamp(3, new Timestamp(System.currentTimeMillis()));
-      prepStatement.setString(4, clcId);
-      int rowsUpdated = prepStatement.executeUpdate();
-
-      if(rowsUpdated == 0) {
-        throw new SiebelDataProviderException("SiebelMessage not found for clcId="+clcId);
-      }
-
-      if (logger.isDebugEnabled()) {
-        logger.debug("Succesful setting smscState='" + state.getCode() +" "+ state.getValue() +"' for clcId="+clcId);
-      }
-    } catch (SQLException exc) {
-      logger.error("Unable to set smscState=" + state.getCode() +" "+ state.getValue() +"' for clcId="+clcId);
-      throw new SiebelDataProviderException("Unable to set smscState=" + state.getCode() +" "+ state.getValue() +"' for clcId="+clcId, exc);
-    } finally {
-      closeConn(connection, prepStatement, null);
-    }
-  }
-
-  public SiebelMessage.SmppState getMessageSmppState(String clcId) throws SiebelDataProviderException {
-    if (clcId == null) {
-      throw new SiebelDataProviderException("Argument is null");
-    }
-    Connection connection = null;
-    PreparedStatement prepStatement = null;
-    java.sql.ResultSet sqlResult = null;
-    SiebelMessage.SmppState state = null;
-
-    try {
-      connection = pool.getConnection();
-
-      prepStatement = connection.prepareStatement(getSql("message.get.status.smsc"), java.sql.ResultSet.CONCUR_READ_ONLY);
-      prepStatement.setFetchSize(Integer.MIN_VALUE);
-      prepStatement.setString(1, clcId);
-
-      sqlResult = prepStatement.executeQuery();
-
-      if (sqlResult.next()) {
-        state = new SiebelMessage.SmppState();
-        state.setCode(
-            sqlResult.getString(sql.getProperty("message.smsc.stat.code"))
-        );
-        state.setValue(
-            sqlResult.getString(sql.getProperty("message.smsc.stat.val"))
-        );
-      }
-
-      if (logger.isDebugEnabled()) {
-        logger.debug("Succesful get SiebelMessage smsc state " + state);
-      }
-    } catch (Throwable exc) {
-      logger.error("Unable to get SiebelMessage smsc state for clcId: " + clcId, exc);
-      throw new SiebelDataProviderException("Unable to get SiebelMessage smsc state for clcId: " + clcId, exc);
-
-    } finally {
-      closeConn(connection, prepStatement, sqlResult);
-    }
-    return state;
-  }
-
   public void updateDeliveryStates(Map deliveryStates) throws SiebelDataProviderException {
     if(deliveryStates == null) {
       throw new SiebelDataProviderException("Some arguments are null");
@@ -475,8 +400,8 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
         Map.Entry e = (Map.Entry)i.next();
         String clcId = (String)e.getKey();
         SiebelMessage.DeliveryState deliverySt = (SiebelMessage.DeliveryState)e.getValue();
-        prepStatement.setString(1, deliverySt.getSmppState().getCode());
-        prepStatement.setString(2, deliverySt.getSmppState().getValue());
+        prepStatement.setString(1, deliverySt.getSmppCode());
+        prepStatement.setString(2, deliverySt.getSmppCodeDescription());
         prepStatement.setString(3, deliverySt.getState().toString());
         prepStatement.setTimestamp(4, new Timestamp(System.currentTimeMillis()));
         prepStatement.setString(5, clcId);
