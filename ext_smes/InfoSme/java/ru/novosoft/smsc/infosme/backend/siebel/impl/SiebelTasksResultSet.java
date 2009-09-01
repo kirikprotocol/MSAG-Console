@@ -14,15 +14,15 @@ import java.util.Properties;
 /**
  * author: alkhal
  */
-public class SmsMailParamsResultSet implements ResultSet {
+public class SiebelTasksResultSet implements ResultSet {
 
-  private static final Logger logger = Logger.getLogger(SmsMailResultSet.class);
+  private static final Logger logger = Logger.getLogger(SiebelMessagesResultSet.class);
   private java.sql.ResultSet sqlResult;
   private Connection connection;
   private PreparedStatement prepStatement;
   private final Properties sql;
 
-  public SmsMailParamsResultSet(java.sql.ResultSet resultSet, Connection connection, PreparedStatement prepStatement, Properties sql){
+  public SiebelTasksResultSet(java.sql.ResultSet resultSet, Connection connection, PreparedStatement prepStatement, Properties sql){
     this.connection = connection;
     this.sqlResult = resultSet;
     this.prepStatement = prepStatement;

@@ -135,7 +135,7 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
       closeConn(connection, prepStatement, sqlResult);
       throw new SiebelDataProviderException("Unable to get list of smsMails from the dataBase", exc);
     }
-    return new SmsMailResultSet(sqlResult, connection, prepStatement, sql);
+    return new SiebelMessagesResultSet(sqlResult, connection, prepStatement, sql);
   }
 
   public SiebelTask getTask(String waveId) throws SiebelDataProviderException {
@@ -210,7 +210,7 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
       closeConn(connection, prepStatement, sqlResult);
       throw new SiebelDataProviderException("Unable to get list of smsMailParams from the dataBase", exc);
     }
-    return new SmsMailParamsResultSet(sqlResult, connection, prepStatement, sql);
+    return new SiebelTasksResultSet(sqlResult, connection, prepStatement, sql);
   }
 
   public ResultSet getTasks() throws SiebelDataProviderException {
@@ -234,7 +234,7 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
       closeConn(connection, prepStatement, sqlResult);
       throw new SiebelDataProviderException("Unable to get list of smsMailParams from the dataBase", exc);
     }
-    return new SmsMailParamsResultSet(sqlResult, connection, prepStatement, sql);
+    return new SiebelTasksResultSet(sqlResult, connection, prepStatement, sql);
   }
 
   public void setTaskStatus(String waveId, SiebelTask.Status status) throws SiebelDataProviderException {

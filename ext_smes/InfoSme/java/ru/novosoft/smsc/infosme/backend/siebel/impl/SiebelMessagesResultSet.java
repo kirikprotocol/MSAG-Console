@@ -14,15 +14,15 @@ import ru.novosoft.smsc.infosme.backend.siebel.SiebelDataProviderException;
 /**
  * author: alkhal
  */
-public class SmsMailResultSet implements ResultSet{
+public class SiebelMessagesResultSet implements ResultSet{
 
-  private static final Logger logger = Logger.getLogger(SmsMailResultSet.class);
+  private static final Logger logger = Logger.getLogger(SiebelMessagesResultSet.class);
   private java.sql.ResultSet sqlResult;
   private Connection connection;
   private PreparedStatement prepStatement;
   private final Properties sql;
 
-  public SmsMailResultSet(java.sql.ResultSet resultSet, Connection connection, PreparedStatement prepStatement, Properties sql){
+  public SiebelMessagesResultSet(java.sql.ResultSet resultSet, Connection connection, PreparedStatement prepStatement, Properties sql){
     this.connection = connection;
     this.sqlResult = resultSet;
     this.prepStatement = prepStatement;
