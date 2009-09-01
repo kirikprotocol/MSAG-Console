@@ -25,7 +25,9 @@ public:
     void save( time_t          now,
                const TaskInfo& info,
                const Message&  msg,
-               uint8_t         state );
+               uint8_t         state,
+               int             smppStatus,
+               bool            noMoreMessages );
 
     // check if the file should be rolled (and roll if needed)
     void checkRoll( time_t now );

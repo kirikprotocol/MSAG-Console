@@ -36,7 +36,9 @@ FinalStateSaver::~FinalStateSaver()
 void FinalStateSaver::save( time_t          now,
                             const TaskInfo& info,
                             const Message&  msg,
-                            uint8_t         state )
+                            uint8_t         state,
+                            int             smppStatus,
+                            bool            noMoreMessages )
 {
     smsc_log_debug(log_,"save task=%u msg=%llu",info.uid,msg.id);
     // prepare the buffer to save
@@ -51,7 +53,8 @@ void FinalStateSaver::save( time_t          now,
             tnow.tm_min,
             tnow.tm_sec );
     std::string buf;
-    smsc::util::format(buf,"%s,%u,%u,%llu,%s,%s,%s\n",timestr,state,info.uid,msg.id,
+    smsc::util::format(buf,"%s,%u,%u,%llu,%u,%s,%s,%s\n",timestr,state,info.uid,msg.id,
+                       smppStatus,
                        msg.abonent.c_str(),
                        msg.userData.c_str(),
                        info.name.c_str());
@@ -60,14 +63,22 @@ void FinalStateSaver::save( time_t          now,
     checkRollUnsync(now);
     if ( ! file_.isOpened() ) {
         std::string fname;
-        fname.reserve(path_.size() + strlen(timestr) + ::workingExtension.size() + 1);
+        fname.reserve(path_.size() + ::strlen(timestr) + ::workingExtension.size() + 1);
         fname.append(path_);
         fname.append(timestr);
         fname.append(::workingExtension);
         file_.WOpen( fname.c_str() );
         nextOpen_ = now + rollingInterval_;
+        const char* msg = "TIME,STATE,TASKID,MSGID,SMPPSTATUS,ADDRESS,USERDATA,TASKNAME";
+        file_.Write(msg,::strlen(msg));
     }
     file_.Write(buf.c_str(),buf.size());
+    if ( noMoreMessages ) {
+        buf.clear();
+        smsc::util::format(buf,"%s,%u,%u,%llu,%u,%s,%s,%s\n",
+                           timestr,0,info.uid,0ULL,
+                           0,"","",info.name.c_str());
+    }
 }
 
 

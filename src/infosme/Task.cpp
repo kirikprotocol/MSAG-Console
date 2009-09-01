@@ -641,7 +641,7 @@ bool Task::retryMessage(uint64_t msgId, time_t nextTime)
     return result;
 }
 
-bool Task::finalizeMessage(uint64_t msgId, MessageState state)
+bool Task::finalizeMessage(uint64_t msgId, MessageState state, int smppStatus )
 {   
     if (state == NEW || state == WAIT || state == ENROUTE) {
         smsc_log_warn(logger, "Invalid state=%d to finalize message on task '%d/%s' for id=%llx",
@@ -665,11 +665,18 @@ bool Task::finalizeMessage(uint64_t msgId, MessageState state)
       {
         store.setMsgState(msgId,DELETED,info.saveFinalState ? &msg : 0);
       }
-      if ( info.saveFinalState ) {
-          finalStateSaver_->save(now,info,msg,state);
-      }
 
+      if ( info.saveFinalState ) {
+          size_t messagesCacheSz;
+          {
+              MutexGuard mg(messagesCacheLock);
+              messagesCacheSz = messagesCache.size();
+          }
+          finalStateSaver_->save(now,info,msg,state,smppStatus,
+                                 bSelectedAll && (messagesCacheSz == 0));
+      }
       result = true;
+
     }
     catch (std::exception& exc) {
         smsc_log_error(logger, "Task '%d/%s'. finalizeMessage(): Messages access failure. "

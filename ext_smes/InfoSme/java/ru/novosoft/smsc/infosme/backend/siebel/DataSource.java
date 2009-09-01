@@ -14,14 +14,16 @@ public interface DataSource {
     public class FinalStateItem {
         String state;
         String userData;
+        String smppStatus;
 
-        FinalStateItem( String state, String userData ) {
+        FinalStateItem( String state, String userData, String smppStatus ) {
             this.state = state;
             this.userData = userData;
+            this.smppStatus = smppStatus;
         }
     }
 
     /// set final states for messages
     public void saveFinalStates( Collection states);
-
+    public void taskHasFinished( String taskName );
 }

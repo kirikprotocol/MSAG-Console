@@ -62,31 +62,45 @@ public class FinalStateThread extends Thread {
         BufferedReader is = null;
         try {
             is = new BufferedReader( new FileReader(fd) );
-            String line;
+            String line = is.readLine();
+            if ( line == null ) throw new IOException("heading line is not found");
             int totalRecords = 0;
+            int processedRecords = 0;
             LinkedList list = new LinkedList();
             while ( started_ && ( line = is.readLine()) != null ) {
+                // parse line: date,state,taskId,msgId,smppStatus,abnt,userData,taskName
                 ++totalRecords;
-                // parse line: date,state,taskId,msgId,abnt,userData,taskName
-                String[] fields = recSep_.split(line,7);
-                if ( fields.length < 7 ) {
+                String[] fields = recSep_.split(line,8);
+                if ( fields.length < 8 ) {
                     // not all fields specified
                     if (log_.isDebugEnabled() ) {
                         log_.debug("message " + line + " cannot be parsed");
                     }
                     continue;
                 }
-                if ( fields[5].length() == 0 ) {
+                if ( fields[6].length() != 0 ) {
+                    Message.State state = Message.State.getById(new Integer(fields[1]).intValue());
+                    list.add( new DataSource.FinalStateItem(state.getName(),fields[6],fields[4]) );
+                    if ( (totalRecords - processedRecords) > 100 ) {
+                        dataSource_.saveFinalStates( list );
+                        list.clear();
+                        processedRecords = totalRecords;
+                    }
+                } else if ( fields[1] == "0" && fields[3] == "0" ) {
+                    // end of messages in the task
+                    if (log_.isInfoEnabled()) {
+                        log_.info("all messages have been processed for task " + fields[7]);
+                    }
+                    if (list.size() > 0) {
+                        dataSource_.saveFinalStates(list);
+                        list.clear();
+                        processedRecords = totalRecords;
+                    }
+                    dataSource_.taskHasFinished( fields[7] );
+                } else {
                     if (log_.isDebugEnabled() ) {
                         log_.debug("message " + line + ": userData is empty" );
                     }
-                    continue;
-                }
-                Message.State state = Message.State.getById(new Integer(fields[1]).intValue());
-                list.add( new DataSource.FinalStateItem(state.getName(),fields[5]) );
-                if ( (totalRecords % 100) == 0 ) {
-                    dataSource_.saveFinalStates( list );
-                    list.clear();
                 }
             }
             if ( list.size() > 0 ) {
@@ -96,6 +110,9 @@ public class FinalStateThread extends Thread {
             is = null;
             // renaming the file
             fd.renameTo( new File(processedPath_,fileName) );
+            if ( log_.isInfoEnabled() ) {
+                log_.info("file processed " + fileName + ", msg records=" + totalRecords );
+            }
         } catch ( IOException e ) {
             log_.error( "exc processing file " + fileName + ": " + e.getMessage() );
         } finally {

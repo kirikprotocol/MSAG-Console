@@ -575,7 +575,7 @@ void TaskProcessor::processMessage(Task* task, uint64_t msgId,const ResponseData
 
     if (rd.accepted)
     {
-        task->finalizeMessage(msgId, DELIVERED);
+        task->finalizeMessage(msgId, DELIVERED, rd.status );
         statistics->incDelivered(task->getInfo().uid);
     }
     else
@@ -588,7 +588,7 @@ void TaskProcessor::processMessage(Task* task, uint64_t msgId,const ResponseData
             if ((info.endDate>0 && nextTime >=info.endDate) ||
                 (info.validityDate>0 && nextTime>=info.validityDate))
             {
-                task->finalizeMessage(msgId, EXPIRED);
+                task->finalizeMessage(msgId, EXPIRED, rd.status);
                 statistics->incFailed(info.uid);
             } 
             else
@@ -602,7 +602,7 @@ void TaskProcessor::processMessage(Task* task, uint64_t msgId,const ResponseData
         }
         else
         { 
-            task->finalizeMessage(msgId, FAILED);
+            task->finalizeMessage(msgId, FAILED, rd.status );
             statistics->incFailed(info.uid);
         }
     }
@@ -667,7 +667,7 @@ void TaskProcessor::processResponce(const ResponseData& rd, bool internal)
             if ((info.endDate>0 && nextTime >=info.endDate) ||
                 (info.validityDate>0 && nextTime>=info.validityDate))
             {
-                task->finalizeMessage(tmIds.msgId, EXPIRED);
+                task->finalizeMessage(tmIds.msgId, EXPIRED, rd.status );
                 statistics->incFailed(info.uid);
             } 
             else
@@ -681,14 +681,14 @@ void TaskProcessor::processResponce(const ResponseData& rd, bool internal)
         }
         else
         {
-            task->finalizeMessage(tmIds.msgId, FAILED);
+            task->finalizeMessage(tmIds.msgId, FAILED, rd.status );
             statistics->incFailed(info.uid);
         }
     }
     else
     {
         if (info.transactionMode) {
-            task->finalizeMessage(tmIds.msgId, DELIVERED);
+            task->finalizeMessage(tmIds.msgId, DELIVERED, rd.status );
             statistics->incDelivered(info.uid);
             return;
         }

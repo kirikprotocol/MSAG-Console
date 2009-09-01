@@ -225,9 +225,10 @@ class FinalStateSaver;
          * @param state         финальное состояние сообщения
          * @param connection    connection от TaskProcessor'а
          *                      из внутреннего источника данных. (оптимизация)
+         * @param smppStatus    The smpp status of the response (or the fake response)
          * @return true         если сообщение найдено и финализированно/удалено.
          */
-        bool finalizeMessage(uint64_t msgId, MessageState state);
+        bool finalizeMessage( uint64_t msgId, MessageState state, int smppStatus );
 
         /**
          * Переводит сообщение в состояние NEW по получению deliveryReport Failed
