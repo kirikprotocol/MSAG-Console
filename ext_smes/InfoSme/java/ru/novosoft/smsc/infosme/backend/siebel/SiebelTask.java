@@ -17,7 +17,7 @@ public class SiebelTask {
   private boolean save;
   private boolean beep;
   private Integer expPeriod;
-  private CtrlStatus ctrlStatus;
+  private Status status;
 
   public String getWaveId() {
     return waveId;
@@ -104,24 +104,24 @@ public class SiebelTask {
   }
 
 
-  public CtrlStatus getCtrlStatus() {
-    return ctrlStatus;
+  public Status getStatus() {
+    return status;
   }
 
-  public void setCtrlStatus(CtrlStatus ctrlStatus) {
-    this.ctrlStatus = ctrlStatus;
+  public void setStatus(Status status) {
+    this.status = status;
   }
 
-  public static class CtrlStatus {
+  public static class Status {
 
-    public final static CtrlStatus ENQUEUED = new CtrlStatus("ENQUEUED");
-    public final static CtrlStatus PAUSED = new CtrlStatus("PAUSED");
-    public final static CtrlStatus STOPPED = new CtrlStatus("STOPPED");
-    public final static CtrlStatus IN_PROCESS = new CtrlStatus("IN PROCESS");
-    public final static CtrlStatus PROCESSED = new CtrlStatus("PROCESSED");
+    public final static Status ENQUEUED = new Status("ENQUEUED");
+    public final static Status PAUSED = new Status("PAUSED");
+    public final static Status STOPPED = new Status("STOPPED");
+    public final static Status IN_PROCESS = new Status("IN PROCESS");
+    public final static Status PROCESSED = new Status("PROCESSED");
 
     private String value;
-    private CtrlStatus(String value) {
+    private Status(String value) {
       this.value = value;
     }
 
@@ -129,7 +129,7 @@ public class SiebelTask {
       return value;
     }
 
-    public static CtrlStatus valueOf(String st) {
+    public static Status valueOf(String st) {
       if(ENQUEUED.value.equals(st)) {
         return ENQUEUED;
       } else if(PAUSED.value.equals(st)) {
@@ -149,12 +149,13 @@ public class SiebelTask {
       if (this == o) return true;
       if (o == null || getClass() != o.getClass()) return false;
 
-      CtrlStatus that = (CtrlStatus) o;
+      Status that = (Status) o;
 
       if (value != null ? !value.equals(that.value) : that.value != null) return false;
 
       return true;
     }
+
   }
 
   public String toString() {
@@ -168,7 +169,7 @@ public class SiebelTask {
         ", save=" + save +
         ", beep=" + beep +
         ", expPeriod=" + expPeriod +
-        ", ctrlStatus=" + ctrlStatus +
+        ", status=" + status +
         '}';
   }
 }

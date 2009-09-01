@@ -9,9 +9,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.util.Date;
-import java.util.Properties;
-import java.util.Map;
+import java.util.*;
 
 import org.apache.log4j.Logger;
 import ru.sibinco.util.conpool.ConnectionPool;
@@ -28,7 +26,7 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
   private final Properties sql;
 
 
-  public SiebelDataProviderImpl(String config) throws IntegrationDataSourceException {
+  public SiebelDataProviderImpl(String config) throws SiebelDataProviderException {
     InputStream in = null;
     try{
       Properties jdbcProp = new Properties();
@@ -56,17 +54,17 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
         }
       }
     }catch (Throwable e) {
-      throw new IntegrationDataSourceException(e);
+      throw new SiebelDataProviderException(e);
     }
   }
 
-  private String getSql(java.lang.String string) throws IntegrationDataSourceException {
+  private String getSql(java.lang.String string) throws SiebelDataProviderException {
     return sql.getProperty(string);
   }
 
-  public SiebelMessage getMessage(String clcId) throws IntegrationDataSourceException {
+  public SiebelMessage getMessage(String clcId) throws SiebelDataProviderException {
     if (clcId == null) {
-      throw new IntegrationDataSourceException("Argument is null");
+      throw new SiebelDataProviderException("Argument is null");
     }
     SiebelMessage siebelMessage = null;
     Connection connection = null;
@@ -76,7 +74,7 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
     try {
       connection = pool.getConnection();
 
-      prepStatement = connection.prepareStatement(getSql("sms.mail.get"), java.sql.ResultSet.CONCUR_READ_ONLY);
+      prepStatement = connection.prepareStatement(getSql("message.get"), java.sql.ResultSet.CONCUR_READ_ONLY);
       prepStatement.setFetchSize(Integer.MIN_VALUE);
       prepStatement.setString(1, clcId);
 
@@ -85,17 +83,17 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
       if (sqlResult.next()) {
         siebelMessage = new SiebelMessage();
         siebelMessage.setClcId(clcId);
-        siebelMessage.setCreated(new Date(sqlResult.getTimestamp(sql.getProperty("sms.mail.created")).getTime()));
-        siebelMessage.setLastUpd(new Date(sqlResult.getTimestamp(sql.getProperty("sms.mail.last.upd")).getTime()));
-        siebelMessage.setMessage(sqlResult.getString(sql.getProperty("sms.mail.message")));
-        String ms = sqlResult.getString(sql.getProperty("sms.mail.message.state"));
+        siebelMessage.setCreated(new Date(sqlResult.getTimestamp(sql.getProperty("message.created")).getTime()));
+        siebelMessage.setLastUpd(new Date(sqlResult.getTimestamp(sql.getProperty("message.last.upd")).getTime()));
+        siebelMessage.setMessage(sqlResult.getString(sql.getProperty("message.message")));
+        String ms = sqlResult.getString(sql.getProperty("message.message.state"));
         if(ms != null) {
           siebelMessage.setMessageState(SiebelMessage.State.valueOf(ms));
         }
-        siebelMessage.setMsisdn(sqlResult.getString(sql.getProperty("sms.mail.msisdn")));
-        siebelMessage.setSmscCode(sqlResult.getString(sql.getProperty("sms.mail.smsc.stat.code")));
-        siebelMessage.setSmscValue(sqlResult.getString(sql.getProperty("sms.mail.smsc.stat.val")));
-        siebelMessage.setWaveId(sqlResult.getString(sql.getProperty("sms.mail.wave.id")));
+        siebelMessage.setMsisdn(sqlResult.getString(sql.getProperty("message.msisdn")));
+        siebelMessage.setSmscCode(sqlResult.getString(sql.getProperty("message.smsc.stat.code")));
+        siebelMessage.setSmscValue(sqlResult.getString(sql.getProperty("message.smsc.stat.val")));
+        siebelMessage.setWaveId(sqlResult.getString(sql.getProperty("message.wave.id")));
       }
 
       if (logger.isDebugEnabled()) {
@@ -103,7 +101,7 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
       }
     } catch (Throwable exc) {
       logger.error("Unable to get SiebelMessage from the dataBase with clcId: " + clcId, exc);
-      throw new IntegrationDataSourceException("Unable to get SiebelMessage from the dataBase with clcId: " + clcId, exc);
+      throw new SiebelDataProviderException("Unable to get SiebelMessage from the dataBase with clcId: " + clcId, exc);
 
     } finally {
       closeConn(connection, prepStatement, sqlResult);
@@ -112,9 +110,9 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
   }
 
 
-  public ResultSet getMessages(String waveId) throws IntegrationDataSourceException {
+  public ResultSet getMessages(String waveId) throws SiebelDataProviderException {
     if (waveId == null) {
-      throw new IntegrationDataSourceException("Argument is null");
+      throw new SiebelDataProviderException("Argument is null");
     }
     Connection connection = null;
     PreparedStatement prepStatement = null;
@@ -123,7 +121,7 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
     try {
       connection = pool.getConnection();
 
-      prepStatement = connection.prepareStatement(getSql("sms.mail.list"), java.sql.ResultSet.CONCUR_READ_ONLY);
+      prepStatement = connection.prepareStatement(getSql("message.list"), java.sql.ResultSet.CONCUR_READ_ONLY);
       prepStatement.setFetchSize(Integer.MIN_VALUE);
       prepStatement.setString(1, waveId);
 
@@ -135,14 +133,14 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
     } catch (SQLException exc) {
       logger.error("Unable to get list of smsMails from the dataBase", exc);
       closeConn(connection, prepStatement, sqlResult);
-      throw new IntegrationDataSourceException("Unable to get list of smsMails from the dataBase", exc);
+      throw new SiebelDataProviderException("Unable to get list of smsMails from the dataBase", exc);
     }
     return new SmsMailResultSet(sqlResult, connection, prepStatement, sql);
   }
 
-  public SiebelTask getTask(String waveId) throws IntegrationDataSourceException {
+  public SiebelTask getTask(String waveId) throws SiebelDataProviderException {
     if (waveId == null) {
-      throw new IntegrationDataSourceException("Argument is null");
+      throw new SiebelDataProviderException("Argument is null");
     }
     SiebelTask siebelTask = null;
     Connection connection = null;
@@ -152,7 +150,7 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
     try {
       connection = pool.getConnection();
 
-      prepStatement = connection.prepareStatement(getSql("sms.mail.params.get"), java.sql.ResultSet.CONCUR_READ_ONLY);
+      prepStatement = connection.prepareStatement(getSql("task.get"), java.sql.ResultSet.CONCUR_READ_ONLY);
       prepStatement.setFetchSize(Integer.MIN_VALUE);
       prepStatement.setString(1, waveId);
 
@@ -161,16 +159,16 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
       if (sqlResult.next()) {
         siebelTask = new SiebelTask();
         siebelTask = new SiebelTask();
-        siebelTask.setLastUpdate(new java.util.Date(sqlResult.getTimestamp(sql.getProperty("sms.mail.params.last.upd")).getTime()));
-        siebelTask.setBeep(sqlResult.getString(sql.getProperty("sms.mail.params.beep")).equals("Y"));
-        siebelTask.setCampaignId(sqlResult.getString(sql.getProperty("sms.mail.params.campaign.id")));
-        siebelTask.setCreated(new java.util.Date(sqlResult.getTimestamp(sql.getProperty("sms.mail.params.created")).getTime()));
-        siebelTask.setCtrlStatus(SiebelTask.CtrlStatus.valueOf(
-            sqlResult.getString(sql.getProperty("sms.mail.params.ctrl.status"))));
-        siebelTask.setExpPeriod(new Integer(sqlResult.getInt(sql.getProperty("sms.mail.params.exp.period"))));
-        siebelTask.setFlash(sqlResult.getString(sql.getProperty("sms.mail.params.flash")).equals("Y"));
-        siebelTask.setPriority(sqlResult.getInt(sql.getProperty("sms.mail.params.priority")));
-        siebelTask.setSave(sqlResult.getString(sql.getProperty("sms.mail.params.save")).equals("Y"));
+        siebelTask.setLastUpdate(new java.util.Date(sqlResult.getTimestamp(sql.getProperty("task.last.upd")).getTime()));
+        siebelTask.setBeep(sqlResult.getString(sql.getProperty("task.beep")).equals("Y"));
+        siebelTask.setCampaignId(sqlResult.getString(sql.getProperty("task.campaign.id")));
+        siebelTask.setCreated(new java.util.Date(sqlResult.getTimestamp(sql.getProperty("task.created")).getTime()));
+        siebelTask.setStatus(SiebelTask.Status.valueOf(
+            sqlResult.getString(sql.getProperty("task.ctrl.status"))));
+        siebelTask.setExpPeriod(new Integer(sqlResult.getInt(sql.getProperty("task.exp.period"))));
+        siebelTask.setFlash(sqlResult.getString(sql.getProperty("task.flash")).equals("Y"));
+        siebelTask.setPriority(sqlResult.getInt(sql.getProperty("task.priority")));
+        siebelTask.setSave(sqlResult.getString(sql.getProperty("task.save")).equals("Y"));
         siebelTask.setWaveId(waveId);
       }
 
@@ -179,7 +177,7 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
       }
     } catch (Throwable exc) {
       logger.error("Unable to get SiebelTask from the dataBase with waveId: " + waveId, exc);
-      throw new IntegrationDataSourceException("Unable to get SiebelTask from the dataBase with waveId: " + waveId, exc);
+      throw new SiebelDataProviderException("Unable to get SiebelTask from the dataBase with waveId: " + waveId, exc);
 
     } finally {
       closeConn(connection, prepStatement, sqlResult);
@@ -187,9 +185,9 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
     return siebelTask;
   }
 
-  public ResultSet getTasks(Date fromUpdate) throws IntegrationDataSourceException {
+  public ResultSet getTasks(Date fromUpdate) throws SiebelDataProviderException {
     if (fromUpdate == null) {
-      throw new IntegrationDataSourceException("Argument is null");
+      throw new SiebelDataProviderException("Argument is null");
     }
     Connection connection = null;
     PreparedStatement prepStatement = null;
@@ -198,7 +196,7 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
     try {
       connection = pool.getConnection();
 
-      prepStatement = connection.prepareStatement(getSql("sms.mail.params.list.from.update"), java.sql.ResultSet.CONCUR_READ_ONLY);
+      prepStatement = connection.prepareStatement(getSql("task.list.from.update"), java.sql.ResultSet.CONCUR_READ_ONLY);
       prepStatement.setFetchSize(Integer.MIN_VALUE);
       prepStatement.setTimestamp(1, new Timestamp(fromUpdate.getTime()));
 
@@ -210,12 +208,12 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
     } catch (SQLException exc) {
       logger.error("Unable to get list of smsMailParams from the dataBase", exc);
       closeConn(connection, prepStatement, sqlResult);
-      throw new IntegrationDataSourceException("Unable to get list of smsMailParams from the dataBase", exc);
+      throw new SiebelDataProviderException("Unable to get list of smsMailParams from the dataBase", exc);
     }
     return new SmsMailParamsResultSet(sqlResult, connection, prepStatement, sql);
   }
 
-  public ResultSet getTasks() throws IntegrationDataSourceException {
+  public ResultSet getTasks() throws SiebelDataProviderException {
     Connection connection = null;
     PreparedStatement prepStatement = null;
     java.sql.ResultSet sqlResult = null;
@@ -223,7 +221,7 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
     try {
       connection = pool.getConnection();
 
-      prepStatement = connection.prepareStatement(getSql("sms.mail.params.list"), java.sql.ResultSet.CONCUR_READ_ONLY);
+      prepStatement = connection.prepareStatement(getSql("task.list"), java.sql.ResultSet.CONCUR_READ_ONLY);
       prepStatement.setFetchSize(Integer.MIN_VALUE);
 
       sqlResult = prepStatement.executeQuery();
@@ -234,14 +232,14 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
     } catch (SQLException exc) {
       logger.error("Unable to get list of smsMailParams from the dataBase", exc);
       closeConn(connection, prepStatement, sqlResult);
-      throw new IntegrationDataSourceException("Unable to get list of smsMailParams from the dataBase", exc);
+      throw new SiebelDataProviderException("Unable to get list of smsMailParams from the dataBase", exc);
     }
     return new SmsMailParamsResultSet(sqlResult, connection, prepStatement, sql);
   }
 
-  public void setTaskStatus(String waveId, SiebelTask.CtrlStatus status) throws IntegrationDataSourceException {
+  public void setTaskStatus(String waveId, SiebelTask.Status status) throws SiebelDataProviderException {
     if (status == null || waveId == null) {
-      throw new IntegrationDataSourceException("Some arguments are null");
+      throw new SiebelDataProviderException("Some arguments are null");
     }
 
     Connection connection = null;
@@ -249,13 +247,14 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
 
     try {
       connection = pool.getConnection();
-      prepStatement = connection.prepareStatement(getSql("sms.mail.params.set.status"));
+      prepStatement = connection.prepareStatement(getSql("task.set.status"));
       prepStatement.setString(1, status.toString());
-      prepStatement.setString(2, waveId);
+      prepStatement.setTimestamp(2, new Timestamp(System.currentTimeMillis()));
+      prepStatement.setString(3, waveId);
       int rowsUpdated = prepStatement.executeUpdate();
 
       if(rowsUpdated == 0) {
-        throw new IntegrationDataSourceException("SiebelTask not found for waveId="+waveId);
+        throw new SiebelDataProviderException("SiebelTask not found for waveId="+waveId);
       }
 
       if (logger.isDebugEnabled()) {
@@ -263,25 +262,25 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
       }
     } catch (SQLException exc) {
       logger.error("Unable to set ctrl_status=" + status+" for waveId="+waveId);
-      throw new IntegrationDataSourceException("Unable to set ctrl_status=" + status+" for waveId="+waveId, exc);
+      throw new SiebelDataProviderException("Unable to set ctrl_status=" + status+" for waveId="+waveId, exc);
     } finally {
       closeConn(connection, prepStatement, null);
     }
   }
 
-  public SiebelTask.CtrlStatus getTaskStatus(String waveId) throws IntegrationDataSourceException {
+  public SiebelTask.Status getTaskStatus(String waveId) throws SiebelDataProviderException {
     if (waveId == null) {
-      throw new IntegrationDataSourceException("Argument is null");
+      throw new SiebelDataProviderException("Argument is null");
     }
     Connection connection = null;
     PreparedStatement prepStatement = null;
     java.sql.ResultSet sqlResult = null;
-    SiebelTask.CtrlStatus status = null;
+    SiebelTask.Status status = null;
 
     try {
       connection = pool.getConnection();
 
-      prepStatement = connection.prepareStatement(getSql("sms.mail.params.get.status"), java.sql.ResultSet.CONCUR_READ_ONLY);
+      prepStatement = connection.prepareStatement(getSql("task.get.status"), java.sql.ResultSet.CONCUR_READ_ONLY);
       prepStatement.setFetchSize(Integer.MIN_VALUE);
       prepStatement.setString(1, waveId);
 
@@ -289,9 +288,9 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
 
       if (sqlResult.next()) {
         String st =
-            sqlResult.getString(sql.getProperty("sms.mail.params.ctrl.status"));
+            sqlResult.getString(sql.getProperty("task.ctrl.status"));
         if(st != null) {
-          status = SiebelTask.CtrlStatus.valueOf(st);
+          status = SiebelTask.Status.valueOf(st);
         }
       }
 
@@ -300,7 +299,7 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
       }
     } catch (Throwable exc) {
       logger.error("Unable to get SmsMailParam's status with waveId: " + waveId, exc);
-      throw new IntegrationDataSourceException("Unable to get SmsMailParam's status with waveId: " + waveId, exc);
+      throw new SiebelDataProviderException("Unable to get SmsMailParam's status with waveId: " + waveId, exc);
 
     } finally {
       closeConn(connection, prepStatement, sqlResult);
@@ -308,23 +307,24 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
     return status;
   }
 
-  public void setMessageState(String clcId, SiebelMessage.State state) throws IntegrationDataSourceException {
+  public void setMessageState(String clcId, SiebelMessage.State state) throws SiebelDataProviderException {
     if (state == null || clcId== null) {
-      throw new IntegrationDataSourceException("Some arguments are null");
+      throw new SiebelDataProviderException("Some arguments are null");
     }
 
     Connection connection = null;
     PreparedStatement prepStatement = null;
 
     try {
-      connection = pool.getConnection();        
-      prepStatement = connection.prepareStatement(getSql("sms.mail.set.status"));
+      connection = pool.getConnection();
+      prepStatement = connection.prepareStatement(getSql("message.set.status"));
       prepStatement.setString(1, state.toString());
-      prepStatement.setString(2, clcId);
+      prepStatement.setTimestamp(2, new Timestamp(System.currentTimeMillis()));
+      prepStatement.setString(3, clcId);
       int rowsUpdated = prepStatement.executeUpdate();
 
       if(rowsUpdated == 0) {
-        throw new IntegrationDataSourceException("SiebelMessage not found for clcId="+clcId);
+        throw new SiebelDataProviderException("SiebelMessage not found for clcId="+clcId);
       }
 
       if (logger.isDebugEnabled()) {
@@ -332,15 +332,15 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
       }
     } catch (SQLException exc) {
       logger.error("Unable to set state=" + state+" for clcId="+clcId);
-      throw new IntegrationDataSourceException("Unable to set cstates=" + state+" for clcId="+clcId, exc);
+      throw new SiebelDataProviderException("Unable to set cstates=" + state+" for clcId="+clcId, exc);
     } finally {
       closeConn(connection, prepStatement, null);
     }
   }
 
-  public SiebelMessage.State getMessageState(String clcId) throws IntegrationDataSourceException {
+  public SiebelMessage.State getMessageState(String clcId) throws SiebelDataProviderException {
     if (clcId == null) {
-      throw new IntegrationDataSourceException("Argument is null");
+      throw new SiebelDataProviderException("Argument is null");
     }
     Connection connection = null;
     PreparedStatement prepStatement = null;
@@ -350,7 +350,7 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
     try {
       connection = pool.getConnection();
 
-      prepStatement = connection.prepareStatement(getSql("sms.mail.get.status"), java.sql.ResultSet.CONCUR_READ_ONLY);
+      prepStatement = connection.prepareStatement(getSql("message.get.status"), java.sql.ResultSet.CONCUR_READ_ONLY);
       prepStatement.setFetchSize(Integer.MIN_VALUE);
       prepStatement.setString(1, clcId);
 
@@ -358,7 +358,7 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
 
       if (sqlResult.next()) {
         String st =
-            sqlResult.getString(sql.getProperty("sms.mail.message.state"));
+            sqlResult.getString(sql.getProperty("message.message.state"));
         if(st != null) {
           state = SiebelMessage.State.valueOf(st);
         }
@@ -369,7 +369,7 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
       }
     } catch (Throwable exc) {
       logger.error("Unable to get SiebelMessage state with clcId: " + clcId, exc);
-      throw new IntegrationDataSourceException("Unable to get SiebelMessage state with clcId: " + clcId, exc);
+      throw new SiebelDataProviderException("Unable to get SiebelMessage state with clcId: " + clcId, exc);
 
     } finally {
       closeConn(connection, prepStatement, sqlResult);
@@ -379,9 +379,9 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
 
 
 
-  public void setMessageSmppState(String clcId, SiebelMessage.SmppState state) throws IntegrationDataSourceException {
+  public void setMessageSmppState(String clcId, SiebelMessage.SmppState state) throws SiebelDataProviderException {
     if (clcId == null || state== null) {
-      throw new IntegrationDataSourceException("Some arguments are null");
+      throw new SiebelDataProviderException("Some arguments are null");
     }
 
     Connection connection = null;
@@ -389,14 +389,15 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
 
     try {
       connection = pool.getConnection();
-      prepStatement = connection.prepareStatement(getSql("sms.mail.set.status.smsc"));
+      prepStatement = connection.prepareStatement(getSql("message.set.status.smsc"));
       prepStatement.setString(1, state.getCode());
       prepStatement.setString(2, state.getValue());
-      prepStatement.setString(3, clcId);
+      prepStatement.setTimestamp(3, new Timestamp(System.currentTimeMillis()));
+      prepStatement.setString(4, clcId);
       int rowsUpdated = prepStatement.executeUpdate();
 
       if(rowsUpdated == 0) {
-        throw new IntegrationDataSourceException("SiebelMessage not found for clcId="+clcId);
+        throw new SiebelDataProviderException("SiebelMessage not found for clcId="+clcId);
       }
 
       if (logger.isDebugEnabled()) {
@@ -404,15 +405,15 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
       }
     } catch (SQLException exc) {
       logger.error("Unable to set smscState=" + state.getCode() +" "+ state.getValue() +"' for clcId="+clcId);
-      throw new IntegrationDataSourceException("Unable to set smscState=" + state.getCode() +" "+ state.getValue() +"' for clcId="+clcId);
+      throw new SiebelDataProviderException("Unable to set smscState=" + state.getCode() +" "+ state.getValue() +"' for clcId="+clcId, exc);
     } finally {
       closeConn(connection, prepStatement, null);
     }
   }
 
-  public SiebelMessage.SmppState getMessageSmppState(String clcId) throws IntegrationDataSourceException {
+  public SiebelMessage.SmppState getMessageSmppState(String clcId) throws SiebelDataProviderException {
     if (clcId == null) {
-      throw new IntegrationDataSourceException("Argument is null");
+      throw new SiebelDataProviderException("Argument is null");
     }
     Connection connection = null;
     PreparedStatement prepStatement = null;
@@ -422,7 +423,7 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
     try {
       connection = pool.getConnection();
 
-      prepStatement = connection.prepareStatement(getSql("sms.mail.get.status.smsc"), java.sql.ResultSet.CONCUR_READ_ONLY);
+      prepStatement = connection.prepareStatement(getSql("message.get.status.smsc"), java.sql.ResultSet.CONCUR_READ_ONLY);
       prepStatement.setFetchSize(Integer.MIN_VALUE);
       prepStatement.setString(1, clcId);
 
@@ -431,10 +432,10 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
       if (sqlResult.next()) {
         state = new SiebelMessage.SmppState();
         state.setCode(
-            sqlResult.getString(sql.getProperty("sms.mail.smsc.stat.code"))
+            sqlResult.getString(sql.getProperty("message.smsc.stat.code"))
         );
         state.setValue(
-            sqlResult.getString(sql.getProperty("sms.mail.smsc.stat.val"))
+            sqlResult.getString(sql.getProperty("message.smsc.stat.val"))
         );
       }
 
@@ -443,7 +444,7 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
       }
     } catch (Throwable exc) {
       logger.error("Unable to get SiebelMessage smsc state for clcId: " + clcId, exc);
-      throw new IntegrationDataSourceException("Unable to get SiebelMessage smsc state for clcId: " + clcId, exc);
+      throw new SiebelDataProviderException("Unable to get SiebelMessage smsc state for clcId: " + clcId, exc);
 
     } finally {
       closeConn(connection, prepStatement, sqlResult);
@@ -451,8 +452,51 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
     return state;
   }
 
-  public void updateDeliveryStates(Map deliveryStates) {
-    //todo
+  public void updateDeliveryStates(Map deliveryStates) throws SiebelDataProviderException {
+    if(deliveryStates == null) {
+      throw new SiebelDataProviderException("Some arguments are null");
+    }
+    if(deliveryStates.isEmpty()) {
+      return;
+    }
+
+    Connection connection = null;
+    PreparedStatement prepStatement = null;
+
+    try {
+      connection = pool.getConnection();
+      boolean autoCommit = connection.getAutoCommit();
+      connection.setAutoCommit(false);
+
+      prepStatement = connection.prepareStatement(getSql("message.update.delivered"));
+      Iterator i = deliveryStates.entrySet().iterator();
+      int count = 0;
+      while(i.hasNext()) {
+        Map.Entry e = (Map.Entry)i.next();
+        String clcId = (String)e.getKey();
+        SiebelMessage.DeliveryState deliverySt = (SiebelMessage.DeliveryState)e.getValue();
+        prepStatement.setString(1, deliverySt.getSmppState().getCode());
+        prepStatement.setString(2, deliverySt.getSmppState().getValue());
+        prepStatement.setString(3, deliverySt.getState().toString());
+        prepStatement.setTimestamp(4, new Timestamp(System.currentTimeMillis()));
+        prepStatement.setString(5, clcId);
+        prepStatement.addBatch();
+        count++;
+        if(count == 1000) {
+          prepStatement.executeBatch();
+        }
+      }
+      if(count != 0) {
+        prepStatement.executeBatch();
+      }
+      connection.commit();
+      connection.setAutoCommit(autoCommit );
+    } catch (SQLException exc) {
+      throw new SiebelDataProviderException("Unable to update Delivery States=", exc);
+    } finally {
+      closeConn(connection, prepStatement, null);
+    }
+
   }
 
   public void shutdown() {

@@ -1,9 +1,9 @@
 package ru.novosoft.smsc.infosme.backend.siebel;
 
 public interface ResultSet {
-  public boolean next() throws IntegrationDataSourceException;
+  public boolean next() throws SiebelDataProviderException;
 
-  public Object get() throws IntegrationDataSourceException;
+  public Object get() throws SiebelDataProviderException;
 
   public void close();
 }

@@ -181,6 +181,13 @@ public class SiebelMessage {
     public void setValue(String value) {
       this.value = value;
     }
+
+    public String toString() {
+      return "SmppState{" +
+          "code='" + code + '\'' +
+          ", value='" + value + '\'' +
+          '}';
+    }
   }
 
   public static class DeliveryState {
@@ -198,6 +205,13 @@ public class SiebelMessage {
 
     public SmppState getSmppState() {
       return smppState;
+    }
+
+    public String toString() {
+      return "DeliveryState{" +
+          "state=" + state +
+          ", smppState=" + smppState +
+          '}';
     }
   }
 }

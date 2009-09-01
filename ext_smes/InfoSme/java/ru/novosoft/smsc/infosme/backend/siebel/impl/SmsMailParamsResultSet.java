@@ -2,7 +2,7 @@ package ru.novosoft.smsc.infosme.backend.siebel.impl;
 
 import ru.novosoft.smsc.infosme.backend.siebel.ResultSet;
 import ru.novosoft.smsc.infosme.backend.siebel.SiebelTask;
-import ru.novosoft.smsc.infosme.backend.siebel.IntegrationDataSourceException;
+import ru.novosoft.smsc.infosme.backend.siebel.SiebelDataProviderException;
 import org.apache.log4j.Logger;
 
 import java.sql.Connection;
@@ -29,30 +29,30 @@ public class SmsMailParamsResultSet implements ResultSet {
     this.sql = sql;
   }
 
-  public boolean next() throws IntegrationDataSourceException {
+  public boolean next() throws SiebelDataProviderException {
     try {
       return sqlResult.next();
     } catch (SQLException e) {
-      throw new IntegrationDataSourceException("Unable to move resultset cursor", e);
+      throw new SiebelDataProviderException("Unable to move resultset cursor", e);
     }
   }
 
-  public Object get() throws IntegrationDataSourceException {
+  public Object get() throws SiebelDataProviderException {
     SiebelTask siebelTask = new SiebelTask();
     try {
-      siebelTask.setLastUpdate(new Date(sqlResult.getTimestamp(sql.getProperty("sms.mail.params.last.upd")).getTime()));
-      siebelTask.setBeep(sqlResult.getString(sql.getProperty("sms.mail.params.beep")).equals("Y"));
-      siebelTask.setCampaignId(sqlResult.getString(sql.getProperty("sms.mail.params.campaign.id")));
-      siebelTask.setCreated(new Date(sqlResult.getTimestamp(sql.getProperty("sms.mail.params.created")).getTime()));
-      siebelTask.setCtrlStatus(SiebelTask.CtrlStatus.valueOf(
-          sqlResult.getString(sql.getProperty("sms.mail.params.ctrl.status"))));
-      siebelTask.setExpPeriod(sqlResult.getInt(sql.getProperty("sms.mail.params.exp.period")));
-      siebelTask.setFlash(sqlResult.getString(sql.getProperty("sms.mail.params.flash")).equals("Y"));
-      siebelTask.setPriority(sqlResult.getInt(sql.getProperty("sms.mail.params.priority")));
-      siebelTask.setSave(sqlResult.getString(sql.getProperty("sms.mail.params.save")).equals("Y"));
-      siebelTask.setWaveId(sqlResult.getString(sql.getProperty("sms.mail.params.wave.id")));
+      siebelTask.setLastUpdate(new Date(sqlResult.getTimestamp(sql.getProperty("task.last.upd")).getTime()));
+      siebelTask.setBeep(sqlResult.getString(sql.getProperty("task.beep")).equals("Y"));
+      siebelTask.setCampaignId(sqlResult.getString(sql.getProperty("task.campaign.id")));
+      siebelTask.setCreated(new Date(sqlResult.getTimestamp(sql.getProperty("task.created")).getTime()));
+      siebelTask.setStatus(SiebelTask.Status.valueOf(
+          sqlResult.getString(sql.getProperty("task.ctrl.status"))));
+      siebelTask.setExpPeriod(sqlResult.getInt(sql.getProperty("task.exp.period")));
+      siebelTask.setFlash(sqlResult.getString(sql.getProperty("task.flash")).equals("Y"));
+      siebelTask.setPriority(sqlResult.getInt(sql.getProperty("task.priority")));
+      siebelTask.setSave(sqlResult.getString(sql.getProperty("task.save")).equals("Y"));
+      siebelTask.setWaveId(sqlResult.getString(sql.getProperty("task.wave.id")));
     } catch (Throwable e) {
-      throw new IntegrationDataSourceException("Unable to get SiebelTask from the dataBase ", e);
+      throw new SiebelDataProviderException("Unable to get SiebelTask from the dataBase ", e);
     }
     return siebelTask;
   }
