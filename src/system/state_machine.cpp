@@ -1484,6 +1484,10 @@ StateType StateMachine::submit(Tuple& t)
     aclCheck=true;
   }
 
+  if(c.ri.billing==smsc::sms::BILLING_ONSUBMIT)
+  {
+    sms->setIntProperty(Tag::SMSC_CHARGINGPOLICY,Smsc::chargeOnSubmit);
+  }else
   if((fromMap || c.fromDistrList) && toMap)//peer2peer
   {
     sms->setIntProperty(Tag::SMSC_CHARGINGPOLICY,smsc->p2pChargePolicy);
