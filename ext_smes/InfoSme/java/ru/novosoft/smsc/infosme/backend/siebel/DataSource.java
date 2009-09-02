@@ -10,19 +10,6 @@ import java.util.Map;
  * To change this template use File | Settings | File Templates.
  */
 public interface DataSource {
-
-    public class FinalStateItem {
-        String state;
-        String userData;
-        String smppStatus;
-
-        FinalStateItem( String state, String userData, String smppStatus ) {
-            this.state = state;
-            this.userData = userData;
-            this.smppStatus = smppStatus;
-        }
-    }
-
     /// set final states for messages, see SiebelDataProvider.updateDeliveryStates
     public void saveFinalStates( Map states);
     public void taskHasFinished( String taskName );
