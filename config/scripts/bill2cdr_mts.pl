@@ -7,6 +7,11 @@ use File::Copy;
 use Fcntl ':flock';
 use Time::Local qw(timegm timelocal);
 
+use constant CHARGE_SUBMIT=>0;
+use constant CHARGE_DELIVERY=>1;
+use constant CHARGE_DATACOLLECTED=>2;
+
+
 BEGIN{
   my $self=$0;
   if($self=~m/[\/\\]/)
@@ -539,6 +544,7 @@ sub process{
     $infields->{$hdr->[$_]}=$row->[$_]for(0..$#{$row});
     next if $infields->{STATUS}!=0;
     my $makeoutrec=1;
+		my $makeinrec=1;
     if($infields->{SRC_SME_ID} eq 'MCISme')
     {
       $makeoutrec=0;
@@ -550,6 +556,14 @@ sub process{
       $infields->{SRC_ADDR}='.1.1.79134548051';
     }
     
+    if($infields->{CHARGE}==CHARGE_DATACOLLECTED)
+    {
+      $makeoutrec=0;
+    }elsif($infields->{CHARGE}==CHARGE_SUBMIT)
+    {
+      $makeinrec=0;
+    }
+		
     
     my $outfields={};
     %$outfields=%$infields;
@@ -654,7 +668,7 @@ sub process{
       # B <- A
       for(1..$infields->{PARTS_NUM})
       {
-        $billed|=outrow($out,$outfields);
+        $billed|=outrow($out,$outfields) if $makeinrec;
       }
       
       $outfields->{PAYER_ADDR}=conv_addr_payer($infields->{DIVERTED_FOR});
@@ -665,7 +679,7 @@ sub process{
       # C <- B
       for(1..$infields->{PARTS_NUM})
       {
-        $billed|=outrow($out,$outfields);
+        $billed|=outrow($out,$outfields) if $makeinrec;
       }
     }else
     {
@@ -690,7 +704,7 @@ sub process{
       }
       for(1..$infields->{PARTS_NUM})
       {
-        $billed|=outrow($out,$outfields);
+        $billed|=outrow($out,$outfields) if $makeinrec;
       }
     }
   }
