@@ -47,6 +47,8 @@ public:
   void finalizeMsg(uint64_t msgId,time_t date,uint8_t state, Message* msg = 0);
     
   void closeAllFiles();
+    // if all messages have been read and their states are final
+    bool isProcessed();
 
   struct Directory;
   struct CsvFile{

@@ -667,13 +667,7 @@ bool Task::finalizeMessage(uint64_t msgId, MessageState state, int smppStatus )
       }
 
       if ( info.saveFinalState ) {
-          size_t messagesCacheSz;
-          {
-              MutexGuard mg(messagesCacheLock);
-              messagesCacheSz = messagesCache.size();
-          }
-          finalStateSaver_->save(now,info,msg,state,smppStatus,
-                                 bSelectedAll && (messagesCacheSz == 0));
+          finalStateSaver_->save(now,info,msg,state,smppStatus,store.isProcessed());
       }
       result = true;
 

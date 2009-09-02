@@ -61,7 +61,8 @@ public class Task extends Observable
   private int messagesCacheSleep = 0;
   private boolean transactionMode = false;
   private boolean keepHistory = false;
-  private boolean saveFinalState = false;
+    // temporary switched to true
+  private boolean saveFinalState = true;
   private boolean flash = false;
   private int uncommitedInGeneration = 0;
   private int uncommitedInProcess = 0;

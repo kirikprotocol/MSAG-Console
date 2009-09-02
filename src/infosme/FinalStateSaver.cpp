@@ -69,7 +69,7 @@ void FinalStateSaver::save( time_t          now,
         fname.append(::workingExtension);
         file_.WOpen( fname.c_str() );
         nextOpen_ = now + rollingInterval_;
-        const char* msg = "TIME,STATE,TASKID,MSGID,SMPPSTATUS,ADDRESS,USERDATA,TASKNAME";
+        const char* msg = "TIME,STATE,TASKID,MSGID,SMPPSTATUS,ADDRESS,USERDATA,TASKNAME\n";
         file_.Write(msg,::strlen(msg));
     }
     file_.Write(buf.c_str(),buf.size());
@@ -78,6 +78,7 @@ void FinalStateSaver::save( time_t          now,
         smsc::util::format(buf,"%s,%u,%u,%llu,%u,%s,%s,%s\n",
                            timestr,0,info.uid,0ULL,
                            0,"","",info.name.c_str());
+        file_.Write(buf.c_str(),buf.size());
     }
 }
 

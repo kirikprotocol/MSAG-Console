@@ -1,6 +1,6 @@
 package ru.novosoft.smsc.infosme.backend.siebel;
 
-import java.util.Collection;
+import java.util.Map;
 
 /**
  * Created by IntelliJ IDEA.
@@ -23,7 +23,7 @@ public interface DataSource {
         }
     }
 
-    /// set final states for messages
-    public void saveFinalStates( Collection states);
+    /// set final states for messages, see SiebelDataProvider.updateDeliveryStates
+    public void saveFinalStates( Map states);
     public void taskHasFinished( String taskName );
 }

@@ -133,6 +133,22 @@ void CsvStore::closeAllFiles()
 }
 
 
+bool CsvStore::isProcessed()
+{
+    sync::MutexGuard mg(mtx);
+    for ( DirMap::const_iterator dit = dirs.begin(); dit != dirs.end(); ++dit ) {
+        Directory& dir = *dit->second;
+        for ( FileMap::const_iterator fit = dir.files.begin(); fit != dir.files.end(); ++fit ) {
+            CsvFile* f = fit->second;
+            if ( !f ) continue;
+            if ( f->readAll && f->openMessages == 0 ) { continue; }
+            return false;
+        }
+    }
+    return true;
+}
+
+
 bool CsvStore::getNextMessage(Message &message)
 {
   sync::MutexGuard mg(mtx);

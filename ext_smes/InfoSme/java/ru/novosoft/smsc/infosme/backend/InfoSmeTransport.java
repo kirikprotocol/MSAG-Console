@@ -413,11 +413,15 @@ public class InfoSmeTransport extends Service
 
     final List list = new ArrayList(messages.size());
     // boolean putData = true;
+    // long prevMsgId = System.currentTimeMillis();
     for (Iterator iter = messages.iterator(); iter.hasNext();) {
       Message m = (Message)iter.next();
         // FIXME: temporary adding userData to test new functionality
         // if ( m.getUserData() == null && putData ) {
-        //     m.setUserData(String.valueOf(System.currentTimeMillis()));
+        //     long newMsgId = System.currentTimeMillis();
+        //     while ( newMsgId <= prevMsgId ) { ++newMsgId; }
+        //     prevMsgId = newMsgId;
+        //     m.setUserData(String.valueOf(newMsgId));
         // }
         // putData = !putData;
       list.add(messageToString(m));
