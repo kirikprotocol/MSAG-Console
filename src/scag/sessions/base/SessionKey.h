@@ -3,6 +3,7 @@
 
 #include "util/int.h"
 #include "scag/util/io/Serializer.h"
+#include "scag/exc/SCAGExceptions.h"
 #include "logger/Logger.h"
 #include "sms/sms.h"  // for Address
 #include "core/synchronization/Mutex.hpp"
@@ -24,16 +25,18 @@ public:
     }
 
 protected:
-    static inline uint64_t setaddr( uint8_t ton, uint8_t npi, uint64_t addr ) {
-        // NOTE: it is made so that for ton=1,npi=1 the msisdn_ == addr.
-        return addr + ((ton^1)&0xf)*toncoef + ((npi^1)&0xf)*npicoef;
+    static inline uint64_t setaddr( uint8_t ton, uint8_t npi, uint8_t len, uint64_t addr ) {
+        return addr + len2cut(len) + (ton*10+npi)*tnpcoef;
+        // return addr + ((ton^1)&0xf)*toncoef + ((npi^1)&0xf)*npicoef;
     }
 
 private:
-    static const uint64_t toncoef = 0x1000000000000000ULL;
-    static const uint64_t npicoef = 0x0100000000000000ULL;
-    static const uint64_t adrmask = 0x00ffffffffffffffULL;
+    static const uint64_t tnpmask = 0xfe00000000000000ULL;
+    static const uint64_t tnpcoef = 0x0200000000000000ULL;
+    static const uint64_t adrmask = 0x01ffffffffffffffULL;
     static uint64_t zeroadr();
+    static uint64_t len2cut(uint8_t len);
+    static void fillstatic();
 
 public:
     StoredSessionKey();
@@ -55,7 +58,7 @@ public:
         return msisdn_;
     }
 
-    inline void setMSISDN( uint64_t m ) {
+    inline void setMangled( uint64_t m ) {
         msisdn_ = m;
     }
 
@@ -75,17 +78,18 @@ protected:
     explicit StoredSessionKey( uint64_t a ) : msisdn_(a) {}
 
     inline uint8_t ton() const {
-        return uint8_t(((msisdn_/toncoef)^1)&0xf);
+        return uint8_t(msisdn_/tnpcoef)/10;
     }
     inline uint8_t npi() const {
-        return uint8_t(((msisdn_/npicoef)^1)&0xf);
+        return uint8_t(msisdn_/tnpcoef)%10;
     }
+    // returns address mangled with len
     inline uint64_t adr() const {
         return msisdn_ & adrmask;
     }
 
 protected:
-    uint64_t              msisdn_;   // abonent number, including ton+npi prefix
+    uint64_t              msisdn_;   // mangled abonent number, including ton+npi and len
     // smsc::sms::Address addr_;
 };
 
@@ -99,7 +103,7 @@ inline Serializer& operator << ( Serializer& s, const StoredSessionKey& sk )
 inline Deserializer& operator >> ( Deserializer& s, StoredSessionKey& sk )
 {
     uint64_t m;
-    s >> m; sk.setMSISDN(m);
+    s >> m; sk.setMangled(m);
     return s;
 }
 
