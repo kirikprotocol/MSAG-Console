@@ -571,7 +571,8 @@ void StateMachine::processSmResp( std::auto_ptr<SmppCommand> aucmd,
         // session should be here
 
         // create operation
-        CommandProperty cp(scag2::re::CommandBridge::getCommandProperty(*cmd, session->sessionKey().address(), static_cast<uint8_t>(cmd->getOperationId())));
+        const Address& address =  keyisdest ? sms->getDestinationAddress() : sms->getOriginatingAddress();
+        CommandProperty cp(scag2::re::CommandBridge::getCommandProperty(*cmd, address, static_cast<uint8_t>(cmd->getOperationId())));
         SmppOperationMaker opmaker( where, aucmd, session, log_ );
         opmaker.process( st, cp );
 
