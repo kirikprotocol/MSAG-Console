@@ -3,6 +3,28 @@
 #include <memory>
 #include <algorithm>
 
+namespace {
+
+inline int dec2hex(int decval)
+{
+    return ((decval/10)<<4)|(decval%10);
+}
+
+inline int hex2dec( int hexval ) {
+    return (hexval>>4)*10 + (hexval&0xf);
+}
+
+inline int tm2xdate( const struct tm& t )
+{
+    const int year = dec2hex(t.tm_year%100);
+    const int mon = dec2hex(t.tm_mon+1);
+    const int day = dec2hex(t.tm_mday);
+    return (((year << 8) | mon) << 8) | day;
+}
+
+}
+
+
 namespace smsc{
 namespace infosme{
 
@@ -13,11 +35,6 @@ static void MsgId2Info(uint64_t msgId,uint64_t& off,int& date,int& hour)
   uint32_t fk=(uint32_t)((msgId>>32)&0xffffffffull);
   date=fk>>8;
   hour=fk&0xff;
-}
-
-static inline int hexfix(int val)
-{
-  return ((val/10)<<4)|(val%10);
 }
 
 CsvStore::~CsvStore()
@@ -153,16 +170,16 @@ bool CsvStore::getNextMessage(Message &message)
 {
   sync::MutexGuard mg(mtx);
   time_t now=time(NULL);
-  if(!closeSet.empty())//some files are ready to be closed
-  {
     struct tm t;
     localtime_r(&now,&t);
+  if(!closeSet.empty())//some files are ready to be closed
+  {
     typedef std::vector<CloseSet::iterator> KillVector;
     KillVector tokill;
     for(CloseSet::iterator it=closeSet.begin();it!=closeSet.end();it++)
     {
-      int hour=(*it)&0xff;
-      hour=((hour&0xf0)>>4)*10+(hour&0x0f);
+      const int hour= hex2dex( (*it) & 0xff );
+        // hour = ((hour&0xf0)>>4)*10+(hour&0x0f);
       if(t.tm_hour!=hour)//check if current to file hour is already passed
       {
         smsc_log_debug(log,"Try to close file:%x(hour=%d, curHour=%d",*it,hour,t.tm_hour);
@@ -179,58 +196,58 @@ bool CsvStore::getNextMessage(Message &message)
       closeSet.erase(*it);
     }
   }
-  if(curDir==dirs.end())//all dirs and files are processed
-  {
-    return false;
-  }
-  while(curFile==curDir->second->files.end())
-  {
-    curDir++;
-    if(curDir==dirs.end())
-    {
-      return false;
-    }
-    curFile=curDir->second->files.begin();
-  }
-  for(;;)
-  {
-    if(!curFile->second->isOpened())
-    {
-      curFile->second->Open(false);
-    }
-    CsvFile::Record rec;
-    CsvFile::GetRecordResult res=curFile->second->getNextRecord(rec,now);
-    if(res!=CsvFile::grrNoMoreMessages)
-    {
-      if(res==CsvFile::grrRecordNotReady)
-      {
-        smsc_log_debug(log,"date of next message is in future (now=%ld, date=%ld)",now,rec.msg.date);
-        return false;
-      }
-      message=rec.msg;
-      curFile->second->setState(message.id,WAIT);
-      return true;
-    }
-    if(curFile->second->readAll && curFile->second->openMessages==0)
-    {
-      canClose(*curFile->second);
-    }
 
-    smsc_log_debug(log,"finished reading current file '%s' (%s,%d)",curFile->second->fullPath().c_str(),curFile->second->readAll?"readall":"not readall",curFile->second->openMessages);
-    curFile++;
-    while(curFile==curDir->second->files.end())
-    {
-      curDir++;
-      if(curDir==dirs.end())
-      {
-        smsc_log_debug(log,"There are no dirs/files left to read from");
-        return false;
-      }
-      curFile=curDir->second->files.begin();
-    }
-    curFile->second->Open();
-    continue;
-  }
+    while (true) {
+
+        if ( curDir==dirs.end() ) {
+            //all dirs and files are processed
+            return false;
+        }
+        while ( curFile == curDir->second->files.end() ) {
+            curDir++;
+            if ( curDir == dirs.end() ) {
+                return false; 
+            }
+            curFile = curDir->second->files.begin();
+        }
+
+        if (!curFile->second->isOpened()) {
+            // perform a fast check w/o opening the file to see if the file is in future
+            const int xdate = tm2xdate(t);
+            const int hour = dec2hex(t.tm_hour);
+            if ( curFile->second->date > xdate ) {
+                smsc_log_debug(log,"the next file is in future (xdate=%x, fdate=%x)",xdate,curFile->second->date);
+                return false;
+            }
+            if ( curFile->second->date == xdate && curFile->second->hour > hour ) {
+                smsc_log_debug(log,"the next file is in future (xhour=%x, fhour=%x)",hour,curFile->second->hour);
+                return false;
+            }
+            curFile->second->Open(false);
+        }
+
+        CsvFile::Record rec;
+        CsvFile::GetRecordResult res=curFile->second->getNextRecord(rec,now);
+        if (res!=CsvFile::grrNoMoreMessages)
+        {
+            if( res == CsvFile::grrRecordNotReady)
+            {
+                smsc_log_debug(log,"date of next message is in future (now=%ld, date=%ld)",now,rec.msg.date);
+                return false;
+            }
+            message=rec.msg;
+            curFile->second->setState(message.id,WAIT);
+            return true;
+        }
+
+        if (curFile->second->readAll && curFile->second->openMessages==0) {
+            // all messages are read and processed
+            canClose(*curFile->second);
+        }
+        smsc_log_debug(log,"finished reading current file '%s' (%s,%d)",curFile->second->fullPath().c_str(),curFile->second->readAll?"readall":"not readall",curFile->second->openMessages);
+        curFile++;
+
+    } // the main loop over dirs/files
 }
 
 //extract from msgId date and hour and find corresponding CsvFile object.
@@ -349,15 +366,8 @@ uint64_t CsvStore::createMessage(time_t date,const Message& message,uint8_t stat
   sync::MutexGuard mg(mtx);
   struct tm t;
   localtime_r(&date,&t);
-  int year=t.tm_year%100;
-  int mon=t.tm_mon+1;
-  int day=t.tm_mday;
-  int hour=t.tm_hour;
-  uint32_t xdate=hexfix(year)<<8;
-  xdate|=hexfix(mon);
-  xdate<<=8;
-  xdate|=hexfix(day);
-  hour=hexfix(hour);
+    const uint32_t xdate = tm2xdate(t);
+    const int hour = dec2hex(t.tm_hour);
   smsc_log_debug(log,"create msg for date %04d.%02d.%02d/%02d -> %06x/%02x",t.tm_year+1900,t.tm_mon+1,t.tm_mday,t.tm_hour,xdate,hour);
 
   char dirName[64];
