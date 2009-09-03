@@ -66,7 +66,7 @@ extern "C" {
   {
     __map_warn2__("%s: confirmation received ssn=%d rinst=%d status=%d",__func__,lssn,INSTARG0(rinst),status);
     bool isBound=false;
-    if( status == 0  )
+    if( status == 0  || status==1)
     {
       for( int i = 0; i < MapDialogContainer::numLocalSSNs; i++ )
       {
@@ -400,7 +400,6 @@ int MapIoTask::ReconnectThread::Execute()
     {
       break;
     }
-    sleep(1);
 
     if(MAP_connectedInstCount==0)
     {
@@ -409,6 +408,7 @@ int MapIoTask::ReconnectThread::Execute()
       {
         disconnect();
       }
+      sleep(3);
       init(firstConnect);
       firstConnect=false;
       continue;
