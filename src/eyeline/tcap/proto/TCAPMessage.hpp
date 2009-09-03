@@ -96,15 +96,18 @@ public:
 
   TKind_e MsgKind(void) const { return _msgKind; }
   //
-  void Reset(TKind_e use_kind = t_none)
+  void Reset(TKind_e use_kind = t_none, bool is_dlg_resp = false)
   {
     resetPdu();
     switch ((_msgKind = use_kind)) {
-    case t_begin:
+    case t_begin: {
+      _pdu.ac = new(pduMem)TCMsgDlgPortion(TCDlgPduAC::pduAARQ);
+    } break;
     case t_continue:
-    case t_end:
-      _pdu.ac = new(pduMem)TCMsgDlgPortion();
-    break;
+    case t_end: {
+      if (is_dlg_resp)
+        _pdu.ac = new(pduMem)TCMsgDlgPortion(TCDlgPduAC::pduAARE);
+    } break;
     case t_abort:
       _pdu.ac = new(pduMem)TCMsgAbortPortion();
     break;

@@ -23,29 +23,29 @@ using eyeline::asn1::AbstractSyntaxRfp;
 using eyeline::asn1::EncodedOID;
 using eyeline::asn1::BITBuffer;
 
-using eyeline::tcap::UIValue;
+using eyeline::asn1::ASExternal;
+using eyeline::asn1::ASExternalValue;
 
-//ASN.1 1997 EXTERNAL type adopted for TC.
-//keeps TC DialoguePDU or UniDialoguePDU in case of global(direct)
-//type reference, any type in case of local(indirect) reference.
-class TCExternal : public UIValue, public ASTypeAC {
+
+class TCExternal : public ASExternal { //ASTypeAC
 public:
   TCExternal()
-    : ASTypeAC(ASTag::tagUniversal, 8)
+    : ASExternal()
   { }
   TCExternal(const AbstractSyntaxRfp & use_astyp, const char * use_descr = NULL)
-    : UIValue(use_astyp, use_descr), ASTypeAC(ASTag::tagUniversal, 8)
+    : ASExternal(use_astyp, use_descr)
   { }
   TCExternal(uint32_t use_uid, const BITBuffer & use_enc, const char * use_descr = NULL)
-    : UIValue(use_uid, use_enc, use_descr), ASTypeAC(ASTag::tagUniversal, 8)
+    : ASExternal(use_uid, use_enc, use_descr)
   { }
-  TCExternal(const UIValue & use_val)
-    : UIValue(use_val), ASTypeAC(ASTag::tagUniversal, 8)
+  TCExternal(const ASExternalValue & use_val)
+    : ASExternal(use_val)
   { }
-  ~TCExternal()
+  virtual ~TCExternal()
   { }
 
-  static ENCResult EncodeUI(const UIValue & use_val, BITBuffer & use_buf,
+
+  static ENCResult EncodeASEValue(const ASExternalValue & use_val, BITBuffer & use_buf,
                           EncodingRule use_rule = ruleDER) /*throw ASN1CodecError*/;
 
   // ---------------------------------
@@ -53,9 +53,7 @@ public:
   // ---------------------------------
   //REQ: if use_rule == valRule, presentation > valNone, otherwise presentation == valDecoded
   virtual ENCResult Encode(BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
-  {
-    return EncodeUI(*this, use_buf, use_rule);
-  }
+      /*throw ASN1CodecError*/;
 
   //REQ: presentation == valNone
   //OUT: presentation (include all subcomponents) = valDecoded,
@@ -72,8 +70,9 @@ public:
 
 };
 
-
-class TCUserInformation : public ASTypeAC { // list of TCExternal
+//keeps TC DialoguePDU or UniDialoguePDU in case of global(direct)
+//type reference, any type in case of local(indirect) reference.
+class TCUserInformation : public ASTypeAC { // list of ASExternal
 protected:
   std::list<TCExternal> _extVals;
 
@@ -90,7 +89,7 @@ public:
     unsigned i = 0;
     for (std::list<TCExternal>::const_iterator 
          cit = _extVals.begin(); cit != _extVals.end(); ++cit, ++i) {
-      use_uil.addUIValue(*cit);
+      use_uil.addUIValue((const ASExternalValue &)*cit);
     }
     return i;
   }
