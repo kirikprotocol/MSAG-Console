@@ -5,6 +5,7 @@ import ru.novosoft.smsc.admin.region.Region;
 import ru.novosoft.smsc.admin.region.RegionsManager;
 import ru.novosoft.smsc.admin.smsc_service.RouteSubjectManager;
 import ru.novosoft.smsc.jsp.PageBean;
+import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
 import ru.novosoft.smsc.util.Functions;
 
@@ -34,6 +35,7 @@ public class RegionEditBean extends SmscBean {
   private RegionsManager rm;
   protected RouteSubjectManager routeSubjectManager = null;
 
+  private String infoSmeSmsc = null;
 
   protected int init(List errors) {
     int result = super.init(errors);
@@ -106,6 +108,7 @@ public class RegionEditBean extends SmscBean {
         region.setBandWidth(Integer.parseInt(sendSpeed));
         region.setEmail(email);
         region.setTimezone(TimeZone.getTimeZone(timezone));
+        region.setInfoSmeSmsc(infoSmeSmsc);
       } catch (Throwable e) {
         return error("Invalid send speed: " + sendSpeed);
       }
@@ -204,5 +207,41 @@ public class RegionEditBean extends SmscBean {
     List c = Arrays.asList(TimeZone.getAvailableIDs());
     Collections.sort(c);
     return c;
+  }
+
+  public String getInfoSmeSmsc() {
+    return infoSmeSmsc;
+  }
+
+  public void setInfoSmeSmsc(String infoSmeSmsc) {
+    this.infoSmeSmsc = infoSmeSmsc;
+  }
+
+  private Object infoSmeContext;
+
+  public boolean isInfoSmeExist() {
+    try {
+      return (infoSmeContext = Class.forName("ru.novosoft.smsc.infosme.backend.InfoSmeContext").
+          getMethod("getInstance", new Class[]{SMSCAppContext.class, String.class}).
+          invoke(null, new Object[]{appContext, "InfoSme"})) != null;
+    } catch (Throwable e) {
+      return false;
+    }
+  }
+
+  public Collection getListSmsc() {
+    try{
+      if(infoSmeContext == null) {
+        infoSmeContext = Class.forName("ru.novosoft.smsc.infosme.backend.InfoSmeContext").
+            getMethod("getInstance", new Class[]{SMSCAppContext.class, String.class}).
+            invoke(null, new Object[]{appContext, "InfoSme"});
+      }
+      Collection result = (Collection)infoSmeContext.getClass().getMethod("getSmscConectors", new Class[]{}).invoke(infoSmeContext, new Object[]{});
+      return result != null ? result : new LinkedList();
+    }catch(Throwable e) {
+      logger.error(e,e);
+      e.printStackTrace();
+    }
+    return new LinkedList();
   }
 }

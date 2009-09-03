@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Collection;
 
 /**
  * Created by igork
@@ -148,8 +149,9 @@ public class InfoSmeContext implements SMEAppContext
     return infoSme;
   }
 
-
-
+  public Collection getSmscConectors() {
+    return getInfoSmeConfig().getSmscConns().keySet();
+  }
   public String getMessagesSort()
   {
     return messagesSort;

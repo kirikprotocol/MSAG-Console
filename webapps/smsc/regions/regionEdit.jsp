@@ -1,5 +1,4 @@
-<%@ page import="ru.novosoft.smsc.jsp.smsc.region.RegionEditBean,
-                 ru.novosoft.smsc.jsp.smsc.region.RegionEditBean"%>
+<%@ page import="ru.novosoft.smsc.jsp.smsc.region.RegionEditBean"%>
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.jsp.smsc.region.RegionEditBean" />
 <jsp:setProperty name="bean" property="*"/>
@@ -95,6 +94,20 @@ function addSourceSubj() {
       </td>
       <td>&nbsp;</td>
     </tr>
+    <%if(bean.isInfoSmeExist()) {%>
+    <tr class=row<%=rowN++&1%>>
+      <th><%= getLocString("regions.infosme.smsc")%></th>
+      <td>
+        <select name="infoSmeSmsc" id="infoSmeSmsc">
+        <% for (Iterator iter = bean.getListSmsc().iterator(); iter.hasNext();) { String smscName = (String)iter.next();%>
+          <option id="<%=smscName%>" <%=bean.getInfoSmeSmsc() != null && bean.getInfoSmeSmsc().equals(smscName) ? "SELECTED" : ""%>><%=smscName%></option>
+        <% } %>
+        </select>
+      </td>
+      <td>&nbsp;</td>
+    </tr>
+    <%}%>
+
     <tr class=row<%=rowN++&1%>>
       <td valign=top colspan=2><%rowN = 0;%>
         <div class=page_subtitle><%=getLocString("common.titles.subjects")%></div>
@@ -134,6 +147,7 @@ function addSourceSubj() {
       </td>
       <td>&nbsp;</td>
     </tr>
+
   </table>
 </div>
 <%

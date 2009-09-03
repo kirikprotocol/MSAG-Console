@@ -17,8 +17,7 @@ import ru.novosoft.smsc.infosme.backend.config.tasks.Task;
 import ru.novosoft.smsc.infosme.backend.config.tasks.TaskManager;
 import ru.novosoft.smsc.util.config.Config;
 
-import java.util.List;
-import java.util.Iterator;
+import java.util.*;
 
 /**
  * User: artem
@@ -47,11 +46,9 @@ public class InfoSmeConfig {
   private String adminHost;
   private int adminPort;
 
-  private String smscHost;
-  private int smscPort;
-  private String smscSid;
-  private int smscTimeout;
-  private String smscPassword;
+  private Map smscConns = new HashMap();
+
+  private SmscConnector defSmscConn;
 
   private String storeLocation;
   private String statStoreLocation;
@@ -192,7 +189,7 @@ public class InfoSmeConfig {
 
   public void reset(String user, String owner, boolean options, boolean tasks, boolean schedules, boolean retries, boolean providers, boolean drivers) throws AdminException {
     try {
-      Config cfg = ctx.loadCurrentConfig();            
+      Config cfg = ctx.loadCurrentConfig();
 
       Journal j = ctx.getAppContext().getJournal();
       if (options) {
@@ -271,9 +268,9 @@ public class InfoSmeConfig {
     return taskManager.getTask(id);
   }
 
-    public Task getTaskByName(String name) throws AdminException {
-        return taskManager.getTaskByName(name);
-    }
+  public Task getTaskByName(String name) throws AdminException {
+    return taskManager.getTaskByName(name);
+  }
 
   public List getTasks(String owner) {
     return taskManager.getTasks(owner);
@@ -417,11 +414,37 @@ public class InfoSmeConfig {
       adminHost = cfg.getString("InfoSme.Admin.host");
       adminPort = cfg.getInt("InfoSme.Admin.port");
 
-      smscHost = cfg.getString("InfoSme.SMSC.host");
-      smscPort = cfg.getInt("InfoSme.SMSC.port");
-      smscSid = cfg.getString("InfoSme.SMSC.sid");
-      smscTimeout = cfg.getInt("InfoSme.SMSC.timeout");
-      smscPassword = cfg.getString("InfoSme.SMSC.password");
+      if(cfg.containsSection("SMSCConnectors")) {
+        String defname = cfg.getString("SMSCConnectors.default");
+        Set childs = cfg.getSectionChildShortSectionNames("SMSCConnectors");
+        Iterator i = childs.iterator();
+
+        Map newSmscs = new HashMap();
+        while(i.hasNext()) {
+          SmscConnector smsc = new SmscConnector();
+          String smscName = (String)i.next();
+          smsc.setName(smscName);
+          smsc.setHost(cfg.getString("SMSCConnectors."+smscName+".host"));
+          smsc.setPort(cfg.getInt("SMSCConnectors."+smscName+".port"));
+          smsc.setSid(cfg.getString("SMSCConnectors."+smscName+".sid"));
+          smsc.setTimeout(cfg.getInt("SMSCConnectors."+smscName+".timeout"));
+          smsc.setPassword(cfg.getString("SMSCConnectors."+smscName+".password"));
+          newSmscs.put(smscName, smsc);
+        }
+
+        if((defname != null)) {
+          SmscConnector def = (SmscConnector)newSmscs.get(defname);
+          if(def == null) {
+            throw new AdminException("SmscConnector not found with name="+defname);
+          }
+          defSmscConn = def;
+        } else if(!newSmscs.isEmpty()) {
+          throw new AdminException("Default smsc not found");
+        }
+
+        smscConns = newSmscs;
+      }
+
       tasksSwitchTimeout = cfg.getInt("InfoSme.tasksSwitchTimeout");
       tasksTaskTablesPrefix = cfg.getString("InfoSme.tasksTablesPrefix");
 
@@ -454,11 +477,25 @@ public class InfoSmeConfig {
       cfg.setString("InfoSme.Admin.host", adminHost);
       cfg.setInt("InfoSme.Admin.port", adminPort);
 
-      cfg.setString("InfoSme.SMSC.host", smscHost);
-      cfg.setInt("InfoSme.SMSC.port", smscPort);
-      cfg.setString("InfoSme.SMSC.sid", smscSid);
-      cfg.setInt("InfoSme.SMSC.timeout", smscTimeout);
-      cfg.setString("InfoSme.SMSC.password", smscPassword);
+      if(defSmscConn != null) {
+        if(smscConns.get(defSmscConn.getName()) == null) {
+          throw new AdminException("Default smsc not found with name="+ defSmscConn.getName());
+        }
+        cfg.setString("SMSCConnectors.default", defSmscConn.getName());
+      } else if(!smscConns.isEmpty()) {
+        throw new AdminException("Default smsc not found");
+      }
+
+      Iterator i = smscConns.values().iterator();
+      while(i.hasNext()){
+        SmscConnector smsc = (SmscConnector)i.next();
+        cfg.setString("SMSCConnectors."+smsc.getName()+".host",smsc.getHost());
+        cfg.setInt("SMSCConnectors."+smsc.getName()+".port",smsc.getPort());
+        cfg.setInt("SMSCConnectors."+smsc.getName()+".timeout",smsc.getTimeout());
+        cfg.setString("SMSCConnectors."+smsc.getName()+".sid",smsc.getSid());
+        cfg.setString("SMSCConnectors."+smsc.getName()+".password",smsc.getPassword());
+      }
+
       cfg.setInt("InfoSme.tasksSwitchTimeout", tasksSwitchTimeout);
       cfg.setString("InfoSme.tasksTablesPrefix", tasksTaskTablesPrefix);
 
@@ -565,50 +602,6 @@ public class InfoSmeConfig {
     setOptionsModified(true);
   }
 
-  public String getSmscHost() {
-    return smscHost;
-  }
-
-  public void setSmscHost(String smscHost) {
-    this.smscHost = smscHost;
-    setOptionsModified(true);
-  }
-
-  public String getSmscPassword() {
-    return smscPassword;
-  }
-
-  public void setSmscPassword(String smscPassword) {
-    this.smscPassword = smscPassword;
-    setOptionsModified(true);
-  }
-
-  public int getSmscPort() {
-    return smscPort;
-  }
-
-  public void setSmscPort(int smscPort) {
-    this.smscPort = smscPort;
-    setOptionsModified(true);
-  }
-
-  public String getSmscSid() {
-    return smscSid;
-  }
-
-  public void setSmscSid(String smscSid) {
-    this.smscSid = smscSid;
-    setOptionsModified(true);
-  }
-
-  public int getSmscTimeout() {
-    return smscTimeout;
-  }
-
-  public void setSmscTimeout(int smscTimeout) {
-    this.smscTimeout = smscTimeout;
-    setOptionsModified(true);
-  }
 
   public String getStatStoreLocation() {
     return statStoreLocation;
@@ -689,5 +682,93 @@ public class InfoSmeConfig {
   public void setUnrespondedMessagesSleep(int unrespondedMessagesSleep) {
     this.unrespondedMessagesSleep = unrespondedMessagesSleep;
     setOptionsModified(true);
+  }
+
+  public Map getSmscConns() {
+    return new HashMap(smscConns);
+  }
+
+  public SmscConnector getDefaultSmsc() {
+    return defSmscConn;
+  }
+
+  public SmscConnector getSmscConn(String name) {
+    return (SmscConnector) smscConns.get(name);
+  }
+
+  public void setSmscConn(Collection smscs, String def) throws AdminException{
+
+    Map newConn = new HashMap();
+    Iterator it = smscs.iterator();
+    while(it.hasNext()) {
+      SmscConnector o = (SmscConnector)it.next();
+      if(o != null) {
+        newConn.put(o.getName(), o);
+      }
+    }
+    SmscConnector dS = (SmscConnector)newConn.get(def);
+    if(dS == null) {
+      throw new AdminException("Default smsc not found with name="+ defSmscConn.getName());
+    }
+    this.smscConns = new HashMap(newConn);
+    this.defSmscConn = dS;
+    setOptionsModified(true);
+  }
+
+  public static class SmscConnector {
+    private String name;
+    private String host;
+    private int port;
+    private String sid;
+    private int timeout;
+    private String password;
+
+    public String getName() {
+      return name;
+    }
+
+    public void setName(String name) {
+      this.name = name;
+    }
+
+    public String getHost() {
+      return host;
+    }
+
+    public void setHost(String host) {
+      this.host = host;
+    }
+
+    public int getPort() {
+      return port;
+    }
+
+    public void setPort(int port) {
+      this.port = port;
+    }
+
+    public String getSid() {
+      return sid;
+    }
+
+    public void setSid(String sid) {
+      this.sid = sid;
+    }
+
+    public int getTimeout() {
+      return timeout;
+    }
+
+    public void setTimeout(int timeout) {
+      this.timeout = timeout;
+    }
+
+    public String getPassword() {
+      return password;
+    }
+
+    public void setPassword(String password) {
+      this.password = password;
+    }
   }
 }

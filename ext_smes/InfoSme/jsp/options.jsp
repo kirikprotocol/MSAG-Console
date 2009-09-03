@@ -1,11 +1,13 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <%@ page import="ru.novosoft.smsc.util.StringEncoderDecoder"%>
+<%@ page import="ru.novosoft.smsc.jsp.util.helper.dynamictable.DynamicTableHelper" %>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.infosme.beans.Options" />
 <jsp:setProperty name="bean" property="*"/>
 <%
 	//ServiceIDForShowStatus = ;
 	TITLE=getLocString("infosme.title");
 	MENU0_SELECTION = "MENU0_SERVICES";
+    bean.getSmscHelper().processRequest(request);
 	//MENU1_SELECTION = "WSME_INDEX";
 
 	int beanResult = bean.process(request);
@@ -83,26 +85,12 @@
   <th>Admin port</th>
   <td><input class=txt name=adminPort value="<%=StringEncoderDecoder.encode(bean.getAdminPort())%>"></td>
 </tr>
+
 <tr class=row<%=rowN++&1%>>
-  <th>SMSC host</th>
-  <td><input class=txt name=smscHost value="<%=StringEncoderDecoder.encode(bean.getSmscHost())%>"></td>
+  <th>Default smsc connector</th>
+  <td><input class=txt name=defSmscConn value="<%=StringEncoderDecoder.encode(bean.getDefSmscConn())%>"></td>
 </tr>
-<tr class=row<%=rowN++&1%>>
-  <th>SMSC port</th>
-  <td><input class=txt name=smscPort value="<%=StringEncoderDecoder.encode(bean.getSmscPort())%>"></td>
-</tr>
-<tr class=row<%=rowN++&1%>>
-  <th>SMSC SID</th>
-  <td><input class=txt name=smscSid value="<%=StringEncoderDecoder.encode(bean.getSmscSid())%>"></td>
-</tr>
-<tr class=row<%=rowN++&1%>>
-  <th>SMSC connection timeout</th>
-  <td><input class=txt name=smscTimeout value="<%=StringEncoderDecoder.encode(bean.getSmscTimeout())%>"></td>
-</tr>
-<tr class=row<%=rowN++&1%>>
-  <th>SMSC connection password</th>
-  <td><input class=txt name=smscPassword value="<%=StringEncoderDecoder.encode(bean.getSmscPassword())%>"></td>
-</tr>
+
 <tr class=row<%=rowN++&1%>>
   <th>Store location</th>
   <td><input class=txt name=storeLocation value="<%=StringEncoderDecoder.encode(bean.getStoreLocation())%>"></td>
@@ -110,6 +98,13 @@
 <tr class=row<%=rowN++&1%>>
   <th>Statistics store location</th>
   <td><input class=txt name=statStoreLocation value="<%=StringEncoderDecoder.encode(bean.getStatStoreLocation())%>"></td>
+</tr>
+
+<tr class=row<%=rowN++&1%>>
+    <td colspan="2">
+        <%  final DynamicTableHelper tableHelper = bean.getSmscHelper();%>
+          <%@ include file="/WEB-INF/inc/dynamic_table.jsp"%>
+    </td>
 </tr>
 
 </table>

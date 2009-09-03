@@ -19,6 +19,7 @@ public class Region {
   private String email;
   private TimeZone timezone;
   private final Set subjects = new HashSet();
+  private String infoSmeSmsc;
 
   public Region(String name) {
     this.name = name;
@@ -97,5 +98,13 @@ public class Region {
 
   boolean isExists() {
     return id != -1;
+  }
+
+  public String getInfoSmeSmsc() {
+    return infoSmeSmsc;
+  }
+
+  public void setInfoSmeSmsc(String infoSmeSmsc) {
+    this.infoSmeSmsc = infoSmeSmsc;
   }
 }

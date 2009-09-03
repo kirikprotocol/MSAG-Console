@@ -1,7 +1,13 @@
 package ru.novosoft.smsc.infosme.beans;
 
+import ru.novosoft.smsc.jsp.util.helper.dynamictable.DynamicTableHelper;
+import ru.novosoft.smsc.infosme.backend.config.InfoSmeConfig;
+
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.Map;
+import java.util.Iterator;
+import java.util.Collection;
 
 /**
  * Created by igork
@@ -30,12 +36,9 @@ public class Options extends InfoSmeBean
   private String adminHost = "";
   private int adminPort = 0;
 
-  private String smscHost = "";
-  private int smscPort = 0;
-  private String smscSid = "";
-  private int smscTimeout = 0;
-  private String smscPassword = "";
+  private String defSmscConn = "";
 
+  private OptionsSmscHelper smscHelper = new  OptionsSmscHelper("infosme.label.smsc.connectors", "smsc_connectors", 70, true);
 
   private String storeLocation;
   private String statStoreLocation;
@@ -62,6 +65,12 @@ public class Options extends InfoSmeBean
         responceWaitTime = getConfig().getResponceWaitTime();
         receiptWaitTime = getConfig().getReceiptWaitTime();
 
+        smscHelper.fillSmscConn(getConfig().getSmscConns().values());
+
+        if(getConfig().getDefaultSmsc() != null) {
+          defSmscConn = getConfig().getDefaultSmsc().getName();
+        }
+
         tasksThreadPoolMax = getConfig().getTasksThreadPoolMax();
         tasksThreadPoolInit = getConfig().getTasksThreadPoolInit();
 
@@ -71,11 +80,6 @@ public class Options extends InfoSmeBean
         adminHost = getConfig().getAdminHost();
         adminPort = getConfig().getAdminPort();
 
-        smscHost = getConfig().getSmscHost();
-        smscPort = getConfig().getSmscPort();
-        smscSid = getConfig().getSmscSid();
-        smscTimeout = getConfig().getSmscTimeout();
-        smscPassword = getConfig().getSmscPassword();
         tasksSwitchTimeout = getConfig().getTasksSwitchTimeout();
         tasksTaskTablesPrefix = getConfig().getTasksTaskTablesPrefix();
 
@@ -129,36 +133,64 @@ public class Options extends InfoSmeBean
 
   private int save()
   {
-    getConfig().setAddress(address);
-    getConfig().setSvcType(svcType);
-    getConfig().setProtocolId(protocolId);
-    getConfig().setMaxMessagesPerSecond(maxMessagesPerSecond);
-    getConfig().setUnrespondedMessagesMax(unrespondedMessagesMax);
-    getConfig().setUnrespondedMessagesSleep(unrespondedMessagesSleep);
-    getConfig().setResponceWaitTime(responceWaitTime);
-    getConfig().setReceiptWaitTime(receiptWaitTime);
+    try{
+      getConfig().setAddress(address);
+      getConfig().setSvcType(svcType);
+      getConfig().setProtocolId(protocolId);
+      getConfig().setMaxMessagesPerSecond(maxMessagesPerSecond);
+      getConfig().setUnrespondedMessagesMax(unrespondedMessagesMax);
+      getConfig().setUnrespondedMessagesSleep(unrespondedMessagesSleep);
+      getConfig().setResponceWaitTime(responceWaitTime);
+      getConfig().setReceiptWaitTime(receiptWaitTime);
 
-    getConfig().setTasksThreadPoolMax(tasksThreadPoolMax);
-    getConfig().setTasksThreadPoolInit(tasksThreadPoolInit);
+      getConfig().setTasksThreadPoolMax(tasksThreadPoolMax);
+      getConfig().setTasksThreadPoolInit(tasksThreadPoolInit);
 
-    getConfig().setEventsThreadPoolMax(eventsThreadPoolMax);
-    getConfig().setEventsThreadPoolInit(eventsThreadPoolInit);
+      getConfig().setEventsThreadPoolMax(eventsThreadPoolMax);
+      getConfig().setEventsThreadPoolInit(eventsThreadPoolInit);
 
-    getConfig().setAdminHost(adminHost);
-    getConfig().setAdminPort(adminPort);
+      getConfig().setAdminHost(adminHost);
+      getConfig().setAdminPort(adminPort);
 
-    getConfig().setSmscHost(smscHost);
-    getConfig().setSmscPort(smscPort);
-    getConfig().setSmscSid(smscSid);
-    getConfig().setSmscTimeout(smscTimeout);
-    getConfig().setSmscPassword(smscPassword);
-    getConfig().setTasksSwitchTimeout(tasksSwitchTimeout);
-    getConfig().setTasksTaskTablesPrefix(tasksTaskTablesPrefix);
+      Map oldSmscConns = getConfig().getSmscConns();
+      Iterator oldIt = oldSmscConns.values().iterator();
+      Collection newConn = smscHelper.getSmscConn();
 
-    getConfig().setStoreLocation(storeLocation);
-    getConfig().setStatStoreLocation(statStoreLocation);
+      while(oldIt.hasNext()) {
+        InfoSmeConfig.SmscConnector o = (InfoSmeConfig.SmscConnector)oldIt.next();
+        Iterator newIt = newConn.iterator();
+        boolean remove = true;
+        while(newIt.hasNext()){
+          InfoSmeConfig.SmscConnector n = (InfoSmeConfig.SmscConnector)newIt.next();
+          if(n.getName().equals(o.getName())) {
+            remove = false;
+            break;
+          }
+        }
+        if(remove) {
+          if(!getAppContext().getRegionsManager().getRegionsByInfoSmeSmsc(o.getName()).isEmpty()) {
+            smscHelper.clear();
+            smscHelper.fillSmscConn(oldSmscConns.values());
+            return warning("SmscConnector is used in Regions: "+o.getName());
+          }
+        }
+      }
+      getConfig().setSmscConn(smscHelper.getSmscConn(), defSmscConn);
+      getConfig().setTasksSwitchTimeout(tasksSwitchTimeout);
+      getConfig().setTasksTaskTablesPrefix(tasksTaskTablesPrefix);
 
-    return RESULT_DONE;
+      getConfig().setStoreLocation(storeLocation);
+      getConfig().setStatStoreLocation(statStoreLocation);
+
+      return RESULT_DONE;
+
+    }catch (Throwable e) {
+      return warning(e.getMessage());
+    }
+  }
+
+  public DynamicTableHelper getSmscHelper() {
+    return smscHelper;
   }
 
   public String getSvcType() {
@@ -185,59 +217,59 @@ public class Options extends InfoSmeBean
       this.protocolId = 0;
     }
   }
-
-  public String getSmscHost() {
-    return smscHost;
-  }
-  public void setSmscHost(String smscHost) {
-    this.smscHost = smscHost;
-  }
-  public int getSmscPortInt() {
-    return smscPort;
-  }
-  public void setSmscPortInt(int smscPort) {
-    this.smscPort = smscPort;
-  }
-  public String getSmscPort() {
-    return String.valueOf(smscPort);
-  }
-  public void setSmscPort(String smscPort) {
-    try {
-      this.smscPort = Integer.decode(smscPort).intValue();
-    } catch (NumberFormatException e) {
-      logger.error("Invalid InfoSme.SMSC.port parameter value: \"" + smscPort + '"', e);
-      this.smscPort = 0;
-    }
-  }
-  public String getSmscSid() {
-    return smscSid;
-  }
-  public void setSmscSid(String smscSid) {
-    this.smscSid = smscSid;
-  }
-  public int getSmscTimeoutInt() {
-    return smscTimeout;
-  }
-  public void setSmscTimeoutInt(int smscTimeout) {
-    this.smscTimeout = smscTimeout;
-  }
-  public String getSmscTimeout() {
-    return String.valueOf(smscTimeout);
-  }
-  public void setSmscTimeout(String smscTimeout) {
-    try {
-      this.smscTimeout = Integer.valueOf(smscTimeout).intValue();
-    } catch (NumberFormatException e) {
-      logger.error("Invalid InfoSme.SMSC.timeout parameter value: \"" + smscTimeout + '"', e);
-      this.smscTimeout = 0;
-    }
-  }
-  public String getSmscPassword() {
-    return smscPassword;
-  }
-  public void setSmscPassword(String smscPassword) {
-    this.smscPassword = smscPassword;
-  }
+//
+//  public String getSmscHost() {
+//    return smscHost;
+//  }
+//  public void setSmscHost(String smscHost) {
+//    this.smscHost = smscHost;
+//  }
+//  public int getSmscPortInt() {
+//    return smscPort;
+//  }
+//  public void setSmscPortInt(int smscPort) {
+//    this.smscPort = smscPort;
+//  }
+//  public String getSmscPort() {
+//    return String.valueOf(smscPort);
+//  }
+//  public void setSmscPort(String smscPort) {
+//    try {
+//      this.smscPort = Integer.decode(smscPort).intValue();
+//    } catch (NumberFormatException e) {
+//      logger.error("Invalid InfoSme.SMSC.port parameter value: \"" + smscPort + '"', e);
+//      this.smscPort = 0;
+//    }
+//  }
+//  public String getSmscSid() {
+//    return smscSid;
+//  }
+//  public void setSmscSid(String smscSid) {
+//    this.smscSid = smscSid;
+//  }
+//  public int getSmscTimeoutInt() {
+//    return smscTimeout;
+//  }
+//  public void setSmscTimeoutInt(int smscTimeout) {
+//    this.smscTimeout = smscTimeout;
+//  }
+//  public String getSmscTimeout() {
+//    return String.valueOf(smscTimeout);
+//  }
+//  public void setSmscTimeout(String smscTimeout) {
+//    try {
+//      this.smscTimeout = Integer.valueOf(smscTimeout).intValue();
+//    } catch (NumberFormatException e) {
+//      logger.error("Invalid InfoSme.SMSC.timeout parameter value: \"" + smscTimeout + '"', e);
+//      this.smscTimeout = 0;
+//    }
+//  }
+//  public String getSmscPassword() {
+//    return smscPassword;
+//  }
+//  public void setSmscPassword(String smscPassword) {
+//    this.smscPassword = smscPassword;
+//  }
 
   public boolean isInitialized() {
     return initialized;
@@ -272,7 +304,7 @@ public class Options extends InfoSmeBean
     try {
       this.tasksSwitchTimeout = Integer.decode(tasksSwitchTimeout).intValue();
     } catch (NumberFormatException e) {
-      logger.error("Invalid int InfoSme.Tasks.switchTimeout parameter value: \"" + smscTimeout + '"', e);
+      logger.error("Invalid int InfoSme.Tasks.switchTimeout parameter value: \"" + tasksSwitchTimeout + '"', e);
       this.tasksSwitchTimeout = 0;
     }
   }
@@ -464,5 +496,13 @@ public class Options extends InfoSmeBean
 
   public void setStatStoreLocation(String statStoreLocation) {
     this.statStoreLocation = statStoreLocation;
+  }
+
+  public String getDefSmscConn() {
+    return defSmscConn;
+  }
+
+  public void setDefSmscConn(String defSmscConn) {
+    this.defSmscConn = defSmscConn;
   }
 }

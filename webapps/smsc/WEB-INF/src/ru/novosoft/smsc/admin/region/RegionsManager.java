@@ -72,6 +72,18 @@ public class RegionsManager {
     return (Region)regions.get(new Integer(id));
   }
 
+  public synchronized Collection getRegionsByInfoSmeSmsc(String smsc) {
+    Collection result = new LinkedList();
+    Iterator i = regions.values().iterator();
+    while(i.hasNext()) {
+      Region r = (Region)i.next();
+      if(r.getInfoSmeSmsc() != null && r.getInfoSmeSmsc().equals(smsc)) {
+        result.add(r);
+      }
+    }
+    return result;
+  }
+
   private synchronized void load() throws AdminException {
     regions.clear();
     try {
@@ -83,6 +95,7 @@ public class RegionsManager {
         region.setId(Integer.parseInt(el.getAttribute("id")));
         region.setBandWidth(Integer.parseInt(el.getAttribute("bandwidth")));
         region.setEmail(el.getAttribute("email"));
+        region.setInfoSmeSmsc(el.getAttribute("infosme_smsc"));
 
         TimeZone tz = null;
         String tzId = el.getAttribute("timezone");
@@ -144,9 +157,10 @@ public class RegionsManager {
         Map.Entry entry = (Map.Entry)iter.next();
         Region region = (Region)entry.getValue();
         out.println("  <region id=\"" + region.getId() + "\" name=\"" + region.getName() +
-                                                         "\" bandwidth=\"" + region.getBandWidth() + "\"" +
-                                                        (region.getEmail()==null || region.getEmail().length() == 0 ? "" : " email=\"" + region.getEmail() + "\" ") +
-                                                        (region.getTimezone() == null ? "" : " timezone=\"" + region.getTimezone().getID() + "\" ")+ ">");
+            "\" bandwidth=\"" + region.getBandWidth() + "\"" +
+            (region.getEmail()==null || region.getEmail().length() == 0 ? "" : " email=\"" + region.getEmail() + "\" ") +
+            (region.getInfoSmeSmsc()==null || region.getInfoSmeSmsc().length() == 0 ? "" : " infosme_smsc=\"" + region.getInfoSmeSmsc() + "\" ") +
+            (region.getTimezone() == null ? "" : " timezone=\"" + region.getTimezone().getID() + "\" ")+ ">");
         out.println("    <subjects>");
         for (Iterator subjects = region.getSubjects().iterator(); subjects.hasNext();)
           out.println("      <subject id=\"" + subjects.next() + "\"/>");
@@ -200,7 +214,7 @@ public class RegionsManager {
   }
 
   public synchronized void setDefaultEmail(String defaultEmail) {
-    modified = modified || !defaultEmail.equals(this.defaultEmail);      
+    modified = modified || !defaultEmail.equals(this.defaultEmail);
     this.defaultEmail = defaultEmail;
   }
 
