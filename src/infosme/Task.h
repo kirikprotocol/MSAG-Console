@@ -83,13 +83,18 @@ class FinalStateSaver;
         bool        bInProcess, bInGeneration, bGenerationSuccess;
         bool        infoSme_T_storageWasDestroyed;
 
+        // cache
+        class MessageRegionCache;
+        /*
         Mutex           messagesCacheLock;
         std::list<Message> messagesCache;
 
-        typedef std::set<std::string /*region id value*/>  suspendedRegions_t;
+        typedef std::set<std::string>  suspendedRegions_t;
         suspendedRegions_t                                 _suspendedRegions;
         std::list<Message>::iterator                       _messagesCacheIter;
         time_t          lastMessagesCacheEmpty;
+         */
+        MessageRegionCache* messageCache_;
 
         void  doFinalization();
 
@@ -280,11 +285,11 @@ class FinalStateSaver;
         bool changeDeliveryTextMessageByCompositCriterion(const std::string& newTextMsg,
                                                           const InfoSme_T_SearchCriterion& searchCrit);
 
+        // messages to work w/ cache
         void putToSuspendedMessagesQueue(const Message& suspendedMessage);
-
-        bool fetchMessageFromCache(Message& message);
-
         void resetSuspendedRegions();
+    protected:
+        bool fetchMessageFromCache(Message& message);
     };
 
     class TaskGuard

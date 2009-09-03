@@ -178,7 +178,7 @@ bool CsvStore::getNextMessage(Message &message)
     KillVector tokill;
     for(CloseSet::iterator it=closeSet.begin();it!=closeSet.end();it++)
     {
-      const int hour= hex2dex( (*it) & 0xff );
+      const int hour= hex2dec( (*it) & 0xff );
         // hour = ((hour&0xf0)>>4)*10+(hour&0x0f);
       if(t.tm_hour!=hour)//check if current to file hour is already passed
       {
@@ -543,6 +543,7 @@ CsvStore::CsvFile::GetRecordResult CsvStore::CsvFile::getNextRecord(CsvStore::Cs
   }
   if(rdate && curMsg->second.msg.date>rdate)
   {
+      rec.msg.date = curMsg->second.msg.date;
     return grrRecordNotReady;
   }
   if(onlyNew)

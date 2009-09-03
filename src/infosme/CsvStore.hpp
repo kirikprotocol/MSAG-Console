@@ -166,7 +166,7 @@ protected:
   void canClose(CsvFile& file);
   void removeCanClose(CsvFile& file);
 
-    static uint32_t tm2xdate( struct tm& t );
+  // static uint32_t tm2xdate( struct tm& t );
 
 public:
 

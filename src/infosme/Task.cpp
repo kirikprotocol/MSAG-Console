@@ -5,6 +5,7 @@
 #include <time.h>
 #include <sstream>
 #include <list>
+#include <deque>
 #include "util/sleep.h"
 #include "sms/sms.h"
 #include "util/vformat.hpp"
@@ -13,8 +14,137 @@
 
 extern bool isMSISDNAddress(const char* string);
 
-namespace smsc { namespace infosme 
+namespace smsc {
+namespace infosme {
+
+class Task::MessageRegionCache
 {
+public:
+    MessageRegionCache();
+    ~MessageRegionCache();
+    void suspendRegion( const Message& suspendedMessage );
+    void resetSuspendedRegions();
+    /// NOTE: returns 0 if no messages can be fetched
+    uint64_t fetchMessageId();
+    time_t fillTime() const;
+    size_t fill( time_t now, CsvStore& store, size_t cacheFillSize );
+    // bool empty() const;
+private:
+    typedef std::deque< uint64_t > messagelist_type;
+    struct Region {
+        std::string       regionId;
+        messagelist_type  messages;
+        bool              isSuspended;
+    };
+    typedef smsc::core::buffers::Hash< Region* > regionhash_type;
+
+    smsc::logger::Logger*              log_;
+    std::vector< Region* >             regions_;  // owned
+    regionhash_type                    regionHash_;
+    std::vector< Region* >::iterator   iter_;
+    smsc::core::synchronization::Mutex lock_;
+    time_t                             fillTime_;
+};
+
+
+Task::MessageRegionCache::MessageRegionCache() :
+log_(smsc::logger::Logger::getInstance("task.regc")),
+iter_(regions_.begin()),
+fillTime_(0)
+{
+    smsc_log_debug(log_,"region cache is created");
+}
+
+
+Task::MessageRegionCache::~MessageRegionCache()
+{
+    smsc_log_debug(log_,"region cache is being destroyed");
+    for ( std::vector< Region* >::iterator i = regions_.begin(); i != regions_.end(); ++i ) {
+        delete *i;
+    }
+}
+
+
+void Task::MessageRegionCache::suspendRegion( const Message& suspendedMessage )
+{
+    MutexGuard mg(lock_);
+    Region** ptr = regionHash_.GetPtr( suspendedMessage.regionId.c_str() );
+    if ( !ptr ) {
+        smsc_log_error(log_,"region %s is not found in cache", suspendedMessage.regionId.c_str() );
+        return;
+    }
+    if ( (*ptr)->isSuspended ) return;
+    smsc_log_debug(log_,"suspending region %s",suspendedMessage.regionId.c_str());
+    (*ptr)->isSuspended = true;
+    (*ptr)->messages.push_front( suspendedMessage.id );
+}
+
+
+void Task::MessageRegionCache::resetSuspendedRegions()
+{
+    MutexGuard mg(lock_);
+    for ( std::vector< Region* >::const_iterator i = regions_.begin(); i != regions_.end(); ++i ) {
+        (*i)->isSuspended = false;
+    }
+}
+
+
+uint64_t Task::MessageRegionCache::fetchMessageId()
+{
+    MutexGuard mg(lock_);
+    if ( regions_.empty() ) return 0;
+    std::vector< Region* >::const_iterator start = iter_;
+    uint64_t rv = 0;
+    do {
+        if ( ! (*iter_)->isSuspended && ! (*iter_)->messages.empty() ) {
+            rv = (*iter_)->messages.front();
+            smsc_log_debug(log_,"message %llx is found in region %s",rv,(*iter_)->regionId.c_str());
+            (*iter_)->messages.pop_front();
+        }
+        ++iter_;
+        if ( iter_ == regions_.end() ) iter_ = regions_.begin();
+    } while ( rv == 0 && iter_ != start );
+    return rv;
+}
+
+
+time_t Task::MessageRegionCache::fillTime() const
+{
+    return fillTime_;
+}
+
+
+size_t Task::MessageRegionCache::fill( time_t now, CsvStore& store, size_t cacheFileSize )
+{
+    size_t fetched = 0;
+    // MutexGuard mg(lock_);
+    Message fetchedMessage;
+    bool haveMsg = false;
+    smsc_log_debug(log_,"filling cache at %ld, maxSize=%llu",
+                   long(now),static_cast<unsigned long long>(cacheFileSize));
+    while ( fetched < cacheFileSize && (haveMsg=store.getNextMessage(fetchedMessage)) ) {
+        MutexGuard mg(lock_);
+        fillTime_ = now;
+        Region** ptr = regionHash_.GetPtr(fetchedMessage.regionId.c_str());
+        if ( ! ptr ) {
+            // we have to add a new region
+            smsc_log_debug(log_,"a new region %s is created",fetchedMessage.regionId.c_str());
+            Region* r = new Region;
+            r->regionId = fetchedMessage.regionId;
+            r->isSuspended = false;
+            const size_t dist = iter_ - regions_.begin();
+            regions_.push_back( r );
+            iter_ = regions_.begin() + dist;
+            regionHash_.Insert(r->regionId.c_str(),r);
+            r->messages.push_back(fetchedMessage.id);
+        } else {
+            (*ptr)->messages.push_back(fetchedMessage.id);
+        }
+        ++fetched;
+    }
+    return fetched;
+}
+
 
 Task::Task( ConfigView* config,
             uint32_t taskId,
@@ -25,8 +155,10 @@ Task::Task( ConfigView* config,
       finalStateSaver_(finalStateSaver),
       usersCount(0), bFinalizing(false), bSelectedAll(false), dsOwn(_dsOwn),store(location),
       bInProcess(false), bInGeneration(false), bGenerationSuccess(true),
-      infoSme_T_storageWasDestroyed(false), lastMessagesCacheEmpty(0), currentPriorityFrameCounter(0)
-   
+      infoSme_T_storageWasDestroyed(false),
+// lastMessagesCacheEmpty(0), 
+messageCache_(new MessageRegionCache),
+currentPriorityFrameCounter(0)
 {
   init(config, taskId);
   formatter = new OutputFormatter(info.msgTemplate.c_str());
@@ -36,7 +168,7 @@ Task::Task( ConfigView* config,
 Task::~Task()
 {
     if (formatter) delete formatter;
-
+    if (messageCache_) delete messageCache_;
 
 /*  
     if (dsOwn)
@@ -713,13 +845,14 @@ Task::putToSuspendedMessagesQueue(const Message& suspendedMessage)
 {
   smsc_log_info(logger, "Task::putToSuspendedMessagesQueue:::  task '%d/%s': exceeded region bandwidth (regionId=%s), return message with id=%llx to messagesCache",
                 info.uid,info.name.c_str(), suspendedMessage.regionId.c_str(), suspendedMessage.id);
-  MutexGuard guard(messagesCacheLock);
-  _suspendedRegions.insert(suspendedMessage.regionId);
-  messagesCache.push_back(suspendedMessage);
+    messageCache_->suspendRegion( suspendedMessage );
+    // MutexGuard guard(messagesCacheLock);
+    // _suspendedRegions.insert(suspendedMessage.regionId);
+    // messagesCache.push_back(suspendedMessage);
 }
 
-bool
-Task::fetchMessageFromCache(Message& message)
+/*
+bool Task::fetchMessageFromCache(Message& message)
 {
   MutexGuard guard(messagesCacheLock);
   std::string regionForPreviouslyFetchedMessage;
@@ -738,14 +871,15 @@ Task::fetchMessageFromCache(Message& message)
   smsc_log_debug(logger, "Task::fetchMessageFromCache::: cache bypassed, there are no messages meeting search criterion; messagesCache.size = %d", messagesCache.size());
   return false;
 }
+ */
 
-void
-Task::resetSuspendedRegions()
+void Task::resetSuspendedRegions()
 {
-  MutexGuard guard(messagesCacheLock);
+    // MutexGuard guard(messagesCacheLock);
   smsc_log_debug(logger, "Task::resetSuspendedRegions::: method being called on task '%d/%s'",info.uid,info.name.c_str());
-  _messagesCacheIter = messagesCache.begin();
-  _suspendedRegions.clear();
+    // _messagesCacheIter = messagesCache.begin();
+    // _suspendedRegions.clear();
+    messageCache_->resetSuspendedRegions();
 }
 
 bool Task::getNextMessage(Message& message)
@@ -756,9 +890,13 @@ bool Task::getNextMessage(Message& message)
     if (!isEnabled())
       return setInProcess(false);
 
-    // selecting from cache
-    if ( fetchMessageFromCache(message) )
-      return true;
+    // selecting from cache (and from underlying store)
+    uint64_t msgid = messageCache_->fetchMessageId();
+    if ( msgid != 0 ) {
+        uint8_t state;
+        store.loadMessage(msgid,message,state);
+        return true;
+    }
 
     // Cache is empty here or maybe we have bypassed all cache elements but there are ones with region id values for which suspended condition is true
 
@@ -766,33 +904,34 @@ bool Task::getNextMessage(Message& message)
       return setInProcess(false); // for track integrity check that generation finished ok
 
     time_t currentTime = time(NULL);
-    size_t messagesCacheSz;
-    {
-      MutexGuard guard(messagesCacheLock);
-      messagesCacheSz = messagesCache.size();
-    }
 
-    if ( messagesCacheSz > 0 ) return false;
-    else if (currentTime-lastMessagesCacheEmpty > info.messagesCacheSleep)
-      lastMessagesCacheEmpty = currentTime;   // timeout reached, set new sleep timeout & go to fill cache
-    else if (bSelectedAll && !isInGeneration()) 
-      return setInProcess(false);             // if all selected from DB (on last time) & no generation => return
+    // if ( !messageCache_->empty() ) return false;
+    if (currentTime-messageCache_->fillTime() > info.messagesCacheSleep) {
+       // lastMessagesCacheEmpty = currentTime;   // timeout reached, set new sleep timeout & go to fill cache
+    } else if (bSelectedAll && !isInGeneration()) {
+        return setInProcess(false);             // if all selected from DB (on last time) & no generation => return
+    }
     smsc_log_info(logger, "Selecting messages from DB. getNextMessage method on task '%d/%s'",
                   info.uid,info.name.c_str());
 
     // Selecting cache from DB
+    size_t fetched = 0;
     try
     {
-        int fetched = 0;
+        // int fetched = 0;
+        fetched = messageCache_->fill(currentTime,store,info.messagesCacheSize);
+        bSelectedAll = (fetched != info.messageCacheSize);
+        /*
         Message fetchedMessage;
         bool haveMsg=false;
         while (fetched < info.messagesCacheSize && (haveMsg=store.getNextMessage(fetchedMessage)))
         {
-          MutexGuard guard(messagesCacheLock);
-          messagesCache.push_back(fetchedMessage);
-          fetched++;
+            // MutexGuard guard(messagesCacheLock);
+            messagesCache_.push_back(currentTime,fetchedMessage);
+            ++fetched;
         }
         bSelectedAll = !haveMsg;
+         */
     }
     catch (std::exception& exc)
     {
@@ -806,16 +945,21 @@ bool Task::getNextMessage(Message& message)
     }
     
     smsc_log_debug(logger, "Selected %d messages from DB for task '%d/%s'",
-                   messagesCache.size(), info.uid,info.name.c_str());
+                   unsigned(fetched), info.uid,info.name.c_str());
 
     // selecting from cache
-    if ( fetchMessageFromCache(message) )
-      return true;
-    else {
-      lastMessagesCacheEmpty = time(NULL);
-      bSelectedAll = true;
-      return setInProcess(false);
+    msgid = messageCache_->fetchMessageId();
+    if ( msgid != 0 ) {
+        uint8_t state;
+        store.loadMessage(msgid,message,state);
+        return true;
     }
+    return false;
+    // lastMessagesCacheEmpty = time(NULL);
+    // bSelectedAll = true;
+    // -- db: why bSelectedAll is set here?
+    // -- the messages may be not accessible because they are suspended
+    return setInProcess(false);
 }
 
 bool Task::isReady(time_t time, bool checkActivePeriod)
