@@ -20,6 +20,12 @@ namespace inap  {
 #define MAX_UCONN_ATTEMPTS ((MAX_CONN_TIMEOUT + RECONNECT_TIMEOUT/2)/RECONNECT_TIMEOUT)
 #define MAX_BIND_ATTEMPTS ((MAX_BIND_TIMEOUT + RECONNECT_TIMEOUT/2)/RECONNECT_TIMEOUT)
 
+#ifdef EIN_HD
+# define SS7_RESET_STAGE ss7None        //total reset (include CP static data)
+#else
+# define SS7_RESET_STAGE ss7REGISTERED  //msg ports/connections reset
+#endif
+
 /* ************************************************************************** *
  * class TCAPDispatcher::MessageListener implementation:
  * ************************************************************************** */
@@ -86,7 +92,7 @@ int TCAPDispatcher::MessageListener::Execute(void)
  * class TCAPDispatcher implementation:
  * ************************************************************************** */
 TCAPDispatcher::TCAPDispatcher()
-    : _ss7State(ss7None), _dspState(dspStopped), _unitCfg(NULL)
+    : _ss7State(ss7None), _dspState(dspStopped), _connCounter(0), _unitCfg(NULL)
 #ifdef EIN_HD
     , _rcpMgrAdr(NULL)
 #endif /* EIN_HD */
@@ -272,7 +278,7 @@ unsigned short TCAPDispatcher::dispatchMsg(void)
 
 int TCAPDispatcher::Reconnect(void)
 {
-  unsigned connCounter = 0;
+//  unsigned connCounter = 0;
   unsigned bindCounter = 0;
   USHORT_T result = 0;
 
@@ -280,29 +286,30 @@ int TCAPDispatcher::Reconnect(void)
   _dspState = dspRunning;
   _sync.notify();
   while (_dspState == dspRunning) {
-//smsc_log_debug(logger, "%s: Reconnect(): state %u, connCounter: %u", _logId, _ss7State, connCounter);
-    if ((connCounter >= MAX_UCONN_ATTEMPTS) || (bindCounter >= MAX_BIND_ATTEMPTS)) {
+//smsc_log_debug(logger, "%s: Reconnect(): state %u, connCounter: %u", _logId, _ss7State, _connCounter);
+    if ((_connCounter >= MAX_UCONN_ATTEMPTS) || (bindCounter >= MAX_BIND_ATTEMPTS)) {
       smsc_log_error(logger, "%s: lingering connection troubles, reconnecting ..", _logId);
-      disconnectCP(ss7None); //total reset (include CP static data)
-      connCounter = bindCounter = 0;
-    }
-    if (_ss7State == ss7CONNECTED) {
+      disconnectCP(SS7_RESET_STAGE);
+      _connCounter = bindCounter = 0;
+    } else if (_ss7State == ss7CONNECTED) {
       //check for disconnected units
-      bool disconnAll = false;
-      if (disconnectedUnits(&disconnAll)) {
-        if (!connectUnits() && disconnAll)
-          ++connCounter;
-        _sync.wait(RECONNECT_TIMEOUT);  //give the SCCP time to refresh SubSystems states prior to rebinding them.
-        continue;
+      if (disconnectedUnits()) {
+        if (!connectUnits()) {
+          _sync.wait(RECONNECT_TIMEOUT);
+          continue;
+        }
+        //give the SCCP time to refresh SubSystems states prior to rebinding them.
+        _sync.wait((RECONNECT_TIMEOUT*2)/3);
       }
       if (unitsNeedBinding())
         bindSSNs();
       if (!_sessions.empty() && (unbindedSSNs() == _sessions.size()))
         ++bindCounter;
     } else if (connectCP(ss7CONNECTED) < 0) { //also binds SSNs
-      ++connCounter;
+      ++_connCounter;
     } else
       _msgAcq.Notify();
+    /**/
     _sync.wait(RECONNECT_TIMEOUT);
   }
   _sync.Unlock();
@@ -325,8 +332,11 @@ void TCAPDispatcher::onDisconnect(unsigned char inst_id)
     }
     //check for last instance disconnection
     bool allBroken = false;
-    if (disconnectedUnits(&allBroken) && allBroken && (_ss7State == ss7CONNECTED))
-      _ss7State = ss7OPENED; //forbid message listening
+    if (disconnectedUnits(&allBroken) && allBroken) {
+      if (_ss7State == ss7CONNECTED)
+        _ss7State = ss7OPENED; //forbid message listening, and avoid Unbind/RelInst calls
+      _connCounter = MAX_UCONN_ATTEMPTS;  //force total reconnection in Reconnect()
+    }
     _sync.notify(); //awake reconnector thread
   } else
     smsc_log_debug(logger, "%s: connection broken userId=%u -> TCAP[instId = %u]",

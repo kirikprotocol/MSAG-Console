@@ -62,6 +62,7 @@ private:
     mutable EventMonitor _sync;
     volatile SS7State_e  _ss7State;
     volatile DSPState_e  _dspState;
+    volatile unsigned    _connCounter;
 
     TCDsp_CFG       _cfg;
     SS7Unit_CFG *   _unitCfg;   //TCAP Unit(s) configuration
