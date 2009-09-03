@@ -68,9 +68,9 @@ void formUAbortRequest(const asn1::EncodedOID& app_ctx,
 {
   TC_UAbort_Req uAbortRequestPrimitive;
   if ( app_ctx == _ac_contextless_ops )
-    uAbortRequestPrimitive.rejectDlgByUser(TDialogueAssociate::dsu_null);
+    uAbortRequestPrimitive.abortAssociation(TDialogueAssociate::dsu_null);
   else {
-    uAbortRequestPrimitive.rejectDlgByUser(TDialogueAssociate::dsu_ac_not_supported);
+    uAbortRequestPrimitive.abortAssociation(TDialogueAssociate::dsu_ac_not_supported);
     uAbortRequestPrimitive.setAppCtx(app_ctx);
   }
 

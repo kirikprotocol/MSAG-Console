@@ -15,9 +15,13 @@ namespace eyeline {
 namespace tcap {
 
 using eyeline::asn1::EncodedOID;
+using eyeline::asn1::ASExternalValue;
+
 using eyeline::ros::ROSComponentsList;
 using eyeline::ros::ROSComponentRfp;
+
 using eyeline::sccp::SCCPAddress;
+
 
 class TDialogueRequestPrimitive {
 protected:
@@ -50,9 +54,8 @@ public:
   //
   void setInSequenceDelivery(void) { _inSeqDelivery = true; }
   bool getInSequenceDelivery(void) const { return _inSeqDelivery; }
-
   //
-  void addUIValue(const UIValue & use_ui) { _usrInfo.addUIValue(use_ui); }
+  void addUIValue(const ASExternalValue & use_ui) { _usrInfo.addUIValue(use_ui); }
   const TDlgUserInfo * getUserInfo(void) const { return _usrInfo.empty() ? 0 : &_usrInfo; }
 };
 
@@ -101,8 +104,8 @@ protected:
   DialogEnding_e        _termination;
 
 public:
-  TC_End_Req()
-    : _termination(endBASIC)
+  TC_End_Req(DialogEnding_e use_term = endBASIC)
+    : _termination(use_term)
   { }
 
   void setPrearrangedEnd(void) { _termination = endPREARRANGED; }
@@ -112,24 +115,53 @@ public:
   const ROSComponentsList & CompList(void) const { return _comps; }
 };
 
-//
+//There are 3 kinds of user abort:
+// 1) abort of dialogue association (in response to T_Begin) with associate
+//    diagnostic provided as reason
+// 2) abort of established dialogue with optional UserInfo provided as reason
+// 3) abort of established dialogue with some externally defined PDU provided
+//    as reason
 class TC_UAbort_Req : public TDialogueRequestPrimitive {
+public:
+  enum Kind_e {
+    uabrtAssociation = 0, uabrtDialogueUI, uabrtDialogueEXT
+  };
+
 protected:
-  TCUserAssociateResult  _ascResultUsr;
+  Kind_e  _kind;
+  TDialogueAssociate::DiagnosticUser_e _ascRejCause; //associate reject diagnostic
 
 public:
   TC_UAbort_Req()
-    : _ascResultUsr(false)
+    : _kind(uabrtDialogueUI), _ascRejCause(TDialogueAssociate::dsu_null)
   { }
 
-  const TCUserAssociateResult & userAssociateResult(void) const { return _ascResultUsr; }
-  //NOTE: These methods only for 1st response to T_Begin_Ind
-  void rejectDlgByUser(TDialogueAssociate::DiagnosticUser_e use_cause =
-                      TDialogueAssociate::dsu_null)
+  const Kind_e & abortKind(void) const { return _kind; }
+
+  //NOTE: This method only for 1st response to T_Begin_Ind
+  void abortAssociation(TDialogueAssociate::DiagnosticUser_e use_cause =
+                        TDialogueAssociate::dsu_null)
   {
-//    _ascResultUsr._accepted = false;
-    _ascResultUsr._rejCause = use_cause;
+    _kind = uabrtAssociation;
+    _ascRejCause = use_cause;
   }
+
+  //abort of established dialogue with optional UserInfo provided as reason
+  //NOTE: add UserInfo values by addUIValue() calls next to this one!!!
+  void abortDialogue(void)
+  {
+    _kind = uabrtDialogueUI;
+//    _usrInfo.clear();
+  }
+
+  //abort of established dialogue with some externally defined PDU provided as reason
+  void abortDialogueAS(const ASExternalValue & use_ext)
+  {
+    _kind = uabrtDialogueEXT;
+    _usrInfo.clear();
+    _usrInfo.addUIValue(use_ext);
+  }
+
 };
 
 } //tcap
