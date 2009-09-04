@@ -947,8 +947,6 @@ TaskProcessor::SendAbntOnlineNotifications(const sms_info* pInfo,
                                            const AbonentProfile& profile,
                                            SendMessageEventHandler* bannerEngineProxy)
 {
-  statistics->incNotified();
-
   if ( !needNotify(profile, pInfo) ) return;
 
   size_t events_count = pInfo->events.size();
@@ -1007,6 +1005,7 @@ TaskProcessor::SendAbntOnlineNotifications(const sms_info* pInfo,
 
     int seqNum = getMessageSender()->getSequenceNumber();
     insertBannerInfo(seqNum, bannerRespTrace);
+    statistics->incNotified();
     getMessageSender()->send(seqNum, msg);
     store_N_Event_in_logstore(abnt, caller.getText());
   }
