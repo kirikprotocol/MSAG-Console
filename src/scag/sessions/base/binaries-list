@@ -1,0 +1,6 @@
+scag/tests/test-sessionKey testSessionKey \
+  -lscag-sessions-base \
+  -lscag-util-io \
+  -lscag-exc \
+  @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
+  -lutil

@@ -74,15 +74,16 @@ public:
     // return addr_.toString();
     // }
 
-protected:
-    explicit StoredSessionKey( uint64_t a ) : msisdn_(a) {}
-
     inline uint8_t ton() const {
         return uint8_t(msisdn_/tnpcoef)/10;
     }
     inline uint8_t npi() const {
         return uint8_t(msisdn_/tnpcoef)%10;
     }
+
+protected:
+    explicit StoredSessionKey( uint64_t a ) : msisdn_(a) {}
+
     // returns address mangled with len
     inline uint64_t adr() const {
         return msisdn_ & adrmask;
@@ -115,7 +116,7 @@ class SessionKey : public StoredSessionKey
     // static void getLogger();
 
 public:
-    SessionKey() {}
+    SessionKey() : str_(".0.0.0") {}
     SessionKey( const StoredSessionKey& sk );
     explicit SessionKey( const smsc::sms::Address& ab ); // : StoredSessionKey(ab) {}
     explicit SessionKey( const std::string& ab ); // : StoredSessionKey(ab) {}

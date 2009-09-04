@@ -25,7 +25,7 @@ using namespace scag::exceptions;
 uint64_t StoredSessionKey::zeroadr()
 {
     if ( zeroadr_ == uint64_t(-1LL) ) {
-        uint64_t v = setaddr(0,0,0,0);
+        uint64_t v = setaddr(0,0,1,0);
         MutexGuard mg(zeromutex);
         if ( zeroadr_ == uint64_t(-1LL) ) { zeroadr_ = v; }
     }
