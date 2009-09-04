@@ -9,7 +9,7 @@
 namespace {
 
 bool zeroadrdone = false;
-uint64_t zeroadr_;
+uint64_t zeroadr_ = uint64_t(-1LL);
 smsc::core::synchronization::Mutex zeromutex;
 const uint8_t maxlen = 16;
 uint64_t lencut[maxlen+1];
@@ -24,7 +24,11 @@ using namespace scag::exceptions;
 
 uint64_t StoredSessionKey::zeroadr()
 {
-    if ( ! ::zeroadrdone ) fillstatic();
+    if ( zeroadr_ == uint64_t(-1LL) ) {
+        uint64_t v = setaddr(0,0,0,0);
+        MutexGuard mg(zeromutex);
+        if ( zeroadr_ == uint64_t(-1LL) ) { zeroadr_ = v; }
+    }
     return ::zeroadr_;
 }
 
@@ -42,8 +46,8 @@ uint64_t StoredSessionKey::len2cut(uint8_t len)
 void StoredSessionKey::fillstatic()
 {
     MutexGuard mg(::zeromutex);
-    if ( zeroadrdone ) return;
-    zeroadr_ = setaddr(0,0,0,0);
+    if ( ::zeroadrdone ) return;
+    // zeroadr_ = setaddr(0,0,0,0);
     uint64_t val = 1;
     for ( uint8_t l = 0; l <= ::maxlen; ++l ) {
         ::lencut[l] = val;
