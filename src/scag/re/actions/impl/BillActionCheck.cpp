@@ -86,6 +86,10 @@ void BillActionCheck::postInit(const SectionParams& params,
         }
     }
 
+    txStatus_.init(params,propertyObject);
+    txAmount_.init(params,propertyObject);
+    txEndDate_.init(params,propertyObject);
+
     /*
     BillAction::init( params, propertyObject );
 
