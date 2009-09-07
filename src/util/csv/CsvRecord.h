@@ -22,7 +22,7 @@ public:
     // -- methods for csv record creation
     // NOTE: ptr_ will be used as a written field counter
     CsvRecord( const char* escapeChars = 0, char delim = ',' ) :
-    buf_(0), eptr_(0), ptr_(0), delim_(delim) {
+    buf_(0), eptr_(0), ptr_(0), delim_(delim), justStarted_(true) {
         if ( escapeChars ) {
             escapeChars_.reserve(10);
             escapeChars_ = escapeChars;
@@ -42,7 +42,7 @@ public:
 
     CsvRecord( const char* buf, size_t bufsize,
                bool escapeChars = false, char delim = ',' ) :
-    buf_(buf), eptr_(buf+bufsize), ptr_(buf), delim_(delim) {
+    buf_(buf), eptr_(buf+bufsize), ptr_(buf), delim_(delim), justStarted_(true) {
         if (escapeChars) escapeChars_ = "\\\n\r\0";
     }
 
@@ -73,6 +73,7 @@ private:
     const char* ptr_;
     std::string escapeChars_;
     char        delim_;
+    bool        justStarted_;
 };
 
 } // namespace csv

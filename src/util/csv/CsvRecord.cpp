@@ -58,14 +58,10 @@ void CsvRecord::addField( std::string& line, const char* str, size_t sz )
 bool CsvRecord::isNextFieldSimple() const
 {
     if ( ptr_ >= eptr_ ) return false;
-    if ( ptr_ == buf_ ) {
-        if ( *ptr_ != '"' ) return true;
-    } else {
-        const char* ptr = ptr_;
-        ++ptr;
-        if ( ptr >= eptr_ ) return true; // empty field at the end
-        if ( *ptr != '"' ) return true;
-    }
+    const char* ptr = ptr_;
+    if ( ! justStarted_ ) { ++ptr; }
+    if ( ptr >= eptr_ ) return true; // empty field at the end
+    if ( *ptr != '"' ) return true;
     return false;
 }
 
@@ -149,12 +145,13 @@ void CsvRecord::moveToNextField()
 {
     if ( ptr_ >= eptr_ ) throw CsvRecordException( "field at %u is at end of record",
                                                    unsigned(ptr_-buf_));
-    if ( ptr_ != buf_ ) {
+    if ( ! justStarted_ ) {
         if ( *ptr_ != delim_ ) {
             throw CsvRecordException("delim at %u is not %c",unsigned(ptr_-buf_),delim_);
         }
         ++ptr_;
     }
+    justStarted_ = false;
 }
 
 } // namespace csv
