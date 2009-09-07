@@ -4,7 +4,7 @@ config
 templates
 recoder
 regexp
-#csv
+csv
 mirrorfile
 URCdb
 comm_comp
