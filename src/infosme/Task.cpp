@@ -920,7 +920,7 @@ bool Task::getNextMessage(Message& message)
     {
         // int fetched = 0;
         fetched = messageCache_->fill(currentTime,store,info.messagesCacheSize);
-        bSelectedAll = (fetched != info.messageCacheSize);
+        bSelectedAll = (fetched != info.messagesCacheSize);
         /*
         Message fetchedMessage;
         bool haveMsg=false;
