@@ -407,3 +407,13 @@ B3108: Aug 20, 2009
 B3109: Aug 25, 2009
     SMSC	clean imsi and msc when reusing dialog. Important for nosri enabled ussd codes.
     Ussman	correct destroy request processor and MAP dialog, when disconnected state detected.
+
+B3110: Sep 07, 2009
+    MCISme	fix for notifications statistic, moved call to statistics->incNotified() immediately before send message to abonent
+    INMan	EIN SS7 HA reconnection logic separated from HD logic
+    USSMan	EIN SS7 HA reconnection logic separated from HD logic
+    InfoSme	Multiple SMSC connections support
+    InfoSme	Siebel integration added
+    SMSC	Billing on submit on route now forces charge on submit logic on this route. Otherwise default configured logic used. 
+    SMSC	EIN SS7 HA reconnection logic separated from HD logic
+    mcahdb	another status code changing by MTS
