@@ -55,7 +55,8 @@ CREATE TABLE smpp_messages (
   status INT NOT NULL,
   smpp_id BIGINT,
 
-  PRIMARY KEY(id)
+  PRIMARY KEY(id),
+  INDEX(smpp_id)
 ) CHARACTER SET koi8r, ENGINE InnoDB;
 
 
