@@ -15,21 +15,22 @@ session_(cfg, &listener_),
 smscId_(smscId),
 timeout_(cfg.timeOut),
 stopped_(false),
-needReconnect_(false)
+connected_(false)
 {
-
+  listener_.setSyncTransmitter(session_.getSyncTransmitter());
+  listener_.setAsyncTransmitter(session_.getAsyncTransmitter());
 }
 
 void SmscConnector::stop() {
-  MutexGuard mg(monitor_);
+  MutexGuard mg(connectMonitor_);
   stopped_ = true;
-  monitor_.notify();
+  connectMonitor_.notify();
 }
 
 void SmscConnector::reconnect() {
-  MutexGuard mg(monitor_);
-  needReconnect_ = true;
-  monitor_.notify();
+  MutexGuard mg(connectMonitor_);
+  connected_ = false;
+  connectMonitor_.notify();
 }
 
 bool SmscConnector::isStopped() const {
@@ -44,9 +45,9 @@ int SmscConnector::Execute() {
       smsc_log_info(logger_, "Connecting to SMSC id='%s'... ", smscId_.c_str());
       try
       {
-          listener_.setSyncTransmitter(session_.getSyncTransmitter());
-          listener_.setAsyncTransmitter(session_.getAsyncTransmitter());
           session_.connect();
+          MutexGuard mg(connectMonitor_);
+          connected_ = true;
       }
       catch (SmppConnectException& exc)
       {
@@ -56,19 +57,23 @@ int SmscConnector::Execute() {
           if (exc.getReason() == SmppConnectException::Reason::bindFailed) throw;
           sleep(timeout_);
           session_.close();
+          MutexGuard mg(connectMonitor_);
+          connected_ = false;
           continue;
       }
       smsc_log_info(logger_, "Connected to SMSC id='%s'.", smscId_.c_str());
       {
-        MutexGuard mg(monitor_);
-        while (!needReconnect_ && !isStopped()) {
-          monitor_.wait();
+        MutexGuard mg(connectMonitor_);
+        while (connected_ && !isStopped()) {
+          connectMonitor_.wait();
         }
-        needReconnect_ = false;
+        if (!connected_) {
+          smsc_log_info(logger_, "Need Reconnect to SMSC id='%s'.", smscId_.c_str());
+        }
       }
       session_.close();
   }
-  smsc_log_info(logger_, "SMSC Connector for '%s' stopped", smscId_.c_str());
+  smsc_log_info(logger_, "SMSC Connector '%s' stopped", smscId_.c_str());
   return 1; 
 }
 
@@ -78,95 +83,107 @@ int SmscConnector::getSeqNum() {
 }
 
 bool SmscConnector::send(std::string abonent, std::string message, TaskInfo info, int seqNum) {
-  MutexGuard guard(sendLock_);
-
-  //if (!session_) {
-    //  smsc_log_error(logger_, "Smpp session is undefined for MessageSender.");
-      //return false;
-  //}
-  SmppTransmitter* asyncTransmitter = session_.getAsyncTransmitter();
-  if (!asyncTransmitter) {
-      smsc_log_error(logger_, "Smpp transmitter is undefined for MessageSender.");
-      return false;
-  }
-
-  Address oa, da;
-  const char* oaStr = info.address.c_str();
-  if (!oaStr || !oaStr[0]) oaStr = processor_.getAddress();
-  if (!oaStr || !convertMSISDNStringToAddress(oaStr, oa)) {
-      smsc_log_error(logger_, "Invalid originating address '%s'", oaStr ? oaStr:"-");
-      return false;
-  }
-  const char* daStr = abonent.c_str();
-  if (!daStr || !convertMSISDNStringToAddress(daStr, da)) {
-      smsc_log_error(logger_, "Invalid destination address '%s'", daStr ? daStr:"-");
-      return false;
-  }
-
-  SMS sms;
-  sms.setOriginatingAddress(oa);
-  sms.setDestinationAddress(da);
-  sms.setArchivationRequested(false);
-  sms.setDeliveryReport(1);
-  sms.setValidTime( (info.validityDate <= 0 || info.validityPeriod > 0) ?
-                     time(NULL)+info.validityPeriod : info.validityDate );
-
-  sms.setIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG,
-                     (info.replaceIfPresent) ? 1:0);
-  sms.setEServiceType( (info.replaceIfPresent && info.svcType.length()>0) ?
-                        info.svcType.c_str():processor_.getSvcType() );
-
-  sms.setIntProperty(Tag::SMPP_PROTOCOL_ID, processor_.getProtocolId());
-  sms.setIntProperty(Tag::SMPP_ESM_CLASS, (info.transactionMode) ? 2:0);
-  sms.setIntProperty(Tag::SMPP_PRIORITY, 0);
-  sms.setIntProperty(Tag::SMPP_REGISTRED_DELIVERY, 1);
-
-  if(info.flash)
   {
-    sms.setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,1);
-  }
-
-  const char* out = message.c_str();
-  size_t outLen = message.length();
-  char* msgBuf = 0;
-  if(smsc::util::hasHighBit(out,outLen)) {
-      size_t msgLen = outLen*2;
-      msgBuf = new char[msgLen];
-      ConvertMultibyteToUCS2(out, outLen, (short*)msgBuf, msgLen,
-                             CONV_ENCODING_CP1251);
-      sms.setIntProperty(Tag::SMPP_DATA_CODING, DataCoding::UCS2);
-      out = msgBuf;
-      outLen = msgLen;
-  } else {
-      sms.setIntProperty(Tag::SMPP_DATA_CODING, DataCoding::LATIN1);
-  }
-
-  try
-  {
-      if (outLen <= MAX_ALLOWED_MESSAGE_LENGTH) {
-          sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE, out, (unsigned)outLen);
-          sms.setIntProperty(Tag::SMPP_SM_LENGTH, (unsigned)outLen);
-      } else {
-          sms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD, out,
-                             (unsigned)((outLen <= MAX_ALLOWED_PAYLOAD_LENGTH) ?
-                              outLen :  MAX_ALLOWED_PAYLOAD_LENGTH));
-      }
-  }
-  catch (...) {
-      smsc_log_error(logger_, "Something is wrong with message body. Set/Get property failed");
-      if (msgBuf) delete msgBuf; msgBuf = 0;
+    MutexGuard mg(connectMonitor_);
+    if (!connected_) {
+      smsc_log_warn(logger_, "SMSC Connector '%s' is not connected.", smscId_.c_str());
+      connectMonitor_.notify();
       return false;
+    }
   }
-  if (msgBuf) delete msgBuf;
-
-  PduSubmitSm sm;
-  sm.get_header().set_sequenceNumber(seqNum);
-  sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
-  fillSmppPduFromSms(&sm, &sms);
-  asyncTransmitter->sendPdu(&(sm.get_header()));
-
-  TrafficControl::incOutgoing();
-  return true;
+ {
+    MutexGuard guard(sendLock_);
+    SmppTransmitter* asyncTransmitter = session_.getAsyncTransmitter();
+    if (!asyncTransmitter) {
+        smsc_log_error(logger_, "Smpp transmitter is undefined for SMSC Connector '%s'.", smscId_.c_str());
+        return false;
+    }
+  
+    Address oa, da;
+    const char* oaStr = info.address.c_str();
+    if (!oaStr || !oaStr[0]) oaStr = processor_.getAddress();
+    if (!oaStr || !convertMSISDNStringToAddress(oaStr, oa)) {
+        smsc_log_error(logger_, "Invalid originating address '%s'", oaStr ? oaStr:"-");
+        return false;
+    }
+    const char* daStr = abonent.c_str();
+    if (!daStr || !convertMSISDNStringToAddress(daStr, da)) {
+        smsc_log_error(logger_, "Invalid destination address '%s'", daStr ? daStr:"-");
+        return false;
+    }
+  
+    SMS sms;
+    sms.setOriginatingAddress(oa);
+    sms.setDestinationAddress(da);
+    sms.setArchivationRequested(false);
+    sms.setDeliveryReport(1);
+    sms.setValidTime( (info.validityDate <= 0 || info.validityPeriod > 0) ?
+                       time(NULL)+info.validityPeriod : info.validityDate );
+  
+    sms.setIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG,
+                       (info.replaceIfPresent) ? 1:0);
+    sms.setEServiceType( (info.replaceIfPresent && info.svcType.length()>0) ?
+                          info.svcType.c_str():processor_.getSvcType() );
+  
+    sms.setIntProperty(Tag::SMPP_PROTOCOL_ID, processor_.getProtocolId());
+    sms.setIntProperty(Tag::SMPP_ESM_CLASS, (info.transactionMode) ? 2:0);
+    sms.setIntProperty(Tag::SMPP_PRIORITY, 0);
+    sms.setIntProperty(Tag::SMPP_REGISTRED_DELIVERY, 1);
+  
+    if(info.flash)
+    {
+      sms.setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,1);
+    }
+  
+    const char* out = message.c_str();
+    size_t outLen = message.length();
+    char* msgBuf = 0;
+    if(smsc::util::hasHighBit(out,outLen)) {
+        size_t msgLen = outLen*2;
+        msgBuf = new char[msgLen];
+        ConvertMultibyteToUCS2(out, outLen, (short*)msgBuf, msgLen,
+                               CONV_ENCODING_CP1251);
+        sms.setIntProperty(Tag::SMPP_DATA_CODING, DataCoding::UCS2);
+        out = msgBuf;
+        outLen = msgLen;
+    } else {
+        sms.setIntProperty(Tag::SMPP_DATA_CODING, DataCoding::LATIN1);
+    }
+  
+    try
+    {
+        if (outLen <= MAX_ALLOWED_MESSAGE_LENGTH) {
+            sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE, out, (unsigned)outLen);
+            sms.setIntProperty(Tag::SMPP_SM_LENGTH, (unsigned)outLen);
+        } else {
+            sms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD, out,
+                               (unsigned)((outLen <= MAX_ALLOWED_PAYLOAD_LENGTH) ?
+                                outLen :  MAX_ALLOWED_PAYLOAD_LENGTH));
+        }
+    }
+    catch (...) {
+        smsc_log_error(logger_, "Something is wrong with message body. Set/Get property failed");
+        if (msgBuf) delete msgBuf; msgBuf = 0;
+        return false;
+    }
+    if (msgBuf) delete msgBuf;
+  
+    try {
+      PduSubmitSm sm;
+      sm.get_header().set_sequenceNumber(seqNum);
+      sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
+      fillSmppPduFromSms(&sm, &sms);
+      asyncTransmitter->sendPdu(&(sm.get_header()));
+      TrafficControl::incOutgoing();
+      return true;
+    } catch (const std::exception& ex) {
+      smsc_log_warn(logger_, "SmscConnector::send exception: %s", ex.what());
+    } catch (...) {
+      smsc_log_warn(logger_, "SmscConnector::send unknown exception");
+    }
+ }
+  reconnect();
+  return false;
 }
 
 

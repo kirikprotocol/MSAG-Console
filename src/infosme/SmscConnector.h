@@ -65,10 +65,10 @@ private:
   SmppSession session_;
   string smscId_;
   Mutex sendLock_;
-  EventMonitor monitor_;
+  EventMonitor connectMonitor_;
   int timeout_;
   bool stopped_;
-  bool needReconnect_;
+  bool connected_;
 };
 
 } //infosme
