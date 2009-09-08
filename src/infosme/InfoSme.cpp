@@ -288,42 +288,22 @@ public:
       regions_.Insert(regionId.c_str(), smscId);
     }
 
-    virtual ConnectorSeqNum getSequenceNumber(const string& regionId)
-    {
+    SmscConnector* getSmscConnector(const string& regionId) {
       const string* smscId = regions_.GetPtr(regionId.c_str());
       if (!smscId) {
         smsc_log_debug(logger, "SMSC id for region '%s' not set. Default SMSC '%s' will be used.", regionId.c_str(), defaultSmscId_.c_str());
-        return ConnectorSeqNum(defaultConnector_.getSeqNum(), defaultSmscId_);
+        return &defaultConnector_;
       }
-
       SmscConnector** connector = connectors_.GetPtr(smscId->c_str());
       if (connector) {
         smsc_log_debug(logger, "SMSC id='%s' will be used for region '%s'.",smscId->c_str(), regionId.c_str());
-        return ConnectorSeqNum((*connector)->getSeqNum(), smscId->c_str());
+        return *connector;
       }
       smsc_log_warn(logger, "SMSC connector id='%s' for region '%s' not found. Default SMSC '%s' will be used.",
                      smscId->c_str(), regionId.c_str(), defaultSmscId_.c_str());
-      return ConnectorSeqNum(defaultConnector_.getSeqNum(), defaultSmscId_);
+      return &defaultConnector_;
     }
 
-    virtual bool send(std::string abonent, std::string message, TaskInfo info, ConnectorSeqNum seqNum)
-    {
-        if (seqNum.smscId == defaultSmscId_) {
-          smsc_log_debug(logger, "message for abonent='%s' will be send to default connector",abonent.c_str());
-          return defaultConnector_.send(abonent, message, info, seqNum.seqNum);
-        }
-
-        SmscConnector** connector = connectors_.GetPtr(seqNum.smscId.c_str());
-        if (*connector) {
-          smsc_log_debug(logger, "message for abonent='%s' will be send to '%s' connector", abonent.c_str(), seqNum.smscId.c_str());
-          return (*connector)->send(abonent, message, info, seqNum.seqNum);
-        }
-
-        smsc_log_warn(logger, "Unknown SMSC id='%s' for abonent '%s'. Default SMSC connector '%s' will be used.",
-                               seqNum.smscId.c_str(), abonent.c_str(), defaultSmscId_.c_str());
-        return defaultConnector_.send(abonent, message, info, seqNum.seqNum);
-    }
-    
     uint32_t sendSms(const std::string& org,const std::string& dst,const std::string& txt,bool flash)
     {
       smsc_log_info(logger, "sendSms do default region!");

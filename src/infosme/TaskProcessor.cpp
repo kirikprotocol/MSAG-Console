@@ -1,5 +1,6 @@
 #include "TaskProcessor.h"
 #include "FinalStateSaver.h"
+#include "SmscConnector.h"
 #include <exception>
 #include <list>
 #include <sstream>
@@ -434,7 +435,9 @@ bool TaskProcessor::processTask(Task* task)
     if (messageSender)
     {
         if ( controlTrafficSpeedByRegion(task, message) != TRAFFIC_SUSPENDED ) {
-          ConnectorSeqNum seqNum = messageSender->getSequenceNumber(message.regionId);
+
+          SmscConnector* connector = messageSender->getSmscConnector(message.regionId);
+          ConnectorSeqNum seqNum(connector->getSeqNum(), connector->getSmscId());
           smsc_log_debug(logger, "TaskId=[%d/%s]: Sending message #%llx,seqNum=%d SMSC id='%s' region id='%s' for '%s': %s", 
                          info.uid,info.name.c_str(), message.id, seqNum.seqNum, seqNum.smscId.c_str(), message.regionId.c_str(),
                          message.abonent.c_str(), message.message.c_str());
@@ -459,10 +462,12 @@ bool TaskProcessor::processTask(Task* task)
             responceWaitQueue.Push(ResponceTimer(time(NULL)+responceWaitTime, seqNum));
           }
         
-          if (!messageSender->send(message.abonent, message.message, info, seqNum))
+          if (!connector->send(message.abonent, message.message, info, seqNum.seqNum))
           {
             smsc_log_error(logger, "Failed to send message #%llx for '%s'", 
                            message.id, message.abonent.c_str());
+
+            task->putToSuspendedMessagesQueue(message);
 
             MutexGuard snGuard(taskIdsBySeqNumMonitor);
             if (taskIdsBySeqNum.Exists(seqNum))

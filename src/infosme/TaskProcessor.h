@@ -196,11 +196,11 @@ namespace smsc { namespace infosme
         };
     };
 
+    class SmscConnector;
+
     struct MessageSender
     {
-        virtual ConnectorSeqNum getSequenceNumber(const std::string& regionId) = 0;
-        virtual bool send(std::string abonent, std::string message,
-                          TaskInfo info, ConnectorSeqNum seqNum) = 0;
+        virtual SmscConnector* getSmscConnector(const std::string& regionId) = 0;
         virtual uint32_t sendSms(const std::string& src,const std::string& dst,const std::string& txt,bool flash)=0;
         virtual ~MessageSender() {};
 
