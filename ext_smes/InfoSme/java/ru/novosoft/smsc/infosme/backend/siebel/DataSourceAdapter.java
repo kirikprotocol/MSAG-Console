@@ -25,7 +25,7 @@ public class DataSourceAdapter implements DataSource {
     public void saveFinalStates( Map states ) {
         try {
             provider_.updateDeliveryStates(states);
-        } catch ( SiebelDataProviderException e ) {
+        } catch ( SiebelException e ) {
             log_.error("exc to update states:" + e.getMessage());
         }
     }
@@ -41,7 +41,7 @@ public class DataSourceAdapter implements DataSource {
             if ( log_.isInfoEnabled() ) {
                 log_.info("wave " + waveId + " is processed");
             }
-        } catch ( SiebelDataProviderException e ) {
+        } catch ( SiebelException e ) {
             log_.error("cannot set wave " + waveId + " status: " + e.getMessage());
         }
     }

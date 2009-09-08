@@ -160,6 +160,15 @@ public class TaskManager {
     return false;
   }
 
+  public synchronized boolean containsTaskWithName(String name, String owner) {
+    for (Iterator iter = tasks.values().iterator(); iter.hasNext();) {
+      Task t = (Task)iter.next();
+      if (t.getName().equals(name) && t.getOwner().equals(owner))
+        return true;
+    }
+    return false;
+  }
+
   private Changes analyzeChanges(List oldTasks) throws Config.WrongParamTypeException, Config.ParamNotFoundException {
     Changes changes = new Changes();
 

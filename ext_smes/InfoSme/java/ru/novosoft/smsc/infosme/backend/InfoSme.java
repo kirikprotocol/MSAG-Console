@@ -3,6 +3,11 @@ package ru.novosoft.smsc.infosme.backend;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
+import ru.novosoft.smsc.infosme.backend.siebel.SiebelDataProvider;
+import ru.novosoft.smsc.infosme.backend.siebel.SiebelTaskManager;
+import ru.novosoft.smsc.infosme.backend.siebel.impl.SiebelDataProviderImpl;
+
+import java.io.File;
 
 /**
  * Created by IntelliJ IDEA.

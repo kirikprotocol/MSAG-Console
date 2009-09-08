@@ -2,7 +2,7 @@ package ru.novosoft.smsc.infosme.backend.siebel.impl;
 
 import ru.novosoft.smsc.infosme.backend.siebel.ResultSet;
 import ru.novosoft.smsc.infosme.backend.siebel.SiebelTask;
-import ru.novosoft.smsc.infosme.backend.siebel.SiebelDataProviderException;
+import ru.novosoft.smsc.infosme.backend.siebel.SiebelException;
 import org.apache.log4j.Logger;
 
 import java.sql.Connection;
@@ -29,15 +29,15 @@ public class SiebelTasksResultSet implements ResultSet {
     this.sql = sql;
   }
 
-  public boolean next() throws SiebelDataProviderException {
+  public boolean next() throws SiebelException {
     try {
       return sqlResult.next();
     } catch (SQLException e) {
-      throw new SiebelDataProviderException("Unable to move resultset cursor", e);
+      throw new SiebelException("Unable to move resultset cursor", e);
     }
   }
 
-  public Object get() throws SiebelDataProviderException {
+  public Object get() throws SiebelException {
     SiebelTask siebelTask = new SiebelTask();
     try {
       siebelTask.setLastUpdate(new Date(sqlResult.getTimestamp(sql.getProperty("task.last.upd")).getTime()));
@@ -52,7 +52,7 @@ public class SiebelTasksResultSet implements ResultSet {
       siebelTask.setSave(sqlResult.getString(sql.getProperty("task.save")).equals("Y"));
       siebelTask.setWaveId(sqlResult.getString(sql.getProperty("task.wave.id")));
     } catch (Throwable e) {
-      throw new SiebelDataProviderException("Unable to get SiebelTask from the dataBase ", e);
+      throw new SiebelException("Unable to get SiebelTask from the dataBase ", e);
     }
     return siebelTask;
   }

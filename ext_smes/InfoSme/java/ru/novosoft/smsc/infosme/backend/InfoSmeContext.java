@@ -3,6 +3,9 @@ package ru.novosoft.smsc.infosme.backend;
 import org.xml.sax.SAXException;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.infosme.backend.config.InfoSmeConfig;
+import ru.novosoft.smsc.infosme.backend.siebel.SiebelDataProvider;
+import ru.novosoft.smsc.infosme.backend.siebel.SiebelTaskManager;
+import ru.novosoft.smsc.infosme.backend.siebel.impl.SiebelDataProviderImpl;
 import ru.novosoft.smsc.jsp.SMEAppContext;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.util.config.Config;
@@ -13,6 +16,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Collection;
+import java.util.Properties;
 
 /**
  * Created by igork
@@ -50,6 +54,9 @@ public class InfoSmeContext implements SMEAppContext
   private BlackListManager blackListManager;
   private String smeId = "InfoSme";
 
+  private SiebelDataProvider siebelDataProvider;
+  private SiebelTaskManager siebelTaskManager;
+
   private InfoSmeContext(SMSCAppContext appContext, String smeId)
       throws AdminException, ParserConfigurationException, SAXException, IOException,
       Config.WrongParamTypeException, Config.ParamNotFoundException
@@ -65,10 +72,50 @@ public class InfoSmeContext implements SMEAppContext
     this.blackListManager = new BlackListManager(appContext.getPersonalizationClientPool());
   }
 
+  public boolean isSiebelOnline() {
+    return siebelTaskManager != null && siebelTaskManager.isOnline();
+  }
 
+  public Boolean isSiebelWasStarted() throws AdminException{
+    return new Boolean(infoSmeConfig.isSiebelTMStarted());
+  }
+
+  public void startSiebelTaskManager() throws AdminException{
+    if(siebelDataProvider == null && siebelTaskManager == null) {
+      try{
+        Properties props = new Properties();
+        props.setProperty("jdbc.source", infoSmeConfig.getSiebelJDBCSource());
+        props.setProperty("jdbc.driver", infoSmeConfig.getSiebelJDBCDriver());
+        props.setProperty("jdbc.user", infoSmeConfig.getSiebelJDBCUser());
+        props.setProperty("jdbc.pass", infoSmeConfig.getSiebelJDBCPass());
+        siebelDataProvider = new SiebelDataProviderImpl(props);
+        siebelTaskManager = new SiebelTaskManager(siebelDataProvider, this);
+      }catch(Throwable e) {
+        throw new AdminException("Can't init SiebelTaskManager", e);
+      }
+    }
+    siebelTaskManager.start();
+    infoSmeConfig.setSiebelTMStarted(true);
+  }
+
+  public void stopSiebelTaskManager() throws AdminException{
+    if(siebelTaskManager != null) {
+      siebelTaskManager.shutdown();
+      if(siebelDataProvider != null) {
+        siebelDataProvider.shutdown();
+        infoSmeConfig.setSiebelTMStarted(false);
+      }
+    }
+  }
 
   public void shutdown()
   {
+    if(siebelTaskManager != null) {
+      siebelTaskManager.shutdown();
+    }
+    if(siebelDataProvider != null) {
+      siebelDataProvider.shutdown();
+    }
 
   }
 

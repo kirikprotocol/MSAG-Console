@@ -9,7 +9,7 @@ import java.util.Properties;
 
 import ru.novosoft.smsc.infosme.backend.siebel.ResultSet;
 import ru.novosoft.smsc.infosme.backend.siebel.SiebelMessage;
-import ru.novosoft.smsc.infosme.backend.siebel.SiebelDataProviderException;
+import ru.novosoft.smsc.infosme.backend.siebel.SiebelException;
 
 /**
  * author: alkhal
@@ -29,15 +29,15 @@ public class SiebelMessagesResultSet implements ResultSet{
     this.sql = sql;
   }
 
-  public boolean next() throws SiebelDataProviderException {
+  public boolean next() throws SiebelException {
     try {
       return sqlResult.next();
     } catch (SQLException e) {
-      throw new SiebelDataProviderException("Unable to move resultset cursor", e);
+      throw new SiebelException("Unable to move resultset cursor", e);
     }
   }
 
-  public Object get() throws SiebelDataProviderException {
+  public Object get() throws SiebelException {
     SiebelMessage siebelMessage = new SiebelMessage();
     try {
       siebelMessage.setClcId(sqlResult.getString(sql.getProperty("message.clc.id")));
@@ -53,7 +53,7 @@ public class SiebelMessagesResultSet implements ResultSet{
       siebelMessage.setSmscValue(sqlResult.getString(sql.getProperty("message.smsc.stat.val")));
       siebelMessage.setWaveId(sqlResult.getString(sql.getProperty("message.wave.id")));
     } catch (Throwable e) {
-      throw new SiebelDataProviderException("Unable to get SiebelMessage from the dataBase ", e);
+      throw new SiebelException("Unable to get SiebelMessage from the dataBase ", e);
     }
     return siebelMessage;
   }

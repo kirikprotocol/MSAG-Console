@@ -16,14 +16,21 @@ import ru.novosoft.smsc.infosme.backend.config.schedules.ScheduleManager;
 import ru.novosoft.smsc.infosme.backend.config.tasks.Task;
 import ru.novosoft.smsc.infosme.backend.config.tasks.TaskManager;
 import ru.novosoft.smsc.util.config.Config;
+import ru.novosoft.smsc.util.Functions;
 
 import java.util.*;
+import java.text.SimpleDateFormat;
 
 /**
  * User: artem
  * Date: 26.01.2009
  */
 public class InfoSmeConfig {
+
+
+  public final static String[] WEEK_DAYS = {"Mon","Tue","Wed","Thu","Fri","Sat","Sun"};
+  private final static String DEFAULT_ACTIVE_WEEK_DAYS = "Mon,Tue,Wed,Thu,Fri";
+  private static final SimpleDateFormat tf = new SimpleDateFormat("HH:mm:ss");
 
   // Common options
   private String address;
@@ -65,6 +72,39 @@ public class InfoSmeConfig {
   private final DriverManager driverManager;
 
 
+  private String siebelJDBCSource="";
+  private String siebelJDBCDriver="";
+  private String siebelJDBCUser="";
+  private String siebelJDBCPass="";
+
+  private int siebelTMPeriod = 20;
+  private boolean siebelTMRemove;
+
+  // General
+  private boolean siebelTReplaceMessage = false;
+  private String siebelTSvcType = "";
+
+  // Retry on fail
+  private boolean siebelTRetryOnFail = false;
+  private String siebelTRetryPolicy = "";
+
+
+  // Time arguments
+  private Date siebelTPeriodStart = null;
+  private Date siebelTPeriodEnd = null;
+  private Collection siebelTWeekDaysSet = new HashSet(WEEK_DAYS.length);
+
+  // Other
+  private int siebelTCacheSize = 0;
+  private int siebelTCacheSleep = 0;
+  private boolean siebelTTrMode = false;
+  private boolean siebelTKeepHistory = false;
+  // temporary switched to true
+  private int siebelTUncommitGeneration = 0;
+  private int siebelTUncommitProcess = 0;
+  private boolean siebelTTrackIntegrity;
+
+
   public InfoSmeConfig(String configDir, InfoSmeContext ctx) throws AdminException {
     try {
       Config cfg = ctx.loadCurrentConfig();
@@ -75,6 +115,7 @@ public class InfoSmeConfig {
       this.driverManager = new DriverManager(cfg);
       this.ctx = ctx;
       this.configDir = configDir;
+      Functions.addValuesToCollection(this.siebelTWeekDaysSet, DEFAULT_ACTIVE_WEEK_DAYS, ",", true);
       loadOptions(cfg);
     } catch (Throwable e) {
       e.printStackTrace();
@@ -101,7 +142,7 @@ public class InfoSmeConfig {
     }
   }
 
-  public ConfigChanges apply(String user, String owner, boolean options, boolean tasks, boolean schedules, boolean retries, boolean providers, boolean drivers) throws AdminException {
+  public synchronized ConfigChanges apply(String user, String owner, boolean options, boolean tasks, boolean schedules, boolean retries, boolean providers, boolean drivers) throws AdminException {
     try {
       Config cfg = ctx.loadCurrentConfig();
 
@@ -187,7 +228,7 @@ public class InfoSmeConfig {
     }
   }
 
-  public void reset(String user, String owner, boolean options, boolean tasks, boolean schedules, boolean retries, boolean providers, boolean drivers) throws AdminException {
+  public synchronized void reset(String user, String owner, boolean options, boolean tasks, boolean schedules, boolean retries, boolean providers, boolean drivers) throws AdminException {
     try {
       Config cfg = ctx.loadCurrentConfig();
 
@@ -234,13 +275,34 @@ public class InfoSmeConfig {
     taskManager.addTask(t);
   }
 
-  public void addAndApplyTask(Task t) throws AdminException {
+  public synchronized void addAndApplyTask(Task t) throws AdminException {
     try {
       Config cfg = ctx.loadCurrentConfig();
       boolean modified = taskManager.containsTaskWithId(t.getId());
       taskManager.addTask(t, cfg);
       cfg.save();
       ctx.getAppContext().getJournal().append(t.getOwner(), "", SubjectTypes.TYPE_infosme, t.getId(), modified ? Actions.ACTION_MODIFY : Actions.ACTION_ADD, "Type", "Task");
+    } catch (Throwable e) {
+      e.printStackTrace();
+      throw new AdminException(e.getMessage());
+    }
+  }
+
+  public synchronized void setSiebelTMStarted(boolean started) throws AdminException{
+    try {
+      Config cfg = ctx.loadCurrentConfig();
+      cfg.setBool("InfoSme.Siebel.TaskManager.started", started);
+      cfg.save();
+    } catch (Throwable e) {
+      e.printStackTrace();
+      throw new AdminException(e.getMessage());
+    }
+  }
+
+  public boolean isSiebelTMStarted() throws AdminException{
+    try {
+      Config cfg = ctx.loadCurrentConfig();
+      return cfg.getBool("InfoSme.Siebel.TaskManager.started");
     } catch (Throwable e) {
       e.printStackTrace();
       throw new AdminException(e.getMessage());
@@ -282,6 +344,10 @@ public class InfoSmeConfig {
 
   public boolean containsTaskWithName(String name) {
     return taskManager.containsTaskWithName(name);
+  }
+
+  public boolean containsTaskWithName(String name, String owner) {
+    return taskManager.containsTaskWithName(name, owner);
   }
 
   public boolean containsTaskWithId(String id) {
@@ -414,6 +480,38 @@ public class InfoSmeConfig {
       adminHost = cfg.getString("InfoSme.Admin.host");
       adminPort = cfg.getInt("InfoSme.Admin.port");
 
+      if(cfg.containsSection("InfoSme.Siebel")) {
+        String prefix = "InfoSme.Siebel.DataProvider";
+        siebelJDBCSource = cfg.getString(prefix + ".jdbc.source");
+        siebelJDBCDriver = cfg.getString(prefix + ".jdbc.driver");
+        siebelJDBCUser = cfg.getString(prefix + ".jdbc.user");
+        siebelJDBCPass = cfg.getString(prefix + ".jdbc.pass");
+
+        prefix = "InfoSme.Siebel.TaskManager";
+        siebelTMPeriod = cfg.getInt(prefix + ".period");
+        siebelTMRemove = cfg.getBool(prefix + ".remove");
+
+        prefix = "InfoSme.Siebel.Task";
+        siebelTRetryOnFail = cfg.getBool(prefix + ".retryOnFail");
+        siebelTReplaceMessage = cfg.getBool(prefix + ".replaceMessage");
+        siebelTSvcType = cfg.getString(prefix + ".svcType");
+        siebelTRetryPolicy = cfg.getString(prefix + ".retryPolicy");
+        String tmp = cfg.getString(prefix + ".activePeriodStart");
+        siebelTPeriodStart = (tmp == null || tmp.trim().length() == 0) ? null : tf.parse(tmp);
+        tmp = cfg.getString(prefix + ".activePeriodEnd");
+        siebelTPeriodEnd = (tmp == null || tmp.trim().length() == 0) ? null : tf.parse(tmp);
+
+        siebelTCacheSize = cfg.getInt(prefix + ".messagesCacheSize");
+        siebelTCacheSleep = cfg.getInt(prefix + ".messagesCacheSleep");
+        siebelTTrMode = cfg.getBool(prefix + ".transactionMode");
+        siebelTUncommitGeneration = cfg.getInt(prefix + ".uncommitedInGeneration");
+        siebelTUncommitProcess = cfg.getInt(prefix + ".uncommitedInProcess");
+        siebelTTrackIntegrity = cfg.getBool(prefix + ".trackIntegrity");
+        siebelTKeepHistory = cfg.getBool(prefix + ".keepHistory");
+        siebelTWeekDaysSet = new HashSet(WEEK_DAYS.length);
+        Functions.addValuesToCollection(this.siebelTWeekDaysSet, cfg.getString(prefix + ".activeWeekDays"), ",", true);
+      }
+
       if(cfg.containsSection("SMSCConnectors")) {
         String defname = cfg.getString("SMSCConnectors.default");
         Set childs = cfg.getSectionChildShortSectionNames("SMSCConnectors");
@@ -459,6 +557,35 @@ public class InfoSmeConfig {
 
   public void applyOptions(Config cfg) throws AdminException {
     try {
+      //Siebel
+      String prefix = "InfoSme.Siebel.DataProvider";
+      cfg.setString(prefix + ".jdbc.source", siebelJDBCSource);
+      cfg.setString(prefix + ".jdbc.driver", siebelJDBCDriver);
+      cfg.setString(prefix + ".jdbc.user", siebelJDBCUser);
+      cfg.setString(prefix + ".jdbc.pass", siebelJDBCPass);
+
+      prefix = "InfoSme.Siebel.TaskManager";
+      cfg.setInt(prefix + ".period", siebelTMPeriod);
+      cfg.setBool(prefix + ".remove", siebelTMRemove);
+
+      prefix = "InfoSme.Siebel.Task";
+      cfg.setBool(prefix + ".retryOnFail", siebelTRetryOnFail);
+      cfg.setBool(prefix + ".replaceMessage", siebelTReplaceMessage);
+      cfg.setString(prefix + ".svcType", siebelTSvcType);
+      cfg.setString(prefix + ".retryPolicy", siebelTRetryPolicy);
+      cfg.setString(prefix + ".activePeriodStart", siebelTPeriodStart == null ? "" : tf.format(siebelTPeriodStart));
+      cfg.setString(prefix + ".activePeriodEnd", siebelTPeriodEnd == null ? "" : tf.format(siebelTPeriodEnd));
+
+      cfg.setInt(prefix + ".messagesCacheSize", siebelTCacheSize);
+      cfg.setInt(prefix + ".messagesCacheSleep", siebelTCacheSleep);
+      cfg.setBool(prefix + ".transactionMode", siebelTTrMode);
+      cfg.setInt(prefix + ".uncommitedInGeneration", siebelTUncommitGeneration);
+      cfg.setInt(prefix + ".uncommitedInProcess", siebelTUncommitProcess);
+      cfg.setBool(prefix + ".trackIntegrity", siebelTTrackIntegrity);
+      cfg.setBool(prefix + ".keepHistory", siebelTKeepHistory);
+      cfg.setString(prefix + ".activeWeekDays", Functions.collectionToString(siebelTWeekDaysSet, ","));
+
+      //
       cfg.setString("InfoSme.Address", address);
       cfg.setString("InfoSme.SvcType", svcType);
       cfg.setInt("InfoSme.ProtocolId", protocolId);
@@ -770,5 +897,186 @@ public class InfoSmeConfig {
     public void setPassword(String password) {
       this.password = password;
     }
+  }
+
+  public String getSiebelJDBCSource() {
+    return siebelJDBCSource;
+  }
+
+  public void setSiebelJDBCSource(String siebelJDBCSource) {
+    this.siebelJDBCSource = siebelJDBCSource;
+    setOptionsModified(true);
+  }
+
+  public String getSiebelJDBCDriver() {
+    return siebelJDBCDriver;
+  }
+
+  public void setSiebelJDBCDriver(String siebelJDBCDriver) {
+    this.siebelJDBCDriver = siebelJDBCDriver;
+    setOptionsModified(true);
+  }
+
+  public String getSiebelJDBCUser() {
+    return siebelJDBCUser;
+  }
+
+  public void setSiebelJDBCUser(String siebelJDBCUser) {
+    this.siebelJDBCUser = siebelJDBCUser;
+    setOptionsModified(true);
+  }
+
+  public String getSiebelJDBCPass() {
+    return siebelJDBCPass;
+  }
+
+  public void setSiebelJDBCPass(String siebelJDBCPass) {
+    this.siebelJDBCPass = siebelJDBCPass;
+    setOptionsModified(true);
+  }
+
+  public int getSiebelTMPeriod() {
+    return siebelTMPeriod;
+  }
+
+  public void setSiebelTMPeriod(int siebelTMPeriod) {
+    this.siebelTMPeriod = siebelTMPeriod;
+    setOptionsModified(true);
+  }
+
+  public boolean isSiebelTMRemove() {
+    return siebelTMRemove;
+  }
+
+  public void setSiebelTMRemove(boolean siebelTMRemove) {
+    this.siebelTMRemove = siebelTMRemove;
+    setOptionsModified(true);
+  }
+
+
+  public boolean isSiebelTReplaceMessage() {
+    return siebelTReplaceMessage;
+  }
+
+  public void setSiebelTReplaceMessage(boolean siebelTReplaceMessage) {
+    this.siebelTReplaceMessage = siebelTReplaceMessage;
+    setOptionsModified(true);
+  }
+
+  public String getSiebelTSvcType() {
+    return siebelTSvcType;
+  }
+
+  public void setSiebelTSvcType(String siebelTSvcType) {
+    this.siebelTSvcType = siebelTSvcType;
+    setOptionsModified(true);
+  }
+
+  public boolean isSiebelTRetryOnFail() {
+    return siebelTRetryOnFail;
+  }
+
+  public void setSiebelTRetryOnFail(boolean siebelTRetryOnFail) {
+    this.siebelTRetryOnFail = siebelTRetryOnFail;
+    setOptionsModified(true);
+  }
+
+  public String getSiebelTRetryPolicy() {
+    return siebelTRetryPolicy;
+  }
+
+  public void setSiebelTRetryPolicy(String siebelTRetryPolicy) {
+    this.siebelTRetryPolicy = siebelTRetryPolicy;
+    setOptionsModified(true);
+  }
+
+  public Date getSiebelTPeriodStart() {
+    return siebelTPeriodStart;
+  }
+
+  public void setSiebelTPeriodStart(Date siebelTPeriodStart) {
+    this.siebelTPeriodStart = siebelTPeriodStart;
+    setOptionsModified(true);
+  }
+
+  public Date getSiebelTPeriodEnd() {
+    return siebelTPeriodEnd;
+  }
+
+  public void setSiebelTPeriodEnd(Date siebelTPeriodEnd) {
+    this.siebelTPeriodEnd = siebelTPeriodEnd;
+    setOptionsModified(true);
+  }
+
+  public Collection getSiebelTWeekDaysSet() {
+    return siebelTWeekDaysSet;
+  }
+
+  public void setSiebelTWeekDaysSet(Collection siebelTWeekDaysSet) {
+    this.siebelTWeekDaysSet = siebelTWeekDaysSet;
+    setOptionsModified(true);
+  }
+
+  public int getSiebelTCacheSize() {
+    return siebelTCacheSize;
+  }
+
+  public void setSiebelTCacheSize(int siebelTCacheSize) {
+    this.siebelTCacheSize = siebelTCacheSize;
+    setOptionsModified(true);
+  }
+
+  public int getSiebelTCacheSleep() {
+    return siebelTCacheSleep;
+  }
+
+  public void setSiebelTCacheSleep(int siebelTCacheSleep) {
+    this.siebelTCacheSleep = siebelTCacheSleep;
+    setOptionsModified(true);
+  }
+
+  public boolean isSiebelTTrMode() {
+    return siebelTTrMode;
+  }
+
+  public void setSiebelTTrMode(boolean siebelTTrMode) {
+    this.siebelTTrMode = siebelTTrMode;
+    setOptionsModified(true);
+  }
+
+  public boolean isSiebelTKeepHistory() {
+    return siebelTKeepHistory;
+  }
+
+  public void setSiebelTKeepHistory(boolean siebelTKeepHistory) {
+    this.siebelTKeepHistory = siebelTKeepHistory;
+    setOptionsModified(true);
+  }
+
+  public int getSiebelTUncommitGeneration() {
+    return siebelTUncommitGeneration;
+  }
+
+  public void setSiebelTUncommitGeneration(int siebelTUncommitGeneration) {
+    this.siebelTUncommitGeneration = siebelTUncommitGeneration;
+    setOptionsModified(true);
+  }
+
+  public int getSiebelTUncommitProcess() {
+    return siebelTUncommitProcess;
+  }
+
+  public void setSiebelTUncommitProcess(int siebelTUncommitProcess) {
+    this.siebelTUncommitProcess = siebelTUncommitProcess;
+    setOptionsModified(true);
+  }
+
+  public boolean isSiebelTTrackIntegrity() {
+    return siebelTTrackIntegrity;
+  }
+
+  public void setSiebelTTrackIntegrity(boolean siebelTTrackIntegrity) {
+    this.siebelTTrackIntegrity = siebelTTrackIntegrity;
+    setOptionsModified(true);
   }
 }
