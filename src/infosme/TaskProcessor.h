@@ -15,7 +15,8 @@
 
 #include "core/buffers/Array.hpp"
 #include "core/buffers/Hash.hpp"
-#include "core/buffers/IntHash.hpp"
+#include "core/buffers/IntHash.hpp" //TODO comment include to see other IntHash using
+#include "core/buffers/XHash.hpp"
 #include "core/threads/Thread.hpp"
 #include "core/threads/ThreadPool.hpp"
 #include "core/synchronization/Mutex.hpp"
@@ -30,19 +31,21 @@
 
 #include "InfoSme_Tasks_Stat_SearchCriterion.hpp"
 #include "TrafficControl.hpp"
+#include "TaskTypes.hpp"
 #include "core/buffers/JStore.hpp"
 
 struct TaskIdMsgId{
   uint64_t msgId;
   uint32_t taskId;
+  TaskIdMsgId():msgId(0), taskId(0) {};
 };
 
 inline size_t WriteRecord(File& f,uint64_t key,const TaskIdMsgId& val)
 {
-  f.WriteNetInt64(key);
+  f.WriteNetInt64(key); 
   f.WriteNetInt64(val.msgId);
   f.WriteNetInt32(val.taskId);
-  return 8+8+4;
+  return 8+8+4; 
 }
 
 inline size_t ReadRecord(File& f,uint64_t& key,TaskIdMsgId& val)
@@ -63,6 +66,32 @@ inline size_t ReadKey(File& f,uint64_t& key)
 {
   key=f.ReadNetInt64();
   return 8;
+}
+
+inline size_t WriteKey(File& f, const smsc::infosme::ReceiptId& key)
+{
+  return key.Write(f);
+}
+
+inline size_t ReadKey(File& f, smsc::infosme::ReceiptId& key)
+{
+  return key.Read(f);
+}
+
+inline size_t WriteRecord(File& f, const smsc::infosme::ReceiptId& key, const TaskIdMsgId& val)
+{
+  uint8_t keySize = WriteKey(f, key);
+  f.WriteNetInt64(val.msgId);
+  f.WriteNetInt32(val.taskId);
+  return keySize+8+4; 
+}
+
+inline size_t ReadRecord(File& f, smsc::infosme::ReceiptId& key, TaskIdMsgId& val)
+{
+  uint8_t keySize = ReadKey(f, key);
+  val.msgId=f.ReadNetInt64();
+  val.taskId=f.ReadNetInt32();
+  return keySize+8+4;
 }
 
 namespace smsc { namespace infosme
@@ -169,9 +198,9 @@ namespace smsc { namespace infosme
 
     struct MessageSender
     {
-        virtual int  getSequenceNumber() = 0;
+        virtual ConnectorSeqNum getSequenceNumber(const std::string& regionId) = 0;
         virtual bool send(std::string abonent, std::string message,
-                          TaskInfo info, int seqNum) = 0;
+                          TaskInfo info, ConnectorSeqNum seqNum) = 0;
         virtual uint32_t sendSms(const std::string& src,const std::string& dst,const std::string& txt,bool flash)=0;
         virtual ~MessageSender() {};
 
@@ -263,28 +292,21 @@ namespace smsc { namespace infosme
 
     struct ResponceTimer
     {
-        time_t      timer;
-        int         seqNum;
+        time_t          timer;
+        ConnectorSeqNum seqNum;
 
-        ResponceTimer(time_t timer=0, int seqNum=0): timer(timer), seqNum(seqNum) {};
+        ResponceTimer(time_t timer = 0):timer(timer) {};
+        ResponceTimer(time_t timer, const ConnectorSeqNum& seqNum): timer(timer), seqNum(seqNum) {};
         ResponceTimer(const ResponceTimer& rt) : timer(rt.timer), seqNum(rt.seqNum) {};
-        ResponceTimer& operator=(const ResponceTimer& rt) {
-            timer = rt.timer; seqNum = rt.seqNum;
-            return *this;
-        }
-
     };
+
     struct ReceiptTimer
     {
         time_t      timer;
-        std::string smscId;
+        ReceiptId   receiptId;
 
-        ReceiptTimer(time_t timer=0, std::string smscId="") : timer(timer), smscId(smscId) {};
-        ReceiptTimer(const ReceiptTimer& rt) : timer(rt.timer), smscId(rt.smscId) {};
-        ReceiptTimer& operator=(const ReceiptTimer& rt) {
-            timer = rt.timer; smscId = rt.smscId;
-            return *this;
-        }
+        ReceiptTimer(time_t timer=0) : timer(timer) {};
+        ReceiptTimer(time_t timer, const ReceiptId& rcptId) : timer(timer), receiptId(rcptId) {};
     };
 
     struct Int64HashFunc{
@@ -316,7 +338,7 @@ namespace smsc { namespace infosme
         Mutex       startLock;
         int         switchTimeout;
 
-        JStore<uint64_t,TaskIdMsgId,Int64HashFunc> jstore;
+        JStore<ReceiptId, TaskIdMsgId, ReceiptId> jstore;
 
         std::string storeLocation;
         
@@ -324,11 +346,11 @@ namespace smsc { namespace infosme
         MessageSender*  messageSender;
         Mutex           messageSenderLock;
 
-        IntHash<TaskMsgId> taskIdsBySeqNum;
+        XHash<ConnectorSeqNum, TaskMsgId, ConnectorSeqNum> taskIdsBySeqNum;
       //Mutex              taskIdsBySeqNumLock;
         EventMonitor       taskIdsBySeqNumMonitor;
 
-        Hash<ReceiptData>  receipts;
+        XHash<ReceiptId, ReceiptData, ReceiptId>  receipts; 
         Mutex              receiptsLock;
 
         Mutex                   responceWaitQueueLock;

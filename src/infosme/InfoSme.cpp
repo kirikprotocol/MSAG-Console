@@ -8,6 +8,7 @@
 
 #include <core/threads/ThreadPool.hpp>
 #include <core/buffers/Array.hpp>
+#include <core/buffers/Hash.hpp>
 
 #include <logger/Logger.h>
 #include <util/config/Manager.h>
@@ -41,6 +42,7 @@
 #include <util/config/region/Region.hpp>
 #include <util/config/region/RegionFinder.hpp>
 #include "infosme/TaskLock.hpp"
+#include "SmscConnector.h"
 
 #include "version.inc"
 
@@ -59,8 +61,8 @@ using namespace smsc::infosme;
 using smsc::util::TimeSlotCounter;
 using smsc::core::synchronization::EventMonitor;
 
-const int   MAX_ALLOWED_MESSAGE_LENGTH = 254;
-const int   MAX_ALLOWED_PAYLOAD_LENGTH = 65535;
+//const int   MAX_ALLOWED_MESSAGE_LENGTH = 254;
+//const int   MAX_ALLOWED_PAYLOAD_LENGTH = 65535;
 
 static smsc::logger::Logger *logger = 0;
 
@@ -118,7 +120,8 @@ extern bool isMSISDNAddress(const char* string)
     try { Address converted(string); } catch (...) { return false;}
     return true;
 }
-extern bool convertMSISDNStringToAddress(const char* string, Address& address)
+/*
+extern bool smsc::infosme::convertMSISDNStringToAddress(const char* string, Address& address)
 {
     try {
         Address converted(string);
@@ -127,11 +130,12 @@ extern bool convertMSISDNStringToAddress(const char* string, Address& address)
         return false;
     }
     return true;
-};
+};*/
 
 //static int  unrespondedMessagesSleep = 10;
 //static int  unrespondedMessagesMax   = 3;
 static int  maxMessagesPerSecond     = 50;
+
 
 #include "TrafficControl.hpp"
 
@@ -184,350 +188,146 @@ TimeSlotCounter<int> TrafficControl::incoming(1, 1);
 TimeSlotCounter<int> TrafficControl::outgoing(1, 1);
 bool                 TrafficControl::stopped = false;
 
-class InfoSmeConfig : public SmeConfig
-{
-private:
-
-    char *strHost, *strSid, *strPassword, *strSysType, *strOrigAddr;
-
-public:
-
-    InfoSmeConfig(ConfigView* config)
-        throw(ConfigException)
-            : SmeConfig(), strHost(0), strSid(0), strPassword(0),
-                strSysType(0), strOrigAddr(0)
-    {
-        // Mandatory fields
-        strHost = config->getString("host", "SMSC host wasn't defined !");
-        host = strHost;
-        strSid = config->getString("sid", "InfoSme id wasn't defined !");
-        sid = strSid;
-
-        port = config->getInt("port", "SMSC port wasn't defined !");
-        timeOut = config->getInt("timeout", "Connect timeout wasn't defined !");
-
-        // Optional fields
-        try
-        {
-            strPassword = config->getString("password",
-                                            "InfoSme password wasn't defined !");
-            password = strPassword;
-        }
-        catch (ConfigException& exc) { password = ""; strPassword = 0; }
-        try
-        {
-            strSysType = config->getString("systemType",
-                                           "InfoSme system type wasn't defined !");
-            systemType = strSysType;
-        }
-        catch (ConfigException& exc) { systemType = ""; strSysType = 0; }
-        try
-        {
-            strOrigAddr = config->getString("origAddress",
-                                            "InfoSme originating address wasn't defined !");
-            origAddr = strOrigAddr;
-        }
-        catch (ConfigException& exc) { origAddr = ""; strOrigAddr = 0; }
-    };
-
-    virtual ~InfoSmeConfig()
-    {
-        if (strHost) delete strHost;
-        if (strSid) delete strSid;
-        if (strPassword) delete strPassword;
-        if (strSysType) delete strSysType;
-        if (strOrigAddr) delete strOrigAddr;
-    };
-};
-
 class InfoSmeMessageSender: public MessageSender
 {
 private:
 
-    TaskProcessor&  processor;
-    SmppSession*    session;
-    Mutex           sendLock;
+    TaskProcessor& processor_;
+    SmscConnector defaultConnector_;
+    string defaultSmscId_;
+    Hash<SmscConnector*> connectors_;
+    Hash<string> regions_;
+
+    typedef Hash<SmscConnector*>::Iterator ConnectorIterator;
 
 public:
 
-    InfoSmeMessageSender(TaskProcessor& processor, SmppSession* session)
-        : MessageSender(), processor(processor), session(session) {};
+    InfoSmeMessageSender(TaskProcessor& processor, const InfoSmeConfig& defaultConfig, const string& defaultSmscId) :
+       processor_(processor), defaultConnector_(processor, defaultConfig, defaultSmscId), defaultSmscId_(defaultSmscId) {
+
+    };
     virtual ~InfoSmeMessageSender() {
-        MutexGuard guard(sendLock);
-        session = 0;
+      ConnectorIterator it = connectors_.getIterator();
+      SmscConnector* connector;
+      char *key = 0;
+      while(it.Next(key, connector)) {
+        if (connector) {
+         delete connector;
+        }
+      }
     };
 
-    virtual int getSequenceNumber()
-    {
-        MutexGuard guard(sendLock);
-        return (session) ? session->getNextSeq():0;
+    void start() {
+      defaultConnector_.Start();
+
+      ConnectorIterator it = connectors_.getIterator();
+      SmscConnector* connector;
+      char *key = 0;
+      while(it.Next(key, connector)) {
+        if (connector) {
+          connector->Start();
+        }
+      }
     }
-    virtual bool send(std::string abonent, std::string message, TaskInfo info, int seqNum)
-    {
-        MutexGuard guard(sendLock);
 
-        if (!session) {
-            smsc_log_error(logger, "Smpp session is undefined for MessageSender.");
-            return false;
+    void stop() {
+      defaultConnector_.stop();
+      ConnectorIterator it = connectors_.getIterator();
+      SmscConnector* connector;
+      char *key = 0;
+      while(it.Next(key, connector)) {
+        if (connector) {
+          connector->stop();
         }
-        SmppTransmitter* asyncTransmitter = session->getAsyncTransmitter();
-        if (!asyncTransmitter) {
-            smsc_log_error(logger, "Smpp transmitter is undefined for MessageSender.");
-            return false;
-        }
-
-        Address oa, da;
-        const char* oaStr = info.address.c_str();
-        if (!oaStr || !oaStr[0]) oaStr = processor.getAddress();
-        if (!oaStr || !convertMSISDNStringToAddress(oaStr, oa)) {
-            smsc_log_error(logger, "Invalid originating address '%s'", oaStr ? oaStr:"-");
-            return false;
-        }
-        const char* daStr = abonent.c_str();
-        if (!daStr || !convertMSISDNStringToAddress(daStr, da)) {
-            smsc_log_error(logger, "Invalid destination address '%s'", daStr ? daStr:"-");
-            return false;
-        }
-
-        SMS sms;
-        sms.setOriginatingAddress(oa);
-        sms.setDestinationAddress(da);
-        sms.setArchivationRequested(false);
-        sms.setDeliveryReport(1);
-        sms.setValidTime( (info.validityDate <= 0 || info.validityPeriod > 0) ?
-                           time(NULL)+info.validityPeriod : info.validityDate );
-
-        sms.setIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG,
-                           (info.replaceIfPresent) ? 1:0);
-        sms.setEServiceType( (info.replaceIfPresent && info.svcType.length()>0) ?
-                              info.svcType.c_str():processor.getSvcType() );
-
-        sms.setIntProperty(Tag::SMPP_PROTOCOL_ID, processor.getProtocolId());
-        sms.setIntProperty(Tag::SMPP_ESM_CLASS, (info.transactionMode) ? 2:0);
-        sms.setIntProperty(Tag::SMPP_PRIORITY, 0);
-        sms.setIntProperty(Tag::SMPP_REGISTRED_DELIVERY, 1);
-
-        if(info.flash)
-        {
-          sms.setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,1);
-        }
-
-        const char* out = message.c_str();
-        size_t outLen = message.length();
-        char* msgBuf = 0;
-        if(hasHighBit(out,outLen)) {
-            size_t msgLen = outLen*2;
-            msgBuf = new char[msgLen];
-            ConvertMultibyteToUCS2(out, outLen, (short*)msgBuf, msgLen,
-                                   CONV_ENCODING_CP1251);
-            sms.setIntProperty(Tag::SMPP_DATA_CODING, DataCoding::UCS2);
-            out = msgBuf;
-            outLen = msgLen;
-        } else {
-            sms.setIntProperty(Tag::SMPP_DATA_CODING, DataCoding::LATIN1);
-        }
-
-        try
-        {
-            if (outLen <= MAX_ALLOWED_MESSAGE_LENGTH) {
-                sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE, out, (unsigned)outLen);
-                sms.setIntProperty(Tag::SMPP_SM_LENGTH, (unsigned)outLen);
-            } else {
-                sms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD, out,
-                                   (unsigned)((outLen <= MAX_ALLOWED_PAYLOAD_LENGTH) ?
-                                    outLen :  MAX_ALLOWED_PAYLOAD_LENGTH));
-            }
-        }
-        catch (...) {
-            smsc_log_error(logger, "Something is wrong with message body. Set/Get property failed");
-            if (msgBuf) delete msgBuf; msgBuf = 0;
-            return false;
-        }
-        if (msgBuf) delete msgBuf;
-
-        PduSubmitSm sm;
-        sm.get_header().set_sequenceNumber(seqNum);
-        sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
-        fillSmppPduFromSms(&sm, &sms);
-        asyncTransmitter->sendPdu(&(sm.get_header()));
-
-        TrafficControl::incOutgoing();
-        return true;
+      }
     }
+
+    void addConnector(const InfoSmeConfig& cfg, const string& smscId) {
+      if (smscId == defaultSmscId_) {
+        //throw ConfigException("SMSC Connector with id='%s' is default and already exists.", smscId.c_str());
+        smsc_log_debug(logger, "SMSC Connector with id='%s' is default and already exists.", smscId.c_str());
+        return;
+      }
+      if (connectors_.Exists(smscId.c_str())) {
+        throw ConfigException("SMSC Connector id='%s' is not unique.", smscId.c_str());
+      }
+      connectors_.Insert(smscId.c_str(), new SmscConnector(processor_, cfg, smscId));
+    }
+
+    void addConnectors(Manager& manager, ConfigView& config, const std::string& sectinoName) {
+
+      std::auto_ptr<CStrSet> connectors(config.getShortSectionNames());
+
+      for (CStrSet::iterator i = connectors.get()->begin(); i != connectors.get()->end(); ++i) 
+      {
+          std::string connectorSectionName = sectinoName + "." + (*i); 
+          ConfigView connectorCfgView(manager, connectorSectionName.c_str());
+  
+          InfoSmeConfig connectorCfg(ConfigView(manager, connectorSectionName.c_str()));
+          addConnector(connectorCfg, *i);
+      }
+    }
+
+
+    void addRegion(const string& regionId, const string& smscId) {
+      if (smscId.empty() || smscId == defaultSmscId_) {
+        smsc_log_info(logger, "SMSC id '%s' for region '%s' set. Default SMSC Connector '%s' will be used.", smscId.c_str(), regionId.c_str(), defaultSmscId_.c_str());
+        regions_.Insert(regionId.c_str(), defaultSmscId_);
+        return;
+      }
+      if (regions_.Exists(regionId.c_str())) {
+        throw ConfigException("Region already exists: '%s'", smscId.c_str());
+      }
+      if (!connectors_.Exists(smscId.c_str())) {
+        smsc_log_info(logger, "SMSC Connector '%s' for region '%s' unknown. Default SMSC Connector '%s' will be used.",
+                      smscId.c_str(), regionId.c_str(), defaultSmscId_.c_str());
+        regions_.Insert(regionId.c_str(), defaultSmscId_);
+        return;
+      }
+      smsc_log_info(logger, "SMSC Connector '%s' for region '%s' will be used.", smscId.c_str(), regionId.c_str());
+      regions_.Insert(regionId.c_str(), smscId);
+    }
+
+    virtual ConnectorSeqNum getSequenceNumber(const string& regionId)
+    {
+      const string* smscId = regions_.GetPtr(regionId.c_str());
+      if (!smscId) {
+        smsc_log_debug(logger, "SMSC id for region '%s' not set. Default SMSC '%s' will be used.", regionId.c_str(), defaultSmscId_.c_str());
+        return ConnectorSeqNum(defaultConnector_.getSeqNum(), defaultSmscId_);
+      }
+
+      SmscConnector** connector = connectors_.GetPtr(smscId->c_str());
+      if (connector) {
+        smsc_log_debug(logger, "SMSC id='%s' will be used for region '%s'.",smscId->c_str(), regionId.c_str());
+        return ConnectorSeqNum((*connector)->getSeqNum(), smscId->c_str());
+      }
+      smsc_log_warn(logger, "SMSC connector id='%s' for region '%s' not found. Default SMSC '%s' will be used.",
+                     smscId->c_str(), regionId.c_str(), defaultSmscId_.c_str());
+      return ConnectorSeqNum(defaultConnector_.getSeqNum(), defaultSmscId_);
+    }
+
+    virtual bool send(std::string abonent, std::string message, TaskInfo info, ConnectorSeqNum seqNum)
+    {
+        if (seqNum.smscId == defaultSmscId_) {
+          smsc_log_debug(logger, "message for abonent='%s' will be send to default connector",abonent.c_str());
+          return defaultConnector_.send(abonent, message, info, seqNum.seqNum);
+        }
+
+        SmscConnector** connector = connectors_.GetPtr(seqNum.smscId.c_str());
+        if (*connector) {
+          smsc_log_debug(logger, "message for abonent='%s' will be send to '%s' connector", abonent.c_str(), seqNum.smscId.c_str());
+          return (*connector)->send(abonent, message, info, seqNum.seqNum);
+        }
+
+        smsc_log_warn(logger, "Unknown SMSC id='%s' for abonent '%s'. Default SMSC connector '%s' will be used.",
+                               seqNum.smscId.c_str(), abonent.c_str(), defaultSmscId_.c_str());
+        return defaultConnector_.send(abonent, message, info, seqNum.seqNum);
+    }
+    
     uint32_t sendSms(const std::string& org,const std::string& dst,const std::string& txt,bool flash)
     {
-      PduSubmitSm sbm;
-      PduPartSm& msg=sbm.get_message();
-      msg.set_source(smsc::smpp::Address2PduAddress(org.c_str()));
-      msg.set_dest(smsc::smpp::Address2PduAddress(dst.c_str()));
-      msg.set_esmClass(0x02);//forward mode
-      if(flash)
-      {
-        sbm.get_optional().set_destAddrSubunit(1);
-      }
-      
-      if(hasHighBit(txt.c_str(),txt.length()))
-      {
-        msg.set_dataCoding(DataCoding::UCS2);
-        TmpBuf<short,1024> tmp(txt.length()+1);
-        int len=ConvertMultibyteToUCS2(txt.c_str(), txt.length(), tmp.get(), txt.length()*2+2,
-                                       CONV_ENCODING_CP1251);
-        for(int i=0;i<len;i++)
-        {
-          tmp.get()[i]=htons(tmp.get()[i]);
-        }        
-        sbm.get_optional().set_messagePayload((char*)tmp.get(),len);
-      }else
-      {
-        msg.set_dataCoding(DataCoding::LATIN1);
-        sbm.get_optional().set_messagePayload(txt.c_str(),int(txt.length()));
-      }
-      sbm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
-      sbm.get_header().set_sequenceNumber(getSequenceNumber());
-      PduSubmitSmResp* resp=session->getSyncTransmitter()->submit(sbm);
-      if(!resp)
-      {
-        return SmppStatusSet::ESME_RUNKNOWNERR;
-      }
-      uint32_t rv=resp->get_header().get_commandStatus();
-      disposePdu((SmppHeader*)resp);
-      return rv;
-    }
-};
-
-class InfoSmePduListener: public SmppPduEventListener
-{
-protected:
-
-    TaskProcessor&          processor;
-
-    SmppTransmitter*    syncTransmitter;
-    SmppTransmitter*    asyncTransmitter;
-
-public:
-
-    InfoSmePduListener(TaskProcessor& proc) : SmppPduEventListener(),
-        processor(proc), syncTransmitter(0), asyncTransmitter(0) {};
-    virtual ~InfoSmePduListener() {}; // ???
-
-    void setSyncTransmitter(SmppTransmitter *transmitter) {
-        syncTransmitter = transmitter;
-    }
-    void setAsyncTransmitter(SmppTransmitter *transmitter) {
-        asyncTransmitter = transmitter;
-    }
-
-    void processReceipt (SmppHeader *pdu)
-    {
-        if (!pdu || !asyncTransmitter) return;
-        bool bNeedResponce = true;
-
-        SMS sms;
-        fetchSmsFromSmppPdu((PduXSm*)pdu, &sms);
-        bool isReceipt = (sms.hasIntProperty(Tag::SMPP_ESM_CLASS)) ?
-            ((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3C) == 0x4) : false;
-
-        if (isReceipt && ((PduXSm*)pdu)->get_optional().has_receiptedMessageId())
-        {
-            const char* msgid = ((PduXSm*)pdu)->get_optional().get_receiptedMessageId();
-            if (msgid && msgid[0] != '\0')
-            {
-                bool delivered = false;
-                bool retry = false;
-
-                if (sms.hasIntProperty(Tag::SMPP_MSG_STATE))
-                {
-                    int msgState = sms.getIntProperty(Tag::SMPP_MSG_STATE);
-                    switch (msgState)
-                    {
-                    case SmppMessageState::DELIVERED:
-                        delivered = true;
-                        break;
-                    case SmppMessageState::EXPIRED:
-                    case SmppMessageState::DELETED:
-                        retry = true;
-                        break;
-                    case SmppMessageState::ENROUTE:
-                    case SmppMessageState::UNKNOWN:
-                    case SmppMessageState::ACCEPTED:
-                    case SmppMessageState::REJECTED:
-                    case SmppMessageState::UNDELIVERABLE:
-                        break;
-                    default:
-                        smsc_log_warn(logger, "Invalid state=%d received in reciept !", msgState);
-                        break;
-                    }
-                }
-                ResponseData rd(delivered?0:Status::UNKNOWNERR,0,msgid);
-                rd.retry=retry;
-
-                bNeedResponce = processor.invokeProcessReceipt(rd);
-            }
-        }
-
-        if (bNeedResponce)
-        {
-            PduDeliverySmResp smResp;
-            smResp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
-            smResp.set_messageId("");
-            smResp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
-            asyncTransmitter->sendDeliverySmResp(smResp);
-        }
-    }
-
-    void processResponce(SmppHeader *pdu)
-    {
-        if (!pdu) return;
-
-        int seqNum = pdu->get_sequenceNumber();
-        int status = pdu->get_commandStatus();
-
-        bool accepted  = (status == Status::OK);
-
-        const char* msgid = ((PduXSmResp*)pdu)->get_messageId();
-        std::string msgId = "";
-        if (!msgid || msgid[0] == '\0') accepted = false;
-        else msgId = msgid;
-
-        if (!accepted)
-            smsc_log_info(logger, "SMS #%s seqNum=%d wasn't accepted, errcode=%d",
-                          msgId.c_str(), seqNum, status);
-
-        processor.invokeProcessResponce(ResponseData(status,seqNum,msgId));
-    }
-
-    void handleEvent(SmppHeader *pdu)
-    {
-        if (bInfoSmeIsConnecting) {
-            infoSmeReady.Wait(infoSmeReadyTimeout);
-            if (bInfoSmeIsConnecting) {
-                disposePdu(pdu);
-                return;
-            }
-        }
-
-        switch (pdu->get_commandId())
-        {
-        case SmppCommandSet::DELIVERY_SM:
-            processReceipt(pdu);
-            break;
-        case SmppCommandSet::SUBMIT_SM_RESP:
-            processResponce(pdu);
-            break;
-        case SmppCommandSet::ENQUIRE_LINK: case SmppCommandSet::ENQUIRE_LINK_RESP:
-            break;
-        default:
-            smsc_log_debug(logger, "Received unsupported Pdu !");
-            break;
-        }
-
-        disposePdu(pdu);
-    }
-
-    void handleError(int errorCode)
-    {
-        smsc_log_error(logger, "Transport error handled! Code is: %d", errorCode);
-        setNeedReconnect();
+      smsc_log_info(logger, "sendSms do default region!");
+      return defaultConnector_.sendSms(org,dst,txt,flash);
     }
 };
 
@@ -549,7 +349,7 @@ extern "C" static void atExitHandler(void)
 }
 
 static void
-doRegionsInitilization(const char* regions_xml_file, const char* route_xml_file)
+doRegionsInitilization(const char* regions_xml_file, const char* route_xml_file, InfoSmeMessageSender& messageSender)
 {
   smsc::logger::Logger *log = smsc::logger::Logger::getInstance("smsc.infosme.InfoSme");
 
@@ -572,6 +372,7 @@ doRegionsInitilization(const char* regions_xml_file, const char* route_xml_file)
 
   while (regsIter.fetchNext(region) == smsc::util::config::region::RegionsConfig::success) {
     region->expandSubjectRefs(routeConfig);
+    messageSender.addRegion(region->getId(), region->getInfosmeSmscId());
     smsc::util::config::region::Region::MasksIterator maskIter = region->getMasksIterator();
     std::string addressMask;
     while(maskIter.fetchNext(addressMask)) {
@@ -648,7 +449,18 @@ int main(int argc, char** argv)
           TaskLock::Init(fn.c_str());
         }
 
-        doRegionsInitilization(regions_xml_file, route_xml_file);
+        TaskProcessor processor(&tpConfig);
+
+        std::string connectorsSectionName = "InfoSme.SMSCConnectors";
+        ConfigView connectorsConfigView(manager, connectorsSectionName.c_str());
+        std::string defsmscId = connectorsConfigView.getString("default", "default SMSC Connector id not set");
+        std::string defsmscIdSectionName = connectorsSectionName + "." + defsmscId;
+        ConfigView defaultConfigView(manager, defsmscIdSectionName.c_str());
+        InfoSmeConfig defaultCfg(defaultConfigView);
+        InfoSmeMessageSender messageSender(processor, defaultCfg, defsmscId);
+        messageSender.addConnectors(manager, connectorsConfigView, connectorsSectionName);
+
+        doRegionsInitilization(regions_xml_file, route_xml_file, messageSender);
 
         sigfillset(&blocked_signals);
         sigdelset(&blocked_signals, SIGKILL);
@@ -662,41 +474,39 @@ int main(int argc, char** argv)
         adminListener->init(adminConfig.getString("host"), adminConfig.getInt("port"));
         bAdminListenerInited = true;
 
-        TaskProcessor processor(&tpConfig);
 
         InfoSmeComponent admin(processor);
         ComponentManager::registerComponent(&admin);
         adminListener->Start();
 
-        ConfigView smscConfig(manager, "InfoSme.SMSC");
-        InfoSmeConfig cfg(&smscConfig);
-
         bool haveSysError=false;
+
+        messageSender.start();
+
         while (!isNeedStop() && !haveSysError)
         {
           // after call to isNeedStop() was completed all signals is locked.
           // any thread being started from this point has signal mask with all signals locked 
-            InfoSmePduListener      listener(processor);
-            SmppSession             session(cfg, &listener);
-            InfoSmeMessageSender    sender(processor, &session);
 
-            smsc_log_info(logger, "Connecting to SMSC ... ");
-            try
-            {
-                listener.setSyncTransmitter(session.getSyncTransmitter());
-                listener.setAsyncTransmitter(session.getAsyncTransmitter());
+
+            smsc_log_info(logger, "Starting InfoSME ... ");
+
+            //try
+            //{
+                //listener.setSyncTransmitter(session.getSyncTransmitter());
+                //listener.setAsyncTransmitter(session.getAsyncTransmitter());
 
                 bInfoSmeIsConnecting = true;
                 infoSmeReady.Wait(0);
                 TrafficControl::startControl();
-                session.connect();
-                processor.assignMessageSender(&sender);
+                //session.connect();
+                processor.assignMessageSender(&messageSender);
                 processor.Start();
                 bInfoSmeIsConnecting = false;
                 infoSmeReady.Signal();
                 setConnected();
-            }
-            catch (SmppConnectException& exc)
+            //} 
+            /*catch (SmppConnectException& exc)
             {
                 const char* msg = exc.what();
                 smsc_log_error(logger, "Connect to SMSC failed. Cause: %s", (msg) ? msg:"unknown");
@@ -705,7 +515,7 @@ int main(int argc, char** argv)
                 sleep(cfg.timeOut);
                 session.close();
                 continue;
-            }
+            }*/
             smsc_log_info(logger, "Connected.");
             sigprocmask(SIG_SETMASK, &original_signal_mask, NULL); // unlock all signals and deliver any pending signals
             int st;
@@ -729,7 +539,8 @@ int main(int argc, char** argv)
             TrafficControl::stopControl();
             processor.Stop();
             processor.assignMessageSender(0);
-            session.close();
+
+            messageSender.stop();
             // sleep for 2 secs.
             struct timeval sleepTimeout;
             sleepTimeout.tv_sec = 2;

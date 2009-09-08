@@ -365,6 +365,8 @@ TaskProcessor::controlTrafficSpeedByRegion(Task* task, Message& message)
   smsc_log_debug(logger, "TaskProcessor::controlTrafficSpeedByRegion::: TaskId=[%d]: check region(regionId=%s) bandwidth limit exceeding", taskId, message.regionId.c_str());
   const smsc::util::config::region::Region* region = smsc::util::config::region::RegionFinder::getInstance().getRegionById(message.regionId);
 
+  //TODO: check region pointer must be not NULL
+
   timeSlotsHashByRegion_t::iterator iter = _timeSlotsHashByRegion.find(message.regionId);
   if ( iter == _timeSlotsHashByRegion.end() ) {
     smsc_log_debug(logger, "TaskProcessor::controlTrafficSpeedByRegion::: TaskId=[%d]: insert timeSlot to hash for regionId=%s", taskId, message.regionId.c_str());
@@ -432,9 +434,10 @@ bool TaskProcessor::processTask(Task* task)
     if (messageSender)
     {
         if ( controlTrafficSpeedByRegion(task, message) != TRAFFIC_SUSPENDED ) {
-          int seqNum = messageSender->getSequenceNumber();
-          smsc_log_debug(logger, "TaskId=[%d/%s]: Sending message #%llx,seqNum=%d for '%s': %s", 
-                         info.uid,info.name.c_str(), message.id, seqNum, message.abonent.c_str(), message.message.c_str());
+          ConnectorSeqNum seqNum = messageSender->getSequenceNumber(message.regionId);
+          smsc_log_debug(logger, "TaskId=[%d/%s]: Sending message #%llx,seqNum=%d SMSC id='%s' region id='%s' for '%s': %s", 
+                         info.uid,info.name.c_str(), message.id, seqNum.seqNum, seqNum.smscId.c_str(), message.regionId.c_str(),
+                         message.abonent.c_str(), message.message.c_str());
           {
             {
               MutexGuard snGuard(taskIdsBySeqNumMonitor);
@@ -445,9 +448,9 @@ bool TaskProcessor::processTask(Task* task)
               }
               if (bNeedExit) return false;
 
-              if (taskIdsBySeqNum.Exist(seqNum))
+              if (taskIdsBySeqNum.Exists(seqNum))
               {
-                smsc_log_warn(logger, "Sequence id=%d was already used !", seqNum);
+                smsc_log_warn(logger, "Sequence id=%d SMSC id='%s' was already used !", seqNum.seqNum, seqNum.smscId.c_str());
                 taskIdsBySeqNum.Delete(seqNum);
               }
               taskIdsBySeqNum.Insert(seqNum, TaskMsgId(info.uid, message.id));
@@ -462,7 +465,7 @@ bool TaskProcessor::processTask(Task* task)
                            message.id, message.abonent.c_str());
 
             MutexGuard snGuard(taskIdsBySeqNumMonitor);
-            if (taskIdsBySeqNum.Exist(seqNum))
+            if (taskIdsBySeqNum.Exists(seqNum))
             {
               taskIdsBySeqNum.Delete(seqNum);
               taskIdsBySeqNumMonitor.notifyAll();
@@ -470,8 +473,8 @@ bool TaskProcessor::processTask(Task* task)
             return false;
           }
           msguard.processed();
-          smsc_log_info(logger, "TaskId=[%d/%s]: Sent message #%llx sq=%d for '%s'", 
-                        info.uid,info.name.c_str(), message.id, seqNum, message.abonent.c_str());
+          smsc_log_info(logger, "TaskId=[%d/%s]: Sent message #%llx sq=%d for '%s' to SMSC '%s'", 
+                        info.uid,info.name.c_str(), message.id, seqNum.seqNum, message.abonent.c_str(), seqNum.smscId.c_str());
         } else {
           msguard.processed();
           const smsc::util::config::region::Region* region = smsc::util::config::region::RegionFinder::getInstance().getRegionById(message.regionId);
@@ -516,7 +519,7 @@ void TaskProcessor::processWaitingEvents(time_t time)
         bool needProcess = false;
         {
           MutexGuard guard(taskIdsBySeqNumMonitor);
-          needProcess = taskIdsBySeqNum.Exist(timer.seqNum);
+          needProcess = taskIdsBySeqNum.Exists(timer.seqNum);
         }
         if (needProcess)
         {
@@ -548,17 +551,18 @@ void TaskProcessor::processWaitingEvents(time_t time)
         bool needProcess = false;
         {
             MutexGuard guard(receiptsLock);
-            ReceiptData* receiptPtr = receipts.GetPtr(timer.smscId.c_str());
+            ReceiptData* receiptPtr = receipts.GetPtr(timer.receiptId);
             if (receiptPtr) { 
-              smsc_log_warn(logger, "%s for smscId=%s wasn't received and timed out!", 
+              smsc_log_warn(logger, "%s for smscMsgId='%s' smscConnectorId='%s' wasn't received and timed out!", 
                             ((receiptPtr->receipted) ? "Receipt":"Responce"),
-                            timer.smscId.c_str());
+                            timer.receiptId.getMessageId(), timer.receiptId.getConnectorId());
               needProcess = true;
             }
         }
         if (needProcess)
         {
-          processReceipt(ResponseData(smsc::system::Status::MSGQFUL,0,timer.smscId), true);
+          //processReceipt(ResponseData(smsc::system::Status::MSGQFUL,0,timer.smscId), true); //TODO: why seqNum=0 ?
+          processReceipt(ResponseData(smsc::system::Status::MSGQFUL,ConnectorSeqNum(),timer.receiptId.getMessageId()), true);
         }
 
         {
@@ -624,12 +628,12 @@ void TaskProcessor::processResponce(const ResponseData& rd, bool internal)
 {
     if (!internal)
     {
-      smsc_log_info(logger, "Response: seqNum=%d, smscMsgId=%s, accepted=%d, retry=%d, immediate=%d",
-                                 rd.seqNum, rd.msgId.c_str(),rd.accepted, rd.retry, rd.immediate);
+      smsc_log_info(logger, "Response: seqNum=%d SMSC id='%s', smscMsgId=%s, accepted=%d, retry=%d, immediate=%d",
+                                 rd.seqNum.seqNum, rd.seqNum.smscId.c_str(), rd.msgId.c_str(),rd.accepted, rd.retry, rd.immediate);
     }
     else
     {
-       smsc_log_info(logger, "Response for seqNum=%d is timed out.", rd.seqNum);
+       smsc_log_info(logger, "Response for seqNum=%d SMSC id='%s' is timed out.", rd.seqNum.seqNum, rd.seqNum.smscId.c_str());
     }
 
     TaskMsgId tmIds;
@@ -640,7 +644,7 @@ void TaskProcessor::processResponce(const ResponseData& rd, bool internal)
         {
             if (!internal)
             {
-              smsc_log_warn(logger, "processResponce(): Sequence number=%d is unknown !", rd.seqNum);
+              smsc_log_warn(logger, "processResponce(): Sequence number=%d SMSC id='%s' is unknown !", rd.seqNum.seqNum, rd.seqNum.smscId.c_str());
             }
             return;
         }
@@ -652,8 +656,8 @@ void TaskProcessor::processResponce(const ResponseData& rd, bool internal)
     TaskGuard taskGuard = getTask(tmIds.getTaskId()); 
     Task* task = taskGuard.get();
     if (!task) {
-        if (!internal) smsc_log_warn(logger, "Unable to locate task '%d' for sequence number=%d", 
-                                     tmIds.taskId, rd.seqNum);
+        if (!internal) smsc_log_warn(logger, "Unable to locate task '%d' for sequence number=%d SMSC id='%s'" , 
+                                     tmIds.taskId, rd.seqNum.seqNum, rd.seqNum.smscId.c_str());
         return;
     }
     TaskInfo info = task->getInfo();
@@ -693,19 +697,19 @@ void TaskProcessor::processResponce(const ResponseData& rd, bool internal)
             return;
         }
         
-        const char* smsc_id = rd.msgId.c_str();
+        ReceiptId receiptId(rd.msgId, rd.seqNum.smscId);
         
         try
         {
             ReceiptData receipt; // receipt.receipted = false
             {
                 MutexGuard guard(receiptsLock);
-                ReceiptData* receiptPtr = receipts.GetPtr(smsc_id);
+                ReceiptData* receiptPtr = receipts.GetPtr(receiptId);
                 if (receiptPtr) receipt = *receiptPtr;
                 else {
-                    receipts.Insert(smsc_id, receipt);
+                    receipts.Insert(receiptId, receipt);
                     MutexGuard recptGuard(receiptWaitQueueLock);
-                    receiptWaitQueue.Push(ReceiptTimer(time(NULL)+receiptWaitTime, rd.msgId));
+                    receiptWaitQueue.Push(ReceiptTimer(time(NULL)+receiptWaitTime, receiptId));
                 }
             }
 
@@ -718,16 +722,17 @@ void TaskProcessor::processResponce(const ResponseData& rd, bool internal)
                 TaskIdMsgId timi;
                 timi.msgId=tmIds.msgId;
                 timi.taskId=info.uid;
-                jstore.Insert(atol(smsc_id),timi);
+                smsc_log_debug(logger, "Receipt ID: msgId='%s' connectorId='%s'", receiptId.getMessageId(), receiptId.getConnectorId());
+                jstore.Insert(receiptId, timi);
                 idMappingCreated = true;
             }
 
             {
                 MutexGuard guard(receiptsLock);
-                ReceiptData* receiptPtr = receipts.GetPtr(smsc_id);
+                ReceiptData* receiptPtr = receipts.GetPtr(receiptId);
                 if (receiptPtr) {
                     receipt = *receiptPtr;
-                    receipts.Delete(smsc_id);
+                    receipts.Delete(receiptId);
                 }
                 else receipt.receipted = false;
             }
@@ -737,7 +742,7 @@ void TaskProcessor::processResponce(const ResponseData& rd, bool internal)
                 smsc_log_debug(logger, "Receipt come when responce is in process");
                 if (idMappingCreated)
                 {
-                  jstore.Delete(atol(smsc_id));
+                  jstore.Delete(receiptId);
                 }
                 ResponseData rd2(rd);
                 rd2.accepted=receipt.delivered;
@@ -757,22 +762,22 @@ void TaskProcessor::processResponce(const ResponseData& rd, bool internal)
 
 void TaskProcessor::processReceipt (const ResponseData& rd, bool internal)
 {
-    const char* smsc_id = rd.msgId.c_str();
-
+    ReceiptId receiptId(rd.msgId, rd.seqNum.smscId);
     if (!internal)
     {
-      smsc_log_info(logger, "Receipt : smscId=%s, delivered=%d, retry=%d",
-                            smsc_id, rd.accepted, rd.retry);
+      smsc_log_info(logger, "Receipt : smscMsgId='%s' smscConnectorId='%s', delivered=%d, retry=%d",
+                            receiptId.getMessageId(), receiptId.getConnectorId(), rd.accepted, rd.retry);
     }
     else
     {
-      smsc_log_info(logger, "Responce/Receipt for smscId=%s is timed out. Cleanup.",smsc_id);
+      smsc_log_info(logger, "Responce/Receipt for smscMsgId='%s' smscConnectorId='%s' is timed out. Cleanup.", 
+                    receiptId.getMessageId(), receiptId.getConnectorId());
     }
     
     if (!internal)
     {
         MutexGuard guard(receiptsLock);
-        ReceiptData* receiptPtr = receipts.GetPtr(smsc_id);
+        ReceiptData* receiptPtr = receipts.GetPtr(receiptId);
         if (receiptPtr) // attach & return;
         {   
             receiptPtr->receipted = true;
@@ -782,9 +787,9 @@ void TaskProcessor::processReceipt (const ResponseData& rd, bool internal)
         }
         else
         {
-            receipts.Insert(smsc_id, ReceiptData(true, rd.accepted, rd.retry));
+            receipts.Insert(receiptId, ReceiptData(true, rd.accepted, rd.retry));
             MutexGuard recptGuard(receiptWaitQueueLock);
-            receiptWaitQueue.Push(ReceiptTimer(time(NULL)+receiptWaitTime, rd.msgId));
+            receiptWaitQueue.Push(ReceiptTimer(time(NULL)+receiptWaitTime, receiptId));
         }
     }
     
@@ -807,15 +812,15 @@ void TaskProcessor::processReceipt (const ResponseData& rd, bool internal)
       uint64_t msgId;
       uint32_t taskId;
       bool needProcess = false;
-      if(jstore.Lookup(atol(smsc_id),timi))
+      if(jstore.Lookup(receiptId, timi))
       {
         msgId = timi.msgId;
         taskId = timi.taskId;
         MutexGuard guard(receiptsLock);
-        ReceiptData* receiptPtr = receipts.GetPtr(smsc_id);
+        ReceiptData* receiptPtr = receipts.GetPtr(receiptId);
         if (receiptPtr)
         { 
-          receipts.Delete(smsc_id);
+          receipts.Delete(receiptId);
           needProcess = true;
         }
       }
@@ -823,13 +828,13 @@ void TaskProcessor::processReceipt (const ResponseData& rd, bool internal)
       if (needProcess)
       {
       
-        jstore.Delete(atol(smsc_id));
+        jstore.Delete(receiptId);
       
         TaskGuard taskGuard = getTask(taskId); 
         Task* task = taskGuard.get();
         if (!task)
-          throw Exception("processReceipt(): Unable to locate task '%d' for smscId=%s",
-                          taskId, smsc_id);
+          throw Exception("processReceipt(): Unable to locate task '%d' for smscMsgId='%s' smscConnectorId='%s'",
+                          taskId, receiptId.getMessageId(), receiptId.getConnectorId());
 
         processMessage(task, msgId,rd);
       }

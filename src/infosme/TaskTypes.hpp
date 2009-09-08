@@ -5,6 +5,8 @@
 #include "util/int.h"
 #include "DateTime.h"
 #include "system/status.h"
+#include "core/buffers/File.hpp"
+#include "core/buffers/Hash.hpp"
 
 namespace smsc{
 namespace infosme{
@@ -86,13 +88,116 @@ namespace infosme{
             messagesCacheSize(100), messagesCacheSleep(0) {};
   };
 
+  struct ConnectorSeqNum {
+    uint32_t seqNum;
+    std::string smscId;
+
+    ConnectorSeqNum():seqNum(0) {};
+    ConnectorSeqNum(uint32_t seqnum, const std::string& smscid):seqNum(seqnum), smscId(smscid) {};
+    bool operator==(const ConnectorSeqNum& sn) {
+      return ((seqNum == sn.seqNum) && (smscId == sn.smscId));
+    }
+    static uint32_t CalcHash(const ConnectorSeqNum& seqNum) {
+      return smsc::core::buffers::HashFunc(seqNum.smscId.c_str()) + seqNum.seqNum;
+    }
+  };
+
+  struct ReceiptId {
+
+    ReceiptId() {
+      memset(smscMessageId, 0, SMSC_MSGID_MAX_SIZE);
+      memset(smscConnectorId, 0, SMSC_CONNECTORID_MAX_SIZE);
+    };
+
+    ReceiptId(const std::string& messageId, const std::string& connectorId) {
+      setMessageId(messageId);
+      setConnectorId(connectorId);
+    };
+
+    ReceiptId(const ReceiptId& receiptId) {
+      setMessageId(receiptId.getMessageId());
+      setConnectorId(receiptId.getConnectorId());
+    }
+    ReceiptId& operator=(const ReceiptId& receiptId) {
+      setMessageId(receiptId.getMessageId());
+      setConnectorId(receiptId.getConnectorId());
+      return *this;
+    }
+
+    bool operator==(const ReceiptId& receiptId) {
+      return (strcpy(smscMessageId, receiptId.getMessageId()) == 0 && strcpy(smscConnectorId, receiptId.getConnectorId()) == 0);
+    }
+    bool operator!=(const ReceiptId& receiptId) {
+      return !(*this == receiptId);
+    }
+
+    void setMessageId(const std::string& messageId) {
+      memset(smscMessageId, 0, SMSC_MSGID_MAX_SIZE);
+      size_t size = messageId.size();
+      memcpy(smscMessageId, messageId.c_str(), size < SMSC_MSGID_MAX_SIZE ? size : SMSC_MSGID_MAX_SIZE - 1);
+    }
+
+    void setConnectorId(const std::string& connectorId) {
+      memset(smscConnectorId, 0, SMSC_MSGID_MAX_SIZE);
+      size_t size = connectorId.size();
+      memcpy(smscConnectorId, connectorId.c_str(), size < SMSC_CONNECTORID_MAX_SIZE ? size : SMSC_CONNECTORID_MAX_SIZE - 1);
+    }
+
+    const char* getMessageId() const {
+      return smscMessageId;
+    }
+
+    const char* getConnectorId() const {
+      return smscConnectorId;
+    }
+
+    static uint32_t CalcHash(const ReceiptId& receiptId) {
+      return smsc::core::buffers::HashFunc(receiptId.getMessageId()) + smsc::core::buffers::HashFunc(receiptId.getConnectorId()); 
+    }
+
+    int Read(smsc::core::buffers::File& f) {
+      char buf[STRUCT_SIZE];
+      f.Read(buf, STRUCT_SIZE);
+      memset(smscMessageId, 0, SMSC_MSGID_MAX_SIZE);
+      memcpy(smscMessageId, buf, SMSC_MSGID_MAX_SIZE);
+      memset(smscConnectorId, 0, SMSC_CONNECTORID_MAX_SIZE);
+      memcpy(smscConnectorId, buf + SMSC_MSGID_MAX_SIZE, SMSC_CONNECTORID_MAX_SIZE);
+      return STRUCT_SIZE;
+    }
+
+    int Write(smsc::core::buffers::File& f) const {
+      char buf[STRUCT_SIZE];
+      memset(buf, 0, STRUCT_SIZE);
+      memcpy(buf, smscMessageId, SMSC_MSGID_MAX_SIZE);
+      memcpy(buf + SMSC_MSGID_MAX_SIZE, smscConnectorId, SMSC_CONNECTORID_MAX_SIZE);
+      f.Write(buf, STRUCT_SIZE);
+      return STRUCT_SIZE;
+    }
+
+    static const uint8_t SMSC_MSGID_MAX_SIZE = 65; //with 0
+    static const uint8_t SMSC_CONNECTORID_MAX_SIZE = 23; //with 0
+    static const uint8_t STRUCT_SIZE = SMSC_MSGID_MAX_SIZE + SMSC_CONNECTORID_MAX_SIZE; //with 0
+  private:
+    void setMessageId(const char* messageId) {
+      memcpy(smscMessageId, messageId, SMSC_MSGID_MAX_SIZE);
+    }
+    void setConnectorId(const char* connectorId) {
+      memcpy(smscConnectorId, connectorId, SMSC_CONNECTORID_MAX_SIZE);
+    }
+
+  private:
+    char smscMessageId[SMSC_MSGID_MAX_SIZE];
+    char smscConnectorId[SMSC_CONNECTORID_MAX_SIZE];
+  };
+
 
   struct ResponseData{
     std::string msgId;
     int status;
-    int seqNum;
+    //int seqNum;
+    ConnectorSeqNum seqNum;
     bool accepted, retry, immediate, trafficst;
-    ResponseData(int argStatus,int argSeqNum,const std::string& argMsgId):msgId(argMsgId),status(argStatus),seqNum(argSeqNum)
+    ResponseData(int argStatus,const ConnectorSeqNum& argSeqNum,const std::string& argMsgId):msgId(argMsgId),status(argStatus),seqNum(argSeqNum)
     {
       using namespace smsc::system;
       accepted = status==Status::OK;
