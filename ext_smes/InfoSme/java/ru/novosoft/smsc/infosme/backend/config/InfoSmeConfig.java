@@ -58,6 +58,7 @@ public class InfoSmeConfig {
   private SmscConnector defSmscConn;
 
   private String storeLocation;
+  private String archiveLocation;
   private String statStoreLocation;
 
   private boolean optionsModified;
@@ -547,6 +548,7 @@ public class InfoSmeConfig {
       tasksTaskTablesPrefix = cfg.getString("InfoSme.tasksTablesPrefix");
 
       storeLocation = cfg.getString("InfoSme.storeLocation");
+      archiveLocation = cfg.getString("InfoSme.archiveLocation");
       statStoreLocation = cfg.getString("InfoSme.statStoreLocation");
 
     } catch (Exception e) {
@@ -627,6 +629,7 @@ public class InfoSmeConfig {
       cfg.setString("InfoSme.tasksTablesPrefix", tasksTaskTablesPrefix);
 
       cfg.setString("InfoSme.storeLocation", storeLocation);
+      cfg.setString("InfoSme.archiveLocation", archiveLocation);
       cfg.setString("InfoSme.statStoreLocation", statStoreLocation);
 
     } catch (Exception e) {
@@ -1078,5 +1081,13 @@ public class InfoSmeConfig {
   public void setSiebelTTrackIntegrity(boolean siebelTTrackIntegrity) {
     this.siebelTTrackIntegrity = siebelTTrackIntegrity;
     setOptionsModified(true);
+  }
+
+  public String getArchiveLocation() {
+    return archiveLocation;
+  }
+
+  public void setArchiveLocation(String archiveLocation) {
+    this.archiveLocation = archiveLocation;
   }
 }

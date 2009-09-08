@@ -96,6 +96,12 @@
   <th>Store location</th>
   <td><input class=txt name=storeLocation value="<%=StringEncoderDecoder.encode(bean.getStoreLocation())%>"></td>
 </tr>
+
+<tr class=row<%=rowN++&1%>>
+  <th>Archive location</th>
+  <td><input class=txt name=archiveLocation value="<%=StringEncoderDecoder.encode(bean.getArchiveLocation())%>"></td>
+</tr>
+
 <tr class=row<%=rowN++&1%>>
   <th>Statistics store location</th>
   <td><input class=txt name=statStoreLocation value="<%=StringEncoderDecoder.encode(bean.getStatStoreLocation())%>"></td>

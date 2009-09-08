@@ -89,7 +89,7 @@ public class testFinalStateThread {
         SiebelDataProvider provider = new TestSiebelDataProvider(logger);
 
         try {
-            FinalStateThread stateThread = new FinalStateThread("working", "processed", provider );
+            SiebelFinalStateThread stateThread = new SiebelFinalStateThread("working", "processed", provider );
             stateThread.start();
             stateThread.join(); // waiting until it is finished
         } catch ( Exception e ) {

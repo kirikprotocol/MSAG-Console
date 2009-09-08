@@ -116,12 +116,12 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
       sqlResult = prepStatement.executeQuery();
 
       if (logger.isDebugEnabled()) {
-        logger.debug("Succesful get list of smsMails");
+        logger.debug("Succesful get list of messages");
       }
     } catch (Throwable exc) {
-      logger.error("Unable to get list of smsMails from the dataBase", exc);
+      logger.error("Unable to get list of messages from the dataBase", exc);
       closeConn(connection, prepStatement, sqlResult);
-      throw new SiebelException("Unable to get list of smsMails from the dataBase", exc);
+      throw new SiebelException("Unable to get list of messages from the dataBase", exc);
     }
     return new SiebelMessagesResultSet(sqlResult, connection, prepStatement, sql);
   }
@@ -192,12 +192,12 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
       sqlResult = prepStatement.executeQuery();
 
       if (logger.isDebugEnabled()) {
-        logger.debug("Succesful get list of smsMailParams");
+        logger.debug("Succesful get list of task");
       }
     } catch (Throwable exc) {
-      logger.error("Unable to get list of smsMailParams from the dataBase", exc);
+      logger.error("Unable to get list of tasks from the dataBase", exc);
       closeConn(connection, prepStatement, sqlResult);
-      throw new SiebelException("Unable to get list of smsMailParams from the dataBase", exc);
+      throw new SiebelException("Unable to get list of tasks from the dataBase", exc);
     }
     return new SiebelTasksResultSet(sqlResult, connection, prepStatement, sql);
   }
@@ -216,12 +216,12 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
       sqlResult = prepStatement.executeQuery();
 
       if (logger.isDebugEnabled()) {
-        logger.debug("Succesful get list of smsMails");
+        logger.debug("Succesful get list of messages");
       }
     } catch (Throwable exc) {
-      logger.error("Unable to get list of smsMailParams from the dataBase", exc);
+      logger.error("Unable to get list of tasks from the dataBase", exc);
       closeConn(connection, prepStatement, sqlResult);
-      throw new SiebelException("Unable to get list of smsMailParams from the dataBase", exc);
+      throw new SiebelException("Unable to get list of tasks from the dataBase", exc);
     }
     return new SiebelTasksResultSet(sqlResult, connection, prepStatement, sql);
   }

@@ -5,6 +5,7 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.infosme.backend.config.InfoSmeConfig;
 import ru.novosoft.smsc.infosme.backend.siebel.SiebelDataProvider;
 import ru.novosoft.smsc.infosme.backend.siebel.SiebelTaskManager;
+import ru.novosoft.smsc.infosme.backend.siebel.SiebelFinalStateThread;
 import ru.novosoft.smsc.infosme.backend.siebel.impl.SiebelDataProviderImpl;
 import ru.novosoft.smsc.jsp.SMEAppContext;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
@@ -56,6 +57,7 @@ public class InfoSmeContext implements SMEAppContext
 
   private SiebelDataProvider siebelDataProvider;
   private SiebelTaskManager siebelTaskManager;
+  private SiebelFinalStateThread siebelFinalStateThread;
 
   private InfoSmeContext(SMSCAppContext appContext, String smeId)
       throws AdminException, ParserConfigurationException, SAXException, IOException,
@@ -81,7 +83,7 @@ public class InfoSmeContext implements SMEAppContext
   }
 
   public void startSiebelTaskManager() throws AdminException{
-    if(siebelDataProvider == null && siebelTaskManager == null) {
+    if(siebelDataProvider == null && siebelTaskManager == null && siebelFinalStateThread == null) {
       try{
         Properties props = new Properties();
         props.setProperty("jdbc.source", infoSmeConfig.getSiebelJDBCSource());
@@ -90,10 +92,13 @@ public class InfoSmeContext implements SMEAppContext
         props.setProperty("jdbc.pass", infoSmeConfig.getSiebelJDBCPass());
         siebelDataProvider = new SiebelDataProviderImpl(props);
         siebelTaskManager = new SiebelTaskManager(siebelDataProvider, this);
+        siebelFinalStateThread = new SiebelFinalStateThread(infoSmeConfig.getStoreLocation(),
+            infoSmeConfig.getArchiveLocation(), siebelDataProvider);
       }catch(Throwable e) {
         throw new AdminException("Can't init SiebelTaskManager", e);
       }
     }
+    siebelFinalStateThread.start();
     siebelTaskManager.start();
     infoSmeConfig.setSiebelTMStarted(true);
   }
@@ -112,6 +117,9 @@ public class InfoSmeContext implements SMEAppContext
   {
     if(siebelTaskManager != null) {
       siebelTaskManager.shutdown();
+    }
+    if(siebelFinalStateThread != null) {
+      siebelFinalStateThread.shutdown();
     }
     if(siebelDataProvider != null) {
       siebelDataProvider.shutdown();

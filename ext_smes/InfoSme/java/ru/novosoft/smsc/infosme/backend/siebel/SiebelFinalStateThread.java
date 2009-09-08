@@ -3,8 +3,6 @@ package ru.novosoft.smsc.infosme.backend.siebel;
 import org.apache.log4j.Category;
 
 import java.io.*;
-import java.util.LinkedList;
-import java.util.Map;
 import java.util.TreeMap;
 import java.util.regex.Pattern;
 
@@ -18,9 +16,9 @@ import ru.novosoft.smsc.infosme.backend.Message;
  * Time: 15:45:33
  * To change this template use File | Settings | File Templates.
  */
-public class FinalStateThread extends Thread {
+public class SiebelFinalStateThread extends Thread {
 
-    private static final Category log_ = Category.getInstance(FinalStateThread.class);
+    private static final Category log_ = Category.getInstance(SiebelFinalStateThread.class);
     private static final String rollingExtension = ".csv";
     private String path_;
     private Pattern  recSep_;
@@ -28,7 +26,7 @@ public class FinalStateThread extends Thread {
     private DataSource dataSource_;
     private boolean started_;
 
-    public FinalStateThread( String path, String processedPath, SiebelDataProvider provider ) throws IOException {
+    public SiebelFinalStateThread( String path, String processedPath, SiebelDataProvider provider ) throws IOException {
         this.path_ = path;
         this.recSep_ = Pattern.compile(",");
         this.processedPath_ = processedPath;
@@ -38,6 +36,16 @@ public class FinalStateThread extends Thread {
 
     public void shutdown() {
         started_ = false;
+    }
+
+    public boolean isOnline() {
+      return started_;
+    }
+
+    public void start() {
+      if(!started_) {
+        super.start();
+      }
     }
 
     public void run() {
@@ -54,6 +62,7 @@ public class FinalStateThread extends Thread {
                 }
                 Thread.sleep(10000);
             }
+        log_.info("final state thread is shutdowned");
         } catch ( Exception exc ) {
             log_.error("exc in run: " + exc.getMessage() );
             started_ = false;

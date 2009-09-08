@@ -74,6 +74,7 @@ public class Options extends InfoSmeBean
   private OptionsSmscHelper smscHelper = new  OptionsSmscHelper("infosme.label.smsc.connectors", "smsc_connectors", 70, true);
 
   private String storeLocation;
+  private String archiveLocation;
   private String statStoreLocation;
 
   private boolean initialized = false;
@@ -117,6 +118,7 @@ public class Options extends InfoSmeBean
         tasksTaskTablesPrefix = getConfig().getTasksTaskTablesPrefix();
 
         storeLocation = getConfig().getStoreLocation();
+        archiveLocation = getConfig().getArchiveLocation();
         statStoreLocation = getConfig().getStatStoreLocation();
 
         siebelJDBCDriver = getConfig().getSiebelJDBCDriver();
@@ -243,6 +245,7 @@ public class Options extends InfoSmeBean
       getConfig().setTasksTaskTablesPrefix(tasksTaskTablesPrefix);
 
       getConfig().setStoreLocation(storeLocation);
+      getConfig().setArchiveLocation(archiveLocation);
       getConfig().setStatStoreLocation(statStoreLocation);
 
 
@@ -575,6 +578,14 @@ public class Options extends InfoSmeBean
 
   public void setStoreLocation(String storeLocation) {
     this.storeLocation = storeLocation;
+  }
+
+  public String getArchiveLocation() {
+    return archiveLocation;
+  }
+
+  public void setArchiveLocation(String archiveLocation) {
+    this.archiveLocation = archiveLocation;
   }
 
   public String getStatStoreLocation() {
