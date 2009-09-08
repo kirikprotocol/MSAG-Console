@@ -48,21 +48,13 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 
   public static void init(String configFileName) {
     instance = new SMSCAppContextImpl(configFileName);
-    System.out.println("Trying to start Siebel");
     try{
-      Object infoSmeContext = Class.forName("ru.novosoft.smsc.infosme.backend.InfoSmeContext").
+      Class.forName("ru.novosoft.smsc.infosme.backend.InfoSmeContext").
           getMethod("getInstance", new Class[]{SMSCAppContext.class, String.class}).
           invoke(null, new Object[]{instance, "InfoSme"});
-      Boolean started = (Boolean)infoSmeContext.getClass().getMethod("isSiebelWasStarted", new Class[]{}).invoke(infoSmeContext, new Object[]{});
-      if(started != null && started.booleanValue()) {
-        infoSmeContext.getClass().getMethod("startSiebelTaskManager", new Class[]{}).invoke(infoSmeContext, new Object[]{});
-        System.out.println("Siebel is started");
-        return;
-      }
     }catch(Throwable e) {
       e.printStackTrace();
     }
-    System.out.println("Siebel is not started");
   }
 
   public static SMSCAppContextImpl getInstance() {

@@ -70,14 +70,14 @@ public class InfoSmeContext implements SMEAppContext
         infoSmeConfig.getAdminPort());
 
     this.blackListManager = new BlackListManager(appContext.getPersonalizationClientPool());
+    if(infoSmeConfig.isSiebelTMStarted()) {
+      startSiebelTaskManager();
+      System.out.println("Siebel: Siebel is started");
+    }
   }
 
   public boolean isSiebelOnline() {
     return siebelTaskManager != null && siebelTaskManager.isOnline();
-  }
-
-  public Boolean isSiebelWasStarted() throws AdminException{
-    return new Boolean(infoSmeConfig.isSiebelTMStarted());
   }
 
   public void startSiebelTaskManager() throws AdminException{
