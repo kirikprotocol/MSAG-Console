@@ -20,6 +20,7 @@ public abstract class IndexProperties extends TasksListBean
   private boolean infosmeStarted;
   private boolean taskProcessorRuning = false;
   private boolean taskSchedulerRuning = false;
+  private boolean siebelOnline = false;
   private String mbApply = null;
   private String mbReset = null;
   private String mbStart = null;
@@ -63,6 +64,7 @@ public abstract class IndexProperties extends TasksListBean
       if (infosmeStarted) {
         taskProcessorRuning = infoSme.isTaskProcessorRuning();
         taskSchedulerRuning = infoSme.isTaskSchedulerRuning();
+        siebelOnline = getInfoSmeContext().isSiebelOnline();
       } else {
         //message("Info SME is not running");
       }
@@ -168,6 +170,10 @@ public abstract class IndexProperties extends TasksListBean
   public boolean isTaskProcessorRuning()
   {
     return taskProcessorRuning;
+  }
+
+  public boolean isSiebelOnline() {
+    return siebelOnline;
   }
 
   public boolean isTaskSchedulerRuning()

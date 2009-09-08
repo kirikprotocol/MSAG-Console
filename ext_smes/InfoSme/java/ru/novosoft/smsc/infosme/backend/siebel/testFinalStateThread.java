@@ -23,25 +23,25 @@ public class testFinalStateThread {
             this.log_ = logger;
         }
 
-        public SiebelMessage getMessage(String clcId) throws SiebelDataProviderException {
+        public SiebelMessage getMessage(String clcId) throws SiebelException {
             throw notImpl("getMessage");
         }
-        public ResultSet getMessages(String waveId) throws SiebelDataProviderException {
+        public ResultSet getMessages(String waveId) throws SiebelException {
             throw notImpl("getMessages");
         }
 
-        public void setMessageState(String clcId, SiebelMessage.State state) throws SiebelDataProviderException {
+        public void setMessageState(String clcId, SiebelMessage.State state) throws SiebelException {
             throw notImpl("setMessageState");
         }
-        public SiebelMessage.State getMessageState(String clcId) throws SiebelDataProviderException {
+        public SiebelMessage.State getMessageState(String clcId) throws SiebelException {
             throw notImpl("getMessageState");
         }
 
         /**
          * @param deliveryStates - map, where key is String with message Id, value is instance of SiebelMessage.DeliveryState
-         * @throws SiebelDataProviderException
+         * @throws SiebelException
          */
-        public void updateDeliveryStates(Map deliveryStates) throws SiebelDataProviderException {
+        public void updateDeliveryStates(Map deliveryStates) throws SiebelException {
             log_.info("updateDeliveryStates, size=" + deliveryStates.size());
             for ( Iterator i = deliveryStates.entrySet().iterator(); i.hasNext(); ) {
                 Map.Entry entry = (Map.Entry) i.next();
@@ -51,27 +51,32 @@ public class testFinalStateThread {
             }
         }
 
-        public SiebelTask getTask(String waveId) throws SiebelDataProviderException {
+        public SiebelTask getTask(String waveId) throws SiebelException {
             throw notImpl("getTask");
         }
-        public ResultSet getTasks(Date fromUpdate) throws SiebelDataProviderException {
-            throw notImpl("getTasks");
-        }
-        public ResultSet getTasks() throws SiebelDataProviderException {
+        public ResultSet getTasks(Date fromUpdate) throws SiebelException {
             throw notImpl("getTasks");
         }
 
-        public void setTaskStatus(String waveId, SiebelTask.Status status) throws SiebelDataProviderException {
+      public ResultSet getTasks(Date fromUpdate, Date tillUpdate) throws SiebelException {
+            throw notImpl("getTasksFromTill");
+      }
+
+      public ResultSet getTasks() throws SiebelException {
+          throw notImpl("getTasks");
+      }
+
+        public void setTaskStatus(String waveId, SiebelTask.Status status) throws SiebelException {
             log_.info("wave " + waveId + "has state:" + status.toString() );
         }
-        public SiebelTask.Status getTaskStatus(String waveId) throws SiebelDataProviderException {
+        public SiebelTask.Status getTaskStatus(String waveId) throws SiebelException {
             throw notImpl("getTaskStatus");
         }
         public void shutdown() {
         }
 
-        private SiebelDataProviderException notImpl( String what ) {
-            return new SiebelDataProviderException( what + " not implemented");
+        private SiebelException notImpl( String what ) {
+            return new SiebelException( what + " not implemented");
         }
     }
 

@@ -35,15 +35,15 @@ public class Index extends IndexProperties
     }
 
     if (isApply("tasks")) {
-        tasks = true;
+      tasks = true;
     }
 
     if (isApply("scheds")) {
-        schedules = true;
+      schedules = true;
     }
 
     if (isApply("retries")) {
-        retries = true;
+      retries = true;
     }
 
     try {
@@ -147,6 +147,14 @@ public class Index extends IndexProperties
           result = error("infosme.error.start_ts", e);
         }
       }
+      if (isToStart("siebel")) {
+        try {
+          getInfoSmeContext().startSiebelTaskManager();
+        } catch (AdminException e) {
+          logger.error(e, e);
+          result = error("infosme.error.start_siebel", e);
+        }
+      }
     }
     return result;
   }
@@ -157,6 +165,7 @@ public class Index extends IndexProperties
     if (isToStart("sme")) {
       try {
         getAppContext().getHostsManager().shutdownService(getSmeId());
+        getInfoSmeContext().stopSiebelTaskManager();
       } catch (AdminException e) {
         logger.error("Could not stop Info SME", e);
         result = error("infosme.error.stop", e);
@@ -176,6 +185,14 @@ public class Index extends IndexProperties
         } catch (AdminException e) {
           logger.error("Could not stop task scheduler", e);
           result = error("infosme.error.stop_ts", e);
+        }
+      }
+      if (isToStart("siebel")) {
+        try {
+          getInfoSmeContext().stopSiebelTaskManager();
+        } catch (AdminException e) {
+          logger.error("Could not stop siebel tm", e);
+          result = error("infosme.error.stop_siebel", e);
         }
       }
     }

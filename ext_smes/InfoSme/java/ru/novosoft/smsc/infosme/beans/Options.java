@@ -1,13 +1,16 @@
 package ru.novosoft.smsc.infosme.beans;
 
 import ru.novosoft.smsc.jsp.util.helper.dynamictable.DynamicTableHelper;
+import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.infosme.backend.config.InfoSmeConfig;
+import ru.novosoft.smsc.infosme.backend.tables.retrypolicies.RetryPolicyDataSource;
+import ru.novosoft.smsc.infosme.backend.tables.retrypolicies.RetryPolicyQuery;
+import ru.novosoft.smsc.infosme.backend.tables.retrypolicies.RetryPolicyDataItem;
+import ru.novosoft.smsc.admin.AdminException;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.List;
-import java.util.Map;
-import java.util.Iterator;
-import java.util.Collection;
+import java.util.*;
+import java.text.SimpleDateFormat;
 
 /**
  * Created by igork
@@ -16,6 +19,36 @@ import java.util.Collection;
  */
 public class Options extends InfoSmeBean
 {
+
+  //Siebel
+
+  private String siebelJDBCDriver="";
+  private String siebelJDBCSource="";
+  private String siebelJDBCUser="";
+  private String siebelJDBCPass="";
+
+  private boolean siebelRetryOnFail = false;
+  private boolean siebelReplaceMessage = false;
+  private String siebelSvcType = "";
+  private String siebelActivePeriodStart = "";
+  private String siebelActivePeriodEnd = "";
+  private String[] siebelActiveWeekDays = new String[0];
+
+  private int siebelMessagesCacheSize = 0;
+  private int siebelMessagesCacheSleep = 0;
+  private boolean siebelTransactionMode = false;
+  private int siebelUncommitedInGeneration = 0;
+  private int siebelUncommitedInProcess = 0;
+  private boolean siebelTrackIntegrity = false;
+  private boolean siebelKeepHistory = false;
+  private String siebelRetryPolicy = "";
+
+  private static final SimpleDateFormat tf = new SimpleDateFormat("HH:mm:ss");
+
+  private int siebelTMPeriod = 20;
+  private boolean siebelTMRemoveStopped = false;
+  //
+
   private String address = "";
   private String svcType = "";
   private int protocolId = 0;
@@ -85,6 +118,36 @@ public class Options extends InfoSmeBean
 
         storeLocation = getConfig().getStoreLocation();
         statStoreLocation = getConfig().getStatStoreLocation();
+
+        siebelJDBCDriver = getConfig().getSiebelJDBCDriver();
+        siebelJDBCSource = getConfig().getSiebelJDBCSource();
+        siebelJDBCUser = getConfig().getSiebelJDBCUser();
+        siebelJDBCPass = getConfig().getSiebelJDBCPass();
+
+        siebelRetryOnFail = getConfig().isSiebelTRetryOnFail();
+        siebelReplaceMessage = getConfig().isSiebelTReplaceMessage();
+        siebelSvcType = getConfig().getSiebelTSvcType();
+        siebelActivePeriodStart = (getConfig().getSiebelTPeriodStart() == null) ? "" : tf.format(getConfig().getSiebelTPeriodStart());
+        siebelActivePeriodEnd = (getConfig().getSiebelTPeriodEnd() == null) ? "" : tf.format(getConfig().getSiebelTPeriodEnd());
+
+        siebelActiveWeekDays = new String[getConfig().getSiebelTWeekDaysSet().size()];
+        int i=0;
+        for (Iterator iter = getConfig().getSiebelTWeekDaysSet().iterator(); iter.hasNext();) {
+          siebelActiveWeekDays[i] = (String)iter.next();
+          i++;
+        }
+
+        siebelMessagesCacheSize = getConfig().getSiebelTCacheSize();
+        siebelMessagesCacheSleep = getConfig().getSiebelTCacheSleep();
+        siebelTransactionMode = getConfig().isSiebelTTrMode();
+        siebelUncommitedInGeneration = getConfig().getSiebelTUncommitGeneration();
+        siebelUncommitedInProcess = getConfig().getSiebelTUncommitProcess();
+        siebelTrackIntegrity = getConfig().isSiebelTTrackIntegrity();
+        siebelKeepHistory = getConfig().isSiebelTKeepHistory();
+        siebelRetryPolicy = getConfig().getSiebelTRetryPolicy();
+
+        siebelTMPeriod = getConfig().getSiebelTMPeriod();
+        siebelTMRemoveStopped = getConfig().isSiebelTMRemove();
 
       } catch (Exception e) {
         checkForNulls();
@@ -181,6 +244,30 @@ public class Options extends InfoSmeBean
 
       getConfig().setStoreLocation(storeLocation);
       getConfig().setStatStoreLocation(statStoreLocation);
+
+
+      getConfig().setSiebelJDBCDriver(siebelJDBCDriver);
+      getConfig().setSiebelJDBCSource(siebelJDBCSource);
+      getConfig().setSiebelJDBCUser(siebelJDBCUser);
+      getConfig().setSiebelJDBCPass(siebelJDBCPass);
+      getConfig().setSiebelTRetryOnFail(siebelRetryOnFail);
+      getConfig().setSiebelTReplaceMessage(siebelReplaceMessage);
+      getConfig().setSiebelTSvcType(siebelSvcType);
+      getConfig().setSiebelTPeriodStart( siebelActivePeriodStart.trim().length() == 0 ? null : tf.parse(siebelActivePeriodStart)) ;
+      getConfig().setSiebelTPeriodEnd( siebelActivePeriodEnd.trim().length() == 0 ? null : tf.parse(siebelActivePeriodEnd)) ;
+      getConfig().setSiebelTWeekDaysSet(Arrays.asList(siebelActiveWeekDays));
+
+      getConfig().setSiebelTCacheSize(siebelMessagesCacheSize);
+      getConfig().setSiebelTCacheSleep(siebelMessagesCacheSleep);
+      getConfig().setSiebelTTrMode(siebelTransactionMode);
+      getConfig().setSiebelTUncommitGeneration(siebelUncommitedInGeneration);
+      getConfig().setSiebelTUncommitProcess(siebelUncommitedInProcess);
+      getConfig().setSiebelTTrackIntegrity(siebelTrackIntegrity);
+      getConfig().setSiebelTKeepHistory(siebelKeepHistory);
+      getConfig().setSiebelTRetryPolicy(siebelRetryPolicy);
+
+      getConfig().setSiebelTMPeriod(siebelTMPeriod);
+      getConfig().setSiebelTMRemove(siebelTMRemoveStopped);
 
       return RESULT_DONE;
 
@@ -504,5 +591,217 @@ public class Options extends InfoSmeBean
 
   public void setDefSmscConn(String defSmscConn) {
     this.defSmscConn = defSmscConn;
+  }
+
+  public boolean isSiebelTransactionMode() {
+    return siebelTransactionMode;
+  }
+
+  public void setSiebelTransactionMode(boolean siebelTransactionMode) {
+    this.siebelTransactionMode = siebelTransactionMode;
+  }
+
+  public String getSiebelActivePeriodEnd() {
+    return siebelActivePeriodEnd;
+  }
+
+  public void setSiebelActivePeriodEnd(String siebelActivePeriodEnd) {
+    this.siebelActivePeriodEnd = siebelActivePeriodEnd;
+  }
+
+  public String getSiebelActivePeriodStart() {
+    return siebelActivePeriodStart;
+  }
+
+  public void setSiebelActivePeriodStart(String siebelActivePeriodStart) {
+    this.siebelActivePeriodStart = siebelActivePeriodStart;
+  }
+
+  public String[] getSiebelActiveWeekDays() {
+    return siebelActiveWeekDays;
+  }
+  public void setSiebelActiveWeekDays(String[] activeWeekDays) {
+    this.siebelActiveWeekDays = activeWeekDays;
+  }
+
+  public boolean isWeekDayActive(String weekday) {
+    for(int i=0; i<siebelActiveWeekDays.length; i++)
+      if (siebelActiveWeekDays[i].equals(weekday))
+        return true;
+    return false;
+  }
+
+  public List getRetryPolicies() {
+    try{
+      QueryResultSet rs = new RetryPolicyDataSource().query(getConfig(), new RetryPolicyQuery(1000, "name", 0));
+      List result = new ArrayList(rs.size() + 1);
+      for (int i=0; i<rs.size(); i++) {
+        RetryPolicyDataItem item = (RetryPolicyDataItem)rs.get(i);
+        result.add(item.getName());
+      }
+      return result;
+    }catch(AdminException e){
+      logger.error(e,e);
+      return new LinkedList();
+    }
+  }
+
+  public String getSiebelRetryPolicy() {
+    return siebelRetryPolicy;
+  }
+
+  public void setSiebelRetryPolicy(String retryPolicy) {
+    this.siebelRetryPolicy = retryPolicy;
+  }
+
+  public boolean isSiebelRetryOnFail() {
+    return siebelRetryOnFail;
+  }
+
+  public void setSiebelRetryOnFail(boolean retryOnFail) {
+    this.siebelRetryOnFail = retryOnFail;
+  }
+
+
+  public boolean isSiebelReplaceMessage() {
+    return siebelReplaceMessage;
+  }
+
+  public void setSiebelReplaceMessage(boolean replaceMessage) {
+    this.siebelReplaceMessage = replaceMessage;
+  }
+
+  public String getSiebelSvcType() {
+    return siebelSvcType;
+  }
+
+  public void setSiebelSvcType(String svcType) {
+    this.siebelSvcType = svcType;
+  }
+
+  public String getSiebelMessagesCacheSize() {
+    return Integer.toString(siebelMessagesCacheSize);
+  }
+
+  public void setSiebelMessagesCacheSize(String siebelMessagesCacheSize) {
+    if(siebelMessagesCacheSize != null && siebelMessagesCacheSize.length()>0) {
+      try{
+        this.siebelMessagesCacheSize = Integer.parseInt(siebelMessagesCacheSize);
+      }catch(NumberFormatException e) {
+        logger.error(e,e);
+      }
+    }
+  }
+
+  public String getSiebelMessagesCacheSleep() {
+    return Integer.toString(siebelMessagesCacheSleep);
+  }
+
+  public void setSiebelMessagesCacheSleep(String siebelMessagesCacheSleep) {
+    if(siebelMessagesCacheSleep != null && siebelMessagesCacheSleep.length()>0) {
+      try{
+        this.siebelMessagesCacheSleep = Integer.parseInt(siebelMessagesCacheSleep);
+      }catch(NumberFormatException e) {
+        logger.error(e,e);
+      }
+    }
+  }
+
+  public String getSiebelUncommitedInGeneration() {
+    return Integer.toString(siebelUncommitedInGeneration);
+  }
+
+  public void setSiebelUncommitedInGeneration(String siebelUncommitedInGeneration) {
+    if(siebelUncommitedInGeneration != null && siebelUncommitedInGeneration.length()>0) {
+      try{
+        this.siebelUncommitedInGeneration = Integer.parseInt(siebelUncommitedInGeneration);
+      }catch(NumberFormatException e) {
+        logger.error(e,e);
+      }
+    }
+  }
+
+  public String getSiebelUncommitedInProcess() {
+    return Integer.toString(siebelUncommitedInProcess);
+  }
+
+  public void setSiebelUncommitedInProcess(String siebelUncommitedInProcess) {
+    if(siebelUncommitedInProcess != null && siebelUncommitedInProcess.length()>0) {
+      try{
+        this.siebelUncommitedInProcess = Integer.parseInt(siebelUncommitedInProcess);
+      }catch(NumberFormatException e) {
+        logger.error(e,e);
+      }
+    }
+  }
+
+  public boolean isSiebelTrackIntegrity() {
+    return siebelTrackIntegrity;
+  }
+
+  public void setSiebelTrackIntegrity(boolean siebelTrackIntegrity) {
+    this.siebelTrackIntegrity = siebelTrackIntegrity;
+  }
+
+  public boolean isSiebelKeepHistory() {
+    return siebelKeepHistory;
+  }
+
+  public void setSiebelKeepHistory(boolean siebelKeepHistory) {
+    this.siebelKeepHistory = siebelKeepHistory;
+  }
+
+  public String getSiebelJDBCDriver() {
+    return siebelJDBCDriver;
+  }
+
+  public void setSiebelJDBCDriver(String siebelJDBCDriver) {
+    this.siebelJDBCDriver = siebelJDBCDriver;
+  }
+
+  public String getSiebelJDBCSource() {
+    return siebelJDBCSource;
+  }
+
+  public void setSiebelJDBCSource(String siebelJDBCSource) {
+    this.siebelJDBCSource = siebelJDBCSource;
+  }
+
+  public String getSiebelJDBCUser() {
+    return siebelJDBCUser;
+  }
+
+  public void setSiebelJDBCUser(String siebelJDBCUser) {
+    this.siebelJDBCUser = siebelJDBCUser;
+  }
+
+  public String getSiebelJDBCPass() {
+    return siebelJDBCPass;
+  }
+
+  public void setSiebelJDBCPass(String siebelJDBCPass) {
+    this.siebelJDBCPass = siebelJDBCPass;
+  }
+
+  public String getSiebelTMPeriod() {
+    return Integer.toString(siebelTMPeriod);
+  }
+
+  public void setSiebelTMPeriod(String siebelTMPeriod) {
+    if(siebelTMPeriod != null && siebelTMPeriod.trim().length()>0) {
+      try{
+        this.siebelTMPeriod = Integer.parseInt(siebelTMPeriod.trim());
+      }catch(NumberFormatException e) {
+        logger.error(e,e);
+      }
+    }
+  }
+
+  public boolean isSiebelTMRemoveStopped() {
+    return siebelTMRemoveStopped;
+  }
+
+  public void setSiebelTMRemoveStopped(boolean siebelRemoveStopped) {
+    this.siebelTMRemoveStopped = siebelRemoveStopped;
   }
 }

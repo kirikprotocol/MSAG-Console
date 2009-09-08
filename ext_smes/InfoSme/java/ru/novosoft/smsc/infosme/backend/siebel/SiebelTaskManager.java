@@ -283,7 +283,7 @@ public class SiebelTaskManager implements Runnable{
     } catch (Exception e) {
       logger.error(e,e);
       try{
-      //  _removeTask(task);
+        _removeTask(task);
       }catch(Throwable ex){
         logger.error(ex,ex);
       }

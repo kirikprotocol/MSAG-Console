@@ -62,6 +62,12 @@ function checkApplyResetButtons()
       <th><label for=toStartScheduler><%= getLocString("infosme.label.gen_processor")%></label></th>
       <td id=schedStatus><%=bean.isTaskSchedulerRuning() ? getLocString("common.statuses.online") : getLocString("common.statuses.offline") %></td>
     </tr>
+    <tr class=row1 id=siebelRow>
+      <td style="padding-right:3px"><input class=check type=checkbox id=toStartSiebel name=toStart value=siebel onClick="checkStartStop();"></td>
+      <th><label for=toStartSiebel><%= getLocString("infosme.label.siebel")%></label></th>
+      <td id=siebelStatus><%=bean.isSiebelOnline() ? getLocString("common.statuses.online") : getLocString("common.statuses.offline") %></td>
+    </tr>
+
     </table>
   </td>
   <td>&nbsp;</td>
