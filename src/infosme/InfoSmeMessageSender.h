@@ -2,6 +2,7 @@
 #define INFOSME_INFOSMEMESSAGESENDER_H
 
 #include <string>
+#include "sme/SmppBase.hpp"
 #include "util/config/region/RegionsConfig.hpp"
 #include "logger/Logger.h"
 #include "core/buffers/Hash.hpp"
@@ -10,7 +11,6 @@
 namespace smsc {
 namespace infosme {
 
-class InfoSmeConfig;
 class SmscConnector;
 class TaskProcessor;
 
@@ -39,7 +39,7 @@ public:
 
 private:
 
-    SmscConnector* addConnector( const InfoSmeConfig& cfg, const std::string& smscid );
+    SmscConnector* addConnector( const smsc::sme::SmeConfig& cfg, const std::string& smscid );
     void addRegionMapping( const std::string& regionId, const std::string& smscId );
 
     /*

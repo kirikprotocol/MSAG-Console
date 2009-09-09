@@ -12,18 +12,19 @@
 const int   MAX_ALLOWED_PAYLOAD_LENGTH = 65535;
 const int   MAX_ALLOWED_MESSAGE_LENGTH = 254;
 
-namespace smsc { namespace infosme {
+namespace smsc {
+namespace infosme {
 
 using smsc::logger::Logger;
 using smsc::core::synchronization::EventMonitor;
 using smsc::core::synchronization::Mutex;
 using smsc::util::config::ConfigView;
 
+/*
 class InfoSmeConfig : public smsc::sme::SmeConfig {
 public:
-  InfoSmeConfig(ConfigView& config) throw(ConfigException);
-  virtual ~InfoSmeConfig();
-
+    InfoSmeConfig(ConfigView& config) throw(ConfigException);
+    // virtual ~InfoSmeConfig();
 private:
     char* strHost;
     char* strSid;
@@ -31,6 +32,7 @@ private:
     char* strSysType;
     char* strOrigAddr;
 };
+ */
 
 using smsc::sme::SmppSession;
 
@@ -42,14 +44,18 @@ struct SeqNum {
   string smscId;
 };*/
 
-class SmscConnector : public smsc::core::threads::Thread {
+class SmscConnector : public smsc::core::threads::Thread 
+{
 public:
-  SmscConnector(TaskProcessor& processor, const InfoSmeConfig& cfg, const string& smscId);
+    static SmeConfig readSmeConfig( ConfigView& config ); // throw ConfigException
+
+    SmscConnector(TaskProcessor& processor, const smsc::sme::SmeConfig& cfg, const string& smscId);
     virtual ~SmscConnector();
 
   int Execute();
   void stop();
   void reconnect();
+    void updateConfig( const smsc::sme::SmeConfig& config );
   bool isStopped() const;
   int getSeqNum();
   bool send(std::string abonent, std::string message, TaskInfo info, int seqNum);

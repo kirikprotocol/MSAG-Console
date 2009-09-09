@@ -2,12 +2,47 @@
 #include "SmscConnector.h"
 #include "TrafficControl.hpp"
 
+namespace {
+
+std::string cgetString( smsc::util::config::ConfigView& cv, const char* tag, const char* what )
+{
+    std::auto_ptr<char> str(cv.getString(tag,what));
+    return std::string(str.get());
+}
+
+}
+
 namespace smsc {
 namespace infosme {
 
 using smsc::core::synchronization::MutexGuard;
 
-SmscConnector::SmscConnector(TaskProcessor& processor, const InfoSmeConfig& cfg, const string& smscId):
+
+smsc::sme::SmeConfig SmscConnector::readSmeConfig( ConfigView& config )
+{
+    smsc::sme::SmeConfig rv;
+    // Mandatory fields
+    rv.host = ::cgetString(config,"host", "SMSC host wasn't defined !");
+    rv.sid = ::cgetString(config,"sid", "InfoSme id wasn't defined !");
+    rv.port = config.getInt("port", "SMSC port wasn't defined !");
+    rv.timeOut = config.getInt("timeout", "Connect timeout wasn't defined !");
+
+    // Optional fields
+    try {
+        rv.password = ::cgetString(config,"password","InfoSme password wasn't defined !");
+    } catch (ConfigException&) {}
+    try {
+        rv.systemType = ::cgetString(config,"systemType","InfoSme system type wasn't defined !");
+    } catch (ConfigException&) {}
+    try {
+        rv.origAddr = ::cgetString(config,"origAddress",
+                                   "InfoSme originating address wasn't defined !");
+    } catch (ConfigException&) {}
+    return rv;
+}
+
+
+SmscConnector::SmscConnector(TaskProcessor& processor, const smsc::sme::SmeConfig& cfg, const string& smscId):
 processor_(processor), 
 logger_(Logger::getInstance("smsc.infosme.connector")),
 listener_(processor_, smscId, logger_),
@@ -37,6 +72,11 @@ void SmscConnector::reconnect() {
   MutexGuard mg(connectMonitor_);
   connected_ = false;
   connectMonitor_.notify();
+}
+
+void SmscConnector::updateConfig( const smsc::sme::SmeConfig& config )
+{
+    smsc_log_warn(logger_, "FIXME: updateConfig on '%s'... ", smscId_.c_str());
 }
 
 bool SmscConnector::isStopped() const {
@@ -241,50 +281,6 @@ bool SmscConnector::convertMSISDNStringToAddress(const char* string, Address& ad
         return false;
     }
     return true;
-}
-
-InfoSmeConfig::InfoSmeConfig(ConfigView& config) throw(ConfigException)
-              : strHost(0), strSid(0), strPassword(0), strSysType(0), strOrigAddr(0)
-{
-  // Mandatory fields
-  strHost = config.getString("host", "SMSC host wasn't defined !");
-  host = strHost;
-  strSid = config.getString("sid", "InfoSme id wasn't defined !");
-  sid = strSid;
-
-  port = config.getInt("port", "SMSC port wasn't defined !");
-  timeOut = config.getInt("timeout", "Connect timeout wasn't defined !");
-
-  // Optional fields
-  try
-  {
-      strPassword = config.getString("password",
-                                      "InfoSme password wasn't defined !");
-      password = strPassword;
-  }
-  catch (ConfigException& exc) { password = ""; strPassword = 0; }
-  try
-  {
-      strSysType = config.getString("systemType",
-                                     "InfoSme system type wasn't defined !");
-      systemType = strSysType;
-  }
-  catch (ConfigException& exc) { systemType = ""; strSysType = 0; }
-  try
-  {
-      strOrigAddr = config.getString("origAddress",
-                                      "InfoSme originating address wasn't defined !");
-      origAddr = strOrigAddr;
-  }
-  catch (ConfigException& exc) { origAddr = ""; strOrigAddr = 0; }
-}
-
-InfoSmeConfig::~InfoSmeConfig() {
-  if (strHost) delete strHost;
-  if (strSid) delete strSid;
-  if (strPassword) delete strPassword;
-  if (strSysType) delete strSysType;
-  if (strOrigAddr) delete strOrigAddr;
 }
 
 }  //infosme

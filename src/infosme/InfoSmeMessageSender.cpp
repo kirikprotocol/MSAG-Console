@@ -119,7 +119,7 @@ void InfoSmeMessageSender::reloadSmscAndRegions( Manager& manager )
     for ( smsc::util::config::CStrSet::iterator i = connNames.get()->begin();
           i != connNames.get()->end(); ++i ) {
         const std::string sectName( csn + "." + *i );
-        InfoSmeConfig cfg(ConfigView(manager,sectName.c_str()));
+        smsc::sme::SmeConfig cfg = SmscConnector::readSmeConfig(ConfigView(manager,sectName.c_str()));
         SmscConnector* conn = addConnector(cfg,*i);
         if ( *i == defId ) {
             defaultConnector_ = conn;
@@ -165,13 +165,13 @@ void InfoSmeMessageSender::reloadSmscAndRegions( Manager& manager )
 }
 
 
-SmscConnector* InfoSmeMessageSender::addConnector( const InfoSmeConfig& cfg, const std::string& smscid )
+SmscConnector* InfoSmeMessageSender::addConnector( const smsc::sme::SmeConfig& cfg, const std::string& smscid )
 {
     SmscConnector** ptr = connectors_.GetPtr(smscid.c_str());
     SmscConnector* p = 0;
     if ( ptr ) {
         p = *ptr;
-        // FIXME: update
+        p->updateConfig(cfg);
     } else {
         p = new SmscConnector(processor_,cfg,smscid);
         connectors_.Insert( smscid.c_str(), p );
