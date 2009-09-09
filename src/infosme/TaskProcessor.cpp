@@ -11,8 +11,8 @@
 
 extern bool isMSISDNAddress(const char* string);
 
-namespace smsc { namespace infosme 
-{
+namespace smsc {
+namespace infosme {
 
 RetryPolicies TaskProcessor::retryPlcs;
 
@@ -857,6 +857,16 @@ void TaskProcessor::processReceipt (const ResponseData& rd, bool internal)
 }
 
 /* ------------------------ Admin interface implementation ------------------------ */ 
+
+void reloadSmscAndRegions()
+{
+    MutexGuard msGuard(messageSenderLock);
+    if ( !messageSender ) return;
+    Manager::reinit();
+    Manager& config = Manager::getInstance();
+    messageSender->reloadSmscAndRegions( config );
+}
+
 
 void TaskProcessor::addTask(uint32_t taskId)
 {

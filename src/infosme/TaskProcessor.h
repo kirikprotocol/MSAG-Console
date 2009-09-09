@@ -200,10 +200,13 @@ namespace smsc { namespace infosme
 
     struct MessageSender
     {
-        virtual SmscConnector* getSmscConnector(const std::string& regionId) = 0;
         virtual uint32_t sendSms(const std::string& src,const std::string& dst,const std::string& txt,bool flash)=0;
         virtual ~MessageSender() {};
 
+        /// NOTE: both methods are externally (in taskprocessor) guarded 
+        /// against connector/regions list modifications
+        virtual SmscConnector* getSmscConnector(const std::string& regionId) = 0;
+        virtual void reloadSmscAndRegions( Manager& mgr ) = 0;
     protected:
 
         MessageSender() {};
@@ -478,6 +481,8 @@ namespace smsc { namespace infosme
         virtual void flushStatistics() {
             if (statistics) statistics->flushStatistics();
         }
+        
+        virtual void reloadSmscAndRegions();
 
         virtual void addTask(uint32_t taskId);
         virtual void removeTask(uint32_t taskId);

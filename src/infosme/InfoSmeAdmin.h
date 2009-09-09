@@ -38,6 +38,8 @@ namespace smsc { namespace infosme
 
         virtual void flushStatistics() = 0;
         
+        virtual void reloadSmscAndRegions() = 0;
+
         virtual void addTask(uint32_t taskId) = 0;
         virtual void removeTask(uint32_t taskId) = 0; 
         virtual void changeTask(uint32_t taskId) = 0;
