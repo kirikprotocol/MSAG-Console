@@ -45,6 +45,7 @@ struct SeqNum {
 class SmscConnector : public smsc::core::threads::Thread {
 public:
   SmscConnector(TaskProcessor& processor, const InfoSmeConfig& cfg, const string& smscId);
+    virtual ~SmscConnector();
 
   int Execute();
   void stop();

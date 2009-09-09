@@ -164,5 +164,42 @@ void InfoSmeMessageSender::reloadSmscAndRegions( Manager& manager )
     smsc::util::config::region::RegionFinder::getInstance().registerDefaultRegion(&(regionsConfig_->getDefaultRegion()));
 }
 
+
+SmscConnector* InfoSmeMessageSender::addConnector( const InfoSmeConfig& cfg, const std::string& smscid )
+{
+    SmscConnector** ptr = connectors_.GetPtr(smscid.c_str());
+    SmscConnector* p = 0;
+    if ( ptr ) {
+        p = *ptr;
+        // FIXME: update
+    } else {
+        p = new SmscConnector(processor_,cfg,smscid);
+        connectors_.Insert( smscid.c_str(), p );
+    }
+    return p;
+}
+
+
+void InfoSmeMessageSender::addRegionMapping( const std::string& regionId, const std::string& smscId )
+{
+    if ( smscId.empty() || smscId == defaultConnector_->getSmscId() ) {
+        smsc_log_info(log_, "SMSC id '%s' for region '%s' set. Default SMSC Connector '%s' will be used.",
+                      smscId.c_str(), regionId.c_str(), defaultConnector_->getSmscId().c_str());
+        regions_.Insert(regionId.c_str(), defaultConnector_->getSmscId());
+        return;
+    }
+    if (regions_.Exists(regionId.c_str())) {
+        throw ConfigException("Region already exists: '%s'", smscId.c_str());
+    }
+    if (!connectors_.Exists(smscId.c_str())) {
+        smsc_log_info(log_, "SMSC Connector '%s' for region '%s' unknown. Default SMSC Connector '%s' will be used.",
+                      smscId.c_str(), regionId.c_str(), defaultConnector_->getSmscId().c_str());
+        regions_.Insert(regionId.c_str(), defaultConnector_->getSmscId());
+        return;
+    }
+    smsc_log_info(log_, "SMSC Connector '%s' for region '%s' will be used.", smscId.c_str(), regionId.c_str());
+    regions_.Insert(regionId.c_str(), smscId);
+}
+
 } // namespace infosme
 } // namespace smsc

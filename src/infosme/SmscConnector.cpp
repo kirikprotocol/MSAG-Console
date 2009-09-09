@@ -2,10 +2,10 @@
 #include "SmscConnector.h"
 #include "TrafficControl.hpp"
 
-namespace smsc { namespace infosme {
+namespace smsc {
+namespace infosme {
 
 using smsc::core::synchronization::MutexGuard;
-
 
 SmscConnector::SmscConnector(TaskProcessor& processor, const InfoSmeConfig& cfg, const string& smscId):
 processor_(processor), 
@@ -19,6 +19,12 @@ connected_(false)
 {
   listener_.setSyncTransmitter(session_.getSyncTransmitter());
   listener_.setAsyncTransmitter(session_.getAsyncTransmitter());
+}
+
+SmscConnector::~SmscConnector()
+{
+    stop();
+    WaitFor();
 }
 
 void SmscConnector::stop() {
