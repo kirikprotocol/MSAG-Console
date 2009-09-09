@@ -253,6 +253,21 @@ sub generate{
     $moddeps.=' '.readstring($dirname.'/.depends') if -f $dirname.'/.depends';
     $allmoddeps.=' '.readstring($dirname.'/.depends') if -f $dirname.'/.depends';
     
+    if (-x $dirname.'/regtest.sh')
+    {
+        if ( $moddeps ) {
+            print $mkf "$modname.regtest: $modname\n";
+        } else {
+            print $mkf "$modname.regtest:\n";
+        }
+        print $mkf "\t\@\$(ECHO) '\$(LNKCLR)Regression tests for $modname\$(CLREND)'\n";
+        print $mkf "\t-mkdir -p \$(SMSC_BUILDDIR)/regtest/$modname\n";
+        print $mkf "\tcp \$(SMSC_SRCDIR)/conf/regtest.logger.properties \$(SMSC_BUILDDIR)/regtest/$modname/logger.properties\n";
+        print $mkf "\tcd \$(SMSC_BUILDDIR)/regtest/$modname ; LD_LIBRARY_PATH=\$\${LD_LIBRARY_PATH}:\$(SMSC_BUILDDIR)/bin \$(SMSC_SRCDIR)/$dirname/regtest.sh \$(SMSC_SRCDIR) \$(SMSC_BUILDDIR) $dirname $modname >regtest.output\n";
+        print $mkf "\tdiff -u \$(SMSC_SRCDIR)/$dirname/regtest.output \$(SMSC_BUILDDIR)/regtest/$modname/regtest.output\n";
+        print $mkf "\n";
+    }
+
     print $mkf "$modname: $moddeps\n\n" if $moddeps;
     print $mkf "$modname.all: $allmoddeps\n\n" if $allmoddeps;
     print $mkf "$modname.rclean: $modname.clean".(join('',map{" $modname.$_.rclean"}@$mods))."\n\n";
