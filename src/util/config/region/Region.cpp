@@ -6,8 +6,9 @@ namespace util {
 namespace config {
 namespace region {
 
-Region::Region(const std::string& id, const std::string& name, ulong_t bandwidth,const std::string& email, subjects_ids_lst_t subjects_ids)
-  :_id(id), _name(name), _bandwidth(bandwidth), _email(email),_subjects_ids(subjects_ids), _subjectHasBeenExpanded(false) {}
+Region::Region(const std::string& id, const std::string& name, ulong_t bandwidth,const std::string& email, subjects_ids_lst_t subjects_ids, const std::string& infosmeSmscId)
+  :_id(id), _name(name), _bandwidth(bandwidth), _email(email),_subjects_ids(subjects_ids), _subjectHasBeenExpanded(false),
+   _infosmeSmscId(infosmeSmscId) {}
 
 Region::MasksIterator
 Region::getMasksIterator() {

@@ -98,8 +98,10 @@ RegionsConfig::load()
         smsc::util::xml::XmlStr region_name(region_element->getAttribute(smsc::util::xml::XmlStr("name")));
         smsc::util::xml::XmlStr region_bandwidth(region_element->getAttribute(smsc::util::xml::XmlStr("bandwidth")));
         smsc::util::xml::XmlStr region_email(region_element->getAttribute(smsc::util::xml::XmlStr("email")));
+        smsc::util::xml::XmlStr region_infosmeSmscId(region_element->getAttribute(smsc::util::xml::XmlStr("infosme_smsc")));
 
-        smsc_log_info(logger, "RegionsConfig::load::: id=%s name=%s bandwidth=%d email=%s", (const char *)region_id, (const char *)region_name, atol(region_bandwidth),(const char*)region_email);
+        smsc_log_info(logger, "RegionsConfig::load::: id=%s name=%s bandwidth=%d email=%s infosme_smsc=%s",
+                       (const char *)region_id, (const char *)region_name, atol(region_bandwidth),(const char*)region_email, (const char*)region_infosmeSmscId);
 
         Region::subjects_ids_lst_t subjects_ids;
         if ( loadSubjects(region_element->getElementsByTagName(smsc::util::xml::XmlStr("subjects")), subjects_ids) != success ) return fail;
@@ -107,7 +109,8 @@ RegionsConfig::load()
                                                                           (const char *)region_name,
                                                                           atol(region_bandwidth),
                                                                           region_email.c_str(),
-                                                                          subjects_ids)));
+                                                                          subjects_ids,
+                                                                          region_infosmeSmscId.c_str())));
       }
 
       // load default region

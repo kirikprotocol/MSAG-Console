@@ -15,7 +15,8 @@ class Region
 {
 public:
   typedef std::vector<std::string> subjects_ids_lst_t;
-  Region(const std::string& id="", const std::string& name="", ulong_t bandwidth=0, const std::string& email="",subjects_ids_lst_t subjects_ids=subjects_ids_lst_t());
+  Region(const std::string& id="", const std::string& name="", ulong_t bandwidth=0, 
+         const std::string& email="",subjects_ids_lst_t subjects_ids=subjects_ids_lst_t(), const std::string& infosmeSmscId="");
 
   const std::string& getId() const { return _id; }
   const std::string& getName() const { return _name; }
@@ -24,6 +25,7 @@ public:
   {
     return _email;
   }
+  const std::string& getInfosmeSmscId() const { return _infosmeSmscId;}
 
   std::string toString() const;
 
@@ -33,6 +35,7 @@ private:
   ulong_t _bandwidth;
   std::string _email;
   subjects_ids_lst_t _subjects_ids;
+  std::string _infosmeSmscId;
 
   typedef std::vector<smsc::util::config::route::Subject> subjects_t;
   subjects_t _subjects;

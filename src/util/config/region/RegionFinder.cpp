@@ -12,7 +12,7 @@ RegionFinder::registerAddressMask(const std::string& addressMask, const smsc::ut
   _wildcardSearchTree.Insert(addressMask.c_str(), region);
   regions_hash_t::const_iterator iter = _regionsHash.find(region->getId());
   if ( iter == _regionsHash.end() )
-    _regionsHash.insert(std::make_pair(region->getId(), region));
+   _regionsHash.insert(std::make_pair(region->getId(), region));
 }
 
 void
