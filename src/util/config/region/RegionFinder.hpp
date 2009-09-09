@@ -17,6 +17,7 @@ public:
   RegionFinder():_regionDefault(0)
   {
   }
+  void unsafeReset(); // destroy the mapping
   void registerAddressMask(const std::string& addressMask, const smsc::util::config::region::Region* region);
   void registerDefaultRegion(const smsc::util::config::region::RegionDefault* region);
   const smsc::util::config::region::Region* findRegionByAddress(const std::string& address);

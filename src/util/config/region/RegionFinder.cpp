@@ -6,6 +6,13 @@ namespace util {
 namespace config {
 namespace region {
 
+void RegionFinder::unsafeReset()
+{
+    _wildcardSearchTree.Clear();
+    _regionDefault = 0;
+    _regionsHash.clear();
+}
+
 void
 RegionFinder::registerAddressMask(const std::string& addressMask, const smsc::util::config::region::Region* region)
 {

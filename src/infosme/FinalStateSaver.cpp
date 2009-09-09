@@ -69,8 +69,8 @@ void FinalStateSaver::save( time_t          now,
         fname.append(::workingExtension);
         file_.WOpen( fname.c_str() );
         nextOpen_ = now + rollingInterval_;
-        const char* msg = "TIME,STATE,TASKID,MSGID,SMPPSTATUS,ADDRESS,USERDATA,TASKNAME\n";
-        file_.Write(msg,::strlen(msg));
+        const char* head = "TIME,STATE,TASKID,MSGID,SMPPSTATUS,ADDRESS,USERDATA,TASKNAME\n";
+        file_.Write(head,::strlen(head));
     }
     file_.Write(buf.c_str(),buf.size());
     if ( noMoreMessages ) {

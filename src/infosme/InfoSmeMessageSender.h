@@ -1,10 +1,18 @@
 #ifndef INFOSME_INFOSMEMESSAGESENDER_H
 #define INFOSME_INFOSMEMESSAGESENDER_H
 
+#include <string>
+#include "util/config/region/RegionsConfig.hpp"
+#include "logger/Logger.h"
+#include "core/buffers/Hash.hpp"
 #include "TaskProcessor.h"
 
 namespace smsc {
 namespace infosme {
+
+class InfoSmeConfig;
+class SmscConnector;
+class TaskProcessor;
 
 class InfoSmeMessageSender : public MessageSender
 {
@@ -12,25 +20,28 @@ private:
     typedef Hash<SmscConnector*>::Iterator ConnectorIterator;
 
 public:
-    InfoSmeMessageSender( TaskProcessor& processor,
-                          const InfoSmeConfig& defaultConfig,
-                          const string& defaultSmscId );
-    // processor_(processor), defaultConnector_(processor, defaultConfig, defaultSmscId), defaultSmscId_(defaultSmscId) {
+    InfoSmeMessageSender( TaskProcessor& processor );
 
     virtual ~InfoSmeMessageSender();
     void start();
     void stop();
 
-    virtual uint32_t sendSms(const std::string& org,const std::string& dst,const std::string& txt,bool flash)
+    virtual uint32_t sendSms(const std::string& org,const std::string& dst,const std::string& txt,bool flash);
+    /*
     {
         smsc_log_info(logger, "sendSms do default region!");
         return defaultConnector_->sendSms(org,dst,txt,flash);
     }
+     */
 
-    virtual SmscConnector* getSmscConnector(const string& regionId);
+    virtual SmscConnector* getSmscConnector(const std::string& regionId);
     virtual void reloadSmscAndRegions( Manager& mgr );
 
 private:
+
+    SmscConnector* addConnector( const InfoSmeConfig& cfg, const std::string& smscid );
+    void addRegionMapping( const std::string& regionId, const std::string& smscId );
+
     /*
     void addConnector(const InfoSmeConfig& cfg, const string& smscId) {
       if (smscId == defaultSmscId_) {
@@ -80,11 +91,12 @@ private:
      */
 
 private:
-    TaskProcessor&               processor_;
-    std::auto_ptr<SmscConnector> defaultConnector_;
-    // string defaultSmscId_;
-    Hash<SmscConnector*> connectors_;  // owned, excluding default
-    Hash<string> regions_;
+    std::auto_ptr< smsc::util::config::region::RegionsConfig > regionsConfig_;
+    smsc::logger::Logger* log_;
+    TaskProcessor&        processor_;
+    SmscConnector*        defaultConnector_;
+    Hash<SmscConnector*>  connectors_;  // owned, all connectors
+    Hash<std::string>     regions_;
 };
 
 } // namespace infosme

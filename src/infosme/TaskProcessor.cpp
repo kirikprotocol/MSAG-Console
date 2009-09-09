@@ -858,7 +858,7 @@ void TaskProcessor::processReceipt (const ResponseData& rd, bool internal)
 
 /* ------------------------ Admin interface implementation ------------------------ */ 
 
-void reloadSmscAndRegions()
+void TaskProcessor::reloadSmscAndRegions()
 {
     MutexGuard msGuard(messageSenderLock);
     if ( !messageSender ) return;
