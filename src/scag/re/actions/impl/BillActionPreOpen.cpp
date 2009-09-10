@@ -118,10 +118,11 @@ BillOpenCallParamsData* BillActionPreOpen::makeParamsData( ActionContext& contex
 
     if (tariffRec->billType == bill::infrastruct::NONE)
     {
-        smsc_log_warn(logger, "Billing desabled for this tariff entry. ServiceNumber=%s, CategoryId=%d, MediaTypeId=%d",
+        smsc_log_warn(logger, "Billing desibled for this tariff entry. ServiceNumber=%s, CategoryId=%d, MediaTypeId=%d",
                       tariffRec->ServiceNumber.c_str(), tariffRec->CategoryId,
                       tariffRec->MediaTypeId );
-        // FIXME: how to (should we?) report disabled billing ?
+        setBillingStatus( context, "billing disabled", false );
+        setTariffStatus( context, 0 );
         return 0;
     }
 
