@@ -32,6 +32,7 @@ BillOpenCallParamsData* BillActionPreOpen::makeParamsData( ActionContext& contex
         // check bill id
         const std::string transId = getTransId( context );
         if ( transId.empty() ) {
+            setBillingStatus( context, "no trans-id specified", false );
             setTariffStatus( context, 0 );
             return 0;
         }
@@ -99,6 +100,8 @@ BillOpenCallParamsData* BillActionPreOpen::makeParamsData( ActionContext& contex
     {
         smsc_log_warn(logger,"Action '%s' cannot process. Empty category or content-type",
                       opname() );
+        setBillingStatus( context, "empty category", false );
+        setTariffStatus( context, 0 );
         return 0;
     }
 
@@ -118,7 +121,7 @@ BillOpenCallParamsData* BillActionPreOpen::makeParamsData( ActionContext& contex
 
     if (tariffRec->billType == bill::infrastruct::NONE)
     {
-        smsc_log_warn(logger, "Billing desibled for this tariff entry. ServiceNumber=%s, CategoryId=%d, MediaTypeId=%d",
+        smsc_log_warn(logger, "Billing disabled for this tariff entry. ServiceNumber=%s, CategoryId=%d, MediaTypeId=%d",
                       tariffRec->ServiceNumber.c_str(), tariffRec->CategoryId,
                       tariffRec->MediaTypeId );
         setBillingStatus( context, "billing disabled", false );
