@@ -481,7 +481,7 @@ billid_type BillingManagerImpl::Open( BillOpenCallParams& openCallParams,
                 pck->setDescription(billingInfoStruct.description);
             }
             pck->setWalletType(tariffRec.Currency);
-            pck->setAmount( int(tariffRec.getFloatPrice()+0.5) );
+            pck->setAmount(tariffRec.getIntPrice());
             if (!billingInfoStruct.externalId.empty()) {
                 pck->setExternalId(billingInfoStruct.externalId);
             }
@@ -548,7 +548,7 @@ void BillingManagerImpl::Commit(billid_type billId, lcm::LongCallContext* lcmCtx
             pck->setAgentId(billingInfoStruct.serviceId);
             pck->setUserId(billingInfoStruct.AbonentNumber);
             pck->setWalletType(tariffRec.Currency);
-            pck->setAmount( int(tariffRec.getFloatPrice()+0.5) );
+            pck->setAmount(tariffRec.getIntPrice());
             if (!billingInfoStruct.externalId.empty()) {
                 pck->setExternalId(billingInfoStruct.externalId);
             } else {
@@ -620,7 +620,7 @@ void BillingManagerImpl::CommitTransit( BillCloseCallParams& params, lcm::LongCa
     pck->setAgentId(billingInfoStruct.serviceId);
     pck->setUserId(billingInfoStruct.AbonentNumber);
     pck->setWalletType(tariffRec.Currency);
-    pck->setAmount( int(tariffRec.getFloatPrice()+0.5) );
+    pck->setAmount(tariffRec.getIntPrice());
     if (!billingInfoStruct.externalId.empty()) {
         pck->setExternalId(billingInfoStruct.externalId);
     } else {
@@ -656,7 +656,7 @@ void BillingManagerImpl::RollbackTransit( BillCloseCallParams& params, lcm::Long
     pck->setAgentId(billingInfoStruct.serviceId);
     pck->setUserId(billingInfoStruct.AbonentNumber);
     pck->setWalletType(tariffRec.Currency);
-    // pck->setAmount( int(tariffRec.getFloatPrice()+0.5) );
+    // pck->setAmount(tariffRec.getIntPrice());
     if (!billingInfoStruct.externalId.empty()) {
         pck->setExternalId(billingInfoStruct.externalId);
     } else {
@@ -692,7 +692,7 @@ void BillingManagerImpl::Check( BillCheckCallParams& params, lcm::LongCallContex
     pck->setAgentId(billingInfoStruct.serviceId);
     pck->setUserId(billingInfoStruct.AbonentNumber);
     pck->setWalletType(tariffRec.Currency);
-    // pck->setAmount( int(tariffRec.getFloatPrice()+0.5) );
+    // pck->setAmount(tariffRec.getIntPrice());
     if (!billingInfoStruct.externalId.empty()) {
         pck->setExternalId(billingInfoStruct.externalId);
     } else {
