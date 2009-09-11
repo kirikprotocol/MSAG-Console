@@ -17,6 +17,7 @@ using eyeline::asn1::ASTag;
 using eyeline::asn1::ASTypeAC;
 using eyeline::asn1::ASTypeRfp;
 using eyeline::asn1::BITBuffer;
+using eyeline::asn1::OCTBuffer;
 
 typedef uint8_t InvokeId;
 
@@ -101,22 +102,25 @@ public:
   // ---------------------------------
   // -- ASTypeAC interface methods
   // ---------------------------------
+  using ASTypeAC::encode;
+  using ASTypeAC::decode;
+  using ASTypeAC::deferredDecode;
 
   //REQ: if use_rule == valRule, presentation > valNone, otherwise presentation == valDecoded
-  ENCResult Encode(BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
+  ENCResult encode(OCTBuffer & use_buf, EncodingRule use_rule = ruleDER)
     /*throw ASN1CodecError*/;
 
   //REQ: presentation == valNone
   //OUT: presentation (include all subcomponents) = valDecoded,
   //NOTE: in case of decMoreInput, stores decoding context 
-  DECResult Decode(const BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
+  DECResult decode(const OCTBuffer & use_buf, EncodingRule use_rule = ruleDER)
     /*throw ASN1CodecError*/;
 
   //REQ: presentation == valNone
   //OUT: presentation (include all subcomponents) = valMixed | valDecoded
-  //NOTE: in case of valMixed keeps references to BITBuffer !!!
+  //NOTE: in case of valMixed keeps references to OCTBuffer !!!
   //NOTE: in case of decMoreInput, stores decoding context 
-  DECResult DeferredDecode(const BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
+  DECResult deferredDecode(const OCTBuffer & use_buf, EncodingRule use_rule = ruleDER)
     /*throw ASN1CodecError*/;
 };
 
@@ -129,21 +133,24 @@ public:
   // -- ASTypeAC interface methods
   // ---------------------------------
 
+  using ASTypeAC::encode;
+  using ASTypeAC::decode;
+  using ASTypeAC::deferredDecode;
   //REQ: if use_rule == valRule, presentation > valNone, otherwise presentation == valDecoded
-  ENCResult Encode(BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
+  ENCResult encode(OCTBuffer & use_buf, EncodingRule use_rule = ruleDER)
     /*throw ASN1CodecError*/;
 
   //REQ: presentation == valNone
   //OUT: presentation (include all subcomponents) = valDecoded,
   //NOTE: in case of decMoreInput, stores decoding context 
-  DECResult Decode(const BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
+  DECResult decode(const OCTBuffer & use_buf, EncodingRule use_rule = ruleDER)
     /*throw ASN1CodecError*/;
 
   //REQ: presentation == valNone
   //OUT: presentation (include all subcomponents) = valMixed | valDecoded
-  //NOTE: in case of valMixed keeps references to BITBuffer !!!
+  //NOTE: in case of valMixed keeps references to OCTBuffer !!!
   //NOTE: in case of decMoreInput, stores decoding context 
-  DECResult DeferredDecode(const BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
+  DECResult deferredDecode(const OCTBuffer & use_buf, EncodingRule use_rule = ruleDER)
     /*throw ASN1CodecError*/;
 };
 
@@ -155,22 +162,25 @@ public:
   // ---------------------------------
   // -- ASTypeAC interface methods
   // ---------------------------------
+  using ASTypeAC::encode;
+  using ASTypeAC::decode;
+  using ASTypeAC::deferredDecode;
 
   //REQ: if use_rule == valRule, presentation > valNone, otherwise presentation == valDecoded
-  ENCResult Encode(BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
+  ENCResult encode(OCTBuffer & use_buf, EncodingRule use_rule = ruleDER)
     /*throw ASN1CodecError*/;
 
   //REQ: presentation == valNone
   //OUT: presentation (include all subcomponents) = valDecoded,
   //NOTE: in case of decMoreInput, stores decoding context 
-  DECResult Decode(const BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
+  DECResult decode(const OCTBuffer & use_buf, EncodingRule use_rule = ruleDER)
     /*throw ASN1CodecError*/;
 
   //REQ: presentation == valNone
   //OUT: presentation (include all subcomponents) = valMixed | valDecoded
-  //NOTE: in case of valMixed keeps references to BITBuffer !!!
+  //NOTE: in case of valMixed keeps references to OCTBuffer !!!
   //NOTE: in case of decMoreInput, stores decoding context 
-  DECResult DeferredDecode(const BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
+  DECResult deferredDecode(const OCTBuffer & use_buf, EncodingRule use_rule = ruleDER)
     /*throw ASN1CodecError*/;
 };
 
@@ -182,22 +192,25 @@ public:
   // ---------------------------------
   // -- ASTypeAC interface methods
   // ---------------------------------
+  using ASTypeAC::encode;
+  using ASTypeAC::decode;
+  using ASTypeAC::deferredDecode;
 
   //REQ: if use_rule == valRule, presentation > valNone, otherwise presentation == valDecoded
-  ENCResult Encode(BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
+  ENCResult encode(OCTBuffer & use_buf, EncodingRule use_rule = ruleDER)
     /*throw ASN1CodecError*/;
 
   //REQ: presentation == valNone
   //OUT: presentation (include all subcomponents) = valDecoded,
   //NOTE: in case of decMoreInput, stores decoding context 
-  DECResult Decode(const BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
+  DECResult decode(const OCTBuffer & use_buf, EncodingRule use_rule = ruleDER)
     /*throw ASN1CodecError*/;
 
   //REQ: presentation == valNone
   //OUT: presentation (include all subcomponents) = valMixed | valDecoded
-  //NOTE: in case of valMixed keeps references to BITBuffer !!!
+  //NOTE: in case of valMixed keeps references to OCTBuffer !!!
   //NOTE: in case of decMoreInput, stores decoding context 
-  DECResult DeferredDecode(const BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
+  DECResult deferredDecode(const OCTBuffer & use_buf, EncodingRule use_rule = ruleDER)
     /*throw ASN1CodecError*/;
 };
 
@@ -233,22 +246,25 @@ public:
   // ---------------------------------
   // -- ASTypeAC interface methods
   // ---------------------------------
+  using ASTypeAC::encode;
+  using ASTypeAC::decode;
+  using ASTypeAC::deferredDecode;
 
   //REQ: if use_rule == valRule, presentation > valNone, otherwise presentation == valDecoded
-  ENCResult Encode(BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
+  ENCResult encode(OCTBuffer & use_buf, EncodingRule use_rule = ruleDER)
     /*throw ASN1CodecError*/;
 
   //REQ: presentation == valNone
   //OUT: presentation (include all subcomponents) = valDecoded,
   //NOTE: in case of decMoreInput, stores decoding context 
-  DECResult Decode(const BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
+  DECResult decode(const OCTBuffer & use_buf, EncodingRule use_rule = ruleDER)
     /*throw ASN1CodecError*/;
 
   //REQ: presentation == valNone
   //OUT: presentation (include all subcomponents) = valMixed | valDecoded
-  //NOTE: in case of valMixed keeps references to BITBuffer !!!
+  //NOTE: in case of valMixed keeps references to OCTBuffer !!!
   //NOTE: in case of decMoreInput, stores decoding context 
-  DECResult DeferredDecode(const BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
+  DECResult deferredDecode(const OCTBuffer & use_buf, EncodingRule use_rule = ruleDER)
     /*throw ASN1CodecError*/;
 };
 
