@@ -21,19 +21,39 @@ private:
 protected:
   void countIds(void)
   {
-    _numIds = length() ? 2 : 0;
-    for (uint16_t i = 1; i < length(); ++i) {
+    _numIds = 0;
+    for (uint16_t i = 0; i < length(); ++i) {
       if (!(_octs[i] & 0x80))
-          ++_numIds;
+        ++_numIds;
     }
+    if (_numIds)
+      ++_numIds;  //take in account packing of 1st and 2nd arcs ids
     return;
   }
 
-  bool getSubId(uint32_t & sub_id, uint16_t & idx/* >= 1 */) const
+  //Splits the 1st subidentifier to 1st and 2nd arcs ids
+  void splitIdsPair(const uint32_t & sub_id, uint32_t & id_1st, uint32_t & id_2nd) const
+  {
+    if (sub_id < 80) {
+      id_1st = sub_id/40; //arc 0 or 1
+      id_2nd = sub_id%40;
+    } else {              //arc 2
+      id_1st = 2;
+      id_2nd = sub_id - 80;
+    }
+  }
+  //Decodes subidentifier starting from octet pointed by 'idx'.
+  //Returns false in case of invalid encoding setting 'sub_id' to -1
+  bool getSubId(uint32_t & sub_id, uint16_t & idx/* >= 0 */) const
   {
     for (sub_id = 0; idx < length(); ++idx) {
       uint8_t oct = _octs[idx];
+      uint32_t prev = sub_id;
+
       sub_id = (sub_id << 7) + (oct & 0x7F);
+      if (prev > sub_id)
+        break; //uint32_t overloading
+
       if (!(oct & 0x80)) {
         ++idx;
         return true;
@@ -75,15 +95,27 @@ public:
   const char *    nick(void) const { return _nick.c_str(); }
   const uint8_t * octets(void) const { return &_octs[0]; }
 
-  uint32_t  subId(uint16_t idx) const
+  //Returns OID subidentifier #'id_idx',
+  //-1 in case of 'id_idx' is out of range or encoding is invalid
+  //NOTE: 'id_idx' is counted starting from 0
+  uint32_t  subId(uint16_t id_idx) const
   {
-    if (!idx)
-      return (uint32_t)(_octs[0]/40);
-    if (idx == 1)
-      return (uint32_t)(_octs[0]%40);
-    uint32_t subId;
-    uint16_t i = 1;
-    while (--idx && getSubId(subId, i));
+    if (id_idx >= numSubIds())
+      return (uint32_t)(-1);
+
+    uint32_t subId = 0;
+    uint16_t i = 0;
+    if (!getSubId(subId, i))
+      return subId;
+
+    if (id_idx < 2) {
+      uint32_t id1st = 0;
+      uint32_t id2nd = 0;
+      splitIdsPair(subId, id1st, id2nd);
+      return (id_idx == 1) ? id1st : id2nd;
+    }
+
+    while (--id_idx && getSubId(subId, i));
     return subId;
   }
 
