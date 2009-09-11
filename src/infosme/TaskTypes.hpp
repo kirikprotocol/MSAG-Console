@@ -94,7 +94,7 @@ struct TaskMsgId
     uint32_t taskId;
     uint64_t msgId;
 
-    uint32_t getTaskId()
+    uint32_t getTaskId() const
     {
         return taskId;
     }
@@ -103,21 +103,6 @@ struct TaskMsgId
         : taskId(taskId), msgId(msgId) {}
 };
 
-/*
-  struct ConnectorSeqNum {
-    uint32_t seqNum;
-    std::string smscId;
-
-    ConnectorSeqNum():seqNum(0) {};
-    ConnectorSeqNum(uint32_t seqnum, const std::string& smscid):seqNum(seqnum), smscId(smscid) {};
-    bool operator==(const ConnectorSeqNum& sn) {
-      return ((seqNum == sn.seqNum) && (smscId == sn.smscId));
-    }
-    static uint32_t CalcHash(const ConnectorSeqNum& seqNum) {
-      return smsc::core::buffers::HashFunc(seqNum.smscId.c_str()) + seqNum.seqNum;
-    }
-  };
- */
 
 struct ReceiptId 
 {
@@ -215,13 +200,17 @@ struct ReceiptId
 };
 
 
-  struct ResponseData{
+struct ResponseData
+{
     std::string msgId;
     int status;
     int seqNum;
-    // ConnectorSeqNum seqNum;
     bool accepted, retry, immediate, trafficst;
-    ResponseData(int argStatus,int argSeqNum,const std::string& argMsgId):msgId(argMsgId),status(argStatus),seqNum(argSeqNum)
+
+    ResponseData( int argStatus,
+                  int argSeqNum,
+                  const std::string& argMsgId ) :
+    msgId(argMsgId), status(argStatus), seqNum(argSeqNum)
     {
       using namespace smsc::system;
       accepted = status==Status::OK;
@@ -242,7 +231,8 @@ struct ReceiptId
                         status == Status::SMENOTCONNECTED           ||
                         status == Status::SYSFAILURE);
     }
-  };
+};
+
 }
 }
 

@@ -18,9 +18,10 @@ struct MessageSender
 
     /// NOTE: both methods are externally (in taskprocessor) guarded 
     /// against connector/regions list modifications
-    virtual SmscConnector* getSmscConnector(const std::string& regionId) = 0;
     virtual void reloadSmscAndRegions( smsc::util::config::Manager& mgr ) = 0;
     virtual bool send( Task* task, Message& message ) = 0;
+    virtual void processWaitingEvents(time_t tm) = 0;
+
 protected:
     MessageSender() {}
 };

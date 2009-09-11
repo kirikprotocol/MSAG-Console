@@ -6,8 +6,6 @@
 #include "sme/SmppBase.hpp"
 #include "logger/Logger.h"
 
-// #include "TaskProcessor.h"
-
 namespace smsc {
 namespace infosme {
 

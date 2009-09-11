@@ -119,9 +119,10 @@ public:
     bool invokeProcessReceipt( const ResponseData& data );
     bool invokeProcessResponse( const ResponseData& data );
     bool send( Task* task, Message& message );
+    void processWaitingEvents( time_t tm );
 
 private:
-  bool convertMSISDNStringToAddress(const char* string, smsc::sms::Address& address);
+    bool convertMSISDNStringToAddress(const char* string, smsc::sms::Address& address);
 
     void processResponse( const ResponseData& rd, bool internal = false );
     void processReceipt( const ResponseData& rd, bool internal = false );

@@ -21,7 +21,7 @@ RetryPolicies TaskProcessor::retryPlcs;
 
 TaskProcessor::TaskProcessor(ConfigView* config) :
 TaskProcessorAdapter(), InfoSmeAdmin(), Thread(),
-logger(Logger::getInstance("smsc.infosme.TaskProcessor")), 
+log_(Logger::getInstance("smsc.infosme.TaskProcessor")), 
 bStarted(false),
 bNeedExit(false),
 messageSender(0), 
@@ -34,7 +34,7 @@ statistics(0), protocolId(0), svcType(0), address(0),
 unrespondedMessagesMax(1),
 unrespondedMessagesSleep(10)
 {
-    smsc_log_info(logger, "Loading ...");
+    smsc_log_info(log_, "Loading ...");
 
     address = config->getString("Address");
     if (!address || !isMSISDNAddress(address))
@@ -59,22 +59,22 @@ unrespondedMessagesSleep(10)
     try { unrespondedMessagesMax = config->getInt("unrespondedMessagesMax"); } catch (...) {};
     if (unrespondedMessagesMax <= 0) {
       unrespondedMessagesMax = 1;
-      smsc_log_warn(logger, "Parameter 'unrespondedMessagesMax' value is invalid. Using default %d",
+      smsc_log_warn(log_, "Parameter 'unrespondedMessagesMax' value is invalid. Using default %d",
                     unrespondedMessagesMax);
     }
     if (unrespondedMessagesMax > 500) {
-      smsc_log_warn(logger, "Parameter 'unrespondedMessagesMax' value '%d' is too big. "
+      smsc_log_warn(log_, "Parameter 'unrespondedMessagesMax' value '%d' is too big. "
                     "The preffered max value is 500", unrespondedMessagesMax);
     }
     
     try { unrespondedMessagesSleep = config->getInt("unrespondedMessagesSleep"); } catch (...) {};
     if (unrespondedMessagesSleep <= 0) {
       unrespondedMessagesSleep = 10;
-      smsc_log_warn(logger, "'unrespondedMessagesSleep' value is invalid. Using default %dms",
+      smsc_log_warn(log_, "'unrespondedMessagesSleep' value is invalid. Using default %dms",
                     unrespondedMessagesSleep);
     }
     if (unrespondedMessagesSleep > 500) {
-      smsc_log_warn(logger, "Parameter 'unrespondedMessagesSleep' value '%d' is too big. "
+      smsc_log_warn(log_, "Parameter 'unrespondedMessagesSleep' value '%d' is too big. "
                     "The preffered max value is 500ms", unrespondedMessagesSleep);
     }
 
@@ -91,7 +91,7 @@ unrespondedMessagesSleep(10)
     
     std::auto_ptr<ConfigView> dsIntCfgGuard(config->getSubConfig("systemDataSource"));
 
-    smsc_log_info(logger, "Loading tasks ...");
+    smsc_log_info(log_, "Loading tasks ...");
     std::auto_ptr<ConfigView> tasksCfgGuard(config->getSubConfig("Tasks"));
     ConfigView* tasksCfg = tasksCfgGuard.get();
     std::auto_ptr< std::set<std::string> > setGuard(tasksCfg->getShortSectionNames());
@@ -115,7 +115,7 @@ unrespondedMessagesSleep(10)
             const char* taskId = (const char *)i->c_str();
             if (!taskId || taskId[0] == '\0')
                 throw ConfigException("Task id empty or wasn't specified");
-            smsc_log_info(logger, "Loading task '%s' ...", taskId);
+            smsc_log_info(log_, "Loading task '%s' ...", taskId);
             
             std::auto_ptr<ConfigView> taskConfigGuard(tasksCfg->getSubConfig(taskId));
             ConfigView* taskConfig = taskConfigGuard.get();
@@ -152,19 +152,19 @@ unrespondedMessagesSleep(10)
         }
         catch (ConfigException& exc)
         {
-            smsc_log_error(logger, "Load of tasks failed ! Config exception: %s", exc.what());
+            smsc_log_error(log_, "Load of tasks failed ! Config exception: %s", exc.what());
             throw;
         }
     }
-    smsc_log_info(logger, "Tasks loaded.");
+    smsc_log_info(log_, "Tasks loaded.");
 
-    smsc_log_info(logger, "Loading task schedules ...");
+    smsc_log_info(log_, "Loading task schedules ...");
     std::auto_ptr<ConfigView> schedulerCfgGuard(config->getSubConfig("Schedules"));
     ConfigView* schedulerCfg = schedulerCfgGuard.get();
     scheduler.init(this, schedulerCfg);
-    smsc_log_info(logger, "Task schedules loaded.");
+    smsc_log_info(log_, "Task schedules loaded.");
     
-    smsc_log_info(logger, "Load success.");
+    smsc_log_info(log_, "Load success.");
 
     // jstore.Init((storeLocation+"mapping.bin").c_str(),config->getInt("mappingRollTime"),config->getInt("mappingMaxChanges"));
     mappingRollTime = config->getInt("mappingRollTime");
@@ -275,29 +275,18 @@ void TaskProcessor::Start()
     
     if (!bStarted)
     {
-        smsc_log_info(logger, "Starting ...");
+        smsc_log_info(log_, "Starting ...");
 
         if (!isMessageSenderAssigned()) {
-            smsc_log_error(logger, "Failed to start processing. Message sender is undefined.");
+            smsc_log_error(log_, "Failed to start processing. Message sender is undefined.");
             return;
         }
-        /*
-        {
-          MutexGuard snGuard(taskIdsBySeqNumMonitor);
-          taskIdsBySeqNum.Empty();
-          taskIdsBySeqNumMonitor.notifyAll();
-        }
-        {
-          MutexGuard respGuard(responceWaitQueueLock);
-          responceWaitQueue.Clean();
-        }
-         */
         resetWaitingTasks();
         bNeedExit = false;
         awake.Wait(0);
         Thread::Start();
         bStarted = true;
-        smsc_log_info(logger, "Started.");
+        smsc_log_info(log_, "Started.");
     }
 }
 void TaskProcessor::Stop()
@@ -306,12 +295,12 @@ void TaskProcessor::Stop()
     
     if (bStarted)
     {
-        smsc_log_info(logger, "Stopping ...");
+        smsc_log_info(log_, "Stopping ...");
         bNeedExit = true;
         awake.Signal();
         exited.Wait();
         bStarted = false;
-        smsc_log_info(logger, "Stoped.");
+        smsc_log_info(log_, "Stoped.");
     }
 }
 int TaskProcessor::Execute()
@@ -350,7 +339,7 @@ int TaskProcessor::Execute()
                     task->currentPriorityFrameCounter < task->getPriority())
                 {
                     task->currentPriorityFrameCounter++;
-                    smsc_log_debug(logger, "TaskProcessor::Execute::: processTask for taskId=%d", task->getId());
+                    smsc_log_debug(log_, "TaskProcessor::Execute::: processTask for taskId=%d", task->getId());
                     if (!processTask(task)) {
                         task->currentPriorityFrameCounter = task->getPriority();
                         if (!task->isEnabled()) task->setEnabled(false); // to reset inProcess
@@ -370,233 +359,81 @@ int TaskProcessor::Execute()
     return 0;
 }
 
-/*
-TaskProcessor::traffic_control_res_t
-TaskProcessor::controlTrafficSpeedByRegion(Task* task, Message& message)
-{
-  uint32_t taskId = task->getId();
-
-  smsc_log_debug(logger, "TaskProcessor::controlTrafficSpeedByRegion::: TaskId=[%d]: check region(regionId=%s) bandwidth limit exceeding", taskId, message.regionId.c_str());
-  const smsc::util::config::region::Region* region = smsc::util::config::region::RegionFinder::getInstance().getRegionById(message.regionId);
-
-  //TODO: check region pointer must be not NULL
-
-  timeSlotsHashByRegion_t::iterator iter = _timeSlotsHashByRegion.find(message.regionId);
-  if ( iter == _timeSlotsHashByRegion.end() ) {
-    smsc_log_debug(logger, "TaskProcessor::controlTrafficSpeedByRegion::: TaskId=[%d]: insert timeSlot to hash for regionId=%s", taskId, message.regionId.c_str());
-    std::pair<timeSlotsHashByRegion_t::iterator, bool> insRes = _timeSlotsHashByRegion.insert(std::make_pair(message.regionId, new TimeSlotCounter<int>(1,1)));
-    iter = insRes.first;
-  }
-  TimeSlotCounter<int>* outgoing = iter->second;
-  int out = outgoing->Get();
-
-  bool regionTrafficLimitReached = (out >= region->getBandwidth());
-  smsc_log_debug(logger, "TaskProcessor::controlTrafficSpeedByRegion::: TaskId=[%d]: regionTrafficLimitReached=%d, region bandwidth=%d, current sent messages during one second=%d", taskId, regionTrafficLimitReached, region->getBandwidth(), out);
-  // check max messages per sec. limit. if limit was reached then put message to queue of suspended messages.
-  if ( regionTrafficLimitReached ) {
-    task->putToSuspendedMessagesQueue(message);
-    return TRAFFIC_SUSPENDED;
-  } else {
-    outgoing->Inc();
-    return TRAFFIC_CONTINUED;
-  }
-}
- */
-
-/*
-struct MessageGuard{
-  MessageGuard(Task* argTask,uint64_t argMsgId):task(argTask),msgId(argMsgId),messageProcessed(false)
-  {
-  }
-
-  ~MessageGuard()
-  {
-    if(!messageProcessed)
-    {
-      time_t retryTime=TaskProcessor::getRetryPolicies().getRetryTime(task->getInfo().retryPolicy.c_str(),0);
-      if(retryTime==0)
-      {
-        retryTime=60*60;
-      }
-      task->retryMessage(msgId,time(NULL)+retryTime);
-    }
-  }
-
-  void processed()
-  {
-    messageProcessed=true;
-  }
-
-  Task* task;
-  uint64_t msgId;
-  bool messageProcessed;
-};
-*/
 
 bool TaskProcessor::processTask(Task* task)
 {
     __require__(task);
 
-    // TaskInfo info = task->getInfo();
     Message message;
     if (!task->getNextMessage(message))
     {
-        //smsc_log_debug(logger, "No messages found for task '%s'", info.id.c_str());
+        //smsc_log_debug(log_, "No messages found for task '%s'", info.id.c_str());
         return false;
     }
-
-    // MessageGuard msguard(task,message.id);
 
     MutexGuard msGuard(messageSenderLock);
-    if (messageSender)
-    {
-        return messageSender->send(task,message);
-        /*
-        if ( controlTrafficSpeedByRegion(task, message) != TRAFFIC_SUSPENDED ) {
-
-          SmscConnector* connector = messageSender->getSmscConnector(message.regionId);
-          ConnectorSeqNum seqNum(connector->getSeqNum(), connector->getSmscId());
-          smsc_log_debug(logger, "TaskId=[%d/%s]: Sending message #%llx,seqNum=%d SMSC id='%s' region id='%s' for '%s': %s", 
-                         info.uid,info.name.c_str(), message.id, seqNum.seqNum, seqNum.smscId.c_str(), message.regionId.c_str(),
-                         message.abonent.c_str(), message.message.c_str());
-          {
-            {
-              MutexGuard snGuard(taskIdsBySeqNumMonitor);
-              int seqNumsCount;
-              while ((seqNumsCount=taskIdsBySeqNum.Count()) > unrespondedMessagesMax && !bNeedExit) {
-                int difference = seqNumsCount - unrespondedMessagesMax;
-                taskIdsBySeqNumMonitor.wait(difference*unrespondedMessagesSleep);
-              }
-              if (bNeedExit) return false;
-
-              if (taskIdsBySeqNum.Exists(seqNum))
-              {
-                smsc_log_warn(logger, "Sequence id=%d SMSC id='%s' was already used !", seqNum.seqNum, seqNum.smscId.c_str());
-                taskIdsBySeqNum.Delete(seqNum);
-              }
-              taskIdsBySeqNum.Insert(seqNum, TaskMsgId(info.uid, message.id));
-            }
-            MutexGuard respGuard(responceWaitQueueLock);
-            responceWaitQueue.Push(ResponceTimer(time(NULL)+responceWaitTime, seqNum));
-          }
-        
-          if (!connector->send(message.abonent, message.message, info, seqNum.seqNum))
-          {
-            smsc_log_error(logger, "Failed to send message #%llx for '%s'", 
-                           message.id, message.abonent.c_str());
-
-            task->putToSuspendedMessagesQueue(message);
-
-            MutexGuard snGuard(taskIdsBySeqNumMonitor);
-            if (taskIdsBySeqNum.Exists(seqNum))
-            {
-              taskIdsBySeqNum.Delete(seqNum);
-              taskIdsBySeqNumMonitor.notifyAll();
-            }
-            return false;
-          }
-          msguard.processed();
-          smsc_log_info(logger, "TaskId=[%d/%s]: Sent message #%llx sq=%d for '%s' to SMSC '%s'", 
-                        info.uid,info.name.c_str(), message.id, seqNum.seqNum, message.abonent.c_str(), seqNum.smscId.c_str());
-        } else {
-          msguard.processed();
-          const smsc::util::config::region::Region* region = smsc::util::config::region::RegionFinder::getInstance().getRegionById(message.regionId);
-          smsc_log_info(logger, "TaskId=[%d/%s]: Traffic for region %s with id %s was suspended",
-                        info.uid,info.name.c_str(), region->getName().c_str(), region->getId().c_str());
-          return false;
-        }
-         */
-    }
-    else
-    {
-        smsc_log_error(logger, "No messageSender defined !!!");
+    if (! messageSender) {
+        smsc_log_error(log_, "No messageSender defined !!!");
         return false;
     }
+    return messageSender->send(task,message);
+}
+
+
+void TaskProcessor::processWaitingEvents(time_t tm)
+{
+    MutexGuard msGuard(messageSenderLock);
+    messageSender->processWaitingEvents(tm);
+}
+
+
+bool TaskProcessor::processResponse( Task*    task,
+                                     uint64_t msgId,
+                                     const ResponseData& rd,
+                                     bool internal )
+{
+    const TaskInfo& info = task->getInfo();
+
+    if (!rd.accepted || internal)
+    {
+        if (rd.retry && (rd.immediate || (info.retryOnFail && info.retryPolicy.length())))
+        {
+            time_t nextTime = time(NULL)+(rd.immediate ? 0 :
+                                          TaskProcessor::getRetryPolicies().getRetryTime(info.retryPolicy.c_str(),rd.status));
+
+            if ((info.endDate>0 && nextTime >=info.endDate) ||
+                (info.validityDate>0 && nextTime>=info.validityDate))
+            {
+                task->finalizeMessage(msgId, EXPIRED, rd.status );
+                statistics->incFailed(info.uid);
+            } 
+            else
+            {
+                if (!task->retryMessage(msgId, nextTime)) {
+                    smsc_log_warn(log_, "Message #%llx not found for retry.", msgId);
+                    statistics->incFailed(info.uid);
+                } 
+                else if (!rd.immediate) statistics->incRetried(info.uid);
+            }
+        }
+        else
+        {
+            task->finalizeMessage(msgId, FAILED, rd.status );
+            statistics->incFailed(info.uid);
+        }
+        return false;
+    }
+
+    if (info.transactionMode) {
+        task->finalizeMessage(msgId, DELIVERED, rd.status );
+        statistics->incDelivered(info.uid);
+        return false;
+    }
+        
+    // need receipt
     return true;
 }
 
-void TaskProcessor::processWaitingEvents(time_t time)
-{
-    /*
-    int count = 0;
-    
-    do
-    {
-        ResponceTimer timer;
-        {
-            MutexGuard respGuard(responceWaitQueueLock);
-            if (responceWaitQueue.Count() > 0)
-            {
-                timer = responceWaitQueue[0];
-                if (timer.timer > time)
-                {
-                  break;
-                }
-                responceWaitQueue.Shift(timer);
-            }
-            else
-            {
-              break;
-            }
-        }
-
-        bool needProcess = false;
-        {
-          MutexGuard guard(taskIdsBySeqNumMonitor);
-          needProcess = taskIdsBySeqNum.Exists(timer.seqNum);
-        }
-        if (needProcess)
-        {
-          ResponseData rd(smsc::system::Status::MSGQFUL,timer.seqNum,"");
-
-          processResponce(rd, true);
-        }
-        
-        {
-            MutexGuard respGuard(responceWaitQueueLock);
-            count = responceWaitQueue.Count();
-        }
-    }
-    while (!bNeedExit && count > 0);
-    
-    do
-    {
-        ReceiptTimer timer;
-        {
-            MutexGuard recptGuard(receiptWaitQueueLock);
-            if (receiptWaitQueue.Count() > 0) {
-                timer = receiptWaitQueue[0];
-                if (timer.timer > time) break;
-                receiptWaitQueue.Shift(timer);
-            } 
-            else break;
-        }
-
-        bool needProcess = false;
-        {
-            MutexGuard guard(receiptsLock);
-            ReceiptData* receiptPtr = receipts.GetPtr(timer.receiptId);
-            if (receiptPtr) { 
-              smsc_log_warn(logger, "%s for smscMsgId='%s' smscConnectorId='%s' wasn't received and timed out!", 
-                            ((receiptPtr->receipted) ? "Receipt":"Responce"),
-                            timer.receiptId.getMessageId(), timer.receiptId.getConnectorId());
-              needProcess = true;
-            }
-        }
-        if (needProcess)
-        {
-          //processReceipt(ResponseData(smsc::system::Status::MSGQFUL,0,timer.smscId), true); //TODO: why seqNum=0 ?
-          processReceipt(ResponseData(smsc::system::Status::MSGQFUL,ConnectorSeqNum(),timer.receiptId.getMessageId()), true);
-        }
-
-        {
-            MutexGuard recptGuard(receiptWaitQueueLock);
-            count = receiptWaitQueue.Count();
-        }
-    }
-    while (!bNeedExit && count > 0);
-     */
-}
 
 void TaskProcessor::processMessage(Task* task, uint64_t msgId,const ResponseData& rd)
 {
@@ -623,7 +460,7 @@ void TaskProcessor::processMessage(Task* task, uint64_t msgId,const ResponseData
             else
             {
                 if (!task->retryMessage(msgId, nextTime)) {
-                    smsc_log_warn(logger, "Message #%lld not found for retry.", msgId);
+                    smsc_log_warn(log_, "Message #%lld not found for retry.", msgId);
                     statistics->incFailed(info.uid);
                 } 
                 else if (!rd.immediate) statistics->incRetried(info.uid);
@@ -637,6 +474,7 @@ void TaskProcessor::processMessage(Task* task, uint64_t msgId,const ResponseData
     }
 }
 
+/*
 const char* CREATE_ID_MAPPING_STATEMENT_ID = "CREATE_ID_MAPPING_STATEMENT_ID";
 const char* CREATE_ID_MAPPING_STATEMENT_SQL = (const char*)
 "INSERT INTO INFOSME_ID_MAPPING (ID, SMSC_ID, TASK_ID) VALUES (:ID, :SMSC_ID, :TASK_ID)";
@@ -648,21 +486,22 @@ const char* GET_ID_MAPPING_STATEMENT_SQL = (const char*)
 const char* DEL_ID_MAPPING_STATEMENT_ID = "DEL_ID_MAPPING_STATEMENT_ID";
 const char* DEL_ID_MAPPING_STATEMENT_SQL = (const char*)
 "DELETE FROM INFOSME_ID_MAPPING WHERE ID=:ID";
+ */
 
 /*
 void TaskProcessor::processResponce(const ResponseData& rd, bool internal)
 {
     if (!internal)
     {
-      smsc_log_info(logger, "Response: seqNum=%d, smscMsgId=%s, accepted=%d, retry=%d, immediate=%d",
+      smsc_log_info(log_, "Response: seqNum=%d, smscMsgId=%s, accepted=%d, retry=%d, immediate=%d",
                                  rd.seqNum, rd.msgId.c_str(),rd.accepted, rd.retry, rd.immediate);
     }
     else
     {
-       smsc_log_info(logger, "Response for seqNum=%d is timed out.", rd.seqNum);
+       smsc_log_info(log_, "Response for seqNum=%d is timed out.", rd.seqNum);
     }
 
-    smsc_log_error(logger,"FIXME: pass tmIds as an arg");
+    smsc_log_error(log_,"FIXME: pass tmIds as an arg");
     TaskMsgId tmIds;
     {
         TaskMsgId* tmIdsPtr = 0;
@@ -671,7 +510,7 @@ void TaskProcessor::processResponce(const ResponseData& rd, bool internal)
         {
             if (!internal)
             {
-              smsc_log_warn(logger, "processResponce(): Sequence number=%d SMSC id='%s' is unknown !", rd.seqNum.seqNum, rd.seqNum.smscId.c_str());
+              smsc_log_warn(log_, "processResponce(): Sequence number=%d SMSC id='%s' is unknown !", rd.seqNum.seqNum, rd.seqNum.smscId.c_str());
             }
             return;
         }
@@ -683,7 +522,7 @@ void TaskProcessor::processResponce(const ResponseData& rd, bool internal)
     TaskGuard taskGuard = getTask(tmIds.getTaskId()); 
     Task* task = taskGuard.get();
     if (!task) {
-        if (!internal) smsc_log_warn(logger, "Unable to locate task '%d' for sequence number=%d" ,
+        if (!internal) smsc_log_warn(log_, "Unable to locate task '%d' for sequence number=%d" ,
                                      tmIds.taskId, rd.seqNum);
         return;
     }
@@ -704,7 +543,7 @@ void TaskProcessor::processResponce(const ResponseData& rd, bool internal)
             else
             {
                 if (!task->retryMessage(tmIds.msgId, nextTime)) {
-                    smsc_log_warn(logger, "Message #%lld not found for retry.", tmIds.msgId);
+                    smsc_log_warn(log_, "Message #%lld not found for retry.", tmIds.msgId);
                     statistics->incFailed(info.uid);
                 } 
                 else if (!rd.immediate) statistics->incRetried(info.uid);
@@ -749,7 +588,7 @@ void TaskProcessor::processResponce(const ResponseData& rd, bool internal)
                 TaskIdMsgId timi;
                 timi.msgId=tmIds.msgId;
                 timi.taskId=info.uid;
-                smsc_log_debug(logger, "Receipt ID: msgId='%s'", receiptId.getMessageId());
+                smsc_log_debug(log_, "Receipt ID: msgId='%s'", receiptId.getMessageId());
                 jstore.Insert(receiptId, timi);
                 idMappingCreated = true;
             }
@@ -766,7 +605,7 @@ void TaskProcessor::processResponce(const ResponseData& rd, bool internal)
 
             if (receipt.receipted) // receipt already come
             {
-                smsc_log_debug(logger, "Receipt come when responce is in process");
+                smsc_log_debug(log_, "Receipt come when responce is in process");
                 if (idMappingCreated)
                 {
                   jstore.Delete(receiptId);
@@ -779,10 +618,10 @@ void TaskProcessor::processResponce(const ResponseData& rd, bool internal)
             }
         }
         catch (std::exception& exc) {
-            smsc_log_error(logger, "Failed to process responce. Details: %s", exc.what());
+            smsc_log_error(log_, "Failed to process responce. Details: %s", exc.what());
         }
         catch (...) {
-            smsc_log_error(logger, "Failed to process responce.");
+            smsc_log_error(log_, "Failed to process responce.");
         }
     }
 }
@@ -792,12 +631,12 @@ void TaskProcessor::processReceipt (const ResponseData& rd, bool internal)
     ReceiptId receiptId(rd.msgId);
     if (!internal)
     {
-      smsc_log_info(logger, "Receipt : smscMsgId='%s', delivered=%d, retry=%d",
+      smsc_log_info(log_, "Receipt : smscMsgId='%s', delivered=%d, retry=%d",
                             receiptId.getMessageId(), rd.accepted, rd.retry);
     }
     else
     {
-      smsc_log_info(logger, "Responce/Receipt for smscMsgId='%s' is timed out. Cleanup.", 
+      smsc_log_info(log_, "Responce/Receipt for smscMsgId='%s' is timed out. Cleanup.", 
                     receiptId.getMessageId());
     }
     
@@ -870,11 +709,11 @@ void TaskProcessor::processReceipt (const ResponseData& rd, bool internal)
     }
     catch (std::exception& exc)
     {
-        smsc_log_error(logger, "Failed to process receipt. Details: %s", exc.what());
+        smsc_log_error(log_, "Failed to process receipt. Details: %s", exc.what());
     }
     catch (...)
     {
-        smsc_log_error(logger, "Failed to process receipt.");
+        smsc_log_error(log_, "Failed to process receipt.");
     }
     
 }
@@ -928,7 +767,7 @@ void TaskProcessor::addTask(uint32_t taskId)
 
         if(!buf::File::Exists(location.c_str()))
         {
-          smsc_log_info(logger,"creating new dir:'%s' for taskId=%u",location.c_str(),taskId);
+          smsc_log_info(log_,"creating new dir:'%s' for taskId=%u",location.c_str(),taskId);
           buf::File::MkDir(location.c_str());
         }
 
@@ -941,11 +780,11 @@ void TaskProcessor::addTask(uint32_t taskId)
        
     } catch (std::exception& exc) {
         if (task && !delivery) task->destroy();
-        smsc_log_error(logger, "Failed to add task '%d'. Details: %s", taskId, exc.what());
+        smsc_log_error(log_, "Failed to add task '%d'. Details: %s", taskId, exc.what());
         throw;
     } catch (...) {
         if (task && !delivery) task->destroy();
-        smsc_log_error(logger, "Failed to add task '%d'. Cause is unknown", taskId);
+        smsc_log_error(log_, "Failed to add task '%d'. Cause is unknown", taskId);
         throw Exception("Cause is unknown");
     }
 }
@@ -958,10 +797,10 @@ void TaskProcessor::removeTask(uint32_t taskId)
         if (statistics) statistics->delStatistics(taskId);
     
     } catch (std::exception& exc) {
-        smsc_log_error(logger, "Failed to remove task '%d'. Details: %s", taskId, exc.what());
+        smsc_log_error(log_, "Failed to remove task '%d'. Details: %s", taskId, exc.what());
         throw;
     } catch (...) {
-        smsc_log_error(logger, "Failed to remove task '%d'. Cause is unknown", taskId);
+        smsc_log_error(log_, "Failed to remove task '%d'. Cause is unknown", taskId);
         throw Exception("Cause is unknown");
     }
 }
@@ -997,7 +836,7 @@ void TaskProcessor::changeTask(uint32_t taskId)
         
         if (!remTask(taskId))
         {
-          smsc_log_warn(logger, "Failed to change task. Task with id '%d' wasn't registered.", taskId);
+          smsc_log_warn(log_, "Failed to change task. Task with id '%d' wasn't registered.", taskId);
         }
         std::string location=storeLocation;
         char buf[32];
@@ -1005,7 +844,7 @@ void TaskProcessor::changeTask(uint32_t taskId)
         location+=buf;
         if(!buf::File::Exists(location.c_str()))
         {
-          smsc_log_info(logger,"creating new dir:'%s' for taskId=%u",location.c_str(),taskId);
+          smsc_log_info(log_,"creating new dir:'%s' for taskId=%u",location.c_str(),taskId);
           buf::File::MkDir(location.c_str());
         }
         task = new Task(&taskConfig, taskId, location, taskDs);
@@ -1015,19 +854,19 @@ void TaskProcessor::changeTask(uint32_t taskId)
         }
         if (!putTask(task))
         {
-          smsc_log_warn(logger, "Failed to change task with id '%d'. Task was re-registered", taskId);
+          smsc_log_warn(log_, "Failed to change task with id '%d'. Task was re-registered", taskId);
           if (!delivery) task->destroy();
         }
         */
     } catch (std::exception& exc)
     {
         //if (task && !delivery) task->destroy();
-        smsc_log_error(logger, "Failed to change task '%d'. Details: %s", taskId, exc.what());
+        smsc_log_error(log_, "Failed to change task '%d'. Details: %s", taskId, exc.what());
         throw;
     } catch (...) 
     {
         //if (task && !delivery) task->destroy();
-        smsc_log_error(logger, "Failed to change task '%d'. Cause is unknown", taskId);
+        smsc_log_error(log_, "Failed to change task '%d'. Cause is unknown", taskId);
         throw Exception("Cause is unknown");
     }
 }
@@ -1123,15 +962,15 @@ void TaskProcessor::addSchedule(std::string scheduleId)
     
     } catch (Exception& exc) {
         if (schedule) delete schedule;
-        smsc_log_error(logger, "Failed to add schedule '%s'. Details: %s", schedule_id, exc.what());
+        smsc_log_error(log_, "Failed to add schedule '%s'. Details: %s", schedule_id, exc.what());
         throw;
     } catch (std::exception& exc) {
         if (schedule) delete schedule;
-        smsc_log_error(logger, "Failed to add schedule '%s'. Details: %s", schedule_id, exc.what());
+        smsc_log_error(log_, "Failed to add schedule '%s'. Details: %s", schedule_id, exc.what());
         throw Exception("%s", exc.what());
     } catch (...) {
         if (schedule) delete schedule;
-        smsc_log_error(logger, "Failed add schedule '%s'. Cause is unknown", schedule_id);
+        smsc_log_error(log_, "Failed add schedule '%s'. Cause is unknown", schedule_id);
         throw Exception("Cause is unknown");
     }
 }
@@ -1161,20 +1000,20 @@ void TaskProcessor::changeSchedule(std::string scheduleId)
             throw Exception("New schedule create failed");
         if (!scheduler.changeSchedule(scheduleId, schedule)) {
             delete schedule;
-            smsc_log_warn(logger, "Failed to change schedule with id '%s'. Schedule was re-registered", schedule_id);
+            smsc_log_warn(log_, "Failed to change schedule with id '%s'. Schedule was re-registered", schedule_id);
         }
     
     } catch (Exception& exc) {
         if (schedule) delete schedule;
-        smsc_log_error(logger, "Failed to change schedule '%s'. Details: %s", schedule_id, exc.what());
+        smsc_log_error(log_, "Failed to change schedule '%s'. Details: %s", schedule_id, exc.what());
         throw;
     } catch (std::exception& exc) {
         if (schedule) delete schedule;
-        smsc_log_error(logger, "Failed to change schedule '%s'. Details: %s", schedule_id, exc.what());
+        smsc_log_error(log_, "Failed to change schedule '%s'. Details: %s", schedule_id, exc.what());
         throw Exception("%s", exc.what());
     } catch (...) {
         if (schedule) delete schedule;
-        smsc_log_error(logger, "Failed change schedule '%s'. Cause is unknown", schedule_id);
+        smsc_log_error(log_, "Failed change schedule '%s'. Cause is unknown", schedule_id);
         throw Exception("Cause is unknown");
     }
 }
@@ -1204,10 +1043,10 @@ void TaskProcessor::changeDeliveryMessageInfoByRecordId(uint32_t taskId,
   uint64_t newMsgId;
   if(task->changeDeliveryMessageInfoByRecordId(msgState, unixTime, recordId,newMsgId))
   {
-    smsc_log_debug(logger,"msgId=#%s changed to #%llx",recordId.c_str(),newMsgId);
+    smsc_log_debug(log_,"msgId=#%s changed to #%llx",recordId.c_str(),newMsgId);
   }else
   {
-    smsc_log_debug(logger,"changeDeliveryMessageInfoByRecordId failed msgId=#%s",recordId.c_str());
+    smsc_log_debug(log_,"changeDeliveryMessageInfoByRecordId failed msgId=#%s",recordId.c_str());
   }
 }
 
@@ -1281,10 +1120,10 @@ Array<std::string> TaskProcessor::getTaskMessages(const uint32_t taskId,
     if (!task) throw Exception("TaskProcessor::getTaskMessages::: can't get task by taskId='%d'", taskId);
     return task->selectDeliveryMessagesByCompositCriterion(searchCrit);
   } catch (std::exception& ex) {
-    smsc_log_error(logger, "TaskProcessor::getTaskMessages::: catch exception=[%s]", ex.what());
+    smsc_log_error(log_, "TaskProcessor::getTaskMessages::: catch exception=[%s]", ex.what());
     throw;
   } catch (...) {
-    smsc_log_error(logger, "TaskProcessor::getTaskMessages::: catch unexpected exception");
+    smsc_log_error(log_, "TaskProcessor::getTaskMessages::: catch unexpected exception");
     throw;
   }
 }
@@ -1357,7 +1196,7 @@ Array<std::string> TaskProcessor::getTasksStatistic(const InfoSme_Tasks_Stat_Sea
   int fetched = 0;
   while (rs->fetchNext()) {
     if ( doesMessageConformToCriterion(rs, searchCrit) ) {
-      smsc_log_debug(logger, "TaskProcessor::getTasksStatistic::: add statistic [%s,%d,%d,%d,%d,%d] into statisticsList", rs->getString(1), rs->getUint32(2), rs->getUint32(3), rs->getUint32(4), rs->getUint32(5), rs->getUint32(6));
+      smsc_log_debug(log_, "TaskProcessor::getTasksStatistic::: add statistic [%s,%d,%d,%d,%d,%d] into statisticsList", rs->getString(1), rs->getUint32(2), rs->getUint32(3), rs->getUint32(4), rs->getUint32(5), rs->getUint32(6));
       statisticsList.push_back(TaskStatDescription(rs->getString(1),
                                                    rs->getUint32(2),
                                                    rs->getUint32(3),
@@ -1442,6 +1281,5 @@ uint32_t TaskProcessor::sendSms(const std::string& src,const std::string& dst,co
     return messageSender->sendSms(src,dst,msg,flash);
 }
 
-
-}}
-
+}
+}

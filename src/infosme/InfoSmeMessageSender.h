@@ -35,12 +35,13 @@ public:
     }
      */
 
-    virtual SmscConnector* getSmscConnector(const std::string& regionId);
     virtual void reloadSmscAndRegions( Manager& mgr );
     virtual bool send( Task* task, Message& message );
+    virtual void processWaitingEvents(time_t tm);
 
 private:
 
+    virtual SmscConnector* getSmscConnector(const std::string& regionId);
     SmscConnector* addConnector( const smsc::sme::SmeConfig& cfg, const std::string& smscid );
     void addRegionMapping( const std::string& regionId, const std::string& smscId );
 
@@ -51,6 +52,7 @@ private:
     SmscConnector*        defaultConnector_;
     Hash<SmscConnector*>  connectors_;  // owned, all connectors
     Hash<std::string>     regions_;
+    bool                  started_;
 };
 
 } // namespace infosme

@@ -83,7 +83,7 @@ void InfoSmePduListener::processResponce(SmppHeader *pdu) {
   bool accepted  = (status == smsc::system::Status::OK);
 
   const char* msgid = ((PduXSmResp*)pdu)->get_messageId();
-  std::string msgId = "";
+  std::string msgId;
   if (!msgid || msgid[0] == '\0') accepted = false;
   else msgId = msgid;
 

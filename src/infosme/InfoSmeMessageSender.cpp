@@ -8,7 +8,8 @@ namespace infosme {
 InfoSmeMessageSender::InfoSmeMessageSender( TaskProcessor& processor ) :
 log_(smsc::logger::Logger::getInstance("msgsend")),
 processor_(processor),
-defaultConnector_(0)
+defaultConnector_(0),
+started_(false)
 {}
 
 
@@ -30,8 +31,8 @@ void InfoSmeMessageSender::start()
     if ( ! regionsConfig_.get() ) {
         throw smsc::util::config::ConfigException("regions not loaded, use reloadSmscAndRegions");
     }
-
-    defaultConnector_->Start();
+    if ( started_ ) return;
+    started_ = true;
 
     ConnectorIterator it = connectors_.getIterator();
     SmscConnector* connector;
@@ -46,7 +47,7 @@ void InfoSmeMessageSender::start()
 
 void InfoSmeMessageSender::stop() 
 {
-    defaultConnector_->stop();
+    if ( ! started_ ) return;
     ConnectorIterator it = connectors_.getIterator();
     SmscConnector* connector;
     char *key = 0;
@@ -55,6 +56,7 @@ void InfoSmeMessageSender::stop()
             connector->stop();
         }
     }
+    started_ = false;
 }
 
 
@@ -121,6 +123,7 @@ void InfoSmeMessageSender::reloadSmscAndRegions( Manager& manager )
             delete *i;
         }
     }
+    // add new connectors
     for ( smsc::util::config::CStrSet::iterator i = connNames.get()->begin();
           i != connNames.get()->end(); ++i ) {
         const std::string sectName( csn + "." + *i );
@@ -184,6 +187,16 @@ bool InfoSmeMessageSender::send( Task* task, Message& message )
 }
 
 
+void InfoSmeMessageSender::processWaitingEvents( time_t tm )
+{
+    SmscConnector* connector;
+    char *key = 0;
+    for ( ConnectorIterator it = connectors_.getIterator(); it.Next(key,connector); ) {
+        connector->processWaitingEvents(tm);
+    }
+}
+
+
 SmscConnector* InfoSmeMessageSender::addConnector( const smsc::sme::SmeConfig& cfg, const std::string& smscid )
 {
     SmscConnector** ptr = connectors_.GetPtr(smscid.c_str());
@@ -194,6 +207,7 @@ SmscConnector* InfoSmeMessageSender::addConnector( const smsc::sme::SmeConfig& c
     } else {
         p = new SmscConnector(processor_,cfg,smscid);
         connectors_.Insert( smscid.c_str(), p );
+        if (started_) { p->Start(); }
     }
     return p;
 }

@@ -150,7 +150,7 @@ class TaskProcessor : public TaskProcessorAdapter, public InfoSmeAdmin, public T
 {
 private:
 
-    smsc::logger::Logger *logger;
+    smsc::logger::Logger *log_;
     std::auto_ptr< FinalStateSaver > finalStateSaver_;
 
     ThreadManager taskManager;
@@ -186,6 +186,11 @@ private:
     char*   address;
 
     void processWaitingEvents(time_t time);
+    /// invoked from smsc connector, return true if receipt is needed
+    bool processResponse( Task* task,
+                          uint64_t msgId,
+                          const ResponseData& rd,
+                          bool internal );
     bool processTask(Task* task);
     void resetWaitingTasks();
 

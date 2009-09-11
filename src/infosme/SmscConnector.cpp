@@ -461,6 +461,61 @@ bool SmscConnector::send( Task* task, Message& message )
 }
 
 
+void SmscConnector::processWaitingEvents( time_t tm )
+{
+    int count = 0;
+    // process responses
+    do {
+        ResponseTimer timer;
+        {
+            MutexGuard respGuard(responseWaitQueueLock);
+            count = responseWaitQueue.Count();
+            if ( count <= 0 ) { break; } // no events
+            if ( responseWaitQueue[0].timer > tm ) { break; } // too early
+            responseWaitQueue.Shift(timer);
+        }
+        bool needProcess = false;
+        {
+            MutexGuard mg(taskIdsBySeqNumMonitor);
+            needProcess = taskIdsBySeqNum.Exist(timer.seqNum);
+        }
+        if (needProcess) {
+            ResponseData rd(smsc::system::Status::MSGQFUL,timer.seqNum,"");
+            processResponse(rd, true);
+        }
+    } while ( ! processor_.bNeedExit );
+        
+    // process receipts
+    do {
+        ReceiptTimer timer;
+        {
+            MutexGuard recptGuard(receiptWaitQueueLock);
+            count = receiptWaitQueue.Count();
+            if ( count <= 0 ) { break; }
+            if ( receiptWaitQueue[0].timer > tm ) { break; }
+            receiptWaitQueue.Shift(timer);
+        }
+
+        bool needProcess = false;
+        {
+            MutexGuard guard(receiptsLock);
+            ReceiptData* receiptPtr = receipts.GetPtr(timer.receiptId);
+            if (receiptPtr) { 
+                smsc_log_warn(log_, "%s for smscMsgId='%s' smscConnectorId='%s' wasn't received and timed out!",
+                              ((receiptPtr->receipted) ? "Receipt": "Response"),
+                              timer.receiptId.getMessageId(), smscId_.c_str());
+                needProcess = true;
+            }
+        }
+        if (needProcess)
+        {
+            processReceipt(ResponseData(smsc::system::Status::MSGQFUL,0,timer.receiptId.getMessageId()), true);
+        }
+
+    } while (!processor_.bNeedExit);
+}
+
+
 bool SmscConnector::convertMSISDNStringToAddress(const char* string, Address& address)
 {
     try {
@@ -483,7 +538,6 @@ void SmscConnector::processResponse( const ResponseData& rd, bool internal )
         smsc_log_info(log_, "Response(%s) for seqNum=%d is timed out.", rd.seqNum);
     }
 
-    // smsc_log_error(log_,"FIXME: pass tmIds as an arg");
     TaskMsgId tmIds;
     {
         TaskMsgId* tmIdsPtr = 0;
@@ -501,114 +555,78 @@ void SmscConnector::processResponse( const ResponseData& rd, bool internal )
         taskIdsBySeqNum.Delete(rd.seqNum);
         taskIdsBySeqNumMonitor.notifyAll();
     }
-    
-    TaskGuard taskGuard = processor_.getTask(tmIds.getTaskId());
+
+    TaskGuard taskGuard(processor_.getTask(tmIds.getTaskId()));
     Task* task = taskGuard.get();
     if (!task) {
         if (!internal) smsc_log_warn(log_, "Response(%s): Unable to locate task '%d' for sequence number=%d" ,
                                      smscId_.c_str(), tmIds.taskId, rd.seqNum);
         return;
     }
-    TaskInfo info = task->getInfo();
+    
+    if ( !processor_.processResponse(task,tmIds.msgId,rd,internal) ) return;
 
-    if (!rd.accepted || internal)
+    // need receipt
+    ReceiptId receiptId(rd.msgId);
+        
+    try
     {
-        if (rd.retry && (rd.immediate || (info.retryOnFail && info.retryPolicy.length())))
+        ReceiptData receipt; // receipt.receipted = false
         {
-            time_t nextTime = time(NULL)+(rd.immediate ? 0 :
-                                          TaskProcessor::getRetryPolicies().getRetryTime(info.retryPolicy.c_str(),rd.status));
-
-            if ((info.endDate>0 && nextTime >=info.endDate) ||
-                (info.validityDate>0 && nextTime>=info.validityDate))
-            {
-                task->finalizeMessage(tmIds.msgId, EXPIRED, rd.status );
-                processor_.statistics->incFailed(info.uid);
-            } 
-            else
-            {
-                if (!task->retryMessage(tmIds.msgId, nextTime)) {
-                    smsc_log_warn(log_, "Message #%lld not found for retry.", tmIds.msgId);
-                    processor_.statistics->incFailed(info.uid);
-                } 
-                else if (!rd.immediate) processor_.statistics->incRetried(info.uid);
+            MutexGuard guard(receiptsLock);
+            ReceiptData* receiptPtr = receipts.GetPtr(receiptId);
+            if (receiptPtr) receipt = *receiptPtr;
+            else {
+                receipts.Insert(receiptId, receipt);
+                MutexGuard recptGuard(receiptWaitQueueLock);
+                receiptWaitQueue.Push(ReceiptTimer(time(NULL)+receiptWaitTime, receiptId));
             }
         }
-        else
+
+        bool idMappingCreated = false;
+        if (!receipt.receipted)
         {
-            task->finalizeMessage(tmIds.msgId, FAILED, rd.status );
-            processor_.statistics->incFailed(info.uid);
+            if (!task->enrouteMessage(tmIds.msgId))
+                throw Exception("Message #%lld not found (doEnroute).", tmIds.msgId);
+
+            // TaskIdMsgId timi;
+            // timi.msgId=tmIds.msgId;
+            // timi.taskId=info.uid;
+            smsc_log_debug(log_, "Response(%s): Receipt ID: msgId='%s'",
+                           smscId_.c_str(), receiptId.getMessageId());
+            jstore_->jstore.Insert(receiptId, tmIds);
+            idMappingCreated = true;
+        }
+
+        {
+            MutexGuard guard(receiptsLock);
+            ReceiptData* receiptPtr = receipts.GetPtr(receiptId);
+            if (receiptPtr) {
+                receipt = *receiptPtr;
+                receipts.Delete(receiptId);
+            }
+            else receipt.receipted = false;
+        }
+
+        if (receipt.receipted) // receipt already come
+        {
+            smsc_log_debug(log_, "Response(%s): receipt come when response is in process",
+                           smscId_.c_str() );
+            if (idMappingCreated)
+            {
+                jstore_->jstore.Delete(receiptId);
+            }
+            ResponseData rd2(rd);
+            rd2.accepted=receipt.delivered;
+            rd2.retry=receipt.retry;
+            processor_.processMessage(task, tmIds.msgId,rd2);
         }
     }
-    else
-    {
-        if (info.transactionMode) {
-            task->finalizeMessage(tmIds.msgId, DELIVERED, rd.status );
-            processor_.statistics->incDelivered(info.uid);
-            return;
-        }
-        
-        ReceiptId receiptId(rd.msgId);
-        
-        try
-        {
-            ReceiptData receipt; // receipt.receipted = false
-            {
-                MutexGuard guard(receiptsLock);
-                ReceiptData* receiptPtr = receipts.GetPtr(receiptId);
-                if (receiptPtr) receipt = *receiptPtr;
-                else {
-                    receipts.Insert(receiptId, receipt);
-                    MutexGuard recptGuard(receiptWaitQueueLock);
-                    receiptWaitQueue.Push(ReceiptTimer(time(NULL)+receiptWaitTime, receiptId));
-                }
-            }
-
-            bool idMappingCreated = false;
-            if (!receipt.receipted)
-            {
-                if (!task->enrouteMessage(tmIds.msgId))
-                    throw Exception("Message #%lld not found (doEnroute).", tmIds.msgId);
-
-                // TaskIdMsgId timi;
-                // timi.msgId=tmIds.msgId;
-                // timi.taskId=info.uid;
-                smsc_log_debug(log_, "Response(%s): Receipt ID: msgId='%s'",
-                               smscId_.c_str(), receiptId.getMessageId());
-                jstore_->jstore.Insert(receiptId, tmIds);
-                idMappingCreated = true;
-            }
-
-            {
-                MutexGuard guard(receiptsLock);
-                ReceiptData* receiptPtr = receipts.GetPtr(receiptId);
-                if (receiptPtr) {
-                    receipt = *receiptPtr;
-                    receipts.Delete(receiptId);
-                }
-                else receipt.receipted = false;
-            }
-
-            if (receipt.receipted) // receipt already come
-            {
-                smsc_log_debug(log_, "Response(%s): receipt come when response is in process",
-                               smscId_.c_str() );
-                if (idMappingCreated)
-                {
-                    jstore_->jstore.Delete(receiptId);
-                }
-                ResponseData rd2(rd);
-                rd2.accepted=receipt.delivered;
-                rd2.retry=receipt.retry;
-
-                processor_.processMessage(task, tmIds.msgId,rd2);
-            }
-        }
-        catch (std::exception& exc) {
-            smsc_log_error(log_, "Failed to process response. Details: %s", exc.what());
-        }
-        catch (...) {
-            smsc_log_error(log_, "Failed to process response.");
-        }
+    catch (std::exception& exc) {
+        smsc_log_error(log_, "Failed to process response. Details: %s", exc.what());
+    }
+    catch (...) {
+        smsc_log_error(log_, "Failed to process response.");
     }
 }
 
@@ -636,27 +654,14 @@ void SmscConnector::processReceipt( const ResponseData& rd, bool internal )
             receiptPtr->retry     = rd.retry;
             return;
         }
-        else
-        {
-            receipts.Insert(receiptId, ReceiptData(true, rd.accepted, rd.retry));
-            MutexGuard recptGuard(receiptWaitQueueLock);
-            receiptWaitQueue.Push(ReceiptTimer(time(NULL)+receiptWaitTime, receiptId));
-        }
+
+        receipts.Insert(receiptId, ReceiptData(true, rd.accepted, rd.retry));
+        MutexGuard recptGuard(receiptWaitQueueLock);
+        receiptWaitQueue.Push(ReceiptTimer(time(NULL)+receiptWaitTime, receiptId));
     }
     
     try
     {
-
-#if 0
-       std::auto_ptr<Statement> getMapping(connection->createStatement(GET_ID_MAPPING_STATEMENT_SQL));
-        if (!getMapping.get())
-            throw Exception("processReceipt(): Failed to create statement for ids mapping.");
-    
-        getMapping->setString(1, smsc_id);
-        std::auto_ptr<ResultSet> rsGuard(getMapping->executeQuery());
-        ResultSet* rs = rsGuard.get();
-#endif // if 0        
-          //while(rs->fetchNext())
 
       TaskMsgId timi;
       uint64_t msgId;
@@ -699,7 +704,6 @@ void SmscConnector::processReceipt( const ResponseData& rd, bool internal )
     {
         smsc_log_error(log_, "Receipt(%s): Failed to process receipt.", smscId_.c_str());
     }
-
 }
 
 
