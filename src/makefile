@@ -31,12 +31,16 @@ endif
 USRLOCLIB := /usr/local/lib
 ifeq ($(B64),YES)
 USRLOCLIB := /usr/local/lib/64
-
-ifndef ORACLE_LIB
-ORACLE_LIB=$(ORACLE_HOME)/lib
-export ORACLE_LIB
 endif
 
+ifdef ORACLE_HOME
+ ifeq ($(B64),YES)
+  ORACLE_LIB = $(ORACLE_HOME)/lib64
+ else
+  ORACLE_LIB = $(ORACLE_HOME)/lib
+ endif
+ export ORACLE_LIB
+ ORACLE_INC = -I$(ORACLE_HOME)/rdbms/demo -I$(ORACLE_HOME)/rdbms/public -I$(ORACLE_HOME)/network/public
 endif
 
 
@@ -73,7 +77,11 @@ export SHARED_OPT
 export SSL_LIB
 
 ifndef XTARGET
+ifeq ($(B64),YES)
+XTARGET := -xtarget=ultra3 -xarch=v9 -xmemalign=8s -xcode=pic32
+else
 XTARGET := -xtarget=ultra3 -xarch=v8plus
+endif
 endif
 
 ifndef SMSC_SRCDIR
@@ -264,8 +272,8 @@ CXXFLAGS := $(CXXFLAGS) -DSPARC
 CFLAGS := $(CFLAGS) -DSPARC
 endif
 
-CXXFLAGS := $(CXXFLAGS) -I$(ORACLE_HOME)/rdbms/demo -I$(ORACLE_HOME)/rdbms/public -I$(ORACLE_HOME)/network/public -D_STLP_USE_NEWALLOC=1
-CFLAGS := $(CFLAGS) -I$(ORACLE_HOME)/rdbms/demo -I$(ORACLE_HOME)/rdbms/public -I$(ORACLE_HOME)/network/public
+CXXFLAGS := $(CXXFLAGS) $(ORACLE_INC) -D_STLP_USE_NEWALLOC=1
+CFLAGS := $(CFLAGS) $(ORACLE_INC)
 
 ifneq ("$(NOMAP)","YES")
 MAP_LIBRARIES := -L$(SS7_STACK_HOME)/lib -l$(SS7_LIBRARY_NAME) -lsystem-mapio
