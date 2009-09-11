@@ -1,9 +1,12 @@
+#include "system/status.h"
 #include "InfoSmePduListener.h"
-#include <system/status.h>
+#include "SmscConnector.h"
+#include "TaskTypes.hpp"
 
-namespace smsc { namespace infosme {
+namespace smsc {
+namespace infosme {
 
-using namespace smsc::system;
+// using namespace smsc::system;
 
 void InfoSmePduListener::setSyncTransmitter(SmppTransmitter *transmitter) {
   syncTransmitter = transmitter;
@@ -53,8 +56,8 @@ void InfoSmePduListener::processReceipt (SmppHeader *pdu) {
                   break;
               }
           }
-          //ResponseData rd(delivered?0:Status::UNKNOWNERR,0,msgid);
-          ResponseData rd(delivered?0:Status::UNKNOWNERR, ConnectorSeqNum(), msgid);
+          ResponseData rd(delivered?0:smsc::system::Status::UNKNOWNERR,0,msgid);
+          // ResponseData rd(delivered?0:Status::UNKNOWNERR, ConnectorSeqNum(), msgid);
           rd.retry=retry;
 
           bNeedResponce = processor.invokeProcessReceipt(rd);
@@ -77,7 +80,7 @@ void InfoSmePduListener::processResponce(SmppHeader *pdu) {
   int seqNum = pdu->get_sequenceNumber();
   int status = pdu->get_commandStatus();
 
-  bool accepted  = (status == Status::OK);
+  bool accepted  = (status == smsc::system::Status::OK);
 
   const char* msgid = ((PduXSmResp*)pdu)->get_messageId();
   std::string msgId = "";
@@ -87,7 +90,7 @@ void InfoSmePduListener::processResponce(SmppHeader *pdu) {
   if (!accepted)
       smsc_log_info(logger, "SMS #%s seqNum=%d wasn't accepted, errcode=%d",
                     msgId.c_str(), seqNum, status);
-  processor.invokeProcessResponce(ResponseData(status, ConnectorSeqNum(seqNum, smscId_), msgId));
+  processor.invokeProcessResponse(ResponseData(status, seqNum, msgId));
 }
 
 void InfoSmePduListener::handleEvent(SmppHeader *pdu) {

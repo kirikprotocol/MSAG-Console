@@ -43,9 +43,9 @@ namespace smsc { namespace infosme
 
      protected:
 
-         friend class EventRunner;
-         virtual void processResponce(const ResponseData& rd, bool internal=false) = 0;
-         virtual void processReceipt (const ResponseData& rd, bool internal=false) = 0;
+         // friend class EventRunner;
+         // virtual void processResponce(const ResponseData& rd, bool internal=false) = 0;
+         // virtual void processReceipt (const ResponseData& rd, bool internal=false) = 0;
 
          TaskProcessorAdapter() {};
     };
@@ -85,6 +85,7 @@ namespace smsc { namespace infosme
 
         virtual int Execute();
         void Start();
+        void Start(int) { Start(); }
         void Stop();
 
         inline bool isStarted() { 

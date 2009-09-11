@@ -1,22 +1,204 @@
-#include <util/smstext.h>
+#include "util/smstext.h"
 #include "SmscConnector.h"
 #include "TrafficControl.hpp"
+#include "TaskProcessor.h"
+#include "core/buffers/JStore.hpp"
+#include "util/config/region/RegionFinder.hpp"
 
 namespace {
 
-std::string cgetString( smsc::util::config::ConfigView& cv, const char* tag, const char* what )
+using namespace smsc::infosme;
+using namespace smsc::util::config;
+
+std::string cgetString( ConfigView& cv, const char* tag, const char* what )
 {
     std::auto_ptr<char> str(cv.getString(tag,what));
     return std::string(str.get());
 }
 
+inline size_t WriteKey(File& f, const ReceiptId& key)
+{
+    return key.Write(f);
 }
+
+inline size_t ReadKey(File& f, ReceiptId& key)
+{
+    return key.Read(f);
+}
+
+inline size_t WriteRecord( smsc::core::buffers::File& f,
+                           const ReceiptId& key,
+                           const TaskMsgId& val )
+{
+    uint8_t keySize = uint8_t(WriteKey(f, key));
+    f.WriteNetInt64(val.msgId);
+    f.WriteNetInt32(val.taskId);
+    return keySize+8+4; 
+}
+
+inline size_t ReadRecord( smsc::core::buffers::File& f,
+                          ReceiptId& key,
+                          TaskMsgId& val )
+{
+    uint8_t keySize = uint8_t(ReadKey(f, key));
+    val.msgId=f.ReadNetInt64();
+    val.taskId=f.ReadNetInt32();
+    return keySize+8+4;
+}
+
+class MessageGuard
+{
+public:
+    MessageGuard(Task* argTask,uint64_t argMsgId) : task(argTask),msgId(argMsgId),messageProcessed(false)
+    {
+    }
+
+    ~MessageGuard()
+    {
+        if (!messageProcessed) {
+            TaskProcessor::retryMessage(task,msgId);
+        }
+    }
+
+    void processed()
+    {
+        messageProcessed=true;
+    }
+
+private:
+    Task* task;
+    uint64_t msgId;
+    bool messageProcessed;
+};
+
+} // anonymous namespace
+
 
 namespace smsc {
 namespace infosme {
 
 using smsc::core::synchronization::MutexGuard;
 
+class SmscConnector::EventRunner : public smsc::core::threads::ThreadedTask
+{
+public:
+    EventRunner( EventMethod method, SmscConnector& proc, const ResponseData& argRd ) :
+    method(method), processor(proc), rd(argRd) {
+        ++processor.usage_; // externally locked
+    }
+    
+    virtual ~EventRunner() {
+        MutexGuard mg(processor.connectMonitor_);
+        if ( --processor.usage_ == 0 ) processor.connectMonitor_.notifyAll();
+    }
+    
+    virtual int Execute()
+    {
+        switch (method)
+        {
+        case processResponseMethod:
+            processor.processResponse(rd);
+            if (!rd.trafficst) TrafficControl::incIncoming();
+            break;
+        case processReceiptMethod:
+            processor.processReceipt(rd);
+            break;
+        default:
+            __trace2__("Invalid method '%d' invoked by event.", method);
+            return -1;
+        }
+        return 0;
+    };
+    virtual const char* taskName() {
+        return "InfoSmeEvent";
+    };
+private:
+    EventMethod    method;
+    SmscConnector& processor;
+    ResponseData   rd;
+};
+
+
+struct SmscConnector::JStoreWrapper 
+{
+    smsc::core::buffers::JStore< ReceiptId, TaskMsgId, ReceiptId > jstore;
+    JStoreWrapper( const std::string& storeLocation,
+                   const std::string& smscId,
+                   int mappingRollTime,
+                   size_t mappingMaxChanges ) {
+        const std::string jLocation = storeLocation + "/jstore";
+        if ( ! File::IsDir(jLocation.c_str()) ) {
+            // trying to unlink first
+            try {
+                File::Unlink(jLocation.c_str());
+            } catch (...) {}
+            File::MkDir(jLocation.c_str());
+        }
+        const std::string path = jLocation + "/mapping" + smscId + ".bin";
+        jstore.Init( path.c_str(), mappingRollTime, mappingMaxChanges );
+    }
+    ~JStoreWrapper() {
+        jstore.Stop();
+    }
+private:
+    JStoreWrapper();
+};
+
+
+// NOTE: this class is not thread-safe
+class SmscConnector::RegionTrafficControl
+{
+public:
+    RegionTrafficControl( smsc::logger::Logger* logger ) : log_(logger) {}
+    ~RegionTrafficControl();
+    bool speedLimitReached( Task* task, const Message& message );
+private:
+    smsc::logger::Logger* log_;
+    typedef std::map<std::string, TimeSlotCounter<int>* > timeSlotsHashByRegion_t;
+    timeSlotsHashByRegion_t timeSlotsHashByRegion_;
+};
+
+
+SmscConnector::RegionTrafficControl::~RegionTrafficControl()
+{
+    for ( timeSlotsHashByRegion_t::iterator i = timeSlotsHashByRegion_.begin();
+          i != timeSlotsHashByRegion_.end();
+          ++i ) {
+        delete i->second;
+    }
+}
+
+
+bool SmscConnector::RegionTrafficControl::speedLimitReached( Task* task, const Message& message )
+{
+    uint32_t taskId = task->getId();
+    smsc_log_debug( log_, "TaskProcessor::controlTrafficSpeedByRegion::: TaskId=[%d]: check region(regionId=%s) bandwidth limit exceeding", taskId, message.regionId.c_str());
+    const smsc::util::config::region::Region* region = smsc::util::config::region::RegionFinder::getInstance().getRegionById(message.regionId);
+    if ( ! region ) return true;
+
+    timeSlotsHashByRegion_t::iterator iter = timeSlotsHashByRegion_.lower_bound(message.regionId);
+    if ( iter == timeSlotsHashByRegion_.end() || iter->first != message.regionId ) {
+        // not found
+        smsc_log_debug(log_, "TaskProcessor::controlTrafficSpeedByRegion::: TaskId=[%d]: insert timeSlot to hash for regionId=%s", taskId, message.regionId.c_str());
+        iter = timeSlotsHashByRegion_.insert(iter,std::make_pair(message.regionId, new TimeSlotCounter<int>(1,1)));
+    }
+    TimeSlotCounter<int>* outgoing = iter->second;
+    int out = outgoing->Get();
+
+    bool regionTrafficLimitReached = (out >= region->getBandwidth());
+    smsc_log_debug(log_, "TaskProcessor::controlTrafficSpeedByRegion::: TaskId=[%d]: regionTrafficLimitReached=%d, region bandwidth=%d, current sent messages during one second=%d",
+                   taskId, regionTrafficLimitReached, region->getBandwidth(), out);
+    // check max messages per sec. limit. if limit was reached then put message to queue of suspended messages.
+    if ( regionTrafficLimitReached ) {
+        task->putToSuspendedMessagesQueue(message);
+        return true;
+    } else {
+        outgoing->Inc();
+        return false;
+    }
+}
+
+// ===================================================================
 
 smsc::sme::SmeConfig SmscConnector::readSmeConfig( ConfigView& config )
 {
@@ -30,36 +212,57 @@ smsc::sme::SmeConfig SmscConnector::readSmeConfig( ConfigView& config )
     // Optional fields
     try {
         rv.password = ::cgetString(config,"password","InfoSme password wasn't defined !");
-    } catch (ConfigException&) {}
+    } catch (smsc::util::config::ConfigException&) {}
     try {
         rv.systemType = ::cgetString(config,"systemType","InfoSme system type wasn't defined !");
-    } catch (ConfigException&) {}
+    } catch (smsc::util::config::ConfigException&) {}
     try {
         rv.origAddr = ::cgetString(config,"origAddress",
                                    "InfoSme originating address wasn't defined !");
-    } catch (ConfigException&) {}
+    } catch (smsc::util::config::ConfigException&) {}
     return rv;
 }
 
 
-SmscConnector::SmscConnector(TaskProcessor& processor, const smsc::sme::SmeConfig& cfg, const string& smscId):
-processor_(processor), 
-logger_(Logger::getInstance("smsc.infosme.connector")),
-listener_(processor_, smscId, logger_),
-session_(cfg, &listener_),
+SmscConnector::SmscConnector( TaskProcessor& processor,
+                              const smsc::sme::SmeConfig& cfg,
+                              const string& smscId):
 smscId_(smscId),
+log_(Logger::getInstance("smsc.infosme.connector")),
+processor_(processor),
+listener_(*this, log_),
+session_(cfg, &listener_),
 timeout_(cfg.timeOut),
 stopped_(false),
-connected_(false)
+connected_(false),
+usage_(0),
+responseWaitTime(processor_.responseWaitTime),
+receiptWaitTime(processor_.receiptWaitTime),
+jstore_(0),
+trafficControl_(0)
 {
-  listener_.setSyncTransmitter(session_.getSyncTransmitter());
-  listener_.setAsyncTransmitter(session_.getAsyncTransmitter());
+    listener_.setSyncTransmitter(session_.getSyncTransmitter());
+    listener_.setAsyncTransmitter(session_.getAsyncTransmitter());
+    jstore_ = new JStoreWrapper(processor_.storeLocation,
+                                smscId_,
+                                processor_.mappingRollTime,
+                                processor_.mappingMaxChanges);
+    trafficControl_ = new RegionTrafficControl(log_);
 }
+
 
 SmscConnector::~SmscConnector()
 {
     stop();
     WaitFor();
+    // waiting until all dependent objects finished
+    while ( true ) {
+        MutexGuard mg(connectMonitor_);
+        if ( usage_ <= 0 ) break;
+        connectMonitor_.wait(100);
+    }
+    if ( jstore_ ) { delete jstore_; }
+    if ( trafficControl_ ) { delete trafficControl_; }
 }
 
 void SmscConnector::stop() {
@@ -76,7 +279,7 @@ void SmscConnector::reconnect() {
 
 void SmscConnector::updateConfig( const smsc::sme::SmeConfig& config )
 {
-    smsc_log_warn(logger_, "FIXME: updateConfig on '%s'... ", smscId_.c_str());
+    smsc_log_warn(log_, "FIXME: updateConfig on '%s'... ", smscId_.c_str());
 }
 
 bool SmscConnector::isStopped() const {
@@ -88,7 +291,7 @@ int SmscConnector::Execute() {
   {
     // after call to isNeedStop() was completed all signals is locked.
     // any thread being started from this point has signal mask with all signals locked 
-      smsc_log_info(logger_, "Connecting to SMSC id='%s'... ", smscId_.c_str());
+      smsc_log_info(log_, "Connecting to SMSC id='%s'... ", smscId_.c_str());
       try
       {
           session_.connect();
@@ -98,7 +301,7 @@ int SmscConnector::Execute() {
       catch (SmppConnectException& exc)
       {
           const char* msg = exc.what();
-          smsc_log_error(logger_, "Connect to SMSC id='%s' failed. Cause: %s", smscId_.c_str(), (msg) ? msg:"unknown");
+          smsc_log_error(log_, "Connect to SMSC id='%s' failed. Cause: %s", smscId_.c_str(), (msg) ? msg:"unknown");
           //bInfoSmeIsConnecting = false;
           if (exc.getReason() == SmppConnectException::Reason::bindFailed) throw;
           sleep(timeout_);
@@ -107,129 +310,25 @@ int SmscConnector::Execute() {
           connected_ = false;
           continue;
       }
-      smsc_log_info(logger_, "Connected to SMSC id='%s'.", smscId_.c_str());
+      smsc_log_info(log_, "Connected to SMSC id='%s'.", smscId_.c_str());
       {
         MutexGuard mg(connectMonitor_);
         while (connected_ && !isStopped()) {
           connectMonitor_.wait();
         }
         if (!connected_) {
-          smsc_log_info(logger_, "Need Reconnect to SMSC id='%s'.", smscId_.c_str());
+          smsc_log_info(log_, "Need Reconnect to SMSC id='%s'.", smscId_.c_str());
         }
       }
       session_.close();
   }
-  smsc_log_info(logger_, "SMSC Connector '%s' stopped", smscId_.c_str());
+  smsc_log_info(log_, "SMSC Connector '%s' stopped", smscId_.c_str());
   return 1; 
 }
 
 int SmscConnector::getSeqNum() {
   MutexGuard guard(sendLock_);
   return session_.getNextSeq();
-}
-
-bool SmscConnector::send(std::string abonent, std::string message, TaskInfo info, int seqNum) {
-  {
-    MutexGuard mg(connectMonitor_);
-    if (!connected_) {
-      smsc_log_warn(logger_, "SMSC Connector '%s' is not connected.", smscId_.c_str());
-      connectMonitor_.notify();
-      return false;
-    }
-  }
- {
-    MutexGuard guard(sendLock_);
-    SmppTransmitter* asyncTransmitter = session_.getAsyncTransmitter();
-    if (!asyncTransmitter) {
-        smsc_log_error(logger_, "Smpp transmitter is undefined for SMSC Connector '%s'.", smscId_.c_str());
-        return false;
-    }
-  
-    Address oa, da;
-    const char* oaStr = info.address.c_str();
-    if (!oaStr || !oaStr[0]) oaStr = processor_.getAddress();
-    if (!oaStr || !convertMSISDNStringToAddress(oaStr, oa)) {
-        smsc_log_error(logger_, "Invalid originating address '%s'", oaStr ? oaStr:"-");
-        return false;
-    }
-    const char* daStr = abonent.c_str();
-    if (!daStr || !convertMSISDNStringToAddress(daStr, da)) {
-        smsc_log_error(logger_, "Invalid destination address '%s'", daStr ? daStr:"-");
-        return false;
-    }
-  
-    SMS sms;
-    sms.setOriginatingAddress(oa);
-    sms.setDestinationAddress(da);
-    sms.setArchivationRequested(false);
-    sms.setDeliveryReport(1);
-    sms.setValidTime( (info.validityDate <= 0 || info.validityPeriod > 0) ?
-                       time(NULL)+info.validityPeriod : info.validityDate );
-  
-    sms.setIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG,
-                       (info.replaceIfPresent) ? 1:0);
-    sms.setEServiceType( (info.replaceIfPresent && info.svcType.length()>0) ?
-                          info.svcType.c_str():processor_.getSvcType() );
-  
-    sms.setIntProperty(Tag::SMPP_PROTOCOL_ID, processor_.getProtocolId());
-    sms.setIntProperty(Tag::SMPP_ESM_CLASS, (info.transactionMode) ? 2:0);
-    sms.setIntProperty(Tag::SMPP_PRIORITY, 0);
-    sms.setIntProperty(Tag::SMPP_REGISTRED_DELIVERY, 1);
-  
-    if(info.flash)
-    {
-      sms.setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,1);
-    }
-  
-    const char* out = message.c_str();
-    size_t outLen = message.length();
-    char* msgBuf = 0;
-    if(smsc::util::hasHighBit(out,outLen)) {
-        size_t msgLen = outLen*2;
-        msgBuf = new char[msgLen];
-        ConvertMultibyteToUCS2(out, outLen, (short*)msgBuf, msgLen,
-                               CONV_ENCODING_CP1251);
-        sms.setIntProperty(Tag::SMPP_DATA_CODING, DataCoding::UCS2);
-        out = msgBuf;
-        outLen = msgLen;
-    } else {
-        sms.setIntProperty(Tag::SMPP_DATA_CODING, DataCoding::LATIN1);
-    }
-  
-    try
-    {
-        if (outLen <= MAX_ALLOWED_MESSAGE_LENGTH) {
-            sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE, out, (unsigned)outLen);
-            sms.setIntProperty(Tag::SMPP_SM_LENGTH, (unsigned)outLen);
-        } else {
-            sms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD, out,
-                               (unsigned)((outLen <= MAX_ALLOWED_PAYLOAD_LENGTH) ?
-                                outLen :  MAX_ALLOWED_PAYLOAD_LENGTH));
-        }
-    }
-    catch (...) {
-        smsc_log_error(logger_, "Something is wrong with message body. Set/Get property failed");
-        if (msgBuf) delete msgBuf; msgBuf = 0;
-        return false;
-    }
-    if (msgBuf) delete msgBuf;
-  
-    try {
-      PduSubmitSm sm;
-      sm.get_header().set_sequenceNumber(seqNum);
-      sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
-      fillSmppPduFromSms(&sm, &sms);
-      asyncTransmitter->sendPdu(&(sm.get_header()));
-      TrafficControl::incOutgoing();
-      return true;
-    } catch (const std::exception& ex) {
-      smsc_log_warn(logger_, "SmscConnector::send exception: %s", ex.what());
-    } catch (...) {
-      smsc_log_warn(logger_, "SmscConnector::send unknown exception");
-    }
- }
-  reconnect();
-  return false;
 }
 
 
@@ -258,7 +357,7 @@ uint32_t SmscConnector::sendSms(const std::string& org,const std::string& dst,co
   }else
   {
     msg.set_dataCoding(DataCoding::LATIN1);
-    sbm.get_optional().set_messagePayload(txt.c_str(),txt.length());
+    sbm.get_optional().set_messagePayload(txt.c_str(),int(txt.length()));
   }
   sbm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
   sbm.get_header().set_sequenceNumber(getSeqNum());
@@ -272,6 +371,96 @@ uint32_t SmscConnector::sendSms(const std::string& org,const std::string& dst,co
   return rv;
 }
 
+
+bool SmscConnector::invokeProcessReceipt( const ResponseData& rd )
+{
+    EventRunner* er = 0;
+    {
+        MutexGuard mg(connectMonitor_);
+        if ( stopped_ ) return false;
+        er = new EventRunner(processReceiptMethod,*this,rd);
+    }
+    return processor_.invokeProcessEvent(er);
+}
+
+
+bool SmscConnector::invokeProcessResponse( const ResponseData& rd )
+{
+    EventRunner* er = 0;
+    {
+        MutexGuard mg(connectMonitor_);
+        if ( stopped_ ) return false;
+        er = new EventRunner(processResponseMethod,*this,rd);
+    }
+    return processor_.invokeProcessEvent(er);
+}
+
+
+bool SmscConnector::send( Task* task, Message& message )
+{
+    MessageGuard msguard(task,message.id);
+    const TaskInfo& info = task->getInfo();
+
+    if ( trafficControl_->speedLimitReached(task,message) ) {
+        msguard.processed();
+        if ( log_->isInfoEnabled() ) {
+            const smsc::util::config::region::Region* region = smsc::util::config::region::RegionFinder::getInstance().getRegionById(message.regionId);
+            smsc_log_info(log_, "TaskId=[%d/%s]: Traffic for region %s with id %s was suspended",
+                          info.uid, info.name.c_str(), region->getName().c_str(), region->getId().c_str());
+        }
+        return false;
+    }
+
+    int seqNum = getSeqNum();
+    smsc_log_debug(log_, "TaskId=[%d/%s]: Sending message #%llx, seqNum=%d SMSC id='%s' region id='%s' for '%s': %s",
+                   info.uid,info.name.c_str(), message.id, seqNum, smscId_.c_str(), message.regionId.c_str(),
+                   message.abonent.c_str(), message.message.c_str());
+
+    {
+        MutexGuard snGuard(taskIdsBySeqNumMonitor);
+        int seqNumsCount;
+        while ( true ) {
+            if (processor_.bNeedExit || stopped_ ) return false;
+            seqNumsCount = taskIdsBySeqNum.Count();
+            if ( seqNumsCount <= processor_.unrespondedMessagesMax ) break;
+            int difference = seqNumsCount - processor_.unrespondedMessagesMax;
+            taskIdsBySeqNumMonitor.wait(difference*processor_.unrespondedMessagesSleep);
+        }
+
+        if (taskIdsBySeqNum.Exist(seqNum))
+        {
+            smsc_log_warn(log_, "Sequence id=%d SMSC id='%s' was already used !", seqNum, smscId_.c_str());
+            taskIdsBySeqNum.Delete(seqNum);
+        }
+        taskIdsBySeqNum.Insert(seqNum, TaskMsgId(info.uid, message.id));
+    }
+    {
+        MutexGuard respGuard(responseWaitQueueLock);
+        responseWaitQueue.Push(ResponseTimer(time(NULL)+responseWaitTime, seqNum));
+    }
+    if ( ! send(message.abonent,message.message,info,seqNum) ) {
+
+        smsc_log_error( log_, "Failed to send message #%llx for '%s'",
+                        message.id, message.abonent.c_str());
+
+        task->putToSuspendedMessagesQueue(message);
+
+        MutexGuard snGuard(taskIdsBySeqNumMonitor);
+        if ( taskIdsBySeqNum.Delete(seqNum) ) {
+            taskIdsBySeqNumMonitor.notifyAll();
+        }
+        return false;
+
+    }
+
+    // message is sent
+    msguard.processed();
+    smsc_log_info(log_, "TaskId=[%d/%s]: Sent message #%llx sq=%d for '%s' to SMSC '%s'",
+                  info.uid, info.name.c_str(), message.id, seqNum, message.abonent.c_str(), smscId_.c_str());
+    return true;
+}
+
+
 bool SmscConnector::convertMSISDNStringToAddress(const char* string, Address& address)
 {
     try {
@@ -281,6 +470,344 @@ bool SmscConnector::convertMSISDNStringToAddress(const char* string, Address& ad
         return false;
     }
     return true;
+}
+
+
+void SmscConnector::processResponse( const ResponseData& rd, bool internal )
+{
+    if (!internal) {
+        smsc_log_info(log_, "Response(%s): seqNum=%d, smscMsgId=%s, accepted=%d, retry=%d, immediate=%d",
+                      smscId_.c_str(),
+                      rd.seqNum, rd.msgId.c_str(),rd.accepted, rd.retry, rd.immediate);
+    } else {
+        smsc_log_info(log_, "Response(%s) for seqNum=%d is timed out.", rd.seqNum);
+    }
+
+    // smsc_log_error(log_,"FIXME: pass tmIds as an arg");
+    TaskMsgId tmIds;
+    {
+        TaskMsgId* tmIdsPtr = 0;
+        MutexGuard snGuard(taskIdsBySeqNumMonitor);
+        if (!(tmIdsPtr = taskIdsBySeqNum.GetPtr(rd.seqNum)))
+        {
+            if (!internal)
+            {
+                smsc_log_warn(log_, "Response(%s): Sequence number=%d is unknown!",
+                              smscId_.c_str(), rd.seqNum);
+            }
+            return;
+        }
+        tmIds = *tmIdsPtr;
+        taskIdsBySeqNum.Delete(rd.seqNum);
+        taskIdsBySeqNumMonitor.notifyAll();
+    }
+    
+    TaskGuard taskGuard = processor_.getTask(tmIds.getTaskId());
+    Task* task = taskGuard.get();
+    if (!task) {
+        if (!internal) smsc_log_warn(log_, "Response(%s): Unable to locate task '%d' for sequence number=%d" ,
+                                     smscId_.c_str(), tmIds.taskId, rd.seqNum);
+        return;
+    }
+    TaskInfo info = task->getInfo();
+
+    if (!rd.accepted || internal)
+    {
+        if (rd.retry && (rd.immediate || (info.retryOnFail && info.retryPolicy.length())))
+        {
+            time_t nextTime = time(NULL)+(rd.immediate ? 0 :
+                                          TaskProcessor::getRetryPolicies().getRetryTime(info.retryPolicy.c_str(),rd.status));
+
+            if ((info.endDate>0 && nextTime >=info.endDate) ||
+                (info.validityDate>0 && nextTime>=info.validityDate))
+            {
+                task->finalizeMessage(tmIds.msgId, EXPIRED, rd.status );
+                processor_.statistics->incFailed(info.uid);
+            } 
+            else
+            {
+                if (!task->retryMessage(tmIds.msgId, nextTime)) {
+                    smsc_log_warn(log_, "Message #%lld not found for retry.", tmIds.msgId);
+                    processor_.statistics->incFailed(info.uid);
+                } 
+                else if (!rd.immediate) processor_.statistics->incRetried(info.uid);
+            }
+        }
+        else
+        {
+            task->finalizeMessage(tmIds.msgId, FAILED, rd.status );
+            processor_.statistics->incFailed(info.uid);
+        }
+    }
+    else
+    {
+        if (info.transactionMode) {
+            task->finalizeMessage(tmIds.msgId, DELIVERED, rd.status );
+            processor_.statistics->incDelivered(info.uid);
+            return;
+        }
+        
+        ReceiptId receiptId(rd.msgId);
+        
+        try
+        {
+            ReceiptData receipt; // receipt.receipted = false
+            {
+                MutexGuard guard(receiptsLock);
+                ReceiptData* receiptPtr = receipts.GetPtr(receiptId);
+                if (receiptPtr) receipt = *receiptPtr;
+                else {
+                    receipts.Insert(receiptId, receipt);
+                    MutexGuard recptGuard(receiptWaitQueueLock);
+                    receiptWaitQueue.Push(ReceiptTimer(time(NULL)+receiptWaitTime, receiptId));
+                }
+            }
+
+            bool idMappingCreated = false;
+            if (!receipt.receipted)
+            {
+                if (!task->enrouteMessage(tmIds.msgId))
+                    throw Exception("Message #%lld not found (doEnroute).", tmIds.msgId);
+
+                // TaskIdMsgId timi;
+                // timi.msgId=tmIds.msgId;
+                // timi.taskId=info.uid;
+                smsc_log_debug(log_, "Response(%s): Receipt ID: msgId='%s'",
+                               smscId_.c_str(), receiptId.getMessageId());
+                jstore_->jstore.Insert(receiptId, tmIds);
+                idMappingCreated = true;
+            }
+
+            {
+                MutexGuard guard(receiptsLock);
+                ReceiptData* receiptPtr = receipts.GetPtr(receiptId);
+                if (receiptPtr) {
+                    receipt = *receiptPtr;
+                    receipts.Delete(receiptId);
+                }
+                else receipt.receipted = false;
+            }
+
+            if (receipt.receipted) // receipt already come
+            {
+                smsc_log_debug(log_, "Response(%s): receipt come when response is in process",
+                               smscId_.c_str() );
+                if (idMappingCreated)
+                {
+                    jstore_->jstore.Delete(receiptId);
+                }
+                ResponseData rd2(rd);
+                rd2.accepted=receipt.delivered;
+                rd2.retry=receipt.retry;
+
+                processor_.processMessage(task, tmIds.msgId,rd2);
+            }
+        }
+        catch (std::exception& exc) {
+            smsc_log_error(log_, "Failed to process response. Details: %s", exc.what());
+        }
+        catch (...) {
+            smsc_log_error(log_, "Failed to process response.");
+        }
+    }
+}
+
+
+void SmscConnector::processReceipt( const ResponseData& rd, bool internal )
+{
+    ReceiptId receiptId(rd.msgId);
+    if (!internal) {
+        smsc_log_info(log_, "Receipt(%s): smscMsgId='%s', delivered=%d, retry=%d",
+                      smscId_.c_str(),
+                      receiptId.getMessageId(), rd.accepted, rd.retry);
+    } else {
+        smsc_log_info(log_, "Response/Receipt(%s) msgId='%s' is timed out. Cleanup.",
+                      smscId_.c_str(),
+                      receiptId.getMessageId());
+    }
+    
+    if (!internal) {
+        MutexGuard guard(receiptsLock);
+        ReceiptData* receiptPtr = receipts.GetPtr(receiptId);
+        if (receiptPtr) // attach & return;
+        {   
+            receiptPtr->receipted = true;
+            receiptPtr->delivered = rd.accepted;
+            receiptPtr->retry     = rd.retry;
+            return;
+        }
+        else
+        {
+            receipts.Insert(receiptId, ReceiptData(true, rd.accepted, rd.retry));
+            MutexGuard recptGuard(receiptWaitQueueLock);
+            receiptWaitQueue.Push(ReceiptTimer(time(NULL)+receiptWaitTime, receiptId));
+        }
+    }
+    
+    try
+    {
+
+#if 0
+       std::auto_ptr<Statement> getMapping(connection->createStatement(GET_ID_MAPPING_STATEMENT_SQL));
+        if (!getMapping.get())
+            throw Exception("processReceipt(): Failed to create statement for ids mapping.");
+    
+        getMapping->setString(1, smsc_id);
+        std::auto_ptr<ResultSet> rsGuard(getMapping->executeQuery());
+        ResultSet* rs = rsGuard.get();
+#endif // if 0        
+          //while(rs->fetchNext())
+
+      TaskMsgId timi;
+      uint64_t msgId;
+      uint32_t taskId;
+      bool needProcess = false;
+      if(jstore_->jstore.Lookup(receiptId, timi))
+      {
+        msgId = timi.msgId;
+        taskId = timi.taskId;
+        MutexGuard guard(receiptsLock);
+        ReceiptData* receiptPtr = receipts.GetPtr(receiptId);
+        if (receiptPtr)
+        { 
+          receipts.Delete(receiptId);
+          needProcess = true;
+        }
+      }
+      
+      if (needProcess)
+      {
+      
+        jstore_->jstore.Delete(receiptId);
+      
+        TaskGuard taskGuard = processor_.getTask(taskId);
+        Task* task = taskGuard.get();
+        if (!task)
+          throw Exception("processReceipt(): Unable to locate task '%d' for smscMsgId='%s'",
+                          taskId, receiptId.getMessageId());
+
+        processor_.processMessage(task, msgId,rd);
+      }
+      
+    }
+    catch (std::exception& exc)
+    {
+        smsc_log_error(log_, "Receipt(%s): Failed to process receipt. Details: %s",
+                       smscId_.c_str(), exc.what());
+    }
+    catch (...)
+    {
+        smsc_log_error(log_, "Receipt(%s): Failed to process receipt.", smscId_.c_str());
+    }
+
+}
+
+
+bool SmscConnector::send( const std::string& abonent,
+                          const std::string& message,
+                          const TaskInfo& info, int seqNum )
+{
+    {
+        MutexGuard mg(connectMonitor_);
+        if (!connected_) {
+            smsc_log_warn(log_, "SMSC Connector '%s' is not connected.", smscId_.c_str());
+            connectMonitor_.notify();
+            return false;
+        }
+    }
+    {
+        MutexGuard guard(sendLock_);
+        SmppTransmitter* asyncTransmitter = session_.getAsyncTransmitter();
+        if (!asyncTransmitter) {
+            smsc_log_error(log_, "Smpp transmitter is undefined for SMSC Connector '%s'.", smscId_.c_str());
+            return false;
+        }
+
+        Address oa, da;
+        const char* oaStr = info.address.c_str();
+        if (!oaStr || !oaStr[0]) oaStr = processor_.getAddress();
+        if (!oaStr || !convertMSISDNStringToAddress(oaStr, oa)) {
+            smsc_log_error(log_, "Invalid originating address '%s'", oaStr ? oaStr:"-");
+            return false;
+        }
+        const char* daStr = abonent.c_str();
+        if (!daStr || !convertMSISDNStringToAddress(daStr, da)) {
+            smsc_log_error(log_, "Invalid destination address '%s'", daStr ? daStr:"-");
+            return false;
+        }
+  
+        SMS sms;
+        sms.setOriginatingAddress(oa);
+        sms.setDestinationAddress(da);
+        sms.setArchivationRequested(false);
+        sms.setDeliveryReport(1);
+        sms.setValidTime( (info.validityDate <= 0 || info.validityPeriod > 0) ?
+                          time(NULL)+info.validityPeriod : info.validityDate );
+  
+        sms.setIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG,
+                           (info.replaceIfPresent) ? 1:0);
+        sms.setEServiceType( (info.replaceIfPresent && info.svcType.length()>0) ?
+                             info.svcType.c_str():processor_.getSvcType() );
+  
+        sms.setIntProperty(Tag::SMPP_PROTOCOL_ID, processor_.getProtocolId());
+        sms.setIntProperty(Tag::SMPP_ESM_CLASS, (info.transactionMode) ? 2:0);
+        sms.setIntProperty(Tag::SMPP_PRIORITY, 0);
+        sms.setIntProperty(Tag::SMPP_REGISTRED_DELIVERY, 1);
+  
+        if(info.flash)
+        {
+            sms.setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,1);
+        }
+  
+        const char* out = message.c_str();
+        size_t outLen = message.length();
+        char* msgBuf = 0;
+        if(smsc::util::hasHighBit(out,outLen)) {
+            size_t msgLen = outLen*2;
+            msgBuf = new char[msgLen];
+            ConvertMultibyteToUCS2(out, outLen, (short*)msgBuf, msgLen,
+                                   CONV_ENCODING_CP1251);
+            sms.setIntProperty(Tag::SMPP_DATA_CODING, DataCoding::UCS2);
+            out = msgBuf;
+            outLen = msgLen;
+        } else {
+            sms.setIntProperty(Tag::SMPP_DATA_CODING, DataCoding::LATIN1);
+        }
+  
+        try
+        {
+            if (outLen <= MAX_ALLOWED_MESSAGE_LENGTH) {
+                sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE, out, (unsigned)outLen);
+                sms.setIntProperty(Tag::SMPP_SM_LENGTH, (unsigned)outLen);
+            } else {
+                sms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD, out,
+                                   (unsigned)((outLen <= MAX_ALLOWED_PAYLOAD_LENGTH) ?
+                                              outLen :  MAX_ALLOWED_PAYLOAD_LENGTH));
+            }
+        }
+        catch (...) {
+            smsc_log_error(log_, "Something is wrong with message body. Set/Get property failed");
+            if (msgBuf) delete msgBuf; msgBuf = 0;
+            return false;
+        }
+        if (msgBuf) delete msgBuf;
+  
+        try {
+            PduSubmitSm sm;
+            sm.get_header().set_sequenceNumber(seqNum);
+            sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
+            fillSmppPduFromSms(&sm, &sms);
+            asyncTransmitter->sendPdu(&(sm.get_header()));
+            TrafficControl::incOutgoing();
+            return true;
+        } catch (const std::exception& ex) {
+            smsc_log_warn(log_, "SmscConnector::send exception: %s", ex.what());
+        } catch (...) {
+            smsc_log_warn(log_, "SmscConnector::send unknown exception");
+        }
+    }
+    reconnect();
+    return false;
 }
 
 }  //infosme

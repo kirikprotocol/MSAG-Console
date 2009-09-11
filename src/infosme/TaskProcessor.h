@@ -12,16 +12,10 @@
 
 #include "util/config/ConfigView.h"
 #include "util/config/ConfigException.h"
-
-#include "core/buffers/Array.hpp"
-#include "core/buffers/Hash.hpp"
-#include "core/buffers/IntHash.hpp" //TODO comment include to see other IntHash using
-#include "core/buffers/XHash.hpp"
 #include "core/threads/Thread.hpp"
 #include "core/threads/ThreadPool.hpp"
 #include "core/synchronization/Mutex.hpp"
 #include "core/synchronization/Event.hpp"
-#include "util/config/region/Region.hpp"
 #include "db/DataSource.h"
 
 #include "TaskScheduler.h"
@@ -32,516 +26,328 @@
 #include "InfoSme_Tasks_Stat_SearchCriterion.hpp"
 #include "TrafficControl.hpp"
 #include "TaskTypes.hpp"
-#include "core/buffers/JStore.hpp"
 
-struct TaskIdMsgId{
-  uint64_t msgId;
-  uint32_t taskId;
-  TaskIdMsgId():msgId(0), taskId(0) {};
+namespace smsc {
+namespace infosme {
+
+using namespace smsc::core::buffers;
+using namespace smsc::core::threads;
+using namespace smsc::db;
+
+using smsc::core::synchronization::Event;
+using smsc::core::synchronization::Mutex;
+
+using smsc::logger::Logger;
+using smsc::util::config::Manager;
+using smsc::util::config::ConfigView;
+using smsc::util::config::ConfigException;
+
+class FinalStateSaver;
+
+typedef enum { beginGenerationMethod, endGenerationMethod, dropAllMessagesMethod } TaskMethod;
+
+class TaskRunner : public TaskGuard, public ThreadedTask // for task method execution
+{
+private:
+
+    TaskMethod            method;
+    Statistics*           statistics;
+    TaskProcessorAdapter* processor;
+
+public:
+
+    TaskRunner(Task* task, TaskMethod method, 
+               TaskProcessorAdapter* adapter = 0, Statistics* statistics = 0)
+        : TaskGuard(task), ThreadedTask(), method(method), processor(adapter), statistics(statistics) {};
+    virtual ~TaskRunner() {};
+
+    virtual int Execute()
+    {
+        __require__(task);
+        switch (method)
+        {
+        case endGenerationMethod:
+            task->endGeneration();
+            break;
+        case beginGenerationMethod:
+            if (task->beginGeneration(statistics)) {
+                if (processor) processor->awakeSignal();
+            }
+            break;
+        case dropAllMessagesMethod:
+            task->dropNewMessages(statistics);
+            break;
+        default:
+            __trace2__("Invalid method '%d' invoked on task.", method);
+            return -1;
+        }
+        return 0;
+    };
+    virtual const char* taskName() {
+        return "InfoSmeTask";
+    };
 };
 
-inline size_t WriteRecord(File& f,uint64_t key,const TaskIdMsgId& val)
+
+class ThreadManager : public ThreadPool
 {
-  f.WriteNetInt64(key); 
-  f.WriteNetInt64(val.msgId);
-  f.WriteNetInt32(val.taskId);
-  return 8+8+4; 
-}
+protected:
 
-inline size_t ReadRecord(File& f,uint64_t& key,TaskIdMsgId& val)
-{
-  key=f.ReadNetInt64();
-  val.msgId=f.ReadNetInt64();
-  val.taskId=f.ReadNetInt32();
-  return 8+8+4;
-}
+    smsc::logger::Logger *logger;
+    Mutex               stopLock;
+    bool                bStopping;
 
-inline size_t WriteKey(File& f,uint64_t key)
-{
-  f.WriteNetInt64(key);
-  return 8;
-}
+public:
 
-inline size_t ReadKey(File& f,uint64_t& key)
-{
-  key=f.ReadNetInt64();
-  return 8;
-}
-
-inline size_t WriteKey(File& f, const smsc::infosme::ReceiptId& key)
-{
-  return key.Write(f);
-}
-
-inline size_t ReadKey(File& f, smsc::infosme::ReceiptId& key)
-{
-  return key.Read(f);
-}
-
-inline size_t WriteRecord(File& f, const smsc::infosme::ReceiptId& key, const TaskIdMsgId& val)
-{
-  uint8_t keySize = WriteKey(f, key);
-  f.WriteNetInt64(val.msgId);
-  f.WriteNetInt32(val.taskId);
-  return keySize+8+4; 
-}
-
-inline size_t ReadRecord(File& f, smsc::infosme::ReceiptId& key, TaskIdMsgId& val)
-{
-  uint8_t keySize = ReadKey(f, key);
-  val.msgId=f.ReadNetInt64();
-  val.taskId=f.ReadNetInt32();
-  return keySize+8+4;
-}
-
-namespace smsc { namespace infosme
-{
-    using namespace smsc::core::buffers;
-    using namespace smsc::core::threads;
-    using namespace smsc::db;
-
-    using smsc::core::synchronization::Event;
-    using smsc::core::synchronization::Mutex;
-
-    using smsc::logger::Logger;
-    using smsc::util::config::Manager;
-    using smsc::util::config::ConfigView;
-    using smsc::util::config::ConfigException;
-
-    class FinalStateSaver;
-
-    typedef enum { beginGenerationMethod, endGenerationMethod, dropAllMessagesMethod } TaskMethod;
-
-    class TaskRunner : public TaskGuard, public ThreadedTask // for task method execution
-    {
-    private:
-
-        TaskMethod            method;
-        Statistics*           statistics;
-        TaskProcessorAdapter* processor;
-
-    public:
-
-        TaskRunner(Task* task, TaskMethod method, 
-                   TaskProcessorAdapter* adapter = 0, Statistics* statistics = 0)
-            : TaskGuard(task), ThreadedTask(), method(method), processor(adapter), statistics(statistics) {};
-        virtual ~TaskRunner() {};
-
-        virtual int Execute()
-        {
-            __require__(task);
-            switch (method)
-            {
-            case endGenerationMethod:
-                task->endGeneration();
-                break;
-            case beginGenerationMethod:
-                if (task->beginGeneration(statistics)) {
-                    if (processor) processor->awakeSignal();
-                }
-                break;
-            case dropAllMessagesMethod:
-                task->dropNewMessages(statistics);
-                break;
-            default:
-                __trace2__("Invalid method '%d' invoked on task.", method);
-                return -1;
-            }
-            return 0;
-        };
-        virtual const char* taskName() {
-            return "InfoSmeTask";
-        };
+    ThreadManager() : ThreadPool(),
+    logger(Logger::getInstance("smsc.infosme.ThreadManager")),
+    bStopping(false) {};
+    virtual ~ThreadManager() {
+        this->Stop();
+        shutdown();
     };
 
-    typedef enum { processResponceMethod, processReceiptMethod } EventMethod;
+    void Stop() {
+        MutexGuard guard(stopLock);
+        bStopping = true;
+    }
 
-    class EventRunner : public ThreadedTask
-    {
-    private:
-
-        EventMethod            method;
-        TaskProcessorAdapter&  processor;
-        ResponseData           rd;
-    public:
-
-        EventRunner(EventMethod method, TaskProcessorAdapter& processor,const ResponseData& argRd)
-            : method(method), processor(processor),rd(argRd) {};
-        /*EventRunner(EventMethod method, TaskProcessorAdapter& processor,
-                    std::string smscId, bool delivered, bool retry)
-            : method(method), processor(processor), seqNum(0),
-              delivered(delivered), retry(retry), immediate(false), smscId(smscId), trafficst(false) {};*/
-
-        virtual ~EventRunner() {};
-
-        virtual int Execute()
-        {
-            switch (method)
-            {
-            case processResponceMethod:
-                processor.processResponce(rd);
-                if (!rd.trafficst) TrafficControl::incIncoming();
-                break;
-            case processReceiptMethod:
-                processor.processReceipt (rd);
-                break;
-            default:
-                __trace2__("Invalid method '%d' invoked by event.", method);
-                return -1;
-            }
-            return 0;
-        };
-        virtual const char* taskName() {
-            return "InfoSmeEvent";
-        };
-    };
-
-    class SmscConnector;
-
-    struct MessageSender
-    {
-        virtual uint32_t sendSms(const std::string& src,const std::string& dst,const std::string& txt,bool flash)=0;
-        virtual ~MessageSender() {};
-
-        /// NOTE: both methods are externally (in taskprocessor) guarded 
-        /// against connector/regions list modifications
-        virtual SmscConnector* getSmscConnector(const std::string& regionId) = 0;
-        virtual void reloadSmscAndRegions( Manager& mgr ) = 0;
-    protected:
-
-        MessageSender() {};
-    };
-
-    struct TaskMsgId
-    {
-        uint32_t taskId;
-        uint64_t    msgId;
-
-        uint32_t getTaskId()
-        {
-          return taskId;
+    bool startThread(ThreadedTask* task) {
+        MutexGuard guard(stopLock);
+        if (!bStopping && task) {
+            startTask(task);
+            return true;
         }
+        else if (task) delete task;
+        return false;
+    }
 
-        TaskMsgId(uint32_t taskId=0, uint64_t msgId=0)
-            : taskId(taskId), msgId(msgId) {};
-    };
-
-    class ThreadManager : public ThreadPool
+    void init(ConfigView* config) // throw(ConfigException)
     {
-    protected:
-
-        smsc::logger::Logger *logger;
-        //ThreadPool           pool;
-
-        Mutex               stopLock;
-        bool                bStopping;
-
-    public:
-
-        ThreadManager() : ThreadPool(),
-            logger(Logger::getInstance("smsc.infosme.ThreadManager")),
-                bStopping(false) {};
-        virtual ~ThreadManager() {
-            this->Stop();
-            shutdown();
-        };
-
-        void Stop() {
-            MutexGuard guard(stopLock);
-            bStopping = true;
+        try {
+            setMaxThreads(config->getInt("max"));
+        } catch (ConfigException& exc) {
+            smsc_log_warn(logger, "Maximum thread pool size wasn't specified !");
         }
-
-        bool startThread(ThreadedTask* task) {
-            MutexGuard guard(stopLock);
-            if (!bStopping && task) {
-                startTask(task);
-                return true;
-            }
-            else if (task) delete task;
-            return false;
-        }
-
-        void init(ConfigView* config) // throw(ConfigException)
-        {
-            try {
-                setMaxThreads(config->getInt("max"));
-            } catch (ConfigException& exc) {
-                smsc_log_warn(logger, "Maximum thread pool size wasn't specified !");
-            }
-            try {
-                preCreateThreads(config->getInt("init"));
-            } catch (ConfigException& exc) {
-                smsc_log_warn(logger, "Precreated threads count in pool wasn't specified !");
-            }
-        };
-    };
-
-    struct ReceiptData
-    {
-        bool receipted, delivered, retry;
-
-        ReceiptData(bool receipted=false, bool delivered=false, bool retry=false)
-         : receipted(receipted), delivered(delivered), retry(retry) {};
-        ReceiptData(const ReceiptData& receipt)
-          : receipted(receipt.receipted), delivered(receipt.delivered), retry(receipt.retry) {};
-
-        ReceiptData& operator=(const ReceiptData& receipt) {
-            receipted = receipt.receipted;
-            delivered = receipt.delivered;
-            retry = receipt.retry;
-            return *this;
+        try {
+            preCreateThreads(config->getInt("init"));
+        } catch (ConfigException& exc) {
+            smsc_log_warn(logger, "Precreated threads count in pool wasn't specified !");
         }
     };
+};
 
-    struct ResponceTimer
+struct Int64HashFunc{
+    static size_t CalcHash(uint64_t key)
     {
-        time_t          timer;
-        ConnectorSeqNum seqNum;
-
-        ResponceTimer(time_t timer = 0):timer(timer) {};
-        ResponceTimer(time_t timer, const ConnectorSeqNum& seqNum): timer(timer), seqNum(seqNum) {};
-        ResponceTimer(const ResponceTimer& rt) : timer(rt.timer), seqNum(rt.seqNum) {};
-    };
-
-    struct ReceiptTimer
-    {
-        time_t      timer;
-        ReceiptId   receiptId;
-
-        ReceiptTimer(time_t timer=0) : timer(timer) {};
-        ReceiptTimer(time_t timer, const ReceiptId& rcptId) : timer(timer), receiptId(rcptId) {};
-    };
-
-    struct Int64HashFunc{
-      static size_t CalcHash(uint64_t key)
-      {
         return key;
-      }
+    }
+};
+
+class MessageSender;
+
+class TaskProcessor : public TaskProcessorAdapter, public InfoSmeAdmin, public Thread
+{
+private:
+
+    smsc::logger::Logger *logger;
+    std::auto_ptr< FinalStateSaver > finalStateSaver_;
+
+    ThreadManager taskManager;
+    ThreadManager eventManager;
+
+    TaskScheduler scheduler;    // for scheduled messages generation
+    static RetryPolicies retryPlcs;
+    DataProvider  provider;     // to obtain registered data source by key
+
+    IntHash<Task *>  tasks;
+    Mutex         tasksLock;
+
+    Event       awake, exited;
+    bool        bStarted, bNeedExit;
+    Mutex       startLock;
+    int         switchTimeout;
+
+    std::string storeLocation;
+
+    MessageSender*  messageSender;
+    Mutex           messageSenderLock;
+
+    int         responseWaitTime;
+    int         receiptWaitTime;
+    int         mappingRollTime; // FIXME: to be moved to smscconn
+    size_t      mappingMaxChanges; // FIXME: to be moved to smscconn
+
+    Connection*         dsStatConnection;
+    StatisticsManager*  statistics;
+
+    int     protocolId;
+    char*   svcType;
+    char*   address;
+
+    void processWaitingEvents(time_t time);
+    bool processTask(Task* task);
+    void resetWaitingTasks();
+
+    friend class SmscConnector;
+    virtual void processMessage (Task* task, uint64_t msgId,const ResponseData& rd);
+
+    bool doesMessageConformToCriterion(ResultSet* rs,
+                                       const InfoSme_Tasks_Stat_SearchCriterion& searchCrit);
+
+    int unrespondedMessagesMax, unrespondedMessagesSleep;
+public:
+
+    TaskProcessor(ConfigView* config);
+    virtual ~TaskProcessor();
+
+    int getProtocolId()      { return protocolId; };
+    const char* getSvcType() { return (svcType) ? svcType:"InfoSme"; };
+    const char* getAddress() { return address; };
+
+    virtual int Execute();
+    void Start();
+    virtual void Start(int) { Start(); }
+    void Stop();
+
+    inline bool isStarted() {
+        MutexGuard guard(startLock);
+        return bStarted;
     };
 
-    class TaskProcessor : public TaskProcessorAdapter, public InfoSmeAdmin, public Thread
+    void assignMessageSender(MessageSender* sender) {
+        MutexGuard guard(messageSenderLock);
+        messageSender = sender;
+    };
+    bool isMessageSenderAssigned() {
+        MutexGuard guard(messageSenderLock);
+        return (messageSender != 0);
+    };
+
+    virtual bool putTask(Task* task);
+    virtual bool addTask(Task* task);
+    virtual bool remTask(uint32_t taskId);
+    virtual bool delTask(uint32_t taskId);
+    virtual bool hasTask(uint32_t taskId);
+    virtual TaskGuard getTask(uint32_t taskId);
+
+    virtual TaskInfo getTaskInfo(uint32_t taskId);
+
+    virtual bool invokeEndGeneration(Task* task) {
+        return taskManager.startThread(new TaskRunner(task, endGenerationMethod,   this));
+    };
+    virtual bool invokeBeginGeneration(Task* task) {
+        return taskManager.startThread(new TaskRunner(task, beginGenerationMethod, this, statistics));
+    };
+    virtual bool invokeDropAllMessages(Task* task) {
+        return taskManager.startThread(new TaskRunner(task, dropAllMessagesMethod, this, statistics));
+    };
+
+    // invoked from smscconnector
+    virtual bool invokeProcessEvent(ThreadedTask* task) {
+        return eventManager.startThread(task);
+    }
+
+    virtual void awakeSignal() {
+        awake.Signal();
+    };
+
+    bool getStatistics(uint32_t taskId, TaskStat& stat) {
+        return (statistics) ? statistics->getStatistics(taskId, stat):false;
+    };
+
+    static RetryPolicies& getRetryPolicies()
     {
-    private:
-
-        smsc::logger::Logger *logger;
-        std::auto_ptr< FinalStateSaver > finalStateSaver_;
-
-        ThreadManager taskManager;
-        ThreadManager eventManager;
-
-        TaskScheduler scheduler;    // for scheduled messages generation
-        static RetryPolicies retryPlcs;
-        DataProvider  provider;     // to obtain registered data source by key
-
-        IntHash<Task *>  tasks;
-        Mutex         tasksLock;
-
-        Event       awake, exited;
-        bool        bStarted, bNeedExit;
-        Mutex       startLock;
-        int         switchTimeout;
-
-        JStore<ReceiptId, TaskIdMsgId, ReceiptId> jstore;
-
-        std::string storeLocation;
-        
-
-        MessageSender*  messageSender;
-        Mutex           messageSenderLock;
-
-        XHash<ConnectorSeqNum, TaskMsgId, ConnectorSeqNum> taskIdsBySeqNum;
-      //Mutex              taskIdsBySeqNumLock;
-        EventMonitor       taskIdsBySeqNumMonitor;
-
-        XHash<ReceiptId, ReceiptData, ReceiptId>  receipts; 
-        Mutex              receiptsLock;
-
-        Mutex                   responceWaitQueueLock;
-        Mutex                   receiptWaitQueueLock;
-        Array<ResponceTimer>    responceWaitQueue;
-        Array<ReceiptTimer>     receiptWaitQueue;
-        int                     responceWaitTime;
-        int                     receiptWaitTime;
-
-        Connection*         dsStatConnection;
-        StatisticsManager*  statistics;
-
-        int     protocolId;
-        char*   svcType;
-        char*   address;
-
-        typedef std::map<std::string, TimeSlotCounter<int>* > timeSlotsHashByRegion_t;
-        timeSlotsHashByRegion_t _timeSlotsHashByRegion;
-
-        void processWaitingEvents(time_t time);
-        bool processTask(Task* task);
-        void resetWaitingTasks();
-
-        virtual void processMessage (Task* task, uint64_t msgId,const ResponseData& rd);
-        friend class EventRunner;
-        virtual void processResponce(const ResponseData& rd, bool internal=false);
-        virtual void processReceipt (const ResponseData& rd, bool internal=false);
-
-        bool doesMessageConformToCriterion(ResultSet* rs,
-                                           const InfoSme_Tasks_Stat_SearchCriterion& searchCrit);
-
-        int unrespondedMessagesMax, unrespondedMessagesSleep;
-
-        typedef enum { TRAFFIC_CONTINUED = 1, TRAFFIC_SUSPENDED = -1 } traffic_control_res_t;
-        traffic_control_res_t controlTrafficSpeedByRegion(Task* task, Message& message);
-    public:
-
-        TaskProcessor(ConfigView* config);
-        virtual ~TaskProcessor();
-
-        int getProtocolId()      { return protocolId; };
-        const char* getSvcType() { return (svcType) ? svcType:"InfoSme"; };
-        const char* getAddress() { return address; };
-
-        virtual int Execute();
-        void Start();
-        void Stop();
-
-        inline bool isStarted() {
-            MutexGuard guard(startLock);
-            return bStarted;
-        };
-
-        void assignMessageSender(MessageSender* sender) {
-            MutexGuard guard(messageSenderLock);
-            messageSender = sender;
-        };
-        bool isMessageSenderAssigned() {
-            MutexGuard guard(messageSenderLock);
-            return (messageSender != 0);
-        };
-
-        virtual bool putTask(Task* task);
-        virtual bool addTask(Task* task);
-        virtual bool remTask(uint32_t taskId);
-        virtual bool delTask(uint32_t taskId);
-        virtual bool hasTask(uint32_t taskId);
-        virtual TaskGuard getTask(uint32_t taskId);
-
-        virtual TaskInfo getTaskInfo(uint32_t taskId);
-
-
-        virtual bool invokeEndGeneration(Task* task) {
-            return taskManager.startThread(new TaskRunner(task, endGenerationMethod,   this));
-        };
-        virtual bool invokeBeginGeneration(Task* task) {
-            return taskManager.startThread(new TaskRunner(task, beginGenerationMethod, this, statistics));
-        };
-        virtual bool invokeDropAllMessages(Task* task) {
-            return taskManager.startThread(new TaskRunner(task, dropAllMessagesMethod, this, statistics));
-        };
-
-        virtual bool invokeProcessResponce(const ResponseData& rd)
-        {
-            return eventManager.startThread(new EventRunner(processResponceMethod, *this,rd));
-        };
-        virtual bool invokeProcessReceipt (const ResponseData& rd)
-        {
-            return eventManager.startThread(new EventRunner(processReceiptMethod, *this,rd));
-        };
-        virtual void awakeSignal() {
-            awake.Signal();
-        };
-
-        bool getStatistics(uint32_t taskId, TaskStat& stat) {
-            return (statistics) ? statistics->getStatistics(taskId, stat):false;
-        };
-
-        static RetryPolicies& getRetryPolicies()
-        {
-          return retryPlcs;
+      return retryPlcs;
+    }
+    
+    static void retryMessage( Task* task, uint64_t msgId ) {
+        time_t retryTime = getRetryPolicies().getRetryTime( task->getInfo().retryPolicy.c_str(),0);
+        if ( retryTime == 0 ) {
+            retryTime = 60*60;
         }
+        task->retryMessage(msgId,time(0)+retryTime);
+    }
 
-        /* ------------------------ Admin interface ------------------------ */
+    /* ------------------------ Admin interface ------------------------ */
 
-        virtual void startTaskProcessor() {
-            this->Start();
-        }
-        virtual void stopTaskProcessor() {
-            this->Stop();
-        }
-        virtual bool isTaskProcessorRunning() {
-            return this->isStarted();
-        }
+    virtual void startTaskProcessor() {
+        this->Start();
+    }
+    virtual void stopTaskProcessor() {
+        this->Stop();
+    }
+    virtual bool isTaskProcessorRunning() {
+        return this->isStarted();
+    }
 
-        virtual void startTaskScheduler() {
-            scheduler.Start();
-        }
-        virtual void stopTaskScheduler() {
-            scheduler.Stop();
-        }
-        virtual bool isTaskSchedulerRunning() {
-            return scheduler.isStarted();
-        }
-        virtual void flushStatistics() {
-            if (statistics) statistics->flushStatistics();
-        }
-        
-        virtual void reloadSmscAndRegions();
+    virtual void startTaskScheduler() {
+        scheduler.Start();
+    }
+    virtual void stopTaskScheduler() {
+        scheduler.Stop();
+    }
+    virtual bool isTaskSchedulerRunning() {
+        return scheduler.isStarted();
+    }
+    virtual void flushStatistics() {
+        if (statistics) statistics->flushStatistics();
+    }
+    
+    virtual void reloadSmscAndRegions();
 
-        virtual void addTask(uint32_t taskId);
-        virtual void removeTask(uint32_t taskId);
-        virtual void changeTask(uint32_t taskId);
+    virtual void addTask(uint32_t taskId);
+    virtual void removeTask(uint32_t taskId);
+    virtual void changeTask(uint32_t taskId);
 
-        virtual bool startTask(uint32_t taskId);
-        virtual bool stopTask(uint32_t taskId);
-        virtual Array<std::string> getGeneratingTasks();
-        virtual Array<std::string> getProcessingTasks();
+    virtual bool startTask(uint32_t taskId);
+    virtual bool stopTask(uint32_t taskId);
+    virtual Array<std::string> getGeneratingTasks();
+    virtual Array<std::string> getProcessingTasks();
 
-        virtual bool isTaskEnabled(uint32_t taskId);
-        virtual bool setTaskEnabled(uint32_t taskId, bool enabled);
+    virtual bool isTaskEnabled(uint32_t taskId);
+    virtual bool setTaskEnabled(uint32_t taskId, bool enabled);
 
-        virtual void addSchedule(std::string scheduleId);
-        virtual void removeSchedule(std::string scheduleId);
-        virtual void changeSchedule(std::string scheduleId);
+    virtual void addSchedule(std::string scheduleId);
+    virtual void removeSchedule(std::string scheduleId);
+    virtual void changeSchedule(std::string scheduleId);
 
-        virtual void addDeliveryMessages(uint32_t taskId,
-                                         uint8_t msgState,
-                                         const std::string& address,
-                                         time_t messageDate,
-                                         const std::string& msg,
-                                         const std::string& userData );
+    virtual void addDeliveryMessages(uint32_t taskId,
+                                     uint8_t msgState,
+                                     const std::string& address,
+                                     time_t messageDate,
+                                     const std::string& msg,
+                                     const std::string& userData );
 
-        virtual void changeDeliveryMessageInfoByRecordId(uint32_t taskId,
-                                                         uint8_t messageState,
-                                                         time_t unixTime,
-                                                         const std::string& recordId);
-
-        virtual void changeDeliveryMessageInfoByCompositCriterion(uint32_t taskId,
-                                                                  uint8_t messageState,
-                                                                  time_t unixTime,
-                                                                  const InfoSme_T_SearchCriterion& searchCrit);
-        virtual void deleteDeliveryMessageByRecordId(uint32_t taskId,
+    virtual void changeDeliveryMessageInfoByRecordId(uint32_t taskId,
+                                                     uint8_t messageState,
+                                                     time_t unixTime,
                                                      const std::string& recordId);
 
-        virtual void deleteDeliveryMessagesByCompositCriterion(uint32_t taskId,
-                                                               const InfoSme_T_SearchCriterion& searchCrit);
+    virtual void changeDeliveryMessageInfoByCompositCriterion(uint32_t taskId,
+                                                              uint8_t messageState,
+                                                              time_t unixTime,
+                                                              const InfoSme_T_SearchCriterion& searchCrit);
+    virtual void deleteDeliveryMessageByRecordId(uint32_t taskId,
+                                                 const std::string& recordId);
 
-        /*virtual void insertRecordIntoTasksStat(uint32_t taskId,
-                                               uint32_t period,
-                                               uint32_t generated,
-                                               uint32_t delivered,
-                                               uint32_t retried,
-                                               uint32_t failed);*/
+    virtual void deleteDeliveryMessagesByCompositCriterion(uint32_t taskId,
+                                                           const InfoSme_T_SearchCriterion& searchCrit);
 
-        virtual Array<std::string> getTaskMessages(uint32_t taskId,
-                                                   const InfoSme_T_SearchCriterion& searchCrit);
+    virtual Array<std::string> getTaskMessages(uint32_t taskId,
+                                               const InfoSme_T_SearchCriterion& searchCrit);
 
-        //virtual Array<std::string> getTasksStatistic(const InfoSme_Tasks_Stat_SearchCriterion& searchCrit);
+    virtual void endDeliveryMessagesGeneration(uint32_t taskId);
 
-        virtual void endDeliveryMessagesGeneration(uint32_t taskId);
-
-        virtual void changeDeliveryTextMessageByCompositCriterion(uint32_t taskId,
-                                                                  const std::string& newTextMsg,
-                                                                  const InfoSme_T_SearchCriterion& searchCrit);
-      void applyRetryPolicies();
-      uint32_t sendSms(const std::string& src,const std::string& dst,const std::string& msg,bool flash);
-    };
+    virtual void changeDeliveryTextMessageByCompositCriterion(uint32_t taskId,
+                                                              const std::string& newTextMsg,
+                                                              const InfoSme_T_SearchCriterion& searchCrit);
+    virtual void applyRetryPolicies();
+    virtual uint32_t sendSms( const std::string& src,
+                              const std::string& dst,
+                              const std::string& msg,
+                              bool flash );
+};
 
 }}
 

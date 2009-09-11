@@ -61,6 +61,7 @@ namespace smsc { namespace infosme
         
         virtual int Execute();
         virtual void Start();
+        virtual void Start(int) { Start(); }
         virtual void Stop();
 
         virtual void flushStatistics();

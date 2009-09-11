@@ -39,7 +39,7 @@
 #include <util/config/route/RouteStructures.h>
 #include <util/config/route/RouteConfig.h>
 
-#include <util/config/region/RegionsConfig.hpp>
+// #include <util/config/region/RegionsConfig.hpp>
 #include <util/config/region/Region.hpp>
 #include <util/config/region/RegionFinder.hpp>
 #include "infosme/TaskLock.hpp"
@@ -197,7 +197,7 @@ extern "C" static void appSignalHandler(int sig)
   }
 }
 
-static smsc::util::config::region::RegionsConfig *regionsConfig;
+// static smsc::util::config::region::RegionsConfig *regionsConfig;
 
 extern "C" static void atExitHandler(void)
 {

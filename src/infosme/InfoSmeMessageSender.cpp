@@ -7,7 +7,8 @@ namespace infosme {
 
 InfoSmeMessageSender::InfoSmeMessageSender( TaskProcessor& processor ) :
 log_(smsc::logger::Logger::getInstance("msgsend")),
-processor_(processor)
+processor_(processor),
+defaultConnector_(0)
 {}
 
 
@@ -26,6 +27,10 @@ InfoSmeMessageSender::~InfoSmeMessageSender()
 
 void InfoSmeMessageSender::start()
 {
+    if ( ! regionsConfig_.get() ) {
+        throw smsc::util::config::ConfigException("regions not loaded, use reloadSmscAndRegions");
+    }
+
     defaultConnector_->Start();
 
     ConnectorIterator it = connectors_.getIterator();
@@ -162,6 +167,20 @@ void InfoSmeMessageSender::reloadSmscAndRegions( Manager& manager )
         addRegionMapping( region->getId(), region->getInfosmeSmscId() );
     }
     smsc::util::config::region::RegionFinder::getInstance().registerDefaultRegion(&(regionsConfig_->getDefaultRegion()));
+}
+
+
+bool InfoSmeMessageSender::send( Task* task, Message& message )
+{
+    SmscConnector* connector = getSmscConnector(message.regionId);
+    const TaskInfo& info = task->getInfo();
+    if ( ! connector ) {
+        smsc_log_error(log_,"TaskId=[%d/%s]: msgId=%llx cannot find connector by regionId=%s",
+                       info.uid, info.name.c_str(), message.id, message.regionId.c_str() );
+        TaskProcessor::retryMessage(task,message.id);
+        return false;
+    }
+    return connector->send( task, message );
 }
 
 

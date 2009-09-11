@@ -2,22 +2,29 @@
 #define SMSC_INFOSME_INFOSMEPDULISTENER
 
 #include <string>
-#include <sms/sms.h>
-#include <sme/SmppBase.hpp>
-#include <logger/Logger.h>
+#include "sms/sms.h"
+#include "sme/SmppBase.hpp"
+#include "logger/Logger.h"
 
-#include "TaskProcessor.h"
+// #include "TaskProcessor.h"
 
-namespace smsc { namespace infosme {
+namespace smsc {
+namespace infosme {
 
 using namespace smsc::smpp;
 using namespace smsc::sme;
 using smsc::logger::Logger;
 
-class InfoSmePduListener: public smsc::sme::SmppPduEventListener {
+class SmscConnector;
+
+class InfoSmePduListener: public smsc::sme::SmppPduEventListener 
+{
 public:
-  InfoSmePduListener(TaskProcessor& proc, const std::string& smscId, Logger* log) : processor(proc),
-                     syncTransmitter(0), asyncTransmitter(0), smscId_(smscId), logger(log) {};
+    InfoSmePduListener( SmscConnector& proc,
+                        Logger* log) :
+    processor(proc),
+    syncTransmitter(0), asyncTransmitter(0),
+    logger(log) {};
   virtual ~InfoSmePduListener() {}; 
 
   void setSyncTransmitter(SmppTransmitter *transmitter);
@@ -28,7 +35,7 @@ public:
   void handleError(int errorCode);
 
 private:
-  TaskProcessor& processor;
+    SmscConnector& processor;
   SmppTransmitter* syncTransmitter;
   SmppTransmitter* asyncTransmitter;
   std::string smscId_;
