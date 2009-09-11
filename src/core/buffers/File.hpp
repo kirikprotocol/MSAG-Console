@@ -996,6 +996,19 @@ public:
 #endif
   }
 
+    static bool IsDir( const char* file ) {
+#ifdef _WIN32
+# error "WIN32 is not impl yet"
+#endif
+
+#ifdef __GNUC__
+        struct stat st;
+#else
+        struct ::stat st;
+#endif
+        return (::stat(file,&st)==0) && S_ISDIR(st.st_mode);
+    }
+
   static void Rename(const char* oldname,const char* newname)
   {
     if(rename(oldname,newname)!=0)throw FileException(FileException::errRenameFailed,oldname);
