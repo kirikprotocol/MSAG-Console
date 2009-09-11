@@ -66,7 +66,7 @@ bool TDlgIndicationDispatcher::processSuaInd(const SUAUnitdataInd & sua_ind)
   switch (tmTag.tagValue) {
   case TCAPMessage::t_begin: {
     _msgTC.Reset(TCAPMessage::t_begin);
-    decRc = _msgTC.DeferredDecode(tmsgEnc);
+    decRc = _msgTC.deferredDecode(tmsgEnc);
     if (decRc.rval) {
       failed = true;
     } else {
@@ -77,7 +77,7 @@ bool TDlgIndicationDispatcher::processSuaInd(const SUAUnitdataInd & sua_ind)
 
   case TCAPMessage::t_end: {
     _msgTC.Reset(TCAPMessage::t_end);
-    decRc = _msgTC.DeferredDecode(tmsgEnc);
+    decRc = _msgTC.deferredDecode(tmsgEnc);
     if (decRc.rval) {
       failed = true;
     } else {
@@ -88,7 +88,7 @@ bool TDlgIndicationDispatcher::processSuaInd(const SUAUnitdataInd & sua_ind)
 
   case TCAPMessage::t_continue: {
     _msgTC.Reset(TCAPMessage::t_continue);
-    decRc = _msgTC.DeferredDecode(tmsgEnc);
+    decRc = _msgTC.deferredDecode(tmsgEnc);
     if (decRc.rval) {
       failed = true;
     } else {
@@ -99,7 +99,7 @@ bool TDlgIndicationDispatcher::processSuaInd(const SUAUnitdataInd & sua_ind)
 
   case TCAPMessage::t_abort: {
     _msgTC.Reset(TCAPMessage::t_abort);
-    decRc = _msgTC.DeferredDecode(tmsgEnc);
+    decRc = _msgTC.deferredDecode(tmsgEnc);
     if (decRc.rval) {
       failed = true;
     } else {
@@ -137,7 +137,7 @@ bool TDlgIndicationDispatcher::processSuaInd(const SUANoticeInd & sua_ind)
   case TCAPMessage::t_continue:
   case TCAPMessage::t_abort: {
     _msgTC.Reset(static_cast<TCAPMessage::TKind_e>(tmTag.tagValue));
-    decRc = _msgTC.DeferredDecode(tmsgEnc);
+    decRc = _msgTC.deferredDecode(tmsgEnc);
     if (decRc.rval)
       failed = true;
   } break;

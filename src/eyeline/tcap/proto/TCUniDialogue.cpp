@@ -27,7 +27,7 @@ EncodedOID _ac_tcap_uniDialogue_as(_octs_uniDialogue_as_id, "_ac_tcap_uniDialogu
 
 //REQ: if use_rule == valRule, presentation > valNone, otherwise presentation == valDecoded
 ASTypeAC::ENCResult
-  TCAudtPDU::Encode(BITBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
+TCAudtPDU::encode(OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
   /*throw ASN1CodecError*/
 {
   //TODO:
@@ -38,7 +38,7 @@ ASTypeAC::ENCResult
 //OUT: presentation (include all subcomponents) = valDecoded,
 //NOTE: in case of decMoreInput, stores decoding context 
 ASTypeAC::DECResult
-  TCAudtPDU::Decode(const BITBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
+TCAudtPDU::decode(const OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
   /*throw ASN1CodecError*/
 {
   //TODO:
@@ -50,7 +50,7 @@ ASTypeAC::DECResult
 //NOTE: in case of valMixed keeps references to BITBuffer !!!
 //NOTE: in case of decMoreInput, stores decoding context 
 ASTypeAC::DECResult
-  TCAudtPDU::DeferredDecode(const BITBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
+TCAudtPDU::deferredDecode(const OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
   /*throw ASN1CodecError*/
 {
   //TODO:
@@ -64,7 +64,7 @@ ASTypeAC::DECResult
 
 //REQ: if use_rule == valRule, presentation > valNone, otherwise presentation == valDecoded
 ASTypeAC::ENCResult
-  TCUniDialogueAS::Encode(BITBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
+TCUniDialogueAS::encode(OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
   /*throw ASN1CodecError*/
 {
   //TODO:
@@ -75,7 +75,7 @@ ASTypeAC::ENCResult
 //OUT: presentation (include all subcomponents) = valDecoded,
 //NOTE: in case of decMoreInput, stores decoding context 
 ASTypeAC::DECResult
-  TCUniDialogueAS::Decode(const BITBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
+TCUniDialogueAS::decode(const OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
   /*throw ASN1CodecError*/
 {
   //TODO:
@@ -87,7 +87,7 @@ ASTypeAC::DECResult
 //NOTE: in case of valMixed keeps references to BITBuffer !!!
 //NOTE: in case of decMoreInput, stores decoding context 
 ASTypeAC::DECResult
-  TCUniDialogueAS::DeferredDecode(const BITBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
+TCUniDialogueAS::deferredDecode(const OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
   /*throw ASN1CodecError*/
 {
   //TODO:

@@ -26,7 +26,7 @@ ASTypeAC::ENCResult
 //OUT: presentation (include all subcomponents) = valDecoded,
 //NOTE: in case of decMoreInput, stores decoding context 
 ASTypeAC::DECResult
-  TCExternal::Decode(const BITBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
+TCExternal::decode(const OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
   /*throw ASN1CodecError*/
 {
   //TODO:
@@ -38,7 +38,7 @@ ASTypeAC::DECResult
 //NOTE: in case of valMixed keeps references to BITBuffer !!!
 //NOTE: in case of decMoreInput, stores decoding context 
 ASTypeAC::DECResult
-  TCExternal::DeferredDecode(const BITBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
+TCExternal::deferredDecode(const OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
   /*throw ASN1CodecError*/
 {
   //TODO:
@@ -52,7 +52,7 @@ ASTypeAC::DECResult
 
 //REQ: if use_rule == valRule, presentation > valNone, otherwise presentation == valDecoded
 ASTypeAC::ENCResult
-  TCUserInformation::Encode(BITBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
+TCUserInformation::encode(OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
   /*throw ASN1CodecError*/
 {
   //TODO:
@@ -63,7 +63,7 @@ ASTypeAC::ENCResult
 //OUT: presentation (include all subcomponents) = valDecoded,
 //NOTE: in case of decMoreInput, stores decoding context 
 ASTypeAC::DECResult
-  TCUserInformation::Decode(const BITBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
+TCUserInformation::decode(const OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
   /*throw ASN1CodecError*/
 {
   //TODO:
@@ -75,7 +75,7 @@ ASTypeAC::DECResult
 //NOTE: in case of valMixed keeps references to BITBuffer !!!
 //NOTE: in case of decMoreInput, stores decoding context 
 ASTypeAC::DECResult
-  TCUserInformation::DeferredDecode(const BITBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
+TCUserInformation::deferredDecode(const OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
   /*throw ASN1CodecError*/
 {
   //TODO:

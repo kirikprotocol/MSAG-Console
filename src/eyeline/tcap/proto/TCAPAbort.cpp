@@ -14,7 +14,7 @@ namespace proto {
 
 //REQ: if use_rule == valRule, presentation > valNone, otherwise presentation == valDecoded
 ASTypeAC::ENCResult
-  TCMsgAbort::Encode(BITBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
+TCMsgAbort::encode(OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
   /*throw ASN1CodecError*/
 {
   //TODO:
@@ -25,7 +25,7 @@ ASTypeAC::ENCResult
 //OUT: presentation (include all subcomponents) = valDecoded,
 //NOTE: in case of decMoreInput, stores decoding context 
 ASTypeAC::DECResult
-  TCMsgAbort::Decode(const BITBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
+TCMsgAbort::decode(const OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
   /*throw ASN1CodecError*/
 {
   //TODO:
@@ -37,7 +37,7 @@ ASTypeAC::DECResult
 //NOTE: in case of valMixed keeps references to BITBuffer !!!
 //NOTE: in case of decMoreInput, stores decoding context 
 ASTypeAC::DECResult
-  TCMsgAbort::DeferredDecode(const BITBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
+TCMsgAbort::deferredDecode(const OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
   /*throw ASN1CodecError*/
 {
   //TODO:
