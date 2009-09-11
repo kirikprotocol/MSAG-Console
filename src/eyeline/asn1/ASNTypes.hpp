@@ -7,6 +7,7 @@
 
 #include <set>
 #include "eyeline/asn1/ASNTags.hpp"
+#include "util/Exception.hpp"
 
 namespace eyeline {
 namespace asn1 {
@@ -21,12 +22,15 @@ struct OCTBuffer {
 };
 
 //unaligned BIT buffer
-struct BITBuffer : public OCTBuffer {
+struct BITBuffer {
+  uint8_t *       ptr;
+  uint32_t        size;
+
   uint8_t         bitsGap;    //unused bits in first byte of encoding
   uint8_t         bitsUnused; //unused bits in last byte of encoding
 
   BITBuffer(uint8_t * use_ptr = 0, uint32_t use_sz = 0)
-    : OCTBuffer(use_ptr, use_sz), bitsGap(0), bitsUnused(0)
+    : ptr(use_ptr), size(use_sz), bitsGap(0), bitsUnused(0)
   { }
 };
 
@@ -94,6 +98,15 @@ public:
   {
     current = find(ASTagging(out_tag));
     return  current != end();
+  }
+};
+
+class ASN1CodecError : public smsc::util::Exception {
+public:
+  ASN1CodecError(const char * fmt, ...)
+    : Exception()
+  {
+    SMSC_UTIL_EX_FILL(fmt);
   }
 };
 
@@ -198,22 +211,40 @@ public:
   // ---------------------------------
 
   //REQ: if use_rule == valRule, presentation > valNone, otherwise presentation == valDecoded
-  virtual ENCResult Encode(BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
-    /*throw ASN1CodecError*/ = 0;
+  virtual ENCResult encode(OCTBuffer & use_buf, EncodingRule use_rule = ruleDER)
+  /*throw ASN1CodecError*/ = 0;
 
   //REQ: presentation == valNone
   //OUT: presentation (include all subcomponents) = valDecoded,
-  //NOTE: in case of decMoreInput, stores decoding context 
-  virtual DECResult Decode(const BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
-    /*throw ASN1CodecError*/ = 0;
+  //NOTE: in case of decMoreInput, stores decoding context
+  virtual DECResult decode(const OCTBuffer & use_buf, EncodingRule use_rule = ruleDER)
+  /*throw ASN1CodecError*/ = 0;
 
   //REQ: presentation == valNone
   //OUT: presentation (include all subcomponents) = valMixed | valDecoded
   //NOTE: in case of valMixed keeps references to BITBuffer !!!
-  //NOTE: in case of decMoreInput, stores decoding context 
-  virtual DECResult DeferredDecode(const BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
-    /*throw ASN1CodecError*/ = 0;
+  //NOTE: in case of decMoreInput, stores decoding context
+  virtual DECResult deferredDecode(const OCTBuffer & use_buf, EncodingRule use_rule = ruleDER)
+  /*throw ASN1CodecError*/ = 0;
 
+  //REQ: if use_rule == valRule, presentation > valNone, otherwise presentation == valDecoded
+  virtual ENCResult encode(BITBuffer & use_buf, EncodingRule use_rule = ruleDER) {
+    throw ASN1CodecError("encode(BITBuffer &): not implemented");
+  }
+
+  //REQ: presentation == valNone
+  //OUT: presentation (include all subcomponents) = valDecoded,
+  //NOTE: in case of decMoreInput, stores decoding context 
+  virtual DECResult decode(const BITBuffer & use_buf, EncodingRule use_rule = ruleDER) {
+    throw ASN1CodecError("decode(BITBuffer &): not implemented");
+  }
+  //REQ: presentation == valNone
+  //OUT: presentation (include all subcomponents) = valMixed | valDecoded
+  //NOTE: in case of valMixed keeps references to BITBuffer !!!
+  //NOTE: in case of decMoreInput, stores decoding context 
+  virtual DECResult deferredDecode(const BITBuffer & use_buf, EncodingRule use_rule = ruleDER) {
+    throw ASN1CodecError("defferedDecode(BITBuffer &): not implemented");
+  }
 
   // ---------------------------------
   // ASTypeAC auxiliary methods
@@ -226,7 +257,7 @@ public:
   {
     if ((valPresentation == valEncoded) || (valPresentation == valMixed)) {
       BITBuffer useEnc = valEnc;
-      return Decode(useEnc, valRule);
+      return decode(useEnc, valRule);
     }
     return DECResult(decBadVal);
   }
@@ -239,7 +270,7 @@ public:
   {
     if (valPresentation == valEncoded) {
       BITBuffer useEnc = valEnc;
-      return DeferredDecode(useEnc, valRule);
+      return deferredDecode(useEnc, valRule);
     }
     return DECResult(decBadVal);
   }
