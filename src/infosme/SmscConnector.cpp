@@ -556,42 +556,38 @@ void SmscConnector::processResponse( const ResponseData& rd, bool internal )
         taskIdsBySeqNumMonitor.notifyAll();
     }
 
-    TaskGuard taskGuard(processor_.getTask(tmIds.getTaskId()));
-    Task* task = taskGuard.get();
-    if (!task) {
-        if (!internal) smsc_log_warn(log_, "Response(%s): Unable to locate task '%d' for sequence number=%d" ,
-                                     smscId_.c_str(), tmIds.taskId, rd.seqNum);
-        return;
-    }
-    
-    if ( !processor_.processResponse(task,tmIds.msgId,rd,internal) ) return;
-
-    // need receipt
-    ReceiptId receiptId(rd.msgId);
-        
     try
     {
+        ReceiptId receiptId(rd.msgId);
         ReceiptData receipt; // receipt.receipted = false
-        {
+
+        bool receiptInCache = ( !internal && rd.accepted );
+
+        if ( receiptInCache ) {
             MutexGuard guard(receiptsLock);
             ReceiptData* receiptPtr = receipts.GetPtr(receiptId);
-            if (receiptPtr) receipt = *receiptPtr;
-            else {
+            if (receiptPtr) {
+                receipt = *receiptPtr;
+                receiptInCache = false;
+            } else {
                 receipts.Insert(receiptId, receipt);
                 MutexGuard recptGuard(receiptWaitQueueLock);
                 receiptWaitQueue.Push(ReceiptTimer(time(NULL)+receiptWaitTime, receiptId));
             }
         }
 
-        bool idMappingCreated = false;
-        if (!receipt.receipted)
-        {
-            if (!task->enrouteMessage(tmIds.msgId))
-                throw Exception("Message #%lld not found (doEnroute).", tmIds.msgId);
+        // check what processor tells us about receipts
+        if ( ! processor_.processResponse(tmIds,rd,internal,receipt.receipted) ) {
+            if ( receiptInCache ) {
+                // delete newly created receipt in cache
+                MutexGuard guard(receiptsLock);
+                receipts.Delete(receiptId);
+            }
+            return;
+        }
 
-            // TaskIdMsgId timi;
-            // timi.msgId=tmIds.msgId;
-            // timi.taskId=info.uid;
+        bool idMappingCreated = false;
+        if ( !receipt.receipted ) {
             smsc_log_debug(log_, "Response(%s): Receipt ID: msgId='%s'",
                            smscId_.c_str(), receiptId.getMessageId());
             jstore_->jstore.Insert(receiptId, tmIds);
@@ -619,7 +615,7 @@ void SmscConnector::processResponse( const ResponseData& rd, bool internal )
             ResponseData rd2(rd);
             rd2.accepted=receipt.delivered;
             rd2.retry=receipt.retry;
-            processor_.processMessage(task, tmIds.msgId,rd2);
+            processor_.processMessage(tmIds,rd2);
         }
     }
     catch (std::exception& exc) {
@@ -663,14 +659,10 @@ void SmscConnector::processReceipt( const ResponseData& rd, bool internal )
     try
     {
 
-      TaskMsgId timi;
-      uint64_t msgId;
-      uint32_t taskId;
+      TaskMsgId tmIds;
       bool needProcess = false;
-      if(jstore_->jstore.Lookup(receiptId, timi))
+      if(jstore_->jstore.Lookup(receiptId, tmIds))
       {
-        msgId = timi.msgId;
-        taskId = timi.taskId;
         MutexGuard guard(receiptsLock);
         ReceiptData* receiptPtr = receipts.GetPtr(receiptId);
         if (receiptPtr)
@@ -684,14 +676,14 @@ void SmscConnector::processReceipt( const ResponseData& rd, bool internal )
       {
       
         jstore_->jstore.Delete(receiptId);
-      
+          /*
         TaskGuard taskGuard = processor_.getTask(taskId);
         Task* task = taskGuard.get();
         if (!task)
           throw Exception("processReceipt(): Unable to locate task '%d' for smscMsgId='%s'",
                           taskId, receiptId.getMessageId());
-
-        processor_.processMessage(task, msgId,rd);
+           */
+        processor_.processMessage(tmIds,rd);
       }
       
     }

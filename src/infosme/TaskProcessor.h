@@ -187,15 +187,15 @@ private:
 
     void processWaitingEvents(time_t time);
     /// invoked from smsc connector, return true if receipt is needed
-    bool processResponse( Task* task,
-                          uint64_t msgId,
+    bool processResponse( const TaskMsgId& tmIds,
                           const ResponseData& rd,
-                          bool internal );
+                          bool internal,
+                          bool receipted );
     bool processTask(Task* task);
     void resetWaitingTasks();
 
     friend class SmscConnector;
-    virtual void processMessage (Task* task, uint64_t msgId,const ResponseData& rd);
+    virtual void processMessage ( const TaskMsgId& tmIds, const ResponseData& rd);
 
     bool doesMessageConformToCriterion(ResultSet* rs,
                                        const InfoSme_Tasks_Stat_SearchCriterion& searchCrit);

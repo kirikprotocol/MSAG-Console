@@ -387,11 +387,19 @@ void TaskProcessor::processWaitingEvents(time_t tm)
 }
 
 
-bool TaskProcessor::processResponse( Task*    task,
-                                     uint64_t msgId,
+bool TaskProcessor::processResponse( const TaskMsgId& tmIds,
                                      const ResponseData& rd,
-                                     bool internal )
+                                     bool  internal,
+                                     bool  receipted )
 {
+    TaskGuard taskGuard(getTask(tmIds.getTaskId()));
+    Task* task = taskGuard.get();
+    if (!task) {
+        if (!internal) smsc_log_warn(log_, "Response: Unable to locate task '%d' for sequence number=%d" ,
+                                     tmIds.taskId, rd.seqNum);
+        return false;
+    }
+
     const TaskInfo& info = task->getInfo();
 
     if (!rd.accepted || internal)
@@ -404,13 +412,13 @@ bool TaskProcessor::processResponse( Task*    task,
             if ((info.endDate>0 && nextTime >=info.endDate) ||
                 (info.validityDate>0 && nextTime>=info.validityDate))
             {
-                task->finalizeMessage(msgId, EXPIRED, rd.status );
+                task->finalizeMessage(tmIds.msgId, EXPIRED, rd.status );
                 statistics->incFailed(info.uid);
             } 
             else
             {
-                if (!task->retryMessage(msgId, nextTime)) {
-                    smsc_log_warn(log_, "Message #%llx not found for retry.", msgId);
+                if (!task->retryMessage(tmIds.msgId, nextTime)) {
+                    smsc_log_warn(log_, "Message #%llx not found for retry.", tmIds.msgId);
                     statistics->incFailed(info.uid);
                 } 
                 else if (!rd.immediate) statistics->incRetried(info.uid);
@@ -418,30 +426,42 @@ bool TaskProcessor::processResponse( Task*    task,
         }
         else
         {
-            task->finalizeMessage(msgId, FAILED, rd.status );
+            task->finalizeMessage(tmIds.msgId, FAILED, rd.status );
             statistics->incFailed(info.uid);
         }
         return false;
     }
 
     if (info.transactionMode) {
-        task->finalizeMessage(msgId, DELIVERED, rd.status );
+        task->finalizeMessage(tmIds.msgId, DELIVERED, rd.status );
         statistics->incDelivered(info.uid);
         return false;
     }
         
     // need receipt
+    if ( !receipted ) {
+        if (!task->enrouteMessage(tmIds.msgId) ) {
+            throw Exception("Message #%llx not found(doEnroute).",tmIds.msgId);
+        }
+    }
     return true;
 }
 
 
-void TaskProcessor::processMessage(Task* task, uint64_t msgId,const ResponseData& rd)
+void TaskProcessor::processMessage(const TaskMsgId& tmIds,const ResponseData& rd)
 {
-    __require__(task);
+    TaskGuard taskGuard = getTask(tmIds.taskId);
+    Task* task = taskGuard.get();
+    if (!task) {
+        throw Exception("processMessage(): Unable to locate task '%d' for smscMsgId='%s'",
+                        tmIds.taskId, rd.msgId.c_str());
+    }
+
+    // __require__(task);
 
     if (rd.accepted)
     {
-        task->finalizeMessage(msgId, DELIVERED, rd.status );
+        task->finalizeMessage(tmIds.msgId, DELIVERED, rd.status );
         statistics->incDelivered(task->getInfo().uid);
     }
     else
@@ -454,13 +474,13 @@ void TaskProcessor::processMessage(Task* task, uint64_t msgId,const ResponseData
             if ((info.endDate>0 && nextTime >=info.endDate) ||
                 (info.validityDate>0 && nextTime>=info.validityDate))
             {
-                task->finalizeMessage(msgId, EXPIRED, rd.status);
+                task->finalizeMessage(tmIds.msgId, EXPIRED, rd.status);
                 statistics->incFailed(info.uid);
             } 
             else
             {
-                if (!task->retryMessage(msgId, nextTime)) {
-                    smsc_log_warn(log_, "Message #%lld not found for retry.", msgId);
+                if (!task->retryMessage(tmIds.msgId, nextTime)) {
+                    smsc_log_warn(log_, "Message #%lld not found for retry.", tmIds.msgId);
                     statistics->incFailed(info.uid);
                 } 
                 else if (!rd.immediate) statistics->incRetried(info.uid);
@@ -468,7 +488,7 @@ void TaskProcessor::processMessage(Task* task, uint64_t msgId,const ResponseData
         }
         else
         { 
-            task->finalizeMessage(msgId, FAILED, rd.status );
+            task->finalizeMessage(tmIds.msgId, FAILED, rd.status );
             statistics->incFailed(info.uid);
         }
     }

@@ -124,6 +124,8 @@ public:
 private:
     bool convertMSISDNStringToAddress(const char* string, smsc::sms::Address& address);
 
+    // merge state for given receipt
+    bool mergeReceiptState( const ReceiptId& receiptId, ReceiptData& rd );
     void processResponse( const ResponseData& rd, bool internal = false );
     void processReceipt( const ResponseData& rd, bool internal = false );
     bool send( const std::string& abonent,
