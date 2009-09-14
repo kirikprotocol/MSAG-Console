@@ -283,8 +283,8 @@ void SmscConnector::reconnect() {
 void SmscConnector::updateConfig( const smsc::sme::SmeConfig& config )
 {
     smsc_log_warn(log_, "updateConfig on '%s'... ", smscId_.c_str());
-    session_->close();
     MutexGuard mg(connectMonitor_);
+    session_->close();
     session_.reset(new SmppSession(config,&listener_));
     connected_ = false;
     connectMonitor_.notify();
@@ -301,10 +301,10 @@ int SmscConnector::Execute() {
     // any thread being started from this point has signal mask with all signals locked 
       clearHashes();
       smsc_log_info(log_, "Connecting to SMSC id='%s'... ", smscId_.c_str());
+      MutexGuard mg(connectMonitor_);
       try
       {
           session_->connect();
-          MutexGuard mg(connectMonitor_);
           connected_ = true;
       }
       catch (SmppConnectException& exc)
@@ -315,19 +315,15 @@ int SmscConnector::Execute() {
           if (exc.getReason() == SmppConnectException::Reason::bindFailed) throw;
           sleep(timeout_);
           session_->close();
-          MutexGuard mg(connectMonitor_);
           connected_ = false;
           continue;
       }
       smsc_log_info(log_, "Connected to SMSC id='%s'.", smscId_.c_str());
-      {
-        MutexGuard mg(connectMonitor_);
-        while (connected_ && !isStopped()) {
-          connectMonitor_.wait();
-        }
-        if (!connected_) {
-          smsc_log_info(log_, "Need Reconnect to SMSC id='%s'.", smscId_.c_str());
-        }
+      while (connected_ && !isStopped()) {
+        connectMonitor_.wait();
+      }
+      if (!connected_) {
+        smsc_log_info(log_, "Need Reconnect to SMSC id='%s'.", smscId_.c_str());
       }
       session_->close();
   }
@@ -337,7 +333,7 @@ int SmscConnector::Execute() {
 }
 
 int SmscConnector::getSeqNum() {
-  MutexGuard guard(sendLock_);
+  MutexGuard guard(connectMonitor_);
   return session_->getNextSeq();
 }
 
@@ -713,15 +709,12 @@ bool SmscConnector::send( const std::string& abonent,
                           const TaskInfo& info, int seqNum )
 {
     {
-        MutexGuard mg(connectMonitor_);
-        if (!connected_) {
-            smsc_log_warn(log_, "SMSC Connector '%s' is not connected.", smscId_.c_str());
-            connectMonitor_.notify();
-            return false;
-        }
-    }
-    {
-        MutexGuard guard(sendLock_);
+      MutexGuard mg(connectMonitor_);
+      if (!connected_) {
+          smsc_log_warn(log_, "SMSC Connector '%s' is not connected.", smscId_.c_str());
+          connectMonitor_.notify();
+          return false;
+      }
         SmppTransmitter* asyncTransmitter = session_->getAsyncTransmitter();
         if (!asyncTransmitter) {
             smsc_log_error(log_, "Smpp transmitter is undefined for SMSC Connector '%s'.", smscId_.c_str());

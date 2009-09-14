@@ -119,7 +119,6 @@ private:
     TaskProcessor& processor_;
     InfoSmePduListener listener_;
     std::auto_ptr<SmppSession> session_;
-    Mutex sendLock_;
     EventMonitor connectMonitor_;
     int timeout_;
     bool stopped_;
