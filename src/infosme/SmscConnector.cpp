@@ -401,6 +401,13 @@ bool SmscConnector::send( Task* task, Message& message )
     MessageGuard msguard(task,message.id);
     const TaskInfo& info = task->getInfo();
 
+    if ( ! isConnected() ) {
+        msguard.processed();
+        smsc_log_debug(log_, "TaskId=[%d/%s]: SMSC id='%s' is not connected",
+                       info.uid, info.name.c_str(), smscId_.c_str());
+        return false;
+    }
+
     if ( trafficControl_->speedLimitReached(task,message) ) {
         msguard.processed();
         if ( log_->isInfoEnabled() ) {
@@ -419,14 +426,18 @@ bool SmscConnector::send( Task* task, Message& message )
     {
         MutexGuard snGuard(taskIdsBySeqNumMonitor);
         int seqNumsCount;
-        while ( true ) {
-            if (processor_.bNeedExit || stopped_ ) return false;
-            seqNumsCount = taskIdsBySeqNum.Count();
-            if ( seqNumsCount <= processor_.unrespondedMessagesMax ) break;
+        if (processor_.bNeedExit || stopped_ ) return false;
+        seqNumsCount = taskIdsBySeqNum.Count();
+        if ( seqNumsCount > processor_.unrespondedMessagesMax ) {
+            msguard.processed(); // to prevent retry
+            smsc_log_debug(log_,"TaskId=[%d/%s]: too many messages queued for SMSC id='%s'",
+                           info.uid, info.name.c_str(), smscId_.c_str() );
+            return false;
+        }
+        /*
             int difference = seqNumsCount - processor_.unrespondedMessagesMax;
             taskIdsBySeqNumMonitor.wait(difference*processor_.unrespondedMessagesSleep);
-        }
-
+         */
         if (taskIdsBySeqNum.Exist(seqNum))
         {
             smsc_log_warn(log_, "Sequence id=%d SMSC id='%s' was already used !", seqNum, smscId_.c_str());
@@ -676,13 +687,6 @@ void SmscConnector::processReceipt( const ResponseData& rd, bool internal )
       {
       
         jstore_->jstore.Delete(receiptId);
-          /*
-        TaskGuard taskGuard = processor_.getTask(taskId);
-        Task* task = taskGuard.get();
-        if (!task)
-          throw Exception("processReceipt(): Unable to locate task '%d' for smscMsgId='%s'",
-                          taskId, receiptId.getMessageId());
-           */
         processor_.processMessage(tmIds,rd);
       }
       
