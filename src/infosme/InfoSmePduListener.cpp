@@ -124,8 +124,7 @@ void InfoSmePduListener::handleEvent(SmppHeader *pdu) {
 
 void InfoSmePduListener::handleError(int errorCode) {
   smsc_log_error(logger, "Transport error handled! Code is: %d", errorCode);
-  //TODO:
-  //setNeedReconnect();
+  processor.reconnect();
 }
 
 }//infosme
