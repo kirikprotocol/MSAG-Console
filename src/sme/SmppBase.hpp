@@ -850,16 +850,21 @@ protected:
     while(tolist.front().to<now)
     {
       int key=tolist.front().seq;
-      Lock& l=lock.Get(key);
-      if(!l.pdu) // in synchronous case if l.pdu assigned than it was already received
+      Lock* l = lock.GetPtr(key);
+      if (!l) {
+          // lock was already processed
+          tolist.erase(tolist.begin());
+          continue;
+      }
+      if(!l->pdu) // in synchronous case if l.pdu assigned than it was already received
       {
         listener->handleTimeout(key);
         tolist.erase(tolist.begin());
         lock.Delete(key);
       }
-      if(l.event)
+      if(l->event)
       {
-        l.event->Signal();
+        l->event->Signal();
       }
     }
     /*
