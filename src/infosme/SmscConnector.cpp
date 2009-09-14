@@ -401,7 +401,7 @@ bool SmscConnector::send( Task* task, Message& message )
     MessageGuard msguard(task,message.id);
     const TaskInfo& info = task->getInfo();
 
-    if ( ! isConnected() ) {
+    if ( ! connected_ ) {
         msguard.processed();
         smsc_log_debug(log_, "TaskId=[%d/%s]: SMSC id='%s' is not connected",
                        info.uid, info.name.c_str(), smscId_.c_str());
