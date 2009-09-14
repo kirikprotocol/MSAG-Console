@@ -3,6 +3,7 @@
 #include "eyeline/protogen/framework/SerializerBuffer.hpp"
 #include "eyeline/protogen/framework/Exceptions.hpp"
 #include "eyeline/load_balancer/cluster/ClusterControllerMsgsHndlr.hpp"
+#include "eyeline/load_balancer/cluster/messages/RegisterAsLoadBalancer.hpp"
 #include "eyeline/load_balancer/cluster/messages/GetServicesStatusResp.hpp"
 #include "eyeline/load_balancer/cluster/messages/DisconnectServiceResp.hpp"
 
@@ -13,10 +14,11 @@ namespace cluster {
 class ClusterLoadBalancerProtocol{
 public:
   enum{
-    tag_GetServicesStatus=63,
-    tag_DisconnectService=64,
-    tag_GetServicesStatusResp=1063,
-    tag_DisconnectServiceResp=1064
+    tag_GetServicesStatus=101,
+    tag_DisconnectService=102,
+    tag_RegisterAsLoadBalancer=301,
+    tag_GetServicesStatusResp=1101,
+    tag_DisconnectServiceResp=1102
   };
  
   ClusterLoadBalancerProtocol():handler(0)
@@ -27,6 +29,7 @@ public:
   void decodeAndHandleMessage(const char* buf,size_t sz);
   void decodeAndHandleMessage(protogen::framework::SerializerBuffer& ss);
 
+  void encodeMessage(const messages::RegisterAsLoadBalancer& msg,protogen::framework::SerializerBuffer* ss);
   void encodeMessage(const messages::GetServicesStatusResp& msg,protogen::framework::SerializerBuffer* ss);
   void encodeMessage(const messages::DisconnectServiceResp& msg,protogen::framework::SerializerBuffer* ss);
 protected:
