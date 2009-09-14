@@ -234,7 +234,7 @@ smscId_(smscId),
 log_(Logger::getInstance("smsc.infosme.connector")),
 processor_(processor),
 listener_(*this, log_),
-session_(cfg, &listener_),
+session_(new SmppSession(cfg, &listener_)),
 timeout_(cfg.timeOut),
 stopped_(false),
 connected_(false),
@@ -244,8 +244,8 @@ receiptWaitTime(processor_.receiptWaitTime),
 jstore_(0),
 trafficControl_(0)
 {
-    listener_.setSyncTransmitter(session_.getSyncTransmitter());
-    listener_.setAsyncTransmitter(session_.getAsyncTransmitter());
+    listener_.setSyncTransmitter(session_->getSyncTransmitter());
+    listener_.setAsyncTransmitter(session_->getAsyncTransmitter());
     jstore_ = new JStoreWrapper(processor_.storeLocation,
                                 smscId_,
                                 processor_.mappingRollTime,
@@ -282,7 +282,12 @@ void SmscConnector::reconnect() {
 
 void SmscConnector::updateConfig( const smsc::sme::SmeConfig& config )
 {
-    smsc_log_warn(log_, "FIXME: updateConfig on '%s'... ", smscId_.c_str());
+    smsc_log_warn(log_, "updateConfig on '%s'... ", smscId_.c_str());
+    session_->close();
+    MutexGuard mg(connectMonitor_);
+    session_.reset(new SmppSession(config,&listener_));
+    connected_ = false;
+    connectMonitor_.notify();
 }
 
 bool SmscConnector::isStopped() const {
@@ -294,10 +299,11 @@ int SmscConnector::Execute() {
   {
     // after call to isNeedStop() was completed all signals is locked.
     // any thread being started from this point has signal mask with all signals locked 
+      clearHashes();
       smsc_log_info(log_, "Connecting to SMSC id='%s'... ", smscId_.c_str());
       try
       {
-          session_.connect();
+          session_->connect();
           MutexGuard mg(connectMonitor_);
           connected_ = true;
       }
@@ -308,7 +314,7 @@ int SmscConnector::Execute() {
           //bInfoSmeIsConnecting = false;
           if (exc.getReason() == SmppConnectException::Reason::bindFailed) throw;
           sleep(timeout_);
-          session_.close();
+          session_->close();
           MutexGuard mg(connectMonitor_);
           connected_ = false;
           continue;
@@ -323,15 +329,16 @@ int SmscConnector::Execute() {
           smsc_log_info(log_, "Need Reconnect to SMSC id='%s'.", smscId_.c_str());
         }
       }
-      session_.close();
+      session_->close();
   }
-  smsc_log_info(log_, "SMSC Connector '%s' stopped", smscId_.c_str());
+    clearHashes();
+    smsc_log_info(log_, "SMSC Connector '%s' stopped", smscId_.c_str());
   return 1; 
 }
 
 int SmscConnector::getSeqNum() {
   MutexGuard guard(sendLock_);
-  return session_.getNextSeq();
+  return session_->getNextSeq();
 }
 
 
@@ -364,7 +371,7 @@ uint32_t SmscConnector::sendSms(const std::string& org,const std::string& dst,co
   }
   sbm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
   sbm.get_header().set_sequenceNumber(getSeqNum());
-  PduSubmitSmResp* resp=session_.getSyncTransmitter()->submit(sbm);
+  PduSubmitSmResp* resp=session_->getSyncTransmitter()->submit(sbm);
   if(!resp)
   {
     return SmppStatusSet::ESME_RUNKNOWNERR;
@@ -715,7 +722,7 @@ bool SmscConnector::send( const std::string& abonent,
     }
     {
         MutexGuard guard(sendLock_);
-        SmppTransmitter* asyncTransmitter = session_.getAsyncTransmitter();
+        SmppTransmitter* asyncTransmitter = session_->getAsyncTransmitter();
         if (!asyncTransmitter) {
             smsc_log_error(log_, "Smpp transmitter is undefined for SMSC Connector '%s'.", smscId_.c_str());
             return false;
@@ -806,6 +813,19 @@ bool SmscConnector::send( const std::string& abonent,
     }
     reconnect();
     return false;
+}
+
+
+void SmscConnector::clearHashes()
+{
+    {
+        MutexGuard mg(taskIdsBySeqNumMonitor);
+        taskIdsBySeqNum.Empty();
+    }
+    {
+        MutexGuard mg(responseWaitQueueLock);
+        responseWaitQueue.Empty();
+    }
 }
 
 }  //infosme

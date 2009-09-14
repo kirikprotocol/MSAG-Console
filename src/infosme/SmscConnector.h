@@ -1,6 +1,7 @@
 #ifndef SMSC_INFOSME_SMSCCONNECTOR
 #define SMSC_INFOSME_SMSCCONNECTOR
 
+#include <memory>
 #include <logger/Logger.h>
 #include <sms/sms.h>
 #include <sme/SmppBase.hpp>
@@ -109,13 +110,15 @@ private:
                const std::string& message,
                const TaskInfo& info,
                int seqNum );
+    // cleanup all hashes except receipts
+    void clearHashes();
 
 private:
     string smscId_;
     Logger* log_;
     TaskProcessor& processor_;
     InfoSmePduListener listener_;
-    SmppSession session_;
+    std::auto_ptr<SmppSession> session_;
     Mutex sendLock_;
     EventMonitor connectMonitor_;
     int timeout_;
@@ -124,8 +127,8 @@ private:
     // how many dependant objects are working on the connectors,
     // guarded by connectMonitor_
     int usage_;
-    smsc::core::buffers::IntHash<TaskMsgId>   taskIdsBySeqNum;
-    smsc::core::synchronization::EventMonitor taskIdsBySeqNumMonitor;
+    smsc::core::buffers::IntHash<TaskMsgId>         taskIdsBySeqNum;
+    smsc::core::synchronization::EventMonitor       taskIdsBySeqNumMonitor;
     smsc::core::buffers::XHash<ReceiptId, ReceiptData, ReceiptId>  receipts; 
     smsc::core::synchronization::Mutex              receiptsLock;
 
