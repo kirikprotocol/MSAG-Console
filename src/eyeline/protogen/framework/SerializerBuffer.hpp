@@ -39,7 +39,7 @@ public:
       delete [] buf;
     }
   }
-  
+
   typedef uint16_t TagType;
   typedef uint16_t LengthType;
   enum{tagTypeSize=sizeof(TagType)};
@@ -103,7 +103,7 @@ public:
     }
     //pos+=value.length();
   }
-  
+
   void writeBool(bool value)
   {
     resize(1);
@@ -141,7 +141,7 @@ public:
     writeLength((LengthType)value.length()*2);
     writeStr(value);
   }
-  
+
   void writeStrLstLV(const std::vector<std::string>& value)
   {
     writeLength(fieldSize(value));
@@ -202,7 +202,7 @@ public:
   {
     return pos<dataSize;
   }
-  
+
   LengthType readLength()
   {
     if(pos+lengthTypeSize>dataSize)
@@ -307,7 +307,7 @@ public:
 
   bool readBoolLV()
   {
-    uint16_t len=readLength();
+    LengthType len=readLength();
     if(len!=1)
     {
       throw InvalidValueLength("bool",len);
@@ -315,9 +315,9 @@ public:
     return readBool();
   }
 
-  bool readByteLV()
+  uint8_t readByteLV()
   {
-    uint16_t len=readLength();
+    LengthType len=readLength();
     if(len!=1)
     {
       throw InvalidValueLength("byte",len);
@@ -326,9 +326,9 @@ public:
   }
 
 
-  bool readInt16LV()
+  uint16_t readInt16LV()
   {
-    uint16_t len=readLength();
+    LengthType len=readLength();
     if(len!=2)
     {
       throw InvalidValueLength("int16",len);
@@ -336,9 +336,9 @@ public:
     return readInt16();
   }
 
-  bool readInt32LV()
+  uint32_t readInt32LV()
   {
-    uint16_t len=readLength();
+    LengthType len=readLength();
     if(len!=4)
     {
       throw InvalidValueLength("int32",len);
@@ -363,7 +363,7 @@ public:
     for(size_t i=0;i<pos;i++)
     {
       sprintf(buffer,"%02x ",(unsigned int)(unsigned char)buf[i]);
-      rv+=buf;
+      rv+=buffer;
     }
     return rv;
   }
@@ -375,13 +375,13 @@ public:
   void setExternalData(const char* data,size_t size)
   {
     pos=0;
-		if(ownedBuffer && buf)
-		{
-		  delete [] buf;
-		}
-		buf=const_cast<char*>(data);
-		dataSize=size;
-		ownedBuffer=false;
+    if(ownedBuffer && buf)
+    {
+      delete [] buf;
+    }
+    buf=const_cast<char*>(data);
+    dataSize=size;
+    ownedBuffer=false;
   }
   char* prepareBuffer(uint32_t size)
   {
@@ -390,15 +390,20 @@ public:
     dataSize=size;
     return buf;
   }
-	
-	const char* getBuffer()const
-	{
-	  return buf;
-	}
-	size_t getDataWritten()const
-	{
-	  return pos;
-	}
+
+  const char* getBuffer()const
+  {
+    return buf;
+  }
+  size_t getDataWritten()const
+  {
+    return pos;
+  }
+  const char* detachBuffer()
+  {
+    ownedBuffer=false;
+    return buf;
+  }
 protected:
   char* buf;
   size_t pos;
@@ -407,10 +412,10 @@ protected:
   bool ownedBuffer;
   void resize(size_t grow)
   {
-	  if(!ownedBuffer)
-		{
-		  throw protogen::framework::WriteToReadonlyBuffer();
-		}
+    if(!ownedBuffer)
+    {
+      throw protogen::framework::WriteToReadonlyBuffer();
+    }
     if(pos+grow>bufSize)
     {
       bufSize=bufSize*2+grow;
