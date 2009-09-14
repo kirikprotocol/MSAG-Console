@@ -11,6 +11,7 @@
 #include "util/Exception.hpp"
 #include "eyeline/corex/io/network/TCPSocket.hpp"
 #include "eyeline/corex/io/IOExceptions.hpp"
+#include "logger/Logger.h"
 
 namespace eyeline {
 namespace corex {
@@ -186,21 +187,19 @@ TCPSocket::tryConnectWithTimeout(int connect_timeout)
     timeout.tv_sec = connect_timeout; timeout.tv_usec = 0;
     int st = ::select(_sockfd+1, &rset, &wset, NULL, &timeout);
     int error = errno;
-    setNonBlocking(_sockfd, false);
     if ( st < 0 )
       throw smsc::util::SystemError("TCPSocket::tryConnectWithTimeout::: call to select failed", error);
-
+    setNonBlocking(_sockfd, false);
     if ( !st ) {
       errno = ETIMEDOUT;
       return -1;
     }
     if ( FD_ISSET(_sockfd, &wset) ) {
       if ( FD_ISSET(_sockfd, &rset) ) {
-        int len = sizeof(error);
         error = 0;
+        int len = sizeof(error);
         if ( getsockopt(_sockfd, SOL_SOCKET, SO_ERROR, &error, &len) < 0 )
-          throw smsc::util::SystemError("TCPSocket::connect::: call to getsockopt() failed");
-
+          throw smsc::util::SystemError("TCPSocket::tryConnectWithTimeout::: call to getsockopt() failed");
         errno = error;
         return -1;
       }
