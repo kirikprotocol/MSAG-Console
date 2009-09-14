@@ -48,27 +48,33 @@ inline size_t ReadRecord( smsc::core::buffers::File& f,
 
 class MessageGuard
 {
+    typedef enum { msgProcessed, msgSuspended, msgFailed } MessageState;
 public:
-    MessageGuard(Task* argTask,uint64_t argMsgId) : task(argTask),msgId(argMsgId),messageProcessed(false)
+    MessageGuard(Task* argTask, const Message& theMsg) :
+    task(argTask), msg(theMsg), state(msgFailed)
     {
     }
 
     ~MessageGuard()
     {
-        if (!messageProcessed) {
-            TaskProcessor::retryMessage(task,msgId);
+        if (state == msgFailed ) {
+            TaskProcessor::retryMessage(task,msg.id);
+        } else if ( state == msgSuspended ) {
+            task->putToSuspendedMessagesQueue(msg);
         }
     }
 
-    void processed()
-    {
-        messageProcessed=true;
+    void processed() {
+        state = msgProcessed;
+    }
+    void suspended() {
+        state = msgSuspended;
     }
 
 private:
     Task* task;
-    uint64_t msgId;
-    bool messageProcessed;
+    const Message& msg;
+    MessageState state;
 };
 
 } // anonymous namespace
@@ -189,13 +195,10 @@ bool SmscConnector::RegionTrafficControl::speedLimitReached( Task* task, const M
     smsc_log_debug(log_, "TaskProcessor::controlTrafficSpeedByRegion::: TaskId=[%d]: regionTrafficLimitReached=%d, region bandwidth=%d, current sent messages during one second=%d",
                    taskId, regionTrafficLimitReached, region->getBandwidth(), out);
     // check max messages per sec. limit. if limit was reached then put message to queue of suspended messages.
-    if ( regionTrafficLimitReached ) {
-        task->putToSuspendedMessagesQueue(message);
-        return true;
-    } else {
-        outgoing->Inc();
-        return false;
-    }
+    if ( regionTrafficLimitReached ) { return true; }
+
+    outgoing->Inc();
+    return false;
 }
 
 // ===================================================================
@@ -398,18 +401,18 @@ bool SmscConnector::invokeProcessResponse( const ResponseData& rd )
 
 bool SmscConnector::send( Task* task, Message& message )
 {
-    MessageGuard msguard(task,message.id);
+    MessageGuard msguard(task,message);
     const TaskInfo& info = task->getInfo();
 
     if ( ! connected_ ) {
-        msguard.processed();
+        msguard.suspended();
         smsc_log_debug(log_, "TaskId=[%d/%s]: SMSC id='%s' is not connected",
                        info.uid, info.name.c_str(), smscId_.c_str());
         return false;
     }
 
     if ( trafficControl_->speedLimitReached(task,message) ) {
-        msguard.processed();
+        msguard.suspended();
         if ( log_->isInfoEnabled() ) {
             const smsc::util::config::region::Region* region = smsc::util::config::region::RegionFinder::getInstance().getRegionById(message.regionId);
             smsc_log_info(log_, "TaskId=[%d/%s]: Traffic for region %s with id %s was suspended",
@@ -429,15 +432,11 @@ bool SmscConnector::send( Task* task, Message& message )
         if (processor_.bNeedExit || stopped_ ) return false;
         seqNumsCount = taskIdsBySeqNum.Count();
         if ( seqNumsCount > processor_.unrespondedMessagesMax ) {
-            msguard.processed(); // to prevent retry
+            msguard.suspended(); // to prevent retry
             smsc_log_debug(log_,"TaskId=[%d/%s]: too many messages queued for SMSC id='%s'",
                            info.uid, info.name.c_str(), smscId_.c_str() );
             return false;
         }
-        /*
-            int difference = seqNumsCount - processor_.unrespondedMessagesMax;
-            taskIdsBySeqNumMonitor.wait(difference*processor_.unrespondedMessagesSleep);
-         */
         if (taskIdsBySeqNum.Exist(seqNum))
         {
             smsc_log_warn(log_, "Sequence id=%d SMSC id='%s' was already used !", seqNum, smscId_.c_str());
@@ -453,9 +452,7 @@ bool SmscConnector::send( Task* task, Message& message )
 
         smsc_log_error( log_, "Failed to send message #%llx for '%s'",
                         message.id, message.abonent.c_str());
-
-        task->putToSuspendedMessagesQueue(message);
-
+        msguard.suspended();
         MutexGuard snGuard(taskIdsBySeqNumMonitor);
         if ( taskIdsBySeqNum.Delete(seqNum) ) {
             taskIdsBySeqNumMonitor.notifyAll();
@@ -546,7 +543,8 @@ void SmscConnector::processResponse( const ResponseData& rd, bool internal )
                       smscId_.c_str(),
                       rd.seqNum, rd.msgId.c_str(),rd.accepted, rd.retry, rd.immediate);
     } else {
-        smsc_log_info(log_, "Response(%s) for seqNum=%d is timed out.", rd.seqNum);
+        smsc_log_info(log_, "Response(%s) for seqNum=%d is timed out.",
+                      smscId_.c_str(), rd.seqNum);
     }
 
     TaskMsgId tmIds;

@@ -844,41 +844,14 @@ void
 Task::putToSuspendedMessagesQueue(const Message& suspendedMessage)
 {
   smsc_log_info(logger, "Task::putToSuspendedMessagesQueue:::  task '%d/%s': exceeded region bandwidth (regionId=%s), return message with id=%llx to messagesCache",
-                info.uid,info.name.c_str(), suspendedMessage.regionId.c_str(), suspendedMessage.id);
+                info.uid, info.name.c_str(), suspendedMessage.regionId.c_str(), suspendedMessage.id);
     messageCache_->suspendRegion( suspendedMessage );
-    // MutexGuard guard(messagesCacheLock);
-    // _suspendedRegions.insert(suspendedMessage.regionId);
-    // messagesCache.push_back(suspendedMessage);
 }
 
-/*
-bool Task::fetchMessageFromCache(Message& message)
-{
-  MutexGuard guard(messagesCacheLock);
-  std::string regionForPreviouslyFetchedMessage;
-  while(_messagesCacheIter != messagesCache.end() ) {
-    const Message& fetchedMessage = *_messagesCacheIter;
-    if ( regionForPreviouslyFetchedMessage != fetchedMessage.regionId && 
-         _suspendedRegions.find(fetchedMessage.regionId) == _suspendedRegions.end() ) {
-      message = fetchedMessage; setInProcess(isEnabled());
-      _messagesCacheIter = messagesCache.erase(_messagesCacheIter);
-      smsc_log_debug(logger, "Task::fetchMessageFromCache::: task '%d/%s', fetched next message [id=%llx,abonent=%s,regionId=%s]",info.uid,info.name.c_str(), message.id, message.abonent.c_str(), message.regionId.c_str());
-      return true;
-    }
-    ++_messagesCacheIter;
-    regionForPreviouslyFetchedMessage = fetchedMessage.regionId;
-  }
-  smsc_log_debug(logger, "Task::fetchMessageFromCache::: cache bypassed, there are no messages meeting search criterion; messagesCache.size = %d", messagesCache.size());
-  return false;
-}
- */
 
 void Task::resetSuspendedRegions()
 {
-    // MutexGuard guard(messagesCacheLock);
-  smsc_log_debug(logger, "Task::resetSuspendedRegions::: method being called on task '%d/%s'",info.uid,info.name.c_str());
-    // _messagesCacheIter = messagesCache.begin();
-    // _suspendedRegions.clear();
+    smsc_log_debug(logger, "Task::resetSuspendedRegions::: method being called on task '%d/%s'",info.uid,info.name.c_str());
     messageCache_->resetSuspendedRegions();
 }
 
@@ -921,17 +894,6 @@ bool Task::getNextMessage(Message& message)
         // int fetched = 0;
         fetched = messageCache_->fill(currentTime,store,info.messagesCacheSize);
         bSelectedAll = (fetched != info.messagesCacheSize);
-        /*
-        Message fetchedMessage;
-        bool haveMsg=false;
-        while (fetched < info.messagesCacheSize && (haveMsg=store.getNextMessage(fetchedMessage)))
-        {
-            // MutexGuard guard(messagesCacheLock);
-            messagesCache_.push_back(currentTime,fetchedMessage);
-            ++fetched;
-        }
-        bSelectedAll = !haveMsg;
-         */
     }
     catch (std::exception& exc)
     {

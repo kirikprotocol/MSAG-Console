@@ -24,30 +24,7 @@ using smsc::logger::Logger;
 using smsc::core::synchronization::EventMonitor;
 using smsc::core::synchronization::Mutex;
 using smsc::util::config::ConfigView;
-
-/*
-class InfoSmeConfig : public smsc::sme::SmeConfig {
-public:
-    InfoSmeConfig(ConfigView& config) throw(ConfigException);
-    // virtual ~InfoSmeConfig();
-private:
-    char* strHost;
-    char* strSid;
-    char* strPassword;
-    char* strSysType;
-    char* strOrigAddr;
-};
- */
-
 using smsc::sme::SmppSession;
-
-/*
-struct SeqNum {
-  SeqNum():seqNum(0) {};
-  SeqNum(uint64_t seqnum, const std::string& smscid):seqNum(sn), smscId(smscid) {};
-  uint64_t seqNum;
-  string smscId;
-};*/
 
 class Task;
 class TaskProcessor;
@@ -158,7 +135,6 @@ private:
     smsc::core::buffers::Array<ReceiptTimer>        receiptWaitQueue;
     int                                             responseWaitTime;
     int                                             receiptWaitTime;
-    // JStore<ReceiptId, TaskMsgId, ReceiptId>         jstore;
     JStoreWrapper*                                  jstore_;
     RegionTrafficControl*                           trafficControl_;
 };
