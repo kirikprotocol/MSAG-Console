@@ -332,51 +332,58 @@ int TaskProcessor::Execute()
             taskGuards.Shift(taskGuard);
             if (!taskGuard) continue;
 
-            if (!bNeedExit)
-            {
+            do {
+                if (bNeedExit) break;
                 Task* task = taskGuard->get();
-                while (task && !task->isFinalizing() && task->isEnabled() &&
-                    task->currentPriorityFrameCounter < task->getPriority())
-                {
-                    task->currentPriorityFrameCounter++;
-                    smsc_log_debug(log_, "TaskProcessor::Execute::: processTask for taskId=%d", task->getId());
-                    if (!processTask(task)) {
-                        task->currentPriorityFrameCounter = task->getPriority();
-                        if (!task->isEnabled()) task->setEnabled(false); // to reset inProcess
-                    }
-                    else processed++;
+                if (!task) break;
+                if (task->isFinalizing() || !task->isEnabled()) break;
+                const unsigned taskProcessed = processTask(task);
+                if ( ! taskProcessed ) {
+                    // no one message in task is processed
+                    task->currentPriorityFrameCounter = task->getPriority();
+                    if (!task->isEnabled()) task->setEnabled(false);
                 }
-            }
+                processed += taskProcessed;
+            } while ( false );
             delete taskGuard;
         }
 
         if (bNeedExit) break;
 
         processWaitingEvents(time(NULL)); // ?? or time(NULL)
-        if (!bNeedExit && processed <= 0) awake.Wait(switchTimeout);
+        if (!bNeedExit && processed <= 0) {
+            smsc_log_info(log_,"TaskProc: processed=%d waiting %d",processed,switchTimeout);
+            awake.Wait(switchTimeout);
+        }
     }
     exited.Signal();
     return 0;
 }
 
 
-bool TaskProcessor::processTask(Task* task)
+unsigned TaskProcessor::processTask(Task* task)
 {
     __require__(task);
+    unsigned res = 0;
+    smsc_log_debug(log_, "TaskProc::processTask(%d) taskPrio(cur/tot)=%d/%d",
+                   task->getId(), task->currentPriorityFrameCounter, task->getPriority() );
+    while ( task->currentPriorityFrameCounter < task->getPriority() ) {
 
-    Message message;
-    if (!task->getNextMessage(message))
-    {
-        //smsc_log_debug(log_, "No messages found for task '%s'", info.id.c_str());
-        return false;
-    }
+        ++task->currentPriorityFrameCounter;
 
-    MutexGuard msGuard(messageSenderLock);
-    if (! messageSender) {
-        smsc_log_error(log_, "No messageSender defined !!!");
-        return false;
+        Message message;
+        if (!task->getNextMessage(message)) continue;
+
+        MutexGuard msGuard(messageSenderLock);
+        if (! messageSender) {
+            smsc_log_error(log_, "No messageSender defined !!!");
+            break;
+        }
+        if ( messageSender->send(task,message) ) {
+            ++res;
+        }
     }
-    return messageSender->send(task,message);
+    return res;
 }
 
 

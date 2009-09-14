@@ -191,7 +191,9 @@ private:
                           const ResponseData& rd,
                           bool internal,
                           bool receipted );
-    bool processTask(Task* task);
+
+    // process a lot of messages from the task and return the number of processed messages
+    unsigned processTask(Task* task);
     void resetWaitingTasks();
 
     friend class SmscConnector;
