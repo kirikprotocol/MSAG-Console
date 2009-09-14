@@ -847,7 +847,7 @@ protected:
       return;
     }
     time_t now=time(NULL);
-    while(tolist.front().to<now)
+    while(! tolist.empty() && tolist.front().to < now )
     {
       int key=tolist.front().seq;
       Lock* l = lock.GetPtr(key);
