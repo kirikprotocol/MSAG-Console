@@ -6,9 +6,9 @@ namespace clustercontroller{
 namespace protocol{
 
 enum ProtocolMagics{
-  pmWebApp='WBAP',
-  pmSmsc='SMSC',
-  pmLoadBalancer='LDBL'
+  pmWebApp=0x57424150,//'WBAP'
+  pmSmsc=0x534d5343,//'SMSC'
+  pmLoadBalancer=0x4c444c42//'LDBL'
 };
 
 }
