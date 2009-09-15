@@ -14,6 +14,6 @@ int main(int argc, char* argv[])
   msg.setComponent("250130124323100","1979139860001","1979139860001");
   vector<unsigned char> ulmsg;
   msg.encode(ulmsg);
-  printf("UpdateLocation[%d]={%s}",ulmsg.size(),dump(ulmsg.size(),&ulmsg[0]).c_str());
+  printf("UpdateLocation[%d]={%s}",ulmsg.size(),dump((uint16_t)ulmsg.size(),&ulmsg[0]).c_str());
   //smsc::mtsmsme::processor::SuperTestFunction();
 }

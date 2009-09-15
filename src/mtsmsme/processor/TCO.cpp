@@ -114,7 +114,7 @@ void TCO::NUNITDATA(uint8_t cdlen, uint8_t *cd, /* called party address  */
       smsc_log_error(logger,"tco receive BEGIN with no dialogue portion, send ABORT(badlyFormattedTransactionPortion)");
       std::vector<unsigned char> rsp;
       encoder.encodeBadTrPortion(rtrid, rsp);
-      SCCPsend(cllen, cl, cdlen, cd, rsp.size(), &rsp[0]);
+      SCCPsend(cllen, cl, cdlen, cd, (uint16_t)rsp.size(), &rsp[0]);
       return;
     }
 
@@ -123,7 +123,7 @@ void TCO::NUNITDATA(uint8_t cdlen, uint8_t *cd, /* called party address  */
       smsc_log_error(logger,"tco receive BEGIN with unsupported app context, send ABORT(application-context-name-not-supported)");
       std::vector<unsigned char> rsp;
       encoder.encodeACNotSupported(rtrid, appcntx, rsp);
-      SCCPsend(cllen, cl, cdlen, cd, rsp.size(), &rsp[0]);
+      SCCPsend(cllen, cl, cdlen, cd, (uint16_t)rsp.size(), &rsp[0]);
       return;
     }
     TSM* tsm = 0; TrId ltrid;
@@ -137,7 +137,7 @@ void TCO::NUNITDATA(uint8_t cdlen, uint8_t *cd, /* called party address  */
                      "send ABORT(resourceLimitation)",exc.what());
       std::vector<unsigned char> rsp;
       encoder.encodeResourceLimitation(rtrid, rsp);
-      SCCPsend(cllen, cl, cdlen, cd, rsp.size(), &rsp[0]);
+      SCCPsend(cllen, cl, cdlen, cd, (uint16_t)rsp.size(), &rsp[0]);
       return;
     }
     if (tsm)
@@ -156,7 +156,7 @@ void TCO::NUNITDATA(uint8_t cdlen, uint8_t *cd, /* called party address  */
           ", send ABORT(resourceLimitation)");
       std::vector<unsigned char> rsp;
       encoder.encodeResourceLimitation(rtrid, rsp);
-      SCCPsend(cllen, cl, cdlen, cd, rsp.size(), &rsp[0]);
+      SCCPsend(cllen, cl, cdlen, cd, (uint16_t)rsp.size(), &rsp[0]);
       return;
     }
     return;
@@ -184,7 +184,7 @@ void TCO::NUNITDATA(uint8_t cdlen, uint8_t *cd, /* called party address  */
       smsc_log_error(logger,"TCO receive CONTINUE but TSM not found, DISCARD, but need to send ABORT for quick transaction release");
       std::vector<unsigned char> rsp;
       encoder.encodeResourceLimitation(rtrid, rsp);
-      SCCPsend(cllen, cl, cdlen, cd, rsp.size(), &rsp[0]);
+      SCCPsend(cllen, cl, cdlen, cd, (uint16_t)rsp.size(), &rsp[0]);
     }
     return;
   }/* end of CONTINUE handling section */
