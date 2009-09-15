@@ -177,7 +177,7 @@ int SuaProcessor::Run()
   changeState(INIT);
   for(int i=0; i < suaApi.sua_getConnectsCount(); ++i)
   {
-    int result;
+    //int result;
     if ((result = suaApi.sua_connect(i)) != 0)
     {
       smsc_log_error(logger,
