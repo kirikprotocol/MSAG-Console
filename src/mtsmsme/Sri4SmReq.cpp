@@ -156,7 +156,10 @@ int main(int argc, char** argv)
     {
       char* s;
       /* SMSC = 79139860004, MSISDN=79139870001 */
-      if (++count % 2) s = "79139870001"; else s = "79139872021";
+      char ms1[] = "79139870001";
+      char ms2[] = "79139872021";
+      //if (++count % 2) s = "79139870001"; else s = "79139872021";
+      if (++count % 2) s = ms1; else s = ms2;
       string ms(s); // mobile station MSISDN
       string sca("79139860004"); // service center address
       uint8_t cl[20]; uint8_t cllen; uint8_t cd[20]; uint8_t cdlen;
