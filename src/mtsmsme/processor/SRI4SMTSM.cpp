@@ -211,7 +211,7 @@ void SRI4SMTSM::TBeginReq(uint8_t  cdlen, uint8_t* cd, uint8_t  cllen, uint8_t* 
   r.protocol_version = &tcapversion;
 
   // use applicatopn context from TSM
-  OBJECT_IDENTIFIER_set_arcs(&r.application_context_name,&appcntx.arcs[0],sizeof(unsigned long),appcntx.arcs.size());
+  OBJECT_IDENTIFIER_set_arcs(&r.application_context_name,&appcntx.arcs[0],(unsigned int)sizeof(unsigned long),(unsigned int)appcntx.arcs.size());
   r.aarq_user_information = 0;
   begin.choice.begin.dialoguePortion = ( struct EXT *)&dp;
 
