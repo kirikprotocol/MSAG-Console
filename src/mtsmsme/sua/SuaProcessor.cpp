@@ -94,9 +94,9 @@ enum State{
       WORKING
 } state;
 
-static std::string getStateDescription(State state)
+static std::string getStateDescription(State cstate)
 {
-  switch(state)
+  switch(cstate)
   {
     case INIT: return "INIT";
     case SUABINDING: return "SUABINDING";
