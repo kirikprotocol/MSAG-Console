@@ -64,7 +64,7 @@ unsigned unpackBCD912NumString(char* dst, const unsigned char* src, unsigned src
 }
 unsigned packSCCPAddress(unsigned char* dst, unsigned char npi, const char *saddr, unsigned char ssn)
 {
-    unsigned len = strlen(saddr);
+    unsigned len = (unsigned)strlen(saddr);
     unsigned addrLen = 5 + (len + 1)/2;    // length in octets
     dst[0]  = 0x12;                        // GlobTitle(0100) & SSN indicator
     dst[1]  = ssn;                         // SSN
