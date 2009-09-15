@@ -76,7 +76,7 @@ void TSM::TBeginReq(uint8_t cdlen, uint8_t* cd, /* called party address */
   begin.setInvokeReq(internal_invokeId,internal_opcode,internal_arg);
   vector<unsigned char> data;
   begin.encode(data);
-  tco->SCCPsend(raddrlen,raddr,laddrlen,laddr,data.size(),&data[0]);
+  tco->SCCPsend(raddrlen,raddr,laddrlen,laddr,(uint16_t)data.size(),&data[0]);
 }
 void TSM::CONTINUE_received(uint8_t cdlen,
                                    uint8_t *cd, /* called party address */
