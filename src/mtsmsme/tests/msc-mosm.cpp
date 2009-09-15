@@ -194,9 +194,9 @@ int main(int argc, char** argv)
     TrafficShaper shaper((SccpSender*)&listener, speed,120);
     mtsms.setSccpSender((SccpSender*)&shaper);
 
-    listener.configure(43, 191, Address(strlen(msca), 1, 1, msca),
-        Address(strlen(vlra), 1, 1, vlra),
-        Address(strlen(hlra), 1, 1, hlra));
+    listener.configure(43, 191, Address((uint8_t)strlen(msca), 1, 1, msca),
+        Address((uint8_t)strlen(vlra), 1, 1, vlra),
+        Address((uint8_t)strlen(hlra), 1, 1, hlra));
     listener.Start();
     sleep(10);
     uint32_t smscount = 0;

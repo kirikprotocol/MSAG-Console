@@ -129,9 +129,9 @@ int main(int argc, char** argv)
     mtsms.setRequestSender(&fakeSender);
     GopotaListener listener(&mtsms,&fakeHLR);
     DialogueStat stat;
-    listener.configure(43, 191, Address(strlen(msca), 1, 1, msca),
-        Address(strlen(vlra), 1, 1, vlra),
-        Address(strlen(hlra), 1, 1, hlra));
+    listener.configure(43, 191, Address((uint8_t)strlen(msca), 1, 1, msca),
+        Address((uint8_t)strlen(vlra), 1, 1, vlra),
+        Address((uint8_t)strlen(hlra), 1, 1, hlra));
     listener.Start();
     stat.Start();
     int8_t invoke_id = 0;
