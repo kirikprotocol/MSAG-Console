@@ -29,7 +29,7 @@ void CLTSM::BEGIN(Message& msg)
   end.setComponent(0, iid);
   std::vector<unsigned char> rsp;
   tco->encoder.encode_resp(end,rsp);
-  tco->SCCPsend(raddrlen,&raddr[0],laddrlen,laddr,rsp.size(),&rsp[0]);
+  tco->SCCPsend(raddrlen,&raddr[0],laddrlen,laddr,(uint16_t)rsp.size(),&rsp[0]);
   smsc_log_debug(logger,"tsm.cltsm otid=%s receive BEGIN, END sent",ltrid.toString().c_str());
   tco->TSMStopped(ltrid);
 }
