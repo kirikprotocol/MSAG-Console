@@ -45,6 +45,7 @@ public class SiebelTaskManager implements Runnable{
 
   public void shutdown() {
     shutdown = true;
+    lastCheck = new Date(0);
   }
 
   public boolean isOnline() {

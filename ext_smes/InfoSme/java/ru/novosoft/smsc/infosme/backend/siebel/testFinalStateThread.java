@@ -5,6 +5,7 @@ import org.apache.log4j.Category;
 import java.util.Map;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.Properties;
 
 /**
  * Created by IntelliJ IDEA.
@@ -72,8 +73,17 @@ public class testFinalStateThread {
         public SiebelTask.Status getTaskStatus(String waveId) throws SiebelException {
             throw notImpl("getTaskStatus");
         }
-        public void shutdown() {
-        }
+
+      public void connect(Properties props) throws SiebelException {
+          throw notImpl("connect");
+      }
+
+      public boolean isShutdowned() {
+        return false;
+      }
+
+      public void shutdown() {
+      }
 
         private SiebelException notImpl( String what ) {
             return new SiebelException( what + " not implemented");

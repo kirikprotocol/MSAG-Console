@@ -83,24 +83,28 @@ public class InfoSmeContext implements SMEAppContext
   }
 
   public void startSiebelTaskManager() throws AdminException{
-    if(siebelDataProvider == null && siebelTaskManager == null && siebelFinalStateThread == null) {
-      try{
+    try{
+      if(siebelDataProvider == null) {
+        siebelDataProvider = new SiebelDataProviderImpl();
+        siebelTaskManager = new SiebelTaskManager(siebelDataProvider, this);
+        siebelFinalStateThread = new SiebelFinalStateThread(infoSmeConfig.getStoreLocation(),
+            infoSmeConfig.getArchiveLocation(), siebelDataProvider);
+      }
+      if(siebelDataProvider.isShutdowned()) {
         Properties props = new Properties();
         props.setProperty("jdbc.source", infoSmeConfig.getSiebelJDBCSource());
         props.setProperty("jdbc.driver", infoSmeConfig.getSiebelJDBCDriver());
         props.setProperty("jdbc.user", infoSmeConfig.getSiebelJDBCUser());
         props.setProperty("jdbc.pass", infoSmeConfig.getSiebelJDBCPass());
-        siebelDataProvider = new SiebelDataProviderImpl(props);
-        siebelTaskManager = new SiebelTaskManager(siebelDataProvider, this);
-        siebelFinalStateThread = new SiebelFinalStateThread(infoSmeConfig.getStoreLocation(),
-            infoSmeConfig.getArchiveLocation(), siebelDataProvider);
-      }catch(Throwable e) {
-        throw new AdminException("Can't init SiebelTaskManager", e);
+        props.setProperty("jdbc.pool.name", "siebel");
+        siebelDataProvider.connect(props);
       }
+      siebelFinalStateThread.start();
+      siebelTaskManager.start();
+      infoSmeConfig.setSiebelTMStarted(true);
+    }catch(Throwable e) {
+      throw new AdminException("Can't init SiebelTaskManager", e);
     }
-    siebelFinalStateThread.start();
-    siebelTaskManager.start();
-    infoSmeConfig.setSiebelTMStarted(true);
   }
 
   public void stopSiebelTaskManager() throws AdminException{
@@ -109,6 +113,9 @@ public class InfoSmeContext implements SMEAppContext
       if(siebelDataProvider != null) {
         siebelDataProvider.shutdown();
         infoSmeConfig.setSiebelTMStarted(false);
+      }
+      if(siebelFinalStateThread != null) {
+        siebelFinalStateThread.shutdown();
       }
     }
   }
@@ -124,7 +131,6 @@ public class InfoSmeContext implements SMEAppContext
     if(siebelDataProvider != null) {
       siebelDataProvider.shutdown();
     }
-
   }
 
   public Config loadCurrentConfig()

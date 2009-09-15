@@ -4,7 +4,6 @@ import ru.novosoft.smsc.infosme.backend.siebel.ResultSet;
 
 import java.io.InputStream;
 import java.io.IOException;
-import java.io.FileInputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -22,13 +21,15 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
 
   private static final Logger logger = Logger.getLogger(SiebelDataProviderImpl.class);
 
-  private final ConnectionPool pool;
+  private ConnectionPool pool;
+
+  private String poolName = null;
+
   private final Properties sql;
 
 
-  public SiebelDataProviderImpl(Properties props) throws SiebelException {
+  public SiebelDataProviderImpl() throws SiebelException {
     try{
-      pool = new ConnectionPool(props);
       InputStream is = this.getClass().getResourceAsStream("db.properties");
       sql = new Properties();
       try {
@@ -44,6 +45,24 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
     }catch (Throwable e) {
       throw new SiebelException(e);
     }
+  }
+
+  public void connect(Properties props) throws SiebelException{
+    if(pool != null) {
+      try {
+        pool.shutdown();
+      } catch (SQLException e) {}
+    }
+    try{
+      pool = new ConnectionPool(props);
+      shutdowned = false;
+    }catch (Throwable e) {
+      throw new SiebelException(e);
+    }
+  }
+
+  public boolean isShutdowned() {
+    return shutdowned;
   }
 
   private String getSql(java.lang.String string){
@@ -414,12 +433,15 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
 
   }
 
+  private boolean shutdowned = true;
+
   public void shutdown() {
     if(pool != null) {
       try {
         pool.shutdown();
       } catch (SQLException e) {}
     }
+    shutdowned = true;
   }
 
   private static void closeConn(Connection connection, PreparedStatement preparedStatement,

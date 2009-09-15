@@ -4,6 +4,7 @@ import ru.novosoft.smsc.infosme.backend.siebel.ResultSet;
 
 import java.util.Date;
 import java.util.Map;
+import java.util.Properties;
 
 /**
  * author: alkhal
@@ -28,6 +29,10 @@ public interface SiebelDataProvider {
 
   public void setTaskStatus(String waveId, SiebelTask.Status status) throws SiebelException;
   public SiebelTask.Status getTaskStatus(String waveId) throws SiebelException;
+
+  public void connect(Properties props) throws SiebelException;
+
+  public boolean isShutdowned();
 
   public void shutdown();
 
