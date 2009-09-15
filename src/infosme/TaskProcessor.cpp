@@ -67,19 +67,6 @@ unrespondedMessagesMax(1)
                     "The preffered max value is 500", unrespondedMessagesMax);
     }
     
-    /*
-    try { unrespondedMessagesSleep = config->getInt("unrespondedMessagesSleep"); } catch (...) {};
-    if (unrespondedMessagesSleep <= 0) {
-      unrespondedMessagesSleep = 10;
-      smsc_log_warn(log_, "'unrespondedMessagesSleep' value is invalid. Using default %dms",
-                    unrespondedMessagesSleep);
-    }
-    if (unrespondedMessagesSleep > 500) {
-      smsc_log_warn(log_, "Parameter 'unrespondedMessagesSleep' value '%d' is too big. "
-                    "The preffered max value is 500ms", unrespondedMessagesSleep);
-    }
-     */
-
     std::auto_ptr<ConfigView> retryPlcCfg(config->getSubConfig("RetryPolicies"));
     retryPlcs.Load(retryPlcCfg.get());
 
@@ -601,47 +588,6 @@ void TaskProcessor::changeTask(uint32_t taskId)
         Task* task = tg.get();
         task->update(&taskConfig);
 
-        /*
-        try { delivery = taskConfig.getBool("delivery"); }
-        catch (ConfigException& ce) { delivery = false; }
-
-        DataSource* taskDs = 0;
-        if (!delivery)
-        {
-          const char* ds_id = taskConfig.getString("dsId");
-          if (!ds_id || ds_id[0] == '\0')
-              throw ConfigException("DataSource id for task '%d' empty or wasn't specified",
-                                    taskId);
-          taskDs = provider.getDataSource(ds_id);
-          if (!taskDs)
-              throw ConfigException("Failed to obtail DataSource driver '%s' for task '%d'", 
-                                    ds_id, taskId);
-        }
-        
-        if (!remTask(taskId))
-        {
-          smsc_log_warn(log_, "Failed to change task. Task with id '%d' wasn't registered.", taskId);
-        }
-        std::string location=storeLocation;
-        char buf[32];
-        sprintf(buf,"%u/",taskId);
-        location+=buf;
-        if(!buf::File::Exists(location.c_str()))
-        {
-          smsc_log_info(log_,"creating new dir:'%s' for taskId=%u",location.c_str(),taskId);
-          buf::File::MkDir(location.c_str());
-        }
-        task = new Task(&taskConfig, taskId, location, taskDs);
-        if (!task) 
-        {
-          throw Exception("New task create failed");
-        }
-        if (!putTask(task))
-        {
-          smsc_log_warn(log_, "Failed to change task with id '%d'. Task was re-registered", taskId);
-          if (!delivery) task->destroy();
-        }
-        */
     } catch (std::exception& exc)
     {
         //if (task && !delivery) task->destroy();
@@ -867,34 +813,6 @@ extern const char* INSERT_TASK_STAT_STATE_SQL;
 extern const char* INSERT_TASK_STAT_STATE_ID;
 
 
-/*
-void TaskProcessor::insertRecordIntoTasksStat(uint32_t taskId,
-                                              uint32_t period,
-                                              uint32_t generated,
-                                              uint32_t delivered,
-                                              uint32_t retried,
-                                              uint32_t failed)
-{
-  std::auto_ptr<Statement> statement(dsIntConnection->createStatement(INSERT_TASK_STAT_STATE_SQL));
-  if (!statement.get())
-    throw Exception("Failed to obtain statement for statistics update");
-
-  char buf[32];
-  sprintf(buf,"%u",taskId);
-
-  statement->setString(1, buf);
-  statement->setUint32(2, period);
-  statement->setUint32(3, generated);
-  statement->setUint32(4, delivered);
-  statement->setUint32(5, retried);
-  statement->setUint32(6, failed);
-
-  statement->executeUpdate();
-  !!TODO!! STATS! :(
-  
-}
-  */
-
 Array<std::string> TaskProcessor::getTaskMessages(const uint32_t taskId,
                                                   const InfoSme_T_SearchCriterion& searchCrit)
 {
@@ -961,69 +879,6 @@ static bool orderBinaryPredicate(const TaskStatDescription& lhs,
   else return false;
 }
 
-/*
-Array<std::string> TaskProcessor::getTasksStatistic(const InfoSme_Tasks_Stat_SearchCriterion& searchCrit)
-{
-  std::auto_ptr<Statement> selectMessage(dsIntConnection->createStatement(DO_FULL_TABLESCAN_TASKS_STAT_STATEMENT_SQL));
-  if (!selectMessage.get())
-    throw Exception("getTasksStatistic(): Failed to create statement for messages access.");
-
-  std::auto_ptr<ResultSet> rsGuard(selectMessage->executeQuery());
-
-  ResultSet* rs = rsGuard.get();
-  if (!rs)
-    throw Exception("Failed to obtain result set for message access.");
-
-  typedef std::list<TaskStatDescription> TasksStatList_t;
-  TasksStatList_t statisticsList;
-
-  int fetched = 0;
-  while (rs->fetchNext()) {
-    if ( doesMessageConformToCriterion(rs, searchCrit) ) {
-      smsc_log_debug(log_, "TaskProcessor::getTasksStatistic::: add statistic [%s,%d,%d,%d,%d,%d] into statisticsList", rs->getString(1), rs->getUint32(2), rs->getUint32(3), rs->getUint32(4), rs->getUint32(5), rs->getUint32(6));
-      statisticsList.push_back(TaskStatDescription(rs->getString(1),
-                                                   rs->getUint32(2),
-                                                   rs->getUint32(3),
-                                                   rs->getUint32(4),
-                                                   rs->getUint32(5),
-                                                   rs->getUint32(6)));
-    }
-  }
-
-  statisticsList.sort(orderBinaryPredicate);
-
-  TasksStatList_t accumulatedStatisticsList;
-
-  TasksStatList_t::iterator iter = statisticsList.begin();
-
-  if ( iter != statisticsList.end() ) {
-    TaskStatDescription prevElement(*iter);
-    TaskStatDescription taskStatResult(*iter);
-    while ( ++iter != statisticsList.end() ) {
-      if ( iter->period != prevElement.period ) {
-        accumulatedStatisticsList.push_back(taskStatResult);
-        taskStatResult = *iter;
-      } else
-        taskStatResult = taskStatResult + *iter;
-      prevElement = *iter;
-    }
-    accumulatedStatisticsList.push_back(taskStatResult);
-  }
-
-  Array<std::string> tasksStat;
-  for(TasksStatList_t::iterator iter=accumulatedStatisticsList.begin();
-      iter!=accumulatedStatisticsList.end(); ++iter) {
-    std::ostringstream statisticBuf;
-    statisticBuf << iter->period << "|"
-                 << iter->generated << "|"
-                 << iter->delivered << "|"
-                 << iter->retried << "|"
-                 << iter->failed;
-    tasksStat.Push(statisticBuf.str());
-  }
-
-  return tasksStat;
-}*/
 
 void
 TaskProcessor::endDeliveryMessagesGeneration(uint32_t taskId)
