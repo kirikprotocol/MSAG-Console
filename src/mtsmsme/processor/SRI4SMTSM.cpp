@@ -161,7 +161,7 @@ void SRI4SMTSM::TEndReq()
    }
    vector<unsigned char> data;
    end.encode(data);
-   tco->SCCPsend(raddrlen,raddr,laddrlen,laddr,(uint16)data.size(),&data[0]);
+   tco->SCCPsend(raddrlen,raddr,laddrlen,laddr,(uint16_t)data.size(),&data[0]);
 
    smsc_log_debug(logger,
                   "tsm.sri4sm otid=%s receive BEGIN, END sent "
