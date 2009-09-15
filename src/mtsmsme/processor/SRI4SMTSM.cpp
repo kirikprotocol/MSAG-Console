@@ -66,7 +66,7 @@ void SRI4SMTSM::BEGIN(Message& msg)
       Address msisdn;
       Address _imsi;
       Address _msc;
-      msisdn.setValue(strlen(sri4sm.getMSISDN()),sri4sm.getMSISDN());
+      msisdn.setValue((uint8_t)strlen(sri4sm.getMSISDN()),sri4sm.getMSISDN());
       //if ( hlr->lookup(msisdn,_imsi) )
       if ( hlr->lookup(msisdn,_imsi,_msc) )
       {
@@ -116,7 +116,7 @@ void SRI4SMTSM::CONTINUE_received(uint8_t cdlen,
     cont.setComponent(0,iid);
     std::vector<unsigned char> rsp;
     tco->encoder.encode_resp(cont,rsp);
-    tco->SCCPsend(raddrlen,&raddr[0],laddrlen,laddr,rsp.size(),&rsp[0]);
+    tco->SCCPsend(raddrlen,&raddr[0],laddrlen,laddr,(uint16_t)rsp.size(),&rsp[0]);
 
     smsc_log_debug(logger,
                    "tsm.SRI4SMTSM otid=%s receive CONTINUE with component, INVOKE_RES sent",
@@ -161,7 +161,7 @@ void SRI4SMTSM::TEndReq()
    }
    vector<unsigned char> data;
    end.encode(data);
-   tco->SCCPsend(raddrlen,raddr,laddrlen,laddr,data.size(),&data[0]);
+   tco->SCCPsend(raddrlen,raddr,laddrlen,laddr,(uint16)data.size(),&data[0]);
 
    smsc_log_debug(logger,
                   "tsm.sri4sm otid=%s receive BEGIN, END sent "
@@ -171,7 +171,7 @@ void SRI4SMTSM::TEndReq()
                   ltrid.toString().c_str(),
                   raddrlen,dump(raddrlen,raddr).c_str(),
                   laddrlen,dump(laddrlen,laddr).c_str(),
-                  data.size(),dump(data.size(),&data[0]).c_str());
+                  (uint16_t)data.size(),dump((uint16_t)data.size(),&data[0]).c_str());
 }
 void SRI4SMTSM::TBeginReq(uint8_t  cdlen, uint8_t* cd, uint8_t  cllen, uint8_t* cl)
 {
@@ -226,7 +226,7 @@ void SRI4SMTSM::TBeginReq(uint8_t  cdlen, uint8_t* cd, uint8_t  cllen, uint8_t* 
   comp.choice.invoke.linkedId = 0;
   comp.choice.invoke.opcode.present = Code_PR_local;
   comp.choice.invoke.opcode.choice.local = temp_opcode;
-  argument.size = temp_arg.size();
+  argument.size = (int)temp_arg.size();
   argument.buf = &temp_arg[0];
   comp.choice.invoke.argument = &argument;
 
@@ -245,8 +245,8 @@ void SRI4SMTSM::TBeginReq(uint8_t  cdlen, uint8_t* cd, uint8_t  cllen, uint8_t* 
   smsc_log_debug(logger,
                  "CALLING[%d]={%s}",laddrlen,dump(laddrlen,laddr).c_str());
   smsc_log_debug(logger,
-                 "SRI4SM[%d]={%s}",data.size(),dump(data.size(),&data[0]).c_str());
+                 "SRI4SM[%d]={%s}",data.size(),dump((uint16_t)data.size(),&data[0]).c_str());
 
-  tco->SCCPsend(raddrlen,raddr,laddrlen,laddr,data.size(),&data[0]);
+  tco->SCCPsend(raddrlen,raddr,laddrlen,laddr,(uint16_t)data.size(),&data[0]);
 }
 }/*namespace processor*/}/*namespace mtsmsme*/}/*namespace smsc*/
