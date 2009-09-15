@@ -494,6 +494,7 @@ void TaskProcessor::processMessage(const TaskMsgId& tmIds,const ResponseData& rd
 
 void TaskProcessor::reloadSmscAndRegions()
 {
+    smsc_log_info(log_,"reloadSmscAndRegions invoked");
     MutexGuard msGuard(messageSenderLock);
     if ( !messageSender ) return;
     Manager::reinit();

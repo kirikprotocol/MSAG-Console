@@ -41,7 +41,7 @@ namespace smsc { namespace infosme
         deleteDeliveryMessagesMethod, addStatisticRecordMethod,
         selectTaskMessagesMethod, selectTasksStatisticMethod, endDeliveryMessagesGenerationMethod,
         changeDeliveryTextMessageMethod,applyRetryPoliciesMethod,
-        sendSmsMethod
+        sendSmsMethod, reloadSmscAndRegionsMethod
       };
       
       void error(const char* method, const char* param);
@@ -83,6 +83,7 @@ namespace smsc { namespace infosme
       Variant selectTasksStatistic(const Arguments& args);
       void endDeliveryMessagesGeneration(const Arguments& args);
       void changeDeliveryTextMessage(const Arguments& args);
+        void reloadSmscAndRegions(const Arguments& args);
     public:
     
       InfoSmeComponent(InfoSmeAdmin& admin);

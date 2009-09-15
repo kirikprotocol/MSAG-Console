@@ -17,7 +17,7 @@ import java.util.*;
  * Date: Aug 1, 2007
  */
 
-public class RegionsManager {
+public class RegionsManager extends Observable {
 
   private static final Category log = Category.getInstance(RegionsManager.class);
   private static RegionsManager instance = null;
@@ -170,6 +170,8 @@ public class RegionsManager {
       out.println("  <region_default bandwidth=\"" + defaultBandwidth + "\"" + (defaultEmail==null || defaultEmail.length() == 0 ? "" : " email=\"" + defaultEmail + "\" ") + "/>");
       Functions.storeConfigFooter(out, "regions");
       modified = false;
+      setChanged();
+      notifyObservers();
     } catch (IOException e) {
       log.error(e,e);
       throw new AdminException("Can't save regions. Reason: " + e.getMessage());

@@ -138,6 +138,22 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
       serviceManager.add(smsc);
       routeSubjectManager = new RouteSubjectManagerImpl(smeManager);
       regionsManager = RegionsManager.getInstance();
+        regionsManager.addObserver(new Observer() {
+            public void update(Observable o, Object arg) {
+                try {
+                    Class infoSmeContextClass = Class.forName("ru.novosoft.smsc.infosme.backend.InfoSmeContext");
+                    Object infoSmeContext = infoSmeContextClass.
+                            getMethod("getInstance", new Class[]{SMSCAppContext.class, String.class}).
+                            invoke(null, new Object[]{instance, "InfoSme"});
+                    Object infoSme = infoSmeContextClass.getMethod("getInfoSme", null).invoke(infoSmeContext,null);
+                    Class.forName("ru.novosoft.smsc.infosme.backend.InfoSme").
+                            getMethod("reloadSmscAndRegions",null).
+                            invoke(infoSme,null);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
       fraudConfigManager = FraudConfigManager.getInstance();
 
       switch (Constants.instType) {

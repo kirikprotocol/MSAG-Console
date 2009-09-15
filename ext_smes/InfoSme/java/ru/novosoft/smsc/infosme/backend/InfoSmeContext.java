@@ -238,5 +238,4 @@ public class InfoSmeContext implements SMEAppContext
   public BlackListManager getBlackListManager() {
     return blackListManager;
   }
-
 }

@@ -173,6 +173,9 @@ InfoSmeComponent::InfoSmeComponent(InfoSmeAdmin& admin)
   send_sms_params["flash"] = Parameter("flash",BooleanType);
   Method send_sms((unsigned)sendSmsMethod,"sendSms",send_sms_params,LongType);
 
+    Method reload_smsc_and_regions((unsigned)reloadSmscAndRegionsMethod,
+                                   "reloadSmscAndRegions", empty_params, StringType );
+
   methods[start_task_processor.getName()]         = start_task_processor;
   methods[stop_task_processor.getName()]          = stop_task_processor;
   methods[is_task_processor_running.getName()]    = is_task_processor_running;
@@ -202,6 +205,7 @@ InfoSmeComponent::InfoSmeComponent(InfoSmeAdmin& admin)
   methods[change_delivery_text_message.getName()]     = change_delivery_text_message;
   methods[apply_retry_policies.getName()] = apply_retry_policies;
   methods[send_sms.getName()] = send_sms;
+    methods[reload_smsc_and_regions.getName()] = reload_smsc_and_regions;
 }
 
 InfoSmeComponent::~InfoSmeComponent()
@@ -296,6 +300,9 @@ Variant InfoSmeComponent::call(const Method& method, const Arguments& args)
           break;
         case sendSmsMethod:
           return sendSms(args);
+        case reloadSmscAndRegionsMethod:
+            reloadSmscAndRegions(args);
+            break;
         default:
             smsc_log_debug(logger, "unknown method \"%s\" [%u]", method.getName(), method.getId());
             throw AdminException("Unknown method \"%s\"", method.getName());
@@ -962,6 +969,11 @@ Variant InfoSmeComponent::sendSms(const Arguments& args)
   bool isFlash=args["flash"].getBooleanValue();
   
   return Variant((long)admin.sendSms(org,dst,txt,isFlash));
+}
+
+void InfoSmeComponent::reloadSmscAndRegions(const Arguments& args)
+{
+    admin.reloadSmscAndRegions();
 }
 
 }}

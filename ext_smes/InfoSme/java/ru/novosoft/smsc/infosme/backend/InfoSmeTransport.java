@@ -53,7 +53,7 @@ public class InfoSmeTransport extends Service
   private static final String ADD_DELIVERY_MESSAGES_METHOD_ID = "addDeliveryMessages";
   private static final String END_DELIVERY_MESSAGE_GENERATION_ID = "endDeliveryMessagesGeneration";
   private static final String ADD_STATISTIC_RECORD_METHOD_ID = "addStatisticRecord";
-
+    private static final String RELOAD_SMSC_AND_REGIONS_ID = "reloadSmscAndRegions";
 
   private static final SimpleDateFormat mdf = new SimpleDateFormat("ddMMyyyyHHmmss");
   private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHH");
@@ -464,6 +464,10 @@ public class InfoSmeTransport extends Service
 
     return ((Long)callMethod(method_sendSms_ID, Type.Types[Type.IntType], args)).intValue();
   }
+
+    public void reloadSmscAndRegions() throws AdminException {
+        callMethod(RELOAD_SMSC_AND_REGIONS_ID, Type.Types[Type.StringType], Collections.EMPTY_MAP); 
+    }
 
   private static String messageToString(Message m) {
     StringBuffer b = new StringBuffer(100);
