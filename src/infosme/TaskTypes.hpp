@@ -107,33 +107,27 @@ struct TaskMsgId
 struct ReceiptId 
 {
     static const uint8_t SMSC_MSGID_MAX_SIZE = 65; //with 0
-    // static const uint8_t SMSC_CONNECTORID_MAX_SIZE = 23; //with 0
-    static const uint8_t STRUCT_SIZE = SMSC_MSGID_MAX_SIZE; // + SMSC_CONNECTORID_MAX_SIZE; //with 0
 
     ReceiptId() {
       memset(smscMessageId, 0, SMSC_MSGID_MAX_SIZE);
-      // memset(smscConnectorId, 0, SMSC_CONNECTORID_MAX_SIZE);
     };
 
     ReceiptId(const std::string& messageId) {
       setMessageId(messageId);
-        // setConnectorId(connectorId);
     };
 
     ReceiptId(const ReceiptId& receiptId) {
       setMessageId(receiptId.getMessageId());
-        // setConnectorId(receiptId.getConnectorId());
     }
     ReceiptId& operator=(const ReceiptId& receiptId) {
       if ( &receiptId != this ) {
           setMessageId(receiptId.getMessageId());
-        // setConnectorId(receiptId.getConnectorId());
       }
       return *this;
     }
 
     bool operator==(const ReceiptId& receiptId) {
-      return (strcpy(smscMessageId, receiptId.getMessageId()) == 0); // && strcpy(smscConnectorId, receiptId.getConnectorId()) == 0);
+      return (strcmp(smscMessageId, receiptId.getMessageId()) == 0); 
     }
     bool operator!=(const ReceiptId& receiptId) {
       return !(*this == receiptId);
@@ -145,58 +139,37 @@ struct ReceiptId
       memcpy(smscMessageId, messageId.c_str(), size < SMSC_MSGID_MAX_SIZE ? size : SMSC_MSGID_MAX_SIZE - 1);
     }
 
-    /*
-    void setConnectorId(const std::string& connectorId) {
-      memset(smscConnectorId, 0, SMSC_MSGID_MAX_SIZE);
-      size_t size = connectorId.size();
-      memcpy(smscConnectorId, connectorId.c_str(), size < SMSC_CONNECTORID_MAX_SIZE ? size : SMSC_CONNECTORID_MAX_SIZE - 1);
-    }
-     */
-
     const char* getMessageId() const {
       return smscMessageId;
     }
 
-    // const char* getConnectorId() const {
-    // return smscConnectorId;
-    // }
-
     static uint32_t CalcHash(const ReceiptId& receiptId) {
-      return smsc::core::buffers::HashFunc(receiptId.getMessageId()); // + smsc::core::buffers::HashFunc(receiptId.getConnectorId()); 
+      return smsc::core::buffers::HashFunc(receiptId.getMessageId());  
     }
 
     int Read(smsc::core::buffers::File& f) {
-      char buf[STRUCT_SIZE];
-      f.Read(buf, STRUCT_SIZE);
+      char buf[SMSC_MSGID_MAX_SIZE];
+      f.Read(buf, SMSC_MSGID_MAX_SIZE);
       memset(smscMessageId, 0, SMSC_MSGID_MAX_SIZE);
       memcpy(smscMessageId, buf, SMSC_MSGID_MAX_SIZE);
-      // memset(smscConnectorId, 0, SMSC_CONNECTORID_MAX_SIZE);
-      // memcpy(smscConnectorId, buf + SMSC_MSGID_MAX_SIZE, SMSC_CONNECTORID_MAX_SIZE);
-      return STRUCT_SIZE;
+      return SMSC_MSGID_MAX_SIZE;
     }
 
     int Write(smsc::core::buffers::File& f) const {
-      char buf[STRUCT_SIZE];
-      memset(buf, 0, STRUCT_SIZE);
+      char buf[SMSC_MSGID_MAX_SIZE];
+      memset(buf, 0, SMSC_MSGID_MAX_SIZE);
       memcpy(buf, smscMessageId, SMSC_MSGID_MAX_SIZE);
-      // memcpy(buf + SMSC_MSGID_MAX_SIZE, smscConnectorId, SMSC_CONNECTORID_MAX_SIZE);
-      f.Write(buf, STRUCT_SIZE);
-      return STRUCT_SIZE;
+      f.Write(buf, SMSC_MSGID_MAX_SIZE);
+      return SMSC_MSGID_MAX_SIZE;
     }
 
   private:
     void setMessageId(const char* messageId) {
       memcpy(smscMessageId, messageId, SMSC_MSGID_MAX_SIZE);
     }
-    /*
-    void setConnectorId(const char* connectorId) {
-      memcpy(smscConnectorId, connectorId, SMSC_CONNECTORID_MAX_SIZE);
-    }
-     */
 
   private:
     char smscMessageId[SMSC_MSGID_MAX_SIZE];
-    // char smscConnectorId[SMSC_CONNECTORID_MAX_SIZE];
 };
 
 
