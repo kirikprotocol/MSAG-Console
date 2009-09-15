@@ -119,9 +119,9 @@ int main(int argc, char** argv)
     EmptySubscriberRegistrator fakeHLR(&mtsms);
     mtsms.setRequestSender(&fakeSender);
     GopotaListener listener(&mtsms, &fakeHLR);
-    listener.configure(44, 192, Address(msca.length(), 1, 1, msca.c_str()),
-        Address(vlra.length(), 1, 1, vlra.c_str()),
-        Address(hlra.length(), 1, 1, hlra.c_str()));
+    listener.configure(44, 192, Address((uint8_t)msca.length(), 1, 1, msca.c_str()),
+        Address((uint8_t)vlra.length(), 1, 1, vlra.c_str()),
+        Address((uint8_t)hlra.length(), 1, 1, hlra.c_str()));
     listener.Start();
     sleep(10);
     uint32_t smscount = 0;
