@@ -14,7 +14,7 @@ void ProvideRoamingNumberResp::setRoamingNumber(const string& number)
     arg.extensionContainer = 0;
     arg.releaseResourcesSupported = 0;
     ZERO_OCTET_STRING(_number);
-    _number.size = packNumString2BCD91(_number.buf, number.c_str(), number.length());
+    _number.size = (int)packNumString2BCD91(_number.buf, number.c_str(), number.length());
     arg.roamingNumber = _number;
 }
 void ProvideRoamingNumberResp::encode(vector<unsigned char>& buf)
@@ -29,7 +29,7 @@ void ProvideRoamingNumberResp::decode(const vector<unsigned char>& buf)
 void ProvideRoamingNumberRespV1::setRoamingNumber(const string& number)
 {
     ZERO_OCTET_STRING(_number);
-    _number.size = packNumString2BCD91(_number.buf, number.c_str(), number.length());
+    _number.size = (int)packNumString2BCD91(_number.buf, number.c_str(), number.length());
 }
 void ProvideRoamingNumberRespV1::encode(vector<unsigned char>& buf)
 {

@@ -32,7 +32,7 @@ UpdateLocationMessage::UpdateLocationMessage()
   dp.encoding.choice.single_ASN1_type.present = DialoguePDU_PR_dialogueRequest;
   AARQ_apdu_t& r = dp.encoding.choice.single_ASN1_type.choice.dialogueRequest;
   r.protocol_version = &tcapversion;
-  OBJECT_IDENTIFIER_set_arcs(&r.application_context_name,&ac.arcs[0],sizeof(unsigned long),ac.arcs.size());
+  OBJECT_IDENTIFIER_set_arcs(&r.application_context_name,&ac.arcs[0],(unsigned int)sizeof(unsigned long),(unsigned int)ac.arcs.size());
   r.aarq_user_information = 0;
   begin.choice.begin.dialoguePortion = ( struct EXT *)&dp;
 }
@@ -61,15 +61,15 @@ void UpdateLocationMessage::setComponent(const string& imsi, const string& msc, 
   arg.informPreviousNetworkEntity = 0;
 
   ZERO_OCTET_STRING(_imsi);
-  _imsi.size = packNumString2BCD(_imsi.buf, imsi.c_str(), imsi.length());
+  _imsi.size = (int)packNumString2BCD(_imsi.buf, imsi.c_str(), imsi.length());
   arg.imsi = _imsi;
 
   ZERO_OCTET_STRING(_msc);
-  _msc.size = packNumString2BCD91(_msc.buf, msc.c_str(), msc.length());
+  _msc.size = (int)packNumString2BCD91(_msc.buf, msc.c_str(), msc.length());
   arg.msc_Number = _msc;
 
   ZERO_OCTET_STRING(_vlr);
-  _vlr.size = packNumString2BCD91(_vlr.buf, vlr.c_str(), vlr.length());
+  _vlr.size = (int)packNumString2BCD91(_vlr.buf, vlr.c_str(), vlr.length());
   arg.vlr_Number = _vlr;
 
   vlrcap.supportedCamelPhases = &phases;
@@ -101,7 +101,7 @@ void UpdateLocationMessage::encode(vector<unsigned char>& buf)
   ANY_t argument;
   asn_enc_rval_t er;
   er = der_encode(&asn_DEF_UpdateLocationArg, &arg, print2vec, &arg_buf);
-  argument.size = arg_buf.size();
+  argument.size = (int)arg_buf.size();
   argument.buf = &arg_buf[0];
   comp.choice.invoke.argument = &argument;
   er = der_encode(&asn_DEF_TCMessage, &begin, print2vec, &buf);
@@ -120,15 +120,15 @@ void UpdateLocationReq::setParameters(const string& imsi, const string& msc, con
 	arg.informPreviousNetworkEntity = 0;
 
 	ZERO_OCTET_STRING(_imsi);
-	_imsi.size = packNumString2BCD(_imsi.buf, imsi.c_str(), imsi.length());
+	_imsi.size = (int)packNumString2BCD(_imsi.buf, imsi.c_str(), imsi.length());
 	arg.imsi = _imsi;
 
 	ZERO_OCTET_STRING(_msc);
-	_msc.size = packNumString2BCD91(_msc.buf, msc.c_str(), msc.length());
+	_msc.size = (int)packNumString2BCD91(_msc.buf, msc.c_str(), msc.length());
 	arg.msc_Number = _msc;
 
 	ZERO_OCTET_STRING(_vlr);
-	_vlr.size = packNumString2BCD91(_vlr.buf, vlr.c_str(), vlr.length());
+	_vlr.size = (int)packNumString2BCD91(_vlr.buf, vlr.c_str(), vlr.length());
 	arg.vlr_Number = _vlr;
 
 	vlrcap.supportedCamelPhases = &phases;

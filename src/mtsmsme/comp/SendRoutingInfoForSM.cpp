@@ -14,11 +14,11 @@ using smsc::mtsmsme::processor::util::unpackBCD912NumString;
 SendRoutingInfoForSMReq::SendRoutingInfoForSMReq(const string& msisdn, bool force, const string& sca )
 {
   ZERO_OCTET_STRING(_msisdn);
-  _msisdn.size = packNumString2BCD91(_msisdn.buf, msisdn.c_str(), msisdn.length());
+  _msisdn.size = (int)packNumString2BCD91(_msisdn.buf, msisdn.c_str(), msisdn.length());
   arg.msisdn = _msisdn;
 
   ZERO_OCTET_STRING(_sca);
-  _sca.size = packNumString2BCD91(_sca.buf, sca.c_str(), sca.length());
+  _sca.size = (int)packNumString2BCD91(_sca.buf, sca.c_str(), sca.length());
   arg.serviceCentreAddress = _sca;
 
   arg.sm_RP_PRI = force;
@@ -44,11 +44,11 @@ void SendRoutingInfoForSMReq::decode(const vector<unsigned char>& buf)
 SendRoutingInfoForSMResp::SendRoutingInfoForSMResp(const string& imsi, const string& msc)
 {
   ZERO_OCTET_STRING(_imsi);
-  _imsi.size = packNumString2BCD(_imsi.buf, imsi.c_str(), imsi.length());
+  _imsi.size = (int)packNumString2BCD(_imsi.buf, imsi.c_str(), imsi.length());
   res.imsi = _imsi;
 
   ZERO_OCTET_STRING(_msc);
-  _msc.size = packNumString2BCD91(_msc.buf, msc.c_str(), msc.length());
+  _msc.size = (int)packNumString2BCD91(_msc.buf, msc.c_str(), msc.length());
   res.locationInfoWithLMSI.networkNode_Number = _msc;
 
   res.locationInfoWithLMSI.lmsi = 0;
@@ -73,14 +73,14 @@ void SendRoutingInfoForSMResp::decode(const vector<unsigned char>& buf)
 SendRoutingInfoForSMRespV1::SendRoutingInfoForSMRespV1(const string& imsi, const string& msc)
 {
   ZERO_OCTET_STRING(_imsi);
-  _imsi.size = packNumString2BCD(_imsi.buf, imsi.c_str(), imsi.length());
+  _imsi.size = (int)packNumString2BCD(_imsi.buf, imsi.c_str(), imsi.length());
   res.imsi = _imsi;
 
   mwd = 0;
   res.mwd_Set = &mwd;
 
   ZERO_OCTET_STRING(_msc);
-  _msc.size = packNumString2BCD91(_msc.buf, msc.c_str(), msc.length());
+  _msc.size = (int)packNumString2BCD91(_msc.buf, msc.c_str(), msc.length());
 
   res.choice.present = choice_PR_sequence;
   res.choice.choice.sequence.lMsId = 0;
