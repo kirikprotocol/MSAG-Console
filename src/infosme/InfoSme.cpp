@@ -121,22 +121,7 @@ extern bool isMSISDNAddress(const char* string)
     try { Address converted(string); } catch (...) { return false;}
     return true;
 }
-/*
-extern bool smsc::infosme::convertMSISDNStringToAddress(const char* string, Address& address)
-{
-    try {
-        Address converted(string);
-        address = converted;
-    } catch (...) {
-        return false;
-    }
-    return true;
-};*/
-
-//static int  unrespondedMessagesSleep = 10;
-//static int  unrespondedMessagesMax   = 3;
 static int  maxMessagesPerSecond     = 50;
-
 
 #include "TrafficControl.hpp"
 
@@ -197,51 +182,12 @@ extern "C" static void appSignalHandler(int sig)
   }
 }
 
-// static smsc::util::config::region::RegionsConfig *regionsConfig;
-
 extern "C" static void atExitHandler(void)
 {
     // delete regionsConfig;
     smsc::util::xml::TerminateXerces();
     smsc::logger::Logger::Shutdown();
 }
-
-/*
-static void
-doRegionsInitilization(const char* regions_xml_file, const char* route_xml_file, InfoSmeMessageSender& messageSender)
-{
-  smsc::logger::Logger *log = smsc::logger::Logger::getInstance("smsc.infosme.InfoSme");
-
-  regionsConfig = new smsc::util::config::region::RegionsConfig(regions_xml_file);
-
-  smsc::util::config::region::RegionsConfig::status st = regionsConfig->load();
-  if ( st == smsc::util::config::region::RegionsConfig::success )
-    smsc_log_info(log, "config file %s has been loaded successful", regions_xml_file);
-  else
-    throw smsc::util::config::ConfigException("can't load config file %s", regions_xml_file);
-
-  smsc::util::config::route::RouteConfig routeConfig;
-  if ( routeConfig.load(route_xml_file) == smsc::util::config::route::RouteConfig::success )
-    smsc_log_info(log, "config file %s has been loaded successful", route_xml_file);
-  else
-    throw smsc::util::config::ConfigException("can't load config file %s", route_xml_file);
-
-  smsc::util::config::region::Region* region;
-  smsc::util::config::region::RegionsConfig::RegionsIterator regsIter = regionsConfig->getIterator();
-
-  while (regsIter.fetchNext(region) == smsc::util::config::region::RegionsConfig::success) {
-    region->expandSubjectRefs(routeConfig);
-    messageSender.addRegion(region->getId(), region->getInfosmeSmscId());
-    smsc::util::config::region::Region::MasksIterator maskIter = region->getMasksIterator();
-    std::string addressMask;
-    while(maskIter.fetchNext(addressMask)) {
-      smsc::util::config::region::RegionFinder::getInstance().registerAddressMask(addressMask, region);
-    }
-  }
-
-  smsc::util::config::region::RegionFinder::getInstance().registerDefaultRegion(&(regionsConfig->getDefaultRegion()));
-}
- */
 
 int main(int argc, char** argv)
 {
@@ -296,9 +242,6 @@ int main(int argc, char** argv)
                           "The preffered max value is 100", maxMessagesPerSecond);
         }
 
-        // const char* route_xml_file = tpConfig.getString("route_config_filename");
-        // const char* regions_xml_file = tpConfig.getString("regions_config_filename");
-
         {
           std::string fn=tpConfig.getString("storeLocation");
           if(fn.length() && *fn.rbegin()!='/')
@@ -311,18 +254,8 @@ int main(int argc, char** argv)
 
         TaskProcessor processor(&tpConfig);
 
-        // std::string connectorsSectionName = "InfoSme.SMSCConnectors";
-        // ConfigView connectorsConfigView(manager, connectorsSectionName.c_str());
-        // std::string defsmscId = connectorsConfigView.getString("default", "default SMSC Connector id not set");
-        // std::string defsmscIdSectionName = connectorsSectionName + "." + defsmscId;
-        // ConfigView defaultConfigView(manager, defsmscIdSectionName.c_str());
-        // InfoSmeConfig defaultCfg(defaultConfigView);
         InfoSmeMessageSender messageSender( processor );
         messageSender.reloadSmscAndRegions( manager );
-        /*
-        messageSender.addConnectors(manager, connectorsConfigView, connectorsSectionName);
-        doRegionsInitilization(regions_xml_file, route_xml_file, messageSender);
-         */
 
         sigfillset(&blocked_signals);
         sigdelset(&blocked_signals, SIGKILL);

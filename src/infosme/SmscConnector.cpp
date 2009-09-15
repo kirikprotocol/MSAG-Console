@@ -239,17 +239,15 @@ timeout_(cfg.timeOut),
 stopped_(false),
 connected_(false),
 usage_(0),
-responseWaitTime(processor_.responseWaitTime),
-receiptWaitTime(processor_.receiptWaitTime),
 jstore_(0),
 trafficControl_(0)
 {
     listener_.setSyncTransmitter(session_->getSyncTransmitter());
     listener_.setAsyncTransmitter(session_->getAsyncTransmitter());
-    jstore_ = new JStoreWrapper(processor_.storeLocation,
+    jstore_ = new JStoreWrapper(processor_.getStoreLocation(),
                                 smscId_,
-                                processor_.mappingRollTime,
-                                processor_.mappingMaxChanges);
+                                processor_.getMappingRollTime(),
+                                processor_.getMappingMaxChanges() );
     trafficControl_ = new RegionTrafficControl(log_);
 }
 
@@ -434,7 +432,7 @@ bool SmscConnector::send( Task* task, Message& message )
         int seqNumsCount;
         if (processor_.bNeedExit || stopped_ ) return false;
         seqNumsCount = taskIdsBySeqNum.Count();
-        if ( seqNumsCount > processor_.unrespondedMessagesMax ) {
+        if ( seqNumsCount > processor_.getUnrespondedMessagesMax() ) {
             msguard.suspended(); // to prevent retry
             smsc_log_debug(log_,"TaskId=[%d/%s]: too many messages queued for SMSC id='%s'",
                            info.uid, info.name.c_str(), smscId_.c_str() );
@@ -449,7 +447,7 @@ bool SmscConnector::send( Task* task, Message& message )
     }
     {
         MutexGuard respGuard(responseWaitQueueLock);
-        responseWaitQueue.Push(ResponseTimer(time(NULL)+responseWaitTime, seqNum));
+        responseWaitQueue.Push(ResponseTimer(time(NULL)+processor_.getResponseWaitTime(), seqNum));
     }
     if ( ! send(message.abonent,message.message,info,seqNum) ) {
 
@@ -584,7 +582,7 @@ void SmscConnector::processResponse( const ResponseData& rd, bool internal )
             } else {
                 receipts.Insert(receiptId, receipt);
                 MutexGuard recptGuard(receiptWaitQueueLock);
-                receiptWaitQueue.Push(ReceiptTimer(time(NULL)+receiptWaitTime, receiptId));
+                receiptWaitQueue.Push(ReceiptTimer(time(NULL)+processor_.getReceiptWaitTime(), receiptId));
             }
         }
 
@@ -665,7 +663,7 @@ void SmscConnector::processReceipt( const ResponseData& rd, bool internal )
 
         receipts.Insert(receiptId, ReceiptData(true, rd.accepted, rd.retry));
         MutexGuard recptGuard(receiptWaitQueueLock);
-        receiptWaitQueue.Push(ReceiptTimer(time(NULL)+receiptWaitTime, receiptId));
+        receiptWaitQueue.Push(ReceiptTimer(time(NULL)+processor_.getReceiptWaitTime(), receiptId));
     }
     
     try

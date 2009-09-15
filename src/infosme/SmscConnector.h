@@ -135,8 +135,8 @@ private:
     smsc::core::synchronization::Mutex              receiptWaitQueueLock;
     smsc::core::buffers::Array<ResponseTimer>       responseWaitQueue;
     smsc::core::buffers::Array<ReceiptTimer>        receiptWaitQueue;
-    int                                             responseWaitTime;
-    int                                             receiptWaitTime;
+    // int                                             responseWaitTime;
+    // int                                             receiptWaitTime;
     JStoreWrapper*                                  jstore_;
     RegionTrafficControl*                           trafficControl_;
 };

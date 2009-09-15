@@ -202,15 +202,22 @@ private:
     bool doesMessageConformToCriterion(ResultSet* rs,
                                        const InfoSme_Tasks_Stat_SearchCriterion& searchCrit);
 
-    int unrespondedMessagesMax, unrespondedMessagesSleep;
+    int unrespondedMessagesMax;
 public:
 
     TaskProcessor(ConfigView* config);
     virtual ~TaskProcessor();
 
-    int getProtocolId()      { return protocolId; };
-    const char* getSvcType() { return (svcType) ? svcType:"InfoSme"; };
-    const char* getAddress() { return address; };
+    int getProtocolId() const { return protocolId; };
+    const char* getSvcType() const { return (svcType) ? svcType:"InfoSme"; };
+    const char* getAddress() const { return address; };
+
+    int getResponseWaitTime() const { return responseWaitTime; }
+    int getReceiptWaitTime() const { return receiptWaitTime; }
+    int getMappingRollTime() const { return mappingRollTime; }
+    size_t getMappingMaxChanges() const { return mappingMaxChanges; }
+    const std::string& getStoreLocation() const { return storeLocation; }
+    int getUnrespondedMessagesMax() const { return unrespondedMessagesMax; }
 
     virtual int Execute();
     void Start();

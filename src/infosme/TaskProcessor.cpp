@@ -31,8 +31,8 @@ mappingRollTime(0),
 mappingMaxChanges(0),
 dsStatConnection(0),
 statistics(0), protocolId(0), svcType(0), address(0),
-unrespondedMessagesMax(1),
-unrespondedMessagesSleep(10)
+unrespondedMessagesMax(1)
+// unrespondedMessagesSleep(10)
 {
     smsc_log_info(log_, "Loading ...");
 
@@ -67,6 +67,7 @@ unrespondedMessagesSleep(10)
                     "The preffered max value is 500", unrespondedMessagesMax);
     }
     
+    /*
     try { unrespondedMessagesSleep = config->getInt("unrespondedMessagesSleep"); } catch (...) {};
     if (unrespondedMessagesSleep <= 0) {
       unrespondedMessagesSleep = 10;
@@ -77,6 +78,7 @@ unrespondedMessagesSleep(10)
       smsc_log_warn(log_, "Parameter 'unrespondedMessagesSleep' value '%d' is too big. "
                     "The preffered max value is 500ms", unrespondedMessagesSleep);
     }
+     */
 
     std::auto_ptr<ConfigView> retryPlcCfg(config->getSubConfig("RetryPolicies"));
     retryPlcs.Load(retryPlcCfg.get());
