@@ -16,13 +16,13 @@ MoForwardSmReq::MoForwardSmReq(const string& _smsca, const string& _msisdn, cons
   arg.imsi = 0;
 
   ZERO_OCTET_STRING(da);
-  da.size = (int)packNumString2BCD91(da.buf, _smsca.c_str(), _smsca.length());
+  da.size = (int)packNumString2BCD91(da.buf, _smsca.c_str(), (unsigned)_smsca.length());
   arg.sm_RP_DA.present = SM_RP_DA_PR_serviceCentreAddressDA;
   arg.sm_RP_DA.choice.serviceCentreAddressDA.size = da.size;
   arg.sm_RP_DA.choice.serviceCentreAddressDA.buf = da.buf;
 
   ZERO_OCTET_STRING(oa);
-  oa.size = (int)packNumString2BCD91(oa.buf, _msisdn.c_str(), _msisdn.length());
+  oa.size = (int)packNumString2BCD91(oa.buf, _msisdn.c_str(), (unsigned)_msisdn.length());
   arg.sm_RP_OA.present = SM_RP_OA_PR_msisdn;
   arg.sm_RP_OA.choice.msisdn.size = oa.size;
   arg.sm_RP_OA.choice.msisdn.buf = oa.buf;
