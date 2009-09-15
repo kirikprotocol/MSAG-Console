@@ -61,15 +61,15 @@ void UpdateLocationMessage::setComponent(const string& imsi, const string& msc, 
   arg.informPreviousNetworkEntity = 0;
 
   ZERO_OCTET_STRING(_imsi);
-  _imsi.size = (int)packNumString2BCD(_imsi.buf, imsi.c_str(), imsi.length());
+  _imsi.size = (int)packNumString2BCD(_imsi.buf, imsi.c_str(), (unsigned)imsi.length());
   arg.imsi = _imsi;
 
   ZERO_OCTET_STRING(_msc);
-  _msc.size = (int)packNumString2BCD91(_msc.buf, msc.c_str(), msc.length());
+  _msc.size = (int)packNumString2BCD91(_msc.buf, msc.c_str(), (unsigned)msc.length());
   arg.msc_Number = _msc;
 
   ZERO_OCTET_STRING(_vlr);
-  _vlr.size = (int)packNumString2BCD91(_vlr.buf, vlr.c_str(), vlr.length());
+  _vlr.size = (int)packNumString2BCD91(_vlr.buf, vlr.c_str(), (unsigned)vlr.length());
   arg.vlr_Number = _vlr;
 
   vlrcap.supportedCamelPhases = &phases;
@@ -120,15 +120,15 @@ void UpdateLocationReq::setParameters(const string& imsi, const string& msc, con
 	arg.informPreviousNetworkEntity = 0;
 
 	ZERO_OCTET_STRING(_imsi);
-	_imsi.size = (int)packNumString2BCD(_imsi.buf, imsi.c_str(), imsi.length());
+	_imsi.size = (int)packNumString2BCD(_imsi.buf, imsi.c_str(), (unsigned)imsi.length());
 	arg.imsi = _imsi;
 
 	ZERO_OCTET_STRING(_msc);
-	_msc.size = (int)packNumString2BCD91(_msc.buf, msc.c_str(), msc.length());
+	_msc.size = (int)packNumString2BCD91(_msc.buf, msc.c_str(), (unsigned)msc.length());
 	arg.msc_Number = _msc;
 
 	ZERO_OCTET_STRING(_vlr);
-	_vlr.size = (int)packNumString2BCD91(_vlr.buf, vlr.c_str(), vlr.length());
+	_vlr.size = (int)packNumString2BCD91(_vlr.buf, vlr.c_str(), (unsigned)vlr.length());
 	arg.vlr_Number = _vlr;
 
 	vlrcap.supportedCamelPhases = &phases;
