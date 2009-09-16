@@ -19,7 +19,8 @@ SwitchCircuitController::SwitchCircuitController(const std::string& link_set_pre
       iter != end_iter; ++iter) {
     std::auto_ptr<smsc::util::config::ConfigView> outConnectDefSection(out_links_cfg_section.getSubConfig((*iter).c_str()));
 
-    addOutConnectDefinition(*iter,
+    addOutConnectDefinition(outConnectDefSection->getInt("link_index"),
+                            *iter,
                             outConnectDefSection->getString("peer_host"),
                             outConnectDefSection->getInt("peer_port"),
                             outConnectDefSection->getInt("connect_timeout"),
@@ -44,7 +45,8 @@ SwitchCircuitController::activateConnection(corex::io::network::TCPSocket* new_s
   std::auto_ptr<SetOfNotBindedConnections> notBindedConns;
   for(known_links_t::const_iterator iter = _knownLinks.begin(), end_iter = _knownLinks.end();
       iter != end_iter; ++iter) {
-    LinkRefPtr link(createOutcomingLink((*iter)._peerHost, (*iter)._peerPort,
+    LinkRefPtr link(createOutcomingLink((*iter)._linkIndex,
+                                        (*iter)._peerHost, (*iter)._peerPort,
                                         (*iter)._connectTimeout, (*iter)._bindRespWaitTimeout,
                                         (*iter)._unbindRespWaitTimeout));
     try {
@@ -115,7 +117,8 @@ SwitchCircuitController::deactivateConnection(const LinkId& link_id,
 }
 
 void
-SwitchCircuitController::addOutConnectDefinition(const std::string& link_name,
+SwitchCircuitController::addOutConnectDefinition(unsigned int link_index,
+                                                 const std::string& link_name,
                                                  const char* peer_host, unsigned peer_port,
                                                  unsigned int connect_timeout,
                                                  unsigned int bind_resp_wait_timeout,
@@ -124,7 +127,8 @@ SwitchCircuitController::addOutConnectDefinition(const std::string& link_name,
   if ( _knownLinkIds.find(link_name) == _knownLinkIds.end() ) {
     smsc_log_info(_logger, "SwitchCircuitController::addOutConnectDefinition::: add new out connect definition: link id=%s,peer_host=%s,peer_port=%d,connect_timeout=%d,unbind_resp_wait_timeout=%d",
                   link_name.c_str(),peer_host,peer_port,connect_timeout,unbind_resp_wait_timeout);
-    _knownLinks.push_back(OutLinkDefinition(link_name,
+    _knownLinks.push_back(OutLinkDefinition(link_index,
+                                            link_name,
                                             peer_host,
                                             peer_port,
                                             connect_timeout,

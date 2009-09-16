@@ -38,13 +38,15 @@ protected:
 
   virtual LinkSet* createLinkSet() = 0;
 
-  virtual Link* createOutcomingLink(const std::string& peer_host,
+  virtual Link* createOutcomingLink(unsigned int link_index,
+                                    const std::string& peer_host,
                                     unsigned int  peer_port,
                                     unsigned int connect_timeout,
                                     unsigned int bind_resp_wait_timeout,
                                     unsigned int unbind_resp_wait_timeout) = 0;
 
-  void addOutConnectDefinition(const std::string& linkName,
+  void addOutConnectDefinition(unsigned int link_index,
+                               const std::string& linkName,
                                const char* peer_host,
                                unsigned int peer_port,
                                unsigned int connect_timeout,
@@ -57,16 +59,18 @@ protected:
   SwitchingTable& _switchTable;
 
   struct OutLinkDefinition {
-    OutLinkDefinition(const std::string& link_name,
+    OutLinkDefinition(unsigned int link_index,
+                      const std::string& link_name,
                       const std::string& peer_host,
                       unsigned int peer_port,
                       unsigned int connect_timeout,
                       unsigned int bind_resp_wait_timeout,
                       unsigned int unbind_resp_wait_timeout)
-    : _linkName(link_name), _peerHost(peer_host), _peerPort(peer_port),
+    : _linkIndex(link_index), _linkName(link_name), _peerHost(peer_host), _peerPort(peer_port),
       _connectTimeout(connect_timeout), _bindRespWaitTimeout(bind_resp_wait_timeout),
       _unbindRespWaitTimeout(unbind_resp_wait_timeout)
       {}
+    unsigned int _linkIndex;
     std::string _linkName, _peerHost;
     unsigned int _peerPort, _connectTimeout, _bindRespWaitTimeout, _unbindRespWaitTimeout;
   };
