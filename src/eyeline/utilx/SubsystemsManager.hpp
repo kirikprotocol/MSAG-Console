@@ -5,11 +5,11 @@
 # include <string>
 # include <map>
 # include <list>
-# include <eyeline/utilx/Subsystem.hpp>
-# include <eyeline/utilx/Singleton.hpp>
-# include <eyeline/utilx/ShutdownInProgressNotification.hpp>
-# include <logger/Logger.h>
-# include <core/synchronization/Mutex.hpp>
+# include "eyeline/utilx/Subsystem.hpp"
+# include "eyeline/utilx/Singleton.hpp"
+# include "eyeline/utilx/ShutdownInProgressNotification.hpp"
+# include "logger/Logger.h"
+# include "core/synchronization/Mutex.hpp"
 
 namespace eyeline {
 namespace utilx {
