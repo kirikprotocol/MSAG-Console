@@ -1,9 +1,9 @@
 #include <signal.h>
 #include <stdlib.h>
+#include <utility>
 
 #include "SubsystemsManager.hpp"
-#include <util/Exception.hpp>
-#include <utility>
+#include "util/Exception.hpp"
 
 namespace eyeline {
 namespace utilx {
@@ -46,7 +46,7 @@ SubsystemsManager::unregisterSubsystem(const std::string& subsystemName)
     return NULL;
 }
 
-extern "C" static void appSignalHandler(int sig)
+extern "C" void appSignalHandler_SubsystemsManager(int sig)
 {
   return;
 }
@@ -70,7 +70,7 @@ SubsystemsManager::initialize()
     if ( pthread_sigmask(SIG_SETMASK, &_blocked_signals, NULL) )
       throw smsc::util::SystemError("SubsystemsManager::initialize::: call to pthread_sigmask failed");
 
-    sigset(SIGTERM, appSignalHandler);
+    sigset(SIGTERM, appSignalHandler_SubsystemsManager);
     _initialized = true;
   }
 }
