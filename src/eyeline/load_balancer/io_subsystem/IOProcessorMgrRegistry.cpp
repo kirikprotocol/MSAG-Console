@@ -37,6 +37,19 @@ IOProcessorMgrRegistry::unregisterNextIOProcMgr()
   }
 }
 
+IOProcessorMgr*
+IOProcessorMgrRegistry::getIOProcessorMgr(unsigned io_proc_mgr_id)
+{
+  smsc::core::synchronization::WriteLockGuard synchronize(_lock);
+  registered_ioprocmgrs_t::iterator iter = _registeredIoProcMgrs.find(io_proc_mgr_id);
+  if ( iter == _registeredIoProcMgrs.end() ) {
+    smsc_log_debug(_logger, "IOProcessorMgrRegistry::getIOProcessorMgr::: IOProcessorMgr with id=%d is absent",
+                   io_proc_mgr_id);
+    return NULL;
+  }
+  return iter->second;
+}
+
 IOProcessorMgrRegistry::Iterator
 IOProcessorMgrRegistry::getIterator()
 {

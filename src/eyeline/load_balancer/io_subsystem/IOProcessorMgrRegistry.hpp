@@ -14,7 +14,7 @@ class IOProcessorMgrRegistry : public utilx::Singleton<IOProcessorMgrRegistry> {
 public:
   void registerIOProcMgr(IOProcessorMgr* io_proc_mgr);
   IOProcessorMgr* unregisterNextIOProcMgr();
-
+  IOProcessorMgr* getIOProcessorMgr(unsigned io_proc_mgr_id);
   class Iterator;
   Iterator getIterator();
 
