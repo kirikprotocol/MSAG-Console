@@ -7,7 +7,7 @@ namespace io_subsystem {
 void
 AcceptNewConnectionEvent::handle()
 {
-  _switchCircuitCtrl.activateConnection(_newSocket, _ioProcessor);
+  _switchCircuitCtrl.activateConnection(_newSocket, *_ioProcessor);
 }
 
 }}}

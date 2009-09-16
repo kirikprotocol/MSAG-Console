@@ -5,6 +5,7 @@
 # include "eyeline/load_balancer/io_subsystem/IOEvent.hpp"
 # include "eyeline/load_balancer/io_subsystem/IOProcessor.hpp"
 # include "eyeline/load_balancer/io_subsystem/SwitchCircuitController.hpp"
+# include "eyeline/load_balancer/io_subsystem/types.hpp"
 
 namespace eyeline {
 namespace load_balancer {
@@ -12,7 +13,7 @@ namespace io_subsystem {
 
 class AcceptNewConnectionEvent : public IOEvent {
 public:
-  AcceptNewConnectionEvent(IOProcessor& io_processor,
+  AcceptNewConnectionEvent(IOProcessorRefPtr io_processor,
                            SwitchCircuitController& switch_circuit_ctrl,
                            corex::io::network::TCPSocket* new_socket)
   : _ioProcessor(io_processor), _switchCircuitCtrl(switch_circuit_ctrl),
@@ -21,7 +22,7 @@ public:
 
   virtual void handle();
 private:
-  IOProcessor& _ioProcessor;
+  IOProcessorRefPtr _ioProcessor;
   SwitchCircuitController& _switchCircuitCtrl;
   corex::io::network::TCPSocket* _newSocket;
 };
