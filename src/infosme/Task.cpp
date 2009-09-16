@@ -791,14 +791,14 @@ bool Task::finalizeMessage(uint64_t msgId, MessageState state, int smppStatus )
       Message msg;
       if (info.keepHistory)
       {
-        store.finalizeMsg(msgId,now,state,info.saveFinalState ? &msg : 0);
+        store.finalizeMsg(msgId,now,state, info.saveFinalState ? &msg : 0);
       }
       else
       {
-        store.setMsgState(msgId,DELETED,info.saveFinalState ? &msg : 0);
+        store.setMsgState(msgId,DELETED, info.saveFinalState ? &msg : 0);
       }
 
-      if ( info.saveFinalState ) {
+      if ( info.saveFinalState && ! msg.userData.empty() ) {
           finalStateSaver_->save(now,info,msg,state,smppStatus,store.isProcessed());
       }
       result = true;
@@ -857,8 +857,9 @@ void Task::resetSuspendedRegions()
 
 bool Task::getNextMessage(Message& message)
 {
-    smsc_log_debug(logger, "getNextMessage method being called on task '%d/%s'",
-                   info.uid,info.name.c_str());
+    smsc_log_debug(logger, "getNextMessage method being called on task '%d/%s', ena/fin/inProc/inGen/genOk=%u/%u/%u/%u/%u",
+                   info.uid,info.name.c_str(),
+                   info.enabled,bFinalizing,bInProcess,bInGeneration,bGenerationSuccess);
 
     if (!isEnabled())
       return setInProcess(false);
@@ -868,13 +869,16 @@ bool Task::getNextMessage(Message& message)
     if ( msgid != 0 ) {
         uint8_t state;
         store.loadMessage(msgid,message,state);
+        smsc_log_debug(logger,"fetch msgId=%llx from cache",msgid);
         return true;
     }
 
     // Cache is empty here or maybe we have bypassed all cache elements but there are ones with region id values for which suspended condition is true
 
-    if (info.trackIntegrity && !isGenerationSucceeded())
-      return setInProcess(false); // for track integrity check that generation finished ok
+    if (info.trackIntegrity && !isGenerationSucceeded()) {
+        smsc_log_debug(logger,"trackIntegrity and generation not succeded");
+        return setInProcess(false); // for track integrity check that generation finished ok
+    }
 
     time_t currentTime = time(NULL);
 
@@ -882,6 +886,7 @@ bool Task::getNextMessage(Message& message)
     if (currentTime-messageCache_->fillTime() > info.messagesCacheSleep) {
        // lastMessagesCacheEmpty = currentTime;   // timeout reached, set new sleep timeout & go to fill cache
     } else if (bSelectedAll && !isInGeneration()) {
+        smsc_log_debug(logger,"selectedAll and not in generation");
         return setInProcess(false);             // if all selected from DB (on last time) & no generation => return
     }
     smsc_log_info(logger, "Selecting messages from DB. getNextMessage method on task '%d/%s'",
@@ -921,7 +926,7 @@ bool Task::getNextMessage(Message& message)
     // bSelectedAll = true;
     // -- db: why bSelectedAll is set here?
     // -- the messages may be not accessible because they are suspended
-    return setInProcess(false);
+    // return setInProcess(false);
 }
 
 bool Task::isReady(time_t time, bool checkActivePeriod)
