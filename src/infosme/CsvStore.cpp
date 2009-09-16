@@ -78,7 +78,7 @@ void CsvStore::Init()
         dir->unknownFiles=true;
         continue;
       }
-      CsvFile* f=new CsvFile(dir->date,hour,dir);
+      CsvFile* f=new CsvFile(log,dir->date,hour,dir);
       if(fit->find("processed")!=std::string::npos)
       {
         f->processed=true;
@@ -398,7 +398,7 @@ uint64_t CsvStore::createMessage(time_t date,const Message& message,uint8_t stat
   CsvFile* fptr;
   if(fit==dir->files.end())
   {
-    fptr=new CsvFile(xdate,hour,dir);
+    fptr=new CsvFile(log,xdate,hour,dir);
     fptr->Open(true);
     fit=dir->files.insert(FileMap::value_type(hour,fptr)).first;
     smsc_log_debug(log,"%s:opened new file:'%s'",__func__,fptr->fullPath().c_str());
@@ -465,6 +465,7 @@ bool CsvStore::CsvFile::Open(bool cancreate)
     return true;
   }
   std::string fileName=fullPath();
+  smsc_log_debug(log_,"opening new csv file %s",fileName.c_str());
   if(buf::File::Exists(fileName.c_str()))
   {
     std::string ln;
@@ -490,6 +491,8 @@ bool CsvStore::CsvFile::Open(bool cancreate)
     }
     readAll=!haveNonFinal;
     curMsg=timeMap.begin();
+    smsc_log_debug(log_,"file has been read, openMessages=%u, total=%u",
+                   unsigned(openMessages), unsigned(msgMap.size()) );
   }else
   {
     if(!cancreate)
@@ -499,6 +502,7 @@ bool CsvStore::CsvFile::Open(bool cancreate)
     f.RWCreate(fileName.c_str());
     const char* header="STATE,DATE,ABONENT,REGION,USERDATA,MESSAGE\n";
     f.Write(header,strlen(header));
+    smsc_log_debug(log_,"file successfully created");
   }
   return true;
 }

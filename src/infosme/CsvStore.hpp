@@ -52,11 +52,14 @@ public:
 
   struct Directory;
   struct CsvFile{
-    CsvFile(int argDate,int argHour,Directory* argDir):readAll(false),processed(false),date(argDate),hour(argHour),dir(argDir)
+      CsvFile(smsc::logger::Logger* log, int argDate,int argHour,Directory* argDir ) :
+      log_(log),
+      readAll(false),processed(false),date(argDate),hour(argHour),dir(argDir)
     {
       openMessages=0;
       curMsg=timeMap.end();
     }
+    smsc::logger::Logger* log_;
     bool readAll;
     bool processed;
     int date;//0xYYmmdd00
@@ -179,7 +182,7 @@ public:
     CsvFile f;
     FullScan(const FullScan&);
   public:
-    FullScan(CsvStore& argStore):store(argStore),f(0,0,0)
+    FullScan(CsvStore& argStore):store(argStore),f(smsc::logger::Logger::getInstance("fullscan"),0,0,0)
     {
       dit=store.dirs.begin();
       if(dit!=store.dirs.end())
