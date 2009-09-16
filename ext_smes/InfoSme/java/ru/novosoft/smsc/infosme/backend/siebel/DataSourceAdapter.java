@@ -13,7 +13,7 @@ import java.util.Map;
  */
 public class DataSourceAdapter implements DataSource {
 
-    private static final String siebelTaskPrefix = "siebelTask-";
+    private static final String siebelTaskPrefix = "siebel_";
 
     private SiebelDataProvider provider_;
     private Category log_;

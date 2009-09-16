@@ -83,6 +83,7 @@ public class SiebelFinalStateThread extends Thread {
         // parse line: date,state,taskId,msgId,smppStatus,abnt,userData,taskName
         ++totalRecords;
         String[] fields = recSep_.split(line,8);
+          /*
         if ( log_.isDebugEnabled() ) {
           StringBuffer sb = new StringBuffer();
           for ( int i = 0; i < fields.length; ++i ) {
@@ -91,6 +92,7 @@ public class SiebelFinalStateThread extends Thread {
           }
           log_.debug("line parsed into " + fields.length + " pieces:" + sb.toString());
         }
+        */
         if ( fields.length < 8 ) {
           // not all fields specified
           if (log_.isDebugEnabled() ) {
@@ -120,9 +122,9 @@ public class SiebelFinalStateThread extends Thread {
           }
           dataSource_.taskHasFinished( fields[7] );
         } else {
-          if (log_.isDebugEnabled() ) {
-            log_.debug("message " + line + ": userData is empty" );
-          }
+          // if (log_.isDebugEnabled() ) {
+          //   log_.debug("message " + line + ": userData is empty" );
+          // }
         }
       }
       if ( map.size() > 0 ) {

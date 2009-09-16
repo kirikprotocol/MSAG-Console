@@ -301,6 +301,7 @@ public class SiebelTaskManager implements Runnable{
       msg.setAbonent(sM.getMsisdn());
       msg.setMessage(sM.getMessage());
       msg.setState(Message.State.NEW);
+      msg.setUserData(sM.getClcId());
       msg.setSendDate(sendDate);
       result.add(msg);
       i++;
