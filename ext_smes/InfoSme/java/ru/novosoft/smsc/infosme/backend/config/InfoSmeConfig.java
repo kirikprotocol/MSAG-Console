@@ -513,9 +513,9 @@ public class InfoSmeConfig {
         Functions.addValuesToCollection(this.siebelTWeekDaysSet, cfg.getString(prefix + ".activeWeekDays"), ",", true);
       }
 
-      if(cfg.containsSection("SMSCConnectors")) {
-        String defname = cfg.getString("SMSCConnectors.default");
-        Set childs = cfg.getSectionChildShortSectionNames("SMSCConnectors");
+      if(cfg.containsSection("InfoSme.SMSCConnectors")) {
+        String defname = cfg.getString("InfoSme.SMSCConnectors.default");
+        Set childs = cfg.getSectionChildShortSectionNames("InfoSme.SMSCConnectors");
         Iterator i = childs.iterator();
 
         Map newSmscs = new HashMap();
@@ -523,11 +523,11 @@ public class InfoSmeConfig {
           SmscConnector smsc = new SmscConnector();
           String smscName = (String)i.next();
           smsc.setName(smscName);
-          smsc.setHost(cfg.getString("SMSCConnectors."+smscName+".host"));
-          smsc.setPort(cfg.getInt("SMSCConnectors."+smscName+".port"));
-          smsc.setSid(cfg.getString("SMSCConnectors."+smscName+".sid"));
-          smsc.setTimeout(cfg.getInt("SMSCConnectors."+smscName+".timeout"));
-          smsc.setPassword(cfg.getString("SMSCConnectors."+smscName+".password"));
+          smsc.setHost(cfg.getString("InfoSme.SMSCConnectors."+smscName+".host"));
+          smsc.setPort(cfg.getInt("InfoSme.SMSCConnectors."+smscName+".port"));
+          smsc.setSid(cfg.getString("InfoSme.SMSCConnectors."+smscName+".sid"));
+          smsc.setTimeout(cfg.getInt("InfoSme.SMSCConnectors."+smscName+".timeout"));
+          smsc.setPassword(cfg.getString("InfoSme.SMSCConnectors."+smscName+".password"));
           newSmscs.put(smscName, smsc);
         }
 
@@ -610,7 +610,7 @@ public class InfoSmeConfig {
         if(smscConns.get(defSmscConn.getName()) == null) {
           throw new AdminException("Default smsc not found with name="+ defSmscConn.getName());
         }
-        cfg.setString("SMSCConnectors.default", defSmscConn.getName());
+        cfg.setString("InfoSme.SMSCConnectors.default", defSmscConn.getName());
       } else if(!smscConns.isEmpty()) {
         throw new AdminException("Default smsc not found");
       }
@@ -618,11 +618,11 @@ public class InfoSmeConfig {
       Iterator i = smscConns.values().iterator();
       while(i.hasNext()){
         SmscConnector smsc = (SmscConnector)i.next();
-        cfg.setString("SMSCConnectors."+smsc.getName()+".host",smsc.getHost());
-        cfg.setInt("SMSCConnectors."+smsc.getName()+".port",smsc.getPort());
-        cfg.setInt("SMSCConnectors."+smsc.getName()+".timeout",smsc.getTimeout());
-        cfg.setString("SMSCConnectors."+smsc.getName()+".sid",smsc.getSid());
-        cfg.setString("SMSCConnectors."+smsc.getName()+".password",smsc.getPassword());
+        cfg.setString("InfoSme.SMSCConnectors."+smsc.getName()+".host",smsc.getHost());
+        cfg.setInt("InfoSme.SMSCConnectors."+smsc.getName()+".port",smsc.getPort());
+        cfg.setInt("InfoSme.SMSCConnectors."+smsc.getName()+".timeout",smsc.getTimeout());
+        cfg.setString("InfoSme.SMSCConnectors."+smsc.getName()+".sid",smsc.getSid());
+        cfg.setString("InfoSme.SMSCConnectors."+smsc.getName()+".password",smsc.getPassword());
       }
 
       cfg.setInt("InfoSme.tasksSwitchTimeout", tasksSwitchTimeout);
