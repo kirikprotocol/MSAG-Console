@@ -153,7 +153,7 @@ bool Message::isDialoguePortionExist()
 void Message::getAppContext(AC& ac)
 {
   unsigned long null_buf[] = {0,0,0,0,0,0,0,0};
-  ac.init(null_buf,sizeof(null_buf)/sizeof(unsigned long));
+  ac.init(null_buf,(int)(sizeof(null_buf)/sizeof(unsigned long)));
 
   TCMessage_t* pmsg = (TCMessage_t*)structure;
   if(pmsg->present == TCMessage_PR_begin)
@@ -215,20 +215,20 @@ void Message::getAppContext(AC& ac)
               if (comp->choice.invoke.opcode.choice.local == 46)
               {
                 unsigned long sm_mt_relay_v1_buf[] = {0,4,0,0,1,0,25,1};
-                ac.init(sm_mt_relay_v1_buf,sizeof(sm_mt_relay_v1_buf)/sizeof(unsigned long));
+                ac.init(sm_mt_relay_v1_buf,(int)(sizeof(sm_mt_relay_v1_buf)/sizeof(unsigned long)));
                 smsc_log_debug(logger,"derive sm_mt_relay_v1 application context");
               }
               // SRI4SM operation
               if (comp->choice.invoke.opcode.choice.local == 45)
               {
                 unsigned long shortMsgGatewayContext_v1_buf[] = {0,4,0,0,1,0,20,1};
-                ac.init(shortMsgGatewayContext_v1_buf,sizeof(shortMsgGatewayContext_v1_buf)/sizeof(unsigned long));
+                ac.init(shortMsgGatewayContext_v1_buf,(int)(sizeof(shortMsgGatewayContext_v1_buf)/sizeof(unsigned long)));
                 smsc_log_debug(logger,"derive shortMsgGatewayContext_v1 application context");
               }
               if (comp->choice.invoke.opcode.choice.local == 4)
               {
                 unsigned long roamingNumberEnquiryContext_v1_buf[] = {0,4,0,0,1,0,3,1};
-                ac.init(roamingNumberEnquiryContext_v1_buf,sizeof(roamingNumberEnquiryContext_v1_buf)/sizeof(unsigned long));
+                ac.init(roamingNumberEnquiryContext_v1_buf,(int)(sizeof(roamingNumberEnquiryContext_v1_buf)/sizeof(unsigned long)));
                 smsc_log_debug(logger,"derive roamingNumberEnquiryContext_v1_buf application context");
               }
             }
@@ -255,7 +255,7 @@ int Message::getInvokeId()
       Component_t *comp = (Component_t *)(list->array[0]);
       if (comp->present == Component_PR_invoke)
       {
-        return comp->choice.invoke.invokeId;
+        return (int)(comp->choice.invoke.invokeId);
       }
     }
   }
@@ -347,7 +347,8 @@ void ContMsg::setDialog(AC& _ac)
   dp.encoding.choice.single_ASN1_type.present = DialoguePDU_PR_dialogueResponse;
   AARE_apdu_t& r = dp.encoding.choice.single_ASN1_type.choice.dialogueResponse;
   r.protocol_version = &tcapversion;
-  OBJECT_IDENTIFIER_set_arcs(&r.application_context_name,&ac.arcs[0],sizeof(unsigned long),ac.arcs.size());
+  OBJECT_IDENTIFIER_set_arcs(&r.application_context_name,&ac.arcs[0],
+                             (int)(sizeof(unsigned long),ac.arcs.size()));
   r.result = Associate_result_accepted;
   r.result_source_diagnostic.present = Associate_source_diagnostic_PR_dialogue_service_user;
   r.result_source_diagnostic.choice.dialogue_service_user = dialogue_service_user_null;
@@ -420,7 +421,8 @@ void EndMsg::setDialog(AC& _ac)
   dp.encoding.choice.single_ASN1_type.present = DialoguePDU_PR_dialogueResponse;
   AARE_apdu_t& r = dp.encoding.choice.single_ASN1_type.choice.dialogueResponse;
   r.protocol_version = &tcapversion;
-  OBJECT_IDENTIFIER_set_arcs(&r.application_context_name,&ac.arcs[0],sizeof(unsigned long),ac.arcs.size());
+  OBJECT_IDENTIFIER_set_arcs(&r.application_context_name,&ac.arcs[0],
+                             (int)(sizeof(unsigned long),ac.arcs.size()));
   r.result = Associate_result_accepted;
   r.result_source_diagnostic.present = Associate_source_diagnostic_PR_dialogue_service_user;
   r.result_source_diagnostic.choice.dialogue_service_user = dialogue_service_user_null;
@@ -466,7 +468,7 @@ void EndMsg::setReturnResultL(int iid, uint8_t opcode, vector<unsigned char>& ar
   //initialize result component
   res.opcode.present = Code_PR_local;
   res.opcode.choice.local = opcode;
-  res.result.size = argument.size();
+  res.result.size = (int)argument.size();
   res.result.buf = &argument[0];
 
   // intialize invoke with invokeID and result component
@@ -532,14 +534,15 @@ void BeginMsg::setDialog(AC& _ac)
   dp.encoding.choice.single_ASN1_type.present = DialoguePDU_PR_dialogueRequest;
   AARQ_apdu_t& r = dp.encoding.choice.single_ASN1_type.choice.dialogueRequest;
   r.protocol_version = &tcapversion;
-  OBJECT_IDENTIFIER_set_arcs(&r.application_context_name,&ac.arcs[0],sizeof(unsigned long),ac.arcs.size());
+  OBJECT_IDENTIFIER_set_arcs(&r.application_context_name,&ac.arcs[0],
+                             (int)(sizeof(unsigned long),ac.arcs.size()));
   r.aarq_user_information = 0;
   begin.choice.begin.dialoguePortion = ( struct EXT *)&dp;
 }
 void BeginMsg::setInvokeReq(int iid, uint8_t opcode, vector<unsigned char>& _argument)
 {
   //initialize component argument
-  argument.size = _argument.size();
+  argument.size = (int)_argument.size();
   argument.buf = &_argument[0];
 
   // intialize invoke with invokeID and operation code
