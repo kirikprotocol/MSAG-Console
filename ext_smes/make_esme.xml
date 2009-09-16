@@ -47,6 +47,7 @@
   <target name="build" description="generate the distribution">
     <jar jarfile="${java_lib}/${esme_name}.jar">
       <fileset dir="${java_out}"/>
+      <fileset dir="${java_src}" includes="**/*.properties"/>
     </jar>
     <mkdir dir="${exploded}/jsp"/>
     <copy todir="${exploded}/jsp" preservelastmodified="yes">
