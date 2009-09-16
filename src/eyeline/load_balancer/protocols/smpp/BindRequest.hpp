@@ -44,6 +44,8 @@ public:
 
   enum { BIND_FAILED=protocols::smpp::ESME_RBINDFAIL };
 
+  virtual std::string getBindType() const = 0;
+
 protected:
   virtual uint32_t calculateCommandBodyLength() const;
 
