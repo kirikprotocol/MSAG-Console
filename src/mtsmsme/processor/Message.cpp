@@ -348,8 +348,8 @@ void ContMsg::setDialog(AC& _ac)
   AARE_apdu_t& r = dp.encoding.choice.single_ASN1_type.choice.dialogueResponse;
   r.protocol_version = &tcapversion;
   OBJECT_IDENTIFIER_set_arcs(&r.application_context_name,&ac.arcs[0],
-                             (unsigned int)(sizeof(unsigned long),
-                             (unsigned int)ac.arcs.size()));
+                             (unsigned int)sizeof(unsigned long),
+                             (unsigned int)ac.arcs.size());
   r.result = Associate_result_accepted;
   r.result_source_diagnostic.present = Associate_source_diagnostic_PR_dialogue_service_user;
   r.result_source_diagnostic.choice.dialogue_service_user = dialogue_service_user_null;
@@ -423,8 +423,8 @@ void EndMsg::setDialog(AC& _ac)
   AARE_apdu_t& r = dp.encoding.choice.single_ASN1_type.choice.dialogueResponse;
   r.protocol_version = &tcapversion;
   OBJECT_IDENTIFIER_set_arcs(&r.application_context_name,&ac.arcs[0],
-                             (unsigned int)(sizeof(unsigned long),
-                             (unsigned int)ac.arcs.size()));
+                             (unsigned int)(sizeof(unsigned long)),
+                             (unsigned int)ac.arcs.size());
   r.result = Associate_result_accepted;
   r.result_source_diagnostic.present = Associate_source_diagnostic_PR_dialogue_service_user;
   r.result_source_diagnostic.choice.dialogue_service_user = dialogue_service_user_null;
@@ -537,8 +537,8 @@ void BeginMsg::setDialog(AC& _ac)
   AARQ_apdu_t& r = dp.encoding.choice.single_ASN1_type.choice.dialogueRequest;
   r.protocol_version = &tcapversion;
   OBJECT_IDENTIFIER_set_arcs(&r.application_context_name,&ac.arcs[0],
-                             (unsigned int)(sizeof(unsigned long),
-                             (unsigned int)ac.arcs.size()));
+                             (unsigned int)sizeof(unsigned long),
+                             (unsigned int)ac.arcs.size());
   r.aarq_user_information = 0;
   begin.choice.begin.dialoguePortion = ( struct EXT *)&dp;
 }

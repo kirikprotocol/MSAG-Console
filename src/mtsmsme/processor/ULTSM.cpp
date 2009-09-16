@@ -46,7 +46,7 @@ void ULTSM::CONTINUE_received(uint8_t cdlen,
     cont.setComponent(0,iid);
     std::vector<unsigned char> rsp;
     tco->encoder.encode_resp(cont,rsp);
-    tco->SCCPsend(raddrlen,&raddr[0],laddrlen,laddr,rsp.size(),&rsp[0]);
+    tco->SCCPsend(raddrlen,&raddr[0],laddrlen,laddr,(uint16_t)rsp.size(),&rsp[0]);
 
     smsc_log_debug(logger,
                    "tsm.ultsm otid=%s receive CONTINUE with component, INVOKE_RES sent",
@@ -88,7 +88,7 @@ void ULTSM::TBeginReq(uint8_t  cdlen, uint8_t* cd, uint8_t  cllen, uint8_t* cl)
 			laddrlen,dump(laddrlen,laddr).c_str());
 	smsc_log_error(logger,
 			"UL[%d]={%s}",
-			data.size(),dump(data.size(),&data[0]).c_str());
-	tco->SCCPsend(raddrlen,raddr,laddrlen,laddr,data.size(),&data[0]);
+			data.size(),dump((uint16_t)data.size(),&data[0]).c_str());
+	tco->SCCPsend(raddrlen,raddr,laddrlen,laddr,(uint16_t)data.size(),&data[0]);
 }
 }/*namespace processor*/}/*namespace mtsmsme*/}/*namespace smsc*/

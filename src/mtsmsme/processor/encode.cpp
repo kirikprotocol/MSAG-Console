@@ -47,8 +47,8 @@ int Encoder::encodeACNotSupported(TrId dtid,AC& ac,vector<unsigned char>& buf)
   r.application_context_name.buf=0;
   OBJECT_IDENTIFIER_set_arcs(&r.application_context_name,
                              &ac.arcs[0],
-                             sizeof(unsigned long),
-                             ac.arcs.size());
+                             (unsigned int)sizeof(unsigned long),
+                             (unsigned int)ac.arcs.size());
 
   r.result = Associate_result_reject_permanent;
   r.result_source_diagnostic.present = Associate_source_diagnostic_PR_dialogue_service_user;
