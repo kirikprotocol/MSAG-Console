@@ -29,12 +29,13 @@ protected:
     return new LINKSET(LinkId(linSetId), getTotalNumberOfOutLinks());
   }
 
-  virtual Link* createOutcomingLink(const std::string& peer_host,
+  virtual Link* createOutcomingLink(unsigned int link_index,
+                                    const std::string& peer_host,
                                     unsigned peer_port,
                                     unsigned connect_timeout,
                                     unsigned bind_resp_wait_timeout,
                                     unsigned unbind_resp_wait_timeout) {
-    return new CONNECTION(peer_host, peer_port, connect_timeout,
+    return new CONNECTION(link_index, peer_host, peer_port, connect_timeout,
                           bind_resp_wait_timeout, unbind_resp_wait_timeout);
   }
 private:
