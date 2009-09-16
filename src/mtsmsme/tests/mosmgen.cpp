@@ -87,7 +87,7 @@ class StatFlusher: public Thread {
         smsc_log_info(logger,"stat flusher: sent %lld",invokation_count - temp_counter);
         temp_counter = invokation_count;
 
-        struct timespec delay = { 0, 995000000 }; // 955ms
+        //struct timespec delay = { 0, 995000000 }; // 955ms
         TSMSTAT statnow;
         TSM::getCounters(statnow);
         smsc_log_info(logger,"dlg cre/del/cnt = %d/%d/%d",
@@ -95,7 +95,7 @@ class StatFlusher: public Thread {
             statnow.objdeleted - stat.objdeleted,
             statnow.objcount);
         stat = statnow;
-        nanosleep(&delay,0);
+        //nanosleep(&delay,0);
       }
       return 0;
     }
@@ -189,15 +189,15 @@ int main(int argc, char** argv)
         //unsigned maxlen=(unsigned)(ET96MAP_MAX_SIGNAL_INFO_LEN-(pdu_ptr+1-(pdu->signalInfo+1)));
         int _newbuflen = ConvertText27bit(
             (unsigned char *)smstextlatin1,strlen(smstextlatin1),
-            smstext,&escaped_len,0,sizeof(smstext));
+            smstext,&escaped_len,0,(unsigned)sizeof(smstext));
 
         OCTET_STRING_DECL(dest,20);
         ZERO_OCTET_STRING(dest);
-        dest.size = packNumString2BCD91(dest.buf,msto.c_str(), msto.length());
+        dest.size = (int)packNumString2BCD91(dest.buf,msto.c_str(), (unsigned)msto.length());
         vector<unsigned char> ui;
         ui.push_back(0x11); //MI
         ui.push_back(0x2E); //TP Message Reference
-        ui.push_back(msto.length()); // TP-Destination-Address length in digits
+        ui.push_back((uint8_t)msto.length()); // TP-Destination-Address length in digits
         ui.insert(ui.end(),dest.buf,dest.buf+dest.size); //TP-Destination-Address
         ui.push_back(0); //TP-Protocol-Identifier
         ui.push_back(0x00); //TP-Data_Coding-Scheme
