@@ -61,4 +61,26 @@ SmeRegistry::deleteSmeInfo(const io_subsystem::LinkId& link_id_to_sme)
   _activeSmeRefs.erase(iter);
 }
 
+void
+SmeRegistry::getActiveSmeList(active_sme_list_t* active_sme_list)
+{
+  smsc::core::synchronization::MutexGuard synchronize(_lock);
+  for(active_smes_t::iterator iter = _activeSmes.begin(), end_iter = _activeSmes.end();
+      iter != end_iter; ++iter) {
+    smsc_log_debug(_logger, "SmeRegistry::getActiveSmeList::: next active sme: [bind_type='%s',sme_address='%s',systemId='%s']",
+                   iter->second->bindRequest->getBindType().c_str(), extractSmePeerAddr(iter->second->linkIdToSme.toString()).c_str(),
+                   iter->second->systemId.c_str());
+    active_sme_list->push_back(SmeTrace(iter->second->bindRequest->getBindType(),
+                                        extractSmePeerAddr(iter->second->linkIdToSme.toString()),
+                                        iter->second->systemId, iter->second->dstLinkSetId,
+                                        iter->second->ioProcMgrId, iter->second->ioProcId));
+  }
+}
+
+std::string
+extractSmePeerAddr(const std::string& link_id_to_sme)
+{
+  return link_id_to_sme.substr(0, link_id_to_sme.find('='));
+}
+
 }}}}
