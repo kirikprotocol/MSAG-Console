@@ -22,6 +22,8 @@ public:
     return bindReceiverResp;
   }
 
+  virtual std::string getBindType() const { return "RX"; }
+
   static const uint32_t _MSGCODE = 0x00000001;
 };
 
