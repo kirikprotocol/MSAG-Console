@@ -33,12 +33,13 @@ SMPPConnection::SMPPConnection(corex::io::network::TCPSocket* socket)
   _peerInfoString = "connection is incoming";
 }
 
-SMPPConnection::SMPPConnection(const std::string& peer_host,
+SMPPConnection::SMPPConnection(unsigned int link_index,
+                               const std::string& peer_host,
                                in_port_t peer_port,
                                unsigned int connect_timeout,
                                unsigned int bind_resp_wait_timeout,
                                unsigned int unbind_resp_wait_timeout)
-  : io_subsystem::Link(connect_timeout, bind_resp_wait_timeout, unbind_resp_wait_timeout),
+  : io_subsystem::Link(link_index, connect_timeout, bind_resp_wait_timeout, unbind_resp_wait_timeout),
     _logger(smsc::logger::Logger::getInstance("smpp")),
     _socket(NULL), _peerHost(peer_host), _peerPort(peer_port),
     _isConnectionIncoming(false), _protocolStateCtrl(SMPP_NotConnected::getInstance())
@@ -159,7 +160,7 @@ SMPPConnection::createNewOutLink() const
     throw smsc::util::Exception("SMPPConnection::duplicateOutLink::: this connection is incoming");
 
 
-  return new SMPPConnection(_peerHost, _peerPort, getConnectTimeout(),
+  return new SMPPConnection(getIndex(), _peerHost, _peerPort, getConnectTimeout(),
                             getBindRespWaitTimeout(), getUnbindRespWaitTimeout());
 }
 

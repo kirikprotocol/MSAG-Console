@@ -25,7 +25,8 @@ class SMPPConnection : public io_subsystem::Link {
 public:
   explicit SMPPConnection(corex::io::network::TCPSocket* socket);
 
-  SMPPConnection(const std::string& peer_host,
+  SMPPConnection(unsigned int link_index,
+                 const std::string& peer_host,
                  in_port_t peer_port,
                  unsigned int connect_timeout,
                  unsigned int bind_resp_wait_timeout,
