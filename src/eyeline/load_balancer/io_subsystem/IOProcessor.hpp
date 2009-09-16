@@ -29,11 +29,13 @@ namespace io_subsystem {
 
 class IOProcessor {
 public:
-  IOProcessor(unsigned io_proc_id, SwitchCircuitController& switch_circuit_ctrl,
+  IOProcessor(unsigned io_proc_id, unsigned io_proc_mgr_id,
+              SwitchCircuitController& switch_circuit_ctrl,
               unsigned max_events_queue_sz, unsigned reconnect_attempt_period,
               unsigned max_out_packets_queue_size, unsigned max_num_of_event_processors,
               unsigned max_links_per_processor)
-  : _ioProcId(io_proc_id), _logger(smsc::logger::Logger::getInstance("io_subsystem")),
+  : _ioProcId(io_proc_id), _ioProcMgrId(io_proc_mgr_id),
+    _logger(smsc::logger::Logger::getInstance("io_subsystem")),
     _switchCircuitCtrl(switch_circuit_ctrl), _messagePublisher(max_events_queue_sz),
     _reconnector(*this, reconnect_attempt_period),
     _packetReader(*this, _messagePublisher, max_links_per_processor),
@@ -60,6 +62,10 @@ public:
     return _ioProcId;
   }
 
+  unsigned getIOProcessorMgrId() const {
+    return _ioProcMgrId;
+  }
+
   virtual Binder& getBinder() = 0;
 
   Reconnector& getReconnector() {
@@ -80,7 +86,7 @@ public:
 private:
   void terminateConnection(const LinkId& link_id, LinkRefPtr* terminated_link_ref = NULL);
 
-  unsigned _ioProcId;
+  unsigned _ioProcId, _ioProcMgrId;
   smsc::logger::Logger* _logger;
   SwitchCircuitController& _switchCircuitCtrl;
   MessagePublisher _messagePublisher;
