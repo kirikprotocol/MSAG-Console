@@ -96,9 +96,13 @@ uint64_t Task::MessageRegionCache::fetchMessageId()
     std::vector< Region* >::const_iterator start = iter_;
     uint64_t rv = 0;
     do {
-        if ( ! (*iter_)->isSuspended && ! (*iter_)->messages.empty() ) {
+        if ( (*iter_)->isSuspended ) {
+            smsc_log_debug(log_,"cached region %s is suspended",(*iter_)->regionId.c_str());
+        } else if ( (*iter_)->messages.empty() ) {
+            smsc_log_debug(log_,"cached region %s is empty", (*iter_)->regionId.c_str());
+        } else {
             rv = (*iter_)->messages.front();
-            smsc_log_debug(log_,"message %llx is found in region %s",rv,(*iter_)->regionId.c_str());
+            smsc_log_debug(log_,"message %llx is found in cached region %s",rv,(*iter_)->regionId.c_str());
             (*iter_)->messages.pop_front();
         }
         ++iter_;
@@ -798,7 +802,7 @@ bool Task::finalizeMessage(uint64_t msgId, MessageState state, int smppStatus )
         store.setMsgState(msgId,DELETED, info.saveFinalState ? &msg : 0);
       }
 
-      if ( info.saveFinalState && ! msg.userData.empty() ) {
+      if ( info.saveFinalState ) {
           finalStateSaver_->save(now,info,msg,state,smppStatus,store.isProcessed());
       }
       result = true;
