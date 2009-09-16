@@ -22,9 +22,10 @@ public:
   {}
 
 protected:
-  virtual IOProcessor* createNewIOProcessor() {
+  virtual IOProcessorRefPtr createNewIOProcessor() {
     const IOParameters& ioParams = getParameters();
-    IOProcessor* newIOProcessor = new IO_PROCESSOR(_ioProcId++, *_switchCircuitCtrl,
+    IOProcessor* newIOProcessor = new IO_PROCESSOR(_ioProcId++, getId(),
+                                                   *_switchCircuitCtrl,
                                                    ioParams.maxEventsQueueSz,
                                                    ioParams.reconnectAttemptPeriod,
                                                    ioParams.maxOutPacketsQueueSz,
