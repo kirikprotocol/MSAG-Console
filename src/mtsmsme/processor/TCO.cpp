@@ -32,7 +32,9 @@ TCO::~TCO()
 }
 TSM* TCO::TC_BEGIN(AC& appcntx)
 {
-  TSM* tsm = 0; TrId ltrid;
+  TSM* tsm = 0;
+  // ltrid is not using in TSM constructor, so set fake value for compiler
+  TrId ltrid; ltrid.size=4;
   try {
     tsm = createOutgoingTSM(ltrid,appcntx,this);
   } catch (Exception exc ) {
