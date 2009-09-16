@@ -57,7 +57,7 @@ void MTFTSM::sendResponse(int result,int iid)
         msg.setComponent(result, iid);
         std::vector<unsigned char> rsp;
         tco->encoder.encode_mt_resp(msg,rsp);
-        tco->SCCPsend(raddrlen,&raddr[0],laddrlen,laddr,rsp.size(),&rsp[0]);
+        tco->SCCPsend(raddrlen,&raddr[0],laddrlen,laddr,(uint16_t)rsp.size(),&rsp[0]);
         DumpSentSms(req.sms,logger);
       }
       else
@@ -67,7 +67,7 @@ void MTFTSM::sendResponse(int result,int iid)
         msg.setComponent(result, iid);
         std::vector<unsigned char> rsp;
         tco->encoder.encode_mt_resp(msg,rsp);
-        tco->SCCPsend(raddrlen,&raddr[0],laddrlen,laddr,rsp.size(),&rsp[0]);
+        tco->SCCPsend(raddrlen,&raddr[0],laddrlen,laddr,(uint16_t)rsp.size(),&rsp[0]);
         DumpSentSms(req.sms,logger);
         tco->TSMStopped(ltrid);
       }
@@ -79,7 +79,7 @@ void MTFTSM::sendResponse(int result,int iid)
       msg.setComponent(result, iid);
       std::vector<unsigned char> rsp;
       tco->encoder.encode_mt_resp(msg,rsp);
-      tco->SCCPsend(raddrlen,&raddr[0],laddrlen,laddr,rsp.size(),&rsp[0]);
+      tco->SCCPsend(raddrlen,&raddr[0],laddrlen,laddr,(uint16_t)rsp.size(),&rsp[0]);
       smsc_log_debug(logger,"tsm otid=%s receive RESULT, END sent",ltrid.toString().c_str());
       DumpSentSms(req.sms,logger);
       tco->TSMStopped(ltrid);
@@ -93,7 +93,7 @@ void MTFTSM::sendResponse(int result,int iid)
     msg.setComponent(result, iid);
     std::vector<unsigned char> rsp;
     tco->encoder.encode_mt_resp(msg,rsp);
-    tco->SCCPsend(raddrlen,&raddr[0],laddrlen,laddr,rsp.size(),&rsp[0]);
+    tco->SCCPsend(raddrlen,&raddr[0],laddrlen,laddr,(uint16_t)rsp.size(),&rsp[0]);
     smsc_log_debug(logger,"tsm otid=%s receive RESULT, END sent",ltrid.toString().c_str());
     DumpSentSms(req.sms,logger);
     tco->TSMStopped(ltrid);
@@ -113,7 +113,7 @@ void MTFTSM::BEGIN(Message& msg)
     std::vector<unsigned char> mtbuf;
     mtbuf = msg.getComponent();
     MtForward mtf(logger);
-    mtf.decode((void *)&mtbuf[0],mtbuf.size());
+    mtf.decode((void *)&mtbuf[0],(int)mtbuf.size());
 
 
     //req =  new MTR(this);
@@ -127,13 +127,13 @@ void MTFTSM::BEGIN(Message& msg)
                        "tsm otid=%s receive BEGIN with MALFORMED(%s) component, mms=%d, END sent, ",
                        ltrid.toString().c_str(),exc.what(),req.mms);
 
-        EndMsg msg;
-        msg.setTrId(rtrid);
-        msg.setDialog(appcntx);
-        msg.setComponent(1025, req.invokeId);// any not OK result, FYI 1025 = 'no route' :)
+        EndMsg end;
+        end.setTrId(rtrid);
+        end.setDialog(appcntx);
+        end.setComponent(1025, req.invokeId);// any not OK result, FYI 1025 = 'no route' :)
         std::vector<unsigned char> rsp;
-        tco->encoder.encode_mt_resp(msg,rsp);
-        tco->SCCPsend(raddrlen,&raddr[0],laddrlen,laddr,rsp.size(),&rsp[0]);
+        tco->encoder.encode_mt_resp(end,rsp);
+        tco->SCCPsend(raddrlen,&raddr[0],laddrlen,laddr,(uint16_t)rsp.size(),&rsp[0]);
         tco->TSMStopped(ltrid);
         return;
     }
@@ -145,13 +145,13 @@ void MTFTSM::BEGIN(Message& msg)
   }
   else
   {
-    ContMsg msg;
-    msg.setOTID(ltrid);
-    msg.setDTID(rtrid);
-    msg.setDialog(appcntx);
+    ContMsg cont;
+    cont.setOTID(ltrid);
+    cont.setDTID(rtrid);
+    cont.setDialog(appcntx);
     std::vector<unsigned char> rsp;
-    tco->encoder.encode_mt_resp(msg,rsp);
-    tco->SCCPsend(raddrlen,&raddr[0],laddrlen,laddr,rsp.size(),&rsp[0]);
+    tco->encoder.encode_mt_resp(cont,rsp);
+    tco->SCCPsend(raddrlen,&raddr[0],laddrlen,laddr,(uint16_t)rsp.size(),&rsp[0]);
     st = ACTIVE;
     smsc_log_debug(logger,"tsm otid=%s receive BEGIN with no component, CONTINUE sent",ltrid.toString().c_str());
   }
@@ -167,7 +167,7 @@ void MTFTSM::CONTINUE_received(uint8_t cdlen,
     std::vector<unsigned char> mtbuf;
     mtbuf = msg.getComponent();
     MtForward mtf(logger);
-    mtf.decode((void *)&mtbuf[0],mtbuf.size());
+    mtf.decode((void *)&mtbuf[0],(int)mtbuf.size());
 
 
     //req =  new MTR(this);
@@ -181,13 +181,13 @@ void MTFTSM::CONTINUE_received(uint8_t cdlen,
                        "tsm otid=%s receive CONTINUE with MALFORMED(%s) component, mms=%d, END sent, ",
                        ltrid.toString().c_str(),exc.what(),req.mms);
 
-        EndMsg msg;
-        msg.setTrId(rtrid);
-        msg.setDialog(appcntx);
-        msg.setComponent(1025, req.invokeId);// any not OK result, FYI 1025 = 'no route' :)
+        EndMsg end;
+        end.setTrId(rtrid);
+        end.setDialog(appcntx);
+        end.setComponent(1025, req.invokeId);// any not OK result, FYI 1025 = 'no route' :)
         std::vector<unsigned char> rsp;
-        tco->encoder.encode_mt_resp(msg,rsp);
-        tco->SCCPsend(raddrlen,&raddr[0],laddrlen,laddr,rsp.size(),&rsp[0]);
+        tco->encoder.encode_mt_resp(end,rsp);
+        tco->SCCPsend(raddrlen,&raddr[0],laddrlen,laddr,(uint16_t)rsp.size(),&rsp[0]);
         tco->TSMStopped(ltrid);
         return;
     }

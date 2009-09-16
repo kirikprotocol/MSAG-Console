@@ -188,7 +188,7 @@ int main(int argc, char** argv)
         unsigned int escaped_len = 0; // TP-User-Data-Length
         //unsigned maxlen=(unsigned)(ET96MAP_MAX_SIGNAL_INFO_LEN-(pdu_ptr+1-(pdu->signalInfo+1)));
         int _newbuflen = ConvertText27bit(
-            (unsigned char *)smstextlatin1,strlen(smstextlatin1),
+            (unsigned char *)smstextlatin1,(unsigned)strlen(smstextlatin1),
             smstext,&escaped_len,0,(unsigned)sizeof(smstext));
 
         OCTET_STRING_DECL(dest,20);
