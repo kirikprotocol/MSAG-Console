@@ -61,6 +61,7 @@ public class RegionEditBean extends SmscBean {
         sendSpeed = String.valueOf(region.getBandWidth());
         email = region.getEmail();
         timezone = region.getTimezone().getID();
+        infoSmeSmsc = region.getInfoSmeSmsc();
         checkedSources = new String[region.getSubjects().size()];
         int i = 0;
         for (Iterator iter = region.getSubjects().iterator(); iter.hasNext(); i++) {
