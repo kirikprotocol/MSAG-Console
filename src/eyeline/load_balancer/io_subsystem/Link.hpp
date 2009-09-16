@@ -15,16 +15,19 @@ class PacketWriter;
 class Link : public Connection {
 public:
   Link()
-  : _packetWriter(NULL), _connectTimeout(0),
+  : _linkIndex(0), _packetWriter(NULL), _connectTimeout(0),
     _bindRespWaitTimeout(0), _unbindRespWaitTimeout(0)
   {}
 
-  Link(unsigned int connect_timeout, unsigned int bind_resp_wait_timeout,
+  Link(unsigned int link_index,
+       unsigned int connect_timeout, unsigned int bind_resp_wait_timeout,
        unsigned int unbind_resp_wait_timeout)
-  : _packetWriter(NULL), _connectTimeout(connect_timeout),
+  : _linkIndex(link_index), _packetWriter(NULL), _connectTimeout(connect_timeout),
     _bindRespWaitTimeout(bind_resp_wait_timeout),
     _unbindRespWaitTimeout(unbind_resp_wait_timeout)
   {}
+
+  unsigned int getIndex() const { return _linkIndex; }
 
   virtual void establish() = 0;
   virtual void close() = 0;
@@ -54,7 +57,7 @@ protected:
   PacketWriter* _packetWriter;
 
 private:
-  unsigned int _connectTimeout, _bindRespWaitTimeout, _unbindRespWaitTimeout;
+  unsigned int _linkIndex, _connectTimeout, _bindRespWaitTimeout, _unbindRespWaitTimeout;
   LinkId _relatedLinkSetId;
 };
 
