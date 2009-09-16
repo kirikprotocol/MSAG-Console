@@ -13,7 +13,8 @@ SessionManagementMessageHandlers::processBindRequest(const BIND_REQUEST& message
     if ( !isSrcLinkIncoming )
       throw smsc::util::Exception("SessionManagementMessageHandlers::processBindRequest::: link with id=%s is not link to sme",
                                   src_link_id.toString().c_str());
-    SmeRegistry::getInstance().registerSme(new SmeInfo(message.getSystemId(), src_link_id,
+    SmeRegistry::getInstance().registerSme(new SmeInfo(message.getSystemId(), src_link_id, dstLinkSetId,
+                                                       io_processor.getId(), io_processor.getIOProcessorMgrId(),
                                                        new BIND_REQUEST(message)));
     io_processor.getBinder().bind(dstLinkSetId, message);
   }
