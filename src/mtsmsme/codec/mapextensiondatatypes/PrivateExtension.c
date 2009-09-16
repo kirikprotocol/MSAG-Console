@@ -13,7 +13,7 @@ static asn_TYPE_member_t asn_MBR_PrivateExtension_1[] = {
 		"extId"
 		},
 	{ ATF_OPEN_TYPE | ATF_NOFLAGS, 0, offsetof(struct PrivateExtension, extType),
-		-1 /* Ambiguous tag (ANY?) */,
+	  (ber_tlv_tag_t)-1 /* Ambiguous tag (ANY?) */,
 		0,
 		&asn_DEF_ANY,
 		0,	/* Defer constraints checking to the member type */

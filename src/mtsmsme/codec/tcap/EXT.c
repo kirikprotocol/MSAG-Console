@@ -98,7 +98,7 @@ static asn_TYPE_member_t asn_MBR_EXT_1[] = {
 		"data-value-descriptor"
 		},
 	{ ATF_NOFLAGS, 0, offsetof(struct EXT, encoding),
-		-1 /* Ambiguous tag (CHOICE?) */,
+	  (ber_tlv_tag_t)-1 /* Ambiguous tag (CHOICE?) */,
 		0,
 		&asn_DEF_encoding_5,
 		0,	/* Defer constraints checking to the member type */

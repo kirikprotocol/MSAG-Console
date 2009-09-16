@@ -70,7 +70,7 @@ static asn_TYPE_member_t asn_MBR_Abort_1[] = {
 		"dtid"
 		},
 	{ ATF_POINTER, 1, offsetof(struct Abort, reason),
-		-1 /* Ambiguous tag (CHOICE?) */,
+	  (ber_tlv_tag_t)-1 /* Ambiguous tag (CHOICE?) */,
 		0,
 		&asn_DEF_reason_3,
 		0,	/* Defer constraints checking to the member type */

@@ -13,7 +13,7 @@ static asn_TYPE_member_t asn_MBR_MT_ForwardSM_VGCS_Arg_1[] = {
 		"asciCallReference"
 		},
 	{ ATF_NOFLAGS, 0, offsetof(struct MT_ForwardSM_VGCS_Arg, sm_RP_OA),
-		-1 /* Ambiguous tag (CHOICE?) */,
+	  (ber_tlv_tag_t)-1 /* Ambiguous tag (CHOICE?) */,
 		0,
 		&asn_DEF_SM_RP_OA,
 		0,	/* Defer constraints checking to the member type */

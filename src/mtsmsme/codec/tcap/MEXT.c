@@ -98,7 +98,7 @@ static asn_TYPE_member_t asn_MBR_MEXT_1[] = {
 		"data-value-descriptor"
 		},
 	{ ATF_NOFLAGS, 0, offsetof(struct MEXT, mencoding),
-		-1 /* Ambiguous tag (CHOICE?) */,
+	  (ber_tlv_tag_t)-1 /* Ambiguous tag (CHOICE?) */,
 		0,
 		&asn_DEF_mencoding_5,
 		0,	/* Defer constraints checking to the member type */

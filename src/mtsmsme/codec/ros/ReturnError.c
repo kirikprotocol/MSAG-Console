@@ -13,7 +13,7 @@ static asn_TYPE_member_t asn_MBR_ReturnError_1[] = {
 		"invokeId"
 		},
 	{ ATF_NOFLAGS, 0, offsetof(struct ReturnError, errcode),
-		-1 /* Ambiguous tag (CHOICE?) */,
+	  (ber_tlv_tag_t)-1 /* Ambiguous tag (CHOICE?) */,
 		0,
 		&asn_DEF_Error,
 		0,	/* Defer constraints checking to the member type */
@@ -22,7 +22,7 @@ static asn_TYPE_member_t asn_MBR_ReturnError_1[] = {
 		"errcode"
 		},
 	{ ATF_OPEN_TYPE | ATF_POINTER, 1, offsetof(struct ReturnError, parameter),
-		-1 /* Ambiguous tag (ANY?) */,
+	  (ber_tlv_tag_t)-1 /* Ambiguous tag (ANY?) */,
 		0,
 		&asn_DEF_ANY,
 		0,	/* Defer constraints checking to the member type */
