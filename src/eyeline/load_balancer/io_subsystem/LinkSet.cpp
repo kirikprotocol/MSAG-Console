@@ -11,7 +11,8 @@ const LinkId LinkSet::EMPTY_LINK_ID;
 LinkSet::LinkSet(const LinkId& link_id, unsigned total_number_of_links)
   : _logger(smsc::logger::Logger::getInstance("io_subsys")),
     _totalNumberOfLinks(total_number_of_links),
-    _arrayOfLinks(new LinkId[total_number_of_links]), _actualNumOfLinks(0)
+    _arrayOfLinks(new LinkId[total_number_of_links]), _actualNumOfLinks(0),
+    _activeNodes(total_number_of_links, false)
 {
   setLinkId(link_id);
 }
@@ -19,13 +20,19 @@ LinkSet::LinkSet(const LinkId& link_id, unsigned total_number_of_links)
 void
 LinkSet::addLink(LinkRefPtr& link)
 {
+  if ( link->getIndex() >= _totalNumberOfLinks + 1 )
+    throw smsc::util::Exception("LinkSet::addLink::: index value of connection [%d] in configuration file is greater than max number of connection [%d]",
+                                link->getIndex(), _totalNumberOfLinks + 1);
   smsc::core::synchronization::WriteLockGuard synchronize(_lock);
+  if ( _activeNodes[link->getIndex() - 1] )
+    throw smsc::util::Exception("LinkSet::addLink::: link with idx=%d has been already added; possibly you have bad configuration with duplicated index value for different link sections", link->getIndex());
   _links.insert(std::make_pair(link->getLinkId(), link));
   _arrayOfLinks[_actualNumOfLinks++] = link->getLinkId();
   LinkId emptyLinkId;
-  if ( link->getRelatedLinkSetId() == emptyLinkId )
+  if ( link->getRelatedLinkSetId() == emptyLinkId ) {
     link->setLinkSetId(getLinkId());
-  else if ( link->getRelatedLinkSetId() != getLinkId() )
+    _activeNodes[link->getIndex() - 1] = true;
+  } else if ( link->getRelatedLinkSetId() != getLinkId() )
     throw smsc::util::Exception("LinkSet::addLink::: link being added [id='%s'] pertain to another linkset with id='%s'",
                                 link->getLinkId().toString().c_str(), link->getRelatedLinkSetId().toString().c_str());
 }
@@ -40,6 +47,7 @@ LinkSet::removeLink(const LinkId& link_id)
 
   iter->second->resetLinkSetId();
   _links.erase(iter);
+  _activeNodes[iter->second->getIndex() - 1] = false;
   for(unsigned i=0; i<_actualNumOfLinks; ++i) {
     if ( _arrayOfLinks[i] == link_id ) {
       _arrayOfLinks[i] = EMPTY_LINK_ID;
@@ -81,6 +89,12 @@ LinkSet::isEmpty() const
 {
   smsc::core::synchronization::ReadLockGuard synchronize(_lock);
   return _links.empty();
+}
+
+std::vector<bool>
+LinkSet::getActivityIndicators() const
+{
+  return _activeNodes;
 }
 
 bool
