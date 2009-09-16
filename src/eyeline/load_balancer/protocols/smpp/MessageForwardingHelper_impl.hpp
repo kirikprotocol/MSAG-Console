@@ -129,7 +129,7 @@ MessageForwardingHelper::forwardSmppResponseToSmsc(const MESSAGE& message,
                                   src_link_id.toString().c_str());
     io_subsystem::LinkSetRefPtr dstLinkSet = io_processor.getLinkSet(dstLinkSetId);
     if ( dstLinkSet.Get() ) {
-      unsigned linkNumInLinkSet = message.getSequenceNumber() % dstLinkSet->getPresetNumberOfLinks();
+      unsigned linkNumInLinkSet = message.getSequenceNumber() % dstLinkSet->getMaxNumberOfLinks();
       dstLinkSet->send(message, linkNumInLinkSet);
     } else
       throw smsc::util::Exception("MessageForwardingHelper::forwardSmppResponseToSmsc::: there isn't linkset for id=%s",
@@ -155,7 +155,7 @@ MessageForwardingHelper::forwardServiceRequestToConcreteSmsc(const MESSAGE& mess
                                   src_link_id.toString().c_str());
     io_subsystem::LinkSetRefPtr dstLinkSet = io_processor.getLinkSet(dstLinkSetId);
     if ( dstLinkSet.Get() ) {
-      unsigned linkNumInLinkSet = static_cast<unsigned>(message.getMessageId() % dstLinkSet->getPresetNumberOfLinks());
+      unsigned linkNumInLinkSet = static_cast<unsigned>(message.getMessageId() % dstLinkSet->getMaxNumberOfLinks());
       dstLinkSet->send(message, linkNumInLinkSet);
     } else
       throw smsc::util::Exception("MessageForwardingHelper::forwardServiceRequestToConcreteSmsc::: there isn't linkset for id=%s",
