@@ -15,6 +15,8 @@
 #include "eyeline/load_balancer/io_subsystem/IOProcessorMgrRegistry.hpp"
 #include "eyeline/load_balancer/io_subsystem/MessageHandlersFactoryRegistry.hpp"
 
+#include "eyeline/load_balancer/cluster/ClusterSubsystem.hpp"
+
 extern "C"
 void
 sig_handler(int signo)
@@ -57,7 +59,20 @@ int main(int argc, char** argv)
     smsc::util::config::Manager::init(cfgFile);
     smsc::util::config::Manager& manager = smsc::util::config::Manager::getInstance();
 
-    smsc::util::config::ConfigView smppConfigView(manager, "smpp");
+    smsc::util::config::ConfigView loadBalancerConfigView(manager, "load_balancer");
+    if ( !loadBalancerConfigView.findSubSection("smpp") ) {
+      smsc_log_error(logger, "invalid config format: subsection 'smpp' is absent in section 'load_balancer' [%s]. Terminate.");
+      return 1;
+    }
+    std::auto_ptr<smsc::util::config::ConfigView>
+      smppConfigView(loadBalancerConfigView.getSubConfig("smpp"));
+
+    if ( !loadBalancerConfigView.findSubSection("cluster") ) {
+      smsc_log_error(logger, "invalid config format: subsection 'cluster' is absent in section 'load_balancer' [%s]. Terminate.");
+      return 1;
+    }
+    std::auto_ptr<smsc::util::config::ConfigView>
+      clusterConfigView(loadBalancerConfigView.getSubConfig("cluster"));
 
     sigset(SIGTERM,sig_handler);
 
@@ -65,11 +80,16 @@ int main(int argc, char** argv)
     smppSubsystem.initialize();
 
     eyeline::load_balancer::io_subsystem::IOSubsystem ioSubsystem;
-    ioSubsystem.initialize(smppConfigView);
+    ioSubsystem.initialize(*smppConfigView);
     ioSubsystem.start();
+
+    eyeline::load_balancer::cluster::ClusterSubsystem clusterSubsystem;
+    clusterSubsystem.initialize(*clusterConfigView);
+    clusterSubsystem.start();
 
     pause();
 
+    clusterSubsystem.stop();
     ioSubsystem.stop();
   } catch(std::exception& ex) {
     smsc_log_error(logger, "caught unexpected exception [%s]. Terminate.", ex.what());
