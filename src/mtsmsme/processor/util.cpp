@@ -180,9 +180,9 @@ std::string getAddressDescription(uint8_t len, uint8_t* buf)
       na &=0x7F;
       k = sprintf(tmp,"%d",na); tmp[k] = 0;
       res+=",NA=";res+=tmp;
-      char ai[32];
-      unpack_addr(ai,buf+i, (len - i)*2 - odd);
-      res+=",AI=";res+=ai;res+=")";
+      char dgts[32];
+      unpack_addr(dgts,buf+i, (len - i)*2 - odd);
+      res+=",AI=";res+=dgts;res+=")";
       break;
     }
     default: res+=" don't know how to decode";
