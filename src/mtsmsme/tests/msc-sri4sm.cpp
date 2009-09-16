@@ -91,7 +91,7 @@ class TrafficShaper: public SccpSender {
       {
         msgstart=gethrtime();
         millisleep((unsigned)(delay-msgproc-overdelay));
-        overdelay=(int)(gethrtime()-msgstart)/1000000-(delay-msgproc-overdelay);
+        overdelay=(int)((gethrtime()-msgstart)/1000000-(delay-msgproc-overdelay));
       }else
       {
         overdelay-=delay;
