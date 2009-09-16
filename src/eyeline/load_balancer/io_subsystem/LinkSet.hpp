@@ -4,6 +4,7 @@
 # include <sys/types.h>
 # include <string>
 # include <map>
+# include <vector>
 
 # include "logger/Logger.h"
 # include "eyeline/utilx/Exception.hpp"
@@ -43,8 +44,9 @@ public:
   }
   bool isEmpty() const;
 
-  unsigned getPresetNumberOfLinks() const { return _totalNumberOfLinks; }
+  virtual unsigned getMaxNumberOfLinks() const = 0;
 
+  std::vector<bool> getActivityIndicators() const;
 protected:
   smsc::logger::Logger* _logger;
   unsigned _totalNumberOfLinks;
@@ -52,8 +54,9 @@ protected:
   unsigned _actualNumOfLinks;
   typedef std::map<LinkId, LinkRefPtr> links_t;
   links_t _links;
+  std::vector<bool> _activeNodes;
   mutable smsc::core::synchronization::RWLock _lock;
-
+  static const unsigned MAX_SMSMC_IN_LINKSET = 16;
 public:
   class LinkSetIterator {
   public:
