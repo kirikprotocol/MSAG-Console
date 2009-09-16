@@ -11,12 +11,12 @@ namespace smpp {
 
 class SMPPIOProcessor : public io_subsystem::IOProcessor {
 public:
-  SMPPIOProcessor(unsigned io_proc_id,
+  SMPPIOProcessor(unsigned io_proc_id, unsigned io_proc_mgr_id,
                   io_subsystem::SwitchCircuitController& switch_circuit_ctrl,
                   unsigned max_events_queue_sz, unsigned reconnect_attempt_period,
                   unsigned max_out_packets_queue_size, unsigned max_num_of_event_processors,
                   unsigned max_links_per_processor)
-  : IOProcessor(io_proc_id, switch_circuit_ctrl,
+  : IOProcessor(io_proc_id, io_proc_mgr_id, switch_circuit_ctrl,
                 max_events_queue_sz, reconnect_attempt_period,
                 max_out_packets_queue_size, max_num_of_event_processors,
                 max_links_per_processor),
