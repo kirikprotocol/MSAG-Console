@@ -21,6 +21,9 @@ public:
 
   using io_subsystem::LinkSet::send;
   virtual io_subsystem::LinkId send(const io_subsystem::Message& message);
+
+  enum { MAX_NUM_OF_SMSC_IN_LINKSET=16 };
+  virtual unsigned getMaxNumberOfLinks() const { return MAX_NUM_OF_SMSC_IN_LINKSET; }
 private:
   unsigned _linkNumInSet;
   smsc::core::synchronization::Mutex _sendLock;
