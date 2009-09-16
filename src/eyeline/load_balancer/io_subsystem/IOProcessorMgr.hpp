@@ -6,8 +6,11 @@
 # include <string>
 
 # include "logger/Logger.h"
+# include "core/buffers/RefPtr.hpp"
 # include "core/threads/Thread.hpp"
+# include "core/synchronization/Mutex.hpp"
 # include "eyeline/corex/io/network/TCPServerSocket.hpp"
+# include "eyeline/load_balancer/io_subsystem/types.hpp"
 # include "eyeline/load_balancer/io_subsystem/IOProcessor.hpp"
 # include "eyeline/load_balancer/io_subsystem/IOParameters.hpp"
 # include "eyeline/load_balancer/io_subsystem/SwitchCircuitController.hpp"
@@ -33,12 +36,14 @@ public:
   void startup();
   void shutdown();
   void setParameters(const IOParameters& ioParameters);
-  IOProcessor* getVacantIOProcessor();
+
+  IOProcessorRefPtr getIOProcessor(unsigned io_proc_id);
 protected:
+  IOProcessorRefPtr getVacantIOProcessor();
   void _shutdown();
 
-  IOProcessor* registerIOProcessor(IOProcessor* io_processor);
-  virtual IOProcessor* createNewIOProcessor() = 0;
+  IOProcessorRefPtr registerIOProcessor(IOProcessor* io_processor);
+  virtual IOProcessorRefPtr createNewIOProcessor() = 0;
   const IOParameters& getParameters() const;
 
   unsigned _ioProcId;
@@ -52,7 +57,8 @@ private:
 
   MessagePublisher _newConnEventsPublisher;
   InputEventProcessorsPool _newConnEventsProcessor;
-  typedef std::map<unsigned, IOProcessor*> registered_ioprocs_t;
+  smsc::core::synchronization::Mutex _ioProcessorsLock;
+  typedef std::map<unsigned, IOProcessorRefPtr> registered_ioprocs_t;
   registered_ioprocs_t _ioProcessors;
   registered_ioprocs_t::iterator _currentVacantIOProcessorIter;
 

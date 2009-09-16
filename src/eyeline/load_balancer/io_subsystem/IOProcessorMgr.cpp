@@ -1,5 +1,6 @@
 #include <utility>
 
+#include "core/synchronization/MutexGuard.hpp"
 #include "eyeline/corex/io/network/TCPServerSocket.hpp"
 #include "IOProcessorMgr.hpp"
 #include "AcceptNewConnectionEvent.hpp"
@@ -41,8 +42,7 @@ IOProcessorMgr::Execute()
       corex::io::network::TCPSocket* newSocket = _listeningIface->accept();
       smsc_log_debug(_logger, "IOProcessorMgr::Execute::: accept returned new socket=[%s]",
                      newSocket->toString().c_str());
-      IOProcessor* vacantIOProcessor = getVacantIOProcessor();
-      _newConnEventsPublisher.publish(new AcceptNewConnectionEvent(*vacantIOProcessor,
+      _newConnEventsPublisher.publish(new AcceptNewConnectionEvent(getVacantIOProcessor(),
                                                                    *_switchCircuitCtrl,
                                                                    newSocket));
     } catch (std::exception& ex) {
@@ -76,6 +76,7 @@ IOProcessorMgr::_shutdown()
 {
   _listeningIface->close();
   _newConnEventsProcessor.shutdown();
+  smsc::core::synchronization::MutexGuard synchronize(_ioProcessorsLock);
   while ( !_ioProcessors.empty() ) {
     registered_ioprocs_t::iterator iter = _ioProcessors.begin();
     smsc_log_debug(_logger, "IOProcessorMgr::shutdown::: try shutdown IOProcessor with id=%d",
@@ -84,7 +85,6 @@ IOProcessorMgr::_shutdown()
       iter->second->shutdown();
     } catch (...) {}
 
-    delete iter->second;
     _ioProcessors.erase(iter);
   }
   smsc_log_debug(_logger, "IOProcessorMgr::shutdown::: IOProcessorMgr with id=%d has been stopped",
@@ -107,9 +107,11 @@ IOProcessorMgr::getParameters() const
     throw smsc::util::Exception("IOProcessorMgr::getParameters::: IO parameters wasn't set");
 }
 
-IOProcessor*
+IOProcessorRefPtr
 IOProcessorMgr::getVacantIOProcessor()
 {
+  smsc::core::synchronization::MutexGuard synchronize(_ioProcessorsLock);
+
   if ( _currentVacantIOProcessorIter != _ioProcessors.end() ) {
     if ( _currentVacantIOProcessorIter->second->canProcessNewSocket() ) {
       smsc_log_debug(_logger, "IOProcessorMgr::getVacantIOProcessor::: return free IOProcessor with id=%d",
@@ -131,9 +133,21 @@ IOProcessorMgr::getVacantIOProcessor()
   return createNewIOProcessor();
 }
 
-IOProcessor*
+IOProcessorRefPtr
+IOProcessorMgr::getIOProcessor(unsigned io_proc_id)
+{
+  smsc::core::synchronization::MutexGuard synchronize(_ioProcessorsLock);
+  registered_ioprocs_t::iterator iter = _ioProcessors.find(io_proc_id);
+  if ( iter == _ioProcessors.end() )
+    return IOProcessorRefPtr(NULL);
+  return iter->second;
+}
+
+IOProcessorRefPtr
 IOProcessorMgr::registerIOProcessor(IOProcessor* io_processor)
 {
+  // because registerIOProcessor called only from createNewIOProcessor() method
+  // _ioProcessorsLock has been already acquired, so there we don't try acquire it
   std::pair<registered_ioprocs_t::iterator, bool> res = _ioProcessors.insert(std::make_pair(io_processor->getId(), io_processor));
   if ( !res.second )
     throw smsc::util::Exception("IOProcessorMgr::registerIOProcessor::: IOProcessor with id = [%d] already registered", io_processor->getId());
@@ -142,7 +156,7 @@ IOProcessorMgr::registerIOProcessor(IOProcessor* io_processor)
 
   smsc_log_debug(_logger, "IOProcessorMgr::registerIOProcessor::: new IOProcessor with id=%d has been registered",
                  io_processor->getId());
-  return io_processor;
+  return res.first->second;
 }
 
 }}}
