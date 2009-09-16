@@ -60,8 +60,10 @@ public class SiebelFinalStateThread extends Thread {
             processFile(files[i]);
           }
         }
-        Thread.sleep(10000);
-      }
+        try{
+          Thread.sleep(10000);
+        }catch(InterruptedException e){}
+    }
       log_.info("final state thread is shutdowned");
     } catch ( Exception exc ) {
       log_.error("exc in run: " + exc.getMessage() );

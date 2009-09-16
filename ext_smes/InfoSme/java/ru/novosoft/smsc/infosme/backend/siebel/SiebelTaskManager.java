@@ -95,7 +95,9 @@ public class SiebelTaskManager implements Runnable{
             rs.close();
           }
         }
-        Thread.sleep(timeout);
+        try{
+          Thread.sleep(timeout);
+        }catch(InterruptedException e){}
       }
 
       if(logger.isDebugEnabled()) {
@@ -295,7 +297,7 @@ public class SiebelTaskManager implements Runnable{
   private static Collection getMessages(int limit, Date sendDate, ResultSet messages) throws SiebelException {
     int i = 0;
     Collection result = new LinkedList();
-    while(messages.next() && i<limit){
+    while(i<limit && messages.next()){
       SiebelMessage sM = (SiebelMessage)messages.get();
       final Message msg = new Message();
       msg.setAbonent(sM.getMsisdn());
