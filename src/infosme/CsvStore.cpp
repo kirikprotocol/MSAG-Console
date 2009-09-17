@@ -159,10 +159,15 @@ bool CsvStore::isProcessed()
         for ( FileMap::const_iterator fit = dir.files.begin(); fit != dir.files.end(); ++fit ) {
             CsvFile* f = fit->second;
             if ( !f ) continue;
-            if ( f->readAll && f->openMessages == 0 ) { continue; }
+            if ( f->readAll && f->openMessages == 0 ) {
+                smsc_log_debug(log,"isProc: file %s finished",f->fileName().c_str());
+                continue; 
+            }
+            smsc_log_debug(log,"isProc: file %s readAll=%u openMess=%u",f->fileName().c_str(),unsigned(f->readAll),unsigned(f->openMessages));
             return false;
         }
     }
+    smsc_log_info(log,"isProc: storage is processed");
     return true;
 }
 
@@ -514,6 +519,7 @@ void CsvStore::CsvFile::Close(bool argProcessed)
   {
     return;
   }
+  smsc_log_debug(log_,"file %s is being closed",fileName().c_str());
   if(!processed && argProcessed)
   {
     std::string fn=fullPath();
@@ -526,6 +532,7 @@ void CsvStore::CsvFile::Close(bool argProcessed)
   f.Close();
   timeMap.clear();
   msgMap.clear();
+  openMessages = 0;
 }
 
 CsvStore::CsvFile::Record& CsvStore::CsvFile::findRecord(uint64_t msgId)
@@ -735,6 +742,8 @@ uint64_t CsvStore::CsvFile::AppendRecord(uint8_t state,time_t fdate,const Messag
   f.Flush();
   readAll=false;
   if(state<=ENROUTE)openMessages++;
+    smsc_log_debug(log_,"file %s msg #%llx added, openMsg=%u",
+                   fileName().c_str(),msgId,unsigned(openMessages));
   return msgId;
 }
 
