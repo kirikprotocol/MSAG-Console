@@ -563,6 +563,7 @@ sub process{
     {
       $makeinrec=0;
     }
+    
 		
     
     my $outfields={};
@@ -570,6 +571,14 @@ sub process{
     $outfields->{INV_SERVICE_ID}=$infields->{SERVICE_ID}==0?22:$infields->{SERVICE_ID};
     $outfields->{SERVICE_TYPE}='0';
     $outfields->{ACTION_CODE}='';
+    
+    #17.09.2009, by request of MTS
+    if($infields->{SRC_SME_ID} eq 'pcmes' || $infields->{SRC_SME_ID} eq 'pcmes2')
+    {
+      $outfields->{CBOSSCDR_ID3}=$infields->{SRC_SME_ID};
+    }
+    
+    
     if( $infields->{BEARER_TYPE} == 1 )
     {
       $outfields->{INV_SERVICE_ID}='ff';

@@ -11,7 +11,7 @@ my @OUT_FIELDS;
 {field=>'DATA_LENGTH',width=>10},               # pos=41
 {field=>'PAYER_IMSI',width=>21},                # pos=51
 {field=>'PAYER_ADDR',width=>21},                # pos=72
-{value=>'',width=>21},                          # pos=93
+{field=>'CBOSSCDR_ID3',width=>21},              # pos=93
 {field=>'OTHER_ADDR',width=>31},                # pos=114
 {value=>'',width=>31},                          # pos=145
 {value=>'',width=>17},                          # pos=176
