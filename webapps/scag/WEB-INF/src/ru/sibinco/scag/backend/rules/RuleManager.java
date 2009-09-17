@@ -838,7 +838,8 @@ public class RuleManager
 
             tempFile = composeRuleBackFile( transport, ruleId, ".tmp" );
             out = new PrintWriter( new OutputStreamWriter( new FileOutputStream(tempFile), "UTF-8" ) ); //alter out = new PrintWriter( new FileWriter(newFile) );
-            ruleWriter( reader, out, STRING_WRITER );
+//            ruleWriter( reader, out, STRING_WRITER );
+            ruleWriter( reader, out, CHAR_WRITER );
 
 //            backFile = new File( tempFile.getAbsolutePath().substring(0, tempFile.getAbsolutePath().lastIndexOf("/")),
 //                                 tempFile.getName()+Functions.suffixDateFormat.format(new Date()) );
@@ -893,7 +894,8 @@ public class RuleManager
 
               tempFile = composeRuleBackFile( transport, ruleId, ".tmp" );
               out = new PrintWriter( new OutputStreamWriter( new FileOutputStream(tempFile), "UTF-8" ) ); //alter out = new PrintWriter( new FileWriter(newFile) );
-              ruleWriter( reader, out, STRING_WRITER );
+//              ruleWriter( reader, out, STRING_WRITER );
+              ruleWriter( reader, out, CHAR_WRITER );
 
 //            backFile = new File( tempFile.getAbsolutePath().substring(0, tempFile.getAbsolutePath().lastIndexOf("/")),
 //                                 tempFile.getName()+Functions.suffixDateFormat.format(new Date()) );
@@ -944,7 +946,8 @@ public class RuleManager
 
             tempFile = composeRuleBackFile( transport, ruleId, ".tmp" );
             out = new PrintWriter( new OutputStreamWriter( new FileOutputStream(tempFile), "UTF-8" ) ); //alter out = new PrintWriter( new FileWriter(newFile) );
-            ruleWriter( reader, out, STRING_WRITER );
+//            ruleWriter( reader, out, STRING_WRITER );
+            ruleWriter( reader, out, CHAR_WRITER );
 
 //            backFile = new File( tempFile.getAbsolutePath().substring(0, tempFile.getAbsolutePath().lastIndexOf("/")),
 //                                 tempFile.getName()+Functions.suffixDateFormat.format(new Date()) );
