@@ -83,7 +83,7 @@ void CsvStore::Init()
       {
         f->processed=true;
       }
-      smsc_log_debug(log,"smsc file found: %s, proc=%u",f->fullPath().c_str(),f->processed ? 1 : 0);
+      smsc_log_debug(log,"csv file found: %s, proc=%u",f->fullPath().c_str(),f->processed ? 1 : 0);
       dir->files.insert(FileMap::value_type(hour,f));
     }
   }

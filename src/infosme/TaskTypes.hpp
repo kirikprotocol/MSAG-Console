@@ -80,7 +80,7 @@ namespace infosme{
           : uid(0), enabled(true), priority(0),
             retryOnFail(false), replaceIfPresent(false),
             trackIntegrity(false), transactionMode(false), keepHistory(false),
-            saveFinalState(true), // FIXME: change to false
+            saveFinalState(false),
             flash(false),
             endDate(-1), validityPeriod(-1), validityDate(-1),
             activePeriodStart(-1), activePeriodEnd(-1), activeWeekDays(0),
