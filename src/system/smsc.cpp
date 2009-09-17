@@ -437,6 +437,26 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
   }
 
   try{
+    const char* ndsmes=cfg.cfgman->getString("core.noDivertSmes");
+    if(ndsmes)
+    {
+      const char* comma=strchr(ndsmes,',');
+      const char* last=ndsmes;
+      while(comma)
+      {
+        nodivertSmes.insert(std::string(last,comma-last));
+        last=comma+1;
+        comma=strchr(last,',');
+      }
+      nodivertSmes.insert(last);
+    }
+    smsc_log_info(log,"%d smes added to nodivert list",nodivertSmes.size());
+  }catch(...)
+  {
+
+  }
+
+  try{
     RouteManager::EnableSmeRouters(cfg.cfgman->getBool("core.srcSmeSeparateRouting"));
   }catch(...)
   {

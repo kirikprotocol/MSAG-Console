@@ -261,7 +261,7 @@ public:
   SmeAdministrator* getSmeAdmin(){return &smeman;}
 
   void RejectSms(const SmscCommand&);
-  
+
   void incRejected()
   {
     MutexGuard g(perfMutex);
@@ -566,6 +566,10 @@ public:
     return scheduler->getStoreSize()>schedulerHardLimit;
   }
 
+  bool isNoDivert(const std::string& smeId)
+  {
+    return nodivertSmes.find(smeId)!=nodivertSmes.end();
+  }
 
 protected:
 
@@ -730,6 +734,8 @@ protected:
   EventMonitor idleMon;
 
   INManComm* inManCom;
+
+  std::set<std::string> nodivertSmes;
 
   bool smartMultipartForward;
   int speedLogFlushPeriod;
