@@ -340,6 +340,7 @@ public class SiebelTaskManager implements Runnable{
       task.setActivePeriodEnd(cfg.getSiebelTPeriodEnd());
       task.setTransactionMode(cfg.isSiebelTTrMode());
       task.setDelivery(true);
+      task.setSaveFinalState(true);
       System.out.println("Validaty period: "+siebelTask.getExpPeriod());
       if(siebelTask.getExpPeriod() != null && siebelTask.getExpPeriod().intValue() != 0) {
         if(siebelTask.getExpPeriod().intValue() > 24) {
