@@ -117,7 +117,8 @@ void loadRoutes(RouteManager* rm,const RouteConfig& rc,bool traceit)
               }
               catch(exception& e)
               {
-                __warning2__("[route skiped] : %s",e.what());
+                __warning2__("[route skiped] %s -> %s: %s",
+                             rinfo.srcSmeSystemId.c_str(), rinfo.smeSystemId.c_str(), e.what());
               }
             }
           }
