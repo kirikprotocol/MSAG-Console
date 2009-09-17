@@ -1193,6 +1193,10 @@ StateType StateMachine::submit(Tuple& t)
     sms->setIntProperty(Tag::SMSC_TRANSLIT,0);
   }
 
+  if(smsc->isNoDivert(sms->getSourceSmeId()))
+  {
+    profile.divert="";
+  }
 
   bool diverted=false;
 
@@ -4184,6 +4188,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
         Task task(uniqueId,dialogId2,dgortr?new SMS(sms):0);
         task.messageId=t.msgId;
         task.inDlgId=t.command->get_resp()->get_inDlgId();
+        task.diverted=t.command->get_resp()->get_diverted();
         if ( !smsc->tasks.createTask(task,dest_proxy->getPreferredTimeout()) )
         {
           __warning__("CONCAT: can't create task");
