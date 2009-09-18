@@ -114,11 +114,10 @@ USSManService::onConnectOpening(smsc::inman::interaction::Server* srv,
                  _logId, sock->getSocket());
   USSManConnect *ussCon = new USSManConnect(conn->getId(), _logger, _cfg);
   if (ussCon) {
+    smsc_log_info(_logger, "%s: New connect[%u] was created", _logId, sockId);
     smsc::core::synchronization::MutexGuard guard(_mutex);
     _ussConnects.insert(UssConnMap_t::value_type(sock->getSocket(), ussCon));
     conn->addListener(ussCon);
-
-    smsc_log_debug(_logger, "%s: New Connect was created", _logId);
   }
   return conn.release();
 }
