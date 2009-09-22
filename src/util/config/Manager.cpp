@@ -37,7 +37,7 @@ Manager::Manager()
       DOMElement *elem = document->getDocumentElement();
       __trace__("config readed");
       config.parse(*elem);
-      __trace2__("parsed %u ints, %u booleans, %u strings\n",
+      __trace2__("parsed %u ints, %u booleans, %u strings",
                  config.intParams.GetCount(),
                  config.boolParams.GetCount(),
                  config.strParams.GetCount());
@@ -129,7 +129,7 @@ std::ostream & operator << (std::ostream & out, const XMLCh * const string)
 }
 */
 /**
- * Записывает конфигурацию системы.
+ * пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
  */
 
 
