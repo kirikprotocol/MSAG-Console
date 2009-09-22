@@ -7,6 +7,7 @@
 
 #include <set>
 #include "eyeline/asn1/ASNTags.hpp"
+#include "eyeline/asn1/TransferSyntax.hpp"
 #include "util/Exception.hpp"
 
 namespace eyeline {
@@ -116,45 +117,7 @@ public:
   enum Presentation {
     valNone = 0, valEncoded, valMixed, valDecoded
   };
-  enum EncodingRule {
-    undefinedER = 0
-    //octet aligned encodings:
-    , ruleBER   //ruleBasic
-    , ruleDER   //ruleDistinguished
-    , ruleCER   //ruleCanonical
-    , rulePER   //rulePacked_aligned
-    , ruleCPER  //rulePacked_aligned_canonical
-    , ruleXER   //ruleXml
-    , ruleCXER  //ruleXml_canonical
-    , ruleEXER  //ruleXml_extended
-    //bit aligned encodings:
-    , ruleUPER  //rulePacked_unaligned
-    , ruleCUPER //rulePacked_unaligned_canonical
-  };
-
-  enum ENCStatus {
-    encBadVal = -2, encError = -1, encOk = 0, encMoreMem = 1
-  };
-  enum DECStatus {
-    decBadVal = -2, decError = -1, decOk = 0, decMoreInput = 1
-  };
-
-  struct ENCResult {
-    ENCStatus   rval;   //encoding status
-    uint32_t    nbytes; //number of bytes encoded
-
-    ENCResult(ENCStatus use_status = encBadVal, uint32_t nb_encoded = 0)
-      : rval(encBadVal), nbytes(nb_encoded)
-    { }
-  };
-  struct DECResult {
-    DECStatus   rval;   //decoding status
-    uint32_t    nbytes; //number of bytes succsefully decoded
-
-    DECResult(DECStatus use_status = decBadVal, uint32_t nb_decoded = 0)
-      : rval(use_status), nbytes(nb_decoded)
-    { }
-  };
+  typedef TransferSyntax::Rule EncodingRule;
 
 protected:
   Presentation  valPresentation;

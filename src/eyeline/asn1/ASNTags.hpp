@@ -6,7 +6,7 @@
 #define __ABSTRACT_SYNTAX_TAGS_DEFS__
 
 #include <inttypes.h>
-#include <vector>
+#include "util/Exception.hpp"
 
 namespace eyeline {
 namespace asn1 {
@@ -18,28 +18,19 @@ struct ASTag {
     tagContextSpecific = 0x80,
     tagPrivate = 0xB0
   };
+  typedef uint16_t ValueType;
 
-  TagClass_e  tagClass;
-  uint16_t    tagValue; //holds 16k (2^14-1) values
+  TagClass_e  _tagClass;
+  ValueType   _tagValue;
+  bool        _isConstructed;
 
-  ASTag(TagClass_e tag_class = tagUniversal, uint16_t tag_val = 0)
-    : tagClass(tag_class), tagValue(tag_val)
+  ASTag(TagClass_e tag_class = tagUniversal, ValueType tag_val = 0, bool _isConstructed = false)
+    : _tagClass(tag_class), _tagValue(tag_val)
   { }
-
-  //NOTE: in case of invalid encoding, ASTag is set to UNIVERSAL::0
-  ASTag(const uint8_t * use_enc, uint16_t enc_len)
-  {
-    if (!decode(use_enc, enc_len)) {
-      tagClass = tagUniversal; tagValue = 0;
-    }
-  }
-
-  //Returns false in case of invalid tag encoding
-  bool decode(const uint8_t * use_enc, uint16_t enc_len);
 
   bool operator== (const ASTag & cmp_tag) const
   {
-    return (tagClass == cmp_tag.tagClass) && (tagValue == cmp_tag.tagValue);
+    return (_tagClass == cmp_tag._tagClass) && (_tagValue == cmp_tag._tagValue);
   }
 
   //Compares tags in accordance with ASN.1 canonical tags order as stated
@@ -53,54 +44,100 @@ struct ASTag {
   //    in ascending order of their tag numbers.
   bool operator< (const ASTag & cmp_tag) const
   {
-    if (tagClass == cmp_tag.tagClass)
-        return (tagValue < cmp_tag.tagValue);
-    return (tagClass < cmp_tag.tagClass);
+    if (_tagClass == cmp_tag._tagClass)
+        return (_tagValue < cmp_tag._tagValue);
+    return (_tagClass < cmp_tag._tagClass);
   }
 };
 
-//Abstract type complete tagging (all tags goes to encoding in case of
-//EXPLICIT tagging environment).
-class ASTagging : std::vector<ASTag> {
+//Abstract type complete tagging (vector of ASTags)
+//NOTE: all tags goes to BER encoding in case of EXPLICIT tagging environment.
+class ASTagging  {
+protected:
+  static const uint8_t _max_STACK_TAGS = 4;
+  bool    _heapBuf;
+  uint8_t _numTags;
+  ASTag   _stags[_max_STACK_TAGS];  //Most of ASN.1 types have no more than 2 tags
+  ASTag * _tags;
+
 public:
   //just a single tag, by default: [UNIVERSAL 0]
-  ASTagging(ASTag::TagClass_e tag_class = ASTag::tagUniversal, uint16_t tag_val = 0)
-    : std::vector<ASTag>(1)
+  ASTagging(ASTag::TagClass_e tag_class = ASTag::tagUniversal,
+            ASTag::ValueType tag_val = 0, bool tag_constructed = false)
+    : _heapBuf(false), _numTags(1), _tags(_stags)
   {
-    at(0) = ASTag(tag_class, tag_val);
+    _stags[0] = ASTag(tag_class, tag_val, tag_constructed);
   }
+  //
   ASTagging(const ASTag & use_tag) //just a single tag
-    : std::vector<ASTag>(1)
+    : _heapBuf(false), _numTags(1), _tags(_stags)
   {
-    at(0) = use_tag;
+    _stags[0] = use_tag;
   }
+  //
   ASTagging(const ASTagging & use_tags)
-    : std::vector<ASTag>(use_tags)
-  { }
-  ASTagging(uint16_t num_tags, ASTag use_tag1, ... /* , const ASTag use_tagN*/);
+    : _heapBuf(use_tags._heapBuf), _numTags(use_tags._numTags), _tags(_stags)
+  {
+    if (_heapBuf)
+      _tags = new ASTag[_numTags];
+    //copy tags
+    for (uint8_t i = 0; i < _numTags; ++i)
+      _tags[i] = use_tags._tags[i];
+  }
+
+  ASTagging(uint8_t num_tags, ASTag use_tag1, ... /* , const ASTag use_tagN*/);
   //
   ~ASTagging()
-  { }
-
-
-  uint16_t numTags(void) const
   {
-    return (uint16_t)(size());
+    if (_heapBuf)
+      delete [] _tags;
   }
+
+
+  uint8_t size(void) const { return _numTags; }
+
+  const ASTag * get(void) const { return _tags; }
+
   //tag_idx = 0 - outermost tag, in most cases this is just a type tag
   //NOTE: It's a caller responsibility to ensure tag_idx isn't out of range
-  const ASTag & Tag(uint16_t tag_idx = 0) const
+
+  const ASTag & tagN(uint8_t tag_idx) const //throw std::exception
   {
-    return tag_idx < numTags() ? at(tag_idx) : at(0);
+    if (tag_idx >= _numTags)
+      throw smsc::util::Exception("tag index out of range");
+    return _tags[tag_idx];
+  }
+  // 
+  const ASTag & operator[] (uint8_t tag_idx) const //throw std::exception
+  {
+    return tagN(tag_idx);
   }
 
   //Compares taggings in accordance with ASN.1 canonical tags order.
   bool operator< (const ASTagging & cmp_tags) const
   {
-    return at(0) < cmp_tags.Tag(0);
+    uint8_t num2cmp = (_numTags <=  cmp_tags._numTags) ? _numTags : cmp_tags._numTags;
+
+    for (uint8_t i = 0; i < num2cmp; ++i) {
+      if (_tags[i] < cmp_tags._tags[i])
+        return true;
+    }
+    //all 'num2cmp' tags are equal, the shorter tagging is smaller one
+    return (_numTags < cmp_tags._numTags);
+  }
+
+  bool operator== (const ASTagging & cmp_tags) const
+  {
+    if (_numTags !=  cmp_tags._numTags)
+      return false;
+
+    for (uint8_t i = 0; i < _numTags; ++i) {
+      if (!(_tags[i] == cmp_tags._tags[i]))
+        return false;
+    }
+    return true;
   }
 };
-
 
 } //asn1
 } //eyeline
