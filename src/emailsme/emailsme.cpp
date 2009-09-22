@@ -37,6 +37,7 @@
 #include "util/udh.hpp"
 
 
+#include "version.inc"
 static const char* cssc_version="@(#)" FILEVER;
 
 
@@ -205,7 +206,7 @@ public:
 };
 
 
-template <int N>
+template <size_t N>
 class StrKey{
 protected:
   char str[N+1];
@@ -218,10 +219,10 @@ public:
   }
   StrKey(const char* s)
   {
-    int l=strlen(s);
+    size_t l=strlen(s);
     strncpy(str,s,N);
     str[N]=0;
-    len=l>N?N:l;
+    len=(uint8_t)(l>N?N:l);
   }
   StrKey(const StrKey& src)
   {
@@ -838,6 +839,7 @@ namespace cfg{
   //int defaultDailyLimit;
   int annotationSize;
   string maildomain;
+  string hdmaildomain;
   vector<string> validDomains;
   string mailstripper;
   int mailthreadsCount;
@@ -1027,9 +1029,9 @@ void CheckCode(Socket& s,int code)
   }
 }
 
-string makeFromAddress(const char* fromaddress)
+string makeFromAddress(const char* fromaddress,bool hdMode)
 {
-  return (string)fromaddress+"@"+cfg::maildomain;
+  return (string)fromaddress+"@"+(hdMode?cfg::hdmaildomain:cfg::maildomain);
 }
 
 string ExtractEmail(const string& value,size_t startPos=0)
@@ -1170,11 +1172,11 @@ int SendEMail(const string& from,const Array<string>& to,const string& subj,cons
 
 
 
-void sendAnswer(const Address& orgAddr,const char* msgName,const char* paramName=0,const char* paramValue=0)
+void sendAnswer(const Address& orgAddr,bool hdMode,const char* msgName,const char* paramName=0,const char* paramValue=0)
 {
   try{
     SMS sms;
-    sms.setOriginatingAddress(cfg::sourceAddress.c_str());
+    sms.setOriginatingAddress(hdMode?cfg::helpDeskAddress.c_str():cfg::sourceAddress.c_str());
     ContextEnvironment ce;
     EmptyGetAdapter ga;
     if(paramName)
@@ -1219,6 +1221,7 @@ void sendAnswer(const Address& orgAddr,const char* msgName,const char* paramName
 int processSms(const char* text,const char* fromaddress,const char* toaddress)
 {
   __trace2__("sms from %s to %s. hdaddr=%s",fromaddress,toaddress,cfg::helpDeskAddress.c_str());
+  bool hdMode=false;
   try{
     string addr,subj,body,from,fromdecor;
     if(cfg::helpDeskAddress.length() && cfg::helpDeskAddress==toaddress)
@@ -1229,6 +1232,7 @@ int processSms(const char* text,const char* fromaddress,const char* toaddress)
       subj="EmailSMS from abonent ";
       subj+=fromaddress;
       body=text;
+      hdMode=true;
     }else
     {
       Hash<SMatch> h;
@@ -1237,7 +1241,7 @@ int processSms(const char* text,const char* fromaddress,const char* toaddress)
       if(!reParseSms.Match(text,m,n,&h))
       {
         __trace2__("RegExp match failed:%d",reParseSms.LastError());
-        sendAnswer(fromaddress,"unknowncommand");
+        sendAnswer(fromaddress,hdMode,"unknowncommand");
         return ProcessSmsCodes::INVALIDSMS;
       }
       //getField(text,h,"flag",cf);
@@ -1261,7 +1265,7 @@ int processSms(const char* text,const char* fromaddress,const char* toaddress)
       __trace2__("no profile for abonent %s",fromaddress);
       if(!cfg::allowGsm2EmlWithoutProfile)
       {
-        sendAnswer(fromaddress,"messagefailednoprofile");
+        sendAnswer(fromaddress,hdMode,"messagefailednoprofile");
         return ProcessSmsCodes::NOPROFILE;
       }
       haveprofile=false;
@@ -1295,7 +1299,7 @@ int processSms(const char* text,const char* fromaddress,const char* toaddress)
           AbonentProfile p2;
           if(storage.getProfileByEmail(value.c_str(),p2))
           {
-            sendAnswer(fromaddress,"aliasbusy","alias",value.c_str());
+            sendAnswer(fromaddress,hdMode,"aliasbusy","alias",value.c_str());
           }else
           if(value.length() && value!=p.user && isValidAlias(value))
           {
@@ -1303,10 +1307,10 @@ int processSms(const char* text,const char* fromaddress,const char* toaddress)
             p.user=value;
             p.numberMap=false;
             storage.CreateProfile(p);
-            sendAnswer(fromaddress,"alias","alias",value.c_str());
+            sendAnswer(fromaddress,hdMode,"alias","alias",value.c_str());
           }else
           {
-            sendAnswer(fromaddress,"aliasfailed","alias",value.c_str());
+            sendAnswer(fromaddress,hdMode,"aliasfailed","alias",value.c_str());
           }
           return ProcessSmsCodes::OK;
         }else
@@ -1318,7 +1322,7 @@ int processSms(const char* text,const char* fromaddress,const char* toaddress)
             p.user=p.addr.value;
             storage.CreateProfile(p);
           }
-          sendAnswer(fromaddress,"noalias");
+          sendAnswer(fromaddress,hdMode,"noalias");
           return ProcessSmsCodes::OK;
         }else
         if(cmd=="forward")
@@ -1328,10 +1332,10 @@ int processSms(const char* text,const char* fromaddress,const char* toaddress)
           {
             p.forwardEmail=eml;
             storage.UpdateProfile(p);
-            sendAnswer(fromaddress,"forward","email",eml.c_str());
+            sendAnswer(fromaddress,hdMode,"forward","email",eml.c_str());
           }else
           {
-            sendAnswer(fromaddress,"forwardfailed","email",eml.c_str());
+            sendAnswer(fromaddress,hdMode,"forwardfailed","email",eml.c_str());
           }
           return ProcessSmsCodes::OK;
         }else
@@ -1339,14 +1343,14 @@ int processSms(const char* text,const char* fromaddress,const char* toaddress)
         {
           p.forwardEmail="";
           storage.UpdateProfile(p);
-          sendAnswer(fromaddress,"forwardoff");
+          sendAnswer(fromaddress,hdMode,"forwardoff");
           return ProcessSmsCodes::OK;
         }else
         if(cmd=="realname")
         {
           p.realName=trimSpaces(sp);
           storage.UpdateProfile(p);
-          sendAnswer(fromaddress,"realname","realname",p.realName.c_str());
+          sendAnswer(fromaddress,hdMode,"realname","realname",p.realName.c_str());
           return ProcessSmsCodes::OK;
         }else
         if(cmd=="norealname")
@@ -1354,7 +1358,7 @@ int processSms(const char* text,const char* fromaddress,const char* toaddress)
           std::string oldRn=p.realName;
           p.realName="";
           storage.UpdateProfile(p);
-          sendAnswer(fromaddress,"norealname","realname",oldRn.c_str());
+          sendAnswer(fromaddress,hdMode,"norealname","realname",oldRn.c_str());
           return ProcessSmsCodes::OK;
         }else
         if(cmd=="number")
@@ -1364,18 +1368,18 @@ int processSms(const char* text,const char* fromaddress,const char* toaddress)
           if(val=="on")
           {
             p.numberMap=true;
-            sendAnswer(fromaddress,"numberon");
+            sendAnswer(fromaddress,hdMode,"numberon");
             storage.UpdateProfile(p);
           }
           else if(val=="off")
           {
             p.numberMap=false;
             storage.UpdateProfile(p);
-            sendAnswer(fromaddress,"numberoff");
+            sendAnswer(fromaddress,hdMode,"numberoff");
           }
           else
           {
-            sendAnswer(fromaddress,"numberfailed");
+            sendAnswer(fromaddress,hdMode,"numberfailed");
           }
           return ProcessSmsCodes::OK;
         }
@@ -1383,13 +1387,13 @@ int processSms(const char* text,const char* fromaddress,const char* toaddress)
       catch(std::exception& e)
       {
         __trace2__("Exception in command processing:%s",e.what());
-        sendAnswer(fromaddress,"systemerror");
+        sendAnswer(fromaddress,hdMode,"systemerror");
         return ProcessSmsCodes::OK;
       }
       catch(...)
       {
         __trace__("Exception in command processing:unknown");
-        sendAnswer(fromaddress,"systemerror");
+        sendAnswer(fromaddress,hdMode,"systemerror");
         return ProcessSmsCodes::OK;
       }
     }
@@ -1398,7 +1402,7 @@ int processSms(const char* text,const char* fromaddress,const char* toaddress)
     {
       if(!storage.checkGsm2EmlLimit(fromaddress))
       {
-        sendAnswer(fromaddress,"messagefailedlimit");
+        sendAnswer(fromaddress,hdMode,"messagefailedlimit");
         return ProcessSmsCodes::OUTOFLIMIT;
       }
     }
@@ -1406,22 +1410,22 @@ int processSms(const char* text,const char* fromaddress,const char* toaddress)
     if(addr.length()==0)
     {
       __trace__("to addr is empty");
-      sendAnswer(fromaddress,"unknowncommand");
+      sendAnswer(fromaddress,hdMode,"unknowncommand");
       return ProcessSmsCodes::INVALIDSMS;
     }
 
     try{
       if(haveprofile)
       {
-        from=makeFromAddress(MapAddressToEmail(fromaddress).c_str());
+        from=makeFromAddress(MapAddressToEmail(fromaddress).c_str(),hdMode);
       }else
       {
-        from=makeFromAddress(fromaddress);
+        from=makeFromAddress(fromaddress,hdMode);
       }
     }catch(exception& e)
     {
       __warning2__("failed to map address to mail:%s",e.what());
-      sendAnswer(fromaddress,"systemerror");
+      sendAnswer(fromaddress,hdMode,"systemerror");
       return ProcessSmsCodes::NOPROFILE;
     }
     fromdecor=from;
@@ -1481,7 +1485,7 @@ int processSms(const char* text,const char* fromaddress,const char* toaddress)
       if(rv!=ProcessSmsCodes::OK)
       {
         statCollector.IncSms2Eml(false);
-        sendAnswer(fromaddress,"messagefailedsendmail");
+        sendAnswer(fromaddress,hdMode,"messagefailedsendmail");
         return rv;
       }else
       {
@@ -1489,19 +1493,19 @@ int processSms(const char* text,const char* fromaddress,const char* toaddress)
       }
       if(cfg::sendSuccessAnswer)
       {
-        sendAnswer(fromaddress,"messagesent","to",to[0].c_str());
+        sendAnswer(fromaddress,hdMode,"messagesent","to",to[0].c_str());
       }
     }catch(std::exception& e)
     {
       __warning2__("SMTP session aborted:%s",e.what());
-      sendAnswer(fromaddress,"messagefailedsendmail");
+      sendAnswer(fromaddress,hdMode,"messagefailedsendmail");
       return ProcessSmsCodes::UNABLETOSEND;
     }
     return ProcessSmsCodes::OK;
   }catch(std::exception& e)
   {
     __warning2__("Exception in processSms:%s",e.what());
-    sendAnswer(fromaddress,"messagefailedsystem");
+    sendAnswer(fromaddress,hdMode,"messagefailedsystem");
   }
   return ProcessSmsCodes::NETERROR;
 }
@@ -2851,6 +2855,7 @@ void initRegions(const char* regions_xml_file,const char* route_xml_file)
 }
 
 
+
 int main(int argc,char* argv[])
 {
   smsc::logger::Logger::Init();
@@ -2859,10 +2864,12 @@ int main(int argc,char* argv[])
   sigset(16,disp);
   sigset(SIGINT,ctrlc);
   sigset(SIGTERM,ctrlc);
+  smsc::logger::Logger *log=smsc::logger::Logger::getInstance("emlsme");
+  smsc_log_info(log,"\n====================\n%s\n====================\n",getStrVersion());
 
   if(gethostname(hostName,(int)sizeof(hostName))!=0)
   {
-    smsc_log_warn(smsc::logger::Logger::getInstance("emlsme"),"gethostname failed:%d",errno);
+    smsc_log_warn(log,"gethostname failed:%d",errno);
     strcpy(hostName,"localhost");
   }
 
@@ -3057,6 +3064,13 @@ int main(int argc,char* argv[])
     cfg::protocolId=cfgman.getInt("smpp.protocolId");
 
     cfg::maildomain=cfgman.getString("mail.domain");
+    try{
+      cfg::hdmaildomain=cfgman.getString("mail.helpdeskDomain");
+    }catch(...)
+    {
+      __warning__("helpdesk mail domain not found");
+      cfg::hdmaildomain=cfg::maildomain;
+    }
 
     {
       std::string validToDomains=cfgman.getString("mail.validToDomains");
@@ -3301,5 +3315,6 @@ int main(int argc,char* argv[])
     __warning__("Top level exception:unknown");
   }
   statCollector.Stop();
+  smsc_log_info(log,"\n====================\nE-Mail sme shutdown complete\n====================\n");
   return 0;
 }
