@@ -62,6 +62,11 @@ public:
     return checkState(STATE_MODE_WRITE,ready,error,timeout);
   }
 
+  int getSize()const
+  {
+    return sockets.Count();
+  }
+
 protected:
   SockArray sockets;
   Array<pollfd> fds;
