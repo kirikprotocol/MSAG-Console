@@ -48,7 +48,7 @@ public:
   }
   RefPtr& operator=(const RefPtr& src)
   {
-      if ( this == &src ) return *this;
+    if ( this == &src ) return *this;
     Unref();
     src.Ref();
     data=src.data;
@@ -56,7 +56,7 @@ public:
   }
   RefPtr& operator=(T* ptr)
   {
-      if ( data->ptr == ptr ) return *this;
+    if ( data->ptr == ptr ) return *this;
     Unref();
     data=new RefPtrData;
     data->ptr=ptr;

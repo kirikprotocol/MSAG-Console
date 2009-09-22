@@ -31,9 +31,9 @@ void addEncoding(const char * const encodingName)
 void initXerces()
 {
   MutexGuard guard(mutex);
-	if (!isXercesInitialized)
-	{
-		XMLPlatformUtils::Initialize();
+  if (!isXercesInitialized)
+  {
+    XMLPlatformUtils::Initialize();
     addEncoding("CP1251");
     addEncoding("CP-1251");
     addEncoding("ANSI-1251");
@@ -44,18 +44,18 @@ void initXerces()
     addEncoding("KOI8-R");
     addEncoding(getLocalEncoding());
     isXercesInitialized = true;
-	}
+  }
 }
 
 void TerminateXerces()
 {
   MutexGuard guard(mutex);
-	if (isXercesInitialized)
-	{
-		XMLPlatformUtils::Terminate();
+  if (isXercesInitialized)
+  {
+    XMLPlatformUtils::Terminate();
     clearIconvs();
     isXercesInitialized = false;
-	}
+  }
 }
 
 }
