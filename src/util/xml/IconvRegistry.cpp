@@ -1,8 +1,8 @@
-// 
+//
 // File:   IconvRegistry.cpp
 // Author: igork
 //
-// Created on 1 Март 2004 г., 15:51
+// Created on 1 О©╫О©╫О©╫О©╫ 2004 О©╫., 15:51
 //
 
 #include "IconvRegistry.h"
@@ -32,13 +32,13 @@ bool operator==(const _IconvInfo& ici1, const _IconvInfo& ici2)
 
 bool operator<(const _IconvInfo& ici1, const _IconvInfo& ici2)
 {
-  return   cStringLess(ici1.first,ici2.first) 
+  return   cStringLess(ici1.first,ici2.first)
         || (cStringEquals(ici1.first, ici2.first) && cStringLess(ici1.second, ici2.second));
 }
 
 
 
-struct _IconvLess : public std::binary_function <_IconvInfo, _IconvInfo, bool> 
+struct _IconvLess : public std::binary_function <_IconvInfo, _IconvInfo, bool>
 {
   bool operator()(const _IconvInfo& _Left, const _IconvInfo& _Right) const
   {
@@ -84,7 +84,7 @@ void clearIconvs() throw()
 {
   MutexGuard guard(globel_mutex);
   #ifdef SMSC_DEBUG
-  smsc_log_debug(Logger::getInstance("u.x.Iconv"), "clear iconv registry: %ld", iconv_instanceCounter);
+  //smsc_log_debug(Logger::getInstance("u.x.Iconv"), "clear iconv registry: %ld", iconv_instanceCounter);
   #endif //SMSC_DEBUG
   for (_IconvReg::const_iterator i = iconv_reg.begin(); i != iconv_reg.end(); i++)
   {
@@ -95,7 +95,7 @@ void clearIconvs() throw()
   iconv_reg.clear();
   #ifdef SMSC_DEBUG
   iconv_instanceCounter = 0;
-  smsc_log_debug(Logger::getInstance("u.x.Iconv"), "iconv registry cleared");
+  //smsc_log_debug(Logger::getInstance("u.x.Iconv"), "iconv registry cleared");
   #endif //SMSC_DEBUG
 }
 
