@@ -155,7 +155,7 @@ static char const ident[] = "$Id$";
           send_enterprise_trap_vars(SNMP_TRAP_ENTERPRISESPECIFIC, 1, poid, (int)oidlen, notification_vars);
           snmp_free_varbind(notification_vars);
         }
-      }else if(vars->recordType==TrapRecord::rtNotification)
+      }else if(vars->recordType==TrapRecord::rtStatusChange)
       {
         if(fileLog) fileLog->log(*vars);
         netsnmp_variable_list *notification_vars = NULL;
@@ -166,7 +166,7 @@ static char const ident[] = "$Id$";
                                   statusNotificationOid,
                                   (int)OID_LENGTH(statusNotificationOid), notification_vars);
         snmp_free_varbind(notification_vars);
-      }else if(vars->recordType==TrapRecord::rtStatusChange)
+      }else if(vars->recordType==TrapRecord::rtNotification)
       {
         netsnmp_variable_list *notification_vars = NULL;
         snmp_varlist_add_variable(&notification_vars,
