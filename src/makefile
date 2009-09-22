@@ -98,13 +98,6 @@ $(warning set SMSC_BUILDDIR = $(SMSC_BUILDDIR))
 export SMSC_BUILDDIR
 endif
 
-ifndef CVSROOT
-#$(warning CVSROOT is not defined)
-CVSROOT:=:pserver:$(USER)@cvs:/cvsroot
-$(warning set CVSROOT = $(CVSROOT))
-export CVSROOT
-endif
-
 OS=$(shell uname)
 
 ifeq ($(OS),Linux)
@@ -149,12 +142,12 @@ endif
 CFLAGS := $(CFLAGS) $(XTARGET)
 endif
 ifeq ($(CXX),CC)
-LDFLAGS := $(XTARGET) -L$(SMSC_BUILDDIR)/lib -L$(USRLOCLIB) -L$(SSL_LIB_DIR) -L$(NETSNMP_LIB_DIR)
+LDFLAGS := $(XTARGET) -L$(SMSC_BUILDDIR)/bin -L$(SMSC_BUILDDIR)/lib -L$(USRLOCLIB) -L$(SSL_LIB_DIR) -L$(NETSNMP_LIB_DIR)
 ifeq ($(STDCXX),YES)
 LDFLAGS := $(LDFLAGS) -L/opt/stdcxx/lib -lstd -lthread
 endif
 else
-LDFLAGS := -L$(SMSC_BUILDDIR)/lib -L$(USRLOCLIB) -L$(SSL_LIB_DIR)
+LDFLAGS := -L$(SMSC_BUILDDIR)/bin -L$(SMSC_BUILDDIR)/lib -L$(USRLOCLIB) -L$(SSL_LIB_DIR)
 CXXFLAGS := $(CXXFLAGS) -fPIC
 endif
 
