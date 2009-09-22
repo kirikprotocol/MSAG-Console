@@ -347,7 +347,8 @@ void MapIoTask::ReconnectThread::init(bool firstTime)
   if(reinitCount>90/SLEEPTIME)
   {
     __map_warn2__("Reconnect count=%d, exiting!",reinitCount);
-    exit(1);
+    smsc::system::Smsc::getInstance().stop();
+    sleep(2);
   }
   if( isStopping || smsc::system::Smsc::getInstance().getStopFlag()) return;
   USHORT_T err;
