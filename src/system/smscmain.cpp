@@ -61,7 +61,7 @@ protected:
 
 extern "C" void atExitHandler(void)
 {
-    smsc::util::xml::TerminateXerces();
+  smsc::util::xml::TerminateXerces();
   smsc::logger::Logger::Shutdown();
 }
 
@@ -78,10 +78,13 @@ int main(int argc,char* argv[])
   smsc::system::clearThreadSignalMask();
 
   try{
+    smsc::logger::Logger *logger = Logger::getInstance("smscmain");
+    smsc_log_info(logger,"\n==========================\nStarting Smsc.\n==========================");
+
     smsc::system::SmscConfigs cfgs;
     smsc::util::config::Manager::init(findConfigFile("config.xml"));
     cfgs.cfgman=&cfgs.cfgman->getInstance();
-    smsc::logger::Logger *logger = Logger::getInstance("smscmain");
+
 
     smsc::system::Smsc::InitLicense();
 
@@ -141,32 +144,34 @@ int main(int argc,char* argv[])
       const char * node = argc < 2 ? "node=1" : argv[1];
 
       // init Admin part
-      SmscComponent smsc_component(cfgs, node);
-      ComponentManager::registerComponent(&smsc_component);
-
-      smsc::admin::service::ServiceSocketListener listener;
-      listener.init(admin_host, servicePort);
-
-      smsc::system::registerSmscSignalHandlers(&smsc_component, &listener);
-      listener.Start();
-
-      // start
-      //fprintf(stderr,"runSmsc\n");
-      smsc_component.runSmsc();
-
-      //fprintf(stderr,"smsc started\n");
-      //running
-      listener.WaitFor();
-
-      //fprintf(stderr,"smsc stopped, finishing\n");
-      // stopped
-      if (smsc_component.isSmscRunning() && !smsc_component.isSmscStopping())
       {
-        smsc_component.stopSmsc();
-      }
+        SmscComponent smsc_component(cfgs, node);
+        ComponentManager::registerComponent(&smsc_component);
 
-      Manager::deinit();
-      smsc_log_info(logger,"Smsc shutdown completed.");
+        smsc::admin::service::ServiceSocketListener listener;
+        listener.init(admin_host, servicePort);
+
+        smsc::system::registerSmscSignalHandlers(&smsc_component, &listener);
+        listener.Start();
+
+        // start
+        //fprintf(stderr,"runSmsc\n");
+        smsc_component.runSmsc();
+
+        //fprintf(stderr,"smsc started\n");
+        //running
+        listener.WaitFor();
+
+        //fprintf(stderr,"smsc stopped, finishing\n");
+        // stopped
+        if (smsc_component.isSmscRunning() && !smsc_component.isSmscStopping())
+        {
+          smsc_component.stopSmsc();
+        }
+
+        Manager::deinit();
+      }
+      smsc_log_info(logger,"\n==========================\nSmsc shutdown completed.\n==========================");
       //fprintf(stderr,"smsc finished\n");
     }
 
