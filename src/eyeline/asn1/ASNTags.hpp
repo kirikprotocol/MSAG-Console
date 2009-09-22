@@ -104,7 +104,8 @@ public:
   const ASTag & tagN(uint8_t tag_idx) const //throw std::exception
   {
     if (tag_idx >= _numTags)
-      throw smsc::util::Exception("tag index out of range");
+      throw smsc::util::Exception("tag index=%u is out of range=%u",
+                                  (unsigned)tag_idx, (unsigned)_numTags);
     return _tags[tag_idx];
   }
   // 
