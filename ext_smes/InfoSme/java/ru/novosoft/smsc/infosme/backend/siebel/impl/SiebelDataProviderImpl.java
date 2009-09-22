@@ -23,8 +23,6 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
 
   private ConnectionPool pool;
 
-  private String poolName = null;
-
   private final Properties sql;
 
 
@@ -47,6 +45,7 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
     }
   }
 
+  /** @noinspection EmptyCatchBlock*/
   public void connect(Properties props) throws SiebelException{
     if(pool != null) {
       try {
@@ -90,17 +89,17 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
       if (sqlResult.next()) {
         siebelMessage = new SiebelMessage();
         siebelMessage.setClcId(clcId);
-        siebelMessage.setCreated(new Date(sqlResult.getTimestamp(sql.getProperty("message.created")).getTime()));
-        siebelMessage.setLastUpd(new Date(sqlResult.getTimestamp(sql.getProperty("message.last.upd")).getTime()));
-        siebelMessage.setMessage(sqlResult.getString(sql.getProperty("message.message")));
-        String ms = sqlResult.getString(sql.getProperty("message.message.state"));
+        siebelMessage.setCreated(new Date(sqlResult.getTimestamp(getSql("message.created")).getTime()));
+        siebelMessage.setLastUpd(new Date(sqlResult.getTimestamp(getSql("message.last.upd")).getTime()));
+        siebelMessage.setMessage(sqlResult.getString(getSql("message.message")));
+        String ms = sqlResult.getString(getSql("message.message.state"));
         if(ms != null) {
           siebelMessage.setMessageState(SiebelMessage.State.valueOf(ms));
         }
-        siebelMessage.setMsisdn(sqlResult.getString(sql.getProperty("message.msisdn")));
-        siebelMessage.setSmscCode(sqlResult.getString(sql.getProperty("message.smsc.stat.code")));
-        siebelMessage.setSmscValue(sqlResult.getString(sql.getProperty("message.smsc.stat.val")));
-        siebelMessage.setWaveId(sqlResult.getString(sql.getProperty("message.wave.id")));
+        siebelMessage.setMsisdn(sqlResult.getString(getSql("message.msisdn")));
+        siebelMessage.setSmscCode(sqlResult.getString(getSql("message.smsc.stat.code")));
+        siebelMessage.setSmscValue(sqlResult.getString(getSql("message.smsc.stat.val")));
+        siebelMessage.setWaveId(sqlResult.getString(getSql("message.wave.id")));
       }
 
       if (logger.isDebugEnabled()) {
@@ -166,16 +165,16 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
       if (sqlResult.next()) {
         siebelTask = new SiebelTask();
         siebelTask = new SiebelTask();
-        siebelTask.setLastUpdate(new java.util.Date(sqlResult.getTimestamp(sql.getProperty("task.last.upd")).getTime()));
-        siebelTask.setBeep(sqlResult.getString(sql.getProperty("task.beep")).equals("Y"));
-        siebelTask.setCampaignId(sqlResult.getString(sql.getProperty("task.campaign.id")));
-        siebelTask.setCreated(new java.util.Date(sqlResult.getTimestamp(sql.getProperty("task.created")).getTime()));
+        siebelTask.setLastUpdate(new java.util.Date(sqlResult.getTimestamp(getSql("task.last.upd")).getTime()));
+        siebelTask.setBeep(sqlResult.getString(getSql("task.beep")).equals("Y"));
+        siebelTask.setCampaignId(sqlResult.getString(getSql("task.campaign.id")));
+        siebelTask.setCreated(new java.util.Date(sqlResult.getTimestamp(getSql("task.created")).getTime()));
         siebelTask.setStatus(SiebelTask.Status.valueOf(
-            sqlResult.getString(sql.getProperty("task.ctrl.status"))));
-        siebelTask.setExpPeriod(new Integer(sqlResult.getInt(sql.getProperty("task.exp.period"))));
-        siebelTask.setFlash(sqlResult.getString(sql.getProperty("task.flash")).equals("Y"));
-        siebelTask.setPriority(sqlResult.getInt(sql.getProperty("task.priority")));
-        siebelTask.setSave(sqlResult.getString(sql.getProperty("task.save")).equals("Y"));
+            sqlResult.getString(getSql("task.ctrl.status"))));
+        siebelTask.setExpPeriod(new Integer(sqlResult.getInt(getSql("task.exp.period"))));
+        siebelTask.setFlash(sqlResult.getString(getSql("task.flash")).equals("Y"));
+        siebelTask.setPriority(sqlResult.getInt(getSql("task.priority")));
+        siebelTask.setSave(sqlResult.getString(getSql("task.save")).equals("Y"));
         siebelTask.setWaveId(waveId);
       }
 
@@ -296,7 +295,7 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
 
       if (sqlResult.next()) {
         String st =
-            sqlResult.getString(sql.getProperty("task.ctrl.status"));
+            sqlResult.getString(getSql("task.ctrl.status"));
         if(st != null) {
           status = SiebelTask.Status.valueOf(st);
         }
@@ -366,7 +365,7 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
 
       if (sqlResult.next()) {
         String st =
-            sqlResult.getString(sql.getProperty("message.message.state"));
+            sqlResult.getString(getSql("message.message.state"));
         if(st != null) {
           state = SiebelMessage.State.valueOf(st);
         }
