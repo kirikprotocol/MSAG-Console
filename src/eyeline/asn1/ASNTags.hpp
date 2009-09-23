@@ -96,7 +96,7 @@ public:
 
   uint8_t size(void) const { return _numTags; }
 
-  const ASTag * get(void) const { return _tags; }
+  const ASTag * begin(void) const { return _tags; }
 
   //tag_idx = 0 - outermost tag, in most cases this is just a type tag
   //NOTE: It's a caller responsibility to ensure tag_idx isn't out of range
@@ -139,6 +139,41 @@ public:
     return true;
   }
 };
+
+
+/* ************************************************************************* *
+ * NIVERSAL CLASS TAG NUMBERS
+ * ************************************************************************* */
+
+extern ASTagging  _tagBOOL;             //1
+extern ASTagging  _tagINTEGER;          //2
+extern ASTagging  _tagBITSTR;           //3
+extern ASTagging  _tagOCTSTR;           //4
+extern ASTagging  _tagNULL;             //5
+extern ASTagging  _tagObjectID;         //6
+extern ASTagging  _tagObjDescriptor;    //7
+extern ASTagging  _tagEXTERNAL;         //8
+extern ASTagging  _tagREAL;             //9
+extern ASTagging  _tagENUM;             //10
+extern ASTagging  _tagEmbeddedPDV;      //11
+extern ASTagging  _tagUTF8STR;          //12
+extern ASTagging  _tagRelativeID;       //13
+
+extern ASTagging  _tagSEQOF;            //16
+extern ASTagging  _tagSETOF;            //17
+extern ASTagging  _tagNumericSTR;       //18
+extern ASTagging  _tagPrintableSTR;     //19
+extern ASTagging  _tagTeletexSTR;       //20
+extern ASTagging  _tagVideotexSTR;      //21
+extern ASTagging  _tagIA5STR;           //22
+extern ASTagging  _tagUTCTime;          //23
+extern ASTagging  _tagGeneralizedTime;  //24
+extern ASTagging  _tagGraphicSTR;       //25
+extern ASTagging  _tagVisibleSTR;       //26
+extern ASTagging  _tagGeneralSTR;       //27
+
+extern ASTagging  _tagCHARSTR;          //29
+extern ASTagging  _tagBMPSTR;           //30
 
 } //asn1
 } //eyeline
