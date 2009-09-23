@@ -115,7 +115,14 @@ for(@dir)
 
   $header="90$timestamp".(' 'x81).'0'.(' 'x7).'90'.(' 'x17).'0'.(' 'x385);
   $footer="90$timestamp".(' 'x81)."0$eoln$crc";
-  process($infile,$tmpfile);
+  eval {
+    process($infile,$tmpfile);
+  };
+  if($@)
+  {
+    print STDERR "Processing error on file $infile:'$@'\n";
+    rename($infile,$infile.'.err');
+  }
   if(-f $tmpfile)
   {
     if(!move($tmpfile,$outfile))
