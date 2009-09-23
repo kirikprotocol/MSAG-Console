@@ -135,7 +135,7 @@ public class SmsViewFormBean extends IndexBean {
       try {
         response.setContentType("application/vnd.ms-excel");
         response.setHeader("Content-Disposition", "attachment; filename=smsview.xls");
-        result = saveResultsToFile(response);
+        result = saveResultsToFile(request, response);
         journalAppend(SubjectTypes.TYPE_smsview, "Save results to xls-file", Actions.ACTION_SAVE);
       } catch (Throwable t) {
         mbSave = null;
@@ -316,7 +316,7 @@ public class SmsViewFormBean extends IndexBean {
     exactRowsCount = false;
   }
 
-  public int saveResultsToFile(HttpServletResponse response) throws Exception {
+  public int saveResultsToFile(HttpServletRequest request, HttpServletResponse response) throws Exception {
     if (rows.getRowsCount() == 0) return RESULT_ERROR;
 
     SimpleDateFormat dateFormatter = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss", appContext.getUserManager().getPrefs(principal).getLocale());
@@ -343,7 +343,7 @@ public class SmsViewFormBean extends IndexBean {
       //id + "\t" + submit + "\t" + valid + "\t" + last + "\t" + next + "\t" + source + "\t" + dest + "\t" + route + "\t" + status + "\t";
       result.append(id).append('\t').append(submit).append('\t').append(valid).append('\t').append(last).append('\t').append(next).append('\t');
       result.append(source).append('\t').append(dest).append('\t').append(route).append('\t').append(status).append('\t');
-      if (row.getOriginalText() != null) {
+      if (row.getOriginalText() != null && isAllowToShowSmsText(request, row)) {
         result.append(row.getOriginalText());
       }
       result.append("\r\n");
