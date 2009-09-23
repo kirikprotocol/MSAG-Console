@@ -54,7 +54,7 @@ public:
   ASTagOptions(const ASTagOptions & use_opt)
     : std::set<ASTagging>(use_opt)
   {
-    current = use_opt.Selected() ? find(use_opt.Selected()->Tag(0)) : end();
+    current = use_opt.Selected() ? find(use_opt.Selected()->tagN(0)) : end();
   }
   //NOTE: sets selected option!
   ASTagOptions(const ASTagging & use_tags)
@@ -83,7 +83,7 @@ public:
   //Returns outermost tag of selected tagging option, if latter is set
   const ASTag * Tag(void) const
   {
-    return Selected() ? &(Selected()->Tag(0)) : 0;
+    return Selected() ? &(Selected()->tagN(0)) : 0;
   }
 
   //Adds tagging option, optionally setting it as selected one.
@@ -117,7 +117,7 @@ public:
   enum Presentation {
     valNone = 0, valEncoded, valMixed, valDecoded
   };
-  typedef TransferSyntax::Rule EncodingRule;
+  typedef TransferSyntax::Rule_e EncodingRule;
 
 protected:
   Presentation  valPresentation;
@@ -127,14 +127,14 @@ protected:
 
 public:
   ASTypeAC()
-    : valPresentation(valNone), valRule(undefinedER)
+    : valPresentation(valNone), valRule(TransferSyntax::undefinedER)
   { }
   ASTypeAC(ASTag::TagClass_e tag_class,  uint16_t tag_val)
-    : valPresentation(valNone), valRule(undefinedER)
+    : valPresentation(valNone), valRule(TransferSyntax::undefinedER)
     , tags(ASTagging(ASTag(tag_class, tag_val)))
   { }
   ASTypeAC(const ASTagging & use_tags)
-    : valPresentation(valNone), valRule(undefinedER)
+    : valPresentation(valNone), valRule(TransferSyntax::undefinedER)
     , tags(use_tags)
   { }
   virtual ~ASTypeAC()
@@ -153,7 +153,7 @@ public:
     tags.selectOption(*use_tags.Tag());
   }
 
-  void setEncoding(const BITBuffer & use_buf, EncodingRule use_rule = ruleDER)
+  void setEncoding(const BITBuffer & use_buf, EncodingRule use_rule = TransferSyntax::ruleDER)
   {
     valPresentation = valEncoded; valEnc = use_buf; valRule = use_rule;
   }
@@ -174,38 +174,38 @@ public:
   // ---------------------------------
 
   //REQ: if use_rule == valRule, presentation > valNone, otherwise presentation == valDecoded
-  virtual ENCResult encode(OCTBuffer & use_buf, EncodingRule use_rule = ruleDER)
+  virtual ENCResult encode(OCTBuffer & use_buf, EncodingRule use_rule = TransferSyntax::ruleDER)
   /*throw ASN1CodecError*/ = 0;
 
   //REQ: presentation == valNone
   //OUT: presentation (include all subcomponents) = valDecoded,
   //NOTE: in case of decMoreInput, stores decoding context
-  virtual DECResult decode(const OCTBuffer & use_buf, EncodingRule use_rule = ruleDER)
+  virtual DECResult decode(const OCTBuffer & use_buf, EncodingRule use_rule = TransferSyntax::ruleDER)
   /*throw ASN1CodecError*/ = 0;
 
   //REQ: presentation == valNone
   //OUT: presentation (include all subcomponents) = valMixed | valDecoded
   //NOTE: in case of valMixed keeps references to BITBuffer !!!
   //NOTE: in case of decMoreInput, stores decoding context
-  virtual DECResult deferredDecode(const OCTBuffer & use_buf, EncodingRule use_rule = ruleDER)
+  virtual DECResult deferredDecode(const OCTBuffer & use_buf, EncodingRule use_rule = TransferSyntax::ruleDER)
   /*throw ASN1CodecError*/ = 0;
 
   //REQ: if use_rule == valRule, presentation > valNone, otherwise presentation == valDecoded
-  virtual ENCResult encode(BITBuffer & use_buf, EncodingRule use_rule = ruleDER) {
+  virtual ENCResult encode(BITBuffer & use_buf, EncodingRule use_rule = TransferSyntax::ruleDER) {
     throw ASN1CodecError("encode(BITBuffer &): not implemented");
   }
 
   //REQ: presentation == valNone
   //OUT: presentation (include all subcomponents) = valDecoded,
   //NOTE: in case of decMoreInput, stores decoding context 
-  virtual DECResult decode(const BITBuffer & use_buf, EncodingRule use_rule = ruleDER) {
+  virtual DECResult decode(const BITBuffer & use_buf, EncodingRule use_rule = TransferSyntax::ruleDER) {
     throw ASN1CodecError("decode(BITBuffer &): not implemented");
   }
   //REQ: presentation == valNone
   //OUT: presentation (include all subcomponents) = valMixed | valDecoded
   //NOTE: in case of valMixed keeps references to BITBuffer !!!
   //NOTE: in case of decMoreInput, stores decoding context 
-  virtual DECResult deferredDecode(const BITBuffer & use_buf, EncodingRule use_rule = ruleDER) {
+  virtual DECResult deferredDecode(const BITBuffer & use_buf, EncodingRule use_rule = TransferSyntax::ruleDER) {
     throw ASN1CodecError("defferedDecode(BITBuffer &): not implemented");
   }
 
@@ -222,7 +222,7 @@ public:
       BITBuffer useEnc = valEnc;
       return decode(useEnc, valRule);
     }
-    return DECResult(decBadVal);
+    return DECResult(DECResult::decBadVal);
   }
 
   //REQ: presentation == valEncoded (setEncoding() was called)
@@ -235,7 +235,7 @@ public:
       BITBuffer useEnc = valEnc;
       return deferredDecode(useEnc, valRule);
     }
-    return DECResult(decBadVal);
+    return DECResult(DECResult::decBadVal);
   }
 };
 

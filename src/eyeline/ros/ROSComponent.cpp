@@ -12,35 +12,32 @@ namespace ros {
  * ************************************************************************* */
 
 //REQ: if use_rule == valRule, presentation > valNone, otherwise presentation == valDecoded
-ASTypeAC::ENCResult
-ROSInvoke::encode(OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
+ENCResult ROSInvoke::encode(OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
   /*throw ASN1CodecError*/
 {
   //TODO:
-  return ASTypeAC::ENCResult();
+  return ENCResult(ENCResult::encBadArg);
 }
 
 //REQ: presentation == valNone
 //OUT: presentation (include all subcomponents) = valDecoded,
 //NOTE: in case of decMoreInput, stores decoding context 
-ASTypeAC::DECResult
-ROSInvoke::decode(const OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
+DECResult ROSInvoke::decode(const OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
   /*throw ASN1CodecError*/
 {
   //TODO:
-  return ASTypeAC::DECResult();
+  return DECResult(DECResult::decBadArg);
 }
 
 //REQ: presentation == valNone
 //OUT: presentation (include all subcomponents) = valMixed | valDecoded
 //NOTE: in case of valMixed keeps references to BITBuffer !!!
 //NOTE: in case of decMoreInput, stores decoding context 
-ASTypeAC::DECResult
-ROSInvoke::deferredDecode(const OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
+DECResult ROSInvoke::deferredDecode(const OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
   /*throw ASN1CodecError*/
 {
   //TODO:
-  return ASTypeAC::DECResult();
+  return DECResult(DECResult::decBadArg);
 }
 
 
@@ -49,35 +46,32 @@ ROSInvoke::deferredDecode(const OCTBuffer & use_buf, EncodingRule use_rule/* = r
  * ************************************************************************* */
 
 //REQ: if use_rule == valRule, presentation > valNone, otherwise presentation == valDecoded
-ASTypeAC::ENCResult
-ROSResult::encode(OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
+ENCResult ROSResult::encode(OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
   /*throw ASN1CodecError*/
 {
   //TODO:
-  return ASTypeAC::ENCResult();
+  return ENCResult(ENCResult::encBadArg);
 }
 
 //REQ: presentation == valNone
 //OUT: presentation (include all subcomponents) = valDecoded,
 //NOTE: in case of decMoreInput, stores decoding context 
-ASTypeAC::DECResult
-ROSResult::decode(const OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
+DECResult ROSResult::decode(const OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
   /*throw ASN1CodecError*/
 {
   //TODO:
-  return ASTypeAC::DECResult();
+  return DECResult(DECResult::decBadArg);
 }
 
 //REQ: presentation == valNone
 //OUT: presentation (include all subcomponents) = valMixed | valDecoded
 //NOTE: in case of valMixed keeps references to BITBuffer !!!
 //NOTE: in case of decMoreInput, stores decoding context 
-ASTypeAC::DECResult
-ROSResult::deferredDecode(const OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
+DECResult ROSResult::deferredDecode(const OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
   /*throw ASN1CodecError*/
 {
   //TODO:
-  return ASTypeAC::DECResult();
+  return DECResult(DECResult::decBadArg);
 }
 
 
@@ -86,35 +80,32 @@ ROSResult::deferredDecode(const OCTBuffer & use_buf, EncodingRule use_rule/* = r
  * ************************************************************************* */
 
 //REQ: if use_rule == valRule, presentation > valNone, otherwise presentation == valDecoded
-ASTypeAC::ENCResult
-ROSResultNL::encode(OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
+ENCResult ROSResultNL::encode(OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
   /*throw ASN1CodecError*/
 {
   //TODO:
-  return ASTypeAC::ENCResult();
+  return ENCResult(ENCResult::encBadArg);
 }
 
 //REQ: presentation == valNone
 //OUT: presentation (include all subcomponents) = valDecoded,
 //NOTE: in case of decMoreInput, stores decoding context 
-ASTypeAC::DECResult
-ROSResultNL::decode(const OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
+DECResult ROSResultNL::decode(const OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
   /*throw ASN1CodecError*/
 {
   //TODO:
-  return ASTypeAC::DECResult();
+  return DECResult(DECResult::decBadArg);
 }
 
 //REQ: presentation == valNone
 //OUT: presentation (include all subcomponents) = valMixed | valDecoded
 //NOTE: in case of valMixed keeps references to BITBuffer !!!
 //NOTE: in case of decMoreInput, stores decoding context 
-ASTypeAC::DECResult
-ROSResultNL::deferredDecode(const OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
+DECResult ROSResultNL::deferredDecode(const OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
   /*throw ASN1CodecError*/
 {
   //TODO:
-  return ASTypeAC::DECResult();
+  return DECResult(DECResult::decBadArg);
 }
 
 
@@ -123,35 +114,32 @@ ROSResultNL::deferredDecode(const OCTBuffer & use_buf, EncodingRule use_rule/* =
  * ************************************************************************* */
 
 //REQ: if use_rule == valRule, presentation > valNone, otherwise presentation == valDecoded
-ASTypeAC::ENCResult
-ROSError::encode(OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
+ENCResult ROSError::encode(OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
   /*throw ASN1CodecError*/
 {
   //TODO:
-  return ASTypeAC::ENCResult();
+  return ENCResult(ENCResult::encBadArg);
 }
 
 //REQ: presentation == valNone
 //OUT: presentation (include all subcomponents) = valDecoded,
 //NOTE: in case of decMoreInput, stores decoding context 
-ASTypeAC::DECResult
-ROSError::decode(const OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
+DECResult ROSError::decode(const OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
   /*throw ASN1CodecError*/
 {
   //TODO:
-  return ASTypeAC::DECResult();
+  return DECResult(DECResult::decBadArg);
 }
 
 //REQ: presentation == valNone
 //OUT: presentation (include all subcomponents) = valMixed | valDecoded
 //NOTE: in case of valMixed keeps references to BITBuffer !!!
 //NOTE: in case of decMoreInput, stores decoding context 
-ASTypeAC::DECResult
-ROSError::deferredDecode(const OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
+DECResult ROSError::deferredDecode(const OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
   /*throw ASN1CodecError*/
 {
   //TODO:
-  return ASTypeAC::DECResult();
+  return DECResult(DECResult::decBadArg);
 }
 
 
@@ -160,35 +148,32 @@ ROSError::deferredDecode(const OCTBuffer & use_buf, EncodingRule use_rule/* = ru
  * ************************************************************************* */
 
 //REQ: if use_rule == valRule, presentation > valNone, otherwise presentation == valDecoded
-ASTypeAC::ENCResult
-ROSReject::encode(OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
+ENCResult ROSReject::encode(OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
   /*throw ASN1CodecError*/
 {
   //TODO:
-  return ASTypeAC::ENCResult();
+  return ENCResult(ENCResult::encBadArg);
 }
 
 //REQ: presentation == valNone
 //OUT: presentation (include all subcomponents) = valDecoded,
 //NOTE: in case of decMoreInput, stores decoding context 
-ASTypeAC::DECResult
-ROSReject::decode(const OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
+DECResult ROSReject::decode(const OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
   /*throw ASN1CodecError*/
 {
   //TODO:
-  return ASTypeAC::DECResult();
+  return DECResult(DECResult::decBadArg);
 }
 
 //REQ: presentation == valNone
 //OUT: presentation (include all subcomponents) = valMixed | valDecoded
 //NOTE: in case of valMixed keeps references to BITBuffer !!!
 //NOTE: in case of decMoreInput, stores decoding context 
-ASTypeAC::DECResult
-ROSReject::deferredDecode(const OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
+DECResult ROSReject::deferredDecode(const OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
   /*throw ASN1CodecError*/
 {
   //TODO:
-  return ASTypeAC::DECResult();
+  return DECResult(DECResult::decBadArg);
 }
 
 
