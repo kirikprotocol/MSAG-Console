@@ -2,7 +2,7 @@
 static char const ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_OFF */
 
-#include "eyeline/asn1/ASNTags.hpp"
+#include "eyeline/asn1/BER/TLVDecoder.hpp"
 #include "eyeline/tcap/provd/TDlgIndDispatcher.hpp"
 #include "eyeline/tcap/provd/SUAIndDispatcher.hpp"
 
@@ -12,16 +12,10 @@ namespace provd {
 
 using eyeline::asn1::ASTag;
 using eyeline::asn1::BITBuffer;
+using eyeline::asn1::DECResult;
+using eyeline::asn1::ber::decode_tag;
 
 using eyeline::tcap::proto::TCMsgAbortPortion;
-
-typedef eyeline::asn1::ASTypeAC::DECResult DECResult;
-
-
-/* ************************************************************************* *
- * class TDlgIndicationDispatcherAC implementation
- * ************************************************************************* */
-
 
 /* ************************************************************************* *
  * class TDlgIndicationDispatcher implementation
@@ -53,21 +47,21 @@ bool TDlgIndicationDispatcher::processSuaMsgBuf(void)
 // ----------------------------------------
 bool TDlgIndicationDispatcher::processSuaInd(const SUAUnitdataInd & sua_ind)
 {
-  ASTag tmTag(sua_ind.userData(), sua_ind.userDataLen());
-  if (tmTag.tagClass != ASTag::tagApplication)
+  ASTag tmTag;
+  DECResult decRc = decode_tag(tmTag, sua_ind.userData(), sua_ind.userDataLen());
+  if (decRc.status || (tmTag._tagClass != ASTag::tagApplication))
     return false;
 
   bool      failed = false;
-  DECResult decRc;
   uint32_t  pos = (uint32_t)(sua_ind.userData() - sua_ind.msgBuffer());
   BITBuffer tmsgEnc(sua_ind.msgBuffer() + pos, (uint32_t)sua_ind.userDataLen());
 
   //decode TCAP message and create associated dispatcher
-  switch (tmTag.tagValue) {
+  switch (tmTag._tagValue) {
   case TCAPMessage::t_begin: {
     _msgTC.Reset(TCAPMessage::t_begin);
     decRc = _msgTC.deferredDecode(tmsgEnc);
-    if (decRc.rval) {
+    if (decRc.status) {
       failed = true;
     } else {
       Reset(indTBegin);
@@ -78,7 +72,7 @@ bool TDlgIndicationDispatcher::processSuaInd(const SUAUnitdataInd & sua_ind)
   case TCAPMessage::t_end: {
     _msgTC.Reset(TCAPMessage::t_end);
     decRc = _msgTC.deferredDecode(tmsgEnc);
-    if (decRc.rval) {
+    if (decRc.status) {
       failed = true;
     } else {
       Reset(indTEnd);
@@ -89,7 +83,7 @@ bool TDlgIndicationDispatcher::processSuaInd(const SUAUnitdataInd & sua_ind)
   case TCAPMessage::t_continue: {
     _msgTC.Reset(TCAPMessage::t_continue);
     decRc = _msgTC.deferredDecode(tmsgEnc);
-    if (decRc.rval) {
+    if (decRc.status) {
       failed = true;
     } else {
       Reset(indTCont);
@@ -100,7 +94,7 @@ bool TDlgIndicationDispatcher::processSuaInd(const SUAUnitdataInd & sua_ind)
   case TCAPMessage::t_abort: {
     _msgTC.Reset(TCAPMessage::t_abort);
     decRc = _msgTC.deferredDecode(tmsgEnc);
-    if (decRc.rval) {
+    if (decRc.status) {
       failed = true;
     } else {
       if (_msgTC.AbortPortion()->AbortForm() == TCMsgAbortPortion::abrtFrmProvider) {
@@ -121,24 +115,24 @@ bool TDlgIndicationDispatcher::processSuaInd(const SUAUnitdataInd & sua_ind)
 
 bool TDlgIndicationDispatcher::processSuaInd(const SUANoticeInd & sua_ind)
 {
-  ASTag tmTag(sua_ind.userData(), sua_ind.userDataLen());
-  if (tmTag.tagClass != ASTag::tagApplication)
+  ASTag tmTag;
+  DECResult decRc = decode_tag(tmTag, sua_ind.userData(), sua_ind.userDataLen());
+  if (decRc.status || (tmTag._tagClass != ASTag::tagApplication))
     return false;
 
   bool      failed = false;
-  DECResult decRc;
   uint32_t  pos = (uint32_t)(sua_ind.userData() - sua_ind.msgBuffer());
   BITBuffer tmsgEnc(sua_ind.msgBuffer() + pos, (uint32_t)sua_ind.userDataLen());
 
   //decode TCAP message
-  switch (tmTag.tagValue) {
+  switch (tmTag._tagValue) {
   case TCAPMessage::t_begin:
   case TCAPMessage::t_end:
   case TCAPMessage::t_continue:
   case TCAPMessage::t_abort: {
-    _msgTC.Reset(static_cast<TCAPMessage::TKind_e>(tmTag.tagValue));
+    _msgTC.Reset(static_cast<TCAPMessage::TKind_e>(tmTag._tagValue));
     decRc = _msgTC.deferredDecode(tmsgEnc);
-    if (decRc.rval)
+    if (decRc.status)
       failed = true;
   } break;
 
