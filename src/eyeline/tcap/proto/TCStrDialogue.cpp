@@ -26,35 +26,32 @@ EncodedOID _ac_tcap_strDialogue_as(_octs_strDialogue_as_id, "_ac_tcap_strDialogu
  * ************************************************************************* */
 
 //REQ: if use_rule == valRule, presentation > valNone, otherwise presentation == valDecoded
-ASTypeAC::ENCResult
-TCReqPDU::encode(OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
+ENCResult TCReqPDU::encode(OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
   /*throw ASN1CodecError*/
 {
   //TODO:
-  return ASTypeAC::ENCResult();
+  return ENCResult(ENCResult::encBadArg);
 }
 
 //REQ: presentation == valNone
 //OUT: presentation (include all subcomponents) = valDecoded,
 //NOTE: in case of decMoreInput, stores decoding context 
-ASTypeAC::DECResult
-TCReqPDU::decode(const OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
+DECResult TCReqPDU::decode(const OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
   /*throw ASN1CodecError*/
 {
   //TODO:
-  return ASTypeAC::DECResult();
+  return DECResult(DECResult::decBadArg);
 }
 
 //REQ: presentation == valNone
 //OUT: presentation (include all subcomponents) = valMixed | valDecoded
 //NOTE: in case of valMixed keeps references to BITBuffer !!!
 //NOTE: in case of decMoreInput, stores decoding context 
-ASTypeAC::DECResult
-TCReqPDU::deferredDecode(const OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
+DECResult TCReqPDU::deferredDecode(const OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
   /*throw ASN1CodecError*/
 {
   //TODO:
-  return ASTypeAC::DECResult();
+  return DECResult(DECResult::decBadArg);
 }
 
 /* ************************************************************************* *
@@ -62,35 +59,32 @@ TCReqPDU::deferredDecode(const OCTBuffer & use_buf, EncodingRule use_rule/* = ru
  * ************************************************************************* */
 
 //REQ: if use_rule == valRule, presentation > valNone, otherwise presentation == valDecoded
-ASTypeAC::ENCResult
-TCRespPDU::encode(OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
+ENCResult TCRespPDU::encode(OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
   /*throw ASN1CodecError*/
 {
   //TODO:
-  return ASTypeAC::ENCResult();
+  return ENCResult(ENCResult::encBadArg);
 }
 
 //REQ: presentation == valNone
 //OUT: presentation (include all subcomponents) = valDecoded,
 //NOTE: in case of decMoreInput, stores decoding context 
-ASTypeAC::DECResult
-TCRespPDU::decode(const OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
+DECResult TCRespPDU::decode(const OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
   /*throw ASN1CodecError*/
 {
   //TODO:
-  return ASTypeAC::DECResult();
+  return DECResult(DECResult::decBadArg);
 }
 
 //REQ: presentation == valNone
 //OUT: presentation (include all subcomponents) = valMixed | valDecoded
 //NOTE: in case of valMixed keeps references to BITBuffer !!!
 //NOTE: in case of decMoreInput, stores decoding context 
-ASTypeAC::DECResult
-TCRespPDU::deferredDecode(const OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
+DECResult TCRespPDU::deferredDecode(const OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
   /*throw ASN1CodecError*/
 {
   //TODO:
-  return ASTypeAC::DECResult();
+  return DECResult(DECResult::decBadArg);
 }
 
 /* ************************************************************************* *
@@ -98,35 +92,33 @@ TCRespPDU::deferredDecode(const OCTBuffer & use_buf, EncodingRule use_rule/* = r
  * ************************************************************************* */
 
 //REQ: if use_rule == valRule, presentation > valNone, otherwise presentation == valDecoded
-ASTypeAC::ENCResult
-TCAbrtPDU::encode(OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
+ENCResult TCAbrtPDU::encode(OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
   /*throw ASN1CodecError*/
 {
   //TODO:
-  return ASTypeAC::ENCResult();
+  return ENCResult(ENCResult::encBadArg);
 }
 
 //REQ: presentation == valNone
 //OUT: presentation (include all subcomponents) = valDecoded,
 //NOTE: in case of decMoreInput, stores decoding context 
-ASTypeAC::DECResult
+DECResult
 TCAbrtPDU::decode(const OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
   /*throw ASN1CodecError*/
 {
   //TODO:
-  return ASTypeAC::DECResult();
+  return DECResult(DECResult::decBadArg);
 }
 
 //REQ: presentation == valNone
 //OUT: presentation (include all subcomponents) = valMixed | valDecoded
 //NOTE: in case of valMixed keeps references to BITBuffer !!!
 //NOTE: in case of decMoreInput, stores decoding context 
-ASTypeAC::DECResult
-TCAbrtPDU::deferredDecode(const OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
+DECResult TCAbrtPDU::deferredDecode(const OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
   /*throw ASN1CodecError*/
 {
   //TODO:
-  return ASTypeAC::DECResult();
+  return DECResult(DECResult::decBadArg);
 }
 
 
@@ -135,35 +127,32 @@ TCAbrtPDU::deferredDecode(const OCTBuffer & use_buf, EncodingRule use_rule/* = r
  * ************************************************************************* */
 
 //REQ: if use_rule == valRule, presentation > valNone, otherwise presentation == valDecoded
-ASTypeAC::ENCResult
-TCStrDialogueAS::encode(OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
+ENCResult TCStrDialogueAS::encode(OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
   /*throw ASN1CodecError*/
 {
   //TODO:
-  return ASTypeAC::ENCResult();
+  return ENCResult(ENCResult::encBadArg);
 }
 
 //REQ: presentation == valNone
 //OUT: presentation (include all subcomponents) = valDecoded,
 //NOTE: in case of decMoreInput, stores decoding context 
-ASTypeAC::DECResult
-TCStrDialogueAS::decode(const OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
+DECResult TCStrDialogueAS::decode(const OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
   /*throw ASN1CodecError*/
 {
   //TODO:
-  return ASTypeAC::DECResult();
+  return DECResult(DECResult::decBadArg);
 }
 
 //REQ: presentation == valNone
 //OUT: presentation (include all subcomponents) = valMixed | valDecoded
 //NOTE: in case of valMixed keeps references to BITBuffer !!!
 //NOTE: in case of decMoreInput, stores decoding context 
-ASTypeAC::DECResult
-TCStrDialogueAS::deferredDecode(const OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
+DECResult TCStrDialogueAS::deferredDecode(const OCTBuffer & use_buf, EncodingRule use_rule/* = ruleDER*/)
   /*throw ASN1CodecError*/
 {
   //TODO:
-  return ASTypeAC::DECResult();
+  return DECResult(DECResult::decBadArg);
 }
 
 
