@@ -417,3 +417,23 @@ B3110: Sep 07, 2009
     SMSC	Billing on submit on route now forces charge on submit logic on this route. Otherwise default configured logic used. 
     SMSC	EIN SS7 HA reconnection logic separated from HD logic
     mcahdb	another status code changing by MTS
+
+B3111: Sep 24, 2009
+    emailsme	subj= now is optional, can be used "quoted text" after email add as subject
+    emailsme	allow to work in helpdesk mode and in normal mode together
+    emailsme	email domain for helpdesk addr should be specified separately by mail.helpdeskDomain parameter
+    Webadm	Remove original row text from output file if user does not allowed to see it
+    SMSC	smsc::stop instead of exit on failed reconnect MAP_PROXY for too long
+    SMSC	SNMP event fix rtStatusChange and rtNotification swapped
+    SMSC	nodivert for specific SMEs feature
+    SMSC	divert flag for concatenated messages fix for bill on submit
+    INMan	HOT-PATCH for short SME ISDN numbers, to avoid SRI for short intl/ISDN numbers
+    INMan	CapSM task completion in case of SMReject is fixed 
+    Infosme     fix: now openMessages=0 when csvfile is closed
+    Infosme	saveFinalState default changed to false
+    Infosme	fix: name of smscconnectors
+    Infosme	siebel task prefix consistent with TaskManager; every siebel-generated message should have userData
+    Infosme	disable saveFinalState for msg w/o userData
+    Infosme	fix bug with ConnectionPool shutdown
+    Infosme	reloading of routes and regions is supported
+    Infosme	task is not blocked by one slow sender
