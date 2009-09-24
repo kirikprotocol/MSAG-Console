@@ -79,10 +79,14 @@ void CAPSmTaskAC::onDPSMSResult(TCDialogID dlg_id, unsigned char rp_cause,
         MutexGuard tmp(_sync);
         CAPSmDPList::iterator res = lookUp(dlg_id);
         if (res == dpRes.end()) {
-            smsc_log_warn(logger, "%s: RES_IND for unhandled Dialog[%u:%Xh]",
+            smsc_log_warn(logger, "%s: DPSMRes_IND{%u} for unhandled Dialog[%u:%Xh]",
                           _logId, (unsigned)dlg_id.tcInstId, dlg_id.dlgId);
             return;
         }
+        smsc_log_debug(logger, "%s: DPSMRes_IND{%u} for Dialog[%u:%Xh]",
+                       _logId, (unsigned)rp_cause,
+                       (unsigned)dlg_id.tcInstId, dlg_id.dlgId);
+
     
         res->dlgRes->answered = true;
         if (!(res->dlgRes->rpCause = rp_cause)) {    //ContinueSMS
@@ -296,8 +300,13 @@ ScheduledTaskAC::PGState CAPSmTaskAC::Report(auto_ptr_utl<UtilizableObjITF> & us
     case pmInstructing: {
         if (use_ref) {
             use_ref->onTaskReport(_Owner, this);
-            _pMode = pmMonitoring;
-            _fsmState = ScheduledTaskAC::pgCont; //monitoringFSM();
+            if (doCharge) { //CHARGING_POSSIBLE -> wait for SM submission status
+              _pMode = pmMonitoring;
+              _fsmState = ScheduledTaskAC::pgCont;
+            } else {        //CHARGING_NOT_POSSIBLE -> normal completion
+              _pMode = pmIdle;
+              _fsmState = ScheduledTaskAC::pgDone;
+            }
         } else {
             //Billing is died or no longer interested in charging -> abort task
             if (doCharge) {
@@ -318,7 +327,7 @@ ScheduledTaskAC::PGState CAPSmTaskAC::Report(auto_ptr_utl<UtilizableObjITF> & us
         _fsmState = ScheduledTaskAC::pgDone;
     } break;
     //
-    default:
+    default: //inconsistent procMode
         log_warn("Report", use_dat.get(), use_ref ? ", referee(ON)" : ", referee(OFF)");
     } //eosw
     return _fsmState;

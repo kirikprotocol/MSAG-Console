@@ -194,7 +194,8 @@ protected:
 
     void Reschedule(TaskSchedulerITF::PGSignal use_sig)
     {
-        smsc_log_debug(logger, "%s: signalling %s", _logId, TaskSchedulerITF::nmPGSignal(use_sig));
+        smsc_log_debug(logger, "%s: {%s, %s} signalling %s", _logId,
+                       nmPMode(), nmPGState(), TaskSchedulerITF::nmPGSignal(use_sig));
         _Owner->SignalTask(_Id, use_sig);
     }
     void log_error(const char * nm_sig, bool has_arg = false, const char * aux_msg = "")
