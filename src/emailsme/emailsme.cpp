@@ -2896,7 +2896,7 @@ int main(int argc,char* argv[])
 "number\\s+off|"
 "realname\\s+.*|"
 "norealname|"
-"(?{address}[\\w\\-\\.]+@[\\w\\-\\.]+)(?:\\ssubj=\"(?{subj}.*?)\")?\\s*(?{body}.*)"
+"(?{address}[\\w\\-\\.]+@[\\w\\-\\.]+)(?:\\s(?:subj=)?\"(?{subj}.*?)\")?\\s*(?{body}.*)"
 ")\\s*$/isx"
 ))
   {
