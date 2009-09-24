@@ -38,7 +38,7 @@ ifndef ORACLE_LIB
 ifeq ($(B64),YES)
   ORACLE_LIB = $(ORACLE_HOME)/lib
 else
-  ORACLE_LIB = $(ORACLE_HOME)/lib64
+  ORACLE_LIB = $(ORACLE_HOME)/lib32
 endif
  export ORACLE_LIB
 endif
