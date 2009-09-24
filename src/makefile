@@ -34,12 +34,14 @@ USRLOCLIB := /usr/local/lib/64
 endif
 
 ifdef ORACLE_HOME
- ifeq ($(B64),YES)
-  ORACLE_LIB = $(ORACLE_HOME)/lib64
- else
+ifndef ORACLE_LIB
+ifeq ($(B64),YES)
   ORACLE_LIB = $(ORACLE_HOME)/lib
- endif
+else
+  ORACLE_LIB = $(ORACLE_HOME)/lib64
+endif
  export ORACLE_LIB
+endif
  ORACLE_INC = -I$(ORACLE_HOME)/rdbms/demo -I$(ORACLE_HOME)/rdbms/public -I$(ORACLE_HOME)/network/public
 endif
 
