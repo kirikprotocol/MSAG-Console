@@ -583,7 +583,7 @@ Billing::PGraphState Billing::onChargeSms(void)
         askProvider = true;
 
     //verify that abonent number is in ISDN international format
-    if (!abNumber.interISDN())
+    if (!abNumber.interISDN() || (abNumber.length < 10)) //HOT-PATCH for short SME ISDN numbers
         askProvider = false;
 
     if (askProvider && _cfg.iaPol) {
