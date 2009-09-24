@@ -2964,7 +2964,7 @@ int main(int argc,char* argv[])
       initRegions(cfgman.getString("admin.regionsconfig"),cfgman.getString("admin.routesconfig"));
     } catch(std::exception& e)
     {
-      __warning__("regions support disabled");
+      __warning2__("regions support disabled, exception: %s", e.what());
     }
 
     try
