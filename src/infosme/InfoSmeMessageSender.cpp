@@ -1,6 +1,7 @@
 #include "InfoSmeMessageSender.h"
 #include "SmscConnector.h"
 #include "util/config/region/RegionFinder.hpp"
+#include "system/status.h"
 
 namespace smsc {
 namespace infosme {
@@ -62,8 +63,17 @@ void InfoSmeMessageSender::stop()
 
 uint32_t InfoSmeMessageSender::sendSms(const std::string& org,const std::string& dst,const std::string& txt,bool flash)
 {
-    smsc_log_info(log_, "sendSms do default region!");
-    return defaultConnector_->sendSms(org,dst,txt,flash);
+    smsc::sms::Address parsedAddr(dst.c_str());
+    const smsc::util::config::region::Region* foundRegion = smsc::util::config::region::RegionFinder::getInstance().findRegionByAddress(parsedAddr.toString());
+    if ( !foundRegion ) {
+      smsc_log_warn(log_, "sendSms: can't find region for abonent '%s'", dst.c_str());
+      return smsc::system::Status::NOROUTE;
+    }
+    smsc_log_debug(log_, "sendSms: telephone number '%s' matches to mask for region with id '%s'", dst.c_str(), foundRegion->getId().c_str());
+
+    SmscConnector* connector = getSmscConnector(foundRegion->getId());
+
+    return connector->sendSms(org,dst,txt,flash);
 }
 
 
