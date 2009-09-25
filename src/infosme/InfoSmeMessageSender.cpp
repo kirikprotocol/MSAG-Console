@@ -140,6 +140,11 @@ void InfoSmeMessageSender::reloadSmscAndRegions( Manager& manager )
         smsc_log_debug(log_,"the default smsc is %s", defaultConnector_->getSmscId().c_str() );
     }
 
+    // delete all regions-to-smsc mapping
+    smsc_log_debug(log_,"resetting all region mapping in region finder");
+    smsc::util::config::region::RegionFinder::getInstance().unsafeReset();
+    regions_.Empty();
+
     // regions
     ConfigView tpConfig(manager,"InfoSme");
     const char* route_xml_file = tpConfig.getString("route_config_filename");
@@ -156,11 +161,6 @@ void InfoSmeMessageSender::reloadSmscAndRegions( Manager& manager )
         smsc_log_info(log_, "config file %s has been loaded successful", route_xml_file);
     else
         throw smsc::util::config::ConfigException("can't load config file %s", route_xml_file);
-
-    // delete all regions-to-smsc mapping
-    smsc_log_debug(log_,"resetting all region mapping in region finder");
-    smsc::util::config::region::RegionFinder::getInstance().unsafeReset();
-    regions_.Empty();
 
     smsc::util::config::region::Region* region;
     smsc::util::config::region::RegionsConfig::RegionsIterator regsIter = regionsConfig_->getIterator();
