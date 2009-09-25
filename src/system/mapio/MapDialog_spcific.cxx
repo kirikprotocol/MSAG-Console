@@ -222,34 +222,13 @@ struct MAP_SMS_ADDRESS{
 };
 
 struct MAP_TIMESTAMP{
-  struct{
-    unsigned char second:4;
-    unsigned char first:4;
-  }year;
-  struct{
-    unsigned char second:4;
-    unsigned char first:4;
-  }mon;
-  struct{
-    unsigned char second:4;
-    unsigned char first:4;
-  }day;
-  struct{
-    unsigned char second:4;
-    unsigned char first:4;
-  }hour;
-  struct{
-    unsigned char second:4;
-    unsigned char first:4;
-  }min;
-  struct{
-    unsigned char second:4;
-    unsigned char first:4;
-  }sec;
-  struct{
-    unsigned char second:4;
-    unsigned char first:4;
-  }tz;
+  uint8_t year;
+  uint8_t mon;
+  uint8_t day;
+  uint8_t hour;
+  uint8_t min;
+  uint8_t sec;
+  uint8_t tz;
 };
 
 inline void mkSS7GTAddress( ET96MAP_SS7_ADDR_T *addr, const ET96MAP_ADDRESS_T *saddr, ET96MAP_LOCAL_SSN_T ssn) {

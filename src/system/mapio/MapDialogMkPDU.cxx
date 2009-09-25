@@ -15,31 +15,32 @@
 };
 */
 
+static uint8_t uint8tohalfoct(uint8_t val)
+{
+  uint8_t high=val/10;
+  uint8_t low=val%10;
+  return (high<<4)|low;
+}
+
 void fillPduTime(MAP_TIMESTAMP* pdu_tm,struct tm* tms,int atz)
 {
-  pdu_tm->year.first  =  ((tms->tm_year)%100)/10;
-  pdu_tm->year.second  = tms->tm_year%10;
-  pdu_tm->mon.first  =  (tms->tm_mon+1)/10;
-  pdu_tm->mon.second  = (tms->tm_mon+1)%10;
-  pdu_tm->day.first  =  tms->tm_mday/10;
-  pdu_tm->day.second  = tms->tm_mday%10;
-  pdu_tm->hour.first  =  tms->tm_hour/10;
-  pdu_tm->hour.second  = tms->tm_hour%10;
-  pdu_tm->min.first  =  tms->tm_min/10;
-  pdu_tm->min.second  = tms->tm_min%10;
-  pdu_tm->sec.first  =  tms->tm_sec/10;
-  pdu_tm->sec.second  = tms->tm_sec%10;
+  pdu_tm->year = uint8tohalfoct(tms->tm_year%100);
+  pdu_tm->mon = uint8tohalfoct(tms->tm_mon+1);
+  pdu_tm->day = uint8tohalfoct(tms->tm_mday);
+  pdu_tm->hour = uint8tohalfoct(tms->tm_hour);
+  pdu_tm->min  =  uint8tohalfoct(tms->tm_min);
+  pdu_tm->sec = uint8tohalfoct(tms->tm_sec);
   if ( tms->tm_isdst ) atz-=3600;
   atz = -atz/900;
   if(atz<0)
   {
     atz=-atz;
-    pdu_tm->tz.first=0x8|(atz/10);
+    pdu_tm->tz=(0x8|(atz/10))<<4;
   }else
   {
-    pdu_tm->tz.first = atz/10;
+    pdu_tm->tz = (atz/10)<<4;
   }
-  pdu_tm->tz.second = atz%10;
+  pdu_tm->tz |= atz%10;
 }
 
 ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false)
