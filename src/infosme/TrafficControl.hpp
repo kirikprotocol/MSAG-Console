@@ -16,8 +16,8 @@ public:
 
 private:
   static EventMonitor   trafficMonitor;
-  static TimeSlotCounter<int> incoming;
-  static TimeSlotCounter<int> outgoing;
+  static smsc::util::TimeSlotCounter<int> incoming;
+  static smsc::util::TimeSlotCounter<int> outgoing;
   static bool                 stopped;
 };
 
