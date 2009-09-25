@@ -283,7 +283,11 @@ void SmscConnector::updateConfig( const smsc::sme::SmeConfig& config )
     smsc_log_warn(log_, "updateConfig on '%s'... ", smscId_.c_str());
     MutexGuard mg(connectMonitor_);
     session_->close();
-    session_.reset(new SmppSession(config,&listener_));
+    std::auto_ptr<SmppSession> newsess(new SmppSession(config,&listener_));
+    listener_.setSyncTransmitter(newsess->getSyncTransmitter());
+    listener_.setAsyncTransmitter(newsess->getAsyncTransmitter());
+    std::auto_ptr<SmppSession> oldsess(session_.release());
+    session_.reset(newsess.release());
     connected_ = false;
     connectMonitor_.notify();
 }
