@@ -170,8 +170,6 @@ public class RegionsManager extends Observable {
       out.println("  <region_default bandwidth=\"" + defaultBandwidth + "\"" + (defaultEmail==null || defaultEmail.length() == 0 ? "" : " email=\"" + defaultEmail + "\" ") + "/>");
       Functions.storeConfigFooter(out, "regions");
       modified = false;
-      setChanged();
-      notifyObservers();
     } catch (IOException e) {
       log.error(e,e);
       throw new AdminException("Can't save regions. Reason: " + e.getMessage());
@@ -188,6 +186,8 @@ public class RegionsManager extends Observable {
       final File newFile = Functions.createNewFilenameForSave(regionsFile);
       save(newFile);
       Functions.renameNewSavedFileToOriginal(newFile, regionsFile);
+        setChanged();
+        notifyObservers();
     } catch (IOException e) {
       log.error(e,e);
       throw new AdminException("Can't save regions. Reason: " + e.getMessage());
