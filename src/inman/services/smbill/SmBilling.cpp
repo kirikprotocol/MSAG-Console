@@ -169,6 +169,7 @@ void Billing::handleCommand(INPPacketAC* pck)
                 chgReq->loadDataBuf();
                 chgReq->export2CDR(cdr);
                 chgReq->exportCAPInfo(csInfo);
+                chrgFlags = chgReq->getChargingFlags();
             } catch (SerializerException & exc) {
                 smsc_log_error(logger, "%s: %s", _logId, exc.what());
                 badPdu = true;
@@ -536,6 +537,8 @@ Billing::PGraphState Billing::onChargeSms(void)
         billMode = ChargeParm::bill2CDR;
     else if (cdr._smsXMask & SMSX_INCHARGE_SRV)
         billMode = ChargeParm::bill2IN;
+    else if (chrgFlags & ChargeSms::chrgCDR)
+        billMode = ChargeParm::bill2CDR;
 
 #ifdef SMSEXTRA
     //TMP_PATCH: Use bill2CDR mode in case of special MSC address reserved for SMSX WEB gateway

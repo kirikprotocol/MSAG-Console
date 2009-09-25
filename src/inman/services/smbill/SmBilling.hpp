@@ -50,7 +50,7 @@ using smsc::inman::interaction::SMCAPSpecificInfo;
 class Billing : public WorkerAC, TaskRefereeITF,
                 IAPQueryListenerITF, TimerListenerITF {
 public:
-    typedef enum {
+    enum BillingState {
         bilIdle,
         bilStarted,     // SSF <- SMSC : CHARGE_SMS_TAG
                         //   [Timer] SSF -> IAProvider
@@ -65,7 +65,7 @@ public:
                         //   [Timer] SSF -> SCF : EventReportSMS
         bilReported,    // SSF <- SCF: T_END{OK|NO}
         bilComplete     // 
-    } BillingState;
+    };
 
     enum PGraphState {  //billing processing graph state
         pgAbort = -1,   //processing has aborted (worker aborted itself)
@@ -101,6 +101,7 @@ private:
 
     CDRRecord           cdr;        //data for CDR record creation & CAP3 interaction
     SMCAPSpecificInfo   csInfo;     //data for CAP3 interaction
+    uint8_t             chrgFlags;  //flags which customize billing settings
     const BModesPrio *  billPrio;   //billing modes priority 
     ChargeParm::MSG_TYPE  msgType;  //
     ChargeParm::BILL_MODE billMode; //current billing mode
@@ -151,10 +152,11 @@ protected:
 
 public:
     Billing(unsigned b_id, SmBillManager * owner, Logger * uselog = NULL)
-        : WorkerAC(b_id, owner, uselog), state(bilIdle), abScf(0)
-        , providerQueried(false), billErr(0), capTask(0), capSched(0), xsmsSrv(0)
+        : WorkerAC(b_id, owner, uselog), _cfg(owner->getConfig())
+        , state(bilIdle), chrgFlags(0), billPrio(0)
         , msgType(ChargeParm::msgUnknown), billMode(ChargeParm::billOFF)
-        , _cfg(owner->getConfig())
+        , providerQueried(false), abScf(0), xsmsSrv(0), billErr(0)
+        , capTask(0), capSched(0)
     {
         logger = uselog ? uselog : Logger::getInstance("smsc.inman.Billing");
         snprintf(_logId, sizeof(_logId)-1, "Billing[%u:%u]", _mgr->cmId(), _wId);

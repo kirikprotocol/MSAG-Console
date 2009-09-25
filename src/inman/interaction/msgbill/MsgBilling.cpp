@@ -46,13 +46,13 @@ CsBillingHdr_sess::CsBillingHdr_sess()
 ChargeSms::ChargeSms()
     : INPBillingCmd(INPCSBilling::CHARGE_SMS_TAG)
     , partsNum(1), smsXSrvsId(0), chrgPolicy(CDRRecord::ON_DELIVERY)
-    , mtBill(false)
+    , chrgFlags(0)
 { }
 
 void ChargeSms::load(ObjectBuffer& in) throw(SerializerException)
 {
     //service fields
-    in >> mtBill;
+    in >> chrgFlags;
     in >> smsXSrvsId;
     //data for IN interaction
     in >> dstSubscriberNumber;
@@ -83,7 +83,7 @@ void ChargeSms::load(ObjectBuffer& in) throw(SerializerException)
 void ChargeSms::save(ObjectBuffer& out) const
 {
     //service fields
-    out << mtBill;
+    out << chrgFlags;
     out << smsXSrvsId;
     //data for IN interaction
     out << dstSubscriberNumber;
@@ -132,7 +132,7 @@ void ChargeSms::export2CDR(CDRRecord & cdr) const
     cdr._dpLength = (uint32_t)msgLen;
     cdr._smsXMask = smsXSrvsId;
     cdr._chargePolicy = chrgPolicy;
-    cdr._chargeType = mtBill ? CDRRecord::MT_Charge : CDRRecord::MO_Charge;
+    cdr._chargeType = (chrgFlags & chrgMT) ? CDRRecord::MT_Charge : CDRRecord::MO_Charge;
     cdr._finalized = CDRRecord::dpSubmitted;
 }
 

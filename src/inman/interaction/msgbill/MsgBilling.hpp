@@ -87,11 +87,17 @@ struct SMCAPSpecificInfo {
 
 class ChargeSms : public INPBillingCmd {
 public:
+    enum ChargingFlags_e {
+        chrgMT = 0x01   //charge the dstSubscriber instead of calling one
+      , chrgCDR = 0x02  //force charging via CDR despite of subscriber contract
+    };
     ChargeSms(); //by default: charging policy is ON_DELIVERY, charging type is MO
     virtual ~ChargeSms() { }
 
     void setMTcharge(void)
-        { mtBill = true; }
+        { chrgFlags |= chrgMT; }
+    void setForcedCDR(void)
+        { chrgFlags |= chrgCDR; }
     void setChargeOnSubmit(void)
         { chrgPolicy = CDRRecord::ON_SUBMIT; }
     void setSmsXSrvs(uint32_t srv_ids)
@@ -135,6 +141,7 @@ public:
     void export2CDR(CDRRecord & cdr) const;
     void exportCAPInfo(SMCAPSpecificInfo & csi) const { csi = csInfo; }
     uint32_t getSmsXSrvs(void) const { return smsXSrvsId; }
+    uint8_t  getChargingFlags(void) const { return chrgFlags; }
 
 protected:
     //SerializableObject interface
@@ -160,7 +167,7 @@ private:
     SMCAPSpecificInfo csInfo;
     //
     uint32_t      smsXSrvsId;
-    bool          mtBill;       //charge the dstSubscriber instead of calling one
+    uint8_t       chrgFlags;    //flags which customize billing settings
     std::string   dsmSrvType;   //SMPP DATA_SM service type
 };
 
