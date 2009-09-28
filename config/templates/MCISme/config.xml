@@ -11,6 +11,7 @@
 	<param name="SvcTypeOnLine" type="string">MCAONL</param>
         <param name="ProtocolId" type="int">0</param>
 
+        <!-- if DaysValid is greater than 10 then it measured in hours -->
 	<param name="DaysValid"  type="int">1</param>
 	
 	<param name="unrespondedMessagesMax" type="int">100</param>
