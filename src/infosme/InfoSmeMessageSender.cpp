@@ -134,6 +134,10 @@ void InfoSmeMessageSender::reloadSmscAndRegions( Manager& manager )
             delete *i;
         }
     }
+
+    const bool oldStarted = started_;
+    stop();
+
     // add new connectors
     for ( smsc::util::config::CStrSet::iterator i = connNames.get()->begin();
           i != connNames.get()->end(); ++i ) {
@@ -195,6 +199,8 @@ void InfoSmeMessageSender::reloadSmscAndRegions( Manager& manager )
     smsc_log_debug(log_,"registering a default region %s/'%s'",
                    region->getId().c_str(), region->getName().c_str() );
     smsc::util::config::region::RegionFinder::getInstance().registerDefaultRegion(&regdef);
+
+    if ( oldStarted ) start();
 }
 
 
