@@ -21,6 +21,8 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
 
   private static final Logger logger = Logger.getLogger(SiebelDataProviderImpl.class);
 
+    private static final int FETCH_SIZE = 1000;
+
   private ConnectionPool pool;
 
   private final Properties sql;
@@ -80,8 +82,8 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
     try {
       connection = pool.getConnection();
 
-      prepStatement = connection.prepareStatement(getSql("message.get"), java.sql.ResultSet.CONCUR_READ_ONLY);
-      prepStatement.setFetchSize(Integer.MIN_VALUE);
+      prepStatement = connection.prepareStatement(getSql("message.get"));
+      prepStatement.setFetchSize(FETCH_SIZE);
       prepStatement.setString(1, clcId);
 
       sqlResult = prepStatement.executeQuery();
@@ -127,8 +129,8 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
     try {
       connection = pool.getConnection();
 
-      prepStatement = connection.prepareStatement(getSql("message.list"), java.sql.ResultSet.CONCUR_READ_ONLY);
-      prepStatement.setFetchSize(Integer.MIN_VALUE);
+      prepStatement = connection.prepareStatement(getSql("message.list"));
+      prepStatement.setFetchSize(FETCH_SIZE);
       prepStatement.setString(1, waveId);
 
       sqlResult = prepStatement.executeQuery();
@@ -156,8 +158,8 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
     try {
       connection = pool.getConnection();
 
-      prepStatement = connection.prepareStatement(getSql("task.get"), java.sql.ResultSet.CONCUR_READ_ONLY);
-      prepStatement.setFetchSize(Integer.MIN_VALUE);
+      prepStatement = connection.prepareStatement(getSql("task.get"));
+      prepStatement.setFetchSize(FETCH_SIZE);
       prepStatement.setString(1, waveId);
 
       sqlResult = prepStatement.executeQuery();
@@ -202,8 +204,8 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
     try {
       connection = pool.getConnection();
 
-      prepStatement = connection.prepareStatement(getSql("task.list.update"), java.sql.ResultSet.CONCUR_READ_ONLY);
-      prepStatement.setFetchSize(Integer.MIN_VALUE);
+      prepStatement = connection.prepareStatement(getSql("task.list.update"));
+      prepStatement.setFetchSize(FETCH_SIZE);
       prepStatement.setTimestamp(1, new Timestamp(fromUpdate.getTime()));
       prepStatement.setTimestamp(2, new Timestamp(tillUpdate.getTime()));
 
@@ -228,8 +230,8 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
     try {
       connection = pool.getConnection();
 
-      prepStatement = connection.prepareStatement(getSql("task.list"), java.sql.ResultSet.CONCUR_READ_ONLY);
-      prepStatement.setFetchSize(Integer.MIN_VALUE);
+      prepStatement = connection.prepareStatement(getSql("task.list"));
+      prepStatement.setFetchSize(FETCH_SIZE);
 
       sqlResult = prepStatement.executeQuery();
 
@@ -287,8 +289,8 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
     try {
       connection = pool.getConnection();
 
-      prepStatement = connection.prepareStatement(getSql("task.get.status"), java.sql.ResultSet.CONCUR_READ_ONLY);
-      prepStatement.setFetchSize(Integer.MIN_VALUE);
+      prepStatement = connection.prepareStatement(getSql("task.get.status"));
+      prepStatement.setFetchSize(FETCH_SIZE);
       prepStatement.setString(1, waveId);
 
       sqlResult = prepStatement.executeQuery();
@@ -357,8 +359,8 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
     try {
       connection = pool.getConnection();
 
-      prepStatement = connection.prepareStatement(getSql("message.get.status"), java.sql.ResultSet.CONCUR_READ_ONLY);
-      prepStatement.setFetchSize(Integer.MIN_VALUE);
+      prepStatement = connection.prepareStatement(getSql("message.get.status"));
+      prepStatement.setFetchSize(FETCH_SIZE);
       prepStatement.setString(1, clcId);
 
       sqlResult = prepStatement.executeQuery();
