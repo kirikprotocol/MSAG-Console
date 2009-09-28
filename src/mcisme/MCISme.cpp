@@ -239,6 +239,7 @@ private:
   RWLock _activeThreadRunningLock;
   MCISmeMessageSender(const MCISmeMessageSender& rhs);
   MCISmeMessageSender& operator=(const MCISmeMessageSender& rhs);
+  enum { MAX_VALUE_IN_DAYS = 10 };
 public:
 
   MCISmeMessageSender(TaskProcessor& processor, SmppSession* session) 
@@ -423,7 +424,13 @@ public:
         out = msgBuf; outLen = msgLen;
       }
 
-      time_t smsValidityDate = time(NULL) + processor.getDaysValid()*3600*24;
+      int dayValid = processor.getDaysValid();
+      time_t smsValidityDate;
+      if ( dayValid > MAX_VALUE_IN_DAYS )
+        // if smsValidityDate > MAX_VALUE_IN_DAYS then it expressed in hours
+        smsValidityDate = time(NULL) + dayValid*3600;
+      else
+        smsValidityDate = time(NULL) + dayValid*3600*24;
 
       EService svcType;
       strncpy(svcType, processor.getSvcTypeOnLine(), MAX_ESERVICE_TYPE_LENGTH);
