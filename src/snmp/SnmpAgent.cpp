@@ -161,7 +161,7 @@ static char const ident[] = "$Id$";
         netsnmp_variable_list *notification_vars = NULL;
         snmp_varlist_add_variable(&notification_vars,
                                   status_oid, OID_LENGTH(status_oid), ASN_INTEGER,
-                                  (u_char *) vars->status, sizeof(vars->status));
+                                  (u_char *) &vars->status, sizeof(vars->status));
         send_enterprise_trap_vars(SNMP_TRAP_ENTERPRISESPECIFIC, 1,
                                   statusNotificationOid,
                                   (int)OID_LENGTH(statusNotificationOid), notification_vars);
