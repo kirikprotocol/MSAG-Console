@@ -101,7 +101,7 @@ public class testFinalStateThread {
         try {
             SiebelFinalStateThread stateThread = new SiebelFinalStateThread("working", "processed", provider );
             stateThread.start();
-            stateThread.join(); // waiting until it is finished
+            // stateThread.join(); // waiting until it is finished
         } catch ( Exception e ) {
             e.printStackTrace( System.out );
         }

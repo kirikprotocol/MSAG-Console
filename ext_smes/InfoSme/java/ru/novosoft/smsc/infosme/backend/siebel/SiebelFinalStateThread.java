@@ -37,11 +37,13 @@ public class SiebelFinalStateThread {
 
   public void shutdown() {
     started_ = false;
+      if (currentThread != null) {
     currentThread.interrupt();
     try {
       currentThread.join();
     } catch (InterruptedException e) {
     }
+      }
   }
 
   public boolean isOnline() {
