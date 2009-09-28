@@ -62,7 +62,7 @@ public class Task extends Observable
   private boolean transactionMode = false;
   private boolean keepHistory = false;
     // temporary switched to true
-  private boolean saveFinalState = true;
+  private boolean saveFinalState = false;
   private boolean flash = false;
   private int uncommitedInGeneration = 0;
   private int uncommitedInProcess = 0;
@@ -128,7 +128,8 @@ public class Task extends Observable
     uncommitedInProcess = config.getInt(prefix + ".uncommitedInProcess");
     trackIntegrity = config.getBool(prefix + ".trackIntegrity");
     keepHistory = config.getBool(prefix + ".keepHistory");
-    saveFinalState = config.getBool(prefix + ".saveFinalState");
+    if (config.containsParameter(prefix + ".saveFinalState"))
+      saveFinalState = config.getBool(prefix + ".saveFinalState");
     messagesHaveLoaded = config.getBool(prefix + ".messagesHaveLoaded");
 
     delivery  = config.containsParameter(prefix + ".delivery") && config.getBool(prefix + ".delivery");

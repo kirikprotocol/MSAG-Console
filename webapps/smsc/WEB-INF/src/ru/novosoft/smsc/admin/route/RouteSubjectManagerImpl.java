@@ -19,13 +19,10 @@ import ru.novosoft.smsc.util.xml.Utils;
 import javax.xml.parsers.FactoryConfigurationError;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ArrayList;
+import java.util.*;
 
 
-public class RouteSubjectManagerImpl implements RouteSubjectManager {
+public class RouteSubjectManagerImpl extends Observable implements RouteSubjectManager {
     private RouteList routes = null;
     private SubjectList subjects = null;
     private Category logger = Category.getInstance(this.getClass());
@@ -132,6 +129,8 @@ public class RouteSubjectManagerImpl implements RouteSubjectManager {
             out.flush();
             out.close();
             Functions.renameNewSavedFileToOriginal(newFile, file);
+            setChanged();
+            notifyObservers();
         } catch (FileNotFoundException e) {
             throw new AdminException("Couldn't save new routes settings: Couldn't write to destination config filename: " + e.getMessage());
         } catch (IOException e) {

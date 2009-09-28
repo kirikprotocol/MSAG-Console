@@ -68,7 +68,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
   private PerfServer perfServer = null;
   private TopServer topServer = null;
   private SmeManager smeManager = null;
-  private RouteSubjectManager routeSubjectManager = null;
+  private RouteSubjectManagerImpl routeSubjectManager = null;
   private RegionsManager regionsManager = null;
   private FraudConfigManager fraudConfigManager = null;
   private ResourcesManager resourcesManager = null;
@@ -138,7 +138,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
       serviceManager.add(smsc);
       routeSubjectManager = new RouteSubjectManagerImpl(smeManager);
       regionsManager = RegionsManager.getInstance();
-        regionsManager.addObserver(new Observer() {
+      Observer regionsChangedObserver = new Observer() {
             public void update(Observable o, Object arg) {
                 try {
                     Class infoSmeContextClass = Class.forName("ru.novosoft.smsc.infosme.backend.InfoSmeContext");
@@ -153,7 +153,9 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
                     e.printStackTrace();
                 }
             }
-        });
+        };
+      regionsManager.addObserver(regionsChangedObserver);
+      routeSubjectManager.addObserver(regionsChangedObserver);
       fraudConfigManager = FraudConfigManager.getInstance();
 
       switch (Constants.instType) {

@@ -88,11 +88,6 @@
 </tr>
 
 <tr class=row<%=rowN++&1%>>
-  <th>Default smsc connector</th>
-  <td><input class=txt name=defSmscConn value="<%=StringEncoderDecoder.encode(bean.getDefSmscConn())%>"></td>
-</tr>
-
-<tr class=row<%=rowN++&1%>>
   <th>Store location</th>
   <td><input class=txt name=storeLocation value="<%=StringEncoderDecoder.encode(bean.getStoreLocation())%>"></td>
 </tr>
@@ -112,6 +107,11 @@
         <%  final DynamicTableHelper tableHelper = bean.getSmscHelper();%>
           <%@ include file="/WEB-INF/inc/dynamic_table.jsp"%>
     </td>
+</tr>
+    
+<tr class=row<%=rowN++&1%>>
+  <th>Default smsc connector</th>
+  <td><input class=txt name=defSmscConn value="<%=StringEncoderDecoder.encode(bean.getDefSmscConn())%>"></td>
 </tr>
 
 </table>

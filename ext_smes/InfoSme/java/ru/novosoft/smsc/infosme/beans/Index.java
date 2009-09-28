@@ -105,8 +105,10 @@ public class Index extends IndexProperties
       if (retries)
         getInfoSme().applyRetryPolicies();
 
-      if(options)
+      if(options) {
+        getInfoSme().reloadSmscAndRegions();
         return warning("infosme.prompt.restart");
+      }
 
     } catch (Throwable e) {
       logger.error("Couldn't save InfoSME config", e);
