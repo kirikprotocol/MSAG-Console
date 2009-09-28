@@ -180,7 +180,10 @@ bool SmscConnector::RegionTrafficControl::speedLimitReached( Task* task, const M
     uint32_t taskId = task->getId();
     smsc_log_debug( log_, "TaskProcessor::controlTrafficSpeedByRegion::: TaskId=[%d]: check region(regionId=%s) bandwidth limit exceeding", taskId, message.regionId.c_str());
     const smsc::util::config::region::Region* region = smsc::util::config::region::RegionFinder::getInstance().getRegionById(message.regionId);
-    if ( ! region ) return true;
+    if ( ! region ) {
+        smsc_log_debug(log_,"TaskProcessor::controlTraffic no region %s found",message.regionId.c_str());
+        return true;
+    }
 
     timeSlotsHashByRegion_t::iterator iter = timeSlotsHashByRegion_.lower_bound(message.regionId);
     if ( iter == timeSlotsHashByRegion_.end() || iter->first != message.regionId ) {
