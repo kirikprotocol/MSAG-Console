@@ -16,7 +16,7 @@ import ru.novosoft.smsc.infosme.backend.Message;
 /**
  * author: alkhal
  */
-public class SiebelTaskManager implements Runnable{
+public class SiebelTaskManager implements Runnable {
 
   private static final Logger logger = Logger.getLogger(SiebelTaskManager.class);
 
@@ -33,13 +33,13 @@ public class SiebelTaskManager implements Runnable{
   private long timeout = 20000;
 
   public SiebelTaskManager(SiebelDataProvider dataProvider, InfoSmeContext infoSmeContext) {
-    if(dataProvider == null) {
+    if (dataProvider == null) {
       throw new IllegalArgumentException("Some argument are null");
     }
     this.provider = dataProvider;
     this.ctx = infoSmeContext;
-    if(ctx.getInfoSmeConfig().getSiebelTMPeriod() != 0) {
-      timeout = 1000*ctx.getInfoSmeConfig().getSiebelTMPeriod();
+    if (ctx.getInfoSmeConfig().getSiebelTMPeriod() != 0) {
+      timeout = 1000 * ctx.getInfoSmeConfig().getSiebelTMPeriod();
     }
   }
 
@@ -53,89 +53,92 @@ public class SiebelTaskManager implements Runnable{
   }
 
   public void start() {
-    if(shutdown) {
+    if (shutdown) {
       new Thread(this, "SiebelTaskManager").start();
-      if(logger.isDebugEnabled()) {
+      if (logger.isDebugEnabled()) {
         logger.debug("Siebel: task manager started");
       }
     }
   }
 
   public void run() {
-    try{
+    try {
       shutdown = false;
       lastCheck = new Date(0);
-      while(!shutdown) {
+      while (!shutdown) {
         ResultSet rs = null;
-        try{
+        try {
           rs = provider.getTasksUpdates(lastCheck);
           Date max = lastCheck;
-          while(rs.next()) {
-            final SiebelTask st = (SiebelTask)rs.get();
-            if (st.getLastUpdate().after(max))
-              max = new Date(st.getLastUpdate().getTime());
-            if(logger.isDebugEnabled()) {
-              logger.debug("Siebel: found modified task "+st);
+          while (rs.next()) {
+            final SiebelTask st = (SiebelTask) rs.get();
+            if (logger.isDebugEnabled()) {
+              logger.debug("Siebel: found modified task " + st);
             }
 
-            new Thread(){
-              public void run() {
-                try{
-                  process(st);
-                }catch(Throwable e) {
-                  logger.error(e,e);
+            if (st.getStatus().isCreatedBySiebel()) {
+              new Thread() {
+                public void run() {
+                  try {
+                    process(st);
+                  } catch (Throwable e) {
+                    logger.error(e, e);
+                  }
                 }
-              }
-            }.start();
+              }.start();
 
+              if (st.getLastUpdate().after(max))
+                max = new Date(st.getLastUpdate().getTime());
+            }
           }
           lastCheck = max;
-        }catch(Throwable e) {
-          logger.error(e,e);
-        } finally{
-          if(rs != null) {
+        } catch (Throwable e) {
+          logger.error(e, e);
+        } finally {
+          if (rs != null) {
             rs.close();
           }
         }
-        try{
+        try {
           Thread.sleep(timeout);
-        }catch(InterruptedException e){}
+        } catch (InterruptedException e) {
+        }
       }
 
-      if(logger.isDebugEnabled()) {
+      if (logger.isDebugEnabled()) {
         logger.debug("Siebel: task manager stopped");
       }
 
-    }catch(Throwable e) {
-      logger.error(e,e);
+    } catch (Throwable e) {
+      logger.error(e, e);
     }
   }
 
 
   private void beginTask(SiebelTask st) throws SiebelException {
-    try{
+    try {
       String taskname = buildTaskName(st.getWaveId());
       Task t;
 
-      if(ctx.getInfoSmeConfig().containsTaskWithName(taskname, TASK_OWNER)) {
+      if (ctx.getInfoSmeConfig().containsTaskWithName(taskname, TASK_OWNER)) {
         t = ctx.getInfoSmeConfig().getTaskByName(taskname);
-        if(t.isMessagesHaveLoaded()) {
-          if(!t.isEnabled()) {
+        if (t.isMessagesHaveLoaded()) {
+          if (!t.isEnabled()) {
             t.setEnabled(true);
             _changeTask(t);
-            if(logger.isDebugEnabled()) {
-              logger.debug("Siebel: enable tasK "+st);
+            if (logger.isDebugEnabled()) {
+              logger.debug("Siebel: enable tasK " + st);
             }
           }
           provider.setTaskStatus(st.getWaveId(), SiebelTask.Status.IN_PROCESS);
 
-          if(logger.isDebugEnabled()) {
-            logger.debug("Siebel: set tasK status to "+SiebelTask.Status.IN_PROCESS);
+          if (logger.isDebugEnabled()) {
+            logger.debug("Siebel: set tasK status to " + SiebelTask.Status.IN_PROCESS);
           }
           return;
-        }else {
-          if(logger.isDebugEnabled()) {
-            logger.debug("Siebel: re-add tasK after crash "+st);
+        } else {
+          if (logger.isDebugEnabled()) {
+            logger.debug("Siebel: re-add tasK after crash " + st);
           }
           _removeTask(t);
         }
@@ -143,124 +146,126 @@ public class SiebelTaskManager implements Runnable{
 
       t = createTask(st, taskname);
       ResultSet messages = null;
-      try{
+      try {
         messages = provider.getMessages(st.getWaveId());
         addTask(ctx, t, messages);
-      }finally{
-        if(messages != null) {
+      } finally {
+        if (messages != null) {
           messages.close();
         }
       }
       provider.setTaskStatus(st.getWaveId(), SiebelTask.Status.IN_PROCESS);
-      if(logger.isDebugEnabled()) {
-        logger.debug("Siebel: set tasK status to "+SiebelTask.Status.IN_PROCESS);
+      if (logger.isDebugEnabled()) {
+        logger.debug("Siebel: set tasK status to " + SiebelTask.Status.IN_PROCESS);
       }
-    }catch(Throwable e) {
+    } catch (Throwable e) {
       throw new SiebelException(e);
     }
   }
 
   private void stopTask(SiebelTask st) throws SiebelException {
-    try{
+    try {
       String taskname = buildTaskName(st.getWaveId());
       Task t = ctx.getInfoSmeConfig().getTaskByName(taskname);
-      if(t != null) {
-        if(ctx.getInfoSmeConfig().isSiebelTMRemove()) {
+      if (t != null) {
+        if (ctx.getInfoSmeConfig().isSiebelTMRemove()) {
           _removeTask(t);
-          if(logger.isDebugEnabled()) {
-            logger.debug("Siebel: remove task "+st);
+          if (logger.isDebugEnabled()) {
+            logger.debug("Siebel: remove task " + st);
           }
-        }else {
+        } else {
           _pauseTask(t);
-          if(logger.isDebugEnabled()) {
-            logger.debug("Siebel: pause tasK "+st);
+          if (logger.isDebugEnabled()) {
+            logger.debug("Siebel: pause tasK " + st);
           }
         }
       }
-    }catch(Throwable e) {
+    } catch (Throwable e) {
       throw new SiebelException(e);
     }
   }
 
-  private void _changeTask(Task t) throws SiebelException{
-    try{
+  private void _changeTask(Task t) throws SiebelException {
+    try {
       ctx.getInfoSmeConfig().addAndApplyTask(t);
       ctx.getInfoSme().changeTask(t.getId());
-    }catch(Throwable e) {
+    } catch (Throwable e) {
       throw new SiebelException(e);
     }
   }
 
-  private void _addTask(Task t, boolean notifyInfoSme) throws SiebelException{
-    try{
+  private void _addTask(Task t, boolean notifyInfoSme) throws SiebelException {
+    try {
       ctx.getInfoSmeConfig().addAndApplyTask(t);
-      if(notifyInfoSme) {
+      if (notifyInfoSme) {
         ctx.getInfoSme().addTask(t.getId());
       }
-    }catch(Throwable e) {
+    } catch (Throwable e) {
       throw new SiebelException(e);
     }
   }
 
   private void _removeTask(Task t) throws SiebelException {
-    try{
+    try {
       ctx.getInfoSmeConfig().removeAndApplyTask(TASK_OWNER, t.getId());
       ctx.getInfoSme().removeTask(t.getId());
-    }catch(Throwable e) {
+    } catch (Throwable e) {
       throw new SiebelException(e);
     }
   }
 
   private void _pauseTask(Task t) throws SiebelException {
-    try{
+    try {
       t.setEnabled(false);
       _changeTask(t);
-    }catch(Throwable e) {
+    } catch (Throwable e) {
       throw new SiebelException(e);
     }
   }
 
   private void pauseTask(SiebelTask st) throws SiebelException {
-    try{
+    try {
       String taskname = buildTaskName(st.getWaveId());
       Task t = ctx.getInfoSmeConfig().getTaskByName(taskname);
       _pauseTask(t);
-      if(logger.isDebugEnabled()) {
-        logger.debug("Siebel: pause tasK "+st);
+      if (logger.isDebugEnabled()) {
+        logger.debug("Siebel: pause task " + st);
       }
-    }catch(Throwable e) {
+    } catch (Throwable e) {
       throw new SiebelException(e);
     }
   }
 
   private void process(SiebelTask st) throws SiebelException {
-    try{
-      if(logger.isDebugEnabled()) {
-        logger.debug("Siebel: start to process task"+st);
+    try {
+      if (logger.isDebugEnabled()) {
+        logger.debug("Siebel: start to process task" + st);
       }
-      if(!ctx.getInfoSme().getInfo().isOnline()) {
+      if (!ctx.getInfoSme().getInfo().isOnline()) {
         throw new SiebelException("Siebel: Infosme is offline");
       }
-      if(st.getStatus() == SiebelTask.Status.ENQUEUED) {
+      if (st.getStatus() == SiebelTask.Status.ENQUEUED) {
         beginTask(st);
-      } else if(st.getStatus() == SiebelTask.Status.STOPPED) {
+      } else if (st.getStatus() == SiebelTask.Status.STOPPED) {
         stopTask(st);
-      } else if(st.getStatus() == SiebelTask.Status.PAUSED) {
+      } else if (st.getStatus() == SiebelTask.Status.PAUSED) {
         pauseTask(st);
       }
-    }catch(Throwable e) {
+    } catch (Throwable e) {
       throw new SiebelException(e);
     }
 
   }
 
-  /** @noinspection EmptyCatchBlock*/
+  /**
+   * @noinspection EmptyCatchBlock
+   */
   private void addTask(InfoSmeContext smeContext, Task task, ResultSet messages) throws SiebelException {
     try {
       task.setMessagesHaveLoaded(false);
       _addTask(task, true);
 
-      if(logger.isDebugEnabled()) {
+      if (logger.isDebugEnabled()) {
         logger.debug("Siebel: starting task generation...");
       }
 
@@ -272,7 +277,7 @@ public class SiebelTaskManager implements Runnable{
       while (toSend != null && !toSend.isEmpty()) {
         smeContext.getInfoSme().addDeliveryMessages(task.getId(), toSend);
         currentTime += 1000;
-        toSend = getMessages(maxMessagesPerSecond,  new Date(currentTime), messages);
+        toSend = getMessages(maxMessagesPerSecond, new Date(currentTime), messages);
       }
 
       smeContext.getInfoSme().endDeliveryMessageGeneration(task.getId());
@@ -281,16 +286,16 @@ public class SiebelTaskManager implements Runnable{
 
       _addTask(task, false);
 
-      if(logger.isDebugEnabled()) {
+      if (logger.isDebugEnabled()) {
         logger.debug("Siebel: task generation ok...");
       }
 
     } catch (Exception e) {
-      logger.error(e,e);
-      try{
+      logger.error(e, e);
+      try {
         _removeTask(task);
-      }catch(Throwable ex){
-        logger.error(ex,ex);
+      } catch (Throwable ex) {
+        logger.error(ex, ex);
       }
       throw new SiebelException(e);
     }
@@ -299,8 +304,8 @@ public class SiebelTaskManager implements Runnable{
   private static Collection getMessages(int limit, Date sendDate, ResultSet messages) throws SiebelException {
     int i = 0;
     Collection result = new LinkedList();
-    while(i<limit && messages.next()){
-      SiebelMessage sM = (SiebelMessage)messages.get();
+    while (i < limit && messages.next()) {
+      SiebelMessage sM = (SiebelMessage) messages.get();
       final Message msg = new Message();
       msg.setAbonent(sM.getMsisdn());
       msg.setMessage(sM.getMessage());
@@ -315,10 +320,9 @@ public class SiebelTaskManager implements Runnable{
   }
 
 
-  private static SimpleDateFormat tf = new SimpleDateFormat("HH:mm:ss");
-
   private Task createTask(SiebelTask siebelTask, String taskName) throws SiebelException {
-    try{
+    try {
+      SimpleDateFormat tf = new SimpleDateFormat("HH:mm:ss");
       InfoSmeConfig cfg = ctx.getInfoSmeConfig();
       Task task = ctx.getInfoSmeConfig().createTask();
       task.setName(taskName);
@@ -343,26 +347,25 @@ public class SiebelTaskManager implements Runnable{
       task.setTransactionMode(cfg.isSiebelTTrMode());
       task.setDelivery(true);
       task.setSaveFinalState(true);
-      System.out.println("Validaty period: "+siebelTask.getExpPeriod());
-      if(siebelTask.getExpPeriod() != null && siebelTask.getExpPeriod().intValue() != 0) {
-        if(siebelTask.getExpPeriod().intValue() > 24) {
+      if (siebelTask.getExpPeriod() != null && siebelTask.getExpPeriod().intValue() != 0) {
+        if (siebelTask.getExpPeriod().intValue() > 24) {
           siebelTask.setExpPeriod(new Integer(24));
         }
         String prefix = (siebelTask.getExpPeriod().intValue() < 10) ? "0" : "";
-        task.setValidityPeriod(tf.parse(prefix+siebelTask.getExpPeriod()+":00:00"));
-      }else {
+        task.setValidityPeriod(tf.parse(prefix + siebelTask.getExpPeriod() + ":00:00"));
+      } else {
         task.setValidityPeriod(tf.parse("01:00:00"));
       }
 
       task.setStartDate(new Date());
       return task;
-    }catch(Throwable e) {
+    } catch (Throwable e) {
       throw new SiebelException(e);
     }
   }
 
 
   private static String buildTaskName(String waveId) {
-    return new StringBuffer(7+waveId.length()).append("siebel_").append(waveId).toString();
+    return new StringBuffer(7 + waveId.length()).append("siebel_").append(waveId).toString();
   }
 }

@@ -114,19 +114,25 @@ public class SiebelTask {
 
   public static class Status {
 
-    public final static Status ENQUEUED = new Status("ENQUEUED");
-    public final static Status PAUSED = new Status("PAUSED");
-    public final static Status STOPPED = new Status("STOPPED");
-    public final static Status IN_PROCESS = new Status("IN PROCESS");
-    public final static Status PROCESSED = new Status("PROCESSED");
+    public final static Status ENQUEUED = new Status("ENQUEUED", true);
+    public final static Status PAUSED = new Status("PAUSED", true);
+    public final static Status STOPPED = new Status("STOPPED", true);
+    public final static Status IN_PROCESS = new Status("IN PROCESS", false);
+    public final static Status PROCESSED = new Status("PROCESSED", false);
 
     private String value;
-    private Status(String value) {
+    private boolean createdBySiebel;
+    private Status(String value, boolean createdBySiebel) {
       this.value = value;
+      this.createdBySiebel = createdBySiebel;
     }
 
     public String toString() {
       return value;
+    }
+
+    public boolean isCreatedBySiebel() {
+      return createdBySiebel;
     }
 
     public static Status valueOf(String st) {
