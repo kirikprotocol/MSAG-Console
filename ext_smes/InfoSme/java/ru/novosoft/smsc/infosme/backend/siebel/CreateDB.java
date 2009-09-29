@@ -19,7 +19,10 @@ public class CreateDB {
 
   private final static Random random = new Random();
 
-  private static int size = 2;
+  private static int wavesize = 1000;
+  private static int nwaves = 1;
+  private static int firstwaveid = 0;
+  private static int firstmsgid = -1;
 
   public static void main(String[] args) throws Exception{
     int argSize = args.length;
@@ -54,7 +57,17 @@ public class CreateDB {
       props.setProperty("jdbc.pass", "student");
     }
     if(arguments.containsKey("-s")) {
-      size = Integer.parseInt((String)arguments.get("-s"));
+      wavesize = Integer.parseInt((String)arguments.get("-s"));
+    }
+    if(arguments.containsKey("-w")) {
+      nwaves = Integer.parseInt((String)arguments.get("-w"));
+    }
+    if(arguments.containsKey("-n")) {
+      firstwaveid = Integer.parseInt((String)arguments.get("-n"));
+    }
+    firstmsgid = wavesize * firstwaveid;
+    if(arguments.containsKey("-m")) {
+      firstmsgid = Integer.parseInt((String)arguments.get("-m"));
     }
     if(args[0].equals("create")) {
       createAll(props);
@@ -67,10 +80,13 @@ public class CreateDB {
   }
 
   public static void help() {
-    System.out.println("Usage: CreateDB (create|remove) (args)");
-    System.out.println("Args:");
-    System.out.println("-f config file (custom)");
-    System.out.println("-s number of task(custom, default: '2')");
+    System.out.println("Usage: CreateDB (create|remove) [options]");
+    System.out.println("Options:");
+    System.out.println("-f config file");
+    System.out.println("-w the number of waves (default: 1)");
+    System.out.println("-s the number of messages per wave (default: 1000)");
+    System.out.println("-n the waveid of the first wave (default: 0)");
+    System.out.println("-m the msgid of the first msg (default: waveid*wavesize)");
   }
 
   public static void createAll(Properties jdbcProp) {
@@ -85,40 +101,44 @@ public class CreateDB {
         connection = pool.getConnection();
         connection.setAutoCommit(false);
 
+        int msgid = firstmsgid;
         try {
-          prepStatement = connection.prepareStatement("replace into SMS_MAIL (ROW_ID, WAVE_INT_ID, " +
+          prepStatement = connection.prepareStatement("insert into SMS_MAIL (ROW_ID, WAVE_INT_ID, " +
               "CLC_INT_ID, CREATED, LAST_UPD, MSISDN, MESSAGE, MESSAGE_STATE, SMSC_STAT_CODE, SMSC_STAT_VAL) values (?,?,?,?,?,?,?,?,?,?)");
           int count = 0;
 
           System.out.println("Creation of SMS_MAIL table...");
-          for(int i=0;i<(1000*size);i++) {
-            prepStatement.setString(1,Integer.toString(i));
-            prepStatement.setString(2,Integer.toString(i%size));
-            prepStatement.setString(3,Integer.toString(i));
+          for( int wid = firstwaveid; wid < firstwaveid+nwaves; ++wid ) {
+            for(int i=0; i<wavesize; i++) {
+            prepStatement.setString(1,Integer.toString(msgid));
+            prepStatement.setString(2,Integer.toString(wid));
+            prepStatement.setString(3,Integer.toString(msgid));
             prepStatement.setTimestamp(4, new Timestamp(System.currentTimeMillis()));
             prepStatement.setTimestamp(5, new Timestamp(System.currentTimeMillis()));
             prepStatement.setString(6, "+" + Long.toString(Long.parseLong("79130000000") + i));
             prepStatement.setString(7, "TestTest");
-            if(random.nextInt(2)==0) {
-              prepStatement.setString(8, SiebelMessage.State.DELIVERED.toString());
-            }else {
+//            if(random.nextInt(2)==0) {
+//              prepStatement.setString(8, SiebelMessage.State.DELIVERED.toString());
+//            }else {
               prepStatement.setNull(8, java.sql.Types.VARCHAR);
-            }
-            if(random.nextInt(2)==0) {
-              prepStatement.setString(9, "1");
-            }else {
+//            }
+//            if(random.nextInt(2)==0) {
+//              prepStatement.setString(9, "1");
+//            }else {
               prepStatement.setNull(9, java.sql.Types.VARCHAR);
-            }
-            if(random.nextInt(2)==0) {
-              prepStatement.setString(10, "ok");
-            }else {
+//            }
+//            if(random.nextInt(2)==0) {
+//              prepStatement.setString(10, "ok");
+//            }else {
               prepStatement.setNull(10, java.sql.Types.VARCHAR);
-            }
+//            }
             prepStatement.addBatch();
+            ++msgid;
             count++;
             if(count == 1000) {
               count = 0;
               prepStatement.executeBatch();
+            }
             }
           }
           if(count != 0) {
@@ -130,26 +150,26 @@ public class CreateDB {
             prepStatement.close();
           }
         }
-        System.out.println("Completed: "+(1000*size));
+        System.out.println("Completed: " + (msgid-firstmsgid) + " messages");
         System.out.println();
 
         try {
-          prepStatement = connection.prepareStatement("replace into SMS_MAIL_PARAMS (ROW_ID, WAVE_INT_ID, CAMPAIGN_INT_ID, " +
+          prepStatement = connection.prepareStatement("insert into SMS_MAIL_PARAMS (ROW_ID, WAVE_INT_ID, CAMPAIGN_INT_ID, " +
               "CREATED, LAST_UPD, PRIORITY, FLASH_FLG, SAVE_FLG, BEEP_FLG, EXP_PERIOD, CTRL_STATUS) values (?,?,?,?,?,?,?,?,?,?,?)");
 
           int count = 0;
           System.out.println("Creation of SMS_MAIL_PARAMS table...");
-          for(int i=0;i<size;i++) {
-            prepStatement.setString(1,Integer.toString(i));
-            prepStatement.setString(2,Integer.toString(i));
-            prepStatement.setString(3,Integer.toString(i));
+          for(int wid=firstwaveid;wid<firstwaveid+nwaves;wid++) {
+            prepStatement.setString(1,Integer.toString(wid));
+            prepStatement.setString(2,Integer.toString(wid));
+            prepStatement.setString(3,Integer.toString(wid));
             prepStatement.setTimestamp(4, new Timestamp(System.currentTimeMillis()));
             prepStatement.setTimestamp(5, new Timestamp(System.currentTimeMillis()));
-            prepStatement.setString(6, Integer.toString(i+1));
+            prepStatement.setString(6, Integer.toString(wid+1));
             prepStatement.setString(7,"Y");
             prepStatement.setString(8,"Y");
             prepStatement.setString(9,"N");
-            prepStatement.setString(10, Integer.toString(i+1));
+            prepStatement.setString(10, Integer.toString(wid+1));
             prepStatement.setString(11, SiebelTask.Status.ENQUEUED.toString());
 
             prepStatement.addBatch();
@@ -169,7 +189,7 @@ public class CreateDB {
             prepStatement.close();
           }
         }
-        System.out.println("Completed: "+size);
+        System.out.println("Completed: " + nwaves + " waves");
 
         System.out.println("Finished");
       }catch (Throwable e) {
