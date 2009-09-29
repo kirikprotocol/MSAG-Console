@@ -72,11 +72,12 @@ public class SiebelTaskManager implements Runnable {
           Date max = lastCheck;
           while (rs.next()) {
             final SiebelTask st = (SiebelTask) rs.get();
-            if (logger.isDebugEnabled()) {
-              logger.debug("Siebel: found modified task " + st);
-            }
 
             if (st.getStatus().isCreatedBySiebel()) {
+              if (logger.isDebugEnabled()) {
+                logger.debug("Siebel: found modified task " + st);
+              }
+              
               new Thread() {
                 public void run() {
                   try {
