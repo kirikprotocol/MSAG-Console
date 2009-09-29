@@ -142,6 +142,21 @@
                 </complexType>
 	    </element>
 
+            <element name="info-transit">
+                <complexType>
+                    <attribute name="category" type="scag:Var" use="optional"/>
+                    <attribute name="content-type" type="scag:Var" use="optional"/>
+                    <attribute name="category-str" type="scag:Var" use="optional"/>
+                    <attribute name="content-type-str" type="scag:Var" use="optional"/>
+                    <attribute name="status" type="scag:Var" use="optional"/>
+                    <attribute name="msg" type="scag:Var" use="optional"/>
+                    <attribute name="abonent" type="scag:Var" use="optional" />
+                    <attribute name="walletType" type="scag:Var" use="optional" />
+                    <attribute name="resultAmount" type="scag:Var" use="optional"/>
+                    <attribute name="resultChargeThreshold" type="scag:Var" use="optional"/>
+                </complexType>
+	    </element>
+
             <element name="add_keywords">
                 <complexType>
                     <attribute name="id" type="scag:Value" use="required"/>
