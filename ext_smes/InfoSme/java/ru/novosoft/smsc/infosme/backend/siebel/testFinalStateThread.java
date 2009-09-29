@@ -59,7 +59,7 @@ public class testFinalStateThread {
             throw notImpl("getTasks");
         }
 
-      public ResultSet getTasks(Date fromUpdate, Date tillUpdate) throws SiebelException {
+      public ResultSet getTasksUpdates(Date fromUpdate) throws SiebelException {
             throw notImpl("getTasksFromTill");
       }
 

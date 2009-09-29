@@ -64,15 +64,16 @@ public class SiebelTaskManager implements Runnable{
   public void run() {
     try{
       shutdown = false;
+      lastCheck = new Date(0);
       while(!shutdown) {
-        Date from = this.lastCheck;
-        this.lastCheck = new Date();
         ResultSet rs = null;
         try{
-          rs = provider.getTasks(from, lastCheck);
+          rs = provider.getTasksUpdates(lastCheck);
+          Date max = lastCheck;
           while(rs.next()) {
             final SiebelTask st = (SiebelTask)rs.get();
-
+            if (st.getLastUpdate().after(max))
+              max = new Date(st.getLastUpdate().getTime());
             if(logger.isDebugEnabled()) {
               logger.debug("Siebel: found modified task "+st);
             }
@@ -88,6 +89,7 @@ public class SiebelTaskManager implements Runnable{
             }.start();
 
           }
+          lastCheck = max;
         }catch(Throwable e) {
           logger.error(e,e);
         } finally{

@@ -193,8 +193,8 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
     return siebelTask;
   }
 
-  public ResultSet getTasks(Date fromUpdate, Date tillUpdate) throws SiebelException {
-    if (fromUpdate == null) {
+  public ResultSet getTasksUpdates(Date from) throws SiebelException {
+    if (from == null) {
       throw new SiebelException("Argument is null");
     }
     Connection connection = null;
@@ -206,8 +206,7 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
 
       prepStatement = connection.prepareStatement(getSql("task.list.update"));
       prepStatement.setFetchSize(FETCH_SIZE);
-      prepStatement.setTimestamp(1, new Timestamp(fromUpdate.getTime()));
-      prepStatement.setTimestamp(2, new Timestamp(tillUpdate.getTime()));
+      prepStatement.setTimestamp(1, new Timestamp(from.getTime()));
 
       sqlResult = prepStatement.executeQuery();
 
