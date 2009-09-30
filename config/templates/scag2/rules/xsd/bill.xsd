@@ -23,6 +23,23 @@
                 </complexType>
             </element>
 
+            <element name="tariff">
+                <complexType>
+                    <attribute name="category" type="scag:Value" use="optional"/>
+                    <attribute name="content-type" type="scag:Value" use="optional"/>
+                    <attribute name="category-str" type="scag:Value" use="optional"/>
+                    <attribute name="content-type-str" type="scag:Value" use="optional"/>
+                    <attribute name="status" type="scag:Var" use="optional" />
+                    <attribute name="msg" type="scag:Var" use="optional" />
+                    <attribute name="result-service-number" type="scag:Var" use="optional" />
+                    <attribute name="result-currency" type="scag:Var" use="optional" />
+                    <attribute name="result-media-type" type="scag:Var" use="optional" />
+                    <attribute name="result-category" type="scag:Var" use="optional" />
+                    <attribute name="result-bill-type" type="scag:Var" use="optional" />
+                    <attribute name="result-price" type="scag:Var" use="optional" />
+                </complexType>
+            </element>
+
             <element name="check">
                 <complexType>
                     <attribute name="category" type="scag:Value" use="optional"/>
@@ -144,14 +161,14 @@
 
             <element name="info-transit">
                 <complexType>
-                    <attribute name="category" type="scag:Var" use="optional"/>
-                    <attribute name="content-type" type="scag:Var" use="optional"/>
-                    <attribute name="category-str" type="scag:Var" use="optional"/>
-                    <attribute name="content-type-str" type="scag:Var" use="optional"/>
+                    <attribute name="category" type="scag:Value" use="optional"/>
+                    <attribute name="content-type" type="scag:Value" use="optional"/>
+                    <attribute name="category-str" type="scag:Value" use="optional"/>
+                    <attribute name="content-type-str" type="scag:Value" use="optional"/>
+                    <attribute name="abonent" type="scag:Value" use="optional" />
+                    <attribute name="walletType" type="scag:Value" use="optional" />
                     <attribute name="status" type="scag:Var" use="optional"/>
                     <attribute name="msg" type="scag:Var" use="optional"/>
-                    <attribute name="abonent" type="scag:Var" use="optional" />
-                    <attribute name="walletType" type="scag:Var" use="optional" />
                     <attribute name="resultAmount" type="scag:Var" use="optional"/>
                     <attribute name="resultChargeThreshold" type="scag:Var" use="optional"/>
                 </complexType>
