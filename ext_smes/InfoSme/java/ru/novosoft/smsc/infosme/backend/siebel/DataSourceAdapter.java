@@ -13,36 +13,40 @@ import java.util.Map;
  */
 public class DataSourceAdapter implements DataSource {
 
-    private static final String siebelTaskPrefix = "siebel_";
+  private static final String siebelTaskPrefix = "siebel_";
 
-    private SiebelDataProvider provider_;
-    private Category log_;
+  private SiebelDataProvider provider_;
+  private Category log_;
 
-    DataSourceAdapter( SiebelDataProvider provider, Category log ) {
-        this.provider_ = provider;
-        this.log_ = log;
+  DataSourceAdapter(SiebelDataProvider provider, Category log) {
+    this.provider_ = provider;
+    this.log_ = log;
+  }
+
+  public void saveFinalStates(Map states) {
+    try {
+      provider_.updateDeliveryStates(states);
+    } catch (SiebelException e) {
+      log_.error("exc to update states:" + e.getMessage());
     }
-    public void saveFinalStates( Map states ) {
-        try {
-            provider_.updateDeliveryStates(states);
-        } catch ( SiebelException e ) {
-            log_.error("exc to update states:" + e.getMessage());
-        }
+  }
+
+  public void taskHasFinished(String taskName) {
+    if (taskName.length() <= siebelTaskPrefix.length() ||
+        !taskName.startsWith(siebelTaskPrefix)) {
+      log_.error("task name " + taskName + " is not siebel");
+      return;
     }
-    public void taskHasFinished( String taskName ) {
-        if ( taskName.length() <= siebelTaskPrefix.length() ||
-                ! taskName.startsWith(siebelTaskPrefix) ) {
-            log_.error("task name " + taskName + " is not siebel");
-            return;
+    String waveId = taskName.substring(siebelTaskPrefix.length());
+    try {
+      if (provider_.getTaskStatus(waveId) == SiebelTask.Status.IN_PROCESS) {
+        provider_.setTaskStatus(waveId, SiebelTask.Status.PROCESSED);
+        if (log_.isInfoEnabled()) {
+          log_.info("wave " + waveId + " is processed");
         }
-        String waveId = taskName.substring(siebelTaskPrefix.length());
-        try {
-            provider_.setTaskStatus(waveId,SiebelTask.Status.PROCESSED);
-            if ( log_.isInfoEnabled() ) {
-                log_.info("wave " + waveId + " is processed");
-            }
-        } catch ( SiebelException e ) {
-            log_.error("cannot set wave " + waveId + " status: " + e.getMessage());
-        }
+      }
+    } catch (SiebelException e) {
+      log_.error("cannot set wave " + waveId + " status: " + e.getMessage());
     }
+  }
 }

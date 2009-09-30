@@ -4,9 +4,11 @@ import org.apache.log4j.Category;
 
 import java.io.*;
 import java.util.TreeMap;
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 import ru.novosoft.smsc.infosme.backend.Message;
+import ru.novosoft.smsc.util.LocaleMessages;
 
 
 /**
@@ -116,7 +118,7 @@ public class SiebelFinalStateThread {
         if (fields[6].length() != 0) {
           Message.State state = Message.State.getById(new Integer(fields[1]).intValue());
           SiebelMessage.State siebelState = stateToSiebelState(state);
-          String smppCodeDescription = ""; // FIXME: ask Artem where to take smpp description from smpp code
+          String smppCodeDescription = LocaleMessages.getString(Locale.ENGLISH, "smsc.errcode." + fields[4]);
           map.put(fields[6], new SiebelMessage.DeliveryState(siebelState, fields[4], smppCodeDescription));
           if ((totalRecords - processedRecords) > 100) {
             dataSource_.saveFinalStates(map);

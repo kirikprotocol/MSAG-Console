@@ -124,6 +124,13 @@ public class SiebelTaskManager implements Runnable {
     }
   }
 
+  private void _setTaskStatusInProcess(SiebelTask st) throws SiebelException {
+    if (provider.getTaskStatus(st.getWaveId()) == SiebelTask.Status.ENQUEUED) {
+      provider.setTaskStatus(st.getWaveId(), SiebelTask.Status.IN_PROCESS);
+      if (logger.isDebugEnabled())
+        logger.debug("Siebel: set tasK status to " + SiebelTask.Status.IN_PROCESS);
+    }
+  }
 
   private void beginTask(SiebelTask st) throws SiebelException {
     try {
@@ -134,11 +141,7 @@ public class SiebelTaskManager implements Runnable {
         t = ctx.getInfoSmeConfig().getTaskByName(taskname);
         if (t.isMessagesHaveLoaded()) {
           _startTask(t);
-          provider.setTaskStatus(st.getWaveId(), SiebelTask.Status.IN_PROCESS);
-
-          if (logger.isDebugEnabled()) {
-            logger.debug("Siebel: set tasK status to " + SiebelTask.Status.IN_PROCESS);
-          }
+          _setTaskStatusInProcess(st);
           return;
         } else {
           if (logger.isDebugEnabled()) {
@@ -158,10 +161,7 @@ public class SiebelTaskManager implements Runnable {
           messages.close();
         }
       }
-      provider.setTaskStatus(st.getWaveId(), SiebelTask.Status.IN_PROCESS);
-      if (logger.isDebugEnabled()) {
-        logger.debug("Siebel: set tasK status to " + SiebelTask.Status.IN_PROCESS);
-      }
+      _setTaskStatusInProcess(st);
     } catch (Throwable e) {
       throw new SiebelException(e);
     }
