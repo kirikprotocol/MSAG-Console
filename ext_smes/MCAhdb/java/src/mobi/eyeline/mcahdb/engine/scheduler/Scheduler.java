@@ -53,13 +53,13 @@ public class Scheduler {
   }
 
   public void missedCall(String caller, String called, Date time) {
-    if (caller == null || caller.length()==0)
+    if (caller == null || caller.length() == 0)
       return;
-    
+
     try {
       Task oldTask = ds.remove(caller, called);
       if (oldTask != null)
-        engine.removeTask(oldTask);      
+        engine.removeTask(oldTask);
 
       // Add new task
       Task t = new Task(caller, called);
@@ -108,17 +108,19 @@ public class Scheduler {
   }
 
   private void sendMessage(String oa, String da, String message) {
-    Message m = new Message();
-    m.setSourceAddress(oa);
-    m.setDestinationAddress(da);
-    m.setMessageString(message);
-    m.setServiceType(config.getSchedulerServiceType());
-    OutgoingObject o = new OutgoingObject();
-    o.setMessage(m);
-    try {
-      transceiver.getOutQueue().offer(o);
-    } catch (ShutdownedException e) {
-      log.error(e,e);
+    if (config.getSchedulerEnableAlerts()) {
+      Message m = new Message();
+      m.setSourceAddress(oa);
+      m.setDestinationAddress(da);
+      m.setMessageString(message);
+      m.setServiceType(config.getSchedulerServiceType());
+      OutgoingObject o = new OutgoingObject();
+      o.setMessage(m);
+      try {
+        transceiver.getOutQueue().offer(o);
+      } catch (ShutdownedException e) {
+        log.error(e, e);
+      }
     }
   }
 
@@ -137,11 +139,18 @@ public class Scheduler {
   }
 
   public interface Config {
+    public boolean getSchedulerEnableAlerts();
+
     public String getSchedulerExpiredNotifText();
+
     public String getSchedulerErrorText();
+
     public String getSchedulerProfileChangedText();
+
     public String getSchedulerStoreDir();
+
     public String getSchedulerServiceType();
+
     public int getSchedulerExpirationPeriod();
   }
 }

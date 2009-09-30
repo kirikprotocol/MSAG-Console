@@ -37,6 +37,7 @@ public class GlobalConfig implements EventStore.Config,
   private final String schedulerProfileChangedText;
   private final String schedulerServiceType;
   private final int schedulerExpirationPeriod;
+  private final boolean schedulerEnableAlerts;
 
   private final boolean jmx;
   private final int jmxPort;
@@ -78,6 +79,7 @@ public class GlobalConfig implements EventStore.Config,
     schedulerProfileChangedText = schedulerSection.getString("profileChangedText");
     schedulerExpirationPeriod = schedulerSection.getInt("expirationPeriod");
     schedulerServiceType = schedulerSection.getString("serviceType");
+    schedulerEnableAlerts = schedulerSection.getBool("enableAlerts", true);
 
     XmlConfigSection jmx = config.getSection("jmx");
     this.jmx = jmx != null;
@@ -122,6 +124,10 @@ public class GlobalConfig implements EventStore.Config,
 
   public int getSoapEventsFetchInterval() {
     return soapEventsFetchInterval;
+  }
+
+  public boolean getSchedulerEnableAlerts() {
+    return schedulerEnableAlerts;
   }
 
   public String getSchedulerExpiredNotifText() {

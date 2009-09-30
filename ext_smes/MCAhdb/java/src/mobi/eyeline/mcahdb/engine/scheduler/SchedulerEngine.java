@@ -5,13 +5,10 @@ import mobi.eyeline.mcahdb.engine.DataSourceException;
 import mobi.eyeline.mcahdb.engine.scheduler.ds.Task;
 import mobi.eyeline.mcahdb.engine.scheduler.ds.TaskDataSource;
 import mobi.eyeline.mcahdb.engine.scheduler.ds.TimeDataSource;
-import mobi.eyeline.mcahdb.engine.scheduler.ds.impl.file.TimeDataSourceImpl;
 
-import java.io.*;
 import java.util.Date;
 import java.util.List;
 import java.util.LinkedList;
-import java.util.Iterator;
 
 import org.apache.log4j.Category;
 import com.eyeline.utils.XDelayedQueue;
@@ -121,7 +118,7 @@ class SchedulerEngine {
             if (log.isDebugEnabled())
               log.debug("Send notification msg: oa=" + t.getCalled() + "; da=" + t.getCaller());
 
-            if (t.getCaller() != null || t.getCaller().length() > 0) {
+            if (config.getSchedulerEnableAlerts() && (t.getCaller() != null || t.getCaller().length() > 0)) {
               Message m = new Message();
               m.setSourceAddress(t.getCalled());
               m.setDestinationAddress(t.getCaller());
