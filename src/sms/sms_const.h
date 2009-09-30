@@ -24,6 +24,7 @@ const int BILLING_NORMAL   = 1;
 const int BILLING_MT       = 2;
 const int BILLING_FINALREP = 3;
 const int BILLING_ONSUBMIT = 4;
+const int BILLING_CDR      = 5;
 
 const int MAX_ESERVICE_TYPE_LENGTH = 5;
 const int MAX_SMESYSID_TYPE_LENGTH = 15;

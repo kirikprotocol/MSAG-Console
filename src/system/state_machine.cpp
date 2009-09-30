@@ -1488,7 +1488,7 @@ StateType StateMachine::submit(Tuple& t)
     aclCheck=true;
   }
 
-  if(c.ri.billing==smsc::sms::BILLING_ONSUBMIT)
+  if(c.ri.billing==smsc::sms::BILLING_ONSUBMIT || c.ri.billing==smsc::sms::BILLING_CDR)
   {
     sms->setIntProperty(Tag::SMSC_CHARGINGPOLICY,Smsc::chargeOnSubmit);
   }else
@@ -3886,7 +3886,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
           smsc->FullReportDelivery(t.msgId,sms);
         }
 #else
-        if(sms.billingRecord==BILLING_FINALREP || sms.billingRecord==BILLING_ONSUBMIT)
+        if(sms.billingRecord==BILLING_FINALREP || sms.billingRecord==BILLING_ONSUBMIT || sms.billingRecord==BILLING_CDR)
         {
           smsc->FullReportDelivery(t.msgId,sms);
         }
@@ -4413,7 +4413,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
           }
         }
       }
-      if(sms.billingRecord==BILLING_FINALREP  || sms.billingRecord==BILLING_ONSUBMIT)
+      if(sms.billingRecord==BILLING_FINALREP  || sms.billingRecord==BILLING_ONSUBMIT || sms.billingRecord==BILLING_CDR)
       {
         smsc->FullReportDelivery(t.msgId,sms);
       }
@@ -4460,7 +4460,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
       smsc->FullReportDelivery(t.msgId,sms);
     }
 #else
-    if(sms.billingRecord==BILLING_FINALREP  || sms.billingRecord==BILLING_ONSUBMIT)
+    if(sms.billingRecord==BILLING_FINALREP  || sms.billingRecord==BILLING_ONSUBMIT || sms.billingRecord==BILLING_CDR)
     {
       smsc->FullReportDelivery(t.msgId,sms);
     }

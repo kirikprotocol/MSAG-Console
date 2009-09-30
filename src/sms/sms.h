@@ -60,7 +60,7 @@ using std::runtime_error;
 using std::auto_ptr;
 
 /**
-    
+
 */
 struct DistrList {
   char dl_name[21];
@@ -73,7 +73,7 @@ static inline bool HSNS_isEqual()
 }
 
 /**
-*  Address   
+*  Address
 *   SMS .
 *
 * @author Victor V. Makarov
@@ -86,7 +86,7 @@ struct Address
   AddressValue value;
 
   /**
-  * Default ,     
+  * Default ,
   */
   Address() : length(1), type(0), plan(0)
   {
@@ -95,12 +95,12 @@ struct Address
 
   /**
   *   Address,     .
-  *      
+  *
   *
   * @param _len     _value
-  * @param _type   
-  * @param _plan   
-  * @param _value  
+  * @param _type
+  * @param _plan
+  * @param _value
   */
   Address(uint8_t _len, uint8_t _type, uint8_t _plan, const char* _value)
     : length(_len), type(_type), plan(_plan)
@@ -109,7 +109,7 @@ struct Address
   };
 
   /**
-  *  ,      
+  *  ,
   *
   * @param addr    .
   */
@@ -161,10 +161,10 @@ struct Address
 
   /**
   *   '=',
-  *       
+  *
   *
   * @param addr      '='
-  * @return   
+  * @return
   */
   Address& operator =(const Address& addr)
   {
@@ -197,8 +197,8 @@ struct Address
   *       .
   *      MAX_ADDRESS_VALUE_LENGTH.
   *
-  * @param _len     
-  * @param _value   
+  * @param _len
+  * @param _value
   */
   inline void setValue(uint8_t _len, const char* _value)
   {
@@ -210,12 +210,12 @@ struct Address
   };
 
   /**
-  *        
   *
-  * @param _value        
-  *                    
-  *               MAX_ADDRESS_VALUE_LENGTH+1,    
-  * @return  
+  *
+  * @param _value
+  *
+  *               MAX_ADDRESS_VALUE_LENGTH+1,
+  * @return
   */
   inline uint8_t getValue(char* _value) const
   {
@@ -236,9 +236,9 @@ struct Address
   };
 
   /**
-  *   
   *
-  * @return  
+  *
+  * @return
   */
   inline uint8_t getLength() const
   {
@@ -246,9 +246,9 @@ struct Address
   };
 
   /**
-  *   
   *
-  * @param _type   
+  *
+  * @param _type
   */
   inline void setTypeOfNumber(uint8_t _type)
   {
@@ -256,9 +256,9 @@ struct Address
   };
 
   /**
-  *   
   *
-  * @param _type   
+  *
+  * @param _type
   */
   inline uint8_t getTypeOfNumber() const
   {
@@ -266,9 +266,9 @@ struct Address
   };
 
   /**
-  *    
   *
-  * @param _plan    
+  *
+  * @param _plan
   */
   inline void setNumberingPlan(uint8_t _plan)
   {
@@ -276,9 +276,9 @@ struct Address
   };
 
   /**
-  *    
   *
-  * @return   
+  *
+  * @return
   */
   inline uint8_t getNumberingPlan() const
   {
@@ -324,8 +324,8 @@ struct Address
 };
 
 /**
-*  Descriptor   
-*    
+*  Descriptor
+*
 * (,     SMS)
 *
 * @author Victor V. Makarov
@@ -339,7 +339,7 @@ struct Descriptor
   uint32_t        sme;
 
   /**
-  * Default ,     
+  * Default ,
   */
   Descriptor() : mscLength(0), imsiLength(0), sme(0)
   {
@@ -348,7 +348,7 @@ struct Descriptor
 
   /**
   *   Descriptor,     .
-  *      
+  *
   *
   * @param _mscLen     _msc
   * @param _value   MSC
@@ -365,8 +365,8 @@ struct Descriptor
   };
 
   /**
-  *  ,  
-  *    
+  *  ,
+  *
   *
   * @param descr  .
   */
@@ -380,10 +380,10 @@ struct Descriptor
 
   /**
   *   '=',
-  *       
+  *
   *
   * @param descr      '='
-  * @return   
+  * @return
   */
   Descriptor& operator =(const Descriptor& descr)
   {
@@ -440,11 +440,11 @@ struct Descriptor
   };
 
   /**
-  *     MSC    
+  *     MSC
   *
-  * @param _value       
-  *                MSC.      
-  *               MAX_ADDRESS_VALUE_LENGTH+1,    
+  * @param _value
+  *                MSC.
+  *               MAX_ADDRESS_VALUE_LENGTH+1,
   * @return   MSC
   */
   inline uint8_t getMsc(char* _value) const
@@ -460,11 +460,11 @@ struct Descriptor
   }
 
   /**
-  *     IMSI    
+  *     IMSI
   *
-  * @param _value       
-  *                IMSI.      
-  *               MAX_ADDRESS_VALUE_LENGTH+1,    
+  * @param _value
+  *                IMSI.
+  *               MAX_ADDRESS_VALUE_LENGTH+1,
   * @return   IMSI
   */
   inline uint8_t getImsi(char* _value) const
@@ -673,7 +673,7 @@ struct PropertySet{
 };
 
 /**
-*    
+*
 *
 * @author Victor V. Makarov
 * @version 10.0
@@ -687,15 +687,15 @@ private:
   mutable PropertySet prop;
 public:
   /**
-  * Default ,    
+  * Default ,
   */
   Body() : buffLen(0) {};
 
   /**
   *   Body,     .
-  *      
   *
-  * @param data      
+  *
+  * @param data
   * @param len      data
   */
   Body(uint8_t* data, int len)
@@ -705,7 +705,7 @@ public:
   };
 
   /**
-  *  ,      
+  *  ,
   *
   * @param body    .
   */
@@ -722,10 +722,10 @@ public:
 
   /**
   *   '=',
-  *        
+  *
   *
   * @param body      '='
-  * @return   
+  * @return
   */
   Body& operator =(const Body& body)
   {
@@ -742,7 +742,7 @@ public:
   /**
   *    .
   *  ,     .
-  *   
+  *
   *
   * @return   .  NULL.
   */
@@ -900,7 +900,7 @@ public:
 
 
 /**
-*   SMS   
+*   SMS
 * SMS .   .
 *
 * @author Victor V. Makarov
@@ -913,13 +913,13 @@ struct SMS
 {
   State       state;
   time_t      submitTime;     // /   SMSC
-  time_t      validTime;      // /    
+  time_t      validTime;      // /
 
-  uint32_t    attempts;       //    
-  uint32_t    lastResult;     //   
+  uint32_t    attempts;       //
+  uint32_t    lastResult;     //
   uint32_t    oldResult;      //   lastResult
-  time_t      lastTime;       // /   
-  time_t      nextTime;       // /   
+  time_t      lastTime;       // /
+  time_t      nextTime;       // /
 
   Address     originatingAddress;
   Address     destinationAddress;
@@ -952,7 +952,7 @@ struct SMS
 
   /**
   * Default ,    state  ENROUTE
-  *     
+  *
   */
   SMS() : state(ENROUTE), submitTime(0), validTime(0),
     attempts(0), lastResult(0), oldResult(0),lastTime(0), nextTime(0),
@@ -966,8 +966,8 @@ struct SMS
 
 
   /**
-  *  ,   
-  * SMS  
+  *  ,
+  * SMS
   *
   * @param sms     SMS
   */
@@ -1005,10 +1005,10 @@ struct SMS
 
   /**
   *   '=',
-  *    
+  *
   *
   * @param sms      '='
-  * @return   
+  * @return
   */
   SMS& operator =(const SMS& sms)
   {
@@ -1049,9 +1049,9 @@ struct SMS
   };
 
   /**
-  *   
   *
-  * @return  
+  *
+  * @return
   */
   inline State getState() const
   {
@@ -1060,12 +1060,12 @@ struct SMS
 
   /**
   *   .
-  *     
+  *
   *
   * @param length   (0 < length <= MAX_ADDRESS_VALUE_LENGTH)
-  * @param type    
-  * @param plan     
-  * @param buff    
+  * @param type
+  * @param plan
+  * @param buff
   * @see Address
   */
   inline void setOriginatingAddress(uint8_t length, uint8_t type,
@@ -1077,10 +1077,10 @@ struct SMS
   };
 
   /**
-  *   
-  *     
   *
-  * @param address   
+  *
+  *
+  * @param address
   * @see Address
   */
   inline void setOriginatingAddress(const Address& address)
@@ -1089,9 +1089,9 @@ struct SMS
   };
 
   /**
-  *   
   *
-  * @return  
+  *
+  * @return
   * @see Address
   */
   inline const Address& getOriginatingAddress() const
@@ -1100,9 +1100,9 @@ struct SMS
   };
 
   /**
-  *   
   *
-  * @return  
+  *
+  * @return
   * @see Address
   */
   inline Address& getOriginatingAddress()
@@ -1111,13 +1111,13 @@ struct SMS
   };
 
   /**
-  *   
-  *     
+  *
+  *
   *
   * @param length   (0 < length <= MAX_ADDRESS_VALUE_LENGTH)
-  * @param type    
-  * @param plan     
-  * @param buff    
+  * @param type
+  * @param plan
+  * @param buff
   * @see Address
   */
   inline void setDestinationAddress(uint8_t length, uint8_t type,
@@ -1129,10 +1129,10 @@ struct SMS
   };
 
   /**
-  *   
-  *     
   *
-  * @param address   
+  *
+  *
+  * @param address
   * @see Address
   */
   inline void setDestinationAddress(const Address& address)
@@ -1141,9 +1141,9 @@ struct SMS
   };
 
   /**
-  *   
   *
-  * @return  
+  *
+  * @return
   * @see Address
   */
   inline const Address& getDestinationAddress() const
@@ -1152,9 +1152,9 @@ struct SMS
   };
 
   /**
-  *   
   *
-  * @return  
+  *
+  * @return
   * @see Address
   */
   inline Address& getDestinationAddress()
@@ -1186,10 +1186,10 @@ struct SMS
   };
 
   /**
-  *   
-  *     
   *
-  * @param descriptor   
+  *
+  *
+  * @param descriptor
   * @see Descriptor
   */
   inline void setOriginatingDescriptor(const Descriptor& descriptor)
@@ -1198,8 +1198,8 @@ struct SMS
   };
 
   /**
-  *   
-  *     
+  *
+  *
   *
   * @param _mscLen     _msc
   * @param _value   MSC
@@ -1218,9 +1218,9 @@ struct SMS
   };
 
   /**
-  *   
   *
-  * @return  
+  *
+  * @return
   * @see Descriptor
   */
   inline const Descriptor& getOriginatingDescriptor() const
@@ -1229,9 +1229,9 @@ struct SMS
   };
 
   /**
-  *   
   *
-  * @return  
+  *
+  * @return
   * @see Descriptor
   */
   inline Descriptor& getOriginatingDescriptor()
@@ -1240,10 +1240,10 @@ struct SMS
   };
 
   /**
-  *   
-  *     
   *
-  * @param descriptor   
+  *
+  *
+  * @param descriptor
   * @see Descriptor
   *
   inline void setDestinationDescriptor(const Descriptor& descriptor)
@@ -1252,9 +1252,9 @@ struct SMS
   };*/
 
   /**
-  *   
   *
-  * @return  
+  *
+  * @return
   * @see Descriptor
   */
   inline const Descriptor& getDestinationDescriptor() const
@@ -1263,9 +1263,9 @@ struct SMS
   };
 
   /**
-  *   
   *
-  * @return  
+  *
+  * @return
   * @see Descriptor
   *
   inline Descriptor& getDestinationDescriptor()
@@ -1277,7 +1277,7 @@ struct SMS
   /**
   *    .
   *
-  * @param time   ,    
+  * @param time   ,
   *               (  ).
   */
   inline void setValidTime(time_t time)
@@ -1288,7 +1288,7 @@ struct SMS
   /**
   *    .
   *
-  * @return time   ,    
+  * @return time   ,
   *         (  ).
   */
   inline time_t getValidTime() const
@@ -1358,7 +1358,7 @@ struct SMS
 
   /**
   *    (MR),
-  *       
+  *
   *
   * @param mr        (MR)
   */
@@ -1369,7 +1369,7 @@ struct SMS
 
   /**
   *    (MR),
-  *       
+  *
   *
   * @return    (MR)
   */
@@ -1379,9 +1379,9 @@ struct SMS
   };
 
   /**
-  *      
   *
-  * @param req        
+  *
+  * @param req
   */
   inline void setDeliveryReport(uint8_t report)
   {
@@ -1389,9 +1389,9 @@ struct SMS
   };
 
   /**
-  *      
   *
-  * @return          
+  *
+  * @return
   */
   inline uint8_t getDeliveryReport() const
   {
@@ -1399,9 +1399,9 @@ struct SMS
   };
 
   /**
-  *    
   *
-  * @param req      
+  *
+  * @param req
   */
   inline void setBillingRecord(uint8_t billing)
   {
@@ -1410,13 +1410,14 @@ struct SMS
 
   inline bool billingRequired()
   {
-    return billingRecord==BILLING_NORMAL || billingRecord==BILLING_MT || billingRecord==BILLING_ONSUBMIT;
+    return billingRecord==BILLING_NORMAL   || billingRecord==BILLING_MT ||
+           billingRecord==BILLING_ONSUBMIT || billingRecord==BILLING_CDR;
   }
 
   /**
-  *    
   *
-  * @return        
+  *
+  * @return
   */
   inline uint8_t getBillingRecord() const
   {
@@ -1424,10 +1425,10 @@ struct SMS
   };
 
   /**
-  *  ,     
-  *     
+  *  ,
   *
-  * @param arc    ,    
+  *
+  * @param arc    ,
   */
   inline void setArchivationRequested(bool arc)
   {
@@ -1435,8 +1436,8 @@ struct SMS
   };
 
   /**
-  *  ,     
-  *     
+  *  ,
+  *
   *
   * @return ,       ( / )
   */
@@ -1446,10 +1447,10 @@ struct SMS
   };
 
   /**
-  *    
-  * //    
   *
-  * @return  // 
+  * //
+  *
+  * @return  //
   */
   inline uint32_t getLastResult() const
   {
@@ -1457,11 +1458,11 @@ struct SMS
   };
 
   /**
-  *  
-  * //    
-  *   
   *
-  * @param value    
+  * //
+  *
+  *
+  * @param value
   *
   */
 
@@ -1472,9 +1473,9 @@ struct SMS
   }
 
   /**
-  *      
   *
-  * @param count      
+  *
+  * @param count
   *
   */
   inline void setAttemptsCount(uint32_t count)
@@ -1483,9 +1484,9 @@ struct SMS
   };
 
   /**
-  *      
   *
-  * @return     
+  *
+  * @return
   */
   inline uint32_t getAttemptsCount() const
   {
@@ -1493,9 +1494,9 @@ struct SMS
   };
 
   /**
-  *   
   *
-  * @return  
+  *
+  * @return
   * @see Body
   */
   inline const Body& getMessageBody() const
@@ -1504,9 +1505,9 @@ struct SMS
   };
 
   /**
-  *   
   *
-  * @return  
+  *
+  * @return
   * @see Body
   */
   inline Body& getMessageBody()
@@ -1536,21 +1537,21 @@ struct SMS
       setStringField(eServiceType, type, MAX_ESERVICE_TYPE_LENGTH);
   };
   /**
-  *   - 
+  *   -
   *
-  * @param type         
-  *                    
-  *               MAX_ESERVICE_TYPE_LENGTH+1,  
-  *                
+  * @param type
+  *
+  *               MAX_ESERVICE_TYPE_LENGTH+1,
+  *
   */
   inline void getEServiceType(char* type) const
   {
       getStringField(eServiceType, type, MAX_ESERVICE_TYPE_LENGTH);
   };
   /**
-  *   - 
+  *   -
   *
-  * @return - 
+  * @return -
   */
   inline const char* getEServiceType() const
   {
@@ -1561,7 +1562,7 @@ struct SMS
   *
   *   .
   *
-  * @param pri     
+  * @param pri
   */
   inline void setPriority(int32_t pri) {
       priority = pri;
@@ -1570,7 +1571,7 @@ struct SMS
   *
   *   .
   *
-  * @return  
+  * @return
   */
   inline int32_t getPriority() const {
       return priority;
@@ -1580,7 +1581,7 @@ struct SMS
   *
   *   .
   *
-  * @param id     
+  * @param id
   */
   inline void setServiceId(int32_t id) {
       serviceId = id;
@@ -1589,7 +1590,7 @@ struct SMS
   *
   *   .
   *
-  * @return  
+  * @return
   */
   inline uint32_t getServiceId() const {
       return serviceId;
@@ -1598,18 +1599,18 @@ struct SMS
   /**
   *    .
   *
-  * @param route  
+  * @param route
   */
   inline void setRouteId(const char* route)
   {
       setStringField(routeId, route, MAX_ROUTE_ID_TYPE_LENGTH);
   };
   /**
-  *    
   *
-  * @param route       
-  *                
-  *                    
+  *
+  * @param route
+  *
+  *
   *               MAX_ROUTE_ID_TYPE_LENGTH+1
   */
   inline void getRouteId(char* route) const
@@ -1617,9 +1618,9 @@ struct SMS
       getStringField(routeId, route, MAX_ROUTE_ID_TYPE_LENGTH);
   };
   /**
-  *    
   *
-  * return  
+  *
+  * return
   */
   inline const char* getRouteId() const
   {
@@ -1638,9 +1639,9 @@ struct SMS
   /**
   *    sme-
   *
-  * @param id          
+  * @param id
   *                sme-
-  *                    
+  *
   *               MAX_SMESYSID_TYPE_LENGTH+1
   */
   inline void getSourceSmeId(char* id) const
@@ -1670,9 +1671,9 @@ struct SMS
   /**
   *    sme-
   *
-  * @param id          
+  * @param id
   *                sme-
-  *                    
+  *
   *               MAX_SMESYSID_TYPE_LENGTH+1
   */
   inline void getDestinationSmeId(char* id) const
