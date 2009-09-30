@@ -15,7 +15,8 @@ using namespace bill;
 
 BillActionPreOpen::BillActionPreOpen( bool transit ) :
 BillAction(transit), categoryId_(0), mediaTypeId_(0),
-walletType_(*this,"walletType",false,true)
+walletType_(*this,"walletType",false,true),
+hasExternalId_(false)
 {
 }
 
@@ -311,14 +312,16 @@ void BillActionPreOpen::init( const SectionParams& params,
         abonentName_ = temp.toString().c_str();
     }
 
-    externalIdType_ = CheckParameter( params,
-                                      propertyObject,
-                                      opname(), "externalId",
-                                      false, true,
-                                      externalIdName_,
-                                      hasExternalId_ );
-    if ( isTransit() && ! hasExternalId_ ) {
-        throw SCAGException("Action '%s': transit action requires 'externalId'", opname());
+    if ( ! hasExternalId_ ) {
+        externalIdType_ = CheckParameter( params,
+                                          propertyObject,
+                                          opname(), "externalId",
+                                          false, true,
+                                          externalIdName_,
+                                          hasExternalId_ );
+        if ( isTransit() && ! hasExternalId_ ) {
+            throw SCAGException("Action '%s': transit action requires 'externalId'", opname());
+        }
     }
 
     walletType_.init(params,propertyObject);

@@ -18,6 +18,7 @@
 #include "scag/bill/ewallet/RollbackResp.h"
 #include "scag/bill/ewallet/CheckResp.h"
 #include "scag/bill/ewallet/TransferResp.h"
+#include "scag/bill/ewallet/InfoResp.h"
 #include "scag/util/io/EndianConverter.h"
 
 namespace scag2 {
@@ -109,10 +110,22 @@ private:
             p->setStatus(o.getStatusValue());
         }
         virtual void handle( stream::Info& o ) {
-            throw Exception( "info is not supported", Status::NOT_SUPPORTED );
+            ewallet::Info* p = new ewallet::Info;
+            packet.reset(p);
+            p->setSeqNum(o.getSeqNum());
+            p->setAgentId(o.getAgentId());
+            p->setUserId(o.getUserId());
+            p->setWalletType(o.getWalletType());
         }
         virtual void handle( stream::InfoResp& o ) {
-            throw Exception( "inforesp is not supported", Status::NOT_SUPPORTED );
+            ewallet::InfoResp* p = new ewallet::InfoResp;
+            packet.reset(p);
+            p->setSeqNum(o.getSeqNum());
+            p->setStatus(o.getStatusValue());
+            if ( p->getStatus() == Status::OK ) {
+                p->setAmount(o.getAmount());
+                p->setChargeThreshold(o.getChargeThreshold());
+            }
         }
         virtual void handle( stream::Transfer& o ) {
             ewallet::Transfer* p = new ewallet::Transfer;
@@ -249,6 +262,15 @@ private:
             proto_.encodeMessage(p,writer_);
             return true;
         }
+        virtual bool visitInfo( ewallet::Info& o ) {
+            stream::Info p;
+            p.setSeqNum(o.getSeqNum());
+            p.setAgentId(o.getAgentId());
+            p.setUserId(o.getUserId());
+            p.setWalletType(o.getWalletType());
+            proto_.encodeMessage(p,writer_);
+            return true;
+        }
         /*
         virtual bool visitPingResp( ewallet::PingResp& o ) {
             stream::PingResp p;
@@ -304,6 +326,17 @@ private:
         }
         virtual bool visitTransferResp( ewallet::TransferResp& o ) {
             stream::TransferResp p;
+            p.setSeqNum(o.getSeqNum());
+            p.setStatusValue(o.getStatus());
+            if ( o.getStatus() == Status::OK ) {
+                p.setAmount(o.getAmount());
+                p.setChargeThreshold(o.getChargeThreshold());
+            }
+            proto_.encodeMessage(p,writer_);
+            return true;
+        }
+        virtual bool visitInfoResp( ewallet::InfoResp& o ) {
+            stream::InfoResp p;
             p.setSeqNum(o.getSeqNum());
             p.setStatusValue(o.getStatus());
             if ( o.getStatus() == Status::OK ) {

@@ -190,9 +190,11 @@ public:
                                   lcm::LongCallContext* lcmCtx = NULL );
     virtual void Check( BillCheckCallParams& checkCallParams,
                         lcm::LongCallContext* lcmCtx );
+    virtual void Info( billid_type billId, BillingInfoStruct& bis, TariffRec& tariffRec);
+    virtual void Info( EwalletInfoCallParams& infoParams,
+                       lcm::LongCallContext* lcmCtx );
     virtual void Transfer( BillTransferCallParams& callParams,
                            lcm::LongCallContext* lcmCtx );
-    virtual void Info( billid_type billId, BillingInfoStruct& bis, TariffRec& tariffRec);
 
     virtual Infrastructure& getInfrastructure() { return infrastruct; };
 

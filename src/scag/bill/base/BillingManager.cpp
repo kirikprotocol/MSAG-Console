@@ -6,6 +6,7 @@
 #include "scag/bill/ewallet/OpenResp.h"
 #include "scag/bill/ewallet/CheckResp.h"
 #include "scag/bill/ewallet/TransferResp.h"
+#include "scag/bill/ewallet/InfoResp.h"
 #include "scag/bill/ewallet/Exception.h"
 
 using namespace scag2::bill;
@@ -101,7 +102,7 @@ void EwalletCheckCallParams::setResponse( ewallet::Response& resp )
 {
     ewallet::CheckResp& cResp = static_cast< ewallet::CheckResp& >(resp);
     transStatus_ = cResp.getTransStatus();
-    txAmount_ = cResp.getAmount();
+    txAmount_ = -cResp.getAmount();
     txEndDate_ = cResp.getEnddate();
 }
 
@@ -110,6 +111,15 @@ void EwalletTransferCallParams::setResponse( ewallet::Response& resp )
 {
     ewallet::TransferResp& cResp = static_cast< ewallet::TransferResp& >(resp);
     smsc_log_debug(log_,"FIXME: transfer::setResponse invoked");
+}
+
+
+void EwalletInfoCallParams::setResponse( ewallet::Response& resp )
+{
+    // status is ok
+    ewallet::InfoResp& oResp = static_cast< ewallet::InfoResp& >(resp);
+    setResultAmount( oResp.getAmount() );
+    setChargeThreshold( oResp.getChargeThreshold() );
 }
 
 

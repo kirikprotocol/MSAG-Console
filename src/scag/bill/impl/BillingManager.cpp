@@ -6,6 +6,7 @@
 #include "scag/stat/base/Statistics2.h"
 #include "scag/util/lltostr.h"
 #include "scag/bill/ewallet/Open.h"
+#include "scag/bill/ewallet/Info.h"
 #include "scag/bill/ewallet/Commit.h"
 #include "scag/bill/ewallet/Rollback.h"
 #include "scag/bill/ewallet/Check.h"
@@ -363,7 +364,7 @@ void BillingManagerImpl::processAsyncResult( EwalletCallParams& params )
         smsc_log_debug(logger,"check parameter received, what to do?");
         return;
     } else {
-        smsc_log_error(logger,"ewallet params %p does not provide open/close/check parts", &params);
+        smsc_log_warn(logger,"ewallet params %p does not provide open/close/check parts", &params);
         return;
     }
 
@@ -481,7 +482,10 @@ billid_type BillingManagerImpl::Open( BillOpenCallParams& openCallParams,
                 pck->setDescription(billingInfoStruct.description);
             }
             pck->setWalletType(tariffRec.Currency);
-            pck->setAmount(tariffRec.getIntPrice());
+            pck->setAmount(-tariffRec.getIntPrice());
+            if ( tariffRec.getIntPrice() == 0 ) {
+                smsc_log_warn(logger,"ewallet open: zero price in tariff record");
+            }
             if (!billingInfoStruct.externalId.empty()) {
                 pck->setExternalId(billingInfoStruct.externalId);
             }
@@ -548,7 +552,7 @@ void BillingManagerImpl::Commit(billid_type billId, lcm::LongCallContext* lcmCtx
             pck->setAgentId(billingInfoStruct.serviceId);
             pck->setUserId(billingInfoStruct.AbonentNumber);
             pck->setWalletType(tariffRec.Currency);
-            pck->setAmount(tariffRec.getIntPrice());
+            pck->setAmount(-tariffRec.getIntPrice());
             if (!billingInfoStruct.externalId.empty()) {
                 pck->setExternalId(billingInfoStruct.externalId);
             } else {
@@ -620,7 +624,7 @@ void BillingManagerImpl::CommitTransit( BillCloseCallParams& params, lcm::LongCa
     pck->setAgentId(billingInfoStruct.serviceId);
     pck->setUserId(billingInfoStruct.AbonentNumber);
     pck->setWalletType(tariffRec.Currency);
-    pck->setAmount(tariffRec.getIntPrice());
+    pck->setAmount(-tariffRec.getIntPrice());
     if (!billingInfoStruct.externalId.empty()) {
         pck->setExternalId(billingInfoStruct.externalId);
     } else {
@@ -721,7 +725,7 @@ void BillingManagerImpl::Transfer( BillTransferCallParams& callParams,
     pck->setUserId(tParams->getUserId());
     pck->setSrcWalletType(tParams->getSrcWalletType());
     pck->setDstWalletType(tParams->getDstWalletType());
-    pck->setAmount(tParams->getAmount());
+    pck->setAmount(-tParams->getAmount());
     if (!tParams->getExternalId().empty()) {
         pck->setExternalId(tParams->getExternalId());
     }
@@ -743,6 +747,23 @@ void BillingManagerImpl::Info(billid_type billId, BillingInfoStruct& bis, Tariff
     bis = (*p)->billingInfoStruct;
     tariffRec = (*p)->tariffRec;
 }
+
+
+void BillingManagerImpl::Info( EwalletInfoCallParams& infoParams,
+                               lcm::LongCallContext* lcmCtx )
+{
+    infoParams.setRegistrator(this);
+    std::auto_ptr< ewallet::Info > pck(new ewallet::Info);
+    BillOpenCallParamsData* data = infoParams.getInfoData();
+    pck->setAgentId(data->billingInfoStruct.serviceId);
+    pck->setUserId(data->billingInfoStruct.AbonentNumber);
+    pck->setWalletType(data->tariffRec.Currency);
+    std::auto_ptr< ewallet::Request > req(pck.release());
+    smsc_log_debug(logger,"passing ewallet info request to client: %s", req->toString().c_str() );
+    ewalletClient_->processRequest( req, infoParams );
+    smsc_log_debug(logger,"ewallet info request is sent");
+}
+
 
 void BillingManagerImpl::makeBillEvent( BillingTransactionEvent billCommand,
                                         BillingCommandStatus commandStatus,

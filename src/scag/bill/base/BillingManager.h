@@ -282,6 +282,33 @@ private:
 };
 
 
+class EwalletInfoCallParams : public EwalletCallParams
+{
+public:
+    EwalletInfoCallParams( BillOpenCallParamsData* data,
+                           lcm::LongCallContext*   lcmCtx ) :
+    EwalletCallParams(true,lcmCtx),
+    data_(data) {}
+
+    virtual BillOpenCallParams* getOpen() { return 0; }
+    virtual BillCloseCallParams* getClose() { return 0; }
+    virtual BillCheckCallParams* getCheck() { return 0; }
+    virtual void setResponse( ewallet::Response& resp );
+
+    virtual BillOpenCallParamsData* getInfoData() { return data_.get(); }
+
+    int32_t getResultAmount() const { return resultAmount_; }
+    void setResultAmount( int32_t v ) { resultAmount_ = v; }
+    int32_t getChargeThreshold() const { return chargeThreshold_; }
+    void setChargeThreshold( int32_t v ) { chargeThreshold_ = v; }
+
+private:
+    std::auto_ptr< BillOpenCallParamsData > data_;
+    int32_t                 resultAmount_;
+    int32_t                 chargeThreshold_;
+};
+
+
 class InmanCloseCallParams : public BillCallParams, public BillCloseCallParams
 {
 public:
@@ -316,6 +343,8 @@ public:
                         lcm::LongCallContext* lcmCtx ) = 0;
     virtual void Info(billid_type billId, BillingInfoStruct& bis,
                       TariffRec& tariffRec) = 0;
+    virtual void Info( EwalletInfoCallParams& infoParams,
+                       lcm::LongCallContext* lcmCtx ) = 0;
     virtual void Transfer( BillTransferCallParams& transferParams,
                            lcm::LongCallContext* lcmCtx ) = 0;
     virtual void Stop() = 0;

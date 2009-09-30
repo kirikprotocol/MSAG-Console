@@ -20,7 +20,8 @@ enum LongCallCommandId
     BILL_COMMIT,
     BILL_ROLLBACK,
     BILL_CHECK,
-    BILL_TRANSFER
+    BILL_TRANSFER,
+    BILL_INFO
 };
 
 class LongCallParams

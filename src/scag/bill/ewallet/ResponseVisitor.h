@@ -12,6 +12,7 @@ class CommitResp;
 class RollbackResp;
 class CheckResp;
 class TransferResp;
+class InfoResp;
 
 class ResponseVisitor
 {
@@ -23,6 +24,7 @@ public:
     virtual bool visitRollbackResp( RollbackResp& ) = 0;
     virtual bool visitCheckResp( CheckResp& ) = 0;
     virtual bool visitTransferResp( TransferResp& ) = 0;
+    virtual bool visitInfoResp( InfoResp& ) = 0;
 };
 
 } // namespace ewallet

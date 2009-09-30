@@ -35,6 +35,12 @@ protected:
                            PropertyObject propertyObject ) = 0;
     virtual void setTariffStatus( ActionContext& context, const bill::TariffRec* tariffRec ) {}
 
+    void setExternalId( const std::string& eid ) {
+        hasExternalId_ = true;
+        externalIdName_ = eid;
+        externalIdType_ = ftUnknown;
+    }
+
 private:
 
     // --- input properties
