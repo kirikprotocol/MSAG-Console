@@ -71,7 +71,7 @@ public class SiebelTaskManager implements Runnable {
             final SiebelTask st = (SiebelTask) rs.get();
 
             if (logger.isDebugEnabled())
-              logger.debug("Siebel: found task: " + st.getWaveId());
+              logger.debug("Siebel: found task to update: " + st.getWaveId());
 
             boolean taskAlreadyInProcessing;
             synchronized (processedTasksMonitor) {
@@ -96,8 +96,10 @@ public class SiebelTaskManager implements Runnable {
                   }
                 }
               }.start();
-            } else
-              logger.debug("Siebel: task: " + st.getWaveId() + " already in processing...");
+            } else {
+              if (logger.isDebugEnabled())
+                logger.debug("Siebel: task: " + st.getWaveId() + " already in processing...");
+            }
 
           }
         } catch (Throwable e) {
