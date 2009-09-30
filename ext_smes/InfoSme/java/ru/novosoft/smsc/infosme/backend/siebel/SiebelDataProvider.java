@@ -24,7 +24,7 @@ public interface SiebelDataProvider {
   public void updateDeliveryStates(Map deliveryStates) throws SiebelException;
 
   public SiebelTask getTask(String waveId) throws SiebelException;
-  public ResultSet getTasksUpdates(Date fromDate) throws SiebelException;
+  public ResultSet getTasksToUpdate() throws SiebelException;
   public ResultSet getTasks() throws SiebelException;
 
   public void setTaskStatus(String waveId, SiebelTask.Status status) throws SiebelException;

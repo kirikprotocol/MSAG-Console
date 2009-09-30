@@ -193,10 +193,8 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
     return siebelTask;
   }
 
-  public ResultSet getTasksUpdates(Date from) throws SiebelException {
-    if (from == null) {
-      throw new SiebelException("Argument is null");
-    }
+  public ResultSet getTasksToUpdate() throws SiebelException {
+
     Connection connection = null;
     PreparedStatement prepStatement = null;
     java.sql.ResultSet sqlResult = null;
@@ -206,7 +204,6 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
 
       prepStatement = connection.prepareStatement(getSql("task.list.update"));
       prepStatement.setFetchSize(FETCH_SIZE);
-      prepStatement.setTimestamp(1, new Timestamp(from.getTime()));
 
       sqlResult = prepStatement.executeQuery();
 
@@ -468,6 +465,25 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
     } catch (SQLException exc) {
       logger.error("Unable to close connection", exc);
     }
+  }
+
+  public static void main(String args[]) throws SiebelException {
+    SiebelDataProviderImpl d = new SiebelDataProviderImpl();
+    Properties props = new Properties();
+    props.setProperty("jdbc.source", "jdbc:oracle:thin:@10.0.94.143:1521:VANDB");
+    props.setProperty("jdbc.driver", "oracle.jdbc.driver.OracleDriver");
+    props.setProperty("jdbc.user", "SMS_SENDER");
+    props.setProperty("jdbc.pass", "SMS_SENDER");
+    System.out.println("Connecting...");
+    d.connect(props);
+    System.out.println("Connected. Fetching tasks...");
+    ResultSet rs = d.getTasks();
+    System.out.println("Tasks fetched:");
+    while(rs.next()) {
+      SiebelTask t = (SiebelTask)rs.get();
+      System.out.println(" " + t);
+    }
+    d.shutdown();
   }
 
 }

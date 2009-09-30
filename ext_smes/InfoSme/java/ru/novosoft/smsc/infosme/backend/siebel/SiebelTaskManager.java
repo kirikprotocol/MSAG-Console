@@ -2,9 +2,7 @@ package ru.novosoft.smsc.infosme.backend.siebel;
 
 import org.apache.log4j.Logger;
 
-import java.util.Date;
-import java.util.Collection;
-import java.util.LinkedList;
+import java.util.*;
 import java.text.SimpleDateFormat;
 
 import ru.novosoft.smsc.infosme.backend.config.tasks.Task;
@@ -26,11 +24,13 @@ public class SiebelTaskManager implements Runnable {
 
   private boolean shutdown = true;
 
-  private Date lastCheck = new Date(0);
-
   private final InfoSmeContext ctx;
 
   private long timeout = 20000;
+
+  private Set processedTasks = new HashSet();
+
+  private final Object processedTasksMonitor = new Object();
 
   public SiebelTaskManager(SiebelDataProvider dataProvider, InfoSmeContext infoSmeContext) {
     if (dataProvider == null) {
@@ -45,7 +45,6 @@ public class SiebelTaskManager implements Runnable {
 
   public void shutdown() {
     shutdown = true;
-    lastCheck = new Date(0);
   }
 
   public boolean isOnline() {
@@ -64,35 +63,41 @@ public class SiebelTaskManager implements Runnable {
   public void run() {
     try {
       shutdown = false;
-      lastCheck = new Date(0);
       while (!shutdown) {
         ResultSet rs = null;
         try {
-          rs = provider.getTasksUpdates(lastCheck);
-          Date max = lastCheck;
+          rs = provider.getTasksToUpdate();
           while (rs.next()) {
             final SiebelTask st = (SiebelTask) rs.get();
 
-            if (st.getStatus().isCreatedBySiebel()) {
-              if (logger.isDebugEnabled()) {
-                logger.debug("Siebel: found modified task " + st);
-              }
-              
+            if (logger.isDebugEnabled())
+              logger.debug("Siebel: found task: " + st.getWaveId());
+
+            boolean taskAlreadyInProcessing;
+            synchronized (processedTasksMonitor) {
+              taskAlreadyInProcessing = processedTasks.contains(st.getWaveId());
+            }
+
+            if (!taskAlreadyInProcessing) {              
               new Thread() {
                 public void run() {
                   try {
+                    synchronized (processedTasksMonitor) {
+                      processedTasks.add(st.getWaveId());
+                    }
                     process(st);
+                    synchronized (processedTasksMonitor) {
+                      processedTasks.remove(st.getWaveId());
+                    }
                   } catch (Throwable e) {
                     logger.error(e, e);
                   }
                 }
               }.start();
+            } else
+              logger.debug("Siebel: task: " + st.getWaveId() + " already in processing...");
 
-              if (st.getLastUpdate().after(max))
-                max = new Date(st.getLastUpdate().getTime());
-            }
           }
-          lastCheck = max;
         } catch (Throwable e) {
           logger.error(e, e);
         } finally {
