@@ -317,6 +317,8 @@ void Task::init(ConfigView* config, uint32_t taskId)
     bGenerationSuccess = config->getBool("messagesHaveLoaded");
     bInGeneration = false;
   } catch (...) {}
+  try { info.useDataSm = config->getBool("useDataSm"); } catch (...) { info.useDataSm = false; } 
+
 }
 
 void Task::update(ConfigView *config)

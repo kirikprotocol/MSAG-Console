@@ -739,6 +739,8 @@ bool SmscConnector::send( const std::string& abonent,
             smsc_log_error(log_, "Invalid destination address '%s'", daStr ? daStr:"-");
             return false;
         }
+
+        time_t now = time(NULL);
   
         SMS sms;
         sms.setOriginatingAddress(oa);
@@ -746,7 +748,7 @@ bool SmscConnector::send( const std::string& abonent,
         sms.setArchivationRequested(false);
         sms.setDeliveryReport(1);
         sms.setValidTime( (info.validityDate <= 0 || info.validityPeriod > 0) ?
-                          time(NULL)+info.validityPeriod : info.validityDate );
+                          now+info.validityPeriod : info.validityDate );
   
         sms.setIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG,
                            (info.replaceIfPresent) ? 1:0);
@@ -780,7 +782,7 @@ bool SmscConnector::send( const std::string& abonent,
   
         try
         {
-            if (outLen <= MAX_ALLOWED_MESSAGE_LENGTH) {
+            if (outLen <= MAX_ALLOWED_MESSAGE_LENGTH && !info.useDataSm) {
                 sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE, out, (unsigned)outLen);
                 sms.setIntProperty(Tag::SMPP_SM_LENGTH, (unsigned)outLen);
             } else {
@@ -797,13 +799,28 @@ bool SmscConnector::send( const std::string& abonent,
         if (msgBuf) delete msgBuf;
   
         try {
-            PduSubmitSm sm;
-            sm.get_header().set_sequenceNumber(seqNum);
-            sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
-            fillSmppPduFromSms(&sm, &sms);
-            asyncTransmitter->sendPdu(&(sm.get_header()));
-            TrafficControl::incOutgoing();
-            return true;
+          if (info.useDataSm) {
+            smsc_log_debug(log_, "Send DATA_SM");
+            
+            uint32_t validityDate = info.validityDate <= now ? 0 : static_cast<uint32_t>(info.validityDate - now);
+            sms.setIntProperty(Tag::SMPP_QOS_TIME_TO_LIVE, (info.validityDate <= 0 || info.validityPeriod > 0) ?
+                                                            static_cast<uint32_t>(info.validityPeriod) : validityDate);
+            PduDataSm dataSm;
+            dataSm.get_header().set_sequenceNumber(seqNum);
+            dataSm.get_header().set_commandId(SmppCommandSet::DATA_SM);
+            fillDataSmFromSms(&dataSm, &sms);
+            asyncTransmitter->sendPdu(&(dataSm.get_header()));
+          } else {
+            smsc_log_debug(log_, "Send SUBMIT_SM");
+
+            PduSubmitSm submitSm;
+            submitSm.get_header().set_sequenceNumber(seqNum);
+            submitSm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
+            fillSmppPduFromSms(&submitSm, &sms);
+            asyncTransmitter->sendPdu(&(submitSm.get_header()));
+          }
+          TrafficControl::incOutgoing();
+          return true;
         } catch (const std::exception& ex) {
             smsc_log_warn(log_, "SmscConnector::send exception: %s", ex.what());
         } catch (...) {

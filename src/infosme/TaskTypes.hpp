@@ -55,6 +55,7 @@ namespace infosme{
 
       bool    retryOnFail, replaceIfPresent, trackIntegrity, transactionMode, keepHistory, saveFinalState;
       bool    flash;
+      bool    useDataSm;
 
       time_t  endDate;            // full date/time
       //time_t  retryTime;          // only HH:mm:ss in seconds
@@ -85,7 +86,7 @@ namespace infosme{
             endDate(-1), validityPeriod(-1), validityDate(-1),
             activePeriodStart(-1), activePeriodEnd(-1), activeWeekDays(0),
             dsTimeout(0), dsUncommitedInProcess(1), dsUncommitedInGeneration(1),
-            messagesCacheSize(100), messagesCacheSleep(0) {};
+            messagesCacheSize(100), messagesCacheSleep(0), useDataSm(false) {}; 
   };
 
 

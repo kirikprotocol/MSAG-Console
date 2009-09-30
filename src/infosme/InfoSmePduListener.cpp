@@ -57,7 +57,6 @@ void InfoSmePduListener::processReceipt (SmppHeader *pdu) {
               }
           }
           ResponseData rd(delivered?0:smsc::system::Status::UNKNOWNERR,0,msgid);
-          // ResponseData rd(delivered?0:Status::UNKNOWNERR, ConnectorSeqNum(), msgid);
           rd.retry=retry;
 
           bNeedResponce = processor.invokeProcessReceipt(rd);
@@ -110,7 +109,8 @@ void InfoSmePduListener::handleEvent(SmppHeader *pdu) {
       processReceipt(pdu);
       break;
   case SmppCommandSet::SUBMIT_SM_RESP:
-      processResponce(pdu);
+  case SmppCommandSet::DATA_SM_RESP:
+      processResponce(pdu); 
       break;
   case SmppCommandSet::ENQUIRE_LINK: case SmppCommandSet::ENQUIRE_LINK_RESP:
       break;
