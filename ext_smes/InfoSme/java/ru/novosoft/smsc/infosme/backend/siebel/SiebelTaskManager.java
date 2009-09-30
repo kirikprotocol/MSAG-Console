@@ -78,19 +78,21 @@ public class SiebelTaskManager implements Runnable {
               taskAlreadyInProcessing = processedTasks.contains(st.getWaveId());
             }
 
-            if (!taskAlreadyInProcessing) {              
-              new Thread() {
+            if (!taskAlreadyInProcessing) {
+              synchronized (processedTasksMonitor) {
+                processedTasks.add(st.getWaveId());
+              }
+
+              new Thread("Siebel-Task-'" + st.getWaveId() + "'-Processor") {
                 public void run() {
                   try {
-                    synchronized (processedTasksMonitor) {
-                      processedTasks.add(st.getWaveId());
-                    }
                     process(st);
+                  } catch (Throwable e) {
+                    logger.error(e, e);
+                  } finally {
                     synchronized (processedTasksMonitor) {
                       processedTasks.remove(st.getWaveId());
                     }
-                  } catch (Throwable e) {
-                    logger.error(e, e);
                   }
                 }
               }.start();
@@ -129,13 +131,7 @@ public class SiebelTaskManager implements Runnable {
       if (ctx.getInfoSmeConfig().containsTaskWithName(taskname, TASK_OWNER)) {
         t = ctx.getInfoSmeConfig().getTaskByName(taskname);
         if (t.isMessagesHaveLoaded()) {
-          if (!t.isEnabled()) {
-            t.setEnabled(true);
-            _changeTask(t);
-            if (logger.isDebugEnabled()) {
-              logger.debug("Siebel: enable tasK " + st);
-            }
-          }
+          _startTask(t);
           provider.setTaskStatus(st.getWaveId(), SiebelTask.Status.IN_PROCESS);
 
           if (logger.isDebugEnabled()) {
@@ -220,10 +216,23 @@ public class SiebelTaskManager implements Runnable {
     }
   }
 
+  private void _startTask(Task t) throws SiebelException {
+    try {
+      if (!t.isEnabled()) {
+        t.setEnabled(true);
+        _changeTask(t);
+      }
+    } catch (Throwable e) {
+      throw new SiebelException(e);
+    }
+  }
+
   private void _pauseTask(Task t) throws SiebelException {
     try {
-      t.setEnabled(false);
-      _changeTask(t);
+      if (t.isEnabled()) {
+        t.setEnabled(false);
+        _changeTask(t);
+      }
     } catch (Throwable e) {
       throw new SiebelException(e);
     }
