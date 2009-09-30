@@ -344,6 +344,8 @@
           FR
         <%} else if(billing == Route.BILLING_ON_SUBMIT) {%>
           SBMT
+        <%} else if(billing == Route.BILLING_CDR) {%>
+          CDR
         <%} else {%>
           &nbsp;
         <%}%>
