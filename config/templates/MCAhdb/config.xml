@@ -19,6 +19,7 @@
   </section>
   
   <section name="scheduler">
+    <param name="enableAlerts">@enable_alerts_flag</param>
     <param name="storeDir">@store_scheduler</param>
     <param name="expirationPeriod">12</param>
     <param name="expiredText">@expired_text</param>
