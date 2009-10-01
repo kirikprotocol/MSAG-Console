@@ -2382,13 +2382,13 @@ int EmailProcessor::sendSms(std::string from,const std::string to,const char* ms
 
 
   string dstUser=to.substr(0,to.find('@'));
-  string fromDomain;
-  size_t atPos=from.find('@');
+  string toDomain;
+  size_t atPos=to.find('@');
   if(atPos!=string::npos)
   {
-    fromDomain=from.substr(atPos+1);
+    toDomain=to.substr(atPos+1);
   }
-  
+
   toLower(dstUser);
 
   if(cfg::useTransformRegexp)
@@ -2498,7 +2498,7 @@ int EmailProcessor::sendSms(std::string from,const std::string to,const char* ms
 
 
   SMS sms;
-  sms.setOriginatingAddress(fromDomain==cfg::hdmaildomain?cfg::helpDeskAddress.c_str():cfg::sourceAddress.c_str());
+  sms.setOriginatingAddress(toDomain==cfg::hdmaildomain?cfg::helpDeskAddress.c_str():cfg::sourceAddress.c_str());
 
   if(noProfile)
   {
