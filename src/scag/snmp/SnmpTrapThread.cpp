@@ -6,7 +6,9 @@ namespace snmp {
 
 SnmpTrapThread::~SnmpTrapThread()
 {
-    assert( stopping_ );
+    smsc_log_info(log_,"snmp trap thread dtor started");
+    Stop();
+    waitStop();
     unsigned count = 0;
     TrapRecord* r;
     while ( queue_.Pop(r) ) {
@@ -21,6 +23,7 @@ SnmpTrapThread::~SnmpTrapThread()
 
 int SnmpTrapThread::Execute()
 {
+    stopped_ = false;
     smsc_log_info( log_, "snmp trap thread is started" );
     TrapRecord* tr;
     while ( ! stopping_ ) {
@@ -37,7 +40,19 @@ int SnmpTrapThread::Execute()
         snmp_->sendTrap(*tr);
     }
     smsc_log_info( log_, "snmp trap thread is stopped" );
+    MutexGuard mg(stopMon_);
+    stopped_ = true;
+    stopMon_.notify();
     return 0;
+}
+
+
+void SnmpTrapThread::waitStop()
+{
+    MutexGuard mg(stopMon_);
+    while ( ! stopped_ ) {
+        stopMon_.wait(500);
+    }
 }
 
 }

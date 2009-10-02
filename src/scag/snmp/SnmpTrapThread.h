@@ -16,13 +16,14 @@ private:
     
 public:
     SnmpTrapThread( SnmpWrapper* snmp ) :
-    smsc::core::threads::Thread(), stopping_(true), snmp_(snmp), log_(0) {
+    smsc::core::threads::Thread(), stopping_(true), stopped_(true), snmp_(snmp), log_(0) 
+    {
         log_ = smsc::logger::Logger::getInstance("snmp.trap");
     }
     virtual ~SnmpTrapThread();
     virtual int Execute();
     void Start() {
-        stopping_ = false;
+        stopped_ = stopping_ = false;
         smsc::core::threads::Thread::Start();
     }
     void Stop() {
@@ -33,19 +34,24 @@ public:
     }
 
     virtual void Push( TrapRecord* trap ) {
-        queue_.Push( trap );
+        if ( stopping_ ) delete trap;
+        else queue_.Push( trap );
     }
     inline TrapRecordQueue* getQueue() { return this; }
 
 private:
+    void waitStop();
+
     void Start(int) { Start(); }
     SnmpTrapThread();
 
 private:
     bool                              stopping_;
+    bool                              stopped_;
     SnmpWrapper*                      snmp_; // not owned
     QueueType                         queue_;
     smsc::logger::Logger*             log_;
+    smsc::core::synchronization::EventMonitor stopMon_;
 };
 
 }
