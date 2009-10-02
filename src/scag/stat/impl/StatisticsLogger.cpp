@@ -16,6 +16,7 @@
 #include <vector>
 #include <exception>
 #include "core/synchronization/Mutex.hpp"
+#include "scag/util/io/HexDump.h"
 
 using smsc::core::synchronization::MutexGuard;
 using std::vector;
@@ -62,7 +63,15 @@ void StatisticsLogger<Event, Buffer>::logEvent(Event* event) {
       file_.WOpen(getFileName(statDir_, lastFileTime_).c_str());
       smsc_log_debug(logger_, "create stat file '%s'", getFileName(statDir_, lastFileTime_).c_str());
     }
+      if ( logger_->isDebugEnabled() ) {
+          util::HexDump::string_type out;
+          util::HexDump hd;
+          hd.hexdump(out,pdubuf.getBuffer(),bsize);
+          hd.strdump(out,pdubuf.getBuffer(),bsize);
+          smsc_log_debug(logger_,"sacc: %s",hd.c_str(out));
+      }
     file_.Write(pdubuf.getBuffer(), bsize);
+    // file_.Flush();
   } catch (const std::exception& ex) {
     smsc_log_warn(logger_, "write event to file error: %s", ex.what());
   }
