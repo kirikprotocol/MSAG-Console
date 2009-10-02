@@ -317,7 +317,13 @@ int SmscConnector::Execute() {
           const char* msg = exc.what();
           smsc_log_error(log_, "Connect to SMSC id='%s' failed. Cause: %s", smscId_.c_str(), (msg) ? msg:"unknown");
           //bInfoSmeIsConnecting = false;
-          if (exc.getReason() == SmppConnectException::Reason::bindFailed) throw;
+          if (exc.getReason() == SmppConnectException::Reason::bindFailed) {
+            connected_ = false;
+            stopped_ = true;
+            session_->close();
+            smsc_log_error(log_, "SMSC Connector id='%s' disabled!", smscId_.c_str());
+            return 1;
+          }
           sleep(timeout_);
           session_->close();
           connected_ = false;
