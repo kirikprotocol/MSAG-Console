@@ -373,4 +373,12 @@ public class Deliveries extends InfoSmeBean {
   public void setRetryPolicy(String policy) {
     pageData.retryPolicy = policy;
   }
+
+  public boolean isUseDataSm() {
+    return pageData.useDataSm;
+  }
+
+  public void setUseDataSm(boolean val) {
+    pageData.useDataSm = val; 
+  }
 }

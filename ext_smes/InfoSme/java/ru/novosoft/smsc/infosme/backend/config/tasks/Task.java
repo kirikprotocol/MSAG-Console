@@ -36,6 +36,7 @@ public class Task extends Observable
   private int priority = 0;
   private boolean replaceMessage = false;
   private String svcType = "";
+  private boolean useDataSm = false;
 
   // Retry on fail
   private boolean retryOnFail = false;
@@ -131,6 +132,8 @@ public class Task extends Observable
     if (config.containsParameter(prefix + ".saveFinalState"))
       saveFinalState = config.getBool(prefix + ".saveFinalState");
     messagesHaveLoaded = config.getBool(prefix + ".messagesHaveLoaded");
+    if (config.containsParameter(prefix + ".useDataSm"))
+      useDataSm = config.getBool(prefix + ".useDataSm");
 
     delivery  = config.containsParameter(prefix + ".delivery") && config.getBool(prefix + ".delivery");
     if (delivery)
@@ -188,6 +191,7 @@ public class Task extends Observable
     config.setBool(prefix + ".trackIntegrity", trackIntegrity);
     config.setBool(prefix + ".keepHistory", keepHistory);
     config.setBool(prefix + ".saveFinalState", saveFinalState );
+    config.setBool(prefix + ".useDataSm", useDataSm );
     config.setBool(prefix + ".flash", flash);
     config.setString(prefix + ".activeWeekDays", Functions.collectionToString(activeWeekDaysSet, ","));
     config.setBool(prefix + ".messagesHaveLoaded", messagesHaveLoaded);
@@ -227,6 +231,7 @@ public class Task extends Observable
               && this.trackIntegrity == task.trackIntegrity
               && this.keepHistory == task.keepHistory
               && this.saveFinalState == task.saveFinalState
+              && this.useDataSm == task.useDataSm
               && this.activeWeekDaysSet.equals(task.activeWeekDaysSet)
               && this.retryPolicy.equals(task.retryPolicy)
               && this.secret == task.secret
@@ -269,6 +274,7 @@ public class Task extends Observable
     sb.append(", transactionMode=").append(transactionMode);
     sb.append(", keepHistory=").append(keepHistory);
     sb.append(", saveFinalState=").append(saveFinalState);
+    sb.append(", useDataSm=").append(useDataSm);
     sb.append(", flash=").append(flash);
     sb.append(", uncommitedInGeneration=").append(uncommitedInGeneration);
     sb.append(", uncommitedInProcess=").append(uncommitedInProcess);
@@ -520,13 +526,23 @@ public class Task extends Observable
     modified = true;
   }
 
-    public boolean isSaveFinalState() {
-        return saveFinalState;
-    }
+  public boolean isSaveFinalState() {
+    return saveFinalState;
+  }
 
-    public void setSaveFinalState(boolean saveFinalState) {
-        this.saveFinalState = saveFinalState;
-    }
+  public void setSaveFinalState(boolean saveFinalState) {
+    this.saveFinalState = saveFinalState;
+    modified = true;
+  }
+
+  public boolean isUseDataSm() {
+    return useDataSm;
+  }
+
+  public void setUseDataSm(boolean useDataSm) {
+    this.useDataSm = useDataSm;
+    modified = true;
+  }
 
   public Collection getActiveWeekDays() {
     return activeWeekDaysSet;

@@ -145,6 +145,7 @@ public class EditTaskPage extends DeliveriesPage {
     pageData.secretFlash = task.isSecretFlash();
     pageData.secretText = task.getSecretMessage();
     pageData.transactionMode = task.isTransactionMode();
+    pageData.useDataSm = task.isUseDataSm();
     pageData.owner = pageData.getAppContext().getUserManager().getUser(task.getOwner());
   }
 
@@ -178,6 +179,7 @@ public class EditTaskPage extends DeliveriesPage {
     task.setSecretFlash(pageData.secretFlash);
     task.setSecretMessage(pageData.secretText);
     task.setTransactionMode(pageData.transactionMode);
+    task.setUseDataSm(pageData.useDataSm);
     task.setOwner(pageData.owner.getName());
   }
 

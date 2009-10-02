@@ -10,7 +10,6 @@ import ru.novosoft.smsc.infosme.backend.tables.retrypolicies.RetryPolicyQuery;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.user.UserDataItem;
 import ru.novosoft.smsc.jsp.util.tables.impl.user.UserQuery;
-import ru.novosoft.smsc.jsp.PageBean;
 import ru.novosoft.smsc.util.SortedList;
 import ru.novosoft.smsc.util.Transliterator;
 
@@ -68,6 +67,7 @@ public class TaskEdit extends InfoSmeBean
   private int messagesCacheSize = 0;
   private int messagesCacheSleep = 0;
   private boolean transactionMode = false;
+  private boolean useDataSm = false;
   private int uncommitedInGeneration = 0;
   private int uncommitedInProcess = 0;
   private boolean trackIntegrity = false;
@@ -164,6 +164,7 @@ public class TaskEdit extends InfoSmeBean
     messagesCacheSize = task.getMessagesCacheSize();
     messagesCacheSleep = task.getMessagesCacheSleep();
     transactionMode = task.isTransactionMode();
+    useDataSm = task.isUseDataSm();
     uncommitedInGeneration = task.getUncommitedInGeneration();
     uncommitedInProcess = task.getUncommitedInProcess();
     trackIntegrity = task.isTrackIntegrity();
@@ -181,6 +182,7 @@ public class TaskEdit extends InfoSmeBean
     task.setAddress(address);
     task.setEnabled(enabled);
     task.setTransactionMode(transactionMode);
+    task.setUseDataSm(useDataSm);
     task.setPriority(priority);
     try {
       task.setEndDate(endDate.trim().length() == 0 ? null : user.getLocalTime(df.parse(endDate)));
@@ -520,6 +522,14 @@ public class TaskEdit extends InfoSmeBean
   }
   public void setTransactionMode(boolean transactionMode) {
     this.transactionMode = transactionMode;
+  }
+
+  public boolean isUseDataSm() {
+    return useDataSm;
+  }
+
+  public void setUseDataSm(boolean useDataSm) {
+    this.useDataSm = useDataSm;
   }
 
   public int getUncommitedInGenerationInt() {

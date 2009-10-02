@@ -111,6 +111,15 @@
   </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
+  <th><label for=useDataSm><%= getLocString("infosme.label.use_data_sm")%></label></th>
+  <td><%if (bean.isSmeRunning()) {
+    %><input class=check type=checkbox id=useDataSm name=useDataSm <%=bean.isUseDataSm() ? "checked" : ""%>><%
+  } else {
+    %><%=bean.isUseDataSm() ? "enabled" : "disabled"%><%
+  }%>
+  </td>
+</tr>
+<tr class=row<%=rowN++&1%>>
   <th><%= getLocString("infosme.label.priority")%></th>
   <td><%if (bean.isSmeRunning()) {
     %><input class=txt name=priority value="<%=StringEncoderDecoder.encode(bean.getPriority())%>" validation="int_range" range_min="1" range_max="100" onkeyup="resetValidation(this)"><%

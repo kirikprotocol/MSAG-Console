@@ -46,6 +46,7 @@ public class DeliveriesPageData {
   public String name;
   public boolean transliterate;
   public boolean transactionMode;
+  public boolean useDataSm;
   public boolean retryOnFail;
   public String endDate;
   public String startDate;
@@ -99,6 +100,7 @@ public class DeliveriesPageData {
     splitDeliveriesFile=false;
     transliterate = false;
     transactionMode = false;
+    useDataSm = false;
     retryOnFail = false;
     endDate = null;
     startDate = null;

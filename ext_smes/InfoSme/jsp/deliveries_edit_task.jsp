@@ -35,7 +35,7 @@
     </tr>
     <tr class=row<%=rowN++&1%>>
       <th><%= getLocString("infosme.label.active_period")%></th>
-      <td>
+      <td>                                                               w
         <input class=timeField id=activePeriodStart name=activePeriodStart value="<%=StringEncoderDecoder.encode(deliveries_bean.getActivePeriodStart())%>" maxlength=20 style="z-index:22;"><button class=timeButton type=button onclick="return showTime(activePeriodStart, false, true);">...</button>
         &nbsp;<%= getLocString("infosme.label.active_period_to")%>&nbsp;
         <input class=timeField id=activePeriodEnd name=activePeriodEnd value="<%=StringEncoderDecoder.encode(deliveries_bean.getActivePeriodEnd())%>" maxlength=20 style="z-index:22;"><button class=timeButton type=button onclick="return showTime(activePeriodEnd, false, true);">...</button>
@@ -102,6 +102,10 @@
     <tr class=row<%=rowN++&1%>>
       <th><label for="transactionMode"><%= getLocString("infosme.label.transaction_mode")%></label></th>
       <td><input class=check type=checkbox id=transactionMode name=transactionMode value=true <%=deliveries_bean.isTransactionMode() ? "checked" : ""%>></td>
+    </tr>
+    <tr class=row<%=rowN++&1%>>
+      <th><label for="useDataSm"><%= getLocString("infosme.label.use_data_sm")%></label></th>
+      <td><input class=check type=checkbox id=useDataSm name=useDataSm <%=deliveries_bean.isUseDataSm() ? "checked" : ""%>></td>
     </tr>
 <% if (!deliveries_bean.isFileContainsText()) { %>
     <tr class=row<%=rowN++&1%>>

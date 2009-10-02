@@ -178,7 +178,9 @@ public class SiebelTaskManager implements Runnable {
             logger.debug("Siebel: remove task " + st);
           }
         } else {
-          _pauseTask(t);
+          t.setEndDate(new Date());
+          t.setEnabled(false);
+          _changeTask(t);          
           if (logger.isDebugEnabled()) {
             logger.debug("Siebel: pause tasK " + st);
           }
