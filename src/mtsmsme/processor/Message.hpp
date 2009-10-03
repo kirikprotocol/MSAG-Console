@@ -89,6 +89,7 @@ class Message {
     bool isAbort();
     bool isComponentPresent();
     int getInvokeId();
+    int getOperationCode();
     bool isDialoguePortionExist();
     void getAppContext(AC& ac);
     string toString();

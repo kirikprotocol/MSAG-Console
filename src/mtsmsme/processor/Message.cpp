@@ -261,7 +261,28 @@ int Message::getInvokeId()
   }
   return 0;
 }
-
+int Message::getOperationCode()
+{
+  TCMessage_t* pmsg = (TCMessage_t*)structure;
+  ComponentPortion_t *comps = 0;
+  if(pmsg->present == TCMessage_PR_begin) comps = pmsg->choice.begin.components;
+  if(pmsg->present == TCMessage_PR_contiinue) comps = pmsg->choice.contiinue.components;
+  if (comps)
+  {
+    /* obtain first component */
+    typedef A_SEQUENCE_OF(void) T;
+    T *list = (T*)&comps->list;//just a hack
+    if (list->count == 1)
+    {
+      Component_t *comp = (Component_t *)(list->array[0]);
+      if (comp->present == Component_PR_invoke)
+      {
+        return (int)(comp->choice.invoke.opcode.choice.local);
+      }
+    }
+  }
+  return 0;
+}
 vector<unsigned char> Message::getComponent()
 {
   vector<unsigned char> buf;
