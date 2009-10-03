@@ -7,7 +7,39 @@
 #include "Component.h"
 
 namespace smsc{namespace mtsmsme{namespace processor{
-
+/*
+ * 17.2.2.23 Short message gateway services
+ * This operation package includes the operations required for short message
+ * service gateway procedures between MSC and HLR.
+ * shortMsgGatewayPackage-v3 OPERATION-PACKAGE ::= {
+ *   -- Supplier is HLR if Consumer is GMSC
+ *   CONSUMER INVOKES {
+ *     sendRoutingInfoForSM |
+ *     reportSM-DeliveryStatus}
+ *   SUPPLIER INVOKES {
+ *     informServiceCentre} }
+ * The v2-equivalent package can be determined according to
+ * the rules described in clause 17.2.1.
+ * The v1-equivalent package is defined as follows:
+ * shortMsgGatewayPackage-v1 OPERATION-PACKAGE ::= {
+ *   -- Supplier is HLR if Consumer is GMSC
+ *   CONSUMER INVOKES {
+ *     sendRoutingInfoForSM |
+ *     reportSMDeliveryStatus} }
+ * 17.3.2.21 Short Message Gateway
+ * This application context is used for short message gateway procedures.
+ * shortMsgGatewayContext-v3 APPLICATION-CONTEXT ::= {
+ *   -- Responder is HLR if Initiator is GMSC
+ *   INITIATOR CONSUMER OF {
+ *     shortMsgGatewayPackage-v3}
+ *   ID {map-ac shortMsgGateway(20) version3(3)} }
+ * The following application-context-name is assigned to
+ * the v2-equivalent application-context:
+ * ID {map-ac shortMsgGateway(20) version2(2)}
+ * The following application-context-name is assigned to
+ * the v1-equivalent application-context:
+ * ID {map-ac shortMsgGateway(20) version1(1)}
+ */
 class SRI4SMTSM : public TSM
 {
   public:
