@@ -69,6 +69,11 @@ static void FillChargeOp(SMSId id,OpClass& op,const SMS& sms)
   {
     op.setMTcharge();
   }
+  if(sms.getBillingRecord()==BILLING_CDR)
+  {
+    op.setForcedCDR();
+    op.setChargeOnSubmit();
+  }
   if(sms.hasBinProperty(Tag::SMPP_SHORT_MESSAGE))
   {
     unsigned len;
@@ -103,11 +108,6 @@ void INManComm::ChargeSms(SMSId id,const SMS& sms,smsc::smeman::INSmsChargeRespo
   smsc::inman::interaction::SPckChargeSms pck;
   pck.Hdr().dlgId = dlgId;
   FillChargeOp(id, pck.Cmd(), sms);
-  if(sms.getBillingRecord()==BILLING_CDR)
-  {
-    pck.Cmd().setForcedCDR();
-    pck.Cmd().setChargeOnSubmit();
-  }
   if(sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY)==Smsc::chargeOnSubmit)
   {
     pck.Cmd().setChargeOnSubmit();
@@ -155,11 +155,6 @@ void INManComm::ChargeSms(SMSId id,const SMS& sms,smsc::smeman::INFwdSmsChargeRe
 //  pck.Cmd().setForwarded();
   pck.Hdr().dlgId = dlgId;
   FillChargeOp(id, pck.Cmd(), sms);
-  if(sms.getBillingRecord()==BILLING_CDR)
-  {
-    pck.Cmd().setForcedCDR();
-    pck.Cmd().setChargeOnSubmit();
-  }
   smsc::inman::interaction::ObjectBuffer buf(400);
   pck.serialize(buf);
   {
