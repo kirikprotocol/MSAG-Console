@@ -400,6 +400,28 @@ void cmd_charge_type_MT(Console&, const std::vector<std::string> &args)
     _billFacade->printDlgConfig();
 }
 
+//USAGE: cdr_charge [?|help | on | off]
+static const char hlp_cdr_charge[] = "USAGE: %s [?|help | .Ton.Npi.Adr | string]\n";
+
+void cmd_cdr_charge(Console&, const std::vector<std::string> &args)
+{
+  if ((args.size() < 2)
+      || !strcmp("?", args[1].c_str()) || !strcmp("help", args[1].c_str())) {
+    fprintf(stdout, hlp_cdr_charge, args[0].c_str());
+    return;
+  }
+
+  if (!strcmp("on", args[1].c_str())) {
+    _billFacade->setForcedCDR(true);
+  } else if (!strcmp("off", args[1].c_str())) {
+    _billFacade->setForcedCDR(false);
+  } else {
+    fprintf(stdout, hlp_cdr_charge, args[0].c_str());
+    return;
+  }
+  _billFacade->printDlgConfig();
+}
+
 //USAGE: chg_mode_abn [?|help | submit | delivery | alldata]
 static const char hlp_org_msc[] = "USAGE: %s [?|help | .Ton.Npi.Adr | string]\n";
 
@@ -554,6 +576,7 @@ int main(int argc, char** argv)
         console.addItem("mo_charge",  cmd_charge_type_MO);
         console.addItem("mt_charge",  cmd_charge_type_MT);
         console.addItem("org_msc", cmd_org_msc);
+        console.addItem("cdr_charge",  cmd_cdr_charge);
 /* ************************************************************************** *
  * Console commands: sending INMan AbonentDetector commands 
  * ************************************************************************** */

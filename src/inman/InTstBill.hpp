@@ -37,13 +37,14 @@ struct INDialogCfg {
     uint32_t            xsmsIds; //SMS Extra services id
     CDRRecord::ChargingPolicy   chgPolicy;
     CDRRecord::ChargingType     chgType;
+    bool                forcedCDR;
     std::string         locMSC; //abonent's location MSC address:
                                 //  TonNpiAddress or string
 
     //NOTE: PRE_ABONENTS_NUM >= 2
     INDialogCfg() : abId(1), dstId(2), ussdOp(false)
       , xsmsIds(0), chgPolicy(CDRRecord::ON_DELIVERY), chgType(CDRRecord::MO_Charge)
-      , locMSC(".1.1.79139860001")
+      , forcedCDR(false), locMSC(".1.1.79139860001")
     { }
 };
 
@@ -61,6 +62,7 @@ public:
     void    setChargeType(CDRRecord::ChargingType chg_type) { cfg.chgType = chg_type; }
     void    setState(DlgState new_state) { state = new_state; }
     void    setLocMSC(const std::string & use_adr) { cfg.locMSC = use_adr; }
+    void    setForcedCDR(bool forced_cdr = true) { cfg.forcedCDR = forced_cdr; }
 
     DlgState getState(void) const { return state; }
     uint32_t getDlvrResult(void) const { return dlvrRes; }
@@ -127,6 +129,7 @@ public:
                 "  DestAdr[%u]: %s (%s)\n"
                 "  chargePol  : %s\n"
                 "  chargeType : %s\n"
+                "  forcedCDR  : %s\n"
                 "  SMSExtra: %u\n",
                 _dlgCfg.locMSC.c_str(),
                 _dlgCfg.abId, (abi->msIsdn.toString()).c_str(), abi->type2Str(),
@@ -134,13 +137,15 @@ public:
                 _dlgCfg.dstId, (dAdr->msIsdn.toString()).c_str(), dAdr->type2Str(),
                 (_dlgCfg.chgPolicy == CDRRecord::ON_DELIVERY) ? "ON_DELIVERY" :
                 ((_dlgCfg.chgPolicy == CDRRecord::ON_SUBMIT) ? "ON_SUBMIT" : "ON_DATA_COLLECTED"),
-                _dlgCfg.chgType ? "MT" : "MO", _dlgCfg.xsmsIds);
+                _dlgCfg.chgType ? "MT" : "MO", _dlgCfg.forcedCDR ? "ON" : "OFF",
+                _dlgCfg.xsmsIds);
     }
 
     void setUssdOp(bool op) { _dlgCfg.ussdOp = op; }
     void setSmsXIds(uint32_t srv_ids) { _dlgCfg.xsmsIds = srv_ids; }
     void setChargePolicy(CDRRecord::ChargingPolicy chg_pol) { _dlgCfg.chgPolicy = chg_pol; }
     void setChargeType(CDRRecord::ChargingType chg_typ) { _dlgCfg.chgType = chg_typ; }
+    void setForcedCDR(bool forced_cdr = true) { _dlgCfg.forcedCDR = forced_cdr; }
     void setLocMSC(const std::string & use_adr) { _dlgCfg.locMSC = use_adr; }
 
     bool setAbonentId(unsigned ab_id, bool orig_abn = true)
@@ -191,6 +196,8 @@ public:
         const AbonentInfo * abi = _abDB->getAbnInfo(dlg_cfg->abId);
         op.setCallingPartyNumber(abi->msIsdn.toString());
         op.setCallingIMSI(abi->abImsi);
+        if (dlg_cfg->forcedCDR)
+          op.setForcedCDR();
         op.setLocationInformationMSC(dlg_cfg->locMSC);
 //        op.setLocationInformationMSC(abi->msIsdn.interISDN() ?
 //                                     ".1.1.79139860001" : "");
