@@ -1,7 +1,12 @@
 static char const ident[] = "$Id$";
 
 #include "mtsmsme/comp/ReportSmDeliveryStatus.hpp"
+#include "mtsmsme/processor/util.hpp"
 namespace smsc{namespace mtsmsme{namespace comp{
+
+using std::vector;
+using std::string;
+
 ReportSmDeliveryStatusReq::ReportSmDeliveryStatusReq(
   const string& msisdn,
   const string& scaddress)

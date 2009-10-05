@@ -2,21 +2,16 @@
 #ifndef __SMSC_MTSMSME_COMP_REPORTSMDELIVERYSTATUS_HPP__
 #define __SMSC_MTSMSME_COMP_REPORTSMDELIVERYSTATUS_HPP__
 
-//#include "mtsmsme/processor/Message.hpp"
-#include "Component.hpp"
+#include "mtsmsme/comp/Component.hpp"
+#include "logger/Logger.h"
 #include "ReportSM-DeliveryStatusArg.h"
 #include <string>
 
-#define OCTET_STRING_DECL(name, szo) unsigned char name##_buf[szo]; OCTET_STRING_t name
-#define ZERO_OCTET_STRING(name)	{ memset(&name, 0, sizeof(name)); name.buf = name##_buf; }
-#define Address2OCTET_STRING(octs, addr)	{ ZERO_OCTET_STRING(octs); \
-    octs.size = packMAPAddress2OCTS(addr, (TONNPI_ADDRESS_OCTS *)(octs.buf)); }
-
 namespace smsc{ namespace mtsmsme{ namespace comp{
 
-using smsc::mtsmsme::processor::TrId;
-using smsc::mtsmsme::processor::AC;
 using std::string;
+using smsc::logger::Logger;
+using smsc::mtsmsme::comp::CompIF;
 
 class ReportSmDeliveryStatusReq: public CompIF {
   public:
