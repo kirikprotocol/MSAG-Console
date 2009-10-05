@@ -12,7 +12,6 @@ using namespace smsc::core::network;
 int SmppAcceptor::Execute()
 {
   smsc::logger::Logger* log=smsc::logger::Logger::getInstance("smpp.acc");
-  Socket srv;
   try{
     if(srv.InitServer(server,port,0,1,true)==-1)
       throw Exception("Failed to init smpp server socket");
@@ -29,14 +28,17 @@ int SmppAcceptor::Execute()
   startNotify->SignalAll();
 
 
-  for(;;)
+  while(!isStopping)
   {
     clnt=srv.Accept();
+    if(isStopping)
+    {
+      break;
+    }
     if(!clnt)
     {
       __warning2__("accept failed. error:%s",strerror(errno));
       //break;
-      if(isStopping)break;
       continue;
     }
     clnt->SetNoDelay(1);

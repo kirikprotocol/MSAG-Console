@@ -33,9 +33,15 @@ public:
   virtual int Execute();
   virtual const char* taskName(){return "SmppAcceptor";}
   bool isStarted(){return started;}
+  void stop()
+  {
+    isStopping=true;
+    srv.Abort();
+  }
 protected:
   int port;
   char server[64];
+  smsc::core::network::Socket srv;
   SmppSocketsManager* sm;
   bool started;
   Event *startNotify;
