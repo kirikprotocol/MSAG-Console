@@ -569,6 +569,10 @@ Billing::PGraphState Billing::onChargeSms(void)
 
     //Here goes either abtPrepaid or abtUnknown ..
 
+    /* **************************************************** */
+    /* conditions which switch ON provider request         */
+    /* **************************************************** */
+
     //check if AbonentProvider should be requested for contract type
     bool askProvider = ((abCsi.abRec.ab_type == AbonentContractInfo::abtUnknown)
                         && ((billMode == ChargeParm::bill2IN)
@@ -585,8 +589,15 @@ Billing::PGraphState Billing::onChargeSms(void)
         && (_cfg.iaPol->getIAPAbilities() & IAProvider::abSCF))
         askProvider = true;
 
+    /* **************************************************** */
+    /* conditions which switch OFF provider request         */
+    /* **************************************************** */
+
     //verify that abonent number is in ISDN international format
     if (!abNumber.interISDN() || (abNumber.length < 10)) //HOT-PATCH for short SME ISDN numbers
+        askProvider = false;
+
+    if (chrgFlags & ChargeSms::chrgCDR)
         askProvider = false;
 
     if (askProvider && _cfg.iaPol) {
