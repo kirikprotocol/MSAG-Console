@@ -74,6 +74,15 @@ struct ENCResult {
   ENCResult(Status_e use_status = encBadVal, TSLength nb_encoded = 0)
     : status(encBadVal), nbytes(nb_encoded)
   { }
+
+  bool isOk(void) const { return (status == encOk); }
+
+  ENCResult & operator+=(const ENCResult & use_res)
+  {
+    status = use_res.status;
+    nbytes += use_res.nbytes;
+    return *this;
+  }
 };
 
 struct DECResult {
@@ -93,6 +102,15 @@ struct DECResult {
   DECResult(Status_e use_status = decBadEncoding, TSLength nb_decoded = 0)
     : status(use_status), nbytes(nb_decoded)
   { }
+
+  bool isOk(void) const { return (status == decOk); }
+
+  DECResult & operator+=(const DECResult & use_res)
+  {
+    status = use_res.status;
+    nbytes += use_res.nbytes;
+    return *this;
+  }
 };
 
 } //asn1

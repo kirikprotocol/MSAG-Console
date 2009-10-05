@@ -6,21 +6,24 @@
 #define __ABSTRACT_SYNTAX_OID_DEFS__
 
 #include <inttypes.h>
-#include <vector>
+#include "eyeline/util/LWArray.hpp"
 
 namespace eyeline {
 namespace asn1 {
 
 typedef uint16_t SubIdType;
 
-typedef std::vector<SubIdType> ObjectID;
-typedef std::vector<SubIdType> RelativeOID;
+static const uint8_t _ObjectID_DFLT_SZ = 16;
 
-/* ************************************************************************* *
- * Validates value of OBJECT-IDENTIFER.
- * Returns  zero on success or ordinal number of invalid subId detected.
- * ************************************************************************* */
-extern uint16_t  validate_ObjectID(const ObjectID & use_oid);
+//NOTE: Overall number of subIdentifiers is limited to 255
+typedef eyeline::util::LWArray_T<SubIdType, uint8_t, _ObjectID_DFLT_SZ> RelativeOID;
+
+class ObjectID : public RelativeOID {
+public:
+  // Validates value of OBJECT-IDENTIFER type.
+  // Returns zero on success or ordinal number of invalid subId detected.
+  uint8_t  validate_ObjectID(void) const;
+};
 
 } //asn1
 } //eyeline

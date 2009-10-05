@@ -11,21 +11,24 @@ namespace asn1 {
  * Validates value of OBJECT-IDENTIFER.
  * Returns  zero on success or ordinal number of invalid subId detected.
  * ************************************************************************* */
-uint16_t  validate_ObjectID(const ObjectID & use_oid)
+uint8_t  ObjectID::validate_ObjectID(void) const
 {
-  //validate 1st subId
-  if (use_oid[0] > 2)
-    return 1; //illegal value
+  if (size()) {
+    //validate 1st subId
+    if (get()[0] > 2)
+      return 1; //illegal value
 
-  //validate 2nd subId
-  if ( (use_oid[1] > 39) && (!use_oid[0] || (use_oid[0] == 1)) )
-    return 2; //illegal value
+    if (size() > 1) {
+      //validate 2nd subId
+      if ( (get()[1] > 39) && (!get()[0] || (get()[0] == 1)) )
+        return 2; //illegal value
 
-  //check that summ of first two subIds do not overload SubIdType
-  SubIdType subId = use_oid[0]*40 +  use_oid[1];
-  if (subId < use_oid[1])
-    return 2; //too large value
-
+      //check that summ of first two subIds do not overload SubIdType
+      SubIdType subId = get()[0]*40 +  get()[1];
+      if (subId < get()[1])
+        return 2; //too large value
+    }
+  }
   return 0; //Ok
 }
 
