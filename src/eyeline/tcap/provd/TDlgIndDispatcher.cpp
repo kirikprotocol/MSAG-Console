@@ -2,7 +2,7 @@
 static char const ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_OFF */
 
-#include "eyeline/asn1/BER/TLVDecoder.hpp"
+#include "eyeline/asn1/BER/rtdec/TLVDecoder.hpp"
 #include "eyeline/tcap/provd/TDlgIndDispatcher.hpp"
 #include "eyeline/tcap/provd/SUAIndDispatcher.hpp"
 
