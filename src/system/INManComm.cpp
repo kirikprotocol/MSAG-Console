@@ -106,6 +106,7 @@ void INManComm::ChargeSms(SMSId id,const SMS& sms,smsc::smeman::INSmsChargeRespo
   if(sms.getBillingRecord()==BILLING_CDR)
   {
     pck.Cmd().setForcedCDR();
+    pck.Cmd().setChargeOnSubmit();
   }
   if(sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY)==Smsc::chargeOnSubmit)
   {
@@ -157,6 +158,7 @@ void INManComm::ChargeSms(SMSId id,const SMS& sms,smsc::smeman::INFwdSmsChargeRe
   if(sms.getBillingRecord()==BILLING_CDR)
   {
     pck.Cmd().setForcedCDR();
+    pck.Cmd().setChargeOnSubmit();
   }
   smsc::inman::interaction::ObjectBuffer buf(400);
   pck.serialize(buf);
