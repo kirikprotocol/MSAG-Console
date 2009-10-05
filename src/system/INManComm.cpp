@@ -65,7 +65,7 @@ static void FillChargeOp(SMSId id,OpClass& op,const SMS& sms)
   op.setServiceOp(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP)?sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP):-1);
   op.setPartsNum(sms.getIntProperty(Tag::SMSC_ORIGINALPARTSNUM));
   op.setServiceType(sms.getEServiceType());
-  if(sms.getBillingRecord()==2)
+  if(sms.getBillingRecord()==BILLING_MT)
   {
     op.setMTcharge();
   }
@@ -103,6 +103,10 @@ void INManComm::ChargeSms(SMSId id,const SMS& sms,smsc::smeman::INSmsChargeRespo
   smsc::inman::interaction::SPckChargeSms pck;
   pck.Hdr().dlgId = dlgId;
   FillChargeOp(id, pck.Cmd(), sms);
+  if(sms.getBillingRecord()==BILLING_CDR)
+  {
+    pck.Cmd().setForcedCDR();
+  }
   if(sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY)==Smsc::chargeOnSubmit)
   {
     pck.Cmd().setChargeOnSubmit();
@@ -150,6 +154,10 @@ void INManComm::ChargeSms(SMSId id,const SMS& sms,smsc::smeman::INFwdSmsChargeRe
 //  pck.Cmd().setForwarded();
   pck.Hdr().dlgId = dlgId;
   FillChargeOp(id, pck.Cmd(), sms);
+  if(sms.getBillingRecord()==BILLING_CDR)
+  {
+    pck.Cmd().setForcedCDR();
+  }
   smsc::inman::interaction::ObjectBuffer buf(400);
   pck.serialize(buf);
   {
