@@ -10,6 +10,7 @@ use Time::Local qw(timegm timelocal);
 use constant CHARGE_SUBMIT=>0;
 use constant CHARGE_DELIVERY=>1;
 use constant CHARGE_DATACOLLECTED=>2;
+use constant CHARGE_DATACOLLECTED_FOR_SUBMIT=>3;
 
 
 BEGIN{
@@ -556,7 +557,7 @@ sub process{
       $infields->{SRC_ADDR}='.1.1.79134548051';
     }
     
-    if($infields->{CHARGE}==CHARGE_DATACOLLECTED)
+    if($infields->{CHARGE}==CHARGE_DATACOLLECTED_FOR_SUBMIT)
     {
       $makeoutrec=0;
     }elsif($infields->{CHARGE}==CHARGE_SUBMIT)
