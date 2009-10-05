@@ -6,7 +6,7 @@
 #define __ABSTRACT_SYNTAX_TAGS_DEFS__
 
 #include <inttypes.h>
-#include "util/Exception.hpp"
+#include "eyeline/util/LWArray.hpp"
 
 namespace eyeline {
 namespace asn1 {
@@ -24,8 +24,8 @@ struct ASTag {
   ValueType   _tagValue;
   bool        _isConstructed;
 
-  ASTag(TagClass_e tag_class = tagUniversal, ValueType tag_val = 0, bool _isConstructed = false)
-    : _tagClass(tag_class), _tagValue(tag_val)
+  ASTag(TagClass_e tag_class = tagUniversal, ValueType tag_val = 0, bool is_constructed = false)
+    : _tagClass(tag_class), _tagValue(tag_val), _isConstructed(is_constructed)
   { }
 
   bool operator== (const ASTag & cmp_tag) const
@@ -50,130 +50,115 @@ struct ASTag {
   }
 };
 
-//Abstract type complete tagging (vector of ASTags)
-//NOTE: all tags goes to BER encoding in case of EXPLICIT tagging environment.
-class ASTagging  {
-protected:
-  static const uint8_t _max_STACK_TAGS = 4;
-  bool    _heapBuf;
-  uint8_t _numTags;
-  ASTag   _stags[_max_STACK_TAGS];  //Most of ASN.1 types have no more than 2 tags
-  ASTag * _tags;
+/* ************************************************************************* *
+ * UNIVERSAL CLASS TAG NUMBERS
+ * ************************************************************************* */
+extern ASTag  _tagUNI0;             //0 - RESERVED TAG
+/**/
+extern ASTag  _tagBOOL;             //1
+extern ASTag  _tagINTEGER;          //2
+extern ASTag  _tagBITSTR;           //3
+extern ASTag  _tagOCTSTR;           //4
+extern ASTag  _tagNULL;             //5
+extern ASTag  _tagObjectID;         //6
+extern ASTag  _tagObjDescriptor;    //7
+extern ASTag  _tagEXTERNAL;         //8
+extern ASTag  _tagREAL;             //9
+extern ASTag  _tagENUM;             //10
+extern ASTag  _tagEmbeddedPDV;      //11
+extern ASTag  _tagUTF8STR;          //12
+extern ASTag  _tagRelativeOID;      //13
 
+extern ASTag  _tagSEQOF;            //16
+extern ASTag  _tagSETOF;            //17
+extern ASTag  _tagNumericSTR;       //18
+extern ASTag  _tagPrintableSTR;     //19
+extern ASTag  _tagTeletexSTR;       //20
+extern ASTag  _tagVideotexSTR;      //21
+extern ASTag  _tagIA5STR;           //22
+extern ASTag  _tagUTCTime;          //23
+extern ASTag  _tagGeneralizedTime;  //24
+extern ASTag  _tagGraphicSTR;       //25
+extern ASTag  _tagVisibleSTR;       //26
+extern ASTag  _tagGeneralSTR;       //27
+
+extern ASTag  _tagCHARSTR;          //29
+extern ASTag  _tagBMPSTR;           //30
+
+/* ************************************************************************* *
+ * ASN type tagging environment
+ * ************************************************************************* */
+
+using eyeline::util::LWArray_T;
+static const uint8_t _ASTaggingDFLT_SZ = 4;
+
+//ASN type complete tagging (vector of ASTags)
+//NOTE: Overall number of tags is limited to 255
+class ASTagging : public LWArray_T<ASTag, uint8_t, _ASTaggingDFLT_SZ> {
 public:
-  //just a single tag, by default: [UNIVERSAL 0]
-  ASTagging(ASTag::TagClass_e tag_class = ASTag::tagUniversal,
-            ASTag::ValueType tag_val = 0, bool tag_constructed = false)
-    : _heapBuf(false), _numTags(1), _tags(_stags)
+  enum Environment_e {
+    tagsEXPLICIT = 0,  //type is identified by full set of tags
+    tagsIMPLICIT       //type is identified only by outermost tag
+  };
+
+  //just a single tag, by default: [UNIVERSAL 0] primitive
+  ASTagging(ASTag::TagClass_e tag_class = ASTag::tagUniversal, ASTag::ValueType tag_val = 0, bool is_constructed = false)
+    : LWArray_T<ASTag, uint8_t, 4>(1)
   {
-    _stags[0] = ASTag(tag_class, tag_val, tag_constructed);
+    LWArray_T<ASTag, uint8_t, 4>::_buf[0] = ASTag(tag_class, tag_val, is_constructed);
   }
   //
-  ASTagging(const ASTag & use_tag) //just a single tag
-    : _heapBuf(false), _numTags(1), _tags(_stags)
+  ASTagging(const ASTag & use_tag = _tagUNI0)
+    : LWArray_T<ASTag, uint8_t, 4>(1)
   {
-    _stags[0] = use_tag;
+    LWArray_T<ASTag, uint8_t, 4>::_buf[0] = use_tag;
   }
   //
   ASTagging(const ASTagging & use_tags)
-    : _heapBuf(use_tags._heapBuf), _numTags(use_tags._numTags), _tags(_stags)
-  {
-    if (_heapBuf)
-      _tags = new ASTag[_numTags];
-    //copy tags
-    for (uint8_t i = 0; i < _numTags; ++i)
-      _tags[i] = use_tags._tags[i];
-  }
+    : LWArray_T<ASTag, uint8_t, 4>(use_tags)
+  { }
 
   ASTagging(uint8_t num_tags, ASTag use_tag1, ... /* , const ASTag use_tagN*/);
   //
   ~ASTagging()
-  {
-    if (_heapBuf)
-      delete [] _tags;
-  }
+  { }
 
-
-  uint8_t size(void) const { return _numTags; }
-
-  const ASTag * begin(void) const { return _tags; }
-
-  //tag_idx = 0 - outermost tag, in most cases this is just a type tag
-  //NOTE: It's a caller responsibility to ensure tag_idx isn't out of range
-
-  const ASTag & tagN(uint8_t tag_idx) const //throw std::exception
-  {
-    if (tag_idx >= _numTags)
-      throw smsc::util::Exception("tag index=%u is out of range=%u",
-                                  (unsigned)tag_idx, (unsigned)_numTags);
-    return _tags[tag_idx];
-  }
-  // 
-  const ASTag & operator[] (uint8_t tag_idx) const //throw std::exception
-  {
-    return tagN(tag_idx);
-  }
+  const ASTag & first(void) const { return LWArray_T<ASTag, uint8_t, 4>::_buf[0]; }
+  const ASTag & last(void) const { return LWArray_T<ASTag, uint8_t, 4>::_buf[size() - 1]; }
 
   //Compares taggings in accordance with ASN.1 canonical tags order.
   bool operator< (const ASTagging & cmp_tags) const
   {
-    uint8_t num2cmp = (_numTags <=  cmp_tags._numTags) ? _numTags : cmp_tags._numTags;
+    uint8_t num2cmp = (size() <=  cmp_tags.size()) ? size() : cmp_tags.size();
 
     for (uint8_t i = 0; i < num2cmp; ++i) {
-      if (_tags[i] < cmp_tags._tags[i])
+      if ((*this)[i] < cmp_tags[i])
         return true;
     }
     //all 'num2cmp' tags are equal, the shorter tagging is smaller one
-    return (_numTags < cmp_tags._numTags);
+    return (size() < cmp_tags.size());
   }
 
   bool operator== (const ASTagging & cmp_tags) const
   {
-    if (_numTags !=  cmp_tags._numTags)
+    if (size() !=  cmp_tags.size())
       return false;
 
-    for (uint8_t i = 0; i < _numTags; ++i) {
-      if (!(_tags[i] == cmp_tags._tags[i]))
+    for (uint8_t i = 0; i < size(); ++i) {
+      if (!((*this)[i] == cmp_tags[i]))
         return false;
     }
     return true;
   }
+
+  //NOTE: if resulting number of tags exceeds limit of 255, size() isn't changed
+  ASTagging & operator+= (const ASTagging & use_tags)
+  {
+    LWArray_T<ASTag, uint8_t, 4>::operator +=(use_tags);
+    return *this;
+  }
 };
 
-
-/* ************************************************************************* *
- * NIVERSAL CLASS TAG NUMBERS
- * ************************************************************************* */
-
-extern ASTagging  _tagBOOL;             //1
-extern ASTagging  _tagINTEGER;          //2
-extern ASTagging  _tagBITSTR;           //3
-extern ASTagging  _tagOCTSTR;           //4
-extern ASTagging  _tagNULL;             //5
-extern ASTagging  _tagObjectID;         //6
-extern ASTagging  _tagObjDescriptor;    //7
-extern ASTagging  _tagEXTERNAL;         //8
-extern ASTagging  _tagREAL;             //9
-extern ASTagging  _tagENUM;             //10
-extern ASTagging  _tagEmbeddedPDV;      //11
-extern ASTagging  _tagUTF8STR;          //12
-extern ASTagging  _tagRelativeID;       //13
-
-extern ASTagging  _tagSEQOF;            //16
-extern ASTagging  _tagSETOF;            //17
-extern ASTagging  _tagNumericSTR;       //18
-extern ASTagging  _tagPrintableSTR;     //19
-extern ASTagging  _tagTeletexSTR;       //20
-extern ASTagging  _tagVideotexSTR;      //21
-extern ASTagging  _tagIA5STR;           //22
-extern ASTagging  _tagUTCTime;          //23
-extern ASTagging  _tagGeneralizedTime;  //24
-extern ASTagging  _tagGraphicSTR;       //25
-extern ASTagging  _tagVisibleSTR;       //26
-extern ASTagging  _tagGeneralSTR;       //27
-
-extern ASTagging  _tagCHARSTR;          //29
-extern ASTagging  _tagBMPSTR;           //30
 
 } //asn1
 } //eyeline

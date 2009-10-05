@@ -54,7 +54,7 @@ public:
   ASTagOptions(const ASTagOptions & use_opt)
     : std::set<ASTagging>(use_opt)
   {
-    current = use_opt.Selected() ? find(use_opt.Selected()->tagN(0)) : end();
+    current = use_opt.Selected() ? find(use_opt.Selected()->at(0)) : end();
   }
   //NOTE: sets selected option!
   ASTagOptions(const ASTagging & use_tags)
@@ -83,7 +83,7 @@ public:
   //Returns outermost tag of selected tagging option, if latter is set
   const ASTag * Tag(void) const
   {
-    return Selected() ? &(Selected()->tagN(0)) : 0;
+    return Selected() ? &(Selected()->at(0)) : 0;
   }
 
   //Adds tagging option, optionally setting it as selected one.
