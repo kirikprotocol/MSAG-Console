@@ -18,29 +18,21 @@ using smsc::mtsmsme::processor::TrId;
 using smsc::mtsmsme::processor::AC;
 using std::string;
 
-class ReportSmDeliveryStatus: public  CompIF {
+class ReportSmDeliveryStatusReq: public CompIF {
   public:
-    ReportSmDeliveryStatus();
-    ~ReportSmDeliveryStatus();
-    void setOTID(TrId _otid);
-    void setComponent(const string& imsi, const string& msc,const string& vlr);
-
+    ReportSmDeliveryStatusReq(const string& msisdn, const string& scaddress);
     virtual void encode(vector<unsigned char>& buf);
     virtual void decode(const vector<unsigned char>& buf);
-private:
-    TCMessage_t begin;
-    EXT_t         dp;
-    ComponentPortion_t comps;
-    Component_t *arr[1];
-    Component_t comp;
-    UpdateLocationArg_t arg;
-    VLR_Capability_t vlrcap;
-    uint8_t otid[4];
-    AC ac;
-    OCTET_STRING_DECL(_imsi,20);
-    OCTET_STRING_DECL(_vlr, 20);
-    OCTET_STRING_DECL(_msc, 20);
+  private:
+    ReportSM_DeliveryStatusArg_t arg;
 };
-
+class ReportSmDeliveryStatusInd: public CompIF {
+  public:
+    ReportSmDeliveryStatusInd(Logger* logger);
+    virtual void encode(vector<unsigned char>& buf);
+    virtual void decode(const vector<unsigned char>& buf);
+  private:
+    Logger* logger;
+};
 /* namespace comp */ } /* namespace mtsmsme */ } /* namespace smsc */ }
 #endif /* __SMSC_MTSMSME_COMP_REPORTSMDELIVERYSTATUS_HPP__ */
