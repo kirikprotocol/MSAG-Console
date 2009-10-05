@@ -253,6 +253,8 @@ public:
         { chrgFlags |= ChargeSms::chrgMT; }
     void setForcedCDR(void)
         { chrgFlags |= ChargeSms::chrgCDR; }
+    void setChargeOnSubmit(void)
+        { chrgPolicy = CDRRecord::ON_SUBMIT_COLLECTED; }
     //data for CDR generation & CAP interaction
     void setDestinationSubscriberNumber(const std::string& dst_adr)
         { dstSubscriberNumber = dst_adr; }
@@ -312,6 +314,7 @@ protected:
 
 private:
     //Charging request data ..
+    CDRRecord::ChargingPolicy chrgPolicy; //
     std::string   dstSubscriberNumber;
     std::string   callingPartyNumber;
     std::string   callingImsi;

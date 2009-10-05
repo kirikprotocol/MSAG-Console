@@ -84,13 +84,14 @@ class BillFacade : public TSTFacadeAC, SMSCBillingHandlerITF {
 protected:
     typedef std::map<unsigned int, INDialog*> INDialogsMap;
 
-    uint32_t _msg_ref;
-    uint64_t _msg_id;
+    uint32_t  _msg_ref;
+    uint64_t  _msg_id;
 
-    unsigned            _maxDlgId;
-    INDialogsMap        _Dialogs;
-    INDialogCfg         _dlgCfg;
-    AbonentsDB *        _abDB;
+    unsigned      _maxDlgId;
+    INDialogsMap  _Dialogs;
+    INDialogCfg   _dlgCfg;
+    AbonentsDB *  _abDB;
+    const char *  _chgModes[4];
 
 public:
     BillFacade(ConnectSrv * conn_srv, Logger * use_log = NULL)
@@ -98,6 +99,11 @@ public:
         , _msg_ref(0x0100), _msg_id(0x010203040000ULL)
         , _abDB(AbonentsDB::getInstance())
     { 
+        //According to CDRRecord::ChargingPolicy
+        _chgModes[0] = "ON_SUBMIT";
+        _chgModes[1] = "ON_DELIVERY";
+        _chgModes[2] = "ON_DATA_COLLECTED";
+        _chgModes[3] = "ON_SUBMIT_COLLECTED";
         strcpy(_logId, "TFBill");
         INPSerializer::getInstance()->registerCmdSet(INPCSBilling::getInstance());
     }
@@ -258,6 +264,8 @@ public:
         op.setMsgLength(160);
         if (dlg_cfg->xsmsIds)
             op.setSmsXSrvs(dlg_cfg->xsmsIds);
+        if (dlg_cfg->chgPolicy == CDRRecord::ON_SUBMIT_COLLECTED)
+            op.setChargeOnSubmit();
 
         //fill delivery fields for CDR creation
         if (dAdr->getImsi())
@@ -283,9 +291,7 @@ public:
     }
 
     void sendChargeSms(unsigned int dlgId, uint32_t num_bytes = 0)
-    {   //According to CDRRecord::ChargingPolicy
-        static const char *_chgModes[] = { "ON_SUBMIT", "ON_DELIVERY", "ON_DATA_COLLECTED" };
-
+    {   
         std::string msg;
         const INDialogCfg * dlg_cfg = &_dlgCfg;
         INDialog * dlg = findDialog(dlgId);
@@ -311,7 +317,7 @@ public:
             n = snprintf(tbuf, sizeof(tbuf)-1, "%u bytes of ", num_bytes);
         tbuf[n] = 0;
 
-        msg = format("--> %sCharge[%u] %s: %s -> %s .., %s", tbuf, dlgId,
+        msg = format("--> %sChargeSms[%u] %s: %s -> %s .., %s", tbuf, dlgId,
                      cdr.dpType().c_str(), cdr._srcAdr.c_str(), cdr._dstAdr.c_str(),
                     _chgModes[cdr._chargePolicy]);
         Prompt(Logger::LEVEL_DEBUG, msg);
@@ -352,8 +358,9 @@ public:
             n = snprintf(tbuf, sizeof(tbuf)-1, "%u bytes of ", num_bytes);
         tbuf[n] = 0;
 
-        msg = format("--> %sDeliveredSMSCharge[%u] %s: %s -> %s ..", tbuf, dlgId,
-                     cdr.dpType().c_str(), cdr._srcAdr.c_str(), cdr._dstAdr.c_str());
+        msg = format("--> %sDeliveredSmsData[%u] %s: %s -> %s ..., %s", tbuf, dlgId,
+                     cdr.dpType().c_str(), cdr._srcAdr.c_str(), cdr._dstAdr.c_str(),
+                     _chgModes[cdr._chargePolicy]);
         Prompt(Logger::LEVEL_DEBUG, msg);
         if (sendPckPart(&pck, num_bytes) && dlg) { // 0 - forces sending whole packet
             if (dlg->getState() == INDialog::dIdle)

@@ -20,12 +20,20 @@ struct CDRRecord {
     //encodes CDR to CSV format
     static void csvEncode(const CDRRecord & cdr, std::string & rec);
 
-    enum ChargingPolicy { ON_SUBMIT = 0, ON_DELIVERY, ON_DATA_COLLECTED };
-    enum ChargingType { MO_Charge = 0, MT_Charge = 1 };
-    typedef enum { dpOrdinary = 0, dpDiverted } CDRRecordType;
-    typedef enum { dpText = 0, dpBinary } CDRMediaType;
-    typedef enum { dpSMS = 0, dpUSSD } CDRBearerType;
-    typedef enum { dpDeliveryOk = 0, dpDeliveryFailed = 1 } CDRDeliveryStatus;
+    enum ChargingPolicy {
+        ON_SUBMIT = 0       //
+      , ON_DELIVERY         //
+      , ON_DATA_COLLECTED   //
+      , ON_SUBMIT_COLLECTED // 
+    };
+    enum ChargingType {
+        MO_Charge = 0   //DP originator is charged
+      , MT_Charge = 1   //DP receiver is charged
+    };
+    enum CDRRecordType { dpOrdinary = 0, dpDiverted };
+    enum CDRMediaType { dpText = 0, dpBinary };
+    enum CDRBearerType { dpSMS = 0, dpUSSD };
+    enum CDRDeliveryStatus { dpDeliveryOk = 0, dpDeliveryFailed = 1 };
     //this one is the same as smsc::inman::AbonentContractInfo::ContractType
     enum ContractType { abtUnknown = 0, abtPostpaid = 1, abtPrepaid = 2 };
 
@@ -67,10 +75,11 @@ struct CDRRecord {
     std::string     _dsmSrvType;    //SMPP DATA_SM service type
 //private: not written to CSV
     ChargingType    _chargeType;    //MO or MT charging
-    enum {              //indicates which fields are fullfilled;
+    enum Phase_e {      //indicates which fields are fullfilled;
         dpEmpty = 0,
-        dpSubmitted,    //DP was submitted,
-        dpDelivered,    //there was an attempt to delivery DP 
+        dpSubmitted,    //DP was submitted, sender description present
+        dpDelivered,    //there was an attempt to delivery DP, receiver
+                        //description may present
         dpCollected     //DP data collected (final delivery attempt)
     }               _finalized;
 };

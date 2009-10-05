@@ -40,7 +40,7 @@ const char * const _MSGtypes[] = {"unknown", "SMS", "USSD", "XSMS"};
 const char * const _CDRmodes[] = {"none", "billMode", "all"};
 
 //According to CDRRecord::ChargingPolicy
-static const char *_chgPolicy[] = { "ON_SUBMIT", "ON_DELIVERY", "ON_DATA_COLLECTED" };
+static const char *_chgPolicy[] = { "ON_SUBMIT", "ON_DELIVERY", "ON_DATA_COLLECTED", "ON_SUBMIT_COLLECTED" };
 
 /* ************************************************************************** *
  * class SmBillManager implementation:
@@ -532,7 +532,8 @@ Billing::PGraphState Billing::onChargeSms(void)
         return chargeResult(false, _RCS_INManErrors->mkhash(INManErrorId::cfgMismatch));
     }
     //Here goes either bill2IN or bill2CDR ..
-    if (cdr._chargePolicy == CDRRecord::ON_DATA_COLLECTED)
+    if ((cdr._chargePolicy == CDRRecord::ON_DATA_COLLECTED)
+        || (cdr._chargePolicy == CDRRecord::ON_SUBMIT_COLLECTED))
         billMode = ChargeParm::bill2CDR;
     else if (cdr._smsXMask & SMSX_NOCHARGE_SRV)
         billMode = ChargeParm::bill2CDR;
@@ -569,22 +570,17 @@ Billing::PGraphState Billing::onChargeSms(void)
     }
 
     //Here goes either abtPrepaid or abtUnknown ..
+    //check if AbonentProvider should be requested for contract type
 
     /* **************************************************** */
     /* conditions which switch ON provider request         */
     /* **************************************************** */
-
-    //check if AbonentProvider should be requested for contract type
-    bool askProvider = ((abCsi.abRec.ab_type == AbonentContractInfo::abtUnknown)
-                        && ((billMode == ChargeParm::bill2IN)
-                            || (_cfg.prm->cntrReq == ChargeParm::reqAlways)
-                            || (cdr._chargePolicy == CDRRecord::ON_DATA_COLLECTED))
+    bool askProvider = ((_cfg.prm->cntrReq == ChargeParm::reqAlways)
+                        || ( (billMode == ChargeParm::bill2IN) 
+                             && ( (abCsi.abRec.ab_type == AbonentContractInfo::abtUnknown)
+                                  || !abCsi.abRec.getSCFinfo(TDPCategory::dpMO_SM) ) )
                         );
 
-    //check for MO_SM SCF params defined
-    if ((abCsi.abRec.ab_type == AbonentContractInfo::abtPrepaid)
-         && !abCsi.abRec.getSCFinfo(TDPCategory::dpMO_SM))
-        askProvider = true;
     //check if AbonentProvider should be requested for current abonent location
     if (abCsi.vlrNum.empty() && _cfg.iaPol
         && (_cfg.iaPol->getIAPAbilities() & IAProvider::abSCF))
@@ -753,7 +749,8 @@ Billing::PGraphState Billing::chargeResult(bool do_charge, RCHash last_err /* = 
                 reply.c_str(), abNumber.getSignals(),
                 abCsi.abRec.type2Str(), (unsigned)abCsi.abRec.ab_type);
 
-    if (cdr._chargePolicy == CDRRecord::ON_DATA_COLLECTED)
+    if ((cdr._chargePolicy == CDRRecord::ON_DATA_COLLECTED)
+        || (cdr._chargePolicy == CDRRecord::ON_SUBMIT_COLLECTED))
         return do_charge ? onDeliverySmsResult() : Billing::pgEnd;
 
     SPckChargeSmsResult res;

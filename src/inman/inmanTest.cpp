@@ -366,7 +366,7 @@ void cmd_no_xsms(Console&, const std::vector<std::string> &args)
 }
 
 //USAGE: chg_mode_abn [?|help | submit | delivery | alldata]
-static const char hlp_chg_policy[] = "USAGE: %s [?|help | submit | delivery | alldata]\n";
+static const char hlp_chg_policy[] = "USAGE: %s [?|help | submit | delivery | allData | submitData]\n";
 void cmd_charge_policy(Console&, const std::vector<std::string> &args)
 {
     if ((args.size() < 2)
@@ -378,8 +378,10 @@ void cmd_charge_policy(Console&, const std::vector<std::string> &args)
     CDRRecord::ChargingPolicy chg_policy = CDRRecord::ON_DELIVERY;
     if (!strcmp(mode, "submit")) {
         chg_policy = CDRRecord::ON_SUBMIT;
-    } else if (!strcmp(mode, "alldata")) {
+    } else if (!strcmp(mode, "allData")) {
         chg_policy = CDRRecord::ON_DATA_COLLECTED;
+    } else if (!strcmp(mode, "submitData")) {
+        chg_policy = CDRRecord::ON_SUBMIT_COLLECTED;
     } else if (strcmp(mode, "delivery")) {
         fprintf(stdout, "ERR: invalid charging mode: %s!", mode);
         return;
