@@ -196,6 +196,7 @@ void Billing::handleCommand(INPPacketAC* pck)
             try {
                 chgReq->loadDataBuf();
                 chgReq->export2CDR(cdr);
+                chrgFlags = chgReq->getChargingFlags();
             } catch (SerializerException & exc) {
                 smsc_log_error(logger, "%s: %s", _logId, exc.what());
                 badPdu = true;

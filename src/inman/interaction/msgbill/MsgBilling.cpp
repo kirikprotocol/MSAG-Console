@@ -145,7 +145,7 @@ ChargeSmsResult::ChargeSmsResult()
 {
 }
 
-ChargeSmsResult::ChargeSmsResult(ChargeSmsResult_t res/* = CHARGING_NOT_POSSIBLE*/,
+ChargeSmsResult::ChargeSmsResult(ChargeSmsResult_e res/* = CHARGING_NOT_POSSIBLE*/,
                                 uint32_t err_code/* = 0*/, const char * err_msg/* = NULL*/)
     : INPBillingCmd(INPCSBilling::CHARGE_SMS_RESULT_TAG)
     , value(res), errCode(err_code)
@@ -159,7 +159,7 @@ void ChargeSmsResult::load(ObjectBuffer& in) throw(SerializerException)
 {
     unsigned short v;
     in >> v;
-    value = static_cast<ChargeSmsResult_t>(v);
+    value = static_cast<ChargeSmsResult_e>(v);
     in >> errCode;
     in >> errMsg;
 
@@ -181,13 +181,13 @@ void ChargeSmsResult::save(ObjectBuffer& out) const
  * ************************************************************************** */
 DeliveredSmsData::DeliveredSmsData(uint32_t res/* = 0*/)
     : INPBillingCmd(INPCSBilling::DELIVERED_SMS_DATA_TAG)
-    , dlvrRes(res), partsNum(1), smsXSrvsId(0), mtBill(false)
+    , dlvrRes(res), partsNum(1), smsXSrvsId(0), chrgFlags(0)
 { }
 
 void DeliveredSmsData::load(ObjectBuffer& in) throw(SerializerException)
 {
     //service fields
-    in >> mtBill;
+    in >> chrgFlags;
     in >> smsXSrvsId;
     //Charging request data ..
     in >> dstSubscriberNumber;
@@ -223,7 +223,7 @@ void DeliveredSmsData::load(ObjectBuffer& in) throw(SerializerException)
 void DeliveredSmsData::save(ObjectBuffer& out) const
 {
     //service fields
-    out << mtBill;
+    out << chrgFlags;
     out << smsXSrvsId;
     //Charging request data ..
     out << dstSubscriberNumber;
@@ -279,7 +279,7 @@ void DeliveredSmsData::export2CDR(CDRRecord & cdr) const
     cdr._dpLength = (uint32_t)msgLen;
     cdr._smsXMask = smsXSrvsId;
     cdr._chargePolicy = CDRRecord::ON_DATA_COLLECTED;
-    cdr._chargeType = mtBill ? CDRRecord::MT_Charge : CDRRecord::MO_Charge;
+    cdr._chargeType = (chrgFlags & ChargeSms::chrgMT) ? CDRRecord::MT_Charge : CDRRecord::MO_Charge;
 
     //Delivery report data ..
     cdr._dlvrRes = dlvrRes;

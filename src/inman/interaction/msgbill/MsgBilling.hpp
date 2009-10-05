@@ -174,20 +174,20 @@ private:
 //NOTE: in case of CAP3 error, this command ends the TCP dialog.
 class ChargeSmsResult : public INPBillingCmd {
 public:
-    typedef enum { CHARGING_POSSIBLE = 0, CHARGING_NOT_POSSIBLE } ChargeSmsResult_t;
+    enum ChargeSmsResult_e { CHARGING_POSSIBLE = 0, CHARGING_NOT_POSSIBLE };
 
     ChargeSmsResult();                //positive result, no error
-    ChargeSmsResult(ChargeSmsResult_t res, uint32_t err_code = 0,
+    ChargeSmsResult(ChargeSmsResult_e res, uint32_t err_code = 0,
                     const char * err_msg = NULL);
     
     virtual ~ChargeSmsResult() { }
 
-    ChargeSmsResult_t GetValue(void) const { return value; }
+    ChargeSmsResult_e GetValue(void) const { return value; }
     CDRRecord::ContractType getContract(void) const { return contract; }
     uint32_t          getError(void) const { return errCode; }
     const char *      getMsg(void)   const { return errMsg.c_str(); }
 
-    void   setValue(ChargeSmsResult_t res = CHARGING_NOT_POSSIBLE) { value = res; }
+    void   setValue(ChargeSmsResult_e res = CHARGING_NOT_POSSIBLE) { value = res; }
     void   setContract(CDRRecord::ContractType abn_contract) { contract = abn_contract; }
     void   setError(uint32_t err_code, const char * err_msg = NULL)
     {
@@ -201,7 +201,7 @@ protected:
     virtual void save(ObjectBuffer& out) const;
 
 private:
-    ChargeSmsResult_t   value;
+    ChargeSmsResult_e   value;
     uint32_t            errCode;
     std::string         errMsg;
     CDRRecord::ContractType contract;
@@ -250,7 +250,9 @@ public:
     virtual ~DeliveredSmsData(void) { }
 
     void setMTcharge(void)
-        { mtBill = true; }
+        { chrgFlags |= ChargeSms::chrgMT; }
+    void setForcedCDR(void)
+        { chrgFlags |= ChargeSms::chrgCDR; }
     //data for CDR generation & CAP interaction
     void setDestinationSubscriberNumber(const std::string& dst_adr)
         { dstSubscriberNumber = dst_adr; }
@@ -298,6 +300,7 @@ public:
     void setDeliveryTime(time_t final_tm)           { finalTimeTZ = final_tm; }
 
     uint32_t getResult(void) const { return dlvrRes; }
+    uint8_t  getChargingFlags(void) const { return chrgFlags; }
 
     void export2CDR(CDRRecord & cdr) const;
     void exportCAPInfo(SMCAPSpecificInfo & csi) const { csi = csInfo; }
@@ -326,7 +329,7 @@ private:
     //
     unsigned char extCode;      //extension fields are present
     uint32_t      smsXSrvsId;
-    bool          mtBill;       //charge the dstSubscriber instead of calling one
+    uint8_t       chrgFlags;    //flags which customize billing settings, see ChargeSms::ChargingFlags_e
     std::string   dsmSrvType;   //SMPP DATA_SM service type
 
     //Delivery report data ..

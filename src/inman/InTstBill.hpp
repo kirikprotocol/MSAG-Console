@@ -235,6 +235,8 @@ public:
         const AbonentInfo * abi = _abDB->getAbnInfo(dlg_cfg->abId);
         op.setCallingPartyNumber(abi->msIsdn.toString());
         op.setCallingIMSI(abi->abImsi);
+        if (dlg_cfg->forcedCDR)
+          op.setForcedCDR();
         op.setLocationInformationMSC(dlg_cfg->locMSC);
 //        op.setLocationInformationMSC(abi->msIsdn.interISDN() ?
 //                                     ".1.1.79139860001" : "");
