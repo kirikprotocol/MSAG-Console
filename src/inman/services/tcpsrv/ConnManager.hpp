@@ -81,16 +81,25 @@ protected:
     //logging prefix, f.ex: "ConnectManagerAC[%u]"
     char        _logId[MAX_CONNECT_MGR_NAME + sizeof("[%u]") + sizeof(unsigned)*3 + 1];
 
+    /* -------------------------------------------------------------- */
+    /* NOTE: _mutex ust be locked prior to calling protected methods  */
+    /* -------------------------------------------------------------- */
     unsigned numWorkers(void) const
     {
         return (unsigned)_workers.size();
     }
-    //
-    void dumpWorkers(std::string & dump) const
+    //dumps workers state to string
+    void dumpWorkers(std::string & dump)
     {
-      for (WorkersMap::const_iterator it = _workers.begin(); it != _workers.end(); ++it) {
-        it->second->logState(dump);
-        dump += ", ";
+      if (!_workers.empty()) {
+        _itLocked = _workers.begin();
+        do {
+          if (_itLocked != _itToErase) {
+            ReverseMutexGuard rGrd(_mutex);
+            _itLocked->second->logState(dump);
+            dump += ", ";
+          }
+        } while (++_itLocked != _workers.end());
       }
     }
     //
