@@ -50,7 +50,7 @@ struct INDialogCfg {
 
 class INDialog {
 public:
-    typedef enum { dIdle = 0, dCharged = 1, dApproved, dReported } DlgState;
+    enum DlgState { dIdle = 0, dCharged = 1, dApproved, dReported };
 
     INDialog(unsigned int dlg_id, const INDialogCfg * use_cfg, bool batch_mode = false,
              uint32_t dlvr_res = 1016)
@@ -91,7 +91,6 @@ protected:
     INDialogsMap  _Dialogs;
     INDialogCfg   _dlgCfg;
     AbonentsDB *  _abDB;
-    const char *  _chgModes[4];
 
 public:
     BillFacade(ConnectSrv * conn_srv, Logger * use_log = NULL)
@@ -99,11 +98,6 @@ public:
         , _msg_ref(0x0100), _msg_id(0x010203040000ULL)
         , _abDB(AbonentsDB::getInstance())
     { 
-        //According to CDRRecord::ChargingPolicy
-        _chgModes[0] = "ON_SUBMIT";
-        _chgModes[1] = "ON_DELIVERY";
-        _chgModes[2] = "ON_DATA_COLLECTED";
-        _chgModes[3] = "ON_SUBMIT_COLLECTED";
         strcpy(_logId, "TFBill");
         INPSerializer::getInstance()->registerCmdSet(INPCSBilling::getInstance());
     }
@@ -141,8 +135,7 @@ public:
                 _dlgCfg.abId, (abi->msIsdn.toString()).c_str(), abi->type2Str(),
                 _dlgCfg.ussdOp ? "USSD" : "SMS",
                 _dlgCfg.dstId, (dAdr->msIsdn.toString()).c_str(), dAdr->type2Str(),
-                (_dlgCfg.chgPolicy == CDRRecord::ON_DELIVERY) ? "ON_DELIVERY" :
-                ((_dlgCfg.chgPolicy == CDRRecord::ON_SUBMIT) ? "ON_SUBMIT" : "ON_DATA_COLLECTED"),
+                CDRRecord::nmPolicy(_dlgCfg.chgPolicy),
                 _dlgCfg.chgType ? "MT" : "MO", _dlgCfg.forcedCDR ? "ON" : "OFF",
                 _dlgCfg.xsmsIds);
     }
@@ -319,7 +312,7 @@ public:
 
         msg = format("--> %sChargeSms[%u] %s: %s -> %s .., %s", tbuf, dlgId,
                      cdr.dpType().c_str(), cdr._srcAdr.c_str(), cdr._dstAdr.c_str(),
-                    _chgModes[cdr._chargePolicy]);
+                    cdr.nmPolicy());
         Prompt(Logger::LEVEL_DEBUG, msg);
         if (sendPckPart(&pck, num_bytes) && dlg) { // 0 - forces sending whole packet
             if (dlg->getState() == INDialog::dIdle)
@@ -341,8 +334,6 @@ public:
             Prompt(Logger::LEVEL_DEBUG, msg);
         } else {
             dlg_cfg = dlg->getConfig();
-            //fix charging mode
-            dlg->setChargePolicy(CDRRecord::ON_DATA_COLLECTED);
         }
         //compose ChargeSms
         CDRRecord       cdr;
@@ -360,7 +351,7 @@ public:
 
         msg = format("--> %sDeliveredSmsData[%u] %s: %s -> %s ..., %s", tbuf, dlgId,
                      cdr.dpType().c_str(), cdr._srcAdr.c_str(), cdr._dstAdr.c_str(),
-                     _chgModes[cdr._chargePolicy]);
+                     cdr.nmPolicy());
         Prompt(Logger::LEVEL_DEBUG, msg);
         if (sendPckPart(&pck, num_bytes) && dlg) { // 0 - forces sending whole packet
             if (dlg->getState() == INDialog::dIdle)

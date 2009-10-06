@@ -481,7 +481,7 @@ void cmd_detect_abn(Console&, const std::vector<std::string> &args)
 }
 
 //USAGE: detect [?|help | abn.NN |.T.N.Addr|+ISDN_Addr] [range] [cacheMode:{true|false}]
-static const char hlp_detect_mlt[] = "USAGE: %s [?|help | abn.NN | .T.N.Addr | +ISDN_Addr] [cacheMode:{true|false}]\n";
+static const char hlp_detect_mlt[] = "USAGE: %s [?|help | abn.NN | .T.N.Addr | +ISDN_Addr] [num_of_abnt] [cacheMode:{true|false}]\n";
 void cmd_detect_mlt(Console&, const std::vector<std::string> &args)
 {
     if ((args.size() < 2)

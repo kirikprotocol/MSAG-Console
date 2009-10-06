@@ -39,9 +39,6 @@ const char * const _BILLmodes[] = {"OFF", "CDR", "IN"};
 const char * const _MSGtypes[] = {"unknown", "SMS", "USSD", "XSMS"};
 const char * const _CDRmodes[] = {"none", "billMode", "all"};
 
-//According to CDRRecord::ChargingPolicy
-static const char *_chgPolicy[] = { "ON_SUBMIT", "ON_DELIVERY", "ON_DATA_COLLECTED", "ON_SUBMIT_COLLECTED" };
-
 /* ************************************************************************** *
  * class SmBillManager implementation:
  * ************************************************************************** */
@@ -323,7 +320,7 @@ void Billing::doFinalize(void)
     smsc_log_info(logger, "%s: %scomplete(%s, %s), %s --> %s(cause %u),"
                           " abonent(%s), type %s, CDR(s) written: %u", _logId,
             BillComplete() ? "" : "IN", cdr._chargeType ? "MT" : "MO",
-            _chgPolicy[cdr._chargePolicy], cdr.dpType().c_str(),
+            cdr.nmPolicy(), cdr.dpType().c_str(),
             cdr._inBilled ? abScf->Ident() : _cfg.prm->billModeStr(billMode), billErr,
             abNumber.getSignals(), abCsi.abRec.type2Str(), cdrs);
 
@@ -477,7 +474,7 @@ bool Billing::verifyChargeSms(void)
 
     smsc_log_info(logger, "%s: %s(%s, %s): '%s' -> '%s'", _logId,
                 cdr.dpType().c_str(), cdr._chargeType ? "MT" : "MO",
-                _chgPolicy[cdr._chargePolicy], cdr._srcAdr.c_str(), cdr._dstAdr.c_str());
+                cdr.nmPolicy(), cdr._srcAdr.c_str(), cdr._dstAdr.c_str());
 
     uint32_t smsXMask = cdr._smsXMask & ~SMSX_RESERVED_MASK;
     if (smsXMask) {

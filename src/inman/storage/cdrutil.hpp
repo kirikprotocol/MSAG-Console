@@ -24,8 +24,11 @@ struct CDRRecord {
         ON_SUBMIT = 0       //
       , ON_DELIVERY         //
       , ON_DATA_COLLECTED   //
-      , ON_SUBMIT_COLLECTED // 
+      , ON_SUBMIT_COLLECTED //
     };
+
+    static const char * nmPolicy(ChargingPolicy use_val);
+
     enum ChargingType {
         MO_Charge = 0   //DP originator is charged
       , MT_Charge = 1   //DP receiver is charged
@@ -38,6 +41,7 @@ struct CDRRecord {
     enum ContractType { abtUnknown = 0, abtPostpaid = 1, abtPrepaid = 2 };
 
     std::string dpType(void) const;
+    const char * nmPolicy(void) const { return nmPolicy(_chargePolicy); }
 
     //basic info:
     uint64_t        _msgId;         //MSG_ID: system message identifier
@@ -73,12 +77,13 @@ struct CDRRecord {
     ChargingPolicy  _chargePolicy;  //
     bool            _inBilled;      //message was billed by IN platform
     std::string     _dsmSrvType;    //SMPP DATA_SM service type
-//private: not written to CSV
     ChargingType    _chargeType;    //MO or MT charging
+
+//private: not written to CSV
     enum Phase_e {      //indicates which fields are fullfilled;
         dpEmpty = 0,
         dpSubmitted,    //DP was submitted, sender description present
-        dpDelivered,    //there was an attempt to delivery DP, receiver
+        dpDelivered,    //there was an attempt to delivery DP, recipient
                         //description may present
         dpCollected     //DP data collected (final delivery attempt)
     }               _finalized;

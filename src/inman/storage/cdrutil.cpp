@@ -17,6 +17,9 @@ extern const char    _CDRRecordHeader_TEXT[] =
     "DIVERTED_FOR,ROUTE_ID,SERVICE_ID,SERVICE_TYPE,USER_MSG_REF,DATA_LENGTH,"
     "PARTS_NUM,SMSX_SRV,MT,CONTRACT,CHARGE,IN_BILL\n";
 
+//According to CDRRecord::ChargingPolicy
+static const char *_chgPolicy[] = { "ON_SUBMIT", "ON_DELIVERY", "ON_DATA_COLLECTED", "ON_SUBMIT_COLLECTED" };
+
 /* ************************************************************************** *
  * class CDRRecord implementation:
  * ************************************************************************** */
@@ -81,6 +84,11 @@ std::string CDRRecord::dpType(void) const
         n += snprintf(buf + n, sizeof(buf)-1-n, "(X:%Xh)", _smsXMask);
     buf[n] = 0;
     return buf;
+}
+
+const char * CDRRecord::nmPolicy(ChargingPolicy use_val)
+{
+  return _chgPolicy[use_val];
 }
 
 } //cdr
