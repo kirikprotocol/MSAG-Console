@@ -19,7 +19,7 @@ static uint8_t uint8tohalfoct(uint8_t val)
 {
   uint8_t high=val/10;
   uint8_t low=val%10;
-  return (high<<4)|low;
+  return (low<<4)|high;
 }
 
 void fillPduTime(MAP_TIMESTAMP* pdu_tm,struct tm* tms,int atz)
@@ -32,15 +32,15 @@ void fillPduTime(MAP_TIMESTAMP* pdu_tm,struct tm* tms,int atz)
   pdu_tm->sec = uint8tohalfoct(tms->tm_sec);
   if ( tms->tm_isdst ) atz-=3600;
   atz = -atz/900;
+  pdu_tm->tz=(atz%10)<<4;
   if(atz<0)
   {
     atz=-atz;
-    pdu_tm->tz=(0x8|(atz/10))<<4;
+    pdu_tm->tz|=0x8|(atz/10);
   }else
   {
-    pdu_tm->tz = (atz/10)<<4;
+    pdu_tm->tz|=atz/10;
   }
-  pdu_tm->tz |= atz%10;
 }
 
 ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false)
