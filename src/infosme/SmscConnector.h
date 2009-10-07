@@ -117,22 +117,21 @@ private:
     string smscId_;
     Logger* log_;
     TaskProcessor& processor_;
-    InfoSmePduListener listener_;
-    std::auto_ptr<SmppSession> session_;
+    int timeout_;
 
     // monitor which guards state change
     EventMonitor stateMonitor_;
-
-    // monitor which guards session destruction and self destruction
-    Mutex destroyMonitor_;
-
-    int timeout_;
     bool stopped_;
     bool connected_;
 
-    // how many dependant objects are working on the connectors,
-    // guarded by destroyMonitor_
-    int usage_;
+    // monitor which guards session destruction and self destruction
+    EventMonitor destroyMonitor_;
+    InfoSmePduListener listener_;
+    std::auto_ptr<SmppSession> session_;
+    int usage_; // how many dependant objects are on this
+    JStoreWrapper*                                  jstore_;
+    RegionTrafficControl*                           trafficControl_;
+
     smsc::core::buffers::IntHash<TaskMsgId>         taskIdsBySeqNum;
     smsc::core::synchronization::EventMonitor       taskIdsBySeqNumMonitor;
     smsc::core::buffers::XHash<ReceiptId, ReceiptData, ReceiptId>  receipts; 
@@ -142,10 +141,6 @@ private:
     smsc::core::synchronization::Mutex              receiptWaitQueueLock;
     smsc::core::buffers::Array<ResponseTimer>       responseWaitQueue;
     smsc::core::buffers::Array<ReceiptTimer>        receiptWaitQueue;
-    // int                                             responseWaitTime;
-    // int                                             receiptWaitTime;
-    JStoreWrapper*                                  jstore_;
-    RegionTrafficControl*                           trafficControl_;
 };
 
 } //infosme
