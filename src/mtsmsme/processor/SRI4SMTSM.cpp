@@ -56,6 +56,8 @@ void SRI4SMTSM::BEGIN(Message& msg)
   if( msg.isComponentPresent() )
   {
     iid = msg.getInvokeId();
+    if (msg.getOperationCode() == 47)
+      smsc_log_error(logger,"tsm otid=%s receive BEGIN with REPORTSM-DELIVERYSTATUS",ltrid.toString().c_str());
     std::vector<unsigned char> sri4smbuf;
     sri4smbuf = msg.getComponent();
     SendRoutingInfoForSMInd sri4sm(logger);
