@@ -9,5 +9,5 @@ void SampleTest::SampleTest1 (void)
 }
 void SampleTest::SampleTest2 (void)
 {
-  CPPUNIT_ASSERT( false );
+  CPPUNIT_ASSERT( true );
 }
