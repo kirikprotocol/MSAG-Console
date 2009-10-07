@@ -94,8 +94,8 @@ public:
     }
     
     virtual ~EventRunner() {
-        MutexGuard mg(processor.connectMonitor_);
-        if ( --processor.usage_ == 0 ) processor.connectMonitor_.notifyAll();
+        MutexGuard mg(processor.destroyMonitor_);
+        if ( --processor.usage_ == 0 ) processor.destroyMonitor_.notifyAll();
     }
     
     virtual int Execute()
@@ -261,91 +261,100 @@ SmscConnector::~SmscConnector()
     WaitFor();
     // waiting until all dependent objects finished
     while ( true ) {
-        MutexGuard mg(connectMonitor_);
+        MutexGuard mg(destroyMonitor_);
         if ( usage_ <= 0 ) break;
-        connectMonitor_.wait(100);
+        destroyMonitor_.wait(100);
     }
+    clearHashes();
     if ( jstore_ ) { delete jstore_; }
     if ( trafficControl_ ) { delete trafficControl_; }
 }
 
 void SmscConnector::stop() {
-  MutexGuard mg(connectMonitor_);
-  stopped_ = true;
-  connectMonitor_.notify();
+    MutexGuard mg(stateMonitor_);
+    stopped_ = true;
+    stateMonitor_.notify();
 }
 
 void SmscConnector::reconnect() {
-  MutexGuard mg(connectMonitor_);
-  connected_ = false;
-  connectMonitor_.notify();
+    MutexGuard mg(stateMonitor_);
+    connected_ = false;
+    stateMonitor_.notify();
 }
 
 void SmscConnector::updateConfig( const smsc::sme::SmeConfig& config )
 {
     smsc_log_warn(log_, "updateConfig on '%s'... ", smscId_.c_str());
-    MutexGuard mg(connectMonitor_);
-    session_->close();
-    std::auto_ptr<SmppSession> newsess(new SmppSession(config,&listener_));
-    listener_.setSyncTransmitter(newsess->getSyncTransmitter());
-    listener_.setAsyncTransmitter(newsess->getAsyncTransmitter());
-    std::auto_ptr<SmppSession> oldsess(session_.release());
-    session_.reset(newsess.release());
-    connected_ = false;
-    connectMonitor_.notify();
+    {
+        MutexGuard mg(destroyMonitor_);
+        session_->close();
+        std::auto_ptr<SmppSession> newsess(new SmppSession(config,&listener_));
+        listener_.setSyncTransmitter(newsess->getSyncTransmitter());
+        listener_.setAsyncTransmitter(newsess->getAsyncTransmitter());
+        std::auto_ptr<SmppSession> oldsess(session_.release());
+        session_.reset(newsess.release());
+        destroyMonitor_.notifyAll();
+    }
+    {
+        MutexGuard mg(stateMonitor_);
+        connected_ = false;
+        stateMonitor_.notify();
+    }
 }
 
 bool SmscConnector::isStopped() const {
-  return stopped_;
+    return stopped_;
 }
 
 int SmscConnector::Execute() { 
-  while (!isStopped())
-  {
-    // after call to isNeedStop() was completed all signals is locked.
-    // any thread being started from this point has signal mask with all signals locked 
-      clearHashes();
-      smsc_log_info(log_, "Connecting to SMSC id='%s'... ", smscId_.c_str());
-      MutexGuard mg(connectMonitor_);
-      try
-      {
-          session_->connect();
-          connected_ = true;
-      }
-      catch (SmppConnectException& exc)
-      {
-          const char* msg = exc.what();
-          smsc_log_error(log_, "Connect to SMSC id='%s' failed. Cause: %s", smscId_.c_str(), (msg) ? msg:"unknown");
-          //bInfoSmeIsConnecting = false;
-          if (exc.getReason() == SmppConnectException::Reason::bindFailed) {
-            connected_ = false;
-            stopped_ = true;
-            session_->close();
-            smsc_log_error(log_, "SMSC Connector id='%s' disabled!", smscId_.c_str());
-            return 1;
-          }
-          sleep(timeout_);
-          session_->close();
-          connected_ = false;
-          continue;
-      }
-      smsc_log_info(log_, "Connected to SMSC id='%s'.", smscId_.c_str());
-      while (connected_ && !isStopped()) {
-        connectMonitor_.wait();
-      }
-      if (!connected_) {
-        smsc_log_info(log_, "Need Reconnect to SMSC id='%s'.", smscId_.c_str());
-      }
-      session_->close();
-  }
-    clearHashes();
+
+    while (!isStopped()) {
+        // after call to isNeedStop() was completed all signals is locked.
+        // any thread being started from this point has signal mask with all signals locked 
+        smsc_log_info(log_, "Connecting to SMSC id='%s'... ", smscId_.c_str());
+        try
+        {
+            {
+                MutexGuard mg(destroyMonitor_);
+                session_->close(); // make sure the session is stopped
+                clearHashes();
+                session_->connect();
+            }
+
+            {
+                MutexGuard mg(stateMonitor_);
+                connected_ = true;
+                while ( connected_ && !isStopped() ) {
+                    stateMonitor_.wait();
+                }
+                if ( !isStopped() ) {
+                    smsc_log_info(log_, "need reconnect to SMSC id='%s'.", smscId_.c_str());
+                }
+            }
+
+        } catch (SmppConnectException& exc) {
+
+            const char* msg = exc.what();
+            smsc_log_error(log_, "Connect to SMSC id='%s' failed. Cause: %s", smscId_.c_str(), (msg) ? msg:"unknown");
+            {
+                MutexGuard mg(stateMonitor_);
+                connected_ = false;
+                if (exc.getReason() == SmppConnectException::Reason::bindFailed) {
+                    stopped_ = true;
+                    smsc_log_error(log_, "SMSC Connector id='%s' disabled!", smscId_.c_str());
+                    break;
+                }
+            }
+            sleep(timeout_);
+        } // if exception occured
+    } // while is not stopped
     smsc_log_info(log_, "SMSC Connector '%s' stopped", smscId_.c_str());
-  return 1; 
+    return 1; 
 }
 
 int SmscConnector::getSeqNum() {
-  MutexGuard guard(connectMonitor_);
-  return session_->getNextSeq();
+    MutexGuard guard(destroyMonitor_);
+    return session_->getNextSeq();
 }
 
 
@@ -399,8 +408,9 @@ bool SmscConnector::invokeProcessReceipt( const ResponseData& rd )
 {
     EventRunner* er = 0;
     {
-        MutexGuard mg(connectMonitor_);
         if ( stopped_ ) return false;
+        MutexGuard mg(destroyMonitor_);
+        if ( stopped_ ) return false; // NOTE: we intentionally lock by different monitor
         er = new EventRunner(processReceiptMethod,*this,rd);
     }
     return processor_.invokeProcessEvent(er);
@@ -411,7 +421,8 @@ bool SmscConnector::invokeProcessResponse( const ResponseData& rd )
 {
     EventRunner* er = 0;
     {
-        MutexGuard mg(connectMonitor_);
+        if ( stopped_ ) return false;
+        MutexGuard mg(destroyMonitor_);
         if ( stopped_ ) return false;
         er = new EventRunner(processResponseMethod,*this,rd);
     }
@@ -426,8 +437,8 @@ bool SmscConnector::send( Task* task, Message& message )
 
     if ( ! connected_ ) {
         msguard.suspended();
-        smsc_log_debug(log_, "TaskId=[%d/%s]: SMSC id='%s' is not connected",
-                       info.uid, info.name.c_str(), smscId_.c_str());
+        smsc_log_info(log_, "TaskId=[%d/%s]: SMSC id='%s' is not connected",
+                      info.uid, info.name.c_str(), smscId_.c_str());
         return false;
     }
 
@@ -725,19 +736,21 @@ bool SmscConnector::send( const std::string& abonent,
                           const std::string& message,
                           const TaskInfo& info, int seqNum )
 {
+    if (!connected_) {
+        smsc_log_warn(log_, "SMSC Connector '%s' is not connected.", smscId_.c_str());
+        // destroyMonitor_.notify();
+        return false;
+    }
+
     {
-      MutexGuard mg(connectMonitor_);
-      if (!connected_) {
-          smsc_log_warn(log_, "SMSC Connector '%s' is not connected.", smscId_.c_str());
-          connectMonitor_.notify();
-          return false;
-      }
+        MutexGuard mg(destroyMonitor_);
+    
         SmppTransmitter* asyncTransmitter = session_->getAsyncTransmitter();
         if (!asyncTransmitter) {
             smsc_log_error(log_, "Smpp transmitter is undefined for SMSC Connector '%s'.", smscId_.c_str());
             return false;
         }
-
+    
         Address oa, da;
         const char* oaStr = info.address.c_str();
         if (!oaStr || !oaStr[0]) oaStr = processor_.getAddress();
@@ -745,14 +758,15 @@ bool SmscConnector::send( const std::string& abonent,
             smsc_log_error(log_, "Invalid originating address '%s'", oaStr ? oaStr:"-");
             return false;
         }
+    
         const char* daStr = abonent.c_str();
         if (!daStr || !convertMSISDNStringToAddress(daStr, da)) {
             smsc_log_error(log_, "Invalid destination address '%s'", daStr ? daStr:"-");
             return false;
         }
-
+    
         time_t now = time(NULL);
-  
+      
         SMS sms;
         sms.setOriginatingAddress(oa);
         sms.setDestinationAddress(da);
@@ -760,22 +774,22 @@ bool SmscConnector::send( const std::string& abonent,
         sms.setDeliveryReport(1);
         sms.setValidTime( (info.validityDate <= 0 || info.validityPeriod > 0) ?
                           now+info.validityPeriod : info.validityDate );
-  
+        
         sms.setIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG,
                            (info.replaceIfPresent) ? 1:0);
         sms.setEServiceType( (info.replaceIfPresent && info.svcType.length()>0) ?
                              info.svcType.c_str():processor_.getSvcType() );
-  
+    
         sms.setIntProperty(Tag::SMPP_PROTOCOL_ID, processor_.getProtocolId());
         sms.setIntProperty(Tag::SMPP_ESM_CLASS, (info.transactionMode) ? 2:0);
         sms.setIntProperty(Tag::SMPP_PRIORITY, 0);
         sms.setIntProperty(Tag::SMPP_REGISTRED_DELIVERY, 1);
-  
+    
         if(info.flash)
         {
             sms.setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,1);
         }
-  
+      
         const char* out = message.c_str();
         size_t outLen = message.length();
         char* msgBuf = 0;
@@ -790,9 +804,9 @@ bool SmscConnector::send( const std::string& abonent,
         } else {
             sms.setIntProperty(Tag::SMPP_DATA_CODING, DataCoding::LATIN1);
         }
-  
-        try
-        {
+      
+        try {
+    
             if (outLen <= MAX_ALLOWED_MESSAGE_LENGTH && !info.useDataSm) {
                 sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE, out, (unsigned)outLen);
                 sms.setIntProperty(Tag::SMPP_SM_LENGTH, (unsigned)outLen);
@@ -808,30 +822,30 @@ bool SmscConnector::send( const std::string& abonent,
             return false;
         }
         if (msgBuf) delete msgBuf;
-  
+      
         try {
-          if (info.useDataSm) {
-            smsc_log_debug(log_, "Send DATA_SM");
-            
-            uint32_t validityDate = info.validityDate <= now ? 0 : static_cast<uint32_t>(info.validityDate - now);
-            sms.setIntProperty(Tag::SMPP_QOS_TIME_TO_LIVE, (info.validityDate <= 0 || info.validityPeriod > 0) ?
-                                                            static_cast<uint32_t>(info.validityPeriod) : validityDate);
-            PduDataSm dataSm;
-            dataSm.get_header().set_sequenceNumber(seqNum);
-            dataSm.get_header().set_commandId(SmppCommandSet::DATA_SM);
-            fillDataSmFromSms(&dataSm, &sms);
-            asyncTransmitter->sendPdu(&(dataSm.get_header()));
-          } else {
-            smsc_log_debug(log_, "Send SUBMIT_SM");
-
-            PduSubmitSm submitSm;
-            submitSm.get_header().set_sequenceNumber(seqNum);
-            submitSm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
-            fillSmppPduFromSms(&submitSm, &sms);
-            asyncTransmitter->sendPdu(&(submitSm.get_header()));
-          }
-          TrafficControl::incOutgoing();
-          return true;
+            if (info.useDataSm) {
+                smsc_log_debug(log_, "Send DATA_SM");
+                
+                uint32_t validityDate = info.validityDate <= now ? 0 : static_cast<uint32_t>(info.validityDate - now);
+                sms.setIntProperty(Tag::SMPP_QOS_TIME_TO_LIVE, (info.validityDate <= 0 || info.validityPeriod > 0) ?
+                                                                static_cast<uint32_t>(info.validityPeriod) : validityDate);
+                PduDataSm dataSm;
+                dataSm.get_header().set_sequenceNumber(seqNum);
+                dataSm.get_header().set_commandId(SmppCommandSet::DATA_SM);
+                fillDataSmFromSms(&dataSm, &sms);
+                asyncTransmitter->sendPdu(&(dataSm.get_header()));
+            } else {
+                smsc_log_debug(log_, "Send SUBMIT_SM");
+    
+                PduSubmitSm submitSm;
+                submitSm.get_header().set_sequenceNumber(seqNum);
+                submitSm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
+                fillSmppPduFromSms(&submitSm, &sms);
+                asyncTransmitter->sendPdu(&(submitSm.get_header()));
+            }
+            TrafficControl::incOutgoing();
+            return true;
         } catch (const std::exception& ex) {
             smsc_log_warn(log_, "SmscConnector::send exception: %s", ex.what());
         } catch (...) {

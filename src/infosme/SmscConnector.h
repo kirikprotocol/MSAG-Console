@@ -119,12 +119,19 @@ private:
     TaskProcessor& processor_;
     InfoSmePduListener listener_;
     std::auto_ptr<SmppSession> session_;
-    EventMonitor connectMonitor_;
+
+    // monitor which guards state change
+    EventMonitor stateMonitor_;
+
+    // monitor which guards session destruction and self destruction
+    Mutex destroyMonitor_;
+
     int timeout_;
     bool stopped_;
     bool connected_;
+
     // how many dependant objects are working on the connectors,
-    // guarded by connectMonitor_
+    // guarded by destroyMonitor_
     int usage_;
     smsc::core::buffers::IntHash<TaskMsgId>         taskIdsBySeqNum;
     smsc::core::synchronization::EventMonitor       taskIdsBySeqNumMonitor;
