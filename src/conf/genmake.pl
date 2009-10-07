@@ -187,7 +187,7 @@ sub generate{
         print $mkf '$(SMSC_BUILDDIR)/bin/'.$binname.': $(SMSC_BUILDDIR)/obj/'.$moddir.'/'.$srcname.'.o'.$libdeps."\n";
         print $mkf "\t\@mkdir -p `dirname \$@`\n";
         print $mkf "\t\@\$(ECHO) '\$(LNKCLR)Linking \$\@\$(CLREND)'\n" unless $silent;
-        print $mkf "\t\$(PFX)\$(CXX) \$(CXXFLAGS) $ldflags -o \$@ \$< \$(LDFLAGS) $rawlibs\n\n";
+        print $mkf "\t\$(PFX)\$(INSTRUMENTATION) \$(CXX) \$(CXXFLAGS) $ldflags -o \$@ \$< \$(LDFLAGS) $rawlibs\n\n";
         srcrule($dirname,$srcname.".cpp",\@files);
         push @files,'$(SMSC_BUILDDIR)/bin/'.$binname;
       } # while
