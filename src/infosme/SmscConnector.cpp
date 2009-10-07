@@ -351,6 +351,15 @@ int SmscConnector::getSeqNum() {
 
 uint32_t SmscConnector::sendSms(const std::string& org,const std::string& dst,const std::string& txt,bool flash) {
   smsc_log_info(log_, "send test sms to:'%s' from:'%s' text:'%s', SMSC id: '%s'", dst.c_str(), org.c_str(), txt.c_str(), smscId_.c_str());
+  {
+    MutexGuard mg(connectMonitor_);
+    if (!connected_) {
+        smsc_log_warn(log_, "SMSC Connector '%s' is not connected.", smscId_.c_str());
+        connectMonitor_.notify();
+        return SmppStatusSet::ESME_RUNKNOWNERR;
+    }
+  }
+
   PduSubmitSm sbm;
   PduPartSm& msg=sbm.get_message();
   msg.set_source(smsc::smpp::Address2PduAddress(org.c_str()));
