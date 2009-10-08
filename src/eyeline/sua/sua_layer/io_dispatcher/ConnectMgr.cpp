@@ -122,7 +122,8 @@ ConnectMgr::removeLink(const communication::LinkId& linkId, bool cleanUpAcceptor
 }
 
 ConnectMgr::ConnectMgr()
-  : _listenStatus(corex::io::IOObjectsPool::OK_NO_EVENTS), _logger(smsc::logger::Logger::getInstance("io_dsptch")), _shutdownInProgress(false)
+  : _ioObjectsPool(MAX_SOCKET_POOL_SIZE), _listenStatus(corex::io::IOObjectsPool::OK_NO_EVENTS),
+    _logger(smsc::logger::Logger::getInstance("io_dsptch")), _shutdownInProgress(false)
 {}
 
 IOEvent*

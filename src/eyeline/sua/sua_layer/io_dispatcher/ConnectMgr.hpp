@@ -73,6 +73,7 @@ private:
   typedef std::map<std::string /*key is a socket fingerprint*/, ConnectAcceptor*> socket2connectAcceptor_t;
   socket2connectAcceptor_t _socket2connectAcceptor;
 
+  enum { MAX_SOCKET_POOL_SIZE=64 };
   corex::io::IOObjectsPool _ioObjectsPool;
   int _listenStatus;
   smsc::logger::Logger* _logger;
