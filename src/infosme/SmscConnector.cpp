@@ -157,7 +157,8 @@ class SmscConnector::RegionTrafficControl
 public:
     RegionTrafficControl( smsc::logger::Logger* logger ) : log_(logger) {}
     ~RegionTrafficControl();
-    bool speedLimitReached( Task* task, const Message& message );
+    bool speedLimitReached( Task* task, const Message& message,
+                            const smsc::util::config::region::Region* region );
 private:
     smsc::logger::Logger* log_;
     typedef std::map<std::string, TimeSlotCounter<int>* > timeSlotsHashByRegion_t;
@@ -175,11 +176,11 @@ SmscConnector::RegionTrafficControl::~RegionTrafficControl()
 }
 
 
-bool SmscConnector::RegionTrafficControl::speedLimitReached( Task* task, const Message& message )
+bool SmscConnector::RegionTrafficControl::speedLimitReached( Task* task, const Message& message,
+                                                             const smsc::util::config::region::Region* region )
 {
     uint32_t taskId = task->getId();
     smsc_log_debug( log_, "TaskProcessor::controlTrafficSpeedByRegion::: TaskId=[%d]: check region(regionId=%s) bandwidth limit exceeding", taskId, message.regionId.c_str());
-    const smsc::util::config::region::Region* region = smsc::util::config::region::RegionFinder::getInstance().getRegionById(message.regionId);
     if ( ! region ) {
         smsc_log_debug(log_,"TaskProcessor::controlTraffic no region %s found",message.regionId.c_str());
         return true;
@@ -438,7 +439,7 @@ bool SmscConnector::send( Task* task, Message& message )
     const smsc::util::config::region::Region* region = smsc::util::config::region::RegionFinder::getInstance().getRegionById(message.regionId);
     if ( ! region ) {
         smsc_log_info(log_,"TaskId=[%d/%s]: SMSC id='%s' region '%s' is not found",
-                      info.uid, info.name.c_str(), smscId_.c_str(), message.regionId );
+                      info.uid, info.name.c_str(), smscId_.c_str(), message.regionId.c_str() );
         return false;
     }
 
@@ -449,14 +450,14 @@ bool SmscConnector::send( Task* task, Message& message )
         return false;
     }
 
-    if ( trafficControl_->speedLimitReached(task,message) ) {
+    if ( trafficControl_->speedLimitReached(task,message,region) ) {
         msguard.suspended();
         if ( log_->isInfoEnabled() ) {
-            const smsc::util::config::region::Region* region = smsc::util::config::region::RegionFinder::getInstance().getRegionById(message.regionId);
+            // const smsc::util::config::region::Region* region = smsc::util::config::region::RegionFinder::getInstance().getRegionById(message.regionId);
             smsc_log_info(log_, "TaskId=[%d/%s]: Traffic for region %s with id %s was suspended",
                           info.uid, info.name.c_str(),
-                          region ? region->getName().c_str() : "???",
-                          message.regionId );
+                          region->getName().c_str(),
+                          message.regionId.c_str() );
         }
         return false;
     }
