@@ -121,6 +121,7 @@ private:
   std::vector<LinkInfo> _knownLinks;
   smsc::logger::Logger* _logger;
 
+  enum {MAX_SOCKET_POOL_SIZE=64};
   corex::io::IOObjectsPool _socketPool;
 
   traffic_mode_t convertStringToTrafficModeValue(const std::string& trafficMode,

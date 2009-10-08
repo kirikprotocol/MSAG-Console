@@ -20,7 +20,8 @@ namespace sua {
 namespace libsua {
 
 SuaUser::SuaUser()
-  : _wasInitialized(false), _logger(smsc::logger::Logger::getInstance("libsua")), _lastUsedConnIdx(0)
+  : _wasInitialized(false), _logger(smsc::logger::Logger::getInstance("libsua")),
+    _lastUsedConnIdx(0), _socketPool(MAX_SOCKET_POOL_SIZE)
 {
   availableData=0;
 }
