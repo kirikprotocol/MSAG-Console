@@ -15,7 +15,8 @@ PacketReader::PacketReader(IOProcessor& io_processor,
                            unsigned max_streams_per_reader)
   : _logger(smsc::logger::Logger::getInstance("io_subsystem")),
     _ioProcessor(io_processor), _shutdownInProgress(false),
-    _messagePublisher(message_publisher), _newSchedTasks(max_streams_per_reader)
+    _messagePublisher(message_publisher), _readableIOObjectsPool(max_streams_per_reader+1),
+    _newSchedTasks(max_streams_per_reader)
 {
   _notificationEndpoint = _pipe.getLeftSide()->getOutputStream();
   _signallingEndpoint = _pipe.getRightSide()->getInputStream();
