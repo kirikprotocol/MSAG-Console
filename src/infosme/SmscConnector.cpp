@@ -435,6 +435,13 @@ bool SmscConnector::send( Task* task, Message& message )
     MessageGuard msguard(task,message);
     const TaskInfo& info = task->getInfo();
 
+    const smsc::util::config::region::Region* region = smsc::util::config::region::RegionFinder::getInstance().getRegionById(message.regionId);
+    if ( ! region ) {
+        smsc_log_info(log_,"TaskId=[%d/%s]: SMSC id='%s' region '%s' is not found",
+                      info.uid, info.name.c_str(), smscId_.c_str(), message.regionId );
+        return false;
+    }
+
     if ( ! connected_ ) {
         msguard.suspended();
         smsc_log_info(log_, "TaskId=[%d/%s]: SMSC id='%s' is not connected",
@@ -447,7 +454,9 @@ bool SmscConnector::send( Task* task, Message& message )
         if ( log_->isInfoEnabled() ) {
             const smsc::util::config::region::Region* region = smsc::util::config::region::RegionFinder::getInstance().getRegionById(message.regionId);
             smsc_log_info(log_, "TaskId=[%d/%s]: Traffic for region %s with id %s was suspended",
-                          info.uid, info.name.c_str(), region->getName().c_str(), region->getId().c_str());
+                          info.uid, info.name.c_str(),
+                          region ? region->getName().c_str() : "???",
+                          message.regionId );
         }
         return false;
     }

@@ -6,7 +6,6 @@
 #include <list>
 #include <sstream>
 #include <util/timeslotcounter.hpp>
-#include <util/config/region/RegionFinder.hpp>
 
 #ident "@(#)$Id$"
 
