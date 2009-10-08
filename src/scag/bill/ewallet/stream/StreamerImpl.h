@@ -167,9 +167,9 @@ private:
             p->setStatus(o.getStatusValue());
             if ( p->getStatus() == Status::OK ) {
                 p->setTransStatus(o.getTransStatus());
-                p->setSourceId(o.getSourceId());
-                p->setAmount(o.getAmount());
-                p->setEnddate(o.getEnddate());
+                if ( o.hasSourceId() ) p->setSourceId(o.getSourceId());
+                if ( o.hasAmount() ) p->setAmount(o.getAmount());
+                if ( o.hasEnddate() ) p->setEnddate(o.getEnddate());
             }
         }
         virtual void handle( stream::TransferCheck& o ) {
