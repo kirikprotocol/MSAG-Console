@@ -663,9 +663,15 @@ public class SmeEngine implements MessageListener, ResponseListener, PThreadClos
     state = getRequestState(message.getSourceAddress());
 
     if (state != null) {
-      logger.warn("Request rejected because another request from this abonent is already processing");
-      sendDeliverSmResponse(message, Data.ESME_RMSGQFUL);
-      return;
+      if (System.currentTimeMillis() - state.getAbonentRequestTime() < 300000L) {
+        logger.warn("Request rejected because another request from this abonent is already processing");
+        sendDeliverSmResponse(message, Data.ESME_RMSGQFUL);
+        return;
+      } else {
+        removeRequestState(state);
+        if (logger.isInfoEnabled())
+          logger.info("Old request replaced with new one.");
+      }
     }
 
     if (states.size() >= maxProcessingRequests) {

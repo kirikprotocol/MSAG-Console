@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<project name="minsk_unibalance" default="jar">
+<project name="unibalance_minsk" default="all">
+  
+  
+  <property file="unibalance_minsk.properties"/>
   <!-- Uncomment the following property if no tests compilation is needed -->
   <!-- 
   <property name="skip.tests" value="true"/>
    -->
-
+  
   <!-- Compiler options -->
-
-
+  
   <property name="compiler.debug" value="on"/>
   <property name="compiler.generate.no.warnings" value="off"/>
   <property name="compiler.args" value=""/>
@@ -19,6 +21,10 @@
     <exclude name="**/rcs/**"/>
     <exclude name="**/.DS_Store/**"/>
     <exclude name="**/.svn/**"/>
+    <exclude name="**/.sbas/**"/>
+    <exclude name="**/.IJI.*/**"/>
+    <exclude name="**/vssver.scc/**"/>
+    <exclude name="**/vssver2.scc/**"/>
   </patternset>
   <patternset id="compiler.resources">
     <include name="**/?*.properties"/>
@@ -30,121 +36,152 @@
     <include name="**/?*.html"/>
     <include name="**/?*.dtd"/>
     <include name="**/?*.tld"/>
-    <include name="**/?*.properties"/>
-    <include name="**/?*.xml"/>
-    <include name="**/?*.html"/>
-    <include name="**/?*.dtd"/>
-    <include name="**/?*.tld"/>
-    <include name="**/?*.gif"/>
-    <include name="**/?*.png"/>
-    <include name="**/?*.jpeg"/>
-    <include name="**/?*.jpg"/>
   </patternset>
-
-
+  
+  <!-- JDK definitions -->
+  
+  <property name="jdk.bin.jdk_1.5" value="${jdk.home.jdk_1.5}/bin"/>
+  <path id="jdk.classpath.jdk_1.5">
+    <fileset dir="${jdk.home.jdk_1.5}">
+      <include name="../../1.5.0/Home/lib/deploy.jar"/>
+      <include name="../../1.5.0/Classes/dt.jar"/>
+      <include name="../../1.5.0/Home/lib/javaws.jar"/>
+      <include name="../../1.5.0/Classes/jce.jar"/>
+      <include name="../../1.5.0/Home/lib/plugin.jar"/>
+      <include name="../../1.5.0/Home/lib/sa-jdi.jar"/>
+      <include name="../../1.5.0/Classes/charsets.jar"/>
+      <include name="../../1.5.0/Classes/classes.jar"/>
+      <include name="../../1.5.0/Classes/jconsole.jar"/>
+      <include name="../../1.5.0/Classes/jsse.jar"/>
+      <include name="../../1.5.0/Classes/laf.jar"/>
+      <include name="../../1.5.0/Classes/ui.jar"/>
+      <include name="../../1.5.0/Home/lib/ext/apple_provider.jar"/>
+      <include name="../../1.5.0/Home/lib/ext/dnsns.jar"/>
+      <include name="../../1.5.0/Home/lib/ext/localedata.jar"/>
+      <include name="../../1.5.0/Home/lib/ext/sunjce_provider.jar"/>
+      <include name="../../1.5.0/Home/lib/ext/sunpkcs11.jar"/>
+    </fileset>
+  </path>
+  
+  <property name="project.jdk.home" value="${jdk.home.jdk_1.5}"/>
+  <property name="project.jdk.bin" value="${jdk.bin.jdk_1.5}"/>
+  <property name="project.jdk.classpath" value="jdk.classpath.jdk_1.5"/>
+  
+  
+  <!-- Application Server Libraries -->
+  
   <!-- Modules -->
-
-
-  <!-- Module unibalance -->
-
-  <dirname property="module.unibalance.basedir" file="${ant.file}"/>
-
-
-  <property name="compiler.args.unibalance" value="${compiler.args}"/>
-
-  <property name="unibalance.output.dir" value="${module.unibalance.basedir}/classes"/>
-  <property name="unibalance.testoutput.dir" value="${module.unibalance.basedir}/classes"/>
-
-  <path id="unibalance.module.bootclasspath">
+  
+  
+  <!-- Module UniBalance_minsk -->
+  
+  <dirname property="module.unibalance_minsk.basedir" file="${ant.file}"/>
+  
+  
+  <property name="module.jdk.home.unibalance_minsk" value="${project.jdk.home}"/>
+  <property name="module.jdk.bin.unibalance_minsk" value="${project.jdk.bin}"/>
+  <property name="module.jdk.classpath.unibalance_minsk" value="${project.jdk.classpath}"/>
+  
+  <property name="compiler.args.unibalance_minsk" value="${compiler.args}"/>
+  
+  <property name="unibalance_minsk.output.dir" value="${module.unibalance_minsk.basedir}/classes/production/UniBalance_minsk"/>
+  <property name="unibalance_minsk.testoutput.dir" value="${module.unibalance_minsk.basedir}/classes/test/UniBalance_minsk"/>
+  
+  <path id="unibalance_minsk.module.bootclasspath">
     <!-- Paths to be included in compilation bootclasspath -->
   </path>
-
-  <path id="unibalance.module.classpath">
-    <fileset dir="${module.unibalance.basedir}/lib/" includes="*.jar"/>
+  
+  <path id="unibalance_minsk.module.classpath">
+    <path refid="${module.jdk.classpath.unibalance_minsk}"/>
+    <pathelement location="${module.unibalance_minsk.basedir}/lib/jcharset.jar"/>
+    <pathelement location="${module.unibalance_minsk.basedir}/lib/classes12.jar"/>
+    <pathelement location="${module.unibalance_minsk.basedir}/lib/jsmppapi.jar"/>
+    <pathelement location="${module.unibalance_minsk.basedir}/lib/log4j.jar"/>
+    <pathelement location="${module.unibalance_minsk.basedir}/lib/adv-client.jar"/>
+    <pathelement location="${module.unibalance_minsk.basedir}/lib/connpool.jar"/>
+    <pathelement location="${module.unibalance_minsk.basedir}/config"/>
+    <pathelement location="${module.unibalance_minsk.basedir}/lib/jdmkrt.jar"/>
+    <pathelement location="${module.unibalance_minsk.basedir}/lib/tpool.jar"/>
   </path>
-
-
-  <patternset id="excluded.from.module.unibalance">
+  
+  <path id="unibalance_minsk.runtime.module.classpath">
+    <path refid="${module.jdk.classpath.unibalance_minsk}"/>
+    <pathelement location="${unibalance_minsk.output.dir}"/>
+    <pathelement location="${unibalance_minsk.testoutput.dir}"/>
+    <pathelement location="${module.unibalance_minsk.basedir}/lib/jcharset.jar"/>
+    <pathelement location="${module.unibalance_minsk.basedir}/lib/classes12.jar"/>
+    <pathelement location="${module.unibalance_minsk.basedir}/lib/jsmppapi.jar"/>
+    <pathelement location="${module.unibalance_minsk.basedir}/lib/log4j.jar"/>
+    <pathelement location="${module.unibalance_minsk.basedir}/lib/adv-client.jar"/>
+    <pathelement location="${module.unibalance_minsk.basedir}/lib/connpool.jar"/>
+    <pathelement location="${module.unibalance_minsk.basedir}/config"/>
+    <pathelement location="${module.unibalance_minsk.basedir}/lib/jdmkrt.jar"/>
+    <pathelement location="${module.unibalance_minsk.basedir}/lib/tpool.jar"/>
+  </path>
+  
+  
+  <patternset id="excluded.from.module.unibalance_minsk">
     <patternset refid="ignored.files"/>
   </patternset>
-
-  <patternset id="excluded.from.compilation.unibalance">
-    <patternset refid="excluded.from.module.unibalance"/>
+  
+  <patternset id="excluded.from.compilation.unibalance_minsk">
+    <patternset refid="excluded.from.module.unibalance_minsk"/>
   </patternset>
-
-  <path id="unibalance.module.sourcepath">
-    <dirset dir="${module.unibalance.basedir}">
+  
+  <path id="unibalance_minsk.module.sourcepath">
+    <dirset dir="${module.unibalance_minsk.basedir}">
+      <include name="config"/>
       <include name="src"/>
     </dirset>
   </path>
-
-
-  <!-- obfuscate -->
-  <target name="obfuscate">
-    <taskdef name="obfuscate" classname="com.yworks.yguard.ObfuscatorTask"
-             classpath="lib/yguard.jar"/>
-    <obfuscate mainclass="ru.sibinco.smpp.ub_sme.Sme" logfile="obfuscate.log"
-               replaceclassnamestrings="true">
-      <property name="error-checking" value="pedantic"/>
-      <inoutpair in="lib/unibalance.jar" out="lib/unibalance.jar"/>
-      <externalclasses>
-        <pathelement location="lib/jsmppapi.jar"/>
-      </externalclasses>
-      <expose>
-        <class classes="protected"
-               methods="protected" fields="protected">
-        </class>
-      </expose>
-    </obfuscate>
-  </target>
-
-
-  <target name="jar" depends="compile.module.unibalance">
-    <copy file="${module.unibalance.basedir}/history.txt" todir="${unibalance.output.dir}"/>
-    <jar basedir="${unibalance.output.dir}" destfile="${module.unibalance.basedir}/lib/unibalance.jar"
-         manifest="${module.unibalance.basedir}/manifest.mf">
-      <exclude name=".dependency-info/**"/>
-    </jar>
-    <delete file="${unibalance.output.dir}/history.txt"/>
-  </target>
-
-  <target name="compile.module.unibalance"
-          depends="compile.module.unibalance.production,compile.module.unibalance.tests"
-          description="Compile module unibalance"/>
-
-  <target name="compile.module.unibalance.production" description="Compile module unibalance; production classes">
-    <mkdir dir="${unibalance.output.dir}"/>
-    <javac destdir="${unibalance.output.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}"
-           source="1.5" target="1.5">
-      <bootclasspath refid="unibalance.module.bootclasspath"/>
-      <classpath refid="unibalance.module.classpath"/>
-      <src refid="unibalance.module.sourcepath"/>
+  
+  
+  <target name="compile.module.unibalance_minsk" depends="compile.module.unibalance_minsk.production,compile.module.unibalance_minsk.tests" description="Compile module UniBalance_minsk"/>
+  
+  <target name="compile.module.unibalance_minsk.production" description="Compile module UniBalance_minsk; production classes">
+    <mkdir dir="${unibalance_minsk.output.dir}"/>
+    <javac destdir="${unibalance_minsk.output.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memorymaximumsize="${compiler.max.memory}" fork="true" executable="${module.jdk.bin.unibalance_minsk}/javac">
+      <compilerarg line="${compiler.args.unibalance_minsk}"/>
+      <bootclasspath refid="unibalance_minsk.module.bootclasspath"/>
+      <classpath refid="unibalance_minsk.module.classpath"/>
+      <src refid="unibalance_minsk.module.sourcepath"/>
+      <patternset refid="excluded.from.compilation.unibalance_minsk"/>
     </javac>
-
-    <copy todir="${unibalance.output.dir}">
-      <fileset dir="${module.unibalance.basedir}/src">
+    
+    <copy todir="${unibalance_minsk.output.dir}">
+      <fileset dir="${module.unibalance_minsk.basedir}/config">
+        <patternset refid="compiler.resources"/>
+        <type type="file"/>
+      </fileset>
+      <fileset dir="${module.unibalance_minsk.basedir}/src">
         <patternset refid="compiler.resources"/>
         <type type="file"/>
       </fileset>
     </copy>
   </target>
-
-  <target name="compile.module.unibalance.tests" depends="compile.module.unibalance.production"
-          description="compile module unibalance; test classes" unless="skip.tests"/>
-
-  <target name="clean.module.unibalance" description="cleanup module">
-    <delete dir="${unibalance.output.dir}"/>
-    <delete dir="${unibalance.testoutput.dir}"/>
+  
+  <target name="compile.module.unibalance_minsk.tests" depends="compile.module.unibalance_minsk.production" description="compile module UniBalance_minsk; test classes" unless="skip.tests"/>
+  
+  <target name="clean.module.unibalance_minsk" description="cleanup module">
+    <delete dir="${unibalance_minsk.output.dir}"/>
+    <delete dir="${unibalance_minsk.testoutput.dir}"/>
   </target>
-
+  
   <target name="init" description="Build initialization">
     <!-- Perform any build initialization in this target -->
   </target>
+  
+  <target name="clean" depends="clean.module.unibalance_minsk" description="cleanup all"/>
+  
+  <target name="all" depends="init, clean, jar" description="build all"/>
 
-  <target name="clean" depends="clean.module.unibalance" description="cleanup all"/>
-
-  <target name="all" depends="init, clean, compile.module.unibalance" description="build all"/>
-
-  <target name="all+obfuscate" depends="all, obfuscate" description="build all and obfuscate"/>
+  <target name="jar" depends="compile.module.unibalance_minsk">
+    <copy file="${module.unibalance_minsk.basedir}/history.txt" todir="${unibalance_minsk.output.dir}"/>
+    <jar basedir="${unibalance_minsk.output.dir}" destfile="${module.unibalance_minsk.basedir}/lib/unibalance.jar"
+         manifest="${module.unibalance_minsk.basedir}/manifest.mf">
+      <exclude name=".dependency-info/**"/>
+    </jar>
+    <delete file="${unibalance_minsk.output.dir}/history.txt"/>
+  </target>
 
 </project>
