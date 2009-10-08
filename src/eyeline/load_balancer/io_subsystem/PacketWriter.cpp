@@ -15,6 +15,7 @@ PacketWriter::PacketWriter(IOProcessor& io_processor,
                            unsigned max_streams_per_writer)
   : _logger(smsc::logger::Logger::getInstance("io_subsystem")),
     _ioProcessor(io_processor), _shutdownInProgress(false),
+    _signallingAndWritableObjectsPool(max_streams_per_writer+1),
     _packetsQueue(max_out_packets_queue_size),
     _newSchedTasks(max_streams_per_writer)
 {
