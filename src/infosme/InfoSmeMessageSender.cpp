@@ -197,7 +197,7 @@ void InfoSmeMessageSender::reloadSmscAndRegions( Manager& manager )
     }
     const smsc::util::config::region::RegionDefault& regdef = regionsConfig_->getDefaultRegion();
     smsc_log_debug(log_,"registering a default region %s/'%s'",
-                   region->getId().c_str(), region->getName().c_str() );
+                   regdef.getId().c_str(), regdef.getName().c_str() );
     smsc::util::config::region::RegionFinder::getInstance().registerDefaultRegion(&regdef);
 
     if ( oldStarted ) start();
