@@ -127,7 +127,7 @@ public:
             *ptr++ = char(l+0x30);
         }
         *ptr = '\0';
-        return ptr - buf;
+        return unsigned(ptr - buf);
     }
     
 
@@ -153,7 +153,7 @@ public:
         char* ptr = buf+((len+1)/2);
         uint64_t val = number_.data.value;
         for ( ; len > 0; ) {
-            unsigned char h = val % 10;
+            unsigned char h = static_cast<unsigned char>(val % 10);
             val /= 10;
             --len;
             if ( !(len & 1) ) {

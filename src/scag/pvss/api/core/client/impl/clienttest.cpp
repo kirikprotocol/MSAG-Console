@@ -52,7 +52,7 @@ int main()
     }
 
     std::auto_ptr< Protocol > protocol( new scag2::pvss::pvap::PvapProtocol );
-    std::auto_ptr< Client > client( new ClientCore( clientConfig, *protocol.get() ) );
+    std::auto_ptr< Client > client( new ClientCore( &clientConfig, protocol.get() ) );
 
     try {
         client->startup();

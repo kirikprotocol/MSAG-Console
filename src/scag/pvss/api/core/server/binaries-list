@@ -6,7 +6,7 @@ scag/pvss-simpleserver simpleserver \
   -lscag-pvss-data \
   -lscag-pvss-common \
   -lscag-util-storage \
-  -lscag-util \
+  -lscag-util-io \
   -lcore-network $(SOCKETLIB) -lnsl \
   -lcore-buffers \
   -lcore-threads \

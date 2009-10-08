@@ -1,6 +1,7 @@
 scag/tests/pvss-propertyio   testPropertyIO \
   -lscag-pvss-data \
   -lscag-util-storage \
+  -lscag-util-io \
   -lscag-exc \
   -lutil
 

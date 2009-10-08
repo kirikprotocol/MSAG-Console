@@ -9,6 +9,7 @@ scag/pvss_old     pvss          \
         -lscag-pvss-base \
 	-lscag-pvss-profile \
         -lscag-util-storage \
+        -lscag-util-io \
 	-lscag-util-multiplexer \
         -llicense-check \
         -lcore-network $(SOCKETLIB) -lnsl \

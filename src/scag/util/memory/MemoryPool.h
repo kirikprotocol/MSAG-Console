@@ -2,6 +2,7 @@
 #define _SCAG_UTIL_MEMORY_MEMORYPOOL_H
 
 #include <limits>
+#include <algorithm>
 #include "scag/util/io/Print.h"
 #include "core/buffers/CyclicQueue.hpp"
 
@@ -347,10 +348,10 @@ public:
     /// - nothing to do because the allocator has no state
     StdAlloc() throw() {
     }
-    StdAlloc(const StdAlloc&) throw() {
+    template <class U> StdAlloc(const StdAlloc<U, BaseMemAlloc>&) throw() {
     }
-    template <class U> StdAlloc(const StdAlloc<U>&) throw() {
-    }
+    // template <class U> StdAlloc(const StdAlloc<U>&) throw() {
+    // }
     ~StdAlloc() throw() {
     }
 

@@ -7,6 +7,8 @@
 using namespace scag2::util::storage;
 using namespace scag2::util;
 using namespace smsc::logger;
+using scag2::util::io::Serializer;
+using scag2::util::io::Deserializer;
 
 struct DummyKey
 {

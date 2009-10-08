@@ -30,3 +30,4 @@ scag/tests/test17     test17 \
 
 scag/tests/test18     test18
 scag/tests/test19     test19 -lscag-util-io -lpthread -lrt -ldl $(LIBMALLOC)
+scag/tests/test20     test20

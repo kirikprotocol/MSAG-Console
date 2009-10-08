@@ -1,5 +1,5 @@
 #include "PersCommand.h"
-#include "scag/util/Print.h"
+#include "scag/util/io/Print.h"
 
 namespace scag2 {
 
@@ -19,7 +19,7 @@ void PersPacket::deserialize(SerialBuffer& sb) {
   profileType = (ProfileType)sb.ReadInt8();
   if (profileType == PT_ABONENT) {
     sb.ReadString(strKey);
-    address.setAddress(strKey.c_str());
+    address.fromString(strKey.c_str());
   } else {
     intKey = sb.ReadInt32();
   }

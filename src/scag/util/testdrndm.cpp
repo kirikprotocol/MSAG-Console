@@ -1,11 +1,11 @@
-#include <cstdio>
+#include <stdio.h>
 #include "scag/util/io/Drndm.h"
 
 int main()
 {
     scag2::util::Drndm rnd;
     for ( int i = 0; i < 100; ++i ) {
-        printf( "%llx\n", rnd.get() );
+        ::printf( "%llx\n", rnd.get() );
     }
     return 0;
 }

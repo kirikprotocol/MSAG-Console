@@ -7,7 +7,8 @@ namespace pvss  {
 using scag::util::storage::StorageNumbering;
 
 StorageManager::StorageManager(const NodeConfig& nodeCfg): nodeNumber_(nodeCfg.nodeNumber), locationsCount_(nodeCfg.locationsCount), isStopped_(true),
-                                                           storagesCount_(nodeCfg.storagesCount), logger_(Logger::getInstance("storeman")), startedProc_(0) {
+                                                           storagesCount_(nodeCfg.storagesCount), logger_(Logger::getInstance("storeman")), startedProc_(0),
+dfm_(4,1000) {
   StorageNumbering::setInstance(nodeCfg.nodesCount);
 }
 

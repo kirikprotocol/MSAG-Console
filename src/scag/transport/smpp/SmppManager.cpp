@@ -14,6 +14,7 @@
 #include "scag/exc/SCAGExceptions.h"
 #include <scag/util/singleton/Singleton.h>
 #include <map>
+#include <list>
 
 namespace scag{
 namespace transport{
@@ -234,7 +235,6 @@ public:
 
 protected:
 
-
   struct MetaEntity{
     struct MetaInfo{
       SmppEntity* ptr;
@@ -252,38 +252,41 @@ protected:
 
     static time_t expirationTimeout;
 
-    struct MappingValue;
+  private:
+      struct MappingValue;
+      typedef std::list< MappingValue >                   ValueList;
+      typedef std::map< Address, ValueList::iterator >    AbonentsMap;      
+      typedef std::multimap<time_t, ValueList::iterator > TimeoutsMap;
 
-    typedef std::map<Address,MappingValue> AbonentsMap;
-    typedef std::multimap<time_t,AbonentsMap::iterator> TimeoutsMap;
-
-    struct MappingValue{
-      SmppEntity* ptr;
-      MappingValue():ptr(0)
+      struct MappingValue
       {
-      }
-      MappingValue(SmppEntity* argPtr):ptr(argPtr)
-      {
-      }
-      TimeoutsMap::iterator toit;
-    };
+          MappingValue() : ptr(0) {}
+          MappingValue(SmppEntity* arg) : ptr(arg) {}
 
-    AbonentsMap storedMappings;
-    TimeoutsMap timeMap;
+          SmppEntity* ptr;
+          AbonentsMap::iterator aiter;
+          TimeoutsMap::iterator titer;
+      };
+
+      ValueList   valueList;
+      AbonentsMap storedMappings;
+      TimeoutsMap timeMap;
 
     SmppEntity* getStoredMapping(const Address& addr)
     {
-      AbonentsMap::iterator it=storedMappings.find(addr);
+      AbonentsMap::const_iterator it=storedMappings.find(addr);
       if(it==storedMappings.end())return 0;
-      timeMap.erase(it->second.toit);
-      timeMap.insert(TimeoutsMap::value_type(time(NULL)+expirationTimeout,it));
-      return it->second.ptr;
+      ValueList::iterator vit = it->second;
+      timeMap.erase(vit->titer);
+      vit->titer = timeMap.insert(TimeoutsMap::value_type(time(NULL)+expirationTimeout,vit));
+      return vit->ptr;
     }
 
     void createStoredMapping(const Address& addr,SmppEntity* ptr)
     {
-      AbonentsMap::iterator it=storedMappings.insert(AbonentsMap::value_type(addr,MappingValue(ptr))).first;
-      it->second.toit=timeMap.insert(TimeoutsMap::value_type(time(NULL)+expirationTimeout,it));
+        ValueList::iterator vit = valueList.insert(valueList.begin(),MappingValue(ptr));
+        vit->aiter = storedMappings.insert(AbonentsMap::value_type(addr,vit)).first;
+        vit->titer = timeMap.insert(TimeoutsMap::value_type(time(NULL)+expirationTimeout,vit));
     }
 
     void expireMappings()
@@ -292,10 +295,14 @@ protected:
       TimeoutsMap::iterator it;
       while(!timeMap.empty() && now>(it=timeMap.begin())->first)
       {
-        storedMappings.erase(it->second);
-        timeMap.erase(it);
+          ValueList::iterator vit = it->second;
+          storedMappings.erase(vit->aiter);
+          valueList.erase(vit);
+          timeMap.erase(it);
       }
     }
+      
+  public:
 
     SmppEntity* getEntity(const Address& addr)
     {

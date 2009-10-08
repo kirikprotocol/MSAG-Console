@@ -37,6 +37,7 @@ public:
   void shutdown();
   unsigned getInfrastructNodeNumber() { return 0; }
   void procStopped();
+    DataFileManager& getDataFileManager() { return dfm_; }
 
 private:
   AbonentStorageProcessor* getLocation(unsigned elementStorageNumber);
@@ -53,7 +54,8 @@ private:
   unsigned storagesCount_;
   unsigned nodeNumber_;
   InfrastructStorageProcessor *infrastructStorage_;
-
+    
+    DataFileManager dfm_;
 };
 
 }//pvss

@@ -524,12 +524,13 @@ public:
     }
     
 
-    void recoverFromBackup( data_type& prof ) const
+    bool recoverFromBackup( data_type& prof ) const
     {
         // prof.recoverFromBackup(glossary_);
         prof.value->deserialize( prof.backup->getBackupData(),
                                  prof.backup->getBackupDataSize(),
                                  glossary_ );
+        return true;
     }
 
 

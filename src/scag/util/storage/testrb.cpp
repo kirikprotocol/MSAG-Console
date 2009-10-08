@@ -380,6 +380,9 @@ Deserializer& operator >> ( Deserializer& s, CSessionKey& sk )
 
 #endif // if 0
 
+using scag2::util::io::Serializer;
+using scag2::util::io::Deserializer;
+
 typedef scag2::pvss::AbntAddr CSessionKey;
 
     class Session 

@@ -1,11 +1,11 @@
 #include <cstdio>
 #include <cstdlib>
 #include "AbntAddr.hpp"
-#include "scag/util/HexDump.h"
+#include "scag/util/io/HexDump.h"
 
 using namespace scag2::pvss;
 using namespace scag2::util;
-using namespace scag2::util::storage;
+using namespace scag2::util::io;
 
 void compare( const AbntAddr& a )
 {
@@ -15,9 +15,9 @@ void compare( const AbntAddr& a )
     ser << a;
 
     HexDump hd;
-    std::string dump;
+    HexDump::string_type dump;
     hd.hexdump(dump,&buf[0],buf.size());
-    printf("hex: %s\n", dump.c_str());
+    printf("hex: %s\n", hd.c_str(dump));
 
     Deserializer deser(buf);
     AbntAddr b;

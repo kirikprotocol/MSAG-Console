@@ -186,7 +186,7 @@ int main()
 
     std::auto_ptr< SyncDispatcher > dispatcher( new SyncDispatcherImpl );
     std::auto_ptr< Protocol > protocol( new scag2::pvss::pvap::PvapProtocol );
-    std::auto_ptr< Server > server( new ServerCore( serverConfig, *protocol.get() ) );
+    std::auto_ptr< Server > server( new ServerCore( &serverConfig, protocol.get() ) );
 
     // synchronous variant
     try {

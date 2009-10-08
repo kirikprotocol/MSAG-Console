@@ -7,7 +7,7 @@
 #include "scag/util/io/EndianConverter.h"
 
 using namespace scag2::util;
-using namespace scag2::util::storage;
+using namespace scag2::util::io;
 
 /// get from ptr, set into temp, compare
 inline uint16_t onecheck16( const char* ptr )

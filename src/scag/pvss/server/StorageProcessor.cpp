@@ -153,7 +153,8 @@ void AbonentStorageProcessor::initElementStorage(const AbonentStorageConfig& cfg
                                                               false, smsc::logger::Logger::getInstance("pvss.idx")));
   smsc_log_debug(logger_, "data index storage %d is created", index);
   std::auto_ptr< DiskDataStorage::storage_type > bs
-        (new DiskDataStorage::storage_type(elStorage.glossary,
+        (new DiskDataStorage::storage_type(manager_->getDataFileManager(),
+                                           elStorage.glossary,
                                            smsc::logger::Logger::getInstance("pvss.bhdisk")));
   int ret = -1;
   const string fn(cfg.dbName + "-data");
@@ -209,7 +210,7 @@ void AbonentStorageProcessor::process(PersPacket* packet) {
     //packet->flushLogs(abntlog_);
   } else if (packet->rollback) {
     smsc_log_debug(logger_, "%p: %p rollback profile %s changes", this, packet, pf->getKey().c_str());
-    elstorage->storage->backup2Profile(packet->address, elstorage->glossary);
+    elstorage->storage->backup2Profile(packet->address);
   }
 }
 
@@ -262,7 +263,7 @@ void InfrastructStorageProcessor::process(PersPacket* packet) {
     //packet->flushLogs(dblog);
   } else if (packet->rollback){
     smsc_log_debug(logger_, "%p: %p rollback profile %s changes", this, packet, pf->getKey().c_str());
-    storage->backup2Profile(key, &glossary_);
+    storage->backup2Profile(key);
   }
 }
 
