@@ -9,5 +9,5 @@ void SampleTest::SampleTest1 (void)
 }
 void SampleTest::SampleTest2 (void)
 {
-  CPPUNIT_ASSERT( true );
+  CPPUNIT_ASSERT_MESSAGE( "just a message assertion test", false);
 }
