@@ -206,15 +206,28 @@ void InfoSmeMessageSender::reloadSmscAndRegions( Manager& manager )
 
 bool InfoSmeMessageSender::send( Task* task, Message& message )
 {
-    SmscConnector* connector = getSmscConnector(message.regionId);
-    const TaskInfo& info = task->getInfo();
+    // get region by message.regionId
+    const smsc::util::config::region::Region* region = smsc::util::config::region::RegionFinder::getInstance().getRegionById(message.regionId);
+    if ( ! region ) {
+        const TaskInfo& info = task->getInfo();
+        smsc_log_info(log_,"TaskId=[%d/%s]: msgId=%llx region '%s' is not found, using default",
+                      info.uid, info.name.c_str(), message.id, message.regionId.c_str() );
+        region = smsc::util::config::region::RegionFinder::getInstance().getDefaultRegion();
+        if ( !region ) {
+            smsc_log_error(log_,"default region is not found");
+            return false;
+        }
+    }
+
+    SmscConnector* connector = getSmscConnector(region->getId());
     if ( ! connector ) {
+        const TaskInfo& info = task->getInfo();
         smsc_log_error(log_,"TaskId=[%d/%s]: msgId=%llx cannot find connector by regionId=%s",
-                       info.uid, info.name.c_str(), message.id, message.regionId.c_str() );
+                       info.uid, info.name.c_str(), message.id, region->getId().c_str());
         TaskProcessor::retryMessage(task,message.id);
         return false;
     }
-    return connector->send( task, message );
+    return connector->send( task, message, region );
 }
 
 

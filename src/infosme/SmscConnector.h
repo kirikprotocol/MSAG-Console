@@ -19,6 +19,15 @@ const int   MAX_ALLOWED_PAYLOAD_LENGTH = 65535;
 const int   MAX_ALLOWED_MESSAGE_LENGTH = 254;
 
 namespace smsc {
+
+namespace util {
+namespace config {
+namespace region {
+class Region;
+}
+}
+}
+
 namespace infosme {
 
 using smsc::logger::Logger;
@@ -96,7 +105,7 @@ public:
     // put resp
     bool invokeProcessReceipt( const ResponseData& data );
     bool invokeProcessResponse( const ResponseData& data );
-    bool send( Task* task, Message& message );
+    bool send( Task* task, Message& message, const smsc::util::config::region::Region* region );
     void processWaitingEvents( time_t tm );
 
 private:

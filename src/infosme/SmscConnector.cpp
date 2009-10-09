@@ -431,17 +431,22 @@ bool SmscConnector::invokeProcessResponse( const ResponseData& rd )
 }
 
 
-bool SmscConnector::send( Task* task, Message& message )
+bool SmscConnector::send( Task* task, Message& message,
+                          const smsc::util::config::region::Region* region )
 {
     MessageGuard msguard(task,message);
+    if ( ! region ) return false;
+
     const TaskInfo& info = task->getInfo();
 
+    /*
     const smsc::util::config::region::Region* region = smsc::util::config::region::RegionFinder::getInstance().getRegionById(message.regionId);
     if ( ! region ) {
-        smsc_log_info(log_,"TaskId=[%d/%s]: SMSC id='%s' region '%s' is not found",
+        smsc_log_info(log_,"TaskId=[%d/%s]: SMSC id='%s' region '%s' is not found, using default",
                       info.uid, info.name.c_str(), smscId_.c_str(), message.regionId.c_str() );
         return false;
     }
+     */
 
     if ( ! connected_ ) {
         msguard.suspended();
@@ -452,19 +457,16 @@ bool SmscConnector::send( Task* task, Message& message )
 
     if ( trafficControl_->speedLimitReached(task,message,region) ) {
         msguard.suspended();
-        if ( log_->isInfoEnabled() ) {
-            // const smsc::util::config::region::Region* region = smsc::util::config::region::RegionFinder::getInstance().getRegionById(message.regionId);
-            smsc_log_info(log_, "TaskId=[%d/%s]: Traffic for region %s with id %s was suspended",
-                          info.uid, info.name.c_str(),
-                          region->getName().c_str(),
-                          message.regionId.c_str() );
-        }
+        smsc_log_info(log_, "TaskId=[%d/%s]: Traffic for region %s with id %s was suspended",
+                      info.uid, info.name.c_str(),
+                      region->getName().c_str(),
+                      region->getId().c_str());
         return false;
     }
 
     int seqNum = getSeqNum();
     smsc_log_debug(log_, "TaskId=[%d/%s]: Sending message #%llx, seqNum=%d SMSC id='%s' region id='%s' for '%s': %s",
-                   info.uid,info.name.c_str(), message.id, seqNum, smscId_.c_str(), message.regionId.c_str(),
+                   info.uid,info.name.c_str(), message.id, seqNum, smscId_.c_str(), region->getId().c_str(),
                    message.abonent.c_str(), message.message.c_str());
 
     {
