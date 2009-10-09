@@ -51,8 +51,7 @@ void AmericaTestFixture::ulprint()
   vector<unsigned char> etalon_buf(etalon, etalon + sizeof(etalon) / sizeof(unsigned char) );
   vector<unsigned char> bad_buf(bad, bad + sizeof(bad) / sizeof(unsigned char) );
   CPPUNIT_ASSERT(etalon_buf == ulmsg);
-  bool res = (bad_buf == ulmsg);
-  CPPUNIT_ASSERT( !res );
+  CPPUNIT_ASSERT_ASSERTION_FAIL( CPPUNIT_ASSERT( bad_buf == ulmsg ) );
 }
 
   /*
