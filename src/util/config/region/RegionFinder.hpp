@@ -22,6 +22,7 @@ public:
   void registerDefaultRegion(const smsc::util::config::region::RegionDefault* region);
   const smsc::util::config::region::Region* findRegionByAddress(const std::string& address);
   const smsc::util::config::region::Region* getRegionById(const std::string& regionId);
+    const smsc::util::config::region::RegionDefault* getDefaultRegion() { return _regionDefault; }
 private:
   smsc::core::buffers::XTree<const smsc::util::config::region::Region*,HeapAllocator,false> _wildcardSearchTree;
   const smsc::util::config::region::RegionDefault* _regionDefault;
