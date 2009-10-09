@@ -340,7 +340,7 @@ int TaskProcessor::Execute()
 
         processWaitingEvents(time(NULL)); // ?? or time(NULL)
         if (!bNeedExit && processed <= 0) {
-            smsc_log_info(log_,"TaskProc: processed=%d waiting %d",processed,switchTimeout);
+            smsc_log_debug(log_,"TaskProc: processed=%d waiting %d",processed,switchTimeout);
             awake.Wait(switchTimeout);
         }
     }
