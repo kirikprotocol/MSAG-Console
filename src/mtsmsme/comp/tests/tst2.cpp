@@ -8,6 +8,7 @@ void AmericaTestFixture::AmericaTest()
   CPPUNIT_ASSERT(true);
 }
 #include "mtsmsme/comp/UpdateLocation.hpp"
+#include "mtsmsme/processor/util.hpp"
 void AmericaTestFixture::ulprint()
 {
   unsigned char etalon[] = {
@@ -28,7 +29,7 @@ void AmericaTestFixture::ulprint()
     0x6B, 0x1E, 0x28, 0x1C, 0x06, 0x07, 0x00, 0x11,
     0x86, 0x05, 0x01, 0x01, 0x01, 0xA0, 0x11, 0x60,
     0x0F, 0x80, 0x02, 0x07, 0x80, 0xA1, 0x09, 0x06,
-    0x07, 0x04, 0x56, 0x00, 0x01, 0x00, 0x01, 0x03,
+    0x07, 0x04, 0x56 /* bad */, 0x00, 0x01, 0x00, 0x01, 0x03,
     0x6C, 0x2E, 0xA1, 0x2C, 0x02, 0x01, 0x01, 0x02,
     0x01, 0x02, 0x30, 0x24, 0x04, 0x08, 0x52, 0x10,
     0x03, 0x21, 0x34, 0x32, 0x01, 0xF0, 0x81, 0x08,
@@ -39,16 +40,18 @@ void AmericaTestFixture::ulprint()
   using std::vector;
   using smsc::mtsmsme::comp::UpdateLocationMessage;
   using smsc::mtsmsme::processor::TrId;
+  using smsc::mtsmsme::processor::util::dump;
   UpdateLocationMessage msg;
   TrId id; id.size=4; id.buf[0] = 0x29; id.buf[1] = 0x00; id.buf[2] = 0x01; id.buf[3] = 0xB3;
   msg.setOTID(id);
   msg.setComponent("250130124323100","1979139860001","1979139860001");
   vector<unsigned char> ulmsg;
   msg.encode(ulmsg);
+  printf("UpdateLocation[%d]={%s}",ulmsg.size(),dump((uint16_t)ulmsg.size(),&ulmsg[0]).c_str());
   vector<unsigned char> etalon_buf(etalon, etalon + sizeof(etalon) / sizeof(unsigned char) );
   vector<unsigned char> bad_buf(bad, bad + sizeof(bad) / sizeof(unsigned char) );
   CPPUNIT_ASSERT(etalon_buf == ulmsg);
-  CPPUNIT_ASSERT(bad_buf == ulmsg);
+  CPPUNIT_ASSERT(bad_buf != ulmsg);
 }
 
   /*
