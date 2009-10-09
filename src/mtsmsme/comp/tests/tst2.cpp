@@ -4,7 +4,8 @@ CPPUNIT_TEST_SUITE_REGISTRATION(AmericaTestFixture);
 void AmericaTestFixture::setUp()
 {
   using smsc::logger::Logger;
-  Logger::Init(); Logger* logger = Logger::getInstance("all");
+  Logger::Init();
+  logger = Logger::getInstance("all");
 }
 void psevdomain();
 void AmericaTestFixture::AmericaTest()
