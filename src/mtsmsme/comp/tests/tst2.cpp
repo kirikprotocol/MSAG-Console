@@ -8,6 +8,12 @@ void AmericaTestFixture::setUp()
   Logger::Init();
   logger = Logger::getInstance("all");
 }
+void AmericaTestFixture::tearDown()
+{
+  using smsc::logger::Logger;
+  printf("AmericaTestFixture::tearDown()\n");
+  Logger::Shutdown();
+}
 void psevdomain();
 void AmericaTestFixture::AmericaTest()
 {
