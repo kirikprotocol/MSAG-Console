@@ -207,6 +207,7 @@ int main(int argc, char** argv)
 
     Logger::Init();
     logger = Logger::getInstance("smsc.infosme.InfoSme");
+    smsc_log_info(logger, "Starting up %s", getStrVersion());
 
     std::auto_ptr<ServiceSocketListener> adml(new ServiceSocketListener());
     adminListener = adml.get();
