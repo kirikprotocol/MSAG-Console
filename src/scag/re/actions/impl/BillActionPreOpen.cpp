@@ -15,8 +15,9 @@ using namespace bill;
 
 BillActionPreOpen::BillActionPreOpen( bool transit ) :
 BillAction(transit), categoryId_(0), mediaTypeId_(0),
+hasExternalId_(false),
 walletType_(*this,"walletType",false,true),
-hasExternalId_(false)
+keywords_(*this,"keywords",false,true)
 {
 }
 
@@ -211,6 +212,11 @@ BillOpenCallParamsData* BillActionPreOpen::makeParamsData( ActionContext& contex
             throw SCAGException("Action '%s': transit is not allowed for non-ewallet",opname());
         }
     }
+
+    // filling keywords
+    if ( keywords_.isFound() ) {
+        billingInfoStruct.keywords = keywords_.getValue(context);
+    }
     return postFillParamsData( bpd.release(), context );
 }
 
@@ -325,6 +331,7 @@ void BillActionPreOpen::init( const SectionParams& params,
     }
 
     walletType_.init(params,propertyObject);
+    keywords_.init(params,propertyObject);
 
     postInit( params, propertyObject );
     smsc_log_debug(logger,"Action '%s' init...", opname() );

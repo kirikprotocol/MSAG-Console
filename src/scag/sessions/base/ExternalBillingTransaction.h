@@ -16,10 +16,10 @@ public:
 
 public:
     explicit ExternalBillingTransaction( billid_type billid ) :
-    billid_(billid), keywords_(0) {}
+    billid_(billid) {}
 
     virtual ~ExternalBillingTransaction() {
-        delete keywords_;
+        // delete keywords_;
     }
 
     virtual void commit() {
@@ -50,6 +50,7 @@ public:
         return billid_;
     }
 
+    /*
     inline const std::string* getKeywords() const {
         return keywords_;
     }
@@ -59,10 +60,12 @@ public:
         if ( kw.empty() ) keywords_ = 0;
         else keywords_ = new std::string(kw);
     }
+     */
 
 private:
     billid_type  billid_;
-    std::string* keywords_;
+    // NOTE: we don't need keywords anymore
+    // std::string* keywords_;
 };
 
 }

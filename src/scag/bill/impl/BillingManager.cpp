@@ -788,6 +788,7 @@ void BillingManagerImpl::makeBillEvent( BillingTransactionEvent billCommand,
     ev->fBillingSumm = tariffRec.getPrice();
     ev->iMediaResourceType = tariffRec.MediaTypeId;
     ev->pBillingCurrency = tariffRec.Currency;
+    if (!billingInfo.keywords.empty()) ev->keywords = billingInfo.keywords;
 
     char buff[70];
     sprintf(buff,"%s/%ld%d",billingInfo.AbonentNumber.c_str(), billingInfo.SessionBornMicrotime.tv_sec, int(billingInfo.SessionBornMicrotime.tv_usec / 1000));

@@ -26,7 +26,6 @@ class BillOpenCallParamsData
 public:
     BillingInfoStruct billingInfoStruct;
     TariffRec         tariffRec;
-    // billid_type       BillId;            // moved to billingInfoStruct
 };
 
 class BillTransitParamsData

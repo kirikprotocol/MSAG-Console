@@ -37,7 +37,7 @@
 #include "BillActionCheck.h"
 #include "BillActionTransfer.h"
 #include "BillActionInfoTransit.h"
-#include "BillActionKeywords.h"
+// #include "BillActionKeywords.h"
 #include "BillActionTariff.h"
 
 #include "scag/pvss/api/packets/DelCommand.h"
@@ -142,8 +142,8 @@ Action * MainActionFactory::CreateAction( const std::string& name ) const
             if ( name == "bill:close-transit" ) return new BillActionCloseTransit();
             if ( name == "bill:info" ) return new BillActionInfo();
             if ( name == "bill:info-transit" ) return new BillActionInfoTransit();
-            if ( name == "bill:set_keywords" ) return new BillActionSetKeywords();
-            if ( name == "bill:add_keywords" ) return new BillActionAddKeywords();
+            // if ( name == "bill:set_keywords" ) return new BillActionSetKeywords();
+            // if ( name == "bill:add_keywords" ) return new BillActionAddKeywords();
             if ( name == "bill:tariff" ) return new BillActionTariff();
             break;
         }

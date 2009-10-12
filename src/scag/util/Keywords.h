@@ -20,7 +20,7 @@ template<class T, class K>
 class Keywords {
 public:  
   Keywords(const string& keywords, bool fieldTypeUnknown, Logger* log, T& actionContext)
-           :value_(keywords), fieldTypeUnknown_(fieldTypeUnknown), logger(log), actionContext_(actionContext) { };
+           :value_(keywords), fieldTypeUnknown_(fieldTypeUnknown), actionContext_(actionContext), logger(log) { };
   virtual ~Keywords() {};
   virtual bool change(K* keywordsContext) {
     if (!keywordsContext) {

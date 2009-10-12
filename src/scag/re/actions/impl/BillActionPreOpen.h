@@ -63,6 +63,8 @@ private:
     FieldType       externalIdType_;
 
     StringField     walletType_;
+
+    StringField     keywords_;
 };
 
 } // namespace actions

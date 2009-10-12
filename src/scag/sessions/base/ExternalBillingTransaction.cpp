@@ -10,7 +10,10 @@ Serializer& ExternalBillingTransaction::serialize( Serializer& s ) const
 {    
     s << id;
     s << uint64_t(billid_);
-    s << (keywords_ ? *keywords_ : std::string());
+    // NOTE: we don't need keywords anymore, but we still output
+    // empty string to preserve the format
+    const std::string empty;
+    s << empty;
     return s;
 }
 
@@ -23,9 +26,10 @@ Deserializer& ExternalBillingTransaction::deserialize( Deserializer& s ) /* thro
     uint64_t ib;
     s >> ib;
     billid_ = ib;
+    // the same as above
     std::string kw;
     s >> kw;
-    setKeywords( kw );
+    // setKeywords( kw );
     return s;
 }
 

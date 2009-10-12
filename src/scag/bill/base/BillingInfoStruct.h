@@ -56,6 +56,7 @@ struct BillingInfoStruct
     int timeout;             // 0 -- not used
     std::string description; // description (empty -- not used)
     std::string externalId;  // external id (empty -- not used)
+    std::string keywords;    // keywords    (empty -- not used)
 
     timeval SessionBornMicrotime;
 
@@ -79,6 +80,7 @@ struct BillingInfoStruct
         timeout = cp.timeout;
         description = cp.description;
         externalId = cp.externalId;
+        keywords = cp.keywords;
         SessionBornMicrotime = cp.SessionBornMicrotime;
         return *this;
     }
