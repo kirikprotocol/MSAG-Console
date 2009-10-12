@@ -14,13 +14,7 @@ class AmericaTestFixture : public CppUnit::TestFixture {
   CPPUNIT_TEST (sendRoutingInfoForSM_sending);
   CPPUNIT_TEST_SUITE_END ();
 public:
-  class SccpSenderImpl: public SccpSender {
-    public:
-      virtual void send(uint8_t cdlen,uint8_t *cd,uint8_t cllen,uint8_t *cl,uint16_t ulen,uint8_t *udp)
-      {
-        smsc_log_debug(logger, "fake sccp sender has pushed message to network");
-      };
-  };
+  class SccpSenderImpl;
   void setUp();
   void tearDown();
 protected:
@@ -31,4 +25,14 @@ protected:
 private:
   Logger* logger;
   SccpSenderImpl* sender;
+public:
+  using smsc::mtsmsme::processor::SccpSender;
+  class SccpSenderImpl: public SccpSender {
+    public:
+      virtual void send(uint8_t cdlen,uint8_t *cd,uint8_t cllen,uint8_t *cl,uint16_t ulen,uint8_t *udp)
+      {
+        smsc_log_debug(logger, "fake sccp sender has pushed message to network");
+      };
+  };
+
 };
