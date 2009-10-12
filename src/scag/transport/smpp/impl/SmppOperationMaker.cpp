@@ -46,7 +46,7 @@ void SmppOperationMaker::process( re::RuleStatus& st, scag2::re::actions::Comman
     try {
         do {
             where = "setup";
-            setupOperation( st );
+            setupOperation( st, cp );
             hrt.mark("opmk.mkop");
             if ( st.status == re::STATUS_OK ) {
                 smsc_log_debug(log_, "%s: RuleEngine processing...", where_ );            
@@ -58,7 +58,7 @@ void SmppOperationMaker::process( re::RuleStatus& st, scag2::re::actions::Comman
             }
 
             where = "post";
-            postProcess( st );
+            postProcess( st, cp );
             hrt.mark("opmk.post");
 
             if ( st.status == re::STATUS_LONG_CALL ) {
@@ -96,7 +96,8 @@ void SmppOperationMaker::process( re::RuleStatus& st, scag2::re::actions::Comman
 
 
 
-void SmppOperationMaker::setupOperation( re::RuleStatus& st )
+void SmppOperationMaker::setupOperation( re::RuleStatus& st,
+                                         re::actions::CommandProperty& cp )
 {
     // find out operation type
     SMS* sms = cmd_->get_sms();
@@ -116,6 +117,9 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st )
                   smsc::system::Status::TRANSACTIONTIMEDOUT );
             return;
         }
+        const std::string* kw = op->getKeywords();
+        if ( kw && !kw->empty() ) { cp.keywords = *kw; }
+
         session_->getLongCallContext().continueExec = true;
         smsc_log_debug( log_, "cmd=%p continue op=%p opid=%d type=%d(%s) (no preprocess)",
                         cmd_.get(), op, cmd_->getOperationId(),
@@ -476,7 +480,8 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st )
 }
 
 
-void SmppOperationMaker::postProcess( re::RuleStatus& st )
+void SmppOperationMaker::postProcess( re::RuleStatus& st,
+                                      re::actions::CommandProperty& cp )
 {
     postproc_ = true;
 
@@ -496,6 +501,11 @@ void SmppOperationMaker::postProcess( re::RuleStatus& st )
             what_ = "Logic error: no current operation is set";
             what = "no op is set";
             break;
+        }
+
+        {
+            const std::string* kw = op->getKeywords();
+            if ( kw && !kw->empty() ) cp.keywords = *kw;
         }
 
         if ( st.status == re::STATUS_FAILED ) {

@@ -62,10 +62,12 @@ private:
     /// then create/obtain operation of this type from session.
     /// NOTE: side-effect: it also modifies command and session.
     /// at return st.status is set to STATUS_OK or STATUS_FAILED.
-    void setupOperation( re::RuleStatus& st );
+    void setupOperation( re::RuleStatus& st,
+                         re::actions::CommandProperty& cp );
 
     /// post-process operation based on status.
-    void postProcess( re::RuleStatus& st );
+    void postProcess( re::RuleStatus& st,
+                      re::actions::CommandProperty& cp );
 
     SmppOperationMaker();
 
