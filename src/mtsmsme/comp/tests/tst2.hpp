@@ -9,6 +9,7 @@ class AmericaTestFixture : public CppUnit::TestFixture {
   CPPUNIT_TEST_SUITE (AmericaTestFixture);
   CPPUNIT_TEST (AmericaTest);
   CPPUNIT_TEST (ulprint);
+  CPPUNIT_TEST (sri4smprint);
   CPPUNIT_TEST_SUITE_END ();
 public:
   void setUp();
