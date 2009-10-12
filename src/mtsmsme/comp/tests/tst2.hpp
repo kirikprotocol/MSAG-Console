@@ -1,6 +1,7 @@
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
 #include "logger/Logger.h"
+#include "mtsmsme/processor/SccpSender.hpp"
 namespace smsc{namespace mtsmsme{namespace comp{namespace tests{
 std::string tsname() { return "smsc::mtsmsme::comp::tests";}
 }}}}
@@ -13,6 +14,13 @@ class AmericaTestFixture : public CppUnit::TestFixture {
   CPPUNIT_TEST (sendRoutingInfoForSM_sending);
   CPPUNIT_TEST_SUITE_END ();
 public:
+  class SccpSenderImpl: public SccpSender {
+    public:
+      virtual void send(uint8_t cdlen,uint8_t *cd,uint8_t cllen,uint8_t *cl,uint16_t ulen,uint8_t *udp)
+      {
+        smsc_log_debug(logger, "fake sccp sender has pushed message to network");
+      };
+  };
   void setUp();
   void tearDown();
 protected:
@@ -22,4 +30,5 @@ protected:
   void sendRoutingInfoForSM_sending(void);
 private:
   Logger* logger;
+  SccpSenderImpl* sender;
 };

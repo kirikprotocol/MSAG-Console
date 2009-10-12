@@ -6,10 +6,12 @@ void AmericaTestFixture::setUp()
   using smsc::logger::Logger;
   Logger::Init();
   logger = Logger::getInstance("all");
+  sender = new SccpSenderImpl();
 }
 void AmericaTestFixture::tearDown()
 {
   using smsc::logger::Logger;
+  delete(sender);
   Logger::Shutdown();
 }
 #include "mtsmsme/comp/UpdateLocation.hpp"
@@ -105,14 +107,6 @@ void AmericaTestFixture::reportSMDeliveryStatus_arg_decoding(void)
    */
 #include "mtsmsme/processor/TCO.hpp"
 #include "sms/sms.h"
-using smsc::mtsmsme::processor::SccpSender;
-class SccpSenderMImpl: public SccpSender {
-  public:
-    SccpSenderMImpl(){}
-    virtual void send(uint8_t cdlen, uint8_t *cd,
-                      uint8_t cllen, uint8_t *cl,
-                      uint16_t ulen, uint8_t *udp){}
-};
 void AmericaTestFixture::reportSMDeliveryStatus_receiving()
 {
   using smsc::mtsmsme::processor::TCO;
@@ -141,8 +135,8 @@ void AmericaTestFixture::reportSMDeliveryStatus_receiving()
                     Address((uint8_t)strlen(vlr), 1, 1, vlr),
                     Address((uint8_t)strlen(hlr), 1, 1, hlr));
 
-  SccpSender* sccpsender = new SccpSenderMImpl();
-  mtsms.setSccpSender(sccpsender);
+  //SccpSender* sccpsender = new SccpSenderMImpl();
+  mtsms.setSccpSender(sender);
 
   mtsms.NUNITDATA((uint8_t) (sizeof(cd)/sizeof(uint8_t)), cd,
                   (uint8_t) (sizeof(cl)/sizeof(uint8_t)), cl,
@@ -152,13 +146,6 @@ void AmericaTestFixture::reportSMDeliveryStatus_receiving()
 #include "mtsmsme/processor/ACRepo.hpp"
 #include "mtsmsme/processor/TSM.hpp"
 #include "mtsmsme/comp/SendRoutingInfoForSM.hpp"
-class SccpSenderImpl: public SccpSender {
-  public:
-    virtual void send(uint8_t cdlen,uint8_t *cd,uint8_t cllen,uint8_t *cl,uint16_t ulen,uint8_t *udp)
-    {
-      smsc_log_debug(logger, "fake sccp sender has pushed message to network");
-    };
-};
 void AmericaTestFixture::sendRoutingInfoForSM_sending()
 {
   /*
@@ -172,15 +159,14 @@ void AmericaTestFixture::sendRoutingInfoForSM_sending()
   using smsc::mtsmsme::processor::TSM;
   using smsc::mtsmsme::processor::shortMsgGatewayContext_v2;
   using smsc::logger::Logger;
-  using smsc::mtsmsme::processor::SccpSender;
 
   using smsc::mtsmsme::comp::SendRoutingInfoForSMReq;
 
   uint8_t cl[] = { 2, 2, 2, 2, 2 };
   uint8_t cd[] = { 3, 3, 3, 3, 3 };
   TCO mtsms(10);
-  SccpSender* sccpsender = new SccpSenderImpl();
-  mtsms.setSccpSender(sccpsender);
+  //SccpSender* sccpsender = new SccpSenderImpl();
+  mtsms.setSccpSender(sender);
   TSM* tsm = 0;
   tsm = mtsms.TC_BEGIN(shortMsgGatewayContext_v2);
   if (tsm)
