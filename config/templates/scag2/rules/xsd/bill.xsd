@@ -79,6 +79,7 @@
                     <attribute name="content-type" type="scag:Value" use="optional"/>
                     <attribute name="category-str" type="scag:Value" use="optional"/>
                     <attribute name="content-type-str" type="scag:Value" use="optional"/>
+                    <attribute name="keywords" type="scag:Value" use="optional"/>
                     <attribute name="status" type="scag:Var" use="optional" />
                     <attribute name="msg" type="scag:Var" use="optional" />
                     <attribute name="result_number" type="scag:Var" use="optional" />
@@ -99,6 +100,7 @@
                     <attribute name="content-type" type="scag:Value" use="optional"/>
                     <attribute name="category-str" type="scag:Value" use="optional"/>
                     <attribute name="content-type-str" type="scag:Value" use="optional"/>
+                    <attribute name="keywords" type="scag:Value" use="optional"/>
                     <attribute name="status" type="scag:Var" use="optional" />
                     <attribute name="msg" type="scag:Var" use="required"/>
                     <attribute name="result_number" type="scag:Var" use="optional" />
@@ -129,6 +131,7 @@
                     <attribute name="content-type" type="scag:Value" use="optional"/>
                     <attribute name="category-str" type="scag:Value" use="optional"/>
                     <attribute name="content-type-str" type="scag:Value" use="optional"/>
+                    <attribute name="keywords" type="scag:Value" use="optional"/>
                     <attribute name="status" type="scag:Var" use="optional" />
                     <attribute name="msg" type="scag:Var" use="optional"/>
                     <attribute name="abonent" type="scag:Value" use="required"/>
@@ -174,7 +177,7 @@
                 </complexType>
 	    </element>
 
-            <element name="add_keywords">
+            <!-- element name="add_keywords">
                 <complexType>
                     <attribute name="id" type="scag:Value" use="required"/>
                     <attribute name="keywords" type="scag:Value" use="required"/>
@@ -190,7 +193,7 @@
                     <attribute name="status" type="scag:Var" use="optional"/>
                     <attribute name="msg" type="scag:Var" use="optional"/>
                 </complexType>
-            </element>
+            </element -->
 	    
         </choice>    
     </group>
