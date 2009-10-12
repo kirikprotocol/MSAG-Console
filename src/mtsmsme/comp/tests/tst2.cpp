@@ -14,7 +14,7 @@ void AmericaTestFixture::tearDown()
 }
 #include "mtsmsme/comp/UpdateLocation.hpp"
 #include "mtsmsme/processor/util.hpp"
-void AmericaTestFixture::ulprint()
+void AmericaTestFixture::updateLocation_arg_encoding()
 {
   unsigned char etalon[] = {
     0x62, 0x56, 0x48, 0x04, 0x29, 0x00, 0x01, 0xB3,
@@ -52,13 +52,26 @@ void AmericaTestFixture::ulprint()
   msg.setComponent("250130124323100","1979139860001","1979139860001");
   vector<unsigned char> ulmsg;
   msg.encode(ulmsg);
-  printf("UpdateLocation[%d]={%s}",ulmsg.size(),dump((uint16_t)ulmsg.size(),&ulmsg[0]).c_str());
+  //printf("UpdateLocation[%d]={%s}",ulmsg.size(),dump((uint16_t)ulmsg.size(),&ulmsg[0]).c_str());
   vector<unsigned char> etalon_buf(etalon, etalon + sizeof(etalon) / sizeof(unsigned char) );
   vector<unsigned char> bad_buf(bad, bad + sizeof(bad) / sizeof(unsigned char) );
   CPPUNIT_ASSERT(etalon_buf == ulmsg);
   CPPUNIT_ASSERT_ASSERTION_FAIL( CPPUNIT_ASSERT( bad_buf == ulmsg ) );
 }
-
+#include "mtsmsme/comp/ReportSmDeliveryStatus.hpp"
+void AmericaTestFixture::reportSMDeliveryStatus_arg_decoding(void)
+{
+  uint8_t ind_encoded[] = {
+    0xA1, 0x1D, 0x02, 0x01, 0x01, 0x02, 0x01, 0x2F,
+    0x30, 0x15, 0x04, 0x07, 0x91, 0x97, 0x58, 0x81,
+    0x55, 0x01, 0xF0, 0x04, 0x07, 0x91, 0x81, 0x67,
+    0x83, 0x00, 0x51, 0xF4, 0x0A, 0x01, 0x02
+  };
+  using smsc::mtsmsme::comp::ReportSmDeliveryStatusInd;
+  ReportSmDeliveryStatusInd ind(logger);
+  ind.decode(ind_encoded);
+  //todo add some validations
+}
   /*
    * After this message application crashes
    * ======================================================
@@ -100,7 +113,7 @@ class SccpSenderMImpl: public SccpSender {
                       uint8_t cllen, uint8_t *cl,
                       uint16_t ulen, uint8_t *udp){}
 };
-void AmericaTestFixture::AmericaTest()
+void AmericaTestFixture::reportSMDeliveryStatus_receiving()
 {
   using smsc::mtsmsme::processor::TCO;
   using smsc::sms::Address;
@@ -146,8 +159,15 @@ class SccpSenderImpl: public SccpSender {
       smsc_log_debug(logger, "fake sccp sender has pushed message to network");
     };
 };
-void AmericaTestFixture::sri4smprint()
+void AmericaTestFixture::sendRoutingInfoForSM_sending()
 {
+  /*
+   * D 12-10 14:44:59,580 001 mt.sme.sri: tsm otid=BABE0001 create SendRoutingInfoForSM
+   * D 12-10 14:44:59,582 001 mt.sme.sri: CALLED[5]={03 03 03 03 03 }
+   * D 12-10 14:44:59,582 001 mt.sme.sri: CALLING[5]={02 02 02 02 02 }
+   * D 12-10 14:44:59,582 001 mt.sme.sri: SRI4SM[73]={62 47 48 04 BA BE 00 01 6B 1E 28 1C 06 07 00 11 86 05 01 01 01 A0 11 60 0F 80 02 07 80 A1 09 06 07 04 00 00 01 00 14 02 6C 1F A1 1D 02 01 01 02 01 2D 30 15 80 07 91 97 31 89 95 84 F9 81 01 FF 82 07 91 97 31 89 96 99 F9 }
+   * D 12-10 14:44:59,582 001 mt.sme.tco: void TCO::SCCPsend: cd=GTRC SSN=3 don't know how to decode, cl=GTRC SSN=2 don't know how to decode
+   */
   using smsc::mtsmsme::processor::TCO;
   using smsc::mtsmsme::processor::TSM;
   using smsc::mtsmsme::processor::shortMsgGatewayContext_v2;
@@ -158,11 +178,11 @@ void AmericaTestFixture::sri4smprint()
 
   uint8_t cl[] = { 2, 2, 2, 2, 2 };
   uint8_t cd[] = { 3, 3, 3, 3, 3 };
-  TCO* mtsms = new TCO(10);
+  TCO mtsms(10);
   SccpSender* sccpsender = new SccpSenderImpl();
-  mtsms->setSccpSender(sccpsender);
+  mtsms.setSccpSender(sccpsender);
   TSM* tsm = 0;
-  tsm = mtsms->TC_BEGIN(shortMsgGatewayContext_v2);
+  tsm = mtsms.TC_BEGIN(shortMsgGatewayContext_v2);
   if (tsm)
   {
     SendRoutingInfoForSMReq* inv = new SendRoutingInfoForSMReq("79139859489", true, "79139869999");

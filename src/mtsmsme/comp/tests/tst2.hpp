@@ -7,17 +7,19 @@ std::string tsname() { return "smsc::mtsmsme::comp::tests";}
 using smsc::logger::Logger;
 class AmericaTestFixture : public CppUnit::TestFixture {
   CPPUNIT_TEST_SUITE (AmericaTestFixture);
-  CPPUNIT_TEST (AmericaTest);
-  CPPUNIT_TEST (ulprint);
-  CPPUNIT_TEST (sri4smprint);
+  CPPUNIT_TEST (reportSMDeliveryStatus_receiving);
+  CPPUNIT_TEST (updateLocation_arg_encoding);
+  CPPUNIT_TEST (reportSMDeliveryStatus_arg_decoding);
+  CPPUNIT_TEST (sendRoutingInfoForSM_sending);
   CPPUNIT_TEST_SUITE_END ();
 public:
   void setUp();
   void tearDown();
 protected:
-  void AmericaTest (void);
-  void ulprint(void);
-  void sri4smprint(void);
+  void reportSMDeliveryStatus_receiving(void);
+  void updateLocation_arg_encoding(void);
+  void reportSMDeliveryStatus_arg_decoding(void);
+  void sendRoutingInfoForSM_sending(void);
 private:
   Logger* logger;
 };
