@@ -5,6 +5,10 @@
 
 int main(int argc, char* argv[])
 {
+  // Retreive test path from command line first argument. Default to "" which resolve
+  // to the top level suite.
+  std::string testPath = (argc > 1) ? std::string(argv[1]) : std::string("");
+
   // Define the file that will store the XML output.
   std::ofstream outputFile("cpptestresults.xml");
 
@@ -23,7 +27,8 @@ int main(int argc, char* argv[])
   runner.setOutputter(outputter);
 
   // Run the tests.
-  bool wasSuccessful = runner.run( "", false, true, false );
+//  bool wasSuccessful = runner.run( "", false, true, false );
+  bool wasSuccessful = runner.run( testPath, false, true, false );
   outputFile.close();
   // Return error code 1 if the one of test failed.
   return wasSuccessful;
