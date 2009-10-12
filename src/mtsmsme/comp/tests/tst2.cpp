@@ -3,7 +3,7 @@ static char const ident[] = "$Id$";
 CPPUNIT_TEST_SUITE_REGISTRATION(AmericaTestFixture);
 void AmericaTestFixture::SccpSenderImpl::send(uint8_t cdlen,uint8_t *cd,uint8_t cllen,uint8_t *cl,uint16_t ulen,uint8_t *udp)
 {
-        smsc_log_debug(logger, "fake sccp sender has pushed message to network");
+        smsc_log_debug(AmericaTestFixture::logger, "fake sccp sender has pushed message to network");
 }
 void AmericaTestFixture::setUp()
 {
