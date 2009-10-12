@@ -131,6 +131,9 @@ void SaccBillingInfoEvent::write(SaccSerialBuffer& buf)
     buf.writeStr(billingSumm, MAX_BILLING_SUMM_LENGTH);
 
     buf.writeStr(pBillingCurrency, MAX_BILLING_CURRENCY_LENGTH);
+    if (!keywords.empty()) {
+      buf.writeStr(keywords, MAX_KEYWORDS_TEXT_LENGTH * 2);
+    }
 }
 
 void SaccAlarmMessageEvent::write(SaccSerialBuffer& buf)

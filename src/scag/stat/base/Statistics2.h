@@ -119,6 +119,7 @@ using scag::util::SerializeBuffer;
         //float    fBillingSumm;
         std::string  fBillingSumm;
         std::string  pBillingCurrency;
+        std::string keywords;
 
         SaccBillingInfoEvent() : SaccEvent(sec_bill)
         {
@@ -132,6 +133,7 @@ using scag::util::SerializeBuffer;
             iMediaResourceType=src.iMediaResourceType;
             iPriceCatId=src.iPriceCatId;
             fBillingSumm=src.fBillingSumm;
+            keywords = src.keywords;
         }
         void write(SaccSerialBuffer& buf);
         const char* getName() { return "SaccBillingInfoEvent"; };
