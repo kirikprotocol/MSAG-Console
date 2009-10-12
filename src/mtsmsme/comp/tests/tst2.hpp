@@ -22,7 +22,7 @@ protected:
   void updateLocation_arg_encoding(void);
   void reportSMDeliveryStatus_arg_decoding(void);
   void sendRoutingInfoForSM_sending(void);
-private:
+public:
   Logger* logger;
   SccpSenderImpl* sender;
 public:
