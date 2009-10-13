@@ -91,6 +91,11 @@ void AmericaTestFixture::reportSMDeliveryStatus_arg_decoding(void)
   ind.decode(vector<unsigned char>(ind_encoded, ind_encoded + sizeof(ind_encoded) / sizeof(unsigned char) ));
   //todo add some validations
 }
+#include "mtsmsme/processor/TCO.hpp"
+#include "sms/sms.h"
+void AmericaTestFixture::reportSMDeliveryStatus_receiving()
+{
+  smsc_log_debug(logger, "======== AmericaTestFixture::reportSMDeliveryStatus_receiving ========");
   /*
    * After this message application crashes
    * ======================================================
@@ -122,11 +127,6 @@ void AmericaTestFixture::reportSMDeliveryStatus_arg_decoding(void)
    * ASSERT*</home/smsx/smsc/src/sms/sms.h(setValue):205>
    * assertin _len && _value && _value[0] && _len<sizeof(AddressValue) failed
    */
-#include "mtsmsme/processor/TCO.hpp"
-#include "sms/sms.h"
-void AmericaTestFixture::reportSMDeliveryStatus_receiving()
-{
-  smsc_log_debug(logger, "======== AmericaTestFixture::reportSMDeliveryStatus_receiving ========");
   using smsc::mtsmsme::processor::TCO;
   using smsc::sms::Address;
 
