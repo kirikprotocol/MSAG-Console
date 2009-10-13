@@ -33,6 +33,7 @@ void AmericaTestFixture::tearDown()
 #include "mtsmsme/processor/util.hpp"
 void AmericaTestFixture::updateLocation_arg_encoding()
 {
+  smsc_log_debug(logger, "======== AmericaTestFixture::updateLocation_arg_encoding ========");
   unsigned char etalon[] = {
     0x62, 0x56, 0x48, 0x04, 0x29, 0x00, 0x01, 0xB3,
     0x6B, 0x1E, 0x28, 0x1C, 0x06, 0x07, 0x00, 0x11,
@@ -73,10 +74,12 @@ void AmericaTestFixture::updateLocation_arg_encoding()
   vector<unsigned char> bad_buf(bad, bad + sizeof(bad) / sizeof(unsigned char) );
   CPPUNIT_ASSERT(etalon_buf == ulmsg);
   CPPUNIT_ASSERT_ASSERTION_FAIL( CPPUNIT_ASSERT( bad_buf == ulmsg ) );
+  smsc_log_debug(logger, "======== AmericaTestFixture::updateLocation_arg_encoding ========");
 }
 #include "mtsmsme/comp/ReportSmDeliveryStatus.hpp"
 void AmericaTestFixture::reportSMDeliveryStatus_arg_decoding(void)
 {
+  smsc_log_debug(logger, "======== AmericaTestFixture::reportSMDeliveryStatus_arg_decoding ========");
   unsigned char ind_encoded[] = {
     0xA1, 0x1D, 0x02, 0x01, 0x01, 0x02, 0x01, 0x2F,
     0x30, 0x15, 0x04, 0x07, 0x91, 0x97, 0x58, 0x81,
@@ -88,6 +91,7 @@ void AmericaTestFixture::reportSMDeliveryStatus_arg_decoding(void)
   ReportSmDeliveryStatusInd ind(logger);
   ind.decode(vector<unsigned char>(ind_encoded, ind_encoded + sizeof(ind_encoded) / sizeof(unsigned char) ));
   //todo add some validations
+  smsc_log_debug(logger, "======== AmericaTestFixture::reportSMDeliveryStatus_arg_decoding ========");
 }
   /*
    * After this message application crashes
@@ -124,6 +128,7 @@ void AmericaTestFixture::reportSMDeliveryStatus_arg_decoding(void)
 #include "sms/sms.h"
 void AmericaTestFixture::reportSMDeliveryStatus_receiving()
 {
+  smsc_log_debug(logger, "======== AmericaTestFixture::reportSMDeliveryStatus_receiving ========");
   using smsc::mtsmsme::processor::TCO;
   using smsc::sms::Address;
 
@@ -159,12 +164,14 @@ void AmericaTestFixture::reportSMDeliveryStatus_receiving()
                   (uint8_t) (sizeof(cl)/sizeof(uint8_t)), cl,
                   (uint8_t) (sizeof(ud)/sizeof(uint8_t)), ud);
   CPPUNIT_ASSERT(true);
+  smsc_log_debug(logger, "======== AmericaTestFixture::reportSMDeliveryStatus_receiving ========");
 }
 #include "mtsmsme/processor/ACRepo.hpp"
 #include "mtsmsme/processor/TSM.hpp"
 #include "mtsmsme/comp/SendRoutingInfoForSM.hpp"
 void AmericaTestFixture::sendRoutingInfoForSM_sending()
 {
+  smsc_log_debug(logger, "======== AmericaTestFixture::sendRoutingInfoForSM_sending ========");
   /*
    * D 12-10 14:44:59,580 001 mt.sme.sri: tsm otid=BABE0001 create SendRoutingInfoForSM
    * D 12-10 14:44:59,582 001 mt.sme.sri: CALLED[5]={03 03 03 03 03 }
@@ -195,4 +202,5 @@ void AmericaTestFixture::sendRoutingInfoForSM_sending()
     tsm->TBeginReq((uint8_t) (sizeof(cd) / sizeof(uint8_t)), cd,
         (uint8_t) (sizeof(cl) / sizeof(uint8_t)), cl);
   }
+  smsc_log_debug(logger, "======== AmericaTestFixture::sendRoutingInfoForSM_sending ========");
 }
