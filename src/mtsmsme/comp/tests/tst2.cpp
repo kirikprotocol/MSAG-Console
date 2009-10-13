@@ -1,21 +1,31 @@
 static char const ident[] = "$Id$";
 #include "mtsmsme/comp/tests/tst2.hpp"
 CPPUNIT_TEST_SUITE_REGISTRATION(AmericaTestFixture);
-void AmericaTestFixture::SccpSenderImpl::send(uint8_t cdlen,uint8_t *cd,uint8_t cllen,uint8_t *cl,uint16_t ulen,uint8_t *udp)
-{
-        smsc_log_debug(AmericaTestFixture::logger, "fake sccp sender has pushed message to network");
-}
+
+using smsc::mtsmsme::processor::SccpSender;
+using std::vector;
+using smsc::logger::Logger;
+class SccpSenderMock: public SccpSender {
+  private:
+    Logger* logger;
+    vector<unsigned char>& buffer;
+  public:
+    SccpSenderMock(Logger* _logger, vector<unsigned char>& _buffer)
+      :logger(_logger),buffer(_buffer){}
+      virtual void send(uint8_t cdlen, uint8_t *cd,
+                        uint8_t cllen, uint8_t *cl,
+                        uint16_t ulen, uint8_t *udp)
+      {
+        //smsc_log_debug(logger, "fake sccp sender has pushed message to network");
+      }
+  };
 void AmericaTestFixture::setUp()
 {
-  using smsc::logger::Logger;
   Logger::Init();
   logger = Logger::getInstance("all");
-  sender = new SccpSenderImpl();
 }
 void AmericaTestFixture::tearDown()
 {
-  using smsc::logger::Logger;
-  delete(sender);
   Logger::Shutdown();
 }
 #include "mtsmsme/comp/UpdateLocation.hpp"
@@ -48,7 +58,6 @@ void AmericaTestFixture::updateLocation_arg_encoding()
     0x04, 0x08, 0x91, 0x91, 0x97, 0x31, 0x89, 0x06,
     0x00, 0xF1, 0xA6, 0x04, 0x80, 0x02, 0x05, 0x80
   };
-  using std::vector;
   using smsc::mtsmsme::comp::UpdateLocationMessage;
   using smsc::mtsmsme::processor::TrId;
   using smsc::mtsmsme::processor::util::dump;
@@ -73,9 +82,10 @@ void AmericaTestFixture::reportSMDeliveryStatus_arg_decoding(void)
     0x55, 0x01, 0xF0, 0x04, 0x07, 0x91, 0x81, 0x67,
     0x83, 0x00, 0x51, 0xF4, 0x0A, 0x01, 0x02
   };
+  unsigned char myints[] = {0,2,4,};
   using smsc::mtsmsme::comp::ReportSmDeliveryStatusInd;
   ReportSmDeliveryStatusInd ind(logger);
-  ind.decode(ind_encoded);
+  ind.decode(vector<unsigned char>(ind_encoded, ind_encoded + sizeof(ind_encoded) / sizeof(unit8_t) ));
   //todo add some validations
 }
   /*
@@ -140,7 +150,9 @@ void AmericaTestFixture::reportSMDeliveryStatus_receiving()
                     Address((uint8_t)strlen(hlr), 1, 1, hlr));
 
   //SccpSender* sccpsender = new SccpSenderMImpl();
-  mtsms.setSccpSender(sender);
+  vector<unsigned char> res ;
+  SccpSenderMock sender(logger, res);
+  mtsms.setSccpSender(&sender);
 
   mtsms.NUNITDATA((uint8_t) (sizeof(cd)/sizeof(uint8_t)), cd,
                   (uint8_t) (sizeof(cl)/sizeof(uint8_t)), cl,
@@ -170,7 +182,9 @@ void AmericaTestFixture::sendRoutingInfoForSM_sending()
   uint8_t cd[] = { 3, 3, 3, 3, 3 };
   TCO mtsms(10);
   //SccpSender* sccpsender = new SccpSenderImpl();
-  mtsms.setSccpSender(sender);
+  vector<unsigned char> res ;
+  SccpSenderMock sender(logger, res);
+  mtsms.setSccpSender(&sender);
   TSM* tsm = 0;
   tsm = mtsms.TC_BEGIN(shortMsgGatewayContext_v2);
   if (tsm)

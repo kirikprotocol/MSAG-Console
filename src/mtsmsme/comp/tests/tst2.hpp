@@ -1,7 +1,6 @@
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
 #include "logger/Logger.h"
-#include "mtsmsme/processor/SccpSender.hpp"
 namespace smsc{namespace mtsmsme{namespace comp{namespace tests{
 std::string tsname() { return "smsc::mtsmsme::comp::tests";}
 }}}}
@@ -22,14 +21,6 @@ protected:
   void updateLocation_arg_encoding(void);
   void reportSMDeliveryStatus_arg_decoding(void);
   void sendRoutingInfoForSM_sending(void);
-public:
+private:
   Logger* logger;
-  SccpSenderImpl* sender;
-public:
-  //using smsc::mtsmsme::processor::SccpSender;
-  class SccpSenderImpl: public smsc::mtsmsme::processor::SccpSender {
-    public:
-      virtual void send(uint8_t cdlen,uint8_t *cd,uint8_t cllen,uint8_t *cl,uint16_t ulen,uint8_t *udp);
-  };
-
 };
