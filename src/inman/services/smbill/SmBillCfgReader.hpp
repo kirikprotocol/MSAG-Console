@@ -7,7 +7,6 @@
 
 #include "inman/common/CSVList.hpp"
 using smsc::util::CSVList;
-using smsc::util::STDString;
 
 #include "inman/incache/AbCacheDefs.hpp"
 using smsc::inman::cache::AbonentCacheCFG;

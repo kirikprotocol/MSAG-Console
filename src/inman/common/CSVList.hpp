@@ -7,47 +7,10 @@
 
 #include <vector>
 #include "util/vformat.hpp"
+#include "inman/common/strutil.hpp"
 
 namespace smsc {
 namespace util {
-
-class STDString : public std::string {
-public:
-    STDString() : std::string()
-    { }
-    STDString(const char * use_cstr) : std::string(use_cstr)
-    { }
-    STDString(const std::string & use_str) : std::string(use_str)
-    { }
-
-    //Cuts off leading/ending blanks
-    static std::string & cutBlanks(std::string & use_str,
-                               const char * pattern = " \t\r\n")
-    {
-        if (!use_str.empty()) {
-            //erase leading blanks
-            std::string::size_type 
-                bpos = use_str.find_first_not_of(pattern);
-            if (bpos == use_str.npos) { //string contains only blank chars
-              use_str.clear();
-            } else {
-              if (bpos)
-                  use_str.erase(0, bpos);
-  
-              //erase ending blanks
-              bpos = use_str.find_last_not_of(pattern);
-              if (bpos != use_str.npos)
-                  use_str.erase(bpos + 1, use_str.npos);
-            }
-        }
-        return use_str;
-    }
-
-    STDString & cutBlanks(const char * pattern = " \t\r\n")
-    {
-        return (STDString &)cutBlanks(*this, pattern);
-    }
-};
 
 //Character Separated Values List (delimiter is comma by default)
 class CSVList : public std::vector<std::string> {
@@ -73,17 +36,17 @@ public:
         if (!str || !str[0])
              return 0;
 
-        STDString csv_list(str);
-        if (_cutBS && csv_list.cutBlanks().empty())
+        std::string csv_list(str);
+        if (_cutBS && str_cut_blanks(csv_list).empty())
             return 0;
 
         std::string::size_type pos = 0, dlmPos;
         do {
             dlmPos = csv_list.find_first_of(_dlm, pos);
-            STDString rp_s(csv_list.substr(pos, 
+            std::string rp_s(csv_list.substr(pos, 
                 ((dlmPos != csv_list.npos) ? dlmPos : csv_list.size()) - pos));
             if (_cutBS)
-                rp_s.cutBlanks();
+                str_cut_blanks(rp_s);
             push_back(rp_s);
             pos = dlmPos + 1;
         } while (dlmPos != csv_list.npos);
