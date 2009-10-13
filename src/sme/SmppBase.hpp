@@ -5,6 +5,7 @@
 #include "smpp/smpp.h"
 #include "core/network/Socket.hpp"
 #include "util/Exception.hpp"
+#include "util/config/ConfigException.h"
 #include "core/synchronization/EventMonitor.hpp"
 #include "core/buffers/Array.hpp"
 #include "core/synchronization/Mutex.hpp"
@@ -495,6 +496,46 @@ struct SmeConfig{
     disconnectTimeout=300;
     interfaceVersion = 0x34;
   }
+
+    void setSystemType( const std::string& st ) {
+        if ( st.size() > 12 ) { throw util::config::ConfigException("systemType is too long: %s", st.c_str()); }
+        else systemType = st;
+    }
+    void setAddressRange( const std::string& ar ) {
+        uint8_t ton, npi;
+        const char* arstr = "";
+        if ( ar.empty() ) {
+            ton = npi = 0;
+        } else if ( ar[0] == '+' ) {
+            ton = npi = 1;
+            arstr = ar.c_str()+1;
+        } else if ( ar[0] == '.' ) {
+            int iton, inpi, shift = 0;
+            sscanf(ar.c_str(),".%u.%u.%n",&iton,&inpi,&shift);
+            if ( shift == 0 ) {
+                throw util::config::ConfigException("problems reading TON NPI from addressRange %s",ar.c_str());
+            }
+            ton = uint8_t(iton);
+            npi = uint8_t(inpi);
+            arstr = ar.c_str() + shift;
+        } else {
+            ton = 0;
+            npi = 1;
+            arstr = ar.c_str();
+        }
+        const size_t arlen = strlen(arstr);
+        if ( ton != 0 && npi != 0 ) {
+            if ( arlen == 0 ) {
+                throw util::config::ConfigException("length of addressRange value is 0: %s", ar.c_str());
+            } else if ( arlen > 40 ) {
+                throw util::config::ConfigException("length of addressRange value > 40: %s", ar.c_str());
+            }
+        }
+        addressRangeTon = ton;
+        addressRangeNpi = npi;
+        addressRangeVal = arstr;
+    }
+
   std::string host;
   int port;
   std::string sid;
@@ -504,10 +545,13 @@ struct SmeConfig{
   std::string systemType;
   std::string origAddr;
   int interfaceVersion;
-  std::string addressRange;
 
   int idleTimeout;
   int disconnectTimeout;
+
+    uint8_t     addressRangeTon;
+    uint8_t     addressRangeNpi;
+    std::string addressRangeVal;
 };
 
 namespace BindType{
@@ -743,12 +787,11 @@ public:
     pdu.set_password(cfg.password.c_str());
     pdu.set_systemType(cfg.systemType.c_str());
     pdu.set_interfaceVersion(cfg.interfaceVersion);
-    if(cfg.addressRange.length())
+    if( ! cfg.addressRangeVal.empty())
     {
-      Address addrRange(cfg.addressRange.c_str());
-      pdu.get_addressRange().set_typeOfNumber(addrRange.type);
-      pdu.get_addressRange().set_numberingPlan(addrRange.plan);
-      pdu.get_addressRange().set_value(addrRange.value);
+      pdu.get_addressRange().set_typeOfNumber(cfg.addressRangeTon);
+      pdu.get_addressRange().set_numberingPlan(cfg.addressRangeNpi);
+      pdu.get_addressRange().set_value(cfg.addressRangeVal.c_str());
     }
     int seq=getNextSeq();
     pdu.get_header().set_sequenceNumber(seq);
