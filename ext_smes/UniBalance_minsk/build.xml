@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<project name="unibalance" default="all">
+  
+  
+  <!-- Uncomment the following property if no tests compilation is needed -->
+  <property name="skip.tests" value="true"/>
+  
+  <!-- Compiler options -->
+  
+  <property name="compiler.debug" value="on"/>
+  <property name="compiler.generate.no.warnings" value="off"/>
+  <property name="compiler.args" value=""/>
+  <property name="compiler.max.memory" value="128m"/>
+  <patternset id="ignored.files">
+    <exclude name="**/CVS/**"/>
+    <exclude name="**/SCCS/**"/>
+    <exclude name="**/RCS/**"/>
+    <exclude name="**/rcs/**"/>
+    <exclude name="**/.DS_Store/**"/>
+    <exclude name="**/.svn/**"/>
+    <exclude name="**/vssver.scc/**"/>
+    <exclude name="**/vssver2.scc/**"/>
+    <exclude name="**/.sbas/**"/>
+    <exclude name="**/.IJI.*/**"/>
+  </patternset>
+  <patternset id="compiler.resources">
+    <include name="**/?*.properties"/>
+    <include name="**/?*.xml"/>
+    <include name="**/?*.gif"/>
+    <include name="**/?*.png"/>
+    <include name="**/?*.jpeg"/>
+    <include name="**/?*.jpg"/>
+    <include name="**/?*.html"/>
+    <include name="**/?*.dtd"/>
+    <include name="**/?*.tld"/>
+  </patternset>
+  
+  
+  <!-- Application Server Libraries -->
+  
+  <!-- Modules -->
+  
+  
+  <!-- Module unibalance -->
+  
+  <dirname property="basedir" file="${ant.file}"/>
+  
+  
+  
+  <property name="compiler.args" value="${compiler.args}"/>
+  
+  <property name="output.dir" value="${basedir}/out/production/unibalance"/>
+  <property name="testoutput.dir" value="${basedir}/out/test/unibalance"/>
+  
+  <path id="bootclasspath">
+    <!-- Paths to be included in compilation bootclasspath -->
+  </path>
+  
+  <fileset id="jars" dir="${basedir}/lib" includes="*.jar" excludes="unibalance.jar"/>
+
+
+  <path id="classpath">
+    <fileset refid="jars"/>
+    <pathelement location="${basedir}/config"/>
+  </path>
+  
+  <path id="runtime.classpath">
+    <pathelement location="${output.dir}"/>
+    <pathelement location="${testoutput.dir}"/>
+    <fileset refid="jars"/>
+    <pathelement location="${basedir}/config"/>
+  </path>
+  
+  
+  <patternset id="excluded.from.module.unibalance">
+    <patternset refid="ignored.files"/>
+  </patternset>
+  
+  <patternset id="excluded.from.compilation.unibalance">
+    <patternset refid="excluded.from.module.unibalance"/>
+  </patternset>
+  
+  <path id="sourcepath">
+    <dirset dir="${basedir}">
+      <include name="src"/>
+    </dirset>
+  </path>
+  
+  
+  <target name="compile" depends="compile.production,compile.tests" description="Compile module unibalance"/>
+  
+  <target name="compile.production" description="Compile module unibalance; production classes">
+    <mkdir dir="${output.dir}"/>
+    <javac destdir="${output.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memorymaximumsize="${compiler.max.memory}" fork="true" encoding="koi8-r" target="1.5">
+      <compilerarg line="${compiler.args}"/>
+      <bootclasspath refid="bootclasspath"/>
+      <classpath refid="classpath"/>
+      <src refid="sourcepath"/>
+      <patternset refid="excluded.from.compilation.unibalance"/>
+    </javac>
+    
+    <copy todir="${output.dir}">
+      <fileset dir="${basedir}/src">
+        <patternset refid="compiler.resources"/>
+        <type type="file"/>
+      </fileset>
+    </copy>
+  </target>
+  
+  <target name="compile.tests" depends="compile.production" description="compile module unibalance; test classes" unless="skip.tests"/>
+  
+  <target name="clean.classes" description="cleanup module">
+    <delete dir="${output.dir}"/>
+  </target>
+  
+  <target name="init" description="Build initialization">
+    <!-- Perform any build initialization in this target -->
+  </target>
+  
+  <target name="clean" depends="clean.classes" description="cleanup all"/>
+  
+  <target name="all" depends="init, clean, compile" description="build all">
+    <copy file="${basedir}/history.txt" todir="${output.dir}"/>
+    <jar jarfile="${basedir}/lib/unibalance.jar" basedir="${output.dir}" manifest="${basedir}/manifest.mf"/>
+  </target>
+</project>

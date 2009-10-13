@@ -140,7 +140,7 @@
   
   <target name="compile.module.unibalance_minsk.production" description="Compile module UniBalance_minsk; production classes">
     <mkdir dir="${unibalance_minsk.output.dir}"/>
-    <javac destdir="${unibalance_minsk.output.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memorymaximumsize="${compiler.max.memory}" fork="true" executable="${module.jdk.bin.unibalance_minsk}/javac">
+    <javac destdir="${unibalance_minsk.output.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memorymaximumsize="${compiler.max.memory}" fork="true" executable="${module.jdk.bin.unibalance_minsk}/javac" target="1.5">
       <compilerarg line="${compiler.args.unibalance_minsk}"/>
       <bootclasspath refid="unibalance_minsk.module.bootclasspath"/>
       <classpath refid="unibalance_minsk.module.classpath"/>
