@@ -1,5 +1,6 @@
 static char const ident[] = "$Id$";
 #include "mtsmsme/comp/tests/tst2.hpp"
+#include "mtsmsme/processor/SccpSender.hpp"
 CPPUNIT_TEST_SUITE_REGISTRATION(AmericaTestFixture);
 
 using smsc::mtsmsme::processor::SccpSender;
@@ -76,7 +77,7 @@ void AmericaTestFixture::updateLocation_arg_encoding()
 #include "mtsmsme/comp/ReportSmDeliveryStatus.hpp"
 void AmericaTestFixture::reportSMDeliveryStatus_arg_decoding(void)
 {
-  uint8_t ind_encoded[] = {
+  unsigned char ind_encoded[] = {
     0xA1, 0x1D, 0x02, 0x01, 0x01, 0x02, 0x01, 0x2F,
     0x30, 0x15, 0x04, 0x07, 0x91, 0x97, 0x58, 0x81,
     0x55, 0x01, 0xF0, 0x04, 0x07, 0x91, 0x81, 0x67,
@@ -85,7 +86,7 @@ void AmericaTestFixture::reportSMDeliveryStatus_arg_decoding(void)
   unsigned char myints[] = {0,2,4,};
   using smsc::mtsmsme::comp::ReportSmDeliveryStatusInd;
   ReportSmDeliveryStatusInd ind(logger);
-  ind.decode(vector<unsigned char>(ind_encoded, ind_encoded + sizeof(ind_encoded) / sizeof(unit8_t) ));
+  ind.decode(vector<unsigned char>(ind_encoded, ind_encoded + sizeof(ind_encoded) / sizeof(unsigned char) ));
   //todo add some validations
 }
   /*
@@ -152,7 +153,7 @@ void AmericaTestFixture::reportSMDeliveryStatus_receiving()
   //SccpSender* sccpsender = new SccpSenderMImpl();
   vector<unsigned char> res ;
   SccpSenderMock sender(logger, res);
-  mtsms.setSccpSender(&sender);
+  mtsms.setSccpSender((SccpSender*)&sender);
 
   mtsms.NUNITDATA((uint8_t) (sizeof(cd)/sizeof(uint8_t)), cd,
                   (uint8_t) (sizeof(cl)/sizeof(uint8_t)), cl,
@@ -184,7 +185,7 @@ void AmericaTestFixture::sendRoutingInfoForSM_sending()
   //SccpSender* sccpsender = new SccpSenderImpl();
   vector<unsigned char> res ;
   SccpSenderMock sender(logger, res);
-  mtsms.setSccpSender(&sender);
+  mtsms.setSccpSender((SccpSender*)&sender);
   TSM* tsm = 0;
   tsm = mtsms.TC_BEGIN(shortMsgGatewayContext_v2);
   if (tsm)
