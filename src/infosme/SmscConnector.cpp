@@ -221,11 +221,19 @@ smsc::sme::SmeConfig SmscConnector::readSmeConfig( ConfigView& config )
         rv.password = ::cgetString(config,"password","InfoSme password wasn't defined !");
     } catch (smsc::util::config::ConfigException&) {}
     try {
-        rv.systemType = ::cgetString(config,"systemType","InfoSme system type wasn't defined !");
+        const std::string systemType = ::cgetString(config,"systemType","InfoSme system type wasn't defined !");
+        rv.setSystemType(systemType);
     } catch (smsc::util::config::ConfigException&) {}
     try {
         rv.origAddr = ::cgetString(config,"origAddress",
                                    "InfoSme originating address wasn't defined !");
+    } catch (smsc::util::config::ConfigException&) {}
+    try {
+        rv.interfaceVersion = config.getInt("interfaceVersion","InfoSme interface version wasn't defined!");
+    } catch (smsc::util::config::ConfigException&) {}
+    try {
+        const std::string ar = ::cgetString(config,"rangeOfAddress","InfoSme range of address was not defined");
+        rv.setAddressRange(ar);
     } catch (smsc::util::config::ConfigException&) {}
     return rv;
 }
