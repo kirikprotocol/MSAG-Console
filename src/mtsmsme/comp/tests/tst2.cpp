@@ -74,7 +74,6 @@ void AmericaTestFixture::updateLocation_arg_encoding()
   vector<unsigned char> bad_buf(bad, bad + sizeof(bad) / sizeof(unsigned char) );
   CPPUNIT_ASSERT(etalon_buf == ulmsg);
   CPPUNIT_ASSERT_ASSERTION_FAIL( CPPUNIT_ASSERT( bad_buf == ulmsg ) );
-  smsc_log_debug(logger, "======== AmericaTestFixture::updateLocation_arg_encoding ========");
 }
 #include "mtsmsme/comp/ReportSmDeliveryStatus.hpp"
 void AmericaTestFixture::reportSMDeliveryStatus_arg_decoding(void)
@@ -91,7 +90,6 @@ void AmericaTestFixture::reportSMDeliveryStatus_arg_decoding(void)
   ReportSmDeliveryStatusInd ind(logger);
   ind.decode(vector<unsigned char>(ind_encoded, ind_encoded + sizeof(ind_encoded) / sizeof(unsigned char) ));
   //todo add some validations
-  smsc_log_debug(logger, "======== AmericaTestFixture::reportSMDeliveryStatus_arg_decoding ========");
 }
   /*
    * After this message application crashes
@@ -164,7 +162,6 @@ void AmericaTestFixture::reportSMDeliveryStatus_receiving()
                   (uint8_t) (sizeof(cl)/sizeof(uint8_t)), cl,
                   (uint8_t) (sizeof(ud)/sizeof(uint8_t)), ud);
   CPPUNIT_ASSERT(true);
-  smsc_log_debug(logger, "======== AmericaTestFixture::reportSMDeliveryStatus_receiving ========");
 }
 #include "mtsmsme/processor/ACRepo.hpp"
 #include "mtsmsme/processor/TSM.hpp"
@@ -202,5 +199,4 @@ void AmericaTestFixture::sendRoutingInfoForSM_sending()
     tsm->TBeginReq((uint8_t) (sizeof(cd) / sizeof(uint8_t)), cd,
         (uint8_t) (sizeof(cl) / sizeof(uint8_t)), cl);
   }
-  smsc_log_debug(logger, "======== AmericaTestFixture::sendRoutingInfoForSM_sending ========");
 }
