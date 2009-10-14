@@ -24,10 +24,7 @@ class SccpSenderMock: public SccpSender {
         //  stream->insert(stream->end(),buf, buf + size);
         buffer.insert(buffer.end(), udp, udp + ulen);
         smsc_log_debug(logger,
-                       "intercepted message to network:\n%s",
-                       dump(ulen,udp).c_str());
-        smsc_log_debug(logger,
-                       "external buffer data[%d]=\n{%s}",
+                       "intercepted message to network data[%d]={%s}",
                        buffer.size(),
                        dump((uint16_t)buffer.size(),&buffer[0]).c_str());
       }
@@ -35,7 +32,7 @@ class SccpSenderMock: public SccpSender {
 void AmericaTestFixture::setUp()
 {
   Logger::Init();
-  logger = Logger::getInstance("tstrunner");
+  logger = Logger::getInstance("testrunner");
 }
 void AmericaTestFixture::tearDown()
 {
@@ -173,7 +170,21 @@ void AmericaTestFixture::reportSMDeliveryStatus_receiving()
   mtsms.NUNITDATA((uint8_t) (sizeof(cd)/sizeof(uint8_t)), cd,
                   (uint8_t) (sizeof(cl)/sizeof(uint8_t)), cl,
                   (uint8_t) (sizeof(ud)/sizeof(uint8_t)), ud);
-  CPPUNIT_ASSERT(true);
+  uint8_t expected_data[] = {
+    0x64, 0x3B, 0x49, 0x04,
+    0x0A, 0x80, 0x37, 0x5A, //transaction id
+    0x6B, 0x2A, 0x28, 0x28, 0x06, 0x07, 0x00, 0x11,
+    0x86, 0x05, 0x01, 0x01, 0x01, 0xA0, 0x1D, 0x61,
+    0x1B, 0x80, 0x02, 0x07, 0x80, 0xA1, 0x09, 0x06,
+    0x07, 0x04, 0x00, 0x00, 0x01, 0x00, 0x14, 0x02,
+    0xA2, 0x03, 0x02, 0x01, 0x00, 0xA3, 0x05, 0xA1,
+    0x03, 0x02, 0x01, 0x00, 0x6C, 0x80, 0xA2, 0x03,
+    0x02, 0x01,
+    0x01, //invoke id
+    0x00, 0x00
+  };
+  vector<unsigned char> expected(expected_data,expected_data + sizeof(expected_data) / sizeof(unsigned char) );
+  CPPUNIT_ASSERT( expected == res);
 }
 #include "mtsmsme/processor/ACRepo.hpp"
 #include "mtsmsme/processor/TSM.hpp"
