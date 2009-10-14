@@ -528,9 +528,12 @@ public class InfoSmeConfig {
           smsc.setSid(cfg.getString("InfoSme.SMSCConnectors."+smscName+".sid"));
           smsc.setTimeout(cfg.getInt("InfoSme.SMSCConnectors."+smscName+".timeout"));
           smsc.setPassword(cfg.getString("InfoSme.SMSCConnectors."+smscName+".password"));
-          smsc.setSystemType(cfg.getString("InfoSme.SMSCConnectors."+smscName+".systemType"));
-          smsc.setRangeOfAddress(cfg.getString("InfoSme.SMSCConnectors."+smscName+".rangeOfAddress"));
-          smsc.setInterfaceVersion(cfg.getInt("InfoSme.SMSCConnectors."+smscName+".interfaceVersion"));
+          if (cfg.containsParameter("InfoSme.SMSCConnectors."+smscName+".systemType"))
+            smsc.setSystemType(cfg.getString("InfoSme.SMSCConnectors."+smscName+".systemType"));
+          if (cfg.containsParameter("InfoSme.SMSCConnectors."+smscName+".rangeOfAddress"))
+            smsc.setRangeOfAddress(cfg.getString("InfoSme.SMSCConnectors."+smscName+".rangeOfAddress"));
+          if (cfg.containsParameter("InfoSme.SMSCConnectors."+smscName+".interfaceVersion"))
+            smsc.setInterfaceVersion(cfg.getInt("InfoSme.SMSCConnectors."+smscName+".interfaceVersion"));
           newSmscs.put(smscName, smsc);
         }
 
