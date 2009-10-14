@@ -501,9 +501,17 @@ struct SmeConfig{
         if ( st.size() > 12 ) { throw util::config::ConfigException("systemType is too long: %s", st.c_str()); }
         else systemType = st;
     }
-    void setAddressRange( const std::string& ar ) {
+    void setAddressRange( const std::string& st ) {
+        addressRange = st;
         uint8_t ton, npi;
-        const char* arstr = "";
+        const char* ar;
+        parseAddressRange(ton,npi,ar);
+    }
+
+    /// throws ConfigException
+    void parseAddressRange(uint8_t& ton, uint8_t& npi, const char* arstr) const {
+        arstr = "";
+        const std::string& ar = addressRange;
         if ( ar.empty() ) {
             ton = npi = 0;
         } else if ( ar[0] == '+' ) {
@@ -531,9 +539,6 @@ struct SmeConfig{
                 throw util::config::ConfigException("length of addressRange value > 40: %s", ar.c_str());
             }
         }
-        addressRangeTon = ton;
-        addressRangeNpi = npi;
-        addressRangeVal = arstr;
     }
 
   std::string host;
@@ -545,13 +550,10 @@ struct SmeConfig{
   std::string systemType;
   std::string origAddr;
   int interfaceVersion;
+  std::string addressRange;
 
   int idleTimeout;
   int disconnectTimeout;
-
-    uint8_t     addressRangeTon;
-    uint8_t     addressRangeNpi;
-    std::string addressRangeVal;
 };
 
 namespace BindType{
@@ -787,11 +789,19 @@ public:
     pdu.set_password(cfg.password.c_str());
     pdu.set_systemType(cfg.systemType.c_str());
     pdu.set_interfaceVersion(cfg.interfaceVersion);
-    if( ! cfg.addressRangeVal.empty())
+    if( ! cfg.addressRange.empty())
     {
-      pdu.get_addressRange().set_typeOfNumber(cfg.addressRangeTon);
-      pdu.get_addressRange().set_numberingPlan(cfg.addressRangeNpi);
-      pdu.get_addressRange().set_value(cfg.addressRangeVal.c_str());
+        uint8_t ton, npi;
+        const char* ar;
+        try {
+            cfg.parseAddressRange(ton,npi,ar);
+        } catch ( util::config::ConfigException& e ) {
+            smsc_log_error(log,"SmppSession: bad address range: %s",e.what());
+            throw SmppConnectException(SmppConnectException::Reason::bindFailed);
+        }
+        pdu.get_addressRange().set_typeOfNumber(ton);
+        pdu.get_addressRange().set_numberingPlan(npi);
+        pdu.get_addressRange().set_value(ar);
     }
     int seq=getNextSeq();
     pdu.get_header().set_sequenceNumber(seq);
