@@ -17,7 +17,17 @@ class SccpSenderMock: public SccpSender {
                         uint8_t cllen, uint8_t *cl,
                         uint16_t ulen, uint8_t *udp)
       {
-        //smsc_log_debug(logger, "fake sccp sender has pushed message to network");
+        //std::vector<unsigned char> *stream = (std::vector<unsigned char> *)app_key;
+        //  unsigned char *buf = (unsigned char *)buffer;
+        //  stream->insert(stream->end(),buf, buf + size);
+        buffer.insert(buffer.end(), udp, udp + ulen);
+        smsc_log_debug(logger,
+                       "intercepted message to network:\n%s",
+                       dump(ulen,udp).c_str());
+        smsc_log_debug(logger,
+                       "external buffer data[%d]=\n{%s}",
+                       buffer.size(),
+                       dump((uint16_t)buffer.size(),&buffer[0]).c_str());
       }
   };
 void AmericaTestFixture::setUp()
