@@ -23,7 +23,7 @@ using std::string;
 SRI4SMTSM::SRI4SMTSM(TrId _ltrid,AC& ac,TCO* _tco):TSM(_ltrid,ac,_tco)
 {
   logger = Logger::getInstance("mt.sme.sri4sm");
-  smsc_log_debug(logger,"tsm otid=%s create SendRoutingInfoForSM",ltrid.toString().c_str());
+  smsc_log_debug(logger,"tsm otid=%s create SendRoutingInfoForSM or reportSMDeliveryStatus",ltrid.toString().c_str());
   temp_errcode = 0;
 }
 SRI4SMTSM::SRI4SMTSM(TrId _ltrid,AC& ac,TCO* _tco, const char* _imsi, const char* _msc,const char* _vlr, const char* _mgt):TSM(_ltrid,ac,_tco)
@@ -37,27 +37,25 @@ SRI4SMTSM::SRI4SMTSM(TrId _ltrid,AC& ac,TCO* _tco, const char* _imsi, const char
   laddrlen = packSCCPAddress(laddr, 1 /* E.164 */, _vlr /* VLR E.164 */, 7 /* VLR SSN */);
   raddrlen = packSCCPAddress(raddr, 7 /* E.214 */, _mgt /* MS  E.214 */, 6 /* HLR SSN */);
 }
-
-
 SRI4SMTSM::~SRI4SMTSM()
 {
-  smsc_log_debug(logger,"tsm otid=%s delete SendRoutingInfoForSM",ltrid.toString().c_str());
+  smsc_log_debug(logger,"tsm otid=%s delete SendRoutingInfoForSM or reportSMDeliveryStatus",ltrid.toString().c_str());
 }
 static int SRI4SMCOUNT = 0;
 void SRI4SMTSM::BEGIN(Message& msg)
 {
-  smsc_log_debug(logger,
-                 "tsm otid=%s receive BEGIN with component, send END with SendRoutingInfoForSM",ltrid.toString().c_str());
   laddrlen = packSCCPAddress(laddr, 1 /* E.164 */, tco->hlrnumber /* HLR E.164 */, 6 /* HLR SSN */);
   smsc_log_debug(logger,
                       "SRI4SMTSM's modified Cd(%s)",
                       getAddressDescription(laddrlen,laddr).c_str());
   int iid = 1;
-  if( msg.isComponentPresent() )
+  if( msg.isComponentPresent() && (msg.getOperationCode() == 45))
   {
+    smsc_log_debug(logger,
+                   "tsm otid=%s receive BEGIN with component, send END with SendRoutingInfoForSM",ltrid.toString().c_str());
     iid = msg.getInvokeId();
-    if (msg.getOperationCode() == 47)
-      smsc_log_error(logger,"tsm otid=%s receive BEGIN with REPORTSM-DELIVERYSTATUS",ltrid.toString().c_str());
+    //if (msg.getOperationCode() == 47)
+    //  smsc_log_error(logger,"tsm otid=%s receive BEGIN with REPORTSM-DELIVERYSTATUS",ltrid.toString().c_str());
     std::vector<unsigned char> sri4smbuf;
     sri4smbuf = msg.getComponent();
     SendRoutingInfoForSMInd sri4sm(logger);
@@ -95,6 +93,19 @@ void SRI4SMTSM::BEGIN(Message& msg)
       }
     }
   }
+  if( msg.isComponentPresent() && (msg.getOperationCode() == 47))
+  {
+    smsc_log_debug(logger,
+                   "tsm otid=%s receive BEGIN with reportSMDeliveryStatus component, send END",ltrid.toString().c_str());
+    using smsc::mtsmsme::comp::ReportSmDeliveryStatusInd;
+    iid = msg.getInvokeId();
+    std::vector<unsigned char> rsmdsbuf;
+    rsmdsbuf = msg.getComponent();
+    ReportSmDeliveryStatusInd rsmds(logger);
+    rsmds.decode(rsmdsbuf);
+    EmptyComp resp;
+    TResultLReq( iid /* invokeId */, 47 /* reportSMDeliveryStatus operation */, resp);
+  }
   TEndReq();
   tco->TSMStopped(ltrid);
 }
@@ -125,8 +136,6 @@ void SRI4SMTSM::CONTINUE_received(uint8_t cdlen,
                    ltrid.toString().c_str());
   }
 }
-
-
 void SRI4SMTSM::TInvokeReq(int8_t invokeId, uint8_t opcode, CompIF& arg)
 {
   arg.encode(temp_arg);
