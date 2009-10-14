@@ -60,9 +60,18 @@ class UpdateLocationTask: public TsmComletionListener{
     void changeStatus(int _status)
     {
       status = _status;
-      if (status == 1)
+      switch (status)
+      {
+      case 1:
         smsc_log_debug(logger,
-                 "COMPLETED UPDATELOCATION imsi=\'%s\'",info.imsi.c_str());
+            "COMPLETED UPDATELOCATION imsi=\'%s\'",info.imsi.c_str());
+        break;
+      case 1143:
+        smsc_log_debug(logger,
+            "NO RESP FROM HLR UPDATELOCATION imsi=\'%s\'",info.imsi.c_str());
+        break;
+      default:
+      }
     }
     void process(TCO* coordinator)
     {
@@ -93,8 +102,8 @@ class UpdateLocationTask: public TsmComletionListener{
         }
       }
     }
-    bool isCompleted() { return (status == 1); }
-    virtual void complete(int _status) { changeStatus(1); }
+    bool isCompleted() { return (status != 0); }
+    virtual void complete(int _status) { changeStatus(_status); }
 };
 
 SubscriberRegistrator::SubscriberRegistrator(TCO* _coordinator)
