@@ -534,6 +534,8 @@ public class InfoSmeConfig {
             smsc.setRangeOfAddress(cfg.getString("InfoSme.SMSCConnectors."+smscName+".rangeOfAddress"));
           if (cfg.containsParameter("InfoSme.SMSCConnectors."+smscName+".interfaceVersion"))
             smsc.setInterfaceVersion(cfg.getInt("InfoSme.SMSCConnectors."+smscName+".interfaceVersion"));
+          else
+            smsc.setInterfaceVersion(-1);
           newSmscs.put(smscName, smsc);
         }
 
@@ -629,9 +631,18 @@ public class InfoSmeConfig {
         cfg.setInt("InfoSme.SMSCConnectors."+smsc.getName()+".timeout",smsc.getTimeout());
         cfg.setString("InfoSme.SMSCConnectors."+smsc.getName()+".sid",smsc.getSid());
         cfg.setString("InfoSme.SMSCConnectors."+smsc.getName()+".password",smsc.getPassword());
-        cfg.setString("InfoSme.SMSCConnectors."+smsc.getName()+".systemType",smsc.getSystemType());
-        cfg.setString("InfoSme.SMSCConnectors."+smsc.getName()+".rangeOfAddress",smsc.getRangeOfAddress());
-        cfg.setInt("InfoSme.SMSCConnectors."+smsc.getName()+".interfaceVersion",smsc.getInterfaceVersion());
+        if (smsc.getSystemType() != null)
+          cfg.setString("InfoSme.SMSCConnectors."+smsc.getName()+".systemType",smsc.getSystemType());
+        else
+          cfg.removeParam("InfoSme.SMSCConnectors."+smsc.getName()+".systemType");
+        if (smsc.getRangeOfAddress() != null)
+          cfg.setString("InfoSme.SMSCConnectors."+smsc.getName()+".rangeOfAddress",smsc.getRangeOfAddress());
+        else
+          cfg.removeParam("InfoSme.SMSCConnectors."+smsc.getName()+".rangeOfAddress");
+        if (smsc.getInterfaceVersion() >= 0)
+          cfg.setInt("InfoSme.SMSCConnectors."+smsc.getName()+".interfaceVersion",smsc.getInterfaceVersion());
+        else
+          cfg.removeParam("InfoSme.SMSCConnectors."+smsc.getName()+".interfaceVersion");
       }
 
       cfg.setInt("InfoSme.tasksSwitchTimeout", tasksSwitchTimeout);

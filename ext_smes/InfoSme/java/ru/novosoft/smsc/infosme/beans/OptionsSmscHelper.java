@@ -37,9 +37,9 @@ public class OptionsSmscHelper extends DynamicTableHelper{
     hostColumn = new TextColumn(this, "infosme.label.smsc.host", uid + "_host", width / 9, Validation.NON_EMPTY, allowEditPropsAfterAdd);
     portColumn = new TextColumn(this, "infosme.label.smsc.port", uid + "_port", width / 9, Validation.PORT, allowEditPropsAfterAdd);
     timeoutColumn = new TextColumn(this, "infosme.label.smsc.timeout", uid + "_timeout", width / 9, Validation.POSITIVE, allowEditPropsAfterAdd);
-    systemTypeColumn = new TextColumn(this, "infosme.label.smsc.systemType", uid + "_systemType", width / 9, Validation.NON_EMPTY, allowEditPropsAfterAdd);
-    rangeOfAddressColumn = new TextColumn(this, "infosme.label.smsc.rangeOfAddress", uid + "_rangeOfAddress", width / 9, Validation.NON_EMPTY, allowEditPropsAfterAdd);
-    interfaceVersionColumn = new TextColumn(this, "infosme.label.smsc.interfaceVersion", uid + "_interfaceVersionColumn", width / 9, Validation.NON_EMPTY, allowEditPropsAfterAdd);
+    systemTypeColumn = new TextColumn(this, "infosme.label.smsc.systemType", uid + "_systemType", width / 9, 12, null, allowEditPropsAfterAdd);
+    rangeOfAddressColumn = new TextColumn(this, "infosme.label.smsc.rangeOfAddress", uid + "_rangeOfAddress", width / 9, 40, null, allowEditPropsAfterAdd);
+    interfaceVersionColumn = new TextColumn(this, "infosme.label.smsc.interfaceVersion", uid + "_interfaceVersionColumn", width / 9, null, allowEditPropsAfterAdd);
     Column delColumn = new RowControlButtonColumn(this, "", "delColumn");
     addColumn(nameColumn);
     addColumn(sidColumn);
@@ -67,8 +67,17 @@ public class OptionsSmscHelper extends DynamicTableHelper{
       String password = (String) (row.getValue(passColumn));
       String timeout = (String) (row.getValue(timeoutColumn));
       String systemType = (String)(row.getValue(systemTypeColumn));
+      if (systemType != null && systemType.trim().length() == 0)
+        systemType = null;
       String rangeOfAddress = (String)(row.getValue(rangeOfAddressColumn));
-      int intefaceVersion = convertInterfaceVersion((String)(row.getValue(interfaceVersionColumn)));
+      if (rangeOfAddress != null && rangeOfAddress.trim().length() == 0)
+        rangeOfAddress = null;
+      String interfaceVersionStr = (String)(row.getValue(interfaceVersionColumn));
+      int intefaceVersion;
+      if (interfaceVersionStr != null)
+        intefaceVersion = convertInterfaceVersion(interfaceVersionStr);
+      else
+        intefaceVersion = -1;
 
       try{
         InfoSmeConfig.SmscConnector conn = new InfoSmeConfig.SmscConnector();
@@ -101,14 +110,14 @@ public class OptionsSmscHelper extends DynamicTableHelper{
         row.addValue(sidColumn,conn.getSid());
         row.addValue(passColumn,conn.getPassword());
         row.addValue(timeoutColumn, Integer.toString(conn.getTimeout()));
-        row.addValue(systemTypeColumn, conn.getSystemType());
-        row.addValue(rangeOfAddressColumn, conn.getRangeOfAddress());
-        row.addValue(interfaceVersionColumn, convertInterfaceVersion(conn.getInterfaceVersion()));
+        row.addValue(systemTypeColumn, conn.getSystemType() == null ? "" : conn.getSystemType());
+        row.addValue(rangeOfAddressColumn, conn.getRangeOfAddress() == null ? "" : conn.getRangeOfAddress());
+        row.addValue(interfaceVersionColumn, conn.getInterfaceVersion() >=0 ? convertInterfaceVersion(conn.getInterfaceVersion()) : "");
       }
     }
   }
 
-  private int convertInterfaceVersion(String version) {
+  private static int convertInterfaceVersion(String version) {
     int pos = version.indexOf('.');
     if (pos > 0) {
       return (Integer.parseInt(version.substring(0, pos)) << 4) + (Integer.parseInt(version.substring(pos + 1)));
@@ -116,7 +125,7 @@ public class OptionsSmscHelper extends DynamicTableHelper{
       return -1;
   }
 
-  private String convertInterfaceVersion(int v) {
+  private static String convertInterfaceVersion(int v) {
     return String.valueOf(v >> 4) + '.' + String.valueOf(v & 0xF);
   }
 
