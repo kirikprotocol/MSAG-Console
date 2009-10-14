@@ -3,6 +3,7 @@ static char const ident[] = "$Id$";
 #include "SRI4SMTSM.hpp"
 #include "mtsmsme/processor/util.hpp"
 #include "mtsmsme/comp/SendRoutingInfoForSM.hpp"
+#include "mtsmsme/comp/ReportSmDeliveryStatus.hpp"
 #include <string>
 #include "sms/sms.h"
 #include <asn_application.h>
@@ -17,6 +18,7 @@ using smsc::mtsmsme::comp::EmptyComp;
 using smsc::mtsmsme::processor::util::getAddressDescription;
 using smsc::mtsmsme::comp::SendRoutingInfoForSMInd;
 using smsc::mtsmsme::comp::SendRoutingInfoForSMRespV1;
+using smsc::mtsmsme::comp::ReportSmDeliveryStatusInd;
 using smsc::sms::Address;
 using std::string;
 
@@ -97,7 +99,6 @@ void SRI4SMTSM::BEGIN(Message& msg)
   {
     smsc_log_debug(logger,
                    "tsm otid=%s receive BEGIN with reportSMDeliveryStatus component, send END",ltrid.toString().c_str());
-    using smsc::mtsmsme::comp::ReportSmDeliveryStatusInd;
     iid = msg.getInvokeId();
     std::vector<unsigned char> rsmdsbuf;
     rsmdsbuf = msg.getComponent();
