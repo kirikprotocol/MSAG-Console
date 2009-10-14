@@ -184,7 +184,10 @@ protected:
   void operator=(const TmpBuf&);
   template <class X> void operator=(const X&);
   void* operator new(size_t sz);
+  union{
   T  stackBuf[SZ];
+  uint64_t aligner;
+  };
   T* heapBuf;
   T* realBuf;
   size_t heapSize;
