@@ -53,7 +53,7 @@ void ReportSmDeliveryStatusInd::decode(const vector<unsigned char>& buf)
     def->print_struct(def, structure, 1, print2vec, &stream);
     /* Create and return resulting string */
     string result((char*)&stream[0],(char*)&stream[0]+stream.size());
-    smsc_log_debug(logger, "SendRoutingInfoForSMInd\n%s", result.c_str());
+    smsc_log_debug(logger, "ReportSmDeliveryStatusInd\n%s", result.c_str());
     /* free decoded tree */
     def->free_struct(def, structure, 0);
   }
