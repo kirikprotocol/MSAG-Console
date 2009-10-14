@@ -148,6 +148,8 @@ void SRI4SMTSM::TResultLReq(uint8_t invokeId, uint8_t opcode, CompIF& arg)
   arg.encode(temp_arg);
   temp_opcode = opcode;
   temp_invokeId = invokeId;
+  smsc_log_debug(logger,
+                    "SRI4SMTSM::TResultLReq temp_arg.size=%d", temp_arg.size());
 }
 void SRI4SMTSM::TUErrorReq(int invokeId, uint8_t errcode, CompIF& arg)
 {
