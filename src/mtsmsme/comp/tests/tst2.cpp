@@ -1,11 +1,13 @@
 static char const ident[] = "$Id$";
 #include "mtsmsme/comp/tests/tst2.hpp"
 #include "mtsmsme/processor/SccpSender.hpp"
+#include "mtsmsme/processor/util.hpp"
 CPPUNIT_TEST_SUITE_REGISTRATION(AmericaTestFixture);
 
 using smsc::mtsmsme::processor::SccpSender;
 using std::vector;
 using smsc::logger::Logger;
+using smsc::mtsmsme::processor::util::dump;
 class SccpSenderMock: public SccpSender {
   private:
     Logger* logger;
@@ -40,7 +42,6 @@ void AmericaTestFixture::tearDown()
   Logger::Shutdown();
 }
 #include "mtsmsme/comp/UpdateLocation.hpp"
-#include "mtsmsme/processor/util.hpp"
 void AmericaTestFixture::updateLocation_arg_encoding()
 {
   smsc_log_debug(logger, "======== AmericaTestFixture::updateLocation_arg_encoding ========");
