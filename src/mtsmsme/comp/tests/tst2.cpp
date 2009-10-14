@@ -23,7 +23,7 @@ class SccpSenderMock: public SccpSender {
 void AmericaTestFixture::setUp()
 {
   Logger::Init();
-  logger = Logger::getInstance("all");
+  logger = Logger::getInstance("tstrunner");
 }
 void AmericaTestFixture::tearDown()
 {
@@ -90,6 +90,7 @@ void AmericaTestFixture::reportSMDeliveryStatus_arg_decoding(void)
   ReportSmDeliveryStatusInd ind(logger);
   ind.decode(vector<unsigned char>(ind_encoded, ind_encoded + sizeof(ind_encoded) / sizeof(unsigned char) ));
   //todo add some validations
+  CPPUNIT_ASSERT( true );
 }
 #include "mtsmsme/processor/TCO.hpp"
 #include "sms/sms.h"
@@ -199,4 +200,5 @@ void AmericaTestFixture::sendRoutingInfoForSM_sending()
     tsm->TBeginReq((uint8_t) (sizeof(cd) / sizeof(uint8_t)), cd,
         (uint8_t) (sizeof(cl) / sizeof(uint8_t)), cl);
   }
+  CPPUNIT_ASSERT( true );
 }
