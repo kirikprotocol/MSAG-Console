@@ -71,6 +71,9 @@ class UpdateLocationTask: public TsmComletionListener{
             "NO RESP FROM HLR UPDATELOCATION imsi=\'%s\'",info.imsi.c_str());
         break;
       default:
+        smsc_log_debug(logger,
+            "UNKNOWN STATUS UPDATELOCATION imsi=\'%s\'",info.imsi.c_str());
+        break;
       }
     }
     void process(TCO* coordinator)
