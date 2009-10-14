@@ -27,9 +27,9 @@ int main(int argc, char* argv[])
   runner.setOutputter(outputter);
 
   // Run the tests.
-  bool wasSuccessful = runner.run( "", false, true, false );
-//  bool wasSuccessful = runner.run( testPath, false, true, false );
+//  bool wasSuccessful = runner.run( "", false, true, false );
+  bool wasSuccessful = runner.run( testPath, false, true, false );
   outputFile.close();
   // Return error code 1 if the one of test failed.
-  return wasSuccessful;
+  return (wasSuccessful ? 0 : -1);
 }
