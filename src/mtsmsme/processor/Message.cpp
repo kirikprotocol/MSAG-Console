@@ -497,7 +497,10 @@ void EndMsg::setReturnResultL(int iid, uint8_t opcode, vector<unsigned char>& ar
   // intialize invoke with invokeID and result component
   comp.present = Component_PR_returnResultLast;
   comp.choice.returnResultLast.invokeId = iid;
-  comp.choice.returnResultLast.result = &res;
+  if ( argument.size() != 0 )
+    comp.choice.returnResultLast.result = &res;
+  else
+    comp.choice.returnResultLast.result = 0;
   fillComponentList();
   //initialize component list
   //arr[0]= &comp;
