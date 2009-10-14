@@ -528,6 +528,9 @@ public class InfoSmeConfig {
           smsc.setSid(cfg.getString("InfoSme.SMSCConnectors."+smscName+".sid"));
           smsc.setTimeout(cfg.getInt("InfoSme.SMSCConnectors."+smscName+".timeout"));
           smsc.setPassword(cfg.getString("InfoSme.SMSCConnectors."+smscName+".password"));
+          smsc.setSystemType(cfg.getString("InfoSme.SMSCConnectors."+smscName+".systemType"));
+          smsc.setRangeOfAddress(cfg.getString("InfoSme.SMSCConnectors."+smscName+".rangeOfAddress"));
+          smsc.setInterfaceVersion(cfg.getInt("InfoSme.SMSCConnectors."+smscName+".interfaceVersion"));
           newSmscs.put(smscName, smsc);
         }
 
@@ -623,6 +626,9 @@ public class InfoSmeConfig {
         cfg.setInt("InfoSme.SMSCConnectors."+smsc.getName()+".timeout",smsc.getTimeout());
         cfg.setString("InfoSme.SMSCConnectors."+smsc.getName()+".sid",smsc.getSid());
         cfg.setString("InfoSme.SMSCConnectors."+smsc.getName()+".password",smsc.getPassword());
+        cfg.setString("InfoSme.SMSCConnectors."+smsc.getName()+".systemType",smsc.getSystemType());
+        cfg.setString("InfoSme.SMSCConnectors."+smsc.getName()+".rangeOfAddress",smsc.getRangeOfAddress());
+        cfg.setInt("InfoSme.SMSCConnectors."+smsc.getName()+".interfaceVersion",smsc.getInterfaceVersion());
       }
 
       cfg.setInt("InfoSme.tasksSwitchTimeout", tasksSwitchTimeout);
@@ -853,6 +859,11 @@ public class InfoSmeConfig {
     private int timeout;
     private String password;
 
+
+    private String systemType;
+    private String rangeOfAddress;
+    private int interfaceVersion;
+
     public String getName() {
       return name;
     }
@@ -899,6 +910,30 @@ public class InfoSmeConfig {
 
     public void setPassword(String password) {
       this.password = password;
+    }
+
+    public String getSystemType() {
+      return systemType;
+    }
+
+    public void setSystemType(String systemType) {
+      this.systemType = systemType;
+    }
+
+    public String getRangeOfAddress() {
+      return rangeOfAddress;
+    }
+
+    public void setRangeOfAddress(String rangeOfAddress) {
+      this.rangeOfAddress = rangeOfAddress;
+    }
+
+    public int getInterfaceVersion() {
+      return interfaceVersion;
+    }
+
+    public void setInterfaceVersion(int interfaceVersion) {
+      this.interfaceVersion = interfaceVersion;
     }
   }
 

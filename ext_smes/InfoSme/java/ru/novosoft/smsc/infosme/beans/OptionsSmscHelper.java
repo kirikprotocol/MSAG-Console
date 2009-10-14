@@ -25,15 +25,21 @@ public class OptionsSmscHelper extends DynamicTableHelper{
   private Column timeoutColumn;
   private Column hostColumn;
   private Column portColumn;
+  private Column systemTypeColumn;
+  private Column rangeOfAddressColumn;
+  private Column interfaceVersionColumn;
 
   public OptionsSmscHelper(String name, String uid, int width,  boolean allowEditPropsAfterAdd) {
     super(name, uid);
-    nameColumn = new TextColumn(this, "infosme.label.smsc.name", uid + "_name", width / 6, Validation.NON_EMPTY, allowEditPropsAfterAdd);
-    sidColumn = new TextColumn(this, "infosme.label.smsc.sid", uid + "_sid", width / 5, Validation.NON_EMPTY, allowEditPropsAfterAdd);
-    passColumn = new TextColumn(this, "infosme.label.smsc.pass", uid + "_pass", width / 6, null, allowEditPropsAfterAdd);
-    hostColumn = new TextColumn(this, "infosme.label.smsc.host", uid + "_host", width / 6, Validation.NON_EMPTY, allowEditPropsAfterAdd);
-    portColumn = new TextColumn(this, "infosme.label.smsc.port", uid + "_port", width / 6, Validation.PORT, allowEditPropsAfterAdd);
-    timeoutColumn = new TextColumn(this, "infosme.label.smsc.timeout", uid + "_timeout", width / 6, Validation.POSITIVE, allowEditPropsAfterAdd);
+    nameColumn = new TextColumn(this, "infosme.label.smsc.name", uid + "_name", width / 9, Validation.NON_EMPTY, allowEditPropsAfterAdd);
+    sidColumn = new TextColumn(this, "infosme.label.smsc.sid", uid + "_sid", width / 9, Validation.NON_EMPTY, allowEditPropsAfterAdd);
+    passColumn = new TextColumn(this, "infosme.label.smsc.pass", uid + "_pass", width / 9, null, allowEditPropsAfterAdd);
+    hostColumn = new TextColumn(this, "infosme.label.smsc.host", uid + "_host", width / 9, Validation.NON_EMPTY, allowEditPropsAfterAdd);
+    portColumn = new TextColumn(this, "infosme.label.smsc.port", uid + "_port", width / 9, Validation.PORT, allowEditPropsAfterAdd);
+    timeoutColumn = new TextColumn(this, "infosme.label.smsc.timeout", uid + "_timeout", width / 9, Validation.POSITIVE, allowEditPropsAfterAdd);
+    systemTypeColumn = new TextColumn(this, "infosme.label.smsc.systemType", uid + "_systemType", width / 9, Validation.NON_EMPTY, allowEditPropsAfterAdd);
+    rangeOfAddressColumn = new TextColumn(this, "infosme.label.smsc.rangeOfAddress", uid + "_rangeOfAddress", width / 9, Validation.NON_EMPTY, allowEditPropsAfterAdd);
+    interfaceVersionColumn = new TextColumn(this, "infosme.label.smsc.interfaceVersion", uid + "_interfaceVersionColumn", width / 9, Validation.NON_EMPTY, allowEditPropsAfterAdd);
     Column delColumn = new RowControlButtonColumn(this, "", "delColumn");
     addColumn(nameColumn);
     addColumn(sidColumn);
@@ -41,6 +47,9 @@ public class OptionsSmscHelper extends DynamicTableHelper{
     addColumn(hostColumn);
     addColumn(portColumn);
     addColumn(timeoutColumn);
+    addColumn(systemTypeColumn);
+    addColumn(rangeOfAddressColumn);
+    addColumn(interfaceVersionColumn);
     addColumn(delColumn);
   }
 
@@ -57,6 +66,9 @@ public class OptionsSmscHelper extends DynamicTableHelper{
       String sid = (String) (row.getValue(sidColumn));
       String password = (String) (row.getValue(passColumn));
       String timeout = (String) (row.getValue(timeoutColumn));
+      String systemType = (String)(row.getValue(systemTypeColumn));
+      String rangeOfAddress = (String)(row.getValue(rangeOfAddressColumn));
+      int intefaceVersion = convertInterfaceVersion((String)(row.getValue(interfaceVersionColumn)));
 
       try{
         InfoSmeConfig.SmscConnector conn = new InfoSmeConfig.SmscConnector();
@@ -66,6 +78,9 @@ public class OptionsSmscHelper extends DynamicTableHelper{
         conn.setName(name.trim());
         conn.setSid(sid.trim());
         conn.setPassword(password.trim());
+        conn.setInterfaceVersion(intefaceVersion);
+        conn.setSystemType(systemType);
+        conn.setRangeOfAddress(rangeOfAddress);
         result.add(conn);
       }catch (NumberFormatException e) {
         throw new IncorrectValueException(e);
@@ -86,8 +101,23 @@ public class OptionsSmscHelper extends DynamicTableHelper{
         row.addValue(sidColumn,conn.getSid());
         row.addValue(passColumn,conn.getPassword());
         row.addValue(timeoutColumn, Integer.toString(conn.getTimeout()));
+        row.addValue(systemTypeColumn, conn.getSystemType());
+        row.addValue(rangeOfAddressColumn, conn.getRangeOfAddress());
+        row.addValue(interfaceVersionColumn, convertInterfaceVersion(conn.getInterfaceVersion()));
       }
     }
+  }
+
+  private int convertInterfaceVersion(String version) {
+    int pos = version.indexOf('.');
+    if (pos > 0) {
+      return (Integer.parseInt(version.substring(0, pos)) << 4) + (Integer.parseInt(version.substring(pos + 1)));
+    } else
+      return -1;
+  }
+
+  private String convertInterfaceVersion(int v) {
+    return String.valueOf(v >> 4) + '.' + String.valueOf(v & 0xF);
   }
 
 
