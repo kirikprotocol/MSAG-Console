@@ -37,7 +37,7 @@ AbonentCacheMTR::AbonentCacheMTR(const AbonentCacheCFG & use_cfg, Logger * uselo
     bool    present = false;    //cache file exists
     if (_cfg.nmDir.length() && _cfg.fileRcrd) {
         std::string nmFile(_cfg.nmDir);
-        if (nmFile[nmFile.length()] != DIRECTORY_SEPARATOR)
+        if (nmFile[nmFile.length()-1] != DIRECTORY_SEPARATOR)
             nmFile += DIRECTORY_SEPARATOR;
         nmFile += _nmCch;
     
