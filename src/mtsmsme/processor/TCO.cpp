@@ -257,9 +257,7 @@ void TCO::TSMStopped(TrId ltrid)
 void TCO::setHLROAM(HLROAM* _hlr) { hlr = _hlr; }
 HLROAM* TCO::getHLROAM() { return hlr; }
 void TCO::setRequestSender(RequestSender* _sender) { sender = _sender; }
-
 void TCO::setSccpSender(SccpSender* sndr) { sccpsender = sndr; }
-
 void TCO::SCCPsend(uint8_t cdlen,uint8_t *cd,
                    uint8_t cllen,uint8_t *cl,
                    uint16_t ulen,uint8_t *udp)
@@ -270,5 +268,43 @@ void TCO::SCCPsend(uint8_t cdlen,uint8_t *cd,
     sccpsender->send(cdlen,cd,cllen,cl,ulen,udp);
   }
 }
+void TCO::dlgcleanup()
+{
 
+}
+/*
+class wdtimerComparator { public: bool operator()(wdtimer*,wdtimer*);};
+static std::priority_queue<wdtimer*,
+                           std::vector<wdtimer*>,
+                           wdtimerComparator> tqueue;
+bool wdtimerComparator::operator()(wdtimer* left, wdtimer* right)
+{
+  return ((left->deadline) >= (right->deadline));
+}
+class wdtimer {
+  public:
+    wdtimer(int sec);
+  private:
+    time_t deadline;
+    TrId ltrid;
+    void setDelay(int delay) { deadline = time(0) + delay; }
+};
+void TCO::dlgcleanup()
+{
+  //check existing watchdogs
+  if (! tqueue.empty())
+  {
+    time_t now; time(&now);
+    wdtimer* request = tqueue.top();
+    if (now > request->deadline)
+    {
+      tqueue.pop();
+      UpdateLocationTask* task = new UpdateLocationTask(*request);
+      delete(request);
+      pqueue.push(task);
+      task->process(coordinator);
+    }
+  }
+}
+*/
 }/*namespace processor*/}/*namespace mtsmsme*/}/*namespace smsc*/

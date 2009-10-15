@@ -60,6 +60,7 @@ class TCO: public SccpUser
     void TSMStopped(TrId);
     void setAdresses(Address& msc, Address& vlr, Address& hlr);
     void setHLROAM(HLROAM* hlr);
+    void dlgcleanup();
     HLROAM* getHLROAM();
     Encoder encoder;
     RequestSender *sender;
