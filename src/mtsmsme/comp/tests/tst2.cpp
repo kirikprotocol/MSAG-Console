@@ -294,6 +294,7 @@ void AmericaTestFixture::updateLocation_dialogue_cleanup(void)
   mtsms.setSccpSender((SccpSender*)&sender);
   TsmComletionListenerMock listener(logger);
   TSMSTAT stat;
+  TSM::objcount=0;
   TSM::getCounters(stat);
   CPPUNIT_ASSERT( stat.objcount == 0 );
   smsc_log_debug(logger,
@@ -301,8 +302,8 @@ void AmericaTestFixture::updateLocation_dialogue_cleanup(void)
       " serving by msc=\'%s\', vlr=\'%s\'",
       imsi.c_str(), msisdn.c_str(), mgt.c_str(), period,
       msc_digits.c_str(), vlr_digits.c_str());
-  TSM* tsm;
 
+  TSM* tsm = 0;
   tsm = mtsms.TC_BEGIN(net_loc_upd_v2);
   TSM::getCounters(stat);
   CPPUNIT_ASSERT( stat.objcount == 1 );
