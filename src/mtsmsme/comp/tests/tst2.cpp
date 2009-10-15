@@ -93,7 +93,6 @@ void AmericaTestFixture::reportSMDeliveryStatus_arg_decoding(void)
     0x55, 0x01, 0xF0, 0x04, 0x07, 0x91, 0x81, 0x67,
     0x83, 0x00, 0x51, 0xF4, 0x0A, 0x01, 0x02
   };
-  unsigned char myints[] = {0,2,4,};
   using smsc::mtsmsme::comp::ReportSmDeliveryStatusInd;
   ReportSmDeliveryStatusInd ind(logger);
   ind.decode(vector<unsigned char>(ind_encoded, ind_encoded + sizeof(ind_encoded) / sizeof(unsigned char) ));
@@ -208,7 +207,6 @@ void AmericaTestFixture::sendRoutingInfoForSM_sending()
   uint8_t cl[] = { 2, 2, 2, 2, 2 };
   uint8_t cd[] = { 3, 3, 3, 3, 3 };
   TCO mtsms(10);
-  //SccpSender* sccpsender = new SccpSenderImpl();
   vector<unsigned char> result ;
   SccpSenderMock sender(logger, result);
   mtsms.setSccpSender((SccpSender*)&sender);
@@ -235,4 +233,59 @@ void AmericaTestFixture::sendRoutingInfoForSM_sending()
   };
   vector<unsigned char> expected(expected_data,expected_data + sizeof(expected_data) / sizeof(unsigned char) );
   CPPUNIT_ASSERT( expected == result);
+}
+void AmericaTestFixture::updateLocation_dialogue_cleanup(void)
+{
+  smsc_log_debug(logger, "======== AmericaTestFixture::updateLocation_dialogue_cleanup ========\n");
+  /*
+   * <section name="250013903784021">
+   *   <param name="reg_type" type="string">external</param>
+   *   <param name="address" type="string">.0.1.250013903784021</param>
+   *   <param name="alias" type="string">.1.1.79134632021</param>
+   *   <param name="mgt" type="string">.1.1.791603903784021</param>
+   *   <param name="msisdn" type="string">.1.1.79134632021</param>
+   *   <param name="period" type="int">3600</param>
+   * </section>
+   * <section name="SCCP">
+   *   <param name="user_id" type="int">43</param>
+   *   <param name="user_ssn" type="int">191</param>
+   *   <param name="msc_gt" type="string">.1.1.791398699812</param>
+   *   <param name="vlr_gt" type="string">.1.1.791398699813</param>
+   *   <param name="hlr_gt" type="string">.1.1.791398699813</param>
+   * </section>
+   */
+  string imsi ("250013903784021");
+  string msisdn ("79134632021");
+  string mgt ("791603903784021");
+  int period = 3600;
+  string msc_digits ("791398699812");
+  string vlr_digits ("791398699813");
+  void process(TCO* coordinator)
+  {
+    smsc_log_debug(logger,
+               "FAKE UPDATELOCATION imsi=\'%s\', msisdn=\'%s\', mgt=\'%s\' with period=%d seconds"
+               " serving by msc=\'%s\', vlr=\'%s\'",
+               imsi.c_str(), msisdn.c_str(), mgt.c_str(), period,
+               msc_digits.c_str(), vlr_digits.c_str());
+    //changeStatus(1);
+    if (coordinator)
+    {
+      TSM* tsm;
+      AC appcntx = net_loc_upd_v2;
+      tsm = coordinator->TC_BEGIN(appcntx);
+      if (tsm)
+      {
+        tsm->setCompletionListener(this);
+
+        UpdateLocationReq msg;
+        msg.setParameters(imsi, msc_digits,vlr_digits);
+        tsm->TInvokeReq( 1 /* invokeId */, 2 /* updateLocation operation */, msg);
+
+        uint8_t cl[20]; uint8_t cllen; uint8_t cd[20]; uint8_t cdlen;
+        cllen = packSCCPAddress(cl, 1 /* E.164 */, vlr_digits.c_str() /* VLR E.164 */, 7 /* VLR SSN */);
+        cdlen = packSCCPAddress(cd, 7 /* E.214 */, mgt.c_str()   /* MS  E.214 */, 6 /* HLR SSN */);
+        tsm->TBeginReq(cdlen, cd, cllen, cl);
+      }
+    }
+  }
 }
