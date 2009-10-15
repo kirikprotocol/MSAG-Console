@@ -179,7 +179,12 @@ void InfoSmeMessageSender::reloadSmscAndRegions( Manager& manager )
     smsc::util::config::region::Region* region;
     smsc::util::config::region::RegionsConfig::RegionsIterator regsIter = regionsConfig_->getIterator();
     while (regsIter.fetchNext(region) == smsc::util::config::region::RegionsConfig::success) {
-        region->expandSubjectRefs(routeConfig);
+        try {
+            region->expandSubjectRefs(routeConfig);
+        } catch ( std::exception& e ) {
+            smsc_log_error(log_,"Problem in configuration of region '%s'",region->getId().c_str());
+            throw ConfigException("Region '%s' misconfigured, exc: %s",region->getId().c_str(),e.what());
+        }
         smsc::util::config::region::Region::MasksIterator maskIter = region->getMasksIterator();
         std::string addressMask;
         while(maskIter.fetchNext(addressMask)) {
@@ -259,25 +264,26 @@ SmscConnector* InfoSmeMessageSender::addConnector( const smsc::sme::SmeConfig& c
 }
 
 
-void InfoSmeMessageSender::addRegionMapping( const std::string& regionId, const std::string& smscId )
+void InfoSmeMessageSender::addRegionMapping( const std::string& regionId, const std::string& smscIdinput )
 {
-    if ( smscId.empty() || smscId == defaultConnector_->getSmscId() ) {
-        smsc_log_info(log_, "SMSC id '%s' for region '%s' set. Default SMSC Connector '%s' will be used.",
-                      smscId.c_str(), regionId.c_str(), defaultConnector_->getSmscId().c_str());
-        regions_.Insert(regionId.c_str(), defaultConnector_->getSmscId());
-        return;
-    }
     if (regions_.Exists(regionId.c_str())) {
-        throw ConfigException("Region already exists: '%s'", smscId.c_str());
+        throw ConfigException("Region already exists: '%s'", regionId.c_str());
     }
-    if (!connectors_.Exists(smscId.c_str())) {
+
+    const std::string* smscId = &smscIdinput;
+    if ( smscId->empty() ) {
+        smsc_log_info( log_, "Default SMSC Connector '%s' for region '%s' will be used.",
+                       defaultConnector_->getSmscId().c_str(), regionId.c_str());
+        smscId = &defaultConnector_->getSmscId();
+    }
+    if (!connectors_.Exists(smscId->c_str())) {
         smsc_log_info(log_, "SMSC Connector '%s' for region '%s' unknown. Default SMSC Connector '%s' will be used.",
-                      smscId.c_str(), regionId.c_str(), defaultConnector_->getSmscId().c_str());
-        regions_.Insert(regionId.c_str(), defaultConnector_->getSmscId());
-        return;
+                      smscId->c_str(), regionId.c_str(), defaultConnector_->getSmscId().c_str());
+        smscId = &defaultConnector_->getSmscId();
     }
-    smsc_log_info(log_, "SMSC Connector '%s' for region '%s' will be used.", smscId.c_str(), regionId.c_str());
-    regions_.Insert(regionId.c_str(), smscId);
+
+    smsc_log_info(log_, "SMSC Connector '%s' for region '%s' will be used.", smscId->c_str(), regionId.c_str());
+    regions_.Insert(regionId.c_str(), *smscId);
 }
 
 } // namespace infosme
