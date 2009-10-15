@@ -274,6 +274,7 @@ void AmericaTestFixture::updateLocation_dialogue_cleanup(void)
   using smsc::mtsmsme::processor::util::packSCCPAddress;
   using smsc::mtsmsme::processor::net_loc_upd_v2;
   using smsc::mtsmsme::comp::UpdateLocationReq;
+  using smsc::mtsmsme::processor::TSMSTAT;
 
   string imsi ("250013903784021");
   string msisdn ("79134632021");
@@ -292,7 +293,6 @@ void AmericaTestFixture::updateLocation_dialogue_cleanup(void)
   SccpSenderMock sender(logger, res);
   mtsms.setSccpSender((SccpSender*)&sender);
   TsmComletionListenerMock listener(logger);
-  using smsc::mtsmsme::processor::TSMSTAT;
   TSMSTAT stat;
   TSM::getCounters(stat);
   CPPUNIT_ASSERT( stat.objcount == 0 );
