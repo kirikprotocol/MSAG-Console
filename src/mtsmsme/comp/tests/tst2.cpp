@@ -299,7 +299,7 @@ void AmericaTestFixture::updateLocation_dialogue_cleanup(void)
   tsm = mtsms.TC_BEGIN(net_loc_upd_v2);
   if (tsm)
   {
-    tsm->setCompletionListener((TsmComletionListener)&listener);
+    tsm->setCompletionListener((TsmComletionListener*)&listener);
 
     UpdateLocationReq msg;
     msg.setParameters(imsi, msc_digits,vlr_digits);
