@@ -274,6 +274,7 @@ void AmericaTestFixture::updateLocation_dialogue_cleanup(void)
   using smsc::mtsmsme::processor::util::packSCCPAddress;
   using smsc::mtsmsme::processor::net_loc_upd_v2;
   using smsc::mtsmsme::comp::UpdateLocationReq;
+
   string imsi ("250013903784021");
   string msisdn ("79134632021");
   string mgt ("791603903784021");
@@ -281,6 +282,7 @@ void AmericaTestFixture::updateLocation_dialogue_cleanup(void)
   string msc_digits ("791398699812");
   string vlr_digits ("791398699813");
   string hlr_digits ("791398699813");
+
   TCO mtsms(10);
   mtsms.setAdresses(
       Address((uint8_t)strlen(msc_digits.c_str()), 1, 1, msc_digits.c_str()),
@@ -290,13 +292,20 @@ void AmericaTestFixture::updateLocation_dialogue_cleanup(void)
   SccpSenderMock sender(logger, res);
   mtsms.setSccpSender((SccpSender*)&sender);
   TsmComletionListenerMock listener(logger);
+  using smsc::mtsmsme::processor::TSMSTAT;
+  TSMSTAT stat;
+  TSM::getCounters(stat);
+  CPPUNIT_ASSERT( stat.objcount == 0 );
   smsc_log_debug(logger,
       "FAKE UPDATELOCATION imsi=\'%s\', msisdn=\'%s\', mgt=\'%s\' with period=%d seconds"
       " serving by msc=\'%s\', vlr=\'%s\'",
       imsi.c_str(), msisdn.c_str(), mgt.c_str(), period,
       msc_digits.c_str(), vlr_digits.c_str());
   TSM* tsm;
+
   tsm = mtsms.TC_BEGIN(net_loc_upd_v2);
+  TSM::getCounters(stat);
+  CPPUNIT_ASSERT( stat.objcount == 1 );
   if (tsm)
   {
     tsm->setCompletionListener((TsmComletionListener*)&listener);
