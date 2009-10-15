@@ -173,11 +173,10 @@ public:
         MutexGuard tmp(Sync());
         prev->unmark();
         typename GRDNodeList::GRDIterator it = listeners.findNode(prev->val);
-        if ((++it) != listeners.end()) {
-            it->mark();
-            return it.operator->();
-        }
-        return NULL;
+        if ((it == listeners.end()) || (++it) == listeners.end())
+            return NULL;
+        it->mark();
+        return it.operator->();
     }
 
 };
