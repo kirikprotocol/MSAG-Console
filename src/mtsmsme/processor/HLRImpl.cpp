@@ -108,7 +108,6 @@ class UpdateLocationTask: public TsmComletionListener{
     bool isCompleted() { return (status != 0); }
     virtual void complete(int _status) { changeStatus(_status); }
 };
-
 SubscriberRegistrator::SubscriberRegistrator(TCO* _coordinator)
 {
   logger = Logger::getInstance("mt.sme.reg");
@@ -133,18 +132,6 @@ int SubscriberRegistrator::update(Address& imsi, Address& msisdn, Address& mgt)
   return 0;
 }
 typedef map<string,string>::iterator hlriter;
-//bool SubscriberRegistrator::lookup(Address& msisdn, Address& imsi)
-//{
-//  hlriter pos = hlr.find(msisdn.value);
-//  if ( pos != hlr.end())
-//  {
-//    imsi.setValue(pos->second.size(),pos->second.c_str());
-//    smsc_log_debug(logger,"hlr::lookup for %s succeded with %s",msisdn.toString().c_str(),imsi.toString().c_str());
-//    return true;
-//  }
-//  smsc_log_debug(logger,"hlr::lookup for %s failed",msisdn.toString().c_str());
-//  return false;
-//}
 bool SubscriberRegistrator::lookup(Address& msisdn, Address& imsi,Address& msc)
 {
   hlriter pos = hlr.find(msisdn.value);
