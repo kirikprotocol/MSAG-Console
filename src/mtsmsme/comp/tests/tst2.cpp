@@ -256,6 +256,8 @@ void AmericaTestFixture::updateLocation_dialogue_cleanup(void)
    * </section>
    */
   using std::string;
+  using smsc::mtsmsme::processor::TCO;
+  using smsc::mtsmsme::processor::TSM;
   string imsi ("250013903784021");
   string msisdn ("79134632021");
   string mgt ("791603903784021");
@@ -264,9 +266,10 @@ void AmericaTestFixture::updateLocation_dialogue_cleanup(void)
   string vlr_digits ("791398699813");
   string hlr_digits ("791398699813");
   TCO mtsms(10);
-  mtsms.setAdresses(Address((uint8_t)strlen(msc), 1, 1, msc),
-      Address((uint8_t)strlen(vlr), 1, 1, vlr),
-      Address((uint8_t)strlen(hlr), 1, 1, hlr));
+  mtsms.setAdresses(
+      Address((uint8_t)strlen(msc_digits.c_str()), 1, 1, msc_digits.c_str()),
+      Address((uint8_t)strlen(vlr_digits.c_str()), 1, 1, vlr_digits.c_str()),
+      Address((uint8_t)strlen(hlr_digits.c_str()), 1, 1, hlr_digits.c_str()));
   vector<unsigned char> res ;
    SccpSenderMock sender(logger, res);
    mtsms.setSccpSender((SccpSender*)&sender);
