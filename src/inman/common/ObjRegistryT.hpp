@@ -50,6 +50,8 @@ public:
         ~const_iterator()
         { }
 
+        _TArg * pValue(void) const { return rIt->second; }
+
         inline const_iterator & operator=(const const_iterator & use_it) { rIt = use_it.rIt; }
         inline const value_type & operator*() const { return *rIt; }
         inline const value_type * operator->() const { return rIt.operator->(); }
