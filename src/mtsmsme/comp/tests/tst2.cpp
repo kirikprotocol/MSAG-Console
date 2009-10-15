@@ -2,6 +2,7 @@ static char const ident[] = "$Id$";
 #include "mtsmsme/comp/tests/tst2.hpp"
 #include "mtsmsme/processor/SccpSender.hpp"
 #include "mtsmsme/processor/util.hpp"
+#include <string>
 CPPUNIT_TEST_SUITE_REGISTRATION(AmericaTestFixture);
 
 using smsc::mtsmsme::processor::SccpSender;
@@ -254,38 +255,40 @@ void AmericaTestFixture::updateLocation_dialogue_cleanup(void)
    *   <param name="hlr_gt" type="string">.1.1.791398699813</param>
    * </section>
    */
+  using std::string;
   string imsi ("250013903784021");
   string msisdn ("79134632021");
   string mgt ("791603903784021");
   int period = 3600;
   string msc_digits ("791398699812");
   string vlr_digits ("791398699813");
-  void process(TCO* coordinator)
+  string hlr_digits ("791398699813");
+  TCO mtsms(10);
+  mtsms.setAdresses(Address((uint8_t)strlen(msc), 1, 1, msc),
+      Address((uint8_t)strlen(vlr), 1, 1, vlr),
+      Address((uint8_t)strlen(hlr), 1, 1, hlr));
+  vector<unsigned char> res ;
+   SccpSenderMock sender(logger, res);
+   mtsms.setSccpSender((SccpSender*)&sender);
+  smsc_log_debug(logger,
+      "FAKE UPDATELOCATION imsi=\'%s\', msisdn=\'%s\', mgt=\'%s\' with period=%d seconds"
+      " serving by msc=\'%s\', vlr=\'%s\'",
+      imsi.c_str(), msisdn.c_str(), mgt.c_str(), period,
+      msc_digits.c_str(), vlr_digits.c_str());
+  TSM* tsm;
+  AC appcntx = net_loc_upd_v2;
+  tsm = mtsms->TC_BEGIN(appcntx);
+  if (tsm)
   {
-    smsc_log_debug(logger,
-               "FAKE UPDATELOCATION imsi=\'%s\', msisdn=\'%s\', mgt=\'%s\' with period=%d seconds"
-               " serving by msc=\'%s\', vlr=\'%s\'",
-               imsi.c_str(), msisdn.c_str(), mgt.c_str(), period,
-               msc_digits.c_str(), vlr_digits.c_str());
-    //changeStatus(1);
-    if (coordinator)
-    {
-      TSM* tsm;
-      AC appcntx = net_loc_upd_v2;
-      tsm = coordinator->TC_BEGIN(appcntx);
-      if (tsm)
-      {
-        tsm->setCompletionListener(this);
+    tsm->setCompletionListener(this);
 
-        UpdateLocationReq msg;
-        msg.setParameters(imsi, msc_digits,vlr_digits);
-        tsm->TInvokeReq( 1 /* invokeId */, 2 /* updateLocation operation */, msg);
+    UpdateLocationReq msg;
+    msg.setParameters(imsi, msc_digits,vlr_digits);
+    tsm->TInvokeReq( 1 /* invokeId */, 2 /* updateLocation operation */, msg);
 
-        uint8_t cl[20]; uint8_t cllen; uint8_t cd[20]; uint8_t cdlen;
-        cllen = packSCCPAddress(cl, 1 /* E.164 */, vlr_digits.c_str() /* VLR E.164 */, 7 /* VLR SSN */);
-        cdlen = packSCCPAddress(cd, 7 /* E.214 */, mgt.c_str()   /* MS  E.214 */, 6 /* HLR SSN */);
-        tsm->TBeginReq(cdlen, cd, cllen, cl);
-      }
-    }
+    uint8_t cl[20]; uint8_t cllen; uint8_t cd[20]; uint8_t cdlen;
+    cllen = packSCCPAddress(cl, 1 /* E.164 */, vlr_digits.c_str() /* VLR E.164 */, 7 /* VLR SSN */);
+    cdlen = packSCCPAddress(cd, 7 /* E.214 */, mgt.c_str() /* MS  E.214 */, 6 /* HLR SSN */);
+    tsm->TBeginReq(cdlen, cd, cllen, cl);
   }
 }
