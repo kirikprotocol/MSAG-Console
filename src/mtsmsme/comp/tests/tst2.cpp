@@ -2,13 +2,32 @@ static char const ident[] = "$Id$";
 #include "mtsmsme/comp/tests/tst2.hpp"
 #include "mtsmsme/processor/SccpSender.hpp"
 #include "mtsmsme/processor/util.hpp"
+#include "mtsmsme/processor/TSM.hpp"
+#include "mtsmsme/processor/ACRepo.hpp"
+#include "mtsmsme/comp/SendRoutingInfoForSM.hpp"
+#include "mtsmsme/processor/TCO.hpp"
+#include "mtsmsme/comp/ReportSmDeliveryStatus.hpp"
+#include "mtsmsme/comp/UpdateLocation.hpp"
+#include "sms/sms.h"
 #include <string>
 CPPUNIT_TEST_SUITE_REGISTRATION(AmericaTestFixture);
 
 using smsc::mtsmsme::processor::SccpSender;
+using smsc::mtsmsme::processor::TsmComletionListener;
 using std::vector;
 using smsc::logger::Logger;
 using smsc::mtsmsme::processor::util::dump;
+class TsmComletionListenerMock: public TsmComletionListener {
+  private:
+    Logger* logger;
+  public:
+    TsmComletionListenerMock(Logger* _logger):logger(_logger){}
+    virtual void complete(int status)
+    {
+      smsc_log_debug(logger,
+           "COMPLETED UPDATELOCATION status=%d",status);
+    }
+};
 class SccpSenderMock: public SccpSender {
   private:
     Logger* logger;
@@ -39,7 +58,6 @@ void AmericaTestFixture::tearDown()
 {
   Logger::Shutdown();
 }
-#include "mtsmsme/comp/UpdateLocation.hpp"
 void AmericaTestFixture::updateLocation_arg_encoding()
 {
   smsc_log_debug(logger, "======== AmericaTestFixture::updateLocation_arg_encoding ========\n");
@@ -84,7 +102,6 @@ void AmericaTestFixture::updateLocation_arg_encoding()
   CPPUNIT_ASSERT(etalon_buf == ulmsg);
   CPPUNIT_ASSERT_ASSERTION_FAIL( CPPUNIT_ASSERT( bad_buf == ulmsg ) );
 }
-#include "mtsmsme/comp/ReportSmDeliveryStatus.hpp"
 void AmericaTestFixture::reportSMDeliveryStatus_arg_decoding(void)
 {
   smsc_log_debug(logger, "======== AmericaTestFixture::reportSMDeliveryStatus_arg_decoding ========\n");
@@ -100,8 +117,6 @@ void AmericaTestFixture::reportSMDeliveryStatus_arg_decoding(void)
   //todo add some validations
   CPPUNIT_ASSERT( true );
 }
-#include "mtsmsme/processor/TCO.hpp"
-#include "sms/sms.h"
 void AmericaTestFixture::reportSMDeliveryStatus_receiving()
 {
   smsc_log_debug(logger, "======== AmericaTestFixture::reportSMDeliveryStatus_receiving ========\n");
@@ -185,9 +200,6 @@ void AmericaTestFixture::reportSMDeliveryStatus_receiving()
   vector<unsigned char> expected(expected_data,expected_data + sizeof(expected_data) / sizeof(unsigned char) );
   CPPUNIT_ASSERT( expected == res);
 }
-#include "mtsmsme/processor/ACRepo.hpp"
-#include "mtsmsme/processor/TSM.hpp"
-#include "mtsmsme/comp/SendRoutingInfoForSM.hpp"
 void AmericaTestFixture::sendRoutingInfoForSM_sending()
 {
   smsc_log_debug(logger, "======== AmericaTestFixture::sendRoutingInfoForSM_sending ========\n");
@@ -260,6 +272,7 @@ void AmericaTestFixture::updateLocation_dialogue_cleanup(void)
   using smsc::mtsmsme::processor::TSM;
   using smsc::sms::Address;
   using smsc::mtsmsme::processor::util::packSCCPAddress;
+  using smsc::mtsmsme::processor::net_loc_upd_v2;
   string imsi ("250013903784021");
   string msisdn ("79134632021");
   string mgt ("791603903784021");
@@ -272,20 +285,20 @@ void AmericaTestFixture::updateLocation_dialogue_cleanup(void)
       Address((uint8_t)strlen(msc_digits.c_str()), 1, 1, msc_digits.c_str()),
       Address((uint8_t)strlen(vlr_digits.c_str()), 1, 1, vlr_digits.c_str()),
       Address((uint8_t)strlen(hlr_digits.c_str()), 1, 1, hlr_digits.c_str()));
-  vector<unsigned char> res ;
-   SccpSenderMock sender(logger, res);
-   mtsms.setSccpSender((SccpSender*)&sender);
+  vector<unsigned char> res;
+  SccpSenderMock sender(logger, res);
+  mtsms.setSccpSender((SccpSender*)&sender);
+  TsmComletionListenerMock listener(logger);
   smsc_log_debug(logger,
       "FAKE UPDATELOCATION imsi=\'%s\', msisdn=\'%s\', mgt=\'%s\' with period=%d seconds"
       " serving by msc=\'%s\', vlr=\'%s\'",
       imsi.c_str(), msisdn.c_str(), mgt.c_str(), period,
       msc_digits.c_str(), vlr_digits.c_str());
   TSM* tsm;
-  AC appcntx = net_loc_upd_v2;
-  tsm = mtsms.TC_BEGIN(appcntx);
+  tsm = mtsms.TC_BEGIN(net_loc_upd_v2);
   if (tsm)
   {
-    tsm->setCompletionListener(this);
+    tsm->setCompletionListener((TsmComletionListener)&listener);
 
     UpdateLocationReq msg;
     msg.setParameters(imsi, msc_digits,vlr_digits);
