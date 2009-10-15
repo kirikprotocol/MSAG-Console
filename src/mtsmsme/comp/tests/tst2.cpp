@@ -294,7 +294,7 @@ void AmericaTestFixture::updateLocation_dialogue_cleanup(void)
   mtsms.setSccpSender((SccpSender*)&sender);
   TsmComletionListenerMock listener(logger);
   TSMSTAT stat;
-  TSM::objcount=0;
+  TSM::resetCounters();
   TSM::getCounters(stat);
   CPPUNIT_ASSERT( stat.objcount == 0 );
   smsc_log_debug(logger,

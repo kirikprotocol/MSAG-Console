@@ -67,6 +67,7 @@ class TSM
     virtual void TInvokeReq(int8_t invokeId, uint8_t opcode, CompIF& arg);
     virtual void TResultLReq(uint8_t invokeId, uint8_t opcode, CompIF& arg);
     static void getCounters(TSMSTAT&);
+    static void resetCounters();
     TrId getltrid();
   protected:
 
