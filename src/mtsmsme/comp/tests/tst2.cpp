@@ -258,6 +258,8 @@ void AmericaTestFixture::updateLocation_dialogue_cleanup(void)
   using std::string;
   using smsc::mtsmsme::processor::TCO;
   using smsc::mtsmsme::processor::TSM;
+  using smsc::sms::Address;
+  using smsc::mtsmsme::processor::util::packSCCPAddress;
   string imsi ("250013903784021");
   string msisdn ("79134632021");
   string mgt ("791603903784021");
@@ -280,7 +282,7 @@ void AmericaTestFixture::updateLocation_dialogue_cleanup(void)
       msc_digits.c_str(), vlr_digits.c_str());
   TSM* tsm;
   AC appcntx = net_loc_upd_v2;
-  tsm = mtsms->TC_BEGIN(appcntx);
+  tsm = mtsms.TC_BEGIN(appcntx);
   if (tsm)
   {
     tsm->setCompletionListener(this);
