@@ -300,7 +300,7 @@ void TCO::dlgcleanup()
     {
       wdtimer timer = wdqueue.top();
       smsc_log_debug(logger,"expired timer found wdtimer(%d,%s,%d)",
-          timer.seconds,timer.ltrid.toString().c_str(),timer.secret);
+          timer.deadline,timer.ltrid.toString().c_str(),timer.secret);
       TSM* tsm = 0;
       {
         MutexGuard g(tridpool_mutex);
