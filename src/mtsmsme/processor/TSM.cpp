@@ -8,6 +8,7 @@ namespace smsc{namespace mtsmsme{namespace processor{
 uint32_t TSM::objcount = 0;
 uint32_t TSM::objcreated = 0;
 uint32_t TSM::objdeleted = 0;
+static uint32_t secretcount = 1971;
 
 void TSM::getCounters(TSMSTAT& stat)
 {
@@ -30,11 +31,11 @@ TSM::TSM(TrId _ltrid,AC& ac,TCO* _tco):tco(_tco),appcntx(ac),listener(0),
 
   logger = Logger::getInstance("mt.sme.tsm");
   ++objcreated;
+  secret = ++secretcount;
   gettimeofday(&start_ts, NULL);
 }
 TrId TSM::getltrid() { return ltrid; }
 void TSM::setCompletionListener(TsmComletionListener* _listener) { listener = _listener; }
-
 TSM::~TSM()
 {
   struct timeval end_ts;
@@ -99,6 +100,19 @@ void TSM::TEndReq()
 void TSM::TResultLReq(uint8_t invokeId, uint8_t opcode, CompIF& arg)
 {
   smsc_log_warn(logger,"TSM::TResultLReq() is NOT IMPLEMENTED");
+}
+void TSM::startwdtimer(int seconds) {tco->startwdtimer(seconds,ltrid,secret);}
+void TSM::expiredwdtimer(uint32_t _secret)
+{
+  if (_secret == secret)
+  {
+    smsc_log_debug(logger,"tsm otid=%s expire watch dog timer, closing...",ltrid.toString().c_str());
+    tco->TSMStopped(ltrid);
+  }
+  else
+  {
+    smsc_log_error(logger,"tsm otid=%s expire UNKNOWN timer, skipping...",ltrid.toString().c_str());
+  }
 }
 void TSM::END_received(Message& msg)
 {

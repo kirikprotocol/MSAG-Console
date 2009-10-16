@@ -66,6 +66,7 @@ class TSM
 
     virtual void TInvokeReq(int8_t invokeId, uint8_t opcode, CompIF& arg);
     virtual void TResultLReq(uint8_t invokeId, uint8_t opcode, CompIF& arg);
+    virtual void expiredwdtimer(uint32_t secret);
     static void getCounters(TSMSTAT&);
     static void resetCounters();
     TrId getltrid();
@@ -82,6 +83,7 @@ class TSM
     uint8_t raddrlen;
     Logger* logger;
     TsmComletionListener* listener;
+    void startwdtimer(int seconds);
   private:
     vector<unsigned char> internal_arg;
     uint8_t internal_opcode;
@@ -91,6 +93,7 @@ class TSM
     static uint32_t objcreated;
     static uint32_t objdeleted;
     uint32_t objnumber;
+    uint32_t secret;
 };
 
 }/*namespace processor*/}/*namespace mtsmsme*/}/*namespace smsc*/

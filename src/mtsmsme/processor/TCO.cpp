@@ -4,6 +4,7 @@ static char const ident[] = "$Id$";
 #include "mtsmsme/processor/ACRepo.hpp"
 #include "util/Exception.hpp"
 #include "logger/Logger.h"
+#include <queue>
 
 namespace smsc{namespace mtsmsme{namespace processor{
 
@@ -268,43 +269,46 @@ void TCO::SCCPsend(uint8_t cdlen,uint8_t *cd,
     sccpsender->send(cdlen,cd,cllen,cl,ulen,udp);
   }
 }
-void TCO::dlgcleanup()
-{
-
-}
-/*
-class wdtimerComparator { public: bool operator()(wdtimer*,wdtimer*);};
-static std::priority_queue<wdtimer*,
-                           std::vector<wdtimer*>,
-                           wdtimerComparator> tqueue;
-bool wdtimerComparator::operator()(wdtimer* left, wdtimer* right)
-{
-  return ((left->deadline) >= (right->deadline));
-}
 class wdtimer {
   public:
-    wdtimer(int sec);
-  private:
+    wdtimer(int delay, TrId _ltrid, uint32_t _secret):
+      deadline(time(0)+delay),ltrid(_ltrid),secret(_secret){}
     time_t deadline;
     TrId ltrid;
-    void setDelay(int delay) { deadline = time(0) + delay; }
+    uint32_t secret;
 };
+class wdtimerComparator {
+  public:
+    bool operator()(wdtimer& left, wdtimer& right){
+      return ((left.deadline) >= (right.deadline));
+    }
+};
+static std::priority_queue<wdtimer,std::vector<wdtimer>,wdtimerComparator> wdqueue;
+void TCO::startwdtimer(int seconds,TrId ltrid, uint32_t secret)
+{
+  wdqueue.push(wdtimer(seconds,ltrid,secret));
+}
 void TCO::dlgcleanup()
 {
   //check existing watchdogs
-  if (! tqueue.empty())
+  if (! wdqueue.empty())
   {
     time_t now; time(&now);
-    wdtimer* request = tqueue.top();
-    if (now > request->deadline)
+    while ( now > wdqueue.top().deadline)
     {
-      tqueue.pop();
-      UpdateLocationTask* task = new UpdateLocationTask(*request);
-      delete(request);
-      pqueue.push(task);
-      task->process(coordinator);
+      wdtimer& timer = wdqueue.top();
+      TSM* tsm = 0;
+      {
+        MutexGuard g(tridpool_mutex);
+        TSM** ptr = tsms.GetPtr(timer.ltrid);
+        if (ptr) tsm = *ptr;
+      }
+      if (tsm)
+        tsm->expiredwdtimer(timer.secret);
+      else
+        smsc_log_error(logger,"timer epires but tsm not found");
+      wdqueue.pop();
     }
   }
 }
-*/
 }/*namespace processor*/}/*namespace mtsmsme*/}/*namespace smsc*/
