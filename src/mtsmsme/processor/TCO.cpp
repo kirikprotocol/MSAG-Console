@@ -288,7 +288,7 @@ void TCO::startwdtimer(int seconds,TrId ltrid, uint32_t secret)
 {
   smsc_log_debug(logger,"start wdtimer(%d,%s,%d)",seconds,ltrid.toString().c_str(),secret);
   wdqueue.push(wdtimer(seconds,ltrid,secret));
-  smsc_log_debug(logger,"wdqueue.empty() = %d",wdqueue.empty());
+  smsc_log_debug(logger,"wdqueue.size() = %d",wdqueue.size());
 }
 void TCO::dlgcleanup()
 {
@@ -296,6 +296,7 @@ void TCO::dlgcleanup()
   if (! wdqueue.empty())
   {
     time_t now; time(&now);
+    smsc_log_debug(logger,"now=%d wdqueue.top().deadline=%d",now,wdqueue.top().deadline);
     while ( now > wdqueue.top().deadline)
     {
       wdtimer timer = wdqueue.top();

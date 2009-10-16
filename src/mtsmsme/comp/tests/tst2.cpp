@@ -320,7 +320,7 @@ void AmericaTestFixture::updateLocation_dialogue_cleanup(void)
     cdlen = packSCCPAddress(cd, 7 /* E.214 */, mgt.c_str() /* MS  E.214 */, 6 /* HLR SSN */);
     tsm->TBeginReq(cdlen, cd, cllen, cl);
   }
-  sleep(60);
+  sleep(70);
   mtsms.dlgcleanup();
   TSM::getCounters(stat);
   CPPUNIT_ASSERT( stat.objcount == 0 );
