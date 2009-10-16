@@ -42,6 +42,8 @@
         <param name="addrRootSize" type="int">32768</param>
 	<param name="defAddrChunkSize" type="int">32</param>
 	<param name="maxFlushSpeed" type="int">4096000</param>
+	<!--param name="textArcEncoding" type="string">utf-8</param-->
+
 	<section name="smeAddrChunkSize">
     	    <param name="MAP_PROXY" type="int">8</param>
 	</section>
