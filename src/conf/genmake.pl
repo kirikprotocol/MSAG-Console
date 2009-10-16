@@ -184,7 +184,7 @@ sub generate{
         $rawlibs=~s/\@\S+//g;
         $moddeps.=' $(SMSC_BUILDDIR)/bin/'.$binname;
         my $ldflags=readstring($dirname.'/.ldflags');
-        print $mkf '$(SMSC_BUILDDIR)/bin/'.$binname.': $(SMSC_BUILDDIR)/obj/'.$moddir.'/'.$srcname.'.o'.$libdeps."\n";
+        print $mkf '$(SMSC_BUILDDIR)/bin/'.$binname.': $(SMSC_BUILDDIR)/obj/'.$moddir.'/'.$srcname.'.o'.$libdeps." makefile.inc\n";
         print $mkf "\t\@mkdir -p `dirname \$@`\n";
         print $mkf "\t\@\$(ECHO) '\$(LNKCLR)Linking \$\@\$(CLREND)'\n" unless $silent;
         print $mkf "\t\$(PFX)\$(INSTRUMENTATION) \$(CXX) \$(CXXFLAGS) $ldflags -o \$@ \$< \$(LDFLAGS) $rawlibs\n\n";
