@@ -286,34 +286,30 @@ class wdtimerComparator {
 static std::priority_queue<wdtimer,std::vector<wdtimer>,wdtimerComparator> wdqueue;
 void TCO::startwdtimer(int seconds,TrId ltrid, uint32_t secret)
 {
-  smsc_log_debug(logger,"start wdtimer(%d,%s,%d)",seconds,ltrid.toString().c_str(),secret);
   wdqueue.push(wdtimer(seconds,ltrid,secret));
-  smsc_log_debug(logger,"wdqueue.size() = %d",wdqueue.size());
 }
 void TCO::dlgcleanup()
 {
   //check existing watchdogs
-  if (! wdqueue.empty())
+  time_t now; time(&now);
+  while (! wdqueue.empty())
   {
-    time_t now; time(&now);
-    smsc_log_debug(logger,"now=%d wdqueue.top().deadline=%d",now,wdqueue.top().deadline);
-    while ( now > wdqueue.top().deadline)
+    wdtimer timer = wdqueue.top();
+    if ( now < timer.deadline)
+      return;
+    wdqueue.pop();
+    smsc_log_debug(logger,"expired timer found wdtimer(%d,%s,%d)",
+        timer.deadline,timer.ltrid.toString().c_str(),timer.secret);
+    TSM* tsm = 0;
     {
-      wdtimer timer = wdqueue.top();
-      smsc_log_debug(logger,"expired timer found wdtimer(%d,%s,%d)",
-          timer.deadline,timer.ltrid.toString().c_str(),timer.secret);
-      TSM* tsm = 0;
-      {
-        MutexGuard g(tridpool_mutex);
-        TSM** ptr = tsms.GetPtr(timer.ltrid);
-        if (ptr) tsm = *ptr;
-      }
-      if (tsm)
-        tsm->expiredwdtimer(timer.secret);
-      else
-        smsc_log_error(logger,"timer epires but tsm not found");
-      wdqueue.pop();
+      MutexGuard g(tridpool_mutex);
+      TSM** ptr = tsms.GetPtr(timer.ltrid);
+      if (ptr) tsm = *ptr;
     }
+    if (tsm)
+      tsm->expiredwdtimer(timer.secret);
+    else
+      smsc_log_error(logger,"timer epires but tsm not found");
   }
 }
 }/*namespace processor*/}/*namespace mtsmsme*/}/*namespace smsc*/
