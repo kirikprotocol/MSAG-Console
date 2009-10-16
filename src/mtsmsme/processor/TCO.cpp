@@ -296,7 +296,7 @@ void TCO::dlgcleanup()
     time_t now; time(&now);
     while ( now > wdqueue.top().deadline)
     {
-      wdtimer& timer = wdqueue.top();
+      wdtimer timer = wdqueue.top();
       TSM* tsm = 0;
       {
         MutexGuard g(tridpool_mutex);
