@@ -56,7 +56,6 @@ void ULTSM::CONTINUE_received(uint8_t cdlen,
 
 void ULTSM::END_received(Message& msg)
 {
-  stopwdtimer();
   if(listener) listener->complete(1);
   TSM::END_received(msg);
 }
