@@ -286,6 +286,7 @@ class wdtimerComparator {
 static std::priority_queue<wdtimer,std::vector<wdtimer>,wdtimerComparator> wdqueue;
 void TCO::startwdtimer(int seconds,TrId ltrid, uint32_t secret)
 {
+  smsc_log_debug(logger,"start wdtimer(%d,%s,%d)",seconds,ltrid.toString().c_str(),secret);
   wdqueue.push(wdtimer(seconds,ltrid,secret));
 }
 void TCO::dlgcleanup()
