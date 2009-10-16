@@ -2611,7 +2611,9 @@ int EmailProcessor::sendSms(std::string from,const std::string to,const char* ms
       {
         psms.setIntProperty(Tag::SMSC_UDH_CONCAT,1);
       }
-      psms.setConcatMsgRef(mr++);
+      int newMr=mr++;
+      psms.setConcatMsgRef(newMr);
+      sms.setConcatMsgRef(newMr);
       extractSmsPart(&psms,0);
       fillSmppPduFromSms(&sm,&psms);
       resp=cfg::tr->submit(sm);
