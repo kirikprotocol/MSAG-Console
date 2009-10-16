@@ -232,6 +232,12 @@ int SccpProcessor::Run()
         break;
       case WORKING:
         if (registrator) registrator->process();
+        {
+          using namespace smsc::mtsmsme::processor;
+          TCO* coordinator = 0;
+          if ( processor) coordinator = processor->getCoordinator();
+          if ( coordinator ) coordinator->dlgcleanup();//todo: remove timer polling
+        }
         break;
     } /* end of switch ( state ) */
 

@@ -83,11 +83,19 @@ void TCO::NNOTICE(uint8_t cdlen, uint8_t *cd, /* called party address  */
                   uint16_t ulen, uint8_t *udp /* user data             */
                   )
 {
-    smsc_log_debug(logger,
-                    "TCO::NNOTICE Cd(%s) Cl(%s)\ndata[%d]={%s}",
-                    getAddressDescription(cdlen,cd).c_str(),
-                    getAddressDescription(cllen,cl).c_str(),
-                    ulen,dump(ulen,udp).c_str());
+  smsc_log_debug(logger,
+    "TCO::N-NOTICE-IND "
+    "Cd[%d]={%s} "
+    "Cg[%d]={%s} "
+    "Ud[%d]={%s} "
+    "Cd(%s) "
+    "Cg(%s)",
+    cdlen,dump(cdlen,cd).c_str(),
+    cllen,dump(cllen,cl).c_str(),
+    ulen, dump(ulen,udp).c_str(),
+    getAddressDescription(cdlen,cd).c_str(),
+    getAddressDescription(cllen,cl).c_str()
+  );
 }
 void TCO::NUNITDATA(uint8_t cdlen, uint8_t *cd, /* called party address  */
                     uint8_t cllen, uint8_t *cl, /* calling party address */
@@ -96,10 +104,18 @@ void TCO::NUNITDATA(uint8_t cdlen, uint8_t *cd, /* called party address  */
 {
   {
     smsc_log_debug(logger,
-                    "TCO::NUNITDATA Cd(%s) Cl(%s)\ndata[%d]={%s}",
-                    getAddressDescription(cdlen,cd).c_str(),
-                    getAddressDescription(cllen,cl).c_str(),
-                    ulen,dump(ulen,udp).c_str());
+      "TCO::N-NUNITDATA-IND "
+      "Cd[%d]={%s} "
+      "Cg[%d]={%s} "
+      "Ud[%d]={%s} "
+      "Cd(%s) "
+      "Cg(%s)",
+      cdlen,dump(cdlen,cd).c_str(),
+      cllen,dump(cllen,cl).c_str(),
+      ulen, dump(ulen,udp).c_str(),
+      getAddressDescription(cdlen,cd).c_str(),
+      getAddressDescription(cllen,cl).c_str()
+    );
   }
   fixCalledAddress(cdlen, cd);
   Message msg(logger);
@@ -265,29 +281,41 @@ void TCO::SCCPsend(uint8_t cdlen,uint8_t *cd,
 {
   if (sccpsender)
   {
-    smsc_log_debug(logger,"void TCO::SCCPsend: cd=%s, cl=%s",getAddressDescription(cdlen,cd).c_str(),getAddressDescription(cllen,cl).c_str());
     sccpsender->send(cdlen,cd,cllen,cl,ulen,udp);
+    smsc_log_debug(logger,
+      "TCO::N-NUNITDATA-REQ "
+      "Cd[%d]={%s} "
+      "Cg[%d]={%s} "
+      "Ud[%d]={%s} "
+      "Cd(%s) "
+      "Cg(%s)",
+      cdlen,dump(cdlen,cd).c_str(),
+      cllen,dump(cllen,cl).c_str(),
+      ulen, dump(ulen,udp).c_str(),
+      getAddressDescription(cdlen,cd).c_str(),
+      getAddressDescription(cllen,cl).c_str()
+    );
   }
 }
+
 class wdtimer {
   public:
+    time_t deadline; TrId ltrid;uint32_t secret;
     wdtimer(int delay, TrId _ltrid, uint32_t _secret):
       deadline(time(0)+delay),ltrid(_ltrid),secret(_secret){}
-    time_t deadline;
-    TrId ltrid;
-    uint32_t secret;
 };
-class wdtimerComparator {
-  public:
+
+class wdtimerComparator { public:
     bool operator()(wdtimer& left, wdtimer& right){
-      return ((left.deadline) >= (right.deadline));
-    }
-};
+      return ((left.deadline) >= (right.deadline));}};
+
 static std::priority_queue<wdtimer,std::vector<wdtimer>,wdtimerComparator> wdqueue;
+
 void TCO::startwdtimer(int seconds,TrId ltrid, uint32_t secret)
 {
   wdqueue.push(wdtimer(seconds,ltrid,secret));
 }
+
 void TCO::dlgcleanup()
 {
   //check existing watchdogs
@@ -298,8 +326,6 @@ void TCO::dlgcleanup()
     if ( now < timer.deadline)
       return;
     wdqueue.pop();
-    smsc_log_debug(logger,"expired timer found wdtimer(%d,%s,%d)",
-        timer.deadline,timer.ltrid.toString().c_str(),timer.secret);
     TSM* tsm = 0;
     {
       MutexGuard g(tridpool_mutex);

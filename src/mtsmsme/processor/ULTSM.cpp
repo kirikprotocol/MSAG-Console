@@ -80,13 +80,13 @@ void ULTSM::TBeginReq(uint8_t  cdlen, uint8_t* cd, uint8_t  cllen, uint8_t* cl)
 	vector<unsigned char> data;
 	begin.encode(data);
 
-	smsc_log_error(logger,
-      "CALLED[%d]={%s} "
-      "CALLING[%d]={%s} "
-      "UL[%d]={%s}",
-      raddrlen,dump(raddrlen,raddr).c_str(),
-      laddrlen,dump(laddrlen,laddr).c_str(),
-      data.size(),dump((uint16_t)data.size(),&data[0]).c_str());
+//	smsc_log_debug(logger,
+//      "CALLED[%d]={%s} "
+//      "CALLING[%d]={%s} "
+//      "UL[%d]={%s}",
+//      raddrlen,dump(raddrlen,raddr).c_str(),
+//      laddrlen,dump(laddrlen,laddr).c_str(),
+//      data.size(),dump((uint16_t)data.size(),&data[0]).c_str());
 	startwdtimer(60);
 	tco->SCCPsend(raddrlen,raddr,laddrlen,laddr,(uint16_t)data.size(),&data[0]);
 }
