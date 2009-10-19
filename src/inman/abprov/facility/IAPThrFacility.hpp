@@ -1,6 +1,6 @@
 /* ************************************************************************** *
  * Threaded Abonent Provider facility.
- * In order to use IAProviderThreaded functionlity implement IAPQueryAC and
+ * In order to use IAProviderFacility functionlity implement IAPQueryAC and
  * IAPQueryFactoryITF.
  * ************************************************************************** */
 #ifndef SMSC_INMAN_IAP_THREADED_FACILITY_HPP
@@ -41,13 +41,13 @@ public:
 
 
 class IAPQueryFactoryITF {
+protected:
+    virtual ~IAPQueryFactoryITF()  //forbid interface destruction
+    { }
+
 public:
     virtual IAPQueryAC * newQuery(unsigned q_id, IAPQueryManagerITF * owner,
                                   Logger * use_log = NULL) = 0;
-
-    //NOTE: special case: explicitly allow interface destruction
-    virtual ~IAPQueryFactoryITF() 
-    { }
 };
 
 class IAPQueryAC : public ThreadedTask {
@@ -101,7 +101,7 @@ protected:
 };
 
 
-struct IAProviderThreadedCFG {
+struct IAPFacilityCFG {
     unsigned            max_queries;
     unsigned            init_threads;
     bool                qryMultiRun;
@@ -109,14 +109,14 @@ struct IAProviderThreadedCFG {
 };
 
 
-class IAProviderThreaded : public IAProviderITF, IAPQueryManagerITF {
+class IAPQueryFacility : public IAPQueryProcessorITF, IAPQueryManagerITF {
 private:
     typedef std::list<IAPQueryListenerITF*> QueryCBList;
     typedef std::list<IAPQueryAC*> QueriesList;
-    typedef struct {
+    struct CachedQuery {
         IAPQueryAC *    query;
         QueryCBList     cbList;
-    } CachedQuery;
+    };
     typedef Hash<CachedQuery> QueriesHash;
 
     ThreadPool          pool;
@@ -124,7 +124,7 @@ private:
     QueriesList         qryPool;
     QueriesHash         qryCache;
     unsigned            _lastQId;
-    IAProviderThreadedCFG _cfg;
+    IAPFacilityCFG      _cfg;
     Logger *            logger;
     const char *        _logId; //prefix for logging info
 
@@ -135,14 +135,14 @@ protected:
     bool hasListeners(const AbonentId & ab_number);
 
 public:
-    IAProviderThreaded(const IAProviderThreadedCFG & in_cfg, Logger * use_log = NULL);
-    ~IAProviderThreaded();
+    IAPQueryFacility(const IAPFacilityCFG & in_cfg, Logger * use_log = NULL);
+    ~IAPQueryFacility();
 
     bool Start(void);
     void Stop(bool do_wait = false);
 
     // ****************************************
-    // IAProviderITF implementation:
+    // IAPQueryProcessorITF implementation:
     // ****************************************
     //Starts query and binds listener to it.
     //Returns true if query succesfully started, false otherwise

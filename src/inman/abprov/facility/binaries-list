@@ -1,5 +1,13 @@
+#
 # $Id$
-# this file contains binaries definitions
+#
+# IAProvider threaded facility
+#
 
-# binary name source name libraries         
+# using global setting of service linkage
+switch INMAN_ICS_LINKAGE
+static: #no need for .so loader, module is statically linked into libinman
+default: \
 inman/ldlib/libinman_iap_fclt.so IAPThrFacility -lcore-threads $(SHARED_OPT) $(__LIBRARIES) -ldl -lrt
+end switch
+

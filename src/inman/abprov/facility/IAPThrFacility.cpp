@@ -5,6 +5,8 @@ static const char ident[] = "$Id$";
 #include "inman/abprov/facility/IAPThrFacility.hpp"
 #include <algorithm>
 
+using smsc::core::synchronization::ReverseMutexGuard;
+
 namespace smsc {
 namespace inman {
 namespace iaprvd {
@@ -72,16 +74,16 @@ void IAPQueryAC::onRelease(void)
 }
 
 /* ************************************************************************** *
- * class IAProviderThreaded implementation:
+ * class IAProviderFacility implementation:
  * ************************************************************************** */
-IAProviderThreaded::IAProviderThreaded(const IAProviderThreadedCFG & in_cfg, Logger * uselog/* = NULL*/)
+IAPQueryFacility::IAPQueryFacility(const IAPFacilityCFG & in_cfg, Logger * uselog/* = NULL*/)
     : _cfg(in_cfg), _lastQId(0), _logId("IAPrvd")
 {
     logger = uselog ? uselog : Logger::getInstance("smsc.inman.iaprvd");
     pool.setMaxThreads((int)_cfg.max_queries);
 }
 
-IAProviderThreaded::~IAProviderThreaded()
+IAPQueryFacility::~IAPQueryFacility()
 {
     //stop and wait for active quieries
     Stop(true);
@@ -95,7 +97,7 @@ IAProviderThreaded::~IAProviderThreaded()
     smsc_log_debug(logger, "%s: shutdown complete", _logId);
 }
 
-bool IAProviderThreaded::Start(void)
+bool IAPQueryFacility::Start(void)
 {
     MutexGuard  guard(qrsGuard);
     if (_cfg.init_threads) {
@@ -105,7 +107,7 @@ bool IAProviderThreaded::Start(void)
     return true;
 }
 
-void IAProviderThreaded::Stop(bool do_wait/* = false*/)
+void IAPQueryFacility::Stop(bool do_wait/* = false*/)
 {
     cancelAllQueries();
     if (do_wait)
@@ -115,7 +117,7 @@ void IAProviderThreaded::Stop(bool do_wait/* = false*/)
     return;
 }
 
-void IAProviderThreaded::cancelAllQueries(void)
+void IAPQueryFacility::cancelAllQueries(void)
 {
     MutexGuard  guard(qrsGuard);
 
@@ -127,13 +129,16 @@ void IAProviderThreaded::cancelAllQueries(void)
         smsc_log_debug(logger, "%s: %s(%s): cancelling, %u listeners set", _logId,
                        ab_rec->query->taskName(), ab_number, ab_rec->cbList.size());
         ab_rec->cbList.clear();
-        ab_rec->query->stop();
+        {
+          ReverseMutexGuard rGrd(qrsGuard);
+          ab_rec->query->stop();
+        }
     }
     return;
 }
 
 
-bool IAProviderThreaded::hasListeners(const AbonentId & ab_number)
+bool IAPQueryFacility::hasListeners(const AbonentId & ab_number)
 {
     MutexGuard  guard(qrsGuard);
     CachedQuery * ab_rec = qryCache.GetPtr(ab_number.getSignals());
@@ -142,7 +147,7 @@ bool IAProviderThreaded::hasListeners(const AbonentId & ab_number)
 
 //This one is called from ThreadedTask on DB query completion.
 //Notifies query listeners and releases query.
-void IAProviderThreaded::releaseQuery(IAPQueryAC * query)
+void IAPQueryFacility::releaseQuery(IAPQueryAC * query)
 {
     //Notify listeners if any, and remove query from active queries cache
     {
@@ -203,7 +208,7 @@ void IAProviderThreaded::releaseQuery(IAPQueryAC * query)
 //Starts query and binds listener to it.
 //Returns true if query succesfully started, false otherwise
 //NOTE: the AbonentId is copied into AbonentQuery
-bool IAProviderThreaded::startQuery(const AbonentId & ab_number, 
+bool IAPQueryFacility::startQuery(const AbonentId & ab_number, 
                                    IAPQueryListenerITF * pf_cb/* = NULL*/)
 {
     CachedQuery  qryRec;
@@ -217,8 +222,8 @@ bool IAProviderThreaded::startQuery(const AbonentId & ab_number,
             return true;
         }
     
-        if (qryPool.size()) {
-            qryRec.query = *(qryPool.begin());
+        if (!qryPool.empty()) {
+            qryRec.query = qryPool.front();
             qryPool.pop_front();
         } else {
             _lastQId++;
@@ -241,7 +246,7 @@ bool IAProviderThreaded::startQuery(const AbonentId & ab_number,
 }
 
 //Unbinds query listener and cancels query
-void IAProviderThreaded::cancelQuery(const AbonentId & ab_number, IAPQueryListenerITF * pf_cb)
+void IAPQueryFacility::cancelQuery(const AbonentId & ab_number, IAPQueryListenerITF * pf_cb)
 {
     MutexGuard  guard(qrsGuard);
     CachedQuery * qry_rec = qryCache.GetPtr(ab_number.getSignals());
@@ -253,13 +258,16 @@ void IAProviderThreaded::cancelQuery(const AbonentId & ab_number, IAPQueryListen
                                          qry_rec->cbList.end(), pf_cb);
     if (it != qry_rec->cbList.end())
         qry_rec->cbList.erase(it);
-    if (qry_rec->cbList.size())
-        smsc_log_debug(logger, "%s: %s(%s): %u listeners remain", _logId,
-                       qry_rec->query->taskName(), ab_number.getSignals(),
-                       qry_rec->cbList.size());
-    else
-        smsc_log_debug(logger, "%s: %s(%s): cancelled", _logId,
-                        qry_rec->query->taskName(), ab_number.getSignals());
+
+    if (logger->isDebugEnabled()) {
+      if (!qry_rec->cbList.empty())
+          smsc_log_debug(logger, "%s: %s(%s): %u listeners remain", _logId,
+                         qry_rec->query->taskName(), ab_number.getSignals(),
+                         qry_rec->cbList.size());
+      else
+          smsc_log_debug(logger, "%s: %s(%s): cancelled", _logId,
+                          qry_rec->query->taskName(), ab_number.getSignals());
+    }
     return;
 }
 
