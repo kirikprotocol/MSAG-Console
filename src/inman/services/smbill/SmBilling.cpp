@@ -3,7 +3,6 @@ static char const ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_OFF */
 
 #include "inman/services/smbill/SmBilling.hpp"
-using smsc::inman::iaprvd::IAProvider;
 using smsc::inman::iaprvd::IAProviderITF;
 using smsc::inman::interaction::SerializerException;
 using smsc::inman::interaction::INPCSBilling;
@@ -580,7 +579,7 @@ Billing::PGraphState Billing::onChargeSms(void)
 
     //check if AbonentProvider should be requested for current abonent location
     if (abCsi.vlrNum.empty() && _cfg.iaPol
-        && (_cfg.iaPol->getIAPAbilities() & IAProvider::abSCF))
+        && (_cfg.iaPol->getIAPAbilities() & IAProviderITF::abSCF))
         askProvider = true;
 
     /* **************************************************** */

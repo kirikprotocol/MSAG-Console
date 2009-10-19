@@ -1,6 +1,16 @@
+#
 # $Id$
-# this file contains binaries definitions
+#
+# IAPManager service shared library loader
+#
+# format: binary_name source_name libraries
 
-# binary name source name libraries
-#-linman-services-iapmgr
-inman/ldlib/libinman_ics_iapmgr.so IAPMgrLoader -linman-abprov $(SHARED_OPT) -ldl $(__LIBRARIES) -lrt
+# using global setting of service linkage
+switch INMAN_ICS_LINKAGE
+static: #no need for .so loader, service is statically linked into libinman
+default: \
+inman/ldlib/libinman_ics_iapmgr.so IAPMgrLoader  $(SHARED_OPT) -linman-services-iapmgr -linman-abprov -ldl -lrt
+end switch
+
+
+

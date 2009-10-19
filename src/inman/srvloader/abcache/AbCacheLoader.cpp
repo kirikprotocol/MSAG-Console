@@ -1,23 +1,18 @@
 #ifndef MOD_IDENT_OFF
-static const char ident[] = "$Id$";
+static const char ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_OFF */
 
 #include "inman/services/ICSrvLoader.hpp"
-using smsc::inman::ICSProducerAC;
-
-#include "inman/services/abcache/ICSAbCacheProd.hpp"
+#include "inman/services/abcache/ICSAbCacheLoader.hpp"
 
 namespace smsc {
 namespace inman {
-namespace cache {
 
-//This is the TCAP Dispatcher Service dynamic library entry point
 extern "C" ICSProducerAC * loadupICService(void)
 {
-    return new ICSProdAbCache();
+    return ICSLoaderAbCache();
 }
 
-} //cache
 } //inman
 } //smsc
 

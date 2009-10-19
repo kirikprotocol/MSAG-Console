@@ -65,6 +65,7 @@ public:
 
     ICSUId icsUId(void) const { return _icsUid; }
     State  icsState(void) const { return _icsState; }
+    const ICSIdsSet & icsDeps(void) const { return _icsDeps; }
 
     //Initializes service verifying that all dependent services are inited
     RCode ICSInit(void);
@@ -127,6 +128,12 @@ public:
     virtual ICServiceAC *  newService(ICServicesHostITF * svc_host,
                                       Logger * use_log = NULL) = 0;
 };
+
+//Generic ICService loading function must have following declaration:
+//
+// extern ICSProducerAC * ICSLoader_func(void);
+//
+typedef ICSProducerAC * (*ICSLoader_fp)(void);
 
 } //inman
 } //smsc

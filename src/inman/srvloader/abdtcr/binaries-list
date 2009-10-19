@@ -1,5 +1,14 @@
+#
 # $Id$
-# this file contains binaries definitions
+#
+# Abonent detector service shared library loader
+#
+# format: binary_name source_name libraries
 
-# binary name source name libraries
-inman/ldlib/libinman_ics_abdtcr.so AbntDtcrLoader -linman-services-abdtcr -linman-interaction-msgdtcr $(SHARED_OPT) -ldl $(__LIBRARIES) -lrt
+# using global setting of service linkage
+switch INMAN_ICS_LINKAGE
+static: #no need for .so loader, service is statically linked into libinman
+default: \
+inman/ldlib/libinman_ics_abdtcr.so AbntDtcrLoader $(SHARED_OPT) -linman-services-abdtcr -linman-interaction-msgdtcr -ldl -lrt
+end switch
+

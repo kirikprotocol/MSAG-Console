@@ -1,0 +1,48 @@
+#
+# $Id$
+#
+# INMan linkage customization.
+#
+# Include this file into global makefile.flags if customized linkage is required.
+#
+# NOTE: all vars, which customize linkage, should be assigned in
+#       global makefile.flags as:
+#		VAR_NAME=var_value
+#	prior to this file inclusion.
+#
+# The following vars are recognized:
+#
+# 1) EIN_SS7_LINKAGE = [static | dynamic(default)]
+#    static - forces static linkage of EIN SS7 libraries and
+#       TCAPDispatcher service.
+#    	NOTE: must be turned on in case of EIN HD libs are used on x86
+#
+# 2) INMAN_ICS_LINKAGE = [static | staticSS7 | dynamic(default)]
+#    static - forces static linkage of all submodules
+#       (configurable services and IAProviders)
+#    staticSS7 - forces static linkage of EIN SS7 libraries and
+#       TCAPDispatcher service keeping dynamic linkage of all other submodules.
+#    dynamic - forces dynamic linkage of all submodules, which support
+#       assembling as shared libs (.so)
+
+ifeq ($(INMAN_ICS_LINKAGE),static)
+  # process global settings of services linkage 
+  CXXFLAGS := $(CXXFLAGS) -DICS_LINKAGE_static
+  export INMAN_ICS_LINKAGE=static
+  # set 'per-library' settings ..
+  export EIN_SS7_LINKAGE=static
+else
+  # process 'per-library' settings ..
+  ifeq ($(EIN_SS7_LINKAGE),static)
+    # affects TCAPDispatcher, SmBilling, IAProviderHLR-SRI, etc ..
+    CXXFLAGS := $(CXXFLAGS) -DEIN_SS7_LINKAGE_static
+    export INMAN_ICS_LINKAGE=staticSS7
+    # set 'per-library' settings ..
+    export EIN_SS7_LINKAGE=static
+  else
+    export INMAN_ICS_LINKAGE=dynamic
+  endif
+endif
+
+$(warning INMAN_ICS_LINKAGE=$(INMAN_ICS_LINKAGE))
+

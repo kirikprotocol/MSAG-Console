@@ -7,7 +7,6 @@
 
 #include "inman/services/abcache/ICSAbCache.hpp"
 #include "inman/services/abcache/AbCacheCfgReader.hpp"
-
 #include "inman/services/ICSXcfProducer.hpp"
 
 namespace smsc {
@@ -17,7 +16,7 @@ namespace cache {
 using smsc::inman::ICSIdent;
 using smsc::inman::ICSProducerXcfAC_T;
 
-//Abonent cache service configurator
+//Abonent cache service producer
 class ICSProdAbCache : public 
     ICSProducerXcfAC_T<ICSAbntCache, ICSAbCacheCfgReader, AbonentCacheCFG> {
 public:

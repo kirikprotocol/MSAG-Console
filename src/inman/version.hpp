@@ -3,14 +3,14 @@
 #define __SMSC_INMAN_VERSION__
 
 /* -- NOTE: these defines must be set by release builder -- */
-#define INMAN_BUILD_NUM   3107
-#define INMAN_BUILD_DATE  "Sep 24 2009"
+#define INMAN_BUILD_NUM   3113
+#define INMAN_BUILD_DATE  "Oct 16 2009"
 /* -- -------------------------------------------------- -- */
 
 /* -- NOTE: these defines are set by developers -- */
 #define INMAN_VER_MAJOR     0    //major verison
 #define INMAN_VER_MINOR     7    //minor version
-#define INMAN_VER_FIX       10   //bug fix version
+#define INMAN_VER_FIX       11   //bug fix version
 /* -- ----------------------------------------- -- */
 
 #define INMAN_VENDOR        "Sibinco"

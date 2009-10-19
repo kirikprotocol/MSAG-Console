@@ -12,11 +12,12 @@ namespace smsc {
 namespace inman {
 namespace iapmgr {
 
-//Abonent detector service
+//Abonent Providers control service
 class ICSIAPManager : public ICServiceAC_T<IAPManagerCFG>,
                      public IAPManagerITF {
 protected:
     mutable Mutex   _sync;
+    const char *    _logId;     //logging prefix
     std::auto_ptr<IAPManagerCFG> _cfg;
 
     // ---------------------------------
@@ -24,36 +25,21 @@ protected:
     // --------------------------------- 
     Mutex & _icsSync(void) const { return _sync; }
     //Initializes service verifying that all dependent services are inited
-    RCode _icsInit(void)
-    {
-        //bind policies to IAProvider allocators
-        return  _cfg->polReg.Init(*(_cfg->prvdReg.get()), _icsHost) ?
-            ICServiceAC::icsRcOk : ICServiceAC::icsRcError;
-    }
+    RCode _icsInit(void);
     //Starts service verifying that all dependent services are started
     RCode _icsStart(void)
     {
-        bool failed = false;
-        PoliciesCfgReg::const_iterator it = _cfg->polReg.begin();
-        for (; it != _cfg->polReg.end() && !failed; ++it)
-            failed |= !it->second->startIAProvider();
-        return failed ? ICServiceAC::icsRcError : ICServiceAC::icsRcOk;
+        return ICServiceAC::icsRcOk;
     }
     //Stops service
-    void  _icsStop(bool do_wait = false)
-    {
-        PoliciesCfgReg::const_iterator it = _cfg->polReg.begin();
-        for (; it != _cfg->polReg.end(); ++it)
-            it->second->stopIAProvider(do_wait);
-        return;
-    }
+    void  _icsStop(bool do_wait = false);
 
 public:
     ICSIAPManager(std::auto_ptr<IAPManagerCFG> & use_cfg,
                     ICServicesHostITF * svc_host, Logger * use_log)
         : ICServiceAC_T<IAPManagerCFG>(ICSIdent::icsIdIAPManager,
                                        svc_host, use_cfg, use_log)
-        , _cfg(use_cfg.release())
+        , _logId("iapMgr"), _cfg(use_cfg.release())
     {
         _icsDeps = _cfg->deps;
         _icsState = ICServiceAC::icsStConfig;

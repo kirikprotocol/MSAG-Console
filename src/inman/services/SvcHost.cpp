@@ -1,5 +1,5 @@
 #ifndef MOD_IDENT_OFF
-static char const ident[] = "$Id$";
+static char const ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_OFF */
 /* ************************************************************************** *
  * class SVCHost implementation:
@@ -44,13 +44,15 @@ ICServiceAC::RCode SVCHost::_icsInit(void)
         bool failed = !--attempt;
         if (!failed) {
             try {
-                failed = (pSrv->ICSInit() == ICServiceAC::icsRcError);
+                failed = (pSrv->ICSInit() != ICServiceAC::icsRcOk);
             } catch (const std::exception & exc) {
                 smsc_log_fatal(logger, "%s: '%s' ICSInit() exception: %s",
                      _logId, ICSIdent::uid2Name(srvId), exc.what());
+                failed = true;
             } catch (...) {
                 smsc_log_fatal(logger, "%s: '%s' ICSInit() exception: <unknown>",
                      _logId, ICSIdent::uid2Name(srvId));
+                failed = true;
             }
         }
         _sync.Lock();
@@ -75,13 +77,15 @@ ICServiceAC::RCode SVCHost::_icsStart(void)
         bool failed = !--attempt;
         if (!failed) {
             try {
-                failed = (pSrv->ICSStart() == ICServiceAC::icsRcError);
+                failed = (pSrv->ICSStart() != ICServiceAC::icsRcOk);
             } catch (const std::exception & exc) {
                 smsc_log_fatal(logger, "%s: '%s' ICSStart() exception: %s",
                      _logId, ICSIdent::uid2Name(srvId), exc.what());
+                failed = true;
             } catch (...) {
                 smsc_log_fatal(logger, "%s: '%s' ICSStart() exception: <unknown>",
                      _logId, ICSIdent::uid2Name(srvId));
+                failed = true;
             }
         }
         _sync.Lock();

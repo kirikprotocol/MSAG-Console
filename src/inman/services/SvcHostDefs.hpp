@@ -20,19 +20,18 @@ struct ICSProducerCFG {
     ICSrvCfgReaderAC *  xcfReader;  //XML configuration reader
 
     ICSProducerCFG(ICSProducerAC * use_allc, Config & root_sec,
-                   const std::string & sec_nm, Logger * use_log)
+                   const char * sec_nm, Logger * use_log)
         : icsUId(use_allc->icsUId()), allc(use_allc)
         , xcfReader(0)
     { 
         xcfReader = (!allc->isConfigurable() ? NULL :
-                    ((ICSProducerXcfAC*)allc)->newCfgReader(root_sec,
-                                            sec_nm.c_str(), use_log));
+                  ((ICSProducerXcfAC*)allc)->newCfgReader(root_sec, sec_nm, use_log));
     }
-    inline ICSrvCfgReaderAC::CfgState cfgState(void) const
+    ICSrvCfgReaderAC::CfgState cfgState(void) const
     {
          return (xcfReader ? xcfReader->icsCfgState() : ICSrvCfgReaderAC::cfgComplete);
     }
-    inline bool cfgToRead(void) const
+    bool cfgToRead(void) const
     {
         return (xcfReader ? xcfReader->hasToRead() : false);
     }

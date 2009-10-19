@@ -6,10 +6,12 @@
 #define __INMAN_ICS_TCAP_DISPATCHER__
 
 #include "inman/inap/dispatcher.hpp"
-
+#include "inman/services/ICSrvDefs.hpp"
 namespace smsc {
 namespace inman {
 namespace inap {
+
+using smsc::inman::ICServiceAC_T;
 
 //TCAP Dispatcher service
 class ICSTCDispatcher : public ICServiceAC_T<TCDsp_CFG>

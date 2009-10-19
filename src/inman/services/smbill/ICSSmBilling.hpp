@@ -6,6 +6,7 @@
 #define __INMAN_ICS_SMBILLING_HPP
 
 #include "inman/services/smbill/SmBillManager.hpp"
+#include "inman/services/ICSrvDefs.hpp"
 
 namespace smsc {
 namespace inman {

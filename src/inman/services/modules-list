@@ -2,11 +2,12 @@
 # $Id$
 #
 tmwatch
-#abcache
+abcache
 tcpsrv
 scheduler
-#tcapdsp
-#iapmgr
+tcapdsp
+iapmgr
 abdtcr
 smbill
+iapSRI
 
