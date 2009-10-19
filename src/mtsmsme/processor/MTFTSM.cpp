@@ -27,6 +27,8 @@ MTFTSM::~MTFTSM()
 }
 static void DumpSentSms(SMS& sms,Logger* logger)
 {
+  return;
+  //TODO modify this code to productin quality
   using namespace smsc::sms;
   const char* prop = 0;
   unsigned int len = 0;
@@ -36,9 +38,9 @@ static void DumpSentSms(SMS& sms,Logger* logger)
   smsc_log_info(logger,"sent resp %s",buf);
 }
 /*
- * Если на входе BEGIN без компонента то CONTINUE
- * Если на входе BEGIN с компонентом но без MMS то END
- * Если на входе BEGIN
+ * пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ BEGIN пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ CONTINUE
+ * пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ BEGIN пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅ MMS пїЅпїЅ END
+ * пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ BEGIN
  */
 void MTFTSM::sendResponse(int result,int iid)
 {
@@ -102,12 +104,12 @@ void MTFTSM::sendResponse(int result,int iid)
 
 void MTFTSM::BEGIN(Message& msg)
 {
-  // канал TCO->TSM, TCO вызвано из SCCP
-  // Должны быть в состоянии IDLE
-  // сохранить Calling address and RTID
-  // создать DHA
-  // вызвать DHA с примитивом TR-BEGIN
-  // перейти в состояние IR
+  // пїЅпїЅпїЅпїЅпїЅ TCO->TSM, TCO пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ SCCP
+  // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ IDLE
+  // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ Calling address and RTID
+  // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ DHA
+  // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ DHA пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ TR-BEGIN
+  // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ IR
   if(msg.isComponentPresent())
   {
     std::vector<unsigned char> mtbuf;

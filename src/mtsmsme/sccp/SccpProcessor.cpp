@@ -449,14 +449,14 @@ USHORT_T EINSS7_I96SccpUnitdataInd(UCHAR_T ssn,
                                    USHORT_T ulen,
                                    UCHAR_T *udp)
 {
-  smsc_log_debug(MtSmsProcessorLogger,
+/*  smsc_log_debug(MtSmsProcessorLogger,
                 "SccpUnitdataInd SSN=%d %s RET=%s Cd(%s) Cl(%s)\ndata[%d]={%s}",
                 ssn,
                 getSequenceControlDescription(seq),
                 getReturnOptionDescription(ropt),
                 getAddressDescription(cdlen,cd).c_str(),
                 getAddressDescription(cllen,cl).c_str(),
-                ulen,dump(ulen,udp).c_str());
+                ulen,dump(ulen,udp).c_str()); */
   {
     using namespace smsc::mtsmsme::processor;
     TCO* coordinator = 0;
