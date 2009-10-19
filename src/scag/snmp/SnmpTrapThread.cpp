@@ -27,12 +27,12 @@ int SnmpTrapThread::Execute()
     smsc_log_info( log_, "snmp trap thread is started" );
     TrapRecord* tr;
     while ( ! stopping_ ) {
-        if ( ! queue_.Pop(tr) ) {
-            queue_.Wait();
-            continue;
+        agent_check_and_process(1);
+        while ( queue_.Pop(tr) ) {
+            snmp_->sendTrap(*tr);
         }
-        if ( !tr ) continue;
-        snmp_->sendTrap(*tr);
+        if ( stopping_ ) break;
+        queue_.Wait();
     }
     // snmp should be still valid here
     while ( queue_.Pop(tr) ) {
