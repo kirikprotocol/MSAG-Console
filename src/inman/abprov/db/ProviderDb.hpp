@@ -50,7 +50,7 @@ using smsc::db::DataSource;
 
 using smsc::inman::iaprvd::IAProvider;
 using smsc::inman::iaprvd::IAProviderCreatorITF;
-using smsc::inman::iaprvd::IAProviderITF;
+using smsc::inman::iaprvd::IAPQueryProcessorITF;
 using smsc::inman::iaprvd::IAPQueryAC;
 using smsc::inman::iaprvd::IAPQueryManagerITF;
 
@@ -110,8 +110,8 @@ public:
 class IAProviderCreatorDB: public IAProviderCreatorITF {
 protected:
     mutable Mutex           _sync;
-    std::auto_ptr<IAProviderThreaded> prvd;
-    IAProviderThreadedCFG   prvdCfg;
+    std::auto_ptr<IAPQueryFacility> prvd;
+    IAPFacilityCFG   prvdCfg;
     IAPQueryDB_CFG          qryCfg;
     Logger *                logger;
     ICSIdsSet               icsDeps; //there are no dependencies!
@@ -130,7 +130,7 @@ public:
     //
     void                logConfig(Logger * use_log = NULL) const;
     //Ensures the provider is properly initialized and returns its interface
-    IAProviderITF *     startProvider(const ICServicesHostITF * use_host);
+    IAPQueryProcessorITF *     startProvider(const ICServicesHostITF * use_host);
     void                stopProvider(bool do_wait = false);
 };
 

@@ -115,11 +115,11 @@ IAProviderCreatorDB::~IAProviderCreatorDB()
         delete prvdCfg.qryPlant;
 }
 
-IAProviderITF * IAProviderCreatorDB::startProvider(const ICServicesHostITF * use_host)
+IAPQueryProcessorITF * IAProviderCreatorDB::startProvider(const ICServicesHostITF * use_host)
 {
     MutexGuard grd(_sync);
     if (!prvd.get()) 
-        prvd.reset(new IAProviderThreaded(prvdCfg, logger));
+        prvd.reset(new IAPQueryFacility(prvdCfg, logger));
     return prvd.get();
 }
 
