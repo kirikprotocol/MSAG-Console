@@ -17,17 +17,24 @@
 -scag/tests/test11     test11         -lcore-threads -lpthread -lrt -ldl $(LIBMALLOC)
 -scag/tests/test12     test12         -lutil -lrt -ldl
 -scag/tests/test14     test14
-scag/tests/test15     test15	      -lcore-threads \
+-scag/tests/test15     test15	      -lcore-threads \
   @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
   $(__LIBRARIES) \
   -lpthread -lrt -ldl $(LIBMALLOC)
-scag/tests/test16     test16
-scag/tests/test17     test17 \
+-scag/tests/test16     test16
+-scag/tests/test17     test17 \
   -lscag-util-io \
   @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
   $(__LIBRARIES) \
   -lpthread -lrt -ldl $(LIBMALLOC)
 
-scag/tests/test18     test18
-scag/tests/test19     test19 -lscag-util-io -lpthread -lrt -ldl $(LIBMALLOC)
-scag/tests/test20     test20
+-scag/tests/test18     test18
+-scag/tests/test19     test19 -lscag-util-io -lpthread -lrt -ldl $(LIBMALLOC)
+-scag/tests/test20     test20
+
+scag/tests/testInfosmeProto testInfosmeProto \
+  -lscag-util-io \
+  -lcore-threads \
+  @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
+  $(__LIBRARIES) \
+  -lpthread -lrt -ldl $(LIBMALLOC)

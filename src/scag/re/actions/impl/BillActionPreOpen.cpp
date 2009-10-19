@@ -98,14 +98,20 @@ BillOpenCallParamsData* BillActionPreOpen::makeParamsData( ActionContext& contex
         billingInfoStruct.category = categoryFieldName_;
     }
 
-    if (!cat || !mt)
-    {
-        smsc_log_warn(logger,"Action '%s' cannot process. Empty category or content-type",
-                      opname() );
+    if (!cat) {
+        smsc_log_warn(logger,"Action '%s' cannot process. Category '%s' is empty or not found",
+                      opname(), billingInfoStruct.category.c_str() );
         setBillingStatus( context, "empty category", false );
         setTariffStatus( context, 0 );
         return 0;
+    } else if ( !mt ) {
+        smsc_log_warn(logger,"Action '%s' cannot process. Media-type '%s' is empty or not found",
+                      opname(), billingInfoStruct.mediaType.c_str() );
+        setBillingStatus( context, "empty media-type", false );
+        setTariffStatus( context, 0 );
+        return 0;
     }
+
 
     TariffRec * tariffRec = 0;
     try {
