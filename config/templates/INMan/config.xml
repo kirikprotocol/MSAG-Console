@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!DOCTYPE config SYSTEM "file://configuration.dtd">
 <!--  "$Id$" -->
-<!-- configuration for INMan v0.7.7 or higher -->
+<!-- configuration for INMan v0.7.11 or higher -->
 <config>
-  <param name="version" type="string">0.7.7</param>   <!-- config version -->
+  <param name="version" type="string">0.7.11</param>   <!-- config version -->
 
   <section name="Services">
     <param name="Host" type="string">uid: icsTCPServer</param> <!--  -->
@@ -273,17 +273,6 @@
         <!-- param name="active" type="bool">true</param -->    <!-- use or ignore this policy, default: true -->
     </section>
 
-    <section name="TST_Nsk_DB"> <!-- get contract from DB, gsmSCF/serviceKey from INMan config -->
-        <param name="policy" type="string">DB_Contract, IN_Nsk_Huawei</param>
-        <!-- param name="addrPool" type="string">7913%7[0-9]</param -->  <!-- address pool mask -->
-        <!-- param name="active" type="bool">true</param -->    <!-- use or ignore this policy, default: true -->
-    </section>
-
-    <section name="MTC_Ural_FORIS"> <!-- get contract from DB, gsmSCF/serviceKey from INMan config -->
-        <param name="policy" type="string">DB_Contract, IN_Ural_Alcatel</param>
-        <!-- param name="addrPool" type="string">7912%7[0-9]</param -->  <!-- address pool mask -->
-        <!-- param name="active" type="bool">true</param -->    <!-- use or ignore this policy, default: true -->
-    </section>
 
   </section>
 
@@ -366,41 +355,16 @@
 
   <section name="AbonentProviders"> <!-- abonent contract/gsmSCF params  providers -->
       <section name="HLR_Nsk_SRI">
-        <param name="loadup" type="string">libinman_iap_sri.so</param>
+        <param name="loadup" type="string">uid: icsIAPrvdSRI</param>
         <section name="Config">
           <param name="tcapUser" type="string">TCAPUserSRI</param> <!--
           section name for TCAP user configuration this provider uses
           -->
+          <param name="iniThreads" type="int">5</param>  <!--
+          initial number of threads serving IAPQUeries
+          -->
         </section>
       </section>
-
-      <section name="DB_Contract"> <!-- DB provides abonent contract (prepaid or postpaid) only -->
-          <param name="loadup" type="string">libinman_iap_db.so</param>
-          <section name="Config">
-              <section name="DataSource">
-                  <param name="type" type="string">OCI</param> <!-- Oracle DB -->
-                  <param name="dbInstance" type="string">@inman.db.instance@</param>
-                  <param name="dbUserName" type="string">@inman.db.userid@</param>
-                  <param name="dbUserPassword" type="string">@inman.db.PasSword@</param>
-                  <param name="connections" type="int">5</param>  <!--  max allowed db connections -->
-                  <param name="maxQueries" type="int">15</param>  <!--  max allowed db queries -->
-                  <param name="watchdog" type="bool">true</param>  <!--  turn on timeouts handling -->
-                  <param name="timeout" type="int">15</param>  <!--  timeout on connection queries, units: secs  [1..65535] -->
-
-               <!--  SQL function returning Abonent type has following prototype:
-                      FUNCTION abonentQueryFunc (iqueryFuncArg  IN VARCHAR) RETURN NUMBER
-                -->
-                  <param name="abonentQueryFunc" type="string">get_prepaid</param>
-                  <param name="queryFuncArg" type="string">in_mob_num</param>
-              </section>
-              <section name="DataSourceDrivers">
-                  <section name="OCIDataSourceDriver">
-                      <param name="type" type="string">OCI</param>
-                      <param name="loadup" type="string">libdb_oci.so</param>
-                  </section>
-              </section>
-          </section>
-      </section> <!-- DB_Contract -->
 
   </section> <!-- AbonentProviders -->
 </config>
