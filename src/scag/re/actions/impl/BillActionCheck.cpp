@@ -64,7 +64,7 @@ void BillActionCheck::ContinueRunning( ActionContext& context )
     }
     if ( txEndDate_.isFound() ) {
         Property* p = txEndDate_.getProperty(context);
-        if (p) p->setDate(time_t(bp->getTxEndDate()));
+        if (p) p->setInt(bp->getTxEndDate());
     }
 }
 
