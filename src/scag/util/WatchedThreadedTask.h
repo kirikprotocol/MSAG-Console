@@ -61,6 +61,13 @@ public:
 protected:
     virtual int doExecute() = 0;
 
+    // should be invoked in dtor
+    void checkDestroy() {
+        if ( !isReleased && isStarted_ ) {
+            waitUntilReleased();
+        }
+    }
+
 protected:
     bool isStarted_;
     smsc::core::synchronization::EventMonitor releaseMon_;
