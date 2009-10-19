@@ -61,9 +61,9 @@ void JournalFile::open( bool readonly )
     }
 
     // loading the whole journal file
-    if ( jsz > 1000000 ) {
-        throw smsc::util::Exception("too big journal file: sz=%u", unsigned(jsz) );
-    }
+    // if ( jsz > 1000000 ) {
+    // throw smsc::util::Exception("too big journal file: sz=%u", unsigned(jsz) );
+    // }
 
     if ( jsz <= mhsz ) {
         return;
@@ -263,7 +263,9 @@ bool JournalFile::writeRecord( const JournalRecord& record )
     const bool needHeader = ( recordSerial_ == 0 );
     uint32_t serial = recordSerial_ + 1;
     if ( serial == 0 ) { ++serial; }
-    const bool lastRecord = ( serial % maxRecords_ ) == 0;
+    const bool lastRecord = 
+        ( ( serial % maxRecords_ ) == 0 ) ||
+        ( journalFile_.Pos() > 10000000 );
     // record.setSerial( serial );
 
     const uint32_t jnlSize = uint32_t(constantRecordSize() + record.savedDataSize());
