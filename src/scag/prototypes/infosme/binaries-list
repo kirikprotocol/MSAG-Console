@@ -1,0 +1,8 @@
+
+scag/prototypes/testInfosmeProto testInfosmeProto \
+  -lscag-prototypes-infosme \
+  -lscag-util-io \
+  -lcore-threads \
+  @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
+  $(__LIBRARIES) \
+  -lpthread -lrt -ldl $(LIBMALLOC)
