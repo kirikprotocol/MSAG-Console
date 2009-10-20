@@ -142,7 +142,7 @@ bool IAPQueryFacility::hasListeners(const AbonentId & ab_number)
 {
     MutexGuard  guard(qrsGuard);
     CachedQuery * ab_rec = qryCache.GetPtr(ab_number.getSignals());
-    return (ab_rec && ab_rec->cbList.size()) ? true : false;
+    return (ab_rec && !ab_rec->cbList.empty()) ? true : false;
 }
 
 //This one is called from ThreadedTask on DB query completion.

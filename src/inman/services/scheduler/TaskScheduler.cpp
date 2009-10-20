@@ -17,17 +17,15 @@ TaskSchedulerAC::~TaskSchedulerAC()
 {
   Stop();
   MutexGuard  grd(_sync);
-  if (!qPool.empty()) {
-    do {
-      TaskMap::iterator it = qPool.begin();
-      ScheduledTaskAC * pTask = it->second->ptr;
-      delete it->second;
-      qPool.erase(it);
-      {
-        ReverseMutexGuard  rGrd(_sync);
-        pTask->Utilize();
-      }
-    } while (!qPool.empty());
+  while (!qPool.empty()) {
+    TaskMap::iterator it = qPool.begin();
+    auto_ptr_utl<ScheduledTaskAC> pTask(it->second->ptr);
+    delete it->second;
+    qPool.erase(it);
+    {
+      ReverseMutexGuard  rGrd(_sync);
+      pTask.reset();
+    }
   }
 }
 
@@ -37,12 +35,12 @@ bool TaskSchedulerAC::releaseTask(TaskMap::iterator qIt)
   TaskDataAC * pTask = qIt->second;
   if (pTask->toDelete()) {
     smsc_log_debug(logger, "%s: releasing %s", _logId, pTask->ptr->TaskName());
-    ScheduledTaskAC * pDel = pTask->ptr;
+    auto_ptr_utl<ScheduledTaskAC> pDel(pTask->ptr);
     delete pTask;
     qPool.erase(qIt);
     {
       ReverseMutexGuard  rGrd(_sync);
-      pDel->Utilize();
+      pDel.reset();
     }
     return true;
   }
@@ -73,11 +71,9 @@ int TaskSchedulerAC::Execute(void)
   _sync.notify(); //if Start() waits for _sync, it will be awaked later
   while (_state != schdStopped) {
     cleanUpReleased();          //Free released tasks
-    if (!qSignaled.empty()) {   //Process tasks signals
-      do {
-        processSignal();
-      } while (!qSignaled.empty());
-    }
+    while (!qSignaled.empty())  //Process tasks signals
+      processSignal();
+
     if (_state == schdStopping) { //no signals can be scheduled!
       if (qPool.empty() || doAbort)
         break;
@@ -426,25 +422,23 @@ bool TaskSchedulerSEQ::Unqueue(TaskMap::iterator & tm_it)
             if (*it == pTask->ptr->Id()) {
                 tQueue.erase(it);
                 //prepare next task in queue for activation
-                if (!tQueue.empty()) {
-                    do {
-                      TaskId  tId = tQueue.front();
-                      TaskMap::iterator tmIt = qPool.find(tId);
-                      if (tmIt == qPool.end()) {
-                        smsc_log_warn(logger, "%s: task[%lu] is unknown or was aborted,"
-                                              " rescheduling signal %s",
-                            _logId, tId, TaskSchedulerITF::nmPGSignal(TaskSchedulerITF::sigProc));
-                        tQueue.pop_front();
-                      } else {
-                        pTask = static_cast<TaskDataSEQ *>(tmIt->second);
-                        smsc_log_debug(logger, "%s: rescheduling %s, procData(%s)",
-                                       _logId, pTask->ptr->TaskName(),
-                                       pTask->hasProcData() ? "ON" : "OFF");
-                        qSignaled.push_back(TaskSignal(tId,
-                                            TaskSchedulerITF::sigProc, pTask->popProcData()));
-                        break;
-                      }
-                    } while (!tQueue.empty());
+                while (!tQueue.empty()) {
+                  TaskId  tId = tQueue.front();
+                  TaskMap::iterator tmIt = qPool.find(tId);
+                  if (tmIt == qPool.end()) {
+                    smsc_log_warn(logger, "%s: task[%lu] is unknown or was aborted,"
+                                          " rescheduling signal %s",
+                        _logId, tId, TaskSchedulerITF::nmPGSignal(TaskSchedulerITF::sigProc));
+                    tQueue.pop_front();
+                  } else {
+                    pTask = static_cast<TaskDataSEQ *>(tmIt->second);
+                    smsc_log_debug(logger, "%s: rescheduling %s, procData(%s)",
+                                   _logId, pTask->ptr->TaskName(),
+                                   pTask->hasProcData() ? "ON" : "OFF");
+                    qSignaled.push_back(TaskSignal(tId,
+                                        TaskSchedulerITF::sigProc, pTask->popProcData()));
+                    break;
+                  }
                 }
                 if (tQueue.empty()) //destroy empty queue
                     schdMap.erase(schdIt);

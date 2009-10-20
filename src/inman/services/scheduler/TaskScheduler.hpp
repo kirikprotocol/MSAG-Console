@@ -268,13 +268,11 @@ protected:
         //Cleans extra resources associated eith task: postponed sigProc data
         void cleanUp(void)
         {
-            if (!procData.empty()) {
-                do {
-                    UtilizableObjITF * pObj = procData.front();
-                    if (pObj)
-                        pObj->Utilize();
-                    procData.pop_front();
-                } while (!procData.empty());
+            while (!procData.empty()) {
+              UtilizableObjITF * pObj = procData.front();
+              if (pObj)
+                  pObj->Utilize();
+              procData.pop_front();
             }
         }
     };
