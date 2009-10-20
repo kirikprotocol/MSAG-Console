@@ -96,7 +96,8 @@ public:
     id_(getNextId()),
     log_(0),
     bandwidth_(bandwidth),
-    speedLimiter_(1,1),
+    wouldSend_(0),
+    nextTime_(0),
     sent_(0)
     {
         char buf[40];
@@ -106,14 +107,28 @@ public:
         random_.setSeed(time(0));
     }
 
-    int send( Message& msg );
+    int send( unsigned deltaTime, Message& msg );
+    void suspend( unsigned deltaTime );
 
     unsigned getId() const { return id_; }
 
+    /// check if the connector is ready.
+    /// @return 0 -- connector is ready, >0 how many ms to wait until it is.
+    unsigned isReady( unsigned deltaTime );
+
     std::string toString() const {
         char buf[256];
-        std::sprintf(buf,"%s band=%u sent=%u",name_.c_str(),bandwidth_,sent_);
+        std::sprintf(buf,"%s band=%u wds=%u sent=%u next=%u",name_.c_str(),bandwidth_,wouldSend_,sent_,nextTime_);
         return buf;
+    }
+
+    bool operator < ( const Connector& other ) const {
+        if ( nextTime_ < other.nextTime_ ) return true;
+        if ( nextTime_ > other.nextTime_ ) return false;
+        if ( bandwidth_ > other.bandwidth_ ) return true;
+        if ( bandwidth_ < other.bandwidth_ ) return false;
+        if ( id_ < other.id_ ) return true;
+        return false;
     }
 
 private:
@@ -121,8 +136,9 @@ private:
     smsc::logger::Logger* log_;
     std::string name_;
     unsigned bandwidth_;    // msg per sec
-    unsigned sent_;
-    smsc::util::TimeSlotCounter<int> speedLimiter_;
+    unsigned wouldSend_;    // msg * 1000 since start
+    unsigned nextTime_;
+    unsigned sent_;         // real number of send msgs
     scag2::util::Drndm random_;
 };
 
@@ -136,26 +152,46 @@ unsigned Connector::getNextId()
 }
 
 
-int Connector::send( Message& msg )
+int Connector::send( unsigned deltaTime, Message& msg )
 {
-    int out = speedLimiter_.Get();
-    bool limitReached = ( out >= bandwidth_ );
-    if ( limitReached ) {
-        // smsc_log_debug(log_,"limit reached");
-        return MessageState::LIMITED;
-    }
-
     // making additional failures
     uint64_t r = random_.getNextNumber();
     if ( random_.uniform(1000,r) < 2 ) {
-        smsc_log_debug(log_,"failed");
+        // stopping it for a second
+        nextTime_ = deltaTime + 1000;
+        wouldSend_ = nextTime_ * bandwidth_;
+        smsc_log_debug(log_,"failed to send, %s",toString().c_str());
         return MessageState::FAIL;
     }
-
-    // sending
     ++sent_;
-    speedLimiter_.Inc();
+    wouldSend_ += 1000;
+    nextTime_ = wouldSend_ / bandwidth_;
+    if ( nextTime_+1000 < deltaTime ) {
+        nextTime_ = deltaTime;
+        wouldSend_ = nextTime_*bandwidth_;
+    } else if ( nextTime_ > deltaTime+1000 ) {
+        nextTime_ = deltaTime+1000;
+        wouldSend_ = nextTime_*bandwidth_;
+    }
+    smsc_log_debug(log_,"msg sent, %s", toString().c_str());
     return MessageState::OK;
+}
+
+
+void Connector::suspend( unsigned deltaTime )
+{
+    if ( deltaTime > nextTime_ ) {
+        nextTime_ = deltaTime;
+        wouldSend_ = nextTime_ * bandwidth_;
+    }
+    smsc_log_debug(log_,"suspended, %s", toString().c_str() );
+}
+
+
+unsigned Connector::isReady( unsigned deltaTime )
+{
+    if ( deltaTime >= nextTime_ ) return 0;
+    return nextTime_ - deltaTime;
 }
 
 
@@ -170,11 +206,8 @@ class Task
 private:
     // messages sorted by sending time
     typedef std::list< Message >          MessageList;
-    struct RegionMapValue {
-        bool        enabled;
-        MessageList list;
-    };
-    typedef std::map< int, RegionMapValue >  RegionMap;
+    typedef std::vector< unsigned >       StatVector;
+    typedef std::map< int, MessageList >  RegionMap;
 
     static unsigned getNextId();
 
@@ -191,11 +224,24 @@ public:
 
     std::string toString() const {
         char buf[256];
-        std::sprintf(buf, "%s %c score=%u prio=%u spd=%u sent=%u wdsn=%u",
+        std::string stat;
+        stat.reserve(100);
+        {
+            const char* sep = "";
+            char b[30];
+            stat.push_back('[');
+            for ( StatVector::const_iterator i = stats_.begin(); i != stats_.end(); ++i ) {
+                std::sprintf(b,"%s%u",sep,*i);
+                stat.append(b);
+                sep = ",";
+            }
+            stat.push_back(']');
+        }
+        std::sprintf(buf, "%s %c score=%u prio=%u spd=%u sent=%u wdsn=%u stat=%s",
                      name_.c_str(),
                      isActive_ ? '+' : '-',
                      normScore_, priority_, speed_,
-                     sent_, wouldSend_ );
+                     sent_, wouldSend_, stat.c_str() );
         return buf;
     }
 
@@ -226,15 +272,6 @@ public:
         isDestroyed_ = true;
     }
 
-    void normalizeScore( unsigned deltaTime, unsigned normScoreToSet ) {
-        MutexGuard mg(taskLock_);
-        normScore_ = normScoreToSet;
-        score_ = normScore_ * priority_ / 100;
-        wouldSend_ = deltaTime * speed_;
-    }
-
-    inline unsigned getNormalizedScore() const { return normScore_; }
-
     /// checking if task has more messages
     bool hasMessages() const { return messages_ > 0; }
 
@@ -246,28 +283,25 @@ public:
     /// otherwise that task wants to sleep RV msec until sending a message.
     unsigned wantToSleep( unsigned deltaTime );
 
-    /// reset all suspended regions for this task
-    void resetSuspendedRegions();
+    /// suspend message
+    void suspendMessage( Message& msg );
 
-    /// suspend region
-    void suspendRegion( Message& msg );
-
-    /// get the next message.
+    /// get the next message for given region.
     /// the method may fail for a number of reasons:
     /// no more messages in task, all regions are suspended, all messages are in future, etc.
-    bool getMessage( Message& msg );
+    bool getMessage( time_t now, unsigned regionId, Message& msg );
 
     /// finalize message
     void finalizeMessage( Message& msg, int state );
+
+    /// normalize score according to the task with lowest score
+    void normalizeScore( const Task* lowestScoreTask, unsigned deltaTime = 0 );
 
     /// message is sent, it should be removed from the list and
     /// the score should be updated.
     void incrementScore( Message& msg );
 
 private:
-    // NOTE: not locked
-    RegionMap::iterator findRegion( unsigned regionId );
-
     bool changeUsage( bool v ) {
         MutexGuard mg(taskLock_);
         if ( v ) {
@@ -307,10 +341,11 @@ private:
 
     // messages suspended by regions
     RegionMap           regionMap_;
-    RegionMap::iterator regionMapIter_;
 
     // these two structures represent a storage
     MessageList messageList_; // messages not in processing
+
+    StatVector  stats_; // statistics by regions
 };
 
 
@@ -338,8 +373,7 @@ score_(0),
 normScore_(0),
 wouldSend_(0),
 messages_(0),
-users_(0),
-regionMapIter_(regionMap_.begin()) 
+users_(0)
 {
     char buf[50];
     sprintf(buf,"task.%03u",id_);
@@ -401,7 +435,7 @@ void Task::addMessages( unsigned nregions, unsigned msgs )
         if ( packsize == 0 ) {
             now += 1;
             uint64_t r = random_.getNextNumber();
-            packsize = 1 + unsigned(random_.uniform(speed_,r));
+            packsize = 1 + speed_/2 + unsigned(random_.uniform(speed_,r));
         }
         --packsize;
         uint64_t r = random_.getNextNumber();
@@ -441,29 +475,22 @@ unsigned Task::wantToSleep( unsigned deltaTime )
 }
 
 
-void Task::resetSuspendedRegions()
-{
-    MutexGuard mg(taskLock_);
-    for ( RegionMap::iterator i = regionMap_.begin(); i != regionMap_.end(); ++i ) {
-        i->second.enabled = true;
-    }
-}
-
-
-void Task::suspendRegion( Message& msg )
+void Task::suspendMessage( Message& msg )
 {
     unsigned regionId = msg.getRegionId();
     {
         MutexGuard mg(taskLock_);
-        RegionMap::iterator i = findRegion( regionId );
-        i->second.enabled = false;
-        i->second.list.push_front(msg);
+        RegionMap::iterator i = regionMap_.lower_bound(regionId);
+        if ( i == regionMap_.end() || i->first != regionId ) {
+            i = regionMap_.insert(i,std::make_pair(regionId,MessageList()));
+        }
+        i->second.push_front(msg);
     }
     // smsc_log_debug(log_,"region %u suspended",regionId);
 }
 
 
-bool Task::getMessage( Message& msg )
+bool Task::getMessage( time_t now, unsigned regionId, Message& msg )
 {
     if ( isDestroyed_ || !isActive_ || !messages_ ) return false;
     MutexGuard mg(taskLock_);
@@ -472,19 +499,14 @@ bool Task::getMessage( Message& msg )
     // looking for regions
     bool res = false;
     if ( ! regionMap_.empty() ) {
-        RegionMap::iterator oldIter = regionMapIter_;
-        while ( ! res ) {
-            while ( regionMapIter_->second.enabled ) {
-                MessageList& list = regionMapIter_->second.list;
-                if ( list.empty() ) break;
+        RegionMap::iterator iter = regionMap_.find(regionId);
+        if ( iter != regionMap_.end() ) {
+            MessageList& list = iter->second;
+            if ( ! list.empty() ) {
                 msg = list.front();
                 list.pop_front();
                 res = true;
-                break;
             }
-            ++regionMapIter_;
-            if ( regionMapIter_ == regionMap_.end() ) regionMapIter_ = regionMap_.begin();
-            if ( regionMapIter_ == oldIter ) break;
         }
     }
 
@@ -493,12 +515,16 @@ bool Task::getMessage( Message& msg )
         while ( ! messageList_.empty() ) {
             msg = messageList_.front();
             messageList_.pop_front();
-            RegionMap::iterator i = findRegion(msg.getRegionId());
-            if ( i->second.enabled ) {
+            unsigned rid = msg.getRegionId();
+            if ( rid == regionId ) {
                 res = true;
                 break;
             }
-            i->second.list.push_back(msg);
+            RegionMap::iterator i = regionMap_.lower_bound(rid);
+            if ( i == regionMap_.end() || i->first != rid ) {
+                i = regionMap_.insert(i,std::make_pair(rid,MessageList()));
+            }
+            i->second.push_back(msg);
         }
     }
     return res;
@@ -517,6 +543,22 @@ void Task::finalizeMessage( Message& msg, int state )
 }
 
 
+void Task::normalizeScore( const Task* lowestScoreTask, unsigned deltaTime )
+{
+    unsigned lowestScore = ( lowestScoreTask ? lowestScoreTask->normScore_ : normScore_ );
+    MutexGuard mg(taskLock_);
+    const static unsigned maxdiff = 100;
+    if ( normScore_ < lowestScore ) { 
+        if ( normScore_+maxdiff < lowestScore ) normScore_ = lowestScore-maxdiff;
+    } else {
+        const unsigned highestScore = normScore_ + maxdiff;
+        if ( normScore_ > highestScore ) normScore_ = highestScore;
+    }
+    score_ = normScore_ * priority_ / 100;
+    if ( deltaTime > 0 ) wouldSend_ = deltaTime * speed_;
+}
+
+
 void Task::incrementScore( Message& msg )
 {
     unsigned score, msgs;
@@ -528,22 +570,11 @@ void Task::incrementScore( Message& msg )
         ++score_;
         wouldSend_ += 1000; // one event * (1s/1ms)
         score = normScore_ = score_ * 100 / priority_;
+        unsigned regid = msg.getRegionId();
+        if ( regid >= stats_.size() ) stats_.resize(regid+1);
+        ++stats_[regid];
     }
     smsc_log_debug(log_,"message %u/%u sent, msgs left=%u, new score=%u", msg.getId(), msg.getRegionId(), msgs, score );
-}
-
-
-Task::RegionMap::iterator Task::findRegion( unsigned regionId )
-{
-    RegionMap::iterator i = regionMap_.lower_bound( regionId );
-    if ( i == regionMap_.end() || i->first != regionId ) {
-        unsigned oldreg = ( regionMapIter_ == regionMap_.end() ? 0 : regionMapIter_->first );
-        i = regionMap_.insert( i, std::make_pair(regionId,RegionMapValue()) );
-        i->second.enabled = true;
-        regionMapIter_ = regionMap_.find(oldreg);
-        if ( regionMapIter_ == regionMap_.end() ) { regionMapIter_ = i; }
-    }
-    return i;
 }
 
 
@@ -560,18 +591,29 @@ public:
     ~Sender();
     void addConnector( Connector* conn );
     unsigned connectorCount();
-    int send( Message& msg );
+    int send( unsigned deltaTime, Message& msg );
     void dumpStatistics( std::string& s );
+
+    /// return a number ms to sleep until a connector becomes ready
+    /// if 0, then regionId will contain the regionId of ready connector.
+    unsigned hasReadyConnector( unsigned deltaTime, unsigned& regionId );
+    void suspendConnector( unsigned deltaTime, unsigned regionId );
+
+private:
+    ConnectorList::iterator findConnector( unsigned regionId );
+    void resort( ConnectorList::iterator iter );
 
 private:
     smsc::logger::Logger* log_;
     smsc::core::synchronization::Mutex lock_;
     ConnectorList connectors_;
+    size_t        default_;
 };
 
 
 Sender::Sender() :
-log_(smsc::logger::Logger::getInstance("sender"))
+log_(smsc::logger::Logger::getInstance("sender")),
+default_(size_t(-1))
 {
     connectors_.reserve(200);
 }
@@ -586,16 +628,10 @@ Sender::~Sender()
 
 void Sender::addConnector( Connector* conn )
 {
-    unsigned id = conn->getId();
     MutexGuard mg(lock_);
-    if ( id >= connectors_.size() ) {
-        connectors_.resize(id+1);
-    }
-    if ( connectors_[id] ) {
-        smsc_log_warn(log_,"connector %u is replaced",id);
-        delete connectors_[id];
-    }
-    connectors_[id] = conn;
+    connectors_.push_back(conn);
+    std::sort( connectors_.begin(), connectors_.end(), PtrLess() );
+    if ( default_ == size_t(-1) ) default_ = 0;
 }
 
 
@@ -606,21 +642,20 @@ unsigned Sender::connectorCount()
 }
 
 
-int Sender::send( Message& msg )
+int Sender::send( unsigned deltaTime, Message& msg )
 {
     unsigned regid = msg.getRegionId();
     MutexGuard mg(lock_);
-    if ( regid >= connectors_.size() ) return MessageState::NOCONN;
-    Connector* conn = connectors_[regid];
-    if ( ! conn ) {
-        smsc_log_warn(log_,"connector %u is not found, trying to find the default one",regid);
-        regid = 0;
-        while ( ! conn && regid < connectors_.size() ) {
-            conn = connectors_[regid];
-        }
-        if ( !conn ) return MessageState::NOCONN;
+    ConnectorList::iterator i = findConnector(regid);
+    if ( i == connectors_.end() ) {
+        if ( default_ == size_t(-1) ) return MessageState::NOCONN;
+        i = connectors_.begin() + default_;
     }
-    return conn->send(msg);
+    int reason = (*i)->send( deltaTime, msg );
+
+    // resorting it
+    resort(i);
+    return reason;
 }
 
 
@@ -631,6 +666,71 @@ void Sender::dumpStatistics( std::string& s )
           i != connectors_.end(); ++i ) {
         s.append("\n  ");
         s.append( (*i)->toString());
+    }
+}
+
+
+unsigned Sender::hasReadyConnector( unsigned deltaTime, unsigned& regionId )
+{
+    MutexGuard mg(lock_);
+    if ( log_->isDebugEnabled() ) {
+        for ( ConnectorList::const_iterator i = connectors_.begin();
+              i != connectors_.end();
+              ++i ) {
+            smsc_log_debug(log_,"%3u %s", unsigned(i-connectors_.begin()), (*i)->toString().c_str() );
+        }
+    }
+
+    unsigned sleepms = 500;
+    for ( ConnectorList::iterator i = connectors_.begin();
+          i != connectors_.end();
+          ++i ) {
+        Connector* conn = *i;
+        unsigned wantToSleep = conn->isReady(deltaTime);
+        if ( wantToSleep == 0 ) {
+            regionId = conn->getId();
+            sleepms = 0;
+            break;
+        }
+        if ( wantToSleep < sleepms ) sleepms = wantToSleep;
+    }
+    return sleepms;
+}
+
+
+void Sender::suspendConnector( unsigned deltaTime, unsigned regionId )
+{
+    MutexGuard mg(lock_);
+    ConnectorList::iterator i = findConnector(regionId);
+    if ( i != connectors_.end() ) {
+        (*i)->suspend(deltaTime);
+        resort(i);
+    }
+}
+
+
+Sender::ConnectorList::iterator Sender::findConnector( unsigned regionId )
+{
+    ConnectorList::iterator res = connectors_.begin();
+    for ( ; res != connectors_.end() && (*res)->getId() != regionId; ++res ) {
+    }
+    return res;
+}
+
+
+void Sender::resort( ConnectorList::iterator i )
+{
+    Connector* c = *i;
+    const size_t oldpos = (i - connectors_.begin());
+    connectors_.erase(i);
+    i = std::lower_bound( connectors_.begin(), connectors_.end(), c, PtrLess() );
+    connectors_.insert(i,c);
+    const size_t newpos = (i - connectors_.begin());
+    if ( oldpos == default_ ) {
+        default_ = newpos;
+    } else {
+        if ( oldpos <= default_ ) --default_;
+        if ( newpos <= default_ ) ++default_;
     }
 }
 
@@ -653,6 +753,7 @@ protected:
     void dumpStatistics( unsigned deltaTime );
 
 private:
+    typedef std::vector< Task* > ActiveTaskList;
     typedef std::list< Task* > TaskList;
     typedef std::list< TaskGuard > GuardedTaskList;
     typedef std::map< unsigned, GuardedTaskList::iterator > TaskMap;
@@ -669,8 +770,8 @@ private:
     TaskList   inactiveTasks_;  // not active tasks
 
     // these lists are accessed only from doExecute
-    TaskList   activeTasks_;    // active tasks, sorted by normScore
-    TaskList   deadTasks_;      // scheduled to be destroyed
+    ActiveTaskList activeTasks_;    // active tasks, sorted by normScore
+    TaskList       deadTasks_;      // scheduled to be destroyed
 };
 
 
@@ -734,22 +835,38 @@ int Processor::doExecute()
     const util::msectime_type startTime = util::currentTimeMillis();
     smsc_log_info(log_,"started");
 
-    util::msectime_type nextWakeTime = startTime;
+    util::msectime_type currentTime = startTime;
     util::msectime_type lastStatTime = startTime;
+    unsigned wantToSleep = 0;
 
     while ( ! stopping() ) {
 
-        const util::msectime_type currentTime = util::currentTimeMillis();
+        const util::msectime_type nextWakeTime = currentTime + wantToSleep;
+        currentTime = util::currentTimeMillis();
         const unsigned deltaTime = unsigned(currentTime - startTime);
         smsc_log_debug(log_,"new pass at %u",deltaTime);
 
-        if ( currentTime - lastStatTime > 10000 ) {
+        // 1. dumping statistics
+        if ( log_->isInfoEnabled() && ( currentTime - lastStatTime > 10000 ) ) {
             dumpStatistics(deltaTime);
             lastStatTime = currentTime;
         }
 
-        // 1. adding tasks that were requested to be activated
+        // 2. waiting on the releaseMon
         {
+            int waitTime = int(nextWakeTime - currentTime);
+            if ( waitTime > 10 ) {
+                MutexGuard mg(releaseMon_);
+                if ( stopping() ) break;
+                releaseMon_.wait(waitTime);
+                continue;
+            }
+        }
+
+
+        {
+            // 2b. meanwhile we may add tasks that were requested to be activated
+            // FIXME: make a fast bool flag if such task exists and set it in setActive
             MutexGuard mg(releaseMon_);
             for ( TaskList::iterator i = inactiveTasks_.begin();
                   i != inactiveTasks_.end();
@@ -765,36 +882,37 @@ int Processor::doExecute()
 
                 if ( task->isActive() && task->hasMessages() ) {
                     const Task* firstTask = activeTasks_.empty() ? 0 : activeTasks_.front();
-                    task->normalizeScore( deltaTime, firstTask ? firstTask->getNormalizedScore() : 0 );
-                    TaskList::iterator j = std::lower_bound( activeTasks_.begin(),
-                                                             activeTasks_.end(),
-                                                             task, PtrLess() );
+                    task->normalizeScore( firstTask, deltaTime );
+                    ActiveTaskList::iterator j = std::lower_bound( activeTasks_.begin(),
+                                                                   activeTasks_.end(),
+                                                                   task, PtrLess() );
                     activeTasks_.insert(j,task);
                     i = inactiveTasks_.erase(i);
                     smsc_log_debug(log_,"moving task %s to active list",task->getName().c_str());
-                    nextWakeTime = currentTime;
                     continue;
                 }
                 ++i;
             }
         }
 
-        {
-            int waitTime = int(nextWakeTime - currentTime);
-            if ( waitTime > 10 ) {
-                MutexGuard mg(releaseMon_);
-                if ( stopping() ) break;
-                releaseMon_.wait(waitTime);
-                continue;
-            }
-        }
+        // 4. retrieving a region to work with
+        unsigned regionId;
+        wantToSleep = sender_->hasReadyConnector( deltaTime, regionId );
+        if ( wantToSleep > 0 ) {
 
-        // 2. next wake up time is initially set to 500 ms later
-        unsigned wantToSleep = 500;
+            // 4a. sender really want to sleep, no regions are ready
+            if ( wantToSleep > 500 ) { wantToSleep = 500; }
+
+            // going to sleep on regions
+            continue;
+        }
         
-        {
+        // here a regionId is ready
+        smsc_log_debug(log_,"region %u is ready, fetching a task",regionId);
+
+        if ( log_->isDebugEnabled() ) {
             unsigned idx = 0;
-            for ( TaskList::iterator i = activeTasks_.begin();
+            for ( ActiveTaskList::iterator i = activeTasks_.begin();
                   i != activeTasks_.end();
                   ++i ) {
                 smsc_log_debug(log_,"%3u %s",idx,(*i)->toString().c_str());
@@ -802,104 +920,122 @@ int Processor::doExecute()
             }
         }
 
-        // 3. the loop over all active tasks
+        // 5. the loop over all active tasks
+        wantToSleep = 500;
+        const time_t now = time(0);
         TaskList makeInactiveList;
-        typedef std::set< unsigned > SuspendedRegions;
-        SuspendedRegions suspendedRegions;
-        for ( TaskList::iterator i = activeTasks_.begin();
+        bool activeListChanged = false;
+        Task* movedTask = 0;
+        for ( ActiveTaskList::iterator i = activeTasks_.begin();
               i != activeTasks_.end();
-              ) {
+              ++i ) {
 
             Task* task = *i;
-            if ( task->isDestroyed() ) {
-                deadTasks_.push_back(*i);
-                i = activeTasks_.erase(i);
+            if ( ! task ) {
+                activeListChanged = true;
                 continue;
             }
 
+            // 5a. task is dead
+            if ( task->isDestroyed() ) {
+                activeListChanged = true;
+                deadTasks_.push_back(*i);
+                *i = 0;
+                continue;
+            }
+
+            // 5b. task is not active, remove it
             if ( !task->isActive() || !task->hasMessages() ) {
+                activeListChanged = true;
                 makeInactiveList.push_back(*i);
-                i = activeTasks_.erase(i);
+                *i = 0;
                 continue;
             }
             
-            // calculating the number of messages would be sent
+            // 5c. restriction on the speed of the task
             unsigned taskWantToSleep = task->wantToSleep( deltaTime );
             if ( taskWantToSleep > 0 ) {
-                if ( taskWantToSleep < wantToSleep ) {
-                    wantToSleep = taskWantToSleep;
-                }
-                ++i;
+                if ( taskWantToSleep < wantToSleep ) wantToSleep = taskWantToSleep;
                 continue;
             }
 
-            // task has sent less messages that it should be,
-            // so it wants to send a message
-            task->resetSuspendedRegions();
+            Message msg;
+            if ( ! task->getMessage(now,regionId,msg) ) {
+                // cannot get a message for the region
+                continue;
+            }
 
-            bool sent = false;
-            do {
-                Message msg;
-                if ( ! task->getMessage(msg) ) {
-                    // cannot get a message
-                    break;
-                }
 
-                int reason = MessageState::UNKNOWN;
-                try {
-                    reason = sender_->send(msg);
-                } catch ( std::exception& e ) {
-                    smsc_log_warn(log_,"sending failed: %s", e.what());
-                    reason = MessageState::UNKNOWN;
-                }
+            // 5d. task wants to send a message
+            wantToSleep = 0;
+            int reason = MessageState::UNKNOWN;
+            try {
+                reason = sender_->send(deltaTime, msg);
+            } catch ( std::exception& e ) {
+                smsc_log_warn(log_,"sending failed: %s", e.what());
+                reason = MessageState::UNKNOWN;
+            }
 
-                if ( reason == MessageState::OK ) {
-                    // if message has been sent
-                    task->incrementScore(msg);
-                    // reorder it
-                    i = activeTasks_.erase(i);
-                    while ( i != activeTasks_.end() && !(*task < **i) ) {
-                        ++i;
-                    }
-                    activeTasks_.insert(i,task);
-                    wantToSleep = 0;
-                    sent = true;
-                    break;
-                } else if ( reason == MessageState::NOCONN ) {
-                    task->finalizeMessage(msg,reason);
+
+            if ( reason == MessageState::OK ) {
+                // 5e. message has been sent
+                task->incrementScore(msg);
+                movedTask = task;  // remember the task to move
+                // reorder it
+                if ( activeListChanged ) {
+                    *i = 0;
                 } else {
-                    unsigned regionId = msg.getRegionId();
-                    SuspendedRegions::iterator si = suspendedRegions.lower_bound(regionId);
-                    if ( si == suspendedRegions.end() || *si != regionId ) {
-                        smsc_log_debug(log_,"region %u is suspended",regionId);
-                        suspendedRegions.insert(si,regionId);
-                    }
-                    task->suspendRegion(msg);
+                    // simply erase the position
+                    activeTasks_.erase(i);
                 }
-
-            } while ( true );
-            
-            // if task has sent a message
-            if ( sent ) break;
-
-            if ( ! task->hasMessages() ) {
-                makeInactiveList.push_back(task);
-                i = activeTasks_.erase(i);
-                continue;
+                break;
             }
 
-            ++i;
+            // 5f. failed to send
+            if ( reason == MessageState::NOCONN ) {
+                task->finalizeMessage(msg,reason);
+                if ( ! task->hasMessages() ) {
+                    makeInactiveList.push_back(task);
+                    *i = 0;
+                    activeListChanged = true;
+                }
+                break;
+            } else {
+                task->suspendMessage(msg);
+                break;
+            }
 
         } // loop over tasks
 
-        nextWakeTime = currentTime + wantToSleep;
+        // 6. suspend the region
+        if ( wantToSleep > 0 ) {
+            sender_->suspendConnector(deltaTime+wantToSleep,regionId);
+            wantToSleep = 0; // to prevent sleeping on regions
+        }
+
+        // 6. remove tasks from the list
+        if ( activeListChanged ) {
+            activeTasks_.erase( std::remove( activeTasks_.begin(),
+                                             activeTasks_.end(),
+                                             static_cast<Task*>(0) ),
+                                activeTasks_.end() );
+        }
+        if ( movedTask ) {
+            // a task has sent something
+            ActiveTaskList::iterator i = std::lower_bound( activeTasks_.begin(),
+                                                           activeTasks_.end(),
+                                                           movedTask, PtrLess() );
+            const Task* firstTask = ( activeTasks_.empty() ? 0 : activeTasks_.front() );
+            movedTask->normalizeScore( firstTask, 0 );
+            activeTasks_.insert(i,movedTask);
+        }
 
         MutexGuard mg(releaseMon_);
 
-        // add all inactiveTasks to inactive and destroy all deadTasks
+        // 7. add all inactiveTasks to inactive and destroy all deadTasks
         inactiveTasks_.splice(inactiveTasks_.end(),makeInactiveList);
 
-        // destroy all tasks waiting destruction
+        // 8. destroy all tasks waiting destruction
         for ( TaskList::iterator i = deadTasks_.begin();
               i != deadTasks_.end(); ++i ) {
             const unsigned taskId = (*i)->getId();
