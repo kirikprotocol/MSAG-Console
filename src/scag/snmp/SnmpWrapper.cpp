@@ -37,9 +37,23 @@ log_(0)
     netsnmp_ds_set_boolean( NETSNMP_DS_APPLICATION_ID,
                             NETSNMP_DS_AGENT_ROLE, 1 ); // we are a subagent
 
-    if ( ! socket.empty() ) {
+    // trimming the socket
+    {
+        const std::string whitespaces(" \t\v\r\n");
+        std::string theSocket(socket);
+        size_t b = theSocket.find_first_not_of(whitespaces);
+        if ( b != std::string::npos ) {
+            theSocket.erase(theSocket.begin(),theSocket.begin()+b);
+        }
+        b = theSocket.find_last_not_of(whitespaces);
+        if ( b != std::string::npos ) {
+            ++b;
+            theSocket.erase(theSocket.begin()+b,theSocket.end());
+        }
+    }
+    if ( ! theSocket.empty() ) {
         netsnmp_ds_set_string( NETSNMP_DS_APPLICATION_ID,
-                               NETSNMP_DS_AGENT_X_SOCKET, socket.c_str() ); // setting a connection
+                               NETSNMP_DS_AGENT_X_SOCKET, theSocket.c_str() ); // setting a connection
     }
 
     init_agent( ::msagnamed );  // initialize the agent library

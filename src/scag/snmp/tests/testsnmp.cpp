@@ -1,6 +1,9 @@
 #include <time.h>
 #include <string>
 #include <stdio.h>
+#include <net-snmp/net-snmp-config.h>
+#include <net-snmp/net-snmp-includes.h>
+#include <net-snmp/agent/net-snmp-agent-includes.h>
 #include "logger/Logger.h"
 
 #ifdef SNMP
@@ -13,7 +16,7 @@ int main( int argc, char** argv )
     smsc::logger::Logger::Init();
 
 #ifdef SNMP
-    std::string socket = "tcp:217.73.202.90:162";
+    std::string socket = "udp:217.73.202.90:162";
     if ( argc > 1 ) {
         socket = argv[1];
     }
@@ -27,6 +30,7 @@ int main( int argc, char** argv )
     trap.severity = TrapRecord::MAJOR;
     trap.text = "entity disconnected";
 
+    agent_check_and_process(1);
     snmp.sendTrap( trap );
 
     struct timespec tm;

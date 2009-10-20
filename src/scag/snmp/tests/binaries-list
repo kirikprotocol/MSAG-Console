@@ -5,3 +5,10 @@ scag/tests/testsnmp	testsnmp	\
    $(SNMP_LIBS_CORE) \
   $(SSL_LIB) \
    -lpthread -lrt -ldl $(LIBMALLOC)
+
+scag/tests/testsnmpsmsc	testsmsc	\
+   @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
+   $(__LIBRARIES) \
+   $(SNMP_LIBS_CORE) \
+  $(SSL_LIB) \
+   -lpthread -lrt -ldl $(LIBMALLOC)
