@@ -32,7 +32,7 @@
 -scag/tests/test19     test19 -lscag-util-io -lpthread -lrt -ldl $(LIBMALLOC)
 -scag/tests/test20     test20
 
-scag/tests/testInfosmeProto testInfosmeProto \
+-scag/tests/testInfosmeProto testInfosmeProto \
   -lscag-util-io \
   -lcore-threads \
   @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
