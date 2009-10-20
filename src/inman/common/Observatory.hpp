@@ -56,8 +56,9 @@ public:
         void mark(void)   { if (!(++marked)) --marked; } //check for integer overflow
         void unmark(void) { if (marked) --marked; }
         void release(void) { freed = true; }
-        bool isMarked(void) { return marked ? true : false; }
-        bool isFreed(void) { return freed; }
+
+        bool isMarked(void) const { return marked ? true : false; }
+        bool isFreed(void) const { return freed; }
     };
 
 protected:
@@ -71,6 +72,8 @@ protected:
 
         typedef typename GRDNodeList::iterator GRDIterator;
 
+        //Searches list for a node containing given value.
+        //Additionally cleans up released nodes.
         GRDIterator findNode(const _GuardedTArg * ref_lstr)
         {
             GRDIterator it = this->begin();
@@ -83,27 +86,28 @@ protected:
             }
             return it;
         }
-
+        //Searches list for released nodes starting from the first
+        //one up to node pointed by given iterator, and erases nodes
+        //which may be safely erased
         void cleanUp(const GRDIterator& up_to)
         {
             GRDIterator it = this->begin();
             while (it != up_to) {
                 GRDIterator cit = it++;
                 if (cit->isFreed() && !cit->isMarked())
-                    erase(cit);
+                    this->erase(cit);
             }
         }
-
+        //Searches whole list for released nodes, and erases nodes
+        //which may be safely erased
         void cleanAll(void)
         {
-            if (!empty()) {
-                GRDIterator it = -- this->end();
-                it->release();
-                cleanUp(this->end());
-            }
+            cleanUp(this->end());
         }
 
-        inline bool releaseNode(GRDIterator & it)
+        //Releases (marks this node as target for erasing)
+        //Returns true if node may be safely erased
+        bool releaseNode(GRDIterator & it)
         {
             it->release();
             return !it->isMarked();
@@ -122,7 +126,7 @@ public:
     void addListener(_GuardedTArg * use_lstr)
     {
         MutexGuard tmp(Sync());
-        listeners.cleanUp(listeners.end());
+        listeners.cleanAll();
         listeners.push_back(GRDNode(use_lstr));
     }
     void removeListener(_GuardedTArg * use_lstr)
@@ -132,18 +136,16 @@ public:
         if ((it != listeners.end()) && listeners.releaseNode(it))
             listeners.erase(it);
     }
-    void folowUp(_GuardedTArg * use_lstr, _GuardedTArg *next_lstr)
+    void folowUp(_GuardedTArg * use_lstr, _GuardedTArg * next_lstr)
     {
         MutexGuard tmp(Sync());
         typename GRDNodeList::GRDIterator it = listeners.findNode(use_lstr);
-        if (it != listeners.end()) {
-            listeners.insert(++it, GRDNode(next_lstr));
-        } else {
-            listeners.push_back(GRDNode(next_lstr));
-        }
+        if (it != listeners.end())
+            ++it;
+        listeners.insert(it, GRDNode(next_lstr));
     }
 
-    bool empty(void)
+    bool empty(void) const
     {
         MutexGuard tmp(Sync());
         return listeners.empty();
@@ -163,7 +165,6 @@ public:
         if (it != listeners.end()) {
             it->mark();
             return it.operator->();
-            
         }
         return NULL;
     }
@@ -171,8 +172,8 @@ public:
     GRDNode * next(GRDNode * prev)
     {
         MutexGuard tmp(Sync());
-        prev->unmark();
         typename GRDNodeList::GRDIterator it = listeners.findNode(prev->val);
+        prev->unmark();
         if ((it == listeners.end()) || (++it) == listeners.end())
             return NULL;
         it->mark();
