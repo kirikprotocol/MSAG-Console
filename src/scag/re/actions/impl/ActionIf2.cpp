@@ -170,70 +170,74 @@ bool ActionIf::run(ActionContext& context)
 
     LongCallContext &longCallContext = context.getSession().getLongCallContext();
 
-    if (longCallContext.ActionStack.empty()) 
-    {
+    do {
+
+        if ( ! longCallContext.ActionStack.empty() ) {
+            isTrueCondition = longCallContext.ActionStack.top().thenSection;
+            break;
+        }
+
         Property * property = context.getProperty(singleparam.strOperand1.c_str());
         if (!property) 
         {
-            smsc_log_debug(logger,"Action 'If' stopped. Details: Cannot find property '%s'", singleparam.strOperand1.c_str());
-            return true;
+            smsc_log_debug(logger,"Action 'If' cannot find property '%s'", singleparam.strOperand1.c_str());
+            isTrueCondition = false;
+            break;
         }
 
         if (!m_hasOP) 
         {
             smsc_log_debug(logger,"Testing %s = '%lld' for bool", singleparam.strOperand1.c_str(), property->getInt());
             isTrueCondition = property->getBool();
+            break;
         } 
+
+
+        //std::string str = property->getStr();
+        //smsc_log_debug(logger,"Testing %s='%s' vs %s",singleparam.strOperand1.c_str(),FormatWStr(str).c_str(),ConvertWStrToStr(singleparam.wstrOperand2).c_str());
+
+        smsc_log_debug(logger,"Testing %s = '%s' %s '%s'",
+                       singleparam.strOperand1.c_str(),
+                       property->getStr().c_str(),
+                       getStrFromOperation(singleparam.Operation),
+                       singleparam.strOperand2.c_str());
+
+        int result = 0;
+
+        PropertyType pt;
+
+        switch (singleparam.Operation)
+        {
+        case opEQ: 
+        case opNE: 
+        case opGT: 
+        case opGE: 
+        case opLT: 
+        case opLE:
+            pt = pt_str;
+            break;
+
+        default:
+            pt = pt_int;
+            break;
+        }                
+
+        if (ftUnknown == ftSecondOperandFieldType) 
+        {
+            if (pt == pt_str)
+                result = property->Compare(singleparam.strOperand2);
+            else
+                result = property->Compare(atoi(singleparam.strOperand2.c_str())); 
+        }
         else
         {
-            //std::string str = property->getStr();
-            //smsc_log_debug(logger,"Testing %s='%s' vs %s",singleparam.strOperand1.c_str(),FormatWStr(str).c_str(),ConvertWStrToStr(singleparam.wstrOperand2).c_str());
-
-            smsc_log_debug(logger,"Testing %s = '%s' %s '%s'",
-                           singleparam.strOperand1.c_str(),
-                           property->getStr().c_str(),
-                           getStrFromOperation(singleparam.Operation),
-                           singleparam.strOperand2.c_str());
-
-            int result = 0;
-
-            PropertyType pt;
-
-            switch (singleparam.Operation)
-            {
-            case opEQ: 
-            case opNE: 
-            case opGT: 
-            case opGE: 
-            case opLT: 
-            case opLE:
-                pt = pt_str;
-                break;
-
-            default:
-                pt = pt_int;
-                break;
-            }                
-
-            if (ftUnknown == ftSecondOperandFieldType) 
-            {
-                if (pt == pt_str)
-                    result = property->Compare(singleparam.strOperand2);
-                else
-                    result = property->Compare(atoi(singleparam.strOperand2.c_str())); 
-            }
-            else
-            {
-                Property * valproperty = context.getProperty(singleparam.strOperand2.c_str());
-                if (valproperty) result = property->Compare(*valproperty,pt);
-                else smsc_log_warn(logger,"Action 'if': Invalid property '%s'", singleparam.strOperand2.c_str());
-            }
-
-            isTrueCondition = CompareResultToBool(singleparam.Operation,result);
+            Property * valproperty = context.getProperty(singleparam.strOperand2.c_str());
+            if (valproperty) result = property->Compare(*valproperty,pt);
+            else smsc_log_warn(logger,"Action 'if': Invalid property '%s'", singleparam.strOperand2.c_str());
         }
-    }
-    else
-        isTrueCondition = longCallContext.ActionStack.top().thenSection;
+        isTrueCondition = CompareResultToBool(singleparam.Operation,result);
+
+    } while ( false ); // fake loop
 
     smsc_log_debug(logger,"Action 'if': run '%s' section", isTrueCondition ? "then" : "else");
     bool b =  RunActionVector(context, longCallContext, isTrueCondition ? ThenActions : ElseActions, logger);
