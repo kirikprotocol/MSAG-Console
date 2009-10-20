@@ -1,5 +1,9 @@
+#include "mtsmsme/tests/PerfTestFixture.hpp"
+#include "mtsmsme/processor/SccpSender.hpp"
+
 CPPUNIT_TEST_SUITE_REGISTRATION(PerfTestFixture);
 
+using smsc::mtsmsme::processor::SccpSender;
 void PerfTestFixture::setUp()
 {
   Logger::Init();
