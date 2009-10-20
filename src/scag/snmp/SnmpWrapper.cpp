@@ -38,9 +38,9 @@ log_(0)
                             NETSNMP_DS_AGENT_ROLE, 1 ); // we are a subagent
 
     // trimming the socket
+    std::string theSocket(socket);
     {
         const std::string whitespaces(" \t\v\r\n");
-        std::string theSocket(socket);
         size_t b = theSocket.find_first_not_of(whitespaces);
         if ( b != std::string::npos ) {
             theSocket.erase(theSocket.begin(),theSocket.begin()+b);

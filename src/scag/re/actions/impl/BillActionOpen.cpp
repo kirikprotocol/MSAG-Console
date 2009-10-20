@@ -14,6 +14,7 @@ using namespace bill;
 
 BillActionOpen::BillActionOpen( bool transit ) :
 BillActionPreOpen( transit ),
+amount_(*this,"amount",false,true),
 totalAmount_(*this,"resultAmount",false,false),
 chargeThreshold_(*this,"resultChargeThreshold",false,false)
 {
@@ -23,6 +24,13 @@ chargeThreshold_(*this,"resultChargeThreshold",false,false)
 BillOpenCallParamsData* BillActionOpen::postFillParamsData( BillOpenCallParamsData* data, ActionContext& context )
 {
     std::auto_ptr< BillOpenCallParamsData > bpd(data);
+    
+    if ( amount_.isFound() ) {
+        const char* val = amount_.getValue(context);
+        smsc_log_debug(logger,"replacing tariff record amount: %s",val);
+        bpd->tariffRec.setPrice(val);
+    }
+    
     if ( bpd->tariffRec.billType == infrastruct::EWALLET ) {
 
         BillingInfoStruct& billingInfoStruct = bpd->billingInfoStruct;
@@ -167,6 +175,7 @@ void BillActionOpen::postInit( const SectionParams& params,
     }
 
     // optional fields
+    amount_.init(params,propertyObject);
     totalAmount_.init(params,propertyObject);
     chargeThreshold_.init(params,propertyObject);
 

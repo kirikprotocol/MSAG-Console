@@ -54,6 +54,8 @@ private:
     FieldType       timeoutFieldType_;
     int             timeout_;
 
+    StringField     amount_;
+
     // --- output properties
 
     std::string     resultFieldName_;

@@ -4,6 +4,21 @@ namespace scag2 {
 namespace re {
 namespace actions {
 
+bill::BillOpenCallParamsData* BillActionCloseTransit::
+postFillParamsData( bill::BillOpenCallParamsData* bp, ActionContext& context )
+{
+    if ( ! bp ) return bp;
+    std::auto_ptr< bill::BillOpenCallParamsData > bpd(bp);
+    if ( amount_.isFound() ) {
+        const char* val = amount_.getValue(context);
+        smsc_log_debug(logger,"tariff amount replaced: %s",val);
+        bpd->tariffRec.setPrice(val);
+    }
+    return bpd.release();
+}
+
+
+
 bool BillActionCloseTransit::RunBeforePostpone(ActionContext& context)
 {
     std::auto_ptr<bill::BillOpenCallParamsData> bpd(makeParamsData(context));
@@ -80,11 +95,7 @@ void BillActionCloseTransit::postInit(const SectionParams& params,
         throw SCAGException( "Action '%s': unrecognised 'action' parameter: '%s'",
                              opname(), str.c_str() );
 
-    /*
-    BillAction::init( params, propertyObject );
-
-    smsc_log_debug(logger,"Action '%s' init...", opname());
-     */
+    amount_.init(params,propertyObject);
 }
 
 }}}

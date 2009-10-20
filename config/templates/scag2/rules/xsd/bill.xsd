@@ -88,6 +88,7 @@
                     <attribute name="externalId" type="scag:Value" use="optional"/>
                     <attribute name="timeout" type="scag:Value" use="optional"/>
                     <attribute name="description" type="scag:Value" use="optional"/>
+                    <attribute name="amount" type="scag:Value" use="optional"/>
                     <attribute name="walletType" type="scag:Value" use="optional"/>
                     <attribute name="resultAmount" type="scag:Var" use="optional"/>
                     <attribute name="resultChargeThreshold" type="scag:Var" use="optional"/>
@@ -109,6 +110,7 @@
                     <attribute name="externalId" type="scag:Value" use="required"/>
                     <attribute name="timeout" type="scag:Value" use="optional"/>
                     <attribute name="description" type="scag:Value" use="optional"/>
+                    <attribute name="amount" type="scag:Value" use="optional"/>
                     <attribute name="walletType" type="scag:Value" use="optional"/>
                     <attribute name="resultAmount" type="scag:Var" use="optional"/>
                     <attribute name="resultChargeThreshold" type="scag:Var" use="optional"/>
@@ -177,24 +179,6 @@
                 </complexType>
 	    </element>
 
-            <!-- element name="add_keywords">
-                <complexType>
-                    <attribute name="id" type="scag:Value" use="required"/>
-                    <attribute name="keywords" type="scag:Value" use="required"/>
-                    <attribute name="status" type="scag:Var" use="optional"/>
-                    <attribute name="msg" type="scag:Var" use="optional"/>
-                </complexType>
-            </element>
-
-            <element name="set_keywords">
-                <complexType>
-                    <attribute name="id" type="scag:Value" use="required"/>
-                    <attribute name="keywords" type="scag:Value" use="required"/>
-                    <attribute name="status" type="scag:Var" use="optional"/>
-                    <attribute name="msg" type="scag:Var" use="optional"/>
-                </complexType>
-            </element -->
-	    
         </choice>    
     </group>
     
