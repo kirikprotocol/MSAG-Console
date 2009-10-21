@@ -749,7 +749,12 @@ uint64_t CsvStore::CsvFile::AppendRecord(uint8_t state,time_t fdate,const Messag
 
 uint8_t CsvStore::CsvFile::getState(uint64_t msgId)
 {
-  Record& rec=findRecord(msgId);
+  try {
+      Record& rec=findRecord(msgId);
+  } catch ( std::exception& e ) {
+      smsc_log_warn(log_,"file %s has not message #%llx",fileName().c_str(),msgId);
+      return MESSAGE_DELETED_STATE;
+  }
   return rec.state;
 }
 

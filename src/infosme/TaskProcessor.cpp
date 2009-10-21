@@ -325,13 +325,18 @@ int TaskProcessor::Execute()
                 Task* task = taskGuard->get();
                 if (!task) break;
                 if (task->isFinalizing() || !task->isEnabled()) break;
-                const unsigned taskProcessed = processTask(task);
-                if ( ! taskProcessed ) {
-                    // no one message in task is processed
-                    task->currentPriorityFrameCounter = task->getPriority();
-                    if (!task->isEnabled()) task->setEnabled(false);
+                try {
+                    const unsigned taskProcessed = processTask(task);
+                    if ( ! taskProcessed ) {
+                        // no one message in task is processed
+                        task->currentPriorityFrameCounter = task->getPriority();
+                        if (!task->isEnabled()) task->setEnabled(false);
+                    }
+                    processed += taskProcessed;
+                } catch ( std::exception& e ) {
+                    smsc_log_warn(log_,"TaskProcessor: task '%d/%s' processing failed: %s",
+                                  task->getId(), task->getName().c_str(), e.what() );
                 }
-                processed += taskProcessed;
             } while ( false );
             delete taskGuard;
         }

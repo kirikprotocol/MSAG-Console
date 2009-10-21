@@ -1,0 +1,6 @@
+History in reverse order
+----------------------------------------------------
+2009-10-21
+bugfix: TaskProcessor did not catch all exceptions in Execute,
+  and CsvStore::loadMessage() may throw exception "message not found"
+  which causes an abort.

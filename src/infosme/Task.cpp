@@ -876,14 +876,23 @@ bool Task::getNextMessage(Message& message)
     if (!isEnabled())
       return setInProcess(false);
 
-    // selecting from cache (and from underlying store)
-    uint64_t msgid = messageCache_->fetchMessageId();
-    if ( msgid != 0 ) {
-        uint8_t state;
-        store.loadMessage(msgid,message,state);
-        smsc_log_debug(logger,"fetch msgId=%llx from cache",msgid);
-        return true;
-    }
+    do {
+        // selecting from cache (and from underlying store)
+        uint64_t msgid = messageCache_->fetchMessageId();
+        if ( msgid == 0 ) break;
+        try {
+            uint8_t state;
+            store.loadMessage(msgid,message,state);
+            smsc_log_debug(logger,"fetch msgId=%llx from cache",msgid);
+            return true;
+        } catch ( std::exception& e ) {
+            smsc_log_error(logger,"Task '%d/%s'. getNextMsg(%llx): Message access failure: %s",
+                           info.uid, info.name.c_str(), msgid, exc.what() );
+        } catch (...) {
+            smsc_log_error(logger,"Task '%d/%s'. getNextMsg(%llx): Message access failure.",
+                           info.uid, info.name.c_str(), msgid );
+        }
+    } while ( true );
 
     // Cache is empty here or maybe we have bypassed all cache elements but there are ones with region id values for which suspended condition is true
 
@@ -927,12 +936,21 @@ bool Task::getNextMessage(Message& message)
                    unsigned(fetched), info.uid,info.name.c_str());
 
     // selecting from cache
-    msgid = messageCache_->fetchMessageId();
-    if ( msgid != 0 ) {
-        uint8_t state;
-        store.loadMessage(msgid,message,state);
-        return true;
-    }
+    do {
+        uint64_t msgid = messageCache_->fetchMessageId();
+        if ( msgid == 0 ) break;
+        try {
+            uint8_t state;
+            store.loadMessage(msgid,message,state);
+            return true;
+        } catch ( std::exception& e ) {
+            smsc_log_error(logger,"Task '%d/%s'. getNextMsg(%llx): Message access failure: %s",
+                           info.uid, info.name.c_str(), msgid, exc.what() );
+        } catch (...) {
+            smsc_log_error(logger,"Task '%d/%s'. getNextMsg(%llx): Message access failure.",
+                           info.uid, info.name.c_str(), msgid );
+        }
+    } while ( true );
     return false;
     // lastMessagesCacheEmpty = time(NULL);
     // bSelectedAll = true;
@@ -1135,7 +1153,15 @@ bool Task::deleteDeliveryMessageByRecordId(const std::string& recordId)
                  info.uid,info.name.c_str());
 
   uint64_t msgId = atol(recordId.c_str());
-  store.setMsgState(msgId,DELETED);
+  try {
+      store.setMsgState(msgId,DELETED);
+  } catch ( std::exception& e ) {
+      smsc_log_error(logger, "Task '%d/%s'. Cannot delete msg #%llx: %s"
+                     info.uid, info.name.c_str(), msgId, exc.what());
+  } catch (...) {
+      smsc_log_error(logger, "Task '%d/%s'. Cannot delete msg #%llx."
+                     info.uid, info.name.c_str(), msgId);
+  }
   return true;
 }
 
@@ -1365,7 +1391,15 @@ bool Task::changeDeliveryTextMessageByCompositCriterion(const std::string& newTe
       {
         continue;
       }
-      store.setMsgState(msg.id,DELETED);
+      try {
+          store.setMsgState(msg.id,DELETED);
+      } catch ( std::exception& e ) {
+          smsc_log_error(logger, "Task '%d/%s'. Cannot delete msg #%llx: %s"
+                         info.uid, info.name.c_str(), msg.id, e.what());
+      } catch (...) {
+          smsc_log_error(logger, "Task '%d/%s'. Cannot delete msg #%llx."
+                         info.uid, info.name.c_str(), msg.id);
+      }
       msg.date=date;
       msg.message=newTextMsg;
       processedMsgs.insert(store.createMessage(msg.date,msg,state));
