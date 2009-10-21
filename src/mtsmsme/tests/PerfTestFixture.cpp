@@ -21,12 +21,22 @@ class NullSccpSender: public SccpSender {
     void send(uint8_t cdlen, uint8_t *cd, uint8_t cllen, uint8_t *cl,
         uint16_t ulen, uint8_t *udp){}
 };
+class NullAppender : public smsc::logger::Appender {
+public:
+  NullAppender(): Appender("-") {}
+  virtual ~NullAppender() {}
+
+  virtual void log(const char logLevelName,
+                   const char * const category,
+                   const char * const message) throw() {}
+};
 void PerfTestFixture::perftest()
 {
   try
   {
     smsc_log_debug(logger, "======== PerfTestFixture::perftest ========\n");
     NullSccpSender nullsender;
+    NullAppender nullappender;
     TCO mtsms(10000);
     mtsms.setSccpSender(&nullsender);
     {
@@ -34,10 +44,10 @@ void PerfTestFixture::perftest()
       Logger* extlogger;
       extlogger = 0;
       extlogger = Logger::getInstance("mt.sme.tco");
-      extlogger->setLogLevel(Logger::LEVEL_FATAL);
+      extlogger->setAppender(&nullappender);
       extlogger = 0;
       extlogger = Logger::getInstance("mt.sme.sri4sm");
-      extlogger->setLogLevel(Logger::LEVEL_FATAL);
+      extlogger->setAppender(&nullappender);
     }
 
 
