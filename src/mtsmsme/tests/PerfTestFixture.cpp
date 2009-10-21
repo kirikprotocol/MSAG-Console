@@ -1,6 +1,7 @@
 #include "mtsmsme/tests/PerfTestFixture.hpp"
 #include "mtsmsme/processor/SccpSender.hpp"
 #include "mtsmsme/processor/TCO.hpp"
+#include "logger/Appender.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION(PerfTestFixture);
 
