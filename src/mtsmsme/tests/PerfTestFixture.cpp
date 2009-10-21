@@ -7,6 +7,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(PerfTestFixture);
 
 using smsc::mtsmsme::processor::SccpSender;
 using smsc::mtsmsme::processor::TCO;
+using smsc::logger::Appender;
 void PerfTestFixture::setUp()
 {
   Logger::Init();
@@ -22,12 +23,12 @@ class NullSccpSender: public SccpSender {
     void send(uint8_t cdlen, uint8_t *cd, uint8_t cllen, uint8_t *cl,
         uint16_t ulen, uint8_t *udp){}
 };
-class NullAppender : public smsc::logger::Appender {
+class NullAppender : public Appender {
 public:
   NullAppender(): Appender("-") {};
   virtual ~NullAppender() {};
 
-  virtual void log(const char logLevelName,
+  void log(const char logLevelName,
                    const char * const category,
                    const char * const message) throw() {};
 };
