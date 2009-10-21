@@ -27,8 +27,8 @@ class NullAppender : public Appender {
 public:
   NullAppender(): Appender("-") {};
   virtual ~NullAppender() {};
-
-  void log(const char logLevelName,
+  virtual void log(timeval tv,
+                   const char logLevelName,
                    const char * const category,
                    const char * const message) throw() {};
 };
