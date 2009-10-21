@@ -1,5 +1,8 @@
 History in reverse order
 ----------------------------------------------------
+----------------------------------------------------
+infosme-build-20091021 14:00
+
 2009-10-21
 bugfix: TaskProcessor did not catch all exceptions in Execute,
   and CsvStore::loadMessage() may throw exception "message not found"
