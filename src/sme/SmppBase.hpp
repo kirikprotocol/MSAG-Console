@@ -504,12 +504,12 @@ struct SmeConfig{
     void setAddressRange( const std::string& st ) {
         addressRange = st;
         uint8_t ton, npi;
-        const char* ar;
+        const char* ar = 0;
         parseAddressRange(ton,npi,ar);
     }
 
     /// throws ConfigException
-    void parseAddressRange(uint8_t& ton, uint8_t& npi, const char* arstr) const {
+    void parseAddressRange(uint8_t& ton, uint8_t& npi, const char*& arstr) const {
         arstr = "";
         const std::string& ar = addressRange;
         if ( ar.empty() ) {
