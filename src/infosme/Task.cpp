@@ -887,7 +887,7 @@ bool Task::getNextMessage(Message& message)
             return true;
         } catch ( std::exception& e ) {
             smsc_log_error(logger,"Task '%d/%s'. getNextMsg(%llx): Message access failure: %s",
-                           info.uid, info.name.c_str(), msgid, exc.what() );
+                           info.uid, info.name.c_str(), msgid, e.what() );
         } catch (...) {
             smsc_log_error(logger,"Task '%d/%s'. getNextMsg(%llx): Message access failure.",
                            info.uid, info.name.c_str(), msgid );
@@ -945,7 +945,7 @@ bool Task::getNextMessage(Message& message)
             return true;
         } catch ( std::exception& e ) {
             smsc_log_error(logger,"Task '%d/%s'. getNextMsg(%llx): Message access failure: %s",
-                           info.uid, info.name.c_str(), msgid, exc.what() );
+                           info.uid, info.name.c_str(), msgid, e.what() );
         } catch (...) {
             smsc_log_error(logger,"Task '%d/%s'. getNextMsg(%llx): Message access failure.",
                            info.uid, info.name.c_str(), msgid );
@@ -1156,10 +1156,10 @@ bool Task::deleteDeliveryMessageByRecordId(const std::string& recordId)
   try {
       store.setMsgState(msgId,DELETED);
   } catch ( std::exception& e ) {
-      smsc_log_error(logger, "Task '%d/%s'. Cannot delete msg #%llx: %s"
-                     info.uid, info.name.c_str(), msgId, exc.what());
+      smsc_log_error(logger, "Task '%d/%s'. Cannot delete msg #%llx: %s",
+                     info.uid, info.name.c_str(), msgId, e.what());
   } catch (...) {
-      smsc_log_error(logger, "Task '%d/%s'. Cannot delete msg #%llx."
+      smsc_log_error(logger, "Task '%d/%s'. Cannot delete msg #%llx.",
                      info.uid, info.name.c_str(), msgId);
   }
   return true;
@@ -1394,10 +1394,10 @@ bool Task::changeDeliveryTextMessageByCompositCriterion(const std::string& newTe
       try {
           store.setMsgState(msg.id,DELETED);
       } catch ( std::exception& e ) {
-          smsc_log_error(logger, "Task '%d/%s'. Cannot delete msg #%llx: %s"
+          smsc_log_error(logger, "Task '%d/%s'. Cannot delete msg #%llx: %s",
                          info.uid, info.name.c_str(), msg.id, e.what());
       } catch (...) {
-          smsc_log_error(logger, "Task '%d/%s'. Cannot delete msg #%llx."
+          smsc_log_error(logger, "Task '%d/%s'. Cannot delete msg #%llx.",
                          info.uid, info.name.c_str(), msg.id);
       }
       msg.date=date;
