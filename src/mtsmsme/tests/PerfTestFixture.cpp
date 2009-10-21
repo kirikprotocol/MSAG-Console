@@ -29,6 +29,17 @@ void PerfTestFixture::perftest()
     NullSccpSender nullsender;
     TCO mtsms(10000);
     mtsms.setSccpSender(&nullsender);
+    {
+      //TODO: modify logger public interface to set TCO SRI4SM levels before
+      Logger* extlogger;
+      extlogger = 0;
+      extlogger = Logger::getInstance("mt.sme.tco");
+      extlogger->setLogLevel(Logger::LEVEL_FATAL);
+      extlogger = 0;
+      extlogger = Logger::getInstance("mt.sme.sri4sm");
+      extlogger->setLogLevel(Logger::LEVEL_FATAL);
+    }
+
 
     uint8_t cd[] ={
     0x12, 0x06, 0x00, 0x12, 0x04, 0x97, 0x31, 0x89,
@@ -59,7 +70,7 @@ void PerfTestFixture::perftest()
     end = gethrtime();
 
     smsc_log_info(logger,
-        "TCAP Engine speed = %f pkt/nsec\n", iters * 1000000000.0 / (end - start));
+        "TCAP Engine speed = %f pkt/sec\n", iters * 1000000000.0 / (end - start));
 
   } catch (std::exception& ex)
   {
