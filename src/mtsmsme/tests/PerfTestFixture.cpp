@@ -23,12 +23,12 @@ class NullSccpSender: public SccpSender {
 };
 class NullAppender : public smsc::logger::Appender {
 public:
-  NullAppender(): Appender("-") {}
-  virtual ~NullAppender() {}
+  NullAppender(): Appender("-") {};
+  virtual ~NullAppender() {};
 
   virtual void log(const char logLevelName,
                    const char * const category,
-                   const char * const message) throw() {}
+                   const char * const message) throw() {};
 };
 void PerfTestFixture::perftest()
 {
