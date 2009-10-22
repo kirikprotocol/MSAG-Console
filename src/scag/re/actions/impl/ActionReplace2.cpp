@@ -103,6 +103,7 @@ bool ActionReplace::run(ActionContext& context)
     SMatch m[100];
     int n = 100;
     size_t pos = 0;
+    size_t prevpos;
     std::string result;
 
     while(re.Search((uint16_t*)(var.data() + pos), m, n))
@@ -110,7 +111,12 @@ bool ActionReplace::run(ActionContext& context)
         smsc_log_debug(logger,"Action 'replace': match: pos=%d", m[0].start);    
         result.append(var.data() + pos, m[0].start * 2);
         result.append(rep.data(), rep.size());
+        prevpos = pos;
         pos += 2 * m[0].end;
+        if ( pos == prevpos ) {
+            smsc_log_warn(logger,"Action 'replace': neverending loop, pos=%u!", unsigned(pos));
+            break;
+        }
         n = 100;
     }
 
