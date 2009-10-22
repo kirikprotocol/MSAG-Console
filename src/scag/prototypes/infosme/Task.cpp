@@ -1,6 +1,7 @@
 #include <cassert>
 #include <algorithm>
 #include "Task.h"
+#include "ProtoException.h"
 
 namespace {
 smsc::core::synchronization::Mutex taskIdMutex;
@@ -29,11 +30,10 @@ priority_(priority),
 speed_(speed),
 kilospeed_(speed*1000),
 sent_(0),
-score_(0),
-normScore_(0),
 wouldSend_(0),
 messages_(0),
-users_(0)
+users_(0),
+prefetched_(false)
 {
     char buf[50];
     sprintf(buf,"task.%03u",id_);
@@ -105,57 +105,26 @@ unsigned Task::wantToSleep( unsigned deltaTime )
 
 void Task::suspendMessage( Message& msg )
 {
-    unsigned regionId = msg.getRegionId();
-    {
-        MutexGuard mg(taskLock_);
-        RegionMap::iterator i = regionMap_.lower_bound(regionId);
-        if ( i == regionMap_.end() || i->first != regionId ) {
-            i = regionMap_.insert(i,std::make_pair(regionId,MessageList()));
-        }
-        i->second.push_front(msg);
-    }
-    // smsc_log_debug(log_,"region %u suspended",regionId);
+    MutexGuard mg(taskLock_);
+    doSuspendMessage( msg );
+}
+
+
+bool Task::prefetchMessage( time_t now, unsigned regionId )
+{
+    if ( isDestroyed_ || !isActive_ || !messages_ ) return false;
+    MutexGuard mg(taskLock_);
+    return doPrefetchMessage(now,regionId);
 }
 
 
 bool Task::getMessage( time_t now, unsigned regionId, Message& msg )
 {
-    if ( isDestroyed_ || !isActive_ || !messages_ ) return false;
     MutexGuard mg(taskLock_);
-    if ( isDestroyed_ || !isActive_ || !messages_ ) return false;
-    
-    // looking for regions
-    bool res = false;
-    if ( ! regionMap_.empty() ) {
-        RegionMap::iterator iter = regionMap_.find(regionId);
-        if ( iter != regionMap_.end() ) {
-            MessageList& list = iter->second;
-            if ( ! list.empty() ) {
-                msg = list.front();
-                list.pop_front();
-                res = true;
-            }
-        }
-    }
-
-    if ( !res ) {
-        // trying to get messages from storage
-        while ( ! messageList_.empty() ) {
-            msg = messageList_.front();
-            messageList_.pop_front();
-            unsigned rid = msg.getRegionId();
-            if ( rid == regionId ) {
-                res = true;
-                break;
-            }
-            RegionMap::iterator i = regionMap_.lower_bound(rid);
-            if ( i == regionMap_.end() || i->first != rid ) {
-                i = regionMap_.insert(i,std::make_pair(rid,MessageList()));
-            }
-            i->second.push_back(msg);
-        }
-    }
-    return res;
+    if ( !prefetched_ && !doPrefetchMessage(now,regionId) ) return false;
+    prefetched_ = false;
+    msg = prefetch_;
+    return true;
 }
 
 
@@ -166,11 +135,21 @@ void Task::finalizeMessage( Message& msg, int state )
         MutexGuard mg(taskLock_);
         if ( messages_ > 0 ) --messages_;
         msgs = messages_;
+        if ( state == MessageState::OK ) {
+            ++sent_;
+            wouldSend_ += 1000;
+            unsigned regid = msg.getRegionId();
+            if ( regid >= stats_.size() ) stats_.resize(regid+1);
+            ++stats_[regid];
+        }
     }
-    smsc_log_debug(log_,"message %u failed, msgs left=%u", msg.getId(), msgs );
+    smsc_log_debug(log_,"msg %u %s, msgs left=%u", msg.getId(),
+                   state == MessageState::OK ? "sent" : "failed",
+                   msgs );
 }
 
 
+/*
 void Task::normalizeScore( const Task* lowestScoreTask, unsigned deltaTime )
 {
     unsigned lowestScore = ( lowestScoreTask ? lowestScoreTask->normScore_ : normScore_ );
@@ -204,6 +183,71 @@ void Task::incrementScore( Message& msg )
     }
     smsc_log_debug(log_,"message %u/%u sent, msgs left=%u, new score=%u", msg.getId(), msg.getRegionId(), msgs, score );
 }
+ */
+
+
+bool Task::setPrefetch( MessageList& list ) 
+{
+    if ( prefetched_ ) {
+        doSuspendMessage(prefetch_);
+    }
+    prefetch_ = list.front();
+    list.pop_front();
+    return (prefetched_ = true);
+}
+
+
+void Task::doSuspendMessage( Message& msg )
+{
+    unsigned regionId = msg.getRegionId();
+    {
+        RegionMap::iterator i = regionMap_.lower_bound(regionId);
+        if ( i == regionMap_.end() || i->first != regionId ) {
+            i = regionMap_.insert(i,std::make_pair(regionId,MessageList()));
+        }
+        i->second.push_front(msg);
+    }
+    // smsc_log_debug(log_,"region %u suspended",regionId);
+}
+
+
+bool Task::doPrefetchMessage( time_t now, unsigned regionId )
+{
+    if ( isDestroyed_ || !isActive_ || !messages_ ) return false;
+
+    if ( prefetched_ && prefetch_.getRegionId() == regionId ) return true;
+
+    RegionMap::iterator iter = regionMap_.find(regionId);
+    if ( iter != regionMap_.end() ) {
+        MessageList& list = iter->second;
+        if ( ! list.empty() ) {
+            return setPrefetch(list);
+        }
+    }
+
+    while ( ! messageList_.empty() ) {
+        Message& msg = messageList_.front();
+        if ( msg.startTime() > now ) {
+            smsc_log_debug(log_,"all messages in task %u/%s for conn=%u are in future",
+                           getId(), getName().c_str(), regionId );
+            return false;
+        }
+        unsigned rid = msg.getRegionId();
+        if ( rid == regionId ) {
+            return setPrefetch(messageList_);
+        }
+        RegionMap::iterator i = regionMap_.lower_bound(rid);
+        if ( i == regionMap_.end() || i->first != rid ) {
+            i = regionMap_.insert(i,std::make_pair(rid,MessageList()));
+        }
+        i->second.push_back(msg);
+        messageList_.pop_front();
+    }
+    smsc_log_debug(log_,"no messages in task %u/%s for conn=%u",
+                   getId(), getName().c_str(), regionId );
+    return false;
+}
+
 
 }
 }

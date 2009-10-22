@@ -34,7 +34,8 @@ public:
     int send( unsigned deltaTime, Message& msg );
     void suspend( unsigned deltaTime );
 
-    unsigned getId() const { return id_; }
+    inline unsigned getId() const { return id_; }
+    inline unsigned getBandwidth() const { return bandwidth_; }
 
     /// check if the connector is ready.
     /// @return 0 -- connector is ready, >0 how many ms to wait until it is.

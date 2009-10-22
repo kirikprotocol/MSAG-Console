@@ -1,4 +1,5 @@
 #include "Connector.h"
+#include "Message.h"
 #include "ProtoException.h"
 
 namespace {
@@ -25,7 +26,7 @@ int Connector::send( unsigned deltaTime, Message& msg )
         // stopping it for a second
         nextTime_ = deltaTime + 1000;
         wouldSend_ = nextTime_ * bandwidth_;
-        smsc_log_debug(log_,"failed to send, %s",toString().c_str());
+        smsc_log_debug(log_,"failed to send msg %u: %s",msg.getId(),toString().c_str());
         return MessageState::FAIL;
     }
     ++sent_;
@@ -38,7 +39,7 @@ int Connector::send( unsigned deltaTime, Message& msg )
         nextTime_ = deltaTime+1000;
         wouldSend_ = nextTime_*bandwidth_;
     }
-    smsc_log_debug(log_,"msg sent, %s", toString().c_str());
+    smsc_log_debug(log_,"msg %u sent, %s", msg.getId(), toString().c_str());
     return MessageState::OK;
 }
 

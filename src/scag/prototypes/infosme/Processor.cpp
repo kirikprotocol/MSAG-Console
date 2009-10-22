@@ -1,5 +1,6 @@
 #include <algorithm>
 #include "Processor.h"
+#include "TaskDispatcher.h"
 #include "Sender.h"
 #include "ProtoException.h"
 #include "scag/util/Time.h"
@@ -9,9 +10,10 @@ namespace scag2 {
 namespace prototypes {
 namespace infosme {
 
-Processor::Processor( Sender& sender ) :
+Processor::Processor( Sender& sender, TaskDispatcher& disp ) :
 log_(smsc::logger::Logger::getInstance(taskName())),
-sender_(&sender)
+sender_(&sender),
+dispatcher_(&disp)
 {
     smsc_log_debug(log_,"ctor");
 }
@@ -115,12 +117,15 @@ int Processor::doExecute()
                 }
 
                 if ( task->isActive() && task->hasMessages() ) {
-                    const Task* firstTask = activeTasks_.empty() ? 0 : activeTasks_.front();
-                    task->normalizeScore( firstTask, deltaTime );
+                    // const Task* firstTask = activeTasks_.empty() ? 0 : activeTasks_.front();
+                    // task->normalizeScore( firstTask, deltaTime );
+                    /*
                     ActiveTaskList::iterator j = std::lower_bound( activeTasks_.begin(),
                                                                    activeTasks_.end(),
                                                                    task, PtrLess() );
                     activeTasks_.insert(j,task);
+                     */
+                    dispatcher_->addTask( *task );
                     i = inactiveTasks_.erase(i);
                     smsc_log_debug(log_,"moving task %s to active list",task->getName().c_str());
                     continue;
@@ -129,14 +134,15 @@ int Processor::doExecute()
             }
         }
 
-        // 4. retrieving a region to work with
-        unsigned regionId;
-        wantToSleep = sender_->hasReadyConnector( deltaTime, regionId );
+        // 4. send a request to process one region
+        wantToSleep = sender_->send( deltaTime, 500 );
+
+        /*
         if ( wantToSleep > 0 ) {
 
             // 4a. sender really want to sleep, no regions are ready
             if ( wantToSleep > 500 ) { wantToSleep = 500; }
-
+            
             // going to sleep on regions
             continue;
         }
@@ -281,6 +287,7 @@ int Processor::doExecute()
             allTasks_.erase(j->second);
             taskMap_.erase(j);
         }
+         */
 
     } // main loop
     smsc_log_info(log_,"finishing");
@@ -295,7 +302,7 @@ void Processor::dumpStatistics( unsigned deltaTime )
     stat.reserve(10000);
     {
         char buf[100];
-        sprintf(buf,"statistics, time=%u",deltaTime);
+        sprintf(buf,"statistics, time=%u ",deltaTime);
         stat.append(buf);
     }
     sender_->dumpStatistics(stat);

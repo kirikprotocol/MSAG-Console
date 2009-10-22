@@ -10,11 +10,12 @@ namespace prototypes {
 namespace infosme {
 
 class Sender;
+class TaskDispatcher;
 
 class Processor : public util::WatchedThreadedTask
 {
 public:
-    Processor( Sender& sender );
+    Processor( Sender& sender, TaskDispatcher& disp );
     virtual ~Processor();
 
     TaskGuard getTask( unsigned idx );
@@ -35,6 +36,7 @@ private:
 private:
     smsc::logger::Logger*     log_;
     Sender*                   sender_; // not owned
+    TaskDispatcher*           dispatcher_; // owned
 
     GuardedTaskList        allTasks_; // all tasks
     TaskMap                taskMap_;  // mapping from id

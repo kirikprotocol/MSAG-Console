@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "Processor.h"
+#include "TaskDispatcher.h"
 #include "logger/Logger.h"
 #include "scag/util/WatchedThreadedTask.h"
 #include "core/threads/ThreadPool.hpp"
@@ -46,8 +47,9 @@ protected:
 private:
     smsc::logger::Logger* log_;
     smsc::core::threads::ThreadPool& pool_;
-    std::auto_ptr< Processor > processor_;
-    std::auto_ptr< Sender > sender_;
+    std::auto_ptr< Processor >  processor_;
+    std::auto_ptr< Sender >     sender_;
+    std::auto_ptr< TaskDispatcher > dispatcher_;
 };
 
 }

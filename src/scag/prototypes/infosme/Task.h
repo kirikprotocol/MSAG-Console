@@ -20,7 +20,7 @@ private:
     // messages sorted by sending time
     typedef std::list< Message >          MessageList;
     typedef std::vector< unsigned >       StatVector;
-    typedef std::map< int, MessageList >  RegionMap;
+    typedef std::map< unsigned, MessageList >  RegionMap;
 
     static unsigned getNextId();
 
@@ -34,6 +34,7 @@ public:
 
     unsigned getId() const { return id_; }
     const std::string& getName() const { return name_; }
+    inline unsigned getPriority() const { return priority_; }
 
     std::string toString() const {
         char buf[256];
@@ -50,17 +51,14 @@ public:
             }
             stat.push_back(']');
         }
-        std::sprintf(buf, "%s %c score=%u prio=%u spd=%u sent=%u wdsn=%u stat=%s",
+        std::sprintf(buf, "%s %c prio=%u spd=%u sent=%u wdsn=%u stat=%s",
                      name_.c_str(),
                      isActive_ ? '+' : '-',
-                     normScore_, priority_, speed_,
-                     sent_, wouldSend_, stat.c_str() );
+                     priority_, speed_, sent_, wouldSend_, stat.c_str() );
         return buf;
     }
 
     inline bool operator < ( const Task& other ) const {
-        if ( normScore_ < other.normScore_ ) return true;
-        if ( other.normScore_ < normScore_ ) return false;
         if ( priority_ > other.priority_ ) return true;
         if ( priority_ < other.priority_ ) return false;
         if ( speed_ > other.speed_ ) return true;
@@ -99,6 +97,8 @@ public:
     /// suspend message
     void suspendMessage( Message& msg );
 
+    bool prefetchMessage( time_t now, unsigned regionId );
+
     /// get the next message for given region.
     /// the method may fail for a number of reasons:
     /// no more messages in task, all regions are suspended, all messages are in future, etc.
@@ -107,12 +107,12 @@ public:
     /// finalize message
     void finalizeMessage( Message& msg, int state );
 
-    /// normalize score according to the task with lowest score
-    void normalizeScore( const Task* lowestScoreTask, unsigned deltaTime = 0 );
+    // normalize score according to the task with lowest score
+    // void normalizeScore( const Task* lowestScoreTask, unsigned deltaTime = 0 );
 
-    /// message is sent, it should be removed from the list and
-    /// the score should be updated.
-    void incrementScore( Message& msg );
+    // message is sent, it should be removed from the list and
+    // the score should be updated.
+    // void incrementScore( Message& msg );
 
 private:
     bool changeUsage( bool v ) {
@@ -125,6 +125,10 @@ private:
             return (users_ == 0);
         }
     }
+
+    bool setPrefetch( MessageList& list );
+    void doSuspendMessage( Message& msg );
+    bool doPrefetchMessage( time_t now, unsigned regionId );
 
 private:
     unsigned    id_;
@@ -140,8 +144,8 @@ private:
     unsigned kilospeed_; // number of messages*1000 per second, derived from speed_
     unsigned sent_;      // actual number of messages sent
 
-    unsigned score_;     // score of the task
-    unsigned normScore_; // normalized score of the task
+    // unsigned score_;     // score of the task
+    // unsigned normScore_; // normalized score of the task
     unsigned wouldSend_; // how many messages would be sent
 
     unsigned messages_;  // total number of messages in task
@@ -152,13 +156,16 @@ private:
     // messages in processing (those which were obtained by get)
     MessageList processing_;
 
-    // messages suspended by regions
-    RegionMap           regionMap_;
+    // messages sorted by regions
+    RegionMap   regionMap_;
 
-    // these two structures represent a storage
+    // these structure represent a CsvStore
     MessageList messageList_; // messages not in processing
 
     StatVector  stats_; // statistics by regions
+
+    bool    prefetched_;
+    Message prefetch_;
 };
 
 

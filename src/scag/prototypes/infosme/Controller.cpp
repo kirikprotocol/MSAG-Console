@@ -63,11 +63,12 @@ int Controller::doExecute()
 {
     smsc_log_info(log_,"started");
 
-    sender_.reset( new Sender() );
+    dispatcher_.reset( new TaskDispatcher() );
+    sender_.reset( new Sender(*dispatcher_.get()) );
     addConnector(10);
 
     // create a processor and start it
-    processor_.reset( new Processor(*sender_.get()) );
+    processor_.reset( new Processor(*sender_.get(),*dispatcher_.get()) );
     pool_.startTask(processor_.get(),false);
 
     while ( ! stopping() ) {

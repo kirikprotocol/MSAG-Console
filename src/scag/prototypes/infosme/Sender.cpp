@@ -1,8 +1,10 @@
+#include <cassert>
 #include <algorithm>
 #include "Sender.h"
 #include "Message.h"
 #include "Connector.h"
 #include "ProtoException.h"
+#include "TaskDispatcher.h"
 #include "scag/util/PtrDestroy.h"
 #include "scag/util/PtrLess.h"
 
@@ -10,37 +12,43 @@ namespace scag2 {
 namespace prototypes {
 namespace infosme {
 
-Sender::Sender() :
+Sender::Sender( TaskDispatcher& disp ) :
 log_(smsc::logger::Logger::getInstance("sender")),
-default_(size_t(-1))
+scoredList_(*this),
+default_(0),
+dispatcher_(&disp)
 {
-    connectors_.reserve(200);
 }
 
 
 Sender::~Sender()
 {
-    std::for_each( connectors_.begin(), connectors_.end(), PtrDestroy() );
-    connectors_.clear();
+    MutexGuard mg(lock_);
+    for ( size_t i = 0; i < scoredList_.size(); ++i ) {
+        Connector* c = scoredList_[i];
+        delete c;
+    }
+    scoredList_.clear();
 }
 
 
 void Sender::addConnector( Connector* conn )
 {
+    if ( ! conn ) return;
     MutexGuard mg(lock_);
-    connectors_.push_back(conn);
-    std::sort( connectors_.begin(), connectors_.end(), PtrLess() );
-    if ( default_ == size_t(-1) ) default_ = 0;
+    scoredList_.add(conn);
+    dispatcher_->addConnector(*conn);
+    if ( default_ == 0 ) default_ = conn;
 }
 
 
 unsigned Sender::connectorCount()
 {
     MutexGuard mg(lock_);
-    return unsigned(connectors_.size());
+    return unsigned(scoredList_.size());
 }
 
-
+/*
 int Sender::send( unsigned deltaTime, Message& msg )
 {
     unsigned regid = msg.getRegionId();
@@ -56,19 +64,17 @@ int Sender::send( unsigned deltaTime, Message& msg )
     resort(i);
     return reason;
 }
+ */
 
 
 void Sender::dumpStatistics( std::string& s )
 {
     MutexGuard mg(lock_);
-    for ( ConnectorList::const_iterator i = connectors_.begin();
-          i != connectors_.end(); ++i ) {
-        s.append("\n  ");
-        s.append( (*i)->toString());
-    }
+    scoredList_.dump(s);
 }
 
 
+/*
 unsigned Sender::hasReadyConnector( unsigned deltaTime, unsigned& regionId )
 {
     MutexGuard mg(lock_);
@@ -106,8 +112,23 @@ void Sender::suspendConnector( unsigned deltaTime, unsigned regionId )
         resort(i);
     }
 }
+ */
 
 
+unsigned Sender::send( unsigned deltaTime, unsigned sleepTime )
+{
+    std::string s;
+    MutexGuard mg(lock_);
+    if ( log_->isDebugEnabled() ) {
+        s.reserve(400);
+        scoredList_.dump(s);
+        smsc_log_debug(log_,"regions (%u) are:%s",unsigned(scoredList_.size()),s.c_str());
+    }
+    return scoredList_.processOnce(deltaTime,sleepTime);
+}
+
+
+/*
 Sender::ConnectorList::iterator Sender::findConnector( unsigned regionId )
 {
     ConnectorList::iterator res = connectors_.begin();
@@ -131,6 +152,39 @@ void Sender::resort( ConnectorList::iterator i )
         if ( oldpos <= default_ ) --default_;
         if ( newpos <= default_ ) ++default_;
     }
+}
+ */
+
+
+void Sender::scoredObjToString( std::string& s, Connector& c )
+{
+    s.append(c.toString());
+}
+
+
+unsigned Sender::scoredObjIsReady( unsigned deltaTime, Connector& c )
+{
+    return c.isReady( deltaTime );
+}
+
+
+int Sender::processScoredObj( unsigned deltaTime, Connector& c )
+{
+    unsigned inc = 1000/c.getBandwidth();
+    try {
+        unsigned wantToSleep = dispatcher_->processConnector( deltaTime, c );
+        smsc_log_debug(log_,"connector %u processed, res=%u",c.getId(),wantToSleep);
+        if ( wantToSleep > 0 ) {
+            // all tasks want to sleep
+            c.suspend(wantToSleep);
+            return -inc;
+        }
+    } catch ( std::exception& exc ) {
+        smsc_log_debug(log_,"sending failed: %s", exc.what() );
+        c.suspend(1000);
+        return -1000;
+    }
+    return inc;
 }
 
 }
