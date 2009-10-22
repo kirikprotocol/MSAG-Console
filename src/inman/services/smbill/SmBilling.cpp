@@ -88,16 +88,20 @@ void SmBillManager::onPacketReceived(Connect* conn, std::auto_ptr<SerializablePa
         if (!bill) {
             if (numWorkers() < _cfg.prm->maxBilling) {
                 insWorker(bill = new Billing(srvHdr->dlgId, this, logger));
+                _denyCnt = 0;
             } else {
+                ++_denyCnt;
                 denyCharging(srvHdr->dlgId, INManErrorId::cfgLimitation); //ignore sending result here
                 smsc_log_warn(logger, "%s: maxBilling limit reached: %u", _logId,
                             _cfg.prm->maxBilling);
-                if (logger->isDebugEnabled()) {
+                if (logger->isDebugEnabled()
+                    && (_denyCnt >= (_cfg.prm->maxBilling/3))) {
                     std::string dump;
                     format(dump, "%s: Workers [%u of %u]: ", _logId,
                            numWorkers(), _cfg.prm->maxBilling);
                     dumpWorkers(dump);
                     smsc_log_debug(logger, dump.c_str());
+                    _denyCnt = 0;
                 }   
             }
         }

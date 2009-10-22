@@ -57,6 +57,7 @@ struct SmBillingCFG {
 
 class SmBillManager: public ConnectManagerT<SmBillingCFG> {
 protected:
+    unsigned _denyCnt;
     //Composes and sends ChargeSmsResult packet
     //returns -1 on error, or number of total bytes sent
     int denyCharging(unsigned dlg_id, INManErrorId::Codes use_error);
@@ -65,6 +66,7 @@ public:
     SmBillManager(const SmBillingCFG & cfg, unsigned cm_id,
                             Connect* conn, Logger * uselog = NULL)
         : ConnectManagerT<SmBillingCFG>(cfg, cm_id, conn, uselog)
+        , _denyCnt(0)
     {
         logger = uselog ? uselog : Logger::getInstance("smsc.inman");
         snprintf(_logId, sizeof(_logId)-1, "BillMgr[%u]", _cmId);
