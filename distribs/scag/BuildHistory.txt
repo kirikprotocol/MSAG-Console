@@ -386,7 +386,8 @@ TO ALL: Insert log record for all significant changes & fixes here.
    Now it machine independed: 32/64 & BE/LE.
 2) MSAG FIX: Admin commands processing fixes (e.g. httpTraceRoute)
 
---- current fixes
+=================================================================================================================
+2009-10-22 12:00 bukind msag-build-20091022
 2009-10-08 bukind
   various code cleanup to allow a compilation with STDCXX
 2009-10-12 odarchenko, bukind
@@ -411,5 +412,4 @@ TO ALL: Insert log record for all significant changes & fixes here.
 2009-10-22 bukind
   bugfix: ActionReplace neverending loop on zero-length matching RE.
 
-
-  
+--- current fixes ---
