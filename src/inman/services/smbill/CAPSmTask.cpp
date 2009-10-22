@@ -152,8 +152,8 @@ void CAPSmTaskAC::onEndCapDlg(TCDialogID dlg_id, RCHash errcode)
 
     //select further actions depending on processing mode
     switch (_pMode) {
+//    case pmIdle: //task is finished and just waits for TCAP dialogs being ended
     //initiating dialog(s) with SCF (IN-platform)
-//    case pmIdle:
     case pmInit:
     case pmWaitingInstr: {
         //abnormal termination: task still hasn't reported result to referee
@@ -304,8 +304,9 @@ ScheduledTaskAC::PGState CAPSmTaskAC::Report(auto_ptr_utl<UtilizableObjITF> & us
               _pMode = pmMonitoring;
               _fsmState = ScheduledTaskAC::pgCont;
             } else {        //CHARGING_NOT_POSSIBLE -> normal completion
-              _pMode = pmIdle;
-              _fsmState = ScheduledTaskAC::pgDone;
+              _pMode = pmIdle; //if all TCAP dialog(s) ended immediately release
+                               //itself, otherwise wait for all dialog(s) end
+              _fsmState = Completed() ? ScheduledTaskAC::pgDone : ScheduledTaskAC::pgSuspend;
             }
         } else {
             //Billing is died or no longer interested in charging -> abort task
@@ -314,8 +315,9 @@ ScheduledTaskAC::PGState CAPSmTaskAC::Report(auto_ptr_utl<UtilizableObjITF> & us
                 abortDialogs();
             } else //CHARGING_NOT_POSSIBLE -> normal completion
                 log_warn("Report", use_ref, ", no referee set ..");
-            _pMode = pmIdle;
-            _fsmState = ScheduledTaskAC::pgDone;
+            _pMode = pmIdle; //if all TCAP dialog(s) ended immediately release
+                             //itself, otherwise wait for all dialog(s) end
+            _fsmState = Completed() ? ScheduledTaskAC::pgDone : ScheduledTaskAC::pgSuspend;
         }
     } break;
 //    case pmMonitoring:

@@ -114,20 +114,20 @@ public:
     bool Adjust(void)
     {
         doCharge = true;
-        for (CAPSmDPList::iterator it = dpRes.begin(); it != dpRes.end(); ++it) {
+        for (CAPSmDPList::const_iterator it = dpRes.begin(); it != dpRes.end(); ++it) {
             if (!it->doCharge) {
                 doCharge = false; break;
             }
         }
         scfErr = 0;
-        for (CAPSmDPList::iterator it = dpRes.begin(); it != dpRes.end(); ++it) {
+        for (CAPSmDPList::const_iterator it = dpRes.begin(); it != dpRes.end(); ++it) {
             if (it->scfErr) {
                 scfErr = it->scfErr; break;
             }
         }
         rejectRPC = false;
         CAPSmDPList::size_type cnt = 0;
-        for (CAPSmDPList::iterator it = dpRes.begin();
+        for (CAPSmDPList::const_iterator it = dpRes.begin();
               (it != dpRes.end()) && it->dlgRes && it->dlgRes->answered; ++it) {
             ++cnt;
             if (abScf->rejectRPC.exist(it->dlgRes->rpCause))
