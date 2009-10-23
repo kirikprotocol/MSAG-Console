@@ -72,7 +72,7 @@ IParserHandler * BatchAction::StartXMLSubSection( const std::string& name, const
     smsc_log_debug(logger, "BatchAction: %s", name.c_str());
     std::auto_ptr<PersActionCommand> act( (PersActionCommand*)( factory.CreateAction(name) ) );
     if ( !act.get() ) {
-        throw SCAGException("batch action %s was not created");
+        throw SCAGException("batch action %s was not created", name.c_str());
     }
     act->init(params, pobj_);
     actions_.push_back(act.release());
