@@ -47,6 +47,10 @@
 #include "scag/pvss/api/packets/IncModCommand.h"
 // #include "scag/pvss/api/packets/BatchCommand.h"
 
+#include "ActionParsePairs.h"
+#include "ActionFormatPairs.h"
+#include "ActionSplitPairs.h"
+
 namespace scag2 {
 namespace re {
 namespace actions {
@@ -65,6 +69,10 @@ Action * MainActionFactory::CreateAction( const std::string& name ) const
             if (name=="strings:indexof") return new ActionIndexof();
             if (name=="strings:length") return new ActionLength();
             if (name=="strings:replace") return new ActionReplace();
+
+            if (name=="strings:parse_pairs") return new ActionParsePairs();
+            if (name=="strings:split_pairs") return new ActionSplitPairs();
+            if (name=="strings:format_pairs") return new ActionFormatPairs();
             break;
         }
 

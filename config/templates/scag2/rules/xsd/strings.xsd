@@ -1,11 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schema targetNamespace="http://www.sibinco.com/SCAG/STRINGS" 
     xmlns="http://www.w3.org/2001/XMLSchema"
-    xmlns:operation="http://www.sibinco.com/SCAG/STRINGS"
+    xmlns:string="http://www.sibinco.com/SCAG/STRINGS"
     xmlns:scag="http://www.sibinco.com/SCAG"
     elementFormDefault="qualified">
 
     <import schemaLocation="rules.xsd" namespace="http://www.sibinco.com/SCAG" />
+    
+    <group name="pairs">
+	<choice>
+	<element name="pair">
+     	    <complexType>
+		<attribute name="name" type="scag:Var" use="required"/>
+		<attribute name="value" type="scag:Var" use="required"/>
+            </complexType>
+	</element>
+	</choice>
+    </group>
+
+    <group name="splitpairs">
+	<choice>
+	<element name="pair">
+     	    <complexType>
+		<attribute name="name" type="scag:Value" use="required"/>
+		<attribute name="value" type="scag:Var" use="required"/>
+            </complexType>
+	</element>
+	</choice>
+    </group>
 
     <group name="Actions">
         <choice>
@@ -51,6 +73,36 @@
 		</complexType>
 	    </element>
 
+	    <element name="parse_pairs">
+                <complexType>
+		   <group ref="string:pairs" minOccurs="0" maxOccurs="unbounded"/>
+	    	   <attribute name="source" type="scag:Value" use="required"/>
+	           <attribute name="name_delimiter" type="scag:Value" use="required" />
+	    	   <attribute name="pair_delimiter" type="scag:Value" use="required"/>
+	           <attribute name="rest" type="scag:Var" use="optional" />
+	        </complexType>
+	    </element>
+
+	    <element name="split_pairs">
+                <complexType>
+		   <group ref="string:splitpairs" minOccurs="0" maxOccurs="unbounded"/>
+	    	   <attribute name="source" type="scag:Value" use="required"/>
+	           <attribute name="name_delimiter" type="scag:Value" use="required" />
+	    	   <attribute name="pair_delimiter" type="scag:Value" use="required"/>
+	           <attribute name="rest" type="scag:Var" use="optional" />
+	        </complexType>
+	    </element>
+
+	    <element name="format_pairs">
+                <complexType>
+		   <group ref="string:pairs" minOccurs="0" maxOccurs="unbounded"/>
+	    	   <attribute name="prefix" type="scag:Value" use="optional"/>
+	    	   <attribute name="postfix" type="scag:Value" use="optional"/>
+	           <attribute name="name_delimiter" type="scag:Value" use="required" />
+	    	   <attribute name="pair_delimiter" type="scag:Value" use="required"/>
+	           <attribute name="result" type="scag:Var" use="required" />
+	        </complexType>
+	    </element>
         </choice>    
     </group>
     
