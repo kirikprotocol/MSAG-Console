@@ -3,6 +3,7 @@
 
 #include "logger/Logger.h"
 #include "scag/util/io/Drndm.h"
+#include "Speed.h"
 
 namespace scag2 {
 namespace prototypes {
@@ -19,9 +20,7 @@ public:
     Connector( unsigned bandwidth ) :
     id_(getNextId()),
     log_(0),
-    bandwidth_(bandwidth),
-    wouldSend_(0),
-    nextTime_(0),
+    speed_(bandwidth),
     sent_(0)
     {
         char buf[40];
@@ -35,23 +34,23 @@ public:
     void suspend( unsigned deltaTime );
 
     inline unsigned getId() const { return id_; }
-    inline unsigned getBandwidth() const { return bandwidth_; }
+    inline unsigned getBandwidth() const { return speed_.getSpeed(); }
 
     /// check if the connector is ready.
     /// @return 0 -- connector is ready, >0 how many ms to wait until it is.
-    unsigned isReady( unsigned deltaTime );
+    inline unsigned isReady( unsigned deltaTime ) { return speed_.isReady(deltaTime); }
 
     std::string toString() const {
         char buf[256];
-        std::sprintf(buf,"%s band=%u wds=%u sent=%u next=%u",name_.c_str(),bandwidth_,wouldSend_,sent_,nextTime_);
+        std::sprintf(buf,"%s band=%u sent=%u next=%u",
+                     name_.c_str(),speed_.getSpeed(),sent_,speed_.getNextTime());
         return buf;
     }
 
     bool operator < ( const Connector& other ) const {
-        if ( nextTime_ < other.nextTime_ ) return true;
-        if ( nextTime_ > other.nextTime_ ) return false;
-        if ( bandwidth_ > other.bandwidth_ ) return true;
-        if ( bandwidth_ < other.bandwidth_ ) return false;
+        const int cmp = speed_.compare( other.speed_ );
+        if ( cmp < 0 ) return true;
+        if ( cmp > 0 ) return false;
         if ( id_ < other.id_ ) return true;
         return false;
     }
@@ -60,9 +59,7 @@ private:
     unsigned id_;
     smsc::logger::Logger* log_;
     std::string name_;
-    unsigned bandwidth_;    // msg per sec
-    unsigned wouldSend_;    // msg * 1000 since start
-    unsigned nextTime_;
+    Speed    speed_;
     unsigned sent_;         // real number of send msgs
     scag2::util::Drndm random_;
 };

@@ -5,6 +5,7 @@
 #include <vector>
 #include <map>
 #include "Message.h"
+#include "Speed.h"
 #include "logger/Logger.h"
 #include "scag/util/io/Drndm.h"
 
@@ -32,8 +33,8 @@ public:
           unsigned nregions,
           unsigned messages );
 
-    unsigned getId() const { return id_; }
-    const std::string& getName() const { return name_; }
+    inline unsigned getId() const { return id_; }
+    inline const std::string& getName() const { return name_; }
     inline unsigned getPriority() const { return priority_; }
 
     std::string toString() const {
@@ -51,23 +52,35 @@ public:
             }
             stat.push_back(']');
         }
-        std::sprintf(buf, "%s %c prio=%u spd=%u sent=%u wdsn=%u stat=%s",
+        std::sprintf(buf, "%s %c prio=%u spd=%u sent=%u left=%u next=%u stat=%s",
                      name_.c_str(),
                      isActive_ ? '+' : '-',
-                     priority_, speed_, sent_, wouldSend_, stat.c_str() );
+                     priority_, speed_.getSpeed(),
+                     sent_,
+                     messages_,
+                     speed_.getNextTime(), stat.c_str() );
         return buf;
     }
 
     inline bool operator < ( const Task& other ) const {
         if ( priority_ > other.priority_ ) return true;
         if ( priority_ < other.priority_ ) return false;
-        if ( speed_ > other.speed_ ) return true;
-        if ( speed_ < other.speed_ ) return false;
+        int cmp = speed_.compare(other.speed_);
+        if ( cmp < 0 ) return true;
+        if ( cmp > 0 ) return false;
         if ( name_ < other.name_ ) return true;
         return false;
     }
 
-    bool isActive() const { return isActive_; }
+    inline bool isActive() const { return isActive_; }
+    inline bool isDestroyed() const { return isDestroyed_; }
+
+    /// checking if task has more messages
+    inline bool hasMessages() const { return messages_ > 0; }
+
+    // --- modifiers
+
+    // --- methods invoked from admin, processor and such
 
     void setActive( bool active ) {
         if ( isActive_ == active ) return;
@@ -76,43 +89,33 @@ public:
         else { isActive_ = active; }
     }
 
-    bool isDestroyed() const { return isDestroyed_; }
-
     void setDestroy() {
         MutexGuard mg(taskLock_);
         isDestroyed_ = true;
     }
 
-    /// checking if task has more messages
-    bool hasMessages() const { return messages_ > 0; }
-
     /// adding more messages to the task
     void addMessages( unsigned nregions, unsigned msgs );
+
+
+    // --- methods invoked from dispatcher
 
     /// method checks how many messges the task has sent up to deltaTime from start.
     /// if returned value is 0, it means that a new message should be sent,
     /// otherwise that task wants to sleep RV msec until sending a message.
-    unsigned wantToSleep( unsigned deltaTime );
-
-    /// suspend message
-    void suspendMessage( Message& msg );
-
-    bool prefetchMessage( time_t now, unsigned regionId );
+    unsigned isReady( unsigned deltaTime );
 
     /// get the next message for given region.
+    /// Typically prefetch is invoked first.
     /// the method may fail for a number of reasons:
     /// no more messages in task, all regions are suspended, all messages are in future, etc.
+    bool prefetchMessage( time_t now, unsigned regionId );
     bool getMessage( time_t now, unsigned regionId, Message& msg );
 
-    /// finalize message
-    void finalizeMessage( Message& msg, int state );
-
-    // normalize score according to the task with lowest score
-    // void normalizeScore( const Task* lowestScoreTask, unsigned deltaTime = 0 );
-
-    // message is sent, it should be removed from the list and
-    // the score should be updated.
-    // void incrementScore( Message& msg );
+    /// Set message state.
+    /// This method is guaranteed to be invoked after the processing of the message.
+    /// @param state is equal to one of MessageState.
+    void setMessageState( Message& msg, int state );
 
 private:
     bool changeUsage( bool v ) {
@@ -139,22 +142,13 @@ private:
     bool        isDestroyed_;
     util::Drndm random_;     // random number generator
 
+    Speed    speed_;
     unsigned priority_;  // priority of the task
-    unsigned speed_;     // number of messages per second
-    unsigned kilospeed_; // number of messages*1000 per second, derived from speed_
     unsigned sent_;      // actual number of messages sent
-
-    // unsigned score_;     // score of the task
-    // unsigned normScore_; // normalized score of the task
-    unsigned wouldSend_; // how many messages would be sent
-
-    unsigned messages_;  // total number of messages in task
+    unsigned messages_;  // total number of unsent messages in task
     unsigned users_;
 
     smsc::core::synchronization::Mutex taskLock_;
-
-    // messages in processing (those which were obtained by get)
-    MessageList processing_;
 
     // messages sorted by regions
     RegionMap   regionMap_;

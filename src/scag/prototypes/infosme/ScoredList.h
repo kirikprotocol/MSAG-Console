@@ -82,7 +82,7 @@ public:
 
                 if ( objSleep > 0 ) {
                     // object is not ready
-                    if ( objSleep < sleepTime ) sleepTime = objSleep;
+                    if ( objSleep < wantToSleep ) wantToSleep = objSleep;
                     continue;
                 }
 

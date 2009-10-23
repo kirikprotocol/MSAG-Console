@@ -21,6 +21,7 @@ public:
     TaskGuard getTask( unsigned idx );
     void addTask( Task* task );
     void notify();
+    void setTaskActive( unsigned idx, bool active );
 
 protected:
     virtual const char* taskName() { return "processor"; }
@@ -38,8 +39,9 @@ private:
     Sender*                   sender_; // not owned
     TaskDispatcher*           dispatcher_; // owned
 
-    GuardedTaskList        allTasks_; // all tasks
-    TaskMap                taskMap_;  // mapping from id
+    GuardedTaskList           allTasks_; // all tasks
+    TaskMap                   taskMap_;  // mapping from id
+    bool                      notified_;
 
     // the task may be in only one of the following lists
 

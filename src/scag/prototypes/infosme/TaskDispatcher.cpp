@@ -10,11 +10,7 @@ struct MessageGuard {
 
     MessageGuard(Task& t, Message& m) : task(t), msg(m), res(MessageState::LIMITED) {}
     ~MessageGuard() {
-        switch(res) {
-        case MessageState::OK : task.finalizeMessage(msg,res); break;
-        case MessageState::FAIL : task.finalizeMessage(msg,res); break;
-        default: task.suspendMessage(msg); break;
-        }
+        task.setMessageState(msg,res);
     }
 
     inline void setRes( int rc ) { res = rc; }
@@ -94,13 +90,18 @@ unsigned TaskDispatcher::processConnector( unsigned deltaTime, Connector& c )
 
 unsigned TaskDispatcher::scoredObjIsReady( unsigned deltaTime, Task& task )
 {
-    if ( ! task.isActive() ||
-         ! task.hasMessages() ||
-         ! task.prefetchMessage(now_,currentConn_->getId()) ) {
-        // task is not ready
+    if ( ! task.isActive() || ! task.hasMessages() ) {
+        // task is not good for this region
         return 1000;
     }
-    return task.wantToSleep( deltaTime );
+    const unsigned wantToSleep = task.isReady( deltaTime );
+    if ( wantToSleep > 0 ) return wantToSleep;
+    // checking the region
+    if ( ! task.prefetchMessage(now_,currentConn_->getId()) ) {
+        // task is not ready for this region
+        return 1000;
+    }
+    return 0; // task is ready
 }
 
 

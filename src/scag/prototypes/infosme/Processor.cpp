@@ -13,7 +13,8 @@ namespace infosme {
 Processor::Processor( Sender& sender, TaskDispatcher& disp ) :
 log_(smsc::logger::Logger::getInstance(taskName())),
 sender_(&sender),
-dispatcher_(&disp)
+dispatcher_(&disp),
+notified_(true)
 {
     smsc_log_debug(log_,"ctor");
 }
@@ -55,6 +56,7 @@ void Processor::addTask( Task* task )
     GuardedTaskList::iterator i = allTasks_.insert(allTasks_.end(),TaskGuard(task));
     taskMap_.insert(std::make_pair(task->getId(),i));
     inactiveTasks_.push_back(task);
+    notified_ = true;
     releaseMon_.notify();
 }
 
@@ -62,6 +64,21 @@ void Processor::addTask( Task* task )
 void Processor::notify()
 {
     MutexGuard mg(releaseMon_);
+    notified_ = true;
+    releaseMon_.notify();
+}
+
+
+void Processor::setTaskActive( unsigned idx, bool active )
+{
+    MutexGuard mg(releaseMon_);
+    TaskMap::iterator i = taskMap_.find(idx);
+    if ( i == taskMap_.end() ) return;
+    Task* task = i->second->get();
+    if (task) {
+        task->setActive(active);
+        notified_ = true;
+    }
     releaseMon_.notify();
 }
 
@@ -73,14 +90,28 @@ int Processor::doExecute()
 
     util::msectime_type currentTime = startTime;
     util::msectime_type lastStatTime = startTime;
-    unsigned wantToSleep = 0;
+    util::msectime_type nextWakeTime = startTime;
 
     while ( ! stopping() ) {
 
-        const util::msectime_type nextWakeTime = currentTime + wantToSleep;
         currentTime = util::currentTimeMillis();
+        // 2. waiting on the releaseMon
+        {
+            int waitTime = int(nextWakeTime - currentTime);
+            if ( waitTime > 10 ) {
+                smsc_log_debug(log_,"want to sleep %u ms",waitTime);
+                MutexGuard mg(releaseMon_);
+                if ( stopping() ) break;
+                if ( ! notified_ ) {
+                    releaseMon_.wait(waitTime);
+                    if ( ! notified_ ) continue;
+                    if ( stopping() ) break;
+                }
+            }
+        }
+
         const unsigned deltaTime = unsigned(currentTime - startTime);
-        smsc_log_debug(log_,"new pass at %u",deltaTime);
+        smsc_log_debug(log_,"new pass at %u, notified=%u",deltaTime,notified_);
 
         // 1. dumping statistics
         if ( log_->isInfoEnabled() && ( currentTime - lastStatTime > 10000 ) ) {
@@ -88,27 +119,23 @@ int Processor::doExecute()
             lastStatTime = currentTime;
         }
 
-        // 2. waiting on the releaseMon
-        {
-            int waitTime = int(nextWakeTime - currentTime);
-            if ( waitTime > 10 ) {
-                MutexGuard mg(releaseMon_);
-                if ( stopping() ) break;
-                releaseMon_.wait(waitTime);
-                continue;
-            }
-        }
-
-
-        {
+        while ( notified_ ) {
             // 2b. meanwhile we may add tasks that were requested to be activated
             // FIXME: make a fast bool flag if such task exists and set it in setActive
             MutexGuard mg(releaseMon_);
+            notified_ = false;
+            if ( inactiveTasks_.empty() ) break;
+            smsc_log_debug(log_,"processing inactive tasks");
             for ( TaskList::iterator i = inactiveTasks_.begin();
                   i != inactiveTasks_.end();
                   ) {
 
                 Task* task = *i;
+                if ( !task ) {
+                    i = inactiveTasks_.erase(i);
+                    continue;
+                }
+                smsc_log_debug(log_,"task %s",task->toString().c_str());
                 if ( task->isDestroyed() ) {
                     deadTasks_.push_back(task);
                     i = inactiveTasks_.erase(i);
@@ -117,14 +144,6 @@ int Processor::doExecute()
                 }
 
                 if ( task->isActive() && task->hasMessages() ) {
-                    // const Task* firstTask = activeTasks_.empty() ? 0 : activeTasks_.front();
-                    // task->normalizeScore( firstTask, deltaTime );
-                    /*
-                    ActiveTaskList::iterator j = std::lower_bound( activeTasks_.begin(),
-                                                                   activeTasks_.end(),
-                                                                   task, PtrLess() );
-                    activeTasks_.insert(j,task);
-                     */
                     dispatcher_->addTask( *task );
                     i = inactiveTasks_.erase(i);
                     smsc_log_debug(log_,"moving task %s to active list",task->getName().c_str());
@@ -135,7 +154,7 @@ int Processor::doExecute()
         }
 
         // 4. send a request to process one region
-        wantToSleep = sender_->send( deltaTime, 500 );
+        nextWakeTime = currentTime + sender_->send( deltaTime, 500 );
 
         /*
         if ( wantToSleep > 0 ) {

@@ -7,6 +7,17 @@ namespace scag2 {
 namespace prototypes {
 namespace infosme {
 
+
+Controller::Controller( smsc::core::threads::ThreadPool& pool ) :
+log_(smsc::logger::Logger::getInstance(taskName())),
+pool_(pool)
+{
+    dispatcher_.reset( new TaskDispatcher() );
+    sender_.reset( new Sender(*dispatcher_.get()) );
+    processor_.reset( new Processor(*sender_.get(),*dispatcher_.get()) );
+}
+
+
 Controller::~Controller()
 {
     processor_->stop();
@@ -29,12 +40,7 @@ void Controller::setTaskActive( unsigned index, bool active )
 {
     MutexGuard mg(releaseMon_);
     if ( processor_.get() ) {
-        TaskGuard taskGuard = processor_->getTask(index);
-        Task* task = taskGuard.get();
-        if ( task ) {
-            task->setActive( active );
-            processor_->notify();
-        }
+        processor_->setTaskActive(index,active);
     }
 }
 
@@ -63,12 +69,7 @@ int Controller::doExecute()
 {
     smsc_log_info(log_,"started");
 
-    dispatcher_.reset( new TaskDispatcher() );
-    sender_.reset( new Sender(*dispatcher_.get()) );
     addConnector(10);
-
-    // create a processor and start it
-    processor_.reset( new Processor(*sender_.get(),*dispatcher_.get()) );
     pool_.startTask(processor_.get(),false);
 
     while ( ! stopping() ) {

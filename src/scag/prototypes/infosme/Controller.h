@@ -17,10 +17,7 @@ namespace infosme {
 class Controller : public util::WatchedThreadedTask
 {
 public:
-    Controller( smsc::core::threads::ThreadPool& pool ) :
-    log_(smsc::logger::Logger::getInstance(taskName())),
-    pool_(pool)
-    {}
+    Controller( smsc::core::threads::ThreadPool& pool );
 
     ~Controller();
 

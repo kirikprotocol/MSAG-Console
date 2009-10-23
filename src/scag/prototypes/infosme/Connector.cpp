@@ -22,42 +22,26 @@ int Connector::send( unsigned deltaTime, Message& msg )
 {
     // making additional failures
     uint64_t r = random_.getNextNumber();
+    int res;
     if ( random_.uniform(1000,r) < 2 ) {
         // stopping it for a second
-        nextTime_ = deltaTime + 1000;
-        wouldSend_ = nextTime_ * bandwidth_;
-        smsc_log_debug(log_,"failed to send msg %u: %s",msg.getId(),toString().c_str());
-        return MessageState::FAIL;
+        suspend(deltaTime+1000);
+        res = MessageState::FAIL;
+    } else {
+        ++sent_;
+        speed_.consumeQuant();
+        res = MessageState::OK;
     }
-    ++sent_;
-    wouldSend_ += 1000;
-    nextTime_ = wouldSend_ / bandwidth_;
-    if ( nextTime_+1000 < deltaTime ) {
-        nextTime_ = deltaTime;
-        wouldSend_ = nextTime_*bandwidth_;
-    } else if ( nextTime_ > deltaTime+1000 ) {
-        nextTime_ = deltaTime+1000;
-        wouldSend_ = nextTime_*bandwidth_;
-    }
-    smsc_log_debug(log_,"msg %u sent, %s", msg.getId(), toString().c_str());
-    return MessageState::OK;
+    smsc_log_debug(log_,"msg %u %s, %s", msg.getId(),
+                   res == MessageState::OK ? "sent" : "failed", toString().c_str());
+    return res;
 }
 
 
 void Connector::suspend( unsigned deltaTime )
 {
-    if ( deltaTime > nextTime_ ) {
-        nextTime_ = deltaTime;
-        wouldSend_ = nextTime_ * bandwidth_;
-    }
+    speed_.suspend(deltaTime);
     smsc_log_debug(log_,"suspended, %s", toString().c_str() );
-}
-
-
-unsigned Connector::isReady( unsigned deltaTime )
-{
-    if ( deltaTime >= nextTime_ ) return 0;
-    return nextTime_ - deltaTime;
 }
 
 }

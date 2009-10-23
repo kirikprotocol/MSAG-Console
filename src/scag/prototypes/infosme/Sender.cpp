@@ -176,12 +176,12 @@ int Sender::processScoredObj( unsigned deltaTime, Connector& c )
         smsc_log_debug(log_,"connector %u processed, res=%u",c.getId(),wantToSleep);
         if ( wantToSleep > 0 ) {
             // all tasks want to sleep
-            c.suspend(wantToSleep);
+            c.suspend(deltaTime+wantToSleep);
             return -inc;
         }
     } catch ( std::exception& exc ) {
         smsc_log_debug(log_,"sending failed: %s", exc.what() );
-        c.suspend(1000);
+        c.suspend(deltaTime+1000);
         return -1000;
     }
     return inc;

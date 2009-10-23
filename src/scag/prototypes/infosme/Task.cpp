@@ -26,11 +26,9 @@ id_(getNextId()),
 log_(0),
 isActive_(false),
 isDestroyed_(false),
+speed_(speed,1000),
 priority_(priority),
-speed_(speed),
-kilospeed_(speed*1000),
 sent_(0),
-wouldSend_(0),
 messages_(0),
 users_(0),
 prefetched_(false)
@@ -41,7 +39,6 @@ prefetched_(false)
     log_ = smsc::logger::Logger::getInstance(name_.c_str());
     random_.setSeed( time(0) );
     assert( priority_ > 0 );
-    assert( speed_ > 0 );
     addMessages( nregions, messages );
 }
 
@@ -59,11 +56,12 @@ void Task::addMessages( unsigned nregions, unsigned msgs )
     MessageList::iterator iter = std::lower_bound( messageList_.begin(),
                                                    messageList_.end(),
                                                    tmp );
+    const unsigned spd = speed_.getSpeed();
     for ( unsigned n = 0; n < msgs; ++n ) {
         if ( packsize == 0 ) {
             now += 1;
             uint64_t r = random_.getNextNumber();
-            packsize = 1 + speed_/2 + unsigned(random_.uniform(speed_,r));
+            packsize = 1 + spd/2 + unsigned(random_.uniform(spd,r));
         }
         --packsize;
         uint64_t r = random_.getNextNumber();
@@ -79,34 +77,13 @@ void Task::addMessages( unsigned nregions, unsigned msgs )
 }
 
 
-unsigned Task::wantToSleep( unsigned deltaTime )
+unsigned Task::isReady( unsigned deltaTime )
 {
-    const unsigned wouldSend = deltaTime * speed_;
-    if ( wouldSend < wouldSend_ ) {
-        // task has sent more than it should be, return ms
-        unsigned want = (wouldSend_ - wouldSend) / speed_ + 1;
-        smsc_log_debug(log_,"wouldSend=%u task.wouldSend=%u, want to sleep %u ms",
-                       wouldSend, wouldSend_, want );
-        return want;
+    const unsigned want = speed_.isReady( deltaTime );
+    if ( want > 0 ) {
+        smsc_log_debug(log_,"want to sleep %u ms", want );
     }
-
-    // task wants to send a message
-    if ( wouldSend > wouldSend_ + kilospeed_ ) {
-        // difference is more than one second, correcting to prevent too many
-        // messages from this task
-        unsigned newval = wouldSend - kilospeed_;
-        smsc_log_debug(log_,"wouldSend=%u task.wouldSend=%u fixing=%u",
-                       wouldSend, wouldSend_, newval );
-        wouldSend_ = newval;
-    }
-    return 0;
-}
-
-
-void Task::suspendMessage( Message& msg )
-{
-    MutexGuard mg(taskLock_);
-    doSuspendMessage( msg );
+    return want;
 }
 
 
@@ -128,24 +105,27 @@ bool Task::getMessage( time_t now, unsigned regionId, Message& msg )
 }
 
 
-void Task::finalizeMessage( Message& msg, int state )
+void Task::setMessageState( Message& msg, int state )
 {
     unsigned msgs;
-    {
+    if ( state == MessageState::OK || state == MessageState::FAIL ) {
         MutexGuard mg(taskLock_);
         if ( messages_ > 0 ) --messages_;
         msgs = messages_;
         if ( state == MessageState::OK ) {
             ++sent_;
-            wouldSend_ += 1000;
+            speed_.consumeQuant();
             unsigned regid = msg.getRegionId();
             if ( regid >= stats_.size() ) stats_.resize(regid+1);
             ++stats_[regid];
         }
+    } else {
+        MutexGuard mg(taskLock_);
+        doSuspendMessage( msg );
+        msgs = messages_;
     }
-    smsc_log_debug(log_,"msg %u %s, msgs left=%u", msg.getId(),
-                   state == MessageState::OK ? "sent" : "failed",
-                   msgs );
+    smsc_log_debug( log_,"msg %u %s, msgs left=%u", msg.getId(),
+                    MessageState::stateToString(state), msgs );
 }
 
 

@@ -22,10 +22,19 @@ public:
     enum {
             UNKNOWN = -1,
             OK = 0,
-            NOCONN,
             LIMITED,
             FAIL
     };
+
+    static const char* stateToString( int state ) {
+        switch (state) {
+        case UNKNOWN : return "UNK";
+        case OK : return "SENT";
+        case LIMITED : return "LIMIT";
+        case FAIL : return "FAIL";
+        default : return "???";
+        }
+    }
 };
 
 }
