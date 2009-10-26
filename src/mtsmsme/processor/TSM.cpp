@@ -16,12 +16,6 @@ void TSM::getCounters(TSMSTAT& stat)
   stat.objcreated = objcreated;
   stat.objdeleted = objdeleted;
 }
-void TSM::resetCounters()
-{
-  objcount = 0;
-  objcreated = 0;
-  objdeleted = 0;
-}
 TSM::TSM(TrId _ltrid,AC& ac,TCO* _tco):tco(_tco),appcntx(ac),listener(0),
                                       objnumber(++objcount),st(IDLE)
 {

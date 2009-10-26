@@ -29,6 +29,7 @@ TCO::TCO(int TrLimit):hlr(0),tsms(TrLimit)
 }
 TCO::~TCO()
 {
+  //TODO: please clean TSM in the TCO::~TCO()
   smsc_log_warn(logger,"please clean TSM in the TCO::~TCO()");
 }
 TSM* TCO::TC_BEGIN(AC& appcntx)

@@ -42,7 +42,7 @@ void PerfTestFixture::perftest()
     TCO mtsms(10000);
     mtsms.setSccpSender(&nullsender);
     {
-      //TODO: modify logger public interface to set TCO SRI4SM levels before
+      //shut up debug loggers for drystone
       Logger* extlogger;
       extlogger = 0;
       extlogger = Logger::getInstance("mt.sme.tco");

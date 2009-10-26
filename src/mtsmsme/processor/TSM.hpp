@@ -68,7 +68,6 @@ class TSM
     virtual void TResultLReq(uint8_t invokeId, uint8_t opcode, CompIF& arg);
     virtual void expiredwdtimer(uint32_t secret);
     static void getCounters(TSMSTAT&);
-    static void resetCounters();
     TrId getltrid();
   protected:
 
