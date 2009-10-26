@@ -45,6 +45,20 @@ void Controller::setTaskActive( unsigned index, bool active )
 }
 
 
+void Controller::destroyTask( unsigned index )
+{
+    MutexGuard mg(releaseMon_);
+    if ( processor_.get() ) {
+        TaskGuard taskGuard = processor_->getTask(index);
+        Task* task = taskGuard.get();
+        if ( task ) {
+            task->setDestroy();
+            processor_->notify();
+        }
+    }
+}
+
+
 void Controller::addMessages( unsigned index, unsigned msgs )
 {
     MutexGuard mg(releaseMon_);

@@ -14,7 +14,7 @@ namespace infosme {
 
 Sender::Sender( TaskDispatcher& disp ) :
 log_(smsc::logger::Logger::getInstance("sender")),
-scoredList_(*this),
+scoredList_(*this,5000,log_),
 default_(0),
 dispatcher_(&disp)
 {

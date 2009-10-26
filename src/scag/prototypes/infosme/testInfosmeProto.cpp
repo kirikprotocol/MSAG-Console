@@ -51,6 +51,9 @@ int main()
                 } else if ( action == "enable" ) {
                     ints = tok.getInts(1,words);
                     controller->setTaskActive(ints[0],true);
+                } else if ( action == "destroy" ) {
+                    ints= tok.getInts(1,words);
+                    controller->destroyTask(ints[0]);
                 } else if ( action == "addmsg" ) {
                     ints = tok.getInts(2,words);
                     controller->addMessages(ints[0],ints[1]);

@@ -4,6 +4,7 @@
 #include "Task.h"
 #include "logger/Logger.h"
 #include "scag/util/WatchedThreadedTask.h"
+#include "scag/util/Time.h"
 
 namespace scag2 {
 namespace prototypes {
@@ -26,11 +27,15 @@ public:
 protected:
     virtual const char* taskName() { return "processor"; }
     virtual int doExecute();
-    void dumpStatistics( unsigned deltaTime );
+    void dumpStatistics( unsigned liveTime );
+
+    // process inactive tasks
+    // NOTE: must be locked
+    void processInactiveTasks();
 
 private:
-    typedef std::vector< Task* > ActiveTaskList;
-    typedef std::list< Task* > TaskList;
+    // typedef std::vector< Task* > ActiveTaskList;
+    typedef std::list< Task* >     TaskList;
     typedef std::list< TaskGuard > GuardedTaskList;
     typedef std::map< unsigned, GuardedTaskList::iterator > TaskMap;
 
@@ -42,14 +47,7 @@ private:
     GuardedTaskList           allTasks_; // all tasks
     TaskMap                   taskMap_;  // mapping from id
     bool                      notified_;
-
-    // the task may be in only one of the following lists
-
-    TaskList   inactiveTasks_;  // not active tasks
-
-    // these lists are accessed only from doExecute
-    ActiveTaskList activeTasks_;    // active tasks, sorted by normScore
-    TaskList       deadTasks_;      // scheduled to be destroyed
+    TaskList                  inactiveTasks_;
 };
 
 }

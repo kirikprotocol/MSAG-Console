@@ -92,6 +92,7 @@ public:
     void setDestroy() {
         MutexGuard mg(taskLock_);
         isDestroyed_ = true;
+        isActive_ = false;
     }
 
     /// adding more messages to the task

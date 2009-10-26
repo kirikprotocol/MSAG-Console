@@ -19,6 +19,8 @@ private:
     typedef std::map< unsigned, ScoredList< TaskDispatcher > > TaskMap;
 
 public:
+    typedef std::list< Task* > TaskList;
+
     TaskDispatcher();
     ~TaskDispatcher();
 
@@ -27,6 +29,13 @@ public:
 
     void addTask( Task& t );
     void delTask( Task& t );
+
+    bool hasInactiveTask() {
+        return hasInactiveTask_;
+    }
+
+    // should be invoked from processor
+    TaskList collectInactiveTasks();
 
     // >0 sleeping
     // =0 success
@@ -47,6 +56,7 @@ private:
     time_t                             now_;
     Connector*                         currentConn_;
     ScoredList< TaskDispatcher >*      currentList_;
+    bool                               hasInactiveTask_;
 };
 
 }

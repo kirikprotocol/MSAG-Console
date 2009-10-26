@@ -6,7 +6,16 @@ namespace {
 
 using namespace scag2::prototypes::infosme;
 
-struct MessageGuard {
+struct isTaskInactive
+{
+    bool operator () ( const Task* t ) {
+        return ! t->isActive();
+    }
+};
+
+
+struct MessageGuard 
+{
 
     MessageGuard(Task& t, Message& m) : task(t), msg(m), res(MessageState::LIMITED) {}
     ~MessageGuard() {
@@ -30,7 +39,8 @@ namespace infosme {
 TaskDispatcher::TaskDispatcher() :
 log_(smsc::logger::Logger::getInstance("dispatch")),
 currentConn_(0),
-currentList_(0)
+currentList_(0),
+hasInactiveTask_(false)
 {}
 
 
@@ -43,8 +53,9 @@ void TaskDispatcher::addConnector( Connector& c )
     MutexGuard mg(lock_);
     currentList_ = ( taskMap_.empty() ? 0 : &taskMap_.begin()->second );
     TaskMap::iterator iter = 
-        taskMap_.insert(std::make_pair(c.getId(),
-                                       TaskMap::mapped_type(*this))).first;
+        taskMap_.insert(std::make_pair
+                        (c.getId(),
+                         TaskMap::mapped_type(*this,5000,log_))).first;
     if ( currentList_ ) {
         TaskMap::mapped_type& list = iter->second;
         for ( size_t i = 0; i < currentList_->size(); ++i ) {
@@ -60,6 +71,24 @@ void TaskDispatcher::addTask( Task& t )
     for ( TaskMap::iterator i = taskMap_.begin(); i != taskMap_.end(); ++i ) {
         i->second.add( &t );
     }
+}
+
+
+TaskDispatcher::TaskList TaskDispatcher::collectInactiveTasks()
+{
+    TaskList res;
+    MutexGuard mg(lock_);
+    hasInactiveTask_ = false;
+    if ( taskMap_.empty() ) return res;
+    TaskMap::iterator iter = taskMap_.begin();
+    iter->second.remove(isTaskInactive(),&res);
+    if ( res.empty() ) return res;
+    for ( ; iter != taskMap_.end(); ++iter ) {
+        for ( TaskList::iterator i = res.begin(); i != res.end(); ++i ) {
+            iter->second.remove( ScoredList< TaskDispatcher >::isEqual(*i) );
+        }
+    }
+    return res;
 }
 
 
@@ -91,7 +120,8 @@ unsigned TaskDispatcher::processConnector( unsigned deltaTime, Connector& c )
 unsigned TaskDispatcher::scoredObjIsReady( unsigned deltaTime, Task& task )
 {
     if ( ! task.isActive() || ! task.hasMessages() ) {
-        // task is not good for this region
+        // task become disabled
+        hasInactiveTask_ = true;
         return 1000;
     }
     const unsigned wantToSleep = task.isReady( deltaTime );

@@ -1,6 +1,7 @@
 #ifndef _SCAG_PROTOTYPES_INFOSME_SCOREDLIST_H
 #define _SCAG_PROTOTYPES_INFOSME_SCOREDLIST_H
 
+#include <list>
 #include <vector>
 #include <algorithm>
 
@@ -44,18 +45,22 @@ private:
             return false;
         }
 
-        struct isEqual {
-            inline isEqual( Obj* o ) : obj(o) {}
-            inline bool operator () ( const ScoredObj& o ) { return o.obj == obj; }
-            Obj* obj;
-        };
     };
 
     typedef std::vector< ScoredObj >          ObjVector;
 
 public:
 
-    ScoredList( Proc& proc ) : proc_(proc) {}
+    struct isEqual {
+        inline isEqual( const Obj* o ) : obj(o) {}
+        inline bool operator () ( const Obj* o ) { return o == obj; }
+        const Obj* obj;
+    };
+
+    ScoredList( Proc& proc,
+                unsigned maxdiff,
+                smsc::logger::Logger* logger ) :
+    proc_(proc), maxdiff_(maxdiff), log_(logger) {}
 
     /// process one item from objects.
     /// the ready object is searched and then one item from this object is processed.
@@ -135,12 +140,17 @@ public:
     }
 
 
-    void erase( Obj* object ) {
-        typename ObjVector::iterator i =  std::find_if( objects_.begin(),
-                                                        objects_.end(),
-                                                        typename ScoredObj::isEqual(object) );
-        if ( i != objects_.end() ) {
-            objects_.erase(i);
+    template < class Pred > void remove( Pred pred, typename std::list< Obj* >* res = 0 )
+    {
+        for ( typename ObjVector::iterator i = objects_.begin();
+              i != objects_.end();
+              ) {
+            if ( pred(i->obj) ) {
+                if (res) res->push_back(i->obj);
+                i = objects_.erase(i);
+                continue;
+            }
+            ++i;
         }
     }
 
@@ -162,10 +172,7 @@ protected:
             needsClean = true;
         }
         if ( needsClean ) {
-            objects_.erase( std::remove_if(objects_.begin(),
-                                           objects_.end(),
-                                           typename ScoredObj::isEqual(0)),
-                            objects_.end() );
+            remove(isEqual(0));
         }
         if ( ! movedObjects_.empty() ) {
             // FIXME: have to restrict on too big difference b/w top and bottom?
@@ -175,15 +182,41 @@ protected:
             std::copy( movedObjects_.begin(), movedObjects_.end(),
                        std::back_inserter(objects_) );
             std::inplace_merge( objects_.begin(), middle, objects_.end() );
-            // FIXME: have to check on score overflow
+            bool needfix = false;
+            const unsigned diff = objects_.back().score - objects_.front().score;
+            const unsigned medi = objects_[objects_.size()/2].score;
+            if ( diff > maxdiff_*2 ) {
+                needfix = true;
+                smsc_log_debug(log_,"too big diff b/w top and bottom: %u, median: %u", diff, medi );
+            }
+            if ( medi > 1000000 ) {
+                needfix = true;
+                smsc_log_debug(log_,"too big median: %u", medi );
+            }
+            if ( needfix ) {
+                const unsigned minscore = medi > maxdiff_/2 ? medi - maxdiff_/2 : 0;
+                const unsigned maxscore = minscore + maxdiff_;
+                for ( typename ObjVector::iterator i = objects_.begin();
+                      i != objects_.end(); ++i ) {
+                    if ( i->score < minscore ) {
+                        i->score = 0;
+                    } else if ( i->score > maxscore ) {
+                        i->score = maxdiff_;
+                    } else {
+                        i->score -= minscore;
+                    }
+                }
+            }
         }
     }
 
 
 private:
-    Proc&     proc_;
-    ObjVector objects_;
-    ObjVector movedObjects_; // temporary vector is here to hold allocated space
+    Proc&                 proc_;
+    ObjVector             objects_;
+    ObjVector             movedObjects_; // temporary vector is here to hold allocated space
+    unsigned              maxdiff_;
+    smsc::logger::Logger* log_;
 };
 
 }
