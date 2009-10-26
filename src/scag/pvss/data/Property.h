@@ -71,6 +71,9 @@ using namespace perstypes;
 
 class Property 
 {
+private:
+    static const std::string emptyString_;
+
 protected:
     PropertyType type;
     std::string name;

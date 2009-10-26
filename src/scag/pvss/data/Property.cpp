@@ -82,6 +82,8 @@ const char* propertyTypeToString( PropertyType pt )
 } // namespace perstypes
 
 
+const std::string Property::emptyString_("empty");
+
 void Property::setPropertyName(const char* nm) {
   name.clear();
   name.append(nm);
@@ -149,8 +151,7 @@ void Property::copy(const Property& cp)
 const std::string& Property::toString() const
 {
     if ( ! propertyStr_.empty() ) return propertyStr_;
-    static const std::string empty("empty");
-    if ( name.empty() ) return empty;
+    if ( name.empty() ) return emptyString_;
     propertyStr_.reserve( name.size() + 40 );
     char strBuf[STRBUF_SIZE];
     propertyStr_.push_back('"');
