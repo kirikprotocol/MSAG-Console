@@ -12,7 +12,7 @@ namespace asn1 {
  * class ASTagging implementation
  * ************************************************************************* */
 ASTagging::ASTagging(uint8_t num_tags, ASTag use_tag1, ... /* , const ASTag use_tagN*/)
-  : LWArray_T<ASTag, uint8_t, 4>(num_tags)
+  : LWArray_T<ASTag, uint8_t, 4>(num_tags), _tagEnv(tagsEXPLICIT)
 {
   LWArray_T<ASTag, uint8_t, 4>::_buf[0] = use_tag1;
 

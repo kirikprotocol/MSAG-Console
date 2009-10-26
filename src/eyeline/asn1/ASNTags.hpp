@@ -101,27 +101,34 @@ public:
     tagsIMPLICIT       //type is identified only by outermost tag
   };
 
+protected:
+  Environment_e _tagEnv;
+
+public:
   //just a single tag, by default: [UNIVERSAL 0] primitive
   ASTagging(ASTag::TagClass_e tag_class = ASTag::tagUniversal, ASTag::ValueType tag_val = 0, bool is_constructed = false)
-    : LWArray_T<ASTag, uint8_t, 4>(1)
+    : LWArray_T<ASTag, uint8_t, 4>(1), _tagEnv(tagsEXPLICIT)
   {
     LWArray_T<ASTag, uint8_t, 4>::_buf[0] = ASTag(tag_class, tag_val, is_constructed);
   }
   //
   ASTagging(const ASTag & use_tag = _tagUNI0)
-    : LWArray_T<ASTag, uint8_t, 4>(1)
+    : LWArray_T<ASTag, uint8_t, 4>(1), _tagEnv(tagsEXPLICIT)
   {
     LWArray_T<ASTag, uint8_t, 4>::_buf[0] = use_tag;
   }
   //
   ASTagging(const ASTagging & use_tags)
-    : LWArray_T<ASTag, uint8_t, 4>(use_tags)
+    : LWArray_T<ASTag, uint8_t, 4>(use_tags), _tagEnv(tagsEXPLICIT)
   { }
 
   ASTagging(uint8_t num_tags, ASTag use_tag1, ... /* , const ASTag use_tagN*/);
   //
   ~ASTagging()
   { }
+
+  Environment_e getEnvironment(void) const { return _tagEnv; }
+  void setEnvironment(Environment_e use_env) { _tagEnv = use_env; }
 
   const ASTag & first(void) const { return LWArray_T<ASTag, uint8_t, 4>::_buf[0]; }
   const ASTag & last(void) const { return LWArray_T<ASTag, uint8_t, 4>::_buf[size() - 1]; }
