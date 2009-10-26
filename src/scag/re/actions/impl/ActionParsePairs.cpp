@@ -28,11 +28,12 @@ bool ActionParsePairs::run(ActionContext &context) {
 		string pair(source, pos, delPos-pos);
         smsc_log_debug(logger, "pair: '%s'", pair.c_str());
         (*i)->setPair(splitPair(pair, nameDel), context);
-        pos = delPos + pairDel.size();
+        pos = delPos + pairDelSize;
     }
     Property *restProp = rest_.getProperty(context);
-    if (restProp && pos != std::string::npos) {
-        string rest(source, pos, source.size() - pos);
+    size_t sourceSize = source.size();
+    if (restProp && delPos != std::string::npos && pos < sourceSize) {
+        string rest(source, pos, sourceSize - pos);
         restProp->setStr(rest.c_str());
     }
     return true;
