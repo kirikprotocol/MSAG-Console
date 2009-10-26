@@ -96,6 +96,20 @@ using namespace xercesc;
 
 
 
+Scag::Scag() :
+stopFlag(false),
+testRouter_(0),
+pvssInited_(false),
+lcmInited_(false),
+billInited_(false),
+httpInited_(false),
+smppInited_(false),
+sessInited_(false),
+statInited_(false)
+{
+    startTime=0;
+};
+
 
 Scag::~Scag()
 {
@@ -159,6 +173,7 @@ void Scag::init( unsigned mynode )
                   pcfg.connections,
                   pcfg.connPerThread );
          */
+        pvssInited_ = true;
         smsc_log_info(log, "Personalization client initialized");
     } catch(std::exception& e) {
         throw Exception("Exception during initialization of PersClient: %s", e.what());
@@ -172,6 +187,7 @@ void Scag::init( unsigned mynode )
     try {
         LongCallManagerImpl* lcm = new LongCallManagerImpl(pvssClnt.release());
         lcm->init( cfg.getLongCallManConfig().maxThreads );
+        lcmInited_ = true;
     }catch(...)
     {
         throw Exception("Exception during initialization of LongCallManager");
@@ -182,6 +198,7 @@ void Scag::init( unsigned mynode )
 
         bill::BillingManagerImpl* bm = new bill::BillingManagerImpl;
         bm->init( cfg );
+        billInited_ = true;
         bm->Start();
 
     }catch(...)
@@ -198,6 +215,7 @@ void Scag::init( unsigned mynode )
         // it will auto-register
         sessman = new SessionManagerImpl;
         sessman->init( cfg.getSessionManConfig(), mynode, fsq );
+        sessInited_ = true;
         // sessman->Start();
 
         smsc_log_info(log, "Session Manager is created" );
@@ -215,6 +233,7 @@ void Scag::init( unsigned mynode )
 
         stat::StatisticsManager* sm = new stat::StatisticsManager;
         sm->init( cfg.getStatManConfig() );
+        statInited_ = true;
         smsc_log_info(log, "Statistics manager inited" );
 
     } catch(exception& e){
@@ -238,7 +257,7 @@ void Scag::init( unsigned mynode )
 
         re::RuleEngineImpl* re = new re::RuleEngineImpl;
         re->init( location );
-
+        // reInited_ = true;
         smsc_log_info(log, "Rule Engine started" );
     } catch (SCAGException& e) {
       smsc_log_warn(log, "%s", e.what());
@@ -285,6 +304,7 @@ void Scag::init( unsigned mynode )
 #endif
              0 );
         sm->Init( findConfigFile("../conf/smpp.xml") );
+        smppInited_ = true;
         smsc_log_info(log, "Smpp Manager started");
     } catch(Exception& e) {
       throw Exception("Exception during initialization of SmppManager: %s", e.what());
@@ -312,7 +332,7 @@ void Scag::init( unsigned mynode )
         transport::http::HttpManagerImpl* mp = 
             new transport::http::HttpManagerImpl;
         mp->init( *hp, cfg.getHttpManConfig());
-
+        httpInited_ = true;
         smsc_log_info(log, "Http Manager started");
 
     }catch(Exception& e)
@@ -347,18 +367,30 @@ void Scag::shutdown()
 {
     // __trace__("shutting down");
     smsc_log_info( log, "SCAG is shutting down\n\n");
-    lcm::LongCallManager::Instance().pvssClient().shutdown();
-    smsc_log_debug(log,"pvssclient notified");
-    bill::BillingManager::Instance().Stop();     // to prevent dangling longcalls
-    smsc_log_debug(log,"billman notified");
-    lcm::LongCallManager::Instance().shutdown(); // to prevent dangling longcalls
-    smsc_log_debug(log,"lcm notified");
-    transport::http::HttpManager::Instance().shutdown();
-    smsc_log_debug(log,"httpman notified");
-    transport::smpp::SmppManager::Instance().shutdown();
-    smsc_log_debug(log,"smppman notified");
-    sessions::SessionManager::Instance().Stop();
-    smsc_log_debug(log,"sessman notified");
+    if ( pvssInited_ ) {
+        lcm::LongCallManager::Instance().pvssClient().shutdown();
+        smsc_log_debug(log,"pvssclient notified");
+    }
+    if ( billInited_ ) {
+        bill::BillingManager::Instance().Stop();     // to prevent dangling longcalls
+        smsc_log_debug(log,"billman notified");
+    }
+    if ( lcmInited_ ) {
+        lcm::LongCallManager::Instance().shutdown(); // to prevent dangling longcalls
+        smsc_log_debug(log,"lcm notified");
+    }
+    if ( httpInited_ ) {
+        transport::http::HttpManager::Instance().shutdown();
+        smsc_log_debug(log,"httpman notified");
+    }
+    if ( smppInited_ ) {
+        transport::smpp::SmppManager::Instance().shutdown();
+        smsc_log_debug(log,"smppman notified");
+    }
+    if ( sessInited_ ) {
+        sessions::SessionManager::Instance().Stop();
+        smsc_log_debug(log,"sessman notified");
+    }
 #ifdef SNMP
     if (snmpthread_.get()) snmpthread_->Stop();
 #endif

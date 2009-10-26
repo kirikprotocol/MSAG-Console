@@ -60,18 +60,7 @@ class Scag
 {
 public:
 
-    Scag() : stopFlag(false), testRouter_(0)
-  {
-/*    acceptedCounter=0;
-    rejectedCounter=0;
-    deliveredCounter=0;
-    deliverErrCounter=0;
-    transOkCounter=0;
-    transFailCounter=0;*/
-
-    startTime=0;
-  };
-
+    Scag();
     ~Scag();
 
     void init( unsigned mynode );
@@ -176,6 +165,15 @@ protected:
     std::auto_ptr< snmp::SnmpWrapper > snmp_;
     std::auto_ptr< snmp::SnmpTrapThread > snmpthread_;
 #endif
+
+private:
+    bool pvssInited_;
+    bool lcmInited_;
+    bool billInited_;
+    bool httpInited_;
+    bool smppInited_;
+    bool sessInited_;
+    bool statInited_;
 };
 
 } // scag2

@@ -151,7 +151,21 @@ int main( int argc, char* argv[] )
         app = new Scag;
 
         smsc_log_info(logger,  "Start initialization");
-        app->init( mynode );
+        try {
+            app->init( mynode );
+        } catch ( std::exception& exc ) {
+            smsc_log_error(logger,"Exception in msag init: %s", exc.what());
+            app->shutdown();
+            delete app;
+            app = 0;
+            throw;
+        } catch (...) {
+            smsc_log_error(logger,"Unknown exception in msag init");
+            app->shutdown();
+            delete app;
+            app = 0;
+            throw;
+        }
 
         admin::SCAGSocketListener *listener = NULL;
 
