@@ -34,7 +34,7 @@ bool ActionSplitPairs::run(ActionContext &context) {
         smsc_log_debug(logger, "pair: '%s'", pairStr.c_str());
         pair = splitPair(pairStr, nameDel);
         pairsHash.Insert(pair.name.c_str(), pair.value);
-        pos = delPos + pairDel.size();
+        pos = delPos + pairDelSize;
     }
 
     for ( std::vector< ActionPair* >::const_iterator i = pairActions_.begin(); i != pairActions_.end(); ++i) {
@@ -51,7 +51,7 @@ bool ActionSplitPairs::run(ActionContext &context) {
     }
 
     Property *restProp = rest_.getProperty(context);
-    if (!restProp) {
+    if (!restProp || pairsHash.GetCount() == 0) {
         return true;
     }
 
