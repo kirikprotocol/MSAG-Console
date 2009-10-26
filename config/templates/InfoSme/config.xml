@@ -40,12 +40,22 @@
       <param name="max" type="int">15</param>
     </section>
 
-    <section name="SMSC">
-      <param name="host" type="string">@connect.host@</param>
-      <param name="password" type="string"></param>
-      <param name="port" type="int">@smsc.smpp.port@</param>
-      <param name="sid" type="string">InfoSme</param>
-      <param name="timeout" type="int">10</param>
+    <section name="SMSCConnectors">
+      <param name="default" type="string">SMSC0</param>
+        <section name="SMSC0">
+	  <param name="host" type="string">@connect.host@</param>
+	  <param name="password" type="string"></param>
+	  <param name="port" type="int">@smsc.smpp.port@</param>
+	  <param name="sid" type="string">InfoSme</param>
+	  <param name="timeout" type="int">10</param>
+	  <param name="systemType" type="string">ESME</param>
+	  <param name="origAdress" type="string">10000</param>
+	  <param name="interfaceVersion" type="int">52</param>
+	  <param name="rangeOfAdress" type="string">+7913.*</param>
+        </section>
+	<!--section name="SMSC_N">
+	    
+        </section-->
     </section>
 
     <section name="Schedules">
