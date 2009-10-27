@@ -113,13 +113,13 @@ public class Smsc extends Service {
 
     private SMSCAppContext appContext = null;
 
-  public Smsc(final String SmscName, final String smscHost, final int smscPort, final String smscConfFolderString, SMSCAppContext smscAppContext) throws AdminException {
+  public Smsc(final String SmscName, final String smscHost, final int smscPort, int timeout, final String smscConfFolderString, SMSCAppContext smscAppContext) throws AdminException {
     super(new ServiceInfo(SmscName, smscHost, "", "", true, null, ServiceInfo.STATUS_OFFLINE), smscPort);
     initFields(smscConfFolderString, smscAppContext);
     distributionListAdmin = new DistributionListManager(super.getInfo(), smscPort);
   }
 
-  public Smsc(final String SmscName, final String smscHost, final int smscPort, final String smscConfFolderString,
+  public Smsc(final String SmscName, final String smscHost, final int smscPort, int timeout, final String smscConfFolderString,
               SMSCAppContext smscAppContext, String distrHost, int distrPort) throws AdminException {
     super(new ServiceInfo(SmscName, smscHost, "", "", true, null, ServiceInfo.STATUS_OFFLINE), smscPort);
     initFields(smscConfFolderString, smscAppContext);

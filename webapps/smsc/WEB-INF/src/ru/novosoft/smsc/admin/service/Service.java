@@ -34,6 +34,12 @@ public class Service extends Proxy
     this.info = info;
   }
 
+  public Service(final ServiceInfo info, final int port, int timeout)
+  {
+    super(info.getHost(), port, timeout);
+    this.info = info;
+  }
+
   public ServiceInfo getInfo()
   {
     return info;
