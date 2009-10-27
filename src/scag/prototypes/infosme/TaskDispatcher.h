@@ -9,7 +9,7 @@ namespace scag2 {
 namespace prototypes {
 namespace infosme {
 
-class Connector;
+class Region;
 
 class TaskDispatcher
 {
@@ -24,8 +24,8 @@ public:
     TaskDispatcher();
     ~TaskDispatcher();
 
-    void addConnector( Connector& c );
-    void delConnector( Connector& c );
+    void addRegion( Region& c );
+    void delRegion( Region& c );
 
     void addTask( Task& t );
     void delTask( Task& t );
@@ -39,7 +39,7 @@ public:
 
     // >0 sleeping
     // =0 success
-    unsigned processConnector( unsigned deltaTime, Connector& c );
+    unsigned processRegion( unsigned deltaTime, Region& c );
 
 private:
     // to satisfy scoredlist contract
@@ -52,9 +52,9 @@ private:
     smsc::logger::Logger*              log_;
     smsc::core::synchronization::Mutex lock_;
     TaskMap                            taskMap_;
-    // these are cached in processConnector call
+    // these are cached in processRegion call
     time_t                             now_;
-    Connector*                         currentConn_;
+    Region*                            currentConn_;
     ScoredList< TaskDispatcher >*      currentList_;
     bool                               hasInactiveTask_;
 };

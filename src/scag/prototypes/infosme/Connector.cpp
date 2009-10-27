@@ -10,7 +10,7 @@ namespace scag2 {
 namespace prototypes {
 namespace infosme {
 
-unsigned Connector::getNextId()
+unsigned Region::getNextId()
 {
     MutexGuard mg(connIdLock);
     static unsigned id = 0;
@@ -18,7 +18,7 @@ unsigned Connector::getNextId()
 }
 
 
-int Connector::send( unsigned deltaTime, Message& msg )
+int Region::send( unsigned deltaTime, Message& msg )
 {
     // making additional failures
     uint64_t r = random_.getNextNumber();
@@ -38,7 +38,7 @@ int Connector::send( unsigned deltaTime, Message& msg )
 }
 
 
-void Connector::suspend( unsigned deltaTime )
+void Region::suspend( unsigned deltaTime )
 {
     speed_.suspend(deltaTime);
     smsc_log_debug(log_,"suspended, %s", toString().c_str() );

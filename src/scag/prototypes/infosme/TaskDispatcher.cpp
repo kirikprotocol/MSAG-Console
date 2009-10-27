@@ -48,7 +48,7 @@ TaskDispatcher::~TaskDispatcher()
 {}
 
 
-void TaskDispatcher::addConnector( Connector& c )
+void TaskDispatcher::addRegion( Region& c )
 {
     MutexGuard mg(lock_);
     currentList_ = ( taskMap_.empty() ? 0 : &taskMap_.begin()->second );
@@ -92,10 +92,10 @@ TaskDispatcher::TaskList TaskDispatcher::collectInactiveTasks()
 }
 
 
-unsigned TaskDispatcher::processConnector( unsigned deltaTime, Connector& c )
+unsigned TaskDispatcher::processRegion( unsigned deltaTime, Region& c )
 {
     const unsigned cid = c.getId();
-    smsc_log_debug(log_,"processConnector(%u,c.id=%u)",deltaTime,cid);
+    smsc_log_debug(log_,"processRegion(%u,c.id=%u)",deltaTime,cid);
     MutexGuard mg(lock_);
     TaskMap::iterator i = taskMap_.find(cid);
     if ( i == taskMap_.end() ) {

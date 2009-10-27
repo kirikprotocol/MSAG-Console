@@ -75,7 +75,7 @@ void Controller::addMessages( unsigned index, unsigned msgs )
 
 void Controller::addConnector( unsigned bandwidth )
 {
-    sender_->addConnector( new Connector(bandwidth ) );
+    sender_->addRegion( new Region(bandwidth ) );
 }
 
 

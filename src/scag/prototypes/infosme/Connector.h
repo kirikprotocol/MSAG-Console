@@ -11,13 +11,13 @@ namespace infosme {
 
 class Message;
 
-class Connector
+class Region
 {
 private:
     static unsigned getNextId();
 
 public:
-    Connector( unsigned bandwidth ) :
+    Region( unsigned bandwidth ) :
     id_(getNextId()),
     log_(0),
     speed_(bandwidth),
@@ -47,7 +47,7 @@ public:
         return buf;
     }
 
-    bool operator < ( const Connector& other ) const {
+    bool operator < ( const Region& other ) const {
         const int cmp = speed_.compare( other.speed_ );
         if ( cmp < 0 ) return true;
         if ( cmp > 0 ) return false;
