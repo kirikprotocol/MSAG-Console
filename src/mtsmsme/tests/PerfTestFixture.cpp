@@ -89,12 +89,38 @@ void PerfTestFixture::perftest()
     smsc_log_error(logger, " catched unexpected exception [%s]", ex.what());
   }
 }
+#include "mtsmsme/processor/CLTSM.hpp"
+#include "mtsmsme/processor/ISD.hpp"
+#include "mtsmsme/processor/MOFTSM.hpp"
+#include "mtsmsme/processor/MTFTSM.hpp"
+#include "mtsmsme/processor/PRNTSM.hpp"
+#include "mtsmsme/processor/SRI4SMTSM.hpp"
+#include "mtsmsme/processor/ULTSM.hpp"
 void PerfTestFixture::szlist()
 {
   smsc_log_debug(logger, "======== PerfTestFixture::szlist ========\n");
-  TCO mtsms(10000);
-  //using smsc::mtsmsme::processor::TSM;
   smsc_log_debug(logger,
                  "sizeof(TSM)=%d",
                  sizeof(smsc::mtsmsme::processor::TSM));
+  smsc_log_debug(logger,
+                 "sizeof(CLTSM)=%d",
+                 sizeof(smsc::mtsmsme::processor::CLTSM));
+  smsc_log_debug(logger,
+                 "sizeof(ISD)=%d",
+                 sizeof(smsc::mtsmsme::processor::ISD));
+  smsc_log_debug(logger,
+                 "sizeof(MOFTSM)=%d",
+                 sizeof(smsc::mtsmsme::processor::MOFTSM));
+  smsc_log_debug(logger,
+                 "sizeof(MTFTSM)=%d",
+                 sizeof(smsc::mtsmsme::processor::MTFTSM));
+  smsc_log_debug(logger,
+                 "sizeof(PRNTSM)=%d",
+                 sizeof(smsc::mtsmsme::processor::PRNTSM));
+  smsc_log_debug(logger,
+                 "sizeof(SRI4SMTSM)=%d",
+                 sizeof(smsc::mtsmsme::processor::SRI4SMTSM));
+  smsc_log_debug(logger,
+                 "sizeof(ULTSM)=%d",
+                 sizeof(smsc::mtsmsme::processor::ULTSM));
 }
