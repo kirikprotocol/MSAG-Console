@@ -7,13 +7,13 @@ namespace scag2 {
 namespace prototypes {
 namespace infosme {
 
-class Speed
+class SpeedControl
 {
 public:
     // the constructor of the speed object,
     // @param speed    -- the necessary speed
     // @param maxDelay -- the maximum delay in msec to the deltaTime
-    Speed( unsigned speed, unsigned maxDelay = 1000 ) :
+    SpeedControl( unsigned speed, unsigned maxDelay = 1000 ) :
     speed_(speed), nextTime_(0), maxDelay_(maxDelay), wouldSend_(0) {
         assert( speed > 0 );
         assert( maxDelay >= 1000 );
@@ -53,7 +53,7 @@ public:
     }
      */
 
-    inline int compare( const Speed& other ) const {
+    inline int compare( const SpeedControl& other ) const {
         if ( nextTime_ < other.nextTime_ ) return -1;
         if ( nextTime_ > other.nextTime_ ) return 1;
         if ( speed_ < other.speed_ ) return -1;

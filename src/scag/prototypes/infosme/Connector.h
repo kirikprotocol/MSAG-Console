@@ -58,9 +58,9 @@ public:
 private:
     unsigned id_;
     smsc::logger::Logger* log_;
-    std::string name_;
-    Speed    speed_;
-    unsigned sent_;         // real number of send msgs
+    std::string  name_;
+    SpeedControl speed_;
+    unsigned     sent_;         // real number of send msgs
     scag2::util::Drndm random_;
 };
 

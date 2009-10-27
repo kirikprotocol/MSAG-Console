@@ -22,7 +22,7 @@ int main()
     {
         std::auto_ptr< Controller > controller( new Controller(pool) );
         smsc_log_info(log,"starting controller");
-        pool.startTask( controller.get() );
+        pool.startTask( controller.get(), false );
 
         Controller::Tokenizer tok;
         while ( true ) {

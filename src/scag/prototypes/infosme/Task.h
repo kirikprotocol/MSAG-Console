@@ -143,7 +143,7 @@ private:
     bool        isDestroyed_;
     util::Drndm random_;     // random number generator
 
-    Speed    speed_;
+    SpeedControl speed_;
     unsigned priority_;  // priority of the task
     unsigned sent_;      // actual number of messages sent
     unsigned messages_;  // total number of unsent messages in task
