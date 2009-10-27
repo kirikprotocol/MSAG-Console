@@ -35,6 +35,7 @@ public class Proxy {
   private ResponseReader reader;
   private Date timeConnect = new Date(0);
   private boolean timeMode = true;
+  private int timeout = 180000;
 
   public OutputStream out;
   public InputStream in;
@@ -42,6 +43,13 @@ public class Proxy {
   protected Proxy(String host, int port) {
     this.host = host;
     this.port = port;
+    status = StatusDisconnected;
+  }
+
+  protected Proxy(String host, int port, int timeout) {
+    this.host = host;
+    this.port = port;
+    this.timeout = timeout;
     status = StatusDisconnected;
   }
 
@@ -120,7 +128,7 @@ public class Proxy {
     if (timeMode) {
       final Date current = new Date();
       final long interval = current.getTime() - timeConnect.getTime();
-      statusTime = (interval > 60000) ? StatusTimeEnabled : StatusTimeDisabled;
+      statusTime = (interval > timeout) ? StatusTimeEnabled : StatusTimeDisabled;
       if (statusTime != StatusTimeEnabled) {
         logger.debug(warning + " timeout");
         throw new AdminException(warning + " timeout");
@@ -134,7 +142,7 @@ public class Proxy {
       logger.debug("connecting to \"" + host + ':' + port + "\" ...");
       socket = new Socket(host, port);
       if (timeMode)
-        socket.setSoTimeout(180000);
+        socket.setSoTimeout(timeout*3);
       out = socket.getOutputStream();
       in = socket.getInputStream();
       writer = new CommandWriter(out);
