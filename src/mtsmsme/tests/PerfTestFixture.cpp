@@ -89,4 +89,12 @@ void PerfTestFixture::perftest()
     smsc_log_error(logger, " catched unexpected exception [%s]", ex.what());
   }
 }
-
+void PerfTestFixture::szlist()
+{
+  smsc_log_debug(logger, "======== PerfTestFixture::szlist ========\n");
+  TCO mtsms(10000);
+  //using smsc::mtsmsme::processor::TSM;
+  smsc_log_debug(logger,
+                 "sizeof(TSM)=%d",
+                 sizeof(smsc::mtsmsme::processor::TSM));
+}
