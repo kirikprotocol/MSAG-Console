@@ -111,30 +111,30 @@ public:
 class ReadBeyonEof:public BaseException{
 public:
   ReadBeyonEof()
-	{
-	  msg="Attempt to read data beyond end.";
-	}
+  {
+    msg="Attempt to read data beyond end.";
+  }
 };
 
 class InvalidValueLength:public BaseException{
 public:
   InvalidValueLength(const char* valueType,int len)
-	{
-	  msg="Invalid value length for type ";
-		msg+=valueType;
-		msg+=":";
-		char buf[32];
-		sprintf(buf,"%d",len);
-		msg+=buf;
-	}
+  {
+    msg="Invalid value length for type ";
+    msg+=valueType;
+    msg+=":";
+    char buf[32];
+    sprintf(buf,"%d",len);
+    msg+=buf;
+  }
 };
 
 class WriteToReadonlyBuffer:public BaseException{
 public:
   WriteToReadonlyBuffer()
-	{
-	  msg="Attempt to write to readonly buffer.";
-	}
+  {
+    msg="Attempt to write to readonly buffer.";
+  }
 };
 
 }
