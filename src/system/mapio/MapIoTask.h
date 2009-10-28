@@ -266,6 +266,7 @@ struct MapDialog{
   bool ussdProcessing:1;
   bool noSri:1;
   bool noRespFromPeer:1;
+  bool lastUssdMessage:1;
   char clevel;
   MapState state;
   int dlgType;
@@ -332,6 +333,7 @@ struct MapDialog{
     id_opened=false;
     ussdProcessing=false;
     noSri=false;
+    lastUssdMessage=false;
     state=MAPST_START;
     dialogid_map=dialogid;
     dialogid_smsc=0;
