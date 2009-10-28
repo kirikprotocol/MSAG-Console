@@ -29,6 +29,17 @@
 	</choice>
     </group>
 
+    <group name="formatpairs">
+	<choice>
+	<element name="pair">
+     	    <complexType>
+		<attribute name="name" type="scag:Value" use="required"/>
+		<attribute name="value" type="scag:Value" use="required"/>
+            </complexType>
+	</element>
+	</choice>
+    </group>
+
     <group name="Actions">
         <choice>
             <element name="indexof">
@@ -95,7 +106,7 @@
 
 	    <element name="format_pairs">
                 <complexType>
-		   <group ref="string:pairs" minOccurs="0" maxOccurs="unbounded"/>
+		   <group ref="string:formatpairs" minOccurs="0" maxOccurs="unbounded"/>
 	    	   <attribute name="prefix" type="scag:Value" use="optional"/>
 	    	   <attribute name="postfix" type="scag:Value" use="optional"/>
 	           <attribute name="name_delimiter" type="scag:Value" use="required" />
