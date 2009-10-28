@@ -1416,7 +1416,7 @@ public:
       {
         Address org,dst;
         ExtractAddresses(pdu,org,dst);
-        if(((tempBlockMode==0 || tempBlockMode==2) && tempBlock.find(org)!=tempBlock.end()) || 
+        if(((tempBlockMode==0 || tempBlockMode==2) && tempBlock.find(org)!=tempBlock.end()) ||
            ((tempBlockMode==1 || tempBlockMode==2) && tempBlock.find(dst)!=tempBlock.end()))
         {
           sendResp(pdu->get_sequenceNumber(),SmppStatusSet::ESME_RX_T_APPN,isDataSm,0);
