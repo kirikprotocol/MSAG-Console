@@ -6,6 +6,7 @@
 #include "logger/Logger.h"
 #include "util/xml/utilFunctions.h"
 #include "util/xml/DOMTreeReader.h"
+#include "smeman/smeinfo.h"
 
 namespace smsc {
 namespace util {
@@ -66,6 +67,33 @@ SmeManConfig::status SmeManConfig::putRecord(SmeRecord *record)
   return success;
 }
 
+void fillFlag(uint32_t& flags,const std::string& val)
+{
+  using namespace smsc::smeman;
+  if(val=="carryOrgDescriptor")
+  {
+    flags|=sfCarryOrgDescriptor;
+  }else if(val=="carryOrgUserInfo")
+  {
+    flags|=sfCarryOrgAbonentInfo;
+  }else if(val=="carrySccpInfo")
+  {
+    flags|=sfCarrySccpInfo;
+  }else if(val=="fillExtraDescriptor")
+  {
+    flags|=sfFillExtraDescriptor;
+  }else if(val=="forceSmeReceipt")
+  {
+    flags|=sfForceReceiptToSme;
+  }else if(val=="forceGsmDataCoding")
+  {
+    flags|=sfForceGsmDatacoding;
+  }else if(val=="smppPlus")
+  {
+    flags|=sfSmppPlus;
+  }
+}
+
 SmeManConfig::status SmeManConfig::load(const char * const filename)
 {
   try
@@ -119,7 +147,7 @@ SmeManConfig::status SmeManConfig::load(const char * const filename)
             } else if (strcmp(name.c_str(), "schedlimit") == 0) {
               record->recdata.smppSme.schedlimit = atoi(value.c_str());
             } else if (strcmp(name.c_str(),"forceDC") == 0) {
-              record->recdata.smppSme.forceDC=!strcmp(value.c_str(),"true");
+              record->recdata.smppSme.flags|=!strcmp(value.c_str(),"true")?smsc::smeman::sfForceGsmDatacoding:0;
             } else if (strcmp(name.c_str(),"wantAlias") == 0) {
               record->recdata.smppSme.wantAlias=!strcmp(value.c_str(),"yes");
             } else if (strcmp(name.c_str(), "receiptSchemeName") == 0) {
@@ -143,7 +171,19 @@ SmeManConfig::status SmeManConfig::load(const char * const filename)
               {
                 record->recdata.smppSme.accessMask = atoi(value.c_str());
               }
-            } else {
+            } else
+            if(strcmp(name.c_str(),"flags")==0)
+            {
+              std::string v=value.c_str();
+              std::string::size_type oldPos=0,commaPos=0;
+              while((commaPos=v.find(',',oldPos))!=std::string::npos)
+              {
+                fillFlag(record->recdata.smppSme.flags,v.substr(oldPos,commaPos-oldPos));
+                oldPos=commaPos+1;
+              }
+              fillFlag(record->recdata.smppSme.flags,v.substr(oldPos));
+            }else
+            {
               smsc_log_warn(logger, "unknown param name \"%s\"", name.c_str());
             }
           }

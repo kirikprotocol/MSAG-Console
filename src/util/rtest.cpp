@@ -79,7 +79,7 @@ int main(int argc,char* argv[])
         si.systemId=rec->smeUid;
         si.timeout = rec->recdata.smppSme.timeout;
         si.wantAlias = rec->recdata.smppSme.wantAlias;
-        si.forceDC = rec->recdata.smppSme.forceDC;
+        //si.forceDC = rec->recdata.smppSme.forceDC;
         si.proclimit=rec->recdata.smppSme.proclimit;
         si.schedlimit=rec->recdata.smppSme.schedlimit;
         si.receiptSchemeName= rec->recdata.smppSme.receiptSchemeName;

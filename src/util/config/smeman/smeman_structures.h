@@ -71,7 +71,7 @@ struct SmppSmeRecord
   char* addrRange;
   uint32_t smeN;
   bool wantAlias;
-  bool forceDC;
+  //bool forceDC;
   uint32_t timeout;
   uint32_t proclimit;
   uint32_t schedlimit;
@@ -80,6 +80,7 @@ struct SmppSmeRecord
   ModeType mode;
   signed long providerId;
   uint32_t accessMask;
+  uint32_t flags;
 };
 
 struct Ss7SmeRecord
