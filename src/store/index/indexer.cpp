@@ -82,7 +82,7 @@ int main(int argc,char* argv[])
   smsc::logger::Logger::Init();
   if(argc==1)
   {
-    printf("Usage: %s path_to_arc_dir [max read/write speed in kb/sec]\n");
+    printf("Usage: %s path_to_arc_dir [max read/write speed in kb/sec]\n",argv[0]);
     return 0;
   }
   try{
