@@ -29,8 +29,16 @@ TCO::TCO(int TrLimit):hlr(0),tsms(TrLimit)
 }
 TCO::~TCO()
 {
+  //typedef Hash<LogLevel> LogLevels;
+  using smsc::core::buffers::XHash;
   //TODO: please clean TSM in the TCO::~TCO()
   //tsms.getIterator();
+  TrId k;
+  TSM* v;
+  for (XHash::Iterator i (&tsms); i.Next(k, v); )
+  {
+    smsc_log_debug(logger,"clean TSM(%s)",k.toString().c_str());
+  }
   smsc_log_warn(logger,"please clean TSM in the TCO::~TCO()");
 }
 TSM* TCO::TC_BEGIN(AC& appcntx)
@@ -111,7 +119,7 @@ void TCO::NUNITDATA(uint8_t cdlen, uint8_t *cd, /* called party address  */
       "Cg[%d]={%s} "
       "Ud[%d]={%s} "
       "Cd(%s) "
-      "Cg(%s)"
+      "Cg(%s) "
       "tsms.size=%d",
       cdlen,dump(cdlen,cd).c_str(),
       cllen,dump(cllen,cl).c_str(),
@@ -292,7 +300,7 @@ void TCO::SCCPsend(uint8_t cdlen,uint8_t *cd,
       "Cg[%d]={%s} "
       "Ud[%d]={%s} "
       "Cd(%s) "
-      "Cg(%s)"
+      "Cg(%s) "
       "tsms.size=%d",
       cdlen,dump(cdlen,cd).c_str(),
       cllen,dump(cllen,cl).c_str(),
