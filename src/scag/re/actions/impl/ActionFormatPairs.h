@@ -10,7 +10,8 @@ namespace actions {
 
 class ActionFormatPairs : public ActionPairsBase {
 public:
-    ActionFormatPairs():prefix_(*this, "prefix", false, true),
+    ActionFormatPairs():ActionPairsBase(true, true),
+                       prefix_(*this, "prefix", false, true),
                        postfix_(*this, "postfix", false, true),
                        result_(*this, "result", true, false) {}
     ~ActionFormatPairs() {};

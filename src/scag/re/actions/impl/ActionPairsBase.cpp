@@ -19,7 +19,7 @@ void ActionPairsBase::init(const SectionParams &params, PropertyObject propertyO
 
 IParserHandler * ActionPairsBase::StartXMLSubSection(const std::string &name, const SectionParams &params, const ActionFactory &factory){
     smsc_log_debug(logger, "%s: StartXMLSubSection %s", opname(), name.c_str());
-    std::auto_ptr<ActionPair> act( new ActionPair(readonlyPairName_) );
+    std::auto_ptr<ActionPair> act( new ActionPair(readonlyPairName_, readonlyPairValue_) );
     if ( !act.get() ) {
         throw SCAGException("action %s was not created", name.c_str());
     }

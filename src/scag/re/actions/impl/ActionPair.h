@@ -17,7 +17,8 @@ struct Pair {
 
 class ActionPair : public Action {
 public:
-    ActionPair(bool readonlyPairName = false):name_(*this, "name", true, readonlyPairName), value_(*this, "value", true, false) {}
+    ActionPair(bool readonlyPairName = false, bool readonlyPairValue = false):
+               name_(*this, "name", true, readonlyPairName), value_(*this, "value", true, readonlyPairValue) {}
     ~ActionPair() {}
     void init(const SectionParams &params, PropertyObject propertyObject);
     bool run(ActionContext &context) { return true; };
@@ -25,6 +26,7 @@ public:
     void setPair(const Pair& pair, ActionContext &context);
     Property* getNameProperty(ActionContext &context) { return name_.getProperty(context); }
     const char* getName(ActionContext &context);
+    const char* getValue(ActionContext &context);
     Property* getValueProperty(ActionContext &context){ return value_.getProperty(context); }
 
 protected:

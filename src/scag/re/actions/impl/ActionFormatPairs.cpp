@@ -19,11 +19,9 @@ bool ActionFormatPairs::run(ActionContext &context) {
     std::string pairDel = pairDel_.getValue(context);
     Property *p = 0;
     for (std::vector< ActionPair* >::const_iterator i = pairActions_.begin(); i != pairActions_.end(); ++i) {
-        p = (*i)->getNameProperty(context);
-        result.append( p ? p->getStr().c_str() : "" );
+        result.append( (*i)->getName(context) );
         result += nameDel;
-        p = (*i)->getValueProperty(context);
-        result.append( p ? p->getStr().c_str() : "" );
+        result.append( (*i)->getValue(context) );
         result += pairDel;
     }
     result += postfix_.getValue(context);

@@ -21,12 +21,11 @@ void ActionPair::setPair(const Pair& pair, ActionContext &context) {
 }
 
 const char* ActionPair::getName(ActionContext &context) { 
-    Property *p = name_.getProperty(context);
-    if (p) {
-        return p->getStr().c_str();
-    } else {
-        return name_.getStringValue(); 
-    }
+    return name_.getValue(context);
+}
+
+const char* ActionPair::getValue(ActionContext &context) { 
+    return value_.getValue(context);
 }
 
 }}}

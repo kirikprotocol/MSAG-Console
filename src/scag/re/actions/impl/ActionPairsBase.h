@@ -13,8 +13,8 @@ namespace actions {
 
 class ActionPairsBase : public Action {
 public:
-    ActionPairsBase(bool readonlyPairName = false):nameDel_(*this, "name_delimiter", true, true),
-                      pairDel_(*this, "pair_delimiter", true, true), readonlyPairName_(readonlyPairName) {}
+    ActionPairsBase(bool readonlyPairName = false, bool readonlyPairValue = false):nameDel_(*this, "name_delimiter", true, true),
+                      pairDel_(*this, "pair_delimiter", true, true), readonlyPairName_(readonlyPairName), readonlyPairValue_(readonlyPairValue) {}
     virtual ~ActionPairsBase();
     virtual void init(const SectionParams &params, PropertyObject propertyObject);
 
@@ -29,6 +29,7 @@ protected:
     PropertyObject pobj_;
     std::vector<ActionPair*> pairActions_;
     bool readonlyPairName_;
+    bool readonlyPairValue_;
 };
 
 }}}
