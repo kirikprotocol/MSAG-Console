@@ -7,6 +7,10 @@
 
 -include makefile.flags
 
+ifeq ($(INMAN_CUSTOM_LINKAGE),YES)
+-include inman/makefile.flags
+endif
+
 ifndef CXX
 CXX:=CC
 endif
