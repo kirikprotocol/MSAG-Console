@@ -15,7 +15,6 @@ class MessageStore;
 
 namespace system{
 
-class SmeManager;
 
 using smsc::smeman::SmscCommand;
 using smsc::core::buffers::IntHash;
