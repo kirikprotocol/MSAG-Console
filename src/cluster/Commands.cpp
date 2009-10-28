@@ -1107,7 +1107,7 @@ void* SmeAddCommand::serialize(uint32_t &len)
 
   try {
 
-  len = (uint32_t)(38 + si.rangeOfAddress.length() + si.systemType.length() +
+  len = (uint32_t)(42 + si.rangeOfAddress.length() + si.systemType.length() +
                 si.password.length() + si.hostname.length() + si.systemId.length() +
                 si.receiptSchemeName.length());
 
@@ -1165,41 +1165,45 @@ void* SmeAddCommand::serialize(uint32_t &len)
       val |= (uint8_t)1;
   if(si.wantAlias)
       val |= BIT(1);
-  if(si.forceDC)
-      val |= BIT(2);
+  //if(si.forceDC)
+      //val |= BIT(2);
   if(si.internal)
       val |= BIT(3);
 
-  if(si.disabled)
+  /*if(si.disabled)
       printf("disabled ok\n");
   if(si.wantAlias)
       printf("wantAlias ok\n");
-  if(si.forceDC)
-      printf("forceDC ok\n");
+  //if(si.forceDC)
+      //printf("forceDC ok\n");
   if(si.internal)
-      printf("internal ok\n");
+      printf("internal ok\n");*/
 
 #undef BIT
 
   memcpy((void*)(buffer + 31), (const void*)&val, 1);
 
+  value32 = htonl(si.flags);
+
+  memcpy((void*)(buffer + 32),        (const void*)&value32, 4);
+
   size_t sz = 0;
-  memcpy((void*)( (uint8_t*)buffer + 32 ),      (const void*)si.rangeOfAddress.c_str(),     si.rangeOfAddress.length() + 1);
+  memcpy((void*)( (uint8_t*)buffer + 36 ),      (const void*)si.rangeOfAddress.c_str(),     si.rangeOfAddress.length() + 1);
   sz += si.rangeOfAddress.length() + 1;
   //printf("rangeOfAddress: '%s', len: %d, sz: %d\n", si.rangeOfAddress.c_str(), si.rangeOfAddress.length(), sz);
-  memcpy((void*)( (uint8_t*)buffer + 32 + sz ), (const void*)si.systemType.c_str(),         si.systemType.length() + 1);
+  memcpy((void*)( (uint8_t*)buffer + 36 + sz ), (const void*)si.systemType.c_str(),         si.systemType.length() + 1);
   sz += si.systemType.length() + 1;
   //printf("systemType: '%s', len: %d, sz: %d\n", si.systemType.c_str(), si.systemType.length(), sz);
-  memcpy((void*)( (uint8_t*)buffer + 32 + sz ), (const void*)si.password.c_str(),           si.password.length() + 1);
+  memcpy((void*)( (uint8_t*)buffer + 36 + sz ), (const void*)si.password.c_str(),           si.password.length() + 1);
   sz += si.password.length() + 1;
   //printf("password: '%s', len: %d, sz: %d\n", si.password.c_str(), si.password.length(), sz);
-  memcpy((void*)( (uint8_t*)buffer + 32 + sz ), (const void*)si.hostname.c_str(),           si.hostname.length() + 1);
+  memcpy((void*)( (uint8_t*)buffer + 36 + sz ), (const void*)si.hostname.c_str(),           si.hostname.length() + 1);
   sz += si.hostname.length() + 1;
   //printf("hostname: '%s', len: %d, sz: %d\n", si.hostname.c_str(), si.hostname.length(), sz);
-  memcpy((void*)( (uint8_t*)buffer + 32 + sz ), (const void*)si.systemId.c_str(),           si.systemId.length() + 1);
+  memcpy((void*)( (uint8_t*)buffer + 36 + sz ), (const void*)si.systemId.c_str(),           si.systemId.length() + 1);
   sz += si.systemId.length() + 1;
   //printf("systemId: '%s', len: %d, sz: %d\n", si.systemId.c_str(), si.systemId.length(), sz);
-  memcpy((void*)( (uint8_t*)buffer + 32 + sz ), (const void*)si.receiptSchemeName.c_str(),  si.receiptSchemeName.length() + 1);
+  memcpy((void*)( (uint8_t*)buffer + 36 + sz ), (const void*)si.receiptSchemeName.c_str(),  si.receiptSchemeName.length() + 1);
   //printf("receiptSchemeName: '%s', len: %d, sz: %d\n", si.receiptSchemeName.c_str(), si.receiptSchemeName.length(), sz);
 
   }catch(...){
@@ -1251,7 +1255,7 @@ bool SmeAddCommand::deserialize(void *buffer, uint32_t len)
 
   si.disabled =     val & (uint8_t)1;
   si.wantAlias =    val & BIT(1);
-  si.forceDC =      val & BIT(2);
+  //si.forceDC =      val & BIT(2);
   si.internal =     val & BIT(3);
 
   /*if(si.disabled)
@@ -1282,18 +1286,28 @@ bool SmeAddCommand::deserialize(void *buffer, uint32_t len)
       break;
   }
 
+  memcpy((void*)&value32,       (const void*)( (uint8_t*)buffer + 32 ), 4);
+
+  si.flags=ntohl(value32);
+
+
   size_t sz = 0;
-  si.rangeOfAddress =       (char*)(   (uint8_t*)buffer + 32   );           sz += si.rangeOfAddress.length() + 1;   if (32 + sz >= len) return false;
+  si.rangeOfAddress =       (char*)(   (uint8_t*)buffer + 36   );           sz += si.rangeOfAddress.length() + 1;
+  if (36 + sz >= len) return false;
   //printf("rangeOfAddress: '%s', len: %d, sz: %d\n", si.rangeOfAddress.c_str(), si.rangeOfAddress.length(), sz);
-  si.systemType =           (char*)(   (uint8_t*)buffer + 32 + sz   );      sz += si.systemType.length() + 1;       if (32 + sz >= len) return false;
+  si.systemType =           (char*)(   (uint8_t*)buffer + 36 + sz   );      sz += si.systemType.length() + 1;
+  if (36 + sz >= len) return false;
   //printf("systemType: '%s', len: %d, sz: %d\n", si.systemType.c_str(), si.systemType.length(), sz);
-  si.password =             (char*)(   (uint8_t*)buffer + 32 + sz   );      sz += si.password.length() + 1;         if (32 + sz >= len) return false;
+  si.password =             (char*)(   (uint8_t*)buffer + 36 + sz   );      sz += si.password.length() + 1;
+  if (36 + sz >= len) return false;
   //printf("password: '%s', len: %d, sz: %d\n", si.password.c_str(), si.password.length(), sz);
-  si.hostname =             (char*)(   (uint8_t*)buffer + 32 + sz   );      sz += si.hostname.length() + 1;         if (32 + sz >= len) return false;
+  si.hostname =             (char*)(   (uint8_t*)buffer + 36 + sz   );      sz += si.hostname.length() + 1;
+  if (36 + sz >= len) return false;
   //printf("hostname: '%s', len: %d, sz: %d\n", si.hostname.c_str(), si.hostname.length(), sz);
-  si.systemId =             (char*)(   (uint8_t*)buffer + 32 + sz   );      sz += si.systemId.length() + 1;         if (32 + sz >= len) return false;
+  si.systemId =             (char*)(   (uint8_t*)buffer + 36 + sz   );      sz += si.systemId.length() + 1;
+  if (36 + sz >= len) return false;
   //printf("systemId: '%s', len: %d, sz: %d\n", si.systemId.c_str(), si.systemId.length(), sz);
-  si.receiptSchemeName =    (char*)(   (uint8_t*)buffer + 32 + sz   );
+  si.receiptSchemeName =    (char*)(   (uint8_t*)buffer + 36 + sz   );
   //printf("receiptSchemeName: '%s', len: %d, sz: %d\n", si.receiptSchemeName.c_str(), si.receiptSchemeName.length(), sz);
 
   }catch(...){
@@ -1386,6 +1400,7 @@ void* SmeUpdateCommand::serialize(uint32_t &len)
   buf.WriteNetInt32(si.schedlimit);
   buf.WriteNetInt32(si.providerId);
   buf.WriteNetInt32(si.accessMask);
+  buf.WriteNetInt64(si.flags);
 
   uint8_t val;
 
@@ -1409,8 +1424,8 @@ void* SmeUpdateCommand::serialize(uint32_t &len)
       val |= 1;
   if(si.wantAlias)
       val |= 2;
-  if(si.forceDC)
-      val |= 4;
+  //if(si.forceDC)
+      //val |= 4;
   if(si.internal)
       val |= 8;
 
@@ -1455,6 +1470,7 @@ bool SmeUpdateCommand::deserialize(void *buffer, uint32_t len)
   si.schedlimit = buf.ReadNetInt32();
   si.providerId = buf.ReadNetInt32();
   si.accessMask = buf.ReadNetInt32();
+  si.flags = buf.ReadNetInt32();
 
   /*printf("port: %d, priority: %d, SME_N: %d, timeout: %d\nproclimit: %d, schedlimit: %d, providerId: %d\n", si.port,
             si.priority, si.SME_N, si.timeout, si.proclimit, si.schedlimit, si.providerId);*/
@@ -1464,7 +1480,7 @@ bool SmeUpdateCommand::deserialize(void *buffer, uint32_t len)
 
   si.disabled =     val & 1;
   si.wantAlias =    val & 2;
-  si.forceDC =      val & 4;
+  //si.forceDC =      val & 4;
   si.internal =     val & 8;
 
 

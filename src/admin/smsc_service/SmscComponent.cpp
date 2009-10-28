@@ -84,7 +84,7 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs, const char * node_)
   sme_params["addrRange"         ] = Parameter("addrRange"         , StringType);
   sme_params["smeN"              ] = Parameter("smeN"              , LongType);
   sme_params["wantAlias"         ] = Parameter("wantAlias"         , BooleanType);
-  sme_params["forceDC"           ] = Parameter("forceDC"           , BooleanType);
+  //sme_params["forceDC"           ] = Parameter("forceDC"           , BooleanType);
   sme_params["timeout"           ] = Parameter("timeout"           , LongType);
   sme_params["receiptSchemeName" ] = Parameter("receiptSchemeName" , StringType);
   sme_params["disabled"          ] = Parameter("disabled"          , BooleanType);
@@ -92,6 +92,7 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs, const char * node_)
   sme_params["proclimit"         ] = Parameter("proclimit"         , LongType);
   sme_params["schedlimit"        ] = Parameter("schedlimit"        , LongType);
   sme_params["accessMask"        ] = Parameter("accessMask"        , LongType);
+  sme_params["flags"             ] = Parameter("flags"             , LongType);
 
   Parameters sme_id_params;
   sme_id_params["id"] = Parameter("id", StringType);
@@ -1000,7 +1001,7 @@ throw (AdminException)
 {
   configs.routesconfig->reload();
   configs.smemanconfig->reload();
-  smsc_app_runner->getApp()->reloadRoutes(configs);
+  smsc_app_runner->getApp()->reloadRoutes();
 
   if(smsc_app_runner->getApp()->isHs()){
       Interconnect * iconn = Interconnect::getInstance();
@@ -1554,7 +1555,7 @@ throw (AdminException)
 
 }
 
-bool isMask(const Address & address)
+static bool isMask(const Address & address)
 {
   for (unsigned i=0; i<address.length; i++)
   {
@@ -1632,9 +1633,16 @@ void fillSmeInfo(SmeInfo & smeInfo, const Arguments & args)
   smeInfo.SME_N             = (SmeNType)args.Get("smeN").getLongValue();
   smeInfo.disabled          = args.Get("disabled").getBooleanValue();
   smeInfo.wantAlias         = args.Get("wantAlias").getBooleanValue();
-  smeInfo.forceDC           = args.Get("forceDC").getBooleanValue();
+  //smeInfo.forceDC           = args.Get("forceDC").getBooleanValue();
   smeInfo.receiptSchemeName = args.Get("receiptSchemeName").getStringValue();
   smeInfo.timeout           = (uint32_t)args.Get("timeout").getLongValue();
+  if(args.Exists("flags"))
+  {
+    smeInfo.flags=(uint32_t)args.Get("flags").getLongValue();
+  }else
+  {
+    smeInfo.flags=0;
+  }
   if(args.Exists("accessMask"))
   {
     smeInfo.accessMask=(uint32_t)args.Get("accessMask").getLongValue();
@@ -1791,7 +1799,7 @@ void SmscComponent::smeDisconnect(const Arguments & args)
   for (StringList::const_iterator j = ids.begin(); j != ids.end(); j++)
   {
     std::string smeId(*j);
-    for (SmeIterator* i = getSmeAdmin()->iterator(); i != NULL;)
+    for (std::auto_ptr<SmeIterator> i (getSmeAdmin()->iterator()); i.get() != NULL;)
     {
       if (i->getSmeProxy() != 0 && i->getSmeInfo().systemId == smeId)
       {
@@ -1944,7 +1952,7 @@ Variant SmscComponent::aclGet(const Arguments & args) throw (AdminException)
     snprintf(buffer, sizeof(buffer), "%lu", aclInfo.ident);
     result.appendValueToStringList(buffer);
     result.appendValueToStringList(aclInfo.name);
-    result.appendValueToStringList(aclInfo.desctiption);
+    result.appendValueToStringList(aclInfo.description);
     buffer[0] = aclInfo.cache;
     buffer[1] = 0;
     result.appendValueToStringList(buffer);
