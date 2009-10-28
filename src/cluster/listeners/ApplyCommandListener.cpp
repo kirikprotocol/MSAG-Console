@@ -65,7 +65,7 @@ void ApplyCommandListener::applyRoutes()
 
     configs->routesconfig->reload();
     configs->smemanconfig->reload();
-    app->reloadRoutes(*configs);
+    app->reloadRoutes();
 }
 
 void ApplyCommandListener::applyAliases()
