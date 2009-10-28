@@ -16,14 +16,14 @@ void TSM::getCounters(TSMSTAT& stat)
   stat.objcreated = objcreated;
   stat.objdeleted = objdeleted;
 }
-TSM::TSM(TrId _ltrid,AC& ac,TCO* _tco):tco(_tco),appcntx(ac),listener(0),
-                                      objnumber(++objcount),st(IDLE)
+TSM::TSM(TrId _ltrid,AC& ac,TCO* _tco):tco(_tco),appcntx(ac),listener(0),st(IDLE)
 {
   if ( tco->tridpool.empty() ) throw smsc::util::Exception("transaction pool is empty");
   ltrid = tco->tridpool.front();
   tco->tridpool.pop_front();
 
   logger = Logger::getInstance("mt.sme.tsm");
+  objnumber(++objcount);
   ++objcreated;
   secret = ++secretcount;
   gettimeofday(&start_ts, NULL);
