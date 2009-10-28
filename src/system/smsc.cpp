@@ -43,7 +43,7 @@
 #include "mapio/FraudControl.hpp"
 #include "mapio/MapLimits.hpp"
 #include "license/check/license.hpp"
-
+//#include "cluster/controller/NetworkDispatcher.hpp"
 
 #ifdef SMSEXTRA
 #include "Extra.hpp"
@@ -254,6 +254,9 @@ extern void loadRoutes(RouteManager* rm,const smsc::util::config::route::RouteCo
 
 void Smsc::init(const SmscConfigs& cfg, const char * node)
 {
+  configs=&cfg;
+
+
   smsc::util::regexp::RegExp::InitLocale();
   smsc::logger::Logger *log=smsc::logger::Logger::getInstance("smsc.init");
   try{
@@ -346,6 +349,9 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
       throw Exception("InterconnectManager initialization exception:%s",e.what());
   }
 
+  //smsc::cluster::controller::NetworkDispatcher::Init(nodeIndex);
+
+
 #ifdef SNMP
   {
     snmpAgent = new SnmpAgent(this);
@@ -404,7 +410,7 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
         si.SME_N=rec->recdata.smppSme.smeN;
         si.timeout = rec->recdata.smppSme.timeout;
         si.wantAlias = rec->recdata.smppSme.wantAlias;
-        si.forceDC = rec->recdata.smppSme.forceDC;
+        //si.forceDC = rec->recdata.smppSme.forceDC;
         si.proclimit=rec->recdata.smppSme.proclimit;
         si.schedlimit=rec->recdata.smppSme.schedlimit;
         si.receiptSchemeName= rec->recdata.smppSme.receiptSchemeName;
@@ -424,6 +430,7 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
         };
 
         si.accessMask=rec->recdata.smppSme.accessMask;
+        si.flags=rec->recdata.smppSme.flags;
 
         try{
           smeman.addSme(si);
@@ -471,7 +478,7 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
     smsc_log_info(log, "Aliases loaded" );
   }
 
-  reloadRoutes(cfg);
+  reloadRoutes();
   smsc_log_info(log, "Routes loaded" );
 
   if(!ishs)
@@ -1535,6 +1542,8 @@ void Smsc::run()
 
 void Smsc::shutdown()
 {
+
+  //smsc::cluster::controller::NetworkDispatcher::getInstance().Stop();
   __trace__("shutting down");
   smeman.Dump();
 
@@ -1599,16 +1608,16 @@ void Smsc::shutdown()
 #ifdef SNMP
   SnmpCounter::Shutdown();
 #endif
-
+  //smsc::cluster::controller::NetworkDispatcher::Shutdown();
   __trace__("shutdown completed");
 }
 
-void Smsc::reloadRoutes(const SmscConfigs& cfg)
+void Smsc::reloadRoutes()
 {
   auto_ptr<RouteManager> router(new RouteManager());
   router->assign(&smeman);
   try{
-    loadRoutes(router.get(),*cfg.routesconfig);
+    loadRoutes(router.get(),*configs->routesconfig);
   }catch(...)
   {
     __warning__("Failed to load routes");
