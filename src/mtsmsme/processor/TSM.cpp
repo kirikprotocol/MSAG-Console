@@ -23,7 +23,7 @@ TSM::TSM(TrId _ltrid,AC& ac,TCO* _tco):tco(_tco),appcntx(ac),listener(0),st(IDLE
   tco->tridpool.pop_front();
 
   logger = Logger::getInstance("mt.sme.tsm");
-  objnumber(++objcount);
+  objnumber = ++objcount;
   ++objcreated;
   secret = ++secretcount;
   gettimeofday(&start_ts, NULL);
