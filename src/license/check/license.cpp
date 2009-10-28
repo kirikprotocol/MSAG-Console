@@ -39,7 +39,7 @@ static bool ReadFile(const char* fn,string& str)
   size_t sz=ftell(f);
   fseek(f,0,SEEK_SET);
 
-  vector<char> v(sz);
+  vector<char> v(sz,0);
   fread(&v[0],sz,1,f);
   str.assign(v.begin(),v.end());
   fclose(f);
