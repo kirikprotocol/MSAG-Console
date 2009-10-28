@@ -46,14 +46,14 @@ struct AclInfoRecord:AclInfo{
   {
     ident=f.ReadNetInt32();
     f.ReadFixedString<32>(name);
-    f.ReadFixedString<128>(desctiption);
+    f.ReadFixedString<128>(description);
     cache=MakeAclCacheType(f.ReadByte());
   }
   void Write(File& f)const
   {
     f.WriteNetInt32(ident);
     f.WriteFixedString<32>(name);
-    f.WriteFixedString<128>(desctiption);
+    f.WriteFixedString<128>(description);
     f.WriteByte(AclCacheTypeAsChar(cache));
   }
   static uint32_t Size()

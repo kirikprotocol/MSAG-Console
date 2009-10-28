@@ -45,7 +45,7 @@ struct AclInfo
 {
   AclIdent        ident;
   AclName         name;
-  AclDescription  desctiption;
+  AclDescription  description;
   AclCacheType    cache;
 };
 inline AclInfo MakeAclInfo(AclIdent argIdent,const char * name,const char * desc,AclCacheType cache)
