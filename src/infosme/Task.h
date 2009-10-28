@@ -123,7 +123,6 @@ public:
 
     bool isReady(time_t time, bool checkActivePeriod = true);
 
-
     /**
      * Запускает процесс генерации сообщений для отправки в спец.таблицу задачи.
      * Выполняестся на ThreadPool'е по команде от Scheduler'а

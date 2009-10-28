@@ -17,8 +17,9 @@
 
 #include "Task.h"
 
-namespace smsc { namespace infosme 
-{
+namespace smsc {
+namespace infosme {
+
     using smsc::core::synchronization::Mutex;
     
     using smsc::util::config::ConfigView;
@@ -44,60 +45,61 @@ namespace smsc { namespace infosme
     static const char* SCHEDULE_TYPE_MONTHLY = "monthly";
     static const char* SCHEDULE_TYPE_INTERVAL = "interval";
 
-    struct Schedule
-    {
-        std::string     id;
-        ScheduleType    type;
+struct Schedule
+{
+    std::string     id;
+    ScheduleType    type;
         
+    time_t  startDateTime;  // full YYYY.MM.dd HH:mm:ss
+    time_t  deadLine;       // full YYYY.MM.dd HH:mm:ss
         
-        time_t  startDateTime;  // full YYYY.MM.dd HH:mm:ss
-        time_t  deadLine;       // full YYYY.MM.dd HH:mm:ss
+    Mutex           taskIdsLock;
+    typedef std::set<uint32_t> IntSet;
+    IntSet taskIds;
         
-        Mutex           taskIdsLock;
-        typedef std::set<uint32_t> IntSet;
-        IntSet taskIds;
+    virtual ~Schedule() {};
         
-        virtual ~Schedule() {};
+    virtual time_t calulateNextTime() = 0;
         
-        virtual time_t calulateNextTime() = 0;
-        
-        virtual bool addTask(uint32_t taskId)
-        { 
-            MutexGuard guard(taskIdsLock);
-            taskIds.insert(taskId);
-            return true;
-        };
-        virtual bool removeTask(uint32_t taskId)
-        { 
-            MutexGuard guard(taskIdsLock);
+    virtual bool removeTask(uint32_t taskId)
+    { 
+        MutexGuard guard(taskIdsLock);
 
-            IntSet::iterator it=taskIds.find(taskId);
-            if (it==taskIds.end()) 
-            {
-              return false;
-            }
-            else
-            {
-              taskIds.erase(it);
-            }
-            return true;
-        };
-
-        IntSet getTasks()
+        IntSet::iterator it=taskIds.find(taskId);
+        if (it==taskIds.end()) 
         {
-          MutexGuard guard(taskIdsLock);
-          return taskIds;
+            return false;
         }
-    
-        static Schedule* create(ConfigView* config, std::string id);
-        virtual void init(ConfigView* config) = 0;
-        void baseinit(ConfigView* config, bool full);
-
-    protected:
-        
-        Schedule(std::string id, ScheduleType type, time_t startDateTime=-1, time_t endDateTime=-1) 
-            : id(id), type(type), startDateTime(startDateTime), deadLine(endDateTime) {};
+        else
+        {
+            taskIds.erase(it);
+        }
+        return true;
     };
+
+    IntSet getTasks()
+    {
+        MutexGuard guard(taskIdsLock);
+        return taskIds;
+    }
+    
+    static Schedule* create(ConfigView* config, std::string id);
+
+protected:
+    virtual bool addTask(uint32_t taskId)
+    { 
+        MutexGuard guard(taskIdsLock);
+        taskIds.insert(taskId);
+        return true;
+    };
+
+    virtual void init(ConfigView* config) = 0;
+
+    void baseinit(ConfigView* config, bool full);
+
+    Schedule(std::string id, ScheduleType type, time_t startDateTime=-1, time_t endDateTime=-1) 
+        : id(id), type(type), startDateTime(startDateTime), deadLine(endDateTime) {};
+};
 
     struct OnceSchedule : public Schedule
     {

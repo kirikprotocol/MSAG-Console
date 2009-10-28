@@ -1,14 +1,17 @@
 
 #include "TaskScheduler.h"
 
-namespace smsc { namespace infosme 
-{
+namespace smsc {
+namespace infosme {
 
-TaskScheduler::TaskScheduler()
-    : Thread(), logger(Logger::getInstance("smsc.infosme.TaskScheduler")),
-        bStarted(false), bNeedExit(false), bChanged(false)
+TaskScheduler::TaskScheduler() :
+Thread(),
+logger(Logger::getInstance("smsc.infosme.TaskScheduler")),
+bStarted(false), bNeedExit(false), bChanged(false)
 {
 }
+
+
 TaskScheduler::~TaskScheduler()
 {
     MutexGuard guard(schedulesLock);
