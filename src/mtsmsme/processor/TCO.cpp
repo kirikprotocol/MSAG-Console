@@ -29,13 +29,12 @@ TCO::TCO(int TrLimit):hlr(0),tsms(TrLimit)
 }
 TCO::~TCO()
 {
-  //typedef Hash<LogLevel> LogLevels;
   using smsc::core::buffers::XHash;
+  typedef XHash<TrId,TSM*,TrIdHash> TsmList;
   //TODO: please clean TSM in the TCO::~TCO()
-  //tsms.getIterator();
   TrId k;
   TSM* v;
-  for (XHash::Iterator i (&tsms); i.Next(k, v); )
+  for (TsmList::Iterator i (&tsms); i.Next(k, v); )
   {
     smsc_log_debug(logger,"clean TSM(%s)",k.toString().c_str());
   }
