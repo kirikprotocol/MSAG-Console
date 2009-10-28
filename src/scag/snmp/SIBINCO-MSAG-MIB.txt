@@ -1,4 +1,4 @@
--- Copyright 2003 Sibinco. All Rights Reserved
+-- Copyright 2008 Sibinco. All Rights Reserved
 -- HISTORY
 -- 2008-12-09  Dmitry Bukin     created
 
