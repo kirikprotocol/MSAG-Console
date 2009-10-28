@@ -69,7 +69,7 @@ int PooledThread::Execute()
     {
       smsc_log_warn(log,"Unknown exception in task:%s",task->taskName());
     }
-    smsc_log_info(log,"Execution of task %s on thread %u finished",task->taskName(),unsigned(::pthread_self()));
+    smsc_log_debug(log,"Execution of task %s on thread %u finished",task->taskName(),unsigned(::pthread_self()));
     //task->releaseHeap();
     owner->releaseThread(this);
   }
