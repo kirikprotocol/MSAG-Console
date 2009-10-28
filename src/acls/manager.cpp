@@ -55,14 +55,14 @@ struct AclInfoRecord:AclInfo{
   {
     ident=f.ReadNetInt32();
     f.ReadFixedString<32>(name);
-    f.ReadFixedString<128>(desctiption);
+    f.ReadFixedString<128>(description);
     cache=MakeAclCacheType(f.ReadByte());
   }
   void Write(File& f)const
   {
     f.WriteNetInt32(ident);
     f.WriteFixedString<32>(name);
-    f.WriteFixedString<128>(desctiption);
+    f.WriteFixedString<128>(description);
     f.WriteByte(AclCacheTypeAsChar(cache));
   }
   static uint32_t Size()
@@ -573,7 +573,7 @@ void AclManager::updateAclInfo(AclIdent aclident,const char* aclname,const char*
   AclInfoRecord* recptr=acls.GetPtr(aclident);
   if(!recptr)throw Exception(ACLMGRPREFIX"Acl with id=%d doesn't exists",aclident);
   recptr->name=aclname;
-  recptr->desctiption=acldesc;
+  recptr->description=acldesc;
   recptr->cache=act;
   aclsFile.Write(recptr->offset,*recptr);
   /*
