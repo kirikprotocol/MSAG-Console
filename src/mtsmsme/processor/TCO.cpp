@@ -30,6 +30,7 @@ TCO::TCO(int TrLimit):hlr(0),tsms(TrLimit)
 TCO::~TCO()
 {
   //TODO: please clean TSM in the TCO::~TCO()
+  //tsms.getIterator();
   smsc_log_warn(logger,"please clean TSM in the TCO::~TCO()");
 }
 TSM* TCO::TC_BEGIN(AC& appcntx)
@@ -110,12 +111,14 @@ void TCO::NUNITDATA(uint8_t cdlen, uint8_t *cd, /* called party address  */
       "Cg[%d]={%s} "
       "Ud[%d]={%s} "
       "Cd(%s) "
-      "Cg(%s)",
+      "Cg(%s)"
+      "tsms.size=%d",
       cdlen,dump(cdlen,cd).c_str(),
       cllen,dump(cllen,cl).c_str(),
       ulen, dump(ulen,udp).c_str(),
       getAddressDescription(cdlen,cd).c_str(),
-      getAddressDescription(cllen,cl).c_str()
+      getAddressDescription(cllen,cl).c_str(),
+      tsms.Count()
     );
   }
   fixCalledAddress(cdlen, cd);
@@ -289,12 +292,14 @@ void TCO::SCCPsend(uint8_t cdlen,uint8_t *cd,
       "Cg[%d]={%s} "
       "Ud[%d]={%s} "
       "Cd(%s) "
-      "Cg(%s)",
+      "Cg(%s)"
+      "tsms.size=%d",
       cdlen,dump(cdlen,cd).c_str(),
       cllen,dump(cllen,cl).c_str(),
       ulen, dump(ulen,udp).c_str(),
       getAddressDescription(cdlen,cd).c_str(),
-      getAddressDescription(cllen,cl).c_str()
+      getAddressDescription(cllen,cl).c_str(),
+      tsms.Count()
     );
   }
 }
