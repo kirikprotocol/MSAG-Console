@@ -183,6 +183,10 @@ public:
   {
     return stopFlag;
   }
+  const SmscConfigs* getConfigs()
+  {
+    return configs;
+  }
   void mainLoop(int);
   void shutdown();
   TaskContainer tasks;
@@ -415,7 +419,7 @@ public:
   }
   */
 
-  void reloadRoutes(const SmscConfigs& cfg);
+  void reloadRoutes();
   void reloadTestRoutes(const RouteConfig& rcfg);
   //void reloadAliases(const SmscConfigs& cfg);
   void reloadReschedule();
@@ -744,6 +748,8 @@ protected:
   int mainLoopsCount;
   int mapIOTasksCount;
   void* mapioptr;
+
+  const SmscConfigs* configs;
 
   static Smsc* instance;
 };
