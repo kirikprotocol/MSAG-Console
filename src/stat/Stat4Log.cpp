@@ -473,7 +473,7 @@ int main(int argc, char* argv[])
             si.systemId=rec->smeUid;
             si.timeout = rec->recdata.smppSme.timeout;
             si.wantAlias = rec->recdata.smppSme.wantAlias;
-            si.forceDC = rec->recdata.smppSme.forceDC;
+            //si.forceDC = rec->recdata.smppSme.forceDC;
             si.proclimit=rec->recdata.smppSme.proclimit;
             si.schedlimit=rec->recdata.smppSme.schedlimit;
             si.receiptSchemeName= rec->recdata.smppSme.receiptSchemeName;
@@ -570,7 +570,7 @@ int main(int argc, char* argv[])
             const char* sub = 0;
             if (strncmp(str, LOG_SBM_ST_PATTERN, sbmPatLen) == 0) // 'SBM: ' matched
             {
-// Только эти строчки !!!!
+// пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ !!!!
 // I SBM: submit ok, seqnum=4187769 Id=11794273310;seq=130463;oa=.1.1.79138923688;da=.5.0.ussd:102;dda=.0.1.102;   srcprx=MAP_PROXY; dstprx=dbSme
 // I SBM: dest sme not connected   Id=11794312619;seq=29963;oa=.1.1.79137500058;da=.0.9.0850;srcprx=upcs_gw; dstprx=espp
 
