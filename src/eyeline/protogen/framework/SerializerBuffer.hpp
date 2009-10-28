@@ -130,6 +130,13 @@ public:
     writeInt32(value);
   }
 
+  void writeInt64LV(uint64_t value)
+  {
+    writeLength(8);
+    writeInt32((uint32_t)(value>>32));
+    writeInt32((uint32_t)(value&0xffffffffu));
+  }
+
   void writeBoolLV(bool value)
   {
     writeLength(1);
@@ -258,6 +265,24 @@ public:
     pos+=4;
     return htonl(rv);
   }
+  uint64_t readInt64()
+  {
+    if(pos+8>dataSize)
+    {
+      throw ReadBeyonEof();
+    }
+    uint64_t rv;
+    uint32_t tmp1;
+    uint32_t tmp2;
+    memcpy(&tmp1,buf+pos,4);
+    pos+=4;
+    memcpy(&tmp2,buf+pos,4);
+    pos+=4;
+    rv=tmp1;
+    rv<<=32;
+    rv|=tmp2;
+    return rv;
+  }
   bool readBool()
   {
     if(pos+1>dataSize)
@@ -344,6 +369,16 @@ public:
       throw InvalidValueLength("int32",len);
     }
     return readInt32();
+  }
+
+  uint64_t readInt64LV()
+  {
+    LengthType len=readLength();
+    if(len!=8)
+    {
+      throw InvalidValueLength("uint64",len);
+    }
+    return readInt64();
   }
 
 
