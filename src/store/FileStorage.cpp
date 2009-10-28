@@ -13,6 +13,8 @@
 
 #include "util/Uint64Converter.h"
 #include "FileStorage.h"
+#include "util/config/Manager.h"
+#include "util/xml/IconvRegistry.h"
 
 /* Static check for 64bit positions for files */
 template <bool cnd> struct StaticCheck {};
@@ -928,9 +930,35 @@ static void decodeMessage(uint8_t* msg, int msgLen, int encoding, std::string& m
     }
     else if (encoding == DataCoding::UCS2)
     {
-        TmpBuf<char,256> textGuard(msgLen*2+1);
+        static const char* dstCodePage=0;
+        if(!dstCodePage)
+        {
+          try{
+            dstCodePage=smsc::util::config::Manager::getInstance().getString("ArchiveDaemon.Indexator.textArcEncoding");
+          }catch(...)
+          {
+            __warning__("faield to get ArchiveDaemon.Indexator.textArcEncoding.");
+            dstCodePage="WINDOWS-1251";
+          }
+        }
+        TmpBuf<char,512> textGuard(msgLen*4+1);
         char* text = textGuard.get();
-        int textLen = ConvertUCS2ToMultibyte((const short *)msg, msgLen, text, msgLen*2, CONV_ENCODING_CP1251);
+        iconv_t cd=smsc::util::xml::getIconv(dstCodePage,"ucs-2be");
+        int textLen;
+        if(cd==(iconv_t)(-1))
+        {
+          __warning2__("failed to init iconv ucs2-2be -> %s",dstCodePage);
+          textLen = ConvertUCS2ToMultibyte((const short *)msg, msgLen, text, msgLen*2, CONV_ENCODING_CP1251);
+        }else
+        {
+          size_t inBufSize=msgLen;
+          size_t outBufSize=msgLen*4+1;
+          char* outBuf=text;
+          size_t rv=iconv(cd,(const char**)&msg,&inBufSize,&outBuf,&outBufSize);
+          textLen=(int)(outBuf-text);
+        }
+        //iconv ->env{LC_
+        //int
         if (textLen >= 0 && textLen <= msgLen*2) {
             text[textLen] = '\0'; message += text;
         } else {
