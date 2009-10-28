@@ -31,14 +31,14 @@ TCO::~TCO()
 {
   using smsc::core::buffers::XHash;
   typedef XHash<TrId,TSM*,TrIdHash> TsmList;
-  //TODO: please clean TSM in the TCO::~TCO()
   TrId k;
   TSM* v;
-  for (TsmList::Iterator i (&tsms); i.Next(k, v); )
+  for (TsmList::Iterator i(&tsms); i.Next(k, v);)
   {
     smsc_log_debug(logger,"clean TSM(%s)",k.toString().c_str());
+    tsms.Delete(k);
+    delete(v);
   }
-  smsc_log_warn(logger,"please clean TSM in the TCO::~TCO()");
 }
 TSM* TCO::TC_BEGIN(AC& appcntx)
 {
