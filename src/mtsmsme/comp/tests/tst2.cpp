@@ -114,7 +114,7 @@ void AmericaTestFixture::reportSMDeliveryStatus_arg_decoding(void)
   using smsc::mtsmsme::comp::ReportSmDeliveryStatusInd;
   ReportSmDeliveryStatusInd ind(logger);
   ind.decode(vector<unsigned char>(ind_encoded, ind_encoded + sizeof(ind_encoded) / sizeof(unsigned char) ));
-  //todo add some validations
+  //TODO: add some validations
   CPPUNIT_ASSERT( true );
 }
 void AmericaTestFixture::reportSMDeliveryStatus_receiving()
@@ -246,6 +246,36 @@ void AmericaTestFixture::sendRoutingInfoForSM_sending()
   };
   vector<unsigned char> expected(expected_data,expected_data + sizeof(expected_data) / sizeof(unsigned char) );
   CPPUNIT_ASSERT( expected == result);
+}
+void AmericaTestFixture::dialogue_limit_check()
+{
+  smsc_log_debug(logger, "======== AmericaTestFixture::dialogue_limit_check ========\n");
+  using smsc::mtsmsme::processor::TCO;
+  using smsc::mtsmsme::processor::TSM;
+  using smsc::mtsmsme::processor::shortMsgGatewayContext_v2;
+  using smsc::logger::Logger;
+
+  using smsc::mtsmsme::comp::SendRoutingInfoForSMReq;
+
+  uint8_t cl[] = { 2, 2, 2, 2, 2 };
+  uint8_t cd[] = { 3, 3, 3, 3, 3 };
+  TCO mtsms(5);
+  vector<unsigned char> result ;
+  SccpSenderMock sender(logger, result);
+  mtsms.setSccpSender((SccpSender*)&sender);
+  for (int i = 1; i <= 5; i++)
+  {
+    TSM* tsm = 0;
+    tsm = mtsms.TC_BEGIN(shortMsgGatewayContext_v2);
+    CPPUNIT_ASSERT_ASSERTION_FAIL( CPPUNIT_ASSERT( tsm == 0 ) );
+    SendRoutingInfoForSMReq* inv = new SendRoutingInfoForSMReq("79139859489", true, "79139869999");
+    tsm->TInvokeReq(1, 45, *inv);
+    tsm->TBeginReq((uint8_t) (sizeof(cd) / sizeof(uint8_t)), cd,
+        (uint8_t) (sizeof(cl) / sizeof(uint8_t)), cl);
+  }
+  TSM* nulltsm = 0;
+  nulltsm = mtsms.TC_BEGIN(shortMsgGatewayContext_v2);
+  CPPUNIT_ASSERT( nulltsm == 0);
 }
 void AmericaTestFixture::updateLocation_dialogue_cleanup(void)
 {
