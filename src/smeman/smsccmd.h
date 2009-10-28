@@ -4,10 +4,10 @@
 #ident "@(#)$Id$"
 
 /*
-Для реализации кода команнды, так же,
-можно использовать и полиморфизм для класса _SmscCommand
-и реализовать несколько фектори : для создания команд из Smpp/Map PDU
-и создание PDU из команд
+пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ пїЅпїЅ,
+пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ _SmscCommand
+пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ : пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ Smpp/Map PDU
+пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ PDU пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 */
 
 #include "../sms/sms.h"
@@ -155,6 +155,7 @@ public:
   bool haveNetworkErrorCode;
   uint8_t networkErrorCode[3];
   std::string additionalStatusInfoText;
+  int ussd_session_id;
 
 
   void set_messageId(const char* msgid)
@@ -235,7 +236,7 @@ public:
   SmsResp() : messageId(0), status(0),dataSm(false),delay(-1),sms(0),diverted(false),
     haveDpf(false),dpfResult(0),inDlgId(0),
     haveDeliveryFailureReason(false),deliveryFailureReason(0),
-    haveNetworkErrorCode(false)
+    haveNetworkErrorCode(false),ussd_session_id(-1)
     {};
   ~SmsResp()
   {
@@ -1130,11 +1131,11 @@ public:
     return cmd;
   }
 
-  static void makeSMSBody(SMS* sms,const SmppHeader* pdu,bool forceDC)
+  static void makeSMSBody(SMS* sms,const SmppHeader* pdu,uint32_t smeFlags)
   {
     const PduXSm* xsm = reinterpret_cast<const PduXSm*>(pdu);
     //(SMS*)_cmd->dta =  new SMS;
-    fetchSmsFromSmppPdu((PduXSm*)xsm,sms,forceDC);
+    fetchSmsFromSmppPdu((PduXSm*)xsm,sms,smeFlags);
     SMS &s=*sms;//((SMS*)_cmd->dta);
     if(s.getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)!=0x3 && s.getIntProperty(Tag::SMPP_ESM_CLASS)&0x40)
     {
@@ -1159,7 +1160,7 @@ public:
      dispose();
   }
   SmscCommand() : cmd (0) {}
-  SmscCommand(SmppHeader* pdu,bool forceDC=false) : cmd (0)
+  SmscCommand(SmppHeader* pdu,uint32_t smeFlags=0) : cmd (0)
   {
     __require__ ( pdu != NULL );
     auto_ptr<_SmscCommand> _cmd(ref(new _SmscCommand()));
@@ -1188,7 +1189,7 @@ public:
         _cmd->cmdid = SUBMIT;
         PduDataSm* dsm = reinterpret_cast<PduDataSm*>(pdu);
         _cmd->dta =  new SMS;
-        if(!fetchSmsFromDataSmPdu(dsm,(SMS*)(_cmd->dta),forceDC))throw Exception("Invalid data coding");
+        if(!fetchSmsFromDataSmPdu(dsm,(SMS*)(_cmd->dta),smeFlags))throw Exception("Invalid data coding");
         ((SMS*)_cmd->dta)->setIntProperty(Tag::SMPP_DATA_SM,1);
         goto end_construct;
       }
@@ -1256,7 +1257,7 @@ public:
         _cmd->cmdid=SUBMIT_MULTI_SM;
         _cmd->dta=new SubmitMultiSm;
         SubmitMultiSm& sm=*((SubmitMultiSm*)_cmd->dta);
-        makeSMSBody(&((SubmitMultiSm*)_cmd->dta)->msg,pdu,forceDC);
+        makeSMSBody(&((SubmitMultiSm*)_cmd->dta)->msg,pdu,smeFlags);
         unsigned u = 0;
         unsigned uu = pduX->message.numberOfDests;
         for ( ; u < uu; ++u )
@@ -1289,7 +1290,7 @@ public:
     sms_pdu:
     {
       _cmd->dta =  new SMS;
-      makeSMSBody((SMS*)_cmd->dta,pdu,forceDC);
+      makeSMSBody((SMS*)_cmd->dta,pdu,smeFlags);
       goto end_construct;
     }
     sms_resp:
@@ -1351,7 +1352,7 @@ public:
   static uint32_t makeSmppStatus(uint32_t status);
   static bool standardErrorCodes;
 
-  SmppHeader* makePdu(bool forceDC=false)
+  SmppHeader* makePdu(uint32_t smeFlags)
   {
     _SmscCommand& c = *cmd;
     switch ( c.get_commandId() )
@@ -1361,7 +1362,7 @@ public:
         auto_ptr<PduXSm> xsm(new PduXSm);
         xsm->header.set_commandId(SmppCommandSet::SUBMIT_SM);
         xsm->header.set_sequenceNumber(c.get_dialogId());
-        fillSmppPduFromSms(xsm.get(),c.get_sms(),forceDC);
+        fillSmppPduFromSms(xsm.get(),c.get_sms(),smeFlags);
         return reinterpret_cast<SmppHeader*>(xsm.release());
       }
     case DELIVERY:
@@ -1371,7 +1372,7 @@ public:
           auto_ptr<PduDataSm> xsm(new PduDataSm);
           xsm->header.set_commandId(SmppCommandSet::DATA_SM);
           xsm->header.set_sequenceNumber(c.get_dialogId());
-          fillDataSmFromSms(xsm.get(),c.get_sms(),forceDC);
+          fillDataSmFromSms(xsm.get(),c.get_sms(),smeFlags);
           return reinterpret_cast<SmppHeader*>(xsm.release());
         }else
         {
@@ -1418,6 +1419,10 @@ public:
           xsm->header.set_sequenceNumber(c.get_dialogId());
           xsm->header.set_commandStatus(makeSmppStatus(c.get_resp()->get_status()));
           xsm->set_messageId(c.get_resp()->get_messageId());
+          if((smeFlags&sfSmppPlus) && c.get_resp()->ussd_session_id!=-1)
+          {
+            xsm->set_ussdSessionId(c.get_resp()->ussd_session_id);
+          }
           return reinterpret_cast<SmppHeader*>(xsm.release());
         }
       }

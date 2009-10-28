@@ -11,6 +11,7 @@
 namespace smsc {
 namespace smeman {
 
+
 struct SmeInfo
 {
   uint8_t typeOfNumber;
@@ -26,7 +27,6 @@ struct SmeInfo
   SmeNType SME_N;
   bool  disabled;
   bool wantAlias;
-  bool forceDC;
   bool internal;
   SmeBindMode bindMode;
   std::string receiptSchemeName;
@@ -35,6 +35,11 @@ struct SmeInfo
   uint32_t schedlimit;
   uint32_t providerId;
   uint32_t accessMask;
+  uint32_t flags;
+  bool hasFlag(SmeFlags flag)
+  {
+    return (flags&flag)!=0;
+  }
   ~SmeInfo(){}
   SmeInfo(){}
 };

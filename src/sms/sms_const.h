@@ -19,6 +19,13 @@ const int USSD_PSSR_RESP  = 17;
 const int USSD_USSR_CONF  = 18;
 const int USSD_USSN_CONF  = 19;
 
+/* smpp+ ussd ops*/
+const int USSD_USSREL_REQ     = 128;
+const int USSD_USSREL_IND     = 129;
+const int USSD_USSR_REQ_LAST  = 130;
+const int USSD_USSN_REQ_LAST  = 131;
+const int USSD_USSR_CONF_LAST = 146;
+
 const int BILLING_NONE     = 0;
 const int BILLING_NORMAL   = 1;
 const int BILLING_MT       = 2;

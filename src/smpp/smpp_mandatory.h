@@ -4,8 +4,8 @@
 
 
 ///
-/// Этот файл содержит код вычитывающий пакет из потока и
-/// код записывающий пакет в поток
+/// пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ
+/// пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅ
 ///
 
 #if !defined __Cxx_Header__smpp_mandatory_h__
@@ -132,6 +132,12 @@ static inline bool fillSmppPdu(SmppStream* stream,SmppHeader* _pdu)
       if(!(cmdid==SUBMIT_SM_RESP && pdu->header.commandStatus!=0))
       {
         fillCOctetStr(stream,pdu->messageId);
+      }
+      if(pdu->has_ussdSessionId())
+      {
+        fillX(stream,SmppOptionalTags::ussd_session_id);
+        fillX(stream,(uint16_t)4);
+        fillX(stream,pdu->get_ussdSessionId());
       }
       return true;
     }
@@ -282,7 +288,7 @@ public:
 };
 
 /**
-  Достаем обязательные поля
+  пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
 */
 static inline SmppHeader* fetchSmppPdu(SmppStream* stream)
 {

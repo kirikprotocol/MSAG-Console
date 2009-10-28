@@ -3,7 +3,7 @@
 */
 
 //
-// этот файл содержит код для доступа к SMS запакоманному в пакет SMPP
+// пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ SMS пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅ SMPP
 //
 
 #if !defined __Cxx_Header__smpp_sms_h__
@@ -13,6 +13,7 @@
 #include "smpp_structures.h"
 #include "sms/sms.h"
 #include "smpp_time.h"
+#include "smeman/smetypes.h"
 #include <string>
 
 namespace smsc{
@@ -43,8 +44,9 @@ inline PduAddress Address2PduAddress(const Address& addr)
   return src;
 }
 
-inline void fillOptional(SmppOptional& optional,SMS* sms,bool forceDC=false)
+inline void fillOptional(SmppOptional& optional,SMS* sms,uint32_t smeFlags=0)
 {
+  using namespace smsc::smeman;
   if ( sms->hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE) )
   {
     optional.set_userMessageReference(
@@ -106,7 +108,7 @@ inline void fillOptional(SmppOptional& optional,SMS* sms,bool forceDC=false)
     const char * data = sms->getBinProperty(Tag::SMSC_RAW_PAYLOAD,&len);
     optional.set_messagePayload(data,len);
   }
-  if(!forceDC)
+  if(!(smeFlags&sfForceGsmDatacoding))
   {
     if( sms->hasIntProperty(Tag::SMPP_MS_VALIDITY) )
       optional.set_msValidity(sms->getIntProperty(Tag::SMPP_MS_VALIDITY));
@@ -134,26 +136,46 @@ inline void fillOptional(SmppOptional& optional,SMS* sms,bool forceDC=false)
 
   if ( sms->hasStrProperty(Tag::SMSC_SUPPORTED_LOCALE) )
     optional.set_supported_locale(sms->getStrProperty(Tag::SMSC_SUPPORTED_LOCALE).c_str());
-  
-  
-  if ( sms->hasStrProperty(Tag::SMSC_IMSI_ADDRESS) )
+
+
+  if ( sms->hasStrProperty(Tag::SMSC_IMSI_ADDRESS) && (smeFlags&sfCarryOrgDescriptor))
     optional.set_imsi_address(sms->getStrProperty(Tag::SMSC_IMSI_ADDRESS).c_str());
 
-  if ( sms->hasStrProperty(Tag::SMSC_MSC_ADDRESS) )
+  if ( sms->hasStrProperty(Tag::SMSC_MSC_ADDRESS)  && (smeFlags&sfCarryOrgDescriptor))
     optional.set_msc_address(sms->getStrProperty(Tag::SMSC_MSC_ADDRESS).c_str());
 
   if ( sms->hasIntProperty(Tag::SMSC_SUPPORTED_CODESET) )
     optional.set_supported_codeset( sms->getIntProperty(Tag::SMSC_SUPPORTED_CODESET) );
-  
-  if( sms->hasStrProperty(Tag::SMSC_SCCP_OA))
+
+  if( sms->hasStrProperty(Tag::SMSC_SCCP_OA) && (smeFlags&sfCarrySccpInfo))
   {
     optional.set_sccp_oa(sms->getStrProperty(Tag::SMSC_SCCP_OA).c_str());
   }
-  if( sms->hasStrProperty(Tag::SMSC_SCCP_DA))
+  if( sms->hasStrProperty(Tag::SMSC_SCCP_DA)  && (smeFlags&sfCarrySccpInfo))
   {
     optional.set_sccp_da(sms->getStrProperty(Tag::SMSC_SCCP_DA).c_str());
   }
-  
+
+  if(smeFlags&sfSmppPlus)
+  {
+    optional.set_ussd_session_id(sms->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
+    if(sms->hasStrProperty(Tag::SMSC_IMSI_ADDRESS))
+    {
+      optional.set_imsi(sms->getStrProperty(Tag::SMSC_IMSI_ADDRESS).c_str());
+    }
+    if(sms->hasStrProperty(Tag::SMSC_MSC_ADDRESS))
+    {
+      optional.set_vlr_number_ton(1);
+      optional.set_vlr_number_npi(1);
+      optional.set_vlr_number(sms->getStrProperty(Tag::SMSC_MSC_ADDRESS).c_str());
+    }
+    if(sms->hasStrProperty(Tag::SMSC_SCCP_OA))
+    {
+      optional.set_hlr_address_ton(1);
+      optional.set_hlr_address_npi(1);
+      optional.set_hlr_address(sms->getStrProperty(Tag::SMSC_SCCP_OA).c_str());
+    }
+  }
 
   if(sms->hasIntProperty(Tag::SMPP_ITS_SESSION_INFO))
   {
@@ -172,8 +194,9 @@ inline void fillOptional(SmppOptional& optional,SMS* sms,bool forceDC=false)
   }
 }
 
-inline bool fillSmppPduFromSms(PduXSm* pdu,SMS* sms,bool forceDC=false)
+inline bool fillSmppPduFromSms(PduXSm* pdu,SMS* sms,uint32_t smeFlags=0)
 {
+  using namespace smsc::smeman;
   __require__ ( pdu != NULL );
   __require__ ( sms != NULL );
   __require__ (smppPduHasSms((SmppHeader*)pdu));
@@ -214,7 +237,7 @@ inline bool fillSmppPduFromSms(PduXSm* pdu,SMS* sms,bool forceDC=false)
       message.set_shortMessage(short_msg,msg_length);
       //message.set_smLength((uint8_t)msg_length);
       //message.set_dataCoding((uint8_t)sms_body.getCodingScheme());
-      if(forceDC && sms->hasIntProperty(Tag::SMSC_ORIGINAL_DC))
+      if((smeFlags&sfForceGsmDatacoding) && sms->hasIntProperty(Tag::SMSC_ORIGINAL_DC))
       {
         message.set_dataCoding((uint8_t)sms->getIntProperty(Tag::SMSC_ORIGINAL_DC));
       }else
@@ -255,12 +278,13 @@ inline bool fillSmppPduFromSms(PduXSm* pdu,SMS* sms,bool forceDC=false)
     pdu->message.set_replaceIfPresentFlag(0);
 
 
-  fillOptional(pdu->optional,sms,forceDC);
+  fillOptional(pdu->optional,sms,smeFlags);
   return true;
 }
 
-inline void fetchOptionals(SmppOptional& optional,SMS* sms,bool forceDC=false)
+inline void fetchOptionals(SmppOptional& optional,SMS* sms,uint32_t smeFlags=0)
 {
+  using namespace smsc::smeman;
   if ( optional.has_userMessageReference() )
     //sms->setMessageReference(optional.get_userMessageReference());
     sms->setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,
@@ -345,7 +369,7 @@ inline void fetchOptionals(SmppOptional& optional,SMS* sms,bool forceDC=false)
     sms->setIntProperty(Tag::SMPP_NETWORK_ERROR_CODE,ntohl(nec));
   }
 
-  if(!forceDC)
+  if(!(smeFlags&sfForceGsmDatacoding))
   {
     if ( optional.has_destAddrSubunit() )
       sms->setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,optional.get_destAddrSubunit());
@@ -400,7 +424,7 @@ inline void fetchOptionals(SmppOptional& optional,SMS* sms,bool forceDC=false)
 
   if ( optional.has_supported_codeset() )
     sms->setIntProperty( Tag::SMSC_SUPPORTED_CODESET, optional.get_supported_codeset() );
-  
+
   if( optional.has_sccp_oa())
   {
     sms->setStrProperty(Tag::SMSC_SCCP_OA,optional.get_sccp_oa());
@@ -409,13 +433,19 @@ inline void fetchOptionals(SmppOptional& optional,SMS* sms,bool forceDC=false)
   {
     sms->setStrProperty(Tag::SMSC_SCCP_DA,optional.get_sccp_da());
   }
-  
+
   if(optional.has_itsSessionInfo())
   {
     const uint8_t* arr=optional.get_itsSessionInfo();
     uint16_t val=arr[0]|(arr[1]<<8);
     sms->setIntProperty(Tag::SMPP_ITS_SESSION_INFO,val);
   }
+
+  if((smeFlags&sfSmppPlus) && optional.has_ussd_session_id())
+  {
+    sms->setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,optional.get_ussd_session_id());
+  }
+
   if(optional.has_unknownFields())
   {
     sms->setBinProperty(Tag::SMSC_UNKNOWN_OPTIONALS,optional.get_unknownFields(),optional.size_unknownFields());
@@ -424,8 +454,9 @@ inline void fetchOptionals(SmppOptional& optional,SMS* sms,bool forceDC=false)
 //    sms->setIntProperty(Tag::SMPP_PROTOCOL_ID,(uint32_t)optional.get_protocol_id());
 }
 
-inline bool fetchSmsFromSmppPdu(PduXSm* pdu,SMS* sms,bool forceDC=false)
+inline bool fetchSmsFromSmppPdu(PduXSm* pdu,SMS* sms,uint32_t smeFlags=0)
 {
+  using namespace smsc::smeman;
   __require__ ( pdu != NULL );
   __require__ ( sms != NULL );
   __require__ (smppPduHasSms((SmppHeader*)pdu));
@@ -469,7 +500,7 @@ inline bool fetchSmsFromSmppPdu(PduXSm* pdu,SMS* sms,bool forceDC=false)
       sms->setIntProperty(Tag::SMPP_SM_LENGTH,(uint32_t)message.shortMessage.size());
     }
     int dc=(uint32_t)message.dataCoding;
-    if(forceDC)
+    if(smeFlags&sfForceGsmDatacoding)
     {
       int user_data_coding=dc;
       sms->setIntProperty(Tag::SMSC_ORIGINAL_DC,dc);
@@ -563,12 +594,13 @@ inline bool fetchSmsFromSmppPdu(PduXSm* pdu,SMS* sms,bool forceDC=false)
   }
   sms->setEServiceType(pdu->message.get_serviceType());
   sms->setIntProperty(Tag::SMPP_ESM_CLASS,(uint32_t)pdu->message.get_esmClass());
-  fetchOptionals(pdu->optional,sms,forceDC);
+  fetchOptionals(pdu->optional,sms,smeFlags);
   return true;
 }
 
-inline bool fetchSmsFromDataSmPdu(PduDataSm* pdu,SMS* sms,bool forceDC=false)
+inline bool fetchSmsFromDataSmPdu(PduDataSm* pdu,SMS* sms,uint32_t smeFlags=0)
 {
+  using namespace smsc::smeman;
   PduDataPartSm& data = pdu->get_data();
   { // fill address
     PduAddress& source = data.source;
@@ -588,7 +620,7 @@ inline bool fetchSmsFromDataSmPdu(PduDataSm* pdu,SMS* sms,bool forceDC=false)
   sms->setIntProperty(Tag::SMPP_REGISTRED_DELIVERY,data.get_registredDelivery());
 
   int dc=(uint32_t)data.dataCoding;
-  if(forceDC)
+  if(smeFlags&sfForceGsmDatacoding)
   {
     int user_data_coding=dc;
     sms->setIntProperty(Tag::SMSC_ORIGINAL_DC,dc);
@@ -662,7 +694,7 @@ inline bool fetchSmsFromDataSmPdu(PduDataSm* pdu,SMS* sms,bool forceDC=false)
     //}
   }
 
-  fetchOptionals(pdu->optional,sms,forceDC);
+  fetchOptionals(pdu->optional,sms,smeFlags);
   sms->setEServiceType(pdu->data.get_serviceType());
   if(pdu->optional.has_qosTimeToLive())
   {
@@ -680,8 +712,9 @@ inline bool fetchSmsFromDataSmPdu(PduDataSm* pdu,SMS* sms,bool forceDC=false)
   return true;
 }
 
-inline bool fillDataSmFromSms(PduDataSm* pdu,SMS* sms,bool forceDC=false)
+inline bool fillDataSmFromSms(PduDataSm* pdu,SMS* sms,uint32_t smeFlags=0)
 {
+  using namespace smsc::smeman;
   PduDataPartSm& data = pdu->get_data();
   PduAddress& src = data.get_source();
   {
@@ -710,9 +743,9 @@ inline bool fillDataSmFromSms(PduDataSm* pdu,SMS* sms,bool forceDC=false)
     pdu->data.set_serviceType(buff);
   }
 
-  fillOptional(pdu->optional,sms,forceDC);
+  fillOptional(pdu->optional,sms,smeFlags);
   data.set_esmClass(sms->getIntProperty(Tag::SMPP_ESM_CLASS));
-  if(forceDC && sms->hasIntProperty(Tag::SMSC_ORIGINAL_DC))
+  if((smeFlags&sfForceGsmDatacoding) && sms->hasIntProperty(Tag::SMSC_ORIGINAL_DC))
   {
     data.set_dataCoding((uint8_t)sms->getIntProperty(Tag::SMSC_ORIGINAL_DC));
   }else

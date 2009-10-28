@@ -72,6 +72,15 @@ namespace SmppOptionalTags{
   static const uint16_t protocol_id         = 0x4104;
   static const uint16_t sccp_oa             = 0x4105;
   static const uint16_t sccp_da             = 0x4106;
+  /* SMPP+ specific*/
+  static const uint16_t ussd_session_id     = 0x1501;
+  static const uint16_t imsi                = 0x1502;
+  static const uint16_t hlr_address_ton     = 0x1800;
+  static const uint16_t hlr_address_npi     = 0x1801;
+  static const uint16_t hlr_address         = 0x1802;
+  static const uint16_t vlr_number_ton      = 0x1503;
+  static const uint16_t vlr_number_npi      = 0x1504;
+  static const uint16_t vlr_number          = 0x1505;
 }
 
 namespace SmppOptionalLength{
@@ -127,6 +136,16 @@ namespace SmppOptionalLength{
   static const uint16_t protocol_id         = 1;
   static const uint16_t sccp_oa             =21;
   static const uint16_t sccp_da             =21;
+  /* SMPP+ specific*/
+  static const uint16_t ussd_session_id     = 4;
+  static const uint16_t imsi                = 15;
+  static const uint16_t hlr_address_ton     = 1;
+  static const uint16_t hlr_address_npi     = 1;
+  static const uint16_t hlr_address         = 21;
+  static const uint16_t vlr_number_ton      = 1;
+  static const uint16_t vlr_number_npi      = 1;
+  static const uint16_t vlr_number          = 21;
+
 }
 
 namespace SmppOptionalFields{
@@ -187,6 +206,15 @@ namespace SmppOptionalFields{
   static const uint64_t sccp_oa         = BIT(50);
   static const uint64_t sccp_da         = BIT(51);
 
+  /* SMPP+ specific*/
+  static const uint64_t ussd_session_id     = BIT(52);
+  static const uint64_t imsi                = BIT(53);
+  static const uint64_t hlr_address_ton     = BIT(54);
+  static const uint64_t hlr_address_npi     = BIT(55);
+  static const uint64_t hlr_address         = BIT(56);
+  static const uint64_t vlr_number_ton      = BIT(57);
+  static const uint64_t vlr_number_npi      = BIT(58);
+  static const uint64_t vlr_number          = BIT(59);
 
 #undef BIT
 }
@@ -623,9 +651,19 @@ struct SmppOptional //: public MemoryManagerUnit
 
   _o_ostr_property__(unknownFields)
   _o_int_property__(uint8_t,protocol_id)
-  
+
   _o_cstr_property__(sccp_oa)
   _o_cstr_property__(sccp_da)
+
+  _o_int_property__(uint32_t,ussd_session_id)
+  _o_cstr_property__(imsi)
+  _o_int_property__(uint8_t,hlr_address_ton)
+  _o_int_property__(uint8_t,hlr_address_npi)
+  _o_cstr_property__(hlr_address)
+  _o_int_property__(uint8_t,vlr_number_ton)
+  _o_int_property__(uint8_t,vlr_number_npi)
+  _o_cstr_property__(vlr_number)
+
 
 #undef _o_int_property__
 #undef _o_intarr_property__
@@ -693,6 +731,14 @@ struct SmppOptional //: public MemoryManagerUnit
   _o_int_property__(uint8_t,protocol_id)
   _o_cstr_property__(sccp_oa)
   _o_cstr_property__(sccp_da)
+  _o_int_property__(uint32_t,ussd_session_id)
+  _o_cstr_property__(imsi)
+  _o_int_property__(uint8_t,hlr_address_ton)
+  _o_int_property__(uint8_t,hlr_address_npi)
+  _o_cstr_property__(hlr_address)
+  _o_int_property__(uint8_t,vlr_number_ton)
+  _o_int_property__(uint8_t,vlr_number_npi)
+  _o_cstr_property__(vlr_number)
 
   + (uint32_t)( has_unknownFields()  ?  unknownFields.size()  : 0 )
 
@@ -766,6 +812,15 @@ struct SmppOptional //: public MemoryManagerUnit
 
     _o_ostr_property__(unknownFields)
     _o_int_property__(uint8_t,protocol_id)
+
+    _o_int_property__(uint32_t,ussd_session_id)
+    _o_cstr_property__(imsi)
+    _o_int_property__(uint8_t,hlr_address_ton)
+    _o_int_property__(uint8_t,hlr_address_npi)
+    _o_cstr_property__(hlr_address)
+    _o_int_property__(uint8_t,vlr_number_ton)
+    _o_int_property__(uint8_t,vlr_number_npi)
+    _o_cstr_property__(vlr_number)
 
     --align;
     dump_text1("} //SmppOptional");
@@ -949,12 +1004,28 @@ struct PduXSmResp //: public SmppHeader //MemoryManagerUnit
 {
   __ref_property__(SmppHeader,header)
   __cstr_property__(messageId)
+  int ussdSessionId;
+  bool haveUssdSessionId;
+  void set_ussdSessionId(int val)
+  {
+    haveUssdSessionId=true;
+    ussdSessionId=val;
+  }
+  int get_ussdSessionId()const
+  {
+    return ussdSessionId;
+  }
+  bool has_ussdSessionId()const
+  {
+    return haveUssdSessionId;
+  }
+  PduXSmResp():haveUssdSessionId(false){}
   inline uint32_t size()
   {
-    return header.get_commandStatus()==0 || header.get_commandId()!=SmppCommandSet::SUBMIT_SM_RESP?
+    return (header.get_commandStatus()==0 || header.get_commandId()!=SmppCommandSet::SUBMIT_SM_RESP?
        (uint32_t)(0 _s_ref_property__(SmppHeader,header)
                     _s_cstr_property__(messageId))
-                    :(uint32_t)(0 _s_ref_property__(SmppHeader,header));
+                    :(uint32_t)(0 _s_ref_property__(SmppHeader,header)))+(haveUssdSessionId?8:0);
   }
   inline void dump(__LOG__ log,int align = 0)
   {

@@ -127,6 +127,17 @@ inline void fillSmppOptional(SmppStream* stream,SmppOptional* opt)
   macroFillCOctetStr( sccp_oa, -1 );
   macroFillCOctetStr( sccp_da, -1 );
 
+  /* smpp+ specific*/
+  macroFillField(ussd_session_id);
+  macroFillCOctetStr(imsi,-1);
+  macroFillField(hlr_address_ton);
+  macroFillField(hlr_address_npi);
+  macroFillCOctetStr(hlr_address,-1);
+  macroFillField(vlr_number_ton);
+  macroFillField(vlr_number_npi);
+  macroFillCOctetStr(vlr_number,-1);
+
+
   if(opt->has_unknownFields())
   {
     const char* val=opt->get_unknownFields();
@@ -143,7 +154,7 @@ inline void fillSmppOptional(SmppStream* stream,SmppOptional* opt)
 }
 
 /**
-  Достаем опциональные поля
+  пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
 */
 inline void fetchSmppOptional(SmppStream* stream,SmppOptional* opt)
 {
@@ -249,7 +260,7 @@ inline void fetchSmppOptional(SmppStream* stream,SmppOptional* opt)
       /*more_messages_to_send(5.3.2.34)*/ macroFetchField(moreMessagesToSend);
       /*message_state(5.3.2.35)*/         macroFetchField(messageState);
       /*ussd_service_op(5.3.2.44)*/
-      /*  зачитываем и храним как 1 октет ,а не как строку */
+      /*  пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ 1 пїЅпїЅпїЅпїЅпїЅ ,пїЅ пїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ */
                                           macroFetchField(ussdServiceOp);
       /*display_time(5.3.2.26)*/          macroFetchField(displayTime);
       /*sms_signal(5.3.2.40)*/            macroFetchField(smsSignal);
@@ -276,6 +287,18 @@ inline void fetchSmppOptional(SmppStream* stream,SmppOptional* opt)
       /*protocol_id*/        macroFetchField(protocol_id);
       macroFetchCOctetStr( sccp_oa, length );
       macroFetchCOctetStr( sccp_da, length );
+
+      /* smpp+ specific*/
+      macroFetchField(ussd_session_id);
+      macroFetchCOctetStr( imsi, length );
+      macroFetchField(hlr_address_ton);
+      macroFetchField(hlr_address_npi);
+      macroFetchCOctetStr( hlr_address, length );
+      macroFetchField(vlr_number_ton);
+      macroFetchField(vlr_number_npi);
+      macroFetchCOctetStr( vlr_number, length );
+
+
       default:
         {
           opt->field_present |= SmppOptionalFields::unknownFields;
