@@ -17,7 +17,7 @@ public:
 
   //set task completion mode: deleting or callback calling
   void setDelOnCompletion(bool del_task = true) { delTask = del_task; }
-  //tells whether the task destructor or onRelease() callback should be called on completion 
+  //tells whether the task destructor or onRelease() callback should be called on completion
   bool delOnCompletion(void) const { return delTask; }
 
   virtual int Execute()=0;
@@ -76,7 +76,7 @@ public:
   virtual void stop(){isStopping=true;}
   virtual void onRelease(void) { isReleased = true; }
 
-    inline bool stopping() const { return isStopping; }
+  inline bool stopping() const { return isStopping; }
 
 protected:
   //smsc::core::buffers::MemoryHeap *heap;
