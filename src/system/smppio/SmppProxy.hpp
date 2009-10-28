@@ -646,14 +646,14 @@ public:
     if(smppTransmitterSocket)smppTransmitterSocket->assignProxy(this);
   }
 
-  bool getForceDc()
+  bool getSmeFlags()const
   {
-    return forceDc;
+    return smeFlags;
   }
 
-  void setForceDc(bool val)
+  void setSmeFlags(uint32_t val)
   {
-    forceDc=val;
+    smeFlags=val;
   }
 
   bool isDualChannel()
@@ -677,7 +677,7 @@ protected:
   smsc::core::buffers::FastMTQueue<SmscCommand> inqueue;
   int inQueueCount;
   smsc::core::buffers::PriorityQueue<SmscCommand,smsc::core::buffers::CyclicQueue<SmscCommand>,0,31> outqueue;
-  bool forceDc;
+  uint32_t smeFlags;
 
   struct UssdSessionKey{
     uint16_t mr;

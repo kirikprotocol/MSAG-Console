@@ -1661,14 +1661,17 @@ StateType StateMachine::submit(Tuple& t)
     }
     return ERROR_STATE;
   }
-
-  if((dstSmeInfo.interfaceVersion&0x0f)==0x09)
+  if(dstSmeInfo.hasFlag(sfCarryOrgAbonentInfo))
   {
     sms->setStrProperty(Tag::SMSC_SUPPORTED_LOCALE,orgprofile.locale.c_str());
     sms->setIntProperty(Tag::SMSC_SUPPORTED_CODESET,orgprofile.codepage);
+  }
+  if(dstSmeInfo.hasFlag(sfCarryOrgDescriptor) || dstSmeInfo.hasFlag(sfSmppPlus))
+  {
     sms->setStrProperty(Tag::SMSC_IMSI_ADDRESS,sms->getOriginatingDescriptor().imsi);
     sms->setStrProperty(Tag::SMSC_MSC_ADDRESS,sms->getOriginatingDescriptor().msc);
-  }else
+  }
+  if(!dstSmeInfo.hasFlag(sfCarrySccpInfo) && !dstSmeInfo.hasFlag(sfSmppPlus))
   {
     if(sms->hasStrProperty(Tag::SMSC_SCCP_OA))
     {
@@ -1682,7 +1685,7 @@ StateType StateMachine::submit(Tuple& t)
 
 #ifdef SMSEXTRA
   {
-    if(c.toMap && (srcSmeInfo.interfaceVersion&0x0f)==0x09 && sms->hasStrProperty(Tag::SMSC_MSC_ADDRESS))
+    if(c.toMap && srcSmeInfo.hasFlag(sfFillExtraDescriptor) && sms->hasStrProperty(Tag::SMSC_MSC_ADDRESS))
     {
       smsc_log_debug(smsLog,"Filling descriptor from smpp fields:%s/%s",sms->getStrProperty(Tag::SMSC_IMSI_ADDRESS).c_str(),sms->getStrProperty(Tag::SMSC_MSC_ADDRESS).c_str());
       Descriptor d;
@@ -3216,7 +3219,7 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     }
   }
 
-  if((dstSmeInfo.interfaceVersion&0xf0)==0x50 && sms.hasStrProperty(Tag::SMSC_RECIPIENTADDRESS))
+  if(dstSmeInfo.hasFlag(sfForceReceiptToSme) && sms.hasStrProperty(Tag::SMSC_RECIPIENTADDRESS))
   {
     sms.setOriginatingAddress(sms.getStrProperty(Tag::SMSC_RECIPIENTADDRESS).c_str());
   }
@@ -4527,7 +4530,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
       rpt.setIntProperty(Tag::SMSC_DISCHARGE_TIME,(unsigned)time(NULL));
       rpt.setIntProperty(Tag::SMSC_RECEIPTED_MSG_SUBMIT_TIME,(unsigned)sms.getSubmitTime());
       SmeInfo si=smsc->getSmeInfo(sms.getSourceSmeId());
-      if((si.interfaceVersion&0xf0)==0x50)
+      if(si.hasFlag(sfForceReceiptToSme))
       {
         rpt.setStrProperty(Tag::SMSC_DIVERTED_TO,sms.getSourceSmeId());
       }
@@ -5143,7 +5146,7 @@ void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const ch
   rpt.setIntProperty(Tag::SMSC_DISCHARGE_TIME,(unsigned)time(NULL));
 
   SmeInfo si=smsc->getSmeInfo(sms.getSourceSmeId());
-  if((si.interfaceVersion&0xf0)==0x50)
+  if(si.hasFlag(sfForceReceiptToSme))
   {
     rpt.setStrProperty(Tag::SMSC_DIVERTED_TO,sms.getSourceSmeId());
   }
@@ -5231,7 +5234,7 @@ void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
     rpt.setIntProperty(Tag::SMSC_DISCHARGE_TIME,(unsigned)time(NULL));
 
     SmeInfo si=smsc->getSmeInfo(sms.getSourceSmeId());
-    if((si.interfaceVersion&0xf0)==0x50)
+    if(si.hasFlag(sfForceReceiptToSme))
     {
       rpt.setStrProperty(Tag::SMSC_DIVERTED_TO,sms.getSourceSmeId());
     }

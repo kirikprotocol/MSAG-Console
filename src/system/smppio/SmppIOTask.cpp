@@ -665,7 +665,7 @@ int SmppInputThread::Execute()
                       }
 #endif
                       proxy->setId(sid,proxyIndex);
-                      info2(log,"NEWPROXY: p=%p, smid=%s, forceDC=%s",proxy,sid.c_str(),si.forceDC?"true":"false");
+                      info2(log,"NEWPROXY: p=%p, smid=%s, forceDC=%s",proxy,sid.c_str(),si.hasFlag(sfForceGsmDatacoding)?"true":"false");
                     }else
                     {
 #ifdef SNMP
@@ -796,7 +796,7 @@ int SmppInputThread::Execute()
                   }
                 }else
                 {
-                  proxy->setForceDc(smeManager->getSmeInfo(proxy->getSmeIndex()).forceDC);
+                  proxy->setSmeFlags(smeManager->getSmeInfo(proxy->getSmeIndex()).flags);
                   ss->assignProxy(proxy);
                   ss->setSystemId(si.systemId.c_str());
                   __trace2__("assign proxy: %p/%p",ss,proxy);
@@ -912,7 +912,7 @@ int SmppInputThread::Execute()
                     SmscCommand cmd
                     (
                       pdu,
-                      ss->getProxy()->getForceDc()
+                      ss->getProxy()->getSmeFlags()
                     );
                     try{
                       if(ss->getProxy()->isOpened())
@@ -1002,7 +1002,7 @@ int SmppInputThread::Execute()
                   }
                 }
                 //
-                // Это так и задумано, здесь не должно быть break!
+                // пїЅпїЅпїЅ пїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ break!
                 //
               }
               default:
@@ -1174,7 +1174,7 @@ int SmppOutputThread::Execute()
 
           SmppHeader *pdu=0;
           try{
-            pdu=cmd.makePdu(ss->getProxy()->getForceDc());
+            pdu=cmd.makePdu(ss->getProxy()->getSmeFlags());
           }catch(...)
           {
             warn2(olog,"Failed to build pdu from command:%d,dlgid=%d",cmd->get_commandId(),cmd->get_dialogId());
