@@ -56,7 +56,7 @@ public:
     }
     const std::string& getPrice() const { return sPrice; }
     double             getFloatPrice() const { return fPrice; }
-    int                getIntPrice() const { return fPrice > 0 ? int(fPrice+0.5) : int(fPrice-0.5); }
+    int                getIntPrice() const { return fPrice >= 0 ? int(fPrice+0.5) : int(fPrice-0.5); }
 
 private:
     std::string sPrice;
