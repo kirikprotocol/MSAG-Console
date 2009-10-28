@@ -61,7 +61,7 @@ static void openJFile(buf::File& f,const std::string& fn)
 void DpfTracker::Init(const char *argStoreLocation, int to1179, int to1044,int mxch,int ctm)
 {
   storeLocation=argStoreLocation;
-  if(storeLocation.length()>0 && storeLocation[storeLocation.length()]!='/')
+  if(storeLocation.length()>0 && storeLocation[storeLocation.length()-1]!='/')
   {
     storeLocation+='/';
   }
