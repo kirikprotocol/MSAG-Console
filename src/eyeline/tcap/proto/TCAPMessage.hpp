@@ -51,6 +51,10 @@ public:
     , t_abort = 7           //[APPLICATION 7]
   };
 
+  enum FieldTagVals_e {
+    OrigTrnIdTag = 8, DestTrnIdTag = 9, PAbrtCauseTag = 10, DlgPortionTag = 11, CompPortionTag = 12
+  };
+
 private:
   uint8_t pduMem[eyeline::util::MaxSizeOf3_T< TCMsgAbortPortion, 
                                             TCMsgDlgPortion, TCUniDlgPortion >::VALUE];
@@ -125,37 +129,37 @@ public:
   void setTransactionId(const TransactionId & use_id) { _trId = use_id; }
   const TransactionId & getTransactionId(void) const { return _trId; }
   //
-  TCMsgDlgPortion * DlgPortion(void) const
+  TCMsgDlgPortion * getDlgPortion(void) const
   {
-    return ((_msgKind == t_begin) || (_msgKind == t_continue)
-            || (_msgKind == t_end)) ? _pdu.dlg : 0;
+    return (_msgKind == t_begin || _msgKind == t_continue
+            || _msgKind == t_end) ? _pdu.dlg : 0;
   }
   //
-  TCMsgAbortPortion * AbortPortion(void) const
+  TCMsgAbortPortion * getAbortPortion(void) const
   {
     return (_msgKind == t_abort) ? _pdu.abrt : 0;
   }
   //
-  TCUniDlgPortion * UniPortion(void) const
+  TCUniDlgPortion * getUniPortion(void) const
   {
     return (_msgKind == t_unidirection) ? _pdu.uni : 0;
   }
   //
-  const EncodedOID * ACDefined(void) const
+  const EncodedOID * getAppCtx(void) const
   {
-    if (UniPortion())
+    if (getUniPortion())
       return _pdu.uni->ACDefined();
-    TCMsgDlgPortion * dlg = DlgPortion();
-    return (dlg && dlg->Get()) ? dlg->Get()->ACDefined() : 0;
+    TCMsgDlgPortion * dlg = getDlgPortion();
+    return (dlg && dlg->Get()) ? dlg->Get()->getAppCtx() : 0;
   }
 
-  TCUserInformation * usrInfo(void)
+  TCUserInformation * getUsrInfo(void)
   {
-    if (UniPortion())
+    if (getUniPortion())
       return _pdu.uni->usrInfo();
-    if (DlgPortion())
+    if (getDlgPortion())
       return _pdu.dlg->usrInfo();
-    return AbortPortion() ? _pdu.abrt->usrInfo() : 0;
+    return getAbortPortion() ? _pdu.abrt->getUsrInfo() : 0;
   }
 
   ROSComponentsList & CompList(void) { return _compPart; }

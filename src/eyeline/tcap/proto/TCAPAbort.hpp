@@ -7,6 +7,7 @@
 #define __TCAP_MESSAGE_ABORT_HPP
 
 #include "eyeline/tcap/proto/TCStrDialogue.hpp"
+#include "util/Exception.hpp"
 
 namespace eyeline {
 namespace tcap {
@@ -62,16 +63,16 @@ public:
       : ASTypeAC(ASTag::tagApplication, 7)
   {
     _pdu.ac = 0;
-    Reset(use_kind);
+    reset(use_kind);
   }
   ~TCMsgAbort()
   {
     resetPdu();
   }
 
-  AbortForm_e AbortForm(void) const { return _abrtForm; }
+  AbortForm_e getAbortForm(void) const { return _abrtForm; }
 
-  void Reset(AbortForm_e use_kind = abrtFrmProvider)
+  void reset(AbortForm_e use_kind = abrtFrmProvider)
   {
     resetPdu();
     switch ((_abrtForm = use_kind)) {
@@ -83,11 +84,11 @@ public:
     return;
   }
 
-  TCAbrtPDU::AbortSource_e  AbortSource(void) const
+  TCAbrtPDU::AbortSource_e  getAbortSource(void) const
   {
     switch (_abrtForm) {
     case abrtFrmDialog:
-      return _pdu.dlg->abortSource();
+      return _pdu.dlg->getAbortSource();
     case abrtFrmUser:
       return TCAbrtPDU::dlg_srv_user;
     default:; //abrtFrmProvider
@@ -95,31 +96,29 @@ public:
     return TCAbrtPDU::dlg_srv_provider;
   }
 
-  bool PAbortCause(PAbortCause_e & pabrt_cause) const
+  PAbortCause_e getPAbortCause() const
   {
-    if (_abrtForm == abrtFrmProvider) {
-      pabrt_cause = _pabrtCause;
-      return true;
-    }
-    if ((_abrtForm == abrtFrmDialog)
-        && (_pdu.dlg->abortSource() == TCAbrtPDU::dlg_srv_provider)) {
-      pabrt_cause = p_noReason;
-      return true;
-    }
-    return false;
+    if (_abrtForm == abrtFrmProvider)
+      return _pabrtCause;
+    if ( _abrtForm == abrtFrmDialog &&
+         _pdu.dlg->getAbortSource() == TCAbrtPDU::dlg_srv_provider )
+      return p_noReason;
+
+    throw smsc::util::Exception("TCMsgAbort::getPAbortCause::: P-AbortCause field is absent");
   }
 
-  const TCExternal *  UAbortCause(void) const
+  const TCExternal*  getUAbortCause() const
   {
     if (_abrtForm == abrtFrmDialog)
-      return _pdu.dlg->usrInfo().first();
+      return _pdu.dlg->getUsrInfo().first();
     return _abrtForm == abrtFrmUser ? _pdu.usr : 0;
   }
 
-  TCUserInformation * usrInfo(void)
+  TCUserInformation * getUsrInfo()
   {
-    return _abrtForm == abrtFrmDialog ? &(_pdu.dlg->usrInfo()) : 0;
+    return _abrtForm == abrtFrmDialog ? &(_pdu.dlg->getUsrInfo()) : 0;
   }
+
   using ASTypeAC::encode;
   using ASTypeAC::decode;
   using ASTypeAC::deferredDecode;

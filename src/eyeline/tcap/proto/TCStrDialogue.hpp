@@ -29,10 +29,10 @@ public:
     : ASTypeAC(ASTag::tagApplication, use_pdu)
   { }
 
-  TCUserInformation & usrInfo(void) { return _usrInfo; }
+  TCUserInformation& getUsrInfo(void) { return _usrInfo; }
 
   // -- TCDlgPduAC interface methods:
-  virtual const EncodedOID * ACDefined(void) const = 0;
+  virtual const EncodedOID* getAppCtx(void) const = 0;
 };
 
 //Structured TC Dialogue request APDU (AARQ)
@@ -51,7 +51,7 @@ public:
   void setAppCtx(const EncodedOID & use_acid) { _acId = use_acid; }
 
   // -- TCDlgPduAC interface methods
-  const EncodedOID * ACDefined(void) const
+  const EncodedOID * getAppCtx(void) const
   {
     return _acId.length() ? &_acId : 0;
   } 
@@ -79,7 +79,6 @@ public:
   DECResult deferredDecode(const OCTBuffer & use_buf, EncodingRule use_rule = TransferSyntax::ruleDER)
     /*throw ASN1CodecError*/;
 };
-
 
 //Structured TC Dialogue response APDU (AARE)
 class TCRespPDU : public TCDlgPduAC {
@@ -128,7 +127,7 @@ public:
   const AssociateSourceDiagnostic & diagnostic(void) const { return _diagnostic; }
 
   // -- TCDlgPduAC interface methods
-  const EncodedOID * ACDefined(void) const
+  const EncodedOID * getAppCtx(void) const
   {
       return _acId.length() ? &_acId : 0;
   }
@@ -177,9 +176,9 @@ public:
 
   void setAbortSource(AbortSource_e abrt_src) { _abrtSrc = abrt_src; }
 
-  AbortSource_e  abortSource(void) const { return _abrtSrc; }
+  AbortSource_e  getAbortSource(void) const { return _abrtSrc; }
   // -- TCDlgPduAC interface methods
-  const EncodedOID * ACDefined(void) const { return 0; }
+  const EncodedOID * getAppCtx(void) const { return 0; }
 
   // ---------------------------------
   // -- ASTypeAC interface methods
@@ -266,7 +265,7 @@ public:
 
   TCUserInformation * usrInfo(void)
   {
-      return _pdu.ac ? &(_pdu.ac->usrInfo()) : 0;
+      return _pdu.ac ? &(_pdu.ac->getUsrInfo()) : 0;
   }
 
   // ---------------------------------
