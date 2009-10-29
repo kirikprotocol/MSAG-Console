@@ -132,6 +132,16 @@ SmeManConfig::status SmeManConfig::load(const char * const filename)
               record->recdata.smppSme.numberingPlan = atoi(value.c_str());
             } else if (strcmp(name.c_str(), "interfaceVersion") == 0) {
               record->recdata.smppSme.interfaceVersion = atoi(value.c_str());
+              using namespace smsc::smeman;
+              if((record->recdata.smppSme.interfaceVersion&0x0f)==0x09)
+              {
+                record->recdata.smppSme.flags=sfCarryOrgAbonentInfo|sfCarryOrgDescriptor|sfCarrySccpInfo|sfFillExtraDescriptor;
+              }
+              if((record->recdata.smppSme.interfaceVersion&0xf0)==0x50)
+              {
+                record->recdata.smppSme.flags=sfForceReceiptToSme;
+              }
+
             } else if (strcmp(name.c_str(), "systemType") == 0) {
               record->recdata.smppSme.systemType = value.c_release();
             } else if (strcmp(name.c_str(), "password") == 0) {
