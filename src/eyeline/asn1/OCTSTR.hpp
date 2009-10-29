@@ -6,14 +6,13 @@
 #define __ABSTRACT_SYNTAX_OCTSTR_DEFS__
 
 #include <inttypes.h>
+#include <sys/types.h>
 #include "eyeline/util/LWArray.hpp"
 
 namespace eyeline {
 namespace asn1 {
 
-static uint8_t _OCTSTR_DFLT_SZ = 32;
-
-
+static const uint8_t _OCTSTR_DFLT_SZ = 32;
 
 //Default unbounded representation, though overall number of octets is limited to 64K
 typedef eyeline::util::LWArray_T<uint8_t, uint16_t, _OCTSTR_DFLT_SZ> OCTSTR;
