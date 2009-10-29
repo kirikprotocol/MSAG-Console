@@ -3,7 +3,16 @@ static char const ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_OFF */
 
 #include "eyeline/sccp/SCCPDefs.hpp"
-#include "eyeline/tcap/provd/TDlgReqComposers.hpp"
+#include "TDlgReqComposers.hpp"
+#include "TDialogueServiceDataRegistry.hpp"
+#include "eyeline/tcap/proto/TCAPMessage.hpp"
+#include "eyeline/tcap/proto/enc/AbortMessage.hpp"
+#include "eyeline/tcap/proto/enc/AARE_APdu.hpp"
+#include "eyeline/tcap/proto/enc/ABRT_APdu.hpp"
+//#include "eyeline/tcap/proto/enc/EXTERNAL_APdu.hpp"
+#include "eyeline/tcap/proto/enc/PAbortCause.hpp"
+#include "eyeline/utilx/Exception.hpp"
+#include "SUARequests.hpp"
 
 //NOTE.1: Providing in-sequence delivery functionality for locally initiated
 //        TCAP dialogue.
@@ -25,7 +34,7 @@ TDlgRequestComposerAC::SerializationResult_e
                                  const SCCPAddress& src_addr,
                                  const SCCPAddress& dst_addr) const
 {
-  if (!use_udt.setCalledAddr(src_addr))
+  if (!use_udt.setCallingAddr(src_addr))
     return TDlgRequestComposerAC::srlzBadSrcAddr;
   if (!use_udt.setCalledAddr(dst_addr))
     return TDlgRequestComposerAC::srlzBadDstAddr;
@@ -118,22 +127,33 @@ TDlgRequestComposerAC::SerializationResult_e
     return rval;
 
   uint16_t maxDataSz = use_udt.dataBuf().getMaxSize();
-
+#if 0
+  proto::AbortMessage tcapMsg(_tReq.getAbortCause());
+  //tcapMsg.set();
+  tcapMsg.set(tDlgSvcData->getTransactionId());
+  const TDlgUserInfo* uInfo = _tReq.getUserInfo();
+  for(TDlgUserInfo::iterator iter = uInfo->begin(), end_iter = uInfo->end();
+      iter != end_iter; ++iter) {
+    tcapMsg.addExternalValue(*iter);
+  }
+  tcapMsg.encode(use_udt.dataBuf());
+  return TDlgRequestComposerAC::srlzOk;
+#else
   //TODO: serialize TEndReq to use_udt.dataBuf() taking in account 'maxDataSz'
   //If serialized data is too long determine the portion of TCAPMessage that is
   //too large (either UserInfo or ComponentsList) and return associated value
   //of SerializationResult_e
   return TDlgRequestComposerAC::srlzBadTransactionPortion;
+#endif
 }
-
 
 /* ************************************************************************* *
  * class TPAbortReqComposer implementation
  * ************************************************************************* */
 TDlgRequestComposerAC::SerializationResult_e
-  TPAbortReqComposer::serialize2UDT(SUAUnitdataReq & use_udt,
-                                    const SCCPAddress& src_addr,
-                                    const SCCPAddress& dst_addr) const
+TPAbortReqComposer::serialize2UDT(SUAUnitdataReq & use_udt,
+                                  const SCCPAddress& src_addr,
+                                  const SCCPAddress& dst_addr) const
 {
   TDlgRequestComposerAC::SerializationResult_e
     rval = initUDT(use_udt, _tReq, src_addr, dst_addr);
@@ -141,21 +161,22 @@ TDlgRequestComposerAC::SerializationResult_e
   if (rval != TDlgRequestComposerAC::srlzOk)
     return rval;
 
-  uint16_t maxDataSz = use_udt.dataBuf().getMaxSize();
+  TDialogueServiceDataRegistry::registry_element_ref_t tDlgSvcData =
+    TDialogueServiceDataRegistry::getInstance().getTDialogueServiceData(_tReq.getDialogueId());
 
-  //TODO: serialize TPAbortReq to use_udt.dataBuf(), perfoming a paranoic check
-  //for 'maxDataSz'.
-  return TDlgRequestComposerAC::srlzBadTransactionPortion;
+  proto::enc::PAbortCause pAbortCause(_tReq.getAbortCause());
+  proto::enc::AbortMessage tcapMsg(tDlgSvcData->getTransactionId(), &pAbortCause);
+
+  return encodeMessage(tcapMsg, use_udt, "TPAbortReqComposer::serialize2UDT");
 }
-
 
 /* ************************************************************************* *
  * class TUAbortReqComposer implementation
  * ************************************************************************* */
 TDlgRequestComposerAC::SerializationResult_e
-  TUAbortReqComposer::serialize2UDT(SUAUnitdataReq & use_udt,
-                                    const SCCPAddress& src_addr,
-                                    const SCCPAddress& dst_addr) const
+TUAbortReqComposer::serialize2UDT(SUAUnitdataReq & use_udt,
+                                  const SCCPAddress& src_addr,
+                                  const SCCPAddress& dst_addr) const
 {
   TDlgRequestComposerAC::SerializationResult_e
     rval = initUDT(use_udt, _tReq, src_addr, dst_addr);
@@ -163,16 +184,65 @@ TDlgRequestComposerAC::SerializationResult_e
   if (rval != TDlgRequestComposerAC::srlzOk)
     return rval;
 
-  uint16_t maxDataSz = use_udt.dataBuf().getMaxSize();
+  TDialogueServiceDataRegistry::registry_element_ref_t tDlgSvcData =
+      TDialogueServiceDataRegistry::getInstance().getTDialogueServiceData(_tReq.getDialogueId());
 
-  //TODO: serialize TUAbortReq to use_udt.dataBuf() taking in account 'maxDataSz'
-  //If serialized data is too long determine the portion of TCAPMessage that is
-  //too large (actually it may be only a UserInfo) and return associated value
-  //of SerializationResult_e
-  return TDlgRequestComposerAC::srlzBadTransactionPortion;
+  switch(_tReq.getAbortKind()) {
+  case TC_UAbort_Req::uabrtAssociation:
+    if ( !isDialogueResponse() )
+      throw utilx::SerializationException("TUAbortReqComposer::serialize2UDT::: isDialogueResponse() is not true");
+
+    return formAARE_APdu(_tReq, tDlgSvcData->getTransactionId(), use_udt);
+  case TC_UAbort_Req::uabrtDialogueUI:
+    if ( isDialogueResponse() )
+      throw utilx::SerializationException("TUAbortReqComposer::serialize2UDT::: invalid abortKind=uabrtDialogueUI in response to dialogue initiation");
+
+    return formABRT_APdu(_tReq, tDlgSvcData->getTransactionId(), use_udt);
+  case TC_UAbort_Req::uabrtDialogueEXT:
+    return formEXTERNAL_APdu(_tReq, tDlgSvcData->getTransactionId(), use_udt);
+  default:
+    throw utilx::SerializationException("TUAbortReqComposer::serialize2UDT::: invalid abortKind value=[%d]", _tReq.getAbortKind());
+  }
+  return TDlgRequestComposerAC::srlzError;
 }
 
+TDlgRequestComposerAC::SerializationResult_e
+TUAbortReqComposer::formAARE_APdu(const TC_UAbort_Req& t_req,
+                                  const proto::TransactionId& transaction_id,
+                                  SUAUnitdataReq& used_udt) const
+{
+  proto::enc::AARE_APdu aareAPdu(proto::enc::AARE_APdu::protoVersion1);
+  aareAPdu.rejectByUser(t_req.getRejectCause());
+  aareAPdu.setAppCtxName(t_req.getAppCtx());
+  aareAPdu.setUserInfo(t_req.getUserInfo());
+  proto::enc::AbortMessage tcapMsg(transaction_id, &aareAPdu);
+  return encodeMessage(tcapMsg, used_udt, "TUAbortReqComposer::formAARE_APdu");
+}
 
+TDlgRequestComposerAC::SerializationResult_e
+TUAbortReqComposer::formABRT_APdu(const TC_UAbort_Req& t_req,
+                                  const proto::TransactionId& transaction_id,
+                                  SUAUnitdataReq& used_udt) const
+{
+  proto::enc::ABRT_APdu abrtAPdu(t_req.isAbortFromTCUser() ? proto::enc::ABRT_APdu::dlgServiceUser
+                                                           : proto::enc::ABRT_APdu::dlgServiceProvider);
+  abrtAPdu.setUserInfo(t_req.getUserInfo());
+  proto::enc::AbortMessage tcapMsg(transaction_id, &abrtAPdu);
+  return encodeMessage(tcapMsg, used_udt, "TUAbortReqComposer::formABRT_APdu");
+}
+
+TDlgRequestComposerAC::SerializationResult_e
+TUAbortReqComposer::formEXTERNAL_APdu(const TC_UAbort_Req& t_req,
+                                      const proto::TransactionId& transaction_id,
+                                      SUAUnitdataReq& used_udt) const
+{
+//  proto::enc::EXTERNAL_APdu externalAPdu(t_req.getUserInfo());
+//
+//  proto::enc::AbortMessage tcapMsg(transaction_id, &externalAPdu);
+//  return encodeMessage(tcapMsg, used_udt, "TUAbortReqComposer::formEXTERNAL_APdu");
+  return srlzOk;
+}
+   
 } //provd
 } //tcap
 } //eyeline
