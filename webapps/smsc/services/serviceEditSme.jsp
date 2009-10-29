@@ -26,6 +26,7 @@
     page_menu_space(out);
     page_menu_end(out);
 %>
+<input type="hidden" name="initiated" id="initiated" value="true">
 <div class=content>
     <%int rowN = 0;%>
     <input type=hidden name="serviceId" value="<%=StringEncoderDecoder.encode(bean.getServiceId())%>">

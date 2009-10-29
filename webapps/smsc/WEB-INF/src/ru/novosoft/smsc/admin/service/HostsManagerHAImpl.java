@@ -126,12 +126,8 @@ public class HostsManagerHAImpl implements HostsManager {
         return smeManager.getSmeNames();
     }
 
-    public synchronized SME addSme(final String id, final int priority, final byte type, final int typeOfNumber, final int numberingPlan,
-                                   final int interfaceVersion, final String systemType, final String password, final String addrRange, final int smeN,
-                                   final boolean wantAlias, final boolean forceDC, final int timeout, final String receiptSchemeName, final boolean disabled,
-                                   final byte mode, final int proclimit, final int schedlimit, int accessMask) throws AdminException {
-        return smeManager.add(id, priority, type, typeOfNumber, numberingPlan, interfaceVersion, systemType, password, addrRange, smeN, wantAlias, forceDC,
-                timeout, receiptSchemeName, disabled, mode, proclimit, schedlimit, accessMask);
+    public synchronized SME addSme(SME sme) throws AdminException {
+        return smeManager.add(sme);
     }
 
     public synchronized void removeSme(final String smeId) throws AdminException {

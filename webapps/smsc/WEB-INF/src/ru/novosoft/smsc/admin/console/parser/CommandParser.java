@@ -5258,7 +5258,6 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_A_RANGE:
 		case OPT_TON:
 		case OPT_NPI:
-		case OPT_INT_V:
 		case OPT_SYS_TYPE:
 		case OPT_PASSWORD:
 		case OPT_TIMEOUT:
@@ -5270,6 +5269,12 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_DISABLED:
 		case OPT_ACCESSMASK:
 		case OPT_ACCESSBIT:
+		case OPT_CARRY_ORG_DESCRIPTOR:
+		case OPT_CARRY_ORG_USER_INFO:
+		case OPT_CARRY_SCCP_INFO:
+		case OPT_FILL_EXTRA_DESCRIPTOR:
+		case OPT_FORCE_SME_RECEIPT:
+		case OPT_SMPP_PLUS:
 		{
 			break;
 		}
@@ -5313,7 +5318,6 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_A_RANGE:
 		case OPT_TON:
 		case OPT_NPI:
-		case OPT_INT_V:
 		case OPT_SYS_TYPE:
 		case OPT_PASSWORD:
 		case OPT_TIMEOUT:
@@ -5325,6 +5329,12 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_DISABLED:
 		case OPT_ACCESSMASK:
 		case OPT_ACCESSBIT:
+		case OPT_CARRY_ORG_DESCRIPTOR:
+		case OPT_CARRY_ORG_USER_INFO:
+		case OPT_CARRY_SCCP_INFO:
+		case OPT_FILL_EXTRA_DESCRIPTOR:
+		case OPT_FORCE_SME_RECEIPT:
+		case OPT_SMPP_PLUS:
 		{
 			break;
 		}
@@ -5348,7 +5358,6 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_A_RANGE:
 		case OPT_TON:
 		case OPT_NPI:
-		case OPT_INT_V:
 		case OPT_SYS_TYPE:
 		case OPT_PASSWORD:
 		case OPT_TIMEOUT:
@@ -5360,6 +5369,12 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_DISABLED:
 		case OPT_ACCESSMASK:
 		case OPT_ACCESSBIT:
+		case OPT_CARRY_ORG_DESCRIPTOR:
+		case OPT_CARRY_ORG_USER_INFO:
+		case OPT_CARRY_SCCP_INFO:
+		case OPT_FILL_EXTRA_DESCRIPTOR:
+		case OPT_FORCE_SME_RECEIPT:
+		case OPT_SMPP_PLUS:
 		{
 			break;
 		}
@@ -5391,7 +5406,6 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_PRI:
 		case OPT_TON:
 		case OPT_NPI:
-		case OPT_INT_V:
 		case OPT_SYS_TYPE:
 		case OPT_PASSWORD:
 		case OPT_TIMEOUT:
@@ -5403,6 +5417,12 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_DISABLED:
 		case OPT_ACCESSMASK:
 		case OPT_ACCESSBIT:
+		case OPT_CARRY_ORG_DESCRIPTOR:
+		case OPT_CARRY_ORG_USER_INFO:
+		case OPT_CARRY_SCCP_INFO:
+		case OPT_FILL_EXTRA_DESCRIPTOR:
+		case OPT_FORCE_SME_RECEIPT:
+		case OPT_SMPP_PLUS:
 		{
 			break;
 		}
@@ -5424,7 +5444,6 @@ public CommandParser(ParserSharedInputState state) {
 		case ACT_DISCONNECT:
 		case OPT_TON:
 		case OPT_NPI:
-		case OPT_INT_V:
 		case OPT_SYS_TYPE:
 		case OPT_PASSWORD:
 		case OPT_TIMEOUT:
@@ -5436,6 +5455,12 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_DISABLED:
 		case OPT_ACCESSMASK:
 		case OPT_ACCESSBIT:
+		case OPT_CARRY_ORG_DESCRIPTOR:
+		case OPT_CARRY_ORG_USER_INFO:
+		case OPT_CARRY_SCCP_INFO:
+		case OPT_FILL_EXTRA_DESCRIPTOR:
+		case OPT_FORCE_SME_RECEIPT:
+		case OPT_SMPP_PLUS:
 		{
 			break;
 		}
@@ -5456,7 +5481,6 @@ public CommandParser(ParserSharedInputState state) {
 		case EOF:
 		case ACT_DISCONNECT:
 		case OPT_NPI:
-		case OPT_INT_V:
 		case OPT_SYS_TYPE:
 		case OPT_PASSWORD:
 		case OPT_TIMEOUT:
@@ -5468,6 +5492,12 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_DISABLED:
 		case OPT_ACCESSMASK:
 		case OPT_ACCESSBIT:
+		case OPT_CARRY_ORG_DESCRIPTOR:
+		case OPT_CARRY_ORG_USER_INFO:
+		case OPT_CARRY_SCCP_INFO:
+		case OPT_FILL_EXTRA_DESCRIPTOR:
+		case OPT_FORCE_SME_RECEIPT:
+		case OPT_SMPP_PLUS:
 		{
 			break;
 		}
@@ -5487,7 +5517,6 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		case EOF:
 		case ACT_DISCONNECT:
-		case OPT_INT_V:
 		case OPT_SYS_TYPE:
 		case OPT_PASSWORD:
 		case OPT_TIMEOUT:
@@ -5499,36 +5528,12 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_DISABLED:
 		case OPT_ACCESSMASK:
 		case OPT_ACCESSBIT:
-		{
-			break;
-		}
-		default:
-		{
-			throw new NoViableAltException(LT(1), getFilename());
-		}
-		}
-		}
-		{
-		switch ( LA(1)) {
-		case OPT_INT_V:
-		{
-			match(OPT_INT_V);
-			cmd.setInterfaceVersion(getint("interfaceVersion"));
-			break;
-		}
-		case EOF:
-		case ACT_DISCONNECT:
-		case OPT_SYS_TYPE:
-		case OPT_PASSWORD:
-		case OPT_TIMEOUT:
-		case OPT_R_SCHEME:
-		case OPT_P_LIMIT:
-		case OPT_S_LIMIT:
-		case OPT_WANT_ALIAS:
-		case OPT_FORCE_DC:
-		case OPT_DISABLED:
-		case OPT_ACCESSMASK:
-		case OPT_ACCESSBIT:
+		case OPT_CARRY_ORG_DESCRIPTOR:
+		case OPT_CARRY_ORG_USER_INFO:
+		case OPT_CARRY_SCCP_INFO:
+		case OPT_FILL_EXTRA_DESCRIPTOR:
+		case OPT_FORCE_SME_RECEIPT:
+		case OPT_SMPP_PLUS:
 		{
 			break;
 		}
@@ -5558,6 +5563,12 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_DISABLED:
 		case OPT_ACCESSMASK:
 		case OPT_ACCESSBIT:
+		case OPT_CARRY_ORG_DESCRIPTOR:
+		case OPT_CARRY_ORG_USER_INFO:
+		case OPT_CARRY_SCCP_INFO:
+		case OPT_FILL_EXTRA_DESCRIPTOR:
+		case OPT_FORCE_SME_RECEIPT:
+		case OPT_SMPP_PLUS:
 		{
 			break;
 		}
@@ -5586,6 +5597,12 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_DISABLED:
 		case OPT_ACCESSMASK:
 		case OPT_ACCESSBIT:
+		case OPT_CARRY_ORG_DESCRIPTOR:
+		case OPT_CARRY_ORG_USER_INFO:
+		case OPT_CARRY_SCCP_INFO:
+		case OPT_FILL_EXTRA_DESCRIPTOR:
+		case OPT_FORCE_SME_RECEIPT:
+		case OPT_SMPP_PLUS:
 		{
 			break;
 		}
@@ -5613,6 +5630,12 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_DISABLED:
 		case OPT_ACCESSMASK:
 		case OPT_ACCESSBIT:
+		case OPT_CARRY_ORG_DESCRIPTOR:
+		case OPT_CARRY_ORG_USER_INFO:
+		case OPT_CARRY_SCCP_INFO:
+		case OPT_FILL_EXTRA_DESCRIPTOR:
+		case OPT_FORCE_SME_RECEIPT:
+		case OPT_SMPP_PLUS:
 		{
 			break;
 		}
@@ -5639,6 +5662,12 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_DISABLED:
 		case OPT_ACCESSMASK:
 		case OPT_ACCESSBIT:
+		case OPT_CARRY_ORG_DESCRIPTOR:
+		case OPT_CARRY_ORG_USER_INFO:
+		case OPT_CARRY_SCCP_INFO:
+		case OPT_FILL_EXTRA_DESCRIPTOR:
+		case OPT_FORCE_SME_RECEIPT:
+		case OPT_SMPP_PLUS:
 		{
 			break;
 		}
@@ -5664,6 +5693,12 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_DISABLED:
 		case OPT_ACCESSMASK:
 		case OPT_ACCESSBIT:
+		case OPT_CARRY_ORG_DESCRIPTOR:
+		case OPT_CARRY_ORG_USER_INFO:
+		case OPT_CARRY_SCCP_INFO:
+		case OPT_FILL_EXTRA_DESCRIPTOR:
+		case OPT_FORCE_SME_RECEIPT:
+		case OPT_SMPP_PLUS:
 		{
 			break;
 		}
@@ -5688,6 +5723,12 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_DISABLED:
 		case OPT_ACCESSMASK:
 		case OPT_ACCESSBIT:
+		case OPT_CARRY_ORG_DESCRIPTOR:
+		case OPT_CARRY_ORG_USER_INFO:
+		case OPT_CARRY_SCCP_INFO:
+		case OPT_FILL_EXTRA_DESCRIPTOR:
+		case OPT_FORCE_SME_RECEIPT:
+		case OPT_SMPP_PLUS:
 		{
 			break;
 		}
@@ -5735,6 +5776,12 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_WANT_ALIAS:
 		case OPT_FORCE_DC:
 		case OPT_DISABLED:
+		case OPT_CARRY_ORG_DESCRIPTOR:
+		case OPT_CARRY_ORG_USER_INFO:
+		case OPT_CARRY_SCCP_INFO:
+		case OPT_FILL_EXTRA_DESCRIPTOR:
+		case OPT_FORCE_SME_RECEIPT:
+		case OPT_SMPP_PLUS:
 		{
 			break;
 		}
@@ -5766,6 +5813,12 @@ public CommandParser(ParserSharedInputState state) {
 			case EOF:
 			case OPT_FORCE_DC:
 			case OPT_DISABLED:
+			case OPT_CARRY_ORG_DESCRIPTOR:
+			case OPT_CARRY_ORG_USER_INFO:
+			case OPT_CARRY_SCCP_INFO:
+			case OPT_FILL_EXTRA_DESCRIPTOR:
+			case OPT_FORCE_SME_RECEIPT:
+			case OPT_SMPP_PLUS:
 			{
 				break;
 			}
@@ -5780,7 +5833,142 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_FORCE_DC:
 			{
 				match(OPT_FORCE_DC);
-				cmd.setForceDC  (true);
+				cmd.setForceGsmDataCoding  (true);
+				break;
+			}
+			case EOF:
+			case OPT_DISABLED:
+			case OPT_CARRY_ORG_DESCRIPTOR:
+			case OPT_CARRY_ORG_USER_INFO:
+			case OPT_CARRY_SCCP_INFO:
+			case OPT_FILL_EXTRA_DESCRIPTOR:
+			case OPT_FORCE_SME_RECEIPT:
+			case OPT_SMPP_PLUS:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_CARRY_ORG_DESCRIPTOR:
+			{
+				match(OPT_CARRY_ORG_DESCRIPTOR);
+				cmd.setCarryOrgDescriptor  (true);
+				break;
+			}
+			case EOF:
+			case OPT_DISABLED:
+			case OPT_CARRY_ORG_USER_INFO:
+			case OPT_CARRY_SCCP_INFO:
+			case OPT_FILL_EXTRA_DESCRIPTOR:
+			case OPT_FORCE_SME_RECEIPT:
+			case OPT_SMPP_PLUS:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_CARRY_ORG_USER_INFO:
+			{
+				match(OPT_CARRY_ORG_USER_INFO);
+				cmd.setCarryOrgUserInfo  (true);
+				break;
+			}
+			case EOF:
+			case OPT_DISABLED:
+			case OPT_CARRY_SCCP_INFO:
+			case OPT_FILL_EXTRA_DESCRIPTOR:
+			case OPT_FORCE_SME_RECEIPT:
+			case OPT_SMPP_PLUS:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_CARRY_SCCP_INFO:
+			{
+				match(OPT_CARRY_SCCP_INFO);
+				cmd.setCarrySccpInfo  (true);
+				break;
+			}
+			case EOF:
+			case OPT_DISABLED:
+			case OPT_FILL_EXTRA_DESCRIPTOR:
+			case OPT_FORCE_SME_RECEIPT:
+			case OPT_SMPP_PLUS:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_FILL_EXTRA_DESCRIPTOR:
+			{
+				match(OPT_FILL_EXTRA_DESCRIPTOR);
+				cmd.setFillExtraDescriptor  (true);
+				break;
+			}
+			case EOF:
+			case OPT_DISABLED:
+			case OPT_FORCE_SME_RECEIPT:
+			case OPT_SMPP_PLUS:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_FORCE_SME_RECEIPT:
+			{
+				match(OPT_FORCE_SME_RECEIPT);
+				cmd.setForceSmeReceipt  (true);
+				break;
+			}
+			case EOF:
+			case OPT_DISABLED:
+			case OPT_SMPP_PLUS:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_SMPP_PLUS:
+			{
+				match(OPT_SMPP_PLUS);
+				cmd.setSmppPlus  (true);
 				break;
 			}
 			case EOF:
@@ -5860,6 +6048,12 @@ public CommandParser(ParserSharedInputState state) {
 			case ACT_DISCONNECT:
 			case OPT_FORCE_DC:
 			case OPT_DISABLED:
+			case OPT_CARRY_ORG_DESCRIPTOR:
+			case OPT_CARRY_ORG_USER_INFO:
+			case OPT_CARRY_SCCP_INFO:
+			case OPT_FILL_EXTRA_DESCRIPTOR:
+			case OPT_FORCE_SME_RECEIPT:
+			case OPT_SMPP_PLUS:
 			{
 				break;
 			}
@@ -5879,13 +6073,13 @@ public CommandParser(ParserSharedInputState state) {
 				case OPT_ON:
 				{
 					match(OPT_ON);
-					cmd.setForceDC   (true);
+					cmd.setForceGsmDataCoding   (true);
 					break;
 				}
 				case OPT_OFF:
 				{
 					match(OPT_OFF);
-					cmd.setForceDC  (false);
+					cmd.setForceGsmDataCoding  (false);
 					break;
 				}
 				default:
@@ -5899,6 +6093,12 @@ public CommandParser(ParserSharedInputState state) {
 			case EOF:
 			case ACT_DISCONNECT:
 			case OPT_DISABLED:
+			case OPT_CARRY_ORG_DESCRIPTOR:
+			case OPT_CARRY_ORG_USER_INFO:
+			case OPT_CARRY_SCCP_INFO:
+			case OPT_FILL_EXTRA_DESCRIPTOR:
+			case OPT_FORCE_SME_RECEIPT:
+			case OPT_SMPP_PLUS:
 			{
 				break;
 			}
@@ -5925,6 +6125,255 @@ public CommandParser(ParserSharedInputState state) {
 				{
 					match(OPT_OFF);
 					cmd.setDisabled (false);
+					break;
+				}
+				default:
+				{
+					throw new NoViableAltException(LT(1), getFilename());
+				}
+				}
+				}
+				break;
+			}
+			case EOF:
+			case ACT_DISCONNECT:
+			case OPT_CARRY_ORG_DESCRIPTOR:
+			case OPT_CARRY_ORG_USER_INFO:
+			case OPT_CARRY_SCCP_INFO:
+			case OPT_FILL_EXTRA_DESCRIPTOR:
+			case OPT_FORCE_SME_RECEIPT:
+			case OPT_SMPP_PLUS:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_CARRY_ORG_DESCRIPTOR:
+			{
+				match(OPT_CARRY_ORG_DESCRIPTOR);
+				{
+				switch ( LA(1)) {
+				case OPT_ON:
+				{
+					match(OPT_ON);
+					cmd.setCarryOrgDescriptor   (true);
+					break;
+				}
+				case OPT_OFF:
+				{
+					match(OPT_OFF);
+					cmd.setCarryOrgDescriptor  (false);
+					break;
+				}
+				default:
+				{
+					throw new NoViableAltException(LT(1), getFilename());
+				}
+				}
+				}
+				break;
+			}
+			case EOF:
+			case ACT_DISCONNECT:
+			case OPT_CARRY_ORG_USER_INFO:
+			case OPT_CARRY_SCCP_INFO:
+			case OPT_FILL_EXTRA_DESCRIPTOR:
+			case OPT_FORCE_SME_RECEIPT:
+			case OPT_SMPP_PLUS:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_CARRY_ORG_USER_INFO:
+			{
+				match(OPT_CARRY_ORG_USER_INFO);
+				{
+				switch ( LA(1)) {
+				case OPT_ON:
+				{
+					match(OPT_ON);
+					cmd.setCarryOrgUserInfo   (true);
+					break;
+				}
+				case OPT_OFF:
+				{
+					match(OPT_OFF);
+					cmd.setCarryOrgUserInfo  (false);
+					break;
+				}
+				default:
+				{
+					throw new NoViableAltException(LT(1), getFilename());
+				}
+				}
+				}
+				break;
+			}
+			case EOF:
+			case ACT_DISCONNECT:
+			case OPT_CARRY_SCCP_INFO:
+			case OPT_FILL_EXTRA_DESCRIPTOR:
+			case OPT_FORCE_SME_RECEIPT:
+			case OPT_SMPP_PLUS:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_CARRY_SCCP_INFO:
+			{
+				match(OPT_CARRY_SCCP_INFO);
+				{
+				switch ( LA(1)) {
+				case OPT_ON:
+				{
+					match(OPT_ON);
+					cmd.setCarrySccpInfo   (true);
+					break;
+				}
+				case OPT_OFF:
+				{
+					match(OPT_OFF);
+					cmd.setCarrySccpInfo  (false);
+					break;
+				}
+				default:
+				{
+					throw new NoViableAltException(LT(1), getFilename());
+				}
+				}
+				}
+				break;
+			}
+			case EOF:
+			case ACT_DISCONNECT:
+			case OPT_FILL_EXTRA_DESCRIPTOR:
+			case OPT_FORCE_SME_RECEIPT:
+			case OPT_SMPP_PLUS:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_FILL_EXTRA_DESCRIPTOR:
+			{
+				match(OPT_FILL_EXTRA_DESCRIPTOR);
+				{
+				switch ( LA(1)) {
+				case OPT_ON:
+				{
+					match(OPT_ON);
+					cmd.setFillExtraDescriptor   (true);
+					break;
+				}
+				case OPT_OFF:
+				{
+					match(OPT_OFF);
+					cmd.setFillExtraDescriptor  (false);
+					break;
+				}
+				default:
+				{
+					throw new NoViableAltException(LT(1), getFilename());
+				}
+				}
+				}
+				break;
+			}
+			case EOF:
+			case ACT_DISCONNECT:
+			case OPT_FORCE_SME_RECEIPT:
+			case OPT_SMPP_PLUS:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_FORCE_SME_RECEIPT:
+			{
+				match(OPT_FORCE_SME_RECEIPT);
+				{
+				switch ( LA(1)) {
+				case OPT_ON:
+				{
+					match(OPT_ON);
+					cmd.setForceSmeReceipt   (true);
+					break;
+				}
+				case OPT_OFF:
+				{
+					match(OPT_OFF);
+					cmd.setForceSmeReceipt  (false);
+					break;
+				}
+				default:
+				{
+					throw new NoViableAltException(LT(1), getFilename());
+				}
+				}
+				}
+				break;
+			}
+			case EOF:
+			case ACT_DISCONNECT:
+			case OPT_SMPP_PLUS:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_SMPP_PLUS:
+			{
+				match(OPT_SMPP_PLUS);
+				{
+				switch ( LA(1)) {
+				case OPT_ON:
+				{
+					match(OPT_ON);
+					cmd.setSmppPlus   (true);
+					break;
+				}
+				case OPT_OFF:
+				{
+					match(OPT_OFF);
+					cmd.setSmppPlus  (false);
 					break;
 				}
 				default:
@@ -6052,27 +6501,27 @@ public CommandParser(ParserSharedInputState state) {
 			}
 			}
 			{
-			_loop306:
+			_loop323:
 			do {
 				if ((LA(1)==ACT_ADD)) {
 					match(ACT_ADD);
 					cmd.addMask(getnameid("closed group mask to add"));
 				}
 				else {
-					break _loop306;
+					break _loop323;
 				}
 				
 			} while (true);
 			}
 			{
-			_loop308:
+			_loop325:
 			do {
 				if ((LA(1)==ACT_DELETE)) {
 					match(ACT_DELETE);
 					cmd.delMask(getnameid("closed group mask to delete"));
 				}
 				else {
-					break _loop308;
+					break _loop325;
 				}
 				
 			} while (true);
@@ -6368,7 +6817,13 @@ public CommandParser(ParserSharedInputState state) {
 		"comma character ','",
 		"ESC",
 		"DIGIT",
-		"TSTR"
+		"TSTR",
+		"OPT_CARRY_ORG_DESCRIPTOR",
+		"OPT_CARRY_ORG_USER_INFO",
+		"OPT_CARRY_SCCP_INFO",
+		"OPT_FILL_EXTRA_DESCRIPTOR",
+		"OPT_FORCE_SME_RECEIPT",
+		"OPT_SMPP_PLUS"
 	};
 	
 	

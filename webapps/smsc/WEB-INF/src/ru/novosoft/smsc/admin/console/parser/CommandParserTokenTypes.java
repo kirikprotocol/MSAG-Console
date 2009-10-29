@@ -189,4 +189,10 @@ public interface CommandParserTokenTypes {
 	int ESC = 163;
 	int DIGIT = 164;
 	int TSTR = 165;
+	int OPT_CARRY_ORG_DESCRIPTOR = 166;
+	int OPT_CARRY_ORG_USER_INFO = 167;
+	int OPT_CARRY_SCCP_INFO = 168;
+	int OPT_FILL_EXTRA_DESCRIPTOR = 169;
+	int OPT_FORCE_SME_RECEIPT = 170;
+	int OPT_SMPP_PLUS = 171;
 }

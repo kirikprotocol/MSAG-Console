@@ -157,7 +157,6 @@ public class ServiceAddExternalAdm extends SmeBean
     if (errors.size() == 0) {
       stage++;
       wantAlias = true;
-      forceDC = true;
       return RESULT_OK;
     }
     else
@@ -174,12 +173,15 @@ public class ServiceAddExternalAdm extends SmeBean
 
     ServiceInfo serviceInfo = null;
     try {
+//      SME sme =  new SME(serviceId, priority, SME.SMPP, typeOfNumber, numberingPlan, convertInterfaceVersion(interfaceVersion), systemType, password,
+//                              rangeOfAddress, extraFlag, wantAlias, forceDC, timeout, receiptSchemeName, disabled, mode, proclimit, schedlimit, accessMask);
+
+
       serviceInfo
               = new ServiceInfo(serviceId, hostName,
                       appContext.getHostsManager().getDaemonServicesFolder(hostName) + File.separatorChar + serviceId,
                       startupArgs, autostart,
-                      new SME(serviceId, priority, SME.SMPP, typeOfNumber, numberingPlan, convertInterfaceVersion(interfaceVersion), systemType, password,
-                              rangeOfAddress, extraFlag, wantAlias, forceDC, timeout, receiptSchemeName, disabled, mode, proclimit, schedlimit, accessMask),
+                      getSME(),
                       ServiceInfo.STATUS_OFFLINE);
     } catch (AdminException e) {
       return error(SMSCErrors.error.services.coudntAddService, e);

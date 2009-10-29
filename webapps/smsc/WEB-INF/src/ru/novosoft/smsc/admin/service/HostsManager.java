@@ -57,10 +57,7 @@ public interface HostsManager {
 
     public List getSmeIds();
 
-    public SME addSme(final String id, final int priority, final byte type, final int typeOfNumber, final int numberingPlan,
-                      final int interfaceVersion, final String systemType, final String password, final String addrRange, final int smeN,
-                      final boolean wantAlias, final boolean forceDC, final int timeout, final String receiptSchemeName, final boolean disabled,
-                      final byte mode, final int proclimit, final int schedlimit, final int accessMask) throws AdminException;
+    public SME addSme(SME sme) throws AdminException;
 
     public void removeSme(final String smeId) throws AdminException;
 

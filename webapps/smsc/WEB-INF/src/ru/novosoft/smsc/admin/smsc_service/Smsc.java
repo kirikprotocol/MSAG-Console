@@ -492,13 +492,14 @@ public class Smsc extends Service {
         params.put("priority", new Integer(sme.getPriority()));
         params.put("typeOfNumber", new Integer(sme.getTypeOfNumber()));
         params.put("numberingPlan", new Integer(sme.getNumberingPlan()));
-        params.put("interfaceVersion", new Integer(sme.getInterfaceVersion()));
+//        params.put("interfaceVersion", new Integer(sme.getInterfaceVersion()));
         params.put("systemType", sme.getSystemType());
         params.put("password", sme.getPassword());
         params.put("addrRange", sme.getAddrRange());
         params.put("smeN", new Integer(sme.getSmeN()));
         params.put("wantAlias", new Boolean(sme.isWantAlias()));
-        params.put("forceDC", new Boolean(sme.isForceDC()));
+//        params.put("forceDC", new Boolean(sme.isForceDC()));
+        params.put("flags", sme.getFlagsStr());
         params.put("timeout", new Integer(sme.getTimeout()));
         params.put("receiptSchemeName", sme.getReceiptSchemeName());
         params.put("disabled", new Boolean(sme.isDisabled()));

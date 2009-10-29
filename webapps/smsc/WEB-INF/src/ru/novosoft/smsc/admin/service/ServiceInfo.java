@@ -51,13 +51,15 @@ public class ServiceInfo {
             if (smeManager.contains(id)) {
                 throw new AdminException("Couldn't add new SMSC - already presented");
             }
-            sme = new SME(id, 0, SME.SMPP, 0, 0, 0, "", "", "", 0, false, false, 0, "", false, SME.MODE_TRX, 0, 0, 0);
+//            sme = new SME(id, 0, SME.SMPP, 0, 0, 0, "", "", "", 0, false, false, 0, "", false, SME.MODE_TRX, 0, 0, 0);
+          sme = new SME(id);
         } else {
             if (id.equals(Constants.ARCHIVE_DAEMON_SVC_ID)) {
                 if (smeManager.contains(id)) {
                     throw new AdminException("Couldn't add new ArchiveDaemon - already presented");
                 }
-                sme = new SME(id, 0, SME.SMPP, 0, 0, 0, "", "", "", 0, false, false, 0, "", false, SME.MODE_TRX, 0, 0, 0);
+//                sme = new SME(id, 0, SME.SMPP, 0, 0, 0, "", "", "", 0, false, false, 0, "", false, SME.MODE_TRX, 0, 0, 0);
+              sme = new SME(id);
             } else {
                 sme = smeManager.get(id);
             }
@@ -77,19 +79,22 @@ public class ServiceInfo {
             if (smeManager.contains(id)) {
                 throw new AdminException("Couldn't add new SMSC - already presented");
             }
-            sme = new SME(id, 0, SME.SMPP, 0, 0, 0, "", "", "", 0, false, false, 0, "", false, SME.MODE_TRX, 0, 0, 0);
+//            sme = new SME(id, 0, SME.SMPP, 0, 0, 0, "", "", "", 0, false, false, 0, "", false, SME.MODE_TRX, 0, 0, 0);
+          sme = new SME(id);
         } else {
             if (id.equals(Constants.ARCHIVE_DAEMON_SVC_ID)) {
                 if (smeManager.contains(id)) {
                     throw new AdminException("Couldn't add new ArchiveDaemon - already presented");
                 }
-                sme = new SME(id, 0, SME.SMPP, 0, 0, 0, "", "", "", 0, false, false, 0, "", false, SME.MODE_TRX, 0, 0, 0);
+//                sme = new SME(id, 0, SME.SMPP, 0, 0, 0, "", "", "", 0, false, false, 0, "", false, SME.MODE_TRX, 0, 0, 0);
+                sme = new SME(id);
             } else {
                 try {
                     sme = smeManager.get(id);
                 }
                 catch (AdminException e) {
-                    sme = new SME(id, 0, SME.SMPP, 0, 0, 0, "", "", "", 0, false, false, 0, "", false, SME.MODE_TRX, 0, 0, 0);
+//                    sme = new SME(id, 0, SME.SMPP, 0, 0, 0, "", "", "", 0, false, false, 0, "", false, SME.MODE_TRX, 0, 0, 0);
+                  sme = new SME(id);
                 }
             }
         }

@@ -44,12 +44,6 @@
     </td>
 </tr>
 <tr class=row<%=(rowN++) & 1%>>
-    <th><%=getLocString("services.interfaceVersion")%></th>
-    <td><input class=txt type="text" name="interfaceVersion"
-               value="<%=bean.getInterfaceVersion()==null||bean.getInterfaceVersion().length()==0?"3.4":bean.getInterfaceVersion()%>">
-    </td>
-</tr>
-<tr class=row<%=(rowN++) & 1%>>
     <th><%=getLocString("services.rangeOfAddress")%></th>
     <td><input class=txt type="text" name="rangeOfAddress"
                value="<%=StringEncoderDecoder.encode(bean.getRangeOfAddress())%>"></td>
@@ -60,8 +54,38 @@
                id="wantAlias_check_id" <%=bean.isWantAlias() ? "checked" : ""%>></td>
 </tr>
 <tr class=row<%=(rowN++) & 1%>>
-    <th><label for="forceDC_check_id"><%=getLocString("services.forceDataCoding")%></label></th>
-    <td><input class=check type="checkbox" name="forceDC" id="forceDC_check_id" <%=bean.isForceDC() ? "checked" : ""%>>
+    <th><label for="carryOrgDescriptor_check_id"><%=getLocString("services.carryOrgDescriptor")%></label></th>
+    <td><input class=check type="checkbox" name="carryOrgDescriptor" id="carryOrgDescriptor_check_id" <%=bean.isCarryOrgDescriptor() ? "checked" : ""%>>
+    </td>
+</tr>
+<tr class=row<%=(rowN++) & 1%>>
+    <th><label for="carryOrgUserInfo_check_id"><%=getLocString("services.carryOrgUserInfo")%></label></th>
+    <td><input class=check type="checkbox" name="carryOrgUserInfo" id="carryOrgUserInfo_check_id" <%=bean.isCarryOrgUserInfo() ? "checked" : ""%>>
+    </td>
+</tr>
+<tr class=row<%=(rowN++) & 1%>>
+    <th><label for="carrySccpInfo_check_id"><%=getLocString("services.carrySccpInfo")%></label></th>
+    <td><input class=check type="checkbox" name="carrySccpInfo" id="carrySccpInfo_check_id" <%=bean.isCarrySccpInfo() ? "checked" : ""%>>
+    </td>
+</tr>
+<tr class=row<%=(rowN++) & 1%>>
+    <th><label for="fillExtraDescriptor_check_id"><%=getLocString("services.fillExtraDescriptor")%></label></th>
+    <td><input class=check type="checkbox" name="fillExtraDescriptor" id="fillExtraDescriptor_check_id" <%=bean.isFillExtraDescriptor() ? "checked" : ""%>>
+    </td>
+</tr>
+<tr class=row<%=(rowN++) & 1%>>
+    <th><label for="forceSmeReceipt_check_id"><%=getLocString("services.forceSmeReceipt")%></label></th>
+    <td><input class=check type="checkbox" name="forceSmeReceipt" id="forceSmeReceipt_check_id" <%=bean.isForceSmeReceipt() ? "checked" : ""%>>
+    </td>
+</tr>
+<tr class=row<%=(rowN++) & 1%>>
+    <th><label for="forceGsmDataCoding_check_id"><%=getLocString("services.forceGsmDataCoding")%></label></th>
+    <td><input class=check type="checkbox" name="forceGsmDataCoding" id="forceGsmDataCoding_check_id" <%=bean.isForceGsmDataCoding() ? "checked" : ""%>>
+    </td>
+</tr>
+<tr class=row<%=(rowN++) & 1%>>
+    <th><label for="smppPlus_check_id"><%=getLocString("services.smppPlus")%></label></th>
+    <td><input class=check type="checkbox" name="smppPlus" id="smppPlus_check_id" <%=bean.isSmppPlus() ? "checked" : ""%>>
     </td>
 </tr>
 <tr class=row<%=(rowN++) & 1%>>

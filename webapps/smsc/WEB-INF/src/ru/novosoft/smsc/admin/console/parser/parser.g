@@ -936,7 +936,6 @@ sme_base_opt[SmeGenCommand cmd]
 	  (OPT_PRI      { cmd.setPriority(getint("priority")); })?
 	  (OPT_TON      { cmd.setTON(getint("ton")); })?
 	  (OPT_NPI      { cmd.setNPI(getint("npi")); })?
-	  (OPT_INT_V    { cmd.setInterfaceVersion(getint("interfaceVersion")); })?
 	  (OPT_SYS_TYPE { cmd.setSystemType(getnameid("systemType")); })?
 	  (OPT_PASSWORD { cmd.setPassword(getnameid("password")); })?
 	  (OPT_TIMEOUT  { cmd.setTimeout(getint("timeout")); })?
@@ -956,7 +955,13 @@ catch [RecognitionException ex] {
 sme_add_opt[SmeGenCommand cmd]
 	: (sme_base_opt[cmd])
 	  (OPT_WANT_ALIAS { cmd.setWantAlias(true); })?
-	  (OPT_FORCE_DC   { cmd.setForceDC  (true); })?
+	  (OPT_FORCE_DC   { cmd.setForceGsmDataCoding  (true); })?
+	  (OPT_CARRY_ORG_DESCRIPTOR   { cmd.setCarryOrgDescriptor  (true); })?
+	  (OPT_CARRY_ORG_USER_INFO   { cmd.setCarryOrgUserInfo  (true); })?
+	  (OPT_CARRY_SCCP_INFO   { cmd.setCarrySccpInfo  (true); })?
+	  (OPT_FILL_EXTRA_DESCRIPTOR   { cmd.setFillExtraDescriptor  (true); })?
+	  (OPT_FORCE_SME_RECEIPT   { cmd.setForceSmeReceipt  (true); })?
+	  (OPT_SMPP_PLUS   { cmd.setSmppPlus  (true); })?
 	  (OPT_DISABLED   { cmd.setDisabled (true); })?
 	;
 exception
@@ -968,10 +973,22 @@ sme_alt_opt[SmeGenCommand cmd]
 	: (sme_base_opt[cmd])
 	  (OPT_WANT_ALIAS (OPT_ON  { cmd.setWantAlias (true); }
 			  |OPT_OFF { cmd.setWantAlias(false); }))?
-	  (OPT_FORCE_DC   (OPT_ON  { cmd.setForceDC   (true); }
-			  |OPT_OFF { cmd.setForceDC  (false); }))?
+	  (OPT_FORCE_DC   (OPT_ON  { cmd.setForceGsmDataCoding   (true); }
+			  |OPT_OFF { cmd.setForceGsmDataCoding  (false); }))?
 	  (OPT_DISABLED   (OPT_ON  { cmd.setDisabled  (true); }
 			  |OPT_OFF { cmd.setDisabled (false); }))?
+	  (OPT_CARRY_ORG_DESCRIPTOR   (OPT_ON  { cmd.setCarryOrgDescriptor   (true); }
+			  |OPT_OFF { cmd.setCarryOrgDescriptor  (false); }))?
+	  (OPT_CARRY_ORG_USER_INFO   (OPT_ON  { cmd.setCarryOrgUserInfo   (true); }
+			  |OPT_OFF { cmd.setCarryOrgUserInfo  (false); }))?
+	  (OPT_CARRY_SCCP_INFO   (OPT_ON  { cmd.setCarrySccpInfo   (true); }
+			  |OPT_OFF { cmd.setCarrySccpInfo  (false); }))?
+	  (OPT_FILL_EXTRA_DESCRIPTOR   (OPT_ON  { cmd.setFillExtraDescriptor   (true); }
+			  |OPT_OFF { cmd.setFillExtraDescriptor  (false); }))?
+	  (OPT_FORCE_SME_RECEIPT   (OPT_ON  { cmd.setForceSmeReceipt   (true); }
+			  |OPT_OFF { cmd.setForceSmeReceipt  (false); }))?
+	  (OPT_SMPP_PLUS   (OPT_ON  { cmd.setSmppPlus   (true); }
+			  |OPT_OFF { cmd.setSmppPlus  (false); }))?
 	  (ACT_DISCONNECT { cmd.setDisconnect(); })?
 	;
 exception

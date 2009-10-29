@@ -13,7 +13,7 @@ import java.util.List;
  * Time: 6:40:28 PM
  */
 public interface SmeManager {
-    SME add(String id, int priority, byte type, int typeOfNumber, int numberingPlan, int interfaceVersion, String systemType, String password, String addrRange, int smeN, boolean wantAlias, boolean forceDC, int timeout, String receiptSchemeName, boolean disabled, byte mode, int proclimit, int schedlimit, int accessMask) throws AdminException;
+//    SME add(String id, int priority, byte type, int typeOfNumber, int numberingPlan, int interfaceVersion, String systemType, String password, String addrRange, int smeN, boolean wantAlias, boolean forceDC, int timeout, String receiptSchemeName, boolean disabled, byte mode, int proclimit, int schedlimit, int accessMask) throws AdminException;
 
     SME add(SME newSme) throws AdminException;
 

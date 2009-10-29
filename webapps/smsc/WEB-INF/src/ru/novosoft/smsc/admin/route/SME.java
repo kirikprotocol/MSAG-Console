@@ -12,6 +12,7 @@ import org.w3c.dom.NodeList;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 
 import java.io.PrintWriter;
+import java.util.StringTokenizer;
 
 
 public class SME {
@@ -27,14 +28,14 @@ public class SME {
     private byte type = SMPP;
     private int typeOfNumber = 0;
     private int numberingPlan = 0;
-    private int interfaceVersion = 0;
+//    private int interfaceVersion = 0;
     private String systemType = null;
     private String password = null;
     private String addrRange = null;
     private int smeN = 0;
     private boolean wantAlias = false;
     private int timeout = 0;
-    private boolean forceDC = false;
+//    private boolean forceDC = false;
     private String receiptSchemeName = null;
     private boolean disabled = false;
     private byte mode = MODE_TRX;
@@ -42,77 +43,49 @@ public class SME {
     private int schedlimit = 0;
     private int accessMask = 1; // for closed groups
 
+    private boolean carryOrgDescriptor;
+    private boolean carryOrgUserInfo;
+    private boolean carrySccpInfo;
+    private boolean fillExtraDescriptor; // for Extra mode
+    private boolean forceSmeReceipt;
+    private boolean forceGsmDataCoding;
+    private boolean smppPlus;
 
-    private Category logger = Category.getInstance(this.getClass());
 
-    /**
-     * Constructor
-     *
-     * @param id                уникальный идентификатор SME
-     * @param priority          приоритет этого SME
-     * @param type              тип SME. может быть SME.SMPP или SME.SS7
-     * @param typeOfNumber      тип номера SME? возможные значени€: <dl compact>
-     *                          <dt>0</dt><dd>Unknown</dd>
-     *                          <dt>1</dt><dd>International</dd>
-     *                          <dt>2</dt><dd>National</dd>
-     *                          <dt>3</dt><dd>Network Specific</dd>
-     *                          <dt>4</dt><dd>Subscriber Number</dd>
-     *                          <dt>5</dt><dd>Alphanumeric</dd>
-     *                          <dt>6</dt><dd>Abbreviated</dd>
-     *                          </dl>
-     * @param numberingPlan     возможные значени€: <dl compact>
-     *                          <dt>0</dt><dd>Unknown</dd>
-     *                          <dt>1</dt><dd>ISDN (E163/E164)</dd>
-     *                          <dt>3</dt><dd>Data (X.121)</dd>
-     *                          <dt>4</dt><dd>Telex (F.69)</dd>
-     *                          <dt>6</dt><dd>Land Mobile (E.212)</dd>
-     *                          <dt>8</dt><dd>National</dd>
-     *                          <dt>9</dt><dd>Private</dd>
-     *                          <dt>10</dt><dd>ERMES</dd>
-     *                          <dt>14</dt><dd>Internet (IP)</dd>
-     *                          <dt>18</dt><dd>WAP Client Id (to be defined by WAP Forum)</dd>
-     *                          </dl>
-     * @param interfaceVersion  ¬озможные значени€: 0x34 (v3.4)
-     * @param systemType        <font color=red>???</font>
-     * @param password          пароль дл€ доступа SME к SMSC
-     * @param addrRange         <font color=red>???</font>
-     * @param smeN              <font color=red>???</font>
-     * @param wantAlias
-     * @param forceDC
-     * @param timeout
-     * @param receiptSchemeName ASCIIZ[32] с именем схемы отчетов о доставке
-     * boolean disabled, byte mode, int proclimit, int schedlimit
-     * @param accessMask
-     * @throws NullPointerException if id, systemType, password, or addrRange is null
-     */
-    public SME(String id, int priority, byte type, int typeOfNumber, int numberingPlan, int interfaceVersion, String systemType, String password, String addrRange, int smeN, boolean wantAlias, boolean forceDC, int timeout, String receiptSchemeName, boolean disabled, byte mode, int proclimit, int schedlimit, int accessMask) throws NullPointerException {
-        if (id == null || systemType == null || password == null || addrRange == null)
-            throw new NullPointerException("SME System ID is null");
+    private static final Category logger = Category.getInstance(SME.class);
 
-        this.id = id.trim();
-        this.priority = priority;
-        this.type = type;
-        this.typeOfNumber = typeOfNumber;
-        this.numberingPlan = numberingPlan;
-        this.interfaceVersion = interfaceVersion;
-        this.systemType = systemType.trim();
-        this.password = password.trim();
-        this.addrRange = addrRange.trim();
-        this.smeN = smeN;
-        this.wantAlias = wantAlias;
-        this.timeout = timeout;
-        this.forceDC = forceDC;
-        this.receiptSchemeName = receiptSchemeName;
-        this.disabled = disabled;
-        this.mode = mode;
-        if (this.receiptSchemeName == null)
-            this.receiptSchemeName = "default";
-        else
-            this.receiptSchemeName = this.receiptSchemeName.trim();
-        this.proclimit = proclimit;
-        this.schedlimit = schedlimit;
-        this.accessMask = accessMask;
+    public SME(String id) {
+      this.id = id;
     }
+
+//    public SME(String id, int priority, byte type, int typeOfNumber, int numberingPlan, int interfaceVersion, String systemType, String password, String addrRange, int smeN, boolean wantAlias, boolean forceDC, int timeout, String receiptSchemeName, boolean disabled, byte mode, int proclimit, int schedlimit, int accessMask) throws NullPointerException {
+//        if (id == null || systemType == null || password == null || addrRange == null)
+//            throw new NullPointerException("SME System ID is null");
+//
+//        this.id = id.trim();
+//        this.priority = priority;
+//        this.type = type;
+//        this.typeOfNumber = typeOfNumber;
+//        this.numberingPlan = numberingPlan;
+//        this.interfaceVersion = interfaceVersion;
+//        this.systemType = systemType.trim();
+//        this.password = password.trim();
+//        this.addrRange = addrRange.trim();
+//        this.smeN = smeN;
+//        this.wantAlias = wantAlias;
+//        this.timeout = timeout;
+//        this.forceDC = forceDC;
+//        this.receiptSchemeName = receiptSchemeName;
+//        this.disabled = disabled;
+//        this.mode = mode;
+//        if (this.receiptSchemeName == null)
+//            this.receiptSchemeName = "default";
+//        else
+//            this.receiptSchemeName = this.receiptSchemeName.trim();
+//        this.proclimit = proclimit;
+//        this.schedlimit = schedlimit;
+//        this.accessMask = accessMask;
+//    }
 
     public SME(Element smeElement) throws NullPointerException {
         this.receiptSchemeName = "default";
@@ -131,7 +104,8 @@ public class SME {
                 } else if (name.equals("numberingPlan")) {
                     numberingPlan = Integer.decode(value).intValue();
                 } else if (name.equals("interfaceVersion")) {
-                    interfaceVersion = Integer.decode(value).intValue();
+                    int interfaceVersion = Integer.decode(value).intValue();
+                    setInterfaceVersion(interfaceVersion);
                 } else if (name.equals("systemType")) {
                     systemType = value;
                 } else if (name.equals("password")) {
@@ -143,7 +117,7 @@ public class SME {
                 } else if (name.equals("wantAlias")) {
                     wantAlias = value.equalsIgnoreCase("yes") || value.equalsIgnoreCase("true");
                 } else if (name.equals("forceDC")) {
-                    forceDC = Boolean.valueOf(value).booleanValue();
+                    forceGsmDataCoding = Boolean.valueOf(value).booleanValue();
                 } else if (name.equals("timeout")) {
                     timeout = Integer.decode(value).intValue();
                 } else if (name.equals("receiptSchemeName")) {
@@ -158,6 +132,27 @@ public class SME {
                     schedlimit = Integer.decode(value).intValue();
                 } else if (name.equals("accessMask")) {
                     accessMask = Integer.decode(value).intValue();
+                } else if (name.equals("flags")) {
+                    StringTokenizer flags = new StringTokenizer(value,",");
+                    while (flags.hasMoreTokens()) {
+                      String flag = flags.nextToken().trim();
+                      if (flag.equals("carryOrgDescriptor"))
+                        carryOrgDescriptor = true;
+                      else if (flag.equals("carryOrgUserInfo"))
+                        carryOrgUserInfo = true;
+                      else if (flag.equals("carrySccpInfo"))
+                        carrySccpInfo = true;
+                      else if (flag.equals("fillExtraDescriptor"))
+                        fillExtraDescriptor = true;
+                      else if (flag.equals("forceSmeReceipt"))
+                        forceSmeReceipt = true;
+                      else if (flag.equals("forceGsmDataCoding"))
+                        forceGsmDataCoding = true;
+                      else if (flag.equals("smppPlus"))
+                        smppPlus = true;
+                      else
+                        logger.error("Unknown SME flag: " + flag + ". It will be skipped.");
+                    }
                 }
             } catch (NumberFormatException e) {
                 logger.error("Int parameter \"" + name + "\" misformatted: " + value + ", skipped", e);
@@ -174,13 +169,13 @@ public class SME {
         out.println("    <param name=\"priority\"          value=\"" + priority + "\"/>");
         out.println("    <param name=\"typeOfNumber\"      value=\"" + typeOfNumber + "\"/>");
         out.println("    <param name=\"numberingPlan\"     value=\"" + numberingPlan + "\"/>");
-        out.println("    <param name=\"interfaceVersion\"  value=\"" + interfaceVersion + "\"/>");
+//        out.println("    <param name=\"interfaceVersion\"  value=\"" + interfaceVersion + "\"/>");
         out.println("    <param name=\"systemType\"        value=\"" + StringEncoderDecoder.encode(systemType) + "\"/>");
         out.println("    <param name=\"password\"          value=\"" + StringEncoderDecoder.encode(password) + "\"/>");
         out.println("    <param name=\"addrRange\"         value=\"" + StringEncoderDecoder.encode(addrRange) + "\"/>");
         out.println("    <param name=\"smeN\"              value=\"" + smeN + "\"/>");
         out.println("    <param name=\"wantAlias\"         value=\"" + (wantAlias ? "yes" : "no") + "\"/>");
-        out.println("    <param name=\"forceDC\"           value=\"" + forceDC + "\"/>");
+//        out.println("    <param name=\"forceDC\"           value=\"" + forceDC + "\"/>");
         out.println("    <param name=\"timeout\"           value=\"" + timeout + "\"/>");
         out.println("    <param name=\"receiptSchemeName\" value=\"" + StringEncoderDecoder.encode(receiptSchemeName) + "\"/>");
         out.println("    <param name=\"disabled\"          value=\"" + disabled + "\"/>");
@@ -191,8 +186,34 @@ public class SME {
             out.println("    <param name=\"schedlimit\"        value=\"" + schedlimit + "\"/>");
         if (accessMask > 0)
             out.println("    <param name=\"accessMask\"        value=\"" + accessMask + "\"/>");
+        out.println("    <param name=\"flags\"              value=\"" + getFlagsStr() + "\"/>");
         out.println("  </smerecord>");
         return out;
+    }
+
+    public String getFlagsStr() {
+      StringBuffer flags = new StringBuffer();
+      if (carryOrgDescriptor)
+          addFlag(flags, "carryOrgDescriptor");
+      if (carryOrgUserInfo)
+          addFlag(flags, "carryOrgUserInfo");
+      if (carrySccpInfo)
+          addFlag(flags, "carrySccpInfo");
+      if (fillExtraDescriptor)
+          addFlag(flags, "fillExtraDescriptor");
+      if (forceSmeReceipt)
+          addFlag(flags, "forceSmeReceipt");
+      if (forceGsmDataCoding)
+          addFlag(flags, "forceGsmDataCoding");
+      if (smppPlus)
+          addFlag(flags, "smppPlus");
+      return flags.toString();
+    }
+
+    private void addFlag(StringBuffer sb, String flag) {
+      if (sb.length() > 0)
+        sb.append(',');
+      sb.append(flag);
     }
 
     private String getTypeStr() {
@@ -221,9 +242,9 @@ public class SME {
         return id;
     }
 
-    public int getInterfaceVersion() {
-        return interfaceVersion;
-    }
+//    public int getInterfaceVersion() {
+//        return interfaceVersion;
+//    }
 
     public int getNumberingPlan() {
         return numberingPlan;
@@ -261,11 +282,39 @@ public class SME {
         return priority;
     }
 
-    public boolean isForceDC() {
-        return forceDC;
-    }
+//    public boolean isForceDC() {
+//        return forceDC;
+//    }
 
-    public String getReceiptSchemeName() {
+  public boolean isCarryOrgDescriptor() {
+    return carryOrgDescriptor;
+  }
+
+  public boolean isCarryOrgUserInfo() {
+    return carryOrgUserInfo;
+  }
+
+  public boolean isCarrySccpInfo() {
+    return carrySccpInfo;
+  }
+
+  public boolean isFillExtraDescriptor() {
+    return fillExtraDescriptor;
+  }
+
+  public boolean isForceSmeReceipt() {
+    return forceSmeReceipt;
+  }
+
+  public boolean isForceGsmDataCoding() {
+    return forceGsmDataCoding;
+  }
+
+  public boolean isSmppPlus() {
+    return smppPlus;
+  }
+
+  public String getReceiptSchemeName() {
         return receiptSchemeName;
     }
 
@@ -306,20 +355,28 @@ public class SME {
         type = newSme.getType();
         typeOfNumber = newSme.getTypeOfNumber();
         numberingPlan = newSme.getNumberingPlan();
-        interfaceVersion = newSme.getInterfaceVersion();
+//        interfaceVersion = newSme.getInterfaceVersion();
         systemType = newSme.getSystemType();
         password = newSme.getPassword();
         addrRange = newSme.getAddrRange();
         smeN = newSme.getSmeN();
         wantAlias = newSme.isWantAlias();
         timeout = newSme.getTimeout();
-        forceDC = newSme.isForceDC();
+//        forceDC = newSme.isForceDC();
         receiptSchemeName = newSme.getReceiptSchemeName();
         disabled = newSme.isDisabled();
         mode = newSme.getMode();
         proclimit = newSme.getProclimit();
         schedlimit = newSme.getSchedlimit();
         accessMask = newSme.getAccessMask();
+
+        carryOrgDescriptor = newSme.isCarryOrgDescriptor();
+        carryOrgUserInfo = newSme.isCarryOrgUserInfo();
+        carrySccpInfo = newSme.isCarrySccpInfo();
+        fillExtraDescriptor = newSme.isFillExtraDescriptor();
+        forceSmeReceipt = newSme.isForceSmeReceipt();
+        forceGsmDataCoding = newSme.isForceGsmDataCoding();
+        smppPlus = newSme.isSmppPlus();
     }
 
     public int getProclimit() {
@@ -333,4 +390,115 @@ public class SME {
     public int getAccessMask() {
         return accessMask;
     }
+
+  public void setId(String id) {
+    this.id = id;
+  }
+
+  public void setPriority(int priority) {
+    this.priority = priority;
+  }
+
+  public void setType(byte type) {
+    this.type = type;
+  }
+
+  public void setTypeOfNumber(int typeOfNumber) {
+    this.typeOfNumber = typeOfNumber;
+  }
+
+  public void setNumberingPlan(int numberingPlan) {
+    this.numberingPlan = numberingPlan;
+  }
+
+  public void setSystemType(String systemType) {
+    this.systemType = systemType;
+  }
+
+  public void setPassword(String password) {
+    this.password = password;
+  }
+
+  public void setAddrRange(String addrRange) {
+    this.addrRange = addrRange;
+  }
+
+  public void setSmeN(int smeN) {
+    this.smeN = smeN;
+  }
+
+  public void setWantAlias(boolean wantAlias) {
+    this.wantAlias = wantAlias;
+  }
+
+  public void setTimeout(int timeout) {
+    this.timeout = timeout;
+  }
+
+  public void setReceiptSchemeName(String receiptSchemeName) {
+    this.receiptSchemeName = receiptSchemeName;
+  }
+
+  public void setDisabled(boolean disabled) {
+    this.disabled = disabled;
+  }
+
+  public void setMode(byte mode) {
+    this.mode = mode;
+  }
+
+  public void setProclimit(int proclimit) {
+    this.proclimit = proclimit;
+  }
+
+  public void setSchedlimit(int schedlimit) {
+    this.schedlimit = schedlimit;
+  }
+
+  public void setAccessMask(int accessMask) {
+    this.accessMask = accessMask;
+  }
+
+  public void setCarryOrgDescriptor(boolean carryOrgDescriptor) {
+    this.carryOrgDescriptor = carryOrgDescriptor;
+  }
+
+  public void setCarryOrgUserInfo(boolean carryOrgUserInfo) {
+    this.carryOrgUserInfo = carryOrgUserInfo;
+  }
+
+  public void setCarrySccpInfo(boolean carrySccpInfo) {
+    this.carrySccpInfo = carrySccpInfo;
+  }
+
+  public void setFillExtraDescriptor(boolean fillExtraDescriptor) {
+    this.fillExtraDescriptor = fillExtraDescriptor;
+  }
+
+  public void setForceSmeReceipt(boolean forceSmeReceipt) {
+    this.forceSmeReceipt = forceSmeReceipt;
+  }
+
+  public void setForceGsmDataCoding(boolean forceGsmDataCoding) {
+    this.forceGsmDataCoding = forceGsmDataCoding;
+  }
+
+  public void setSmppPlus(boolean smppPlus) {
+    this.smppPlus = smppPlus;
+  }
+
+  public void setInterfaceVersion(int interfaceVersion) {
+    if ((interfaceVersion >> 4) == 5)
+      forceSmeReceipt = true;
+    if ((interfaceVersion & 0xF) == 9) {
+      carryOrgDescriptor = true;
+      carryOrgUserInfo = true;
+      carrySccpInfo = true;
+      fillExtraDescriptor = true;
+    }
+  }
+
+  public void setForceDC(boolean forceDC) {
+    forceGsmDataCoding = forceDC;
+  }
 }

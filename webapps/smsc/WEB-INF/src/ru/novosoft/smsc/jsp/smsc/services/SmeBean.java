@@ -14,12 +14,10 @@ public class SmeBean extends PageBean {
     protected String systemType = "";
     protected int typeOfNumber = 0;
     protected int numberingPlan = 0;
-    protected String interfaceVersion = null;
     protected String rangeOfAddress = "";
     protected String password = "";
     protected int timeout = 8;
     protected boolean wantAlias = false;
-    protected boolean forceDC = false;
     protected String receiptSchemeName = "default";
     protected boolean disabled = false;
     protected byte mode = SME.MODE_TRX;
@@ -28,6 +26,14 @@ public class SmeBean extends PageBean {
 
     protected int accessMask = 1;
     protected int extraFlag = -1;
+
+    protected boolean carryOrgDescriptor;
+    protected boolean carryOrgUserInfo;
+    protected boolean carrySccpInfo;
+    protected boolean fillExtraDescriptor; // for Extra mode
+    protected boolean forceSmeReceipt;
+    protected boolean forceGsmDataCoding;
+    protected boolean smppPlus;
 
 
     protected int convertInterfaceVersion(String version) {
@@ -44,18 +50,51 @@ public class SmeBean extends PageBean {
         systemType = "";
         typeOfNumber = 0;
         numberingPlan = 0;
-        interfaceVersion = null;
         rangeOfAddress = "";
         password = "";
         timeout = 8;
         wantAlias = false;
-        forceDC = false;
         receiptSchemeName = "default";
         disabled = false;
         mode = SME.MODE_TRX;
         proclimit = 0;
         schedlimit = 0;
         accessMask = 1;
+        carryOrgDescriptor = false;
+        carryOrgUserInfo = false;
+        carrySccpInfo = false;
+        fillExtraDescriptor = false;
+        forceSmeReceipt = false;
+        forceGsmDataCoding = false;
+        smppPlus = false;
+    }
+
+    protected SME getSME() {
+      SME sme = new SME(serviceId);
+      sme.setPriority(priority);
+      sme.setType(SME.SMPP);
+      sme.setTypeOfNumber(typeOfNumber);
+      sme.setNumberingPlan(numberingPlan);
+      sme.setSystemType(systemType);
+      sme.setPassword(password);
+      sme.setAddrRange(rangeOfAddress);
+      sme.setSmeN(extraFlag);
+      sme.setWantAlias(wantAlias);
+      sme.setTimeout(timeout);
+      sme.setReceiptSchemeName(receiptSchemeName);
+      sme.setDisabled(disabled);
+      sme.setMode(mode);
+      sme.setProclimit(proclimit);
+      sme.setSchedlimit(schedlimit);
+      sme.setAccessMask(accessMask);
+      sme.setCarryOrgDescriptor(carryOrgDescriptor);
+      sme.setCarryOrgUserInfo(carryOrgUserInfo);
+      sme.setCarrySccpInfo(carrySccpInfo);
+      sme.setFillExtraDescriptor(fillExtraDescriptor);
+      sme.setForceSmeReceipt(forceSmeReceipt);
+      sme.setForceGsmDataCoding(forceGsmDataCoding);
+      sme.setSmppPlus(smppPlus);
+      return sme;
     }
 
     /**
@@ -121,14 +160,6 @@ public class SmeBean extends PageBean {
         }
     }
 
-    public String getInterfaceVersion() {
-        return interfaceVersion;
-    }
-
-    public void setInterfaceVersion(String interfaceVersion) {
-        this.interfaceVersion = interfaceVersion.trim();
-    }
-
     public String getRangeOfAddress() {
         return rangeOfAddress;
     }
@@ -175,14 +206,6 @@ public class SmeBean extends PageBean {
 
     public void setWantAlias(boolean wantAlias) {
         this.wantAlias = wantAlias;
-    }
-
-    public boolean isForceDC() {
-        return forceDC;
-    }
-
-    public void setForceDC(boolean forceDC) {
-        this.forceDC = forceDC;
     }
 
     public String getReceiptSchemeName() {
@@ -272,4 +295,60 @@ public class SmeBean extends PageBean {
           this.extraFlag = -1;
       }
     }
+
+  public boolean isCarryOrgDescriptor() {
+    return carryOrgDescriptor;
+  }
+
+  public void setCarryOrgDescriptor(boolean carryOrgDescriptor) {
+    this.carryOrgDescriptor = carryOrgDescriptor;
+  }
+
+  public boolean isCarryOrgUserInfo() {
+    return carryOrgUserInfo;
+  }
+
+  public void setCarryOrgUserInfo(boolean carryOrgUserInfo) {
+    this.carryOrgUserInfo = carryOrgUserInfo;
+  }
+
+  public boolean isCarrySccpInfo() {
+    return carrySccpInfo;
+  }
+
+  public void setCarrySccpInfo(boolean carrySccpInfo) {
+    this.carrySccpInfo = carrySccpInfo;
+  }
+
+  public boolean isFillExtraDescriptor() {
+    return fillExtraDescriptor;
+  }
+
+  public void setFillExtraDescriptor(boolean fillExtraDescriptor) {
+    this.fillExtraDescriptor = fillExtraDescriptor;
+  }
+
+  public boolean isForceSmeReceipt() {
+    return forceSmeReceipt;
+  }
+
+  public void setForceSmeReceipt(boolean forceSmeReceipt) {
+    this.forceSmeReceipt = forceSmeReceipt;
+  }
+
+  public boolean isForceGsmDataCoding() {
+    return forceGsmDataCoding;
+  }
+
+  public void setForceGsmDataCoding(boolean forceGsmDataCoding) {
+    this.forceGsmDataCoding = forceGsmDataCoding;
+  }
+
+  public boolean isSmppPlus() {
+    return smppPlus;
+  }
+
+  public void setSmppPlus(boolean smppPlus) {
+    this.smppPlus = smppPlus;
+  }
 }

@@ -19,6 +19,7 @@ public class ServiceEditSme extends SmeBean {
 
     private String mbSave = null;
     private String mbCancel = null;
+    private String initiated = null;
 
     protected int init(List errors) {
         int result = super.init(errors);
@@ -28,7 +29,7 @@ public class ServiceEditSme extends SmeBean {
         if (serviceId == null || serviceId.length() == 0)
             return error(SMSCErrors.error.services.ServiceIdNotDefined);
 
-        if (interfaceVersion == null) {
+        if (initiated == null) {
             SME sme = null;
             try {
                 sme = appContext.getSmeManager().get(serviceId);
@@ -43,12 +44,10 @@ public class ServiceEditSme extends SmeBean {
             systemType = sme.getSystemType();
             typeOfNumber = sme.getTypeOfNumber();
             numberingPlan = sme.getNumberingPlan();
-            interfaceVersion = String.valueOf(sme.getInterfaceVersion() >> 4) + '.' + String.valueOf(sme.getInterfaceVersion() & 0xF);
             rangeOfAddress = sme.getAddrRange();
             password = sme.getPassword();
             timeout = sme.getTimeout();
             wantAlias = sme.isWantAlias();
-            forceDC = sme.isForceDC();
             receiptSchemeName = sme.getReceiptSchemeName();
             disabled = sme.isDisabled();
             mode = sme.getMode();
@@ -56,6 +55,13 @@ public class ServiceEditSme extends SmeBean {
             schedlimit = sme.getSchedlimit();
             accessMask = sme.getAccessMask();
             extraFlag = sme.getSmeN();
+            carryOrgDescriptor = sme.isCarryOrgDescriptor();
+            carryOrgUserInfo = sme.isCarryOrgUserInfo();
+            carrySccpInfo = sme.isCarrySccpInfo();
+            fillExtraDescriptor = sme.isFillExtraDescriptor();
+            forceGsmDataCoding = sme.isForceGsmDataCoding();
+            forceSmeReceipt = sme.isForceSmeReceipt();
+            smppPlus = sme.isSmppPlus();
         }
 
         return RESULT_OK;
@@ -90,7 +96,7 @@ public class ServiceEditSme extends SmeBean {
             return error(SMSCErrors.error.services.invalidPriority, String.valueOf(priority));
 
         try {
-            SME sme = new SME(serviceId, priority, SME.SMPP, typeOfNumber, numberingPlan, convertInterfaceVersion(interfaceVersion), systemType, password, rangeOfAddress, extraFlag, wantAlias, forceDC, timeout, receiptSchemeName, disabled, mode, proclimit, schedlimit, accessMask);
+            SME sme = getSME();
             if (hostsManager.isService(serviceId))
                 hostsManager.getServiceInfo(serviceId).setSme(sme);
             appContext.getSmeManager().update(sme);
@@ -119,4 +125,11 @@ public class ServiceEditSme extends SmeBean {
         this.mbCancel = mbCancel;
     }
 
+  public String getInitiated() {
+    return initiated;
+  }
+
+  public void setInitiated(String initiated) {
+    this.initiated = initiated;
+  }
 }

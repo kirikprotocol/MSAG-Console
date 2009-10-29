@@ -31,7 +31,6 @@ public class ServiceAddInternal extends SmeBean
     if (serviceId == null) {
       serviceId = "";
       wantAlias = true;
-      forceDC = true;
     }
 
     return RESULT_OK;
@@ -63,7 +62,8 @@ public class ServiceAddInternal extends SmeBean
       return error(SMSCErrors.error.services.invalidPriority, String.valueOf(priority));
 
     try {
-      hostsManager.addSme(serviceId, priority, SME.SMPP, typeOfNumber, numberingPlan, convertInterfaceVersion(interfaceVersion), systemType, password, rangeOfAddress, extraFlag, wantAlias, forceDC, timeout, receiptSchemeName, disabled, mode, proclimit, schedlimit, accessMask);
+//      hostsManager.addSme(serviceId, priority, SME.SMPP, typeOfNumber, numberingPlan, convertInterfaceVersion(interfaceVersion), systemType, password, rangeOfAddress, extraFlag, wantAlias, forceDC, timeout, receiptSchemeName, disabled, mode, proclimit, schedlimit, accessMask);
+      hostsManager.addSme(getSME());
       journalAppend(SubjectTypes.TYPE_service, serviceId, Actions.ACTION_ADD);
       //appContext.getStatuses().setServicesChanged(true);
     } catch (Throwable t) {

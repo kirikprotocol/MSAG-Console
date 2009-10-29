@@ -28,7 +28,6 @@ public abstract class SmeGenCommand extends CommandClass
     protected int priority = 0;
     protected int TON = 0;
     protected int NPI = 0;
-    protected int interfaceVersion = 34;
     protected String systemType = "";
     protected String password = "";
     protected int timeout = 0;
@@ -37,9 +36,15 @@ public abstract class SmeGenCommand extends CommandClass
     protected int schedlimit = 0;
     protected int accessMask = 1;
     protected boolean wantAlias = false;
-    protected boolean forceDC = false;
     protected boolean disabled = false;
     protected boolean disconnect = false;
+    protected boolean carryOrgDescriptor;
+    protected boolean carryOrgUserInfo;
+    protected boolean carrySccpInfo;
+    protected boolean fillExtraDescriptor;
+    protected boolean forceSmeReceipt;
+    protected boolean forceGsmDataCoding;
+    protected boolean smppPlus;
 
     protected boolean isMode = false;
     protected boolean isType = false;
@@ -48,7 +53,6 @@ public abstract class SmeGenCommand extends CommandClass
     protected boolean isPriority = false;
     protected boolean isTON = false;
     protected boolean isNPI = false;
-    protected boolean isInterfaceVersion = false;
     protected boolean isSystemType = false;
     protected boolean isPassword = false;
     protected boolean isTimeout = false;
@@ -56,9 +60,15 @@ public abstract class SmeGenCommand extends CommandClass
     protected boolean isProclimit = false;
     protected boolean isSchedlimit = false;
     protected boolean isWantAlias = false;
-    protected boolean isForceDC = false;
     protected boolean isDisabled = false;
     protected boolean isAccessMask = false;
+    protected boolean isCarryOrgDescriptor;
+    protected boolean isCarryOrgUserInfo;
+    protected boolean isCarrySccpInfo;
+    protected boolean isFillExtraDescriptor; // for Extra mode
+    protected boolean isForceSmeReceipt;
+    protected boolean isForceGsmDataCoding;
+    protected boolean isSmppPlus;
 
     public void setSmeId(String smeId) {
         this.smeId = smeId;
@@ -84,9 +94,6 @@ public abstract class SmeGenCommand extends CommandClass
     public void setNPI(int NPI) {
         this.NPI = NPI; isNPI = true;
     }
-    public void setInterfaceVersion(int interfaceVersion) {
-        this.interfaceVersion = interfaceVersion; isInterfaceVersion = true;
-    }
     public void setSystemType(String systemType) {
         this.systemType = systemType; isSystemType = true;
     }
@@ -108,9 +115,6 @@ public abstract class SmeGenCommand extends CommandClass
     public void setWantAlias(boolean wantAlias) {
         this.wantAlias = wantAlias; isWantAlias = true;
     }
-    public void setForceDC(boolean forceDC) {
-        this.forceDC = forceDC; isForceDC = true;
-    }
     public void setDisabled(boolean disabled) {
         this.disabled = disabled; isDisabled = true;
     }
@@ -127,4 +131,39 @@ public abstract class SmeGenCommand extends CommandClass
               else accessMask = accessMask & ~(1 << bitNum);
         this.isAccessMask = true;
     }
+
+  public void setCarryOrgDescriptor(boolean carryOrgDescriptor) {
+    this.carryOrgDescriptor = carryOrgDescriptor;
+    isCarryOrgDescriptor = true;
+  }
+
+  public void setCarryOrgUserInfo(boolean carryOrgUserInfo) {
+    this.carryOrgUserInfo = carryOrgUserInfo;
+    isCarryOrgUserInfo = true;
+  }
+
+  public void setCarrySccpInfo(boolean carrySccpInfo) {
+    this.carrySccpInfo = carrySccpInfo;
+    isCarrySccpInfo = true;
+  }
+
+  public void setFillExtraDescriptor(boolean fillExtraDescriptor) {
+    this.fillExtraDescriptor = fillExtraDescriptor;
+    isFillExtraDescriptor = true;
+  }
+
+  public void setForceSmeReceipt(boolean forceSmeReceipt) {
+    this.forceSmeReceipt = forceSmeReceipt;
+    isForceSmeReceipt = true;
+  }
+
+  public void setForceGsmDataCoding(boolean forceGsmDataCoding) {
+    this.forceGsmDataCoding = forceGsmDataCoding;
+    isForceGsmDataCoding = true;
+  }
+
+  public void setSmppPlus(boolean smppPlus) {
+    this.smppPlus = smppPlus;
+    isSmppPlus = true;
+  }
 }

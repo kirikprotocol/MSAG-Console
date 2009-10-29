@@ -27,7 +27,6 @@ public class SmeViewCommand extends SmeGenCommand
             ctx.addResult("id: " + sme.getId() + ", smeN: " + sme.getSmeN());
             ctx.addResult("type: " + ((type == SME.SMPP) ? "SMPP":(type == SME.SS7) ? "SS7":"UNKNOWN ("+type+")"));
             ctx.addResult("mode: " + sme.getModeStr().toUpperCase());
-            ctx.addResult("interfaceVersion: " + sme.getInterfaceVersion());
             ctx.addResult("systemType: " + sme.getSystemType());
             ctx.addResult("receipt scheme: " + sme.getReceiptSchemeName());
             ctx.addResult("priority: " + sme.getPriority());
@@ -38,7 +37,7 @@ public class SmeViewCommand extends SmeGenCommand
             ctx.addResult("proc/sched limit: " + sme.getProclimit() + "/" + sme.getSchedlimit());
             ctx.addResult("flags: " + (sme.isDisabled() ? "disabled":"enabled") +
                            ", wantAlias " + (sme.isWantAlias() ? "yes":"no") +
-                           ", forceDC " + (sme.isForceDC() ? "yes":"no"));
+                           sme.getFlagsStr());
             ctx.addResult("accessMask: " + sme.getAccessMask());
             String connected = "unknown";
             try { connected = ctx.getSmsc().getSmeStatus(smeId).isConnected() ? "connected":"disconnected"; }
