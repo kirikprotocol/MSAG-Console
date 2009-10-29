@@ -23,8 +23,8 @@ using eyeline::asn1::_tagINTEGER;
  * ************************************************************************* */
 class EncoderOfINTEGER : public TLVEncoderAC {
 protected:
-  const INTEGER & _encVal;  //value is to encode
-  TSLength        _valSZO;
+  INTEGER _encVal;  //value is to encode
+  TSLength _valSZO;
 
 public:
   EncoderOfINTEGER(const INTEGER & use_val, const ASTag * use_tag = NULL)
