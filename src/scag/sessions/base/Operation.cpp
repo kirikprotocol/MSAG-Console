@@ -95,9 +95,11 @@ void Operation::receiveNewResp( int curidx, int lastidx )
 
 void Operation::setUSSDref( int32_t ref ) /* throw (SCAGException) */
 {
-    if ( ref <= 0 ) throw SCAGException( "session=%p/%s setUSSDref(ref=%d), ref should be >0",
-                                         owner_, owner_ ? owner_->sessionKey().toString().c_str() : "",
-                                         ref );
+    if ( ref < 0 || (ref == 0 && !flagSet(OperationFlags::SERVICE_INITIATED_USSD_DIALOG) ) ) {
+        throw SCAGException( "session=%p/%s setUSSDref(ref=%d), ref should be >0, or (=0 && servInitDialog)",
+                             owner_, owner_ ? owner_->sessionKey().toString().c_str() : "",
+                             ref );
+    }
     // changing umr is allowed
     // if ( umr_ > 0 ) throw SCAGException( "setUSSDref(ref=%d), UMR=%d is already set", ref, umr_ );
     // if ( umr_ == -1 ) throw SCAGException( "session=%p/%s setUSSDref(ref=%d), no USSD operation found",
