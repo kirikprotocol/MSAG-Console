@@ -241,7 +241,7 @@ public:
   //Returns: encoding rule effective for this type.
   //NOTE: may cause recalculation of TLVLayout due to restrictions
   //      implied by the DER or CER
-  virtual TSGroupBER::Rule_e setRule(TSGroupBER::Rule_e use_rule) = 0;
+  virtual TSGroupBER::Rule_e setRule(TSGroupBER::Rule_e use_rule);
 
   //Calculates length of BER/DER/CER encoding of type value.
   //If 'do_indef' flag is set, then length of value encoding is computed
