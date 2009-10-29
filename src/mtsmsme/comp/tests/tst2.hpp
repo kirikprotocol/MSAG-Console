@@ -12,7 +12,6 @@ class AmericaTestFixture : public CppUnit::TestFixture {
   CPPUNIT_TEST (reportSMDeliveryStatus_arg_decoding);
   CPPUNIT_TEST (sendRoutingInfoForSM_sending);
   CPPUNIT_TEST (updateLocation_dialogue_cleanup);
-  CPPUNIT_TEST (dialogue_limit_check);
   CPPUNIT_TEST_SUITE_END ();
 public:
   class SccpSenderImpl;
