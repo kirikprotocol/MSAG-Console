@@ -130,13 +130,14 @@ public:
 protected:
   Kind_e  _kind;
   TDialogueAssociate::DiagnosticUser_e _ascRejCause; //associate reject diagnostic
-
+  bool _abortFromTCUser;
 public:
-  TC_UAbort_Req()
-    : _kind(uabrtDialogueUI), _ascRejCause(TDialogueAssociate::dsu_null)
-  { }
+  TC_UAbort_Req(bool abort_from_tc_user=true)
+    : _kind(uabrtDialogueUI), _ascRejCause(TDialogueAssociate::dsu_null),
+      _abortFromTCUser(abort_from_tc_user)
+  {}
 
-  const Kind_e & abortKind(void) const { return _kind; }
+  const Kind_e & getAbortKind(void) const { return _kind; }
 
   //NOTE: This method only for 1st response to T_Begin_Ind
   void abortAssociation(TDialogueAssociate::DiagnosticUser_e use_cause =
@@ -161,7 +162,8 @@ public:
     _usrInfo.clear();
     _usrInfo.addUIValue(use_ext);
   }
-
+  TDialogueAssociate::DiagnosticUser_e getRejectCause() const { return _ascRejCause; }
+  bool isAbortFromTCUser() const { return _abortFromTCUser; }
 };
 
 } //tcap

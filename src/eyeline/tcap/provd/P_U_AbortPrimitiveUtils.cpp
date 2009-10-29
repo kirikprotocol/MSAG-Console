@@ -66,7 +66,7 @@ void formUAbortRequest(const asn1::EncodedOID& app_ctx,
                        const sccp::SCCPAddress& src_addr,
                        const sccp::SCCPAddress& dst_addr)
 {
-  TC_UAbort_Req uAbortRequestPrimitive;
+  TC_UAbort_Req uAbortRequestPrimitive(false);
   if ( app_ctx == _ac_contextless_ops )
     uAbortRequestPrimitive.abortAssociation(TDialogueAssociate::dsu_null);
   else {

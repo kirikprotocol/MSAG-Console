@@ -97,7 +97,7 @@ bool TDlgIndicationDispatcher::processSuaInd(const SUAUnitdataInd & sua_ind)
     if (decRc.status) {
       failed = true;
     } else {
-      if (_msgTC.AbortPortion()->AbortForm() == TCMsgAbortPortion::abrtFrmProvider) {
+      if (_msgTC.getAbortPortion()->getAbortForm() == TCMsgAbortPortion::abrtFrmProvider) {
         Reset(indTPAbrt);
         failed |= _dsp.tPAbrt->bindSUAInd(sua_ind);
       } else{
