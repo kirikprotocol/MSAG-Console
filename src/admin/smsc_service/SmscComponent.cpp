@@ -87,7 +87,7 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs, const char * node_)
   sme_params["priority"          ] = Parameter("priority"          , LongType);
   sme_params["typeOfNumber"      ] = Parameter("typeOfNumber"      , LongType);
   sme_params["numberingPlan"     ] = Parameter("numberingPlan"     , LongType);
-  sme_params["interfaceVersion"  ] = Parameter("interfaceVersion"  , LongType);
+  //sme_params["interfaceVersion"  ] = Parameter("interfaceVersion"  , LongType);
   sme_params["systemType"        ] = Parameter("systemType"        , StringType);
   sme_params["password"          ] = Parameter("password"          , StringType);
   sme_params["addrRange"         ] = Parameter("addrRange"         , StringType);
@@ -1634,7 +1634,7 @@ void fillSmeInfo(SmeInfo & smeInfo, const Arguments & args)
   smeInfo.systemId          = args.Get("id").getStringValue();
   smeInfo.typeOfNumber      = (uint8_t)args.Get("typeOfNumber").getLongValue();
   smeInfo.numberingPlan     = (uint8_t)args.Get("numberingPlan").getLongValue();
-  smeInfo.interfaceVersion  = (uint8_t)args.Get("interfaceVersion").getLongValue();
+  //smeInfo.interfaceVersion  = (uint8_t)args.Get("interfaceVersion").getLongValue();
   smeInfo.rangeOfAddress    = args.Get("addrRange").getStringValue();
   smeInfo.systemType        = args.Get("systemType").getStringValue();
   smeInfo.password          = args.Get("password").getStringValue();
