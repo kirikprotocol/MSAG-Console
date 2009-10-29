@@ -9,6 +9,7 @@
 #include "eyeline/tcap/provd/SUAIndications.hpp"
 #include "eyeline/tcap/provd/TCAPIndicationsProcessor.hpp"
 #include "eyeline/tcap/proto/TCAPMessage.hpp"
+#include "eyeline/tcap/proto/TCUserInfo.hpp"
 
 namespace eyeline {
 namespace tcap {
@@ -44,10 +45,11 @@ protected:
 public:
   TDlgIndicationDispatcherT(TCAPMessage & use_tmsg)
     : TDlgIndicationDispatcherAC(use_tmsg)
-    , _tInit(use_tmsg.ACDefined())
+    , _tInit(use_tmsg.getAppCtx())
   {
-    if (_tMsg.usrInfo() && !_tMsg.usrInfo()->empty())
-      _tMsg.usrInfo()->export2TDlgUI(_tInit.getUserInfo());
+    proto::TCUserInformation * usrInfo = _tMsg.getUsrInfo();
+    if (usrInfo && !usrInfo->empty())
+      usrInfo->export2TDlgUI(_tInit.getUserInfo());
   }
   virtual ~TDlgIndicationDispatcherT()
   { }
