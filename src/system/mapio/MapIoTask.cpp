@@ -20,6 +20,11 @@ USHORT_T MY_USER_ID=USER01_ID;//!!
 
 using namespace std;
 
+volatile bool MAP_connectedInst[10]={
+false,
+};
+
+volatile int MAP_connectedInstCount=0;
 
 #ifdef USE_MAP
 
@@ -41,11 +46,6 @@ using namespace std;
 static bool MAP_aborting = false;
 
 
-volatile bool MAP_connectedInst[10]={
-false,
-};
-
-volatile int MAP_connectedInstCount=0;
 
 #define MAX_BIND_TIMEOUT 15
 
@@ -855,9 +855,36 @@ void MapIoTask::handleMessage(MSG_T& message)
 
 
 #else
-void MapIoTask::connect(unsigned)
+/*void MapIoTask::connect(unsigned)
 {
   __map_warn__("MapIoTask::connect: no map stack on this platform");
+}*/
+
+bool MapIoTask::ReconnectThread::connect()
+{
+  return false;
+}
+
+EventMonitor MapIoTask::ReconnectThread::reconnectMon;
+
+void MapIoTask::ReconnectThread::reportDisconnect(int rinst,bool needRel)
+{
+
+}
+
+void MapIoTask::ReconnectThread::init(bool firstTime)
+{
+
+}
+
+int MapIoTask::ReconnectThread::Execute()
+{
+  return 0;
+}
+
+MapDialogContainer::MapDialogContainer()
+{
+
 }
 
 void MapIoTask::init(unsigned)
@@ -865,17 +892,22 @@ void MapIoTask::init(unsigned)
   __map_warn__("MapIoTask::init: no map stack on this platform");
 }
 
-void MapIoTask::disconnect()
+/*void MapIoTask::disconnect()
 {
   __map_warn__("MapIoTask::disconnect: no map stack on this platform");
-}
+}*/
 
-void MapIoTask::deinit(bool)
-     {
+void MapIoTask::deinit()
+{
   __map_warn__("MapIoTask::deinit: no map stack on this platform");
 }
 
-void MapIoTask::dispatcher()
+void MapIoTask::killOverflow()
+{
+
+}
+
+void MapIoTask::dispatcher(int idx)
 {
   Event e;
   __map_trace__("MapIoTask::dispatcher: no map stack on this platform");
@@ -924,6 +956,7 @@ void MapIoTask::StartMap()
 
 int MapIoTask::Execute()
 {
+#ifdef USEMAP
   MSG_T message;
   USHORT_T result;
   EINSS7INSTANCE_T rinst=0;
@@ -968,23 +1001,23 @@ int MapIoTask::Execute()
       if(widxPtr)
       {
         if(queues[didx].Count()>200 && message.primitive==MAP_OPEN_IND)
-	{
+        {
           monitors[mapIoTaskCount].Lock();
           queues[mapIoTaskCount].Push(message);
           monitors[mapIoTaskCount].notify();
           monitors[mapIoTaskCount].Unlock();
-	  widxPtr[dlgId]=mapIoTaskCount;
-	  continue;
-	}else
-	{
-	  if(didx==mapIoTaskCount && message.primitive==MAP_DELIMIT_IND)
-	  {
-	    widxPtr[dlgId]=255;
-	  }else
-	  {
+          widxPtr[dlgId]=mapIoTaskCount;
+          continue;
+        }else
+        {
+          if(didx==mapIoTaskCount && message.primitive==MAP_DELIMIT_IND)
+          {
+            widxPtr[dlgId]=255;
+          }else
+          {
             widxPtr[dlgId]=didx;
-	  }
-	}
+          }
+        }
       }
     }else
     {
@@ -999,6 +1032,7 @@ int MapIoTask::Execute()
     monitors[didx].notify();
     monitors[didx].Unlock();
   }
+#endif
   return 0;
 }
 
