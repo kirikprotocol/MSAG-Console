@@ -9,6 +9,7 @@
 #include "eyeline/tcap/proto/TransactionId.hpp"
 #include "eyeline/tcap/provd/TDlgPAbortReq.hpp"
 #include "eyeline/tcap/provd/SUARequests.hpp"
+#include "eyeline/tcap/proto/enc/AbortMessage.hpp"
 
 namespace eyeline {
 namespace tcap {
@@ -73,10 +74,30 @@ template <class T_DLG_REQ_Arg /* pubic: TDialogueRequestPrimitive */>
 class TDlgRequestComposerT : public TDlgRequestComposerAC {
 protected:
   const T_DLG_REQ_Arg & _tReq;
+  smsc::logger::Logger* _logger;
+
+  SerializationResult_e
+  encodeMessage(proto::enc::AbortMessage& tcap_msg,
+                SUAUnitdataReq& used_udt,
+                const char* where) const {
+    asn1::ENCResult encResult = tcap_msg.encode(used_udt.dataBuf());
+    if ( encResult.isOk() ) {
+      used_udt.dataBuf().setPos(encResult.nbytes);
+      return srlzOk;
+    } else if ( encResult.status == asn1::ENCResult::encMoreMem )
+      throw utilx::UnsupportedOperationException("%s::: support for encode result value = encMoreMem has not supported yet",
+                                                 where);
+    else {
+      smsc_log_error(_logger, "%s::: got error [%d] while encoding Abort message",
+                     where, encResult.status);
+      return srlzError;
+    }
+  }
 
 public:
   TDlgRequestComposerT(const T_DLG_REQ_Arg & use_req)
-   : TDlgRequestComposerAC(use_req.getAppCtx()), _tReq(use_req)
+   : TDlgRequestComposerAC(use_req.getAppCtx()), _tReq(use_req),
+     _logger(smsc::logger::Logger::getInstance("tcap.provd"))
   { }
 
   const T_DLG_REQ_Arg & TReq(void) const { return _tReq; }
@@ -166,8 +187,24 @@ public:
   // -- TDlgRequestComposerAC interface methods
   // ----------------------------------------------
   virtual SerializationResult_e
-    serialize2UDT(SUAUnitdataReq & use_udt, const SCCPAddress & src_addr,
-                                            const SCCPAddress & dst_addr) const;
+  serialize2UDT(SUAUnitdataReq & use_udt, const SCCPAddress & src_addr,
+                const SCCPAddress & dst_addr) const;
+private:
+  SerializationResult_e
+  formAARE_APdu(const TC_UAbort_Req& t_req,
+                const proto::TransactionId& transaction_id,
+                SUAUnitdataReq& use_udt) const;
+
+  SerializationResult_e
+  formABRT_APdu(const TC_UAbort_Req& t_req,
+                const proto::TransactionId& transaction_id,
+                SUAUnitdataReq& use_udt) const;
+
+  SerializationResult_e
+  formEXTERNAL_APdu(const TC_UAbort_Req& t_req,
+                    const proto::TransactionId& transaction_id,
+                    SUAUnitdataReq& use_udt) const;
+
 };
 
 } //provd
