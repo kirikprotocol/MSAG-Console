@@ -184,5 +184,7 @@
       <param name="hello">Hello $$string import=who$$</param>
     </section>
     <param name="ussd_error">Error code $$int32 import=code$$. $$string import=msg$$</param>
+    <param name="ussd_invalid_cmd">Invalid ussd command</param>
+    <param name="ussd_route_err">Ussd routing error</param>
   </resources>
 </locale_resources>
