@@ -137,6 +137,7 @@
                     <attribute name="status" type="scag:Var" use="optional" />
                     <attribute name="msg" type="scag:Var" use="optional"/>
                     <attribute name="abonent" type="scag:Value" use="required"/>
+                    <attribute name="amount" type="scag:Value" use="optional"/>
                     <attribute name="walletType" type="scag:Value" use="optional"/>
                     <attribute name="externalId" type="scag:Value" use="required"/>
                     <attribute name="transId" type="scag:Value" use="required"/>
