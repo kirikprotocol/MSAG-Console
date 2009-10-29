@@ -16,6 +16,14 @@ public:
     const char* getName() const { return paramName_.c_str(); }
     FieldType getType() const { return type_; }
     const char* getStringValue() const { return stringValue_.c_str(); }
+    void setStringValue( const char* val ) {
+        if ( val ) {
+            isFound_ = true;
+            type_ = ftUnknown;
+            stringValue_ = val;
+            postInit();
+        }
+    }
 
     // used for writing
     Property* getProperty( ActionContext& ctx ) const { // throw
@@ -24,7 +32,7 @@ public:
     }
 
     /// initialize and return exist flag
-    virtual bool init( const SectionParams& params, PropertyObject& propobj ); // throw
+    virtual bool init( const SectionParams& params, PropertyObject& propobj );
 
 protected:
     BaseField( Action&     baseAction, 
@@ -39,6 +47,8 @@ protected:
     /// NOTE: that the string lives either in field itself or in the action context property,
     /// so it is safe to return a const char*.
     const char* getString( ActionContext& context ) const; // throw
+
+    virtual void postInit() = 0;
 
 private:
     BaseField();

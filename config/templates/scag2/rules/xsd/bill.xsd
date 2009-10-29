@@ -52,7 +52,7 @@
                     <attribute name="transId" type="scag:Value" use="optional"/>
                     <attribute name="walletType" type="scag:Value" use="optional"/>
                     <attribute name="abonent" type="scag:Value" use="required"/>
-                    <attribute name="externalId" type="scag:Value" use="required"/>
+                    <attribute name="externalId" type="scag:Value" use="optional"/>
                     <attribute name="txStatus" type="scag:Var" use="optional"/>
                     <attribute name="amount" type="scag:Var" use="optional"/>
                     <attribute name="enddate" type="scag:Var" use="optional"/>
@@ -107,7 +107,7 @@
                     <attribute name="result_number" type="scag:Var" use="optional" />
                     <!-- for ewallet -->
                     <attribute name="abonent" type="scag:Value" use="optional"/>
-                    <attribute name="externalId" type="scag:Value" use="required"/>
+                    <attribute name="externalId" type="scag:Value" use="optional"/>
                     <attribute name="timeout" type="scag:Value" use="optional"/>
                     <attribute name="description" type="scag:Value" use="optional"/>
                     <attribute name="amount" type="scag:Value" use="optional"/>
@@ -139,8 +139,8 @@
                     <attribute name="abonent" type="scag:Value" use="required"/>
                     <attribute name="amount" type="scag:Value" use="optional"/>
                     <attribute name="walletType" type="scag:Value" use="optional"/>
-                    <attribute name="externalId" type="scag:Value" use="required"/>
-                    <attribute name="transId" type="scag:Value" use="required"/>
+                    <attribute name="externalId" type="scag:Value" use="optional"/>
+                    <attribute name="transId" type="scag:Value" use="optional"/>
                </complexType>
             </element>
         

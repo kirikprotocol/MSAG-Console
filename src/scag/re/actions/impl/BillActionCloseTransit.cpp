@@ -33,23 +33,13 @@ bool BillActionCloseTransit::RunBeforePostpone(ActionContext& context)
         bctpd->data.reset(bpd.release());
 
         // fill transid
-        if ( ewalletTransType_ == ftUnknown ) {
-            bctpd->transId = ewalletTransId_;
-        } else {
-
-            Property * property = context.getProperty(ewalletTransName_);
-            if (!property)
-            {
-                setBillingStatus(context, "Invalid property for transId", false);
-                // setTariffStatus( context, 0 );
-                smsc_log_error(logger,"Action '%s' :: Invalid property %s for transId",
-                               opname(), ewalletTransName_.c_str() );
-                return false;
-            }
-            bctpd->transId = unsigned(property->getInt());
-            
+        if ( transId_.isFound() ) {
+            bctpd->transId = unsigned(transId_.getValue(context));
+        } else if ( bctpd->data->billingInfoStruct.externalId.empty() ) {
+            setBillingStatus(context, "transid/externalId should be specified", false);
+            setTariffStatus(context,0);
+            return false;
         }
-
         bill::EwalletCloseCallParams* ectp =
             new bill::EwalletCloseCallParams(bctpd.release(),&lcmCtx);
         lcmCtx.setParams(ectp);
@@ -71,19 +61,6 @@ void BillActionCloseTransit::ContinueRunning( ActionContext& context )
 void BillActionCloseTransit::postInit(const SectionParams& params,
                                       PropertyObject propertyObject)
 {
-    bool bExist;
-    ewalletTransType_ = CheckParameter( params,
-                                        propertyObject,
-                                        opname(),
-                                        "transId",
-                                        true,      // required
-                                        true,       // readonly
-                                        ewalletTransName_,
-                                        bExist );
-    if ( ewalletTransType_ == ftUnknown ) {
-        ewalletTransId_ = atoi(ewalletTransName_.c_str());
-    }
-
     if ( !params.Exists("action") )
         throw SCAGException( "Action '%s': missing 'action' parameter.", opname() );
 
@@ -95,6 +72,7 @@ void BillActionCloseTransit::postInit(const SectionParams& params,
         throw SCAGException( "Action '%s': unrecognised 'action' parameter: '%s'",
                              opname(), str.c_str() );
 
+    transId_.init(params,propertyObject);
     amount_.init(params,propertyObject);
 }
 

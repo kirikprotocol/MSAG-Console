@@ -20,6 +20,9 @@ public:
         return getString( ctx );
     }
 
+protected:
+    virtual void postInit() {}
+
 };
 
 

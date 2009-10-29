@@ -4,6 +4,7 @@
 #include "scag/re/base/LongCallAction2.h"
 #include "BillActionPreOpen.h"
 #include "scag/re/base/StringField.h"
+#include "scag/re/base/IntField.h"
 
 namespace scag2 {
 namespace re {
@@ -13,6 +14,7 @@ class BillActionCheck : public BillActionPreOpen, public ActionLongCallInterface
 {
 public:
     BillActionCheck() : BillActionPreOpen(true),
+    transId_(*this,"transId",false,true),
     txStatus_(*this,"txStatus",false,false),
     txAmount_(*this,"amount",false,false),
     txEndDate_(*this,"enddate",false,false) {}
@@ -34,11 +36,7 @@ protected:
     }
 
 private:
-    bool        hasTransId_;
-    std::string ewalletTransName_;
-    FieldType   ewalletTransType_;
-    uint32_t    ewalletTransId_;
-
+    IntField    transId_;
     StringField txStatus_;  // transaction status
     StringField txAmount_;  // transaction amount
     StringField txEndDate_; // transaction enddate

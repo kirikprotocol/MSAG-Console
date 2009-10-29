@@ -18,22 +18,11 @@ bool BillActionCheck::RunBeforePostpone(ActionContext& context)
         bcpd->data.reset(bpd.release());
 
         // fill transid
-        if ( hasTransId_ ) {
-            if ( ewalletTransType_ == ftUnknown ) {
-                bcpd->transId = ewalletTransId_;
-            } else {
-
-                Property * property = context.getProperty(ewalletTransName_);
-                if (!property)
-                {
-                    setBillingStatus(context, "Invalid property for transId", false);
-                    // setTariffStatus( context, 0 );
-                    smsc_log_error(logger,"Action '%s' :: Invalid property %s for transId",
-                                   opname(), ewalletTransName_.c_str() );
-                    return false;
-                }
-                bcpd->transId = unsigned(property->getInt());
-            }
+        if ( transId_.isFound() ) {
+            bcpd->transId = unsigned(transId_.getValue(context));
+        } else if ( bcpd->data->billingInfoStruct.externalId.empty() ) {
+            setBillingStatus(context,"transId/externalId should be set",false);
+            return false;
         }
 
         bill::EwalletCheckCallParams* ectp =
@@ -72,20 +61,7 @@ void BillActionCheck::ContinueRunning( ActionContext& context )
 void BillActionCheck::postInit(const SectionParams& params,
                                PropertyObject propertyObject)
 {
-    ewalletTransType_ = CheckParameter( params,
-                                        propertyObject,
-                                        opname(),
-                                        "transId",
-                                        false,      // required
-                                        true,       // readonly
-                                        ewalletTransName_,
-                                        hasTransId_ );
-    if ( hasTransId_ ) {
-        if ( ewalletTransType_ == ftUnknown ) {
-            ewalletTransId_ = atoi(ewalletTransName_.c_str());
-        }
-    }
-
+    transId_.init(params,propertyObject);
     txStatus_.init(params,propertyObject);
     txAmount_.init(params,propertyObject);
     txEndDate_.init(params,propertyObject);

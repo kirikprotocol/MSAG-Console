@@ -39,6 +39,7 @@ bool BaseField::init( const SectionParams& params, PropertyObject& propertyObjec
         throw SCAGException("Action '%s': cannot modify constant property '%s' for '%s' parameter - no access",
                             action_->opname(), stringValue_.c_str(), paramName_.c_str());
     }
+    postInit();
     return true;
 }
 

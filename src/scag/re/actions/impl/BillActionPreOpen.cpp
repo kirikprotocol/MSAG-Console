@@ -15,7 +15,7 @@ using namespace bill;
 
 BillActionPreOpen::BillActionPreOpen( bool transit ) :
 BillAction(transit), categoryId_(0), mediaTypeId_(0),
-hasExternalId_(false),
+externalId_(*this,"externalId",false,true),
 walletType_(*this,"walletType",false,true),
 keywords_(*this,"keywords",false,true)
 {
@@ -191,25 +191,8 @@ BillOpenCallParamsData* BillActionPreOpen::makeParamsData( ActionContext& contex
          */
 
         // externalId
-        if ( hasExternalId_ ) {
-            if ( externalIdType_ == ftUnknown ) {
-                billingInfoStruct.externalId = externalIdName_;
-            } else {
-                Property * property = context.getProperty(externalIdName_);
-                if (!property) {
-                    setBillingStatus( context, "Invalid property for externalId", false );
-                    setTariffStatus( context, 0 );
-                    smsc_log_error(logger,"Action '%s' :: Invalid property %s for externalId",
-                                   opname(), externalIdName_.c_str() );
-                    return 0;
-                }
-                billingInfoStruct.externalId = property->getStr().c_str();
-            }
-        } else {
-            // no external id
-            if ( isTransit() ) {
-                throw SCAGException("Action '%s': transit but externalId is not found",opname());
-            }
+        if ( externalId_.isFound() ) {
+            billingInfoStruct.externalId = externalId_.getValue(context);
         }
 
     } else {
@@ -324,18 +307,7 @@ void BillActionPreOpen::init( const SectionParams& params,
         abonentName_ = temp.toString().c_str();
     }
 
-    if ( ! hasExternalId_ ) {
-        externalIdType_ = CheckParameter( params,
-                                          propertyObject,
-                                          opname(), "externalId",
-                                          false, true,
-                                          externalIdName_,
-                                          hasExternalId_ );
-        if ( isTransit() && ! hasExternalId_ ) {
-            throw SCAGException("Action '%s': transit action requires 'externalId'", opname());
-        }
-    }
-
+    if (!externalId_.isFound()) externalId_.init(params,propertyObject);
     walletType_.init(params,propertyObject);
     keywords_.init(params,propertyObject);
 

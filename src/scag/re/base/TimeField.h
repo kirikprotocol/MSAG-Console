@@ -16,15 +16,6 @@ public:
                bool        isReadonly ) :
     BaseField(baseAction,paramName,isRequired,isReadonly), timeValue_(0) {}
 
-    /// initialize and return exist flag
-    virtual bool init( const SectionParams& params, PropertyObject& propobj ) {
-        const bool exist = BaseField::init(params,propobj);
-        if ( exist && type_ == ftUnknown ) {
-            timeValue_ = getTimeValue(stringValue_.c_str());
-        }
-        return exist;
-    }
-
     /// time in seconds since epoch
     int64_t getSeconds( ActionContext& context ) const {
         if ( type_ == ftUnknown ) {
@@ -35,6 +26,13 @@ public:
     }
 
 protected:
+    /// initialize and return exist flag
+    virtual void postInit() {
+        if ( type_ == ftUnknown ) {
+            timeValue_ = getTimeValue(stringValue_.c_str());
+        }
+    }
+
     // conversion from string to time (seconds)
     int64_t getTimeValue( const char* tv ) const; // throw
 

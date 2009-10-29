@@ -36,9 +36,7 @@ protected:
     virtual void setTariffStatus( ActionContext& context, const bill::TariffRec* tariffRec ) {}
 
     void setExternalId( const std::string& eid ) {
-        hasExternalId_ = true;
-        externalIdName_ = eid;
-        externalIdType_ = ftUnknown;
+        externalId_.setStringValue(eid.c_str());
     }
 
 private:
@@ -58,12 +56,8 @@ private:
     std::string     abonentName_;
     FieldType       abonentType_;
 
-    bool            hasExternalId_;
-    std::string     externalIdName_;
-    FieldType       externalIdType_;
-
+    StringField     externalId_;
     StringField     walletType_;
-
     StringField     keywords_;
 };
 
