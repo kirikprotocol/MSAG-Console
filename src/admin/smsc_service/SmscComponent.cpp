@@ -23,6 +23,15 @@
 #include "system/mapio/MapProxy.h"
 
 namespace smsc {
+
+namespace util{
+namespace config{
+namespace smeman{
+void fillFlag(uint32_t& flags,const std::string& val);
+}
+}
+}
+
 namespace admin {
 namespace smsc_service {
 
@@ -92,7 +101,7 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs, const char * node_)
   sme_params["proclimit"         ] = Parameter("proclimit"         , LongType);
   sme_params["schedlimit"        ] = Parameter("schedlimit"        , LongType);
   sme_params["accessMask"        ] = Parameter("accessMask"        , LongType);
-  sme_params["flags"             ] = Parameter("flags"             , LongType);
+  sme_params["flags"             ] = Parameter("flags"             , StringType);
 
   Parameters sme_id_params;
   sme_id_params["id"] = Parameter("id", StringType);
@@ -1636,12 +1645,17 @@ void fillSmeInfo(SmeInfo & smeInfo, const Arguments & args)
   //smeInfo.forceDC           = args.Get("forceDC").getBooleanValue();
   smeInfo.receiptSchemeName = args.Get("receiptSchemeName").getStringValue();
   smeInfo.timeout           = (uint32_t)args.Get("timeout").getLongValue();
+  smeInfo.flags=0;
   if(args.Exists("flags"))
   {
-    smeInfo.flags=(uint32_t)args.Get("flags").getLongValue();
-  }else
-  {
-    smeInfo.flags=0;
+    std::string v=args.Get("flags").getStringValue();
+    std::string::size_type oldPos=0,commaPos=0;
+    while((commaPos=v.find(',',oldPos))!=std::string::npos)
+    {
+      smsc::util::config::smeman::fillFlag(smeInfo.flags,v.substr(oldPos,commaPos-oldPos));
+      oldPos=commaPos+1;
+    }
+    smsc::util::config::smeman::fillFlag(smeInfo.flags,v.substr(oldPos));
   }
   if(args.Exists("accessMask"))
   {
