@@ -31,7 +31,18 @@ public class TaskManager {
 
   public TaskManager(String configDir, Config config) throws AdminException {
     try {
-      idFile = new RandomAccessFile(new File(configDir, "taskid.bin"), "rw");
+      File f = new File(configDir, "taskid.bin");
+      if (!f.exists()) {
+        File parentDir = new File(configDir).getParentFile();
+        if (parentDir != null) {
+          File f1 = new File(parentDir, "taskid.bin");
+          if (f1.exists())
+            f = f1;
+          }
+      }
+
+      idFile = new RandomAccessFile(f, "rw");
+
       long len = idFile.length();
       if (len % 4 > 0) {
         logger.warn("File taskid.bin is broken and will be repaired.");

@@ -66,7 +66,8 @@ public class InfoSmeContext implements SMEAppContext
     this.smeId = smeId;
     this.appContext = appContext;
     appContext.registerSMEContext(this);
-    this.infoSmeConfig = new InfoSmeConfig(appContext.getHostsManager().getServiceInfo(smeId).getServiceFolder().getAbsolutePath(), this);
+    File configDir = new File(appContext.getHostsManager().getServiceInfo(smeId).getServiceFolder(), "conf");  
+    this.infoSmeConfig = new InfoSmeConfig(configDir.getAbsolutePath(), this);
     this.infoSme = new InfoSme(appContext.getHostsManager().getServiceInfo(this.smeId),
         infoSmeConfig.getAdminHost(),
         infoSmeConfig.getAdminPort());
