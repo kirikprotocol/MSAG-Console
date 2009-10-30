@@ -102,15 +102,15 @@ SmeManConfig::status SmeManConfig::load(const char * const filename)
     smsc::util::xml::DOMTreeReader reader;
     DOMDocument *document = reader.read(filename);
     DOMElement *elem = document->getDocumentElement();
-    DOMNodeList *list = elem->getElementsByTagName(XmlStr("smerecord"));
+    DOMNodeList *list = elem->getElementsByTagName(XmlStr("smerecord").x_str());
     size_t listLength = list->getLength();
     for (size_t i=0; i<listLength; i++)
     {
       DOMNode *node = list->item(i);
       DOMNamedNodeMap *attrs = node->getAttributes();
-      XmlStr type(attrs->getNamedItem(XmlStr("type"))->getNodeValue());
+      XmlStr type(attrs->getNamedItem(XmlStr("type").x_str())->getNodeValue());
       SmeRecord * record = new SmeRecord();
-      record->smeUid = XmlStr(attrs->getNamedItem(XmlStr("uid"))->getNodeValue()).c_release();
+      record->smeUid = XmlStr(attrs->getNamedItem(XmlStr("uid").x_str())->getNodeValue()).c_release();
       if (strcmp(type, "smpp") == 0)
       {
         record->rectype = SMPP_SME;
@@ -122,8 +122,8 @@ SmeManConfig::status SmeManConfig::load(const char * const filename)
           if (child->getNodeType() == DOMNode::ELEMENT_NODE)
           {
             DOMNamedNodeMap *childAttrs = child->getAttributes();
-            XmlStr name(childAttrs->getNamedItem(XmlStr("name"))->getNodeValue());
-            XmlStr value(childAttrs->getNamedItem(XmlStr("value"))->getNodeValue());
+            XmlStr name(childAttrs->getNamedItem(XmlStr("name").x_str())->getNodeValue());
+            XmlStr value(childAttrs->getNamedItem(XmlStr("value").x_str())->getNodeValue());
             if (strcmp(name, "typeOfNumber") == 0) {
               record->recdata.smppSme.typeOfNumber = atoi(value.c_str());
             } else if (strcmp(name.c_str(), "priority") == 0) {
@@ -139,7 +139,7 @@ SmeManConfig::status SmeManConfig::load(const char * const filename)
               }
               if((record->recdata.smppSme.interfaceVersion&0xf0)==0x50)
               {
-                record->recdata.smppSme.flags=sfForceReceiptToSme;
+                record->recdata.smppSme.flags|=sfForceReceiptToSme;
               }
 
             } else if (strcmp(name.c_str(), "systemType") == 0) {
