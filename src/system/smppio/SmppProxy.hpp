@@ -544,11 +544,11 @@ public:
         rxcnt+=2;
       }else
       {
-        throw smsc::util::Exception("Transsceiver cannot be upgraded");
+        throw smsc::util::Exception("Transsceiver (%s) cannot be upgraded",id.c_str());
       }
     }else
     {
-      if(refcnt>0) throw smsc::util::Exception("Attempt to rebind single channel proxy");
+      if(refcnt>0) throw smsc::util::Exception("Attempt to rebind single channel proxy (%s)",id.c_str());
     }
     refcnt+=2;
     __warning2__("SmppProxy::AddRef(%s): pt=%d; cnts=%d/%d/%d",id.c_str(),proxyType,refcnt,rxcnt,txcnt);
