@@ -1578,6 +1578,7 @@ StateType StateMachine::submit(Tuple& t)
   }
 
   SmeInfo dstSmeInfo=smsc->getSmeInfo(c.dest_proxy_index);
+  smsc_log_debug(smsLog,"dst sme '%s', flags=%x",dstSmeInfo.systemId.c_str(),dstSmeInfo.flags);
 
 #ifdef SMSEXTRA
 
