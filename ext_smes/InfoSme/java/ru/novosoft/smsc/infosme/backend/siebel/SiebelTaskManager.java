@@ -3,6 +3,7 @@ package ru.novosoft.smsc.infosme.backend.siebel;
 import org.apache.log4j.Logger;
 
 import java.util.*;
+import java.util.regex.Pattern;
 import java.text.SimpleDateFormat;
 
 import ru.novosoft.smsc.infosme.backend.config.tasks.Task;
@@ -60,6 +61,7 @@ public class SiebelTaskManager implements Runnable {
     }
   }
 
+  /** @noinspection EmptyCatchBlock*/
   public void run() {
     try {
       shutdown = false;
@@ -180,7 +182,7 @@ public class SiebelTaskManager implements Runnable {
         } else {
           t.setEndDate(new Date());
           t.setEnabled(false);
-          _changeTask(t);          
+          _changeTask(t);
           if (logger.isDebugEnabled()) {
             logger.debug("Siebel: pause tasK " + st);
           }
@@ -292,11 +294,12 @@ public class SiebelTaskManager implements Runnable {
 
       long currentTime = task.getStartDate() == null ? System.currentTimeMillis() : task.getStartDate().getTime();
 
-      Collection toSend = getMessages(maxMessagesPerSecond, new Date(currentTime), messages);
+      Collection unloaded = new LinkedList();
+      Collection toSend = loadMessage(maxMessagesPerSecond, new Date(currentTime), messages, unloaded);
       while (toSend != null && !toSend.isEmpty()) {
         smeContext.getInfoSme().addDeliveryMessages(task.getId(), toSend);
         currentTime += 1000;
-        toSend = getMessages(maxMessagesPerSecond, new Date(currentTime), messages);
+        toSend = loadMessage(maxMessagesPerSecond, new Date(currentTime), messages, unloaded);
       }
 
       smeContext.getInfoSme().endDeliveryMessageGeneration(task.getId());
@@ -304,6 +307,10 @@ public class SiebelTaskManager implements Runnable {
       task.setMessagesHaveLoaded(true);
 
       _addTask(task, false);
+
+      if(!unloaded.isEmpty()) {
+        updateUnloaded(unloaded);
+      }
 
       if (logger.isDebugEnabled()) {
         logger.debug("Siebel: task generation ok...");
@@ -320,24 +327,50 @@ public class SiebelTaskManager implements Runnable {
     }
   }
 
-  private static Collection getMessages(int limit, Date sendDate, ResultSet messages) throws SiebelException {
+  private void updateUnloaded(Collection unloaded) {
+    try{
+      Iterator i = unloaded.iterator();
+      Map states = new HashMap();
+      while(i.hasNext()) {
+        Object o = i.next();
+        logger.error("Siebel: Unloaded message for '"+o+"'");
+        states.put(o, new SiebelMessage.DeliveryState(SiebelMessage.State.REJECTED, "ESME_RINVDSTADR", "Invalid Dest Addr"));
+      }
+      provider.updateDeliveryStates(states);
+    }catch(Throwable e) {
+      logger.error(e,e);
+    }
+  }
+
+  private static Collection loadMessage(int limit, Date sendDate, ResultSet messages, Collection unloaded) throws SiebelException {
     int i = 0;
     Collection result = new LinkedList();
     while (i < limit && messages.next()) {
       SiebelMessage sM = (SiebelMessage) messages.get();
-      final Message msg = new Message();
-      msg.setAbonent(sM.getMsisdn());
-      msg.setMessage(sM.getMessage());
-      msg.setState(Message.State.NEW);
-      msg.setUserData(sM.getClcId());
-      msg.setSendDate(sendDate);
-      result.add(msg);
-      i++;
+      String msisdn = sM.getMsisdn();
+      if(checkMsidn(msisdn)) {
+        final Message msg = new Message();
+        msg.setAbonent(msisdn);
+        msg.setMessage(sM.getMessage());
+        msg.setState(Message.State.NEW);
+        msg.setUserData(sM.getClcId());
+        msg.setSendDate(sendDate);
+        result.add(msg);
+        i++;
+      }else {
+        unloaded.add(sM.getClcId());
+      }
     }
+
     return result;
 
   }
 
+  private static Pattern msisdnPattern = Pattern.compile("^\\+[0-9]+$");
+
+  private static boolean checkMsidn(String msisdn) {
+    return msisdn != null && msisdn.length()>7 && msisdnPattern.matcher(msisdn).matches();
+  }
 
   private Task createTask(SiebelTask siebelTask, String taskName) throws SiebelException {
     try {

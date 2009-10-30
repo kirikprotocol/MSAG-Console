@@ -19,7 +19,7 @@ public class CreateDB {
 
   private final static Random random = new Random();
 
-  private static int wavesize = 1000;
+  private static int wavesize = 100;
   private static int nwaves = 1;
   private static int firstwaveid = 0;
   private static int firstmsgid = -1;
@@ -110,13 +110,17 @@ public class CreateDB {
           System.out.println("Creation of SMS_MAIL table...");
           for( int wid = firstwaveid; wid < firstwaveid+nwaves; ++wid ) {
             for(int i=0; i<wavesize; i++) {
-            prepStatement.setString(1,Integer.toString(msgid));
-            prepStatement.setString(2,Integer.toString(wid));
-            prepStatement.setString(3,Integer.toString(msgid));
-            prepStatement.setTimestamp(4, new Timestamp(System.currentTimeMillis()));
-            prepStatement.setTimestamp(5, new Timestamp(System.currentTimeMillis()));
-            prepStatement.setString(6, "+" + Long.toString(Long.parseLong("79130000000") + i));
-            prepStatement.setString(7, "TestTest");
+              prepStatement.setString(1,Integer.toString(msgid));
+              prepStatement.setString(2,Integer.toString(wid));
+              prepStatement.setString(3,Integer.toString(msgid));
+              prepStatement.setTimestamp(4, new Timestamp(System.currentTimeMillis()));
+              prepStatement.setTimestamp(5, new Timestamp(System.currentTimeMillis()));
+              if(i%10 != 0) {
+                prepStatement.setString(6, "+" + Long.toString(Long.parseLong("79130000000") + i));
+              } else {
+                prepStatement.setString(6, "invalid_msisdn");
+              }
+              prepStatement.setString(7, "TestTest");
 //            if(random.nextInt(2)==0) {
 //              prepStatement.setString(8, SiebelMessage.State.DELIVERED.toString());
 //            }else {
@@ -132,13 +136,13 @@ public class CreateDB {
 //            }else {
               prepStatement.setNull(10, java.sql.Types.VARCHAR);
 //            }
-            prepStatement.addBatch();
-            ++msgid;
-            count++;
-            if(count == 1000) {
-              count = 0;
-              prepStatement.executeBatch();
-            }
+              prepStatement.addBatch();
+              ++msgid;
+              count++;
+              if(count == 1000) {
+                count = 0;
+                prepStatement.executeBatch();
+              }
             }
           }
           if(count != 0) {
