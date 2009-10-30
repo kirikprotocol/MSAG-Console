@@ -904,6 +904,7 @@ bool Task::getNextMessage(Message& message)
     time_t currentTime = time(NULL);
 
     // if ( !messageCache_->empty() ) return false;
+    /*
     if (currentTime-messageCache_->fillTime() > info.messagesCacheSleep) {
        // lastMessagesCacheEmpty = currentTime;   // timeout reached, set new sleep timeout & go to fill cache
     } else if (bSelectedAll && !isInGeneration()) {
@@ -912,15 +913,18 @@ bool Task::getNextMessage(Message& message)
     }
     smsc_log_info(logger, "Selecting messages from DB. getNextMessage method on task '%d/%s'",
                   info.uid,info.name.c_str());
+     */
 
-    // Selecting cache from DB
+    // Filling cache from DB
     size_t fetched = 0;
     try
     {
         // int fetched = 0;
         fetched = messageCache_->fill(currentTime,store,info.messagesCacheSize);
         bSelectedAll = (fetched != info.messagesCacheSize);
-        setInProcess(true);
+        if ( fetched == 0 && store.isProcessed() ) {
+            setInProcess(false);
+        }
     }
     catch (std::exception& exc)
     {
