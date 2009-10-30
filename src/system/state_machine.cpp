@@ -1668,11 +1668,11 @@ StateType StateMachine::submit(Tuple& t)
   }
   if(dstSmeInfo.hasFlag(sfCarryOrgDescriptor))
   {
-    if(sms->getOriginatingDescriptor().imsi_length)
+    if(sms->getOriginatingDescriptor().imsiLength)
     {
-      sms->setStrProperty(Tag::SMSC_IMSI_ADDRESS,sms->getOriginatingDecriptor().imsi);
+      sms->setStrProperty(Tag::SMSC_IMSI_ADDRESS,sms->getOriginatingDescriptor().imsi);
     }
-    if(sms->getOriginatingDescriptor().msc_length)
+    if(sms->getOriginatingDescriptor().mscLength)
     {
       sms->setStrProperty(Tag::SMSC_MSC_ADDRESS,sms->getOriginatingDescriptor().msc);
     }
