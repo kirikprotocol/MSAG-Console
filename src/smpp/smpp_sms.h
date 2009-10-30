@@ -44,7 +44,7 @@ inline PduAddress Address2PduAddress(const Address& addr)
   return src;
 }
 
-inline void fillOptional(SmppOptional& optional,SMS* sms,uint32_t smeFlags)
+inline void fillOptional(SmppOptional& optional,SMS* sms,uint32_t smeFlags=0)
 {
   using namespace smsc::smeman;
   if ( sms->hasStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID) )
@@ -192,7 +192,7 @@ inline void fillOptional(SmppOptional& optional,SMS* sms,uint32_t smeFlags)
   }
 }
 
-inline bool fillSmppPduFromSms(PduXSm* pdu,SMS* sms,uint32_t smeFlags)
+inline bool fillSmppPduFromSms(PduXSm* pdu,SMS* sms,uint32_t smeFlags=0)
 {
   using namespace smsc::smeman;
   __require__ ( pdu != NULL );
@@ -280,7 +280,7 @@ inline bool fillSmppPduFromSms(PduXSm* pdu,SMS* sms,uint32_t smeFlags)
   return true;
 }
 
-inline void fetchOptionals(SmppOptional& optional,SMS* sms,uint32_t smeFlags)
+inline void fetchOptionals(SmppOptional& optional,SMS* sms,uint32_t smeFlags=0)
 {
   using namespace smsc::smeman;
   if ( optional.has_userMessageReference() )
@@ -452,7 +452,7 @@ inline void fetchOptionals(SmppOptional& optional,SMS* sms,uint32_t smeFlags)
 //    sms->setIntProperty(Tag::SMPP_PROTOCOL_ID,(uint32_t)optional.get_protocol_id());
 }
 
-inline bool fetchSmsFromSmppPdu(PduXSm* pdu,SMS* sms,uint32_t smeFlags)
+inline bool fetchSmsFromSmppPdu(PduXSm* pdu,SMS* sms,uint32_t smeFlags=0)
 {
   using namespace smsc::smeman;
   __require__ ( pdu != NULL );
@@ -596,7 +596,7 @@ inline bool fetchSmsFromSmppPdu(PduXSm* pdu,SMS* sms,uint32_t smeFlags)
   return true;
 }
 
-inline bool fetchSmsFromDataSmPdu(PduDataSm* pdu,SMS* sms,uint32_t smeFlags)
+inline bool fetchSmsFromDataSmPdu(PduDataSm* pdu,SMS* sms,uint32_t smeFlags=0)
 {
   using namespace smsc::smeman;
   PduDataPartSm& data = pdu->get_data();
@@ -710,7 +710,7 @@ inline bool fetchSmsFromDataSmPdu(PduDataSm* pdu,SMS* sms,uint32_t smeFlags)
   return true;
 }
 
-inline bool fillDataSmFromSms(PduDataSm* pdu,SMS* sms,uint32_t smeFlags)
+inline bool fillDataSmFromSms(PduDataSm* pdu,SMS* sms,uint32_t smeFlags=0)
 {
   using namespace smsc::smeman;
   PduDataPartSm& data = pdu->get_data();
