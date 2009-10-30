@@ -956,7 +956,7 @@ void MapIoTask::StartMap()
 
 int MapIoTask::Execute()
 {
-#ifdef USEMAP
+#ifdef USE_MAP
   MSG_T message;
   USHORT_T result;
   EINSS7INSTANCE_T rinst=0;
