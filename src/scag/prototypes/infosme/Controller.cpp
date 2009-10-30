@@ -36,11 +36,11 @@ void Controller::createTask( unsigned priority, unsigned speed, unsigned msgs )
 }
 
 
-void Controller::setTaskActive( unsigned index, bool active )
+void Controller::setTaskEnabled( unsigned index, bool active )
 {
     MutexGuard mg(releaseMon_);
     if ( processor_.get() ) {
-        processor_->setTaskActive(index,active);
+        processor_->setTaskEnabled(index,active);
     }
 }
 

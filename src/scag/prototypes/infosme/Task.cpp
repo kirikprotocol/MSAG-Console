@@ -24,7 +24,7 @@ Task::Task( unsigned priority,
             unsigned messages ) :
 id_(getNextId()),
 log_(0),
-isActive_(false),
+isEnabled_(false),
 isDestroyed_(false),
 speed_(speed,1000),
 priority_(priority),
@@ -40,6 +40,12 @@ prefetched_(false)
     random_.setSeed( time(0) );
     assert( priority_ > 0 );
     addMessages( nregions, messages );
+}
+
+
+bool Task::isActive() const
+{
+    return (isEnabled_ && messages_ > 0);
 }
 
 
@@ -89,7 +95,7 @@ unsigned Task::isReady( unsigned deltaTime )
 
 bool Task::prefetchMessage( time_t now, unsigned regionId )
 {
-    if ( isDestroyed_ || !isActive_ || !messages_ ) return false;
+    if ( ! isActive() ) return false;
     MutexGuard mg(taskLock_);
     return doPrefetchMessage(now,regionId);
 }
@@ -193,7 +199,7 @@ void Task::doSuspendMessage( Message& msg )
 
 bool Task::doPrefetchMessage( time_t now, unsigned regionId )
 {
-    if ( isDestroyed_ || !isActive_ || !messages_ ) return false;
+    if ( ! isActive() ) return false;
 
     if ( prefetched_ && prefetch_.getRegionId() == regionId ) return true;
 

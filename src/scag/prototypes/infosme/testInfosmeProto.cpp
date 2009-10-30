@@ -47,10 +47,10 @@ int main()
                     controller->createTask(ints[0],ints[1],ints[2]);
                 } else if ( action == "disable" ) {
                     ints = tok.getInts(1,words);
-                    controller->setTaskActive(ints[0],false);
+                    controller->setTaskEnabled(ints[0],false);
                 } else if ( action == "enable" ) {
                     ints = tok.getInts(1,words);
-                    controller->setTaskActive(ints[0],true);
+                    controller->setTaskEnabled(ints[0],true);
                 } else if ( action == "destroy" ) {
                     ints= tok.getInts(1,words);
                     controller->destroyTask(ints[0]);

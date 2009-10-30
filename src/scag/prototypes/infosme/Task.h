@@ -54,7 +54,7 @@ public:
         }
         std::sprintf(buf, "%s %c prio=%u spd=%u sent=%u left=%u next=%u stat=%s",
                      name_.c_str(),
-                     isActive_ ? '+' : '-',
+                     isEnabled_ ? '+' : '-',
                      priority_, speed_.getSpeed(),
                      sent_,
                      messages_,
@@ -72,27 +72,27 @@ public:
         return false;
     }
 
-    inline bool isActive() const { return isActive_; }
+    bool isActive() const;
     inline bool isDestroyed() const { return isDestroyed_; }
 
-    /// checking if task has more messages
-    inline bool hasMessages() const { return messages_ > 0; }
+    // checking if task has more messages
+    // inline bool hasMessages() const { return messages_ > 0; }
 
     // --- modifiers
 
     // --- methods invoked from admin, processor and such
 
-    void setActive( bool active ) {
-        if ( isActive_ == active ) return;
+    void setEnabled( bool active ) {
+        if ( isEnabled_ == active ) return;
         MutexGuard mg(taskLock_);
-        if ( isDestroyed_ ) { isActive_ = false; }
-        else { isActive_ = active; }
+        if ( isDestroyed_ ) { isEnabled_ = false; }
+        else { isEnabled_ = active; }
     }
 
     void setDestroy() {
         MutexGuard mg(taskLock_);
         isDestroyed_ = true;
-        isActive_ = false;
+        isEnabled_ = false;
     }
 
     /// adding more messages to the task
@@ -139,7 +139,7 @@ private:
     smsc::logger::Logger* log_;
     std::string name_;
 
-    bool        isActive_;   // if the task is active
+    bool        isEnabled_;  // if the task is enabled
     bool        isDestroyed_;
     util::Drndm random_;     // random number generator
 

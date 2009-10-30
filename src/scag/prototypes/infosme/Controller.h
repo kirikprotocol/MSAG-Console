@@ -22,7 +22,7 @@ public:
     ~Controller();
 
     void createTask( unsigned priority, unsigned speed, unsigned msgs );
-    void setTaskActive( unsigned index, bool active );
+    void setTaskEnabled( unsigned index, bool active );
     void destroyTask( unsigned index );
     void addMessages( unsigned index, unsigned msgs );
     void addConnector( unsigned bandwidth );

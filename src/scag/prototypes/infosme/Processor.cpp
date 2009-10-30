@@ -67,14 +67,14 @@ void Processor::notify()
 }
 
 
-void Processor::setTaskActive( unsigned idx, bool active )
+void Processor::setTaskEnabled( unsigned idx, bool active )
 {
     MutexGuard mg(releaseMon_);
     TaskMap::iterator i = taskMap_.find(idx);
     if ( i == taskMap_.end() ) return;
     Task* task = i->second->get();
     if (task) {
-        task->setActive(active);
+        task->setEnabled(active);
         notified_ = true;
     }
     releaseMon_.notify();
@@ -212,7 +212,7 @@ void Processor::processInactiveTasks()
             smsc_log_debug(log_,"moving task %s to dead list",task->getName().c_str());
             continue;
         }
-        if ( task->isActive() && task->hasMessages() ) {
+        if ( task->isActive() ) {
             dispatcher_->addTask( *task );
             i = inactiveTasks_.erase(i);
             smsc_log_debug(log_,"moving task %s to active list",task->getName().c_str());

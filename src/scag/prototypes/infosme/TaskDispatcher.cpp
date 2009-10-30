@@ -9,7 +9,7 @@ using namespace scag2::prototypes::infosme;
 struct isTaskInactive
 {
     bool operator () ( const Task* t ) {
-        return ! ( t->isActive() && t->hasMessages() );
+        return ! t->isActive();
     }
 };
 
@@ -119,7 +119,7 @@ unsigned TaskDispatcher::processRegion( unsigned deltaTime, Region& c )
 
 unsigned TaskDispatcher::scoredObjIsReady( unsigned deltaTime, Task& task )
 {
-    if ( ! (task.isActive() && task.hasMessages()) ) {
+    if ( ! task.isActive() ) {
         // task become disabled
         hasInactiveTask_ = true;
         return 1000;

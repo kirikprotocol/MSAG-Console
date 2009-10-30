@@ -22,7 +22,7 @@ public:
     TaskGuard getTask( unsigned idx );
     void addTask( Task* task );
     void notify();
-    void setTaskActive( unsigned idx, bool active );
+    void setTaskEnabled( unsigned idx, bool active );
 
 protected:
     virtual const char* taskName() { return "processor"; }
