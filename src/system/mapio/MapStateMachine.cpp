@@ -1970,7 +1970,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
           if( dlg_found )
           {
             unsigned mr = cmd->get_sms()->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE)&0x0ffffff;
-            if ( dialog->ussdMrRef != mr || ((mr&0xff0000)==0 && (mr&0xffff)!=(dialog->ussdMrRef&0xffff)))
+            if ( !((dialog->ussdMrRef == mr) || ((mr&0xff0000)==0 && (mr&0xffff)==(dialog->ussdMrRef&0xffff))))
             {
               SendErrToSmsc(cmd->get_dialogId(),MAKE_ERRORCODE(CMD_ERR_FATAL,Status::USSDDLGREFMISM),true,mr);
               __map_warn2__("putCommand: dlgId:0x%x bad message_reference 0x%x, must be 0x%x",
