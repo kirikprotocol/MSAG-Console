@@ -666,6 +666,7 @@ public:
     processLimit=info.proclimit;
     processTimeout=info.timeout;
     shapeLimit=info.schedlimit;
+    smeFlags=info.flags;
   }
 
 protected:

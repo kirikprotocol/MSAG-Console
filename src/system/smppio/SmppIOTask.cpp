@@ -796,7 +796,7 @@ int SmppInputThread::Execute()
                   }
                 }else
                 {
-                  proxy->setSmeFlags(smeManager->getSmeInfo(proxy->getSmeIndex()).flags);
+                  proxy->setSmeFlags(si.flags);
                   ss->assignProxy(proxy);
                   ss->setSystemId(si.systemId.c_str());
                   __trace2__("assign proxy: %p/%p",ss,proxy);
