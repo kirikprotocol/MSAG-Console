@@ -14,10 +14,7 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.List;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Arrays;
+import java.util.*;
 import java.text.ParseException;
 
 public class UsersAdd extends UsersEditBean {
@@ -76,7 +73,9 @@ public class UsersAdd extends UsersEditBean {
       prefs.setInfosmeTrMode(infosmeTransactionMode);
       prefs.setInfosmeUncommitGeneration(infosmeUncommitedInGeneration);
       prefs.setInfosmeUncommitProcess(infosmeUncommitedInProcess);
-      prefs.setInfosmeWeekDaysSet(Arrays.asList(infosmeActiveWeekDays));
+      prefs.setInfosmeWeekDaysSet(Arrays.asList(infosmeActiveWeekDays));       
+      if (timezone != null)
+        prefs.setTimezone(TimeZone.getTimeZone(timezone));
       try{
         if (userManager.addUser(new User(login, password.trim(), roles, firstName, lastName, dept, workPhone, homePhone, cellPhone, email, prefs))) {
           request.getSession().setAttribute("USER_LOGIN_ADD_EDIT", login);
