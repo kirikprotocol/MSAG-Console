@@ -884,7 +884,7 @@ bool Task::getNextMessage(Message& message)
             uint8_t state;
             store.loadMessage(msgid,message,state);
             smsc_log_debug(logger,"fetch msgId=%llx from cache",msgid);
-            return true;
+            return setInProcess(true);
         } catch ( std::exception& e ) {
             smsc_log_error(logger,"Task '%d/%s'. getNextMsg(%llx): Message access failure: %s",
                            info.uid, info.name.c_str(), msgid, e.what() );
@@ -942,7 +942,7 @@ bool Task::getNextMessage(Message& message)
         try {
             uint8_t state;
             store.loadMessage(msgid,message,state);
-            return true;
+            return setInProcess(true);
         } catch ( std::exception& e ) {
             smsc_log_error(logger,"Task '%d/%s'. getNextMsg(%llx): Message access failure: %s",
                            info.uid, info.name.c_str(), msgid, e.what() );
@@ -951,7 +951,7 @@ bool Task::getNextMessage(Message& message)
                            info.uid, info.name.c_str(), msgid );
         }
     } while ( true );
-    return false;
+    return setInProcess(false);
     // lastMessagesCacheEmpty = time(NULL);
     // bSelectedAll = true;
     // -- db: why bSelectedAll is set here?
