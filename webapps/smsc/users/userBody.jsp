@@ -1,6 +1,7 @@
 <%@ page import="ru.novosoft.smsc.admin.profiler.SupportExtProfile"%>
 <%@ page import="ru.novosoft.smsc.admin.region.Region" %>
 <%@ include file="/WEB-INF/inc/collapsing_tree.jsp" %>
+<%@ include file="/WEB-INF/inc/time.jsp"%>
 <div class=content>
 <div class=page_subtitle><%=getLocString("users.subTitle")%></div>
 <table class=properties_list cellspacing=0 cellspadding=0>
@@ -144,8 +145,108 @@
               }
               finishParams(out);
               finishSection(out);
-            
-            finishSection(out);
+
+                    startSection(out, "infosme", "infosme.label.task_config", false);  %>
+                    <table class=properties_list cellspacing=0>
+                    <col width="1%">
+                    <col width="99%">
+                    <tr class=row<%=rowN++&1%>>
+                      <th><label for=infosmeTransactionMode><%= getLocString("infosme.label.transaction_mode")%></label></th>
+                      <td>
+                        <input class=check type=checkbox id=infosmeTransactionMode name=infosmeTransactionMode <%=bean.isInfosmeTransactionMode() ? "checked" : ""%>>
+                      </td>
+                    </tr>
+
+                    <tr class=row<%=rowN++&1%>>
+                      <th><%= getLocString("infosme.label.active_period")%></th>
+                      <td>
+                        <input class=timeField id=infosmeActivePeriodStart name=infosmeActivePeriodStart value="<%=StringEncoderDecoder.encode(bean.getInfosmeActivePeriodStart())%>" maxlength=20 style="z-index:22;"><button class=timeButton type=button onclick="return showTime(infosmeActivePeriodStart, false, true);">...</button>
+                        &nbsp;<%= getLocString("infosme.label.active_period_to")%>&nbsp;
+                        <input class=timeField id=infosmeActivePeriodEnd name=infosmeActivePeriodEnd value="<%=StringEncoderDecoder.encode(bean.getInfosmeActivePeriodEnd())%>" maxlength=20 style="z-index:22;"><button class=timeButton type=button onclick="return showTime(infosmeActivePeriodEnd, false, true);">...</button>
+                      </td>
+                    </tr>
+                    <tr class=row<%=rowN++&1%>>
+                      <th><%= getLocString("infosme.label.validity_period")%></th>
+                      <td>
+                        <input class=timeField id=infosmeValidityPeriod name=infosmeValidityPeriod value="<%=StringEncoderDecoder.encode(bean.getInfosmeValidityPeriod())%>" maxlength=20 style="z-index:22;"><button class=timeButton type=button onclick="return showTime(infosmeValidityPeriod, false, true);">...</button>
+                       </td>
+                    </tr>
+                    <tr class=row<%=rowN++&1%>>
+                      <th><%= getLocString("infosme.label.active_weekdays")%></th>
+                      <td>
+                        <table>
+                        <col width="1%"><col width="32%">
+                        <col width="1%"><col width="32%">
+                        <col width="1%"><col width="32%">
+                        <tr>
+                          <td style="border:none;"><input class=check type=checkbox name=infosmeActiveWeekDays id=activeWeekDays_Mon value=Mon <%=bean.isWeekDayActive("Mon") ? "checked" : ""%>></td><td style="border:none;"><label for=activeWeekDays_Mon><%= getLocString("infosme.label.monday")%></label></td>
+                          <td style="border:none;"><input class=check type=checkbox name=infosmeActiveWeekDays id=activeWeekDays_Thu value=Thu <%=bean.isWeekDayActive("Thu") ? "checked" : ""%>></td><td style="border:none;"><label for=activeWeekDays_Thu><%= getLocString("infosme.label.thursday")%></label></td>
+                          <td style="border:none;"><input class=check type=checkbox name=infosmeActiveWeekDays id=activeWeekDays_Sat value=Sat <%=bean.isWeekDayActive("Sat") ? "checked" : ""%>></td><td style="border:none;"><label for=activeWeekDays_Sat><%= getLocString("infosme.label.saturday")%></label></td>
+                        <tr>
+                        <tr>
+                          <td style="border:none;"><input class=check type=checkbox name=infosmeActiveWeekDays id=activeWeekDays_Tue value=Tue <%=bean.isWeekDayActive("Tue") ? "checked" : ""%>></td><td style="border:none;"><label for=activeWeekDays_Tue><%= getLocString("infosme.label.tuesday")%></label></td>
+                          <td style="border:none;"><input class=check type=checkbox name=infosmeActiveWeekDays id=activeWeekDays_Fri value=Fri <%=bean.isWeekDayActive("Fri") ? "checked" : ""%>></td><td style="border:none;"><label for=activeWeekDays_Fri><%= getLocString("infosme.label.friday")%></label></td>
+                          <td style="border:none;"><input class=check type=checkbox name=infosmeActiveWeekDays id=activeWeekDays_Sun value=Sun <%=bean.isWeekDayActive("Sun") ? "checked" : ""%>></td><td style="border:none;"><label for=activeWeekDays_Sun><%= getLocString("infosme.label.sunday")%></label></td>
+                        <tr>
+                        <tr>
+                          <td style="border:none;"><input class=check type=checkbox name=infosmeActiveWeekDays id=activeWeekDays_Wed value=Wed <%=bean.isWeekDayActive("Wed") ? "checked" : ""%>></td><td style="border:none;"><label for=activeWeekDays_Wed><%= getLocString("infosme.label.wednesday")%></label></td>
+                        <tr>
+                        </table>
+                      </td>
+                    </tr>
+
+                    <tr class=row<%=rowN++&1%>>
+                      <th><label for=infosmeReplaceMessage><%= getLocString("infosme.label.replace_messages")%></label></th>
+                      <td>
+                        <input class=check type=checkbox id=infosmeReplaceMessage name=infosmeReplaceMessage <%=bean.isInfosmeReplaceMessage() ? "checked" : ""%> onClick="document.getElementById('infosmeSvcType').disabled = !this.checked;">
+                        <input class=txt id=infosmeSvcType name=infosmeSvcType value="<%=StringEncoderDecoder.encode(bean.getInfosmeSvcType())%>" maxlength=5 validation="id" onkeyup="resetValidation(this)">
+                        <script>document.getElementById('infosmeSvcType').disabled = !document.getElementById('infosmeReplaceMessage').checked;</script>
+                      </td>
+                    </tr>
+                    <tr class=row<%=rowN++&1%>>
+                      <th><label for=infosmeTrackIntegrity><%= getLocString("infosme.label.integrity")%></label></th>
+                      <td><input class=check type=checkbox id=infosmeTrackIntegrity name=infosmeTrackIntegrity <%=bean.isInfosmeTrackIntegrity() ? "checked" : ""%>>
+                      </td>
+                    </tr>
+                    <tr class=row<%=rowN++&1%>>
+                      <th><label for=infosmeKeepHistory><%= getLocString("infosme.label.keep_history")%></label></th>
+                      <td><input class=check type=checkbox id=infosmeKeepHistory name=infosmeKeepHistory <%=bean.isInfosmeKeepHistory() ? "checked" : ""%>>
+                      </td>
+                    </tr>
+
+                    <tr class=row<%=rowN++&1%>>
+                      <th><%=getLocString("infosme.label.cacheSize")%></th>
+                      <td><input class=txt name=infosmeMessagesCacheSize value="<%=StringEncoderDecoder.encode(bean.getInfosmeMessagesCacheSize())%>" validation="positive">
+                      </td>
+                    </tr>
+                    <tr class=row<%=rowN++&1%>>
+                      <th><%=getLocString("infosme.label.cacheSleep")%></th>
+                      <td>
+                         <input class=txt name=infosmeMessagesCacheSleep value="<%=StringEncoderDecoder.encode(bean.getInfosmeMessagesCacheSleep())%>" validation="positive">secs
+                      </td>
+                    </tr>
+                    <tr class=row<%=rowN++&1%>>
+                      <th><%=getLocString("infosme.label.uncommitedGeneration")%></th>
+                      <td><input class=txt name=infosmeUncommitedInGeneration value="<%=StringEncoderDecoder.encode(bean.getInfosmeUncommitedInGeneration())%>" validation="positive">
+                      </td>
+                    </tr>
+                    <tr class=row<%=rowN++&1%>>
+                      <th><%=getLocString("infosme.label.uncommitedProcess")%></th>
+                      <td>
+                          <input class=txt name=infosmeUncommitedInProcess value="<%=StringEncoderDecoder.encode(bean.getInfosmeUncommitedInProcess())%>" validation="positive">
+                      </td>
+                    </tr>
+                    <tr class=row<%=rowN++&1%>>
+                      <th><%=getLocString("infosme.label.priority")%></th>
+                      <td>
+                          <input class=txt name=infosmePriority value="<%=StringEncoderDecoder.encode(bean.getInfosmePriority())%>" validation="positive">
+                      </td>
+                    </tr>
+                            </table>
+
+                    <%finishSection(out);
+
+          finishSection(out);
         %>
     </td>
 </tr>

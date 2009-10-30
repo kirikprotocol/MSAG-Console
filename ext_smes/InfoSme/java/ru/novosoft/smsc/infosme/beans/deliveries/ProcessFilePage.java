@@ -1,6 +1,7 @@
 package ru.novosoft.smsc.infosme.beans.deliveries;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.users.User;
 import ru.novosoft.smsc.admin.region.Region;
 import ru.novosoft.smsc.infosme.backend.InfoSmeContext;
 import ru.novosoft.smsc.infosme.backend.MultiTask;
@@ -14,8 +15,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.text.SimpleDateFormat;
-import java.text.ParseException;
 
 /**
  * User: artem
@@ -54,7 +53,7 @@ public class ProcessFilePage extends DeliveriesPage {
           t.setRegionId(region);
           t.setActualRecordsSize(deliveriesFile.getTotalSize());
           t.setOwner(pageData.owner.getName());
-          resetTask(t, pageData.getInfoSmeContext(), pageData.getAppContext(), request);
+          resetTask(t, pageData.getInfoSmeContext(), pageData.getAppContext(), pageData.owner);
 
           multiTask.addTask(region, t);
           t.setDeliveriesFile(deliveriesFile.getFile());
@@ -106,31 +105,29 @@ public class ProcessFilePage extends DeliveriesPage {
     return request.isUserInRole("infosme-admin");
   }
 
-  private static void resetTask(Task task, InfoSmeContext context, SMSCAppContext appContext, HttpServletRequest request) throws AdminException {
+  private static void resetTask(Task task, InfoSmeContext context, SMSCAppContext appContext, User owner) throws AdminException {
+
     task.setAddress(context.getInfoSmeConfig().getAddress());
     task.setDelivery(true);
     task.setProvider(Task.INFOSME_EXT_PROVIDER);
-    task.setPriority(10);
-    task.setMessagesCacheSize(2000);
-    task.setMessagesCacheSleep(11);
-    task.setUncommitedInGeneration(100);
-    task.setUncommitedInProcess(100);
+    task.setPriority(owner.getPrefs().getInfosmePriority());
+    task.setMessagesCacheSize(owner.getPrefs().getInfosmeCacheSize());
+    task.setMessagesCacheSleep(owner.getPrefs().getInfosmeCacheSleep());
+    task.setUncommitedInGeneration(owner.getPrefs().getInfosmeUncommitGeneration());
+    task.setUncommitedInProcess(owner.getPrefs().getInfosmeUncommitProcess());
+    task.setTrackIntegrity(owner.getPrefs().isInfosmeTrackIntegrity());
+    task.setKeepHistory(owner.getPrefs().isInfosmeKeepHistory());
+    task.setReplaceMessage(owner.getPrefs().isInfosmeReplaceMessage());
+    task.setSvcType(owner.getPrefs().getInfosmeSvcType());
     task.setEnabled(true);
-    task.setTrackIntegrity(true);
-    task.setKeepHistory(true);
-    task.setReplaceMessage(false);
-    task.setRetryOnFail(false);
-    task.setSvcType("dlvr");
-    try {
-      Region r = appContext.getRegionsManager().getRegionById(task.getRegionId());
-      SimpleDateFormat tf = new SimpleDateFormat("HH:mm:ss");
-      task.setActivePeriodStart(r == null ? tf.parse("10:00:00") : r.getLocalTime(tf.parse("10:00:00")));
-      task.setActivePeriodEnd(r == null ? tf.parse("21:00:00") : r.getLocalTime(tf.parse("21:00:00")));
-      Date validityPeriod = isUserAdmin(request) ? tf.parse("01:00:00") : tf.parse("00:45:00");
-      task.setValidityPeriod(r == null ? validityPeriod : validityPeriod);
-    } catch (ParseException e) {
-      throw new AdminException(e.getMessage());
-    }
+
+    Region r = appContext.getRegionsManager().getRegionById(task.getRegionId());
+    task.setActivePeriodStart(r == null ? owner.getPrefs().getInfosmePeriodStart() : r.getLocalTime(owner.getPrefs().getInfosmePeriodStart()));
+    task.setActivePeriodEnd(r == null ? owner.getPrefs().getInfosmePeriodEnd() : r.getLocalTime(owner.getPrefs().getInfosmePeriodEnd()));
+    task.setValidityPeriod(owner.getPrefs().getInfosmeValidityPeriod());
+    task.setTransactionMode(owner.getPrefs().isInfosmeTrMode());
+    task.setActiveWeekDaysSet(owner.getPrefs().getInfosmeWeekDaysSet());
+
     task.setStartDate(new Date());
   }
 

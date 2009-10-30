@@ -298,6 +298,7 @@ public class Options extends InfoSmeBean
   public String getProtocolId() {
     return String.valueOf(protocolId);
   }
+
   public void setProtocolId(String protocolId)
   {
     try {
@@ -307,59 +308,6 @@ public class Options extends InfoSmeBean
       this.protocolId = 0;
     }
   }
-//
-//  public String getSmscHost() {
-//    return smscHost;
-//  }
-//  public void setSmscHost(String smscHost) {
-//    this.smscHost = smscHost;
-//  }
-//  public int getSmscPortInt() {
-//    return smscPort;
-//  }
-//  public void setSmscPortInt(int smscPort) {
-//    this.smscPort = smscPort;
-//  }
-//  public String getSmscPort() {
-//    return String.valueOf(smscPort);
-//  }
-//  public void setSmscPort(String smscPort) {
-//    try {
-//      this.smscPort = Integer.decode(smscPort).intValue();
-//    } catch (NumberFormatException e) {
-//      logger.error("Invalid InfoSme.SMSC.port parameter value: \"" + smscPort + '"', e);
-//      this.smscPort = 0;
-//    }
-//  }
-//  public String getSmscSid() {
-//    return smscSid;
-//  }
-//  public void setSmscSid(String smscSid) {
-//    this.smscSid = smscSid;
-//  }
-//  public int getSmscTimeoutInt() {
-//    return smscTimeout;
-//  }
-//  public void setSmscTimeoutInt(int smscTimeout) {
-//    this.smscTimeout = smscTimeout;
-//  }
-//  public String getSmscTimeout() {
-//    return String.valueOf(smscTimeout);
-//  }
-//  public void setSmscTimeout(String smscTimeout) {
-//    try {
-//      this.smscTimeout = Integer.valueOf(smscTimeout).intValue();
-//    } catch (NumberFormatException e) {
-//      logger.error("Invalid InfoSme.SMSC.timeout parameter value: \"" + smscTimeout + '"', e);
-//      this.smscTimeout = 0;
-//    }
-//  }
-//  public String getSmscPassword() {
-//    return smscPassword;
-//  }
-//  public void setSmscPassword(String smscPassword) {
-//    this.smscPassword = smscPassword;
-//  }
 
   public boolean isInitialized() {
     return initialized;

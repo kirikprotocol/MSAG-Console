@@ -9,13 +9,12 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.infosme.backend.InfoSmeContext;
 import ru.novosoft.smsc.infosme.backend.Message;
 import ru.novosoft.smsc.infosme.backend.config.tasks.Task;
+import ru.novosoft.smsc.infosme.backend.config.InfoSmeConfig;
 import ru.novosoft.smsc.infosme.beans.InfoSmeBean;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 
 import java.io.File;
 import java.util.*;
-import java.text.SimpleDateFormat;
-import java.text.ParseException;
 
 /**
  * User: artem
@@ -93,7 +92,7 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
       int ind = name.lastIndexOf('.');
       if (ind > 0)
         name = name.substring(0, ind);
-      
+
       Task task = null;
       for (Iterator iter = tasks.iterator(); iter.hasNext();) {
         Task t = (Task)iter.next();
@@ -318,30 +317,27 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
 
   private static Task createTask(InfoSmeContext ctx, String name, User owner) throws AdminException {
     Task task = ctx.getInfoSmeConfig().createTask();
+    task.setProvider(Task.INFOSME_EXT_PROVIDER);
     task.setName(name);
     task.setOwner(owner.getName());
     task.setDelivery(true);
-    task.setProvider(Task.INFOSME_EXT_PROVIDER);
-    task.setPriority(10);
-    task.setMessagesCacheSize(2000);
-    task.setMessagesCacheSleep(10);
-    task.setUncommitedInGeneration(100);
-    task.setUncommitedInProcess(100);
+    task.setPriority(owner.getPrefs().getInfosmePriority());
+    task.setMessagesCacheSize(owner.getPrefs().getInfosmeCacheSize());
+    task.setMessagesCacheSleep(owner.getPrefs().getInfosmeCacheSleep());
+    task.setUncommitedInGeneration(owner.getPrefs().getInfosmeUncommitGeneration());
+    task.setUncommitedInProcess(owner.getPrefs().getInfosmeUncommitProcess());
+    task.setTrackIntegrity(owner.getPrefs().isInfosmeTrackIntegrity());
+    task.setKeepHistory(owner.getPrefs().isInfosmeKeepHistory());
+    task.setReplaceMessage(owner.getPrefs().isInfosmeReplaceMessage());
+    task.setSvcType(owner.getPrefs().getInfosmeSvcType());
+    task.setActivePeriodStart(owner.getPrefs().getInfosmePeriodStart());
+    task.setActivePeriodEnd(owner.getPrefs().getInfosmePeriodEnd());
+    task.setActiveWeekDaysSet(owner.getPrefs().getInfosmeWeekDaysSet());
+    task.setTransactionMode(owner.getPrefs().isInfosmeTrMode());
+    task.setValidityPeriod(owner.getPrefs().getInfosmeValidityPeriod());
+
     task.setEnabled(true);
-    task.setTrackIntegrity(true);
-    task.setKeepHistory(true);
-    task.setReplaceMessage(false);
-    task.setRetryOnFail(false);
-    task.setSvcType("dlvr");
-    try {
-      SimpleDateFormat tf = new SimpleDateFormat("HH:mm:ss");
-      task.setActivePeriodStart(tf.parse("10:00:00"));
-      task.setActivePeriodEnd(tf.parse("21:00:00"));
-      task.setTransactionMode(false);
-      task.setValidityPeriod(tf.parse("01:00:00"));
-    } catch (ParseException e) {
-      throw new AdminException(e.getMessage());
-    }
+
     task.setStartDate(new Date());
     return task;
   }

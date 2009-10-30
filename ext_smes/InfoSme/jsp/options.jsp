@@ -13,6 +13,7 @@
 
 	int beanResult = bean.process(request);
 %><%@ include file="inc/menu_switch.jsp"%>
+<%@ include file="/WEB-INF/inc/time.jsp"%>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%@ include file="inc/header.jsp"%>
 <%@ include file="/WEB-INF/inc/collapsing_tree.jsp"%>
@@ -117,7 +118,6 @@
 </table>
 <br/>
 <%startSection(out, "siebel", "infosme.title.siebel", false);  %>
-<!--<%= getLocString("infosme.title.siebel")%><br/>   -->
 <table class=properties_list cellspacing=0>
 <col width="1%">
 <col width="99%">
@@ -249,23 +249,23 @@
 </tr>
 
 <tr class=row<%=rowN++&1%>>
-  <th>Messages cache size </th>
+  <th><%=getLocString("infosme.label.cacheSize")%></th>
   <td><input class=txt name=siebelMessagesCacheSize value="<%=StringEncoderDecoder.encode(bean.getSiebelMessagesCacheSize())%>">
   </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Messages cache sleep</th>
+  <th><%=getLocString("infosme.label.cacheSleep")%></th>
   <td>
      <input class=txt name=siebelMessagesCacheSleep value="<%=StringEncoderDecoder.encode(bean.getSiebelMessagesCacheSleep())%>">secs
   </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Uncommited in generation</th>
+  <th><%=getLocString("infosme.label.uncommitedGeneration")%></th>
   <td><input class=txt name=siebelUncommitedInGeneration value="<%=StringEncoderDecoder.encode(bean.getSiebelUncommitedInGeneration())%>">
   </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Uncommited in process</th>
+  <th><%=getLocString("infosme.label.uncommitedProcess")%></th>
   <td>
       <input class=txt name=siebelUncommitedInProcess value="<%=StringEncoderDecoder.encode(bean.getSiebelUncommitedInProcess())%>">
   </td>

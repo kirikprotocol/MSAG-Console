@@ -8,6 +8,7 @@ package ru.novosoft.smsc.admin.users;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import ru.novosoft.smsc.admin.preferences.UserPreferences;
+import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 import ru.novosoft.smsc.util.Functions;
 
@@ -32,7 +33,7 @@ public class User implements Principal {
     private String email = null;
     private UserPreferences prefs = null;
 
-    public User(String login, String password, String[] roles, String firstName, String lastName, String dept, String workPhone, String homePhone, String cellPhone, String email, UserPreferences prefs) {
+    public User(String login, String password, String[] roles, String firstName, String lastName, String dept, String workPhone, String homePhone, String cellPhone, String email, UserPreferences prefs) throws AdminException {
         this(login, password, roles, firstName, lastName, dept, workPhone, homePhone, cellPhone, email);
         this.prefs = prefs;
     }
@@ -59,7 +60,7 @@ public class User implements Principal {
         if (this.email == null) this.email = "";
     }
 
-    public User(Element userElem) {
+    public User(Element userElem) throws AdminException{
         this.login = userElem.getAttribute("login");
         this.password = userElem.getAttribute("password");
 

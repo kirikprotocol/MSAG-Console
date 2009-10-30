@@ -12,6 +12,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 import ru.novosoft.smsc.admin.preferences.UserPreferences;
+import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.jsp.util.tables.DataSource;
 import ru.novosoft.smsc.jsp.util.tables.Filter;
 import ru.novosoft.smsc.jsp.util.tables.Query;
@@ -33,7 +34,7 @@ public class UserManager implements DataSource {
     private Map users = new HashMap();
 
     public UserManager(File configFile)
-            throws Exception, SAXException, IOException {
+            throws Exception {
         this.configFile = configFile;
         load(this.configFile);
         XmlAuthenticator.init(configFile);
@@ -108,7 +109,7 @@ public class UserManager implements DataSource {
     }
 
     protected void load(File file)
-            throws IOException, SAXException, ParserConfigurationException {
+        throws IOException, SAXException, ParserConfigurationException, AdminException {
         Document document = Utils.parse(new FileReader(file));
         NodeList userNodes = document.getElementsByTagName("user");
         for (int i = 0; i < userNodes.getLength(); i++) {
