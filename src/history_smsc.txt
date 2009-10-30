@@ -427,6 +427,7 @@ B3111: Sep 24, 2009
     SMSC	SNMP event fix rtStatusChange and rtNotification swapped
     SMSC	nodivert for specific SMEs feature
     SMSC	divert flag for concatenated messages fix for bill on submit
+    SMSC	timestamp encoding on x86 platform fix
     INMan	HOT-PATCH for short SME ISDN numbers, to avoid SRI for short intl/ISDN numbers
     INMan	CapSM task completion in case of SMReject is fixed 
     Infosme     fix: now openMessages=0 when csvfile is closed
@@ -437,3 +438,8 @@ B3111: Sep 24, 2009
     Infosme	fix bug with ConnectionPool shutdown
     Infosme	reloading of routes and regions is supported
     Infosme	task is not blocked by one slow sender
+
+B3112: Sep 30, 2009
+    SMSC	add CDR billing mode, works like charge on submit, but uses only CDR. IN/OUT records generates separately
+    mcahdb	Add enableAlerts flag to scheduler section
+    INMan	protocol: charging customizing flags

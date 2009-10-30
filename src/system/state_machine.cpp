@@ -1666,20 +1666,15 @@ StateType StateMachine::submit(Tuple& t)
     sms->setStrProperty(Tag::SMSC_SUPPORTED_LOCALE,orgprofile.locale.c_str());
     sms->setIntProperty(Tag::SMSC_SUPPORTED_CODESET,orgprofile.codepage);
   }
-  if(dstSmeInfo.hasFlag(sfCarryOrgDescriptor) || dstSmeInfo.hasFlag(sfSmppPlus))
+  if(dstSmeInfo.hasFlag(sfCarryOrgDescriptor))
   {
-    sms->setStrProperty(Tag::SMSC_IMSI_ADDRESS,sms->getOriginatingDescriptor().imsi);
-    sms->setStrProperty(Tag::SMSC_MSC_ADDRESS,sms->getOriginatingDescriptor().msc);
-  }
-  if(!dstSmeInfo.hasFlag(sfCarrySccpInfo) && !dstSmeInfo.hasFlag(sfSmppPlus))
-  {
-    if(sms->hasStrProperty(Tag::SMSC_SCCP_OA))
+    if(sms->getOriginatingDescriptor().imsi_length)
     {
-      sms->dropProperty(Tag::SMSC_SCCP_OA);
+      sms->setStrProperty(Tag::SMSC_IMSI_ADDRESS,sms->getOriginatingDecriptor().imsi);
     }
-    if(sms->hasStrProperty(Tag::SMSC_SCCP_DA))
+    if(sms->getOriginatingDescriptor().msc_length)
     {
-      sms->dropProperty(Tag::SMSC_SCCP_DA);
+      sms->setStrProperty(Tag::SMSC_MSC_ADDRESS,sms->getOriginatingDescriptor().msc);
     }
   }
 

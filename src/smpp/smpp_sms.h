@@ -47,11 +47,6 @@ inline PduAddress Address2PduAddress(const Address& addr)
 inline void fillOptional(SmppOptional& optional,SMS* sms,uint32_t smeFlags)
 {
   using namespace smsc::smeman;
-  if ( sms->hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE) )
-  {
-    optional.set_userMessageReference(
-      sms->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
-  }
   if ( sms->hasStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID) )
   {
     optional.set_receiptedMessageId(sms->getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str());
@@ -136,46 +131,49 @@ inline void fillOptional(SmppOptional& optional,SMS* sms,uint32_t smeFlags)
 
   if ( sms->hasStrProperty(Tag::SMSC_SUPPORTED_LOCALE) )
     optional.set_supported_locale(sms->getStrProperty(Tag::SMSC_SUPPORTED_LOCALE).c_str());
-
-
-  if ( sms->hasStrProperty(Tag::SMSC_IMSI_ADDRESS) && (smeFlags&sfCarryOrgDescriptor))
-    optional.set_imsi_address(sms->getStrProperty(Tag::SMSC_IMSI_ADDRESS).c_str());
-
-  if ( sms->hasStrProperty(Tag::SMSC_MSC_ADDRESS)  && (smeFlags&sfCarryOrgDescriptor))
-    optional.set_msc_address(sms->getStrProperty(Tag::SMSC_MSC_ADDRESS).c_str());
-
   if ( sms->hasIntProperty(Tag::SMSC_SUPPORTED_CODESET) )
     optional.set_supported_codeset( sms->getIntProperty(Tag::SMSC_SUPPORTED_CODESET) );
-
-  if( sms->hasStrProperty(Tag::SMSC_SCCP_OA) && (smeFlags&sfCarrySccpInfo))
-  {
-    optional.set_sccp_oa(sms->getStrProperty(Tag::SMSC_SCCP_OA).c_str());
-  }
   if( sms->hasStrProperty(Tag::SMSC_SCCP_DA)  && (smeFlags&sfCarrySccpInfo))
   {
     optional.set_sccp_da(sms->getStrProperty(Tag::SMSC_SCCP_DA).c_str());
   }
-
+  
   if(smeFlags&sfSmppPlus)
   {
     optional.set_ussd_session_id(sms->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
-    if(sms->hasStrProperty(Tag::SMSC_IMSI_ADDRESS))
+    if(sms->hasStrProperty(Tag::SMSC_IMSI_ADDRESS)  && (smeFlags&sfCarryOrgDescriptor))
     {
       optional.set_imsi(sms->getStrProperty(Tag::SMSC_IMSI_ADDRESS).c_str());
     }
-    if(sms->hasStrProperty(Tag::SMSC_MSC_ADDRESS))
+    if(sms->hasStrProperty(Tag::SMSC_MSC_ADDRESS)  && (smeFlags&sfCarryOrgDescriptor))
     {
       optional.set_vlr_number_ton(1);
       optional.set_vlr_number_npi(1);
       optional.set_vlr_number(sms->getStrProperty(Tag::SMSC_MSC_ADDRESS).c_str());
     }
-    if(sms->hasStrProperty(Tag::SMSC_SCCP_OA))
+    if(sms->hasStrProperty(Tag::SMSC_SCCP_OA) && (smeFlags&sfCarrySccpInfo))
     {
       optional.set_hlr_address_ton(1);
       optional.set_hlr_address_npi(1);
       optional.set_hlr_address(sms->getStrProperty(Tag::SMSC_SCCP_OA).c_str());
     }
-  }
+  } else {
+    if ( sms->hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE) )
+    {
+      optional.set_userMessageReference(sms->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
+    }
+    if ( sms->hasStrProperty(Tag::SMSC_IMSI_ADDRESS) && (smeFlags&sfCarryOrgDescriptor))
+      optional.set_imsi_address(sms->getStrProperty(Tag::SMSC_IMSI_ADDRESS).c_str());
+
+    if ( sms->hasStrProperty(Tag::SMSC_MSC_ADDRESS)  && (smeFlags&sfCarryOrgDescriptor))
+      optional.set_msc_address(sms->getStrProperty(Tag::SMSC_MSC_ADDRESS).c_str());
+    
+    if( sms->hasStrProperty(Tag::SMSC_SCCP_OA) && (smeFlags&sfCarrySccpInfo))
+    {
+      optional.set_sccp_oa(sms->getStrProperty(Tag::SMSC_SCCP_OA).c_str());
+    }
+    
+  }  
 
   if(sms->hasIntProperty(Tag::SMPP_ITS_SESSION_INFO))
   {
