@@ -920,6 +920,7 @@ bool Task::getNextMessage(Message& message)
         // int fetched = 0;
         fetched = messageCache_->fill(currentTime,store,info.messagesCacheSize);
         bSelectedAll = (fetched != info.messagesCacheSize);
+        setInProcess(true);
     }
     catch (std::exception& exc)
     {
@@ -951,7 +952,7 @@ bool Task::getNextMessage(Message& message)
                            info.uid, info.name.c_str(), msgid );
         }
     } while ( true );
-    return setInProcess(false);
+    return false;
     // lastMessagesCacheEmpty = time(NULL);
     // bSelectedAll = true;
     // -- db: why bSelectedAll is set here?
