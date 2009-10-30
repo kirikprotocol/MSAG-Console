@@ -163,7 +163,7 @@ int main(int argc,char* argv[])
 
         s.setIntProperty(Tag::SMPP_SM_LENGTH,0);
 
-        fillSmppPduFromSms(&sm,&s);
+        fillSmppPduFromSms(&sm,&s,0);
         ss[org]->getAsyncTransmitter()->submit(sm);
         millisleep(9);
         cnt++;

@@ -281,7 +281,7 @@ int main(int argc,char* argv[])
     StrList words;
     StrList sources;
     StrList dests;
-    
+
     Address startAddr,endAddr,curAddr;
 
     if(sourcesFile.length())LoadFile(sourcesFile,sources);
@@ -294,7 +294,7 @@ int main(int argc,char* argv[])
     }
     else if (destination.length())
     {
-      dests.push_back(destination); 
+      dests.push_back(destination);
     }
     else if(destinationsRange.length())
     {
@@ -347,7 +347,7 @@ int main(int argc,char* argv[])
     }
 
     int delay=1000000/speed;
-    
+
     time_t startTime=time(NULL);
 
     SmppSession ss(cfg,&lst);
@@ -450,7 +450,7 @@ int main(int argc,char* argv[])
             s.setIntProperty(Tag::SMPP_ESM_CLASS,(s.getIntProperty(Tag::SMPP_ESM_CLASS)&(~3))|3);
           }
         }
-        
+
         {
           int ussd=rand()%100;
           if(ussd<probUssdMessage)
@@ -465,7 +465,7 @@ int main(int argc,char* argv[])
           s.setIntProperty(Tag::SMPP_SET_DPF,setDpf);
         }
 
-        fillSmppPduFromSms(&sm,&s);
+        fillSmppPduFromSms(&sm,&s,0);
         atr->submit(sm);
 
         cnt++;
@@ -502,7 +502,7 @@ int main(int argc,char* argv[])
         {
           break;
         }
-        
+
         hrtime_t msgproc=gethrtime()-msgstart;
         msgproc/=1000;
         if(delay>msgproc+overdelay)
@@ -517,7 +517,7 @@ int main(int argc,char* argv[])
           //__warning2__("overdelay:%d",overdelay);
           //if(overdelay<0)overdelay=0;
         }
-        
+
       }
     }
     catch(std::exception& e)

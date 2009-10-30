@@ -1520,10 +1520,10 @@ public:
       SMS s;
       if(pdu->get_commandId()==SmppCommandSet::DELIVERY_SM)
       {
-        fetchSmsFromSmppPdu((PduXSm*)pdu,&s);
+        fetchSmsFromSmppPdu((PduXSm*)pdu,&s,0);
       }else
       {
-        fetchSmsFromDataSmPdu((PduDataSm*)pdu,&s);
+        fetchSmsFromDataSmPdu((PduDataSm*)pdu,&s,0);
       }
 
       if(autoAnswer)
@@ -1537,7 +1537,7 @@ public:
         }
         PduSubmitSm sm;
         sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
-        fillSmppPduFromSms(&sm,&s);
+        fillSmppPduFromSms(&sm,&s,0);
         atrans->submit(sm);
         if(!silent)
         {
@@ -2675,7 +2675,7 @@ int main(int argc,char* argv[])
       SmppHeader *resp=0;
       if(!dataSm)
       {
-        fillSmppPduFromSms(&sm,&s);
+        fillSmppPduFromSms(&sm,&s,0);
         AddOptionals(sm);
         try{
           if(asyncsend || vcmode)
@@ -2691,7 +2691,7 @@ int main(int argc,char* argv[])
         }
       }else
       {
-        fillDataSmFromSms(&dsm,&s);
+        fillDataSmFromSms(&dsm,&s,0);
         AddOptionals(dsm);
         try{
           if(asyncsend || vcmode)

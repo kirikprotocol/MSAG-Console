@@ -118,7 +118,7 @@ int main(int argc,char* argv[])
         printf("Connect:");
         for(int i=0;i<N*2;i++)
         {
-          printf(".",i);fflush(stdout);
+          printf(".");fflush(stdout);
           int idx=v[i];
           for(;;)
           {
@@ -139,7 +139,7 @@ int main(int argc,char* argv[])
         SMS s;
         char msc[]="123";
         char imsi[]="123";
-        s.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
+        s.setOriginatingDescriptor((uint8_t)strlen(msc),msc,(uint8_t)strlen(imsi),imsi,1);
 
         s.setValidTime(0);
 
@@ -191,11 +191,11 @@ int main(int argc,char* argv[])
             s.setOriginatingAddress(dstAddr);
 
             s.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::LATIN1);
-            s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,message.c_str(),message.length());
+            s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,message.c_str(),(unsigned)message.length());
 
             s.setIntProperty(Tag::SMPP_SM_LENGTH,0);
 
-            fillSmppPduFromSms(&sm,&s);
+            fillSmppPduFromSms(&sm,&s,0);
             ss[org*2]->getAsyncTransmitter()->submit(sm);
             millisleep(9);
             cnt++;
