@@ -1542,40 +1542,41 @@ static int makeUssdErrorText( MapDialog* dialog,char *text, unsigned* textLen, i
   DummyGetAdapter ga;
   ContextEnvironment ce;
 
-  smsc::profiler::Profile p=Smsc::getInstance().getProfiler()->lookup(dialog->abonent.c_str());
-
-  int dc=p.codepage;
-  if(dialog->version==1)
+  int dc=0;
+  std::string locale = "en_en";
+  if( dialog->version > 1 && dialog->sms.get() ) 
   {
-    dc=0;
-  }
+    smsc::profiler::Profile p=Smsc::getInstance().getProfiler()->lookup(dialog->sms->getOriginatingAddress().toString().c_str());
+    dc=p.codepage;
+    locale = p.locale;
+  }  
 
 
   if( code > 0 )
   {
     char buf[32];
     sprintf(buf,"%d",code);
-    std::string reason=ResourceManager::getInstance()->getString(p.locale,((string)"reason.")+buf);
+    std::string reason=ResourceManager::getInstance()->getString(locale,((string)"reason.")+buf);
     ce.exportStr("msg",reason.c_str());
     ce.exportInt("code",code);
   } else if( code == -1 )
   {
-    std::string reason=ResourceManager::getInstance()->getString(p.locale,"ussd_invalid_cmd");
+    std::string reason=ResourceManager::getInstance()->getString(locale,"ussd_invalid_cmd");
     ce.exportStr("msg",reason.c_str());
     ce.exportInt("code",0);
   } else
   {
-    std::string reason=ResourceManager::getInstance()->getString(p.locale,"ussd_route_err");
+    std::string reason=ResourceManager::getInstance()->getString(locale,"ussd_route_err");
     ce.exportStr("msg",reason.c_str());
     ce.exportInt("code",routeErr);
   }
 
-  OutputFormatter* ofDelivered=ResourceManager::getInstance()->getFormatter(p.locale,"ussd_error");
+  OutputFormatter* ofDelivered=ResourceManager::getInstance()->getFormatter(locale,"ussd_error");
   string out;
   if(!ofDelivered)
   {
     out="Unknown formatter ussd_error for locale ";
-    out+=p.locale;
+    out+=locale;
   } else
   {
     try{
