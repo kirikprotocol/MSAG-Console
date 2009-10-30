@@ -646,7 +646,7 @@ public:
     if(smppTransmitterSocket)smppTransmitterSocket->assignProxy(this);
   }
 
-  bool getSmeFlags()const
+  uint32_t getSmeFlags()const
   {
     return smeFlags;
   }
