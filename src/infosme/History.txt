@@ -1,13 +1,16 @@
 History in reverse order
 ----------------------------------------------------
+
+2009-10-30 14:48 bukind
+ feature (dirty patch): randomizing tasks before sending
 2009-10-30 12:47 bukind
-bugfix: Task did not set inProcess flag when successfully fetches message
+ bugfix: Task did not set inProcess flag when successfully fetches message
 
 ----------------------------------------------------
 infosme-build-20091021 14:00
 
 2009-10-21 bukind
-bugfix: TaskProcessor did not catch all exceptions in Execute,
+ bugfix: TaskProcessor did not catch all exceptions in Execute,
   and CsvStore::loadMessage() may throw exception "message not found"
   which causes an abort.
 

@@ -4,12 +4,32 @@
 #include "SmscConnector.h"
 #include <exception>
 #include <list>
+#include <cstdlib>
 #include <sstream>
+#include <vector>
 #include <util/timeslotcounter.hpp>
 
 #ident "@(#)$Id$"
 
 extern bool isMSISDNAddress(const char* string);
+
+namespace {
+
+struct Drand48adapter
+{
+public:
+    Drand48adapter() {
+        srand48(time(0));
+    }
+    template <typename T> T operator () ( T tmax ) {
+        return T( tmax * drand48() );
+    }
+};
+
+Drand48adapter drand48adapter;
+
+}
+
 
 namespace smsc {
 namespace infosme {
@@ -293,7 +313,8 @@ void TaskProcessor::Stop()
 }
 int TaskProcessor::Execute()
 {
-    Array<TaskGuard *> taskGuards;
+    std::vector< TaskGuard* > taskGuards;
+    taskGuards.reserve(100);
 
     while (!bNeedExit)
     {
@@ -307,17 +328,20 @@ int TaskProcessor::Execute()
             IntHash<Task*>::Iterator it=tasks.First();
             while (!bNeedExit && it.Next(key, task))
                 if (task && task->isReady(currentTime, true)) {
-                    taskGuards.Push(new TaskGuard(task));
+                    taskGuards.push_back(new TaskGuard(task));
                     task->currentPriorityFrameCounter = 0;
                     task->resetSuspendedRegions();
                 }
+            // NOTE: we randomize under tasksLock
+            std::random_shuffle( taskGuards.begin(), taskGuards.end(),
+                                 ::drand48adapter );
         }
 
         int processed = 0;
-        while (taskGuards.Count()>0)
+        while (!taskGuards.empty())
         {
-            TaskGuard* taskGuard = 0;
-            taskGuards.Shift(taskGuard);
+            TaskGuard* taskGuard = taskGuards.back();
+            taskGuards.pop_back();
             if (!taskGuard) continue;
 
             do {
