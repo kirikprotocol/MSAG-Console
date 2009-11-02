@@ -300,6 +300,13 @@ public class SiebelTaskManager implements Runnable {
         smeContext.getInfoSme().addDeliveryMessages(task.getId(), toSend);
         currentTime += 1000;
         toSend = loadMessage(maxMessagesPerSecond, new Date(currentTime), messages, unloaded);
+        if(unloaded.size() == 10000) {
+          updateUnloaded(unloaded);
+          unloaded.clear();
+        }
+      }
+      if(!unloaded.isEmpty()) {
+        updateUnloaded(unloaded);
       }
 
       smeContext.getInfoSme().endDeliveryMessageGeneration(task.getId());
@@ -308,9 +315,7 @@ public class SiebelTaskManager implements Runnable {
 
       _addTask(task, false);
 
-      if(!unloaded.isEmpty()) {
-        updateUnloaded(unloaded);
-      }
+
 
       if (logger.isDebugEnabled()) {
         logger.debug("Siebel: task generation ok...");
