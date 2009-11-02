@@ -33,7 +33,7 @@ public class InfoSmeTaskManager implements Runnable{
 
   private final LinkedList distributions = new LinkedList();
 
-  private final static String SME = "InfoSme";
+  private final static String SME_ID = "InfoSme";
 
   private final SMSCAppContext appContext;
 
@@ -120,20 +120,19 @@ public class InfoSmeTaskManager implements Runnable{
   private void handle(Distribution d) throws Config.WrongParamTypeException, IOException, ParserConfigurationException,
       AdminException, Config.ParamNotFoundException, SAXException {
 
-    InfoSmeContext smeContext = InfoSmeContext.getInstance(appContext, SME);
+    InfoSmeContext smeContext = InfoSmeContext.getInstance(appContext, SME_ID);
 
     if(smeContext == null) {
       throw new AdminException("Infosme is offline");
     }
 
-    String file = d.filename;
+    String fileName = d.filename;
     User user = d.user;
     Task task = d.task;
 
-    String processedFile = file + ".processed";
-
-    if (!new File(file).renameTo(new File(processedFile))) {
-      category.error("Can't rename initial file: "+file);
+    File file = new File(fileName);
+    if(!file.exists()) {
+      category.warn("File to process doesn't exist: "+fileName);
       return;
     }
 
@@ -149,12 +148,11 @@ public class InfoSmeTaskManager implements Runnable{
         smeContext.getInfoSme().addTask(task.getId());
       }
 
-
       if(category.isDebugEnabled()) {
-        category.debug("Start task's generastion for: " + file);
+        category.debug("Start task's generation for: " + fileName);
       }
 
-      is = new BufferedReader(new InputStreamReader(new FileInputStream(processedFile), Functions.getLocaleEncoding()));
+      is = new BufferedReader(new InputStreamReader(new FileInputStream(file), Functions.getLocaleEncoding()));
 
       final int maxMessagesPerSecond = smeContext.getInfoSmeConfig().getMaxMessagesPerSecond();
 
@@ -172,15 +170,18 @@ public class InfoSmeTaskManager implements Runnable{
       smeContext.getInfoSmeConfig().addAndApplyTask(task);
 
       if(category.isDebugEnabled()) {
-        category.debug("Task's generastion finished: " + file);
+        category.debug("Task's generation finished: " + fileName);
+      }
+      if (!file.renameTo(new File(fileName + ".processed"))) {
+        category.error("Can't rename initial file: "+fileName);
       }
     } catch (Exception e) {
       category.error(e,e);
       removeTask(task, smeContext);
-      if (!new File(processedFile).renameTo(new File(file + ".failed"))) {
+      if (!file.renameTo(new File(fileName + ".failed"))) {
         category.warn("Can't rename file to '.failed'");
       }
-      saveTaskFail(e, file);
+      saveTaskFail(e, fileName);
     } finally {
       try {
         if (is != null)
