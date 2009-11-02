@@ -7,6 +7,7 @@ import ru.novosoft.smsc.infosme.backend.siebel.SiebelDataProvider;
 import ru.novosoft.smsc.infosme.backend.siebel.SiebelTaskManager;
 import ru.novosoft.smsc.infosme.backend.siebel.SiebelFinalStateThread;
 import ru.novosoft.smsc.infosme.backend.siebel.impl.SiebelDataProviderImpl;
+import ru.novosoft.smsc.infosme.backend.commands.InfoSmeTaskManager;
 import ru.novosoft.smsc.jsp.SMEAppContext;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.util.config.Config;
@@ -55,6 +56,8 @@ public class InfoSmeContext implements SMEAppContext
   private BlackListManager blackListManager;
   private String smeId = "InfoSme";
 
+  private final InfoSmeTaskManager taskManager;
+
   private SiebelDataProvider siebelDataProvider;
   private SiebelTaskManager siebelTaskManager;
   private SiebelFinalStateThread siebelFinalStateThread;
@@ -73,6 +76,9 @@ public class InfoSmeContext implements SMEAppContext
         infoSmeConfig.getAdminPort());
 
     this.blackListManager = new BlackListManager(appContext.getPersonalizationClientPool());
+    this.taskManager = new InfoSmeTaskManager(appContext);
+    this.taskManager.start();
+
     if(infoSmeConfig.isSiebelTMStarted()) {
       startSiebelTaskManager();
       System.out.println("Siebel: Siebel is started");
@@ -131,6 +137,9 @@ public class InfoSmeContext implements SMEAppContext
     }
     if(siebelDataProvider != null) {
       siebelDataProvider.shutdown();
+    }
+    if(taskManager != null) {
+      taskManager.shutdown();
     }
   }
 
@@ -244,5 +253,9 @@ public class InfoSmeContext implements SMEAppContext
 
   public BlackListManager getBlackListManager() {
     return blackListManager;
+  }
+
+  public InfoSmeTaskManager getTaskManager() {
+    return taskManager;
   }
 }

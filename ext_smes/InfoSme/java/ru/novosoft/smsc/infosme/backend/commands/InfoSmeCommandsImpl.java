@@ -9,7 +9,6 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.infosme.backend.InfoSmeContext;
 import ru.novosoft.smsc.infosme.backend.Message;
 import ru.novosoft.smsc.infosme.backend.config.tasks.Task;
-import ru.novosoft.smsc.infosme.backend.config.InfoSmeConfig;
 import ru.novosoft.smsc.infosme.beans.InfoSmeBean;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 
@@ -104,7 +103,9 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
       if (task == null)
         task = createTask(context, name, user);
 
-      new TaskBuilder(appContext, context, task, user, file).start();
+      if(!context.getTaskManager().addTask(task, user, file)) {
+        throw new AdminException("Can't add task: "+file);
+      }
       ctx.setMessage("File " + file + " was added to process queue");
       ctx.setStatus(CommandContext.CMD_OK);
     } catch (Exception e) {
@@ -212,7 +213,9 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
       User user = getUser(ctx);
       Task t = createTask(context, d, user);
 
-      new TaskBuilder(appContext, context, t, user, d.getFile()).start();
+      if(!context.getTaskManager().addTask(t, user, d.getFile())) {
+        throw new AdminException("Can't add task: "+d.getFile());
+      }
 
       ctx.setMessage(t.getId());
       ctx.setStatus(CommandContext.CMD_OK);
