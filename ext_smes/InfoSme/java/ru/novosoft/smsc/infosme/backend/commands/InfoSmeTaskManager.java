@@ -29,9 +29,9 @@ import javax.xml.parsers.ParserConfigurationException;
 
 public class InfoSmeTaskManager implements Runnable{
 
-  private Category category = Category.getInstance(InfoSmeTaskManager.class);
+  private static final Category category = Category.getInstance(InfoSmeTaskManager.class);
 
-  private LinkedList distributions = new LinkedList();
+  private final LinkedList distributions = new LinkedList();
 
   private final static String SME = "InfoSme";
 
