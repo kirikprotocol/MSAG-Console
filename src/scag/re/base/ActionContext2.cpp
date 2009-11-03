@@ -83,6 +83,7 @@ void ActionContext::resetContext( Hash<Property>*  constants,
     command_ = command;
     commandProperty_ = commandProperty;
     if ( infrastructConstants_ ) infrastructConstants_->Empty();
+    tariffRec_.reset(0);
     // setInfrastructureConstants();
 };
 
@@ -192,6 +193,13 @@ void ActionContext::getBillingInfoStruct( bill::BillingInfoStruct& bis )
 bill::infrastruct::TariffRec* ActionContext::getTariffRec( uint32_t category,
                                                            uint32_t medyaType)
 {
+    if ( tariffRec_.get() ) {
+        if ( tariffRec_->CategoryId != category ||
+             tariffRec_->MediaTypeId != medyaType ||
+             tariffOperId_ != commandProperty_->operatorId ) {
+            tariffRec_.reset(0);
+        }
+    }
     if (!tariffRec_.get())
     {
         bill::infrastruct::Infrastructure& istr = 
@@ -199,7 +207,7 @@ bill::infrastruct::TariffRec* ActionContext::getTariffRec( uint32_t category,
         tariffRec_.reset( istr.GetTariff(commandProperty_->operatorId,
                                          category,
                                          medyaType) );
-
+        tariffOperId_ = commandProperty_->operatorId;
         if (!tariffRec_.get())
             throw SCAGException( "BillEvent: Cannot find tariffRec for OID=%d, cat=%d, mtype=%d ",
                                  commandProperty_->operatorId, category, medyaType);

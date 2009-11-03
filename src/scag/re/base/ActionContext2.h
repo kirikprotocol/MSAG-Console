@@ -114,6 +114,7 @@ public:
     session_(session),
     command_(command),
     commandProperty_(commandProperty),
+    tariffOperId_(uint32_t(-1)),
     destroyService_(-1),
     rule_(0)
     {
@@ -210,6 +211,7 @@ private:
     CommandAccessor*        command_;
     CommandProperty*        commandProperty_;
     std::auto_ptr< bill::infrastruct::TariffRec >  tariffRec_;
+    uint32_t                tariffOperId_;
     int                     destroyService_;
 
     Rule*                   rule_;        // a rule from long call context
