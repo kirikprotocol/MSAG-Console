@@ -70,7 +70,7 @@ void Connector::processEvents()
         try {
             channel.connect();
             // move sockets to finishing
-            smsc_log_info( log_, "socket %p connected, waiting for server answer", channel.socket() );
+            smsc_log_debug( log_, "socket %p connected, waiting for server answer", channel.socket() );
             finishingSockets_.Push(&channel);
             continue;
         } catch ( std::exception& e ) {

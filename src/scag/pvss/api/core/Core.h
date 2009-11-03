@@ -88,8 +88,9 @@ public:
      * @param channel   Channel on wich problem was occurred
      */
     void handleError( const PvssException& exc, PvssSocket& channel ) {
-        smsc_log_error( logger, "exc %s on channel %p: %s",
-                        PvssException::statusToString(exc.getType()), &channel, exc.what() );
+        smsc_log_error( logger, "exc %s on socket %p of channel %p: %s",
+                        PvssException::statusToString(exc.getType()),
+                        channel.socket(), &channel, exc.what() );
         closeChannel( * channel.socket() );
     }
         
@@ -111,6 +112,7 @@ public:
             registerForRead(channel);
             registerForWrite(channel);
             inactivityTracker->registerChannel(channel, utime);
+            smsc_log_info(logger,"Socket %p connected and registered", channel.socket() );
         }
         catch (PvssException& register_exc) {
             smsc_log_error( logger, "Failed to register new channel. Details: %s", register_exc.what() );

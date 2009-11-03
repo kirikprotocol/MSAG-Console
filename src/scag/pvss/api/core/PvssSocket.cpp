@@ -227,12 +227,12 @@ void PvssSocket::connect() /* throw (exceptions::IOException) */
     smsc_log_info(log_,"Connecting channel %p to host=%s:%d tmo=%d", this,
                   host_.c_str(), port_, connectionTmo_ );
     if ( sock_->Init(host_.c_str(),port_,connectionTmo_) == -1 ) {
-        smsc_log_info(log_,"cannot init socket");
-        throw exceptions::IOException("cannot init socket on channel %p", this);
+        smsc_log_warn(log_,"cannot init socket %p on channel %p", socket(), this );
+        throw exceptions::IOException("cannot init socket %p on channel %p", socket(), this);
     }
     if ( sock_->Connect() == -1 ) {
         smsc_log_info(log_,"connect failed");
-        throw exceptions::IOException("cannot connect socket on channel %p", this);
+        throw exceptions::IOException("Connect() failed for socket %p on channel %p", socket(), this);
     }
 }
 
