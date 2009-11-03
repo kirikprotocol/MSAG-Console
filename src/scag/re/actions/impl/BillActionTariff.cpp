@@ -117,6 +117,15 @@ bool BillActionTariff::run( ActionContext& context )
         return true;
     }
 
+    smsc_log_debug(logger,"tariff record (%d,%d) found: svc=%s currency=%s catid=%d mediaid=%d billType=%d price=%s",
+                   cat, mt,
+                   tariffRec->ServiceNumber.c_str(),
+                   tariffRec->Currency.c_str(),
+                   tariffRec->CategoryId,
+                   tariffRec->MediaTypeId,
+                   tariffRec->billType,
+                   tariffRec->getPrice().c_str() );
+
     if ( resultServiceNumber_.isFound() ) {
         Property* p = resultServiceNumber_.getProperty(context);
         if (p) p->setStr(tariffRec->ServiceNumber.c_str());
