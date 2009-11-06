@@ -1,0 +1,17 @@
+infosme/infosme2   	  infosme \
+ -linfosme-v2 \
+ -ladmin-protocol -ladmin-service \
+ -ldb \
+ -lcore-network $(SOCKETLIB) -lnsl \
+ -lcore-threads \
+ -lutil-csv \
+ -lutil-mirrorfile \
+ -lutil-config-route \
+ -lutil-config-region \
+ -lutil-config \
+ -lutil-xml $(XERCES_LIB) \
+ -L$(SMSC_BUILDDIR)/bin/db/exceptions -ldb_exc @db/exceptions/libdb_exc.so \
+ @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
+ -lutil \
+ $(__LIBRARIES) \
+ -lpthread -lrt -ldl
