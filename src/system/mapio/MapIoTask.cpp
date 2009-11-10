@@ -937,7 +937,7 @@ void MapIoTask::StartMap()
     tp.startTask(new ReconnectThread());
     do{
       sleep(1);
-    }while(MAP_connectedInstCount==0 && !isStopping);
+    }while(MAP_connectedInstCount==0 && !isStopping && !smsc::system::Smsc::getInstance().getStopFlag());
 
     is_started = true;
     __trace2__("signal mapiotask start:%p",startevent);
