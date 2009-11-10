@@ -401,7 +401,7 @@ TO ALL: Insert log record for all significant changes & fixes here.
   with a CommandProperty object itself (the keywords are stored 
   in CommandProperty object).
 2009-10-19 bukind
-  bugfix: JournalFile now does not check journal file size on startup.  Instead
+  pvss bugfix: JournalFile now does not check journal file size on startup.  Instead
   it checks the size when writing to discover if rollover is needed.
 2009-10-20 bukind
   bugfix: snmp client did not reconnect w/o agent_check_and_process(1)
@@ -423,6 +423,7 @@ TO ALL: Insert log record for all significant changes & fixes here.
 
 =================================================================================================================
 2009-11-10 12:30 bukind msag-build-20091110
+2009-11-10 15:35 bukind pvss-build-20091110
 2009-10-29 16:22 bukind
   feature: either externalId or transId may be specified for Ewallet
 2009-10-29 17:02 bukind
@@ -430,4 +431,4 @@ TO ALL: Insert log record for all significant changes & fixes here.
 2009-11-03 14:16 bukind
   bugfix: clearing cached tariff record in ActionContext
 
---- current fixes
+--- current-fixes ---
