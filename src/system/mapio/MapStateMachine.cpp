@@ -1544,12 +1544,12 @@ static int makeUssdErrorText( MapDialog* dialog,char *text, unsigned* textLen, i
 
   int dc=0;
   std::string locale = "en_en";
-  if( dialog->version > 1 && dialog->sms.get() ) 
+  if( dialog->version > 1 && dialog->sms.get() )
   {
     smsc::profiler::Profile p=Smsc::getInstance().getProfiler()->lookup(dialog->sms->getOriginatingAddress().toString().c_str());
     dc=p.codepage;
     locale = p.locale;
-  }  
+  }
 
 
   if( code > 0 )
@@ -3777,12 +3777,12 @@ USHORT_T Et96MapV2UnstructuredSSRequestConf(
     sms.setIntProperty(Tag::SMPP_PROTOCOL_ID,0);
     sms.setMessageReference(0);
     sms.setDestinationAddress(originator);
-    if(sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP)==USSD_USSR_REQ)
-    {
-      sms.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,USSD_USSR_CONF);
-    }else
+    if(dialog->lastUssdMessage)
     {
       sms.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,USSD_USSR_CONF_LAST);
+    }else
+    {
+      sms.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,USSD_USSR_CONF);
     }
     sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,dialog->ussdMrRef);
     dialog->AssignSms(_sms.release());
