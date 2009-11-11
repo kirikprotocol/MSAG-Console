@@ -73,10 +73,10 @@ public class GlobalConfig implements EventStore.Config,
     XmlConfigSection schedulerSection = config.getSection("scheduler");
     if (schedulerSection == null)
       throw new ConfigException(("'scheduler' section not found in config.xml"));
-    schedulerExpiredNotifText = schedulerSection.getString("expiredText");
+    schedulerExpiredNotifText = schedulerSection.getString("expiredText", null);
     schedulerStoreDir = schedulerSection.getString("storeDir");
-    schedulerErrorText = schedulerSection.getString("errorText");
-    schedulerProfileChangedText = schedulerSection.getString("profileChangedText");
+    schedulerErrorText = schedulerSection.getString("errorText", null);
+    schedulerProfileChangedText = schedulerSection.getString("profileChangedText", null);
     schedulerExpirationPeriod = schedulerSection.getInt("expirationPeriod");
     schedulerServiceType = schedulerSection.getString("serviceType");
     schedulerEnableAlerts = schedulerSection.getBool("enableAlerts", true);

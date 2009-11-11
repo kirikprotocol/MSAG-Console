@@ -87,7 +87,7 @@ public class Scheduler {
   }
 
   public void missedCallError(String caller, String called) {
-    if (missedCallAlert(caller, called))
+    if (missedCallAlert(caller, called) && config.getSchedulerErrorText() != null)
       sendMessage(called, caller, config.getSchedulerErrorText());
   }
 
@@ -99,7 +99,8 @@ public class Scheduler {
       for (Task t : tasks) {
         ds.remove(t);
         engine.removeTask(t);
-        sendMessage(t.getCalled(), t.getCaller(), config.getSchedulerProfileChangedText());
+        if (config.getSchedulerProfileChangedText() != null)
+          sendMessage(t.getCalled(), t.getCaller(), config.getSchedulerProfileChangedText());
       }
 
     } catch (DataSourceException e) {

@@ -118,7 +118,7 @@ class SchedulerEngine {
             if (log.isDebugEnabled())
               log.debug("Send notification msg: oa=" + t.getCalled() + "; da=" + t.getCaller());
 
-            if (config.getSchedulerEnableAlerts() && (t.getCaller() != null || t.getCaller().length() > 0)) {
+            if (config.getSchedulerEnableAlerts() && config.getSchedulerExpiredNotifText() != null && (t.getCaller() != null || t.getCaller().length() > 0)) {
               Message m = new Message();
               m.setSourceAddress(t.getCalled());
               m.setDestinationAddress(t.getCaller());
