@@ -268,7 +268,7 @@ int main(int argc, char* argv[]) {
     try{
         smsc_log_info(logger,"###########################################################################");
         smsc_log_info(logger,"Starting up %s%s", getStrVersion(),
-                      ( backup ? "" : " in backup mode" ));
+                      ( backup ? " in backup mode" : "" ));
 
         Manager::init("config.xml");
         Manager& manager = Manager::getInstance();
