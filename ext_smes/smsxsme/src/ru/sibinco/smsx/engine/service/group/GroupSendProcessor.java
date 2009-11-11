@@ -155,6 +155,8 @@ class GroupSendProcessor implements GroupSendCmd.Receiver,
       throw new CommandExecutionException("Group name is empty", GroupSendCmd.ERR_UNKNOWN_GROUP);
 
     try {
+      if (!listsDS.containsDistrList(cmd.getGroupName(), cmd.getOwner()))
+        throw new CommandExecutionException("Group does not exists", GroupSendCmd.ERR_UNKNOWN_GROUP);
       DistrList dl = listsDS.getDistrList(cmd.getGroupName(), cmd.getOwner());
       boolean submitterIsOwner = cmd.getSubmitter().equals(dl.getOwner());
       return groupSend(cmd, dl, submitterIsOwner, !submitterIsOwner);
@@ -173,9 +175,10 @@ class GroupSendProcessor implements GroupSendCmd.Receiver,
     try {
       int listId = replies.get(cmd.getSubmitter());
       if (listId == -1)
-        throw new CommandExecutionException("Reply group for " + cmd.getSubmitter() + " not found.", GroupReplyCmd.ERR_UNKNOWN_GROUP);
-
+        throw new CommandExecutionException("Reply group for " + cmd.getSubmitter() + " not found.", GroupReplyCmd.ERR_UNKNOWN_GROUP);      
       DistrList dl = listsDS.getDistrList(listId);
+      if (dl == null)
+        throw new CommandExecutionException("Reply group does not exists", GroupSendCmd.ERR_UNKNOWN_GROUP);
       boolean submitterIsOwner = cmd.getSubmitter().equals(dl.getOwner());
       return groupSend(cmd, dl, submitterIsOwner, !submitterIsOwner); 
     } catch (CommandExecutionException e) {
