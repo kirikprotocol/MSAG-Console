@@ -356,8 +356,6 @@ public class SiebelTaskManager implements Runnable {
       String msisdn = sM.getMsisdn();
       msisdn = msisdn.trim();
       if(checkMsidn(msisdn)) {
-        if (msisdn.charAt(0) == '7')
-          msisdn = '+' + msisdn;
         final Message msg = new Message();
         msg.setAbonent(msisdn);
         msg.setMessage(sM.getMessage());
