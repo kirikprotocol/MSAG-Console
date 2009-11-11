@@ -526,6 +526,7 @@ struct MapDialog{
     isUSSD = false;
     noSri=false;
     noRespFromPeer=false;
+    lastUssdMessage=false;
     s_imsi.clear();
     s_msc.clear();
 
