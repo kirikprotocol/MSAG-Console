@@ -294,12 +294,14 @@ public class SiebelTaskManager implements Runnable {
 
       long currentTime = task.getStartDate() == null ? System.currentTimeMillis() : task.getStartDate().getTime();
 
-      Collection unloaded = new LinkedList();
-      Collection toSend = loadMessage(maxMessagesPerSecond, new Date(currentTime), messages, unloaded);
+      Collection unloaded = new ArrayList(10001);
+      Collection toSend = new ArrayList(maxMessagesPerSecond + 1);
+      loadMessage(maxMessagesPerSecond, new Date(currentTime), messages, toSend, unloaded);
       while (toSend != null && !toSend.isEmpty()) {
         smeContext.getInfoSme().addDeliveryMessages(task.getId(), toSend);
         currentTime += 1000;
-        toSend = loadMessage(maxMessagesPerSecond, new Date(currentTime), messages, unloaded);
+        toSend.clear();
+        loadMessage(maxMessagesPerSecond, new Date(currentTime), messages, toSend, unloaded);
         if(unloaded.size() == 10000) {
           updateUnloaded(unloaded);
           unloaded.clear();
@@ -339,7 +341,7 @@ public class SiebelTaskManager implements Runnable {
       while(i.hasNext()) {
         Object o = i.next();
         logger.error("Siebel: Unloaded message for '"+o+"'");
-        states.put(o, new SiebelMessage.DeliveryState(SiebelMessage.State.REJECTED, "ESME_RINVDSTADR", "Invalid Dest Addr"));
+        states.put(o, new SiebelMessage.DeliveryState(SiebelMessage.State.REJECTED, "11", "Invalid Dest Addr"));
       }
       provider.updateDeliveryStates(states);
     }catch(Throwable e) {
@@ -347,13 +349,15 @@ public class SiebelTaskManager implements Runnable {
     }
   }
 
-  private static Collection loadMessage(int limit, Date sendDate, ResultSet messages, Collection unloaded) throws SiebelException {
+  private static void loadMessage(int limit, Date sendDate, ResultSet messages, Collection result, Collection unloaded) throws SiebelException {
     int i = 0;
-    Collection result = new LinkedList();
     while (i < limit && messages.next()) {
       SiebelMessage sM = (SiebelMessage) messages.get();
       String msisdn = sM.getMsisdn();
+      msisdn = msisdn.trim();
       if(checkMsidn(msisdn)) {
+        if (msisdn.charAt(0) == '7')
+          msisdn = '+' + msisdn;
         final Message msg = new Message();
         msg.setAbonent(msisdn);
         msg.setMessage(sM.getMessage());
@@ -366,12 +370,9 @@ public class SiebelTaskManager implements Runnable {
         unloaded.add(sM.getClcId());
       }
     }
-
-    return result;
-
   }
 
-  private static Pattern msisdnPattern = Pattern.compile("^\\+[0-9]+$");
+  private static Pattern msisdnPattern = Pattern.compile("^(\\+|)[0-9]+$");
 
   private static boolean checkMsidn(String msisdn) {
     return msisdn != null && msisdn.length()>7 && msisdnPattern.matcher(msisdn).matches();
