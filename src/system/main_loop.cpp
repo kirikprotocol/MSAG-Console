@@ -128,7 +128,7 @@ void Smsc::mainLoop(int idx)
     int totalCnt=getTotalCounter();
     int schedCnt=getSchedCounter();
     int freeBandwidthScaled=maxScaled-(totalCnt-schedCnt);
-    
+
     debug2(log,"freeBandwidth=%d, schedCounter=%d",freeBandwidthScaled,schedCnt);
 
     int perSlot=smsWeight*maxSmsPerSecond/(1000/getTotalCounterRes());
@@ -514,6 +514,9 @@ void Smsc::processCommand(SmscCommand& cmd,EventQueue::EnqueueVector& ev,FindTas
           reverseMergeCache.Insert(id,mci);
           std::pair<time_t,SMSId> to(time(NULL)+mergeConcatTimeout,id);
           mergeCacheTimeouts.Push(to);
+          registerMsuStatEvent(StatEvents::etSubmitOk,&sms);
+          eventqueue.enqueue(id,cmd);
+          return;
         }else
         {
           __trace__("next piece");
