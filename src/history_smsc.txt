@@ -443,3 +443,35 @@ B3112: Sep 30, 2009
     SMSC	add CDR billing mode, works like charge on submit, but uses only CDR. IN/OUT records generates separately
     mcahdb	Add enableAlerts flag to scheduler section
     INMan	protocol: charging customizing flags
+
+B3113: Oct 16, 2009
+    INMan	task releasing is fixed: always wait for TCAP dialogs end
+    INMan	fixed next() called for released  node
+    INMan	code cleanUp/optimization
+    INMan	ICServices loading and dependencies processing are enhanced
+    INMan	IAProviders are rearranged as ICServices
+    INMan	iapSRI rearranged as ICService
+    INMan	iapOCI is obsolete
+    INMan	ABR in file cache initialization is fixed
+    Infosme	bugfix: Task and TaskProcessor did not catch all exceptions, which caused ABORT
+    Infosme	registering default region bug fixed
+    Infosme	bugfix: region may be not found even if message is taken from storage
+    Infosme	bugfix: deadlock in session->connect() calling back smscconnector via infosmepdulist->handleError, then reconnect
+    Infosme	sendSms connected check modified
+    Infosme	sendSms to disabled connector bug fixed
+    emailsme    sms partitioning mr fix
+    Webadm	Increase timeout in Proxy from 60000ms to 180000ms 
+    Webadm	Add optional parameter "smsc.timeout" to webapp.xml
+    Webadm	Add new 'useDataSm' flag to infosme task adm
+
+B3114: Nov 10, 2009
+    SMSC	shutdown before map connect fix
+    SMSC	Ussd error report according to subscriber locale added
+    SMSC	Interface version 5.0 and 5.9 hints made as SME flags
+    SMSC	Comverse SMPP+ support
+    Infosme	siebel: validation for msisdns
+    Infosme	weed out a phony msg
+    Infosme	setting in process true when there are messages in storage
+    Webadm	fix bug with storing user's timezone
+    Webadm	move infosme tasks config in users config
+    Webadm	Add new flags (carry infos, forceDC, forceReceipt, smpp+) to sme
