@@ -257,7 +257,7 @@ SmscConnector::SmscConnector( TaskProcessor& processor,
 smscId_(smscId),
 log_(Logger::getInstance("smsc.infosme.connector")),
 processor_(processor),
-timeout_(10000),
+timeout_(10),
 stopped_(false),
 connected_(false),
 listener_(*this, log_),
@@ -308,7 +308,7 @@ void SmscConnector::updateConfig( const smsc::sme::SmeConfig& config )
     smsc_log_warn(log_, "updateConfig on '%s'... ", smscId_.c_str());
     {
         MutexGuard mg(destroyMonitor_);
-        timeout_ = config.timeOut * 1000;
+        timeout_ = config.timeOut;
         if (session_.get()) session_->close();
         std::auto_ptr<SmppSession> newsess(new SmppSession(config,&listener_));
         listener_.setSyncTransmitter(newsess->getSyncTransmitter());
@@ -366,8 +366,9 @@ int SmscConnector::Execute() {
                     smsc_log_error(log_, "SMSC Connector id='%s' disabled!", smscId_.c_str());
                     break;
                 }
+                smsc_log_debug(log_,"going to sleep for %u seconds",timeout_);
+                stateMonitor_.wait(timeout_*1000);
             }
-            sleep(timeout_);
         } // if exception occured
     } // while is not stopped
     smsc_log_info(log_, "SMSC Connector '%s' stopped", smscId_.c_str());

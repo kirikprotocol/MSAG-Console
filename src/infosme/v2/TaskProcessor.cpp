@@ -742,6 +742,7 @@ void TaskProcessor::initTask( uint32_t id, ConfigView* taskConfig )
             // not passed in, reading from Manager
             try {
                 separateView.reset( new ConfigView(smsc::util::config::Manager::getInstance(),"InfoSme") );
+                separateView.reset( separateView->getSubConfig("Tasks") );
                 taskConfig = separateView.get();
             } catch (...) {
                 throw ConfigException("tasks config is not passed in, and cannot be retrieved");
