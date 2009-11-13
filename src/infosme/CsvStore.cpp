@@ -238,7 +238,7 @@ bool CsvStore::getNextMessage(Message &message)
         {
             if( res == CsvFile::grrRecordNotReady)
             {
-                smsc_log_debug(log,"date of next message is in future (now=%ld, date=%ld)",now,rec.msg.date);
+                smsc_log_debug(log,"date of next message is in future +%u sec",unsigned(rec.msg.date-now));
                 return false;
             }
             message=rec.msg;
