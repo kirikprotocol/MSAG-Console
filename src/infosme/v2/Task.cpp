@@ -189,6 +189,9 @@ infoSme_T_storageWasDestroyed(false)
 // currentPriorityFrameCounter(0)
 {
     smsc_log_debug(logger,"task %u/'%s' ctor",taskInfo.uid,taskInfo.name.c_str());
+    if ( ! smsc::core::buffers::File::Exists(location.c_str()) ) {
+        smsc::core::buffers::File::MkDir(location.c_str());
+    }
     setInfo(taskInfo);
 }
 

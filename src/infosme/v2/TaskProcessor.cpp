@@ -741,7 +741,9 @@ void TaskProcessor::initTask( uint32_t id, ConfigView* taskConfig )
         if ( !taskConfig ) {
             // not passed in, reading from Manager
             try {
-                separateView.reset( new ConfigView(smsc::util::config::Manager::getInstance(),"InfoSme") );
+                Manager& mgr(Manager::getInstance());
+                Manager::reinit();
+                separateView.reset( new ConfigView(mgr,"InfoSme") );
                 separateView.reset( separateView->getSubConfig("Tasks") );
                 taskConfig = separateView.get();
             } catch (...) {
