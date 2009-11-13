@@ -1,9 +1,9 @@
 #include "RegionSender.h"
 #include "SmscConnector.h"
-#include "Types.h"
+#include "TaskTypes.hpp"
 
 namespace smsc {
-namespace infosme2 {
+namespace infosme {
 
 RegionSender::RegionSender( int regionId,
                             const smsc::util::config::region::Region& region,
@@ -25,16 +25,15 @@ RegionSender::~RegionSender()
 }
 
 
-uint8_t RegionSender::send( unsigned curTime, const Task& task, const Message& msg )
+bool RegionSender::send( unsigned curTime, Task& task, Message& msg )
 {
     if ( conn_.send(task,msg) ) {
         speedControl_.consumeQuant();
         ++sent_;
-        return MessageState::ENROUTE;
-    } else {
-        speedControl_.suspend( curTime + 1000 );
-        return MessageState::RETRY;
+        return true;
     }
+    speedControl_.suspend( curTime + 1000 );
+    return false;
 }
 
 }

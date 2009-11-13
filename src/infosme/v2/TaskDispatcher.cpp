@@ -1,34 +1,26 @@
 #include "TaskDispatcher.h"
 #include "RegionSender.h"
-#include "Message.h"
-#include "Types.h"
+#include "TaskTypes.hpp"
 
 namespace {
 
-using namespace smsc::infosme2;
-struct MessageGuard
+using namespace smsc::infosme;
+struct isTaskInactive
 {
-    MessageGuard(Task& t, Message& m) : task(t), msg(m), res(MessageState::RETRY) {}
-    ~MessageGuard() {
-        task.setMessageState(msg,res);
+    bool operator () ( const Task* t ) const {
+        return ! t->isActive();
     }
-    void setState(uint8_t r) {
-        res = r;
-    }
-
-    Task&    task;
-    Message& msg;
-    uint8_t  res;
 };
 
 }
 
 
 namespace smsc {
-namespace infosme2 {
+namespace infosme {
 
-TaskDispatcher::TaskDispatcher() :
-log_(smsc::logger::Logger::getInstance("is2.dispch"))
+TaskDispatcher::TaskDispatcher( unsigned sleepTime ) :
+log_(smsc::logger::Logger::getInstance("is2.dispch")),
+sleepTime_(sleepTime)
 {
     smsc_log_debug(log_,"ctor");
 }
@@ -48,12 +40,20 @@ unsigned TaskDispatcher::processRegion( unsigned curTime, RegionSender& c )
     TaskMap::iterator i = taskMap_.find(cid);
     if ( i == taskMap_.end() ) {
         smsc_log_debug(log_,"logic problem: tasklist not found for region '%d'", cid);
-        return 1000;
+        return sleepTime_;
     }
-    currentSender_ = &c;
     currentList_ = &i->second;
-    now_ = time(0);
-    return currentList_->processOnce(curTime,1000);
+    if ( currentList_->size() > 0 ) {
+        currentSender_ = &c;
+        now_ = time(0);
+        if ( log_->isDebugEnabled() ) {
+            std::string dump;
+            currentList_->dump(dump);
+            smsc_log_debug(log_,"%s",dump.c_str());
+        }
+        return currentList_->processOnce(curTime,sleepTime_);
+    }
+    return sleepTime_;
 }
 
 
@@ -93,11 +93,62 @@ void TaskDispatcher::delRegion( int regionId )
 }
 
 
+void TaskDispatcher::addTask( Task& task )
+{
+    MutexGuard mg(lock_);
+    TaskSet::iterator iter = taskSet_.lower_bound(&task);
+    if ( iter == taskSet_.end() || *iter != &task ) {
+        taskSet_.insert( iter, &task );
+        for ( TaskMap::iterator i = taskMap_.begin(); i != taskMap_.end(); ++i ) {
+            i->second.add( &task );
+        }
+    }
+}
+
+
+void TaskDispatcher::delTask( Task& task )
+{
+    MutexGuard mg(lock_);
+    TaskSet::iterator iter = taskSet_.find(&task);
+    if ( iter == taskSet_.end() ) return;
+    ScoredList< TaskDispatcher >::isEqual functor(&task);
+    for ( TaskMap::iterator i = taskMap_.begin(); i != taskMap_.end(); ++i ) {
+        i->second.remove(functor);
+    }
+    taskSet_.erase(iter);
+}
+
+
+void TaskDispatcher::removeInactiveTasks()
+{
+    typedef std::vector< TaskSet::iterator > DelVector;
+    DelVector toDel;
+    isTaskInactive functor;
+    MutexGuard mg(lock_);
+    for ( TaskSet::iterator i = taskSet_.begin(); i != taskSet_.end(); ++i ) {
+        Task* task = *i;
+        if ( !task ) {
+            toDel.push_back(i);
+        } else if ( functor(task) ) {
+            smsc_log_debug(log_,"removing inactive task %u/'%s'",task->getId(),task->getName().c_str());
+            for ( TaskMap::iterator iter = taskMap_.begin();
+                  iter != taskMap_.end(); ++iter ) {
+                iter->second.remove( ScoredList< TaskDispatcher >::isEqual(task) );
+            }
+            toDel.push_back(i);
+        }
+    }
+    for ( DelVector::const_iterator i = toDel.begin(); i != toDel.end(); ++i ) {
+        taskSet_.erase(*i);
+    }
+}
+
+
 unsigned TaskDispatcher::scoredObjIsReady( unsigned deltaTime, ScoredObjType& task )
 {
     if ( ! task.isActive() ) {
         hasInactiveTask_ = true;
-        return 1000;
+        return sleepTime_;
     }
 
     const unsigned wantToSleep = task.isReady( deltaTime );
@@ -105,7 +156,7 @@ unsigned TaskDispatcher::scoredObjIsReady( unsigned deltaTime, ScoredObjType& ta
 
     if ( ! task.prefetchMessage(now_,currentSender_->getId()) ) {
         // this region is not ready in task
-        return 1000;
+        return sleepTime_;
     }
     return 0; // task is ready
 }
@@ -115,12 +166,10 @@ int TaskDispatcher::processScoredObj( unsigned curTime, ScoredObjType& task )
 {
     try {
 
-        Message msg = task.getPrefetched();
-
-        MessageGuard mg(task,msg);
-        uint8_t rc = currentSender_->send( curTime, task, msg );
-        mg.setState(rc);
-        if ( rc != MessageState::ENROUTE ) {
+        Message msg;
+        task.getPrefetched( msg );
+        // MessageGuard mg(task,msg);
+        if ( ! currentSender_->send(curTime, task, msg) ) {
             return -1000;
         }
 

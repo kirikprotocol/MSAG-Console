@@ -1,18 +1,16 @@
-#ifndef SMSC_INFOSME2_DATETIME
-#define SMSC_INFOSME2_DATETIME
+#ifndef SMSC_INFO_SME_DATETIME
+#define SMSC_INFO_SME_DATETIME
 
-#include <sys/types.h>
-#include <ctime>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include "util/int.h"
+#include <time.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <inttypes.h>
 
 #include <string>
 
-namespace smsc {
-namespace infosme2 {
-
+namespace smsc { namespace infosme
+{
     extern time_t parseDateTime(const char* str);
     extern time_t parseDate(const char* str);
     extern int    parseTime(const char* str);
@@ -63,7 +61,7 @@ namespace infosme2 {
         
         MonthesNamesParser() : weekDayN(0), weekDay(0)
         {
-            std::memset(&monthesNamesSet, 0, sizeof(monthesNamesSet));
+            memset(&monthesNamesSet, 0, sizeof(monthesNamesSet));
         };
         MonthesNamesParser(const std::string& _weekDay,
                            const std::string& _weekDayN,

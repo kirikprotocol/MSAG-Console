@@ -1,8 +1,8 @@
-#include "TaskLock.h"
+#include "TaskLock.hpp"
 #include "util/Exception.hpp"
 
 namespace smsc{
-namespace infosme2 {
+namespace infosme{
 
 TaskLock* TaskLock::instance=0;
 

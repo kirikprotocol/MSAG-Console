@@ -1,16 +1,21 @@
-infosme/infosme2   	  infosme \
+# -ldb \
+# -L$(SMSC_BUILDDIR)/bin/db/exceptions -ldb_exc @db/exceptions/libdb_exc.so \
+#
+
+infosme/infosme2   	  InfoSme \
  -linfosme-v2 \
  -ladmin-protocol -ladmin-service \
- -ldb \
+ -lsms \
  -lcore-network $(SOCKETLIB) -lnsl \
  -lcore-threads \
+ -lutil-recoder-recode_dll \
+ -lutil-templates \
  -lutil-csv \
  -lutil-mirrorfile \
  -lutil-config-route \
  -lutil-config-region \
  -lutil-config \
  -lutil-xml $(XERCES_LIB) \
- -L$(SMSC_BUILDDIR)/bin/db/exceptions -ldb_exc @db/exceptions/libdb_exc.so \
  @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
  -lutil \
  $(__LIBRARIES) \

@@ -1,10 +1,10 @@
 #include "DateTime.h"
 #include <sstream>
 #include <iomanip>
-#include <cerrno>
+#include <errno.h>
 
-namespace smsc {
-namespace infosme2 {
+namespace smsc { namespace infosme 
+{
 
 static const char*  constFullEngMonthesNames[12] = {
     "January", "February", "March", "April",
@@ -30,23 +30,23 @@ int scanMonthName(const char* str)
 {
     if (!str || str[0] == '\0') return -1;
     for (int i=0; i<12; i++)
-        if ( std::strcmp(constFullEngMonthesNames[i], str) == 0 ||
-             std::strcmp(constShortEngMonthesNames[i], str) == 0) return i;
+        if (strcmp(constFullEngMonthesNames[i], str) == 0 ||
+            strcmp(constShortEngMonthesNames[i], str) == 0) return i;
     return -1;    
 }
 int scanWeekDay(const char* str)
 {
     if (!str || str[0] == '\0') return -1;
     for (int i=0; i<7; i++)
-        if (std::strcmp(constFullEngWeekDays[i], str) == 0 ||
-            std::strcmp(constShortEngWeekDays[i], str) == 0) return i;
+        if (strcmp(constFullEngWeekDays[i], str) == 0 ||
+            strcmp(constShortEngWeekDays[i], str) == 0) return i;
     return -1;    
 }
 int scanWeekDayN(const char* str)
 {
     if (!str || str[0] == '\0') return -1;
     for (int i=0; i<5; i++)
-        if (std::strcmp(constFullEngWeekDayN[i], str) == 0) return i;
+        if (strcmp(constFullEngWeekDayN[i], str) == 0) return i;
     return -1;    
 }
 
@@ -54,7 +54,7 @@ time_t parseDateTime(const char* str)
 {
     int year, month, day, hour, minute, second;
     if (!str || str[0] == '\0' ||
-        std::sscanf(str, "%02d.%02d.%4d %02d:%02d:%02d", 
+        sscanf(str, "%02d.%02d.%4d %02d:%02d:%02d", 
                     &day, &month, &year, &hour, &minute, &second) != 6) return -1;
     
     tm  dt; dt.tm_isdst = -1;
@@ -66,7 +66,7 @@ time_t parseDate(const char* str)
 {
     int year, month, day;
     if (!str || str[0] == '\0' ||
-        std::sscanf(str, "%02d.%02d.%4d", &day, &month, &year) != 3) return -1;
+        sscanf(str, "%02d.%02d.%4d", &day, &month, &year) != 3) return -1;
     
     tm  dt; dt.tm_isdst = -1;
     dt.tm_year = year - 1900; dt.tm_mon = month - 1; dt.tm_mday = day;
@@ -77,7 +77,7 @@ int parseTime(const char* str)
 {
     int hour, minute, second;
     if (!str || str[0] == '\0' ||
-        std::sscanf(str, "%02d:%02d:%02d", &hour, &minute, &second) != 3) return -1;
+        sscanf(str, "%02d:%02d:%02d", &hour, &minute, &second) != 3) return -1;
     return hour*3600+minute*60+second;
 }
 
@@ -142,7 +142,7 @@ bool MonthesNamesParser::initWeekDayN(const std::string& weekDayNStr)
 bool MonthesNamesParser::initMonthesNames(const std::string& monthesNames)
 {
     // ',' separated list Jan, Feb, ...
-    std::memset(&monthesNamesSet, 0, sizeof(monthesNamesSet));
+    memset(&monthesNamesSet, 0, sizeof(monthesNamesSet));
 
     const char* str = monthesNames.c_str();
     if (!str || str[0] == '\0') return false;
@@ -198,34 +198,34 @@ bool convertFullDateFormatToUnixTime(// expected date format is DDMMYYYYHH24MISS
 {
   struct tm timeval;
   errno = 0;
-  timeval.tm_mday = (int)std::strtol(date.substr(0, 2).c_str(), (char **)NULL, 10);
+  timeval.tm_mday = (int)strtol(date.substr(0, 2).c_str(), (char **)NULL, 10);
   if ( (!timeval.tm_mday && errno) ||
        (timeval.tm_mday > 31 || timeval.tm_mday  < 1 ) )
        return false;
 
-  timeval.tm_mon=(int)std::strtol(date.substr(2, 2).c_str(), (char **)NULL, 10);
+  timeval.tm_mon=(int)strtol(date.substr(2, 2).c_str(), (char **)NULL, 10);
   if ( (!timeval.tm_mon && errno) ||
        (timeval.tm_mon>12 || timeval.tm_mon<1 ) )
     return false;
   timeval.tm_mon = timeval.tm_mon - 1;
 
-  timeval.tm_year = (int)std::strtol(date.substr(4, 4).c_str(), (char**)NULL, 10);
+  timeval.tm_year = (int)strtol(date.substr(4, 4).c_str(), (char**)NULL, 10);
   if ( (!timeval.tm_year && errno) ||
        timeval.tm_year < 1900 )
     return false;
   timeval.tm_year = timeval.tm_year - 1900;
 
-  timeval.tm_hour = (int)std::strtol(date.substr(8, 2).c_str(), (char**)NULL, 10);
+  timeval.tm_hour = (int)strtol(date.substr(8, 2).c_str(), (char**)NULL, 10);
   if ( (!timeval.tm_hour && errno) ||
        ( timeval.tm_hour < 0 || timeval.tm_hour > 23 ) )
     return false;
 
-  timeval.tm_min = (int)std::strtol(date.substr(10, 2).c_str(), (char**)NULL, 10);
+  timeval.tm_min = (int)strtol(date.substr(10, 2).c_str(), (char**)NULL, 10);
   if ( (!timeval.tm_min && errno) ||
        ( timeval.tm_min < 0 || timeval.tm_min > 59 ) )
     return false;
 
-  timeval.tm_sec = (int)std::strtol(date.substr(12, 2).c_str(), (char**)NULL, 10);
+  timeval.tm_sec = (int)strtol(date.substr(12, 2).c_str(), (char**)NULL, 10);
   if ( (!timeval.tm_sec && errno) ||
        ( timeval.tm_sec < 0 || timeval.tm_sec > 61 ) )
     return false;

@@ -1,93 +1,197 @@
-#include "TaskLock.h"
+#include "TaskLock.hpp"
 #include "TaskProcessor.h"
-#include "DataProvider.h"
-#include "ConfString.h"
+#include "InfoSmeMessageSender.h"
+#include "FinalStateSaver.h"
+#include "SmscConnector.h"
 #include "MsecTime.h"
-#include "util/config/ConfigException.h"
-#include "sms/sms.h"
+#include <exception>
+#include <list>
+#include <cstdlib>
+#include <sstream>
+#include <vector>
+#include <util/timeslotcounter.hpp>
 
-using namespace smsc::util::config;
+#ident "@(#)$Id$"
+
+extern bool isMSISDNAddress(const char* string);
 
 namespace {
 
-bool isMSISDNAddress( const std::string& str )
+struct Drand48adapter
 {
-    try {
-        smsc::sms::Address( str.c_str() );
-        return true;
-    } catch (...) {}
-    return false;
-}
+public:
+    Drand48adapter() {
+        srand48(time(0));
+    }
+    template <typename T> T operator () ( T tmax ) {
+        return T( tmax * drand48() );
+    }
+};
+
+Drand48adapter drand48adapter;
 
 }
+
 
 namespace smsc {
-namespace infosme2 {
+namespace infosme {
+
+using namespace smsc::util::config;
+
+RetryPolicies TaskProcessor::retryPlcs;
+
+/* ---------------------------- TaskProcessor ---------------------------- */
 
 TaskProcessor::TaskProcessor() :
-log_(smsc::logger::Logger::getInstance("is2.proc")),
-scheduler_(*this),
-dispatcher_(),
-sender_(dispatcher_),
-started_(false),
-stopping_(false),
-notified_(false),
-dataProvider_(0),
-finalStateSaver_(0)
+InfoSmeAdmin(), Thread(),
+log_(Logger::getInstance("smsc.infosme.TaskProcessor")), 
+dispatcher_(10000),
+provider(0),
+bStarted(false),
+bNeedExit(false),
+messageSender(new InfoSmeMessageSender(dispatcher_)),
+responseWaitTime(0),
+receiptWaitTime(0),
+mappingRollTime(0),
+mappingMaxChanges(0),
+dsStatConnection(0),
+statistics(0), protocolId(0), svcType(0), address(0),
+unrespondedMessagesMax(1)
+// unrespondedMessagesSleep(10)
 {
-    smsc_log_debug(log_,"ctor");
-}
-
-
-TaskProcessor::~TaskProcessor()
-{
-    stopTaskScheduler();
-    stopTaskProcessor();
-    if (dataProvider_) delete dataProvider_;
-    // if (finalStateSaver_) delete finalStateSaver_;
-    smsc_log_debug(log_,"dtor");
+    smsc_log_info(log_, "ctor...");
 }
 
 
 void TaskProcessor::init( ConfigView* config )
 {
-    smsc_log_info(log_,"init");
-    MutexGuard mg(startMon_);
-    if ( started_ ||
-         isTaskSchedulerRunning() ) throw ConfigException("cannot init while started");
+    smsc_log_info(log_, "Loading ...");
+    MutexGuard mg(startLock);
 
-    // FIXME: cleanup the state
+    storeLocation=config->getString("storeLocation");
+    if(storeLocation.length())
+    {
+      if(*storeLocation.rbegin()!='/')
+      {
+        storeLocation+='/';
+      }
+    }
+    /*
+    {
+        const std::string lockfile(storeLocation + "taskslock.bin");
+        TaskLock::Init(lockfile.c_str());
+    }
+     */
 
-    storeLocation_ = config->getString("storeLocation");
-    if (! storeLocation_.empty() ) {
-        if( *storeLocation_.rbegin() != '/' ) {
-            storeLocation_ += '/';
+    address = config->getString("Address");
+    if (!address || !isMSISDNAddress(address))
+        throw ConfigException("Address string '%s' is invalid", address ? address:"-");
+    
+    try { protocolId = config->getInt("ProtocolId"); }
+    catch(ConfigException& exc) { protocolId = 0; };
+    try { svcType = config->getString("SvcType"); }
+    catch(ConfigException& exc) { svcType = 0; };
+    
+    responseWaitTime = parseTime(config->getString("responceWaitTime"));
+    if (responseWaitTime <= 0) 
+        throw ConfigException("Invalid value for 'responceWaitTime' parameter.");
+    receiptWaitTime = parseTime(config->getString("receiptWaitTime"));
+    if (receiptWaitTime <= 0) 
+        throw ConfigException("Invalid value for 'receiptWaitTime' parameter.");
+
+    switchTimeout = config->getInt("tasksSwitchTimeout");
+    if (switchTimeout <= 0) 
+        throw ConfigException("Task switch timeout should be positive");
+
+    try { unrespondedMessagesMax = config->getInt("unrespondedMessagesMax"); } catch (...) {};
+    if (unrespondedMessagesMax <= 0) {
+      unrespondedMessagesMax = 1;
+      smsc_log_warn(log_, "Parameter 'unrespondedMessagesMax' value is invalid. Using default %d",
+                    unrespondedMessagesMax);
+    }
+    if (unrespondedMessagesMax > 500) {
+      smsc_log_warn(log_, "Parameter 'unrespondedMessagesMax' value '%d' is too big. "
+                    "The preffered max value is 500", unrespondedMessagesMax);
+    }
+    
+    std::auto_ptr<ConfigView> retryPlcCfg(config->getSubConfig("RetryPolicies"));
+    retryPlcs.Load(retryPlcCfg.get());
+
+    std::auto_ptr<ConfigView> tasksThreadPoolCfgGuard(config->getSubConfig("TasksThreadPool"));
+    taskManager.init(tasksThreadPoolCfgGuard.get());   // loads up thread pool for tasks
+    std::auto_ptr<ConfigView> eventsThreadPoolCfgGuard(config->getSubConfig("EventsThreadPool"));
+    eventManager.init(eventsThreadPoolCfgGuard.get()); // loads up thread pool for events
+    
+    try {
+        std::auto_ptr<ConfigView> providerCfgGuard(config->getSubConfig("DataProvider"));
+        if ( !provider ) provider = new DataProvider;
+        provider->init(providerCfgGuard.get());
+    } catch (...) {
+        smsc_log_warn(log_,"DataProvider section is not found");
+    }
+    
+    std::auto_ptr<ConfigView> dsIntCfgGuard(config->getSubConfig("systemDataSource"));
+
+    messageSender->init( *this, config );
+    finalStateSaver_.reset( new FinalStateSaver(storeLocation) );
+
+    smsc_log_info(log_, "Loading tasks ...");
+    /*
+    std::auto_ptr<ConfigView> tasksCfgGuard(config->getSubConfig("Tasks"));
+    ConfigView* tasksCfg = tasksCfgGuard.get();
+    std::auto_ptr< std::set<std::string> > setGuard(tasksCfg->getShortSectionNames());
+    std::set<std::string>* set = setGuard.get();
+
+    for (std::set<std::string>::iterator i=set->begin();i!=set->end();i++)
+    {
+        try
+        {
+            const char* taskId = (const char *)i->c_str();
+            if (!taskId || taskId[0] == '\0')
+                throw ConfigException("Task id empty or wasn't specified");
+            smsc_log_info(log_, "Loading task '%s' ...", taskId);
+            
+            std::auto_ptr<ConfigView> taskConfigGuard(tasksCfg->getSubConfig(taskId));
+            ConfigView* taskConfig = taskConfigGuard.get();
+
+            bool delivery = false;
+            try { delivery = taskConfig->getBool("delivery"); }
+            catch (ConfigException& ce) { delivery = false; }
+
+            std::string location=storeLocation+taskId;
+            if(!buf::File::Exists(location.c_str()))
+            {
+              buf::File::MkDir(location.c_str());
+            }
+            
+            DataSource* taskDs = 0;
+            if (!delivery)
+            {
+                const char* dsId = taskConfig->getString("dsId");
+                if (!dsId || dsId[0] == '\0')
+                    throw ConfigException("DataSource id for task '%s' empty or wasn't specified",
+                                          taskId);
+                taskDs = provider.getDataSource(dsId);
+                if (!taskDs)
+                    throw ConfigException("Failed to obtail DataSource driver '%s' for task '%s'", 
+                                          dsId, taskId);
+            }
+            uint32_t taskIdVal=atoi(taskId);
+            Task* task = new Task(taskConfig, taskIdVal, location, taskDs, finalStateSaver_.get() );
+            if (task && !putTask(task)) {
+                task->finalize();
+                throw ConfigException("Failed to add task. Task with id '%s' already registered.",
+                                      taskId);
+            }
+        }
+        catch (ConfigException& exc)
+        {
+            smsc_log_error(log_, "Load of tasks failed ! Config exception: %s", exc.what());
+            throw;
         }
     }
-    const std::string lockfile(storeLocation_ + "taskslock.bin");
-    TaskLock::Init(lockfile.c_str());
+     */
 
-    address_ = ConfString(config->getString("Address")).str();
-    if ( address_.empty() || !isMSISDNAddress(address_) ) {
-        throw ConfigException("Address string '%s' is invalid", address_.c_str());
-    }
-
-    // FIXME: load other things
-
-    try {
-        std::auto_ptr<ConfigView> subcfg(config->getSubConfig("DataProvider"));
-        if (!dataProvider_) dataProvider_ = new DataProvider();
-        dataProvider_->init(subcfg.get());
-    } catch ( ConfigException& ) {
-        if (dataProvider_) delete dataProvider_;
-        dataProvider_ = 0;
-    }
-
-    // init sender
-    sender_.init( config );
-
-    // loading tasks
-    smsc_log_info(log_,"loading tasks...");
     std::auto_ptr< ConfigView > taskConfig;
     std::auto_ptr< std::set< std::string> > taskNames;
     try {
@@ -101,7 +205,7 @@ void TaskProcessor::init( ConfigView* config )
     // adding tasks that are in storelocation
     std::vector< std::string > entries;
     entries.reserve(200);
-    smsc::core::buffers::File::ReadDir( storeLocation_.c_str(),
+    smsc::core::buffers::File::ReadDir( storeLocation.c_str(),
                                         entries );
     for ( std::vector< std::string >::const_iterator i = entries.begin();
           i != entries.end();
@@ -118,18 +222,191 @@ void TaskProcessor::init( ConfigView* config )
 
         try {
             unsigned id = Task::stringToTaskId(i->c_str());
-            loadTask( id, taskConfig.get() );
+            initTask( id, taskConfig.get() );
         } catch ( ConfigException& e ) {
             smsc_log_warn(log_,"cannot load task %s: %s",i->c_str(),e.what());
         }
     }
 
-    scheduler_.init(config);
-    startTaskScheduler();
-    smsc_log_info(log_,"init finished");
+    smsc_log_info(log_, "Tasks loaded.");
+
+    smsc_log_info(log_, "Loading task schedules ...");
+    std::auto_ptr<ConfigView> schedulerCfgGuard(config->getSubConfig("Schedules"));
+    scheduler.init(this,schedulerCfgGuard.get());
+    smsc_log_info(log_, "Task schedules loaded.");
+    
+    smsc_log_info(log_, "Load success.");
+
+    // jstore.Init((storeLocation+"mapping.bin").c_str(),config->getInt("mappingRollTime"),config->getInt("mappingMaxChanges"));
+    mappingRollTime = config->getInt("mappingRollTime");
+    mappingMaxChanges = config->getInt("mappingMaxChanges");
+    
+    statistics = new StatisticsManager(config->getString("statStoreLocation"),this);
+    if (statistics) statistics->Start();
+    scheduler.Start();
 }
 
 
+TaskProcessor::~TaskProcessor()
+{
+    // jstore.Stop();
+  scheduler.Stop();
+  this->Stop();
+  taskManager.Stop();
+  eventManager.Stop();
+  
+  {
+      MutexGuard guard(tasksLock);
+      int key = 0;
+      TaskGuard* task;
+      IntHash<TaskGuard>::Iterator it=tasks.First();
+      while (it.Next(key, task))
+          if (task->get()) (*task)->shutdown();
+      tasks.Empty();
+  }
+
+  taskManager.shutdown();
+  eventManager.shutdown();
+
+  if (statistics) delete statistics;
+    if (provider) delete provider;
+}
+
+#if 0
+bool TaskProcessor::putTask(Task* task)
+{
+    {
+        __require__(task);
+        MutexGuard guard(tasksLock);
+        if (tasks.Exist(task->getId())) return false;
+        tasks.Insert(task->getId(), task);
+    }
+    awakeSignal();
+    return true;
+}
+
+bool TaskProcessor::addTask(Task* task)
+{
+    __require__(task);
+    if (hasTask(task->getId())) return false;
+    /*if (task->canGenerateMessages())*/
+    return putTask(task);
+}
+
+bool TaskProcessor::remTask(uint32_t taskId)
+{
+    // FIXME
+    throw Exception("remTask is not impl");
+    /*
+  Task* task = 0;
+  {
+      MutexGuard guard(tasksLock);
+      if (!tasks.Exist(taskId)) return false;
+      task = tasks.Get(taskId);
+      tasks.Delete(taskId);
+      if (!task) return false;
+  }
+  // FIXME
+  if (task) task->shutdown();
+  awakeSignal();
+  return true;
+     */
+}
+
+bool TaskProcessor::delTask(uint32_t taskId)
+{
+    // FIXME
+    throw Exception("delTask is not impl");
+    /*
+    Task* task = 0;
+    {
+        MutexGuard guard(tasksLock);
+        if (!tasks.Exist(taskId)) return false;
+        task = tasks.Get(taskId);
+        tasks.Delete(taskId);
+        if (!task) return false;
+    }
+    awakeSignal();
+    if (task) task->destroy();
+    return (task) ? true:false;
+     */
+}
+
+bool TaskProcessor::hasTask(uint32_t taskId)
+{
+    return getTask(taskId).get();
+}
+#endif
+
+TaskGuard TaskProcessor::getTask( uint32_t taskId, bool remove )
+{
+    MutexGuard guard(tasksLock);
+    TaskGuard* ptr = tasks.GetPtr(taskId);
+    if (!ptr) return TaskGuard();
+    if (remove) {
+        TaskGuard ret(*ptr);
+        dispatcher_.delTask(*ret.get());
+        scheduler.removeTask(ret->getId());
+        if ( statistics ) statistics->delStatistics(ret->getId());
+        tasks.Delete(taskId);
+        return ret;
+    }
+    if ((*ptr)->isFinalizing() ) return TaskGuard();
+    // if (!tasks.Exist(taskId)) return TaskGuard(0);
+    // return tasks.Get(taskId);
+    // Task* task = tasks.Get(taskId);
+    // return TaskGuard((task && !task->isFinalizing()) ? task:0);
+    return *ptr;
+}
+
+void TaskProcessor::resetWaitingTasks()
+{
+    MutexGuard guard(tasksLock);
+    
+    int key = 0; 
+    TaskGuard task = 0;
+    IntHash<TaskGuard>::Iterator it=tasks.First();
+    while (it.Next(key,task))
+        if (task.get()) task->resetWaiting();
+}
+
+void TaskProcessor::Start()
+{
+    MutexGuard guard(startLock);
+    if (!bStarted)
+    {
+        smsc_log_info(log_, "Starting ...");
+
+        /*
+        if (!isMessageSenderAssigned()) {
+            smsc_log_error(log_, "Failed to start processing. Message sender is undefined.");
+            return;
+        }
+         */
+        resetWaitingTasks();
+        bNeedExit = false;
+        notified_ = false;
+        Thread::Start();
+        bStarted = true;
+        smsc_log_info(log_, "Started.");
+    }
+}
+
+void TaskProcessor::Stop()
+{
+    MutexGuard  guard(startLock);
+    if (bStarted)
+    {
+        smsc_log_info(log_, "Stopping ...");
+        bNeedExit = true;
+        while ( bStarted ) {
+            startLock.notifyAll();
+            startLock.wait(100);
+        }
+        // bStarted = false;
+        smsc_log_info(log_, "Stoped.");
+    }
+}
 int TaskProcessor::Execute()
 {
     const msectime_type startTime = currentTimeMillis();
@@ -142,6 +419,7 @@ int TaskProcessor::Execute()
 
     // msectime_type lastStatTime = startTime;
 
+    bool wasNotified = false;
     try {
         while ( true ) {
 
@@ -149,67 +427,306 @@ int TaskProcessor::Execute()
 
             // 1. sleeping until some interesting events are there
             {
-                if ( stopping_ ) break;
+                if ( bNeedExit ) break;
                 int waitTime = int(nextWakeTime - currentTime);
                 if ( waitTime > 0 && !notified_ ) {
                     if ( waitTime < 10 ) waitTime = 10;
-                    MutexGuard mg(startMon_);
-                    if ( !notified_ ) {
+                    MutexGuard mg(startLock);
+                    wasNotified = notified_;
+                    notified_ = false;
+                    if ( !wasNotified ) {
                         smsc_log_debug(log_,"want to sleep %u ms",waitTime);
-                        startMon_.wait( waitTime );
+                        startLock.wait( waitTime );
                         continue;
                     }
                 }
             }
 
-            const unsigned deltaTime = unsigned(currentTime - movingStart);
+            unsigned deltaTime = unsigned(currentTime - movingStart);
 
             // 2. flipping start time
             if ( deltaTime > 1000000 ) {
                 movingStart = currentTime;
+                deltaTime = 0;
                 smsc_log_info(log_,"making a flip for a startTime");
-                continue;
             }
 
-            smsc_log_debug(log_,"new pass at %u, notified=%u",deltaTime,notified_);
+            smsc_log_debug(log_,"new pass at %u, notified=%u",deltaTime,wasNotified);
 
             // 3. FIXME: dumping statistics
 
             // 4. processing notification
-            while ( notified_ || (currentTime - lastNotifyTime) > 30000 ) {
+            MutexGuard mg(tasksLock);
+            while ( wasNotified || (currentTime - lastNotifyTime) > 30000 ) {
                 lastNotifyTime = currentTime;
-                smsc_log_debug(log_,"notified or time passed");
-                MutexGuard mg(startMon_);
-                notified_ = false;
-                // FIXME: process events
+                smsc_log_debug(log_,"notified=%u or time passed",wasNotified);
+                wasNotified = false;
+                // TaskDispatcher::TaskList inactiveTasks;
+                checkTaskActivity();
+                dispatcher_.removeInactiveTasks();
+                /*
+                if ( log_->isDebugEnabled() ) {
+                    smsc_log_debug(log_,"dispatcher has collected inactive tasks:");
+                    for ( TaskList::iterator i = inactiveTasks.begin();
+                          i != inactiveTasks.end(); ++i ) {
+                        smsc_log_debug(log_," %s",(*i)->toString().c_str());
+                    }
+                }
+                 */
+                // std::copy( inactiveTasks.begin(), inactiveTasks.end(),
+                // std::back_inserter(inactiveTasks_));
             }
 
             // 5. processing
-            nextWakeTime = currentTime + sender_.send(deltaTime,1000);
+            nextWakeTime = currentTime + messageSender->send(deltaTime,dispatcher_.sleepTime());
 
             // 6. FIXME: find out if dispatcher_ has inactive tasks
+            messageSender->processWaitingEvents(time(0));
         }
 
     } catch ( std::exception& e ) {
         smsc_log_error(log_,"exc in execute, stopping: %s", e.what());
     }
-    MutexGuard mg(startMon_);
-    started_ = false;
-    startMon_.notifyAll();
+    MutexGuard mg(startLock);
+    bStarted = false;
+    startLock.notifyAll();
     smsc_log_info(log_,"execute finished");
+
+    /*
+    std::vector< TaskGuard* > taskGuards;
+    taskGuards.reserve(100);
+
+    while (!bNeedExit)
+    {
+        time_t currentTime = time(NULL);
+        finalStateSaver_->checkRoll(currentTime);
+        
+        {
+            MutexGuard guard(tasksLock);
+            int key = 0;
+            Task* task = 0;
+            IntHash<Task*>::Iterator it=tasks.First();
+            while (!bNeedExit && it.Next(key, task))
+                if (task && task->isReady(currentTime, true)) {
+                    taskGuards.push_back(new TaskGuard(task));
+                    task->currentPriorityFrameCounter = 0;
+                    task->resetSuspendedRegions();
+                }
+            // NOTE: we randomize under tasksLock
+            std::random_shuffle( taskGuards.begin(), taskGuards.end(),
+                                 ::drand48adapter );
+        }
+
+        int processed = 0;
+        while (!taskGuards.empty())
+        {
+            TaskGuard* taskGuard = taskGuards.back();
+            taskGuards.pop_back();
+            if (!taskGuard) continue;
+
+            do {
+                if (bNeedExit) break;
+                Task* task = taskGuard->get();
+                if (!task) break;
+                if (task->isFinalizing() || !task->isEnabled()) break;
+                try {
+                    const unsigned taskProcessed = processTask(task);
+                    if ( ! taskProcessed ) {
+                        // no one message in task is processed
+                        task->currentPriorityFrameCounter = task->getPriority();
+                        if (!task->isEnabled()) task->setEnabled(false);
+                    }
+                    processed += taskProcessed;
+                } catch ( std::exception& e ) {
+                    smsc_log_warn(log_,"TaskProcessor: task '%d/%s' processing failed: %s",
+                                  task->getId(), task->getName().c_str(), e.what() );
+                }
+            } while ( false );
+            delete taskGuard;
+        }
+
+        if (bNeedExit) break;
+
+        processWaitingEvents(time(NULL)); // ?? or time(NULL)
+        if (!bNeedExit && processed <= 0) {
+            // smsc_log_debug(log_,"TaskProc: processed=%d waiting %d",processed,switchTimeout);
+            awake.Wait(switchTimeout);
+        }
+    }
+     */
     return 0;
 }
 
 
-void TaskProcessor::loadTask( unsigned id, ConfigView* taskConfig )
+/*
+unsigned TaskProcessor::processTask(Task* task)
+{
+    __require__(task);
+    unsigned res = 0;
+    smsc_log_debug(log_, "TaskProc::processTask(%d) taskPrio(cur/tot)=%d/%d",
+                   task->getId(), task->currentPriorityFrameCounter, task->getPriority() );
+    while ( task->currentPriorityFrameCounter < task->getPriority() ) {
+
+        ++task->currentPriorityFrameCounter;
+
+        Message message;
+        if (!task->getNextMessage(message)) continue;
+
+        MutexGuard msGuard(messageSenderLock);
+        if (! messageSender) {
+            smsc_log_error(log_, "No messageSender defined !!!");
+            break;
+        }
+        if ( messageSender->send(task,message) ) {
+            ++res;
+        }
+    }
+    return res;
+}
+ */
+
+
+/*
+void TaskProcessor::processWaitingEvents(time_t tm)
+{
+    MutexGuard msGuard(messageSenderLock);
+    messageSender->processWaitingEvents(tm);
+}
+ */
+
+
+bool TaskProcessor::processResponse( const TaskMsgId& tmIds,
+                                     const ResponseData& rd,
+                                     bool  internal,
+                                     bool  receipted )
+{
+    TaskGuard taskGuard(getTask(tmIds.getTaskId()));
+    Task* task = taskGuard.get();
+    if (!task) {
+        if (!internal) smsc_log_warn(log_, "Response: Unable to locate task '%d' for sequence number=%d" ,
+                                     tmIds.taskId, rd.seqNum);
+        return false;
+    }
+
+    const TaskInfo& info = task->getInfo();
+
+    if (!rd.accepted || internal)
+    {
+        if (rd.retry && (rd.immediate || (info.retryOnFail && info.retryPolicy.length())))
+        {
+            time_t nextTime = time(NULL)+(rd.immediate ? 0 :
+                                          TaskProcessor::getRetryPolicies().getRetryTime(info.retryPolicy.c_str(),rd.status));
+
+            if ((info.endDate>0 && nextTime >=info.endDate) ||
+                (info.validityDate>0 && nextTime>=info.validityDate))
+            {
+                task->finalizeMessage(tmIds.msgId, EXPIRED, rd.status );
+                statistics->incFailed(info.uid);
+            } 
+            else
+            {
+                if (!task->retryMessage(tmIds.msgId, nextTime)) {
+                    smsc_log_warn(log_, "Message #%llx not found for retry.", tmIds.msgId);
+                    statistics->incFailed(info.uid);
+                } 
+                else if (!rd.immediate) statistics->incRetried(info.uid);
+            }
+        }
+        else
+        {
+            task->finalizeMessage(tmIds.msgId, FAILED, rd.status );
+            statistics->incFailed(info.uid);
+        }
+        return false;
+    }
+
+    if (info.transactionMode) {
+        task->finalizeMessage(tmIds.msgId, DELIVERED, rd.status );
+        statistics->incDelivered(info.uid);
+        return false;
+    }
+        
+    // need receipt
+    if ( !receipted ) {
+        if (!task->enrouteMessage(tmIds.msgId) ) {
+            throw Exception("Message #%llx not found(doEnroute).",tmIds.msgId);
+        }
+    }
+    return true;
+}
+
+
+void TaskProcessor::processMessage(const TaskMsgId& tmIds,const ResponseData& rd)
+{
+    TaskGuard taskGuard = getTask(tmIds.taskId);
+    Task* task = taskGuard.get();
+    if (!task) {
+        throw Exception("processMessage(): Unable to locate task '%d' for smscMsgId='%s'",
+                        tmIds.taskId, rd.msgId.c_str());
+    }
+
+    // __require__(task);
+
+    if (rd.accepted)
+    {
+        task->finalizeMessage(tmIds.msgId, DELIVERED, rd.status );
+        statistics->incDelivered(task->getInfo().uid);
+    }
+    else
+    {
+        TaskInfo info = task->getInfo();
+        if (rd.retry && (rd.immediate || (info.retryOnFail && info.retryPolicy.length())))
+        {
+            time_t nextTime = time(NULL)+(rd.immediate ? 0:retryPlcs.getRetryTime(info.retryPolicy.c_str(),rd.status));
+
+            if ((info.endDate>0 && nextTime >=info.endDate) ||
+                (info.validityDate>0 && nextTime>=info.validityDate))
+            {
+                task->finalizeMessage(tmIds.msgId, EXPIRED, rd.status);
+                statistics->incFailed(info.uid);
+            } 
+            else
+            {
+                if (!task->retryMessage(tmIds.msgId, nextTime)) {
+                    smsc_log_warn(log_, "Message #%lld not found for retry.", tmIds.msgId);
+                    statistics->incFailed(info.uid);
+                } 
+                else if (!rd.immediate) statistics->incRetried(info.uid);
+            }
+        }
+        else
+        { 
+            task->finalizeMessage(tmIds.msgId, FAILED, rd.status );
+            statistics->incFailed(info.uid);
+        }
+    }
+}
+
+/* ------------------------ Admin interface implementation ------------------------ */ 
+
+void TaskProcessor::reloadSmscAndRegions()
+{
+    smsc_log_info(log_,"reloadSmscAndRegions invoked");
+    MutexGuard msGuard(tasksLock);
+    if ( !messageSender ) return;
+    Manager::reinit();
+    // Manager& config = Manager::getInstance();
+    ConfigView config(Manager::getInstance(),"InfoSme");
+    messageSender->init( *this, &config );
+}
+
+
+void TaskProcessor::initTask( uint32_t id, ConfigView* taskConfig )
 {
     smsc_log_info(log_,"loading task %u...", id );
     char taskId[30];
     sprintf(taskId,"%u",id);
 
+    MutexGuard mg(tasksLock);
+
     std::auto_ptr< Config > separateConfig;
     std::auto_ptr< ConfigView > separateView;
-    const std::string location = storeLocation_ + taskId;
+    const std::string location = storeLocation + taskId;
     if ( smsc::core::buffers::File::Exists(location.c_str()) ) {
         const std::string fname = location + "/config.xml";
         if ( smsc::core::buffers::File::Exists(fname.c_str()) ) {
@@ -222,67 +739,504 @@ void TaskProcessor::loadTask( unsigned id, ConfigView* taskConfig )
     if ( ! separateView.get() ) {
         // not loaded, using default config
         if ( !taskConfig ) {
-            throw ConfigException("tasks config is not passed in");
+            // not passed in, reading from Manager
+            try {
+                separateView.reset( new ConfigView(smsc::util::config::Manager::getInstance(),"InfoSme") );
+                taskConfig = separateView.get();
+            } catch (...) {
+                throw ConfigException("tasks config is not passed in, and cannot be retrieved");
+            }
         }
         separateView.reset( taskConfig->getSubConfig(taskId) );
         smsc_log_debug(log_,"task %u is using an embedded config",id);
         taskConfig = separateView.get();
     }
 
-    TaskInfo info;
-    info.init(id,taskConfig);
+    TaskInfo info(id);
+    info.init(taskConfig);
 
-    TaskGuard guard(getTask(id));
-    if ( guard.get() ) {
+    TaskGuard* ptr( tasks.GetPtr(id) );
+    if ( ptr && ptr->get() ) {
 
-        guard->update(info);
+        (*ptr)->setInfo(info);
 
     } else {
 
         smsc::db::DataSource* taskDs = 0;
-        if ( !info.isDelivery() ) {
+        if ( !info.delivery ) {
             const char* dsId = taskConfig->getString("dsId");
             if (!dsId || dsId[0] == '\0')
                 throw ConfigException("DataSource id for task %u is empty or wasn't specified",
                                       id);
-            if ( !dataProvider_ ) {
+            if ( !provider ) {
                 throw ConfigException("DataSourceProvider is not provided");
             }
-            taskDs = dataProvider_->getDataSource(dsId);
+            taskDs = provider->getDataSource(dsId);
             if (!taskDs)
                 throw ConfigException("Failed to obtail DataSource driver '%s' for task %u",
                                       dsId, id);
         }
-        addTask( guard.create(id,location,info,taskDs,finalStateSaver_) );
+        if ( ptr ) { tasks.Delete(id); }
+        TaskGuard& guard = tasks.Insert(id,TaskGuard().create(id,location,info,taskDs,finalStateSaver_.get()));
+        if ( guard.get() && guard->isActive() ) {
+            dispatcher_.addTask( *guard.get() );
+        }
     }
+    notified_ = true;
+    startLock.notifyAll();
     smsc_log_info(log_,"task %u is loaded",id);
-}
+/*
+    Task* task = 0; bool delivery = false;
+    try
+    {
+        Manager::reinit();
+        Manager& config = Manager::getInstance();
+        char taskSection[1024];
+        sprintf(taskSection, "InfoSme.Tasks.%u", taskId);
+        ConfigView taskConfig(config, taskSection);
+        
+        try { delivery = taskConfig.getBool("delivery"); }
+        catch (ConfigException& ce) { delivery = false; }
 
 
-void TaskProcessor::startTaskProcessor()
-{
-    MutexGuard mg(startMon_);
-    if ( started_ ) return;
-    smsc_log_debug(log_,"starting task processor");
-    stopping_ = false;
-    Start();
-    started_ = true;
-}
+        DataSource* taskDs = 0;
+        if (!delivery)
+        {
+            const char* ds_id = taskConfig.getString("dsId");
+            if (!ds_id || ds_id[0] == '\0')
+                throw ConfigException("DataSource id for task '%d' empty or wasn't specified",
+                                      taskId);
+            taskDs = provider.getDataSource(ds_id);
+            if (!taskDs)
+                throw ConfigException("Failed to obtail DataSource driver '%s' for task '%d'", 
+                                      ds_id, taskId);
+        }
 
+        std::string location=storeLocation;
+        char buf[32];
+        sprintf(buf,"%u/",taskId);
+        location+=buf;
 
-void TaskProcessor::stopTaskProcessor()
-{
-    MutexGuard mg(startMon_);
-    if ( !started_ ) return;
-    smsc_log_debug(log_,"stopping task processor");
-    stopping_ = true;
-    startMon_.notifyAll();
-    while ( started_ ) {
-        startMon_.wait();
+        if(!buf::File::Exists(location.c_str()))
+        {
+          smsc_log_info(log_,"creating new dir:'%s' for taskId=%u",location.c_str(),taskId);
+          buf::File::MkDir(location.c_str());
+        }
+
+        task = new Task(&taskConfig, taskId, location, taskDs, finalStateSaver_.get() );
+        if (!task) 
+            throw Exception("New task create failed");
+        if (!addTask(task))
+            throw ConfigException("Failed to add task. Task with id '%u' already registered.",
+                                  taskId);
+       
+    } catch (std::exception& exc) {
+        if (task && !delivery) task->destroy();
+        smsc_log_error(log_, "Failed to add task '%d'. Details: %s", taskId, exc.what());
+        throw;
+    } catch (...) {
+        if (task && !delivery) task->destroy();
+        smsc_log_error(log_, "Failed to add task '%d'. Cause is unknown", taskId);
+        throw Exception("Cause is unknown");
     }
-    WaitFor();
+ */
 }
 
+
+
+#if 0
+void TaskProcessor::removeTask(uint32_t taskId)
+{
+    try
+    {
+        scheduler.removeTask(taskId);
+        if (!delTask(taskId)) throw Exception("Task not found.");  
+        if (statistics) statistics->delStatistics(taskId);
+    
+    } catch (std::exception& exc) {
+        smsc_log_error(log_, "Failed to remove task '%d'. Details: %s", taskId, exc.what());
+        throw;
+    } catch (...) {
+        smsc_log_error(log_, "Failed to remove task '%d'. Cause is unknown", taskId);
+        throw Exception("Cause is unknown");
+    }
+}
+
+void TaskProcessor::changeTask(uint32_t taskId)
+{
+    try
+    {
+        Manager::reinit();
+        initTask(taskId,0);
+        /*
+        Manager& config = Manager::getInstance();
+        char taskSection[1024];
+        sprintf(taskSection, "InfoSme.Tasks.%d", taskId);
+        ConfigView taskConfig(config, taskSection);
+        TaskGuard tg(getTask(taskId));
+        Task* task = tg.get();
+        task->update(&taskConfig);
+         */
+
+    } catch (std::exception& exc)
+    {
+        //if (task && !delivery) task->destroy();
+        smsc_log_error(log_, "Failed to change task '%d'. Details: %s", taskId, exc.what());
+        throw;
+    } catch (...) 
+    {
+        //if (task && !delivery) task->destroy();
+        smsc_log_error(log_, "Failed to change task '%d'. Cause is unknown", taskId);
+        throw Exception("Cause is unknown");
+    }
+}
+#endif
+
+bool TaskProcessor::startTask(uint32_t taskId)
+{
+    TaskGuard taskGuard = getTask(taskId);
+    Task* task = taskGuard.get();
+    if (!task) return false;
+    if (!task->canGenerateMessages()) return true;
+    return (task->isInGeneration()) ? true:invokeBeginGeneration(task);
+}
+
+bool TaskProcessor::stopTask(uint32_t taskId)
+{
+    TaskGuard taskGuard = getTask(taskId);
+    Task* task = taskGuard.get();
+    if (!task) return false; 
+    if (!task->canGenerateMessages()) return true;
+    return (task->isInGeneration()) ? invokeEndGeneration(task):true;
+}
+Array<std::string> TaskProcessor::getGeneratingTasks()
+{
+    MutexGuard guard(tasksLock);
+    
+    Array<std::string> generatingTasks;
+
+    int key = 0;
+    TaskGuard task = 0;
+    IntHash<TaskGuard>::Iterator it=tasks.First();
+
+    while (it.Next(key, task))
+    {
+        if (task.get() && task->isInGeneration())
+        {
+            generatingTasks.Push(task->getIdStr());
+        }
+    }
+
+    return generatingTasks;
+}
+Array<std::string> TaskProcessor::getProcessingTasks()
+{
+    MutexGuard guard(tasksLock);
+    
+    Array<std::string> processingTasks;
+
+    int key = 0;
+    TaskGuard task = 0;
+    IntHash<TaskGuard>::Iterator it=tasks.First();
+    while (it.Next(key, task))
+    {
+        if (task.get() && task->isInProcess())
+      {
+        processingTasks.Push(task->getIdStr());
+      }
+    }
+
+    return processingTasks;
+}
+
+bool TaskProcessor::isTaskEnabled(uint32_t taskId)
+{
+    TaskGuard task = getTask(taskId);
+    return (task.get() && task->isEnabled());
+}
+
+bool TaskProcessor::setTaskEnabled(uint32_t taskId, bool enabled)
+{
+    TaskGuard taskGuard = getTask(taskId);
+    Task* task = taskGuard.get();
+    if (!task) return false; 
+    task->setEnabled(enabled);
+    awakeSignal();
+    return true;
+}
+
+void TaskProcessor::addSchedule(std::string scheduleId)
+{
+    const char* schedule_id = scheduleId.c_str();
+    if (!schedule_id || schedule_id[0] == '\0') throw Exception("Schedule id is empty");
+
+    Schedule* schedule = 0;
+    try
+    {
+        Manager::reinit();
+        Manager& config = Manager::getInstance();
+        char scheduleSection[1024];
+        sprintf(scheduleSection, "InfoSme.Schedules.%s", schedule_id);
+        ConfigView scheduleConfig(config, scheduleSection);
+        
+        schedule = Schedule::create(&scheduleConfig, scheduleId);
+        if (!schedule) 
+            throw Exception("New schedule create failed");
+        if (!scheduler.addSchedule(schedule))
+            throw Exception("Schedule with id '%s' was alredy registered");
+    
+    } catch (Exception& exc) {
+        if (schedule) delete schedule;
+        smsc_log_error(log_, "Failed to add schedule '%s'. Details: %s", schedule_id, exc.what());
+        throw;
+    } catch (std::exception& exc) {
+        if (schedule) delete schedule;
+        smsc_log_error(log_, "Failed to add schedule '%s'. Details: %s", schedule_id, exc.what());
+        throw Exception("%s", exc.what());
+    } catch (...) {
+        if (schedule) delete schedule;
+        smsc_log_error(log_, "Failed add schedule '%s'. Cause is unknown", schedule_id);
+        throw Exception("Cause is unknown");
+    }
+}
+void TaskProcessor::removeSchedule(std::string scheduleId)
+{
+    const char* schedule_id = scheduleId.c_str();
+    if (!schedule_id || schedule_id[0] == '\0') throw Exception("Schedule id is empty");
+    if (!scheduler.removeSchedule(scheduleId))
+        throw Exception("Schedule with id '%s' not found");
+}
+void TaskProcessor::changeSchedule(std::string scheduleId)
+{
+    const char* schedule_id = scheduleId.c_str();
+    if (!schedule_id || schedule_id[0] == '\0') throw Exception("Schedule id is empty");
+
+    Schedule* schedule = 0;
+    try
+    {
+        Manager::reinit();
+        Manager& config = Manager::getInstance();
+        char scheduleSection[1024];
+        sprintf(scheduleSection, "InfoSme.Schedules.%s", schedule_id);
+        ConfigView scheduleConfig(config, scheduleSection);
+        
+        schedule = Schedule::create(&scheduleConfig, scheduleId);
+        if (!schedule) 
+            throw Exception("New schedule create failed");
+        if (!scheduler.changeSchedule(scheduleId, schedule)) {
+            delete schedule;
+            smsc_log_warn(log_, "Failed to change schedule with id '%s'. Schedule was re-registered", schedule_id);
+        }
+    
+    } catch (Exception& exc) {
+        if (schedule) delete schedule;
+        smsc_log_error(log_, "Failed to change schedule '%s'. Details: %s", schedule_id, exc.what());
+        throw;
+    } catch (std::exception& exc) {
+        if (schedule) delete schedule;
+        smsc_log_error(log_, "Failed to change schedule '%s'. Details: %s", schedule_id, exc.what());
+        throw Exception("%s", exc.what());
+    } catch (...) {
+        if (schedule) delete schedule;
+        smsc_log_error(log_, "Failed change schedule '%s'. Cause is unknown", schedule_id);
+        throw Exception("Cause is unknown");
+    }
+}
+
+void TaskProcessor::addDeliveryMessages(uint32_t taskId,
+                                        uint8_t msgState,
+                                        const std::string& abonentAddress,
+                                        time_t messageDate,
+                                        const std::string& msg,
+                                        const std::string& userData )
+{
+  TaskGuard taskGuard = getTask(taskId);
+  Task* task = taskGuard.get();
+  if (!task) throw Exception("TaskProcessor::addDeliveryMessages::: can't get task by taskId='%d'", taskId);
+  task->insertDeliveryMessage(msgState, abonentAddress, messageDate, msg, userData);
+  statistics->incGenerated(taskId);
+}
+
+void TaskProcessor::changeDeliveryMessageInfoByRecordId(uint32_t taskId,
+                                                        uint8_t msgState,
+                                                        time_t unixTime,
+                                                        const std::string& recordId)
+{
+  TaskGuard taskGuard = getTask(taskId);
+  Task* task = taskGuard.get();
+  if (!task) throw Exception("TaskProcessor::changeDeliveryMessageInfoByRecordId::: can't get task by taskId='%d'", taskId);
+  uint64_t newMsgId;
+  if(task->changeDeliveryMessageInfoByRecordId(msgState, unixTime, recordId,newMsgId))
+  {
+    smsc_log_debug(log_,"msgId=#%s changed to #%llx",recordId.c_str(),newMsgId);
+  }else
+  {
+    smsc_log_debug(log_,"changeDeliveryMessageInfoByRecordId failed msgId=#%s",recordId.c_str());
+  }
+}
+
+void TaskProcessor::changeDeliveryMessageInfoByCompositCriterion(uint32_t taskId,
+                                                                 uint8_t msgState,
+                                                                 time_t unixTime,
+                                                                 const InfoSme_T_SearchCriterion& searchCrit)
+{
+  TaskGuard taskGuard = getTask(taskId);
+  Task* task = taskGuard.get();
+  if (!task) throw Exception("TaskProcessor::changeDeliveryMessageInfoByCompositCriterion::: can't get task by taskId='%d'", taskId);
+  task->changeDeliveryMessageInfoByCompositCriterion(msgState, unixTime, searchCrit);
+}
+
+void TaskProcessor::deleteDeliveryMessageByRecordId(uint32_t taskId,
+                                                    const std::string& recordId)
+{
+  TaskGuard taskGuard = getTask(taskId);
+  Task* task = taskGuard.get();
+  if (!task) throw Exception("TaskProcessor::deleteDeliveryMessageByRecordId::: can't get task by taskId='%d'", taskId);
+  task->deleteDeliveryMessageByRecordId(recordId);
+}
+
+void TaskProcessor::deleteDeliveryMessagesByCompositCriterion(uint32_t taskId,
+                                                              const InfoSme_T_SearchCriterion& searchCrit)
+{
+  TaskGuard taskGuard = getTask(taskId);
+  Task* task = taskGuard.get();
+  if (!task) throw Exception("TaskProcessor::deleteDeliveryMessagesByCompositCriterion::: can't get task by taskId='%d'", taskId);
+  task->deleteDeliveryMessagesByCompositCriterion(searchCrit);
+}
+
+extern const char* INSERT_TASK_STAT_STATE_SQL;
+extern const char* INSERT_TASK_STAT_STATE_ID;
+
+
+Array<std::string> TaskProcessor::getTaskMessages(const uint32_t taskId,
+                                                  const InfoSme_T_SearchCriterion& searchCrit)
+{
+  try {
+    TaskGuard taskGuard = getTask(taskId);
+    Task* task = taskGuard.get();
+    if (!task) throw Exception("TaskProcessor::getTaskMessages::: can't get task by taskId='%d'", taskId);
+    return task->selectDeliveryMessagesByCompositCriterion(searchCrit);
+  } catch (std::exception& ex) {
+    smsc_log_error(log_, "TaskProcessor::getTaskMessages::: catch exception=[%s]", ex.what());
+    throw;
+  } catch (...) {
+    smsc_log_error(log_, "TaskProcessor::getTaskMessages::: catch unexpected exception");
+    throw;
+  }
+}
+
+bool TaskProcessor::doesMessageConformToCriterion(ResultSet* rs, const InfoSme_Tasks_Stat_SearchCriterion& searchCrit)
+{
+  if ( searchCrit.isSetTaskId() && 
+       searchCrit.getTaskId() != rs->getString(1) )
+    return false;
+
+  if ( searchCrit.isSetStartPeriod() && 
+       searchCrit.getStartPeriod() > rs->getUint32(2) )
+    return false;
+
+  if ( searchCrit.isSetEndPeriod() && 
+       searchCrit.getEndPeriod() < rs->getUint32(2) )
+    return false;
+
+  return true;
+}
+
+const char* DO_FULL_TABLESCAN_TASKS_STAT_STATEMENT_ID = "FULL_TABLESCAN_TASKS_STAT_STATEMENT_ID";
+const char* DO_FULL_TABLESCAN_TASKS_STAT_STATEMENT_SQL = "FULL_TABLE_SCAN FROM INFOSME_TASKS_STAT";
+
+struct TaskStatDescription {
+  TaskStatDescription(const std::string& anTaskId="", uint32_t aPeriod=0, uint32_t aGenerated=0,
+                      uint32_t aDelivered=0, uint32_t aRetried=0, uint32_t aFailed=0)
+    : taskId(anTaskId), period(aPeriod), generated(aGenerated), delivered(aDelivered), retried(aRetried), failed(aFailed) {}
+
+  TaskStatDescription& operator+(const TaskStatDescription& rhs) {
+    if ( period == rhs.period ) {
+      generated += rhs.generated;
+      delivered += rhs.delivered;
+      retried += rhs.retried;
+      failed += rhs.failed;
+    }
+    return *this;
+  }
+  std::string taskId;
+  uint32_t period;
+  uint32_t generated;
+  uint32_t delivered;
+  uint32_t retried;
+  uint32_t failed;
+};
+
+static bool orderBinaryPredicate(const TaskStatDescription& lhs,
+                                 const TaskStatDescription& rhs)
+{
+  if ( lhs.period < rhs.period ) return true;
+  else return false;
+}
+
+
+void
+TaskProcessor::endDeliveryMessagesGeneration(uint32_t taskId)
+{
+  TaskGuard taskGuard = getTask(taskId);
+  Task* task = taskGuard.get();
+  if (!task) throw Exception("TaskProcessor::endDeliveryMessagesGeneration::: can't get task by taskId='%d'", taskId);
+  task->endDeliveryMessagesGeneration();
+}
+
+void
+TaskProcessor::changeDeliveryTextMessageByCompositCriterion(uint32_t taskId,
+                                                            const std::string& textMsg,
+                                                            const InfoSme_T_SearchCriterion& searchCrit)
+{
+  TaskGuard taskGuard = getTask(taskId);
+  Task* task = taskGuard.get();
+  if (!task) throw Exception("TaskProcessor::changeDeliveryTextMessageByCompositCriterion::: can't get task by taskId='%d'", taskId);
+  task->changeDeliveryTextMessageByCompositCriterion(textMsg, searchCrit);
+}
+
+/*
+TaskInfo TaskProcessor::getTaskInfo(uint32_t taskId)
+{
+  TaskGuard taskGuard = getTask(taskId);
+  Task* task = taskGuard.get();
+  return task ? task->getInfo() : TaskInfo();
+}
+ */
+  
+void TaskProcessor::applyRetryPolicies()
+{
+  Manager::reinit();
+  Manager& config = Manager::getInstance();
+  ConfigView retryPlcCfg(config,"RetryPolicies");
+  retryPlcs.Load(&retryPlcCfg);
+}
+
+uint32_t TaskProcessor::sendSms(const std::string& src,const std::string& dst,const std::string& msg,bool flash)
+{
+    return messageSender->sendSms(src,dst,msg,flash);
+}
+
+
+void TaskProcessor::checkTaskActivity()
+{
+    time_t now = time(NULL);
+    tm locTm;
+    localtime_r(&now,&locTm);
+    smsc_log_debug(log_,"check task activity at %ld %04u-%02u-%02u+%02u:%02u:%02u",
+                   long(now), 1900+locTm.tm_year, locTm.tm_mon+1, locTm.tm_mday,
+                   locTm.tm_hour, locTm.tm_min, locTm.tm_sec );
+    int key;
+    TaskGuard* ptr;
+    for ( TaskHash::Iterator i(tasks); i.Next(key,ptr); ) {
+        if (ptr && ptr->get()) {
+            (*ptr)->checkActivity(now,locTm);
+            if ( (*ptr)->isActive() ) {
+                dispatcher_.addTask(*(ptr->get()));
+            }
+        }
+    }
+}
 
 }
 }

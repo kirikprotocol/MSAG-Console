@@ -6,7 +6,7 @@
 #include <sys/time.h>
 
 namespace smsc {
-namespace infosme2 {
+namespace infosme {
 
 class MsecTime
 {

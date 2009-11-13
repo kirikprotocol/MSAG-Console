@@ -1,10 +1,7 @@
 #include "util/csv/CsvRecord.h"
-#include "CsvStore.h"
+#include "CsvStore.hpp"
 #include <memory>
 #include <algorithm>
-
-using namespace smsc::core::synchronization;
-using namespace smsc::core::buffers;
 
 namespace {
 
@@ -29,7 +26,7 @@ inline int tm2xdate( const struct tm& t )
 
 
 namespace smsc{
-namespace infosme2 {
+namespace infosme{
 
 
 static void MsgId2Info(uint64_t msgId,uint64_t& off,int& date,int& hour)
@@ -42,7 +39,7 @@ static void MsgId2Info(uint64_t msgId,uint64_t& off,int& date,int& hour)
 
 CsvStore::~CsvStore()
 {
-  MutexGuard mg(mtx);
+  sync::MutexGuard mg(mtx);
   DirMap::iterator end=dirs.end();
   for(DirMap::iterator it=dirs.begin();it!=end;it++)
   {
@@ -108,7 +105,7 @@ uint32_t CsvStore::Delete(bool onlynew)
     FileMap::iterator fend=dir.files.end();
     for(FileMap::iterator fit=dir.files.begin();fit!=fend;fit++)
     {
-      File f;
+      buf::File f;
       std::string fullPath=fit->second->fullPath();
       f.ROpen(fullPath.c_str());
       std::string str;
@@ -118,25 +115,25 @@ uint32_t CsvStore::Delete(bool onlynew)
       }
       cnt--;
       f.Close();
-      File::Unlink(fullPath.c_str());
+      buf::File::Unlink(fullPath.c_str());
       delete fit->second;
     }
     dir.files.clear();
     if(!dir.unknownFiles)
     {
-      File::RmDir(dir.dirPath.c_str());
+      buf::File::RmDir(dir.dirPath.c_str());
     }
   }
   if(!unknownDirs && !onlynew)
   {
-    File::RmDir(location.c_str());
+    buf::File::RmDir(location.c_str());
   }
   return cnt;
 }
 
 void CsvStore::closeAllFiles()
 {
-  MutexGuard mg(mtx);
+  sync::MutexGuard mg(mtx);
   for(DirMap::iterator dit=dirs.begin();dit!=dirs.end();dit++)
   {
     Directory& dir=*dit->second;
@@ -154,9 +151,9 @@ void CsvStore::closeAllFiles()
 }
 
 
-bool CsvStore::isProcessed()
+bool CsvStore::isProcessed() const
 {
-    MutexGuard mg(mtx);
+    sync::MutexGuard mg(mtx);
     for ( DirMap::const_iterator dit = dirs.begin(); dit != dirs.end(); ++dit ) {
         Directory& dir = *dit->second;
         for ( FileMap::const_iterator fit = dir.files.begin(); fit != dir.files.end(); ++fit ) {
@@ -170,14 +167,14 @@ bool CsvStore::isProcessed()
             return false;
         }
     }
-    smsc_log_info(log,"isProc: storage is processed");
+    smsc_log_debug(log,"isProc: storage is processed");
     return true;
 }
 
 
 bool CsvStore::getNextMessage(Message &message)
 {
-  MutexGuard mg(mtx);
+  sync::MutexGuard mg(mtx);
   time_t now=time(NULL);
     struct tm t;
     localtime_r(&now,&t);
@@ -241,11 +238,11 @@ bool CsvStore::getNextMessage(Message &message)
         {
             if( res == CsvFile::grrRecordNotReady)
             {
-                smsc_log_debug(log,"date of next message is in future (now=%ld, date=%ld)",now,rec.msg.date);
+                smsc_log_debug(log,"date of next message is in future +%u sec",unsigned(rec.msg.date-now));
                 return false;
             }
             message=rec.msg;
-            curFile->second->setState(message.id,MessageState::WAIT);
+            curFile->second->setState(message.id,WAIT);
             return true;
         }
 
@@ -308,7 +305,7 @@ void CsvStore::removeCanClose(CsvFile &file)
 
 void CsvStore::setMsgState(uint64_t msgId, uint8_t state, Message* msg)
 {
-  MutexGuard mg(mtx);
+  sync::MutexGuard mg(mtx);
   smsc_log_debug(log,"setMsgState: state=%d msgId=#%llx",state,msgId);
   uint64_t off;
   CsvFile& file=findFile(__func__,msgId,off);
@@ -316,7 +313,7 @@ void CsvStore::setMsgState(uint64_t msgId, uint8_t state, Message* msg)
   {
     //can only delete messages from processed files.
     //any other states have no meaning anyway
-    if(state!=MessageState::DELETED)
+    if(state!=DELETED)
     {
       throw smsc::util::Exception("%s:Unexpected state %d for msgId=#%llx",__func__,state,msgId);
     }
@@ -350,7 +347,7 @@ void CsvStore::setMsgState(uint64_t msgId, uint8_t state, Message* msg)
 
 void CsvStore::loadMessage(uint64_t msgId, Message &message, uint8_t &state)
 {
-  MutexGuard mg(mtx);
+  sync::MutexGuard mg(mtx);
   uint64_t off;
   CsvFile& file=findFile(__func__,msgId,off);
   if(!file.isOpened())//if file is not yet opened, just load single message, not whole file.
@@ -372,7 +369,7 @@ void CsvStore::loadMessage(uint64_t msgId, Message &message, uint8_t &state)
 
 uint64_t CsvStore::createMessage(time_t date,const Message& message,uint8_t state)
 {
-  MutexGuard mg(mtx);
+  sync::MutexGuard mg(mtx);
   struct tm t;
   localtime_r(&date,&t);
     const uint32_t xdate = tm2xdate(t);
@@ -384,10 +381,10 @@ uint64_t CsvStore::createMessage(time_t date,const Message& message,uint8_t stat
   std::string dirPath=location;
   dirPath+=dirName;
   Directory* dir;
-  if(!File::Exists(dirPath.c_str()))
+  if(!buf::File::Exists(dirPath.c_str()))
   {
     smsc_log_debug(log,"%s:creating new dir:'%s'",__func__,dirPath.c_str());
-    File::MkDir(dirPath.c_str(),0755);
+    buf::File::MkDir(dirPath.c_str(),0755);
     dir=new Directory;
     dir->date=xdate;
     dir->dirPath=dirPath;
@@ -433,19 +430,19 @@ uint64_t CsvStore::createMessage(time_t date,const Message& message,uint8_t stat
 
 void CsvStore::enrouteMessage(uint64_t msgId)
 {
-  MutexGuard mg(mtx);
+  sync::MutexGuard mg(mtx);
   uint64_t off;
   CsvFile& file=findFile(__func__,msgId,off);
   if(!file.isOpened())
   {
     file.Open();
   }
-  file.setState(msgId,MessageState::ENROUTE);
+  file.setState(msgId,ENROUTE);
 }
 
 void CsvStore::finalizeMsg(uint64_t msgId, time_t fdate, uint8_t state, Message* msg )
 {
-  MutexGuard mg(mtx);
+  sync::MutexGuard mg(mtx);
   uint64_t off;
   CsvFile& file=findFile(__func__,msgId,off);
   if(!file.isOpened())
@@ -475,24 +472,24 @@ bool CsvStore::CsvFile::Open(bool cancreate)
   }
   std::string fileName=fullPath();
   smsc_log_debug(log_,"opening new csv file %s",fileName.c_str());
-  if(File::Exists(fileName.c_str()))
+  if(buf::File::Exists(fileName.c_str()))
   {
     std::string ln;
     f.RWOpen(fileName.c_str());
-    File::offset_type fileSize=f.Size();
+    buf::File::offset_type fileSize=f.Size();
     f.ReadLine(ln);//skip header
     bool haveNonFinal=false;
     Record rec;
     while(f.Pos()<fileSize)
     {
       ReadRecord(rec);
-      if(rec.state==MessageState::DELETED)
+      if(rec.state==DELETED)
       {
         continue;
       }
       TimeMap::iterator it=timeMap.insert(TimeMap::value_type(rec.msg.date,rec));
       msgMap.insert(MessageMap::value_type(rec.msg.id,it));
-      if(rec.state<MessageState::DELIVERED)//calculate number of messages in non-final state
+      if(rec.state<DELIVERED)//calculate number of messages in non-final state
       {
         openMessages++;
         haveNonFinal=true;
@@ -563,7 +560,7 @@ CsvStore::CsvFile::GetRecordResult CsvStore::CsvFile::getNextRecord(CsvStore::Cs
   }
   if(onlyNew)
   {
-    while(curMsg->second.state>MessageState::WAIT)
+    while(curMsg->second.state>WAIT)
     {
       curMsg++;
       if(curMsg==timeMap.end())
@@ -590,7 +587,7 @@ void CsvStore::CsvFile::ReadRecord(CsvStore::CsvFile::Record& rec)
   rec.msg.id|=off;
 }
 
-void CsvStore::CsvFile::ReadRecord(File &f, CsvStore::CsvFile::Record& rec)
+void CsvStore::CsvFile::ReadRecord(buf::File &f, CsvStore::CsvFile::Record& rec)
 {
   rec.state=f.ReadByte()-'0';
   if(f.ReadByte()!=',')
@@ -658,7 +655,7 @@ void CsvStore::CsvFile::ReadRecord(File &f, CsvStore::CsvFile::Record& rec)
 CsvStore::CsvFile::Record& CsvStore::CsvFile::setState(uint64_t msgId, uint8_t state)
 {
   Record& rec=findRecord(msgId);
-  if(rec.state<=MessageState::ENROUTE && state>MessageState::ENROUTE)
+  if(rec.state<=ENROUTE && state>ENROUTE)
   {
     openMessages--;
     printf("open messages=%d\n",openMessages);
@@ -708,7 +705,6 @@ uint64_t CsvStore::CsvFile::AppendRecord(uint8_t state,time_t fdate,const Messag
       }
   }
   const std::string regionId = Message::regionIdToString(message.regionId);
-
   f.SeekEnd(0);
   uint64_t msgId=date;
   msgId<<=8;
@@ -747,7 +743,7 @@ uint64_t CsvStore::CsvFile::AppendRecord(uint8_t state,time_t fdate,const Messag
   f.WriteByte('\n');
   f.Flush();
   readAll=false;
-  if(state<=MessageState::ENROUTE)openMessages++;
+  if(state<=ENROUTE)openMessages++;
     smsc_log_debug(log_,"file %s msg #%llx added, openMsg=%u",
                    fileName().c_str(),msgId,unsigned(openMessages));
   return msgId;
@@ -760,9 +756,9 @@ uint8_t CsvStore::CsvFile::getState(uint64_t msgId)
       return rec.state;
   } catch ( std::exception& e ) {
       smsc_log_warn(log_,"file %s has not message #%llx",fileName().c_str(),msgId);
-      return MessageState::DELETED;
+      return MESSAGE_DELETED_STATE;
   }
-  return MessageState::DELETED;
+  return MESSAGE_DELETED_STATE;
 }
 
 CsvStore::CsvFile::Record& CsvStore::CsvFile::setStateAndDate(uint64_t msgId,uint8_t state, time_t fdate)
@@ -782,7 +778,7 @@ CsvStore::CsvFile::Record& CsvStore::CsvFile::setStateAndDate(uint64_t msgId,uin
   sprintf(tsbuf,"%02d%02d%02d%02d%02d%02d",t.tm_year%100,t.tm_mon+1,t.tm_mday,t.tm_hour,t.tm_min,t.tm_sec);
   f.Write(tsbuf,12);
   f.Flush();
-  if(oldState<=MessageState::ENROUTE && state>MessageState::ENROUTE)
+  if(oldState<=ENROUTE && state>ENROUTE)
   {
     openMessages--;
   }
@@ -791,7 +787,7 @@ CsvStore::CsvFile::Record& CsvStore::CsvFile::setStateAndDate(uint64_t msgId,uin
 
 bool CsvStore::FullScan::Next(uint8_t &state, Message &msg)
 {
-  MutexGuard mg(store.mtx);
+  sync::MutexGuard mg(store.mtx);
   for(;;)
   {
     if(dit==store.dirs.end())

@@ -2,7 +2,7 @@
 #define _SMSC_INFOSME2_CONFSTRING_H
 
 namespace smsc {
-namespace infosme2 {
+namespace infosme {
 
 
 // the only use of the class is to wrap char* strings returned from ConfigView.
@@ -25,10 +25,9 @@ public:
         }
     }
     ~ConfString() {}
-    const std::string& str() const
-    {
-        return v_;
-    }
+
+    const std::string& str() const { return v_; }
+    const char* c_str() const { return v_.c_str(); }
     
 private:
     ConfString( const ConfString& x );

@@ -1,66 +1,69 @@
-#ifndef SMSC_INFOSME2_TASKPROCESSOR_H
-#define SMSC_INFOSME2_TASKPROCESSOR_H
+#ifndef SMSC_INFO_SME_TASK_PROCESSOR
+#define SMSC_INFO_SME_TASK_PROCESSOR
 
-#include <ctime>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <util/int.h>
+#include <time.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <inttypes.h>
 #include <memory>
 
 #include "logger/Logger.h"
-#include "core/threads/Thread.hpp"
+
 #include "util/config/ConfigView.h"
-#include "core/synchronization/EventMonitor.hpp"
+#include "util/config/ConfigException.h"
+#include "core/threads/Thread.hpp"
+#include "core/threads/ThreadPool.hpp"
+#include "core/synchronization/Mutex.hpp"
+#include "core/synchronization/Event.hpp"
 
-#include "InfoSmeAdmin.h"
 #include "TaskScheduler.h"
-#include "MessageSender.h"
+#include "RetryPolicies.hpp"
+#include "StatisticsManager.h"
+#include "InfoSmeAdmin.h"
+
+#include "InfoSme_Tasks_Stat_SearchCriterion.hpp"
+#include "TrafficControl.hpp"
+#include "TaskTypes.hpp"
 #include "TaskDispatcher.h"
-#include "Task.h"
-
-// #include "util/config/ConfigException.h"
-// #include "core/threads/ThreadPool.hpp"
-// #include "core/synchronization/Event.hpp"
-// #include "db/DataSource.h"
-
-// #include "TaskScheduler.h"
-// #include "RetryPolicies.hpp"
-// #include "StatisticsManager.h"
-
-// #include "InfoSme_Tasks_Stat_SearchCriterion.hpp"
-// #include "TrafficControl.hpp"
-// #include "TaskTypes.hpp"
 
 namespace smsc {
-namespace infosme2 {
+namespace infosme {
 
-class FinalStateSaver;
-class DataProvider;
+using namespace smsc::core::buffers;
+using namespace smsc::core::threads;
 
-/*
+using smsc::core::synchronization::Event;
+using smsc::core::synchronization::Mutex;
+
+using smsc::logger::Logger;
+using smsc::util::config::Manager;
+using smsc::util::config::ConfigView;
+using smsc::util::config::ConfigException;
+
 class FinalStateSaver;
 
 typedef enum { beginGenerationMethod, endGenerationMethod, dropAllMessagesMethod } TaskMethod;
 
-class TaskRunner : public TaskGuard, public ThreadedTask // for task method execution
+class TaskRunner : public ThreadedTask // for task method execution
 {
 private:
 
+    TaskGuard             task;
     TaskMethod            method;
     Statistics*           statistics;
     TaskProcessorAdapter* processor;
 
 public:
 
-    TaskRunner(Task* task, TaskMethod method, 
+    TaskRunner(Task* theTask, TaskMethod method, 
                TaskProcessorAdapter* adapter = 0, Statistics* statistics = 0)
-        : TaskGuard(task), ThreadedTask(), method(method), processor(adapter), statistics(statistics) {};
+        : ThreadedTask(), task(theTask), method(method), processor(adapter), statistics(statistics) {};
     virtual ~TaskRunner() {};
 
     virtual int Execute()
     {
-        __require__(task);
+        __require__(task.get());
         switch (method)
         {
         case endGenerationMethod:
@@ -143,22 +146,74 @@ struct Int64HashFunc{
 
 class MessageSender;
 
-*/
-
-class TaskProcessor : public InfoSmeAdmin, public TaskProcessorAdapter, protected smsc::core::threads::Thread
+class TaskProcessor : public InfoSmeAdmin, public Thread
 {
+private:
+    typedef IntHash< TaskGuard > TaskHash;
+
+private:
+
+    smsc::logger::Logger *log_;
+    std::auto_ptr< FinalStateSaver > finalStateSaver_;
+
+    ThreadManager taskManager;
+    ThreadManager eventManager;
+
+    TaskScheduler scheduler;    // for scheduled messages generation
+    TaskDispatcher dispatcher_;
+    static RetryPolicies retryPlcs;
+    DataProvider* provider;     // to obtain registered data source by key
+
+    Mutex              tasksLock;
+    TaskHash           tasks;
+
+    // Event       awake, exited;
+    bool        bStarted, bNeedExit, notified_;
+    EventMonitor startLock;
+    int         switchTimeout;
+
+    std::string storeLocation;
+
+    MessageSender*  messageSender;
+
+    int         responseWaitTime;
+    int         receiptWaitTime;
+    int         mappingRollTime; // FIXME: to be moved to smscconn
+    size_t      mappingMaxChanges; // FIXME: to be moved to smscconn
+
+    Connection*         dsStatConnection;
+    StatisticsManager*  statistics;
+
+    int     protocolId;
+    char*   svcType;
+    char*   address;
+
+    void processWaitingEvents(time_t time);
+    /// invoked from smsc connector, return true if receipt is needed
+    bool processResponse( const TaskMsgId& tmIds,
+                          const ResponseData& rd,
+                          bool internal,
+                          bool receipted );
+
+    // process a lot of messages from the task and return the number of processed messages
+    unsigned processTask(Task* task);
+    void resetWaitingTasks();
+
+    friend class SmscConnector;
+    virtual void processMessage ( const TaskMsgId& tmIds, const ResponseData& rd);
+
+    bool doesMessageConformToCriterion(ResultSet* rs,
+                                       const InfoSme_Tasks_Stat_SearchCriterion& searchCrit);
+
+    int unrespondedMessagesMax;
 public:
+
     TaskProcessor();
+    void init( ConfigView* config );
     virtual ~TaskProcessor();
 
-    void init( smsc::util::config::ConfigView* config );
-
-    TaskGuard getTask( unsigned taskId );
-    void addTask( Task* task );
-
-    /*
     int getProtocolId() const { return protocolId; };
-    const char* getSvcType() const { return (svcType) ? svcType: "InfoSme"; };
+    const char* getSvcType() const { return (svcType) ? svcType:"InfoSme"; };
     const char* getAddress() const { return address; };
 
     int getResponseWaitTime() const { return responseWaitTime; }
@@ -167,52 +222,43 @@ public:
     size_t getMappingMaxChanges() const { return mappingMaxChanges; }
     const std::string& getStoreLocation() const { return storeLocation; }
     int getUnrespondedMessagesMax() const { return unrespondedMessagesMax; }
-     */
-
-    FinalStateSaver* getFinalStateSaver() const { return finalStateSaver_; }
-    DataProvider*    getDataProvider() const { return dataProvider_; }
-    const std::string& storeLocation() const { return storeLocation_; }
-
-    /* ------------------------ Admin interface ------------------------ */
-
-    virtual void startTaskProcessor();
-    virtual void stopTaskProcessor();
-    virtual bool isTaskProcessorRunning() {
-        MutexGuard mg(startMon_);
-        return started_;
-    }
-    virtual void startTaskScheduler() {
-        scheduler_.start();
-    }
-    virtual void stopTaskScheduler() {
-        scheduler_.stop();
-    }
-    virtual bool isTaskSchedulerRunning() {
-        return scheduler_.isStarted();
-    }
-
-protected:
 
     virtual int Execute();
+    void Start();
+    virtual void Start(int) { Start(); }
+    void Stop();
 
-    void loadTask( unsigned taskId, smsc::util::config::ConfigView* taskConfig );
+    inline bool isStarted() {
+        MutexGuard guard(startLock);
+        return bStarted;
+    };
 
     /*
     void assignMessageSender(MessageSender* sender) {
-        MutexGuard guard(messageSenderLock);
+        MutexGuard guard(tasksLock);
         messageSender = sender;
     };
     bool isMessageSenderAssigned() {
-        MutexGuard guard(messageSenderLock);
+        MutexGuard guard(tasksLock);
         return (messageSender != 0);
     };
-    virtual bool putTask(Task* task);
-    virtual bool addTask(Task* task);
-    virtual bool remTask(uint32_t taskId);
-    virtual bool delTask(uint32_t taskId);
-    virtual bool hasTask(uint32_t taskId);
-    virtual TaskGuard getTask(uint32_t taskId);
-    virtual TaskInfo getTaskInfo(uint32_t taskId);
+     */
+
+    // virtual bool putTask(Task* task);
+    // virtual bool addTask(Task* task);
+    // virtual bool remTask(uint32_t taskId);
+    // virtual bool delTask(uint32_t taskId);
+    // virtual bool hasTask(uint32_t taskId);
+    // virtual TaskInfo getTaskInfo(uint32_t taskId);
+
+    /// @param config is a section "Tasks" of main config
+    virtual void addTask( uint32_t taskId ) {
+        if ( getTask(taskId).get() ) throw Exception("task %u exists already");
+        initTask( taskId, 0 );
+    }
+    virtual void initTask( uint32_t taskId, smsc::util::config::ConfigView* config );
+    virtual TaskGuard getTask( uint32_t taskId, bool remove = false );
+
     virtual bool invokeEndGeneration(Task* task) {
         return taskManager.startThread(new TaskRunner(task, endGenerationMethod,   this));
     };
@@ -229,7 +275,9 @@ protected:
     }
 
     virtual void awakeSignal() {
-        awake.Signal();
+        MutexGuard mg(startLock);
+        startLock.notifyAll();
+        notified_ = true;
     };
 
     bool getStatistics(uint32_t taskId, TaskStat& stat) {
@@ -248,19 +296,36 @@ protected:
         }
         task->retryMessage(msgId,time(0)+retryTime);
     }
-     */
 
     /* ------------------------ Admin interface ------------------------ */
 
-    /*
+    virtual void startTaskProcessor() {
+        this->Start();
+    }
+    virtual void stopTaskProcessor() {
+        this->Stop();
+    }
+    virtual bool isTaskProcessorRunning() {
+        return this->isStarted();
+    }
+
+    virtual void startTaskScheduler() {
+        scheduler.Start();
+    }
+    virtual void stopTaskScheduler() {
+        scheduler.Stop();
+    }
+    virtual bool isTaskSchedulerRunning() {
+        return scheduler.isStarted();
+    }
     virtual void flushStatistics() {
         if (statistics) statistics->flushStatistics();
     }
+    
     virtual void reloadSmscAndRegions();
 
-    virtual void addTask(uint32_t taskId);
-    virtual void removeTask(uint32_t taskId);
-    virtual void changeTask(uint32_t taskId);
+    // virtual void removeTask(uint32_t taskId);
+    // virtual void changeTask(uint32_t taskId);
 
     virtual bool startTask(uint32_t taskId);
     virtual bool stopTask(uint32_t taskId);
@@ -309,83 +374,12 @@ protected:
                               const std::string& dst,
                               const std::string& msg,
                               bool flash );
-     */
 
 private:
-
-    // std::auto_ptr< FinalStateSaver > finalStateSaver_;
-
-    // ThreadManager taskManager;
-    // ThreadManager eventManager;
-
-    // TaskScheduler scheduler;    // for scheduled messages generation
-    // static RetryPolicies retryPlcs;
-    // DataProvider  provider;     // to obtain registered data source by key
-
-    /*
-    IntHash<Task *>  tasks;
-    Mutex         tasksLock;
-
-    Event       awake, exited;
-    bool        bStarted, bNeedExit;
-    Mutex       startLock;
-    int         switchTimeout;
-     */
-
-    /*
-    MessageSender*  messageSender;
-    Mutex           messageSenderLock;
-
-    int         responseWaitTime;
-    int         receiptWaitTime;
-    int         mappingRollTime; // FIXME: to be moved to smscconn
-    size_t      mappingMaxChanges; // FIXME: to be moved to smscconn
-
-    Connection*         dsStatConnection;
-    StatisticsManager*  statistics;
-
-    int     protocolId;
-    char*   svcType;
-    char*   address;
-
-    void processWaitingEvents(time_t time);
-    /// invoked from smsc connector, return true if receipt is needed
-    bool processResponse( const TaskMsgId& tmIds,
-                          const ResponseData& rd,
-                          bool internal,
-                          bool receipted );
-
-    // process a lot of messages from the task and return the number of processed messages
-    unsigned processTask(Task* task);
-    void resetWaitingTasks();
-
-    friend class SmscConnector;
-    virtual void processMessage ( const TaskMsgId& tmIds, const ResponseData& rd);
-
-    bool doesMessageConformToCriterion(ResultSet* rs,
-                                       const InfoSme_Tasks_Stat_SearchCriterion& searchCrit);
-
-    int unrespondedMessagesMax;
-     */
-
-private:
-    smsc::logger::Logger* log_;
-    TaskScheduler         scheduler_;
-    TaskDispatcher        dispatcher_;
-    MessageSender         sender_;
-    std::string           storeLocation_;
-
-    smsc::core::synchronization::EventMonitor startMon_;
-    bool started_;
-    bool stopping_;
-    bool notified_;  // when some interesting external events incoming
-
-    DataProvider*         dataProvider_;
-    FinalStateSaver*      finalStateSaver_;
-    std::string           address_;
+    /// NOTE: already locked
+    void checkTaskActivity();
 };
 
-}
-}
+}}
 
-#endif //SMSC_INFOSME_TASKPROCESSOR_H
+#endif //SMSC_INFO_SME_TASK_PROCESSOR

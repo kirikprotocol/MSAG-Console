@@ -1,52 +1,40 @@
-#ifndef SMSC_INFOSME2_TASKSCHEDULER
-#define SMSC_INFOSME2_TASKSCHEDULER
+#ifndef SMSC_INFO_SME_TASK_SCHEDULER
+#define SMSC_INFO_SME_TASK_SCHEDULER
 
-#include <ctime>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
+#include <time.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <inttypes.h>
 
 #include "logger/Logger.h"
+#include "core/buffers/Array.hpp"
+#include "core/buffers/IntHash.hpp"
 #include "core/threads/Thread.hpp"
-#include "core/synchronization/EventMonitor.hpp"
-#include "util/config/ConfigView.h"
-
-// #include "core/buffers/Array.hpp"
-// #include "core/buffers/IntHash.hpp"
-// #include "core/synchronization/Mutex.hpp"
-// #include "Task.h"
-// #include "Schedules.h"
+#include "core/synchronization/Mutex.hpp"
+#include "core/synchronization/Event.hpp"
+#include "Task.h"
+#include "Schedules.h"
+#include "InfoSmeAdmin.h"
 
 namespace smsc {
-namespace infosme2 {
+namespace infosme {
 
-struct TaskProcessorAdapter
-{
-    /*
-    virtual bool invokeEndGeneration(Task* task)  = 0;
-    virtual bool invokeBeginGeneration(Task* task) = 0;
-    virtual bool invokeDropAllMessages(Task* task) = 0;
-        
-    virtual bool hasTask(uint32_t taskId) = 0;
-    virtual TaskGuard getTask(uint32_t taskId) = 0;
-    virtual void awakeSignal() = 0;
-     */
-protected:
-    virtual ~TaskProcessorAdapter() {}
-    TaskProcessorAdapter() {}
-    TaskProcessorAdapter( const TaskProcessorAdapter& );
-    TaskProcessorAdapter& operator = ( const TaskProcessorAdapter& );
-};
+using namespace smsc::core::buffers;
     
-
-class TaskScheduler : protected smsc::core::threads::Thread
+using smsc::core::threads::Thread;
+using smsc::core::synchronization::Event;
+using smsc::core::synchronization::Mutex;
+using smsc::logger::Logger;
+    
+class TaskScheduler : public Thread
 {
 public:
 
     /**
      * Creates TaskScheduler
      */
-    TaskScheduler( TaskProcessorAdapter& adapter );
+    TaskScheduler();
     virtual ~TaskScheduler();
 
     /**
@@ -55,15 +43,16 @@ public:
      * @param config
      * @exception ConfigException throws when configuration is invalid
      */
-    void init( smsc::util::config::ConfigView* config );
+    void init(TaskProcessorAdapter* processor, ConfigView* config);
 
-    void start();
-    // send stop signal and wait until stopped
-    void stop();
+    virtual int Execute();
+    void Start();
+    void Start(int) { Start(); }
+    void Stop();
 
     inline bool isStarted() { 
-        MutexGuard guard(startMon_);
-        return started_;
+        MutexGuard guard(startLock);
+        return bStarted;
     };
         
     /**
@@ -72,7 +61,7 @@ public:
      * @param schedule      shedule for task(s)
      * @return false if schedule already defined, else returns true.
      */
-    // bool addSchedule(Schedule* schedule);
+    bool addSchedule(Schedule* schedule);
 
     /**
      * Changes schedule in scheduling plan and reactivates scheduler.
@@ -82,7 +71,7 @@ public:
      * @param schedule      new shedule
      * @return false if schedule not found, else returns true.
      */
-    // bool changeSchedule(std::string id, Schedule* schedule);
+    bool changeSchedule(std::string id, Schedule* schedule);
         
     /**
      * Removes task(s) schedule from scheduling plan.
@@ -91,34 +80,33 @@ public:
      * @param id            schedule id
      * @return false if schedule not found, else returns true.
      */ 
-    // bool removeSchedule(std::string id);
+    bool removeSchedule(std::string id);
 
     /**
      * Removes task from all registered schedules
      *
      * @param taskId        task id to be removed
      */
-    // void removeTask(uint32_t taskId);
-
-protected:
-    virtual int Execute();
+    void removeTask(uint32_t taskId);
 
 private:
-    smsc::logger::Logger*                log_;
-    TaskProcessorAdapter*                processor_;
-    // smsc::core::buffers::Hash<Schedule*> schedules_;
-    // smsc::core::synchronization::Mutex   schedulesLock_;
-        
-    // Event   awake, exited;
-    // bool    bStarted, bNeedExit, bChanged;
-    smsc::core::synchronization::EventMonitor startMon_;
-    bool                                      started_;
-    bool                                      stopping_;
 
-    // Schedule* getNextSchedule(time_t& scheduleTime);
+    Logger  *logger;
+
+    TaskProcessorAdapter*   processor;
+    Hash<Schedule*>         schedules;
+    Mutex                   schedulesLock; 
+        
+    Event   awake, exited;
+    bool    bStarted, bNeedExit, bChanged;
+    Mutex   startLock;
+
+    Schedule* getNextSchedule(time_t& scheduleTime);
+
 };
 
 }
 }
 
-#endif // SMSC_INFOSME2_TASKSCHEDULER
+#endif //SMSC_INFO_SME_TASK_SCHEDULER
+

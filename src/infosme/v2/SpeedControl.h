@@ -4,7 +4,7 @@
 #include <cassert>
 
 namespace smsc {
-namespace infosme2 {
+namespace infosme {
 
 class SpeedControl
 {
@@ -28,7 +28,8 @@ public:
             return 0; 
         }
         register const unsigned mx = deltaTime + maxDelay_;
-        if ( mx < nextTime_ ) { suspend(mx); }
+        // NOTE: we want to allow long delays
+        // if ( mx < nextTime_ ) { suspend(mx); }
         return nextTime_ - deltaTime;
     }
 

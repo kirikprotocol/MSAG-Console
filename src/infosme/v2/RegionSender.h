@@ -7,7 +7,7 @@
 #include "SpeedControl.h"
 
 namespace smsc {
-namespace infosme2 {
+namespace infosme {
 
 class SmscConnector;
 class Task;
@@ -31,7 +31,8 @@ public:
         return speedControl_.suspend(nextTime);
     }
 
-    uint8_t send( unsigned curTime, const Task& task, const Message& msg );
+    bool send( unsigned curTime, Task& task, Message& msg );
+    SmscConnector& getSmscConnector() { return conn_; }
 
 private:
     RegionSender( const RegionSender& );

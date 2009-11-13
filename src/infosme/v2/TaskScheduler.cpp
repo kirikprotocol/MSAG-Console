@@ -1,83 +1,266 @@
+
 #include "TaskScheduler.h"
 
 namespace smsc {
-namespace infosme2 {
+namespace infosme {
 
-TaskScheduler::TaskScheduler( TaskProcessorAdapter& adapter ) :
-log_(smsc::logger::Logger::getInstance("is2.sched")),
-processor_(&adapter),
-started_(false),
-stopping_(false)
+TaskScheduler::TaskScheduler() :
+Thread(),
+logger(Logger::getInstance("smsc.infosme.TaskScheduler")),
+bStarted(false), bNeedExit(false), bChanged(false)
 {
-    smsc_log_debug(log_,"ctor");
 }
 
 
 TaskScheduler::~TaskScheduler()
 {
-    stop();
-    smsc_log_debug(log_,"dtor");
+    MutexGuard guard(schedulesLock);
+    
+    this->Stop();
+
+    char* key = 0; Schedule* schedule = 0; schedules.First();
+    while (schedules.Next(key, schedule))
+        if (schedule) delete schedule;
 }
-
-
-void TaskScheduler::init( smsc::util::config::ConfigView* config )
+void TaskScheduler::Start()
 {
-    smsc_log_info(log_,"init");
-    if ( !config ) throw smsc::util::config::ConfigException("no config");
-    MutexGuard mg(startMon_);
-    if ( started_ ) throw smsc::util::config::ConfigException("cannot init while started");
-    // FIXME: clean internal state
-    // FIXME: load schedules
-    smsc_log_info(log_,"init finished");
-}
-
-
-void TaskScheduler::start()
-{
-    MutexGuard mg(startMon_);
-    if ( started_ ) return;
-    smsc_log_debug(log_,"starting task scheduler");
-    stopping_ = false;
-    Start();
-    started_ = true;
-}
-
-
-void TaskScheduler::stop()
-{
-    MutexGuard mg(startMon_);
-    if (!started_) return;
-    smsc_log_debug(log_,"stopping task scheduler");
-    stopping_ = true;
-    startMon_.notifyAll();
-    while ( started_ ) {
-        startMon_.wait();
+    MutexGuard guard(startLock);
+    
+    if (!bStarted)
+    {
+        smsc_log_info(logger, "Starting ...");
+        bNeedExit = false;
+        awake.Wait(0);
+        Thread::Start();
+        bStarted = true;
+        smsc_log_info(logger, "Started.");
     }
-    WaitFor();
 }
-
+void TaskScheduler::Stop()
+{
+    MutexGuard  guard(startLock);
+    
+    if (bStarted)
+    {
+        smsc_log_info(logger, "Stopping ...");
+        bNeedExit = true;
+        awake.Signal();
+        exited.Wait();
+        bStarted = false;
+        smsc_log_info(logger, "Stoped.");
+    }
+}
 
 int TaskScheduler::Execute()
 {
-    smsc_log_info(log_,"execute started");
-    try {
-        while ( true ) {
+    const int SERVICE_SLEEP = 3600; // in seconds
+    const int SERVICE_PAUSE = 100;  // in m-seconds
+
+    Schedule*   schedule = 0;
+    std::string scheduleId = "";
+
+    while (!bNeedExit)
+    {
+        int toSleep = -1;
+        {
+            MutexGuard guard(schedulesLock);
+            time_t scheduleTime = -1;
+            schedule = getNextSchedule(scheduleTime);
+            if (scheduleTime > 0 && schedule) {
+                toSleep = (int)(scheduleTime-time(NULL));
+                scheduleId = schedule->id;
+            }
+            bChanged = false;
+        }
+        
+        if (toSleep < 0) {
+            awake.Wait(SERVICE_PAUSE);
+            continue;
+        }
+        else
+        {
+            while (toSleep > 0 && !bNeedExit && !bChanged) 
             {
-                MutexGuard mg(startMon_);
-                if ( stopping_ ) break;
-                // FIXME: sleeping
+                if (toSleep > SERVICE_SLEEP) {
+                    toSleep -= SERVICE_SLEEP;
+                    awake.Wait(SERVICE_SLEEP*1000);
+                    MutexGuard guard(schedulesLock);
+                    if (bChanged) break;
+                } 
+                else {
+                    awake.Wait(toSleep*1000);
+                    break;
+                }
             }
         }
-    } catch ( std::exception& e ) {
-        smsc_log_error(log_,"exc in execute, stopping: %s", e.what());
+        if (bNeedExit) break;
+        
+        {
+            MutexGuard guard(schedulesLock);
+            if (bChanged) continue;
+        }
+        
+        Schedule::IntSet tasks;
+        {
+            MutexGuard guard(schedulesLock);
+            if (!schedules.Exists(scheduleId.c_str())) continue;
+            schedule = schedules.Get(scheduleId.c_str());
+            if (!schedule) continue;
+            tasks = schedule->getTasks();
+        }
+        
+        try 
+        {
+            time_t currentTime = time(NULL);
+            for(Schedule::IntSet::iterator it=tasks.begin();it!=tasks.end();it++)
+            {
+              TaskGuard taskGuard = processor->getTask(*it);
+              Task* task = taskGuard.get();
+              if (!task)
+              { 
+                smsc_log_warn(logger, "Task '%d' not found.", *it);
+                continue;
+              }
+              if (!task->canGenerateMessages())
+              {
+                continue;
+              }
+              
+                if ( task->isActive() && !task->isInGeneration() ) {
+                    processor->invokeBeginGeneration(task);
+                }
+                /*
+              if (task->isReady(currentTime, false) && !task->isInGeneration())
+              {
+                processor->invokeBeginGeneration(task);
+              }
+                 */
+            }
+        }
+        catch (std::exception& exc) 
+        {
+            awake.Wait(0);
+            smsc_log_error(logger, "Exception occurred during tasks scheduling : %s", exc.what());
+        }
     }
-    MutexGuard mg(startMon_);
-    started_ = false;
-    startMon_.notifyAll();
-    smsc_log_info(log_,"execute finished");
+    exited.Signal();
     return 0;
 }
 
+void TaskScheduler::init(TaskProcessorAdapter* _processor, ConfigView* config)
+{
+    __require__(_processor && config);
+    
+    this->processor = _processor;
 
+    std::auto_ptr< std::set<std::string> > setGuard(config->getShortSectionNames());
+    std::set<std::string>* set = setGuard.get();
+    for (std::set<std::string>::iterator i=set->begin();i!=set->end();i++)
+    {
+        try
+        {
+            const char* scheduleId = (const char *)i->c_str();
+            if (!scheduleId || scheduleId[0] == '\0')
+                throw ConfigException("Schedule id empty or wasn't specified.");
+            
+            smsc_log_info(logger, "Loading schedule '%s' ...", scheduleId);
+            
+            std::auto_ptr<ConfigView> scheduleConfigGuard(config->getSubConfig(scheduleId));
+            ConfigView* scheduleConfig = scheduleConfigGuard.get();
+            Schedule* schedule = Schedule::create(scheduleConfig, scheduleId);
+            
+            if (schedule && !addSchedule(schedule)) {
+                delete schedule;
+                throw ConfigException("Schedule for id '%s' already defined.");
+            }
+        }
+        catch (ConfigException& exc)
+        {
+            smsc_log_error(logger, "Load of schedules failed! Config exception: %s", exc.what());
+            throw;
+        }
+    }
 }
+
+Schedule* TaskScheduler::getNextSchedule(time_t& scheduleTime)
+{
+    Schedule*   nextSchedule = 0;
+    time_t      minimalTime = -1;
+
+    char* key = 0; Schedule* schedule = 0; schedules.First();
+    while (schedules.Next(key, schedule))
+    {
+        if (!schedule) continue;
+        time_t time = schedule->calulateNextTime();
+        if (time < 0) continue;
+        
+        /*printf("Schedule %s\t Next time: %s", 
+               schedule ? schedule->id.c_str():"-", ctime(&time));*/
+        
+        if (minimalTime < 0 || time < minimalTime) {
+            minimalTime = time;
+            nextSchedule = schedule;
+        }
+    }
+    scheduleTime = minimalTime;
+    return nextSchedule;
 }
+
+bool TaskScheduler::addSchedule(Schedule* schedule)
+{
+    __require__(schedule);
+    MutexGuard guard(schedulesLock);
+    
+    const char* scheduleId = schedule->id.c_str();
+    if (!scheduleId || scheduleId[0] == '\0' || 
+        schedules.Exists(scheduleId)) return false;
+    schedules.Insert(scheduleId, schedule);
+    bChanged = true;
+    awake.Signal();
+    return true;
+}
+bool TaskScheduler::changeSchedule(std::string id, Schedule* schedule)
+{                   
+    __require__(schedule);
+    MutexGuard guard(schedulesLock);
+    
+    const char* scheduleId = id.c_str();
+    const char* newId = schedule->id.c_str();
+    if (!scheduleId || scheduleId[0] == '\0' || 
+        !newId || newId[0] == '\0') return false;
+    if (schedules.Exists(scheduleId)) {
+        Schedule* old = schedules.Get(scheduleId);
+        if (old) delete old;
+        schedules.Delete(scheduleId);
+    }
+    schedules.Insert(newId, schedule);
+    bChanged = true;
+    awake.Signal();
+    return true;
+}
+bool TaskScheduler::removeSchedule(std::string id)
+{
+    MutexGuard guard(schedulesLock);
+
+    const char* scheduleId = id.c_str();
+    if (!scheduleId || scheduleId[0] == '\0' || 
+        !schedules.Exists(scheduleId)) return false;
+    Schedule* old = schedules.Get(scheduleId);
+    if (old) delete old;
+    schedules.Delete(scheduleId);
+    bChanged = true;
+    awake.Signal();
+    return true;
+}
+
+void TaskScheduler::removeTask(uint32_t taskId)
+{
+    MutexGuard guard(schedulesLock);
+
+    char* key = 0; Schedule* schedule = 0; schedules.First();
+    while (schedules.Next(key, schedule))
+        if (schedule) schedule->removeTask(taskId);
+}
+
+}}
+

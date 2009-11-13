@@ -1,29 +1,52 @@
-#ifndef SMSC_INFOSME2_SMSCCONNECTOR_H
-#define SMSC_INFOSME2_SMSCCONNECTOR_H
+#ifndef SMSC_INFOSME_SMSCCONNECTOR
+#define SMSC_INFOSME_SMSCCONNECTOR
 
 #include <memory>
-#include "logger/Logger.h"
-#include "sme/SmppBase.hpp"
+#include <logger/Logger.h>
+#include <sms/sms.h>
+#include <sme/SmppBase.hpp>
+#include "util/config/Manager.h"
+#include "util/config/ConfigView.h"
+#include "core/threads/Thread.hpp"
+#include "core/synchronization/EventMonitor.hpp"
+#include "InfoSmePduListener.h"
+#include "core/buffers/Array.hpp"
+#include "core/buffers/IntHash.hpp"
+#include "core/buffers/XHash.hpp"
+#include "TaskTypes.hpp"
 
-// const int   MAX_ALLOWED_PAYLOAD_LENGTH = 65535;
-// const int   MAX_ALLOWED_MESSAGE_LENGTH = 254;
+const int   MAX_ALLOWED_PAYLOAD_LENGTH = 65535;
+const int   MAX_ALLOWED_MESSAGE_LENGTH = 254;
 
 namespace smsc {
 
-namespace util { namespace config { class ConfigView; }}
+namespace util {
+namespace config {
+namespace region {
+class Region;
+}
+}
+}
 
-namespace infosme2 {
+namespace infosme {
+
+using smsc::logger::Logger;
+using smsc::core::synchronization::EventMonitor;
+using smsc::core::synchronization::Mutex;
+using smsc::util::config::ConfigView;
+using smsc::sme::SmppSession;
 
 class Task;
-class Message;
+class TaskProcessor;
+class StatisticsManager;
 
-class SmscConnector
+class SmscConnector : public smsc::core::threads::Thread 
 {
-/*
 private:
+    typedef enum { processResponseMethod, processReceiptMethod } EventMethod;
     class EventRunner;
     struct JStoreWrapper;
-    class RegionTrafficControl;
+    // class RegionTrafficControl;
 
     struct ReceiptData
     {
@@ -60,23 +83,19 @@ private:
         ReceiptTimer(time_t timer=0) : timer(timer) {}
         ReceiptTimer(time_t timer, const ReceiptId& rcptId) : timer(timer), receiptId(rcptId) {}
     };
-*/
+
 
 public:
-    static smsc::sme::SmeConfig readSmeConfig( smsc::util::config::ConfigView& config ); // throw ConfigException
+    static SmeConfig readSmeConfig( ConfigView& config ); // throw ConfigException
 
-    SmscConnector( const std::string& smscId,
-                   const smsc::sme::SmeConfig& cfg );
+    SmscConnector(TaskProcessor& processor,
+                  const string& smscId );
     virtual ~SmscConnector();
 
-    void updateConfig( const smsc::sme::SmeConfig& config );
-
-    const std::string& getId() const { return id_; }
-
-    /*
     int Execute();
     void stop();
     void reconnect();
+    void updateConfig( const smsc::sme::SmeConfig& config );
     bool isStopped() const;
     int getSeqNum();
     uint32_t sendSms(const string& org, const string& dst, const string& txt, bool flash);
@@ -85,14 +104,11 @@ public:
     // put resp
     bool invokeProcessReceipt( const ResponseData& data );
     bool invokeProcessResponse( const ResponseData& data );
-    bool send( Task* task, Message& message, const smsc::util::config::region::Region* region );
+    // bool send( Task* task, Message& message, const smsc::util::config::region::Region* region );
     void processWaitingEvents( time_t tm );
-     */
-
-    bool send( const Task& task, const Message& msg );
+    bool send( Task& task, Message& msg );
 
 private:
-    /*
     bool convertMSISDNStringToAddress(const char* string, smsc::sms::Address& address);
 
     // merge state for given receipt
@@ -105,11 +121,10 @@ private:
                int seqNum );
     // cleanup all hashes except receipts
     void clearHashes();
-     */
+
 private:
-    smsc::logger::Logger* log_;
-    std::string           id_;
-    /*
+    string smscId_;
+    Logger* log_;
     TaskProcessor& processor_;
     int timeout_;
 
@@ -124,7 +139,7 @@ private:
     std::auto_ptr<SmppSession> session_;
     int usage_; // how many dependant objects are on this
     JStoreWrapper*                                  jstore_;
-    RegionTrafficControl*                           trafficControl_;
+    // RegionTrafficControl*                           trafficControl_;
 
     smsc::core::buffers::IntHash<TaskMsgId>         taskIdsBySeqNum;
     smsc::core::synchronization::EventMonitor       taskIdsBySeqNumMonitor;
@@ -135,10 +150,9 @@ private:
     smsc::core::synchronization::Mutex              receiptWaitQueueLock;
     smsc::core::buffers::Array<ResponseTimer>       responseWaitQueue;
     smsc::core::buffers::Array<ReceiptTimer>        receiptWaitQueue;
-     */
 };
 
-} //infosme2
+} //infosme
 } //smsc
 
 #endif

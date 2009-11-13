@@ -6,7 +6,7 @@
 #include <algorithm>
 
 namespace smsc {
-namespace infosme2 {
+namespace infosme {
 
 /// a templated ScoredList
 /// @param Proc is a class that should define the following:
@@ -49,6 +49,7 @@ private:
     typedef std::vector< ScoredObj >          ObjVector;
 
 public:
+    typedef typename std::vector< Obj* > ObjList;
 
     struct isEqual {
         inline isEqual( const Obj* o ) : obj(o) {}
@@ -139,7 +140,7 @@ public:
     }
 
 
-    template < class Pred > void remove( Pred pred, typename std::vector< Obj* >* res = 0 )
+    template < class Pred > void remove( Pred pred, ObjList* res = 0 )
     {
         for ( typename ObjVector::iterator i = objects_.begin();
               i != objects_.end();
