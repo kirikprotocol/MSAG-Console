@@ -38,12 +38,11 @@
 #include "util/mirrorfile/mirrorfile.h"
 
 #include <sms/sms.h>
-#include <util/config/route/RouteStructures.h>
-#include <util/config/route/RouteConfig.h>
-
+// #include <util/config/route/RouteStructures.h>
+// #include <util/config/route/RouteConfig.h>
 // #include <util/config/region/RegionsConfig.hpp>
-#include <util/config/region/Region.hpp>
-#include <util/config/region/RegionFinder.hpp>
+// #include <util/config/region/Region.hpp>
+// #include <util/config/region/RegionFinder.hpp>
 #include "infosme/TaskLock.hpp"
 #include "SmscConnector.h"
 

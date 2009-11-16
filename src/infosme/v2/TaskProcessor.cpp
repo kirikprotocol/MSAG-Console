@@ -429,7 +429,7 @@ int TaskProcessor::Execute()
             {
                 if ( bNeedExit ) break;
                 int waitTime = int(nextWakeTime - currentTime);
-                if ( waitTime > 0 && !notified_ ) {
+                if ( waitTime > 0 ) {
                     if ( waitTime < 10 ) waitTime = 10;
                     MutexGuard mg(startLock);
                     wasNotified = notified_;
@@ -459,8 +459,8 @@ int TaskProcessor::Execute()
             MutexGuard mg(tasksLock);
             while ( wasNotified || (currentTime - lastNotifyTime) > 30000 ) {
                 lastNotifyTime = currentTime;
-                smsc_log_debug(log_,"notified=%u or time passed",wasNotified);
                 wasNotified = false;
+                smsc_log_debug(log_,"notified=%u or time passed",wasNotified);
                 // TaskDispatcher::TaskList inactiveTasks;
                 checkTaskActivity();
                 dispatcher_.removeInactiveTasks();
@@ -702,6 +702,27 @@ void TaskProcessor::processMessage(const TaskMsgId& tmIds,const ResponseData& rd
     }
 }
 
+/* ------------------------ ServicesForTask interface implementation ------------------------ */ 
+
+int TaskProcessor::findRegionByAddress( const char* addr )
+{
+    MutexGuard mg(startLock);
+    return messageSender->findRegionByAddress( addr );
+}
+
+
+void TaskProcessor::saveFinalState( time_t now,
+                                    const TaskInfo& info,
+                                    const Message&  msg,
+                                    uint8_t         state,
+                                    int             smppStatus,
+                                    bool            noMoreMessages )
+{
+    if ( finalStateSaver_.get() )
+        finalStateSaver_->save(now,info,msg,state,smppStatus,noMoreMessages);
+}
+
+
 /* ------------------------ Admin interface implementation ------------------------ */ 
 
 void TaskProcessor::reloadSmscAndRegions()
@@ -780,7 +801,7 @@ void TaskProcessor::initTask( uint32_t id, ConfigView* taskConfig )
                                       dsId, id);
         }
         if ( ptr ) { tasks.Delete(id); }
-        TaskGuard& guard = tasks.Insert(id,TaskGuard().create(id,location,info,taskDs,finalStateSaver_.get()));
+        TaskGuard& guard = tasks.Insert(id,TaskGuard().create(id,location,info,taskDs,this));
         if ( guard.get() && guard->isActive() ) {
             dispatcher_.addTask( *guard.get() );
         }

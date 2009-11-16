@@ -51,7 +51,7 @@ using smsc::util::config::ConfigException;
 
 using namespace smsc::util::templates;
 
-class FinalStateSaver;
+class ServicesForTask;
 
 class Task 
 {
@@ -64,7 +64,7 @@ public:
           const std::string& location,
           const TaskInfo&    taskInfo,
           DataSource* dsOwn,
-          FinalStateSaver* finalStateSaver );
+          ServicesForTask* finalStateSaver );
 
     /// to update task info
     void setInfo( const TaskInfo& info );
@@ -284,7 +284,7 @@ protected:
 
     smsc::logger::Logger *logger;
     OutputFormatter*   formatter;
-    FinalStateSaver*   finalStateSaver_;
+    ServicesForTask*   finalStateSaver_;
 
     Event       usersCountEvent;
     Mutex       lock_;
@@ -352,7 +352,7 @@ public:
                   const std::string&    location,
                   const TaskInfo&       info,
                   smsc::db::DataSource* dataSource,
-                  FinalStateSaver*      saver ) {
+                  ServicesForTask*      saver ) {
         if ( task_ ) { task_->changeUsage(false); task_ = 0; }
         task_ = new Task(id,location,info,dataSource,saver);
         task_->changeUsage(true);

@@ -450,6 +450,16 @@ void InfoSmeMessageSender::processWaitingEvents( time_t tm )
 }
 
 
+int InfoSmeMessageSender::findRegionByAddress( const char* addr )
+{
+    MutexGuard mg(lock_);
+    const smsc::util::config::region::Region* foundRegion =
+        regionFinder_->findRegionByAddress( addr );
+    if ( ! foundRegion ) return -2;
+    return Message::stringToRegionId(foundRegion->getId());
+}
+
+
 /*
 SmscConnector* InfoSmeMessageSender::addConnector( const smsc::sme::SmeConfig& cfg, const std::string& smscid )
 {

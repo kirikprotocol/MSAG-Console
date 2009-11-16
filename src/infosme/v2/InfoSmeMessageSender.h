@@ -55,6 +55,7 @@ public:
 
     virtual unsigned send( unsigned deltaTime, unsigned sleepTime );
     virtual void processWaitingEvents( time_t tm );
+    virtual int findRegionByAddress( const char* addr );
 
 private:
 

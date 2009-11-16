@@ -30,6 +30,21 @@ class Task;
 class TaskGuard;
 using smsc::core::buffers::Array;
 
+
+struct ServicesForTask
+{
+    virtual ~ServicesForTask() {}
+    virtual int findRegionByAddress( const char* addr ) = 0; // throw Exception
+    virtual void saveFinalState( time_t now,
+                                 const TaskInfo& info,
+                                 const Message&  msg,
+                                 uint8_t         state,
+                                 int             smppStatus,
+                                 bool            noMoreMessages ) = 0;
+};
+
+
+
 struct TaskProcessorAdapter
 {
     virtual bool invokeBeginGeneration(Task* task) = 0;
@@ -40,7 +55,7 @@ struct TaskProcessorAdapter
     virtual TaskGuard getTask(uint32_t taskId, bool remove = false) = 0;
     virtual void awakeSignal() = 0;
     
-    virtual ~TaskProcessorAdapter() {};
+    virtual ~TaskProcessorAdapter() {}
 
 protected:
 

@@ -25,6 +25,7 @@ struct MessageSender
     virtual void processWaitingEvents(time_t tm) = 0;
     virtual unsigned send( unsigned deltaTime, unsigned sleepTime ) = 0;
     virtual void init( TaskProcessor&, smsc::util::config::ConfigView* ) = 0;
+    virtual int findRegionByAddress( const char* addr ) = 0;
 
 protected:
     MessageSender() {}

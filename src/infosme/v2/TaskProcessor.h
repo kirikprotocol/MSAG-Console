@@ -146,7 +146,7 @@ struct Int64HashFunc{
 
 class MessageSender;
 
-class TaskProcessor : public InfoSmeAdmin, public Thread
+class TaskProcessor : public InfoSmeAdmin, public ServicesForTask, public Thread
 {
 private:
     typedef IntHash< TaskGuard > TaskHash;
@@ -296,6 +296,19 @@ public:
         }
         task->retryMessage(msgId,time(0)+retryTime);
     }
+
+
+    /* ------------------------ ServicesForTask interface ------------------------ */
+
+    virtual int findRegionByAddress( const char* addr );
+
+    virtual void saveFinalState( time_t now,
+                                 const TaskInfo& info,
+                                 const Message&  msg,
+                                 uint8_t         state,
+                                 int             smppStatus,
+                                 bool            noMoreMessages );
+
 
     /* ------------------------ Admin interface ------------------------ */
 

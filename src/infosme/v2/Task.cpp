@@ -1,5 +1,5 @@
 #include "Task.h"
-#include "FinalStateSaver.h"
+#include "InfoSmeAdmin.h"
 #include "SQLAdapters.h"
 #include "TaskLock.hpp"
 #include <time.h>
@@ -171,7 +171,7 @@ Task::Task( uint32_t           taskId,
             const TaskInfo&    taskInfo,
             // ConfigView* config,
             DataSource* _dsOwn,
-            FinalStateSaver* finalStateSaver ) :
+            ServicesForTask*   finalStateSaver ) :
 logger(Logger::getInstance("smsc.infosme.Task")),
 formatter(0),
 finalStateSaver_(finalStateSaver),
@@ -190,6 +190,7 @@ infoSme_T_storageWasDestroyed(false)
 {
     smsc_log_debug(logger,"task %u/'%s' ctor",taskInfo.uid,taskInfo.name.c_str());
     if ( ! smsc::core::buffers::File::Exists(location.c_str()) ) {
+        smsc_log_debug(logger,"making a directory %s",location.c_str());
         smsc::core::buffers::File::MkDir(location.c_str());
     }
     setInfo(taskInfo);
@@ -704,13 +705,13 @@ bool Task::beginGeneration(Statistics* statistics)
               Message msg;
               msg.abonent=addr.toString().c_str();
               msg.message=message;
-              const smsc::util::config::region::Region* foundRegion = smsc::util::config::region::RegionFinder::getInstance().findRegionByAddress(addr.toString());
-              if ( foundRegion )
-                smsc_log_debug(logger, "Task::beginGeneration::: abonent = %s matches to mask for region with id %s", addr.toString().c_str(), foundRegion->getId().c_str());
-              else
-                throw Exception("Task::insertDeliveryMessage::: Wrong configuraiton - can't find region definition");
+              const int foundRegion = finalStateSaver_->findRegionByAddress( addr.toString().c_str() );
+              if ( foundRegion < -1 ) {
+                  throw Exception("Task::insertDeliveryMessage::: Wrong configuraiton - can't find region definition");
+              }
+                smsc_log_debug(logger, "Task::beginGeneration::: abonent = %s matches to mask for region with id %d", addr.toString().c_str(), foundRegion );
 
-              msg.regionId= Message::stringToRegionId(foundRegion->getId());
+              msg.regionId = foundRegion;
 
               store.createMessage(sendTime,msg);
 
@@ -880,7 +881,7 @@ bool Task::finalizeMessage(uint64_t msgId, MessageState state, int smppStatus )
       }
 
       if ( info.saveFinalState ) {
-          finalStateSaver_->save(now,info,msg,state,smppStatus,store.isProcessed());
+          finalStateSaver_->saveFinalState(now,info,msg,state,smppStatus,store.isProcessed());
       }
       result = true;
 
@@ -1235,11 +1236,11 @@ bool Task::insertDeliveryMessage(uint8_t msgState,
 {
   smsc::sms::Address parsedAddr(address.c_str());
   smsc_log_debug(logger, "Task::insertDeliveryMessage::: try map telephone number [%s] to Region", address.c_str());
-  const smsc::util::config::region::Region* foundRegion = smsc::util::config::region::RegionFinder::getInstance().findRegionByAddress(parsedAddr.toString());
-  if ( foundRegion )
-    smsc_log_debug(logger, "Task::insertDeliveryMessage::: telephone number = %s matches to mask for region with id %s", address.c_str(), foundRegion->getId().c_str());
-  else
-    throw Exception("Task::insertDeliveryMessage::: Wrong configuraiton - can't find region definition");
+  const int foundRegion = finalStateSaver_->findRegionByAddress(parsedAddr.toString().c_str());
+  if ( foundRegion < -1 ) {
+      throw Exception("Task::insertDeliveryMessage::: Wrong configuraiton - can't find region definition");
+  }
+    smsc_log_debug(logger, "Task::insertDeliveryMessage::: telephone number = %s matches to mask for region with id %d", address.c_str(), foundRegion );
 
   if (! msg.empty())
   {
@@ -1252,13 +1253,13 @@ bool Task::insertDeliveryMessage(uint8_t msgState,
     message.abonent=address;
     message.message=msg;
     message.date=messageDate;
-    message.regionId = Message::stringToRegionId(foundRegion->getId());
+    message.regionId = foundRegion;
     if (!userData.empty()) message.userData = userData;
     store.createMessage(messageDate,message);
   }
-
   return true;
 }
+
 bool Task::changeDeliveryMessageInfoByRecordId(uint8_t msgState,
                                                time_t unixTime,
                                                const std::string& recordId,uint64_t& newMsgId)
