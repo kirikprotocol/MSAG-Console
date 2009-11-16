@@ -872,6 +872,9 @@ public:
       socket.GetPeer(in);
   }
 
+    bool isClosed() const {
+        return closed;
+    }
 
 protected:
   SmeConfig cfg;
