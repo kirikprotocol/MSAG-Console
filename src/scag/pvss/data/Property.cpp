@@ -421,7 +421,7 @@ void Property::Deserialize(util::storage::SerialBuffer& buf, bool fromFSDB, util
     }
 
     switch(type) {
-        case INT:   i_val = buf.ReadInt32();        break;
+        case INT:   i_val = static_cast<int32_t>(buf.ReadInt32()); break;
         case STRING:buf.ReadString(s_val);          break;
         case BOOL:  b_val = (bool)buf.ReadInt8();   break;
         case DATE:  d_val = (time_t)buf.ReadInt32();break;
