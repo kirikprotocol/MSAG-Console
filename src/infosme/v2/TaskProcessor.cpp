@@ -45,7 +45,7 @@ RetryPolicies TaskProcessor::retryPlcs;
 TaskProcessor::TaskProcessor() :
 InfoSmeAdmin(), Thread(),
 log_(Logger::getInstance("smsc.infosme.TaskProcessor")), 
-dispatcher_(10000),
+dispatcher_(1000),
 provider(0),
 bStarted(false),
 bNeedExit(false),
