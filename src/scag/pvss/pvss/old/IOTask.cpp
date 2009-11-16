@@ -208,7 +208,7 @@ Performance MTPersReader::getPerformance() {
     PerfCounter &pf = cx->getPerfCounter();
     int accepted = pf.getAccepted();
     int processed = pf.getProcessed();
-    smsc_log_info(logger, "context:%p socket:%p current performance %d:%d", cx, s, accepted, processed);
+    smsc_log_debug(logger, "context:%p socket:%p current performance %d:%d", cx, s, accepted, processed);
     perf.inc(accepted, processed);
   }
   perf.connections += mpcount;
