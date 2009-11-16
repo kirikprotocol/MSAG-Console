@@ -39,6 +39,7 @@ DataSource* DataProvider::createDataSource(ConfigView* config)
 
 void DataProvider::init(ConfigView* config)
 {
+    smsc_log_debug(logger, "init");
 #ifndef INFOSME_NO_DATAPROVIDER
     MutexGuard guard(dssLock);
     
@@ -73,6 +74,7 @@ void DataProvider::init(ConfigView* config)
         }
     }
 #endif
+    smsc_log_debug(logger, "init finished");
 }
 
 DataSource* DataProvider::getDataSource(const char* dsid)

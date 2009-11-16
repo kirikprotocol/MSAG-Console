@@ -133,6 +133,7 @@ SmscConnector* InfoSmeMessageSender::getSmscConnector( const uint32_t regionId )
 void InfoSmeMessageSender::init( TaskProcessor& processor,
                                  ConfigView* config )
 {
+    smsc_log_info(log_,"init");
     if ( ! config ) {
         throw smsc::util::config::ConfigException("config is null");
     }
@@ -146,7 +147,6 @@ void InfoSmeMessageSender::init( TaskProcessor& processor,
         throw smsc::util::config::ConfigException("default SMSC does not match any section");
     }
 
-    smsc_log_info(log_,"init");
     MutexGuard mg(lock_);
 
     // --- full cleanup

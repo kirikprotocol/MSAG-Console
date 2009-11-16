@@ -220,6 +220,11 @@ bool SmscConnector::RegionTrafficControl::speedLimitReached( Task* task, const M
 
 smsc::sme::SmeConfig SmscConnector::readSmeConfig( ConfigView& config )
 {
+    {
+        smsc::logger::Logger* tmplog = smsc::logger::Logger::getInstance("is2.conn");
+        smsc_log_debug(tmplog,"reading sme config");
+    }
+
     smsc::sme::SmeConfig rv;
     // Mandatory fields
     rv.host = ::cgetString(config,"host", "SMSC host wasn't defined !");

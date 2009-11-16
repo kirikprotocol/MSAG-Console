@@ -6,6 +6,7 @@ namespace smsc { namespace infosme
 
 Schedule* Schedule::create(ConfigView* config, std::string id)
 {
+    __trace__("creating schedule");
     Schedule* schedule = 0;
 
     const char* execute = config->getString("execute");

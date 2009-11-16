@@ -228,36 +228,39 @@ int main(int argc, char** argv)
         Manager& manager = Manager::getInstance();
 
 #ifndef INFOSME_NO_DATAPROVIDER
-        ConfigView dsConfig(manager, "StartupLoader");
-        DataSourceLoader::loadup(&dsConfig);
+        {
+            ConfigView dsConfig(manager, "StartupLoader");
+            DataSourceLoader::loadup(&dsConfig);
+        }
 #endif
 
-        ConfigView tpConfig(manager, "InfoSme");
-        maxMessagesPerSecond++;
-
-        try { maxMessagesPerSecond = tpConfig.getInt("maxMessagesPerSecond"); } catch (...) {};
-        if (maxMessagesPerSecond <= 0) {
-            maxMessagesPerSecond = 50;
-            smsc_log_warn(logger, "Parameter 'maxMessagesPerSecond' value is invalid. Using default %d",
-                          maxMessagesPerSecond);
-        }
-        if (maxMessagesPerSecond > 100) {
-            smsc_log_warn(logger, "Parameter 'maxMessagesPerSecond' value '%d' is too big. "
-                          "The preffered max value is 100", maxMessagesPerSecond);
-        }
-
-        {
-          std::string fn=tpConfig.getString("storeLocation");
-          if(fn.length() && *fn.rbegin()!='/')
-          {
-            fn+='/';
-          }
-          fn+="taskslock.bin";
-          TaskLock::Init(fn.c_str());
-        }
-
         TaskProcessor processor;
-        processor.init(&tpConfig);
+        {
+            ConfigView tpConfig(manager, "InfoSme");
+            maxMessagesPerSecond++;
+
+            try { maxMessagesPerSecond = tpConfig.getInt("maxMessagesPerSecond"); } catch (...) {};
+            if (maxMessagesPerSecond <= 0) {
+                maxMessagesPerSecond = 50;
+                smsc_log_warn(logger, "Parameter 'maxMessagesPerSecond' value is invalid. Using default %d",
+                              maxMessagesPerSecond);
+            }
+            if (maxMessagesPerSecond > 100) {
+                smsc_log_warn(logger, "Parameter 'maxMessagesPerSecond' value '%d' is too big. "
+                              "The preffered max value is 100", maxMessagesPerSecond);
+            }
+
+            {
+                std::string fn=tpConfig.getString("storeLocation");
+                if(fn.length() && *fn.rbegin()!='/')
+                {
+                    fn+='/';
+                }
+                fn+="taskslock.bin";
+                TaskLock::Init(fn.c_str());
+            }
+            processor.init(&tpConfig);
+        }
 
         /*
         InfoSmeMessageSender messageSender( processor );
@@ -272,10 +275,11 @@ int main(int argc, char** argv)
 
         sigprocmask(SIG_SETMASK, &blocked_signals, &original_signal_mask);
 
-        ConfigView adminConfig(manager, "InfoSme.Admin");
-        adminListener->init(adminConfig.getString("host"), adminConfig.getInt("port"));
-        bAdminListenerInited = true;
-
+        {
+            ConfigView adminConfig(manager, "InfoSme.Admin");
+            adminListener->init(adminConfig.getString("host"), adminConfig.getInt("port"));
+            bAdminListenerInited = true;
+        }
 
         InfoSmeComponent admin(processor);
         ComponentManager::registerComponent(&admin);
