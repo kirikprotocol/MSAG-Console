@@ -4,6 +4,8 @@
 #include <memory>
 #include <iostream>
 
+#include "util/xml/init.h"
+#include "util/xml/DOMTreeReader.h"
 #include <util/xml/utilFunctions.h>
 
 #include "core/buffers/TmpBuf.hpp"
@@ -16,6 +18,62 @@ using namespace xercesc;
 using namespace std;
 using namespace smsc::util::xml;
 using smsc::core::buffers::TmpBuf;
+
+
+Config* Config::createFromFile( const char* xmlfile )
+{
+    initXerces();
+    if ( !xmlfile || *xmlfile == '\0' ) {
+        throw ConfigException("config file is not specified");
+    }
+    struct stat s;
+    int rc = stat(xmlfile,&s);
+    std::auto_ptr<char> tmp;
+    if ( *xmlfile != '/' ) {
+        if ( rc == 0 && S_ISREG(s.st_mode) ) {
+            // found
+        } else {
+            tmp.reset(new char[strlen(xmlfile) + 10]);
+            strcpy(tmp.get(),"conf/");
+            strcat(tmp.get(),xmlfile);
+            if ( stat(tmp.get(),&s) == 0 && S_ISREG(s.st_mode) ) {
+                // found
+                xmlfile = tmp.get();
+            } else {
+                strcpy(tmp.get(),"../conf/");
+                strcat(tmp.get(),xmlfile);
+                if ( stat(tmp.get(),&s) == 0 && S_ISREG(s.st_mode) ) {
+                    // found
+                    xmlfile = tmp.get();
+                } else {
+                    throw ConfigException("config file '%s' is not found", xmlfile );
+                }
+            }
+        }
+    } else if ( rc == 0 && S_ISREG(s.st_mode) ) {
+        // ok
+    } else {
+        throw ConfigException("config file '%s' is not found", xmlfile);
+    }
+
+    // trying to open the file
+    std::auto_ptr< Config > config;
+    try {
+        DOMTreeReader reader;
+        DOMDocument* document = reader.read(xmlfile);
+        DOMElement* elem;
+        if ( document && (elem = document->getDocumentElement()) ) {
+            config.reset( new Config );
+            config->parse(*elem);
+        } else {
+            throw ConfigException("config file '%s' parsed to null");
+        }
+    } catch ( ParseException& e ) {
+        throw ConfigException(e.what());
+    }
+    return config.release();
+}
+
 
 void Config::parse(const DOMElement &element)
   throw (ConfigException)

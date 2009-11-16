@@ -31,6 +31,8 @@ class Config {
 public:
     friend class Manager;
 
+    static Config* createFromFile( const char* xmlfile ); // throw configexception
+
     Config()
     {}
 
