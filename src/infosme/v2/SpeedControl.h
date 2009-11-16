@@ -28,8 +28,8 @@ public:
             return 0; 
         }
         register const unsigned mx = deltaTime + maxDelay_;
-        // NOTE: we want to allow long delays
-        // if ( mx < nextTime_ ) { suspend(mx); }
+        // NOTE: this is required for making a flip of startTime
+        if ( mx < nextTime_ ) { suspend(mx); }
         return nextTime_ - deltaTime;
     }
 
