@@ -36,22 +36,22 @@ public:
         if ( sz != 1 ) throw InvalidValueLength("byte", sz);
         return readByte();
     }
-    uint16_t readShortLV() throw (exceptions::IOException) {
+    int16_t readShortLV() throw (exceptions::IOException) {
         int sz = readShort();
         if ( sz != 2 ) throw InvalidValueLength("short", sz);
         return readShort();
     }
-    uint32_t readIntLV() throw (exceptions::IOException) {
+    int32_t readIntLV() throw (exceptions::IOException) {
         int sz = readShort();
         if ( sz != 4 ) throw InvalidValueLength("int", sz);
         return readInt();
     }
-    uint64_t readLongLV() throw (exceptions::IOException) {
+    int64_t readLongLV() throw (exceptions::IOException) {
         int sz = readShort();
         if ( sz != 8 ) throw InvalidValueLength("long", sz);
-        uint32_t i1 = readInt();
-        uint32_t i0 = readInt();
-        return (uint64_t(i1) << 32) | i0;
+        uint32_t i1 = uint32_t(readInt());
+        uint32_t i0 = uint32_t(readInt());
+        return int64_t((uint64_t(i1) << 32) | i0);
     }
     std::string readUTFLV() throw (exceptions::IOException) {
         int sz = readLength();
@@ -94,19 +94,19 @@ public:
         ++pos_;
         return rv;
     }
-    uint16_t readShort() throw (exceptions::IOException) {
+    int16_t readShort() throw (exceptions::IOException) {
         rcheck(2);
         uint16_t rv;
         memcpy(&rv, buf_.get()+pos_, 2);
         pos_ += 2;
-        return ntohs(rv);
+        return int16_t(ntohs(rv));
     }
-    uint32_t readInt() throw (exceptions::IOException) {
+    int32_t readInt() throw (exceptions::IOException) {
         rcheck(4);
         uint32_t rv;
         memcpy(&rv, buf_.get()+pos_, 4);
         pos_ += 4;
-        return ntohl(rv);
+        return int32_t(ntohl(rv));
     }
 
     std::string dump() const {

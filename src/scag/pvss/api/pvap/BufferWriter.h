@@ -25,18 +25,18 @@ public:
         writeLength(1);
         writeByte(val);
     }
-    void writeShortLV( uint16_t val ) {
+    void writeShortLV( int16_t val ) {
         writeLength(2);
         writeShort(val);
     }
-    void writeIntLV( uint32_t val ) {
+    void writeIntLV( int32_t val ) {
         writeLength(4);
         writeInt(val);
     }
-    void writeLongLV( uint64_t val ) {
+    void writeLongLV( int64_t val ) {
         writeLength(8);
-        writeInt(uint32_t(val >> 32));
-        writeInt(uint32_t(val));
+        writeInt(int32_t(val >> 32));
+        writeInt(int32_t(val));
     }
     /*
     void writeUCSLV( const std::string& val ) {
@@ -82,11 +82,11 @@ public:
     void writeByte( uint8_t val ) {
         buf_->Append( reinterpret_cast<const char*>(&val), 1 );
     }
-    void writeShort( uint16_t val ) {
+    void writeShort( int16_t val ) {
         uint16_t netval = htons(val);
         buf_->Append( reinterpret_cast<const char*>(&netval), 2 );
     }
-    void writeInt( uint32_t val ) {
+    void writeInt( int32_t val ) {
         uint32_t netval = htonl(val);
         buf_->Append( reinterpret_cast<const char*>(&netval), 4 );
     }
