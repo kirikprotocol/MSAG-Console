@@ -94,7 +94,7 @@ public:
     }
     inline bool isGenerationSucceeded() {
         MutexGuard guard(inGenerationMon);
-        return (!bInGeneration && bGenerationSuccess);
+        return (!bInGeneration && info.bGenerationSuccess);
     }
 
     inline uint32_t getId()
@@ -308,7 +308,7 @@ protected:
     Mutex       createTableLock, enableLock;
     EventMonitor inGenerationMon;
     Mutex       inProcessLock;
-    bool        bInProcess, bInGeneration, bGenerationSuccess;
+    bool        bInProcess, bInGeneration;
     bool        infoSme_T_storageWasDestroyed;
 
 };

@@ -186,7 +186,6 @@ protected:
             remove(isEqual(0));
         }
         if ( ! movedObjects_.empty() ) {
-            // FIXME: have to restrict on too big difference b/w top and bottom?
             std::sort( movedObjects_.begin(), movedObjects_.end() );
             objects_.reserve( objects_.size() + movedObjects_.size() );
             typename ObjVector::iterator middle = objects_.end();

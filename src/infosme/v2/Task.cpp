@@ -182,7 +182,7 @@ dsOwn(_dsOwn),
 prefetched_(false),
 messagesInCache_(0),
 store(location),
-bInProcess(false), bInGeneration(false), bGenerationSuccess(true),
+bInProcess(false), bInGeneration(false),
 infoSme_T_storageWasDestroyed(false)
 // lastMessagesCacheEmpty(0), 
 // messageCache_(new MessageRegionCache),
@@ -225,14 +225,17 @@ void Task::setInfo( const TaskInfo& taskInfo )
         smsc_log_debug(logger,"task %u/'%s' setting new info", taskInfo.uid, taskInfo.name.c_str() );
     }
 
-    // FIXME: changing state
-
     if ( taskInfo.enabled ) {
         store.Init();
     } else {
         active_ = false;
     }
     info = taskInfo;
+
+    if ( ! formatter ) {
+        formatter = new OutputFormatter(info.msgTemplate.c_str());
+    }
+    trackIntegrity(true, true); // delete flag & generated messages
 }
 
 
@@ -365,7 +368,7 @@ void Task::init(ConfigView* config, uint32_t taskId)
   if (info.messagesCacheSleep <= 0) info.messagesCacheSleep = 1;
   try
   { 
-    bGenerationSuccess = config->getBool("messagesHaveLoaded");
+    info.bGenerationSuccess = config->getBool("messagesHaveLoaded");
     bInGeneration = false;
   } catch (...) {}
   try { info.useDataSm = config->getBool("useDataSm"); } catch (...) { info.useDataSm = false; } 
@@ -632,7 +635,7 @@ bool Task::beginGeneration(Statistics* statistics)
           return false;
         }
         bInGeneration = true;
-        bGenerationSuccess = false;
+        info.bGenerationSuccess = false;
     }
 
     Connection* ownConnection = 0;
@@ -733,11 +736,11 @@ bool Task::beginGeneration(Statistics* statistics)
           MutexGuard guard(inGenerationMon);
           if (info.trackIntegrity && !bInGeneration)
           {
-            bGenerationSuccess = false;
+            info.bGenerationSuccess = false;
           }
           else
           {
-            bGenerationSuccess = true;
+            info.bGenerationSuccess = true;
           }
         }
 
@@ -750,7 +753,7 @@ bool Task::beginGeneration(Statistics* statistics)
         
         trackIntegrity(true, true); // delete flag & generated messages
         MutexGuard guard(inGenerationMon);
-        bGenerationSuccess = false;
+        info.bGenerationSuccess = false;
     }
     
     if (ownConnection)
@@ -764,7 +767,7 @@ bool Task::beginGeneration(Statistics* statistics)
       inGenerationMon.notify();
     }
     store.closeAllFiles();
-    return (bGenerationSuccess && totalGenerated > 0);
+    return (info.bGenerationSuccess && totalGenerated > 0);
 }
 
 void Task::endGeneration()
@@ -938,7 +941,7 @@ bool Task::getNextMessage(Message& message)
 {
     smsc_log_debug(logger, "getNextMessage method being called on task '%d/%s', ena/fin/inProc/inGen/genOk=%u/%u/%u/%u/%u",
                    info.uid,info.name.c_str(),
-                   info.enabled,bFinalizing,bInProcess,bInGeneration,bGenerationSuccess);
+                   info.enabled,bFinalizing,bInProcess,bInGeneration,info.bGenerationSuccess);
 
     if (!isEnabled())
       return setInProcess(false);
@@ -1564,7 +1567,7 @@ Task::endDeliveryMessagesGeneration()
 
   MutexGuard guard(inGenerationMon);
   bInGeneration = false;
-  bGenerationSuccess = true;
+  info.bGenerationSuccess = true;
   store.closeAllFiles();
   /*  Manager& configManager = Manager::getInstance();
 

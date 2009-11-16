@@ -60,6 +60,7 @@ namespace infosme{
       int         priority;
 
       bool    retryOnFail, replaceIfPresent, trackIntegrity, transactionMode, keepHistory, saveFinalState;
+      bool    bGenerationSuccess;
       bool    flash;
       bool    useDataSm;
 

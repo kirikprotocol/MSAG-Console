@@ -57,6 +57,7 @@ uid(id), enabled(true), priority(0),
 retryOnFail(false), replaceIfPresent(false),
 trackIntegrity(false), transactionMode(false), keepHistory(false),
 saveFinalState(false),
+bGenerationSuccess(true),
 flash(false),
 endDate(-1), validityPeriod(-1), validityDate(-1),
 activePeriodStart(-1), activePeriodEnd(-1), activeWeekDays(0),
@@ -184,11 +185,9 @@ void TaskInfo::init( ConfigView* config )
         try { useDataSm = config->getBool("useDataSm"); }
         catch (...) { useDataSm = false; }
 
-        /*
         try { bGenerationSuccess = config->getBool("messagesHaveLoaded"); }
         catch (...) { bGenerationSuccess = false; }
-        bInGeneration = false;
-         */
+
     } catch ( std::exception& e ) {
         throw ConfigException("Task %u: %s", uid, e.what());
     }

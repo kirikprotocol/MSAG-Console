@@ -272,71 +272,6 @@ TaskProcessor::~TaskProcessor()
     if (provider) delete provider;
 }
 
-#if 0
-bool TaskProcessor::putTask(Task* task)
-{
-    {
-        __require__(task);
-        MutexGuard guard(tasksLock);
-        if (tasks.Exist(task->getId())) return false;
-        tasks.Insert(task->getId(), task);
-    }
-    awakeSignal();
-    return true;
-}
-
-bool TaskProcessor::addTask(Task* task)
-{
-    __require__(task);
-    if (hasTask(task->getId())) return false;
-    /*if (task->canGenerateMessages())*/
-    return putTask(task);
-}
-
-bool TaskProcessor::remTask(uint32_t taskId)
-{
-    // FIXME
-    throw Exception("remTask is not impl");
-    /*
-  Task* task = 0;
-  {
-      MutexGuard guard(tasksLock);
-      if (!tasks.Exist(taskId)) return false;
-      task = tasks.Get(taskId);
-      tasks.Delete(taskId);
-      if (!task) return false;
-  }
-  // FIXME
-  if (task) task->shutdown();
-  awakeSignal();
-  return true;
-     */
-}
-
-bool TaskProcessor::delTask(uint32_t taskId)
-{
-    // FIXME
-    throw Exception("delTask is not impl");
-    /*
-    Task* task = 0;
-    {
-        MutexGuard guard(tasksLock);
-        if (!tasks.Exist(taskId)) return false;
-        task = tasks.Get(taskId);
-        tasks.Delete(taskId);
-        if (!task) return false;
-    }
-    awakeSignal();
-    if (task) task->destroy();
-    return (task) ? true:false;
-     */
-}
-
-bool TaskProcessor::hasTask(uint32_t taskId)
-{
-    return getTask(taskId).get();
-}
-#endif
 
 TaskGuard TaskProcessor::getTask( uint32_t taskId, bool remove )
 {
@@ -480,7 +415,7 @@ int TaskProcessor::Execute()
             // 5. processing
             nextWakeTime = currentTime + messageSender->send(deltaTime,dispatcher_.sleepTime());
 
-            // 6. FIXME: find out if dispatcher_ has inactive tasks
+            // 6. process waiting events (timeouted responses)
             messageSender->processWaitingEvents(time(0));
         }
 
