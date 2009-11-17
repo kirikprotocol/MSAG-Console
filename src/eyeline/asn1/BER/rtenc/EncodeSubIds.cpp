@@ -2,6 +2,7 @@
 static char const ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_OFF */
 
+#include "eyeline/util/IntConv.hpp"
 #include "eyeline/asn1/BER/rtenc/EncodeSubIds.hpp"
 #include "eyeline/asn1/BER/rtenc/EncodeIdents_impl.hpp"
 
@@ -20,7 +21,7 @@ uint16_t  estimate_SubIds(const SubIdType * use_vals, RelativeOID::size_type val
   for (RelativeOID::size_type it = 0; it < val_num;  ++it) {
     uint16_t olen = rlen;
     if ((rlen += estimate_identifier(use_vals[it])) < olen)
-      return 0;
+      return 0; //value overloads uint16_t
   }
   return rlen;
 }
@@ -35,8 +36,8 @@ ENCResult encode_SubIds(const SubIdType * use_vals, RelativeOID::size_type val_n
   ENCResult rval(ENCResult::encOk);
 
   for (RelativeOID::size_type it = 0; it < val_num;  ++it) {
-    uint16_t subLen = encode_identifier(use_vals[it], use_enc + rval.nbytes,
-                                        max_len - rval.nbytes);
+    uint8_t subLen = encode_identifier(use_vals[it], use_enc + rval.nbytes,
+                                       DOWNCAST_UNSIGNED(max_len - rval.nbytes, uint8_t));
     if (!subLen) {
       rval.status = ENCResult::encMoreMem;
       break;

@@ -14,6 +14,9 @@ namespace ber {
  * ************************************************************************* */
 uint16_t  EncoderOfObjectID::calculateSubIds(void) const /*throw(std::exception)*/
 {
+  if (!_encVal.size())
+    throw smsc::util::Exception("EncoderOfObjectID: illegal value");
+
   uint8_t idx = _encVal.validate_ObjectID();
   if (idx)
     throw smsc::util::Exception("EncoderOfObjectID: illegal subId[%u]", idx-1);
@@ -34,34 +37,24 @@ uint16_t  EncoderOfObjectID::calculateSubIds(void) const /*throw(std::exception)
   return rlen;
 }
 
-//Sets required kind of BER group encoding.
-//Returns: encoding rule effective for this type.
-//NOTE: may cause recalculation of TLVLayout due to restrictions
-//      implied by the DER or CER
-TSGroupBER::Rule_e EncoderOfObjectID::setRule(TSGroupBER::Rule_e use_rule)
+// -- ************************************* --
+// -- ValueEncoderAC interface methods
+// -- ************************************* --
+//NOTE: encoding of ObjectID type value has the same form for all BER
+//family rules: primitive encoding with definite LD form
+
+const EncodingProperty &
+  EncoderOfObjectID::calculateVAL(bool do_indef/* = false*/) const /*throw(std::exception)*/
 {
-  if (_rule != use_rule) {
-    _rule = use_rule;
-    _tldSZO = 0;
-  }
-  return _rule;
+  _vProp._valLen = calculateSubIds();
+  _vProp._ldForm = LDeterminant::frmDefinite;
+  _vProp._isConstructed = false;
+  _isCalculated = true;
+  return _vProp;
 }
 
-//Calculates length of BER/DER/CER encoding of type value.
-//If 'do_indef' flag is set, then length of value encoding is computed
-//even if TLVLayout uses only indefinite form of length determinants.
-//NOTE: may change TLVLayout if type value encoding should be fragmented.
-//NOTE: Throws in case of value that cann't be encoded.
-TSLength  EncoderOfObjectID::calculateVAL(bool do_indef/* = false*/) /*throw(std::exception)*/
-{
-  if (!_valSZO && (!isIndefinite() || do_indef))
-    _valSZO = calculateSubIds();
-  return _valSZO;
-}
-
-//Encodes by BER/DER/CER the type value ('V'-part of encoding)
-//NOTE: Throws in case of value that cann't be encoded.
-ENCResult EncoderOfObjectID::encodeVAL(uint8_t * use_enc, TSLength max_len) const
+ENCResult
+  EncoderOfObjectID::encodeVAL(uint8_t * use_enc, TSLength max_len) const
 {
   uint8_t idx = _encVal.validate_ObjectID();
   if (idx)

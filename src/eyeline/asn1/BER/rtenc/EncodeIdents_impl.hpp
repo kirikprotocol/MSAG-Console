@@ -1,50 +1,47 @@
 /* ************************************************************************* *
- * BER Encoder: tag, subIdentifier, length determinant encoding.
+ * BER Encoder: tag or OID subIdentifier encoding.
  * ************************************************************************* */
 #ifndef __ASN1_BER_ENCODER_IDENTS_DEFS
 #ident "@(#)$Id$"
 #define __ASN1_BER_ENCODER_IDENTS_DEFS
 
-#include "eyeline/asn1/TransferSyntax.hpp"
+#include <inttypes.h>
 
 namespace eyeline {
 namespace asn1 {
 namespace ber {
 
-using eyeline::asn1::TSLength;
 /* ************************************************************************* *
  * Estimates length of BER encoding of unsigned value that is on of:
  * - Tag value grater than 30 (X.690 cl. 8.1.2.4)
- * - Length determinant value grater than 127 (X.690 cl. 8.1.3.5)
  * - OID subId value (X.690 cl. 8.19.2)
  * Returns  number of bytes of resulted encoding or zero.
  * ************************************************************************* */
 template <
-  class _TArg /* unsigned integer type, sizeof(_TArg) < 32 bytes */
+  class _TArg /* unsigned integer type, sizeof(_TArg) <= 222 bytes */
 >
 uint8_t estimate_identifier(const _TArg & use_val)
 {
   if (use_val < 0x80)
     return 1;
 
-  uint8_t msBit = sizeof(_TArg)*8;
+  uint16_t msBit = (uint16_t)(sizeof(_TArg) << 3);
   while (--msBit && !(use_val & (1 << msBit)));
 
-  return (msBit + 1 + 6)/7;
+  return (uint8_t)(msBit + 1 + 6)/7;
 }
 
 /* ************************************************************************* *
  * Encodes by BER the unsigned value that is on of:
  * - Tag value grater than 30 (X.690 cl. 8.1.2.4)
- * - Length determinant value grater than 127 (X.690 cl. 8.1.3.5)
  * - OID subId value (X.690 cl. 8.19.2)
  * Returns  number of bytes of resulted encoding or zero in case of
  * insufficient length of buffer provided.
  * ************************************************************************* */
 template <
-  class _TArg /* unsigned integer type, sizeof(_TArg) < 32 bytes */
+  class _TArg /* unsigned integer type, sizeof(_TArg) <= 222 bytes */
 >
-uint8_t encode_identifier(const _TArg & use_val, uint8_t * use_enc, TSLength max_len)
+uint8_t encode_identifier(const _TArg & use_val, uint8_t * use_enc, uint8_t max_len)
 {
   if (use_val < 0x80) {
     if (max_len) {
