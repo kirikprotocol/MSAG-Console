@@ -41,8 +41,8 @@ ASTag  _tagEmbeddedPDV(ASTag::tagUniversal, 11);
 ASTag  _tagUTF8STR(ASTag::tagUniversal, 12);
 ASTag  _tagRelativeOID(ASTag::tagUniversal, 13);
 
-ASTag  _tagSEQOF(ASTag::tagUniversal, 16, true);
-ASTag  _tagSETOF(ASTag::tagUniversal, 17, true);
+ASTag  _tagSEQOF(ASTag::tagUniversal, 16);
+ASTag  _tagSETOF(ASTag::tagUniversal, 17);
 ASTag  _tagNumericSTR(ASTag::tagUniversal, 18);
 ASTag  _tagPrintableSTR(ASTag::tagUniversal, 19);
 ASTag  _tagTeletexSTR(ASTag::tagUniversal, 20);

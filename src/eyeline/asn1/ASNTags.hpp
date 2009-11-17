@@ -22,10 +22,9 @@ struct ASTag {
 
   TagClass_e  _tagClass;
   ValueType   _tagValue;
-  bool        _isConstructed;
 
-  ASTag(TagClass_e tag_class = tagUniversal, ValueType tag_val = 0, bool is_constructed = false)
-    : _tagClass(tag_class), _tagValue(tag_val), _isConstructed(is_constructed)
+  ASTag(TagClass_e tag_class = tagUniversal, ValueType tag_val = 0)
+    : _tagClass(tag_class), _tagValue(tag_val)
   { }
 
   bool operator== (const ASTag & cmp_tag) const
@@ -95,6 +94,10 @@ static const uint8_t _ASTaggingDFLT_SZ = 4;
 //ASN type complete tagging (vector of ASTags)
 //NOTE: Overall number of tags is limited to 255
 class ASTagging : public LWArray_T<ASTag, uint8_t, _ASTaggingDFLT_SZ> {
+protected:
+  using LWArray_T<ASTag, uint8_t, _ASTaggingDFLT_SZ>::append;
+  using LWArray_T<ASTag, uint8_t, _ASTaggingDFLT_SZ>::operator+=;
+
 public:
   enum Environment_e {
     tagsEXPLICIT = 0,  //type is identified by full set of tags
@@ -104,22 +107,24 @@ public:
 protected:
   Environment_e _tagEnv;
 
+  ASTag & innerTag(void) { return at(size() - 1); }
+
 public:
   //just a single tag, by default: [UNIVERSAL 0] primitive
-  ASTagging(ASTag::TagClass_e tag_class = ASTag::tagUniversal, ASTag::ValueType tag_val = 0, bool is_constructed = false)
+  ASTagging(ASTag::TagClass_e tag_class = ASTag::tagUniversal, ASTag::ValueType tag_val = 0)
     : LWArray_T<ASTag, uint8_t, 4>(1), _tagEnv(tagsEXPLICIT)
   {
-    LWArray_T<ASTag, uint8_t, 4>::_buf[0] = ASTag(tag_class, tag_val, is_constructed);
+    LWArray_T<ASTag, uint8_t, 4>::_buf[0] = ASTag(tag_class, tag_val);
   }
   //
-  ASTagging(const ASTag & use_tag = _tagUNI0)
+  ASTagging(const ASTag & use_tag)
     : LWArray_T<ASTag, uint8_t, 4>(1), _tagEnv(tagsEXPLICIT)
   {
     LWArray_T<ASTag, uint8_t, 4>::_buf[0] = use_tag;
   }
   //
   ASTagging(const ASTagging & use_tags)
-    : LWArray_T<ASTag, uint8_t, 4>(use_tags), _tagEnv(tagsEXPLICIT)
+    : LWArray_T<ASTag, uint8_t, 4>(use_tags), _tagEnv(use_tags._tagEnv)
   { }
 
   ASTagging(uint8_t num_tags, ASTag use_tag1, ... /* , const ASTag use_tagN*/);
@@ -130,8 +135,8 @@ public:
   Environment_e getEnvironment(void) const { return _tagEnv; }
   void setEnvironment(Environment_e use_env) { _tagEnv = use_env; }
 
-  const ASTag & first(void) const { return LWArray_T<ASTag, uint8_t, 4>::_buf[0]; }
-  const ASTag & last(void) const { return LWArray_T<ASTag, uint8_t, 4>::_buf[size() - 1]; }
+  const ASTag & outerTag(void) const { return at(0); }
+  const ASTag & innerTag(void) const { return at(size() - 1); }
 
   //Compares taggings in accordance with ASN.1 canonical tags order.
   bool operator< (const ASTagging & cmp_tags) const
@@ -158,11 +163,21 @@ public:
     return true;
   }
 
-  //NOTE: if resulting number of tags exceeds limit of 255, size() isn't changed
-  ASTagging & operator+= (const ASTagging & use_tags)
+  //Applies this tagging to tagging of tagged type (X.690 cl. 8.14)
+  //Composes resulting tagging according to environment
+  void conjoin(const ASTag & add_tag)
   {
-    LWArray_T<ASTag, uint8_t, 4>::operator +=(use_tags);
-    return *this;
+    if (_tagEnv == tagsEXPLICIT)
+      *this += add_tag;
+  }
+  //NOTE: add_tags shouldn't be empty !
+  void conjoin(const ASTagging & add_tags)
+  {
+    if (_tagEnv == tagsEXPLICIT)
+      *this += add_tags[0];
+    //add tags, which are the part of referenced type content
+    for (uint8_t i = 1; i < add_tags.size(); ++i)
+      *this += add_tags[i];
   }
 };
 

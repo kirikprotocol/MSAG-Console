@@ -21,7 +21,8 @@ using eyeline::asn1::DECResult;
  * Decodes by BER the ASN.1 Tag according to X.680 clause 8.1.2. 
  * Returns number of bytes processed from encoding or zero in case of failure.
  * ************************************************************************* */
-DECResult decode_tag(ASTag & use_tag, const uint8_t * use_enc, TSLength enc_len);
+DECResult decode_tag(ASTag & use_tag, bool & is_constructed, 
+                     const uint8_t * use_enc, TSLength enc_len);
 
 } //ber
 } //asn1

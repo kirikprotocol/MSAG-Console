@@ -48,7 +48,8 @@ bool TDlgIndicationDispatcher::processSuaMsgBuf(void)
 bool TDlgIndicationDispatcher::processSuaInd(const SUAUnitdataInd & sua_ind)
 {
   ASTag tmTag;
-  DECResult decRc = decode_tag(tmTag, sua_ind.userData(), sua_ind.userDataLen());
+  bool  isConstructed = false;
+  DECResult decRc = decode_tag(tmTag, isConstructed, sua_ind.userData(), sua_ind.userDataLen());
   if (decRc.status || (tmTag._tagClass != ASTag::tagApplication))
     return false;
 
@@ -116,7 +117,8 @@ bool TDlgIndicationDispatcher::processSuaInd(const SUAUnitdataInd & sua_ind)
 bool TDlgIndicationDispatcher::processSuaInd(const SUANoticeInd & sua_ind)
 {
   ASTag tmTag;
-  DECResult decRc = decode_tag(tmTag, sua_ind.userData(), sua_ind.userDataLen());
+  bool  isConstructed = false;
+  DECResult decRc = decode_tag(tmTag, isConstructed, sua_ind.userData(), sua_ind.userDataLen());
   if (decRc.status || (tmTag._tagClass != ASTag::tagApplication))
     return false;
 
