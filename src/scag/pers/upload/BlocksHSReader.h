@@ -91,9 +91,23 @@ public:
       propLogger = smsc::logger::Logger::getInstance("property");
       smsc_log_debug(logger, "dbName='%s' dbPath='%s' blockSize=%d blocksInFile=%d",
                      dbName.c_str(), dbPath.c_str(), blockSize, blocksInFile);
+      addresses.push_back(Key(".1.1.5434990229"));
+      addresses.push_back(Key(".1.1.21000000022"));
+      addresses.push_back(Key(".1.1.21000000822"));
+      addresses.push_back(Key(".1.1.21000001142"));
+      addresses.push_back(Key(".1.1.21000001148"));
+      addresses.push_back(Key(".1.1.21000001149"));
+      addresses.push_back(Key(".1.1.21000001230"));
+      addresses.push_back(Key(".1.1.21000001231"));
     }
 
     ~BlocksHSReader() {
+    }
+
+    bool needProfileKey(const Key& key) {
+        std::vector<Key>::iterator result = addresses.end();
+        result = std::find(addresses.begin(), addresses.end(), key);
+        return result == addresses.end() ? false : true;
     }
 
     int OpenDataFiles(int files_count)
@@ -219,6 +233,9 @@ public:
                                 j, hdr.key.toString().c_str(), hdr.total_blocks, hdr.data_size);
                 continue;
               }
+              if (!needProfileKey(hdr.key)) {
+                  continue;
+              }
               smsc_log_debug(logger, "profile key=%s", hdr.key.toString().c_str());
               SerialBuffer data;
               if (!getProfileData(i, &dataFile, hdr, data)) {
@@ -274,7 +291,8 @@ public:
 private:
   int restoreProfileCompletely(const Key& key, SerialBuffer& data, bool sendToPers, const std::vector<std::string>& matchNames, int& matched) {
     try {
-      Profile pf(key.toString(), logger);   
+      Profile pf(key.toString(), logger);  
+      data.SetPos(0);
       pf.Deserialize(data, true);
       SerialBuffer batch;
       
@@ -438,6 +456,7 @@ private:
   // bukind: IT SEEMS THAT THIS CODE IS NEVER USED.
   // it did not have the following declaration!
   std::vector<File*>                    dataFile_f;
+  std::vector<Key> addresses;
   
   EventMonitor monitor;
 
