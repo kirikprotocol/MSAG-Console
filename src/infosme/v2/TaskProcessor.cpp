@@ -44,8 +44,8 @@ RetryPolicies TaskProcessor::retryPlcs;
 
 TaskProcessor::TaskProcessor() :
 InfoSmeAdmin(), Thread(),
-log_(Logger::getInstance("smsc.infosme.TaskProcessor")), 
-dispatcher_(1000),
+log_(Logger::getInstance("is2.proc")), 
+dispatcher_(5000),
 provider(0),
 bStarted(false),
 bNeedExit(false),
@@ -132,8 +132,14 @@ void TaskProcessor::init( ConfigView* config )
     
     std::auto_ptr<ConfigView> dsIntCfgGuard(config->getSubConfig("systemDataSource"));
 
+    mappingRollTime = config->getInt("mappingRollTime");
+    mappingMaxChanges = config->getInt("mappingMaxChanges");
+    
     messageSender->init( *this, config );
     finalStateSaver_.reset( new FinalStateSaver(storeLocation) );
+
+    statistics = new StatisticsManager(config->getString("statStoreLocation"),this);
+    if (statistics) statistics->Start();
 
     smsc_log_info(log_, "Loading tasks ...");
     std::auto_ptr< ConfigView > taskConfig;
@@ -182,17 +188,13 @@ void TaskProcessor::init( ConfigView* config )
     smsc_log_info(log_, "Load success.");
 
     // jstore.Init((storeLocation+"mapping.bin").c_str(),config->getInt("mappingRollTime"),config->getInt("mappingMaxChanges"));
-    mappingRollTime = config->getInt("mappingRollTime");
-    mappingMaxChanges = config->getInt("mappingMaxChanges");
-    
-    statistics = new StatisticsManager(config->getString("statStoreLocation"),this);
-    if (statistics) statistics->Start();
     scheduler.Start();
 }
 
 
 TaskProcessor::~TaskProcessor()
 {
+    smsc_log_debug(log_,"dtor");
     // jstore.Stop();
   scheduler.Stop();
   this->Stop();
@@ -212,8 +214,10 @@ TaskProcessor::~TaskProcessor()
   taskManager.shutdown();
   eventManager.shutdown();
 
-  if (statistics) delete statistics;
+    if (statistics) delete statistics;
     if (provider) delete provider;
+    if (messageSender) delete messageSender;
+    smsc_log_debug(log_,"dtor finished");
 }
 
 

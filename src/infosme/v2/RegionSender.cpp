@@ -32,7 +32,7 @@ bool RegionSender::send( unsigned curTime, Task& task, Message& msg )
         ++sent_;
         return true;
     }
-    speedControl_.suspend( curTime + 1000 );
+    speedControl_.suspend( curTime + 5000 );
     return false;
 }
 

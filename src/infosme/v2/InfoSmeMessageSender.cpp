@@ -14,11 +14,14 @@ dispatcher_(&disp),
 defaultConnector_(0),
 started_(false),
 scoredList_(*this,10000,log_)
-{}
+{
+    smsc_log_debug(log_,"ctor");
+}
 
 
 InfoSmeMessageSender::~InfoSmeMessageSender()
 {
+    smsc_log_debug(log_,"dtor");
     MutexGuard mg(lock_);
     scoredList_.clear();
     defaultConnector_ = 0;
@@ -45,7 +48,7 @@ InfoSmeMessageSender::~InfoSmeMessageSender()
     }
     regionsConfig_.reset(0);
     regionFinder_.reset(0);
-    smsc_log_debug(log_,"dtor");
+    smsc_log_debug(log_,"dtor finished");
 }
 
 

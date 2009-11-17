@@ -141,7 +141,7 @@ struct SmscConnector::JStoreWrapper
                    const std::string& smscId,
                    int mappingRollTime,
                    size_t mappingMaxChanges ) {
-        const std::string jLocation = storeLocation + "/jstore";
+        const std::string jLocation = storeLocation + "jstore";
         if ( ! File::IsDir(jLocation.c_str()) ) {
             // trying to unlink first
             try {
@@ -633,84 +633,6 @@ bool SmscConnector::send( Task& task, Message& msg )
                    msg.id, msg.abonent.c_str(), task.getId(), task.getName().c_str(), what );
     return false;
 }
-
-
-#if 0
-    MessageGuard msguard(task,message);
-
-    const TaskInfo& info = task->getInfo();
-
-    /*
-    const smsc::util::config::region::Region* region = smsc::util::config::region::RegionFinder::getInstance().getRegionById(message.regionId);
-    if ( ! region ) {
-        smsc_log_info(log_,"TaskId=[%d/%s]: SMSC id='%s' region '%s' is not found, using default",
-                      info.uid, info.name.c_str(), smscId_.c_str(), message.regionId.c_str() );
-        return false;
-    }
-     */
-
-    if ( ! connected_ ) {
-        msguard.suspended();
-        smsc_log_info(log_, "TaskId=[%d/%s]: SMSC id='%s' is not connected",
-                      info.uid, info.name.c_str(), smscId_.c_str());
-        return false;
-    }
-
-    if ( trafficControl_->speedLimitReached(task,message,region) ) {
-        msguard.suspended();
-        smsc_log_info(log_, "TaskId=[%d/%s]: Traffic for region %s with id %s was suspended",
-                      info.uid, info.name.c_str(),
-                      region->getName().c_str(),
-                      region->getId().c_str());
-        return false;
-    }
-
-    int seqNum = getSeqNum();
-    smsc_log_debug(log_, "TaskId=[%d/%s]: Sending message #%llx, seqNum=%d SMSC id='%s' region id='%s' for '%s': %s",
-                   info.uid,info.name.c_str(), message.id, seqNum, smscId_.c_str(), region->getId().c_str(),
-                   message.abonent.c_str(), message.message.c_str());
-
-    {
-        MutexGuard snGuard(taskIdsBySeqNumMonitor);
-        int seqNumsCount;
-        if (processor_.bNeedExit || stopped_ ) return false;
-        seqNumsCount = taskIdsBySeqNum.Count();
-        if ( seqNumsCount > processor_.getUnrespondedMessagesMax() ) {
-            msguard.suspended(); // to prevent retry
-            smsc_log_debug(log_,"TaskId=[%d/%s]: too many messages queued for SMSC id='%s'",
-                           info.uid, info.name.c_str(), smscId_.c_str() );
-            return false;
-        }
-        if (taskIdsBySeqNum.Exist(seqNum))
-        {
-            smsc_log_warn(log_, "Sequence id=%d SMSC id='%s' was already used !", seqNum, smscId_.c_str());
-            taskIdsBySeqNum.Delete(seqNum);
-        }
-        taskIdsBySeqNum.Insert(seqNum, TaskMsgId(info.uid, message.id));
-    }
-    {
-        MutexGuard respGuard(responseWaitQueueLock);
-        responseWaitQueue.Push(ResponseTimer(time(NULL)+processor_.getResponseWaitTime(), seqNum));
-    }
-    if ( ! send(message.abonent,message.message,info,seqNum) ) {
-
-        smsc_log_error( log_, "Failed to send message #%llx for '%s'",
-                        message.id, message.abonent.c_str());
-        msguard.suspended();
-        MutexGuard snGuard(taskIdsBySeqNumMonitor);
-        if ( taskIdsBySeqNum.Delete(seqNum) ) {
-            taskIdsBySeqNumMonitor.notifyAll();
-        }
-        return false;
-
-    }
-
-    // message is sent
-    msguard.processed();
-    smsc_log_info(log_, "TaskId=[%d/%s]: Sent message #%llx sq=%d for '%s' to SMSC '%s'",
-                  info.uid, info.name.c_str(), message.id, seqNum, message.abonent.c_str(), smscId_.c_str());
-    return true;
-#endif
 
 
 void SmscConnector::processWaitingEvents( time_t tm )
