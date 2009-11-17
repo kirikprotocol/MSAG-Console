@@ -1,4 +1,4 @@
-#include "TaskLock.hpp"
+// #include "TaskLock.hpp"
 #include "TaskProcessor.h"
 #include "InfoSmeMessageSender.h"
 #include "FinalStateSaver.h"
@@ -76,12 +76,6 @@ void TaskProcessor::init( ConfigView* config )
         storeLocation+='/';
       }
     }
-    /*
-    {
-        const std::string lockfile(storeLocation + "taskslock.bin");
-        TaskLock::Init(lockfile.c_str());
-    }
-     */
 
     address = config->getString("Address");
     if (!address || !isMSISDNAddress(address))
@@ -260,12 +254,6 @@ void TaskProcessor::Start()
     {
         smsc_log_info(log_, "Starting ...");
 
-        /*
-        if (!isMessageSenderAssigned()) {
-            smsc_log_error(log_, "Failed to start processing. Message sender is undefined.");
-            return;
-        }
-         */
         resetWaitingTasks();
         bNeedExit = false;
         notified_ = false;
@@ -347,17 +335,6 @@ int TaskProcessor::Execute()
                 // TaskDispatcher::TaskList inactiveTasks;
                 checkTaskActivity();
                 dispatcher_.removeInactiveTasks();
-                /*
-                if ( log_->isDebugEnabled() ) {
-                    smsc_log_debug(log_,"dispatcher has collected inactive tasks:");
-                    for ( TaskList::iterator i = inactiveTasks.begin();
-                          i != inactiveTasks.end(); ++i ) {
-                        smsc_log_debug(log_," %s",(*i)->toString().c_str());
-                    }
-                }
-                 */
-                // std::copy( inactiveTasks.begin(), inactiveTasks.end(),
-                // std::back_inserter(inactiveTasks_));
             }
 
             // 5. processing
@@ -374,108 +351,8 @@ int TaskProcessor::Execute()
     bStarted = false;
     startLock.notifyAll();
     smsc_log_info(log_,"execute finished");
-
-    /*
-    std::vector< TaskGuard* > taskGuards;
-    taskGuards.reserve(100);
-
-    while (!bNeedExit)
-    {
-        time_t currentTime = time(NULL);
-        finalStateSaver_->checkRoll(currentTime);
-        
-        {
-            MutexGuard guard(tasksLock);
-            int key = 0;
-            Task* task = 0;
-            IntHash<Task*>::Iterator it=tasks.First();
-            while (!bNeedExit && it.Next(key, task))
-                if (task && task->isReady(currentTime, true)) {
-                    taskGuards.push_back(new TaskGuard(task));
-                    task->currentPriorityFrameCounter = 0;
-                    task->resetSuspendedRegions();
-                }
-            // NOTE: we randomize under tasksLock
-            std::random_shuffle( taskGuards.begin(), taskGuards.end(),
-                                 ::drand48adapter );
-        }
-
-        int processed = 0;
-        while (!taskGuards.empty())
-        {
-            TaskGuard* taskGuard = taskGuards.back();
-            taskGuards.pop_back();
-            if (!taskGuard) continue;
-
-            do {
-                if (bNeedExit) break;
-                Task* task = taskGuard->get();
-                if (!task) break;
-                if (task->isFinalizing() || !task->isEnabled()) break;
-                try {
-                    const unsigned taskProcessed = processTask(task);
-                    if ( ! taskProcessed ) {
-                        // no one message in task is processed
-                        task->currentPriorityFrameCounter = task->getPriority();
-                        if (!task->isEnabled()) task->setEnabled(false);
-                    }
-                    processed += taskProcessed;
-                } catch ( std::exception& e ) {
-                    smsc_log_warn(log_,"TaskProcessor: task '%d/%s' processing failed: %s",
-                                  task->getId(), task->getName().c_str(), e.what() );
-                }
-            } while ( false );
-            delete taskGuard;
-        }
-
-        if (bNeedExit) break;
-
-        processWaitingEvents(time(NULL)); // ?? or time(NULL)
-        if (!bNeedExit && processed <= 0) {
-            // smsc_log_debug(log_,"TaskProc: processed=%d waiting %d",processed,switchTimeout);
-            awake.Wait(switchTimeout);
-        }
-    }
-     */
     return 0;
 }
-
-
-/*
-unsigned TaskProcessor::processTask(Task* task)
-{
-    __require__(task);
-    unsigned res = 0;
-    smsc_log_debug(log_, "TaskProc::processTask(%d) taskPrio(cur/tot)=%d/%d",
-                   task->getId(), task->currentPriorityFrameCounter, task->getPriority() );
-    while ( task->currentPriorityFrameCounter < task->getPriority() ) {
-
-        ++task->currentPriorityFrameCounter;
-
-        Message message;
-        if (!task->getNextMessage(message)) continue;
-
-        MutexGuard msGuard(messageSenderLock);
-        if (! messageSender) {
-            smsc_log_error(log_, "No messageSender defined !!!");
-            break;
-        }
-        if ( messageSender->send(task,message) ) {
-            ++res;
-        }
-    }
-    return res;
-}
- */
-
-
-/*
-void TaskProcessor::processWaitingEvents(time_t tm)
-{
-    MutexGuard msGuard(messageSenderLock);
-    messageSender->processWaitingEvents(tm);
-}
- */
 
 
 bool TaskProcessor::processResponse( const TaskMsgId& tmIds,
@@ -691,112 +568,8 @@ void TaskProcessor::initTask( uint32_t id, ConfigView* taskConfig )
     notified_ = true;
     startLock.notifyAll();
     smsc_log_info(log_,"task %u is loaded",id);
-/*
-    Task* task = 0; bool delivery = false;
-    try
-    {
-        Manager::reinit();
-        Manager& config = Manager::getInstance();
-        char taskSection[1024];
-        sprintf(taskSection, "InfoSme.Tasks.%u", taskId);
-        ConfigView taskConfig(config, taskSection);
-        
-        try { delivery = taskConfig.getBool("delivery"); }
-        catch (ConfigException& ce) { delivery = false; }
-
-
-        DataSource* taskDs = 0;
-        if (!delivery)
-        {
-            const char* ds_id = taskConfig.getString("dsId");
-            if (!ds_id || ds_id[0] == '\0')
-                throw ConfigException("DataSource id for task '%d' empty or wasn't specified",
-                                      taskId);
-            taskDs = provider.getDataSource(ds_id);
-            if (!taskDs)
-                throw ConfigException("Failed to obtail DataSource driver '%s' for task '%d'", 
-                                      ds_id, taskId);
-        }
-
-        std::string location=storeLocation;
-        char buf[32];
-        sprintf(buf,"%u/",taskId);
-        location+=buf;
-
-        if(!buf::File::Exists(location.c_str()))
-        {
-          smsc_log_info(log_,"creating new dir:'%s' for taskId=%u",location.c_str(),taskId);
-          buf::File::MkDir(location.c_str());
-        }
-
-        task = new Task(&taskConfig, taskId, location, taskDs, finalStateSaver_.get() );
-        if (!task) 
-            throw Exception("New task create failed");
-        if (!addTask(task))
-            throw ConfigException("Failed to add task. Task with id '%u' already registered.",
-                                  taskId);
-       
-    } catch (std::exception& exc) {
-        if (task && !delivery) task->destroy();
-        smsc_log_error(log_, "Failed to add task '%d'. Details: %s", taskId, exc.what());
-        throw;
-    } catch (...) {
-        if (task && !delivery) task->destroy();
-        smsc_log_error(log_, "Failed to add task '%d'. Cause is unknown", taskId);
-        throw Exception("Cause is unknown");
-    }
- */
 }
 
-
-
-#if 0
-void TaskProcessor::removeTask(uint32_t taskId)
-{
-    try
-    {
-        scheduler.removeTask(taskId);
-        if (!delTask(taskId)) throw Exception("Task not found.");  
-        if (statistics) statistics->delStatistics(taskId);
-    
-    } catch (std::exception& exc) {
-        smsc_log_error(log_, "Failed to remove task '%d'. Details: %s", taskId, exc.what());
-        throw;
-    } catch (...) {
-        smsc_log_error(log_, "Failed to remove task '%d'. Cause is unknown", taskId);
-        throw Exception("Cause is unknown");
-    }
-}
-
-void TaskProcessor::changeTask(uint32_t taskId)
-{
-    try
-    {
-        // Manager::reinit();
-        initTask(taskId,0);
-        /*
-        Manager& config = Manager::getInstance();
-        char taskSection[1024];
-        sprintf(taskSection, "InfoSme.Tasks.%d", taskId);
-        ConfigView taskConfig(config, taskSection);
-        TaskGuard tg(getTask(taskId));
-        Task* task = tg.get();
-        task->update(&taskConfig);
-         */
-
-    } catch (std::exception& exc)
-    {
-        //if (task && !delivery) task->destroy();
-        smsc_log_error(log_, "Failed to change task '%d'. Details: %s", taskId, exc.what());
-        throw;
-    } catch (...) 
-    {
-        //if (task && !delivery) task->destroy();
-        smsc_log_error(log_, "Failed to change task '%d'. Cause is unknown", taskId);
-        throw Exception("Cause is unknown");
-    }
-}
-#endif
 
 bool TaskProcessor::startTask(uint32_t taskId)
 {
@@ -1102,14 +875,6 @@ TaskProcessor::changeDeliveryTextMessageByCompositCriterion(uint32_t taskId,
   task->changeDeliveryTextMessageByCompositCriterion(textMsg, searchCrit);
 }
 
-/*
-TaskInfo TaskProcessor::getTaskInfo(uint32_t taskId)
-{
-  TaskGuard taskGuard = getTask(taskId);
-  Task* task = taskGuard.get();
-  return task ? task->getInfo() : TaskInfo();
-}
- */
   
 void TaskProcessor::applyRetryPolicies()
 {

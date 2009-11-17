@@ -167,7 +167,7 @@ bool CsvStore::isProcessed() const
             return false;
         }
     }
-    smsc_log_debug(log,"isProc: storage is processed");
+    // smsc_log_debug(log,"isProc: storage is processed");
     return true;
 }
 

@@ -268,14 +268,18 @@ private:
     void doSuspendMessage( const Message& msg );
 
     bool changeUsage( bool v ) {
-        MutexGuard mg(lock_);
-        if ( v ) {
-            ++usersCount;
-        } else {
-            if (usersCount > 0) --usersCount;
-            else return true;
+        unsigned uc;
+        {
+            MutexGuard mg(lock_);
+            if ( v ) {
+                ++usersCount;
+            } else {
+                if (usersCount > 0) --usersCount;
+            }
+            uc = usersCount;
         }
-        return false;
+        smsc_log_debug(logger,"task %u count%c1=%u",info.uid,v?'+':'-',usersCount);
+        return (usersCount == 0);
     }
 
 protected:
@@ -288,7 +292,7 @@ protected:
 
     Event       usersCountEvent;
     Mutex       lock_;
-    long        usersCount;
+    unsigned    usersCount;
 
     Mutex       finalizingLock;
     bool        bFinalizing, bSelectedAll;
@@ -329,6 +333,7 @@ public:
     }
     inline TaskGuard& operator = ( const TaskGuard& tg ) {
         if ( &tg != this ) {
+            if (task_ && task_->changeUsage(false)) delete task_;
             task_ = tg.task_;
             if (task_) task_->changeUsage(true);
         }
@@ -353,7 +358,7 @@ public:
                   const TaskInfo&       info,
                   smsc::db::DataSource* dataSource,
                   ServicesForTask*      saver ) {
-        if ( task_ ) { task_->changeUsage(false); task_ = 0; }
+        if ( task_ && task_->changeUsage(false) ) { delete task_; task_ = 0; }
         task_ = new Task(id,location,info,dataSource,saver);
         task_->changeUsage(true);
         return task_;

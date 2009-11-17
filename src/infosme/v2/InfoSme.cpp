@@ -262,11 +262,6 @@ int main(int argc, char** argv)
             processor.init(&tpConfig);
         }
 
-        /*
-        InfoSmeMessageSender messageSender( processor );
-        messageSender.reloadSmscAndRegions( manager );
-         */
-
         sigfillset(&blocked_signals);
         sigdelset(&blocked_signals, SIGKILL);
         sigdelset(&blocked_signals, SIGALRM);
@@ -288,8 +283,6 @@ int main(int argc, char** argv)
 
         bool haveSysError=false;
 
-        // messageSender.start();
-
         while (!isNeedStop() && !haveSysError)
         {
           // after call to isNeedStop() was completed all signals is locked.
@@ -298,31 +291,13 @@ int main(int argc, char** argv)
 
             smsc_log_info(logger, "Starting InfoSME ... ");
 
-            //try
-            //{
-                //listener.setSyncTransmitter(session.getSyncTransmitter());
-                //listener.setAsyncTransmitter(session.getAsyncTransmitter());
-
                 bInfoSmeIsConnecting = true;
                 infoSmeReady.Wait(0);
                 TrafficControl::startControl();
-                //session.connect();
-                // processor.assignMessageSender(&messageSender);
                 processor.Start();
                 bInfoSmeIsConnecting = false;
                 infoSmeReady.Signal();
                 setConnected();
-            //} 
-            /*catch (SmppConnectException& exc)
-            {
-                const char* msg = exc.what();
-                smsc_log_error(logger, "Connect to SMSC failed. Cause: %s", (msg) ? msg:"unknown");
-                bInfoSmeIsConnecting = false;
-                if (exc.getReason() == SmppConnectException::Reason::bindFailed) throw;
-                sleep(cfg.timeOut);
-                session.close();
-                continue;
-            }*/
             smsc_log_info(logger, "Connected.");
             sigprocmask(SIG_SETMASK, &original_signal_mask, NULL); // unlock all signals and deliver any pending signals
             int st;
