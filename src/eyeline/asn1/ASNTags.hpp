@@ -111,14 +111,15 @@ protected:
 
 public:
   //just a single tag, by default: [UNIVERSAL 0] primitive
-  ASTagging(ASTag::TagClass_e tag_class = ASTag::tagUniversal, ASTag::ValueType tag_val = 0)
-    : LWArray_T<ASTag, uint8_t, 4>(1), _tagEnv(tagsEXPLICIT)
+  ASTagging(ASTag::TagClass_e tag_class = ASTag::tagUniversal, ASTag::ValueType tag_val = 0,
+            Environment_e use_env = tagsEXPLICIT)
+    : LWArray_T<ASTag, uint8_t, 4>(1), _tagEnv(use_env)
   {
     LWArray_T<ASTag, uint8_t, 4>::_buf[0] = ASTag(tag_class, tag_val);
   }
   //
-  ASTagging(const ASTag & use_tag)
-    : LWArray_T<ASTag, uint8_t, 4>(1), _tagEnv(tagsEXPLICIT)
+  ASTagging(const ASTag & use_tag, Environment_e use_env = tagsEXPLICIT)
+    : LWArray_T<ASTag, uint8_t, 4>(1), _tagEnv(use_env)
   {
     LWArray_T<ASTag, uint8_t, 4>::_buf[0] = use_tag;
   }
