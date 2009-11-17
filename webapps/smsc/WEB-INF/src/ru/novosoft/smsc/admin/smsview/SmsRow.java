@@ -87,7 +87,7 @@ public class SmsRow {
     try {
       originatingAddressMask = new Mask(address);
     } catch (Exception ex) {
-      originatingAddressMask = new Mask(".5.0.invalid_addr");
+      originatingAddressMask = new Mask(".5.0.inv_addr");
     }
   }
 
