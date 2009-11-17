@@ -10,8 +10,9 @@
 namespace eyeline {
 namespace asn1 {
 
-typedef uint32_t INTEGER;  //default INTEGER type
-//typedef uint64_t INTEGER_LONG;
+typedef int32_t INTEGER;  //default INTEGER type
+typedef uint32_t UINTEGER;  //default unsigned INTEGER type
+//typedef int64_t INTEGER_LONG;
 //typedef LWArray_T<uint8_t, uint8_t, 24> INTEGER_HUGE;
 
 } //asn1

@@ -12,13 +12,14 @@
 namespace eyeline {
 namespace asn1 {
 
-static const uint8_t _OCTSTR_DFLT_SZ = 32;
+static const uint8_t _OCTSTR_DFLT_SZ = 255;
+static const uint8_t _OCTSTR_ARR_DFLT_SZ = 32;
 
 //Default unbounded representation, though overall number of octets is limited to 64K
 typedef eyeline::util::LWArray_T<uint8_t, uint16_t, _OCTSTR_DFLT_SZ> OCTSTR;
 
 //Default constrained representation, overall number of octets is limited to 255
-typedef eyeline::util::LWArray_T<uint8_t, uint8_t, _OCTSTR_DFLT_SZ> OCTSTR_ARRAYED;
+typedef eyeline::util::LWArray_T<uint8_t, uint8_t, _OCTSTR_ARR_DFLT_SZ> OCTSTR_ARRAYED;
 
 
 } //asn1
