@@ -36,7 +36,7 @@ char * const findConfigFile(const char * const config_filename)
   return NULL;
 }
 
-void setStrParam(std::string & param, const char * const prefix, const char * const paramName, const Config config)
+void setStrParam(std::string & param, const char * const prefix, const char * const paramName, const Config& config)
 {
   try {
     char fullParamName[128];
@@ -52,7 +52,7 @@ void setStrParam(std::string & param, const char * const prefix, const char * co
   }
 }
 
-void setIntParam(int & param, const char * const prefix, const char * const paramName, const Config config)
+void setIntParam(int & param, const char * const prefix, const char * const paramName, const Config& config)
 {
   try {
     char fullParamName[128];
@@ -68,7 +68,7 @@ void setIntParam(int & param, const char * const prefix, const char * const para
   }
 }
 
-void ProxySmeConfig::fillSme(ProxySmeConfig::sme& smeItem, const char * const prefix, const Config config)
+void ProxySmeConfig::fillSme(ProxySmeConfig::sme& smeItem, const char * const prefix, const Config& config)
 {
   setStrParam(smeItem.host,        prefix, "host", config);
   setIntParam(smeItem.port,        prefix, "port", config);
