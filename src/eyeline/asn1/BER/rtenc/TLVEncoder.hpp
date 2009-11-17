@@ -75,6 +75,9 @@ public:
     : EncodingProperty(), _szoTag(0), _szoLOC(0)
   { }
 
+  //Calculates number of octets in T and L parts
+  void calculate(const ASTag & use_tag);
+
   //Returns number of 'begin-of-content' octets
   uint8_t getBOCsize(void) const { return _szoTag + _szoLOC; }
   //Returns number of 'end-of-content' octets
@@ -153,33 +156,37 @@ public:
   virtual ENCResult encodeVAL(uint8_t * use_enc, TSLength max_len) const /*throw(std::exception)*/ = 0;
 };
 
+//TL-part encoder
+class TLEncoder : public TLVProperty {
+protected:
+  uint8_t _octTag[MAX_IDENTIFIER_OCTS(ASTag::ValueType)]; //4 bytes as max for uint16_t
+  uint8_t _octLOC[MAX_LDETERMINANT_OCTS(TSLength)];       //5 bytes as max for uint32_t
+
+public:
+  TLEncoder() : TLVProperty()
+  {
+    _octTag[0] = _octLOC[0] = 0;
+  }
+
+  void reset(void)
+  {
+    init(LDeterminant::frmIndefinite, 0, false);
+    _szoTag = _szoLOC = _octTag[0] = _octLOC[0] = 0;
+  }
+
+  void compose(const ASTag & use_tag);
+
+  //Encodes 'begin-of-content' octets of TLV encoding
+  ENCResult encodeBOC(uint8_t * use_enc, TSLength max_len) const;
+  //Encodes 'end-of-content' octets of TLV encoding
+  ENCResult encodeEOC(uint8_t * use_enc, TSLength max_len) const;
+};
+
 
 class TLVLayoutEncoder {
 private:
-  //TLV encoder
-  class TLVEncoder : public TLVProperty {
-  protected:
-    uint8_t _octTag[MAX_IDENTIFIER_OCTS(ASTag::ValueType)]; //4 bytes as max for uint16_t
-    uint8_t _octLOC[MAX_LDETERMINANT_OCTS(TSLength)];       //5 bytes as max for uint32_t
-
-  public:
-    TLVEncoder() : TLVProperty()
-    {
-      _octTag[0] = _octLOC[0] = 0;
-    }
-
-    void reset(void) { _szoTag = _szoLOC = 0; init(LDeterminant::frmIndefinite, 0, false); }
-
-    void calculate(const ASTag & use_tag);
-
-    //Encodes 'begin-of-content' octets of TLV encoding
-    ENCResult encodeBOC(uint8_t * use_enc, TSLength max_len) const;
-    //Encodes 'end-of-content' octets of TLV encoding
-    ENCResult encodeEOC(uint8_t * use_enc, TSLength max_len) const;
-  };
-
   //data for encoding optimization if layout calculation was done prior to encoding
-  mutable LWArray_T<TLVEncoder, uint8_t, _ASTaggingDFLT_SZ> _tlws;
+  mutable LWArray_T<TLEncoder, uint8_t, _ASTaggingDFLT_SZ> _tlws;
   mutable TSLength  _szoBOC; //overall length of 'begin-of-content' octets of TLV
                              //encoding, also serves as a 'calculation-performed' flag
 protected:

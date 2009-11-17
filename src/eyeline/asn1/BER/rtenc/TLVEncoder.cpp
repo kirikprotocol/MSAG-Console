@@ -69,7 +69,18 @@ ENCResult encode_tag(const ASTag & use_tag, bool is_constructed,
 /* ************************************************************************* *
  * Class TLVProperty implementation:
  * ************************************************************************* */
-void TLVLayoutEncoder::TLVEncoder::calculate(const ASTag & use_tag)
+
+void TLVProperty::calculate(const ASTag & use_tag)
+{
+  _szoTag = estimate_tag(use_tag);
+  _szoLOC = isDefinite() ? estimate_ldeterminant(_valLen) : 1;
+}
+
+
+/* ************************************************************************* *
+ * Class TLEncoder implementation:
+ * ************************************************************************* */
+void TLEncoder::compose(const ASTag & use_tag)
 {
   //here encode_tag_internal() cannt' fail, otherwise assertion!
   _szoTag = encode_tag_internal(use_tag, _isConstructed, _octTag, (uint8_t)sizeof(_octTag));
@@ -83,7 +94,7 @@ void TLVLayoutEncoder::TLVEncoder::calculate(const ASTag & use_tag)
 }
 
 //Encodes 'begin-of-content' octets of TLV encoding
-ENCResult TLVLayoutEncoder::TLVEncoder::encodeBOC(uint8_t * use_enc, TSLength max_len) const
+ENCResult TLEncoder::encodeBOC(uint8_t * use_enc, TSLength max_len) const
 {
   ENCResult rval(ENCResult::encOk);
   if (max_len < getBOCsize()) {
@@ -100,7 +111,7 @@ ENCResult TLVLayoutEncoder::TLVEncoder::encodeBOC(uint8_t * use_enc, TSLength ma
 }
 
 //Encodes 'end-of-content' octets of TLV encoding
-ENCResult TLVLayoutEncoder::TLVEncoder::encodeEOC(uint8_t * use_enc, TSLength max_len) const
+ENCResult TLEncoder::encodeEOC(uint8_t * use_enc, TSLength max_len) const
 {
   ENCResult rval(ENCResult::encOk);
   if (max_len < getEOCsize()) {

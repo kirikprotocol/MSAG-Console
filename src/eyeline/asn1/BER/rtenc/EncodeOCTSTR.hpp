@@ -27,18 +27,26 @@ protected:
   const OCTSTR::size_type _encValSz;
   const uint8_t *         _encVal;
 
+  OCTSTR::size_type numFragments(void) const
+  {
+    return (_encValSz/1000 + (_encValSz%1000 ? 1 : 0));
+  }
+
+  //Returns total length of fragmented encoding
+  //Throws if value is too large and cann't be encoded
+  TSLength calculateFragments(void) const /*throw(std::exception)*/;
+
 public:
-  EncoderOfOCTSTR(const OCTSTR & use_val, const ASTag * use_tag = NULL)
-    : TypeEncoderAC(ASTagging(use_tag ? *use_tag : _tagOCTSTR))
+  EncoderOfOCTSTR(const OCTSTR & use_val)
+    : TypeEncoderAC(ASTagging(_tagOCTSTR))
     , _encValSz(use_val.size()), _encVal(use_val.get())
   { }
-  EncoderOfOCTSTR(const OCTSTR_ARRAYED & use_val, const ASTag * use_tag = NULL)
-    : TypeEncoderAC(ASTagging(use_tag ? *use_tag : _tagOCTSTR))
+  EncoderOfOCTSTR(const OCTSTR_ARRAYED & use_val)
+    : TypeEncoderAC(ASTagging(_tagOCTSTR))
     , _encValSz(use_val.size()), _encVal(use_val.get())
   { }
-  EncoderOfOCTSTR(const OCTSTR::size_type use_sz, const uint8_t * use_octs,
-                  const ASTag * use_tag = NULL)
-    : TypeEncoderAC(ASTagging(use_tag ? *use_tag : _tagOCTSTR))
+  EncoderOfOCTSTR(const OCTSTR::size_type use_sz, const uint8_t * use_octs)
+    : TypeEncoderAC(ASTagging(_tagOCTSTR))
     , _encValSz(use_sz), _encVal(use_octs)
   { }
 
