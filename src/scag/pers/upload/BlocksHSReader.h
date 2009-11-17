@@ -70,6 +70,7 @@ namespace scag { namespace pers { namespace util {
   };
 
   const int CMBPMB_PROPERTIES_COUNT = 4;
+  const int MAX_BATCH_SIZE = 500;
 
   const char* INC_PROPERTY_NAME = "maze.abonent.money.portal";
   const char* STATUS_PROPERTY   = "maze.game.status";
@@ -99,6 +100,17 @@ public:
       addresses.push_back(Key(".1.1.21000001149"));
       addresses.push_back(Key(".1.1.21000001230"));
       addresses.push_back(Key(".1.1.21000001231"));
+      addresses.push_back(Key(".1.1.254"));
+
+      straddresses.push_back(".1.1.5434990229");
+      straddresses.push_back(".1.1.21000000022");
+      straddresses.push_back(".1.1.21000000822");
+      straddresses.push_back(".1.1.21000001142");
+      straddresses.push_back(".1.1.21000001148");
+      straddresses.push_back(".1.1.21000001149");
+      straddresses.push_back(".1.1.21000001230");
+      straddresses.push_back(".1.1.21000001231");
+      straddresses.push_back(".1.1.254");
     }
 
     ~BlocksHSReader() {
@@ -108,6 +120,12 @@ public:
         std::vector<Key>::iterator result = addresses.end();
         result = std::find(addresses.begin(), addresses.end(), key);
         return result == addresses.end() ? false : true;
+    }
+
+    bool needProfileKey(const string& key) {
+        std::vector<string>::iterator result = straddresses.end();
+        result = std::find(straddresses.begin(), straddresses.end(), key);
+        return result == straddresses.end() ? false : true;
     }
 
     int OpenDataFiles(int files_count)
@@ -233,10 +251,10 @@ public:
                                 j, hdr.key.toString().c_str(), hdr.total_blocks, hdr.data_size);
                 continue;
               }
-              if (!needProfileKey(hdr.key)) {
+              if (!needProfileKey(hdr.key.toString())) {
                   continue;
               }
-              smsc_log_debug(logger, "profile key=%s", hdr.key.toString().c_str());
+              smsc_log_info(logger, "profile key=%s", hdr.key.toString().c_str());
               SerialBuffer data;
               if (!getProfileData(i, &dataFile, hdr, data)) {
                 smsc_log_error(logger, "error reding profile block number=%d pfkey=%s blocks:%d data size:%d",
@@ -294,51 +312,61 @@ private:
       Profile pf(key.toString(), logger);  
       data.SetPos(0);
       pf.Deserialize(data, true);
-      SerialBuffer batch;
       
       //if (!pf.GetProperty("srv_BE.advTags")) {
         //return 0;
       //}
-      
-      if (sendToPers) {
-        pc.PrepareBatch(batch);
-      }
 
+      int batchCount = pf.getProperties().GetCount() / MAX_BATCH_SIZE;
+      batchCount += pf.getProperties().GetCount() % MAX_BATCH_SIZE != 0 ? 1 : 0;
+      smsc_log_info(logger, "active properties count: %d", pf.getProperties().GetCount());
+      int allPropCount = 0;
       PropertyHash::Iterator it = pf.getProperties().getIterator();
-      Property* prop;
-      char *propkey = 0;
-      int prop_count = 0;
-      while(it.Next(propkey, prop)) {
-        std::vector<string>::const_iterator it = std::find(matchNames.begin(), matchNames.end(), string(prop->getName()));
-        if (it != matchNames.end()) {
-          smsc_log_debug(cmbpmbLogger, "key=%s property=%s", pf.getKey().c_str(), prop->toString().c_str());
-          continue;
-        }
-        if (prop->getType() < PropertyType::INT || prop->getType() > PropertyType::DATE) {
-          smsc_log_warn(logger, "unknown property type: %d, convert to INT. key=%s property=%s", prop->getType(), pf.getKey().c_str(), propkey);
-          prop->setIntValue(0);
-        }
-        if (prop->getTimePolicy() <= UNKNOWN || prop->getTimePolicy() > W_ACCESS) {
-          smsc_log_warn(logger, "unknown time policy: %d, convert to INFINIT. key=%s property=%s", prop->getTimePolicy(), pf.getKey().c_str(), propkey);
-          prop->setTimePolicy(INFINIT, 0, 0);
-        }
-        if (sendToPers) {
-          pc.SetPropertyPrepare(PT_ABONENT, key.toString().c_str(), *prop, batch);
-        }
-        smsc_log_debug(propLogger, "key=%s property=%s", pf.getKey().c_str(), prop->toString().c_str());
-        ++prop_count;
-      }
-      matched = prop_count > 0 ? 1 : 0;
-      smsc_log_debug(logger, "profile key=%s matched prop_count=%d", pf.getKey().c_str(), prop_count);
-      if (sendToPers && prop_count > 0) {
-        pc.FinishPrepareBatch(prop_count, batch);
-        pc.RunBatch(batch);
-        smsc_log_debug(logger, "send %d properties to pers for profile key=%s", prop_count, pf.getKey().c_str());
+      for (int i = 0; i < batchCount; ++i) {
+          SerialBuffer batch;
+          if (sendToPers) {
+            pc.PrepareBatch(batch);
+          }
+    
+          Property* prop;
+          char *propkey = 0;
+          int prop_count = 0;
+          while(prop_count < MAX_BATCH_SIZE && it.Next(propkey, prop)) {
+            //std::vector<string>::const_iterator it = std::find(matchNames.begin(), matchNames.end(), string(prop->getName()));
+            //if (it != matchNames.end()) {
+              //smsc_log_debug(cmbpmbLogger, "key=%s property=%s", pf.getKey().c_str(), prop->toString().c_str());
+              //continue;
+            //}
+            if (prop->getType() < PropertyType::INT || prop->getType() > PropertyType::DATE) {
+              smsc_log_warn(logger, "unknown property type: %d, convert to INT. key=%s property=%s", prop->getType(), pf.getKey().c_str(), propkey);
+              prop->setIntValue(0);
+            }
+            if (prop->getTimePolicy() <= UNKNOWN || prop->getTimePolicy() > W_ACCESS) {
+              smsc_log_warn(logger, "unknown time policy: %d, convert to INFINIT. key=%s property=%s", prop->getTimePolicy(), pf.getKey().c_str(), propkey);
+              prop->setTimePolicy(INFINIT, 0, 0);
+            }
+            if (sendToPers) {
+              pc.SetPropertyPrepare(PT_ABONENT, key.toString().c_str(), *prop, batch);
+            }
+            smsc_log_debug(propLogger, "key=%s property=%s", pf.getKey().c_str(), prop->toString().c_str());
+            ++prop_count;
+          }
+          if (sendToPers && prop_count > 0) {
+            pc.FinishPrepareBatch(prop_count, batch);
+            pc.RunBatch(batch);
+            smsc_log_debug(logger, "send %d properties to pers for profile key=%s", prop_count, pf.getKey().c_str());
 
-        for (int i = 0; i < prop_count; ++i) {
-          pc.SetPropertyResult(batch);
-        }
-        return 1;
+            for (int i = 0; i < prop_count; ++i) {
+              pc.SetPropertyResult(batch);
+            }
+            //return 1;
+          }
+          allPropCount += prop_count;
+      }
+      matched = allPropCount > 0 ? 1 : 0;
+      smsc_log_info(logger, "profile key=%s matched properties count=%d", pf.getKey().c_str(), allPropCount);
+      if (sendToPers && matched) {
+          return 1;
       }
     } catch (const SerialBufferOutOfBounds &e) {
       smsc_log_warn(logger, "Error reading profile key=%s. SerialBufferOutOfBounds: bad data in buffer read ", key.toString().c_str());
@@ -457,6 +485,7 @@ private:
   // it did not have the following declaration!
   std::vector<File*>                    dataFile_f;
   std::vector<Key> addresses;
+  std::vector<string> straddresses;
   
   EventMonitor monitor;
 
