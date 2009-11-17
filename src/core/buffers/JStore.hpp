@@ -6,6 +6,7 @@
 #include "core/threads/Thread.hpp"
 #include "core/synchronization/EventMonitor.hpp"
 #include "util/Exception.hpp"
+#include "logger/Logger.h"
 
 namespace smsc{
 namespace core{
@@ -16,7 +17,7 @@ namespace synch=smsc::core::synchronization;
 template <class K,class V,class HF>
 class JStore:public smsc::core::threads::Thread{
 public:
-  JStore()
+    JStore() : log_(smsc::logger::Logger::getInstance("jstore"))
   {
     rollTime=1800;
     maxChanges=10000;
@@ -25,8 +26,16 @@ public:
     changesCount=0;
     sig="JSTORE";
     jsig="STOREJ";
+      smsc_log_debug(log_,"ctor");
   }
   
+    virtual ~JStore() {
+        smsc_log_debug(log_,"dtor");
+        Stop();
+        WaitFor();
+        smsc_log_debug(log_,"dtor finished");
+    }
+
   void Insert(K k,const V& v)
   {
     synch::MutexGuard mg(mon);
@@ -63,6 +72,7 @@ public:
   
   void Init(const char* argFileName,int argRollTime,size_t argMaxChanges)
   {
+      smsc_log_debug(log_,"init '%s' rollTime=%d maxChg=%u",argFileName,argRollTime,unsigned(argMaxChanges));
     fileName=argFileName;
     rollTime=argRollTime;
     maxChanges=argMaxChanges;
@@ -77,14 +87,8 @@ public:
     
     if(File::Exists(fileName.c_str()))
     {
-      char fileSig[7]={0,};
       File storeFile;
-      storeFile.ROpen(fileName.c_str());
-      storeFile.Read(fileSig,6);
-      if(strcmp(fileSig,sig))
-      {
-        throw smsc::util::Exception("JStore: Invalid file signature:'%s'. Expected:'%s'",fileSig,sig);
-      }
+      OpenRWFile(storeFile,fileName,sig,true);
       uint64_t cnt=storeFile.ReadNetInt64();
       K k;
       V v;
@@ -100,8 +104,8 @@ public:
     if(File::Exists(jrolfn.c_str()) && File::Exists(jfn.c_str()))
     {
       File src,dst;
-      OpenJFile(src,jfn.c_str(),true);
-      OpenJFile(dst,jrolfn.c_str(),false);
+      OpenRWFile(src,jfn.c_str(),jsig,true);
+      OpenRWFile(dst,jrolfn.c_str(),jsig,false);
       dst.SeekEnd(0);
       File::offset_type pos=src.Pos(),sz=src.Size();
       Change c;
@@ -117,7 +121,7 @@ public:
     }
     if(File::Exists(jfn.c_str()))
     {
-      OpenJFile(jfile,jfn.c_str(),false);
+      OpenRWFile(jfile,jfn.c_str(),jsig,false);
       try{
         Change c;
         File::offset_type sz=jfile.Size();
@@ -144,15 +148,14 @@ public:
       }
     }else
     {
-      jfile.WOpen((fileName+".j").c_str());
-      jfile.Write(jsig,6);
-      jfile.Flush();
+      OpenWFile(jfile,fileName+".j",jsig);
     }
     {
       synch::MutexGuard mg(mon);
       Start();
       while(!running)mon.wait();
     }
+      smsc_log_debug(log_,"inited '%s'",fileName.c_str());
   }
   
   void forceRoll()
@@ -169,6 +172,7 @@ public:
   
   int Execute()
   {
+      smsc_log_debug(log_,"Execute(%s)",fileName.c_str());
     {
       synch::MutexGuard mg(mon);
       running=true;
@@ -179,14 +183,17 @@ public:
       try{
       {
         synch::MutexGuard mg(mon);
-        if(changesCount<maxChanges)mon.wait(rollTime*1000);
+        if(changesCount<maxChanges)
+        {
+          mon.wait(rollTime*1000);
+          continue;
+        }
         if(!running)break;
+        smsc_log_debug(log_,"changesCount=%u",unsigned(changesCount));
         rollHash=hash;
         jfile.Rename((fileName+".jrol").c_str());
         jfile.Close();
-        jfile.WOpen((fileName+".j").c_str());
-        jfile.Write(jsig,strlen(jsig));
-        jfile.Flush();
+        OpenWFile(jfile,fileName+".j",jsig);
         if(File::Exists(fileName.c_str()))
         {
           File::Rename(fileName.c_str(),(fileName+".rol").c_str());
@@ -194,8 +201,7 @@ public:
         changesCount=0;
       }
       File storeFile;
-      storeFile.WOpen(fileName.c_str());
-      storeFile.Write(sig,strlen(sig));
+      OpenWFile(storeFile,fileName.c_str(),sig);
       storeFile.WriteNetInt64(rollHash.getCount());
       typename StoreHash::Iterator it=rollHash.getIterator();
       K k;
@@ -217,11 +223,13 @@ public:
         fprintf(stderr,"Exception in jstore:%s\n",e.what());
       }
     }
+      smsc_log_debug(log_,"Execute(%s) finished",fileName.c_str());
     return 0;
   }
   
   void Stop()
   {
+      smsc_log_debug(log_,"stop");
     synch::MutexGuard mg(mon);
     running=false;
     mon.notify();
@@ -284,8 +292,9 @@ protected:
     }
   };
   
-  void OpenJFile(File& f,const std::string& fn,bool readonly)
+  void OpenRWFile(File& f,const std::string& fn,const char* sig,bool readonly)
   {
+    smsc_log_debug(log_,"opening '%s'%s",fn.c_str(),readonly ? " readonly" : "");
     if(readonly)
     {
       f.ROpen(fn.c_str());
@@ -293,15 +302,23 @@ protected:
     { 
       f.RWOpen(fn.c_str());
     }
-    char jfileSig[7]={0,};
-    f.Read(jfileSig,6);
-    if(strcmp(jfileSig,jsig))
+    char fileSig[7]={0,};
+    f.Read(fileSig,6);
+    if(strcmp(fileSig,sig))
     {
-      throw smsc::util::Exception("JStore: Invalid file signature:'%s'. Expected:'%s'",jfileSig,jsig);
+      throw smsc::util::Exception("JStore: Invalid file signature:'%s'. Expected:'%s'",fileSig,sig);
     }
   }
   
+    void OpenWFile(File& f,const std::string& fn,const char* sig)
+    {
+        smsc_log_debug(log_,"opening '%s' writeonly",fn.c_str());
+        f.WOpen(fn.c_str());
+        f.Write(sig,6);
+        f.Flush();
+    }
   
+    smsc::logger::Logger* log_;
   typedef PODHash<K,V,HF> StoreHash;
   StoreHash hash,rollHash;
   typename StoreHash::Iterator iter;
