@@ -7,33 +7,10 @@
 #define __LWARRAY_DEFS__
 
 #include "util/Exception.hpp"
+#include "eyeline/util/IntConv.hpp"
 
 namespace eyeline {
 namespace util {
-
-template <
-  typename _SizeTypeArg /* must be an unsigned integer type! */ 
-> 
-class UIntToA_T { //converts unsigned integer type to its decimal string representation
-protected:
-  uint8_t _idx;
-  char _buf[sizeof(_SizeTypeArg)*3+1];
-
-public:
-  UIntToA_T(_SizeTypeArg use_val)
-    : _idx(sizeof(_SizeTypeArg)*3)
-  {
-    _buf[_idx] = 0;
-    do {
-      _buf[--_idx] = '0' + (char)(use_val % 10);
-    } while ((use_val /= 10) != 0);
-  }
-  ~UIntToA_T()
-  { }
-
-  const char * get(void) const { return _buf + _idx; }
-};
-
 
 template <
     class _TArg                 //Element of array, must have a default constructor!
@@ -52,7 +29,7 @@ protected:
   void checkIndex(_SizeTypeArg use_idx) const //throw(std::exception)
   {
     if (use_idx >= _numElem) {
-      UIntToA_T<_SizeTypeArg> v0(sizeof(_SizeTypeArg));
+      UIntToA_T<_SizeTypeArg> v0((_SizeTypeArg)sizeof(_SizeTypeArg));
       UIntToA_T<_SizeTypeArg> v1(_max_STACK_SZ);
       UIntToA_T<_SizeTypeArg> v2(use_idx);
       UIntToA_T<_SizeTypeArg> v3(_numElem ? _numElem-1 : 0);
@@ -63,7 +40,7 @@ protected:
 
   void denyAddition(_SizeTypeArg num_2add) const //throw(std::exception)
   {
-    UIntToA_T<_SizeTypeArg> v0(sizeof(_SizeTypeArg));
+    UIntToA_T<_SizeTypeArg> v0((_SizeTypeArg)sizeof(_SizeTypeArg));
     UIntToA_T<_SizeTypeArg> v1(_max_STACK_SZ);
     UIntToA_T<_SizeTypeArg> v2(num_2add);
     UIntToA_T<_SizeTypeArg> v3(_MAX_SIZE() - _numElem);
@@ -82,6 +59,7 @@ public:
     : _heapBufSz(0), _numElem(0), _buf(_sbuf)
   {
     enlarge(use_sz);
+    _numElem = use_sz;
     if (!_heapBufSz) { //reset stack elements
       for (_SizeTypeArg i = 0; i < _numElem; ++i)
         new (_buf + i)_TArg();
@@ -91,6 +69,11 @@ public:
     : _heapBufSz(0), _numElem(0), _buf(_sbuf)
   {
     append(use_arr); //NOTE: here append() cann't fail
+  }
+  ~LWArray_T()
+  {
+    if (_heapBufSz)
+      delete [] _buf;
   }
 
   //Returns number of array elements
