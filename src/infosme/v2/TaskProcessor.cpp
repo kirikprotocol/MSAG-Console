@@ -8,7 +8,6 @@
 #include <cstdlib>
 #include <sstream>
 #include <vector>
-#include <util/timeslotcounter.hpp>
 
 #ident "@(#)$Id$"
 
@@ -179,8 +178,6 @@ void TaskProcessor::init( ConfigView* config )
     smsc_log_info(log_, "Task schedules loaded.");
     
     smsc_log_info(log_, "Load success.");
-
-    // jstore.Init((storeLocation+"mapping.bin").c_str(),config->getInt("mappingRollTime"),config->getInt("mappingMaxChanges"));
     scheduler.Start();
 }
 
@@ -286,7 +283,6 @@ int TaskProcessor::Execute()
     msectime_type movingStart = startTime;
     msectime_type nextWakeTime = startTime;
     msectime_type lastNotifyTime = startTime;
-
     // msectime_type lastStatTime = startTime;
 
     bool wasNotified = false;
@@ -331,7 +327,6 @@ int TaskProcessor::Execute()
                 lastNotifyTime = currentTime;
                 wasNotified = false;
                 smsc_log_debug(log_,"notified=%u or time passed",wasNotified);
-                // TaskDispatcher::TaskList inactiveTasks;
                 checkTaskActivity();
                 dispatcher_.removeInactiveTasks();
             }

@@ -5,7 +5,6 @@
 #include <time.h>
 #include <sstream>
 #include <list>
-#include <deque>
 #include "util/sleep.h"
 #include "sms/sms.h"
 #include "util/vformat.hpp"
@@ -92,7 +91,7 @@ void Task::setInfo( const TaskInfo& taskInfo )
     }
     info = taskInfo;
 
-    if ( ! formatter ) {
+    if ( ! formatter && !info.msgTemplate.empty() ) {
         formatter = new OutputFormatter(info.msgTemplate.c_str());
     }
     trackIntegrity(true, true); // delete flag & generated messages
@@ -215,6 +214,8 @@ bool Task::beginGeneration(Statistics* statistics)
         ownConnection = dsOwn->getConnection();
         if (!ownConnection)
             throw Exception("Failed to obtain connection to own data source.");
+        if (!formatter)
+            throw Exception("Formatter is not set");
 
         trackIntegrity(false, false); // insert flag
 
