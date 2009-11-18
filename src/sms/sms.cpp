@@ -195,21 +195,24 @@ void Body::setBinProperty(int tag,const char* value, unsigned len)
           smsc::util::ConcatInfo *ci=(smsc::util::ConcatInfo*)prop.properties[unType(Tag::SMSC_CONCATINFO)].getBin(0);
 
           int esm=prop.properties[unType(Tag::SMPP_ESM_CLASS)].getInt();
-          for(int i=0;i<ci->num;i++)
+          if(ci)
           {
-            int dc=dcl?dcl[i]:encoding;
-
-            int off=ci->getOff(i);
-            int partlen=i==ci->num-1?len-off:ci->getOff(i+1)-off;
-
-            if(dc==8)
+            for(int i=0;i<ci->num;i++)
             {
-              UCS_htons(bufptr,value+off,partlen,esm);
-            }else
-            {
-              memcpy(bufptr,value+off,partlen);
+              int dc=dcl?dcl[i]:encoding;
+  
+              int off=ci->getOff(i);
+              int partlen=i==ci->num-1?len-off:ci->getOff(i+1)-off;
+  
+              if(dc==8)
+              {
+                UCS_htons(bufptr,value+off,partlen,esm);
+              }else
+              {
+                memcpy(bufptr,value+off,partlen);
+              }
+              bufptr+=partlen;
             }
-            bufptr+=partlen;
           }
 
           prop.properties[unType(Tag::SMSC_RAW_SHORTMESSAGE)].setBin(buffer.get(),len);
