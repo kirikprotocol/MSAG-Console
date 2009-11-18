@@ -610,7 +610,7 @@ bool FileStorage::load(SMSId& id, SMS& sms, File::offset_type* pos /*= 0 (no set
 
     UnlockableMutexGuard unlockableGuard(storageFileLock);
     initialize(true); // virtual method call (open for read or create destination file)
-    if (pos) 
+    if (pos)
     {
       if(*pos!=0)
       {
@@ -943,11 +943,11 @@ static void decodeMessage(uint8_t* msg, int msgLen, int encoding, std::string& m
         }
         TmpBuf<char,512> textGuard(msgLen*4+1);
         char* text = textGuard.get();
-        iconv_t cd=smsc::util::xml::getIconv(dstCodePage,"ucs-2be");
+        iconv_t cd=smsc::util::xml::getIconv(dstCodePage,"ucs-2");
         int textLen;
         if(cd==(iconv_t)(-1))
         {
-          __warning2__("failed to init iconv ucs2-2be -> %s",dstCodePage);
+          __warning2__("failed to init iconv ucs2-2 -> %s",dstCodePage);
           textLen = ConvertUCS2ToMultibyte((const short *)msg, msgLen, text, msgLen*2, CONV_ENCODING_CP1251);
         }else
         {
