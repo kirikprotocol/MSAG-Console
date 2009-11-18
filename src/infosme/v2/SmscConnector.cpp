@@ -159,63 +159,6 @@ private:
     JStoreWrapper();
 };
 
-
-// NOTE: this class is not thread-safe
-/*
-class SmscConnector::RegionTrafficControl
-{
-public:
-    RegionTrafficControl( smsc::logger::Logger* logger ) : log_(logger) {}
-    ~RegionTrafficControl();
-    bool speedLimitReached( Task* task, const Message& message,
-                            const smsc::util::config::region::Region* region );
-private:
-    smsc::logger::Logger* log_;
-    typedef std::map<std::string, TimeSlotCounter<int>* > timeSlotsHashByRegion_t;
-    timeSlotsHashByRegion_t timeSlotsHashByRegion_;
-};
-
-
-SmscConnector::RegionTrafficControl::~RegionTrafficControl()
-{
-    for ( timeSlotsHashByRegion_t::iterator i = timeSlotsHashByRegion_.begin();
-          i != timeSlotsHashByRegion_.end();
-          ++i ) {
-        delete i->second;
-    }
-}
-
-
-bool SmscConnector::RegionTrafficControl::speedLimitReached( Task* task, const Message& message,
-                                                             const smsc::util::config::region::Region* region )
-{
-    uint32_t taskId = task->getId();
-    smsc_log_debug( log_, "TaskProcessor::controlTrafficSpeedByRegion::: TaskId=[%d]: check region(regionId=%u) bandwidth limit exceeding", taskId, message.regionId);
-    if ( ! region ) {
-        smsc_log_debug(log_,"TaskProcessor::controlTraffic no region %u found",message.regionId);
-        return true;
-    }
-
-    timeSlotsHashByRegion_t::iterator iter = timeSlotsHashByRegion_.lower_bound(message.regionId);
-    if ( iter == timeSlotsHashByRegion_.end() || iter->first != message.regionId ) {
-        // not found
-        smsc_log_debug(log_, "TaskProcessor::controlTrafficSpeedByRegion::: TaskId=[%d]: insert timeSlot to hash for regionId=%s", taskId, message.regionId.c_str());
-        iter = timeSlotsHashByRegion_.insert(iter,std::make_pair(message.regionId, new TimeSlotCounter<int>(1,1)));
-    }
-    TimeSlotCounter<int>* outgoing = iter->second;
-    int out = outgoing->Get();
-
-    bool regionTrafficLimitReached = (out >= region->getBandwidth());
-    smsc_log_debug(log_, "TaskProcessor::controlTrafficSpeedByRegion::: TaskId=[%d]: regionTrafficLimitReached=%d, region bandwidth=%d, current sent messages during one second=%d",
-                   taskId, regionTrafficLimitReached, region->getBandwidth(), out);
-    // check max messages per sec. limit. if limit was reached then put message to queue of suspended messages.
-    if ( regionTrafficLimitReached ) { return true; }
-
-    outgoing->Inc();
-    return false;
-}
- */
-
 // ===================================================================
 
 smsc::sme::SmeConfig SmscConnector::readSmeConfig( ConfigView& config )

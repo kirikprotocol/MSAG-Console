@@ -57,14 +57,14 @@ class Task
 {
     friend class TaskGuard;
 
-public:
-    static uint32_t stringToTaskId( const char* taskId );
-
     Task( uint32_t taskId,
           const std::string& location,
           const TaskInfo&    taskInfo,
           DataSource* dsOwn,
           ServicesForTask* finalStateSaver );
+
+public:
+    static uint32_t stringToTaskId( const char* taskId );
 
     /// to update task info
     void setInfo( const TaskInfo& info );
