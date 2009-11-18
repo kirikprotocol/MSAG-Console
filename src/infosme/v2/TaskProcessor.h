@@ -233,30 +233,17 @@ public:
         return bStarted;
     };
 
-    /*
-    void assignMessageSender(MessageSender* sender) {
-        MutexGuard guard(tasksLock);
-        messageSender = sender;
-    };
-    bool isMessageSenderAssigned() {
-        MutexGuard guard(tasksLock);
-        return (messageSender != 0);
-    };
-     */
-
-    // virtual bool putTask(Task* task);
-    // virtual bool addTask(Task* task);
-    // virtual bool remTask(uint32_t taskId);
-    // virtual bool delTask(uint32_t taskId);
-    // virtual bool hasTask(uint32_t taskId);
-    // virtual TaskInfo getTaskInfo(uint32_t taskId);
-
     /// @param config is a section "Tasks" of main config
     virtual void addTask( uint32_t taskId ) {
         if ( getTask(taskId).get() ) throw Exception("task %u exists already");
         initTask( taskId, 0 );
     }
+    /// (re-)initialize task with taskId by reading its config.
+    /// NOTE: the task is automatically added to task processor.
     virtual void initTask( uint32_t taskId, smsc::util::config::ConfigView* config );
+
+    /// @return a task with taskId.
+    /// @param remove if set then task is also removed from TaskProcessor
     virtual TaskGuard getTask( uint32_t taskId, bool remove = false );
 
     virtual bool invokeEndGeneration(Task* task) {

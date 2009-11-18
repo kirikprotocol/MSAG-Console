@@ -60,7 +60,6 @@ infoSme_T_storageWasDestroyed(false)
 Task::~Task()
 {
     if (formatter) delete formatter;
-    // if (messageCache_) delete messageCache_;
 
 /*  
     if (dsOwn)

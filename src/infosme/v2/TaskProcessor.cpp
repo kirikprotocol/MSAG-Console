@@ -1,4 +1,3 @@
-// #include "TaskLock.hpp"
 #include "TaskProcessor.h"
 #include "InfoSmeMessageSender.h"
 #include "FinalStateSaver.h"
@@ -199,7 +198,7 @@ TaskProcessor::~TaskProcessor()
       MutexGuard guard(tasksLock);
       int key = 0;
       TaskGuard* task;
-      IntHash<TaskGuard>::Iterator it=tasks.First();
+      TaskHash::Iterator it=tasks.First();
       while (it.Next(key, task))
           if (task->get()) (*task)->shutdown();
       tasks.Empty();
@@ -242,7 +241,7 @@ void TaskProcessor::resetWaitingTasks()
     
     int key = 0; 
     TaskGuard task = 0;
-    IntHash<TaskGuard>::Iterator it=tasks.First();
+    TaskHash::Iterator it=tasks.First();
     while (it.Next(key,task))
         if (task.get()) task->resetWaiting();
 }
@@ -466,7 +465,7 @@ void TaskProcessor::processMessage(const TaskMsgId& tmIds,const ResponseData& rd
 
 int TaskProcessor::findRegionByAddress( const char* addr )
 {
-    MutexGuard mg(startLock);
+    if ( !messageSender ) return -2; // failure
     return messageSender->findRegionByAddress( addr );
 }
 
@@ -596,7 +595,7 @@ Array<std::string> TaskProcessor::getGeneratingTasks()
 
     int key = 0;
     TaskGuard task = 0;
-    IntHash<TaskGuard>::Iterator it=tasks.First();
+    TaskHash::Iterator it=tasks.First();
 
     while (it.Next(key, task))
     {
@@ -616,7 +615,7 @@ Array<std::string> TaskProcessor::getProcessingTasks()
 
     int key = 0;
     TaskGuard task = 0;
-    IntHash<TaskGuard>::Iterator it=tasks.First();
+    TaskHash::Iterator it=tasks.First();
     while (it.Next(key, task))
     {
         if (task.get() && task->isInProcess())
@@ -887,6 +886,7 @@ void TaskProcessor::applyRetryPolicies()
 
 uint32_t TaskProcessor::sendSms(const std::string& src,const std::string& dst,const std::string& msg,bool flash)
 {
+    if (!messageSender) throw smsc::util::Exception("message sender is not set");
     return messageSender->sendSms(src,dst,msg,flash);
 }
 
