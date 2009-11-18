@@ -46,6 +46,7 @@ public:
     const char* addr;
     const char* ddest;
     time_t date;
+    time_t submitDate;
     const char* msgId;
     const char* err;
     int lastResult;

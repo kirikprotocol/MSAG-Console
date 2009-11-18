@@ -279,6 +279,7 @@ void StateMachine::formatDeliver(const FormatData& fd,std::string& out)
   ce.exportStr("dest",fd.addr);
   ce.exportStr("ddest",fd.ddest);
   ce.exportDat("date",fd.date);
+  ce.exportDat("submitTime",fd.submitDate);
   ce.exportStr("msgId",fd.msgId);
   ce.exportInt("lastResult",fd.lastResult);
   ce.exportInt("lastResultGsm",fd.lastResultGsm);
@@ -319,6 +320,7 @@ void StateMachine::formatFailed(const FormatData& fd,std::string& out)
   if(reason.length()==0)reason=buf;
   ce.exportStr("reason",reason.c_str());
   ce.exportDat("date",fd.date);
+  ce.exportDat("submitTime",fd.submitDate);
   ce.exportStr("msgId",fd.msgId);
   ce.exportInt("lastResult",fd.lastResult);
   ce.exportInt("lastResultGsm",fd.lastResultGsm);
@@ -368,6 +370,7 @@ void StateMachine::formatNotify(const FormatData& fd,std::string& out)
   if(reason.length()==0)reason=buf;
   ce.exportStr("reason",reason.c_str());
   ce.exportDat("date",fd.date);
+  ce.exportDat("submitTime",fd.submitDate);
   ce.exportStr("msgId",fd.msgId);
   ce.exportInt("lastResult",fd.lastResult);
   ce.exportInt("lastResultGsm",fd.lastResultGsm);
@@ -4550,7 +4553,9 @@ StateType StateMachine::deliveryResp(Tuple& t)
       FormatData fd;
       fd.ddest=ddest;
       fd.addr=addr;
-      fd.date=time(NULL)+common::TimeZoneManager::getInstance().getTimeZone(rpt.getDestinationAddress())+timezone;
+      time_t tz=common::TimeZoneManager::getInstance().getTimeZone(rpt.getDestinationAddress())+timezone;
+      fd.submitDate=sms.getSubmitTime()+tz;
+      fd.date=time(NULL)+tz;
       fd.msgId=msgid;
       fd.err="";
       fd.lastResult=0;
@@ -5168,7 +5173,9 @@ void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const ch
   const Descriptor& d=sms.getDestinationDescriptor();
   fd.msc=d.msc;
   fd.addr=addr;
-  fd.date=sms.getSubmitTime()+common::TimeZoneManager::getInstance().getTimeZone(rpt.getDestinationAddress())+timezone;
+  time_t tz=common::TimeZoneManager::getInstance().getTimeZone(rpt.getDestinationAddress())+timezone;
+  fd.submitDate=sms.getSubmitTime()+tz;
+  fd.date=fd.submitDate;
   fd.msgId=msgid;
   fd.err=reason;
   fd.setLastResult(sms.lastResult);
@@ -5255,7 +5262,9 @@ void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
     fd.ddest=ddest;
     const Descriptor& d=sms.getDestinationDescriptor();
     fd.msc=d.msc;
-    fd.date=sms.getSubmitTime()+common::TimeZoneManager::getInstance().getTimeZone(rpt.getDestinationAddress())+timezone;
+    time_t tz=common::TimeZoneManager::getInstance().getTimeZone(rpt.getDestinationAddress())+timezone;
+    fd.submitDate=sms.getSubmitTime()+tz;
+    fd.date=fd.submitDate;
     fd.addr=addr;
     fd.msgId=msgid;
     fd.err=reason;
