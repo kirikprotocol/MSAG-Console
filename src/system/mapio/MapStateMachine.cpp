@@ -1600,6 +1600,10 @@ static int makeUssdErrorText( MapDialog* dialog,char *text, unsigned* textLen, i
     {
       short buf[256];
       size_t len=ConvertMultibyteToUCS2(out.c_str(),out.length(),buf,sizeof(buf),CONV_ENCODING_CP1251);
+      for(size_t i=0;i<len/2;i++)
+      {
+        buf[i]=htons(buf[i]);
+      }
       out.assign((char*)buf,len);
     }
   }
