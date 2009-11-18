@@ -12,7 +12,7 @@ namespace ber {
  * Class EncoderOfSequenceAC implementation:
  * ************************************************************************* */
 TSLength 
-  EncoderOfSequenceAC::calculateFields(bool calc_indef/* = false*/) const
+  EncoderOfSequenceAC::calculateFields(bool calc_indef/* = false*/)
     /*throw(std::exception)*/
 {
   bool      definite = true;
@@ -34,7 +34,7 @@ TSLength
 // -- ************************************* --
 // -- ValueEncoderAC interface methods
 // -- ************************************* --
-bool EncoderOfSequenceAC::setRule(TSGroupBER::Rule_e use_rule) const
+bool EncoderOfSequenceAC::setRule(TSGroupBER::Rule_e use_rule)
 {
   for (uint16_t i = 0; i < _fldCnt; ++i) {
     if (getField(i).setRule(use_rule))
@@ -44,7 +44,7 @@ bool EncoderOfSequenceAC::setRule(TSGroupBER::Rule_e use_rule) const
 }
 
 const EncodingProperty &
-  EncoderOfSequenceAC::calculateVAL(bool calc_indef/* = false*/) const
+  EncoderOfSequenceAC::calculateVAL(bool calc_indef/* = false*/)
     /*throw(std::exception)*/
 {
   _vProp._isConstructed = true;
@@ -69,7 +69,7 @@ ENCResult
 {
   ENCResult rval(ENCResult::encOk);
   for (uint16_t i = 0; i < _fldCnt; ++i) {
-    rval += getField(i).encodeTLV(use_enc + rval.nbytes, max_len - rval.nbytes);
+    rval += getField(i).encodeCalculated(use_enc + rval.nbytes, max_len - rval.nbytes);
   }
   return rval;
 }

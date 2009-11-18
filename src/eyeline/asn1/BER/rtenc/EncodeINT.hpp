@@ -23,28 +23,10 @@ using eyeline::asn1::_tagINTEGER;
  * resulting TLV encoding.
  * ************************************************************************* */
 class EncoderOfINTEGER : public TypeEncoderAC {
-protected:
+private:
   UINTEGER _encVal;  //value is to encode, negative number is 
                      //converted to 'two's complement' form
-public:
-  EncoderOfINTEGER(const INTEGER & use_val, const ASTag * use_tag = NULL)
-    : TypeEncoderAC(ASTagging(use_tag ? *use_tag : _tagINTEGER))
-    , _encVal(use_val)
-  { }
-  EncoderOfINTEGER(const INTEGER & use_val, const ASTagging & use_tags)
-    : TypeEncoderAC(use_tags), _encVal(use_val)
-  { }
-  EncoderOfINTEGER(const UINTEGER & use_val, const ASTag * use_tag = NULL)
-    : TypeEncoderAC(ASTagging(use_tag ? *use_tag : _tagINTEGER))
-    , _encVal(use_val)
-  { }
-  EncoderOfINTEGER(const UINTEGER & use_val, const ASTagging & use_tags)
-    : TypeEncoderAC(use_tags), _encVal(use_val)
-  { }
-
-  ~EncoderOfINTEGER()
-  { }
-
+protected:
   // -- ************************************* --
   // -- ValueEncoderAC interface methods
   // -- ************************************* --
@@ -56,10 +38,30 @@ public:
   //NOTE: 'calc_indef' must be set if this encoding is enclosed by
   //another that uses definite LD form.
   //NOTE: Throws in case of value that cann't be encoded.
-  const EncodingProperty & calculateVAL(bool calc_indef = false) const /*throw(std::exception)*/;
+  const EncodingProperty & calculateVAL(bool calc_indef = false) /*throw(std::exception)*/;
   //Encodes by requested encoding rule of BER family the type value ('V'-part of encoding)
   //NOTE: Throws in case of value that cann't be encoded.
+  //NOTE: this method has defined result only after calculateVAL() called
   ENCResult encodeVAL(uint8_t * use_enc, TSLength max_len) const /*throw(std::exception)*/;
+
+public:
+  EncoderOfINTEGER(const INTEGER & use_val)
+    : TypeEncoderAC(ASTagging(_tagINTEGER))
+    , _encVal(use_val)
+  { }
+  EncoderOfINTEGER(const INTEGER & use_val, const ASTagging & use_tags)
+    : TypeEncoderAC(use_tags), _encVal(use_val)
+  { }
+  EncoderOfINTEGER(const UINTEGER & use_val)
+    : TypeEncoderAC(ASTagging(_tagINTEGER))
+    , _encVal(use_val)
+  { }
+  EncoderOfINTEGER(const UINTEGER & use_val, const ASTagging & use_tags)
+    : TypeEncoderAC(use_tags), _encVal(use_val)
+  { }
+
+  ~EncoderOfINTEGER()
+  { }
 };
 
 } //ber

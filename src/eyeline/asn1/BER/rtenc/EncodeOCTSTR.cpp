@@ -38,7 +38,7 @@ TSLength EncoderOfOCTSTR::calculateFragments(void) const
 // -- ************************************* --
 
 const EncodingProperty &
-  EncoderOfOCTSTR::calculateVAL(bool calc_indef/* = false*/) const
+  EncoderOfOCTSTR::calculateVAL(bool calc_indef/* = false*/)
     /*throw(std::exception)*/
 {
   if (getRule() == TSGroupBER::ruleCER) { //perform fragmentation if necessary
@@ -62,8 +62,6 @@ ENCResult
     /*throw(std::exception)*/
 {
   ENCResult rval(ENCResult::encOk);
-  if (!_isCalculated)
-    calculateVAL();
 
   if (_vProp._isConstructed) { //fragmented encoding
     OCTSTR::size_type   i = 0;

@@ -25,17 +25,6 @@ class EncoderOfRelativeOID : public TypeEncoderAC {
 protected:
   const RelativeOID & _encVal;
 
-public:
-  EncoderOfRelativeOID(const RelativeOID & use_val, const ASTag * use_tag = NULL)
-    : TypeEncoderAC(ASTagging(use_tag ? *use_tag : _tagRelativeOID))
-    , _encVal(use_val)
-  { }
-  EncoderOfRelativeOID(const RelativeOID & use_val, const ASTagging & use_tags)
-    : TypeEncoderAC(use_tags), _encVal(use_val)
-  { }
-  ~EncoderOfRelativeOID()
-  { }
-
   // -- ************************************* --
   // -- ValueEncoderAC interface methods
   // -- ************************************* --
@@ -50,7 +39,19 @@ public:
   const EncodingProperty & calculateVAL(bool calc_indef = false) /*throw(std::exception)*/;
   //Encodes by requested encoding rule of BER family the type value ('V'-part of encoding)
   //NOTE: Throws in case of value that cann't be encoded.
+  //NOTE: this method has defined result only after calculateVAL() called
   ENCResult encodeVAL(uint8_t * use_enc, TSLength max_len) const /*throw(std::exception)*/;
+
+public:
+  EncoderOfRelativeOID(const RelativeOID & use_val)
+    : TypeEncoderAC(ASTagging(_tagRelativeOID))
+    , _encVal(use_val)
+  { }
+  EncoderOfRelativeOID(const RelativeOID & use_val, const ASTagging & use_tags)
+    : TypeEncoderAC(use_tags), _encVal(use_val)
+  { }
+  ~EncoderOfRelativeOID()
+  { }
 };
 
 } //ber

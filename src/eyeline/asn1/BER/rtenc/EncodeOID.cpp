@@ -44,7 +44,7 @@ uint16_t  EncoderOfObjectID::calculateSubIds(void) const /*throw(std::exception)
 //family rules: primitive encoding with definite LD form
 
 const EncodingProperty &
-  EncoderOfObjectID::calculateVAL(bool do_indef/* = false*/) const /*throw(std::exception)*/
+  EncoderOfObjectID::calculateVAL(bool do_indef/* = false*/) /*throw(std::exception)*/
 {
   _vProp._valLen = calculateSubIds();
   _vProp._ldForm = LDeterminant::frmDefinite;

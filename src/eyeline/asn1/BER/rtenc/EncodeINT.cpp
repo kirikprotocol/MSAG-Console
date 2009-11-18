@@ -20,7 +20,7 @@ namespace ber {
 // -- ************************************* --
 
 const EncodingProperty &
-  EncoderOfINTEGER::calculateVAL(bool do_indef/* = false*/) const /*throw(std::exception)*/
+  EncoderOfINTEGER::calculateVAL(bool do_indef/* = false*/) /*throw(std::exception)*/
 {
   _vProp._valLen = estimate_INTEGER(_encVal);
   _vProp._ldForm = LDeterminant::frmDefinite;

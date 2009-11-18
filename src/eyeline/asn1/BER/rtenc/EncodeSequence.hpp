@@ -25,9 +25,29 @@ protected:
   //Returns FieldEncoder for field with specified index
   //Throws on invalid field index
   virtual const FieldEncoder & getField(uint16_t fld_idx) const /* throw(std::exception)*/ = 0;
+  virtual FieldEncoder & getField(uint16_t fld_idx) /* throw(std::exception)*/ = 0;
 
   //Calculates total length of fields encoding if possible
-  TSLength calculateFields(bool calc_indef = false) const /*throw(std::exception)*/;
+  TSLength calculateFields(bool calc_indef = false) /*throw(std::exception)*/;
+
+  // -- ***************************************** --
+  // -- ValueEncoderAC abstract methods
+  // -- ***************************************** --
+
+  //Determines properties of addressed value encoding (LD form, constructedness)
+  //according to requested encoding rule of BER family. Additionally calculates
+  //length of value encoding if one of following conditions is fulfilled:
+  // 1) LD form == ldDefinite
+  // 2) (LD form == ldIndefinite) && ('calc_indef' == true)
+  //NOTE: 'calc_indef' must be set if this encoding is enclosed by
+  //another that uses definite LD form.
+  //NOTE: Throws in case of value that cann't be encoded.
+  const EncodingProperty & calculateVAL(bool calc_indef = false) /*throw(std::exception)*/;
+
+  //Encodes by requested encoding rule of BER family the type value ('V'-part of encoding)
+  //NOTE: Throws in case of value that cann't be encoded.
+  //NOTE: this method has defined result only after calculateVAL() called
+  ENCResult encodeVAL(uint8_t * use_enc, TSLength max_len) const /*throw(std::exception)*/;
 
 public:
   // constructor for untagged SEQUENCE/SEQUENCE OF with EXPLICIT tags environment
@@ -48,25 +68,7 @@ public:
   // -- **************************************** --
   //Sets required kind of BER group encoding.
   //Returns: true if value encoding should be (re)calculated
-  bool setRule(TSGroupBER::Rule_e use_rule) const;
-
-  // -- ***************************************** --
-  // -- ValueEncoderAC abstract methods
-  // -- ***************************************** --
-
-  //Determines properties of addressed value encoding (LD form, constructedness)
-  //according to requested encoding rule of BER family. Additionally calculates
-  //length of value encoding if one of following conditions is fulfilled:
-  // 1) LD form == ldDefinite
-  // 2) (LD form == ldIndefinite) && ('calc_indef' == true)
-  //NOTE: 'calc_indef' must be set if this encoding is enclosed by
-  //another that uses definite LD form.
-  //NOTE: Throws in case of value that cann't be encoded.
-  const EncodingProperty & calculateVAL(bool calc_indef = false) const /*throw(std::exception)*/;
-
-  //Encodes by requested encoding rule of BER family the type value ('V'-part of encoding)
-  //NOTE: Throws in case of value that cann't be encoded.
-  ENCResult encodeVAL(uint8_t * use_enc, TSLength max_len) const /*throw(std::exception)*/;
+  bool setRule(TSGroupBER::Rule_e use_rule);
 };
 
 //Template for Encoder of SEQUENCE with known number of fields.
@@ -81,6 +83,10 @@ protected:
   //Returns FieldEncoder for field with specified index
   //Throws on invalid field index
   const FieldEncoder & getField(uint16_t fld_idx) const /* throw(std::exception)*/
+  {
+    return _fields[fld_idx];
+  }
+  FieldEncoder & getField(uint16_t fld_idx) /* throw(std::exception)*/
   {
     return _fields[fld_idx];
   }
@@ -119,6 +125,10 @@ protected:
   //Returns FieldEncoder for field with specified index
   //Throws on invalid field index
   const FieldEncoder & getField(uint16_t fld_idx) const /* throw(std::exception)*/
+  {
+    return _fields[fld_idx];
+  }
+  FieldEncoder & getField(uint16_t fld_idx) /* throw(std::exception)*/
   {
     return _fields[fld_idx];
   }

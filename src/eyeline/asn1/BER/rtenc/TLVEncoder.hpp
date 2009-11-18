@@ -97,65 +97,6 @@ public:
 //Macro that determines maximum number of 'length octets'
 #define MAX_LDETERMINANT_OCTS(ldet_type) (1 + (sizeof(ldet_type)<<3 + 7)/8)
 
-
-/* ************************************************************************* *
- * Abstract class that determines encoding properties of the ASN.1 type value 
- * and composes the V-part of BER/DER/CER encoding according to appropriate
- * clause from X.690.
- * ************************************************************************* */
-class ValueEncoderAC : public TSGroupBER {
-protected:
-  mutable Rule_e            _rule;
-  mutable bool              _isCalculated;
-  mutable EncodingProperty  _vProp;
-
-public:
-  ValueEncoderAC(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : _isCalculated(false), _rule(use_rule)
-  { }
-  virtual ~ValueEncoderAC()
-  { }
-
-  TSGroupBER::Rule_e   getRule(void) const { return _rule; }
-  //NOTE: this method has defined result only after calculateVAL() called
-  const EncodingProperty & getVALProperties(void) const { return _vProp; }
-
-  // -- ************************************* --
-  // -- ValueEncoderAC virtual methods
-  // -- ************************************* --
-
-  //Returns tag identifying the content of value encoding (not value type itself).
-  //Defined only for so called 'hole types' such as untagged ANY, CHOICE, OpenType
-  virtual const ASTag * getContentTag(void) const { return NULL; }
-
-  //Sets required kind of BER group encoding.
-  //Returns: true if value encoding should be (re)calculated
-  virtual bool setRule(TSGroupBER::Rule_e use_rule) const
-  {
-    if (use_rule != _rule) {
-      _rule = use_rule;
-      _isCalculated = false;
-    }
-    return !_isCalculated;
-  }
-
-  // -- ************************************* --
-  // -- ValueEncoderAC abstract methods
-  // -- ************************************* --
-  //Determines properties of addressed value encoding (LD form, constructedness)
-  //according to requested encoding rule of BER family. Additionally calculates
-  //length of value encoding if one of following conditions is fulfilled:
-  // 1) LD form == ldDefinite
-  // 2) (LD form == ldIndefinite) && ('calc_indef' == true)
-  //NOTE: 'calc_indef' must be set if this encoding is enclosed by
-  //another that uses definite LD form.
-  //NOTE: Throws in case of value that cann't be encoded.
-  virtual const EncodingProperty & calculateVAL(bool calc_indef = false) const /*throw(std::exception)*/ = 0;
-  //Encodes by requested encoding rule of BER family the type value ('V'-part of encoding)
-  //NOTE: Throws in case of value that cann't be encoded.
-  virtual ENCResult encodeVAL(uint8_t * use_enc, TSLength max_len) const /*throw(std::exception)*/ = 0;
-};
-
 //TL-part encoder
 class TLEncoder : public TLVProperty {
 protected:
@@ -183,12 +124,74 @@ public:
 };
 
 
+/* ************************************************************************* *
+ * Abstract class that determines encoding properties of the ASN.1 type value 
+ * and composes the V-part of BER/DER/CER encoding according to appropriate
+ * clause from X.690.
+ * ************************************************************************* */
+class ValueEncoderAC {
+protected:
+  TSGroupBER::Rule_e  _rule;
+  bool                _isCalculated;
+  EncodingProperty    _vProp;
+
+public:
+  ValueEncoderAC(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
+    : _isCalculated(false), _rule(use_rule)
+  { }
+  virtual ~ValueEncoderAC()
+  { }
+
+  TSGroupBER::Rule_e   getRule(void) const { return _rule; }
+
+  bool isCalculated(void) const { return _isCalculated; }
+  //NOTE: this method has defined result only after calculateVAL() called
+  const EncodingProperty & getVALProperties(void) const { return _vProp; }
+
+  // -- ************************************* --
+  // -- ValueEncoderAC virtual methods
+  // -- ************************************* --
+
+  //Returns tag identifying the content of value encoding (not value type itself).
+  //Defined only for so called 'hole types' such as untagged ANY, CHOICE, OpenType
+  virtual const ASTag * getContentTag(void) const { return NULL; }
+
+  //Sets required kind of BER group encoding.
+  //Returns: true if value encoding should be (re)calculated
+  virtual bool setRule(TSGroupBER::Rule_e use_rule)
+  {
+    if (use_rule != _rule) {
+      _rule = use_rule;
+      if (use_rule != TSGroupBER::ruleBER)
+        _isCalculated = false;
+    }
+    return !_isCalculated;
+  }
+
+  // -- ************************************* --
+  // -- ValueEncoderAC abstract methods
+  // -- ************************************* --
+  //Determines properties of addressed value encoding (LD form, constructedness)
+  //according to requested encoding rule of BER family. Additionally calculates
+  //length of value encoding if one of following conditions is fulfilled:
+  // 1) LD form == ldDefinite
+  // 2) (LD form == ldIndefinite) && ('calc_indef' == true)
+  //NOTE: 'calc_indef' must be set if this encoding is enclosed by
+  //another that uses definite LD form.
+  //NOTE: Throws in case of value that cann't be encoded.
+  virtual const EncodingProperty & calculateVAL(bool calc_indef = false) /*throw(std::exception)*/ = 0;
+  //Encodes by requested encoding rule of BER family the type value ('V'-part of encoding)
+  //NOTE: Throws in case of value that cann't be encoded.
+  //NOTE: this method has defined result only after calculateVAL() called
+  virtual ENCResult encodeVAL(uint8_t * use_enc, TSLength max_len) const /*throw(std::exception)*/ = 0;
+};
+
 class TLVLayoutEncoder {
 private:
   //data for encoding optimization if layout calculation was done prior to encoding
-  mutable LWArray_T<TLEncoder, uint8_t, _ASTaggingDFLT_SZ> _tlws;
-  mutable TSLength  _szoBOC; //overall length of 'begin-of-content' octets of TLV
-                             //encoding, also serves as a 'calculation-performed' flag
+  LWArray_T<TLEncoder, uint8_t, _ASTaggingDFLT_SZ> _tlws;
+  TSLength  _szoBOC;    //overall length of 'begin-of-content' octets of TLV
+                        //encoding, also serves as a 'calculation-performed' flag
 protected:
   ASTagging         _effTags; //effective tags accroding to tagging environment
   ValueEncoderAC *  _valEnc;  //addressed value encoder, zero means layout isn't initialized
@@ -200,11 +203,13 @@ protected:
   //Calculates TLV layout (tag & length octets + EOC for each tag) basing on
   //given 'V' part encoding properties.
   //Returns  EncodingProperty for outermost tag
-  const TLVProperty & calculateLayout(const EncodingProperty & val_prop) const;
+  const TLVProperty & calculateLayout(const EncodingProperty & val_prop);
 
   //Encodes 'TL'-part ('begin-of-content' octets)
+  //NOTE: TLVLayout must be calculated.
   ENCResult encodeBOC(uint8_t * use_enc, TSLength max_len) const;
   //Encodes 'end-of-content' octets of encoding
+  //NOTE: TLVLayout must be calculated.
   ENCResult encodeEOC(uint8_t * use_enc, TSLength max_len) const;
 
 public:
@@ -248,14 +253,17 @@ public:
   //NOTE: if 'calc_indef' is set, then full TLV encoding length is calculated even
   //if indefinite LD form is used. This may be required if this TLV is enclosed by
   //another that uses definite LD form.
-  const TLVProperty & calculateTLV(bool calc_indef = false) const /*throw(std::exception)*/
+  const TLVProperty & calculateTLV(bool calc_indef = false) /*throw(std::exception)*/
   {
     return calculateLayout(_valEnc->calculateVAL(calc_indef));
   }
-
-  //Encodes by BER/DER/CER the type value (composes complete TLV encoding).
+  //Encodes by BER/DER/CER the previously calculated TLV layout (composes complete TLV encoding).
+  //NOTE: Throws in case the layout wasn't calculated.
+  ENCResult encodeCalculated(uint8_t * use_enc, TSLength max_len) const /*throw(std::exception)*/;
+  //Encodes by BER/DER/CER the TLV layout (composes complete TLV encoding).
   //NOTE: Throws in case of value that cann't be encoded.
-  ENCResult encodeTLV(uint8_t * use_enc, TSLength max_len) const /*throw(std::exception)*/;
+  //NOTE: Calculates layout if it wasn't calculated yet
+  ENCResult encodeTLV(uint8_t * use_enc, TSLength max_len) /*throw(std::exception)*/;
 };
 
 /* ************************************************************************* *
@@ -263,12 +271,19 @@ public:
  * ASN.1 type value according to appropriate clause of X.690.
  * ************************************************************************* */
 class TypeEncoderAC : public TLVLayoutEncoder, public ValueEncoderAC {
+protected:
+  // -- ************************************************* --
+  // -- ValueEncoderAC abstract methods are to implement
+  // -- ************************************************* --
+  using ValueEncoderAC::calculateVAL;
+  using ValueEncoderAC::encodeVAL;
+
 public:
   //'Untagged type encoder' constructor
   TypeEncoderAC(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
     : TLVLayoutEncoder((ValueEncoderAC&)*this), ValueEncoderAC(use_rule)
   { }
-  //'Genric type encoder' constructor
+  //'Genric tagged type encoder' constructor
   //NOTE: tagging MUST contain UNIVERSAL tag of base type
   TypeEncoderAC(const ASTagging & use_tags,
                TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
@@ -276,12 +291,6 @@ public:
   { }
   virtual ~TypeEncoderAC()
   { }
-
-  // -- ************************************************* --
-  // -- ValueEncoderAC abstract methods are to implement
-  // -- ************************************************* --
-  //virtual const EncodingProperty & calculateVAL(bool calc_indef = false) /*throw(std::exception)*/ = 0;
-  //virtual ENCResult encodeVAL(uint8_t * use_enc, TSLength max_len) const /*throw(std::exception)*/ = 0;
 };
 
 
@@ -308,7 +317,7 @@ public:
   // -- --------------------------------------------------------------------
   // NOTE: following methods mat be called ONLY after proper initialization
   // -- --------------------------------------------------------------------
-  bool setRule(TSGroupBER::Rule_e use_rule) const
+  bool setRule(TSGroupBER::Rule_e use_rule)
   {
     return getValueEncoder()->setRule(use_rule);
   }

@@ -23,8 +23,8 @@ using eyeline::asn1::_tagENUM;
  * ************************************************************************* */
 class EncoderOfENUM : public EncoderOfINTEGER {
 public:
-  EncoderOfENUM(const ENUM & use_val, const ASTag * use_tag = NULL)
-    : EncoderOfINTEGER(use_val, use_tag ? use_tag : &_tagENUM)
+  EncoderOfENUM(const ENUM & use_val)
+    : EncoderOfINTEGER(use_val, ASTagging(_tagENUM))
   { }
   EncoderOfENUM(const ENUM & use_val, const ASTagging & use_tags)
     : EncoderOfINTEGER(use_val, use_tags)

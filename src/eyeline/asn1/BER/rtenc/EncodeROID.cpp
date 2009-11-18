@@ -16,7 +16,7 @@ namespace ber {
 // -- ************************************* --
 // -- ValueEncoderAC interface methods
 // -- ************************************* --
-//NOTE: encoding of INTEGER type value has the same form for all BER
+//NOTE: encoding of RelativeOID type value has the same form for all BER
 //family rules: primitive encoding with definite LD form
 
 const EncodingProperty &
@@ -24,6 +24,9 @@ const EncodingProperty &
 {
   if (!(_vProp._valLen = estimate_SubIds(_encVal.get(), _encVal.size())))
     throw smsc::util::Exception("EncoderOfRelativeOID: illegal value");
+  _vProp._ldForm = LDeterminant::frmDefinite;
+  _vProp._isConstructed = false;
+  _isCalculated = true;
   return _vProp;
 }
 

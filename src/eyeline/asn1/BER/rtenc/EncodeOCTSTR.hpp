@@ -36,6 +36,23 @@ protected:
   //Throws if value is too large and cann't be encoded
   TSLength calculateFragments(void) const /*throw(std::exception)*/;
 
+  // -- ************************************* --
+  // -- ValueEncoderAC interface methods
+  // -- ************************************* --
+  //Determines properties of addressed value encoding (LD form, constructedness)
+  //according to requested encoding rule of BER family. Additionally calculates
+  //length of value encoding if one of following conditions is fulfilled:
+  // 1) LD form == ldDefinite
+  // 2) (LD form == ldIndefinite) && ('calc_indef' == true)
+  //NOTE: 'calc_indef' must be set if this encoding is enclosed by
+  //another that uses definite LD form.
+  //NOTE: Throws in case of value that cann't be encoded.
+  const EncodingProperty & calculateVAL(bool calc_indef = false) /*throw(std::exception)*/;
+  //Encodes by requested encoding rule of BER family the type value ('V'-part of encoding)
+  //NOTE: Throws in case of value that cann't be encoded.
+  //NOTE: this method has defined result only after calculateVAL() called
+  ENCResult encodeVAL(uint8_t * use_enc, TSLength max_len) const /*throw(std::exception)*/;
+
 public:
   EncoderOfOCTSTR(const OCTSTR & use_val)
     : TypeEncoderAC(ASTagging(_tagOCTSTR))
@@ -66,22 +83,6 @@ public:
 
   ~EncoderOfOCTSTR()
   { }
-
-  // -- ************************************* --
-  // -- ValueEncoderAC interface methods
-  // -- ************************************* --
-  //Determines properties of addressed value encoding (LD form, constructedness)
-  //according to requested encoding rule of BER family. Additionally calculates
-  //length of value encoding if one of following conditions is fulfilled:
-  // 1) LD form == ldDefinite
-  // 2) (LD form == ldIndefinite) && ('calc_indef' == true)
-  //NOTE: 'calc_indef' must be set if this encoding is enclosed by
-  //another that uses definite LD form.
-  //NOTE: Throws in case of value that cann't be encoded.
-  const EncodingProperty & calculateVAL(bool calc_indef = false) const /*throw(std::exception)*/;
-  //Encodes by requested encoding rule of BER family the type value ('V'-part of encoding)
-  //NOTE: Throws in case of value that cann't be encoded.
-  ENCResult encodeVAL(uint8_t * use_enc, TSLength max_len) const /*throw(std::exception)*/;
 };
 
 } //ber

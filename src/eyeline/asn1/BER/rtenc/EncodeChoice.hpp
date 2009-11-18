@@ -17,6 +17,28 @@ class EncoderOfChoice : public TypeEncoderAC {
 protected:
   FieldEncoder  _alt; //selected alternative
 
+  // -- ***************************************** --
+  // -- ValueEncoderAC abstract methods
+  // -- ***************************************** --
+
+  //Determines properties of addressed value encoding (LD form, constructedness)
+  //according to requested encoding rule of BER family. Additionally calculates
+  //length of value encoding if one of following conditions is fulfilled:
+  // 1) LD form == ldDefinite
+  // 2) (LD form == ldIndefinite) && ('calc_indef' == true)
+  //NOTE: 'calc_indef' must be set if this encoding is enclosed by
+  //another that uses definite LD form.
+  //NOTE: Throws in case of value that cann't be encoded.
+  const EncodingProperty & calculateVAL(bool calc_indef = false) /*throw(std::exception)*/;
+
+  //Encodes by requested encoding rule of BER family the type value ('V'-part of encoding)
+  //NOTE: Throws in case of value that cann't be encoded.
+  //NOTE: this method has defined result only after calculateVAL() called
+  ENCResult encodeVAL(uint8_t * use_enc, TSLength max_len) const /*throw(std::exception)*/
+  {
+    return _alt.encodeCalculated(use_enc, max_len);
+  }
+
 public:
   // constructor for untagged CHOICE
   EncoderOfChoice(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
@@ -39,33 +61,11 @@ public:
   // -- **************************************** --
   //Sets required kind of BER group encoding.
   //Returns: true if value encoding should be (re)calculated
-  bool setRule(TSGroupBER::Rule_e use_rule) const;
+  bool setRule(TSGroupBER::Rule_e use_rule);
 
   //Returns tag identifying the content of value encoding (not value type itself).
   //Defined only for so called 'hole types' such as untagged ANY, CHOICE, OpenType
   const ASTag * getContentTag(void) const { return _alt.getTag(); }
-
-  // -- ***************************************** --
-  // -- ValueEncoderAC abstract methods
-  // -- ***************************************** --
-
-  //Determines properties of addressed value encoding (LD form, constructedness)
-  //according to requested encoding rule of BER family. Additionally calculates
-  //length of value encoding if one of following conditions is fulfilled:
-  // 1) LD form == ldDefinite
-  // 2) (LD form == ldIndefinite) && ('calc_indef' == true)
-  //NOTE: 'calc_indef' must be set if this encoding is enclosed by
-  //another that uses definite LD form.
-  //NOTE: Throws in case of value that cann't be encoded.
-  const EncodingProperty & calculateVAL(bool calc_indef = false) const /*throw(std::exception)*/;
-
-  //Encodes by requested encoding rule of BER family the type value ('V'-part of encoding)
-  //NOTE: Throws in case of value that cann't be encoded.
-  ENCResult encodeVAL(uint8_t * use_enc, TSLength max_len) const /*throw(std::exception)*/
-  {
-    return _alt.encodeTLV(use_enc, max_len);
-  }
-
 };
 
 } //ber

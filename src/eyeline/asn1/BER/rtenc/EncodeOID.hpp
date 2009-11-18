@@ -24,20 +24,8 @@ using eyeline::asn1::_tagObjectID;
 class EncoderOfObjectID : public TypeEncoderAC {
 protected:
   const ObjectID & _encVal;
-  TSLength         _valSZO;
 
   uint16_t  calculateSubIds(void) const /*throw(std::exception)*/;
-
-public:
-  EncoderOfObjectID(const ObjectID & use_val, const ASTag * use_tag = NULL)
-    : TypeEncoderAC(ASTagging(use_tag ? *use_tag : _tagObjectID))
-    , _encVal(use_val), _valSZO(0)
-  { }
-  EncoderOfObjectID(const ObjectID & use_val, const ASTagging & use_tags)
-    : TypeEncoderAC(use_tags), _encVal(use_val), _valSZO(0)
-  { }
-  ~EncoderOfObjectID()
-  { }
 
   // -- ************************************* --
   // -- ValueEncoderAC interface methods
@@ -50,10 +38,22 @@ public:
   //NOTE: 'calc_indef' must be set if this encoding is enclosed by
   //another that uses definite LD form.
   //NOTE: Throws in case of value that cann't be encoded.
-  const EncodingProperty & calculateVAL(bool calc_indef = false) const /*throw(std::exception)*/;
+  const EncodingProperty & calculateVAL(bool calc_indef = false) /*throw(std::exception)*/;
   //Encodes by requested encoding rule of BER family the type value ('V'-part of encoding)
   //NOTE: Throws in case of value that cann't be encoded.
+  //NOTE: this method has defined result only after calculateVAL() called
   ENCResult encodeVAL(uint8_t * use_enc, TSLength max_len) const /*throw(std::exception)*/;
+
+public:
+  EncoderOfObjectID(const ObjectID & use_val)
+    : TypeEncoderAC(ASTagging(_tagObjectID))
+    , _encVal(use_val)
+  { }
+  EncoderOfObjectID(const ObjectID & use_val, const ASTagging & use_tags)
+    : TypeEncoderAC(use_tags), _encVal(use_val)
+  { }
+  ~EncoderOfObjectID()
+  { }
 };
 
 } //ber

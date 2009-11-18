@@ -150,10 +150,10 @@ void TLVLayoutEncoder::initFieldLayout(const TLVLayoutEncoder & type_enc,
 //given 'V' part encoding properties.
 //Returns  EncodingProperty for outermost tag
 const TLVProperty & 
-  TLVLayoutEncoder::calculateLayout(const EncodingProperty & val_prop) const
+  TLVLayoutEncoder::calculateLayout(const EncodingProperty & val_prop)
 {
   if (!_effTags.size())
-    _tlws[0].reset(); //TODO: needs deeper understanding in case of 'hole types'
+    _tlws[0].reset();
   else {
     uint8_t tagIdx = _effTags.size();
     TSLength valLen = val_prop._valLen;
@@ -173,7 +173,7 @@ const TLVProperty &
 }
 
 //Encodes 'TL'-part ('begin-of-content' octets)
-//Perfoms calculation of TLVLayout id necessary
+//NOTE: TLVLayout must be calculated.
 ENCResult TLVLayoutEncoder::encodeBOC(uint8_t * use_enc, TSLength max_len) const
 {
   ENCResult rval(ENCResult::encOk);
@@ -199,12 +199,14 @@ ENCResult TLVLayoutEncoder::encodeEOC(uint8_t * use_enc, TSLength max_len) const
   return rval;
 }
 
-//Encodes by BER/DER/CER (composes TLV) the type value.
-//Perfoms calculation of TLVLayout if necessary
-//NOTE: Throws in case of value that cann't be encoded.
-ENCResult TLVLayoutEncoder::encodeTLV(uint8_t * use_enc, TSLength max_len) const
+//Encodes by BER/DER/CER the previously calculated TLV layout (composes complete TLV encoding).
+//NOTE: Throws in case the layout wasn't calculated.
+ENCResult TLVLayoutEncoder::encodeCalculated(uint8_t * use_enc, TSLength max_len) const
   /*throw(std::exception)*/
 {
+  if (!_valEnc->isCalculated()) //caller doesn't care about TLV encoding length
+    throw smsc::util::Exception("TLVLayoutEncoder: layout isn't calculated");
+
   ENCResult rval = encodeBOC(use_enc, max_len);
   if (rval.isOk()) {
     rval += _valEnc->encodeVAL(use_enc + rval.nbytes, max_len - rval.nbytes); //throws
@@ -214,6 +216,16 @@ ENCResult TLVLayoutEncoder::encodeTLV(uint8_t * use_enc, TSLength max_len) const
   return rval;
 }
 
+//Encodes by BER/DER/CER the TLV layout (composes complete TLV encoding).
+//NOTE: Throws in case of value that cann't be encoded.
+//NOTE: Calculates layout if it wasn't calculated yet
+ENCResult TLVLayoutEncoder::encodeTLV(uint8_t * use_enc, TSLength max_len)
+  /*throw(std::exception)*/
+{
+  if (!_valEnc->isCalculated()) //caller doesn't care about TLV encoding length
+    calculateTLV();
+  return encodeCalculated(use_enc, max_len);
+}
 
 } //ber
 } //asn1

@@ -15,7 +15,7 @@ namespace ber {
 // -- ************************************* --
 // -- ValueEncoderAC interface methods
 // -- ************************************* --
-bool EncoderOfChoice::setRule(TSGroupBER::Rule_e use_rule) const
+bool EncoderOfChoice::setRule(TSGroupBER::Rule_e use_rule)
 {
   if (_alt.setRule(use_rule))
     _isCalculated = false;
@@ -23,7 +23,7 @@ bool EncoderOfChoice::setRule(TSGroupBER::Rule_e use_rule) const
 }
 
 const EncodingProperty &
-  EncoderOfChoice::calculateVAL(bool calc_indef/* = false*/) const /*throw(std::exception)*/
+  EncoderOfChoice::calculateVAL(bool calc_indef/* = false*/) /*throw(std::exception)*/
 {
   _alt.setRule(getRule());
   const TLVProperty & tlvVal = _alt.calculateTLV(calc_indef);
