@@ -94,7 +94,7 @@ public:
                      dbName.c_str(), dbPath.c_str(), blockSize, blocksInFile);
       addresses.push_back(Key(".1.1.5434990229"));
       addresses.push_back(Key(".1.1.21000000022"));
-      addresses.push_back(Key(".1.1.21000000822"));
+      addresses.push_back(Key(".1.1.21000000823"));
       addresses.push_back(Key(".1.1.21000001142"));
       addresses.push_back(Key(".1.1.21000001148"));
       addresses.push_back(Key(".1.1.21000001149"));
@@ -104,7 +104,7 @@ public:
 
       straddresses.push_back(".1.1.5434990229");
       straddresses.push_back(".1.1.21000000022");
-      straddresses.push_back(".1.1.21000000822");
+      straddresses.push_back(".1.1.21000000823");
       straddresses.push_back(".1.1.21000001142");
       straddresses.push_back(".1.1.21000001148");
       straddresses.push_back(".1.1.21000001149");
