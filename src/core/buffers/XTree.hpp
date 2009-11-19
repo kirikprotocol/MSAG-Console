@@ -445,6 +445,11 @@ protected:
         MEMMAN::template Allocator<TreeNode*>::DeleteArray(subNodes,subSize);
       }
       if(data)delete data;
+      if(maskNode)
+      {
+        maskNode->Clear();
+	MEMMAN::template Allocator<TreeNode>::Delete(maskNode);
+      }
       subCount=0;
     }
     void Delete(char k)
