@@ -4,5 +4,8 @@
 #include <stdint.h>
 #else
 #include <inttypes.h>
+#ifdef __GNUC__
+typedef unsigned long ulong_t;
+#endif
 #endif
 #endif
