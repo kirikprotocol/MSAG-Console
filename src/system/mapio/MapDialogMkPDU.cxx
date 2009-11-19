@@ -71,6 +71,10 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
 
     *pdu_ptr++=sms->getMessageReference();
     oa = (MAP_SMS_ADDRESS*)pdu_ptr;
+    if(!sms->getStrProperty(Tag::SMSC_RECIPIENTADDRESS).length())
+    {
+      throw MAPDIALOG_ERROR(MAKE_ERRORCODE(CMD_ERR_PERM,smsc::system::Status::INVESMCLASS),"receipt without recipient address");
+    }
     addr=sms->getStrProperty(Tag::SMSC_RECIPIENTADDRESS).c_str();
   }else
   {
