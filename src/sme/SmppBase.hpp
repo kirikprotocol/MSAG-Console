@@ -163,7 +163,7 @@ public:
     listener(lst),
     socket(sock),
     idleTimeout(it),disconnectTimeout(dt),
-    lastUpdate(0)
+    lastUpdate(0), lastTOCheck(0)
   {
     log=smsc::logger::Logger::getInstance("smppdump");
     logrd=smsc::logger::Logger::getInstance("smpp.rd");
