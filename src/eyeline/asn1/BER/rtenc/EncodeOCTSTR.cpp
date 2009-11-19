@@ -80,7 +80,7 @@ ENCResult
     }
     //encode last fragment
     OCTFragment lastFrag(_encValSz%1000);
-    if ((max_len - rval.nbytes) < lastFrag._valLen)  {
+    if ((max_len - rval.nbytes) < lastFrag.getTLVsize())  {
       rval.status = ENCResult::encMoreMem;
       return rval;
     }
