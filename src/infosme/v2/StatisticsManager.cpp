@@ -6,6 +6,7 @@ namespace smsc { namespace infosme
 
 StatisticsManager::StatisticsManager(const std::string& argLocation,InfoSmeAdmin* argAdmin)
     : Statistics(), Thread(), logger(Logger::getInstance("smsc.infosme.StatisticsManager")),
+    currentHour(-100),
             currentIndex(0), bExternalFlush(false), bStarted(false), bNeedExit(false)
 {
   admin=argAdmin;

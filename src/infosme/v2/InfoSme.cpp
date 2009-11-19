@@ -35,16 +35,11 @@
 #include "TaskProcessor.h"
 #include "InfoSmeComponent.h"
 #include "InfoSmeMessageSender.h"
+#include "ConfString.h"
 #include "util/mirrorfile/mirrorfile.h"
-
-#include <sms/sms.h>
-// #include <util/config/route/RouteStructures.h>
-// #include <util/config/route/RouteConfig.h>
-// #include <util/config/region/RegionsConfig.hpp>
-// #include <util/config/region/Region.hpp>
-// #include <util/config/region/RegionFinder.hpp>
-#include "infosme/TaskLock.hpp"
+#include "sms/sms.h"
 #include "SmscConnector.h"
+#include "TaskLock.hpp"
 
 #include "version.inc"
 
@@ -175,7 +170,7 @@ TimeSlotCounter<int> TrafficControl::incoming(1, 1);
 TimeSlotCounter<int> TrafficControl::outgoing(1, 1);
 bool                 TrafficControl::stopped = false;
 
-extern "C" static void appSignalHandler(int sig)
+extern "C" void appSignalHandler(int sig)
 {
   if (sig==smsc::system::SHUTDOWN_SIGNAL || sig==SIGINT) {
     if ( signaling_WriteFd > -1 ) close (signaling_WriteFd);
@@ -183,7 +178,7 @@ extern "C" static void appSignalHandler(int sig)
   }
 }
 
-extern "C" static void atExitHandler(void)
+extern "C" void atExitHandler(void)
 {
     // delete regionsConfig;
     smsc::util::xml::TerminateXerces();
@@ -251,7 +246,7 @@ int main(int argc, char** argv)
             }
 
             {
-                std::string fn=tpConfig.getString("storeLocation");
+                std::string fn=ConfString(tpConfig.getString("storeLocation")).str();
                 if(fn.length() && *fn.rbegin()!='/')
                 {
                     fn+='/';

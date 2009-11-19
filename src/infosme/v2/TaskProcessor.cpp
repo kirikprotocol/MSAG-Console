@@ -3,6 +3,7 @@
 #include "FinalStateSaver.h"
 #include "SmscConnector.h"
 #include "MsecTime.h"
+#include "ConfString.h"
 #include <exception>
 #include <list>
 #include <cstdlib>
@@ -53,7 +54,7 @@ receiptWaitTime(0),
 mappingRollTime(0),
 mappingMaxChanges(0),
 dsStatConnection(0),
-statistics(0), protocolId(0), svcType(0), address(0),
+statistics(0), protocolId(0), svcType(0),
 unrespondedMessagesMax(1)
 // unrespondedMessagesSleep(10)
 {
@@ -66,7 +67,7 @@ void TaskProcessor::init( ConfigView* config )
     smsc_log_info(log_, "Loading ...");
     MutexGuard mg(startLock);
 
-    storeLocation=config->getString("storeLocation");
+    storeLocation=ConfString(config->getString("storeLocation")).str();
     if(storeLocation.length())
     {
       if(*storeLocation.rbegin()!='/')
@@ -75,9 +76,9 @@ void TaskProcessor::init( ConfigView* config )
       }
     }
 
-    address = config->getString("Address");
-    if (!address || !isMSISDNAddress(address))
-        throw ConfigException("Address string '%s' is invalid", address ? address:"-");
+    address = ConfString(config->getString("Address")).str();
+    if ( address.empty() || !isMSISDNAddress(address.c_str()))
+        throw ConfigException("Address string '%s' is invalid", address.empty() ? "-" : address.c_str());
     
     try { protocolId = config->getInt("ProtocolId"); }
     catch(ConfigException& exc) { protocolId = 0; };

@@ -165,8 +165,8 @@ public:
         return o.obj;
     }
 
-    typename ScoredList< Proc > copy() const {
-        typename ScoredList< Proc > ret(proc_,maxdiff_,log_);
+    ScoredList< Proc > copy() const {
+        ScoredList< Proc > ret(proc_,maxdiff_,log_);
         ret.objects_ = objects_;
         for ( typename ObjVector::iterator i = ret.objects_.begin();
               i != ret.objects_.end();

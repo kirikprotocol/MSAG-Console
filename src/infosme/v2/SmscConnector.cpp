@@ -346,7 +346,7 @@ uint32_t SmscConnector::sendSms(const std::string& org,const std::string& dst,co
     sbm.get_optional().set_destAddrSubunit(1);
   }
 
-  if(hasHighBit(txt.c_str(),txt.length()))
+  if(smsc::util::hasHighBit(txt.c_str(),txt.length()))
   {
     msg.set_dataCoding(DataCoding::UCS2);
     TmpBuf<short,1024> tmp(txt.length()+1);

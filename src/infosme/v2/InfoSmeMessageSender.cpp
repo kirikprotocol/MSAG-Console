@@ -90,17 +90,11 @@ uint32_t InfoSmeMessageSender::sendSms(const std::string& org,const std::string&
 {
     MutexGuard mg(lock_);
     smsc::sms::Address parsedAddr(dst.c_str());
-    const smsc::util::config::region::Region* foundRegion = smsc::util::config::region::RegionFinder::getInstance().findRegionByAddress(parsedAddr.toString());
-    if ( !foundRegion ) {
-        smsc_log_warn(log_, "sendSms: can't find region for abonent '%s'", dst.c_str());
-        return smsc::system::Status::NOROUTE;
-    }
-    smsc_log_debug(log_, "sendSms: telephone number '%s' matches to mask for region with id '%s'", dst.c_str(), foundRegion->getId().c_str());
     int regId;
     try {
-        regId = Message::stringToRegionId(foundRegion->getId());
+        regId = findRegionByAddress(parsedAddr.toString().c_str());
     } catch (...) {
-        smsc_log_warn(log_, "region id is wrong '%s'", foundRegion->getId().c_str());
+        smsc_log_warn(log_, "region id is wrong for address '%s'", parsedAddr.toString().c_str());
         return smsc::system::Status::NOROUTE;
     }
     RegionSender** ptr = senders_.GetPtr(regId);

@@ -186,7 +186,7 @@ private:
 
     int     protocolId;
     char*   svcType;
-    char*   address;
+    std::string address;
 
     void processWaitingEvents(time_t time);
     /// invoked from smsc connector, return true if receipt is needed
@@ -214,7 +214,7 @@ public:
 
     int getProtocolId() const { return protocolId; };
     const char* getSvcType() const { return (svcType) ? svcType:"InfoSme"; };
-    const char* getAddress() const { return address; };
+    const char* getAddress() const { return address.c_str(); };
 
     int getResponseWaitTime() const { return responseWaitTime; }
     int getReceiptWaitTime() const { return receiptWaitTime; }
