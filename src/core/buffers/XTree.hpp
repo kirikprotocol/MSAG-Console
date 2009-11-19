@@ -351,6 +351,11 @@ protected:
         MEMMAN::template Allocator<char>::DeleteArray(subChildren,subSize);
         MEMMAN::template Allocator<HashNode*>::DeleteArray(subNodes,subSize);
       }
+      if(maskNode)
+      {
+        maskNode->Clear();
+	MEMMAN::template Allocator<HashNode>::Delete(maskNode);
+      }
       if(data)delete data;
       subSize=0;
     }
