@@ -1,9 +1,9 @@
 /* ************************************************************************* *
  * BER Encoder methods: OCTET STRING type encoder.
  * ************************************************************************* */
-#ifndef __ASN1_BER_ENCODER_ROID
+#ifndef __ASN1_BER_ENCODER_OCTSTR
 #ident "@(#)$Id$"
-#define __ASN1_BER_ENCODER_ROID
+#define __ASN1_BER_ENCODER_OCTSTR
 
 #include "eyeline/asn1/ASNTags.hpp"
 #include "eyeline/asn1/OCTSTR.hpp"
@@ -89,5 +89,5 @@ public:
 } //asn1
 } //eyeline
 
-#endif /* __ASN1_BER_ENCODER_ROID */
+#endif /* __ASN1_BER_ENCODER_OCTSTR */
 
