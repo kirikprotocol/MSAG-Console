@@ -1,5 +1,5 @@
 /* ************************************************************************* *
- * ASN.1 OCTET STRING type definitions.
+ * ASN.1 BIT STRING type definitions.
  * ************************************************************************* */
 #ifndef __ABSTRACT_SYNTAX_BITSTR_DEFS__
 #ident "@(#)$Id$"
