@@ -5,6 +5,7 @@
 # include <vector>
 # include <string>
 # include <util/config/route/RouteConfig.h>
+#include "util/int.h"
 
 namespace smsc {
 namespace util {

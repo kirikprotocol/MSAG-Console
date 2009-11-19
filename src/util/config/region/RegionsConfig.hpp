@@ -32,7 +32,7 @@ public:
     bool hasRecord() {return _iter != _end;}
     status fetchNext(Region *&record);
   private:
-    RegionsIterator(Regions_t::iterator& begin, Regions_t::iterator& end)
+    RegionsIterator(const Regions_t::iterator& begin, const Regions_t::iterator& end)
       : _iter(begin), _end(end) {}
     friend class RegionsConfig;
     Regions_t::iterator _iter;

@@ -1,11 +1,8 @@
-#include <stdio.h>
-
-#include <util/xml/init.h>
-#include <util/xml/utilFunctions.h>
-#include <util/xml/DOMTreeReader.h>
-
-#include <logger/Logger.h>
-
+#include <cstdio>
+#include "util/xml/init.h"
+#include "util/xml/utilFunctions.h"
+#include "util/xml/DOMTreeReader.h"
+#include "logger/Logger.h"
 #include "RegionsConfig.hpp"
 
 namespace smsc {
