@@ -483,9 +483,11 @@ billid_type BillingManagerImpl::Open( BillOpenCallParams& openCallParams,
             }
             pck->setWalletType(tariffRec.Currency);
             pck->setAmount(-tariffRec.getIntPrice());
+            /*
             if ( tariffRec.getIntPrice() == 0 ) {
                 smsc_log_warn(logger,"ewallet open: zero price in tariff record");
             }
+             */
             if (!billingInfoStruct.externalId.empty()) {
                 pck->setExternalId(billingInfoStruct.externalId);
             }

@@ -43,7 +43,7 @@ public:
     }
     virtual const char* typeToString() const { return "transfer"; }
     virtual bool isValid() const {
-        return ( agentId_ != 0 ) && !userId_.empty() && (amount_ != 0);
+        return ( agentId_ != 0 ) && !userId_.empty();
     }
 
     const std::string& getSourceId() const { return sourceId_; }

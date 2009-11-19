@@ -19,14 +19,10 @@ public:
         res.append(Response::toString());
         if ( getStatus() == Status::OK ) {
             char buf[100];
-            if ( amount_ != 0 ) {
-                snprintf(buf,sizeof(buf)," amount=%d", amount_);
-                res.append(buf);
-            }
-            if ( chargeThreshold_ != 0 ) {
-                snprintf(buf,sizeof(buf)," chargeThreshold=%d", chargeThreshold_);
-                res.append(buf);
-            }
+            snprintf(buf,sizeof(buf)," amount=%d", amount_);
+            res.append(buf);
+            snprintf(buf,sizeof(buf)," chargeThreshold=%d", chargeThreshold_);
+            res.append(buf);
         }
         return res;
     }
