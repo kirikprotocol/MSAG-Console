@@ -38,3 +38,5 @@
   @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
   $(__LIBRARIES) \
   -lpthread -lrt -ldl $(LIBMALLOC)
+
+scag/tests/testXTree  testXTree
