@@ -4,6 +4,7 @@
 #include <stdarg.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <unistd.h>
 #include <core/buffers/Hash.hpp>
 #include <core/synchronization/Mutex.hpp>
@@ -57,6 +58,10 @@ public:
   }
 
   static void Init();
+
+  /// May be used for tests.  Create one appender into stderr,
+  /// with default level of 'level'.
+  static void initForTest( LogLevel level );
 
   static void Reload();
 
@@ -216,15 +221,15 @@ private:
   static ConfigReader configReader;
 
   static Logger * getInstanceInternal(const char * const logCategoryName);
-  static void clear() throw(Exception);
+  static void clear() throw(smsc::util::Exception);
   
-  static void configure(const char * const configFileName) throw (Exception);
-  static void reconfigure(const char * const configFileName) throw (Exception);  
-  static void storeConfig(const char * const configFileName) throw (Exception);    
-  
-  static void configureAppenders(const ConfigReader & properties) throw (Exception);
-  static void configureCatAppenders(const ConfigReader & properties) throw (Exception);
-  static void configureRoot(const ConfigReader & config) throw (Exception);
+  static void configure(const char * const configFileName) throw (smsc::util::Exception);
+  static void reconfigure(const char * const configFileName) throw (smsc::util::Exception);
+  static void storeConfig(const char * const configFileName) throw (smsc::util::Exception);
+
+  static void configureAppenders(const ConfigReader & properties) throw (smsc::util::Exception);
+  static void configureCatAppenders(const ConfigReader & properties) throw (smsc::util::Exception);
+  static void configureRoot(const ConfigReader & config) throw (smsc::util::Exception);
 
   static LogLevel findDebugLevel(const char * const name);
   static Appender* findAppenderByCat(const char * const name);

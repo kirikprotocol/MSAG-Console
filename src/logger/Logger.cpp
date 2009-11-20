@@ -100,6 +100,7 @@ void Logger::Init(const char * const configFileName)
   }
 }
 
+
 void Logger::Init()
 {
   char * logFileName = getenv("SMSC_LOGGER_PROPERTIES");
@@ -108,6 +109,45 @@ void Logger::Init()
   else
     smsc::logger::Logger::Init("logger.properties");
 }
+
+
+void Logger::initForTest( LogLevel level )
+{
+  MutexGuard guard(static_mutex);
+  if(initialized) {
+    __loggerError("Init: logger already initialized");
+  }
+  try {
+    clear();
+    // configure(configFileName);
+      Properties props;
+      if ( unsigned(level) >= sizeof(logNames)/sizeof(const char*) ) {
+          throw Exception("unknown level %d",int(level));
+      }
+      char buf[30];
+      sprintf(buf,"%s, default",logNames[unsigned(level)]);
+      props.Insert("root",cStringCopy(buf));
+      props.Insert("appender.default.stderr.name", cStringCopy("stderr"));
+      reloadConfigInterval = 0;
+      lastConfigMTime = 0;
+      configReader.init(props);
+      configureAppenders(configReader);
+      configureCatAppenders(configReader);
+      configureRoot(configReader);
+
+      initialized = true;
+      _trace_cat=getInstanceInternal("trace");
+      _map_cat=getInstanceInternal("map");
+      _mapmsg_cat=getInstanceInternal("map.msg");
+      _mapdlg_cat=getInstanceInternal("map.dialog");
+      _mapproxy_cat=getInstanceInternal("map.proxy");
+      _sms_err_cat=getInstanceInternal("sms.error");
+
+  } catch (const Exception & e) {
+    __loggerError(e.what());
+  }
+}
+
 
 void Logger::Reload()
 {
