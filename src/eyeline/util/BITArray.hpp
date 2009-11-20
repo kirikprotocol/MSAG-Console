@@ -99,7 +99,7 @@ protected:
       _numBits += msb_used;
     } else { //split use_val 
       _numBits += restUnused;
-      appendBitsAligned(use_val <<= restUnused, msb_used - restUnused)
+      appendBitsAligned(use_val <<= restUnused, msb_used - restUnused);
     }
   }
 
@@ -277,7 +277,7 @@ public:
     bool rval = enlarge(bits_num);
     if (rval) {
       uint8_t bitsUnused = _numBits%8;
-      _SizeTypeArg i = 0
+      _SizeTypeArg i = 0;
       if (use_arr.size() > 8) {
         if (!bitsUnused) {
           for (; i < bits_num/8; ++i)
