@@ -1,6 +1,14 @@
 History in reverse order
 ----------------------------------------------------
 
+2009-11-20 12:55 bukind
+ feature: only activeTasks are considered in the main loop of TaskProcessor;
+2009-11-20 11:19 odarchenko 
+ feature: separate task configs
+
+----------------------------------------------------
+infosme-build-20091102 bukind
+
 2009-10-30 14:48 bukind
  feature (dirty patch): randomizing tasks before sending
 2009-10-30 12:47 bukind

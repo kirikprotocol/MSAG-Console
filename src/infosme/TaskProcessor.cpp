@@ -8,6 +8,7 @@
 #include <sstream>
 #include <vector>
 #include <util/timeslotcounter.hpp>
+#include "util/PtrDestroy.h"
 
 #ident "@(#)$Id$"
 
@@ -457,7 +458,8 @@ int TaskProcessor::Execute()
     {
         time_t currentTime = time(NULL);
         finalStateSaver_->checkRoll(currentTime);
-        
+
+        int allTaskCount, activeTaskCount;
         {
             MutexGuard guard(tasksLock);
             if ( currentTime - prevTime > 60 ) activateFlag = true;
@@ -486,7 +488,12 @@ int TaskProcessor::Execute()
                     }
                 }
             }
+            allTaskCount = int(tasks.Count());
+            activeTaskCount = int(activeTasks.Count());
         }
+
+        smsc_log_debug(log_,"new pass at %llu, all/active/selected=%u/%u/%u",
+                       allTaskCount, activeTaskCount, unsigned(taskGuards.size()));
 
         {
             // processing selected tasks
@@ -548,6 +555,9 @@ int TaskProcessor::Execute()
             awake.Wait(switchTimeout);
         }
     }
+
+    std::for_each(taskGuards.begin(),taskGuards.end(),smsc::util::PtrDestroy());
+
     exited.Signal();
     return 0;
 }
