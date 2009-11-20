@@ -493,6 +493,7 @@ int TaskProcessor::Execute()
         }
 
         smsc_log_debug(log_,"new pass at %llu, all/active/selected=%u/%u/%u",
+                       int64_t(currentTime),
                        allTaskCount, activeTaskCount, unsigned(taskGuards.size()));
 
         {
