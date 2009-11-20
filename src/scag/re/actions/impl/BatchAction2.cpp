@@ -3,7 +3,7 @@
 #include "scag/re/base/ActionFactory2.h"
 #include "scag/pvss/api/packets/BatchCommand.h"
 #include "scag/pvss/api/packets/BatchResponse.h"
-#include "scag/util/PtrDestroy.h"
+#include "util/PtrDestroy.h"
 
 namespace scag2 { 
 
@@ -19,7 +19,7 @@ const char* BATCH_MODE = "mode";
 
 BatchAction::~BatchAction()
 {
-    std::for_each( actions_.begin(), actions_.end(), PtrDestroy() );
+    std::for_each( actions_.begin(), actions_.end(), smsc::util::PtrDestroy() );
 }
 
 
@@ -100,10 +100,10 @@ pvss::ProfileCommand* BatchAction::makeCommand( ActionContext& ctx )
         try {
             comps.push_back((*i)->makeCommand( ctx ));
         } catch ( PvssException& e ) {
-            std::for_each( comps.begin(), comps.end(), PtrDestroy() );
+            std::for_each( comps.begin(), comps.end(), smsc::util::PtrDestroy() );
             handleException(ctx,e,i);
         } catch ( std::exception& e ) {
-            std::for_each( comps.begin(), comps.end(), PtrDestroy() );
+            std::for_each( comps.begin(), comps.end(), smsc::util::PtrDestroy() );
             PvssException pe(e.what(),PvssException::UNKNOWN);
             handleException(ctx,pe,i);
         }
@@ -132,7 +132,7 @@ void BatchAction::handleResponse( ActionContext& ctx, const pvss::CommandRespons
         if ( (*i)->getStatus() != PvssException::OK && status == PvssException::OK ) {
             status = (*i)->getStatus();
             char buf[30];
-            sprintf(buf," in action #%u",i-comps.begin());
+            sprintf(buf," in action #%u",unsigned(i-comps.begin()));
             msg = std::string(PvssException::statusMessage(status)) + buf;
         }
     }
@@ -151,7 +151,7 @@ void BatchAction::handleException( ActionContext& ctx, const PvssException& e,
 {
     (*i)->handleError(ctx,e);
     char buf[30];
-    sprintf(buf," in action #%u", i-actions_.begin());
+    sprintf(buf," in action #%u", unsigned(i-actions_.begin()));
     std::string pewhat;
     pewhat.reserve(strlen(e.what())+30);
     pewhat.append(e.what());

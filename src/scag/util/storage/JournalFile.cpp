@@ -3,8 +3,8 @@
 #include <algorithm>
 #include <sstream>
 #include "JournalFile.h"
-#include "scag/util/PtrLess.h"
-#include "scag/util/PtrDestroy.h"
+#include "util/PtrLess.h"
+#include "util/PtrDestroy.h"
 #include "scag/util/io/EndianConverter.h"
 
 namespace {
@@ -159,7 +159,7 @@ void JournalFile::open( bool readonly )
             }
 
             // check that all records have sequential serials
-            std::sort( records.begin(), records.end(), PtrLess() );
+            std::sort( records.begin(), records.end(), smsc::util::PtrLess() );
             RecordList::const_iterator i = records.begin();
             for ( RecordList::const_iterator j = i+1;
                   j != records.end(); ++j ) {
@@ -228,10 +228,10 @@ void JournalFile::open( bool readonly )
         }
 
     } catch ( ... ) {
-        std::for_each( records.begin(), records.end(), PtrDestroy() );
+        std::for_each( records.begin(), records.end(), smsc::util::PtrDestroy() );
         throw;
     }
-    std::for_each( records.begin(), records.end(), PtrDestroy() );
+    std::for_each( records.begin(), records.end(), smsc::util::PtrDestroy() );
 }
 
 

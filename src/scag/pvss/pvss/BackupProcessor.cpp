@@ -7,7 +7,7 @@
 #include "scag/pvss/api/packets/DelCommand.h"
 #include "scag/pvss/api/packets/ProfileRequest.h"
 #include "scag/pvss/api/core/server/Server.h"
-#include "scag/util/PtrDestroy.h"
+#include "util/PtrDestroy.h"
 #include "PvssDispatcher.h"
 #include <algorithm>
 
@@ -90,7 +90,7 @@ BackupProcessor::~BackupProcessor()
 {
     threadPool_.stopNotify();
     threadPool_.shutdown();
-    std::for_each( processedFiles_.begin(), processedFiles_.end(), PtrDestroy() );
+    std::for_each( processedFiles_.begin(), processedFiles_.end(), smsc::util::PtrDestroy() );
 }
 
 

@@ -30,7 +30,7 @@ bool BillActionTransfer::RunBeforePostpone( ActionContext& ctx )
         if (externalId_.isFound())
             bp->setExternalId( externalId_.getValue(ctx));
         if (amount_.isFound())
-            bp->setAmount(amount_.getValue(ctx));
+            bp->setAmount(int(amount_.getValue(ctx)));
         if (description_.isFound())
             bp->setDescription(description_.getValue(ctx));
     } catch ( std::exception& e ) {

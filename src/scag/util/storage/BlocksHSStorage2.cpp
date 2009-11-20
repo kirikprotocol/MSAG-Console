@@ -4,8 +4,7 @@
 #include "scag/util/WatchedThreadedTask.h"
 #include "DataFileManager.h"
 #include "scag/util/Time.h"
-#include "scag/util/PtrLess.h"
-#include "scag/util/PtrDestroy.h"
+#include "util/PtrDestroy.h"
 
 namespace {
 
@@ -903,7 +902,7 @@ bool BlocksHSStorage2::pushFreeBlocks( size_t freeStart,
 int BlocksHSStorage2::doOpen()
 {
     try {
-        std::for_each( files_.begin(), files_.end(), PtrDestroy() );
+        std::for_each( files_.begin(), files_.end(), smsc::util::PtrDestroy() );
         files_.clear();
         journalFile_.open( readonly_ );
         if ( files_.size() == 0 ) {
@@ -977,7 +976,7 @@ int BlocksHSStorage2::doCreate()
 
 int BlocksHSStorage2::doRecover( IndexRescuer* indexRescuer )
 {
-    std::for_each( files_.begin(), files_.end(), PtrDestroy() );
+    std::for_each( files_.begin(), files_.end(), smsc::util::PtrDestroy() );
     files_.clear();
 
     // first of all open all existing data files
@@ -1409,7 +1408,7 @@ JournalRecord* BlocksHSStorage2::createJournalRecord()
 void BlocksHSStorage2::prepareForApplication( const std::vector< JournalRecord* >& records )
 {
     // closing all files
-    std::for_each( files_.begin(), files_.end(), PtrDestroy() );
+    std::for_each( files_.begin(), files_.end(), smsc::util::PtrDestroy() );
     files_.clear();
 
     // taking the newest state, opening all necessary files
@@ -1469,7 +1468,7 @@ void BlocksHSStorage2::applyJournalState( const JournalRecord& rec, bool takeNew
     const Transaction& t = static_cast<const Transaction&>(rec);
     const StorageState& state( takeNew ? t.newState : t.oldState );
     if ( state.fileCount < files_.size() ) {
-        std::for_each(files_.begin()+state.fileCount, files_.end(), PtrDestroy() );
+        std::for_each(files_.begin()+state.fileCount, files_.end(), smsc::util::PtrDestroy() );
         files_.erase(files_.begin()+state.fileCount, files_.end());
     }
     freeChain_.clear();

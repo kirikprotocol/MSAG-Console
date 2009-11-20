@@ -1,5 +1,5 @@
 #include "ActionPairsBase.h"
-#include "scag/util/PtrDestroy.h"
+#include "util/PtrDestroy.h"
 #include "scag/re/base/ActionFactory2.h"
 #include "scag/re/base/CommandAdapter2.h"
 
@@ -8,7 +8,7 @@ namespace re {
 namespace actions {
 
 ActionPairsBase::~ActionPairsBase() {
-    std::for_each( pairActions_.begin(), pairActions_.end(), PtrDestroy() );
+    std::for_each( pairActions_.begin(), pairActions_.end(), smsc::util::PtrDestroy() );
 }
 
 void ActionPairsBase::init(const SectionParams &params, PropertyObject propertyObject) {
