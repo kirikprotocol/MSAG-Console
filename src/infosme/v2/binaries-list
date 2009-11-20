@@ -20,3 +20,11 @@ infosme/infosme2   	  InfoSme \
  -lutil \
  $(__LIBRARIES) \
  -lpthread -lrt -ldl
+
+infosme/splitTaskSection splitTaskSection \
+ -lutil-config \
+ -lutil-xml $(XERCES_LIB) \
+ @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
+ -lutil \
+ $(__LIBRARIES) \
+ -lpthread -lrt -ldl
