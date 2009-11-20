@@ -34,6 +34,7 @@ Drand48adapter drand48adapter;
 namespace smsc {
 namespace infosme {
 
+using namespace smsc::util::config;
 RetryPolicies TaskProcessor::retryPlcs;
 
 /* ---------------------------- TaskProcessor ---------------------------- */
@@ -99,11 +100,6 @@ unrespondedMessagesMax(1)
     
     std::auto_ptr<ConfigView> dsIntCfgGuard(config->getSubConfig("systemDataSource"));
 
-    smsc_log_info(log_, "Loading tasks ...");
-    std::auto_ptr<ConfigView> tasksCfgGuard(config->getSubConfig("Tasks"));
-    ConfigView* tasksCfg = tasksCfgGuard.get();
-    std::auto_ptr< std::set<std::string> > setGuard(tasksCfg->getShortSectionNames());
-    std::set<std::string>* set = setGuard.get();
 
     storeLocation=config->getString("storeLocation");
     if(storeLocation.length())
@@ -116,6 +112,12 @@ unrespondedMessagesMax(1)
 
     finalStateSaver_.reset( new FinalStateSaver(storeLocation) );
 
+    smsc_log_info(log_, "Loading tasks ...");
+/*
+    std::auto_ptr<ConfigView> tasksCfgGuard(config->getSubConfig("Tasks"));
+    ConfigView* tasksCfg = tasksCfgGuard.get();
+    std::auto_ptr< std::set<std::string> > setGuard(tasksCfg->getShortSectionNames());
+    std::set<std::string>* set = setGuard.get();
     for (std::set<std::string>::iterator i=set->begin();i!=set->end();i++)
     {
         try
@@ -164,6 +166,48 @@ unrespondedMessagesMax(1)
             throw;
         }
     }
+*/
+
+    std::auto_ptr< ConfigView > taskConfig;
+    std::auto_ptr< std::set< std::string> > taskNames;
+    try {
+        taskConfig.reset(config->getSubConfig("Tasks"));
+        taskNames.reset( taskConfig->getShortSectionNames() );
+    } catch ( ConfigException& ) {
+        smsc_log_warn(log_,"problem reading section 'Tasks'");
+    }
+    if ( !taskNames.get() ) { taskNames.reset(new std::set<std::string>()); }
+
+    // adding tasks that are in storelocation
+    std::vector< std::string > entries;
+    entries.reserve(200);
+    smsc::core::buffers::File::ReadDir( storeLocation.c_str(),
+                                        entries );
+    for ( std::vector< std::string >::const_iterator i = entries.begin();
+          i != entries.end();
+          ++i ) {
+        if ( atoi(i->c_str()) != 0 ) {
+            if ( taskNames->insert(*i).second ) {
+                smsc_log_debug(log_,"adding task name '%s' to the list",i->c_str());
+            }
+        }
+    }
+    // finally read all tasks
+    for ( std::set< std::string >::const_iterator i = taskNames->begin();
+          i != taskNames->end(); ++i ) {
+
+        try {
+            unsigned id = Task::stringToTaskId(i->c_str());
+            Task* task = initTask( id, taskConfig.get() ); //TODO implement init task
+            if (task && !putTask(task)) {
+                task->finalize();
+                throw ConfigException("Failed to add task. Task with id '%s' already registered.", id);
+            }
+        } catch ( ConfigException& e ) {
+            smsc_log_warn(log_,"cannot load task %s: %s",i->c_str(),e.what());
+        }
+    }
+
     smsc_log_info(log_, "Tasks loaded.");
 
     smsc_log_info(log_, "Loading task schedules ...");
@@ -204,6 +248,100 @@ TaskProcessor::~TaskProcessor()
 
   if (statistics) delete statistics;
 
+}
+
+Task* TaskProcessor::initTask( uint32_t id, ConfigView* taskConfig )
+{
+    smsc_log_info(log_,"loading task %u...", id );
+    char taskId[30];
+    sprintf(taskId,"%u",id);
+
+    MutexGuard mg(tasksLock);
+
+    std::auto_ptr< Config > separateConfig;
+    std::auto_ptr< ConfigView > separateView;
+    const std::string location = storeLocation + taskId;
+    if ( smsc::core::buffers::File::Exists(location.c_str()) ) {
+        const std::string fname = location + "/config.xml";
+        if ( smsc::core::buffers::File::Exists(fname.c_str()) ) {
+            separateConfig.reset(Config::createFromFile(fname.c_str()));
+            separateView.reset(new ConfigView(*separateConfig.get()));
+            smsc_log_debug(log_,"task %u is using a separate config '%s'",id,fname.c_str());
+            taskConfig = separateView.get();
+        }
+    }
+    if ( ! separateView.get() ) {
+        // not loaded, using default config
+        if ( !taskConfig ) {
+            // not passed in, reading from Manager
+            try {
+                Manager::reinit();
+                Manager& mgr(Manager::getInstance());
+                separateView.reset( new ConfigView(mgr,"InfoSme") );
+                separateView.reset( separateView->getSubConfig("Tasks") );
+                taskConfig = separateView.get();
+            } catch (...) {
+                throw ConfigException("tasks config is not passed in, and cannot be retrieved");
+            }
+        }
+        separateView.reset( taskConfig->getSubConfig(taskId) );
+        smsc_log_debug(log_,"task %u is using an embedded config",id);
+        taskConfig = separateView.get();
+    }
+
+    //TaskInfo info(id);
+    //info.init(taskConfig);
+
+    //TaskGuard* ptr( tasks.GetPtr(id) );
+    //if ( ptr && ptr->get() ) {
+
+      //  (*ptr)->setInfo(info);
+
+    if (tasks.Exist(id)) {
+        Task* task = tasks.Get(id);
+        if (task && !task->isFinalizing()) {
+            TaskGuard tg(task);
+            tg.get()->update(taskConfig);
+            return tg.get();
+        } else {
+            TaskGuard tg(0);
+            return tg.get();
+        }
+    } else {
+
+        bool delivery = false;
+        try { delivery = taskConfig->getBool("delivery"); 
+        } catch (ConfigException& ce) { delivery = false; }
+
+        smsc::db::DataSource* taskDs = 0;
+
+        if ( !delivery ) {
+            const char* dsId = taskConfig->getString("dsId");
+            if (!dsId || dsId[0] == '\0')
+                throw ConfigException("DataSource id for task %u is empty or wasn't specified",
+                                      id);
+            //if ( !provider ) {
+              //  throw ConfigException("DataSourceProvider is not provided");
+            //}
+            //taskDs = provider->getDataSource(dsId);
+            taskDs = provider.getDataSource(dsId);
+            if (!taskDs)
+                throw ConfigException("Failed to obtail DataSource driver '%s' for task %u",
+                                      dsId, id);
+        }
+        Task *task = new Task(taskConfig, id, location, taskDs, finalStateSaver_.get() );
+        if (!task) throw Exception("New task create failed");
+        return task;
+    }
+}
+
+TaskGuard TaskProcessor::getTask(uint32_t taskId)
+{
+    MutexGuard guard(tasksLock);
+
+    if (!tasks.Exist(taskId)) return TaskGuard(0);
+    Task* task = tasks.Get(taskId);
+    return TaskGuard((task && !task->isFinalizing()) ? task:0);
 }
 
 bool TaskProcessor::putTask(Task* task)
@@ -257,14 +395,6 @@ bool TaskProcessor::hasTask(uint32_t taskId)
     MutexGuard guard(tasksLock);
 
     return tasks.Exist(taskId);
-}
-TaskGuard TaskProcessor::getTask(uint32_t taskId)
-{
-    MutexGuard guard(tasksLock);
-
-    if (!tasks.Exist(taskId)) return TaskGuard(0);
-    Task* task = tasks.Get(taskId);
-    return TaskGuard((task && !task->isFinalizing()) ? task:0);
 }
 
 void TaskProcessor::resetWaitingTasks()
@@ -530,6 +660,35 @@ void TaskProcessor::reloadSmscAndRegions()
     messageSender->reloadSmscAndRegions( config );
 }
 
+void TaskProcessor::changeTask(uint32_t taskId)
+{
+    try
+    {
+        /*
+        Manager::reinit();
+        Manager& config = Manager::getInstance();
+        char taskSection[1024];
+        sprintf(taskSection, "InfoSme.Tasks.%d", taskId);
+        ConfigView taskConfig(config, taskSection);
+        */
+
+        //TaskGuard tg(getTask(taskId));
+        //Task* task = tg.get();
+        //task->update(&taskConfig);
+        initTask(taskId, 0);
+
+    } catch (std::exception& exc)
+    {
+        //if (task && !delivery) task->destroy();
+        smsc_log_error(log_, "Failed to change task '%d'. Details: %s", taskId, exc.what());
+        throw;
+    } catch (...) 
+    {
+        //if (task && !delivery) task->destroy();
+        smsc_log_error(log_, "Failed to change task '%d'. Cause is unknown", taskId);
+        throw Exception("Cause is unknown");
+    }
+}
 
 void TaskProcessor::addTask(uint32_t taskId)
 {
@@ -537,6 +696,8 @@ void TaskProcessor::addTask(uint32_t taskId)
     Task* task = 0; bool delivery = false;
     try
     {
+        /*
+
         Manager::reinit();
         Manager& config = Manager::getInstance();
         char taskSection[1024];
@@ -570,14 +731,22 @@ void TaskProcessor::addTask(uint32_t taskId)
           smsc_log_info(log_,"creating new dir:'%s' for taskId=%u",location.c_str(),taskId);
           buf::File::MkDir(location.c_str());
         }
+        */
 
-        task = new Task(&taskConfig, taskId, location, taskDs, finalStateSaver_.get() );
-        if (!task) 
-            throw Exception("New task create failed");
-        if (!addTask(task))
-            throw ConfigException("Failed to add task. Task with id '%u' already registered.",
-                                  taskId);
-       
+        //task = new Task(&taskConfig, taskId, location, taskDs, finalStateSaver_.get() );
+        //if (!task) 
+          //  throw Exception("New task create failed");
+        //if (!addTask(task))
+            //throw ConfigException("Failed to add task. Task with id '%u' already registered.",
+              //                    taskId);
+       ConfigView* taskConfig = 0;
+       task = initTask(taskId, taskConfig);
+       if (taskConfig) {
+           try { delivery = taskConfig->getBool("delivery"); 
+           } catch (ConfigException& ce) { delivery = false; }
+       }
+       if (task && !addTask(task)) throw ConfigException("Failed to add task. Task with id '%u' already registered.", taskId);
+
     } catch (std::exception& exc) {
         if (task && !delivery) task->destroy();
         smsc_log_error(log_, "Failed to add task '%d'. Details: %s", taskId, exc.what());
@@ -588,6 +757,7 @@ void TaskProcessor::addTask(uint32_t taskId)
         throw Exception("Cause is unknown");
     }
 }
+
 void TaskProcessor::removeTask(uint32_t taskId)
 {
     try
@@ -601,31 +771,6 @@ void TaskProcessor::removeTask(uint32_t taskId)
         throw;
     } catch (...) {
         smsc_log_error(log_, "Failed to remove task '%d'. Cause is unknown", taskId);
-        throw Exception("Cause is unknown");
-    }
-}
-void TaskProcessor::changeTask(uint32_t taskId)
-{
-    try
-    {
-        Manager::reinit();
-        Manager& config = Manager::getInstance();
-        char taskSection[1024];
-        sprintf(taskSection, "InfoSme.Tasks.%d", taskId);
-        ConfigView taskConfig(config, taskSection);
-        TaskGuard tg(getTask(taskId));
-        Task* task = tg.get();
-        task->update(&taskConfig);
-
-    } catch (std::exception& exc)
-    {
-        //if (task && !delivery) task->destroy();
-        smsc_log_error(log_, "Failed to change task '%d'. Details: %s", taskId, exc.what());
-        throw;
-    } catch (...) 
-    {
-        //if (task && !delivery) task->destroy();
-        smsc_log_error(log_, "Failed to change task '%d'. Cause is unknown", taskId);
         throw Exception("Cause is unknown");
     }
 }

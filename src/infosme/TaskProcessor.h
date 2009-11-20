@@ -238,6 +238,8 @@ public:
         return (messageSender != 0);
     };
 
+    Task* initTask( uint32_t id, ConfigView* taskConfig );
+
     virtual bool putTask(Task* task);
     virtual bool addTask(Task* task);
     virtual bool remTask(uint32_t taskId);

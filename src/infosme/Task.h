@@ -57,6 +57,8 @@ class Task
 
 public:
 
+    static uint32_t stringToTaskId( const char* taskId );
+
     Task(ConfigView* config,
          uint32_t taskId,
          std::string location,

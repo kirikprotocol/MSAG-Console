@@ -149,6 +149,19 @@ size_t Task::MessageRegionCache::fill( time_t now, CsvStore& store, size_t cache
     return fetched;
 }
 
+unsigned Task::stringToTaskId( const char* taskId )
+{
+    if ( !taskId || !*taskId ) throw ConfigException("taskId is null");
+    char* endptr;
+    unsigned ret = unsigned(strtoul(taskId,&endptr,10));
+    if ( *endptr != '\0') {
+        throw ConfigException("taskId '%s' is not fully converted",taskId);
+    } else if ( ret == 0 ) {
+        throw ConfigException("taskId 0 is forbidden");
+    }
+    return ret;
+}
+
 
 Task::Task( ConfigView* config,
             uint32_t taskId,
@@ -164,7 +177,16 @@ Task::Task( ConfigView* config,
 messageCache_(new MessageRegionCache),
 currentPriorityFrameCounter(0)
 {
+  smsc_log_debug(logger,"task %u ctor", taskId);
+
+  if ( ! smsc::core::buffers::File::Exists(location.c_str()) ) {
+      smsc_log_debug(logger,"making a directory %s",location.c_str());
+      smsc::core::buffers::File::MkDir(location.c_str());
+  }
+
   init(config, taskId);
+
+
   formatter = new OutputFormatter(info.msgTemplate.c_str());
   trackIntegrity(true, true); // delete flag & generated messages
 }
@@ -174,6 +196,7 @@ Task::~Task()
     if (formatter) delete formatter;
     if (messageCache_) delete messageCache_;
 
+    smsc_log_debug(logger,"task %u/'%s' dtor",info.uid,info.name.c_str());
 /*  
     if (dsOwn)
     {
