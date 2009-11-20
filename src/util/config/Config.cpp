@@ -3,12 +3,101 @@
 #include <xercesc/dom/DOM.hpp>
 #include <memory>
 #include <iostream>
+#include <fstream>
 
 #include "util/xml/init.h"
 #include "util/xml/DOMTreeReader.h"
 #include <util/xml/utilFunctions.h>
 
 #include "core/buffers/TmpBuf.hpp"
+#include "core/buffers/File.hpp"
+
+namespace {
+
+class FileStreamBuf : public std::basic_streambuf<char>
+{
+public:
+  void Open(const char* fileName)
+  {
+    f.RWCreate(fileName);
+  }
+  int sync()
+  {
+    try{
+      f.Flush();
+    }catch(...)
+    {
+      return -1;
+    }
+    return 0;
+  }
+  std::streamsize xsputn(const char_type* s,std::streamsize n)
+  {
+    try{
+      f.Write(s,n);
+    }catch(...)
+    {
+      return -1;
+    }
+    return n;
+  }
+protected:
+  smsc::core::buffers::File f;
+};
+
+
+struct StrHashAdapter
+{
+public:
+    typedef Hash< char* > HT;
+    typedef HT::value_type value_type;
+    typedef HT::Iterator Iterator;
+
+    inline StrHashAdapter( HT& h ) : params(h) {}
+    inline int Insert( const char* const paramName, const char* value ) {
+        char** ptr = params.GetPtr(paramName);
+        char* val = smsc::util::cStringCopy(value);
+        if ( ptr ) {
+            delete[] *ptr;
+            *ptr = val;
+            return 1;
+        } else {
+            return params.Insert(paramName,val);
+        }
+    }
+    inline void Delete( const char* const paramName ) {
+        char** ptr = params.GetPtr(paramName);
+        if (ptr) delete [] *ptr;
+        params.Delete(paramName);
+    }
+
+    Iterator getIterator() { return params.getIterator(); }
+
+private:
+    HT& params;
+};
+
+
+template < class HashType > void removeSectionFromHash
+    ( HashType& hash,
+      const char * const sectionName,
+      bool remove = true,
+      HashType* out = 0)
+{
+    const size_t sectionNameLen = strlen(sectionName);
+    char *name;
+    typename HashType::value_type value;
+    for ( typename HashType::Iterator i = hash.getIterator(); i.Next(name,value); ) {
+        if (strlen(name) >= sectionNameLen
+            && name[sectionNameLen] == '.'
+            && memcmp(name, sectionName, sectionNameLen) == 0) {
+            if ( out ) { out->Insert( name+sectionNameLen+1, value ); }
+            if ( remove ) hash.Delete( name );
+        }
+    }
+}
+
+} // namespace
 
 namespace smsc {
 namespace util {
@@ -18,6 +107,7 @@ using namespace xercesc;
 using namespace std;
 using namespace smsc::util::xml;
 using smsc::core::buffers::TmpBuf;
+
 
 
 Config* Config::createFromFile( const char* xmlfile )
@@ -323,37 +413,49 @@ Config::ConfigTree* Config::ConfigTree::createSection(const char * const _name)
   return t->sections[n];
 }
 
-template<class _HashType, class _HashIteratorType, class _ValueType>
-void removeSectionFromHash(_HashType &hash,
-                           const char * const sectionName,
-                           size_t sectionNameLen)
+void Config::saveToFile( const char* filename ) const
 {
-  char *name;
-  _ValueType value;
-  for (_HashIteratorType i = hash.getIterator(); i.Next(name, value); )
-  {
-    if (strlen(name) >= sectionNameLen
-        && name[sectionNameLen] == '.'
-        && memcmp(name, sectionName, sectionNameLen) == 0)
-    {
-      hash.Delete(name);
+    /*
+    FileStreamBuf buf;
+    buf.Open(filename);
+    std::ostream out(&buf);
+    // ((std::basic_ios<char>&)out).rdbuf(&buf);
+    writeHeader(out);
+    save(out);
+    writeFooter(out);
+    out.flush();
+     */
+    std::ofstream out;
+    out.open(filename, std::ios_base::out | std::ios_base::trunc );
+    if ( !out ) {
+        throw smsc::core::buffers::FileException(FileException::errOpenFailed,filename);
     }
-  }
+    writeHeader(out);
+    save(out);
+    writeFooter(out);
+    out.close();
 }
+
 
 void Config::removeSection(const char * const sectionName)
 {
-  const size_t sectionNameLen = strlen(sectionName);
-
-  removeSectionFromHash<intParamsType, intParamsType::Iterator, int32_t>
-    (intParams, sectionName, sectionNameLen);
-
-  removeSectionFromHash<boolParamsType, boolParamsType::Iterator, bool>
-    (boolParams, sectionName, sectionNameLen);
-
-  removeSectionFromHash<strParamsType, strParamsType::Iterator, char *>
-    (strParams, sectionName, sectionNameLen);
+    removeSectionFromHash( intParams, sectionName );
+    removeSectionFromHash( boolParams, sectionName );
+    StrHashAdapter strHash(strParams);
+    removeSectionFromHash( strHash, sectionName );
 }
+
+Config* Config::getSubConfig( const char* const sectionName, bool remove )
+{
+    std::auto_ptr< Config > ret( new Config() );
+    removeSectionFromHash( intParams, sectionName, remove, &ret->intParams );
+    removeSectionFromHash( boolParams, sectionName, remove, &ret->boolParams );
+    StrHashAdapter from(strParams);
+    StrHashAdapter into(ret->strParams);
+    removeSectionFromHash( from, sectionName, remove, &into );
+    return ret.release();
+}
+
 
 void collect_section_names_into_set(CStrSet &result,
                   const char * const sectionName,
@@ -567,6 +669,19 @@ CStrSet * Config::getChildStrParamNames(const char * const sectionName) const
     (strParams, sectionName, sectionNameLen, *result);
 
   return result.release();
+}
+
+
+void Config::writeHeader(std::ostream &out) const
+{
+  out << "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>" << std::endl;
+  out << "<!DOCTYPE config SYSTEM \"configuration.dtd\">" << std::endl;
+  out << "<config>" << std::endl;
+}
+
+void Config::writeFooter(std::ostream &out) const
+{
+  out << "</config>" << std::endl;
 }
 
 }

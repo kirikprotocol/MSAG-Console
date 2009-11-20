@@ -29,7 +29,7 @@ typedef std::set<std::string> CStrSet;
 
 class Config {
 public:
-    friend class Manager;
+    // friend class Manager;
 
     static Config* createFromFile( const char* xmlfile ); // throw configexception
 
@@ -126,12 +126,8 @@ public:
         boolParams[paramName] = value;
     }
 
-    void save(std::ostream &out) const
-    {
-        std::auto_ptr<ConfigTree> tree(createTree());
-        tree->write(out, "  ");
-        out.flush();
-    }
+    /// saving the whole config to file
+    void saveToFile( const char* filename ) const;
 
     char * getTextRepresentation() const
     {
@@ -140,6 +136,9 @@ public:
     }
 
     void removeSection(const char * const sectionName);
+
+    /// create a copy of the section (w/ initial part removed, i.e. sectionName)
+    Config* getSubConfig(const char* const sectionName, bool removeFromOriginal );
 
     //checks does the section with given absolute name exist having parameters defined
     bool    findSection(const char * const sectionName) const;
@@ -231,6 +230,16 @@ public:
     void parse(const DOMElement &element) throw (ConfigException);
     void processNode(const DOMElement &element, const char * const prefix) throw (DOMException);
     void processParamNode(const DOMElement &element, const char * const name, const char * const type) throw (DOMException);
+
+private:
+    void writeHeader( std::ostream& out ) const;
+    void save(std::ostream &out) const
+    {
+        std::auto_ptr<ConfigTree> tree(createTree());
+        tree->write(out, "  ");
+        out.flush();
+    }
+    void writeFooter( std::ostream& out ) const;
 };
 
 }

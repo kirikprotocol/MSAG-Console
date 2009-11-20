@@ -133,40 +133,10 @@ std::ostream & operator << (std::ostream & out, const XMLCh * const string)
  */
 
 
-class FileStreamBuf:public std::basic_streambuf<char>
-{
-public:
-  void Open(const char* fileName)
-  {
-    f.RWCreate(fileName);
-  }
-  int sync()
-  {
-    try{
-      f.Flush();
-    }catch(...)
-    {
-      return -1;
-    }
-    return 0;
-  }
-  std::streamsize xsputn(const char_type* s,std::streamsize n)
-  {
-    try{
-      f.Write(s,n);
-    }catch(...)
-    {
-      return -1;
-    }
-    return n;
-  }
-protected:
-  smsc::core::buffers::File f;
-};
-
-
 void Manager::save()
 {
+    config.saveToFile( config_filename.get() );
+    /*
   FileStreamBuf buf;
   buf.Open(config_filename.get());
   std::ofstream out;
@@ -175,8 +145,10 @@ void Manager::save()
   config.save(out);
   writeFooter(out);
   buf.sync();
+     */
 }
 
+/*
 void Manager::writeHeader(std::ostream &out)
 {
   out << "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>" << std::endl;
@@ -188,6 +160,7 @@ void Manager::writeFooter(std::ostream &out)
 {
   out << "</config>" << std::endl;
 }
+ */
 
 void Manager::findConfigFile()
 {

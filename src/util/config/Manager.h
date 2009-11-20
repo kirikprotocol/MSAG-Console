@@ -213,8 +213,8 @@ protected:
 
 private:
   static std::auto_ptr<char> config_filename;
-  void writeHeader(std::ostream &out);
-  void writeFooter(std::ostream &out);
+  // void writeHeader(std::ostream &out);
+  // void writeFooter(std::ostream &out);
 
   DOMDocument * parse(const char * const filename) throw (ConfigException);
 };
