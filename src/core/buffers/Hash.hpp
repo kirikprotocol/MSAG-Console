@@ -313,6 +313,8 @@ private:
   }
 
 public:
+    typedef T value_type;
+
   Hash<T>(int initbucketsnum=0)
   {
     if(initbucketsnum>=0)_bucketsnum=initbucketsnum;

@@ -55,7 +55,7 @@ protected:
     static uint32_t fldcrc(uint32_t crc,uint32_t fld)
     {
       uint32_t no=htonl(fld);
-      return crc32(crc,&no,4);
+      return smsc::util::crc32(crc,&no,4);
     }
 
     static uint32_t fldcrc(uint32_t crc,uint64_t fld)
@@ -63,9 +63,9 @@ protected:
       uint32_t low=(fld&0xFFFFFFFFLL);
       uint32_t high=(fld>>32)&0xFFFFFFFFLL;
       uint32_t no=htonl(high);
-      crc=crc32(crc,&no,4);
+      crc=smsc::util::crc32(crc,&no,4);
       no=htonl(low);
-      return crc32(crc,&no,4);
+      return smsc::util::crc32(crc,&no,4);
     }
 
     uint32_t CalcCrc()
@@ -285,7 +285,7 @@ public:
 
   void Flush(int maxSpeed=0)
   {
-    if(isCached)f.MemoryFlush(maxSpeed);
+    if(isCached)f.MemoryFlush();
   }
 
   File::offset_type Size()
@@ -293,9 +293,10 @@ public:
     return f.Size();
   }
 
+  class ChunkHandle;
 
 #ifndef _WIN32
-  friend class smsc::core::buffers::ChunkFile::ChunkHandle;
+  friend class smsc::core::buffers::ChunkFile< R >::ChunkHandle;
 #endif
 
   class ChunkHandle{
