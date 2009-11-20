@@ -1,6 +1,9 @@
 History in reverse order
 ----------------------------------------------------
 
+----------------------------------------------------
+infosme-build-20091120 15:35 bukind
+
 2009-11-20 12:55 bukind
  feature: only activeTasks are considered in the main loop of TaskProcessor;
 2009-11-20 11:19 odarchenko 
