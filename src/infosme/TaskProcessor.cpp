@@ -459,10 +459,12 @@ int TaskProcessor::Execute()
         time_t currentTime = time(NULL);
         finalStateSaver_->checkRoll(currentTime);
 
+        bool waked;
         int allTaskCount, activeTaskCount;
         {
             MutexGuard guard(tasksLock);
             if ( currentTime - prevTime > 60 ) activateFlag = true;
+            waked = activateFlag;
             int key = 0;
             Task* task = 0;
             if ( activateFlag ) {
@@ -492,8 +494,8 @@ int TaskProcessor::Execute()
             activeTaskCount = int(activeTasks.Count());
         }
 
-        smsc_log_debug(log_,"new pass at %llu, all/active/selected=%u/%u/%u",
-                       int64_t(currentTime),
+        smsc_log_debug(log_,"new pass at %llu, waked=%u all/active/selected=%u/%u/%u",
+                       int64_t(currentTime), waked,
                        allTaskCount, activeTaskCount, unsigned(taskGuards.size()));
 
         {
