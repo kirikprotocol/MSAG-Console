@@ -174,7 +174,7 @@ TimeSlotCounter<int> TrafficControl::incoming(1, 1);
 TimeSlotCounter<int> TrafficControl::outgoing(1, 1);
 bool                 TrafficControl::stopped = false;
 
-extern "C" static void appSignalHandler(int sig)
+extern "C" void appSignalHandler(int sig)
 {
   if (sig==smsc::system::SHUTDOWN_SIGNAL || sig==SIGINT) {
     if ( signaling_WriteFd > -1 ) close (signaling_WriteFd);
@@ -182,7 +182,7 @@ extern "C" static void appSignalHandler(int sig)
   }
 }
 
-extern "C" static void atExitHandler(void)
+extern "C" void atExitHandler(void)
 {
     // delete regionsConfig;
     smsc::util::xml::TerminateXerces();

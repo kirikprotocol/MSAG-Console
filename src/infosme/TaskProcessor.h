@@ -160,8 +160,10 @@ private:
     static RetryPolicies retryPlcs;
     DataProvider  provider;     // to obtain registered data source by key
 
-    IntHash<Task *>  tasks;
-    Mutex         tasksLock;
+    IntHash<Task*>   tasks;
+    /// NOTE: any modification to tasks should be accompanied with activateFlag=true!
+    bool             activateFlag;
+    Mutex            tasksLock;
 
     Event       awake, exited;
     bool        bStarted, bNeedExit;

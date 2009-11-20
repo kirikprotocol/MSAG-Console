@@ -142,7 +142,8 @@ void InfoSmeMessageSender::reloadSmscAndRegions( Manager& manager )
     for ( smsc::util::config::CStrSet::iterator i = connNames.get()->begin();
           i != connNames.get()->end(); ++i ) {
         const std::string sectName( csn + "." + *i );
-        smsc::sme::SmeConfig cfg = SmscConnector::readSmeConfig(ConfigView(manager,sectName.c_str()));
+        ConfigView cview(manager,sectName.c_str());
+        smsc::sme::SmeConfig cfg = SmscConnector::readSmeConfig(cview);
         SmscConnector* conn = addConnector(cfg,*i);
         if ( *i == defId ) {
             defaultConnector_ = conn;

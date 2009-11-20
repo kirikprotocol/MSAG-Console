@@ -302,6 +302,7 @@ Task* TaskProcessor::initTask( uint32_t id, ConfigView* taskConfig )
         if (task && !task->isFinalizing()) {
             TaskGuard tg(task);
             tg.get()->update(taskConfig);
+            activateFlag = true;
             return tg.get();
         } else {
             TaskGuard tg(0);
@@ -351,6 +352,7 @@ bool TaskProcessor::putTask(Task* task)
 
     if (tasks.Exist(task->getId())) return false;
     tasks.Insert(task->getId(), task);
+    activateFlag = true;
     awake.Signal();
     return true;
 }
@@ -368,6 +370,7 @@ bool TaskProcessor::remTask(uint32_t taskId)
   {
     MutexGuard guard(tasksLock);
     if (!tasks.Exist(taskId)) return false;
+    activateFlag = true;
     task = tasks.Get(taskId);
     tasks.Delete(taskId);
     if (!task) return false;
@@ -382,6 +385,7 @@ bool TaskProcessor::delTask(uint32_t taskId)
     {
         MutexGuard guard(tasksLock);
         if (!tasks.Exist(taskId)) return false;
+        activateFlag = true;
         task = tasks.Get(taskId);
         tasks.Delete(taskId);
         if (!task) return false;
@@ -406,6 +410,7 @@ void TaskProcessor::resetWaitingTasks()
     IntHash<Task*>::Iterator it=tasks.First();
     while (it.Next(key, task))
         if (task) task->resetWaiting();
+    activateFlag = true;
 }
 void TaskProcessor::Start()
 {
@@ -445,6 +450,8 @@ int TaskProcessor::Execute()
 {
     std::vector< TaskGuard* > taskGuards;
     taskGuards.reserve(100);
+    time_t prevTime = time(NULL);
+    IntHash< Task* > activeTasks;
 
     while (!bNeedExit)
     {
@@ -453,38 +460,70 @@ int TaskProcessor::Execute()
         
         {
             MutexGuard guard(tasksLock);
+            if ( currentTime - prevTime > 60 ) activateFlag = true;
             int key = 0;
             Task* task = 0;
-            IntHash<Task*>::Iterator it=tasks.First();
-            while (!bNeedExit && it.Next(key, task))
-                if (task && task->isReady(currentTime, true)) {
-                    taskGuards.push_back(new TaskGuard(task));
-                    task->currentPriorityFrameCounter = 0;
-                    task->resetSuspendedRegions();
+            if ( activateFlag ) {
+                activateFlag = 0;
+                prevTime = currentTime;
+                // adding tasks from tasks to activeTasks
+                activeTasks.Empty();
+                IntHash<Task*>::Iterator it = tasks.First();
+                while ( !bNeedExit && it.Next(key,task) ) {
+                    if (task && task->isReady(currentTime,true) ) {
+                        activeTasks.Insert(key,task);
+                        taskGuards.push_back(new TaskGuard(task));
+                    }
                 }
-            // NOTE: we randomize under tasksLock
+            } else {
+                // working only with activeTasks
+                IntHash<Task*>::Iterator it = activeTasks.First();
+                while ( !bNeedExit && it.Next(key,task) ) {
+                    if (task && task->isReady(currentTime,true) ) {
+                        taskGuards.push_back(new TaskGuard(task));
+                    } else {
+                        activeTasks.Delete(key);
+                    }
+                }
+            }
+        }
+
+        {
+            // processing selected tasks
+            for ( std::vector<TaskGuard*>::const_iterator i = taskGuards.begin();
+                  i != taskGuards.end(); ++i ) {
+                Task* task = (*i)->get();
+                task->currentPriorityFrameCounter = 0;
+                task->resetSuspendedRegions();
+            }
             std::random_shuffle( taskGuards.begin(), taskGuards.end(),
                                  ::drand48adapter );
         }
 
         int processed = 0;
+        std::vector< uint32_t > becomeInactive;
+        becomeInactive.reserve(taskGuards.size());
         while (!taskGuards.empty())
         {
-            TaskGuard* taskGuard = taskGuards.back();
+            std::auto_ptr<TaskGuard> taskGuard(taskGuards.back());
             taskGuards.pop_back();
-            if (!taskGuard) continue;
+            if (!taskGuard.get()) continue;
 
             do {
                 if (bNeedExit) break;
                 Task* task = taskGuard->get();
                 if (!task) break;
-                if (task->isFinalizing() || !task->isEnabled()) break;
+                if (task->isFinalizing() || !task->isEnabled()) {
+                    becomeInactive.push_back(task->getId());
+                    break;
+                }
                 try {
                     const unsigned taskProcessed = processTask(task);
                     if ( ! taskProcessed ) {
                         // no one message in task is processed
                         task->currentPriorityFrameCounter = task->getPriority();
                         if (!task->isEnabled()) task->setEnabled(false);
+                        if (!task->isInProcess()) becomeInactive.push_back(task->getId());
                     }
                     processed += taskProcessed;
                 } catch ( std::exception& e ) {
@@ -492,10 +531,16 @@ int TaskProcessor::Execute()
                                   task->getId(), task->getName().c_str(), e.what() );
                 }
             } while ( false );
-            delete taskGuard;
         }
 
         if (bNeedExit) break;
+
+        if ( !activateFlag ) {
+            for ( std::vector< uint32_t >::const_iterator i = becomeInactive.begin();
+                  i != becomeInactive.end(); ++i ) {
+                activeTasks.Delete(*i);
+            }
+        }
 
         processWaitingEvents(time(NULL)); // ?? or time(NULL)
         if (!bNeedExit && processed <= 0) {
@@ -841,6 +886,10 @@ bool TaskProcessor::setTaskEnabled(uint32_t taskId, bool enabled)
     Task* task = taskGuard.get();
     if (!task) return false; 
     task->setEnabled(enabled);
+    {
+        MutexGuard mg(tasksLock);
+        activateFlag = true;
+    }
     if (enabled) awake.Signal(); 
     return true;
 }
