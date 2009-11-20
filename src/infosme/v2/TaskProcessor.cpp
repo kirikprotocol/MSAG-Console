@@ -64,7 +64,7 @@ unrespondedMessagesMax(1)
 
 void TaskProcessor::init( ConfigView* config )
 {
-    smsc_log_info(log_, "Loading ...");
+    smsc_log_info(log_, "init ...");
     MutexGuard mg(startLock);
 
     storeLocation=ConfString(config->getString("storeLocation")).str();
@@ -178,8 +178,8 @@ void TaskProcessor::init( ConfigView* config )
     scheduler.init(this,schedulerCfgGuard.get());
     smsc_log_info(log_, "Task schedules loaded.");
     
-    smsc_log_info(log_, "Load success.");
     scheduler.Start();
+    smsc_log_info(log_, "init finished");
 }
 
 
@@ -216,21 +216,15 @@ TaskGuard TaskProcessor::getTask( uint32_t taskId, bool remove )
 {
     MutexGuard guard(tasksLock);
     TaskGuard* ptr = tasks.GetPtr(taskId);
-    if (!ptr) return TaskGuard();
-    if (remove) {
-        TaskGuard ret(*ptr);
-        dispatcher_.delTask(*ret.get());
-        scheduler.removeTask(ret->getId());
-        if ( statistics ) statistics->delStatistics(ret->getId());
-        tasks.Delete(taskId);
-        return ret;
-    }
-    if ((*ptr)->isFinalizing() ) return TaskGuard();
-    // if (!tasks.Exist(taskId)) return TaskGuard(0);
-    // return tasks.Get(taskId);
-    // Task* task = tasks.Get(taskId);
-    // return TaskGuard((task && !task->isFinalizing()) ? task:0);
-    return *ptr;
+    if (!ptr || (*ptr)->isFinalizing() ) return TaskGuard();
+    if (!remove) { return *ptr; }
+    // remove
+    TaskGuard ret(*ptr);
+    tasks.Delete(taskId);
+    dispatcher_.delTask(*ret.get());
+    scheduler.removeTask(ret->getId());
+    if ( statistics ) statistics->delStatistics(ret->getId());
+    return ret;
 }
 
 void TaskProcessor::resetWaitingTasks()
