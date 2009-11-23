@@ -1351,7 +1351,7 @@ StateType StateMachine::submit(Tuple& t)
       sscanf(txt.c_str()+m[4].start,"%d",&err);
       FormatData fd;
       char addr[32];
-      sms->getDestinationAddress().getText(addr,sizeof(addr));
+      sms->getOriginatingAddress().getText(addr,sizeof(addr));
       fd.addr=addr;
       fd.ddest=addr;
       fd.submitDate=sbmTime;
