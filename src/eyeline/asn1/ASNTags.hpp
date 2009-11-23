@@ -128,6 +128,14 @@ public:
     : LWArray_T<ASTag, uint8_t, 4>(use_tags), _tagEnv(use_tags._tagEnv)
   { }
 
+  //Conjoining constructor
+  ASTagging(const ASTagging & outer_tags, const ASTagging & inner_tags)
+    : LWArray_T<ASTag, uint8_t, 4>(outer_tags), _tagEnv(outer_tags._tagEnv)
+  {
+    conjoin(inner_tags);
+  }
+
+
   ASTagging(uint8_t num_tags, ASTag use_tag1, ... /* , const ASTag use_tagN*/);
   //
   ~ASTagging()
