@@ -21,13 +21,44 @@ using eyeline::asn1::_tagENUM;
  * NOTE: if ASTagging is not set the standard [UNIVERSAL 10] tag goes to
  * resulting TLV encoding.
  * ************************************************************************* */
-class EncoderOfENUM : public EncoderOfINTEGER {
+class EncoderOfENUM : public TypeEncoderAC {
+private:
+  UINTEGER _encVal;  //value is to encode, negative number is 
+                     //converted to 'two's complement' form
+protected:
+  // -- ************************************* --
+  // -- ValueEncoderAC interface methods
+  // -- ************************************* --
+  //Determines properties of addressed value encoding (LD form, constructedness)
+  //according to requested encoding rule of BER family. Additionally calculates
+  //length of value encoding if one of following conditions is fulfilled:
+  // 1) LD form == ldDefinite
+  // 2) (LD form == ldIndefinite) && ('calc_indef' == true)
+  //NOTE: 'calc_indef' must be set if this encoding is enclosed by
+  //another that uses definite LD form.
+  //NOTE: Throws in case of value that cann't be encoded.
+  const EncodingProperty & calculateVAL(bool calc_indef = false) /*throw(std::exception)*/;
+  //Encodes by requested encoding rule of BER family the type value ('V'-part of encoding)
+  //NOTE: Throws in case of value that cann't be encoded.
+  //NOTE: this method has defined result only after calculateVAL() called
+  ENCResult encodeVAL(uint8_t * use_enc, TSLength max_len) const /*throw(std::exception)*/;
+
 public:
-  EncoderOfENUM(const ENUM & use_val)
-    : EncoderOfINTEGER(use_val, ASTagging(_tagENUM))
+  static const ASTagging & uniTagging(void)
+  {
+    static ASTagging _uniTag(_tagENUM);
+    return _uniTag;
+  }
+
+  //Constructor for untagged type referencing ENUMERATED
+  EncoderOfENUM(const ENUM & use_val,
+                TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
+    : TypeEncoderAC(uniTagging(), use_rule), _encVal(use_val)
   { }
-  EncoderOfENUM(const ENUM & use_val, const ASTagging & use_tags)
-    : EncoderOfINTEGER(use_val, use_tags)
+  //Constructor for tagged type referencing ENUMERATED
+  EncoderOfENUM(const ENUM & use_val, const ASTagging & use_tags,
+                TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
+    : TypeEncoderAC(use_tags, uniTagging(), use_rule), _encVal(use_val)
   { }
   ~EncoderOfENUM()
   { }

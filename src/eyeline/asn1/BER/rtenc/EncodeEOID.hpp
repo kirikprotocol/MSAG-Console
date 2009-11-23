@@ -44,12 +44,22 @@ protected:
   ENCResult encodeVAL(uint8_t * use_enc, TSLength max_len) const /*throw(std::exception)*/;
 
 public:
-  EncoderOfEOID(const EncodedOID & use_val)
-    : TypeEncoderAC(ASTagging(_tagObjectID))
+  static const ASTagging & uniTagging(void)
+  {
+    static ASTagging _uniTag(_tagObjectID);
+    return _uniTag;
+  }
+
+  //Constructor for untagged type referencing OBJECT IDENTIFIER
+  EncoderOfEOID(const EncodedOID & use_val,
+                TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
+    : TypeEncoderAC(uniTagging(), use_rule)
     , _encVal(use_val)
   { }
-  EncoderOfEOID(const EncodedOID & use_val, const ASTagging & use_tags)
-    : TypeEncoderAC(use_tags), _encVal(use_val)
+  //Constructor for tagged type referencing OBJECT IDENTIFIER
+  EncoderOfEOID(const EncodedOID & use_val, const ASTagging & use_tags,
+                TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
+    : TypeEncoderAC(use_tags, uniTagging(), use_rule), _encVal(use_val)
   { }
   ~EncoderOfEOID()
   { }

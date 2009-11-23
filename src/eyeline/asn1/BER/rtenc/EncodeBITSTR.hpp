@@ -61,25 +61,34 @@ protected:
   ENCResult encodeVAL(uint8_t * use_enc, TSLength max_len) const /*throw(std::exception)*/;
 
 public:
-  EncoderOfBITSTR(const BITSTR & use_val)
-    : TypeEncoderAC(ASTagging(_tagBITSTR))
-    , _encValBits(use_val.size()), _encVal(use_val.getOcts())
-    , _encValSz(bitsNum2Octs(_encValBits))
-  { }
-  EncoderOfBITSTR(const BITSTR::size_type num_bits, const uint8_t * use_octs)
-    : TypeEncoderAC(ASTagging(_tagBITSTR))
-    , _encValBits(num_bits), _encVal(use_octs)
-    , _encValSz(bitsNum2Octs(_encValBits))
-  { }
-
-  EncoderOfBITSTR(const BITSTR & use_val, const ASTagging & use_tags)
-    : TypeEncoderAC(use_tags)
+  static const ASTagging & uniTagging(void)
+  {
+    static ASTagging _uniTag(_tagBITSTR);
+    return _uniTag;
+  }
+  //Constructors for untagged type referencing BIT STRING
+  EncoderOfBITSTR(const BITSTR & use_val, TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
+    : TypeEncoderAC(uniTagging(), use_rule)
     , _encValBits(use_val.size()), _encVal(use_val.getOcts())
     , _encValSz(bitsNum2Octs(_encValBits))
   { }
   EncoderOfBITSTR(const BITSTR::size_type num_bits, const uint8_t * use_octs,
-                  const ASTagging & use_tags)
-    : TypeEncoderAC(use_tags)
+                  TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
+    : TypeEncoderAC(uniTagging(), use_rule)
+    , _encValBits(num_bits), _encVal(use_octs)
+    , _encValSz(bitsNum2Octs(_encValBits))
+  { }
+  //Constructors for tagged type referencing BIT STRING
+  EncoderOfBITSTR(const BITSTR & use_val, const ASTagging & use_tags,
+                  TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
+    : TypeEncoderAC(use_tags, uniTagging(), use_rule)
+    , _encValBits(use_val.size()), _encVal(use_val.getOcts())
+    , _encValSz(bitsNum2Octs(_encValBits))
+  { }
+  EncoderOfBITSTR(const BITSTR::size_type num_bits, const uint8_t * use_octs,
+                  const ASTagging & use_tags,
+                  TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
+    : TypeEncoderAC(use_tags, uniTagging(), use_rule)
     , _encValBits(num_bits), _encVal(use_octs)
     , _encValSz(bitsNum2Octs(_encValBits))
   { }

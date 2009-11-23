@@ -127,14 +127,6 @@ ENCResult TLEncoder::encodeEOC(uint8_t * use_enc, TSLength max_len) const
 /* ************************************************************************* *
  * class TLVLayoutEncoder implementation
  * ************************************************************************* */
-void TLVLayoutEncoder::initTypeLayout(const ASTagging & use_tags, ValueEncoderAC & use_val_enc)
-{
-  _effTags = use_tags;
-  _tlws.enlarge(_effTags.size());
-  _szoBOC = 0;
-  _valEnc = &use_val_enc;
-}
-
 void TLVLayoutEncoder::initFieldLayout(const TLVLayoutEncoder & type_enc,
                                        const ASTagging * fld_tags/* = NULL*/)
 {

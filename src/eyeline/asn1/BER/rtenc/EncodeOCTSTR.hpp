@@ -54,30 +54,44 @@ protected:
   ENCResult encodeVAL(uint8_t * use_enc, TSLength max_len) const /*throw(std::exception)*/;
 
 public:
-  EncoderOfOCTSTR(const OCTSTR & use_val)
-    : TypeEncoderAC(ASTagging(_tagOCTSTR))
-    , _encValSz(use_val.size()), _encVal(use_val.get())
-  { }
-  EncoderOfOCTSTR(const OCTSTR_ARRAYED & use_val)
-    : TypeEncoderAC(ASTagging(_tagOCTSTR))
-    , _encValSz(use_val.size()), _encVal(use_val.get())
-  { }
-  EncoderOfOCTSTR(const OCTSTR::size_type use_sz, const uint8_t * use_octs)
-    : TypeEncoderAC(ASTagging(_tagOCTSTR))
-    , _encValSz(use_sz), _encVal(use_octs)
-  { }
+  static const ASTagging & uniTagging(void)
+  {
+    static ASTagging _uniTag(_tagOCTSTR);
+    return _uniTag;
+  }
 
-  EncoderOfOCTSTR(const OCTSTR & use_val, const ASTagging & use_tags)
-    : TypeEncoderAC(use_tags)
+  //Constructors for untagged type referencing OCTET STRING
+  EncoderOfOCTSTR(const OCTSTR & use_val,
+                  TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
+    : TypeEncoderAC(uniTagging(), use_rule)
     , _encValSz(use_val.size()), _encVal(use_val.get())
   { }
-  EncoderOfOCTSTR(const OCTSTR_ARRAYED & use_val, const ASTagging & use_tags)
-    : TypeEncoderAC(use_tags)
+  EncoderOfOCTSTR(const OCTSTR_ARRAYED & use_val,
+                  TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
+    : TypeEncoderAC(uniTagging(), use_rule)
     , _encValSz(use_val.size()), _encVal(use_val.get())
   { }
   EncoderOfOCTSTR(const OCTSTR::size_type use_sz, const uint8_t * use_octs,
-                  const ASTagging & use_tags)
-    : TypeEncoderAC(use_tags)
+                  TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
+    : TypeEncoderAC(uniTagging(), use_rule)
+    , _encValSz(use_sz), _encVal(use_octs)
+  { }
+
+  //Constructors for tagged type referencing OCTET STRING
+  EncoderOfOCTSTR(const OCTSTR & use_val, const ASTagging & use_tags,
+                  TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
+    : TypeEncoderAC(use_tags, uniTagging(), use_rule)
+    , _encValSz(use_val.size()), _encVal(use_val.get())
+  { }
+  EncoderOfOCTSTR(const OCTSTR_ARRAYED & use_val, const ASTagging & use_tags,
+                  TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
+    : TypeEncoderAC(use_tags, uniTagging(), use_rule)
+    , _encValSz(use_val.size()), _encVal(use_val.get())
+  { }
+  EncoderOfOCTSTR(const OCTSTR::size_type use_sz, const uint8_t * use_octs,
+                  const ASTagging & use_tags,
+                  TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
+    : TypeEncoderAC(use_tags, uniTagging(), use_rule)
     , _encValSz(use_sz), _encVal(use_octs)
   { }
 

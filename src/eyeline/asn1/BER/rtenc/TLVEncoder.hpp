@@ -193,11 +193,9 @@ private:
   TSLength  _szoBOC;    //overall length of 'begin-of-content' octets of TLV
                         //encoding, also serves as a 'calculation-performed' flag
 protected:
-  ASTagging         _effTags; //effective tags accroding to tagging environment
   ValueEncoderAC *  _valEnc;  //addressed value encoder, zero means layout isn't initialized
+  ASTagging         _effTags; //effective tags accroding to tagging environment
 
-
-  void initTypeLayout(const ASTagging & use_tags, ValueEncoderAC & use_val_enc);
   void initFieldLayout(const TLVLayoutEncoder & type_enc, const ASTagging * fld_tags = NULL);
 
   //Calculates TLV layout (tag & length octets + EOC for each tag) basing on
@@ -221,11 +219,21 @@ public:
   TLVLayoutEncoder(ValueEncoderAC & use_val_enc)
     : _szoBOC(0), _valEnc(&use_val_enc)
   { }
-  //'Type layout encoder' constructor.
+  //'Tagged type encoder' constructor
+  TLVLayoutEncoder(const ASTagging & outer_tags,
+                   const ASTagging & inner_tags, ValueEncoderAC & use_val_enc)
+    : _szoBOC(0), _valEnc(&use_val_enc), _effTags(outer_tags)
+  {
+    _effTags.conjoin(inner_tags);
+    _tlws.enlarge(_effTags.size());
+  }
+
+  //'Generic type layout encoder' constructor.
   //NOTE: tagging MUST contain UNIVERSAL tag of base type
   TLVLayoutEncoder(const ASTagging & use_tags, ValueEncoderAC & use_val_enc)
+    : _szoBOC(0), _valEnc(&use_val_enc), _effTags(use_tags)
   {
-    initTypeLayout(use_tags, use_val_enc);
+    _tlws.enlarge(_effTags.size());
   }
   //'Field layout encoder' constructor
   //NOTE: field tagging is optional
@@ -279,11 +287,16 @@ protected:
   using ValueEncoderAC::encodeVAL;
 
 public:
+  //'Tagged type encoder' constructor
+  TypeEncoderAC(const ASTagging & outer_tags, const ASTagging & inner_tags,
+               TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
+    : TLVLayoutEncoder(outer_tags, inner_tags, *this), ValueEncoderAC(use_rule)
+  { }
   //'Untagged type encoder' constructor
   TypeEncoderAC(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
     : TLVLayoutEncoder((ValueEncoderAC&)*this), ValueEncoderAC(use_rule)
   { }
-  //'Genric tagged type encoder' constructor
+  //'Generic type encoder' constructor
   //NOTE: tagging MUST contain UNIVERSAL tag of base type
   TypeEncoderAC(const ASTagging & use_tags,
                TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)

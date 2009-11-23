@@ -12,6 +12,8 @@ namespace eyeline {
 namespace asn1 {
 namespace ber {
 
+using eyeline::asn1::_tagSEQOF;
+
 /* ************************************************************************* *
  * Encodes by BER/DER/CER the SEQUENCE/SEQUENCE OF value according to X.690
  * clause 8.9, 8.10 (with appropriate DER/CER restrctions).
@@ -50,14 +52,20 @@ protected:
   ENCResult encodeVAL(uint8_t * use_enc, TSLength max_len) const /*throw(std::exception)*/;
 
 public:
-  // constructor for untagged SEQUENCE/SEQUENCE OF with EXPLICIT tags environment
+  static const ASTagging & uniTagging(void)
+  {
+    static ASTagging _uniTag(_tagSEQOF);
+    return _uniTag;
+  }
+
+  //Constructor for untagged type referencing SEQUENCE/SEQUENCE OF
   EncoderOfSequenceAC(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : TypeEncoderAC(ASTagging(_tagSEQOF), use_rule), _fldCnt(0)
+    : TypeEncoderAC(uniTagging(), use_rule), _fldCnt(0)
   { }
-  // constructor for tagged SEQUENCE/SEQUENCE OF
+  //Constructor for tagged type referencing SEQUENCE/SEQUENCE OF
   EncoderOfSequenceAC(const ASTagging & use_tags,
                     TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : TypeEncoderAC(use_tags, use_rule), _fldCnt(0)
+    : TypeEncoderAC(use_tags, uniTagging(), use_rule), _fldCnt(0)
   { }
 
   //Appends field to SEQUENCE
@@ -92,12 +100,11 @@ protected:
   }
 
 public:
-  // constructor for untagged SEQUENCE/SEQUENCE OF with EXPLICIT tags environment
+  //Constructor for untagged type referencing SEQUENCE/SEQUENCE OF
   EncoderOfSequence_T(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
     : EncoderOfSequenceAC(use_rule), _fields(_NumFieldsTArg)
   { }
-
-  // constructor for tagged SEQUENCE/SEQUENCE OF
+  //Constructor for untagged type referencing SEQUENCE/SEQUENCE OF
   EncoderOfSequence_T(const ASTagging & use_tags,
                     TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
     : EncoderOfSequenceAC(use_tags, use_rule), _fields(_NumFieldsTArg)
@@ -134,11 +141,11 @@ protected:
   }
 
 public:
-  // constructor for untagged SEQUENCE/SEQUENCE OF with EXPLICIT tags environment
+  //Constructor for tagged type referencing SEQUENCE/SEQUENCE OF
   EncoderOfSequence(uint16_t max_fields = 2, TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
     : EncoderOfSequenceAC(use_rule), _fields(max_fields)
   { }
-  // constructor for tagged SEQUENCE/SEQUENCE OF
+  //Constructor for untagged type referencing SEQUENCE/SEQUENCE OF
   EncoderOfSequence(const ASTagging & use_tags, uint16_t max_fields = 2,
                     TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
     : EncoderOfSequenceAC(use_tags, use_rule), _fields(max_fields)

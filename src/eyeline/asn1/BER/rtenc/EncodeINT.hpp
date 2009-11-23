@@ -17,9 +17,9 @@ using eyeline::asn1::INTEGER;
 using eyeline::asn1::UINTEGER;
 using eyeline::asn1::_tagINTEGER;
 /* ************************************************************************* *
- * Encodes by BER/DER/CER the RELATIVE-OID value according to X.690
- * clause 8.20 (with appropriate DER/CER restrctions).
- * NOTE: if ASTagging is not set the standard [UNIVERSAL 13] tag goes to
+ * Encodes by BER/DER/CER the INTEGER value according to X.690
+ * clause 8.3 (with appropriate DER/CER restrctions).
+ * NOTE: if ASTagging is not set the standard [UNIVERSAL 2] tag goes to
  * resulting TLV encoding.
  * ************************************************************************* */
 class EncoderOfINTEGER : public TypeEncoderAC {
@@ -45,19 +45,29 @@ protected:
   ENCResult encodeVAL(uint8_t * use_enc, TSLength max_len) const /*throw(std::exception)*/;
 
 public:
-  EncoderOfINTEGER(const INTEGER & use_val)
-    : TypeEncoderAC(ASTagging(_tagINTEGER))
-    , _encVal(use_val)
+  static const ASTagging & uniTagging(void)
+  {
+    static ASTagging _uniTag(_tagINTEGER);
+    return _uniTag;
+  }
+
+  //Constructors for untagged type referencing INTEGER
+  EncoderOfINTEGER(const INTEGER & use_val,
+                   TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
+    : TypeEncoderAC(uniTagging(), use_rule), _encVal(use_val)
   { }
-  EncoderOfINTEGER(const INTEGER & use_val, const ASTagging & use_tags)
-    : TypeEncoderAC(use_tags), _encVal(use_val)
+  EncoderOfINTEGER(const UINTEGER & use_val,
+                   TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
+    : TypeEncoderAC(uniTagging(), use_rule), _encVal(use_val)
   { }
-  EncoderOfINTEGER(const UINTEGER & use_val)
-    : TypeEncoderAC(ASTagging(_tagINTEGER))
-    , _encVal(use_val)
+  //Constructors for untagged type referencing INTEGER
+  EncoderOfINTEGER(const INTEGER & use_val, const ASTagging & use_tags,
+                   TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
+    : TypeEncoderAC(use_tags, uniTagging(), use_rule), _encVal(use_val)
   { }
-  EncoderOfINTEGER(const UINTEGER & use_val, const ASTagging & use_tags)
-    : TypeEncoderAC(use_tags), _encVal(use_val)
+  EncoderOfINTEGER(const UINTEGER & use_val, const ASTagging & use_tags,
+                   TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
+    : TypeEncoderAC(use_tags, uniTagging(), use_rule), _encVal(use_val)
   { }
 
   ~EncoderOfINTEGER()
