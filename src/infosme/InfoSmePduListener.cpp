@@ -56,7 +56,13 @@ void InfoSmePduListener::processReceipt (SmppHeader *pdu) {
                   break;
               }
           }
-          ResponseData rd(delivered?0:smsc::system::Status::UNKNOWNERR,0,msgid);
+          // ResponseData rd(delivered?0:smsc::system::Status::UNKNOWNERR,0,msgid);
+          int status = pdu->get_commandStatus();
+          if ( !status && !delivered ) {
+              smsc_log_warn(logger,"receipt has status=OK but not delivered, using UNKNOWN");
+              status = smsc::system::Status::UNKNOWNERR;
+          }
+          ResponseData rd(status,0,msgid);
           rd.retry=retry;
 
           bNeedResponce = processor.invokeProcessReceipt(rd);
