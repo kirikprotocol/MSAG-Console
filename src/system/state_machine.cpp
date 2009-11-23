@@ -269,6 +269,8 @@ StateMachine::StateMachine(EventQueue& q,
 #ifdef SMSEXTRA
   createCopyOnNickUsage=false;
 #endif
+  smeAckRx.Compile("/id:\\w+\\s+sub:\\d+\\s+dlvrd:\\d+\\s+submit date:(\\d{10}) done date:(\\d{10})\\s+stat:(\\w+)\\s+err:(\\d+)\\s+Text:(.*)/");
+  __throw_if_fail__(smeAckRx.LastError()==regexp::errNone,RegExpCompilationException);
 }
 
 
@@ -897,6 +899,20 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
   }
 }
 
+time_t parseReceiptTime(const std::string& txt,SMatch* m,int idx)
+{
+  int YY,MM,DD,hh,mm;
+  sscanf(txt.c_str()+m[idx].start,"%02d%02d%02d%02d%02d",&YY,&MM,&DD,&hh,&mm);
+  YY+=2000;
+  tm t={0,};
+  t.tm_year=YY-1900;
+  t.tm_mon=MM-1;
+  t.tm_mday=DD;
+  t.tm_hour=hh;
+  t.tm_min=mm;
+  return mktime(&t);
+}
+
 
 StateType StateMachine::submit(Tuple& t)
 {
@@ -1317,6 +1333,52 @@ StateType StateMachine::submit(Tuple& t)
   c.toMap=c.dest_proxy && !strcmp(c.dest_proxy->getSystemId(),"MAP_PROXY");
   c.fromDistrList=c.src_proxy && !strcmp(c.src_proxy->getSystemId(),"DSTRLST");
 
+  SmeInfo dstSmeInfo=smsc->getSmeInfo(c.dest_proxy_index);
+
+  if(c.toMap && ((sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3c)==0x08 ||
+      (sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3c)==0x10))
+  {
+    std::string txt;
+    getSmsText(sms,txt,CONV_ENCODING_CP1251);
+    SMatch m[10];
+    int n=10;
+    if(smeAckRx.Match(txt.c_str(),txt.c_str()+txt.length(),m,n))
+    {
+      time_t sbmTime=parseReceiptTime(txt,m,1);
+      time_t dlvTime=parseReceiptTime(txt,m,2);
+      std::string st=txt.substr(m[3].start,m[3].end-m[3].start);
+      int err;
+      sscanf(txt.c_str()+m[4].start,"%d",&err);
+      FormatData fd;
+      char addr[32];
+      sms->getDestinationAddress().getText(addr,sizeof(addr));
+      fd.addr=addr;
+      fd.ddest=addr;
+      fd.submitDate=sbmTime;
+      fd.date=dlvTime;
+      fd.setLastResult(err);
+      fd.locale=profile.locale.c_str();
+      fd.msc="";
+      fd.msgId="";
+      fd.scheme=dstSmeInfo.receiptSchemeName.c_str();
+      std::string out;
+      fd.err="";
+      smsc_log_debug(smsLog,"esme delivery ack detected in msgId=%lld. sbmTime=%lu dlvTime=%lu, st=%s",t.msgId,sbmTime,dlvTime,st.c_str());
+      if(st=="DELIVRD")
+      {
+        formatDeliver(fd,out);
+      }else if(st=="ACCEPTD")
+      {
+        formatNotify(fd,out);
+      }else
+      {
+        fd.err=txt.c_str()+m[5].start;
+        formatFailed(fd,out);
+      }
+      fillSms(sms,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,0);
+    }
+  }
+
   sms->setArchivationRequested(c.ri.archived);
 
 #ifdef SMSEXTRA
@@ -1580,7 +1642,6 @@ StateType StateMachine::submit(Tuple& t)
     }
   }
 
-  SmeInfo dstSmeInfo=smsc->getSmeInfo(c.dest_proxy_index);
   smsc_log_debug(smsLog,"dst sme '%s', flags=%x",dstSmeInfo.systemId.c_str(),dstSmeInfo.flags);
 
 #ifdef SMSEXTRA

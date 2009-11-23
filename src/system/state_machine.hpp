@@ -120,6 +120,8 @@ protected:
   smsc::util::regexp::RegExp dreNoTrans;
   smsc::util::regexp::RegExp dreUnknown;
 
+  smsc::util::regexp::RegExp smeAckRx;
+
   StateType submit(Tuple& t);
   StateType forward(Tuple& t);
   StateType forwardChargeResp(Tuple& t);
