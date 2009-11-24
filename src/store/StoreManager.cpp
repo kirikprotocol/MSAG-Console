@@ -5,8 +5,8 @@
 //#include <oci.h>
 //#include <orl.h>
 
-#include <util/debug.h>
-#include <system/status.h>
+#include "util/debug.h"
+#include "smsc/status.h"
 
 #include "StoreManager.h"
 
@@ -17,15 +17,14 @@ namespace smsc { namespace store
 
 /* ----------------------------- StoreManager -------------------------- */
 
+
+#if 0
 using namespace smsc::sms;
-using namespace smsc::system;
 using smsc::logger::Logger;
 using smsc::util::config::Manager;
 
 const unsigned SMSC_MAX_TRIES_TO_PROCESS_OPERATION = 3;
 const unsigned SMSC_MAX_TRIES_TO_PROCESS_OPERATION_LIMIT = 1000;
-
-#if 0
 
 Mutex        StoreManager::mutex;
 RemoteStore* StoreManager::instance  = 0;
