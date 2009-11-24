@@ -43,7 +43,6 @@
 #include "mapio/FraudControl.hpp"
 #include "mapio/MapLimits.hpp"
 #include "license/check/license.hpp"
-//#include "cluster/controller/NetworkDispatcher.hpp"
 
 #ifdef SMSEXTRA
 #include "Extra.hpp"
@@ -349,7 +348,6 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
       throw Exception("InterconnectManager initialization exception:%s",e.what());
   }
 
-  //smsc::cluster::controller::NetworkDispatcher::Init(nodeIndex);
 
 
 #ifdef SNMP
@@ -1543,7 +1541,6 @@ void Smsc::run()
 void Smsc::shutdown()
 {
 
-  //smsc::cluster::controller::NetworkDispatcher::getInstance().Stop();
   __trace__("shutting down");
   smeman.Dump();
 
@@ -1608,7 +1605,6 @@ void Smsc::shutdown()
 #ifdef SNMP
   SnmpCounter::Shutdown();
 #endif
-  //smsc::cluster::controller::NetworkDispatcher::Shutdown();
   __trace__("shutdown completed");
 }
 
