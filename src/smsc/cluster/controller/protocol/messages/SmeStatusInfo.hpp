@@ -1,0 +1,375 @@
+#ifndef __GENERATED_MESSAGE_SMSC_CLUSTER_CONTROLLER_PROTOCOL_MESSAGES_SMESTATUSINFO_HPP__
+#define __GENERATED_MESSAGE_SMSC_CLUSTER_CONTROLLER_PROTOCOL_MESSAGES_SMESTATUSINFO_HPP__
+
+#include <inttypes.h>
+#include <string>
+#include <vector>
+#include "eyeline/protogen/framework/Exceptions.hpp"
+
+
+#ident "@(#) SmeStatusInfo version 1.0"
+
+
+
+namespace smsc{
+namespace cluster{
+namespace controller{
+namespace protocol{
+namespace messages{
+
+typedef std::vector<std::string> string_list;
+
+class SmeStatusInfo{
+public:
+  SmeStatusInfo()
+  {
+    Clear();
+  }
+  void Clear()
+  {
+    systemIdFlag=false;
+    statusFlag=false;
+    bindModeFlag=false;
+    peerInFlag=false;
+    peerOutFlag=false;
+  }
+
+  std::string toString()const
+  {
+    std::string rv;
+    if(systemIdFlag)
+    {
+      if(rv.length()>0)
+      {
+        rv+=";";
+      }
+      rv+="systemId=";
+      rv+=systemId;
+    }
+    if(statusFlag)
+    {
+      if(rv.length()>0)
+      {
+        rv+=";";
+      }
+      rv+="status=";
+      rv+=status;
+    }
+    if(bindModeFlag)
+    {
+      if(rv.length()>0)
+      {
+        rv+=";";
+      }
+      rv+="bindMode=";
+      rv+=bindMode;
+    }
+    if(peerInFlag)
+    {
+      if(rv.length()>0)
+      {
+        rv+=";";
+      }
+      rv+="peerIn=";
+      rv+=peerIn;
+    }
+    if(peerOutFlag)
+    {
+      if(rv.length()>0)
+      {
+        rv+=";";
+      }
+      rv+="peerOut=";
+      rv+=peerOut;
+    }
+    return rv;
+  }
+
+  template <class DataStream>
+  uint32_t length()const
+  {
+    uint32_t rv=0;
+    if(systemIdFlag)
+    {
+      rv+=DataStream::tagTypeSize;
+      rv+=DataStream::lengthTypeSize;
+      rv+=DataStream::fieldSize(systemId);
+    }
+    if(statusFlag)
+    {
+      rv+=DataStream::tagTypeSize;
+      rv+=DataStream::lengthTypeSize;
+      rv+=DataStream::fieldSize(status);
+    }
+    if(bindModeFlag)
+    {
+      rv+=DataStream::tagTypeSize;
+      rv+=DataStream::lengthTypeSize;
+      rv+=DataStream::fieldSize(bindMode);
+    }
+    if(peerInFlag)
+    {
+      rv+=DataStream::tagTypeSize;
+      rv+=DataStream::lengthTypeSize;
+      rv+=DataStream::fieldSize(peerIn);
+    }
+    if(peerOutFlag)
+    {
+      rv+=DataStream::tagTypeSize;
+      rv+=DataStream::lengthTypeSize;
+      rv+=DataStream::fieldSize(peerOut);
+    }
+    rv+=DataStream::tagTypeSize;
+    return rv;
+  }
+  const std::string& getSystemId()const
+  {
+    if(!systemIdFlag)
+    {
+      throw protogen::framework::FieldIsNullException("systemId");
+    }
+    return systemId;
+  }
+  void setSystemId(const std::string& value)
+  {
+    systemId=value;
+    systemIdFlag=true;
+  }
+  bool hasSystemId()const
+  {
+    return systemIdFlag;
+  }
+  const std::string& getStatus()const
+  {
+    if(!statusFlag)
+    {
+      throw protogen::framework::FieldIsNullException("status");
+    }
+    return status;
+  }
+  void setStatus(const std::string& value)
+  {
+    status=value;
+    statusFlag=true;
+  }
+  bool hasStatus()const
+  {
+    return statusFlag;
+  }
+  const std::string& getBindMode()const
+  {
+    if(!bindModeFlag)
+    {
+      throw protogen::framework::FieldIsNullException("bindMode");
+    }
+    return bindMode;
+  }
+  void setBindMode(const std::string& value)
+  {
+    bindMode=value;
+    bindModeFlag=true;
+  }
+  bool hasBindMode()const
+  {
+    return bindModeFlag;
+  }
+  const std::string& getPeerIn()const
+  {
+    if(!peerInFlag)
+    {
+      throw protogen::framework::FieldIsNullException("peerIn");
+    }
+    return peerIn;
+  }
+  void setPeerIn(const std::string& value)
+  {
+    peerIn=value;
+    peerInFlag=true;
+  }
+  bool hasPeerIn()const
+  {
+    return peerInFlag;
+  }
+  const std::string& getPeerOut()const
+  {
+    if(!peerOutFlag)
+    {
+      throw protogen::framework::FieldIsNullException("peerOut");
+    }
+    return peerOut;
+  }
+  void setPeerOut(const std::string& value)
+  {
+    peerOut=value;
+    peerOutFlag=true;
+  }
+  bool hasPeerOut()const
+  {
+    return peerOutFlag;
+  }
+  template <class DataStream>
+  void serialize(DataStream& ds)const
+  {
+    if(!systemIdFlag)
+    {
+      throw protogen::framework::MandatoryFieldMissingException("systemId");
+    }
+    if(!statusFlag)
+    {
+      throw protogen::framework::MandatoryFieldMissingException("status");
+    }
+    if(!bindModeFlag)
+    {
+      throw protogen::framework::MandatoryFieldMissingException("bindMode");
+    }
+    if(!peerInFlag)
+    {
+      throw protogen::framework::MandatoryFieldMissingException("peerIn");
+    }
+    if(!peerOutFlag)
+    {
+      throw protogen::framework::MandatoryFieldMissingException("peerOut");
+    }
+    //ds.writeByte(versionMajor);
+    //ds.writeByte(versionMinor);
+    //ds.writeInt32(seqNum);
+    ds.writeTag(systemIdTag);
+    ds.writeStrLV(systemId);
+    ds.writeTag(statusTag);
+    ds.writeStrLV(status);
+    ds.writeTag(bindModeTag);
+    ds.writeStrLV(bindMode);
+    ds.writeTag(peerInTag);
+    ds.writeStrLV(peerIn);
+    ds.writeTag(peerOutTag);
+    ds.writeStrLV(peerOut);
+    ds.writeTag(DataStream::endOfMessage_tag);
+  }
+
+  template <class DataStream>
+  void deserialize(DataStream& ds)
+  {
+    Clear();
+    bool endOfMessage=false;
+    //uint8_t rdVersionMajor=ds.readByte();
+    //uint8_t rdVersionMinor=ds.readByte();
+    //if(rdVersionMajor!=versionMajor)
+    //{
+    //  throw protogen::framework::IncompatibleVersionException("SmeStatusInfo");
+    //}
+    //seqNum=ds.readInt32();
+    while(!endOfMessage)
+    {
+      uint32_t tag=ds.readTag();
+      switch(tag)
+      {
+        case systemIdTag:
+        {
+          if(systemIdFlag)
+          {
+            throw protogen::framework::DuplicateFieldException("systemId");
+          }
+          systemId=ds.readStrLV();
+          systemIdFlag=true;
+        }break;
+        case statusTag:
+        {
+          if(statusFlag)
+          {
+            throw protogen::framework::DuplicateFieldException("status");
+          }
+          status=ds.readStrLV();
+          statusFlag=true;
+        }break;
+        case bindModeTag:
+        {
+          if(bindModeFlag)
+          {
+            throw protogen::framework::DuplicateFieldException("bindMode");
+          }
+          bindMode=ds.readStrLV();
+          bindModeFlag=true;
+        }break;
+        case peerInTag:
+        {
+          if(peerInFlag)
+          {
+            throw protogen::framework::DuplicateFieldException("peerIn");
+          }
+          peerIn=ds.readStrLV();
+          peerInFlag=true;
+        }break;
+        case peerOutTag:
+        {
+          if(peerOutFlag)
+          {
+            throw protogen::framework::DuplicateFieldException("peerOut");
+          }
+          peerOut=ds.readStrLV();
+          peerOutFlag=true;
+        }break;
+        case DataStream::endOfMessage_tag:
+          endOfMessage=true;
+          break;
+        default:
+          //if(rdVersionMinor==versionMinor)
+          //{
+          //  throw protogen::framework::UnexpectedTag("SmeStatusInfo",tag);
+          //}
+          ds.skip(ds.readLength());
+      }
+    }
+    if(!systemIdFlag)
+    {
+      throw protogen::framework::MandatoryFieldMissingException("systemId");
+    }
+    if(!statusFlag)
+    {
+      throw protogen::framework::MandatoryFieldMissingException("status");
+    }
+    if(!bindModeFlag)
+    {
+      throw protogen::framework::MandatoryFieldMissingException("bindMode");
+    }
+    if(!peerInFlag)
+    {
+      throw protogen::framework::MandatoryFieldMissingException("peerIn");
+    }
+    if(!peerOutFlag)
+    {
+      throw protogen::framework::MandatoryFieldMissingException("peerOut");
+    }
+
+  }
+
+
+protected:
+  //static const uint8_t versionMajor=1;
+  //static const uint8_t versionMinor=0;
+
+  static const uint32_t systemIdTag=1;
+  static const uint32_t statusTag=2;
+  static const uint32_t bindModeTag=3;
+  static const uint32_t peerInTag=4;
+  static const uint32_t peerOutTag=5;
+
+
+  std::string systemId;
+  std::string status;
+  std::string bindMode;
+  std::string peerIn;
+  std::string peerOut;
+
+  bool systemIdFlag;
+  bool statusFlag;
+  bool bindModeFlag;
+  bool peerInFlag;
+  bool peerOutFlag;
+};
+
+}
+}
+}
+}
+}
+#endif

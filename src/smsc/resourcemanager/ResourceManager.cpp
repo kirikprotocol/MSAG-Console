@@ -1,0 +1,280 @@
+#include <string>
+#include <list>
+#include <dirent.h>
+
+#include "util/Exception.hpp"
+#include "logger/Logger.h"
+#include "util/debug.h"
+#include "core/buffers/TmpBuf.hpp"
+
+#include "ResourceManager.hpp"
+
+namespace smsc{
+namespace resourcemanager{
+
+using smsc::util::Exception;
+using namespace smsc::core::synchronization;
+using smsc::core::buffers::TmpBuf;
+
+std::auto_ptr<ResourceManager> ResourceManager::instance(0);
+std::string ResourceManager::defaultLocale("en_en");
+Mutex ResourceManager::mtx;
+OutputFormatter nullFmt("");
+
+const ResourceManager* ResourceManager::getInstance() throw()
+{
+  MutexGuard g(mtx);
+  if (instance.get() == 0)
+  {
+    instance.reset(new ResourceManager);
+  }
+  return instance.get();
+}
+
+void ResourceManager::init(const char * const localesString, const char * const defaultLocaleStr) throw()
+{
+  std::string _defaultLocale(defaultLocaleStr);
+  std::list<std::string> locales;
+  const char * str = localesString;
+  for (const char * ptr = strchr(str, ','); ptr != 0; ptr = strchr(str, ','))
+  {
+    while ((*str == ' ') || (*str == '\t')) str++;
+    size_t length = ptr-str;
+    //char tmp[length+1];
+    TmpBuf<char,64> tmp(length+1);
+    strncpy(tmp,  str, length);
+    tmp[length] = 0;
+    char * tmpptr = tmp;
+    while ((*tmpptr != ' ') && (*tmpptr != '\t') && (*tmpptr != 0)) tmpptr++;
+    (*tmpptr) = 0;
+    __trace2__("ResMgr: add locale %s", tmp.get() );
+    locales.push_back(tmp.get());
+    str = ptr+1;
+  }
+  if ((*str != 0) && (strlen(str) > 0))
+  {
+    while ((*str == ' ') || (*str == '\t')) str++;
+    size_t length = strlen(str);
+    //char tmp[length+1];
+    TmpBuf<char,64> tmp(length+1);
+    strncpy(tmp,  str, length);
+    tmp[length] = 0;
+    char * tmpptr = tmp;
+    while ((*tmpptr != ' ') && (*tmpptr != '\t') && (*tmpptr != 0)) tmpptr++;
+    (*tmpptr) = 0;
+    __trace2__("ResMgr: add locale %s", tmp.get() );
+    locales.push_back(tmp.get());
+  }
+
+  init(locales, _defaultLocale);
+}
+
+typedef std::list<std::string> _stringlist;
+void ResourceManager::init(const _stringlist & localeNames, const std::string & defaultLocaleName) throw()
+{
+  smsc::logger::Logger *logger = smsc::logger::Logger::getInstance("smsc.resourcemanager.ResourceManager");
+  defaultLocale = defaultLocaleName;
+  instance.reset(new ResourceManager);
+  bool isDefaultLocaleFound = false;
+  for (_stringlist::const_iterator i = localeNames.begin(); i != localeNames.end(); i++)
+  {
+    const std::string & name = *i;
+    if (instance->locales.find(name) == instance->locales.end())
+    {
+      smsc_log_error(logger, "Resource file for locale \"%s\" not found.", name.c_str());
+      continue;
+    }
+    isDefaultLocaleFound |= (name == defaultLocaleName);
+  }
+
+  if (!isDefaultLocaleFound)
+  {
+    smsc_log_error(logger, "Default locale \"%s\" not found in locales.", defaultLocaleName.c_str());
+  }
+  instance.get()->validLocales=localeNames;
+  __trace2__("ResMgr: this = %p set valid locales %p/%d <- %p/%d", instance.get(), &(instance.get()->validLocales), instance.get()->validLocales.size(), &localeNames, localeNames.size() );
+}
+
+void ResourceManager::reload(const char * const localesString, const char * const defaultLocaleStr) throw ()
+{
+  MutexGuard g(mtx);
+  instance.reset(new ResourceManager);
+  init(localesString, defaultLocaleStr);
+}
+
+ResourceManager::ResourceManager() throw ()
+{
+  smsc::logger::Logger * logger = smsc::logger::Logger::getInstance("smsc.resourcemanager.ResourceManager");
+  const char * const prefix = "resources_";
+  const char * const suffix = ".xml";
+  size_t prefixLength = strlen(prefix);
+  size_t suffixLength = strlen(suffix);
+
+  const char * dirName = "";
+  DIR* configDir = opendir(dirName = "conf");
+  if (configDir == 0)
+    configDir = opendir(dirName = "../conf");
+  if (configDir == 0)
+    configDir = opendir(dirName = ".");
+  if (configDir == 0)
+  {
+    smsc_log_error(logger, "Config dir not found");
+  }
+
+  for (dirent* entry = readdir(configDir); entry != 0; entry = readdir(configDir))
+  {
+    size_t entryLength = strlen(entry->d_name);
+    const char * const entrySuffix = entry->d_name + (entryLength - suffixLength);
+    if ((strncmp(entry->d_name,  prefix, prefixLength) == 0)
+        && (strcmp(entrySuffix, suffix) == 0))
+    {
+      std::string name(dirName);
+      name += '/';
+      name += entry->d_name;
+      size_t localeNameLength = entryLength - (prefixLength + suffixLength);
+      //char localeName[entryLength+1];
+      TmpBuf<char,64> localeName(entryLength+1);
+      strncpy(localeName, entry->d_name + prefixLength, localeNameLength);
+      localeName[localeNameLength] = 0;
+      locales[localeName.get()] = new LocaleResources(name);
+    }
+  }
+  if (configDir != 0)
+  {
+    closedir(configDir);
+  }
+}
+
+ResourceManager::~ResourceManager() throw ()
+{
+  for (_LocalesMap::iterator i = locales.begin(); i != locales.end(); i++)
+  {
+    delete i->second;
+  }
+}
+
+
+
+//         .
+std::string ResourceManager::getSetting(const std::string& locale,const std::string& key) const throw ()
+{
+  MutexGuard g(mtx);
+  _LocalesMap::const_iterator l = locales.find(locale);
+  if (l != locales.end())
+    return (l->second)->getSetting(key);
+  else
+  {
+    l = locales.find(defaultLocale);
+    if (l != locales.end())
+      return (l->second)->getSetting(key);
+    else
+      return getSetting(key);
+  }
+}
+
+//         .
+std::string ResourceManager::getSetting(const std::string& key) const throw ()
+{
+  MutexGuard g(mtx);
+  _LocalesMap::const_iterator l = locales.find(defaultLocale);
+  if (l != locales.end())
+    return (l->second)->getSetting(key);
+  else
+    return key;
+}
+
+//         .
+std::string ResourceManager::getString(const std::string& locale, const std::string& key) const throw ()
+{
+  MutexGuard g(mtx);
+  _LocalesMap::const_iterator l = locales.find(locale);
+  if (l != locales.end() && l->second->hasString(key))
+    return (l->second)->getString(key);
+  else
+  {
+    l = locales.find(defaultLocale);
+    if (l != locales.end())
+      return (l->second)->getString(key);
+    else
+    {
+      __trace2__("RM: string not found for locale=%s, key=%s",locale.c_str(),key.c_str());
+      return key;
+    }
+  }
+}
+
+//         .
+std::string ResourceManager::getString(const std::string& key) const throw ()
+{
+  MutexGuard g(mtx);
+  _LocalesMap::const_iterator l = locales.find(defaultLocale);
+  if (l != locales.end())
+    return (l->second)->getString(key);
+  else
+  {
+    __trace2__("RM: string not found for locale=%s, key=%s",defaultLocale.c_str(),key.c_str());
+    return "";
+  }
+}
+
+OutputFormatter* ResourceManager::getFormatter(const std::string& locale, const std::string& key) const throw()
+{
+  MutexGuard g(mtx);
+  _LocalesMap::const_iterator l = locales.find(locale);
+  if (l != locales.end() && l->second->hasString(key))
+    return (l->second)->getFormatter(key);
+  else
+  {
+    l = locales.find(defaultLocale);
+    if (l != locales.end() && l->second->hasString(key))
+      return (l->second)->getFormatter(key);
+    else
+    {
+      __trace2__("RM: formatter not found for locale=%s, key=%s",locale.c_str(),key.c_str());
+      return 0;
+    }
+  }
+}
+
+OutputFormatter* ResourceManager::getFormatter(const std::string& key) const throw()
+{
+  MutexGuard g(mtx);
+  const _LocalesMap::const_iterator l = locales.find(defaultLocale);
+  if (l != locales.end() && l->second->hasString(key))
+    return (l->second)->getFormatter(key);
+  else
+  {
+    __trace2__("RM: formatter not found for locale=%s, key=%s",defaultLocale.c_str(),key.c_str());
+    return 0;
+  }
+
+}
+
+
+bool ResourceManager::isValidLocale(const std::string& localeName)const
+{
+  MutexGuard g(mtx);
+  __trace2__("ResMgr: this %p is valid locale? %p/%d", this, &(validLocales), validLocales.size() );
+  for(_stringlist::const_iterator i=validLocales.begin();i!=validLocales.end();i++)
+  {
+    __trace2__("ResMgr: testing %s = %s", localeName.c_str(), i->c_str() );
+    if(localeName==*i)return true;
+  }
+  return false;
+}
+
+
+#ifdef SMSC_DEBUG
+void ResourceManager::dump(std::ostream & outStream) const
+{
+  outStream << "ResourceManager dump: " << std::endl;
+  for (_LocalesMap::const_iterator i = locales.begin(); i != locales.end(); i++)
+  {
+    outStream << "Locale: " << i->first << std::endl;
+    i->second->dump(outStream);
+  }
+}
+#endif //#ifdef SMSC_DEBUG
+
+}//resourcemanager
+}//smsc

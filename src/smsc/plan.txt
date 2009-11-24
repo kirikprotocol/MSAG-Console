@@ -1,0 +1,13 @@
+mscman
+profiler
+distrlist
+aliases
+acl
+
+dpf?
+
+interconnect(multipart & replace if present)
+
+snmp
+
+java admin interface

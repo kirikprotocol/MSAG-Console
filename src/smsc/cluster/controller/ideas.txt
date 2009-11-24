@@ -1,0 +1,43 @@
+ICon:SmeProxy
+  reconnect thread
+  processor threads
+  {
+    if(multipart answer && number of answers == number of requests || timeout)
+    {
+      if(!handled)
+      {
+        mapProxy->putCommand();
+      }
+    }
+  }
+
+MapStateMachine:
+  delimeter ind:
+    if(multipart)
+    {
+      if(!firstPart)
+      {
+        close dialog;
+        if(!ownSms)
+        {
+          ICon->putCommand();
+        }
+      }else
+      {
+        SRI;
+      }
+    }
+  putCommand:
+    if(multipart answer)
+    {
+      SRI;
+    }
+
+mainLoop:
+  if(replace if present && !own && !asked)
+  {
+    ICon->putCommand();
+  }else
+  {
+    eq.enqueue();
+  }
