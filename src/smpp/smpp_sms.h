@@ -13,8 +13,8 @@
 #include "smpp_structures.h"
 #include "sms/sms.h"
 #include "smpp_time.h"
-#include "smeman/smetypes.h"
 #include <string>
+#include "smsc/smeman/smetypes.h"
 
 namespace smsc{
 namespace smpp{
@@ -137,8 +137,8 @@ inline void fillOptional(SmppOptional& optional,SMS* sms,uint32_t smeFlags=0)
   {
     optional.set_sccp_da(sms->getStrProperty(Tag::SMSC_SCCP_DA).c_str());
   }
-  
-  if(smeFlags&sfSmppPlus)
+
+  if(smeFlags&sfSmppPlus && sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
   {
     optional.set_ussd_session_id(sms->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
     if(sms->hasStrProperty(Tag::SMSC_IMSI_ADDRESS)  && (smeFlags&sfCarryOrgDescriptor))
@@ -167,13 +167,13 @@ inline void fillOptional(SmppOptional& optional,SMS* sms,uint32_t smeFlags=0)
 
     if ( sms->hasStrProperty(Tag::SMSC_MSC_ADDRESS)  && (smeFlags&sfCarryOrgDescriptor))
       optional.set_msc_address(sms->getStrProperty(Tag::SMSC_MSC_ADDRESS).c_str());
-    
+
     if( sms->hasStrProperty(Tag::SMSC_SCCP_OA) && (smeFlags&sfCarrySccpInfo))
     {
       optional.set_sccp_oa(sms->getStrProperty(Tag::SMSC_SCCP_OA).c_str());
     }
-    
-  }  
+
+  }
 
   if(sms->hasIntProperty(Tag::SMPP_ITS_SESSION_INFO))
   {
