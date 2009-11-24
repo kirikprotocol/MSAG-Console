@@ -2,10 +2,11 @@
 #define SMSC_UTIL_CONFIG_ROUTE_ROUTESTRUCTURES
 
 #include <vector>
-#include <util/cstrings.h>
-#include <core/buffers/Hash.hpp>
-#include <sms/sms_const.h>
-#include <acls/interfaces.h>
+
+#include "util/cstrings.h"
+#include "core/buffers/Hash.hpp"
+#include "sms/sms_const.h"
+#include "acls/interfaces.h"
 #include "router/route_types.h"
 
 namespace smsc {
