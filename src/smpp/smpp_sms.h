@@ -14,7 +14,7 @@
 #include "sms/sms.h"
 #include "smpp_time.h"
 #include <string>
-#include "smsc/smeman/smetypes.h"
+#include "smeman/smetypes.h"
 
 namespace smsc{
 namespace smpp{
