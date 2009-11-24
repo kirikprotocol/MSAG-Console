@@ -1376,6 +1376,16 @@ StateType StateMachine::submit(Tuple& t)
         formatFailed(fd,out);
       }
       fillSms(sms,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,0);
+      if(sms->hasIntProperty(Tag::SMSC_ORIGINAL_DC))
+      {
+        if(sms->getIntProperty(Tag::SMPP_DATA_CODING)==DataCoding::UCS2)
+        {
+          sms->setIntProperty(Tag::SMSC_ORIGINAL_DC,0xe0);
+        }else
+        {
+          sms->setIntProperty(Tag::SMSC_ORIGINAL_DC,0x0);
+        }
+      }
     }
   }
 
