@@ -1,0 +1,794 @@
+type string
+type uint32
+type uint64
+type byte
+type bool
+type stringlist
+
+property opt _bool
+  optional true
+  mandatory false
+end
+
+property mnd _bool
+  default
+  optional false
+  mandatory true
+end
+
+property notarray _bool
+  default
+  array false
+end
+
+property array _bool
+  array true
+end
+
+message Response
+  property noseq=true
+  uint32 status 1
+end
+
+message ApplyRoutes
+end
+
+message ApplyRoutesResp
+  property ccmsg=true
+  Response resp 1
+end
+
+message ApplyReschedule
+end
+
+message ApplyRescheduleResp
+  property ccmsg=true
+  Response resp 1
+end
+
+message ApplyLocaleResource
+end
+
+
+message ApplyLocaleResourceResp
+  property ccmsg=true
+  Response resp 1
+end
+
+message ApplyTimeZones
+end
+
+message ApplyTimeZonesResp
+  property ccmsg=true
+  Response resp 1
+end
+
+message ApplyFraudControl
+end
+
+message ApplyFraudControlResp
+  property ccmsg=true
+  Response resp 1
+end
+
+message ApplyMapLimits
+end
+
+
+message ApplyMapLimitsResp
+  property ccmsg=true
+  Response resp 1
+end
+
+message ApplySnmp
+end
+
+
+message ApplySnmpResp
+  property ccmsg=true
+  Response resp 1
+end
+
+message TraceRoute
+  string dst 1
+  string src 2
+  string srcSysId 3
+end
+
+message TraceRouteResp
+  property ccmsg=true
+  Response resp 1
+  string aliasInfo 2
+  string foundInfo 3
+  string routeId 4 opt
+  string srcAddr 5 opt
+  string dstAddr 6 opt
+  string smeId 7 opt
+  string srcSmeId 8 opt
+  uint32 priority 9 opt
+  uint32 serviceId 10 opt
+  uint32 deliveryMode 11 opt
+  string forwardTo 12 opt
+  bool billing 13 opt
+  bool archiving 14 opt
+  bool enabled 15 opt
+  bool suppressDlvRep 16 opt
+  stringlist trace 17 opt
+end
+
+message LoadRoutes
+end
+
+message LoadRoutesResp
+  property ccmsg=true
+  Response resp 1
+  stringlist trace 2 opt
+end
+
+message Profile
+  property noseq=true
+  string divert 1
+  string locale 2
+  byte codepage 3
+  byte reportOptions 4
+  byte hide 5
+  bool hideModifiable 6
+  bool divertActive 7
+  bool divertActiveAbsent 8
+  bool divertActiveBlocked 9
+  bool divertActiveBarred 10
+  bool divertActiveCapacity 11
+  bool divertModifiable 12
+  bool udhConcat 13
+  bool translit 14
+  uint32 closedGroupId 15
+  uint32 accessMaskIn 16
+  uint32 accessMaskOut 17
+  uint32 subscription 18 opt
+  byte sponsored 19 opt
+  string nick 20 opt
+end
+
+message LookupProfile
+  string address 1
+end
+
+message LookupProfileResp
+  property ccmsg=true
+  Response resp 1
+  Profile prof 2
+end
+
+
+message LookupProfileEx
+  string address 1
+end
+
+message LookupProfileExResp
+  property ccmsg=true
+  Response resp 1
+  byte matchType 2
+  Profile prof 3
+end
+
+message UpdateProfile
+  string address 1
+  Profile prof 2
+end
+
+message UpdateProfileResp
+  property ccmsg=true
+  Response resp 1
+  byte result 2
+end
+
+message DeleteProfile
+  string address 1
+end
+
+message DeleteProfileResp
+  property ccmsg=true
+  Response resp 1
+end
+
+message CancelSms
+  stringlist ids 1
+  stringlist srcs 2
+  stringlist dsts 3
+end
+
+message CancelSmsResp
+  property ccmsg=true
+  Response resp 1
+  string statusText 2
+end
+
+message MscAdd
+  string msc 1
+end
+
+message MscAddResp
+  property ccmsg=true
+  Response resp 1
+end
+
+message MscRemove
+  string msc 1
+end
+
+message MscRemoveResp
+  property ccmsg=true
+  Response resp 1
+end
+
+
+message SmeParams
+  property noseq=true
+  string id 1
+  uint32 priority 2
+  uint32 typeOfNumber 3
+  uint32 numberingPlan 4
+  uint32 interfaceVersion 5
+  string systemType 6
+  string password 7
+  string addrRange 8
+  uint32 smeN 9
+  bool wantAlias 10
+  //bool forceDC 11
+  uint32 timeout 12
+  string receiptScheme 13
+  bool disabled 14
+  string mode 15
+  uint32 procLimit 16
+  uint32 schedLimit 17
+  uint32 accessMask 18
+  uint32 flags 19
+end
+
+message SmeAdd
+  SmeParams params 1
+end
+
+message SmeAddResp
+  property ccmsg=true
+  Response resp 1
+end
+
+message SmeUpdate
+  SmeParams params 1
+end
+
+message SmeUpdateResp
+  property ccmsg=true
+  Response resp 1
+end
+
+message SmeRemove
+  string smeId 1
+end
+
+message SmeRemoveResp
+  property ccmsg=true
+  Response resp 1
+end
+
+message SmeStatus
+end
+
+message SmeStatusInfo
+  property noseq=true
+  string systemId 1
+  string status 2
+  string bindMode 3
+  string peerIn 4
+  string peerOut 5
+end
+
+message SmeStatusResp
+  property ccmsg=true
+  Response resp 1
+  SmeStatusInfo status 2 array
+end
+
+message SmeDisconnect
+  stringlist sysIds 1
+end
+
+message SmeDisconnectResp
+  property ccmsg=true
+  Response resp 1
+end
+
+message LoggerGetCategories
+end
+
+message CategoryInfo
+  property noseq=true
+  string name 1
+  string level 2
+end
+
+message LoggerGetCategoriesResp
+  property ccmsg=true
+  Response resp 1
+  CategoryInfo categories 2 array
+end
+
+message LoggerSetCategories
+  CategoryInfo categories 1 array
+end
+
+message LoggerSetCategoriesResp
+  property ccmsg=true
+  Response resp 1
+end
+
+message AclGet
+  uint32 aclId 1
+end
+
+message AclInfo
+  property noseq=true
+  uint32 id 1
+  string name 2
+  string description 3
+  byte cacheType 4
+end
+
+message AclGetResp
+  property ccmsg=true
+  Response resp 1
+  AclInfo acl 2 opt
+end
+
+message AclList
+end
+
+message AclListResp
+  property ccmsg=true
+  Response resp 1
+  AclInfo aclList 2 array opt
+end
+
+message AclRemove
+  uint32 aclId 1
+end
+
+message AclRemoveResp
+  property ccmsg=true
+  Response resp 1
+end
+
+message AclCreate
+  string name 1
+  string description 2
+  byte cacheType 3
+  stringlist addresses 4
+end
+
+message AclCreateResp
+  property ccmsg=true
+  Response resp 1
+  uint32 id 2 opt
+end
+
+message AclUpdate
+  AclInfo acl 1
+end
+
+message AclUpdateResp
+  property ccmsg=true
+  Response resp 1
+end
+
+message AclLookup
+  uint32 aclId 1
+  string addrPrefix 2
+end
+
+message AclLookupResp
+  property ccmsg=true
+  Response resp 1
+  stringlist result 2
+end
+
+message AclRemoveAddresses
+  uint32 aclId 1
+  stringlist addrs 2
+end
+
+message AclRemoveAddressesResp
+  property ccmsg=true
+  Response resp 1
+end
+
+message AclAddAddresses
+  uint32 aclId 1
+  stringlist addrs 2
+end
+
+message AclAddAddressesResp
+  property ccmsg=true
+  Response resp 1
+end
+
+message DlPrcList
+  string address 1 opt
+end
+
+message PrcInfo
+  property noseq=true
+  string address 1
+  uint32 maxLst 2
+  uint32 maxEl 3
+end
+
+message DlPrcListResp
+  property ccmsg=true
+  Response resp 1
+  PrcInfo result 2 array
+end
+
+message DlPrcAdd
+  PrcInfo prc 1
+end
+
+message DlPrcAddResp
+  property ccmsg=true
+  Response resp 1
+end
+
+message DlPrcDelete
+  string address 1
+end
+
+message DlPrcDeleteResp
+  property ccmsg=true
+  Response resp 1
+end
+
+message DlPrcGet
+  string address 1
+end
+
+message DlPrcGetResp
+  property ccmsg=true
+  Response resp 1
+  PrcInfo result 2
+end
+
+message DlPrcAlter
+  string address 1
+  uint32 maxLists 2
+  uint32 maxElements 3
+end
+
+message DlPrcAlterResp
+  property ccmsg=true
+  Response resp 1
+end
+
+message DlMemAdd
+  string dlName 1
+  string address 2
+end
+
+message DlMemAddResp
+  property ccmsg=true
+  Response resp 1
+end
+
+message DlMemDelete
+  string dlName 1
+  string address 2
+end
+
+message DlMemDeleteResp
+  property ccmsg=true
+  Response resp 1
+end
+
+message DlMemGet
+  string dlName 1
+end
+
+message DlMemGetResp
+  property ccmsg=true
+  Response resp 1
+  stringlist result 2
+end
+
+message DlSbmAdd
+  string dlName 1
+  string address 2
+end
+
+message DlSbmAddResp
+  property ccmsg=true
+  Response resp 1
+end
+
+message DlSbmDel
+  string dlName 1
+  string address 2
+end
+
+message DlSbmDelResp
+  property ccmsg=true
+  Response resp 1
+end
+
+message DlSbmList
+  string dlName 1
+end
+
+message DlSbmListResp
+  property ccmsg=true
+  Response resp 1
+  stringlist result 2
+end
+
+message DlAdd
+  string dlName 1
+  string owner 2 opt
+  uint32 maxElements 3
+end
+
+message DlAddResp
+  property ccmsg=true
+  Response resp 1
+end
+
+message DlDelete
+  string dlName 1
+  string owner 2
+end
+
+message DlDeleteResp
+  property ccmsg=true
+  Response resp 1
+end
+
+message DlGet
+  string dlName 1
+end
+
+message DlGetResp
+  property ccmsg=true
+  Response resp 1
+  string name 2
+  string owner 3 opt
+  uint32 maxEl 4
+end
+
+message DlList
+  stringlist names 1 
+  stringlist owners 2 
+end
+
+message DlListInfo
+  property noseq=true
+  string name 1
+  string owner 2 opt
+  uint32 maxEl 3
+end
+
+message DlListResp
+  property ccmsg=true
+  Response resp 1
+  DlListInfo result 2 array
+end
+
+message DlAlter
+  string dlName 1
+  uint32 maxElements 2
+end
+
+message DlAlterResp
+  property ccmsg=true
+  Response resp 1
+end
+
+message DlCopy
+  string srcDlName 1
+  string dstDlName 2
+end
+
+message DlCopyResp
+  property ccmsg=true
+  Response resp 1
+end
+
+message DlRename
+  string srcDlName 1
+  string dstDlName 2
+end
+
+message DlRenameResp
+  property ccmsg=true
+  Response resp 1
+end
+
+message CgmAddGroup
+  uint32 id 1
+  string name 2
+end
+
+message CgmAddGroupResp
+  property ccmsg=true
+  Response resp 1
+end
+
+message CgmDeleteGroup
+  uint32 id 1
+end
+
+message CgmDeleteGroupResp
+  property ccmsg=true
+  Response resp 1
+end
+
+message CgmAddAddr
+  uint32 id 1
+  string addr 2
+end
+
+message CgmAddAddrResp
+  property ccmsg=true
+  Response resp 1
+end
+
+message CgmCheck
+  uint32 id 1
+  string addr 2
+end
+
+message CgmCheckResp
+  property ccmsg=true
+  Response resp 1
+  bool result 2
+end
+
+message CgmDelAddr
+  uint32 id 1
+  string addr 2
+end
+
+message CgmDelAddrResp
+  property ccmsg=true
+  Response resp 1
+end
+
+message CgmAddAbonent
+  uint32 id 1
+  string addr 2
+end
+
+message CgmAddAbonentResp
+  property ccmsg=true
+  Response resp 1
+end
+
+message CgmDelAbonent
+  uint32 id 1
+  string addr 2
+end
+
+message CgmDelAbonentResp
+  property ccmsg=true
+  Response resp 1
+end
+
+message CgmListAbonents
+  uint32 id 1
+end
+
+message CgmListAbonentsResp
+  property ccmsg=true
+  Response resp 1
+  stringlist result 2
+end
+
+message AliasAdd
+  string addr 1
+  string alias 2
+  bool hide 3
+end
+
+message AliasAddResp
+  property ccmsg=true
+  Response resp 1
+end
+
+message AliasDel
+  string alias 1
+end
+
+message AliasDelResp
+  property ccmsg=true
+  Response resp 1
+end
+
+message GetServicesStatus
+end
+
+message ServiceStatus
+  property noseq=true
+  string serviceName 1
+  string peerAddress 2
+  string bindMode 3
+  bool boundSmsc 4 array
+end
+
+message GetServicesStatusResp
+  property ccmsg=true
+  Response resp 1
+  ServiceStatus status 2 array
+end
+
+message DisconnectService
+  string serviceId 1
+end
+
+message DisconnectServiceResp
+  property ccmsg=true
+  Response resp 1
+end
+
+message MultipartMessageRequest
+  property ccmsg=true
+  byte msg 1 array
+end
+
+message MultipartMessageRequestResp
+  Response resp 1
+end
+
+message ReplaceIfPresentRequest
+  property ccmsg=true
+  byte msg 1 array
+end
+
+message ReplaceIfPresentRequestResp
+  Response resp 1
+end
+
+message LockProfiler
+  property ccmsg=true
+end
+
+message LockProfilerResp
+  Response resp 1
+end
+
+message UnlockProfiler
+  property ccmsg=true
+end
+
+message LockMscManager
+  property ccmsg=true
+end
+
+message LockMscManagerResp
+  Response resp 1
+end
+
+message UnlockMscManager
+  property ccmsg=true
+end
+
+message RegisterAsLoadBalancer
+  property ccmsg=true
+  uint32 magic 1
+end
+
+message RegisterAsWebapp
+  property ccmsg=true
+  uint32 magic 1
+end
+
+message RegisterAsSmsc
+  property ccmsg=true
+  uint32 magic 1
+  uint32 nodeIndex 2
+end

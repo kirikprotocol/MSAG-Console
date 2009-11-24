@@ -1,0 +1,11 @@
+include Messages.def
+
+protocol ClusterLoadBalancerProtocol
+  GetServicesStatus 101
+  DisconnectService 102
+
+  RegisterAsLoadBalancer 301
+
+  GetServicesStatusResp 1101
+  DisconnectServiceResp 1102
+end
