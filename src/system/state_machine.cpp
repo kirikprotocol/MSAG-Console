@@ -899,7 +899,7 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
   }
 }
 
-time_t parseReceiptTime(const std::string& txt,SMatch* m,int idx)
+static time_t parseReceiptTime(const std::string& txt,SMatch* m,int idx)
 {
   int YY,MM,DD,hh,mm;
   sscanf(txt.c_str()+m[idx].start,"%02d%02d%02d%02d%02d",&YY,&MM,&DD,&hh,&mm);
