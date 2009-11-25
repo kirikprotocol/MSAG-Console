@@ -3841,7 +3841,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
       {
         try{
           time_t rt=time(NULL)+2;
-          if(t.command->get_resp()->get_delay()!=-1)
+          if(t.command->get_resp()->get_delay()>2)
           {
             rt+=t.command->get_resp()->get_delay()-2;
           }
