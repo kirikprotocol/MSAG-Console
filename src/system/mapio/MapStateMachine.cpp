@@ -1593,6 +1593,7 @@ static int makeUssdErrorText( MapDialog* dialog,char *text, unsigned* textLen, i
       char buf[256];
       Transliterate(out.c_str(),out.length(),CONV_ENCODING_CP1251,buf,sizeof(buf));
       out=buf;
+      dc=0;
     }
   }else
   {
@@ -1605,6 +1606,10 @@ static int makeUssdErrorText( MapDialog* dialog,char *text, unsigned* textLen, i
         buf[i]=htons(buf[i]);
       }
       out.assign((char*)buf,len);
+      dc=8;
+    }else
+    {
+      dc=0;
     }
   }
   *textLen=(unsigned)out.length();
