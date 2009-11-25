@@ -5,8 +5,6 @@
 //#include <oci.h>
 //#include <orl.h>
 
-#include "util/debug.h"
-#include "smsc/status.h"
 
 #include "StoreManager.h"
 
