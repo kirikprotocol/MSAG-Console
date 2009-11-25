@@ -21,7 +21,7 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
 
   private static final Logger logger = Logger.getLogger(SiebelDataProviderImpl.class);
 
-    private static final int FETCH_SIZE = 1000;
+  private static final int FETCH_SIZE = 1000;
 
   private ConnectionPool pool;
 
@@ -382,6 +382,7 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
     return state;
   }
 
+  /** @noinspection EmptyCatchBlock*/
   public void updateDeliveryStates(Map deliveryStates) throws SiebelException {
     if(deliveryStates == null) {
       throw new SiebelException("Some arguments are null");
@@ -397,41 +398,55 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
       connection = pool.getConnection();
       boolean autoCommit = connection.getAutoCommit();
       connection.setAutoCommit(false);
-
-      prepStatement = connection.prepareStatement(getSql("message.update.delivered"));
-      Iterator i = deliveryStates.entrySet().iterator();
-      int count = 0;
-      while(i.hasNext()) {
-        Map.Entry e = (Map.Entry)i.next();
-        String clcId = (String)e.getKey();
-        SiebelMessage.DeliveryState deliverySt = (SiebelMessage.DeliveryState)e.getValue();
-        prepStatement.setString(1, deliverySt.getSmppCode());
-        prepStatement.setString(2, deliverySt.getSmppCodeDescription());
-        prepStatement.setString(3, deliverySt.getState().toString());
-        prepStatement.setTimestamp(4, new Timestamp(System.currentTimeMillis()));
-        prepStatement.setString(5, clcId);
-        prepStatement.addBatch();
-        count++;
-        if(count == 1000) {
-          count = 0;
+      try{
+        Iterator i = deliveryStates.entrySet().iterator();
+        int count = 0;
+        while(i.hasNext()) {
+          if(prepStatement == null) {
+            prepStatement = connection.prepareStatement(getSql("message.update.delivered"));
+          }
+          Map.Entry e = (Map.Entry)i.next();
+          String clcId = (String)e.getKey();
+          SiebelMessage.DeliveryState deliverySt = (SiebelMessage.DeliveryState)e.getValue();
+          prepStatement.setString(1, deliverySt.getSmppCode());
+          prepStatement.setString(2, deliverySt.getSmppCodeDescription());
+          prepStatement.setString(3, deliverySt.getState().toString());
+          prepStatement.setTimestamp(4, new Timestamp(System.currentTimeMillis()));
+          prepStatement.setString(5, clcId);
+          prepStatement.addBatch();
+          count++;
+          if(count == 1000) {
+            count = 0;
+            prepStatement.executeBatch();
+            closeConn(null, prepStatement, null);
+            prepStatement = null;
+          }
+        }
+        if(count != 0 && prepStatement != null) {
           prepStatement.executeBatch();
         }
+        connection.commit();
+      } catch(Exception e){
+        try{
+          connection.rollback();
+        }catch(Exception ex){}
+        throw e;
+      } finally {
+        try{
+          connection.setAutoCommit(autoCommit);
+        }catch(Exception exc) {}
+        closeConn(null, prepStatement, null);
       }
-      if(count != 0) {
-        prepStatement.executeBatch();
-      }
-      connection.commit();
-      connection.setAutoCommit(autoCommit );
-    } catch (SQLException exc) {
-      throw new SiebelException("Unable to update Delivery States=", exc);
-    } finally {
-      closeConn(connection, prepStatement, null);
+    } catch (Exception exc) {
+      throw new SiebelException("Unable to update Delivery States", exc);
+    } finally{
+      closeConn(connection, null, null);
     }
-
   }
 
   private boolean shutdowned = true;
 
+  /** @noinspection EmptyCatchBlock*/
   public void shutdown() {
     if(pool != null) {
       try {
@@ -443,47 +458,47 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
 
   private static void closeConn(Connection connection, PreparedStatement preparedStatement,
                                 java.sql.ResultSet resultSet) {
-    try {
-      if (connection != null) {
-        connection.close();
-      }
-    } catch (SQLException exc) {
-      logger.error("Unable to close connection", exc);
-    }
-    try {
-      if (preparedStatement != null) {
-        preparedStatement.close();
-      }
-    } catch (SQLException exc) {
-      logger.error("Unable to close connection", exc);
 
-    }
-    try {
-      if (resultSet != null) {
+    if (resultSet != null) {
+      try {
         resultSet.close();
+      } catch (SQLException exc) {
+        logger.error("Unable to close resultSet", exc);
       }
-    } catch (SQLException exc) {
-      logger.error("Unable to close connection", exc);
+    }
+    if (preparedStatement != null) {
+      try {
+        preparedStatement.close();
+      } catch (SQLException exc) {
+        logger.error("Unable to close preparedStatement", exc);
+      }
+    }
+    if (connection != null) {
+      try {
+        connection.close();
+      } catch (SQLException exc) {
+        logger.error("Unable to close connection", exc);
+      }
     }
   }
 
-  public static void main(String args[]) throws SiebelException {
-    SiebelDataProviderImpl d = new SiebelDataProviderImpl();
-    Properties props = new Properties();
-    props.setProperty("jdbc.source", "jdbc:oracle:thin:@10.0.94.143:1521:VANDB");
-    props.setProperty("jdbc.driver", "oracle.jdbc.driver.OracleDriver");
-    props.setProperty("jdbc.user", "SMS_SENDER");
-    props.setProperty("jdbc.pass", "SMS_SENDER");
-    System.out.println("Connecting...");
-    d.connect(props);
-    System.out.println("Connected. Fetching tasks...");
-    ResultSet rs = d.getTasks();
-    System.out.println("Tasks fetched:");
-    while(rs.next()) {
-      SiebelTask t = (SiebelTask)rs.get();
-      System.out.println(" " + t);
-    }
-    d.shutdown();
-  }
+//  public static void main(String args[]) throws SiebelException {
+//    SiebelDataProviderImpl d = new SiebelDataProviderImpl();
+//    Properties props = new Properties();
+//    props.setProperty("jdbc.source", "jdbc:oracle:thin:@10.0.94.143:1521:VANDB");
+//    props.setProperty("jdbc.driver", "oracle.jdbc.driver.OracleDriver");
+//    props.setProperty("jdbc.user", "SMS_SENDER");
+//    props.setProperty("jdbc.pass", "SMS_SENDER");
+//    System.out.println("Connecting...");
+//    d.connect(props);
+//    System.out.println("Connected. Fetching tasks...");
+//    ResultSet rs = d.getTasks();
+//    System.out.println("Tasks fetched:");
+//    while(rs.next()) {
+//      SiebelTask t = (SiebelTask)rs.get();
+//      System.out.println(" " + t);
+//    }
+//    d.shutdown();
+//  }
 
 }
