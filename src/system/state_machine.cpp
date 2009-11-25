@@ -1379,6 +1379,7 @@ StateType StateMachine::submit(Tuple& t)
       if(sms->hasIntProperty(Tag::SMSC_ORIGINAL_DC))
       {
         sms->getMessageBody().dropIntProperty(Tag::SMSC_ORIGINAL_DC);
+        sms->getMessageBody().dropIntProperty(Tag::SMSC_FORCE_DC);
       }
     }
   }
