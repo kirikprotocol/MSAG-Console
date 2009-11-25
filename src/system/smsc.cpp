@@ -221,7 +221,7 @@ public:
         std::auto_ptr<uint8_t> smePerfData(smsc->getSmePerfData(smePerfDataSize));
         perfSmeListener->reportSmePerformance(smePerfData.get(), smePerfDataSize);
         info2(log,"ut=%.3lf;avg=%.3lf;last=%.3lf;cnt=%llu;eq=%d;equnl=%d;sched=%d;dpf=%d;sbm=%d;rej=%d;dlv=%d;fwd=%d;tmp=%d;prm=%d",ut,avg,rate,cnt,eqhash,equnl,d.inScheduler,d.dpfCount,
-              d.counters[0].lastSecond,d.counters[1].lastSecond,d.counters[2].lastSecond,d.counters[3].lastSecond,d.counters[4].lastSecond,d.counters[5].lastSecond);
+              d.counters[6].lastSecond,d.counters[7].lastSecond,d.counters[8].lastSecond,d.counters[9].lastSecond,d.counters[10].lastSecond,d.counters[11].lastSecond);
       }catch(std::exception& e)
       {
         warn2(log,"Exception in speed monitor:%s",e.what());
