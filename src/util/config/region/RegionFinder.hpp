@@ -12,7 +12,7 @@ namespace util {
 namespace config {
 namespace region {
 
-class RegionFinder : smsc::util::Singleton<RegionFinder> {
+class RegionFinder : public smsc::util::Singleton<RegionFinder> {
 public:
   RegionFinder():_regionDefault(0)
   {
