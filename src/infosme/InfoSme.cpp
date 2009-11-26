@@ -15,7 +15,9 @@
 #include <util/recoder/recode_dll.h>
 #include <util/smstext.h>
 
+#ifndef INFOSME_NO_DATAPROVIDER
 #include <db/DataSourceLoader.h>
+#endif
 #include <core/synchronization/EventMonitor.hpp>
 
 #include <system/smscsignalhandlers.h>
@@ -226,8 +228,10 @@ int main(int argc, char** argv)
         Manager::init("config.xml");
         Manager& manager = Manager::getInstance();
 
+#ifndef INFOSME_NO_DATAPROVIDER
         ConfigView dsConfig(manager, "StartupLoader");
         DataSourceLoader::loadup(&dsConfig);
+#endif
 
         ConfigView tpConfig(manager, "InfoSme");
         maxMessagesPerSecond++;
@@ -377,7 +381,9 @@ int main(int argc, char** argv)
         adminListener->WaitFor();
     }
 
+#ifndef INFOSME_NO_DATAPROVIDER
     DataSourceLoader::unload();
+#endif
     return resultCode;
   } catch (std::exception& ex) {
     fprintf(stderr, "catch unexpected exception[%s]\n",ex.what());

@@ -6,16 +6,19 @@ namespace smsc { namespace infosme
 
 DataProvider::~DataProvider()
 {
+#ifndef INFOSME_NO_DATAPROVIDER
     MutexGuard guard(dssLock);
     
     char* key = 0; DataSource* ds = 0; dss.First();
     while (dss.Next(key, ds))
         if (ds) delete ds;
+#endif
 }
 
 DataSource* DataProvider::createDataSource(ConfigView* config)
 {
     DataSource* ds   = 0;
+#ifndef INFOSME_NO_DATAPROVIDER
     try 
     {
         std::auto_ptr<char> dsIdentity(config->getString("type"));
@@ -30,11 +33,13 @@ DataSource* DataProvider::createDataSource(ConfigView* config)
         if (ds) delete ds;
         throw;
     }
+#endif
     return ds;
 }
 
 void DataProvider::init(ConfigView* config)
 {
+#ifndef INFOSME_NO_DATAPROVIDER
     MutexGuard guard(dssLock);
     
     std::auto_ptr< std::set<std::string> > setGuard(config->getShortSectionNames());
@@ -67,6 +72,7 @@ void DataProvider::init(ConfigView* config)
             throw;
         }
     }
+#endif
 }
 
 }}

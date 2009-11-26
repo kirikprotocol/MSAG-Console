@@ -62,8 +62,12 @@ namespace smsc { namespace infosme
 
         DataSource* getDataSource(const char* dsid)
         {
+#ifndef INFOSME_NO_DATAPROVIDER
             MutexGuard guard(dssLock);
             return ((dss.Exists(dsid)) ? dss.Get(dsid):0);
+#else
+            return 0;
+#endif
         }
     };
 
