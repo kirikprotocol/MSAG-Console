@@ -1,7 +1,6 @@
 #include <cstdio>
 #include "logger/Logger.h"
 #include "util/config/Config.h"
-#include "ConfString.h"
 #include "core/buffers/File.hpp"
 
 void usage( const char* prog )
@@ -24,8 +23,7 @@ int main( int argc, char** argv )
     // extract tasks section
     std::auto_ptr<Config> taskConfig( rootConfig->getSubConfig("InfoSme.Tasks",true) );
 
-    const std::string storeLocation = 
-        smsc::infosme::ConfString(rootConfig->getString("InfoSme.storeLocation")).str();
+    const std::string storeLocation = rootConfig->getString("InfoSme.storeLocation");
     if ( ! smsc::core::buffers::File::Exists(storeLocation.c_str()) ) {
         smsc::core::buffers::File::MkDir(storeLocation.c_str());
     }
