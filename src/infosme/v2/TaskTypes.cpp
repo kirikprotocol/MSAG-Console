@@ -62,7 +62,8 @@ flash(false),
 endDate(-1), validityPeriod(-1), validityDate(-1),
 activePeriodStart(-1), activePeriodEnd(-1), activeWeekDays(0),
 dsTimeout(0), dsUncommitedInProcess(1), dsUncommitedInGeneration(1),
-messagesCacheSize(100), messagesCacheSleep(0), useDataSm(false)
+messagesCacheSize(100), messagesCacheSleep(0), useDataSm(false),
+useUssdPush(false)
 {}
 
 
@@ -187,6 +188,15 @@ void TaskInfo::init( ConfigView* config )
 
         try { bGenerationSuccess = config->getBool("messagesHaveLoaded"); }
         catch (...) { bGenerationSuccess = false; }
+
+        try { useUssdPush = config->getBool("ussdPush"); }
+        catch (...) { useUssdPush = false; }
+        if ( useUssdPush ) {
+            // overriding things
+            transactionMode = true;
+            flash = false;
+            useDataSm = false;
+        }
 
     } catch ( std::exception& e ) {
         throw ConfigException("Task %u: %s", uid, e.what());

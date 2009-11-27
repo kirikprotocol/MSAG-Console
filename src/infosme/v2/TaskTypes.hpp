@@ -63,6 +63,7 @@ namespace infosme{
       bool    bGenerationSuccess;
       bool    flash;
       bool    useDataSm;
+      bool    useUssdPush;
 
       time_t  endDate;            // full date/time
       //time_t  retryTime;          // only HH:mm:ss in seconds

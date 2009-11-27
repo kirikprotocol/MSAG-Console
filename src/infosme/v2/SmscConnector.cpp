@@ -514,6 +514,13 @@ bool SmscConnector::send( Task& task, Message& msg )
                 if (outLen <= MAX_ALLOWED_MESSAGE_LENGTH && !info.useDataSm) {
                     sms.setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE, out, (unsigned)outLen);
                     sms.setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH, (unsigned)outLen);
+                } else if ( info.useUssdPush ) {
+                    if (outLen > MAX_ALLOWED_MESSAGE_LENGTH;
+                        smsc_log_warn(log_,"ussdpush: max allowed msg length reached: %u",unsigned(outLen));
+                        outLen = MAX_ALLOWED_MESSAGE_LENGTH;
+                    }
+                    sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE, out, (unsigned)outLen);
+                    sms.setIntProperty(Tag::SMPP_SM_LENGTH, (unsigned)outLen);
                 } else {
                     sms.setBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD, out,
                                        (unsigned)((outLen <= MAX_ALLOWED_PAYLOAD_LENGTH) ?
@@ -526,6 +533,15 @@ bool SmscConnector::send( Task& task, Message& msg )
                 break;
             }
             if (msgBuf) delete msgBuf;
+
+            if (info.useUssdPush) {
+                try {
+                    sms.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,smsc::smpp::UssdServiceOpValue::USSN_REQUEST);
+                } catch (...) {
+                    smsc_log_error(log_,"ussdpush: cannot set USSN_REQ");
+                    return false;
+                }
+            }
 
             if (info.useDataSm) {
                 smsc_log_debug(log_, "Send DATA_SM");
