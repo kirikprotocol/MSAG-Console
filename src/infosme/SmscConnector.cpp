@@ -833,9 +833,9 @@ bool SmscConnector::send( const std::string& abonent,
                 sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE, out, (unsigned)outLen);
                 sms.setIntProperty(Tag::SMPP_SM_LENGTH, (unsigned)outLen);
             } else if ( info.useUssdPush ) {
-                if (outLen > MAX_ALLOWED_PAYLOAD_LENGTH) {
+                if (outLen > MAX_ALLOWED_MESSAGE_LENGTH) {
                     smsc_log_warn(log_,"ussdpush: max allowed msg length reached: %u",unsigned(outLen));
-                    outLen = MAX_ALLOWED_PAYLOAD_LENGTH;
+                    outLen = MAX_ALLOWED_MESSAGE_LENGTH;
                 }
                 sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE, out, (unsigned)outLen);
                 sms.setIntProperty(Tag::SMPP_SM_LENGTH, (unsigned)outLen);
