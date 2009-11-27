@@ -4,10 +4,15 @@ import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataSource;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.config.Config;
+import ru.novosoft.smsc.util.config.Config.WrongParamTypeException;
 
 import java.util.*;
 import java.text.SimpleDateFormat;
-import java.io.File;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.*;
+
+import org.xml.sax.SAXException;
+import org.apache.log4j.Category;
 
 /**
  * Created by IntelliJ IDEA.
@@ -17,12 +22,15 @@ import java.io.File;
  */
 public class Task extends Observable
 {
+  private static final Category logger = Category.getInstance(Task.class);
+  
   public final static String[] WEEK_DAYS = {"Mon","Tue","Wed","Thu","Fri","Sat","Sun"};
   private final static String DEFAULT_ACTIVE_WEEK_DAYS = "Mon,Tue,Wed,Thu,Fri";
   private final static SimpleDateFormat df = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
   private static final SimpleDateFormat tf = new SimpleDateFormat("HH:mm:ss");
 
   public static final String INFOSME_EXT_PROVIDER = "EXTERNAL";
+  public static final String CONFIG_FILE_NAME = "config.xml";
 
   private boolean modified;
 
@@ -76,73 +84,85 @@ public class Task extends Observable
   private boolean deliveriesFileContainsTexts;
   private int actualRecordsSize;
   private boolean messagesHaveLoaded = false;
+  private String location;
   // for secret
   private boolean secret;
   private boolean secretFlash;
   private String secretMessage="";
 
-  Task(String id) {
+  Task(String id, String storeLocation) {
     this.id = id;
     activeWeekDaysSet = new HashSet(WEEK_DAYS.length);
     Functions.addValuesToCollection(this.activeWeekDaysSet, DEFAULT_ACTIVE_WEEK_DAYS, ",", true);
     if (delivery)
       provider = Task.INFOSME_EXT_PROVIDER;
     this.modified = true;
+    location = storeLocation + File.separatorChar + id;
   }
 
-  Task(Config config, String id) throws Config.WrongParamTypeException, Config.ParamNotFoundException {
-    this(id);
-    final String prefix = TaskDataSource.TASKS_PREFIX + '.' + StringEncoderDecoder.encodeDot(id);
+  Task(Config config, String id, String storeLocation) throws Config.WrongParamTypeException, Config.ParamNotFoundException,
+          IOException, ParserConfigurationException, SAXException {
+    this(id, storeLocation);
+    File configFile = new File(location, CONFIG_FILE_NAME);
+    if (configFile.exists()) {
+      loadConfig(new Config(configFile), "");
+      logger.info("Task " + id + " loaded from separate config");
+    } else {
+      loadConfig(config, TaskDataSource.TASKS_PREFIX + '.' + StringEncoderDecoder.encodeDot(id) + '.');
+      logger.info("Task " + id + " loaded from common config");
+    }
+  }
 
-    name = config.getString(prefix + ".name");
-    address = (config.containsParameter(prefix + ".address")) ? config.getString(prefix + ".address") : "";
-    owner = config.containsParameter(prefix + ".owner") ? config.getString(prefix + ".owner") : null;
+  private void loadConfig(Config config, String prefix) throws Config.ParamNotFoundException, Config.WrongParamTypeException {
+    name = config.getString(prefix + "name");
+    address = (config.containsParameter(prefix + "address")) ? config.getString(prefix + "address") : "";
+    owner = config.containsParameter(prefix + "owner") ? config.getString(prefix + "owner") : null;
 
-    provider = config.getString(prefix + ".dsId");
+    provider = config.getString(prefix + "dsId");
 
-    priority = config.getInt(prefix + ".priority");
+    priority = config.getInt(prefix + "priority");
 
-    enabled = config.getBool(prefix + ".enabled");
-    endDate = getDateFromConfig(config, prefix + ".endDate", df);
-    startDate = getDateFromConfig(config, prefix + ".startDate", df);
-    activePeriodStart = getDateFromConfig(config, prefix + ".activePeriodStart", tf);
-    activePeriodEnd = getDateFromConfig(config, prefix + ".activePeriodEnd", tf);
-    String activeWeekDaysStr = config.containsParameter(prefix + ".activeWeekDays") ? config.getString(prefix + ".activeWeekDays") : DEFAULT_ACTIVE_WEEK_DAYS;
+    enabled = config.getBool(prefix + "enabled");
+    endDate = getDateFromConfig(config, prefix + "endDate", df);
+    startDate = getDateFromConfig(config, prefix + "startDate", df);
+    activePeriodStart = getDateFromConfig(config, prefix + "activePeriodStart", tf);
+    activePeriodEnd = getDateFromConfig(config, prefix + "activePeriodEnd", tf);
+    String activeWeekDaysStr = config.containsParameter(prefix + "activeWeekDays") ? config.getString(prefix + "activeWeekDays") : DEFAULT_ACTIVE_WEEK_DAYS;
     activeWeekDaysSet = new HashSet(WEEK_DAYS.length);
     Functions.addValuesToCollection(this.activeWeekDaysSet, activeWeekDaysStr, ",", true);
 
-    transactionMode = config.getBool(prefix + ".transactionMode");
-    validityPeriod = getDateFromConfig(config, prefix + ".validityPeriod", tf);
-    validityDate = getDateFromConfig(config, prefix + ".validityDate", df);
-    replaceMessage = config.getBool(prefix + ".replaceMessage");
-    svcType = config.getString(prefix + ".svcType");
-    retryOnFail = config.getBool(prefix + ".retryOnFail");
-    retryPolicy = config.getString(prefix + ".retryPolicy");
-    flash = config.containsParameter(prefix + ".flash") && config.getBool(prefix + ".flash");
+    transactionMode = config.getBool(prefix + "transactionMode");
+    validityPeriod = getDateFromConfig(config, prefix + "validityPeriod", tf);
+    validityDate = getDateFromConfig(config, prefix + "validityDate", df);
+    replaceMessage = config.getBool(prefix + "replaceMessage");
+    svcType = config.getString(prefix + "svcType");
+    retryOnFail = config.getBool(prefix + "retryOnFail");
+    retryPolicy = config.getString(prefix + "retryPolicy");
+    flash = config.containsParameter(prefix + "flash") && config.getBool(prefix + "flash");
 
-    query = config.getString(prefix + ".query");
-    template = config.getString(prefix + ".template");
-    dsTimeout = config.getInt(prefix + ".dsTimeout");
-    messagesCacheSize = config.getInt(prefix + ".messagesCacheSize");
-    messagesCacheSleep = config.getInt(prefix + ".messagesCacheSleep");
-    uncommitedInGeneration = config.getInt(prefix + ".uncommitedInGeneration");
-    uncommitedInProcess = config.getInt(prefix + ".uncommitedInProcess");
-    trackIntegrity = config.getBool(prefix + ".trackIntegrity");
-    keepHistory = config.getBool(prefix + ".keepHistory");
-    if (config.containsParameter(prefix + ".saveFinalState"))
-      saveFinalState = config.getBool(prefix + ".saveFinalState");
-    messagesHaveLoaded = config.getBool(prefix + ".messagesHaveLoaded");
-    if (config.containsParameter(prefix + ".useDataSm"))
-      useDataSm = config.getBool(prefix + ".useDataSm");
+    query = config.getString(prefix + "query");
+    template = config.getString(prefix + "template");
+    dsTimeout = config.getInt(prefix + "dsTimeout");
+    messagesCacheSize = config.getInt(prefix + "messagesCacheSize");
+    messagesCacheSleep = config.getInt(prefix + "messagesCacheSleep");
+    uncommitedInGeneration = config.getInt(prefix + "uncommitedInGeneration");
+    uncommitedInProcess = config.getInt(prefix + "uncommitedInProcess");
+    trackIntegrity = config.getBool(prefix + "trackIntegrity");
+    keepHistory = config.getBool(prefix + "keepHistory");
+    if (config.containsParameter(prefix + "saveFinalState"))
+      saveFinalState = config.getBool(prefix + "saveFinalState");
+    messagesHaveLoaded = config.getBool(prefix + "messagesHaveLoaded");
+    if (config.containsParameter(prefix + "useDataSm"))
+      useDataSm = config.getBool(prefix + "useDataSm");
 
-    delivery  = config.containsParameter(prefix + ".delivery") && config.getBool(prefix + ".delivery");
+    delivery  = config.containsParameter(prefix + "delivery") && config.getBool(prefix + "delivery");
     if (delivery)
       provider = Task.INFOSME_EXT_PROVIDER;
 
     try {
-      secret = config.getBool(prefix + ".secret");
-      secretFlash = config.getBool(prefix + ".secretFlash");
-      secretMessage = config.getString(prefix + ".secretMessage");
+      secret = config.getBool(prefix + "secret");
+      secretFlash = config.getBool(prefix + "secretFlash");
+      secretMessage = config.getString(prefix + "secretMessage");
     } catch (Config.ParamNotFoundException e) {
       secret = false;
       secretFlash = false;
@@ -160,45 +180,93 @@ public class Task extends Observable
     }
   }
 
-  void storeToConfig(Config config)
+  public static boolean existsConfigFile(String fileLocation) {
+    return new File(fileLocation, CONFIG_FILE_NAME).exists();
+  }
+
+  private File createConfigFile() throws IOException {
+    File configFile = new File(location, CONFIG_FILE_NAME);
+    if (!configFile.createNewFile()) {
+      return configFile;
+    }
+    PrintWriter out = null;
+    try {
+      out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(configFile), Functions.getLocaleEncoding()));
+      Functions.storeConfigHeader(out, "config", "configuration.dtd", Functions.getLocaleEncoding());
+      Functions.storeConfigFooter(out, "config");
+    } finally {
+      if (out != null) out.close();
+    }
+    return configFile;
+  }
+
+  //void storeToConfig(Config config)
+  void storeToConfig() throws IOException, SAXException, ParserConfigurationException, WrongParamTypeException
   {
-    final String prefix = TaskDataSource.TASKS_PREFIX + '.' + StringEncoderDecoder.encodeDot(id);
-    config.setString(prefix + ".name", name);
+    //final String prefix = separateConfig ? "" : TaskDataSource.TASKS_PREFIX + '.' + StringEncoderDecoder.encodeDot(id) + '.';
+    String prefix = "";
+    File configDir = new File(location);
+    if (!configDir.exists()) {
+      configDir.mkdir();
+    }
+    File configFile = this.createConfigFile();
+    Config config = new Config(configFile);
+    config.setString(prefix + "name", name);
     if (address != null && address.trim().length() > 0)
-      config.setString(prefix + ".address", address.trim());
-    config.setString(prefix + ".dsId", provider);
-    config.setBool(prefix + ".enabled", enabled);
-    config.setBool(prefix + ".delivery", delivery);
-    config.setInt(prefix + ".priority", priority);
-    config.setBool(prefix + ".retryOnFail", retryOnFail);
-    config.setBool(prefix + ".replaceMessage", replaceMessage);
-    config.setString(prefix + ".svcType", svcType);
-    config.setString(prefix + ".startDate", startDate == null ? "" : df.format(startDate));
-    config.setString(prefix + ".endDate", endDate == null ? "" : df.format(endDate));
-    config.setString(prefix + ".retryPolicy", retryPolicy);
-    config.setString(prefix + ".validityPeriod", validityPeriod == null ? "" : tf.format(validityPeriod));
-    config.setString(prefix + ".validityDate", validityDate == null ? "" : df.format(validityDate));
-    config.setString(prefix + ".activePeriodStart", activePeriodStart == null ? "" : tf.format(activePeriodStart));
-    config.setString(prefix + ".activePeriodEnd", activePeriodEnd == null ? "" : tf.format(activePeriodEnd));
-    config.setString(prefix + ".query", query);
-    config.setString(prefix + ".template", template);
-    config.setInt(prefix + ".dsTimeout", dsTimeout);
-    config.setInt(prefix + ".messagesCacheSize", messagesCacheSize);
-    config.setInt(prefix + ".messagesCacheSleep", messagesCacheSleep);
-    config.setBool(prefix + ".transactionMode", transactionMode);
-    config.setInt(prefix + ".uncommitedInGeneration", uncommitedInGeneration);
-    config.setInt(prefix + ".uncommitedInProcess", uncommitedInProcess);
-    config.setBool(prefix + ".trackIntegrity", trackIntegrity);
-    config.setBool(prefix + ".keepHistory", keepHistory);
-    config.setBool(prefix + ".saveFinalState", saveFinalState );
-    config.setBool(prefix + ".useDataSm", useDataSm );
-    config.setBool(prefix + ".flash", flash);
-    config.setString(prefix + ".activeWeekDays", Functions.collectionToString(activeWeekDaysSet, ","));
-    config.setBool(prefix + ".messagesHaveLoaded", messagesHaveLoaded);
-    config.setBool(prefix + ".secret", secret);
-    config.setBool(prefix + ".secretFlash", secretFlash);
-    config.setString(prefix + ".secretMessage", secretMessage);
-    config.setString(prefix + ".owner", owner);
+      config.setString(prefix + "address", address.trim());
+    config.setString(prefix + "dsId", provider);
+    config.setBool(prefix + "enabled", enabled);
+    config.setBool(prefix + "delivery", delivery);
+    config.setInt(prefix + "priority", priority);
+    config.setBool(prefix + "retryOnFail", retryOnFail);
+    config.setBool(prefix + "replaceMessage", replaceMessage);
+    config.setString(prefix + "svcType", svcType);
+    config.setString(prefix + "startDate", startDate == null ? "" : df.format(startDate));
+    config.setString(prefix + "endDate", endDate == null ? "" : df.format(endDate));
+    config.setString(prefix + "retryPolicy", retryPolicy);
+    config.setString(prefix + "validityPeriod", validityPeriod == null ? "" : tf.format(validityPeriod));
+    config.setString(prefix + "validityDate", validityDate == null ? "" : df.format(validityDate));
+    config.setString(prefix + "activePeriodStart", activePeriodStart == null ? "" : tf.format(activePeriodStart));
+    config.setString(prefix + "activePeriodEnd", activePeriodEnd == null ? "" : tf.format(activePeriodEnd));
+    config.setString(prefix + "query", query);
+    config.setString(prefix + "template", template);
+    config.setInt(prefix + "dsTimeout", dsTimeout);
+    config.setInt(prefix + "messagesCacheSize", messagesCacheSize);
+    config.setInt(prefix + "messagesCacheSleep", messagesCacheSleep);
+    config.setBool(prefix + "transactionMode", transactionMode);
+    config.setInt(prefix + "uncommitedInGeneration", uncommitedInGeneration);
+    config.setInt(prefix + "uncommitedInProcess", uncommitedInProcess);
+    config.setBool(prefix + "trackIntegrity", trackIntegrity);
+    config.setBool(prefix + "keepHistory", keepHistory);
+    config.setBool(prefix + "saveFinalState", saveFinalState );
+    config.setBool(prefix + "useDataSm", useDataSm );
+    config.setBool(prefix + "flash", flash);
+    config.setString(prefix + "activeWeekDays", Functions.collectionToString(activeWeekDaysSet, ","));
+    config.setBool(prefix + "messagesHaveLoaded", messagesHaveLoaded);
+    config.setBool(prefix + "secret", secret);
+    config.setBool(prefix + "secretFlash", secretFlash);
+    config.setString(prefix + "secretMessage", secretMessage);
+    config.setString(prefix + "owner", owner);
+    config.save();
+  }
+
+  public void remove(Config config) {
+    File configFile = new File(location, CONFIG_FILE_NAME);
+    if (configFile.exists()) {
+      configFile.renameTo(new File(location, CONFIG_FILE_NAME + ".bak"));
+    } else {
+      config.removeSection(TaskDataSource.TASKS_PREFIX  + '.' + id);
+    }
+  }
+
+  public void change(Config config) throws IOException, SAXException, ParserConfigurationException, WrongParamTypeException {
+    File configFile = new File(location, CONFIG_FILE_NAME);
+    if (configFile.exists()) {
+      this.storeToConfig();
+    } else {
+      config.removeSection(TaskDataSource.TASKS_PREFIX  + '.' + id);
+      this.storeToConfig();
+    }
   }
 
   public boolean equals(Object obj)

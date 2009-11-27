@@ -1,10 +1,12 @@
 package ru.novosoft.smsc.infosme.backend.config.tasks;
 
 import org.apache.log4j.Category;
+import org.xml.sax.SAXException;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.infosme.backend.config.Changes;
 import ru.novosoft.smsc.util.config.Config;
 
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -28,6 +30,7 @@ public class TaskManager {
 
   private final Map tasks = new HashMap(100);
   private boolean modified = false;
+  private String storeLocation;
 
   public TaskManager(String configDir, Config config) throws AdminException {
     try {
@@ -60,7 +63,10 @@ public class TaskManager {
         id = idFile.readInt();
       }
 
+      this.storeLocation = config.getString("InfoSme.storeLocation");
       resetTasks(null, config);
+      //this.storeLocation = storeLocation;
+
     } catch (Exception e) {
       e.printStackTrace();
       throw new AdminException("Can't init task manager");
@@ -91,15 +97,37 @@ public class TaskManager {
     }
   }
 
-  private static List loadTasks(Config config) throws Config.WrongParamTypeException, Config.ParamNotFoundException {
+  private List loadTasks(Config config) throws IOException, ParserConfigurationException, SAXException,
+          Config.WrongParamTypeException, Config.ParamNotFoundException {
+    logger.info("Store location: '" + storeLocation + "'");
+    String[] storeDirs = new File(storeLocation).list();
+    Set tasksNames =  config.getSectionChildShortSectionNames(TASKS_PREFIX);
+
+    for (Iterator i = tasksNames.iterator(); i.hasNext();) {
+      logger.info("Task from common " + i.next());
+    }
+
+    for (int i = 0; i < storeDirs.length; ++i) {
+      String configLocation = storeLocation + File.separatorChar + storeDirs[i];
+      if (new File(configLocation).isDirectory() && Task.existsConfigFile(configLocation)) {
+        tasksNames.add(storeDirs[i]);
+        logger.info("Add from store dir "+ storeDirs[i]);
+      }
+    }
+
+    for (Iterator i = tasksNames.iterator(); i.hasNext();) {
+      logger.info("All names " + i.next());
+    }
+
     List result = new ArrayList(100);
-    for (Iterator i = config.getSectionChildShortSectionNames(TASKS_PREFIX).iterator(); i.hasNext();)
-      result.add(new Task(config, (String)i.next()));
+    for (Iterator i = tasksNames.iterator(); i.hasNext();) {
+      result.add(new Task(config, (String)i.next(), storeLocation));
+    }
     return result;
   }
 
   public synchronized Task createTask() throws AdminException {
-    return new Task(String.valueOf(getId()));
+    return new Task(String.valueOf(getId()), storeLocation);
   }
 
   public synchronized void addTask(Task t) {
@@ -109,7 +137,8 @@ public class TaskManager {
   public synchronized void addTask(Task t, Config cfg) throws AdminException {
     try {
       addTask(t);
-      t.storeToConfig(cfg);
+      t.storeToConfig();
+      //t.storeToConfig(cfg);
       t.setModified(false);
     } catch (Exception e) {
       e.printStackTrace();
@@ -124,10 +153,15 @@ public class TaskManager {
 
   public synchronized boolean removeTask(String id, Config cfg) throws AdminException {
     try {
-      boolean removed = tasks.remove(id) != null;
-      if (removed)
-        cfg.removeSection(TASKS_PREFIX + '.' + id);
-      return removed;
+      //boolean removed = tasks.remove(id) != null;
+      Task task = (Task)tasks.remove(id);
+      if (task != null) {
+         task.remove(cfg);
+        //cfg.removeSection(TASKS_PREFIX + '.' + id);
+        return true;
+      } else {
+        return false;
+      }
     } catch (Exception e) {
       e.printStackTrace();
       throw new AdminException(e.getMessage());
@@ -182,39 +216,50 @@ public class TaskManager {
 
   private Changes analyzeChanges(List oldTasks) throws Config.WrongParamTypeException, Config.ParamNotFoundException {
     Changes changes = new Changes();
+    Changes changedTasks = new Changes();
 
     // Lookup new tasks
     for (Iterator iter = tasks.keySet().iterator(); iter.hasNext();) {
       String id = (String)iter.next();
 
       boolean contains = false;
+      Task t = null;
       for (Iterator iter1 = oldTasks.iterator(); iter1.hasNext();) {
-        Task t = (Task)iter1.next();
+        //Task t = (Task)iter1.next();
+        t = (Task)iter1.next();
         if (t.getId().equals(id)) {
           contains = true;
           break;
         }
       }
 
-      if (!contains)
+      if (!contains) {
         changes.added(id);
+        if (t != null) changedTasks.added(t);
+      }
+
     }
 
     // Lookup deleted tasks
     for (Iterator iter = oldTasks.iterator(); iter.hasNext();) {
       Task t = (Task)iter.next();
-      if (!containsTaskWithId(t.getId()))
+      if (!containsTaskWithId(t.getId())) {
         changes.deleted(t.getId());
+        changedTasks.deleted(t);
+      }
     }
 
     // Lookup modified tasks
     for (Iterator iter = tasks.values().iterator(); iter.hasNext();) {
       Task t = (Task)iter.next();
-      if (t.isModified() && !changes.isAdded(t.getId()) && !changes.isDeleted(t.getId()))
+      if (t.isModified() && !changes.isAdded(t.getId()) && !changes.isDeleted(t.getId())) {
         changes.modified(t.getId());
+        changedTasks.modified(t);
+      }
     }
 
-    return changes;
+    //return changes;
+    return changedTasks;
   }
 
   public synchronized Changes applyTasks(String owner, Config cfg) throws AdminException {
@@ -222,9 +267,38 @@ public class TaskManager {
       List oldTasks = loadTasks(cfg);
 
       // Analyze changes
-      Changes changes = analyzeChanges(oldTasks);
+      Changes changedTasks = analyzeChanges(oldTasks);
+      Changes changes = new Changes();
 
+      //deleted tasks
+      for (Iterator iter = changedTasks.getDeleted().iterator(); iter.hasNext();) {
+        Task t = (Task)iter.next();
+        if (owner == null || (t.getOwner() != null && t.getOwner().equals(owner))) {
+          t.remove(cfg);
+        }
+        changes.deleted(t.getId());
+      }
+
+      //changed tasks
+      for (Iterator iter = changedTasks.getModified().iterator(); iter.hasNext();) {
+        Task t = (Task)iter.next();
+        if (owner == null || (t.getOwner() != null && t.getOwner().equals(owner))) {
+          t.change(cfg);
+        }
+        changes.modified(t.getId());
+      }
+
+      //added tasks
+      for (Iterator iter = changedTasks.getAdded().iterator(); iter.hasNext();) {
+        Task t = (Task)iter.next();
+        if (owner == null || t.getOwner().equals(owner))
+          t.storeToConfig();
+        changes.modified(t.getId());
+      }
+
+     /*
       // Remove all tasks by owner
+
       for (Iterator iter = oldTasks.iterator(); iter.hasNext();) {
         Task t = (Task)iter.next();
         if (owner == null || (t.getOwner() != null && t.getOwner().equals(owner)))
@@ -237,9 +311,8 @@ public class TaskManager {
         if (owner == null || t.getOwner().equals(owner))
           t.storeToConfig(cfg);
       }
-
+       */
       return changes;
-
     } catch (Exception e) {
       e.printStackTrace();
       throw new AdminException(e.getMessage());

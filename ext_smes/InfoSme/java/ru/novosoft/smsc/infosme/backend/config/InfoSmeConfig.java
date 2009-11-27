@@ -109,7 +109,6 @@ public class InfoSmeConfig {
   public InfoSmeConfig(String configDir, InfoSmeContext ctx) throws AdminException {
     try {
       Config cfg = ctx.loadCurrentConfig();
-      this.taskManager = new TaskManager(configDir, cfg);
       this.scheduleManager = new ScheduleManager(cfg);
       this.retryPolicyManager = new RetryPolicyManager(cfg);
       this.providerManager = new ProviderManager(cfg);
@@ -118,6 +117,7 @@ public class InfoSmeConfig {
       this.configDir = configDir;
       Functions.addValuesToCollection(this.siebelTWeekDaysSet, DEFAULT_ACTIVE_WEEK_DAYS, ",", true);
       loadOptions(cfg);
+      this.taskManager = new TaskManager(configDir, cfg);
     } catch (Throwable e) {
       e.printStackTrace();
       throw new AdminException(e.getMessage());
