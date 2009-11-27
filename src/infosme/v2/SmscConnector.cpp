@@ -515,7 +515,7 @@ bool SmscConnector::send( Task& task, Message& msg )
                     sms.setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE, out, (unsigned)outLen);
                     sms.setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH, (unsigned)outLen);
                 } else if ( info.useUssdPush ) {
-                    if (outLen > MAX_ALLOWED_MESSAGE_LENGTH;
+                    if (outLen > MAX_ALLOWED_MESSAGE_LENGTH ) {
                         smsc_log_warn(log_,"ussdpush: max allowed msg length reached: %u",unsigned(outLen));
                         outLen = MAX_ALLOWED_MESSAGE_LENGTH;
                     }
