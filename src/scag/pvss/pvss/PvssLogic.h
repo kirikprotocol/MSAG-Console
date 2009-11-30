@@ -137,6 +137,7 @@ public:
     /// start a task that initialize the logic
     virtual LogicInitTask* startInit( bool checkAtStart = false ) = 0;
     virtual LogicRebuildIndexTask* startRebuildIndex(unsigned maxSpeed = 0) = 0;
+    virtual void dumpStorage( int index ) = 0;
 
     /// return the name of the logic
     virtual std::string toString() const = 0;
@@ -178,6 +179,7 @@ public:
 
     virtual LogicInitTask* startInit( bool checkAtStart = false );
     virtual LogicRebuildIndexTask* startRebuildIndex(unsigned maxSpeed = 0);
+    virtual void dumpStorage( int index );
 
     virtual std::string toString() const {
         char buf[64];
@@ -198,8 +200,11 @@ protected:
     virtual void rebuildIndex( unsigned maxSpeed = 0);
 
     /// init an element storage and return the total number of good nodes in it
-    unsigned long initElementStorage(unsigned index,bool checkAtStart = false) /* throw (smsc::util::Exception) */;
+    unsigned long initElementStorage(unsigned index,
+                                     bool checkAtStart = false,
+                                     bool readonly = false ) /* throw (smsc::util::Exception) */;
     unsigned long rebuildElementStorage(unsigned index,unsigned maxSpeed);
+    void dumpElementStorage( unsigned index );
 
     virtual Response* processProfileRequest(ProfileRequest& request);
 
@@ -256,6 +261,7 @@ public:
 
     virtual LogicInitTask* startInit( bool checkAtStart = false );
     virtual LogicRebuildIndexTask* startRebuildIndex( unsigned maxSpeed = 0);
+    virtual void dumpStorage( int index );
     virtual std::string toString() const { return "infrastruct logic"; }
 
   //virtual Response* process(Request& request) /* throw(PvssException) */ ;

@@ -52,6 +52,9 @@ public:
     void init();
     void rebuildIndex( unsigned maxSpeed = 0 );
 
+    /// dump the storage -1 -- infrastruct, >= 0 -- abonent
+    void dumpStorage( int index );
+
   unsigned getInfrastructNodeNumber() const { return 0; }
 
     inline unsigned getNodeNumber() const { return nodeCfg_.nodeNumber; }

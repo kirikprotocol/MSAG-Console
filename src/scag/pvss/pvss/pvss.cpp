@@ -237,6 +237,7 @@ int main(int argc, char* argv[]) {
     bool recovery = false;
     bool checkIndex = false;
     bool backup = false;
+    int dodump = -2;
     for ( int i = 1; i < argc; ++i ) {
         std::string sarg(argv[i]);
         if ( sarg == "--recovery" || sarg == "--rebuild-index" ) {
@@ -251,6 +252,15 @@ int main(int argc, char* argv[]) {
         }
         if ( sarg == "--backup" ) {
             backup = true;
+            smsc_log_info(logger,"%s on command line", sarg.c_str());
+            continue;
+        }
+        if ( sarg == "--dump" ) {
+            if ( i >= argc ) {
+                smsc_log_error(logger,"--dump requires an argument");
+                ::exit(1);
+            }
+            dodump = atoi(argv[++i]);
             smsc_log_info(logger,"%s on command line", sarg.c_str());
             continue;
         }
@@ -382,10 +392,13 @@ int main(int argc, char* argv[]) {
         }
 
         try {
-            const bool makedirs = !recovery;
+            const bool makedirs = !(recovery || (dodump>=-1));
             pvssDispatcher.createLogics( makedirs, abntCfg, infCfg.get() );
             if ( recovery ) {
                 pvssDispatcher.rebuildIndex( maxSpeed );
+                return 0;
+            } else if ( dodump >= -1 ) {
+                pvssDispatcher.dumpStorage( dodump );
                 return 0;
             } else {
                 pvssDispatcher.init();

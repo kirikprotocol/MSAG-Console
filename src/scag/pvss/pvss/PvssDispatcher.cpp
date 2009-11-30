@@ -213,6 +213,18 @@ void PvssDispatcher::rebuildIndex( unsigned maxSpeed )
 }
 
 
+void PvssDispatcher::dumpStorage( int index )
+{
+    if ( index >= 0 ) {
+        for ( unsigned i = 0; i < abonentLogics_.Count(); ++i ) {
+            abonentLogics_[i]->dumpStorage(index);
+        }
+    } else if ( infrastructLogic_.get() ) {
+        infrastructLogic_->dumpStorage(0);
+    }
+}
+
+
 unsigned PvssDispatcher::getLocationNumber(unsigned elementStorageNumber) const {
   return (elementStorageNumber / StorageNumbering::instance().nodes()) % nodeCfg_.locationsCount;
 }

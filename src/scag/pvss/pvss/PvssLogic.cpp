@@ -113,11 +113,34 @@ PvssLogic::LogicInitTask* AbonentLogic::startInit( bool checkAtStart )
     dataFileManager_.startTask(task,false);
     return task;
 }
+
 PvssLogic::LogicRebuildIndexTask* AbonentLogic::startRebuildIndex(unsigned maxSpeed)
 {
     LogicRebuildIndexTask* task = new LogicRebuildIndexTask(this,maxSpeed);
     dataFileManager_.startTask(task,false);
     return task;
+}
+
+void AbonentLogic::dumpStorage( int i )
+{
+    if ( i >= 0 && i < dispatcher_.getStoragesCount() &&
+         util::storage::StorageNumbering::instance().node(i) == dispatcher_.getNodeNumber() &&
+         dispatcher_.getLocationNumber(i) == locationNumber_ ) {
+        smsc_log_info(logger_,"DUMPING STORAGE %u",i);
+        initElementStorage( i, false, true );
+        AbonentStorage* storage = elementStorages_.Get(i)->storage;
+        AbntAddr key;
+        DataBlockBackup2< Profile > value;
+        for ( DiskStorage::iterator_type iter = storage->dataBegin();
+              iter.next( key, value ); ) 
+        {
+            // dumping
+            if ( value.value ) {
+                smsc_log_info(logger_,"%s: %s",key.toString().c_str(),value.value->toString().c_str());
+            }
+        }
+        value.dealloc();
+    }
 }
 
 
@@ -188,7 +211,9 @@ void AbonentLogic::rebuildIndex(unsigned maxSpeed)
 }
 
 
-unsigned long AbonentLogic::initElementStorage(unsigned index,bool checkAtStart) /* throw (smsc::util::Exception) */ {
+unsigned long AbonentLogic::initElementStorage( unsigned index,
+                                                bool checkAtStart,
+                                                bool readonly ) /* throw (smsc::util::Exception) */ {
   char pathSuffix[4];
   snprintf(pathSuffix, sizeof(pathSuffix), "%03u", index);
   string path = string(config_.locations[locationNumber_].path + "/") + pathSuffix;
@@ -213,9 +238,11 @@ unsigned long AbonentLogic::initElementStorage(unsigned index,bool checkAtStart)
             smsc::logger::Logger::getInstance(("pvssbh."+pathSuffixString).c_str())));
     const std::string fn( config_.dbName + "-data" );
     int ret = -1;
-    ret = bs->open(fn,path);
+    ret = bs->open(fn,path,readonly);
     if ( ret == DiskDataStorage::storage_type::JOURNAL_FILE_OPEN_FAILED ) {
-        if ( bs->create(fn,path, config_.fileSize, config_.blockSize ) < 0 ) {
+        if ( readonly ) {
+            throw smsc::util::Exception("failed to open journal file %s in readonly mode",path.c_str());
+        } else if ( bs->create(fn,path, config_.fileSize, config_.blockSize ) < 0 ) {
             throw smsc::util::Exception("cannot create data disk storage: %s", path.c_str());
         }
         ret = 0;
@@ -230,6 +257,10 @@ unsigned long AbonentLogic::initElementStorage(unsigned index,bool checkAtStart)
             smsc::logger::Logger::getInstance(("pvssdd."+pathSuffixString).c_str())));
 
 #else
+
+  if ( readonly ) {
+      throw smsc::util::Exception("readonly mode is not supported for old storage");
+  }
 
   std::auto_ptr< DiskDataStorage::storage_type > bs
         (new DiskDataStorage::storage_type
@@ -486,6 +517,10 @@ PvssLogic::LogicRebuildIndexTask* InfrastructLogic::startRebuildIndex(unsigned m
     std::auto_ptr<LogicRebuildIndexTask> task(new LogicRebuildIndexTask(this,maxSpeed));
     task->Execute();
     return 0;
+}
+void InfrastructLogic::dumpStorage( int i )
+{
+    smsc_log_warn(logger_,"dump storage is not impl yet");
 }
 
 
