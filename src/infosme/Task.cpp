@@ -341,7 +341,7 @@ void Task::init(ConfigView* config, uint32_t taskId)
     bInGeneration = false;
   } catch (...) {}
   try { info.useDataSm = config->getBool("useDataSm"); } catch (...) { info.useDataSm = false; } 
-  try { info.useUssdPush = config->getBool("ussdPush"); }
+  try { info.useUssdPush = config->getBool("useUssdPush"); }
   catch (...) { info.useUssdPush = false; }
     if ( info.useUssdPush ) {
         // overriding things

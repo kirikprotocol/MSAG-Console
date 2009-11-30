@@ -189,7 +189,7 @@ void TaskInfo::init( ConfigView* config )
         try { bGenerationSuccess = config->getBool("messagesHaveLoaded"); }
         catch (...) { bGenerationSuccess = false; }
 
-        try { useUssdPush = config->getBool("ussdPush"); }
+        try { useUssdPush = config->getBool("useUssdPush"); }
         catch (...) { useUssdPush = false; }
         if ( useUssdPush ) {
             // overriding things
