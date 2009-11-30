@@ -123,23 +123,35 @@ PvssLogic::LogicRebuildIndexTask* AbonentLogic::startRebuildIndex(unsigned maxSp
 
 void AbonentLogic::dumpStorage( int i )
 {
-    if ( i >= 0 && i < dispatcher_.getStoragesCount() &&
+    smsc_log_debug(logger_,"dump i=%u storages=%u node(i)=%u disp.node=%u disp.loc=%u loc=%u",
+                  unsigned(i),
+                  unsigned(dispatcher_.getStoragesCount()),
+                  unsigned(util::storage::StorageNumbering::instance().node(i)),
+                  unsigned(dispatcher_.getNodeNumber()),
+                  unsigned(dispatcher_.getLocationNumber(i)),
+                  unsigned(locationNumber_));
+    if ( i >= 0 &&
+         i < dispatcher_.getStoragesCount() &&
          util::storage::StorageNumbering::instance().node(i) == dispatcher_.getNodeNumber() &&
          dispatcher_.getLocationNumber(i) == locationNumber_ ) {
-        smsc_log_info(logger_,"DUMPING STORAGE %u",i);
+        smsc_log_info(logger_,"INITING STORAGE %u",i);
         initElementStorage( i, false, true );
+        smsc_log_info(logger_,"DUMPING STORAGE %u",i);
         AbonentStorage* storage = elementStorages_.Get(i)->storage;
         AbntAddr key;
-        DataBlockBackup2< Profile > value;
+        Profile profile;
+        typedef DiskStorage::value_type value_type;
+        value_type value( &profile, new value_type::backup_type );
         for ( DiskStorage::iterator_type iter = storage->dataBegin();
               iter.next( key, value ); ) 
         {
+            smsc_log_debug(logger_,"key: %s, val:%p", key.toString().c_str(), value.value );
             // dumping
             if ( value.value ) {
                 smsc_log_info(logger_,"%s: %s",key.toString().c_str(),value.value->toString().c_str());
             }
         }
-        value.dealloc();
+        // value.dealloc();
     }
 }
 
