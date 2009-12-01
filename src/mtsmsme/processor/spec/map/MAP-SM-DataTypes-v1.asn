@@ -1,3 +1,8 @@
+-- unformatted text of asn modules ca be pbtained from
+-- http://www.3gpp.org/ftp/Specs/archive/09_series/09.02/0902-3b0.zip
+-- more formatted scanned text of asn modules ca be pbtained from
+-- http://pda.etsi.org/exchangefolder/gsmts_0902sv031100p.pdf
+
 MAP-SM-DataTypes-v1 DEFINITIONS IMPLICIT TAGS ::=
 
 BEGIN
@@ -18,23 +23,23 @@ RoutingInfoForSM-Res-v1 ::= SEQUENCE{
 	imsi		IMSI,
 			CHOICE{
 				[0] IMPLICIT SEQUENCE{
-	locationInfo				LocationInfo,
-	lMsId				LMsId OPTIONAL},
-	forwardingData		[1] IMPLICIT ForwardingData},
+	locationInfo				LocationInfo-v1,
+	lMsId				LMsId-v1 OPTIONAL},
+	forwardingData		[1] IMPLICIT ForwardingData-v1},
 	mwd-Set			[2] IMPLICIT BOOLEAN OPTIONAL
 }
 
-LocationInfo	 ::= CHOICE {
+LocationInfo-v1	 ::= CHOICE {
 		roamingNumber	[0] IMPLICIT ISDN-AddressString,
 		mscNumber		[1] IMPLICIT ISDN-AddressString}
 
-LMsId	 ::= OCTET STRING (SIZE (4))
+LMsId-v1	 ::= OCTET STRING (SIZE (4))
 
-ForwardingData	 ::= SEQUENCE{
+ForwardingData-v1	 ::= SEQUENCE{
 	forwardedToNumber	[5] IMPLICIT ISDN-AddressString,
-	forwardingOptions	[6] IMPLICIT ForwardingOptions OPTIONAL
+	forwardingOptions	[6] IMPLICIT ForwardingOptions-v1 OPTIONAL
 }
-ForwardingOptions	 ::= OCTET STRING (SIZE(1))
+ForwardingOptions-v1	 ::= OCTET STRING (SIZE(1))
 		-- Bit 8-7  Notification to forwarding party
 		--          00  No notification
 		--          01  notification with calling number identity
