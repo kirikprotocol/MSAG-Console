@@ -14,7 +14,8 @@ namespace util {
 
 template <
     class _TArg                 //Element of array, must have a default constructor!
-  , typename _SizeTypeArg       //must be an unsigned integer type!
+  , typename _SizeTypeArg       //must be an unsigned integer type, implicitly
+                                //restricts maximum number of elemnets in array!
   , _SizeTypeArg _max_STACK_SZ  //maximum number of elements are to store on stack
 >
 class LWArray_T {
@@ -25,6 +26,15 @@ protected:
   _TArg * _buf;                   //pointer to data elements buffer (either heap or stck)
 
   _SizeTypeArg _MAX_FACTOR(void) const { return _MAX_SIZE()/_max_STACK_SZ; }
+
+  //Resetes unused stack elements
+  void resetUnusedStack(void)
+  {
+    if (!_heapBufSz) {
+      for (_SizeTypeArg i = _numElem; i < capacity(); ++i)
+        new (_buf + i)_TArg();
+    }
+  }
 
   void checkIndex(_SizeTypeArg use_idx) const //throw(std::exception)
   {
@@ -55,15 +65,11 @@ public:
 
   _SizeTypeArg _MAX_SIZE(void) const { return (_SizeTypeArg)(-1); }
 
-  LWArray_T(_SizeTypeArg use_sz = 0) //throw()
+  LWArray_T(_SizeTypeArg num_to_reserve = 0) //throw()
     : _heapBufSz(0), _numElem(0), _buf(_sbuf)
   {
-    enlarge(use_sz);
-    _numElem = use_sz;
-    if (!_heapBufSz) { //reset stack elements
-      for (_SizeTypeArg i = 0; i < _numElem; ++i)
-        new (_buf + i)_TArg();
-    }
+    enlarge(num_to_reserve);
+    resetUnusedStack();
   }
   LWArray_T(const LWArray_T & use_arr) //throw()
     : _heapBufSz(0), _numElem(0), _buf(_sbuf)
@@ -115,13 +121,25 @@ public:
     _numElem = 0;
   }
 
+  //Reserves space for storing given number of element
+  //Returns false if requested capacity exceeds _MAX_SIZE().
+  bool reserve(_SizeTypeArg num_to_reserve)
+  {
+    if (num_to_reserve <= capacity())
+      return true;
+    if (!enlarge(num_to_reserve - capacity()))
+      return false;
+    resetUnusedStack();
+    return true;
+  }
+
   //Attempts to enlarge buffer for specified number of elements,
-  //performin check for _SizeTypeArg overloading.
+  //performing check for _SizeTypeArg overloading.
   //Return false if resulting size exceeds _MAX_SIZE()
   bool enlarge(_SizeTypeArg add_sz) //throw()
   {
-    _SizeTypeArg req_sz = _numElem + add_sz;
-    if (req_sz < _numElem) //check for overloading;
+    _SizeTypeArg req_sz = capacity() + add_sz;
+    if (req_sz < capacity()) //check for overloading;
       return false;
 
     if (req_sz > _max_STACK_SZ) {
@@ -131,6 +149,7 @@ public:
         _SizeTypeArg new_sz = _max_STACK_SZ*((factor > _MAX_FACTOR()) ? _MAX_FACTOR() : factor);
 
         _TArg * hbuf = new _TArg[new_sz];
+        //copy initialized elements
         for (_SizeTypeArg i = 0; i < _numElem; ++i)
           hbuf[i] = _buf[i];
 
@@ -143,8 +162,8 @@ public:
     return true;
   }
 
-  //Appends tag to tagging.
-  //Returns false if resulting number of tags exceeds limit of 255.
+  //Appends element to array
+  //Returns false if resulting number of elemennts would exceed limit
   bool append(const _TArg & use_val) //throw()
   {
     bool rval = enlarge(1);
@@ -152,8 +171,8 @@ public:
       _buf[_numElem++] = use_val;
     return rval;
   }
-  //Appends another tagging.
-  //Returns false if resulting number of tags exceeds limit of 255.
+  //Appends another array.
+  //Returns false if resulting number of elements would exceed limit
   bool append(const LWArray_T & use_arr) //throw()
   {
     bool rval = enlarge(use_arr.size());
