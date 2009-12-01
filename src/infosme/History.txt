@@ -1,6 +1,9 @@
 History in reverse order
 ----------------------------------------------------
 
+2009-12-01 14:50 bukind
+ feature: ussdPush implemented both in backend and frontend
+
 ----------------------------------------------------
 infosme-build-20091120 15:35 bukind
 
