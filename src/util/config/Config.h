@@ -79,6 +79,8 @@ public:
      *                   if key not found
      * @see getInt()
      * @see getBool()
+     * 
+     * NOTE: returned value should not be deleted!
      */
     char * getString(const char * const paramName) const
         throw (HashInvalidKeyException)

@@ -55,6 +55,7 @@ namespace config {
         CStrSet* getStrParamNames() const
             throw (ConfigException);
         
+        /// NOTE: returned value should be deleted []
         char* getString(const char* param, const char* error=0, bool check=true) const
             throw (ConfigException);
         int32_t getInt(const char* param, const char* error=0) const
