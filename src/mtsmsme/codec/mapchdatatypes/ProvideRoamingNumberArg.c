@@ -188,26 +188,26 @@ static ber_tlv_tag_t asn_DEF_ProvideRoamingNumberArg_tags_1[] = {
 	(ASN_TAG_CLASS_UNIVERSAL | (16 << 2))
 };
 static asn_TYPE_tag2member_t asn_MAP_ProvideRoamingNumberArg_tag2el_1[] = {
-    { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 0, 0, 0 }, /* imsi at 49 */
-    { (ASN_TAG_CLASS_CONTEXT | (1 << 2)), 1, 0, 0 }, /* msc-Number at 50 */
-    { (ASN_TAG_CLASS_CONTEXT | (2 << 2)), 2, 0, 0 }, /* msisdn at 51 */
-    { (ASN_TAG_CLASS_CONTEXT | (4 << 2)), 3, 0, 0 }, /* lmsi at 52 */
-    { (ASN_TAG_CLASS_CONTEXT | (5 << 2)), 4, 0, 0 }, /* gsm-BearerCapability at 53 */
-    { (ASN_TAG_CLASS_CONTEXT | (6 << 2)), 5, 0, 0 }, /* networkSignalInfo at 54 */
-    { (ASN_TAG_CLASS_CONTEXT | (7 << 2)), 6, 0, 0 }, /* suppressionOfAnnouncement at 55 */
-    { (ASN_TAG_CLASS_CONTEXT | (8 << 2)), 7, 0, 0 }, /* gmsc-Address at 56 */
-    { (ASN_TAG_CLASS_CONTEXT | (9 << 2)), 8, 0, 0 }, /* callReferenceNumber at 57 */
-    { (ASN_TAG_CLASS_CONTEXT | (10 << 2)), 9, 0, 0 }, /* or-Interrogation at 58 */
-    { (ASN_TAG_CLASS_CONTEXT | (11 << 2)), 10, 0, 0 }, /* extensionContainer at 59 */
-    { (ASN_TAG_CLASS_CONTEXT | (12 << 2)), 11, 0, 0 }, /* alertingPattern at 61 */
-    { (ASN_TAG_CLASS_CONTEXT | (13 << 2)), 12, 0, 0 }, /* ccbs-Call at 62 */
-    { (ASN_TAG_CLASS_CONTEXT | (14 << 2)), 14, 0, 0 }, /* additionalSignalInfo at 64 */
-    { (ASN_TAG_CLASS_CONTEXT | (15 << 2)), 13, 0, 0 }, /* supportedCamelPhasesInInterrogatingNode at 63 */
-    { (ASN_TAG_CLASS_CONTEXT | (16 << 2)), 15, 0, 0 }, /* orNotSupportedInGMSC at 65 */
-    { (ASN_TAG_CLASS_CONTEXT | (17 << 2)), 16, 0, 0 }, /* pre-pagingSupported at 66 */
-    { (ASN_TAG_CLASS_CONTEXT | (18 << 2)), 17, 0, 0 }, /* longFTN-Supported at 67 */
-    { (ASN_TAG_CLASS_CONTEXT | (19 << 2)), 18, 0, 0 }, /* suppress-VT-CSI at 68 */
-    { (ASN_TAG_CLASS_CONTEXT | (20 << 2)), 19, 0, 0 } /* offeredCamel4CSIsInInterrogatingNode at 69 */
+    { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 0, 0, 0 }, /* imsi at 203 */
+    { (ASN_TAG_CLASS_CONTEXT | (1 << 2)), 1, 0, 0 }, /* msc-Number at 204 */
+    { (ASN_TAG_CLASS_CONTEXT | (2 << 2)), 2, 0, 0 }, /* msisdn at 205 */
+    { (ASN_TAG_CLASS_CONTEXT | (4 << 2)), 3, 0, 0 }, /* lmsi at 206 */
+    { (ASN_TAG_CLASS_CONTEXT | (5 << 2)), 4, 0, 0 }, /* gsm-BearerCapability at 207 */
+    { (ASN_TAG_CLASS_CONTEXT | (6 << 2)), 5, 0, 0 }, /* networkSignalInfo at 208 */
+    { (ASN_TAG_CLASS_CONTEXT | (7 << 2)), 6, 0, 0 }, /* suppressionOfAnnouncement at 209 */
+    { (ASN_TAG_CLASS_CONTEXT | (8 << 2)), 7, 0, 0 }, /* gmsc-Address at 210 */
+    { (ASN_TAG_CLASS_CONTEXT | (9 << 2)), 8, 0, 0 }, /* callReferenceNumber at 211 */
+    { (ASN_TAG_CLASS_CONTEXT | (10 << 2)), 9, 0, 0 }, /* or-Interrogation at 212 */
+    { (ASN_TAG_CLASS_CONTEXT | (11 << 2)), 10, 0, 0 }, /* extensionContainer at 213 */
+    { (ASN_TAG_CLASS_CONTEXT | (12 << 2)), 11, 0, 0 }, /* alertingPattern at 215 */
+    { (ASN_TAG_CLASS_CONTEXT | (13 << 2)), 12, 0, 0 }, /* ccbs-Call at 216 */
+    { (ASN_TAG_CLASS_CONTEXT | (14 << 2)), 14, 0, 0 }, /* additionalSignalInfo at 218 */
+    { (ASN_TAG_CLASS_CONTEXT | (15 << 2)), 13, 0, 0 }, /* supportedCamelPhasesInInterrogatingNode at 217 */
+    { (ASN_TAG_CLASS_CONTEXT | (16 << 2)), 15, 0, 0 }, /* orNotSupportedInGMSC at 219 */
+    { (ASN_TAG_CLASS_CONTEXT | (17 << 2)), 16, 0, 0 }, /* pre-pagingSupported at 220 */
+    { (ASN_TAG_CLASS_CONTEXT | (18 << 2)), 17, 0, 0 }, /* longFTN-Supported at 221 */
+    { (ASN_TAG_CLASS_CONTEXT | (19 << 2)), 18, 0, 0 }, /* suppress-VT-CSI at 222 */
+    { (ASN_TAG_CLASS_CONTEXT | (20 << 2)), 19, 0, 0 } /* offeredCamel4CSIsInInterrogatingNode at 223 */
 };
 static asn_SEQUENCE_specifics_t asn_SPC_ProvideRoamingNumberArg_specs_1 = {
 	sizeof(struct ProvideRoamingNumberArg),

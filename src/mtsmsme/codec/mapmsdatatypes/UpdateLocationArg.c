@@ -98,16 +98,16 @@ static ber_tlv_tag_t asn_DEF_UpdateLocationArg_tags_1[] = {
 	(ASN_TAG_CLASS_UNIVERSAL | (16 << 2))
 };
 static asn_TYPE_tag2member_t asn_MAP_UpdateLocationArg_tag2el_1[] = {
-    { (ASN_TAG_CLASS_UNIVERSAL | (4 << 2)), 0, 0, 1 }, /* imsi at 47 */
-    { (ASN_TAG_CLASS_UNIVERSAL | (4 << 2)), 2, -1, 0 }, /* vlr-Number at 49 */
-    { (ASN_TAG_CLASS_UNIVERSAL | (16 << 2)), 4, 0, 0 }, /* extensionContainer at 51 */
-    { (ASN_TAG_CLASS_CONTEXT | (1 << 2)), 1, 0, 0 }, /* msc-Number at 48 */
-    { (ASN_TAG_CLASS_CONTEXT | (2 << 2)), 8, 0, 0 }, /* v-gmlc-Address at 56 */
-    { (ASN_TAG_CLASS_CONTEXT | (6 << 2)), 5, 0, 0 }, /* vlr-Capability at 53 */
-    { (ASN_TAG_CLASS_CONTEXT | (10 << 2)), 3, 0, 0 }, /* lmsi at 50 */
-    { (ASN_TAG_CLASS_CONTEXT | (11 << 2)), 6, 0, 0 }, /* informPreviousNetworkEntity at 54 */
-    { (ASN_TAG_CLASS_CONTEXT | (12 << 2)), 7, 0, 0 }, /* cs-LCS-NotSupportedByUE at 55 */
-    { (ASN_TAG_CLASS_CONTEXT | (13 << 2)), 9, 0, 0 } /* add-info at 57 */
+    { (ASN_TAG_CLASS_UNIVERSAL | (4 << 2)), 0, 0, 1 }, /* imsi at 70 */
+    { (ASN_TAG_CLASS_UNIVERSAL | (4 << 2)), 2, -1, 0 }, /* vlr-Number at 72 */
+    { (ASN_TAG_CLASS_UNIVERSAL | (16 << 2)), 4, 0, 0 }, /* extensionContainer at 74 */
+    { (ASN_TAG_CLASS_CONTEXT | (1 << 2)), 1, 0, 0 }, /* msc-Number at 71 */
+    { (ASN_TAG_CLASS_CONTEXT | (2 << 2)), 8, 0, 0 }, /* v-gmlc-Address at 79 */
+    { (ASN_TAG_CLASS_CONTEXT | (6 << 2)), 5, 0, 0 }, /* vlr-Capability at 76 */
+    { (ASN_TAG_CLASS_CONTEXT | (10 << 2)), 3, 0, 0 }, /* lmsi at 73 */
+    { (ASN_TAG_CLASS_CONTEXT | (11 << 2)), 6, 0, 0 }, /* informPreviousNetworkEntity at 77 */
+    { (ASN_TAG_CLASS_CONTEXT | (12 << 2)), 7, 0, 0 }, /* cs-LCS-NotSupportedByUE at 78 */
+    { (ASN_TAG_CLASS_CONTEXT | (13 << 2)), 9, 0, 0 } /* add-info at 80 */
 };
 static asn_SEQUENCE_specifics_t asn_SPC_UpdateLocationArg_specs_1 = {
 	sizeof(struct UpdateLocationArg),

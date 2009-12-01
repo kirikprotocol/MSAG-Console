@@ -80,14 +80,14 @@ static ber_tlv_tag_t asn_DEF_VLR_Capability_tags_1[] = {
 	(ASN_TAG_CLASS_UNIVERSAL | (16 << 2))
 };
 static asn_TYPE_tag2member_t asn_MAP_VLR_Capability_tag2el_1[] = {
-    { (ASN_TAG_CLASS_UNIVERSAL | (16 << 2)), 1, 0, 0 }, /* extensionContainer at 62 */
-    { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 0, 0, 0 }, /* supportedCamelPhases at 61 */
-    { (ASN_TAG_CLASS_CONTEXT | (1 << 2)), 3, 0, 0 }, /* istSupportIndicator at 65 */
-    { (ASN_TAG_CLASS_CONTEXT | (2 << 2)), 2, 0, 0 }, /* solsaSupportIndicator at 64 */
-    { (ASN_TAG_CLASS_CONTEXT | (3 << 2)), 4, 0, 0 }, /* superChargerSupportedInServingNetworkEntity at 66 */
-    { (ASN_TAG_CLASS_CONTEXT | (4 << 2)), 5, 0, 0 }, /* longFTN-Supported at 67 */
-    { (ASN_TAG_CLASS_CONTEXT | (5 << 2)), 6, 0, 0 }, /* supportedLCS-CapabilitySets at 68 */
-    { (ASN_TAG_CLASS_CONTEXT | (6 << 2)), 7, 0, 0 } /* offeredCamel4CSIs at 69 */
+    { (ASN_TAG_CLASS_UNIVERSAL | (16 << 2)), 1, 0, 0 }, /* extensionContainer at 85 */
+    { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 0, 0, 0 }, /* supportedCamelPhases at 84 */
+    { (ASN_TAG_CLASS_CONTEXT | (1 << 2)), 3, 0, 0 }, /* istSupportIndicator at 88 */
+    { (ASN_TAG_CLASS_CONTEXT | (2 << 2)), 2, 0, 0 }, /* solsaSupportIndicator at 87 */
+    { (ASN_TAG_CLASS_CONTEXT | (3 << 2)), 4, 0, 0 }, /* superChargerSupportedInServingNetworkEntity at 89 */
+    { (ASN_TAG_CLASS_CONTEXT | (4 << 2)), 5, 0, 0 }, /* longFTN-Supported at 90 */
+    { (ASN_TAG_CLASS_CONTEXT | (5 << 2)), 6, 0, 0 }, /* supportedLCS-CapabilitySets at 91 */
+    { (ASN_TAG_CLASS_CONTEXT | (6 << 2)), 7, 0, 0 } /* offeredCamel4CSIs at 92 */
 };
 static asn_SEQUENCE_specifics_t asn_SPC_VLR_Capability_specs_1 = {
 	sizeof(struct VLR_Capability),

@@ -37,9 +37,9 @@ static ber_tlv_tag_t asn_DEF_CancelLocationArg_tags_1[] = {
 };
 static asn_TYPE_tag2member_t asn_MAP_CancelLocationArg_tag2el_1[] = {
     { (ASN_TAG_CLASS_UNIVERSAL | (4 << 2)), 0, 0, 0 }, /* imsi at 253 */
-    { (ASN_TAG_CLASS_UNIVERSAL | (10 << 2)), 1, 0, 0 }, /* cancellationType at 114 */
+    { (ASN_TAG_CLASS_UNIVERSAL | (10 << 2)), 1, 0, 0 }, /* cancellationType at 144 */
     { (ASN_TAG_CLASS_UNIVERSAL | (16 << 2)), 0, 0, 1 }, /* imsi-WithLMSI at 255 */
-    { (ASN_TAG_CLASS_UNIVERSAL | (16 << 2)), 2, -1, 0 } /* extensionContainer at 115 */
+    { (ASN_TAG_CLASS_UNIVERSAL | (16 << 2)), 2, -1, 0 } /* extensionContainer at 145 */
 };
 static asn_SEQUENCE_specifics_t asn_SPC_CancelLocationArg_specs_1 = {
 	sizeof(struct CancelLocationArg),
