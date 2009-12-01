@@ -68,6 +68,7 @@ public class TaskEdit extends InfoSmeBean
   private int messagesCacheSleep = 0;
   private boolean transactionMode = false;
   private boolean useDataSm = false;
+  private int useUssdPush = -1;
   private int uncommitedInGeneration = 0;
   private int uncommitedInProcess = 0;
   private boolean trackIntegrity = false;
@@ -165,6 +166,7 @@ public class TaskEdit extends InfoSmeBean
     messagesCacheSleep = task.getMessagesCacheSleep();
     transactionMode = task.isTransactionMode();
     useDataSm = task.isUseDataSm();
+    useUssdPush = task.getUseUssdPush();
     uncommitedInGeneration = task.getUncommitedInGeneration();
     uncommitedInProcess = task.getUncommitedInProcess();
     trackIntegrity = task.isTrackIntegrity();
@@ -220,7 +222,10 @@ public class TaskEdit extends InfoSmeBean
       }
       task.setRetryPolicy(retryPolicy);
       task.setOwner(owner);
+
     }
+    // NOTE: ussd push is set the last to override other settings
+    task.setUseUssdPush(useUssdPush);
   }
 
   protected int done(User user) throws AdminException {
@@ -531,6 +536,19 @@ public class TaskEdit extends InfoSmeBean
   public void setUseDataSm(boolean useDataSm) {
     this.useDataSm = useDataSm;
   }
+
+    public boolean isUssdPushAllowed() {
+        return useUssdPush >= 0;
+    }
+
+    public boolean isUseUssdPush() {
+        return useUssdPush > 0;
+    }
+
+    public void setUseUssdPush(boolean useUssdPush) {
+        if (logger.isInfoEnabled()) logger.info("setting useUssdPush=" + useUssdPush);
+        this.useUssdPush = useUssdPush ? 1 : 0;
+    }
 
   public int getUncommitedInGenerationInt() {
     return uncommitedInGeneration;

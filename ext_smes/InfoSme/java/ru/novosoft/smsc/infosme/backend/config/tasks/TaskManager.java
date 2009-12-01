@@ -31,8 +31,16 @@ public class TaskManager {
   private final Map tasks = new HashMap(100);
   private boolean modified = false;
   private String storeLocation;
+    private boolean ussdPushFeature; // not set from frontend (yet)
 
   public TaskManager(String configDir, Config config) throws AdminException {
+
+      try {
+          this.ussdPushFeature = config.getBool("InfoSme.ussdPushFeature");
+      } catch ( Exception e ) {
+          this.ussdPushFeature = false;
+      }
+
     try {
       File f = new File(configDir, "taskid.bin");
       if (!f.exists()) {
@@ -127,8 +135,16 @@ public class TaskManager {
   }
 
   public synchronized Task createTask() throws AdminException {
-    return new Task(String.valueOf(getId()), storeLocation);
+      Task t = new Task(String.valueOf(getId()), storeLocation);
+      if ( ussdPushFeature ) {
+          t.setUseUssdPush(0);
+      }
+      return t;
   }
+
+    public boolean hasUssdPushFeature() {
+        return ussdPushFeature;
+    }
 
   public synchronized void addTask(Task t) {
     tasks.put(t.getId(), t);

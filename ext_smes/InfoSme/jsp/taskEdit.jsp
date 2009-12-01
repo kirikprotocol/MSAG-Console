@@ -119,6 +119,17 @@
   }%>
   </td>
 </tr>
+<%if ( bean.isUssdPushAllowed() ) {%>
+<tr class=row<%=rowN++&1%>>
+  <th><label for=useUssdPush><%= getLocString("infosme.label.use_ussd_push")%></label></th>
+  <td><%if (bean.isSmeRunning()) {
+    %><input class=check type=checkbox id=useUssdPush name=useUssdPush <%=bean.isUseUssdPush() ? "checked" : ""%>><%
+  } else {
+    %><%=bean.isUseUssdPush() ? "enabled" : "disabled"%><%
+  }%>
+  </td>
+</tr>
+<% } %>
 <tr class=row<%=rowN++&1%>>
   <th><%= getLocString("infosme.label.priority")%></th>
   <td><%if (bean.isSmeRunning()) {

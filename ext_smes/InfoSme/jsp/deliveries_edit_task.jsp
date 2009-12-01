@@ -107,6 +107,12 @@
       <th><label for="useDataSm"><%= getLocString("infosme.label.use_data_sm")%></label></th>
       <td><input class=check type=checkbox id=useDataSm name=useDataSm <%=deliveries_bean.isUseDataSm() ? "checked" : ""%>></td>
     </tr>
+<% if ( deliveries_bean.isUssdPushAllowed() ) { %>
+    <tr class=row<%=rowN++&1%>>
+      <th><label for="useUssdPush"><%= getLocString("infosme.label.use_ussd_push")%></label></th>
+      <td><input class=check type=checkbox id=useUssdPush name=useUssdPush <%=deliveries_bean.isUseUssdPush() ? "checked" : ""%>></td>
+    </tr>
+<% } %>
 <% if (!deliveries_bean.isFileContainsText()) { %>
     <tr class=row<%=rowN++&1%>>
       <th><%= getLocString("infosme.label.message_text")%></th>

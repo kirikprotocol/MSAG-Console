@@ -355,6 +355,10 @@ public class InfoSmeConfig {
     return taskManager.containsTaskWithId(id);
   }
 
+    public boolean hasUssdPushFeature() { 
+        return taskManager.hasUssdPushFeature();
+    }
+
   // SCHEDULES ---------------------------------
 
   public void addSchedule(Schedule s) {

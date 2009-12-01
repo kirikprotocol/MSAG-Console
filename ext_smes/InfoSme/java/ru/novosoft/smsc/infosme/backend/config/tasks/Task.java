@@ -45,6 +45,7 @@ public class Task extends Observable
   private boolean replaceMessage = false;
   private String svcType = "";
   private boolean useDataSm = false;
+  private int useUssdPush = -1; // -1 -- notactive, 0 -- false, 1 -- true
 
   // Retry on fail
   private boolean retryOnFail = false;
@@ -169,6 +170,19 @@ public class Task extends Observable
       secretMessage = "";
     }
 
+      try {
+          boolean tmp = config.getBool(prefix + "useUssdPush" );
+          useUssdPush = tmp ? 1 : 0;
+      } catch ( Exception e ) {
+          useUssdPush = -1;
+      }
+      if ( useUssdPush > 0 ) {
+          // true
+          useDataSm = false;
+          transactionMode = true;
+          flash = false;
+      }
+
     this.modified = false;
   }
 
@@ -240,6 +254,8 @@ public class Task extends Observable
     config.setBool(prefix + "keepHistory", keepHistory);
     config.setBool(prefix + "saveFinalState", saveFinalState );
     config.setBool(prefix + "useDataSm", useDataSm );
+    if (logger.isInfoEnabled()) logger.info("writing useUssdPush=" + useUssdPush );
+    if (useUssdPush >= 0) config.setBool(prefix + "useUssdPush", (useUssdPush > 0) ? true : false );
     config.setBool(prefix + "flash", flash);
     config.setString(prefix + "activeWeekDays", Functions.collectionToString(activeWeekDaysSet, ","));
     config.setBool(prefix + "messagesHaveLoaded", messagesHaveLoaded);
@@ -300,6 +316,7 @@ public class Task extends Observable
               && this.keepHistory == task.keepHistory
               && this.saveFinalState == task.saveFinalState
               && this.useDataSm == task.useDataSm
+              && this.useUssdPush == task.useUssdPush
               && this.activeWeekDaysSet.equals(task.activeWeekDaysSet)
               && this.retryPolicy.equals(task.retryPolicy)
               && this.secret == task.secret
@@ -343,6 +360,7 @@ public class Task extends Observable
     sb.append(", keepHistory=").append(keepHistory);
     sb.append(", saveFinalState=").append(saveFinalState);
     sb.append(", useDataSm=").append(useDataSm);
+    if ( useUssdPush >= 0 ) sb.append(", useUssdPush=").append(useUssdPush>0?true:false);
     sb.append(", flash=").append(flash);
     sb.append(", uncommitedInGeneration=").append(uncommitedInGeneration);
     sb.append(", uncommitedInProcess=").append(uncommitedInProcess);
@@ -554,8 +572,10 @@ public class Task extends Observable
   }
 
   public void setTransactionMode(boolean transactionMode) {
-    this.transactionMode = transactionMode;
-    modified = true;
+      if ( this.useUssdPush <= 0 ) {
+          this.transactionMode = transactionMode;
+          modified = true;
+      }
   }
 
   public int getUncommitedInGeneration() {
@@ -608,9 +628,28 @@ public class Task extends Observable
   }
 
   public void setUseDataSm(boolean useDataSm) {
-    this.useDataSm = useDataSm;
-    modified = true;
+      if ( useUssdPush <= 0 ) {
+          this.useDataSm = useDataSm;
+          modified = true;
+      }
   }
+
+    /// <0 -- not active
+    /// >0 -- true
+    public int getUseUssdPush() {
+        return useUssdPush;
+    }
+    
+    public void setUseUssdPush(int useUssdPush) {
+        if (logger.isInfoEnabled()) logger.info("setting useUssdPush=" + useUssdPush );
+        if ( useUssdPush > 0 ) {
+            this.useDataSm = false;
+            this.flash = false;
+            this.transactionMode = true;
+        }
+        this.useUssdPush = useUssdPush;
+        modified = true;
+    }
 
   public Collection getActiveWeekDays() {
     return activeWeekDaysSet;
@@ -657,8 +696,10 @@ public class Task extends Observable
   }
 
   public void setFlash(boolean flash) {
-    this.flash = flash;
-    modified = true;
+      if ( useUssdPush <= 0 ) {
+          this.flash = flash;
+          modified = true;
+      }
   }
 
   public boolean isMessagesHaveLoaded() {

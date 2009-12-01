@@ -381,4 +381,22 @@ public class Deliveries extends InfoSmeBean {
   public void setUseDataSm(boolean val) {
     pageData.useDataSm = val; 
   }
+
+    public boolean isUssdPushAllowed() {
+        return pageData.useUssdPush >= 0;
+    }
+
+    public boolean isUseUssdPush() {
+        return pageData.useUssdPush > 0;
+    }
+
+    public void setUseUssdPush( boolean useUssdPush ) {
+        if (logger.isInfoEnabled()) logger.info("setting useUssdPush=" + useUssdPush);
+        pageData.useUssdPush = (useUssdPush ? 1 : 0);
+        if ( useUssdPush ) {
+            pageData.useDataSm = false;
+            pageData.transactionMode = true;
+            pageData.flash = false;
+        }
+    }
 }
