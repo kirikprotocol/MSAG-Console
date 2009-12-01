@@ -84,7 +84,7 @@ SendRoutingInfoForSMRespV1::SendRoutingInfoForSMRespV1(const string& imsi, const
 
   res.choice.present = choice_PR_sequence;
   res.choice.choice.sequence.lMsId = 0;
-  res.choice.choice.sequence.locationInfo.present = LocationInfo_PR_mscNumber;
+  res.choice.choice.sequence.locationInfo.present = LocationInfo_v1_PR_mscNumber;
   res.choice.choice.sequence.locationInfo.choice.mscNumber = _msc;
 }
 SendRoutingInfoForSMRespV1::~SendRoutingInfoForSMRespV1()
