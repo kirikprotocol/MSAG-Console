@@ -112,6 +112,7 @@ public:
       }catch(...)
       {
         __trace__("CANCELAGENT: batch cancel processing error");
+        try{
         cmd.getProxy()->putCommand
         (
           SmscCommand::makeCancelSmResp
@@ -120,6 +121,7 @@ public:
             Status::CANCELFAIL
           )
         );
+        }catch(...){}
       }
 
       // end of processing
