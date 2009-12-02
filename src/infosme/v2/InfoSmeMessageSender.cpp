@@ -518,7 +518,14 @@ void InfoSmeMessageSender::createRegionSender( const smsc::util::config::region:
     }
 
     SmscConnector** ptr = connectors_.GetPtr(smscId);
-    SmscConnector* conn = ptr ? *ptr : defaultConnector_;
+    SmscConnector* conn;
+    if ( ptr ) {
+        conn = *ptr;
+    } else {
+        smsc_log_warn(log_,"smsc connector '%s' is not found for region %d",
+                      smscId,regId);
+        conn = defaultConnector_;
+    }
     if ( !conn ) {
         throw ConfigException("connector is null for region %d",regId);
     }

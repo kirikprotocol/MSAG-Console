@@ -513,9 +513,16 @@ bool Task::prefetchMessage( time_t now, int regionId )
 
     if ( !active_ ) return false;
     if ( prefetched_ ) {
-        if ( prefetch_.id == regionId ) {
-            if ( prefetch_.date <= now ) return true;
-            else return false;
+        if ( prefetch_.regionId == regionId ) {
+            if ( prefetch_.date <= now ) {
+                smsc_log_debug(logger,"task %u/'%s' message %llx for reg=%d is already prefetched",
+                               info.uid,info.name.c_str(),prefetch_.id,regionId);
+                return true;
+            } else {
+                smsc_log_debug(logger,"task %u/'%s' prefetched message %llx for reg=%d is in the future",
+                               info.uid,info.name.c_str(),prefetch_.id,regionId);
+                return false;
+            }
         }
         doSuspendMessage(prefetch_);
         prefetched_ = false;
@@ -530,6 +537,8 @@ bool Task::prefetchMessage( time_t now, int regionId )
                 prefetch_ = msg;
                 list.pop_front();
                 --messagesInCache_;
+                smsc_log_debug(logger,"task %u/'%s' message %llx for reg=%d prefetched from list, left size=%u",
+                               info.uid,info.name.c_str(),prefetch_.id,regionId,unsigned(list.size()));
                 return (prefetched_ = true);
             }
         }
@@ -564,8 +573,9 @@ void Task::getPrefetched( Message& msg )
     MutexGuard mg(lock_);
     if ( !prefetched_ ) throw smsc::util::Exception("logic problem in task %u: msg is not prefetched",info.uid);
     prefetched_ = false;
-    smsc_log_debug(logger,"task %u/'%s' message %llx, abonent %s fetched",
-                   info.uid, info.name.c_str(), prefetch_.id, prefetch_.abonent.c_str() );
+    smsc_log_debug(logger,"task %u/'%s' message %llx, region %d, abonent %s fetched",
+                   info.uid, info.name.c_str(), prefetch_.id,
+                   prefetch_.regionId, prefetch_.abonent.c_str() );
     msg = prefetch_;
 }
 
