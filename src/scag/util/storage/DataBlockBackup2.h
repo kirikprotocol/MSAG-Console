@@ -73,6 +73,13 @@ template < class Val > struct DataBlockBackup2 : public DataBlockBackup2Base
         if (backup) { deallocBackup(backup); backup = 0; }
     }
 
+    std::string toString() const {
+        char buf[100];
+        snprintf(buf,sizeof(buf),"v=%p b=%p %s",value,backup,value ? value->toString().c_str() : "");
+        return buf;
+    }
+
+
 public:
     Val*                 value;
 };
@@ -110,6 +117,11 @@ public:
     inline void dealloc( stored_type& v ) const {
         v.dealloc();
     }
+
+    std::string storedTypeToString( stored_type v ) const {
+        return v.toString();
+    }
+
 protected:
     inline void releaseval( stored_type& v ) const {
         v.value = 0;

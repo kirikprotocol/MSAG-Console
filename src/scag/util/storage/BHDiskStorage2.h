@@ -59,6 +59,7 @@ public:
         i_ = invalidIndex();
         v_ = const_cast<value_type*>(&v);
         if ( !buf_ ) buf_ = value_type::allocBackup();
+        if (log_) smsc_log_debug(log_,"serialize(%s)",v.toString().c_str());
         io::Serializer ser(*buf_,glossary_);
         ser.setVersion(store_->version());
         ser.reset();
@@ -84,10 +85,12 @@ public:
                 // successfully stored, now buf_ has fully functional
                 attachBackup(*v_,buf_);
             }
-            if (log_) { smsc_log_debug(log_,"append: %s idx=%llx val=%p bck=%p",
-                                       key_.toString().c_str(),
-                                       uint64_t(blockIndex),
-                                       v_->value, v_->backup ); }
+            if (log_) {
+                smsc_log_debug(log_,"append: %s idx=%llx %s",
+                               key_.toString().c_str(),
+                               uint64_t(blockIndex),
+                               v_->toString().c_str());
+            }
         } else {
             blockIndex = invalidIndex();
         }
@@ -110,10 +113,11 @@ public:
         if ( !buf_ || buf_->empty() || !v.value ) return false;
         if ( ! deserializeBuffer(*v.value,*buf_) ) return false;
         attachBackup(v,buf_);
-        if (log_) { smsc_log_debug(log_,"deser: %s idx=%llx val=%p bck=%p",
+        if (log_) { smsc_log_debug(log_,"deser: %s idx=%llx %s",
                                    key_.toString().c_str(),
                                    uint64_t(i_),
-                                   v.value, v.backup ); }
+                                   v.toString().c_str() ); 
+        }
         return true;
     }
 
@@ -127,10 +131,12 @@ public:
                 // successfully stored, attach buf_ to v
                 attachBackup(*v_,buf_);
             }
-            if (log_) { smsc_log_debug(log_,"update: %s idx=%llx val=%p bck=%p",
-                                       key_.toString().c_str(),
-                                       uint64_t(blockIndex),
-                                       v_->value, v_->backup ); }
+            if (log_) {
+                smsc_log_debug(log_,"update: %s idx=%llx %s",
+                               key_.toString().c_str(),
+                               uint64_t(blockIndex),
+                               v_->toString());
+            }
         } else {
             blockIndex = invalidIndex();
         }
@@ -195,14 +201,15 @@ protected:
             dsr.setrpos(headerSize()+extraSize());
             dsr >> key;
             // should we check for key match here?
-            /*
             if ( key != key_ ) {
                 key_type empty;
                 if ( key_ != empty ) {
-                    throw smsc::util::Exception("key mismatch");
+                    if (log_) smsc_log_warn(log_,"key mismatch: idx=%llx, key=%s, key_=%s",
+                                            uint64_t(i_), key.toString().c_str(), key_.toString().c_str());
+                    smsc::util::Exception("key mismatch: idx=%llx, key=%s, key_=%s",
+                                          uint64_t(i_), key.toString().c_str(), key_.toString().c_str());
                 }
             }
-             */
             dsr >> value;
             rv = true;
         } catch ( std::exception& e ) {

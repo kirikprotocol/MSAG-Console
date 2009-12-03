@@ -73,6 +73,13 @@ public:
         if (v.value) { delete v.value; v.value = 0; }
         if (v.backup) { delete v.backup; v.backup = 0; }
     }
+
+    inline std::string storedTypeToString( stored_type v ) const {
+        char buf[100];
+        snprintf(buf,sizeof(buf),"v=%p b=%p %s",v.value,v.backup,v.value?v.value->toString().c_str():"");
+        return buf;
+    }
+
 protected:
     inline void releaseval( stored_type& v ) const {
         v.value = 0;

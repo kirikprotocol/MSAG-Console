@@ -57,7 +57,11 @@ public:
           return false;
         }
         if ( ! (item->key == k)) {
-          if (cachelog_) smsc_log_debug( cachelog_, "set: replace %s by %s", item->key.toString().c_str(), k.toString().c_str() );
+          if (cachelog_) {
+              smsc_log_debug( cachelog_, "set: replace %s by %s, old=%s new=%s",
+                              item->key.toString().c_str(), k.toString().c_str(),
+                              storedTypeToString(item->vv).c_str(), storedTypeToString(v).c_str());
+          }
           // if (store2val(item->vv)) dealloc(item->vv);
           dealloc(item->vv);
           item->vv = v;

@@ -27,6 +27,12 @@ public:
         if (v) { delete v; v = 0; }
     }
 
+    std::string storedTypeToString( stored_type v ) const {
+        char buf[100];
+        snprintf(buf,sizeof(buf),"v=%p %s",v,v ? v->toString().c_str() : "");
+        return buf;
+    }
+
 protected:
     /// release the value_type part only
     inline void releaseval( stored_type& v ) const {
