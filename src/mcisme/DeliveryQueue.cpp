@@ -88,6 +88,7 @@ time_t DeliveryQueue::Schedule(const AbntAddr& abnt, bool onBusy, time_t schedTi
   string strAbnt = abnt.toString();
   MutexGuard lock(deliveryQueueMonitor);
   char curSchedTimeStr[32];
+  char lastAttemptTimeStr[32];
   if(AbntsStatus.Exists(strAbnt.c_str()))
   {
     SchedParam *schedParam = AbntsStatus.GetPtr(strAbnt.c_str());
@@ -97,16 +98,10 @@ time_t DeliveryQueue::Schedule(const AbntAddr& abnt, bool onBusy, time_t schedTi
     if( (curTime - curSchedTime) > 900)
     {
       Resched(abnt, curSchedTime, curTime);
+      schedParam->abntStatus = Idle;
       schedParam->schedTime = curTime;
       deliveryQueueMonitor.notify();
-      smsc_log_info(logger, "Abonent %s rescheduled on %s. total = %d (%d)", strAbnt.c_str(), cTime(&curTime, curSchedTimeStr, sizeof(curSchedTimeStr)), total, deliveryQueue.size());
-    }
-    if( (schedParam->abntStatus == InProcess) && (schedParam->lastAttempt != 0) &&
-        (curTime > (schedParam->lastAttempt + responseWaitTime)) )
-    {
-      smsc_log_warn(logger, "Abonent %s is in delivery too long. Reset abntStatus in Idle", strAbnt.c_str());
-      schedParam->abntStatus = Idle;
-      schedParam->lastAttempt = 0;
+      smsc_log_info(logger, "Abonent %s rescheduled on %s. Status = %d, lastAttempt = %s, total = %d (%d)", strAbnt.c_str(), cTime(&curTime, curSchedTimeStr, sizeof(curSchedTimeStr)), , cTime(&schedParam->lastAttempt, lastAttemptTimeStr, sizeof(lastAttemptTimeStr)), total, deliveryQueue.size());
     }
     return schedParam->schedTime;
   }
