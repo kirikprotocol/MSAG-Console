@@ -3588,7 +3588,7 @@ StateType StateMachine::DivertProcessing(Tuple& t,SMS& sms)
      (
        (divertFlags&DF_CAPAC) &&
        (
-         status==Status::SMDELIFERYFAILURE
+         status==Status::MSMEMCAPACITYFULL
        )
      );
   if(!doDivert)return UNKNOWN_STATE;
