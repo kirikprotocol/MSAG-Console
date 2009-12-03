@@ -31,6 +31,7 @@ bool ProfileCommandProcessor::visitBatchCommand(BatchCommand &cmd) /* throw(Pvap
       bool result = (*i)->visit(proc);
       resp->addComponent(proc.getBatchResponseComponent());
       addBatchComponentDBLog(proc.getDBLog());
+      proc.clearDBLog();
       if (!result) {
         rollback_ = true;
         batchLogs_.clear();
@@ -42,6 +43,7 @@ bool ProfileCommandProcessor::visitBatchCommand(BatchCommand &cmd) /* throw(Pvap
       (*i)->visit(proc);
       resp->addComponent(proc.getBatchResponseComponent());
       addBatchComponentDBLog(proc.getDBLog());
+      proc.clearDBLog();
     }
   }
   return true;
@@ -127,7 +129,7 @@ bool ProfileCommandProcessor::visitSetCommand(SetCommand &cmd) /* throw(PvapExce
     dblog_.createUpdateLogMsg(profile_->getKey(), prop.toString());
   } else {
     if (!profile_->AddProperty(prop)) {
-      response_->setStatus(StatusType::IO_ERROR);
+      response_->setStatus(StatusType::BAD_REQUEST);
       return false;
     }
     dblog_.createAddLogMsg(profile_->getKey(), prop.toString());
@@ -175,6 +177,18 @@ uint8_t ProfileCommandProcessor::incModProperty(Property& property, uint32_t mod
 }
 
 void ProfileCommandProcessor::setProfile(Profile *pf) {
+  if (!dblog_.getLogMsg().empty()) {
+    Logger* log = Logger::getInstance("pvss.proc");
+    smsc_log_warn(log, "db log not empty: %s", dblog_.getLogMsg().c_str());
+    dblog_.clear();
+  }
+  if (!batchLogs_.empty()) {
+    Logger* log = Logger::getInstance("pvss.proc");
+    for (std::vector<string>::iterator i = batchLogs_.begin(); i != batchLogs_.end(); ++i) {
+      smsc_log_warn(log, "butch db log not empty: %s", (*i).c_str());
+    }
+    std::vector<string>().swap(batchLogs_);
+  }
   if (pf) {
     pf->setChanged(false);
   }
@@ -191,6 +205,10 @@ CommandResponse* ProfileCommandProcessor::getResponse() {
 
 const string& ProfileCommandProcessor::getDBLog() const {
   return dblog_.getLogMsg();
+}
+
+void ProfileCommandProcessor::clearDBLog() {
+  return dblog_.clear();
 }
 
 void ProfileCommandProcessor::addBatchComponentDBLog(const string& logmsg) {

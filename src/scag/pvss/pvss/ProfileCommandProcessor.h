@@ -29,6 +29,7 @@ public:
   bool rollback() const { return rollback_; };
   void flushLogs(Logger* logger);
   const string& getDBLog() const;
+  void clearDBLog();
 
 private:
   uint8_t incModProperty(Property& property, uint32_t mod, uint32_t &result);
