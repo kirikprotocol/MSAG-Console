@@ -101,7 +101,7 @@ time_t DeliveryQueue::Schedule(const AbntAddr& abnt, bool onBusy, time_t schedTi
       schedParam->abntStatus = Idle;
       schedParam->schedTime = curTime;
       deliveryQueueMonitor.notify();
-      smsc_log_info(logger, "Abonent %s rescheduled on %s. Status = %d, lastAttempt = %s, total = %d (%d)", strAbnt.c_str(), cTime(&curTime, curSchedTimeStr, sizeof(curSchedTimeStr)), , cTime(&schedParam->lastAttempt, lastAttemptTimeStr, sizeof(lastAttemptTimeStr)), total, deliveryQueue.size());
+      smsc_log_info(logger, "Abonent %s rescheduled on %s. Status = %d, lastAttempt = %s, total = %d (%d)", strAbnt.c_str(), cTime(&curTime, curSchedTimeStr, sizeof(curSchedTimeStr)), schedParam->abntStatus, cTime(&schedParam->lastAttempt, lastAttemptTimeStr, sizeof(lastAttemptTimeStr)), total, deliveryQueue.size());
     }
     return schedParam->schedTime;
   }
