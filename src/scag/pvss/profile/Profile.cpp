@@ -234,7 +234,8 @@ bool Profile::AddProperty(const Property& prop)
 {
   uint16_t cnt = properties.GetCount();
   if (cnt == MAX_PROPERTIES_COUNT) {
-    smsc_log_warn(log, "can't add property \'%s\', profile key=%s already has maximum properties count=%d",
+    Logger* wlog = log ? log : Logger::getInstance("pvss.profile");
+    smsc_log_warn(wlog, "can't add property \'%s\', profile key=%s overflow properties count=%d",
                   prop.getName(), pkey.c_str(), cnt);
     return false;
   }
