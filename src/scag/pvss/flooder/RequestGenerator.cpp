@@ -98,8 +98,10 @@ void RequestGenerator::parseCommandPatterns( const std::string& patterns ) /* th
     std::auto_ptr<BatchCommand> batchCmd;
     unsigned batchCount = 0;
     unsigned modulus = 0;
+    const char* allowedCmdTypes = "bBiImgsdiI";
     for ( size_t pos = 0; pos+1 < patterns.size(); ) {
         char cmdtype = patterns[pos++];
+        if ( strchr(allowedCmdTypes,cmdtype) == NULL ) continue;
         char* endptr;
         unsigned long int cmdnumber = strtoul(patterns.c_str()+pos, &endptr, 10);
         if ( cmdnumber == ULONG_MAX ) 
