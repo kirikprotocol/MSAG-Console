@@ -34,8 +34,11 @@ void compare( const AbntAddr& a )
 int main()
 {
     AbntAddr a;
-    AbntAddr b(11,1,1,"79137654079");
-    AbntAddr c(10,1,1,"79137654079");
+    // AbntAddr b(11,1,1,"79137654079");
+    // AbntAddr b(11,1,1,"21000001575");
+    // AbntAddr c(11,1,1,"79101799991");
+    AbntAddr b; b.fromString(".1.1.21000001575");
+    AbntAddr c; c.fromString(".1.1.79101799991");
     compare(a);
     compare(b);
     compare(c);

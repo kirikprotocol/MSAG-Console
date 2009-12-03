@@ -87,11 +87,15 @@ enum ProfileState {
 
 class Profile : public Serializable
 {
+private:
+    static smsc::logger::Logger* loga_;
+    void initLog();
+
 public:
-    Profile():log(NULL), state(OK), changed(false) {};
-    Profile(const std::string& _pkey, smsc::logger::Logger* _log = NULL) : log(_log), state(OK), pkey(_pkey) {};
-    Profile(const AbntAddr& address, smsc::logger::Logger* _log = NULL) : log(_log), state(OK), pkey(address.toString()) {};
-    Profile(const IntProfileKey& intKey, smsc::logger::Logger* _log = NULL) : log(_log), state(OK), pkey(intKey.toString()) {};
+    Profile();
+    Profile(const std::string& _pkey, smsc::logger::Logger* _log = NULL); // : log(_log), state(OK), pkey(_pkey) {};
+    Profile(const AbntAddr& address, smsc::logger::Logger* _log = NULL); // : log(_log), state(OK), pkey(address.toString()) {};
+    Profile(const IntProfileKey& intKey, smsc::logger::Logger* _log = NULL); // : log(_log), state(OK), pkey(intKey.toString()) {};
     ~Profile();
     Profile& operator=(const Profile& pf);
 
@@ -104,7 +108,7 @@ public:
     uint32_t GetCount() { return properties.GetCount(); };
     const PropertyHash& getProperties() const { return properties; }
     const string& getKey() const { return pkey; }
-    void setKey(const string& key) { pkey = key; }
+    void setKey(const string& key); // { pkey = key; }
     const smsc::logger::Logger* getLog() const { return log; }
     void setLog(Logger* dblog) { log = dblog; }
 

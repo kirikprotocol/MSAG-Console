@@ -3,10 +3,18 @@
 #include <unistd.h>
 #include "Profile.h"
 
-namespace scag2 { namespace pvss {
+namespace {
+smsc::core::synchronization::Mutex logamutex;
+}
+
+
+namespace scag2 {
+namespace pvss {
 
 const uint8_t PROPERTIES_COUNT_SIZE = 14; //14 bits for profile properties count
 const uint16_t MAX_PROPERTIES_COUNT = 16383; 
+
+smsc::logger::Logger* Profile::loga_ = 0;
 
 void Profile::Serialize(SerialBuffer& buf, bool toFSDB, GlossaryBase* glossary) const
 {
@@ -71,6 +79,46 @@ void Profile::deserialize(const char* data, uint32_t dataSize, GlossaryBase* glo
   Deserialize(sb, true, glossary);
 }
 
+
+
+void Profile::initLog()
+{
+    if (!loga_) {
+        MutexGuard mg(logamutex);
+        if (!loga_) loga_ = smsc::logger::Logger::getInstance("prof.alloc");
+    }
+    smsc_log_debug(loga_,"ctor %p key=%s",this,pkey.c_str());
+}
+
+
+Profile::Profile() :
+log(0), state(OK), changed(false)
+{
+    initLog();
+}
+    
+
+Profile::Profile(const std::string& _pkey, smsc::logger::Logger* _log ) :
+log(_log), state(OK), pkey(_pkey), changed(false)
+{
+    initLog();
+}
+
+
+Profile::Profile(const AbntAddr& address, smsc::logger::Logger* _log ) :
+log(_log), state(OK), pkey(address.toString()), changed(false)
+{
+    initLog();
+}
+
+
+Profile::Profile(const IntProfileKey& intKey, smsc::logger::Logger* _log ) :
+log(_log), state(OK), pkey(intKey.toString()), changed(false)
+{
+    initLog();
+}
+
+
 Profile::~Profile()
 {
     char *key = 0;
@@ -80,7 +128,33 @@ Profile::~Profile()
 
     while(it.Next(key, prop))
         if(prop) delete prop;
+    smsc_log_debug(loga_,"dtor: %p key=%s",this,pkey.c_str());
 }
+
+
+Profile& Profile::operator=(const Profile& pf) {
+  if (this == &pf) {
+    return *this;
+  }
+  smsc_log_debug(loga_,"op=: %p key=%s <== %p key=%s",this,pkey.c_str(),&pf,pf.pkey.c_str());
+  const smsc::logger::Logger* _log = pf.getLog();
+  if (_log) {
+    log = smsc::logger::Logger::getInstance(_log->getName());
+  }
+  pkey = pf.getKey();
+  state = pf.getState();
+
+  Empty();
+
+  char *key = 0;
+  Property* prop;
+  PropertyHash::Iterator pf_it = pf.getProperties().getIterator();
+  while (pf_it.Next(key, prop)) {
+    properties.Insert(key, new Property(*prop));
+  }
+  return *this;
+}
+
 
 bool Profile::PropertyExists(const char* name)
 {
@@ -148,6 +222,14 @@ void Profile::Empty()
     properties.Empty();
 }
 
+
+void Profile::setKey( const std::string& k )
+{
+    smsc_log_debug(loga_,"setk %p key=%s newkey=%s",this,pkey.c_str(),k.c_str());
+    pkey = k;
+}
+
+
 bool Profile::AddProperty(const Property& prop)
 {
   uint16_t cnt = properties.GetCount();
@@ -158,29 +240,6 @@ bool Profile::AddProperty(const Property& prop)
   }
   properties.Insert(prop.getName(), new Property(prop));
   return true;
-}
-
-Profile& Profile::operator=(const Profile& pf) {
-  if (this == &pf) {
-    return *this;
-  }
-  const smsc::logger::Logger* _log = pf.getLog();
-  if (_log) {
-    log = smsc::logger::Logger::getInstance(_log->getName());
-  }
-  log = NULL;
-  pkey = pf.getKey();
-  state = pf.getState();
-
-  Empty();
-
-  char *key = 0;
-  Property* prop;
-  PropertyHash::Iterator pf_it = pf.getProperties().getIterator();
-  while (pf_it.Next(key, prop)) {
-    properties.Insert(key, new Property(*prop));
-  }
-  return *this;
 }
 
 void Profile::addNewProperty(Property& prop) {
