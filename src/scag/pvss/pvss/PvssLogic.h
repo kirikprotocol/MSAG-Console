@@ -126,7 +126,7 @@ protected:
     };
 
 public:
-  PvssLogic( PvssDispatcher& dispatcher ) : dispatcher_(dispatcher), logger_(Logger::getInstance("storeproc")) {}
+  PvssLogic( PvssDispatcher& dispatcher ) : dispatcher_(dispatcher), logger_(Logger::getInstance("pvss.proc")) {}
   virtual ~PvssLogic() {};
   Response* process(Request& request) /* throw(PvssException) */ ;
   void responseSent(std::auto_ptr<core::server::ServerContext> response) { /*TODO: implement this method*/ };
