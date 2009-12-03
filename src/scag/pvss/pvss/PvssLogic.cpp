@@ -424,9 +424,11 @@ unsigned long AbonentLogic::rebuildElementStorage( unsigned index, unsigned maxS
 Response* AbonentLogic::processProfileRequest(ProfileRequest& profileRequest) {
 
   const ProfileKey &profileKey = profileRequest.getProfileKey();
+    const std::string& profkey = profileKey.getAddress().toString();
+
   unsigned elstorageIndex = static_cast<unsigned>(profileKey.getAddress().getNumber() % dispatcher_.getStoragesCount());
   smsc_log_debug( logger_, "%p: %p process profile key='%s' in location: %d, storage: %d",
-                  this, &profileRequest, profileKey.getAddress().toString().c_str(), locationNumber_, elstorageIndex);
+                  this, &profileRequest, profkey.c_str(), locationNumber_, elstorageIndex);
 
   ElementStorage **elstoragePtr = elementStorages_.GetPtr(elstorageIndex);
   if (!elstoragePtr) {
@@ -437,25 +439,33 @@ Response* AbonentLogic::processProfileRequest(ProfileRequest& profileRequest) {
 
   bool createProfile = profileRequest.getCommand()->visit(createProfileVisitor);
   Profile *pf = elstorage->storage->get(profileKey.getAddress(), createProfile);
+  if (pf) pf->setKey(profkey);
+    /*
+  if ( pf && pf->getKey() != profileKey.getAddress().toString() ) {
+      smsc_log_error(logger_,"key mismatch: pf=%p pf.key=%s req.key=%s", pf, pf->getKey().c_str(), profileKey.getAddress().toString().c_str() );
+      abort();
+      return 0;
+  }
+     */
   commandProcessor_.setProfile(pf);
   profileRequest.getCommand()->visit(commandProcessor_);
   if (!pf) {
     if (createProfile) {
-        smsc_log_warn(logger_, "%p: %p can't create profile %s", this, &profileRequest, pf->getKey().c_str());
+        smsc_log_warn(logger_, "%p: %p can't create profile %s", this, &profileRequest, profkey.c_str());
     }
     CommandResponse* r = commandProcessor_.getResponse();
     return r ? new ProfileResponse(profileRequest.getSeqNum(),r) : 0;
   }
 
   if (pf->isChanged()) {
-    smsc_log_debug(logger_, "%p: %p flush profile %s", this, &profileRequest, pf->getKey().c_str());
+    smsc_log_debug(logger_, "%p: %p flush profile %s", this, &profileRequest, profkey.c_str());
       {
           MutexGuard mg(elstorage->mutex);
           elstorage->storage->flush(profileKey.getAddress());
       }
     commandProcessor_.flushLogs(abntlog_);
   } else if (commandProcessor_.rollback()) {
-    smsc_log_debug(logger_, "%p: %p rollback profile %s changes", this, &profileRequest, pf->getKey().c_str());
+    smsc_log_debug(logger_, "%p: %p rollback profile %s changes", this, &profileRequest, profkey.c_str());
     elstorage->storage->backup2Profile(profileKey.getAddress());
     // NOTE: backup2profile may delete object under pf!
   }
@@ -488,27 +498,29 @@ Response* InfrastructLogic::processProfileRequest(ProfileRequest& profileRequest
   }
 
   IntProfileKey intKey(key);
+  
   bool createProfile = profileRequest.getCommand()->visit(createProfileVisitor); 
   Profile *pf = storage->get(intKey, createProfile);
+  if (pf) pf->setKey(intKey.toString());
   commandProcessor_.setProfile(pf);
   profileRequest.getCommand()->visit(commandProcessor_);
   if (!pf) {
     if (createProfile) {
-        smsc_log_warn(logger_, "%p: %p can't create profile %s", this, &profileRequest, pf->getKey().c_str());
+        smsc_log_warn(logger_, "%p: %p can't create profile %s", this, &profileRequest, intKey.toString().c_str());
     }
     CommandResponse* r = commandProcessor_.getResponse();
     return r ? new ProfileResponse(profileRequest.getSeqNum(),r) : 0;
   }
 
   if (pf->isChanged()) {
-    smsc_log_debug(logger_, "%p: %p flush profile %s", this, &profileRequest, pf->getKey().c_str());
+    smsc_log_debug(logger_, "%p: %p flush profile %s", this, &profileRequest, intKey.toString().c_str());
       {
           MutexGuard mg(statMutex_);
           storage->flush(intKey);
       }
     commandProcessor_.flushLogs(dblog);
   } else if (commandProcessor_.rollback()){
-    smsc_log_debug(logger_, "%p: %p rollback profile %s changes", this, &profileRequest, pf->getKey().c_str());
+    smsc_log_debug(logger_, "%p: %p rollback profile %s changes", this, &profileRequest, intKey.toString().c_str());
     storage->backup2Profile(intKey);
   }
   CommandResponse* r = commandProcessor_.getResponse();
