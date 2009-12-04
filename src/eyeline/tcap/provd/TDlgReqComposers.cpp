@@ -5,11 +5,12 @@ static char const ident[] = "@(#)$Id$";
 #include "eyeline/sccp/SCCPDefs.hpp"
 #include "TDlgReqComposers.hpp"
 #include "TDialogueServiceDataRegistry.hpp"
-#include "eyeline/tcap/proto/TCAPMessage.hpp"
-#include "eyeline/tcap/proto/enc/AbortMessage.hpp"
+
+#include "eyeline/tcap/proto/enc/Abort.hpp"
 #include "eyeline/tcap/proto/enc/AARE_APdu.hpp"
 #include "eyeline/tcap/proto/enc/ABRT_APdu.hpp"
-//#include "eyeline/tcap/proto/enc/EXTERNAL_APdu.hpp"
+#include "eyeline/tcap/proto/enc/Begin.hpp"
+#include "eyeline/tcap/proto/enc/ComponentPortion.hpp"
 #include "eyeline/tcap/proto/enc/PAbortCause.hpp"
 #include "eyeline/utilx/Exception.hpp"
 #include "SUARequests.hpp"
@@ -77,13 +78,19 @@ TDlgRequestComposerAC::SerializationResult_e
   if (rval != TDlgRequestComposerAC::srlzOk)
     return rval;
 
-  uint16_t maxDataSz = use_udt.dataBuf().getMaxSize();
+  TDialogueServiceDataRegistry::registry_element_ref_t tDlgSvcData =
+      TDialogueServiceDataRegistry::getInstance().getTDialogueServiceData(_tReq.getDialogueId());
 
-  //TODO: serialize TBeginReq to use_udt.dataBuf() taking in account 'maxDataSz'
-  //If serialized data is too long determine the portion of TCAPMessage that is
-  //too large (either UserInfo or ComponentsList) and return associated value
-  //of SerializationResult_e
-  return TDlgRequestComposerAC::srlzBadTransactionPortion;
+  proto::enc::Begin beginMsgEncoder(tDlgSvcData->getTransactionId());
+
+  proto::enc::ComponentPortion componentPortion;
+  const ros::ROSComponentsList& compList = _tReq.getCompList();
+  for(ROSComponentsList::const_iterator iter = compList.begin(), end_iter = compList.end();
+      iter != end_iter; ++iter) {
+    componentPortion.addComponent(*iter);
+  }
+  beginMsgEncoder.setComponentPortion(&componentPortion);
+  return encodeMessage(beginMsgEncoder, use_udt, "TBeginReqComposer::serialize2UDT");
 }
 
 /* ************************************************************************* *
@@ -127,24 +134,12 @@ TDlgRequestComposerAC::SerializationResult_e
     return rval;
 
   uint16_t maxDataSz = use_udt.dataBuf().getMaxSize();
-#if 0
-  proto::AbortMessage tcapMsg(_tReq.getAbortCause());
-  //tcapMsg.set();
-  tcapMsg.set(tDlgSvcData->getTransactionId());
-  const TDlgUserInfo* uInfo = _tReq.getUserInfo();
-  for(TDlgUserInfo::iterator iter = uInfo->begin(), end_iter = uInfo->end();
-      iter != end_iter; ++iter) {
-    tcapMsg.addExternalValue(*iter);
-  }
-  tcapMsg.encode(use_udt.dataBuf());
-  return TDlgRequestComposerAC::srlzOk;
-#else
+
   //TODO: serialize TEndReq to use_udt.dataBuf() taking in account 'maxDataSz'
   //If serialized data is too long determine the portion of TCAPMessage that is
   //too large (either UserInfo or ComponentsList) and return associated value
   //of SerializationResult_e
   return TDlgRequestComposerAC::srlzBadTransactionPortion;
-#endif
 }
 
 /* ************************************************************************* *
@@ -164,10 +159,10 @@ TPAbortReqComposer::serialize2UDT(SUAUnitdataReq & use_udt,
   TDialogueServiceDataRegistry::registry_element_ref_t tDlgSvcData =
     TDialogueServiceDataRegistry::getInstance().getTDialogueServiceData(_tReq.getDialogueId());
 
-  proto::enc::PAbortCause pAbortCause(_tReq.getAbortCause());
-  proto::enc::AbortMessage tcapMsg(tDlgSvcData->getTransactionId(), &pAbortCause);
+  proto::enc::PAbortCause pAbortCauseEncoder(_tReq.getAbortCause());
+  proto::enc::Abort abortMsgEncoder(tDlgSvcData->getTransactionId(), &pAbortCauseEncoder);
 
-  return encodeMessage(tcapMsg, use_udt, "TPAbortReqComposer::serialize2UDT");
+  return encodeMessage(abortMsgEncoder, use_udt, "TPAbortReqComposer::serialize2UDT");
 }
 
 /* ************************************************************************* *
@@ -211,12 +206,13 @@ TUAbortReqComposer::formAARE_APdu(const TC_UAbort_Req& t_req,
                                   const proto::TransactionId& transaction_id,
                                   SUAUnitdataReq& used_udt) const
 {
-  proto::enc::AARE_APdu aareAPdu(proto::enc::AARE_APdu::protoVersion1);
-  aareAPdu.rejectByUser(t_req.getRejectCause());
-  aareAPdu.setAppCtxName(t_req.getAppCtx());
-  aareAPdu.setUserInfo(t_req.getUserInfo());
-  proto::enc::AbortMessage tcapMsg(transaction_id, &aareAPdu);
-  return encodeMessage(tcapMsg, used_udt, "TUAbortReqComposer::formAARE_APdu");
+  proto::enc::AARE_APdu aareAPduEncoder(t_req.getAppCtx());
+  aareAPduEncoder.rejectByUser(t_req.getRejectCause());
+  aareAPduEncoder.setUserInfo(t_req.getUserInfo());
+
+  //TODO: proto::enc::DialoguePortion dlgPortion(&aareAPdu);
+  proto::enc::Abort abortMsgEncoder(transaction_id, &aareAPduEncoder);
+  return encodeMessage(abortMsgEncoder, used_udt, "TUAbortReqComposer::formAARE_APdu");
 }
 
 TDlgRequestComposerAC::SerializationResult_e
@@ -224,11 +220,11 @@ TUAbortReqComposer::formABRT_APdu(const TC_UAbort_Req& t_req,
                                   const proto::TransactionId& transaction_id,
                                   SUAUnitdataReq& used_udt) const
 {
-  proto::enc::ABRT_APdu abrtAPdu(t_req.isAbortFromTCUser() ? proto::enc::ABRT_APdu::dlgServiceUser
-                                                           : proto::enc::ABRT_APdu::dlgServiceProvider);
-  abrtAPdu.setUserInfo(t_req.getUserInfo());
-  proto::enc::AbortMessage tcapMsg(transaction_id, &abrtAPdu);
-  return encodeMessage(tcapMsg, used_udt, "TUAbortReqComposer::formABRT_APdu");
+  proto::enc::ABRT_APdu abrtAPduEncoder(t_req.isAbortFromTCUser() ? TDialogueAssociate::dlgServiceUser
+                                                                  : TDialogueAssociate::dlgServiceProvider);
+  abrtAPduEncoder.setUserInfo(t_req.getUserInfo());
+  proto::enc::Abort abortMsgEncoder(transaction_id, &abrtAPduEncoder);
+  return encodeMessage(abortMsgEncoder, used_udt, "TUAbortReqComposer::formABRT_APdu");
 }
 
 TDlgRequestComposerAC::SerializationResult_e
