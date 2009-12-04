@@ -35,7 +35,7 @@ OutPrimitivesProcessor::updateDialogue(const TC_Begin_Req & begin_req_primitive)
     if ( rc.operationResult == SuaApi::OK ) {
       tDlgSvcData->activateDialogueTimer();
 
-      activateTimers(tDlgSvcData.Get(), &begin_req_primitive.CompList());
+      activateTimers(tDlgSvcData.Get(), &begin_req_primitive.getCompList());
 
       tDlgSvcData->setLinkNum(rc.suaConnectNum);
     } else {
@@ -70,7 +70,7 @@ OutPrimitivesProcessor::updateDialogue(const TC_Cont_Req & cont_req_primitive)
     if ( rc.operationResult == SuaApi::OK ) {
       tDlgSvcData->activateDialogueTimer();
 
-      activateTimers(tDlgSvcData.Get(), &cont_req_primitive.CompList());
+      activateTimers(tDlgSvcData.Get(), &cont_req_primitive.getCompList());
 
       tDlgSvcData->setLinkNum(rc.suaConnectNum);
     } else {
@@ -226,7 +226,7 @@ OutPrimitivesProcessor::activateTimers(TDialogueServiceData* t_dlg_svc_data,
     return;
 
   for (ros::ROSComponentsList::const_iterator it = comp_list->begin(); it != comp_list->end(); ++it) {
-    ros::ROSComponentPrimitive* rosCompPrimitive = it->get();
+    const ros::ROSComponentPrimitive* rosCompPrimitive = *it;
     if ( rosCompPrimitive && rosCompPrimitive->rosKind() == ros::ROSComponentPrimitive::rosInvoke ) {
       const ros::ROSInvoke* invoke = static_cast<const ros::ROSInvoke*>(rosCompPrimitive);
       if (invoke->getOperationClass() != ros::ROSInvoke::Class_4)
