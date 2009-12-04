@@ -39,7 +39,7 @@
     <echo>
 SMS Center build script
 Targets:
-      rmbuild (run deps target after it)
+      rmbuild (run makedeps target after it)
       makedeps
       distr
       update
@@ -414,9 +414,14 @@ Targets:
     <ant dir="${SRC_DIR}" target="mod">
       <property name="MOD" value="infosme"/>
     </ant>
+    <ant dir="${SRC_DIR}" target="mod">
+      <property name="MOD" value="infosme.v2"/>
+    </ant>
   </target>
   <target name="infosme_update" depends="infosme_build" >
     <ant dir="${SMSC_DIR}/ext_smes" target="infosme_update"/>
+        <copy todir="${DISTR_DIR}/services/InfoSme/bin" file="${BUILD_DIR}/bin/infosme/infosme2" flatten="yes" preservelastmodified="yes" failonerror="false"/>
+        <copy todir="${DISTR_DIR}/services/InfoSme/bin" file="${BUILD_DIR}/bin/infosme/splitTaskSection" flatten="yes" preservelastmodified="yes" failonerror="false"/>
   </target>
   <target name="infosme_distr" depends="infosme_build" >
     <ant dir="${SMSC_DIR}/ext_smes" target="infosme_distr"/>
