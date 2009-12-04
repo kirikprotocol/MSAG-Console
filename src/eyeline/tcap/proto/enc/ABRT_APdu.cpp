@@ -1,43 +1,37 @@
-# include "ABRT_APdu.hpp"
-# include "eyeline/utilx/Exception.hpp"
-# include "eyeline/asn1/ASNTags.hpp"
+#include "ABRT_APdu.hpp"
+#include "eyeline/utilx/Exception.hpp"
+
 
 namespace eyeline {
 namespace tcap {
 namespace proto {
 namespace enc {
 
-//asn1::ENCResult
-//ABRT_APdu::encodeVAL(uint8_t * used_enc, asn1::TSLength max_len)
-//{
-//  if ( _rule == asn1::TSGroupBER::ruleDER ||
-//       _rule == asn1::TSGroupBER::ruleBER ) {
-    // asn1::ASTagging pduTags(2, asn1::ASTag(asn1::ASTag::tagApplication, ABRT_Tag_Value),
-    //                         asn1::ASTag(ASTag::tagUniversal, asn1::_tagSEQOF, true));
-    // pduTags.setEnvironment(asn1::ASTagging::tagsIMPLICIT);
-    // asn1::EncoderOfSequence pdu(pduTags);
+const asn1::ASTagging ABRT_APdu::_typeTags =
+    asn1::ASTagging(asn1::ASTag::tagApplication,
+                    ABRT_APdu::ABRT_Tag,
+                    asn1::ASTagging::tagsIMPLICIT);
 
-    // asn1::ASTagging fieldTags(2, asn1::ASTag(asn1::ASTag::tagContextSpecific, ABRT_Source_Tag_Value),
-    //                           asn1::ASTag(asn1::ASTag::tagUniversal, asn1::_tagINTEGER));
-    // fieldTags.setEnvironment(asn1::ASTagging::tagsIMPLICIT);
-    // asn1::ber::EncoderOfINTEGER abortSource(_abortSource, fieldTags);
-    // pdu.addField(abortSource);
+const asn1::ASTagging ABRT_APdu::_abortSource_fieldTags =
+    asn1::ASTagging(asn1::ASTag::tagContextSpecific,
+                    ABRT_APdu::AbortSource_FieldTag,
+                    asn1::ASTagging::tagsIMPLICIT);
 
-    // pdu.encodeTLV(used_enc, max_len);
-    // return asn1::ENCResult::encOk;
-//    asn1::EncoderOfSequence pdu(pduTags);
-//
-//    asn1::ASTagging fieldTags(2, asn1::ASTag(asn1::ASTag::tagContextSpecific, ABRT_Source_Tag_Value),
-//                              asn1::ASTag(asn1::ASTag::tagUniversal, asn1::_tagINTEGER));
-//    fieldTags.setEnvironment(asn1::ASTagging::tagsIMPLICIT);
-//    asn1::ber::EncoderOfINTEGER abortSource(_abortSource, fieldTags);
-//    pdu.addField(abortSource);
-//
-//    pdu.encodeTLV(used_enc, max_len);
-//    return asn1::ENCResult::encOk;
-//  } else
-//    throw utilx::SerializationException("ABRT_APdu::encode::: invalid rule coding value=%d",
-//                                        use_rule);
-//}
+ABRT_APdu::ABRT_APdu(TDialogueAssociate::AbrtSource_e abort_source,
+                     asn1::TSGroupBER::Rule_e use_rule)
+: EncoderOfSequence(_typeTags, use_rule),
+  _abortSourceEncoder(NULL), _usrInfo(NULL)
+{
+  _abortSourceEncoder = new (_memForAbortSourceEncoder.allocation) asn1::ber::EncoderOfINTEGER(abort_source),
+  addField(*_abortSourceEncoder, &_abortSource_fieldTags);
+}
+
+void
+ABRT_APdu::arrangeFields()
+{
+  if ( !_abortSourceEncoder )
+    throw utilx::SerializationException("ABRT_APdu::arrangeFields::: missed mandatory field 'abort-source'");
+  addField(*_abortSourceEncoder);
+}
 
 }}}}
