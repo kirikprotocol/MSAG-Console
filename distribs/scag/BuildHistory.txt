@@ -441,6 +441,8 @@ TO ALL: Insert log record for all significant changes & fixes here.
 --- current-fixes ---
 2009-11-19 11:37 bukind
   msag feature: ewallet allows amount=0
+2009-12-03 11:38 odarchenko
+  pvss bugfix: data base logs were printed several times (not properly cleaned after print)
 2009-12-03 16:52 bukind
   pvss flooders feature: skipping whitespaces in command list
 2009-12-03 16:52 bukind
