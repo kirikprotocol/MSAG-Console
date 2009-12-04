@@ -9,7 +9,7 @@
 #include "eyeline/tcap/proto/TransactionId.hpp"
 #include "eyeline/tcap/provd/TDlgPAbortReq.hpp"
 #include "eyeline/tcap/provd/SUARequests.hpp"
-#include "eyeline/tcap/proto/enc/AbortMessage.hpp"
+#include "logger/Logger.h"
 
 namespace eyeline {
 namespace tcap {
@@ -76,8 +76,9 @@ protected:
   const T_DLG_REQ_Arg & _tReq;
   smsc::logger::Logger* _logger;
 
+  template <class TCAP_MESSAGE>
   SerializationResult_e
-  encodeMessage(proto::enc::AbortMessage& tcap_msg,
+  encodeMessage(TCAP_MESSAGE& tcap_msg,
                 SUAUnitdataReq& used_udt,
                 const char* where) const {
     asn1::ENCResult encResult = tcap_msg.encode(used_udt.dataBuf());
