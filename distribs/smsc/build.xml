@@ -40,7 +40,7 @@
 SMS Center build script
 Targets:
       rmbuild (run deps target after it)
-      deps
+      makedeps
       distr
       update
     </echo>
