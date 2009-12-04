@@ -180,24 +180,24 @@ bool SmscConnector::RegionTrafficControl::speedLimitReached( Task* task, const M
                                                              const smsc::util::config::region::Region* region )
 {
     uint32_t taskId = task->getId();
-    smsc_log_debug( log_, "TaskProcessor::controlTrafficSpeedByRegion::: TaskId=[%d]: check region(regionId=%s) bandwidth limit exceeding", taskId, message.regionId.c_str());
+    // smsc_log_debug( log_, "TaskProcessor::controlTrafficSpeedByRegion::: TaskId=[%d]: check region(regionId=%s) bandwidth limit exceeding", taskId, message.regionId.c_str());
     if ( ! region ) {
-        smsc_log_debug(log_,"TaskProcessor::controlTraffic no region %s found",message.regionId.c_str());
+        // smsc_log_debug(log_,"TaskProcessor::controlTraffic no region %s found",message.regionId.c_str());
         return true;
     }
 
     timeSlotsHashByRegion_t::iterator iter = timeSlotsHashByRegion_.lower_bound(message.regionId);
     if ( iter == timeSlotsHashByRegion_.end() || iter->first != message.regionId ) {
         // not found
-        smsc_log_debug(log_, "TaskProcessor::controlTrafficSpeedByRegion::: TaskId=[%d]: insert timeSlot to hash for regionId=%s", taskId, message.regionId.c_str());
+        // smsc_log_debug(log_, "TaskProcessor::controlTrafficSpeedByRegion::: TaskId=[%d]: insert timeSlot to hash for regionId=%s", taskId, message.regionId.c_str());
         iter = timeSlotsHashByRegion_.insert(iter,std::make_pair(message.regionId, new TimeSlotCounter<int>(1,1)));
     }
     TimeSlotCounter<int>* outgoing = iter->second;
     int out = outgoing->Get();
 
     bool regionTrafficLimitReached = (out >= region->getBandwidth());
-    smsc_log_debug(log_, "TaskProcessor::controlTrafficSpeedByRegion::: TaskId=[%d]: regionTrafficLimitReached=%d, region bandwidth=%d, current sent messages during one second=%d",
-                   taskId, regionTrafficLimitReached, region->getBandwidth(), out);
+    // smsc_log_debug(log_, "TaskProcessor::controlTrafficSpeedByRegion::: TaskId=[%d]: regionTrafficLimitReached=%d, region bandwidth=%d, current sent messages during one second=%d",
+    //                taskId, regionTrafficLimitReached, region->getBandwidth(), out);
     // check max messages per sec. limit. if limit was reached then put message to queue of suspended messages.
     if ( regionTrafficLimitReached ) { return true; }
 

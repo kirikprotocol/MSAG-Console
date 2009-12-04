@@ -570,8 +570,8 @@ unsigned TaskProcessor::processTask(Task* task)
 {
     __require__(task);
     unsigned res = 0;
-    smsc_log_debug(log_, "TaskProc::processTask(%d) taskPrio(cur/tot)=%d/%d",
-                   task->getId(), task->currentPriorityFrameCounter, task->getPriority() );
+    // smsc_log_debug(log_, "TaskProc::processTask(%d) taskPrio(cur/tot)=%d/%d",
+    // task->getId(), task->currentPriorityFrameCounter, task->getPriority() );
     while ( task->currentPriorityFrameCounter < task->getPriority() ) {
 
         ++task->currentPriorityFrameCounter;

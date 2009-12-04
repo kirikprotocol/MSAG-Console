@@ -124,15 +124,15 @@ size_t Task::MessageRegionCache::fill( time_t now, CsvStore& store, size_t cache
     // MutexGuard mg(lock_);
     Message fetchedMessage;
     bool haveMsg = false;
-    smsc_log_debug(log_,"filling cache at %ld, maxSize=%llu",
-                   long(now),static_cast<unsigned long long>(cacheFileSize));
+    // smsc_log_debug(log_,"filling cache at %ld, maxSize=%llu",
+    // long(now),static_cast<unsigned long long>(cacheFileSize));
     while ( fetched < cacheFileSize && (haveMsg=store.getNextMessage(fetchedMessage)) ) {
         MutexGuard mg(lock_);
         fillTime_ = now;
         Region** ptr = regionHash_.GetPtr(fetchedMessage.regionId.c_str());
         if ( ! ptr ) {
             // we have to add a new region
-            smsc_log_debug(log_,"a new region %s is created",fetchedMessage.regionId.c_str());
+            // smsc_log_debug(log_,"a new region %s is created",fetchedMessage.regionId.c_str());
             Region* r = new Region;
             r->regionId = fetchedMessage.regionId;
             r->isSuspended = false;
@@ -893,18 +893,18 @@ Task::putToSuspendedMessagesQueue(const Message& suspendedMessage)
 
 void Task::resetSuspendedRegions()
 {
-    smsc_log_debug(logger, "Task::resetSuspendedRegions::: method being called on task '%d/%s'",info.uid,info.name.c_str());
+    // smsc_log_debug(logger, "Task::resetSuspendedRegions::: method being called on task '%d/%s'",info.uid,info.name.c_str());
     messageCache_->resetSuspendedRegions();
 }
 
 bool Task::getNextMessage(Message& message)
 {
-    smsc_log_debug(logger, "getNextMessage method being called on task '%d/%s', ena/fin/inProc/inGen/genOk=%u/%u/%u/%u/%u",
-                   info.uid,info.name.c_str(),
-                   info.enabled,bFinalizing,bInProcess,bInGeneration,bGenerationSuccess);
-
     if (!isEnabled())
       return setInProcess(false);
+
+    // smsc_log_debug(logger, "getNextMessage method being called on task '%d/%s', ena/fin/inProc/inGen/genOk=%u/%u/%u/%u/%u",
+    // info.uid,info.name.c_str(),
+    // info.enabled,bFinalizing,bInProcess,bInGeneration,bGenerationSuccess);
 
     do {
         // selecting from cache (and from underlying store)
@@ -967,8 +967,10 @@ bool Task::getNextMessage(Message& message)
                      info.uid,info.name.c_str());
     }
     
-    smsc_log_debug(logger, "Selected %d messages from DB for task '%d/%s'",
-                   unsigned(fetched), info.uid,info.name.c_str());
+    if (fetched >0) {
+        smsc_log_debug(logger, "Selected %d messages from DB for task '%d/%s'",
+                       unsigned(fetched), info.uid,info.name.c_str());
+    }
 
     // selecting from cache
     do {
