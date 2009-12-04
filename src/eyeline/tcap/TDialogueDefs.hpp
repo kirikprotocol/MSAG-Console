@@ -31,6 +31,10 @@ struct TDialogueAssociate {
   enum DiagnosticProvider_e {
     dsp_null = 0, dsp_no_reason_given = 1, dsp_no_common_dialogue_portion = 2
   };
+
+  enum AbrtSource_e {
+    dlgServiceUser = 0, dlgServiceProvider = 1
+  };
 };
 
 struct TCUserAssociateResult {
