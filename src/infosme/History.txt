@@ -1,6 +1,9 @@
 History in reverse order
 ----------------------------------------------------
 
+----------------------------------------------------
+infosme-build-20091204 11:45 bukind
+
 2009-12-04 11:40 bukind
  feature: infosme.v2 included into infosme_update target
 2009-12-01 14:50 bukind
