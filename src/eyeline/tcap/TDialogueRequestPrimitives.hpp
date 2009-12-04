@@ -7,6 +7,7 @@
 
 # include "eyeline/asn1/EncodedOID.hpp"
 # include "eyeline/ros/ROSCompList.hpp"
+# include "eyeline/ros/ROSComponent.hpp"
 # include "eyeline/sccp/SCCPAddress.hpp"
 # include "eyeline/tcap/TDialogueDefs.hpp"
 # include "eyeline/tcap/TDlgUserInfo.hpp"
@@ -18,7 +19,6 @@ using eyeline::asn1::EncodedOID;
 using eyeline::asn1::ASExternalValue;
 
 using eyeline::ros::ROSComponentsList;
-using eyeline::ros::ROSComponentRfp;
 
 using eyeline::sccp::SCCPAddress;
 
@@ -75,8 +75,8 @@ public:
   void setDestAddress(const SCCPAddress & use_adr) { _dstAdr = use_adr; }
   const SCCPAddress & getDestAddress(void) const { return _dstAdr; }
   //
-  void addROSComponent(const ROSComponentRfp & use_comp) { _comps.push_back(use_comp); }
-  const ROSComponentsList & CompList(void) const { return _comps; }
+  void addROSComponent(ros::ROSComponentPrimitive* use_comp) { _comps.push_back(use_comp); }
+  const ROSComponentsList & getCompList(void) const { return _comps; }
 };
 
 //
@@ -91,8 +91,8 @@ public:
   void setOrigAddress(const SCCPAddress & use_adr) { _orgAdr = use_adr; }
   const SCCPAddress & getOrigAddress(void) const { return _orgAdr; }
   //
-  void addROSComponent(const ROSComponentRfp & use_comp) { _comps.push_back(use_comp); }
-  const ROSComponentsList & CompList(void) const { return _comps; }
+  void addROSComponent(ros::ROSComponentPrimitive* use_comp) { _comps.push_back(use_comp); }
+  const ROSComponentsList & getCompList(void) const { return _comps; }
 };
 
 //
@@ -111,8 +111,8 @@ public:
   void setPrearrangedEnd(void) { _termination = endPREARRANGED; }
   DialogEnding_e getTermination() const { return _termination; }
   //
-  void addROSComponent(const ROSComponentRfp & use_comp) { _comps.push_back(use_comp); }
-  const ROSComponentsList & CompList(void) const { return _comps; }
+  void addROSComponent(ros::ROSComponentPrimitive* use_comp) { _comps.push_back(use_comp); }
+  const ROSComponentsList & getCompList(void) const { return _comps; }
 };
 
 //There are 3 kinds of user abort:
