@@ -291,7 +291,7 @@ TDialogueServiceData::handleInvocationResults(const ROSComponentsList * componen
     return;
 
   for (ros::ROSComponentsList::const_iterator it = componentsList->begin(); it != componentsList->end(); ++it) {
-    ros::ROSComponentPrimitive* rosCompPrimitive = it->get();
+    const ros::ROSComponentPrimitive* rosCompPrimitive = *it;
     if ( rosCompPrimitive ) {
       ros::ROSComponentPrimitive::Kind_e rosKind = rosCompPrimitive->rosKind();
       if ( rosKind == ros::ROSComponentPrimitive::rosResult ||
