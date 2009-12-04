@@ -18,9 +18,7 @@ namespace tcap {
 namespace proto {
 
 using eyeline::ros::ROSComponentPrimitive;
-using eyeline::ros::ROSComponentRfp;
 using eyeline::ros::ROSComponentsList;
-
 
 //TCAP unidirection dialogue portion.
 //May be the one of APDUs defined in _ac_tcap_strDialogue_as.
