@@ -33,12 +33,15 @@ void compare( const AbntAddr& a )
 
 int main()
 {
+    AbntAddr::setAllowNewPacking( true );
+    printf("using new packing\n");
+
     AbntAddr a;
     // AbntAddr b(11,1,1,"79137654079");
     // AbntAddr b(11,1,1,"21000001575");
     // AbntAddr c(11,1,1,"79101799991");
-    AbntAddr b; b.fromString(".1.1.21000001575");
-    AbntAddr c; c.fromString(".1.1.79101799991");
+    AbntAddr b; b.fromString(".1.1.21000001575 ");
+    AbntAddr c; c.fromString("4790002120422769 ");
     compare(a);
     compare(b);
     compare(c);
@@ -48,6 +51,8 @@ int main()
     }
 
     AbntAddr::setAllowNewPacking( false );
+    printf("using old packing\n");
+
     compare(a);
     compare(b);
     compare(c);
