@@ -4076,6 +4076,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
       {
         __warning2__("DELIVERYRESP: failed to create sms for SmartMultipartForward:'%s'",e.what());
         finalizeSms(t.msgId,sms);
+        smsc->registerMsuStatEvent(StatEvents::etUndeliverable,&sms);
         return UNDELIVERABLE_STATE;
       }
       dgortr=false;
@@ -4133,8 +4134,10 @@ StateType StateMachine::deliveryResp(Tuple& t)
           {
             sms.state=UNDELIVERABLE;
             finalizeSms(t.msgId,sms);
+            smsc->registerMsuStatEvent(StatEvents::etUndeliverable,&sms);
             return UNDELIVERABLE_STATE;
           }
+          smsc->registerMsuStatEvent(StatEvents::etDeliverErr,&sms);
           return UNKNOWN_STATE;
         }
         __trace2__("CONCAT: concatseqnum=%d for msdgId=%lld",sms.getConcatSeqNum(),t.msgId);
@@ -4192,8 +4195,10 @@ StateType StateMachine::deliveryResp(Tuple& t)
         {
           sms.state=UNDELIVERABLE;
           finalizeSms(t.msgId,sms);
+          smsc->registerMsuStatEvent(StatEvents::etUndeliverable,&sms);
           return UNDELIVERABLE_STATE;
         }
+        smsc->registerMsuStatEvent(StatEvents::etDeliverErr,&sms);
         return ERROR_STATE;
       }
 
@@ -4232,8 +4237,10 @@ StateType StateMachine::deliveryResp(Tuple& t)
         {
           sms.state=UNDELIVERABLE;
           finalizeSms(t.msgId,sms);
+          smsc->registerMsuStatEvent(StatEvents::etUndeliverable,&sms);
           return UNDELIVERABLE_STATE;
         }
+        smsc->registerMsuStatEvent(StatEvents::etDeliverErr,&sms);
         return ENROUTE_STATE;
       }
       // create task
@@ -4272,8 +4279,10 @@ StateType StateMachine::deliveryResp(Tuple& t)
           {
             sms.state=UNDELIVERABLE;
             finalizeSms(t.msgId,sms);
+            smsc->registerMsuStatEvent(StatEvents::etUndeliverable,&sms);
             return UNDELIVERABLE_STATE;
           }
+          smsc->registerMsuStatEvent(StatEvents::etDeliverErr,&sms);
           return ENROUTE_STATE;
         }
         __trace2__("CONCAT: created task for %u/%d",dialogId2,uniqueId);
@@ -4294,8 +4303,10 @@ StateType StateMachine::deliveryResp(Tuple& t)
         {
           sms.state=UNDELIVERABLE;
           finalizeSms(t.msgId,sms);
+          smsc->registerMsuStatEvent(StatEvents::etUndeliverable,&sms);
           return UNDELIVERABLE_STATE;
         }
+        smsc->registerMsuStatEvent(StatEvents::etDeliverErr,&sms);
         return ENROUTE_STATE;
       }
       Address srcOriginal=sms.getOriginatingAddress();
@@ -4389,10 +4400,22 @@ StateType StateMachine::deliveryResp(Tuple& t)
         {
           sms.state=UNDELIVERABLE;
           finalizeSms(t.msgId,sms);
+          smsc->registerMsuStatEvent(StatEvents::etUndeliverable,&sms);
           return UNDELIVERABLE_STATE;
         }
-        return Status::isErrorPermanent(errstatus)?UNDELIVERABLE_STATE:ENROUTE_STATE;
+        if(Status::isErrorPermanent(errstatus))
+        {
+          smsc->registerMsuStatEvent(StatEvents::etUndeliverable,&sms);
+          return UNDELIVERABLE_STATE;
+        }else
+        {
+          smsc->registerMsuStatEvent(StatEvents::etDeliverErr,&sms);
+          return ENROUTE_STATE;
+        }
       }
+
+      smsc->registerMsuStatEvent(StatEvents::etDeliveredOk,&sms);
+
 
       //
       //
