@@ -475,3 +475,29 @@ B3114: Nov 10, 2009
     Webadm	fix bug with storing user's timezone
     Webadm	move infosme tasks config in users config
     Webadm	Add new flags (carry infos, forceDC, forceReceipt, smpp+) to sme
+
+B3115: Nov 23, 2009
+    SMSC	ESME Acknowledge now can be reformated from SMPP to human format if dest is MAP_PROXY (usefull for smsc<>smsc proxies)
+    SMSC	invalid delivery receipts got from SME now undeliverable after first try.
+    SMSC	fill smpp+ fields only for ussd messages
+    SMSC	fix for divert on msmemorycapacity
+    Infosme	using smppStatus from receipt
+    Infosme	bugfix: memleak in premature exiting main loop
+    Infosme	activeTasks is introduced in the main loop of TaskProcessor. This container is filled whenever the tasks container or a task is changed. To mark such events there is a flag activateFlag.  Also the container is checked once per minute.
+    Infosme	separate configs
+    Infosme	Fix msisdn template for siebel messages
+    Util	Config manager: bugfix: writing config to a file (had problems) bugfix: memleak in removeSection; - getSubSection added; - file operation on Config is moved from Manager.cpp to Config.cpp.
+    SMSX	Check group exists before sending sms (It fix NPE when sends sms to unknown group)
+    mcahdb	Make params "expiredText", "profileChangedText" and "errorText" in "scheduler" sections optional. If any of this params is null, notification according to this param will no be sent
+    Webadm	add @ symbol as allowed to alphanumeric
+    Webadm	fixed bad mask representation
+
+B3116: Dec 8, 2009
+    SMSC	charge on submit fix
+    SMSC	possible cancel agent exit fix
+    Infosme	suppression of spurious logging
+    Infosme	ussdpush feature implemented
+    Infosme	separate configs for tasks
+    Infosme	optimize siebelTaskManager, fix bug with locked resources
+    MCISme	fix for possible lost abonent from delivry
+     
