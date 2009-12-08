@@ -337,7 +337,7 @@ public:
 
     time_t oldntt=sms.getNextTime();
     bool sethead=false;
-    if(sms.attempts==0)
+    if(sms.attempts==0 && c->queueSize!=0)
     {
       ChainPush(c,SchedulerData(id,sms.getValidTime()));
       debug2(log,"Resched: push sms %lld to tail (%d), c=%p",id,c->headTime,c);
