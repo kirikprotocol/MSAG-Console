@@ -495,6 +495,7 @@ B3115: Nov 23, 2009
 B3116: Dec 8, 2009
     SMSC	charge on submit fix
     SMSC	possible cancel agent exit fix
+    SMSC	reschedulenow hyperrescheduling fix
     Infosme	suppression of spurious logging
     Infosme	ussdpush feature implemented
     Infosme	separate configs for tasks
