@@ -451,3 +451,5 @@ TO ALL: Insert log record for all significant changes & fixes here.
   msag feature: ewallet allows amount=0
 
 --- current-fixes ---
+2009-12-07 17:20 bukind
+  pvss bugfix: AbntAddr off-by-one error problem in unpack with len=15
