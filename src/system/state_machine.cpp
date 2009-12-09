@@ -453,7 +453,7 @@ int StateMachine::Execute()
       opStart=(gethrtime()-opStart)/1000000;
       if(opStart>20)
       {
-        smsc_log_warn(smsLog,"command %s processing takes %dms",op,opStart);
+        smsc_log_warn(smsLog,"command %s processing takes %lldms",op,opStart);
       }
       __trace2__("change state for %lld to %d",t.msgId,st);
       opStart=gethrtime();
@@ -461,7 +461,7 @@ int StateMachine::Execute()
       opStart=(gethrtime()-opStart)/1000000;
       if(opStart>20)
       {
-        smsc_log_warn(smsLog,"eq change state processing takes %dms",op,opStart);
+        smsc_log_warn(smsLog,"eq change state processing takes %lldms",op,opStart);
       }
     }catch(exception& e)
     {
