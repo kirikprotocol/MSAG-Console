@@ -23,16 +23,17 @@ bool ICSHostCfgReader::markProducer(ICSUId ics_uid)
   return false;
 }
 
-void ICSHostCfgReader::addDfltLoadUps(void) /*throw(ConfigException)*/
+//Returns true if at least one new service was loaded
+bool ICSHostCfgReader::addDfltLoadUps(void) /*throw(ConfigException)*/
 {
   ICSIdsSet ids = ICSLoadupsReg::get().loadDefaults(logger);
   if (ids.empty())
-    return;
+    return false;
 
   for (ICSIdsSet::const_iterator it = ids.begin(); it != ids.end(); ++it) {
     markProducer(*it);
   }
-  return;
+  return true;
 }
 
 //Reads 'Services' section containing services loadup configuration
@@ -67,25 +68,10 @@ void ICSHostCfgReader::readLoadUps(XConfigView & cfg_sec) /*throw(ConfigExceptio
   }
 }
 
-//Parses XML configuration entry section, updates dependencies.
-//Returns status of config parsing, 
-ICSrvCfgReaderAC::CfgState ICSHostCfgReader::parseConfig(void * opaque_arg/* = NULL*/)
-  throw(ConfigException)
+//Reads or complete reading the configuration of loaded services,
+//also loads up services requested by dependencies
+void ICSHostCfgReader::readLoadedCfg(void)
 {
-  XConfigView cfgSec(rootSec, nmCfgSection());
-
-  const char * cstr = NULL;
-  try { cstr = cfgSec.getString("version");
-  } catch (const ConfigException & exc) { }
-  if (!cstr || !cstr[0])
-      smsc_log_warn(logger, "Config version is not set");
-  else
-      smsc_log_info(logger, "Config version: %s", cstr);
-
-  //Read initial services loadup configuration
-  readLoadUps(cfgSec);
-
-  //Read configurations for prepared services, load up newly requested ones
   ICSProducerCFG * prodCfg = NULL;
   ICSProducersReg::size_type attempt = icsCfg->prodReg.size() + 1;
   while ((prodCfg = icsCfg->prodReg.nextToRead()) != 0) { //xcfReader is set
@@ -116,7 +102,32 @@ ICSrvCfgReaderAC::CfgState ICSHostCfgReader::parseConfig(void * opaque_arg/* = N
       }
     }
   }
-  addDfltLoadUps();
+}
+
+
+//Parses XML configuration entry section, updates dependencies.
+//Returns status of config parsing, 
+ICSrvCfgReaderAC::CfgState ICSHostCfgReader::parseConfig(void * opaque_arg/* = NULL*/)
+  throw(ConfigException)
+{
+  XConfigView cfgSec(rootSec, nmCfgSection());
+
+  const char * cstr = NULL;
+  try { cstr = cfgSec.getString("version");
+  } catch (const ConfigException & exc) { }
+  if (!cstr || !cstr[0])
+      smsc_log_warn(logger, "Config version is not set");
+  else
+      smsc_log_info(logger, "Config version: %s", cstr);
+
+  //Read initial services loadup configuration
+  readLoadUps(cfgSec);
+  //Read configurations for loaded services and load up services requested
+  //by dependencies
+  readLoadedCfg();
+  //verify that configurations of all default services were read
+  if (addDfltLoadUps())
+    readLoadedCfg();
   /**/
   if (icsCfg->prodReg.empty())
     throw ConfigException("No services loadUps processed!");

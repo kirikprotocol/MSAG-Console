@@ -16,12 +16,17 @@ class ICSHostCfgReader : public ICSrvCfgReaderAC_T<SvcHostCFG> {
 private:
   bool markProducer(ICSUId ics_uid);
 
-  void addDfltLoadUps(void) /*throw(ConfigException)*/;
+  //Returns true if at least one new service was loaded
+  bool addDfltLoadUps(void) /*throw(ConfigException)*/;
 
   //Reads 'Services' section containing services loadup configuration
   //NOTE: default config section names for services may be overridden
   //      only in 'Services' section
   void readLoadUps(XConfigView & cfg_sec) /*throw(ConfigException)*/;
+
+  //Reads or complete reading the configuration of loaded services,
+  //also loads up services requested by dependencies
+  void readLoadedCfg(void);
 
 protected:
   static const unsigned int _DFLT_CLIENT_CONNS = 3;
