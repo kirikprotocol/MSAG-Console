@@ -432,24 +432,37 @@ int StateMachine::Execute()
     eq.selectAndDequeue(t,&isStopping);
     if(isStopping)break;
     try{
+      const char* op="unknown";
+      hrtime_t opStart=gethrtime();
       switch(t.command->cmdid)
       {
-        case SUBMIT:st=submit(t);break;
-        case INSMSCHARGERESPONSE:st=submitChargeResp(t);break;
-        case DELIVERY_RESP:st=deliveryResp(t);break;
-        case FORWARD:st=forward(t);break;
-        case INFWDSMSCHARGERESPONSE:st=forwardChargeResp(t);break;
-        case ALERT:st=alert(t);break;
-        case REPLACE:st=replace(t);break;
-        case QUERY:st=query(t);break;
-        case CANCEL:st=cancel(t);break;
+        case SUBMIT:st=submit(t);op="submit";break;
+        case INSMSCHARGERESPONSE:st=submitChargeResp(t);op="insmschargeresp";break;
+        case DELIVERY_RESP:st=deliveryResp(t);op="deliveryresp";break;
+        case FORWARD:st=forward(t);op="forward";break;
+        case INFWDSMSCHARGERESPONSE:st=forwardChargeResp(t);op="infwdchargereso";break;
+        case ALERT:st=alert(t);op="alert";break;
+        case REPLACE:st=replace(t);op="replace";break;
+        case QUERY:st=query(t);op="query";break;
+        case CANCEL:st=cancel(t);op="cancel";break;
         default:
           __warning2__("UNKNOWN COMMAND:%d",t.command->cmdid);
           st=ERROR_STATE;
           break;
       }
+      opStart=(gethrtime()-opStart)/1000000;
+      if(opStart>20)
+      {
+        smsc_log_warn(smsLog,"command %s processing takes %dms",op,opStart);
+      }
       __trace2__("change state for %lld to %d",t.msgId,st);
+      opStart=gethrtime();
       eq.changeState(t.msgId,st);
+      opStart=(gethrtime()-opStart)/1000000;
+      if(opStart>20)
+      {
+        smsc_log_warn(smsLog,"eq change state processing takes %dms",op,opStart);
+      }
     }catch(exception& e)
     {
       __warning2__("StateMachine::exception %s",e.what());

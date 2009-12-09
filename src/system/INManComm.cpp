@@ -119,12 +119,12 @@ void INManComm::ChargeSms(SMSId id,const SMS& sms,smsc::smeman::INSmsChargeRespo
 
   debug2(log,"Buffer size:%d",buf.getDataSize());
   {
-    sync::MutexGuard mg(reqMtx);
     ReqData* rd=new ReqData;
     rd->id=id;
     rd->chargeType=ReqData::ctSubmit;
     rd->sms=sms;
     rd->sbmCtx=new smsc::smeman::INSmsChargeResponse::SubmitContext(ctx);
+    sync::MutexGuard mg(reqMtx);
     ReqDataMap::iterator it=reqDataMap.insert(ReqDataMap::value_type(dlgId,rd)).first;
     it->second->tmIt=timeMap.insert(TimeMap::value_type(time(NULL)+reqTimeOut,it));
     debug2(log,"ChargeSms: reqDataMap.size()=%d",reqDataMap.size());
