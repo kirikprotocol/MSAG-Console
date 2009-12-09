@@ -332,7 +332,7 @@ public:
         if (task_) task_->changeUsage(true);
     }
     inline TaskGuard& operator = ( const TaskGuard& tg ) {
-        if ( &tg != this ) {
+        if ( tg.task_ != task_ ) {
             if (task_ && task_->changeUsage(false)) delete task_;
             task_ = tg.task_;
             if (task_) task_->changeUsage(true);

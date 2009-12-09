@@ -1,6 +1,9 @@
 History in reverse order
 ----------------------------------------------------
 
+2009-12-09 16:10
+ potential bugfix: destroying task in assignment of TaskGuard to self
+
 ----------------------------------------------------
 infosme-build-20091204 11:45 bukind
 
