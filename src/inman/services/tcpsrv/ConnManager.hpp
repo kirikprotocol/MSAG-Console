@@ -61,15 +61,13 @@ private:
     void cleanUpWorkers(void)
     {
         MutexGuard grd(_mutex);
-        if (!_corpses.empty()) {
-          do {
-            WorkerAC * pWorker = _corpses.front();
-            _corpses.pop_front();
-            {
-              ReverseMutexGuard rGrd(_mutex);
-              delete pWorker;
-            }
-          } while (!_corpses.empty());
+        while (!_corpses.empty()) {
+          WorkerAC * pWorker = _corpses.front();
+          _corpses.pop_front();
+          {
+            ReverseMutexGuard rGrd(_mutex);
+            delete pWorker;
+          }
         }
     }
 
@@ -82,7 +80,7 @@ protected:
     char        _logId[MAX_CONNECT_MGR_NAME + sizeof("[%u]") + sizeof(unsigned)*3 + 1];
 
     /* -------------------------------------------------------------- */
-    /* NOTE: _mutex ust be locked prior to calling protected methods  */
+    /* NOTE: _mutex must be locked prior to calling protected methods */
     /* -------------------------------------------------------------- */
     unsigned numWorkers(void) const
     {
