@@ -154,11 +154,11 @@ void INManComm::ChargeSms(SMSId id,const SMS& sms,smsc::smeman::INFwdSmsChargeRe
   smsc::inman::interaction::ObjectBuffer buf(400);
   pck.serialize(buf);
   {
-    sync::MutexGuard mg(reqMtx);
     ReqData* rd=new ReqData;
     rd->id=id;
     rd->chargeType=ReqData::ctForward;
     rd->sms=sms;
+    sync::MutexGuard mg(reqMtx);
     rd->fwdCtx=new smsc::smeman::INFwdSmsChargeResponse::ForwardContext(ctx);
     ReqDataMap::iterator it=reqDataMap.insert(ReqDataMap::value_type(dlgId,rd)).first;
     it->second->tmIt=timeMap.insert(TimeMap::value_type(time(NULL)+reqTimeOut,it));
@@ -346,6 +346,7 @@ int INManComm::Execute()
         static_cast<smsc::inman::interaction::ChargeSmsResult*>(pck->pCmd());
 
     smsc::smeman::SmscCommand cmd;
+    std::auto_ptr<ReqData> rd;
     {
       sync::MutexGuard mg(reqMtx);
 
@@ -355,34 +356,34 @@ int INManComm::Execute()
         info2(log,"Request for response with dlgId=%d not found", hdr->dlgId);
         continue;
       }
-      debug2(log,"Received response for dlgId=%d, value=%d", hdr->dlgId, result->GetValue());
-      if(it->second->chargeType==ReqData::ctSubmit)
-      {
-        cmd=smsc::smeman::SmscCommand::makeINSmsChargeResponse
-          (
-            it->second->id,
-            it->second->sms,
-            *it->second->sbmCtx,
-            result->GetValue()==smsc::inman::interaction::ChargeSmsResult::CHARGING_POSSIBLE
-          );
-        cmd->get_chargeSmsResp()->inmanError=result->getMsg();
-        cmd->get_chargeSmsResp()->contractType=result->getContract();
-        delete it->second->sbmCtx;
-      }else
-      {
-        cmd=smsc::smeman::SmscCommand::makeINFwdSmsChargeResponse
-          (
-            it->second->id,
-            it->second->sms,
-            *it->second->fwdCtx,
-            result->GetValue()==smsc::inman::interaction::ChargeSmsResult::CHARGING_POSSIBLE
-          );
-        cmd->get_fwdChargeSmsResp()->inmanError=result->getMsg();
-        delete it->second->fwdCtx;
-      }
+      rd.reset(it->second);
       timeMap.erase(it->second->tmIt);
-      delete it->second;
       reqDataMap.erase(it);
+    }
+    debug2(log,"Received response for dlgId=%d, value=%d", hdr->dlgId, result->GetValue());
+    if(rd->chargeType==ReqData::ctSubmit)
+    {
+      cmd=smsc::smeman::SmscCommand::makeINSmsChargeResponse
+          (
+              rd->id,
+              rd->sms,
+              *rd->sbmCtx,
+              result->GetValue()==smsc::inman::interaction::ChargeSmsResult::CHARGING_POSSIBLE
+          );
+      cmd->get_chargeSmsResp()->inmanError=result->getMsg();
+      cmd->get_chargeSmsResp()->contractType=result->getContract();
+      delete rd->sbmCtx;
+    }else
+    {
+      cmd=smsc::smeman::SmscCommand::makeINFwdSmsChargeResponse
+          (
+              rd->id,
+              rd->sms,
+              *rd->fwdCtx,
+              result->GetValue()==smsc::inman::interaction::ChargeSmsResult::CHARGING_POSSIBLE
+          );
+      cmd->get_fwdChargeSmsResp()->inmanError=result->getMsg();
+      delete rd->fwdCtx;
     }
     {
       sync::MutexGuard mg(queueMtx);

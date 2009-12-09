@@ -51,13 +51,13 @@ bool isUSSDSessionSms(SMS* sms)
   ;
 }
 
-void Smsc::RejectSms(const SmscCommand& cmd)
+void Smsc::RejectSms(const SmscCommand& cmd,bool isLicenseLimit)
 {
   SmeProxy* src_proxy=cmd.getProxy();
   try{
     SMS* sms=cmd->get_sms();
     sms->setSourceSmeId(src_proxy->getSystemId());
-    sms->setLastResult(Status::LICENSELIMITREJECT);
+    sms->setLastResult(isLicenseLimit?Status::LICENSELIMITREJECT:Status::MSGQFUL);
     registerStatisticalEvent(StatEvents::etSubmitErr,sms);
     registerMsuStatEvent(StatEvents::etSubmitErr,sms);
 
@@ -392,7 +392,7 @@ void Smsc::mainLoop(int idx)
                   (*i)->get_sms()->getOriginatingAddress().toString().c_str(),
                   (*i)->get_sms()->getDestinationAddress().toString().c_str(),
                   totalCnt,maxScaled,perSlot,equnsize,eventQueueLimit);
-                RejectSms(*i);
+                RejectSms(*i,totalCnt>maxScaled);
               }else
               {
                 info2(log,"Sms id=%lld fwd rejected by license/eq limit: %d/%d (%d), %d/%d",(*i)->get_forwardMsgId(),

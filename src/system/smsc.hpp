@@ -264,7 +264,7 @@ public:
 
   SmeAdministrator* getSmeAdmin(){return &smeman;}
 
-  void RejectSms(const SmscCommand&);
+  void RejectSms(const SmscCommand&,bool isLicenseLimit);
 
   void incRejected()
   {
