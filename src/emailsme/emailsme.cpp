@@ -839,7 +839,7 @@ namespace cfg{
   //int defaultDailyLimit;
   int annotationSize;
   string maildomain;
-  string hdmaildomain;
+  string hdmaildomain="";
   vector<string> validDomains;
   string mailstripper;
   int mailthreadsCount;
@@ -855,7 +855,7 @@ namespace cfg{
   int defaultLimitValue=10;
   bool sendSuccessAnswer=true;
 
-  std::string helpDeskAddress;
+  std::string helpDeskAddress="";
 
   bool useTransformRegexp=false;
   // RegExp reTransform;
@@ -3078,7 +3078,6 @@ int main(int argc,char* argv[])
     }catch(...)
     {
       __warning__("helpdesk mail domain not found");
-      cfg::hdmaildomain=cfg::maildomain;
     }
 
     {
