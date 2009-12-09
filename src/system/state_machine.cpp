@@ -451,18 +451,12 @@ int StateMachine::Execute()
           break;
       }
       opStart=(gethrtime()-opStart)/1000000;
-      if(opStart>20)
+      if(opStart>50)
       {
         smsc_log_warn(smsLog,"command %s processing takes %lldms",op,opStart);
       }
       __trace2__("change state for %lld to %d",t.msgId,st);
-      opStart=gethrtime();
       eq.changeState(t.msgId,st);
-      opStart=(gethrtime()-opStart)/1000000;
-      if(opStart>20)
-      {
-        smsc_log_warn(smsLog,"eq change state processing takes %lldms",op,opStart);
-      }
     }catch(exception& e)
     {
       __warning2__("StateMachine::exception %s",e.what());
