@@ -181,9 +181,47 @@ inline void Serialize(const SMS& sms,BufOps::SmsBuffer& dst)
   //added in version 0x010001;
   dst<<(uint8_t)sms.needArchivate;
 
-  uint32_t bodyLength=sms.messageBody.getBufferLength();
+  const PropertySet& prop=sms.messageBody.getProperties();
+
+  uint32_t dummy=0;
+  dst<<dummy;
+
+  for(size_t i=0;i<=SMS_LAST_TAG;i++)
+  {
+    if ( i == Body::unType(Tag::SMPP_SHORT_MESSAGE) ) continue;
+    if ( i == Body::unType(Tag::SMPP_MESSAGE_PAYLOAD) ) continue;
+    if(prop.properties[i].isSet())
+    {
+      switch(prop.properties[i].type)
+      {
+        case SMS_INT_TAG:
+        {
+          uint16_t tag=(uint16_t)i;
+          dst<<tag;
+          dst<<(uint32_t)prop.properties[i].iValue;
+        }break;
+        case SMS_STR_TAG:
+        {
+          uint16_t tag=(uint16_t)(i|(SMS_STR_TAG<<8));
+          dst<<tag;
+          uint32_t len=(uint32_t)(prop.properties[i].xValue.length()+1);
+          dst<<len;
+          dst.Append(prop.properties[i].xValue.c_str(),len);
+        }break;
+        case SMS_BIN_TAG:
+        {
+          uint16_t tag=(uint16_t)(i|(SMS_BIN_TAG<<8));
+          dst<<tag;
+          uint32_t len=(uint32_t)(prop.properties[i].xValue.length());
+          dst.Append(prop.properties[i].xValue.data(),len);
+        }break;
+      }
+    }
+  }
+
+ /* uint32_t bodyLength=sms.messageBody.getBufferLength();
   dst<<bodyLength;
-  dst.Append((char*)sms.messageBody.getBuffer(),bodyLength);
+  dst.Append((char*)sms.messageBody.getBuffer(),bodyLength);*/
 }
 
 inline void Deserialize(BufOps::SmsBuffer& src,SMS& sms,int ver)
@@ -219,10 +257,44 @@ inline void Deserialize(BufOps::SmsBuffer& src,SMS& sms,int ver)
   sms.state=(State)smsState;
 
   uint32_t bodyLength;//=sms.messageBody.getBufferLength();
-  src>>bodyLength;
+  src>>bodyLength;//dummy
+
+  PropertySet& prop=sms.getMessageBody().getProperties();
+
+  sms.getMessageBody().Clear();
+
+  while(src.GetPos()<src.getSize())
+  {
+    uint16_t tag;
+    src>>tag;
+    switch(tag>>8)
+    {
+      case SMS_INT_TAG:
+      {
+        uint32_t val;
+        src>>val;
+        prop.properties[Body::unType(tag)].setInt(val);
+      }break;
+      case SMS_STR_TAG:
+      {
+        uint32_t len;
+        src>>len;
+        prop.properties[Body::unType(tag)].setStr(src.GetCurPtr());
+        src.SetPos(src.GetPos()+len);
+      }break;
+      case SMS_BIN_TAG:
+      {
+        uint32_t len;
+        src>>len;
+        prop.properties[Body::unType(tag)].setBin(src.GetCurPtr(),len);
+        src.SetPos(src.GetPos()+len);
+      }break;
+    }
+  }
+  /*
   uint8_t* bodyBuffer = new uint8_t[bodyLength];
   src.Read((char*)bodyBuffer,bodyLength);
-  sms.messageBody.setBuffer(bodyBuffer, bodyLength);
+  sms.messageBody.setBuffer(bodyBuffer, bodyLength);*/
 }
 
 }//namespace sms

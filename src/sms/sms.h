@@ -545,15 +545,17 @@ struct Descriptor
 struct OptionalProperty{
   uint16_t isSetVal;
   uint16_t type;
-  static SmsPropertyBuf* nullStr;
-  SmsPropertyBuf xValue;
   int iValue;
+  SmsPropertyBuf xValue;
+
+  static SmsPropertyBuf* nullStr;
+
   OptionalProperty():isSetVal(0),type(SMS_INT_TAG){}
-  OptionalProperty(const OptionalProperty& prop):isSetVal(0),type(SMS_INT_TAG),iValue(0)
+  OptionalProperty(const OptionalProperty& prop):isSetVal(0),type(SMS_INT_TAG)
   {
     *this=prop;
   }
-  bool isSet()
+  bool isSet()const
   {
     return isSetVal==1;
   }
@@ -677,7 +679,17 @@ public:
     setBuffer(b, len);*/
     buff=auto_ptr<uint8_t>(0);
     prop=body.prop;
-  };
+  }
+
+  const PropertySet& getProperties()const
+  {
+    return prop;
+  }
+
+  PropertySet& getProperties()
+  {
+    return prop;
+  }
 
   /**
   *   '=',
