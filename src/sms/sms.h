@@ -602,7 +602,7 @@ struct OptionalProperty{
   }
   int getInt()const
   {
-    return iValue;
+    return isSetVal?iValue:0;
   }
   const SmsPropertyBuf& getStr()const
   {
