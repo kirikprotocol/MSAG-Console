@@ -3,6 +3,7 @@
 
 #include <util/Exception.hpp>
 #include "sms/sms.h"
+#include "core/buffers/FixedLengthString.hpp"
 
 namespace smsc { namespace stat
 {
@@ -24,11 +25,11 @@ namespace smsc { namespace stat
     struct StatInfo
     {
         int errcode;       // 0 - if status ok
-        std::string smeId; // either src or dst smeId
-        std::string routeId;
+        smsc::core::buffers::FixedLengthString<smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1> smeId; // either src or dst smeId
+        smsc::core::buffers::FixedLengthString<smsc::sms::MAX_ROUTE_ID_TYPE_LENGTH+1> routeId;
         signed long providerId, categoryId; // -1 if undefined
 
-        StatInfo(const std::string& _smeId, const std::string& _routeId, int _errcode = 0,
+        StatInfo(const char* _smeId, const char* _routeId, int _errcode = 0,
                  signed long _providerId = -1, signed long _categoryId = -1)
             : smeId(_smeId), routeId(_routeId), errcode(_errcode),
               providerId(_providerId), categoryId(_categoryId) {};

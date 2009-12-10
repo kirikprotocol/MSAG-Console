@@ -464,12 +464,12 @@ BODY           RAW(1500)
 void FileStorage::save(SMSId id, SMS& sms, File::offset_type* pos /*= 0 (no getPos) */)
 {
     uint8_t smsState = (uint8_t)sms.state;
-    std::string oa  = sms.originatingAddress.toString();
-    std::string da  = sms.destinationAddress.toString();
-    std::string dda = sms.dealiasedDestinationAddress.toString();
-    int8_t oaSize   = (int8_t)oa.length();
-    int8_t daSize   = (int8_t)da.length();
-    int8_t ddaSize  = (int8_t)dda.length();
+    char oa[32];
+    char da[32];
+    char dda[32];
+    int8_t oaSize = sms.originatingAddress.toString(oa,sizeof(oa));
+    int8_t daSize = sms.destinationAddress.toString(da,sizeof(da));
+    int8_t ddaSize  = sms.dealiasedDestinationAddress.toString(dda,sizeof(dda));
     int8_t svcSize    = (int8_t)strlen(sms.eServiceType);
     int8_t odMscSize  = (int8_t)strlen(sms.originatingDescriptor.msc);
     int8_t odImsiSize = (int8_t)strlen(sms.originatingDescriptor.imsi);
@@ -516,11 +516,11 @@ void FileStorage::save(SMSId id, SMS& sms, File::offset_type* pos /*= 0 (no getP
     memcpy(position, &lastResult, sizeof(lastResult)); position+=sizeof(lastResult);
 
     memcpy(position, &oaSize, sizeof(oaSize));   position+=sizeof(oaSize);
-    if (oaSize > 0)  { memcpy(position, oa.c_str(), oaSize);   position+=oaSize;  }
+    if (oaSize > 0)  { memcpy(position, oa, oaSize);   position+=oaSize;  }
     memcpy(position, &daSize, sizeof(daSize));   position+=sizeof(daSize);
-    if (daSize > 0)  { memcpy(position, da.c_str(), daSize);   position+=daSize;  }
+    if (daSize > 0)  { memcpy(position, da, daSize);   position+=daSize;  }
     memcpy(position, &ddaSize, sizeof(ddaSize)); position+=sizeof(ddaSize);
-    if (ddaSize > 0) { memcpy(position, dda.c_str(), ddaSize); position+=ddaSize; }
+    if (ddaSize > 0) { memcpy(position, dda, ddaSize); position+=ddaSize; }
 
     uint16_t mr = htons(sms.messageReference);
     memcpy(position, &mr, sizeof(mr)); position+=sizeof(mr);
