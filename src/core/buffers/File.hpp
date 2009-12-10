@@ -515,7 +515,7 @@ public:
     Check();
     if(flags&FLG_WRBUF)Flush();
     if((flags&FLG_BUFFERED) && (flags&FLG_RDBUF)!=FLG_RDBUF && sz<(size_t)bufferSize)
-    { 
+    {
       ssize_t rd=read(fd,buffer,bufferSize);
       if(rd==-1)
       {
@@ -770,7 +770,7 @@ public:
     }
     return realPos;
   }
-    
+
   void Truncate( offset_type pos )
   {
       if (isInMemory()) { throw std::runtime_error("Truncate is not impl for inmemory");}
@@ -1079,6 +1079,14 @@ public:
     {
       throw FileException(FileException::errOpenDirFailed,dirName);
     }
+    struct CloseDirGuard{
+      DIR* dir;
+      CloseDirGuard(DIR* argDir):dir(argDir){}
+      ~CloseDirGuard()
+      {
+        closedir(dir);
+      }
+    }guard(dir);
     TmpBuf<char,512> buf(sizeof(dirent)+pathconf(dirName,_PC_NAME_MAX)+1);
     dirent* de=(dirent*)buf.get();
     dirent* ptr;
@@ -1142,7 +1150,7 @@ public:
       }
     }
   }
-  
+
   static offset_type Size(const char* argFileName)
   {
 #ifdef __GNUC__
