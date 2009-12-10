@@ -51,7 +51,7 @@ private:
   bool released;
 };
 
-template <int SZ>
+template <size_t SZ>
 inline
 void AttrFillStringValue(DOMNamedNodeMap* attr,const char* attrName,buf::FixedLengthString<SZ>& str)
 {

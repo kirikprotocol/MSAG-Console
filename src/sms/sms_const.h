@@ -61,7 +61,7 @@ const uint8_t SMSC_TRANSACTION_MSG_MODE     = 2;
 const uint8_t SMSC_STOREANDFORWARD_MSG_MODE = 3;
 
 /**
-* ������⢮ ���ﭨ� SMS � ���⥪�� SMS 業��
+*
 *
 * @see SMS
 */

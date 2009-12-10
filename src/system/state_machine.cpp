@@ -1537,7 +1537,8 @@ StateType StateMachine::submit(Tuple& t)
   sms->setIntProperty(Tag::SMSC_CATEGORYID,c.ri.categoryId);
 
   bool aclCheck=false;
-  std::string aclAddr;
+  smsc::core::buffers::FixedLengthString<32> aclAddr;
+  //std::string aclAddr;
 
   bool& fromMap=c.fromMap;
   bool& toMap=c.toMap;
@@ -1561,7 +1562,7 @@ StateType StateMachine::submit(Tuple& t)
     {
       sms->getDestinationAddress().getText(buf,sizeof(buf));
     }
-    aclAddr=buf;
+    aclAddr=(const char*)buf;
     aclCheck=true;
   }
 
@@ -1591,7 +1592,7 @@ StateType StateMachine::submit(Tuple& t)
   }
 
 
-  if(aclCheck && c.ri.aclId!=-1 && !smsc->getAclMgr()->isGranted(c.ri.aclId,aclAddr))
+  if(aclCheck && c.ri.aclId!=-1 && !smsc->getAclMgr()->isGranted(c.ri.aclId,aclAddr.c_str()))
   {
     submitResp(t,sms,Status::NOROUTE);
     char buf1[32];
@@ -2584,7 +2585,7 @@ StateType StateMachine::submitChargeResp(Tuple& t)
 
   bool deliveryOk=false;
   int  err=0;
-  std::string errstr;
+  smsc::core::buffers::FixedLengthString<64> errstr;
 
   try{
 

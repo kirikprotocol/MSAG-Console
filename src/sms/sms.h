@@ -546,12 +546,9 @@ struct OptionalProperty{
   uint16_t isSetVal;
   uint16_t type;
   static SmsPropertyBuf* nullStr;
-  union{
-    SmsPropertyBuf* sValue;
-    SmsPropertyBuf* bValue;
-    int iValue;
-  };
-  OptionalProperty():isSetVal(0),type(SMS_INT_TAG),bValue(0){}
+  SmsPropertyBuf xValue;
+  int iValue;
+  OptionalProperty():isSetVal(0),type(SMS_INT_TAG){}
   OptionalProperty(const OptionalProperty& prop):isSetVal(0),type(SMS_INT_TAG),iValue(0)
   {
     *this=prop;
@@ -562,13 +559,7 @@ struct OptionalProperty{
   }
   OptionalProperty& operator=(const OptionalProperty& src)
   {
-    if(src.isSetVal==0 || src.isSetVal==2)
-    {
-      if(isSetVal==1)isSetVal=2;
-    }else
-    {
-      isSetVal=1;
-    }
+    isSetVal=src.isSetVal;
 
     if(src.isSetVal==1)
     {
@@ -578,19 +569,11 @@ struct OptionalProperty{
         case SMS_INT_TAG:iValue=src.iValue;break;
         case SMS_STR_TAG:
         {
-          if(!sValue)
-          {
-            sValue=new SmsPropertyBuf;
-          }
-          sValue->assign(src.sValue->data(),src.sValue->length());
+          xValue.assign(src.xValue.data(),src.xValue.length());
         }break;
         case SMS_BIN_TAG:
         {
-          if(!bValue)
-          {
-            bValue=new SmsPropertyBuf;
-          }
-          bValue->assign(src.bValue->data(),src.bValue->length());
+          xValue.assign(src.xValue.data(),src.xValue.length());
         }break;
       }
     }
@@ -598,19 +581,6 @@ struct OptionalProperty{
   }
   ~OptionalProperty()
   {
-    if(isSetVal)
-    {
-      if(type==SMS_STR_TAG)
-      {
-        delete sValue;
-        sValue=0;
-      }
-      else if(type==SMS_BIN_TAG)
-      {
-        delete bValue;
-        bValue=0;
-      }
-    }
   }
   void setInt(int value)
   {
@@ -621,21 +591,13 @@ struct OptionalProperty{
   void setStr(const char* str)
   {
     type=SMS_STR_TAG;
-    if(!isSetVal)
-    {
-      sValue=new SmsPropertyBuf;
-    }
-    *sValue=str;
+    xValue=str;
     isSetVal=1;
   }
   void setBin(const char* bin,int len)
   {
     type=SMS_BIN_TAG;
-    if(!isSetVal)
-    {
-      bValue=new SmsPropertyBuf;
-    }
-    bValue->assign(bin,len);
+    xValue.assign(bin,len);
     isSetVal=1;
   }
   int getInt()const
@@ -644,15 +606,15 @@ struct OptionalProperty{
   }
   const SmsPropertyBuf& getStr()const
   {
-    if(isSetVal==1)return *sValue;
+    if(isSetVal==1)return xValue;
     else return *nullStr;
   }
   const char* getBin(unsigned* len)const
   {
     if(isSetVal==1)
     {
-      if(len)*len=(unsigned)bValue->length();
-      return bValue->c_str();
+      if(len)*len=(unsigned)xValue.length();
+      return xValue.data();
     }else
     {
       if(len)*len=0;
@@ -661,10 +623,7 @@ struct OptionalProperty{
   }
   void Unset()
   {
-    if(isSetVal)
-    {
-      isSetVal=2;
-    }
+    isSetVal=0;
   }
 };
 

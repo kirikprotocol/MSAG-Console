@@ -26,10 +26,10 @@ int Body::getRequiredBufferSize() const
           blength+=6;
           break;
         case SMS_STR_TAG:
-          blength+=(int)prop.properties[i].sValue->length()+1+6;
+          blength+=(int)prop.properties[i].xValue.length()+1+6;
           break;
         case SMS_BIN_TAG:
-          blength+=(int)prop.properties[i].bValue->length()+6;
+          blength+=(int)prop.properties[i].xValue.length()+6;
           break;
       }
     }
@@ -70,12 +70,12 @@ void Body::encode(uint8_t* buffer,int& length) const
           memcpy(buffer+offset,&tag,2);
           offset+=2;
           __require__(offset<length);
-          uint32_t len=htonl((unsigned)prop.properties[i].sValue->length()+1);
+          uint32_t len=htonl((unsigned)prop.properties[i].xValue.length()+1);
           memcpy(buffer+offset,&len,4);
           offset+=4;
           __require__(offset<length);
-          len=(unsigned)prop.properties[i].sValue->length()+1;
-          memcpy(buffer+offset,prop.properties[i].sValue->c_str(),len);
+          len=(unsigned)prop.properties[i].xValue.length()+1;
+          memcpy(buffer+offset,prop.properties[i].xValue.c_str(),len);
           offset+=len;
         }break;
         case SMS_BIN_TAG:
@@ -84,12 +84,12 @@ void Body::encode(uint8_t* buffer,int& length) const
           memcpy(buffer+offset,&tag,2);
           offset+=2;
           __require__(offset<length);
-          uint32_t len=htonl((unsigned)prop.properties[i].bValue->length());
+          uint32_t len=htonl((unsigned)prop.properties[i].xValue.length());
           memcpy(buffer+offset,&len,4);
           offset+=4;
-          len=(unsigned)prop.properties[i].bValue->length();
+          len=(unsigned)prop.properties[i].xValue.length();
           __require__(offset+len<=length);
-          memcpy(buffer+offset,prop.properties[i].bValue->c_str(),len);
+          memcpy(buffer+offset,prop.properties[i].xValue.c_str(),len);
           offset+=len;
         }break;
       }
@@ -432,10 +432,10 @@ void Body::Print(FILE* f)
           fprintf(f,"i:%s:%d=%d\n",Tag::tagNames[i],i,prop.properties[i].iValue);
           break;
         case SMS_STR_TAG:
-          fprintf(f,"s:%s:%d(%ld)=%s\n",Tag::tagNames[i],i,prop.properties[i].sValue->length(),prop.properties[i].sValue->c_str());
+          fprintf(f,"s:%s:%d(%ld)=%s\n",Tag::tagNames[i],i,prop.properties[i].xValue.length(),prop.properties[i].xValue.c_str());
           break;
         case SMS_BIN_TAG:
-          fprintf(f,"b:%s:%d(%ld)=%s\n",Tag::tagNames[i],i,prop.properties[i].bValue->length(),prop.properties[i].bValue->c_str());
+          fprintf(f,"b:%s:%d(%ld)=%s\n",Tag::tagNames[i],i,prop.properties[i].xValue.length(),prop.properties[i].xValue.c_str());
           break;
       }
     }
