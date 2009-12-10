@@ -485,6 +485,10 @@ bool Billing::verifyChargeSms(void)
             smsc_log_error(logger, "%s: invalid bearer for SMS Extra service", _logId);
             return false;
         }
+        if (!_cfg.prm->smsXMap.get()) {
+            smsc_log_error(logger, "%s: SMS Extra services are not configured!", _logId);
+            return false;
+        }
         SmsXServiceMap::iterator it = _cfg.prm->smsXMap->find(smsXMask);
         if (it != _cfg.prm->smsXMap->end()) {
             xsmsSrv = &(it->second);
