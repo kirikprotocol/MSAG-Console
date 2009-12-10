@@ -8,7 +8,7 @@ namespace smsc{
 namespace core{
 namespace buffers{
 
-template <int N>
+template <size_t N>
 struct FixedLengthString{
   char str[N];
   FixedLengthString()
@@ -24,7 +24,7 @@ struct FixedLengthString{
     }
     *this=argStr;
   }
-  template <int M>
+  template <size_t M>
   FixedLengthString(const FixedLengthString<M>& argStr)
   {
     *this=argStr.str;
@@ -36,7 +36,7 @@ struct FixedLengthString{
     return *this;
   }
 
-  template <int M>
+  template <size_t M>
   FixedLengthString& operator=(const char (&argStr)[M])
   {
     strncpy(str,argStr,N);
@@ -51,7 +51,7 @@ struct FixedLengthString{
     return *this;
   }
 
-  template <int M>
+  template <size_t M>
   bool operator==(const FixedLengthString<M>& argStr)const
   {
     return !strcmp(str,argStr.str);
@@ -72,7 +72,7 @@ struct FixedLengthString{
     return strcmp(str,argStr)!=0;
   }
 
-  template <int M>
+  template <size_t M>
   bool operator<(const FixedLengthString<M>& argStr)const
   {
     return strcmp(str,argStr.str)<0;
