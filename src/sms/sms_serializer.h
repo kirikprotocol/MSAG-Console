@@ -183,6 +183,7 @@ inline void Serialize(const SMS& sms,BufOps::SmsBuffer& dst)
 
   const PropertySet& prop=sms.messageBody.getProperties();
 
+  size_t szPos=dst.GetPos();
   uint32_t dummy=0;
   dst<<dummy;
 
@@ -218,6 +219,12 @@ inline void Serialize(const SMS& sms,BufOps::SmsBuffer& dst)
       }
     }
   }
+
+  size_t savePos=dst.GetPos();
+  uint32_t bodySize=(uint32_t)(savePos-szPos-4);
+  dst.SetPos(szPos);
+  dst<<bodySize;
+  dst.SetPos(savePos);
 
  /* uint32_t bodyLength=sms.messageBody.getBufferLength();
   dst<<bodyLength;
@@ -263,7 +270,9 @@ inline void Deserialize(BufOps::SmsBuffer& src,SMS& sms,int ver)
 
   sms.getMessageBody().Clear();
 
-  while(src.GetPos()<src.getSize())
+  size_t bodyStart=src.GetPos();
+
+  while(src.GetPos()-bodyStart<bodyLength)
   {
     uint16_t tag;
     src>>tag;
