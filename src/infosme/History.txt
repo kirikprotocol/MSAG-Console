@@ -1,6 +1,9 @@
 History in reverse order
 ----------------------------------------------------
 
+----------------------------------------------------
+infosme-build-20091211 11:50 bukind
+
 2009-12-10 13:40 skv
  bugfix: bug in File::ReadDir - resource leakage
 2009-12-09 16:10 bukind
