@@ -12,6 +12,7 @@
 #include "util/xml/utilFunctions.h"
 #include "scag/lcm/base/LongCallManager2.h"
 #include "scag/sessions/base/SessionManager2.h"
+#include "core/buffers/FixedLengthString.hpp"
 
 namespace scag2 {
 namespace transport {
@@ -104,14 +105,14 @@ XmlStr GetNodeName( DOMNamedNodeMap* attr )
     return attr->getNamedItem(XmlStr("name"))->getNodeValue();
 }
 
-template <int SZ>
+template <size_t SZ>
 void FillStringValue(DOMNamedNodeMap* attr,buf::FixedLengthString<SZ>& str)
 {
   XmlStr value(attr->getNamedItem(XmlStr("value"))->getNodeValue());
   str=value.c_str();
 }
 
-template <int SZ>
+template <size_t SZ>
 void FillStringValue(DOMNamedNodeMap* attr,char (&str)[SZ])
 {
   XmlStr value(attr->getNamedItem(XmlStr("value"))->getNodeValue());
