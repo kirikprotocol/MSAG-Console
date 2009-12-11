@@ -10,6 +10,7 @@
 #include <stdexcept>
 #include <string>
 #include "util/Uint64Converter.h"
+#include "core/buffers/FixedLengthString.hpp"
 
 namespace smsc {
 namespace util {
