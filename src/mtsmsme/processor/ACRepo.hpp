@@ -48,6 +48,7 @@ extern AC roamingNumberEnquiryContext_v3;
 extern AC subscriberDataMngtContext_v1;
 extern AC subscriberDataMngtContext_v2;
 extern AC subscriberDataMngtContext_v3;
+extern AC locationInfoRetrievalContext_v3;
 extern BIT_STRING_t tcapversion;
 extern ASN__PRIMITIVE_TYPE_t pduoid;
 
