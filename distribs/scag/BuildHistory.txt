@@ -455,4 +455,13 @@ TO ALL: Insert log record for all significant changes & fixes here.
 2009-12-07 17:20 bukind
   pvss bugfix: AbntAddr off-by-one error problem in unpack with len=15
 
+=================================================================================================================
+2009-12-11 14:50 bukind pvss-build-20091211
+2009-12-11 14:50 bukind msag-build-20091211
+  bugfix: leakage in File:ReadDir
+2009-12-10 ??:?? odarchenko
+  msag: http routes fix
+2009-12-08 ??:?? bukind
+  pvss: abonent address
+
 --- current-fixes ---
