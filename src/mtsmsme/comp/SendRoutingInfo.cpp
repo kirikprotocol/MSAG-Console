@@ -4,12 +4,12 @@ static char const ident[] = "$Id$";
 
 namespace smsc{namespace mtsmsme{namespace comp{
 using smsc::mtsmsme::processor::util::packNumString2BCD91;
+using std::string;
 
-SendRoutingInfoReq::SendRoutingInfoReq()
+SendRoutingInfoReq::SendRoutingInfoReq(const string& msisdn, const string& gmsc)
 {
-  char* msisdn="648237648723";
   ZERO_OCTET_STRING(_msisdn);
-    _msisdn.size = (int)packNumString2BCD91(_msisdn.buf, msisdn, (unsigned)sizeof(msisdn));
+    _msisdn.size = (int)packNumString2BCD91(_msisdn.buf, msisdn.c_str(), (unsigned)msisdn.length());
   arg.msisdn = _msisdn;
 
   arg.cug_CheckInfo = 0;
@@ -18,9 +18,8 @@ SendRoutingInfoReq::SendRoutingInfoReq()
   arg.or_Interrogation = 0;
   arg.or_Capability = 0;
 
-  char* gmsc = "34563463";
   ZERO_OCTET_STRING(_gmsc);
-    _gmsc.size = (int)packNumString2BCD91(_gmsc.buf, gmsc, (unsigned)sizeof(gmsc));
+    _gmsc.size = (int)packNumString2BCD91(_gmsc.buf, gmsc.c_str(), (unsigned)gmsc.length());
   arg.gmsc_OrGsmSCF_Address = _gmsc;
 
   arg.callReferenceNumber = 0;

@@ -360,7 +360,7 @@ void AmericaTestFixture::sendRoutingInfo_arg_encoding()
   using smsc::mtsmsme::comp::SendRoutingInfoReq;
   using smsc::mtsmsme::processor::util::dump;
 
-  SendRoutingInfoReq req;
+  SendRoutingInfoReq req("79131273996","79139869981");
   vector<unsigned char> result ;
   req.encode(result);
   smsc_log_debug(logger,"encoded SendRoutingInfoReq[%d]={%s}",
