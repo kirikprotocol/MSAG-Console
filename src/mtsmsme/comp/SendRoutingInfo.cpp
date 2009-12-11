@@ -5,13 +5,22 @@ static char const ident[] = "$Id$";
 namespace smsc{namespace mtsmsme{namespace comp{
 SendRoutingInfoReq::SendRoutingInfoReq()
 {
-  arg.msisdn = "4353540";
+  char* msisdn="648237648723";
+  ZERO_OCTET_STRING(_msisdn);
+    _msisdn.size = (int)packNumString2BCD91(_msisdn.buf, msisdn, (unsigned)sizeof(msisdn));
+  arg.msisdn = _msisdn;
+
   arg.cug_CheckInfo = 0;
   arg.numberOfForwarding = 0;
   arg.interrogationType = InterrogationType_basicCall;
   arg.or_Interrogation = 0;
   arg.or_Capability = 0;
-  arg.gmsc_OrGsmSCF_Address = "5345343";
+
+  char* gmsc = "34563463";
+  ZERO_OCTET_STRING(_gmsc);
+    _gmsc.size = (int)packNumString2BCD91(_gmsc.buf, gmsc, (unsigned)sizeof(gmsc));
+  arg.gmsc_OrGsmSCF_Address = _gmsc;
+
   arg.callReferenceNumber = 0;
   arg.forwardingReason = 0;
   arg.basicServiceGroup = 0;
