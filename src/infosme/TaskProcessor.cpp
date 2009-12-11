@@ -1010,6 +1010,7 @@ void TaskProcessor::changeDeliveryMessageInfoByRecordId(uint32_t taskId,
   if(task->changeDeliveryMessageInfoByRecordId(msgState, unixTime, recordId,newMsgId))
   {
     smsc_log_debug(log_,"msgId=#%s changed to #%llx",recordId.c_str(),newMsgId);
+    awakeSignal();
   }else
   {
     smsc_log_debug(log_,"changeDeliveryMessageInfoByRecordId failed msgId=#%s",recordId.c_str());
@@ -1025,6 +1026,7 @@ void TaskProcessor::changeDeliveryMessageInfoByCompositCriterion(uint32_t taskId
   Task* task = taskGuard.get();
   if (!task) throw Exception("TaskProcessor::changeDeliveryMessageInfoByCompositCriterion::: can't get task by taskId='%d'", taskId);
   task->changeDeliveryMessageInfoByCompositCriterion(msgState, unixTime, searchCrit);
+    awakeSignal();
 }
 
 void TaskProcessor::deleteDeliveryMessageByRecordId(uint32_t taskId,
@@ -1123,6 +1125,7 @@ TaskProcessor::endDeliveryMessagesGeneration(uint32_t taskId)
   Task* task = taskGuard.get();
   if (!task) throw Exception("TaskProcessor::endDeliveryMessagesGeneration::: can't get task by taskId='%d'", taskId);
   task->endDeliveryMessagesGeneration();
+    awakeSignal();
 }
 
 void
@@ -1134,6 +1137,7 @@ TaskProcessor::changeDeliveryTextMessageByCompositCriterion(uint32_t taskId,
   Task* task = taskGuard.get();
   if (!task) throw Exception("TaskProcessor::changeDeliveryTextMessageByCompositCriterion::: can't get task by taskId='%d'", taskId);
   task->changeDeliveryTextMessageByCompositCriterion(textMsg, searchCrit);
+    awakeSignal();
 }
 
 TaskInfo TaskProcessor::getTaskInfo(uint32_t taskId)

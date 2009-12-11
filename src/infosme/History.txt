@@ -1,7 +1,9 @@
 History in reverse order
 ----------------------------------------------------
 
-2009-12-09 16:10
+2009-12-10 13:40 skv
+ bugfix: bug in File::ReadDir - resource leakage
+2009-12-09 16:10 bukind
  potential bugfix: destroying task in assignment of TaskGuard to self
 
 ----------------------------------------------------

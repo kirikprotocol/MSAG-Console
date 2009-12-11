@@ -346,7 +346,7 @@ void Task::init(ConfigView* config, uint32_t taskId)
     if ( info.useUssdPush ) {
         // overriding things
         info.transactionMode = true;
-        info.flash = false;
+        // info.flash = false;
         info.useDataSm = false;
     }
 }

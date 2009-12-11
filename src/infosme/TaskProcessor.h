@@ -267,6 +267,10 @@ public:
     }
 
     virtual void awakeSignal() {
+        {
+            MutexGuard mg(tasksLock);
+            activateFlag = true;
+        }
         awake.Signal();
     };
 
