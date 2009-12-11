@@ -1,6 +1,6 @@
 #ifndef __SMSC_CORE_BUFFERS_HPP__
+#ident "@(#)$Id$"
 #define __SMSC_CORE_BUFFERS_HPP__
-#ident "$Id$"
 
 #include <algorithm>
 
@@ -9,25 +9,31 @@ namespace core{
 namespace buffers{
 
 template <typename T,size_t SZ>
-class TmpBuf{
-public:
-    TmpBuf() : heapBuf(0), realBuf(stackBuf), heapSize(0), pos(0) {
-    }
+class TmpBuf {
+protected:
+  TmpBuf(const TmpBuf&);
+  void operator=(const TmpBuf&);
+  template <class X> void operator=(const X&);
+  void* operator new(size_t sz);
 
-  explicit TmpBuf(size_t size)
+  union {
+    T         buf[SZ];
+    uint64_t  aligner;
+  } _stack;
+  T*      heapBuf;
+  T*      realBuf;
+  size_t  heapSize;
+  size_t  pos;
+
+public:
+  explicit TmpBuf(size_t size = 0)
+    : heapBuf(0), realBuf(_stack.buf), heapSize(0), pos(0)
   {
-    if(size>SZ)
-    {
-      heapBuf=new T[size];
-      realBuf=heapBuf;
-      heapSize=size;
-    }else
-    {
-      heapBuf=0;
-      heapSize=0;
-      realBuf=stackBuf;
+    _stack.aligner = 0;
+    if (size > SZ) {
+      realBuf = heapBuf = new T[size];
+      heapSize = size;
     }
-    pos=0;
   }
 
   /*use to read from external buffer.
@@ -178,24 +184,11 @@ public:
   {
     return realBuf;
   }
-
-protected:
-  TmpBuf(const TmpBuf&);
-  void operator=(const TmpBuf&);
-  template <class X> void operator=(const X&);
-  void* operator new(size_t sz);
-  union{
-  T  stackBuf[SZ];
-  uint64_t aligner;
-  };
-  T* heapBuf;
-  T* realBuf;
-  size_t heapSize;
-  size_t pos;
 };
 
 }//namespace buffers
 }//namespace core
 }//namespace smsc
 
-#endif
+#endif /* __SMSC_CORE_BUFFERS_HPP__ */
+
