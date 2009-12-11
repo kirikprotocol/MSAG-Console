@@ -10,4 +10,5 @@ package ru.sibinco.smsx.engine.soaphandler.blacklist;
 public interface BlacklistSoap extends java.rmi.Remote {
   public boolean add(String msisdn) throws java.rmi.RemoteException;
   public boolean remove(String msisdn) throws java.rmi.RemoteException;
+  public boolean check(String msisdn) throws java.rmi.RemoteException;
 }

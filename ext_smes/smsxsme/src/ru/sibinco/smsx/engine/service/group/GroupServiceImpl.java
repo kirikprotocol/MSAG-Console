@@ -8,7 +8,9 @@ import ru.sibinco.smsx.engine.service.ServiceInitializationException;
 import ru.sibinco.smsx.engine.service.group.commands.*;
 import ru.sibinco.smsx.engine.service.group.datasource.*;
 import ru.sibinco.smsx.engine.service.group.datasource.impl.distrlist.FileDistrListDataSource;
+import ru.sibinco.smsx.engine.service.group.datasource.impl.distrlist.DBDistrListDataSource;
 import ru.sibinco.smsx.engine.service.group.datasource.impl.principal.FilePrincipalDataSource;
+import ru.sibinco.smsx.engine.service.group.datasource.impl.principal.DBPrincipalDataSource;
 import ru.sibinco.smsx.engine.service.group.datasource.impl.profile.DBGroupEditProfileDataSource;
 import ru.sibinco.smsx.engine.service.group.datasource.impl.send.DBGroupSendDataSource;
 import ru.sibinco.smsx.Context;
@@ -35,8 +37,10 @@ public class GroupServiceImpl implements Service, GroupService {
   public GroupServiceImpl(XmlConfigSection g, OutgoingQueue outQueue, int serviceId) throws ServiceInitializationException {
     try {
       String storeDir = g.getString("store.dir");
-      this.listsDS = new FileDistrListDataSource(new File(storeDir, "members.bin"), new File(storeDir, "submitters.bin"), new File(storeDir, "lists.bin"));
-      this.principalDS = new FilePrincipalDataSource(new File(storeDir, "principals.bin"));
+//      this.listsDS = new FileDistrListDataSource(new File(storeDir, "members.bin"), new File(storeDir, "submitters.bin"), new File(storeDir, "lists.bin"));
+      this.listsDS = new DBDistrListDataSource();
+//      this.principalDS = new FilePrincipalDataSource(new File(storeDir, "principals.bin"));
+      this.principalDS = new DBPrincipalDataSource();
       this.groupEditDSProfile = new DBGroupEditProfileDataSource();
       this.sendDS = new DBGroupSendDataSource();
 

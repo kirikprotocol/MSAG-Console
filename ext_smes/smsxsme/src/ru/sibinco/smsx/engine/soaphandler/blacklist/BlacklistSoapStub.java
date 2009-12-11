@@ -47,6 +47,18 @@ public class BlacklistSoapStub extends org.apache.axis.client.Stub implements Bl
     oper.setUse(org.apache.axis.constants.Use.LITERAL);
     _operations[1] = oper;
 
+    oper = new org.apache.axis.description.OperationDesc();
+    oper.setName("Check");
+    param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://mts.qmobile.ru/api/", "msisdn"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false);
+    param.setOmittable(true);
+    oper.addParameter(param);
+    oper.setReturnType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
+    oper.setReturnClass(boolean.class);
+    oper.setReturnQName(new javax.xml.namespace.QName("http://mts.qmobile.ru/api/", "CheckResult"));
+    oper.setStyle(org.apache.axis.constants.Style.WRAPPED);
+    oper.setUse(org.apache.axis.constants.Use.LITERAL);
+    _operations[2] = oper;
+
   }
 
   public BlacklistSoapStub() throws org.apache.axis.AxisFault {
@@ -147,6 +159,40 @@ public class BlacklistSoapStub extends org.apache.axis.client.Stub implements Bl
     _call.setProperty(org.apache.axis.AxisEngine.PROP_DOMULTIREFS, Boolean.FALSE);
     _call.setSOAPVersion(org.apache.axis.soap.SOAPConstants.SOAP11_CONSTANTS);
     _call.setOperationName(new javax.xml.namespace.QName("http://mts.qmobile.ru/api/", "Remove"));
+
+    setRequestHeaders(_call);
+    setAttachments(_call);
+    try {        java.lang.Object _resp = _call.invoke(new java.lang.Object[] {msisdn});
+
+      if (_resp instanceof java.rmi.RemoteException) {
+        throw (java.rmi.RemoteException)_resp;
+      }
+      else {
+        extractAttachments(_call);
+        try {
+          return ((java.lang.Boolean) _resp).booleanValue();
+        } catch (java.lang.Exception _exception) {
+          return ((java.lang.Boolean) org.apache.axis.utils.JavaUtils.convert(_resp, boolean.class)).booleanValue();
+        }
+      }
+    } catch (org.apache.axis.AxisFault axisFaultException) {
+      throw axisFaultException;
+    }
+  }
+
+  public boolean check(java.lang.String msisdn) throws java.rmi.RemoteException {
+    if (super.cachedEndpoint == null) {
+      throw new org.apache.axis.NoEndPointException();
+    }
+    org.apache.axis.client.Call _call = createCall();
+    _call.setOperation(_operations[2]);
+    _call.setUseSOAPAction(false);
+//    _call.setSOAPActionURI("http://mts.qmobile.ru/api/Remove");
+    _call.setEncodingStyle(null);
+    _call.setProperty(org.apache.axis.client.Call.SEND_TYPE_ATTR, Boolean.FALSE);
+    _call.setProperty(org.apache.axis.AxisEngine.PROP_DOMULTIREFS, Boolean.FALSE);
+    _call.setSOAPVersion(org.apache.axis.soap.SOAPConstants.SOAP11_CONSTANTS);
+    _call.setOperationName(new javax.xml.namespace.QName("http://mts.qmobile.ru/api/", "Check"));
 
     setRequestHeaders(_call);
     setAttachments(_call);

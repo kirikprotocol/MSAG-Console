@@ -24,7 +24,7 @@ public interface DistrListDataSource {
 
   public DistrList getDistrList(long id) throws DataSourceException;
 
-  public int size();
+  public int size() throws DataSourceException;
 
   public void close();
 }

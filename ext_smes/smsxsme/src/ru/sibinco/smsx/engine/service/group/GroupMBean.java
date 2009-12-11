@@ -5,6 +5,7 @@ import javax.management.*;
 
 import ru.sibinco.smsx.engine.service.group.datasource.RepliesMap;
 import ru.sibinco.smsx.engine.service.group.datasource.DistrListDataSource;
+import ru.sibinco.smsx.utils.DataSourceException;
 import mobi.eyeline.apm.utils.jmx.mbeans.AbstractDynamicMBean;
 
 /**
@@ -30,7 +31,11 @@ class GroupMBean extends AbstractDynamicMBean {
     if (attribute.equals("RepliesMapSize"))
       return repliesMap.size();
     else if (attribute.equals("GroupsNumber"))
-      return listsDS.size();
+      try {
+        return listsDS.size();
+      } catch (DataSourceException e) {
+        return -1;
+      }
     throw new AttributeNotFoundException("Attribute " + attribute + " not found");
   }
 

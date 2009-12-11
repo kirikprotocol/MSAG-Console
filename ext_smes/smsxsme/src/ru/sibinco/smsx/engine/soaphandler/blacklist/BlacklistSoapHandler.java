@@ -11,6 +11,7 @@ import org.apache.log4j.Category;
 import ru.sibinco.smsx.engine.service.*;
 import ru.sibinco.smsx.engine.service.blacklist.commands.BlackListAddCmd;
 import ru.sibinco.smsx.engine.service.blacklist.commands.BlackListRemoveCmd;
+import ru.sibinco.smsx.engine.service.blacklist.commands.BlackListCheckMsisdnCmd;
 
 class BlacklistSoapHandler implements BlacklistSoap {
 
@@ -23,7 +24,7 @@ class BlacklistSoapHandler implements BlacklistSoap {
     final long start = System.currentTimeMillis();
     if (log.isInfoEnabled())
       log.info("Add to black list: msisdn=" + msisdn);
-    try {
+    try {                                                                 
       final BlackListAddCmd cmd = new BlackListAddCmd();
       cmd.setMsisdn(msisdn);
 
@@ -60,4 +61,22 @@ class BlacklistSoapHandler implements BlacklistSoap {
     }
   }
 
+  public boolean check(String msisdn) throws java.rmi.RemoteException {
+    final long start = System.currentTimeMillis();
+    if (log.isInfoEnabled())
+      log.info("Check: msisdn=" + msisdn);
+
+    try {
+      final BlackListCheckMsisdnCmd cmd = new BlackListCheckMsisdnCmd();
+      cmd.setMsisdn(msisdn);
+      return Services.getInstance().getBlackListService().execute(cmd);
+
+    } catch (Throwable e) {
+      log.error(e,e);
+      return false;
+    } finally {
+      if (log.isInfoEnabled())
+        log.info("Time=" + (System.currentTimeMillis() - start));
+    }
+  }
 }

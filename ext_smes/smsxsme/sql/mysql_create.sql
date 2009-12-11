@@ -68,12 +68,42 @@ CREATE TABLE nicks (
   PRIMARY KEY(address)
 ) ENGINE InnoDB;
 
-
 ##TABLES FOR GROUP
 CREATE TABLE group_edit_profiles (
   address CHAR(20) NOT NULL PRIMARY KEY,
   send_notifications SMALLINT NOT NULL,
   lock_group_edit SMALLINT NOT NULL
+) ENGINE InnoDB;
+
+CREATE TABLE group_edit_lists (
+  id INT NOT NULL PRIMARY KEY,
+  name VARCHAR(200) NOT NULL,
+  owner CHAR(20) NOT NULL,
+  max_elements INT NOT NULL,
+
+  UNIQUE INDEX (name, owner)
+) CHARACTER SET koi8r, ENGINE InnoDB;
+
+CREATE TABLE group_edit_members (
+  group_id INT NOT NULL,
+  address CHAR(20) NOT NULL,
+
+  INDEX (group_id),
+  UNIQUE INDEX (group_id, address)
+) ENGINE InnoDB;
+
+CREATE TABLE group_edit_submitters (
+  group_id INT NOT NULL,
+  address CHAR(20) NOT NULL,
+
+  INDEX (group_id),
+  UNIQUE INDEX (group_id, address)
+) ENGINE InnoDB;
+
+CREATE TABLE group_edit_principals (
+  address CHAR(20) NOT NULL PRIMARY KEY,
+  max_lists INT NOT NULL,
+  max_members_per_list INT NOT NULL
 ) ENGINE InnoDB;
 
 CREATE TABLE group_send (
