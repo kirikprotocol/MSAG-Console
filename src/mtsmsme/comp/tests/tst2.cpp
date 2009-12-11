@@ -331,7 +331,6 @@ void AmericaTestFixture::dialogue_limit_check()
   using smsc::mtsmsme::processor::TCO;
   using smsc::mtsmsme::processor::TSM;
   using smsc::mtsmsme::processor::shortMsgGatewayContext_v2;
-  using smsc::logger::Logger;
 
   using smsc::mtsmsme::comp::SendRoutingInfoForSMReq;
 
@@ -355,7 +354,7 @@ void AmericaTestFixture::dialogue_limit_check()
   nulltsm = mtsms.TC_BEGIN(shortMsgGatewayContext_v2);
   CPPUNIT_ASSERT( nulltsm == 0);
 }
-void sendRoutingInfo_arg_encoding()
+void AmericaTestFixture::sendRoutingInfo_arg_encoding()
 {
   smsc_log_debug(logger, "======== AmericaTestFixture::sendRoutingInfo_arg_encoding ========\n");
   using smsc::mtsmsme::comp::SendRoutingInfoReq;
