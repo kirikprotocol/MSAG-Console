@@ -221,17 +221,17 @@ public:
     return smeman.getSmeInfo(idx);
   }
 
-  smsc::smeman::SmeIndex getSmeIndex(const string& systemId)
+  smsc::smeman::SmeIndex getSmeIndex(const SmeSystemId& systemId)
   {
     return smeman.lookup(systemId);
   }
 
-  smsc::smeman::SmeInfo getSmeInfo(const string& systemId)
+  smsc::smeman::SmeInfo getSmeInfo(const SmeSystemId& systemId)
   {
     return smeman.getSmeInfo(smeman.lookup(systemId));
   }
 
-  SmeProxy* getSmeProxy(const string& systemId)
+  SmeProxy* getSmeProxy(const SmeSystemId& systemId)
   {
     smsc::smeman::SmeIndex idx=smeman.lookup(systemId);
     if(idx==-1)return 0;

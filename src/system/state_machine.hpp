@@ -105,7 +105,7 @@ protected:
 
   std::string serviceType;
   int protocolId;
-  std::string smscSmeId;
+  SmeSystemId smscSmeId;
 
   static Hash<std::list<std::string> > directiveAliases;
 

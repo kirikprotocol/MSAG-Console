@@ -8,13 +8,15 @@
 #include <string>
 #include <inttypes.h>
 #include <exception>
+#include "core/buffers/FixedLengthString.hpp"
+#include "sms/sms_const.h"
 
 namespace smsc {
 namespace smeman {
 
 //typedef const char* SmeSystemId;
-typedef std::string SmeSystemId;
-typedef std::string SmePassword;
+typedef smsc::core::buffers::FixedLengthString<smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1> SmeSystemId;
+typedef smsc::core::buffers::FixedLengthString<smsc::sms::MAX_SMEPASSWD_TYPE_LENGTH+1> SmePassword;
 typedef int32_t SmeIndex;
 typedef int SmeNType;
 

@@ -258,9 +258,7 @@ public:
       {
         if ( (*it)->proxy )
         {
-          __warning__((string("proxy with system id ")+
-                      (*it)->info.systemId+
-                      string(" is attached when destroy smeman")).c_str());
+          __warning2__("proxy with system id %s is attached when destroy smeman",(*it)->info.systemId.c_str());
           //dispatcher.detachSmeProxy((*it)->proxy);
         }
         delete (*it);

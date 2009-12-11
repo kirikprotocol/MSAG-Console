@@ -121,7 +121,7 @@ __synchronized__
   if ( index == INVALID_SME_INDEX ) throw SmeError();
   if ( records[index]->proxy )
   {
-    // ???????        ,  ,    
+    // ???????        ,  ,
     //   ,   ,   close?
     //dispatcher.detachSmeProxy(records[index]->proxy);
     records[index]->proxy->attachMonitor(0);
@@ -193,7 +193,7 @@ void SmeManager::disableSme(const SmeSystemId& systemId)
   /*
   SmeIndex index = internalLookup(systemId);
   if ( index == INVALID_SME_INDEX ) throw SmeError();
-  // ???????        ,  ,    
+  // ???????        ,  ,
   records[index].info.disabled = true;*/
   __warning__("disableSme is not implemented");
 }
@@ -202,7 +202,7 @@ void SmeManager::enableSme(const SmeSystemId& systemId)
 {
   /*SmeIndex index = internalLookup(systemId);
   if ( index != INVALID_SME_INDEX ) throw SmeError();
-  // ???????        ,  ,    
+  // ???????        ,  ,
   records[index].info.disabled = false;*/
   __warning__("enableSme is not implemented");
 }
@@ -273,13 +273,13 @@ __synchronized__
   SmeIndex index = internalLookup(systemId);
   if ( index == INVALID_SME_INDEX )
   {
-    throw runtime_error(string("unknown systm id:")+systemId);
+    throw runtime_error(string("unknown systm id:")+systemId.c_str());
   }
   if ( records[index]->proxy )
   {
     __trace2__("Failed to register proxy with sid:%s",systemId.c_str());
     __warning__("Sme proxy with this systemId already registered");
-    throw runtime_error(string("proxy with id ")+systemId+" already exists");
+    throw runtime_error(string("proxy with id ")+systemId.c_str()+" already exists");
   }
   {
     MutexGuard guard(records[index]->mutex);
@@ -457,7 +457,7 @@ void SmeManager::getFrame(vector<SmscCommand>& frames, unsigned long timeout,boo
 
 SmeIndex SmeManager::internalLookup(const SmeSystemId& systemId) const
 {
-//__synchronized__       
+//__synchronized__
   for ( Records::const_iterator p = records.begin(); p != records.end(); ++p )
   {
     if ( (*p) == 0 )
@@ -467,7 +467,7 @@ SmeIndex SmeManager::internalLookup(const SmeSystemId& systemId) const
     else
     {
       if ( (*p)->deleted ) continue;
-      if ( (*p)->info.systemId.compare(systemId) == 0 ) return (*p)->idx;
+      if ( (*p)->info.systemId==systemId ) return (*p)->idx;
     }
   }
   return INVALID_SME_INDEX;

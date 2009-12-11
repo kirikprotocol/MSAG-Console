@@ -3684,7 +3684,7 @@ USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
     sms.setStrProperty(Tag::SMSC_SCCP_OA,dialog->origAddress.c_str());
     sms.setStrProperty(Tag::SMSC_SCCP_DA,dialog->destAddress.c_str());
 
-    sms.setIntProperty(Tag::SMSC_ORIGINAL_DC, ussdDataCodingScheme );
+    //sms.setIntProperty(Tag::SMSC_ORIGINAL_DC, ussdDataCodingScheme );
     unsigned esm_class = 2; // Transaction mode
     sms.setIntProperty(Tag::SMPP_ESM_CLASS,esm_class);
 
@@ -3761,7 +3761,7 @@ USHORT_T Et96MapV2UnstructuredSSRequestConf(
 
     UCHAR_T udhPresent, msgClassMean, msgClass;
     if( ussdDataCodingScheme_p && ussdString_sp ) {
-      sms.setIntProperty(Tag::SMSC_ORIGINAL_DC, *ussdDataCodingScheme_p );
+      //sms.setIntProperty(Tag::SMSC_ORIGINAL_DC, *ussdDataCodingScheme_p );
       unsigned dataCoding = (unsigned)convertCBSDatacoding2SMSC(*ussdDataCodingScheme_p, &udhPresent, &msgClassMean, &msgClass);
       if( dataCoding == smsc::smpp::DataCoding::SMSC7BIT )
       {
@@ -4202,7 +4202,7 @@ USHORT_T Et96MapV1ProcessUnstructuredSSDataInd(
     dialog->origInvokeId = invokeId;
 
     SMS& sms = *dialog->sms.get();
-    sms.setIntProperty(Tag::SMSC_ORIGINAL_DC, smsc::smpp::DataCoding::LATIN1 );
+    //sms.setIntProperty(Tag::SMSC_ORIGINAL_DC, smsc::smpp::DataCoding::LATIN1 );
     unsigned esm_class = 2; // Transaction mode
     sms.setIntProperty(Tag::SMPP_ESM_CLASS,esm_class);
     string subsystem = GetUSSDSubsystem((const char*)ssUserData_s.ssUserDataStr,ssUserData_s.ssUserDataStrLen).c_str();

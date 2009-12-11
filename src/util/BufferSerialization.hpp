@@ -210,6 +210,45 @@ public:
     bufferPos+=len;
   }
 
+  template <class StrLenType,size_t N>
+  void WriteString(const smsc::core::buffers::FixedLengthString<N>& str)
+  {
+    if(str.length()!=(StrLenType)str.length())
+    {
+      throw std::runtime_error("WriteString: string length is too large for requested length type");
+    }
+    if(sizeof(StrLenType)==1)
+    {
+      WriteByte((uint8_t)str.length());
+    }else if(sizeof(StrLenType)==2)
+    {
+      WriteNetInt16((uint16_t)str.length());
+    }else
+    {
+      WriteNetInt32((uint32_t)str.length());
+    }
+    Write(str.c_str(),str.length());
+  }
+
+  template <class StrLenType,size_t N>
+  void ReadString(smsc::core::buffers::FixedLengthString<N>& str)
+  {
+    size_t len;
+    if(sizeof(StrLenType)==1)
+    {
+      len=ReadByte();
+    }else if(sizeof(StrLenType)==2)
+    {
+      len=ReadNetInt16();
+    }else
+    {
+      len=ReadNetInt32();
+    }
+    if(bufferPos+len>bufferSize)throw std::runtime_error("Attempt to read beyond buffer");
+    str.assign(buffer+bufferPos,len);
+    bufferPos+=(uint32_t)len;
+  }
+
   void assign(const void* buf,uint32_t sz)
   {
     resize(sz);
