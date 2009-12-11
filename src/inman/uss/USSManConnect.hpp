@@ -35,7 +35,7 @@ public:
   bool operator<(const USSProcSearchCrit& rhs) const {
     if (_ssn != rhs._ssn)
       return _ssn < rhs._ssn;
-    else if (_addr.toString() != rhs._addr.toString())
+    else if (_addr != rhs._addr)
       return _addr.toString() < rhs._addr.toString();
     else if (_dialogId != rhs._dialogId)
       return _dialogId < rhs._dialogId;

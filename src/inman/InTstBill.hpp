@@ -27,6 +27,8 @@ namespace smsc  {
 namespace inman {
 namespace test {
 
+using smsc::inman::cdr::CDRRecord;
+
 /* ************************************************************************** *
  * class INDialog: INMan billing dialog params and result
  * ************************************************************************** */
@@ -190,14 +192,14 @@ public:
     void composeChargeSms(ChargeSms& op, const INDialogCfg * dlg_cfg)
     {
         const AbonentInfo * dAdr = _abDB->getAbnInfo(dlg_cfg->dstId);
-        op.setDestinationSubscriberNumber(dAdr->msIsdn.toString());
+        op.setDestinationSubscriberNumber(dAdr->msIsdn.toString().c_str());
 
         const AbonentInfo * abi = _abDB->getAbnInfo(dlg_cfg->abId);
-        op.setCallingPartyNumber(abi->msIsdn.toString());
-        op.setCallingIMSI(abi->abImsi);
+        op.setCallingPartyNumber(abi->msIsdn.toString().c_str());
+        op.setCallingIMSI(abi->abImsi.c_str());
         if (dlg_cfg->forcedCDR)
           op.setForcedCDR();
-        op.setLocationInformationMSC(dlg_cfg->locMSC);
+        op.setLocationInformationMSC(dlg_cfg->locMSC.c_str());
 //        op.setLocationInformationMSC(abi->msIsdn.interISDN() ?
 //                                     ".1.1.79139860001" : "");
 //        op.setLocationInformationMSC("GT_SMSXC");
@@ -229,14 +231,14 @@ public:
     void composeDeliveredSmsData(DeliveredSmsData& op, const INDialogCfg * dlg_cfg)
     {
         const AbonentInfo * dAdr = _abDB->getAbnInfo(dlg_cfg->dstId);
-        op.setDestinationSubscriberNumber(dAdr->msIsdn.toString());
+        op.setDestinationSubscriberNumber(dAdr->msIsdn.toString().c_str());
 
         const AbonentInfo * abi = _abDB->getAbnInfo(dlg_cfg->abId);
-        op.setCallingPartyNumber(abi->msIsdn.toString());
-        op.setCallingIMSI(abi->abImsi);
+        op.setCallingPartyNumber(abi->msIsdn.toString().c_str());
+        op.setCallingIMSI(abi->abImsi.c_str());
         if (dlg_cfg->forcedCDR)
           op.setForcedCDR();
-        op.setLocationInformationMSC(dlg_cfg->locMSC);
+        op.setLocationInformationMSC(dlg_cfg->locMSC.c_str());
 //        op.setLocationInformationMSC(abi->msIsdn.interISDN() ?
 //                                     ".1.1.79139860001" : "");
 //        op.setLocationInformationMSC("GT_SMSXC"); 
@@ -265,7 +267,7 @@ public:
             op.setDestIMSI(dAdr->getImsi());
         op.setDestMSC(dAdr->msIsdn.interISDN() ? ".1.1.79139860001" : "");
         op.setDestSMEid("DST_MAP_PROXY");
-        op.setDivertedAdr(dAdr->msIsdn.toString());
+        op.setDivertedAdr(dAdr->msIsdn.toString().c_str());
         op.setDeliveryTime(time(NULL));
         if (dlg_cfg->chgType)
             op.setMTcharge();
@@ -279,7 +281,7 @@ public:
             op.setDestIMSI(dAdr->getImsi());
         op.setDestMSC(dAdr->msIsdn.interISDN() ? ".1.1.79139860001" : "");
         op.setDestSMEid("DST_MAP_PROXY");
-        op.setDivertedAdr(dAdr->msIsdn.toString());
+        op.setDivertedAdr(dAdr->msIsdn.toString().c_str());
         op.setDeliveryTime(time(NULL));
     }
 

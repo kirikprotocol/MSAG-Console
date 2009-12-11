@@ -210,7 +210,7 @@ bool SRIInterrogator::isActive(void)
 bool SRIInterrogator::interrogate(const std::string &subcr_addr)
 {
     MutexGuard  grd(_sync);
-    subcrImsi[0] = 0;
+    subcrImsi.clear();
     scfInfo.serviceKey = 0;
     scfInfo.scfAddress.clear();
     try {
@@ -270,8 +270,8 @@ void SRIInterrogator::onEndMapDlg(RCHash ercode/* =0*/)
         delete sriDlg;
     }
     if (!ercode) {
-        if (subcrImsi[0])
-            csiHdl->onCSIresult(subcrAddr, subcrImsi,
+        if (!subcrImsi.empty())
+            csiHdl->onCSIresult(subcrAddr, subcrImsi.c_str(),
                                 scfInfo.scfAddress.length ? &scfInfo : NULL);
         else
             csiHdl->onCSIabort(subcrAddr, 

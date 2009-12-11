@@ -7,6 +7,7 @@
 
 #include "logger/Logger.h"
 
+#include "inman/GsmSCFInfo.hpp"
 #include "inman/common/adrutil.hpp"
 #include "inman/comp/compdefs.hpp"
 #include "inman/comp/MapOpErrors.hpp"

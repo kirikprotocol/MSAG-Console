@@ -150,12 +150,12 @@ SPckChargeSmsResult * BillingServer::CreateRespOnCharge(SPckChargeSms* pck)
   } */
 
     MatrixKey key;
-    if (cdr._dstAdr.size() > 0) 
+    if (cdr._dstAdr.length() > 0) 
         key.serviceNumber = atoi(cdr._dstAdr.c_str());
     else
         key.serviceNumber = 0;
 
-    Address addr((cdr._srcAdr.size()>0) ? cdr._srcAdr.c_str(): "0");
+    Address addr((cdr._srcAdr.length()>0) ? cdr._srcAdr.c_str(): "0");
 
     SPckChargeSmsResult * res = new SPckChargeSmsResult();
 

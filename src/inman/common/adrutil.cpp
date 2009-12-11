@@ -14,7 +14,7 @@ unsigned packMAPAddress2OCTS(const TonNpiAddress & addr, uint8_t * use_octs) //t
   unsigned	oa_length = 1;
   if ((addr.typeOfNumber == 0x05) && !addr.numPlanInd)
     oa_length += packTextAs7BitPaddedSafe(addr.getSignals(),
-                (unsigned)addr.length, use_octs + 1, CAP_MAX_SMS_AddressStringLength);
+                (unsigned)addr.length, use_octs + 1, CAPConst::MAX_SMS_AddressStringLength);
   else
     oa_length += packNumString2BCD(use_octs + 1, addr.getSignals(), (int)addr.length);
 
@@ -36,8 +36,8 @@ unsigned unpackOCTS2MAPAddress(TonNpiAddress & addr, uint8_t * use_octs, unsigne
   
     if (addr.typeOfNumber == 0x05)	//packed 7bit text
       addr.length = unpack7BitPadded2TextSafe(use_octs, octs_len,
-                                      (unsigned char*)addr.signals, CAP_MAX_SMS_AddressValueLength);
-    else if (octs_len*2 <= CAP_MAX_SMS_AddressValueLength) //check for ABW
+                                      (unsigned char*)addr.signals, CAPConst::MAX_SMS_AddressValueLength);
+    else if (octs_len*2 <= CAPConst::MAX_SMS_AddressValueLength) //check for ABW
       addr.length = (uint8_t)unpackBCD2NumString(use_octs, (char*)addr.signals, octs_len);
   }
   return (unsigned)addr.length;

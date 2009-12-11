@@ -28,6 +28,7 @@ using smsc::inman::test::DtcrFacade;
 
 using smsc::inman::AbonentContractInfo;
 using smsc::inman::interaction::ConnectSrv;
+using smsc::inman::cdr::CDRRecord;
 
 /* ************************************************************************** *
  * 

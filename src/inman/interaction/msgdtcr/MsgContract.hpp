@@ -14,6 +14,7 @@ namespace inman {
 namespace interaction {
 
 using smsc::inman::AbonentContractInfo;
+using smsc::util::TonNpiAddressString;
 
 // -------------------------------------------------------------------- //
 // Abonent Contract detection CommandSet: 
@@ -67,8 +68,8 @@ public:
 // --------------------------------------------------------- // 
 class AbntContractRequest : public INPAbntContractCmd {
 protected:
-    bool          useCache;
-    std::string   subscrNum;
+    bool                useCache;
+    TonNpiAddressString subscrNum;
 
     // -----------------------------------------
     // -- SerializableObjectAC interface methods
@@ -91,12 +92,12 @@ public:
     { }
     ~AbntContractRequest() { }
     //--Setters
-    void setSubscrNumber(const std::string& subscr_adr) { subscrNum = subscr_adr; }
-    void allowCache(bool use_cache = true)              { useCache = use_cache; }
+    void setSubscrNumber(const char * subscr_adr) { subscrNum = subscr_adr; }
+    void allowCache(bool use_cache = true)        { useCache = use_cache; }
 
     //--Getters
-    bool cacheMode(void) const                          { return useCache; }
-    const std::string & subscrAddr(void) const          { return subscrNum; }
+    bool cacheMode(void) const                    { return useCache; }
+    const TonNpiAddressString & subscrAddr(void) const { return subscrNum; }
 };
 
 

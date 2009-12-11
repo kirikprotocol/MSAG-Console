@@ -21,7 +21,6 @@ using smsc::core::synchronization::Event;
 using smsc::core::synchronization::Mutex;
 using smsc::core::synchronization::MutexGuard;
 
-using smsc::inman::AbonentImsi;
 using smsc::inman::AbonentContractInfo;
 
 using smsc::inman::interaction::ConnectSrv;
@@ -223,7 +222,7 @@ public:
     {
         fprintf(stream, "abn.%u: %s, isdn <%s>, imsi <%s>, %s\n", ab_id,
                 abn.type2Str(), abn.msIsdn.length ? abn.msIsdn.toString().c_str() : " ",
-                abn.abImsi[0] ? abn.abImsi : "none", abn.tdpSCF.toString().c_str());
+                abn.getImsi() ? abn.getImsi() : "none", abn.tdpSCF.toString().c_str());
     }
 
     inline unsigned getMaxAbId(void) const { return lastAbnId; }

@@ -41,7 +41,7 @@ void AbntContractResult::load(ObjectBuffer& in) throw(SerializerException)
         cntrInfo.ab_type = static_cast<AbonentContractInfo::ContractType>(itmp);
     }
     {
-        std::string stmp;
+        TonNpiAddressString stmp;
         in >> stmp;
         if (stmp.empty())
             cntrInfo.tdpSCF.clear();
@@ -58,18 +58,7 @@ void AbntContractResult::load(ObjectBuffer& in) throw(SerializerException)
         cntrInfo.tdpSCF[TDPCategory::dpMO_SM].serviceKey = errCode;
         errCode = 0;
     }
-    {
-        std::string stmp;
-        in >> stmp;
-        if (stmp.empty())
-            cntrInfo.abImsi[0] = 0;
-        else {
-            if (stmp.length() > MAP_MAX_IMSI_AddressValueLength)
-                throw SerializerException("invalid IMSI",
-                                          SerializerException::invObjData, stmp.c_str());
-            cntrInfo.setImsi(stmp.c_str());
-        }
-    }
+    in >> cntrInfo.abImsi;
     in >> errMsg;
 }
 
@@ -92,11 +81,7 @@ void AbntContractResult::save(ObjectBuffer& out) const
         out << smScf.scfAddress.toString();
 
     out << (errCode ? errCode : smScf.serviceKey);
-    if (cntrInfo.getImsi()) {
-        std::string si(cntrInfo.getImsi());
-        out << si;
-    } else
-        out << (uint8_t)0x00;
+    out << cntrInfo.abImsi;
     out << errMsg;
 }
 

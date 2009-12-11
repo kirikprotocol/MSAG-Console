@@ -138,10 +138,10 @@ unsigned short CHSendRoutingInfoRes::getSCFinfo(GsmSCFinfo * scf_dat) const
     return mask.st.o_csi + mask.st.imsi;
 }
 
-unsigned short CHSendRoutingInfoRes::getIMSI(char *imsi) const
+unsigned short CHSendRoutingInfoRes::getIMSI(IMSIString & out_imsi) const
 {
     if (mask.st.imsi)
-        strcpy(imsi, o_imsi);
+      out_imsi = o_imsi;
     return mask.st.imsi;
 }
 
@@ -163,8 +163,8 @@ void CHSendRoutingInfoRes::decode(const std::vector<unsigned char>& buf) throw(C
 
     try {
         if (dcmd->imsi) {
-            if (dcmd->imsi->size >= sizeof(o_imsi)
-                || !unpackBCD2NumString(dcmd->imsi->buf, o_imsi, dcmd->imsi->size))
+            if (dcmd->imsi->size >= o_imsi.capacity()
+                || !unpackBCD2NumString(dcmd->imsi->buf, o_imsi.str, dcmd->imsi->size))
                 throw CustomException(-1, "SRIRes: bad IMSI");
             mask.st.imsi = 1;
         }

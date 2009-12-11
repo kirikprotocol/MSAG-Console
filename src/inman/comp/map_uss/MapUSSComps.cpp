@@ -11,6 +11,8 @@ static char const ident[] = "@(#)$Id$";
 #include "inman/common/cvtutil.hpp"
 #include "inman/comp/compsutl.hpp"
 
+using smsc::util::MAPConst;
+
 using smsc::inman::comp::smsc_log_component;
 using smsc::inman::comp::OCTET_STRING_2_Address;
 
@@ -140,7 +142,7 @@ void ProcessUSSRequestArg::encode(std::vector<unsigned char>& buf) const throw(C
     uint8_t fdcsbuf;
     uint8_t fussdsbuf[MAP_MAX_USSD_StringLength];
 
-    unsigned char isdn_buf[1 + MAP_MAX_ISDN_AddressLength];
+    unsigned char isdn_buf[1 + MAPConst::MAX_ISDN_AddressLength];
     OCTET_STRING_t  isdn;
 
     memset(&cmd, 0x00, sizeof(cmd)); //clear optionals and asn_ctx

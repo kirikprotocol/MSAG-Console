@@ -6,14 +6,16 @@
 #define __INMAN_ABONENTS_DB_HPP__
 
 #include "util/TonNpiAddress.hpp"
-using smsc::util::TonNpiAddress;
 
 namespace smsc  {
 namespace inman {
 
+using smsc::util::MAPConst;
+using smsc::util::TonNpiAddress;
+
 struct AbonentInfo {
     TonNpiAddress  addr;
-    char           imsi[MAP_MAX_IMSI_AddressValueLength];
+    char           imsi[MAPConst::MAX_IMSI_AddressValueLength];
     GsmSCFinfo     scf;
 
     AbonentInfo() { imsi[0] = 0; }

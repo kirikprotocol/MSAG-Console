@@ -6,10 +6,17 @@
 #ident "$Id$"
 
 #include "inman/InTstDefs.hpp"
+#include "inman/interaction/msgdtcr/MsgContract.hpp"
+
+namespace smsc  {
+namespace inman {
+namespace test {
+
+using smsc::util::CAPConst;
+
 using smsc::inman::test::TSTFacadeAC;
 using smsc::inman::test::AbonentsDB;
 
-#include "inman/interaction/msgdtcr/MsgContract.hpp"
 using smsc::inman::interaction::INPSerializer;
 using smsc::inman::interaction::INPCSAbntContract;
 using smsc::inman::interaction::AbntContractRequest;
@@ -19,9 +26,6 @@ using smsc::inman::interaction::CSAbntContractHdr_dlg;
 using smsc::inman::interaction::SPckContractRequest;
 using smsc::inman::interaction::SPckContractResult;
 
-namespace smsc  {
-namespace inman {
-namespace test {
 
 /* ************************************************************************** *
  * class DtcrDialog: INMan AbonentContract detection dialog params and result
@@ -46,7 +50,7 @@ public:
     {
         SPckContractRequest  pck;
         pck.Hdr().dlgId = dId;
-        pck.Cmd().setSubscrNumber(abInfo->msIsdn.toString());
+        pck.Cmd().setSubscrNumber(abInfo->msIsdn.toString().c_str());
         pck.Cmd().allowCache(useCache);
 
         char tbuf[sizeof("%u bytes of ") + 4*3 + 1];
@@ -136,8 +140,8 @@ protected:
     {
         if (!len)
             return false;
-        char nbuf[CAP_MAX_SMS_AddressValueLength + 1];
-        unsigned i = CAP_MAX_SMS_AddressValueLength;
+        char nbuf[CAPConst::MAX_SMS_AddressValueLength + 1];
+        unsigned i = CAPConst::MAX_SMS_AddressValueLength;
         nbuf[i] = 0;
 
         bool shift = true;

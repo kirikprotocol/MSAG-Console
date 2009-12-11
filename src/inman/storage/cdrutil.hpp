@@ -6,11 +6,17 @@
 #ident "@(#)$Id$"
 #define _SMSC_INMAN_CDR_UTIL_H
 
-#include <string>
+#include "inman/CDRTypes.hpp"
 
 namespace smsc  {
 namespace inman {
 namespace cdr {
+
+using smsc::util::TonNpiAddressString;
+using smsc::util::IMSIString;
+using smsc::util::MSCAddress;
+using smsc::inman::SMESysId;
+using smsc::inman::SMPPServiceType;
 
 extern const char    _CDRRecordHeader_TEXT[];
 
@@ -21,10 +27,10 @@ struct CDRRecord {
     static void csvEncode(const CDRRecord & cdr, std::string & rec);
 
     enum ChargingPolicy {
-        ON_SUBMIT = 0       //
-      , ON_DELIVERY         //
-      , ON_DATA_COLLECTED   //
-      , ON_SUBMIT_COLLECTED //
+        ON_SUBMIT = 0           //
+      , ON_DELIVERY = 1         //
+      , ON_DATA_COLLECTED = 2   //
+      , ON_SUBMIT_COLLECTED = 3 //
     };
 
     static const char * nmPolicy(ChargingPolicy use_val);
@@ -44,40 +50,40 @@ struct CDRRecord {
     const char * nmPolicy(void) const { return nmPolicy(_chargePolicy); }
 
     //basic info:
-    uint64_t        _msgId;         //MSG_ID: system message identifier
-    CDRRecordType   _cdrType;       //RECORD_TYPE: 
-    CDRMediaType    _mediaType;     //MEDIA_TYPE: text or binary
-    CDRBearerType   _bearer;        //BEARER_TYPE: sms or ussd
-    std::string     _routeId;       //ROUTE_ID:
-    int32_t         _serviceId;     //SERVICE_ID: id of service on route,
-                                    //in case of SMS Extra - id of pack of extra services
-    int32_t         _userMsgRef;    //USER_MSG_REF: system identifier for dialog tracing
-    uint8_t         _partsNum;      //number of parts if packet was conjoined.
+    uint64_t            _msgId;         //MSG_ID: system message identifier
+    CDRRecordType       _cdrType;       //RECORD_TYPE: 
+    CDRMediaType        _mediaType;     //MEDIA_TYPE: text or binary
+    CDRBearerType       _bearer;        //BEARER_TYPE: sms or ussd
+    SMRouteId           _routeId;       //ROUTE_ID:
+    int32_t             _serviceId;     //SERVICE_ID: id of service on route,
+                                        //in case of SMS Extra - id of pack of extra services
+    int32_t             _userMsgRef;    //USER_MSG_REF: system identifier for dialog tracing
+    uint8_t             _partsNum;      //number of parts if packet was conjoined.
     //sender info
-    time_t          _submitTime;    //SUBMIT: sms submit time
-    std::string     _srcAdr;        //SRC_ADDR: sender number
-    std::string     _srcIMSI;       //SRC_IMSI: sender IMSI
-    std::string     _srcMSC;        //SRC_MSC: sender MSC
-    std::string     _srcSMEid;      //SRC_SME_ID: sender SME identifier
+    time_t              _submitTime;    //SUBMIT: sms submit time
+    TonNpiAddressString _srcAdr;        //SRC_ADDR: sender number
+    IMSIString          _srcIMSI;       //SRC_IMSI: sender IMSI
+    MSCAddress          _srcMSC;        //SRC_MSC: sender MSC
+    SMESysId            _srcSMEid;      //SRC_SME_ID: sender SME identifier
     //recipient info
-    time_t          _finalTime;     //FINALIZED: sms delivery time
-    std::string     _dstAdr;        //DST_ADDR: final recipient number
-    std::string     _dstIMSI;       //DST_IMSI: recipient IMSI
-    std::string     _dstMSC;        //DST_MSC:	recipient MSC
-    std::string     _dstSMEid;      //DST_SME_ID: recipient SME identifier
-    uint32_t        _dlvrRes;       //STATUS: delivery status: 0 or error code
-    std::string     _divertedAdr;   //DIVERTED_FOR: if cdrType == dpDiverted, keeps
-                                    //destination number to which delivery was made 
-                                    //that differs from original destination address.
+    time_t              _finalTime;     //FINALIZED: sms delivery time
+    TonNpiAddressString _dstAdr;        //DST_ADDR: final recipient number
+    IMSIString          _dstIMSI;       //DST_IMSI: recipient IMSI
+    MSCAddress          _dstMSC;        //DST_MSC:	recipient MSC
+    SMESysId            _dstSMEid;      //DST_SME_ID: recipient SME identifier
+    uint32_t            _dlvrRes;       //STATUS: delivery status: 0 or error code
+    TonNpiAddressString _divertedAdr;   //DIVERTED_FOR: if cdrType == dpDiverted, keeps
+                                        //destination number to which delivery was made 
+                                        //that differs from original destination address.
 
-    uint32_t        _dpLength;      //DATA_LENGTH: message length: in chars for dpText,
-                                    //in bytes for dpBinary.
-    uint32_t        _smsXMask;      //mask of pack of SMS Extra services
-    ContractType    _contract;      //sender contract type
-    ChargingPolicy  _chargePolicy;  //
-    bool            _inBilled;      //message was billed by IN platform
-    std::string     _dsmSrvType;    //SMPP DATA_SM service type
-    ChargingType    _chargeType;    //MO or MT charging
+    uint32_t            _dpLength;      //DATA_LENGTH: message length: in chars for dpText,
+                                        //in bytes for dpBinary.
+    uint32_t            _smsXMask;      //mask of pack of SMS Extra services
+    ContractType        _contract;      //sender contract type
+    ChargingPolicy      _chargePolicy;  //
+    bool                _inBilled;      //message was billed by IN platform
+    SMPPServiceType     _dsmSrvType;    //SMPP DATA_SM service type
+    ChargingType        _chargeType;    //MO or MT charging
 
 //private: not written to CSV
     enum Phase_e {      //indicates which fields are fullfilled;
@@ -86,7 +92,7 @@ struct CDRRecord {
         dpDelivered,    //there was an attempt to delivery DP, recipient
                         //description may present
         dpCollected     //DP data collected (final delivery attempt)
-    }               _finalized;
+    }                   _finalized;
 };
 
 

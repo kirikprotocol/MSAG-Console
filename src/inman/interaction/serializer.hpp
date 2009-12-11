@@ -16,6 +16,7 @@ using smsc::util::format;
 using smsc::util::CustomException;
 
 #include "core/buffers/ExtendingBuf.hpp"
+#include "core/buffers/FixedLengthString.hpp"
 
 namespace smsc  {
 namespace inman {
@@ -23,7 +24,7 @@ namespace interaction {
 
 class SerializerException : public CustomException {
 public:
-    typedef enum { invPacket = 1, invObject, invObjData } ErrorClass;
+    enum ErrorClass { invPacket = 1, invObject, invObjData };
     SerializerException(const char * msg,
                         ErrorClass ex_class = SerializerException::invObjData,
                         const char * desc = NULL)
@@ -42,6 +43,57 @@ typedef smsc::core::buffers::ExtendingBuffer<unsigned char,1024> ObjectBuffer;
  * BYTE ORDER:   network << host   - sending
  *               network >> host   - recieving
  */
+
+/* -------------------------------------------------------------------------- *
+ * FixedLengthString serialization
+ * -------------------------------------------------------------------------- */
+
+template <size_t _SizeTArg>
+ObjectBuffer& operator<<(ObjectBuffer& buf, const smsc::core::buffers::FixedLengthString<_SizeTArg> & str)
+{
+  unsigned   len = (unsigned)str.length();
+  do {
+      unsigned char l7b = (unsigned char)(len & 0x7F);
+      if (len >>= 7)
+          l7b |= 0x80;
+      buf.Append(&l7b, 1);
+  } while (len);
+  buf.Append((const unsigned char*)str.c_str(), (unsigned)str.length());
+  return buf;
+}
+
+template <size_t _SizeTArg>
+ObjectBuffer& operator>>(ObjectBuffer& buf, smsc::core::buffers::FixedLengthString<_SizeTArg> & str)
+   throw(SerializerException)
+{
+  unsigned len = 0, i = 0;
+  unsigned char l7b;
+  do {
+      if (buf.Read(&l7b, 1) < 1)
+          throw SerializerException(format("ObjectBuffer[pos: %u]", buf.getPos()).c_str(),
+                                      SerializerException::invObjData,
+                                      " >> fixedString: corrupted size");
+      len |= ((unsigned)(l7b & 0x7F) << (7*i++));
+  } while ((l7b >= 0x80) && (i < ((sizeof(unsigned)<<3)/7)));
+
+  if ((l7b >= 0x80) || (len >= _SizeTArg))
+    throw SerializerException(format("ObjectBuffer[pos: %u]", buf.getPos()).c_str(),
+                              SerializerException::invObjData, 
+                              ">> fixedString: size is too large");
+
+  unsigned num2r = (len <= (_SizeTArg-1) ? len : (unsigned)(_SizeTArg-1));
+  if (buf.Read((unsigned char*)str.str, num2r) < num2r)
+      throw SerializerException(format("ObjectBuffer[pos: %u]", buf.getPos()).c_str(),
+                                  SerializerException::invObjData,
+                                  " >> fixedString: corrupted data");
+  str.str[num2r] = 0;
+  return buf;
+}
+
+/* -------------------------------------------------------------------------- *
+ * std::vector serialization
+ * -------------------------------------------------------------------------- */
+
 inline ObjectBuffer& operator<<(ObjectBuffer& buf, const std::vector<unsigned char>& arr)
 {
     unsigned   len = (unsigned)arr.size();
@@ -79,6 +131,10 @@ inline ObjectBuffer& operator>>(ObjectBuffer& buf, std::vector<unsigned char>& a
                                     " >> vector: corrupted data");
     return buf;
 }
+
+/* -------------------------------------------------------------------------- *
+ * std::string serialization
+ * -------------------------------------------------------------------------- */
 
 inline ObjectBuffer& operator<<(ObjectBuffer& buf, const std::string& str)
 {
@@ -126,6 +182,9 @@ inline ObjectBuffer& operator>>(ObjectBuffer& buf, std::string& str ) throw(Seri
     return buf;
 }
 
+/* -------------------------------------------------------------------------- *
+ * unsigned ints serialization
+ * -------------------------------------------------------------------------- */
 
 inline ObjectBuffer& operator<<(ObjectBuffer& buf, const uint64_t& val)
 {
@@ -163,6 +222,27 @@ inline ObjectBuffer& operator>>(ObjectBuffer& buf, uint32_t & val) throw(Seriali
     return buf;
 }
 
+inline ObjectBuffer& operator<<(ObjectBuffer& buf, const unsigned short& val)
+{
+    unsigned short nval = htons(val);
+    buf.Append((unsigned char*)&nval, 2);
+    return buf;
+}
+inline ObjectBuffer& operator>>(ObjectBuffer& buf, unsigned short& val) throw(SerializerException)
+{
+    if (buf.Read((unsigned char*)&val, 2) < 2)
+        throw SerializerException(format("ObjectBuffer[pos: %u]", buf.getPos()).c_str(),
+                                SerializerException::invObjData,
+                                " >> uint16_t: corrupted data");
+    else
+        val = ntohs(val);
+    return buf;
+}
+
+/* -------------------------------------------------------------------------- *
+ * signed ints serialization
+ * -------------------------------------------------------------------------- */
+
 inline ObjectBuffer& operator<<(ObjectBuffer& buf, const int32_t& val)
 {
     uint32_t nval= htonl((uint32_t)val);
@@ -180,8 +260,10 @@ inline ObjectBuffer& operator>>(ObjectBuffer& buf, int32_t& val) throw(Serialize
     return buf;
 }
 
-/* NOTE: on all platforms time_t is a signed integer type holding at least 4 bytes!!!
- */
+/* -------------------------------------------------------------------------- *
+ * time_t serialization
+ * NOTE: on all platforms time_t is a signed integer type holding at least 4 bytes !!!
+ * -------------------------------------------------------------------------- */
 inline ObjectBuffer& operator<<(ObjectBuffer& buf, const time_t& val)
 {
     uint32_t nval = htonl((uint32_t)val);
@@ -200,23 +282,10 @@ inline ObjectBuffer& operator>>(ObjectBuffer& buf, time_t& val) throw(Serializer
     return buf;
 }
 
-inline ObjectBuffer& operator<<(ObjectBuffer& buf, const unsigned short& val)
-{
-    unsigned short nval = htons(val);
-    buf.Append((unsigned char*)&nval, 2);
-    return buf;
-}
-inline ObjectBuffer& operator>>(ObjectBuffer& buf, unsigned short& val) throw(SerializerException)
-{
-    if (buf.Read((unsigned char*)&val, 2) < 2)
-        throw SerializerException(format("ObjectBuffer[pos: %u]", buf.getPos()).c_str(),
-                                SerializerException::invObjData,
-                                " >> uint16_t: corrupted data");
-    else
-        val = ntohs(val);
-    return buf;
-}
 
+/* -------------------------------------------------------------------------- *
+ * char/bool serialization
+ * -------------------------------------------------------------------------- */
 
 inline ObjectBuffer& operator<<(ObjectBuffer& buf, const unsigned char& val)
 {
@@ -250,6 +319,9 @@ inline ObjectBuffer& operator>>(ObjectBuffer& buf, bool& val) throw(SerializerEx
 }
 
 
+/* -------------------------------------------------------------------------- *
+ * 
+ * -------------------------------------------------------------------------- */
 class SerializableObjectAC {
 public:
     SerializableObjectAC(unsigned short obj_id)

@@ -8,7 +8,9 @@ static char const ident[] = "@(#)$Id$";
 #include "inman/comp/compsutl.hpp"
 #include "inman/common/cvtutil.hpp"
 #include "util/vformat.hpp"
+
 using smsc::util::format;
+using smsc::util::MAPConst;
 
 using smsc::cvtutil::TONNPI_ADDRESS_OCTS;
 using smsc::cvtutil::packNumString2BCD;
@@ -43,7 +45,7 @@ void ATSIArg::setSubscriberId(const char *addr, bool imsi/* = true*/) throw(Cust
     if (!subscrAdr.fromText(addr))
         throw CustomException(-1, "inalid subscriberID", addr);
     if ((subscrImsi = imsi)) {
-        if (((subscrAdr.length + 1)/2) > CAP_MAX_IMSILength)
+        if (((subscrAdr.length + 1)/2) > MAPConst::MAX_IMSI_AddressLength)
             throw CustomException("IMSI length is too long: %u", subscrAdr.length);
     }
 }
@@ -53,7 +55,7 @@ void ATSIArg::encode(std::vector<unsigned char>& buf) const throw(CustomExceptio
     asn_enc_rval_t                          erc;
     AnyTimeSubscriptionInterrogationArg_t   cmd;
     RequestedCAMEL_SubscriptionInfo_t	    reqCSI = askCSI;
-    unsigned char                           imsi_buf[CAP_MAX_IMSILength];
+    unsigned char                           imsi_buf[MAPConst::MAX_IMSI_AddressLength];
     unsigned char                           isdn_buf[sizeof(TONNPI_ADDRESS_OCTS)];
     unsigned char                           isdn_buf2[sizeof(TONNPI_ADDRESS_OCTS)];
 

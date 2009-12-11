@@ -8,13 +8,12 @@
 #include <map>
 
 #include "util/TonNpiAddress.hpp"
+#include "inman/GsmSCFInfo.hpp"
 #include "inman/common/RPCList.hpp"
 
 namespace smsc  {
 namespace inman {
 
-using smsc::util::TonNpiAddress;
-using smsc::util::GsmSCFinfo;
 using smsc::util::format;
 using smsc::inman::common::RPCList;
 using smsc::inman::common::RPCListATT;

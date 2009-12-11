@@ -9,6 +9,9 @@ static char const ident[] = "$Id$";
 #include "inman/common/console.hpp"
 using smsc::inman::common::Console;
 
+#include "inman/GsmSCFInfo.hpp"
+using smsc::inman::GsmSCFinfo;
+
 #include "inman/utilbin/URCInitMAP.hpp"
 #include "inman/utilbin/chsri_srv.hpp"
 using smsc::inman::SRI_CSIListener;

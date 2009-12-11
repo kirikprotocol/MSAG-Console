@@ -5,34 +5,33 @@
 #ident "@(#)$Id$"
 #define SMSC_INMAN_SUBSCR_CONTRACT_HPP
 
-#include "inman/InScf.hpp"  //using TDPScfMap
-#include "util/strlcpy.h"   // for strlcpy on linux
+#include "inman/InScf.hpp"
+#include "inman/CDRTypes.hpp"
 
 namespace smsc {
 namespace inman {
 
-typedef char AbonentImsi[MAP_MAX_IMSI_AddressValueLength + 1];
+using smsc::util::IMSIString;
+
 typedef TonNpiAddress AbonentId; //isdn international number assumed
 
 struct AbonentContractInfo {
     enum ContractType { abtUnknown = 0, abtPostpaid = 1, abtPrepaid = 2 };
 
     ContractType    ab_type;
-    AbonentImsi     abImsi;
+    IMSIString      abImsi;
     TDPScfMap       tdpSCF;
 
     AbonentContractInfo(ContractType cntr_type = abtUnknown, const char * p_imsi = NULL)
-        : ab_type(cntr_type)
-    {
-        setImsi(p_imsi);
-    }
+        : ab_type(cntr_type), abImsi(p_imsi)
+    { }
 
     void setImsi(const char * p_imsi)
-    { 
+    {
         if (p_imsi && p_imsi[0])
-            strlcpy(abImsi, p_imsi, sizeof(abImsi));
+            abImsi = p_imsi;
         else
-            abImsi[0] = 0;
+            abImsi.clear();
     }
 
     void setSCF(TDPCategory::Id tdp_type, const GsmSCFinfo * p_scf)
@@ -43,7 +42,7 @@ struct AbonentContractInfo {
             tdpSCF[tdp_type].Reset();
     }
 
-    void Reset(void) { ab_type = abtUnknown; abImsi[0] = 0; tdpSCF.clear();  }
+    void Reset(void) { ab_type = abtUnknown; abImsi.clear(); tdpSCF.clear();  }
 
     //Returns true if at least one parameter was updated
     bool Merge(const AbonentContractInfo & use_info)
@@ -55,7 +54,7 @@ struct AbonentContractInfo {
             rval = true;
         }
         if (use_info.getImsi()) {
-            strlcpy(abImsi, use_info.abImsi, sizeof(abImsi));
+            abImsi = use_info.abImsi;
             rval = true;
         }
         if (!use_info.tdpSCF.empty()) {
@@ -65,9 +64,9 @@ struct AbonentContractInfo {
         return rval;
     }
 
-    inline bool isUnknown(void) const { return (bool)(ab_type == abtUnknown); }
-    inline bool isPostpaid(void) const { return (bool)(ab_type == abtPostpaid); }
-    inline bool isPrepaid(void) const { return (bool)(ab_type == abtPrepaid); }
+    bool isUnknown(void) const { return (bool)(ab_type == abtUnknown); }
+    bool isPostpaid(void) const { return (bool)(ab_type == abtPostpaid); }
+    bool isPrepaid(void) const { return (bool)(ab_type == abtPrepaid); }
 
     static const char * type2Str(ContractType cntr_type)
     {
@@ -78,11 +77,13 @@ struct AbonentContractInfo {
         return "Unknown";
     }
 
-    inline const char * type2Str(void) const { return type2Str(ab_type); }
-    inline const char * getImsi(void) const { return abImsi[0] ? (const char*)abImsi : NULL; }
-    inline const char * imsiCStr(void) const { return abImsi[0] ? (const char*)abImsi : "<none>"; }
+    const char * type2Str(void) const { return type2Str(ab_type); }
+    //Returns cstr containing IMSI signals if latter is defined
+    const char * getImsi(void) const { return !abImsi.empty() ? abImsi.c_str() : NULL; }
+    //Returns cstr containing either IMSI signals or string "none"
+    const char * imsiCStr(void) const { return !abImsi.empty() ? abImsi.c_str() : "<none>"; }
 
-    inline const GsmSCFinfo * getSCFinfo(TDPCategory::Id tdp_type) const
+    const GsmSCFinfo * getSCFinfo(TDPCategory::Id tdp_type) const
     {
         TDPScfMap::const_iterator it = tdpSCF.find(tdp_type);
         return ((it == tdpSCF.end()) || it->second.scfAddress.empty()) ? NULL : &(it->second);
@@ -108,8 +109,8 @@ struct AbonentRecord : public AbonentContractInfo {
 
     void reset(void)    { tm_queried = 0; AbonentContractInfo::Reset(); }
 
-    //NOTE: tm_queried = zero, means record ALWAYS expired!
-    inline bool isExpired(uint32_t interval) const
+    //NOTE: tm_queried = zero, means record is ALWAYS expired!
+    bool isExpired(uint32_t interval) const
     { return (bool)(time(NULL) >= (tm_queried + (time_t)interval)); }
 };
 

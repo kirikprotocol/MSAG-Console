@@ -6,19 +6,11 @@
 #define __SMSC_UTIL_TONNPIADDR_HPP__
 
 #include <inttypes.h>
-
-#include <string.h>
 #include <stdio.h>
 
-#include <string>
+#include "core/buffers/FixedLengthString.hpp"
 
-#define MAP_MAX_IMSI_AddressLength      8
-#define MAP_MAX_IMSI_AddressValueLength (MAP_MAX_IMSI_AddressLength*2)
-#define MAP_MAX_ISDN_AddressLength      8
-
-#define CAP_MAX_SMS_AddressStringLength 10 //CAP-datatypes.maxSMS-AddressStringLength - 1
-#define CAP_MAX_SMS_AddressValueLength  (CAP_MAX_SMS_AddressStringLength*2)
-
+//TODO: proper define consts for MAP and CAP ToNs and NPis !!!
 #define NUMBERING_ISDN                  1
 #define ToN_INTERNATIONAL               1
 #define ToN_ALPHANUM                    5
@@ -26,21 +18,59 @@
 
 namespace smsc {
 namespace util {
+
+//MAP constants defined in ASM.1 module MAP-CommonDataTypes 
+struct MAPConst {
+  //max number of octets representing IMSI
+  static const unsigned MAX_IMSI_AddressLength = 8;
+  //max number of signals in IMSI
+  static const unsigned MAX_IMSI_AddressValueLength = (MAX_IMSI_AddressLength*2);
+  //max number of octets representing ISDN address
+  static const unsigned MAX_ISDN_AddressLength = 8; 
+  //max number of signals in ISDN address
+  static const unsigned MAX_ISDN_AddressValueLength = (MAX_ISDN_AddressLength*2);
+};
+
+//CAP constants defined in ASM.1 module CAP-datatypes 
+struct CAPConst {
+  //max number of octets representing SMS address (CAP-datatypes.maxSMS-AddressStringLength - 1)
+  static const unsigned MAX_SMS_AddressStringLength = 10;
+  //max number of signals in SMS address
+  static const unsigned MAX_SMS_AddressValueLength = (MAX_SMS_AddressStringLength*2);
+  //max number of octets representing Location address
+  static const unsigned MAX_LocationNumberLength = 8;
+  //max number of octets representing time and timezone data
+  static const unsigned MAX_TimeAndTimezoneLength = 8;
+};
+
+//
+typedef smsc::core::buffers::FixedLengthString<MAPConst::MAX_IMSI_AddressValueLength+1>
+  IMSIString;
+//
+typedef smsc::core::buffers::FixedLengthString<MAPConst::MAX_ISDN_AddressValueLength+1>
+  MSCAddress;
+
+//max number of chars in .ton.npi string representation of SMS address:
+// '.' + 3 + '.' + 3 + '.' + 20
+const unsigned TON_NPI_AddressStringLength = (9 + CAPConst::MAX_SMS_AddressValueLength + 1);
+
+typedef smsc::core::buffers::FixedLengthString<TON_NPI_AddressStringLength>
+  TonNpiAddressString;
                                  
 //This is slightly more intelligent analog of sms::sms::Address,
 //it also accepts alpha-numeric addresses.
 //In opposite to sms::Address, all methods return error code instead
 //of throwing exception.
-struct TonNpiAddress {              // '.' + 3 + '.' + 3 + '.' + 20
-    static const unsigned  _strSZ = (12 + CAP_MAX_SMS_AddressValueLength + 2);
+struct TonNpiAddress {
+    static const unsigned  _strSZ = TON_NPI_AddressStringLength;
 
-    unsigned char   length, typeOfNumber, numPlanInd;
-                     //signals is always zero-terminated
-    char            signals[CAP_MAX_SMS_AddressValueLength + 1];
+    uint8_t length, typeOfNumber, numPlanInd;
+            //signals is always zero-terminated
+    char    signals[CAPConst::MAX_SMS_AddressValueLength + 1];
 
-    inline void clear(void) { length = typeOfNumber = numPlanInd = signals[0] = 0; }
-    inline const char * getSignals(void) const { return (const char*)&signals[0]; }
-    inline bool empty(void) const { return (bool)!length; }
+    void clear(void) { length = typeOfNumber = numPlanInd = signals[0] = 0; }
+    const char * getSignals(void) const { return (const char*)&signals[0]; }
+    bool empty(void) const { return (bool)!length; }
 
     TonNpiAddress() { clear(); }
 
@@ -49,7 +79,7 @@ struct TonNpiAddress {              // '.' + 3 + '.' + 3 + '.' + 20
         if (!text || !*text)
             return false;
 
-        char    buff[CAP_MAX_SMS_AddressValueLength + 1];
+        char    buff[CAPConst::MAX_SMS_AddressValueLength + 1];
         char *  addr_value = buff;
         int     iplan = 0, itype = 0;
         int     max_scan = 1, scanned = 0;
@@ -74,7 +104,7 @@ struct TonNpiAddress {              // '.' + 3 + '.' + 3 + '.' + 20
             if (scanned == 1 && (length == strlen(addr_value))) {
                 iplan = 1; /*itype = 0;*/   // isdn unknown
             } else {
-                if (length <= CAP_MAX_SMS_AddressValueLength) {
+                if (length <= CAPConst::MAX_SMS_AddressValueLength) {
                     /*iplan = 0;*/ itype = 5;   //alpha-numeric adr
                     addr_value = (char*)text;
                     scanned = 1;
@@ -102,9 +132,9 @@ struct TonNpiAddress {              // '.' + 3 + '.' + 3 + '.' + 20
     }
 
     //Returns true if address numbering is ISDN international
-    inline bool interISDN(void) const
+    bool interISDN(void) const
     {
-        return (bool)((numPlanInd == typeOfNumber) && (numPlanInd == 0x01));
+        return ((ToN_INTERNATIONAL == typeOfNumber) && (numPlanInd == NUMBERING_ISDN));
     }
                 
     //use at least TonNpiAddress::_strSZ chars buffer
@@ -112,26 +142,24 @@ struct TonNpiAddress {              // '.' + 3 + '.' + 3 + '.' + 20
     {
         int n = 0;
         if (length) {
-            if (ton_npi)
-                n = snprintf(buf, buflen - 1, ".%u.%u.", (unsigned)typeOfNumber,
-                                                            (unsigned)numPlanInd);
-            else if (interISDN())
-                buf[n++] = '+';
-            strcpy(buf + n, getSignals()); //inserts ending zero
-            n += length;
-        } else
-            buf[0] = 0;
+          if (ton_npi)
+            n = snprintf(buf, buflen - 1, ".%u.%u.", (unsigned)typeOfNumber, (unsigned)numPlanInd);
+          else if (interISDN())
+            buf[n++] = '+';
+          n += snprintf(buf + n, buflen - n - 1, "%s", getSignals());
+        }
+        buf[n] = 0;
         return n;
     }
 
-    inline std::string toString(bool ton_npi = true) const
+    TonNpiAddressString toString(bool ton_npi = true) const
     {
-        char buf[TonNpiAddress::_strSZ];
-        toString(buf, ton_npi);
+        TonNpiAddressString buf;
+        toString(buf.str, ton_npi);
         return buf;
     }
 
-    inline bool operator== (const TonNpiAddress &adr2) const
+    bool operator== (const TonNpiAddress &adr2) const
     {
         if ((typeOfNumber == adr2.typeOfNumber)
             && (numPlanInd == adr2.numPlanInd)
@@ -140,43 +168,14 @@ struct TonNpiAddress {              // '.' + 3 + '.' + 3 + '.' + 20
         }
         return false;
     }
-};
-
-struct GsmSCFinfo { //gsmSCF paramaters
-    static const unsigned  _strSZ = sizeof("%s:{%u}") + TonNpiAddress::_strSZ + sizeof(uint32_t)*3;
-
-    uint32_t      serviceKey;   //4 bytes long
-    TonNpiAddress scfAddress;   //gsmSCF address always has ISDN international format
-
-    GsmSCFinfo() : serviceKey(0)
-    { }
-    GsmSCFinfo(const TonNpiAddress & use_scf, uint32_t use_key)
-        : serviceKey(use_key), scfAddress(use_scf)
-    { }
-
-    void Reset(void) { serviceKey = 0; scfAddress.clear(); }
-
-    int toString(char* buf, bool omit_ton_npi = true, unsigned buflen = GsmSCFinfo::_strSZ) const
+    bool operator!= (const TonNpiAddress &adr2) const
     {
-        int     n = scfAddress.toString(buf, !omit_ton_npi);
-        if (n)
-            n += snprintf(buf + n, buflen-1-n, ":{%u}", serviceKey);
-        buf[n] = 0;
-        return n;
-    }
-
-    std::string toString(bool omit_ton_npi = true) const
-    {
-        if (!scfAddress.length)
-            return "<none>";
-
-        char    buf[GsmSCFinfo::_strSZ];
-        toString(buf, omit_ton_npi);
-        return buf;
+      return !(*this == adr2);
     }
 };
 
-}//namespace util
-}//namespace smsc
+
+}//util
+}//smsc
 #endif /* __SMSC_UTIL_TONNPIADDR_HPP__ */
 

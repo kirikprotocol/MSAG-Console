@@ -293,7 +293,7 @@ void DeliveredSmsData::export2CDR(CDRRecord & cdr) const
     cdr._dstSMEid = destSMEid;
     cdr._finalTime = finalTimeTZ;
     cdr._divertedAdr = divertedAdr;
-    cdr._cdrType = divertedAdr.size() ? CDRRecord::dpDiverted: CDRRecord::dpOrdinary;
+    cdr._cdrType = !divertedAdr.empty() ? CDRRecord::dpDiverted: CDRRecord::dpOrdinary;
     cdr._finalized = CDRRecord::dpCollected;
 }
 
@@ -338,7 +338,7 @@ void DeliverySmsResult::export2CDR(CDRRecord & cdr) const
     cdr._dstSMEid = destSMEid;
     cdr._finalTime = finalTimeTZ;
     cdr._divertedAdr = divertedAdr;
-    cdr._cdrType = divertedAdr.size() ? CDRRecord::dpDiverted: CDRRecord::dpOrdinary;
+    cdr._cdrType = !divertedAdr.empty() ? CDRRecord::dpDiverted: CDRRecord::dpOrdinary;
     cdr._finalized = final ? CDRRecord::dpCollected : CDRRecord::dpDelivered;
 }
 

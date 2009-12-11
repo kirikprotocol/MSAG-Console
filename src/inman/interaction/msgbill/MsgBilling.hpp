@@ -8,11 +8,20 @@
 #include "inman/interaction/messages.hpp"
 
 #include "inman/storage/cdrutil.hpp"
-using smsc::inman::cdr::CDRRecord;
 
 namespace smsc  {
 namespace inman {
 namespace interaction {
+
+using smsc::util::TonNpiAddressString;
+
+using smsc::util::IMSIString;
+using smsc::util::MSCAddress;
+using smsc::inman::SMESysId;
+using smsc::inman::SMRouteId;
+
+using smsc::inman::cdr::CDRRecord;
+
 // -------------------------------------------------------------------- //
 // Billing CommandSet: factory of billing commands and their subobjects
 // -------------------------------------------------------------------- //
@@ -26,7 +35,7 @@ public:
     };
     enum HeaderFrm {
         HDR_DIALOG = 1, HDR_SESSIONED_DLG = 2
-    } HeaderFrm;
+    };
 
     INPCSBilling();
 
@@ -78,14 +87,41 @@ public:
 
 //Short message data specific for CAP3 interaction
 struct SMCAPSpecificInfo {
-    std::string   smscAddress;
-    unsigned char tpShortMessageSpecificInfo;
-    unsigned char tpProtocolIdentifier;
-    unsigned char tpDataCodingScheme;
-    time_t        tpValidityPeriod;
+  TonNpiAddressString smscAddress;
+  unsigned char       tpShortMessageSpecificInfo;
+  unsigned char       tpProtocolIdentifier;
+  unsigned char       tpDataCodingScheme;
+  time_t              tpValidityPeriod;
 };
 
 class ChargeSms : public INPBillingCmd {
+protected:
+  //SerializableObject interface
+  void load(ObjectBuffer& in) throw(SerializerException);
+  void save(ObjectBuffer& out) const;
+
+private:
+  CDRRecord::ChargingPolicy chrgPolicy; //
+  //data for CDR generation
+  TonNpiAddressString dstSubscriberNumber;
+  TonNpiAddressString callingPartyNumber;
+  IMSIString          callingImsi;
+  time_t              submitTimeTZ;
+  MSCAddress          locationInformationMSC; //keeps SRC_MSC
+  SMESysId            callingSMEid; //"MAP_PROXY"
+  SMRouteId           routeId;      //"sibinco.sms > plmn.kem"
+  int32_t             serviceId;    //
+  int32_t             userMsgRef;   //negative if absent
+  uint64_t            msgId;        //
+  int32_t             ussdServiceOp; //see sms_const.h
+  uint8_t             partsNum;     //number of parts if packet was conjoined.
+  uint16_t            msgLen;       //total length of message(including multipart case)
+  SMCAPSpecificInfo   csInfo;
+  //
+  uint32_t            smsXSrvsId;
+  uint8_t             chrgFlags;    //flags which customize billing settings
+  SMPPServiceType     dsmSrvType;   //SMPP DATA_SM service type
+
 public:
     enum ChargingFlags_e {
         chrgMT = 0x01   //charge the dstSubscriber instead of calling one
@@ -103,31 +139,31 @@ public:
     void setSmsXSrvs(uint32_t srv_ids)
         { smsXSrvsId = srv_ids; }
     //data for CDR generation & CAP interaction
-    void setDestinationSubscriberNumber(const std::string& dst_adr)
+    void setDestinationSubscriberNumber(const char * dst_adr)
         { dstSubscriberNumber = dst_adr; }
-    void setCallingPartyNumber(const std::string& src_adr)
+    void setCallingPartyNumber(const char * src_adr)
         { callingPartyNumber = src_adr; }
-    void setCallingIMSI(const std::string& imsi)
+    void setCallingIMSI(const char * imsi)
         { callingImsi = imsi; }
     void setSubmitTimeTZ(time_t tmVal)
         { submitTimeTZ = tmVal; }
-    void setLocationInformationMSC(const std::string& src_msc)
+    void setLocationInformationMSC(const char * src_msc)
         { locationInformationMSC = src_msc; }
-    void setCallingSMEid(const std::string & sme_id)
+    void setCallingSMEid(const char * sme_id)
         { callingSMEid = sme_id; }
-    void setRouteId(const std::string & route_id)
+    void setRouteId(const char * route_id)
         { routeId = route_id; }
     void setServiceId(int32_t service_id)   { serviceId = service_id; }
     //sets SMPP DATA_SM service type
-    void setServiceType(const std::string & service_type)
-                                                   { dsmSrvType = service_type; }
+    void setServiceType(const char * service_type)
+                                            { dsmSrvType = service_type; }
     void setUserMsgRef(uint32_t msg_ref)    { userMsgRef = msg_ref; }
     void setMsgId(uint64_t msg_id)          { msgId = msg_id; }
     void setServiceOp(int32_t service_op)   { ussdServiceOp = service_op; }
     void setPartsNum(uint8_t parts_num)     { partsNum = parts_num; }
     void setMsgLength(uint16_t msg_len)     { msgLen = msg_len; }
     //data for CAP3 InitialDP OPERATION
-    void setSMSCAddress(const std::string& smsc_adr)
+    void setSMSCAddress(const char * smsc_adr)
         { csInfo.smscAddress = smsc_adr; }
     void setTPShortMessageSpecificInfo(unsigned char sm_info)
         { csInfo.tpShortMessageSpecificInfo = sm_info; }
@@ -142,33 +178,6 @@ public:
     void exportCAPInfo(SMCAPSpecificInfo & csi) const { csi = csInfo; }
     uint32_t getSmsXSrvs(void) const { return smsXSrvsId; }
     uint8_t  getChargingFlags(void) const { return chrgFlags; }
-
-protected:
-    //SerializableObject interface
-    void load(ObjectBuffer& in) throw(SerializerException);
-    void save(ObjectBuffer& out) const;
-
-private:
-    CDRRecord::ChargingPolicy chrgPolicy; //
-    //data for CDR generation
-    std::string   dstSubscriberNumber;
-    std::string   callingPartyNumber;
-    std::string   callingImsi;
-    time_t        submitTimeTZ;
-    std::string   locationInformationMSC; //keeps SRC_MSC
-    std::string   callingSMEid; //"MAP_PROXY"
-    std::string   routeId;      //"sibinco.sms > plmn.kem"
-    int32_t       serviceId;    //
-    int32_t       userMsgRef;   //negative if absent
-    uint64_t      msgId;        //
-    int32_t       ussdServiceOp; //see sms_const.h
-    uint8_t       partsNum;     //number of parts if packet was conjoined.
-    uint16_t      msgLen;       //total length of message(including multipart case)
-    SMCAPSpecificInfo csInfo;
-    //
-    uint32_t      smsXSrvsId;
-    uint8_t       chrgFlags;    //flags which customize billing settings
-    std::string   dsmSrvType;   //SMPP DATA_SM service type
 };
 
 //NOTE: in case of CAP3 error, this command ends the TCP dialog.
@@ -208,23 +217,6 @@ private:
 };
 
 class DeliverySmsResult : public INPBillingCmd {
-public:
-    //default constructor for successfull delivery 
-    DeliverySmsResult(uint32_t res = 0, bool finalAttemp = true);
-    virtual ~DeliverySmsResult() { }
-
-    void setResultValue(uint32_t res)               { value = res; }
-    void setFinal(bool final_attemp = true)         { final = final_attemp; }
-    void setDestIMSI(const std::string& imsi)       { destImsi = imsi; }
-    void setDestMSC(const std::string& msc)         { destMSC = msc; }
-    void setDestSMEid(const std::string& sme_id)    { destSMEid = sme_id; }
-    void setDivertedAdr(const std::string& dvrt_adr) { divertedAdr = dvrt_adr; }
-    void setDeliveryTime(time_t final_tm)           { finalTimeTZ = final_tm; }
-
-    uint32_t GetValue() const { return value; }
-
-    void export2CDR(CDRRecord & cdr) const;
-
 protected:
     //SerializableObject interface
     virtual void load(ObjectBuffer& in) throw(SerializerException);
@@ -235,16 +227,70 @@ private:
     bool          final;    //successfull delivery or last delivery attempt,
                             //enforces CDR generation
     //optional data for CDR generation (on successfull delivery)
-    std::string   destImsi;
-    std::string   destMSC;
-    std::string   destSMEid;
-    std::string   divertedAdr;
-    time_t        finalTimeTZ;
+    IMSIString          destImsi;
+    MSCAddress          destMSC;
+    SMESysId            destSMEid;
+    TonNpiAddressString divertedAdr;
+    time_t              finalTimeTZ;
+
+public:
+    //default constructor for successfull delivery 
+    DeliverySmsResult(uint32_t res = 0, bool finalAttemp = true);
+    virtual ~DeliverySmsResult() { }
+
+    void setResultValue(uint32_t res)           { value = res; }
+    void setFinal(bool final_attemp = true)     { final = final_attemp; }
+    void setDestIMSI(const char * imsi)         { destImsi = imsi; }
+    void setDestMSC(const char * msc)           { destMSC = msc; }
+    void setDestSMEid(const char * sme_id)      { destSMEid = sme_id; }
+    void setDivertedAdr(const char * dvrt_adr)  { divertedAdr = dvrt_adr; }
+    void setDeliveryTime(time_t final_tm)       { finalTimeTZ = final_tm; }
+
+    uint32_t GetValue() const { return value; }
+
+    void export2CDR(CDRRecord & cdr) const;
 };
 
 //DP collected data: successfull delivery or last delivery attempt
 //Charging mode ON_DATA_COLLECTED is assumed
 class DeliveredSmsData : public INPBillingCmd {
+protected:
+    //SerializableObject interface
+    void load(ObjectBuffer& in) throw(SerializerException);
+    void save(ObjectBuffer& out) const;
+
+private:
+    //Charging request data ..
+    CDRRecord::ChargingPolicy chrgPolicy; //
+    TonNpiAddressString dstSubscriberNumber;
+    TonNpiAddressString callingPartyNumber;
+    IMSIString          callingImsi;
+    time_t              submitTimeTZ;
+    MSCAddress          locationInformationMSC; //keeps SRC_MSC
+    SMESysId            callingSMEid; //"MAP_PROXY"
+    SMRouteId           routeId;      //"sibinco.sms > plmn.kem"
+    int32_t             serviceId;    //
+    int32_t             userMsgRef;   //negative if absent
+    uint64_t            msgId;        //
+    int32_t             ussdServiceOp; //see sms_const.h
+    uint8_t             partsNum;     //number of parts if packet was conjoined.
+    uint16_t            msgLen;       //total length of message(including multipart case)
+    SMCAPSpecificInfo   csInfo;
+    //
+    unsigned char       extCode;      //extension fields are present
+    uint32_t            smsXSrvsId;
+    uint8_t             chrgFlags;    //flags which customize billing settings, see ChargeSms::ChargingFlags_e
+    SMPPServiceType     dsmSrvType;   //SMPP DATA_SM service type
+
+    //Delivery report data ..
+    uint32_t            dlvrRes;    //0, or errorcode
+    //optional data for CDR generation (on successfull delivery)
+    IMSIString          destImsi;
+    MSCAddress          destMSC;
+    SMESysId            destSMEid;
+    TonNpiAddressString divertedAdr;
+    time_t              finalTimeTZ;
+
 public:
     DeliveredSmsData(uint32_t res = 0); //by default: charging type is MO
     virtual ~DeliveredSmsData(void) { }
@@ -256,31 +302,31 @@ public:
     void setChargeOnSubmit(void)
         { chrgPolicy = CDRRecord::ON_SUBMIT_COLLECTED; }
     //data for CDR generation & CAP interaction
-    void setDestinationSubscriberNumber(const std::string& dst_adr)
+    void setDestinationSubscriberNumber(const char * dst_adr)
         { dstSubscriberNumber = dst_adr; }
-    void setCallingPartyNumber(const std::string& src_adr)
+    void setCallingPartyNumber(const char * src_adr)
         { callingPartyNumber = src_adr; }
-    void setCallingIMSI(const std::string& imsi)
+    void setCallingIMSI(const char * imsi)
         { callingImsi = imsi; }
     void setSubmitTimeTZ(time_t tmVal)
         { submitTimeTZ = tmVal; }
-    void setLocationInformationMSC(const std::string& src_msc)
+    void setLocationInformationMSC(const char * src_msc)
         { locationInformationMSC = src_msc; }
-    void setCallingSMEid(const std::string & sme_id)
+    void setCallingSMEid(const char * sme_id)
         { callingSMEid = sme_id; }
-    void setRouteId(const std::string & route_id)
+    void setRouteId(const char * route_id)
         { routeId = route_id; }
     void setServiceId(int32_t service_id)   { serviceId = service_id; }
     //sets SMPP DATA_SM service type
-    void setServiceType(const std::string & service_type)
-                                                   { dsmSrvType = service_type; }
+    void setServiceType(const char * service_type)
+                                            { dsmSrvType = service_type; }
     void setUserMsgRef(uint32_t msg_ref)    { userMsgRef = msg_ref; }
     void setMsgId(uint64_t msg_id)          { msgId = msg_id; }
     void setServiceOp(int32_t service_op)   { ussdServiceOp = service_op; }
     void setPartsNum(uint8_t parts_num)     { partsNum = parts_num; }
     void setMsgLength(uint16_t msg_len)     { msgLen = msg_len; }
     //data for CAP3 InitialDP OPERATION
-    void setSMSCAddress(const std::string& smsc_adr)
+    void setSMSCAddress(const char * smsc_adr)
         { csInfo.smscAddress = smsc_adr; }
     void setTPShortMessageSpecificInfo(unsigned char sm_info)
         { csInfo.tpShortMessageSpecificInfo = sm_info; }
@@ -294,55 +340,18 @@ public:
     void setSmsXSrvs(uint32_t srv_ids)     { extCode |= 0x80; smsXSrvsId = srv_ids; }
 
     //Delivery report data setters  ..
-    void setResultValue(uint32_t res)               { dlvrRes = res; }
-    void setDestIMSI(const std::string& imsi)       { destImsi = imsi; }
-    void setDestMSC(const std::string& msc)         { destMSC = msc; }
-    void setDestSMEid(const std::string& sme_id)    { destSMEid = sme_id; }
-    void setDivertedAdr(const std::string& dvrt_adr) { divertedAdr = dvrt_adr; }
-    void setDeliveryTime(time_t final_tm)           { finalTimeTZ = final_tm; }
+    void setResultValue(uint32_t res)           { dlvrRes = res; }
+    void setDestIMSI(const char * imsi)         { destImsi = imsi; }
+    void setDestMSC(const char * msc)           { destMSC = msc; }
+    void setDestSMEid(const char * sme_id)      { destSMEid = sme_id; }
+    void setDivertedAdr(const char * dvrt_adr)  { divertedAdr = dvrt_adr; }
+    void setDeliveryTime(time_t final_tm)       { finalTimeTZ = final_tm; }
 
     uint32_t getResult(void) const { return dlvrRes; }
     uint8_t  getChargingFlags(void) const { return chrgFlags; }
 
     void export2CDR(CDRRecord & cdr) const;
     void exportCAPInfo(SMCAPSpecificInfo & csi) const { csi = csInfo; }
-
-protected:
-    //SerializableObject interface
-    void load(ObjectBuffer& in) throw(SerializerException);
-    void save(ObjectBuffer& out) const;
-
-private:
-    //Charging request data ..
-    CDRRecord::ChargingPolicy chrgPolicy; //
-    std::string   dstSubscriberNumber;
-    std::string   callingPartyNumber;
-    std::string   callingImsi;
-    time_t        submitTimeTZ;
-    std::string   locationInformationMSC; //keeps SRC_MSC
-    std::string   callingSMEid; //"MAP_PROXY"
-    std::string   routeId;      //"sibinco.sms > plmn.kem"
-    int32_t       serviceId;    //
-    int32_t       userMsgRef;   //negative if absent
-    uint64_t      msgId;        //
-    int32_t       ussdServiceOp; //see sms_const.h
-    uint8_t       partsNum;     //number of parts if packet was conjoined.
-    uint16_t      msgLen;       //total length of message(including multipart case)
-    SMCAPSpecificInfo csInfo;
-    //
-    unsigned char extCode;      //extension fields are present
-    uint32_t      smsXSrvsId;
-    uint8_t       chrgFlags;    //flags which customize billing settings, see ChargeSms::ChargingFlags_e
-    std::string   dsmSrvType;   //SMPP DATA_SM service type
-
-    //Delivery report data ..
-    uint32_t      dlvrRes;    //0, or errorcode
-    //optional data for CDR generation (on successfull delivery)
-    std::string   destImsi;
-    std::string   destMSC;
-    std::string   destSMEid;
-    std::string   divertedAdr;
-    time_t        finalTimeTZ;
 };
 
 

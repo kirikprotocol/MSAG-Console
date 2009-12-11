@@ -9,6 +9,8 @@ static char const ident[] = "@(#)$Id$";
 #include "inman/common/adrutil.hpp"
 #include "inman/common/cvtutil.hpp"
 
+using smsc::util::MAPConst;
+
 using smsc::cvtutil::packTimeT2BCD7;
 using smsc::cvtutil::packTimeT2BCD8;
 using smsc::cvtutil::packTP_VP_Relative;
@@ -37,9 +39,9 @@ public:
     OCTET_STRING_DECL(_destSN, sizeof(TONNPI_ADDRESS_OCTS));
     OCTET_STRING_DECL(_clldPN, sizeof(TONNPI_ADDRESS_OCTS));
     OCTET_STRING_DECL(_clngPN, sizeof(TONNPI_ADDRESS_OCTS));
-    OCTET_STRING_DECL(_iMSI, CAP_MAX_IMSILength);
+    OCTET_STRING_DECL(_iMSI, MAPConst::MAX_IMSI_AddressLength);
     OCTET_STRING_DECL(_adrSMSC, sizeof(TONNPI_ADDRESS_OCTS));
-    OCTET_STRING_DECL(_tmTz, CAP_MAX_TimeAndTimezoneLength);
+    OCTET_STRING_DECL(_tmTz, CAPConst::MAX_TimeAndTimezoneLength);
     OCTET_STRING_DECL(_tPSMSI, 1);
     OCTET_STRING_DECL(_tPPid, 1);
     OCTET_STRING_DECL(_tPDCSch, 1);
@@ -130,7 +132,7 @@ void SMSInitialDPArg::setCallingPartyNumber(const char * text)
 void SMSInitialDPArg::setIMSI(const std::string& imsi) throw(CustomException)
 {
     //smsc_log_debug( compLogger, "IMSI: %s (%d)", imsi.c_str(), imsi.length());
-    if (((imsi.length() + 1)/2) > CAP_MAX_IMSILength)
+    if (((imsi.length() + 1)/2) > MAPConst::MAX_IMSI_AddressLength)
         throw CustomException("IDPMSArg: IMSI length is too long: %u", imsi.length());
 
     ZERO_OCTET_STRING(comp->_iMSI);

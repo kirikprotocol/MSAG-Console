@@ -17,6 +17,8 @@
 namespace smsc  {
 namespace inman {
 
+using smsc::util::IMSIString;
+
 using smsc::inman::comp::chsri::CHSendRoutingInfoRes;
 using smsc::inman::comp::chsri::CHSendRoutingInfoArg;
 
@@ -61,7 +63,7 @@ private:
     GsmSCFinfo      scfInfo;
     SRI_CSIListener * csiHdl;
     std::string     subcrAddr;
-    char            subcrImsi[MAP_MAX_IMSI_AddressValueLength + 1];
+    IMSIString      subcrImsi;
     Logger *        logger;
 };
 

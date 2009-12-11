@@ -7,13 +7,9 @@
 
 #include "util/TonNpiAddress.hpp"
 using smsc::util::TonNpiAddress;
+using smsc::util::CAPConst;
 
 #include "inman/inap/SS7Types.hpp"
-
-#define CAP_MAX_LocationNumber_Length   8
-#define CAP_MAX_TimeAndTimezoneLength   8
-#define CAP_MAX_IMSILength              8
-
 
 namespace smsc {
 namespace cvtutil {
@@ -65,7 +61,7 @@ struct TONNPI_OCT { // MSB -> LSB
 
 struct TONNPI_ADDRESS_OCTS {
   TONNPI_OCT  b0;
-  uint8_t     val[CAP_MAX_SMS_AddressStringLength];  //MAX_ADDRESS_VALUE_LENGTH/2
+  uint8_t     val[CAPConst::MAX_SMS_AddressStringLength];  //MAX_ADDRESS_VALUE_LENGTH/2
 
   TONNPI_ADDRESS_OCTS()
   { val[0] = 0; }
@@ -128,7 +124,7 @@ struct LOCATION_ADDRESS_INDS {
 
 struct LOCATION_ADDRESS_OCTS {
   LOCATION_ADDRESS_INDS   ind;
-  uint8_t                 val[CAP_MAX_LocationNumber_Length]; /* address */
+  uint8_t                 val[CAPConst::MAX_LocationNumberLength]; /* address */
 };
 
 

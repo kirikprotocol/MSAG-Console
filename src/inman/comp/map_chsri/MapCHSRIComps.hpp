@@ -6,6 +6,7 @@
 #define __SMSC_INMAN_MAPCHSRI_COMPS_HPP__
 
 #include "logger/Logger.h"
+#include "inman/GsmSCFInfo.hpp"
 #include "inman/common/adrutil.hpp"
 #include "inman/comp/compdefs.hpp"
 #include "inman/comp/MapOpErrors.hpp"
@@ -15,7 +16,10 @@ namespace inman {
 namespace comp {
 namespace chsri {
 
+using smsc::util::IMSIString;
+using smsc::util::MAPConst;
 using smsc::logger::Logger;
+using smsc::inman::GsmSCFinfo;
 using smsc::inman::comp::Component;
 using smsc::inman::comp::MAPComponent;
 using smsc::inman::comp::MAPOpErrorId;
@@ -79,22 +83,22 @@ public:
         : compLogger(use_log ? use_log : 
                  Logger::getInstance("smsc.inman.comp.CHSRIRes"))
     {
-        mask.value = o_imsi[0] = 0;
+        mask.value = 0;
     }
     ~CHSendRoutingInfoRes()
     {}
 
     unsigned short getSCFinfo(GsmSCFinfo * scf_dat) const;
-    unsigned short getIMSI(char *imsi) const;
+    unsigned short getIMSI(IMSIString & out_imsi) const;
     unsigned short getVLRN(TonNpiAddress & vlr_n) const;
 
 
     void decode(const std::vector<unsigned char>& buf) throw(CustomException);
     void mergeSegment(Component * segm) throw(CustomException);
 
-    inline bool hasIMSI(void) const { return mask.st.imsi; }
-    inline bool hasOCSI(void) const { return mask.st.o_csi; }
-    inline bool hasVLRN(void) const { return mask.st.n_vlr; }
+    bool hasIMSI(void) const { return mask.st.imsi; }
+    bool hasOCSI(void) const { return mask.st.o_csi; }
+    bool hasVLRN(void) const { return mask.st.n_vlr; }
 
 private:
     union {
@@ -107,7 +111,7 @@ private:
     } mask;
     TonNpiAddress vlrNum;   //VLR number
     GsmSCFinfo    o_csi;
-    char          o_imsi[MAP_MAX_IMSI_AddressValueLength + 1];
+    IMSIString    o_imsi;
     Logger*	  compLogger;
 };
 

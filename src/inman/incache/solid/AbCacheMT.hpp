@@ -20,11 +20,6 @@ using smsc::core::synchronization::EventMonitor;
 
 #include "inman/common/adrutil.hpp"
 #include "inman/common/cvtutil.hpp"
-using smsc::cvtutil::TONNPI_ADDRESS_OCTS;
-using smsc::cvtutil::packMAPAddress2OCTS;
-using smsc::cvtutil::unpackOCTS2MAPAddress;
-using smsc::cvtutil::packNumString2BCD;
-using smsc::cvtutil::unpackBCD2NumString;
 
 #include "inman/incache/AbCacheDefs.hpp"
 #define HFREHASH_LOG_ON
@@ -33,6 +28,14 @@ using smsc::cvtutil::unpackBCD2NumString;
 namespace smsc {
 namespace inman {
 namespace cache {
+
+using smsc::util::MAPConst;
+
+using smsc::cvtutil::TONNPI_ADDRESS_OCTS;
+using smsc::cvtutil::packMAPAddress2OCTS;
+using smsc::cvtutil::unpackOCTS2MAPAddress;
+using smsc::cvtutil::packNumString2BCD;
+using smsc::cvtutil::unpackBCD2NumString;
 
 class AbonentCacheMTR: public AbonentCacheITF {
 public:
@@ -59,7 +62,7 @@ protected:
     //maintain signals of ISDN International address as its BCD form
     class AbonentHashKey : public AbonentId, public HashFileKeyITF {
     public:
-        static const uint32_t _maxSize = MAP_MAX_ISDN_AddressLength;
+        static const uint32_t _maxSize = MAPConst::MAX_ISDN_AddressLength;
 
     private:
         using AbonentId::operator==; //hide it to avoid annoying CC warnings
@@ -138,7 +141,7 @@ protected:
     public:
         static const uint32_t _maxSize = sizeof(time_t) + 1 + 1 
             + (TDPCategory::dpRESERVED_MAX - 1)
-                * (1 + sizeof(uint32_t) + 1 + MAP_MAX_ISDN_AddressLength);
+                * (1 + sizeof(uint32_t) + 1 + MAPConst::MAX_ISDN_AddressLength);
 
         AbonentHashData() : AbonentRecord()
         { }
@@ -185,7 +188,7 @@ protected:
                         gsmSCF.serviceKey = (uint32_t)fh.ReadNetInt32();
                         uint8_t len = fh.ReadByte();
                         rv += 5;
-                        if (len && (len <= MAP_MAX_ISDN_AddressLength)) {
+                        if (len && (len <= MAPConst::MAX_ISDN_AddressLength)) {
                             uint8_t oct_buf[sizeof(TONNPI_ADDRESS_OCTS)];
                             fh.Read(oct_buf, len);
                             rv += len;
@@ -221,7 +224,7 @@ protected:
 
                         uint8_t oct_buf[sizeof(TONNPI_ADDRESS_OCTS)];
                         unsigned len = packMAPAddress2OCTS(it->second.scfAddress, oct_buf);
-                        if ((len > 1) && (len <= MAP_MAX_ISDN_AddressLength)) {
+                        if ((len > 1) && (len <= MAPConst::MAX_ISDN_AddressLength)) {
                             fh.WriteByte((uint8_t)len);
                             fh.Write(oct_buf, len);
                             sz += len;
