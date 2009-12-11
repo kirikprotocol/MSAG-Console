@@ -8,6 +8,7 @@ static char const ident[] = "$Id$";
 #include "mtsmsme/processor/TCO.hpp"
 #include "mtsmsme/comp/ReportSmDeliveryStatus.hpp"
 #include "mtsmsme/comp/UpdateLocation.hpp"
+#include "mtsmsme/comp/SendRoutingInfo.hpp"
 #include "sms/sms.h"
 #include <string>
 CPPUNIT_TEST_SUITE_REGISTRATION(AmericaTestFixture);
@@ -353,4 +354,25 @@ void AmericaTestFixture::dialogue_limit_check()
   TSM* nulltsm = 0;
   nulltsm = mtsms.TC_BEGIN(shortMsgGatewayContext_v2);
   CPPUNIT_ASSERT( nulltsm == 0);
+}
+void sendRoutingInfo_arg_encoding()
+{
+  smsc_log_debug(logger, "======== AmericaTestFixture::sendRoutingInfo_arg_encoding ========\n");
+  using smsc::mtsmsme::comp::SendRoutingInfoReq;
+  using smsc::mtsmsme::processor::util::dump;
+
+  SendRoutingInfoReq req;
+  vector<unsigned char> result ;
+  req.encode(result);
+  smsc_log_debug(logger,"encoded SendRoutingInfoReq[%d]={%s}",
+                        result.size(),
+                        dump((uint16_t)result.size(),&result[0]).c_str());
+  uint8_t expected_data[] = {
+    //0xa1, 0x1d, 0x02, 0x01, 0x01, 0x02, 0x01, 0x16,
+      0x30, 0x15, 0x80, 0x07, 0x91, 0x97, 0x31, 0x21,
+      0x37, 0x99, 0xf6, 0x83, 0x01, 0x00, 0x86, 0x07,
+      0x91, 0x97, 0x31, 0x89, 0x96, 0x89, 0xf1
+  };
+  vector<unsigned char> expected(expected_data, expected_data + sizeof(expected_data) / sizeof(unsigned char));
+  CPPUNIT_ASSERT( expected == result);
 }

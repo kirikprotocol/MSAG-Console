@@ -12,6 +12,7 @@ class AmericaTestFixture : public CppUnit::TestFixture {
   CPPUNIT_TEST (reportSMDeliveryStatus_arg_decoding);
   CPPUNIT_TEST (sendRoutingInfoForSM_sending);
   CPPUNIT_TEST (updateLocation_dialogue_cleanup);
+  CPPUNIT_TEST (sendRoutingInfo_arg_encoding);
   CPPUNIT_TEST_SUITE_END ();
 public:
   class SccpSenderImpl;
@@ -23,6 +24,7 @@ protected:
   void reportSMDeliveryStatus_arg_decoding(void);
   void sendRoutingInfoForSM_sending(void);
   void updateLocation_dialogue_cleanup(void);
+  void sendRoutingInfo_arg_encoding(void);
   void dialogue_limit_check(void);
 private:
   Logger* logger;
