@@ -68,14 +68,9 @@ void XMLBasicHandler::insertPlacement(PlacementArray* pa, const Placement& p)
 
 uint32_t XMLBasicHandler::getKind(const std::string& s)
 {
-    if(!s.compare("address_place"))
-        return PlacementKind::ADDR;
-    // else if(!s.compare("usr_place"))
-    // return PlacementKind::USR;
-    else if(!s.compare("route_id_place"))
-        return PlacementKind::ROUTE_ID;
-    else if(!s.compare("service_id_place"))
-        return PlacementKind::SERVICE_ID;
+    if(s.compare("address_place") == 0)    return PlacementKind::ADDR;
+    if(s.compare("route_id_place") == 0)   return PlacementKind::ROUTE_ID;
+    if(s.compare("service_id_place") == 0) return PlacementKind::SERVICE_ID;
     return PlacementKind::UNKNOWN;
 }
 
@@ -120,7 +115,7 @@ bool XMLBasicHandler::getBool(AttributeList& attrs, const char *v, bool def)
 
 void XMLBasicHandler::startElement(const XMLCh* const nm, AttributeList& attrs)
 {
-    //uint32_t i;
+    uint32_t placeKind;
     StrX XMLQName(nm);
     const char *qname = XMLQName.localForm();
 
@@ -146,8 +141,9 @@ void XMLBasicHandler::startElement(const XMLCh* const nm, AttributeList& attrs)
         else
             throw Exception("Invalid XML address_prefix: No route id");
     }
-    else if(int i = getKind(qname) != PlacementKind::UNKNOWN)
-        handlePlacement(i, attrs);
+    else if((placeKind = getKind(qname)) != PlacementKind::UNKNOWN) {
+          handlePlacement(placeKind, attrs);
+    }
     else if(!strcmp(qname, "route"))
     {
         StrX s = attrs.getValue("name");
