@@ -38,20 +38,21 @@ public:
                      |          |                                      |                                    |
                       ---------  -- processed by load()/save() method --
 */
-class INPPacketAC : public SerializablePacketAC { //[0] = header, [1] = cmdObject
+class INPPacketAC : public SerializablePacket_T<2> { //[0] = header, [1] = cmdObject
 public:
-    INPPacketAC() { Resize(2); }
+    INPPacketAC()
+    { }
    
-    INPHeaderAC * pHdr(void) { return at(0); }
-    INPCommandAC * pCmd(void) { return static_cast<INPCommandAC*>(at(1)); }
+    INPHeaderAC * pHdr(void) const { return static_cast<INPHeaderAC*>(getObj(0)); }
+    INPCommandAC * pCmd(void) const { return static_cast<INPCommandAC*>(getObj(1)); }
 
     //SerializablePacketAC interface implementation
-    void serialize(ObjectBuffer& out_buf) throw(SerializerException)
+    void serialize(ObjectBuffer& out_buf) const throw(SerializerException)
     {
-        out_buf << at(1)->Id();
-        out_buf << at(0)->Id();
-        at(0)->save(out_buf);
-        at(1)->save(out_buf);
+        out_buf << getObj(1)->Id();
+        out_buf << getObj(0)->Id();
+        getObj(0)->save(out_buf);
+        getObj(1)->save(out_buf);
     }
 };
 
@@ -64,14 +65,19 @@ protected:
     _Command pckCmd;
 
 public:
-    INPSolidPacketT() : INPPacketAC()
-        { referObj(0, pckHdr); referObj(1, pckCmd); }
+    INPSolidPacketT()
+      : INPPacketAC()
+    { referObj(0, pckHdr); referObj(1, pckCmd); }
     //constructor for copying
-    INPSolidPacketT(const INPSolidPacketT &org_pck) : INPPacketAC(org_pck)
-        { referObj(0, pckHdr); referObj(1, pckCmd); } //fix at([01]) references
+    INPSolidPacketT(const INPSolidPacketT &org_pck)
+      : INPPacketAC(org_pck)
+    { referObj(0, pckHdr); referObj(1, pckCmd); }
 
     _Header &  Hdr() { return pckHdr; }
     _Command & Cmd() { return pckCmd; }
+
+    const _Header &  Hdr() const { return pckHdr; }
+    const _Command & Cmd() const { return pckCmd; }
 };
 
 //INMan Protocol CommandSet: factory of commands and their subobjects
@@ -80,8 +86,7 @@ protected:
     typedef FactoryT<uint32_t, INPPacketAC> PckFactory;
     PckFactory  pckFct;
 
-    uint32_t 
-        mkPckIdx(unsigned short cmd_id, unsigned short hdr_frm) const
+    uint32_t mkPckIdx(unsigned short cmd_id, unsigned short hdr_frm) const
     {
         return ((cmd_id << 16) | (hdr_frm & 0xFFFF));
     }

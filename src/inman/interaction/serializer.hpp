@@ -368,53 +368,125 @@ protected:
 };
 
 
-class SerializablePacketAC : public std::vector<SerializableObjectAC*>  {
+/* -------------------------------------------------------------------------- *
+ * 
+ * -------------------------------------------------------------------------- */
+class SerializablePacketAC /* vector<SerializableObjectAC*> */  {
 protected:
-    std::vector<bool>   ownObj;
+    class Element {
+    protected:
+      bool                    _ownObj;
+      SerializableObjectAC *  _pObj;
+
+    public:
+      Element() : _ownObj(false), _pObj(0)
+      { }
+      ~Element()
+      {
+        reset();
+      }
+
+      SerializableObjectAC * getObj(void) const
+      {
+        return _pObj;
+      }
+      void setObj(SerializableObjectAC *  use_obj)
+      {
+        _ownObj = true; _pObj = use_obj;
+      }
+      void refObj(SerializableObjectAC *  use_obj)
+      {
+        _ownObj = false; _pObj = use_obj;
+      }
+
+      SerializableObjectAC * release(void)
+      {
+        SerializableObjectAC * tmp = _pObj;
+        _ownObj = false; _pObj = NULL;
+        return tmp;
+      }
+
+      void reset(void)
+      {
+        if (_ownObj)
+          delete _pObj;
+        _ownObj = false; _pObj = NULL;
+      }
+    };
+
+    virtual unsigned size(void) const = 0;
+    virtual const Element & at(unsigned use_idx) const = 0;
+    virtual Element & at(unsigned use_idx) = 0;
 
 public:
-    virtual void serialize(ObjectBuffer& out_buf) throw(SerializerException) = 0;
+    virtual void serialize(ObjectBuffer& out_buf) const throw(SerializerException) = 0;
 
-    void Resize(unsigned sz)
+
+    bool checkIndex(unsigned use_idx) const
     {
-        resize(sz, NULL);
-        ownObj.resize(sz, false);
+      return (use_idx < size());
+    }
+    SerializableObjectAC * getObj(unsigned use_idx) const
+    {
+      return checkIndex(use_idx) ? at(use_idx).getObj() : 0;
     }
 
-    //NOTE: it's a caller responsibility to check for index range!!!
-    SerializableObjectAC* releaseObj(unsigned idx)
+    SerializableObjectAC * releaseObj(unsigned use_idx)
     {
-        SerializableObjectAC* pObj = at(idx);
-        at(idx) = NULL; ownObj[idx] = false;
-        return pObj;
+      return checkIndex(use_idx) ? at(use_idx).release() : 0;
     }
     //Deletes old object if any.
-    void resetObj(unsigned idx)
+    void resetObj(unsigned use_idx)
     { 
-        if (ownObj[idx] && at(idx)) {
-            delete at(idx); at(idx) = NULL; ownObj[idx] = false;
-        } 
+      if (checkIndex(use_idx))
+        at(use_idx).reset();
     }
-    //Returns object Id, or zero in case of error
-    unsigned short referObj(unsigned idx, SerializableObjectAC & use_obj)
+    //Returns false in case of invalid index
+    bool referObj(unsigned use_idx, SerializableObjectAC & use_obj)
     {
-        resetObj(idx);
-        return (!(at(idx) = &use_obj) ? 0 : use_obj.Id());
+      if (checkIndex(use_idx)) {
+        at(use_idx).refObj(&use_obj);
+        return true;
+      }
+      return false;
     }
-    //Returns object Id, or zero in case of error
-    unsigned short assignObj(unsigned idx, SerializableObjectAC * use_obj)
+    //Sets object and gives ownership of it
+    //Returns false in case of invalid index
+    bool assignObj(unsigned use_idx, SerializableObjectAC & use_obj)
     {
-        resetObj(idx);
-        unsigned short objId;
-        ownObj[idx] = (objId = (!(at(idx) = use_obj)) ? 0 : use_obj->Id()) ? true : false;
-        return objId;
+      if (checkIndex(use_idx)) {
+        at(use_idx).setObj(&use_obj);
+        return true;
+      }
+      return false;
     }
 
     virtual ~SerializablePacketAC()
-    {
-        for (unsigned i = 0; i < size(); i++)
-            resetObj(i);
-    }
+    { }
+};
+
+template <unsigned _SizeTArg>
+class SerializablePacket_T : public SerializablePacketAC {
+private:
+  Element  _elem[_SizeTArg];
+
+protected:
+  unsigned size(void) const { return _SizeTArg; }
+  const Element & at(unsigned use_idx) const { return _elem[use_idx]; }
+  virtual Element & at(unsigned use_idx) { return _elem[use_idx]; }
+
+public:
+  SerializablePacket_T()
+  {
+    for (unsigned i = 0; i < _SizeTArg; ++i)
+      new (_elem + i)Element();
+  }
+
+  virtual ~SerializablePacket_T()
+  {
+    for (unsigned i = 0; i < _SizeTArg; ++i)
+      _elem[i].~Element();
+  }
 };
 
 //Serializer interface:

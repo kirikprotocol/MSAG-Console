@@ -65,23 +65,25 @@ protected:
        |                                           |
            -- processed by load()/save() method --
 */
-class USSPacketAC : public SerializablePacketAC { //[0] = cmdObject
+class USSPacketAC : public SerializablePacket_T<1> { //[0] = cmdObject
 protected:
     uint32_t    dlgId;
 
 public:
-    USSPacketAC(uint32_t dlg_id = 0) : dlgId(dlg_id) { Resize(1); }
+    USSPacketAC(uint32_t dlg_id = 0) : dlgId(dlg_id)
+    { }
    
-    SerializableObjectAC * pCmd(void) { return at(0); }
+    SerializableObjectAC * const pCmd(void) { return getObj(0); }
+
     uint32_t dialogId(void) const { return dlgId; }
     void setDialogId(uint32_t dlg_id) { dlgId = dlg_id; }
 
     //SerializablePacketAC interface implementation
-    void serialize(ObjectBuffer& out_buf) throw(SerializerException)
+    void serialize(ObjectBuffer& out_buf) const throw(SerializerException)
     {
-        out_buf << at(0)->Id();
+        out_buf << getObj(0)->Id();
         out_buf << dlgId;
-        at(0)->save(out_buf);
+        getObj(0)->save(out_buf);
     }
 };
 
@@ -99,6 +101,7 @@ public:
         { referObj(0, pckCmd); } //fix at(0) reference
 
     _Command & Cmd(void) { return pckCmd; }
+    const _Command & Cmd() const { return pckCmd; }
 };
 
 // --------------------------------------------------------- //

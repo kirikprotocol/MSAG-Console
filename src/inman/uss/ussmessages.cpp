@@ -98,7 +98,7 @@ SerializablePacketAC* SerializerUSS::deserialize(ObjectBuffer& in) const
   obj->load(in);  //throws
 
   std::auto_ptr<USSPacketAC> pck(new USSPacketAC(reqId));
-  pck->assignObj(0, obj.release());
+  pck->assignObj(0, *obj.release());
 //  smsc_log_debug(_logger, "SerializerUSS::deserialize::: return new packet");
   return pck.release();
 }
