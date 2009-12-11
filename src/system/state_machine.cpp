@@ -5732,10 +5732,10 @@ bool StateMachine::processMerge(SbmContext& c)
   {
     info2(smsLog, "merging sms Id=%lld, first part arrived(%u/%u),mr=%d,dc=%d",c.t.msgId,idx,num,(int)mr,dc);
     c.sms->setIntProperty(Tag::SMPP_ESM_CLASS,c.sms->getIntProperty(Tag::SMPP_ESM_CLASS)&~0x40);
-    string tmp;
+    TmpBuf<char,2048> tmp(0);
     if(!c.isForwardTo)
     {
-      tmp.assign((const char*)body,len);
+      tmp.Append((const char*)body,len);
     }else
     {
       unsigned lenMo;
@@ -5744,11 +5744,11 @@ bool StateMachine::processMerge(SbmContext& c)
       {
         warn2(smsLog,"MO LEN=%d",lenMo);
       }
-      tmp.assign(bodyMo,lenMo);
+      tmp.Append(bodyMo,lenMo);
       c.sms->setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::BINARY);
       dc=DataCoding::BINARY;
     }
-    c.sms->setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,tmp.c_str(),(unsigned)tmp.length());
+    c.sms->setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,tmp.get(),(unsigned)tmp.GetPos());
     c.sms->getMessageBody().dropProperty(Tag::SMPP_SHORT_MESSAGE);
     c.sms->getMessageBody().dropProperty(Tag::SMSC_RAW_SHORTMESSAGE);
     c.sms->setIntProperty(Tag::SMPP_SM_LENGTH,0);
@@ -5927,9 +5927,9 @@ bool StateMachine::processMerge(SbmContext& c)
       }
     }
 
-    string tmp;
-    tmp.assign((const char*)newbody,newlen);
-    tmp.append((const char*)body,len);
+    TmpBuf<char,2048> tmp(newlen+len);
+    tmp.Append((const char*)newbody,newlen);
+    tmp.Append((const char*)body,len);
     ci->setOff(ci->num,newlen);
     ci->num++;
     bool allParts=ci->num==num;
@@ -5961,7 +5961,7 @@ bool StateMachine::processMerge(SbmContext& c)
           uint16_t mr0;
           uint8_t idx0,num0;
           bool havemoreudh0;
-          smsc::util::findConcatInfo((unsigned char*)tmp.c_str()+ci->getOff(i),mr0,idx0,num0,havemoreudh0);
+          smsc::util::findConcatInfo((unsigned char*)tmp.get()+ci->getOff(i),mr0,idx0,num0,havemoreudh0);
           __trace2__("SUBMIT_SM: merge check order %d:%d",i,idx0);
           totalMoreUdh=totalMoreUdh || havemoreudh0;
           order.push_back(idx0);
@@ -5981,7 +5981,7 @@ bool StateMachine::processMerge(SbmContext& c)
           __trace__("SUBMIT_SM: not right order - need to reorder");
           //average number of parts is 2-3. so, don't f*ck mind with quick sort and so on.
           //maximum is 255.  65025 comparisons. not very good, but not so bad too.
-          string newtmp;
+          TmpBuf<char,2048> newtmp(0);
           uint16_t newci[256];
 
           for(unsigned i=1;i<=num;i++)
@@ -5990,9 +5990,9 @@ bool StateMachine::processMerge(SbmContext& c)
             {
               if(order[j]==i)
               {
-                int partlen=j==num-1?(int)tmp.length()-ci->getOff(j):ci->getOff(j+1)-ci->getOff(j);
-                newci[i-1]=(uint16_t)newtmp.length();
-                newtmp.append(tmp.c_str()+ci->getOff(j),partlen);
+                int partlen=j==num-1?(int)tmp.getSize()-ci->getOff(j):ci->getOff(j+1)-ci->getOff(j);
+                newci[i-1]=(uint16_t)newtmp.GetPos();
+                newtmp.Append(tmp.get()+ci->getOff(j),partlen);
 
               }
             }
@@ -6002,25 +6002,27 @@ bool StateMachine::processMerge(SbmContext& c)
           {
             ci->setOff(i,newci[i]);
           }
-          tmp=newtmp;
+          tmp.SetPos(0);
+          tmp.Append(newtmp.get(),newtmp.GetPos());
         }
       }//isForwardTo
       newsms.setIntProperty(Tag::SMSC_MERGE_CONCAT,3); // final state
       if(!totalMoreUdh && !differentDc && !haveBinDc)//make single text message
       {
-        string newtmp;
+        TmpBuf<char,2048> newtmp(0);
         for(int i=1;i<=ci->num;i++)
         {
-          int partlen=i==num?(int)tmp.length()-ci->getOff(i-1):ci->getOff(i)-ci->getOff(i-1);
-          const unsigned char * part=(const unsigned char *)tmp.c_str()+ci->getOff(i-1);
+          int partlen=i==num?(int)tmp.GetPos()-ci->getOff(i-1):ci->getOff(i)-ci->getOff(i-1);
+          const unsigned char * part=(const unsigned char *)tmp.get()+ci->getOff(i-1);
           partlen-=*part+1;
           part+=*part+1;
-          newtmp.append((const char*)part,partlen);
+          newtmp.Append((const char*)part,partlen);
         }
-        tmp=newtmp;
+        tmp.SetPos(0);
+        tmp.Append(newtmp.get(),newtmp.GetPos());
         newsms.messageBody.dropProperty(Tag::SMSC_CONCATINFO);
         newsms.messageBody.dropIntProperty(Tag::SMSC_MERGE_CONCAT);
-        newsms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,tmp.c_str(),(int)tmp.length());
+        newsms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,tmp.get(),(int)tmp.GetPos());
         try{
           processDirectives(newsms,c.profile,c.srcprof);
         }catch(...)
@@ -6056,7 +6058,7 @@ bool StateMachine::processMerge(SbmContext& c)
         */
       }else
       {
-        newsms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,tmp.c_str(),(int)tmp.length());
+        newsms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,tmp.get(),(int)tmp.GetPos());
         if(!c.isForwardTo)
         {
           newsms.setIntProperty(Tag::SMPP_ESM_CLASS,newsms.getIntProperty(Tag::SMPP_ESM_CLASS)|0x40);
@@ -6064,7 +6066,7 @@ bool StateMachine::processMerge(SbmContext& c)
       }
     }else
     {
-      newsms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,tmp.c_str(),(int)tmp.length());
+      newsms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,tmp.get(),(int)tmp.GetPos());
     }
     try{
       store->replaceSms(c.t.msgId,newsms);
