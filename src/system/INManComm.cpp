@@ -47,10 +47,10 @@ void INManComm::Init(const char* argHost,int argPort)
 template <class OpClass>
 static void FillChargeOp(SMSId id,OpClass& op,const SMS& sms)
 {
-  op.setDestinationSubscriberNumber(sms.getDealiasedDestinationAddress().toString());
-  op.setCallingPartyNumber(sms.getOriginatingAddress().toString());
+  op.setDestinationSubscriberNumber(sms.getDealiasedDestinationAddress().toString().c_str());
+  op.setCallingPartyNumber(sms.getOriginatingAddress().toString().c_str());
   op.setCallingIMSI(sms.getOriginatingDescriptor().imsi);
-  op.setSMSCAddress(INManComm::scAddr.toString());
+  op.setSMSCAddress(INManComm::scAddr.toString().c_str());
   op.setSubmitTimeTZ(sms.getSubmitTime());
   op.setTPShortMessageSpecificInfo(0x11);
   op.setTPProtocolIdentifier(sms.getIntProperty(Tag::SMPP_PROTOCOL_ID));
@@ -189,7 +189,7 @@ void INManComm::FullReport(SMSId id,const SMS& sms)
   pck.Cmd().setDestSMEid(sms.getDestinationSmeId());
   pck.Cmd().setDeliveryTime(time(NULL));
   if(sms.hasStrProperty(Tag::SMSC_DIVERTED_TO))
-    pck.Cmd().setDivertedAdr(sms.getStrProperty(Tag::SMSC_DIVERTED_TO));
+    pck.Cmd().setDivertedAdr(sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str());
   smsc::inman::interaction::ObjectBuffer buf(200);
   pck.serialize(buf);
   packetWriter.enqueue((const char*)buf.get(),buf.getDataSize());
@@ -209,7 +209,7 @@ void INManComm::Report(int dlgId,const SMS& sms,bool final)
   pck.Cmd().setDeliveryTime(time(NULL));
   pck.Cmd().setFinal(final);
   if(sms.hasStrProperty(Tag::SMSC_DIVERTED_TO))
-    pck.Cmd().setDivertedAdr(sms.getStrProperty(Tag::SMSC_DIVERTED_TO));
+    pck.Cmd().setDivertedAdr(sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str());
 
   smsc::inman::interaction::ObjectBuffer buf(200);
   pck.serialize(buf);
