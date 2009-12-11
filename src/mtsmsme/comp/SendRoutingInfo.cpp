@@ -3,6 +3,8 @@ static char const ident[] = "$Id$";
 #include "mtsmsme/comp/SendRoutingInfo.hpp"
 
 namespace smsc{namespace mtsmsme{namespace comp{
+using smsc::mtsmsme::processor::util::packNumString2BCD91;
+
 SendRoutingInfoReq::SendRoutingInfoReq()
 {
   char* msisdn="648237648723";
