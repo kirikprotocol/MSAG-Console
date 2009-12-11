@@ -214,6 +214,7 @@ inline void Serialize(const SMS& sms,BufOps::SmsBuffer& dst)
           uint16_t tag=(uint16_t)(i|(SMS_BIN_TAG<<8));
           dst<<tag;
           uint32_t len=(uint32_t)(prop.properties[i].xValue.length());
+          dst<<len;
           dst.Append(prop.properties[i].xValue.data(),len);
         }break;
       }
