@@ -142,6 +142,7 @@ struct FixedLengthString{
   {
     return !str[0];
   }
+  size_t capacity() const { return N; }
 };
 
 }//namespace buffers
