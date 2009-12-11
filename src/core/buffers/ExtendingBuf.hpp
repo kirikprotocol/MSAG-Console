@@ -22,25 +22,26 @@ namespace buffers {
 // 
 template <typename T, unsigned SZ /*stackBufSZ*/> class ExtendingBuffer {
 protected:
-    T   stackBuf[SZ];
-    T*  heapBuf;
-    unsigned heapBufSz;  //actual size of allocated buffer
-    T*  dataBuf;
-    unsigned pos;        //current position within buffer for reading/writing data
-    unsigned dataSz;     //effective size of data in buffer (stack or heap), starting from pos = 0
+    union {
+      T         buf[SZ];
+      uint64_t  aligner;
+    } _stack;
+
+    T *       heapBuf;
+    unsigned  heapBufSz;  //actual size of allocated buffer
+    T *       dataBuf;
+    unsigned  pos;        //current position within buffer for reading/writing data
+    unsigned  dataSz;     //effective size of data in buffer (stack or heap), starting from pos = 0
 
 public:
     explicit ExtendingBuffer(unsigned size = SZ)
+      : heapBuf(0), heapBufSz(0), dataBuf(_stack.buf), pos(0), dataSz(0)
     {
+        _stack.aligner = 0;
         if (size > SZ) {
             dataBuf = heapBuf = new T[size];
             heapBufSz = size;
-        } else {
-            heapBuf = 0;
-            heapBufSz = 0;
-            dataBuf = stackBuf;
         }
-        pos = dataSz = 0;
     }
 
     ~ExtendingBuffer()
@@ -181,7 +182,6 @@ public:
         Write(pos, data, count);
         return (pos += count);
     }
-
 
     operator T* () { return dataBuf; }
 
