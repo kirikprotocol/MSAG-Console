@@ -132,6 +132,10 @@ struct FixedLengthString{
   {
     str[0]=0;
   }
+  bool empty() const
+  {
+    return !str[0];
+  }
 };
 
 }//namespace buffers
