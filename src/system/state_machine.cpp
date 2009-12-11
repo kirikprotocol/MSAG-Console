@@ -5990,7 +5990,7 @@ bool StateMachine::processMerge(SbmContext& c)
             {
               if(order[j]==i)
               {
-                int partlen=j==num-1?(int)tmp.getSize()-ci->getOff(j):ci->getOff(j+1)-ci->getOff(j);
+                int partlen=j==num-1?(int)tmp.GetPos()()-ci->getOff(j):ci->getOff(j+1)-ci->getOff(j);
                 newci[i-1]=(uint16_t)newtmp.GetPos();
                 newtmp.Append(tmp.get()+ci->getOff(j),partlen);
 
