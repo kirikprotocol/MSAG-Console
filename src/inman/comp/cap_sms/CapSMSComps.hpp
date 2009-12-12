@@ -161,7 +161,7 @@ public:
     void setCallingPartyNumber(const char * text);
 
     //imsi contains sequence of ASCII digits
-    void setIMSI(const std::string& imsi) throw(CustomException);
+    void setIMSI(const IMSIString & imsi) throw(CustomException);
 
     void setSMSCAddress(const TonNpiAddress& addr);
     void setSMSCAddress(const char * text);
@@ -225,7 +225,7 @@ public:
     { }
 
     const SMSEventDPs& SMSEvents(void) const { return events; }
-    const std::string & printEvents(std::string & dump);
+    std::string & printEvents(std::string & dump) { return events.print(dump); }
 
     void  decode(const std::vector<unsigned char>& buf) throw(CustomException);
 

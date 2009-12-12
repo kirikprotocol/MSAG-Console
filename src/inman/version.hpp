@@ -3,8 +3,8 @@
 #define __SMSC_INMAN_VERSION__
 
 /* -- NOTE: these defines must be set by release builder -- */
-#define INMAN_BUILD_NUM   3113
-#define INMAN_BUILD_DATE  "Oct 16 2009"
+#define INMAN_BUILD_NUM   3117
+#define INMAN_BUILD_DATE  "Dec 12 2009"
 /* -- -------------------------------------------------- -- */
 
 /* -- NOTE: these defines are set by developers -- */

@@ -10,21 +10,6 @@ namespace smsc {
 namespace inman {
 namespace comp {
 
-const std::string & SMSRequestReportEventArg::printEvents(std::string & dump)
-{
-    SMSEventDPs::const_iterator it = events.begin();
-    for (short i = 0; it != events.end(); it++, i++) {
-        if (i)
-            dump += ", ";
-        dump += "{";
-        dump += _nmEventTypeSMS(it->first);
-        dump += ", ";
-        dump += _nmMonitorMode(it->second);
-        dump += "}";
-    }
-    return dump;
-}
-
 void SMSRequestReportEventArg::decode(const std::vector<unsigned char>& buf) throw(CustomException)
 {
     RequestReportSMSEventArg_t *dcmd = 0;

@@ -16,7 +16,6 @@ namespace interaction {
 using smsc::util::TonNpiAddressString;
 
 using smsc::util::IMSIString;
-using smsc::util::MSCAddress;
 using smsc::inman::SMESysId;
 using smsc::inman::SMRouteId;
 
@@ -107,7 +106,7 @@ private:
   TonNpiAddressString callingPartyNumber;
   IMSIString          callingImsi;
   time_t              submitTimeTZ;
-  MSCAddress          locationInformationMSC; //keeps SRC_MSC
+  TonNpiAddressString locationInformationMSC; //keeps SRC_MSC
   SMESysId            callingSMEid; //"MAP_PROXY"
   SMRouteId           routeId;      //"sibinco.sms > plmn.kem"
   int32_t             serviceId;    //
@@ -147,6 +146,8 @@ public:
         { callingImsi = imsi; }
     void setSubmitTimeTZ(time_t tmVal)
         { submitTimeTZ = tmVal; }
+    //sets SRC_MSC address (either signals (optionally preceeded by ToN & NPi = ".1.1.")
+    //or alphanumeric string)
     void setLocationInformationMSC(const char * src_msc)
         { locationInformationMSC = src_msc; }
     void setCallingSMEid(const char * sme_id)
@@ -228,7 +229,7 @@ private:
                             //enforces CDR generation
     //optional data for CDR generation (on successfull delivery)
     IMSIString          destImsi;
-    MSCAddress          destMSC;
+    TonNpiAddressString destMSC;
     SMESysId            destSMEid;
     TonNpiAddressString divertedAdr;
     time_t              finalTimeTZ;
@@ -241,6 +242,8 @@ public:
     void setResultValue(uint32_t res)           { value = res; }
     void setFinal(bool final_attemp = true)     { final = final_attemp; }
     void setDestIMSI(const char * imsi)         { destImsi = imsi; }
+    //sets DST_MSC address (either signals (optionally preceeded by ToN & NPi = ".1.1.")
+    //or alphanumeric string)
     void setDestMSC(const char * msc)           { destMSC = msc; }
     void setDestSMEid(const char * sme_id)      { destSMEid = sme_id; }
     void setDivertedAdr(const char * dvrt_adr)  { divertedAdr = dvrt_adr; }
@@ -266,7 +269,7 @@ private:
     TonNpiAddressString callingPartyNumber;
     IMSIString          callingImsi;
     time_t              submitTimeTZ;
-    MSCAddress          locationInformationMSC; //keeps SRC_MSC
+    TonNpiAddressString locationInformationMSC; //keeps SRC_MSC
     SMESysId            callingSMEid; //"MAP_PROXY"
     SMRouteId           routeId;      //"sibinco.sms > plmn.kem"
     int32_t             serviceId;    //
@@ -286,7 +289,7 @@ private:
     uint32_t            dlvrRes;    //0, or errorcode
     //optional data for CDR generation (on successfull delivery)
     IMSIString          destImsi;
-    MSCAddress          destMSC;
+    TonNpiAddressString destMSC;
     SMESysId            destSMEid;
     TonNpiAddressString divertedAdr;
     time_t              finalTimeTZ;
@@ -310,6 +313,8 @@ public:
         { callingImsi = imsi; }
     void setSubmitTimeTZ(time_t tmVal)
         { submitTimeTZ = tmVal; }
+    //sets SRC_MSC address (either signals (optionally preceeded by ToN & NPi = ".1.1.")
+    //or alphanumeric string)
     void setLocationInformationMSC(const char * src_msc)
         { locationInformationMSC = src_msc; }
     void setCallingSMEid(const char * sme_id)
@@ -342,6 +347,8 @@ public:
     //Delivery report data setters  ..
     void setResultValue(uint32_t res)           { dlvrRes = res; }
     void setDestIMSI(const char * imsi)         { destImsi = imsi; }
+    //sets DST_MSC address (either signals (optionally preceeded by ToN & NPi = ".1.1.")
+    //or alphanumeric string)
     void setDestMSC(const char * msc)           { destMSC = msc; }
     void setDestSMEid(const char * sme_id)      { destSMEid = sme_id; }
     void setDivertedAdr(const char * dvrt_adr)  { divertedAdr = dvrt_adr; }

@@ -14,15 +14,18 @@ namespace cdr {
 
 using smsc::util::TonNpiAddressString;
 using smsc::util::IMSIString;
-using smsc::util::MSCAddress;
 using smsc::inman::SMESysId;
 using smsc::inman::SMPPServiceType;
 
 extern const char    _CDRRecordHeader_TEXT[];
 
+const unsigned MAX_DPTypeStringLength = (sizeof("dpUSSD(X:%Xh)") + sizeof("FFFFFFFF") + 2);
+
+typedef smsc::core::buffers::FixedLengthString<MAX_DPTypeStringLength> DPTypeString;
+
 struct CDRRecord {
     CDRRecord();
-
+    
     //encodes CDR to CSV format
     static void csvEncode(const CDRRecord & cdr, std::string & rec);
 
@@ -46,7 +49,7 @@ struct CDRRecord {
     //this one is the same as smsc::inman::AbonentContractInfo::ContractType
     enum ContractType { abtUnknown = 0, abtPostpaid = 1, abtPrepaid = 2 };
 
-    std::string dpType(void) const;
+    DPTypeString dpType(void) const;
     const char * nmPolicy(void) const { return nmPolicy(_chargePolicy); }
 
     //basic info:
@@ -63,13 +66,17 @@ struct CDRRecord {
     time_t              _submitTime;    //SUBMIT: sms submit time
     TonNpiAddressString _srcAdr;        //SRC_ADDR: sender number
     IMSIString          _srcIMSI;       //SRC_IMSI: sender IMSI
-    MSCAddress          _srcMSC;        //SRC_MSC: sender MSC
+    TonNpiAddressString _srcMSC;        //SRC_MSC: sender MSC: either signals (optionally
+                                        //  preceeded by ToN & NPi = ".1.1.")
+                                        //  or alphanumeric string)
     SMESysId            _srcSMEid;      //SRC_SME_ID: sender SME identifier
     //recipient info
     time_t              _finalTime;     //FINALIZED: sms delivery time
     TonNpiAddressString _dstAdr;        //DST_ADDR: final recipient number
     IMSIString          _dstIMSI;       //DST_IMSI: recipient IMSI
-    MSCAddress          _dstMSC;        //DST_MSC:	recipient MSC
+    TonNpiAddressString _dstMSC;        //DST_MSC: recipient MSC: either signals (optionally
+                                        //  preceeded by ToN & NPi = ".1.1.")
+                                        //  or alphanumeric string)
     SMESysId            _dstSMEid;      //DST_SME_ID: recipient SME identifier
     uint32_t            _dlvrRes;       //STATUS: delivery status: 0 or error code
     TonNpiAddressString _divertedAdr;   //DIVERTED_FOR: if cdrType == dpDiverted, keeps

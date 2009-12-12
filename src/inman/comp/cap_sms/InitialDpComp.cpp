@@ -129,12 +129,8 @@ void SMSInitialDPArg::setCallingPartyNumber(const char * text)
 }
 
 //imsi contains sequence of ASCII digits
-void SMSInitialDPArg::setIMSI(const std::string& imsi) throw(CustomException)
+void SMSInitialDPArg::setIMSI(const IMSIString & imsi) throw(CustomException)
 {
-    //smsc_log_debug( compLogger, "IMSI: %s (%d)", imsi.c_str(), imsi.length());
-    if (((imsi.length() + 1)/2) > MAPConst::MAX_IMSI_AddressLength)
-        throw CustomException("IDPMSArg: IMSI length is too long: %u", imsi.length());
-
     ZERO_OCTET_STRING(comp->_iMSI);
     comp->_iMSI.size = packNumString2BCD(comp->_iMSI.buf, imsi.c_str(), (unsigned)imsi.length());
     comp->idp.iMSI = &(comp->_iMSI);

@@ -170,7 +170,7 @@ void Billing::handleCommand(INPPacketAC* pck)
                 chgReq->export2CDR(cdr);
                 chgReq->exportCAPInfo(csInfo);
                 chrgFlags = chgReq->getChargingFlags();
-            } catch (SerializerException & exc) {
+            } catch (const SerializerException & exc) {
                 smsc_log_error(logger, "%s: %s", _logId, exc.what());
                 badPdu = true;
             }
@@ -197,7 +197,7 @@ void Billing::handleCommand(INPPacketAC* pck)
                 chgReq->loadDataBuf();
                 chgReq->export2CDR(cdr);
                 chrgFlags = chgReq->getChargingFlags();
-            } catch (SerializerException & exc) {
+            } catch (const SerializerException & exc) {
                 smsc_log_error(logger, "%s: %s", _logId, exc.what());
                 badPdu = true;
             }
@@ -226,7 +226,7 @@ void Billing::handleCommand(INPPacketAC* pck)
             try { 
                 smsRes->loadDataBuf(); 
                 smsRes->export2CDR(cdr);
-            } catch (SerializerException & exc) {
+            } catch (const SerializerException & exc) {
                 smsc_log_error(logger, "%s: %s", _logId, exc.what());
                 badPdu = true;
                 state = Billing::bilAborted;
@@ -298,13 +298,13 @@ unsigned Billing::writeCDR(void)
         TonNpiAddress tna;
         if (tna.fromText(cdr._srcMSC.c_str()))
             cdr._srcMSC = tna.getSignals();
-        else if (cdr._chargeType == CDRRecord::MO_Charge)
-            smsc_log_error(logger, "%s: empty MSC for %s", _logId, abNumber.toString().c_str());
+        else if ((cdr._chargeType == CDRRecord::MO_Charge) && abNumber.interISDN())
+            smsc_log_warn(logger, "%s: empty MSC for %s", _logId, abNumber.toString().c_str());
 
         if (tna.fromText(cdr._dstMSC.c_str()))
             cdr._dstMSC = tna.getSignals();
-        else if (cdr._chargeType == CDRRecord::MT_Charge)
-            smsc_log_error(logger, "%s: empty MSC for %s", _logId, abNumber.toString().c_str());
+        else if ((cdr._chargeType == CDRRecord::MT_Charge) && abNumber.interISDN())
+            smsc_log_warn(logger, "%s: empty MSC for %s", _logId, abNumber.toString().c_str());
 
         _cfg.bfs->bill(cdr); cnt++;
         smsc_log_info(logger, "%s: CDR written: msgId: %llu, status: %u, IN billed: %s, charged: %s",
@@ -397,7 +397,7 @@ RCHash Billing::startCAPSmTask(void)
         default:
             smTask->Arg().setLocationInformationMSC(abCsi.vlrNum);
         }
-        smTask->Arg().setIMSI(abCsi.abRec.getImsi());
+        smTask->Arg().setIMSI(abCsi.abRec.abImsi);
         smTask->Arg().setSMSCAddress(csInfo.smscAddress.c_str());
         smTask->Arg().setTimeAndTimezone(cdr._submitTime);
         smTask->Arg().setTPShortMessageSpecificInfo(csInfo.tpShortMessageSpecificInfo);
@@ -470,9 +470,9 @@ bool Billing::verifyChargeSms(void)
                         cdr._chargeType ? cdr._dstAdr.c_str() : cdr._srcAdr.c_str());
         return false;
     }
-    //check if abonent IMSI is already present
-    abCsi.abRec.setImsi(cdr._chargeType ? cdr._dstIMSI.c_str() : cdr._srcIMSI.c_str());
-    //check if abonent location MSC number is already present
+    //remember IMSI of abonent is to charge (if present)
+    abCsi.abRec.abImsi = cdr._chargeType ? cdr._dstIMSI : cdr._srcIMSI;
+    //remember location MSC of abonent is to charge (if present)
     abCsi.vlrNum.fromText(cdr._chargeType ? cdr._dstMSC.c_str() : cdr._srcMSC.c_str());
 
     smsc_log_info(logger, "%s: %s(%s, %s): '%s' -> '%s'", _logId,
@@ -733,25 +733,24 @@ Billing::PGraphState Billing::chargeResult(bool do_charge, RCHash last_err /* = 
 {
     if (last_err)
         billErr = last_err;
-    std::string reply;
+    state = !do_charge ? Billing::bilReleased : Billing::bilContinued;
 
-    if (!do_charge) {
-        format(reply, "NOT_POSSIBLE (cause %u", billErr);
-        state = Billing::bilReleased;
-    } else {
-        format(reply, "POSSIBLE (via %s, cause %u",
-            (billMode == ChargeParm::bill2CDR) ? "CDR" : abScf->Ident(), billErr);
-        state = Billing::bilContinued;
+    if (logger->isInfoEnabled()) {
+      std::string reply = !do_charge ? 
+                    format("NOT_POSSIBLE (cause %u", billErr) :
+                    format("POSSIBLE (via %s, cause %u", (billMode == ChargeParm::bill2CDR) ?
+                           "CDR" : abScf->Ident(), billErr);
+      if (billErr) {
+          reply += ": ";
+          reply += URCRegistry::explainHash(billErr);
+      }
+      reply += ")";
+      logger->log_(smsc::logger::Logger::LEVEL_INFO, 
+                   "%s: <-- %s %s CHARGING_%s, abonent(%s) type: %s (%u)",
+                   _logId, cdr.dpType().c_str(), cdr._chargeType ? "MT" : "MO",
+                   reply.c_str(), abNumber.getSignals(),
+                   abCsi.abRec.type2Str(), (unsigned)abCsi.abRec.ab_type);
     }
-    if (billErr) {
-        reply += ": ";
-        reply += URCRegistry::explainHash(billErr);
-    }
-    reply += ")";
-    smsc_log_info(logger, "%s: <-- %s %s CHARGING_%s, abonent(%s) type: %s (%u)",
-                _logId, cdr.dpType().c_str(), cdr._chargeType ? "MT" : "MO",
-                reply.c_str(), abNumber.getSignals(),
-                abCsi.abRec.type2Str(), (unsigned)abCsi.abRec.ab_type);
 
     if ((cdr._chargePolicy == CDRRecord::ON_DATA_COLLECTED)
         || (cdr._chargePolicy == CDRRecord::ON_SUBMIT_COLLECTED))

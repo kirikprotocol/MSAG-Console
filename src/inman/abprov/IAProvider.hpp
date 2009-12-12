@@ -29,7 +29,7 @@ struct AbonentSubscription {
     const TonNpiAddress * getVLRNum(void) const
         { return vlrNum.length ? &vlrNum : NULL; }
 
-    std::string vlr2Str(void) const 
+    TonNpiAddressString vlr2Str(void) const 
         { return vlrNum.length ? vlrNum.toString() : "<none>"; }
 };
 
