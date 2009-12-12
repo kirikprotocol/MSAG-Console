@@ -502,4 +502,10 @@ B3116: Dec 8, 2009
     Infosme	separate configs for tasks
     Infosme	optimize siebelTaskManager, fix bug with locked resources
     MCISme	fix for possible lost abonent from delivry
-     
+
+B3117: Dec 9, 2009
+    SMSC	licenselimitation and event queue full errors reporting separated
+    SMSC	inman communication mutex guarding optimization
+    SMSC	std::string replaced in stat save, sms save, inman communication for performance issues
+    INMan	std::string replaced by fixed length string
+    emailsme	proper config init without helpdesk mode
