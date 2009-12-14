@@ -375,3 +375,23 @@ void AmericaTestFixture::sendRoutingInfo_arg_encoding()
   vector<unsigned char> expected(expected_data, expected_data + sizeof(expected_data) / sizeof(unsigned char));
   CPPUNIT_ASSERT( expected == result);
 }
+void AmericaTestFixture::sendRoutingInfo_res_decoding()
+{
+  smsc_log_debug(logger, "======== AmericaTestFixture::sendRoutingInfo_res_decoding ========\n");
+  using smsc::mtsmsme::comp::SendRoutingInfoConf;
+  using smsc::mtsmsme::processor::util::dump;
+
+  unit8_t encoded_data[] = {
+    0xa2, 0x2c, 0x02, 0x01, 0x01, 0x30, 0x27, 0x02,
+    0x01, 0x16, 0xa3, 0x80, 0x89, 0x08, 0x52, 0x00,
+    0x31, 0x03, 0x10, 0x90, 0x88, 0xf6, 0x04, 0x07,
+    0x91, 0x97, 0x31, 0x04, 0x99, 0x78, 0xf0, 0x82,
+    0x07, 0x91, 0x97, 0x31, 0x03, 0x99, 0x99, 0xf2,
+    0x8f, 0x02, 0x04, 0xe0, 0x00, 0x00
+  };
+  vector<unsigned char> encoded(encoded_data, encoded_data + sizeof(encoded_data) / sizeof(unsigned char));
+  SendRoutingInfoConf conf(logger);
+  conf.decode(encoded);
+  char expected_msrn[] = "79134099870";
+  CPPUNIT_ASSERT( expected_msrn == conf.getMSRN());
+}
