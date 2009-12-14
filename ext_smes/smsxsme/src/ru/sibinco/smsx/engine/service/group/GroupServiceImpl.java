@@ -37,10 +37,10 @@ public class GroupServiceImpl implements Service, GroupService {
   public GroupServiceImpl(XmlConfigSection g, OutgoingQueue outQueue, int serviceId) throws ServiceInitializationException {
     try {
       String storeDir = g.getString("store.dir");
-//      this.listsDS = new FileDistrListDataSource(new File(storeDir, "members.bin"), new File(storeDir, "submitters.bin"), new File(storeDir, "lists.bin"));
-      this.listsDS = new DBDistrListDataSource();
-//      this.principalDS = new FilePrincipalDataSource(new File(storeDir, "principals.bin"));
-      this.principalDS = new DBPrincipalDataSource();
+      this.listsDS = new FileDistrListDataSource(new File(storeDir, "members.bin"), new File(storeDir, "submitters.bin"), new File(storeDir, "lists.bin"));
+//      this.listsDS = new DBDistrListDataSource();
+      this.principalDS = new FilePrincipalDataSource(new File(storeDir, "principals.bin"));
+//      this.principalDS = new DBPrincipalDataSource();
       this.groupEditDSProfile = new DBGroupEditProfileDataSource();
       this.sendDS = new DBGroupSendDataSource();
 
