@@ -392,6 +392,7 @@ void AmericaTestFixture::sendRoutingInfo_res_decoding()
   vector<unsigned char> encoded(encoded_data, encoded_data + sizeof(encoded_data) / sizeof(unsigned char));
   SendRoutingInfoConf conf(logger);
   conf.decode(encoded);
+  smsc_log_debug(logger,"decoded MSRN=%s",conf.getMSRN());
   char expected_msrn[] = "79134099870";
   CPPUNIT_ASSERT( expected_msrn == conf.getMSRN());
 }

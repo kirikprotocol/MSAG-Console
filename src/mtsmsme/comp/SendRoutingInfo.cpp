@@ -4,6 +4,7 @@ static char const ident[] = "$Id$";
 
 namespace smsc{namespace mtsmsme{namespace comp{
 using smsc::mtsmsme::processor::util::packNumString2BCD91;
+using smsc::mtsmsme::processor::util::unpackBCD912NumString;
 using std::string;
 
 SendRoutingInfoReq::SendRoutingInfoReq(const string& msisdn, const string& gmsc)
@@ -65,7 +66,7 @@ void SendRoutingInfoConf::encode(vector<unsigned char>& buf)
 {
   return;
 }
-void SendRoutingInfoConf::decode(vector<unsigned char>& buf)
+void SendRoutingInfoConf::decode(const vector<unsigned char>& buf)
 {
   void *structure = 0;
   asn_codec_ctx_t s_codec_ctx;
