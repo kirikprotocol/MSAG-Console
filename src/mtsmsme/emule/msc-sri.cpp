@@ -16,7 +16,7 @@ using smsc::mtsmsme::processor::SccpProcessor;
 using smsc::mtsmsme::processor::RequestSender;
 using smsc::mtsmsme::processor::Request;
 using smsc::mtsmsme::processor::SubscriberRegistrator;
-using smsc::mtsmsme::comp::SendRoutingInfoForSMReq;
+using smsc::mtsmsme::comp::SendRoutingInfoReq;
 using smsc::mtsmsme::processor::TCO;
 using smsc::mtsmsme::processor::TSM;
 using smsc::mtsmsme::processor::util::packSCCPAddress;
