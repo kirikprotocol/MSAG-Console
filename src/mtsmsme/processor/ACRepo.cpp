@@ -165,10 +165,6 @@ TSM* createIncomingTSM(TrId ltrid,AC& appcntx,TCO* tco)
   {
     tsm = new MOFTSM(ltrid,appcntx,tco);
   }
-  if (appcntx == locationInfoRetrievalContext_v3)
-  {
-    tsm = new SRITSM(ltrid,appcntx,tco);
-  }
   return tsm;
 }
 TSM* createOutgoingTSM(TrId ltrid,AC& appcntx,TCO* tco)
@@ -182,6 +178,8 @@ TSM* createOutgoingTSM(TrId ltrid,AC& appcntx,TCO* tco)
     tsm = new ULTSM(ltrid,appcntx,tco);
   if ( appcntx == shortMsgMoRelayContext_v2)
     tsm = new MOFTSM(ltrid,appcntx,tco);
+  if (appcntx == locationInfoRetrievalContext_v3)
+    tsm = new SRITSM(ltrid,appcntx,tco);
   return tsm;
 }
 static uint8_t magic0780[] = {0x80};
