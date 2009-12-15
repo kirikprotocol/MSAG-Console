@@ -1,4 +1,5 @@
 static char const ident[] = "$Id$";
+#include "mtsmsme/sccp/SccpProcessor.hpp"
 #include "mtsmsme/processor/HLRImpl.hpp"
 #include "mtsmsme/processor/TCO.hpp"
 #include "mtsmsme/processor/TSM.hpp"
