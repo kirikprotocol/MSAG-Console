@@ -393,6 +393,7 @@ void AmericaTestFixture::sendRoutingInfo_sending()
   mtsms.setSccpSender((SccpSender*)&sender);
   TSM* tsm = 0;
   tsm = mtsms.TC_BEGIN(locationInfoRetrievalContext_v3);
+  CPPUNIT_ASSERT_ASSERTION_FAIL( CPPUNIT_ASSERT( tsm == 0 ) );
   if (tsm)
   {
     SendRoutingInfoReq req("79131273996","79139869981");
