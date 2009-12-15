@@ -149,6 +149,13 @@ protected:
 
   StateType DivertProcessing(Tuple& t,SMS& sms);
 
+  void onSubmitOk(SMSId id,SMS& sms);
+  void onSubmitFail(SMSId id,SMS& sms);
+  void onDeliveryOk(SMSId id,SMS& sms);
+  void onDeliveryFail(SMSId id,SMS& sms);
+  void onUndeliverable(SMSId id,SMS& sms);
+  void onForwardOk(SMSId id,SMS& sms);
+
   struct SbmContext
   {
     SbmContext(Tuple& argT):t(argT)

@@ -476,6 +476,7 @@ struct INSmsChargeResponse{
     bool isForwardTo;
     bool diverted;
     bool routeHide;
+    bool generateDeliver;
     Address dst;
 #ifdef SMSEXTRA
     bool noDestChange;

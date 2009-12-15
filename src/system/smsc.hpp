@@ -273,7 +273,7 @@ public:
     submitErrCounter++;
   }
 
-  void registerMsuStatEvent(int eventType,const SMS* sms)
+  /*void registerMsuStatEvent(int eventType,const SMS* sms)
   {
     using namespace smsc::stat;
     using namespace StatEvents;
@@ -311,8 +311,9 @@ public:
       }break;
     }
   }
+  */
 
-  void registerStatisticalEvent(int eventType,const SMS* sms);
+  void registerStatisticalEvent(int eventType,const SMS* sms,bool msuOnly=false);
 
   void SaveStats()
   {

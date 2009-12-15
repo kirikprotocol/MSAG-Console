@@ -59,7 +59,6 @@ void Smsc::RejectSms(const SmscCommand& cmd,bool isLicenseLimit)
     sms->setSourceSmeId(src_proxy->getSystemId());
     sms->setLastResult(isLicenseLimit?Status::LICENSELIMITREJECT:Status::MSGQFUL);
     registerStatisticalEvent(StatEvents::etSubmitErr,sms);
-    registerMsuStatEvent(StatEvents::etSubmitErr,sms);
 
     src_proxy->putCommand
     (
@@ -514,7 +513,7 @@ void Smsc::processCommand(SmscCommand& cmd,EventQueue::EnqueueVector& ev,FindTas
           reverseMergeCache.Insert(id,mci);
           std::pair<time_t,SMSId> to(time(NULL)+mergeConcatTimeout,id);
           mergeCacheTimeouts.Push(to);
-          registerMsuStatEvent(StatEvents::etSubmitOk,&sms);
+          //registerMsuStatEvent(StatEvents::etSubmitOk,&sms);
           eventqueue.enqueue(id,cmd);
           return;
         }else
@@ -529,7 +528,7 @@ void Smsc::processCommand(SmscCommand& cmd,EventQueue::EnqueueVector& ev,FindTas
         id=store->getNextId();
       }
       __trace2__("main loop submit: seq=%d, id=%lld",cmd->get_dialogId(),id);
-      registerMsuStatEvent(StatEvents::etSubmitOk,&sms);
+      //registerMsuStatEvent(StatEvents::etSubmitOk,&sms);
       break;
     }
     case __CMD__(DELIVERY_RESP):
