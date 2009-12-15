@@ -383,7 +383,7 @@ void AmericaTestFixture::sendRoutingInfo_sending()
   using smsc::mtsmsme::processor::locationInfoRetrievalContext_v3;
   using smsc::logger::Logger;
 
-  using smsc::mtsmsme::comp::SendRoutingInfoForSMReq;
+  using smsc::mtsmsme::comp::SendRoutingInfoReq;
 
   uint8_t cl[] = { 2, 2, 2, 2, 2 };
   uint8_t cd[] = { 3, 3, 3, 3, 3 };
