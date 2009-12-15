@@ -375,6 +375,46 @@ void AmericaTestFixture::sendRoutingInfo_arg_encoding()
   vector<unsigned char> expected(expected_data, expected_data + sizeof(expected_data) / sizeof(unsigned char));
   CPPUNIT_ASSERT( expected == result);
 }
+void AmericaTestFixture::sendRoutingInfo_sending()
+{
+  smsc_log_debug(logger, "======== AmericaTestFixture::sendRoutingInfo_sending ========\n");
+  using smsc::mtsmsme::processor::TCO;
+  using smsc::mtsmsme::processor::TSM;
+  using smsc::mtsmsme::processor::locationInfoRetrievalContext_v3;
+  using smsc::logger::Logger;
+
+  using smsc::mtsmsme::comp::SendRoutingInfoForSMReq;
+
+  uint8_t cl[] = { 2, 2, 2, 2, 2 };
+  uint8_t cd[] = { 3, 3, 3, 3, 3 };
+  TCO mtsms(10);
+  vector<unsigned char> result ;
+  SccpSenderMock sender(logger, result);
+  mtsms.setSccpSender((SccpSender*)&sender);
+  TSM* tsm = 0;
+  tsm = mtsms.TC_BEGIN(locationInfoRetrievalContext_v3);
+  if (tsm)
+  {
+    SendRoutingInfoReq req("79131273996","79139869981");
+    tsm->TInvokeReq( 1 /* invoke_id */, 22 /* SRI */, req);
+    tsm->TBeginReq((uint8_t) (sizeof(cd) / sizeof(uint8_t)), cd,
+        (uint8_t) (sizeof(cl) / sizeof(uint8_t)), cl);
+  }
+  uint8_t expected_data[] = {
+    0x62, 0x47, 0x48, 0x04, 0x03, 0x00, 0x00, 0x00,
+    0x6b, 0x1e, 0x28, 0x1c, 0x06, 0x07, 0x00, 0x11,
+    0x86, 0x05, 0x01, 0x01, 0x01, 0xa0, 0x11, 0x60,
+    0x0f, 0x80, 0x02, 0x07, 0x80, 0xa1, 0x09, 0x06,
+    0x07, 0x04, 0x00, 0x00, 0x01, 0x00, 0x05, 0x03,
+    0x6c, 0x1f, 0xa1, 0x1d, 0x02, 0x01, 0x01, 0x02,
+    0x01, 0x16, 0x30, 0x15, 0x80, 0x07, 0x91, 0x97,
+    0x31, 0x21, 0x37, 0x99, 0xf6, 0x83, 0x01, 0x00,
+    0x86, 0x07, 0x91, 0x97, 0x31, 0x89, 0x96, 0x89,
+    0xf1
+  };
+  vector<unsigned char> expected(expected_data,expected_data + sizeof(expected_data) / sizeof(unsigned char) );
+  CPPUNIT_ASSERT( expected == result);
+}
 void AmericaTestFixture::sendRoutingInfo_res_decoding()
 {
   smsc_log_debug(logger, "======== AmericaTestFixture::sendRoutingInfo_res_decoding ========\n");
@@ -399,7 +439,7 @@ void AmericaTestFixture::sendRoutingInfo_res_decoding()
   vector<unsigned char> encoded(encoded_data, encoded_data + sizeof(encoded_data) / sizeof(unsigned char));
   SendRoutingInfoConf conf(logger);
   conf.decode(encoded);
-  smsc_log_debug(logger,"decoded MSRN=%s",conf.getMSRN());
+  //smsc_log_debug(logger,"decoded MSRN=%s",conf.getMSRN());
   char expected_msrn[] = "79134099870";
   CPPUNIT_ASSERT( 0 == strcmp(expected_msrn,conf.getMSRN()));
 }
