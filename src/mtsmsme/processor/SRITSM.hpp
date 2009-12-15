@@ -12,6 +12,7 @@ class SRITSM : public TSM
   public:
     SRITSM(TrId _ltrid,AC& ac,TCO* _tco);
     virtual ~SRITSM();
+    virtual void END_received(Message& msg);
 };
 
 }/*namespace processor*/}/*namespace mtsmsme*/}/*namespace smsc*/
