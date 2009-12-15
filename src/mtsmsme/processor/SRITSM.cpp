@@ -11,14 +11,14 @@ using smsc::mtsmsme::comp::SendRoutingInfoConf;
 
 SRITSM::SRITSM(TrId _ltrid,AC& ac,TCO* _tco):TSM(_ltrid,ac,_tco)
 {
-  logger = Logger::getInstance("mt.sme.mofwd");
+  logger = Logger::getInstance("mt.sme.sri");
   smsc_log_debug(logger,"tsm otid=%s create SRI",ltrid.toString().c_str());
 }
 SRITSM::~SRITSM()
 {
   smsc_log_debug(logger,"tsm otid=%s delete SRI",ltrid.toString().c_str());
 }
-void ULTSM::END_received(Message& msg)
+void SRITSM::END_received(Message& msg)
 {
   if (msg.isComponentPresent() && (msg.getOperationCode() == 22))
   {
