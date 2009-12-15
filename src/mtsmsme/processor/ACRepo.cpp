@@ -7,6 +7,7 @@ static char const ident[] = "$Id$";
 #include "mtsmsme/processor/PRNTSM.hpp"
 #include "mtsmsme/processor/ISD.hpp"
 #include "mtsmsme/processor/MOFTSM.hpp"
+#include "mtsmsme/processor/SRITSM.hpp"
 namespace smsc{namespace mtsmsme{namespace processor{
 
 bool TrId::operator==(const TrId& obj)const
@@ -163,6 +164,10 @@ TSM* createIncomingTSM(TrId ltrid,AC& appcntx,TCO* tco)
   if (appcntx == shortMsgMoRelayContext_v2)
   {
     tsm = new MOFTSM(ltrid,appcntx,tco);
+  }
+  if (appcntx == locationInfoRetrievalContext_v3)
+  {
+    tsm = new SRITSM(ltrid,appcntx,tco);
   }
   return tsm;
 }
