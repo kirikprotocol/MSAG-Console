@@ -132,6 +132,11 @@ bool Message::isComponentPresent()
       void *comps = pmsg->choice.contiinue.components;
       res = (comps != 0);
     }
+    if(pmsg->present == TCMessage_PR_end)
+    {
+      void *comps = pmsg->choice.end.components;
+      res = (comps != 0);
+    }
   }
   return res;
 }
@@ -245,6 +250,7 @@ int Message::getInvokeId()
   ComponentPortion_t *comps = 0;
   if(pmsg->present == TCMessage_PR_begin) comps = pmsg->choice.begin.components;
   if(pmsg->present == TCMessage_PR_contiinue) comps = pmsg->choice.contiinue.components;
+  if(pmsg->present == TCMessage_PR_end) comps = pmsg->choice.end.components;
   if (comps)
   {
     /* obtain first component */
@@ -267,6 +273,8 @@ int Message::getOperationCode()
   ComponentPortion_t *comps = 0;
   if(pmsg->present == TCMessage_PR_begin) comps = pmsg->choice.begin.components;
   if(pmsg->present == TCMessage_PR_contiinue) comps = pmsg->choice.contiinue.components;
+  if(pmsg->present == TCMessage_PR_end) comps = pmsg->choice.end.components;
+  if(pmsg->present == TCMessage_PR_end) comps = pmsg->choice.end.components;
   if (comps)
   {
     /* obtain first component */
@@ -290,6 +298,7 @@ vector<unsigned char> Message::getComponent()
   ComponentPortion_t *comps = 0;
   if(pmsg->present == TCMessage_PR_begin) comps = pmsg->choice.begin.components;
   if(pmsg->present == TCMessage_PR_contiinue) comps = pmsg->choice.contiinue.components;
+  if
   if (comps)
   {
     /* obtain first component */
