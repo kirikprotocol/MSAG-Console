@@ -102,6 +102,7 @@ protected:
   smsc::system::Smsc *smsc;
 
   smsc::logger::Logger* smsLog;
+  smsc::logger::Logger* perfLog;
 
   std::string serviceType;
   int protocolId;
