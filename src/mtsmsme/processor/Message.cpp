@@ -263,6 +263,10 @@ int Message::getInvokeId()
       {
         return (int)(comp->choice.invoke.invokeId);
       }
+      if (comp->present == Component_PR_returnResultLast)
+      {
+        return (int)(comp->choice.returnResultLast.invokeId);
+      }
     }
   }
   return 0;
@@ -286,6 +290,11 @@ int Message::getOperationCode()
       {
         return (int)(comp->choice.invoke.opcode.choice.local);
       }
+      if (comp->present == Component_PR_returnResultLast)
+      {
+        if (comp->choice.returnResultLast.result)
+          return (int)(comp->choice.returnResultLast.result->opcode.choice.local);
+       }
     }
   }
   return 0;
@@ -311,6 +320,14 @@ vector<unsigned char> Message::getComponent()
         ANY_t *pdu = comp->choice.invoke.argument;
         buf.insert(buf.end(),pdu->buf, pdu->buf + pdu->size);
       }
+      if (comp->present == Component_PR_returnResultLast)
+      {
+        if (comp->choice.returnResultLast.result)
+        {
+          ANY_t *pdu = comp->choice.returnResultLast.result->result;
+          buf.insert(buf.end(),pdu->buf, pdu->buf + pdu->size);
+        }
+       }
     }
   }
   return buf;
