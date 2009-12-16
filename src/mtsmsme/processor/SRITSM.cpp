@@ -20,8 +20,9 @@ SRITSM::~SRITSM()
 }
 void SRITSM::END_received(Message& msg)
 {
-  smsc_log_debug(logger,"tsm receive END comppres=$d code=%d",msg.isComponentPresent(),msg.getOperationCode());
-  if (msg.isComponentPresent() && (msg.getOperationCode() == 22))
+  smsc_log_debug(logger,"tsm receive END comppres=%d code=%d",msg.isComponentPresent(),msg.getOperationCode());
+  //if (msg.isComponentPresent() && (msg.getOperationCode() == 22))
+  if (msg.isComponentPresent())
   {
     smsc_log_debug(logger,"tsm otid=%s receive END with component, closing",ltrid.toString().c_str());
     std::vector<unsigned char> sriconfbuf;
