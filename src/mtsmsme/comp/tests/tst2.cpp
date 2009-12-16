@@ -435,6 +435,9 @@ void AmericaTestFixture::sendRoutingInfo_sending()
   mtsms.NUNITDATA((uint8_t) (sizeof(cd)/sizeof(uint8_t)), cd,
                   (uint8_t) (sizeof(cl)/sizeof(uint8_t)), cl,
                   (uint8_t) (sizeof(expected_income)/sizeof(uint8_t)), expected_income);
+  TSMSTAT stat;
+  TSM::getCounters(stat);
+  CPPUNIT_ASSERT( stat.objcount == 0 );
 }
 void AmericaTestFixture::sendRoutingInfo_res_decoding()
 {
