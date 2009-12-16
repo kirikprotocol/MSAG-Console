@@ -324,8 +324,8 @@ vector<unsigned char> Message::getComponent()
       {
         if (comp->choice.returnResultLast.result)
         {
-          ANY_t *pdu = comp->choice.returnResultLast.result->result;
-          buf.insert(buf.end(),pdu->buf, pdu->buf + pdu->size);
+          ANY_t& pdu = comp->choice.returnResultLast.result->result;
+          buf.insert(buf.end(),pdu.buf, pdu.buf + pdu.size);
         }
        }
     }
