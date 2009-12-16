@@ -265,7 +265,7 @@ void Body::setBinProperty(int tag,const char* value, unsigned len)
             bufptr+=partlen;
           }
 
-          prop.properties[unType(Tag::SMSC_RAW_SHORTMESSAGE)].setBin(buffer.get(),len);
+          prop.properties[unType(Tag::SMSC_RAW_PAYLOAD)].setBin(buffer.get(),len);
         }else
         {
           TmpBuf<char,256> buffer(len);
