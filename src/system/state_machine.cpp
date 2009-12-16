@@ -431,7 +431,11 @@ int StateMachine::Execute()
     if(isStopping)break;
     try{
       const char* op="unknown";
-      hrtime_t opStart=gethrtime();
+      hrtime_t opStart;
+      if(perfLog->isInfoEnabled())
+      {
+        opStart=gethrtime();
+      }
       switch(t.command->cmdid)
       {
         case SUBMIT:st=submit(t);op="submit";break;
@@ -448,10 +452,13 @@ int StateMachine::Execute()
           st=ERROR_STATE;
           break;
       }
-      opStart=(gethrtime()-opStart)/1000000;
-      if(opStart>50)
+      if(perfLog->isInfoEnabled())
       {
-        smsc_log_info(perfLog,"command %s processing takes %lldms",op,opStart);
+        opStart=(gethrtime()-opStart)/1000000;
+        if(opStart>50)
+        {
+          smsc_log_info(perfLog,"command %s processing takes %lldms",op,opStart);
+        }
       }
       smsc_log_debug(smsLog,"change state for Id=%lld to %d",t.msgId,st);
       eq.changeState(t.msgId,st);
@@ -2491,12 +2498,21 @@ StateType StateMachine::submitChargeResp(Tuple& t)
     if(prio>=32)prio=31;
     delivery->set_priority(prio);
     try{
-      hrtime_t putCommandStart=gethrtime();
-      dest_proxy->putCommand(delivery);
-      hrtime_t putCommandTime=(gethrtime()-putCommandStart)/1000000;
-      if(putCommandTime>20)
+      hrtime_t putCommandStart;
+
+      if(perfLog->isInfoEnabled())
       {
-        smsc_log_info(perfLog,"put command time=%lld",putCommandTime);
+        putCommandStart=gethrtime();
+      }
+      dest_proxy->putCommand(delivery);
+
+      if (perfLog->isInfoEnabled())
+      {
+        hrtime_t putCommandTime=(gethrtime()-putCommandStart)/1000000;
+        if(putCommandTime>20)
+        {
+          smsc_log_info(perfLog,"put command time=%lld",putCommandTime);
+        }
       }
       deliveryOk=true;
     }catch(InvalidProxyCommandException& e)
