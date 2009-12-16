@@ -32,12 +32,12 @@ using smsc::logger::Logger;
 using std::vector;
 using std::string;
 
-namespace smsc{namespace mtsmsme{namespace processor{
-unsigned ConvertText27bit(
-  const unsigned char* text, unsigned chars, unsigned char* bit7buf,unsigned* elen,
-  unsigned offset,unsigned buflen);
-}}}
-using smsc::mtsmsme::processor::ConvertText27bit;
+static char msca[] = "791398699923"; // MSC address
+static char vlra[] = "79139860004"; //VLR address
+static char hlra[] = "79139860004"; //HLR address
+static char abnt[] = "79131273996"; //abonent MSISDN
+static uint8_t userid = 44;
+static uint8_t ssn = 192;
 
 static Logger *logger = 0;
 class EmptyRequestSender: public RequestSender {
@@ -71,31 +71,29 @@ int main(int argc, char** argv)
     smsc::logger::Logger::Init();
     logger = smsc::logger::Logger::getInstance("srireq");
     smsc_log_info(logger, "SRI Requester");
-    string msca("791398600045"); // MSC address
-    string sca("79139860005"); // service center address
-    string vlra("791398600043"); //VLR address
-    string hlra("791398600044"); //HLR address
     EmptyRequestSender fakeSender;
     TCO mtsms(10000);
     EmptySubscriberRegistrator fakeHLR(&mtsms);
     mtsms.setRequestSender(&fakeSender);
     GopotaListener listener(&mtsms, &fakeHLR);
-    listener.configure(44, 192, Address((uint8_t)msca.length(), 1, 1, msca.c_str()),
-        Address((uint8_t)vlra.length(), 1, 1, vlra.c_str()),
-        Address((uint8_t)hlra.length(), 1, 1, hlra.c_str()));
+    listener.configure(userid, ssn, Address((uint8_t)strlen(msca), 1, 1, msca),
+           Address((uint8_t)strlen(vlra), 1, 1, vlra),
+           Address((uint8_t)strlen(hlra), 1, 1, hlra));
     listener.Start();
     sleep(10);
-    // fill SCCP addresses for SMS sending, FROM = MSC GT, TO = SMSC GT
+    // fill SCCP addresses for SRI sending, FROM = MSC GT, TO = HLR = MSISDN
     uint8_t cl[20]; uint8_t cllen; uint8_t cd[20]; uint8_t cdlen;
-    cdlen = packSCCPAddress(cd, 1 /* E.164 */, sca.c_str() /* SMSC E.164 */, 8 /* SMSC SSN */);
-    cllen = packSCCPAddress(cl, 1 /* E.164 */, msca.c_str() /* MSC E.164 */, 8 /* MSC SSN */);
+    cdlen = packSCCPAddress(cd, 1 /* E.164 */, abnt /* ABNT E.164 */, 6 /* HLR SSN */);
+    cllen = packSCCPAddress(cl, 1 /* E.164 */, msca /* MSC  E.164 */, 8 /* MSC SSN */);
     {
       sleep(10);
       TSM* tsm = 0;
       tsm = mtsms.TC_BEGIN(locationInfoRetrievalContext_v3);
       if (tsm)
       {
-        SendRoutingInfoReq req("79131273996",msca);
+        string msisdn(abnt);
+        string fromwho(msca);
+        SendRoutingInfoReq req(msisdn,fromwho);
         tsm->TInvokeReq( 1 /* invoke_id */, 22 /* SRI */, req);
         tsm->TBeginReq(cdlen, cd, cllen, cl);
       }
