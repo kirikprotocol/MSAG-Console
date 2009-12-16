@@ -380,6 +380,7 @@ void AmericaTestFixture::sendRoutingInfo_sending()
   smsc_log_debug(logger, "======== AmericaTestFixture::sendRoutingInfo_sending ========\n");
   using smsc::mtsmsme::processor::TCO;
   using smsc::mtsmsme::processor::TSM;
+  using smsc::mtsmsme::processor::TSMSTAT;
   using smsc::mtsmsme::processor::locationInfoRetrievalContext_v3;
   using smsc::logger::Logger;
 
