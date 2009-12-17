@@ -60,7 +60,7 @@ static void FillChargeOp(SMSId id,OpClass& op,const SMS& sms)
   op.setCallingSMEid(sms.getSourceSmeId());
   op.setRouteId(sms.getRouteId());
   op.setServiceId(sms.getServiceId());
-  op.setUserMsgRef(sms.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE)?sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE):-1);
+  op.setUserMsgRef(sms.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE)?sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE)&0xffff:-1);
   op.setMsgId(id);
   op.setServiceOp(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP)?sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP):-1);
   op.setPartsNum(sms.getIntProperty(Tag::SMSC_ORIGINALPARTSNUM));
