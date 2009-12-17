@@ -12,25 +12,30 @@
 namespace eyeline {
 namespace ros {
 
-typedef eyeline::util::RFPtr_T<ROSComponentPrimitive> ROSComponentRfp;
-typedef eyeline::util::URFPtr_T<ROSComponentPrimitive> ROSComponentURfp;
-typedef eyeline::util::CRFPtr_T<ROSComponentPrimitive> ROSComponentCRfp;
+//typedef eyeline::util::RFPtr_T<ROSComponentPrimitive> ROSComponentRfp;
+//typedef eyeline::util::URFPtr_T<ROSComponentPrimitive> ROSComponentURfp;
+//typedef eyeline::util::CRFPtr_T<ROSComponentPrimitive> ROSComponentCRfp;
 
+typedef std::list<ROSComponentPrimitive*> ROSComponentsList;
+
+#if 0
 class ROSComponentsList {
 protected:
   //NOTE: component utilization depends on RFP kind(CRFP or URFP)
-  std::list<ROSComponentRfp> _comps;
+  std::list<ROSComponentPrimitive*> _comps;
 
 public:
   ROSComponentsList()
   { }
   ~ROSComponentsList()
-  { }
+  {
+    //TODO: clean up _comps
+  }
 
   class iterator {
   protected:
     friend class ROSComponentsList;
-    typedef std::list<ROSComponentRfp>::iterator XIterator;
+    typedef std::list<ROSComponentPrimitive*>::iterator XIterator;
     XIterator _rIt;
     XIterator _endIt;
 
@@ -44,8 +49,8 @@ public:
     ~iterator()
     { }
 
-    ROSComponentRfp & operator*() const { return *_rIt; }
-    ROSComponentRfp * operator->() const { return _rIt.operator->(); }
+    ROSComponentPrimitive& operator*() const { return *_rIt; }
+    ROSComponentPrimitive* operator->() const { return _rIt.operator->(); }
 
     bool  hasNext(void) const
     {
@@ -75,7 +80,7 @@ public:
   class const_iterator {
   protected:
     friend class ROSComponentsList;
-    typedef std::list<ROSComponentRfp>::const_iterator XIterator;
+    typedef std::list<ROSComponentPrimitive*>::const_iterator XIterator;
     XIterator _rIt;
     XIterator _endIt;
 
@@ -146,11 +151,12 @@ public:
   bool empty(void) const { return _comps.empty(); }
 
   void clear(void) { _comps.clear(); }
-  void push_back(const ROSComponentRfp & use_comp) { _comps.push_back(use_comp); }
+  void push_back(ROSComponentPrimitive* use_comp) { _comps.push_back(use_comp); }
 
   //TODO: add searching helpers (by opcode, ROS kind, etc)
 
 };
+#endif
 
 } //ros
 } //eyeline
