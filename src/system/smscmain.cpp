@@ -160,6 +160,7 @@ int main(int argc,char* argv[])
 
         //fprintf(stderr,"smsc started\n");
         //running
+        listener.shutdown();
         listener.WaitFor();
 
         //fprintf(stderr,"smsc stopped, finishing\n");
