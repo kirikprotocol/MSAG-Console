@@ -32,9 +32,9 @@ using smsc::logger::Logger;
 using std::vector;
 using std::string;
 
-static char msca[] = "791398699923"; // MSC address
-static char vlra[] = "79139860004"; //VLR address
-static char hlra[] = "79139860004"; //HLR address
+static char msca[] = "791398699812"; // MSC address
+static char vlra[] = "791398699813"; //VLR address
+static char hlra[] = "791398699814"; //HLR address
 static char abnt[] = "79131273996"; //abonent MSISDN
 static uint8_t userid = 44;
 static uint8_t ssn = 192;
