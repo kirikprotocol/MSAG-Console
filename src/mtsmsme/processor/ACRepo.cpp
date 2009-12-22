@@ -112,7 +112,8 @@ static unsigned long shortMsgMoRelayContext_v2_buf[] = {0,4,0,0,1,0,21,2};
 AC shortMsgMoRelayContext_v2 = AC(shortMsgMoRelayContext_v2_buf,(int)(sizeof(shortMsgMoRelayContext_v2_buf)/sizeof(unsigned long)));
 
 static unsigned long locationInfoRetrievalContext_v3_buf[] = {0,4,0,0,1,0,5,3};
-AC locationInfoRetrievalContext_v3 = AC(locationInfoRetrievalContext_v3_buf,(int)(sizeof(locationInfoRetrievalContext_v3_buf)/sizeof(unsigned long)));
+static unsigned long locationInfoRetrievalContext_v2_buf[] = {0,4,0,0,1,0,5,2};
+AC locationInfoRetrievalContext_v2 = AC(locationInfoRetrievalContext_v2_buf,(int)(sizeof(locationInfoRetrievalContext_v2_buf)/sizeof(unsigned long)));
 
 bool isMapV1ContextSupported(AC& appcntx)
 {
@@ -178,7 +179,7 @@ TSM* createOutgoingTSM(TrId ltrid,AC& appcntx,TCO* tco)
     tsm = new ULTSM(ltrid,appcntx,tco);
   if ( appcntx == shortMsgMoRelayContext_v2)
     tsm = new MOFTSM(ltrid,appcntx,tco);
-  if (appcntx == locationInfoRetrievalContext_v3)
+  if (appcntx == locationInfoRetrievalContext_v3 || appcntx == locationInfoRetrievalContext_v2)
     tsm = new SRITSM(ltrid,appcntx,tco);
   return tsm;
 }
