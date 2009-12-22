@@ -125,27 +125,16 @@ bool Message::isAbort()
  */
 bool Message::isComponentPresent()
 {
-  bool res = false;
-  if(structure)
-  {
+  void *comps = 0;
+  if(structure) {
     TCMessage_t* pmsg = (TCMessage_t*)structure;
-    if(pmsg->present == TCMessage_PR_begin)
-    {
-      void *comps = pmsg->choice.begin.components;
-      res = (comps != 0);
-    }
-    if(pmsg->present == TCMessage_PR_contiinue)
-    {
-      void *comps = pmsg->choice.contiinue.components;
-      res = (comps != 0);
-    }
-    if(pmsg->present == TCMessage_PR_end)
-    {
-      void *comps = pmsg->choice.end.components;
-      res = (comps != 0);
+    switch (pmsg->present) {
+      case TCMessage_PR_begin: comps = pmsg->choice.begin.components; break;
+      case TCMessage_PR_contiinue: comps = pmsg->choice.contiinue.components; break;
+      case TCMessage_PR_end: comps = pmsg->choice.end.components; break;
     }
   }
-  return res;
+  return (comps != 0);
 }
 bool Message::isDialoguePortionExist()
 {
