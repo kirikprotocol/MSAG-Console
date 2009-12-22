@@ -114,6 +114,7 @@ AC shortMsgMoRelayContext_v2 = AC(shortMsgMoRelayContext_v2_buf,(int)(sizeof(sho
 static unsigned long locationInfoRetrievalContext_v3_buf[] = {0,4,0,0,1,0,5,3};
 static unsigned long locationInfoRetrievalContext_v2_buf[] = {0,4,0,0,1,0,5,2};
 AC locationInfoRetrievalContext_v2 = AC(locationInfoRetrievalContext_v2_buf,(int)(sizeof(locationInfoRetrievalContext_v2_buf)/sizeof(unsigned long)));
+AC locationInfoRetrievalContext_v3 = AC(locationInfoRetrievalContext_v3_buf,(int)(sizeof(locationInfoRetrievalContext_v3_buf)/sizeof(unsigned long)));
 
 bool isMapV1ContextSupported(AC& appcntx)
 {
