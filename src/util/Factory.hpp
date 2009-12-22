@@ -71,13 +71,13 @@ public:
 
     struct ProducerITF
     {
-        virtual _ProductAC_TArg* create(_ArgTArg * use_arg = NULL) const = 0;
+        virtual _ProductAC_TArg * create(_ArgTArg use_arg) const = 0;
     };
 
     template< class _TArg /* : public _ProductAC_TArg*/>
     struct ProducerT : public ProducerITF
     {
-        virtual _ProductAC_TArg * create(_ArgTArg * use_arg = NULL) const
+        virtual _ProductAC_TArg * create(_ArgTArg use_arg) const
         { return new _TArg(use_arg); }
     };
 
@@ -98,7 +98,7 @@ public:
         return res.second;
     }
 
-    _ProductAC_TArg * create(KeyType key, _ArgTArg * use_arg = NULL) const
+    _ProductAC_TArg * create(KeyType key, _ArgTArg use_arg) const
     {
         typename ProductsMap::const_iterator it = producers.find(key);
         return (it == producers.end()) ? NULL : it->second->create(use_arg);

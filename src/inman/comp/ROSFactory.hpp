@@ -19,7 +19,7 @@ namespace comp {
 
 using smsc::logger::Logger;
 
-typedef smsc::util::FactoryXArg_T<unsigned, Component, Logger> CompFactory;
+typedef smsc::util::FactoryXArg_T<unsigned, Component, Logger *> CompFactory;
 typedef CompFactory::ProducerITF CompProducer;
 
 //ROS Operations Components factory(ARGUMENT, RESULT, ERRORS)
