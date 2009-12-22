@@ -3,12 +3,13 @@
 #
 # INMan linkage customization.
 #
-# Include this file into global makefile.flags if customized linkage is required.
+# NOTE: this file is included into global makefile only if make command line 
+#	arguments or global makefile.flags contains:
+#	    INMAN_CUSTOM_LINKAGE=YES
 #
-# NOTE: all vars, which customize linkage, should be assigned in
-#       global makefile.flags as:
-#		VAR_NAME=var_value
-#	prior to this file inclusion.
+# NOTE: all vars, which customize linkage, should be assigned either in
+#       global makefile.flags or in make command line as:
+#	    VAR_NAME=var_value
 #
 # The following vars are recognized:
 #
