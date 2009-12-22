@@ -83,6 +83,13 @@ TrId Message::getDTID()
       memcpy(dtid.buf,tid->buf,tid->size);
       //otid.insert(otid.end(),tid->buf, tid->buf + tid->size);
     }
+    if (pmsg->present == TCMessage_PR_abort)
+    {
+      OCTET_STRING_t *tid = &(pmsg->choice.abort.dtid);
+      dtid.size = tid->size;
+      memcpy(dtid.buf,tid->buf,tid->size);
+
+    }
   }
   return dtid;
 }
