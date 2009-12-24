@@ -70,6 +70,14 @@ CUG-CheckInfo ::= SEQUENCE {
 
 NumberOfForwarding ::= INTEGER (1..5)
 
+SendRoutingInfoArg-v2 ::= SEQUENCE {
+        msisdn          [0] ISDN-AddressString,
+        cug-CheckInfo   [1] CUG-CheckInfo       OPTIONAL,
+        -- OA1 cug-CheckInfo must be absent in version 1
+        numberOfForwarding      [2] NumberOfForwarding  OPTIONAL,
+        networkSignalInfo       [10] ExternalSignalInfo OPTIONAL,
+        ...}
+
 SendRoutingInfoArg ::= SEQUENCE {
     msisdn		[0] ISDN-AddressString,
     cug-CheckInfo	[1] CUG-CheckInfo	OPTIONAL,
@@ -126,6 +134,14 @@ CallDiversionTreatmentIndicator ::= OCTET STRING (SIZE(1))
 --	callDiversionAllowed (xxxx xx01)
 --	callDiversionNotAllowed (xxxx xx10)
 --	network default is call diversion allowed
+
+SendRoutingInfoRes-v2 ::= SEQUENCE {
+        imsi                    IMSI,
+        routingInfo     RoutingInfo,
+        cug-CheckInfo   CUG-CheckInfo   OPTIONAL,
+        -- OA1 cug-CheckInfo must be absent in version 1
+        ...
+}
 
 SendRoutingInfoRes ::= [3] SEQUENCE {
     imsi			[9] IMSI		OPTIONAL,
