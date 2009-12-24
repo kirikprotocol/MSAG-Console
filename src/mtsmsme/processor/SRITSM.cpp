@@ -7,6 +7,7 @@ static char const ident[] = "$Id$";
 
 namespace smsc{namespace mtsmsme{namespace processor{
 using smsc::mtsmsme::comp::SendRoutingInfoConf;
+using smsc::mtsmsme::comp::SendRoutingInfoConfV2;
 
 
 SRITSM::SRITSM(TrId _ltrid,AC& ac,TCO* _tco):TSM(_ltrid,ac,_tco)
@@ -25,8 +26,16 @@ void SRITSM::END_received(Message& msg)
     smsc_log_debug(logger,"tsm otid=%s receive END with SRI RES, closing",ltrid.toString().c_str());
     std::vector<unsigned char> sriconfbuf;
     sriconfbuf = msg.getComponent();
-    SendRoutingInfoConf sriconf(logger);
-    sriconf.decode(sriconfbuf);
+    if (appcntx == locationInfoRetrievalContext_v2)
+    {
+      SendRoutingInfoConf sriconf(logger);
+      sriconf.decode(sriconfbuf);
+    }
+    else
+    {
+      SendRoutingInfoConfV2 sriconf(logger);
+      sriconf.decode(sriconfbuf);
+    }
   }
   TSM::END_received(msg);
 }

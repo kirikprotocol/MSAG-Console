@@ -7,6 +7,25 @@ using smsc::mtsmsme::processor::util::packNumString2BCD91;
 using smsc::mtsmsme::processor::util::unpackBCD912NumString;
 using std::string;
 
+SendRoutingInfoReqV2::SendRoutingInfoReqV2(const string& msisdn, const string& gmsc)
+{
+  ZERO_OCTET_STRING(_msisdn);
+    _msisdn.size = (int)packNumString2BCD91(_msisdn.buf, msisdn.c_str(), (unsigned)msisdn.length());
+  arg.msisdn = _msisdn;
+
+  arg.cug_CheckInfo = 0;
+  arg.networkSignalInfo = 0;
+  arg.numberOfForwarding = 0;
+}
+void SendRoutingInfoReqV2::encode(vector<unsigned char>& buf)
+{
+  asn_enc_rval_t er;
+  er = der_encode(&asn_DEF_SendRoutingInfoArg_v2, &arg, print2vec, &buf);
+}
+void SendRoutingInfoReqV2::decode(const vector<unsigned char>& buf)
+{
+  return;
+}
 SendRoutingInfoReq::SendRoutingInfoReq(const string& msisdn, const string& gmsc)
 {
   ZERO_OCTET_STRING(_msisdn);
@@ -52,6 +71,54 @@ void SendRoutingInfoReq::encode(vector<unsigned char>& buf)
 void SendRoutingInfoReq::decode(const vector<unsigned char>& buf)
 {
   return;
+}
+char* SendRoutingInfoConfV2::getMSRN()
+{
+  return _msrn;
+}
+SendRoutingInfoConfV2::SendRoutingInfoConfV2(Logger* _logger) : logger(_logger)
+{
+  _msrn[0] = '0';
+  _msrn[1] = '\0';
+}
+void SendRoutingInfoConfV2::encode(vector<unsigned char>& buf)
+{
+  return;
+}
+void SendRoutingInfoConfV2::decode(const vector<unsigned char>& buf)
+{
+  void *structure = 0;
+  asn_codec_ctx_t s_codec_ctx;
+  asn_codec_ctx_t *opt_codec_ctx = 0;
+  opt_codec_ctx = &s_codec_ctx;
+  asn_dec_rval_t rval;
+  asn_TYPE_descriptor_t *def = &asn_DEF_SendRoutingInfoRes_v2;
+
+  rval = ber_decode(0/*opt_codec_ctx*/, def,
+      (void **) &structure, (void *) &buf[0], buf.size());
+  if (rval.code != RC_OK)
+    smsc_log_error(logger,
+        "SendRoutingInfoConfV2::decode consumes %d/%d and returns code %d",
+        rval.consumed,buf.size(), rval.code)
+      ;
+  if (structure)
+  {
+    /* Invoke type-specific printer */
+    std::vector<unsigned char> stream;
+    def->print_struct(def, structure, 1, print2vec, &stream);
+    /* Create and return resulting string */
+    string result((char*) &stream[0], (char*) &stream[0] + stream.size());
+    SendRoutingInfoRes_v2_t& arg = *(SendRoutingInfoRes_v2_t*) structure;
+    RoutingInfo_t& ri = arg.routingInfo;
+    if (ri.present == RoutingInfo_PR_roamingNumber)
+    {
+      OCTET_STRING_t& addr = ri.choice.roamingNumber;
+      unpackBCD912NumString(_msrn, addr.buf, addr.size);
+    }
+    smsc_log_debug(logger, "SendRoutingInfoConfV2\n%s\nmsrn=%s", result.c_str(),getMSRN());
+    /* free decoded tree */
+    def->free_struct(def, structure, 0);
+  }
 }
 char* SendRoutingInfoConf::getMSRN()
 {
