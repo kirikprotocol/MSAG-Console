@@ -28,12 +28,12 @@ void SRITSM::END_received(Message& msg)
     sriconfbuf = msg.getComponent();
     if (appcntx == locationInfoRetrievalContext_v2)
     {
-      SendRoutingInfoConf sriconf(logger);
+      SendRoutingInfoConfV2 sriconf(logger);
       sriconf.decode(sriconfbuf);
     }
     else
     {
-      SendRoutingInfoConfV2 sriconf(logger);
+      SendRoutingInfoConf sriconf(logger);
       sriconf.decode(sriconfbuf);
     }
   }
