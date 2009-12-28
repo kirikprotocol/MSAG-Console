@@ -7,6 +7,7 @@
 #include "system/status.h"
 #include "core/buffers/File.hpp"
 #include "core/buffers/Hash.hpp"
+#include "sms/sms.h"
 
 namespace smsc{
 namespace util { namespace config { class ConfigView; } }
@@ -99,6 +100,8 @@ namespace infosme{
        */
 
       void init( smsc::util::config::ConfigView* config );
+
+      bool convertMSISDNStringToAddress(const char* string, smsc::sms::Address& addr) const;
   };
 
 

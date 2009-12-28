@@ -98,6 +98,14 @@ void TaskInfo::init( ConfigView* config )
             smsc_log_warn(log_, "Task %u: <address> parameter missed. "
                           "Using global definitions", uid );
         }
+        
+        if ( ! address.empty() ) {
+            smsc::sms::Address a;
+            if ( !convertMSISDNStringToAddress(address.c_str(), a) ) {
+                throw ConfigException("Task %u: wrong \"address\" value '%s'",
+                                      uid, address.c_str() );
+            }
+        }
 
         retryOnFail = config->getBool("retryOnFail");
         replaceIfPresent = config->getBool("replaceMessage");
@@ -203,6 +211,17 @@ void TaskInfo::init( ConfigView* config )
     }
 }
 
+
+bool TaskInfo::convertMSISDNStringToAddress(const char* string, smsc::sms::Address& addr) const
+{
+    try {
+        const smsc::sms::Address converted(string);
+        addr = converted;
+    } catch (...) {
+        return false;
+    }
+    return true;
+}
 
 }
 }

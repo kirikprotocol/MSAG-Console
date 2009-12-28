@@ -51,14 +51,18 @@ class MessageGuard
     typedef enum { msgProcessed, msgSuspended, msgFailed } MessageState;
 public:
     MessageGuard(Task& argTask, const Message& theMsg) :
-    task(argTask), msg(theMsg), state(msgSuspended), smppState(0)
+    task(argTask), msg(theMsg), state(msgSuspended),
+    smppState(smsc::system::Status::SYSERR)
     {
     }
 
     ~MessageGuard()
     {
-        if (state == msgFailed ) {
+        /* if (state == msgResending ) {
             TaskProcessor::retryMessage(&task,msg.id);
+        } else */
+        if (state == msgFailed ) {
+            task.finalizeMessage(msg.id,FAILED,smppState);
         } else if ( state == msgSuspended ) {
             task.putToSuspendedMessagesQueue(msg);
         }
@@ -407,7 +411,7 @@ bool SmscConnector::send( Task& task, Message& msg )
     const char* what = "";
     int seqNum = 0;
     MessageGuard msguard(task,msg);
-    msguard.suspended( smsc::system::Status::SYSERR );
+    // msguard.suspended( smsc::system::Status::SYSERR );
 
     MutexGuard mg(destroyMonitor_);
     smsc_log_debug(log_,"smsc '%s': send msg %llx of task %u/'%s'",
@@ -456,7 +460,7 @@ bool SmscConnector::send( Task& task, Message& msg )
             smsc::sms::Address oa, da;
             const std::string& oaStr = 
                 info.address.empty() ? processor_.getAddress() : info.address;
-            if ( !convertMSISDNStringToAddress(oaStr.c_str(),oa) ) {
+            if ( !info.convertMSISDNStringToAddress(oaStr.c_str(),oa) ) {
                 if (log_->isErrorEnabled()) {
                     sprintf(whatbuf,"invalid oa: %s",oaStr.c_str());
                     what = whatbuf;
@@ -464,7 +468,7 @@ bool SmscConnector::send( Task& task, Message& msg )
                 msguard.failed(smsc::system::Status::INVSRCADR);
                 break;
             }
-            if ( !convertMSISDNStringToAddress(msg.abonent.c_str(),da) ) {
+            if ( !info.convertMSISDNStringToAddress(msg.abonent.c_str(),da) ) {
                 if (log_->isErrorEnabled()) {
                     sprintf(whatbuf,"invalid da: %s",msg.abonent.c_str());
                     what = whatbuf;
@@ -539,6 +543,7 @@ bool SmscConnector::send( Task& task, Message& msg )
                     sms.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,smsc::smpp::UssdServiceOpValue::USSN_REQUEST);
                 } catch (...) {
                     smsc_log_error(log_,"ussdpush: cannot set USSN_REQ");
+                    msguard.failed(smsc::system::Status::SYSERR);
                     return false;
                 }
             }
@@ -646,18 +651,6 @@ void SmscConnector::processWaitingEvents( time_t tm )
         }
 
     } while (!processor_.bNeedExit);
-}
-
-
-bool SmscConnector::convertMSISDNStringToAddress(const char* string, Address& address)
-{
-    try {
-        Address converted(string);
-        address = converted;
-    } catch (...) {
-        return false;
-    }
-    return true;
 }
 
 
