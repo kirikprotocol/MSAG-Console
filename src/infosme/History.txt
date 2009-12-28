@@ -1,6 +1,10 @@
 History in reverse order
 ----------------------------------------------------
 
+2009-12-28 18:02 bukind
+ bugfix: OA for task/msg is checked when TaskInfo is loaded
+         and just before sending message.
+
 2009-12-28 13:10 bukind
  bugfix: when OA is wrong message gets failed (should not be resent)
 

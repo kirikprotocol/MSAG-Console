@@ -7,6 +7,7 @@
 #include "system/status.h"
 #include "core/buffers/File.hpp"
 #include "core/buffers/Hash.hpp"
+#include "sms/sms.h"
 
 namespace smsc{
 namespace infosme{
@@ -87,7 +88,18 @@ namespace infosme{
             endDate(-1), validityPeriod(-1), validityDate(-1),
             activePeriodStart(-1), activePeriodEnd(-1), activeWeekDays(0),
             dsTimeout(0), dsUncommitedInProcess(1), dsUncommitedInGeneration(1),
-            messagesCacheSize(100), messagesCacheSleep(0), useDataSm(false), useUssdPush(false) {};
+            messagesCacheSize(100), messagesCacheSleep(0), useDataSm(false), useUssdPush(false) {}
+
+      bool convertMSISDNStringToAddress(const char* string, smsc::sms::Address& addr) const
+      {
+          try {
+              const smsc::sms::Address converted(string);
+              addr = converted;
+          } catch (...) {
+              return false;
+          }
+          return true;
+      }
   };
 
 

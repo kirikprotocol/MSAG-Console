@@ -48,19 +48,21 @@ inline size_t ReadRecord( smsc::core::buffers::File& f,
 
 class MessageGuard
 {
-    typedef enum { msgProcessed, msgSuspended, msgFailed } MessageState;
+    typedef enum { msgProcessed, msgSuspended, msgResending, msgFailed } MessageState;
 public:
     MessageGuard(Task* argTask, const Message& theMsg) :
-    task(argTask), msg(theMsg), state(msgFailed)
+    task(argTask), msg(theMsg), state(msgSuspended), smppState(0)
     {
     }
 
     ~MessageGuard()
     {
-        if (state == msgFailed ) {
+        if (state == msgResending ) {
             TaskProcessor::retryMessage(task,msg.id);
         } else if ( state == msgSuspended ) {
             task->putToSuspendedMessagesQueue(msg);
+        } else if (state == msgFailed) {
+            task->finalizeMessage(msg.id,FAILED,smppState);
         }
     }
 
@@ -70,11 +72,16 @@ public:
     void suspended() {
         state = msgSuspended;
     }
+    void failed( int smpp ) {
+        state = msgFailed;
+        smppState = smpp;
+    }
 
 private:
     Task* task;
     const Message& msg;
     MessageState state;
+    int smppState;
 };
 
 } // anonymous namespace
@@ -529,14 +536,16 @@ bool SmscConnector::send( Task* task, Message& message,
         Address oa, da;
         const char* oaStr = info.address.c_str();
         if (!oaStr || !oaStr[0]) oaStr = processor_.getAddress();
-        if (!oaStr || !convertMSISDNStringToAddress(oaStr, oa)) {
+        if (!oaStr || !info.convertMSISDNStringToAddress(oaStr, oa)) {
             smsc_log_error(log_, "Invalid originating address '%s'", oaStr ? oaStr:"-");
+            msguard.failed(smsc::system::Status::INVSRCADR);
             break;
         }
     
         const char* daStr = abonent.c_str();
-        if (!daStr || !convertMSISDNStringToAddress(daStr, da)) {
+        if (!daStr || !info.convertMSISDNStringToAddress(daStr, da)) {
             smsc_log_error(log_, "Invalid destination address '%s'", daStr ? daStr:"-");
+            msguard.failed(smsc::system::Status::INVDSTADR);
             break;
         }
     
@@ -601,6 +610,7 @@ bool SmscConnector::send( Task* task, Message& message,
         catch (...) {
             smsc_log_error(log_, "Something is wrong with message body. Set/Get property failed");
             if (msgBuf) delete msgBuf; msgBuf = 0;
+            msguard.failed(smsc::system::Status::SYSERR);
             break;
         }
 
@@ -724,18 +734,6 @@ void SmscConnector::processWaitingEvents( time_t tm )
         }
 
     } while (!processor_.bNeedExit);
-}
-
-
-bool SmscConnector::convertMSISDNStringToAddress(const char* string, Address& address)
-{
-    try {
-        Address converted(string);
-        address = converted;
-    } catch (...) {
-        return false;
-    }
-    return true;
 }
 
 

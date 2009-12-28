@@ -109,7 +109,7 @@ public:
     void processWaitingEvents( time_t tm );
 
 private:
-    bool convertMSISDNStringToAddress(const char* string, smsc::sms::Address& address);
+    // bool convertMSISDNStringToAddress(const char* string, smsc::sms::Address& address);
 
     // merge state for given receipt
     bool mergeReceiptState( const ReceiptId& receiptId, ReceiptData& rd );

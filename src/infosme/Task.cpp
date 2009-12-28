@@ -177,6 +177,7 @@ Task::Task( ConfigView* config,
 messageCache_(new MessageRegionCache),
 currentPriorityFrameCounter(0)
 {
+    try {
   smsc_log_debug(logger,"task %u ctor", taskId);
 
   if ( ! smsc::core::buffers::File::Exists(location.c_str()) ) {
@@ -189,6 +190,11 @@ currentPriorityFrameCounter(0)
 
   formatter = new OutputFormatter(info.msgTemplate.c_str());
   trackIntegrity(true, true); // delete flag & generated messages
+    } catch (...) {
+        if (formatter) delete formatter;
+        if (messageCache_) delete messageCache_;
+        throw;
+    }
 }
 
 Task::~Task()
@@ -236,6 +242,14 @@ void Task::init(ConfigView* config, uint32_t taskId)
                             "Using global definitions", info.uid);
       info.address = "";
   }
+    if ( info.address.size() > 0 ) {
+        smsc::sms::Address a;
+        if ( !info.convertMSISDNStringToAddress(info.address.c_str(),a) ) {
+            throw ConfigException("task %u: \"address\" parameter '%s' is wrong",
+                                  info.uid,info.address.c_str());
+        }
+    }
+
   info.retryOnFail = config->getBool("retryOnFail");
   info.replaceIfPresent = config->getBool("replaceMessage");
   info.transactionMode = config->getBool("transactionMode");
