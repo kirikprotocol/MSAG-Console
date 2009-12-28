@@ -444,7 +444,6 @@ void StateMachine::processSmResp( std::auto_ptr<SmppCommand> aucmd,
                        );
 
         router::RouteInfo ri = router::RouteInfo();
-        bool keyisdest = ( dir == dsdSrv2Sc || dir == dsdSrv2Srv ) ? true : false;
         if ( cmd->getOperationId() == invalidOpId() )
         {
             SmppCommand* orgCmd;
@@ -499,6 +498,8 @@ void StateMachine::processSmResp( std::auto_ptr<SmppCommand> aucmd,
             } else {
                 cmd->get_resp()->set_dir(dir);
             }
+
+            const bool keyisdest = ( dir == dsdSrv2Sc || dir == dsdSrv2Srv ) ? true : false;
 
             cmd->setServiceId(orgCmd->getServiceId());
             sms->setOriginatingAddress(smscmd.orgSrc);
