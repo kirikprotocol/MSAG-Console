@@ -496,14 +496,14 @@ struct ParamsHash:public smsc::core::buffers::Hash<ParamTag>{
 
 static const ParamsHash paramsHash;
 
-template <int SZ>
+template <size_t SZ>
 void FillStringValue(DOMNamedNodeMap* attr,buf::FixedLengthString<SZ>& str)
 {
   XmlStr value(attr->getNamedItem(XmlStr("value"))->getNodeValue());
   str=value.c_str();
 }
 
-template <int SZ>
+template <size_t SZ>
 void FillStringValue(DOMNamedNodeMap* attr,char (&str)[SZ])
 {
   XmlStr value(attr->getNamedItem(XmlStr("value"))->getNodeValue());
