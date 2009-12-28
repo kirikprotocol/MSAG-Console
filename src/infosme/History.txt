@@ -1,6 +1,9 @@
 History in reverse order
 ----------------------------------------------------
 
+2009-12-28 13:10 bukind
+ bugfix: when OA is wrong message gets failed (should not be resent)
+
 ----------------------------------------------------
 infosme-build-20091211 11:50 bukind
 
