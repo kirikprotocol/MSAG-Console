@@ -826,6 +826,7 @@ void SmscConnector::processReceipt( const ResponseData& rd, bool internal )
 }
 
 
+/*
 bool SmscConnector::send( const std::string& abonent,
                           const std::string& message,
                           const TaskInfo& info, int seqNum )
@@ -949,6 +950,7 @@ bool SmscConnector::send( const std::string& abonent,
     reconnect();
     return false;
 }
+ */
 
 
 void SmscConnector::clearHashes()

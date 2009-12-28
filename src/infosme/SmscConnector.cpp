@@ -501,24 +501,174 @@ bool SmscConnector::send( Task* task, Message& message,
         MutexGuard respGuard(responseWaitQueueLock);
         responseWaitQueue.Push(ResponseTimer(time(NULL)+processor_.getResponseWaitTime(), seqNum));
     }
-    if ( ! send(message.abonent,message.message,info,seqNum) ) {
 
-        smsc_log_error( log_, "Failed to send message #%llx for '%s'",
-                        message.id, message.abonent.c_str());
-        msguard.suspended();
-        MutexGuard snGuard(taskIdsBySeqNumMonitor);
-        if ( taskIdsBySeqNum.Delete(seqNum) ) {
-            taskIdsBySeqNumMonitor.notifyAll();
+    bool needreconnect = false;
+    do {
+
+        // if ( ! send(message.abonent,message.message,info,seqNum) ) {
+
+        const std::string& abonent = message.abonent;
+        const std::string& msgtext = message.message;
+
+        /*
+        if (!connected_) {
+            smsc_log_warn(log_, "SMSC Connector '%s' is not connected.", smscId_.c_str());
+            msguard.suspended();
+            break;
         }
-        return false;
+         */
 
+        MutexGuard mg(destroyMonitor_);
+
+        SmppTransmitter* asyncTransmitter = session_->getAsyncTransmitter();
+        if (!asyncTransmitter) {
+            smsc_log_error(log_, "Smpp transmitter is undefined for SMSC Connector '%s'.", smscId_.c_str());
+            break;
+        }
+    
+        Address oa, da;
+        const char* oaStr = info.address.c_str();
+        if (!oaStr || !oaStr[0]) oaStr = processor_.getAddress();
+        if (!oaStr || !convertMSISDNStringToAddress(oaStr, oa)) {
+            smsc_log_error(log_, "Invalid originating address '%s'", oaStr ? oaStr:"-");
+            break;
+        }
+    
+        const char* daStr = abonent.c_str();
+        if (!daStr || !convertMSISDNStringToAddress(daStr, da)) {
+            smsc_log_error(log_, "Invalid destination address '%s'", daStr ? daStr:"-");
+            break;
+        }
+    
+        time_t now = time(NULL);
+      
+        SMS sms;
+        sms.setOriginatingAddress(oa);
+        sms.setDestinationAddress(da);
+        sms.setArchivationRequested(false);
+        sms.setDeliveryReport(1);
+        sms.setValidTime( (info.validityDate <= 0 || info.validityPeriod > 0) ?
+                          now+info.validityPeriod : info.validityDate );
+        
+        sms.setIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG,
+                           (info.replaceIfPresent) ? 1:0);
+        sms.setEServiceType( (info.replaceIfPresent && info.svcType.length()>0) ?
+                             info.svcType.c_str():processor_.getSvcType() );
+    
+        sms.setIntProperty(Tag::SMPP_PROTOCOL_ID, processor_.getProtocolId());
+        sms.setIntProperty(Tag::SMPP_ESM_CLASS, (info.transactionMode) ? 2:0);
+        sms.setIntProperty(Tag::SMPP_PRIORITY, 0);
+        sms.setIntProperty(Tag::SMPP_REGISTRED_DELIVERY, 1);
+    
+        if(info.flash)
+        {
+            sms.setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,1);
+        }
+      
+        const char* out = msgtext.c_str();
+        size_t outLen = msgtext.length();
+        char* msgBuf = 0;
+        if(smsc::util::hasHighBit(out,outLen)) {
+            size_t msgLen = outLen*2;
+            msgBuf = new char[msgLen];
+            ConvertMultibyteToUCS2(out, outLen, (short*)msgBuf, msgLen,
+                                   CONV_ENCODING_CP1251);
+            sms.setIntProperty(Tag::SMPP_DATA_CODING, DataCoding::UCS2);
+            out = msgBuf;
+            outLen = msgLen;
+        } else {
+            sms.setIntProperty(Tag::SMPP_DATA_CODING, DataCoding::LATIN1);
+        }
+      
+        try {
+
+            if (outLen <= MAX_ALLOWED_MESSAGE_LENGTH && !info.useDataSm) {
+                sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE, out, (unsigned)outLen);
+                sms.setIntProperty(Tag::SMPP_SM_LENGTH, (unsigned)outLen);
+            } else if ( info.useUssdPush ) {
+                if (outLen > MAX_ALLOWED_MESSAGE_LENGTH) {
+                    smsc_log_warn(log_,"ussdpush: max allowed msg length reached: %u",unsigned(outLen));
+                    outLen = MAX_ALLOWED_MESSAGE_LENGTH;
+                }
+                sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE, out, (unsigned)outLen);
+                sms.setIntProperty(Tag::SMPP_SM_LENGTH, (unsigned)outLen);
+            } else {
+                sms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD, out,
+                                   (unsigned)((outLen <= MAX_ALLOWED_PAYLOAD_LENGTH) ?
+                                              outLen :  MAX_ALLOWED_PAYLOAD_LENGTH));
+            }
+        }
+        catch (...) {
+            smsc_log_error(log_, "Something is wrong with message body. Set/Get property failed");
+            if (msgBuf) delete msgBuf; msgBuf = 0;
+            break;
+        }
+
+        if (msgBuf) delete msgBuf;
+      
+        if (info.useUssdPush) {
+            try {
+                sms.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,smsc::smpp::UssdServiceOpValue::USSN_REQUEST);
+            } catch (...) {
+                smsc_log_error(log_,"ussdpush: cannot set USSN_REQ");
+                break;
+            }
+        }
+
+        try {
+            if (info.useDataSm) {
+                smsc_log_debug(log_, "Send DATA_SM");
+                
+                uint32_t validityDate = info.validityDate <= now ? 0 : static_cast<uint32_t>(info.validityDate - now);
+                sms.setIntProperty(Tag::SMPP_QOS_TIME_TO_LIVE, (info.validityDate <= 0 || info.validityPeriod > 0) ?
+                                                                static_cast<uint32_t>(info.validityPeriod) : validityDate);
+                PduDataSm dataSm;
+                dataSm.get_header().set_sequenceNumber(seqNum);
+                dataSm.get_header().set_commandId(SmppCommandSet::DATA_SM);
+                fillDataSmFromSms(&dataSm, &sms);
+                asyncTransmitter->sendPdu(&(dataSm.get_header()));
+            } else {
+                smsc_log_debug(log_, "Send SUBMIT_SM");
+    
+                PduSubmitSm submitSm;
+                submitSm.get_header().set_sequenceNumber(seqNum);
+                submitSm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
+                fillSmppPduFromSms(&submitSm, &sms);
+                asyncTransmitter->sendPdu(&(submitSm.get_header()));
+            }
+            TrafficControl::incOutgoing();
+        } catch (const std::exception& ex) {
+            smsc_log_warn(log_, "SmscConnector::send exception: %s", ex.what());
+            msguard.suspended();
+            needreconnect = true;
+            break;
+        } catch (...) {
+            smsc_log_warn(log_, "SmscConnector::send unknown exception");
+            msguard.suspended();
+            needreconnect = true;
+            break;
+        }
+
+        // message is sent
+        msguard.processed();
+        smsc_log_info(log_, "TaskId=[%d/%s]: Sent message #%llx sq=%d for '%s' to SMSC '%s'",
+                      info.uid, info.name.c_str(), message.id, seqNum, abonent.c_str(), smscId_.c_str());
+        return true;
+
+    } while ( false );
+
+    if ( needreconnect ) {
+        reconnect();
     }
 
-    // message is sent
-    msguard.processed();
-    smsc_log_info(log_, "TaskId=[%d/%s]: Sent message #%llx sq=%d for '%s' to SMSC '%s'",
-                  info.uid, info.name.c_str(), message.id, seqNum, message.abonent.c_str(), smscId_.c_str());
-    return true;
+    // failed to send
+    smsc_log_error( log_, "Failed to send message #%llx for '%s'",
+                    message.id, message.abonent.c_str());
+    MutexGuard snGuard(taskIdsBySeqNumMonitor);
+    if ( taskIdsBySeqNum.Delete(seqNum) ) {
+        taskIdsBySeqNumMonitor.notifyAll();
+    }
+    return false;
 }
 
 
@@ -751,148 +901,6 @@ void SmscConnector::processReceipt( const ResponseData& rd, bool internal )
     {
         smsc_log_error(log_, "Receipt(%s): Failed to process receipt.", smscId_.c_str());
     }
-}
-
-
-bool SmscConnector::send( const std::string& abonent,
-                          const std::string& message,
-                          const TaskInfo& info, int seqNum )
-{
-    if (!connected_) {
-        smsc_log_warn(log_, "SMSC Connector '%s' is not connected.", smscId_.c_str());
-        // destroyMonitor_.notify();
-        return false;
-    }
-
-    {
-        MutexGuard mg(destroyMonitor_);
-    
-        SmppTransmitter* asyncTransmitter = session_->getAsyncTransmitter();
-        if (!asyncTransmitter) {
-            smsc_log_error(log_, "Smpp transmitter is undefined for SMSC Connector '%s'.", smscId_.c_str());
-            return false;
-        }
-    
-        Address oa, da;
-        const char* oaStr = info.address.c_str();
-        if (!oaStr || !oaStr[0]) oaStr = processor_.getAddress();
-        if (!oaStr || !convertMSISDNStringToAddress(oaStr, oa)) {
-            smsc_log_error(log_, "Invalid originating address '%s'", oaStr ? oaStr:"-");
-            return false;
-        }
-    
-        const char* daStr = abonent.c_str();
-        if (!daStr || !convertMSISDNStringToAddress(daStr, da)) {
-            smsc_log_error(log_, "Invalid destination address '%s'", daStr ? daStr:"-");
-            return false;
-        }
-    
-        time_t now = time(NULL);
-      
-        SMS sms;
-        sms.setOriginatingAddress(oa);
-        sms.setDestinationAddress(da);
-        sms.setArchivationRequested(false);
-        sms.setDeliveryReport(1);
-        sms.setValidTime( (info.validityDate <= 0 || info.validityPeriod > 0) ?
-                          now+info.validityPeriod : info.validityDate );
-        
-        sms.setIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG,
-                           (info.replaceIfPresent) ? 1:0);
-        sms.setEServiceType( (info.replaceIfPresent && info.svcType.length()>0) ?
-                             info.svcType.c_str():processor_.getSvcType() );
-    
-        sms.setIntProperty(Tag::SMPP_PROTOCOL_ID, processor_.getProtocolId());
-        sms.setIntProperty(Tag::SMPP_ESM_CLASS, (info.transactionMode) ? 2:0);
-        sms.setIntProperty(Tag::SMPP_PRIORITY, 0);
-        sms.setIntProperty(Tag::SMPP_REGISTRED_DELIVERY, 1);
-    
-        if(info.flash)
-        {
-            sms.setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,1);
-        }
-      
-        const char* out = message.c_str();
-        size_t outLen = message.length();
-        char* msgBuf = 0;
-        if(smsc::util::hasHighBit(out,outLen)) {
-            size_t msgLen = outLen*2;
-            msgBuf = new char[msgLen];
-            ConvertMultibyteToUCS2(out, outLen, (short*)msgBuf, msgLen,
-                                   CONV_ENCODING_CP1251);
-            sms.setIntProperty(Tag::SMPP_DATA_CODING, DataCoding::UCS2);
-            out = msgBuf;
-            outLen = msgLen;
-        } else {
-            sms.setIntProperty(Tag::SMPP_DATA_CODING, DataCoding::LATIN1);
-        }
-      
-        try {
-
-            if (outLen <= MAX_ALLOWED_MESSAGE_LENGTH && !info.useDataSm) {
-                sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE, out, (unsigned)outLen);
-                sms.setIntProperty(Tag::SMPP_SM_LENGTH, (unsigned)outLen);
-            } else if ( info.useUssdPush ) {
-                if (outLen > MAX_ALLOWED_MESSAGE_LENGTH) {
-                    smsc_log_warn(log_,"ussdpush: max allowed msg length reached: %u",unsigned(outLen));
-                    outLen = MAX_ALLOWED_MESSAGE_LENGTH;
-                }
-                sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE, out, (unsigned)outLen);
-                sms.setIntProperty(Tag::SMPP_SM_LENGTH, (unsigned)outLen);
-            } else {
-                sms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD, out,
-                                   (unsigned)((outLen <= MAX_ALLOWED_PAYLOAD_LENGTH) ?
-                                              outLen :  MAX_ALLOWED_PAYLOAD_LENGTH));
-            }
-        }
-        catch (...) {
-            smsc_log_error(log_, "Something is wrong with message body. Set/Get property failed");
-            if (msgBuf) delete msgBuf; msgBuf = 0;
-            return false;
-        }
-
-        if (msgBuf) delete msgBuf;
-      
-        if (info.useUssdPush) {
-            try {
-                sms.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,smsc::smpp::UssdServiceOpValue::USSN_REQUEST);
-            } catch (...) {
-                smsc_log_error(log_,"ussdpush: cannot set USSN_REQ");
-                return false;
-            }
-        }
-
-        try {
-            if (info.useDataSm) {
-                smsc_log_debug(log_, "Send DATA_SM");
-                
-                uint32_t validityDate = info.validityDate <= now ? 0 : static_cast<uint32_t>(info.validityDate - now);
-                sms.setIntProperty(Tag::SMPP_QOS_TIME_TO_LIVE, (info.validityDate <= 0 || info.validityPeriod > 0) ?
-                                                                static_cast<uint32_t>(info.validityPeriod) : validityDate);
-                PduDataSm dataSm;
-                dataSm.get_header().set_sequenceNumber(seqNum);
-                dataSm.get_header().set_commandId(SmppCommandSet::DATA_SM);
-                fillDataSmFromSms(&dataSm, &sms);
-                asyncTransmitter->sendPdu(&(dataSm.get_header()));
-            } else {
-                smsc_log_debug(log_, "Send SUBMIT_SM");
-    
-                PduSubmitSm submitSm;
-                submitSm.get_header().set_sequenceNumber(seqNum);
-                submitSm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
-                fillSmppPduFromSms(&submitSm, &sms);
-                asyncTransmitter->sendPdu(&(submitSm.get_header()));
-            }
-            TrafficControl::incOutgoing();
-            return true;
-        } catch (const std::exception& ex) {
-            smsc_log_warn(log_, "SmscConnector::send exception: %s", ex.what());
-        } catch (...) {
-            smsc_log_warn(log_, "SmscConnector::send unknown exception");
-        }
-    }
-    reconnect();
-    return false;
 }
 
 

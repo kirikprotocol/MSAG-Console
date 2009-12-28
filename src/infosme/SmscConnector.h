@@ -115,10 +115,12 @@ private:
     bool mergeReceiptState( const ReceiptId& receiptId, ReceiptData& rd );
     void processResponse( const ResponseData& rd, bool internal = false );
     void processReceipt( const ResponseData& rd, bool internal = false );
+    /*
     bool send( const std::string& abonent,
                const std::string& message,
                const TaskInfo& info,
                int seqNum );
+     */
     // cleanup all hashes except receipts
     void clearHashes();
 
