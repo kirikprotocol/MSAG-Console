@@ -5,8 +5,8 @@
 #include "Connector.h"
 #include "ProtoException.h"
 #include "TaskDispatcher.h"
-#include "scag/util/PtrDestroy.h"
-#include "scag/util/PtrLess.h"
+#include "util/PtrDestroy.h"
+#include "util/PtrLess.h"
 
 namespace scag2 {
 namespace prototypes {

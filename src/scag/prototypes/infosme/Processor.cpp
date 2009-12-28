@@ -4,7 +4,7 @@
 #include "Sender.h"
 #include "ProtoException.h"
 #include "scag/util/Time.h"
-#include "scag/util/PtrLess.h"
+#include "util/PtrLess.h"
 
 namespace scag2 {
 namespace prototypes {
