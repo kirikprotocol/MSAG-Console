@@ -17,6 +17,15 @@
 #include "scag/re/base/CommandBridge.h"
 #include "scag/re/base/EventHandlerType.h"
 
+namespace {
+using namespace scag2::transport::smpp;
+
+bool isDirFromService( DataSmDirection dir ) {
+    return ( dir == dsdSrv2Sc || dir == dsdSrv2Srv );
+}
+
+}
+
 namespace scag2 {
 namespace transport {
 namespace smpp {
@@ -392,7 +401,6 @@ uint32_t StateMachine::putCommand(CommandId cmdType, SmppEntity* src, SmppEntity
     return failed;
 }
 
-
 void StateMachine::processSmResp( std::auto_ptr<SmppCommand> aucmd,
                                   ActiveSession session )
 {
@@ -499,7 +507,7 @@ void StateMachine::processSmResp( std::auto_ptr<SmppCommand> aucmd,
                 cmd->get_resp()->set_dir(dir);
             }
 
-            const bool keyisdest = ( dir == dsdSrv2Sc || dir == dsdSrv2Srv ) ? true : false;
+            // const bool keyisdest = ( dir == dsdSrv2Sc || dir == dsdSrv2Srv ) ? true : false;
 
             cmd->setServiceId(orgCmd->getServiceId());
             sms->setOriginatingAddress(smscmd.orgSrc);
@@ -514,7 +522,7 @@ void StateMachine::processSmResp( std::auto_ptr<SmppCommand> aucmd,
             if ( orgCmd->getOperationId() == invalidOpId() ) {
                 smsc_log_debug(log_, "%s: orgcmd has no operation, transit route?", where );
                 if (ri.statistics) {
-                  const Address& address =  keyisdest ? sms->getDestinationAddress() : sms->getOriginatingAddress();
+                  const Address& address =  isDirFromService(dir) ? sms->getDestinationAddress() : sms->getOriginatingAddress();
                   const SessionKey key( address );
                   CommandProperty cp(scag2::re::CommandBridge::getCommandProperty(*cmd, address, static_cast<uint8_t>(cmd->getOperationId())));
                   SessionPrimaryKey primaryKey(key);
@@ -572,7 +580,7 @@ void StateMachine::processSmResp( std::auto_ptr<SmppCommand> aucmd,
         // session should be here
 
         // create operation
-        const Address& address =  keyisdest ? sms->getDestinationAddress() : sms->getOriginatingAddress();
+        const Address& address =  isDirFromService(dir) ? sms->getDestinationAddress() : sms->getOriginatingAddress();
         CommandProperty cp(scag2::re::CommandBridge::getCommandProperty(*cmd, address, static_cast<uint8_t>(cmd->getOperationId())));
         SmppOperationMaker opmaker( where, aucmd, session, log_ );
         opmaker.process( st, cp );
@@ -784,7 +792,7 @@ void StateMachine::processSm( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* 
                        ri.transit ? "(transit)" : "");
 
         if ( ! routeset ) smscmd.setRouteInfo( ri );
-        bool keyisdest = ( cmd->getCommandId() == SUBMIT ? true :
+        const bool keyisdest = ( cmd->getCommandId() == SUBMIT ? true :
                            ( cmd->getCommandId() == DELIVERY ? false :
                              ( src->info.type == etService ? true : false )));
         const Address& address =  keyisdest ? sms.getDestinationAddress() : sms.getOriginatingAddress();
