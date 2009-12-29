@@ -191,7 +191,7 @@ public class SmsOperativeSource extends SmsSource
             Long msgIdLong = new Long(msgId);
             boolean outOfSize1 = (msgs.size() == rowsMaximum && !msgs.containsKey(msgIdLong));
             outOfSize = outOfSize || outOfSize1;
-            if (finishedMsgs.contains(msgIdLong) || (!calcExactCount && outOfSize1)) {
+            if ((query.isFilterSmsId && msgId != query.getSmsIdValue()) || finishedMsgs.contains(msgIdLong) || (!calcExactCount && outOfSize1)) {
               Message.skip(input, msgSize1 - 8 + 4);
               continue;
             }
