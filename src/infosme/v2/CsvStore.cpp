@@ -160,10 +160,10 @@ bool CsvStore::isProcessed() const
             CsvFile* f = fit->second;
             if ( !f ) continue;
             if ( f->readAll && f->openMessages == 0 ) {
-                smsc_log_debug(log,"isProc: file %s finished",f->fileName().c_str());
+                // smsc_log_debug(log,"isProc: file %s finished",f->fileName().c_str());
                 continue; 
             }
-            smsc_log_debug(log,"isProc: file %s readAll=%u openMess=%u",f->fileName().c_str(),unsigned(f->readAll),unsigned(f->openMessages));
+            // smsc_log_debug(log,"isProc: file %s readAll=%u openMess=%u",f->fileName().c_str(),unsigned(f->readAll),unsigned(f->openMessages));
             return false;
         }
     }
