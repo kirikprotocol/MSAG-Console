@@ -5,5 +5,12 @@ scag/counter/tests/test1 test1 \
   @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
   -lutil
 
+scag/counter/tests/test2 test2 \
+  -lscag-counter-impl -lscag-counter \
+  -lscag-util-io \
+  -lcore-threads \
+  @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
+  -lutil
+
 scag/counter/tests/test2time test2time \
   -lrt -ldl

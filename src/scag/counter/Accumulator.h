@@ -1,5 +1,5 @@
-#ifndef _SCAG_COUNTER_COUNTERACCUMULATOR_H
-#define _SCAG_COUNTER_COUNTERACCUMULATOR_H
+#ifndef _SCAG_COUNTER_ACCUMULATOR_H
+#define _SCAG_COUNTER_ACCUMULATOR_H
 
 #include "Counter.h"
 #include "util/TypeInfo.h"
@@ -7,6 +7,15 @@
 namespace scag2 {
 namespace counter {
 
+/**
+ * Accumulator counter.
+ * 
+ * It accumulates two values:
+ * 1. number of calls (count);
+ * 2. total accumulated value (integral).
+ * 
+ * Parameter 'w' in call of accumulate is meaningless.
+ */
 class Accumulator : public Counter
 {
 public:
@@ -35,10 +44,10 @@ public:
         integral_ = 0;
     }
 
-    virtual int64_t accumulate( int64_t inc, int64_t x = 0 ) {
+    virtual int64_t accumulate( int64_t x, int64_t w = 1 ) {
         smsc::core::synchronization::MutexGuard mg(countMutex_);
         ++count_;
-        return integral_ += inc;
+        return integral_ += x;
     }
 
 protected:

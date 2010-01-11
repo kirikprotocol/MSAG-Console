@@ -1,7 +1,7 @@
 #include <cassert>
 #include <iostream>
 #include "scag/counter/impl/HashCountManager.h"
-#include "scag/counter/Accumulator.h"
+#include "scag/counter/TimeSnapshot.h"
 #include "logger/Logger.h"
 #include "scag/util/io/Drndm.h"
 #include "core/synchronization/EventMonitor.hpp"
@@ -11,12 +11,14 @@ using scag2::util::Drndm;
 
 std::auto_ptr<impl::HashCountManager> mgr;
 
-CounterPtr< Accumulator > getAccumulator( const char* name, counttime_type delayTime )
+CounterPtr< TimeSnapshot<> > getSnapshot( const char* name, counttime_type delayTime )
 {
-    CounterPtr< Accumulator > ptr = mgr->getCounter< Accumulator >(name);
+    CounterPtr< TimeSnapshot<> > ptr = mgr->getCounter< TimeSnapshot<> >(name);
     if ( ! ptr.get() ) {
         try {
-            ptr = mgr->registerCounter( new Accumulator(name,delayTime) );
+            ptr = mgr->registerCounter
+                ( new TimeSnapshot<>(name,
+                                     TimeSnapshot<>::ticksPerSec*2,10,delayTime) );
         } catch ( std::exception& e ) {
         }
     }
@@ -45,7 +47,7 @@ int main()
 
     Drndm& rnd = Drndm::getRnd();
     const counttime_type delay = 3;
-    const unsigned indices = 10;
+    const unsigned indices = 6;
 
     for ( unsigned i = 0; i < 1000; ++i ) {
 
@@ -53,16 +55,17 @@ int main()
         const unsigned idx = Drndm::uniform(indices,rnd.get());
         char fullname[100];
         snprintf(fullname,sizeof(fullname),"%s.%u",name,idx);
-        CounterPtr< Accumulator > ptr = getAccumulator(fullname,delay);
+        CounterPtr< TimeSnapshot<> > ptr = getSnapshot(fullname,delay);
         if ( !ptr.get() ) continue;
 
-        ptr->accumulate(10);
+        // ptr->accumulate(time(0));
+        ptr->accumulate();
 
         smsc_log_debug(logger,"counter name='%s' type=%u integral=%llu",
                        ptr->getName().c_str(),
                        unsigned(ptr->getType()),
                        ptr->getIntegral());
-        mainmon.wait(1);
+        mainmon.wait(20);
     }
     return 0;
 }

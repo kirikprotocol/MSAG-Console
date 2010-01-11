@@ -63,11 +63,11 @@ public:
     /// reset the counter
     virtual void reset() = 0;
 
-    /// accumulate count with value 'inc' for position 'x' and return current integral.
-    virtual int64_t accumulate( int64_t inc, int64_t x = 0 ) = 0;
+    /// accumulate value 'x' with weight 'w' and return current integral.
+    virtual int64_t accumulate( int64_t x, int64_t w = 1 ) = 0;
 
     /// advance counter position to x and return the count.
-    /// for now, it is meaningful for 'Snapshot' counter only.
+    /// for now, this operation is meaningful for 'Snapshot' counter only.
     virtual int64_t advance( int64_t ) {
         return getIntegral();
     }
