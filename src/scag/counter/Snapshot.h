@@ -69,7 +69,6 @@ public:
     }
 
 protected:
-    smsc::core::synchronization::Mutex countMutex_;
     int64_t integral_, lasttime_;
     unsigned nbins_, first_, last_;
     int* slot_;

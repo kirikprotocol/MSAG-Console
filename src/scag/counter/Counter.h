@@ -15,7 +15,7 @@ typedef int32_t counttime_type;
 const counttime_type counttime_max = 0x7fffffff;
 const counttime_type counttime_locked = counttime_max;
 
-/// A manager responsible for (delayed) disposing a counter
+/// A manager responsible for (delayed) disposal of a counter
 class Disposer
 {
 public:
@@ -95,9 +95,12 @@ private:
     Counter( const Counter& );
     Counter& operator = ( const Counter& );
 
+protected:
+    smsc::core::synchronization::Mutex countMutex_; // a lock to be invoked from accumulate
+
 private:
     std::string name_;
-    smsc::core::synchronization::Mutex usageMutex_;
+    smsc::core::synchronization::Mutex usageMutex_; // a lock for setting number of referrers
 
     // a time to wait since release until disposal.
     counttime_type disposeDelayTime_;
@@ -127,6 +130,7 @@ inline bool Disposer::checkDisposal( Counter* c, counttime_type now ) const
 }
 
 
+/// A smart pointer to any counter
 class CounterPtrAny
 {
 public:
@@ -161,7 +165,7 @@ public:
             ptr_ = ptr;
         }
     }
-
+    
     // inline T* release() {
     // if (ptr_) ptr_->changeUsage(false);
     // return ptr_;
@@ -171,6 +175,7 @@ protected:
 };
 
 
+/// a pointer to a counter of given type.
 template < class T > class CounterPtr : protected CounterPtrAny
 {
 public:
@@ -184,6 +189,27 @@ public:
     inline T* get() const { return static_cast<T*>(ptr_); }
     inline void reset( T* ptr ) { CounterPtrAny::reset(ptr); }
 };
+
+
+// helper class to lock a counter from changing.
+/*
+class CountLock
+{
+public:
+    CountLock( const CounterPtrAny& ptr ) : ptr_(ptr) {
+        if (ptr_.get()) ptr_->countMutex_.Lock();
+    }
+    ~CountLock() {
+        if (ptr_.get()) ptr_->countMutex_.Unlock();
+    }
+
+private:
+    CountLock( const CountLock& );
+    CountLock& operator = ( const CountLock& );
+private:
+    CounterPtrAny ptr_;
+};
+ */
 
 }
 }

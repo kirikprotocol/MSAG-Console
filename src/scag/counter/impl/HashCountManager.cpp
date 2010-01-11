@@ -90,10 +90,10 @@ CounterPtrAny HashCountManager::registerAnyCounter( Counter* ccc )
 void HashCountManager::scheduleDisposal( counttime_type dt, Counter& c )
 {
     MutexGuard mg(disposeMon_);
-    if ( dt < nextTime_ ) {
-        nextTime_ = dt;
-        disposeMon_.notify();
-    }
+    // if ( dt < wakeTime_ ) {
+    // nextTime_ = dt;
+    // disposeMon_.notify();
+    // }
     if ( disposeQueue_.size() > 200 ) {
         disposeMon_.notify();
     }
@@ -129,12 +129,13 @@ int HashCountManager::Execute()
         {
             MutexGuard mg(disposeMon_);
             if ( stopping_ ) break;
-            if ( nextTime_ < nextTime ) nextTime = nextTime_;
-            nextTime_ = now + timeToSleep;
+            // if ( nextTime_ < nextTime ) nextTime = nextTime_;
+            // nextTime_ = now + timeToSleep;
             if ( ! disposeQueue_.empty() ) {
                 workingQueue.swap(disposeQueue_);
             } else if ( nextTime > now ) {
                 // we did not reached the time
+                // smsc_log_debug(log_,"next pass will be at %u",unsigned(nextTime));
                 int waitTime = int(nextTime - now) * 1000;
                 if ( waitTime < 100 ) waitTime = 100;
                 wakeTime_ = nextTime;

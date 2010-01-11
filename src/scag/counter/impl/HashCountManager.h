@@ -50,7 +50,7 @@ private:
     smsc::core::synchronization::EventMonitor  disposeMon_; // we are waiting on it
 
     counttime_type                             wakeTime_;
-    counttime_type                             nextTime_;
+    // counttime_type                             nextTime_;
 
     typedef std::vector< Counter* >            DisposeQueueType;
     DisposeQueueType                           disposeQueue_;

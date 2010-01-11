@@ -51,7 +51,6 @@ public:
     }
 
 protected:
-    smsc::core::synchronization::Mutex countMutex_;
     int64_t count_;
     int64_t integral_;
 };
