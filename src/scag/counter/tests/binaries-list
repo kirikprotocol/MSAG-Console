@@ -1,5 +1,7 @@
 scag/counter/tests/test1 test1 \
   -lscag-counter-impl -lscag-counter \
+  -lscag-util-io \
+  -lcore-threads \
   @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
   -lutil
 

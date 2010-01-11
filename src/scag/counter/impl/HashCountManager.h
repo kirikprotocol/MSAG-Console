@@ -6,15 +6,22 @@
 #include "core/buffers/Hash.hpp"
 #include "core/synchronization/Mutex.hpp"
 #include "core/synchronization/EventMonitor.hpp"
+#include "core/threads/Thread.hpp"
 
 namespace scag2 {
 namespace counter {
 namespace impl {
 
-class HashCountManager : public Manager
+class HashCountManager : public Manager, protected smsc::core::threads::Thread
 {
 public:
+    HashCountManager();
     virtual ~HashCountManager();
+
+    virtual void start() {
+        stopping_ = false;
+        this->Start();
+    }
 
     /// retrieve the counter of type T with name 'name'
     /// it may return 0 if the counter is not there.
@@ -27,15 +34,28 @@ protected:
     /// NOTE: don't use 'c' pointer after the call, the object under it may be destroyed!
     virtual CounterPtrAny registerAnyCounter( Counter* c );
     virtual void scheduleDisposal( counttime_type dt, Counter& c );
-    virtual counttime_type getCurrentTime() const;
+    virtual counttime_type getWakeTime() const;
+    inline counttime_type getCurrentTime() const {
+        return counttime_type(time(NULL));
+    }
+
+    virtual int Execute();
 
 private:
-    smsc::core::synchronization::Mutex         hashMutex_;
-    smsc::core::buffers::Hash< Counter* > hash_;
+    smsc::logger::Logger*                      log_;
 
-    smsc::core::synchronization::EventMonitor  disposeMon_;
+    smsc::core::synchronization::Mutex         hashMutex_;
+    smsc::core::buffers::Hash< Counter* >      hash_;
+
+    smsc::core::synchronization::EventMonitor  disposeMon_; // we are waiting on it
+
+    counttime_type                             wakeTime_;
     counttime_type                             nextTime_;
-    std::vector< Counter* >                    disposeQueue_;
+
+    typedef std::vector< Counter* >            DisposeQueueType;
+    DisposeQueueType                           disposeQueue_;
+
+    bool stopping_;
 };
 
 }

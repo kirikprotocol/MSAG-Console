@@ -12,16 +12,23 @@ namespace counter {
 class Counter;
 
 typedef int32_t counttime_type;
+const counttime_type counttime_max = 0x7fffffff;
+const counttime_type counttime_locked = counttime_max;
 
 /// A manager responsible for (delayed) disposing a counter
 class Disposer
 {
 public:
     virtual void scheduleDisposal( counttime_type disposeTime, Counter& counter ) = 0;
-    virtual counttime_type getCurrentTime() const = 0;
+
+    /// returns the next wake time.
+    /// Counters shall schedule their disposal referred to this time.
+    virtual counttime_type getWakeTime() const = 0;
 protected:
     /// NOTE: should be invoked from registration
     inline void setDisposer( Counter& counter );
+    /// return true if the counter may be destroyed.
+    inline bool checkDisposal( Counter* counter, counttime_type now ) const;
 };
 
 class CounterPtrAny;
@@ -40,38 +47,50 @@ protected:
 public:
     virtual ~Counter();
     inline const std::string& getName() const { return name_; }
+
+    // NOTE: this is unsynchronized access to disposal time.
     inline counttime_type getDisposeTime() const { return disposeTime_; }
 
     /// NOTE: any subclass should override this method
     virtual int getType() const = 0;
 
+    /// return the number of times accumulate was invoked from the last reset.
+    virtual int64_t getCount() const = 0;
+
+    /// return the integral of values for given counter.
+    virtual int64_t getIntegral() const = 0;
+
     /// reset the counter
     virtual void reset() = 0;
 
-    /// accumulate count with value 'inc' for position 'x' and return current count.
+    /// accumulate count with value 'inc' for position 'x' and return current integral.
     virtual int64_t accumulate( int64_t inc, int64_t x = 0 ) = 0;
 
-    /// return the most important magnitude for given counter.
-    virtual int64_t getCount() const = 0;
-    virtual int64_t getIntegral() const = 0;
+    /// advance counter position to x and return the count.
+    /// for now, it is meaningful for 'Snapshot' counter only.
+    virtual int64_t advance( int64_t ) {
+        return getIntegral();
+    }
 
 private:
     inline void changeUsage( bool inc ) {
         smsc::core::synchronization::MutexGuard mg(usageMutex_);
-        if ( inc ) { ++usage_; }
-        else if (--usage_ == 0) {
+        if ( inc ) {
+            disposeTime_ = counttime_locked;
+            ++usage_;
+        } else if (--usage_ == 0) {
             if (!disposer_) {
                 throw smsc::util::Exception("logic error: disposer is not set in counter '%s'",name_.c_str());
             }
-            disposeTime_ = disposer_->getCurrentTime() + disposeDelayTime_;
-            smsc_log_debug(loga_,"'%s': scheduling disposal at %d",name_.c_str(),int(disposeTime_));
-            disposer_->scheduleDisposal(disposeTime_,*this);
+            if ( disposeDelayTime_ == 0 ) {
+                disposeTime_ = counttime_max; // not expired
+            } else {
+                disposeTime_ = disposer_->getWakeTime() + disposeDelayTime_;
+                smsc_log_debug(loga_,"'%s': scheduling disposal at %d",name_.c_str(),int(disposeTime_));
+                disposer_->scheduleDisposal(disposeTime_,*this);
+            }
         }
     }
-    inline void setDisposer( Disposer& d ) {
-        disposer_ = &d;
-    }
-
 private:
     Counter( const Counter& );
     Counter& operator = ( const Counter& );
@@ -94,7 +113,17 @@ private:
 
 inline void Disposer::setDisposer(Counter&c)
 {
-    c.setDisposer(*this);
+    c.disposer_ = this;
+}
+
+inline bool Disposer::checkDisposal( Counter* c, counttime_type now ) const
+{
+    if ( !c || c->usage_ ) return false;
+    {
+        MutexGuard mg(c->usageMutex_);
+        if ( c->usage_ || c->disposeTime_ > now ) return false;
+    }
+    return true;
 }
 
 
