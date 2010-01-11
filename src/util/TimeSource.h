@@ -52,7 +52,7 @@ struct TimeSourceClockGettime {
 #endif
 
 #if defined(sun)
-struct TimeSourceClockGethrtime {
+struct TimeSourceGethrtime {
     typedef hrtime_t hrtime_type;
     static const hrtime_type ticksPerSec = 1000000000U;
     inline static hrtime_type getHRTime() {
