@@ -44,7 +44,7 @@ public:
         integral_ = 0;
     }
 
-    virtual int64_t accumulate( int64_t x, int64_t w = 1 ) {
+    virtual int64_t accumulate( int64_t x, int w = 1 ) {
         smsc::core::synchronization::MutexGuard mg(countMutex_);
         ++count_;
         return integral_ += x;

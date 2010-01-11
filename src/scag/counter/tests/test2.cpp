@@ -52,7 +52,7 @@ int main()
     for ( unsigned i = 0; i < 1000; ++i ) {
 
         const char* name = names[Drndm::uniform(sizeof(names)/sizeof(names[0]),rnd.get())];
-        const unsigned idx = Drndm::uniform(indices,rnd.get());
+        const unsigned idx = unsigned(Drndm::uniform(indices,rnd.get()));
         char fullname[100];
         snprintf(fullname,sizeof(fullname),"%s.%u",name,idx);
         CounterPtr< TimeSnapshot<> > ptr = getSnapshot(fullname,delay);

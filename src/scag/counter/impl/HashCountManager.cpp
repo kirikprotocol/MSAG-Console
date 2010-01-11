@@ -11,6 +11,15 @@ template < class T > struct select2nd
     typename T::second_type& operator () ( T& pair ) const { return pair.second; }
 };
 
+struct PtrHashFunc
+{
+    template <class T> static inline unsigned int CalcHash( const T* key )
+    {
+        return unsigned(reinterpret_cast<uint64_t>
+                        (reinterpret_cast<const void*>(key)));
+    }
+};
+
 }
 
 
@@ -103,7 +112,7 @@ counttime_type HashCountManager::getWakeTime() const
 int HashCountManager::Execute()
 {
     typedef std::multimap< counttime_type, Counter* > ExpireMapType;
-    typedef smsc::core::buffers::XHash< Counter*, ExpireMapType::iterator > ExpireHashType;
+    typedef smsc::core::buffers::XHash< Counter*, ExpireMapType::iterator, PtrHashFunc > ExpireHashType;
 
     smsc_log_info(log_,"started");
 

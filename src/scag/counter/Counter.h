@@ -64,7 +64,7 @@ public:
     virtual void reset() = 0;
 
     /// accumulate value 'x' with weight 'w' and return current integral.
-    virtual int64_t accumulate( int64_t x, int64_t w = 1 ) = 0;
+    virtual int64_t accumulate( int64_t x, int w = 1 ) = 0;
 
     /// advance counter position to x and return the count.
     /// for now, this operation is meaningful for 'Snapshot' counter only.

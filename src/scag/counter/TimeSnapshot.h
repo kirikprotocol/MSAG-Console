@@ -32,7 +32,7 @@ public:
 
     virtual int getType() const { return getStaticType(); }
 
-    virtual int64_t accumulate( int64_t x = 0, int64_t w = 1 ) {
+    virtual int64_t accumulate( int64_t x = 0, int w = 1 ) {
         const int64_t bin = int64_t(T::getHRTime()/resol_);
         return Snapshot::accumulate(bin);
     }

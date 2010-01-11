@@ -3,7 +3,7 @@
 namespace scag2 {
 namespace counter {
 
-int64_t Snapshot::accumulate( int64_t x, int64_t inc )
+int64_t Snapshot::accumulate( int64_t x, int inc )
 {
     smsc::core::synchronization::MutexGuard mg(countMutex_);
     int64_t diff = x - lasttime_;

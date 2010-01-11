@@ -62,7 +62,7 @@ public:
         slot_[0] = 0;
     }
 
-    virtual int64_t accumulate( int64_t x, int64_t w = 1 );
+    virtual int64_t accumulate( int64_t x, int w = 1 );
 
     virtual int64_t advance( int64_t x ) {
         return accumulate(x,0);
