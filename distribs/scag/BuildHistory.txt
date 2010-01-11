@@ -462,7 +462,10 @@ TO ALL: Insert log record for all significant changes & fixes here.
 2009-12-10 ??:?? odarchenko
   msag: http routes fix
 
---- current-fixes ---
+=================================================================================================================
+2010-01-11 11:10 bukind msag-build-20100111
 2009-12-28 11:50 bukind
   msag: bugfix: data_sm_resp always determined its direction as from sc to srv,
         thus always taking OA to determine operator, service, etc.
+
+--- current-fixes ---
