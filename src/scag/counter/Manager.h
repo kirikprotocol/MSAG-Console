@@ -4,6 +4,7 @@
 #include "Counter.h"
 #include "util/TypeInfo.h"
 #include "util/Exception.hpp"
+#include "AveragingManager.h"
 
 namespace scag2 {
 namespace counter {
@@ -33,6 +34,9 @@ public:
     /// retrieve the counter of type T with name 'name'
     /// it may return 0 if the counter is not there.
     virtual CounterPtrAny getAnyCounter( const char* name ) = 0; // throw smsc::util::Exception
+
+    /// return an instance of averaging manager
+    virtual AveragingManager& getAvgManager() = 0;
 
 protected:
     /// register counter and return a ptr to it, or to existing counter of this name.

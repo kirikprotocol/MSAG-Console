@@ -1,7 +1,7 @@
 #include <cassert>
 #include <iostream>
 #include "scag/counter/impl/HashCountManager.h"
-#include "scag/counter/TimeSnapshot.h"
+#include "scag/counter/Average.h"
 #include "logger/Logger.h"
 #include "scag/util/io/Drndm.h"
 #include "core/synchronization/EventMonitor.hpp"
@@ -11,14 +11,25 @@ using scag2::util::Drndm;
 
 std::auto_ptr<impl::HashCountManager> mgr;
 
-CounterPtr< TimeSnapshot<> > getSnapshot( const char* name, counttime_type delayTime )
+const char* groupname = "sys.performance";
+
+CounterPtr< Average > getCounter( const char* name, counttime_type delayTime )
 {
-    CounterPtr< TimeSnapshot<> > ptr = mgr->getCounter< TimeSnapshot<> >(name);
+    CounterPtr< Average > ptr = mgr->getCounter< Average >(name);
     if ( ! ptr.get() ) {
         try {
+            CounterPtr< AveragingGroup > grp( mgr->getCounter< AveragingGroup >(groupname) );
+            if ( !grp.get() ) {
+                grp = mgr->registerCounter
+                    ( new AveragingGroup( groupname,
+                                          mgr->getAvgManager(),
+                                          1000,
+                                          delayTime ) );
+            }
             ptr = mgr->registerCounter
-                ( new TimeSnapshot<>(name,
-                                     TimeSnapshot<>::ticksPerSec*2,10,delayTime) );
+                ( new Average(name,
+                              grp,
+                              delayTime) );
         } catch ( std::exception& e ) {
         }
     }
@@ -55,16 +66,23 @@ int main()
         const unsigned idx = unsigned(Drndm::uniform(indices,rnd.get()));
         char fullname[100];
         snprintf(fullname,sizeof(fullname),"%s.%u",name,idx);
-        CounterPtr< TimeSnapshot<> > ptr = getSnapshot(fullname,delay);
+        CounterPtr< Average > ptr = getCounter(fullname,delay);
         if ( !ptr.get() ) continue;
 
         // ptr->accumulate(time(0));
-        ptr->increment();
+        const uint64_t r0 = rnd.get();
+        const uint64_t r1 = Drndm::uniform(100,r0);
+        const int64_t r2 = int64_t(r1) - 50;
+        smsc_log_debug(logger,"r0=%llu r1=%llu r2=%lld",r0,r1,r2);
+        ptr->accumulate(r2);
 
-        smsc_log_debug(logger,"counter name='%s' type=%u integral=%llu",
+        const Average::Stat& total = ptr->total();
+        const Average::Stat& last = ptr->last();
+        smsc_log_debug(logger,"counter name='%s' type=%u total=(cnt:%lld,sum:%lld,sm2:%lld), last=(cnt:%lld,sum:%lld,sm2:%lld)",
                        ptr->getName().c_str(),
                        unsigned(ptr->getType()),
-                       ptr->getIntegral());
+                       total.count, total.sum, total.sum2,
+                       last.count, last.sum, last.sum2 );
         mainmon.wait(20);
     }
     return 0;

@@ -18,16 +18,16 @@ public:
     HashCountManager();
     virtual ~HashCountManager();
 
-    virtual void start() {
-        stopping_ = false;
-        this->Start();
-    }
+    virtual void start();
+    void stop();
 
+    virtual AveragingManager& getAvgManager();
+
+protected:
     /// retrieve the counter of type T with name 'name'
     /// it may return 0 if the counter is not there.
     virtual CounterPtrAny getAnyCounter( const char* name );
 
-protected:
     /// register counter and return a ptr to it, or to existing counter of this name.
     /// it may throw exception if counter types are not the same.
     /// otherwise it always return a ptr to a good counter.
@@ -40,6 +40,9 @@ protected:
     }
 
     virtual int Execute();
+
+    // averaging mgr iface
+    class AveragingMgrImpl;
 
 private:
     smsc::logger::Logger*                      log_;
@@ -54,6 +57,7 @@ private:
 
     typedef std::vector< Counter* >            DisposeQueueType;
     DisposeQueueType                           disposeQueue_;
+    AveragingMgrImpl*                          avgManager_;
 
     bool stopping_;
 };

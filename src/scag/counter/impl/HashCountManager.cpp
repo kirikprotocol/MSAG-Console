@@ -1,8 +1,10 @@
+#include <cassert>
 #include <map>
 #include <algorithm>
 #include "HashCountManager.h"
 #include "util/Exception.hpp"
 #include "core/buffers/XHash.hpp"
+#include "scag/counter/AveragingGroup.h"
 
 namespace {
 
@@ -29,10 +31,139 @@ namespace impl {
 
 using namespace smsc::core::synchronization;
 
+
+class HashCountManager::AveragingMgrImpl : public AveragingManager, public smsc::core::threads::Thread
+{
+public:
+    AveragingMgrImpl( smsc::logger::Logger* logger ) :
+    log_(logger), wakeTime_(util::MsecTime::max_time), stopping_(true) {}
+    virtual ~AveragingMgrImpl() {
+        stop();
+    }
+
+    void start() {
+        if ( !stopping_ ) return;
+        MutexGuard mg(mon_);
+        if ( !stopping_ ) return;
+        smsc_log_debug(log_,"starting");
+        stopping_ = false;
+        this->Start();
+    }
+
+    void stop() {
+        if ( stopping_ ) return;
+        {
+            MutexGuard mg(mon_);
+            if ( stopping_ ) return;
+            smsc_log_debug(log_,"stopping");
+            stopping_ = true;
+            mon_.notifyAll();
+        }
+        this->WaitFor();
+    }
+
+    virtual int Execute();
+
+    virtual void addGroup( AveragingGroup& group, util::MsecTime::time_type wakeTime ) {
+        MutexGuard mg(mon_);
+        GrpMap::iterator* iptr = groupHash_.GetPtr(&group);
+        if ( ! iptr ) {
+            smsc_log_debug(log_,"adding group '%s' at %lld",
+                           group.getName().c_str(),wakeTime);
+            GrpMap::iterator iter = groupMap_.insert( std::make_pair(wakeTime,&group) );
+            groupHash_.Insert(&group,iter);
+        } else {
+            smsc_log_warn(log_,"group '%s' is already in the mgr",
+                          group.getName().c_str());
+            if ( (*iptr)->first != wakeTime ) {
+                groupMap_.erase(*iptr);
+                *iptr = groupMap_.insert( std::make_pair(wakeTime,&group));
+            }
+        }
+        if ( wakeTime < wakeTime_ ) {
+            wakeTime_ = wakeTime;
+            mon_.notify();
+        }
+    }
+
+    virtual void remGroup( AveragingGroup& group ) {
+        MutexGuard mg(mon_);
+        GrpMap::iterator* iptr = groupHash_.GetPtr(&group);
+        if ( !iptr ) {
+            smsc_log_warn(log_,"group '%s' is not found in the mgr", group.getName().c_str());
+            return;
+        }
+        smsc_log_debug(log_,"removing group '%s'",group.getName().c_str());
+        groupMap_.erase(*iptr);
+        groupHash_.Delete(&group);
+    }
+
+private:
+    typedef std::multimap< util::MsecTime::time_type, AveragingGroup* > GrpMap;
+    typedef smsc::core::buffers::XHash< AveragingGroup*, GrpMap::iterator > GrpHash;
+
+private:
+    EventMonitor              mon_;
+    smsc::logger::Logger*     log_;
+    GrpMap                    groupMap_;
+    GrpHash                   groupHash_;
+    util::MsecTime::time_type wakeTime_;
+    bool                      stopping_;
+};
+
+
+int HashCountManager::AveragingMgrImpl::Execute()
+{
+    smsc_log_info(log_,"started");
+    const int timeToSleep = 10000;
+    while ( ! stopping_ ) {
+        util::MsecTime::time_type curTime = util::MsecTime::currentTimeMillis();
+
+        MutexGuard mg(mon_);
+        smsc_log_debug(log_,"new pass at %lld, wake=%lld",curTime, wakeTime_);
+        if ( stopping_ ) break;
+        if ( wakeTime_ > curTime ) {
+            int tosleep;
+            if ( wakeTime_ > curTime + timeToSleep ) {
+                tosleep = timeToSleep;
+            } else {
+                tosleep = int(wakeTime_ - curTime);
+            }
+            mon_.wait(tosleep);
+            continue;
+        }
+
+        GrpMap::iterator i = groupMap_.begin();
+        while ( i != groupMap_.end() ) {
+            if ( i->first > curTime ) break;
+            if ( stopping_ ) break;
+            AveragingGroup* grp = i->second;
+            smsc_log_debug(log_,"averaging group '%s'",grp->getName().c_str());
+            const util::MsecTime::time_type nextTime = grp->average( curTime );
+            GrpMap::iterator j = i;
+            ++i;
+            if ( nextTime != j->first ) {
+                GrpMap::iterator* ptr = groupHash_.GetPtr(grp);
+                assert(ptr);
+                groupMap_.erase(j);
+                *ptr = groupMap_.insert(std::make_pair(nextTime,grp));
+            }
+        }
+
+        wakeTime_ = util::MsecTime::max_time;
+        if ( !groupMap_.empty() ) wakeTime_ = groupMap_.begin()->first;
+    }
+    smsc_log_info(log_,"stopped");
+    return 0;
+}
+
+// ======================================================================
+
 HashCountManager::HashCountManager() :
 Manager(),
 smsc::core::threads::Thread(),
 log_(smsc::logger::Logger::getInstance("count.mgr")),
+avgManager_(new AveragingMgrImpl(smsc::logger::Logger::getInstance("count.avmg"))),
 stopping_(true)
 {
     smsc_log_debug(log_,"ctor");
@@ -42,20 +173,70 @@ stopping_(true)
 HashCountManager::~HashCountManager()
 {
     smsc_log_debug(log_,"dtor");
+    stop();
+    /*
     {
         MutexGuard mg(disposeMon_);
         stopping_ = true;
         disposeMon_.notifyAll();
         disposeQueue_.clear();
     }
+     */
     this->WaitFor();
-    MutexGuard mg(hashMutex_);
-    char* key;
-    Counter* ptr;
-    for ( smsc::core::buffers::Hash<Counter*>::Iterator iter(&hash_); iter.Next(key,ptr); ) {
-        delete ptr;
+    bool isempty;
+    unsigned npass = 0;
+    do {
+        isempty = true;
+        MutexGuard mg(hashMutex_);
+        char* key;
+        Counter** ptr;
+        for ( smsc::core::buffers::Hash<Counter*>::Iterator iter(&hash_); iter.Next(key,ptr); ) {
+            if ( *ptr ) {
+                if ( checkDisposal(*ptr,counttime_max) ) {
+                    delete *ptr;
+                    *ptr = 0;
+                } else {
+                    smsc_log_debug(log_,"counter '%s' is still locked",(*ptr)->getName().c_str());
+                    isempty = false;
+                }
+            }
+        }
+    } while ( !isempty && ++npass < 20 );
+    if ( !isempty ) {
+        smsc_log_warn(log_,"manager has non-free counters");
     }
     hash_.Empty();
+    delete avgManager_; avgManager_ = 0;
+}
+
+
+void HashCountManager::start()
+{
+    if ( !stopping_ ) return;
+    MutexGuard mg(disposeMon_);
+    if ( !stopping_ ) return;
+    stopping_ = false;
+    avgManager_->start();
+    this->Start();
+}
+
+
+void HashCountManager::stop()
+{
+    if ( stopping_ ) return;
+    {
+        MutexGuard mg(disposeMon_);
+        stopping_ = true;
+        avgManager_->stop();
+        disposeMon_.notifyAll();
+        disposeQueue_.clear();
+    }
+}
+
+
+AveragingManager& HashCountManager::getAvgManager()
+{
+    return *avgManager_;
 }
 
 

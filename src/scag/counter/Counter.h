@@ -54,23 +54,17 @@ public:
     /// NOTE: any subclass should override this method
     virtual int getType() const = 0;
 
-    /// return the number of times accumulate was invoked from the last reset.
-    virtual int64_t getCount() const = 0;
-
-    /// return the integral of values for given counter.
-    virtual int64_t getIntegral() const = 0;
-
     /// reset the counter
     virtual void reset() = 0;
 
-    /// accumulate value 'x' with weight 'w' and return current integral.
-    virtual int64_t accumulate( int64_t x, int w = 1 ) = 0;
+    // accumulate value 'x' with weight 'w' and return current integral.
+    // virtual int64_t accumulate( int64_t x, int w = 1 ) = 0;
 
-    /// advance counter position to x and return the count.
-    /// for now, this operation is meaningful for 'Snapshot' counter only.
-    virtual int64_t advance( int64_t ) {
-        return getIntegral();
-    }
+    // advance counter position to x and return the count.
+    // for now, this operation is meaningful for 'Snapshot' counter only.
+    // virtual int64_t advance( int64_t ) {
+    // return getIntegral();
+    // }
 
 private:
     inline void changeUsage( bool inc ) {
@@ -97,6 +91,7 @@ private:
 
 protected:
     smsc::core::synchronization::Mutex countMutex_; // a lock to be invoked from accumulate
+    Disposer*      disposer_;
 
 private:
     std::string name_;
@@ -110,7 +105,6 @@ private:
 
     // number of consumers
     unsigned       usage_;
-    Disposer*      disposer_;
 };
 
 

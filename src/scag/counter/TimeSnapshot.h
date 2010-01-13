@@ -32,15 +32,19 @@ public:
 
     virtual int getType() const { return getStaticType(); }
 
-    virtual int64_t accumulate( int64_t x = 0, int w = 1 ) {
+    inline int64_t increment() {
         const int64_t bin = int64_t(T::getHRTime()/resol_);
         return Snapshot::accumulate(bin);
     }
 
-    virtual int64_t advance( int64_t x ) {
+    inline int64_t advanceTime() {
         const int64_t bin = int64_t(T::getHRTime()/resol_);
         return Snapshot::advance(bin);
     }
+
+protected:
+    using Snapshot::accumulate;
+    using Snapshot::advance;
 
 protected:
     typename T::hrtime_type resol_;

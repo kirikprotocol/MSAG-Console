@@ -43,16 +43,6 @@ public:
 
     virtual int getType() const { return getStaticType(); }
 
-    virtual int64_t getCount() const {
-        // smsc::core::synchronization::MutexGuard mg(countMutex_);
-        return integral_;
-    }
-
-    virtual int64_t getIntegral() const {
-        // smsc::core::synchronization::MutexGuard mg(countMutex_);
-        return integral_;
-    }
-
     virtual void reset() {
         smsc::core::synchronization::MutexGuard mg(countMutex_);
         integral_ = 0;
@@ -62,9 +52,19 @@ public:
         slot_[0] = 0;
     }
 
-    virtual int64_t accumulate( int64_t x, int w = 1 );
+    inline int64_t getCount() const {
+        // smsc::core::synchronization::MutexGuard mg(countMutex_);
+        return integral_;
+    }
 
-    virtual int64_t advance( int64_t x ) {
+    inline int64_t getIntegral() const {
+        // smsc::core::synchronization::MutexGuard mg(countMutex_);
+        return integral_;
+    }
+
+    int64_t accumulate( int64_t x, int w = 1 );
+
+    inline int64_t advance( int64_t x ) {
         return accumulate(x,0);
     }
 

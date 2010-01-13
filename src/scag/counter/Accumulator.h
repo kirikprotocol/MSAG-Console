@@ -13,8 +13,6 @@ namespace counter {
  * It accumulates two values:
  * 1. number of calls (count);
  * 2. total accumulated value (integral).
- * 
- * Parameter 'w' in call of accumulate is meaningless.
  */
 class Accumulator : public Counter
 {
@@ -28,23 +26,23 @@ public:
 
     virtual int getType() const { return getStaticType(); }
 
-    virtual int64_t getCount() const {
-        // smsc::core::synchronization::MutexGuard mg(countMutex_);
-        return count_;
-    }
-
-    virtual int64_t getIntegral() const {
-        // smsc::core::synchronization::MutexGuard mg(countMutex_);
-        return integral_;
-    }
-
     virtual void reset() {
         smsc::core::synchronization::MutexGuard mg(countMutex_);
         count_ = 0;
         integral_ = 0;
     }
 
-    virtual int64_t accumulate( int64_t x, int w = 1 ) {
+    inline int64_t getCount() const {
+        // smsc::core::synchronization::MutexGuard mg(countMutex_);
+        return count_;
+    }
+
+    inline int64_t getIntegral() const {
+        // smsc::core::synchronization::MutexGuard mg(countMutex_);
+        return integral_;
+    }
+
+    inline int64_t accumulate( int64_t x ) {
         smsc::core::synchronization::MutexGuard mg(countMutex_);
         ++count_;
         return integral_ += x;
