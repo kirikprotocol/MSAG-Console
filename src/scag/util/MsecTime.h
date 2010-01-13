@@ -2,6 +2,7 @@
 #define _SCAG_UTIL_MSECTIME_H
 
 #include <sys/time.h>
+#include "util/int.h"
 
 namespace scag2 {
 namespace util {
@@ -11,6 +12,7 @@ class MsecTime
 public:
     // NOTE: time is signed to allow arithmetics
     typedef int64_t time_type;
+    static const time_type max_time = 0x7fffffffffffffffLL;
 
     MsecTime() {
         ::gettimeofday(&t0_,0);
