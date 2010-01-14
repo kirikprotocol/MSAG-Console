@@ -276,13 +276,13 @@ private final static String GET_MAX_MEMBERS_COUNT_FOR_OWNER_SQL = "SELECT NVL(MA
 
   private List parseDistributionList(final List listStr /*, DlFilter filter*/) throws AdminException {
     if (null == listStr || 0 == listStr.size())
-      return new LinkedList();
-    final List result = new LinkedList();
+      return Collections.EMPTY_LIST;
+    final List result = new ArrayList();
     int i = 0;
     while (i+2 < listStr.size()) {
       String name = (String) listStr.get(i++);
       String owner = (String) listStr.get(i++);
-      if (owner.equals("")) owner = null;
+      if (owner.length() == 0) owner = null;
       int maxElements = Integer.parseInt((String) listStr.get(i++));
       final DistributionList dl = new DistributionList(name, owner, maxElements);
       // if (filter == null || filter.isItemAllowed(dl)) {

@@ -11,6 +11,7 @@ import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.admin.route.MaskList;
 import ru.novosoft.smsc.jsp.SMSCErrors;
+import ru.novosoft.smsc.jsp.util.tables.impl.dl.DlFilter;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
@@ -30,7 +31,7 @@ public class dlEdit extends dlBody {
             List dls = admin.list();
             for (Iterator iterator = dls.iterator(); iterator.hasNext();) {
                 DistributionList distributionList = (DistributionList) iterator.next();
-                if (distributionList.getName().equals(name))
+                if (distributionList.getName().equalsIgnoreCase(name))
                     return distributionList;
             }
             return null;
