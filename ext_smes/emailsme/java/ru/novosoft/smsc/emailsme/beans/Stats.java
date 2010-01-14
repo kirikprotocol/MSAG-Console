@@ -98,8 +98,11 @@ public class Stats extends SmeBean {
   public void setFrom(String from) {
     if (from != null && from.trim().length() > 0)
       filter.setFrom(convertStringToDate(from));
-    else
-      filter.setFrom(new Date(System.currentTimeMillis() - 3600000 * 24));
+    else {
+      long now = System.currentTimeMillis();
+      long offset = TimeZone.getDefault().getOffset(now);
+      filter.setFrom(new Date(now - offset - 3600000 * 24));
+    }
   }
 
   public String getFrom() {
@@ -109,8 +112,11 @@ public class Stats extends SmeBean {
   public void setTill(String till) {
     if (till != null && till.trim().length() > 0)
       filter.setTill(convertStringToDate(till));
-    else
-      filter.setTill(new Date());
+    else {
+      long now = System.currentTimeMillis();
+      long offset = TimeZone.getDefault().getOffset(now);
+      filter.setTill(new Date(now - offset));
+    }
   }
 
   public String getTill() {
