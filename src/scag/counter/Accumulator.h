@@ -42,10 +42,23 @@ public:
         return integral_;
     }
 
-    inline int64_t accumulate( int64_t x ) {
+    virtual void increment( int64_t x = 1, int w = 1 ) {
         smsc::core::synchronization::MutexGuard mg(countMutex_);
-        ++count_;
-        return integral_ += x;
+        count_ += w;
+        integral_ += x*w;
+    }
+
+    virtual bool getValue( Valtype a, int64_t& value )
+    {
+        smsc::core::synchronization::MutexGuard mg(countMutex_);
+        switch (a) {
+        case SUM:
+        case VALUE: value = integral_; return true;
+        case COUNT: value = count_; return true;
+        case AVERAGE: count_ ? value = ( integral_ + count_/2 ) / count_ : 0; return true;
+        default: break;
+        }
+        return false;
     }
 
 protected:

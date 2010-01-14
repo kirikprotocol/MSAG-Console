@@ -32,14 +32,26 @@ public:
 
     virtual int getType() const { return getStaticType(); }
 
-    inline int64_t increment() {
+    virtual void increment( int64_t x = 1, int w = 1 ) {
         const int64_t bin = int64_t(T::getHRTime()/resol_);
-        return Snapshot::accumulate(bin);
+        Snapshot::accumulate(bin,w);
     }
 
     inline int64_t advanceTime() {
         const int64_t bin = int64_t(T::getHRTime()/resol_);
         return Snapshot::advance(bin);
+    }
+
+    virtual bool getValue( Valtype a, int64_t& value ) {
+        switch (a) {
+        case VALUE:
+        case COUNT:
+        case SUM: {
+            value = advanceTime();
+            return true;
+        }
+        }
+        return false;
     }
 
 protected:

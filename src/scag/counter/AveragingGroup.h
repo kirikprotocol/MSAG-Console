@@ -42,6 +42,13 @@ public:
     /// reset all counters attached to the group
     virtual void reset();
 
+    virtual void increment( int64_t x = 1, int w = 1 ) {
+    }
+
+    virtual bool getValue( Valtype a, int64_t& x ) {
+        return false;
+    }
+
     /// average all counters attached to the group
     util::MsecTime::time_type average( util::MsecTime::time_type curTime );
 

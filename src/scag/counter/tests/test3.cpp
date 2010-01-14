@@ -74,7 +74,7 @@ int main()
         const uint64_t r1 = Drndm::uniform(100,r0);
         const int64_t r2 = int64_t(r1) - 50;
         smsc_log_debug(logger,"r0=%llu r1=%llu r2=%lld",r0,r1,r2);
-        ptr->accumulate(r2);
+        ptr->increment(r2);
 
         const Average::Stat& total = ptr->total();
         const Average::Stat& last = ptr->last();

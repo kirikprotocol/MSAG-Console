@@ -56,7 +56,7 @@ int main()
         CounterPtr< Accumulator > ptr = getAccumulator(fullname,delay);
         if ( !ptr.get() ) continue;
 
-        ptr->accumulate(10);
+        ptr->increment(10);
 
         smsc_log_debug(logger,"counter name='%s' type=%u integral=%llu",
                        ptr->getName().c_str(),

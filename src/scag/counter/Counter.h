@@ -45,6 +45,24 @@ protected:
     Counter( const std::string& name, counttime_type disposeDelayTime = 0 );
 
 public:
+
+    typedef enum Valtype {
+            VALUE = 0,      // the most appropriate value for this counter
+            COUNT,
+            SUM,
+            MIN,
+            MAX,
+            AVERAGE,
+            SIGMA,
+            TOTALVALUE,     // TOTAL* are used for averaging
+            TOTALCOUNT,
+            TOTALSUM,
+            TOTALMIN,
+            TOTALMAX,
+            TOTALAVERAGE,
+            TOTALSIGMA
+    } Valtype;
+
     virtual ~Counter();
     inline const std::string& getName() const { return name_; }
 
@@ -54,17 +72,21 @@ public:
     /// NOTE: any subclass should override this method
     virtual int getType() const = 0;
 
+    /// flags
+    void setFlags( int32_t flags ) { flags_ = flags; }
+    int32_t getFlags() const { return flags_; }
+
     /// reset the counter
     virtual void reset() = 0;
 
-    // accumulate value 'x' with weight 'w' and return current integral.
-    // virtual int64_t accumulate( int64_t x, int w = 1 ) = 0;
+    /// increment the counter with value 'x' with weight 'w'.
+    /// This method is for generic usage from e.g. MSAG rules.
+    /// NOTE: that x and w may be ignored for some counters.
+    virtual void increment( int64_t x = 1, int w = 1 ) = 0;
 
-    // advance counter position to x and return the count.
-    // for now, this operation is meaningful for 'Snapshot' counter only.
-    // virtual int64_t advance( int64_t ) {
-    // return getIntegral();
-    // }
+    /// get the value of counter attribute
+    /// return false if the value is not defined.
+    virtual bool getValue( Valtype a, int64_t& value ) = 0;
 
 private:
     inline void changeUsage( bool inc ) {
@@ -105,6 +127,7 @@ private:
 
     // number of consumers
     unsigned       usage_;
+    int32_t        flags_;
 };
 
 
@@ -170,7 +193,7 @@ protected:
 
 
 /// a pointer to a counter of given type.
-template < class T > class CounterPtr : protected CounterPtrAny
+template < class T > class CounterPtr : public CounterPtrAny
 {
 public:
     inline CounterPtr( T* ptr = 0 ) : CounterPtrAny(ptr) {}

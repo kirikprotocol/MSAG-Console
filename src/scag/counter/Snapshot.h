@@ -68,6 +68,25 @@ public:
         return accumulate(x,0);
     }
 
+    /// NOTE: x typically must be an ordered streaming value
+    virtual void increment( int64_t x = 1, int w = 1 ) {
+        accumulate(x,w);
+    }
+
+    virtual bool getValue( Valtype a, int64_t& value ) 
+    {
+        switch (a) {
+        case VALUE:
+        case COUNT:
+        case SUM: {
+            smsc::core::synchronization::MutexGuard mg(countMutex_);
+            value = integral_; return true;
+        }
+        default: break;
+        }
+        return false;
+    }
+
 protected:
     int64_t integral_, lasttime_;
     unsigned nbins_, first_, last_;

@@ -49,14 +49,14 @@ public:
             sum += s.sum;
             sum2 += s.sum2;
         }
-        inline double average() const {
+        inline int64_t average() const {
             register const int64_t c = count;
-            return c ? double(sum) / c : 0;
+            return c ? (sum+c/2) / c : 0;
         }
         inline double sigma() const {
             register const int64_t c = count;
             if ( c == 0 ) return 0;
-            const double avg = average();
+            const double avg = double(sum) / c;
             const double sig2 = double(sum2) / c - avg*avg;
             return sig2 > 0 ? std::sqrt(sig2) : -std::sqrt(-sig2);
         }
@@ -80,12 +80,30 @@ public:
     /// return current data
     inline const Stat& current() const { return current_; }
     
-    int64_t accumulate( int64_t x, int w = 1 ) {
+    virtual void increment( int64_t x = 1, int w = 1 ) {
         smsc::core::synchronization::MutexGuard mg(countMutex_);
         current_.count += w;
         current_.sum += x*w;
         current_.sum2 += x*x*w;
-        return current_.sum;
+    }
+
+    virtual bool getValue( Valtype a, int64_t& value )
+    {
+        smsc::core::synchronization::MutexGuard mg(countMutex_);
+        switch (a) {
+        case VALUE:
+        case AVERAGE: value = current_.average(); return true;
+        case COUNT: value = current_.count; return true;
+        case SUM: value = current_.sum; return true;
+        case SIGMA: {
+            double x = current_.sigma() + 0.5;
+            if ( x < 0 ) x -= 1.;
+            value = int64_t(x);
+            return true;
+        }
+        default: break;
+        }
+        return false;
     }
 
     // do averaging
