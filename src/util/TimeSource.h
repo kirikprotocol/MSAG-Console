@@ -2,6 +2,7 @@
 #define _SMSC_UTIL_TIMESOURCE_H
 
 #include <ctime>
+#include <sys/time.h>
 
 namespace smsc {
 namespace util {
@@ -26,10 +27,16 @@ struct TimeSourceTime {
 struct TimeSourceGettimeofday {
     typedef int64_t hrtime_type;
     static const hrtime_type ticksPerSec = 1000000U;
+    typedef int64_t usec_type;
     inline static time_t getSeconds() {
         struct timeval tv;
         gettimeofday(&tv,0);
         return tv.tv_sec;
+    }
+    inline static usec_type getUSec() {
+        struct timeval tv;
+        gettimeofday(&tv,0);
+        return usec_type(tv.tv_sec)*1000000U + tv.tv_usec;
     }
     inline static hrtime_type getHRTime() {
         struct timeval tv;
@@ -43,6 +50,12 @@ struct TimeSourceGettimeofday {
 struct TimeSourceClockGettime {
     typedef int64_t hrtime_type;
     static const hrtime_type ticksPerSec = 1000000000U;
+    typedef int64_t usec_type;
+    inline static usec_type getUSec() {
+        struct timespec ts;
+        clock_gettime(CLOCK_REALTIME,&ts);
+        return usec_type(ts.tv_sec)*1000000U + ts.tv_nsec/1000;
+    }
     inline static hrtime_type getHRTime() {
         struct timespec ts;
         clock_gettime(CLOCK_MONOTONIC,&ts);
@@ -65,10 +78,12 @@ struct TimeSourceGethrtime {
 struct TimeSourceSetup {
 #if defined(__sparc) || defined(__sparc__)
     typedef TimeSourceGettimeofday AbsSec;
+    typedef TimeSourceGettimeofday AbsUSec;
     typedef TimeSourceGethrtime    HRTime;
 #else
 #if defined(__i386) || defined(__i386__) || defined(__ia64) || defined(__ia64__)
     typedef TimeSourceTime         AbsSec;
+    typedef TimeSourceGettimeofday AbsUSec;
     typedef TimeSourceClockGettime HRTime;
 #else
 #error NOT IMPLEMENTED
