@@ -4,9 +4,8 @@
 #include <cmath>
 #include <list>
 #include <algorithm>
-#include "AveragingGroup.h"
+#include "TimeSliceManager.h"
 #include "util/TypeInfo.h"
-#include "scag/util/MsecTime.h"
 
 namespace scag2 {
 namespace counter {
@@ -19,23 +18,22 @@ namespace counter {
  * 
  * Typically an averaging counter should be added into averaging group.
  */
-class Average : public Counter, public AverageItem
+class Average : public Counter, public TimeSliceItem
 {
 public:
     static int getStaticType() { return smsc::util::TypeInfo< Average >::typeValue(); }
 
     Average( const std::string&                name,
-             const CounterPtr<AveragingGroup>& group,
+             usec_type                         averageEveryUsec,
              counttime_type                    disposeDelayTime = 0 ) :
     Counter(name,disposeDelayTime),
-    group_(group)
+    group_(0),
+    averageTime_(averageEveryUsec)
     {
         reset();
-        if (group_.get()) addItem(*group_.get());
     }
 
     virtual ~Average() {
-        if (group_.get()) remItem(*group_.get());
     }
 
 
@@ -69,6 +67,7 @@ public:
         total_.reset();
         last_.reset();
         current_.reset();
+        average_ = 0;
     }
 
     /// return the total statistics
@@ -87,16 +86,20 @@ public:
         current_.sum2 += x*x*w;
     }
 
-    virtual bool getValue( Valtype a, int64_t& value )
+    virtual int64_t getValue() const {
+        return average_;
+    }
+
+    virtual bool getValue( Valtype a, int64_t& value ) const
     {
         smsc::core::synchronization::MutexGuard mg(countMutex_);
         switch (a) {
         case VALUE:
-        case AVERAGE: value = current_.average(); return true;
-        case COUNT: value = current_.count; return true;
-        case SUM: value = current_.sum; return true;
+        case AVERAGE: value = last_.average(); return true;
+        case COUNT: value = last_.count; return true;
+        case SUM: value = last_.sum; return true;
         case SIGMA: {
-            double x = current_.sigma() + 0.5;
+            double x = last_.sigma() + 0.5;
             if ( x < 0 ) x -= 1.;
             value = int64_t(x);
             return true;
@@ -107,18 +110,26 @@ public:
     }
 
     // do averaging
-    virtual void average( util::MsecTime::time_type ) {
+    virtual void advanceTime( usec_type ) {
         smsc::core::synchronization::MutexGuard mg(countMutex_);
         total_.merge(current_);
         last_ = current_;
         current_.reset();
+        average_ = last_.average();
     }
 
+private:
+    virtual TimeSliceGroup* getTimeSliceGroup() const { return group_; }
+    virtual void doSetTimeSliceGroup( TimeSliceGroup* grp ) { group_ = grp; }
+    virtual usec_type getTimeSliceWidth() const { return averageTime_; }
+
 protected:
-    CounterPtr<AveragingGroup> group_;
-    Stat                       total_;
-    Stat                       last_;
-    Stat                       current_;
+    TimeSliceGroup* group_;
+    int64_t         averageTime_;
+    Stat            total_;
+    Stat            last_;
+    Stat            current_;
+    int64_t         average_;
 };
 
 }

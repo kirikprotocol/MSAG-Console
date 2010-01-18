@@ -33,6 +33,18 @@ protected:
 
 class CounterPtrAny;
 
+// ================================================================
+class Observer
+{
+public:
+    virtual ~Observer() {}
+
+    /// notification that the value of the counter has changed
+    virtual void modified( Counter& counter, int64_t value ) = 0;
+};
+
+
+// ================================================================
 class Counter
 {
     friend class CounterPtrAny;
@@ -42,7 +54,9 @@ protected:
     static smsc::logger::Logger* log_;
     static smsc::logger::Logger* loga_;
 
-    Counter( const std::string& name, counttime_type disposeDelayTime = 0 );
+    Counter( const std::string& name,
+             counttime_type     disposeDelayTime = 0,
+             Observer*          observer = 0 );
 
 public:
 
@@ -72,10 +86,6 @@ public:
     /// NOTE: any subclass should override this method
     virtual int getType() const = 0;
 
-    /// flags
-    void setFlags( int32_t flags ) { flags_ = flags; }
-    int32_t getFlags() const { return flags_; }
-
     /// reset the counter
     virtual void reset() = 0;
 
@@ -84,9 +94,14 @@ public:
     /// NOTE: that x and w may be ignored for some counters.
     virtual void increment( int64_t x = 1, int w = 1 ) = 0;
 
-    /// get the value of counter attribute
-    /// return false if the value is not defined.
-    virtual bool getValue( Valtype a, int64_t& value ) = 0;
+    /// get the most appropriate value for the counter.
+    /// it may have different sense for different types of counters.
+    /// NOTE: the value may be out-of-date, e.g. for TimeSliceItem.
+    virtual int64_t getValue() const = 0;
+
+    /// get the value of counter attribute.
+    /// return false if the attribute is not defined.
+    virtual bool getValue( Valtype a, int64_t& value ) const = 0;
 
 private:
     inline void changeUsage( bool inc ) {
@@ -112,8 +127,9 @@ private:
     Counter& operator = ( const Counter& );
 
 protected:
-    smsc::core::synchronization::Mutex countMutex_; // a lock to be invoked from accumulate
+    mutable smsc::core::synchronization::Mutex countMutex_; // a lock to be invoked from accumulate
     Disposer*      disposer_;
+    Observer*      observer_;
 
 private:
     std::string name_;
@@ -127,7 +143,7 @@ private:
 
     // number of consumers
     unsigned       usage_;
-    int32_t        flags_;
+    // int32_t        flags_;
 };
 
 

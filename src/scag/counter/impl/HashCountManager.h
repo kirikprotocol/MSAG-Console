@@ -7,21 +7,26 @@
 #include "core/synchronization/Mutex.hpp"
 #include "core/synchronization/EventMonitor.hpp"
 #include "core/threads/Thread.hpp"
+#include "TimeSliceManagerImpl.h"
 
 namespace scag2 {
 namespace counter {
 namespace impl {
 
+class NotificationManager;
+
 class HashCountManager : public Manager, protected smsc::core::threads::Thread
 {
 public:
-    HashCountManager();
+    HashCountManager( unsigned notifySlices = 5 );
     virtual ~HashCountManager();
 
-    virtual void start();
+    void start();
     void stop();
 
-    virtual AveragingManager& getAvgManager();
+    virtual TimeSliceManager& getTimeManager() {
+        return *timeSliceManager_;
+    }
 
 protected:
     /// retrieve the counter of type T with name 'name'
@@ -32,7 +37,14 @@ protected:
     /// it may throw exception if counter types are not the same.
     /// otherwise it always return a ptr to a good counter.
     /// NOTE: don't use 'c' pointer after the call, the object under it may be destroyed!
-    virtual CounterPtrAny registerAnyCounter( Counter* c );
+    virtual CounterPtrAny registerAnyCounter( Counter* c, bool& wasRegistered );
+    virtual void registerTimeItem( TimeSliceItem* ptr ) {
+        if (ptr) {
+            timeSliceManager_->addItem(*ptr,
+                                       timeSliceManager_->roundSlice
+                                       ( ptr->getTimeSliceWidth() ));
+        }
+    }
     virtual void scheduleDisposal( counttime_type dt, Counter& c );
     virtual counttime_type getWakeTime() const;
     inline counttime_type getCurrentTime() const {
@@ -40,9 +52,6 @@ protected:
     }
 
     virtual int Execute();
-
-    // averaging mgr iface
-    class AveragingMgrImpl;
 
 private:
     smsc::logger::Logger*                      log_;
@@ -56,9 +65,10 @@ private:
     // counttime_type                             nextTime_;
 
     typedef std::vector< Counter* >            DisposeQueueType;
-    DisposeQueueType                           disposeQueue_;
-    AveragingMgrImpl*                          avgManager_;
 
+    DisposeQueueType                           disposeQueue_;
+    NotificationManager*                       notificationManager_;
+    TimeSliceManagerImpl*                      timeSliceManager_;
     bool stopping_;
 };
 

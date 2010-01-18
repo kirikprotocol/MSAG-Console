@@ -10,8 +10,14 @@ namespace counter {
 smsc::logger::Logger* Counter::log_ = 0;
 smsc::logger::Logger* Counter::loga_ = 0;
 
-Counter::Counter( const std::string& name, counttime_type disposeDelayTime ) :
-name_(name), disposeDelayTime_(disposeDelayTime), usage_(0) {
+Counter::Counter( const std::string& name,
+                  counttime_type     disposeDelayTime,
+                  Observer*          observer ) :
+disposer_(0), observer_(observer),
+name_(name),
+disposeDelayTime_(disposeDelayTime),
+usage_(0)
+{
     if (!log_) {
         MutexGuard mg(logMutex);
         if (!log_) log_ = smsc::logger::Logger::getInstance("cnt.cntr");

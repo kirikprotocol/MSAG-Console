@@ -52,6 +52,7 @@ public:
         slot_[0] = 0;
     }
 
+    /*
     inline int64_t getCount() const {
         // smsc::core::synchronization::MutexGuard mg(countMutex_);
         return integral_;
@@ -61,16 +62,22 @@ public:
         // smsc::core::synchronization::MutexGuard mg(countMutex_);
         return integral_;
     }
+     */
 
     int64_t accumulate( int64_t x, int w = 1 );
 
-    inline int64_t advance( int64_t x ) {
+    inline int64_t advanceTo( int64_t x ) {
         return accumulate(x,0);
     }
 
     /// NOTE: x typically must be an ordered streaming value
     virtual void increment( int64_t x = 1, int w = 1 ) {
         accumulate(x,w);
+    }
+
+    virtual int64_t getValue()
+    {
+        return integral_;
     }
 
     virtual bool getValue( Valtype a, int64_t& value ) 

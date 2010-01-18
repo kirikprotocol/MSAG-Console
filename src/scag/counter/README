@@ -1,0 +1,41 @@
+Probable usage from MSAG rules (mandatory fields prefixed with *):
+
+<counter:create
+    *name="NAME"
+    *type="TYPENAME"
+    inc="VALUE,default=0"
+    reset="false|true,default=false"
+    scope="USER|SERVICE|OPERATOR|PROVIDER,default=USER"
+    status="VARNAME"
+    lifetime="LT,default=from_type"              // seconds
+    />
+
+<counter:inc
+    *name="NAME"
+    scope="USER|SERVICE|OPERATOR|PROVIDER,default=USER"
+    value="INT64,default=1"        // ignored for some types
+    weight="INT,default=1"         // ignored for some types
+    status="VARNAME"
+    />
+
+<counter:reset
+    *name="NAME"
+    scope="USER|SERVICE|OPERATOR|PROVIDER,default=USER"
+    status="VARNAME"
+    />
+
+<counter:get
+    *name="NAME"
+    *value="VARNAME"
+    scope="SYSTEM|USER|SERVICE|OPERATOR|PROVIDER,default=USER"
+    function="VAL|AVG|MIN|MAX|SIGMA|other,default=VAL"
+    status="VARNAME"
+    />
+
+// =============================================
+
+The type template contains the following fields:
+ type="acc|time|avg|hist"
+ param1="..."
+ param2="..."
+ notification="10"         // seconds

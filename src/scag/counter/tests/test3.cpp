@@ -11,24 +11,14 @@ using scag2::util::Drndm;
 
 std::auto_ptr<impl::HashCountManager> mgr;
 
-const char* groupname = "sys.performance";
-
 CounterPtr< Average > getCounter( const char* name, counttime_type delayTime )
 {
     CounterPtr< Average > ptr = mgr->getCounter< Average >(name);
     if ( ! ptr.get() ) {
         try {
-            CounterPtr< AveragingGroup > grp( mgr->getCounter< AveragingGroup >(groupname) );
-            if ( !grp.get() ) {
-                grp = mgr->registerCounter
-                    ( new AveragingGroup( groupname,
-                                          mgr->getAvgManager(),
-                                          1000,
-                                          delayTime ) );
-            }
             ptr = mgr->registerCounter
                 ( new Average(name,
-                              grp,
+                              5*usecFactor,
                               delayTime) );
         } catch ( std::exception& e ) {
         }

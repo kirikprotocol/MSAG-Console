@@ -11,14 +11,15 @@ using scag2::util::Drndm;
 
 std::auto_ptr<impl::HashCountManager> mgr;
 
-CounterPtr< TimeSnapshot<> > getSnapshot( const char* name, counttime_type delayTime )
+CounterPtr< TimeSnapshot > getSnapshot( const char* name, counttime_type delayTime )
 {
-    CounterPtr< TimeSnapshot<> > ptr = mgr->getCounter< TimeSnapshot<> >(name);
+    CounterPtr< TimeSnapshot > ptr = mgr->getCounter< TimeSnapshot >(name);
     if ( ! ptr.get() ) {
         try {
             ptr = mgr->registerCounter
-                ( new TimeSnapshot<>(name,
-                                     TimeSnapshot<>::ticksPerSec*2,10,delayTime) );
+                ( new TimeSnapshot(name,
+                                   usecFactor*2,10,
+                                   delayTime) );
         } catch ( std::exception& e ) {
         }
     }
@@ -55,7 +56,7 @@ int main()
         const unsigned idx = unsigned(Drndm::uniform(indices,rnd.get()));
         char fullname[100];
         snprintf(fullname,sizeof(fullname),"%s.%u",name,idx);
-        CounterPtr< TimeSnapshot<> > ptr = getSnapshot(fullname,delay);
+        CounterPtr< TimeSnapshot > ptr = getSnapshot(fullname,delay);
         if ( !ptr.get() ) continue;
 
         // ptr->accumulate(time(0));
@@ -64,7 +65,7 @@ int main()
         smsc_log_debug(logger,"counter name='%s' type=%u integral=%llu",
                        ptr->getName().c_str(),
                        unsigned(ptr->getType()),
-                       ptr->getIntegral());
+                       ptr->getValue());
         mainmon.wait(20);
     }
     return 0;

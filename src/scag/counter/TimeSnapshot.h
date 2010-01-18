@@ -14,52 +14,62 @@ namespace counter {
  * The only difference with 'Snapshot' is that it automatically takes T::getHRTime().
  * 
  */
-template < class T = smsc::util::TimeSourceSetup::HRTime > class TimeSnapshot : public Snapshot
+class TimeSnapshot : public Snapshot, public TimeSliceItem
 {
 public:
-    static const typename T::hrtime_type ticksPerSec = T::ticksPerSec;
-    static int getStaticType() { return smsc::util::TypeInfo< TimeSnapshot< T > >::typeValue(); }
-
     TimeSnapshot( const std::string&      name,
-                  typename T::hrtime_type width,
+                  usec_type               width,
                   unsigned                nbins,
                   counttime_type disposeDelayTime = 0 ) :
-    Snapshot(name,nbins,disposeDelayTime)
+    Snapshot(name,nbins,disposeDelayTime),
+    group_(0)
     {
-        assert( width > static_cast<typename T::hrtime_type>(nbins) );
+        assert( width > usec_type(nbins) );
         resol_ = (width + nbins - 1) / nbins;
     }
 
     virtual int getType() const { return getStaticType(); }
 
     virtual void increment( int64_t x = 1, int w = 1 ) {
-        const int64_t bin = int64_t(T::getHRTime()/resol_);
+        const int64_t bin = int64_t(TSource::getUSec()/resol_);
         Snapshot::accumulate(bin,w);
     }
 
-    inline int64_t advanceTime() {
-        const int64_t bin = int64_t(T::getHRTime()/resol_);
-        return Snapshot::advance(bin);
+    virtual void advanceTime( usec_type curtime ) {
+        smsc_log_debug(log_,"'%s' advancing",getName().c_str());
+        const int64_t bin = int64_t(curtime/resol_);
+        Snapshot::advanceTo(bin);
     }
 
-    virtual bool getValue( Valtype a, int64_t& value ) {
+    virtual int64_t getValue() const
+    {
+        return integral_;
+    }
+
+    virtual bool getValue( Valtype a, int64_t& value ) const {
         switch (a) {
         case VALUE:
         case COUNT:
         case SUM: {
-            value = advanceTime();
+            value = integral_;
             return true;
         }
+        default: break;
         }
         return false;
     }
 
 protected:
     using Snapshot::accumulate;
-    using Snapshot::advance;
+    using Snapshot::advanceTo;
+
+    virtual TimeSliceGroup* getTimeSliceGroup() const { return group_; }
+    virtual void doSetTimeSliceGroup( TimeSliceGroup* grp ) { group_ = grp; }
+    virtual usec_type getTimeSliceWidth() const { return resol_*nbins_; }
 
 protected:
-    typename T::hrtime_type resol_;
+    usec_type       resol_;
+    TimeSliceGroup* group_;
 };
 
 }

@@ -4,10 +4,12 @@
 #include "Counter.h"
 #include "util/TypeInfo.h"
 #include "util/Exception.hpp"
-#include "AveragingManager.h"
+#include "TimeSliceManager.h"
 
 namespace scag2 {
 namespace counter {
+
+class Accumulator;
 
 class Manager : public Disposer
 {
@@ -24,10 +26,15 @@ public:
     }
 
     /// the same notes as for registerAnyCounter
-    template <class T> CounterPtr< T > registerCounter( T* c ) {
+    template <class T> CounterPtr< T > registerCounter( T* c )
+    {
         if (!c) throw smsc::util::Exception("registering null counter");
         setDisposer(*c);
-        CounterPtr< T > res( static_cast< T* >(registerAnyCounter(c).get()) );
+        bool wasRegistered;
+        CounterPtr< T > res( static_cast< T* >(registerAnyCounter(c,wasRegistered).get()) );
+        if ( wasRegistered ) {
+            registerTimeItem(c);
+        }
         return res;
     }
 
@@ -35,15 +42,22 @@ public:
     /// it may return 0 if the counter is not there.
     virtual CounterPtrAny getAnyCounter( const char* name ) = 0; // throw smsc::util::Exception
 
-    /// return an instance of averaging manager
-    virtual AveragingManager& getAvgManager() = 0;
+    /// return an instance of time slice manager
+    virtual TimeSliceManager& getTimeManager() = 0;
 
 protected:
     /// register counter and return a ptr to it, or to existing counter of this name.
     /// it may throw exception if counter types are not the same.
     /// otherwise it always return a ptr to a good counter.
     /// NOTE: don't use 'c' pointer after the call, the object under it may be destroyed!
-    virtual CounterPtrAny registerAnyCounter( Counter* c ) = 0;
+    virtual CounterPtrAny registerAnyCounter( Counter* c, bool& wasRegistered ) = 0;
+    void registerTimeItem( Accumulator* ptr ) {}
+    void registerTimeItem( TimeSliceItem* ptr ) {
+        if (ptr) {
+            TimeSliceManager& m = getTimeManager();
+            m.addItem(*ptr,m.roundSlice(ptr->getTimeSliceWidth()));
+        }
+    }
 };
 
 }

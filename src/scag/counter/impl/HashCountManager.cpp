@@ -2,9 +2,11 @@
 #include <map>
 #include <algorithm>
 #include "HashCountManager.h"
+#include "NotificationManager.h"
 #include "util/Exception.hpp"
+#include "core/buffers/IntHash64.hpp"
 #include "core/buffers/XHash.hpp"
-#include "scag/counter/AveragingGroup.h"
+#include "scag/counter/TimeSliceGroup.h"
 
 namespace {
 
@@ -31,139 +33,102 @@ namespace impl {
 
 using namespace smsc::core::synchronization;
 
-
-class HashCountManager::AveragingMgrImpl : public AveragingManager, public smsc::core::threads::Thread
+/*
+class HashCountManager::TimeSliceMgrImpl : public TimeSliceManager
 {
+private:
+    static const usec_type idleSlice = 1*minSlice*usecFactor;
+    
 public:
-    AveragingMgrImpl( smsc::logger::Logger* logger ) :
-    log_(logger), wakeTime_(util::MsecTime::max_time), stopping_(true) {}
-    virtual ~AveragingMgrImpl() {
-        stop();
+    TimeSliceMgrImpl( usec_type             curTime,
+                      smsc::logger::Logger* logger ) :
+    log_(logger),
+    lastTime_(curTime) {
+        smsc_log_info(log_,"ctor");
     }
+    virtual ~TimeSliceMgrImpl();
 
-    void start() {
-        if ( !stopping_ ) return;
-        MutexGuard mg(mon_);
-        if ( !stopping_ ) return;
-        smsc_log_debug(log_,"starting");
-        stopping_ = false;
-        this->Start();
-    }
+    usec_type lastTime() const { return lastTime_; }
 
-    void stop() {
-        if ( stopping_ ) return;
+    /// process all groups up to curtime
+    usec_type process( usec_type curTime );
+
+    virtual void addItem( TimeSliceItem& item, unsigned slices )
+    {
+        const usec_type slice = slices * minSlice * usecFactor;
+        MutexGuard mg(lock_);
+        TimeSliceGroup* grp;
         {
-            MutexGuard mg(mon_);
-            if ( stopping_ ) return;
-            smsc_log_debug(log_,"stopping");
-            stopping_ = true;
-            mon_.notifyAll();
-        }
-        this->WaitFor();
-    }
-
-    virtual int Execute();
-
-    virtual void addGroup( AveragingGroup& group, util::MsecTime::time_type wakeTime ) {
-        MutexGuard mg(mon_);
-        GrpMap::iterator* iptr = groupHash_.GetPtr(&group);
-        if ( ! iptr ) {
-            smsc_log_debug(log_,"adding group '%s' at %lld",
-                           group.getName().c_str(),wakeTime);
-            GrpMap::iterator iter = groupMap_.insert( std::make_pair(wakeTime,&group) );
-            groupHash_.Insert(&group,iter);
-        } else {
-            smsc_log_warn(log_,"group '%s' is already in the mgr",
-                          group.getName().c_str());
-            if ( (*iptr)->first != wakeTime ) {
-                groupMap_.erase(*iptr);
-                *iptr = groupMap_.insert( std::make_pair(wakeTime,&group));
+            TimeSliceGroup** ptr = groupHash_.GetPtr(slice);
+            if ( ptr ) {
+                grp = *ptr;
+            } else {
+                // no such group
+                smsc_log_debug(log_,"group %u is created",slices);
+                grp = createGroup(slice);
+                groupHash_.Insert(slice,grp);
+                groupMap_.insert(std::make_pair(lastTime_+slice,grp));
             }
         }
-        if ( wakeTime < wakeTime_ ) {
-            wakeTime_ = wakeTime;
-            mon_.notify();
-        }
-    }
-
-    virtual void remGroup( AveragingGroup& group ) {
-        MutexGuard mg(mon_);
-        GrpMap::iterator* iptr = groupHash_.GetPtr(&group);
-        if ( !iptr ) {
-            smsc_log_warn(log_,"group '%s' is not found in the mgr", group.getName().c_str());
-            return;
-        }
-        smsc_log_debug(log_,"removing group '%s'",group.getName().c_str());
-        groupMap_.erase(*iptr);
-        groupHash_.Delete(&group);
+        grp->addItem( item );
     }
 
 private:
-    typedef std::multimap< util::MsecTime::time_type, AveragingGroup* > GrpMap;
-    typedef smsc::core::buffers::XHash< AveragingGroup*, GrpMap::iterator > GrpHash;
-
+    typedef std::multimap< usec_type, TimeSliceGroup* > GroupMap;
+    typedef smsc::core::buffers::IntHash64< TimeSliceGroup* > GroupHash;
+    
 private:
-    EventMonitor              mon_;
+    Mutex                     lock_;
     smsc::logger::Logger*     log_;
-    GrpMap                    groupMap_;
-    GrpHash                   groupHash_;
-    util::MsecTime::time_type wakeTime_;
-    bool                      stopping_;
+    GroupHash                 groupHash_;
+    GroupMap                  groupMap_; // owned
+    usec_type                 lastTime_;
 };
 
 
-int HashCountManager::AveragingMgrImpl::Execute()
+usec_type HashCountManager::TimeSliceMgrImpl::process( usec_type curTime )
 {
-    smsc_log_info(log_,"started");
-    const int timeToSleep = 10000;
-    while ( ! stopping_ ) {
-        util::MsecTime::time_type curTime = util::MsecTime::currentTimeMillis();
-
-        MutexGuard mg(mon_);
-        smsc_log_debug(log_,"new pass at %lld, wake=%lld",curTime, wakeTime_);
-        if ( stopping_ ) break;
-        if ( wakeTime_ > curTime ) {
-            int tosleep;
-            if ( wakeTime_ > curTime + timeToSleep ) {
-                tosleep = timeToSleep;
-            } else {
-                tosleep = int(wakeTime_ - curTime);
+    usec_type retval;
+    MutexGuard mg(lock_);
+    if ( groupMap_.empty() ) {
+        retval = curTime + idleSlice;
+    } else {
+        while ( true ) {
+            GroupMap::iterator i = groupMap_.begin();
+            if ( i->first > curTime ) {
+                retval = i->first;
+                break;
             }
-            mon_.wait(tosleep);
-            continue;
+            TimeSliceGroup* grp = i->second;
+            const usec_type nextTime = grp->advanceTime(curTime);
+            groupMap_.erase(i);
+            groupMap_.insert(std::make_pair(nextTime,grp));
         }
-
-        GrpMap::iterator i = groupMap_.begin();
-        while ( i != groupMap_.end() ) {
-            if ( i->first > curTime ) break;
-            if ( stopping_ ) break;
-            AveragingGroup* grp = i->second;
-            smsc_log_debug(log_,"averaging group '%s'",grp->getName().c_str());
-            const util::MsecTime::time_type nextTime = grp->average( curTime );
-            GrpMap::iterator j = i;
-            ++i;
-            if ( nextTime != j->first ) {
-                GrpMap::iterator* ptr = groupHash_.GetPtr(grp);
-                assert(ptr);
-                groupMap_.erase(j);
-                *ptr = groupMap_.insert(std::make_pair(nextTime,grp));
-            }
-        }
-
-        wakeTime_ = util::MsecTime::max_time;
-        if ( !groupMap_.empty() ) wakeTime_ = groupMap_.begin()->first;
     }
-    smsc_log_info(log_,"stopped");
-    return 0;
+    lastTime_ = curTime;
+    return retval;
+}
+
+
+HashCountManager::TimeSliceMgrImpl::~TimeSliceMgrImpl()
+{
+    smsc_log_info(log_,"dtor");
+    groupHash_.Empty();
+    for ( GroupMap::iterator i = groupMap_.begin(); i != groupMap_.end(); ++i ) {
+        delete i->second;
+    }
 }
 
 // ======================================================================
+*/
 
-HashCountManager::HashCountManager() :
+HashCountManager::HashCountManager( unsigned notifySlices ) :
 Manager(),
 smsc::core::threads::Thread(),
 log_(smsc::logger::Logger::getInstance("count.mgr")),
-avgManager_(new AveragingMgrImpl(smsc::logger::Logger::getInstance("count.avmg"))),
+notificationManager_(new NotificationManager),
+timeSliceManager_(new TimeSliceManagerImpl(smsc::logger::Logger::getInstance("count.tmgr"),
+                                           notificationManager_,notifySlices)),
 stopping_(true)
 {
     smsc_log_debug(log_,"ctor");
@@ -206,7 +171,8 @@ HashCountManager::~HashCountManager()
         smsc_log_warn(log_,"manager has non-free counters");
     }
     hash_.Empty();
-    delete avgManager_; avgManager_ = 0;
+    delete timeSliceManager_; timeSliceManager_ = 0;
+    delete notificationManager_; notificationManager_ = 0;
 }
 
 
@@ -215,8 +181,8 @@ void HashCountManager::start()
     if ( !stopping_ ) return;
     MutexGuard mg(disposeMon_);
     if ( !stopping_ ) return;
+    timeSliceManager_->start();
     stopping_ = false;
-    avgManager_->start();
     this->Start();
 }
 
@@ -227,16 +193,10 @@ void HashCountManager::stop()
     {
         MutexGuard mg(disposeMon_);
         stopping_ = true;
-        avgManager_->stop();
+        timeSliceManager_->stop();
         disposeMon_.notifyAll();
         disposeQueue_.clear();
     }
-}
-
-
-AveragingManager& HashCountManager::getAvgManager()
-{
-    return *avgManager_;
 }
 
 
@@ -250,9 +210,10 @@ CounterPtrAny HashCountManager::getAnyCounter( const char* name )
     return CounterPtrAny();
 }
 
-CounterPtrAny HashCountManager::registerAnyCounter( Counter* ccc )
+CounterPtrAny HashCountManager::registerAnyCounter( Counter* ccc, bool& wasRegistered )
 {
     if (!ccc) throw smsc::util::Exception("CountManager: null counter to register");
+    wasRegistered = false;
     std::auto_ptr<Counter> cnt(ccc);
     MutexGuard mg(hashMutex_);
     Counter** ptr = hash_.GetPtr(ccc->getName().c_str());
@@ -263,6 +224,7 @@ CounterPtrAny HashCountManager::registerAnyCounter( Counter* ccc )
         }
         return CounterPtrAny(*ptr);
     }
+    wasRegistered = true;
     hash_.Insert(ccc->getName().c_str(),cnt.release());
     return CounterPtrAny(ccc);
 }

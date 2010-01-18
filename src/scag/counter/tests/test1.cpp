@@ -61,7 +61,7 @@ int main()
         smsc_log_debug(logger,"counter name='%s' type=%u integral=%llu",
                        ptr->getName().c_str(),
                        unsigned(ptr->getType()),
-                       ptr->getIntegral());
+                       ptr->getValue());
         mainmon.wait(1);
     }
     return 0;

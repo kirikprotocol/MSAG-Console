@@ -32,6 +32,7 @@ public:
         integral_ = 0;
     }
 
+    /*
     inline int64_t getCount() const {
         // smsc::core::synchronization::MutexGuard mg(countMutex_);
         return count_;
@@ -41,6 +42,7 @@ public:
         // smsc::core::synchronization::MutexGuard mg(countMutex_);
         return integral_;
     }
+     */
 
     virtual void increment( int64_t x = 1, int w = 1 ) {
         smsc::core::synchronization::MutexGuard mg(countMutex_);
@@ -48,7 +50,12 @@ public:
         integral_ += x*w;
     }
 
-    virtual bool getValue( Valtype a, int64_t& value )
+    virtual int64_t getValue() const
+    {
+        return integral_;
+    }
+
+    virtual bool getValue( Valtype a, int64_t& value ) const
     {
         smsc::core::synchronization::MutexGuard mg(countMutex_);
         switch (a) {
