@@ -159,7 +159,7 @@ HashCountManager::~HashCountManager()
         for ( smsc::core::buffers::Hash<Counter*>::Iterator iter(&hash_); iter.Next(key,ptr); ) {
             if ( *ptr ) {
                 if ( checkDisposal(*ptr,counttime_max) ) {
-                    delete *ptr;
+                    destroy(*ptr);
                     *ptr = 0;
                 } else {
                     smsc_log_debug(log_,"counter '%s' is still locked",(*ptr)->getName().c_str());
@@ -379,7 +379,7 @@ int HashCountManager::Execute()
                   ++i ) {
                 if ( checkDisposal(*i,now) ) {
                     hash_.Delete( (*i)->getName().c_str() );
-                    delete *i;
+                    destroy(*i);
                 }
             }
             workingQueue.clear();

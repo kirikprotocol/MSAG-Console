@@ -72,6 +72,12 @@ protected:
         }
     }
      */
+    inline void destroy( Counter* ptr ) {
+        if (ptr) {
+            ptr->preDestroy(*this);
+            delete ptr;
+        }
+    }
 
 private:
     static Manager* manager_;
