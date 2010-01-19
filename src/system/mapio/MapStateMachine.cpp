@@ -1284,25 +1284,30 @@ static void TryDestroyDialog(unsigned dialogid,bool send_error,unsigned err_code
     __map_trace2__("%s: invalid dialogid/ssn 0x%x/%d",__func__, dialogid,ssn);
     return;
   }
-  DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogid,ssn,rinst));
-  if ( dialog.isnull() ) {
-    __map_trace2__("%s: there is no dlg 0x%x",__func__,dialogid);
-    return;
-  }
-  __require__(dialog->ssn==ssn);
-  __map_trace2__("%s: dlg 0x%x state %d",__func__,dialog->dialogid_map,dialog->state);
+  DialogRefGuard dialog;
   try
   {
+    dialog.assign(MapDialogContainer::getInstance()->getDialog(dialogid,ssn,rinst));
+    if ( dialog.isnull() )
+    {
+      __map_trace2__("%s: there is no dlg 0x%x",__func__,dialogid);
+      return;
+    }
+    __require__(dialog->ssn==ssn);
+    __map_trace2__("%s: dlg 0x%x state %d",__func__,dialog->dialogid_map,dialog->state);
     if ( send_error)
     {
       dialog->dropChain = true;
       try{
-        if ( dialog->isQueryAbonentStatus && dialog->QueryAbonentCommand.IsOk() ){
+        if ( dialog->isQueryAbonentStatus && dialog->QueryAbonentCommand.IsOk() )
+        {
           int status;
           status = AbonentStatus::UNKNOWNVALUE;
           SendAbonentStatusToSmsc(dialog.get(),status);
-        }else{
-          if( dialog->state != MAPST_WaitNextMMS ) {
+        }else
+        {
+          if( dialog->state != MAPST_WaitNextMMS )
+          {
             SendErrToSmsc(dialog->dialogid_smsc,err_code,dialog->isUSSD,dialog->ussdMrRef);
           }
         }
@@ -1310,26 +1315,32 @@ static void TryDestroyDialog(unsigned dialogid,bool send_error,unsigned err_code
         __map_warn__("TryDestroyDialog: catched exception when send error response to smsc");
       }
     }
-    if ( send_error ){
-      if ( dialog->id_opened ){
+    if ( send_error )
+    {
+      if ( dialog->id_opened )
+      {
         AbortMapDialog(dialog->dialogid_map,dialog->ssn,dialog->instanceId);
         dialog->id_opened = false;
       }
-    }else{
-      switch(dialog->state){
-      case MAPST_ABORTED:
-        if ( dialog->id_opened ) {
-          AbortMapDialog(dialog->dialogid_map,dialog->ssn,dialog->instanceId);
-          dialog->id_opened = false;
-        }
-        break;
-      default:
-        CloseMapDialog(dialog->dialogid_map,dialog->ssn,dialog->instanceId);
+    }else
+    {
+      switch(dialog->state)
+      {
+        case MAPST_ABORTED:
+          if ( dialog->id_opened ) {
+            AbortMapDialog(dialog->dialogid_map,dialog->ssn,dialog->instanceId);
+            dialog->id_opened = false;
+          }
+          break;
+        default:
+          CloseMapDialog(dialog->dialogid_map,dialog->ssn,dialog->instanceId);
       }
     }
-  }catch(std::exception &e){
+  }catch(std::exception &e)
+  {
     __map_warn2__("TryDestroyDialog: catched exception: %s", e.what());
-  }catch(...){
+  }catch(...)
+  {
     __map_warn__("TryDestroyDialog: catched unexpected exception");
   }
   DropMapDialog(dialog.get());
@@ -2872,14 +2883,15 @@ USHORT_T Et96MapUAbortInd (
   MAP_TRY{
     DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogueId,localSsn,INSTARG0(rinst)));
     if ( dialog.isnull() )
+    {
       throw runtime_error(
         FormatText("MAP::%s MAP.did:{0x%x} is not present",__func__,dialogueId));
-    __require__(dialog->ssn == localSsn);
+    }
     dialogid_smsc = dialog->dialogid_smsc;
     dialog->id_opened = false;
     __map_trace2__("%s: dialogid 0x%x userReason 0x%x",__func__,dialogid_map,userReason_p?*userReason_p:-1);
-    //throw runtime_error("UABORT");
-    throw MAPDIALOG_TEMP_ERROR("UABORT",Status::MAP_USER_REASON_BASE+(userReason_p?*userReason_p:-1));
+    int err=MAKE_COMMAND_STATUS(CMD_ERR_TEMP,Status::MAP_USER_REASON_BASE+(userReason_p?*userReason_p:-1));
+    TryDestroyDialog(dialogid_map,true,err,localSsn,INSTARG0(rinst));
   }MAP_CATCH(dialogid_map,dialogid_smsc,localSsn,INSTARG0(rinst));
   return ET96MAP_E_OK;
 }
