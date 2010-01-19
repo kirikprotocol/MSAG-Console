@@ -15,7 +15,7 @@
 namespace smsc{
 namespace system{
 
-#define WAIT_DATA_TIMEOUT 20 /* ms */
+#define WAIT_DATA_TIMEOUT 10 /* ms */
 using smsc::smeman::CommandId;
 using smsc::smeman::SmscCommand;
 using std::exception;
@@ -128,10 +128,10 @@ void Smsc::mainLoop(int idx)
     int schedCnt=getSchedCounter();
     int freeBandwidthScaled=maxScaled-(totalCnt-schedCnt);
 
-    debug2(log,"freeBandwidth=%d, schedCounter=%d",freeBandwidthScaled,schedCnt);
+    debug2(log,"totalCounter=%d, freeBandwidth=%d, schedCounter=%d, schedHasInput=%s",totalCnt,freeBandwidthScaled,schedCnt,scheduler->hasInput()?"Y":"N");
 
     int perSlot=smsWeight*maxSmsPerSecond/(1000/getTotalCounterRes());
-    int fperSlot=freeBandwidthScaled/(2*1000/getTotalCounterRes());
+    int fperSlot=(freeBandwidthScaled/shapeTimeFrame)/(2*1000/getTotalCounterRes());
 
     //perSlot+=perSlot/4;
 
@@ -142,7 +142,7 @@ void Smsc::mainLoop(int idx)
       hrtime_t gfStart=gethrtime();
       smeman.getFrame(frame,WAIT_DATA_TIMEOUT,getSchedCounter()>=freeBandwidthScaled/2);
       hrtime_t gfEnd=gethrtime();
-      if(frame.size()>0)debug2(log,"getFrame time:%lld",gfEnd-gfStart);
+      if(frame.size()>0)debug2(log,"getFrame time:%lld, size=%d",gfEnd-gfStart,frame.size());
       now = time(NULL);
 
       if(idx==0)
