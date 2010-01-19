@@ -122,13 +122,14 @@ HashCountManager::TimeSliceMgrImpl::~TimeSliceMgrImpl()
 // ======================================================================
 */
 
-HashCountManager::HashCountManager( unsigned notifySlices ) :
+HashCountManager::HashCountManager( TemplateManager* tmplmgr, unsigned notifySlices ) :
 Manager(),
 smsc::core::threads::Thread(),
 log_(smsc::logger::Logger::getInstance("count.mgr")),
 notificationManager_(new NotificationManager),
 timeSliceManager_(new TimeSliceManagerImpl(smsc::logger::Logger::getInstance("count.tmgr"),
                                            notificationManager_,notifySlices)),
+templateManager_(tmplmgr),
 stopping_(true)
 {
     smsc_log_debug(log_,"ctor");
@@ -171,6 +172,7 @@ HashCountManager::~HashCountManager()
         smsc_log_warn(log_,"manager has non-free counters");
     }
     hash_.Empty();
+    delete templateManager_; templateManager_ = 0;
     delete timeSliceManager_; timeSliceManager_ = 0;
     delete notificationManager_; notificationManager_ = 0;
 }
@@ -210,7 +212,7 @@ CounterPtrAny HashCountManager::getAnyCounter( const char* name )
     return CounterPtrAny();
 }
 
-CounterPtrAny HashCountManager::registerAnyCounter( Counter* ccc, bool& wasRegistered )
+CounterPtrAny HashCountManager::doRegisterAnyCounter( Counter* ccc, bool& wasRegistered )
 {
     if (!ccc) throw smsc::util::Exception("CountManager: null counter to register");
     wasRegistered = false;

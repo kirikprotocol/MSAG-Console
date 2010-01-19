@@ -30,7 +30,7 @@ public:
 
     /// process all groups up to curtime
     virtual int Execute();
-    virtual void addItem( TimeSliceItem& item, unsigned slices );
+    virtual TimeSliceGroup* addItem( TimeSliceItem& item, usec_type slices );
 
 private:
     // typedef std::multimap< usec_type, TimeSliceGroup* > GroupMap;

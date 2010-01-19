@@ -5,6 +5,7 @@
 #include "util/TypeInfo.h"
 #include "util/Exception.hpp"
 #include "TimeSliceManager.h"
+#include "TemplateManager.h"
 
 namespace scag2 {
 namespace counter {
@@ -14,7 +15,13 @@ class Accumulator;
 class Manager : public Disposer
 {
 public:
-    virtual ~Manager() {}
+    static Manager& getInstance();
+
+protected:
+    Manager();
+
+public:
+    virtual ~Manager();
 
     template < class T > CounterPtr< T > getCounter( const char* name ) {
         CounterPtrAny ptr = getAnyCounter(name);
@@ -28,14 +35,19 @@ public:
     /// the same notes as for registerAnyCounter
     template <class T> CounterPtr< T > registerCounter( T* c )
     {
-        if (!c) throw smsc::util::Exception("registering null counter");
-        setDisposer(*c);
-        bool wasRegistered;
-        CounterPtr< T > res( static_cast< T* >(registerAnyCounter(c,wasRegistered).get()) );
-        if ( wasRegistered ) {
-            registerTimeItem(c);
-        }
+        // if (!c) throw smsc::util::Exception("registering null counter");
+        // setDisposer(*c);
+        CounterPtr< T > res( static_cast< T* >(registerAnyCounter(c).get()) );
         return res;
+    }
+
+    inline CounterPtrAny registerAnyCounter( Counter* c ) {
+        if (!c) throw smsc::util::Exception("registering null counter");
+        c->disposer_ = this;
+        bool wasReg;
+        CounterPtrAny ptr = doRegisterAnyCounter(c,wasReg);
+        if (wasReg) c->postRegister(*this);
+        return ptr;
     }
 
     /// retrieve the counter of type T with name 'name'
@@ -44,20 +56,25 @@ public:
 
     /// return an instance of time slice manager
     virtual TimeSliceManager& getTimeManager() = 0;
+    virtual TemplateManager* getTemplateManager() = 0;
 
 protected:
     /// register counter and return a ptr to it, or to existing counter of this name.
     /// it may throw exception if counter types are not the same.
     /// otherwise it always return a ptr to a good counter.
     /// NOTE: don't use 'c' pointer after the call, the object under it may be destroyed!
-    virtual CounterPtrAny registerAnyCounter( Counter* c, bool& wasRegistered ) = 0;
-    void registerTimeItem( Accumulator* ptr ) {}
+    virtual CounterPtrAny doRegisterAnyCounter( Counter* c, bool& wasReg ) = 0;
+    /*
     void registerTimeItem( TimeSliceItem* ptr ) {
         if (ptr) {
             TimeSliceManager& m = getTimeManager();
             m.addItem(*ptr,m.roundSlice(ptr->getTimeSliceWidth()));
         }
     }
+     */
+
+private:
+    static Manager* manager_;
 };
 
 }

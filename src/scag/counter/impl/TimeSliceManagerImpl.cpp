@@ -120,8 +120,9 @@ int TimeSliceManagerImpl::Execute()
 }
 
 
-void TimeSliceManagerImpl::addItem( TimeSliceItem& item, unsigned slices )
+TimeSliceGroup* TimeSliceManagerImpl::addItem( TimeSliceItem& item, usec_type theSlice )
 {
+    const unsigned slices = roundSlice(theSlice);
     const usec_type slice = sliceToTime(slices);
     TimeSliceGroup* grp;
     {
@@ -139,6 +140,7 @@ void TimeSliceManagerImpl::addItem( TimeSliceItem& item, unsigned slices )
         }
     }
     grp->addItem( item );
+    return grp;
 }
 
 }

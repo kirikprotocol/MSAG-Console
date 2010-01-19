@@ -25,13 +25,12 @@ public:
     /// Counters shall schedule their disposal referred to this time.
     virtual counttime_type getWakeTime() const = 0;
 protected:
-    /// NOTE: should be invoked from registration
-    inline void setDisposer( Counter& counter );
     /// return true if the counter may be destroyed.
     inline bool checkDisposal( Counter* counter, counttime_type now ) const;
 };
 
 class CounterPtrAny;
+class Manager;
 
 // ================================================================
 class Observer
@@ -49,6 +48,7 @@ class Counter
 {
     friend class CounterPtrAny;
     friend class Disposer;
+    friend class Manager;
 
 protected:
     static smsc::logger::Logger* log_;
@@ -103,6 +103,13 @@ public:
     /// return false if the attribute is not defined.
     virtual bool getValue( Valtype a, int64_t& value ) const = 0;
 
+protected:
+    /// guaranteed to be invoked after registration
+    virtual void postRegister( Manager& mgr ) = 0;
+
+    /// guaranteed to be invoked just before destruction
+    virtual void preDestroy( Manager& mgr ) = 0;
+
 private:
     inline void changeUsage( bool inc ) {
         smsc::core::synchronization::MutexGuard mg(usageMutex_);
@@ -146,11 +153,6 @@ private:
     // int32_t        flags_;
 };
 
-
-inline void Disposer::setDisposer(Counter&c)
-{
-    c.disposer_ = this;
-}
 
 inline bool Disposer::checkDisposal( Counter* c, counttime_type now ) const
 {

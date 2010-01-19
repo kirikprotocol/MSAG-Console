@@ -20,38 +20,39 @@ class TimeSliceItem
 public:
     virtual ~TimeSliceItem() {}
     virtual void advanceTime( usec_type curtime ) = 0;
-    virtual TimeSliceGroup* getTimeSliceGroup() const = 0;
+    // virtual TimeSliceGroup* getTimeSliceGroup() const = 0;
     virtual usec_type getTimeSliceWidth() const = 0;
 protected:
     // to be invoked from TimeSliceManager, realization in TimeSliceGroup.cpp
-    void setTimeSliceGroup( TimeSliceGroup* grp );
-    virtual void doSetTimeSliceGroup( TimeSliceGroup* grp ) = 0;
+    // void setTimeSliceGroup( TimeSliceGroup* grp );
+    // virtual void doSetTimeSliceGroup( TimeSliceGroup* grp ) = 0;
 };
 
 
 /// A manager
 class TimeSliceManager
 {
-public:
+protected:
     static const unsigned minSlice = 1; // in sec
     static const usec_type minUSlice = minSlice*usecFactor;
+
+public:
     virtual ~TimeSliceManager() {}
-    virtual void addItem( TimeSliceItem& item, unsigned slice ) = 0;
+    // virtual void addItem( TimeSliceItem& item, usec_type slice ) = 0;
+
     inline static usec_type sliceToTime( unsigned slice ) {
         return slice*minUSlice;
     }
     inline static unsigned timeToSlice( usec_type tm ) {
         return unsigned(tm/minUSlice);
     }
+    virtual TimeSliceGroup* addItem( TimeSliceItem& item, usec_type slice ) = 0;
+
+protected:
     inline static unsigned roundSlice( usec_type slice ) {
         return unsigned((slice+minSlice*usecFactor-1)/(minSlice*usecFactor));
     }
-
-protected:
     TimeSliceGroup* createGroup( usec_type slice );
-    inline void setGroup( TimeSliceItem& item, TimeSliceGroup* group ) {
-        item.setTimeSliceGroup(group);
-    }
 };
 
 }

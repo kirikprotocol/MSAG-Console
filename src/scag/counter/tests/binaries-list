@@ -1,5 +1,6 @@
 scag/counter/tests/test1 test1 \
   -lscag-counter-impl -lscag-counter \
+  -lscag-util-singleton \
   -lscag-util-io \
   -lcore-threads \
   @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
@@ -7,6 +8,7 @@ scag/counter/tests/test1 test1 \
 
 scag/counter/tests/test2 test2 \
   -lscag-counter-impl -lscag-counter \
+  -lscag-util-singleton \
   -lscag-util-io \
   -lcore-threads \
   @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
@@ -17,6 +19,7 @@ scag/counter/tests/test2time test2time \
 
 scag/counter/tests/test3 test3 \
   -lscag-counter-impl -lscag-counter \
+  -lscag-util-singleton \
   -lscag-util-io \
   -lcore-threads \
   @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \

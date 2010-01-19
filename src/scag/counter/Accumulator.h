@@ -69,6 +69,10 @@ public:
     }
 
 protected:
+    virtual void postRegister( Manager& mgr ) {}
+    virtual void preDestroy( Manager& mgr ) {}
+
+protected:
     int64_t count_;
     int64_t integral_;
 };

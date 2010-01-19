@@ -18,7 +18,7 @@ class NotificationManager;
 class HashCountManager : public Manager, protected smsc::core::threads::Thread
 {
 public:
-    HashCountManager( unsigned notifySlices = 5 );
+    HashCountManager( TemplateManager* tmplmgr = 0, unsigned notifySlices = 5 );
     virtual ~HashCountManager();
 
     void start();
@@ -26,6 +26,9 @@ public:
 
     virtual TimeSliceManager& getTimeManager() {
         return *timeSliceManager_;
+    }
+    virtual TemplateManager* getTemplateManager() {
+        return templateManager_;
     }
 
 protected:
@@ -37,7 +40,8 @@ protected:
     /// it may throw exception if counter types are not the same.
     /// otherwise it always return a ptr to a good counter.
     /// NOTE: don't use 'c' pointer after the call, the object under it may be destroyed!
-    virtual CounterPtrAny registerAnyCounter( Counter* c, bool& wasRegistered );
+    virtual CounterPtrAny doRegisterAnyCounter( Counter* c, bool& wasRegistered );
+    /*
     virtual void registerTimeItem( TimeSliceItem* ptr ) {
         if (ptr) {
             timeSliceManager_->addItem(*ptr,
@@ -45,6 +49,7 @@ protected:
                                        ( ptr->getTimeSliceWidth() ));
         }
     }
+     */
     virtual void scheduleDisposal( counttime_type dt, Counter& c );
     virtual counttime_type getWakeTime() const;
     inline counttime_type getCurrentTime() const {
@@ -69,6 +74,7 @@ private:
     DisposeQueueType                           disposeQueue_;
     NotificationManager*                       notificationManager_;
     TimeSliceManagerImpl*                      timeSliceManager_;
+    TemplateManager*                           templateManager_;
     bool stopping_;
 };
 

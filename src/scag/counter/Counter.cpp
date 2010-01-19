@@ -13,7 +13,8 @@ smsc::logger::Logger* Counter::loga_ = 0;
 Counter::Counter( const std::string& name,
                   counttime_type     disposeDelayTime,
                   Observer*          observer ) :
-disposer_(0), observer_(observer),
+disposer_(0),
+observer_(observer),
 name_(name),
 disposeDelayTime_(disposeDelayTime),
 usage_(0)

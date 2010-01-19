@@ -2,7 +2,7 @@ Probable usage from MSAG rules (mandatory fields prefixed with *):
 
 <counter:create
     *name="NAME"
-    *type="TYPENAME"
+    *type="TEMPLID"
     inc="VALUE,default=0"
     reset="false|true,default=false"
     scope="USER|SERVICE|OPERATOR|PROVIDER,default=USER"
@@ -34,8 +34,21 @@ Probable usage from MSAG rules (mandatory fields prefixed with *):
 
 // =============================================
 
-The type template contains the following fields:
+The values of status:
+0 -- ok
+1 -- not found
+2 -- type mismatch
+3 -- function not found
+
+
+The type template TEMPLID contains the following fields:
  type="acc|time|avg|hist"
  param1="..."
  param2="..."
  notification="10"         // seconds
+
+
+Counter       Arguments
+Accumulator   ---
+Average       time
+TimeSnapshot  time    bins

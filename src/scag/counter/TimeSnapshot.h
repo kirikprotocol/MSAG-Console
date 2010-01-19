@@ -63,9 +63,18 @@ protected:
     using Snapshot::accumulate;
     using Snapshot::advanceTo;
 
-    virtual TimeSliceGroup* getTimeSliceGroup() const { return group_; }
-    virtual void doSetTimeSliceGroup( TimeSliceGroup* grp ) { group_ = grp; }
+    // virtual TimeSliceGroup* getTimeSliceGroup() const { return group_; }
+    // virtual void doSetTimeSliceGroup( TimeSliceGroup* grp ) { group_ = grp; }
     virtual usec_type getTimeSliceWidth() const { return resol_*nbins_; }
+    virtual void postRegister( Manager& mgr ) {
+        group_ = mgr.getTimeManager().addItem(*this,getTimeSliceWidth());
+    }
+    virtual void preDestroy( Manager& mgr ) {
+        if (group_) {
+            group_->remItem(*this);
+            group_ = 0;
+        }
+    }
 
 protected:
     usec_type       resol_;
