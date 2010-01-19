@@ -7,6 +7,7 @@
 #include "cluster/Interconnect.h"
 #include "core/threads/Thread.hpp"
 #include "util/vformat.hpp"
+#include "util/sleep.h"
 
 namespace smsc{
 namespace system{
@@ -342,9 +343,10 @@ void LocalFileStore::Init(smsc::util::config::Manager* cfgman,Smsc* smsc)
       }
 
       cnt++;
-      if(cnt%10)
+      if((cnt%200)==0)
       {
-        smsc::core::threads::Thread::Yield();
+        //smsc::core::threads::Thread::Yield();
+	millisleep(10);
       }
 
       Scheduler::StoreData* sd=new Scheduler::StoreData(item.smsBuf,item.smsBufSize,item.seq);
@@ -462,9 +464,10 @@ int LocalFileStore::Execute()
           __trace2__("roll:id=%lld, seq=%d",it->first,it->second);
           sched.StoreSms(it->first,it->second);
           i++;
-          if((i%10)==0)
+          if((i%200)==0)
           {
-            Thread::Yield();
+//            Thread::Yield();
+            millisleep(10);
           }
         }
       }catch(exception& e)
