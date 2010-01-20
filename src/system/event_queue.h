@@ -313,7 +313,6 @@ public:
       MsgIdType msgId=it->first;
       CommandType& command=it->second;
 
-      debug2(log,"enqueue:cmd=%d, msgId=%lld, prio=%d",command->get_commandId(),msgId,command->get_priority());
       Locker* locker = hash.get(msgId);
 
       if ( !locker )
