@@ -19,6 +19,12 @@ SRITSM::~SRITSM()
 {
   smsc_log_debug(logger,"tsm otid=%s delete SRI",ltrid.toString().c_str());
 }
+void SRITSM::TBeginReq(uint8_t cdlen, uint8_t* cd, /* called party address */
+                    uint8_t cllen, uint8_t* cl /* calling party address */)
+{
+  startwdtimer(10);
+  TSM::TBeginReq(cdlen,cd,cllen,cl);
+}
 void SRITSM::END_received(Message& msg)
 {
   if (msg.isComponentPresent() && (msg.getOperationCode() == 22))
@@ -37,6 +43,8 @@ void SRITSM::END_received(Message& msg)
       sriconf.decode(sriconfbuf);
     }
   }
+  if (listener)
+    listener->complete(msg);
   TSM::END_received(msg);
 }
 }/*namespace processor*/}/*namespace mtsmsme*/}/*namespace smsc*/

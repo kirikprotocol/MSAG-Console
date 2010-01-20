@@ -18,6 +18,7 @@ using smsc::mtsmsme::processor::AC;
 class TCO;
 class TsmComletionListener {
   public: virtual void complete(int status) = 0;
+  virtual void complete(Message& msg) {}
 };
 struct TSMSTAT {
   TSMSTAT():objcount(0),objcreated(0),objdeleted(0){}
