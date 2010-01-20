@@ -165,7 +165,7 @@ void Smsc::mainLoop(int idx)
         while ( tasks.getExpired(&task) )
         {
           SMSId id = task.messageId;
-          __trace2__("enqueue timeout Alert: dialogId=%d, proxyUniqueId=%d",
+          debug2(log,"enqueue timeout Alert: dialogId=%d, proxyUniqueId=%d",
             task.sequenceNumber,task.proxy_id);
           //eventqueue.enqueue(id,SmscCommand::makeAlert(task.sms));
           generateAlert(id,task.sms,task.inDlgId);
@@ -254,7 +254,7 @@ void Smsc::mainLoop(int idx)
     for(CmdVector::iterator i=frame.begin();i!=frame.end();i++)
     {
       try{
-        __trace2__("mainLoop: %s.priority=%d",i->getProxy()->getSystemId(),i->getProxy()->getPriority());
+        debug2(log,"mainLoop: %s.priority=%d",i->getProxy()->getSystemId(),i->getProxy()->getPriority());
         int prio=i->getProxy()->getPriority()/1000;
         if(prio<0)prio=0;
         if(prio>=32)prio=31;
@@ -262,7 +262,7 @@ void Smsc::mainLoop(int idx)
         (*i)->sourceId=i->getProxy()->getSystemId();
       }catch(exception& e)
       {
-        __warning2__("Source proxy died after selection: %s",e.what());
+        warn2(log,"Source proxy died after selection: %s",e.what());
         CmdVector::difference_type pos=std::distance(frame.begin(),i);
         frame.erase(i);
         if(frame.size()==0)break;
@@ -271,7 +271,7 @@ void Smsc::mainLoop(int idx)
         continue;
       }catch(...)
       {
-        __warning__("Source proxy died after selection");
+        warn1(log,"Source proxy died after selection");
         CmdVector::difference_type pos=std::distance(frame.begin(),i);
         frame.erase(i);
         if(frame.size()==0)break;
@@ -415,7 +415,7 @@ void Smsc::mainLoop(int idx)
       //__warning2__("count=%d, smooth_cnt=%d",cntInstant,cntSmooth);
     }
   } // end of main loop
-  __warning__("end of mainloop");
+  info1(log,"end of mainloop");
 }
 
 
@@ -452,7 +452,7 @@ void Smsc::processCommand(SmscCommand& cmd,EventQueue::EnqueueVector& ev,FindTas
         bool haveconcat=smsc::util::findConcatInfo(body,mr,idx,num,havemoreudh);
         if(haveconcat && num>1)
         {
-          __trace2__("sms from %s have concat info:mr=%u, %u/%u",sms.getOriginatingAddress().toString().c_str(),(unsigned)mr,(unsigned)idx,(unsigned)num);
+          debug2(log,"sms from %s have concat info:mr=%u, %u/%u",sms.getOriginatingAddress().toString().c_str(),(unsigned)mr,(unsigned)idx,(unsigned)num);
           MergeCacheItem mci;
           mci.mr=mr;
           mci.oa=sms.getOriginatingAddress();
@@ -463,7 +463,6 @@ void Smsc::processCommand(SmscCommand& cmd,EventQueue::EnqueueVector& ev,FindTas
           SMSId *pid=mergeCache.GetPtr(mci);
           if(!pid)
           {
-            __trace__("first piece");
             sms.setIntProperty(Tag::SMSC_MERGE_CONCAT,1);
             id=store->getNextId();
             info2(log,"create mrcache item msgId=%lld;oa=%s;da=%s;mr=%d",id,sms.getOriginatingAddress().toString().c_str(),sms.getDestinationAddress().toString().c_str(),(int)mr);
@@ -473,7 +472,6 @@ void Smsc::processCommand(SmscCommand& cmd,EventQueue::EnqueueVector& ev,FindTas
             mergeCacheTimeouts.Push(to);
           }else
           {
-            __trace__("next piece");
             sms.setIntProperty(Tag::SMSC_MERGE_CONCAT,2);
             id=*pid;
             info2(log,"assign from mrcache msgId=%lld;oa=%s;da=%s;mr=%d",id,sms.getOriginatingAddress().toString().c_str(),sms.getDestinationAddress().toString().c_str(),(int)mr);
@@ -493,7 +491,7 @@ void Smsc::processCommand(SmscCommand& cmd,EventQueue::EnqueueVector& ev,FindTas
         uint16_t mr=sms.getIntProperty(Tag::SMPP_SAR_MSG_REF_NUM);
         uint8_t idx=sms.getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM),
                 num=sms.getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
-        __trace2__("sms from %s have sar info:mr=%u, %u/%u",
+        debug2(log,"sms from %s have sar info:mr=%u, %u/%u",
           sms.getOriginatingAddress().toString().c_str(),(unsigned)mr,(unsigned)idx,(unsigned)num);
         MergeCacheItem mci;
         mci.mr=mr;
@@ -505,7 +503,6 @@ void Smsc::processCommand(SmscCommand& cmd,EventQueue::EnqueueVector& ev,FindTas
         SMSId *pid=mergeCache.GetPtr(mci);
         if(!pid)
         {
-          __trace__("first piece");
           sms.setIntProperty(Tag::SMSC_MERGE_CONCAT,1);
           id=store->getNextId();
           info2(log,"create mrcache item msgId=%lld;oa=%s;da=%s;mr=%d",id,sms.getOriginatingAddress().toString().c_str(),sms.getDestinationAddress().toString().c_str(),(int)mr);
@@ -518,7 +515,6 @@ void Smsc::processCommand(SmscCommand& cmd,EventQueue::EnqueueVector& ev,FindTas
           return;
         }else
         {
-          __trace__("next piece");
           sms.setIntProperty(Tag::SMSC_MERGE_CONCAT,2);
           id=*pid;
           info2(log,"assign from mrcache msgId=%lld;oa=%s;da=%s;mr=%d",id,sms.getOriginatingAddress().toString().c_str(),sms.getDestinationAddress().toString().c_str(),(int)mr);
@@ -527,7 +523,6 @@ void Smsc::processCommand(SmscCommand& cmd,EventQueue::EnqueueVector& ev,FindTas
       {
         id=store->getNextId();
       }
-      __trace2__("main loop submit: seq=%d, id=%lld",cmd->get_dialogId(),id);
       //registerMsuStatEvent(StatEvents::etSubmitOk,&sms);
       break;
     }

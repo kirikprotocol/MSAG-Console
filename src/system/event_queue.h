@@ -51,7 +51,7 @@ class EventQueue
   public:
   uint64_t counter;
 
-  // запись таблицы блокировок
+  //   
   struct Locker
   {
     bool locked;
@@ -93,9 +93,9 @@ class EventQueue
       __warning2__("LOCKER POOL OUT OF ITEMS! msgId=%lld",msgId);
     }
 
-    // выберает следующую допустимую команду
-    // возвращает true если команда найдена - false в обраном случае
-    // удаляет все команды для которых возможен таймаут и он истек
+    //    
+    //  true    - false   
+    //          
     bool getNextCommand(CommandType& c,bool remove=true)
     {
       for(int i=0;i<8;i++)
@@ -138,7 +138,6 @@ class EventQueue
         while(l)
         {
           tmp=l->next_hash;
-          __trace2__("deleting in hash destructor:msgid=%lld",l->msgId);
           //delete l;
           l=tmp;
         }
@@ -277,12 +276,13 @@ public:
     return true;
   }
 
-  // добавляет в запись команду (создает новую запись приее отсутствии)
-  // если для записи допустима выборка команд , то нотифицирует исполнителей
+  //     (    )
+  //       ,   
   void enqueue(MsgIdType msgId, const CommandType& command)
   {
+    static smsc::logger::Logger* log=smsc::logger::Logger::getInstance("eventqueue");
   __synchronized__
-    __trace2__("enqueue:cmd=%d, msgId=%lld, prio=%d",command->get_commandId(),msgId,command->get_priority());
+    debug2(log,"enqueue:cmd=%d, msgId=%lld, prio=%d",command->get_commandId(),msgId,command->get_priority());
     Locker* locker = hash.get(msgId);
 
     if ( !locker )
@@ -307,7 +307,6 @@ public:
   void enqueueEx(EnqueueVector& in)
   {
     __synchronized__
-    static smsc::logger::Logger* log=smsc::logger::Logger::getInstance("eventqueue");
     bool doSignal=false;
     for(EnqueueVector::iterator it=in.begin();it!=in.end();it++)
     {
@@ -338,10 +337,10 @@ public:
   }
 
 
-  // просматривет список активных записей
-  // записи в одном из финальных состояний при отсутствии команд удаляуются
-  // для записей имеющих команды выберает доступную для текущего состояния команду
-  // если нет записей с доступными командами ожидает нотификации
+  //    
+  //          
+  //          
+  //        
   void selectAndDequeue(Tuple& result,volatile bool* quitting)
   {
     for(;;)
@@ -365,8 +364,8 @@ public:
     }
   }
 
-  // изменяет состояние, снимает лок и добавляет в список активных
-  // после чего нотифицирует исполнителей
+  //  ,       
+  //    
   void changeState(MsgIdType msgId,StateType state)
   {
   __synchronized__
@@ -376,7 +375,7 @@ public:
     locker->state = state;
     //locker->lastCommand=UNKNOWN;
 
-    // разблокируем запись и добавляем в список активных
+    //       
     locker->locked = false;
 
 
