@@ -877,6 +877,7 @@ throw (AdminException)
       smsc_app_runner.reset(new SmscAppRunner(configs, node.c_str()));
       smsc::resourcemanager::ResourceManager::reload(configs.cfgman->getString("core.locales"), configs.cfgman->getString("core.default_locale"));
       smsc_app_runner->Start();
+      smsc_app_runner->WaitFor();
     }
     catch (smsc::util::Exception &e)
     {
