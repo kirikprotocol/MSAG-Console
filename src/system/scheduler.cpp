@@ -544,23 +544,24 @@ int Scheduler::Execute()
       {
         try{
           int idx=cmd->get_smeIndex();
-          info2(log,"SMEALERT for %d",idx);
+          info2(log,"SMEALERT for smeIdx=%d,smeId=%s",idx,Smsc::getInstance().getSmeInfo(idx).systemId.c_str());
           int cnt=0;
           time_t sctime=time(NULL);
           SmeStatMap::iterator it=smeStatMap.find(idx);
           if(it==smeStatMap.end())continue;
-          SmeStat::ChainSet::iterator cit=it->second.chainSet.begin();
-          for(;cit!=it->second.chainSet.end();cit++)
+          SmeStat::ChainSet::iterator cit=it->second.chainSet.begin(),end=it->second.chainSet.end();
+          for(;cit!=end;cit++)
           {
             Chain* c=*cit;
             RescheduleChain(c,sctime);
             cnt++;
-            if(cnt==5)
+            if(cnt==500)
             {
               sctime++;
               cnt=0;
             }
           }
+          info2(log,"rescheduled %d sms for smeId=%s",(int)it->second.chainSet.size(),Smsc::getInstance().getSmeInfo(idx).systemId.c_str());
         }catch(std::exception& e)
         {
           warn2(log,"Exception during SMEALERT:%s",e.what());
