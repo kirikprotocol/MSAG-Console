@@ -869,34 +869,36 @@ throw (AdminException)
 void SmscComponent::runSmsc()
 throw (AdminException)
 {
-  smsc::core::synchronization::MutexGuard guard(mutex);
-  if (smsc_app_runner.get() == 0)
   {
-    try
+    smsc::core::synchronization::MutexGuard guard(mutex);
+    if (smsc_app_runner.get() == 0)
     {
-      smsc_app_runner.reset(new SmscAppRunner(configs, node.c_str()));
-      smsc::resourcemanager::ResourceManager::reload(configs.cfgman->getString("core.locales"), configs.cfgman->getString("core.default_locale"));
-      smsc_app_runner->Start();
-      smsc_app_runner->WaitFor();
+      try
+      {
+        smsc_app_runner.reset(new SmscAppRunner(configs, node.c_str()));
+        smsc::resourcemanager::ResourceManager::reload(configs.cfgman->getString("core.locales"), configs.cfgman->getString("core.default_locale"));
+        smsc_app_runner->Start();
+      }
+      catch (smsc::util::Exception &e)
+      {
+        smsc_log_error(logger, "Exception on starting SMSC: \"%s\"", e.what());
+        throw AdminException("Exception on starting SMSC: \"%s\"", e.what());
+      }
+      catch (std::exception &e)
+      {
+        smsc_log_error(logger, "Exception on starting SMSC: \"%s\"", e.what());
+        throw AdminException("Exception on starting SMSC: \"%s\"", e.what());
+      }
+      catch (...)
+      {
+        smsc_log_error(logger, "Unknown exception on starting SMSC");
+        throw AdminException("Unknown exception on starting SMSC");
+      }
     }
-    catch (smsc::util::Exception &e)
-    {
-      smsc_log_error(logger, "Exception on starting SMSC: \"%s\"", e.what());
-      throw AdminException("Exception on starting SMSC: \"%s\"", e.what());
-    }
-    catch (std::exception &e)
-    {
-      smsc_log_error(logger, "Exception on starting SMSC: \"%s\"", e.what());
-      throw AdminException("Exception on starting SMSC: \"%s\"", e.what());
-    }
-    catch (...)
-    {
-      smsc_log_error(logger, "Unknown exception on starting SMSC");
-      throw AdminException("Unknown exception on starting SMSC");
-    }
+    else
+      throw   AdminException("SMSC Application started already (or not sucessfully stopped)");
   }
-  else
-    throw   AdminException("SMSC Application started already (or not sucessfully stopped)");
+  smsc_app_runner->WaitFor();
 }
 
 void SmscComponent::sigStopSmsc()
