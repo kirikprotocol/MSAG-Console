@@ -9,14 +9,13 @@
 using namespace scag2::counter;
 using scag2::util::Drndm;
 
-std::auto_ptr<impl::HashCountManager> mgr;
-
 CounterPtr< Accumulator > getAccumulator( const char* name, counttime_type delayTime )
 {
-    CounterPtr< Accumulator > ptr = mgr->getCounter< Accumulator >(name);
+    Manager& mgr = Manager::getInstance();
+    CounterPtr< Accumulator > ptr = mgr.getCounter< Accumulator >(name);
     if ( ! ptr.get() ) {
         try {
-            ptr = mgr->registerCounter( new Accumulator(name,delayTime) );
+            ptr = mgr.registerCounter( new Accumulator(name,delayTime) );
         } catch ( std::exception& e ) {
         }
     }
@@ -40,8 +39,10 @@ int main()
     smsc::core::synchronization::EventMonitor mainmon;
     MutexGuard mg(mainmon);
 
-    mgr.reset( new impl::HashCountManager() );
-    mgr->start();
+    {
+        impl::HashCountManager* mgr = new impl::HashCountManager();
+        mgr->start();
+    }
 
     Drndm& rnd = Drndm::getRnd();
     const counttime_type delay = 3;

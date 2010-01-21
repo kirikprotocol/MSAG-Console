@@ -6,6 +6,8 @@
 #include <algorithm>
 #include "TimeSliceManager.h"
 #include "util/TypeInfo.h"
+#include "TimeSliceGroup.h"
+#include "Manager.h"
 
 namespace scag2 {
 namespace counter {
@@ -25,15 +27,24 @@ public:
 
     Average( const std::string&                name,
              usec_type                         averageEveryUsec,
+             Observer*                         observer = 0,
              counttime_type                    disposeDelayTime = 0 ) :
-    Counter(name,disposeDelayTime),
+    Counter(name,observer,disposeDelayTime),
     group_(0),
     averageTime_(averageEveryUsec)
     {
+        smsc_log_debug(loga_,"ctor %p %s '%s'",this,getTypeName(),getName().c_str());
         reset();
     }
 
+    virtual Average* clone( const std::string& name,
+                            counttime_type     disposeTime = 0 ) const
+    {
+        return new Average(name,averageTime_,observer_,disposeTime);
+    }
+
     virtual ~Average() {
+        smsc_log_debug(loga_,"dtor %p %s '%s'",this,getTypeName(),getName().c_str());
     }
 
 
@@ -61,6 +72,7 @@ public:
     };
 
     virtual int getType() const { return getStaticType(); }
+    virtual const char* getTypeName() const { return "average"; }
 
     virtual void reset() {
         smsc::core::synchronization::MutexGuard mg(countMutex_);
@@ -68,6 +80,7 @@ public:
         last_.reset();
         current_.reset();
         average_ = 0;
+        if ( observer_ ) observer_->modified(*this,average_);
     }
 
     /// return the total statistics
@@ -116,6 +129,7 @@ public:
         last_ = current_;
         current_.reset();
         average_ = last_.average();
+        if ( observer_ ) observer_->modified(*this,average_);
     }
 
 private:

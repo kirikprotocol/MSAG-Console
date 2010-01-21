@@ -5,7 +5,7 @@ namespace counter {
 namespace impl {
 
 NotificationManager::NotificationManager() :
-log_(smsc::logger::Logger::getInstance("count.nmgr"))
+log_(smsc::logger::Logger::getInstance("cnt.nmgr"))
 {
     smsc_log_debug(log_,"ctor");
 }

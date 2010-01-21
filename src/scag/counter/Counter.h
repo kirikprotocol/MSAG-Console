@@ -5,49 +5,24 @@
 #include "util/int.h"
 #include "core/synchronization/Mutex.hpp"
 #include "logger/Logger.h"
+#include "Observer.h"
 
 namespace scag2 {
 namespace counter {
 
 class Counter;
+class Manager;
 
 typedef int32_t counttime_type;
 const counttime_type counttime_max = 0x7fffffff;
 const counttime_type counttime_locked = counttime_max;
 
-/// A manager responsible for (delayed) disposal of a counter
-class Disposer
-{
-public:
-    virtual void scheduleDisposal( counttime_type disposeTime, Counter& counter ) = 0;
-
-    /// returns the next wake time.
-    /// Counters shall schedule their disposal referred to this time.
-    virtual counttime_type getWakeTime() const = 0;
-protected:
-    /// return true if the counter may be destroyed.
-    inline bool checkDisposal( Counter* counter, counttime_type now ) const;
-};
-
 class CounterPtrAny;
-class Manager;
-
-// ================================================================
-class Observer
-{
-public:
-    virtual ~Observer() {}
-
-    /// notification that the value of the counter has changed
-    virtual void modified( Counter& counter, int64_t value ) = 0;
-};
-
 
 // ================================================================
 class Counter
 {
     friend class CounterPtrAny;
-    friend class Disposer;
     friend class Manager;
 
 protected:
@@ -55,8 +30,8 @@ protected:
     static smsc::logger::Logger* loga_;
 
     Counter( const std::string& name,
-             counttime_type     disposeDelayTime = 0,
-             Observer*          observer = 0 );
+             Observer*          observer = 0,
+             counttime_type     disposeDelayTime = 0 );
 
 public:
 
@@ -77,6 +52,9 @@ public:
             TOTALSIGMA
     } Valtype;
 
+    virtual Counter* clone( const std::string& name,
+                            counttime_type     disposeTime = 0 ) const = 0;
+
     virtual ~Counter();
     inline const std::string& getName() const { return name_; }
 
@@ -85,6 +63,7 @@ public:
 
     /// NOTE: any subclass should override this method
     virtual int getType() const = 0;
+    virtual const char* getTypeName() const = 0;
 
     /// reset the counter
     virtual void reset() = 0;
@@ -111,58 +90,51 @@ protected:
     virtual void preDestroy( Manager& mgr ) = 0;
 
 private:
+
+    /// NOTE: invoked only from CounterPtr
     inline void changeUsage( bool inc ) {
         smsc::core::synchronization::MutexGuard mg(usageMutex_);
         if ( inc ) {
             disposeTime_ = counttime_locked;
             ++usage_;
         } else if (--usage_ == 0) {
-            if (!disposer_) {
-                throw smsc::util::Exception("logic error: disposer is not set in counter '%s'",name_.c_str());
-            }
+            // if (!disposer_) {
+            // throw smsc::util::Exception("logic error: disposer is not set in counter '%s'",name_.c_str());
+            // }
             if ( disposeDelayTime_ == 0 ) {
                 disposeTime_ = counttime_max; // not expired
             } else {
-                disposeTime_ = disposer_->getWakeTime() + disposeDelayTime_;
-                smsc_log_debug(loga_,"'%s': scheduling disposal at %d",name_.c_str(),int(disposeTime_));
-                disposer_->scheduleDisposal(disposeTime_,*this);
+                scheduleDisposal();
+                // Manager& mgr = Manager::getInstance();
+                // disposeTime_ = mgr.getWakeTime() + disposeDelayTime_;
+                // smsc_log_debug(loga_,"'%s': scheduling disposal at %d",name_.c_str(),int(disposeTime_));
+                // mgr.scheduleDisposal(*this);
             }
         }
     }
+
+    void scheduleDisposal();
+
 private:
     Counter( const Counter& );
     Counter& operator = ( const Counter& );
 
 protected:
     mutable smsc::core::synchronization::Mutex countMutex_; // a lock to be invoked from accumulate
-    Disposer*      disposer_;
+    // Disposer*      disposer_;
     Observer*      observer_;
 
 private:
     std::string name_;
     smsc::core::synchronization::Mutex usageMutex_; // a lock for setting number of referrers
 
-    // a time to wait since release until disposal.
-    counttime_type disposeDelayTime_;
-
+    // a time to wait since release until disposal,
     // absolute time when the counter should be disposed.
-    counttime_type disposeTime_;
+    counttime_type disposeDelayTime_, disposeTime_;
 
     // number of consumers
     unsigned       usage_;
-    // int32_t        flags_;
 };
-
-
-inline bool Disposer::checkDisposal( Counter* c, counttime_type now ) const
-{
-    if ( !c || c->usage_ ) return false;
-    {
-        MutexGuard mg(c->usageMutex_);
-        if ( c->usage_ || c->disposeTime_ > now ) return false;
-    }
-    return true;
-}
 
 
 /// A smart pointer to any counter

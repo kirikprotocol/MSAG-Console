@@ -23,6 +23,7 @@ TimeSliceManagerImpl::~TimeSliceManagerImpl()
 {
     stop();
     // FIXME: destruction of groups in hash
+    smsc_log_info(log_,"dtor");
 }
 
 
@@ -116,6 +117,7 @@ int TimeSliceManagerImpl::Execute()
             observer_->advanceTime(curTime);
         }
     }
+    smsc_log_info(log_,"stopped");
     return 0;
 }
 

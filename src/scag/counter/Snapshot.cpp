@@ -57,6 +57,7 @@ int64_t Snapshot::accumulate( int64_t x, int inc )
         slot_[cur] += inc;
         integral_ += inc;
     }
+    if ( observer_ ) observer_->modified(*this,integral_);
     return integral_;
 }
 

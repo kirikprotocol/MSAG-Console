@@ -4,6 +4,7 @@ Probable usage from MSAG rules (mandatory fields prefixed with *):
     *name="NAME"
     *type="TEMPLID"
     inc="VALUE,default=0"
+    weight="INT,default=0"         // ignored for some types
     reset="false|true,default=false"
     scope="USER|SERVICE|OPERATOR|PROVIDER,default=USER"
     status="VARNAME"
@@ -13,7 +14,7 @@ Probable usage from MSAG rules (mandatory fields prefixed with *):
 <counter:inc
     *name="NAME"
     scope="USER|SERVICE|OPERATOR|PROVIDER,default=USER"
-    value="INT64,default=1"        // ignored for some types
+    inc="INT64,default=1"        // ignored for some types
     weight="INT,default=1"         // ignored for some types
     status="VARNAME"
     />

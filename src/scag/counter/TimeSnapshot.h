@@ -4,6 +4,8 @@
 #include <cassert>
 #include "Snapshot.h"
 #include "util/TimeSource.h"
+#include "TimeSliceGroup.h"
+#include "Manager.h"
 
 namespace scag2 {
 namespace counter {
@@ -20,15 +22,28 @@ public:
     TimeSnapshot( const std::string&      name,
                   usec_type               width,
                   unsigned                nbins,
+                  Observer*               observer = 0,
                   counttime_type disposeDelayTime = 0 ) :
-    Snapshot(name,nbins,disposeDelayTime),
+    Snapshot(name,nbins,observer,disposeDelayTime),
     group_(0)
     {
         assert( width > usec_type(nbins) );
         resol_ = (width + nbins - 1) / nbins;
+        smsc_log_debug(loga_,"ctor %p %s '%s'",this,getTypeName(),getName().c_str());
+    }
+
+    virtual ~TimeSnapshot() {
+        smsc_log_debug(loga_,"dtor %p %s '%s'",this,getTypeName(),getName().c_str());
+    }
+
+    virtual TimeSnapshot* clone( const std::string& name,
+                                 counttime_type     disposeTime = 0 ) const
+    {
+        return new TimeSnapshot(name,resol_*nbins_,nbins_,observer_,disposeTime);
     }
 
     virtual int getType() const { return getStaticType(); }
+    virtual const char* getTypeName() const { return "timesnapshot"; }
 
     virtual void increment( int64_t x = 1, int w = 1 ) {
         const int64_t bin = int64_t(TSource::getUSec()/resol_);

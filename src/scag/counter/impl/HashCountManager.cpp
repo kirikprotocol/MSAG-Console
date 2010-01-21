@@ -125,9 +125,9 @@ HashCountManager::TimeSliceMgrImpl::~TimeSliceMgrImpl()
 HashCountManager::HashCountManager( TemplateManager* tmplmgr, unsigned notifySlices ) :
 Manager(),
 smsc::core::threads::Thread(),
-log_(smsc::logger::Logger::getInstance("count.mgr")),
+log_(smsc::logger::Logger::getInstance("cnt.mgr")),
 notificationManager_(new NotificationManager),
-timeSliceManager_(new TimeSliceManagerImpl(smsc::logger::Logger::getInstance("count.tmgr"),
+timeSliceManager_(new TimeSliceManagerImpl(smsc::logger::Logger::getInstance("cnt.tmgr"),
                                            notificationManager_,notifySlices)),
 templateManager_(tmplmgr),
 stopping_(true)
@@ -172,8 +172,11 @@ HashCountManager::~HashCountManager()
         smsc_log_warn(log_,"manager has non-free counters");
     }
     hash_.Empty();
+    smsc_log_debug(log_,"destroying template manager");
     delete templateManager_; templateManager_ = 0;
+    smsc_log_debug(log_,"destroying time slice manager");
     delete timeSliceManager_; timeSliceManager_ = 0;
+    smsc_log_debug(log_,"destroying notification manager");
     delete notificationManager_; notificationManager_ = 0;
 }
 
@@ -232,8 +235,9 @@ CounterPtrAny HashCountManager::doRegisterAnyCounter( Counter* ccc, bool& wasReg
 }
 
 
-void HashCountManager::scheduleDisposal( counttime_type dt, Counter& c )
+void HashCountManager::scheduleDisposal( Counter& c )
 {
+    const counttime_type dt = c.getDisposeTime();
     MutexGuard mg(disposeMon_);
     // if ( dt < wakeTime_ ) {
     // nextTime_ = dt;

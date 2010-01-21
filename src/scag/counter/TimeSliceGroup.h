@@ -18,11 +18,16 @@ protected:
     slice_(slice) {
         if (!log_) {
             MutexGuard mg(lock_);
-            if (!log_) log_ = smsc::logger::Logger::getInstance("count.grp");
+            if (!log_) log_ = smsc::logger::Logger::getInstance("cnt.tgrp");
         }
+        smsc_log_debug(log_,"ctor %p, slice=%llu",this,slice);
     }
 
 public:
+
+    ~TimeSliceGroup() {
+        smsc_log_debug(log_,"dtor %p",this);
+    }
 
     usec_type getSlice() const { return slice_; }
 

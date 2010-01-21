@@ -20,16 +20,31 @@ public:
     static int getStaticType() { return smsc::util::TypeInfo< Accumulator >::typeValue(); }
 
     Accumulator( const std::string& name,
+                 Observer* observer = 0,
                  counttime_type disposeDelayTime = 0 ) :
-    Counter(name,disposeDelayTime),
-    count_(0), integral_(0) {}
+    Counter(name,observer,disposeDelayTime),
+    count_(0), integral_(0) {
+        smsc_log_debug(loga_,"ctor %p %s '%s'",this,getTypeName(),getName().c_str());
+    }
+
+    virtual ~Accumulator() {
+        smsc_log_debug(loga_,"dtor %p %s '%s'",this,getTypeName(),getName().c_str());
+    }
+
+    virtual Accumulator* clone( const std::string& name,
+                                counttime_type disposeTime = 0 ) const
+    {
+        return new Accumulator( name, observer_, disposeTime );
+    }
 
     virtual int getType() const { return getStaticType(); }
+    virtual const char* getTypeName() const { return "accumulator"; }
 
     virtual void reset() {
         smsc::core::synchronization::MutexGuard mg(countMutex_);
         count_ = 0;
         integral_ = 0;
+        if ( observer_ ) observer_->modified(*this,integral_);
     }
 
     /*
@@ -48,6 +63,7 @@ public:
         smsc::core::synchronization::MutexGuard mg(countMutex_);
         count_ += w;
         integral_ += x*w;
+        if ( observer_ ) observer_->modified(*this,integral_);
     }
 
     virtual int64_t getValue() const

@@ -4,16 +4,16 @@
 #include "Counter.h"
 #include "util/TypeInfo.h"
 #include "util/Exception.hpp"
-#include "TimeSliceManager.h"
-#include "TemplateManager.h"
 
 namespace scag2 {
 namespace counter {
 
-class Accumulator;
+class TemplateManager;
+class TimeSliceManager;
 
-class Manager : public Disposer
+class Manager
 {
+    friend class Counter;
 public:
     static Manager& getInstance();
 
@@ -35,15 +35,14 @@ public:
     /// the same notes as for registerAnyCounter
     template <class T> CounterPtr< T > registerCounter( T* c )
     {
-        // if (!c) throw smsc::util::Exception("registering null counter");
-        // setDisposer(*c);
         CounterPtr< T > res( static_cast< T* >(registerAnyCounter(c).get()) );
         return res;
     }
 
-    inline CounterPtrAny registerAnyCounter( Counter* c ) {
+    inline CounterPtrAny registerAnyCounter( Counter* c )
+    {
         if (!c) throw smsc::util::Exception("registering null counter");
-        c->disposer_ = this;
+        // c->disposer_ = this;
         bool wasReg;
         CounterPtrAny ptr = doRegisterAnyCounter(c,wasReg);
         if (wasReg) c->postRegister(*this);
@@ -58,27 +57,35 @@ public:
     virtual TimeSliceManager& getTimeManager() = 0;
     virtual TemplateManager* getTemplateManager() = 0;
 
+    virtual void stop() = 0;
+
 protected:
     /// register counter and return a ptr to it, or to existing counter of this name.
     /// it may throw exception if counter types are not the same.
     /// otherwise it always return a ptr to a good counter.
     /// NOTE: don't use 'c' pointer after the call, the object under it may be destroyed!
     virtual CounterPtrAny doRegisterAnyCounter( Counter* c, bool& wasReg ) = 0;
-    /*
-    void registerTimeItem( TimeSliceItem* ptr ) {
-        if (ptr) {
-            TimeSliceManager& m = getTimeManager();
-            m.addItem(*ptr,m.roundSlice(ptr->getTimeSliceWidth()));
-        }
-    }
-     */
-    inline void destroy( Counter* ptr ) {
+    inline void destroy( Counter* ptr )
+    {
         if (ptr) {
             ptr->preDestroy(*this);
             delete ptr;
         }
     }
 
+    virtual counttime_type getWakeTime() const = 0;
+    virtual void scheduleDisposal( Counter& c ) = 0;
+
+    inline bool checkDisposal( Counter* c, counttime_type now ) const
+    {
+        if ( !c || c->usage_ ) return false;
+        {
+            MutexGuard mg(c->usageMutex_);
+            if ( c->usage_ || c->disposeTime_ > now ) return false;
+        }
+        return true;
+    }
+    
 private:
     static Manager* manager_;
 };

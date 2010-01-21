@@ -27,8 +27,9 @@ public:
 
     Snapshot( const std::string& name,
               unsigned nbins,          // number of bins in the snapshot
+              Observer*      observer = 0,
               counttime_type disposeDelayTime = 0 ) :
-    Counter(name,disposeDelayTime),
+    Counter(name,observer,disposeDelayTime),
     integral_(0), lasttime_(0),
     nbins_(nbins), first_(0), last_(0)
     {
@@ -50,6 +51,7 @@ public:
         first_ = 0;
         last_ = 0;
         slot_[0] = 0;
+        if ( observer_ ) observer_->modified(*this,integral_);
     }
 
     /*
