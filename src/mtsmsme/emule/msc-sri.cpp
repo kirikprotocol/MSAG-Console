@@ -292,13 +292,17 @@ public:
       sm.get_message().set_smDefaultMsgId(0);
       sm.get_message().set_shortMessage(msrn,(int)strlen(msrn));
 
-      smsc_log_info(logger, "Sending answer");
+      smsc_log_info(logger, "Sending answer \'%s\'",msrn);
       asyncTransmitter->sendPdu(&(sm.get_header()));
       delete(request);
       request = 0;
     }
 
-    virtual void complete(int status) {}
+    virtual void complete(int status)
+    {
+      char dflt[] = "error";
+      sendReply(dflt);
+    }
     virtual void complete(Message& msg)
     {
       char dflt[] = "error";
