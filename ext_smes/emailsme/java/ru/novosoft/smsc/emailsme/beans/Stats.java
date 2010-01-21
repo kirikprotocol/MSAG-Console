@@ -21,9 +21,17 @@ public class Stats extends SmeBean {
   private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
 
   private String mbQuery;
-  private StatisticsFilter filter = new StatisticsFilter();
+  private StatisticsFilter filter;
   private StatisticsDataSource ds;
   private Map stats;
+
+  public Stats() {
+    long now = System.currentTimeMillis();
+    long offset = TimeZone.getDefault().getOffset(now);
+    filter = new StatisticsFilter();
+    filter.setFrom(new Date(now - offset - 3600000 * 24));
+    filter.setTill(new Date(now - offset - 3600000 * 24));
+  }
 
   protected int init(List errors) {
     int result = super.init(errors);
