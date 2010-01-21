@@ -45,6 +45,7 @@ protected:
     bool prefetch( ActionContext& context, counter::CounterPtrAny& ptr );
     virtual bool postFetch( ActionContext& context, counter::CounterPtrAny& ptr);
     bool setStatus( ActionContext& context, Status status );
+    std::string makeName( ActionContext& context, const char* name ) const;
 
 protected:
     static smsc::logger::Logger* log_;
@@ -85,7 +86,7 @@ public:
     {}
     virtual const char* opname() const { return "counter:create"; }
     virtual void init( const SectionParams& params, PropertyObject propertyObject );
-    virtual bool run( ActionContext& context );
+    // virtual bool run( ActionContext& context );
 protected:
     virtual bool isInc() const { return false; }
     virtual bool postFetch( ActionContext& context,
@@ -112,8 +113,8 @@ public:
     virtual const char* opname() const { return "counter:get"; }
     virtual void init( const SectionParams& params, PropertyObject propertyObject );
     virtual bool run( ActionContext& context );
-    virtual bool postFetch( ActionContext& context,
-                            counter::CounterPtrAny& ptr);
+    // virtual bool postFetch( ActionContext& context,
+    // counter::CounterPtrAny& ptr);
 protected:
     StringField value_;
 };

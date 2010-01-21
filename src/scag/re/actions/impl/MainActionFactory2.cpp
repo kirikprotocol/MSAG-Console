@@ -51,6 +51,9 @@
 #include "ActionFormatPairs.h"
 #include "ActionSplitPairs.h"
 
+// counters
+#include "ActionCounter.h"
+
 namespace scag2 {
 namespace re {
 namespace actions {
@@ -176,6 +179,14 @@ Action * MainActionFactory::CreateAction( const std::string& name ) const
             if (name == "stat:add_keywords") return new AddKeywordsAction();
             if (name == "stat:set_keywords") return new SetKeywordsAction();
             if (name == "stat:get_keywords") return new GetKeywordsAction();
+            break;
+        }
+
+        if (0 == strncmp(name.c_str(),"counter:",8)) {
+            if (name == "counter:create") return new ActionCounterCreate();
+            if (name == "counter:reset") return new ActionCounterReset();
+            if (name == "counter:inc") return new ActionCounterInc();
+            if (name == "counter:get") return new ActionCounterGet();
             break;
         }
 

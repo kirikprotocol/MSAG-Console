@@ -1,6 +1,7 @@
 #include "ActionCounter.h"
 #include "scag/counter/Counter.h"
 #include "scag/counter/Manager.h"
+#include "scag/counter/TemplateManager.h"
 
 namespace {
 smsc::core::synchronization::Mutex logMutex;
@@ -29,9 +30,11 @@ void ActionCounterBase::init( const SectionParams& params,
 {
     name_.init(params,propertyObject);
     status_.init(params,propertyObject);
-    StringField scope(*this,"scope",true,true);
+    StringField scope(*this,"scope",false,true);
     scope.init(params,propertyObject);
-    if ( scope.getType() == ftUnknown ) {
+    if ( !scope.isFound() ) {
+        scope_ = USER;
+    } else if ( scope.getType() == ftUnknown ) {
         if ( strcmp(scope.getStringValue(),"USER") ) {
             scope_ = USER;
         } else if ( strcmp(scope.getStringValue(),"SERVICE") ) {
@@ -86,6 +89,26 @@ bool ActionCounterBase::setStatus(ActionContext& ctx, Status status)
 }
 
 
+std::string ActionCounterBase::makeName( ActionContext& context,
+                                         const char* name ) const
+{
+    char buf[50];
+    const char* pfx;
+    switch ( scope_ ) {
+    case USER : pfx = "user."; break;
+    case SERVICE : sprintf(buf,"service.%u.",
+                           context.getCommandProperty().serviceId); pfx = buf; break;
+    case OPERATOR : sprintf(buf,"operator.%u.",
+                            context.getCommandProperty().operatorId); pfx = buf; break;
+    case PROVIDER : sprintf(buf,"provider.%u.",
+                            context.getCommandProperty().providerId); pfx = buf; break;
+    case SYSTEM : pfx = "sys."; break;
+    default : pfx = ""; break;
+    }
+    return std::string(pfx) + name;
+}
+
+
 void ActionCounterInc::init( const SectionParams& params,
                              PropertyObject propertyObject )
 {
@@ -105,7 +128,7 @@ bool ActionCounterInc::run( ActionContext& context )
     if ( prefetch(context,ptr) ) {
         ptr->increment(val,weight);
     }
-    return 0;
+    return true;
 }
 
 
@@ -123,22 +146,22 @@ bool ActionCounterCreate::postFetch( ActionContext& context,
                                      counter::CounterPtrAny& ptr )
 {
     if ( ptr.get() ) {
-        if ( reset_.getValue(context) ) ptr->reset();
+        if ( reset_.isFound() && reset_.getValue(context) ) ptr->reset();
         return setStatus(context,OK);
     }
     counter::Manager& mgr = counter::Manager::getInstance();
     counter::TemplateManager* tmgr = mgr.getTemplateManager();
     if ( !tmgr ) return setStatus(context,NOTFOUND);
-    Counter* c = tmgr->createCounter( makeName(name_-.getValue(context)),
-                                      templid_.getValue(context),
-                                      unsigned(lifetime_.getValue(context)) );
+    counter::Counter* c = tmgr->createCounter( templid_.getValue(context),
+                                               makeName(context,name_.getValue(context)),
+                                               unsigned(lifetime_.getSeconds(context)) );
     if ( !c ) return setStatus(context,NOTFOUND);
     try {
         ptr = mgr.registerAnyCounter(c);
     } catch ( std::exception& e ) {
         return setStatus(context,TYPEMISMATCH);
     }
-    return setStatus(ptr.get()?OK:NOTFOUND);
+    return setStatus(context,ptr.get()?OK:NOTFOUND);
 }
 
 
@@ -159,16 +182,21 @@ void ActionCounterGet::init( const SectionParams& params,
 }
 
 
-bool ActionCounterGet::postFetch( ActionContext& context,
-                                  counter::CounterPtrAny& ptr )
+bool ActionCounterGet::run( ActionContext& context )
 {
-    if ( ! ptr.get() ) return setStatus(context,NOTFOUND);
+    smsc_log_debug(log_,"%s run",opname());
+    counter::CounterPtrAny ptr;
+    if ( ! prefetch(context,ptr) ) {
+        setStatus(context,NOTFOUND);
+        return true;
+    }
     int64_t result = ptr->getValue();
     if ( value_.isFound() ) {
         Property* p = value_.getProperty(context);
         if (p) p->setInt(result);
     }
-    return setStatus(context,OK);
+    setStatus(context,OK);
+    return true;
 }
 
 }
