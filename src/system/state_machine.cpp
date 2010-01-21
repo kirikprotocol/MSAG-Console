@@ -5469,9 +5469,9 @@ bool StateMachine::processMerge(SbmContext& c)
     if(!allParts)
     {
       info2(smsLog, "merging sms Id=%lld;oa=%s;da=%s not all parts are here, waiting",
+          c.t.msgId,
           c.sms->getOriginatingAddress().toString().c_str(),
-          c.sms->getDestinationAddress().toString().c_str(),
-          c.t.msgId);
+          c.sms->getDestinationAddress().toString().c_str());
       char buf[64];
       sprintf(buf,"%lld",c.t.msgId);
       SmscCommand resp = SmscCommand::makeSubmitSmResp
