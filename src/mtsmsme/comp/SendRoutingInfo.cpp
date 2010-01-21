@@ -78,8 +78,7 @@ char* SendRoutingInfoConfV2::getMSRN()
 }
 SendRoutingInfoConfV2::SendRoutingInfoConfV2(Logger* _logger) : logger(_logger)
 {
-  _msrn[0] = '0';
-  _msrn[1] = '\0';
+  _msrn[0] = '\0';
 }
 void SendRoutingInfoConfV2::encode(vector<unsigned char>& buf)
 {
