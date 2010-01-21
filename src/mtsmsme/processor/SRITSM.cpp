@@ -18,6 +18,8 @@ SRITSM::SRITSM(TrId _ltrid,AC& ac,TCO* _tco):TSM(_ltrid,ac,_tco)
 SRITSM::~SRITSM()
 {
   smsc_log_debug(logger,"tsm otid=%s delete SRI",ltrid.toString().c_str());
+  if (listener)
+    listener->complete(0);
 }
 void SRITSM::TBeginReq(uint8_t cdlen, uint8_t* cd, /* called party address */
                     uint8_t cllen, uint8_t* cl /* calling party address */)
