@@ -10,6 +10,7 @@ scag/msag           gwmain2        \
   -lscag-bill-impl \
   -lscag-bill-ewallet-client \
   -lscag-bill-ewallet-proto \
+  -lscag-counter-impl \
   -lscag-stat-impl \
   -lscag-re-impl \
   -lscag-re-actions-impl \
@@ -35,6 +36,7 @@ scag/msag           gwmain2        \
   -lscag-pvss-api-packets \
   -lscag-pvss-common \
   \
+  -lscag-counter \
   -lscag-transport \
   \
   -lscag-config \

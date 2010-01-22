@@ -30,6 +30,9 @@
 #include "util/regexp/RegExp.hpp"
 #include "util/xml/utilFunctions.h"
 
+#include "scag/counter/impl/HashCountManager.h"
+#include "scag/counter/impl/TemplateManagerImpl.h"
+#include "scag/counter/ActionTable.h"
 
 namespace {
 
@@ -124,6 +127,36 @@ void Scag::init( unsigned mynode )
     ConfigManager& cfg = ConfigManager::Instance();
 
     //************** Personalization client initialization **************
+
+    try {
+        smsc_log_info(log,"creating counter manager...");
+        counter::impl::HashCountManager* mgr =
+            new counter::impl::HashCountManager
+            ( new counter::impl::TemplateManagerImpl(), 10 );
+        mgr->start();
+    } catch (...) {
+        smsc_log_error(log,"exc in counter mgr");
+        abort();
+    }
+
+    {
+        smsc_log_info(log,"Adding a few counter templates");
+        counter::Manager& mgr = counter::Manager::getInstance();
+        counter::TemplateManager* tmgr = mgr.getTemplateManager();
+        if (tmgr) {
+            counter::Observer* o = new counter::ActionTable();
+            tmgr->replaceObserver("sys.act.notify",o);
+            tmgr->replaceTemplate( "sys.time.persec",
+                                   counter::CounterTemplate::create
+                                   ( "timesnapshot", o, 1000000LL, 50 ) );
+            tmgr->replaceTemplate( "sys.acc",
+                                   counter::CounterTemplate::create
+                                   ( "accumulator", o ));
+            tmgr->replaceTemplate( "sys.avg",
+                                   counter::CounterTemplate::create
+                                   ( "average", o, 10000000UL ));
+        }
+    }
 
     std::auto_ptr<pvss::core::client::Client> pvssClnt;
     try {
@@ -391,6 +424,10 @@ void Scag::shutdown()
         sessions::SessionManager::Instance().Stop();
         smsc_log_debug(log,"sessman notified");
     }
+
+    counter::Manager::getInstance().stop();
+    smsc_log_debug(log,"counter manager stopped");
+
 #ifdef SNMP
     if (snmpthread_.get()) snmpthread_->Stop();
 #endif
