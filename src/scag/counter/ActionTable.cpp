@@ -43,7 +43,7 @@ void ActionTable::ref(bool add)
             return;
         }
         destroy = !--ref_;
-        smsc_log_debug(log_,"%p: ref -1 => %u",this,ref_);
+        smsc_log_debug(log_,"%p: ref -1 => %u%s",this,ref_,destroy?" (need dtor)":"");
     }
     if (destroy) delete this;
 }

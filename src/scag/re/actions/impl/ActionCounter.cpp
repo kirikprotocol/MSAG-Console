@@ -35,15 +35,15 @@ void ActionCounterBase::init( const SectionParams& params,
     if ( !scope.isFound() ) {
         scope_ = USER;
     } else if ( scope.getType() == ftUnknown ) {
-        if ( strcmp(scope.getStringValue(),"USER") ) {
+        if ( 0 == strcmp(scope.getStringValue(),"USER") ) {
             scope_ = USER;
-        } else if ( strcmp(scope.getStringValue(),"SERVICE") ) {
+        } else if ( 0 == strcmp(scope.getStringValue(),"SERVICE") ) {
             scope_ = SERVICE;
-        } else if ( strcmp(scope.getStringValue(),"OPERATOR") ) {
+        } else if ( 0 == strcmp(scope.getStringValue(),"OPERATOR") ) {
             scope_ = OPERATOR;
-        } else if ( strcmp(scope.getStringValue(),"PROVIDER") ) {
+        } else if ( 0 == strcmp(scope.getStringValue(),"PROVIDER") ) {
             scope_ = PROVIDER;
-        } else if ( strcmp(scope.getStringValue(),"SYSTEM") ) {
+        } else if ( 0 == strcmp(scope.getStringValue(),"SYSTEM") ) {
             scope_ = SYSTEM;
         }
         throw SCAGException("action '%s': unknown scope '%s'",
@@ -65,9 +65,9 @@ IParserHandler* ActionCounterBase::StartXMLSubSection( const std::string& name,
 bool ActionCounterBase::prefetch( ActionContext& context,
                                   counter::CounterPtrAny& ptr )
 {
-    const char* name = name_.getValue(context);
+    const std::string cname = makeName(context,name_.getValue(context));
     counter::Manager& mgr = counter::Manager::getInstance();
-    ptr = mgr.getAnyCounter(name);
+    ptr = mgr.getAnyCounter(cname.c_str());
     return postFetch(context,ptr);
 }
 
@@ -149,11 +149,14 @@ bool ActionCounterCreate::postFetch( ActionContext& context,
         if ( reset_.isFound() && reset_.getValue(context) ) ptr->reset();
         return setStatus(context,OK);
     }
+    const std::string cname = makeName(context,name_.getValue(context));
+    smsc_log_debug(log_,"%s: cannot find counter '%s', creating it",
+                   opname(),cname.c_str());
     counter::Manager& mgr = counter::Manager::getInstance();
     counter::TemplateManager* tmgr = mgr.getTemplateManager();
     if ( !tmgr ) return setStatus(context,NOTFOUND);
     counter::Counter* c = tmgr->createCounter( templid_.getValue(context),
-                                               makeName(context,name_.getValue(context)),
+                                               cname,
                                                unsigned(lifetime_.getSeconds(context)) );
     if ( !c ) return setStatus(context,NOTFOUND);
     try {

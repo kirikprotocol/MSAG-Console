@@ -7,6 +7,7 @@
 #include "core/buffers/IntHash64.hpp"
 #include "core/buffers/XHash.hpp"
 #include "scag/counter/TimeSliceGroup.h"
+#include "scag/counter/TemplateManager.h"
 
 namespace {
 
@@ -127,7 +128,7 @@ Manager(),
 smsc::core::threads::Thread(),
 log_(smsc::logger::Logger::getInstance("cnt.mgr")),
 notificationManager_(new NotificationManager),
-timeSliceManager_(new TimeSliceManagerImpl(smsc::logger::Logger::getInstance("cnt.tmgr"),
+timeSliceManager_(new TimeSliceManagerImpl(smsc::logger::Logger::getInstance("cnt.timgr"),
                                            notificationManager_,notifySlices)),
 templateManager_(tmplmgr),
 stopping_(true)
@@ -207,6 +208,8 @@ void HashCountManager::stop()
 
 CounterPtrAny HashCountManager::getAnyCounter( const char* name )
 {
+    if (!name) return CounterPtrAny();
+    smsc_log_debug(log_,"asking to fetch counter '%s'",name);
     {
         MutexGuard mg(hashMutex_);
         Counter** ptr = hash_.GetPtr(name);
@@ -218,6 +221,8 @@ CounterPtrAny HashCountManager::getAnyCounter( const char* name )
 CounterPtrAny HashCountManager::doRegisterAnyCounter( Counter* ccc, bool& wasRegistered )
 {
     if (!ccc) throw smsc::util::Exception("CountManager: null counter to register");
+    smsc_log_debug(log_,"asking to register a counter %s '%s'",
+                   ccc->getTypeName(), ccc->getName().c_str());
     wasRegistered = false;
     std::auto_ptr<Counter> cnt(ccc);
     MutexGuard mg(hashMutex_);
@@ -237,7 +242,7 @@ CounterPtrAny HashCountManager::doRegisterAnyCounter( Counter* ccc, bool& wasReg
 
 void HashCountManager::scheduleDisposal( Counter& c )
 {
-    const counttime_type dt = c.getDisposeTime();
+    // const counttime_type dt = c.getDisposeTime();
     MutexGuard mg(disposeMon_);
     // if ( dt < wakeTime_ ) {
     // nextTime_ = dt;

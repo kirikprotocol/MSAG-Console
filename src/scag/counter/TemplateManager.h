@@ -28,7 +28,7 @@ private:
     CounterTemplate& operator = ( const CounterTemplate& );
 
 private:
-    Counter*    prototype_;  // owned
+    Counter*    prototype_;  // owned, i.e. it is not registered in manager
 };
 
 

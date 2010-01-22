@@ -1,3 +1,4 @@
+#include "logger/Logger.h"
 #include "scag/counter/TemplateManager.h"
 #include "core/buffers/Hash.hpp"
 #include "core/synchronization/Mutex.hpp"
@@ -21,6 +22,7 @@ public:
     virtual void replaceObserver( const char* name, Observer* table );
 
 private:
+    smsc::logger::Logger*                         log_;
     smsc::core::synchronization::Mutex            lock_;
     smsc::core::buffers::Hash< CounterTemplate* > templates_;
     smsc::core::buffers::Hash< Observer* >     actionTables_;

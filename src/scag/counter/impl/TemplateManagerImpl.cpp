@@ -7,14 +7,17 @@ namespace scag2 {
 namespace counter {
 namespace impl {
 
-TemplateManagerImpl::TemplateManagerImpl()
+TemplateManagerImpl::TemplateManagerImpl() :
+log_(smsc::logger::Logger::getInstance("cnt.temgr"))
 {
+    smsc_log_debug(log_,"ctor");
 }
 
 
 TemplateManagerImpl::~TemplateManagerImpl()
 {
     // templates
+    smsc_log_debug(log_,"dtor, cleaning templates and groups");
     char* key;
     CounterTemplate* val;
     for ( smsc::core::buffers::Hash< CounterTemplate* >::Iterator i(&templates_);
@@ -33,6 +36,8 @@ Counter* TemplateManagerImpl::createCounter( const char* templid,
                                              const std::string& name,
                                              unsigned seconds )
 {
+    if (!templid) return 0;
+    smsc_log_debug(log_,"asking to create a counter templid='%s' name='%s'",templid,name.c_str());
     MutexGuard mg(lock_);
     CounterTemplate** ptr = templates_.GetPtr(templid);
     if (!ptr || !*ptr) return 0;
@@ -46,6 +51,7 @@ void TemplateManagerImpl::replaceTemplate( const char*      name,
                                            CounterTemplate* tmpl )
 {
     if (!name) return;
+    smsc_log_debug(log_,"asking to replace/add templid='%s' with %p",name,tmpl);
     MutexGuard mg(lock_);
     CounterTemplate** ptr = templates_.GetPtr(name);
     if (ptr) {
@@ -61,6 +67,7 @@ void TemplateManagerImpl::replaceTemplate( const char*      name,
 ObserverPtr TemplateManagerImpl::getObserver( const char* name )
 {
     if (!name) return ObserverPtr();
+    smsc_log_debug(log_,"asking to fetch observer='%s'",name);
     MutexGuard mg(lock_);
     Observer** ptr = actionTables_.GetPtr(name);
     if (!ptr) return ObserverPtr();
@@ -69,9 +76,10 @@ ObserverPtr TemplateManagerImpl::getObserver( const char* name )
 
 
 void TemplateManagerImpl::replaceObserver( const char* name,
-                                              Observer* table )
+                                           Observer* table )
 {
     if (!name) return;
+    smsc_log_debug(log_,"asking to replace/add observer='%s' with %p",name,table);
     MutexGuard mg(lock_);
     Observer** ptr = actionTables_.GetPtr(name);
     if (ptr) {
