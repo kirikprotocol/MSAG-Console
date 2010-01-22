@@ -1,5 +1,5 @@
 #include "TaskTypes.hpp"
-#include "ConfString.h"
+#include "util/config/ConfString.h"
 #include "util/Exception.hpp"
 #include "util/config/ConfigView.h"
 

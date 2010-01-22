@@ -2,8 +2,8 @@
 #define _SMSC_INFOSME2_CONFSTRING_H
 
 namespace smsc {
-namespace infosme {
-
+namespace util {
+namespace config {
 
 // the only use of the class is to wrap char* strings returned from ConfigView.
 class ConfString
@@ -36,6 +36,7 @@ private:
     std::string v_;
 };
 
+}
 }
 }
 

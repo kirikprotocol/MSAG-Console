@@ -3,7 +3,7 @@
 #include "FinalStateSaver.h"
 #include "SmscConnector.h"
 #include "MsecTime.h"
-#include "ConfString.h"
+#include "util/config/ConfString.h"
 #include <exception>
 #include <list>
 #include <cstdlib>

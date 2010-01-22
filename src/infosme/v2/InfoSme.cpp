@@ -35,7 +35,7 @@
 #include "TaskProcessor.h"
 #include "InfoSmeComponent.h"
 #include "InfoSmeMessageSender.h"
-#include "ConfString.h"
+#include "util/config/ConfString.h"
 #include "util/mirrorfile/mirrorfile.h"
 #include "sms/sms.h"
 #include "SmscConnector.h"
