@@ -59,7 +59,7 @@ void BillingManagerImpl::init( config::ConfigManager& mgr )
         if ( ! econfig->isLoopback() ) {
 
             try {
-                econfig->setHost(config::ConfString(cview.getString("host")).str());
+                econfig->setHost(smsc::util::config::ConfString(cview.getString("host")).str());
             } catch (...) {
                 smsc_log_warn(logger,"ewallet host parameter missing. disabling");
                 econfig->setEnabled(false);

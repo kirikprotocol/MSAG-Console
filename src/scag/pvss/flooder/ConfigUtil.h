@@ -23,7 +23,7 @@ void readClientConfig( smsc::logger::Logger*                    logger,
     }
 
     try {
-        clientConfig.setHost( ConfString(cview.getString("host")).str() );
+        clientConfig.setHost( smsc::util::config::ConfString(cview.getString("host")).str() );
     } catch (...) {
         smsc_log_warn(logger, "Parameter <PvssClient.host> missed. Defaul value is %s", clientConfig.getHost().c_str());
     }
@@ -95,7 +95,7 @@ void readFlooderConfig( smsc::logger::Logger* logger,
         for ( unsigned i = 0; i < propertiesCount; ++i ) {
             char pbuf[50];
             snprintf(pbuf,sizeof(pbuf),"property.%d",i);
-            properties.push_back( ConfString(fview.getString(pbuf)).str() );
+            properties.push_back( smsc::util::config::ConfString(fview.getString(pbuf)).str() );
         }
         flooderConfig.setPropertyPatterns(properties);
     } catch (...) {
@@ -108,7 +108,7 @@ void readFlooderConfig( smsc::logger::Logger* logger,
     }
 
     try {
-        flooderConfig.setCommands( ConfString(fview.getString("commands")).str() );
+        flooderConfig.setCommands( smsc::util::config::ConfString(fview.getString("commands")).str() );
     } catch (...) {
         smsc_log_warn(logger, "Parameter <Flooder.commands> missed. Default value is %s", flooderConfig.getCommands().c_str());
     }
