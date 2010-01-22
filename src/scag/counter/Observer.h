@@ -8,6 +8,19 @@ namespace counter {
 
 class Counter;
 
+/// ActionParams
+struct ActionParams
+{
+    enum OpType {
+            GT = 1,
+            LT
+    };
+    OpType            optype; // >, <
+    int64_t           limit;  // limit
+    bool              skip;   // skip other actions if this one fired
+};
+
+
 // ================================================================
 class Observer
 {
