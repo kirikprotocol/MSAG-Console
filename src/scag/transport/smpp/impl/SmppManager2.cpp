@@ -896,14 +896,14 @@ int SmppManagerImpl::registerSmscChannel(SmppChannel* ch)
     } while ( false );
 
     if ( text && snmpqueue_ && snmpTracking ) {
-        snmp::TrapRecord* trap = new snmp::TrapRecord;
+        std::auto_ptr<snmp::TrapRecord> trap(new snmp::TrapRecord);
         trap->recordType = snmp::TrapRecord::Trap;
         trap->status = ( ret == rarFailed ? snmp::TrapRecord::STATNEW : snmp::TrapRecord::STATCLEAR );
         trap->id = ch->getSystemId();
         trap->category = "SMSC";
         trap->severity = ( ret == rarFailed ? snmp::TrapRecord::MAJOR : snmp::TrapRecord::CLEAR );
         trap->text = text;
-        snmpqueue_->Push( trap );
+        snmpqueue_->Push( trap.release() );
     }
     return ret;
 }

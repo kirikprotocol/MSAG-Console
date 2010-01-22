@@ -65,6 +65,7 @@ log_(0)
 
 SnmpWrapper::~SnmpWrapper()
 {
+    snmp_shutdown( ::msagname );
     snmp_shutdown( ::msagnamed );
     smsc_log_info(log_,"snmp wrapper shutdowned");
 }

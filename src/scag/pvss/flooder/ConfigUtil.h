@@ -4,6 +4,7 @@
 #include <string>
 #include "util/config/ConfigView.h"
 #include "util/config/Config.h"
+#include "util/config/ConfString.h"
 #include "scag/pvss/api/core/client/ClientConfig.h"
 #include "FlooderConfig.h"
 #include "scag/pvss/common/ScopeType.h"
@@ -22,7 +23,7 @@ void readClientConfig( smsc::logger::Logger*                    logger,
     }
 
     try {
-        clientConfig.setHost( cview.getString("host") );
+        clientConfig.setHost( ConfString(cview.getString("host")).str() );
     } catch (...) {
         smsc_log_warn(logger, "Parameter <PvssClient.host> missed. Defaul value is %s", clientConfig.getHost().c_str());
     }
@@ -94,7 +95,7 @@ void readFlooderConfig( smsc::logger::Logger* logger,
         for ( unsigned i = 0; i < propertiesCount; ++i ) {
             char pbuf[50];
             snprintf(pbuf,sizeof(pbuf),"property.%d",i);
-            properties.push_back( fview.getString(pbuf) );
+            properties.push_back( ConfString(fview.getString(pbuf)).str() );
         }
         flooderConfig.setPropertyPatterns(properties);
     } catch (...) {
@@ -107,7 +108,7 @@ void readFlooderConfig( smsc::logger::Logger* logger,
     }
 
     try {
-        flooderConfig.setCommands( fview.getString("commands") );
+        flooderConfig.setCommands( ConfString(fview.getString("commands")).str() );
     } catch (...) {
         smsc_log_warn(logger, "Parameter <Flooder.commands> missed. Default value is %s", flooderConfig.getCommands().c_str());
     }

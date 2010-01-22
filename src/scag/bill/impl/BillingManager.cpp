@@ -14,6 +14,7 @@
 #include "scag/bill/ewallet/client/ClientCore.h"
 #include "scag/bill/ewallet/stream/StreamerImpl.h"
 #include "scag/config/base/ConfigView.h"
+#include "util/config/ConfString.h"
 
 #ifdef MSAG_INMAN_BILL
 #include "inman/services/smbill/SmBillDefs.hpp"
@@ -58,7 +59,7 @@ void BillingManagerImpl::init( config::ConfigManager& mgr )
         if ( ! econfig->isLoopback() ) {
 
             try {
-                econfig->setHost(cview.getString("host"));
+                econfig->setHost(config::ConfString(cview.getString("host")).str());
             } catch (...) {
                 smsc_log_warn(logger,"ewallet host parameter missing. disabling");
                 econfig->setEnabled(false);
