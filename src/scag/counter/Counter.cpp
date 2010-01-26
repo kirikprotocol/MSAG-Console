@@ -15,6 +15,7 @@ Counter::Counter( const std::string& name,
                   Observer*          observer,
                   counttime_type     disposeDelayTime ) :
 observer_(observer),
+oldsev_(NORMAL),
 name_(name),
 disposeDelayTime_(disposeDelayTime),
 usage_(0)
@@ -24,13 +25,13 @@ usage_(0)
         if (!log_) log_ = smsc::logger::Logger::getInstance("cnt.cntr");
         if (!loga_) loga_ = smsc::logger::Logger::getInstance("cnt.alloc");
     }
-    if (observer_) observer_->ref(true);
+    // if (observer_) observer_->ref(true);
     // smsc_log_debug(loga_,"ctor: '%s', delay=%d", name_.c_str(), int(disposeDelayTime));
 }
 
 Counter::~Counter()
 {
-    if (observer_) observer_->ref(false);
+    // if (observer_) observer_->ref(false);
     // smsc_log_debug(loga_,"dtor: '%s', usage=%u",name_.c_str(),usage_);
 }
 

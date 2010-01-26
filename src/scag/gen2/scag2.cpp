@@ -144,7 +144,12 @@ void Scag::init( unsigned mynode )
         counter::Manager& mgr = counter::Manager::getInstance();
         counter::TemplateManager* tmgr = mgr.getTemplateManager();
         if (tmgr) {
-            counter::Observer* o = new counter::ActionTable();
+            counter::ActionTable* o = new counter::ActionTable();
+            counter::ActionList* al = new counter::ActionList();
+            al->push_back(counter::ActionLimit(15,counter::GT,counter::MAJOR));
+            al->push_back(counter::ActionLimit(13,counter::GT,counter::MINOR));
+            al->push_back(counter::ActionLimit(10,counter::GT,counter::WARNING));
+            o->setNewActions(al);
             tmgr->replaceObserver("sys.act.notify",o);
             tmgr->replaceTemplate( "sys.time.persec",
                                    counter::CounterTemplate::create

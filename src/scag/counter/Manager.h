@@ -57,6 +57,12 @@ public:
     virtual TimeSliceManager& getTimeManager() = 0;
     virtual TemplateManager* getTemplateManager() = 0;
 
+    /// make a notification for the counter
+    virtual void notify( const char* cname,
+                         CntSeverity& sev,   // severity for backtrace
+                         int64_t value,      // newval
+                         const ActionLimit& limit ) = 0;
+
     virtual void stop() = 0;
 
 protected:

@@ -122,7 +122,8 @@ private:
 protected:
     mutable smsc::core::synchronization::Mutex countMutex_; // a lock to be invoked from accumulate
     // Disposer*      disposer_;
-    Observer*      observer_;
+    ObserverPtr       observer_;
+    CntSeverity       oldsev_; // the current severity set from observer
 
 private:
     std::string name_;

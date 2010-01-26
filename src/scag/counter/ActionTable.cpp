@@ -1,4 +1,5 @@
 #include "ActionTable.h"
+#include "Manager.h"
 
 namespace {
 smsc::core::synchronization::Mutex logMutex;
@@ -10,7 +11,8 @@ namespace counter {
 smsc::logger::Logger* ActionTable::log_ = 0;
 
 ActionTable::ActionTable() :
-ref_(0)
+ref_(0),
+actions_(0)
 {
     if (!log_) {
         MutexGuard mg(logMutex);
@@ -26,33 +28,28 @@ ActionTable::~ActionTable()
 }
 
 
-void ActionTable::modified( Counter& counter, int64_t value )
+void ActionTable::modified( const char* cname, CntSeverity& sev, int64_t value )
 {
-    smsc_log_debug(log_,"%p: counter '%s' modified, new val=%llu",this,counter.getName().c_str(),value);
+    smsc_log_debug(log_,"%p: counter '%s' modified, new val=%llu",this,cname,value);
     ActionList* ptr;
     {
         MutexGuard mg(actlock_);
         ptr = actions_;
     }
-    ActionParams* list = ptr->list;
-    for ( size_t i = 0; i < ptr->size; ++i ) {
-        const ActionParams& a = list[i];
-        switch (a.optype) {
-        case ActionParams::GT : {
-            if ( value > a.limit ) {
-                notify(counter,value,a);
-                if (a.skip) i = ptr->size;
+    if ( ptr && ptr->list ) {
+        const ActionLimit* list = ptr->list;
+        for ( size_t i = 0; i < ptr->size; ++i ) {
+            const ActionLimit& a = list[i];
+            if ( a.compare(value) ) {
+                Manager::getInstance().notify(cname,sev,value,a);
+                return;
             }
-            break;
-        }
-        case ActionParams::LT : {
-            if ( value < a.limit ) {
-                notify(counter,value,a);
-                if (a.skip) i = ptr->size;
-            }
-        }
-        } // switch
-    } // for
+        } // for
+    }
+    if ( sev > NORMAL ) {
+        // we have to reset severity here
+        Manager::getInstance().notify(cname,sev,value,ActionLimit(0,GT,NORMAL));
+    }
 }
 
 
@@ -77,7 +74,7 @@ void ActionTable::setNewActions( ActionList* newlist )
 {
     const time_t t = time(0);
     MutexGuard mg(actlock_);
-    oldlists_.push_back( std::make_pair(t,actions_) );
+    if (actions_) oldlists_.push_back( std::make_pair(t,actions_) );
     actions_ = newlist;
     const time_t killt = t-5;
     for ( std::list<OldList>::iterator i = oldlists_.begin();
@@ -86,15 +83,6 @@ void ActionTable::setNewActions( ActionList* newlist )
         delete i->second;
         i = oldlists_.erase(i);
     }
-}
-
-
-void ActionTable::notify( Counter& c, int64_t value, const ActionParams& params )
-{
-    smsc_log_debug(log_,"value %lld of counter '%s' is %s than limit=%llu",
-                   value, c.getName().c_str(),
-                   params.optype == ActionParams::GT ? "greater" : "less",
-                   params.limit );
 }
 
 }

@@ -40,7 +40,7 @@ public:
     virtual Average* clone( const std::string& name,
                             counttime_type     disposeTime = 0 ) const
     {
-        return new Average(name,averageTime_,observer_,disposeTime);
+        return new Average(name,averageTime_,observer_.get(),disposeTime);
     }
 
     virtual ~Average() {
@@ -80,7 +80,7 @@ public:
         last_.reset();
         current_.reset();
         average_ = 0;
-        if ( observer_ ) observer_->modified(*this,average_);
+        if ( observer_.get() ) observer_->modified(getName().c_str(),oldsev_,average_);
     }
 
     /// return the total statistics
@@ -129,7 +129,7 @@ public:
         last_ = current_;
         current_.reset();
         average_ = last_.average();
-        if ( observer_ ) observer_->modified(*this,average_);
+        if ( observer_.get() ) observer_->modified(getName().c_str(),oldsev_,average_);
     }
 
 private:

@@ -34,7 +34,7 @@ public:
     virtual Accumulator* clone( const std::string& name,
                                 counttime_type disposeTime = 0 ) const
     {
-        return new Accumulator( name, observer_, disposeTime );
+        return new Accumulator( name, observer_.get(), disposeTime );
     }
 
     virtual int getType() const { return getStaticType(); }
@@ -44,7 +44,7 @@ public:
         smsc::core::synchronization::MutexGuard mg(countMutex_);
         count_ = 0;
         integral_ = 0;
-        if ( observer_ ) observer_->modified(*this,integral_);
+        if ( observer_.get() ) observer_->modified(getName().c_str(),oldsev_,integral_);
     }
 
     /*
@@ -63,7 +63,7 @@ public:
         smsc::core::synchronization::MutexGuard mg(countMutex_);
         count_ += w;
         integral_ += x*w;
-        if ( observer_ ) observer_->modified(*this,integral_);
+        if ( observer_.get() ) observer_->modified(getName().c_str(),oldsev_,integral_);
     }
 
     virtual int64_t getValue() const
@@ -89,8 +89,8 @@ protected:
     virtual void preDestroy( Manager& mgr ) {}
 
 protected:
-    int64_t count_;
-    int64_t integral_;
+    int64_t     count_;
+    int64_t     integral_;
 };
 
 }

@@ -8,12 +8,13 @@
 #include "core/synchronization/EventMonitor.hpp"
 #include "core/threads/Thread.hpp"
 #include "TimeSliceManagerImpl.h"
+#include "NotificationManager.h"
 
 namespace scag2 {
 namespace counter {
 namespace impl {
 
-class NotificationManager;
+// class NotificationManager;
 
 class HashCountManager : public Manager, protected smsc::core::threads::Thread
 {
@@ -30,6 +31,12 @@ public:
     }
     virtual TemplateManager* getTemplateManager() {
         return templateManager_;
+    }
+
+    virtual void notify( const char* cname, CntSeverity& sev,
+                         int64_t value, const ActionLimit& params )
+    {
+        notificationManager_->notify(cname,sev,value,params);
     }
 
 protected:

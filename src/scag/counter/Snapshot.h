@@ -51,7 +51,7 @@ public:
         first_ = 0;
         last_ = 0;
         slot_[0] = 0;
-        if ( observer_ ) observer_->modified(*this,integral_);
+        if ( observer_.get() ) observer_->modified(getName().c_str(),oldsev_,integral_);
     }
 
     /*

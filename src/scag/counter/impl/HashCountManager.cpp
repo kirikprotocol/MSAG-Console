@@ -150,6 +150,10 @@ HashCountManager::~HashCountManager()
     }
      */
     this->WaitFor();
+
+    smsc_log_debug(log_,"destroying notification manager, it may hold some cntrs");
+    delete notificationManager_; notificationManager_ = 0;
+
     bool isempty;
     unsigned npass = 0;
     do {
@@ -177,8 +181,6 @@ HashCountManager::~HashCountManager()
     delete templateManager_; templateManager_ = 0;
     smsc_log_debug(log_,"destroying time slice manager");
     delete timeSliceManager_; timeSliceManager_ = 0;
-    smsc_log_debug(log_,"destroying notification manager");
-    delete notificationManager_; notificationManager_ = 0;
 }
 
 

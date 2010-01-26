@@ -39,7 +39,7 @@ public:
     virtual TimeSnapshot* clone( const std::string& name,
                                  counttime_type     disposeTime = 0 ) const
     {
-        return new TimeSnapshot(name,resol_*nbins_,nbins_,observer_,disposeTime);
+        return new TimeSnapshot(name,resol_*nbins_,nbins_,observer_.get(),disposeTime);
     }
 
     virtual int getType() const { return getStaticType(); }

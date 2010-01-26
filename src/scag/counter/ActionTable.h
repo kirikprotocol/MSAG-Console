@@ -18,10 +18,10 @@ public:
     }
 
     /// this method should be used only 
-    void push_back( const ActionParams& a ) {
+    void push_back( const ActionLimit& a ) {
         if ( size >= capacity ) {
             capacity = size + 8;
-            ActionParams* newlist = new ActionParams[capacity];
+            ActionLimit* newlist = new ActionLimit[capacity];
             memcpy(newlist,list,size);
             delete[] list;
             list = newlist;
@@ -33,7 +33,7 @@ private:
     size_t  capacity;
 public:
     size_t        size;      // number of actions
-    ActionParams* list;      // owned, delete []
+    ActionLimit*  list;      // owned, delete []
 };
 
 
@@ -44,7 +44,9 @@ protected:
     virtual ~ActionTable();
 public:
     ActionTable();
-    virtual void modified( Counter& counter, int64_t value );
+    virtual void modified( const char*  cname,
+                           CntSeverity& sev,
+                           int64_t      value );
 
     /// NOTE: do not fiddle with this method
     virtual void ref(bool add);
@@ -53,13 +55,13 @@ public:
     void setNewActions( ActionList* newlist );
 
 private:
-    void notify( Counter& c, int64_t value, const ActionParams& params );
+    // void notify( Counter& c, int64_t value, const ActionParams& params );
 
 private:
     smsc::core::synchronization::Mutex    lock_;
     unsigned                              ref_;
     smsc::core::synchronization::Mutex    actlock_;
-    ActionList*                           actions_; // owned[]
+    ActionList*                           actions_; // owned
     typedef std::pair<time_t,ActionList*> OldList;
     std::list< OldList >                  oldlists_;
 };
