@@ -15,7 +15,7 @@ CounterPtr< Accumulator > getAccumulator( const char* name, counttime_type delay
     CounterPtr< Accumulator > ptr = mgr.getCounter< Accumulator >(name);
     if ( ! ptr.get() ) {
         try {
-            ptr = mgr.registerCounter( new Accumulator(name,delayTime) );
+            ptr = mgr.registerCounter( new Accumulator(name,0,delayTime) );
         } catch ( std::exception& e ) {
         }
     }

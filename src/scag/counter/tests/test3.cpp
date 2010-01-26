@@ -18,6 +18,7 @@ CounterPtr< Average > getCounter( const char* name, counttime_type delayTime )
             ptr = mgr.registerCounter
                 ( new Average(name,
                               5*usecFactor,
+                              0,
                               delayTime) );
         } catch ( std::exception& e ) {
         }

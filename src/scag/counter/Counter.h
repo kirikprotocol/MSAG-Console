@@ -13,10 +13,6 @@ namespace counter {
 class Counter;
 class Manager;
 
-typedef int32_t counttime_type;
-const counttime_type counttime_max = 0x7fffffff;
-const counttime_type counttime_locked = counttime_max;
-
 class CounterPtrAny;
 
 // ================================================================
@@ -31,7 +27,7 @@ protected:
 
     Counter( const std::string& name,
              Observer*          observer = 0,
-             counttime_type     disposeDelayTime = 0 );
+             counttime_type     disposeDelayTime = counttime_max );
 
 public:
 
@@ -71,7 +67,7 @@ public:
     /// increment the counter with value 'x' with weight 'w'.
     /// This method is for generic usage from e.g. MSAG rules.
     /// NOTE: that x and w may be ignored for some counters.
-    virtual void increment( int64_t x = 1, int w = 1 ) = 0;
+    virtual int64_t increment( int64_t x = 1, int w = 1 ) = 0;
 
     /// get the most appropriate value for the counter.
     /// it may have different sense for different types of counters.

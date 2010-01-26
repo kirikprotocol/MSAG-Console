@@ -24,3 +24,11 @@ scag/counter/tests/test3 test3 \
   -lcore-threads \
   @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
   -lutil
+
+scag/counter/tests/test4 test4 \
+  -lscag-counter-impl -lscag-counter \
+  -lscag-util-singleton \
+  -lscag-util-io \
+  -lcore-threads \
+  @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
+  -lutil

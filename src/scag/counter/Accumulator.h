@@ -59,11 +59,12 @@ public:
     }
      */
 
-    virtual void increment( int64_t x = 1, int w = 1 ) {
+    virtual int64_t increment( int64_t x = 1, int w = 1 ) {
         smsc::core::synchronization::MutexGuard mg(countMutex_);
         count_ += w;
         integral_ += x*w;
         if ( observer_.get() ) observer_->modified(getName().c_str(),oldsev_,integral_);
+        return integral_;
     }
 
     virtual int64_t getValue() const

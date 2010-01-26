@@ -1,5 +1,6 @@
 #include <stdexcept>
 #include "Manager.h"
+#include "TemplateManager.h"
 #include "scag/util/singleton/Singleton2.h"
 
 namespace {
@@ -41,6 +42,17 @@ Manager::~Manager()
     MutexGuard mg(mtx);
     inited = false;
 }
+
+
+CounterPtrAny Manager::createCounter( const char* tmplid,
+                                      const char* name,
+                                      unsigned    lifetime )
+{
+    Counter* c = getTemplateManager()->createCounter(tmplid,name,lifetime);
+    if (!c) return CounterPtrAny();
+    return registerAnyCounter(c);
+}
+
 
 }
 }

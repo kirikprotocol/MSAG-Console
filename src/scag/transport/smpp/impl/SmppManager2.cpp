@@ -13,6 +13,11 @@
 #include "scag/lcm/base/LongCallManager2.h"
 #include "scag/sessions/base/SessionManager2.h"
 #include "core/buffers/FixedLengthString.hpp"
+#include "scag/counter/Manager.h"
+
+namespace {
+const char* smppCounterName = "sys.traffic.smpp";
+}
 
 namespace scag2 {
 namespace transport {
@@ -316,7 +321,10 @@ static void ParseMetaTag(SmppManagerImpl* smppMan,DOMNodeList* list,MetaEntityTy
 
 
 SmppManagerImpl::SmppManagerImpl( snmp::TrapRecordQueue* snmpqueue ) :
-ConfigListener(SMPPMAN_CFG), sm(this,this), licenseCounter(10,20), testRouter_(0),
+ConfigListener(SMPPMAN_CFG), sm(this,this),
+licenseCounter(counter::Manager::getInstance().createCounter(::smppCounterName,
+                                                             ::smppCounterName)),
+testRouter_(0),
 snmpqueue_(snmpqueue)
 {
   log=smsc::logger::Logger::getInstance("smpp.man");
@@ -344,6 +352,9 @@ SmppManagerImpl::~SmppManagerImpl()
 
 void SmppManagerImpl::Init(const char* cfgFile)
 {
+    if ( !licenseCounter.get() )
+        throw SCAGException("license counter %s cannot be created",::smppCounterName);
+
   cfgFileName=cfgFile;
   using namespace smsc::util::xml;
   DOMTreeReader reader;
@@ -995,7 +1006,8 @@ void SmppManagerImpl::putCommand( SmppChannel* ct, std::auto_ptr<SmppCommand> cm
 
     MutexGuard mg(queueMon);
     int licLimit=ConfigManager::Instance().getLicense().maxsms;
-    int cntValue=licenseCounter.Get()/10;
+    // int cntValue=licenseCounter.Get()/10;
+    const int cntValue = licenseCounter->increment(0) / 10;
     if(cntValue>licLimit)
     {
         bool allow=false;
@@ -1041,7 +1053,8 @@ void SmppManagerImpl::putCommand( SmppChannel* ct, std::auto_ptr<SmppCommand> cm
                 //smsc_log_debug(limitsLog,"cnt=%d",entPtr->incCnt.Get());
             }
             entPtr->incQueueCount();
-            licenseCounter.Inc();
+            // licenseCounter.Inc();
+            licenseCounter->increment();
         }
     }
     queueMon.notify();

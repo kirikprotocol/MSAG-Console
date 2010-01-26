@@ -92,11 +92,12 @@ public:
     /// return current data
     inline const Stat& current() const { return current_; }
     
-    virtual void increment( int64_t x = 1, int w = 1 ) {
+    virtual int64_t increment( int64_t x = 1, int w = 1 ) {
         smsc::core::synchronization::MutexGuard mg(countMutex_);
         current_.count += w;
         current_.sum += x*w;
         current_.sum2 += x*x*w;
+        return average_; // taking the previous value
     }
 
     virtual int64_t getValue() const {
@@ -130,6 +131,7 @@ public:
         current_.reset();
         average_ = last_.average();
         if ( observer_.get() ) observer_->modified(getName().c_str(),oldsev_,average_);
+        // return average_;
     }
 
 private:

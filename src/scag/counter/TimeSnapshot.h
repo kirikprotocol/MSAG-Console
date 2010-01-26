@@ -45,9 +45,9 @@ public:
     virtual int getType() const { return getStaticType(); }
     virtual const char* getTypeName() const { return "timesnapshot"; }
 
-    virtual void increment( int64_t x = 1, int w = 1 ) {
+    virtual int64_t increment( int64_t x = 1, int w = 1 ) {
         const int64_t bin = int64_t(TSource::getUSec()/resol_);
-        Snapshot::accumulate(bin,w);
+        return Snapshot::accumulate(bin,w);
     }
 
     virtual void advanceTime( usec_type curtime ) {

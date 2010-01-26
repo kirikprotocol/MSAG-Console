@@ -143,23 +143,31 @@ void Scag::init( unsigned mynode )
         smsc_log_info(log,"Adding a few counter templates");
         counter::Manager& mgr = counter::Manager::getInstance();
         counter::TemplateManager* tmgr = mgr.getTemplateManager();
-        if (tmgr) {
+        if (!tmgr) {
+            throw SCAGException("no template manager is found in counter manager");
+        }
+        {
+            const char* cname = "sys.traffic.smpp";
             counter::ActionTable* o = new counter::ActionTable();
             counter::ActionList* al = new counter::ActionList();
-            al->push_back(counter::ActionLimit(15,counter::GT,counter::MAJOR));
-            al->push_back(counter::ActionLimit(13,counter::GT,counter::MINOR));
-            al->push_back(counter::ActionLimit(10,counter::GT,counter::WARNING));
+            const unsigned maxsms = cfg.getLicense().maxsms;
+            al->push_back(counter::ActionLimit(maxsms*95/100,counter::GT,counter::CRITICAL));
+            al->push_back(counter::ActionLimit(maxsms*90/100,counter::GT,counter::MAJOR));
+            al->push_back(counter::ActionLimit(maxsms*80/100,counter::GT,counter::MINOR));
+            al->push_back(counter::ActionLimit(maxsms*70/100,counter::GT,counter::WARNING));
             o->setNewActions(al);
-            tmgr->replaceObserver("sys.act.notify",o);
-            tmgr->replaceTemplate( "sys.time.persec",
+            tmgr->replaceObserver(cname,o);
+            tmgr->replaceTemplate( cname,
                                    counter::CounterTemplate::create
-                                   ( "timesnapshot", o, 1000000LL, 50 ) );
+                                   ("timesnapshot", o, 10*counter::usecFactor, 500));
+            /*
             tmgr->replaceTemplate( "sys.acc",
                                    counter::CounterTemplate::create
                                    ( "accumulator", o ));
             tmgr->replaceTemplate( "sys.avg",
                                    counter::CounterTemplate::create
                                    ( "average", o, 10000000UL ));
+             */
         }
     }
 

@@ -14,6 +14,7 @@
 #include "scag/config/base/ConfigListener2.h"
 #include "SmppSocketManager2.h"
 #include "scag/snmp/TrapRecord.h"
+#include "scag/counter/Counter.h"
 
 namespace scag2 {
 namespace transport {
@@ -384,7 +385,8 @@ protected:
     mutable smsc::core::synchronization::Mutex regMtx;
     SmppSocketManager sm;
 
-    smsc::util::TimeSlotCounter<> licenseCounter;
+    // smsc::util::TimeSlotCounter<> licenseCounter;
+    counter::CounterPtrAny licenseCounter;
     time_t lastLicenseExpTest;
     int licenseFileCheckHour;
 

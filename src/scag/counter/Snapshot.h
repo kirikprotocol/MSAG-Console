@@ -73,8 +73,8 @@ public:
     }
 
     /// NOTE: x typically must be an ordered streaming value
-    virtual void increment( int64_t x = 1, int w = 1 ) {
-        accumulate(x,w);
+    virtual int64_t increment( int64_t x = 1, int w = 1 ) {
+        return accumulate(x,w);
     }
 
     virtual int64_t getValue()

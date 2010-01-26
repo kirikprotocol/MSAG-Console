@@ -18,6 +18,7 @@ CounterPtr< TimeSnapshot > getSnapshot( const char* name, counttime_type delayTi
             ptr = mgr.registerCounter
                 ( new TimeSnapshot(name,
                                    usecFactor*2,10,
+                                   0,
                                    delayTime) );
         } catch ( std::exception& e ) {
         }

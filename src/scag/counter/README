@@ -53,3 +53,14 @@ Counter       Arguments
 Accumulator   ---
 Average       time
 TimeSnapshot  time    bins
+
+// ======================================================
+The system counters (all prefixed with sys.):
+
+# NAME                TYPE
+traffic.smpp          snap 1/s    
+traffic.http          snap 1/s
+
+session.              
+transport.http.
+transport.smpp.

@@ -6,6 +6,10 @@
 namespace scag2 {
 namespace counter {
 
+typedef int32_t counttime_type;
+const counttime_type counttime_max = 0x7fffffff;
+const counttime_type counttime_locked = counttime_max;
+
 class Counter;
 
 /// the severity of the reporting event
