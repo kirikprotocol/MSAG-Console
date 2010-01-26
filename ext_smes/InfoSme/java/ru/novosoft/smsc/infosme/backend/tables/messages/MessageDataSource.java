@@ -297,14 +297,18 @@ public class MessageDataSource extends AbstractDataSource {
       File[] dirArr = dir.listFiles();
       if (dirArr != null) {
         for (int j = 0; j < dirArr.length; j++) {
-          Date d = dirNameFormat.parse(dirArr[j].getName());
-          File[] files = dirArr[j].listFiles();
-          if (files != null) {
-            for (int i = 0; i < files.length; i++)
-              if (isFileContainsMessages(files[i])) {
-                result.add(d);
-                break;
+          if (dirArr[j].isDirectory()) {
+            try{
+              Date d = dirNameFormat.parse(dirArr[j].getName());
+              File[] files = dirArr[j].listFiles();
+              if (files != null) {
+                for (int i = 0; i < files.length; i++)
+                  if (isFileContainsMessages(files[i])) {
+                    result.add(d);
+                    break;
+                  }
               }
+            }catch(ParseException e) {}
           }
         }
       }

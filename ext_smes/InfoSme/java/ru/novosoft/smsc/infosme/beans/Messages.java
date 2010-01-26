@@ -434,12 +434,8 @@ public class Messages extends InfoSmeBean
   public void setTaskId(String taskId) {
     msgFilter.setTaskId(taskId);
   }
-  public boolean isTaskId(String taskId) {
-    return msgFilter.getTaskId().equals(taskId);
-  }
-  public String getTaskName(String taskId)
-  {
-    return getInfoSmeConfig().getTask(taskId).getName();
+  public String getTaskName() {
+    return getInfoSmeConfig().getTask(msgFilter.getTaskId()).getName();
   }
 
   public String getAddress() {

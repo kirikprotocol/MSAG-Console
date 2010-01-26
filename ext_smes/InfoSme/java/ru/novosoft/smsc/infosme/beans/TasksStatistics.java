@@ -5,6 +5,7 @@ import ru.novosoft.smsc.admin.users.User;
 import ru.novosoft.smsc.infosme.backend.DateCountersSet;
 import ru.novosoft.smsc.infosme.backend.HourCountersSet;
 import ru.novosoft.smsc.infosme.backend.Statistics;
+import ru.novosoft.smsc.infosme.backend.config.tasks.Task;
 import ru.novosoft.smsc.infosme.backend.tables.stat.*;
 import ru.novosoft.smsc.jsp.util.helper.statictable.TableHelperException;
 
@@ -195,7 +196,7 @@ public class TasksStatistics extends InfoSmeBean
             String taskId = query.getTaskId();
             if ((taskId == null || taskId.length() <= 0)) out.print("All");
             else {
-                String taskName = getTaskName(taskId);
+                String taskName = getInfoSmeConfig().getTask(taskId).getName();
                 out.print((taskName == null || taskName.length() <= 0) ? "???":taskName);
             }
 
@@ -329,9 +330,11 @@ public class TasksStatistics extends InfoSmeBean
         query.setTaskId((taskId == null || taskId.length() <= 0 || taskId.equals(ALL_TASKS_MARKER)) ? null : taskId);
     }
 
-    public String getTaskName(String taskId)
-    {
-      return getInfoSmeConfig().getTask(taskId).getName();
+    public String getTaskName() {
+      Task t;
+        return query.getTaskId() == null || query.getTaskId().length() <= 0 || query.getTaskId().equals(ALL_TASKS_MARKER)
+            ? null :
+            (t = getInfoSmeConfig().getTask(query.getTaskId())) == null ? null : t.getName();
     }
 
     public int getView() {

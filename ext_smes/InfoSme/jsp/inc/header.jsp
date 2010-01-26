@@ -18,7 +18,6 @@
       sme_menu_button(out, "mbMenu",  "black_list", getLocString("infosme.menu.black_list"), "");
 
     sme_menu_space(out);
-    sme_menu_button(out, "mbMenu",  "messages",  getLocString("infosme.menu.messages"),  "");
     sme_menu_button(out, "mbMenu",  "stat",      getLocString("infosme.menu.statistics"),"");
 	sme_menu_end(out);
 %>

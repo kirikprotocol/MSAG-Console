@@ -27,6 +27,7 @@
 <div class=content>
 <div class=page_subtitle><%= getLocString("infosme.subtitle.stat_params")%></div>
 <input type=hidden name=initialized value="<%=bean.isInitialized()%>">
+<input type=hidden name=taskId value="<%=bean.getTaskId()%>">
 <table class=properties_list>
 <col width="5%">
 <col width="45%">
@@ -34,17 +35,7 @@
 <col width="45%">
 <tr class=row<%=rowN++&1%>>
   <th style="text-align:left"><%= getLocString("infosme.label.task")%></th>
-  <td colspan=1>
-  <select name=taskId>
-    <option value="<%=TasksStatistics.ALL_TASKS_MARKER%>" <%=bean.getTaskId().length()==0 ? "selected" : ""%>><%=getLocString("infosme.label.all")%></option>
-  <%for (Iterator i = bean.getAllTasks(request).iterator(); i.hasNext();) {
-      String taskId = (String) i.next();
-      String taskIdEnc = StringEncoderDecoder.encode(taskId);
-      %><option value="<%=taskIdEnc%>" <%= (taskId != null && taskId.equals(bean.getTaskId()) ? "selected":"")%>><%=
-          StringEncoderDecoder.encode(bean.getTaskName(taskId))
-      %></option>
-  <%}%>
-  </select></td>
+  <td colspan=1><%= bean.getTaskId() == null || bean.getTaskId().length() == 0 ? getLocString("infosme.label.all") : bean.getTaskName()%></td>
   <th style="text-align:left"><%= getLocString("infosme.label.view")%></th>
   <td colspan=2>
     <select name="view">

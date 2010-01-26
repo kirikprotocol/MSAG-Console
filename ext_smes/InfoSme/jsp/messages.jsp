@@ -49,12 +49,7 @@
 <col width="40%">
 <tr class=row<%=rowN++&1%>>
   <th style="text-align:left"><%= getLocString("infosme.label.task")%>:</th>
-  <td><select name=taskId><%
-  for (Iterator i = allTasks.iterator(); i.hasNext();) {
-    String taskId = (String) i.next();
-    String taskIdEnc = StringEncoderDecoder.encode(taskId);
-  %><option value="<%=taskIdEnc%>" <%= (bean.isTaskId(taskIdEnc)) ? "selected":""%>><%=StringEncoderDecoder.encode(bean.getTaskName(taskId))%></option>
-<%}%></select></td>
+  <td><%=StringEncoderDecoder.encode(bean.getTaskName())%></td>
   <th style="text-align:left"><%= getLocString("infosme.label.msg_state")%></th>
   <td><select name=status>
         <option value="<%=Message.State.UNDEFINED.getId()%>" <%= (bean.isStatus(Message.State.UNDEFINED.getId())) ? "selected":""%>>ALL</option>
