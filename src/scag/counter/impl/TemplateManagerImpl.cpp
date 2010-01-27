@@ -34,16 +34,23 @@ TemplateManagerImpl::~TemplateManagerImpl()
 
 Counter* TemplateManagerImpl::createCounter( const char* templid,
                                              const std::string& name,
-                                             unsigned seconds )
+                                             unsigned seconds,
+                                             unsigned maxval )
 {
     if (!templid) return 0;
     smsc_log_debug(log_,"asking to create a counter templid='%s' name='%s'",templid,name.c_str());
     MutexGuard mg(lock_);
     CounterTemplate** ptr = templates_.GetPtr(templid);
-    if (!ptr || !*ptr) return 0;
+    if (!ptr || !*ptr) {
+        smsc_log_error(log_,"counter template '%s' is not found",templid);
+        return 0;
+    }
     Counter* c = (*ptr)->getPrototype();
-    if (!c) return 0;
-    return c->clone(name,seconds);
+    if (!c) {
+        smsc_log_error(log_,"counter prototype '%s' is not found",templid);
+        return 0;
+    }
+    return c->clone(name,seconds,maxval);
 }
 
 

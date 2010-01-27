@@ -56,7 +56,8 @@ public:
     /// helper method to create a counter from template
     CounterPtrAny createCounter( const char* tmplid,
                                  const char* name,
-                                 unsigned lifetime = counttime_max );
+                                 unsigned    lifetime = counttime_max,
+                                 unsigned    maxval = 0 );
 
     /// return an instance of time slice manager
     virtual TimeSliceManager& getTimeManager() = 0;

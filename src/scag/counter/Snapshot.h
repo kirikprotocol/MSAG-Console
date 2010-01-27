@@ -28,9 +28,11 @@ public:
     Snapshot( const std::string& name,
               unsigned nbins,          // number of bins in the snapshot
               Observer*      observer = 0,
-              counttime_type disposeDelayTime = 0 ) :
-    Counter(name,observer,disposeDelayTime),
-    integral_(0), lasttime_(0),
+              counttime_type disposeDelayTime = 0,
+              unsigned maxval = 100 ) :
+    Counter(name,observer,disposeDelayTime,maxval),
+    lasttime_(0),
+    integral_(0),
     nbins_(nbins), first_(0), last_(0)
     {
         assert(nbins > 0);
@@ -46,25 +48,14 @@ public:
 
     virtual void reset() {
         smsc::core::synchronization::MutexGuard mg(countMutex_);
+        const int64_t pv = integral_;
         integral_ = 0;
         lasttime_ = 0;
         first_ = 0;
         last_ = 0;
         slot_[0] = 0;
-        if ( observer_.get() ) observer_->modified(getName().c_str(),oldsev_,integral_);
+        if ( observer_.get() && pv != integral_ ) observer_->modified(getName().c_str(),oldsev_,integral_,maxval_);
     }
-
-    /*
-    inline int64_t getCount() const {
-        // smsc::core::synchronization::MutexGuard mg(countMutex_);
-        return integral_;
-    }
-
-    inline int64_t getIntegral() const {
-        // smsc::core::synchronization::MutexGuard mg(countMutex_);
-        return integral_;
-    }
-     */
 
     int64_t accumulate( int64_t x, int w = 1 );
 
@@ -97,7 +88,8 @@ public:
     }
 
 protected:
-    int64_t integral_, lasttime_;
+    int64_t  lasttime_;
+    unsigned integral_;
     unsigned nbins_, first_, last_;
     int* slot_;
 };

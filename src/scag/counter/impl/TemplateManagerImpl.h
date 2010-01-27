@@ -12,9 +12,10 @@ class TemplateManagerImpl : public TemplateManager
 public:
     TemplateManagerImpl();
     virtual ~TemplateManagerImpl();
-    virtual Counter* createCounter( const char* templid,
+    virtual Counter* createCounter( const char*        templid,
                                     const std::string& name,
-                                    unsigned lifetimeSeconds );
+                                    unsigned           lifetimeSeconds,
+                                    unsigned           maxval );
     virtual void replaceTemplate( const char* name, CounterTemplate* tmpl );
 
     // action tables

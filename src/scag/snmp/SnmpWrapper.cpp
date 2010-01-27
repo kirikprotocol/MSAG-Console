@@ -9,14 +9,21 @@ namespace {
 const char* msagnamed = "msagd";
 const char* msagname = "msag";
 
-oid snmptrap_oid[] = {1, 3, 6, 1, 6, 3, 1, 1, 4, 1, 0};
+// oid snmptrap_oid[] = {1, 3, 6, 1, 6, 3, 1, 1, 4, 1, 0};
 oid alertMessage_oid[] = { 1,3,6,1,4,1,26757,2,5, 0 };
 oid alertSeverity_oid[] = { 1,3,6,1,4,1,26757,2,7, 0 };
 oid alertObjCategory_oid[] = { 1,3,6,1,4,1,26757,2,9, 0 };
 oid alertId_oid[] = { 1,3,6,1,4,1,26757,2,8, 0 };
 
+// types of traps
 oid msagNewAlertFFMR_oid[] = { 1,3,6,1,4,1,26757,2,0,4 };
 oid msagClearAlertFFMR_oid[] = { 1,3,6,1,4,1,26757,2,0,5 };
+oid msagLoadConfig_oid[] = { 1,3,6,1,4,1,26757,2,0,6 };
+oid msagTraffic_oid[] = { 1,3,6,1,4,1,26757,2,0,7 };
+oid msagSMPPEndPointTraffic_oid[] = { 1,3,6,1,4,1,26757,2,0,8 };
+oid msagSMPPQueueLimit_oid[] = { 1,3,6,1,4,1,26757,2,0,9 };
+oid msagSessionLimit_oid[] = { 1,3,6,1,4,1,26757,2,0,10 };
+oid msagSMPPConnect_oid[] = { 1,3,6,1,4,1,26757,2,0,11 };
 
 void init_msag()
 {
@@ -81,16 +88,28 @@ void SnmpWrapper::sendTrap( const TrapRecord& rec )
         size_t poidlen = 0;
         switch (rec.status) {
 
-        case (TrapRecord::STATNEW) : {
+#define TRAPTCASE(x,y) case (x) : { poid = y; poidlen = OID_LENGTH(y); break; }
+            TRAPTCASE(TrapRecord::TRAPTNEWALERT,msagNewAlertFFMR_oid);
+            TRAPTCASE(TrapRecord::TRAPTCLRALERT,msagClearAlertFFMR_oid);
+            TRAPTCASE(TrapRecord::TRAPTLOADCFG,msagLoadConfig_oid);
+            TRAPTCASE(TrapRecord::TRAPTTRAFFIC,msagTraffic_oid);
+            TRAPTCASE(TrapRecord::TRAPTSMPPTRAF,msagSMPPEndPointTraffic_oid);
+            TRAPTCASE(TrapRecord::TRAPTSMPPQLIM,msagSMPPQueueLimit_oid);
+            TRAPTCASE(TrapRecord::TRAPTSESSLIM,msagSessionLimit_oid);
+            TRAPTCASE(TrapRecord::TRAPTSMPPCONN,msagSMPPConnect_oid);
+            /*
+        case (TrapRecord::TRAPTNEWALERT) : {
             poid = msagNewAlertFFMR_oid;
             poidlen = OID_LENGTH(msagNewAlertFFMR_oid);
             break;
         }
-        case (TrapRecord::STATCLEAR) : {
+        case (TrapRecord::TRAPTCLRALERT) : {
             poid = msagClearAlertFFMR_oid;
             poidlen = OID_LENGTH(msagClearAlertFFMR_oid);
             break;
         }
+             */
+#undef TRAPTCASE
         default : {
             smsc_log_warn( log_, "trap(id=%s, object=%s, severity=%d, text=%s): unknown status=%d",
                            rec.id.c_str(),
@@ -103,7 +122,7 @@ void SnmpWrapper::sendTrap( const TrapRecord& rec )
         } // switch rec.status
         if ( ! poid ) break;
 
-        smsc_log_debug( log_, "trap(id=%s, object=%s, severity=%d, text=%s)",
+        smsc_log_debug( log_, "trap(id=%s, cat=%s, severity=%d, text=%s)",
                         rec.id.c_str(),
                         rec.category.c_str(),
                         rec.severity,

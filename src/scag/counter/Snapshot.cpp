@@ -6,6 +6,7 @@ namespace counter {
 int64_t Snapshot::accumulate( int64_t x, int inc )
 {
     smsc::core::synchronization::MutexGuard mg(countMutex_);
+    const int64_t pv = integral_;
     int64_t diff = x - lasttime_;
     if ( diff == 0 ) {
         slot_[last_] += inc;
@@ -57,7 +58,7 @@ int64_t Snapshot::accumulate( int64_t x, int inc )
         slot_[cur] += inc;
         integral_ += inc;
     }
-    if ( observer_.get() ) observer_->modified(getName().c_str(),oldsev_,integral_);
+    if ( observer_.get() && pv != integral_ ) observer_->modified(getName().c_str(),oldsev_,integral_,maxval_);
     return integral_;
 }
 

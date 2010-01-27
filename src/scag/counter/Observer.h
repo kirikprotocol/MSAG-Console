@@ -75,7 +75,8 @@ public:
     /// it is set from the critical section, so there must be no problem with locking.
     virtual void modified( const char*   cname,
                            CntSeverity&  sev,
-                           int64_t       value ) = 0;
+                           int64_t       value,
+                           unsigned      maxval ) = 0;
     /// ref counting
     virtual void ref(bool add) = 0;
 };

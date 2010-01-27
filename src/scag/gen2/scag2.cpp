@@ -147,27 +147,64 @@ void Scag::init( unsigned mynode )
             throw SCAGException("no template manager is found in counter manager");
         }
         {
-            const char* cname = "sys.traffic.smpp";
+            const char* cname = "sys.traffic.global.smpp";
             counter::ActionTable* o = new counter::ActionTable();
             counter::ActionList* al = new counter::ActionList();
-            const unsigned maxsms = cfg.getLicense().maxsms;
-            al->push_back(counter::ActionLimit(maxsms*95/100,counter::GT,counter::CRITICAL));
-            al->push_back(counter::ActionLimit(maxsms*90/100,counter::GT,counter::MAJOR));
-            al->push_back(counter::ActionLimit(maxsms*80/100,counter::GT,counter::MINOR));
-            al->push_back(counter::ActionLimit(maxsms*70/100,counter::GT,counter::WARNING));
+            al->push_back(counter::ActionLimit(95,counter::GT,counter::CRITICAL));
+            al->push_back(counter::ActionLimit(90,counter::GT,counter::MAJOR));
+            al->push_back(counter::ActionLimit(80,counter::GT,counter::MINOR));
+            al->push_back(counter::ActionLimit(70,counter::GT,counter::WARNING));
             o->setNewActions(al);
             tmgr->replaceObserver(cname,o);
             tmgr->replaceTemplate( cname,
                                    counter::CounterTemplate::create
-                                   ("timesnapshot", o, 10*counter::usecFactor, 500));
-            /*
-            tmgr->replaceTemplate( "sys.acc",
+                                   ("timesnapshot", o, 10, 20));
+        }
+        {
+            const char* names[] = { "sys.traffic.smpp.sme", "sys.traffic.smpp.smsc", 0 };
+            for ( const char** cname = names; *cname != 0; ++cname ) {
+                counter::ActionTable* o = new counter::ActionTable();
+                counter::ActionList* al = new counter::ActionList();
+                al->push_back(counter::ActionLimit(95,counter::GT,counter::CRITICAL));
+                al->push_back(counter::ActionLimit(90,counter::GT,counter::MAJOR));
+                al->push_back(counter::ActionLimit(80,counter::GT,counter::MINOR));
+                al->push_back(counter::ActionLimit(70,counter::GT,counter::WARNING));
+                o->setNewActions(al);
+                tmgr->replaceObserver(*cname,o);
+                tmgr->replaceTemplate(*cname,
+                                      counter::CounterTemplate::create
+                                      ("timesnapshot", o, 5, 100));
+            }
+        }
+        {
+            const char* cname = "sys.smpp.queue.global";
+            counter::ActionTable* o = new counter::ActionTable();
+            counter::ActionList* al = new counter::ActionList();
+            al->push_back(counter::ActionLimit(95,counter::GT,counter::CRITICAL));
+            al->push_back(counter::ActionLimit(90,counter::GT,counter::MAJOR));
+            al->push_back(counter::ActionLimit(80,counter::GT,counter::MINOR));
+            al->push_back(counter::ActionLimit(70,counter::GT,counter::WARNING));
+            o->setNewActions(al);
+            tmgr->replaceObserver(cname,o);
+            tmgr->replaceTemplate( cname,
                                    counter::CounterTemplate::create
-                                   ( "accumulator", o ));
-            tmgr->replaceTemplate( "sys.avg",
-                                   counter::CounterTemplate::create
-                                   ( "average", o, 10000000UL ));
-             */
+                                   ("accumulator",o));
+        }
+        {
+            const char* names[] = { "sys.traffic.smpp.sme", "sys.traffic.smpp.smsc", 0 };
+            for ( const char** cname = names; *cname != 0; ++cname ) {
+                counter::ActionTable* o = new counter::ActionTable();
+                counter::ActionList* al = new counter::ActionList();
+                al->push_back(counter::ActionLimit(95,counter::GT,counter::CRITICAL));
+                al->push_back(counter::ActionLimit(90,counter::GT,counter::MAJOR));
+                al->push_back(counter::ActionLimit(80,counter::GT,counter::MINOR));
+                al->push_back(counter::ActionLimit(70,counter::GT,counter::WARNING));
+                o->setNewActions(al);
+                tmgr->replaceObserver(*cname,o);
+                tmgr->replaceTemplate(*cname,
+                                      counter::CounterTemplate::create
+                                      ("timesnapshot", o, 5, 100));
+            }
         }
     }
 
@@ -346,9 +383,11 @@ void Scag::init( unsigned mynode )
         SmppManagerImpl* sm = new SmppManagerImpl
             (
 #ifdef SNMP
-             snmpthread_.get() ? snmpthread_.get()->getQueue() : 
+             snmpthread_.get()
+#else
+             0
 #endif
-             0 );
+             );
         sm->Init( findConfigFile("../conf/smpp.xml") );
         smppInited_ = true;
         smsc_log_info(log, "Smpp Manager started");

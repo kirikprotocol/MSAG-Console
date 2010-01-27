@@ -46,7 +46,8 @@ public:
     ActionTable();
     virtual void modified( const char*  cname,
                            CntSeverity& sev,
-                           int64_t      value );
+                           int64_t      value,
+                           unsigned     maxval );
 
     /// NOTE: do not fiddle with this method
     virtual void ref(bool add);

@@ -20,8 +20,8 @@ public:
 
     static CounterTemplate* create( const char*        type,
                                     Observer*          observer,
-                                    int64_t            param0 = 0,
-                                    int64_t            param1 = 0 );
+                                    int64_t            param0 = 1,
+                                    int64_t            param1 = 1 );
 private:
     CounterTemplate();
     CounterTemplate( const CounterTemplate& );
@@ -38,7 +38,8 @@ public:
     virtual ~TemplateManager() {}
     virtual Counter* createCounter( const char*        templid,
                                     const std::string& name,
-                                    unsigned lifetimeSeconds = counttime_max ) = 0;
+                                    unsigned           lifetimeSeconds = counttime_max,
+                                    unsigned           maxval = 0 ) = 0;
     /// replace a template with a new one, or delete
     virtual void replaceTemplate( const char* name, CounterTemplate* tmpl ) = 0;
     

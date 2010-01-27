@@ -55,11 +55,15 @@ Average       time
 TimeSnapshot  time    bins
 
 // ======================================================
-The system counters (all prefixed with sys.):
+The system counters:
 
-# NAME                TYPE
-traffic.smpp          snap 1/s    
-traffic.http          snap 1/s
+# NAME                       TYPE
+sys.traffic.global.smpp      timesnapshot    1/10s
+sys.traffic.smpp.sme.NAME    timesnapshot    1/5s
+sys.traffic.smpp.smsc.NAME   timesnapshot    1/5s
+sys.smpp.queue.global        accumulator
+sys.smpp.queue.in.NAME       accumulator
+sys.smpp.queue.out.NAME      accumulator
 
 session.              
 transport.http.

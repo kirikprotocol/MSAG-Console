@@ -25,9 +25,11 @@ protected:
     static smsc::logger::Logger* log_;
     static smsc::logger::Logger* loga_;
 
+    /// NOTE: maxval is used to scale counter value in the observer
     Counter( const std::string& name,
              Observer*          observer = 0,
-             counttime_type     disposeDelayTime = counttime_max );
+             counttime_type     disposeDelayTime = counttime_max,
+             unsigned           maxval = 100 );
 
 public:
 
@@ -48,11 +50,16 @@ public:
             TOTALSIGMA
     } Valtype;
 
+    /// NOTE: maxval=0 means to take maxval from template
     virtual Counter* clone( const std::string& name,
-                            counttime_type     disposeTime = 0 ) const = 0;
+                            counttime_type     disposeTime = 0,
+                            unsigned           maxval = 0 ) const = 0;
 
     virtual ~Counter();
     inline const std::string& getName() const { return name_; }
+
+    inline unsigned getMaxVal() const { return maxval_; }
+    inline void setMaxVal(unsigned maxval) { maxval_ = maxval; }
 
     // NOTE: this is unsynchronized access to disposal time.
     inline counttime_type getDisposeTime() const { return disposeTime_; }
@@ -74,9 +81,15 @@ public:
     /// NOTE: the value may be out-of-date, e.g. for TimeSliceItem.
     virtual int64_t getValue() const = 0;
 
+    /// NOTE: suitable for accumulators only
+    virtual void setValue( int64_t ) {}
+
     /// get the value of counter attribute.
     /// return false if the attribute is not defined.
     virtual bool getValue( Valtype a, int64_t& value ) const = 0;
+
+    /// return the interval (right now is used only in TimeSnapshot).
+    virtual unsigned getBaseInterval() const { return 1; }
 
 protected:
     /// guaranteed to be invoked after registration
@@ -120,6 +133,7 @@ protected:
     // Disposer*      disposer_;
     ObserverPtr       observer_;
     CntSeverity       oldsev_; // the current severity set from observer
+    unsigned          maxval_;
 
 private:
     std::string name_;

@@ -30,7 +30,7 @@ int main()
         Manager& mgr = Manager::getInstance();
         TemplateManager* tmgr = mgr.getTemplateManager();
         tmgr->replaceTemplate(smppname,
-                              CounterTemplate::create("timesnapshot",0,5*usecFactor,500));
+                              CounterTemplate::create("timesnapshot",0,5));
     }
     
     CounterPtrAny p = Manager::getInstance().createCounter(smppname,smppname);

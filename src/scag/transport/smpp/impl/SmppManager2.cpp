@@ -16,7 +16,7 @@
 #include "scag/counter/Manager.h"
 
 namespace {
-const char* smppCounterName = "sys.traffic.smpp";
+const char* smppCounterName = "sys.traffic.global.smpp";
 }
 
 namespace scag2 {
@@ -322,13 +322,19 @@ static void ParseMetaTag(SmppManagerImpl* smppMan,DOMNodeList* list,MetaEntityTy
 
 SmppManagerImpl::SmppManagerImpl( snmp::TrapRecordQueue* snmpqueue ) :
 ConfigListener(SMPPMAN_CFG), sm(this,this),
-licenseCounter(counter::Manager::getInstance().createCounter(::smppCounterName,
-                                                             ::smppCounterName)),
+// licenseCounter(counter::Manager::getInstance().createCounter(::smppCounterName,
 testRouter_(0),
 snmpqueue_(snmpqueue)
 {
   log=smsc::logger::Logger::getInstance("smpp.man");
   limitsLog=smsc::logger::Logger::getInstance("smpp.lmt");
+    {
+        counter::Manager& mgr = counter::Manager::getInstance();
+        const unsigned maxsms = ConfigManager::Instance().getLicense().maxsms;
+        licenseCounter = mgr.createCounter(::smppCounterName,
+                                           ::smppCounterName);
+        licenseCounter->setMaxVal(licenseCounter->getBaseInterval()*maxsms);
+    }
   running=false;
   lastUid=0;
   lastExpireProcess=0;
@@ -433,6 +439,12 @@ void SmppManagerImpl::Init(const char* cfgFile)
   {
     smsc_log_warn(log,"smpp.queueLimit not found! Using default(%d)",queueLimit);
   }
+    const char* cname = "sys.smpp.queue.global";
+    queueCount = counter::Manager::getInstance().createCounter(cname,cname);
+    if (!queueCount.get()) {
+        throw SCAGException("cannot find counter '%s'",cname);
+    }
+    queueCount->setMaxVal(queueLimit);
 
   /*
   try{
@@ -861,7 +873,7 @@ int SmppManagerImpl::registerSmeChannel(const char* sysId,const char* pwd,SmppBi
     if ( text && snmpqueue_ && snmpTracking ) {
         snmp::TrapRecord* trap = new snmp::TrapRecord;
         trap->recordType = snmp::TrapRecord::Trap;
-        trap->status = ( ret == rarFailed ? snmp::TrapRecord::STATNEW : snmp::TrapRecord::STATCLEAR );
+        trap->status = ( ret == rarFailed ? snmp::TrapRecord::TRAPTNEWALERT : snmp::TrapRecord::TRAPTCLRALERT );
         trap->id = sysId;
         trap->category = "SME";
         trap->severity = ( ret == rarFailed ? snmp::TrapRecord::MAJOR : snmp::TrapRecord::CLEAR );
@@ -909,7 +921,7 @@ int SmppManagerImpl::registerSmscChannel(SmppChannel* ch)
     if ( text && snmpqueue_ && snmpTracking ) {
         std::auto_ptr<snmp::TrapRecord> trap(new snmp::TrapRecord);
         trap->recordType = snmp::TrapRecord::Trap;
-        trap->status = ( ret == rarFailed ? snmp::TrapRecord::STATNEW : snmp::TrapRecord::STATCLEAR );
+        trap->status = ( ret == rarFailed ? snmp::TrapRecord::TRAPTNEWALERT : snmp::TrapRecord::TRAPTCLRALERT );
         trap->id = ch->getSystemId();
         trap->category = "SMSC";
         trap->severity = ( ret == rarFailed ? snmp::TrapRecord::MAJOR : snmp::TrapRecord::CLEAR );
@@ -956,7 +968,7 @@ void SmppManagerImpl::unregisterChannel(SmppChannel* ch)
     if ( text && snmpqueue_ && snmpTracking ) {
         snmp::TrapRecord* trap = new snmp::TrapRecord;
         trap->recordType = snmp::TrapRecord::Trap;
-        trap->status = isDeleted ? snmp::TrapRecord::STATCLEAR : snmp::TrapRecord::STATNEW;
+        trap->status = isDeleted ? snmp::TrapRecord::TRAPTCLRALERT : snmp::TrapRecord::TRAPTNEWALERT;
         trap->id = ch->getSystemId();
         trap->category = ( isSME ? "SME" : "SMSC" );
         trap->severity = isDeleted ? snmp::TrapRecord::CLEAR : snmp::TrapRecord::MAJOR;
@@ -1007,7 +1019,7 @@ void SmppManagerImpl::putCommand( SmppChannel* ct, std::auto_ptr<SmppCommand> cm
     MutexGuard mg(queueMon);
     int licLimit=ConfigManager::Instance().getLicense().maxsms;
     // int cntValue=licenseCounter.Get()/10;
-    const int cntValue = licenseCounter->increment(0) / 10;
+    const int cntValue = licenseCounter->increment(0,0)/licenseCounter->getBaseInterval();
     if(cntValue>licLimit)
     {
         bool allow=false;
@@ -1031,10 +1043,14 @@ void SmppManagerImpl::putCommand( SmppChannel* ct, std::auto_ptr<SmppCommand> cm
         }
     }
     
-    int cnt = entPtr->incCnt.Get();
-    if(entPtr->info.sendLimit>0 && cnt/5>=entPtr->info.sendLimit && cmd->getCommandId()==SUBMIT && !cmd->get_sms()->hasIntProperty(smsc::sms::Tag::SMPP_USSD_SERVICE_OP))
+    // int cnt = entPtr->incCnt.Get();
+    int cnt = int(entPtr->incCnt->increment(0,0));
+    if (entPtr->info.sendLimit>0 &&
+        unsigned(cnt/entPtr->incCnt->getBaseInterval()) >= entPtr->info.sendLimit &&
+        cmd->getCommandId()==SUBMIT &&
+        !cmd->get_sms()->hasIntProperty(smsc::sms::Tag::SMPP_USSD_SERVICE_OP))
     {
-        smsc_log_warn(limitsLog,"Denied submit from '%s' by sendLimit:%d/%d",entPtr->info.systemId.c_str(),cnt/5,entPtr->info.sendLimit);
+        smsc_log_warn(limitsLog,"Denied submit from '%s' by sendLimit:%d/%d",entPtr->info.systemId.c_str(),cnt/entPtr->incCnt->getBaseInterval(),entPtr->info.sendLimit);
         std::auto_ptr<SmppCommand> resp = mkErrResp(i,cmd->get_dialogId(),smsc::system::Status::MSGQFUL);
         ct->putCommand(resp);
     } else if ( queue.Count()>=queueLimit && !cmd->get_sms()->hasIntProperty(smsc::sms::Tag::SMPP_USSD_SERVICE_OP)) {
@@ -1042,14 +1058,14 @@ void SmppManagerImpl::putCommand( SmppChannel* ct, std::auto_ptr<SmppCommand> cm
         std::auto_ptr<SmppCommand> resp = mkErrResp(i,cmd->get_dialogId(),smsc::system::Status::MSGQFUL);
         ct->putCommand(resp);
     } else {
-        if(entPtr->info.inQueueLimit>0 && entPtr->getQueueCount()>=entPtr->info.inQueueLimit) {
+        if(entPtr->info.inQueueLimit>0 && entPtr->getQueueCount() >= entPtr->info.inQueueLimit) {
             smsc_log_warn(limitsLog,"Denied submit from '%s' by inQueueLimit:%d/%d",entPtr->info.systemId.c_str(),entPtr->getQueueCount(),entPtr->info.inQueueLimit);
             std::auto_ptr<SmppCommand> resp = mkErrResp(i,cmd->get_dialogId(),smsc::system::Status::MSGQFUL);
             ct->putCommand(resp);
         } else {
             queue.Push( cmd.release() );
             if ( entPtr->info.sendLimit>0 ) {
-                entPtr->incCnt.Inc();
+                entPtr->incCnt->increment();
                 //smsc_log_debug(limitsLog,"cnt=%d",entPtr->incCnt.Get());
             }
             entPtr->incQueueCount();
@@ -1152,7 +1168,10 @@ bool SmppManagerImpl::getCommand(SmppCommand*& cmd)
     else if(queue.Count())
     {
         queue.Pop(cmd);
-        if (cmd->getEntity()) cmd->getEntity()->decQueueCount();
+        queueCount->setValue(queue.Count());
+        if (cmd->getEntity()) {
+            cmd->getEntity()->decQueueCount();
+        }
     }
     else
     {
@@ -1254,6 +1273,7 @@ unsigned SmppManagerImpl::pushSessionCommand( SmppCommand* cmd, int action )
         respQueue.Push( cmd );
     } else {
         queue.Push( cmd );
+        queueCount->setValue(queue.Count());
         // for being decremented in getCommand
         if ( cmd->getEntity() ) cmd->getEntity()->incQueueCount();
     }

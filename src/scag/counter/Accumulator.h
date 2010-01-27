@@ -21,8 +21,9 @@ public:
 
     Accumulator( const std::string& name,
                  Observer* observer = 0,
-                 counttime_type disposeDelayTime = 0 ) :
-    Counter(name,observer,disposeDelayTime),
+                 counttime_type disposeDelayTime = 0,
+                 unsigned maxval = 100 ) :
+    Counter(name,observer,disposeDelayTime,maxval),
     count_(0), integral_(0) {
         smsc_log_debug(loga_,"ctor %p %s '%s'",this,getTypeName(),getName().c_str());
     }
@@ -32,9 +33,11 @@ public:
     }
 
     virtual Accumulator* clone( const std::string& name,
-                                counttime_type disposeTime = 0 ) const
+                                counttime_type     disposeTime = 0,
+                                unsigned           maxval = 0 ) const
     {
-        return new Accumulator( name, observer_.get(), disposeTime );
+        if (!maxval) maxval = maxval_;
+        return new Accumulator( name, observer_.get(), disposeTime, maxval );
     }
 
     virtual int getType() const { return getStaticType(); }
@@ -44,7 +47,7 @@ public:
         smsc::core::synchronization::MutexGuard mg(countMutex_);
         count_ = 0;
         integral_ = 0;
-        if ( observer_.get() ) observer_->modified(getName().c_str(),oldsev_,integral_);
+        if ( observer_.get() ) observer_->modified(getName().c_str(),oldsev_,integral_,maxval_);
     }
 
     /*
@@ -61,15 +64,26 @@ public:
 
     virtual int64_t increment( int64_t x = 1, int w = 1 ) {
         smsc::core::synchronization::MutexGuard mg(countMutex_);
+        const int64_t pv = integral_;
         count_ += w;
         integral_ += x*w;
-        if ( observer_.get() ) observer_->modified(getName().c_str(),oldsev_,integral_);
+        if ( observer_.get() && pv != integral_ )
+            observer_->modified(getName().c_str(),oldsev_,integral_,maxval_);
         return integral_;
     }
 
     virtual int64_t getValue() const
     {
         return integral_;
+    }
+
+    virtual void setValue( int64_t val ) {
+        smsc::core::synchronization::MutexGuard mg(countMutex_);
+        const int64_t pv = integral_;
+        count_ = val;
+        integral_ = val;
+        if ( observer_.get() && pv != integral_ ) 
+            observer_->modified(getName().c_str(),oldsev_,integral_,maxval_);
     }
 
     virtual bool getValue( Valtype a, int64_t& value ) const

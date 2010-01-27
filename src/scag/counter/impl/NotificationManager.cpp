@@ -1,14 +1,20 @@
+#include <cassert>
 #include "NotificationManager.h"
+#include "scag/snmp/TrapRecord.h"
+#include "core/buffers/TmpBuf.hpp"
 
 namespace scag2 {
 namespace counter {
 namespace impl {
+
+using namespace scag2::snmp;
 
 NotificationManager::NotificationManager() :
 log_(smsc::logger::Logger::getInstance("cnt.nmgr")),
 serial_(0)
 {
     smsc_log_debug(log_,"ctor");
+    initMapping();
 }
 
 
@@ -33,8 +39,26 @@ void NotificationManager::advanceTime( usec_type curTime )
     SendData* s;
     for ( SendDataHash::Iterator i(&sendDataHash_); i.Next(c,s); ) {
         if ( s->serial == serial_ ) {
-            smsc_log_debug(log_,"sending TRAP '%s' level=%s val=%lld",
-                           c, severityToString(s->severity), s->value );
+#ifdef SNMP
+            TrapRecordQueue* inst = TrapRecordQueue::getInstance();
+            TrapData* trd;
+            const char* idfound;
+            if (inst && (trd=findTrapData(c,&idfound)) ) {
+                smsc_log_debug(log_,"sending TRAP '%s' level=%s val=%lld",
+                               c, severityToString(s->severity), s->value );
+                TrapRecord* rec = new TrapRecord;
+                rec->recordType = TrapRecord::Trap;
+                rec->submitTime = curTime/usecFactor;
+                rec->status = TrapRecord::TrapType(trd->trap); // the type of trap
+                rec->id = idfound;
+                rec->category = trd->cat;
+                rec->severity = TrapRecord::Severity(s->severity);
+                char buf[200];
+                snprintf(buf,sizeof(buf),"%s=%lld",c,s->value);
+                rec->text = buf;
+                inst->Push(rec);
+            }
+#endif
         } else {
             // removing obsolete elements from hash
             smsc_log_debug(log_,"trap '%s' level=%s val=%lld is obsolete, deleting",
@@ -74,6 +98,46 @@ void NotificationManager::notify( const char* c, CntSeverity& sev,
         // merging
         if ( (limit.optype == LT) == (value < ptr->value) ) { // XOR
             ptr->value = value;
+        }
+    }
+}
+
+
+void NotificationManager::initMapping()
+{
+    mappingHash_.Insert("sys.traffic.global.smpp",TrapData(TrapRecord::TRAPTTRAFFIC,"SMPP"));
+    mappingHash_.Insert("sys.traffic.smpp.sme",TrapData(TrapRecord::TRAPTSMPPTRAF,"SME"));
+    mappingHash_.Insert("sys.traffic.smpp.smsc",TrapData(TrapRecord::TRAPTSMPPTRAF,"SMSC"));
+}
+
+
+NotificationManager::TrapData* NotificationManager::findTrapData( const char* cname,
+                                                                  const char** idfound )
+{
+    const size_t cnameLen = strlen(cname);
+    if (idfound) *idfound = cname + cnameLen;
+    // try to find the name as a whole
+    TrapData* ptr = mappingHash_.GetPtr(cname);
+    if (ptr) {
+        return ptr;
+    }
+    const char* p = cname + cnameLen;
+    const char delim = '.';
+    while (true) {
+        for ( --p; p>cname && *p!=delim; --p ) {
+        }
+        if ( p<=cname ) {
+            return 0;
+        }
+        assert(*p==delim);
+        TmpBuf<char,100> temp;
+        const size_t pfxlen = p-cname;
+        memcpy(temp.setSize(pfxlen+1),cname,pfxlen);
+        temp.get()[pfxlen] = '\0';
+        ptr = mappingHash_.GetPtr(temp.get());
+        if (ptr) {
+            if (idfound) *idfound = cname+pfxlen+1;
+            return ptr;
         }
     }
 }

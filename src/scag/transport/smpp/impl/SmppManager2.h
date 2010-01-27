@@ -415,6 +415,8 @@ protected:
     std::string cfgFileName;
 
     snmp::TrapRecordQueue* snmpqueue_;    // not owned
+
+    counter::CounterPtrAny queueCount;
 };
 
 }//smpp

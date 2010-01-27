@@ -28,7 +28,7 @@ ActionTable::~ActionTable()
 }
 
 
-void ActionTable::modified( const char* cname, CntSeverity& sev, int64_t value )
+void ActionTable::modified( const char* cname, CntSeverity& sev, int64_t value, unsigned maxval )
 {
     smsc_log_debug(log_,"%p: counter '%s' modified, new val=%llu",this,cname,value);
     ActionList* ptr;
@@ -37,10 +37,11 @@ void ActionTable::modified( const char* cname, CntSeverity& sev, int64_t value )
         ptr = actions_;
     }
     if ( ptr && ptr->list ) {
+        const int64_t scaled = value*100/maxval;
         const ActionLimit* list = ptr->list;
         for ( size_t i = 0; i < ptr->size; ++i ) {
             const ActionLimit& a = list[i];
-            if ( a.compare(value) ) {
+            if ( a.compare(scaled) ) {
                 Manager::getInstance().notify(cname,sev,value,a);
                 return;
             }

@@ -20,9 +20,15 @@ public:
             Notification,
             StatusChange
     };
-    enum TrapStatus {
-            STATNEW = 1,
-            STATCLEAR
+    enum TrapType {
+            TRAPTNEWALERT = 1,  // msagNewAlertFFMR
+            TRAPTCLRALERT,    // msagClearAlertFFMR
+            TRAPTLOADCFG,  // msagLoadConfig
+            TRAPTTRAFFIC,  // msagTraffic
+            TRAPTSMPPTRAF, // msagSMPPEndPointTraffic
+            TRAPTSMPPQLIM, // msagSMPPQueueLimit
+            TRAPTSESSLIM,  // msagSessionLimit
+            TRAPTSMPPCONN  // msagSMPPConnect
     };
     enum Severity {
             CLEAR = 1,
@@ -35,7 +41,7 @@ public:
 public:
     RecordType   recordType;
     time_t       submitTime;
-    TrapStatus   status;     // this determine which kind of message we'll use (alarm, clear, etc)
+    TrapType     status;   // this determine which kind of message we'll use (alarm, clear, etc)
     smsc::core::buffers::FixedLengthString<32> id;
     smsc::core::buffers::FixedLengthString<32> category;
     Severity     severity;
@@ -48,7 +54,13 @@ public:
 // an interface of a trap record queue
 class TrapRecordQueue
 {
+private:
+    static TrapRecordQueue* instance_;
 public:
+    static TrapRecordQueue* getInstance() { return instance_; }
+public:
+    TrapRecordQueue();
+    virtual ~TrapRecordQueue();
     virtual void Push( TrapRecord* trap ) = 0;
     // virtual TrapRecord* Pop() = 0;
 };

@@ -20,15 +20,16 @@ class TimeSnapshot : public Snapshot, public TimeSliceItem
 {
 public:
     TimeSnapshot( const std::string&      name,
-                  usec_type               width,
-                  unsigned                nbins,
+                  unsigned                nseconds,          // microseconds
+                  unsigned                msecresol = 100,   // resolution in milliseconds
                   Observer*               observer = 0,
-                  counttime_type disposeDelayTime = 0 ) :
-    Snapshot(name,nbins,observer,disposeDelayTime),
+                  counttime_type disposeDelayTime = 0,
+                  unsigned                maxval = 100 ) :
+    Snapshot(name,unsigned(nseconds*1000ULL/msecresol),observer,disposeDelayTime,maxval),
     group_(0)
     {
-        assert( width > usec_type(nbins) );
-        resol_ = (width + nbins - 1) / nbins;
+        // assert( width/1000 > usec_type(msecresol) );
+        resol_ = msecresol*1000LL;
         smsc_log_debug(loga_,"ctor %p %s '%s'",this,getTypeName(),getName().c_str());
     }
 
@@ -37,9 +38,12 @@ public:
     }
 
     virtual TimeSnapshot* clone( const std::string& name,
-                                 counttime_type     disposeTime = 0 ) const
+                                 counttime_type     disposeTime = 0,
+                                 unsigned           maxval = 0 ) const
     {
-        return new TimeSnapshot(name,resol_*nbins_,nbins_,observer_.get(),disposeTime);
+        if (!maxval) maxval = maxval_;
+        return new TimeSnapshot(name,unsigned(resol_*nbins_/usecFactor),
+                                unsigned(resol_/1000),observer_.get(),disposeTime,maxval);
     }
 
     virtual int getType() const { return getStaticType(); }
@@ -73,6 +77,8 @@ public:
         }
         return false;
     }
+
+    virtual unsigned getBaseInterval() const { return unsigned(nbins_*resol_/usecFactor); }
 
 protected:
     using Snapshot::accumulate;

@@ -12,6 +12,8 @@
 #include "logger/Logger.h"
 #include "scag/util/RelockMutexGuard.h"
 #include "scag/transport/smpp/router/route_types.h"
+#include "scag/counter/Manager.h"
+#include "scag/exc/SCAGExceptions.h"
 
 namespace scag2 {
 namespace transport {
@@ -32,6 +34,9 @@ struct UMRUSR
 struct SmppEntity
 {
 private:
+    // static const char* cntTrafficSme;// = "sys.traffic.smpp.sme";
+    // static const char* cntTrafficSmsc;// = "sys.traffic.smpp.smsc";
+private:
     static const int sarTimeout = 300; // 5 min
 
     struct SarData {
@@ -48,26 +53,59 @@ private:
     };
 
 public:
-  SmppEntity():incCnt(5)
+  SmppEntity()
+    // incCnt(counter::Manager::getInstance().createCounter(cntTrafficName,
+    // cntTrafficName))
   {
+      log_ = smsc::logger::Logger::getInstance("smpp.ent");
       reset();
       seq = 0;
       slicingSeq8 = 0;
       slicingSeq16 = 0;
       connected = false;
-      queueCount=0;
-      log_ = smsc::logger::Logger::getInstance("smpp.ent");
+      // queueCount->reset();
   }
-  SmppEntity(const SmppEntityInfo& argInfo):incCnt(5)
+  SmppEntity(const SmppEntityInfo& argInfo)
+    // incCnt(counter::Manager::getInstance().createCounter("sys.traffic.smpp",
+    // ""))
   {
+      log_ = smsc::logger::Logger::getInstance("smpp.ent");
       reset();
       info=argInfo;
+      {
+          const char* cname = ( info.type == etSmsc ?
+                                "sys.traffic.smpp.smsc" :
+                                "sys.traffic.smpp.sme" );
+          char buf[100];
+          snprintf(buf,sizeof(buf),"%s.%s",cname,info.systemId.c_str());
+          incCnt = counter::Manager::getInstance().createCounter(cname,buf);
+          if (!incCnt.get()) {
+              // smsc_log_error(log_,"entity '%s' cannot create counter '%s'",
+              // info.systemId.c_str(),buf);
+              throw exceptions::SCAGException("entity '%s' cannot create counter '%s'",
+                                              info.systemId.c_str(), buf);
+          }
+          const unsigned sendLimit = (info.sendLimit>0)?info.sendLimit:100000;
+          if (sendLimit>0) {
+              incCnt->setMaxVal(incCnt->getBaseInterval()*sendLimit);
+          }
+      }
       seq = 1;
       slicingSeq8 = 0;
       slicingSeq16 = 0;
-      queueCount=0;
+      {
+          const char* cname = "sys.smpp.queue.in";
+          char buf[100];
+          snprintf(buf,sizeof(buf),"%s.%s",cname,info.systemId.c_str());
+          queueCount = counter::Manager::getInstance().createCounter(cname,buf);
+          if (!queueCount.get()) {
+              throw exceptions::SCAGException("entity '%s' cannot create counter '%s'",
+                                              info.systemId.c_str(), buf);
+          }
+          const unsigned queueLimit = (info.inQueueLimit>0 ? info.inQueueLimit : 1000000 );
+          if (queueLimit>0) queueCount->setMaxVal(queueLimit);
+      }
       connected = false;
-      log_ = smsc::logger::Logger::getInstance("smpp.ent");
   }
 
     /// reset to an initial state, used at disconnect
@@ -185,20 +223,23 @@ public:
 
   int getQueueCount()
   {
-    MutexGuard mg(cntMtx);
-    return queueCount;
+      return int(queueCount->getValue());
+      // MutexGuard mg(cntMtx);
+      // return queueCount;
   }
 
   void incQueueCount()
   {
-    MutexGuard mg(cntMtx);
-    queueCount++;
+      // MutexGuard mg(cntMtx);
+      // queueCount++;
+      queueCount->increment();
   }
 
   void decQueueCount()
   {
-    MutexGuard mg(cntMtx);
-    queueCount--;
+      // MutexGuard mg(cntMtx);
+      // queueCount--;
+      queueCount->increment(-1);
   }
 
     /// return existing mapping or invalidOpId().
@@ -378,7 +419,8 @@ public:
   SmppChannel* recvChannel;
   SmppChannel* transChannel;
   bool connected;
-  smsc::util::TimeSlotCounter<> incCnt;
+  // smsc::util::TimeSlotCounter<> incCnt;
+    counter::CounterPtrAny incCnt;
 
 protected:
     int seq;
@@ -386,13 +428,13 @@ protected:
     uint16_t slicingSeq16;
 
   Mutex seqMtx;
-  Mutex cntMtx;
-  int queueCount;
     smsc::logger::Logger* log_;
 
     /// mapping of isar -> {opid,osar,count}
     smsc::core::synchronization::Mutex        sarMutex_;
     smsc::core::buffers::IntHash< SarData >   sarMapping_;
+
+    counter::CounterPtrAny queueCount;
 };
 
 }//smpp

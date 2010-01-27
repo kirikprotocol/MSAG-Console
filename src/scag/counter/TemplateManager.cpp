@@ -25,7 +25,7 @@ CounterTemplate* CounterTemplate::create( const char* type,
     } else if ( 0 == strcmp(type,"average") ) {
         ptr = new Average(type,param0,observer,0);
     } else if ( 0 == strcmp(type,"timesnapshot") ) {
-        ptr = new TimeSnapshot(type,param0,param1,observer,0);
+        ptr = new TimeSnapshot(type,unsigned(param0),unsigned(param1),observer,0);
     } else {
         return 0;
     }

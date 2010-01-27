@@ -37,7 +37,7 @@ public:
         if ( stopping_ ) delete trap;
         else queue_.Push( trap );
     }
-    inline TrapRecordQueue* getQueue() { return this; }
+    // inline TrapRecordQueue* getQueue() { return this; }
 
 private:
     void waitStop();
