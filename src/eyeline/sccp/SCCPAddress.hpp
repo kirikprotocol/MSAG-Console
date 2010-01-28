@@ -6,6 +6,7 @@
 #define __EYELINE_SCCP_ADDRESS_HPP
 
 #include "eyeline/sccp/GlobalTitle.hpp"
+#include "core/buffers/FixedLengthString.hpp"
 
 namespace eyeline {
 namespace sccp {
@@ -107,7 +108,7 @@ public:
   }
 
   //
-  const AEIndicator & Indicator(void) const { return _ind.parm; }
+  const AEIndicator & getIndicator(void) const { return _ind.parm; }
   //
   uint8_t getSSN(void) const { return _ssn; }
   //
@@ -129,7 +130,13 @@ public:
   //Decodes/Unpacks address from octet buffer
   //Returns number of characters unpacked, 0 - in case of failure.
   unsigned unpackOcts(const uint8_t * use_buf, unsigned buf_len);
+
+  typedef smsc::core::buffers::FixedLengthString<_maxOctsLen*2> sccp_addr_string_t;
+  // TODO:: implement toString()
+  sccp_addr_string_t toString() const;
 };
+
+typedef SCCPAddress::sccp_addr_string_t sccp_addr_string_t;
 
 } //sccp
 } //eyeline

@@ -7,6 +7,7 @@
 
 #include <inttypes.h>
 #include "eyeline/util/TBCDString.hpp"
+#include "core/buffers/FixedLengthString.hpp"
 
 namespace eyeline {
 namespace sccp {
@@ -432,7 +433,7 @@ public:
   //GTI = gtiInternational
   //NOTE: in international use this GTI implies only BCD odd or BCD even encoding scheme!
   void construct(TranslationType_e use_tr_type, NumberingPlan_e use_npi,
-              NatureOfAddress_e use_noa, const char * use_signals)
+                 NatureOfAddress_e use_noa, const char * use_signals)
   {
     _signals = use_signals;
     _hdr.kind = GlobalTitle::gtiInternational;
@@ -445,8 +446,8 @@ public:
 
   //GTI = gtiInternational
   void construct(TranslationType_e use_tr_type, NumberingPlan_e use_npi,
-              NatureOfAddress_e use_noa, EncodingScheme_e use_sch,
-              const char * use_signals)
+                 NatureOfAddress_e use_noa, EncodingScheme_e use_sch,
+                 const char * use_signals)
   {
     _signals = use_signals;
     _hdr.kind = GlobalTitle::gtiInternational;
@@ -482,8 +483,13 @@ public:
       n += TBCDString::unpackOcts(use_buf + n, buf_len - n, _signals);
     return n;
   }
+
+  // TODO:: implement toString()
+  typedef smsc::core::buffers::FixedLengthString<_maxOctsLen*2> gt_string_t;
+  gt_string_t toString() const;
 };
 
+typedef GlobalTitle::gt_string_t gt_string_t;
 
 } //sccp
 } //eyeline
