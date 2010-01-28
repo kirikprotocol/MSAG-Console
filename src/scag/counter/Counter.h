@@ -32,6 +32,17 @@ protected:
 
 public:
 
+    typedef enum CountType {
+            TYPEUNKNOWN = 0,
+            TYPEACCUMULATOR,
+            TYPEAVERAGE,
+            TYPETIMESNAPSHOT
+    } CountType;
+
+
+    static const char* countTypeToString(CountType);
+    static CountType stringToCountType(const char* tname);
+
     typedef enum Valtype {
             VALUE = 0,      // the most appropriate value for this counter
             COUNT,
@@ -63,8 +74,10 @@ public:
     inline counttime_type getDisposeTime() const { return disposeTime_; }
 
     /// NOTE: any subclass should override this method
-    virtual int getType() const = 0;
-    virtual const char* getTypeName() const = 0;
+    virtual CountType getType() const = 0;
+    inline const char* getTypeName() const {
+        return countTypeToString(getType());
+    }
 
     /// reset the counter
     virtual void reset() = 0;

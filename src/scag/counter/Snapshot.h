@@ -3,7 +3,6 @@
 
 #include <cassert>
 #include "Counter.h"
-#include "util/TypeInfo.h"
 
 namespace scag2 {
 namespace counter {
@@ -23,7 +22,7 @@ namespace counter {
 class Snapshot : public Counter
 {
 public:
-    static int getStaticType() { return smsc::util::TypeInfo< Snapshot >::typeValue(); }
+    // static CountType getStaticType() { return smsc::util::TypeInfo< Snapshot >::typeValue(); }
 
     Snapshot( const std::string& name,
               unsigned nbins,          // number of bins in the snapshot
@@ -43,7 +42,7 @@ public:
         delete [] slot_;
     }
 
-    virtual int getType() const { return getStaticType(); }
+    // virtual int getType() const { return getStaticType(); }
 
     virtual void reset() {
         smsc::core::synchronization::MutexGuard mg(countMutex_);

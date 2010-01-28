@@ -13,23 +13,25 @@ CounterTemplate::~CounterTemplate()
 }
 
 
-CounterTemplate* CounterTemplate::create( const char* type,
+CounterTemplate* CounterTemplate::create( const char* tname,
                                           Observer*   observer,
                                           int64_t     param0,
                                           int64_t     param1 )
 {
-    if (!type) return 0;
-    Counter* ptr = 0;
-    if ( 0 == strcmp(type,"accumulator") ) {
-        ptr = new Accumulator(type,observer,0);
-    } else if ( 0 == strcmp(type,"average") ) {
-        ptr = new Average(type,param0,observer,0);
-    } else if ( 0 == strcmp(type,"timesnapshot") ) {
-        ptr = new TimeSnapshot(type,unsigned(param0),unsigned(param1),observer,0);
-    } else {
-        return 0;
+    const Counter::CountType type = Counter::stringToCountType(tname);
+    Counter* proto;
+    switch (type) {
+    case Counter::TYPEUNKNOWN: return 0;
+    case Counter::TYPEACCUMULATOR:
+        proto = new Accumulator("",observer,0);
+        break;
+    case Counter::TYPEAVERAGE:
+        proto = new Average("",param0,observer,0);
+        break;
+    case Counter::TYPETIMESNAPSHOT:
+        proto = new TimeSnapshot("",unsigned(param0),unsigned(param1),observer,0);
     }
-    return new CounterTemplate(ptr);
+    return new CounterTemplate(proto);
 }
 
 }

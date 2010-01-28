@@ -18,7 +18,7 @@ public:
     Counter* getPrototype() { return prototype_; }
     ~CounterTemplate();
 
-    static CounterTemplate* create( const char*        type,
+    static CounterTemplate* create( const char*        countType,
                                     Observer*          observer,
                                     int64_t            param0 = 1,
                                     int64_t            param1 = 1 );

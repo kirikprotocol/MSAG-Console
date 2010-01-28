@@ -5,7 +5,6 @@
 #include <list>
 #include <algorithm>
 #include "TimeSliceManager.h"
-#include "util/TypeInfo.h"
 #include "TimeSliceGroup.h"
 #include "Manager.h"
 
@@ -23,7 +22,7 @@ namespace counter {
 class Average : public Counter, public TimeSliceItem
 {
 public:
-    static int getStaticType() { return smsc::util::TypeInfo< Average >::typeValue(); }
+    static CountType getStaticType() { return TYPEAVERAGE; }
 
     Average( const std::string&                name,
              usec_type                         averageEveryUsec,
@@ -71,8 +70,7 @@ public:
         }
     };
 
-    virtual int getType() const { return getStaticType(); }
-    virtual const char* getTypeName() const { return "average"; }
+    virtual CountType getType() const { return getStaticType(); }
 
     virtual void reset() {
         smsc::core::synchronization::MutexGuard mg(countMutex_);

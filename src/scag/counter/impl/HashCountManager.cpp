@@ -231,8 +231,8 @@ CounterPtrAny HashCountManager::doRegisterAnyCounter( Counter* ccc, bool& wasReg
     Counter** ptr = hash_.GetPtr(ccc->getName().c_str());
     if ( ptr ) {
         if ( ccc->getType() != (*ptr)->getType() ) {
-            throw smsc::util::Exception("CountManager: counter '%s' already registered with different type %d != %d",
-                                        ccc->getName().c_str(), (*ptr)->getType(), ccc->getType());
+            throw smsc::util::Exception("CountManager: counter '%s' already registered with different type %s != %s",
+                                        ccc->getName().c_str(), (*ptr)->getTypeName(), ccc->getTypeName());
         }
         return CounterPtrAny(*ptr);
     }

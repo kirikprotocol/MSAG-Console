@@ -2,7 +2,6 @@
 #define _SCAG_COUNTER_ACCUMULATOR_H
 
 #include "Counter.h"
-#include "util/TypeInfo.h"
 
 namespace scag2 {
 namespace counter {
@@ -17,7 +16,7 @@ namespace counter {
 class Accumulator : public Counter
 {
 public:
-    static int getStaticType() { return smsc::util::TypeInfo< Accumulator >::typeValue(); }
+    static CountType getStaticType() { return TYPEACCUMULATOR; }
 
     Accumulator( const std::string& name,
                  Observer* observer = 0,
@@ -38,8 +37,8 @@ public:
         return new Accumulator( name, observer_.get(), disposeTime );
     }
 
-    virtual int getType() const { return getStaticType(); }
-    virtual const char* getTypeName() const { return "accumulator"; }
+    virtual CountType getType() const { return getStaticType(); }
+    // virtual const char* getTypeName() const { return countTypeToString(getType()); }
 
     virtual void reset() {
         smsc::core::synchronization::MutexGuard mg(countMutex_);

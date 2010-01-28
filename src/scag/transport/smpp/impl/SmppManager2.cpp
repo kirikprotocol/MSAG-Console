@@ -1046,7 +1046,7 @@ void SmppManagerImpl::putCommand( SmppChannel* ct, std::auto_ptr<SmppCommand> cm
     // int cnt = entPtr->incCnt.Get();
     int cnt = int(entPtr->incCnt->increment(0,0));
     if (entPtr->info.sendLimit>0 &&
-        unsigned(cnt/entPtr->incCnt->getBaseInterval()) >= entPtr->info.sendLimit &&
+        unsigned(cnt/entPtr->incCnt->getBaseInterval()) >= unsigned(entPtr->info.sendLimit) &&
         cmd->getCommandId()==SUBMIT &&
         !cmd->get_sms()->hasIntProperty(smsc::sms::Tag::SMPP_USSD_SERVICE_OP))
     {

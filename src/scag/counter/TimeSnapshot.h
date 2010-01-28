@@ -19,6 +19,8 @@ namespace counter {
 class TimeSnapshot : public Snapshot, public TimeSliceItem
 {
 public:
+    static CountType getStaticType() { return TYPETIMESNAPSHOT; }
+
     TimeSnapshot( const std::string&      name,
                   unsigned                nseconds,          // microseconds
                   unsigned                msecresol = 100,   // resolution in milliseconds
@@ -43,8 +45,7 @@ public:
                                 unsigned(resol_/1000),observer_.get(),disposeTime);
     }
 
-    virtual int getType() const { return getStaticType(); }
-    virtual const char* getTypeName() const { return "timesnapshot"; }
+    virtual CountType getType() const { return getStaticType(); }
 
     virtual int64_t increment( int64_t x = 1, int w = 1 ) {
         const int64_t bin = int64_t(TSource::getUSec()/resol_);
