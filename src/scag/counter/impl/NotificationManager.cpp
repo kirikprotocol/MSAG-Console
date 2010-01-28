@@ -108,6 +108,12 @@ void NotificationManager::initMapping()
     mappingHash_.Insert("sys.traffic.global.smpp",TrapData(TrapRecord::TRAPTTRAFFIC,"SMPP"));
     mappingHash_.Insert("sys.traffic.smpp.sme",TrapData(TrapRecord::TRAPTSMPPTRAF,"SME"));
     mappingHash_.Insert("sys.traffic.smpp.smsc",TrapData(TrapRecord::TRAPTSMPPTRAF,"SMSC"));
+    mappingHash_.Insert("sys.smpp.queue.global",TrapData(TrapRecord::TRAPTSMPPQLIM,"TOTAL"));
+    mappingHash_.Insert("sys.smpp.queue.in",TrapData(TrapRecord::TRAPTSMPPQLIM,"IN"));
+    mappingHash_.Insert("sys.smpp.queue.out",TrapData(TrapRecord::TRAPTSMPPQLIM,"OUT"));
+    mappingHash_.Insert("sys.sessions.total",TrapData(TrapRecord::TRAPTSESSLIM,"TOTAL"));
+    mappingHash_.Insert("sys.sessions.active",TrapData(TrapRecord::TRAPTSESSLIM,"ACTIVE"));
+    mappingHash_.Insert("sys.sessions.locked",TrapData(TrapRecord::TRAPTSESSLIM,"LOCKED"));
 }
 
 

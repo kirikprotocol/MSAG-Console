@@ -21,9 +21,8 @@ public:
 
     Accumulator( const std::string& name,
                  Observer* observer = 0,
-                 counttime_type disposeDelayTime = 0,
-                 unsigned maxval = 100 ) :
-    Counter(name,observer,disposeDelayTime,maxval),
+                 counttime_type disposeDelayTime = 0 ) :
+    Counter(name,observer,disposeDelayTime),
     count_(0), integral_(0) {
         smsc_log_debug(loga_,"ctor %p %s '%s'",this,getTypeName(),getName().c_str());
     }
@@ -33,11 +32,10 @@ public:
     }
 
     virtual Accumulator* clone( const std::string& name,
-                                counttime_type     disposeTime = 0,
-                                unsigned           maxval = 0 ) const
+                                counttime_type     disposeTime = 0 ) const
     {
-        if (!maxval) maxval = maxval_;
-        return new Accumulator( name, observer_.get(), disposeTime, maxval );
+        // if (!maxval) maxval = maxval_;
+        return new Accumulator( name, observer_.get(), disposeTime );
     }
 
     virtual int getType() const { return getStaticType(); }

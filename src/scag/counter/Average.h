@@ -28,8 +28,7 @@ public:
     Average( const std::string&                name,
              usec_type                         averageEveryUsec,
              Observer*                         observer = 0,
-             counttime_type                    disposeDelayTime = 0,
-             unsigned maxval = 100 ) :
+             counttime_type                    disposeDelayTime = 0 ) :
     Counter(name,observer,disposeDelayTime),
     group_(0),
     averageTime_(averageEveryUsec)
@@ -39,11 +38,9 @@ public:
     }
 
     virtual Average* clone( const std::string& name,
-                            counttime_type     disposeTime = 0,
-                            unsigned           maxval = 0 ) const
+                            counttime_type     disposeTime = 0 ) const
     {
-        if (!maxval) maxval = maxval_;
-        return new Average(name,averageTime_,observer_.get(),disposeTime,maxval);
+        return new Average(name,averageTime_,observer_.get(),disposeTime);
     }
 
     virtual ~Average() {

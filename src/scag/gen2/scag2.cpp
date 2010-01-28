@@ -191,7 +191,7 @@ void Scag::init( unsigned mynode )
                                    ("accumulator",o));
         }
         {
-            const char* names[] = { "sys.traffic.smpp.sme", "sys.traffic.smpp.smsc", 0 };
+            const char* names[] = { "sys.smpp.queue.in", "sys.smpp.queue.out", 0 };
             for ( const char** cname = names; *cname != 0; ++cname ) {
                 counter::ActionTable* o = new counter::ActionTable();
                 counter::ActionList* al = new counter::ActionList();
@@ -203,7 +203,25 @@ void Scag::init( unsigned mynode )
                 tmgr->replaceObserver(*cname,o);
                 tmgr->replaceTemplate(*cname,
                                       counter::CounterTemplate::create
-                                      ("timesnapshot", o, 5, 100));
+                                      ("accumulator", o));
+            }
+        }
+        {
+            const char* names[] = { "total", "active", "locked", 0 };
+            for ( const char** pname = names; *pname != 0; ++pname ) {
+                char buf[60];
+                sprintf(buf,"sys.sessions.%s",*pname);
+                counter::ActionTable* o = new counter::ActionTable();
+                counter::ActionList* al = new counter::ActionList();
+                al->push_back(counter::ActionLimit(95,counter::GT,counter::CRITICAL));
+                al->push_back(counter::ActionLimit(90,counter::GT,counter::MAJOR));
+                al->push_back(counter::ActionLimit(80,counter::GT,counter::MINOR));
+                al->push_back(counter::ActionLimit(70,counter::GT,counter::WARNING));
+                o->setNewActions(al);
+                tmgr->replaceObserver(buf,o);
+                tmgr->replaceTemplate(buf,
+                                      counter::CounterTemplate::create
+                                      ("accumulator", o));
             }
         }
     }

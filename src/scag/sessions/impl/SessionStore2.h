@@ -14,6 +14,7 @@
 #include "scag/util/storage/RBTreeIndexStorage.h"
 #include "scag/util/storage/StorageIface.h"
 #include "scag/util/storage/CompositeDiskStorage.h"
+#include "scag/counter/Counter.h"
 
 namespace scag2 {
 namespace sessions {
@@ -70,7 +71,7 @@ public:
                                 std::auto_ptr<SCAGCommand>& cmd,
                                 bool                        create );
 
-    unsigned storedCommands() const;
+    // unsigned storedCommands() const;
 
     bool expireSessions( const std::vector< SessionKey >& expired,
                          const std::vector< std::pair<SessionKey,time_t> >& flush );
@@ -121,9 +122,12 @@ private:
     bool                        diskio_;
 
     // statistics
-    unsigned                    totalSessions_;
-    unsigned                    loadedSessions_;
-    unsigned                    lockedSessions_;
+    // unsigned                    totalSessions_;
+    // unsigned                    loadedSessions_;
+    // unsigned                    lockedSessions_;
+    counter::CounterPtrAny      totalSessions_;
+    counter::CounterPtrAny      loadedSessions_;
+    counter::CounterPtrAny      lockedSessions_;
     unsigned                    storedCommands_;
 
     unsigned                    maxqueuesize_;

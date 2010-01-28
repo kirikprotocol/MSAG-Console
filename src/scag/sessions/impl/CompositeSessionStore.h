@@ -43,7 +43,7 @@ public:
                                 std::auto_ptr<SCAGCommand>& cmd,
                                 bool                        create );
 
-    unsigned storedCommands() const;
+    // unsigned storedCommands() const;
 
     bool expireSessions( const std::vector< SessionKey >& expired,
                          const std::vector< std::pair<SessionKey,time_t> >& flush );
@@ -86,6 +86,9 @@ private:
 
     smsc::core::synchronization::EventMonitor stopLock_;
 
+    counter::CounterPtrAny  totalSessions_;
+    counter::CounterPtrAny  loadedSessions_;
+    counter::CounterPtrAny  lockedSessions_;
 };
 
 } // namespace sessions

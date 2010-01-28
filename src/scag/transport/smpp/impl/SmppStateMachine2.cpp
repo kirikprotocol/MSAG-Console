@@ -96,19 +96,31 @@ struct StateMachine::ResponseRegistry
         }
         if(cmd->getDstEntity()->info.outQueueLimit > 0)
         {
-            int* p=outCnt.GetPtr(cmd->getDstEntity()->info.systemId.c_str());
-            if(limit && p && *p>cmd->getDstEntity()->info.outQueueLimit)
+            const char* sysname = cmd->getDstEntity()->info.systemId.c_str();
+            counter::CounterPtrAny* p = outCnt.GetPtr(sysname);
+            // int* p=outCnt.GetPtr(cmd->getDstEntity()->info.systemId.c_str());
+            if(limit && p && (*p)->getValue() > cmd->getDstEntity()->info.outQueueLimit)
             {
-                smsc_log_warn(log,"command registration for '%s' denied: outQueueLimit",
-                              cmd->getDstEntity()->info.systemId.c_str());
+                smsc_log_warn(log,"command registration for '%s' denied: outQueueLimit",sysname);
                 return false;
             }
             if(p)
             {
-                (*p)++;
+                (*p)->increment(); // (*p)++;
             }else
             {
-                outCnt.Insert(cmd->getDstEntity()->info.systemId.c_str(),1);
+                // outCnt.Insert(cmd->getDstEntity()->info.systemId.c_str(),1);
+                const char* cname = "sys.smpp.queue.out";
+                char buf[100];
+                snprintf(buf,sizeof(buf),"%s.%s",cname,sysname);
+                counter::CounterPtrAny pp = counter::Manager::getInstance().createCounter(cname,buf);
+                outCnt.Insert(sysname,pp);
+                if (pp.get()) {
+                    pp->setMaxVal(cmd->getDstEntity()->info.outQueueLimit);
+                    pp->increment();
+                } else {
+                    smsc_log_warn(log,"cannot create a counter '%s' for '%s'",cname,sysname);
+                }
             }
         }
         RegValue val;
@@ -123,7 +135,8 @@ struct StateMachine::ResponseRegistry
         // we will use dialog id in resp
         cmd->set_dialogId( seq );
         reg.Insert(key,val);
-        smsc_log_debug(log, "register uid=%d, seq=%d, name=%s", uid, seq, cmd->getDstEntity()->info.systemId.c_str());
+        smsc_log_debug(log, "register uid=%d, seq=%d, name=%s", uid, seq,
+                       cmd->getDstEntity()->info.systemId.c_str());
         return true;
     }
 
@@ -142,7 +155,8 @@ struct StateMachine::ResponseRegistry
             toList.erase(ptr->it);
             reg.Delete(key);
             if(cmd->getDstEntity()->info.outQueueLimit > 0) {
-                outCnt.Get(cmd->getDstEntity()->info.systemId.c_str())--;
+                counter::CounterPtrAny& p = outCnt.Get(cmd->getDstEntity()->info.systemId.c_str());
+                if (p.get()) p->increment(-1);
             }
         }
         return cmd;
@@ -189,7 +203,8 @@ struct StateMachine::ResponseRegistry
             cmd->setFlag(SmppCommandFlags::EXPIRED_COMMAND);
 
             if ( cmd->getDstEntity()->info.outQueueLimit > 0 ) {
-                outCnt.Get(cmd->getDstEntity()->info.systemId.c_str())--;
+                counter::CounterPtrAny& p = outCnt.Get(cmd->getDstEntity()->info.systemId.c_str());
+                if (p.get()) p->increment(-1);
             }
 
         } while ( false );
@@ -201,7 +216,8 @@ private:
     int timeout;
     TimeOutList toList;
     XHash<RegKey, RegValue, HashFunc> reg;
-    Hash<int> outCnt;
+    // Hash<int> outCnt;
+    Hash< counter::CounterPtrAny > outCnt;
     sync::Mutex mtx;
 };
 

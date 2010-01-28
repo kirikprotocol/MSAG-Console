@@ -23,9 +23,8 @@ public:
                   unsigned                nseconds,          // microseconds
                   unsigned                msecresol = 100,   // resolution in milliseconds
                   Observer*               observer = 0,
-                  counttime_type disposeDelayTime = 0,
-                  unsigned                maxval = 100 ) :
-    Snapshot(name,unsigned(nseconds*1000ULL/msecresol),observer,disposeDelayTime,maxval),
+                  counttime_type disposeDelayTime = 0 ) :
+    Snapshot(name,unsigned(nseconds*1000ULL/msecresol),observer,disposeDelayTime),
     group_(0)
     {
         // assert( width/1000 > usec_type(msecresol) );
@@ -38,12 +37,10 @@ public:
     }
 
     virtual TimeSnapshot* clone( const std::string& name,
-                                 counttime_type     disposeTime = 0,
-                                 unsigned           maxval = 0 ) const
+                                 counttime_type     disposeTime = 0 ) const
     {
-        if (!maxval) maxval = maxval_;
         return new TimeSnapshot(name,unsigned(resol_*nbins_/usecFactor),
-                                unsigned(resol_/1000),observer_.get(),disposeTime,maxval);
+                                unsigned(resol_/1000),observer_.get(),disposeTime);
     }
 
     virtual int getType() const { return getStaticType(); }

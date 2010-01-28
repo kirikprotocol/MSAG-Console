@@ -8,6 +8,7 @@
 #include "scag/util/UnlockMutexGuard.h"
 #include "scag/util/io/Print.h"
 #include "core/threads/Thread.hpp"
+#include "scag/counter/Manager.h"
 
 namespace scag2 {
 namespace sessions {
@@ -62,9 +63,9 @@ SessionStoreImpl::~SessionStoreImpl()
     stop();
     MutexGuard mg(cacheLock_);
     unsigned pass = 0;
-    while ( lockedSessions_ > 0 ) {
-        if ( lockedSessions_ < 300 && ++pass == 10 ) {
-            smsc_log_info( log_, "the following %d sessions are still locked:", lockedSessions_ );
+    while ( lockedSessions_->getValue() > 0 ) {
+        if ( lockedSessions_->getValue() < 300 && ++pass == 10 ) {
+            smsc_log_info( log_, "the following %d sessions are still locked:", lockedSessions_->getValue() );
             scag_plog_info(pl,log_);
             for ( MemStorage::iterator_type i = cache_->begin(); i.next(); ) {
                 Session* s = cache_->store2val(i.value());
@@ -92,9 +93,14 @@ void SessionStoreImpl::init( unsigned eltNumber,
     queue_ = &queue;
     // eltNumber_ = eltNumber;
 
-    totalSessions_ = 0;
-    loadedSessions_ = 0;
-    lockedSessions_ = 0;
+    {
+        counter::Manager& cntmgr = counter::Manager::getInstance();
+        totalSessions_ = cntmgr.createCounter("sys.sessions.total","sys.sessions.total");
+        loadedSessions_ = cntmgr.createCounter("sys.sessions.active","sys.sessions.active");
+        lockedSessions_ = cntmgr.createCounter("sys.sessions.locked","sys.sessions.locked");
+        if (!totalSessions_.get() || !loadedSessions_.get() || !lockedSessions_.get())
+            throw std::runtime_error("cannot create session counters");
+    }
     storedCommands_ = 0;
 
     maxcachesize_ = 0;   // maximum of loadedSessions
@@ -174,7 +180,8 @@ void SessionStoreImpl::init( unsigned eltNumber,
             smsc_log_info( log_, "#%u has %u initial sessions",
                            eltNumber,
                            unsigned(initialkeys_.size()) );
-            totalSessions_ = unsigned(initialkeys_.size());
+            // totalSessions_ = unsigned(initialkeys_.size());
+            totalSessions_->setValue(initialkeys_.size());
         }
 
         // disk_->addStorage( i, eds.release() );
@@ -253,7 +260,8 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
                 // key.toString().c_str(), session, session->currentCommand() );
 
                 if ( ! session->currentCommand() ) {
-                    ++lockedSessions_;
+                    // ++lockedSessions_;
+                    lockedSessions_->increment();
                     session->setCurrentCommand( cmd->getSerial() );
                     what = " was free";
                     break;
@@ -306,8 +314,10 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
         session = cache_->store2val(*v);
         session->setCurrentCommand( cmd->getSerial() );
 
-        ++loadedSessions_;
-        ++lockedSessions_;
+        // ++loadedSessions_;
+        //++lockedSessions_;
+        loadedSessions_->increment();
+        lockedSessions_->increment();
 
         // release lock
         break;
@@ -324,10 +334,13 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
                 if ( ! create ) {
                     // creation is forbidden
                     session = cache_->release( key );
-                    --loadedSessions_;
-                    --lockedSessions_;
+                    //--loadedSessions_;
+                    //--lockedSessions_;
+                    loadedSessions_->increment(-1);
+                    lockedSessions_->increment(-1);
                 } else {
-                    ++totalSessions_;
+                    // ++totalSessions_;
+                    totalSessions_->increment();
                 }
             }
             if ( !create ) {
@@ -449,13 +462,14 @@ void SessionStoreImpl::releaseSession( Session& session )
             setCommandSession( *nextcmd, &session );
             nextuid = nextcmd->getSerial();
         } else {
-            --lockedSessions_;
+            // --lockedSessions_;
+            lockedSessions_->increment(-1);
         }
         prevuid = session.setCurrentCommand( nextuid );
 
-        tot = totalSessions_;
-        ldd = loadedSessions_;
-        lck = lockedSessions_;
+        tot = totalSessions_->getValue();
+        ldd = loadedSessions_->getValue();
+        lck = lockedSessions_->getValue();
         // release lock
     }
     // commands are owned elsewhere
@@ -508,11 +522,13 @@ inline ActiveSession SessionStoreImpl::makeLockedSession( Session&     s,
 }
 
 
+/*
 unsigned SessionStoreImpl::storedCommands() const
 {
     MutexGuard mg(cacheLock_);
     return storedCommands_;
 }
+ */
 
 
 bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
@@ -625,7 +641,8 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
             }
             session = cache_->store2val(*v);
             session->setCurrentCommand(2);
-            ++loadedSessions_;
+            // ++loadedSessions_;
+            loadedSessions_->increment();
             bool uploaded;
             {
                 UnlockMutexGuard umg(cacheLock_);
@@ -647,7 +664,7 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
                     }
                 }
             }
-            if ( ! uploaded ) ++totalSessions_;
+            if ( ! uploaded ) totalSessions_->increment(); // ++totalSessions_;
             session->setCurrentCommand(0);
         } else {
             continue;
@@ -686,7 +703,8 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
             SCAGCommand* nextcmd = session->popCommand();
             if ( nextcmd ) {
                 // a command has appeared on the queue
-                ++lockedSessions_;
+                // ++lockedSessions_;
+                lockedSessions_->increment();
                 setCommandSession( *nextcmd, session );
                 session->setCurrentCommand( nextcmd->getSerial() );
                 if ( carryNextCommand(*session,nextcmd,false) ) {
@@ -727,7 +745,8 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
         // lock session with some fictional command serial to prevent fetching
         // while finalizing
         session->setCurrentCommand( 1 );
-        ++lockedSessions_;
+        // ++lockedSessions_;
+        lockedSessions_->increment();
 
     } // while
 
@@ -750,9 +769,9 @@ void SessionStoreImpl::getSessionsCount( unsigned& sessionsCount,
                                          unsigned& sessionsLockedCount ) const
 {
     MutexGuard mg(cacheLock_);
-    sessionsCount = totalSessions_;
-    sessionsLoadedCount = loadedSessions_;
-    sessionsLockedCount = lockedSessions_;
+    sessionsCount = totalSessions_->getValue();
+    sessionsLoadedCount = loadedSessions_->getValue();
+    sessionsLockedCount = lockedSessions_->getValue();
 }
 
 
@@ -832,11 +851,13 @@ bool SessionStoreImpl::doSessionFinalization( Session& session, bool keep )
                        &session, session.sessionKey().toString().c_str(), session.currentCommand() );
         ::abort();
     }
-    --lockedSessions_;
+    // --lockedSessions_;
+    lockedSessions_->increment(-1);
 
     SCAGCommand* nextcmd = session.popCommand();
     if ( nextcmd ) {
-        ++lockedSessions_;
+        // ++lockedSessions_;
+        lockedSessions_->increment();
         setCommandSession( *nextcmd, &session );
         session.setCurrentCommand( nextcmd->getSerial() );
         // session has been already finalized, so clear it up
@@ -845,7 +866,8 @@ bool SessionStoreImpl::doSessionFinalization( Session& session, bool keep )
         return false;
     } else {
         // no more commands, delete the session
-        --loadedSessions_;
+        // --loadedSessions_;
+        loadedSessions_->increment(-1);
         if (keep) {
             // NOTE: we leave a stub in cache as a flag that session has been processed in this run
             MemStorage::stored_type* v = cache_->get( session.sessionKey() );
@@ -853,7 +875,8 @@ bool SessionStoreImpl::doSessionFinalization( Session& session, bool keep )
             cache_->dealloc(*v);
             *v = cache_->val2store(0);
         } else {
-            --totalSessions_;
+            // --totalSessions_;
+            totalSessions_->increment(-1);
             delete cache_->release( session.sessionKey() );
         }
         return true;
@@ -881,7 +904,8 @@ bool SessionStoreImpl::carryNextCommand( Session&     session,
                 comlist.push_back( com );
             }
             // reset the state
-            --lockedSessions_;
+            // --lockedSessions_;
+            lockedSessions_->increment(-1);
             session.setCurrentCommand( 0 );
         } catch (...) {
         }

@@ -64,7 +64,35 @@ sys.traffic.smpp.smsc.NAME   timesnapshot    1/5s
 sys.smpp.queue.global        accumulator
 sys.smpp.queue.in.NAME       accumulator
 sys.smpp.queue.out.NAME      accumulator
+sys.sessions.total           accumulator
+sys.sessions.active          accumulator
+sys.sessions.locked          accumulator
 
-session.              
-transport.http.
-transport.smpp.
+// ===================================================
+The format of the config file.
+<section name="counters">
+    <section name="limits">
+        <section name="sys.smpp.queue.global">
+            <param name="maxvalue" type="int">0</param> <!-- opt, if >0 use percentage -->
+            <section name="0">
+                <param name="optype" type="string">gt</param>
+                <param name="limit" type="int">95</param>
+                <param name="severity" type="string">CRITICAL</param>
+            </section>
+        </section>
+        <section name="user.deliveries">
+            <param name="maxvalue" type="int">100</param>
+            <section name="0">
+                <param name="optype" type="string">gt</param>
+                <param name="limit" type="int">95</param>
+                <param name="severity" type="string">CRITICAL</param>
+            </section>
+        </section>
+    </section>
+    <section name="templates">
+        <section name="user.deliveries">
+            <param name="type" type="string">accumulator</param>
+            <param name="limits" type="string">user.deliveries</param> <!-- optional, def=sectname -->
+        </section>
+    </section>
+</section>

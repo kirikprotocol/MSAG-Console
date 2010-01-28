@@ -34,8 +34,7 @@ TemplateManagerImpl::~TemplateManagerImpl()
 
 Counter* TemplateManagerImpl::createCounter( const char* templid,
                                              const std::string& name,
-                                             unsigned seconds,
-                                             unsigned maxval )
+                                             unsigned seconds )
 {
     if (!templid) return 0;
     smsc_log_debug(log_,"asking to create a counter templid='%s' name='%s'",templid,name.c_str());
@@ -50,7 +49,7 @@ Counter* TemplateManagerImpl::createCounter( const char* templid,
         smsc_log_error(log_,"counter prototype '%s' is not found",templid);
         return 0;
     }
-    return c->clone(name,seconds,maxval);
+    return c->clone(name,seconds);
 }
 
 

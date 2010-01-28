@@ -13,11 +13,10 @@ smsc::logger::Logger* Counter::loga_ = 0;
 
 Counter::Counter( const std::string& name,
                   Observer*          observer,
-                  counttime_type     disposeDelayTime,
-                  unsigned           maxval ) :
+                  counttime_type     disposeDelayTime ) :
 observer_(observer),
 oldsev_(NORMAL),
-maxval_(maxval),
+maxval_(0),
 name_(name),
 disposeDelayTime_(disposeDelayTime),
 usage_(0)

@@ -28,8 +28,7 @@ protected:
     /// NOTE: maxval is used to scale counter value in the observer
     Counter( const std::string& name,
              Observer*          observer = 0,
-             counttime_type     disposeDelayTime = counttime_max,
-             unsigned           maxval = 100 );
+             counttime_type     disposeDelayTime = counttime_max );
 
 public:
 
@@ -52,13 +51,12 @@ public:
 
     /// NOTE: maxval=0 means to take maxval from template
     virtual Counter* clone( const std::string& name,
-                            counttime_type     disposeTime = 0,
-                            unsigned           maxval = 0 ) const = 0;
+                            counttime_type     disposeTime = 0 ) const = 0;
 
     virtual ~Counter();
     inline const std::string& getName() const { return name_; }
 
-    inline unsigned getMaxVal() const { return maxval_; }
+    // inline unsigned getMaxVal() const { return maxval_; }
     inline void setMaxVal(unsigned maxval) { maxval_ = maxval; }
 
     // NOTE: this is unsynchronized access to disposal time.

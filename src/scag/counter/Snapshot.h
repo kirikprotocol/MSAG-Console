@@ -28,9 +28,8 @@ public:
     Snapshot( const std::string& name,
               unsigned nbins,          // number of bins in the snapshot
               Observer*      observer = 0,
-              counttime_type disposeDelayTime = 0,
-              unsigned maxval = 100 ) :
-    Counter(name,observer,disposeDelayTime,maxval),
+              counttime_type disposeDelayTime = 0 ) :
+    Counter(name,observer,disposeDelayTime),
     lasttime_(0),
     integral_(0),
     nbins_(nbins), first_(0), last_(0)

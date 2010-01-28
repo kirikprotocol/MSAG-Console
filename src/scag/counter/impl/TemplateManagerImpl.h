@@ -14,8 +14,7 @@ public:
     virtual ~TemplateManagerImpl();
     virtual Counter* createCounter( const char*        templid,
                                     const std::string& name,
-                                    unsigned           lifetimeSeconds,
-                                    unsigned           maxval );
+                                    unsigned           lifetimeSeconds );
     virtual void replaceTemplate( const char* name, CounterTemplate* tmpl );
 
     // action tables

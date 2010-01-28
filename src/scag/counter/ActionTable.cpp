@@ -36,8 +36,8 @@ void ActionTable::modified( const char* cname, CntSeverity& sev, int64_t value, 
         MutexGuard mg(actlock_);
         ptr = actions_;
     }
-    if ( ptr && ptr->list ) {
-        const int64_t scaled = value*100/maxval;
+    if ( ptr && ptr->list && maxval!=unsigned(-1) ) {
+        const int64_t scaled = maxval!=0 ? value*100/maxval : value;
         const ActionLimit* list = ptr->list;
         for ( size_t i = 0; i < ptr->size; ++i ) {
             const ActionLimit& a = list[i];

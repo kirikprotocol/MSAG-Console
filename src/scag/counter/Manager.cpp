@@ -46,10 +46,9 @@ Manager::~Manager()
 
 CounterPtrAny Manager::createCounter( const char* tmplid,
                                       const char* name,
-                                      unsigned    lifetime,
-                                      unsigned    maxval )
+                                      unsigned    lifetime )
 {
-    Counter* c = getTemplateManager()->createCounter(tmplid,name,lifetime,maxval);
+    Counter* c = getTemplateManager()->createCounter(tmplid,name,lifetime);
     if (!c) return CounterPtrAny();
     return registerAnyCounter(c);
 }

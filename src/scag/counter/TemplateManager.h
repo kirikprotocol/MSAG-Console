@@ -38,8 +38,7 @@ public:
     virtual ~TemplateManager() {}
     virtual Counter* createCounter( const char*        templid,
                                     const std::string& name,
-                                    unsigned           lifetimeSeconds = counttime_max,
-                                    unsigned           maxval = 0 ) = 0;
+                                    unsigned           lifetimeSeconds = counttime_max ) = 0;
     /// replace a template with a new one, or delete
     virtual void replaceTemplate( const char* name, CounterTemplate* tmpl ) = 0;
     

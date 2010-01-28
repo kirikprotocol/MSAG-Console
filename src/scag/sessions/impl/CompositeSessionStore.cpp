@@ -3,6 +3,7 @@
 #include "CompositeSessionStore.h"
 #include "core/synchronization/EventMonitor.hpp"
 #include "core/threads/Thread.hpp"
+#include "scag/counter/Manager.h"
 
 namespace scag2 {
 namespace sessions {
@@ -49,6 +50,18 @@ void CompositeSessionStore::init( unsigned nodeNumber,
     
     initialChunk_ = initialCount;
     initialTime_ = initialTime;
+
+    {
+        counter::Manager& mgr = counter::Manager::getInstance();
+        totalSessions_ = mgr.createCounter("sys.sessions.total","sys.sessions.total");
+        loadedSessions_ = mgr.createCounter("sys.sessions.active","sys.sessions.active");
+        lockedSessions_ = mgr.createCounter("sys.sessions.locked","sys.sessions.locked");
+        if (!totalSessions_.get() || !loadedSessions_.get() || !lockedSessions_.get())
+            throw std::runtime_error("cannot create session counters");
+        totalSessions_->setMaxVal(2000);
+        loadedSessions_->setMaxVal(500);
+        lockedSessions_->setMaxVal(200);
+    }
 
     unsigned pathidx = 0;
     for ( unsigned i = 0; i < storages_.size(); ++i ) {
@@ -104,6 +117,7 @@ ActiveSession CompositeSessionStore::fetchSession( const SessionKey&            
 }
 
 
+/*
 unsigned CompositeSessionStore::storedCommands() const
 {
     unsigned ret = 0;
@@ -117,6 +131,7 @@ unsigned CompositeSessionStore::storedCommands() const
     }
     return ret;
 }
+ */
 
 
 bool CompositeSessionStore::expireSessions( const std::vector< SessionKey >& expired,
@@ -176,10 +191,15 @@ void CompositeSessionStore::getSessionsCount( unsigned& sessionsCount,
                                               unsigned& sessionsLoadedCount,
                                               unsigned& sessionsLockedCount ) const
 {
+    if ( stopped_ ) return;
+    sessionsCount = totalSessions_->getValue();
+    sessionsLoadedCount = loadedSessions_->getValue();
+    sessionsLockedCount = lockedSessions_->getValue();
+    
+    /*
     sessionsCount = 0;
     sessionsLoadedCount = 0;
     sessionsLockedCount = 0;
-    if ( stopped_ ) return;
     for ( std::vector< Storage* >::const_iterator i = storages_.begin();
           i != storages_.end();
           ++i ) {
@@ -190,6 +210,7 @@ void CompositeSessionStore::getSessionsCount( unsigned& sessionsCount,
         sessionsLoadedCount += slc;
         sessionsLockedCount += skc;
     }
+     */
 }
 
 

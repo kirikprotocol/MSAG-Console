@@ -1,5 +1,7 @@
 scag/counter/tests/test1 test1 \
-  -lscag-counter-impl -lscag-counter \
+  -lscag-counter-impl \
+  -lscag-snmp \
+  -lscag-counter \
   -lscag-util-singleton \
   -lscag-util-io \
   -lcore-threads \
@@ -7,7 +9,9 @@ scag/counter/tests/test1 test1 \
   -lutil
 
 scag/counter/tests/test2 test2 \
-  -lscag-counter-impl -lscag-counter \
+  -lscag-counter-impl \
+  -lscag-snmp \
+  -lscag-counter \
   -lscag-util-singleton \
   -lscag-util-io \
   -lcore-threads \
@@ -18,7 +22,9 @@ scag/counter/tests/test2time test2time \
   -lrt -ldl
 
 scag/counter/tests/test3 test3 \
-  -lscag-counter-impl -lscag-counter \
+  -lscag-counter-impl \
+  -lscag-snmp \
+  -lscag-counter \
   -lscag-util-singleton \
   -lscag-util-io \
   -lcore-threads \
@@ -26,7 +32,9 @@ scag/counter/tests/test3 test3 \
   -lutil
 
 scag/counter/tests/test4 test4 \
-  -lscag-counter-impl -lscag-counter \
+  -lscag-counter-impl \
+  -lscag-snmp \
+  -lscag-counter \
   -lscag-util-singleton \
   -lscag-util-io \
   -lcore-threads \
