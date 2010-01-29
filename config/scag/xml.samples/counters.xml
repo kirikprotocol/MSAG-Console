@@ -2,28 +2,23 @@
 <!DOCTYPE counters SYSTEM "counters.dtd">
 
 <counters>
-    <param name="last used template id" type="int">1</param>
-    <param name="last used ca_table id" type="int">1</param>
 
     <templates>
 	
-	<template id="0" type="ACCUMULATOR">
-	    <name>SimpleAcc</name>
-	    <ca id="0"/>
+	<template id="SimpleAcc" type="ACCUMULATOR">
+	    <ca id="DefaultCATable"/>
 	</template>
 	
-	<template id="1" type="AVERAGE">
-	    <name>SimpleAvg</name>
-	    <param name="slot" type="int">10</param>
-	    <ca id="1"/>
+	<template id="SimpleAvg" type="AVERAGE">
+	    <param name="sample_slot" type="int">10</param>
+	    <ca id="UserCATable1"/>
 	</template>
 	
     </templates>
 
     <ca_tables>
     
-	<ca_table id="0" system="true">
-	    <name>DefaultCATable</name>
+	<ca_table id="DefaultCATable" system="true">
 	    <limits min="0" max="1000">
 		<limit procent="10" severity="NORMAL"/>
 		<limit procent="75" severity="WARNING"/>
@@ -32,13 +27,13 @@
 	    <param name="some_param" type="string">101</param>
 	</ca_table>
 
-	<ca_table id="1">
-	    <name>UserCATable</name>
+	<ca_table id="UserCATable1" system="false">
 	    <limits min="100" max="500">
 		<limit procent="5" severity="NORMAL"/>
 		<limit procent="50" severity="WARNING"/>
 		<limit procent="75" severity="MAJOR"/>
 	    </limits>
+	    <param name="some_user_param" type="string">101</param>
 	</ca_table>
 	
     </ca_tables>
