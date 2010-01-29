@@ -1,10 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 
 <!ELEMENT counters (templates|ca_tables)*>
-<!ELEMENT param (#PCDATA)>
-<!ATTLIST param
-    name CDATA #REQUIRED
-    type (string|int|bool) #IMPLIED>
 
 <!ELEMENT templates (template)*>
 <!ELEMENT template (ca|param*)>
@@ -28,3 +24,8 @@
 <!ATTLIST limit
     procent CDATA #REQUIRED
     severity (NORMAL|WARNING|MINOR|MAJOR|CRITICAL) #REQUIRED>
+
+<!ELEMENT param (#PCDATA)>
+<!ATTLIST param
+    name CDATA #REQUIRED
+    type (string|int|bool) #IMPLIED>
