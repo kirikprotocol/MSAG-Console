@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<!ELEMENT counters (param|templates|ca_tables)*>
+<!ELEMENT param (#PCDATA)>
+<!ATTLIST param
+    name CDATA #REQUIRED
+    type (string|int|bool) #IMPLIED>
+
+<!ELEMENT templates (template)*>
+<!ELEMENT template (name|ca|param*)>
+<!ATTLIST template
+    id CDATA #REQUIRED
+    type (ACCUMULATOR|INTEGRAL|AVERAGE|HISTOGRAMM) #REQUIRED>
+<!ELEMENT ca>
+<!ATTLIST ca
+    id CDATA #REQUIRED>
+
+<!ELEMENT ca_tables (ca_table)*>
+<!ELEMENT ca_table (name|limits|param*)>
+<!ATTLIST ca_table
+    id CDATA #REQUIRED
+    system (true|false) "false">
+<!ELEMENT limits (limit)*>
+<!ATTLIST limits
+    min CDATA #IMPLIED
+    max CDATA #REQUIRED>
+<!ELEMENT limit>
+<!ATTLIST limit
+    procent CDATA #REQUIRED
+    severity (NORMAL|WARNING|MINOR|MAJOR|CRITICAL) #REQUIRED>
+
+<!ELEMENT name (#PCDATA)>
