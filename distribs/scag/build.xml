@@ -697,7 +697,7 @@ If you have it somewhere, you may specify it on command line via -DPROTOGEN=full
               preservelastmodified="yes"
               flatten="yes">
             <fileset dir="${SMSC_DIR}/config"
-                     includes="scag2/smpp.dtd scag/operators.dtd scag2/tariffs.dtd scag/services.dtd scag2/smpp_routes.dtd scag2/http_routes.dtd"/>
+                     includes="scag2/smpp.dtd scag/operators.dtd scag2/tariffs.dtd scag/services.dtd scag2/smpp_routes.dtd scag2/http_routes.dtd scag/counters.dtd"/>
         </copy>
         <copy todir="${DISTR_DIR}/services/msag/conf/rules/"
               preservelastmodified="yes"
