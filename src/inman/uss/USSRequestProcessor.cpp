@@ -110,7 +110,7 @@ void USSRequestProcessor::onMapResult(smsc::inman::comp::uss::MAPUSS2CompAC* arg
     _resultUssData = arg->getUSSData();
     _dcs = arg->getDCS();
 
-    smsc_log_debug(_logger, "$s: onMapResult::: got USSData=[%s], _dcs=%d", _logId,
+    smsc_log_debug(_logger, "%s: onMapResult::: got USSData=[%s], _dcs=%d", _logId,
                    smsc::util::DumpHex(_resultUssData.size(), &_resultUssData[0]).c_str(), _dcs);
   }
 }
