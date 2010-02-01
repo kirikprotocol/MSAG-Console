@@ -8,12 +8,12 @@ TrapRecordQueue* TrapRecordQueue::instance_ = 0;
 
 TrapRecordQueue::TrapRecordQueue()
 {
-    if (instance_ != 0) abort();
+    if (instance_ != 0) std::abort();
     instance_ = this;
 }
 
 TrapRecordQueue::~TrapRecordQueue() {
-    if (instance_ == 0) abort();
+    if (instance_ == 0) std::abort();
     instance_ = 0;
 }
 
