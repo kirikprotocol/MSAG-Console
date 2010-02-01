@@ -20,12 +20,18 @@ public:
   //The maximum number of the GTAI digits is normally determined by the
   //maximum of the E.164 numbering plan.
   static const unsigned _maxAdrSignalsNum = 15;
+  typedef smsc::core::buffers::FixedLengthString<_maxAdrSignalsNum + 1> gt_adr_string_t;
+
+  static const unsigned _maxGTEnumChars = 24;
+  static const unsigned _maxGTStringLen = 5*(sizeof(".(ddd)") + _maxGTEnumChars)
+                                          + _maxAdrSignalsNum + 1;
+  typedef smsc::core::buffers::FixedLengthString<_maxGTStringLen> gt_string_t;
 
   //Maximum number of octet in packed/encoded GlobalTitle address
   static const unsigned _maxOctsLen = (_maxAdrSignalsNum + 1)/2 + 3/*sizeof(GTI_Inter)*/;
 
   //
-  enum Indicator_e { //4 bits value, contains combination of following 4 elemenst:
+  enum IndicatorKind_e { //4 bits value, contains combination of following 4 elemenst:
                      //  NoA - Nature Of Address, TrType - Translation type
                      //  NPi - Numbering Plan indicator, EnSch - encoding scheme
     gtiNone = 0x00, gtiNoA_only = 0x01, gtiTrT_only = 0x02,
@@ -39,7 +45,7 @@ public:
     //
     gtiMaxReserved = 0x0F
   };
-//  static const uint16_t _gtiMask = 0x0F;
+  static const char * nmIndicatorKind(IndicatorKind_e use_kind);
 
   enum NatureOfAddress_e { //7 bits value,
     noaUnknown = 0x00,
@@ -48,33 +54,45 @@ public:
     noaNationalSign = 0x03,   //NDC + SN (National Destination Code + SubscriberNumber)
     noaInternational = 0x04,  //CC + NDC + SN (CountryCode + 
                               //          National Destination Code + SubscriberNumber)
-    //
-    noaSpareMin = 0x05, noaSpareMax = 0x6F,
-    noaRsrvNationalMin = 0x70, noaRsrvNationalMax = 0x7E,
+    noaSpare05 = 0x05,
+    noaSpareRange = 0x6F, //[0x06, 0x6F]
+    noaRsrvNationalRange = 0x7E, // [0x70, 0x7E]
     //
     noaMaxReserved = 0x7F
   };
-//  static const uint16_t _noaMask = 0x7F;
+  static NatureOfAddress_e val2NatureOfAddress(uint8_t use_val)
+  {
+    if ((use_val >= 0x70) && (use_val <= 0x7E))
+      return GlobalTitle::noaRsrvNationalRange;
+    if ((use_val >= 0x06) && (use_val <= 0x6F))
+      return GlobalTitle::noaSpareRange;
+    return static_cast<NatureOfAddress_e>(use_val);
+  }
+  static const char * nmNatureOfAddress(NatureOfAddress_e use_val);
+
 
   enum NumberingPlan_e { //4 bits values
     npiUnknown = 0x00, npiISDNTele_e164 = 0x01, npiGeneric = 0x02,
     npiData_x121 = 0x03, npiTelex_f69 = 0x04, npiMaritimeMobile_e210 = 0x05,
     npiLandMobile_e212 = 0x06, npiISDNMobile_e214 = 0x07,
-    npiSpare8 = 0x08, npiSpare9 = 0x09, npiSpare10 = 0x0A, 
+    npiSpare08 = 0x08, npiSpare09 = 0x09, npiSpare10 = 0x0A, 
     npiSpare11 = 0x0B, npiSpare12 = 0x0C, npiSpare13 = 0x0D,
     npiNetworkSpec = 0x0E,
     npiMaxReserved = 0x0F
   };
-//  static const uint16_t _npiMask = 0x0F;
+  static const char * nmNumberingPlan(NumberingPlan_e use_val);
 
   enum EncodingScheme_e { //4 bits values
     schUnknown = 0x00, schBCDodd = 0x01, schBCDeven = 0x02,
     schNational = 0x03,
-    schSpareMin = 0x04, schSpareMax = 0x0E,
+    schSpare04 = 0x04, schSpare05 = 0x05, schSpare06 = 0x06,
+    schSpare07 = 0x07, schSpare08 = 0x08, schSpare09 = 0x09,
+    schSpare10 = 0x0A, schSpare11 = 0x0B, schSpare12 = 0x0C,
+    schSpare13 = 0x0D, schSpare14 = 0x0E,
     //
     schMaxReserved = 0x0F
   };
-//  static const uint16_t _schMask = 0x0F;
+  static const char * nmEncodingScheme(EncodingScheme_e use_val);
 
   enum TranslationType_e { //values, which address range of 8 bits numbers
     trtUnknown = 0x00,    //range [0, 0]
@@ -83,8 +101,9 @@ public:
     trtNationalNetwork,   //range [128, 254]
     trtReserved           //range [255, 255]
   };
+  static const char * nmTranslationType(TranslationType_e use_val);
 
-  static TranslationType_e transType(uint8_t tr_type_val)
+  static TranslationType_e val2TransType(uint8_t tr_type_val)
   {
     if (!tr_type_val)
       return trtUnknown;
@@ -98,30 +117,27 @@ public:
   }
 
   struct GTI_NoA {
-    uint8_t odd : 1; //odd or even number of address signals, 1 - odd, 0 - even
-    uint8_t val : 7; //NatureOfAddress_e value
+    bool    odd /*: 1*/; //odd or even number of address signals, 1 - odd, 0 - even
+    uint8_t val /*: 7*/; //NatureOfAddress_e value
 
     static const unsigned _octsSZ = 1;
 
     unsigned pack2Octs(uint8_t * use_buf) const
     {
-      *use_buf = val + (odd ? 0x80 : 0x00);
+      *use_buf = (val & 0x7F) + (odd ? 0x80 : 0x00);
       return _octsSZ;
     }
     unsigned unpackOcts(const uint8_t * use_buf, unsigned buf_len)
     {
       if (buf_len) {
-        odd = *use_buf >> 7;
+        odd = (bool)(*use_buf >> 7);
         val = *use_buf & 0x7F;
         return _octsSZ;
       }
       return 0;
     }
 
-    NatureOfAddress_e NoA(void) const
-    {
-      return static_cast<NatureOfAddress_e>(val);
-    }
+    NatureOfAddress_e getNoA(void) const { return val2NatureOfAddress(val); }
   };
 
   struct GTI_TrT {
@@ -143,154 +159,132 @@ public:
       return 0;
     }
 
-    TranslationType_e TrType(void) const { return transType(val); }
+    TranslationType_e getTrType(void) const { return val2TransType(val); }
   };
 
   struct GTI_TNS {
-    uint8_t trT;      //TranslationType_e value
-    struct {
-      uint8_t npi : 4; //NumberingPlan_e value
-      uint8_t sch : 4; //EncodingScheme_e value
-    } npiSch;
+    uint8_t trT;          //TranslationType_e value
+    uint8_t npi /*: 4*/;  //NumberingPlan_e value
+    uint8_t sch /*: 4*/;  //EncodingScheme_e value
 
     static const unsigned _octsSZ = 2;
     //
     unsigned pack2Octs(uint8_t * use_buf) const
     {
       *use_buf = trT;
-      use_buf[1] = npiSch.sch + (npiSch.npi << 4);
+      use_buf[1] = (sch & 0x0F) + (npi << 4);
       return _octsSZ;
     }
     unsigned unpackOcts(const uint8_t * use_buf, unsigned buf_len)
     {
       if (buf_len > 1) {
         trT = *use_buf;
-        npiSch.npi = (use_buf[1]) >> 4;
-        npiSch.sch = (use_buf[1]) & 0x0F;
+        npi = (use_buf[1]) >> 4;
+        sch = (use_buf[1]) & 0x0F;
         return _octsSZ;
       }
       return 0;
     }
 
-    TranslationType_e TrType(void) const { return transType(trT); }
+    TranslationType_e getTrType(void) const { return val2TransType(trT); }
     //
-    NumberingPlan_e NPi(void) const
-    {
-      return static_cast<NumberingPlan_e>(npiSch.npi);
-    }
+    NumberingPlan_e getNPi(void) const { return static_cast<NumberingPlan_e>(npi); }
     //
-    EncodingScheme_e Scheme(void) const
-    {
-      return static_cast<EncodingScheme_e>(npiSch.sch);
-    }
+    EncodingScheme_e getScheme(void) const { return static_cast<EncodingScheme_e>(sch); }
   };
 
   struct GTI_Inter {
-    uint8_t trT;      //TranslationType_e value
-    struct {
-      uint8_t npi : 4; //NumberingPlan_e value
-      uint8_t sch : 4; //EncodingScheme_e value
-    } npiSch;
-    struct  {
-      uint8_t reserved : 1; // = 0
-      uint8_t val : 7; //NatureOfAddress_e value
-    } noa;
+    uint8_t trT;          //TranslationType_e value
+    uint8_t npi /*: 4*/;  //NumberingPlan_e value
+    uint8_t sch /*: 4*/;  //EncodingScheme_e value
+    uint8_t noa /*: 7*/;  //NatureOfAddress_e value
 
     static const unsigned _octsSZ = 3;
     //
     unsigned pack2Octs(uint8_t * use_buf) const
     {
       *use_buf = trT;
-      use_buf[1] = npiSch.sch + (npiSch.npi << 4);
-      use_buf[2] = noa.val;
+      use_buf[1] = (sch & 0x0F) + (npi << 4);
+      use_buf[2] = (noa & 0x7F);
       return _octsSZ;
     }
     unsigned unpackOcts(const uint8_t * use_buf, unsigned buf_len)
     {
       if (buf_len > 2) {
         trT = *use_buf;
-        npiSch.npi = (use_buf[1]) >> 4;
-        npiSch.sch = (use_buf[1]) & 0x0F;
-        noa.val = use_buf[2] & 0x7F;
+        npi = (use_buf[1]) >> 4;
+        sch = (use_buf[1]) & 0x0F;
+        noa = use_buf[2] & 0x7F;
         return _octsSZ;
       }
       return 0;
     }
 
-    TranslationType_e TrType(void) const { return transType(trT); }
+    TranslationType_e getTrType(void) const { return val2TransType(trT); }
     //
-    NumberingPlan_e NPi(void) const
-    {
-      return static_cast<NumberingPlan_e>(npiSch.npi);
-    }
+    NumberingPlan_e getNPi(void) const { return static_cast<NumberingPlan_e>(npi); }
     //
-    EncodingScheme_e Scheme(void) const
-    {
-      return static_cast<EncodingScheme_e>(npiSch.sch);
-    }
+    EncodingScheme_e getScheme(void) const { return static_cast<EncodingScheme_e>(sch); }
     //
-    NatureOfAddress_e NoA(void) const
-    {
-      return static_cast<NatureOfAddress_e>(noa.val);
-    }
+    NatureOfAddress_e getNoA(void) const { return val2NatureOfAddress(noa); }
   };
 
   struct GTIndicator {
-    Indicator_e       kind;
+    IndicatorKind_e   kind;
     union {
       GTI_NoA         NoA;
       GTI_TrT         TrT;
-      GTI_TNS TNS;
+      GTI_TNS         TNS;
       GTI_Inter       All;
     } parm;
 
     GTIndicator() : kind(GlobalTitle::gtiNone)
     { }
-    GTIndicator(NatureOfAddress_e use_noa, bool use_odd = false)
+
+    GTIndicator(bool use_odd, uint8_t use_noa_val)
       : kind(GlobalTitle::gtiNoA_only)
     {
       parm.NoA.odd = use_odd;
-      parm.NoA.val = use_noa;
+      parm.NoA.val = use_noa_val;
     }
-    GTIndicator(TranslationType_e use_tr_type)
+    //TranslationType only:
+    GTIndicator(uint8_t trans_type_val)
       : kind(GlobalTitle::gtiTrT_only)
     {
-      parm.TrT.val = use_tr_type;
+      parm.TrT.val = trans_type_val;
     }
-    GTIndicator(TranslationType_e use_tr_type,
-             NumberingPlan_e use_npi, EncodingScheme_e use_sch)
+    GTIndicator(uint8_t trans_type_val, NumberingPlan_e use_npi,
+                EncodingScheme_e use_sch)
       : kind(GlobalTitle::gtiTrT_NPi_Sch)
     {
-      parm.TNS.trT = use_tr_type;
-      parm.TNS.npiSch.npi = use_npi;
-      parm.TNS.npiSch.sch = use_sch;
+      parm.TNS.trT = trans_type_val;
+      parm.TNS.npi = use_npi;
+      parm.TNS.sch = use_sch;
     }
-    GTIndicator(TranslationType_e use_tr_type, NumberingPlan_e use_npi,
-                EncodingScheme_e use_sch, NatureOfAddress_e use_noa)
+    GTIndicator(uint8_t trans_type_val, NumberingPlan_e use_npi,
+                EncodingScheme_e use_sch, uint8_t use_noa_val)
       : kind(GlobalTitle::gtiInternational)
     {
-      parm.All.trT = use_tr_type;
-      parm.All.npiSch.npi = use_npi;
-      parm.All.npiSch.sch = use_sch;
-      parm.All.noa.reserved = 0;
-      parm.All.noa.val = use_noa;
+      parm.All.trT = trans_type_val;
+      parm.All.npi = use_npi;
+      parm.All.sch = use_sch;
+      parm.All.noa = use_noa_val;
     }
-    GTIndicator(TranslationType_e use_tr_type, NumberingPlan_e use_npi,
-                bool bcd_odd_scheme, NatureOfAddress_e use_noa)
+    GTIndicator(uint8_t trans_type_val, NumberingPlan_e use_npi,
+                bool bcd_odd_scheme, uint8_t use_noa_val)
       : kind(GlobalTitle::gtiInternational)
     {
-      parm.All.trT = use_tr_type;
-      parm.All.npiSch.npi = use_npi;
-      parm.All.npiSch.sch = bcd_odd_scheme ? GlobalTitle::schBCDodd : GlobalTitle::schBCDeven;
-      parm.All.noa.reserved = 0;
-      parm.All.noa.val = use_noa;
+      parm.All.trT = trans_type_val;
+      parm.All.npi = use_npi;
+      parm.All.sch = bcd_odd_scheme ? GlobalTitle::schBCDodd : GlobalTitle::schBCDeven;
+      parm.All.noa = use_noa_val;
     }
 
     NatureOfAddress_e getNoA(void) const
     {
       switch (kind) {
-      case GlobalTitle::gtiNoA_only:  return parm.NoA.NoA();
-      case GlobalTitle::gtiInternational:  return parm.All.NoA();
+      case GlobalTitle::gtiNoA_only:  return parm.NoA.getNoA();
+      case GlobalTitle::gtiInternational:  return parm.All.getNoA();
 //      case GlobalTitle::gtiTrT_only:
 //      case GlobalTitle::gtiTrT_NPi_Sch:  
       default:;
@@ -298,11 +292,24 @@ public:
       return GlobalTitle::noaUnknown;
     }
 
+    uint8_t getNoAValue(void) const
+    {
+      switch (kind) {
+      case GlobalTitle::gtiNoA_only:  return parm.NoA.val;
+      case GlobalTitle::gtiInternational:  return parm.All.noa;
+//      case GlobalTitle::gtiTrT_only:
+//      case GlobalTitle::gtiTrT_NPi_Sch:  
+      default:;
+      }
+      return 0;
+    }
+
+
     NumberingPlan_e getNPi(void) const
     {
       switch (kind) {
-      case GlobalTitle::gtiTrT_NPi_Sch:  return parm.TNS.NPi();
-      case GlobalTitle::gtiInternational:  return parm.All.NPi();
+      case GlobalTitle::gtiTrT_NPi_Sch:  return parm.TNS.getNPi();
+      case GlobalTitle::gtiInternational:  return parm.All.getNPi();
 //      case GlobalTitle::gtiTrT_only:
 //      case GlobalTitle::gtiNoA_only:  
       default:;
@@ -310,7 +317,30 @@ public:
       return GlobalTitle::npiUnknown;
     }
 
-    static unsigned octsSize(GlobalTitle::Indicator_e use_gti)
+    TranslationType_e getTrType(void) const
+    {
+      switch (kind) {
+      case GlobalTitle::gtiTrT_NPi_Sch: return parm.TNS.getTrType();
+//      case GlobalTitle::gtiInternational:
+      case GlobalTitle::gtiTrT_only:    return parm.TrT.getTrType();
+//      case GlobalTitle::gtiNoA_only:  
+      default:;
+      }
+      return GlobalTitle::trtUnknown;
+    }
+    uint8_t getTrTypeValue(void) const
+    {
+      switch (kind) {
+      case GlobalTitle::gtiTrT_NPi_Sch: return parm.TNS.trT;
+//      case GlobalTitle::gtiInternational:
+      case GlobalTitle::gtiTrT_only:    return parm.TrT.val;
+//      case GlobalTitle::gtiNoA_only:  
+      default:;
+      }
+      return 0;
+    }
+
+    static unsigned octsSize(GlobalTitle::IndicatorKind_e use_gti)
     {
       switch (use_gti) {
       case GlobalTitle::gtiNoA_only:  return GTI_NoA::_octsSZ;
@@ -322,10 +352,7 @@ public:
       return 0;
     }
     //
-    unsigned octsSize(void) const
-    {
-      return octsSize(kind);
-    }
+    unsigned octsSize(void) const { return octsSize(kind); }
 
     //Encodes/Packs header to octet buffer
     //NOTE: specified buffer must be able to store at least 3 bytes!!!
@@ -341,7 +368,7 @@ public:
       return 0;
     }
     //Decodes/Unpacks address from octet buffer
-    unsigned unpackOcts(Indicator_e use_gti, const uint8_t * use_buf, unsigned buf_len)
+    unsigned unpackOcts(IndicatorKind_e use_gti, const uint8_t * use_buf, unsigned buf_len)
     {
       switch (kind = use_gti) {
       case GlobalTitle::gtiNoA_only:  return parm.NoA.unpackOcts(use_buf, buf_len);
@@ -356,41 +383,42 @@ public:
   };
 
 protected:
-  std::string _signals;
-  GTIndicator _hdr;
+  gt_adr_string_t _signals;
+  GTIndicator     _hdr;
 
 public:
   GlobalTitle()
   { }
 
   //GTI = gtiNoA_only, it's assumed translation type = Unknown
-  GlobalTitle(NatureOfAddress_e use_noa, const char * use_signals)
-    : _signals(use_signals), _hdr(use_noa, bool(_signals.length()%2))
+  GlobalTitle(uint8_t use_noa_val, const char * use_signals)
+    : _signals(use_signals), _hdr(bool(_signals.length()%2), use_noa_val)
   { }
 
   //GTI = gtiTrT_only, it's assumed that Numbering Plan = E.164
-  GlobalTitle(TranslationType_e use_tr_type, const char * use_signals)
-    : _signals(use_signals), _hdr(use_tr_type)
-  { }
+  GlobalTitle(TranslationType_e use_tr_type, uint8_t use_trType_val,
+              const char * use_signals)
+    : _signals(use_signals), _hdr(use_trType_val)
+ { }
 
   //GTI = gtiTrT_NPi_Sch
-  GlobalTitle(TranslationType_e use_tr_type, NumberingPlan_e use_npi,
+  GlobalTitle(uint8_t use_trType_val, NumberingPlan_e use_npi,
               EncodingScheme_e use_sch, const char * use_signals)
-    : _signals(use_signals), _hdr(use_tr_type, use_npi, use_sch)
+    : _signals(use_signals), _hdr(use_trType_val, use_npi, use_sch)
   { }
 
   //GTI = gtiInternational
   //NOTE: in international use this GTI implies only odd or even encoding scheme!
-  GlobalTitle(TranslationType_e use_tr_type, NumberingPlan_e use_npi,
-              NatureOfAddress_e use_noa, const char * use_signals)
-    : _signals(use_signals), _hdr(use_tr_type, use_npi, bool(_signals.length()%2), use_noa)
+  GlobalTitle(uint8_t use_trType_val, NumberingPlan_e use_npi,
+              uint8_t use_noa_val, const char * use_signals)
+    : _signals(use_signals), _hdr(use_trType_val, use_npi, bool(_signals.length()%2), use_noa_val)
   { }
 
   //GTI = gtiInternational
-  GlobalTitle(TranslationType_e use_tr_type, NumberingPlan_e use_npi,
-              NatureOfAddress_e use_noa, EncodingScheme_e use_sch,
+  GlobalTitle(uint8_t use_trType_val, NumberingPlan_e use_npi,
+              uint8_t use_noa_val, EncodingScheme_e use_sch,
               const char * use_signals)
-    : _signals(use_signals), _hdr(use_tr_type, use_npi, use_sch, use_noa)
+    : _signals(use_signals), _hdr(use_trType_val, use_npi, use_sch, use_noa_val)
   { }
 
   ~GlobalTitle()
@@ -403,66 +431,66 @@ public:
     _hdr.kind = GlobalTitle::gtiNone;
   }
   //GTI = gtiNoA_only, it's assumed translation type = Unknown
-  void construct(NatureOfAddress_e use_noa, const char * use_signals)
+  void constructNoA(uint8_t use_noa_val, const char * use_signals)
   {
     _signals = use_signals;
     _hdr.kind = GlobalTitle::gtiNoA_only;
-    _hdr.parm.NoA.val = use_noa;
-    _hdr.parm.NoA.odd = uint8_t(_signals.length()%2);
+    _hdr.parm.NoA.val = use_noa_val;
+    _hdr.parm.NoA.odd = bool(_signals.length()%2);
   }
 
   //GTI = gtiTrT_only, it's assumed that Numbering Plan = E.164
-  void construct(TranslationType_e use_tr_type, const char * use_signals)
+  void constructTrT(uint8_t use_trType_val, const char * use_signals)
   {
     _signals = use_signals;
     _hdr.kind = GlobalTitle::gtiTrT_only;
-    _hdr.parm.TrT.val = use_tr_type;
+    _hdr.parm.TrT.val = use_trType_val;
   }
 
   //GTI = gtiTrT_NPi_Sch
-  void construct(TranslationType_e use_tr_type, NumberingPlan_e use_npi,
+  void constructTNS(uint8_t use_trType_val, NumberingPlan_e use_npi,
               EncodingScheme_e use_sch, const char * use_signals)
   {
     _signals = use_signals;
     _hdr.kind = GlobalTitle::gtiTrT_NPi_Sch;
-    _hdr.parm.TNS.trT = use_tr_type;
-    _hdr.parm.TNS.npiSch.npi = use_npi;
-    _hdr.parm.TNS.npiSch.sch = use_sch;
+    _hdr.parm.TNS.trT = use_trType_val;
+    _hdr.parm.TNS.npi = use_npi;
+    _hdr.parm.TNS.sch = use_sch;
   }
 
   //GTI = gtiInternational
   //NOTE: in international use this GTI implies only BCD odd or BCD even encoding scheme!
-  void construct(TranslationType_e use_tr_type, NumberingPlan_e use_npi,
-                 NatureOfAddress_e use_noa, const char * use_signals)
+  void construct(uint8_t use_trType_val, NumberingPlan_e use_npi,
+                 uint8_t use_noa_val, const char * use_signals)
   {
     _signals = use_signals;
     _hdr.kind = GlobalTitle::gtiInternational;
-    _hdr.parm.All.trT = use_tr_type;
-    _hdr.parm.All.npiSch.npi = use_npi;
-    _hdr.parm.All.npiSch.sch = (_signals.length()%2) ? GlobalTitle::schBCDodd
+    _hdr.parm.All.trT = use_trType_val;
+    _hdr.parm.All.npi = use_npi;
+    _hdr.parm.All.sch = (_signals.length()%2) ? GlobalTitle::schBCDodd
                                                      : GlobalTitle::schBCDeven;
-    _hdr.parm.All.noa.val = use_noa;
+    _hdr.parm.All.noa = use_noa_val;
   }
 
   //GTI = gtiInternational
-  void construct(TranslationType_e use_tr_type, NumberingPlan_e use_npi,
-                 NatureOfAddress_e use_noa, EncodingScheme_e use_sch,
+  void construct(uint8_t use_trType_val, NumberingPlan_e use_npi,
+                 uint8_t use_noa_val, EncodingScheme_e use_sch,
                  const char * use_signals)
   {
     _signals = use_signals;
     _hdr.kind = GlobalTitle::gtiInternational;
-    _hdr.parm.All.trT = use_tr_type;
-    _hdr.parm.All.npiSch.npi = use_npi;
-    _hdr.parm.All.npiSch.sch = use_sch;
-    _hdr.parm.All.noa.val = use_noa;
+    _hdr.parm.All.trT = use_trType_val;
+    _hdr.parm.All.npi = use_npi;
+    _hdr.parm.All.sch = use_sch;
+    _hdr.parm.All.noa = use_noa_val;
   }
 
   //
-  Indicator_e GTi(void) const { return _hdr.kind; }
+  IndicatorKind_e getGTIKind(void) const { return _hdr.kind; }
   //
-  const GTIndicator & Indicator(void) const { return _hdr; }
+  const GTIndicator & getGTIndicator(void) const { return _hdr; }
   //
-  const std::string & Signals(void) const { return _signals; }
+  const char * getSignals(void) const { return _signals.c_str(); }
 
   //Encodes/Packs address to octet buffer
   //Returns number of characters packed, 0 - in case of failure.
@@ -476,17 +504,25 @@ public:
   }
   //Decodes/Unpacks address from octet buffer
   //Returns number of characters unpacked, 0 - in case of failure.
-  unsigned unpackOcts(Indicator_e use_gti, const uint8_t * use_buf, unsigned buf_len)
+  unsigned unpackOcts(IndicatorKind_e use_gti, const uint8_t * use_buf, unsigned buf_len)
   {
     unsigned n = _hdr.unpackOcts(use_gti, use_buf, buf_len);
     if (n)
-      n += TBCDString::unpackOcts(use_buf + n, buf_len - n, _signals);
+      n += TBCDString::unpackOcts(use_buf + n, buf_len - n, _signals.str);
     return n;
   }
 
-  // TODO:: implement toString()
-  typedef smsc::core::buffers::FixedLengthString<_maxOctsLen*2> gt_string_t;
-  gt_string_t toString() const;
+  //Composes string representation of GlobalTitle
+  //NOTE: length of buffer should be at least _maxGTCharsNum 
+  size_t      toString(char * use_buf, size_t max_len) const;
+
+  //Composes string representation of GlobalTitle
+  gt_string_t toString(void) const
+  {
+    gt_string_t gtStr;
+    toString(gtStr.str, gtStr.capacity());
+    return gtStr;
+  }
 };
 
 typedef GlobalTitle::gt_string_t gt_string_t;

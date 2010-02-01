@@ -21,94 +21,112 @@ class SCCPAddress {
 public:
   //Maximum number of octet in packed/encoded GlobalTitle address
   static const unsigned _maxOctsLen = GlobalTitle::_maxOctsLen + 4;
+  //
+  static const unsigned _maxStringLen = GlobalTitle::_maxGTStringLen + sizeof(".route(SSN).ssn(uuu).spc(uuuuu)");
+  typedef smsc::core::buffers::FixedLengthString<_maxStringLen> sccp_addr_string_t;
 
-  typedef GlobalTitle::Indicator_e GTKind_e;
+  typedef GlobalTitle::IndicatorKind_e GTKind_e;
 
   enum Routing_e {
     routeGT = 0, routeSSN = 1
   };
   struct AEIndicator { //SCCP Address elements indicators
-    uint8_t reserved : 1; //0 - reserved for national use
-    uint8_t routing  : 1; // = Routing_e value
-    uint8_t gti      : 4; // = GlobalTitle::Indicator_e
-    uint8_t ssn      : 1; //1 - SSN present, 0 - missed
-    uint8_t spc      : 1; //1 - SPC present, 0 - missed
+    bool      ssnRouted;   //route by SSN or GT
+    GTKind_e  gti;
+    bool      hasSSN;
+    bool      hasSPC;
 
-    GlobalTitle::Indicator_e GTi(void) const
+    AEIndicator()
+      : ssnRouted(false), gti(GlobalTitle::gtiNone), hasSSN(false), hasSPC(false)
+    { }
+
+    //indicators octet layout:
+    //uint8_t reserved : 1; //0 - reserved for national use
+    //uint8_t routing  : 1; //1 - route by SSN, 0 - by GT
+    //uint8_t gti      : 4; // = GlobalTitle::Indicator_e
+    //uint8_t ssn      : 1; //1 - SSN present, 0 - missed
+    //uint8_t spc      : 1; //1 - SPC present, 0 - missed
+    uint8_t pack2Oct(void) const
     {
-      return static_cast<GlobalTitle::Indicator_e>(gti);
+      uint8_t val = ((gti & 0x0F) << 2);
+      if (ssnRouted)
+        val |= 0x40;
+      if (hasSSN)
+        val |= 0x02;
+      if (hasSPC)
+        val |= 0x01;
+      return val;
+    }
+
+    void unpackOct(uint8_t use_val)
+    {
+      hasSPC = (bool)(use_val & 0x01);
+      hasSSN = (bool)(use_val & 0x02);
+      ssnRouted = (bool)(use_val & 0x40);
+      gti = static_cast<GTKind_e>((use_val >> 2) & 0x0F);
     }
 
     //Returns number of octets packed SCCP address occupies excluding address signals
     //( SPC + SSN + GT{TrT, NPi, Sch, NoA} )
     unsigned octsSize(void) const
     {
-      return GlobalTitle::GTIndicator::octsSize(GTi())
-             + (ssn ? 1 : 0) + (spc ? 2 : 0);
+      return GlobalTitle::GTIndicator::octsSize(gti) + (hasSSN ? 1 : 0) + (hasSPC ? 2 : 0);
     }
   };
 
 protected:
-  union {
-    uint8_t     val;
-    AEIndicator parm;
-  }           _ind;
-
+  AEIndicator _ind;
   uint16_t    _spc;
   uint8_t     _ssn;
   GlobalTitle _gt;
 
 public:
   SCCPAddress() : _spc(0), _ssn(0)
-  {
-    _ind.val = 0;
-  }
+  { }
   SCCPAddress(const GlobalTitle & use_gt, uint8_t use_ssn,
                               Routing_e use_route = routeGT)
    : _spc(0), _ssn(use_ssn), _gt(use_gt)
   {
-    _ind.val = 0;
-    _ind.parm.routing = use_route;
-    _ind.parm.gti = _gt.GTi();
-    _ind.parm.ssn = _ssn ? 1 : 0;
+    _ind.ssnRouted = (use_route == routeSSN);
+    _ind.gti = _gt.getGTIKind();
+    _ind.hasSSN = (bool)(_ssn != 0);
   }
   SCCPAddress(uint16_t use_spc, uint8_t use_ssn,
                               Routing_e use_route = routeSSN)
    : _spc(use_spc), _ssn(use_ssn)
   {
-    _ind.val = 0;
-    _ind.parm.routing = use_route;
-    _ind.parm.ssn = _ssn ? 1 : 0;
-    _ind.parm.spc = _spc ? 1 : 0;
+    _ind.ssnRouted = (use_route == routeSSN);
+    _ind.hasSSN = (bool)(_ssn != 0);
+    _ind.hasSPC = (bool)(_spc != 0);
   }
 
-  void construct(const GlobalTitle & use_gt, uint8_t use_ssn,
-                              Routing_e use_route = routeGT)
+  void construct(const GlobalTitle & use_gt,
+                 uint8_t use_ssn, Routing_e use_route = routeGT)
   {
     _spc = 0;
     _ssn = use_ssn;
     _gt = use_gt;
 
-    _ind.val = 0;
-    _ind.parm.routing = use_route;
-    _ind.parm.gti = _gt.GTi();
-    _ind.parm.ssn = _ssn ? 1 : 0;
+    _ind.ssnRouted = (use_route == routeSSN);
+    _ind.gti = _gt.getGTIKind();
+    _ind.hasSSN = (bool)(_ssn != 0);
+    _ind.hasSPC = false;
   }
-  void construct(uint16_t use_spc, uint8_t use_ssn,
-                              Routing_e use_route = routeSSN)
+  void construct(uint16_t use_spc,
+                 uint8_t use_ssn, Routing_e use_route = routeSSN)
   {
     _spc = use_spc;
     _ssn = use_ssn;
     _gt.reset();
 
-    _ind.val = 0;
-    _ind.parm.routing = use_route;
-    _ind.parm.ssn = _ssn ? 1 : 0;
-    _ind.parm.spc = _spc ? 1 : 0;
+    _ind.gti = GlobalTitle::gtiNone;
+    _ind.ssnRouted = (use_route == routeSSN);
+    _ind.hasSSN = (bool)(_ssn != 0);
+    _ind.hasSPC = (bool)(_spc != 0);
   }
 
   //
-  const AEIndicator & getIndicator(void) const { return _ind.parm; }
+  const AEIndicator & getIndicator(void) const { return _ind; }
   //
   uint8_t getSSN(void) const { return _ssn; }
   //
@@ -116,7 +134,7 @@ public:
   //
   Routing_e getRouting(void) const
   {
-    return static_cast<Routing_e>(_ind.parm.routing);
+    return _ind.ssnRouted ? SCCPAddress::routeSSN : SCCPAddress::routeGT;
   }
   //
   const GlobalTitle & getGT(void) const { return _gt; }
@@ -131,9 +149,17 @@ public:
   //Returns number of characters unpacked, 0 - in case of failure.
   unsigned unpackOcts(const uint8_t * use_buf, unsigned buf_len);
 
-  typedef smsc::core::buffers::FixedLengthString<_maxOctsLen*2> sccp_addr_string_t;
-  // TODO:: implement toString()
-  sccp_addr_string_t toString() const;
+  //Composes string representation of GlobalTitle
+  //NOTE: length of buffer should be at least _maxGTCharsNum 
+  size_t  toString(char * use_buf, size_t max_len) const;
+
+  //Composes string representation of SCCPAddress
+  sccp_addr_string_t toString(void) const
+  {
+    sccp_addr_string_t adrStr;
+    toString(adrStr.str, adrStr.capacity());
+    return adrStr;
+  }
 };
 
 typedef SCCPAddress::sccp_addr_string_t sccp_addr_string_t;
