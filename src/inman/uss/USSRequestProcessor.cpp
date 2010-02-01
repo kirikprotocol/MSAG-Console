@@ -73,6 +73,11 @@ USSRequestProcessor::handleRequest(const smsc::inman::interaction::USSRequestMes
                                          requestObject->get_IN_ISDNaddr());
   if (!_mapSess) {
     sendNegativeResponse();
+    {
+      core::synchronization::MutexGuard mg(_callbackActivityLock);
+      finalizeRequest();
+    }
+    delete this;
     return;
   }
   try {
@@ -89,7 +94,10 @@ USSRequestProcessor::handleRequest(const smsc::inman::interaction::USSRequestMes
   } catch (const std::exception & ex) {
     smsc_log_error(_logger, "%s: MapUSSDlg exception %s", _logId, ex.what());
     sendNegativeResponse();
-    finalizeRequest();
+    {
+      core::synchronization::MutexGuard mg(_callbackActivityLock);
+      finalizeRequest();
+    }
     delete this;
   }
 }
