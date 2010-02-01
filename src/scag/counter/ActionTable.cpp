@@ -10,9 +10,9 @@ namespace counter {
 
 smsc::logger::Logger* ActionTable::log_ = 0;
 
-ActionTable::ActionTable() :
+ActionTable::ActionTable( ActionList* list ) :
 ref_(0),
-actions_(0)
+actions_(list)
 {
     if (!log_) {
         MutexGuard mg(logMutex);
@@ -47,9 +47,9 @@ void ActionTable::modified( const char* cname, CntSeverity& sev, int64_t value, 
             }
         } // for
     }
-    if ( sev > NORMAL ) {
+    if ( sev > SEVNORMAL ) {
         // we have to reset severity here
-        Manager::getInstance().notify(cname,sev,value,ActionLimit(0,GT,NORMAL));
+        Manager::getInstance().notify(cname,sev,value,ActionLimit(0,OPTYPEGE,SEVNORMAL));
     }
 }
 

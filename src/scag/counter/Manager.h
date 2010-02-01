@@ -56,10 +56,13 @@ public:
     /// it may return 0 if the counter is not there.
     virtual CounterPtrAny getAnyCounter( const char* name ) = 0; // throw smsc::util::Exception
 
-    /// helper method to create a counter from template
-    CounterPtrAny createCounter( const char* tmplid,
-                                 const char* name,
-                                 unsigned    lifetime = counttime_max );
+    // helper method to create a counter from template
+    // CounterPtrAny createCounter( const char* tmplid,
+    // const char* name,
+    // unsigned    lifetime = counttime_max );
+
+    /// helper method to get observer
+    ObserverPtr getObserver( const char* name );
 
     /// return an instance of time slice manager
     virtual TimeSliceManager& getTimeManager() = 0;

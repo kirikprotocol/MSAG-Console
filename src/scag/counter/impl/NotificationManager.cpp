@@ -96,7 +96,7 @@ void NotificationManager::notify( const char* c, CntSeverity& sev,
         sev = ptr->severity = limit.severity;
     } else {
         // merging
-        if ( (limit.optype == LT) == (value < ptr->value) ) { // XOR
+        if ( (limit.optype == OPTYPELE) == (value < ptr->value) ) { // XOR
             ptr->value = value;
         }
     }

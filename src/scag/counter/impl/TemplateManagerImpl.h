@@ -16,16 +16,21 @@ public:
                                     const std::string& name,
                                     unsigned           lifetimeSeconds );
     virtual void replaceTemplate( const char* name, CounterTemplate* tmpl );
+    virtual std::vector< std::string > getTemplateNames();
 
     // action tables
     virtual ObserverPtr getObserver( const char* name );
     virtual void replaceObserver( const char* name, Observer* table );
+    virtual std::vector< std::string > getObserverNames();
+
+    /// creates default system observers
+    void init();
 
 private:
     smsc::logger::Logger*                         log_;
     smsc::core::synchronization::Mutex            lock_;
     smsc::core::buffers::Hash< CounterTemplate* > templates_;
-    smsc::core::buffers::Hash< Observer* >     actionTables_;
+    smsc::core::buffers::Hash< Observer* >        actionTables_;
 };
 
 }

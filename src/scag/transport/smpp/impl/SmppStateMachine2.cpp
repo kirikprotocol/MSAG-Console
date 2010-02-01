@@ -16,6 +16,8 @@
 #include "scag/util/HRTimer.h"
 #include "scag/re/base/CommandBridge.h"
 #include "scag/re/base/EventHandlerType.h"
+#include "scag/counter/Manager.h"
+#include "scag/counter/Accumulator.h"
 
 namespace {
 using namespace scag2::transport::smpp;
@@ -113,10 +115,13 @@ struct StateMachine::ResponseRegistry
                 const char* cname = "sys.smpp.queue.out";
                 char buf[100];
                 snprintf(buf,sizeof(buf),"%s.%s",cname,sysname);
-                counter::CounterPtrAny pp = counter::Manager::getInstance().createCounter(cname,buf);
+                counter::Manager& mgr = counter::Manager::getInstance();
+                counter::ObserverPtr o = mgr.getObserver(cname);
+                counter::CounterPtrAny pp = 
+                    mgr.registerAnyCounter(new counter::Accumulator(buf,o.get()));
                 outCnt.Insert(sysname,pp);
                 if (pp.get()) {
-                    pp->setMaxVal(cmd->getDstEntity()->info.outQueueLimit);
+                    // pp->setMaxVal(cmd->getDstEntity()->info.outQueueLimit);
                     pp->increment();
                 } else {
                     smsc_log_warn(log,"cannot create a counter '%s' for '%s'",cname,sysname);

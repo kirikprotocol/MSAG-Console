@@ -13,6 +13,8 @@
 #include "scag/util/RelockMutexGuard.h"
 #include "scag/transport/smpp/router/route_types.h"
 #include "scag/counter/Manager.h"
+#include "scag/counter/TimeSnapshot.h"
+#include "scag/counter/Accumulator.h"
 #include "scag/exc/SCAGExceptions.h"
 
 namespace scag2 {
@@ -78,17 +80,21 @@ public:
                                 "sys.traffic.smpp.sme" );
           char buf[100];
           snprintf(buf,sizeof(buf),"%s.%s",cname,info.systemId.c_str());
-          incCnt = counter::Manager::getInstance().createCounter(cname,buf);
+          counter::Manager& mgr = counter::Manager::getInstance();
+          counter::ObserverPtr o = mgr.getObserver(cname);
+          incCnt = mgr.registerAnyCounter(new counter::TimeSnapshot(buf,5,100,o.get()));
           if (!incCnt.get()) {
               // smsc_log_error(log_,"entity '%s' cannot create counter '%s'",
               // info.systemId.c_str(),buf);
               throw exceptions::SCAGException("entity '%s' cannot create counter '%s'",
                                               info.systemId.c_str(), buf);
           }
+          /*
           const unsigned sendLimit = (info.sendLimit>0)?info.sendLimit:100000;
           if (sendLimit>0) {
               incCnt->setMaxVal(incCnt->getBaseInterval()*sendLimit);
           }
+           */
       }
       seq = 1;
       slicingSeq8 = 0;
@@ -97,13 +103,15 @@ public:
           const char* cname = "sys.smpp.queue.in";
           char buf[100];
           snprintf(buf,sizeof(buf),"%s.%s",cname,info.systemId.c_str());
-          queueCount = counter::Manager::getInstance().createCounter(cname,buf);
+          counter::Manager& mgr = counter::Manager::getInstance();
+          counter::ObserverPtr o = mgr.getObserver(cname);
+          queueCount = mgr.registerAnyCounter(new counter::Accumulator(buf,o.get()));
           if (!queueCount.get()) {
               throw exceptions::SCAGException("entity '%s' cannot create counter '%s'",
                                               info.systemId.c_str(), buf);
           }
-          const unsigned queueLimit = (info.inQueueLimit>0 ? info.inQueueLimit : 1000000 );
-          if (queueLimit>0) queueCount->setMaxVal(queueLimit);
+          // const unsigned queueLimit = (info.inQueueLimit>0 ? info.inQueueLimit : 1000000 );
+          // if (queueLimit>0) queueCount->setMaxVal(queueLimit);
       }
       connected = false;
   }

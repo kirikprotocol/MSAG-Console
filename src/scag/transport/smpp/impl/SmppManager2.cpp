@@ -14,6 +14,8 @@
 #include "scag/sessions/base/SessionManager2.h"
 #include "core/buffers/FixedLengthString.hpp"
 #include "scag/counter/Manager.h"
+#include "scag/counter/Accumulator.h"
+#include "scag/counter/TimeSnapshot.h"
 
 namespace {
 const char* smppCounterName = "sys.traffic.global.smpp";
@@ -330,10 +332,11 @@ snmpqueue_(snmpqueue)
   limitsLog=smsc::logger::Logger::getInstance("smpp.lmt");
     {
         counter::Manager& mgr = counter::Manager::getInstance();
-        const unsigned maxsms = ConfigManager::Instance().getLicense().maxsms;
-        licenseCounter = mgr.createCounter(::smppCounterName,
-                                           ::smppCounterName);
-        licenseCounter->setMaxVal(licenseCounter->getBaseInterval()*maxsms);
+        // const unsigned maxsms = ConfigManager::Instance().getLicense().maxsms;
+        counter::ObserverPtr o = mgr.getObserver(::smppCounterName);
+        licenseCounter =
+            mgr.registerAnyCounter( new counter::TimeSnapshot(::smppCounterName,10,20,o.get()) );
+        // licenseCounter->setMaxVal(licenseCounter->getBaseInterval()*maxsms);
     }
   running=false;
   lastUid=0;
@@ -439,12 +442,16 @@ void SmppManagerImpl::Init(const char* cfgFile)
   {
     smsc_log_warn(log,"smpp.queueLimit not found! Using default(%d)",queueLimit);
   }
-    const char* cname = "sys.smpp.queue.global";
-    queueCount = counter::Manager::getInstance().createCounter(cname,cname);
-    if (!queueCount.get()) {
-        throw SCAGException("cannot find counter '%s'",cname);
+    {
+        const char* cname = "sys.smpp.queue.global";
+        counter::Manager& mgr = counter::Manager::getInstance();
+        counter::ObserverPtr o = mgr.getObserver(cname);
+        queueCount = mgr.registerAnyCounter(new counter::Accumulator(cname,o.get()));
+        if (!queueCount.get()) {
+            throw SCAGException("cannot create counter '%s'",cname);
+        }
+        // queueCount->setMaxVal(queueLimit);
     }
-    queueCount->setMaxVal(queueLimit);
 
   /*
   try{

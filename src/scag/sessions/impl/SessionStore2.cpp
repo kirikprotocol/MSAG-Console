@@ -95,9 +95,9 @@ void SessionStoreImpl::init( unsigned eltNumber,
 
     {
         counter::Manager& cntmgr = counter::Manager::getInstance();
-        totalSessions_ = cntmgr.createCounter("sys.sessions.total","sys.sessions.total");
-        loadedSessions_ = cntmgr.createCounter("sys.sessions.active","sys.sessions.active");
-        lockedSessions_ = cntmgr.createCounter("sys.sessions.locked","sys.sessions.locked");
+        totalSessions_ = cntmgr.getAnyCounter("sys.sessions.total");
+        loadedSessions_ = cntmgr.getAnyCounter("sys.sessions.active");
+        lockedSessions_ = cntmgr.getAnyCounter("sys.sessions.locked");
         if (!totalSessions_.get() || !loadedSessions_.get() || !lockedSessions_.get())
             throw std::runtime_error("cannot create session counters");
     }

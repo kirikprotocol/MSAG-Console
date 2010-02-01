@@ -32,6 +32,7 @@
 
 #include "scag/counter/impl/HashCountManager.h"
 #include "scag/counter/impl/TemplateManagerImpl.h"
+#include "scag/counter/impl/ConfigReader.h"
 #include "scag/counter/ActionTable.h"
 
 namespace {
@@ -130,15 +131,30 @@ void Scag::init( unsigned mynode )
 
     try {
         smsc_log_info(log,"creating counter manager...");
+        counter::impl::TemplateManagerImpl* tmgr =
+            new counter::impl::TemplateManagerImpl();
+        tmgr->init();
         counter::impl::HashCountManager* mgr =
-            new counter::impl::HashCountManager
-            ( new counter::impl::TemplateManagerImpl(), 10 );
+            new counter::impl::HashCountManager(tmgr,10);
+
+        counter::impl::ConfigReader cread;
+        const char* cfile = "conf/counters.xml";
+        if ( ! cread.readConfig(cfile) ) {
+            smsc_log_warn(log,"cannot read counter config file: %s, using default",cfile);
+        } else {
+            cread.reload(*tmgr);
+        }
+
         mgr->start();
-    } catch (...) {
+    } catch ( std::exception& e ) {
+        smsc_log_error(log,"exc in counter mgr: %s",e.what());
+        abort();
+    } catch ( ... ) {
         smsc_log_error(log,"exc in counter mgr");
         abort();
     }
 
+    /*
     {
         smsc_log_info(log,"Adding a few counter templates");
         counter::Manager& mgr = counter::Manager::getInstance();
@@ -225,6 +241,7 @@ void Scag::init( unsigned mynode )
             }
         }
     }
+     */
 
     std::auto_ptr<pvss::core::client::Client> pvssClnt;
     try {

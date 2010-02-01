@@ -32,17 +32,6 @@ protected:
 
 public:
 
-    typedef enum CountType {
-            TYPEUNKNOWN = 0,
-            TYPEACCUMULATOR,
-            TYPEAVERAGE,
-            TYPETIMESNAPSHOT
-    } CountType;
-
-
-    static const char* countTypeToString(CountType);
-    static CountType stringToCountType(const char* tname);
-
     typedef enum Valtype {
             VALUE = 0,      // the most appropriate value for this counter
             COUNT,

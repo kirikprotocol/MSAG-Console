@@ -12,36 +12,11 @@ smsc::logger::Logger* Counter::log_ = 0;
 smsc::logger::Logger* Counter::loga_ = 0;
 
 
-const char* Counter::countTypeToString( CountType c )
-{
-    switch (c) {
-    case TYPEACCUMULATOR : return "accumulator";
-    case TYPEAVERAGE : return "average";
-    case TYPETIMESNAPSHOT : return "timesnapshot";
-    default : return "???";
-    }
-}
-
-
-Counter::CountType Counter::stringToCountType( const char* c )
-{
-    if (!c) return TYPEUNKNOWN;
-    if (0==strcmp(c,"accumulator")) {
-        return TYPEACCUMULATOR;
-    } else if (0==strcmp(c,"average")) {
-        return TYPEAVERAGE;
-    } else if (0==strcmp(c,"timesnapshot")) {
-        return TYPETIMESNAPSHOT;
-    } else {
-        return TYPEUNKNOWN;
-    }
-}
-
 Counter::Counter( const std::string& name,
                   Observer*          observer,
                   counttime_type     disposeDelayTime ) :
 observer_(observer),
-oldsev_(NORMAL),
+oldsev_(SEVNORMAL),
 maxval_(0),
 name_(name),
 disposeDelayTime_(disposeDelayTime),

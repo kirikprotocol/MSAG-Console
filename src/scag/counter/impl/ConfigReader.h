@@ -3,7 +3,6 @@
 
 #include <map>
 #include <string>
-#include "scag/config/base/ConfigView.h"
 #include "scag/counter/ActionTable.h"
 
 namespace scag2 {
@@ -16,26 +15,23 @@ namespace impl {
 class ConfigReader
 {
     struct TemplateProto {
-        std::string typeName;
-        std::string limitName;
-        int64_t     param0, param1;
+        CountType          countType;
+        std::string        limitName;
+        int                param0, param1;
     };
 
     typedef std::map<std::string,ActionList>    LimitMap;
     typedef std::map<std::string,TemplateProto> ProtoMap;
 
 public:
-    void reloadConfig( TemplateManager& tmgr,
-                       const config::ConfigView& view );
-    
-private:
-    /// @param view is a section with counter limits.
-    void reloadLimits( config::ConfigView& view );
-    /// @param view is a section with templates.
-    void reloadTemplates( TemplateManager& tmgr,
-                          config::ConfigView& view );
-private:
+    ConfigReader() : log_(smsc::logger::Logger::getInstance("cnt.cfg")) {}
+    bool readConfig( const char* fname );
+    void reload( TemplateManager& tmgr );
 
+private:
+    smsc::logger::Logger* log_;
+    LimitMap              limitMap_;
+    ProtoMap              protoMap_;
 };
 
 }

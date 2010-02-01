@@ -25,12 +25,12 @@ public:
     static CountType getStaticType() { return TYPEAVERAGE; }
 
     Average( const std::string&                name,
-             usec_type                         averageEveryUsec,
+             unsigned                          nseconds,
              Observer*                         observer = 0,
              counttime_type                    disposeDelayTime = 0 ) :
     Counter(name,observer,disposeDelayTime),
     group_(0),
-    averageTime_(averageEveryUsec)
+    averageTime_(nseconds*usecFactor)
     {
         smsc_log_debug(loga_,"ctor %p %s '%s'",this,getTypeName(),getName().c_str());
         reset();
@@ -39,7 +39,7 @@ public:
     virtual Average* clone( const std::string& name,
                             counttime_type     disposeTime = 0 ) const
     {
-        return new Average(name,averageTime_,observer_.get(),disposeTime);
+        return new Average(name,averageTime_/usecFactor,observer_.get(),disposeTime);
     }
 
     virtual ~Average() {

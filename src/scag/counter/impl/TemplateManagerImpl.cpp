@@ -1,7 +1,8 @@
 #include "TemplateManagerImpl.h"
-#include "scag/counter/Accumulator.h"
-#include "scag/counter/Average.h"
-#include "scag/counter/TimeSnapshot.h"
+// #include "scag/counter/Accumulator.h"
+// #include "scag/counter/Average.h"
+// #include "scag/counter/TimeSnapshot.h"
+#include "scag/counter/ActionTable.h"
 
 namespace scag2 {
 namespace counter {
@@ -70,6 +71,23 @@ void TemplateManagerImpl::replaceTemplate( const char*      name,
 }
 
 
+std::vector< std::string > TemplateManagerImpl::getTemplateNames()
+{
+    std::vector< std::string > res;
+    res.reserve( templates_.GetCount() );
+    {
+        MutexGuard mg(lock_);
+        char* p;
+        CounterTemplate* t;
+        for ( smsc::core::buffers::Hash< CounterTemplate* >::Iterator i(&templates_);
+              i.Next(p,t); ) {
+            res.push_back(p);
+        }
+    }
+    return res;
+}
+
+
 ObserverPtr TemplateManagerImpl::getObserver( const char* name )
 {
     if (!name) return ObserverPtr();
@@ -96,6 +114,52 @@ void TemplateManagerImpl::replaceObserver( const char* name,
     } else if (table) {
         actionTables_.Insert(name,table);
         table->ref(true);
+    }
+}
+
+
+std::vector< std::string > TemplateManagerImpl::getObserverNames()
+{
+    std::vector< std::string > res;
+    res.reserve( actionTables_.GetCount() );
+    {
+        MutexGuard mg(lock_);
+        char* p;
+        Observer* t;
+        for ( smsc::core::buffers::Hash< Observer* >::Iterator i(&actionTables_);
+              i.Next(p,t); ) {
+            res.push_back(p);
+        }
+    }
+    return res;
+}
+
+
+void TemplateManagerImpl::init()
+{
+    struct Limit {
+        const char* name;
+        unsigned    maxval;
+    };
+    Limit limits[] = {
+        { "sys.traffic.global.smpp", 100 },
+        { "sys.traffic.smpp.sme", 100 },
+        { "sys.traffic.smpp.smsc", 100 },
+        { "sys.smpp.queue.global", 100 },
+        { "sys.smpp.queue.in", 100 },
+        { "sys.smpp.queue.out", 100 },
+        { "sys.sessions.total", 1000 },
+        { "sys.sessions.active", 1000 },
+        { "sys.sessions.locked", 1000 },
+        { 0, 0 }
+    };
+    for ( Limit* p = limits; p->name != 0; ++p ) {
+        ActionList* l = new ActionList();
+        l->push_back(ActionLimit(95*p->maxval/100,OPTYPEGE,SEVCRITICAL));
+        l->push_back(ActionLimit(90*p->maxval/100,OPTYPEGE,SEVMAJOR));
+        l->push_back(ActionLimit(80*p->maxval/100,OPTYPEGE,SEVMINOR));
+        l->push_back(ActionLimit(70*p->maxval/100,OPTYPEGE,SEVWARNING));
+        replaceObserver( p->name, new ActionTable(l) );
     }
 }
 

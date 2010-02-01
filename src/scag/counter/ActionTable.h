@@ -8,13 +8,37 @@
 namespace scag2 {
 namespace counter {
 
+class ActionTable;
+
 struct ActionList
 {
+    friend class ActionTable;
 public:
     ActionList() : capacity(0), size(0), list(0) {}
+    ActionList( const ActionList& l ) :
+    capacity(l.size), size(l.size), list(0) {
+        if (size>0) {
+            list = new ActionLimit[size];
+            memcpy(list,l.list,size*sizeof(ActionLimit));
+        }
+    }
+    ActionList& operator = ( const ActionList& l ) {
+        if (this != &l) {
+            if (l.size>size) {
+                delete [] list;
+                capacity = l.size;
+                list = new ActionLimit[capacity];
+            }
+            size = l.size;
+            if (size>0) {
+                memcpy(list,l.list,size*sizeof(ActionLimit));
+            }
+        }
+        return *this;
+    }
 
     ~ActionList() {
-        delete[] list;
+        if (list) delete[] list;
     }
 
     /// this method should be used only 
@@ -22,7 +46,7 @@ public:
         if ( size >= capacity ) {
             capacity = size + 8;
             ActionLimit* newlist = new ActionLimit[capacity];
-            memcpy(newlist,list,size);
+            memcpy(newlist,list,size*sizeof(ActionLimit));
             delete[] list;
             list = newlist;
         }
@@ -30,8 +54,7 @@ public:
     }
 
 private:
-    size_t  capacity;
-public:
+    size_t        capacity;
     size_t        size;      // number of actions
     ActionLimit*  list;      // owned, delete []
 };
@@ -43,7 +66,7 @@ protected:
     static smsc::logger::Logger* log_;
     virtual ~ActionTable();
 public:
-    ActionTable();
+    ActionTable( ActionList* list = 0 );
     virtual void modified( const char*  cname,
                            CntSeverity& sev,
                            int64_t      value,

@@ -44,6 +44,7 @@ Manager::~Manager()
 }
 
 
+/*
 CounterPtrAny Manager::createCounter( const char* tmplid,
                                       const char* name,
                                       unsigned    lifetime )
@@ -52,7 +53,14 @@ CounterPtrAny Manager::createCounter( const char* tmplid,
     if (!c) return CounterPtrAny();
     return registerAnyCounter(c);
 }
+ */
 
+ObserverPtr Manager::getObserver( const char* oname )
+{
+    TemplateManager* tmgr = getTemplateManager();
+    if (!tmgr) return ObserverPtr();
+    return tmgr->getObserver(oname);
+}
 
 }
 }

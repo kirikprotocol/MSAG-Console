@@ -4,6 +4,7 @@
 #include "core/synchronization/EventMonitor.hpp"
 #include "core/threads/Thread.hpp"
 #include "scag/counter/Manager.h"
+#include "scag/counter/Accumulator.h"
 
 namespace scag2 {
 namespace sessions {
@@ -53,14 +54,20 @@ void CompositeSessionStore::init( unsigned nodeNumber,
 
     {
         counter::Manager& mgr = counter::Manager::getInstance();
-        totalSessions_ = mgr.createCounter("sys.sessions.total","sys.sessions.total");
-        loadedSessions_ = mgr.createCounter("sys.sessions.active","sys.sessions.active");
-        lockedSessions_ = mgr.createCounter("sys.sessions.locked","sys.sessions.locked");
+        totalSessions_ = mgr.registerAnyCounter
+            (new counter::Accumulator("sys.sessions.total",
+                                      mgr.getObserver("sys.sessions.total").get()));
+        loadedSessions_ = mgr.registerAnyCounter
+            (new counter::Accumulator("sys.sessions.active",
+                                      mgr.getObserver("sys.sessions.active").get()));
+        lockedSessions_ = mgr.registerAnyCounter
+            (new counter::Accumulator("sys.sessions.locked",
+                                      mgr.getObserver("sys.sessions.locked").get()));
         if (!totalSessions_.get() || !loadedSessions_.get() || !lockedSessions_.get())
             throw std::runtime_error("cannot create session counters");
-        totalSessions_->setMaxVal(2000);
-        loadedSessions_->setMaxVal(500);
-        lockedSessions_->setMaxVal(200);
+        // totalSessions_->setMaxVal(2000);
+        // loadedSessions_->setMaxVal(500);
+        // lockedSessions_->setMaxVal(200);
     }
 
     unsigned pathidx = 0;
