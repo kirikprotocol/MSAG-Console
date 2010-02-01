@@ -66,12 +66,12 @@ public:
         return accumulate(x,w);
     }
 
-    virtual int64_t getValue()
+    virtual int64_t getValue() const
     {
         return integral_;
     }
 
-    virtual bool getValue( Valtype a, int64_t& value ) 
+    virtual bool getValue( Valtype a, int64_t& value ) const
     {
         switch (a) {
         case VALUE:

@@ -37,11 +37,11 @@ inline static const char* severityToString( CntSeverity l ) {
 
 inline static CntSeverity stringToSeverity( const char* s ) {
     if (!s) return SEVUNKNOWN;
-    if (0==strcmp(s,"NORMAL")) return SEVNORMAL;
-    if (0==strcmp(s,"WARNING")) return SEVWARNING;
-    if (0==strcmp(s,"MINOR")) return SEVMINOR;
-    if (0==strcmp(s,"MAJOR")) return SEVMAJOR;
-    if (0==strcmp(s,"CRITICAL")) return SEVCRITICAL;
+    if (0==std::strcmp(s,"NORMAL")) return SEVNORMAL;
+    if (0==std::strcmp(s,"WARNING")) return SEVWARNING;
+    if (0==std::strcmp(s,"MINOR")) return SEVMINOR;
+    if (0==std::strcmp(s,"MAJOR")) return SEVMAJOR;
+    if (0==std::strcmp(s,"CRITICAL")) return SEVCRITICAL;
     return SEVUNKNOWN;
 }
 
@@ -61,8 +61,8 @@ inline static const char* opTypeToString( CntOpType o ) {
 
 inline static CntOpType stringToOpType( const char* optype ) {
     if ( !optype ) return OPTYPEUNKNOWN;
-    if (0 == strcmp("GE",optype)) return OPTYPEGE;
-    if (0 == strcmp("LE",optype)) return OPTYPELE;
+    if (0 == std::strcmp("GE",optype)) return OPTYPEGE;
+    if (0 == std::strcmp("LE",optype)) return OPTYPELE;
     return OPTYPEUNKNOWN;
 }
 
@@ -88,11 +88,11 @@ inline static const char* countTypeToString(CountType c)
 inline static CountType stringToCountType(const char* c)
 {
     if (!c) return TYPEUNKNOWN;
-    if (0==strcmp(c,"ACCUMULATOR")) {
+    if (0==std::strcmp(c,"ACCUMULATOR")) {
         return TYPEACCUMULATOR;
-    } else if (0==strcmp(c,"AVERAGE")) {
+    } else if (0==std::strcmp(c,"AVERAGE")) {
         return TYPEAVERAGE;
-    } else if (0==strcmp(c,"INTEGRAL")) {
+    } else if (0==std::strcmp(c,"INTEGRAL")) {
         return TYPETIMESNAPSHOT;
     } else {
         return TYPEUNKNOWN;
