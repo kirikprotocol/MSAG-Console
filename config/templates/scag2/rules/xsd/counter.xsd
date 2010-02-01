@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema targetNamespace="http://www.sibinco.com/SCAG/COUNTER" 
+    xmlns="http://www.w3.org/2001/XMLSchema"
+    xmlns:scag="http://www.sibinco.com/SCAG"
+    xmlns:counter="http://www.sibinco.com/SCAG/COUNTER"
+    elementFormDefault="qualified">
+
+    <import schemaLocation="rules.xsd" namespace="http://www.sibinco.com/SCAG"/>
+
+    <simpleType name="CounterScope">
+        <restriction base="string">
+            <enumeration value="USER"/>
+            <enumeration value="OPERATOR"/>
+            <enumeration value="PROVIDER"/>
+            <enumeration value="SERVICE"/>
+            <enumeration value="SYSTEM"/>
+        </restriction>
+    </simpleType>
+
+    <attributeGroup name="CounterCommonAttrs">
+        <attribute name="name" type="scag:Value" use="required"/>
+        <attribute name="scope" type="counter:CounterScope" use="optional"/>
+        <attribute name="status" type="scag:Var" use="optional"/>
+    </attributeGroup>
+
+    <group name="Actions">
+        <choice>
+
+            <element name="create">
+                <complexType>
+                    <attributeGroup ref="counter:CounterCommonAttrs"/>
+                    <attribute name="type" type="scag:Value" use="required"/>
+                    <attribute name="inc"  type="scag:Value" use="optional"/>
+                    <attribute name="weight" type="scag:Value" use="optional"/>
+                    <attribute name="reset"  type="scag:Value" use="optional"/>
+                    <attribute name="lifetime" type="scag:Value" use="optional"/>
+                </complexType>
+            </element>
+
+            <element name="reset">
+                <complexType>
+                    <attributeGroup ref="counter:CounterCommonAttrs"/>
+                </complexType>
+            </element>
+
+            <element name="inc">
+                <complexType>
+                    <attributeGroup ref="counter:CounterCommonAttrs"/>
+                    <attribute name="inc"  type="scag:Value" use="optional"/>
+                    <attribute name="weight" type="scag:Value" use="optional"/>
+                </complexType>
+            </element>
+
+            <element name="get">
+                <complexType>
+                    <attributeGroup ref="counter:CounterCommonAttrs"/>
+                    <attribute name="value" type="scag:Var" use="required"/>
+                    <attribute name="function" type="scag:Value" use="optional"/>
+                </complexType>
+            </element>
+
+        </choice>
+    </group>
+</schema>
