@@ -2,40 +2,61 @@
 <!DOCTYPE counters SYSTEM "counters.dtd">
 
 <counters>
-
-    <templates>
-	
-	<template id="SimpleAcc" type="ACCUMULATOR">
-	    <ca id="DefaultCATable"/>
-	</template>
-	
-	<template id="SimpleAvg" type="AVERAGE">
-	    <param name="sample_slot" type="int">10</param>
-	    <ca id="UserCATable1"/>
-	</template>
-	
-    </templates>
-
     <ca_tables>
-    
-	<ca_table id="DefaultCATable" system="true">
-	    <limits min="0" max="1000">
-		<limit procent="10" severity="NORMAL"/>
-		<limit procent="75" severity="WARNING"/>
-		<limit procent="95" severity="CRITICAL"/>
+        <ca_table id="sys.traffic.global.smpp" system="true">
+            <limits min="0" max="10">
+		<limit percent="75" severity="WARNING"/>
+                <limit percent="95" severity="CRITICAL"/>
 	    </limits>
-	    <param name="some_param" type="string">101</param>
-	</ca_table>
+            <!-- param name="some_param" type="string">101</param -->
+        </ca_table>
 
-	<ca_table id="UserCATable1" system="false">
-	    <limits min="100" max="500">
-		<limit procent="5" severity="NORMAL"/>
-		<limit procent="50" severity="WARNING"/>
-		<limit procent="75" severity="MAJOR"/>
-	    </limits>
-	    <param name="some_user_param" type="string">101</param>
-	</ca_table>
-	
+        <ca_table id="sys.traffic.smpp.sme" system="true">
+            <limits min="0" max="10">
+                <limit percent="20" severity="CRITICAL"/>
+            </limits>
+        </ca_table>
+
+        <ca_table id="sys.smpp.queue.global" system="true">
+            <limits min="0" max="100">
+                <limit percent="10" severity="CRITICAL"/>
+            </limits>
+        </ca_table>
+
+        <ca_table id="user.table1" system="false">
+            <limits min="100" max="500">
+                <!-- limit percent="5" severity="NORMAL"/ -->
+		<limit percent="50" severity="WARNING"/>
+		<limit percent="75" severity="MAJOR"/>
+            </limits>
+            <!-- param name="some_user_param" type="string">101</param -->
+        </ca_table>
+
+        <ca_table id="user.defaultTable" system="false">
+            <limits min="0" max="100">
+                <!-- limit percent="5" severity="NORMAL"/ -->
+		<limit percent="70" severity="WARNING"/>
+		<limit percent="80" severity="MINOR"/>
+                <limit percent="90" severity="MAJOR"/>
+                <limit percent="95" severity="CRITICAL"/>
+            </limits>
+            <!-- param name="some_user_param" type="string">101</param -->
+        </ca_table>
     </ca_tables>
     
+    <templates>
+        <template id="SimpleAcc" type="ACCUMULATOR">
+	    <ca id="user.defaultTable"/>
+	</template>
+        <template id="SimpleAvg" type="AVERAGE">
+            <ca id="user.table1"/>
+            <param name="nseconds" type="int">10</param>
+	</template>
+	<template id="SimpleIntegral" type="INTEGRAL">
+	    <ca id="user.defaultTable"/>
+            <param name="nseconds" type="int">10</param>
+            <param name="msecresol" type="int">100</param>
+	</template>
+    </templates>
+
 </counters>

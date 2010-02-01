@@ -1,31 +1,30 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 
-<!ELEMENT counters (templates|ca_tables)>
+<!ELEMENT counters (templates|ca_tables)*>
 
 <!ELEMENT templates (template)*>
-<!ELEMENT template (ca|param*)>
-<!ATTLIST template
-    id CDATA #REQUIRED
-    type (ACCUMULATOR|INTEGRAL|AVERAGE|HISTOGRAMM) #REQUIRED>
-<!ELEMENT ca>
-<!ATTLIST ca
-    id CDATA #REQUIRED>
+<!ELEMENT template (ca|param)*>
+    <!ATTLIST template id CDATA #REQUIRED>
+    <!ATTLIST template type (ACCUMULATOR|INTEGRAL|AVERAGE|HISTOGRAM) #REQUIRED>
+
+<!ELEMENT ca (#PCDATA)>
+    <!ATTLIST ca id CDATA #REQUIRED>
 
 <!ELEMENT ca_tables (ca_table)*>
+
 <!ELEMENT ca_table (limits|param*)>
-<!ATTLIST ca_table
-    id CDATA #REQUIRED
-    system (true|false) "false">
+    <!ATTLIST ca_table id CDATA #REQUIRED>
+    <!ATTLIST ca_table system (true|false) "false">
+
 <!ELEMENT limits (limit)*>
-<!ATTLIST limits
-    min CDATA #IMPLIED
-    max CDATA #REQUIRED>
-<!ELEMENT limit>
-<!ATTLIST limit
-    procent CDATA #REQUIRED
-    severity (NORMAL|WARNING|MINOR|MAJOR|CRITICAL) #REQUIRED>
+    <!ATTLIST limits min CDATA #IMPLIED>
+    <!ATTLIST limits max CDATA #REQUIRED>
+
+<!ELEMENT limit (#PCDATA)>
+    <!ATTLIST limit percent CDATA #REQUIRED>
+    <!ATTLIST limit severity (NORMAL|WARNING|MINOR|MAJOR|CRITICAL) #REQUIRED>
+    <!ATTLIST limit op (LE|GE) "GE">
 
 <!ELEMENT param (#PCDATA)>
-<!ATTLIST param
-    name CDATA #REQUIRED
-    type (string|int|bool) #IMPLIED>
+    <!ATTLIST param name CDATA #REQUIRED>
+    <!ATTLIST param type (string|int|bool) #IMPLIED>
