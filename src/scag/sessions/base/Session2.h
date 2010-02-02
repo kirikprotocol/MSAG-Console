@@ -135,7 +135,7 @@ public:
     }
 
     /// set an existing operation as current by id and return it.
-    Operation* setCurrentOperation( opid_type opid );
+    Operation* setCurrentOperation( opid_type opid, bool updateExpire = false );
 
     /// return ussd operation id or invalidOpId()
     opid_type getUSSDOperationId() const {

@@ -232,7 +232,7 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st,
                   smsc::system::Status::SYSERR );
             return;
         }
-        op = session_->setCurrentOperation( opid );
+        op = session_->setCurrentOperation( opid, true );
         if ( ! op ) {
             fail( "resp->orgCmd opid is set, but operation not found", st,
                   smsc::system::Status::TRANSACTIONTIMEDOUT );
@@ -257,7 +257,7 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st,
             const opid_type opid = cmd_->getEntity()->getSarMappingOpid(sarmr_,currentTime_);
             if ( opid != invalidOpId() ) {
                 // restore from session
-                op = session_->setCurrentOperation(opid);
+                op = session_->setCurrentOperation(opid,true);
                 smsc_log_debug(log_,"multipart op %sfound: cmd=%p sess=%p/%s opid=%u type=%d(%s) sarmr/idx/tot=%d/%d/%d",
                                op ? "":"NOT ",
                                cmd_.get(), session_.get(), 
@@ -299,7 +299,7 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st,
             if ( wantOpenUSSD ) {
 
                 if ( session_->getUSSDOperationId() != invalidOpId() ) {
-                    op = session_->setCurrentOperation( found_ussd );
+                    op = session_->setCurrentOperation(found_ussd);
                     smsc_log_info( log_, "current USSD dialog op=%p opid=%u is replaced",
                                    op, found_ussd );
                     session_->closeCurrentOperation();
@@ -321,7 +321,7 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st,
 
             } else { // ussd op exists
 
-                op = session_->setCurrentOperation( found_ussd );
+                op = session_->setCurrentOperation( found_ussd, true );
                 if ( ! op ) {
                     fail( "ussd opid is set, but operation not found", st,
                           smsc::system::Status::SYSERR );

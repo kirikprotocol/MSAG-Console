@@ -673,7 +673,7 @@ std::auto_ptr< ExternalTransaction > Session::releaseTransaction( const char* id
 
 
 /// operation methods
-Operation* Session::setCurrentOperation( opid_type opid )
+Operation* Session::setCurrentOperation( opid_type opid, bool updateExpire )
 {
     do {
 
@@ -703,6 +703,11 @@ Operation* Session::setCurrentOperation( opid_type opid )
 
     const uint8_t optype = currentOperation_->type();
     currentOperationId_ = opid;
+    if ( updateExpire ) {
+        const time_t now = time(0);
+        const time_t expire = now + defaultLiveTime();
+        if ( expire > expirationTime_ ) expirationTime_ = expire;
+    }
     smsc_log_debug( log_, "session=%p/%s setOp(opid=%u) => op=%p type=%d(%s) etime=%d",
                     this, sessionKey().toString().c_str(),
                     unsigned(opid), currentOperation_,
