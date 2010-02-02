@@ -1,5 +1,5 @@
 #include "SessionManagerConfig2.h"
-
+#include "scag/sessions/base/Session2.h"
 
 namespace scag2 {
 namespace config {
@@ -60,7 +60,7 @@ namespace config {
 
         // ugly: applying config right after creation
         if ( expire >= 1000 ) {
-            Session::setDefaultLiveTime( expire / 1000 );
+            sessions::Session::setDefaultLiveTime( expire / 1000 );
         }
     }
 
