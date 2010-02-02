@@ -316,6 +316,8 @@ unsigned Session::defaultLiveTime()
 void Session::setDefaultLiveTime( unsigned tmo )
 {
     sessionLiveTime = tmo;
+    ::getlog();
+    smsc_log_info(log_,"setting default session live time %u", tmo);
 }
 
 bool Session::isReadOnlyProperty( const char* name )

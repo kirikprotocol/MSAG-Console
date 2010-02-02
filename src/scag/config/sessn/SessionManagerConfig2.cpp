@@ -21,6 +21,7 @@ namespace config {
 
     void SessionManagerConfig::init(const ConfigView& cv) throw(ConfigException)
     {
+        unsigned expire = 0;
         // dir = getString(cv,"location");
         clear();
         getInt(cv, "indexgrowth", indexgrowth );
@@ -30,6 +31,10 @@ namespace config {
         getInt(cv, "flushTimeLimit", flushlimittime );
         getInt(cv, "initUploadCount", initUploadCount );
         getInt(cv, "initUploadInterval", initUploadInterval );
+        try {
+            getInt(cv, "expireInterval", expire);
+        } catch (...) {}
+
         getBool(cv, "diskio", diskio);
 
         // locations
@@ -51,6 +56,11 @@ namespace config {
             dirs = newlocs;
         } else if ( ! usedefault_ ) {
             throw ConfigException("SessionManager.locations has no elements");
+        }
+
+        // ugly: applying config right after creation
+        if ( expire >= 1000 ) {
+            Session::setDefaultLiveTime( expire / 1000 );
         }
     }
 
