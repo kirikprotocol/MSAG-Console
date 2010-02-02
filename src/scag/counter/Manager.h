@@ -76,6 +76,10 @@ public:
 
     virtual void stop() = 0;
 
+    /// load observer/template from config and replace them in template manager.
+    virtual void reloadObserver( const char* id ) = 0; // throw
+    virtual void reloadTemplate( const char* id ) = 0; // throw
+
 protected:
     /// register counter and return a ptr to it, or to existing counter of this name.
     /// it may throw exception if counter types are not the same.

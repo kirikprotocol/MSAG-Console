@@ -25,8 +25,13 @@ class ConfigReader
 
 public:
     ConfigReader() : log_(smsc::logger::Logger::getInstance("cnt.cfg")) {}
-    bool readConfig( const char* fname );
+
+    /// @param useExc if true then throw exception instead of returning false
+    bool readConfig( const char* fname, bool useExc = false );
     void reload( TemplateManager& tmgr );
+
+    void replaceObserver( TemplateManager& tmgr, const std::string& id ); // throw
+    void replaceTemplate( TemplateManager& tmgr, const std::string& id ); // throw
 
 private:
     smsc::logger::Logger* log_;

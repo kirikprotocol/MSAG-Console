@@ -134,6 +134,60 @@ struct ActionLimit
 };
 
 
+
+// ================================================================
+class ActionTable;
+struct ActionList
+{
+    friend class ActionTable;
+public:
+    ActionList() : capacity(0), size(0), list(0) {}
+    ActionList( const ActionList& l ) :
+    capacity(l.size), size(l.size), list(0) {
+        if (size>0) {
+            list = new ActionLimit[size];
+            memcpy(list,l.list,size*sizeof(ActionLimit));
+        }
+    }
+    ActionList& operator = ( const ActionList& l ) {
+        if (this != &l) {
+            if (l.size>size) {
+                delete [] list;
+                capacity = l.size;
+                list = new ActionLimit[capacity];
+            }
+            size = l.size;
+            if (size>0) {
+                memcpy(list,l.list,size*sizeof(ActionLimit));
+            }
+        }
+        return *this;
+    }
+
+    ~ActionList() {
+        if (list) delete[] list;
+    }
+
+    /// this method should be used only 
+    void push_back( const ActionLimit& a ) {
+        if ( size >= capacity ) {
+            capacity = size + 8;
+            ActionLimit* newlist = new ActionLimit[capacity];
+            memcpy(newlist,list,size*sizeof(ActionLimit));
+            delete[] list;
+            list = newlist;
+        }
+        list[size++] = a;
+    }
+
+private:
+    size_t        capacity;
+    size_t        size;      // number of actions
+    ActionLimit*  list;      // owned, delete []
+};
+
+
+
 // ================================================================
 class Observer
 {
@@ -149,6 +203,7 @@ public:
                            unsigned      maxval ) = 0;
     /// ref counting
     virtual void ref(bool add) = 0;
+    virtual void setNewActions( ActionList* newlist ) = 0;
 };
 
 

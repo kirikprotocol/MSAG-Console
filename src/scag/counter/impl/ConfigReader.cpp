@@ -102,12 +102,15 @@ namespace scag2 {
 namespace counter {
 namespace impl {
 
-bool ConfigReader::readConfig( const char* fname )
+bool ConfigReader::readConfig( const char* fname, bool useExc )
 {
     limitMap_.clear();
     protoMap_.clear();
-    if (!fname) return false;
     try {
+
+        if (!fname) {
+            throw smsc::util::Exception("filename is not specified");
+        }
 
         smsc::util::xml::DOMTreeReader reader;
         xercesc::DOMDocument* document = reader.read(fname);
@@ -206,9 +209,9 @@ bool ConfigReader::readConfig( const char* fname )
         smsc_log_error( log_,"exc: %s", e.what() );
         limitMap_.clear();
         protoMap_.clear();
+        if (useExc) throw;
         return false;
     }
-
     return true;
 
     /*
@@ -426,9 +429,15 @@ void ConfigReader::reload( TemplateManager& tmgr )
         }
     }
     for ( LimitMap::const_iterator i = limitMap_.begin(); i != limitMap_.end(); ++i ) {
-        smsc_log_info(log_,"replacing limit '%s'",i->first.c_str());
-        tmgr.replaceObserver(i->first.c_str(),
-                             new ActionTable(new ActionList(i->second)));
+        ObserverPtr ptr = tmgr.getObserver(i->first.c_str());
+        if ( ptr.get() ) {
+            smsc_log_info(log_,"replacing limit table '%s'",i->first.c_str());
+            ptr->setNewActions(new ActionList(i->second));
+        } else {
+            smsc_log_info(log_,"creating limit '%s'",i->first.c_str());
+            tmgr.replaceObserver(i->first.c_str(),
+                                 new ActionTable(new ActionList(i->second)));
+        }
     }
     VS oldTempl(tmgr.getTemplateNames());
     for ( VS::const_iterator i = oldTempl.begin(); i != oldTempl.end(); ++i ) {
@@ -448,6 +457,55 @@ void ConfigReader::reload( TemplateManager& tmgr )
                                                       i->second.param1));
     }
     smsc_log_info(log_,"counter config reloaded");
+}
+
+
+void ConfigReader::replaceObserver( TemplateManager& tmgr, const std::string& id )
+{
+    ObserverPtr ptr = tmgr.getObserver(id.c_str());
+    LimitMap::const_iterator i = limitMap_.find(id);
+    if (!ptr.get()) {
+        // creation
+        if ( i == limitMap_.end() )
+            throw smsc::util::Exception("unknown counter action id=%s",id.c_str());
+        tmgr.replaceObserver( id.c_str(), new ActionTable(new ActionList(i->second)) );
+        smsc_log_info(log_,"counter actions '%s' loaded",id.c_str());
+    } else if ( i == limitMap_.end() ) {
+        if ( 0 == strncmp(id.c_str(),sysPrefix,sysPrefixLen) ) {
+            // system
+            smsc_log_warn(log_,"destruction of system actions '%s' skipped");
+        } else {
+            // destruction
+            tmgr.replaceObserver( id.c_str(), 0);
+            smsc_log_info(log_,"counter actions '%s' deleted",id.c_str());
+        }
+    } else {
+        // replacement
+        ptr->setNewActions( new ActionList(i->second) );
+        smsc_log_info(log_,"counter actions '%s' replaced",id.c_str());
+    }
+}
+
+
+void ConfigReader::replaceTemplate( TemplateManager& tmgr, const std::string& id )
+{
+    ProtoMap::const_iterator i = protoMap_.find(id);
+    std::auto_ptr< CounterTemplate > templ;
+    if ( i != protoMap_.end() ) {
+        ObserverPtr observer;
+        if ( ! i->second.limitName.empty() ) {
+            observer = tmgr.getObserver(i->second.limitName.c_str());
+            if (!observer.get()) 
+                throw smsc::util::Exception("action table '%s' required by template '%s' is not found",
+                                            i->second.limitName.c_str(), id.c_str() );
+        }
+        templ.reset( CounterTemplate::create(i->second.countType,
+                                             observer.get(),
+                                             i->second.param0,
+                                             i->second.param1 ));
+    }
+    tmgr.replaceTemplate(id.c_str(),templ.release());
+    smsc_log_info(log_,"template '%s' replaced",id.c_str());
 }
 
 }

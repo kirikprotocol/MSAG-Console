@@ -31,6 +31,7 @@
 #include "scag/transport/http/base/HttpRouter.h"
 #include "scag/config/base/ConfigManager2.h"
 #include "scag/transport/smpp/base/SmppManager2.h"
+#include "scag/counter/Manager.h"
 
 #define CATCH_ADMINEXC(msg_)                                    \
       }catch(AdminException& e){                                \
@@ -899,6 +900,36 @@ Response * CommandRemoveMetaEndpoint::CreateResponse(Scag *ScagApp)
   return new Response(Response::Ok,"MetaEndpoint removed");
 }
 
+
+//================ Sme commands ==================================
+
+void CommandReplaceCounter::init()
+{
+
+    smsc_log_info(logger, "CommandReplaceCounterActions got parameters:");
+    BEGIN_SCAN_PARAMS
+    GETSTRPARAM_(id,"id")
+    END_SCAN_PARAMS
+}
+
+
+Response* CommandReplaceCounter::CreateResponse( Scag* )
+{
+    // if (!app) throw Exception("scag undefined");
+    smsc_log_info(logger,"CommandReplaceCounter is processing...");
+    counter::Manager& mgr = counter::Manager::getInstance();
+    const char* what;
+    if ( getId() == CommandIds::replaceCounterActions ) {
+        what = "actions replaced";
+        mgr.reloadObserver( id.c_str() );
+    } else if ( getId() == CommandIds::replaceCounterTemplate ) {
+        what = "template replaced";
+        mgr.reloadTemplate( id.c_str() );
+    } else {
+        throw Exception("unknown counter replace command id %d",getId());
+    }
+    return new Response(Response::Ok,what);
+}
 
 }
 }

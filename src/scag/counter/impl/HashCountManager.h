@@ -39,6 +39,13 @@ public:
         notificationManager_->notify(cname,sev,value,params);
     }
 
+    virtual void reloadObserver( const char* id ); // throw
+    virtual void reloadTemplate( const char* id ); // throw
+
+    /// loading counters config file. This method is not seen in base class.
+    /// so it may be invoked only once, just after creation of HashCountManager.
+    void loadConfigFile();
+
 protected:
     /// retrieve the counter of type T with name 'name'
     /// it may return 0 if the counter is not there.

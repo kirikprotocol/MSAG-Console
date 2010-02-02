@@ -408,6 +408,17 @@ public:
 };
 
 
+class CommandReplaceCounter : public AdminCommand
+{
+public:
+    CommandReplaceCounter( CommandIds::IDS id, const xercesc::DOMDocument* doc ) :
+    AdminCommand((Command::Id)id,doc) {}
+    virtual void init();
+    virtual Response* CreateResponse( Scag* ScagApp );
+protected:
+    std::string id;
+};
+
 }
 }
 

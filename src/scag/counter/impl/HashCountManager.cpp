@@ -8,8 +8,11 @@
 #include "core/buffers/XHash.hpp"
 #include "scag/counter/TimeSliceGroup.h"
 #include "scag/counter/TemplateManager.h"
+#include "ConfigReader.h"
 
 namespace {
+
+const char* confFilename = "conf/counters.xml";
 
 template < class T > struct select2nd
 {
@@ -204,6 +207,45 @@ void HashCountManager::stop()
         timeSliceManager_->stop();
         disposeMon_.notifyAll();
         disposeQueue_.clear();
+    }
+}
+
+
+void HashCountManager::reloadObserver( const char* id )
+{
+    if (!templateManager_) throw smsc::util::Exception("template manager is not attached");
+    if (!id) throw smsc::util::Exception("action table id is not specified");
+    ConfigReader reader;
+    try {
+        reader.readConfig( ::confFilename, true );
+    } catch ( std::exception& e ) {
+        throw smsc::util::Exception( "cannot read %s: %s", ::confFilename, e.what() );
+    }
+    reader.replaceObserver( *templateManager_, id );
+}
+
+
+void HashCountManager::reloadTemplate( const char* id )
+{
+    if (!templateManager_) throw smsc::util::Exception("template manager is not attached");
+    if (!id) throw smsc::util::Exception("template id is not specified");
+    ConfigReader reader;
+    try {
+        reader.readConfig( ::confFilename, true );
+    } catch ( std::exception& e ) {
+        throw smsc::util::Exception( "cannot read %s: %s", ::confFilename, e.what() );
+    }
+    reader.replaceTemplate( *templateManager_, id );
+}
+
+
+void HashCountManager::loadConfigFile()
+{
+    ConfigReader reader;
+    if ( !reader.readConfig(confFilename) ) {
+        smsc_log_warn(log_,"cannot read counters config file '%s', using default",confFilename);
+    } else if (templateManager_) {
+        reader.reload(*templateManager_);
     }
 }
 

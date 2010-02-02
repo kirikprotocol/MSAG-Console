@@ -55,6 +55,8 @@ SCAGCommandReader::SCAGCommandReader(Socket * admSocket)
   commandlist["addMetaEndpoint"] = CommandIds::addMetaEndpoint;
   commandlist["removeMetaEndpoint"] = CommandIds::removeMetaEndpoint;
 
+    commandlist["replaceCounterActions"] = CommandIds::replaceCounterActions;
+    commandlist["replaceCounterTemplate"] = CommandIds::replaceCounterTemplate;
 }
 
 
@@ -119,6 +121,9 @@ Command * SCAGCommandReader::createCommand(int id, const DOMDocument *data)
     case CommandIds::deleteMetaEntity:return new CommandDeleteMetaEntity(data);
     case CommandIds::addMetaEndpoint:return new CommandAddMetaEndpoint(data);
     case CommandIds::removeMetaEndpoint:return new CommandRemoveMetaEndpoint(data);
+
+  case CommandIds::replaceCounterActions: return new CommandReplaceCounter(CommandIds::replaceCounterActions,data);
+  case CommandIds::replaceCounterTemplate: return new CommandReplaceCounter(CommandIds::replaceCounterTemplate,data);
 
     default:
       smsc_log_warn(logger, "Unknown command id \"%i\"", id);

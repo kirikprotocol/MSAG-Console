@@ -136,15 +136,7 @@ void Scag::init( unsigned mynode )
         tmgr->init();
         counter::impl::HashCountManager* mgr =
             new counter::impl::HashCountManager(tmgr,10);
-
-        counter::impl::ConfigReader cread;
-        const char* cfile = "conf/counters.xml";
-        if ( ! cread.readConfig(cfile) ) {
-            smsc_log_warn(log,"cannot read counter config file: %s, using default",cfile);
-        } else {
-            cread.reload(*tmgr);
-        }
-
+        mgr->loadConfigFile();
         mgr->start();
     } catch ( std::exception& e ) {
         smsc_log_error(log,"exc in counter mgr: %s",e.what());

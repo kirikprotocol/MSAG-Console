@@ -46,7 +46,10 @@ namespace CommandIds {
     updateMetaEntity,
     deleteMetaEntity,
     addMetaEndpoint,
-    removeMetaEndpoint
+    removeMetaEndpoint,
+          
+          replaceCounterActions, // add, update, delete
+          replaceCounterTemplate // add, update, delete
   };
 }
 
