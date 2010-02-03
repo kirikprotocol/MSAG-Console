@@ -60,6 +60,8 @@ public class TopMenu  extends ArrayList {
             Collection statisticItems = new ArrayList();
             statisticItems.add(new MenuItem("menu.stat.monitor","", "/stat/monitor/index.jsp', '', 'channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=500,width=580');",new String[]{"stat"}));
             statisticItems.add(new MenuItem("menu.stat.stat","/stat/stat/index.jsp",new String[]{"stat"}));
+            statisticItems.add(new MenuItem("menu.stat.counters", "/stat/counters/index.jsp",new String[]{"stat"}));
+            statisticItems.add(new MenuItem("menu.stat.counters.ca", "/stat/counters/ca/index.jsp",new String[]{"stat"}));
             add(new MenuItem("menu.stat", "", statisticItems,new String[]{"stat"}));
 
         } catch (Exception e) {
