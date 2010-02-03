@@ -7,6 +7,10 @@
 #include "logger/Logger.h"
 
 namespace smsc {
+namespace sms {
+class IllFormedReceiptParser; 
+}
+
 namespace infosme {
 
 using namespace smsc::smpp;
@@ -18,12 +22,11 @@ class SmscConnector;
 class InfoSmePduListener: public smsc::sme::SmppPduEventListener 
 {
 public:
-    InfoSmePduListener( SmscConnector& proc,
-                        Logger* log) :
-    processor(proc),
-    syncTransmitter(0), asyncTransmitter(0),
-    logger(log) {};
-  virtual ~InfoSmePduListener() {}; 
+    InfoSmePduListener( SmscConnector& proc, Logger* log);
+    // processor(proc),
+    // syncTransmitter(0), asyncTransmitter(0),
+    // logger(log) {};
+    virtual ~InfoSmePduListener();
 
   void setSyncTransmitter(SmppTransmitter *transmitter);
   void setAsyncTransmitter(SmppTransmitter *transmitter);
@@ -38,6 +41,7 @@ private:
   SmppTransmitter* asyncTransmitter;
   std::string smscId_;
   Logger* logger;
+    smsc::sms::IllFormedReceiptParser* parser_;
 };
 
 }//infosme

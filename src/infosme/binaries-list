@@ -10,6 +10,7 @@ infosme/InfoSme   	  InfoSme	 \
  -ladmin-protocol -ladmin-daemon -ladmin \
  $(SOCKETLIB) -lcore-network \
  -ldb \
+ -lutil-regexp \
  -lutil-templates -lutil-config -lutil-config-route -lutil-config-region -lutil-xml \
  -lutil \
  -lutil-recoder-recode_dll \

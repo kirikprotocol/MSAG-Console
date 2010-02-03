@@ -8,6 +8,7 @@ infosme/infosme2   	  InfoSme \
  -lsms \
  -lcore-network $(SOCKETLIB) -lnsl \
  -lcore-threads \
+ -lutil-regexp \
  -lutil-recoder-recode_dll \
  -lutil-templates \
  -lutil-csv \

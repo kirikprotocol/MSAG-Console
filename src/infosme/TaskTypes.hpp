@@ -85,10 +85,11 @@ namespace infosme{
             trackIntegrity(false), transactionMode(false), keepHistory(false),
             saveFinalState(false),
             flash(false),
+            useDataSm(false), useUssdPush(false),
             endDate(-1), validityPeriod(-1), validityDate(-1),
             activePeriodStart(-1), activePeriodEnd(-1), activeWeekDays(0),
             dsTimeout(0), dsUncommitedInProcess(1), dsUncommitedInGeneration(1),
-            messagesCacheSize(100), messagesCacheSleep(0), useDataSm(false), useUssdPush(false) {}
+            messagesCacheSize(100), messagesCacheSleep(0) {}
 
       bool convertMSISDNStringToAddress(const char* string, smsc::sms::Address& addr) const
       {

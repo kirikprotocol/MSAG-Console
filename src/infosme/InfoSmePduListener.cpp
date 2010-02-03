@@ -2,11 +2,26 @@
 #include "InfoSmePduListener.h"
 #include "SmscConnector.h"
 #include "TaskTypes.hpp"
+#include "sms/IllFormedReceiptParser.h"
 
 namespace smsc {
 namespace infosme {
 
 // using namespace smsc::system;
+
+InfoSmePduListener::InfoSmePduListener( SmscConnector& proc, Logger* log) :
+processor(proc),
+syncTransmitter(0), asyncTransmitter(0),
+logger(log),
+parser_(new smsc::sms::IllFormedReceiptParser)
+{}
+
+
+InfoSmePduListener::~InfoSmePduListener()
+{
+    if (parser_) delete parser_;
+}
+
 
 void InfoSmePduListener::setSyncTransmitter(SmppTransmitter *transmitter) {
   syncTransmitter = transmitter;
@@ -25,37 +40,41 @@ void InfoSmePduListener::processReceipt (SmppHeader *pdu) {
   bool isReceipt = (sms.hasIntProperty(Tag::SMPP_ESM_CLASS)) ?
       ((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3C) == 0x4) : false;
 
-  if (isReceipt && ((PduXSm*)pdu)->get_optional().has_receiptedMessageId())
+  if (isReceipt) // && ((PduXSm*)pdu)->get_optional().has_receiptedMessageId())
   {
-      const char* msgid = ((PduXSm*)pdu)->get_optional().get_receiptedMessageId();
+      char buf[70];
+      uint8_t msgState;
+      int err;
+      const char* msgid = parser_->parseSms(sms,buf,msgState,err);
+      // const char* msgid = ((PduXSm*)pdu)->get_optional().get_receiptedMessageId();
       if (msgid && msgid[0] != '\0')
       {
           bool delivered = false;
           bool retry = false;
 
-          if (sms.hasIntProperty(Tag::SMPP_MSG_STATE))
+          // if (sms.hasIntProperty(Tag::SMPP_MSG_STATE))
+          // {
+          // int msgState = sms.getIntProperty(Tag::SMPP_MSG_STATE);
+          switch (msgState)
           {
-              int msgState = sms.getIntProperty(Tag::SMPP_MSG_STATE);
-              switch (msgState)
-              {
-              case SmppMessageState::DELIVERED:
-                  delivered = true;
-                  break;
-              case SmppMessageState::EXPIRED:
-              case SmppMessageState::DELETED:
-                  retry = true;
-                  break;
-              case SmppMessageState::ENROUTE:
-              case SmppMessageState::UNKNOWN:
-              case SmppMessageState::ACCEPTED:
-              case SmppMessageState::REJECTED:
-              case SmppMessageState::UNDELIVERABLE:
-                  break;
-              default:
-                  smsc_log_warn(logger, "Invalid state=%d received in reciept !", msgState);
-                  break;
-              }
+          case SmppMessageState::DELIVERED:
+              delivered = true;
+              break;
+          case SmppMessageState::EXPIRED:
+          case SmppMessageState::DELETED:
+              retry = true;
+              break;
+          case SmppMessageState::ENROUTE:
+          case SmppMessageState::UNKNOWN:
+          case SmppMessageState::ACCEPTED:
+          case SmppMessageState::REJECTED:
+          case SmppMessageState::UNDELIVERABLE:
+              break;
+          default:
+              smsc_log_warn(logger, "Invalid state=%d received in reciept !", msgState);
+              break;
           }
+          // }
           // ResponseData rd(delivered?0:smsc::system::Status::UNKNOWNERR,0,msgid);
           int status = pdu->get_commandStatus();
           if ( !status && !delivered ) {
