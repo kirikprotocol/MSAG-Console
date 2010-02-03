@@ -1,6 +1,9 @@
 History in reverse order
 ----------------------------------------------------
 
+2010-02-03 16:30 bukind
+ feature: ill-formed receipts are now processed also (in both v1 & v2)
+
 2009-12-28 18:02 bukind
  bugfix: OA for task/msg is checked when TaskInfo is loaded
          and just before sending message.
