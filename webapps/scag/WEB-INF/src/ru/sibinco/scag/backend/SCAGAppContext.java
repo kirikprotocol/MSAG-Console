@@ -103,6 +103,9 @@ public class SCAGAppContext {
             if( instType.equals(HSDaemon.typeCluster) ) { isCluster = true; }
 
             hsDaemon = new HSDaemon(config.getString("installation.type"), config.getString("installation.mirrorpath"));
+
+            String cntFile = gwConfigFolder + config.getString("gw location.counters_file");
+            countersManager = new CountersManager(cntFile, hsDaemon);
             loggingManager = new LoggingManager(config.getString("logger.properties_file"),hsDaemon);
             userManager = new UserManager(config.getString("users_config_file"),hsDaemon);
             providerManager = new ProviderManager(idsConfig);
@@ -113,13 +116,13 @@ public class SCAGAppContext {
             categoryManager = new CategoryManager(idsConfig);
             smppManager = new SmppManager(gwConfigFolder + config.getString("gw location.smpp_file"), providerManager);
             smppManager.init();
+
             String rulesFolder = gwConfigFolder + config.getString("gw location.rules_folder");
             String xsdFolder = gwConfigFolder + config.getString("gw location.xsd_folder");
             String xslFolder = gwConfigFolder + config.getString("gw location.xsl_folder");
             resourceManager = new ResourceManager(scagConfFolder);
             localeManager = new LocaleManager(config.getString("locales_file"));
-            countersManager = new CountersManager(config.getString("counters_config_file"), hsDaemon);
-            
+
 //            scagDaemon = new Daemon(gwDaemonHost, (int) config.getInt("gw daemon.port"), smppManager, config.getString("gw daemon.folder"));
 //            final ServiceInfo scagServiceInfo = (ServiceInfo) scagDaemon.getServices().get(config.getString("gw name"));
 

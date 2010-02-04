@@ -61,16 +61,16 @@ public class CountersManager
     private void load() throws IOException, ParserConfigurationException, SAXException
     {
         Document document = Utils.parse(new FileReader(configFile));
-        NodeList userNodes = document.getElementsByTagName("templates");
-        for (int i = 0; i < userNodes.getLength(); i++) {
-            Counter counter = parseXMLCounter(userNodes.item(i));
+        NodeList counterNodes = document.getElementsByTagName("template");
+        for (int i = 0; i < counterNodes.getLength(); i++) {
+            Counter counter = parseXMLCounter(counterNodes.item(i));
             counters.put(counter.getId(), counter);
         }
-        userNodes = document.getElementsByTagName("ca_tables");
-        for (int i = 0; i < userNodes.getLength(); i++) {
-            CATable ca_table = parseXMLCATable(userNodes.item(i));
+        NodeList ca_tablesNodes = document.getElementsByTagName("ca_table");
+        for (int i = 0; i < ca_tablesNodes.getLength(); i++) {
+            CATable ca_table = parseXMLCATable(ca_tablesNodes.item(i));
             ca_tables.put(ca_table.getId(), ca_table);
-            userNodes.item(i);
+            ca_tablesNodes.item(i);
         }
     }
 
@@ -112,9 +112,10 @@ public class CountersManager
     {
         NamedNodeMap attributes = node.getAttributes();
         String id = attributes.getNamedItem("id").getNodeValue();
-        String type = attributes.getNamedItem("id").getNodeValue();
-        final Counter counter = new Counter(id, CounterType.valueOf(type));
+        String type = attributes.getNamedItem("type").getNodeValue();
         String ca_table_id = node.getChildNodes().item(0).getAttributes().getNamedItem("id").getNodeValue();
+
+        final Counter counter = new Counter(id, CounterType.valueOf(type));
         counter.setCATableId(ca_table_id);
         // TODO: check all
         return counter;
