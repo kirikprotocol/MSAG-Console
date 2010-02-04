@@ -213,6 +213,8 @@ public class Constants {
             public static final Constants FAILED_OBTAIN_DIR = new Constants("error.stat.failed_obtain_dir");//Failed to obtain statistics dir. Details:
             public static final Constants NO_STAT_DIR = new Constants("error.stat.no_stat_dir");//No stat directories at path
             public static final Constants UNSUPPORTED_HEADER = new Constants("error.stat.unsupported_header");//unsupported header of file (support only SCAG.STAT file )
+            public static final Constants APPLY_COUNTERS = new Constants("error.stat.apply.counters");
+            public static final Constants APPLY_CA_TABLES = new Constants("error.stat.apply.ca_tables");
         }
 
     }

@@ -23,6 +23,7 @@ import ru.sibinco.scag.backend.sme.CategoryManager;
 import ru.sibinco.scag.backend.sme.ProviderManager;
 import ru.sibinco.scag.backend.status.StatusManager;
 import ru.sibinco.scag.backend.users.UserManager;
+import ru.sibinco.scag.backend.stat.counters.CountersManager;
 import ru.sibinco.scag.perfmon.PerfServer;
 import ru.sibinco.scag.scmon.ScServer;
 import ru.sibinco.scag.svcmon.SvcMonServer;
@@ -68,6 +69,8 @@ public class SCAGAppContext {
     private final Statuses statuses;
     private final DataSource connectionPool;
     private final LoggingManager loggingManager;
+    private final CountersManager countersManager;
+
     private final LiveConnect liveConnect;
     private Journal journal = new Journal();
     private static File scagConfFolder = null;
@@ -115,6 +118,7 @@ public class SCAGAppContext {
             String xslFolder = gwConfigFolder + config.getString("gw location.xsl_folder");
             resourceManager = new ResourceManager(scagConfFolder);
             localeManager = new LocaleManager(config.getString("locales_file"));
+            countersManager = new CountersManager(config.getString("counters_config_file"), hsDaemon);
             
 //            scagDaemon = new Daemon(gwDaemonHost, (int) config.getInt("gw daemon.port"), smppManager, config.getString("gw daemon.folder"));
 //            final ServiceInfo scagServiceInfo = (ServiceInfo) scagDaemon.getServices().get(config.getString("gw name"));
@@ -218,6 +222,10 @@ public class SCAGAppContext {
 
     public CategoryManager getCategoryManager() {
         return categoryManager;
+    }
+
+    public CountersManager getCountersManager() {
+        return countersManager;
     }
 
     public ScagRoutingManager getScagRoutingManager() {
