@@ -113,8 +113,9 @@ public class CountersManager
         NamedNodeMap attributes = node.getAttributes();
         String id = attributes.getNamedItem("id").getNodeValue();
         String type = attributes.getNamedItem("type").getNodeValue();
-        String ca_table_id = node.getChildNodes().item(0).getAttributes().getNamedItem("id").getNodeValue();
-
+        logger.debug("id=" + id + "type=" + type);
+        String ca_table_id = node.getFirstChild().getAttributes().getNamedItem("id").getNodeValue();
+        logger.debug("id=" + id + "type=" + type + "ca_id=" + ca_table_id);
         final Counter counter = new Counter(id, CounterType.valueOf(type));
         counter.setCATableId(ca_table_id);
         // TODO: check all
