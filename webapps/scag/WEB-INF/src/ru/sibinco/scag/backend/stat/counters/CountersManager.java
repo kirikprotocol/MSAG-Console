@@ -8,7 +8,6 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NamedNodeMap;
 
 import java.io.*;
-import java.util.Map;
 import java.util.HashMap;
 
 import ru.sibinco.scag.backend.installation.HSDaemon;
@@ -70,7 +69,6 @@ public class CountersManager
         for (int i = 0; i < ca_tablesNodes.getLength(); i++) {
             CATable ca_table = parseXMLCATable(ca_tablesNodes.item(i));
             ca_tables.put(ca_table.getId(), ca_table);
-            ca_tablesNodes.item(i);
         }
     }
 
@@ -102,7 +100,7 @@ public class CountersManager
     {
         final String header =
             "\t\t<template id=\"" + StringEncoderDecoder.encode(counter.getId()) + '"' +
-            " type=\"" + StringEncoderDecoder.encode(counter.getType()) + "\">\n" +
+            " type=\"" + StringEncoderDecoder.encode(counter.getTypeString()) + "\">\n" +
             "\t\t\t<ca id=\"" + StringEncoderDecoder.encode(counter.getCATableId()) + "\"/>\n";
         // TODO: dump additional params
         String footer = "\t\t</template>\n";
@@ -132,7 +130,7 @@ public class CountersManager
                 final String paramType = childNodeAttributes.getNamedItem("type").getNodeValue();
                 logger.debug("param=" + paramName + " type=" + paramType);
                 counter.setParam(paramName, paramType);
-                // TODO: add param value
+                // TODO: add param value!
             }
         }
         // TODO: check all

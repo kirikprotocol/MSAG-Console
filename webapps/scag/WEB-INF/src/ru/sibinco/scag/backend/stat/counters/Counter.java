@@ -14,12 +14,14 @@ import java.util.HashMap;
  */
 public class Counter
 {
-    private final String id;
-    private final CounterType type;
-
-    private final HashMap<String, String> params = new HashMap<String, String>();
+    private String id = "";
+    private CounterType type = CounterType.ACCUMULATOR;
     private String CATableId = null;
 
+    private final HashMap<String, String> params = new HashMap<String, String>();
+
+    public Counter() {
+    }
     public Counter(String id, CounterType type) {
         this.id = id; this.type = type;
     }
@@ -27,8 +29,21 @@ public class Counter
     public String getId() {
         return id;
     }
-    public String getType() {
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public CounterType getType() {
+        return type;
+    }
+    public String getTypeString() {
         return type.toString();
+    }
+    public void setType(CounterType type) {
+        this.type = type;
+    }
+    public void setType(String type) {
+        this.type = CounterType.valueOf(type);
     }
 
     public Set<Map.Entry<String, String>> getParams() {
