@@ -258,4 +258,8 @@ public class InfoSmeContext implements SMEAppContext
   public InfoSmeTaskManager getTaskManager() {
     return taskManager;
   }
+
+  public Boolean getUssdFeature() {
+    return infoSmeConfig.getUssdPushFeature();
+  }
 }

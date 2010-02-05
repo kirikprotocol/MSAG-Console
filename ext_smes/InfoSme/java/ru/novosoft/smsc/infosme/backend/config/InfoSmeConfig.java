@@ -1,6 +1,8 @@
 package ru.novosoft.smsc.infosme.backend.config;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.region.Region;
+import ru.novosoft.smsc.admin.users.User;
 import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.admin.journal.Actions;
 import ru.novosoft.smsc.admin.journal.Journal;
@@ -17,6 +19,7 @@ import ru.novosoft.smsc.infosme.backend.config.tasks.Task;
 import ru.novosoft.smsc.infosme.backend.config.tasks.TaskManager;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.Functions;
+import ru.novosoft.smsc.jsp.SMSCAppContext;
 
 import java.util.*;
 import java.text.SimpleDateFormat;
@@ -33,6 +36,7 @@ public class InfoSmeConfig {
   private static final SimpleDateFormat tf = new SimpleDateFormat("HH:mm:ss");
 
   // Common options
+  private Boolean ussdPushFeature;
   private String address;
   private String svcType;
   private int protocolId;
@@ -272,6 +276,57 @@ public class InfoSmeConfig {
     return taskManager.createTask();
   }
 
+  public Task createTask(User owner) throws AdminException {
+    Task t = createTask();
+    resetTask(t, owner);
+    return t;
+  }
+  public Task createTask(User owner, String name) throws AdminException {
+    Task t = createTask(owner);
+    t.setName(name);
+    return t;
+  }
+
+  public void resetTask(Task task, User owner) throws AdminException {
+    task.setProvider(Task.INFOSME_EXT_PROVIDER);
+    task.setOwner(owner.getName());
+    task.setDelivery(true);
+    task.setPriority(owner.getPrefs().getInfosmePriority());
+    task.setMessagesCacheSize(owner.getPrefs().getInfosmeCacheSize());
+    task.setMessagesCacheSleep(owner.getPrefs().getInfosmeCacheSleep());
+    task.setUncommitedInGeneration(owner.getPrefs().getInfosmeUncommitGeneration());
+    task.setUncommitedInProcess(owner.getPrefs().getInfosmeUncommitProcess());
+    task.setTrackIntegrity(owner.getPrefs().isInfosmeTrackIntegrity());
+    task.setKeepHistory(owner.getPrefs().isInfosmeKeepHistory());
+    task.setReplaceMessage(owner.getPrefs().isInfosmeReplaceMessage());
+    task.setSvcType(owner.getPrefs().getInfosmeSvcType());
+
+    Region r = ctx.getAppContext().getRegionsManager().getRegionById(task.getRegionId());
+    task.setActivePeriodStart(r == null ? owner.getPrefs().getInfosmePeriodStart() : r.getLocalTime(owner.getPrefs().getInfosmePeriodStart()));
+    task.setActivePeriodEnd(r == null ? owner.getPrefs().getInfosmePeriodEnd() : r.getLocalTime(owner.getPrefs().getInfosmePeriodEnd()));
+    task.setActiveWeekDaysSet(owner.getPrefs().getInfosmeWeekDaysSet());
+    task.setTransactionMode(owner.getPrefs().isInfosmeTrMode());
+    task.setValidityPeriod(owner.getPrefs().getInfosmeValidityPeriod());
+    String sa;
+    if(owner.getPrefs().getInfosmeSourceAddress() != null && (sa = owner.getPrefs().getInfosmeSourceAddress().trim()).length() != 0) {
+      task.setAddress(sa);
+    }else {
+      task.setAddress(ctx.getInfoSmeConfig().getAddress());
+    }
+    Boolean ussdPushFeature = ctx.getInfoSmeConfig().getUssdPushFeature();
+    if(ussdPushFeature != null) {
+      task.setUseUssdPush(
+          owner.getPrefs().isInfosmeUssdPush() != null && owner.getPrefs().isInfosmeUssdPush().booleanValue() ? 1 : 0
+      );
+    }else {
+      task.setUseUssdPush(-1);
+    }
+
+    task.setEnabled(true);
+
+    task.setStartDate(new Date());
+  }
+
   public void addTask(Task t) {
     taskManager.addTask(t);
   }
@@ -355,9 +410,9 @@ public class InfoSmeConfig {
     return taskManager.containsTaskWithId(id);
   }
 
-    public boolean hasUssdPushFeature() { 
-        return taskManager.hasUssdPushFeature();
-    }
+  public boolean hasUssdPushFeature() {
+    return taskManager.hasUssdPushFeature();
+  }
 
   // SCHEDULES ---------------------------------
 
@@ -467,6 +522,9 @@ public class InfoSmeConfig {
 
   private void loadOptions(Config cfg) throws AdminException {
     try {
+      if(cfg.containsParameter("InfoSme.ussdPushFeature")) {
+        ussdPushFeature = Boolean.valueOf(cfg.getBool("InfoSme.ussdPushFeature"));
+      }
       address = cfg.getString("InfoSme.Address");
       svcType = cfg.getString("InfoSme.SvcType");
       protocolId = cfg.getInt("InfoSme.ProtocolId");
@@ -601,6 +659,9 @@ public class InfoSmeConfig {
 
       //
       cfg.setString("InfoSme.Address", address);
+      if(ussdPushFeature != null) {
+        cfg.setBool("InfoSme.ussdPushFeature", ussdPushFeature.booleanValue());
+      }
       cfg.setString("InfoSme.SvcType", svcType);
       cfg.setInt("InfoSme.ProtocolId", protocolId);
       cfg.setInt("InfoSme.maxMessagesPerSecond", maxMessagesPerSecond);
@@ -1142,5 +1203,9 @@ public class InfoSmeConfig {
 
   public void setArchiveLocation(String archiveLocation) {
     this.archiveLocation = archiveLocation;
+  }
+
+  public Boolean getUssdPushFeature() {
+    return ussdPushFeature;
   }
 }

@@ -260,6 +260,8 @@ public abstract class UsersEditBean extends SmscBean {
   protected String infosmeSvcType = "";
   protected String infosmeActivePeriodStart = "";
   protected String infosmeActivePeriodEnd = "";
+  protected String infosmeSourceAddress = "";
+  protected boolean infoSmeUssdPush = false;
   protected String[] infosmeActiveWeekDays = new String[0];
 
   protected int infosmeMessagesCacheSize = 0;
@@ -322,6 +324,22 @@ public abstract class UsersEditBean extends SmscBean {
 
   public void setInfosmeSvcType(String svcType) {
     this.infosmeSvcType = svcType;
+  }
+
+  public String getInfosmeSourceAddress() {
+    return infosmeSourceAddress;
+  }
+
+  public void setInfosmeSourceAddress(String infosmeSourceAddress) {
+    this.infosmeSourceAddress = infosmeSourceAddress;
+  }
+
+  public boolean isInfoSmeUssdPush() {
+    return infoSmeUssdPush;
+  }
+
+  public void setInfoSmeUssdPush(boolean infoSmeUssdPush) {
+    this.infoSmeUssdPush = infoSmeUssdPush;
   }
 
   public String getInfosmeMessagesCacheSize() {
@@ -414,6 +432,24 @@ public abstract class UsersEditBean extends SmscBean {
 
   public void setInfosmeKeepHistory(boolean infosmeKeepHistory) {
     this.infosmeKeepHistory = infosmeKeepHistory;
+  }
+
+  private static Object infoSmeContext;
+
+  public boolean isUssdPushFeature() {
+    try{
+      if(infoSmeContext == null) {
+        infoSmeContext = Class.forName("ru.novosoft.smsc.infosme.backend.InfoSmeContext").
+            getMethod("getInstance", new Class[]{SMSCAppContext.class, String.class}).
+            invoke(null, new Object[]{appContext, "InfoSme"});
+      }
+      Boolean result = (Boolean)infoSmeContext.getClass().getMethod("getUssdFeature", new Class[]{}).invoke(infoSmeContext, new Object[]{});
+      return result != null && result.booleanValue();
+    }catch(Throwable e) {
+      logger.error(e,e);
+      e.printStackTrace();
+      return false;
+    }
   }
 
 

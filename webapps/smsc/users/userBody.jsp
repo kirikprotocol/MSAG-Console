@@ -242,7 +242,21 @@
                           <input class=txt name=infosmePriority value="<%=StringEncoderDecoder.encode(bean.getInfosmePriority())%>" validation="positive">
                       </td>
                     </tr>
-                            </table>
+                    <tr class=row<%=rowN++&1%>>
+                      <th><%=getLocString("infosme.label.originating_address")%></th>
+                      <td>
+                          <input class=txt name=infosmeSourceAddress value="<%=StringEncoderDecoder.encode(bean.getInfosmeSourceAddress())%>">
+                      </td>
+                    </tr>
+                    <%if(bean.isUssdPushFeature()){ %>
+                      <tr class=row<%=rowN++&1%>>
+                        <th><%=getLocString("infosme.label.use_ussd_push")%></th>
+                        <td>
+                          <input class=check type=checkbox id=infoSmeUssdPush name=infoSmeUssdPush <%=bean.isInfoSmeUssdPush() ? "checked" : ""%>>
+                        </td>
+                      </tr>
+                    <%} %>
+                    </table>
 
                     <%finishSection(out);
 

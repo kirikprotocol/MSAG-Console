@@ -93,14 +93,7 @@ public class TaskEdit extends InfoSmeBean
     if (!create)
       return getInfoSmeContext().getInfoSmeConfig().getTask(getId());
     else {
-      Task task = getInfoSmeContext().getInfoSmeConfig().createTask();
-      task.setPriority(1);
-      task.setOwner(user.getName());
-      task.setMessagesCacheSize(100);
-      task.setMessagesCacheSleep(1);
-      task.setUncommitedInGeneration(1);
-      task.setUncommitedInProcess(1);
-      return task;
+      return getInfoSmeContext().getInfoSmeConfig().createTask(user);
     }
   }
 

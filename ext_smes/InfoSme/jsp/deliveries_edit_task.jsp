@@ -35,7 +35,7 @@
     </tr>
     <tr class=row<%=rowN++&1%>>
       <th><%= getLocString("infosme.label.active_period")%></th>
-      <td>                                                               w
+      <td>
         <input class=timeField id=activePeriodStart name=activePeriodStart value="<%=StringEncoderDecoder.encode(deliveries_bean.getActivePeriodStart())%>" maxlength=20 style="z-index:22;"><button class=timeButton type=button onclick="return showTime(activePeriodStart, false, true);">...</button>
         &nbsp;<%= getLocString("infosme.label.active_period_to")%>&nbsp;
         <input class=timeField id=activePeriodEnd name=activePeriodEnd value="<%=StringEncoderDecoder.encode(deliveries_bean.getActivePeriodEnd())%>" maxlength=20 style="z-index:22;"><button class=timeButton type=button onclick="return showTime(activePeriodEnd, false, true);">...</button>

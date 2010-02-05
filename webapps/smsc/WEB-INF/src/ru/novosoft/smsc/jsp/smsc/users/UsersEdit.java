@@ -57,7 +57,8 @@ public class UsersEdit extends UsersEditBean {
           infosmeSvcType = user.getPrefs().getInfosmeSvcType();
           infosmeActivePeriodStart = tf.format(user.getPrefs().getInfosmePeriodStart());
           infosmeActivePeriodEnd = tf.format(user.getPrefs().getInfosmePeriodEnd());
-
+          infoSmeUssdPush = user.getPrefs().isInfosmeUssdPush() != null && user.getPrefs().isInfosmeUssdPush().booleanValue();
+          infosmeSourceAddress = user.getPrefs().getInfosmeSourceAddress();
           Collection set = user.getPrefs().getInfosmeWeekDaysSet();
           infosmeActiveWeekDays = new String[set.size()];
           int i=0;
@@ -128,6 +129,10 @@ public class UsersEdit extends UsersEditBean {
       prefs.setInfosmeUncommitGeneration(infosmeUncommitedInGeneration);
       prefs.setInfosmeUncommitProcess(infosmeUncommitedInProcess);
       prefs.setInfosmeWeekDaysSet(Arrays.asList(infosmeActiveWeekDays));
+      prefs.setInfosmeSourceAddress(infosmeSourceAddress);
+      if(isUssdPushFeature()) {
+        prefs.setInfosmeUssdPush(Boolean.valueOf(infoSmeUssdPush));
+      }
       if (timezone != null)
         prefs.setTimezone(TimeZone.getTimeZone(timezone));
       journalAppend(SubjectTypes.TYPE_user, login, Actions.ACTION_MODIFY);

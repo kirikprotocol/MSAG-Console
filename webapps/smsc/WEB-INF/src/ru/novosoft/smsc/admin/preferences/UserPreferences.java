@@ -102,6 +102,8 @@ public class UserPreferences {
   private int infosmePriority;
   private boolean infosmeReplaceMessage = false;
   private String infosmeSvcType = "";
+  private String infosmeSourceAddress = null;
+  private Boolean infosmeUssdPush;
   private Date infosmePeriodStart = null;
   private Date infosmePeriodEnd = null;
   private Date infosmeValidityPeriod = null;
@@ -503,6 +505,8 @@ public class UserPreferences {
       infosmeWeekDaysSet = new HashSet(WEEK_DAYS.length);
       Functions.addValuesToCollection(this.infosmeWeekDaysSet, DEFAULT_ACTIVE_WEEK_DAYS, ",", true);
       infosmePriority = 10;
+      infosmeSourceAddress="";
+
 
       if (values != null) {
         for (int i = 0; i < values.getLength(); i++) {
@@ -552,6 +556,10 @@ public class UserPreferences {
             infosmeValidityPeriod = tf.parse(value);
           } else if(name.equals("infosme.priority")) {
             infosmePriority = Integer.parseInt(value);
+          } else if(name.equals("infosme.sourceAddress")) {
+            infosmeSourceAddress = value;
+          } else if(name.equals("infosme.ussdPush")) {
+            infosmeUssdPush = Boolean.valueOf(value);
           }
         }
       }
@@ -588,6 +596,10 @@ public class UserPreferences {
     result += "\t\t<pref name=\"infosme.messagesCacheSleep\" value=\"" + infosmeCacheSleep + "\"/>\n";
     result += "\t\t<pref name=\"infosme.replaceMessage\" value=\"" + infosmeReplaceMessage + "\"/>\n";
     result += "\t\t<pref name=\"infosme.svcType\" value=\"" + infosmeSvcType + "\"/>\n";
+    result += "\t\t<pref name=\"infosme.sourceAddress\" value=\"" + infosmeSourceAddress + "\"/>\n";
+    if(infosmeUssdPush != null) {
+      result += "\t\t<pref name=\"infosme.ussdPush\" value=\"" + infosmeUssdPush + "\"/>\n";
+    }
     result += "\t\t<pref name=\"infosme.trackIntegrity\" value=\"" + infosmeTrackIntegrity + "\"/>\n";
     result += "\t\t<pref name=\"infosme.transactionMode\" value=\"" + infosmeTrMode + "\"/>\n";
     result += "\t\t<pref name=\"infosme.uncommitedInGeneration\" value=\"" + infosmeUncommitGeneration + "\"/>\n";
@@ -720,6 +732,22 @@ public class UserPreferences {
 
   public void setInfosmeUncommitGeneration(int infosmeUncommitGeneration) {
     this.infosmeUncommitGeneration = infosmeUncommitGeneration;
+  }
+
+  public String getInfosmeSourceAddress() {
+    return infosmeSourceAddress;
+  }
+
+  public void setInfosmeSourceAddress(String infosmeSourceAddress) {
+    this.infosmeSourceAddress = infosmeSourceAddress;
+  }
+
+  public Boolean isInfosmeUssdPush() {
+    return infosmeUssdPush;
+  }
+
+  public void setInfosmeUssdPush(Boolean infosmeUssdPush) {
+    this.infosmeUssdPush = infosmeUssdPush;
   }
 
   public int getInfosmeUncommitProcess() {

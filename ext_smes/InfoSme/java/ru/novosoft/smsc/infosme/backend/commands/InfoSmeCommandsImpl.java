@@ -6,6 +6,7 @@ import ru.novosoft.smsc.admin.console.commands.infosme.Distribution;
 import ru.novosoft.smsc.admin.console.commands.infosme.InfoSmeCommands;
 import ru.novosoft.smsc.admin.users.User;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.region.Region;
 import ru.novosoft.smsc.infosme.backend.InfoSmeContext;
 import ru.novosoft.smsc.infosme.backend.Message;
 import ru.novosoft.smsc.infosme.backend.config.tasks.Task;
@@ -101,7 +102,7 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
         }
       }
       if (task == null)
-        task = createTask(context, name, user);
+        task = context.getInfoSmeConfig().createTask(user, name);
 
       if(!context.getTaskManager().addTask(task, user, file)) {
         throw new AdminException("Can't add task: "+file);
@@ -318,35 +319,8 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
     }
   }
 
-  private static Task createTask(InfoSmeContext ctx, String name, User owner) throws AdminException {
-    Task task = ctx.getInfoSmeConfig().createTask();
-    task.setProvider(Task.INFOSME_EXT_PROVIDER);
-    task.setName(name);
-    task.setOwner(owner.getName());
-    task.setDelivery(true);
-    task.setPriority(owner.getPrefs().getInfosmePriority());
-    task.setMessagesCacheSize(owner.getPrefs().getInfosmeCacheSize());
-    task.setMessagesCacheSleep(owner.getPrefs().getInfosmeCacheSleep());
-    task.setUncommitedInGeneration(owner.getPrefs().getInfosmeUncommitGeneration());
-    task.setUncommitedInProcess(owner.getPrefs().getInfosmeUncommitProcess());
-    task.setTrackIntegrity(owner.getPrefs().isInfosmeTrackIntegrity());
-    task.setKeepHistory(owner.getPrefs().isInfosmeKeepHistory());
-    task.setReplaceMessage(owner.getPrefs().isInfosmeReplaceMessage());
-    task.setSvcType(owner.getPrefs().getInfosmeSvcType());
-    task.setActivePeriodStart(owner.getPrefs().getInfosmePeriodStart());
-    task.setActivePeriodEnd(owner.getPrefs().getInfosmePeriodEnd());
-    task.setActiveWeekDaysSet(owner.getPrefs().getInfosmeWeekDaysSet());
-    task.setTransactionMode(owner.getPrefs().isInfosmeTrMode());
-    task.setValidityPeriod(owner.getPrefs().getInfosmeValidityPeriod());
-
-    task.setEnabled(true);
-
-    task.setStartDate(new Date());
-    return task;
-  }
-
   private static Task createTask(InfoSmeContext ctx, Distribution distr, User owner) throws AdminException {
-    Task task = createTask(ctx, distr.getTaskName(), owner);
+    Task task = ctx.getInfoSmeConfig().createTask(owner, distr.getTaskName());
     return alterTask(task, distr);
   }
 

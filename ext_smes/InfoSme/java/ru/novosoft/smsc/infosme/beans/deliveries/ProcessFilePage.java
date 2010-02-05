@@ -53,7 +53,7 @@ public class ProcessFilePage extends DeliveriesPage {
           t.setRegionId(region);
           t.setActualRecordsSize(deliveriesFile.getTotalSize());
           t.setOwner(pageData.owner.getName());
-          resetTask(t, pageData.getInfoSmeContext(), pageData.getAppContext(), pageData.owner);
+          pageData.getInfoSmeContext().getInfoSmeConfig().resetTask(t, pageData.owner);
 
           multiTask.addTask(region, t);
           t.setDeliveriesFile(deliveriesFile.getFile());
@@ -103,32 +103,6 @@ public class ProcessFilePage extends DeliveriesPage {
 
   public static boolean isUserAdmin(HttpServletRequest request) {
     return request.isUserInRole("infosme-admin");
-  }
-
-  private static void resetTask(Task task, InfoSmeContext context, SMSCAppContext appContext, User owner) throws AdminException {
-
-    task.setAddress(context.getInfoSmeConfig().getAddress());
-    task.setDelivery(true);
-    task.setProvider(Task.INFOSME_EXT_PROVIDER);
-    task.setPriority(owner.getPrefs().getInfosmePriority());
-    task.setMessagesCacheSize(owner.getPrefs().getInfosmeCacheSize());
-    task.setMessagesCacheSleep(owner.getPrefs().getInfosmeCacheSleep());
-    task.setUncommitedInGeneration(owner.getPrefs().getInfosmeUncommitGeneration());
-    task.setUncommitedInProcess(owner.getPrefs().getInfosmeUncommitProcess());
-    task.setTrackIntegrity(owner.getPrefs().isInfosmeTrackIntegrity());
-    task.setKeepHistory(owner.getPrefs().isInfosmeKeepHistory());
-    task.setReplaceMessage(owner.getPrefs().isInfosmeReplaceMessage());
-    task.setSvcType(owner.getPrefs().getInfosmeSvcType());
-    task.setEnabled(true);
-
-    Region r = appContext.getRegionsManager().getRegionById(task.getRegionId());
-    task.setActivePeriodStart(r == null ? owner.getPrefs().getInfosmePeriodStart() : r.getLocalTime(owner.getPrefs().getInfosmePeriodStart()));
-    task.setActivePeriodEnd(r == null ? owner.getPrefs().getInfosmePeriodEnd() : r.getLocalTime(owner.getPrefs().getInfosmePeriodEnd()));
-    task.setValidityPeriod(owner.getPrefs().getInfosmeValidityPeriod());
-    task.setTransactionMode(owner.getPrefs().isInfosmeTrMode());
-    task.setActiveWeekDaysSet(owner.getPrefs().getInfosmeWeekDaysSet());
-
-    task.setStartDate(new Date());
   }
 
   public int getId() {
