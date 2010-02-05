@@ -1,6 +1,9 @@
 History in reverse order
 ----------------------------------------------------
 
+----------------------------------------------------
+infosme-build-20100205 16:50 bukind
+
 2010-02-03 16:30 bukind
  feature: ill-formed receipts are now processed also (in both v1 & v2)
 
