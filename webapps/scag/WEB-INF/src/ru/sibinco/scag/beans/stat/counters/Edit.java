@@ -50,7 +50,9 @@ public class Edit extends EditBean
         requestParams = request.getParameterMap();
         super.process(request, response);
 
-        //if (isAdd()) setDefaultValues();
+        /*if (isAdd()) {
+            counter = new Counter();
+        }*/
 
         final Collection<Counter> counters = appContext.getCountersManager().getCounters().values();
         final List<String> ids = new ArrayList<String>(counters.size());
@@ -58,8 +60,8 @@ public class Edit extends EditBean
         countersIds = ids.toArray(new String[ids.size()]);
     }
 
-    protected void load(String loadId) throws SCAGJspException
-    {
+    protected void load(String loadId) throws SCAGJspException {
+        logger.debug("Loading counter, id=" + loadId);
         counter = appContext.getCountersManager().getCounters().get(loadId);
     }
 

@@ -143,8 +143,8 @@ public class CountersManager
             "\t\t<ca_table id=\"" + StringEncoderDecoder.encode(ca_table.getId()) + '"' +
             " system=\"" + StringEncoderDecoder.encode(ca_table.getSystem()) + "\">\n";
         String footer =
-            "\t\t\t<limits min=\"" + StringEncoderDecoder.encode(ca_table.getLimitsMin()) + '"' +
-            "max=\"" + StringEncoderDecoder.encode(ca_table.getLimitsMax())+ "\">\n";
+            "\t\t\t<limits min=\"" + StringEncoderDecoder.encode(ca_table.getLimitsMinString()) + '"' +
+            "max=\"" + StringEncoderDecoder.encode(ca_table.getLimitsMaxString())+ "\">\n";
 
         // TODO: dump limits content & additional params
 
@@ -154,8 +154,17 @@ public class CountersManager
     }
     private CATable parseXMLCATable(Node node)
     {
-        // TODO: parse XML
-        return new CATable("567", false);
+        NamedNodeMap attributes = node.getAttributes();
+        String id = attributes.getNamedItem("id").getNodeValue();
+        String system = attributes.getNamedItem("system").getNodeValue();
+        logger.debug("id=" + id + ", system=" + system);
+        final CATable ca_table = new CATable(id, Boolean.valueOf(system));
+
+        // TODO: parse limits & additional params
+        ca_table.setLimitsMin(10);
+        ca_table.setLimitsMax(100);
+
+        return ca_table;
     }
 
     public synchronized HashMap<String, Counter> getCounters() {

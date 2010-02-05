@@ -24,8 +24,8 @@
             <sm-ep:txt title="statistics.counters.edit.txt.id"     name="id" validation="nonEmpty" readonly="${!bean.add}"/>
             <sm-ep:list title="statistics.counters.edit.list.type" name="type" readonly="${!bean.add}" emptyOption="true"
                         values="${fn:join(bean.typeIds, ',')}" valueTitles="${fn:join(bean.typeTitles, '~')}"/>
-            <sm-ep:list title="statistics.counters.edit.list.ca"   name="ca" emptyOption="true"
-                        values="${fn:join(bean.caIds, ',')}" valueTitles="${fn:join(bean.caTitles, '~')}"/>
+            <sm-ep:list title="statistics.counters.edit.list.ca"   name="CATableId" emptyOption="true"
+                        values="${fn:join(bean.caIds, ',')}" valueTitles="${fn:join(bean.caIds, '~')}"/>
         </sm-ep:properties>
     </jsp:body>
 </sm:page>

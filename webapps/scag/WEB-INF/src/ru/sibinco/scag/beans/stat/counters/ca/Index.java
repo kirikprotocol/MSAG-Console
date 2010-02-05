@@ -14,7 +14,7 @@ import java.util.Collection;
  * Date: 05.02.2010
  * Time: 12:34:25
  */
-public class Index  extends TabledBeanImpl
+public class Index extends TabledBeanImpl
 {
     protected Collection getDataSource() {
         return appContext.getCountersManager().getCATables().values();
@@ -26,6 +26,7 @@ public class Index  extends TabledBeanImpl
 
     protected void delete() throws SCAGJspException
     {
+        // TODO: send command(s) to MSAG
         if (appContext.getCountersManager().getCATables().keySet().removeAll(checkedSet)) {
             try {
                 appContext.getCountersManager().apply();

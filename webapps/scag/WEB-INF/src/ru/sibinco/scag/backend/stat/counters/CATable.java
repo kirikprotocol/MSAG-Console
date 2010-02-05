@@ -10,12 +10,14 @@ package ru.sibinco.scag.backend.stat.counters;
  */
 public class CATable
 {
-    private final String id;
-    private final boolean system;
+    private String id = null;
+    private boolean system = false;
 
     private int limitsMin = 0;
     private int limitsMax = 0;
 
+    public CATable() {
+    }
     public CATable(String id, boolean system) {
         this.id = id; this.system = system;
     }
@@ -23,18 +25,37 @@ public class CATable
     public String getId() {
         return id;
     }
+    public void setId(String id) {
+        this.id = id;
+    }
+
     public boolean isSystem() {
         return system;
     }
-
     public String getSystem() {
         return Boolean.toString(system);
     }
-    public String getLimitsMin() {
-        return Integer.toString(limitsMin);
-    }
-    public String getLimitsMax() {
-        return Integer.toString(limitsMax);
+    public void setSystem(boolean system) {
+        this.system = system;
     }
 
+    public int getLimitsMin() {
+        return limitsMin;
+    }
+    public String getLimitsMinString() {
+        return Integer.toString(limitsMin);
+    }
+    public void setLimitsMin(int limitsMin) {
+        this.limitsMin = limitsMin;
+    }
+
+    public int getLimitsMax() {
+        return limitsMax;
+    }
+    public String getLimitsMaxString() {
+        return Integer.toString(limitsMax);
+    }
+    public void setLimitsMax(int limitsMax) {
+        this.limitsMax = limitsMax;
+    }
 }

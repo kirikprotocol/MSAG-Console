@@ -131,7 +131,6 @@ public class Config implements Cloneable
   }
 
   /**
-   * Ищет имена секций (только секций)
    *
    * @return section names that is immediate descedants of given section. Full names.
    */
@@ -149,7 +148,6 @@ public class Config implements Cloneable
   }
 
   /**
-   * Ищет имена секций (только секций)
    *
    * @return section names that is immediate descedants of given section. Full names.
    */
@@ -167,7 +165,6 @@ public class Config implements Cloneable
   }
 
   /**
-   * Ищет имена секций (только секций)
    *
    * @return section names that is immediate descedants of given section.
    */
@@ -239,27 +236,11 @@ public class Config implements Cloneable
       removeParam((String) i.next());
   }
 
-  /**
-   * Записывает конфиг в тот файл, из которого прочитал в конструкторе. Если конфиг был построен через Config(Reader configReader) - то есть файл конфига
-   * неизвестен - будет брошен NullPointerException <br> В файл конфига будет записана та кодировка, под которой запущен сервлет контейнер.
-   *
-   * @throws IOException
-   * @throws WrongParamTypeException
-   * @throws NullPointerException    если неизвестен файл конфига. Если вы создаёте конфиг с помощью Config(Reader configReader), то будьте добры для записи
-   *                                 использовать метод save(File configFileToSave, String encoding)
-   * @see #save(File configFileToSave)
-   */
   public synchronized void save() throws IOException, WrongParamTypeException, NullPointerException
   {
     save(Functions.getLocaleEncoding());
   }
 
-  /**
-   * Записывает конфиг в указанный файл.<br> В файл конфига будет записана та кодировка, под которой запущен сервлет контейнер.
-   *
-   * @throws IOException
-   * @throws WrongParamTypeException
-   */
   public synchronized void save(final File configFile) throws IOException, WrongParamTypeException
   {
     if (null == configFile)
@@ -267,17 +248,6 @@ public class Config implements Cloneable
     save(configFile, Functions.getLocaleEncoding());
   }
 
-  /**
-   * Записывает конфиг в тот файл, из которого прочитал в конструкторе. Если конфиг был построен через Config(Reader configReader) - то есть файл конфига
-   * неизвестен - будет брошен NullPointerException
-   *
-   * @param encoding - кодировка, которая будет указана в файле конфига.
-   * @throws IOException
-   * @throws WrongParamTypeException
-   * @throws NullPointerException    если неизвестен файл конфига. Если вы создаёте конфиг с помощью Config(Reader configReader), то будьте добры для записи
-   *                                 использовать метод save(File configFileToSave, String encoding)
-   * @see #save(File configFileToSave, String encoding)
-   */
   private synchronized void save(final String encoding) throws IOException, WrongParamTypeException, NullPointerException
   {
     if (null == configFile)
@@ -285,15 +255,6 @@ public class Config implements Cloneable
     save(configFile, encoding);
   }
 
-  /**
-   * Записывает конфиг в указанный файл.
-   *
-   * @param encoding         - кодировка, которая будет указана в файле конфига.
-   * @param configFileToSave
-   * @param encoding
-   * @throws IOException
-   * @throws WrongParamTypeException
-   */
   private synchronized void save(final File configFileToSave, final String encoding) throws IOException, WrongParamTypeException
   {
     final File configXmlNew = Functions.createNewFilenameForSave(configFileToSave);
