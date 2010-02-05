@@ -114,22 +114,27 @@ public class CountersManager
         String id = attributes.getNamedItem("id").getNodeValue();
         String type = attributes.getNamedItem("type").getNodeValue();
         logger.debug("id=" + id + ", type=" + type);
+        final Counter counter = new Counter(id, CounterType.valueOf(type));
+
         NodeList childs = node.getChildNodes();
-        for (int i = 0; i < childs.getLength(); i++) {
+        for (int i = 0; i < childs.getLength(); i++)
+        {
             Node childNode = childs.item(i);
-            logger.debug("nname=" + childNode.getNodeName() + " nvalue=" + childNode.getNodeValue());
-            NamedNodeMap childNodeAttributes = childNode.getAttributes();
-            if (childNodeAttributes != null) {
-                for (int j=0; j<childNodeAttributes.getLength(); j++) {
-                    Node attr = childNodeAttributes.item(j);
-                    logger.debug("aname=" + attr.getNodeName() + " avalue=" + attr.getNodeValue());
-                }
+            String nodeName = childNode.getNodeName();
+            if (nodeName.equals("ca")) {
+                NamedNodeMap childNodeAttributes = childNode.getAttributes();
+                final String ca_table_id = childNodeAttributes.getNamedItem("id").getNodeValue();
+                logger.debug("ca_id=" + ca_table_id);
+                counter.setCATableId(ca_table_id);
+            } else if (nodeName.equals("param")) {
+                NamedNodeMap childNodeAttributes = childNode.getAttributes();
+                final String paramName = childNodeAttributes.getNamedItem("name").getNodeValue();
+                final String paramType = childNodeAttributes.getNamedItem("type").getNodeValue();
+                logger.debug("param=" + paramName + " type=" + paramType);
+                counter.setParam(paramName, paramType);
+                // TODO: add param value
             }
         }
-        String ca_table_id = "aaa";//node.getFirstChild().getAttributes().getNamedItem("id").getNodeValue();
-        //logger.debug("id=" + id + ", type=" + type + ", ca_id=" + ca_table_id);
-        final Counter counter = new Counter(id, CounterType.valueOf(type));
-        counter.setCATableId(ca_table_id);
         // TODO: check all
         return counter;
     }
