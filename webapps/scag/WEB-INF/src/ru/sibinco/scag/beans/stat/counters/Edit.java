@@ -9,7 +9,6 @@ import ru.sibinco.scag.backend.stat.counters.CounterType;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.*;
-import static java.lang.String.valueOf;
 
 /**
  * Copyright (c) EyeLine Communications
@@ -24,7 +23,6 @@ public class Edit extends EditBean
     private Counter counter = new Counter();
 
     protected Map requestParams = new HashMap();
-    protected String[] countersIds = new String[0];
     private String[] caIds;
 
     public String getId() {
@@ -52,15 +50,9 @@ public class Edit extends EditBean
         requestParams = request.getParameterMap();
         super.process(request, response);
 
-        /*if (isAdd()) {
-            counter = new Counter();
-        }*/
+        // if (isAdd())
 
-        final Collection<Counter> counters = appContext.getCountersManager().getCounters().values();
-        final List<String> ids = new ArrayList<String>(counters.size());
-        for (Counter counter : counters) ids.add(valueOf(counter.getId()));
-        countersIds = ids.toArray(new String[ids.size()]);
-        Set<String> cas = appContext.getCountersManager().getCATables().keySet();
+        final Set<String> cas = appContext.getCountersManager().getCATables().keySet();
         caIds = cas.toArray(new String[cas.size()]);
     }
 

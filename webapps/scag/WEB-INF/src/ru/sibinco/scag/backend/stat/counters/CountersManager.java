@@ -78,10 +78,12 @@ public class CountersManager
         hsDaemon.store(configFile);
     }
 
-    public void addCounter(Counter counter)
-    {
+    public void addCounter(Counter counter) {
         counters.put(counter.getId(), counter);
-        //apply();
+        // TODO: apply config, command call to MSAG, restore if failed
+    }
+    public void addCATable(CATable ca_table) {
+        ca_tables.put(ca_table.getId(), ca_table);
         // TODO: apply config, command call to MSAG, restore if failed
     }
 
