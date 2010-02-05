@@ -24,6 +24,7 @@ public class Edit extends EditBean
 
     protected Map requestParams = new HashMap();
     protected String[] countersIds = new String[0];
+    private String[] caIds;
 
     public String getId() {
         return counter.getId();
@@ -58,6 +59,8 @@ public class Edit extends EditBean
         final List<String> ids = new ArrayList<String>(counters.size());
         for (Counter counter : counters) ids.add(valueOf(counter.getId()));
         countersIds = ids.toArray(new String[ids.size()]);
+        Set<String> cas = appContext.getCountersManager().getCATables().keySet();
+        caIds = cas.toArray(new String[cas.size()]);
     }
 
     protected void load(String loadId) throws SCAGJspException {
@@ -84,8 +87,7 @@ public class Edit extends EditBean
         return ids.toArray(new String[ids.size()]);
     }
     public String[] getCaIds() {
-        Set<String> cas = appContext.getCountersManager().getCATables().keySet();
-        return cas.toArray(new String[cas.size()]);
+        return caIds; 
     }
     
 }
