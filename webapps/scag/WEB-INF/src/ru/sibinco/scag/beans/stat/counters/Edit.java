@@ -73,16 +73,19 @@ public class Edit extends EditBean
         return null;
     }
 
-    public String[] getTypeIds()
-    {
+    public String[] getTypeIds() {
+        CounterType[] types = CounterType.values();
+        final List<String> ids = new ArrayList<String>(types.length);
+        for (CounterType type : types) ids.add(Integer.toString(type.getValue()));
+        return ids.toArray(new String[ids.size()]);
+    }
+    public String[] getTypeTitles() {
         CounterType[] types = CounterType.values();
         final List<String> ids = new ArrayList<String>(types.length);
         for (CounterType type : types) ids.add(type.getName());
         return ids.toArray(new String[ids.size()]);
-        //return new String[] {"A", "B", "C"};
     }
-    public String[] getCaIds()
-    {
+    public String[] getCaIds() {
         Set<String> cas = appContext.getCountersManager().getCATables().keySet();
         return cas.toArray(new String[cas.size()]);
     }
