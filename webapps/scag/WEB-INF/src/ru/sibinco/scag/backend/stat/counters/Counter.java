@@ -14,7 +14,7 @@ import java.util.HashMap;
  */
 public class Counter
 {
-    private String id = "";
+    private String id = null;
     private CounterType type = CounterType.ACCUMULATOR;
     private String CATableId = null;
 

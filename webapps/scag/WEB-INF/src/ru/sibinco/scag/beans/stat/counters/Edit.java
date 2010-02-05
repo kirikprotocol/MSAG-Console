@@ -71,10 +71,6 @@ public class Edit extends EditBean
     protected void delete() throws SCAGJspException {
     }
 
-    protected Collection getDataSource() {
-        return null;
-    }
-
     public String[] getTypeIds() {
         CounterType[] types = CounterType.values();
         final List<String> ids = new ArrayList<String>(types.length);
