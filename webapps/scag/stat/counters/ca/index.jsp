@@ -12,6 +12,6 @@
   </jsp:attribute>
 
   <jsp:body>
-    <sm:table columns="checkbox,id,system" names="c,id,system" widths="1,15,20,64" edit="id"/>
+    <sm:table columns="checkbox,id,system" names="c,statistics.counters.ca.edit.txt.id,statistics.counters.ca.edit.txt.system" widths="1,15,20,64" edit="id"/>
   </jsp:body>
 </sm:page>
