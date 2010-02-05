@@ -2,6 +2,7 @@ package ru.sibinco.scag.beans.stat.counters;
 
 import ru.sibinco.scag.beans.SCAGJspException;
 import ru.sibinco.scag.beans.EditBean;
+import ru.sibinco.scag.beans.DoneException;
 import ru.sibinco.scag.backend.stat.counters.Counter;
 import ru.sibinco.scag.backend.stat.counters.CounterType;
 
@@ -69,9 +70,10 @@ public class Edit extends EditBean
     }
 
     protected void save() throws SCAGJspException {
-    }
-
-    protected void delete() throws SCAGJspException {
+        logger.debug("Adding new counter, id=" + getId());
+        appContext.getCountersManager().addCounter(counter);
+        // TODO: handle exceptions (if can't add)
+        throw new DoneException();
     }
 
     public String[] getTypeIds() {

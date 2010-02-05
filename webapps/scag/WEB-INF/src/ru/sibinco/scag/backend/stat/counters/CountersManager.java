@@ -78,6 +78,13 @@ public class CountersManager
         hsDaemon.store(configFile);
     }
 
+    public void addCounter(Counter counter)
+    {
+        counters.put(counter.getId(), counter);
+        //apply();
+        // TODO: apply config, command call to MSAG, restore if failed
+    }
+
     protected void store() throws IOException
     {
         File configNew = Functions.createNewFilenameForSave(configFile);
