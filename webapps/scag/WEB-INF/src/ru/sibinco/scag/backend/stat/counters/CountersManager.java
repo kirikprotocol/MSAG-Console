@@ -160,11 +160,11 @@ public class CountersManager
         return new CATable("567", false);
     }
 
-    public synchronized Map getCounters() {
+    public synchronized HashMap<String, Counter> getCounters() {
         return counters;
     }
 
-    public synchronized Map getCATables() {
+    public synchronized HashMap<String, CATable> getCATables() {
         return ca_tables;
     }
 }
