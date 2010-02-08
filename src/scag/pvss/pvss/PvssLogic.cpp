@@ -82,7 +82,18 @@ void PvssLogic::initGlossary(const string& path, Glossary* glossary) {
 
 Response* PvssLogic::process(Request& request) /* throw(PvssException) */  {
   try {
-    return processProfileRequest(static_cast<ProfileRequest&>(request));
+      ProfileRequest& preq(static_cast<ProfileRequest&>(request));
+      commandProcessor_.resetProfile();
+      Response* resp = processProfileRequest(preq);
+      if ( preq.hasTiming() ) {
+          const Profile* pf = commandProcessor_.getProfile();
+          char buf[100];
+          snprintf(buf,sizeof(buf)," [%s props=%u]",
+                   preq.getProfileKey().toString().c_str(),
+                   unsigned(pf ? pf->GetCount() : 0));
+          preq.timingComment(buf);
+      }
+      return resp;
   } catch (const PvapException& e) {
     smsc_log_warn(logger_, "%p: %p processing error: PvapException", this, &request);
     //TODO: some rollback actions

@@ -24,6 +24,8 @@ public:
   bool visitIncModCommand(IncModCommand &cmd) /* throw(PvapException) */ ;
   bool visitSetCommand(SetCommand &cmd) /* throw(PvapException) */ ;
   void setProfile(Profile *pf);
+    const Profile* getProfile() const { return profile_; }
+    void resetProfile() { profile_ = 0; }
   BatchResponseComponent* getBatchResponseComponent();
   CommandResponse* getResponse();
   bool rollback() const { return rollback_; };
