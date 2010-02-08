@@ -30,6 +30,8 @@ int main()
         for ( unsigned j = 0; j < sizeof(propTypes)/sizeof(PropertyType); ++j ) {
             PropertyType pt = propTypes[j];
 
+            std::cout << std::endl << "======" << std::endl;
+
             std::string name = "test_";
             name += propertyTypeToString(pt);
             name += "_";
@@ -39,15 +41,19 @@ int main()
             property.setName(name);
 
             setPropVal( property, pt );
-            property.setTimePolicy( tp, time(0)+100, 12345 );
+            property.setTimePolicy( tp, -1, 12345 );
 
-            std::string stream = property.toString();
+            const std::string stream = property.toString();
             std::cout << "property: " << stream << std::endl;
+            property.setTimePolicy( tp, property.getFinalDate(), property.getLifeTime() );
+            const std::string stream2 = property.toString();
+            std::cout << "property[2]: " << stream2 << std::endl;
+
             Property prop2;
             prop2.fromString(stream);
-            std::string prop2str = prop2.toString();
+            const std::string prop2str = prop2.toString();
             std::cout << "prop2:    " << prop2str << std::endl;
-            if ( stream != prop2str ) {
+            if ( stream != prop2str || stream != stream2 ) {
                 std::cout << "*** ABOVE TWO STRINGS DIFFER!" << std::endl;
             }
         }

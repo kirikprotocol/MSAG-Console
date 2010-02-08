@@ -253,6 +253,7 @@ void Property::fromString( const std::string& input ) /* throw (exceptions::IOEx
         // date
         from.erase(0,strlen(DATE_PREF));
         struct tm indate;
+        indate.tm_isdst = 0;
         char* p = strptime(from.c_str(),TIMEFORMAT,&indate);
         if ( !p ) throw exceptions::IOException("cannot convert time value");
         time_t ourdate = mktime(&indate) - timezone;
@@ -286,6 +287,7 @@ void Property::fromString( const std::string& input ) /* throw (exceptions::IOEx
         {
             // final date
             struct tm indate;
+            indate.tm_isdst = 0;
             char* pdate = strptime(from.c_str(),FINALDATE,&indate);
             if ( !pdate ) throw exceptions::IOException("cannot convert final date");
             time_t ourdate = mktime(&indate) - timezone;
