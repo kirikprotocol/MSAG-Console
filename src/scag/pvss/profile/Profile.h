@@ -105,7 +105,7 @@ public:
     bool DeleteProperty(const char* str);
     void DeleteExpired();
     void Empty();
-    uint32_t GetCount() { return properties.GetCount(); };
+    uint32_t GetCount() const { return properties.GetCount(); };
     const PropertyHash& getProperties() const { return properties; }
     const string& getKey() const { return pkey; }
     void setKey(const string& key); // { pkey = key; }
