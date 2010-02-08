@@ -135,7 +135,7 @@ public:
                 smsc_log_debug(log_,"update: %s idx=%llx %s",
                                key_.toString().c_str(),
                                uint64_t(blockIndex),
-                               v_->toString());
+                               v_->toString().c_str());
             }
         } else {
             blockIndex = invalidIndex();
