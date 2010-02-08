@@ -42,6 +42,7 @@
 #include "TaskLock.hpp"
 
 #include "version.inc"
+#include "util/regexp/RegExp.hpp"
 
 using namespace smsc::sme;
 using namespace smsc::smpp;
@@ -201,6 +202,7 @@ int main(int argc, char** argv)
 
     int resultCode = 0;
 
+      smsc::util::regexp::RegExp::InitLocale();
     Logger::Init();
     logger = Logger::getInstance("smsc.infosme.InfoSme");
     smsc_log_info(logger, "Starting up %s", getStrVersion());

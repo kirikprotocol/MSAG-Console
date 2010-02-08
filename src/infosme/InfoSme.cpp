@@ -48,6 +48,8 @@
 #include "SmscConnector.h"
 
 #include "version.inc"
+#include "util/regexp/RegExp.hpp"
+
 
 using namespace smsc::sme;
 using namespace smsc::smpp;
@@ -206,6 +208,8 @@ int main(int argc, char** argv)
     reconnect_ReadFd = fds[0]; reconnect_WriteFd = fds[1];
 
     int resultCode = 0;
+
+      smsc::util::regexp::RegExp::InitLocale();
 
     Logger::Init();
     logger = Logger::getInstance("smsc.infosme.InfoSme");
