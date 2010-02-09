@@ -468,6 +468,11 @@ TO ALL: Insert log record for all significant changes & fixes here.
   msag: bugfix: data_sm_resp always determined its direction as from sc to srv,
         thus always taking OA to determine operator, service, etc.
 
+=================================================================================================================
+2010-02-09 13:20 bukind pvss-build-20100209
+2010-02-09 12:50 bukind
+  pvss: feature: better logging into abonents log and into timing.
+
 --- current-fixes ---
 2010-02-01 15:40 bukind
   msag: counters incorporated into it.  There are three types of counters:
@@ -481,6 +486,3 @@ TO ALL: Insert log record for all significant changes & fixes here.
   msag: bugfix: there was not expiration time prolongation for (long) ussd operations,
         which leads to the expiration of the operations after 1 minute.
   msag: feature: reading 'expireInterval' (msec) from session part of the config.
-
-2010-02-09 12:50 bukind
-  pvss: feature: better logging into abonents log and into timing.
