@@ -433,7 +433,7 @@ protected:
 
 template < class MemStorage, class DiskStorage,
         class Allocator = HeapAllocator< typename MemStorage::key_type, typename MemStorage::value_type > >
-class CachedDiskStorage : protected Allocator
+class CachedDiskStorage : public Allocator
 {
 public:
     // typedef MemStorage                   memstorage_type;
