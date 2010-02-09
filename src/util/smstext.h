@@ -2,7 +2,7 @@
 #define __SMSC_UTIL_SMSTEXT_H__
 
 #include "sms/sms.h"
-#include "smpp/smpp.h"
+#include "smpp/smpp_mandatory.h"
 #include "util/recoder/recode_dll.h"
 #include "core/buffers/Array.hpp"
 #include "util/debug.h"
@@ -116,7 +116,7 @@ static inline int getPduText(PduXSm* pdu,char* buf,size_t bufsize)
     }
     udhi=pdu->get_message().get_esmClass()&0x40;
   }
-	
+
   if(len==0)
   {
     buf[0]=0;
