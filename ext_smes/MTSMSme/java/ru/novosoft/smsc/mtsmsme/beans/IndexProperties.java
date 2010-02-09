@@ -35,6 +35,7 @@ public abstract class IndexProperties extends MTSMSmeBean
   private String sccpHlrGt = "";
 
   private String mapping_new_address = null;
+  private String mapping_new_comment = null;
   private String mapping_new_reg_type = null;
   private String mapping_new_alias = null;
   private String mapping_new_mgt = null;
@@ -279,7 +280,8 @@ public abstract class IndexProperties extends MTSMSmeBean
     for (Iterator i = requestParams.keySet().iterator(); i.hasNext();)
     {
       String paramName = (String) i.next();
-      if (paramName.startsWith(PREFIX) && (paramName.endsWith("address") || paramName.endsWith("alias") || paramName.endsWith("mgt") || paramName.endsWith("msisdn") || paramName.endsWith("reg_type")))
+      if (paramName.startsWith(PREFIX) && (paramName.endsWith("address") || paramName.endsWith("alias") || paramName.endsWith("mgt") || paramName.endsWith("msisdn") || paramName.endsWith("reg_type")
+      || paramName.endsWith("comment")))
       {
         final String paramValue = getParamValue(requestParams.get(paramName));
         if (paramValue != null) getConfig().setString(paramName, paramValue);
@@ -306,11 +308,13 @@ public abstract class IndexProperties extends MTSMSmeBean
 //      String section = mapping_new_address.replace('.', '_');
       String section = mapping_new_address.substring(i >=0 ? i : 0);
       getConfig().setString(PREFIX + section + ".address", mapping_new_address);
+      getConfig().setString(PREFIX + section + ".comment", mapping_new_comment == null ? "" : mapping_new_comment);
       getConfig().setString(PREFIX + section + ".reg_type", mapping_new_reg_type);
       getConfig().setString(PREFIX + section + ".alias", mapping_new_alias);
       getConfig().setString(PREFIX + section + ".mgt", mapping_new_mgt);
       getConfig().setString(PREFIX + section + ".msisdn", mapping_new_msisdn);
       getConfig().setInt(PREFIX + section + ".period", mapping_new_period);
+      System.out.println("Set period: "+PREFIX + section + ".period = "+mapping_new_period);
     }
 
     return RESULT_DONE;
@@ -322,6 +326,14 @@ public abstract class IndexProperties extends MTSMSmeBean
   public void setMapping_new_address(String mapping_new_address) {
     this.mapping_new_address = mapping_new_address;
   }
+  public String getMapping_new_comment() {
+    return mapping_new_comment;
+  }
+
+  public void setMapping_new_comment(String mapping_new_comment) {
+    this.mapping_new_comment = mapping_new_comment;
+  }
+
   public String getMapping_new_alias() {
     return mapping_new_alias;
   }
