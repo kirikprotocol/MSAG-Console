@@ -129,8 +129,9 @@ bool ProfileCommandProcessor::visitSetCommand(SetCommand &cmd) /* throw(PvapExce
   }
   Property* p = profile_->GetProperty(prop.getName());
   if (p != NULL) {
-      // FIXME: should we update timepolicy here?
     p->setValue(prop);
+    // FIXED by bukind on 20100209, now timepolicy is also updated!
+    p->setTimePolicy(prop.getTimePolicy(),prop.getFinalDate(),prop.getLifeTime());
     p->WriteAccess();
     dblog_.createUpdateLogMsg(profile_->getKey(), p->toString());
   } else {

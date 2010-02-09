@@ -486,3 +486,8 @@ TO ALL: Insert log record for all significant changes & fixes here.
   msag: bugfix: there was not expiration time prolongation for (long) ussd operations,
         which leads to the expiration of the operations after 1 minute.
   msag: feature: reading 'expireInterval' (msec) from session part of the config.
+
+2010-02-09 16:05 bukind
+  pvss: time policy of the property is now updated in set command.
+        Previously, if the property existed and PVSS received a set command
+        for that property, its time policy was not updated.
