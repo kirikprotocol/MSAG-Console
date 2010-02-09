@@ -5140,8 +5140,9 @@ bool StateMachine::processMerge(SbmContext& c)
     c.sms->setIntProperty(Tag::SMPP_SM_LENGTH,0);
     c.sms->setIntProperty(Tag::SMSC_ORIGINALPARTSNUM,num);
 
-    if(c.sms->getIntProperty(Tag::SMPP_SAR_MSG_REF_NUM))
+    if(c.sms->hasIntProperty(Tag::SMPP_SAR_MSG_REF_NUM))
     {
+      smsc_log_debug(smsLog,"droping sar fields");
       c.sms->getMessageBody().dropIntProperty(Tag::SMPP_SAR_MSG_REF_NUM);
       c.sms->getMessageBody().dropIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
       c.sms->getMessageBody().dropIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
