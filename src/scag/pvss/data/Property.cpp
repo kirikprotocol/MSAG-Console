@@ -20,6 +20,7 @@ const char* STRING_PREF = "STRING: \"";
 const char* DATE_PREF = "DATE: ";
 const char* TIMEFORMAT = "%Y/%m/%d %H:%M:%S";
 const char* FINALDATE = " FINAL_DATE: %Y/%m/%d %H:%M:%S";
+const char* FINALDATENONE = " FINAL_DATE: -";
 const char* LIFETIME = " LIFE_TIME: ";
 #define TIMEPOLPREF " TIME_POLICY: "
 
@@ -284,7 +285,10 @@ void Property::fromString( const std::string& input ) /* throw (exceptions::IOEx
 
     // read final date and life time
     if ( time_policy != INFINIT ) {
-        {
+        if (strncmp(from.c_str(),FINALDATENONE,strlen(FINALDATENONE))==0) {
+            from.erase(0,strlen(FINALDATENONE));
+            final_date = time_t(-1);
+        } else {
             // final date
             struct tm indate;
             indate.tm_isdst = 0;
@@ -304,6 +308,7 @@ void Property::fromString( const std::string& input ) /* throw (exceptions::IOEx
             uint32_t lt = strtoul(from.c_str(),&endptr,10);
             from.erase(0,endptr-from.c_str());
             life_time = lt;
+            setTimePolicy(time_policy,final_date,life_time);
         }
     }
 }
