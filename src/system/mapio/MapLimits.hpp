@@ -9,7 +9,7 @@
 namespace smsc{
 namespace system{
 namespace mapio{
-  
+
 namespace sync=smsc::core::synchronization;
 
 class MapLimits{
@@ -45,7 +45,7 @@ public:
   {
     return limitNIUSSD;
   }
-  
+
   bool isNoSRIUssd(const std::string& ussd)
   {
     sync::MutexGuard mg(mtx);
@@ -55,6 +55,17 @@ public:
       return noSriUssd.find(ussd.substr(pos+1))!=noSriUssd.end();
     }
     return noSriUssd.find(ussd)!=noSriUssd.end();
+  }
+
+  bool isCondSRIUssd(const std::string& ussd)
+  {
+    sync::MutexGuard mg(mtx);
+    std::string::size_type pos=ussd.find(':');
+    if(pos!=std::string::npos)
+    {
+      return condSriUssd.find(ussd.substr(pos+1))!=condSriUssd.end();
+    }
+    return condSriUssd.find(ussd)!=condSriUssd.end();
   }
 
   static void Init(const char* fn);
@@ -69,7 +80,7 @@ public:
   }
 
   void Reinit();
-  
+
   void reportMscFailure(const char* msc)
   {
     //sync::MutexGuard mg(mtxMsc);
@@ -117,7 +128,7 @@ public:
       mscPtr->okCount=0;
     }
   }
-  
+
   // return congestion level or -1 if limit reached
   int incDlgCounter(const char* msc)
   {
@@ -136,7 +147,7 @@ public:
     smsc_log_debug(log,"inc dlg count by msc %s[cl=%d]:%d",msc,mscPtr->clevel,li.dlgCount);
     return mscPtr->clevel;
   }
-  
+
   void decDlgCounter(int clevel)
   {
     //sync::MutexGuard mg(mtxMsc);
@@ -149,19 +160,23 @@ public:
       smsc_log_warn(log,"attempt to decrement dlg count for incorect clevel=%d",clevel);
     }
   }
-  
+
 protected:
   static MapLimits* instance;
-  
+
   enum{
     maxCLevels=8
   };
-  
+
+
   smsc::logger::Logger* log;
 
   std::string configFilename;
-  
-  std::set<std::string> noSriUssd;
+
+
+  typedef std::set<std::string> StringSet;
+  StringSet noSriUssd;
+  StringSet condSriUssd;
   sync::Mutex mtx;
 
   int limitIn;
@@ -169,7 +184,7 @@ protected:
   int limitUSSD;
   int limitOutSRI;
   int limitNIUSSD;
-  
+
   struct CLevelInfo{
     int dlgCount;
     int dlgLimit;
@@ -177,9 +192,9 @@ protected:
     int failLowerLimit;
     int okToLower;
   };
-  
+
   CLevelInfo limitsOut[maxCLevels];
-  
+
   struct MSCInfo{
     MSCInfo():clevel(0),failCount(0),okCount(0)
     {
@@ -188,7 +203,7 @@ protected:
     int failCount;
     int okCount;
   };
-  
+
   sync::Mutex mtxMsc;
   smsc::core::buffers::Hash<MSCInfo> mscInfo;
 };

@@ -284,21 +284,22 @@ inline void mkMapAddress( ET96MAP_ADDRESS_T *addr, const char *saddr, unsigned l
   }
 }
 
-inline void mkIMSIOrMSISDNFromIMSI( ET96MAP_IMSI_OR_MSISDN_T *addr, string &s_imsi ) {
+inline void mkIMSIOrMSISDNFromIMSI( ET96MAP_IMSI_OR_MSISDN_T *addr, const string &s_imsi ) {
   size_t len = s_imsi.length();
   size_t sz = (len+1)/2;
-  addr->imsiOrMsisdnLen = (UCHAR_T)sz;
+  addr->imsiOrMsisdnLen = (UCHAR_T)(sz+1);
+  addr->imsiOrMsisdn[0]=0x96;
   const char *value = s_imsi.c_str();
   for( size_t i = 0; i < len; i++ ) {
     UCHAR_T bi = (UCHAR_T)i/2;
     if( i%2 == 1 ) {
-      addr->imsiOrMsisdn[bi] |= ((value[i]-'0')<<4); // fill high octet
+      addr->imsiOrMsisdn[1+bi] |= ((value[i]-'0')<<4); // fill high octet
     } else {
-      addr->imsiOrMsisdn[bi] = (value[i]-'0')&0x0F; // fill low octet
+      addr->imsiOrMsisdn[1+bi] = (value[i]-'0')&0x0F; // fill low octet
     }
   }
   if( len%2 != 0 ) {
-    addr->imsiOrMsisdn[sz-1] |= 0xF0;
+    addr->imsiOrMsisdn[sz] |= 0xF0;
   }
 }
 

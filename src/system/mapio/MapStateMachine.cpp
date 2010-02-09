@@ -1887,10 +1887,24 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
     mkMapAddress( &origRef, dialog->sms->getOriginatingAddress() );
     ET96MAP_IMSI_OR_MSISDN_T destRef;
     memset(&destRef,0,sizeof(destRef));
-//    if( dialog->s_imsi.length() > 0 ) mkIMSIOrMSISDNFromIMSI( &destRef, dialog->s_imsi );
-    mkIMSIOrMSISDNFromAddress( &destRef, dialog->sms->getDestinationAddress() );
+    if( dialog->s_imsi.length() > 0 )
+    {
+      mkIMSIOrMSISDNFromIMSI( &destRef, dialog->s_imsi );
+    }
+    else
+    {
+      mkIMSIOrMSISDNFromAddress( &destRef, dialog->sms->getDestinationAddress() );
+    }
 
-    checkMapReq( Et96MapOpenReq( dialog->ssn INSTDLGARG(dialog), dialog->dialogid_map, &appContext, &dialog->mshlrAddr, GetUSSDAddr(), &destRef, &origRef, &specificInfo ), __func__);
+    if(Smsc::getInstance().getNiUssdViaVlr())
+    {
+      ET96MAP_SS7_ADDR_T destAddr=dialog->destMscAddr;
+      destAddr.ss7Addr[1]=7;
+      checkMapReq( Et96MapOpenReq( dialog->ssn INSTDLGARG(dialog), dialog->dialogid_map, &appContext, &destAddr, GetUSSDAddr(), &destRef, 0/*&origRef*/, 0/*&specificInfo*/ ), __func__);
+    }else
+    {
+      checkMapReq( Et96MapOpenReq( dialog->ssn INSTDLGARG(dialog), dialog->dialogid_map, &appContext, &dialog->mshlrAddr, GetUSSDAddr(), &destRef, &origRef, &specificInfo ), __func__);
+    }
   }
   dialog->invokeId++;
   ET96MAP_ALERTING_PATTERN_T alertPattern = ET96MAP_ALERTING_PATTERN_LEVEL2;
@@ -3337,7 +3351,9 @@ USHORT_T Et96MapDelimiterInd(
         reason = ET96MAP_NO_REASON;
         checkMapReq( Et96MapOpenResp(dialog->ssn INSTDLGARG(dialog),dialogueId,ET96MAP_RESULT_OK,&reason,0,0,0), __func__);
         __map_trace2__("subsystem=%s",dialog->subsystem.c_str());
-        if(smsc::system::mapio::MapLimits::getInstance().isNoSRIUssd(dialog->subsystem))
+        if(smsc::system::mapio::MapLimits::getInstance().isNoSRIUssd(dialog->subsystem) ||
+           ((dialog->s_imsi.empty() || dialog->s_msc.empty()) && smsc::system::mapio::MapLimits::getInstance().isCondSRIUssd(dialog->subsystem))
+          )
         {
           dialog->noSri=true;
           dialog->state = MAPST_WaitSubmitCmdConf;

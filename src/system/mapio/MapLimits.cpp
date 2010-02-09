@@ -30,13 +30,13 @@ void MapLimits::Reinit()
     DOMElement *elem = document->getDocumentElement();
     smsc::util::config::Config config;
     config.parse(*elem);
-    
+
     limitIn=config.getInt("dlglimit.in");
     limitInSRI=config.getInt("dlglimit.insri");
     limitUSSD=config.getInt("dlglimit.ussd");
     limitOutSRI=config.getInt("dlglimit.outsri");
     limitNIUSSD=config.getInt("dlglimit.niussd");
-    
+
     try{
       sync::MutexGuard mg(mtx);
       noSriUssd.clear();
@@ -50,6 +50,26 @@ void MapLimits::Reinit()
           std::string code=noSriUssdStr.substr(lastPos,nextPos==std::string::npos?nextPos:nextPos-lastPos);
           smsc_log_debug(log,"add no sri ussd code:%s",code.c_str());
           noSriUssd.insert(code);
+          lastPos=nextPos+1;
+        }while(nextPos!=std::string::npos);
+      }
+    }catch(...)
+    {
+      smsc_log_info(log,"ussd.no_sri_codes not found and disabled");
+    }
+    try{
+      sync::MutexGuard mg(mtx);
+      condSriUssd.clear();
+      std::string condSriUssdStr=config.getString("ussd.cond_sri_codes");
+      smsc_log_debug(log,"ussd.cond_sri_codes=%s",condSriUssdStr.c_str());
+      if(condSriUssdStr.length())
+      {
+        std::string::size_type lastPos=0,nextPos;
+        do{
+          nextPos=condSriUssdStr.find(',',lastPos);
+          std::string code=condSriUssdStr.substr(lastPos,nextPos==std::string::npos?nextPos:nextPos-lastPos);
+          smsc_log_debug(log,"add cond sri ussd code:%s",code.c_str());
+          condSriUssd.insert(code);
           lastPos=nextPos+1;
         }while(nextPos!=std::string::npos);
       }
