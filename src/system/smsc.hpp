@@ -164,6 +164,7 @@ public:
     mapioptr=0;
     speedLogFlushPeriod=60;
     nextSpeedLogFlush=0;
+    niussdViaVlr=0;
     if(instance!=0)
     {
       throw smsc::util::Exception("Attempt to init second smsc instance:%p (previous:%p)",this,instance);
@@ -576,6 +577,11 @@ public:
     return nodivertSmes.find(smeId)!=nodivertSmes.end();
   }
 
+  bool getNiUssdViaVlr()const
+  {
+    return niussdViaVlr;
+  }
+
 protected:
 
   void processCommand(SmscCommand& cmd,EventQueue::EnqueueVector& ev,FindTaskVector& ftv);
@@ -749,6 +755,7 @@ protected:
   int mainLoopsCount;
   int mapIOTasksCount;
   void* mapioptr;
+  bool niussdViaVlr;
 
   const SmscConfigs* configs;
 
