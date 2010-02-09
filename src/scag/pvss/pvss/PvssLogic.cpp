@@ -32,7 +32,7 @@ void doRename( const std::string& t,
 }
 
 
-  class CreateProfileVisitor : public scag2::pvss::ProfileCommandVisitor {
+class CreateProfileVisitor : public scag2::pvss::ProfileCommandVisitor {
 public:
     virtual bool visitBatchCommand(scag2::pvss::BatchCommand &cmd) /* throw(scag2::pvss::PvapException) */ {
         const std::vector< scag2::pvss::BatchRequestComponent* >& content = cmd.getBatchContent();
@@ -236,7 +236,8 @@ void AbonentLogic::rebuildIndex(unsigned maxSpeed)
 
 unsigned long AbonentLogic::initElementStorage( unsigned index,
                                                 bool checkAtStart,
-                                                bool readonly ) /* throw (smsc::util::Exception) */ {
+                                                bool readonly ) /* throw (smsc::util::Exception) */ 
+{
   char pathSuffix[4];
   snprintf(pathSuffix, sizeof(pathSuffix), "%03u", index);
   string path = string(config_.locations[locationNumber_].path + "/") + pathSuffix;
@@ -317,6 +318,7 @@ unsigned long AbonentLogic::initElementStorage( unsigned index,
   smsc_log_debug(logger_, "memory storage is created");
 
   elStorage->storage = new AbonentStorage(ms.release(), ds.release());
+  elStorage->storage->setProfileLog(abntlog_);
   unsigned long filledNodes = elStorage->storage->filledDataSize();
   elementStorages_.Insert(index, elStorage.release());
   smsc_log_debug(logger_, "abonent storage is assembled");
@@ -435,7 +437,7 @@ unsigned long AbonentLogic::rebuildElementStorage( unsigned index, unsigned maxS
 Response* AbonentLogic::processProfileRequest(ProfileRequest& profileRequest) {
 
   const ProfileKey &profileKey = profileRequest.getProfileKey();
-    const std::string& profkey = profileKey.getAddress().toString();
+  const std::string& profkey = profileKey.getAddress().toString();
 
   unsigned elstorageIndex = static_cast<unsigned>(profileKey.getAddress().getNumber() % dispatcher_.getStoragesCount());
   smsc_log_debug( logger_, "%p: %p process profile key='%s' in location: %d, storage: %d",
@@ -478,6 +480,7 @@ Response* AbonentLogic::processProfileRequest(ProfileRequest& profileRequest) {
   } else if (commandProcessor_.rollback()) {
     smsc_log_debug(logger_, "%p: %p rollback profile %s changes", this, &profileRequest, profkey.c_str());
     elstorage->storage->backup2Profile(profileKey.getAddress());
+    commandProcessor_.resetProfile();
     // NOTE: backup2profile may delete object under pf!
   }
   CommandResponse* r = commandProcessor_.getResponse();
@@ -580,12 +583,15 @@ void InfrastructLogic::init( bool checkAtStart ) /* throw (smsc::util::Exception
   initGlossary(locCfg.dbPath, &glossary_);
   locCfg.dbName = "provider";
   provider_ = initStorage(locCfg,checkAtStart);
+    provider_->setProfileLog(plog_);
   smsc_log_debug(logger_, "provider storage is created");
   locCfg.dbName = "service";
   service_ = initStorage(locCfg,checkAtStart);
+    service_->setProfileLog(slog_);
   smsc_log_debug(logger_, "service storage is created");
   locCfg.dbName = "operator";
   operator_ = initStorage(locCfg,checkAtStart);
+    operator_->setProfileLog(olog_);
   smsc_log_debug(logger_, "operator storage is created");
     smsc_log_info(logger_,"infrastructure storages are inited, good nodes: provider=%lu, service=%lu, operator=%lu", 
                   static_cast<unsigned long>(provider_->filledDataSize()),

@@ -8,7 +8,7 @@ static const string NAME_LOG     = " name=";
 static const string UPDATE_LOG   = "U key=";
 static const string ADD_LOG      = "A key=";
 static const string DEL_LOG      = "D key=";
-static const string EXPIRE_LOG   = "E key=";
+static const string EXPIRE_LOG   = "e key=";
 
 const string& DBLog::getLogMsg() const {
   return logmsg_;

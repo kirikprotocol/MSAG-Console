@@ -151,6 +151,18 @@ protected:
 
   virtual Response* processProfileRequest(ProfileRequest& request) = 0;
 
+    template < class Key > struct ProfileHeapAllocator
+    {
+        ProfileHeapAllocator() : plog_(0) {}
+        void setProfileLog( smsc::logger::Logger* plog ) { plog_ = plog; }
+        inline Profile* alloc( const Key& k ) const {
+            return new Profile(k,plog_);
+        }
+    protected:
+        smsc::logger::Logger* plog_;
+    };
+
+
 protected:
   //unsigned maxWaitingCount_;
     PvssDispatcher& dispatcher_;
@@ -221,7 +233,7 @@ private:
 #endif
     typedef RBTreeIndexStorage< AbntAddr, DiskDataStorage::index_type > DiskIndexStorage;
     typedef IndexedStorage< DiskIndexStorage, DiskDataStorage > DiskStorage;
-    typedef CachedDiskStorage< MemStorage, DiskStorage > AbonentStorage;
+    typedef CachedDiskStorage< MemStorage, DiskStorage, ProfileHeapAllocator<AbntAddr> > AbonentStorage;
 
     struct ElementStorage {
         ElementStorage(unsigned idx):glossary(0), storage(0), index(idx) {}
@@ -283,7 +295,7 @@ private:
   typedef PageFileDiskStorage< IntProfileKey, DataBlockBackup<Profile>, PageFile > DiskDataStorage;
   typedef DiskHashIndexStorage< IntProfileKey, DiskDataStorage::index_type > DiskIndexStorage;
   typedef IndexedStorage< DiskIndexStorage, DiskDataStorage > DiskStorage;
-  typedef CachedDiskStorage< MemStorage, DiskStorage > InfrastructStorage;
+  typedef CachedDiskStorage< MemStorage, DiskStorage, ProfileHeapAllocator< IntProfileKey > > InfrastructStorage;
 
 private:
   InfrastructStorage* initStorage( const InfrastructStorageConfig& cfg, bool checkAtStart = false );

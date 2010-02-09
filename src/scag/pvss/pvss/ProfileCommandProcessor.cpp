@@ -72,6 +72,11 @@ bool ProfileCommandProcessor::visitGetCommand(GetCommand &cmd) /* throw(PvapExce
     response_->setStatus(StatusType::PROPERTY_NOT_FOUND);
     return false;
   }
+    // temporary
+    Logger* theLog = profile_->getLog();
+    if (theLog) {
+        smsc_log_debug(theLog,"G key=%s name=%s", profile_->getKey().c_str(), p->toString().c_str());
+    }
   if(p->getTimePolicy() == R_ACCESS) {
     p->ReadAccess();
     profile_->setChanged(true);
@@ -124,9 +129,10 @@ bool ProfileCommandProcessor::visitSetCommand(SetCommand &cmd) /* throw(PvapExce
   }
   Property* p = profile_->GetProperty(prop.getName());
   if (p != NULL) {
+      // FIXME: should we update timepolicy here?
     p->setValue(prop);
     p->WriteAccess();
-    dblog_.createUpdateLogMsg(profile_->getKey(), prop.toString());
+    dblog_.createUpdateLogMsg(profile_->getKey(), p->toString());
   } else {
     if (!profile_->AddProperty(prop)) {
       response_->setStatus(StatusType::BAD_REQUEST);
