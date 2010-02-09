@@ -55,7 +55,7 @@ void Profile::Deserialize(SerialBuffer& buf, bool fromFSDB, GlossaryBase* glossa
             prop->Deserialize(buf, fromFSDB, glossary);
             cnt--;
             if(log && prop->isExpired(cur_time))
-                smsc_log_info(log, "E key=\"%s\" name=%s", pkey.c_str(), prop->getName());
+                smsc_log_info(log, "E key=%s name=%s", pkey.c_str(), prop->getName());
         }while(prop->isExpired(cur_time) && cnt);
 
         if(!prop->isExpired(cur_time))
@@ -169,7 +169,7 @@ Property* Profile::GetProperty(const char* name)
   }
   if(*p && (*p)->isExpired())
   {
-      if(log) smsc_log_info(log, "E key=\"%s\" name=%s", pkey.c_str(), name);
+      if(log) smsc_log_info(log, "E key=%s name=%s", pkey.c_str(), name);
       delete *p;
       properties.Delete(name);
       return NULL;

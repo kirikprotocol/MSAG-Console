@@ -109,7 +109,7 @@ public:
     const PropertyHash& getProperties() const { return properties; }
     const string& getKey() const { return pkey; }
     void setKey(const string& key); // { pkey = key; }
-    const smsc::logger::Logger* getLog() const { return log; }
+    smsc::logger::Logger* getLog() const { return log; }
     void setLog(Logger* dblog) { log = dblog; }
 
     void Serialize(SerialBuffer& buf, bool toFSDB = false, GlossaryBase* glossary = NULL) const;
