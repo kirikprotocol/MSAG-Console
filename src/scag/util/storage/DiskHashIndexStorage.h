@@ -48,8 +48,11 @@ private:
     typedef DiskHash < Key, OffsetValue > IndexStorage;
 
 public:
-  DiskHashIndexStorage(const string& dbName, const string& dbPath, uint32_t initRecCnt) {
-    logger_ = Logger::getInstance("dhindex");
+  DiskHashIndexStorage(const string& dbName,
+                       const string& dbPath,
+                       uint32_t initRecCnt,
+                       smsc::logger::Logger* thelog = 0 ) :
+    logger_(thelog) {
     string fn = dbPath + "/" + dbName + ".idx";
     if (!File::Exists(fn.c_str())) {
       index_.Create(fn.c_str(), initRecCnt, false);
@@ -90,11 +93,18 @@ public:
 
   index_type getIndex(const key_type& key) const {
       OffsetValue off;
-      return index_.LookUp(key, off) ? off.value : invalid_;
+      const index_type i = index_.LookUp(key, off) ? off.value : invalid_;
+      smsc_log_debug(logger_,"getIndex key=%s index=%llx",
+                     key.toString().c_str(),
+                     static_cast<unsigned long long>(i));
+      return i;
   }
 
   bool setIndex(const key_type& key, index_type index) {
     OffsetValue off(index);
+      smsc_log_debug(logger_,"setIndex key=%s index=%llx",
+                     key.toString().c_str(),
+                     static_cast<unsigned long long>(index));
     index_.Insert(key, off, true);
     return true;
   } 
@@ -102,11 +112,11 @@ public:
   index_type removeIndex(const key_type& key) {
       OffsetValue off;
     if (!index_.LookUp(key, off)) {
-      smsc_log_info(logger_, "Attempt to delete record that doesn't exists:%s", key.toString().c_str());
+      if (logger_) smsc_log_info(logger_, "Attempt to delete record that doesn't exists:%s", key.toString().c_str());
       return invalid_;
     }
     index_.Delete(key);
-    smsc_log_debug(logger_, "delRecord:%s:%08llx", key.toString().c_str(), off.value);
+    if (logger_) smsc_log_debug(logger_, "delRecord:%s:%08llx", key.toString().c_str(), off.value);
     return off.value;
   }
 

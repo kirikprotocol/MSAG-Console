@@ -37,3 +37,11 @@ scag/tests/test-blockshsstorage2  testbh2 \
    -lcore-buffers -lcore-threads \
    @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
    -lutil -lpthread -lrt -ldl
+
+scag/tests/test-indexed-storage  test-indexed-storage \
+   -lscag-pvss-profile \
+   -lscag-util-storage \
+   -lscag-util-io \
+   -lcore-buffers -lcore-threads \
+   @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
+   -lutil -lpthread -lrt -ldl

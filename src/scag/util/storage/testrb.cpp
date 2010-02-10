@@ -402,6 +402,8 @@ typedef scag2::pvss::AbntAddr CSessionKey;
         void deserialize( Deserializer& pfb );
         const CSessionKey& getKey() const { return sessionKey; }
 
+        const std::string& toString() const { return sessionKey.toString() + ":" + somedata; }
+
 /*
 #ifndef USEPAGEFILE
         // these two methods are necessary for BlocksHSStorage
