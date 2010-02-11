@@ -93,7 +93,7 @@ public class InfoSmeContext implements SMEAppContext
     try{
       if(siebelDataProvider == null) {
         siebelDataProvider = new SiebelDataProviderImpl();
-        siebelTaskManager = new SiebelTaskManager(siebelDataProvider, this);
+        siebelTaskManager = new SiebelTaskManager(siebelDataProvider, appContext, this);
         siebelFinalStateThread = new SiebelFinalStateThread(infoSmeConfig.getStoreLocation(),
             infoSmeConfig.getArchiveLocation(), siebelDataProvider);
       }
