@@ -1,15 +1,20 @@
 package ru.novosoft.smsc.infosme.backend.siebel;
 
 import org.apache.log4j.Logger;
-
-import java.util.*;
-import java.util.regex.Pattern;
-import java.text.SimpleDateFormat;
-
-import ru.novosoft.smsc.infosme.backend.config.tasks.Task;
-import ru.novosoft.smsc.infosme.backend.config.InfoSmeConfig;
+import ru.novosoft.smsc.admin.region.Region;
+import ru.novosoft.smsc.admin.route.Subject;
+import ru.novosoft.smsc.admin.users.User;
 import ru.novosoft.smsc.infosme.backend.InfoSmeContext;
 import ru.novosoft.smsc.infosme.backend.Message;
+import ru.novosoft.smsc.infosme.backend.config.InfoSmeConfig;
+import ru.novosoft.smsc.infosme.backend.config.tasks.Task;
+import ru.novosoft.smsc.infosme.backend.radixtree.TemplatesRadixTree;
+import ru.novosoft.smsc.infosme.beans.InfoSmeBean;
+import ru.novosoft.smsc.jsp.SMSCAppContext;
+
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.regex.Pattern;
 
 
 /**
@@ -26,6 +31,7 @@ public class SiebelTaskManager implements Runnable {
   private boolean shutdown = true;
 
   private final InfoSmeContext ctx;
+  private final SMSCAppContext appContext;
 
   private long timeout = 20000;
 
@@ -33,12 +39,13 @@ public class SiebelTaskManager implements Runnable {
 
   private final Object processedTasksMonitor = new Object();
 
-  public SiebelTaskManager(SiebelDataProvider dataProvider, InfoSmeContext infoSmeContext) {
+  public SiebelTaskManager(SiebelDataProvider dataProvider, SMSCAppContext appContext, InfoSmeContext infoSmeContext) {
     if (dataProvider == null) {
       throw new IllegalArgumentException("Some argument are null");
     }
     this.provider = dataProvider;
     this.ctx = infoSmeContext;
+    this.appContext = appContext;
     if (ctx.getInfoSmeConfig().getSiebelTMPeriod() != 0) {
       timeout = 1000 * ctx.getInfoSmeConfig().getSiebelTMPeriod();
     }
@@ -79,7 +86,9 @@ public class SiebelTaskManager implements Runnable {
     }
   }
 
-  /** @noinspection EmptyCatchBlock*/
+  /**
+   * @noinspection EmptyCatchBlock
+   */
   public void run() {
     try {
       shutdown = false;
@@ -253,7 +262,7 @@ public class SiebelTaskManager implements Runnable {
 
       if (ctx.getInfoSmeConfig().containsTaskWithName(taskname, TASK_OWNER)) {
         t = ctx.getInfoSmeConfig().getTaskByName(taskname);
-      }else {
+      } else {
         t = null;
       }
 
@@ -271,9 +280,9 @@ public class SiebelTaskManager implements Runnable {
             }
           }
         };
-      }else if (st.getStatus() == SiebelTask.Status.STOPPED) {
+      } else if (st.getStatus() == SiebelTask.Status.STOPPED) {
         final boolean remove;
-        if(t == null || (!(remove = ctx.getInfoSmeConfig().isSiebelTMRemove()) && !t.isEnabled())) {
+        if (t == null || (!(remove = ctx.getInfoSmeConfig().isSiebelTMRemove()) && !t.isEnabled())) {
           return;
         }
         thread = new Thread(threadName) {
@@ -288,7 +297,7 @@ public class SiebelTaskManager implements Runnable {
           }
         };
       } else if (st.getStatus() == SiebelTask.Status.PAUSED) {
-        if(t == null || !t.isEnabled()) {
+        if (t == null || !t.isEnabled()) {
           return;
         }
         thread = new Thread(threadName) {
@@ -302,8 +311,8 @@ public class SiebelTaskManager implements Runnable {
             }
           }
         };
-      }else {
-        throw new SiebelException("Illegal task's status: "+st.getStatus());
+      } else {
+        throw new SiebelException("Illegal task's status: " + st.getStatus());
       }
 
       setInProcessing(st);
@@ -313,6 +322,28 @@ public class SiebelTaskManager implements Runnable {
       thread.start();
     } catch (Throwable e) {
       throw new SiebelException(e);
+    }
+  }
+
+  private void initiateRadixTree(TemplatesRadixTree tree) {
+    Collection regions = appContext.getRegionsManager().getRegions();
+    User user = appContext.getUserManager().getUser(TASK_OWNER);
+    boolean admin;
+    if (user == null)
+      admin = true;
+    else
+      admin = user.getRoles().contains(InfoSmeBean.INFOSME_ADMIN_ROLE);
+
+    Region r;
+    for (Iterator regionsIter = regions.iterator(); regionsIter.hasNext();) {
+      r = (Region) regionsIter.next();
+      if (admin || user.getPrefs().isInfoSmeRegionAllowed(String.valueOf(r.getId()))) {
+        for (Iterator subjectsIter = r.getSubjects().iterator(); subjectsIter.hasNext();) {
+          String subjectName = (String) subjectsIter.next();
+          Subject s = appContext.getRouteSubjectManager().getSubjects().get(subjectName);
+          tree.add(s.getMasks().getNames(), Boolean.TRUE);
+        }
+      }
     }
   }
 
@@ -328,24 +359,27 @@ public class SiebelTaskManager implements Runnable {
         logger.debug("Siebel: starting task generation...");
       }
 
+      TemplatesRadixTree rtree = new TemplatesRadixTree();
+      initiateRadixTree(rtree);
+
       final int maxMessagesPerSecond = smeContext.getInfoSmeConfig().getMaxMessagesPerSecond();
 
       long currentTime = task.getStartDate() == null ? System.currentTimeMillis() : task.getStartDate().getTime();
 
       Collection unloaded = new ArrayList(10001);
       Collection toSend = new ArrayList(maxMessagesPerSecond + 1);
-      loadMessage(maxMessagesPerSecond, new Date(currentTime), messages, toSend, unloaded);
+      loadMessage(maxMessagesPerSecond, new Date(currentTime), messages, rtree, toSend, unloaded);
       while (toSend != null && !toSend.isEmpty()) {
         smeContext.getInfoSme().addDeliveryMessages(task.getId(), toSend);
         currentTime += 1000;
         toSend.clear();
-        loadMessage(maxMessagesPerSecond, new Date(currentTime), messages, toSend, unloaded);
-        if(unloaded.size() == 10000) {
+        loadMessage(maxMessagesPerSecond, new Date(currentTime), messages, rtree, toSend, unloaded);
+        if (unloaded.size() == 10000) {
           updateUnloaded(unloaded);
           unloaded.clear();
         }
       }
-      if(!unloaded.isEmpty()) {
+      if (!unloaded.isEmpty()) {
         updateUnloaded(unloaded);
       }
 
@@ -354,7 +388,6 @@ public class SiebelTaskManager implements Runnable {
       task.setMessagesHaveLoaded(true);
 
       _addTask(task, false);
-
 
 
       if (logger.isDebugEnabled()) {
@@ -373,36 +406,40 @@ public class SiebelTaskManager implements Runnable {
   }
 
   private void updateUnloaded(Collection unloaded) {
-    try{
+    try {
       Iterator i = unloaded.iterator();
       Map states = new HashMap();
-      while(i.hasNext()) {
+      while (i.hasNext()) {
         Object o = i.next();
-        logger.error("Siebel: Unloaded message for '"+o+"'");
+        logger.error("Siebel: Unloaded message for '" + o + "'");
         states.put(o, new SiebelMessage.DeliveryState(SiebelMessage.State.REJECTED, "11", "Invalid Dest Addr"));
       }
       provider.updateDeliveryStates(states);
-    }catch(Throwable e) {
-      logger.error(e,e);
+    } catch (Throwable e) {
+      logger.error(e, e);
     }
   }
 
-  private static void loadMessage(int limit, Date sendDate, ResultSet messages, Collection result, Collection unloaded) throws SiebelException {
+  private static void loadMessage(int limit, Date sendDate, ResultSet messages, TemplatesRadixTree rtree, Collection result, Collection unloaded) throws SiebelException {
     int i = 0;
     while (i < limit && messages.next()) {
       SiebelMessage sM = (SiebelMessage) messages.get();
       String msisdn = sM.getMsisdn();
-      msisdn = msisdn.trim();
-      if(checkMsidn(msisdn)) {
-        final Message msg = new Message();
-        msg.setAbonent(msisdn);
-        msg.setMessage(sM.getMessage());
-        msg.setState(Message.State.NEW);
-        msg.setUserData(sM.getClcId());
-        msg.setSendDate(sendDate);
-        result.add(msg);
-        i++;
-      }else {
+      if (msisdn != null) {
+        msisdn = msisdn.trim();
+        if (msisdn.charAt(0) != '+')
+          msisdn = "+" + msisdn;
+        if (checkMsidn(msisdn) && rtree.getValue(msisdn) != null) {
+          final Message msg = new Message();
+          msg.setAbonent(msisdn);
+          msg.setMessage(sM.getMessage());
+          msg.setState(Message.State.NEW);
+          msg.setUserData(sM.getClcId());
+          msg.setSendDate(sendDate);
+          result.add(msg);
+          i++;
+        }
+      } else {
         unloaded.add(sM.getClcId());
       }
     }
@@ -411,7 +448,7 @@ public class SiebelTaskManager implements Runnable {
   private static Pattern msisdnPattern = Pattern.compile("^(\\+|)[0-9]+$");
 
   private static boolean checkMsidn(String msisdn) {
-    return msisdn != null && msisdn.length()>7 && msisdnPattern.matcher(msisdn).matches();
+    return msisdn != null && msisdn.length() > 7 && msisdnPattern.matcher(msisdn).matches();
   }
 
   private Task createTask(SiebelTask siebelTask, String taskName) throws SiebelException {
