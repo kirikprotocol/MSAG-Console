@@ -44,6 +44,9 @@ Modules:
   <target name="infosme_update">
     <ant dir="InfoSme" antfile="build.xml" target="update"/>
   </target>
+  <target name="infosme_build">
+    <ant dir="InfoSme" antfile="build.xml" target="build"/>
+  </target>
   <target name="proxysme_distr">
     <ant dir="proxysme" antfile="build.xml" target="distr"/>
   </target>
