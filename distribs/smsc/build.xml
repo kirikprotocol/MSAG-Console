@@ -410,6 +410,10 @@ Targets:
     <ant dir="${SMSC_DIR}/ext_smes" target="inman_distr"/>
   </target>
 
+  <target name="infosme_web">
+    <ant dir="${SMSC_DIR}/ext_smes" target="infosme_update"/>
+  </target>
+
   <target name="infosme_build">
     <ant dir="${SRC_DIR}" target="mod">
       <property name="MOD" value="infosme"/>
