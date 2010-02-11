@@ -674,7 +674,7 @@ CStrSet * Config::getChildStrParamNames(const char * const sectionName) const
 
 void Config::writeHeader(std::ostream &out) const
 {
-  out << "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>" << std::endl;
+  out << "<?xml version=\"1.0\" encoding=\"windows-1251\"?>" << std::endl;
   out << "<!DOCTYPE config SYSTEM \"configuration.dtd\">" << std::endl;
   out << "<config>" << std::endl;
 }
