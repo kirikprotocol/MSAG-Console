@@ -411,7 +411,7 @@ Targets:
   </target>
 
   <target name="infosme_web">
-    <ant dir="${SMSC_DIR}/ext_smes" target="infosme_update"/>
+    <ant dir="${SMSC_DIR}/ext_smes" target="infosme_build"/>
   </target>
 
   <target name="infosme_build">
