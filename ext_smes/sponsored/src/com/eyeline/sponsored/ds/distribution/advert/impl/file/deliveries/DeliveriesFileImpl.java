@@ -508,13 +508,17 @@ class DeliveriesFileImpl implements DeliveriesFile {
 
       getDeliveries(new DeliveriesQuery() {
         public boolean add(DeliveryImpl d) {
-          double totalTime = d.getEndDate().getTime() - d.getStartDate().getTime();
-          double p1 = startDate.getTime() - d.getStartDate().getTime();
-          double p2 = endDate.getTime() - d.getStartDate().getTime();
+          if (d.getTotal() == 1) {
+            return startDate.getTime() < d.getStartDate().getTime() && endDate.getTime() >= d.getEndDate().getTime();
+          } else {
+            double totalTime = d.getEndDate().getTime() - d.getStartDate().getTime();
+            double p1 = startDate.getTime() - d.getStartDate().getTime();
+            double p2 = endDate.getTime() - d.getStartDate().getTime();
 
-          double a1 = (double)(d.getTotal() - 1) * p1 / totalTime;
-          double a2 = (double)(d.getTotal() - 1) * p2 / totalTime;
-          return ((Math.ceil(a1)>=0 || a2 > 0) && Math.ceil(a1) < d.getTotal() && Math.ceil(a1) < a2);
+            double a1 = (double)(d.getTotal() - 1) * p1 / totalTime;
+            double a2 = (double)(d.getTotal() - 1) * p2 / totalTime;
+            return ((Math.ceil(a1)>=0 || a2 > 0) && Math.ceil(a1) < d.getTotal() && Math.ceil(a1) < a2);
+          }
         }
 
         public String printQuery() {
