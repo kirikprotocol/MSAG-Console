@@ -1,8 +1,8 @@
 #include <memory>
 #include "scag/pvss/profile/AbntAddr.hpp"
 #include "scag/pvss/profile/Profile.h"
-#include "BHDiskStorage2.h"
-#include "PageFileDiskStorage.h"
+#include "BHDiskStorage3.h"
+#include "PageFileDiskStorage2.h"
 #include "BlocksHSStorage2.h"
 #include "RBTreeIndexStorage.h"
 #include "IndexedStorage2.h"
@@ -19,87 +19,16 @@ using scag2::pvss::Profile;
 using scag2::util::Drndm;
 using scag2::util::HexDump;
 
-// #define ABONENTSTORAGE
+#define ABONENTSTORAGE
 
 #ifdef ABONENTSTORAGE
 
-typedef BHDiskStorage2< AbntAddr, Profile, BlocksHSStorage2 > DiskDataStorage;
+typedef BHDiskStorage3 DiskDataStorage;
 typedef RBTreeIndexStorage< AbntAddr, DiskDataStorage::index_type > DiskIndexStorage;
 
 #else // service storage
 
-template < class PF > class PageFileDiskStorage2
-{
-public:
-    static const bool updatable = false;
-
-    typedef smsc::core::buffers::File::offset_type index_type;
-    typedef PF                                     storage_type;
-    typedef std::vector< unsigned char >           buffer_type;
-
-    PageFileDiskStorage2( PF* pf, smsc::logger::Logger* thelog = 0 ) :
-    pf_(pf), log_(thelog), keylogger_(0) {
-        if (log_) smsc_log_debug(log_,"pagefilediskstorage created");
-    }
-
-    ~PageFileDiskStorage2() { delete pf_; }
-    
-    inline void setKeyLogger( KeyLogger& kl ) { keylogger_ = &kl; }
-
-    inline index_type invalidIndex() const { return 0; }
-
-    index_type append( const buffer_type& buf,
-                       const buffer_type* oldbuf = 0 ) {
-        const index_type i = pf_->Append( &(buf[0]), buf.size() );
-        if (log_) smsc_log_debug(log_,"append: key=%s buf=%u -> index=%llx",
-                                 keylogger_->toString(), unsigned(buf.size()),
-                                 static_cast<unsigned long long>(i));
-        return i;
-    }
-
-    /*
-    index_type update( index_type i, const buffer_type& buf, buffer_type* oldbuf = 0 ) {
-        if (log_) smsc_log_debug(log_,"update: key=%s index=%llx buf=%u",
-                                 keylogger_->toString(),
-                                 static_cast<unsigned long long>(i),
-                                 unsigned(buf.size()));
-        pf_->Update(i,&(buf[0]), buf.size());
-    }
-     */
-
-    bool read( index_type i, buffer_type& buf ) {
-        buf.resize(0);
-        index_type j;
-        if (log_) smsc_log_debug(log_,"reading key=%s index=%llx",
-                                 keylogger_->toString(),
-                                 static_cast<unsigned long long>(i));
-        pf_->Read(i,buf,&j);
-        if ( i != j ) {
-            if (log_) smsc_log_warn(log_,"diff index: was=%llx is=%llx buf=%u",
-                                    static_cast<unsigned long long>(i),
-                                    static_cast<unsigned long long>(j),
-                                    unsigned(buf.size()));
-        } else {
-            if (log_) smsc_log_debug(log_,"ok: buf=%u",
-                                     unsigned(buf.size()));
-        }
-        return true;
-    }
-
-    inline void remove( index_type i, const buffer_type* oldbuf = 0 ) {
-        if (log_) smsc_log_debug(log_,"remove: key=%s index=%llx",
-                                 keylogger_->toString(),
-                                 static_cast<unsigned long long>(i));
-        pf_->Delete(i);
-    }
-
-private:
-    PF*                   pf_;
-    smsc::logger::Logger* log_;
-    KeyLogger*            keylogger_;
-};
-
-typedef PageFileDiskStorage2< PageFile > DiskDataStorage;
+typedef PageFileDiskStorage2 DiskDataStorage;
 typedef DiskHashIndexStorage< IntProfileKey, DiskDataStorage::index_type > DiskIndexStorage;
 
 #endif // service storage
@@ -195,7 +124,16 @@ int main()
     Drndm rnd;
     for ( unsigned i = 0; i < 200; ++i ) {
         uint64_t choice = Drndm::uniform(100,rnd.getNextNumber());
+
+#ifdef ABONENTSTORAGE
+        char pkeybuf[30];
+        sprintf(pkeybuf,"+7913%07u",unsigned(Drndm::uniform(100,rnd.getNextNumber())));
+        AbntAddr pkey;
+        pkey.fromString(pkeybuf);
+#else
         IntProfileKey pkey(unsigned(Drndm::uniform(100,rnd.getNextNumber())));
+#endif
+
         if ( choice < 30 ) {
             smsc_log_debug(logger,"remove key=%s",pkey.toString().c_str());
             ds.remove(pkey);

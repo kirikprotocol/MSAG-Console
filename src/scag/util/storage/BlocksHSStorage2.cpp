@@ -23,6 +23,8 @@ void makeStaticData()
     staticDone = true;
 }
 
+scag2::util::storage::DummyKeyLogger dummyKeyLogger;
+
 }
 
 
@@ -453,6 +455,7 @@ freeCount_(0),
 journalFile_(*this,100,logger),
 manager_(manager),
 creationTask_(0),
+keylogger_(&::dummyKeyLogger),
 readonly_(false)
 {
     makeStaticData();
@@ -528,8 +531,7 @@ int BlocksHSStorage2::recover( const std::string& dbname,
 
 BlocksHSStorage2::index_type BlocksHSStorage2::change( index_type   oldIndex,
                                                        buffer_type* oldBuf,
-                                                       buffer_type* newBuf,
-                                                       const KeyLogger* kl )
+                                                       buffer_type* newBuf )
 {
     size_t needBlocks;
     size_t hasBlocks;
@@ -604,10 +606,18 @@ BlocksHSStorage2::index_type BlocksHSStorage2::change( index_type   oldIndex,
 
             } else {
 
-                if ( ! getAffectedBlocks(*oldBuf,affectedBlocks) ) {
+                if ( !oldBuf ) {
+                    if (!oldBuf_) oldBuf_ = new buffer_type;
+                    oldBuf = oldBuf_;
+                    oldBuf->clear();
+                    // reread from disk
+                    if (!read(oldPos,*oldBuf,&affectedBlocks)) break;
+                } else if ( !getAffectedBlocks(*oldBuf,affectedBlocks) ) {
                     // buffer parsing failed
-                    // FIXME: should we try to reread from disk?
-                    break;
+                    if (!oldBuf_) oldBuf_ = new buffer_type;
+                    oldBuf = oldBuf_;
+                    oldBuf->clear();
+                    if (!read(oldPos,*oldBuf,&affectedBlocks)) break;
                 }
                 if ( oldBuf->size() <= idxSize() ) {
                     // invalid buffer

@@ -525,9 +525,11 @@ public:
 
     /// NOTE: it is your responsibility to delete the return value.
     value_type* release( const key_type& k, bool fromdiskalso = false ) {
-        std::auto_ptr<value_type> v( cache_->release(k) );
-        if ( v.get() && fromdiskalso ) disk_->remove( k );
-        return v.release();
+        stored_type sv = cache_->release(k);
+        if ( cache_->store2val(sv) && fromdiskalso ) disk_->remove(k);
+        value_type* v = cache_->setval(sv,0);
+        cache_->dealloc(sv);
+        return v;
     }
 
 

@@ -13,6 +13,7 @@
 #include "scag/util/io/Serializer.h"
 #include "DataFileManager.h"
 #include "HSPacker.h"
+#include "KeyLogger.h"
 #include "JournalFile.h"
 
 namespace scag2 {
@@ -56,14 +57,6 @@ public:
         virtual void recoverIndex( index_type idx, buffer_type& buffer ) = 0;
     };
 
-    /// adapter interface to print key.
-    /// It is created to avoid dependency on key type.
-    struct KeyLogger
-    {
-    public:
-        virtual const char* toString() const = 0;
-        virtual ~KeyLogger() {}
-    };
 
     class Iterator
     {
@@ -98,6 +91,8 @@ public:
 
     ~BlocksHSStorage2();
 
+    inline void setKeyLogger( const KeyLogger& kl ) { keylogger_ = &kl; }
+
     int open( const std::string& dbname,
               const std::string& dbpath,
               bool  readonly = false );
@@ -129,14 +124,14 @@ public:
     /// 2. oldIndex == invalidIndex() -- data should be appended (created).
     ///    oldBuf ignored.
     /// 3. otherwise, data should be updated.
-    ///    precondition: oldBuf != 0 and oldBuf->size() > idxSize()+navSize().
+    ///    if oldBuf == 0, it is read from storage.
+    ///    precondition: oldBuf->size() > idxSize()+navSize().
     ///
     /// Return invalidIndex() on failure, the index of new data on success.
     /// NOTE: that in case of removal, it always returns invalidIndex().
     index_type change( index_type   oldIndex,
                        buffer_type* oldBuf,
-                       buffer_type* newBuf,
-                       const KeyLogger* kl = 0 );
+                       buffer_type* newBuf );
 
 
     /// Read data, starting from index 'index' to the buffer buf (as is, i.e. w/o unpacking).
@@ -344,6 +339,7 @@ private:
     DataFileManager&                   manager_;
     std::auto_ptr<CreationTask>        creationTask_;
     smsc::core::synchronization::Mutex creationMutex_;
+    const KeyLogger*                   keylogger_;
 
     bool                               readonly_;
 };

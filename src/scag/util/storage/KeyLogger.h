@@ -13,6 +13,13 @@ public:
 };
 
 
+class DummyKeyLogger : public KeyLogger
+{
+public:
+    virtual const char* toString() const { return "dummy"; }
+};
+
+
 template < class T > class KeyLoggerT : public KeyLogger
 {
 public:

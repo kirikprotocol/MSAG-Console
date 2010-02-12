@@ -122,9 +122,18 @@ public:
         return v.toString();
     }
 
-protected:
-    inline void releaseval( stored_type& v ) const {
+    /*
+    inline value_type* releaseval( stored_type& v ) const {
+        value_type* x = v.value;
         v.value = 0;
+        return x;
+    }
+     */
+
+    inline value_type* setval( stored_type& v, value_type* nv ) const {
+        value_type* x = v.value;
+        v.value = nv;
+        return x;
     }
 };
 

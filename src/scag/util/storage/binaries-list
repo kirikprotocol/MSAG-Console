@@ -45,3 +45,13 @@ scag/tests/test-indexed-storage  test-indexed-storage \
    -lcore-buffers -lcore-threads \
    @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
    -lutil -lpthread -lrt -ldl
+
+scag/tests/test-delayed-storage  test-delayed-storage \
+   -lscag-pvss-profile \
+   -lscag-pvss-data \
+   -lscag-util-storage \
+   -lscag-util-io \
+   -lcore-buffers -lcore-threads \
+   @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
+   -lutil -lpthread -lrt -ldl
+

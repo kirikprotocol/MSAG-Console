@@ -112,11 +112,15 @@ public:
   index_type removeIndex(const key_type& key) {
       OffsetValue off;
     if (!index_.LookUp(key, off)) {
-      if (logger_) smsc_log_info(logger_, "Attempt to delete record that doesn't exists:%s", key.toString().c_str());
+      if (logger_) {
+          smsc_log_info(logger_, "Attempt to delete record that doesn't exists:%s", key.toString().c_str());
+      }
       return invalid_;
     }
     index_.Delete(key);
-    if (logger_) smsc_log_debug(logger_, "delRecord:%s:%08llx", key.toString().c_str(), off.value);
+    if (logger_) {
+        smsc_log_debug(logger_, "delRecord:%s:%08llx", key.toString().c_str(), off.value);
+    }
     return off.value;
   }
 

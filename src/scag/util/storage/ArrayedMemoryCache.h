@@ -23,6 +23,7 @@ public:
     typedef Key key_type;
     typedef typename TypeJuggling< Val >::value_type  value_type;
     typedef typename TypeJuggling< Val >::stored_type stored_type;
+    typedef HF hash_function;
 
 private:
   struct CacheItem {
@@ -48,11 +49,15 @@ public:
     }
 
     bool set( const key_type& k, stored_type v ) {
-        if (cachelog_) smsc_log_debug( cachelog_, "set: %s", k.toString().c_str() );
+        if (cachelog_) {
+            smsc_log_debug( cachelog_, "set: %s", k.toString().c_str() );
+        }
         uint32_t index = getIndex(k);
         CacheItem* item = hash_.GetPtr(index);
         if (!item) {
-          if (cachelog_) smsc_log_debug( cachelog_, "set: insert %s", k.toString().c_str() );
+          if (cachelog_) {
+              smsc_log_debug( cachelog_, "set: insert %s", k.toString().c_str() );
+          }
           hash_.Insert(index, CacheItem(k, v));
           return false;
         }
@@ -67,7 +72,9 @@ public:
           item->vv = v;
           item->key = k;
         } else if (!store2val(item->vv)) {
-          if (cachelog_) smsc_log_debug( cachelog_, "set: not null value for %s", item->key.toString().c_str() );
+          if (cachelog_) {
+              smsc_log_debug( cachelog_, "set: not null value for %s", item->key.toString().c_str() );
+          }
           dealloc(item->vv);
           item->vv = v;
         } else if (store2val(item->vv) && store2val(v)) {
@@ -89,21 +96,29 @@ public:
     stored_type* get( const key_type& k ) const {
         CacheItem* item = getCacheItem(k);
         if (item && item->key == k && store2val(item->vv)) {
-          if (cachelog_) smsc_log_debug( cachelog_, "get: %s hit", k.toString().c_str());
+          if (cachelog_) {
+              smsc_log_debug( cachelog_, "get: %s hit", k.toString().c_str());
+          }
           return &(item->vv);
         } else {
-          if (cachelog_) smsc_log_debug( cachelog_, "get: %s miss", k.toString().c_str());
+          if (cachelog_) {
+              smsc_log_debug( cachelog_, "get: %s miss", k.toString().c_str());
+          }
           return 0;
         }
     }
 
 
-    value_type* release( const key_type& k ) {
-        if (cachelog_) smsc_log_debug( cachelog_, "clr: %s", k.toString().c_str() );
+    stored_type release( const key_type& k ) {
+        if (cachelog_) {
+            smsc_log_debug( cachelog_, "rls: %s", k.toString().c_str() );
+        }
         const uint32_t index = getIndex(k);
         CacheItem* item = hash_.GetPtr(index);
         if ( !item ) {
-            if (cachelog_) { smsc_log_debug(cachelog_,"clr: item not found: %s",k.toString().c_str()); }
+            if (cachelog_) {
+                smsc_log_debug(cachelog_,"clr: item not found: %s",k.toString().c_str()); 
+            }
             return 0;
         } else if ( !(item->key == k) ) {
             if (cachelog_) {
@@ -114,11 +129,16 @@ public:
         }
         stored_type v = item->vv;
         hash_.Delete( index );
+        return v;
+        /*
         value_type* vvv = store2val(v);
-        if (cachelog_) { smsc_log_debug(cachelog_,"clr: item %s found: val=%p",k.toString().c_str(),vvv); }
+        if (cachelog_) {
+            smsc_log_debug(cachelog_,"clr: item %s found: val=%p",k.toString().c_str(),vvv); 
+        }
         releaseval(v); // release value_type
         dealloc(v);    // and free all other resources
         return vvv;
+         */
     }
 
 
