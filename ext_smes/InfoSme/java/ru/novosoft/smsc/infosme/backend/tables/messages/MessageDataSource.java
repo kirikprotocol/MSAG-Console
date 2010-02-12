@@ -33,7 +33,7 @@ public class MessageDataSource extends AbstractDataSource {
   public static final String MSISDN = "msisdn";
   public static final String REGION = "region";
   public static final String MESSAGE = "message";
-    public static final String USERDATA = "userdata";
+  public static final String USERDATA = "userdata";
   public static final String ID = "id";
   public static final String TASK_ID = "taskId";
 
@@ -316,6 +316,52 @@ public class MessageDataSource extends AbstractDataSource {
     return result;
   }
 
+  public boolean isAllMessagesProcessed(String taskId) throws ParseException {
+    final SimpleDateFormat dirNameFormat = new SimpleDateFormat(DIR_DATE_FORMAT);
+    File dir = new File(storeDir + File.separator + taskId);
+
+    // Fetch directories
+    File[] dirArr = getDirectories(dir, null, null, dirNameFormat);
+    if(dirArr == null) {
+      return false;
+    }
+    // Fetch files
+    for (int i=0;i<dirArr.length;i++) {
+      File directory = dirArr[i];
+      File[] fileArr = directory.listFiles();
+
+      for(int j=0;j<fileArr.length;j++) {
+        File f = fileArr[j];
+        if (!f.isFile())
+          continue;
+        String name = f.getName();
+        if (!name.endsWith(".csv"))
+          continue;
+        if(!name.endsWith("processed.csv")) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  private static File[] getDirectories(File taskDir,  Date from, Date till, final SimpleDateFormat dirNameFormat) throws ParseException {
+    final Date fromDir = from == null ? null : dirNameFormat.parse(dirNameFormat.format(from));
+    final Date tillDir = till == null ? null : dirNameFormat.parse(dirNameFormat.format(till));
+    return taskDir.listFiles(new FileFilter(){
+      public boolean accept(File file) {
+        if (!file.isDirectory())
+          return false;
+        try {
+          Date dirDate = dirNameFormat.parse(file.getName());
+          return (fromDir == null || dirDate.compareTo(fromDir) >= 0) && (tillDir == null || dirDate.compareTo(tillDir) <= 0);
+        } catch (ParseException e) {
+          return false;
+        }
+      }
+    });
+  }
+
   private List getFiles(String taskId, Date from, Date till) throws ParseException {
 
     List files = new LinkedList();
@@ -327,24 +373,11 @@ public class MessageDataSource extends AbstractDataSource {
       final SimpleDateFormat fileNameFormat = new SimpleDateFormat(DIR_DATE_FORMAT + '/' + FILE_DATE_FORMAT);
       final SimpleDateFormat fileDateFormat = new SimpleDateFormat(DIR_DATE_FORMAT + FILE_DATE_FORMAT);
 
-      final Date fromDir = from == null ? null : dirNameFormat.parse(dirNameFormat.format(from));
       final Date fromFile = from == null ? null : fileDateFormat.parse(fileDateFormat.format(from));
-      final Date tillDir = till == null ? null : dirNameFormat.parse(dirNameFormat.format(till));
       final Date tillFile = till == null ? null : fileDateFormat.parse(fileDateFormat.format(till));
 
       // Fetch directories
-      File[] dirArr = dir.listFiles(new FileFilter(){
-        public boolean accept(File file) {
-          if (!file.isDirectory())
-            return false;
-          try {
-            Date dirDate = dirNameFormat.parse(file.getName());
-            return (fromDir == null || dirDate.compareTo(fromDir) >= 0) && (tillDir == null || dirDate.compareTo(tillDir) <= 0);
-          } catch (ParseException e) {
-            return false;
-          }
-        }
-      });
+      File[] dirArr = getDirectories(dir, from, till, dirNameFormat);
 
       // Fetch files
       for (int i=0;i<dirArr.length;i++) {
@@ -443,22 +476,22 @@ public class MessageDataSource extends AbstractDataSource {
             i = line.indexOf(',', k);
             String region = line.substring(k, i);
 
-              i += 1;
-              char c = line.charAt(i);
-              String userData = null;
-              String message = null;
-              if ( c == ',' ) {
-                  // userData field is empty
-                  message = prepareMessage(line.substring(i+2,line.length()-1));
-              } else if ( c != '"' ) {
-                  // user data specified
-                  k = line.indexOf(',',i);
-                  userData = line.substring(i,k);
-                  message = prepareMessage(line.substring(k+2,line.length()-1));
-              } else {
-                  // user data field is not present (old format)
-                  message = prepareMessage(line.substring(i+1,line.length()-1));
-              }
+            i += 1;
+            char c = line.charAt(i);
+            String userData = null;
+            String message = null;
+            if ( c == ',' ) {
+              // userData field is empty
+              message = prepareMessage(line.substring(i+2,line.length()-1));
+            } else if ( c != '"' ) {
+              // user data specified
+              k = line.indexOf(',',i);
+              userData = line.substring(i,k);
+              message = prepareMessage(line.substring(k+2,line.length()-1));
+            } else {
+              // user data field is not present (old format)
+              message = prepareMessage(line.substring(i+1,line.length()-1));
+            }
 
             MessageDataItem item = new MessageDataItem(lineObj.id, filter.getTaskId(), state, msgDateFormat.parse(dateStr), msisdn, region, message, userData);
             if (!visitor.visit(item))

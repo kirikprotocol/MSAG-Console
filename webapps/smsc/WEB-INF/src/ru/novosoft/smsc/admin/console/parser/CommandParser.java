@@ -777,6 +777,12 @@ public CommandParser(ParserSharedInputState state) {
 			cmd=infosmedistr();
 			break;
 		}
+		case TGT_EXPORT_STAT:
+		{
+			match(TGT_EXPORT_STAT);
+			cmd=infosmeexportstat();
+			break;
+		}
 		default:
 		{
 			throw new NoViableAltException(LT(1), getFilename());
@@ -3388,6 +3394,22 @@ public CommandParser(ParserSharedInputState state) {
 			throw new NoViableAltException(LT(1), getFilename());
 		}
 		}
+		return cmd;
+	}
+	
+	public final InfoSmeExportStatCommand  infosmeexportstat() throws RecognitionException, TokenStreamException {
+		InfoSmeExportStatCommand cmd;
+		
+		
+		cmd = new InfoSmeExportStatCommand();
+		
+		
+		
+		cmd.setTaskName(getnameid("taskName"));
+		cmd.setFileName(getnameid("fileName"));
+			    cmd.setStartDate(getnameid("startDate"));
+			    cmd.setStartTime(getnameid("startTime"));
+		
 		return cmd;
 	}
 	
@@ -6573,7 +6595,6 @@ public CommandParser(ParserSharedInputState state) {
 		
 		
 		
-		cmd = new InfoSmeCreateDistrCommand();
 		cmd.setFile(getnameid("distr file"));
 		cmd.setTaskName(getnameid("task name"));
 		cmd.setDateBeginStr(getnameid("date begin"));
@@ -6636,7 +6657,6 @@ public CommandParser(ParserSharedInputState state) {
 		
 		
 		
-		cmd = new InfoSmeAlterDistrCommand();
 		cmd.setTaskId(getnameid("taskId"));
 		cmd.setTaskName(getnameid("task name"));
 		cmd.setDateBeginStr(getnameid("date begin"));
@@ -6698,6 +6718,7 @@ public CommandParser(ParserSharedInputState state) {
 		"\"group\"",
 		"\"emailsme\"",
 		"\"import\"",
+		"\"exportstat\"",
 		"\"id\"",
 		"\"name\"",
 		"\"hide\"",
@@ -6790,6 +6811,12 @@ public CommandParser(ParserSharedInputState state) {
 		"\"status\"",
 		"\"resend\"",
 		"\"remove\"",
+		"\"carryorgdesc\"",
+		"\"carryorguser\"",
+		"\"carrysccp\"",
+		"\"fillextra\"",
+		"\"forcereceipt\"",
+		"\"smppplus\"",
 		"\"force\"",
 		"\"suppress\"",
 		"\"pass\"",
@@ -6817,13 +6844,7 @@ public CommandParser(ParserSharedInputState state) {
 		"comma character ','",
 		"ESC",
 		"DIGIT",
-		"TSTR",
-		"OPT_CARRY_ORG_DESCRIPTOR",
-		"OPT_CARRY_ORG_USER_INFO",
-		"OPT_CARRY_SCCP_INFO",
-		"OPT_FILL_EXTRA_DESCRIPTOR",
-		"OPT_FORCE_SME_RECEIPT",
-		"OPT_SMPP_PLUS"
+		"TSTR"
 	};
 	
 	

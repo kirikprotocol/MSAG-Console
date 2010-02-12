@@ -8,6 +8,8 @@ import ru.novosoft.smsc.infosme.backend.siebel.SiebelTaskManager;
 import ru.novosoft.smsc.infosme.backend.siebel.SiebelFinalStateThread;
 import ru.novosoft.smsc.infosme.backend.siebel.impl.SiebelDataProviderImpl;
 import ru.novosoft.smsc.infosme.backend.commands.InfoSmeTaskManager;
+import ru.novosoft.smsc.infosme.backend.commands.InfoSmeExportStatManager;
+import ru.novosoft.smsc.infosme.backend.tables.messages.MessageDataSource;
 import ru.novosoft.smsc.jsp.SMEAppContext;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.util.config.Config;
@@ -57,6 +59,7 @@ public class InfoSmeContext implements SMEAppContext
   private String smeId = "InfoSme";
 
   private final InfoSmeTaskManager taskManager;
+  private final InfoSmeExportStatManager exportStatManager;
 
   private SiebelDataProvider siebelDataProvider;
   private SiebelTaskManager siebelTaskManager;
@@ -69,7 +72,8 @@ public class InfoSmeContext implements SMEAppContext
     this.smeId = smeId;
     this.appContext = appContext;
     appContext.registerSMEContext(this);
-    File configDir = new File(appContext.getHostsManager().getServiceInfo(smeId).getServiceFolder(), "conf");  
+    String serviceFolder = appContext.getHostsManager().getServiceInfo(smeId).getServiceFolder().getAbsolutePath();
+    File configDir = new File(serviceFolder, "conf");
     this.infoSmeConfig = new InfoSmeConfig(configDir.getAbsolutePath(), this);
     this.infoSme = new InfoSme(appContext.getHostsManager().getServiceInfo(this.smeId),
         infoSmeConfig.getAdminHost(),
@@ -78,6 +82,14 @@ public class InfoSmeContext implements SMEAppContext
     this.blackListManager = new BlackListManager(appContext.getPersonalizationClientPool());
     this.taskManager = new InfoSmeTaskManager(appContext);
     this.taskManager.start();
+
+
+    String msgStoreDir = this.infoSmeConfig.getStoreLocation();
+    if( msgStoreDir.length() > 0 && msgStoreDir.charAt(0) != '/' )
+      msgStoreDir = serviceFolder + '/' + msgStoreDir;
+
+    this.exportStatManager = new InfoSmeExportStatManager(new MessageDataSource(msgStoreDir));
+    this.exportStatManager.start();
 
     if(infoSmeConfig.isSiebelTMStarted()) {
       startSiebelTaskManager();
@@ -140,6 +152,9 @@ public class InfoSmeContext implements SMEAppContext
     }
     if(taskManager != null) {
       taskManager.shutdown();
+    }
+    if(exportStatManager != null) {
+      exportStatManager.shutdown();
     }
   }
 
@@ -257,6 +272,10 @@ public class InfoSmeContext implements SMEAppContext
 
   public InfoSmeTaskManager getTaskManager() {
     return taskManager;
+  }
+
+  public InfoSmeExportStatManager getExportStatManager() {
+    return exportStatManager;
   }
 
   public Boolean getUssdFeature() {

@@ -6,7 +6,6 @@ import ru.novosoft.smsc.admin.console.commands.infosme.Distribution;
 import ru.novosoft.smsc.admin.console.commands.infosme.InfoSmeCommands;
 import ru.novosoft.smsc.admin.users.User;
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.region.Region;
 import ru.novosoft.smsc.infosme.backend.InfoSmeContext;
 import ru.novosoft.smsc.infosme.backend.Message;
 import ru.novosoft.smsc.infosme.backend.config.tasks.Task;
@@ -14,6 +13,7 @@ import ru.novosoft.smsc.infosme.beans.InfoSmeBean;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -112,6 +112,46 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
     } catch (Exception e) {
       e.printStackTrace();
       log.error(e);
+      ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+    }
+  }
+
+
+
+  public void exportStat(CommandContext ctx, String taskName, String file, Date startDate) {
+    try{
+      // Check user
+      if (!checkUserPermissions(ctx))
+        return;
+
+      final SMSCAppContext appContext = ctx.getOwner().getContext();
+      final InfoSmeContext context = InfoSmeContext.getInstance(appContext, "InfoSme");
+
+      if (!checkInfoSmeOnline(ctx, context))
+        return;
+
+      switch(context.getExportStatManager().addExportTask(taskName, file, startDate)) {
+        case -1 :
+          ctx.setMessage("Can't export stats for task: "+taskName);
+          ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+          break;
+        case 0 :
+          ctx.setMessage("Task is not processed: "+taskName);
+          ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+          break;
+        case 1 :
+          ctx.setMessage("Export is started. See results later in :"+file);
+          ctx.setStatus(CommandContext.CMD_OK);
+          break;
+      }
+
+    }catch(IOException e){
+      log.error(e,e);
+      ctx.setMessage("Problems with creation file: "+file);
+      ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+    }catch(Exception e){
+      log.error(e,e);
+      ctx.setMessage("Can't export stats for task: "+taskName);
       ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
     }
   }

@@ -214,6 +214,7 @@ infosme returns [Command cmd] {
 }
   : TGT_IMPORT cmd = infosmeimport
   | OPT_TASK cmd = infosmedistr
+  | TGT_EXPORT_STAT cmd = infosmeexportstat
   ;
 
 /* ----------------------- Common names parser ------------------------- */
@@ -1118,7 +1119,6 @@ infosmedistr returns [Command cmd] {
 infosmealtertask returns [InfoSmeAlterDistrCommand cmd] {
       cmd = new InfoSmeAlterDistrCommand();
 } : {
-      cmd = new InfoSmeAlterDistrCommand();
       cmd.setTaskId(getnameid("taskId"));
       cmd.setTaskName(getnameid("task name"));
       cmd.setDateBeginStr(getnameid("date begin"));
@@ -1131,10 +1131,19 @@ infosmealtertask returns [InfoSmeAlterDistrCommand cmd] {
       }
   ;
 
+infosmeexportstat returns [InfoSmeExportStatCommand cmd] {
+      cmd = new InfoSmeExportStatCommand();
+} : {
+      cmd.setTaskName(getnameid("taskName"));
+      cmd.setFileName(getnameid("fileName"));
+	    cmd.setStartDate(getnameid("startDate"));
+	    cmd.setStartTime(getnameid("startTime"));
+     }
+  ;
+
 infosmecreatedistr returns [InfoSmeCreateDistrCommand cmd] {
       cmd = new InfoSmeCreateDistrCommand();
 } : {
-      cmd = new InfoSmeCreateDistrCommand();
       cmd.setFile(getnameid("distr file"));
       cmd.setTaskName(getnameid("task name"));
       cmd.setDateBeginStr(getnameid("date begin"));

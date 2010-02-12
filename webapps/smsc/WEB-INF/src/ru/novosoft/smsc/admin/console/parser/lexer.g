@@ -59,6 +59,7 @@ tokens {
   TGT_GROUP     = "group";
   TGT_EMAILSME  = "emailsme";
   TGT_IMPORT    = "import";
+  TGT_EXPORT_STAT    = "exportstat";
 
   OPT_ID        = "id";
   OPT_NAME      = "name";
@@ -152,12 +153,12 @@ tokens {
   OPT_STATUS    = "status";
   OPT_RESEND    = "resend";
   OPT_REMOVE    = "remove";
-  OPT_CARRY_ORG_DESCRIPTOR = "carryorgdesc"
-  OPT_CARRY_ORG_USER_INFO = "carryorguser"
-  OPT_CARRY_SCCP_INFO = "carrysccp"
-  OPT_FILL_EXTRA_DESCRIPTOR = "fillextra"
-  OPT_FORCE_SME_RECEIPT = "forcereceipt"
-  OPT_SMPP_PLUS = "smppplus"
+  OPT_CARRY_ORG_DESCRIPTOR = "carryorgdesc";
+  OPT_CARRY_ORG_USER_INFO = "carryorguser";
+  OPT_CARRY_SCCP_INFO = "carrysccp";
+  OPT_FILL_EXTRA_DESCRIPTOR = "fillextra";
+  OPT_FORCE_SME_RECEIPT = "forcereceipt";
+  OPT_SMPP_PLUS = "smppplus";
 
   VAL_FORCE     = "force";
   VAL_SUPPRESS  = "suppress";
