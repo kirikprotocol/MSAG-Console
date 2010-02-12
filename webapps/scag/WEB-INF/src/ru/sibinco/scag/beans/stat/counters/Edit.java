@@ -47,7 +47,7 @@ public class Edit extends EditBean
 
     public void process(final HttpServletRequest request, final HttpServletResponse response) throws SCAGJspException
     {
-        logger.debug("Counters process() called"); // TODO: remove it
+        logger.debug("Counters process() called, mbSave=" + getMbSave()); // TODO: remove it
         requestParams = request.getParameterMap();
         super.process(request, response);
 
