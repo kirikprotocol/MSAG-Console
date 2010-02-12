@@ -47,10 +47,9 @@ public class SCAGFilter implements Filter {
         appContext = null;
     }
 
-    public void doFilter(final ServletRequest req, final ServletResponse resp, final FilterChain chain) throws ServletException, IOException {
-        String log = null;
+    public void doFilter(final ServletRequest req, final ServletResponse resp, final FilterChain chain) throws ServletException, IOException
+    {
         if (logger == null) logger = Logger.getLogger(this.getClass());
-
         if (config == null) {
             logger.fatal("Not initialized");
             return;
@@ -60,25 +59,25 @@ public class SCAGFilter implements Filter {
         if (req instanceof HttpServletRequest) {
             final HttpServletRequest request = (HttpServletRequest) req;
             req.setAttribute("requestURI", request.getRequestURI());
-            if (logger.isDebugEnabled()){
-                logger.debug("Requested URL:" + request.getRequestURL() + log );
-            }
-        }else if (logger.isDebugEnabled()){
-            logger.debug("Request: " + req.getScheme() + " from " + req.getRemoteHost() + "| "+ req.toString() );
+            /*if (logger.isDebugEnabled()){
+                logger.debug("Requested URL:" + request.getRequestURL());
+            }*/
+        } else if (logger.isDebugEnabled()){
+            //logger.debug("Request: " + req.getScheme() + " from " + req.getRemoteHost() + "| "+ req.toString() );
         }
         chain.doFilter(req, resp);
     }
 
     private void setdefaultLocale() throws Throwable {
       String language_country = config.getServletContext().getInitParameter("javax.servlet.jsp.jstl.fmt.locale");
-      ArrayList localesList = null;
+      ArrayList localesList;
       try {
         localesList = appContext.getLocaleManager().validate(language_country);
       } catch (Throwable t) {
         t.printStackTrace();
         throw t;
       }
-      config.getServletContext().setAttribute("localesList",localesList);
+      config.getServletContext().setAttribute("localesList", localesList);
       Config.set(config.getServletContext(), Config.FMT_LOCALIZATION_CONTEXT, config.getServletContext().getInitParameter("javax.servlet.jsp.jstl.fmt.localizationContext"));
       Config.set(config.getServletContext(), Config.FMT_LOCALE, language_country);
     }

@@ -24,7 +24,6 @@ public abstract class SCAGBean
 
   public void process(HttpServletRequest request, HttpServletResponse response) throws SCAGJspException
   {
-    logger.debug( "SCAGBean:process()");
     this.errors = (List) request.getAttribute(Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAME);
     if (null == errors) {
       this.errors = new ArrayList();

@@ -8,7 +8,6 @@ import ru.sibinco.scag.backend.daemon.Daemon;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.Map;
 
 
 /**
@@ -19,7 +18,7 @@ public class Status extends SCAGBean {
     private byte scagStatus = ServiceInfo.STATUS_UNKNOWN;
 
     public void process(final HttpServletRequest request, final HttpServletResponse response) throws SCAGJspException {
-        logger.debug("Status.process() start");
+        //logger.debug("Status.process() start");
         super.process(request, response);
         if( !getAppContext().isCluster() ){
             final Daemon scagDaemon = appContext.getScagDaemon();
@@ -41,7 +40,7 @@ public class Status extends SCAGBean {
                 logger.error("Could not get SCAG daemon");
             }
         }else{
-            logger.debug( "Status.process() CLUSTER" );
+            //logger.debug( "Status.process() CLUSTER" );
 //            scagStatus = ServiceInfo.STATUS_CLUSTER;
         }
     }
