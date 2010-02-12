@@ -55,7 +55,9 @@ public class StatisticsDataSource extends AbstractDataSource {
           while((line = is.readLine()) != null) {
             StringTokenizer st = new StringTokenizer(line, ",");
             String taskId = st.nextToken();
-            String taskName = st.nextToken();
+            String taskName = st.nextToken().trim();
+            while (taskName.charAt(taskName.length() -1) != '"')
+              taskName += st.nextToken();
             taskName = taskName.substring(1, taskName.length() - 1);
             String minute = st.nextToken();
             String generated = st.nextToken();
