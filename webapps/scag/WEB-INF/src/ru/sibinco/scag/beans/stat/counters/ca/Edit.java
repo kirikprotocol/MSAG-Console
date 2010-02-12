@@ -3,7 +3,6 @@ package ru.sibinco.scag.beans.stat.counters.ca;
 import ru.sibinco.scag.beans.EditBean;
 import ru.sibinco.scag.beans.SCAGJspException;
 import ru.sibinco.scag.beans.DoneException;
-import ru.sibinco.scag.backend.stat.counters.Counter;
 import ru.sibinco.scag.backend.stat.counters.CATable;
 
 import javax.servlet.http.HttpServletRequest;
@@ -30,6 +29,20 @@ public class Edit  extends EditBean
     }
     public void setId(String id) {
         ca_table.setId(id);
+    }
+
+    public int getLimitsMin() {
+        return ca_table.getLimitsMin();
+    }
+    public void setLimitsMin(int limitsMin) {
+        ca_table.setLimitsMin(limitsMin);
+    }
+
+    public int getLimitsMax() {
+        return ca_table.getLimitsMax();
+    }
+    public void setLimitsMax(int limitsMax) {
+        ca_table.setLimitsMax(limitsMax);
     }
 
     public void process(final HttpServletRequest request, final HttpServletResponse response) throws SCAGJspException

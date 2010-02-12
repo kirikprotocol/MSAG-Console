@@ -57,8 +57,8 @@
 
         <sm-ep:properties title="statistics.counters.ca.edit.properties">
             <sm-ep:txt title="statistics.counters.ca.edit.txt.id"   name="id" validation="nonEmpty" readonly="${!bean.add}"/>
-            <sm-ep:txt title="statistics.counters.ca.edit.txt.min"  name="min" maxlength="5" validation="unsignedOrEmpty"/>
-            <sm-ep:txt title="statistics.counters.ca.edit.txt.max"  name="max" maxlength="5" validation="unsignedOrEmpty"/>
+            <sm-ep:txt title="statistics.counters.ca.edit.txt.min"  name="limitsMin" maxlength="5" validation="unsignedOrEmpty"/>
+            <sm-ep:txt title="statistics.counters.ca.edit.txt.max"  name="limitsMax" maxlength="5" validation="unsignedOrEmpty"/>
         </sm-ep:properties>
 
         <fmt:message>statistics.counters.ca.label.limits</fmt:message><br/>
