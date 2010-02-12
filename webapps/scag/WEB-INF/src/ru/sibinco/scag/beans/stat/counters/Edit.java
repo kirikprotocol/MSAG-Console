@@ -37,6 +37,9 @@ public class Edit extends EditBean
     public void setType(String type) {
         counter.setType(type);
     }
+    public void setType(int type) {
+        setType(Integer.toString(type));
+    }
 
     public String getCATableId() {
         return counter.getCATableId();
