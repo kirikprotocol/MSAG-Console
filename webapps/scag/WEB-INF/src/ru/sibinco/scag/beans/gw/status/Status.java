@@ -17,7 +17,8 @@ public class Status extends SCAGBean {
 
     private byte scagStatus = ServiceInfo.STATUS_UNKNOWN;
 
-    public void process(final HttpServletRequest request, final HttpServletResponse response) throws SCAGJspException {
+    public void process(final HttpServletRequest request, final HttpServletResponse response) throws SCAGJspException 
+    {
         //logger.debug("Status.process() start");
         super.process(request, response);
         if( !getAppContext().isCluster() ){
@@ -35,9 +36,9 @@ public class Status extends SCAGBean {
                     logger.debug("Status.process() SCAGstatus='" + scagStatus +"'");
                 }
             } catch (SibincoException e) {
-                logger.error("Could not refresh services", e);
+                logger.warn("Could not refresh services. Details: " + e.getMessage());
             } catch (NullPointerException e) {
-                logger.error("Could not get SCAG daemon");
+                logger.warn("Could not get SCAG daemon");
             }
         }else{
             //logger.debug( "Status.process() CLUSTER" );
