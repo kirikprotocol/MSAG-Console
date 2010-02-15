@@ -147,7 +147,7 @@ public class CountersManager
                 final String paramType = childNodeAttributes.getNamedItem("type").getNodeValue();
                 String paramValue = "";
                 NodeList paramValueList = childNode.getChildNodes();
-                for (int e = 0; e < paramValueList.getLength(); i++) {
+                for (int e = 0; e < paramValueList.getLength(); e++) {
                   if (paramValueList.item(e).getNodeType() == Node.TEXT_NODE) {
                       Node cNode = paramValueList.item(i);
                       if (cNode != null) paramValue += cNode.getNodeValue();
