@@ -145,7 +145,14 @@ public class CountersManager
                 NamedNodeMap childNodeAttributes = childNode.getAttributes();
                 final String paramName = childNodeAttributes.getNamedItem("name").getNodeValue();
                 final String paramType = childNodeAttributes.getNamedItem("type").getNodeValue();
-                final String paramValue = childNode.getTextContent();
+                String paramValue = "";
+                NodeList paramValueList = childNode.getChildNodes();
+                for (int e = 0; e < paramValueList.getLength(); i++) {
+                  if (paramValueList.item(e).getNodeType() == Node.TEXT_NODE) {
+                      Node cNode = paramValueList.item(i);
+                      if (cNode != null) paramValue += cNode.getNodeValue();
+                  }
+                }
                 logger.debug("param=" + paramName + ", type=" + paramType + ", value=" + paramValue);
                 counter.setParam(paramName, paramType, paramValue);
             }
