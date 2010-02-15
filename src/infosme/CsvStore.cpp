@@ -234,6 +234,11 @@ bool CsvStore::getNextMessage(Message &message)
                 smsc_log_debug(log,"the next file is in future (xhour=%x, fhour=%x)",hour,curFile->second->hour);
                 return false;
             }
+            if ( curFile->second->processed ) {
+                smsc_log_debug(log,"skipping opening processed file: %s",curFile->second->fullPath().c_str());
+                curFile++;
+                continue;
+            }
             curFile->second->Open(false);
         }
 
