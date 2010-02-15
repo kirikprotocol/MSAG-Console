@@ -106,7 +106,7 @@ public class CountersManager
         Functions.renameNewSavedFileToOriginal(configNew, configFile);
     }
 
-    private void parseParams(ConfigParamOwner owner, Node node)
+    private void parseParam(ConfigParamOwner owner, Node node)
     {
         NamedNodeMap nodeAttributes = node.getAttributes();
         final String paramName = nodeAttributes.getNamedItem("name").getNodeValue();
@@ -159,7 +159,7 @@ public class CountersManager
                 logger.debug("ca_id=" + ca_table_id);
                 counter.setCATableId(ca_table_id);
             } else if (nodeName.equals("param")) {
-                parseParams(counter, childNode);
+                parseParam(counter, childNode);
             }
         }
         return counter;
@@ -210,7 +210,7 @@ public class CountersManager
                 NodeList limits = childNode.getChildNodes();
                 for (int j = 0; j < limits.getLength(); j++) {
                     Node limitNode = limits.item(j);
-                    String limitNodeName = childNode.getNodeName();
+                    String limitNodeName = limitNode.getNodeName();
                     if (limitNodeName == null || !limitNodeName.equals("limit")) continue;
                     final NamedNodeMap limitAttributes = limitNode.getAttributes();
                     final String limitPercent = limitAttributes.getNamedItem("percent").getNodeValue();
@@ -220,7 +220,7 @@ public class CountersManager
                 }
             }
             else if (nodeName.equals("param")) {
-                parseParams(ca_table, childNode);
+                parseParam(ca_table, childNode);
             }
         }
         return ca_table;
