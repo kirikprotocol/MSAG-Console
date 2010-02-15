@@ -196,10 +196,10 @@ public class CountersManager
         NodeList childs = node.getChildNodes();
         for (int i = 0; i < childs.getLength(); i++) {
             Node childNode = childs.item(i);
-            String nodeName = childNode.getNodeName();
+            final String nodeName = childNode.getNodeName();
             if (nodeName.equals("limits"))
             {
-                NamedNodeMap childNodeAttributes = childNode.getAttributes();
+                final NamedNodeMap childNodeAttributes = childNode.getAttributes();
                 int min = 0; int max = 100; // Default hardcoded values
                 try { min = Integer.parseInt(childNodeAttributes.getNamedItem("min").getNodeValue()); }
                 catch (Throwable th) { logger.warn("Failed to get 'min' attribute, using default=" + min); }
@@ -210,6 +210,8 @@ public class CountersManager
                 NodeList limits = childNode.getChildNodes();
                 for (int j = 0; j < limits.getLength(); j++) {
                     Node limitNode = limits.item(j);
+                    String limitNodeName = childNode.getNodeName();
+                    if (limitNodeName == null || !limitNodeName.equals("limit")) continue;
                     final NamedNodeMap limitAttributes = limitNode.getAttributes();
                     final String limitPercent = limitAttributes.getNamedItem("percent").getNodeValue();
                     final String limitSeverity = limitAttributes.getNamedItem("severity").getNodeValue();
