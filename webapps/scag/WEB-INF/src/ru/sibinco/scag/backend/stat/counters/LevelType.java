@@ -14,8 +14,7 @@ public enum LevelType
     WARNING (0x02, "WARNING"),
     MINOR   (0x03, "MINOR"),
     MAJOR   (0x04, "MAJOR"),
-    CRITICAL(0x05, "CRITICAL"),
-    UNKNOWN (0xFF, "UNKNOWN"); // TODO: need it ???
+    CRITICAL(0x05, "CRITICAL");
 
     private final byte value;
     private final String name;

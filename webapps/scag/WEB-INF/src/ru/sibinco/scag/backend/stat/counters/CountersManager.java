@@ -170,8 +170,8 @@ public class CountersManager
         String text =
             "\t\t<ca_table id=\"" + StringEncoderDecoder.encode(ca_table.getId()) + '"' +
             " system=\"" + StringEncoderDecoder.encode(ca_table.getSystem()) + "\">\n" +
-            "\t\t\t<limits min=\"" + StringEncoderDecoder.encode(ca_table.getLimitsMinString()) + '"' +
-            " max=\"" + StringEncoderDecoder.encode(ca_table.getLimitsMaxString())+ "\">\n";
+            "\t\t\t<limits min=\"" + StringEncoderDecoder.encode(ca_table.getLimitsMinStr()) + '"' +
+            " max=\"" + StringEncoderDecoder.encode(ca_table.getLimitsMaxStr())+ "\">\n";
 
         // TODO: dump limits content
         text += "\t\t\t</limits>\n";
@@ -197,7 +197,8 @@ public class CountersManager
         for (int i = 0; i < childs.getLength(); i++) {
             Node childNode = childs.item(i);
             String nodeName = childNode.getNodeName();
-            if (nodeName.equals("limits")) {
+            if (nodeName.equals("limits"))
+            {
                 NamedNodeMap childNodeAttributes = childNode.getAttributes();
                 int min = 0; int max = 100; // Default hardcoded values
                 try { min = Integer.parseInt(childNodeAttributes.getNamedItem("min").getNodeValue()); }
@@ -205,7 +206,18 @@ public class CountersManager
                 try { max = Integer.parseInt(childNodeAttributes.getNamedItem("max").getNodeValue()); }
                 catch (Throwable th) { logger.warn("Failed to get 'max' attribute, using default=" + max); }
                 ca_table.setLimitsMin(min); ca_table.setLimitsMax(max);
-            } else if (nodeName.equals("param")) {
+
+                NodeList limits = childNode.getChildNodes();
+                for (int j = 0; j < limits.getLength(); j++) {
+                    Node limitNode = limits.item(j);
+                    final NamedNodeMap limitAttributes = limitNode.getAttributes();
+                    final String limitPercent = limitAttributes.getNamedItem("percent").getNodeValue();
+                    final String limitSeverity = limitAttributes.getNamedItem("severity").getNodeValue();
+                    logger.debug("Percent=" + limitPercent + ", severity=" + limitSeverity);
+                    ca_table.addLimit(limitPercent, limitSeverity); 
+                }
+            }
+            else if (nodeName.equals("param")) {
                 parseParams(ca_table, childNode);
             }
         }
