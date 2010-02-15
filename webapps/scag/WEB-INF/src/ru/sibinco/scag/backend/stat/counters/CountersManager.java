@@ -145,7 +145,7 @@ public class CountersManager
                 NamedNodeMap childNodeAttributes = childNode.getAttributes();
                 final String paramName = childNodeAttributes.getNamedItem("name").getNodeValue();
                 final String paramType = childNodeAttributes.getNamedItem("type").getNodeValue();
-                final String paramValue = childNode.getNodeValue();
+                final String paramValue = childNode.getTextContent();
                 logger.debug("param=" + paramName + ", type=" + paramType + ", value=" + paramValue);
                 counter.setParam(paramName, paramType, paramValue);
             }
@@ -160,7 +160,7 @@ public class CountersManager
             "\t\t<ca_table id=\"" + StringEncoderDecoder.encode(ca_table.getId()) + '"' +
             " system=\"" + StringEncoderDecoder.encode(ca_table.getSystem()) + "\">\n" +
             "\t\t\t<limits min=\"" + StringEncoderDecoder.encode(ca_table.getLimitsMinString()) + '"' +
-            "max=\"" + StringEncoderDecoder.encode(ca_table.getLimitsMaxString())+ "\">\n";
+            " max=\"" + StringEncoderDecoder.encode(ca_table.getLimitsMaxString())+ "\">\n";
 
         // TODO: dump limits content & additional params
 
