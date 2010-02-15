@@ -149,7 +149,7 @@ public class CountersManager
                 NodeList paramValueList = childNode.getChildNodes();
                 for (int e = 0; e < paramValueList.getLength(); e++) {
                   if (paramValueList.item(e).getNodeType() == Node.TEXT_NODE) {
-                      Node cNode = paramValueList.item(i);
+                      Node cNode = paramValueList.item(e);
                       if (cNode != null) paramValue += cNode.getNodeValue();
                   }
                 }
