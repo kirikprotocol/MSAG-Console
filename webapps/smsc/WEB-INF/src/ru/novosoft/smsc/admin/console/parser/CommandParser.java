@@ -3400,12 +3400,19 @@ public CommandParser(ParserSharedInputState state) {
 	public final InfoSmeExportStatCommand  infosmeexportstat() throws RecognitionException, TokenStreamException {
 		InfoSmeExportStatCommand cmd;
 		
+		Token  name = null;
 		
 		cmd = new InfoSmeExportStatCommand();
 		
 		
+		{
+		name = LT(1);
+		match(QSTR);
 		
-		cmd.setTaskName(getnameid("taskName"));
+			    cmd.setTaskName(name.getText().trim().substring(1, name.getText().trim().length()-1));
+			
+		}
+		
 		cmd.setFileName(getnameid("fileName"));
 			    cmd.setStartDate(getnameid("startDate"));
 			    cmd.setStartTime(getnameid("startTime"));

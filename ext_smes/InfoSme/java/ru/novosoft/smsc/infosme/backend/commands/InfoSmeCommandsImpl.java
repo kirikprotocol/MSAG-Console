@@ -129,8 +129,16 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
 
       if (!checkInfoSmeOnline(ctx, context))
         return;
-
-      switch(context.getExportStatManager().addExportTask(taskName, file, startDate)) {
+      String taskId;
+      try{
+        Task t = context.getInfoSmeConfig().getTaskByName(taskName);
+        taskId = t.getId();
+      }catch(AdminException e){
+        ctx.setMessage("Task is not found with name: '"+taskName+"'");
+        ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+        return;
+      }
+      switch(context.getExportStatManager().addExportTask(taskId, file, startDate)) {
         case -1 :
           ctx.setMessage("Can't export stats for task: "+taskName);
           ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);

@@ -1133,8 +1133,11 @@ infosmealtertask returns [InfoSmeAlterDistrCommand cmd] {
 
 infosmeexportstat returns [InfoSmeExportStatCommand cmd] {
       cmd = new InfoSmeExportStatCommand();
-} : {
-      cmd.setTaskName(getnameid("taskName"));
+} :
+    (name:QSTR {
+	    cmd.setTaskName(name.getText().trim().substring(1, name.getText().trim().length()-1));
+	  })
+    {
       cmd.setFileName(getnameid("fileName"));
 	    cmd.setStartDate(getnameid("startDate"));
 	    cmd.setStartTime(getnameid("startTime"));
