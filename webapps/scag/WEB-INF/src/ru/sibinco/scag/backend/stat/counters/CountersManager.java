@@ -9,6 +9,7 @@ import org.w3c.dom.NamedNodeMap;
 
 import java.io.*;
 import java.util.HashMap;
+import java.util.Collection;
 
 import ru.sibinco.scag.backend.installation.HSDaemon;
 import ru.sibinco.lib.backend.util.xml.Utils;
@@ -107,13 +108,20 @@ public class CountersManager
 
     private String getXMLText(Counter counter)
     {
-        final String header =
+        String text =
             "\t\t<template id=\"" + StringEncoderDecoder.encode(counter.getId()) + '"' +
             " type=\"" + StringEncoderDecoder.encode(counter.getTypeString()) + "\">\n" +
             "\t\t\t<ca id=\"" + StringEncoderDecoder.encode(counter.getCATableId()) + "\"/>\n";
-        // TODO: dump additional params
-        String footer = "\t\t</template>\n";
-        return header + footer;
+
+        final Collection<ConfigParam> params = counter.getParams();
+        for (ConfigParam param : params) { // dump additional params
+            text += "\t\t\t<param name=\"" + StringEncoderDecoder.encode(param.getName() + '"' +
+                    " type=\"" + StringEncoderDecoder.encode(param.getType()) + "\">" +
+                    StringEncoderDecoder.encode(param.getValue()) + "</param>\n");
+        }
+
+        text += "\t\t</template>\n";
+        return text;
     }
     private Counter parseXMLCounter(Node node)
     {
@@ -137,9 +145,9 @@ public class CountersManager
                 NamedNodeMap childNodeAttributes = childNode.getAttributes();
                 final String paramName = childNodeAttributes.getNamedItem("name").getNodeValue();
                 final String paramType = childNodeAttributes.getNamedItem("type").getNodeValue();
-                logger.debug("param=" + paramName + " type=" + paramType);
-                counter.setParam(paramName, paramType);
-                // TODO: add param value!
+                final String paramValue = childNode.getNodeValue();
+                logger.debug("param=" + paramName + ", type=" + paramType + ", value=" + paramValue);
+                counter.setParam(paramName, paramType, paramValue);
             }
         }
         // TODO: check all
@@ -148,18 +156,17 @@ public class CountersManager
 
     private String getXMLText(CATable ca_table)
     {
-        final String header =
+        String text =
             "\t\t<ca_table id=\"" + StringEncoderDecoder.encode(ca_table.getId()) + '"' +
-            " system=\"" + StringEncoderDecoder.encode(ca_table.getSystem()) + "\">\n";
-        String footer =
+            " system=\"" + StringEncoderDecoder.encode(ca_table.getSystem()) + "\">\n" +
             "\t\t\t<limits min=\"" + StringEncoderDecoder.encode(ca_table.getLimitsMinString()) + '"' +
             "max=\"" + StringEncoderDecoder.encode(ca_table.getLimitsMaxString())+ "\">\n";
 
         // TODO: dump limits content & additional params
 
-        footer += "\t\t\t</limits>\n";
-        footer += "\t\t</ca_table>\n";
-        return header + footer;
+        text += "\t\t\t</limits>\n";
+        text += "\t\t</ca_table>\n";
+        return text;
     }
     private CATable parseXMLCATable(Node node)
     {

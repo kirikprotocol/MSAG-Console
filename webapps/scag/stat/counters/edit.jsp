@@ -23,7 +23,7 @@
         <sm-ep:properties title="statistics.counters.edit.properties">
             <sm-ep:txt title="statistics.counters.edit.txt.id"     name="id" validation="nonEmpty" readonly="${!bean.add}"/>
             <sm-ep:list title="statistics.counters.edit.list.type" name="type" readonly="${!bean.add}" emptyOption="true"
-                        values="${fn:join(bean.typeIds, ',')}" valueTitles="${fn:join(bean.typeTitles, ',')}"/>
+                        values="${fn:join(bean.typeTitles, ',')}" valueTitles="${fn:join(bean.typeTitles, ',')}"/>
             <sm-ep:list title="statistics.counters.edit.list.ca"   name="CATableId" emptyOption="true"
                         values="${fn:join(bean.caIds, ',')}" valueTitles="${fn:join(bean.caIds, ',')}"/>
         </sm-ep:properties>

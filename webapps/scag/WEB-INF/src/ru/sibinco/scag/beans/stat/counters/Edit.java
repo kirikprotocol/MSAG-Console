@@ -37,9 +37,6 @@ public class Edit extends EditBean
     public void setType(String type) {
         counter.setType(type);
     }
-    public void setType(int type) {
-        setType(Integer.toString(type));
-    }
 
     public String getCATableId() {
         return counter.getCATableId();
@@ -50,8 +47,7 @@ public class Edit extends EditBean
 
     public void process(final HttpServletRequest request, final HttpServletResponse response) throws SCAGJspException
     {
-        logger.debug("Counters process() called, mbSave=" + getMbSave() +
-                     " idAdd=" + isAdd() + ", id=" + getId()); // TODO: remove it
+        logger.debug("Counters.process(), save="+getMbSave()+" add="+isAdd()+", id="+getId()); // TODO: remove it
         requestParams = request.getParameterMap();
         super.process(request, response);
 
