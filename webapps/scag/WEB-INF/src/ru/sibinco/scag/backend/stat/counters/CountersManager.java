@@ -106,6 +106,23 @@ public class CountersManager
         Functions.renameNewSavedFileToOriginal(configNew, configFile);
     }
 
+    private void parseParams(ConfigParamOwner owner, Node node)
+    {
+        NamedNodeMap nodeAttributes = node.getAttributes();
+        final String paramName = nodeAttributes.getNamedItem("name").getNodeValue();
+        final String paramType = nodeAttributes.getNamedItem("type").getNodeValue();
+        String paramValue = "";
+        NodeList paramValueList = node.getChildNodes();
+        for (int e = 0; e < paramValueList.getLength(); e++) {
+          if (paramValueList.item(e).getNodeType() == Node.TEXT_NODE) {
+              Node cNode = paramValueList.item(e);
+              if (cNode != null) paramValue += cNode.getNodeValue();
+          }
+        }
+        logger.debug("param=" + paramName + ", type=" + paramType + ", value=" + paramValue);
+        owner.setParam(paramName, paramType, paramValue);
+    }
+
     private String getXMLText(Counter counter)
     {
         String text =
@@ -123,6 +140,7 @@ public class CountersManager
         text += "\t\t</template>\n";
         return text;
     }
+
     private Counter parseXMLCounter(Node node)
     {
         NamedNodeMap attributes = node.getAttributes();
@@ -132,8 +150,7 @@ public class CountersManager
         final Counter counter = new Counter(id, CounterType.valueOf(type));
 
         NodeList childs = node.getChildNodes();
-        for (int i = 0; i < childs.getLength(); i++)
-        {
+        for (int i = 0; i < childs.getLength(); i++) {
             Node childNode = childs.item(i);
             String nodeName = childNode.getNodeName();
             if (nodeName.equals("ca")) {
@@ -142,22 +159,9 @@ public class CountersManager
                 logger.debug("ca_id=" + ca_table_id);
                 counter.setCATableId(ca_table_id);
             } else if (nodeName.equals("param")) {
-                NamedNodeMap childNodeAttributes = childNode.getAttributes();
-                final String paramName = childNodeAttributes.getNamedItem("name").getNodeValue();
-                final String paramType = childNodeAttributes.getNamedItem("type").getNodeValue();
-                String paramValue = "";
-                NodeList paramValueList = childNode.getChildNodes();
-                for (int e = 0; e < paramValueList.getLength(); e++) {
-                  if (paramValueList.item(e).getNodeType() == Node.TEXT_NODE) {
-                      Node cNode = paramValueList.item(e);
-                      if (cNode != null) paramValue += cNode.getNodeValue();
-                  }
-                }
-                logger.debug("param=" + paramName + ", type=" + paramType + ", value=" + paramValue);
-                counter.setParam(paramName, paramType, paramValue);
+                parseParams(counter, childNode);
             }
         }
-        // TODO: check all
         return counter;
     }
 
@@ -169,9 +173,15 @@ public class CountersManager
             "\t\t\t<limits min=\"" + StringEncoderDecoder.encode(ca_table.getLimitsMinString()) + '"' +
             " max=\"" + StringEncoderDecoder.encode(ca_table.getLimitsMaxString())+ "\">\n";
 
-        // TODO: dump limits content & additional params
-
+        // TODO: dump limits content
         text += "\t\t\t</limits>\n";
+
+        final Collection<ConfigParam> params = ca_table.getParams();
+        for (ConfigParam param : params) { // dump additional params
+            text += "\t\t\t<param name=\"" + StringEncoderDecoder.encode(param.getName() + '"' +
+                    " type=\"" + StringEncoderDecoder.encode(param.getType()) + "\">" +
+                    StringEncoderDecoder.encode(param.getValue()) + "</param>\n");
+        }
         text += "\t\t</ca_table>\n";
         return text;
     }
@@ -183,10 +193,22 @@ public class CountersManager
         logger.debug("id=" + id + ", system=" + system);
         final CATable ca_table = new CATable(id, Boolean.valueOf(system));
 
-        // TODO: parse limits & additional params
-        ca_table.setLimitsMin(10);
-        ca_table.setLimitsMax(100);
-
+        NodeList childs = node.getChildNodes();
+        for (int i = 0; i < childs.getLength(); i++) {
+            Node childNode = childs.item(i);
+            String nodeName = childNode.getNodeName();
+            if (nodeName.equals("limits")) {
+                NamedNodeMap childNodeAttributes = childNode.getAttributes();
+                int min = 0; int max = 100; // Default hardcoded values
+                try { min = Integer.parseInt(childNodeAttributes.getNamedItem("min").getNodeValue()); }
+                catch (Throwable th) { logger.warn("Failed to get 'min' attribute, using default=" + min); }
+                try { max = Integer.parseInt(childNodeAttributes.getNamedItem("max").getNodeValue()); }
+                catch (Throwable th) { logger.warn("Failed to get 'max' attribute, using default=" + max); }
+                ca_table.setLimitsMin(min); ca_table.setLimitsMax(max);
+            } else if (nodeName.equals("param")) {
+                parseParams(ca_table, childNode);
+            }
+        }
         return ca_table;
     }
 

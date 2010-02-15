@@ -1,8 +1,5 @@
 package ru.sibinco.scag.backend.stat.counters;
 
-import java.util.HashMap;
-import java.util.Collection;
-
 /**
  * Copyright (c) EyeLine Communications
  * All rights reserved.
@@ -11,13 +8,11 @@ import java.util.Collection;
  * Date: 04.02.2010
  * Time: 10:38:26
  */
-public class Counter
+public class Counter extends ConfigParamOwner
 {
     private String id = null;
     private CounterType type = CounterType.ACCUMULATOR;
     private String CATableId = null;
-
-    private final HashMap<String, ConfigParam> params = new HashMap<String, ConfigParam>();
 
     public Counter() {
     }
@@ -43,19 +38,6 @@ public class Counter
     }
     public void setType(String type) {
         this.type = CounterType.valueOf(type);
-    }
-
-    public Collection<ConfigParam> getParams() {
-        return params.values();
-    }
-    public ConfigParam getParam(String name) {
-        return params.get(name);
-    }
-    public void setParam(ConfigParam param) {
-        params.put(param.getName(), param);
-    }
-    public void setParam(String name, String type, String value) {
-        setParam(new ConfigParam(name, type, value));
     }
 
     public void setCATableId(String CATableId) {

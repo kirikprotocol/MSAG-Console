@@ -8,7 +8,7 @@ package ru.sibinco.scag.backend.stat.counters;
  * Date: 04.02.2010
  * Time: 11:02:46
  */
-public class CATable
+public class CATable extends ConfigParamOwner
 {
     private String id = null;
     private boolean system = false;
