@@ -235,6 +235,7 @@ TaskProcessor::~TaskProcessor()
   this->Stop();
   taskManager.Stop();
   eventManager.Stop();
+  if (statistics) statistics->Stop();
   
   {
       MutexGuard guard(tasksLock);
@@ -452,89 +453,46 @@ int TaskProcessor::Execute()
 {
     std::vector< TaskGuard* > taskGuards;
     taskGuards.reserve(100);
-    time_t prevTime = time(NULL);
-    IntHash< Task* > activeTasks;
 
     while (!bNeedExit)
     {
         time_t currentTime = time(NULL);
         finalStateSaver_->checkRoll(currentTime);
-
-        bool waked;
-        int allTaskCount, activeTaskCount;
+        
         {
             MutexGuard guard(tasksLock);
-            if ( currentTime - prevTime > 60 ) activateFlag = true;
-            waked = activateFlag;
             int key = 0;
             Task* task = 0;
-            if ( activateFlag ) {
-                activateFlag = 0;
-                prevTime = currentTime;
-                // adding tasks from tasks to activeTasks
-                activeTasks.Empty();
-                IntHash<Task*>::Iterator it = tasks.First();
-                while ( !bNeedExit && it.Next(key,task) ) {
-                    if (task && task->isReady(currentTime,true) ) {
-                        activeTasks.Insert(key,task);
-                        taskGuards.push_back(new TaskGuard(task));
-                    }
+            IntHash<Task*>::Iterator it=tasks.First();
+            while (!bNeedExit && it.Next(key, task))
+                if (task && task->isReady(currentTime, true)) {
+                    taskGuards.push_back(new TaskGuard(task));
+                    task->currentPriorityFrameCounter = 0;
+                    task->resetSuspendedRegions();
                 }
-            } else {
-                // working only with activeTasks
-                IntHash<Task*>::Iterator it = activeTasks.First();
-                while ( !bNeedExit && it.Next(key,task) ) {
-                    if (task && task->isReady(currentTime,true) ) {
-                        taskGuards.push_back(new TaskGuard(task));
-                    } else {
-                        activeTasks.Delete(key);
-                    }
-                }
-            }
-            allTaskCount = int(tasks.Count());
-            activeTaskCount = int(activeTasks.Count());
-        }
-
-        smsc_log_debug(log_,"new pass at %llu, waked=%u all/active/selected=%u/%u/%u",
-                       int64_t(currentTime), waked,
-                       allTaskCount, activeTaskCount, unsigned(taskGuards.size()));
-
-        {
-            // processing selected tasks
-            for ( std::vector<TaskGuard*>::const_iterator i = taskGuards.begin();
-                  i != taskGuards.end(); ++i ) {
-                Task* task = (*i)->get();
-                task->currentPriorityFrameCounter = 0;
-                task->resetSuspendedRegions();
-            }
+            // NOTE: we randomize under tasksLock
             std::random_shuffle( taskGuards.begin(), taskGuards.end(),
                                  ::drand48adapter );
         }
 
         int processed = 0;
-        std::vector< uint32_t > becomeInactive;
-        becomeInactive.reserve(taskGuards.size());
         while (!taskGuards.empty())
         {
-            std::auto_ptr<TaskGuard> taskGuard(taskGuards.back());
+            TaskGuard* taskGuard = taskGuards.back();
             taskGuards.pop_back();
-            if (!taskGuard.get()) continue;
+            if (!taskGuard) continue;
 
             do {
                 if (bNeedExit) break;
                 Task* task = taskGuard->get();
                 if (!task) break;
-                if (task->isFinalizing() || !task->isEnabled()) {
-                    becomeInactive.push_back(task->getId());
-                    break;
-                }
+                if (task->isFinalizing() || !task->isEnabled()) break;
                 try {
                     const unsigned taskProcessed = processTask(task);
                     if ( ! taskProcessed ) {
                         // no one message in task is processed
                         task->currentPriorityFrameCounter = task->getPriority();
                         if (!task->isEnabled()) task->setEnabled(false);
-                        if (!task->isInProcess()) becomeInactive.push_back(task->getId());
                     }
                     processed += taskProcessed;
                 } catch ( std::exception& e ) {
@@ -542,16 +500,10 @@ int TaskProcessor::Execute()
                                   task->getId(), task->getName().c_str(), e.what() );
                 }
             } while ( false );
+            delete taskGuard;
         }
 
         if (bNeedExit) break;
-
-        if ( !activateFlag ) {
-            for ( std::vector< uint32_t >::const_iterator i = becomeInactive.begin();
-                  i != becomeInactive.end(); ++i ) {
-                activeTasks.Delete(*i);
-            }
-        }
 
         processWaitingEvents(time(NULL)); // ?? or time(NULL)
         if (!bNeedExit && processed <= 0) {
@@ -559,9 +511,6 @@ int TaskProcessor::Execute()
             awake.Wait(switchTimeout);
         }
     }
-
-    std::for_each(taskGuards.begin(),taskGuards.end(),smsc::util::PtrDestroy());
-
     exited.Signal();
     return 0;
 }
