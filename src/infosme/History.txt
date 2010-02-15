@@ -1,6 +1,9 @@
 History in reverse order
 ----------------------------------------------------
 
+2010-02-15 11:35 bukind
+ bugfix: memleak when reading ConfigView
+
 ----------------------------------------------------
 infosme-build-20100208 12:40 bukind
 

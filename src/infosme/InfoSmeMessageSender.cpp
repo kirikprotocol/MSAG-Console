@@ -1,10 +1,13 @@
 #include "InfoSmeMessageSender.h"
 #include "SmscConnector.h"
 #include "util/config/region/RegionFinder.hpp"
+#include "util/config/ConfString.h"
 #include "system/status.h"
 
 namespace smsc {
 namespace infosme {
+
+using smsc::util::config::ConfString;
 
 InfoSmeMessageSender::InfoSmeMessageSender( TaskProcessor& processor ) :
 log_(smsc::logger::Logger::getInstance("msgsend")),
@@ -102,7 +105,7 @@ void InfoSmeMessageSender::reloadSmscAndRegions( Manager& manager )
     ConfigView ccv(manager,csn.c_str());
 
     // get the default connector id
-    const std::string defId = ccv.getString("default", "default SMSC Connector id not set");
+    const std::string defId = ConfString(ccv.getString("default", "default SMSC Connector id not set")).str();
 
     // create connectors
     std::auto_ptr<smsc::util::config::CStrSet> connNames(ccv.getShortSectionNames());
@@ -162,20 +165,20 @@ void InfoSmeMessageSender::reloadSmscAndRegions( Manager& manager )
 
     // regions
     ConfigView tpConfig(manager,"InfoSme");
-    const char* route_xml_file = tpConfig.getString("route_config_filename");
-    const char* regions_xml_file = tpConfig.getString("regions_config_filename");
-    regionsConfig_.reset(new smsc::util::config::region::RegionsConfig(regions_xml_file));
+    ConfString route_xml_file(tpConfig.getString("route_config_filename"));
+    ConfString regions_xml_file(tpConfig.getString("regions_config_filename"));
+    regionsConfig_.reset(new smsc::util::config::region::RegionsConfig(regions_xml_file.c_str()));
     smsc::util::config::region::RegionsConfig::status st = regionsConfig_->load();
     if ( st == smsc::util::config::region::RegionsConfig::success )
-        smsc_log_info(log_, "config file %s has been loaded successful", regions_xml_file);
+        smsc_log_info(log_, "config file %s has been loaded successful", regions_xml_file.c_str());
     else
-        throw smsc::util::config::ConfigException("can't load config file %s", regions_xml_file);
+        throw smsc::util::config::ConfigException("can't load config file %s", regions_xml_file.c_str());
 
     smsc::util::config::route::RouteConfig routeConfig;
-    if ( routeConfig.load(route_xml_file) == smsc::util::config::route::RouteConfig::success )
-        smsc_log_info(log_, "config file %s has been loaded successful", route_xml_file);
+    if ( routeConfig.load(route_xml_file.c_str()) == smsc::util::config::route::RouteConfig::success )
+        smsc_log_info(log_, "config file %s has been loaded successful", route_xml_file.c_str());
     else
-        throw smsc::util::config::ConfigException("can't load config file %s", route_xml_file);
+        throw smsc::util::config::ConfigException("can't load config file %s", route_xml_file.c_str());
 
     smsc::util::config::region::Region* region;
     smsc::util::config::region::RegionsConfig::RegionsIterator regsIter = regionsConfig_->getIterator();

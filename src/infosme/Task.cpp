@@ -9,6 +9,7 @@
 #include "util/sleep.h"
 #include "sms/sms.h"
 #include "util/vformat.hpp"
+#include "util/config/ConfString.h"
 #include "util/config/region/Region.hpp"
 #include "util/config/region/RegionFinder.hpp"
 
@@ -16,6 +17,8 @@ extern bool isMSISDNAddress(const char* string);
 
 namespace smsc {
 namespace infosme {
+
+using namespace smsc::util::config;
 
 class Task::MessageRegionCache
 {
@@ -222,7 +225,7 @@ void Task::init(ConfigView* config, uint32_t taskId)
   const int MAX_PRIORITY_VALUE = 1000;
 
   info.uid = taskId;
-  try { info.name = config->getString("name"); } catch (...) {}
+  try { info.name = ConfString(config->getString("name")).str(); } catch (...) {}
   info.enabled = config->getBool("enabled");
   if(info.enabled)
   {
@@ -234,7 +237,7 @@ void Task::init(ConfigView* config, uint32_t taskId)
       throw ConfigException("Task priority should be positive and less than %d.", 
                             MAX_PRIORITY_VALUE);
   try {
-    info.address = config->getString("address"); 
+    info.address = ConfString(config->getString("address")).str();
   }
   catch (...)
   { 
@@ -265,7 +268,7 @@ void Task::init(ConfigView* config, uint32_t taskId)
   } catch(std::exception& e)
   {
   }
-  info.endDate = parseDateTime(config->getString("endDate"));
+  info.endDate = parseDateTime(ConfString(config->getString("endDate")).c_str());
 
   /*
   !!TODO!!??
@@ -287,49 +290,49 @@ void Task::init(ConfigView* config, uint32_t taskId)
   }
   */
 
-  info.retryPolicy = config->getString("retryPolicy");
+  info.retryPolicy = ConfString(config->getString("retryPolicy")).str();
   if (info.retryOnFail && info.retryPolicy.length()==0)
       throw ConfigException("Task retry time specified incorrectly."); 
-  info.validityPeriod = parseTime(config->getString("validityPeriod"));
-  info.validityDate = parseDateTime(config->getString("validityDate"));
+  info.validityPeriod = parseTime(ConfString(config->getString("validityPeriod")).c_str());
+  info.validityDate = parseDateTime(ConfString(config->getString("validityDate")).c_str());
   if (info.validityPeriod <= 0 && info.validityDate <= 0)
       throw ConfigException("Message validity period/date specified incorrectly.");
-  info.activePeriodStart = parseTime(config->getString("activePeriodStart"));
-  info.activePeriodEnd = parseTime(config->getString("activePeriodEnd"));
+  info.activePeriodStart = parseTime(ConfString(config->getString("activePeriodStart")).c_str());
+  info.activePeriodEnd = parseTime(ConfString(config->getString("activePeriodEnd")).c_str());
   if ((info.activePeriodStart < 0 && info.activePeriodEnd >= 0) ||
       (info.activePeriodStart >= 0 && info.activePeriodEnd < 0)/* ||
       (info.activePeriodStart >= 0 && info.activePeriodEnd >= 0 && //remove by request
        info.activePeriodStart >= info.activePeriodEnd)*/)
       throw ConfigException("Task active period specified incorrectly."); 
   
-  const char* awd = 0;
-  try { awd = config->getString("activeWeekDays"); } 
+  std::string awd;
+  try { awd = ConfString(config->getString("activeWeekDays")).str(); }
   catch (...) { 
       smsc_log_warn(logger, "<activeWeekDays> parameter missed for task '%d'. "
                             "Using default: Mon,Tue,Wed,Thu,Fri", info.uid);
-      info.activeWeekDays.weekDays = 0x7c; awd = 0;
+      info.activeWeekDays.weekDays = 0x7c; awd.clear();
   }
-  if (awd && awd[0]) {
-      if (!info.activeWeekDays.setWeekDays(awd))
+  if (!awd.empty()) {
+      if (!info.activeWeekDays.setWeekDays(awd.c_str()))
           throw ConfigException("Task active week days set listed incorrectly."); 
   }
   else info.activeWeekDays.weekDays = 0;
 
   if (dsOwn != 0)
   {
-      const char* query_sql = config->getString("query");
-      if (!query_sql || query_sql[0] == '\0')
+      const std::string query_sql = ConfString(config->getString("query")).str();
+      if (query_sql.empty())
           throw ConfigException("Sql query for task empty or wasn't specified.");
       info.querySql = query_sql;
-      const char* msg_template = config->getString("template");
-      if (!msg_template || msg_template[0] == '\0')
+      const std::string msg_template = ConfString(config->getString("template")).str();
+      if (msg_template.empty())
           throw ConfigException("Message template for task empty or wasn't specified.");
       info.msgTemplate = msg_template;
   }
   info.svcType = "";
   if (info.replaceIfPresent)
   {
-      try         { info.svcType = config->getString("svcType"); } 
+      try         { info.svcType = ConfString(config->getString("svcType")).str(); }
       catch (...) { info.svcType = "";}
   }
 
@@ -370,14 +373,14 @@ void Task::update(ConfigView *config)
   const int MAX_PRIORITY_VALUE = 1000;
 
   TaskInfo newinfo = info;
-  try { newinfo.name = config->getString("name"); } catch (...) {}
+  try { newinfo.name = ConfString(config->getString("name")).str(); } catch (...) {}
   newinfo.enabled = config->getBool("enabled");
   newinfo.priority = config->getInt("priority");
   if (newinfo.priority <= 0 || newinfo.priority > MAX_PRIORITY_VALUE)
       throw ConfigException("Task priority should be positive and less than %d.", 
                             MAX_PRIORITY_VALUE);
   try {
-    newinfo.address = config->getString("address"); 
+    newinfo.address = ConfString(config->getString("address")).str();
   }
   catch (...)
   { 
@@ -400,7 +403,7 @@ void Task::update(ConfigView *config)
   } catch(std::exception& e)
   {
   }
-  newinfo.endDate = parseDateTime(config->getString("endDate"));
+  newinfo.endDate = parseDateTime(ConfString(config->getString("endDate")).c_str());
 
   /*
   !!TODO!!??
@@ -422,49 +425,49 @@ void Task::update(ConfigView *config)
   }
   */
 
-  newinfo.retryPolicy = config->getString("retryPolicy");
+  newinfo.retryPolicy = ConfString(config->getString("retryPolicy")).c_str();
   if (newinfo.retryOnFail && newinfo.retryPolicy.length()== 0)
       throw ConfigException("Task retry time specified incorrectly."); 
-  newinfo.validityPeriod = parseTime(config->getString("validityPeriod"));
-  newinfo.validityDate = parseDateTime(config->getString("validityDate"));
+  newinfo.validityPeriod = parseTime(ConfString(config->getString("validityPeriod")).c_str());
+  newinfo.validityDate = parseDateTime(ConfString(config->getString("validityDate")).c_str());
   if (newinfo.validityPeriod <= 0 && newinfo.validityDate <= 0)
       throw ConfigException("Message validity period/date specified incorrectly.");
-  newinfo.activePeriodStart = parseTime(config->getString("activePeriodStart"));
-  newinfo.activePeriodEnd = parseTime(config->getString("activePeriodEnd"));
+  newinfo.activePeriodStart = parseTime(ConfString(config->getString("activePeriodStart")).c_str());
+  newinfo.activePeriodEnd = parseTime(ConfString(config->getString("activePeriodEnd")).c_str());
   if ((newinfo.activePeriodStart < 0 && newinfo.activePeriodEnd >= 0) ||
       (newinfo.activePeriodStart >= 0 && newinfo.activePeriodEnd < 0)/* ||
       (newinfo.activePeriodStart >= 0 && newinfo.activePeriodEnd >= 0 && 
        newinfo.activePeriodStart >= newinfo.activePeriodEnd)*/)
       throw ConfigException("Task active period specified incorrectly."); 
 
-  const char* awd = 0;
-  try { awd = config->getString("activeWeekDays"); } 
+  std::string awd;
+  try { awd = ConfString(config->getString("activeWeekDays")).str(); }
   catch (...) { 
       smsc_log_warn(logger, "<activeWeekDays> parameter missed for task '%d'. "
                             "Using default: Mon,Tue,Wed,Thu,Fri", newinfo.uid);
-      newinfo.activeWeekDays.weekDays = 0x7c; awd = 0;
+      newinfo.activeWeekDays.weekDays = 0x7c; awd.clear();
   }
-  if (awd && awd[0]) {
-      if (!newinfo.activeWeekDays.setWeekDays(awd))
+  if (!awd.empty()) {
+      if (!newinfo.activeWeekDays.setWeekDays(awd.c_str()))
           throw ConfigException("Task active week days set listed incorrectly."); 
   }
   else newinfo.activeWeekDays.weekDays = 0;
 
   if (dsOwn != 0)
   {
-      const char* query_sql = config->getString("query");
-      if (!query_sql || query_sql[0] == '\0')
+      const std::string query_sql = ConfString(config->getString("query")).str();
+      if (query_sql.empty())
           throw ConfigException("Sql query for task empty or wasn't specified.");
       newinfo.querySql = query_sql;
-      const char* msg_template = config->getString("template");
-      if (!msg_template || msg_template[0] == '\0')
+      const std::string msg_template = ConfString(config->getString("template")).str();
+      if (msg_template.empty())
           throw ConfigException("Message template for task empty or wasn't specified.");
       newinfo.msgTemplate = msg_template;
   }
   newinfo.svcType = "";
   if (newinfo.replaceIfPresent)
   {
-      try         { newinfo.svcType = config->getString("svcType"); } 
+      try         { newinfo.svcType = ConfString(config->getString("svcType")).str(); }
       catch (...) { newinfo.svcType = "";}
   }
 

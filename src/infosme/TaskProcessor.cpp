@@ -9,6 +9,7 @@
 #include <vector>
 #include <util/timeslotcounter.hpp>
 #include "util/PtrDestroy.h"
+#include "util/config/ConfString.h"
 
 #ident "@(#)$Id$"
 
@@ -51,25 +52,25 @@ receiptWaitTime(0),
 mappingRollTime(0),
 mappingMaxChanges(0),
 dsStatConnection(0),
-statistics(0), protocolId(0), svcType(0), address(0),
+statistics(0), protocolId(0),
 unrespondedMessagesMax(1)
 // unrespondedMessagesSleep(10)
 {
     smsc_log_info(log_, "Loading ...");
 
-    address = config->getString("Address");
-    if (!address || !isMSISDNAddress(address))
-        throw ConfigException("Address string '%s' is invalid", address ? address:"-");
+    address = ConfString(config->getString("Address")).str();
+    if (address.empty() || !isMSISDNAddress(address.c_str()))
+        throw ConfigException("Address string '%s' is invalid", address.empty() ? "-" : address.c_str() );
     
     try { protocolId = config->getInt("ProtocolId"); }
     catch(ConfigException& exc) { protocolId = 0; };
-    try { svcType = config->getString("SvcType"); }
-    catch(ConfigException& exc) { svcType = 0; };
+    try { svcType = ConfString(config->getString("SvcType")).str(); }
+    catch(ConfigException& exc) { svcType.clear(); };
     
-    responseWaitTime = parseTime(config->getString("responceWaitTime"));
+    responseWaitTime = parseTime(ConfString(config->getString("responceWaitTime")).c_str());
     if (responseWaitTime <= 0) 
         throw ConfigException("Invalid value for 'responceWaitTime' parameter.");
-    receiptWaitTime = parseTime(config->getString("receiptWaitTime"));
+    receiptWaitTime = parseTime(ConfString(config->getString("receiptWaitTime")).c_str());
     if (receiptWaitTime <= 0) 
         throw ConfigException("Invalid value for 'receiptWaitTime' parameter.");
 
@@ -102,7 +103,7 @@ unrespondedMessagesMax(1)
     std::auto_ptr<ConfigView> dsIntCfgGuard(config->getSubConfig("systemDataSource"));
 
 
-    storeLocation=config->getString("storeLocation");
+    storeLocation=ConfString(config->getString("storeLocation")).str();
     if(storeLocation.length())
     {
       if(*storeLocation.rbegin()!='/')
@@ -223,7 +224,7 @@ unrespondedMessagesMax(1)
     mappingRollTime = config->getInt("mappingRollTime");
     mappingMaxChanges = config->getInt("mappingMaxChanges");
     
-    statistics = new StatisticsManager(config->getString("statStoreLocation"),this);
+    statistics = new StatisticsManager(ConfString(config->getString("statStoreLocation")).c_str(),this);
     if (statistics) statistics->Start();
     scheduler.Start();
 }

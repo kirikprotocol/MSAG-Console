@@ -84,7 +84,12 @@ void CsvStore::Init()
         f->processed=true;
       }
       smsc_log_debug(log,"csv file found: %s, proc=%u",f->fullPath().c_str(),f->processed ? 1 : 0);
-      dir->files.insert(FileMap::value_type(hour,f));
+      if ( dir->files.find(hour) != dir->files.end() ) {
+          smsc_log_warn(log,"file %s is already in the list",fit->c_str());
+          delete f;
+      } else {
+          dir->files.insert(FileMap::value_type(hour,f));
+      }
     }
   }
   curDir=dirs.begin();

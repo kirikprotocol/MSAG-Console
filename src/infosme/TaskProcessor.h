@@ -184,8 +184,8 @@ private:
     StatisticsManager*  statistics;
 
     int     protocolId;
-    char*   svcType;
-    char*   address;
+    std::string svcType;
+    std::string address;
 
     void processWaitingEvents(time_t time);
     /// invoked from smsc connector, return true if receipt is needed
@@ -211,8 +211,8 @@ public:
     virtual ~TaskProcessor();
 
     int getProtocolId() const { return protocolId; };
-    const char* getSvcType() const { return (svcType) ? svcType:"InfoSme"; };
-    const char* getAddress() const { return address; };
+    const char* getSvcType() const { return svcType.empty() ? "InfoSme" : svcType.c_str(); };
+    const char* getAddress() const { return address.c_str(); };
 
     int getResponseWaitTime() const { return responseWaitTime; }
     int getReceiptWaitTime() const { return receiptWaitTime; }
