@@ -24,6 +24,7 @@
 #include "version.inc"
 #include "PvssDispatcher.h"
 #include "BackupProcessor.h"
+#include "util/config/ConfString.h"
 
 using namespace smsc::util::config;
 using namespace scag2::pvss;
@@ -287,7 +288,7 @@ int main(int argc, char* argv[]) {
 
         std::string host = "phoenix";
         try { 
-            host = persConfig.getString("host");
+            host = smsc::util::config::ConfString(persConfig.getString("host")).c_str();
         } catch (...) {
             smsc_log_warn(logger, "Parameter <PVSS.host> missed. Default value is '%s'", host.c_str());
         }

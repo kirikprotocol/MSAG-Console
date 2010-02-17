@@ -8,6 +8,7 @@
 #include "scag/pvss/api/packets/ProfileCommandVisitor.h"
 
 #include "DBLog.h"
+#include "ProfileBackup.h"
 
 namespace scag2 {
 namespace pvss {
@@ -16,20 +17,27 @@ class BatchResponseComponent;
 
 class ProfileCommandProcessor : public ProfileCommandVisitor {
 public:
-  ProfileCommandProcessor():rollback_(false), profile_(0), response_(0) {};
+    ProfileCommandProcessor( Profile* prof = 0):
+    rollback_(false), profile_(prof), response_(0), backup_(0) {}
+
+  void setProfile(Profile *pf);
+    const Profile* getProfile() const { return profile_; }
+    void resetProfile() { profile_ = 0; }
+    inline void setBackup( ProfileBackup* bck ) { backup_ = bck; }
+
+  CommandResponse* getResponse();
+  bool needRollback() const { return rollback_; };
+    /// do rollback of current profile
+    void rollback() { if (profile_ && backup_) backup_->rollback(*profile_); }
+  void flushLogs(Logger* logger);
+protected:
   bool visitBatchCommand(BatchCommand &cmd) /* throw(PvapException) */ ;
   bool visitDelCommand(DelCommand &cmd) /* throw(PvapException) */ ;
   bool visitGetCommand(GetCommand &cmd) /* throw(PvapException) */ ;
   bool visitIncCommand(IncCommand &cmd) /* throw(PvapException) */ ;
   bool visitIncModCommand(IncModCommand &cmd) /* throw(PvapException) */ ;
   bool visitSetCommand(SetCommand &cmd) /* throw(PvapException) */ ;
-  void setProfile(Profile *pf);
-    const Profile* getProfile() const { return profile_; }
-    void resetProfile() { profile_ = 0; }
   BatchResponseComponent* getBatchResponseComponent();
-  CommandResponse* getResponse();
-  bool rollback() const { return rollback_; };
-  void flushLogs(Logger* logger);
   const string& getDBLog() const;
   void clearDBLog();
 
@@ -43,6 +51,7 @@ private:
   std::vector<std::string> batchLogs_;
   Profile* profile_;
   std::auto_ptr<CommandResponse> response_;
+    ProfileBackup* backup_;
 };
 
 }//pvss

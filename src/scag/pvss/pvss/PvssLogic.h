@@ -13,7 +13,6 @@
 #include "core/buffers/PageFile.hpp"
 #include "core/buffers/IntHash.hpp"
 
-
 #include "scag/util/storage/DataBlockBackup.h"
 
 // please uncomment the following line to get the new code
@@ -35,11 +34,15 @@
 #include "scag/util/storage/DiskHashIndexStorage.h"
 #include "scag/util/storage/ArrayedMemoryCache.h"
 #include "scag/util/storage/StorageIface.h"
-#include "scag/util/storage/PageFileDiskStorage.h"
+#include "scag/util/storage/IndexedStorage2.h"
+#include "scag/util/storage/PageFileDiskStorage2.h"
+#include "scag/util/storage/CachedDelayedDiskStorage.h"
 #include "scag/util/storage/Glossary.h"
 #include "scag/util/WatchedThreadedTask.h"
 #include "scag/pvss/api/core/server/Server.h"
 #include "ProfileCommandProcessor.h"
+#include "ProfileBackup.h"
+#include "scag/util/io/Serializer.h"
 
 namespace scag {
 namespace util {
@@ -168,6 +171,7 @@ protected:
     PvssDispatcher& dispatcher_;
     Logger* logger_;
   ProfileCommandProcessor commandProcessor_;
+    ProfileBackup profileBackup_;
 };
 
 
@@ -281,24 +285,108 @@ public:
 
     std::string reportStatistics() const;
 
+    virtual void keepAlive() {
+        util::msectime_type now = util::currentTimeMillis();
+        MutexGuard mg(statMutex_);
+        provider_->flushDirty(now);
+        service_->flushDirty(now);
+        operator_->flushDirty(now);
+    }
+
 protected:
     virtual void init( bool checkAtStart = false ) /* throw (smsc::util::Exception) */;
     virtual void rebuildIndex( unsigned maxSpeed = 0 );
 
   virtual Response* processProfileRequest(ProfileRequest& request);
 
-private:
-  //typedef HashedMemoryCache< IntProfileKey, Profile > MemStorage;
-  //typedef PageFileDiskStorage< IntProfileKey, Profile, PageFile > DiskDataStorage;
-  //typedef HashedMemoryCache< IntProfileKey, Profile, DataBlockBackupTypeJuggling > MemStorage;
-  typedef ArrayedMemoryCache< IntProfileKey, Profile, DataBlockBackupTypeJuggling > MemStorage;
-  typedef PageFileDiskStorage< IntProfileKey, DataBlockBackup<Profile>, PageFile > DiskDataStorage;
-  typedef DiskHashIndexStorage< IntProfileKey, DiskDataStorage::index_type > DiskIndexStorage;
-  typedef IndexedStorage< DiskIndexStorage, DiskDataStorage > DiskStorage;
-  typedef CachedDiskStorage< MemStorage, DiskStorage, ProfileHeapAllocator< IntProfileKey > > InfrastructStorage;
+
+    template < class MemStorage, class DiskStorage > struct ProfileSerializer
+    {
+    public:
+        typedef typename MemStorage::stored_type  stored_type;
+        typedef typename DiskStorage::buffer_type buffer_type;
+
+        ProfileSerializer( DiskStorage* disk,
+                           GlossaryBase* glossary = 0 ) :
+        disk_(disk), glossary_(glossary), newbuf_(0), ownbuf_(0) {
+            if (!disk) throw smsc::util::Exception("disk storage should be provided");
+        }
+
+        ~ProfileSerializer() {
+            if (newbuf_) delete newbuf_;
+        }
+
+        /// --- reading
+
+        /// making a new buffer
+        buffer_type* getFreeBuffer( bool create = false ) {
+            if (!newbuf_ && create) { newbuf_ = new buffer_type; }
+            return newbuf_; 
+        }
+
+        buffer_type* getOwnedBuffer() {
+            return ownbuf_;
+        }
+
+        /// deserialization && attaching the buffer
+        bool deserialize( stored_type& val ) {
+            assert(newbuf_ && val.value );
+            util::io::Deserializer dsr(*newbuf_,glossary_);
+// #ifdef ABONENTSTORAGE
+//            disk_->unpackBuffer(*newbuf_,&hdrbuf_);
+//            dsr.setrpos(disk_->headerSize());
+//            dsr >> *val.value;
+//            disk_->packBuffer(*newbuf_,&hdrbuf_);
+//#else
+            dsr >> *val.value;
+//#endif
+            
+            std::swap(val.backup,newbuf_);
+            ownbuf_ = val.backup;
+            return true;
+        }
+
+        /// --- writing
+        void serialize( stored_type& val ) {
+            assert( val.value );
+            if (!newbuf_) { newbuf_ = new buffer_type; }
+            util::io::Serializer ser(*newbuf_,glossary_);
+//#ifdef ABONENTSTORAGE
+//            ser.setwpos(disk_->headerSize());
+//            ser << *val.value;
+//            disk_->packBuffer(*newbuf_);
+//#else
+            ser << *val.value;
+//#endif
+            std::swap(val.backup,newbuf_);
+            ownbuf_ = val.backup;
+        }
+
+    private:
+        DiskStorage*  disk_;     // not owned
+        GlossaryBase* glossary_; // not owned
+        buffer_type*  newbuf_;   // owned
+        buffer_type*  ownbuf_;   // not owned (owned by other stored_type instance)
+        buffer_type   hdrbuf_;
+    };
 
 private:
-  InfrastructStorage* initStorage( const InfrastructStorageConfig& cfg, bool checkAtStart = false );
+  // typedef ArrayedMemoryCache< IntProfileKey, Profile, DataBlockBackupTypeJuggling > MemStorage;
+  // typedef PageFileDiskStorage< IntProfileKey, DataBlockBackup<Profile>, PageFile > DiskDataStorage;
+  // typedef DiskHashIndexStorage< IntProfileKey, DiskDataStorage::index_type > DiskIndexStorage;
+  // typedef IndexedStorage< DiskIndexStorage, DiskDataStorage > DiskStorage;
+  // typedef CachedDiskStorage< MemStorage, DiskStorage, ProfileHeapAllocator< IntProfileKey > > InfrastructStorage;
+    typedef PageFileDiskStorage2 DiskDataStorage;
+    typedef DiskHashIndexStorage< IntProfileKey, DiskDataStorage::index_type > DiskIndexStorage;
+    typedef ArrayedMemoryCache< IntProfileKey, Profile, DataBlockBackupTypeJuggling2 > MemStorage;
+    typedef IndexedStorage2< DiskIndexStorage, DiskDataStorage > DiskStorage;
+    typedef ProfileSerializer< MemStorage, DiskStorage > DataSerializer;
+    typedef CachedDelayedDiskStorage< MemStorage, DiskStorage, DataSerializer, ProfileHeapAllocator< MemStorage::key_type > > InfrastructStorage;
+
+private:
+  InfrastructStorage* initStorage( const InfrastructStorageConfig& cfg,
+                                   bool checkAtStart = false,
+                                   const std::string& logsfx = "" );
 
 private:
   InfrastructStorage* provider_;
@@ -341,6 +429,9 @@ struct InfrastructStorageConfig {
   string localPath;
   uint32_t cacheSize;
   uint32_t recordCount;
+    uint32_t minDirtyTime;  // 10
+    uint32_t maxDirtyTime;  // 1000
+    uint32_t maxDirtyCount; // 100
   bool    checkAtStart;
 };
 

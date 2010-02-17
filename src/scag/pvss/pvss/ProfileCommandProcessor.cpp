@@ -21,6 +21,7 @@ namespace pvss  {
 bool ProfileCommandProcessor::visitBatchCommand(BatchCommand &cmd) /* throw(PvapException) */  {
   ProfileCommandProcessor proc;
   proc.setProfile(profile_);
+  proc.setBackup(backup_);
   BatchResponse* resp = new BatchResponse(StatusType::OK);
   response_.reset(resp);
   std::vector<BatchRequestComponent*> content = cmd.getBatchContent();
@@ -49,17 +50,21 @@ bool ProfileCommandProcessor::visitBatchCommand(BatchCommand &cmd) /* throw(Pvap
   return true;
 }
 
+
 bool ProfileCommandProcessor::visitDelCommand(DelCommand &cmd) /* throw(PvapException) */  {
-  response_.reset(new DelResponse());
-  if (!profile_ || !profile_->DeleteProperty(cmd.getVarName().c_str())) {
+  response_.reset(new DelResponse());    
+    std::auto_ptr<Property> holder;
+  if (!profile_ || !profile_->DeleteProperty(cmd.getVarName().c_str(),&holder)) {
     response_->setStatus(StatusType::PROPERTY_NOT_FOUND);
     return false;
   }
+  if (backup_) backup_->delProperty(holder.release());
   dblog_.createDelLogMsg(profile_->getKey(), cmd.getVarName());
   response_->setStatus(StatusType::OK);
   profile_->setChanged(true);
   return true;
 }
+
 
 bool ProfileCommandProcessor::visitGetCommand(GetCommand &cmd) /* throw(PvapException) */  {
   response_.reset(new GetResponse());
@@ -78,6 +83,7 @@ bool ProfileCommandProcessor::visitGetCommand(GetCommand &cmd) /* throw(PvapExce
         smsc_log_debug(theLog,"G key=%s name=%s", profile_->getKey().c_str(), p->toString().c_str());
     }
   if(p->getTimePolicy() == R_ACCESS) {
+      if (backup_) backup_->fixPolicy( *p );
     p->ReadAccess();
     profile_->setChanged(true);
   }
@@ -129,6 +135,7 @@ bool ProfileCommandProcessor::visitSetCommand(SetCommand &cmd) /* throw(PvapExce
   }
   Property* p = profile_->GetProperty(prop.getName());
   if (p != NULL) {
+      if (backup_) backup_->fixProperty(*p);
     p->setValue(prop);
     // FIXED by bukind on 20100209, now timepolicy is also updated!
     p->setTimePolicy(prop.getTimePolicy(),prop.getFinalDate(),prop.getLifeTime());
@@ -139,6 +146,7 @@ bool ProfileCommandProcessor::visitSetCommand(SetCommand &cmd) /* throw(PvapExce
       response_->setStatus(StatusType::BAD_REQUEST);
       return false;
     }
+    if (backup_) backup_->addProperty(prop);
     dblog_.createAddLogMsg(profile_->getKey(), prop.toString());
   }
   profile_->setChanged(true);
@@ -155,12 +163,14 @@ uint8_t ProfileCommandProcessor::incModProperty(Property& property, uint32_t mod
     if (!profile_->AddProperty(property)) {
       return StatusType::IO_ERROR;
     }
+    if (backup_) backup_->addProperty(property);
     dblog_.createAddLogMsg(profile_->getKey(), property.toString());
     profile_->setChanged(true);
     return StatusType::OK;
   }
 
   if (p->getType() == INT && property.getType() == INT) {
+      if (backup_) backup_->fixProperty(*p);
     result = static_cast<uint32_t>(p->getIntValue() + property.getIntValue());
     result = mod > 0 ? result % mod : result;
     p->setIntValue(result);
@@ -171,6 +181,7 @@ uint8_t ProfileCommandProcessor::incModProperty(Property& property, uint32_t mod
   }
 
   if (p->convertToInt() && property.convertToInt()) {
+      if (backup_) backup_->fixProperty(*p);
     result = static_cast<uint32_t>(p->getIntValue() + property.getIntValue());
     result = mod > 0 ? result % mod : result;
     p->setIntValue(result);
@@ -185,20 +196,21 @@ uint8_t ProfileCommandProcessor::incModProperty(Property& property, uint32_t mod
 
 void ProfileCommandProcessor::setProfile(Profile *pf) {
   if (!dblog_.getLogMsg().empty()) {
-    Logger* log = Logger::getInstance("pvss.proc");
-    smsc_log_warn(log, "db log not empty: %s", dblog_.getLogMsg().c_str());
-    dblog_.clear();
+      Logger* log = Logger::getInstance("pvss.proc");
+      smsc_log_warn(log, "db log not empty: %s", dblog_.getLogMsg().c_str());
+      dblog_.clear();
   }
   if (!batchLogs_.empty()) {
     Logger* log = Logger::getInstance("pvss.proc");
     for (std::vector<string>::iterator i = batchLogs_.begin(); i != batchLogs_.end(); ++i) {
-      smsc_log_warn(log, "butch db log not empty: %s", (*i).c_str());
+      smsc_log_warn(log, "batch db log not empty: %s", (*i).c_str());
     }
     std::vector<string>().swap(batchLogs_);
   }
   if (pf) {
     pf->setChanged(false);
   }
+  rollback_ = false;
   profile_ = pf;
 }
 

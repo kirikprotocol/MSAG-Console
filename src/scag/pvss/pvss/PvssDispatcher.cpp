@@ -234,6 +234,7 @@ AbonentLogic* PvssDispatcher::getLocation(unsigned elementStorageNumber) {
 }
 
 void PvssDispatcher::shutdown() {
+    smsc_log_info(logger_,"shutting down a pvss dispatcher");
   uint16_t created = createdLocations_;
     // stopping all file managers
     for ( std::vector< DataFileManager* >::iterator i = dataFileManagers_.begin();
@@ -258,6 +259,7 @@ void PvssDispatcher::shutdown() {
 
 PvssDispatcher::~PvssDispatcher() {
   shutdown();
+    smsc_log_info(logger_,"dtor pvss dispatcher");
 }
 
 
