@@ -314,7 +314,7 @@ inline scag::util::io::Deserializer& operator >> ( scag::util::io::Deserializer&
     if ( len > strlen(val) ) {
         // throw scag::exceptions::IOException("wrong abntaddr: len=%u, val=%s", unsigned(len), val);
         // __warning2__("wrong abntaddr: len=%u, val=%s", unsigned(len), val);
-        len = strlen(val);
+        len = static_cast<unsigned char>(strlen(val));
     }
     addr.setValue( len, type, plan, val );
     return dsr;
