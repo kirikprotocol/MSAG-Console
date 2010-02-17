@@ -504,3 +504,6 @@ TO ALL: Insert log record for all significant changes & fixes here.
   msag: bugfix: there was not expiration time prolongation for (long) ussd operations,
         which leads to the expiration of the operations after 1 minute.
   msag: feature: reading 'expireInterval' (msec) from session part of the config.
+
+2010-02-17 14:29 bukind
+  pvss: little bugfix: files were not destroyed in dtor of BlocksHSStorage2
