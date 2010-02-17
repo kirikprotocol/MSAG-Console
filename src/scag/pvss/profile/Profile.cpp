@@ -177,14 +177,15 @@ Property* Profile::GetProperty(const char* name)
   return *p;
 }
 
-bool Profile::DeleteProperty(const char* name)
+bool Profile::DeleteProperty(const char* name, std::auto_ptr<Property>* holder )
 {
   Property **prop = properties.GetPtr(name);
   if (!prop) {
     return false;
   }
   if (*prop) {
-    delete *prop;
+      if (holder) holder->reset(*prop);
+      else delete *prop;
   }
   properties.Delete(name);
   return true;

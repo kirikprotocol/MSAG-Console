@@ -6,6 +6,7 @@
 #include <list>
 #include <string>
 #include <vector>
+#include <memory>
 
 #include "util/crc32.h"
 #include "logger/Logger.h"
@@ -102,7 +103,7 @@ public:
     Property* GetProperty(const char* name);
     bool PropertyExists(const char* str);
     bool AddProperty(const Property& prop);
-    bool DeleteProperty(const char* str);
+    bool DeleteProperty(const char* str, std::auto_ptr<Property>* holder = 0);
     void DeleteExpired();
     void Empty();
     uint32_t GetCount() const { return properties.GetCount(); };
