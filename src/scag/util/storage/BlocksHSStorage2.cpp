@@ -472,6 +472,7 @@ BlocksHSStorage2::~BlocksHSStorage2()
     }
     delete oldBuf_;
     delete newBuf_;
+    std::for_each( files_.rbegin(), files_.rend(), smsc::util::PtrDestroy() );
 }
 
 
@@ -912,7 +913,7 @@ bool BlocksHSStorage2::pushFreeBlocks( size_t freeStart,
 int BlocksHSStorage2::doOpen()
 {
     try {
-        std::for_each( files_.begin(), files_.end(), smsc::util::PtrDestroy() );
+        std::for_each( files_.rbegin(), files_.rend(), smsc::util::PtrDestroy() );
         files_.clear();
         journalFile_.open( readonly_ );
         if ( files_.size() == 0 ) {
@@ -986,7 +987,7 @@ int BlocksHSStorage2::doCreate()
 
 int BlocksHSStorage2::doRecover( IndexRescuer* indexRescuer )
 {
-    std::for_each( files_.begin(), files_.end(), smsc::util::PtrDestroy() );
+    std::for_each( files_.rbegin(), files_.rend(), smsc::util::PtrDestroy() );
     files_.clear();
 
     // first of all open all existing data files
@@ -1310,11 +1311,11 @@ bool BlocksHSStorage2::attachNewFile()
     }
     // creation task is finished
     std::auto_ptr<CreationTask> ct(creationTask_.release());
-    File* f = ct->getFile();
-    if ( !f ) { return false; }
+    std::auto_ptr<File> f(ct->getFile());
+    if ( !f.get() ) { return false; }
     // write a new transaction
     Transaction trans(*this);
-    files_.push_back(f);
+    files_.push_back(f.release());
     const size_t oldFreeCount = freeCount_;
     const size_t freeChainSize = freeChain_.size();
     // overwrite the content of the last block in previous free chain
@@ -1360,8 +1361,10 @@ bool BlocksHSStorage2::attachNewFile()
         // recovery
         freeChain_.erase(freeChain_.begin()+freeChainSize,freeChain_.end());
         freeCount_ = oldFreeCount;
+        f.reset(files_.back());
         files_.pop_back();
-        delete f;
+        // files_.pop_back();
+        // delete f;
     }
     return rv;
 }
@@ -1418,7 +1421,7 @@ JournalRecord* BlocksHSStorage2::createJournalRecord()
 void BlocksHSStorage2::prepareForApplication( const std::vector< JournalRecord* >& records )
 {
     // closing all files
-    std::for_each( files_.begin(), files_.end(), smsc::util::PtrDestroy() );
+    std::for_each( files_.rbegin(), files_.rend(), smsc::util::PtrDestroy() );
     files_.clear();
 
     // taking the newest state, opening all necessary files
