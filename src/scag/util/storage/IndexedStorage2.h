@@ -117,6 +117,11 @@ public:
         index_->setInvalidIndex(invalidIndex_);
     }
 
+    ~IndexedStorage2() {
+        delete index_;
+        delete data_;
+    }
+
     inline unsigned long size() const {
         return index_->size();
     }
