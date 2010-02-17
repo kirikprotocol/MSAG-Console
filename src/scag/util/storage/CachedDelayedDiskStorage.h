@@ -33,6 +33,8 @@ public:
 private:
     // dirty things
     struct Dirty {
+        Dirty(util::msectime_type t, key_type k, const stored_type& s) :
+        dirtyTime(t), key(k), stored(s) {}
         util::msectime_type dirtyTime;
         key_type            key;
         stored_type         stored;
@@ -355,7 +357,7 @@ private:
         if (log_) {
             smsc_log_debug(log_,"adding dirty key=%s now=%llu",k.toString().c_str(),now);
         }
-        dirtyHash_.Insert(k,dirtyList_.insert(dirtyList_.end(), (Dirty) {now,k,sv}));
+        dirtyHash_.Insert(k,dirtyList_.insert(dirtyList_.end(), Dirty(now,k,sv)));
         // flushDirty(now);
     }
 

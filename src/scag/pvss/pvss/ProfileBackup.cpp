@@ -24,28 +24,28 @@ ProfileBackup::ProfileBackup()
 
 void ProfileBackup::addProperty( const Property& prop )
 {
-    operationList_.push_back( (PvssOp){unsigned(fixedPolicies_.size()),PROPADD} );
+    operationList_.push_back( PvssOp(unsigned(fixedPolicies_.size()),PROPADD) );
     fixedPolicies_.push_back( PropTime(prop.getName()) );
 }
 
 
 void ProfileBackup::delProperty( Property* prop )
 {
-    operationList_.push_back( (PvssOp){unsigned(deletedProperties_.size()),PROPDEL} );
+    operationList_.push_back( PvssOp(unsigned(deletedProperties_.size()),PROPDEL) );
     deletedProperties_.push_back( prop );
 }
 
 
 void ProfileBackup::fixPolicy( Property& prop )
 {
-    operationList_.push_back( (PvssOp){unsigned(fixedPolicies_.size()),PROPFIX} );
+    operationList_.push_back( PvssOp(unsigned(fixedPolicies_.size()),PROPFIX) );
     fixedPolicies_.push_back( PropTime(prop.getName()) );
 }
 
 
 void ProfileBackup::fixProperty( Property& prop )
 {
-    operationList_.push_back( (PvssOp){unsigned(modifiedProperties_.size()),PROPMOD} );
+    operationList_.push_back( PvssOp(unsigned(modifiedProperties_.size()),PROPMOD) );
     modifiedProperties_.push_back(prop);
 }
 

@@ -46,7 +46,7 @@ private:
         PROPADD = 1,
         PROPDEL = 2,
         PROPMOD = 3,
-        PROPFIX = 4,
+        PROPFIX = 4
     };
     struct PropTime {
         PropTime( const std::string& n ) : name(n) {}
@@ -61,6 +61,7 @@ private:
         uint32_t    lifeTime;
     };
     struct PvssOp {
+        PvssOp( unsigned p, PvssOpType t ) : position(p), opType(t) {}
         unsigned   position;
         PvssOpType opType;
     };
