@@ -45,7 +45,7 @@ public:
                               DiskStorage* ds,
                               Serializer* sr,
                               smsc::logger::Logger* thelog = 0 ) :
-    cache_(ms), disk_( ds ), ser_(sr), hitcount_(0), log_(thelog),
+    cache_(ms), disk_( ds ), ser_(sr), hitcount_(0), log_(thelog), inited_(false),
     lastDirtyFlush_(0), minDirtyTime_(10), maxDirtyTime_(10000), maxDirtyCount_(100)
     {
         if ( !ms || !sr || !ds ) {
@@ -55,6 +55,24 @@ public:
             throw smsc::util::Exception("CachedDiskStorage2: all storages and serializer should be provided!");
         }
         spare_ = cache_->val2store(0);
+    }
+
+
+    void init( unsigned minDirtyTime,
+               unsigned maxDirtyTime,
+               unsigned maxDirtyCount )
+    {
+        if (inited_) return;
+        inited_ = true;
+        lastDirtyFlush_ = time(0);
+        minDirtyTime_ = std::min(minDirtyTime,100U);
+        maxDirtyTime_ = std::min(std::max(maxDirtyTime,10U),100000U);
+        maxDirtyCount_ = std::min(std::max(maxDirtyCount,10U),10000U);
+        if (log_) {
+            smsc_log_debug(log_,"inited minTime: %u, maxTime: %u, maxCount: %u",
+                           unsigned(minDirtyTime_), unsigned(maxDirtyTime_),
+                           unsigned(maxDirtyCount_));
+        }
     }
 
 
@@ -68,6 +86,10 @@ public:
     }
 
     bool set( const key_type& k, value_type* v ) {
+        if (!inited_) {
+            if (log_) { smsc_log_warn(log_,"DELAYED STORAGE IS NOT INITED"); }
+            return false;
+        }
         typename DirtyList::iterator* di = dirtyHash_.GetPtr(k);
         if (di) {
             if (log_) { smsc_log_debug(log_,"dirty key=%s updated",k.toString().c_str()); }
@@ -84,6 +106,10 @@ public:
 
 
     value_type* get( const key_type& k, bool create = false ) {
+        if (!inited_) {
+            if (log_) { smsc_log_warn(log_,"DELAYED STORAGE IS NOT INITED"); }
+            return 0;
+        }
         // first check in dirty
         typename DirtyList::iterator* di = dirtyHash_.GetPtr(k);
         if (di) {
@@ -126,6 +152,10 @@ public:
 
     /// flush item to disk
     bool flush( const key_type& k ) {
+        if (!inited_) {
+            if (log_) { smsc_log_warn(log_,"DELAYED STORAGE IS NOT INITED"); }
+            return false;
+        }
         typename DirtyList::iterator* di = dirtyHash_.GetPtr(k);
         bool res = false;
         if (di) {
@@ -144,7 +174,7 @@ public:
 
     //TODO: flush without cache_->get()
 
-    /// only needed after get + some modifications
+    /// Only necessary for get + modifications
     void markDirty( const key_type& k )
     {
         typename DirtyList::iterator* i = dirtyHash_.GetPtr(k);
@@ -154,19 +184,27 @@ public:
                 addDirty(k,sv);
             }
         }
+        flushDirty();
     }
 
 
+    /// This method should be invoked periodically!
     void flushDirty( util::msectime_type now = 0 )
     {
         if ( !now ) now = util::currentTimeMillis();
         {
             const unsigned dhc = dirtyHash_.Count();
             if ( dhc == 0 ) { return; }
-            else if ( dhc > maxDirtyCount_ ) {}
+            //if (log_) {
+            //smsc_log_debug(log_,"flush dirty check: count=%u, last=%u",
+            //dhc, unsigned(now-lastDirtyFlush_));
+            //}
+            if ( dhc > maxDirtyCount_ ) {}
             else if ( now - lastDirtyFlush_ < minDirtyTime_ ) { return; }
-            smsc_log_debug(log_,"flushing dirty at %llu: dirties=%u last=%u",
-                           now, dhc, unsigned(now-lastDirtyFlush_));
+            if (log_) {
+                smsc_log_debug(log_,"flushing dirty at %llu: dirties=%u last=%u",
+                               now, dhc, unsigned(now-lastDirtyFlush_));
+            }
         }
         lastDirtyFlush_ = now;
         do {
@@ -302,7 +340,10 @@ private:
 
     inline bool doFlush( const key_type& k, stored_type& sv )
     {
-        smsc_log_debug(log_,"flushing key=%s ptr=%p",k.toString().c_str(),cache_->store2val(sv));
+        if (log_) {
+            smsc_log_debug(log_,"flushing key=%s ptr=%p",
+                           k.toString().c_str(),cache_->store2val(sv));
+        }
         ser_->serialize(cache_->store2ref(sv));
         return disk_->set(k,*ser_->getOwnedBuffer(),ser_->getFreeBuffer());
     }
@@ -315,7 +356,7 @@ private:
             smsc_log_debug(log_,"adding dirty key=%s now=%llu",k.toString().c_str(),now);
         }
         dirtyHash_.Insert(k,dirtyList_.insert(dirtyList_.end(), (Dirty) {now,k,sv}));
-        flushDirty(now);
+        // flushDirty(now);
     }
 
 
@@ -348,6 +389,7 @@ private:
     mutable stored_type spare_;
     mutable unsigned int hitcount_;
     smsc::logger::Logger* log_;
+    bool                  inited_;
 
     DirtyList dirtyList_;
     DirtyHash dirtyHash_;

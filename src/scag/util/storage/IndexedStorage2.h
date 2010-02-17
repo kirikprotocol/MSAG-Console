@@ -121,6 +121,10 @@ public:
         return index_->size();
     }
 
+    inline unsigned long filledSize() const {
+        return index_->filledSize();
+    }
+
     bool set( const key_type& k, buffer_type& buf, buffer_type* oldbuf = 0 ) {
         keylogger_.setKey(k);
         index_type i = index_->getIndex(k);

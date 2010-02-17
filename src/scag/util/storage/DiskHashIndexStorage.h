@@ -94,17 +94,21 @@ public:
   index_type getIndex(const key_type& key) const {
       OffsetValue off;
       const index_type i = index_.LookUp(key, off) ? off.value : invalid_;
-      smsc_log_debug(logger_,"getIndex key=%s index=%llx",
-                     key.toString().c_str(),
-                     static_cast<unsigned long long>(i));
+      if (logger_) {
+          smsc_log_debug(logger_,"getIndex key=%s index=%llx",
+                         key.toString().c_str(),
+                         static_cast<unsigned long long>(i));
+      }
       return i;
   }
 
   bool setIndex(const key_type& key, index_type index) {
     OffsetValue off(index);
-      smsc_log_debug(logger_,"setIndex key=%s index=%llx",
-                     key.toString().c_str(),
-                     static_cast<unsigned long long>(index));
+    if (logger_) {
+        smsc_log_debug(logger_,"setIndex key=%s index=%llx",
+                       key.toString().c_str(),
+                       static_cast<unsigned long long>(index));
+    }
     index_.Insert(key, off, true);
     return true;
   } 
