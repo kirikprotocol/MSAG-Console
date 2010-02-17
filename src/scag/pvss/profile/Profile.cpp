@@ -127,7 +127,11 @@ Profile::~Profile()
     PropertyHash::Iterator it = properties.getIterator();
 
     while(it.Next(key, prop))
-        if(prop) delete prop;
+        if (prop) {
+            smsc_log_debug(loga_,"deleting prop key=%s prop@%p %s",
+                           pkey.c_str(),prop,prop->getName());
+            delete prop;
+        }
     smsc_log_debug(loga_,"dtor: %p key=%s",this,pkey.c_str());
 }
 
@@ -169,7 +173,9 @@ Property* Profile::GetProperty(const char* name)
   }
   if(*p && (*p)->isExpired())
   {
-      if(log) smsc_log_info(log, "E key=%s name=%s", pkey.c_str(), name);
+      if (log) smsc_log_info(log, "E key=%s name=%s", pkey.c_str(), name);
+      smsc_log_debug(loga_,"expiring prop key=%s prop@%p %s",
+                     pkey.c_str(), *p, (*p)->getName());
       delete *p;
       properties.Delete(name);
       return NULL;
@@ -184,6 +190,8 @@ bool Profile::DeleteProperty(const char* name, std::auto_ptr<Property>* holder )
     return false;
   }
   if (*prop) {
+      smsc_log_debug(loga_,"detaching prop key=%s prop@%p %s",
+                     pkey.c_str(), *prop, (*prop)->getName());
       if (holder) holder->reset(*prop);
       else delete *prop;
   }
@@ -240,7 +248,21 @@ bool Profile::AddProperty(const Property& prop)
                   prop.getName(), pkey.c_str(), cnt);
     return false;
   }
-  properties.Insert(prop.getName(), new Property(prop));
+    Property** ptr = properties.GetPtr(prop.getName());
+    if (ptr) {
+        if (*ptr) {
+            if (*ptr == &prop) return true;
+            delete *ptr;
+        }
+        *ptr = new Property(prop);
+        smsc_log_debug(loga_,"adding prop key=%s prop@%p %s",
+                       pkey.c_str(),*ptr,prop.getName());
+        return true;
+    }
+  Property* p = new Property(prop);
+    smsc_log_debug(loga_,"adding prop key=%s prop@%p %s",
+                   pkey.c_str(),p,prop.getName());
+  properties.Insert(prop.getName(), p);
   return true;
 }
 
