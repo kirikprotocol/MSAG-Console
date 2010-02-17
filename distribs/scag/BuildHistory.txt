@@ -491,3 +491,14 @@ TO ALL: Insert log record for all significant changes & fixes here.
   pvss: time policy of the property is now updated in set command.
         Previously, if the property existed and PVSS received a set command
         for that property, its time policy was not updated.
+
+2010-02-16 12:20 bukind
+  pvss: bugfix: the check in PvssLogic first checked if profile was changed
+        and then if it should be rollbacked (check inversion).
+
+2010-02-17 11:40 bukind
+  pvss: bugfix: rollback_ flag was never cleared
+  pvss: deleted property may be optionally returned from profile,
+        which is useful for backing up.
+  pvss: delayed storage installed for service, operator, provider.
+  pvss: worker threads ping sync logics to implement keep-alive.
