@@ -9,6 +9,7 @@
 #include "scag/util/storage/SerialBuffer.h"
 #include "scag/util/io/GlossaryBase.h"
 #include "scag/exc/IOException.h"
+#include "logger/Logger.h"
 
 namespace scag2 {
 namespace pvss {
@@ -72,7 +73,10 @@ using namespace perstypes;
 class Property 
 {
 private:
+    static smsc::logger::Logger* log_;
     static const std::string emptyString_;
+
+    static void initLog();
 
 protected:
     PropertyType type;
@@ -96,19 +100,30 @@ protected:
 
 public:
 
-    Property() : type(PropertyType(0)), i_val(0), time_policy(INFINIT){};
+    Property() : type(PropertyType(0)), i_val(0), time_policy(INFINIT) {
+        // if (!log_) initLog();
+        // smsc_log_debug(log_,"ctor %p",this);
+    }
     Property(const Property& cp);
     Property& operator=(const Property& cp);
 
     Property(const char *nm, int32_t i, TimePolicy policy, time_t fd, uint32_t lt)
     {
+        // if (!log_) initLog();
         setInt(nm, i, policy, fd, lt);
+        // smsc_log_debug(log_,"ctor %p %s",this,toString().c_str());
     };
 
     Property(const char *nm, const char* str, TimePolicy policy, time_t fd, uint32_t lt)
     {
+        // if (!log_) initLog();
         setString(nm, str, policy, fd, lt);
+        // smsc_log_debug(log_,"ctor %p %s",this,toString().c_str());
     };
+
+    ~Property() {
+        // smsc_log_debug(log_,"dtor %p %s",this,toString().c_str());
+    }
 
     bool operator == ( const Property& prop ) const {
         if ( type != prop.type ||

@@ -5,7 +5,6 @@
 #include <stdlib.h>
 #include "Property.h"
 
-
 namespace {
 
 using namespace scag2::pvss;
@@ -40,6 +39,8 @@ size_t timePolicyFromString( const std::string& from, TimePolicy& tp, size_t* st
 #undef TIMEPOLCMP
 }
 
+
+smsc::core::synchronization::Mutex logMtx;
 
 } // namespace
 
@@ -84,6 +85,16 @@ const char* propertyTypeToString( PropertyType pt )
 
 
 const std::string Property::emptyString_("empty");
+
+smsc::logger::Logger* Property::log_ = 0;
+
+void Property::initLog()
+{
+    if (!log_) {
+        MutexGuard mg(logMtx);
+        if (!log_) log_ = smsc::logger::Logger::getInstance("prop.alloc");
+    }
+}
 
 void Property::setPropertyName(const char* nm) {
   name.clear();
@@ -317,6 +328,7 @@ void Property::fromString( const std::string& input ) /* throw (exceptions::IOEx
 Property::Property(const Property& cp)
 {
     copy(cp);
+    // smsc_log_debug(log_,"ctor %p %s",this,toString().c_str());
 }
 
 Property& Property::operator=(const Property& cp)
