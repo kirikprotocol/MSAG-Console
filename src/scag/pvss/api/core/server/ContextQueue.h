@@ -30,10 +30,11 @@ public:
     /// notify queue that response is send/failed
     void reportResponse(std::auto_ptr<ServerContext>& context);
 
-    /// receive a new context (blocking), until either one:
+    /// receive a new context, until either one:
     /// 1. a new context is arrived (it is returned);
     /// 2. the queue is stopped, and all contained contexts are exhausted (0 is returned).
-    ServerContext* getContext();
+    /// 3. tmo (msec) is expired if it is >0, otherwise it is blocking
+    ServerContext* getContext( int tmo = 0 );
 
     /// fast check for request queue w/o locking
     inline int getSize() const { return queues_[1].Count(); }

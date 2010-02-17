@@ -37,7 +37,9 @@ void Acceptor::init() /* throw (PvssException) */
     if ( -1 == socket_.InitServer( getConfig().getHost().c_str(),
                                    getConfig().getPort(),
                                    int(getConfig().getConnectTimeout())) ) {
-        throw PvssException(PvssException::NOT_CONNECTED,"cannot init socket");
+        throw PvssException(PvssException::NOT_CONNECTED,"cannot init socket at %s:%u",
+                            getConfig().getHost().c_str(),
+                            unsigned(getConfig().getPort()));
     }
     if ( -1 == socket_.StartServer() ) {
         throw PvssException(PvssException::NOT_CONNECTED,"cannot init acceptor");

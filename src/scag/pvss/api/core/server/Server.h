@@ -58,6 +58,10 @@ public:
          * @param context   Contains processed PVAP request & failed PVAP response.
          */
         virtual void responseFail(std::auto_ptr<ServerContext> context) = 0;
+
+        // method is invoked from the worker running this logic when
+        // there is no input activity on the logic.
+        virtual void keepAlive() {}
     };
 
 

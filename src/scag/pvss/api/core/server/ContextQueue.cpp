@@ -58,7 +58,7 @@ void ContextQueue::reportResponse( std::auto_ptr<ServerContext>& context )
 }
 
 
-ServerContext* ContextQueue::getContext()
+ServerContext* ContextQueue::getContext( int tmo )
 {
     ServerContext* res = 0;
     MutexGuard mg(queueMon_);
@@ -69,6 +69,11 @@ ServerContext* ContextQueue::getContext()
         if ( ! acceptRequests_ ) {
             queueMon_.wait(100);
             queues_[0].Pop(res);
+            break;
+        }
+        if (tmo>0) {
+            queueMon_.wait(tmo);
+            if (!queues_[0].Pop(res)) { queues_[1].Pop(res); }
             break;
         }
         queueMon_.wait();

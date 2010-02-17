@@ -33,10 +33,11 @@ int Worker::doExecute()
 {
     std::auto_ptr<ServerContext> context;
     while ( true ) {
-        context.reset( queue_.getContext() );
+        context.reset( queue_.getContext(100) );
         if ( ! context.get() ) {
             if ( ! queue_.couldHaveRequests() ) stop();
             if ( ! queue_.isStarted() ) break;
+            logic_.keepAlive();
             continue;
         }
         switch (context->getState()) {
