@@ -67,9 +67,10 @@ public:
         if (inited_) return;
         inited_ = true;
         lastDirtyFlush_ = time(0);
-        minDirtyTime_ = std::min(minDirtyTime,100U);
+        minDirtyTime_ = std::min(minDirtyTime,1000U);
         maxDirtyTime_ = std::min(std::max(maxDirtyTime,10U),100000U);
         maxDirtyCount_ = std::min(std::max(maxDirtyCount,10U),10000U);
+        if ( minDirtyTime_ >= maxDirtyTime_ ) maxDirtyTime_ = minDirtyTime_ + 100U;
         if (log_) {
             smsc_log_debug(log_,"inited minTime: %u, maxTime: %u, maxCount: %u",
                            unsigned(minDirtyTime_), unsigned(maxDirtyTime_),
