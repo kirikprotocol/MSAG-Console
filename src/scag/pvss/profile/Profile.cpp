@@ -2,6 +2,7 @@
 
 #include <unistd.h>
 #include "Profile.h"
+#include "ProfileBackup.h"
 
 namespace {
 smsc::core::synchronization::Mutex logamutex;
@@ -54,8 +55,8 @@ void Profile::Deserialize(SerialBuffer& buf, bool fromFSDB, GlossaryBase* glossa
         do{
             prop->Deserialize(buf, fromFSDB, glossary);
             cnt--;
-            if(log && prop->isExpired(cur_time))
-                smsc_log_info(log, "E key=%s name=%s", pkey.c_str(), prop->getName());
+            if (backup_ && prop->isExpired(cur_time))
+                backup_->expireProperty(pkey.c_str(),*prop);
         }while(prop->isExpired(cur_time) && cnt);
 
         if(!prop->isExpired(cur_time))
@@ -91,29 +92,29 @@ void Profile::initLog()
 }
 
 
-Profile::Profile() :
-log(0), state(OK), changed(false)
+Profile::Profile( ProfileBackup* backup) :
+backup_(backup), state(OK), changed(false)
 {
     initLog();
 }
     
 
-Profile::Profile(const std::string& _pkey, smsc::logger::Logger* _log ) :
-log(_log), state(OK), pkey(_pkey), changed(false)
+Profile::Profile(const std::string& _pkey, ProfileBackup* backup) :
+backup_(backup), state(OK), pkey(_pkey), changed(false)
 {
     initLog();
 }
 
 
-Profile::Profile(const AbntAddr& address, smsc::logger::Logger* _log ) :
-log(_log), state(OK), pkey(address.toString()), changed(false)
+Profile::Profile(const AbntAddr& address, ProfileBackup* backup ) :
+backup_(backup), state(OK), pkey(address.toString()), changed(false)
 {
     initLog();
 }
 
 
-Profile::Profile(const IntProfileKey& intKey, smsc::logger::Logger* _log ) :
-log(_log), state(OK), pkey(intKey.toString()), changed(false)
+Profile::Profile(const IntProfileKey& intKey, ProfileBackup* backup ) :
+backup_(backup), state(OK), pkey(intKey.toString()), changed(false)
 {
     initLog();
 }
@@ -128,8 +129,8 @@ Profile::~Profile()
 
     while(it.Next(key, prop))
         if (prop) {
-            smsc_log_debug(loga_,"deleting prop key=%s prop@%p %s",
-                           pkey.c_str(),prop,prop->getName());
+            // smsc_log_debug(loga_,"deleting prop key=%s prop@%p %s",
+            // pkey.c_str(),prop,prop->getName());
             delete prop;
         }
     smsc_log_debug(loga_,"dtor: %p key=%s",this,pkey.c_str());
@@ -141,10 +142,7 @@ Profile& Profile::operator=(const Profile& pf) {
     return *this;
   }
   smsc_log_debug(loga_,"op=: %p key=%s <== %p key=%s",this,pkey.c_str(),&pf,pf.pkey.c_str());
-  const smsc::logger::Logger* _log = pf.getLog();
-  if (_log) {
-    log = smsc::logger::Logger::getInstance(_log->getName());
-  }
+    backup_ = pf.backup_;
   pkey = pf.getKey();
   state = pf.getState();
 
@@ -173,9 +171,9 @@ Property* Profile::GetProperty(const char* name)
   }
   if(*p && (*p)->isExpired())
   {
-      if (log) smsc_log_info(log, "E key=%s name=%s", pkey.c_str(), name);
-      smsc_log_debug(loga_,"expiring prop key=%s prop@%p %s",
-                     pkey.c_str(), *p, (*p)->getName());
+      if (backup_) backup_->expireProperty(pkey.c_str(),**p);
+      // smsc_log_debug(loga_,"expiring prop key=%s prop@%p %s",
+      // pkey.c_str(), *p, (*p)->getName());
       delete *p;
       properties.Delete(name);
       return NULL;
@@ -190,8 +188,8 @@ bool Profile::DeleteProperty(const char* name, std::auto_ptr<Property>* holder )
     return false;
   }
   if (*prop) {
-      smsc_log_debug(loga_,"detaching prop key=%s prop@%p %s",
-                     pkey.c_str(), *prop, (*prop)->getName());
+      // smsc_log_debug(loga_,"detaching prop key=%s prop@%p %s",
+      // pkey.c_str(), *prop, (*prop)->getName());
       if (holder) holder->reset(*prop);
       else delete *prop;
   }
@@ -211,7 +209,7 @@ void Profile::DeleteExpired()
         if(prop->isExpired(cur_time))
         {
             i++;
-            if(log) smsc_log_info(log, "E key=\"%s\" name=%s", pkey.c_str(), key);
+            if (backup_) backup_->expireProperty(pkey.c_str(),*prop);
             delete prop;
             properties.Delete(key);
         }
@@ -243,9 +241,8 @@ bool Profile::AddProperty(const Property& prop)
 {
   uint16_t cnt = properties.GetCount();
   if (cnt == MAX_PROPERTIES_COUNT) {
-    Logger* wlog = log ? log : Logger::getInstance("pvss.profile");
-    smsc_log_warn(wlog, "can't add property \'%s\', profile key=%s overflow properties count=%d",
-                  prop.getName(), pkey.c_str(), cnt);
+      smsc_log_warn(loga_, "can't add property \'%s\', profile key=%s overflow properties count=%d",
+                    prop.getName(), pkey.c_str(), cnt);
     return false;
   }
     Property** ptr = properties.GetPtr(prop.getName());
@@ -255,13 +252,13 @@ bool Profile::AddProperty(const Property& prop)
             delete *ptr;
         }
         *ptr = new Property(prop);
-        smsc_log_debug(loga_,"adding prop key=%s prop@%p %s",
-                       pkey.c_str(),*ptr,prop.getName());
+        // smsc_log_debug(loga_,"adding prop key=%s prop@%p %s",
+        // pkey.c_str(),*ptr,prop.getName());
         return true;
     }
   Property* p = new Property(prop);
-    smsc_log_debug(loga_,"adding prop key=%s prop@%p %s",
-                   pkey.c_str(),p,prop.getName());
+    // smsc_log_debug(loga_,"adding prop key=%s prop@%p %s",
+    // pkey.c_str(),p,prop.getName());
   properties.Insert(prop.getName(), p);
   return true;
 }
@@ -275,10 +272,10 @@ void Profile::copyPropertiesTo(Profile* pf) const {
   Property* prop;
 
   PropertyHash::Iterator it = properties.getIterator();
-  smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("profile");
+    // smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("profile");
 
   while(it.Next(key, prop)) {
-    smsc_log_debug(logger, "copy property key=\'%s\' prop=\'%s\'", key, prop->toString().c_str());
+    smsc_log_debug(loga_, "copy property key=\'%s\' prop=\'%s\'", key, prop->toString().c_str());
     pf->addNewProperty(*prop);
   }
 }

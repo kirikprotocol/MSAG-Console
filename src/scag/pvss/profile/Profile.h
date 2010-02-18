@@ -20,8 +20,8 @@
 #include "scag/pvss/data/Property.h"
 #include "AbntAddr.hpp"
 
-
-namespace scag2 { namespace pvss {
+namespace scag2 {
+namespace pvss {
 
 using namespace std;
 using namespace smsc::core::buffers;
@@ -38,6 +38,8 @@ typedef Hash<Property*> PropertyHash;
 
 extern const uint8_t PROPERTIES_COUNT_SIZE;
 extern const uint16_t MAX_PROPERTIES_COUNT; 
+
+class ProfileBackup;
 
 class IntProfileKey
 {
@@ -93,10 +95,10 @@ private:
     void initLog();
 
 public:
-    Profile();
-    Profile(const std::string& _pkey, smsc::logger::Logger* _log = NULL); // : log(_log), state(OK), pkey(_pkey) {};
-    Profile(const AbntAddr& address, smsc::logger::Logger* _log = NULL); // : log(_log), state(OK), pkey(address.toString()) {};
-    Profile(const IntProfileKey& intKey, smsc::logger::Logger* _log = NULL); // : log(_log), state(OK), pkey(intKey.toString()) {};
+    Profile( ProfileBackup* backup = 0 );
+    Profile(const std::string& _pkey, ProfileBackup* backup = 0); // : log(_log), state(OK), pkey(_pkey) {};
+    Profile(const AbntAddr& address, ProfileBackup* backup = 0); // : log(_log), state(OK), pkey(address.toString()) {};
+    Profile(const IntProfileKey& intKey, ProfileBackup* backup = 0); // : log(_log), state(OK), pkey(intKey.toString()) {};
     ~Profile();
     Profile& operator=(const Profile& pf);
 
@@ -110,8 +112,9 @@ public:
     const PropertyHash& getProperties() const { return properties; }
     const string& getKey() const { return pkey; }
     void setKey(const string& key); // { pkey = key; }
-    smsc::logger::Logger* getLog() const { return log; }
-    void setLog(Logger* dblog) { log = dblog; }
+    // smsc::logger::Logger* getLog() const { return log; }
+    // void setLog(Logger* dblog) { log = dblog; }
+    // void setBackup( ProfileBackup& backup ) { backup_ = &backup; }
 
     void Serialize(SerialBuffer& buf, bool toFSDB = false, GlossaryBase* glossary = NULL) const;
     void Deserialize(SerialBuffer& buf, bool fromFSDB = false, GlossaryBase* glossary = NULL);
@@ -135,7 +138,8 @@ public:
 
 private:
   PropertyHash properties;
-  smsc::logger::Logger* log;
+    // smsc::logger::Logger* log;
+  ProfileBackup* backup_;
   ProfileState state;
   std::string pkey;
   bool changed;
