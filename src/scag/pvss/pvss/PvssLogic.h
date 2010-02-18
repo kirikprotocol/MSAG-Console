@@ -41,7 +41,7 @@
 #include "scag/util/WatchedThreadedTask.h"
 #include "scag/pvss/api/core/server/Server.h"
 #include "ProfileCommandProcessor.h"
-#include "ProfileBackup.h"
+#include "scag/pvss/profile/ProfileBackup.h"
 #include "scag/util/io/Serializer.h"
 
 namespace scag {
@@ -129,7 +129,9 @@ protected:
     };
 
 public:
-  PvssLogic( PvssDispatcher& dispatcher ) : dispatcher_(dispatcher), logger_(Logger::getInstance("pvss.proc")) {}
+    PvssLogic( PvssDispatcher& dispatcher ) :
+    dispatcher_(dispatcher), logger_(Logger::getInstance("pvss.proc"))
+    {}
   virtual ~PvssLogic() {};
   Response* process(Request& request) /* throw(PvssException) */ ;
   void responseSent(std::auto_ptr<core::server::ServerContext> response) { /*TODO: implement this method*/ };
@@ -146,23 +148,31 @@ public:
     virtual std::string toString() const = 0;
 
 protected:
-  void initGlossary(const string& path, Glossary* glossary);
+    void initGlossary(const string& path, Glossary& glossary );
 
     // initialize logic
     virtual void init( bool checkAtStart = false ) = 0;
     virtual void rebuildIndex(unsigned maxSpeed = 0) = 0;
 
-  virtual Response* processProfileRequest(ProfileRequest& request) = 0;
+    // the method apply the logic common for all types of pvss
+    // @return true if the command is successfully applied.
+    // FIXME: move to commandprocessor
+    // bool applyCommonLogic( const std::string& pkey,
+    // ProfileRequest&    request,
+    // Profile*           profile );
+
+    virtual CommandResponse* processProfileRequest(ProfileRequest& request,
+                                                   const Profile*& pf ) = 0;
 
     template < class Key > struct ProfileHeapAllocator
     {
-        ProfileHeapAllocator() : plog_(0) {}
-        void setProfileLog( smsc::logger::Logger* plog ) { plog_ = plog; }
+        ProfileHeapAllocator() : backup_(0) {}
+        void setProfileBackup( ProfileBackup& backup ) { backup_ = &backup; }
         inline Profile* alloc( const Key& k ) const {
-            return new Profile(k,plog_);
+            return new Profile(k,backup_);
         }
     protected:
-        smsc::logger::Logger* plog_;
+        ProfileBackup* backup_;
     };
 
 
@@ -170,8 +180,6 @@ protected:
   //unsigned maxWaitingCount_;
     PvssDispatcher& dispatcher_;
     Logger* logger_;
-  ProfileCommandProcessor commandProcessor_;
-    ProfileBackup profileBackup_;
 };
 
 
@@ -189,7 +197,9 @@ public:
     AbonentLogic( PvssDispatcher& dispatcher, unsigned locationNumber, const AbonentStorageConfig& cfg, scag::util::storage::DataFileManager& manager ) :
     PvssLogic(dispatcher),
     locationNumber_(locationNumber),
-    abntlog_(smsc::logger::Logger::getInstance("pvss.abnt")), config_(cfg), dataFileManager_(manager) {}
+    config_(cfg), dataFileManager_(manager),
+    profileBackup_(smsc::logger::Logger::getInstance("pvss.abnt")),
+    commandProcessor_(profileBackup_) {}
 
     virtual ~AbonentLogic();
 
@@ -222,7 +232,8 @@ protected:
     unsigned long rebuildElementStorage(unsigned index,unsigned maxSpeed);
     void dumpElementStorage( unsigned index );
 
-    virtual Response* processProfileRequest(ProfileRequest& request);
+    virtual CommandResponse* processProfileRequest(ProfileRequest& request,
+                                                   const Profile*& pf );
 
 private:
     
@@ -250,10 +261,12 @@ private:
 
 private:
     IntHash<ElementStorage*> elementStorages_;
-    unsigned locationNumber_;
-    Logger* abntlog_;
+    unsigned                 locationNumber_;
+    Logger*                  abntlog_;
     const AbonentStorageConfig& config_;
     scag::util::storage::DataFileManager& dataFileManager_;
+    ProfileBackup           profileBackup_;
+    ProfileCommandProcessor commandProcessor_;
 };
 
 
@@ -264,142 +277,41 @@ private:
 
 struct InfrastructStorageConfig;
 
-class InfrastructLogic: public PvssLogic {
+class InfrastructLogic: public PvssLogic 
+{
+protected:
+    class InfraLogic;
+
 public:
     InfrastructLogic( PvssDispatcher& dispatcher, const InfrastructStorageConfig& cfg ) :
-    PvssLogic(dispatcher),
-    provider_(NULL), service_(NULL), operator_(NULL), config_(cfg),
-    plog_(smsc::logger::Logger::getInstance("pvss.prov")),
-    slog_(smsc::logger::Logger::getInstance("pvss.serv")),
-    olog_(smsc::logger::Logger::getInstance("pvss.oper"))
-    {}
-  ~InfrastructLogic();
+    PvssLogic(dispatcher), provider_(0), service_(0), operator_(0), config_(cfg) {}
+    virtual ~InfrastructLogic();
 
     virtual LogicInitTask* startInit( bool checkAtStart = false );
     virtual LogicRebuildIndexTask* startRebuildIndex( unsigned maxSpeed = 0);
     virtual void dumpStorage( int index );
     virtual std::string toString() const { return "infrastruct logic"; }
 
-  //virtual Response* process(Request& request) /* throw(PvssException) */ ;
-  void shutdownStorages();
+    void shutdownStorages();
 
     std::string reportStatistics() const;
 
-    virtual void keepAlive() {
-        util::msectime_type now = util::currentTimeMillis();
-        MutexGuard mg(statMutex_);
-        provider_->flushDirty(now);
-        service_->flushDirty(now);
-        operator_->flushDirty(now);
-    }
+    virtual void keepAlive();
 
 protected:
     virtual void init( bool checkAtStart = false ) /* throw (smsc::util::Exception) */;
     virtual void rebuildIndex( unsigned maxSpeed = 0 );
-
-  virtual Response* processProfileRequest(ProfileRequest& request);
-
-
-    template < class MemStorage, class DiskStorage > struct ProfileSerializer
-    {
-    public:
-        typedef typename MemStorage::stored_type  stored_type;
-        typedef typename DiskStorage::buffer_type buffer_type;
-
-        ProfileSerializer( DiskStorage* disk,
-                           GlossaryBase* glossary = 0 ) :
-        disk_(disk), glossary_(glossary), newbuf_(0), ownbuf_(0) {
-            if (!disk) throw smsc::util::Exception("disk storage should be provided");
-        }
-
-        ~ProfileSerializer() {
-            if (newbuf_) delete newbuf_;
-        }
-
-        /// --- reading
-
-        /// making a new buffer
-        buffer_type* getFreeBuffer( bool create = false ) {
-            if (!newbuf_ && create) { newbuf_ = new buffer_type; }
-            return newbuf_; 
-        }
-
-        buffer_type* getOwnedBuffer() {
-            return ownbuf_;
-        }
-
-        /// deserialization && attaching the buffer
-        bool deserialize( stored_type& val ) {
-            assert(newbuf_ && val.value );
-            util::io::Deserializer dsr(*newbuf_,glossary_);
-// #ifdef ABONENTSTORAGE
-//            disk_->unpackBuffer(*newbuf_,&hdrbuf_);
-//            dsr.setrpos(disk_->headerSize());
-//            dsr >> *val.value;
-//            disk_->packBuffer(*newbuf_,&hdrbuf_);
-//#else
-            dsr >> *val.value;
-//#endif
-            
-            std::swap(val.backup,newbuf_);
-            ownbuf_ = val.backup;
-            return true;
-        }
-
-        /// --- writing
-        void serialize( stored_type& val ) {
-            assert( val.value );
-            if (!newbuf_) { newbuf_ = new buffer_type; }
-            util::io::Serializer ser(*newbuf_,glossary_);
-//#ifdef ABONENTSTORAGE
-//            ser.setwpos(disk_->headerSize());
-//            ser << *val.value;
-//            disk_->packBuffer(*newbuf_);
-//#else
-            ser << *val.value;
-//#endif
-            std::swap(val.backup,newbuf_);
-            ownbuf_ = val.backup;
-        }
-
-    private:
-        DiskStorage*  disk_;     // not owned
-        GlossaryBase* glossary_; // not owned
-        buffer_type*  newbuf_;   // owned
-        buffer_type*  ownbuf_;   // not owned (owned by other stored_type instance)
-        buffer_type   hdrbuf_;
-    };
+    virtual CommandResponse* processProfileRequest(ProfileRequest& request,
+                                                   const Profile*& pf );
 
 private:
-  // typedef ArrayedMemoryCache< IntProfileKey, Profile, DataBlockBackupTypeJuggling > MemStorage;
-  // typedef PageFileDiskStorage< IntProfileKey, DataBlockBackup<Profile>, PageFile > DiskDataStorage;
-  // typedef DiskHashIndexStorage< IntProfileKey, DiskDataStorage::index_type > DiskIndexStorage;
-  // typedef IndexedStorage< DiskIndexStorage, DiskDataStorage > DiskStorage;
-  // typedef CachedDiskStorage< MemStorage, DiskStorage, ProfileHeapAllocator< IntProfileKey > > InfrastructStorage;
-    typedef PageFileDiskStorage2 DiskDataStorage;
-    typedef DiskHashIndexStorage< IntProfileKey, DiskDataStorage::index_type > DiskIndexStorage;
-    typedef ArrayedMemoryCache< IntProfileKey, Profile, DataBlockBackupTypeJuggling2 > MemStorage;
-    typedef IndexedStorage2< DiskIndexStorage, DiskDataStorage > DiskStorage;
-    typedef ProfileSerializer< MemStorage, DiskStorage > DataSerializer;
-    typedef CachedDelayedDiskStorage< MemStorage, DiskStorage, DataSerializer, ProfileHeapAllocator< MemStorage::key_type > > InfrastructStorage;
-
-private:
-  InfrastructStorage* initStorage( const InfrastructStorageConfig& cfg,
-                                   bool checkAtStart = false,
-                                   const std::string& logsfx = "" );
-
-private:
-  InfrastructStorage* provider_;
-  InfrastructStorage* service_;
-  InfrastructStorage* operator_;
+    Glossary    glossary_;
+    InfraLogic* provider_;
+    InfraLogic* service_;
+    InfraLogic* operator_;
     const InfrastructStorageConfig& config_;
-  Glossary glossary_;
-  Logger* plog_;
-  Logger* slog_;
-  Logger* olog_;
-    // used to access statistics of disk storages
-    mutable smsc::core::synchronization::Mutex statMutex_;
 };
+
 
 struct AbonentStorageConfig {
 

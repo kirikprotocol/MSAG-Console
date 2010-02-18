@@ -200,7 +200,7 @@ void getAbntStorageConfig(AbonentStorageConfig& abntCfg, ConfigView& locationsCo
   try {
     std::auto_ptr<CStrSet> locations(locationsConfig.getStrParamNames());
     for (CStrSet::iterator i = locations.get()->begin(); i != locations.get()->end(); ++i) {
-      string locpath = locationsConfig.getString((*i).c_str());
+      string locpath = ConfString(locationsConfig.getString(i->c_str())).c_str();
       AbonentStorageConfig::Location location(locpath, nodeCfg.disksCount);
       smsc_log_debug(logger, "init location: '%s' on disk %d", location.path.c_str(), location.disk);
       abntCfg.locations.push_back(location);

@@ -5,6 +5,7 @@
 #include "core/buffers/IntHash64.hpp"
 #include "scag/util/storage/Glossary.h"
 #include "scag/pvss/profile/Profile.h"
+#include "scag/pvss/profile/ProfileBackup.h"
 #include "scag/pvss/data/Property.h"
 #include "scag/pvss/data/ProfileKey.h"
 #include "scag/util/storage/StorageIface.h"
@@ -55,8 +56,8 @@ void extractPageFile( smsc::logger::Logger* logger,
                 break;
             }
 
-            Profile prof;
-            prof.setLog(logger);
+            ProfileBackup profBackup(logger);
+            Profile prof(&profBackup);
             uint32_t pkey;
             IntProfileKey profileKey;
             bool hasProfileKey = false;

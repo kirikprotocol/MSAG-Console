@@ -12,6 +12,7 @@
 #include "scag/pvss/api/packets/IncCommand.h"
 #include "scag/pvss/api/packets/IncModCommand.h"
 #include "scag/pvss/api/packets/SetCommand.h"
+#include "util/config/ConfString.h"
 
 
 namespace {
@@ -69,33 +70,36 @@ const char* DEF_GLOSSARY_NAME   = "/glossary";
 using smsc::core::buffers::File;
 using smsc::core::buffers::FileException;
 
-void PvssLogic::initGlossary(const string& path, Glossary* glossary) {
-  if (!File::Exists(path.c_str())) {
-    smsc_log_debug(logger_, "create storage dir '%s'", path.c_str());
-    File::MkDir(path.c_str());
-  }
-  string fn = path + DEF_GLOSSARY_NAME;
-  if ( GlossaryBase::SUCCESS != glossary->Open(fn) ) {
-    throw std::runtime_error("StorageProcessor: glossary open error");
-  }
+void PvssLogic::initGlossary(const string& path, Glossary& glossary) {
+    if (!File::Exists(path.c_str())) {
+        smsc_log_debug(logger_, "create storage dir '%s'", path.c_str());
+        File::MkDir(path.c_str());
+    }
+    string fn = path + DEF_GLOSSARY_NAME;
+    if ( GlossaryBase::SUCCESS != glossary.Open(fn) ) {
+        throw std::runtime_error("StorageProcessor: glossary open error");
+    }
 }
 
 Response* PvssLogic::process(Request& request) /* throw(PvssException) */  {
   try {
       ProfileRequest& preq(static_cast<ProfileRequest&>(request));
-      profileBackup_.cleanup();
-      commandProcessor_.resetProfile();
-      commandProcessor_.setBackup(&profileBackup_);
-      Response* resp = processProfileRequest(preq);
+      // profileBackup_.cleanup();
+      // commandProcessor_.reset();
+      const Profile* pf = 0;
+      CommandResponse* r = processProfileRequest(preq,pf);
       if ( preq.hasTiming() ) {
-          const Profile* pf = commandProcessor_.getProfile();
+          // const Profile* pf = commandProcessor_.getProfile();
           char buf[100];
           snprintf(buf,sizeof(buf)," [%s props=%u]",
                    preq.getProfileKey().toString().c_str(),
                    unsigned(pf ? pf->GetCount() : 0));
           preq.timingComment(buf);
       }
-      return resp;
+      return r ? new ProfileResponse(preq.getSeqNum(),r) : 0;
+      // CommandResponse* r = commandProcessor_.getResponse();
+      // return r ? new ProfileResponse(preq.getSeqNum(),r) : 0;
+
   } catch (const PvapException& e) {
     smsc_log_warn(logger_, "%p: %p processing error: PvapException", this, &request);
     //TODO: some rollback actions
@@ -245,7 +249,7 @@ unsigned long AbonentLogic::initElementStorage( unsigned index,
   string path = string(config_.locations[locationNumber_].path + "/") + pathSuffix;
   std::auto_ptr<ElementStorage> elStorage(new ElementStorage(index));
   elStorage->glossary = new Glossary();
-  initGlossary(path, elStorage->glossary);
+  initGlossary(path, *elStorage->glossary);
 
     const std::string pathSuffixString(pathSuffix);
   std::auto_ptr< DiskIndexStorage > dis
@@ -320,7 +324,7 @@ unsigned long AbonentLogic::initElementStorage( unsigned index,
   smsc_log_debug(logger_, "memory storage is created");
 
   elStorage->storage = new AbonentStorage(ms.release(), ds.release());
-  elStorage->storage->setProfileLog(abntlog_);
+  elStorage->storage->setProfileBackup(profileBackup_);
   unsigned long filledNodes = elStorage->storage->filledDataSize();
   elementStorages_.Insert(index, elStorage.release());
   smsc_log_debug(logger_, "abonent storage is assembled");
@@ -436,8 +440,9 @@ unsigned long AbonentLogic::rebuildElementStorage( unsigned index, unsigned maxS
 }
 
 
-Response* AbonentLogic::processProfileRequest(ProfileRequest& profileRequest) {
-
+CommandResponse* AbonentLogic::processProfileRequest(ProfileRequest& profileRequest,
+                                                     const Profile*& pfr )
+{
   const ProfileKey &profileKey = profileRequest.getProfileKey();
   const std::string& profkey = profileKey.getAddress().toString();
 
@@ -452,114 +457,226 @@ Response* AbonentLogic::processProfileRequest(ProfileRequest& profileRequest) {
   }
   ElementStorage* elstorage = *elstoragePtr;
 
-  bool createProfile = profileRequest.getCommand()->visit(createProfileVisitor);
-  Profile *pf = elstorage->storage->get(profileKey.getAddress(), createProfile);
-  if (pf) {
-      smsc_log_debug(logger_,"FIXME(pre): prof=%s",pf->toString().c_str());
-      if ( pf->getKey() != profkey ) {
-          smsc_log_warn(logger_,"key mismatch: pf=%p pf.key=%s req.key=%s",
-                        pf,pf->getKey().c_str(),profkey.c_str());
-          pf->setKey(profkey);
-      }
-  }
-    /*
-  if ( pf && pf->getKey() != profileKey.getAddress().toString() ) {
-      smsc_log_error(logger_,"key mismatch: pf=%p pf.key=%s req.key=%s", pf, pf->getKey().c_str(), profileKey.getAddress().toString().c_str() );
-      abort();
-      return 0;
-  }
-     */
-  commandProcessor_.setProfile(pf);
-  profileRequest.getCommand()->visit(commandProcessor_);
-  if (!pf) {
-    if (createProfile) {
-        smsc_log_warn(logger_, "%p: %p can't create profile %s", this, &profileRequest, profkey.c_str());
+    const bool createProfile = profileRequest.getCommand()->visit(createProfileVisitor);
+    Profile* pf = elstorage->storage->get(profileKey.getAddress(), createProfile);
+    if ( commandProcessor_.applyCommonLogic(profkey, profileRequest, pf, createProfile )) {
+        if ( pf->isChanged() )
+        {
+            MutexGuard mg(elstorage->mutex);
+            elstorage->storage->flush(profileKey.getAddress());
+        }
     }
-    CommandResponse* r = commandProcessor_.getResponse();
-    return r ? new ProfileResponse(profileRequest.getSeqNum(),r) : 0;
-  }
-  if (commandProcessor_.needRollback()) {
-    smsc_log_debug(logger_, "%p: %p rollback profile %s changes", this, &profileRequest, profkey.c_str());
-    commandProcessor_.rollback();
-    commandProcessor_.resetProfile();
-    // NOTE: backup2profile may delete object under pf!
-  } else if (pf->isChanged()) {
-    smsc_log_debug(logger_, "%p: %p flush profile %s", this, &profileRequest, profkey.c_str());
-      {
-          MutexGuard mg(elstorage->mutex);
-          elstorage->storage->flush(profileKey.getAddress());
-      }
-    commandProcessor_.flushLogs(abntlog_);
-  }
-
-    smsc_log_debug(logger_,"FIXME(post): prof=%s",pf->toString().c_str());
-
-  CommandResponse* r = commandProcessor_.getResponse();
-  return r ? new ProfileResponse(profileRequest.getSeqNum(),r) : 0;
+    pfr = pf;
+    return commandProcessor_.getResponse();
 }
 
 // ==== infrastruct
 
 
-Response* InfrastructLogic::processProfileRequest(ProfileRequest& profileRequest) {
-  Logger *dblog = 0;
-  InfrastructStorage* storage = 0;
-  uint32_t key = 0;
-  const ProfileKey& profileKey = profileRequest.getProfileKey();
-  if (profileKey.hasOperatorKey()) {
-    dblog = olog_;
-    storage = operator_;
-    key = profileKey.getOperatorKey();
-  }
-  if (profileKey.hasProviderKey()) {
-    dblog = plog_;
-    storage = provider_;
-    key = profileKey.getProviderKey();
-  }
-  if (profileKey.hasServiceKey()) {
-    dblog = slog_;
-    storage = service_;
-    key = profileKey.getServiceKey();
-  }
+class InfrastructLogic::InfraLogic
+{
+public:
+    InfraLogic( const char* dblogName ) :
+    profileBackup_(smsc::logger::Logger::getInstance(dblogName)),
+    commandProcessor_(profileBackup_),
+    log_(0),
+    storage_(0)
+    {}
+    
+    void init( const std::string& name,
+               const std::string& logsfx,
+               const InfrastructStorageConfig& cfg,
+               Glossary& glossary ) {
+        log_ = smsc::logger::Logger::getInstance(("pvssst" + logsfx).c_str());
+        smsc_log_debug(log_,"starting initialization of %s infralogic",name.c_str());
+        const std::string fn( cfg.dbPath + "/" + name + ".bin");
+        std::auto_ptr< DiskDataStorage::storage_type > pf(new DiskDataStorage::storage_type);
+        try {
+            pf->Open(fn);
+        } catch (...) {
+            pf->Create(fn, 256, cfg.recordCount);
+        }
 
-  IntProfileKey intKey(key);
-  
-  bool createProfile = profileRequest.getCommand()->visit(createProfileVisitor); 
-  Profile *pf = storage->get(intKey, createProfile);
-  if (pf) {
-      smsc_log_debug(logger_,"FIXME(pre): prof=%s",pf->toString().c_str());
-      pf->setKey(intKey.toString());
-  }
+        std::auto_ptr< DiskDataStorage > data(new DiskDataStorage(pf.release(),
+                                                                  Logger::getInstance(("pvssdd"+logsfx).c_str())));
+        smsc_log_debug(log_, "infralogic %s disk data storage is created", name.c_str());
 
-  commandProcessor_.setProfile(pf);
-  profileRequest.getCommand()->visit(commandProcessor_);
-  if (!pf) {
-    if (createProfile) {
-        smsc_log_warn(logger_, "%p: %p can't create profile %s", this, &profileRequest, intKey.toString().c_str());
+        std::auto_ptr< DiskIndexStorage > index(new DiskIndexStorage(name,
+                                                                     cfg.dbPath,
+                                                                     cfg.recordCount,
+                                                                     Logger::getInstance(("pvssix"+logsfx).c_str())));
+        // FIX: mandatory size recalculation
+        index->recalcSize();
+        smsc_log_debug(log_, "infralogic %s disk index storage is created", name.c_str());
+
+        std::auto_ptr< DiskStorage > ds(new DiskStorage(index.release(), data.release()));
+        smsc_log_debug(log_, "infralogic %s indexed storage is created", name.c_str());
+
+        std::auto_ptr< MemStorage > ms(new MemStorage(Logger::getInstance(("pvssmc"+logsfx).c_str()),
+                                                      cfg.cacheSize));
+        smsc_log_debug(log_, "infralogic %s memory storage is created", name.c_str());
+
+        std::auto_ptr<DataSerializer> ps( new DataSerializer(ds.get(),&glossary) );
+        smsc_log_debug(log_,"infralogic %s serializer is created", name.c_str());
+
+        storage_ = new InfrastructStorage(ms.release(),ds.release(),ps.release(),
+                                          Logger::getInstance(("pvssst"+logsfx).c_str()));
+        storage_->init(cfg.minDirtyTime, cfg.maxDirtyTime, cfg.maxDirtyCount);
+        storage_->setProfileBackup(profileBackup_);
+        smsc_log_info(log_,"infralogic %s initialized",name.c_str());
     }
-    CommandResponse* r = commandProcessor_.getResponse();
-    return r ? new ProfileResponse(profileRequest.getSeqNum(),r) : 0;
-  }
 
-  if (commandProcessor_.needRollback()) {
-    smsc_log_debug(logger_, "%p: %p rollback profile %s changes", this, &profileRequest, intKey.toString().c_str());
-    commandProcessor_.rollback();
-  } else if (pf->isChanged()) {
-    smsc_log_debug(logger_, "%p: %p flush profile %s", this, &profileRequest, intKey.toString().c_str());
-      {
-          MutexGuard mg(statMutex_);
-          // storage->flush(intKey);
-          storage->markDirty(intKey);
-      }
-    commandProcessor_.flushLogs(dblog);
-  } else {
-      storage->flushDirty();
-  }
+    ~InfraLogic() {
+        delete storage_;
+    }
 
-    smsc_log_debug(logger_,"FIXME(post): prof=%s",pf->toString().c_str());
+    void shutdown() {
+        delete storage_; storage_ = 0;
+    }
+    void dumpStorage( int index );
+    void init( bool checkAtStart = false );
+    void rebuildIndex( unsigned maxSpeed = 0 );
+    void keepAlive( util::msectime_type now ) {
+        MutexGuard mg(statMutex_);
+        storage_->flushDirty(now);
+    }
 
-  CommandResponse* r = commandProcessor_.getResponse();
-  return r ? new ProfileResponse(profileRequest.getSeqNum(),r) : 0;
+    CommandResponse* process( const IntProfileKey& intKey,
+                              ProfileRequest& request,
+                              const Profile*& pf );
+
+    unsigned long filledDataSize() const {
+        return static_cast<unsigned long>(storage_->filledDataSize());
+    }
+    
+    template < class MemStorage, class DiskStorage > struct ProfileSerializer
+    {
+    public:
+        typedef typename MemStorage::stored_type  stored_type;
+        typedef typename DiskStorage::buffer_type buffer_type;
+
+        ProfileSerializer( DiskStorage* disk,
+                           GlossaryBase* glossary = 0 ) :
+        disk_(disk), glossary_(glossary), newbuf_(0), ownbuf_(0) {
+            if (!disk) throw smsc::util::Exception("disk storage should be provided");
+        }
+
+        ~ProfileSerializer() {
+            if (newbuf_) delete newbuf_;
+        }
+
+        /// --- reading
+
+        /// making a new buffer
+        buffer_type* getFreeBuffer( bool create = false ) {
+            if (!newbuf_ && create) { newbuf_ = new buffer_type; }
+            return newbuf_; 
+        }
+
+        buffer_type* getOwnedBuffer() {
+            return ownbuf_;
+        }
+
+        /// deserialization && attaching the buffer
+        bool deserialize( stored_type& val ) {
+            assert(newbuf_ && val.value );
+            util::io::Deserializer dsr(*newbuf_,glossary_);
+// #ifdef ABONENTSTORAGE
+//            disk_->unpackBuffer(*newbuf_,&hdrbuf_);
+//            dsr.setrpos(disk_->headerSize());
+//            dsr >> *val.value;
+//            disk_->packBuffer(*newbuf_,&hdrbuf_);
+//#else
+            dsr >> *val.value;
+//#endif
+            
+            std::swap(val.backup,newbuf_);
+            ownbuf_ = val.backup;
+            return true;
+        }
+
+        /// --- writing
+        void serialize( stored_type& val ) {
+            assert( val.value );
+            if (!newbuf_) { newbuf_ = new buffer_type; }
+            util::io::Serializer ser(*newbuf_,glossary_);
+//#ifdef ABONENTSTORAGE
+//            ser.setwpos(disk_->headerSize());
+//            ser << *val.value;
+//            disk_->packBuffer(*newbuf_);
+//#else
+            ser << *val.value;
+//#endif
+            std::swap(val.backup,newbuf_);
+            ownbuf_ = val.backup;
+        }
+
+    private:
+        DiskStorage*  disk_;     // not owned
+        GlossaryBase* glossary_; // not owned
+        buffer_type*  newbuf_;   // owned
+        buffer_type*  ownbuf_;   // not owned (owned by other stored_type instance)
+        buffer_type   hdrbuf_;
+    };
+
+private:
+    typedef PageFileDiskStorage2 DiskDataStorage;
+    typedef DiskHashIndexStorage< IntProfileKey, DiskDataStorage::index_type > DiskIndexStorage;
+    typedef ArrayedMemoryCache< IntProfileKey, Profile, DataBlockBackupTypeJuggling2 > MemStorage;
+    typedef IndexedStorage2< DiskIndexStorage, DiskDataStorage > DiskStorage;
+    typedef ProfileSerializer< MemStorage, DiskStorage > DataSerializer;
+    typedef CachedDelayedDiskStorage< MemStorage, DiskStorage, DataSerializer, ProfileHeapAllocator< MemStorage::key_type > > InfrastructStorage;
+
+private:
+    ProfileBackup           profileBackup_;
+    ProfileCommandProcessor commandProcessor_;
+    smsc::logger::Logger*   log_;
+    smsc::core::synchronization::Mutex statMutex_;
+    InfrastructStorage*                storage_;
+};
+
+
+
+CommandResponse* InfrastructLogic::InfraLogic::process( const IntProfileKey& intKey,
+                                                        ProfileRequest& profileRequest,
+                                                        const Profile*& pfr )
+{
+    const bool createProfile = profileRequest.getCommand()->visit(createProfileVisitor); 
+    Profile* pf = storage_->get(intKey, createProfile);
+    const std::string profkey = intKey.toString();
+    if ( commandProcessor_.applyCommonLogic(profkey,profileRequest,pf,createProfile) ) {
+        MutexGuard mg(statMutex_);
+        if ( pf->isChanged() ) {
+            storage_->markDirty(intKey);
+        } else {
+            storage_->flushDirty();
+        }
+    }
+    pfr = pf;
+    return commandProcessor_.getResponse();
+}
+
+
+CommandResponse* InfrastructLogic::processProfileRequest(ProfileRequest& profileRequest,
+                                                         const Profile*& pf )
+{
+    uint32_t key = 0;
+    InfraLogic* logic = 0;
+    const ProfileKey& profileKey = profileRequest.getProfileKey();
+    if (profileKey.hasOperatorKey()) {
+        logic = operator_;
+        key = profileKey.getOperatorKey();
+    } else if (profileKey.hasProviderKey()) {
+        logic = provider_;
+        key = profileKey.getProviderKey();
+    } else if (profileKey.hasServiceKey()) {
+        logic = service_;
+        key = profileKey.getServiceKey();
+    } else {
+        throw smsc::util::Exception("unknown profile key %s", profileKey.toString().c_str());
+    }
+    IntProfileKey intKey(key);
+    return logic->process(key,profileRequest,pf);
 }
 
 
@@ -586,12 +703,9 @@ void InfrastructLogic::dumpStorage( int i )
 std::string InfrastructLogic::reportStatistics() const
 {
     unsigned long providerStat, operatorStat, serviceStat;
-    {
-        MutexGuard mg(statMutex_);
-        providerStat = provider_->filledDataSize();
-        operatorStat = operator_->filledDataSize();
-        serviceStat = service_->filledDataSize();
-    }
+    providerStat = provider_->filledDataSize();
+    operatorStat = operator_->filledDataSize();
+    serviceStat = service_->filledDataSize();
     char buf[100];
     snprintf(buf,sizeof(buf),"providers=%lu services=%lu operators=%lu",
              providerStat, serviceStat, operatorStat);
@@ -599,25 +713,27 @@ std::string InfrastructLogic::reportStatistics() const
 }
 
 
-void InfrastructLogic::init( bool checkAtStart ) /* throw (smsc::util::Exception) */ {
-  InfrastructStorageConfig locCfg(config_);
-  initGlossary(locCfg.dbPath, &glossary_);
-  locCfg.dbName = "provider";
-  provider_ = initStorage(locCfg,checkAtStart,".pr");
-    provider_->setProfileLog(plog_);
-  smsc_log_debug(logger_, "provider storage is created");
-  locCfg.dbName = "service";
-  service_ = initStorage(locCfg,checkAtStart,".sv");
-    service_->setProfileLog(slog_);
-  smsc_log_debug(logger_, "service storage is created");
-  locCfg.dbName = "operator";
-  operator_ = initStorage(locCfg,checkAtStart,".op");
-    operator_->setProfileLog(olog_);
-  smsc_log_debug(logger_, "operator storage is created");
-    smsc_log_info(logger_,"infrastructure storages are inited, good nodes: provider=%lu, service=%lu, operator=%lu", 
-                  static_cast<unsigned long>(provider_->filledDataSize()),
-                  static_cast<unsigned long>(service_->filledDataSize()),
-                  static_cast<unsigned long>(operator_->filledDataSize()));
+void InfrastructLogic::keepAlive()
+{
+    util::msectime_type now = util::currentTimeMillis();
+    // MutexGuard mg(statMutex_);
+    provider_->keepAlive(now);
+    service_->keepAlive(now);
+    operator_->keepAlive(now);
+}
+
+
+void InfrastructLogic::init( bool /*checkAtStart*/ )
+{
+    initGlossary(config_.dbPath,glossary_);
+    provider_ = new InfraLogic("pvss.prov");
+    provider_->init("provider",".pr",config_,glossary_);
+    service_ = new InfraLogic("pvss.serv");
+    service_->init("service",".sv",config_,glossary_);
+    operator_ = new InfraLogic("pvss.oper");
+    operator_->init("operator",".op",config_,glossary_);
+    smsc_log_info(logger_,"infrastructure storages are inited, good nodes: %s",
+                  reportStatistics().c_str());
 }
 
 
@@ -627,6 +743,7 @@ void InfrastructLogic::rebuildIndex( unsigned /*maxSpeed*/)
 }
 
 
+/*
 InfrastructLogic::InfrastructStorage* InfrastructLogic::initStorage(const InfrastructStorageConfig& cfg,
                                                                     bool  checkAtStart,
                                                                     const std::string& logsfx )
@@ -666,6 +783,7 @@ InfrastructLogic::InfrastructStorage* InfrastructLogic::initStorage(const Infras
     st->init(cfg.minDirtyTime, cfg.maxDirtyTime, cfg.maxDirtyCount);
     return st;
 }
+ */
 
 void InfrastructLogic::shutdownStorages() {
   if (provider_) {
@@ -709,7 +827,7 @@ AbonentStorageConfig::AbonentStorageConfig() {
 AbonentStorageConfig::AbonentStorageConfig(ConfigView& cfg, const char* storageType,
                                             Logger* logger) {
   try {
-    dbName = cfg.getString("storageName"); 
+    dbName = ConfString(cfg.getString("storageName")).str();
   } catch (...) {
     dbName = DEF_STORAGE_NAME;
     smsc_log_warn(logger, "Parameter <PVSS.%s.storageName> missed. Defaul value is '%s'",
@@ -763,7 +881,7 @@ InfrastructStorageConfig::InfrastructStorageConfig() {
 
 InfrastructStorageConfig::InfrastructStorageConfig(ConfigView& cfg, const char* storageType, Logger* logger) {
   try {
-    dbPath = cfg.getString("storagePath"); 
+    dbPath = ConfString(cfg.getString("storagePath")).str();
   } catch (...) {
     dbPath = "./storage";
     smsc_log_warn(logger, "Parameter <PVSS.%s.storageDir> missed. Defaul value is '/'",

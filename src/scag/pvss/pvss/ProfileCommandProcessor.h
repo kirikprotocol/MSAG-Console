@@ -7,51 +7,55 @@
 #include "scag/pvss/api/packets/CommandResponse.h"
 #include "scag/pvss/api/packets/ProfileCommandVisitor.h"
 
-#include "DBLog.h"
-#include "ProfileBackup.h"
+// #include "DBLog.h"
 
 namespace scag2 {
 namespace pvss {
 
+class ProfileRequest;
+class ProfileBackup;
 class BatchResponseComponent;
 
-class ProfileCommandProcessor : public ProfileCommandVisitor {
+class ProfileCommandProcessor : public ProfileCommandVisitor 
+{
 public:
-    ProfileCommandProcessor( Profile* prof = 0):
-    rollback_(false), profile_(prof), response_(0), backup_(0) {}
+    ProfileCommandProcessor( ProfileBackup& backup, Profile* prof = 0 ) :
+    log_(smsc::logger::Logger::getInstance("pvss.proc")),
+    backup_(&backup), rollback_(false), profile_(prof), response_(0) {}
 
-  void setProfile(Profile *pf);
-    const Profile* getProfile() const { return profile_; }
-    void resetProfile() { profile_ = 0; }
-    inline void setBackup( ProfileBackup* bck ) { backup_ = bck; }
+    inline CommandResponse* getResponse() { return response_.release(); }
+    bool applyCommonLogic( const std::string& profkey,
+                           ProfileRequest&    profileRequest,
+                           Profile*           pf,
+                           bool               createProfile );
 
-  CommandResponse* getResponse();
-  bool needRollback() const { return rollback_; };
-    /// do rollback of current profile
-    void rollback() { if (profile_ && backup_) backup_->rollback(*profile_); }
-  void flushLogs(Logger* logger);
 protected:
-  bool visitBatchCommand(BatchCommand &cmd) /* throw(PvapException) */ ;
-  bool visitDelCommand(DelCommand &cmd) /* throw(PvapException) */ ;
-  bool visitGetCommand(GetCommand &cmd) /* throw(PvapException) */ ;
-  bool visitIncCommand(IncCommand &cmd) /* throw(PvapException) */ ;
-  bool visitIncModCommand(IncModCommand &cmd) /* throw(PvapException) */ ;
-  bool visitSetCommand(SetCommand &cmd) /* throw(PvapException) */ ;
-  BatchResponseComponent* getBatchResponseComponent();
-  const string& getDBLog() const;
-  void clearDBLog();
+    /// full cleanup at the start of processing new profile
+    void resetProfile(Profile *pf);
+    // void flushLogs(Logger* logger);
+
+    bool visitBatchCommand(BatchCommand &cmd) /* throw(PvapException) */ ;
+    bool visitDelCommand(DelCommand &cmd) /* throw(PvapException) */ ;
+    bool visitGetCommand(GetCommand &cmd) /* throw(PvapException) */ ;
+    bool visitIncCommand(IncCommand &cmd) /* throw(PvapException) */ ;
+    bool visitIncModCommand(IncModCommand &cmd) /* throw(PvapException) */ ;
+    bool visitSetCommand(SetCommand &cmd) /* throw(PvapException) */ ;
+    // BatchResponseComponent* getBatchResponseComponent();
+    // const string& getDBLog() const;
+    // void clearDBLog();
 
 private:
-  uint8_t incModProperty(Property& property, uint32_t mod, uint32_t &result);
-  void addBatchComponentDBLog(const string& logmsg);
+    uint8_t incModProperty(Property& property, uint32_t mod, uint32_t &result);
+    // void addBatchComponentDBLog(const string& logmsg);
 
 private:
-  bool rollback_;
-  DBLog dblog_;
-  std::vector<std::string> batchLogs_;
-  Profile* profile_;
-  std::auto_ptr<CommandResponse> response_;
-    ProfileBackup* backup_;
+    smsc::logger::Logger* log_;
+    ProfileBackup*        backup_;
+    bool                  rollback_;
+    // DBLog                 dblog_;
+    // std::vector<std::string> batchLogs_;
+    Profile*              profile_;
+    std::auto_ptr<CommandResponse> response_;
 };
 
 }//pvss
