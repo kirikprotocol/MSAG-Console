@@ -13,27 +13,16 @@
 #include "core/buffers/PageFile.hpp"
 #include "core/buffers/IntHash.hpp"
 
-#include "scag/util/storage/DataBlockBackup.h"
-
-// please uncomment the following line to get the new code
-#define PVSSLOGIC_BHS2 1
-
-#ifdef PVSSLOGIC_BHS2
+#include "scag/util/storage/DataBlockBackup2.h"
 
 #include "scag/util/storage/BlocksHSStorage2.h"
-#include "scag/util/storage/BHDiskStorage2.h"
-
-#else
-
-#include "scag/util/storage/BlocksHSStorage3.h"
-#include "scag/util/storage/BHDiskStorage.h"
-
-#endif
+#include "scag/util/storage/BHDiskStorage3.h"
 
 #include "scag/util/storage/RBTreeIndexStorage.h"
 #include "scag/util/storage/DiskHashIndexStorage.h"
 #include "scag/util/storage/ArrayedMemoryCache.h"
-#include "scag/util/storage/StorageIface.h"
+
+// #include "scag/util/storage/StorageIface.h"
 #include "scag/util/storage/IndexedStorage2.h"
 #include "scag/util/storage/PageFileDiskStorage2.h"
 #include "scag/util/storage/CachedDelayedDiskStorage.h"
@@ -237,18 +226,81 @@ protected:
 
 private:
     
-    //typedef HashedMemoryCache< AbntAddr, Profile, DataBlockBackupTypeJuggling > MemStorage;
-    // typedef ArrayedMemoryCache< AbntAddr, Profile, DataBlockBackupTypeJuggling > MemStorage;
-    // typedef BHDiskStorage< AbntAddr, Profile > DiskDataStorage;
-    typedef ArrayedMemoryCache< AbntAddr, Profile, DataBlockBackupTypeJuggling2 > MemStorage;
-#ifdef PVSSLOGIC_BHS2
-    typedef BHDiskStorage2< AbntAddr, Profile, BlocksHSStorage2 > DiskDataStorage;
-#else
-    typedef BHDiskStorage< AbntAddr, Profile, BlocksHSStorage3<AbntAddr,Profile> > DiskDataStorage;
-#endif
+    template < class MemStorage, class DiskStorage > struct ProfileSerializer
+    {
+    public:
+        typedef typename MemStorage::key_type     key_type;
+        typedef typename MemStorage::stored_type  stored_type;
+        typedef typename DiskStorage::buffer_type buffer_type;
+
+        ProfileSerializer( DiskStorage* disk,
+                           GlossaryBase* glossary = 0 ) :
+        disk_(disk), glossary_(glossary), newbuf_(0), ownbuf_(0) {
+            if (!disk) throw smsc::util::Exception("disk storage should be provided");
+        }
+
+        ~ProfileSerializer() {
+            if (newbuf_) delete newbuf_;
+        }
+
+        /// --- reading
+
+        /// making a new buffer
+        buffer_type* getFreeBuffer( bool create = false ) {
+            if (!newbuf_ && create) { newbuf_ = new buffer_type; }
+            return newbuf_; 
+        }
+
+        buffer_type* getOwnedBuffer() {
+            return ownbuf_;
+        }
+
+        /// deserialization && attaching the buffer
+        bool deserialize( const key_type& k, stored_type& val ) {
+            assert(newbuf_ && val.value );
+            util::io::Deserializer dsr(*newbuf_,glossary_);
+            dsr.setVersion(disk_->version());
+            disk_->unpackBuffer(*newbuf_,&hdrbuf_);
+            key_type key;
+            dsr.setrpos(disk_->offset());
+            dsr >> key;
+            dsr >> *val.value;
+            disk_->packBuffer(*newbuf_,&hdrbuf_);
+            std::swap(val.backup,newbuf_);
+            ownbuf_ = val.backup;
+            return true;
+        }
+
+        /// --- writing
+        void serialize( const key_type& k, stored_type& val ) {
+            assert( val.value );
+            if (!newbuf_) { newbuf_ = new buffer_type; }
+            util::io::Serializer ser(*newbuf_,glossary_);
+            ser.setVersion(disk_->version());
+            ser.reset();
+            ser.setwpos(disk_->offset());
+            ser << k;
+            ser << *val.value;
+            disk_->packBuffer(*newbuf_);
+            std::swap(val.backup,newbuf_);
+            ownbuf_ = val.backup;
+        }
+
+    private:
+        DiskStorage*  disk_;     // not owned
+        GlossaryBase* glossary_; // not owned
+        buffer_type*  newbuf_;   // owned
+        buffer_type*  ownbuf_;   // not owned (owned by other stored_type instance)
+        buffer_type   hdrbuf_;
+    };
+
+    typedef BHDiskStorage3 DiskDataStorage;
     typedef RBTreeIndexStorage< AbntAddr, DiskDataStorage::index_type > DiskIndexStorage;
-    typedef IndexedStorage< DiskIndexStorage, DiskDataStorage > DiskStorage;
-    typedef CachedDiskStorage< MemStorage, DiskStorage, ProfileHeapAllocator<AbntAddr> > AbonentStorage;
+    typedef ArrayedMemoryCache< AbntAddr, Profile, DataBlockBackupTypeJuggling2 > MemStorage;
+
+    typedef IndexedStorage2< DiskIndexStorage, DiskDataStorage > DiskStorage;
+    typedef ProfileSerializer< MemStorage, DiskStorage > DataSerializer;
+    typedef CachedDelayedDiskStorage< MemStorage, DiskStorage, DataSerializer, ProfileHeapAllocator<MemStorage::key_type> > AbonentStorage;
 
     struct ElementStorage {
         ElementStorage(unsigned idx):glossary(0), storage(0), index(idx) {}
@@ -325,6 +377,9 @@ struct AbonentStorageConfig {
   unsigned blockSize;
   unsigned cacheSize;
   bool     checkAtStart;
+    unsigned minDirtyTime;
+    unsigned maxDirtyTime;
+    unsigned maxDirtyCount;
   struct Location {
     Location(const string& locpath, unsigned locdisk):path(locpath), disk(locdisk) {};
     string path;

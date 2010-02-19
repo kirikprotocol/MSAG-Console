@@ -20,7 +20,6 @@
 namespace scag2 {
 namespace pvss  {
 
-
 bool ProfileCommandProcessor::applyCommonLogic( const std::string& profkey,
                                                 ProfileRequest&    profileRequest,
                                                 Profile*           pf,
@@ -46,18 +45,21 @@ bool ProfileCommandProcessor::applyCommonLogic( const std::string& profkey,
         return false;
     }
 
+    bool ret;
     if (rollback_) {
         smsc_log_debug(log_, "%p: %p rollback profile %s changes", this, &profileRequest, profkey.c_str());
         backup_->rollback(*profile_);
-        return false;
+        profile_->setChanged(false);
+        ret = false;
+    } else {
+        backup_->flushLogs(*profile_);
+        if (pf->isChanged()) {
+            smsc_log_debug(log_,"profile %s needs flush",profkey.c_str());
+        }
+        ret = true;
     }
-
-    backup_->flushLogs(*profile_);
     smsc_log_debug(log_,"FIXME(post): prof=%s",pf->toString().c_str());
-    if (pf->isChanged()) {
-        smsc_log_debug(log_,"profile %s needs flush",profkey.c_str());
-    }
-    return true;
+    return ret;
     
 }
 
@@ -83,7 +85,6 @@ void ProfileCommandProcessor::resetProfile(Profile *pf)
     if (pf) { pf->setChanged(false); }
     response_.reset(0);
 }
-
 
 
 bool ProfileCommandProcessor::visitBatchCommand(BatchCommand &cmd) /* throw(PvapException) */  {

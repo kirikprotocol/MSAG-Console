@@ -157,16 +157,16 @@ void AbonentLogic::dumpStorage( int i )
         AbonentStorage* storage = elementStorages_.Get(i)->storage;
         AbntAddr key;
         Profile profile;
-        typedef DiskStorage::value_type value_type;
-        value_type value( &profile, new value_type::backup_type );
-        for ( DiskStorage::iterator_type iter = storage->dataBegin();
-              iter.next( key, value ); ) 
+        MemStorage::stored_type stored;
+        stored.value = &profile;
+        DataSerializer& ser = storage->serializer();
+        for ( DiskStorage::iterator_type iter = storage->diskStorage().begin();
+              iter.next( key, *ser.getFreeBuffer(true) ); )
         {
-            smsc_log_debug(logger_,"key: %s, val:%p", key.toString().c_str(), value.value );
+            if ( !ser.deserialize(key,stored) ) continue;
+            smsc_log_debug(logger_,"key: %s, val:%p", key.toString().c_str(), stored.value );
             // dumping
-            if ( value.value ) {
-                smsc_log_info(logger_,"%s: %s",key.toString().c_str(),value.value->toString().c_str());
-            }
+            smsc_log_info(logger_,"%s: %s",key.toString().c_str(),stored.value->toString().c_str());
         }
         // value.dealloc();
     }
@@ -252,16 +252,18 @@ unsigned long AbonentLogic::initElementStorage( unsigned index,
   initGlossary(path, *elStorage->glossary);
 
     const std::string pathSuffixString(pathSuffix);
-  std::auto_ptr< DiskIndexStorage > dis
-        (new DiskIndexStorage( config_.dbName, path, config_.indexGrowth, false,
+    std::auto_ptr< DiskIndexStorage > dis
+        (new DiskIndexStorage( config_.dbName,
+                               path,
+                               config_.indexGrowth,
+                               false,
                                smsc::logger::Logger::getInstance(("pvssix."+pathSuffixString).c_str())));
-  smsc_log_debug(logger_, "data index storage %d is created", index);
-  if ( checkAtStart ) {
-      dis->checkTree();
-      smsc_log_debug(logger_, "data index storage %d is checked", index);
-  }
+    smsc_log_debug(logger_, "data index storage %d is created", index);
+    if ( checkAtStart ) {
+        dis->checkTree();
+        smsc_log_debug(logger_, "data index storage %d is checked", index);
+    }
 
-#ifdef PVSSLOGIC_BHS2
     std::auto_ptr< DiskDataStorage::storage_type > bs
         ( new DiskDataStorage::storage_type
           ( dataFileManager_,
@@ -283,48 +285,26 @@ unsigned long AbonentLogic::initElementStorage( unsigned index,
     std::auto_ptr< DiskDataStorage > dds
         ( new DiskDataStorage
           ( bs.release(),
-            elStorage->glossary,
             smsc::logger::Logger::getInstance(("pvssdd."+pathSuffixString).c_str())));
+    smsc_log_debug(logger_, "data disk storage %d is created", index);
 
-#else
+    std::auto_ptr< DiskStorage > ds(new DiskStorage(dis.release(), dds.release()));
+    smsc_log_debug(logger_, "disk storage is assembled");
 
-  if ( readonly ) {
-      throw smsc::util::Exception("readonly mode is not supported for old storage");
-  }
+    std::auto_ptr< MemStorage > ms(new MemStorage(Logger::getInstance(("pvssmc."+pathSuffixString).c_str()), config_.cacheSize));
+    smsc_log_debug(logger_, "memory storage is created");
 
-  std::auto_ptr< DiskDataStorage::storage_type > bs
-        (new DiskDataStorage::storage_type
-         (dataFileManager_, elStorage->glossary,
-          smsc::logger::Logger::getInstance(("pvssbh."+pathSuffixString).c_str())));
-  int ret = -1;
-  const string fn(config_.dbName + "-data");
+    std::auto_ptr<DataSerializer> ps(new DataSerializer(ds.get(),elStorage->glossary));
+    elStorage->storage = new AbonentStorage(ms.release(),
+                                            ds.release(),
+                                            ps.release(),
+                                            smsc::logger::Logger::getInstance
+                                            (("pvssst."+pathSuffixString).c_str()));
+    elStorage->storage->init( config_.minDirtyTime,
+                              config_.maxDirtyTime,
+                              config_.maxDirtyCount );
+    elStorage->storage->setProfileBackup(profileBackup_);
 
-  ret = bs->Open(fn, path);
-
-  if (ret == BlocksHSStorage< AbntAddr, Profile >::DESCR_FILE_OPEN_FAILED) {
-    if (bs->Create(fn, path, config_.fileSize, config_.blockSize) < 0) {
-      throw Exception("can't create data disk storage: %s", path.c_str());
-    }
-    ret = 0;
-  }
-  if (ret < 0) {
-    throw Exception("can't open data disk storage: %s", path.c_str());
-  }
-  std::auto_ptr< DiskDataStorage > dds
-        (new DiskDataStorage(bs.release(),
-                             smsc::logger::Logger::getInstance(("pvssdd."+pathSuffixString).c_str())));
-#endif
-
-  smsc_log_debug(logger_, "data disk storage %d is created", index);
-
-  std::auto_ptr< DiskStorage > ds(new DiskStorage(dis.release(), dds.release()));
-  smsc_log_debug(logger_, "disk storage is assembled");
-
-  std::auto_ptr< MemStorage > ms(new MemStorage(Logger::getInstance(("pvssmc."+pathSuffixString).c_str()), config_.cacheSize));
-  smsc_log_debug(logger_, "memory storage is created");
-
-  elStorage->storage = new AbonentStorage(ms.release(), ds.release());
-  elStorage->storage->setProfileBackup(profileBackup_);
   unsigned long filledNodes = elStorage->storage->filledDataSize();
   elementStorages_.Insert(index, elStorage.release());
   smsc_log_debug(logger_, "abonent storage is assembled");
@@ -347,7 +327,7 @@ public:
         dstore_.unpackBuffer(buffer,0);
         Deserializer dsr(buffer);
         dsr.setVersion(dstore_.version());
-        dsr.setrpos(dstore_.headerSize());
+        dsr.setrpos(dstore_.offset());
         AbntAddr key;
         dsr >> key;
         istore_.setIndex( key, idx );
@@ -371,26 +351,10 @@ unsigned long AbonentLogic::rebuildElementStorage( unsigned index, unsigned maxS
 
     const std::string pathSuffixString(pathSuffix);
 
-#ifdef PVSSLOGIC_BHS2
     std::auto_ptr< DiskDataStorage::storage_type > bs
         (new DiskDataStorage::storage_type
          (dataFileManager_,
           smsc::logger::Logger::getInstance(("pvssbh."+pathSuffixString).c_str())));
-#else
-    // do we need glossary here ?
-    // I (db) think 'no', as we don't unpack datablocks
-    std::auto_ptr< DiskDataStorage::storage_type > bs
-        (new DiskDataStorage::storage_type
-         (dataFileManager_,
-          0, // elStorage->glossary,
-          smsc::logger::Logger::getInstance(("pvssbh."+pathSuffixString).c_str())));
-
-    const string fn(config_.dbName + "-data");
-    int ret = bs->Open(fn, path);
-    if (ret < 0 && ret != DiskDataStorage::storage_type::FIRST_FREE_BLOCK_FAILED ) {
-        throw Exception("can't open data disk storage: %s", path.c_str());
-    }
-#endif
     // we have opened data storage
 
     /// making sure that temporary index file is not here
@@ -412,24 +376,14 @@ unsigned long AbonentLogic::rebuildElementStorage( unsigned index, unsigned maxS
     smsc_log_debug(logger_, "temporary data index storage %u is created", index);
 
     // rebuilding index
-#ifdef PVSSLOGIC_BHS2
-    DiskDataStorage dds(bs.release(),
-                        0, // glossary
-                        0 ); // logger
+    DiskDataStorage dds(bs.release());
     DiskDataStorage::IndexRescuer< DiskIndexStorage > indexRescuer(*dis.get(),dds);
     const string fn(config_.dbName + "-data");
     int ret = indexRescuer.recover(fn, path);
     if ( ret < 0 ) {
         throw Exception("can't recover data disk storage: %s", path.c_str());
     }
-#else
-    for ( DiskDataStorage::storage_type::Iterator iter = bs->beginWithRecovery(); iter.next(); ) {
-        smsc_log_debug( logger_, "rebuilding: key=%s, idx=%lx",
-                        iter.key().toString().c_str(),
-                        long(iter.blockIndex()) );
-        dis->setIndex(iter.key(),iter.blockIndex());
-    }
-#endif
+
     const size_t rebuilt = dis->flush(maxSpeed);
     smsc_log_info( logger_, "storage %s indices rebuilt: %u", path.c_str(), unsigned(rebuilt) );
 
@@ -457,13 +411,18 @@ CommandResponse* AbonentLogic::processProfileRequest(ProfileRequest& profileRequ
   }
   ElementStorage* elstorage = *elstoragePtr;
 
+
+
     const bool createProfile = profileRequest.getCommand()->visit(createProfileVisitor);
     Profile* pf = elstorage->storage->get(profileKey.getAddress(), createProfile);
     if ( commandProcessor_.applyCommonLogic(profkey, profileRequest, pf, createProfile )) {
+        MutexGuard mg(elstorage->mutex);
         if ( pf->isChanged() )
         {
-            MutexGuard mg(elstorage->mutex);
-            elstorage->storage->flush(profileKey.getAddress());
+            elstorage->storage->markDirty(profileKey.getAddress());
+            // elstorage->storage->flush(profileKey.getAddress());
+        } else {
+            elstorage->storage->flushDirty();
         }
     }
     pfr = pf;
@@ -552,6 +511,7 @@ public:
     template < class MemStorage, class DiskStorage > struct ProfileSerializer
     {
     public:
+        typedef typename MemStorage::key_type     key_type;
         typedef typename MemStorage::stored_type  stored_type;
         typedef typename DiskStorage::buffer_type buffer_type;
 
@@ -578,7 +538,7 @@ public:
         }
 
         /// deserialization && attaching the buffer
-        bool deserialize( stored_type& val ) {
+        bool deserialize( const key_type& k, stored_type& val ) {
             assert(newbuf_ && val.value );
             util::io::Deserializer dsr(*newbuf_,glossary_);
 // #ifdef ABONENTSTORAGE
@@ -596,7 +556,7 @@ public:
         }
 
         /// --- writing
-        void serialize( stored_type& val ) {
+        void serialize( const key_type& k, stored_type& val ) {
             assert( val.value );
             if (!newbuf_) { newbuf_ = new buffer_type; }
             util::io::Serializer ser(*newbuf_,glossary_);
@@ -822,10 +782,14 @@ AbonentStorageConfig::AbonentStorageConfig() {
   fileSize = DEF_FILE_SIZE;
   cacheSize = DEF_CACHE_SIZE;
   checkAtStart = false;
+    minDirtyTime = 10;
+    maxDirtyTime = 10000;
+    maxDirtyCount = 100;
 }
 
-AbonentStorageConfig::AbonentStorageConfig(ConfigView& cfg, const char* storageType,
-                                            Logger* logger) {
+AbonentStorageConfig::AbonentStorageConfig(ConfigView& cfg,
+                                           const char* storageType,
+                                           Logger* logger) {
   try {
     dbName = ConfString(cfg.getString("storageName")).str();
   } catch (...) {
@@ -871,6 +835,27 @@ AbonentStorageConfig::AbonentStorageConfig(ConfigView& cfg, const char* storageT
                   storageType, checkAtStart);
   }
      */
+    try {
+        minDirtyTime = cfg.getInt("minDirtyTime");
+    } catch (...) {
+        minDirtyTime = 10;
+        smsc_log_warn(logger,"Parameter <Pvss.%s.minDirtyTime> missed. Default value is %u",
+                      storageType,10);
+    }
+    try {
+        maxDirtyTime = cfg.getInt("maxDirtyTime");
+    } catch (...) {
+        maxDirtyTime = 10000;
+        smsc_log_warn(logger,"Parameter <Pvss.%s.maxDirtyTime> missed. Default value is %u",
+                      storageType,10000);
+    }
+    try {
+        maxDirtyCount = cfg.getInt("maxDirtyCount");
+    } catch (...) {
+        maxDirtyCount = 100;
+        smsc_log_warn(logger,"Parameter <Pvss.%s.maxDirtyCount> missed. Default value is %u",
+                      storageType,100);
+    }
 }
 
 InfrastructStorageConfig::InfrastructStorageConfig() {
