@@ -130,6 +130,10 @@ public:
         return index_->filledSize();
     }
 
+    iterator_type begin() {
+        return Iterator(*this);
+    }
+
     bool set( const key_type& k, buffer_type& buf, buffer_type* oldbuf = 0 ) {
         keylogger_.setKey(k);
         index_type i = index_->getIndex(k);
@@ -171,7 +175,10 @@ public:
     inline void unpackBuffer( buffer_type& buf, buffer_type* hdr = 0 ) {
         data_->unpackBuffer(buf,hdr);
     }
-    inline size_t headerSize() const { return data_->headerSize(); }
+    /// an offset to the key+data
+    inline size_t offset() const { return data_->offset(); }
+
+    inline uint32_t version() const { return data_->version(); }
 
 private:
     IStorage*                                       index_;

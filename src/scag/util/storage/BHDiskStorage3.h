@@ -102,7 +102,42 @@ public:
     inline void unpackBuffer( buffer_type& buf, buffer_type* hdr ) {
         store_->unpackBuffer(buf,hdr);
     }
+    inline size_t offset() const { return headerSize() + extraSize(); }
+    inline uint32_t version() const { return store_->version(); }
     inline size_t headerSize() const { return store_->headerSize(); }
+    inline size_t extraSize() const { return 32; }
+
+    // to recover indices
+    // NOTE: that it should not be here.
+    // It should be in serializer.
+    template < class DiskIndexStorage >
+        class IndexRescuer : public storage_type::IndexRescuer
+    {
+    public:
+        IndexRescuer( DiskIndexStorage& istore,
+                      BHDiskStorage3&   dstore ) :
+        istore_(istore), dstore_(dstore) {}
+
+        int recover( const std::string& dbname,
+                     const std::string& dbpath )
+        {
+            return dstore_.store_->recover(dbname,dbpath,this);
+        }
+
+        virtual void recoverIndex( index_type idx, buffer_type& buffer ) {
+            dstore_.unpackBuffer(buffer,0);
+            io::Deserializer dsr(buffer);
+            dsr.setVersion(dstore_.version());
+            dsr.setrpos(dstore_.offset());
+            typename DiskIndexStorage::key_type key;
+            dsr >> key;
+            istore_.setIndex(key,idx);
+        }
+
+    private:
+        DiskIndexStorage& istore_;
+        BHDiskStorage3&   dstore_;
+    };
 
 private:
     storage_type*            store_; // owned

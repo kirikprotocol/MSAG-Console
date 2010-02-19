@@ -43,6 +43,7 @@ private:
     typedef smsc::core::buffers::XHash< key_type, typename DirtyList::iterator, hash_function > DirtyHash;
 
 public:
+
     CachedDelayedDiskStorage( MemStorage* ms,
                               DiskStorage* ds,
                               Serializer* sr,
@@ -59,6 +60,10 @@ public:
         spare_ = cache_->val2store(0);
     }
 
+    /// underlying structure access
+    MemStorage& memoryCache() { return *cache_; }
+    DiskStorage& diskStorage() { return *disk_; }
+    Serializer& serializer() { return *ser_; }
 
     void init( unsigned minDirtyTime,
                unsigned maxDirtyTime,
@@ -347,7 +352,7 @@ private:
             smsc_log_debug(log_,"flushing key=%s ptr=%p",
                            k.toString().c_str(),cache_->store2val(sv));
         }
-        ser_->serialize(cache_->store2ref(sv));
+        ser_->serialize(k,cache_->store2ref(sv));
         return disk_->set(k,*ser_->getOwnedBuffer(),ser_->getFreeBuffer());
     }
 
@@ -368,7 +373,7 @@ private:
         if (!cache_->store2val(spare_)) spare_ = cache_->val2store( alloc(k) );
         if ( disk_->get(k,*ser_->getFreeBuffer(true)) ) {
             stored_type& ref = cache_->store2ref(spare_);
-            if (!ser_->deserialize(ref) && !create ) {
+            if (!ser_->deserialize(k,ref) && !create ) {
                 return cache_->val2store(0);
             }
         } else if (!create) {
