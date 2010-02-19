@@ -71,7 +71,7 @@ void ProfileBackup::expireProperty( const char* profkey, const Property& prop )
 void ProfileBackup::fixTimePolicy( const Property& prop )
 {
     operationList_.push_back( PvssOp(unsigned(fixedPolicies_.size()),PROPFIX) );
-    fixedPolicies_.push_back( PropTime(prop.getName()) );
+    fixedPolicies_.push_back( PropTime(prop) );
     // FIXME: should we log?
 }
 
@@ -123,7 +123,7 @@ void ProfileBackup::rollback( Profile& prof )
             }
             break;
         }
-        case PROPFIX :
+        case PROPFIX : {
             const PropTime& p = fixedPolicies_[i->position];
             Property* ptr = prof.GetProperty(p.name.c_str());
             if (ptr) {
@@ -134,7 +134,10 @@ void ProfileBackup::rollback( Profile& prof )
             }
             break;
         }
-    }
+        default : 
+            break;
+        } // switch
+    } // for
     cleanup();
 }
 
