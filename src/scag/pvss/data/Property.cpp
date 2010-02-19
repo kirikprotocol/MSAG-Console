@@ -321,6 +321,9 @@ void Property::fromString( const std::string& input ) /* throw (exceptions::IOEx
             life_time = lt;
             setTimePolicy(time_policy,final_date,life_time);
         }
+    } else {
+        final_date = 0;
+        life_time = 0;
     }
 }
 
