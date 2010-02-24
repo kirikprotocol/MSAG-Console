@@ -64,7 +64,7 @@ public class UsersAdd extends UsersEditBean {
         prefs.setInfosmeValidityPeriod(tf.parse(infosmeValidityPeriod));
       }catch(ParseException e) {
         logger.error(e,e);
-        return error(SMSCErrors.error.unknown);
+        return error(e.getMessage());
       }
       prefs.setInfosmePriority(infosmePriority);
       prefs.setInfosmeReplaceMessage(infosmeReplaceMessage);
@@ -78,7 +78,7 @@ public class UsersAdd extends UsersEditBean {
         prefs.setInfosmeUssdPush(Boolean.valueOf(infoSmeUssdPush));
       }else {
         prefs.setInfosmeUssdPush(null);
-      }      
+      }
       prefs.setInfosmeSourceAddress(infosmeSourceAddress);
       if (timezone != null)
         prefs.setTimezone(TimeZone.getTimeZone(timezone));

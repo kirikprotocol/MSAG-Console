@@ -254,21 +254,21 @@ public abstract class UsersEditBean extends SmscBean {
   }
 
 
-  protected int infosmePriority = 0;
-  protected String infosmeValidityPeriod = "";
+  protected int infosmePriority = 10;
+  protected String infosmeValidityPeriod = "01:00:00";
   protected boolean infosmeReplaceMessage = false;
   protected String infosmeSvcType = "";
-  protected String infosmeActivePeriodStart = "";
-  protected String infosmeActivePeriodEnd = "";
+  protected String infosmeActivePeriodStart = "10:00:00";
+  protected String infosmeActivePeriodEnd = "20:00:00";
   protected String infosmeSourceAddress = "";
   protected boolean infoSmeUssdPush = false;
-  protected String[] infosmeActiveWeekDays = new String[0];
+  protected String[] infosmeActiveWeekDays = new String[]{"Mon","Tue","Wed","Thu","Fri"};
 
-  protected int infosmeMessagesCacheSize = 0;
-  protected int infosmeMessagesCacheSleep = 0;
+  protected int infosmeMessagesCacheSize = 2000;
+  protected int infosmeMessagesCacheSleep = 10;
   protected boolean infosmeTransactionMode = false;
-  protected int infosmeUncommitedInGeneration = 0;
-  protected int infosmeUncommitedInProcess = 0;
+  protected int infosmeUncommitedInGeneration = 100;
+  protected int infosmeUncommitedInProcess = 100;
   protected boolean infosmeTrackIntegrity = false;
   protected boolean infosmeKeepHistory = false;
 
