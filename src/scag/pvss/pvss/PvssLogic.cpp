@@ -157,6 +157,7 @@ void AbonentLogic::dumpStorage( int i )
         AbonentStorage* storage = elementStorages_.Get(i)->storage;
         AbntAddr key;
         Profile profile;
+        /*
         MemStorage::stored_type stored;
         stored.value = &profile;
         DataSerializer& ser = storage->serializer();
@@ -169,6 +170,18 @@ void AbonentLogic::dumpStorage( int i )
             smsc_log_info(logger_,"%s: %s",key.toString().c_str(),stored.value->toString().c_str());
         }
         // value.dealloc();
+         */
+        typedef DiskStorage::value_type value_type;
+        value_type value( &profile, new value_type::backup_type );
+        for ( DiskStorage::iterator_type iter = storage->dataBegin();
+              iter.next( key, value ); )
+        {
+            smsc_log_debug(logger_,"key: %s, val:%p", key.toString().c_str(), value.value );
+            // dumping
+            if ( value.value ) {
+                smsc_log_info(logger_,"%s: %s",key.toString().c_str(),value.value->toString().c_str());
+            }
+        }
     }
 }
 
@@ -285,6 +298,7 @@ unsigned long AbonentLogic::initElementStorage( unsigned index,
     std::auto_ptr< DiskDataStorage > dds
         ( new DiskDataStorage
           ( bs.release(),
+            elStorage->glossary,
             smsc::logger::Logger::getInstance(("pvssdd."+pathSuffixString).c_str())));
     smsc_log_debug(logger_, "data disk storage %d is created", index);
 
@@ -294,15 +308,15 @@ unsigned long AbonentLogic::initElementStorage( unsigned index,
     std::auto_ptr< MemStorage > ms(new MemStorage(Logger::getInstance(("pvssmc."+pathSuffixString).c_str()), config_.cacheSize));
     smsc_log_debug(logger_, "memory storage is created");
 
-    std::auto_ptr<DataSerializer> ps(new DataSerializer(ds.get(),elStorage->glossary));
+    // std::auto_ptr<DataSerializer> ps(new DataSerializer(ds.get(),elStorage->glossary));
     elStorage->storage = new AbonentStorage(ms.release(),
                                             ds.release(),
-                                            ps.release(),
+                                            // ps.release(),
                                             smsc::logger::Logger::getInstance
                                             (("pvssst."+pathSuffixString).c_str()));
-    elStorage->storage->init( config_.minDirtyTime,
-                              config_.maxDirtyTime,
-                              config_.maxDirtyCount );
+    // elStorage->storage->init( config_.minDirtyTime,
+    // config_.maxDirtyTime,
+    // config_.maxDirtyCount );
     elStorage->storage->setProfileBackup(profileBackup_);
 
   unsigned long filledNodes = elStorage->storage->filledDataSize();
@@ -376,7 +390,7 @@ unsigned long AbonentLogic::rebuildElementStorage( unsigned index, unsigned maxS
     smsc_log_debug(logger_, "temporary data index storage %u is created", index);
 
     // rebuilding index
-    DiskDataStorage dds(bs.release());
+    DiskDataStorage dds(bs.release(), 0, 0);
     DiskDataStorage::IndexRescuer< DiskIndexStorage > indexRescuer(*dis.get(),dds);
     const string fn(config_.dbName + "-data");
     int ret = indexRescuer.recover(fn, path);
@@ -416,13 +430,12 @@ CommandResponse* AbonentLogic::processProfileRequest(ProfileRequest& profileRequ
     const bool createProfile = profileRequest.getCommand()->visit(createProfileVisitor);
     Profile* pf = elstorage->storage->get(profileKey.getAddress(), createProfile);
     if ( commandProcessor_.applyCommonLogic(profkey, profileRequest, pf, createProfile )) {
-        MutexGuard mg(elstorage->mutex);
-        if ( pf->isChanged() )
-        {
-            elstorage->storage->markDirty(profileKey.getAddress());
-            // elstorage->storage->flush(profileKey.getAddress());
-        } else {
-            elstorage->storage->flushDirty();
+        if ( pf->isChanged() ) {
+            MutexGuard mg(elstorage->mutex);
+            elstorage->storage->flush(profileKey.getAddress());
+            // elstorage->storage->markDirty(profileKey.getAddress());
+        // } else {
+            // elstorage->storage->flushDirty();
         }
     }
     pfr = pf;
@@ -782,9 +795,9 @@ AbonentStorageConfig::AbonentStorageConfig() {
   fileSize = DEF_FILE_SIZE;
   cacheSize = DEF_CACHE_SIZE;
   checkAtStart = false;
-    minDirtyTime = 10;
-    maxDirtyTime = 10000;
-    maxDirtyCount = 100;
+//    minDirtyTime = 10;
+//    maxDirtyTime = 10000;
+//    maxDirtyCount = 100;
 }
 
 AbonentStorageConfig::AbonentStorageConfig(ConfigView& cfg,
@@ -835,6 +848,7 @@ AbonentStorageConfig::AbonentStorageConfig(ConfigView& cfg,
                   storageType, checkAtStart);
   }
      */
+    /*
     try {
         minDirtyTime = cfg.getInt("minDirtyTime");
     } catch (...) {
@@ -856,6 +870,7 @@ AbonentStorageConfig::AbonentStorageConfig(ConfigView& cfg,
         smsc_log_warn(logger,"Parameter <Pvss.%s.maxDirtyCount> missed. Default value is %u",
                       storageType,100);
     }
+     */
 }
 
 InfrastructStorageConfig::InfrastructStorageConfig() {

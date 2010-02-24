@@ -16,13 +16,14 @@
 #include "scag/util/storage/DataBlockBackup2.h"
 
 #include "scag/util/storage/BlocksHSStorage2.h"
-#include "scag/util/storage/BHDiskStorage3.h"
+#include "scag/util/storage/BHDiskStorage2.h"
+// #include "scag/util/storage/BHDiskStorage3.h"
+#include "scag/util/storage/StorageIface.h"
 
 #include "scag/util/storage/RBTreeIndexStorage.h"
 #include "scag/util/storage/DiskHashIndexStorage.h"
 #include "scag/util/storage/ArrayedMemoryCache.h"
 
-// #include "scag/util/storage/StorageIface.h"
 #include "scag/util/storage/IndexedStorage2.h"
 #include "scag/util/storage/PageFileDiskStorage2.h"
 #include "scag/util/storage/CachedDelayedDiskStorage.h"
@@ -143,13 +144,6 @@ protected:
     virtual void init( bool checkAtStart = false ) = 0;
     virtual void rebuildIndex(unsigned maxSpeed = 0) = 0;
 
-    // the method apply the logic common for all types of pvss
-    // @return true if the command is successfully applied.
-    // FIXME: move to commandprocessor
-    // bool applyCommonLogic( const std::string& pkey,
-    // ProfileRequest&    request,
-    // Profile*           profile );
-
     virtual CommandResponse* processProfileRequest(ProfileRequest& request,
                                                    const Profile*& pf ) = 0;
 
@@ -226,6 +220,13 @@ protected:
 
 private:
     
+    typedef ArrayedMemoryCache< AbntAddr, Profile, DataBlockBackupTypeJuggling2 > MemStorage;
+    typedef BHDiskStorage2< AbntAddr, Profile, BlocksHSStorage2 > DiskDataStorage;
+    typedef RBTreeIndexStorage< AbntAddr, DiskDataStorage::index_type > DiskIndexStorage;
+    typedef IndexedStorage< DiskIndexStorage, DiskDataStorage > DiskStorage;
+    typedef CachedDiskStorage< MemStorage, DiskStorage, ProfileHeapAllocator<AbntAddr> > AbonentStorage;
+
+    /*
     template < class MemStorage, class DiskStorage > struct ProfileSerializer
     {
     public:
@@ -301,6 +302,7 @@ private:
     typedef IndexedStorage2< DiskIndexStorage, DiskDataStorage > DiskStorage;
     typedef ProfileSerializer< MemStorage, DiskStorage > DataSerializer;
     typedef CachedDelayedDiskStorage< MemStorage, DiskStorage, DataSerializer, ProfileHeapAllocator<MemStorage::key_type> > AbonentStorage;
+     */
 
     struct ElementStorage {
         ElementStorage(unsigned idx):glossary(0), storage(0), index(idx) {}
@@ -377,9 +379,9 @@ struct AbonentStorageConfig {
   unsigned blockSize;
   unsigned cacheSize;
   bool     checkAtStart;
-    unsigned minDirtyTime;
-    unsigned maxDirtyTime;
-    unsigned maxDirtyCount;
+    // unsigned minDirtyTime;
+    // unsigned maxDirtyTime;
+    // unsigned maxDirtyCount;
   struct Location {
     Location(const string& locpath, unsigned locdisk):path(locpath), disk(locdisk) {};
     string path;
