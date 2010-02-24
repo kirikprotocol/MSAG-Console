@@ -108,15 +108,15 @@ public:
       grrRecordNotReady
     };
 
-    bool Open(bool cancreate=false,bool readFinal=true);
+    bool Open(bool cancreate=false,bool readFinal=false);
     void Close(bool processed=true);
     GetRecordResult getNextRecord(Record& rec,time_t date,bool onlyNew=true);
     void ReadRecord(Record& rec);
     static void ReadRecord(buf::File& f,Record& rec);
-    Record& findRecord(uint64_t msgId);
+    MessageMap::iterator findRecord(uint64_t msgId,bool loadFromDisk=false);
     uint64_t AppendRecord(uint8_t state,time_t date,const Message& message);
-    Record& setState(uint64_t msgId,uint8_t state);
-    Record& setStateAndDate(uint64_t msgId,uint8_t state,time_t date);
+    void setState(uint64_t msgId,uint8_t state, Message* msg = 0);
+    void setStateAndDate(uint64_t msgId,uint8_t state,time_t date, Message* msg = 0);
     // uint8_t getState(uint64_t msgId);
   };
 

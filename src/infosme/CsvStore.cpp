@@ -22,6 +22,11 @@ inline int tm2xdate( const struct tm& t )
     return (((year << 8) | mon) << 8) | day;
 }
 
+inline smsc::core::buffers::File::offset_type getOffset( uint64_t msgId )
+{
+    return smsc::core::buffers::File::offset_type(msgId & 0xffffffffull);
+}
+
 }
 
 
@@ -337,7 +342,8 @@ void CsvStore::setMsgState(uint64_t msgId, uint8_t state, Message* msg)
   {
     file.Open();
   }
-  CsvFile::Record& rec = file.setState(msgId,state);
+  file.setState(msgId,state,msg);
+  /*
   if ( msg ) {
       msg->id = rec.msg.id;
       msg->date = rec.msg.date;
@@ -346,6 +352,7 @@ void CsvStore::setMsgState(uint64_t msgId, uint8_t state, Message* msg)
       msg->regionId = rec.msg.regionId;
       msg->userData = rec.msg.userData;
   }
+   */
   //all records are read and all messages are in final state
   //file can be closed
   if(file.readAll && file.openMessages==0)
@@ -371,7 +378,7 @@ void CsvStore::loadMessage(uint64_t msgId, Message &message, uint8_t &state)
     file.f.Close();
     return;
   }
-  CsvFile::Record& rec=file.findRecord(msgId);
+  CsvFile::Record& rec = file.findRecord(msgId,true)->second->second;
   state=rec.state;
   message=rec.msg;
 }
@@ -459,15 +466,7 @@ void CsvStore::finalizeMsg(uint64_t msgId, time_t fdate, uint8_t state, Message*
   {
     file.Open();
   }
-  CsvFile::Record& rec = file.setStateAndDate(msgId,state,fdate);
-  if ( msg ) {
-      msg->id = rec.msg.id;
-      msg->date = rec.msg.date;
-      msg->abonent = rec.msg.abonent;
-      msg->message = rec.msg.message;
-      msg->regionId = rec.msg.regionId;
-      msg->userData = rec.msg.userData;
-  }
+  file.setStateAndDate(msgId,state,fdate,msg);
   if(file.readAll && file.openMessages==0)
   {
     canClose(file);
@@ -552,14 +551,35 @@ void CsvStore::CsvFile::Close(bool argProcessed)
   openMessages = 0;
 }
 
-CsvStore::CsvFile::Record& CsvStore::CsvFile::findRecord(uint64_t msgId)
+CsvStore::CsvFile::MessageMap::iterator CsvStore::CsvFile::findRecord(uint64_t msgId,bool loadFromDisk)
 {
   MessageMap::iterator it=msgMap.find(msgId);
   if(it==msgMap.end())
   {
+      // NOTE: it the message is not found in the map of the opened file
+      // it means that the state is final...
+      if (loadFromDisk) {
+          const buf::File::offset_type off = ::getOffset(msgId);
+          if ( off < f.Size() ) {
+              const buf::File::offset_type curpos = f.Pos();
+              try {
+                  // ... so we don't need to update the openMessages and readAll fields.
+                  f.Seek(off);
+                  CsvFile::Record rec;
+                  ReadRecord(rec);
+                  TimeMap::iterator j = timeMap.insert(TimeMap::value_type(rec.msg.date,rec));
+                  it = msgMap.insert(MessageMap::value_type(rec.msg.id,j)).first;
+              } catch (...) {
+                  f.Seek(curpos);
+                  throw smsc::util::Exception("Cannot load msg #%llx from %s",msgId,fullPath().c_str());
+              }
+              f.Seek(curpos);
+          }
+      }
+
     throw smsc::util::Exception("Message #%llx not found in %s",msgId,fullPath().c_str());
   }
-  return it->second->second;
+  return it;
 }
 
 
@@ -668,9 +688,10 @@ void CsvStore::CsvFile::ReadRecord(buf::File &f, CsvStore::CsvFile::Record& rec)
 }
 
 
-CsvStore::CsvFile::Record& CsvStore::CsvFile::setState(uint64_t msgId, uint8_t state)
+void CsvStore::CsvFile::setState(uint64_t msgId, uint8_t state, Message* msg)
 {
-  Record& rec=findRecord(msgId);
+  MessageMap::iterator it = findRecord(msgId);
+  Record& rec = it->second->second;
   if(rec.state<=ENROUTE && state>ENROUTE)
   {
     openMessages--;
@@ -683,7 +704,18 @@ CsvStore::CsvFile::Record& CsvStore::CsvFile::setState(uint64_t msgId, uint8_t s
   f.Seek(off);
   f.WriteByte(state+'0');
   f.Flush();
-  return rec;
+  if ( msg ) {
+      msg->id = rec.msg.id;
+      msg->date = rec.msg.date;
+      msg->abonent = rec.msg.abonent;
+      msg->message = rec.msg.message;
+      msg->regionId = rec.msg.regionId;
+      msg->userData = rec.msg.userData;
+  }
+  if ( state > ENROUTE ) {
+      timeMap.erase(it->second);
+      msgMap.erase(it);
+  }
 }
 
 static std::string escapeMessage(const char* msg)
@@ -778,9 +810,10 @@ uint8_t CsvStore::CsvFile::getState(uint64_t msgId)
 }
  */
 
-CsvStore::CsvFile::Record& CsvStore::CsvFile::setStateAndDate(uint64_t msgId,uint8_t state, time_t fdate)
+void CsvStore::CsvFile::setStateAndDate(uint64_t msgId,uint8_t state, time_t fdate, Message* msg)
 {
-  Record& rec=findRecord(msgId);
+  MessageMap::iterator it = findRecord(msgId);
+  Record& rec = it->second->second;
   uint8_t oldState=rec.state;
   rec.state=state;
   int rdate,rhour;
@@ -799,8 +832,23 @@ CsvStore::CsvFile::Record& CsvStore::CsvFile::setStateAndDate(uint64_t msgId,uin
   {
     openMessages--;
   }
-  return rec;
+  if ( msg ) {
+      msg->id = rec.msg.id;
+      msg->date = rec.msg.date;
+      msg->abonent = rec.msg.abonent;
+      msg->message = rec.msg.message;
+      msg->regionId = rec.msg.regionId;
+      msg->userData = rec.msg.userData;
+  }
+  if ( state > ENROUTE ) {
+      timeMap.erase(it->second);
+      msgMap.erase(it);
+  }
 }
+
+
+// ====== full scan
+
 
 bool CsvStore::FullScan::Next(uint8_t &state, Message &msg)
 {
@@ -826,7 +874,7 @@ bool CsvStore::FullScan::Next(uint8_t &state, Message &msg)
       f.date=fit->second->date;
       f.dir=fit->second->dir;
       f.processed=fit->second->processed;
-      f.Open();
+      f.Open(false,true);
     }
     CsvStore::CsvFile::Record rec;
     CsvStore::CsvFile::GetRecordResult res=f.getNextRecord(rec,0,false);
