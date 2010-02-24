@@ -1,6 +1,9 @@
 History in reverse order
 ----------------------------------------------------
 
+2010-02-24 16:50 bukind
+ feature: processed final messages are purged from memory
+
 2010-02-15 14:30 bukind
  bugfix: processed csv files were being opened in CsvStore::getNextMessage()
 2010-02-15 14:00 bukind
