@@ -1,8 +1,12 @@
 History in reverse order
 ----------------------------------------------------
 
+2010-02-15 14:30 bukind
+ bugfix: processed csv files were being opened in CsvStore::getNextMessage()
+2010-02-15 14:00 bukind
+ bugfix: statistics manager was not properly stopped in taskproc dtor
 2010-02-15 11:35 bukind
- bugfix: memleak when reading ConfigView
+ bugfix: memleak when reading ConfigView fixed
 
 ----------------------------------------------------
 infosme-build-20100208 12:40 bukind
