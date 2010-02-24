@@ -474,7 +474,9 @@ void CsvStore::finalizeMsg(uint64_t msgId, time_t fdate, uint8_t state, Message*
   }
 }
 
-bool CsvStore::CsvFile::Open(bool cancreate)
+/// ======================= File
+
+bool CsvStore::CsvFile::Open(bool cancreate, bool readFinal)
 {
   if(isOpened())
   {
@@ -490,6 +492,7 @@ bool CsvStore::CsvFile::Open(bool cancreate)
     f.ReadLine(ln);//skip header
     bool haveNonFinal=false;
     Record rec;
+    unsigned totalMsgs = 0;
     while(f.Pos()<fileSize)
     {
       ReadRecord(rec);
@@ -497,18 +500,22 @@ bool CsvStore::CsvFile::Open(bool cancreate)
       {
         continue;
       }
-      TimeMap::iterator it=timeMap.insert(TimeMap::value_type(rec.msg.date,rec));
-      msgMap.insert(MessageMap::value_type(rec.msg.id,it));
+      ++totalMsgs;
       if(rec.state<DELIVERED)//calculate number of messages in non-final state
       {
         openMessages++;
         haveNonFinal=true;
+      } else if ( !readFinal ) {
+          // final msg skipped
+          continue;
       }
+      TimeMap::iterator it=timeMap.insert(TimeMap::value_type(rec.msg.date,rec));
+      msgMap.insert(MessageMap::value_type(rec.msg.id,it));
     }
     readAll=!haveNonFinal;
     curMsg=timeMap.begin();
-    smsc_log_debug(log_,"file has been read, openMessages=%u, total=%u",
-                   unsigned(openMessages), unsigned(msgMap.size()) );
+    smsc_log_debug(log_,"file has been read, openMessages=%u, total=%u, in map=%u",
+                   unsigned(openMessages), totalMsgs, unsigned(msgMap.size()));
   }else
   {
     if(!cancreate)
@@ -757,6 +764,7 @@ uint64_t CsvStore::CsvFile::AppendRecord(uint8_t state,time_t fdate,const Messag
   return msgId;
 }
 
+/*
 uint8_t CsvStore::CsvFile::getState(uint64_t msgId)
 {
   try {
@@ -768,6 +776,7 @@ uint8_t CsvStore::CsvFile::getState(uint64_t msgId)
   }
   return MESSAGE_DELETED_STATE;
 }
+ */
 
 CsvStore::CsvFile::Record& CsvStore::CsvFile::setStateAndDate(uint64_t msgId,uint8_t state, time_t fdate)
 {

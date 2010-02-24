@@ -108,7 +108,7 @@ public:
       grrRecordNotReady
     };
 
-    bool Open(bool cancreate=false);
+    bool Open(bool cancreate=false,bool readFinal=true);
     void Close(bool processed=true);
     GetRecordResult getNextRecord(Record& rec,time_t date,bool onlyNew=true);
     void ReadRecord(Record& rec);
@@ -117,7 +117,7 @@ public:
     uint64_t AppendRecord(uint8_t state,time_t date,const Message& message);
     Record& setState(uint64_t msgId,uint8_t state);
     Record& setStateAndDate(uint64_t msgId,uint8_t state,time_t date);
-    uint8_t getState(uint64_t msgId);
+    // uint8_t getState(uint64_t msgId);
   };
 
   typedef std::map<int,CsvFile*> FileMap;
