@@ -512,7 +512,8 @@ void StateMachine::processSmResp( std::auto_ptr<SmppCommand> aucmd,
 
             if ( dir == dsdSc2Srv && orgCmd->flagSet(SmppCommandFlags::NOTIFICATION_RECEIPT) ) {
                 // for delivery only
-                smsc_log_debug(log_, "MSAG Receipt: Got responce, expired (srcuid='%d', seq='%d')", srcUid, cmd->get_dialogId());
+                smsc_log_debug(log_, "MSAG Receipt: Got responce, expired sid='%s', seq='%d'",
+                               src ? src->getSystemId() : "NULL", cmd->get_dialogId());
                 return;
             }
 
