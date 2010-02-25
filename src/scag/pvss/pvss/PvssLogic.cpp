@@ -429,6 +429,8 @@ CommandResponse* AbonentLogic::processProfileRequest(ProfileRequest& profileRequ
 
     const bool createProfile = profileRequest.getCommand()->visit(createProfileVisitor);
     Profile* pf = elstorage->storage->get(profileKey.getAddress(), createProfile);
+    /// FIXME: temporary
+    if (pf) pf->setKey( profkey );
     if ( commandProcessor_.applyCommonLogic(profkey, profileRequest, pf, createProfile )) {
         if ( pf->isChanged() ) {
             MutexGuard mg(elstorage->mutex);

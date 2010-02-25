@@ -26,6 +26,7 @@ bool ProfileCommandProcessor::applyCommonLogic( const std::string& profkey,
                                                 bool               createProfile )
 {
     if (pf) {
+        if (profileRequest.hasTiming()) { profileRequest.timingMark("pfgot"); }
         smsc_log_debug(log_,"FIXME(pre): prof=%s",pf->toString().c_str());
         if ( pf->getKey() != profkey ) {
             smsc_log_warn(log_,"key mismatch: pf=%p pf.key=%s req.key=%s",
@@ -51,12 +52,14 @@ bool ProfileCommandProcessor::applyCommonLogic( const std::string& profkey,
         backup_->rollback(*profile_);
         profile_->setChanged(false);
         ret = false;
+        if (profileRequest.hasTiming()) { profileRequest.timingMark("rollback"); }
     } else {
         backup_->flushLogs(*profile_);
         if (pf->isChanged()) {
             smsc_log_debug(log_,"profile %s needs flush",profkey.c_str());
         }
         ret = true;
+        if (profileRequest.hasTiming()) { profileRequest.timingMark("proc_ok"); }
     }
     smsc_log_debug(log_,"FIXME(post): prof=%s",pf->toString().c_str());
     return ret;

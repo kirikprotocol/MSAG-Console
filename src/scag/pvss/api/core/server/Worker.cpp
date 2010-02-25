@@ -68,7 +68,7 @@ int Worker::doExecute()
                     context->getRequest()->timingMark("inQueue");
                     Response* resp = logic_.process(*context->getRequest().get());
                     if ( context->getRequest()->hasTiming() ) {
-                        context->getRequest()->timingMark("process");
+                        context->getRequest()->timingMark("respgot");
                         if (resp) {
                             resp->startTiming(*context->getRequest().get());
                         }
