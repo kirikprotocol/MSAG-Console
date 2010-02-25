@@ -146,7 +146,7 @@ public:
     capacity(l.size), size(l.size), list(0) {
         if (size>0) {
             list = new ActionLimit[size];
-            memcpy(list,l.list,size*sizeof(ActionLimit));
+            std::memcpy(list,l.list,size*sizeof(ActionLimit));
         }
     }
     ActionList& operator = ( const ActionList& l ) {
@@ -158,7 +158,7 @@ public:
             }
             size = l.size;
             if (size>0) {
-                memcpy(list,l.list,size*sizeof(ActionLimit));
+                std::memcpy(list,l.list,size*sizeof(ActionLimit));
             }
         }
         return *this;
@@ -173,7 +173,7 @@ public:
         if ( size >= capacity ) {
             capacity = size + 8;
             ActionLimit* newlist = new ActionLimit[capacity];
-            memcpy(newlist,list,size*sizeof(ActionLimit));
+            std::memcpy(newlist,list,size*sizeof(ActionLimit));
             delete[] list;
             list = newlist;
         }

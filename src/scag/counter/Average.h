@@ -39,7 +39,7 @@ public:
     virtual Average* clone( const std::string& name,
                             counttime_type     disposeTime = 0 ) const
     {
-        return new Average(name,averageTime_/usecFactor,observer_.get(),disposeTime);
+        return new Average(name,unsigned(averageTime_/usecFactor),observer_.get(),disposeTime);
     }
 
     virtual ~Average() {
