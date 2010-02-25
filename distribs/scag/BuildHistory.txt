@@ -517,3 +517,11 @@ TO ALL: Insert log record for all significant changes & fixes here.
   msag: bugfix: there was not expiration time prolongation for (long) ussd operations,
         which leads to the expiration of the operations after 1 minute.
   msag: feature: reading 'expireInterval' (msec) from session part of the config.
+
+=================================================================================================================
+2010-02-25 17:20 bukind msag-build-20100225
+2010-02-25 17:15 bukind
+  msag: bugfix: a check for expired resp generated for msag receipt was hidden by outer check
+        which led to coredump.
+
+--- current fixes ---
