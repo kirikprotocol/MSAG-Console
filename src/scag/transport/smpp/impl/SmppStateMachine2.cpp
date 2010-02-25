@@ -502,16 +502,18 @@ void StateMachine::processSmResp( std::auto_ptr<SmppCommand> aucmd,
                     smsc_log_warn(log_,"%s: Original cmd not found. sid='%s',seq='%d'",
                                   where, src ? src->getSystemId() : "NULL" ,cmd->get_dialogId() );
                     return;
-                } else if ( dir == dsdSc2Srv && orgCmd->flagSet(SmppCommandFlags::NOTIFICATION_RECEIPT) ) {
-                    // for delivery only
-                    smsc_log_debug(log_, "MSAG Receipt: Got responce, expired (srcuid='%d', seq='%d')", srcUid, cmd->get_dialogId());
-                    return;
                 }
                 cmd->get_resp()->setOrgCmd( orgCmd );
             }
             else
             {
                 orgCmd = cmd->get_resp()->getOrgCmd();
+            }
+
+            if ( dir == dsdSc2Srv && orgCmd->flagSet(SmppCommandFlags::NOTIFICATION_RECEIPT) ) {
+                // for delivery only
+                smsc_log_debug(log_, "MSAG Receipt: Got responce, expired (srcuid='%d', seq='%d')", srcUid, cmd->get_dialogId());
+                return;
             }
 
             if(!orgCmd->get_smsCommand().essentialSlicedResponse(cmd->get_status() || cmd->get_resp()->expiredResp))
@@ -534,6 +536,11 @@ void StateMachine::processSmResp( std::auto_ptr<SmppCommand> aucmd,
             sms->setOriginatingAddress(smscmd.orgSrc);
             sms->setDestinationAddress(smscmd.orgDst);
             dst = orgCmd->getEntity();
+            if (!dst) {
+                smsc_log_warn(log_,"orgcmd has no src for resp sid='%s' seq=%u",
+                              src ? src->getSystemId() : "NULL", cmd->get_dialogId() );
+                return;
+            }
             cmd->setDstEntity(dst);
             cmd->set_dialogId( smscmd.get_orgDialogId() );
 
