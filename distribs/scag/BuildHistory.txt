@@ -519,7 +519,7 @@ TO ALL: Insert log record for all significant changes & fixes here.
   msag: feature: reading 'expireInterval' (msec) from session part of the config.
 
 =================================================================================================================
-2010-02-25 17:20 bukind msag-build-20100225
+2010-02-25 18:00 bukind msag-build-20100225
 2010-02-25 17:15 bukind
   msag: bugfix: a check for expired resp generated for msag receipt was hidden by outer check
         which led to coredump.
