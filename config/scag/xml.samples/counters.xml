@@ -17,7 +17,43 @@
             </limits>
         </ca_table>
 
+        <ca_table id="sys.traffic.smpp.smsc" system="true">
+            <limits min="0" max="100">
+                <limit percent="90" severity="CRITICAL"/>
+            </limits>
+        </ca_table>
+
         <ca_table id="sys.smpp.queue.global" system="true">
+            <limits min="0" max="100">
+                <limit percent="10" severity="CRITICAL"/>
+            </limits>
+        </ca_table>
+
+        <ca_table id="sys.smpp.queue.in" system="true">
+            <limits min="0" max="100">
+                <limit percent="10" severity="CRITICAL"/>
+            </limits>
+        </ca_table>
+
+        <ca_table id="sys.smpp.queue.out" system="true">
+            <limits min="0" max="100">
+                <limit percent="10" severity="CRITICAL"/>
+            </limits>
+        </ca_table>
+
+        <ca_table id="sys.sessions.total" system="true">
+            <limits min="0" max="100">
+                <limit percent="10" severity="CRITICAL"/>
+            </limits>
+        </ca_table>
+
+        <ca_table id="sys.sessions.active" system="true">
+            <limits min="0" max="100">
+                <limit percent="10" severity="CRITICAL"/>
+            </limits>
+        </ca_table>
+
+        <ca_table id="sys.sessions.locked" system="true">
             <limits min="0" max="100">
                 <limit percent="10" severity="CRITICAL"/>
             </limits>
