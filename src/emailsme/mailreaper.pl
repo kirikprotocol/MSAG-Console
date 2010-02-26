@@ -80,13 +80,19 @@ while(my $sz=<STDIN>)
         my $part=$e->parts($num);
         if($part->head->get('Content-Type') =~ m'text/plain'i)
         {
-          $$msgref=$part->bodyhandle->as_string;
+	  if($part->bodyhandle)
+	  {
+            $$msgref=$part->bodyhandle->as_string;
+	  }
           $$msgctref='text';
           last;
         }
         if($part->head->get('Content-Type') =~ m'text/html'i)
         {
-          $$msgref=$part->bodyhandle->as_string;
+	  if($part->bodyhandle)
+	  {
+            $$msgref=$part->bodyhandle->as_string;
+	  }
           $$msgctref='html';
         }
         if($part->is_multipart)
@@ -98,7 +104,10 @@ while(my $sz=<STDIN>)
     Check($entity,\$msg,\$msgct);
   }else
   {
-    $msg=$entity->bodyhandle->as_string;
+    if($entity->bodyhandle)
+    {
+      $msg=$entity->bodyhandle->as_string;
+    }
     if($entity->head->get('Content-Type')=~m'text/html'i)
     {
       $msgct='html';
