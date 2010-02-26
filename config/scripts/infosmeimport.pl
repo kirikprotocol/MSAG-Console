@@ -25,7 +25,7 @@ $dir.='/' unless $dir=~m!/$!;
 opendir(D,$dir) || die "Failed to open dir $dir for reading:$!";
 for my $file(readdir(D))
 {
-  next unless $file=~/.csv$/;
+  next unless $file=~/.csv$/i;
   $sck->write("infosme import task $dir$file\n");
   getline($sck,10*60);
 }
