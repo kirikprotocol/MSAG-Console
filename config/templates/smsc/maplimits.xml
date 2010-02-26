@@ -12,6 +12,7 @@
   </section>
   <section name="ussd">
     <param name="no_sri_codes" type="string"><!--50--></param>
+    <param name="cond_sri_codes" type="string"><!--100--></param>
   </section>
   <section name="clevels">
     <section name="level1">
