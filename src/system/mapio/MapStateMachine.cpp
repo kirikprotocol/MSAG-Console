@@ -1896,7 +1896,7 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
       mkIMSIOrMSISDNFromAddress( &destRef, dialog->sms->getDestinationAddress() );
     }
 
-    if(Smsc::getInstance().getNiUssdViaVlr())
+    if(dialog->sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP)==smsc::sms::USSD_USSR_REQ_VLR)
     {
       ET96MAP_SS7_ADDR_T destAddr=dialog->destMscAddr;
       destAddr.ss7Addr[1]=7;

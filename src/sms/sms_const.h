@@ -26,6 +26,8 @@ const int USSD_USSR_REQ_LAST  = 130;
 const int USSD_USSN_REQ_LAST  = 131;
 const int USSD_USSR_CONF_LAST = 146;
 
+const int USSD_USSR_REQ_VLR = 150;
+
 const int BILLING_NONE     = 0;
 const int BILLING_NORMAL   = 1;
 const int BILLING_MT       = 2;
