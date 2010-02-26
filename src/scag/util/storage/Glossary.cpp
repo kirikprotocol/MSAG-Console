@@ -70,7 +70,7 @@ int Glossary::Add(const string& key) {
 }
 
 int Glossary::GetValueByKey(const string& key) {
-  smsc_log_debug(logger, "GetValueByKey %s", key.c_str());
+  // smsc_log_debug(logger, "GetValueByKey %s", key.c_str());
   if (!opened)  {
     smsc_log_debug(logger, "cancel GetValueByKey - Glossary not opened");
     return GLOSSARY_CLOSED;
@@ -80,12 +80,12 @@ int Glossary::GetValueByKey(const string& key) {
     smsc_log_debug(logger, "GetValueByKey. No value for %s", key.c_str());
     return NO_VALUE;
   }
-  smsc_log_debug(logger, "GetValueByKey %s - %d", key.c_str(), *val);
+  // smsc_log_debug(logger, "GetValueByKey %s - %d", key.c_str(), *val);
   return *val;
 }
 
 int Glossary::GetKeyByValue(int value, string& key) {
-  smsc_log_debug(logger, "GetKeyByValue %d", value);
+  // smsc_log_debug(logger, "GetKeyByValue %d", value);
   if (!opened) {
     smsc_log_debug(logger, "cancel GetKeyByValue - Glossary not opened");
     return GLOSSARY_CLOSED;
@@ -95,7 +95,7 @@ int Glossary::GetKeyByValue(int value, string& key) {
     smsc_log_debug(logger, "GetKeyByValue. %d - %s", value, key.c_str());
     return SUCCESS;
   }
-  smsc_log_debug(logger, "GetKeyByValue. No key for %d", value);
+  // smsc_log_debug(logger, "GetKeyByValue. No key for %d", value);
   return NO_KEY;
 }
 
