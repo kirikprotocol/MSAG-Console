@@ -26,7 +26,8 @@ public:
     void randomizeProfileKeys( const std::string& addressFormat,
                                unsigned abonents,
                                unsigned skip = unsigned(-1),
-                               ScopeType stype = SCOPE_ABONENT );
+                               ScopeType stype = SCOPE_ABONENT,
+                               unsigned offset = 0U );
 
     /// add a variable pattern
     void addPropertyPattern( unsigned idx, Property* prop ) /* throw (exceptions::IOException) */ ;

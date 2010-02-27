@@ -90,6 +90,11 @@ void readFlooderConfig( smsc::logger::Logger* logger,
         smsc_log_warn(logger, "Parameter <Flooder.addressesCount> missed. Defaul value is %d", flooderConfig.getAddressesCount());
     }
     try { 
+        flooderConfig.setAddressOffset( fview.getInt("addressOffset") );
+    } catch (...) {
+        smsc_log_warn(logger, "Parameter <Flooder.addressOffset> missed. Defaul value is %d", flooderConfig.getAddressOffset());
+    }
+    try { 
         const unsigned propertiesCount = fview.getInt("properties");
         std::vector< std::string > properties;
         for ( unsigned i = 0; i < propertiesCount; ++i ) {

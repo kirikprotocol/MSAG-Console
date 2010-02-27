@@ -167,8 +167,10 @@ PvssFlooder::PvssFlooder(pvss::PersClient& pc, const FlooderConfig& config, unsi
   }
 
   smsc_log_info(logger_,"shuffling %u addresses", unsigned(config_.getAddressesCount()));
-  generator_.randomizeProfileKeys( config_.getAddressFormat().c_str(), config_.getAddressesCount(), skip,
-                                   config_.getScopeType() );
+  generator_.randomizeProfileKeys( config_.getAddressFormat().c_str(),
+                                   config_.getAddressesCount(), skip,
+                                   config_.getScopeType(),
+                                   config_.getAddressOffset() );
 
 }
 

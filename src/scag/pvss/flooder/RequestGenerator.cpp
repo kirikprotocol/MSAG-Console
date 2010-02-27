@@ -58,7 +58,8 @@ RequestGenerator::~RequestGenerator() {
 void RequestGenerator::randomizeProfileKeys( const std::string& addressFormat,
                                              unsigned abonents,
                                              unsigned skip,
-                                             ScopeType stype )
+                                             ScopeType stype,
+                                             unsigned offset )
 {
     abonents_ = abonents;
     addressFormat_ = addressFormat;
@@ -72,7 +73,7 @@ void RequestGenerator::randomizeProfileKeys( const std::string& addressFormat,
     }
     profileKeys_ = new unsigned[abonents_];
     for ( unsigned i = 0; i < abonents; ++i ) {
-        profileKeys_[i] = i;
+        profileKeys_[i] = i + offset;
     }
     std::random_shuffle( profileKeys_, profileKeys_+abonents, ::myrand );
     if ( skip >= abonents_ ) {

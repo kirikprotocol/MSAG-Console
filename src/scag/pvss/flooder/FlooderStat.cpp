@@ -266,7 +266,8 @@ void FlooderStat::init( unsigned skip ) /* throw (exceptions::IOException) */
     smsc_log_info(log_,"shuffling %u addresses", unsigned(config_.getAddressesCount()));
     generator_.randomizeProfileKeys( config_.getAddressFormat().c_str(),
                                      config_.getAddressesCount(), skip,
-                                     config_.getScopeType() );
+                                     config_.getScopeType(),
+                                     config_.getAddressOffset() );
 }
 
 

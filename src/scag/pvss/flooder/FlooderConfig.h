@@ -14,7 +14,7 @@ class FlooderConfig
 {
 public:
     FlooderConfig() :
-    asyncMode_(false), speed_(10), addressesCount_(100), flooderThreads_(1), commands_("s0g0"),
+    asyncMode_(false), speed_(10), addressesCount_(100), addressOffset_(0), flooderThreads_(1), commands_("s0g0"),
     oneCommandPerAbonent_(false), maxSpeed_(false), scopeType_(SCOPE_ABONENT) {
         patterns_.push_back("\"test0\" INT: 1 TIME_POLICY: FIXED FINAL_DATE: 2009/03/16 09:52:55 LIFE_TIME: 123");
     }
@@ -27,6 +27,8 @@ public:
     // void setGetSetCount( int gsCount ) { getSetCount_ = gsCount; }
     int getAddressesCount() const { return addressesCount_; }
     void setAddressesCount( int ac ) { addressesCount_ = ac; } 
+    int getAddressOffset() const { return addressOffset_; }
+    void setAddressOffset( int off ) { addressOffset_ = off; }
     int getFlooderThreadCount() const { return flooderThreads_; }
     void setFlooderThreadCount( int ftc ) { flooderThreads_ = ftc; }
     bool getOneCommandPerAbonent() const { return oneCommandPerAbonent_; }
@@ -54,6 +56,7 @@ private:
     int     speed_;
     int     getSetCount_;
     int     addressesCount_;
+    int     addressOffset_;
     int     flooderThreads_;
     std::vector< std::string > patterns_;
     std::string                commands_;
