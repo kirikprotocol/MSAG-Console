@@ -252,8 +252,8 @@ protected:
     }
     inline void attachBackup( value_type& val, buffer_type*& newBuf ) const {
         if (log_) {
-            smsc_log_debug(log_,"val @ %p { value=%p, backup=%p } w/ key=%s, buffer %p attached",
-                           &val, val.value, val.backup, key_.toString().c_str(), newBuf );
+            smsc_log_debug(log_,"val @ %p { value=%p, backup=%p } w/ key=%s, buffer %p sz=%u attached",
+                           &val, val.value, val.backup, key_.toString().c_str(), newBuf, newBuf ? unsigned(newBuf->size()) : 0U );
         }
         std::swap(val.backup,newBuf);
     }
