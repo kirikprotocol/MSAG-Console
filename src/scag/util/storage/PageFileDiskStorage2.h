@@ -69,12 +69,13 @@ public:
     }
 
     inline void remove( index_type i, buffer_type* oldbuf = 0 ) {
+        const unsigned del = store_->Delete(i);
         if (log_) {
-            smsc_log_debug(log_,"remove: key=%s index=%llx",
+            smsc_log_debug(log_,"remove: key=%s index=%llx -> pages=%u",
                            keylogger_->toString(),
-                           static_cast<unsigned long long>(i));
+                           static_cast<unsigned long long>(i),
+                           del );
         }
-        store_->Delete(i);
     }
 
 private:
