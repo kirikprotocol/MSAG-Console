@@ -291,11 +291,14 @@ public:
     return firstPage;
   }
 
-  void Delete(File::offset_type pageIdx)
+  /// Delete the entry pages starting from pageIdx.
+  /// @return number of pages actually deleted
+  unsigned Delete(File::offset_type pageIdx)
   {
     FileFlushGuard fg(file);
     bool firstPage=true;
     int status;
+    unsigned delPages = 0;
     do{
       if((pageIdx-headerSize)%pageSize!=0)
       {
@@ -317,9 +320,11 @@ public:
                                             "PageFile::Delete : Invalid page index for Delete operation:%08llx", pageIdx );
       }
       FreePage(pageIdx);
+      ++delPages;
       pageIdx=nxt;
       firstPage=false;
     }while(status!=pageUsedFinal && status!=pageUsedSingle);
+    return delPages;
   }
 
   void Update(File::offset_type pageIdx,const void* data,unsigned size)
