@@ -574,6 +574,7 @@ public:
         void serialize( const key_type& k, stored_type& val ) {
             assert( val.value );
             if (!newbuf_) { newbuf_ = new buffer_type; }
+//          newbuf_->clear();
             util::io::Serializer ser(*newbuf_,glossary_);
 //#ifdef ABONENTSTORAGE
 //            ser.setwpos(disk_->headerSize());
@@ -591,7 +592,7 @@ public:
         GlossaryBase* glossary_; // not owned
         buffer_type*  newbuf_;   // owned
         buffer_type*  ownbuf_;   // not owned (owned by other stored_type instance)
-        buffer_type   hdrbuf_;
+        // buffer_type   hdrbuf_;
     };
 
 private:
