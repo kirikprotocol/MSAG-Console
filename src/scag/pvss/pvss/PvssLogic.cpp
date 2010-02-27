@@ -574,7 +574,7 @@ public:
         void serialize( const key_type& k, stored_type& val ) {
             assert( val.value );
             if (!newbuf_) { newbuf_ = new buffer_type; }
-//          newbuf_->clear();
+            newbuf_->clear();
             util::io::Serializer ser(*newbuf_,glossary_);
 //#ifdef ABONENTSTORAGE
 //            ser.setwpos(disk_->headerSize());
