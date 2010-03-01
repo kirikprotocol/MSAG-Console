@@ -498,24 +498,34 @@ void SmppCommand::changeSliceRefNum( SMS& sms, uint32_t sarmr )
         sms.dropProperty(Tag::SMPP_SHORT_MESSAGE);
         sms.dropProperty(Tag::SMSC_RAW_SHORTMESSAGE);
         // FIXME: find position in udh
+        const unsigned char* udhend = udh + uhdl;
         uint16_t oldRefNum;
-        if ( udh[1] == 0x00 && slicingType == router::SlicingType::UDH8 ) {
-            if ( udh[2] != 3 ) {
-                smsc_log_warn(log_,"wrong udh8 size in message: udh[2]=%u", udh[2] );
+        bool changed = false;
+        for ( unsigned char* p = udh+1; p < udhend; ) {
+            if ( *p == 0x00 && slicingType == router::SlicingType::UDH8 ) {
+                if ( p[1] != 3 ) {
+                    smsc_log_warn(log_,"wrong udh8 size in message: udh[2]=%u", p[1] );
+                    break;
+                }
+                oldRefNum = p[2];
+                p[2] = sarmr & 0xff;
+                changed = true;
+                break;
+            } else if ( *p == 0x08 && slicingType == router::SlicingType::UDH16 ) {
+                if ( p[1] != 4 ) {
+                    smsc_log_warn(log_,"wrong udh16 size in message: udh[2]=%u", p[1] );
+                    break;
+                }
+                oldRefNum = (uint16_t(p[2]) << 8) + p[3];
+                p[2] = (sarmr >> 8) & 0xff;
+                p[3] = sarmr & 0xff;
+                changed = true;
                 break;
             }
-            oldRefNum = udh[3];
-            udh[3] = sarmr & 0xff;
-        } else if ( udh[1] == 0x08 && slicingType == router::SlicingType::UDH16 ) {
-            if ( udh[2] != 4 ) {
-                smsc_log_warn(log_,"wrong udh16 size in message: udh[2]=%u", udh[2] );
-                break;
-            }
-            oldRefNum = (uint16_t(udh[3]) << 8) + udh[4];
-            udh[3] = (sarmr >> 8) & 0xff;
-            udh[4] = sarmr & 0xff;
-        } else {
-            smsc_log_warn(log_,"wrong/mismatched udh header: type=%u udh[1]=%u", slicingType, udh[1]);
+            p += p[1] + 2;
+        }
+        if ( !changed ) {
+            smsc_log_warn(log_,"udh change slicing: field not found");
             break;
         }
         if ( log_->isDebugEnabled() ) {
