@@ -868,11 +868,6 @@ void StateMachine::processSm( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* 
             return;
         }
 
-        if (ri.statistics) {
-          smsc_log_debug(log_, "%s: register traffic info event, keywords='%s'", where, cp.keywords.c_str());
-          scag2::re::CommandBridge::RegisterTrafficEvent(cp, session->sessionPrimaryKey(), scag2::re::CommandBridge::getMessageBody(*cmd), &hrt);
-        }
-
         if ( hrt.mark("stm.rerule") > 100000 ) hrt.comment("/HRTWARN");
 
         routeset = false; // in case rerouting happens
@@ -886,6 +881,11 @@ void StateMachine::processSm( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* 
             st.status = re::STATUS_FAILED;
             st.result = smsc::system::Status::NOROUTE;
             break;
+        }
+
+        if (st.status == re::STATUS_OK && ri.statistics) {
+          smsc_log_debug(log_, "%s: register traffic info event, keywords='%s'", where, cp.keywords.c_str());
+          scag2::re::CommandBridge::RegisterTrafficEvent(cp, session->sessionPrimaryKey(), scag2::re::CommandBridge::getMessageBody(*cmd), &hrt);
         }
 
     } // while
