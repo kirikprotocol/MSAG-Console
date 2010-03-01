@@ -26,6 +26,7 @@ class ULTSM : public TSM
                            uint8_t* cd,        /* called party address */
                            uint8_t  cllen,
                            uint8_t* cl        /* calling party address */);
+    virtual void expiredwdtimer(uint32_t secret);
   private:
     //vector<unsigned char> ulmsg;
     vector<unsigned char> temp_arg;

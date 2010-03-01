@@ -59,6 +59,11 @@ void ULTSM::END_received(Message& msg)
   if(listener) listener->complete(1);
   TSM::END_received(msg);
 }
+void ULTSM::expiredwdtimer(uint32_t secret)
+{
+  if (listener) listener->complete(1143);
+  TSM::expiredwdtimer(secret);
+}
 void ULTSM::TInvokeReq(int8_t invokeId, uint8_t opcode, CompIF& arg)
 {
   arg.encode(temp_arg);
