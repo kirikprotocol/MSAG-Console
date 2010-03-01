@@ -409,34 +409,38 @@ void SmppCommand::getSlicingParameters( SMS& sms, int& sarmr, int& currentIndex,
             hd.hexdump(dump,udh,udhl);
             smsc_log_debug(log_,"msg w/ udh: %s",hd.c_str(dump));
         }
-        // FIXME: impl comprehensive parsing
-        if ( 0x00 == udh[1] ) {
-            // udh8
-            if ( udh[2] != 3 ) {
-                smsc_log_warn(log_,"msg w/ udh8: wrong len: %u", udh[2]);
+        const unsigned char* udhend = udh+udhl;
+        for ( const unsigned char* p = udh+1; p < udhend; ) {
+            if ( 0x00 == p[0] ) {
+                // udh8
+                if ( p[1] != 3 ) {
+                    smsc_log_warn(log_,"msg w/ udh8: wrong len: %u", p[1]);
+                    break;
+                }
+                sarmr = p[2];
+                lastIndex = p[3];
+                currentIndex = p[4];
+                slicingType = router::SlicingType::UDH8;
+                break;
+            } else if ( 0x08 == p[0] ) {
+                // udh16
+                if ( p[1] != 4 ) {
+                    smsc_log_warn(log_,"msg w/ udh16: wrong len: %u", p[1]);
+                    break;
+                }
+                sarmr = (unsigned(p[2]) << 8) | p[3] ;
+                lastIndex = p[4];
+                currentIndex = p[5];
+                slicingType = router::SlicingType::UDH16;
                 break;
             }
-            sarmr = udh[3];
-            lastIndex = udh[4];
-            currentIndex = udh[5];
-            slicingType = router::SlicingType::UDH8;
-        } else if ( 0x08 == udh[1] ) {
-            // udh16
-            if ( udh[2] != 4 ) {
-                smsc_log_warn(log_,"msg w/ udh16: wrong len: %u", udh[2]);
-                break;
-            }
-            sarmr = (unsigned(udh[3]) << 8) | udh[4] ;
-            lastIndex = udh[5];
-            currentIndex = udh[6];
-            slicingType = router::SlicingType::UDH16;
-        } else {
-            util::HexDump hd;
-            util::HexDump::string_type dump;
-            hd.hexdump(dump,udh,udhl);
-            smsc_log_warn(log_,"udh bit is found but header has is weird: %s", hd.c_str(dump) );
-            break;
-        }
+
+            p += p[1] + 2;
+            // util::HexDump hd;
+            // util::HexDump::string_type dump;
+            // hd.hexdump(dump,udh,udhl);
+            // smsc_log_warn(log_,"udh bit is found but header has is weird: %s", hd.c_str(dump) );
+        } // loop over udh fields
     } while ( false );
 
     if ( slicingType != router::SlicingType::NONE ) {

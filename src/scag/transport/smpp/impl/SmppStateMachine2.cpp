@@ -405,9 +405,11 @@ uint32_t StateMachine::putCommand(CommandId cmdType, SmppEntity* src, SmppEntity
                     // we have to replace sms slicing refnum, to allow several
                     // sources to come into one destination.
                     uint32_t newsarmr = src->countSlicedOnOutput(dst,cmd);
-                    // remember the original slicing ref num
-                    // sms.setConcatMsgRef(uint16_t(sliceRefNum));
-                    SmppCommand::changeSliceRefNum(sms,newsarmr);
+                    if ( uint8_t(newsarmr/0x10000) != router::SlicingType::NONE ) {
+                        // remember the original slicing ref num
+                        // sms.setConcatMsgRef(uint16_t(sliceRefNum));
+                        SmppCommand::changeSliceRefNum(sms,newsarmr);
+                    }
                 }
                 if (!reg_.Register(dst->getUid(), newSeq, cmd))
                     throw smsc::util::Exception("%s: Register cmd for uid=%d, seq=%d failed", cmdName, dst->getUid(), newSeq);

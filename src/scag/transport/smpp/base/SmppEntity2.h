@@ -310,6 +310,9 @@ public:
         int sarmr, currentIndex, lastIndex;
         SMS& sms = *cmd->get_sms();
         SmppCommand::getSlicingParameters(sms,sarmr,currentIndex,lastIndex);
+        if ( uint8_t(sarmr/0x10000) == router::SlicingType::NONE ) 
+            return router::SlicingType::NONE * 0x10000;
+
         const char* what = "used";
         bool replaced = false;
         SarData old;
