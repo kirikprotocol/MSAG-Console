@@ -21,13 +21,16 @@ using smsc::mtsmsme::processor::util::dump;
 class TsmComletionListenerMock: public TsmComletionListener {
   private:
     Logger* logger;
+    bool pending;
   public:
-    TsmComletionListenerMock(Logger* _logger):logger(_logger){}
+    TsmComletionListenerMock(Logger* _logger):logger(_logger),pending(true){}
     virtual void complete(int status)
     {
       smsc_log_debug(logger,
            "COMPLETED UPDATELOCATION status=%d",status);
+      pending = false;
     }
+    bool isCompleted() {return !pending;}
 };
 class SccpSenderMock: public SccpSender {
   private:
@@ -321,9 +324,10 @@ void AmericaTestFixture::updateLocation_dialogue_cleanup(void)
     tsm->TBeginReq(cdlen, cd, cllen, cl);
   }
   sleep(70);
-  mtsms.dlgcleanup();
+  mtsms.dlgcleanup();//simulate timer expiration
   TSM::getCounters(stat);
   CPPUNIT_ASSERT( stat.objcount == 0 );
+  CPPUNIT_ASSERT( listener.isCompleted() );
 }
 void AmericaTestFixture::dialogue_limit_check()
 {
