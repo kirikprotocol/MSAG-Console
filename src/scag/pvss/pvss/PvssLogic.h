@@ -144,15 +144,14 @@ protected:
     virtual void init( bool checkAtStart = false ) = 0;
     virtual void rebuildIndex(unsigned maxSpeed = 0) = 0;
 
-    virtual CommandResponse* processProfileRequest(ProfileRequest& request,
-                                                   const Profile*& pf ) = 0;
+    virtual CommandResponse* processProfileRequest(ProfileRequest& request) = 0;
 
-    template < class Key > struct ProfileHeapAllocator
+    template < class Key, class Prof = Profile > struct ProfileHeapAllocator
     {
         ProfileHeapAllocator() : backup_(0) {}
         void setProfileBackup( ProfileBackup& backup ) { backup_ = &backup; }
-        inline Profile* alloc( const Key& k ) const {
-            return new Profile(k,backup_);
+        inline Prof* alloc( const Key& k ) const {
+            return new Prof(k,backup_);
         }
     protected:
         ProfileBackup* backup_;
@@ -215,8 +214,7 @@ protected:
     unsigned long rebuildElementStorage(unsigned index,unsigned maxSpeed);
     void dumpElementStorage( unsigned index );
 
-    virtual CommandResponse* processProfileRequest(ProfileRequest& request,
-                                                   const Profile*& pf );
+    virtual CommandResponse* processProfileRequest(ProfileRequest& request);
 
 private:
     
@@ -355,8 +353,7 @@ public:
 protected:
     virtual void init( bool checkAtStart = false ) /* throw (smsc::util::Exception) */;
     virtual void rebuildIndex( unsigned maxSpeed = 0 );
-    virtual CommandResponse* processProfileRequest(ProfileRequest& request,
-                                                   const Profile*& pf );
+    virtual CommandResponse* processProfileRequest(ProfileRequest& request);
 
 private:
     Glossary    glossary_;

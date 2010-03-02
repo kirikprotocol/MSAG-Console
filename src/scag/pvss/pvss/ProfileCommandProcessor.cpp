@@ -61,6 +61,13 @@ bool ProfileCommandProcessor::applyCommonLogic( const std::string& profkey,
         ret = true;
         if (profileRequest.hasTiming()) { profileRequest.timingMark("proc_ok"); }
     }
+    if ( profileRequest.hasTiming() ) {
+        char buf[100];
+        snprintf(buf,sizeof(buf)," [%s props=%u]",
+                 profileRequest.getProfileKey().toString().c_str(),
+                 pf->GetCount());
+        profileRequest.timingComment(buf);
+    }
     smsc_log_debug(log_,"FIXME(post): prof=%s",pf->toString().c_str());
     return ret;
     
