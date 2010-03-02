@@ -4,18 +4,11 @@
 #include "logger/Logger.h"
 #include "core/buffers/XHash.hpp"
 #include "scag/util/Time.h"
+#include "HeapAllocator.h"
 
 namespace scag2 {
 namespace util {
 namespace storage {
-
-template < class Key, class Val > class HeapAllocator
-{
-protected:
-    ~HeapAllocator() {}
-    inline Val* alloc( const Key& k ) const { return new Val(k); }
-};
-
 
 template <
     class MemStorage,

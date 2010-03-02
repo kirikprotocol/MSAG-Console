@@ -4,6 +4,7 @@
 #include <memory>
 #include <stdexcept>
 #include "logger/Logger.h"
+#include "HeapAllocator.h"
 
 namespace scag {
 namespace util {
@@ -420,15 +421,6 @@ public:
     virtual value_type* release( const key_type& k ) = 0;
 };
 */
-
-
-template < class Key, class Val >
-class HeapAllocator
-{
-protected:
-    ~HeapAllocator() {}
-    inline Val* alloc( const Key& k ) const { return new Val(k); }
-};
 
 
 template < class MemStorage, class DiskStorage,
