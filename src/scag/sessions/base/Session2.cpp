@@ -512,7 +512,12 @@ Deserializer& Session::deserialize( Deserializer& s ) /* throw (DeserializerExce
                 if ( ! key.empty() ) {
                     ExternalTransaction* et = 
                         ExternalTransaction::createAndDeserialize( s );
-                    assert( et );
+                    if ( !et ) {
+                        smsc_log_error(log_,"cannot deserialize external transaction session=%s key=%s",
+                                       key_.toString().c_str(), key.c_str() );
+                        throw SCAGException( "cannot deserialize external transation session=%s key=%s",
+                                             key_.toString().c_str(), key.c_str());
+                    }
                     transactions_->Insert( smsc::util::cStringCopy(key.c_str()), et );
                 }
             }
