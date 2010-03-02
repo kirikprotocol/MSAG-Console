@@ -451,6 +451,7 @@ Serializer& Session::serialize( Serializer& s ) const
 Deserializer& Session::deserialize( Deserializer& s ) /* throw (DeserializerException) */
 {
     clear();
+    const int32_t oldVersion = s.version();
     try {
         uint32_t count;
         {
@@ -466,6 +467,7 @@ Deserializer& Session::deserialize( Deserializer& s ) /* throw (DeserializerExce
                 throw SCAGException( fail, count );
             }
         }
+        s.setVersion(count);
 
         key_.deserialize( s );
         {
@@ -535,8 +537,10 @@ Deserializer& Session::deserialize( Deserializer& s ) /* throw (DeserializerExce
         setCurrentOperation( currentOperationId_ );
     } catch (...) {
         clear();
+        s.setVersion(oldVersion);
         throw;
     }
+    s.setVersion(oldVersion);
     return s;
 }
 
