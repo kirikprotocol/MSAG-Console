@@ -486,21 +486,22 @@ ResultSet* OCIStatement::executeQuery()
     return rs;
 }
 
-OCIDataDescriptor* OCIStatement::setField(int pos, ub2 type, ub4 size,
-                                          bool null)
+OCIDataDescriptor* OCIStatement::setField(int pos, ub2 type, ub4 size, bool null)
+    throw(SQLException)
 {
+    if (pos <= 0) {
+	SQLException exc("Field position should be positive");
+	throw exc;
+    }
+    
     OCIDataDescriptor* descriptor = 0;
-    if (descriptors.Count() < pos)
-    {
-        while (descriptors.Count() < pos-1)
-        {
+    if (descriptors.Count() < pos) {
+        while (descriptors.Count() < pos-1) {
             descriptors.Push((OCIDataDescriptor *)0);
         }
         descriptor = new OCIDataDescriptor(type, size);
         descriptors.Push(descriptor);
-    }
-    else
-    {
+    } else {
         descriptor = descriptors[pos-1];
         if (descriptor) delete descriptor;
         descriptor = new OCIDataDescriptor(type, size);
