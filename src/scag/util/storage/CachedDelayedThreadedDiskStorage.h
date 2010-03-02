@@ -48,7 +48,7 @@ public:
                                       Serializer* srout,
                                       smsc::logger::Logger* thelog = 0 ) :
     cache_(ms), disk_( ds ), serin_(srin), serout_(srout), hitcount_(0), log_(thelog), inited_(false),
-    lastDirtyFlush_(0), minDirtyTime_(10), maxDirtyTime_(10000), maxDirtyCount_(100)
+    maxSpeed_(10000)
     {
         if ( !ms || !srin || !srout || !ds ) {
             delete ms;
@@ -65,21 +65,14 @@ public:
     DiskStorage& diskStorage() { return *disk_; }
     Serializer& serializer() { return *serin_; }
 
-    void init( unsigned minDirtyTime,
-               unsigned maxDirtyTime,
-               unsigned maxDirtyCount )
+    void init( unsigned maxDirtySpeed )
     {
         if (inited_) return;
         inited_ = true;
-        lastDirtyFlush_ = util::currentTimeMillis();
-        minDirtyTime_ = std::min(minDirtyTime,1000U);
-        maxDirtyTime_ = std::min(std::max(maxDirtyTime,10U),100000U);
-        maxDirtyCount_ = std::min(std::max(maxDirtyCount,10U),10000U);
-        if ( minDirtyTime_ >= maxDirtyTime_ ) maxDirtyTime_ = minDirtyTime_ + 100U;
+        // lastDirtyFlush_ = util::currentTimeMillis();
+        maxSpeed_ = std::max(maxDirtySpeed,10U);
         if (log_) {
-            smsc_log_debug(log_,"inited minTime: %u, maxTime: %u, maxCount: %u",
-                           unsigned(minDirtyTime_), unsigned(maxDirtyTime_),
-                           unsigned(maxDirtyCount_));
+            smsc_log_debug(log_,"inited maxSpeed: %u", unsigned(maxSpeed_));
         }
         startCleaner();
     }
@@ -117,6 +110,15 @@ public:
         MutexGuard mg(dirtyMon_);
 
         // otherwise we have to check the clean queue
+        stored_type qv = popCleanQ(k);
+        if ( cache_->store2val(qv) ) {
+            value_type* ov = cache_->setval(qv,v);
+            delete ov;
+            addDirty(k,qv);
+            return ov;
+        }
+
+        /*
         Dirty d;
         while ( cleanQueue_.Pop(d) ) {
             if ( d.key == k ) {
@@ -128,6 +130,7 @@ public:
             }
             cache_->set(d.key,d.stored);
         }
+         */
 
         // finally, check the dirty hash
         typename DirtyList::iterator* di = dirtyHash_.GetPtr(k);
@@ -176,14 +179,12 @@ public:
         {
             MutexGuard mg(dirtyMon_);
             // then we want to check clean queue
-            Dirty d;
-            while ( cleanQueue_.Pop(d) ) {
-                cache_->set(d.key,d.stored);
-                if ( d.key == k ) {
-                    if (log_) { smsc_log_debug(log_,"clean key=%s found",k.toString().c_str());}
-                    return cache_->store2val(d.stored);
-                }
+            stored_type sv = popCleanQ(k);
+            if ( cache_->store2val(sv) ) {
+                cache_->set(k,sv);
+                return cache_->store2val(sv);
             }
+
             // we did not find the element in clean queue
             // trying the dirty hash
             typename DirtyList::iterator* di = dirtyHash_.GetPtr(k);
@@ -251,13 +252,9 @@ public:
         } else {
             MutexGuard mg(dirtyMon_);
             // look into clean queue
-            Dirty d;
-            while ( cleanQueue_.Pop(d) ) {
-                if ( d.key == k ) {
-                    addDirty(d.key,d.stored);
-                    break;
-                }
-                cache_->set(d.key,d.stored);
+            stored_type qv = popCleanQ(k);
+            if ( cache_->store2val(qv) ) {
+                addDirty(k,qv);
             }
         }
     }
@@ -452,7 +449,6 @@ private:
                 int wtime = 0;
                 if ( !inited_ ) {
                     // we need to stop, no wait
-                    wtime = 0;
                 } else if ( written > shouldBeWrt ) {
                     // too fast, need to wait
                     wtime = int(written/maxSpeed_) - deltat;
@@ -460,7 +456,11 @@ private:
                     const unsigned maxIdle = idleWaitTime*maxSpeed_;
                     if ( written + maxIdle < shouldBeWrt ) {
                         // we are at idle
-                        written = shouldBeWrt - maxIdle;
+                        const unsigned nwr = shouldBeWrt - maxIdle;
+                        if (log_) {
+                            smsc_log_debug(log_,"too idle: written=%u -> %u",written,nwr);
+                        }
+                        written = nwr;
                     }
                     if ( dirtyHash_.Count() == 0 ) {
                         wtime = idleWaitTime;
@@ -473,11 +473,10 @@ private:
                 }
 
                 dhc = unsigned(dirtyHash_.Count());
-                if (!inited_ && !dhc ) {
-                    // all items are flushed
-                    break;
+                if (!dhc) {
+                    if (!inited_) break;
+                    continue;
                 }
-                assert( dhc > 0 );
 
                 // accessing dirtyList is safe
                 di = dirtyList_.begin();
@@ -509,7 +508,12 @@ private:
 
             if ( deltat > maxDeltaT ) {
                 const unsigned newdeltat = deltat % maxDeltaT + minWaitTime;
-                written = (written / deltat)*newdeltat;
+                const unsigned nwr = (written / deltat)*newdeltat;
+                if (log_) {
+                    smsc_log_debug(log_,"shifting: dt=%d->%d,  written=%u->%u",
+                                   deltat, newdeltat, written, nwr);
+                }
+                written = nwr;
                 w0 += deltat - newdeltat;
             }
 
@@ -524,6 +528,20 @@ private:
         } // loop while inited
         return 0;
     }
+
+
+    stored_type popCleanQ( const key_type& k ) {
+        Dirty d;
+        while ( cleanQueue_.Pop(d) ) {
+            if ( d.key == k ) {
+                if (log_) smsc_log_debug(log_,"cleanq pop key=%s val=%p",k.toString().c_str(),cache_->store2val(d.stored));
+                return d.stored;
+            }
+            cache_->set(d.key,d.stored);
+        }
+        return cache_->store2val(0);
+    }
+
 
     /*
     void flushDirty( util::msectime_type now = 0 )
@@ -567,7 +585,11 @@ private:
 
     void stopCleaner() {
         if (inited_) {
-            inited_ = false;
+            {
+                MutexGuard mg(dirtyMon_);
+                inited_ = false;
+                dirtyMon_.notifyAll();
+            }
             WaitFor();
         }
     }
@@ -593,12 +615,8 @@ private:
     smsc::logger::Logger* log_;
     bool                  inited_;
 
-    DirtyList dirtyList_;
-    DirtyHash dirtyHash_;
-    util::msectime_type lastDirtyFlush_;
-    util::msectime_type minDirtyTime_;    // minimum time to relax after dirty flash
-    util::msectime_type maxDirtyTime_;    // maximum time to allow dirty to exist
-    unsigned            maxDirtyCount_;   // maximum number of dirty to
+    DirtyList           dirtyList_;
+    DirtyHash           dirtyHash_;
     unsigned            maxSpeed_;
 };
 

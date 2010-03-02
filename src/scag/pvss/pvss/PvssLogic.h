@@ -395,9 +395,7 @@ struct InfrastructStorageConfig {
   string localPath;
   uint32_t cacheSize;
   uint32_t recordCount;
-    uint32_t minDirtyTime;  // 10
-    uint32_t maxDirtyTime;  // 1000
-    uint32_t maxDirtyCount; // 100
+  uint32_t maxDirtySpeed; // 10000
   bool    checkAtStart;
 };
 

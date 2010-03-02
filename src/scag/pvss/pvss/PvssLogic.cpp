@@ -496,7 +496,7 @@ public:
         storage_ = new InfrastructStorage(ms.release(),ds.release(),
                                           ps1.release(),ps2.release(),
                                           Logger::getInstance(("pvssst"+logsfx).c_str()));
-        storage_->init(cfg.minDirtyTime, cfg.maxDirtyTime, cfg.maxDirtyCount);
+        storage_->init(cfg.maxDirtySpeed);
         storage_->setProfileBackup(profileBackup_);
         smsc_log_info(log_,"infralogic %s initialized",name.c_str());
     }
@@ -909,6 +909,7 @@ InfrastructStorageConfig::InfrastructStorageConfig(ConfigView& cfg, const char* 
                    storageType, DEF_CACHE_SIZE);
   }
 
+    /*
     try {
         minDirtyTime = cfg.getInt("minDirtyTime");
     } catch (...) {
@@ -929,6 +930,14 @@ InfrastructStorageConfig::InfrastructStorageConfig(ConfigView& cfg, const char* 
         maxDirtyCount = 100;
         smsc_log_warn(logger,"Parameter <Pvss.%s.maxDirtyCount> missed. Default value is %u",
                       storageType,100);
+    }
+     */
+    try {
+        maxDirtySpeed = cfg.getInt("maxDirtySpeed");
+    } catch (...) {
+        maxDirtySpeed = 10000;
+        smsc_log_warn(logger,"Parameter <Pvss.%s.maxDirtySpeed> missed. Default value is %u",
+                      storageType,10000);
     }
 }
 
