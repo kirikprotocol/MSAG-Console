@@ -13,6 +13,7 @@
 #include "core/buffers/File.hpp"
 #include "core/buffers/Hash.hpp"
 #include "core/buffers/TmpBuf.hpp"
+#include "core/synchronization/Mutex.hpp"
 #include "scag/util/io/Serializer.h"
 #include "scag/util/io/GlossaryBase.h"
 #include "scag/util/storage/BlocksHSBackupData.h"
@@ -82,11 +83,13 @@ class IntProfileKey
     }
 };
 
+/*
 enum ProfileState {
     OK,
     LOCKED,
     DELETED
 };
+ */
 
 class Profile : public Serializable
 {
@@ -99,8 +102,7 @@ public:
     Profile(const std::string& _pkey, ProfileBackup* backup = 0); // : log(_log), state(OK), pkey(_pkey) {};
     Profile(const AbntAddr& address, ProfileBackup* backup = 0); // : log(_log), state(OK), pkey(address.toString()) {};
     Profile(const IntProfileKey& intKey, ProfileBackup* backup = 0); // : log(_log), state(OK), pkey(intKey.toString()) {};
-    ~Profile();
-    Profile& operator=(const Profile& pf);
+    virtual ~Profile();
 
     Property* GetProperty(const char* name);
     bool PropertyExists(const char* str);
@@ -118,10 +120,10 @@ public:
 
     void Serialize(SerialBuffer& buf, bool toFSDB = false, GlossaryBase* glossary = NULL) const;
     void Deserialize(SerialBuffer& buf, bool fromFSDB = false, GlossaryBase* glossary = NULL);
-    ProfileState getState() const { return state; };
-    void setLocked() { state = LOCKED; };
-    void setDeleted() { Empty(); state = DELETED; };
-    void setOk() { state = OK; };
+    // ProfileState getState() const { return state; };
+    // void setLocked() { state = LOCKED; };
+    // void setDeleted() { Empty(); state = DELETED; };
+    // void setOk() { state = OK; };
     void addNewProperty(Property& prop);
     void copyPropertiesTo(Profile* pf) const;
 
@@ -137,13 +139,33 @@ public:
     std::string toString() const;
 
 private:
+    Profile( const Profile& pf );
+    Profile& operator=(const Profile& pf);
+
+private:
   PropertyHash properties;
     // smsc::logger::Logger* log;
   ProfileBackup* backup_;
-  ProfileState state;
+  // ProfileState state;
   std::string pkey;
   bool changed;
 };
+
+
+class LockableProfile : public Profile
+{
+public:
+    inline LockableProfile( ProfileBackup* backup = 0 ) : Profile(backup) {}
+    inline LockableProfile( const std::string& pkey, ProfileBackup* backup = 0 ) : Profile(pkey,backup) {}
+    inline LockableProfile( const AbntAddr& addr, ProfileBackup* backup = 0 ) : Profile(addr,backup) {}
+    inline LockableProfile( const IntProfileKey& intKey, ProfileBackup* backup = 0) : Profile(intKey,backup) {}
+
+    inline void Lock() { lock_.Lock(); }
+    inline void Unlock() { lock_.Unlock(); }
+private:
+    smsc::core::synchronization::Mutex lock_;
+};
+
 
 }//pvss
 }//scag2

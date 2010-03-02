@@ -21,9 +21,10 @@ void Profile::Serialize(SerialBuffer& buf, bool toFSDB, GlossaryBase* glossary) 
 {
   //TODO: add glossary check
     uint16_t cnt = properties.GetCount();
-    if (cnt == 0 && toFSDB && state != LOCKED) {
+    if (cnt == 0 && toFSDB ) {
       return;
     }
+    int state = 1; // previously was enum value OK
     uint16_t serialized_state = (uint16_t)state << PROPERTIES_COUNT_SIZE;
     serialized_state |= cnt;
     buf.WriteInt16(serialized_state);
@@ -45,7 +46,7 @@ void Profile::Deserialize(SerialBuffer& buf, bool fromFSDB, GlossaryBase* glossa
     uint16_t state_cnt = buf.ReadInt16();
     uint16_t cnt = state_cnt & MAX_PROPERTIES_COUNT;
     state_cnt >>= PROPERTIES_COUNT_SIZE;
-    state = static_cast<ProfileState>(state_cnt);
+    // state = static_cast<ProfileState>(state_cnt);
 
     Empty();
     Property* prop;
@@ -93,28 +94,28 @@ void Profile::initLog()
 
 
 Profile::Profile( ProfileBackup* backup) :
-backup_(backup), state(OK), changed(false)
+backup_(backup), /*state(OK),*/ changed(false)
 {
     initLog();
 }
     
 
 Profile::Profile(const std::string& _pkey, ProfileBackup* backup) :
-backup_(backup), state(OK), pkey(_pkey), changed(false)
+backup_(backup), /*state(OK),*/ pkey(_pkey), changed(false)
 {
     initLog();
 }
 
 
 Profile::Profile(const AbntAddr& address, ProfileBackup* backup ) :
-backup_(backup), state(OK), pkey(address.toString()), changed(false)
+backup_(backup), /*state(OK),*/ pkey(address.toString()), changed(false)
 {
     initLog();
 }
 
 
 Profile::Profile(const IntProfileKey& intKey, ProfileBackup* backup ) :
-backup_(backup), state(OK), pkey(intKey.toString()), changed(false)
+backup_(backup), /*state(OK),*/ pkey(intKey.toString()), changed(false)
 {
     initLog();
 }
@@ -144,7 +145,7 @@ Profile& Profile::operator=(const Profile& pf) {
   smsc_log_debug(loga_,"op=: %p key=%s <== %p key=%s",this,pkey.c_str(),&pf,pf.pkey.c_str());
     backup_ = pf.backup_;
   pkey = pf.getKey();
-  state = pf.getState();
+  // state = pf.getState();
 
   Empty();
 
