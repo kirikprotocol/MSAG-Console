@@ -524,14 +524,16 @@ TO ALL: Insert log record for all significant changes & fixes here.
   msag: bugfix: a check for expired resp generated for msag receipt was hidden by outer check
         which led to coredump.
 
---- current fixes ---
+=================================================================================================================
+2010-03-02 17:15 bukind msag-build-20100302
 2010-03-01 16:35 bukind
   msag: bugfix: registerTrafficEvent is invoked several times in case of redirect
   msag: bugfix: problems when parsing UDH with additional fields
-
 2010-03-02 12:30 bukind
   msag: bugfix: session deserialization throws exception instead of assert
-2010-03-02 14:55 bukind
-  pvss: feature: delayed writes in a separate thread
 2010-03-02 16:05 bukind
   msag: bugfix: asymmetry in session disk IO
+
+--- current fixes ---
+2010-03-02 14:55 bukind
+  pvss: feature: delayed writes in a separate thread
