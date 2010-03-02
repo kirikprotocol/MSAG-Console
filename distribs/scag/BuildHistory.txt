@@ -533,3 +533,6 @@ TO ALL: Insert log record for all significant changes & fixes here.
   msag: bugfix: session deserialization throws exception instead of assert
 2010-03-02 14:55 bukind
   pvss: feature: delayed writes in a separate thread
+2010-03-02 16:05 bukind
+  msag: asymmetry in session disk IO
+
