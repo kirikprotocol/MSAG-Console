@@ -107,7 +107,7 @@ void Serializer::write( uint32_t sz, const char* buf )
 {
     uint8_t* p = ensure(sz+4);
     EndianConverter::set32(p,sz);
-    std::copy(buf,buf+sz,p+4);
+    if (buf) std::copy(buf,buf+sz,p+4);
 }
 
 
