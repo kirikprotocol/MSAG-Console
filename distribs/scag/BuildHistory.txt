@@ -528,3 +528,6 @@ TO ALL: Insert log record for all significant changes & fixes here.
 2010-03-01 16:35 bukind
   msag: bugfix: registerTrafficEvent is invoked several times in case of redirect
   msag: bugfix: problems when parsing UDH with additional fields
+
+2010-03-02 12:30 bukind
+  msag: bugfix: session deserialization throws exception instead of assert
