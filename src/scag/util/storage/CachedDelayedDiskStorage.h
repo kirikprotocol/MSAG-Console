@@ -71,7 +71,7 @@ public:
     {
         if (inited_) return;
         inited_ = true;
-        lastDirtyFlush_ = time(0);
+        lastDirtyFlush_ = util::currentTimeMillis();
         minDirtyTime_ = std::min(minDirtyTime,1000U);
         maxDirtyTime_ = std::min(std::max(maxDirtyTime,10U),100000U);
         maxDirtyCount_ = std::min(std::max(maxDirtyCount,10U),10000U);

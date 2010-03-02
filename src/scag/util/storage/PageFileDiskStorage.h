@@ -122,7 +122,7 @@ public:
             io::Deserializer s( buf, glossary_ );
             s >> v;
             // key_ = "destroyed";
-        } catch ( io::DeserializerException& e ) {
+        } catch ( std::exception& e ) {
             if (disklog_) 
                 smsc_log_error( disklog_, "exception occurred: %s", e.what() );
             return false;
