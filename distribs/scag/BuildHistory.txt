@@ -534,6 +534,9 @@ TO ALL: Insert log record for all significant changes & fixes here.
 2010-03-02 16:05 bukind
   msag: bugfix: asymmetry in session disk IO
 
---- current fixes ---
+=================================================================================================================
+2010-03-03 12:40 bukind pvss-build-20100303
 2010-03-03 11:20 bukind
-  pvss: feature: delayed writes in a separate thread
+  pvss: feature: delayed writes (service) in a separate thread
+
+--- current fixes ---
