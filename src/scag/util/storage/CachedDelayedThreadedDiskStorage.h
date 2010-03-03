@@ -31,11 +31,11 @@ private:
     // dirty things
     struct Dirty {
         Dirty() {}
-        Dirty(util::msectime_type t, key_type k, const stored_type& s) :
-        dirtyTime(t), key(k), stored(s) {}
-        util::msectime_type dirtyTime;
+        Dirty(key_type k, const stored_type& s) :
+        key(k), stored(s), changes(0) {}
         key_type            key;
         stored_type         stored;
+        unsigned            changes;
     };
     typedef std::list< Dirty >  DirtyList;
     typedef smsc::core::buffers::XHash< key_type, typename DirtyList::iterator, hash_function > DirtyHash;
@@ -126,6 +126,7 @@ public:
         // finally, check the dirty hash
         typename DirtyList::iterator* di = dirtyHash_.GetPtr(k);
         if (di) {
+            ++((*di)->changes);
             if (log_) { smsc_log_debug(log_,"dirty key=%s updated",k.toString().c_str()); }
             value_type* ov = cache_->setval((*di)->stored,v);
             delete ov;
@@ -242,6 +243,12 @@ public:
             if ( cache_->store2val(sv) ) {
                 addDirty(k,sv);
                 return;
+            }
+            // NOTE: we have to increment the number of changes for item in dirtyHash
+            // as it may be going to become clean by being flushed right now.
+            typename DirtyList::iterator* di = dirtyHash_.GetPtr(k);
+            if (di) {
+                ++((*di)->changes);
             }
         }
     }
@@ -381,11 +388,11 @@ private:
 
     inline void addDirty( const key_type& k, stored_type sv )
     {
-        util::msectime_type now = util::currentTimeMillis();
+        // util::msectime_type now = util::currentTimeMillis();
         if (log_) {
-            smsc_log_debug(log_,"adding dirty key=%s now=%llu",k.toString().c_str(),now);
+            smsc_log_debug(log_,"adding dirty key=%s",k.toString().c_str());
         }
-        dirtyHash_.Insert(k,dirtyList_.insert(dirtyList_.end(), Dirty(now,k,sv)));
+        dirtyHash_.Insert(k,dirtyList_.insert(dirtyList_.end(), Dirty(k,sv)));
         dirtyMon_.notify();
     }
 
@@ -427,7 +434,7 @@ private:
             const unsigned shouldBeWrt = deltat * maxSpeed_;
             // const unsigned speedkbs = written / deltat;
             typename DirtyList::iterator di;
-            unsigned cqc, dhc;
+            unsigned cqc, dhc, oldChanges;
             {
                 MutexGuard mg(dirtyMon_);
 
@@ -467,6 +474,7 @@ private:
 
                 // accessing dirtyList is safe
                 di = dirtyList_.begin();
+                oldChanges = di->changes;
             }
 
             value_type* dv = cache_->store2val(di->stored);
@@ -507,8 +515,21 @@ private:
             // save done, cleanup
             {
                 MutexGuard mg(dirtyMon_);
-                cleanQueue_.Push(*di);
-                dirtyHash_.Delete(di->key);
+                if ( di->changes != oldChanges ) {
+                    if (log_) {
+                        smsc_log_debug(log_,"key=%s is still dirty after flush",
+                                       di->key.toString().c_str());
+                    }
+                    *dirtyHash_.GetPtr(di->key) = 
+                        dirtyList_.insert(dirtyList_.end(),*di);
+                } else {
+                    cleanQueue_.Push(*di);
+                    if (log_) {
+                        smsc_log_debug(log_,"key=%s is clean qsz=%u",
+                                       di->key.toString().c_str(),unsigned(cleanQueue_.Count()));
+                    }
+                    dirtyHash_.Delete(di->key);
+                }
                 dirtyList_.erase(di);
             }
 
