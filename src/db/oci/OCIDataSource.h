@@ -147,8 +147,8 @@ namespace smsc { namespace db { namespace oci
         
         ub4 getRowsAffectedCount();
 
-        OCIDataDescriptor* setField(int pos, ub2 type, ub4 size,
-                                    bool null=false);
+        OCIDataDescriptor* setField(int pos, ub2 type, ub4 size, bool null=false)
+	    throw(SQLException);
     public:
 
         OCIStatement(OCIConnection* connection) : Statement(), OCIQuery(connection) {};
