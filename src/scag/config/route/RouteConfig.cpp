@@ -206,7 +206,7 @@ throw (SubjectNotFoundException)
   std::auto_ptr<Route> r(new Route( getAttribStr(elem, "id"),
                                     false, // getAttribBool(elem, "archived"),
                                     getAttribBool(elem, "enabled"),
-                                    getAttribBool(elem, "active"),
+                                    getAttribBool(elem, "active") /*not used*/,
                                     getAttribBool(elem, "transit"),
                                     getAttribBool(elem, "saa"),
                                     getAttribStr(elem, "srcSmeId"),
@@ -269,7 +269,7 @@ RouteConfig::status RouteConfig::load(const char * const filename)
       try
       {
         std::auto_ptr<Route> route(createRoute(*elem2, subjects));
-        // if (route->isActive())
+        if (route->isActive())
           routes.push_back(route.release());
       }
       catch (SubjectNotFoundException &ex)
@@ -319,11 +319,31 @@ RouteConfig::status RouteConfig::store(const char * const filename) const
     for (RoutePVector::const_iterator i = routes.begin(); i != routes.end(); i++)
     {
       Route *r = *i;
+      const char* slice;
+        switch (r->getSlicingType()) {
+        case SlicingType::SAR : slice = "SAR"; break;
+        case SlicingType::UDH8 : slice = "UDH8"; break;
+        case SlicingType::UDH16 : slice = "UDH16"; break;
+        case SlicingType::NONE:
+        default:
+            slice = "NONE";
+        }
+        const char* slicePol;
+        switch (r->getSlicingRespPolicy()) {
+        case SlicingRespPolicy::ANY: slicePol = "ANY"; break;
+        case SlicingRespPolicy::ALL:
+        default: slicePol = "ALL"; break;
+        }
+
       out << "  <route id=\""  << encode(r->getId())
       // << "\" archiving=\""     << (r->isArchiving() ? "true" : "false")
-      << "\" enabling=\""      << (r->isEnabling() ? "true" : "false")
+      << "\" enabled=\""      << (r->isActive() ? "true" : "false")
       << "\" transit=\""       << (r->isTransit() ? "true" : "false")
       << "\" saa=\""           << (r->hasStatistics() ? "true" : "false")
+      << "\" slicing=\"" << slice <<
+            "\" slicedRespPolicy=\"" << slicePol <<
+            "\" srcSmeId=\"" << encode(r->getSrcSmeSystemId().c_str()) <<
+            "\" serviceId=\"" << r->getServiceId()
       << "\">" << std::endl;
 
       Source src;
