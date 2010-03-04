@@ -430,7 +430,19 @@ private:
         unsigned written = 0;
         while ( true ) {
             now = util::currentTimeMillis();
-            const unsigned deltat = now - w0;
+            unsigned deltat = now - w0;
+            if ( deltat > maxDeltaT ) {
+                const unsigned newdeltat = deltat % maxDeltaT + minWaitTime;
+                const unsigned nwr = (written / deltat)*newdeltat;
+                if (log_) {
+                    smsc_log_debug(log_,"shifting: dt=%d->%d,  written=%u->%u",
+                                   deltat, newdeltat, written, nwr);
+                }
+                written = nwr;
+                w0 += deltat - newdeltat;
+                deltat = newdeltat;
+            }
+
             const unsigned shouldBeWrt = deltat * maxSpeed_;
             // const unsigned speedkbs = written / deltat;
             typename DirtyList::iterator di;
@@ -501,16 +513,6 @@ private:
                 }
             }
 
-            if ( deltat > maxDeltaT ) {
-                const unsigned newdeltat = deltat % maxDeltaT + minWaitTime;
-                const unsigned nwr = (written / deltat)*newdeltat;
-                if (log_) {
-                    smsc_log_debug(log_,"shifting: dt=%d->%d,  written=%u->%u",
-                                   deltat, newdeltat, written, nwr);
-                }
-                written = nwr;
-                w0 += deltat - newdeltat;
-            }
 
             // save done, cleanup
             {
