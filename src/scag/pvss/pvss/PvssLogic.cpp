@@ -1,6 +1,7 @@
 #include "PvssLogic.h"
 #include "PvssDispatcher.h"
 
+#include <ctime>
 #include <exception>
 #include "core/buffers/File.hpp"
 #include "scag/pvss/api/packets/ProfileRequest.h"
@@ -448,82 +449,8 @@ CommandResponse* AbonentLogic::processProfileRequest(ProfileRequest& profileRequ
 
 class InfrastructLogic::InfraLogic
 {
-public:
-    InfraLogic( const char* dblogName ) :
-    profileBackup_(smsc::logger::Logger::getInstance(dblogName)),
-    commandProcessor_(profileBackup_),
-    log_(0),
-    storage_(0)
-    {}
-    
-    void init( const std::string& name,
-               const std::string& logsfx,
-               const InfrastructStorageConfig& cfg,
-               Glossary& glossary ) {
-        log_ = smsc::logger::Logger::getInstance(("pvssst" + logsfx).c_str());
-        smsc_log_debug(log_,"starting initialization of %s infralogic",name.c_str());
-        const std::string fn( cfg.dbPath + "/" + name + ".bin");
-        std::auto_ptr< DiskDataStorage::storage_type > pf(new DiskDataStorage::storage_type);
-        try {
-            pf->Open(fn);
-        } catch (...) {
-            pf->Create(fn, 256, cfg.recordCount);
-        }
+private:
 
-        std::auto_ptr< DiskDataStorage > data(new DiskDataStorage(pf.release(),
-                                                                  Logger::getInstance(("pvssdd"+logsfx).c_str())));
-        smsc_log_debug(log_, "infralogic %s disk data storage is created", name.c_str());
-
-        std::auto_ptr< DiskIndexStorage > index(new DiskIndexStorage(name,
-                                                                     cfg.dbPath,
-                                                                     cfg.recordCount,
-                                                                     Logger::getInstance(("pvssix"+logsfx).c_str())));
-        // FIX: mandatory size recalculation
-        index->recalcSize();
-        smsc_log_debug(log_, "infralogic %s disk index storage is created", name.c_str());
-
-        std::auto_ptr< DiskStorage > ds(new DiskStorage(index.release(), data.release()));
-        smsc_log_debug(log_, "infralogic %s indexed storage is created", name.c_str());
-
-        std::auto_ptr< MemStorage > ms(new MemStorage(Logger::getInstance(("pvssmc"+logsfx).c_str()),
-                                                      cfg.cacheSize));
-        smsc_log_debug(log_, "infralogic %s memory storage is created", name.c_str());
-
-        std::auto_ptr<DataSerializer> ps1( new DataSerializer(ds.get(),&glossary) );
-        std::auto_ptr<DataSerializer> ps2( new DataSerializer(ds.get(),&glossary) );
-        smsc_log_debug(log_,"infralogic %s serializers are created", name.c_str());
-
-        storage_ = new InfrastructStorage(ms.release(),ds.release(),
-                                          ps1.release(),ps2.release(),
-                                          Logger::getInstance(("pvssst"+logsfx).c_str()));
-        storage_->init(cfg.maxDirtySpeed);
-        storage_->setProfileBackup(profileBackup_);
-        smsc_log_info(log_,"infralogic %s initialized",name.c_str());
-    }
-
-    ~InfraLogic() {
-        delete storage_;
-    }
-
-    void shutdown() {
-        delete storage_; storage_ = 0;
-    }
-    void dumpStorage( int index );
-    void init( bool checkAtStart = false );
-    void rebuildIndex( unsigned maxSpeed = 0 );
-    void keepAlive( util::msectime_type now ) {
-        // not needed
-        // MutexGuard mg(statMutex_);
-        // storage_->flushDirty(now);
-    }
-
-    CommandResponse* process( const IntProfileKey& intKey,
-                              ProfileRequest& request );
-
-    unsigned long filledDataSize() const {
-        return static_cast<unsigned long>(storage_->filledDataSize());
-    }
-    
     template < class MemStorage, class DiskStorage > struct ProfileSerializer
     {
     public:
@@ -596,13 +523,98 @@ public:
         // buffer_type   hdrbuf_;
     };
 
-private:
     typedef PageFileDiskStorage2 DiskDataStorage;
     typedef DiskHashIndexStorage< IntProfileKey, DiskDataStorage::index_type > DiskIndexStorage;
     typedef ArrayedMemoryCache< IntProfileKey, LockableProfile, DataBlockBackupTypeJuggling2 > MemStorage;
     typedef IndexedStorage2< DiskIndexStorage, DiskDataStorage > DiskStorage;
     typedef ProfileSerializer< MemStorage, DiskStorage > DataSerializer;
     typedef CachedDelayedThreadedDiskStorage< MemStorage, DiskStorage, DataSerializer, ProfileHeapAllocator< MemStorage::key_type, LockableProfile > > InfrastructStorage;
+
+public:
+    InfraLogic( const char* dblogName ) :
+    profileBackup_(smsc::logger::Logger::getInstance(dblogName)),
+    commandProcessor_(profileBackup_),
+    log_(0),
+    storage_(0)
+    {}
+    
+    void init( const std::string& name,
+               const std::string& logsfx,
+               const InfrastructStorageConfig& cfg,
+               Glossary& glossary ) {
+        log_ = smsc::logger::Logger::getInstance(("pvssst" + logsfx).c_str());
+        smsc_log_debug(log_,"starting initialization of %s infralogic",name.c_str());
+        const std::string fn( cfg.dbPath + "/" + name + ".bin");
+        std::auto_ptr< DiskDataStorage::storage_type > pf(new DiskDataStorage::storage_type);
+        try {
+            pf->Open(fn);
+        } catch (...) {
+            pf->Create(fn, cfg.pageSize, cfg.recordCount);
+        }
+
+        // successfully open, checking if pageSize is smaller than requested
+        if ( pf->getPageSize() != cfg.pageSize ) {
+            resizePageSize(pf,cfg.dbPath+"/"+name,cfg);
+        }
+
+        std::auto_ptr< DiskDataStorage > data(new DiskDataStorage(pf.release(),
+                                                                  Logger::getInstance(("pvssdd"+logsfx).c_str())));
+        smsc_log_debug(log_, "infralogic %s disk data storage is created", name.c_str());
+
+        std::auto_ptr< DiskIndexStorage > index(new DiskIndexStorage(name,
+                                                                     cfg.dbPath,
+                                                                     cfg.recordCount,
+                                                                     Logger::getInstance(("pvssix"+logsfx).c_str())));
+        // FIX: mandatory size recalculation
+        index->recalcSize();
+        smsc_log_debug(log_, "infralogic %s disk index storage is created", name.c_str());
+
+        std::auto_ptr< DiskStorage > ds(new DiskStorage(index.release(), data.release()));
+        smsc_log_debug(log_, "infralogic %s indexed storage is created", name.c_str());
+
+        std::auto_ptr< MemStorage > ms(new MemStorage(Logger::getInstance(("pvssmc"+logsfx).c_str()),
+                                                      cfg.cacheSize));
+        smsc_log_debug(log_, "infralogic %s memory storage is created", name.c_str());
+
+        std::auto_ptr<DataSerializer> ps1( new DataSerializer(ds.get(),&glossary) );
+        std::auto_ptr<DataSerializer> ps2( new DataSerializer(ds.get(),&glossary) );
+        smsc_log_debug(log_,"infralogic %s serializers are created", name.c_str());
+
+        storage_ = new InfrastructStorage(ms.release(),ds.release(),
+                                          ps1.release(),ps2.release(),
+                                          Logger::getInstance(("pvssst"+logsfx).c_str()));
+        storage_->init(cfg.maxDirtySpeed);
+        storage_->setProfileBackup(profileBackup_);
+        smsc_log_info(log_,"infralogic %s initialized",name.c_str());
+    }
+
+    ~InfraLogic() {
+        delete storage_;
+    }
+
+    void shutdown() {
+        delete storage_; storage_ = 0;
+    }
+    void dumpStorage( int index );
+    void init( bool checkAtStart = false );
+    void rebuildIndex( unsigned maxSpeed = 0 );
+    void keepAlive( util::msectime_type now ) {
+        // not needed
+        // MutexGuard mg(statMutex_);
+        // storage_->flushDirty(now);
+    }
+
+    CommandResponse* process( const IntProfileKey& intKey,
+                              ProfileRequest& request );
+
+    unsigned long filledDataSize() const {
+        return static_cast<unsigned long>(storage_->filledDataSize());
+    }
+    
+private:
+    void resizePageSize( std::auto_ptr< DiskDataStorage::storage_type >& pf,
+                         const std::string& fold,
+                         const InfrastructStorageConfig& cfg );
 
 private:
     ProfileBackup           profileBackup_;
@@ -612,6 +624,95 @@ private:
     InfrastructStorage*                storage_;
     LockableProfile         dummyProfile_;  // is used to be locked when there is no profile
 };
+
+
+
+void InfrastructLogic::InfraLogic::resizePageSize( std::auto_ptr< DiskDataStorage::storage_type >& pf,
+                                                   const std::string& fold,
+                                                   const InfrastructStorageConfig& cfg )
+{
+    smsc_log_info(log_,"storage %s pageSize is to be resized from %u to %u",
+                  fold.c_str(), pf->getPageSize(), cfg.pageSize);
+    std::auto_ptr< DiskStorage > ostore;
+    {
+        std::auto_ptr< DiskDataStorage > data( new DiskDataStorage(pf.release(),
+                                                                   smsc::logger::Logger::getInstance("olddd")));
+        smsc_log_debug(log_,"data storage is opened");
+        std::auto_ptr< DiskIndexStorage > index( new DiskIndexStorage(fold+".idx",
+                                                                      cfg.recordCount,
+                                                                      smsc::logger::Logger::getInstance("oldix")));
+        smsc_log_debug(log_,"index storage is opened");
+        ostore.reset(new DiskStorage(index.release(),data.release()));
+    }
+    
+    char datebuf[40];
+    {
+        struct tm stm;
+        stm.tm_isdst = 0;
+        const time_t curt = time(0);
+        localtime_r(&curt,&stm);
+        std::strftime(datebuf,sizeof(datebuf),"-%Y%m%d%H%M%S",&stm);
+    }
+
+    // creating the new storage
+    const std::string fnew = fold + "-tmp" + datebuf;
+    std::auto_ptr< DiskStorage > nstore;
+    {
+        try {
+            smsc::core::buffers::File::Unlink((fnew+".bin").c_str());
+        } catch (...) {
+        }
+        std::auto_ptr< DiskDataStorage::storage_type > pf(new DiskDataStorage::storage_type);
+        try {
+            pf->Create(fnew+".bin", cfg.pageSize, cfg.recordCount);
+        } catch (...) {
+            smsc_log_error(log_,"file %s.bin cannot be created",fnew.c_str());
+            throw smsc::util::Exception("file %s.bin cannot be created",fnew.c_str());
+        }
+
+        std::auto_ptr< DiskDataStorage > data( new DiskDataStorage(pf.release(),
+                                                                   smsc::logger::Logger::getInstance("newdd")));
+        smsc_log_debug(log_,"data storage is created");
+
+        try {
+            smsc::core::buffers::File::Unlink((fnew+".idx").c_str());
+        } catch (...) {
+        }
+        std::auto_ptr< DiskIndexStorage > index( new DiskIndexStorage(fnew+".idx",
+                                                                      cfg.recordCount,
+                                                                      smsc::logger::Logger::getInstance("newix")));
+        smsc_log_debug(log_,"index storage is created");
+        nstore.reset(new DiskStorage(index.release(),data.release()));
+    }
+    
+    // main resizing loop
+    DiskStorage::key_type    k;
+    DiskStorage::buffer_type b;
+    for ( DiskStorage::iterator_type i(ostore->begin()); i.next(k,b); ) {
+        nstore->set(k,b);
+        smsc_log_info(log_,"key=%s written",k.toString().c_str());
+    }
+
+    // closing everything
+    nstore.reset(0);
+    ostore.reset(0);
+
+    // renaming files
+    smsc_log_info(log_,"renaming files...");
+    smsc::core::buffers::File::Rename((fold+".bin").c_str(),(fold+".bin"+datebuf).c_str());
+    smsc::core::buffers::File::Rename((fold+".idx").c_str(),(fold+".idx"+datebuf).c_str());
+    smsc::core::buffers::File::Rename((fnew+".bin").c_str(),(fold+".bin").c_str());
+    smsc::core::buffers::File::Rename((fnew+".idx").c_str(),(fold+".idx").c_str());
+
+    // reopening the file
+    pf.reset( new DiskDataStorage::storage_type );
+    try {
+        pf->Open(fold+".bin");
+    } catch (...) {
+        smsc_log_error(log_,"cannot open %s.bin after pageSize resizing",fold.c_str());
+        throw smsc::util::Exception("cannot open %s.bin",fold.c_str());
+    }
+}
 
 
 
@@ -722,48 +823,6 @@ void InfrastructLogic::rebuildIndex( unsigned /*maxSpeed*/)
     smsc_log_warn(logger_,"infrastructure index rebuilding is not impl yet");
 }
 
-
-/*
-InfrastructLogic::InfrastructStorage* InfrastructLogic::initStorage(const InfrastructStorageConfig& cfg,
-                                                                    bool  checkAtStart,
-                                                                    const std::string& logsfx )
-{
-  const string fn(cfg.dbPath + "/" + cfg.dbName + ".bin");
-  std::auto_ptr< DiskDataStorage::storage_type > pf(new DiskDataStorage::storage_type);
-  try {
-    pf->Open(fn);
-  } catch (...) {
-    pf->Create(fn, 256, cfg.recordCount);
-  }
-
-  std::auto_ptr< DiskDataStorage > data(new DiskDataStorage(pf.release(),
-                                                            Logger::getInstance(("pvssdd"+logsfx).c_str())));
-  smsc_log_debug(logger_, "%s data storage is created", cfg.dbName.c_str());
-
-  std::auto_ptr< DiskIndexStorage > index(new DiskIndexStorage(cfg.dbName,
-                                                               cfg.dbPath,
-                                                               cfg.recordCount,
-                                                               Logger::getInstance(("pvssix"+logsfx).c_str())));
-  // FIX: mandatory size recalculation
-  index->recalcSize();
-  smsc_log_debug(logger_, "%s index storage is created", cfg.dbName.c_str());
-
-  std::auto_ptr< DiskStorage > ds (new DiskStorage(index.release(), data.release()));
-  smsc_log_debug(logger_, "%s indexed storage is created", cfg.dbName.c_str());
-
-  std::auto_ptr< MemStorage > ms(new MemStorage(Logger::getInstance(("pvssmc"+logsfx).c_str()),
-                                                cfg.cacheSize));
-  smsc_log_debug(logger_, "%s memory storage is created", cfg.dbName.c_str());
-
-  std::auto_ptr<DataSerializer> ps( new DataSerializer(ds.get(),&glossary_) );
-  smsc_log_debug(logger_,"%s serializer is created", cfg.dbName.c_str());
-
-    InfrastructStorage* st = new InfrastructStorage(ms.release(),ds.release(),ps.release(),
-                                                    Logger::getInstance(("pvssst"+logsfx).c_str()));
-    st->init(cfg.minDirtyTime, cfg.maxDirtyTime, cfg.maxDirtyCount);
-    return st;
-}
- */
 
 void InfrastructLogic::shutdownStorages() {
   if (provider_) {
@@ -937,7 +996,21 @@ InfrastructStorageConfig::InfrastructStorageConfig(ConfigView& cfg, const char* 
     } catch (...) {
         maxDirtySpeed = 10000;
         smsc_log_warn(logger,"Parameter <Pvss.%s.maxDirtySpeed> missed. Default value is %u",
-                      storageType,10000);
+                      storageType,maxDirtySpeed);
+    }
+
+    try {
+        pageSize = cfg.getInt("pageSize");
+        if ( pageSize < 256 ) {
+            unsigned newval = 256;
+            smsc_log_warn(logger,"pageSize=%u is too small, using default value %u",
+                          pageSize,newval);
+            pageSize = newval;
+        }
+    } catch (...) {
+        pageSize = 256;
+        smsc_log_warn(logger,"Parameter <Pvss.%s.pageSize> missed. Default value is %u",
+                      storageType,pageSize);
     }
 }
 

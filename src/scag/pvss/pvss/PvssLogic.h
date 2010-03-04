@@ -396,6 +396,7 @@ struct InfrastructStorageConfig {
   uint32_t cacheSize;
   uint32_t recordCount;
   uint32_t maxDirtySpeed; // 10000
+    uint32_t pageSize;    // 256
   bool    checkAtStart;
 };
 
