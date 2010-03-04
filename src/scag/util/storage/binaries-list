@@ -55,3 +55,10 @@ scag/tests/test-delayed-storage  test-delayed-storage \
    @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
    -lutil -lpthread -lrt -ldl
 
+scag/tests/pvss-test-resize-pagefile test-resize-pagefile \
+   -lscag-pvss-profile \
+   -lscag-util-storage \
+   -lscag-util-io \
+   -lcore-buffers \
+   @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
+   -lutil -lpthread -lrt -ldl
