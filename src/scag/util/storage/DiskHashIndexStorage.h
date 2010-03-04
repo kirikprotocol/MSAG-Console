@@ -61,6 +61,18 @@ public:
     }
   }
 
+    DiskHashIndexStorage( const string& fn,
+                          uint32_t initRecCnt,
+                          smsc::logger::Logger* thelog = 0 ) :
+    logger_(thelog) {
+        if (!File::Exists(fn.c_str())) {
+            index_.Create(fn.c_str(),initRecCnt,false);
+        } else {
+            index_.Open(fn.c_str());
+        }
+    }
+
+
   ~DiskHashIndexStorage() {
   }
 
