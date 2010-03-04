@@ -122,8 +122,6 @@ public abstract class dlBody extends IndexBean {
   }
 
   public void setName(String name) {
-    if (this.name == null || !this.name.equals(name))
-      clear();
     this.name = name.toLowerCase();
   }
 

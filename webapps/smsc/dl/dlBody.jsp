@@ -1,5 +1,5 @@
 <%@ page import="ru.novosoft.smsc.util.StringEncoderDecoder" %>
-<input type=hidden name=isChanged value="false">
+<input type=hidden id=isChanged name=isChanged value="false">
 <div class=content>
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Common values ~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
 <div class=page_subtitle>
@@ -27,27 +27,20 @@
             <%
                 if (bean.isCreate()) {
             %>
-            <input class=radio type=radio name=system id=systemTrue value=true
+            <input class=radio type=radio name=system id=system value=true
                    onClick="checkSystemRadio();" <%= bean.isSystem() ? "checked" : "" %>>
-            <label for=systemTrue>
+            <label>
                 &nbsp;
                 system
             </label>
-            <input class=radio type=radio name=system id=systemFalse value=false
+            <input class=radio type=radio name=system id=system value=false
                    onClick="checkSystemRadio();" <%= bean.isSystem() ? "" : "checked" %>>
-            <label for=systemFalse>
+            <label>
                 &nbsp;
-                <input class=txt name=owner id=ownerAddress value="<%= StringEncoderDecoder.encode(bean.getOwner()) %>"
-                       validation="address" onkeyup="resetValidation(this)">
             </label>
-            <script>
-                function checkSystemRadio() {
-                    document.getElementById('ownerAddress').disabled = document.getElementById('systemTrue').checked;
-                    document.getElementById('maxElements').disabled = !document.getElementById('systemTrue').checked;
-                }
+            <input class=txt name=owner id=ownerAddress value="<%= StringEncoderDecoder.encode(bean.getOwner()) %>"
+                       validation="address" onkeyup="resetValidation(this)">
 
-                checkSystemRadio();
-            </script>
             <%
             } else {
             %>
@@ -63,8 +56,18 @@
             maximum members count:
         </th>
         <td>
-            <input class=txt name=maxElements id=maxElements value="<%= bean.getMaxElements() %>" validation="positive"
+            <input class=txt id="maxElements" name="maxElements"  value="<%= bean.getMaxElements() %>" validation="positive"
                    onkeyup="resetValidation(this)">
+            <% if (bean.isCreate()) { %>
+            <script>
+                function checkSystemRadio() {
+                    document.getElementById('ownerAddress').disabled = document.getElementById('system').checked;
+                    document.getElementById('maxElements').disabled = !document.getElementById('system').checked;
+                }
+
+                checkSystemRadio();
+            </script>
+            <% } %>
         </td>
     </tr>
 </table>
