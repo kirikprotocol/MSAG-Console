@@ -26,6 +26,7 @@ using namespace scag2::util::storage;
 using scag2::pvss::AbntAddr;
 using scag2::pvss::IntProfileKey;
 using scag2::pvss::Profile;
+using scag2::pvss::ProfileBackup;
 using scag2::pvss::Property;
 using scag2::util::Drndm;
 using scag2::util::HexDump;
@@ -38,19 +39,20 @@ using scag2::util::io::GlossaryBase;
 template < class Key > struct ProfileHeapAllocator
 {
 public:
-    void setProfileLog( smsc::logger::Logger* thelog ) { plog_ = thelog; }
+    void setProfileBackup( ProfileBackup* b ) { plog_ = b; }
 protected:
     ProfileHeapAllocator() : plog_(0) {}
     ~ProfileHeapAllocator() {}
     inline Profile* alloc( const Key& k ) const { return new Profile(k,plog_); }
 private:
-    smsc::logger::Logger* plog_;
+    ProfileBackup* plog_;
 };
 
 
 template < class MemStorage, class DiskStorage > struct ProfileSerializer
 {
 public:
+    typedef typename MemStorage::key_type     key_type;
     typedef typename MemStorage::stored_type  stored_type;
     typedef typename DiskStorage::buffer_type buffer_type;
 
@@ -78,7 +80,7 @@ public:
     }
 
     /// deserialization && attaching the buffer
-    bool deserialize( stored_type& val ) {
+    bool deserialize( const key_type&, stored_type& val ) {
         assert(newbuf_ && val.value );
         Deserializer dsr(*newbuf_,glossary_);
 #ifdef ABONENTSTORAGE
@@ -95,7 +97,7 @@ public:
     }
 
     /// --- writing
-    void serialize( stored_type& val ) {
+    void serialize( const key_type&, stored_type& val ) {
         assert( val.value );
         if (!newbuf_) { newbuf_ = new buffer_type; }
         Serializer ser(*newbuf_,glossary_);
@@ -226,7 +228,7 @@ int main()
 
     CachedStorage st(ms.release(),ds.release(),ps.release(),
                      smsc::logger::Logger::getInstance("pvssst"));
-    st.setProfileLog(smsc::logger::Logger::getInstance("prof"));
+    // st.setProfileLog(smsc::logger::Logger::getInstance("prof"));
 
     Drndm rnd;
     for ( unsigned i = 0; i < 200; ++i ) {
