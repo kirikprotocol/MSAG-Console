@@ -206,8 +206,9 @@ public class ExportStat {
   private Date tillDate = null;
   private int  minuteInterval = 5;
   private boolean useFromDateInHeaders;
+  private boolean writeTotals;
 
-  public ExportStat(String src, String dest, String minuteInterval, String dateTime, String useFromDateInHeaders) {
+  public ExportStat(String src, String dest, String minuteInterval, String dateTime, String useFromDateInHeaders, String writeTotals) {
     srcDir = new File(src);
     destDir = new File(dest);
     try {
@@ -222,6 +223,11 @@ public class ExportStat {
           dateTime = null;
         }
       }
+
+      if (writeTotals != null)
+        this.writeTotals = writeTotals.equals("true");
+
+      calendar.set(Calendar.DATE, 18);
       gmtDateFormat.setCalendar(calendar);
       gmtDateDayFormat.setCalendar(calendar);
       dateFormat.setCalendar(localCalendar);
@@ -283,6 +289,7 @@ public class ExportStat {
             try { // read record from file to buffer
               recordNum++;
               int rs1 = (int) readUInt32(input);
+              System.out.println(rs1);
               if (buffer.length < rs1) buffer = new byte[rs1];
               readBuffer(input, buffer, rs1);
               int rs2 = (int) readUInt32(input);
@@ -357,10 +364,40 @@ public class ExportStat {
       r.println("#"+destDateFormat.format(fromDate));
     else
       r.println("#"+destDateFormat.format(tillDate));
+
+    SmeIdCountersSet totalCounters = new SmeIdCountersSet("Total");
     for (Iterator i = smeCounters.keySet().iterator(); i.hasNext();) {
       String smeId = (String) i.next();
       SmeIdCountersSet set = (SmeIdCountersSet) smeCounters.get(smeId);
       if (set == null) continue;
+      r.println(smeId + ",accepted," + set.accepted);
+      totalCounters.accepted+=set.accepted;
+      r.println(smeId + ",rejected," + set.rejected);
+      totalCounters.rejected+=set.rejected;
+      r.println(smeId + ",delivered," + set.delivered);
+      totalCounters.delivered+=set.delivered;
+      r.println(smeId + ",failed," + set.failed);
+      totalCounters.failed+=set.failed;
+      r.println(smeId + ",rescheduled," + set.rescheduled);
+      totalCounters.rescheduled+=set.rescheduled;
+      r.println(smeId + ",temporal," + set.temporal);
+      totalCounters.temporal +=set.temporal;
+      r.println(smeId + ",peak_i," + set.peak_i);
+      totalCounters.peak_i += set.peak_i;
+      r.println(smeId + ",peak_o," + set.peak_o);
+      totalCounters.peak_o += set.peak_o;
+      for (Iterator j = set.getErrors().iterator(); j.hasNext();) {
+        ErrorCounterSet err = (ErrorCounterSet) j.next();
+        if (err == null) continue;
+        r.println(smeId + ",errc-" + err.errcode + "," + err.counter);
+        totalCounters.incError(err.errcode, err.counter);
+      }
+    }
+    r.close();
+
+    if (writeTotals) {
+      SmeIdCountersSet set = totalCounters;
+      String smeId = totalCounters.smeid;
       r.println(smeId + ",accepted," + set.accepted);
       r.println(smeId + ",rejected," + set.rejected);
       r.println(smeId + ",delivered," + set.delivered);
@@ -375,7 +412,6 @@ public class ExportStat {
         r.println(smeId + ",errc-" + err.errcode + "," + err.counter);
       }
     }
-    r.close();
   }
 
   private TreeMap getStatQueryDirs() throws Exception {
@@ -549,12 +585,14 @@ public class ExportStat {
   public static void main(String[] args) {
     ExportStat stat = null;
     try {
-      stat = new ExportStat(args[0], args[1], args[2], args.length > 3? args[3] : null, args.length > 4 ? args[4] : null);
+      stat = new ExportStat(args[0], args[1], args[2], args.length > 3? args[3] : null, args.length > 4 ? args[4] : null, args.length > 5 ? args[5] : null);
     }
     catch (Exception e) {
-      System.out.println("java ExportStat srcDir destDir [ExportDate] [UseStartDateInHeader]");
+      e.printStackTrace();
+      System.out.println("java ExportStat srcDir destDir [ExportDate] [UseStartDateInHeader] [WriteTotals]");
       System.out.println("ExportDate in yyyy-MM-dd-HH format");
       System.out.println("UseStartDateInHeader=true/false");
+      System.out.println("WriteTotals=true/false");
       return;
     }
 
