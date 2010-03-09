@@ -168,7 +168,7 @@ bool CsvStore::isProcessed()
         Directory& dir = *dit->second;
         for ( FileMap::const_iterator fit = dir.files.begin(); fit != dir.files.end(); ++fit ) {
             CsvFile* f = fit->second;
-            if ( !f ) continue;
+            if ( !f || f->processed ) continue;
             if ( f->readAll && f->openMessages == 0 ) {
                 // smsc_log_debug(log,"isProc: file %s finished",f->fileName().c_str());
                 continue; 
@@ -467,7 +467,7 @@ void CsvStore::finalizeMsg(uint64_t msgId, time_t fdate, uint8_t state, Message*
     file.Open();
   }
   file.setStateAndDate(msgId,state,fdate,msg);
-  if(file.readAll && file.openMessages==0)
+  if(file.processed || (file.readAll && file.openMessages==0) )
   {
     canClose(file);
   }

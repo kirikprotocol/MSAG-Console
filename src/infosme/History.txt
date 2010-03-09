@@ -1,6 +1,9 @@
 History in reverse order
 ----------------------------------------------------
 
+2010-03-09 15:55 bukind
+ bugfix: processed files don't watch their readAll field
+
 ----------------------------------------------------
 infosme-build-20100309 13:00 bukind
 
