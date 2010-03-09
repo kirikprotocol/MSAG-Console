@@ -991,12 +991,6 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
   {
     __warning2__("mapIOTasksCount set to default %d",mapIOTasksCount);
   }
-  try{
-    niussdViaVlr=cfg.cfgman->getBool("map.niUssdViaVlr");
-  }catch(...)
-  {
-    __warning2__("map.niUssdViaVlr set to default %s",niussdViaVlr?"true":"false");
-  }
 #ifdef EIN_HD
     localInst=cfg.cfgman->getString("map.localInstancies");
     remoteInst=cfg.cfgman->getString("map.remoteInstancies");

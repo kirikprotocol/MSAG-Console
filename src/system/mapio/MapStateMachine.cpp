@@ -1535,7 +1535,7 @@ static ET96MAP_USSD_DATA_CODING_SCHEME_T fillUSSDString(unsigned encoding, const
       // if buffer have trailing 7 unfilled bits place <cr> there
       if( bytes*8-elen*7 == 7 ) ussdString->ussdStr[bytes-1] |= (0x0D<<1);
     }
-    ussdEncoding = 0x01;
+    ussdEncoding = 0x0f;
   } else
   { //8 bit
     if( text_len > ET96MAP_MAX_USSD_STR_LEN )
@@ -1896,7 +1896,7 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
       mkIMSIOrMSISDNFromAddress( &destRef, dialog->sms->getDestinationAddress() );
     }
 
-    if(dialog->sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP)==smsc::sms::USSD_USSR_REQ_VLR)
+    if(dialog->sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP)>=smsc::sms::USSD_USSR_REQ_VLR && dialog->sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP)<=smsc::sms::USSD_USSN_REQ_LAST)
     {
       ET96MAP_SS7_ADDR_T destAddr=dialog->destMscAddr;
       destAddr.ss7Addr[1]=7;
@@ -1908,7 +1908,7 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
   }
   dialog->invokeId++;
   ET96MAP_ALERTING_PATTERN_T alertPattern = ET96MAP_ALERTING_PATTERN_LEVEL2;
-  if( serviceOp == USSD_USSR_REQ || serviceOp==USSD_USSR_REQ_LAST )
+  if( serviceOp == USSD_USSR_REQ || serviceOp==USSD_USSR_REQ_LAST || serviceOp==smsc::sms::USSD_USSR_REQ_VLR || serviceOp==smsc::sms::USSD_USSR_REQ_VLR_LAST)
   {
     checkMapReq( Et96MapV2UnstructuredSSRequestReq( dialog->ssn INSTDLGARG(dialog), dialog->dialogid_map, dialog->invokeId, ussdEncoding, ussdString, &alertPattern), __func__);
   } else
@@ -2012,7 +2012,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                   dialog->dialogid_map,mr,dialog->ussdMrRef);
               return;
             }
-            dialog->lastUssdMessage=serviceOp==USSD_USSR_REQ_LAST || serviceOp==USSD_USSN_REQ_LAST;
+            dialog->lastUssdMessage=serviceOp==USSD_USSR_REQ_LAST || serviceOp==USSD_USSN_REQ_LAST || serviceOp==USSD_USSR_REQ_VLR_LAST || serviceOp==USSD_USSN_REQ_VLR_LAST;
             dialog->id_opened = true;
             dialog->dialogid_smsc = dialogid_smsc;
             if (dialog->state == MAPST_WaitSubmitCmdConf || dialog->state == MAPST_WaitSubmitUSSDRequestConf )
