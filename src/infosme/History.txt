@@ -1,6 +1,12 @@
 History in reverse order
 ----------------------------------------------------
 
+----------------------------------------------------
+infosme-build-20100309 13:00 bukind
+
+2010-03-09 13:00 bukind
+ bugfix: exc thrown after successfully loading msg in a CsvStore::loadMessage
+
 2010-02-24 16:50 bukind
  feature: processed final messages are purged from memory
 

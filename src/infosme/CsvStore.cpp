@@ -554,7 +554,7 @@ void CsvStore::CsvFile::Close(bool argProcessed)
 CsvStore::CsvFile::MessageMap::iterator CsvStore::CsvFile::findRecord(uint64_t msgId,bool loadFromDisk)
 {
   MessageMap::iterator it=msgMap.find(msgId);
-  if(it==msgMap.end())
+  while (it==msgMap.end() ) // fake while
   {
       // NOTE: it the message is not found in the map of the opened file
       // it means that the state is final...
@@ -569,15 +569,15 @@ CsvStore::CsvFile::MessageMap::iterator CsvStore::CsvFile::findRecord(uint64_t m
                   ReadRecord(rec);
                   TimeMap::iterator j = timeMap.insert(TimeMap::value_type(rec.msg.date,rec));
                   it = msgMap.insert(MessageMap::value_type(rec.msg.id,j)).first;
+                  f.Seek(curpos);
+                  break; // leave the fake loop
               } catch (...) {
                   f.Seek(curpos);
                   throw smsc::util::Exception("Cannot load msg #%llx from %s",msgId,fullPath().c_str());
               }
-              f.Seek(curpos);
           }
       }
-
-    throw smsc::util::Exception("Message #%llx not found in %s",msgId,fullPath().c_str());
+      throw smsc::util::Exception("Message #%llx not found in %s",msgId,fullPath().c_str());
   }
   return it;
 }
