@@ -373,9 +373,10 @@ void CsvStore::loadMessage(uint64_t msgId, Message &message, uint8_t &state)
     file.f.Seek(off);
     CsvFile::Record rec;
     file.ReadRecord(rec);
+    file.f.Close();
+    if ( rec.state == DELETED ) throw smsc::util::Exception("message #%llx is deleted",msgId);
     message=rec.msg;
     state=rec.state;
-    file.f.Close();
     return;
   }
   CsvFile::Record& rec = file.findRecord(msgId,true)->second->second;
@@ -567,10 +568,14 @@ CsvStore::CsvFile::MessageMap::iterator CsvStore::CsvFile::findRecord(uint64_t m
                   f.Seek(off);
                   CsvFile::Record rec;
                   ReadRecord(rec);
+                  if (rec.state == DELETED) throw smsc::util::Exception("message #%llx is deleted",msgId);
+                  f.Seek(curpos);
                   TimeMap::iterator j = timeMap.insert(TimeMap::value_type(rec.msg.date,rec));
                   it = msgMap.insert(MessageMap::value_type(rec.msg.id,j)).first;
-                  f.Seek(curpos);
                   break; // leave the fake loop
+              } catch ( smsc::util::Exception& e ) {
+                  f.Seek(curpos);
+                  throw;
               } catch (...) {
                   f.Seek(curpos);
                   throw smsc::util::Exception("Cannot load msg #%llx from %s",msgId,fullPath().c_str());

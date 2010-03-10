@@ -1,6 +1,12 @@
 History in reverse order
 ----------------------------------------------------
 
+----------------------------------------------------
+infosme-build-20100310 12:00 bukind
+
+2010-03-10 11:57 bukind
+ bugfix: deleted records should not be seen 
+
 2010-03-09 15:55 bukind
  bugfix: processed files don't watch their readAll field
 
