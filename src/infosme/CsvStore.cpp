@@ -695,7 +695,8 @@ void CsvStore::CsvFile::ReadRecord(buf::File &f, CsvStore::CsvFile::Record& rec)
 
 void CsvStore::CsvFile::setState(uint64_t msgId, uint8_t state, Message* msg)
 {
-  MessageMap::iterator it = findRecord(msgId);
+  // load a record from disk if state is DELETED
+  MessageMap::iterator it = findRecord(msgId,state == DELETED);
   Record& rec = it->second->second;
   if(rec.state<=ENROUTE && state>ENROUTE)
   {
@@ -817,7 +818,7 @@ uint8_t CsvStore::CsvFile::getState(uint64_t msgId)
 
 void CsvStore::CsvFile::setStateAndDate(uint64_t msgId,uint8_t state, time_t fdate, Message* msg)
 {
-  MessageMap::iterator it = findRecord(msgId);
+  MessageMap::iterator it = findRecord(msgId,state == DELETED);
   Record& rec = it->second->second;
   uint8_t oldState=rec.state;
   rec.state=state;

@@ -2,7 +2,10 @@ History in reverse order
 ----------------------------------------------------
 
 ----------------------------------------------------
-infosme-build-20100310 12:00 bukind
+infosme-build-20100310 18:00 bukind
+
+2010-03-10 17:45 bukind
+ bugfix: message to set state=DELETED are forced to be loaded from disk
 
 2010-03-10 11:57 bukind
  bugfix: deleted records should not be seen 
