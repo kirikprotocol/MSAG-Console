@@ -1,12 +1,14 @@
 <%@ page import="ru.novosoft.smsc.infosme.beans.Messages"%>
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
-<jsp:useBean id="bean" scope="request" class="ru.novosoft.smsc.infosme.beans.Messages" />
+<jsp:useBean id="infoSmeMessagesBean" scope="session" class="ru.novosoft.smsc.infosme.beans.Messages" />
 <%--<% if (!bean.isProcessed()) {%>--%>
-  <jsp:setProperty name="bean" property="*"/>
+  <jsp:setProperty name="infoSmeMessagesBean" property="*"/>
 <%--<% } %>--%>
 <%
 	TITLE=getLocString("infosme.title");
 	MENU0_SELECTION = "MENU0_SERVICES";
+
+  Messages bean = infoSmeMessagesBean;
 
   int beanResult = bean.process(request);
 
