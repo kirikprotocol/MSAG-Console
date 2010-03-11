@@ -27,7 +27,7 @@ bool ProfileCommandProcessor::applyCommonLogic( const std::string& profkey,
 {
     if (pf) {
         if (profileRequest.hasTiming()) { profileRequest.timingMark("pfgot"); }
-        smsc_log_debug(log_,"FIXME(pre): prof=%s",pf->toString().c_str());
+        // smsc_log_debug(log_,"FIXME(pre): prof=%s",pf->toString().c_str());
         if ( pf->getKey() != profkey ) {
             smsc_log_warn(log_,"key mismatch: pf=%p pf.key=%s req.key=%s",
                           pf,pf->getKey().c_str(),profkey.c_str());
@@ -68,7 +68,7 @@ bool ProfileCommandProcessor::applyCommonLogic( const std::string& profkey,
                  pf->GetCount());
         profileRequest.timingComment(buf);
     }
-    smsc_log_debug(log_,"FIXME(post): prof=%s",pf->toString().c_str());
+    // smsc_log_debug(log_,"FIXME(post): prof=%s",pf->toString().c_str());
     return ret;
     
 }
