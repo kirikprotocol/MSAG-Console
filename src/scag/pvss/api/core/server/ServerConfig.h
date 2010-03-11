@@ -17,7 +17,11 @@ public:
     const static int MAX_QUEUE_SIZE_LIMIT = 10000;
 public:
 
-    ServerConfig() : Config(), queueSizeLimit_(DEF_QUEUE_SIZE_LIMIT) {}
+    ServerConfig() :
+    Config(),
+    queueSizeLimit_(DEF_QUEUE_SIZE_LIMIT),
+    timingInterval_(5000),
+    timingSeriesSize_(5) {}
 
     int getQueueSizeLimit() const {
         return queueSizeLimit_;
@@ -31,16 +35,31 @@ public:
         this->queueSizeLimit_ = queueSizeLimit;
     }
 
+    unsigned getTimingInterval() const { return timingInterval_; }
+    unsigned getTimingSeriesSize() const { return timingSeriesSize_; }
+
+    void setTimingInterval( unsigned ti ) {
+        if (ti < 1000) throw ConfigException("timingInterval value=%u is invalid, must be >=1000",ti);
+        timingInterval_ = ti;
+    }
+
+    void setTimingSeriesSize( unsigned tss ) {
+        if (tss == 0 || tss > 100) throw ConfigException("timingSeriesSize value=%u is invalid, must be in [1,100]",tss);
+        timingSeriesSize_ = tss;
+    }
+
     std::string toString() const {
         std::string s(Config::toString());
         char buf[128];
-        snprintf(buf,sizeof(buf)," queueSize=%d", queueSizeLimit_ );
+        snprintf(buf,sizeof(buf)," queueSize=%d timingInterval=%u timingSeriesSize=%u",
+                 queueSizeLimit_, timingInterval_, timingSeriesSize_ );
         return s + buf;
     }
 
 private:
     int queueSizeLimit_;
-
+    unsigned timingInterval_;
+    unsigned timingSeriesSize_;
 };
 
 } // namespace server

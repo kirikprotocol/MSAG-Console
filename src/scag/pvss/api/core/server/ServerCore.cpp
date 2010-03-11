@@ -421,26 +421,40 @@ void ServerCore::receiveContext( std::auto_ptr< ServerContext > ctx )
         }
 
         bool needTiming = false;
-        do {
+        unsigned totalRequests;
+        {
             // a new request has come
             MutexGuard mg(statMutex_);
             static util::msectime_type timingCounter = 0;
-            ++total_.requests;
+            totalRequests = ++total_.requests;
             ++last_.requests;
             util::msectime_type currentTime = checkStatistics();
-            if ( preq && (currentTime - timingCounter > util::msectime_type(5000)) ) {
-                // more than 5 seconds
-                // NOTE: simple randomization
-                static unsigned counter = 0;
-                ++counter;
-                if ( (counter % 7) == 0 ) break;
-                counter += unsigned(reinterpret_cast<uint64_t>(static_cast<const void*>(req)));
-                timingCounter = currentTime;
-                needTiming = true;
+            if ( preq ) {
+                static unsigned successiveTimings = 0;
+                if ( successiveTimings ) {
+                    --successiveTimings;
+                    needTiming = true;
+                } else if (currentTime - timingCounter > util::msectime_type(getConfig().getTimingInterval())) {
+                    // more than 5 seconds
+                    /*
+                    // NOTE: simple randomization
+                    static unsigned counter = 0;
+                    ++counter;
+                    if ( (counter % 7) == 0 ) break;
+                    counter += unsigned(reinterpret_cast<uint64_t>(static_cast<const void*>(req)));
+                    needTiming = true;
+                     */
+                    timingCounter = currentTime;
+                    successiveTimings = getConfig().getTimingSeriesSize() - 1;
+                    needTiming = true;
+                }
             }
-        } while ( false );
+        }
         if ( needTiming ) {
             preq->startTiming();
+            char buf[30];
+            std::sprintf(buf,"#%u ",totalRequests);
+            preq->timingComment(buf);
         }
 
         smsc_log_debug(log_,"packet received %p: %s", req, req->toString().c_str());

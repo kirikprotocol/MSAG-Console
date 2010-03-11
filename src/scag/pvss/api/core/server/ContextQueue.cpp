@@ -26,7 +26,7 @@ void ContextQueue::requestReceived( std::auto_ptr<ServerContext>& context ) /* t
     }
     if ( context->getRequest()->hasTiming() ) {
         char buf[50];
-        sprintf(buf,"reqRecv(qsz=%u)",getSize());
+        sprintf(buf,"reqRecv(qsz=%u)",queues_[1].Count());
         context->getRequest()->timingMark(buf);
     }
     context->setRespQueue(*this);

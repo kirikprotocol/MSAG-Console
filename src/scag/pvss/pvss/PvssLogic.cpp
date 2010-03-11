@@ -598,11 +598,13 @@ public:
     void dumpStorage( int index );
     void init( bool checkAtStart = false );
     void rebuildIndex( unsigned maxSpeed = 0 );
+    /*
     void keepAlive( util::msectime_type now ) {
         // not needed
         // MutexGuard mg(statMutex_);
         // storage_->flushDirty(now);
     }
+     */
 
     CommandResponse* process( const IntProfileKey& intKey,
                               ProfileRequest& request );
@@ -620,7 +622,7 @@ private:
     ProfileBackup           profileBackup_;
     ProfileCommandProcessor commandProcessor_;
     smsc::logger::Logger*   log_;
-    smsc::core::synchronization::Mutex statMutex_;
+    // smsc::core::synchronization::Mutex statMutex_;
     InfrastructStorage*                storage_;
     LockableProfile         dummyProfile_;  // is used to be locked when there is no profile
 };
@@ -728,11 +730,8 @@ CommandResponse* InfrastructLogic::InfraLogic::process( const IntProfileKey& int
         ok = commandProcessor_.applyCommonLogic(profkey,profileRequest,pf,createProfile);
     }
     if (ok) {
-        MutexGuard mg(statMutex_);
         if ( pf->isChanged() ) {
             storage_->markDirty(intKey);
-            // } else {
-            // storage_->flushDirty();
         }
     }
     return commandProcessor_.getResponse();
@@ -794,6 +793,7 @@ std::string InfrastructLogic::reportStatistics() const
 }
 
 
+/*
 void InfrastructLogic::keepAlive()
 {
     util::msectime_type now = util::currentTimeMillis();
@@ -802,6 +802,7 @@ void InfrastructLogic::keepAlive()
     service_->keepAlive(now);
     operator_->keepAlive(now);
 }
+ */
 
 
 void InfrastructLogic::init( bool /*checkAtStart*/ )

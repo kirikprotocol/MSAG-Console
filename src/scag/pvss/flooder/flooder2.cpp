@@ -95,6 +95,17 @@ void getConfig( smsc::logger::Logger* thelog,
 }
 
 
+int usage()
+{
+    fprintf(stderr,"Usage: flooder [options]\n");
+    fprintf(stderr," -s | --speed SPEED   specify the speed of flood\n");
+    fprintf(stderr," -k | --skip  SKIP    specify how many profiles to skip\n");
+    fprintf(stderr," -h | --host  HOST    specify the host to connect\n");
+    fprintf(stderr," -p | --post  PORT    specify the port to connect\n");
+    return -1;
+}
+
+
 int main( int argc, const char** argv )
 {
     smsc::logger::Logger::Init();
@@ -119,20 +130,29 @@ int main( int argc, const char** argv )
 
     // --- reading speed from cmd line
     unsigned skip = unsigned(-1);
-    if ( argc > 1 ) {
-        unsigned newSpeed = unsigned(atoi(argv[1]));
-        if ( newSpeed == 0 ) {
-            fprintf(stderr, "wrong speed specified on Command line: %s\n", argv[1]);
-            exit(-1);
+    for ( int i = 1; i < argc; ++i ) {
+        const std::string arg = argv[i];
+        if ( arg == "-s" || arg == "--speed" ) {
+            if ( ++i >= argc ) return usage();
+            flooderConfig.setSpeed(unsigned(atoi(argv[i])));
+            printf("speed specified %u\n",flooderConfig.getSpeed());
+        } else if ( arg == "-k" || arg == "--skip" ) {
+            if ( ++i >= argc ) return usage();
+            skip = unsigned(atoi(argv[i]));
+            printf("skip specified %u\n",skip);
+        } else if ( arg == "-h" || arg == "--host" ) {
+            if ( ++i >= argc ) return usage();
+            clientConfig.setHost(argv[i]);
+            printf("host specified %s\n",clientConfig.getHost().c_str());
+        } else if ( arg == "-p" || arg == "--port" ) {
+            if ( ++i >= argc ) return usage();
+            clientConfig.setPort(atoi(argv[i]));
+            printf("port specified %u\n",clientConfig.getPort());
         } else {
-            printf("overriding flooder speed %u -> %u\n", flooderConfig.getSpeed(), newSpeed );
-            flooderConfig.setSpeed( newSpeed );
-        }
-        
-        if ( argc > 2 ) {
-            skip = unsigned(atoi(argv[2]));
+            return usage(); 
         }
     }
+
 
     // --- making a client
     std::auto_ptr< Client > client

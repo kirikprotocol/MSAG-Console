@@ -49,6 +49,17 @@ extern "C" void atExitHandler(void)
     smsc::logger::Logger::Shutdown();
 }
 
+int usage()
+{
+    fprintf(stderr,"Usage: flooder [options]\n");
+    fprintf(stderr," -s | --speed SPEED   specify the speed of flood\n");
+    fprintf(stderr," -k | --skip  SKIP    specify how many profiles to skip\n");
+    fprintf(stderr," -h | --host  HOST    specify the host to connect\n");
+    fprintf(stderr," -p | --post  PORT    specify the port to connect\n");
+    return -1;
+}
+
+
 int main(int argc, char* argv[]) {
 
   int speed = 0; //req/sec
@@ -72,9 +83,6 @@ int main(int argc, char* argv[]) {
   try {
     logger = Logger::getInstance("flooder");
 
-    if (argc > 1) {
-      speed = atoi(argv[1]);
-    }
     smsc_log_info(logger,  "Starting up pvss flooder...");
 
     smsc::util::config::Manager::init("config.xml");
@@ -88,6 +96,7 @@ int main(int argc, char* argv[]) {
     } catch (...) {
       smsc_log_warn(logger, "Parameter <PvssClient.host> missed. Defaul value is %s", host.c_str());
     };
+
     int port = 27880;
     try { 
       port = clientConfig.getInt("port");
@@ -139,10 +148,32 @@ int main(int argc, char* argv[]) {
 
     PvssStreamClient* pc = new PvssStreamClient;
 
-    unsigned skip = unsigned(-1);
-    if ( argc > 2 ) {
-        skip = unsigned(atoi(argv[2]));
-    }
+      // reading command-line arguments
+      unsigned skip = unsigned(-1);
+      for ( int i = 1; i < argc; ++i ) {
+          const std::string arg = argv[i];
+          if ( arg == "-s" || arg == "--speed" ) {
+              if ( ++i >= argc ) return usage();
+              speed = atoi(argv[i]);
+              printf("speed specified %d\n",speed);
+          } else if ( arg == "-k" || arg == "--skip" ) {
+              if ( ++i >= argc ) return usage();
+              skip = unsigned(atoi(argv[i]));
+              printf("skip specified %u\n",skip);
+          } else if ( arg == "-h" || arg == "--host" ) {
+              if ( ++i >= argc ) return usage();
+              host = argv[i];
+              printf("host specified %s\n",host.c_str());
+          } else if ( arg == "-p" || arg == "--port" ) {
+              if ( ++i >= argc ) return usage();
+              port = atoi(argv[i]);
+              printf("port specified %u\n",port);
+          } else {
+              return usage(); 
+          }
+      }
+
+
     if ( skip == unsigned(-1) ) {
         scag2::util::Drndm::getRnd().setSeed(uint64_t(time(0)));
     }

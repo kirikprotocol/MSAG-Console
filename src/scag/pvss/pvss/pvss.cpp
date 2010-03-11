@@ -306,6 +306,19 @@ int main(int argc, char* argv[]) {
             smsc_log_warn(logger,"Parameter <PVSS.maxSpeed> missed, Default value is %d", maxSpeed );
         }
 
+        unsigned timingInterval = 5000;
+        unsigned timingSeriesSize = 5;
+        try {
+            timingInterval = persConfig.getInt("timingInterval");
+        } catch (...) {
+            smsc_log_warn(logger,"Parameter <PVSS.timingInterval> is missed, using default %u", timingInterval);
+        }
+        try {
+            timingSeriesSize = persConfig.getInt("timingSeriesSize");
+        } catch (...) {
+            smsc_log_warn(logger,"Parameter <PVSS.timingSeriesSize> is missed, using default %u", timingSeriesSize);
+        }
+
         std::string abonentBackup, serviceBackup, operatorBackup, providerBackup;
         std::string backupJournalDir;
         size_t propPerSec = 10;
@@ -349,6 +362,8 @@ int main(int argc, char* argv[]) {
         ServerConfig serverConfig = getAsyncConfig(asyncCfg, logger);
         serverConfig.setHost(host);
         serverConfig.setQueueSizeLimit(maxWaitingCount);
+        serverConfig.setTimingInterval(timingInterval);
+        serverConfig.setTimingSeriesSize(timingSeriesSize);
         smsc_log_info(logger, "async config: %s", serverConfig.toString().c_str());
 
         ConfigView syncTransportCfg(manager, "PVSS.SyncTransport");

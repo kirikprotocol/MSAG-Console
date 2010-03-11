@@ -348,7 +348,7 @@ public:
 
     std::string reportStatistics() const;
 
-    virtual void keepAlive();
+    // virtual void keepAlive();
 
 protected:
     virtual void init( bool checkAtStart = false ) /* throw (smsc::util::Exception) */;

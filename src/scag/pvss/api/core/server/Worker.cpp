@@ -65,14 +65,16 @@ int Worker::doExecute()
                 }
                 
                 try {
+                    smsc_log_debug(log_,"request %p processing started",context->getRequest().get());
                     context->getRequest()->timingMark("inQueue");
                     Response* resp = logic_.process(*context->getRequest().get());
                     if ( context->getRequest()->hasTiming() ) {
-                        context->getRequest()->timingMark("respgot");
+                        context->getRequest()->timingMark("postProc");
                         if (resp) {
                             resp->startTiming(*context->getRequest().get());
                         }
                     }
+                    smsc_log_debug(log_,"request %p processing finished",context->getRequest().get());
                     context->setResponse(resp);
                 } catch ( smsc::core::buffers::FileException& e ) {
                     smsc_log_fatal(log_,"FileExc in process: %s, SIGTERM will follow", e.what());
