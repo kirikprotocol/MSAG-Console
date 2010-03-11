@@ -86,27 +86,10 @@ void PvssLogic::initGlossary(const string& path, Glossary& glossary) {
 Response* PvssLogic::process(Request& request) /* throw(PvssException) */  {
   try {
       ProfileRequest& preq(static_cast<ProfileRequest&>(request));
-      // profileBackup_.cleanup();
-      // commandProcessor_.reset();
-      // const Profile* pf = 0;
       CommandResponse* r = processProfileRequest(preq);
-      /*
-      if ( preq.hasTiming() ) {
-          // const Profile* pf = commandProcessor_.getProfile();
-          char buf[100];
-          snprintf(buf,sizeof(buf)," [%s props=%u]",
-                   preq.getProfileKey().toString().c_str(),
-                   unsigned(pf ? pf->GetCount() : 0));
-          preq.timingComment(buf);
-      }
-       */
       return r ? new ProfileResponse(preq.getSeqNum(),r) : 0;
-      // CommandResponse* r = commandProcessor_.getResponse();
-      // return r ? new ProfileResponse(preq.getSeqNum(),r) : 0;
-
   } catch (const PvapException& e) {
     smsc_log_warn(logger_, "%p: %p processing error: PvapException", this, &request);
-    //TODO: some rollback actions
     throw;
   } catch (const std::runtime_error &e) {
     smsc_log_warn(logger_, "%p: %p processing error: std::runtime_error: %s", this, &request, e.what());
@@ -161,20 +144,6 @@ void AbonentLogic::dumpStorage( int i )
         AbonentStorage* storage = elementStorages_.Get(i)->storage;
         AbntAddr key;
         Profile profile;
-        /*
-        MemStorage::stored_type stored;
-        stored.value = &profile;
-        DataSerializer& ser = storage->serializer();
-        for ( DiskStorage::iterator_type iter = storage->diskStorage().begin();
-              iter.next( key, *ser.getFreeBuffer(true) ); )
-        {
-            if ( !ser.deserialize(key,stored) ) continue;
-            smsc_log_debug(logger_,"key: %s, val:%p", key.toString().c_str(), stored.value );
-            // dumping
-            smsc_log_info(logger_,"%s: %s",key.toString().c_str(),stored.value->toString().c_str());
-        }
-        // value.dealloc();
-         */
         typedef DiskStorage::value_type value_type;
         value_type value( &profile, new value_type::backup_type );
         for ( DiskStorage::iterator_type iter = storage->dataBegin();
@@ -329,33 +298,6 @@ unsigned long AbonentLogic::initElementStorage( unsigned index,
   smsc_log_info( logger_, "storage #%u is inited, total number of good nodes: %lu", index, filledNodes );
   return filledNodes;
 }
-
-
-/*
-#ifdef PVSSLOGIC_BHS2
-class AbonentLogic::RBTreeIndexRescuer : public AbonentLogic::DiskDataStorage::storage_type::IndexRescuer
-{
-public:
-    RBTreeIndexRescuer( DiskIndexStorage& istore,
-                        DiskDataStorage::storage_type& dstore ) :
-    istore_(istore), dstore_(dstore) {}
-    virtual void recoverIndex( index_type idx, buffer_type& buffer )
-    {
-        // unpack buffer
-        dstore_.unpackBuffer(buffer,0);
-        Deserializer dsr(buffer);
-        dsr.setVersion(dstore_.version());
-        dsr.setrpos(dstore_.offset());
-        AbntAddr key;
-        dsr >> key;
-        istore_.setIndex( key, idx );
-    }
-private:
-    DiskIndexStorage&              istore_;
-    DiskDataStorage::storage_type& dstore_;
-};
-#endif
- */
 
 
 unsigned long AbonentLogic::rebuildElementStorage( unsigned index, unsigned maxSpeed )
@@ -905,39 +847,6 @@ AbonentStorageConfig::AbonentStorageConfig(ConfigView& cfg,
     smsc_log_warn(logger, "Parameter <PVSS.%s.cacheSize> missed. Defaul value is %d",
                    storageType, DEF_CACHE_SIZE);
   }
-    /*
-     * It is not taken from config
-  try {
-    checkAtStart = cfg.getBool("checkAtStart");
-  } catch (...) {
-    checkAtStart = false;
-    smsc_log_warn(logger, "Parameter <PVSS.%s.checkAtStart> missed. Default value is %d",
-                  storageType, checkAtStart);
-  }
-     */
-    /*
-    try {
-        minDirtyTime = cfg.getInt("minDirtyTime");
-    } catch (...) {
-        minDirtyTime = 10;
-        smsc_log_warn(logger,"Parameter <Pvss.%s.minDirtyTime> missed. Default value is %u",
-                      storageType,10);
-    }
-    try {
-        maxDirtyTime = cfg.getInt("maxDirtyTime");
-    } catch (...) {
-        maxDirtyTime = 10000;
-        smsc_log_warn(logger,"Parameter <Pvss.%s.maxDirtyTime> missed. Default value is %u",
-                      storageType,10000);
-    }
-    try {
-        maxDirtyCount = cfg.getInt("maxDirtyCount");
-    } catch (...) {
-        maxDirtyCount = 100;
-        smsc_log_warn(logger,"Parameter <Pvss.%s.maxDirtyCount> missed. Default value is %u",
-                      storageType,100);
-    }
-     */
 }
 
 InfrastructStorageConfig::InfrastructStorageConfig() {
@@ -969,29 +878,6 @@ InfrastructStorageConfig::InfrastructStorageConfig(ConfigView& cfg, const char* 
                    storageType, DEF_CACHE_SIZE);
   }
 
-    /*
-    try {
-        minDirtyTime = cfg.getInt("minDirtyTime");
-    } catch (...) {
-        minDirtyTime = 10;
-        smsc_log_warn(logger,"Parameter <Pvss.%s.minDirtyTime> missed. Default value is %u",
-                      storageType,10);
-    }
-    try {
-        maxDirtyTime = cfg.getInt("maxDirtyTime");
-    } catch (...) {
-        maxDirtyTime = 10000;
-        smsc_log_warn(logger,"Parameter <Pvss.%s.maxDirtyTime> missed. Default value is %u",
-                      storageType,10000);
-    }
-    try {
-        maxDirtyCount = cfg.getInt("maxDirtyCount");
-    } catch (...) {
-        maxDirtyCount = 100;
-        smsc_log_warn(logger,"Parameter <Pvss.%s.maxDirtyCount> missed. Default value is %u",
-                      storageType,100);
-    }
-     */
     try {
         maxDirtySpeed = cfg.getInt("maxDirtySpeed");
     } catch (...) {

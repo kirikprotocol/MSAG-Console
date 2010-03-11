@@ -77,18 +77,6 @@ bool ProfileCommandProcessor::applyCommonLogic( const std::string& profkey,
 
 void ProfileCommandProcessor::resetProfile(Profile *pf) 
 {
-    /*
-    if (!dblog_.getLogMsg().empty()) {
-        smsc_log_warn(log_, "db log not empty: %s", dblog_.getLogMsg().c_str());
-        dblog_.clear();
-    }
-    if (!batchLogs_.empty()) {
-        for (std::vector<string>::iterator i = batchLogs_.begin(); i != batchLogs_.end(); ++i) {
-            smsc_log_warn(log_, "batch db log not empty: %s", i->c_str());
-        }
-        std::vector<string>().swap(batchLogs_);
-    }
-     */
     backup_->cleanup();
     rollback_ = false;
     profile_ = pf;
@@ -102,17 +90,13 @@ bool ProfileCommandProcessor::visitBatchCommand(BatchCommand &cmd) /* throw(Pvap
     BatchResponse* resp = new BatchResponse(StatusType::OK);
     response_.reset(resp);
     std::vector<BatchRequestComponent*> content = cmd.getBatchContent();
-    // batchLogs_.reserve(content.size());
     typedef std::vector<BatchRequestComponent*>::iterator BatchIterator;
     if (cmd.isTransactional()) {
         for (BatchIterator i = content.begin(); i != content.end(); ++i) {
             bool result = (*i)->visit(proc);
             resp->addComponent(static_cast<BatchResponseComponent*>(proc.getResponse()));
-            // addBatchComponentDBLog(proc.getDBLog());
-            // proc.clearDBLog();
             if (!result) {
                 rollback_ = true;
-                // batchLogs_.clear();
                 return false;
             }
         }
@@ -120,8 +104,6 @@ bool ProfileCommandProcessor::visitBatchCommand(BatchCommand &cmd) /* throw(Pvap
         for (BatchIterator i = content.begin(); i != content.end(); ++i) {
             (*i)->visit(proc);
             resp->addComponent(static_cast<BatchResponseComponent*>(proc.getResponse()));
-            // addBatchComponentDBLog(proc.getDBLog());
-            // proc.clearDBLog();
         }
     }
     return true;
@@ -136,7 +118,6 @@ bool ProfileCommandProcessor::visitDelCommand(DelCommand &cmd) /* throw(PvapExce
         return false;
     }
     backup_->delProperty(holder.release());
-    // dblog_.createDelLogMsg(profile_->getKey(), cmd.getVarName());
     response_->setStatus(StatusType::OK);
     profile_->setChanged(true);
     return true;
@@ -154,11 +135,6 @@ bool ProfileCommandProcessor::visitGetCommand(GetCommand &cmd) /* throw(PvapExce
         response_->setStatus(StatusType::PROPERTY_NOT_FOUND);
         return false;
     }
-    // temporary
-    // Logger* theLog = profile_->getLog();
-    // if (theLog) {
-    // smsc_log_debug(theLog,"G key=%s name=%s", profile_->getKey().c_str(), p->toString().c_str());
-    // }
     backup_->getProperty(*p);
     if(p->getTimePolicy() == R_ACCESS) {
         backup_->fixTimePolicy(*p);
@@ -208,8 +184,6 @@ bool ProfileCommandProcessor::visitSetCommand(SetCommand &cmd) /* throw(PvapExce
         return false;
     }
     if (prop.isExpired()) {
-        // FIXME: do we need this message? it is not related to real profile...
-        // dblog_.createExpireLogMsg(profile_->getKey(), prop.toString());
         response_->setStatus(StatusType::PROPERTY_NOT_FOUND);
         return false;
     }
@@ -221,14 +195,12 @@ bool ProfileCommandProcessor::visitSetCommand(SetCommand &cmd) /* throw(PvapExce
         p->setTimePolicy(prop.getTimePolicy(),prop.getFinalDate(),prop.getLifeTime());
         p->WriteAccess();
         backup_->propertyUpdated(*p);
-        // dblog_.createUpdateLogMsg(profile_->getKey(), p->toString());
     } else {
         if (!profile_->AddProperty(prop)) {
             response_->setStatus(StatusType::BAD_REQUEST);
             return false;
         }
         backup_->addProperty(prop);
-        // dblog_.createAddLogMsg(profile_->getKey(), prop.toString());
     }
     profile_->setChanged(true);
     response_->setStatus(StatusType::OK);
@@ -246,7 +218,6 @@ uint8_t ProfileCommandProcessor::incModProperty(Property& property, uint32_t mod
             return StatusType::IO_ERROR;
         }
         backup_->addProperty(property);
-        // dblog_.createAddLogMsg(profile_->getKey(), property.toString());
         profile_->setChanged(true);
         return StatusType::OK;
     }
@@ -257,7 +228,6 @@ uint8_t ProfileCommandProcessor::incModProperty(Property& property, uint32_t mod
         result = mod > 0 ? result % mod : result;
         p->setIntValue(result);
         p->WriteAccess();
-        // dblog_.createUpdateLogMsg(profile_->getKey(), p->toString());
         backup_->propertyUpdated(*p);
         profile_->setChanged(true);
         return StatusType::OK;
@@ -269,47 +239,12 @@ uint8_t ProfileCommandProcessor::incModProperty(Property& property, uint32_t mod
         backup_->delProperty(p,true);
         p->setIntValue(result);
         p->WriteAccess();
-        // dblog_.createDelLogMsg(profile_->getKey(), p->getName());
-        // dblog_.createAddLogMsg(profile_->getKey(), p->toString());
         backup_->addProperty(*p,true);
         profile_->setChanged(true);
         return StatusType::OK;
     }
     return StatusType::TYPE_INCONSISTENCE;
 }
-
-/*
-BatchResponseComponent* ProfileCommandProcessor::getBatchResponseComponent() {
-    return static_cast<BatchResponseComponent*>(response_.release());
-}
-CommandResponse* ProfileCommandProcessor::getResponse() {
-  return response_.release();
-}
-const string& ProfileCommandProcessor::getDBLog() const {
-  return dblog_.getLogMsg();
-}
-void ProfileCommandProcessor::clearDBLog() {
-  return dblog_.clear();
-}
-void ProfileCommandProcessor::addBatchComponentDBLog(const string& logmsg) {
-  if (!logmsg.empty()) {
-    batchLogs_.push_back(logmsg);
-  }
-}
-void ProfileCommandProcessor::flushLogs(Logger* logger) {
-  if (!batchLogs_.empty()) {
-    for (std::vector<string>::iterator i = batchLogs_.begin(); i != batchLogs_.end(); ++i) {
-      smsc_log_info(logger, "%s", (*i).c_str());
-    }
-    std::vector<string>().swap(batchLogs_);
-    return;
-  }
-  if (!dblog_.getLogMsg().empty()) {
-    smsc_log_info(logger, "%s", dblog_.getLogMsg().c_str());
-    dblog_.clear();
-  }
-}
- */
 
 }
 }
