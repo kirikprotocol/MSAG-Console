@@ -8,7 +8,6 @@
 #include "core/synchronization/EventMonitor.hpp"
 #include "core/synchronization/Mutex.hpp"
 #include "core/buffers/CyclicQueue.hpp"
-#include "core/threads/Thread.hpp"
 
 namespace scag2 {
 namespace util {
@@ -19,7 +18,7 @@ template <
     class DiskStorage,
     class Serializer,
     class Allocator = HeapAllocator< typename MemStorage::key_type, typename MemStorage::value_type > >
-    class CachedDelayedThreadedDiskStorage : public Allocator, protected smsc::core::threads::Thread
+    class CachedDelayedThreadedDiskStorage : public Allocator
 {
 public:
     typedef typename MemStorage::key_type       key_type;
@@ -47,8 +46,7 @@ public:
                                       Serializer* srin,
                                       Serializer* srout,
                                       smsc::logger::Logger* thelog = 0 ) :
-    cache_(ms), disk_( ds ), serin_(srin), serout_(srout), hitcount_(0), log_(thelog), inited_(false),
-    maxSpeed_(10000)
+    cache_(ms), disk_( ds ), serin_(srin), serout_(srout), hitcount_(0), log_(thelog)
     {
         if ( !ms || !srin || !srout || !ds ) {
             delete ms;
@@ -65,21 +63,8 @@ public:
     DiskStorage& diskStorage() { return *disk_; }
     Serializer& serializer() { return *serin_; }
 
-    void init( unsigned maxDirtySpeed )
-    {
-        if (inited_) return;
-        inited_ = true;
-        // lastDirtyFlush_ = util::currentTimeMillis();
-        maxSpeed_ = std::max(maxDirtySpeed,10U);
-        if (log_) {
-            smsc_log_debug(log_,"inited maxSpeed: %u", unsigned(maxSpeed_));
-        }
-        startCleaner();
-    }
-
-
     ~CachedDelayedThreadedDiskStorage() {
-        stopCleaner();
+        // stopCleaner();
         Dirty d;
         while ( cleanQueue_.Pop(d) ) {
             cache_->dealloc(d.stored);
@@ -94,11 +79,6 @@ public:
 
     /// @return true if old value was replaced
     bool set( const key_type& k, value_type* v ) {
-        if (!inited_) {
-            if (log_) { smsc_log_warn(log_,"DELAYED STORAGE IS NOT INITED"); }
-            return false;
-        }
-
         // first check the cache
         stored_type sv = cache_->release(k);
         if ( cache_->store2val(sv) ) {
@@ -140,11 +120,6 @@ public:
 
 
     value_type* get( const key_type& k, bool create = false ) {
-        if (!inited_) {
-            if (log_) { smsc_log_warn(log_,"DELAYED STORAGE IS NOT INITED"); }
-            return 0;
-        }
-
         // first check the cache
         stored_type* const vv = cache_->get(k);
         if ( vv ) {
@@ -188,25 +163,9 @@ public:
         return cache_->store2val(v);
     }
 
-    /*
-    // NOTE: use only if type of stored_type is DataBlockBackup
-    void backup2Profile ( const key_type& k ) {
-        stored_type* const vv = cache_->get( k );
-        if ( !vv ) {return;}
-        if ( !vv->value || !vv->backup ||
-             !disk_->recoverFromBackup(cache_->store2ref(*vv)) ) {
-            // we have to delete such an entry from cache
-            delete cache_->release(k);
-        }
-    }
-     */
 
     /// flush dirty item to disk
     bool flush( const key_type& k ) {
-        if (!inited_) {
-            if (log_) { smsc_log_warn(log_,"DELAYED STORAGE IS NOT INITED"); }
-            return false;
-        }
         throw smsc::util::Exception("flush is not allowed");
         /*
         typename DirtyList::iterator* di = dirtyHash_.GetPtr(k);
@@ -254,6 +213,74 @@ public:
     }
 
 
+    /// flush dirty item to disk
+    /// @return number of bytes written
+    unsigned flushDirty()
+    {
+        // fast check w/o locking
+        if ( dirtyHash_.Count() == 0 ) return 0;
+        typename DirtyList::iterator di;
+        unsigned dhc, cqc, oldChanges;
+        {
+            MutexGuard mg(dirtyMon_);
+            dhc = unsigned(dirtyHash_.Count());
+            if ( !dhc ) return 0;
+
+            cqc = unsigned(cleanQueue_.Count()); // for logging
+
+            // accessing dirtyList item via iterator is safe
+            di = dirtyList_.begin();
+            oldChanges = di->changes;
+        }
+
+        value_type* dv = cache_->store2val(di->stored);
+        assert(dv);
+        {
+            // NOTE: we have to serialize under the lock
+            smsc::core::synchronization::MutexGuardTmpl<value_type> mg(*dv);
+            serout_->serialize(di->key,cache_->store2ref(di->stored));
+        }
+
+        const unsigned written = unsigned(serout_->getOwnedBuffer()->size());
+
+        if (log_) {
+            smsc_log_debug(log_,"flushing dirty [dsz=%u,qsz=%u] key=%s ptr=%p bsz=%u",
+                           dhc, cqc, di->key.toString().c_str(), dv, written);
+        }
+
+        try {
+            MutexGuard mg(diskLock_);
+            disk_->set(di->key,*serout_->getOwnedBuffer(),serout_->getFreeBuffer());
+        } catch ( std::exception& e ) {
+            if (log_) {
+                smsc_log_error(log_,"cannot save key=%s: %s",di->key.toString().c_str(),e.what());
+            }
+        }
+
+        // save done, cleanup
+        {
+            MutexGuard mg(dirtyMon_);
+            if ( di->changes != oldChanges ) {
+                if (log_) {
+                    smsc_log_debug(log_,"key=%s is still dirty after flush",
+                                   di->key.toString().c_str());
+                }
+                *dirtyHash_.GetPtr(di->key) = 
+                    dirtyList_.insert(dirtyList_.end(),*di);
+            } else {
+                cleanQueue_.Push(*di);
+                if (log_) {
+                    smsc_log_debug(log_,"key=%s is clean now, qsz=%u",
+                                   di->key.toString().c_str(),unsigned(cleanQueue_.Count()));
+                }
+                dirtyHash_.Delete(di->key);
+            }
+            dirtyList_.erase(di);
+        }
+        return written;
+    }
+
+
     // NOTE: it is your responsibility to delete the return value.
     value_type* release( const key_type& k, bool fromdiskalso = false ) {
         throw smsc::util::Exception("release is not allowed, key=%s",k.toString().c_str());
@@ -281,33 +308,6 @@ public:
         value_type* res = cache_->setval(sv,0);
         cache_->dealloc(sv);
         return res;
-    }
-     */
-
-
-    /// flush all cached data to disk
-    /// @return number of flushed items
-    /*
-    unsigned int flushAll() {
-        // key_type k;
-        // stored_type v;
-        unsigned int count = 0;
-        if (log_) {
-            smsc_log_debug( log_, "FLUSH STARTED" );
-        }
-        // cache_->preflush();
-        for ( typename MemStorage::iterator_type i = cache_->begin();
-              i.next(); ) {
-            if ( cache_->store2val(i.value()) ) {
-                ++count;
-                ser_->serialize(cache_->store2ref(i.value()));
-                disk_->set(i.key(),ser_->getOwnedBuffer(),ser_->getFreeBuffer());
-            }
-        }
-        if (log_) {
-            smsc_log_debug( log_, "FLUSH FINISHED, count=%d", count );
-        }
-        return count;
     }
      */
 
@@ -372,20 +372,6 @@ public:
 
 private:
 
-    /*
-    inline bool doFlush( const key_type& k, stored_type& sv )
-    {
-        if (log_) {
-            smsc_log_debug(log_,"flushing key=%s ptr=%p",
-                           k.toString().c_str(),cache_->store2val(sv));
-        }
-        serout_->serialize(k,cache_->store2ref(sv));
-        MutexGuard mg(diskLock_);
-        return disk_->set(k,*serout_->getOwnedBuffer(),serout_->getFreeBuffer());
-    }
-     */
-
-
     inline void addDirty( const key_type& k, stored_type sv )
     {
         // util::msectime_type now = util::currentTimeMillis();
@@ -419,7 +405,8 @@ private:
     }
 
 
-    /// NOTE: This method is run by inner thread
+    // NOTE: This method is run by inner thread
+    /*
     virtual int Execute()
     {
         util::msectime_type now = util::currentTimeMillis();
@@ -538,6 +525,7 @@ private:
         } // loop while inited
         return 0;
     }
+     */
 
 
     stored_type popCleanQ( const key_type& k ) {
@@ -552,6 +540,7 @@ private:
         return cache_->store2val(0);
     }
 
+    /*
     void startCleaner() {
         Start();
     }
@@ -566,6 +555,7 @@ private:
             WaitFor();
         }
     }
+     */
 
     CachedDelayedThreadedDiskStorage( const CachedDelayedThreadedDiskStorage& );
 
@@ -586,11 +576,9 @@ private:
     mutable stored_type spare_;
     mutable unsigned int hitcount_;
     smsc::logger::Logger* log_;
-    bool                  inited_;
 
     DirtyList           dirtyList_;
     DirtyHash           dirtyHash_;
-    unsigned            maxSpeed_;
 };
 
 }
