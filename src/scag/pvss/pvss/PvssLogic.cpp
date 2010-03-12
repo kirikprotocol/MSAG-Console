@@ -473,11 +473,12 @@ private:
     typedef CachedDelayedThreadedDiskStorage< MemStorage, DiskStorage, DataSerializer, ProfileHeapAllocator< MemStorage::key_type, LockableProfile > > InfrastructStorage;
 
 public:
-    InfraLogic( const char* dblogName ) :
+    InfraLogic( const char* dblogName, DiskFlusher& flusher ) :
     profileBackup_(smsc::logger::Logger::getInstance(dblogName)),
     commandProcessor_(profileBackup_),
     log_(0),
-    storage_(0)
+    storage_(0),
+    diskFlusher_(&flusher)
     {}
     
     void init( const std::string& name,
@@ -525,7 +526,8 @@ public:
         storage_ = new InfrastructStorage(ms.release(),ds.release(),
                                           ps1.release(),ps2.release(),
                                           Logger::getInstance(("pvssst"+logsfx).c_str()));
-        storage_->init(cfg.maxDirtySpeed);
+        diskFlusher_->add( storage_ );
+        // storage_->init(cfg.maxDirtySpeed);
         storage_->setProfileBackup(profileBackup_);
         smsc_log_info(log_,"infralogic %s initialized",name.c_str());
     }
@@ -565,7 +567,8 @@ private:
     ProfileCommandProcessor commandProcessor_;
     smsc::logger::Logger*   log_;
     // smsc::core::synchronization::Mutex statMutex_;
-    InfrastructStorage*                storage_;
+    InfrastructStorage*     storage_;
+    DiskFlusher*            diskFlusher_;
     LockableProfile         dummyProfile_;  // is used to be locked when there is no profile
 };
 
@@ -674,6 +677,7 @@ CommandResponse* InfrastructLogic::InfraLogic::process( const IntProfileKey& int
     if (ok) {
         if ( pf->isChanged() ) {
             storage_->markDirty(intKey);
+            diskFlusher_->wakeup();
         }
     }
     return commandProcessor_.getResponse();
@@ -750,14 +754,16 @@ void InfrastructLogic::keepAlive()
 void InfrastructLogic::init( bool /*checkAtStart*/ )
 {
     initGlossary(config_.dbPath,glossary_);
-    provider_ = new InfraLogic("pvss.prov");
+    provider_ = new InfraLogic("pvss.prov",diskFlusher_);
     provider_->init("provider",".pr",config_,glossary_);
-    service_ = new InfraLogic("pvss.serv");
+    service_ = new InfraLogic("pvss.serv",diskFlusher_);
     service_->init("service",".sv",config_,glossary_);
-    operator_ = new InfraLogic("pvss.oper");
+    operator_ = new InfraLogic("pvss.oper",diskFlusher_);
     operator_->init("operator",".op",config_,glossary_);
     smsc_log_info(logger_,"infrastructure storages are inited, good nodes: %s",
                   reportStatistics().c_str());
+    // now, starting flusher
+    diskFlusher_.start(config_.maxDirtySpeed);
 }
 
 
@@ -768,6 +774,8 @@ void InfrastructLogic::rebuildIndex( unsigned /*maxSpeed*/)
 
 
 void InfrastructLogic::shutdownStorages() {
+    diskFlusher_.stop();
+    diskFlusher_.clear();
   if (provider_) {
     delete provider_;
     provider_ = 0;

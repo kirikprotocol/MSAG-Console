@@ -33,6 +33,7 @@
 #include "ProfileCommandProcessor.h"
 #include "scag/pvss/profile/ProfileBackup.h"
 #include "scag/util/io/Serializer.h"
+#include "scag/util/storage/DiskFlusher.h"
 
 namespace scag {
 namespace util {
@@ -176,7 +177,10 @@ struct AbonentStorageConfig;
 class AbonentLogic: public PvssLogic 
 {
 public:
-    AbonentLogic( PvssDispatcher& dispatcher, unsigned locationNumber, const AbonentStorageConfig& cfg, scag::util::storage::DataFileManager& manager ) :
+    AbonentLogic( PvssDispatcher& dispatcher,
+                  unsigned locationNumber,
+                  const AbonentStorageConfig& cfg,
+                  scag::util::storage::DataFileManager& manager ) :
     PvssLogic(dispatcher),
     locationNumber_(locationNumber),
     config_(cfg), dataFileManager_(manager),
@@ -336,7 +340,9 @@ protected:
 
 public:
     InfrastructLogic( PvssDispatcher& dispatcher, const InfrastructStorageConfig& cfg ) :
-    PvssLogic(dispatcher), provider_(0), service_(0), operator_(0), config_(cfg) {}
+    PvssLogic(dispatcher),
+    diskFlusher_("dflush.inf"),
+    provider_(0), service_(0), operator_(0), config_(cfg) {}
     virtual ~InfrastructLogic();
 
     virtual LogicInitTask* startInit( bool checkAtStart = false );
@@ -356,6 +362,7 @@ protected:
     virtual CommandResponse* processProfileRequest(ProfileRequest& request);
 
 private:
+    DiskFlusher diskFlusher_;
     Glossary    glossary_;
     InfraLogic* provider_;
     InfraLogic* service_;
