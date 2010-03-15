@@ -45,7 +45,7 @@ public:
         if (started_) return;
         MutexGuard mg(mon_);
         started_ = true;
-        maxSpeed_ = std::min(maxDirtySpeed,10U);
+        maxSpeed_ = std::max(maxDirtySpeed,10U);
         Start();
     }
 

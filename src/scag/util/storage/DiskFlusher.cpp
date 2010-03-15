@@ -23,7 +23,7 @@ int DiskFlusher::Execute()
 
     counter::TimeSnapshot speedLimiter("sys." + name_,5,minSleepTime);
 
-    smsc_log_info(log_,"started");
+    smsc_log_info(log_,"started, maxSpeed=%ukb/s", maxSpeed_);
 
     util::msectime_type nextWakeTime = 0;
     while ( true ) {
