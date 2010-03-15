@@ -85,6 +85,8 @@ public:
         return false;
     }
 
+    void getMaxDerivative( int64_t& value, unsigned& nbins );
+
 protected:
     int64_t  lasttime_;
     unsigned integral_;

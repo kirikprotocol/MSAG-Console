@@ -21,7 +21,10 @@ public:
     virtual ~TimeSliceItem() {}
     virtual void advanceTime( usec_type curtime ) = 0;
     // virtual TimeSliceGroup* getTimeSliceGroup() const = 0;
+
+    /// return the width of the counter
     virtual usec_type getTimeSliceWidth() const = 0;
+
 protected:
     // to be invoked from TimeSliceManager, realization in TimeSliceGroup.cpp
     // void setTimeSliceGroup( TimeSliceGroup* grp );

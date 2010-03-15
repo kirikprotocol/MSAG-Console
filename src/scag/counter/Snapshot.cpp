@@ -62,5 +62,32 @@ int64_t Snapshot::accumulate( int64_t x, int inc )
     return integral_;
 }
 
+
+void Snapshot::getMaxDerivative( int64_t& value, unsigned& nbins )
+{
+    smsc::core::synchronization::MutexGuard mg(countMutex_);
+    nbins = 1;
+    value = slot_[last_];
+    // smsc_log_debug(log_,"deriv, first_=%u last=%u, val=%u",first_,last_,unsigned(value));
+    if ( last_ == first_ ) return;
+    unsigned maxspeed = value;
+    unsigned curval = value;
+    unsigned curbins = 1;
+    for ( int p = last_; p != first_; ) {
+        if ( p == 0 ) p = nbins_;
+        --p;
+        ++curbins;
+        curval += slot_[p];
+        unsigned speed = curval / curbins;
+        // smsc_log_debug(log_,"deriv, p=%u, val=%u, bins=%u, spd=%u",
+        // p,curval,curbins,speed);
+        if (speed>maxspeed) {
+            maxspeed = speed;
+            nbins = curbins;
+            value = curval;
+        }
+    }
+}
+
 }
 }

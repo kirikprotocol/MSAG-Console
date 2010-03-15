@@ -22,7 +22,7 @@ public:
     static CountType getStaticType() { return TYPETIMESNAPSHOT; }
 
     TimeSnapshot( const std::string&      name,
-                  unsigned                nseconds,          // microseconds
+                  unsigned                nseconds,          // seconds
                   unsigned                msecresol = 100,   // resolution in milliseconds
                   Observer*               observer = 0,
                   counttime_type disposeDelayTime = 0 ) :
@@ -58,6 +58,12 @@ public:
         Snapshot::advanceTo(bin);
     }
 
+    int64_t accumulate( usec_type curtime, int w = 1 )
+    {
+        const int64_t x = int64_t(curtime/resol_);
+        return Snapshot::accumulate(x,w);
+    }
+
     virtual int64_t getValue() const
     {
         return integral_;
@@ -78,13 +84,17 @@ public:
 
     virtual unsigned getBaseInterval() const { return unsigned(nbins_*resol_/usecFactor); }
 
+    /// return the resolution (microseconds), i.e. the width of one bin
+    unsigned getResolution() const { return resol_; }
+
 protected:
     using Snapshot::accumulate;
     using Snapshot::advanceTo;
 
+    virtual usec_type getTimeSliceWidth() const { return resol_*nbins_; }
+
     // virtual TimeSliceGroup* getTimeSliceGroup() const { return group_; }
     // virtual void doSetTimeSliceGroup( TimeSliceGroup* grp ) { group_ = grp; }
-    virtual usec_type getTimeSliceWidth() const { return resol_*nbins_; }
     virtual void postRegister( Manager& mgr ) {
         group_ = mgr.getTimeManager().addItem(*this,getTimeSliceWidth());
     }
