@@ -34,13 +34,16 @@ PvssDispatcher::PvssDispatcher(const NodeConfig& nodeCfg,
 nodeCfg_(nodeCfg), createdLocations_(0), infrastructIndex_(nodeCfg_.locationsCount),
 logger_(Logger::getInstance("pvss.disp"))
 {
-  StorageNumbering::setInstance(nodeCfg.nodesCount);
-  unsigned addSpeed = nodeCfg_.expectedSpeed / nodeCfg_.disksCount;
-  for (int i = 0; i < nodeCfg_.disksCount; ++i) {
-    dataFileManagers_.push_back(new scag::util::storage::DataFileManager(1, addSpeed,creationLimit));
-  }
-  smsc_log_info(logger_, "nodeNumber:%d, nodesCount:%d, storagesCount:%d, locationsCount:%d, disksCount:%d",
-                          nodeCfg_.nodeNumber, nodeCfg_.nodesCount, nodeCfg_.storagesCount, nodeCfg_.locationsCount, nodeCfg_.disksCount);
+    StorageNumbering::setInstance(nodeCfg.nodesCount);
+    unsigned addSpeed = nodeCfg_.expectedSpeed / nodeCfg_.disksCount;
+    for (int i = 0; i < nodeCfg_.disksCount; ++i) {
+        dataFileManagers_.push_back(new scag::util::storage::DataFileManager(1, addSpeed,creationLimit));
+        char buf[30];
+        sprintf(buf,"dflush.%02u",i);
+        diskFlushers_.push_back( new scag::util::storage::DiskFlusher(buf) );
+    }
+    smsc_log_info(logger_, "nodeNumber:%d, nodesCount:%d, storagesCount:%d, locationsCount:%d, disksCount:%d",
+                  nodeCfg_.nodeNumber, nodeCfg_.nodesCount, nodeCfg_.storagesCount, nodeCfg_.locationsCount, nodeCfg_.disksCount);
 }
 
 unsigned PvssDispatcher::getIndex(Request& request) const 
@@ -99,27 +102,30 @@ std::string PvssDispatcher::reportStatistics() const
 
 void PvssDispatcher::createLogics( bool makedirs, const AbonentStorageConfig& abntcfg, const InfrastructStorageConfig* infcfg )
 {
-  for (unsigned locationNumber = 0; locationNumber < nodeCfg_.locationsCount; ++locationNumber) {
-    if (!File::Exists(abntcfg.locations[locationNumber].path.c_str())) {
-        if ( makedirs ) {
-            smsc_log_debug(logger_, "create storage dir '%s' on disk %d",
-                           abntcfg.locations[locationNumber].path.c_str(),
-                           abntcfg.locations[locationNumber].disk);
-            File::MkDir(abntcfg.locations[locationNumber].path.c_str());
-        } else {
-            smsc_log_debug(logger_, "storage dir '%s' creation on disk %d skipped",
-                           abntcfg.locations[locationNumber].path.c_str(),
-                           abntcfg.locations[locationNumber].disk );
-            continue;
+    for (unsigned locationNumber = 0; locationNumber < nodeCfg_.locationsCount; ++locationNumber) {
+
+        const AbonentStorageConfig::Location& locCfg = abntcfg.locations[locationNumber];
+        const unsigned diskNumber = locCfg.disk;
+
+        if (!File::Exists( locCfg.path.c_str() )) {
+            if ( makedirs ) {
+                smsc_log_debug(logger_, "create storage dir '%s' on disk %d",
+                               locCfg.path.c_str(), diskNumber );
+                File::MkDir(locCfg.path.c_str());
+            } else {
+                smsc_log_debug(logger_, "storage dir '%s' creation on disk %d skipped",
+                               locCfg.path.c_str(), diskNumber );
+                continue;
+            }
         }
+        AbonentLogic* logic = new AbonentLogic( *this,
+                                                locationNumber,
+                                                abntcfg,
+                                                *dataFileManagers_[diskNumber],
+                                                *diskFlushers_[diskNumber]);
+        abonentLogics_.Push(logic);
+        ++createdLocations_;
     }
-    AbonentLogic* logic = new AbonentLogic( *this,
-                                            locationNumber,
-                                            abntcfg,
-                                            *dataFileManagers_[abntcfg.locations[locationNumber].disk] );
-    abonentLogics_.Push(logic);
-    ++createdLocations_;
-  }
 
     // infrastruct logic
     if (nodeCfg_.nodeNumber == getInfrastructNodeNumber()) {
@@ -173,6 +179,14 @@ void PvssDispatcher::init()
     }
 
     if ( !failure.empty() ) throw smsc::util::Exception(failure.c_str());
+
+    // starting flushers
+    for ( std::vector<scag::util::storage::DiskFlusher*>::const_iterator i = diskFlushers_.begin();
+          i != diskFlushers_.end();
+          ++i ) {
+        (*i)->start(nodeCfg_.maxDirtySpeed);
+    }
+
     smsc_log_info(logger_,"all storages inited, stats: %s", reportStatistics().c_str());
 }
 
@@ -235,7 +249,8 @@ AbonentLogic* PvssDispatcher::getLocation(unsigned elementStorageNumber) {
 
 void PvssDispatcher::shutdown() {
     smsc_log_info(logger_,"shutting down a pvss dispatcher");
-  uint16_t created = createdLocations_;
+    uint16_t created = createdLocations_;
+
     // stopping all file managers
     for ( std::vector< DataFileManager* >::iterator i = dataFileManagers_.begin();
           i != dataFileManagers_.end();
@@ -244,6 +259,15 @@ void PvssDispatcher::shutdown() {
             (*i)->shutdown();
         }
     }
+
+    // stopping all disk flushers
+    for ( std::vector< DiskFlusher* >::const_iterator i = diskFlushers_.begin();
+          i != diskFlushers_.end();
+          ++i ) {
+        (*i)->stop();
+        delete *i;
+    }
+    diskFlushers_.clear();
 
   for (unsigned i = 0; i < created; ++i) {
     delete abonentLogics_[i];

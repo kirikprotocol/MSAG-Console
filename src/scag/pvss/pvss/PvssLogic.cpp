@@ -127,6 +127,8 @@ PvssLogic::LogicRebuildIndexTask* AbonentLogic::startRebuildIndex(unsigned maxSp
 
 void AbonentLogic::dumpStorage( int i )
 {
+    smsc_log_error(logger_,"dumping storage %u is not impl yet", i);
+    /*
     smsc_log_debug(logger_,"dump i=%u storages=%u node(i)=%u disp.node=%u disp.loc=%u loc=%u",
                   unsigned(i),
                   unsigned(dispatcher_.getStoragesCount()),
@@ -156,6 +158,7 @@ void AbonentLogic::dumpStorage( int i )
             }
         }
     }
+     */
 }
 
 
@@ -271,7 +274,7 @@ unsigned long AbonentLogic::initElementStorage( unsigned index,
     std::auto_ptr< DiskDataStorage > dds
         ( new DiskDataStorage
           ( bs.release(),
-            elStorage->glossary,
+            // elStorage->glossary,
             smsc::logger::Logger::getInstance(("pvssdd."+pathSuffixString).c_str())));
     smsc_log_debug(logger_, "data disk storage %d is created", index);
 
@@ -281,16 +284,19 @@ unsigned long AbonentLogic::initElementStorage( unsigned index,
     std::auto_ptr< MemStorage > ms(new MemStorage(Logger::getInstance(("pvssmc."+pathSuffixString).c_str()), config_.cacheSize));
     smsc_log_debug(logger_, "memory storage is created");
 
-    // std::auto_ptr<DataSerializer> ps(new DataSerializer(ds.get(),elStorage->glossary));
+    std::auto_ptr<DataSerializer> ps1(new DataSerializer(ds.get(),elStorage->glossary));
+    std::auto_ptr<DataSerializer> ps2(new DataSerializer(ds.get(),elStorage->glossary));
     elStorage->storage = new AbonentStorage(ms.release(),
                                             ds.release(),
-                                            // ps.release(),
+                                            ps1.release(),
+                                            ps2.release(),
                                             smsc::logger::Logger::getInstance
                                             (("pvssst."+pathSuffixString).c_str()));
     // elStorage->storage->init( config_.minDirtyTime,
     // config_.maxDirtyTime,
     // config_.maxDirtyCount );
     elStorage->storage->setProfileBackup(profileBackup_);
+    diskFlusher_->add(elStorage->storage);
 
   unsigned long filledNodes = elStorage->storage->filledDataSize();
   elementStorages_.Insert(index, elStorage.release());
@@ -336,7 +342,7 @@ unsigned long AbonentLogic::rebuildElementStorage( unsigned index, unsigned maxS
     smsc_log_debug(logger_, "temporary data index storage %u is created", index);
 
     // rebuilding index
-    DiskDataStorage dds(bs.release(), 0, 0);
+    DiskDataStorage dds(bs.release(), 0);
     DiskDataStorage::IndexRescuer< DiskIndexStorage > indexRescuer(*dis.get(),dds);
     const string fn(config_.dbName + "-data");
     int ret = indexRescuer.recover(fn, path);
@@ -376,10 +382,14 @@ CommandResponse* AbonentLogic::processProfileRequest(ProfileRequest& profileRequ
     if (pf) pf->setKey( profkey );
     if ( commandProcessor_.applyCommonLogic(profkey, profileRequest, pf, createProfile )) {
         if ( pf->isChanged() ) {
-            MutexGuard mg(elstorage->mutex);
-            elstorage->storage->flush(profileKey.getAddress());
+            {
+                MutexGuard mg(elstorage->mutex);
+                elstorage->storage->markDirty(profileKey.getAddress());
+            }
+            diskFlusher_->wakeup();
+            // elstorage->storage->flush(profileKey.getAddress());
             // elstorage->storage->markDirty(profileKey.getAddress());
-        // } else {
+            // } else {
             // elstorage->storage->flushDirty();
         }
     }

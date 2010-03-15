@@ -64,7 +64,9 @@ public:
     Serializer& serializer() { return *serin_; }
 
     ~CachedDelayedThreadedDiskStorage() {
-        // stopCleaner();
+        // first of all, flush everything not flushed yet
+        while ( flushDirty() ) {}
+        // then deallocate elements remained in the clean queue
         Dirty d;
         while ( cleanQueue_.Pop(d) ) {
             cache_->dealloc(d.stored);
@@ -321,7 +323,7 @@ public:
     class Iterator {
     protected:
         Iterator( const MemStorage& cache ) : cache_(&cache), iter_(cache.begin()) {}
-        friend class CachedDelayedDiskStorage< MemStorage, DiskStorage, Allocator >;
+        friend class CachedDelayedThreadedDiskStorage< MemStorage, DiskStorage, Allocator >;
     public:
         ~Iterator() {}
         // void reset() { iter_ = cache_->begin(); }

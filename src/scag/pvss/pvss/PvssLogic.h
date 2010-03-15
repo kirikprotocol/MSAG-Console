@@ -16,8 +16,8 @@
 #include "scag/util/storage/DataBlockBackup2.h"
 
 #include "scag/util/storage/BlocksHSStorage2.h"
-#include "scag/util/storage/BHDiskStorage2.h"
-// #include "scag/util/storage/BHDiskStorage3.h"
+// #include "scag/util/storage/BHDiskStorage2.h"
+#include "scag/util/storage/BHDiskStorage3.h"
 #include "scag/util/storage/StorageIface.h"
 
 #include "scag/util/storage/RBTreeIndexStorage.h"
@@ -26,7 +26,7 @@
 
 #include "scag/util/storage/IndexedStorage2.h"
 #include "scag/util/storage/PageFileDiskStorage2.h"
-#include "scag/util/storage/CachedDelayedDiskStorage.h"
+#include "scag/util/storage/CachedDelayedThreadedDiskStorage.h"
 #include "scag/util/storage/Glossary.h"
 #include "scag/util/WatchedThreadedTask.h"
 #include "scag/pvss/api/core/server/Server.h"
@@ -180,10 +180,13 @@ public:
     AbonentLogic( PvssDispatcher& dispatcher,
                   unsigned locationNumber,
                   const AbonentStorageConfig& cfg,
-                  scag::util::storage::DataFileManager& manager ) :
+                  DataFileManager& manager,
+                  DiskFlusher&     diskFlusher ) :
     PvssLogic(dispatcher),
     locationNumber_(locationNumber),
-    config_(cfg), dataFileManager_(manager),
+    config_(cfg),
+    dataFileManager_(manager),
+    diskFlusher_(&diskFlusher),
     profileBackup_(smsc::logger::Logger::getInstance("pvss.abnt")),
     commandProcessor_(profileBackup_) {}
 
@@ -222,13 +225,12 @@ protected:
 
 private:
     
-    typedef ArrayedMemoryCache< AbntAddr, Profile, DataBlockBackupTypeJuggling2 > MemStorage;
-    typedef BHDiskStorage2< AbntAddr, Profile, BlocksHSStorage2 > DiskDataStorage;
-    typedef RBTreeIndexStorage< AbntAddr, DiskDataStorage::index_type > DiskIndexStorage;
-    typedef IndexedStorage< DiskIndexStorage, DiskDataStorage > DiskStorage;
-    typedef CachedDiskStorage< MemStorage, DiskStorage, ProfileHeapAllocator<AbntAddr> > AbonentStorage;
+    // typedef ArrayedMemoryCache< AbntAddr, Profile, DataBlockBackupTypeJuggling2 > MemStorage;
+    // typedef BHDiskStorage2< AbntAddr, Profile, BlocksHSStorage2 > DiskDataStorage;
+    // typedef RBTreeIndexStorage< AbntAddr, DiskDataStorage::index_type > DiskIndexStorage;
+    // typedef IndexedStorage< DiskIndexStorage, DiskDataStorage > DiskStorage;
+    // typedef CachedDiskStorage< MemStorage, DiskStorage, ProfileHeapAllocator<AbntAddr> > AbonentStorage;
 
-    /*
     template < class MemStorage, class DiskStorage > struct ProfileSerializer
     {
     public:
@@ -299,15 +301,13 @@ private:
 
     typedef BHDiskStorage3 DiskDataStorage;
     typedef RBTreeIndexStorage< AbntAddr, DiskDataStorage::index_type > DiskIndexStorage;
-    typedef ArrayedMemoryCache< AbntAddr, Profile, DataBlockBackupTypeJuggling2 > MemStorage;
-
+    typedef ArrayedMemoryCache< AbntAddr, LockableProfile, DataBlockBackupTypeJuggling2 > MemStorage;
     typedef IndexedStorage2< DiskIndexStorage, DiskDataStorage > DiskStorage;
     typedef ProfileSerializer< MemStorage, DiskStorage > DataSerializer;
-    typedef CachedDelayedDiskStorage< MemStorage, DiskStorage, DataSerializer, ProfileHeapAllocator<MemStorage::key_type> > AbonentStorage;
-     */
+    typedef CachedDelayedThreadedDiskStorage< MemStorage, DiskStorage, DataSerializer, ProfileHeapAllocator<MemStorage::key_type, LockableProfile > > AbonentStorage;
 
     struct ElementStorage {
-        ElementStorage(unsigned idx):glossary(0), storage(0), index(idx) {}
+        ElementStorage(unsigned idx) : glossary(0), storage(0), index(idx) {}
         ElementStorage(): glossary(0), storage(0), index(0) {}
         smsc::core::synchronization::Mutex mutex;
         Glossary* glossary;
@@ -320,7 +320,8 @@ private:
     unsigned                 locationNumber_;
     Logger*                  abntlog_;
     const AbonentStorageConfig& config_;
-    scag::util::storage::DataFileManager& dataFileManager_;
+    DataFileManager&        dataFileManager_;
+    DiskFlusher*            diskFlusher_;       // not owned
     ProfileBackup           profileBackup_;
     ProfileCommandProcessor commandProcessor_;
 };

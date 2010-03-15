@@ -52,8 +52,10 @@ int DiskFlusher::Execute()
 
             /// speed in b/ms == kb/s
             speedKbs = totalWritten / writeTime;
-            smsc_log_debug(log_,"accumulating %u bytes, now total=%llu, time=%ums, speed=%ukb/s",
-                           written, totalWritten, writeTime, speedKbs);
+            if (written>0) {
+                smsc_log_debug(log_,"accumulating %u bytes, now maxwr=%llu, dt=%ums, speed=%ukb/s",
+                               written, totalWritten, writeTime, speedKbs);
+            }
             written = 0;
 
             if ( speedKbs > maxSpeed_ ) {
@@ -66,7 +68,7 @@ int DiskFlusher::Execute()
 
         } // normal operation
 
-        smsc_log_debug(log_,"pass at %llums: spd=%ukb/s sleep=%d",now,speedKbs,sleepTime);
+        // smsc_log_debug(log_,"pass at %llums: spd=%ukb/s sleep=%d",now,speedKbs,sleepTime);
 
         if ( sleepTime > 0 ) {
             if (sleepTime < minSleepTime) sleepTime = minSleepTime;
@@ -87,7 +89,7 @@ int DiskFlusher::Execute()
                 // processing all storages one by one
                 written = items_[i]->flush();
                 if ( written > 0 ) {
-                    smsc_log_debug(log_,"%u bytes written into %u",written,i);
+                    // smsc_log_debug(log_,"%u bytes written into %u",written,i);
                     curItem = i + 1;
                     break;
                 } else if ( !started_ ) {
@@ -95,7 +97,7 @@ int DiskFlusher::Execute()
                     if ( curItem > i ) --curItem;
                     items_.erase(items_.begin()+i);
                 } else {
-                    smsc_log_debug(log_,"nothing is written into %u",i);
+                    // smsc_log_debug(log_,"nothing is written into %u",i);
                     ++i;
                 }
                 if ( i >= items_.size() ) { i = 0; }
@@ -109,7 +111,7 @@ int DiskFlusher::Execute()
                 if (!started_) break;
 
                 // idle, we want to sleep
-                smsc_log_debug(log_,"idle, sleeping %u msec",idleSleepTime);
+                // smsc_log_debug(log_,"idle, sleeping %u msec",idleSleepTime);
                 mon_.wait(idleSleepTime);
             }
 
