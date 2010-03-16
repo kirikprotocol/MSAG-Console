@@ -550,8 +550,13 @@ TO ALL: Insert log record for all significant changes & fixes here.
   pvss: bugfix: delayed threaded storage become CPU-hog after idle period
   pvss: feature: infra pageSize resizing
 
---- current fixes ---
+=================================================================================================================
+2010-03-16 10:30 bukind pvss-build-20100316
 2010-03-11 18:00 bukind
   pvss: feature: timings are into series
 2010-03-12 17:40 bukind
-  pvss: feature: DiskFlusher - a separate thread flushing several storages (for infra only yet)
+  pvss: feature: DiskFlusher - a separate thread flushing several storages (for infra yet)
+2010-03-15 17:00 bukind
+  pvss: feature: all storages are equipped with DiskFlusher
+
+--- current fixes ---
