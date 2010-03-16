@@ -141,7 +141,7 @@ extern "C" {
             break;
           }
         }
-      } else {
+      } /*else {
         for( int i = 0; i < MapDialogContainer::numLocalSSNs; i++ )
         {
           if( MapDialogContainer::localSSNs[i] == affectedSSN )
@@ -150,7 +150,7 @@ extern "C" {
             break;
           }
         }
-      }
+      }*/
     }
     return ET96MAP_E_OK;
   }
@@ -235,6 +235,7 @@ bool MapIoTask::ReconnectThread::connect()
     {
       for( int i = 0; i < MapDialogContainer::numLocalSSNs; i++ )
       {
+        MapDialogContainer::boundLocalSSNs[MapDialogContainer::remInst[n]] &= ~((uint64_t)1<<i);
         result = Et96MapBindReq(MY_USER_ID, MapDialogContainer::localSSNs[i] CONNINSTARG(MapDialogContainer::remInst[n]));
         if (result!=ET96MAP_E_OK)
         {
@@ -426,6 +427,7 @@ int MapIoTask::ReconnectThread::Execute()
       bool bindOk=true;
       {
         MutexTempUnlock mung(reconnectMon);
+        MapDialogContainer::boundLocalSSNs[MapDialogContainer::remInst[n]]=0;
         result = EINSS7CpMsgConnNotify(MY_USER_ID, ETSIMAP_ID, MapDialogContainer::remInst[n],onBrokenConn);
         if(result != RETURN_OK)
         {
