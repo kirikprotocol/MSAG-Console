@@ -569,7 +569,7 @@ void StateMachine::processSmResp( std::auto_ptr<SmppCommand> aucmd,
         } else {
 
             // no session
-            const SessionKey key( ( dir == dsdSrv2Sc || dir == dsdSrv2Srv ) ?
+            const SessionKey key( isDirFromService(dir) ?
                                   sms->getDestinationAddress() :
                                   sms->getOriginatingAddress() );
             // NOTE: session should already exist, so if it is not found

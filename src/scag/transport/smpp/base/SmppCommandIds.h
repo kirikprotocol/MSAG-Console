@@ -48,7 +48,7 @@ enum CommandStatus{
 */
 
 enum DataSmDirection {
-    dsdUnknown,
+    dsdUnknown = 1,
     dsdSrv2Srv,
     dsdSrv2Sc,
     dsdSc2Srv,

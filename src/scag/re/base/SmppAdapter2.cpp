@@ -18,17 +18,15 @@ using namespace smsc::system::Status;
 
 // === fields
 
-Hash<int> SmppCommandAdapter::SubmitFieldNames = SmppCommandAdapter::InitSubmitFieldNames();
-Hash<int> SmppCommandAdapter::DeliverFieldNames = SmppCommandAdapter::InitDeliverFieldNames();
-Hash<int> SmppCommandAdapter::DataSmFieldNames = SmppCommandAdapter::InitDataSmFieldNames();
-Hash<int> SmppCommandAdapter::RespFieldNames = SmppCommandAdapter::InitRespFieldNames();
-Hash<int> SmppCommandAdapter::DataSmRespFieldNames = SmppCommandAdapter::InitDataSmRespFieldNames();
+Hash<int> SmppCommandAdapter::SubmitFieldNames = SmppCommandAdapter::initFieldNames(EH_SUBMIT_SM);
+Hash<int> SmppCommandAdapter::DeliverFieldNames = SmppCommandAdapter::initFieldNames(EH_DELIVER_SM);
+Hash<int> SmppCommandAdapter::RespFieldNames = SmppCommandAdapter::initFieldNames(EH_SUBMIT_SM_RESP);
+Hash<int> SmppCommandAdapter::DataSmRespFieldNames = SmppCommandAdapter::initFieldNames(EH_DATA_SM_RESP);
 
-IntHash<AccessType> SmppCommandAdapter::SubmitFieldsAccess = SmppCommandAdapter::InitSubmitAccess();
-IntHash<AccessType> SmppCommandAdapter::DeliverFieldsAccess = SmppCommandAdapter::InitDeliverAccess();
-IntHash<AccessType> SmppCommandAdapter::DataSmFieldsAccess = SmppCommandAdapter::InitDataSmAccess();
-IntHash<AccessType> SmppCommandAdapter::RespFieldsAccess = SmppCommandAdapter::InitRespAccess();
-IntHash<AccessType> SmppCommandAdapter::DataSmRespFieldsAccess = SmppCommandAdapter::InitDataSmRespAccess();
+IntHash<AccessType> SmppCommandAdapter::SubmitFieldsAccess = SmppCommandAdapter::initFieldsAccess(EH_SUBMIT_SM);
+IntHash<AccessType> SmppCommandAdapter::DeliverFieldsAccess = SmppCommandAdapter::initFieldsAccess(EH_DELIVER_SM);
+IntHash<AccessType> SmppCommandAdapter::SubmitRespFieldsAccess = SmppCommandAdapter::initFieldsAccess(EH_SUBMIT_SM_RESP);
+IntHash<AccessType> SmppCommandAdapter::DeliverRespFieldsAccess = SmppCommandAdapter::initFieldsAccess(EH_DELIVER_SM_RESP);
 
 IntHash<int>  SmppCommandAdapter::tagToMaskAndValue = SmppCommandAdapter::initTagToMaskAndValue();
 
@@ -36,61 +34,56 @@ IntHash<int>  SmppCommandAdapter::tagToMaskAndValue = SmppCommandAdapter::initTa
 
 AccessType SmppCommandAdapter::CheckAccess(int handlerType, const std::string& name)
 {
-    int * pFieldId;
-    AccessType * actype = 0;
-
     if(!strcmp(name.c_str(), "src_sme_id") || !strcmp(name.c_str(), "dst_sme_id")) return atRead;
 
-    switch (handlerType) 
-    {
+    Hash<int> *nameHash = 0, *nameHash2 = 0;
+    IntHash<AccessType> *accessHash = 0, *accessHash2 = 0;
+    switch (handlerType) {
     case EH_DATA_SM:
-
-        pFieldId = DataSmFieldNames.GetPtr(name.c_str());
-
-        if (!pFieldId) return atNoAccess;
-
-        actype = DataSmFieldsAccess.GetPtr(*pFieldId);
-        if (actype) return *actype;
-
-        return atRead;
+        nameHash = &SubmitFieldNames;
+        accessHash = &SubmitFieldsAccess;
+        nameHash2 = &DeliverFieldNames;
+        accessHash2 = &DeliverFieldsAccess;
         break;
     case EH_DELIVER_SM:
-        pFieldId = DeliverFieldNames.GetPtr(name.c_str());
-        if (!pFieldId) return atNoAccess;
-
-        actype = DeliverFieldsAccess.GetPtr(*pFieldId);
-
-        if (actype) return *actype;
-
-        return atRead;
+        nameHash = &DeliverFieldNames;
+        accessHash = &DeliverFieldsAccess;
         break;
     case EH_SUBMIT_SM:
-        pFieldId = SubmitFieldNames.GetPtr(name.c_str());
-
-        if (!pFieldId) return atNoAccess;
-
-        actype = SubmitFieldsAccess.GetPtr(*pFieldId);
-
-        if (actype) return *actype;
-        return atRead;
-    case EH_DATA_SM_RESP:
-        pFieldId = DataSmRespFieldNames.GetPtr(name.c_str());
-        if (pFieldId) {
-          actype = DataSmRespFieldsAccess.GetPtr(*pFieldId);
-          return actype ? *actype : atRead;
-        }
-    case EH_DELIVER_SM_RESP:
-    case EH_SUBMIT_SM_RESP:
-        pFieldId = RespFieldNames.GetPtr(name.c_str());
-        if (!pFieldId) return atNoAccess;
-
-        actype = RespFieldsAccess.GetPtr(*pFieldId);
-        if (actype) return *actype;
-
-        return atRead;
+        nameHash = &SubmitFieldNames;
+        accessHash = &SubmitFieldsAccess;
         break;
+    case EH_DATA_SM_RESP:
+        nameHash = &DataSmRespFieldNames;
+        accessHash = &SubmitRespFieldsAccess;
+        accessHash2 = &DeliverRespFieldsAccess;
+        break;
+    case EH_DELIVER_SM_RESP:
+        nameHash = &RespFieldNames;
+        accessHash = &DeliverRespFieldsAccess;
+        break;
+    case EH_SUBMIT_SM_RESP:
+        nameHash = &RespFieldNames;
+        accessHash = &SubmitRespFieldsAccess;
+        break;
+    default:
+        return atNoAccess;
     }
-    return atNoAccess;
+
+    int* pFieldId = 0;
+    if (nameHash) { pFieldId = nameHash->GetPtr(name.c_str()); }
+    if (!pFieldId && nameHash2 ) { pFieldId = nameHash2->GetPtr(name.c_str()); }
+    if (!pFieldId) return atNoAccess;
+
+    AccessType* actype1 = accessHash ? accessHash->GetPtr(*pFieldId) : 0;
+    AccessType* actype2 = accessHash2 ? accessHash2->GetPtr(*pFieldId) : 0;
+    if (actype1 && actype2) {
+        // we are taking higher access
+        return std::max(*actype1,*actype2);
+    }
+    if (actype1) return *actype1;
+    if (actype2) return *actype2;
+    return atReadWrite;
 }
 
 
@@ -110,16 +103,6 @@ SmppCommandAdapter::~SmppCommandAdapter()
 
 Property* SmppCommandAdapter::getProperty(const std::string& name)
 {
-    SMS * sms = 0;
-
-    CommandId cmdid = CommandId(command.getCommandId());
-
-    int * pFieldId = 0;
-    AdapterProperty * property = 0;
-
-    AdapterProperty ** propertyPtr;
-    SmsResp * smsResp = 0;
-
     if(!strcmp(name.c_str(), "src_sme_id"))
     {
         if(!src_sme_id)
@@ -133,105 +116,357 @@ Property* SmppCommandAdapter::getProperty(const std::string& name)
         return dst_sme_id;
     }
 
+    const CommandId cmdid = CommandId(command.getCommandId());
+    Hash<int>* nameHash;
+    IntHash<AccessType>* accessHash;
     switch (cmdid) 
     {
     case DELIVERY:
-        sms = command.get_sms();
-        if (!sms) return 0;
-
-        pFieldId = DeliverFieldNames.GetPtr(name.c_str());
-        if (!pFieldId) return 0;
-
-        propertyPtr = PropertyPul.GetPtr(*pFieldId);
-        if (propertyPtr) return (*propertyPtr);
-
-        property = getDeliverProperty(*sms,name,*pFieldId);
+        nameHash = &DeliverFieldNames;
+        accessHash = &DeliverFieldsAccess;
         break;
     case SUBMIT:
-        sms = command.get_sms();
-        if (!sms) return 0;
-
-        pFieldId = SubmitFieldNames.GetPtr(name.c_str());
-        if (!pFieldId) return 0;
-
-        propertyPtr = PropertyPul.GetPtr(*pFieldId);
-        if (propertyPtr) return (*propertyPtr);
-
-        property = getSubmitProperty(*sms,name,*pFieldId);
+        nameHash = &SubmitFieldNames;
+        accessHash = &SubmitFieldsAccess;
         break;
-
-    case DATASM:
-        pFieldId = DataSmFieldNames.GetPtr(name.c_str());
-        if (!pFieldId) return 0;
-
-        propertyPtr = PropertyPul.GetPtr(*pFieldId);
-        if (propertyPtr) return (*propertyPtr);
-
-        property = getDataSmProperty(command.get_smsCommand(),name,*pFieldId);
-        break;
-
-    case DATASM_RESP:
-        pFieldId = DataSmRespFieldNames.GetPtr(name.c_str());
-        if (pFieldId) {
-          propertyPtr = PropertyPul.GetPtr(*pFieldId);
-          if (propertyPtr) return (*propertyPtr);
-          property = getDataSmRespProperty(name, *pFieldId);
-          break;
+    case DATASM: {
+        const DataSmDirection dir = command.get_smsCommand().dir;
+        if ( dir == dsdSc2Srv ) {
+            nameHash = &DeliverFieldNames;
+            accessHash = &DeliverFieldsAccess;
+        } else if ( dir == dsdSrv2Sc ) {
+            nameHash = &SubmitFieldNames;
+            accessHash = &SubmitFieldsAccess;
+        } else {
+            return 0;
         }
-    case SUBMIT_RESP:
-    case DELIVERY_RESP:
-
-        pFieldId = RespFieldNames.GetPtr(name.c_str());
-        if (!pFieldId) return 0;
-
-        propertyPtr = PropertyPul.GetPtr(*pFieldId);
-        if (propertyPtr) return (*propertyPtr);
-
-        smsResp = command.get_resp();
-        if (!smsResp) return 0;
-        sms = smsResp->get_sms();
-        if (!sms) return 0;
-
-        property = getRespProperty(*sms, name,*pFieldId);
-        break;
-    default:
         break;
     }
+    case DATASM_RESP: {
+        nameHash = &DataSmRespFieldNames;
+        SmsResp* resp = command.get_resp();
+        if (!resp) return 0;
+        const DataSmDirection dir = resp->get_dir();
+        if ( dir == dsdSc2Srv ) {
+            accessHash = &DeliverRespFieldsAccess;
+        } else if (dir == dsdSrv2Sc) {
+            accessHash = &SubmitRespFieldsAccess;
+        } else {
+            return 0;
+        }
+        break;
+    }
+    case SUBMIT_RESP:
+        nameHash = &RespFieldNames;
+        accessHash = &SubmitRespFieldsAccess;
+        break;
+    case DELIVERY_RESP:
+        nameHash = &RespFieldNames;
+        accessHash = &DeliverRespFieldsAccess;
+        break;
+    default:
+        return 0;
+    } // switch cmdid
 
-    if ((property)&&(pFieldId)) PropertyPul.Insert(*pFieldId, property);
+    int* pFieldId = nameHash->GetPtr(name.c_str());
+    if (!pFieldId) return 0;
 
+    AdapterProperty** propertyPtr = PropertyPul.GetPtr(*pFieldId);
+    if (propertyPtr) return *propertyPtr;
+
+    // checking access
+    AccessType* actype = accessHash->GetPtr(*pFieldId);
+    if (actype && *actype == atNoAccess) return 0;
+
+    // property was not accessed yet, creating
+    AdapterProperty* property = 0;
+    switch (cmdid) {
+    case SUBMIT:
+    case DELIVERY:
+    case DATASM: {
+        property = createSmProperty(name,*pFieldId);
+        break;
+    }
+    case SUBMIT_RESP:
+    case DELIVERY_RESP:
+    case DATASM_RESP: {
+        property = createRespProperty(name,*pFieldId);
+        break;
+    }
+    default:
+        return 0;
+    }
+
+    if (property) PropertyPul.Insert(*pFieldId,property);
+    return property;
+}
+
+
+AdapterProperty* SmppCommandAdapter::createSmProperty( const std::string& name, int fieldId )
+{
+    AdapterProperty* property = 0;
+
+    do { // fake do
+
+        if (fieldId == PACKET_DIRECTION) {
+            property = new AdapterProperty(name.c_str(),this,command.get_smsCommand().dir);
+            break;
+        }
+
+        SMS* sms = command.get_sms();
+        if (!sms) break;
+        SMS& data = *sms;
+
+        switch ( fieldId ) {
+        case OA:
+            property = new AdapterProperty(name.c_str(),this,data.getOriginatingAddress().toString().c_str());
+            break;
+        case DA:
+            property = new AdapterProperty(name.c_str(),this,data.getDestinationAddress().toString().c_str());
+            break;
+        case SMS_MESSAGE_BODY:
+            property = getMessageBodyProperty(data, name);
+            break;
+        case SMS_SVC_TYPE:
+            property = new AdapterProperty(name.c_str(),this,data.eServiceType);
+            break;
+        case USSD_DIALOG:
+            property = new AdapterProperty(name.c_str(),this,data.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP));
+            break;
+        default: break;
+        } // switch
+    
+        if ( property ) { break; }
+
+        // generic
+        if ( (fieldId >= ESM_MM_SMSC_DEFAULT) && (fieldId <= ESM_NSF_BOTH) ) {
+            property = getESMBitProperty(data,name,fieldId);
+            break;
+        }
+
+        if ( (fieldId >= RD_RECEIPT_OFF) && (fieldId <= RD_I_NOTIFICATION) ) {
+            property = getRDBitProperty(data,name,fieldId);
+            break;
+        }
+
+        if ( (fieldId >= DC_BINARY) && (fieldId <= DC_GSM_MSG_CC) ) {
+            property = getDCBitProperty(data,name,fieldId);
+            break;
+        }
+
+        if ( (fieldId >= USSD_PSSD_IND) && (fieldId <= USSD_USSN_CONF) ) {
+            property = getUSSDBoolProperty(data,name,fieldId);
+            break;
+        }
+
+        if ( (fieldId >= SLICING_REF_NUM) && (fieldId <= SLICING_SEGMENT_SEQNUM) ) {
+            property = getSlicingProperty(data,name,fieldId);
+            break;
+        }
+
+        // delivery specific
+        if ( (fieldId >= ST_ENROUTE) && (fieldId <= ST_REJECTED) ) {
+            property = new AdapterProperty(name.c_str(),this,data.getState());
+            break;
+        }
+
+        // submit specific
+        if ((fieldId >= OPTIONAL_CHARGING)&&(fieldId <= OPTIONAL_EXPECTED_MESSAGE_CONTENT_TYPE)) {
+            property = getUnknownProperty(data, name, fieldId);
+            break;
+        }
+        if (fieldId == SMS_VALIDITY_PERIOD ) {
+            property = new AdapterProperty(name.c_str(),this,data.validTime);
+            break;
+        }
+    
+        if (fieldId >= SMALLEST_ADDITIONAL_TAG && fieldId <= BIGGEST_ADDITIONAL_TAG) {
+            smsc::logger::Logger* logr = smsc::logger::Logger::getInstance("smpp.adapt");
+            smsc_log_warn(logr,"requested field #%u/%s is not handled",fieldId,name.c_str());
+            break;
+        }
+
+        // sms tag property
+        int tagType = (fieldId >> 8);
+        if (tagType == SMS_STR_TAG) 
+            property = new AdapterProperty(name.c_str(),this, data.hasStrProperty(fieldId) ? data.getStrProperty(fieldId).c_str() : "");
+        else if (tagType == SMS_INT_TAG) 
+            property = new AdapterProperty(name.c_str(), this, data.hasIntProperty(fieldId) ? data.getIntProperty(fieldId) : 0);
+
+    } while (false); // fake do
+    return property;
+}
+
+
+AdapterProperty* SmppCommandAdapter::createRespProperty(const std::string& name, int fieldId)
+{
+    AdapterProperty* property = 0;
+    do {
+
+        SmsResp* resp = command.get_resp();
+        if (!resp) break;
+
+        // data sm resp
+        switch (fieldId) {
+
+        case PACKET_DIRECTION:
+            property = new AdapterProperty(name.c_str(),this,resp->get_dir());
+            break;
+
+        case SMPP_ADDITIONAL_STATUS_INFO_TEXT:
+            property = new AdapterProperty(name.c_str(),this,resp->getAdditionalStatusInfoText());
+            break;
+        case SMPP_DELIVERY_FAILURE_REASON: {
+            int val = resp->hasDeliveryFailureReason() ? resp->getDeliveryFailureReason() : -1;
+            property = new AdapterProperty(name.c_str(),this,val);
+            break;
+        }
+        case SMPP_DPF_RESULT:
+            property = new AdapterProperty(name.c_str(),this,resp->getDpfResult());
+            break;
+        case SMPP_NETWORK_ERROR_CODE:
+            property = new AdapterProperty(name.c_str(),this,resp->getNetworkErrorCode());
+            break;
+        case STATUS:
+            property = new AdapterProperty(name.c_str(),this,command.get_status());
+            break;
+        case MESSAGE_ID:
+            property = new AdapterProperty(name.c_str(),this,resp->get_messageId());
+            break;
+        case USSD_DIALOG: {
+            SMS* data = resp->get_sms();
+            if (data) {
+                property = new AdapterProperty(name.c_str(),this,data->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP));
+            }
+            break;
+        }
+        case OA: {
+            SMS* data = resp->get_sms();
+            if (data) {
+                property = new AdapterProperty(name.c_str(),this,data->getOriginatingAddress().toString());
+            }
+            break;
+        }
+        case DA: {
+            SMS* data = resp->get_sms();
+            if (data) {
+                property = new AdapterProperty(name.c_str(),this,data->getDestinationAddress().toString());
+            }
+            break;
+        }
+        case STATUS_OK:
+            property = new AdapterProperty(name.c_str(),this,(command.get_status() == 0));
+            break;
+        case STATUS_PERM_ERROR:
+            if (command.get_status() > 0)
+                property = new AdapterProperty(name.c_str(),this,isErrorPermanent(command.get_status()));
+            else
+                property = new AdapterProperty(name.c_str(),this,0);
+            break;
+        case STATUS_TEMP_ERROR:
+            if (command.get_status() > 0) 
+                property = new AdapterProperty(name.c_str(),this,!isErrorPermanent(command.get_status()));
+            else
+                property = new AdapterProperty(name.c_str(),this,0);
+            break;
+
+        default: break;
+        } // switch
+        
+        if (property) break;
+
+        if (fieldId >= SMALLEST_ADDITIONAL_TAG && fieldId <= BIGGEST_ADDITIONAL_TAG) {
+            smsc::logger::Logger* logr = smsc::logger::Logger::getInstance("smpp.adapt");
+            smsc_log_warn(logr,"requested resp field #%u/%s is not handled",fieldId,name.c_str());
+            break;
+        }
+
+    } while (false);
     return property;
 }
 
 
 void SmppCommandAdapter::changed(AdapterProperty& property)
 {
-
-    SMS * sms = 0;
-
     CommandId cmdid = CommandId(command.getCommandId());
 
-    int * pFieldId = 0;
-    // int receiptMessageId;
-
-    const Property::string_type& name = property.getName();
-
+    Hash<int>* nameHash;
+    IntHash<AccessType>* accessHash;
     switch (cmdid) 
     {
     case DELIVERY:
-        sms = command.get_sms();
-        if (sms == 0) return;
-
-        pFieldId = DeliverFieldNames.GetPtr(name.c_str());
-        if (!pFieldId) return;
-
-        /*
-        //TODO: ensure
-        receiptMessageId = atoi(sms->getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str());
-        //TODO: check - what we must to do?
-        if (receiptMessageId) return;
-         */
+        nameHash = &DeliverFieldNames;
+        accessHash = &DeliverFieldsAccess;
+        break;
+    case SUBMIT:
+        nameHash = &SubmitFieldNames;
+        accessHash = &SubmitFieldsAccess;
+        break;
+    case DATASM: {
+        const DataSmDirection dir = command.get_smsCommand().dir;
+        if (dir == dsdSc2Srv) {
+            nameHash = &DeliverFieldNames;
+            accessHash = &DeliverFieldsAccess;
+        } else if (dir == dsdSrv2Sc) {
+            nameHash = &SubmitFieldNames;
+            accessHash = &SubmitFieldsAccess;
+        } else {
+            return;
+        }
+        break;
+    }
+    case SUBMIT_RESP:
+        nameHash = &RespFieldNames;
+        accessHash = &SubmitRespFieldsAccess;
+        break;
+    case DELIVERY_RESP:
+        nameHash = &RespFieldNames;
+        accessHash = &DeliverRespFieldsAccess;
+        break;
+    case DATASM_RESP: {
+        nameHash = &DataSmRespFieldNames;
+        SmsResp* resp = command.get_resp();
+        if (!resp) return;
+        const DataSmDirection dir = resp->get_dir();
+        if ( dir == dsdSc2Srv ) {
+            accessHash = &DeliverRespFieldsAccess;
+        } else if (dir == dsdSrv2Sc) {
+            accessHash = &SubmitRespFieldsAccess;
+        } else {
+            return;
+        }
+        break;
+    }
+    default: break;
+    }
         
+    const Property::string_type& name = property.getName();
+    int* pFieldId = nameHash->GetPtr(name.c_str());
+    if (!pFieldId) return;
+
+    AccessType* actype = accessHash->GetPtr(*pFieldId);
+    if (actype && *actype <= atRead) return;
+
+    // allowed to write
+    switch (cmdid) {
+    case SUBMIT:
+    case DELIVERY:
+    case DATASM:
+        writeSmField(*pFieldId,property);
+        break;
+    case SUBMIT_RESP:
+    case DELIVERY_RESP:
+    case DATASM_RESP:
+        writeRespField(*pFieldId,property);
+        break;
+    default: break;
+    } // switch
+}
+
+    /*
+    pFieldId = DeliverFieldNames.GetPtr(name.c_str());
+    if (!pFieldId) return;
+
         writeDeliveryField(*sms,*pFieldId,property);
         break;
     case SUBMIT:
@@ -270,12 +505,14 @@ void SmppCommandAdapter::changed(AdapterProperty& property)
         return;
     }
 }
+     */
 
 
 /// ==========================================================================
 ///     private
 /// ==========================================================================
 
+/*
 AdapterProperty * SmppCommandAdapter::getDeliverProperty(SMS& data,const std::string& name,int FieldId)
 {
     AdapterProperty * property = 0;
@@ -313,17 +550,16 @@ AdapterProperty * SmppCommandAdapter::getSubmitProperty(SMS& data,const std::str
     } while ( false );
     return property;
 }
+ */
 
-
+/*
 AdapterProperty * SmppCommandAdapter::getDataSmProperty(SmsCommand& data,const std::string& name,int FieldId)
 {
     AdapterProperty * property = 0;
-/*
-    dsdSrv2Srv,
-    dsdSrv2Sc,
-    dsdSc2Srv,
-    dsdSc2Sc
-*/
+    // dsdSrv2Srv,
+    // dsdSrv2Sc,
+    // dsdSc2Srv,
+    // dsdSc2Sc
     if (FieldId == PACKET_DIRECTION) 
         property = new AdapterProperty(name.c_str(),this,(int)data.dir);
     else if (data.dir == dsdSc2Srv) 
@@ -332,8 +568,9 @@ AdapterProperty * SmppCommandAdapter::getDataSmProperty(SmsCommand& data,const s
         property = getSubmitProperty(data.sms, name, FieldId);
     return property;
 }
+ */
 
-
+/*
 AdapterProperty * SmppCommandAdapter::getRespProperty(SMS& data,const std::string& name,int FieldId)
 {
     AdapterProperty * property = 0;
@@ -403,8 +640,9 @@ AdapterProperty * SmppCommandAdapter::getDataSmRespProperty(const std::string& n
     }
     return property;
 }
+ */
 
-
+/*
 AdapterProperty* SmppCommandAdapter::getGenericProperty(SMS& data, const std::string& name, int fieldId)
 {
     AdapterProperty* property = 0;
@@ -429,13 +667,6 @@ AdapterProperty* SmppCommandAdapter::getGenericProperty(SMS& data, const std::st
             property = getUSSDBoolProperty(data,name,fieldId);
             break;
         }
-
-        /*
-        if ( fieldId == Tag::SMPP_MESSAGE_PAYLOAD ) {
-            property = new AdapterProperty(name.c_str(),this,data.getState());
-            break;
-        }
-         */
 
         if ( (fieldId >= SLICING_REF_NUM) && (fieldId <= SLICING_SEGMENT_SEQNUM) ) {
             property = getSlicingProperty(data,name,fieldId);
@@ -474,6 +705,7 @@ AdapterProperty* SmppCommandAdapter::getGenericProperty(SMS& data, const std::st
     } while ( false );
     return property;
 }
+ */
 
 
 AdapterProperty* SmppCommandAdapter::getESMBitProperty(SMS& data, const std::string& name,int fieldId)
@@ -674,6 +906,7 @@ void SmppCommandAdapter::Set_DC_BIT_Property(SMS& data,int FieldId,bool value)
  */
 
 
+/*
 void SmppCommandAdapter::writeDataSmField(SMS& data,int FieldId,AdapterProperty& property)
 {
     writeDeliveryField(data,FieldId,property);
@@ -684,29 +917,34 @@ void SmppCommandAdapter::writeSubmitField(SMS& data,int FieldId,AdapterProperty&
 {
     writeDeliveryField(data,FieldId,property);
 }
+ */
 
 
-void SmppCommandAdapter::writeDeliveryField(SMS& data,int FieldId,AdapterProperty& property)
+void SmppCommandAdapter::writeSmField(int fieldId,AdapterProperty& property)
 {
-    if (FieldId == OA) 
+    SMS* sms = command.get_sms();
+    if (!sms) return;
+    SMS& data = *sms;
+
+    if (fieldId == OA) 
         AssignAddress(data.originatingAddress, property.getStr().c_str());
-    else if (FieldId == DA) 
+    else if (fieldId == DA) 
         AssignAddress(data.destinationAddress, property.getStr().c_str());
     /*
-    else if ((FieldId >= DC_BINARY)&&(FieldId <= DC_GSM_MSG_CC)) 
-        Set_DC_BIT_Property(data,FieldId,property.getBool());
+    else if ((fieldId >= DC_BINARY)&&(fieldId <= DC_GSM_MSG_CC)) 
+        Set_DC_BIT_Property(data,fieldId,property.getBool());
      */
-    else if ( (FieldId >= ESM_MM_SMSC_DEFAULT) && (FieldId <= ESM_NSF_BOTH) ) {
+    else if ( (fieldId >= ESM_MM_SMSC_DEFAULT) && (fieldId <= ESM_NSF_BOTH) ) {
 
-        setBitField(data,Tag::SMPP_ESM_CLASS,property.getBool(),FieldId);
+        setBitField(data,Tag::SMPP_ESM_CLASS,property.getBool(),fieldId);
 
-    } else if ( (FieldId >= RD_RECEIPT_OFF) && (FieldId <= RD_I_NOTIFICATION) ) {
+    } else if ( (fieldId >= RD_RECEIPT_OFF) && (fieldId <= RD_I_NOTIFICATION) ) {
 
-        setBitField(data,Tag::SMPP_REGISTRED_DELIVERY,property.getBool(),FieldId);
+        setBitField(data,Tag::SMPP_REGISTRED_DELIVERY,property.getBool(),fieldId);
 
     } else {
 
-        switch (FieldId) {
+        switch (fieldId) {
         case Tag::SMPP_USER_MESSAGE_REFERENCE:
             // was fixme: should we also set session UMR?
             // if ( ! command.getSession() )
@@ -719,7 +957,7 @@ void SmppCommandAdapter::writeDeliveryField(SMS& data,int FieldId,AdapterPropert
         case Tag::SMPP_LANGUAGE_INDICATOR:
         case Tag::SMPP_SOURCE_PORT:
         case Tag::SMPP_DESTINATION_PORT:
-            data.setIntProperty(FieldId, unsigned(property.getInt()));
+            data.setIntProperty(fieldId, unsigned(property.getInt()));
             break;
         case SMS_SVC_TYPE: {
             const Property::string_type& str = property.getStr();
@@ -775,29 +1013,45 @@ void SmppCommandAdapter::writeDeliveryField(SMS& data,int FieldId,AdapterPropert
 
             break;
         }
+
+        default: {
+            smsc::logger::Logger* logr = smsc::logger::Logger::getInstance("smpp.adapt");
+            smsc_log_warn(logr,"requested field(w) #%u/%s is not handled",fieldId,property.getName().c_str());
+            break;
+        }
         } // switch
     } // if
 }
 
-void SmppCommandAdapter::writeDataSmRespField(int fieldId, AdapterProperty& property) {
-    SmsResp* resp = command.get_resp();
-    if (!resp) {
+
+void SmppCommandAdapter::writeRespField(int fieldId, AdapterProperty& property) {
+    if (fieldId == STATUS) {
+        command.set_status(int(property.getInt()));
         return;
     }
-  switch (fieldId) {
-  case SMPP_ADDITIONAL_STATUS_INFO_TEXT:
-    resp->setAdditionalStatusInfoText(property.getStr().c_str());
-    break;
-  case SMPP_DELIVERY_FAILURE_REASON:
-    resp->setDeliveryFailureReason(uint8_t(property.getInt()));
-    break;
-  case SMPP_DPF_RESULT:
-    resp->setDpfResult(uint8_t(property.getInt()));
-    break;
-  case SMPP_NETWORK_ERROR_CODE:
-    resp->setNetworkErrorCode(unsigned(property.getInt()));
-    break;
-  }
+
+    SmsResp* resp = command.get_resp();
+    if (!resp) { return; }
+
+    switch (fieldId) {
+    case SMPP_ADDITIONAL_STATUS_INFO_TEXT:
+        resp->setAdditionalStatusInfoText(property.getStr().c_str());
+        break;
+    case SMPP_DELIVERY_FAILURE_REASON:
+        resp->setDeliveryFailureReason(uint8_t(property.getInt()));
+        break;
+    case SMPP_DPF_RESULT:
+        resp->setDpfResult(uint8_t(property.getInt()));
+        break;
+    case SMPP_NETWORK_ERROR_CODE:
+        resp->setNetworkErrorCode(unsigned(property.getInt()));
+        break;
+    default: {
+        smsc::logger::Logger* logr = smsc::logger::Logger::getInstance("smpp.adapt");
+        smsc_log_warn(logr,"requested resp field(w) #%u/%s is not handled",fieldId,property.getName().c_str());
+        break;
+    }
+    }
 }
 
 
@@ -827,595 +1081,285 @@ void SmppCommandAdapter::SetBitMask(SMS& data, int tag, int mask)
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+IntHash<AccessType> SmppCommandAdapter::initFieldsAccess( EventHandlerType eh )
+{
+    IntHash<AccessType> hs;
+
+    hs.Insert(PACKET_DIRECTION,atRead);
+
+    switch (eh) {
+    case EH_SUBMIT_SM_RESP:
+    case EH_DELIVER_SM_RESP:
+    case EH_DATA_SM_RESP:
+        hs.Insert(OA,atRead);
+        hs.Insert(DA,atRead);
+        hs.Insert(STATUS_OK,atRead);
+        hs.Insert(STATUS_PERM_ERROR,atRead);
+        hs.Insert(STATUS_TEMP_ERROR,atRead);
+        hs.Insert(MESSAGE_ID,atRead);
+        hs.Insert(USSD_DIALOG,atRead);
+        break;
+        
+    case EH_SUBMIT_SM:
+    case EH_DELIVER_SM:
+    case EH_DATA_SM:
+        hs.Insert(Tag::SMPP_PROTOCOL_ID,atRead);
+        hs.Insert(Tag::SMPP_PRIORITY,atRead);
+        hs.Insert(Tag::SMPP_SCHEDULE_DELIVERY_TIME ,atRead);
+        hs.Insert(SMS_VALIDITY_PERIOD              ,atRead);
+        hs.Insert(Tag::SMPP_REPLACE_IF_PRESENT_FLAG,atRead);
+        hs.Insert(DC_BINARY         ,atRead);
+        hs.Insert(DC_TEXT           ,atRead);
+        hs.Insert(DC_SMSC_DEFAULT   ,atRead);
+        hs.Insert(DC_ASCII_X34      ,atRead);
+        hs.Insert(DC_LATIN1         ,atRead);
+        hs.Insert(DC_JIS            ,atRead);
+        hs.Insert(DC_CYRILIC        ,atRead);
+        hs.Insert(DC_LATIN_HEBREW   ,atRead);
+        hs.Insert(DC_UCS2           ,atRead);
+        hs.Insert(DC_PICTOGRAM_ENC  ,atRead);
+        hs.Insert(DC_ISO_MUSIC_CODES,atRead);
+        hs.Insert(DC_E_KANJI_JIS    ,atRead);
+        hs.Insert(DC_KS_C_5601      ,atRead);
+        hs.Insert(DC_GSM_MWI        ,atRead);
+        hs.Insert(DC_GSM_MSG_CC     ,atRead);
+        hs.Insert(Tag::SMPP_SM_LENGTH,atRead);
+        hs.Insert(Tag::SMPP_DEST_ADDR_SUBUNIT    ,atRead);
+        hs.Insert(Tag::SMPP_SAR_MSG_REF_NUM      ,atRead);
+        hs.Insert(Tag::SMPP_SAR_TOTAL_SEGMENTS   ,atRead);
+        hs.Insert(Tag::SMPP_SAR_SEGMENT_SEQNUM   ,atRead);
+        hs.Insert(Tag::SMPP_PAYLOAD_TYPE         ,atRead);
+        hs.Insert(Tag::SMPP_MORE_MESSAGES_TO_SEND,atRead);
+        hs.Insert(Tag::SMPP_MS_VALIDITY          ,atRead);
+        hs.Insert(Tag::SMPP_NUMBER_OF_MESSAGES   ,atRead);
+        hs.Insert(Tag::SMPP_NETWORK_ERROR_CODE   ,atRead);
+        hs.Insert(ST_ENROUTE      ,atRead);
+        hs.Insert(ST_DELIVERED    ,atRead);
+        hs.Insert(ST_EXPIRED      ,atRead);
+        hs.Insert(ST_DELETED      ,atRead);
+        hs.Insert(ST_UNDELIVERABLE,atRead);
+        hs.Insert(ST_ACCEPTED     ,atRead);
+        hs.Insert(ST_UNKNOWN      ,atRead);
+        hs.Insert(ST_REJECTED     ,atRead);
+        hs.Insert(Tag::SMPP_RECEIPTED_MESSAGE_ID,atRead);
+        hs.Insert(USSD_DIALOG   ,atRead);
+        hs.Insert(USSD_PSSD_IND ,atRead);
+        hs.Insert(USSD_PSSR_IND ,atRead);
+        hs.Insert(USSD_USSR_REQ ,atRead);
+        hs.Insert(USSD_USSN_REQ ,atRead);
+        hs.Insert(USSD_PSSD_RESP,atRead);
+        hs.Insert(USSD_PSSR_RESP,atRead);
+        hs.Insert(USSD_USSR_CONF,atRead);
+        hs.Insert(USSD_USSN_CONF,atRead);
+        hs.Insert(SLICING_REF_NUM       ,atRead);
+        hs.Insert(SLICING_TOTAL_SEGMENTS,atRead);
+        hs.Insert(SLICING_SEGMENT_SEQNUM,atRead);
+        break;
+
+    default:
+        break;
+    }
+    return hs;
+}
+
+/*
 IntHash<AccessType> SmppCommandAdapter::InitRespAccess()
 {
     IntHash<AccessType> hs;
-    hs.Insert(STATUS,atReadWrite);
+    initCommonRespAccess(hs);
     return hs;
 }
 
 IntHash<AccessType> SmppCommandAdapter::InitDataSmRespAccess()
 {
     IntHash<AccessType> hs;
-    hs.Insert(SMPP_ADDITIONAL_STATUS_INFO_TEXT, atReadWrite);
-    hs.Insert(SMPP_DELIVERY_FAILURE_REASON, atReadWrite);
-    hs.Insert(SMPP_DPF_RESULT, atReadWrite);
-    hs.Insert(SMPP_NETWORK_ERROR_CODE, atReadWrite);
+    initCommonRespAccess(hs);
+    // hs.Insert(SMPP_ADDITIONAL_STATUS_INFO_TEXT, atReadWrite);
+    // hs.Insert(SMPP_DELIVERY_FAILURE_REASON, atReadWrite);
+    // hs.Insert(SMPP_DPF_RESULT, atReadWrite);
+    // hs.Insert(SMPP_NETWORK_ERROR_CODE, atReadWrite);
     return hs;
 }
+ */
 
 
-IntHash<AccessType> SmppCommandAdapter::InitSubmitAccess()
-{
-    IntHash<AccessType> hs;
-
-    hs.Insert(SMS_SVC_TYPE, atReadWrite);
-    hs.Insert(OA,atReadWrite);
-    hs.Insert(DA,atReadWrite);
-
-    hs.Insert(ESM_MM_SMSC_DEFAULT,atReadWrite);
-    hs.Insert(ESM_MM_DATAGRAM    ,atReadWrite);
-    hs.Insert(ESM_MM_FORWARD     ,atReadWrite);
-    hs.Insert(ESM_MM_S_AND_F     ,atReadWrite);
-    hs.Insert(ESM_MT_DEFAULT     ,atReadWrite);
-    hs.Insert(ESM_MT_DELIVERY_ACK,atReadWrite);
-    hs.Insert(ESM_MT_MANUAL_ACK  ,atReadWrite);
-    hs.Insert(ESM_NSF_NONE       ,atReadWrite);
-    hs.Insert(ESM_NSF_UDHI       ,atReadWrite);
-    hs.Insert(ESM_NSF_SRP        ,atReadWrite);
-    hs.Insert(ESM_NSF_BOTH       ,atReadWrite);
-
-    hs.Insert(RD_RECEIPT_OFF     ,atReadWrite);
-    hs.Insert(RD_RECEIPT_ON      ,atReadWrite);
-    hs.Insert(RD_RECEIPT_FAILURE ,atReadWrite);
-    hs.Insert(RD_ACK_OFF         ,atReadWrite);
-    hs.Insert(RD_ACK_ON          ,atReadWrite);
-    hs.Insert(RD_ACK_MAN_ON      ,atReadWrite);
-    hs.Insert(RD_RD_ACK_BOTH_ON  ,atReadWrite);
-    hs.Insert(RD_I_NOTIFICATION  ,atReadWrite);
-
-    /*
-    hs.Insert(DC_BINARY,atReadWrite);
-    hs.Insert(DC_TEXT, atReadWrite);
-    hs.Insert(DC_SMSC_DEFAULT, atReadWrite);
-    hs.Insert(DC_ASCII_X34, atReadWrite);
-    hs.Insert(DC_LATIN1, atReadWrite);
-    hs.Insert(DC_JIS, atReadWrite);
-    hs.Insert(DC_CYRILIC, atReadWrite);
-    hs.Insert(DC_LATIN_HEBREW, atReadWrite);
-    hs.Insert(DC_UCS2, atReadWrite);
-    hs.Insert(DC_PICTOGRAM_ENC, atReadWrite);
-    hs.Insert(DC_ISO_MUSIC_CODES, atReadWrite);
-    hs.Insert(DC_E_KANJI_JIS, atReadWrite);
-    hs.Insert(DC_KS_C_5601, atReadWrite);
-    hs.Insert(DC_GSM_MWI, atReadWrite);
-    hs.Insert(DC_GSM_MSG_CC, atReadWrite);
-     */
-
-    // hs.Insert(Tag::SMPP_SM_LENGTH, atReadWrite);
-    hs.Insert(SMS_MESSAGE_BODY, atReadWrite);
-
-    // --- optional
-
-    hs.Insert(Tag::SMPP_USER_MESSAGE_REFERENCE, atReadWrite);
-    hs.Insert(Tag::SMPP_SOURCE_PORT, atReadWrite);
-    hs.Insert(Tag::SMPP_DESTINATION_PORT, atReadWrite);
-    hs.Insert(Tag::SMPP_USER_RESPONSE_CODE, atReadWrite);
-    hs.Insert(Tag::SMPP_LANGUAGE_INDICATOR, atReadWrite);
-    hs.Insert(Tag::SMPP_ITS_SESSION_INFO, atReadWrite);
-    return hs;
-}
-
-
-IntHash<AccessType> SmppCommandAdapter::InitDeliverAccess()
-{
-    IntHash<AccessType> hs;
-    hs.Insert(SMS_SVC_TYPE, atReadWrite);
-    hs.Insert(OA,atReadWrite);
-    hs.Insert(DA,atReadWrite);
-
-    hs.Insert(ESM_MM_SMSC_DEFAULT,atReadWrite);
-    hs.Insert(ESM_MM_DATAGRAM    ,atReadWrite);
-    hs.Insert(ESM_MM_FORWARD     ,atReadWrite);
-    hs.Insert(ESM_MM_S_AND_F     ,atReadWrite);
-    hs.Insert(ESM_MT_DEFAULT     ,atReadWrite);
-    hs.Insert(ESM_MT_DELIVERY_ACK,atReadWrite);
-    hs.Insert(ESM_MT_MANUAL_ACK  ,atReadWrite);
-    hs.Insert(ESM_NSF_NONE       ,atReadWrite);
-    hs.Insert(ESM_NSF_UDHI       ,atReadWrite);
-    hs.Insert(ESM_NSF_SRP        ,atReadWrite);
-    hs.Insert(ESM_NSF_BOTH       ,atReadWrite);
-
-    hs.Insert(RD_RECEIPT_OFF     ,atReadWrite);
-    hs.Insert(RD_RECEIPT_ON      ,atReadWrite);
-    hs.Insert(RD_RECEIPT_FAILURE ,atReadWrite);
-    hs.Insert(RD_ACK_OFF         ,atReadWrite);
-    hs.Insert(RD_ACK_ON          ,atReadWrite);
-    hs.Insert(RD_ACK_MAN_ON      ,atReadWrite);
-    hs.Insert(RD_RD_ACK_BOTH_ON  ,atReadWrite);
-    hs.Insert(RD_I_NOTIFICATION  ,atReadWrite);
-
-    /*
-    hs.Insert(DC_BINARY, atReadWrite);
-    hs.Insert(DC_TEXT, atReadWrite);
-    hs.Insert(DC_SMSC_DEFAULT, atReadWrite);
-    hs.Insert(DC_ASCII_X34, atReadWrite);
-    hs.Insert(DC_LATIN1, atReadWrite);
-    hs.Insert(DC_JIS, atReadWrite);
-    hs.Insert(DC_CYRILIC, atReadWrite);
-    hs.Insert(DC_LATIN_HEBREW, atReadWrite);
-    hs.Insert(DC_UCS2, atReadWrite);
-    hs.Insert(DC_PICTOGRAM_ENC, atReadWrite);
-    hs.Insert(DC_ISO_MUSIC_CODES, atReadWrite);
-    hs.Insert(DC_E_KANJI_JIS, atReadWrite);
-    hs.Insert(DC_KS_C_5601, atReadWrite);
-    hs.Insert(DC_GSM_MWI, atReadWrite);
-    hs.Insert(DC_GSM_MSG_CC, atReadWrite);
-     */
-
-    // hs.Insert(Tag::SMPP_SM_LENGTH, atReadWrite);
-    hs.Insert(SMS_MESSAGE_BODY, atReadWrite);
-
-    // --- optional
-
-    hs.Insert(Tag::SMPP_USER_MESSAGE_REFERENCE, atReadWrite );
-    hs.Insert(Tag::SMPP_SOURCE_PORT, atReadWrite);
-    hs.Insert(Tag::SMPP_DESTINATION_PORT, atReadWrite);
-    hs.Insert(Tag::SMPP_USER_RESPONSE_CODE, atReadWrite);
-    hs.Insert(Tag::SMPP_LANGUAGE_INDICATOR, atReadWrite);
-    hs.Insert(Tag::SMPP_ITS_SESSION_INFO, atReadWrite);
-    return hs;
-}
-
-
-IntHash<AccessType> SmppCommandAdapter::InitDataSmAccess()
-{
-    IntHash<AccessType> hs;
-
-    hs.Insert(SMS_SVC_TYPE, atReadWrite);
-    hs.Insert(OA,atReadWrite);
-    hs.Insert(DA,atReadWrite);
-
-    hs.Insert(ESM_MM_SMSC_DEFAULT,atReadWrite);
-    hs.Insert(ESM_MM_DATAGRAM    ,atReadWrite);
-    hs.Insert(ESM_MM_FORWARD     ,atReadWrite);
-    hs.Insert(ESM_MM_S_AND_F     ,atReadWrite);
-    hs.Insert(ESM_MT_DEFAULT     ,atReadWrite);
-    hs.Insert(ESM_MT_DELIVERY_ACK,atReadWrite);
-    hs.Insert(ESM_MT_MANUAL_ACK  ,atReadWrite);
-    hs.Insert(ESM_NSF_NONE       ,atReadWrite);
-    hs.Insert(ESM_NSF_UDHI       ,atReadWrite);
-    hs.Insert(ESM_NSF_SRP        ,atReadWrite);
-    hs.Insert(ESM_NSF_BOTH       ,atReadWrite);
-
-    hs.Insert(RD_RECEIPT_OFF     ,atReadWrite);
-    hs.Insert(RD_RECEIPT_ON      ,atReadWrite);
-    hs.Insert(RD_RECEIPT_FAILURE ,atReadWrite);
-    hs.Insert(RD_ACK_OFF         ,atReadWrite);
-    hs.Insert(RD_ACK_ON          ,atReadWrite);
-    hs.Insert(RD_ACK_MAN_ON      ,atReadWrite);
-    hs.Insert(RD_RD_ACK_BOTH_ON  ,atReadWrite);
-    hs.Insert(RD_I_NOTIFICATION  ,atReadWrite);
-
-    /*
-    hs.Insert(DC_BINARY,atReadWrite);
-    hs.Insert(DC_TEXT, atReadWrite);
-    hs.Insert(DC_SMSC_DEFAULT, atReadWrite);
-    hs.Insert(DC_ASCII_X34, atReadWrite);
-    hs.Insert(DC_LATIN1, atReadWrite);
-    hs.Insert(DC_JIS, atReadWrite);
-    hs.Insert(DC_CYRILIC, atReadWrite);
-    hs.Insert(DC_LATIN_HEBREW, atReadWrite);
-    hs.Insert(DC_UCS2, atReadWrite);
-    hs.Insert(DC_PICTOGRAM_ENC, atReadWrite);
-    hs.Insert(DC_ISO_MUSIC_CODES, atReadWrite);
-    hs.Insert(DC_E_KANJI_JIS, atReadWrite);
-    hs.Insert(DC_KS_C_5601, atReadWrite);
-    hs.Insert(DC_GSM_MWI, atReadWrite);
-    hs.Insert(DC_GSM_MSG_CC, atReadWrite);
-     */
-
-    // hs.Insert(Tag::SMPP_SM_LENGTH, atReadWrite);
-    hs.Insert(SMS_MESSAGE_BODY, atReadWrite);
-
-    // --- optional
-
-    hs.Insert(Tag::SMPP_USER_MESSAGE_REFERENCE, atReadWrite);
-    hs.Insert(Tag::SMPP_SOURCE_PORT, atReadWrite);
-    hs.Insert(Tag::SMPP_DESTINATION_PORT, atReadWrite);
-    hs.Insert(Tag::SMPP_USER_RESPONSE_CODE, atReadWrite);
-    hs.Insert(Tag::SMPP_LANGUAGE_INDICATOR, atReadWrite);
-    hs.Insert(Tag::SMPP_ITS_SESSION_INFO, atReadWrite);
-    return hs;
-}
-
-
-Hash<int> SmppCommandAdapter::InitSubmitFieldNames()
-{
-    Hash<int> hs;
-    hs["packet_direction"]              = PACKET_DIRECTION;
-    hs["svc_type"]                      = SMS_SVC_TYPE;
-    hs["OA"]                            = OA;
-    hs["DA"]                            = DA;
-
-    hs["esm_mm_smsc_default"]           = ESM_MM_SMSC_DEFAULT;
-    hs["esm_mm_datagram"]               = ESM_MM_DATAGRAM;
-    hs["esm_mm_forward"]                = ESM_MM_FORWARD;
-    hs["esm_mm_s_and_f"]                = ESM_MM_S_AND_F;
-    hs["esm_mt_default"]                = ESM_MT_DEFAULT;
-    hs["esm_mt_delivery_ack"]           = ESM_MT_DELIVERY_ACK;
-    hs["esm_mt_manual_ack"]             = ESM_MT_MANUAL_ACK;
-    hs["esm_nsf_none"]                  = ESM_NSF_NONE;
-    hs["esm_nsf_udhi"]                  = ESM_NSF_UDHI;
-    hs["esm_nsf_srp"]                   = ESM_NSF_SRP;
-    hs["esm_nsf_both"]                  = ESM_NSF_BOTH;
-
-    hs["protocol_id"]                   = Tag::SMPP_PROTOCOL_ID; 
-    hs["priority_flag"]                 = Tag::SMPP_PRIORITY; 
-    hs["schedule_delivery_time"]        = Tag::SMPP_SCHEDULE_DELIVERY_TIME;
-    hs["validity_period"]               = SMS_VALIDITY_PERIOD;
-
-    hs["rd_receipt_off"]                = RD_RECEIPT_OFF;
-    hs["rd_receipt_on"]                 = RD_RECEIPT_ON;
-    hs["rd_receipt_failure"]            = RD_RECEIPT_FAILURE;
-    hs["rd_ack_off"]                    = RD_ACK_OFF;
-    hs["rd_ack_on"]                     = RD_ACK_ON;
-    hs["rd_ack_man_on"]                 = RD_ACK_MAN_ON;
-    hs["rd_ack_both_on"]                = RD_RD_ACK_BOTH_ON;
-    hs["rd_i_notification"]             = RD_I_NOTIFICATION;
-
-    hs["replace_if_present_flag"]       = Tag::SMPP_REPLACE_IF_PRESENT_FLAG;
-
-    hs["dc_binary"]                     = DC_BINARY;
-    hs["dc_text"]                       = DC_TEXT;
-    hs["dc_smsc_default"]               = DC_SMSC_DEFAULT;
-    hs["dc_ascii_x34"]                  = DC_ASCII_X34;
-    hs["dc_latin1"]                     = DC_LATIN1;
-    hs["dc_jis"]                        = DC_JIS;
-    hs["dc_cyrilic"]                    = DC_CYRILIC;
-    hs["dc_latin_hebrew"]               = DC_LATIN_HEBREW;
-    hs["dc_ucs2"]                       = DC_UCS2;
-    hs["dc_pictogram_enc"]              = DC_PICTOGRAM_ENC;
-    hs["dc_iso_music_codes"]            = DC_ISO_MUSIC_CODES;
-    hs["dc_e_kanji_jis"]                = DC_E_KANJI_JIS;
-    hs["dc_ks_c_5601"]                  = DC_KS_C_5601;
-    hs["dc_gsm_mwi"]                    = DC_GSM_MWI;
-    hs["dc_gsm_msg_cc"]                 = DC_GSM_MSG_CC;
-
-    hs["sm_length"]                     = Tag::SMPP_SM_LENGTH;
-
-    hs["message_text"]                  = SMS_MESSAGE_BODY;
-
-    // --- optional
-    hs["umr"]                           = Tag::SMPP_USER_MESSAGE_REFERENCE;
-    hs["source_port"]                   = Tag::SMPP_SOURCE_PORT; 
-    hs["destination_port"]              = Tag::SMPP_DESTINATION_PORT; 
-    hs["dest_addr_subunit"]             = Tag::SMPP_DEST_ADDR_SUBUNIT; 
-    hs["sar_msg_ref_num"]               = Tag::SMPP_SAR_MSG_REF_NUM; 
-    hs["sar_total_segments"]            = Tag::SMPP_SAR_TOTAL_SEGMENTS; 
-    hs["sar_segment_seqnum"]            = Tag::SMPP_SAR_SEGMENT_SEQNUM; 
-    hs["more_messages_to_send"]         = Tag::SMPP_MORE_MESSAGES_TO_SEND; 
-    hs["payload_type"]                  = Tag::SMPP_PAYLOAD_TYPE; 
-
-    hs["user_response_code"]            = Tag::SMPP_USER_RESPONSE_CODE; // *
-    hs["ms_validity"]                   = Tag::SMPP_MS_VALIDITY; 
-    hs["number_of_messages"]            = Tag::SMPP_NUMBER_OF_MESSAGES; 
-    hs["language_indicator"]            = Tag::SMPP_LANGUAGE_INDICATOR; // *
-    hs["its_session_info"]              = Tag::SMPP_ITS_SESSION_INFO;
-
-    //hs[""] = Tag::SMPP_USSD_SERVICE_OP //mask +
-    hs["ussd_dialog"]                   = USSD_DIALOG;
-    hs["ussd_pssd_ind"]                 = USSD_PSSD_IND;
-    hs["ussd_pssr_ind"]                 = USSD_PSSR_IND;
-    hs["ussd_ussr_req"]                 = USSD_USSR_REQ;
-    hs["ussd_ussn_req"]                 = USSD_USSN_REQ;
-    hs["ussd_pssd_resp"]                = USSD_PSSD_RESP;
-    hs["ussd_pssr_resp"]                = USSD_PSSR_RESP;
-    hs["ussd_ussr_conf"]                = USSD_USSR_CONF;
-    hs["ussd_ussn_conf"]                = USSD_USSN_CONF;
-
-    hs["whoisd_charging"]                          = OPTIONAL_CHARGING;
-    hs["whoisd_message_transport_type"]            = OPTIONAL_MESSAGE_TRANSPORT_TYPE;
-    hs["whoisd_expected_message_transport_type"]   = OPTIONAL_EXPECTED_MESSAGE_TRANSPORT_TYPE;
-
-    hs["whoisd_message_content_type"]              = OPTIONAL_MESSAGE_CONTENT_TYPE;
-    hs["whoisd_expected_message_content_type"]     = OPTIONAL_EXPECTED_MESSAGE_CONTENT_TYPE;
-
-//    hs["whoisd_phone_model"]     = OPTIONAL_PHONE_MODEL;
-
-/*
-Tag::SMPP_ESM_CLASS //mask +
-Tag::SMPP_PROTOCOL_ID //+
-Tag::SMPP_PRIORITY // +
-Tag::SMPP_SCHEDULE_DELIVERY_TIME //+
-Tag::SMPP_REGISTRED_DELIVERY//+
-Tag::SMPP_REPLACE_IF_PRESENT_FLAG//+
-
-Tag::SMPP_DATA_CODING //mask *
-Tag::SMPP_SM_LENGTH // *
-Tag::SMPP_SHORT_MESSAGE // *
-Tag::SMPP_SOURCE_PORT //+
-Tag::SMPP_DESTINATION_PORT //+
-Tag::SMPP_DEST_ADDR_SUBUNIT //+
-Tag::SMPP_SAR_MSG_REF_NUM //+
-Tag::SMPP_SAR_TOTAL_SEGMENTS //+
-Tag::SMPP_SAR_SEGMENT_SEQNUM //+
-Tag::SMPP_MORE_MESSAGES_TO_SEND //+
-Tag::SMPP_PAYLOAD_TYPE //+
-Tag::SMPP_MESSAGE_PAYLOAD // *
-Tag::SMPP_USER_RESPONSE_CODE // *
-Tag::SMPP_MS_VALIDITY //+
-Tag::SMPP_NUMBER_OF_MESSAGES // +
-Tag::SMPP_LANGUAGE_INDICATOR // *
-Tag::SMPP_USSD_SERVICE_OP //mask +
-
-
-
-
-  SMPP_USER_MESSAGE_REFERENCE
-  SMPP_USSD_SERVICE_OP
-  SMPP_RECEIPTED_MESSAGE_ID
-  SMPP_NUMBER_OF_MESSAGES
-  SMPP_DATA_SM
-  SMPP_MSG_STATE
-  
-  SMPP_MORE_MESSAGES_TO_SEND
-  SMPP_DEST_NETWORK_TYPE
-  SMPP_DEST_BEARER_TYPE
-  SMPP_QOS_TIME_TO_LIVE
-  SMPP_SET_DPF
-  SMPP_SOURCE_NETWORK_TYPE
-  SMPP_SOURCE_BEARER_TYPE
-  
- 
-
-*/
-
-    //Setting submit command fields access
-
-    hs["slicing_ref_num"]               = SLICING_REF_NUM;
-    hs["slicing_total_segments"]        = SLICING_TOTAL_SEGMENTS;
-    hs["slicing_segment_seqnum"]        = SLICING_SEGMENT_SEQNUM;
-    return hs;
-}
-
-
-Hash<int> SmppCommandAdapter::InitDataSmFieldNames()
+Hash<int> SmppCommandAdapter::initFieldNames( EventHandlerType eh )
 {
     Hash<int> hs;
 
-    hs["OA"]                            = OA;
-    hs["DA"]                            = DA;
+    switch (eh) {
 
-    hs["packet_direction"]              = PACKET_DIRECTION;
+    case EH_SUBMIT_SM:
+    case EH_DELIVER_SM:
+    case EH_DATA_SM:
 
-    hs["whoisd_charging"]                          = OPTIONAL_CHARGING;
-    hs["whoisd_message_transport_type"]            = OPTIONAL_MESSAGE_TRANSPORT_TYPE;
-    hs["whoisd_expected_message_transport_type"]   = OPTIONAL_EXPECTED_MESSAGE_TRANSPORT_TYPE;
+        hs["packet_direction"]              = PACKET_DIRECTION;
+        hs["svc_type"]                      = SMS_SVC_TYPE;
+        hs["OA"]                            = OA;
+        hs["DA"]                            = DA;
 
-    hs["whoisd_message_content_type"]              = OPTIONAL_MESSAGE_CONTENT_TYPE;
-    hs["whoisd_expected_message_content_type"]     = OPTIONAL_EXPECTED_MESSAGE_CONTENT_TYPE;
+        hs["esm_mm_smsc_default"]           = ESM_MM_SMSC_DEFAULT;
+        hs["esm_mm_datagram"]               = ESM_MM_DATAGRAM;
+        hs["esm_mm_forward"]                = ESM_MM_FORWARD;
+        hs["esm_mm_s_and_f"]                = ESM_MM_S_AND_F;
+        hs["esm_mt_default"]                = ESM_MT_DEFAULT;
+        hs["esm_mt_delivery_ack"]           = ESM_MT_DELIVERY_ACK;
+        hs["esm_mt_manual_ack"]             = ESM_MT_MANUAL_ACK;
+        hs["esm_nsf_none"]                  = ESM_NSF_NONE;
+        hs["esm_nsf_udhi"]                  = ESM_NSF_UDHI;
+        hs["esm_nsf_srp"]                   = ESM_NSF_SRP;
+        hs["esm_nsf_both"]                  = ESM_NSF_BOTH;
 
-    //Data fields
-    hs["esm_mm_smsc_default"]           = ESM_MM_SMSC_DEFAULT;
-    hs["esm_mm_datagram"]               = ESM_MM_DATAGRAM;
-    hs["esm_mm_forward"]                = ESM_MM_FORWARD;
-    hs["esm_mm_s_and_f"]                = ESM_MM_S_AND_F;
-    hs["esm_mt_default"]                = ESM_MT_DEFAULT;
-    hs["esm_mt_delivery_ack"]           = ESM_MT_DELIVERY_ACK;
-    hs["esm_mt_manual_ack"]             = ESM_MT_MANUAL_ACK;
-    hs["esm_nsf_none"]                  = ESM_NSF_NONE;
-    hs["esm_nsf_udhi"]                  = ESM_NSF_UDHI;
-    hs["esm_nsf_srp"]                   = ESM_NSF_SRP;
-    hs["esm_nsf_both"]                  = ESM_NSF_BOTH;
+        hs["protocol_id"]                   = Tag::SMPP_PROTOCOL_ID; 
+        hs["priority_flag"]                 = Tag::SMPP_PRIORITY; 
 
-    hs["protocol_id"]                   = Tag::SMPP_PROTOCOL_ID; 
-    hs["priority_flag"]                 = Tag::SMPP_PRIORITY; 
-    hs["umr"]                           = Tag::SMPP_USER_MESSAGE_REFERENCE;
-    hs["schedule_delivery_time"]        = Tag::SMPP_SCHEDULE_DELIVERY_TIME;
+        hs["rd_receipt_off"]                = RD_RECEIPT_OFF;
+        hs["rd_receipt_on"]                 = RD_RECEIPT_ON;
+        hs["rd_receipt_failure"]            = RD_RECEIPT_FAILURE;
+        hs["rd_ack_off"]                    = RD_ACK_OFF;
+        hs["rd_ack_on"]                     = RD_ACK_ON;
+        hs["rd_ack_man_on"]                 = RD_ACK_MAN_ON;
+        hs["rd_ack_both_on"]                = RD_RD_ACK_BOTH_ON;
+        hs["rd_i_notification"]             = RD_I_NOTIFICATION;
 
-    //hs["registred_delivery"]            = Tag::SMPP_REGISTRED_DELIVERY; //mask +
-    hs["rd_receipt_off"]                = RD_RECEIPT_OFF;
-    hs["rd_receipt_on"]                 = RD_RECEIPT_ON;
-    hs["rd_receipt_failure"]            = RD_RECEIPT_FAILURE;
-    hs["rd_ack_off"]                    = RD_ACK_OFF;
-    hs["rd_ack_on"]                     = RD_ACK_ON;
-    hs["rd_ack_man_on"]                 = RD_ACK_MAN_ON;
-    hs["rd_ack_both_on"]                = RD_RD_ACK_BOTH_ON;
-    hs["rd_i_notification"]             = RD_I_NOTIFICATION;
+        hs["dc_binary"]                     = DC_BINARY;
+        hs["dc_text"]                       = DC_TEXT;
+        hs["dc_smsc_default"]               = DC_SMSC_DEFAULT;
+        hs["dc_ascii_x34"]                  = DC_ASCII_X34;
+        hs["dc_latin1"]                     = DC_LATIN1;
+        hs["dc_jis"]                        = DC_JIS;
+        hs["dc_cyrilic"]                    = DC_CYRILIC;
+        hs["dc_latin_hebrew"]               = DC_LATIN_HEBREW;
+        hs["dc_ucs2"]                       = DC_UCS2;
+        hs["dc_pictogram_enc"]              = DC_PICTOGRAM_ENC;
+        hs["dc_iso_music_codes"]            = DC_ISO_MUSIC_CODES;
+        hs["dc_e_kanji_jis"]                = DC_E_KANJI_JIS;
+        hs["dc_ks_c_5601"]                  = DC_KS_C_5601;
+        hs["dc_gsm_mwi"]                    = DC_GSM_MWI;
+        hs["dc_gsm_msg_cc"]                 = DC_GSM_MSG_CC;    
 
-    hs["replace_if_present_flag"]       = Tag::SMPP_REPLACE_IF_PRESENT_FLAG;
+        hs["sm_length"]                     = Tag::SMPP_SM_LENGTH;
+        hs["message_text"]                  = SMS_MESSAGE_BODY;
 
-    //hs[""] = Tag::SMPP_DATA_CODING //mask *
-    hs["dc_binary"]                     = DC_BINARY;
-    hs["dc_text"]                       = DC_TEXT;
-    hs["dc_smsc_default"]               = DC_SMSC_DEFAULT;
-    hs["dc_ascii_x34"]                  = DC_ASCII_X34;
-    hs["dc_latin1"]                     = DC_LATIN1;
-    hs["dc_jis"]                        = DC_JIS;
-    hs["dc_cyrilic"]                    = DC_CYRILIC;
-    hs["dc_latin_hebrew"]               = DC_LATIN_HEBREW;
-    hs["dc_ucs2"]                       = DC_UCS2;
-    hs["dc_pictogram_enc"]              = DC_PICTOGRAM_ENC;
-    hs["dc_iso_music_codes"]            = DC_ISO_MUSIC_CODES;
-    hs["dc_e_kanji_jis"]                = DC_E_KANJI_JIS;
-    hs["dc_ks_c_5601"]                  = DC_KS_C_5601;
-    hs["dc_gsm_mwi"]                    = DC_GSM_MWI;
-    hs["dc_gsm_msg_cc"]                 = DC_GSM_MSG_CC;
+        // --- optional
 
-    /*
-    dc_binary !
-    dc_text   !
-    */
+        hs["umr"]                           = Tag::SMPP_USER_MESSAGE_REFERENCE;
+        hs["source_port"]                   = Tag::SMPP_SOURCE_PORT; 
+        hs["destination_port"]              = Tag::SMPP_DESTINATION_PORT; 
 
-    hs["sm_length"]                     = Tag::SMPP_SM_LENGTH; // *
-    hs["message_text"]                  = SMS_MESSAGE_BODY;
+        hs["sar_msg_ref_num"]               = Tag::SMPP_SAR_MSG_REF_NUM;
+        hs["sar_total_segments"]            = Tag::SMPP_SAR_TOTAL_SEGMENTS; 
+        hs["sar_segment_seqnum"]            = Tag::SMPP_SAR_SEGMENT_SEQNUM;
 
-    hs["source_port"]                   = Tag::SMPP_SOURCE_PORT; 
-    hs["destination_port"]              = Tag::SMPP_DESTINATION_PORT; 
-    hs["dest_addr_subunit"]             = Tag::SMPP_DEST_ADDR_SUBUNIT; 
-    hs["sar_msg_ref_num"]               = Tag::SMPP_SAR_MSG_REF_NUM; 
-    hs["sar_total_segments"]            = Tag::SMPP_SAR_TOTAL_SEGMENTS; 
-    hs["sar_segment_seqnum"]            = Tag::SMPP_SAR_SEGMENT_SEQNUM; 
-    hs["more_messages_to_send"]         = Tag::SMPP_MORE_MESSAGES_TO_SEND; 
-    hs["payload_type"]                  = Tag::SMPP_PAYLOAD_TYPE; 
-    hs["user_response_code"]            = Tag::SMPP_USER_RESPONSE_CODE; // *
-    hs["ms_validity"]                   = Tag::SMPP_MS_VALIDITY; 
-    hs["number_of_messages"]            = Tag::SMPP_NUMBER_OF_MESSAGES; 
-    hs["language_indicator"]            = Tag::SMPP_LANGUAGE_INDICATOR; // *
-    hs["its_session_info"]              = Tag::SMPP_ITS_SESSION_INFO;
+        hs["payload_type"]                  = Tag::SMPP_PAYLOAD_TYPE; 
+        // hs["privacy_indicator"]
+        // hs["callback_num"]
 
-    //hs[""] = Tag::SMPP_USSD_SERVICE_OP //mask +
+        hs["user_response_code"]            = Tag::SMPP_USER_RESPONSE_CODE;
 
-    hs["ussd_pssd_ind"]                 = USSD_PSSD_IND;
-    hs["ussd_pssr_ind"]                 = USSD_PSSR_IND;
-    hs["ussd_ussr_req"]                 = USSD_USSR_REQ;
-    hs["ussd_ussn_req"]                 = USSD_USSN_REQ;
-    hs["ussd_pssd_resp"]                = USSD_PSSD_RESP;
-    hs["ussd_pssr_resp"]                = USSD_PSSR_RESP;
-    hs["ussd_ussr_conf"]                = USSD_USSR_CONF;
-    hs["ussd_ussn_conf"]                = USSD_USSN_CONF;
+        hs["language_indicator"]            = Tag::SMPP_LANGUAGE_INDICATOR;
+        hs["its_session_info"]              = Tag::SMPP_ITS_SESSION_INFO;
 
-    hs["validity_period"]               = SMS_VALIDITY_PERIOD;
-    hs["svc_type"]                      = SMS_SVC_TYPE;
+        hs["ussd_dialog"]                   = USSD_DIALOG;
+        hs["ussd_pssd_ind"]                 = USSD_PSSD_IND;
+        hs["ussd_pssr_ind"]                 = USSD_PSSR_IND;
+        hs["ussd_ussr_req"]                 = USSD_USSR_REQ;
+        hs["ussd_ussn_req"]                 = USSD_USSN_REQ;
+        hs["ussd_pssd_resp"]                = USSD_PSSD_RESP;
+        hs["ussd_pssr_resp"]                = USSD_PSSR_RESP;
+        hs["ussd_ussr_conf"]                = USSD_USSR_CONF;
+        hs["ussd_ussn_conf"]                = USSD_USSN_CONF;
 
-    hs["ussd_dialog"]                   = USSD_DIALOG;
+        // --- generated
 
-//    hs["whoisd_phone_model"]     = OPTIONAL_PHONE_MODEL;
+        hs["slicing_ref_num"]               = SLICING_REF_NUM;
+        hs["slicing_total_segments"]        = SLICING_TOTAL_SEGMENTS;
+        hs["slicing_segment_seqnum"]        = SLICING_SEGMENT_SEQNUM;
 
-    hs["slicing_ref_num"]               = SLICING_REF_NUM;
-    hs["slicing_total_segments"]        = SLICING_TOTAL_SEGMENTS;
-    hs["slicing_segment_seqnum"]        = SLICING_SEGMENT_SEQNUM;
+        break;
 
-    return hs;
-}
+    case EH_SUBMIT_SM_RESP:
+    case EH_DELIVER_SM_RESP:
+    case EH_DATA_SM_RESP:
+        hs["packet_direction"]              = PACKET_DIRECTION;
+        hs["OA"]                            = OA;
+        hs["DA"]                            = DA;
+        hs["status"]                        = STATUS;
+        hs["message_id"]                    = MESSAGE_ID; // submit_resp
+        hs["ussd_dialog"]                   = USSD_DIALOG;
+        hs["status_ok"]                     = STATUS_OK;
+        hs["status_perm_error"]             = STATUS_PERM_ERROR;
+        hs["status_temp_error"]             = STATUS_TEMP_ERROR;
+        break;
 
+    default : break;
+    }
 
-Hash<int> SmppCommandAdapter::InitDataSmRespFieldNames() {
-  Hash<int> hs;
+    // --- additional fields
+    switch (eh) {
 
-  hs["delivery_failure_reason"]      = SMPP_DELIVERY_FAILURE_REASON;
-  hs["network_error_code"]           = SMPP_NETWORK_ERROR_CODE;
-  hs["additional_status_info_text"]  = SMPP_ADDITIONAL_STATUS_INFO_TEXT;
-  hs["dpf_result"]                   = SMPP_DPF_RESULT;
+    case EH_SUBMIT_SM:
+        
+        hs["schedule_delivery_time"]        = Tag::SMPP_SCHEDULE_DELIVERY_TIME;
+        hs["validity_period"]               = SMS_VALIDITY_PERIOD;
+        hs["replace_if_present_flag"]       = Tag::SMPP_REPLACE_IF_PRESENT_FLAG;
+        // hs["sm_default_msg_id"]
 
-  return hs;
-}
+        // --- optional
 
+        // hs["source_addr_subunit"]
+        hs["dest_addr_subunit"]             = Tag::SMPP_DEST_ADDR_SUBUNIT;
+        hs["more_messages_to_send"]         = Tag::SMPP_MORE_MESSAGES_TO_SEND;
+        hs["ms_validity"]                   = Tag::SMPP_MS_VALIDITY;         
 
-Hash<int> SmppCommandAdapter::InitRespFieldNames()
-{
-    Hash<int> hs;
+        // hs["callback_num_pres_ind"]
+        // hs["callback_num_atag"]
+        // hs["display_time"]
+        // hs["sms_signal"]
+        // hs["ms_msg_wait_facilities"]
 
-    hs["packet_direction"]              = PACKET_DIRECTION;
-    hs["OA"]                            = OA;
-    hs["DA"]                            = DA;
-    hs["status"]                        = STATUS;
-    hs["message_id"]                    = MESSAGE_ID;
-    hs["ussd_dialog"]                   = USSD_DIALOG;
-    hs["status_ok"]                     = STATUS_OK;
-    hs["status_perm_error"]             = STATUS_PERM_ERROR;
-    hs["status_temp_error"]             = STATUS_TEMP_ERROR;
-    return hs;
-}
+        hs["number_of_messages"]            = Tag::SMPP_NUMBER_OF_MESSAGES;
 
+        // hs["alert_on_msg_delivery"]
+        // hs["its_reply_type"]
+    
+        hs["whoisd_charging"]                          = OPTIONAL_CHARGING;
+        hs["whoisd_message_transport_type"]            = OPTIONAL_MESSAGE_TRANSPORT_TYPE;
+        hs["whoisd_expected_message_transport_type"]   = OPTIONAL_EXPECTED_MESSAGE_TRANSPORT_TYPE;
+        hs["whoisd_message_content_type"]              = OPTIONAL_MESSAGE_CONTENT_TYPE;
+        hs["whoisd_expected_message_content_type"]     = OPTIONAL_EXPECTED_MESSAGE_CONTENT_TYPE;
+        break;
 
-Hash<int> SmppCommandAdapter::InitDeliverFieldNames()
-{
-    Hash<int> hs;
+    case EH_DELIVER_SM:
 
-    hs["packet_direction"]              = PACKET_DIRECTION;
-    hs["svc_type"]                      = SMS_SVC_TYPE;
-    hs["OA"]                            = OA;
-    hs["DA"]                            = DA;
+        hs["esm_mt_receipt"]                = ESM_MT_RECEIPT;
 
-    //hs[""] = Tag::SMPP_ESM_CLASS //mask +
-    hs["esm_mm_smsc_default"]           = ESM_MM_SMSC_DEFAULT;
-    hs["esm_mm_datagram"]               = ESM_MM_DATAGRAM;
-    hs["esm_mm_forward"]                = ESM_MM_FORWARD;
-    hs["esm_mm_s_and_f"]                = ESM_MM_S_AND_F;
-    hs["esm_mt_default"]                = ESM_MT_DEFAULT;
-    hs["esm_mt_delivery_ack"]           = ESM_MT_DELIVERY_ACK;
-    hs["esm_mt_manual_ack"]             = ESM_MT_MANUAL_ACK;
-    hs["esm_nsf_none"]                  = ESM_NSF_NONE;
-    hs["esm_nsf_udhi"]                  = ESM_NSF_UDHI;
-    hs["esm_nsf_srp"]                   = ESM_NSF_SRP;
-    hs["esm_nsf_both"]                  = ESM_NSF_BOTH;
+        // --- optional
 
-    hs["protocol_id"]                   = Tag::SMPP_PROTOCOL_ID; 
-    hs["priority_flag"]                 = Tag::SMPP_PRIORITY; 
-    // hs["schedule_delivery_time"]        = Tag::SMPP_SCHEDULE_DELIVERY_TIME;
+        hs["network_error_code"]            = Tag::SMPP_NETWORK_ERROR_CODE;
 
-    //hs["registred_delivery"]            = Tag::SMPP_REGISTRED_DELIVERY; //mask +
-    hs["rd_receipt_off"]                = RD_RECEIPT_OFF;
-    hs["rd_receipt_on"]                 = RD_RECEIPT_ON;
-    hs["rd_receipt_failure"]            = RD_RECEIPT_FAILURE;
-    hs["rd_ack_off"]                    = RD_ACK_OFF;
-    hs["rd_ack_on"]                     = RD_ACK_ON;
-    hs["rd_ack_man_on"]                 = RD_ACK_MAN_ON;
-    hs["rd_ack_both_on"]                = RD_RD_ACK_BOTH_ON;
-    hs["rd_i_notification"]             = RD_I_NOTIFICATION;
+        hs["st_enroute"]                    = ST_ENROUTE;
+        hs["st_delivered"]                  = ST_DELIVERED;
+        hs["st_expired"]                    = ST_EXPIRED;
+        hs["st_deleted"]                    = ST_DELETED;
+        hs["st_undeliverable"]              = ST_UNDELIVERABLE;
+        hs["st_accepted"]                   = ST_ACCEPTED;
+        hs["st_unknown"]                    = ST_UNKNOWN;
+        hs["st_rejected"]                   = ST_REJECTED;    
 
-    //hs[""] = Tag::SMPP_DATA_CODING //mask *
-    hs["dc_binary"]                     = DC_BINARY;
-    hs["dc_text"]                       = DC_TEXT;
-    hs["dc_smsc_default"]               = DC_SMSC_DEFAULT;
-    hs["dc_ascii_x34"]                  = DC_ASCII_X34;
-    hs["dc_latin1"]                     = DC_LATIN1;
-    hs["dc_jis"]                        = DC_JIS;
-    hs["dc_cyrilic"]                    = DC_CYRILIC;
-    hs["dc_latin_hebrew"]               = DC_LATIN_HEBREW;
-    hs["dc_ucs2"]                       = DC_UCS2;
-    hs["dc_pictogram_enc"]              = DC_PICTOGRAM_ENC;
-    hs["dc_iso_music_codes"]            = DC_ISO_MUSIC_CODES;
-    hs["dc_e_kanji_jis"]                = DC_E_KANJI_JIS;
-    hs["dc_ks_c_5601"]                  = DC_KS_C_5601;
-    hs["dc_gsm_mwi"]                    = DC_GSM_MWI;
-    hs["dc_gsm_msg_cc"]                 = DC_GSM_MSG_CC;
+        hs["receipted_message_id"]          = Tag::SMPP_RECEIPTED_MESSAGE_ID;
+        break;
 
-    hs["sm_length"]                     = Tag::SMPP_SM_LENGTH; // *
-    hs["message_text"]                  = SMS_MESSAGE_BODY;
+    case EH_DATA_SM_RESP:
+        hs["delivery_failure_reason"]      = SMPP_DELIVERY_FAILURE_REASON;
+        hs["network_error_code"]           = SMPP_NETWORK_ERROR_CODE;
+        hs["additional_status_info_text"]  = SMPP_ADDITIONAL_STATUS_INFO_TEXT;
+        hs["dpf_result"]                   = SMPP_DPF_RESULT;
+        break;
+    default:
+        break;
+    }
 
-    // --- optional
-
-    hs["umr"]                           = Tag::SMPP_USER_MESSAGE_REFERENCE;
-    hs["source_port"]                   = Tag::SMPP_SOURCE_PORT; 
-    hs["destination_port"]              = Tag::SMPP_DESTINATION_PORT; 
-    hs["sar_msg_ref_num"]               = Tag::SMPP_SAR_MSG_REF_NUM; 
-    hs["sar_total_segments"]            = Tag::SMPP_SAR_TOTAL_SEGMENTS; 
-    hs["sar_segment_seqnum"]            = Tag::SMPP_SAR_SEGMENT_SEQNUM; 
-    hs["user_response_code"]            = Tag::SMPP_USER_RESPONSE_CODE; //*
-    hs["payload_type"]                  = Tag::SMPP_PAYLOAD_TYPE; 
-    hs["language_indicator"]            = Tag::SMPP_LANGUAGE_INDICATOR; //*
-    hs["its_session_info"]              = Tag::SMPP_ITS_SESSION_INFO;
-
-    //mask
-    hs["st_enroute"]                    = ST_ENROUTE;
-    hs["st_delivered"]                  = ST_DELIVERED;
-    hs["st_expired"]                    = ST_EXPIRED;
-    hs["st_deleted"]                    = ST_DELETED;
-    hs["st_undeliverable"]              = ST_UNDELIVERABLE;
-    hs["st_accepted"]                   = ST_ACCEPTED;
-    hs["st_unknown"]                    = ST_UNKNOWN;
-    hs["st_rejected"]                   = ST_REJECTED;
-
-    hs["receipted_message_id"]          = Tag::SMPP_RECEIPTED_MESSAGE_ID;
-
-    hs["ussd_dialog"]                   = USSD_DIALOG;
-    hs["ussd_pssd_ind"]                 = USSD_PSSD_IND;
-    hs["ussd_pssr_ind"]                 = USSD_PSSR_IND;
-    hs["ussd_ussr_req"]                 = USSD_USSR_REQ;
-    hs["ussd_ussn_req"]                 = USSD_USSN_REQ;
-    hs["ussd_pssd_resp"]                = USSD_PSSD_RESP;
-    hs["ussd_pssr_resp"]                = USSD_PSSR_RESP;
-    hs["ussd_ussr_conf"]                = USSD_USSR_CONF;
-    hs["ussd_ussn_conf"]                = USSD_USSN_CONF;
-
-//    hs["whoisd_phone_model"]     = OPTIONAL_PHONE_MODEL;
-
-    hs["slicing_ref_num"]               = SLICING_REF_NUM;
-    hs["slicing_total_segments"]        = SLICING_TOTAL_SEGMENTS;
-    hs["slicing_segment_seqnum"]        = SLICING_SEGMENT_SEQNUM;
     return hs;
 }
 
@@ -1429,6 +1373,7 @@ IntHash<int> SmppCommandAdapter::initTagToMaskAndValue()
     hs.Insert(ESM_MM_FORWARD     ,0x0302);
     hs.Insert(ESM_MM_S_AND_F     ,0x0303);
     hs.Insert(ESM_MT_DEFAULT     ,0x3c00);
+    hs.Insert(ESM_MT_RECEIPT     ,0x3c04); // added on 2010-03-09
     hs.Insert(ESM_MT_DELIVERY_ACK,0x3c08);
     hs.Insert(ESM_MT_MANUAL_ACK  ,0x3c10);
     hs.Insert(ESM_NSF_NONE       ,0xc000);
