@@ -25,21 +25,22 @@ using smsc::core::buffers::Array;
 using std::vector;
 
 struct NodeConfig {
-  NodeConfig():storagesCount(100), nodesCount(1), nodeNumber(0), locationsCount(0), disksCount(0), expectedSpeed(100), maxDirtySpeed(100) {};
+  NodeConfig():storagesCount(100), nodesCount(1), nodeNumber(0), locationsCount(0), disksCount(0), expectedSpeed(100) {}
   unsigned storagesCount;
   unsigned nodesCount;
   unsigned nodeNumber;
   unsigned locationsCount;
   unsigned disksCount;
   unsigned expectedSpeed;
-    unsigned maxDirtySpeed;
 };
 
 class Request;
 
 class PvssDispatcher : public core::server::SyncDispatcher {
 public:
-  PvssDispatcher(const NodeConfig& nodeCfg, unsigned creationLimit = 1000);
+  PvssDispatcher( const NodeConfig& nodeCfg,
+                  const AbonentStorageConfig& abntCfg,
+                  unsigned creationLimit = 1000 );
   virtual ~PvssDispatcher();
 
   virtual unsigned getIndex(Request& request) const;

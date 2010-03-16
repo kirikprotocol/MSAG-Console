@@ -54,7 +54,8 @@ bool ProfileCommandProcessor::applyCommonLogic( const std::string& profkey,
         ret = false;
         if (profileRequest.hasTiming()) { profileRequest.timingMark("rollback"); }
     } else {
-        backup_->flushLogs(*profile_);
+        // NOTE: flush logs has been moved outside this method to be able to rollback.
+        // backup_->flushLogs(*profile_);
         if (pf->isChanged()) {
             smsc_log_debug(log_,"profile %s needs flush",profkey.c_str());
         }
@@ -73,6 +74,18 @@ bool ProfileCommandProcessor::applyCommonLogic( const std::string& profkey,
     
 }
 
+
+void ProfileCommandProcessor::finishProcessing( bool commit )
+{
+    if (profile_) {
+        if (commit) {
+            backup_->flushLogs(*profile_);
+        } else {
+            backup_->rollback(*profile_);
+            if (response_.get()) response_->setStatus(StatusType::SERVER_BUSY);
+        }
+    }
+}
 
 
 void ProfileCommandProcessor::resetProfile(Profile *pf) 

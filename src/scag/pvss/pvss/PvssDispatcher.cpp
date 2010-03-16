@@ -30,6 +30,7 @@ namespace pvss  {
 using scag::util::storage::StorageNumbering;
 
 PvssDispatcher::PvssDispatcher(const NodeConfig& nodeCfg,
+                               const AbonentStorageConfig& abntCfg,
                                unsigned creationLimit ):
 nodeCfg_(nodeCfg), createdLocations_(0), infrastructIndex_(nodeCfg_.locationsCount),
 logger_(Logger::getInstance("pvss.disp"))
@@ -40,7 +41,7 @@ logger_(Logger::getInstance("pvss.disp"))
         dataFileManagers_.push_back(new scag::util::storage::DataFileManager(1, addSpeed,creationLimit));
         char buf[30];
         sprintf(buf,"dflush.%02u",i);
-        diskFlushers_.push_back( new scag::util::storage::DiskFlusher(buf) );
+        diskFlushers_.push_back( new scag::util::storage::DiskFlusher(buf,abntCfg.maxFlushSpeed) );
     }
     smsc_log_info(logger_, "nodeNumber:%d, nodesCount:%d, storagesCount:%d, locationsCount:%d, disksCount:%d",
                   nodeCfg_.nodeNumber, nodeCfg_.nodesCount, nodeCfg_.storagesCount, nodeCfg_.locationsCount, nodeCfg_.disksCount);
@@ -184,7 +185,7 @@ void PvssDispatcher::init()
     for ( std::vector<scag::util::storage::DiskFlusher*>::const_iterator i = diskFlushers_.begin();
           i != diskFlushers_.end();
           ++i ) {
-        (*i)->start(nodeCfg_.maxDirtySpeed);
+        (*i)->start();
     }
 
     smsc_log_info(logger_,"all storages inited, stats: %s", reportStatistics().c_str());

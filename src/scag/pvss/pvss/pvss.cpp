@@ -399,7 +399,7 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        PvssDispatcher pvssDispatcher(nodeCfg,abntCfg.fileSize/2);
+        PvssDispatcher pvssDispatcher(nodeCfg,abntCfg,abntCfg.fileSize/2);
 
         std::auto_ptr<InfrastructStorageConfig> infCfg;
         if (nodeCfg.nodeNumber == pvssDispatcher.getInfrastructNodeNumber()) {

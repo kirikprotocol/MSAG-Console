@@ -29,6 +29,8 @@ public:
                            Profile*           pf,
                            bool               createProfile );
 
+    void finishProcessing( bool commit );
+
 protected:
     /// full cleanup at the start of processing new profile
     void resetProfile(Profile *pf);

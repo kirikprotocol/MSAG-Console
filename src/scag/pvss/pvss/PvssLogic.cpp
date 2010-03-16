@@ -290,6 +290,7 @@ unsigned long AbonentLogic::initElementStorage( unsigned index,
                                             ds.release(),
                                             ps1.release(),
                                             ps2.release(),
+                                            config_.maxFlushQueueSize,
                                             smsc::logger::Logger::getInstance
                                             (("pvssst."+pathSuffixString).c_str()));
     // elStorage->storage->init( config_.minDirtyTime,
@@ -382,15 +383,16 @@ CommandResponse* AbonentLogic::processProfileRequest(ProfileRequest& profileRequ
     if (pf) pf->setKey( profkey );
     if ( commandProcessor_.applyCommonLogic(profkey, profileRequest, pf, createProfile )) {
         if ( pf->isChanged() ) {
+            bool ok;
             {
                 MutexGuard mg(elstorage->mutex);
-                elstorage->storage->markDirty(profileKey.getAddress());
+                ok = elstorage->storage->markDirty(profileKey.getAddress());
             }
-            diskFlusher_->wakeup();
-            // elstorage->storage->flush(profileKey.getAddress());
-            // elstorage->storage->markDirty(profileKey.getAddress());
-            // } else {
-            // elstorage->storage->flushDirty();
+            if (ok) { diskFlusher_->wakeup(); }
+            commandProcessor_.finishProcessing(ok);
+            if (!ok) {
+                // making a server_busy
+            }
         }
     }
     return commandProcessor_.getResponse();
@@ -533,11 +535,13 @@ public:
         std::auto_ptr<DataSerializer> ps2( new DataSerializer(ds.get(),&glossary) );
         smsc_log_debug(log_,"infralogic %s serializers are created", name.c_str());
 
-        storage_ = new InfrastructStorage(ms.release(),ds.release(),
-                                          ps1.release(),ps2.release(),
+        storage_ = new InfrastructStorage(ms.release(),
+                                          ds.release(),
+                                          ps1.release(),
+                                          ps2.release(),
+                                          cfg.maxFlushQueueSize,
                                           Logger::getInstance(("pvssst"+logsfx).c_str()));
         diskFlusher_->add( storage_ );
-        // storage_->init(cfg.maxDirtySpeed);
         storage_->setProfileBackup(profileBackup_);
         smsc_log_info(log_,"infralogic %s initialized",name.c_str());
     }
@@ -686,8 +690,9 @@ CommandResponse* InfrastructLogic::InfraLogic::process( const IntProfileKey& int
     }
     if (ok) {
         if ( pf->isChanged() ) {
-            storage_->markDirty(intKey);
-            diskFlusher_->wakeup();
+            ok = storage_->markDirty(intKey);
+            if (ok) diskFlusher_->wakeup();
+            commandProcessor_.finishProcessing(ok);
         }
     }
     return commandProcessor_.getResponse();
@@ -773,7 +778,7 @@ void InfrastructLogic::init( bool /*checkAtStart*/ )
     smsc_log_info(logger_,"infrastructure storages are inited, good nodes: %s",
                   reportStatistics().c_str());
     // now, starting flusher
-    diskFlusher_.start(config_.maxDirtySpeed);
+    diskFlusher_.start(config_.maxFlushSpeed);
 }
 
 
@@ -822,9 +827,8 @@ AbonentStorageConfig::AbonentStorageConfig() {
   fileSize = DEF_FILE_SIZE;
   cacheSize = DEF_CACHE_SIZE;
   checkAtStart = false;
-//    minDirtyTime = 10;
-//    maxDirtyTime = 10000;
-//    maxDirtyCount = 100;
+    maxFlushSpeed = 1000;
+    maxFlushQueueSize = 100;
 }
 
 AbonentStorageConfig::AbonentStorageConfig(ConfigView& cfg,
@@ -865,12 +869,28 @@ AbonentStorageConfig::AbonentStorageConfig(ConfigView& cfg,
     smsc_log_warn(logger, "Parameter <PVSS.%s.cacheSize> missed. Defaul value is %d",
                    storageType, DEF_CACHE_SIZE);
   }
+    try {
+        maxFlushSpeed = cfg.getInt("maxFlushSpeed");
+    } catch (...) {
+        maxFlushSpeed = 1000;
+        smsc_log_warn(logger,"Parameter <PVSS.%s.maxFlushSpeed> is missed. Default value is %u",
+                      storageType, maxFlushSpeed );
+    }
+    try {
+        maxFlushQueueSize = cfg.getInt("maxFlushQueueSize");
+    } catch (...) {
+        maxFlushQueueSize = 100;
+        smsc_log_warn(logger,"Parameter <PVSS.%s.maxFlushQueueSize> is missed. Default value is %u",
+                      storageType, maxFlushQueueSize );
+    }
 }
 
 InfrastructStorageConfig::InfrastructStorageConfig() {
   dbPath = DEF_STORAGE_PATH;
   cacheSize = DEF_CACHE_SIZE;
   recordCount = DEF_RECORD_COUNT;
+    maxFlushSpeed = 1000;
+    maxFlushQueueSize = 100;
 }
 
 InfrastructStorageConfig::InfrastructStorageConfig(ConfigView& cfg, const char* storageType, Logger* logger) {
@@ -897,14 +917,6 @@ InfrastructStorageConfig::InfrastructStorageConfig(ConfigView& cfg, const char* 
   }
 
     try {
-        maxDirtySpeed = cfg.getInt("maxDirtySpeed");
-    } catch (...) {
-        maxDirtySpeed = 10000;
-        smsc_log_warn(logger,"Parameter <Pvss.%s.maxDirtySpeed> missed. Default value is %u",
-                      storageType,maxDirtySpeed);
-    }
-
-    try {
         pageSize = cfg.getInt("pageSize");
         if ( pageSize < 256 ) {
             unsigned newval = 256;
@@ -917,6 +929,23 @@ InfrastructStorageConfig::InfrastructStorageConfig(ConfigView& cfg, const char* 
         smsc_log_warn(logger,"Parameter <Pvss.%s.pageSize> missed. Default value is %u",
                       storageType,pageSize);
     }
+
+    try {
+        maxFlushSpeed = cfg.getInt("maxFlushSpeed");
+    } catch (...) {
+        maxFlushSpeed = 1000;
+        smsc_log_warn(logger,"Parameter <Pvss.%s.maxFlushSpeed> missed. Default value is %u",
+                      storageType,maxFlushSpeed);
+    }
+
+    try {
+        maxFlushQueueSize = cfg.getInt("maxFlushQueueSize");
+    } catch (...) {
+        maxFlushQueueSize = 100;
+        smsc_log_warn(logger,"Parameter <Pvss.%s.maxFlushQueueSize> missed. Default value is %u",
+                      storageType,maxFlushQueueSize);
+    }
+
 }
 
 }//pvss

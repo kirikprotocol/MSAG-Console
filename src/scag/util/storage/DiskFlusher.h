@@ -33,19 +33,21 @@ protected:
     };
 
 public:
-    DiskFlusher( const std::string& name ) :
+    DiskFlusher( const std::string& name, unsigned maxSpeed = 1000 ) :
     name_(name),
     log_(smsc::logger::Logger::getInstance(name.c_str())),
-    maxSpeed_(1000), started_(false) {}
+    maxSpeed_(std::max(maxSpeed,10U)), started_(false) {}
 
 
     ~DiskFlusher();
 
-    void start( unsigned maxDirtySpeed ) {
+    void start( unsigned maxFlushSpeed = 0 ) {
         if (started_) return;
         MutexGuard mg(mon_);
         started_ = true;
-        maxSpeed_ = std::max(maxDirtySpeed,10U);
+        if ( maxFlushSpeed ) {
+            maxSpeed_ = std::max(maxFlushSpeed,10U);
+        }
         Start();
     }
 

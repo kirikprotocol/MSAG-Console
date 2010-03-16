@@ -384,9 +384,8 @@ struct AbonentStorageConfig {
   unsigned blockSize;
   unsigned cacheSize;
   bool     checkAtStart;
-    // unsigned minDirtyTime;
-    // unsigned maxDirtyTime;
-    // unsigned maxDirtyCount;
+    unsigned maxFlushSpeed;
+    unsigned maxFlushQueueSize;
   struct Location {
     Location(const string& locpath, unsigned locdisk):path(locpath), disk(locdisk) {};
     string path;
@@ -403,7 +402,8 @@ struct InfrastructStorageConfig {
   string localPath;
   uint32_t cacheSize;
   uint32_t recordCount;
-  uint32_t maxDirtySpeed; // 10000
+    uint32_t maxFlushSpeed; // 1000
+    unsigned maxFlushQueueSize; // 100
     uint32_t pageSize;    // 256
   bool    checkAtStart;
 };
