@@ -509,3 +509,36 @@ B3117: Dec 9, 2009
     SMSC	std::string replaced in stat save, sms save, inman communication for performance issues
     INMan	std::string replaced by fixed length string
     emailsme	proper config init without helpdesk mode
+
+B3118: Feb 18, 2010
+    SMSC	logging improvements
+    SMSC	shutdown fix, wait for smsc run to finish smsc
+    SMSC	scheduler fixed bug with srcSme/dstSme mixed up
+    SMSC 	scheduler speed counter fix
+    SMSC	inmancomm USER_MESSAGE_REFERENCE timming fix
+    SMSC	topmon statistics fix
+    Webadm	Fix distr list name comparison at Distribution List Edit page.
+    Webadm 	emailsme Set GMT time by default to 'From' and 'Till' fields
+    Webadm	SmsView Add filter by SmsId
+
+B3119: Mar 17, 2010
+    SMSC	do not mark ssn as bound on ok, state ind reset bound state on reconnect fix
+    SMSC	usse_vlr+ussr/last added for USSD svc op
+    SMSC	conditional SRI for USSD codes added to maplimits
+    SMSC	mr=0 and sar field fix
+    Infosme	web optimize stats query
+    Infosme	web Set 'session' scope for bean at updateMessages.jsp
+    Infosme	add stat export
+    Infosme	Fix NPE in SiebelTaskManager, Fix NPE when siebel task contains message with empty msisdn 
+    Infosme	Message to set state=DELETED is forced to be loaded from disk
+    Infosme	deleted msgs should not be seen
+    Infosme	processed files don"t have readAll
+    Infosme	fix exc thrown in loadMessage after successfully loading msg
+    Infosme	feature: final messages are purged from memory
+    Infosme	processed files are not opened in getNextMessage
+    Infosme	activeTasks patch has been returned
+    Infosme	ill-formed receipt parser added
+    exportstats Add write totals feature
+    Webadm	Fix distr list creation error
+    emailsme	undef bodyhandle fix
+    
