@@ -86,42 +86,28 @@ public:
     /// @return true if old value was replaced
     bool set( const key_type& k, value_type* v ) {
         // first check the cache
-        stored_type sv = cache_->release(k);
-        if ( cache_->store2val(sv) ) {
-            // we have old value
-            value_type* ov = cache_->setval(sv,v);
+        stored_type* vv = cache_->get(k);
+        if (vv) {
+            value_type* ov = cache_->setval(*vv,v);
             delete ov;
+            return ov;
+        }
+        
+        {
             MutexGuard mg(dirtyMon_);
-            // FIXME: adding dirty to dirtyHash_
-            addDirty(k,sv);
-            return ov;
+            stored_type sv = popCleanQ(k);
+            if (cache_->store2val(sv)) {
+                value_type* ov = cache_->setval(sv,v);
+                delete ov;
+                return cache_->set(k,sv);
+            }
+
+            typename DirtyList::iterator* di = dirtyHash_.GetPtr(k);
+            if (di) {
+                if (log_) smsc_log_error(log_,"strange: profile k=%s in dirtyhash on set -- is get() before set() forgotten?",k.toString().c_str());
+            }
         }
-        cache_->dealloc(sv);
-
-        MutexGuard mg(dirtyMon_);
-
-        // otherwise we have to check the clean queue
-        sv = popCleanQ(k);
-        if ( cache_->store2val(sv) ) {
-            value_type* ov = cache_->setval(sv,v);
-            delete ov;
-            addDirty(k,sv);
-            return ov;
-        }
-
-        // finally, check the dirty hash
-        typename DirtyList::iterator* di = dirtyHash_.GetPtr(k);
-        if (di) {
-            ++((*di)->changes);
-            if (log_) { smsc_log_debug(log_,"dirty key=%s updated",k.toString().c_str()); }
-            value_type* ov = cache_->setval((*di)->stored,v);
-            delete ov;
-            return ov;
-        }
-
-        // nothing found, create new
-        addDirty(k,cache_->val2store(v));
-        return false;
+        return cache_->set(k,cache_->val2store(v));
     }
 
 
