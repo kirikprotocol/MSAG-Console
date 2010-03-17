@@ -18,6 +18,10 @@ protected:
     struct DiskFlusherItemBase {
         virtual ~DiskFlusherItemBase() {}
         virtual unsigned flush() = 0;
+        virtual void flushIOStatistics( unsigned& pfget,
+                                        unsigned& kbget,
+                                        unsigned& pfset,
+                                        unsigned& kbset ) = 0;
     };
 
     template < class DiskStorage > class DiskFlusherItem : public DiskFlusherItemBase {
@@ -25,6 +29,12 @@ protected:
         DiskFlusherItem( DiskStorage* store ) : store_(store) {}
         virtual unsigned flush() {
             return store_->flushDirty();
+        }
+        virtual void flushIOStatistics( unsigned& pfget,
+                                        unsigned& kbget,
+                                        unsigned& pfset,
+                                        unsigned& kbset ) {
+            return store_->flushIOStatistics(pfget,kbget,pfset,kbset);
         }
     private:
         DiskFlusherItem() : store_(0) {}
@@ -35,9 +45,11 @@ protected:
 public:
     DiskFlusher( const std::string& name, unsigned maxSpeed = 1000 ) :
     name_(name),
-    log_(smsc::logger::Logger::getInstance(name.c_str())),
-    maxSpeed_(std::max(maxSpeed,10U)), started_(false) {}
+    log_(smsc::logger::Logger::getInstance(("dflush." + name).c_str())),
+    maxSpeed_(std::max(maxSpeed,10U)),
+    started_(false) {}
 
+    const std::string& getName() const { return name_; }
 
     ~DiskFlusher();
 
@@ -80,6 +92,12 @@ public:
     }
 
     virtual int Execute();
+
+    /// flush io statistics and return current increments.
+    void flushIOStatistics( unsigned& pfget,
+                            unsigned& kbget,
+                            unsigned& pfset,
+                            unsigned& kbset );
 
 private:
     DiskFlusher();

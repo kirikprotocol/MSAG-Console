@@ -379,6 +379,10 @@ int ServerCore::doExecute()
             fullstat.append(caught);
         }
         if ( syncDispatcher_ ) {
+            fullstat.append("\n  R/W [pf/s(kb/s)]:");
+            util::msectime_type e10ms;
+            unsigned scale = lastStat.prescale(e10ms);
+            fullstat.append(syncDispatcher_->flushIOStatistics(scale,unsigned(e10ms)));
             fullstat.append("\n    Data: ");
             fullstat.append(syncDispatcher_->reportStatistics());
         }

@@ -48,6 +48,7 @@ public:
                                       unsigned maxFlushQueueSize = 100,
                                       smsc::logger::Logger* thelog = 0 ) :
     cache_(ms), disk_( ds ), serin_(srin), serout_(srout), hitcount_(0),
+    pfget_(0), bget_(0), pfset_(0), bset_(0),
     maxFlushQueueSize_(maxFlushQueueSize),
     log_(thelog)
     {
@@ -266,6 +267,12 @@ public:
             }
         }
 
+        {
+            MutexGuard mg(statLock_);
+            ++pfset_;
+            bset_ += written;
+        }
+
         // save done, cleanup
         {
             MutexGuard mg(dirtyMon_);
@@ -287,6 +294,20 @@ public:
             dirtyList_.erase(di);
         }
         return written;
+    }
+
+
+    void flushIOStatistics( unsigned& pfget,
+                            unsigned& kbget,
+                            unsigned& pfset,
+                            unsigned& kbset )
+    {
+        MutexGuard mg(statLock_);
+        pfget += pfget_;
+        kbget += bget_ / 1024;
+        pfset += pfset_;
+        kbset += bset_ / 1024;
+        pfget_ = bget_ = pfset_ = bset_ = 0;
     }
 
 
@@ -407,6 +428,11 @@ private:
             MutexGuard mg(diskLock_);
             itemLoaded = disk_->get(k,*serin_->getFreeBuffer(true));
         }
+        {
+            MutexGuard mg(statLock_);
+            ++pfget_;
+            bget_ += serin_->getFreeBuffer()->size();
+        }
         if ( itemLoaded ) {
             stored_type& ref = cache_->store2ref(spare_);
             if (!serin_->deserialize(k,ref) && !create ) {
@@ -455,6 +481,7 @@ private:
 private:
     smsc::core::synchronization::EventMonitor  dirtyMon_;
     mutable smsc::core::synchronization::Mutex diskLock_;
+    mutable smsc::core::synchronization::Mutex statLock_;
     mutable MemStorage*  cache_;
     DiskStorage*         disk_;
     Serializer*          serin_;
@@ -468,6 +495,12 @@ private:
     //  when item is not found.
     mutable stored_type spare_;
     mutable unsigned int hitcount_;
+
+    mutable unsigned pfget_;
+    mutable unsigned bget_;
+    unsigned pfset_;
+    unsigned bset_;
+
     unsigned maxFlushQueueSize_;
     smsc::logger::Logger* log_;
 

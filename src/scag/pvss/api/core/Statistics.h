@@ -34,6 +34,24 @@ struct Statistics
     std::string toString() const {
         char buf[160];
         util::msectime_type e10ms;
+        unsigned scale = prescale(e10ms);
+        unsigned seconds = unsigned(elapsedTime/1000);
+        const unsigned d = unsigned(e10ms/2);
+        snprintf(buf,sizeof(buf),
+                 "%02u:%02u:%02u  req/resp/err=%u/%u/%u ok/fail=%u/%u\n"
+                 "       speed [1/s]: req/resp/err=%u/%u/%u ok/fail=%u/%u",
+                 seconds/3600, (seconds/60) % 60, seconds % 60,
+                 requests, responses, errors, successes, failures,
+                 unsigned((requests*scale+d)/e10ms), unsigned((responses*scale+d)/e10ms),
+                 unsigned((errors*scale+d)/e10ms),
+                 unsigned((successes*scale+d)/e10ms), unsigned((failures*scale+d)/e10ms));
+        return buf;
+    }
+
+
+    /// preparation for better calculation of speed
+    unsigned prescale( util::msectime_type& e10ms ) const
+    {
         unsigned scale;
         if ( elapsedTime > 20000 ) {
             // more than 10 s
@@ -44,16 +62,7 @@ struct Statistics
             scale = 100;
         }
         if ( e10ms <= 0 ) e10ms = 1;
-        unsigned seconds = unsigned(elapsedTime/1000);
-        snprintf(buf,sizeof(buf),
-                 "%02u:%02u:%02u  req/resp/err=%u/%u/%u ok/fail=%u/%u\n"
-                 "        speed(1/s): req/resp/err=%u/%u/%u ok/fail=%u/%u",
-                 seconds/3600, (seconds/60) % 60, seconds % 60,
-                 requests, responses, errors, successes, failures,
-                 unsigned(requests*scale/e10ms), unsigned(responses*scale/e10ms), unsigned(errors*scale/e10ms),
-                 unsigned(successes*scale/e10ms), unsigned(failures*scale/e10ms)
-                 );
-        return buf;
+        return scale;
     }
 
     util::msectime_type accumulationTime;

@@ -399,13 +399,13 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        PvssDispatcher pvssDispatcher(nodeCfg,abntCfg,abntCfg.fileSize/2);
-
         std::auto_ptr<InfrastructStorageConfig> infCfg;
-        if (nodeCfg.nodeNumber == pvssDispatcher.getInfrastructNodeNumber()) {
+        if (nodeCfg.nodeNumber == PvssDispatcher::getInfrastructNodeNumber()) {
             ConfigView infStorageConfig(manager, "PVSS.InfrastructStorage");
             infCfg.reset(new InfrastructStorageConfig(infStorageConfig, "InfrastructStorage", logger));
         }
+
+        PvssDispatcher pvssDispatcher(nodeCfg,abntCfg,infCfg.get());
 
         try {
             const bool makedirs = !(recovery || (dodump>=-1));

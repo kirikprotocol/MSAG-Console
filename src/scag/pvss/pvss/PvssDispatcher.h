@@ -40,12 +40,14 @@ class PvssDispatcher : public core::server::SyncDispatcher {
 public:
   PvssDispatcher( const NodeConfig& nodeCfg,
                   const AbonentStorageConfig& abntCfg,
-                  unsigned creationLimit = 1000 );
+                  const InfrastructStorageConfig* infCfg );
   virtual ~PvssDispatcher();
 
   virtual unsigned getIndex(Request& request) const;
   virtual Server::SyncLogic* getSyncLogic(unsigned idx);
     virtual std::string reportStatistics() const;
+    virtual std::string flushIOStatistics( unsigned scale,
+                                           unsigned dt );
 
     void createLogics( bool makedirs,
                        const AbonentStorageConfig& abntcfg,
@@ -57,7 +59,7 @@ public:
     /// dump the storage -1 -- infrastruct, >= 0 -- abonent
     void dumpStorage( int index );
 
-  unsigned getInfrastructNodeNumber() const { return 0; }
+    static unsigned getInfrastructNodeNumber() { return 0; }
 
     inline unsigned getNodeNumber() const { return nodeCfg_.nodeNumber; }
     inline unsigned getStoragesCount() const { return nodeCfg_.storagesCount; }

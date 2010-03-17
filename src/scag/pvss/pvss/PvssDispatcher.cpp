@@ -31,17 +31,20 @@ using scag::util::storage::StorageNumbering;
 
 PvssDispatcher::PvssDispatcher(const NodeConfig& nodeCfg,
                                const AbonentStorageConfig& abntCfg,
-                               unsigned creationLimit ):
+                               const InfrastructStorageConfig* infCfg) :
 nodeCfg_(nodeCfg), createdLocations_(0), infrastructIndex_(nodeCfg_.locationsCount),
 logger_(Logger::getInstance("pvss.disp"))
 {
     StorageNumbering::setInstance(nodeCfg.nodesCount);
     unsigned addSpeed = nodeCfg_.expectedSpeed / nodeCfg_.disksCount;
     for (int i = 0; i < nodeCfg_.disksCount; ++i) {
-        dataFileManagers_.push_back(new scag::util::storage::DataFileManager(1, addSpeed,creationLimit));
-        char buf[30];
-        sprintf(buf,"dflush.%02u",i);
+        dataFileManagers_.push_back(new scag::util::storage::DataFileManager(1, addSpeed, abntCfg.fileSize / 2));
+        char buf[15];
+        sprintf(buf,"%02u",i);
         diskFlushers_.push_back( new scag::util::storage::DiskFlusher(buf,abntCfg.maxFlushSpeed) );
+    }
+    if (infCfg) {
+        diskFlushers_.push_back( new scag::util::storage::DiskFlusher("inf",infCfg->maxFlushSpeed) );
     }
     smsc_log_info(logger_, "nodeNumber:%d, nodesCount:%d, storagesCount:%d, locationsCount:%d, disksCount:%d",
                   nodeCfg_.nodeNumber, nodeCfg_.nodesCount, nodeCfg_.storagesCount, nodeCfg_.locationsCount, nodeCfg_.disksCount);
@@ -101,7 +104,35 @@ std::string PvssDispatcher::reportStatistics() const
 }
 
 
-void PvssDispatcher::createLogics( bool makedirs, const AbonentStorageConfig& abntcfg, const InfrastructStorageConfig* infcfg )
+std::string PvssDispatcher::flushIOStatistics( unsigned scale,
+                                               unsigned dt )
+{
+    std::string rv;
+    rv.reserve(200);
+    unsigned idx = 0;
+    const unsigned d = dt/2;
+    for ( std::vector< DiskFlusher* >::const_iterator i = diskFlushers_.begin();
+          i != diskFlushers_.end();
+          ++i ) {
+        unsigned pfget, kbget, pfset, kbset;
+        pfget = kbget = pfset = kbset = 0;
+        (*i)->flushIOStatistics(pfget,kbget,pfset,kbset);
+        char buf[100];
+        sprintf(buf," %s:%u(%u)/%u(%u)",(*i)->getName().c_str(),
+                unsigned((pfget*scale+d)/dt), unsigned((kbget*scale+d)/dt),
+                unsigned((pfset*scale+d)/dt), unsigned((kbset*scale+d)/dt));
+        if (idx%4==0 && idx>0) {
+            rv.append("\n          ");
+        }
+        rv.append(buf);
+        ++idx;
+    }
+    return rv;
+}
+
+
+void PvssDispatcher::createLogics( bool makedirs, const AbonentStorageConfig& abntcfg,
+                                   const InfrastructStorageConfig* infcfg )
 {
     for (unsigned locationNumber = 0; locationNumber < nodeCfg_.locationsCount; ++locationNumber) {
 
@@ -133,7 +164,9 @@ void PvssDispatcher::createLogics( bool makedirs, const AbonentStorageConfig& ab
         if (!infcfg) {
             throw Exception("Error init infrastruct storage, config is NULL");
         }
-        infrastructLogic_.reset( new InfrastructLogic(*this,*infcfg) );
+        infrastructLogic_.reset( new InfrastructLogic(*this,
+                                                      *infcfg,
+                                                      *diskFlushers_[nodeCfg_.disksCount]));
     }
 }
 

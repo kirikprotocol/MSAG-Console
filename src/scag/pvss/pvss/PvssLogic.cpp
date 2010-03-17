@@ -556,13 +556,6 @@ public:
     void dumpStorage( int index );
     void init( bool checkAtStart = false );
     void rebuildIndex( unsigned maxSpeed = 0 );
-    /*
-    void keepAlive( util::msectime_type now ) {
-        // not needed
-        // MutexGuard mg(statMutex_);
-        // storage_->flushDirty(now);
-    }
-     */
 
     CommandResponse* process( const IntProfileKey& intKey,
                               ProfileRequest& request );
@@ -769,16 +762,14 @@ void InfrastructLogic::keepAlive()
 void InfrastructLogic::init( bool /*checkAtStart*/ )
 {
     initGlossary(config_.dbPath,glossary_);
-    provider_ = new InfraLogic("pvss.prov",diskFlusher_);
+    provider_ = new InfraLogic("pvss.prov",*diskFlusher_);
     provider_->init("provider",".pr",config_,glossary_);
-    service_ = new InfraLogic("pvss.serv",diskFlusher_);
+    service_ = new InfraLogic("pvss.serv",*diskFlusher_);
     service_->init("service",".sv",config_,glossary_);
-    operator_ = new InfraLogic("pvss.oper",diskFlusher_);
+    operator_ = new InfraLogic("pvss.oper",*diskFlusher_);
     operator_->init("operator",".op",config_,glossary_);
     smsc_log_info(logger_,"infrastructure storages are inited, good nodes: %s",
                   reportStatistics().c_str());
-    // now, starting flusher
-    diskFlusher_.start(config_.maxFlushSpeed);
 }
 
 
@@ -789,8 +780,6 @@ void InfrastructLogic::rebuildIndex( unsigned /*maxSpeed*/)
 
 
 void InfrastructLogic::shutdownStorages() {
-    diskFlusher_.stop();
-    diskFlusher_.clear();
   if (provider_) {
     delete provider_;
     provider_ = 0;

@@ -61,105 +61,6 @@ public:
     /// accept an old transport channel
     void acceptOldChannel( smsc::core::network::Socket* socket );
 
-    /**
-     * Implementation of Server interface method.</p>
-     * Blocks until next request will be received & processed or state will be changed for processing request.
-     * Method exits only when PVSS server is completely shutted down.
-     * Dequeues next context from states or requests queue.
-     *
-     * @param logic     Sync server logic interface
-     */
-    /*
-    virtual void waitEvents(SyncLogic logic);
-    {
-        ServerContext context;
-        while ((context = getEvent()) != null)
-        {
-            switch (context.getState())
-            {
-            case NEW:
-                Response response;
-                try { response = logic.process(context.getRequest()); } catch (Exception exc) {
-                    response = new ErrorResponse(context.getSeqNum(), Response.StatusType.ERROR, exc.getMessage());
-                }
-                try { context.setResponse(response); } catch (PvssException exc) {
-                    context.setState(ServerContext.State.FAILED);
-                    logic.responseFail(response);
-                }
-                break;
-            case SENT:   logic.responseSent(context.getResponse()); break;
-            case FAILED: logic.responseFail(context.getResponse()); break;
-            default:
-                log_.error("Unknown sync context state=" + context.getState());
-                break;
-            }
-        }
-    }
-     */
-
-    /*
-     * Implementation of Server interface method.</p>
-     * Blocks until next request will be received or state will be changed for processing request.
-     * Dequeues next context from states or requests queue.
-     * Method exits only when PVSS server is completely shutted down.
-     *
-     * @param logic     Async server logic interface
-     */
-    // virtual void waitEvents(AsyncLogic& logic);
-    /*
-    virtual void waitEvents(AsyncLogic& logic)
-    {
-        ServerContext context;
-        while ((context = getEvent()) != null)
-        {
-            switch (context.getState())
-            {
-            case NEW:    logic.requestReceived(context); break;
-            case SENT:   logic.responseSent(context); break;
-            case FAILED: logic.responseFail(context); break;
-            default:
-                log_.error("Unknown async context state=" + context.getState());
-                break;
-            }
-        }
-    }
-     */
-
-    // private final Object contextsMonitor = new Object();
-
-    /*
-     * Method returns next context when it new or it's state was changed.<p/>
-     * Uses pendingStates & pendingContexts queues. Blocks while no contexts available.<p/>
-     * After shutdown method returns all from pendingStates queue & ignors new context,
-     * for the rest of pendingContexts queue fail-responses will be generated.
-     *
-     * @return  next context (new or when it states has changed),
-     *          null when PVSS server is shutting down & no any changed states rest.
-     */
-    /*
-    private ServerContext getEvent()
-    {
-        synchronized (contextsMonitor)
-        {
-            while (started || !pendingStates.isEmpty() || !pendingContexts.isEmpty() || hasProcessingContexts())
-            {
-                if (!pendingStates.isEmpty()) // process all states first
-                    return pendingStates.pollFirst();
-
-                if (!pendingContexts.isEmpty()) { // process new requests
-                    ServerContext context = pendingContexts.pollFirst();
-                    registerProcessingContext(context);
-                    return context;
-                }
-
-                try { contextsMonitor.wait(started ? config.getProcessTimeout() : 10); }
-                catch (InterruptedException e) { log_.warn("Wait on contexts monitor interrupted", e); }
-            }
-        }
-        return null; // break only when no one context rest
-    }
-     */
-
     /*
      * Used to send response or error for processed request.
      * Invoked from worker thread.
@@ -170,67 +71,6 @@ public:
      */
     void contextProcessed(std::auto_ptr<ServerContext> context); // /* throw(PvssException) */ ;
 
-    /*
-    {
-        PvssSocket& channel = context.getChannel();
-        checkProcessingContext(channel, context.getSeqNum()); // check registration only, don't remove!
-        sendResponse(context.getResponse(), channel);
-    }
-     */
-
-
-    /*
-    private void registerProcessingContext(ServerContext context)
-    {
-        synchronized (processingContexts)
-        {
-            processingContexts.addLast(context);
-            final SocketChannel channel = context.getChannel();
-            synchronized (processingContextsMap) {
-                HashMap<Integer, ServerContext> map = processingContextsMap.get(channel);
-                if (map == null) {
-                    map = new HashMap<Integer, ServerContext>();
-                    processingContextsMap.put(channel, map);
-                }
-                map.put(context.getSeqNum(), context);
-            }
-            processingContexts.notify();
-        }
-    }
-    private ServerContext removeProcessingContext(SocketChannel channel, int seqNum, boolean checkState)
-    {
-        ServerContext context = null;
-        synchronized (processingContextsMap) {
-            HashMap<Integer, ServerContext> map = processingContextsMap.get(channel);
-            if (map != null)
-            {
-                if (checkState) {
-                    context = map.get(seqNum);
-                    if (context.getState() == ServerContext.State.PROCESSED)
-                        return null; // do not remove, wait response report from Writers
-                }
-                context = map.remove(seqNum);
-                if (map.isEmpty()) processingContextsMap.remove(channel);
-            }
-        }
-        return context;
-    }
-    private void checkProcessingContext(SocketChannel channel, int seqNum) throws PvssException
-    {
-        synchronized (processingContextsMap) {
-            HashMap<Integer, ServerContext> map = processingContextsMap.get(channel);
-            if (map == null || !map.containsKey(seqNum))
-                throw new PvssException(PvssException.Type.UNEXPECTED_RESPONSE,
-                                        "Request expired, error response was already sent");
-        }
-    }
-    private boolean hasProcessingContexts()
-    {
-        synchronized (processingContextsMap) {
-            return !processingContextsMap.isEmpty();
-        }
-    }
-     */
 
     /**
      * Implementation of Core abstraction method.
@@ -248,33 +88,6 @@ public:
     virtual void receiveOldPacket( std::auto_ptr< ServerContext > context );
 
 
-    /*
-    {
-        try
-        {
-            if (state == Core.PacketState.RECEIVED) // Response received
-            {
-                if (packet == null || !(packet instanceof Request) || !packet.isValid())
-                    throw new PvssException(PvssException.Type.BAD_REQUEST,
-                                            "Received packet isn't valid PVAP request");
-                handleRequest((Request)packet, channel);
-            }
-            else // EXPIRED | FAILED | SENT Response notification
-            {
-                if (packet == null || !(packet instanceof Response) || !packet.isValid())
-                    throw new PvssException(PvssException.Type.BAD_RESPONSE,
-                                            "Handled packet isn't valid PVAP response");
-                reportResponse((Response)packet, channel, state);
-            }
-        }
-        catch (PvssException exc) {
-            log_.error(exc.getMessage(), exc); // Do not close channel
-        }
-    }
-     */
-
-
-
     /**
      * Implementation of Core abstraction method.
      * Invoked from writer to notify core api of a packet state change (sent,failed,expired).
@@ -284,65 +97,6 @@ public:
      * @param state     Packet state in IO processing
      */
     virtual void reportPacket(uint32_t seqnum, smsc::core::network::Socket& channel, PacketState state);
-
-
-
-    /*
-    private void handleRequest(Request request, SocketChannel channel) throws PvssException
-    {
-        updateChannelActivity(channel); // Update last activity time on channel
-
-        if (!started) {
-            sendResponse(new ErrorResponse(request.getSeqNum(),
-                                           Response.StatusType.SERVER_SHUTDOWN, null), channel);
-            return;
-        }
-
-        if (request instanceof PingRequest) {
-            PingResponse ping = new PingResponse(request.getSeqNum());
-            ping.setStatus(Response.StatusType.OK);
-            sendResponse(ping, channel);
-        } 
-        else {
-            boolean needErrorResponse = false;
-            final int pendingContextSize;
-            synchronized (contextsMonitor) {
-                pendingContextSize = pendingContexts.size();
-                if (pendingContextSize < ((ServerConfig)config).getQueueSizeLimit()) {
-                    pendingContexts.addLast(new ServerContext(request, channel, this));
-                    contextsMonitor.notifyAll();
-                } else needErrorResponse = true;
-            }
-            if (needErrorResponse) {
-                log_.warn("Pending requests queue overflow, queue size=" + pendingContextSize);
-                sendResponse(new ErrorResponse(request.getSeqNum(),
-                                               Response.StatusType.SERVER_BUSY, "Try later"), channel);
-            }
-        }
-    }
-     */
-
-    /*
-    private void reportResponse(Response response, SocketChannel channel, PacketState state)
-    {
-        if (response instanceof PingResponse) log_.warn("PING response state=" + state);
-        else if (response instanceof ErrorResponse) log_.warn("ERROR response state=" + state);
-        else
-        {
-            if (log_.isDebugEnabled()) log_.debug("Response '" + response + "' state=" + state);
-            ServerContext context = removeProcessingContext(channel, response.getSeqNum(), false);
-            if (context != null) {
-                synchronized (contextsMonitor) {
-                    context.setState((state == PacketState.SENT) ?
-                                     ServerContext.State.SENT : ServerContext.State.FAILED);
-                    pendingStates.addLast(context);
-                    contextsMonitor.notifyAll();
-                }
-            } // else context not found => already expired
-        }
-    }
-
-     */
 
 
     void init() /* throw PvssException */;

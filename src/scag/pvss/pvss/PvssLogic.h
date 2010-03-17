@@ -340,9 +340,11 @@ protected:
     class InfraLogic;
 
 public:
-    InfrastructLogic( PvssDispatcher& dispatcher, const InfrastructStorageConfig& cfg ) :
+    InfrastructLogic( PvssDispatcher& dispatcher,
+                      const InfrastructStorageConfig& cfg,
+                      DiskFlusher& diskFlusher ) :
     PvssLogic(dispatcher),
-    diskFlusher_("dflush.inf"),
+    diskFlusher_(&diskFlusher),
     provider_(0), service_(0), operator_(0), config_(cfg) {}
     virtual ~InfrastructLogic();
 
@@ -363,7 +365,7 @@ protected:
     virtual CommandResponse* processProfileRequest(ProfileRequest& request);
 
 private:
-    DiskFlusher diskFlusher_;
+    DiskFlusher* diskFlusher_;   // not owned
     Glossary    glossary_;
     InfraLogic* provider_;
     InfraLogic* service_;

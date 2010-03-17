@@ -21,7 +21,7 @@ int DiskFlusher::Execute()
     unsigned written = 0;  // the number of written bytes in the last write
     unsigned curItem = 0;  // index of current processing item
 
-    counter::TimeSnapshot speedLimiter("sys." + name_,5,minSleepTime);
+    counter::TimeSnapshot speedLimiter("sys.dflush." + name_,5,minSleepTime);
 
     smsc_log_info(log_,"started, maxSpeed=%ukb/s", maxSpeed_);
 
@@ -123,6 +123,20 @@ int DiskFlusher::Execute()
 
     smsc_log_info(log_,"stopped");
     return 0;
+}
+
+
+void DiskFlusher::flushIOStatistics( unsigned& pfget,
+                                     unsigned& kbget,
+                                     unsigned& pfset,
+                                     unsigned& kbset )
+{
+    MutexGuard mg(mon_);
+    for ( std::vector<DiskFlusherItemBase*>::const_iterator i = items_.begin();
+          i != items_.end();
+          ++i ) {
+        (*i)->flushIOStatistics(pfget,kbget,pfset,kbset);
+    }
 }
 
 }
