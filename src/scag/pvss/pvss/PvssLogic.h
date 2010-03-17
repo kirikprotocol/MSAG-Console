@@ -356,6 +356,7 @@ public:
     void shutdownStorages();
 
     std::string reportStatistics() const;
+    void flushIOStatistics( std::string& rv, unsigned scale, unsigned dt );
 
     // virtual void keepAlive();
 

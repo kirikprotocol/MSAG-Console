@@ -485,7 +485,8 @@ private:
     typedef CachedDelayedThreadedDiskStorage< MemStorage, DiskStorage, DataSerializer, ProfileHeapAllocator< MemStorage::key_type, LockableProfile > > InfrastructStorage;
 
 public:
-    InfraLogic( const char* dblogName, DiskFlusher& flusher ) :
+    InfraLogic( const char* name, const char* dblogName, DiskFlusher& flusher ) :
+    name_(name),
     profileBackup_(smsc::logger::Logger::getInstance(dblogName)),
     commandProcessor_(profileBackup_),
     log_(0),
@@ -494,10 +495,9 @@ public:
     {}
     
     void init( const std::string& name,
-               const std::string& logsfx,
                const InfrastructStorageConfig& cfg,
                Glossary& glossary ) {
-        log_ = smsc::logger::Logger::getInstance(("pvssst" + logsfx).c_str());
+        log_ = smsc::logger::Logger::getInstance(("pvssst." + name_).c_str());
         smsc_log_debug(log_,"starting initialization of %s infralogic",name.c_str());
         const std::string fn( cfg.dbPath + "/" + name + ".bin");
         std::auto_ptr< DiskDataStorage::storage_type > pf(new DiskDataStorage::storage_type);
@@ -513,13 +513,13 @@ public:
         }
 
         std::auto_ptr< DiskDataStorage > data(new DiskDataStorage(pf.release(),
-                                                                  Logger::getInstance(("pvssdd"+logsfx).c_str())));
+                                                                  Logger::getInstance(("pvssdd."+name_).c_str())));
         smsc_log_debug(log_, "infralogic %s disk data storage is created", name.c_str());
 
         std::auto_ptr< DiskIndexStorage > index(new DiskIndexStorage(name,
                                                                      cfg.dbPath,
                                                                      cfg.recordCount,
-                                                                     Logger::getInstance(("pvssix"+logsfx).c_str())));
+                                                                     Logger::getInstance(("pvssix."+name_).c_str())));
         // FIX: mandatory size recalculation
         index->recalcSize();
         smsc_log_debug(log_, "infralogic %s disk index storage is created", name.c_str());
@@ -527,7 +527,7 @@ public:
         std::auto_ptr< DiskStorage > ds(new DiskStorage(index.release(), data.release()));
         smsc_log_debug(log_, "infralogic %s indexed storage is created", name.c_str());
 
-        std::auto_ptr< MemStorage > ms(new MemStorage(Logger::getInstance(("pvssmc"+logsfx).c_str()),
+        std::auto_ptr< MemStorage > ms(new MemStorage(Logger::getInstance(("pvssmc."+name_).c_str()),
                                                       cfg.cacheSize));
         smsc_log_debug(log_, "infralogic %s memory storage is created", name.c_str());
 
@@ -540,10 +540,10 @@ public:
                                           ps1.release(),
                                           ps2.release(),
                                           cfg.maxFlushQueueSize,
-                                          Logger::getInstance(("pvssst"+logsfx).c_str()));
+                                          Logger::getInstance(("pvssst."+name_).c_str()));
         diskFlusher_->add( storage_ );
         storage_->setProfileBackup(profileBackup_);
-        smsc_log_info(log_,"infralogic %s initialized",name.c_str());
+        smsc_log_info(log_,"infralogic %s initialized", name.c_str());
     }
 
     ~InfraLogic() {
@@ -560,6 +560,10 @@ public:
     CommandResponse* process( const IntProfileKey& intKey,
                               ProfileRequest& request );
 
+    void flushIOStatistics( std::string& rv,
+                            unsigned scale,
+                            unsigned dt );
+
     unsigned long filledDataSize() const {
         return static_cast<unsigned long>(storage_->filledDataSize());
     }
@@ -570,6 +574,7 @@ private:
                          const InfrastructStorageConfig& cfg );
 
 private:
+    std::string             name_;
     ProfileBackup           profileBackup_;
     ProfileCommandProcessor commandProcessor_;
     smsc::logger::Logger*   log_;
@@ -692,6 +697,30 @@ CommandResponse* InfrastructLogic::InfraLogic::process( const IntProfileKey& int
 }
 
 
+void InfrastructLogic::InfraLogic::flushIOStatistics( std::string& rv,
+                                                      unsigned scale,
+                                                      unsigned dt )
+{
+    if (storage_) {
+        unsigned pfget, kbget, pfset, kbset;
+        pfget = kbget = pfset = kbset = 0;
+        storage_->flushIOStatistics(pfget,kbget,pfset,kbset);
+        char buf[100];
+        const unsigned d = dt/2;
+        sprintf(buf," %s:%u(%u)/%u(%u)",name_.c_str(),
+                unsigned((pfget*scale+d)/dt), unsigned((kbget*scale+d)/dt),
+                unsigned((pfset*scale+d)/dt), unsigned((kbset*scale+d)/dt));
+        rv.append(buf);
+    }
+}
+
+
+
+// ===================================================================
+
+
+
+
 CommandResponse* InfrastructLogic::processProfileRequest(ProfileRequest& profileRequest)
 {
     uint32_t key = 0;
@@ -747,6 +776,14 @@ std::string InfrastructLogic::reportStatistics() const
 }
 
 
+void InfrastructLogic::flushIOStatistics( std::string& rv, unsigned scale, unsigned dt )
+{
+    provider_->flushIOStatistics(rv,scale,dt);
+    service_->flushIOStatistics(rv,scale,dt);
+    operator_->flushIOStatistics(rv,scale,dt);
+}
+
+
 /*
 void InfrastructLogic::keepAlive()
 {
@@ -762,12 +799,12 @@ void InfrastructLogic::keepAlive()
 void InfrastructLogic::init( bool /*checkAtStart*/ )
 {
     initGlossary(config_.dbPath,glossary_);
-    provider_ = new InfraLogic("pvss.prov",*diskFlusher_);
-    provider_->init("provider",".pr",config_,glossary_);
-    service_ = new InfraLogic("pvss.serv",*diskFlusher_);
-    service_->init("service",".sv",config_,glossary_);
-    operator_ = new InfraLogic("pvss.oper",*diskFlusher_);
-    operator_->init("operator",".op",config_,glossary_);
+    provider_ = new InfraLogic("prv", "pvss.prov",*diskFlusher_);
+    provider_->init("provider",config_,glossary_);
+    service_ = new InfraLogic("svc", "pvss.serv",*diskFlusher_);
+    service_->init("service",config_,glossary_);
+    operator_ = new InfraLogic("opr", "pvss.oper",*diskFlusher_);
+    operator_->init("operator",config_,glossary_);
     smsc_log_info(logger_,"infrastructure storages are inited, good nodes: %s",
                   reportStatistics().c_str());
 }

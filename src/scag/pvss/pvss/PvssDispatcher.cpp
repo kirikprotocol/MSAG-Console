@@ -109,23 +109,26 @@ std::string PvssDispatcher::flushIOStatistics( unsigned scale,
 {
     std::string rv;
     rv.reserve(200);
-    unsigned idx = 0;
     const unsigned d = dt/2;
-    for ( std::vector< DiskFlusher* >::const_iterator i = diskFlushers_.begin();
-          i != diskFlushers_.end();
-          ++i ) {
+    for ( unsigned idx = 0; idx < nodeCfg_.disksCount; ++idx ) {
+        DiskFlusher* df = diskFlushers_[idx];
+        if ( !df ) continue;
         unsigned pfget, kbget, pfset, kbset;
         pfget = kbget = pfset = kbset = 0;
-        (*i)->flushIOStatistics(pfget,kbget,pfset,kbset);
+        df->flushIOStatistics(pfget,kbget,pfset,kbset);
         char buf[100];
-        sprintf(buf," %s:%u(%u)/%u(%u)",(*i)->getName().c_str(),
+        sprintf(buf," %s:%u(%u)/%u(%u)",df->getName().c_str(),
                 unsigned((pfget*scale+d)/dt), unsigned((kbget*scale+d)/dt),
                 unsigned((pfset*scale+d)/dt), unsigned((kbset*scale+d)/dt));
         if (idx%4==0 && idx>0) {
-            rv.append("\n          ");
+            rv.append("\n           ");
         }
         rv.append(buf);
         ++idx;
+    }
+    if ( infrastructLogic_.get() ) {
+        rv.append("\n         infra R/W:");
+        infrastructLogic_->flushIOStatistics(rv,scale,dt);
     }
     return rv;
 }
