@@ -202,7 +202,7 @@ void SmppSocket::processInput()
     case SmppCommandSet::DATA_SM_RESP:
     {
       try{
-          std::auto_ptr<SmppCommand> cmd(new SmppCommand(pdu,false));
+          std::auto_ptr<SmppCommand> cmd(new SmppCommand(pdu));
           cmdQueue->putCommand(this,cmd);
           break;
       }catch(std::exception& e)
