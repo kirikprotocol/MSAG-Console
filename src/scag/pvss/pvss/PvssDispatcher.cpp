@@ -124,7 +124,6 @@ std::string PvssDispatcher::flushIOStatistics( unsigned scale,
             rv.append("\n           ");
         }
         rv.append(buf);
-        ++idx;
     }
     if ( infrastructLogic_.get() ) {
         rv.append("\n         infra R/W:");
