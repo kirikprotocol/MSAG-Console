@@ -16,7 +16,6 @@ namespace sessions {
 namespace transport {
 
 using namespace scag::transport;
-using namespace scag2::sessions;
 
 class SCAGCommand
 {
@@ -51,14 +50,14 @@ public:
 
     virtual ~SCAGCommand() {};
 
-    virtual Session* getSession() = 0;
+    virtual scag2::sessions::Session* getSession() = 0;
 
     /// print-out the command (for debugging)
     virtual void print( util::Print& p ) const = 0;
 
 protected:
     /// session is set from session store when the command is locking the session.
-    virtual void setSession( Session* as ) = 0;
+    virtual void setSession( scag2::sessions::Session* as ) = 0;
 
 protected:
     SCAGCommand() {}

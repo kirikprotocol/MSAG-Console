@@ -160,7 +160,7 @@ public:
 
     virtual uint32_t getSerial() const { return serial_; }
 
-    virtual Session* getSession() { return session_; }
+    virtual scag2::sessions::Session* getSession() { return session_; }
 
     virtual void print( util::Print& p ) const;
 
@@ -287,7 +287,7 @@ public:
 
 
 protected:
-    virtual void setSession( Session* s ) { session_ = s; };
+    virtual void setSession( scag2::sessions::Session* s ) { session_ = s; };
 
 public:
     StringHash headerFields;
@@ -302,7 +302,7 @@ public:
     CookieHash cookies;
     uint8_t command_id;
 
-    Session* session_;
+    scag2::sessions::Session* session_;
         
     TransactionContext &trc;
     HttpContext* context;

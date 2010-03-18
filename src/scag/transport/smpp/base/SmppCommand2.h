@@ -469,7 +469,7 @@ protected:
     CommandId        cmdid_;
     int              serviceId_;
     opid_type        opId_;
-    Session*         session_;
+    scag2::sessions::Session* session_;
 
     // -- smpp-specific
     SmppEntity* src_ent_;
@@ -571,7 +571,7 @@ public:
         return shared_->uid;
     }
     
-    virtual Session* getSession() { return session_; };
+    virtual scag2::sessions::Session* getSession() { return session_; };
 
     virtual void print( util::Print& p ) const;
 
@@ -679,7 +679,7 @@ private:
 public:
 
 protected:
-    virtual void setSession( Session* s) { session_ = s; };
+    virtual void setSession( scag2::sessions::Session* s) { session_ = s; };
 
 private:
     static Logger* log_;

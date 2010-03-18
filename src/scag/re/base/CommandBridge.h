@@ -187,7 +187,10 @@ public:
     }*/
 
     static actions::CommandProperty getCommandProperty( SCAGCommand& command, const Address& abonentAddr, uint8_t operationType );
-    static void CheckCommandProperty(SCAGCommand& command, const actions::CommandProperty& cp, const SessionPrimaryKey& primaryKey, Session* session);
+    static void CheckCommandProperty( SCAGCommand& command,
+                                      const actions::CommandProperty& cp,
+                                      const sessions::SessionPrimaryKey& primaryKey,
+                                      sessions::Session* session);
 
     static void RegisterTrafficEvent( const actions::CommandProperty& commandProperty,
                                       const sessions::SessionPrimaryKey& sessionPrimaryKey,

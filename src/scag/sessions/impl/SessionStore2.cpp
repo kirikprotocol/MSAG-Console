@@ -650,7 +650,7 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
                                key.toString().c_str() );
                 uploaded = disk_->get( key, cache_->store2ref(*v) );
                 if ( ! uploaded ) {
-                    smsc_log_warn( log_, "session key=%s cannot be uploaded",
+                    smsc_log_debug( log_, "session key=%s cannot be uploaded",
                                    key.toString().c_str() );
                 } else {
                     smsc_log_debug( log_,"session=%p/%s has been just uploaded",

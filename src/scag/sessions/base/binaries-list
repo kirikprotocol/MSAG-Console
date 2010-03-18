@@ -4,3 +4,16 @@ scag/tests/test-sessionKey testSessionKey \
   -lscag-exc \
   @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
   -lutil
+
+scag/tests/test-sessionSerialization testSessionSerialization \
+  -lscag-sessions-base \
+  -lscag-bill-base \
+  -lscag-bill-ewallet \
+  -lscag-re-base \
+  -lscag-transport \
+  -lscag-util-properties \
+  -lscag-util-singleton \
+  -lscag-util-io \
+  -lscag-exc \
+  @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
+  -lutil

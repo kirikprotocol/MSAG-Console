@@ -14,7 +14,7 @@ inline opid_type invalidOpId() { return opid_type(0); }
 
 namespace scag {
 namespace transport {
-typedef scag2::transport::opid_type opid_type;
+using scag2::transport::opid_type;
 using scag2::transport::invalidOpId;
 }
 }
