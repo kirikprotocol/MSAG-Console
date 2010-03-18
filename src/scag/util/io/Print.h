@@ -21,6 +21,7 @@
 namespace scag {
 namespace util {
 
+
 class Print
 {
 protected:
@@ -29,11 +30,18 @@ public:
     virtual ~Print() throw () {}
     inline bool enabled() const throw () { return enabled_; }
     void print( const char* fmt, ... ) throw ();
-protected:
     virtual void printva( const char* fmt, va_list args ) throw () = 0;
 protected:
     bool enabled_;
 };
+
+
+inline void fprintf(util::Print* log, const char* format,...) {
+    va_list args;
+    va_start(args,format);
+    log->printva(format,args);
+    va_end(args);
+}
 
 
 class PrintLog : public Print
@@ -42,7 +50,6 @@ public:
     PrintLog( smsc::logger::Logger*          log,
               smsc::logger::Logger::LogLevel lev ) : 
     Print( log && log->isLogLevelEnabled(lev) ), log_(log), lev_(lev) {}
-protected:
     virtual void printva( const char* fmt, va_list args ) throw ();
 private:
     smsc::logger::Logger*          log_;
@@ -54,8 +61,6 @@ class PrintFile : public Print
 {
 public:
     PrintFile( FILE* fp ) : Print( fp ), fp_(fp) {}
-
-protected:
     virtual void printva( const char* fmt, va_list args ) throw ();
 private:
     FILE* fp_;
@@ -70,8 +75,6 @@ public:
     inline const char* buf() const {
         return buf_;
     }
-
-protected:
     virtual void printva( const char* fmt, va_list args ) throw ();
 
 private:
@@ -104,6 +107,21 @@ private:
     char* buf_;
 };
 
+
+class PrintStdString : public Print
+{
+public:
+    virtual ~PrintStdString() throw() {}
+    PrintStdString() : Print(true) {}
+    virtual void printva( const char* fmt, va_list args ) throw();
+    const char* buf() const {
+        return str_.c_str();
+    }
+    void reset() { str_.clear(); }
+private:
+    std::string str_;
+};
+
 }
 }
 
@@ -114,6 +132,7 @@ using scag::util::PrintLog;
 using scag::util::PrintFile;
 using scag::util::PrintString;
 using scag::util::PrintAString;
+using scag::util::PrintStdString;
 }
 }
 

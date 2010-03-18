@@ -1,4 +1,5 @@
 #include "Print.h"
+#include "core/buffers/TmpBuf.hpp"
 
 namespace scag {
 namespace util {
@@ -72,6 +73,19 @@ void PrintAString::printva( const char* fmt, va_list args ) throw ()
          myvasprintf( &buf_, fmt, args )
 #endif
          ) buf_ = 0;
+}
+
+
+void PrintStdString::printva( const char* fmt, va_list args ) throw ()
+{
+    smsc::core::buffers::TmpBuf<char,256> buf;
+    int res = vsnprintf(buf.get(),buf.getSize(),fmt,args);
+    if ( res < 0 ) { return; }
+    if ( size_t(res) > buf.getSize() ) {
+        buf.setSize(res);
+        vsnprintf(buf.get(),buf.getSize(),fmt,args);
+    }
+    str_.append(buf.get());
 }
 
 }
