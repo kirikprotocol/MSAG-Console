@@ -474,7 +474,8 @@ template<class T> unsigned CalcSize(T* arr,unsigned count)
 
 #else
 #define __LOG__ FILE*
-inline void fprintf_tab(__LOG__ log, int align) { for( int i=0; i<align; ++i) fprintf(log,"  ");}
+template <class TLOG>
+inline void fprintf_tab(TLOG* log, int align) { for( int i=0; i<align; ++i) fprintf(log,"  ");}
 #define dump_text1(format) {fprintf_tab(log,align); fprintf(log,format"\n");}
 #define dump_text(format,...) {fprintf_tab(log,align); fprintf(log,format"\n",__VA_ARGS__);}
 #define dump_uint(field) dump_text("%s = %u",#field,(uint32_t)field);
@@ -498,7 +499,8 @@ struct SmppHeader //: public MemoryManagerUnit
     commandId(0),
     commandStatus(0),
     sequenceNumber(0) {}
-  inline void dump(__LOG__ log,int align)
+  template <class TLOG>
+  inline void dump( TLOG* log,int align)
   {
     dump_text1("SmppHeader{");
     ++align;
@@ -526,7 +528,8 @@ struct PduAddress //: public MemoryManagerUnit
                    _s_int_property__(uint8_t,numberingPlan)
                    _s_cstr_property__(value));
   }
-  inline void dump(__LOG__ log,int align)
+  template <class TLOG >
+  inline void dump( TLOG* log,int align)
   {
     dump_text1("PduAddress{");
     ++align;
@@ -552,7 +555,8 @@ struct PduDestAddress : public PduAddress
       throw runtime_error("invalid PduDestAddress flag");
     }
   }
-  inline void dump(__LOG__ log,int align)
+  template <class TLOG>
+  inline void dump( TLOG* log,int align)
   {
     dump_text1("PduDestAddress{");
     ++align;
@@ -754,7 +758,8 @@ struct SmppOptional //: public MemoryManagerUnit
 #define _o_intarr_property__(type,field,size) if ( has_##field() ) {for ( int i=0; i < size; ++i) {dump_uint(field[i]);}}
 #define _o_cstr_property__(field) if ( has_##field() ) { dump_cstr(field); }
 #define _o_ostr_property__(field) if ( has_##field() ) { dump_ostr(field); }
-  inline void dump(__LOG__ log,int align)
+  template <class TLOG>
+  inline void dump( TLOG* log,int align)
   {
     dump_text1("SmppOptional{");
     ++align;
@@ -844,7 +849,8 @@ struct PduOutBind //: public SmppHeader//MemoryManagerUnit
                       _s_cstr_property__(systemId)
                       _s_cstr_property__(password));
   }
-  inline void dump(__LOG__ log,int align = 0)
+  template <class TLOG>
+  inline void dump( TLOG* log,int align = 0)
   {
     dump_text1("SmppOutBind{");
     header.dump(log,align+1);
@@ -861,7 +867,8 @@ struct PduWithOnlyHeader //: public SmppHeader//MemoryManagerUnit
 {
   __ref_property__(SmppHeader,header);
   inline uint32_t size() { return _s_ref_property__(SmppHeader,header); }
-  inline void dump(__LOG__ log,int align = 0)
+  template <class TLOG>
+  inline void dump( TLOG* log,int align = 0)
   {
     dump_text1("PduWithOnlyHeader{");
     header.dump(log,align+1);
@@ -943,7 +950,8 @@ struct PduPartSm //: public MemoryManagerUnit
                       _s_int_property__(uint8_t,smDefaultMsgId)
                       _s_ostr_property__(shortMessage));
   }
-  inline void dump(__LOG__ log,int align = 0)
+  template <class TLOG>
+  inline void dump( TLOG* log,int align = 0)
   {
     dump_text1("PduPartSm{");
     ++align;
@@ -982,7 +990,8 @@ struct PduXSm //: public SmppHeader//public MemoryManagerUnit
                       _s_ref_property__(SmppOptional,optional)
                       );
   }
-  inline void dump(__LOG__ log,int align = 0)
+  template <class TLOG>
+  inline void dump(TLOG* log,int align = 0)
   {
     dump_text1("PduXSm{");
     header.dump(log,align+1);
@@ -1027,7 +1036,8 @@ struct PduXSmResp //: public SmppHeader //MemoryManagerUnit
                     _s_cstr_property__(messageId))
                     :(uint32_t)(0 _s_ref_property__(SmppHeader,header)))+(haveUssdSessionId?8:0);
   }
-  inline void dump(__LOG__ log,int align = 0)
+  template <class TLOG>
+  inline void dump(TLOG* log,int align = 0)
   {
     dump_text1("PduXSmResp{");
     header.dump(log,align+1);
@@ -1058,7 +1068,8 @@ struct PduDataSmResp //: public SmppHeader //MemoryManagerUnit
                       _s_ref_property__(SmppOptional,optional));
 
   }
-  inline void dump(__LOG__ log,int align = 0)
+  template <class TLOG>
+  inline void dump(TLOG* log,int align = 0)
   {
     dump_text1("PduXSmResp{");
     header.dump(log,align+1);
@@ -1097,7 +1108,8 @@ struct PduMultiSmResp //: public SmppHeader//MemoryManagerUnit
     _s_int_property__(uint8_t,noUnsuccess)
     _s_ptr_property__(UnsuccessDeliveries,sme,noUnsuccess));
   }
-  inline void dump(__LOG__ log,int align = 0)
+  template <class TLOG>
+  inline void dump(TLOG* log,int align = 0)
   {
     dump_text1("PduMultiResp{");
     header.dump(log,align+1);
@@ -1135,7 +1147,8 @@ struct PduBindTRX //: public SmppHeader//MemoryManagerUnit
                       _s_int_property__(uint8_t,interfaceVersion)
                       _s_ref_property__(PduAddress,addressRange));
   }
-  inline void dump(__LOG__ log,int align = 0)
+  template <class TLOG>
+  inline void dump(TLOG* log,int align = 0)
   {
     dump_text1("PduBindTRX{");
     header.dump(log,align+1);
@@ -1166,7 +1179,8 @@ struct PduBindTRXResp //: public SmppHeader//MemoryManagerUnit
                     //optional
                       _s_int_property__(int8_t,scInterfaceVersion)+4);
   }
-  inline void dump(__LOG__ log,int align = 0)
+  template <class TLOG>
+  inline void dump(TLOG* log,int align = 0)
   {
     dump_text1("PduBindTRXResp{");
     header.dump(log,align+1);
@@ -1202,7 +1216,8 @@ struct PduDataPartSm //: public MemoryManagerUnit
                       _s_int_property__(uint8_t,registredDelivery)
                       _s_int_property__(uint8_t,dataCoding));
   }
-  inline void dump(__LOG__ log,int align = 0)
+  template <class TLOG>
+  inline void dump(TLOG* log,int align = 0)
   {
     dump_text1("PduPartSm{");
     ++align;
@@ -1230,7 +1245,8 @@ struct PduDataSm
                       _s_ref_property__(PduDataPartSm,data)
                       _s_ref_property__(SmppOptional,optional));
   }
-  inline void dump(__LOG__ log,int align = 0)
+  template <class TLOG>
+  inline void dump(TLOG* log,int align = 0)
   {
     dump_text1("PduDataSm{");
     header.dump(log,align+1);
@@ -1254,7 +1270,8 @@ struct PduQuerySm
                       _s_cstr_property__(messageId)
                       _s_ref_property__(PduAddress,source));
   }
-  inline void dump(__LOG__ log,int align = 0)
+  template <class TLOG>
+  inline void dump(TLOG* log,int align = 0)
   {
     dump_text1("PduQuerySm{");
     header.dump(log,align+1);
@@ -1282,7 +1299,8 @@ struct PduQuerySmResp
                       _s_int_property__(uint8_t,messageState)
                       _s_int_property__(uint8_t,errorCode));
   }
-  inline void dump(__LOG__ log,int align = 0)
+  template <class TLOG>
+  inline void dump(TLOG* log,int align = 0)
   {
     dump_text1("PduQuerySmResp{");
     header.dump(log,align+1);
@@ -1313,7 +1331,8 @@ struct PduCancelSm
                       _s_ref_property__(PduAddress,source)
                       _s_ref_property__(PduAddress,dest));
   }
-  inline void dump(__LOG__ log,int align = 0)
+  template <class TLOG>
+  inline void dump(TLOG* log,int align = 0)
   {
     dump_text1("PduCancelSm{");
     header.dump(log,align+1);
@@ -1358,7 +1377,8 @@ struct PduReplaceSm
                     _s_int_property__(uint8_t,smDefaultMsgId)
                     _s_ostr_property__(shortMessage));
   }
-  inline void dump(__LOG__ log,int align = 0)
+  template <class TLOG>
+  inline void dump(TLOG* log,int align = 0)
   {
     dump_text1("PduReplaceSm{");
     header.dump(log,align+1);
@@ -1389,7 +1409,8 @@ struct PduAlertNotification
             _s_ref_property__(PduAddress,esme)
             _s_ref_property__(SmppOptional,optional));
   }
-  inline void dump(__LOG__ log,int align = 0)
+  template <class TLOG>
+  inline void dump(TLOG* log,int align = 0)
   {
     dump_text1("PduAlertNotification{");
     header.dump(log,align+1);
