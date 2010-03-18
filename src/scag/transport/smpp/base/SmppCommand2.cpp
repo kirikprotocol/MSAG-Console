@@ -1,4 +1,5 @@
 #include <cassert>
+#include "scag/util/io/Print.h"
 #include "SmppCommand2.h"
 #include "SmppEntity2.h"
 #include "scag/util/encodings/Encodings.h"
@@ -271,10 +272,43 @@ std::auto_ptr<SmppCommand> SmppCommand::makeCommand(CommandId cmdId,uint32_t dia
 }
 
 
-void SmppCommand::makeSMSBody(SMS* sms,const SmppHeader* pdu,bool forceDC)
+/*
+template <class Pdu> inline void dumpPdu( smsc::logger::Logger* logg,
+                                          const char* fmt,
+                                          const Pdu*  pdu )
+{
+    if (logg->isDebugEnabled()) {
+        util::PrintStdString dump;
+        const_cast<Pdu*>(pdu)->dump(&dump);
+        smsc_log_debug(logg,fmt,dump.buf());
+    }
+}
+
+
+void dumpSms( smsc::logger::Logger* logg,
+              const char* where,
+              SMS* sms )
+{
+    if (!logg->isDebugEnabled()) return;
+    util::HexDump hd;
+    util::HexDump::string_type dump;
+    Body& body = sms->getMessageBody();
+    hd.hexdump(dump,body.getBuffer(),body.getBufferLength());
+    util::PrintStdString pss;
+    body.Print(&pss);
+    smsc_log_debug(logg,"sms %s: sz=%u %s %s",
+                   where, unsigned(body.getBufferLength()),
+                   hd.c_str(dump), pss.buf());
+}
+ */
+
+
+void SmppCommand::makeSMSBody(SMS* sms,const SmppHeader* pdu,uint32_t smeFlags)
 {
     const PduXSm* xsm = reinterpret_cast<const PduXSm*>(pdu);
-    fetchSmsFromSmppPdu((PduXSm*)xsm,sms,forceDC);
+    // dumpPdu(log_,"pduXsm at input: %s",xsm);
+    fetchSmsFromSmppPdu((PduXSm*)xsm,sms,smeFlags);
+    // dumpSms(log_,"after conversion",sms);
     SMS &s=*sms;
     if(s.getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)!=0x3 && s.getIntProperty(Tag::SMPP_ESM_CLASS)&0x40)
     {
@@ -600,7 +634,7 @@ void SmppCommand::print( util::Print& p ) const
 }
 
 
-SmppCommand::SmppCommand( SmppHeader* pdu, bool forceDC ) :
+SmppCommand::SmppCommand( SmppHeader* pdu, uint32_t smeFlags ) :
 SCAGCommand(), _SmppCommand()
 {
     getlogger();
@@ -632,7 +666,7 @@ SCAGCommand(), _SmppCommand()
                 cmdid_ = DATASM;
                 PduDataSm* dsm = reinterpret_cast<PduDataSm*>(pdu);
                 dta_ = new SmsCommand;
-                if ( !fetchSmsFromDataSmPdu( dsm, get_sms(), forceDC) )
+                if ( !fetchSmsFromDataSmPdu( dsm, get_sms(), smeFlags) )
                     throw smsc::util::Exception("Invalid data coding");
                 get_sms()->setIntProperty(Tag::SMPP_DATA_SM,1);
                 shared_ = & get_smsCommand();
@@ -733,7 +767,7 @@ SCAGCommand(), _SmppCommand()
                 cmdid_ = SUBMIT_MULTI_SM;
                 SubmitMultiSm* sm = new SubmitMultiSm;
                 dta_ = sm;
-                makeSMSBody( &(sm->msg), pdu, forceDC );
+                makeSMSBody( &(sm->msg), pdu, smeFlags );
                 unsigned u = 0;
                 unsigned uu = pduX->message.numberOfDests;
                 for ( ; u < uu; ++u )
@@ -767,7 +801,7 @@ SCAGCommand(), _SmppCommand()
         {
             dta_ = new SmsCommand;
             shared_ = &get_smsCommand();
-            makeSMSBody( get_sms(), pdu, forceDC );
+            makeSMSBody( get_sms(), pdu, smeFlags );
             goto end_construct;
         }
         sms_resp:
@@ -822,7 +856,7 @@ SCAGCommand(), _SmppCommand()
 }
 
 
-SmppHeader* SmppCommand::makePdu(bool forceDC)
+SmppHeader* SmppCommand::makePdu(uint32_t smeFlags)
 {
     switch ( getCommandId() )
     {
@@ -831,7 +865,9 @@ SmppHeader* SmppCommand::makePdu(bool forceDC)
             auto_ptr<PduXSm> xsm(new PduXSm);
             xsm->header.set_commandId(SmppCommandSet::SUBMIT_SM);
             xsm->header.set_sequenceNumber(get_dialogId());
-            fillSmppPduFromSms( xsm.get(), get_sms(), forceDC );
+            // dumpSms(log_,"before conversion",get_sms());
+            fillSmppPduFromSms(xsm.get(), get_sms(),smeFlags);
+            // dumpPdu(log_,"makePdu (submit): %s",xsm.get());
             return reinterpret_cast<SmppHeader*>(xsm.release());
         }
     case DELIVERY:
@@ -840,16 +876,18 @@ SmppHeader* SmppCommand::makePdu(bool forceDC)
                 auto_ptr<PduDataSm> xsm(new PduDataSm);
                 xsm->header.set_commandId(SmppCommandSet::DATA_SM);
                 xsm->header.set_sequenceNumber(get_dialogId());
-                fillDataSmFromSms(xsm.get(),get_sms(),forceDC);
+                fillDataSmFromSms(xsm.get(),get_sms(),smeFlags);
                 return reinterpret_cast<SmppHeader*>(xsm.release());
             } else {
                 auto_ptr<PduXSm> xsm(new PduXSm);
                 xsm->header.set_commandId(SmppCommandSet::DELIVERY_SM);
                 xsm->header.set_sequenceNumber(get_dialogId());
-                fillSmppPduFromSms(xsm.get(),get_sms());
+                // dumpSms(log_,"before conversion",get_sms());
+                fillSmppPduFromSms(xsm.get(),get_sms(),smeFlags);
                 xsm->message.set_scheduleDeliveryTime("");
                 xsm->message.set_validityPeriod("");
                 xsm->message.set_replaceIfPresentFlag(0);
+                // dumpPdu(log_,"makePdu (delivery): %s",xsm.get());
                 return reinterpret_cast<SmppHeader*>(xsm.release());
             }
         }
@@ -908,7 +946,7 @@ SmppHeader* SmppCommand::makePdu(bool forceDC)
             auto_ptr<PduDataSm> xsm(new PduDataSm);
             xsm->header.set_commandId(SmppCommandSet::DATA_SM);
             xsm->header.set_sequenceNumber(get_dialogId());
-            fillDataSmFromSms(xsm.get(),get_sms(),forceDC);
+            fillDataSmFromSms(xsm.get(),get_sms(),smeFlags);
             return reinterpret_cast<SmppHeader*>(xsm.release());
         }
     case DATASM_RESP:
