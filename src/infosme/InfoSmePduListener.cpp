@@ -36,7 +36,16 @@ void InfoSmePduListener::processReceipt (SmppHeader *pdu) {
   bool bNeedResponce = true;
 
   SMS sms;
-  fetchSmsFromSmppPdu((PduXSm*)pdu, &sms);
+    switch (pdu->get_commandId()) {
+    case SmppCommandSet::DELIVERY_SM:
+        fetchSmsFromSmppPdu((PduXSm*)pdu, &sms);
+        break;
+    case SmppCommandSet::DATA_SM_RESP:
+        fetchSmsFromDataSmPdu((PduDataSm*)pdu, &sms);
+        break;
+    default:
+        return;
+    }
   bool isReceipt = (sms.hasIntProperty(Tag::SMPP_ESM_CLASS)) ?
       ((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3C) == 0x4) : false;
 
@@ -90,11 +99,26 @@ void InfoSmePduListener::processReceipt (SmppHeader *pdu) {
 
   if (bNeedResponce)
   {
-      PduDeliverySmResp smResp;
-      smResp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
-      smResp.set_messageId("");
-      smResp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
-      asyncTransmitter->sendDeliverySmResp(smResp);
+    switch (pdu->get_commandId()) {
+    case SmppCommandSet::DELIVERY_SM: {
+        PduDeliverySmResp smResp;
+        smResp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
+        smResp.set_messageId("");
+        smResp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
+        asyncTransmitter->sendDeliverySmResp(smResp);
+        break;
+    }
+    case SmppCommandSet::DATA_SM_RESP: {
+        PduDataSmResp smResp;
+        smResp.get_header().set_commandId(SmppCommandSet::DATA_SM_RESP);
+        smResp.set_messageId("");
+        smResp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
+        asyncTransmitter->sendDataSmResp(smResp);
+        break;
+    }
+    default:
+        break;
+    }
   }
 }
 
@@ -131,6 +155,7 @@ void InfoSmePduListener::handleEvent(SmppHeader *pdu) {
   switch (pdu->get_commandId())
   {
   case SmppCommandSet::DELIVERY_SM:
+  case SmppCommandSet::DATA_SM:
       processReceipt(pdu);
       break;
   case SmppCommandSet::SUBMIT_SM_RESP:

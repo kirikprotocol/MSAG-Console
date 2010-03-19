@@ -1,6 +1,9 @@
 History in reverse order
 ----------------------------------------------------
 
+2010-03-19 16:55 bukind
+ feature: support for incoming DATA_SM receipts
+
 ----------------------------------------------------
 infosme-build-20100310 18:00 bukind
 
