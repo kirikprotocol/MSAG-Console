@@ -39,4 +39,6 @@
   $(__LIBRARIES) \
   -lpthread -lrt -ldl $(LIBMALLOC)
 
-scag/tests/testXTree  testXTree
+-scag/tests/testXTree  testXTree
+
+scag/tests/test21     test21
