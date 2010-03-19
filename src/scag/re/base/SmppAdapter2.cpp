@@ -30,6 +30,8 @@ IntHash<AccessType> SmppCommandAdapter::DeliverRespFieldsAccess = SmppCommandAda
 
 IntHash<int>  SmppCommandAdapter::tagToMaskAndValue = SmppCommandAdapter::initTagToMaskAndValue();
 
+std::multimap<int,int> SmppCommandAdapter::exclusiveBitTags_ = initExclusiveBitTags();
+
 // === public
 
 AccessType SmppCommandAdapter::CheckAccess(int handlerType, const std::string& name)
@@ -1066,6 +1068,15 @@ void SmppCommandAdapter::setBitField(SMS& data, int smppTag, bool value, int tag
     oldVal &= (~(*maskValue >> 8) & 0xff);
     if ( value ) oldVal |= (*maskValue & 0xff);
     data.setIntProperty(smppTag,oldVal);
+
+    // resetting exclusive fields
+    typedef std::multimap<int,int>::const_iterator eiter;
+    std::pair< eiter, eiter > range = exclusiveBitTags_.equal_range(tag);
+    AdapterProperty** ptr;
+    for ( eiter i = range.first; i != range.second; ++i ) {
+        ptr = PropertyPul.GetPtr(i->second);
+        if (ptr) (*ptr)->setBool(false);
+    }
 }
 
 
@@ -1406,6 +1417,41 @@ IntHash<int> SmppCommandAdapter::initTagToMaskAndValue()
     hs.Insert(DC_GSM_MWI         ,0xe0c0);
     hs.Insert(DC_GSM_MSG_CC      ,0xf0f0);
     return hs;
+}
+
+
+int SmppCommandAdapter::bitFieldType( int fieldId )
+{
+    if ( (fieldId >= ESM_MM_SMSC_DEFAULT) && (fieldId <= ESM_NSF_BOTH) ) {
+        return 1;
+    } else if ( (fieldId >= RD_RECEIPT_OFF) && (fieldId <= RD_I_NOTIFICATION) ) {
+        return 2;
+    } else if ( (fieldId >= DC_BINARY) && (fieldId <= DC_GSM_MSG_CC) ) {
+        return 3;
+    }
+    return 0;
+}
+
+
+std::multimap<int,int> SmppCommandAdapter::initExclusiveBitTags()
+{
+    std::multimap<int,int> res;
+    IntHash<int> taghash = initTagToMaskAndValue();
+    int tag, tag2;
+    int maskValue, maskVal2;
+    for ( IntHash<int>::Iterator iter(taghash); iter.Next(tag,maskValue); ) {
+        const int mask = (maskValue & 0xff00);
+        const int tagType = bitFieldType(tag);
+        for ( IntHash<int>::Iterator jter(iter); jter.Next(tag2,maskVal2); ) {
+            if (tag == tag2) continue;
+            if (tagType != bitFieldType(tag2)) continue;
+            if ((maskVal2 & 0xff00) == mask) {
+                res.insert(std::make_pair(tag,tag2));
+                res.insert(std::make_pair(tag2,tag));
+            }
+        }
+    }
+    return res;
 }
 
 }}}

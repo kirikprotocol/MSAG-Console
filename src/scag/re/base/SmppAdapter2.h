@@ -1,6 +1,7 @@
 #ifndef SCAG_RULE_ENGINE_SMPP_ADAPTER2
 #define SCAG_RULE_ENGINE_SMPP_ADAPTER2
 
+#include <map>
 #include "scag/transport/smpp/base/SmppCommand2.h"
 #include "ActionContext2.h"
 #include "CommandBridge.h"
@@ -209,6 +210,7 @@ private:
 
     // 16-bits values in hash: mask (8msb) + value (8lsb).
     static IntHash<int> tagToMaskAndValue;
+    static std::multimap<int,int> exclusiveBitTags_;
 
     // field initializers
     static Hash<int> initFieldNames( EventHandlerType handlerType );
@@ -229,6 +231,8 @@ private:
     // static IntHash<AccessType> InitDeliverRespAccess();
 
     static IntHash<int> initTagToMaskAndValue();
+    static int bitFieldType( int tag );
+    static std::multimap<int,int> initExclusiveBitTags();
 
 private:
     SmppCommand&    command;
