@@ -1060,7 +1060,7 @@ void SmppCommandAdapter::setBitField(SMS& data, int smppTag, bool value, int tag
     int* maskValue = tagToMaskAndValue.GetPtr(tag);
     if (!maskValue) return;
     // we cannot unset complex values
-    if ( value == false || (*maskValue & 0x10000) == 0 ) return;
+    if ( value == false && (*maskValue & 0x10000) == 0 ) return;
 
     int oldVal = data.getIntProperty(smppTag);
     oldVal &= (~(*maskValue >> 8) & 0xff);
