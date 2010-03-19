@@ -29,6 +29,7 @@ using namespace xercesc;
 using namespace smsc::util::xml;
 using namespace exceptions;
 using namespace config;
+using namespace sessions;
 
 time_t SmppManagerImpl::MetaEntity::expirationTimeout=300;
 

@@ -18,6 +18,7 @@ namespace scag2 {
 namespace transport {
 namespace http {
 
+using namespace sessions;
 using smsc::util::Exception;
 using scag2::re::actions::CommandProperty;
 /*

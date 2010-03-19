@@ -14,6 +14,7 @@ namespace transport {
 namespace smpp {
 
 using namespace exceptions;
+using namespace sessions;
 
 SmppOperationMaker::SmppOperationMaker( const char* where,
                                         std::auto_ptr<SmppCommand>& thecmd,

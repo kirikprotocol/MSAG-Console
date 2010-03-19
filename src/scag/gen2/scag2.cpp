@@ -41,6 +41,7 @@ using namespace scag2;
 using namespace scag2::transport;
 using namespace scag2::transport::smpp;
 using namespace scag2::transport::http;
+using namespace scag2::sessions;
 
 class FromSessionQueue : public SCAGCommandQueue
 {

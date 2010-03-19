@@ -51,7 +51,8 @@ public:
 
     // lcm
     virtual void continueExecution(LongCallContextBase* lcmCtx, bool dropped);
-    virtual bool makeLongCall( std::auto_ptr<SmppCommand>& cx, ActiveSession& session );
+    virtual bool makeLongCall( std::auto_ptr<SmppCommand>& cx,
+                               sessions::ActiveSession& session );
 
   //manager
   void  sendReceipt(Address& from, Address& to, int state, const char* msgId, const char* dst_sme_id, uint32_t netErrCode);

@@ -68,7 +68,7 @@ public:
 
     /// if success cx is cleared and session is left locked, true is returned.
     virtual bool makeLongCall( std::auto_ptr<SmppCommand>& cx,
-                               ActiveSession& session ) = 0;
+                               sessions::ActiveSession& session ) = 0;
 
     // virtual void continueExecution( LongCallContext* lcmCtx, bool dropped ) = 0;
 
