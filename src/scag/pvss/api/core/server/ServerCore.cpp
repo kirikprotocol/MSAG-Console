@@ -1,3 +1,6 @@
+#include <ctime>
+#include <cstring>
+
 #include "ServerCore.h"
 #include "ContextQueue.h"
 #include "ServerNewContext.h"
@@ -457,7 +460,7 @@ void ServerCore::receiveContext( std::auto_ptr< ServerContext > ctx )
         if ( needTiming ) {
             preq->startTiming();
             char buf[30];
-            std::sprintf(buf,"#%u ",totalRequests);
+            std::sprintf(buf,"#%u",totalRequests % 100);
             preq->timingComment(buf);
         }
 
@@ -755,6 +758,24 @@ util::msectime_type ServerCore::checkStatistics()
         smsc_log_info(log_, "last %u sec: %s", unsigned(last_.accumulationTime/1000), last_.toString().c_str() );
         last_.reset();
          */
+    } else if ( last_.elapsedTime == 0 ) {
+        // the first entrance to statistics
+        // adjusting to the edge of time slots
+        static util::msectime_type ref = 0;
+        if (!ref) {
+            time_t now = std::time(0);
+            struct tm nowtm;
+            std::memset(&nowtm,0,sizeof(nowtm));
+            gmtime_r(&now,&nowtm);
+            nowtm.tm_sec = 0;
+            nowtm.tm_min = 0;
+            nowtm.tm_hour = 0;
+            ref = util::msectime_type(mktime(&nowtm)) * 1000;
+        }
+        const util::msectime_type wid = getConfig().getStatisticsInterval();
+        const util::msectime_type nbins = (last_.startTime - ref + wid/2) / wid;
+        const util::msectime_type endt = ref + (nbins+1)*wid;
+        last_.accumulationTime = endt - last_.startTime;
     }
     return currentTime;
 }

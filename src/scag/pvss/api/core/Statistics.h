@@ -11,7 +11,8 @@ struct Statistics
 {
     Statistics( util::msectime_type accTime = 0 ) : accumulationTime(accTime) { reset(); }
 
-    void reset() {
+    void reset( util::msectime_type accTime = 0 ) {
+        if ( accTime ) { accumulationTime = accTime; }
         // NOTE: it works until Statistics has no virtual members
         // register const util::msectime_type a = accumulationTime;
         memset(&startTime,0,((char*)&errors) - ((char*)&startTime) + sizeof(unsigned) );
@@ -35,7 +36,7 @@ struct Statistics
         char buf[160];
         util::msectime_type e10ms;
         unsigned scale = prescale(e10ms);
-        unsigned seconds = unsigned(elapsedTime/1000);
+        unsigned seconds = unsigned((elapsedTime+500)/1000);
         const unsigned d = unsigned(e10ms/2);
         snprintf(buf,sizeof(buf),
                  "%02u:%02u:%02u  req/resp/err=%u/%u/%u ok/fail=%u/%u\n"
