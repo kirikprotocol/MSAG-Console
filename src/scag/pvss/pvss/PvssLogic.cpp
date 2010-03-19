@@ -290,7 +290,7 @@ unsigned long AbonentLogic::initElementStorage( unsigned index,
                                             ds.release(),
                                             ps1.release(),
                                             ps2.release(),
-                                            config_.maxFlushQueueSize,
+                                            config_.flushConfig,
                                             smsc::logger::Logger::getInstance
                                             (("pvssst."+pathSuffixString).c_str()));
     // elStorage->storage->init( config_.minDirtyTime,
@@ -508,7 +508,7 @@ public:
         }
 
         // successfully open, checking if pageSize is smaller than requested
-        if ( pf->getPageSize() != cfg.pageSize ) {
+        if ( unsigned(pf->getPageSize()) != cfg.pageSize ) {
             resizePageSize(pf,cfg.dbPath+"/"+name,cfg);
         }
 
@@ -539,7 +539,7 @@ public:
                                           ds.release(),
                                           ps1.release(),
                                           ps2.release(),
-                                          cfg.maxFlushQueueSize,
+                                          cfg.flushConfig,
                                           Logger::getInstance(("pvssst."+name_).c_str()));
         diskFlusher_->add( storage_ );
         storage_->setProfileBackup(profileBackup_);
@@ -845,7 +845,57 @@ const uint32_t DEF_FILE_SIZE    = 50000;
 const uint32_t DEF_CACHE_SIZE   = 1000;
 const uint32_t DEF_RECORD_COUNT = 1000;
 
-AbonentStorageConfig::AbonentStorageConfig() {
+
+
+namespace {
+void loadFlushConfig( smsc::logger::Logger* logger,
+                      scag2::util::storage::FlushConfig& fc,
+                      const char* storageType,
+                      smsc::util::config::ConfigView& cfg )
+{
+    try {
+        fc.flushSpeed = cfg.getInt("flushSpeed");
+    } catch (...) {
+        // fc.flushSpeed = 1000;
+        smsc_log_warn(logger,"Parameter <PVSS.%s.flushSpeed> is missed. Default value is %u",
+                      storageType, fc.flushSpeed );
+    }
+    try {
+        fc.flushCount = cfg.getInt("flushCount");
+    } catch (...) {
+        // flushCount = 10;
+        smsc_log_warn(logger,"Parameter <PVSS.%s.flushCount> is missed. Default value is %u",
+                      storageType, fc.flushCount );
+    }
+    try {
+        fc.flushLowMark = cfg.getInt("flushLowMark");
+    } catch (...) {
+        // flushLowMark = 20;
+        smsc_log_warn(logger,"Parameter <PVSS.%s.flushLowMark> is missed. Default value is %u",
+                      storageType, fc.flushLowMark );
+    }
+    try {
+        fc.flushHighMark = cfg.getInt("flushHighMark");
+    } catch (...) {
+        // flushHighMark = 200;
+        smsc_log_warn(logger,"Parameter <PVSS.%s.flushHighMark> is missed. Default value is %u",
+                      storageType, fc.flushHighMark );
+    }
+    try {
+        fc.flushInterval = cfg.getInt("flushInterval") * 1000;
+    } catch (...) {
+        // flushInterval = 20;
+        smsc_log_warn(logger,"Parameter <PVSS.%s.flushInterval> is missed. Default value is %u",
+                      storageType, fc.flushInterval/1000 );
+    }
+    fc.postLoadFix();
+}
+
+} // namespace
+
+
+AbonentStorageConfig::AbonentStorageConfig() 
+{
   dbName = DEF_STORAGE_NAME;
   dbPath = DEF_STORAGE_PATH;
   indexGrowth = DEF_INDEX_GROWTH;
@@ -853,8 +903,6 @@ AbonentStorageConfig::AbonentStorageConfig() {
   fileSize = DEF_FILE_SIZE;
   cacheSize = DEF_CACHE_SIZE;
   checkAtStart = false;
-    maxFlushSpeed = 1000;
-    maxFlushQueueSize = 100;
 }
 
 AbonentStorageConfig::AbonentStorageConfig(ConfigView& cfg,
@@ -895,31 +943,18 @@ AbonentStorageConfig::AbonentStorageConfig(ConfigView& cfg,
     smsc_log_warn(logger, "Parameter <PVSS.%s.cacheSize> missed. Defaul value is %d",
                    storageType, DEF_CACHE_SIZE);
   }
-    try {
-        maxFlushSpeed = cfg.getInt("maxFlushSpeed");
-    } catch (...) {
-        maxFlushSpeed = 1000;
-        smsc_log_warn(logger,"Parameter <PVSS.%s.maxFlushSpeed> is missed. Default value is %u",
-                      storageType, maxFlushSpeed );
-    }
-    try {
-        maxFlushQueueSize = cfg.getInt("maxFlushQueueSize");
-    } catch (...) {
-        maxFlushQueueSize = 100;
-        smsc_log_warn(logger,"Parameter <PVSS.%s.maxFlushQueueSize> is missed. Default value is %u",
-                      storageType, maxFlushQueueSize );
-    }
+    loadFlushConfig( logger, flushConfig, storageType, cfg );
 }
 
 InfrastructStorageConfig::InfrastructStorageConfig() {
   dbPath = DEF_STORAGE_PATH;
   cacheSize = DEF_CACHE_SIZE;
   recordCount = DEF_RECORD_COUNT;
-    maxFlushSpeed = 1000;
-    maxFlushQueueSize = 100;
+    pageSize = 1024;
 }
 
-InfrastructStorageConfig::InfrastructStorageConfig(ConfigView& cfg, const char* storageType, Logger* logger) {
+InfrastructStorageConfig::InfrastructStorageConfig(ConfigView& cfg, const char* storageType, Logger* logger) 
+{
   try {
     dbPath = ConfString(cfg.getString("storagePath")).str();
   } catch (...) {
@@ -951,27 +986,11 @@ InfrastructStorageConfig::InfrastructStorageConfig(ConfigView& cfg, const char* 
             pageSize = newval;
         }
     } catch (...) {
-        pageSize = 256;
+        pageSize = 1024;
         smsc_log_warn(logger,"Parameter <Pvss.%s.pageSize> missed. Default value is %u",
                       storageType,pageSize);
     }
-
-    try {
-        maxFlushSpeed = cfg.getInt("maxFlushSpeed");
-    } catch (...) {
-        maxFlushSpeed = 1000;
-        smsc_log_warn(logger,"Parameter <Pvss.%s.maxFlushSpeed> missed. Default value is %u",
-                      storageType,maxFlushSpeed);
-    }
-
-    try {
-        maxFlushQueueSize = cfg.getInt("maxFlushQueueSize");
-    } catch (...) {
-        maxFlushQueueSize = 100;
-        smsc_log_warn(logger,"Parameter <Pvss.%s.maxFlushQueueSize> missed. Default value is %u",
-                      storageType,maxFlushQueueSize);
-    }
-
+    loadFlushConfig( logger, flushConfig, storageType, cfg );
 }
 
 }//pvss

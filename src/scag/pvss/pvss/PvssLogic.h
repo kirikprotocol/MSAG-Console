@@ -377,38 +377,40 @@ private:
 
 struct AbonentStorageConfig {
 
-  AbonentStorageConfig();
-  AbonentStorageConfig(ConfigView& cfg, const char* storageType, Logger* logger);
-
-  string dbName;
-  string dbPath;
-  unsigned indexGrowth;
-  unsigned fileSize;
-  unsigned blockSize;
-  unsigned cacheSize;
-  bool     checkAtStart;
-    unsigned maxFlushSpeed;
-    unsigned maxFlushQueueSize;
   struct Location {
     Location(const string& locpath, unsigned locdisk):path(locpath), disk(locdisk) {};
     string path;
     unsigned disk;
   };
-  vector<Location> locations;
+
+  AbonentStorageConfig();
+  AbonentStorageConfig(ConfigView& cfg, const char* storageType, Logger* logger);
+
+public:
+    string      dbName;
+    string      dbPath;
+    unsigned    indexGrowth;
+    unsigned    fileSize;
+    unsigned    blockSize;
+    unsigned    cacheSize;
+    bool        checkAtStart;
+    FlushConfig flushConfig;
+    vector<Location> locations;
 };
 
 struct InfrastructStorageConfig {
   InfrastructStorageConfig();
   InfrastructStorageConfig(ConfigView& cfg, const char* storageType, Logger* logger);
-  string dbName;
-  string dbPath;
-  string localPath;
-  uint32_t cacheSize;
-  uint32_t recordCount;
-    uint32_t maxFlushSpeed; // 1000
-    unsigned maxFlushQueueSize; // 100
-    uint32_t pageSize;    // 256
-  bool    checkAtStart;
+
+public:
+    string   dbName;
+    string   dbPath;
+    string   localPath;
+    uint32_t cacheSize;
+    uint32_t recordCount;
+    FlushConfig flushConfig;
+    uint32_t pageSize;      // 256
+    bool    checkAtStart;
 };
 
 }//mtpers

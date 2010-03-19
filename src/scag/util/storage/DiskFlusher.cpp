@@ -1,6 +1,8 @@
+#include <algorithm>
 #include "DiskFlusher.h"
 #include "scag/counter/TimeSnapshot.h"
 #include "scag/util/Time.h"
+#include "util/PtrDestroy.h"
 
 namespace scag2 {
 namespace util {
@@ -10,6 +12,14 @@ DiskFlusher::~DiskFlusher()
 {
     stop();
     clear();
+}
+
+void DiskFlusher::clear()
+{
+    MutexGuard mg(mon_);
+    assert(!started_);
+    std::for_each( items_.rbegin(), items_.rend(), smsc::util::PtrDestroy());
+    items_.clear();
 }
 
 
@@ -23,7 +33,7 @@ int DiskFlusher::Execute()
 
     counter::TimeSnapshot speedLimiter("sys.dflush." + name_,5,minSleepTime);
 
-    smsc_log_info(log_,"started, maxSpeed=%ukb/s", maxSpeed_);
+    smsc_log_info(log_,"started, %s", flushConfig_.toString().c_str());
 
     util::msectime_type nextWakeTime = 0;
     while ( true ) {
@@ -58,12 +68,12 @@ int DiskFlusher::Execute()
             }
             written = 0;
 
-            if ( speedKbs > maxSpeed_ ) {
+            if ( speedKbs > flushConfig_.flushSpeed ) {
                 // too fast, sleeping...
                 // How much to sleep?
                 //   vmax = N0 / ( t0 + tsleep )
                 // we want tsleep
-                sleepTime = totalWritten / maxSpeed_ - writeTime + 1;
+                sleepTime = totalWritten / flushConfig_.flushSpeed - writeTime + 1;
             }
 
         } // normal operation
@@ -87,7 +97,7 @@ int DiskFlusher::Execute()
             for ( unsigned i = curItem; ; ) {
 
                 // processing all storages one by one
-                written = items_[i]->flush();
+                written = items_[i]->flush(now);
                 if ( written > 0 ) {
                     // smsc_log_debug(log_,"%u bytes written into %u",written,i);
                     curItem = i + 1;
@@ -95,6 +105,7 @@ int DiskFlusher::Execute()
                 } else if ( !started_ ) {
                     // erase this storage, it is finished
                     if ( curItem > i ) --curItem;
+                    delete items_[i];
                     items_.erase(items_.begin()+i);
                 } else {
                     // smsc_log_debug(log_,"nothing is written into %u",i);

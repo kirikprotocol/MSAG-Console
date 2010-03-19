@@ -41,10 +41,10 @@ logger_(Logger::getInstance("pvss.disp"))
         dataFileManagers_.push_back(new scag::util::storage::DataFileManager(1, addSpeed, abntCfg.fileSize / 2));
         char buf[15];
         sprintf(buf,"%02u",i);
-        diskFlushers_.push_back( new scag::util::storage::DiskFlusher(buf,abntCfg.maxFlushSpeed) );
+        diskFlushers_.push_back( new scag::util::storage::DiskFlusher(buf,abntCfg.flushConfig) );
     }
     if (infCfg) {
-        diskFlushers_.push_back( new scag::util::storage::DiskFlusher("inf",infCfg->maxFlushSpeed) );
+        diskFlushers_.push_back( new scag::util::storage::DiskFlusher("inf",infCfg->flushConfig) );
     }
     smsc_log_info(logger_, "nodeNumber:%d, nodesCount:%d, storagesCount:%d, locationsCount:%d, disksCount:%d",
                   nodeCfg_.nodeNumber, nodeCfg_.nodesCount, nodeCfg_.storagesCount, nodeCfg_.locationsCount, nodeCfg_.disksCount);

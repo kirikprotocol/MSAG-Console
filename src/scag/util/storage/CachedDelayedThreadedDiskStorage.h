@@ -8,6 +8,7 @@
 #include "core/synchronization/EventMonitor.hpp"
 #include "core/synchronization/Mutex.hpp"
 #include "core/buffers/CyclicQueue.hpp"
+#include "FlushConfig.h"
 
 namespace scag2 {
 namespace util {
@@ -29,12 +30,10 @@ public:
 private:
     // dirty things
     struct Dirty {
-        Dirty() {}
-        Dirty(key_type k, const stored_type& s) :
-        key(k), stored(s), changes(0) {}
         key_type            key;
         stored_type         stored;
         unsigned            changes;
+        util::msectime_type addTime;
     };
     typedef std::list< Dirty >  DirtyList;
     typedef smsc::core::buffers::XHash< key_type, typename DirtyList::iterator, hash_function > DirtyHash;
@@ -45,12 +44,11 @@ public:
                                       DiskStorage* ds,
                                       Serializer* srin,
                                       Serializer* srout,
-                                      unsigned maxFlushQueueSize = 100,
+                                      const FlushConfig& fc,
                                       smsc::logger::Logger* thelog = 0 ) :
     cache_(ms), disk_( ds ), serin_(srin), serout_(srout), hitcount_(0),
-    pfget_(0), bget_(0), pfset_(0), bset_(0),
-    maxFlushQueueSize_(maxFlushQueueSize),
-    log_(thelog)
+    pfget_(0), bget_(0), pfset_(0), bset_(0), fc_(fc),
+    log_(thelog), moreToFlush_(0)
     {
         if ( !ms || !srin || !srout || !ds ) {
             delete ms;
@@ -69,7 +67,8 @@ public:
 
     ~CachedDelayedThreadedDiskStorage() {
         // first of all, flush everything not flushed yet
-        while ( flushDirty() ) {}
+        util::msectime_type now = util::currentTimeMillis() + fc_.flushInterval*2;
+        while ( flushDirty(now) ) {}
         // then deallocate elements remained in the clean queue
         Dirty d;
         while ( cleanQueue_.Pop(d) ) {
@@ -104,7 +103,9 @@ public:
 
             typename DirtyList::iterator* di = dirtyHash_.GetPtr(k);
             if (di) {
-                if (log_) smsc_log_error(log_,"strange: profile k=%s in dirtyhash on set -- is get() before set() forgotten?",k.toString().c_str());
+                if (log_) {
+                    smsc_log_error(log_,"strange: profile k=%s in dirtyhash on set -- is get() before set() forgotten?",k.toString().c_str());
+                }
             }
         }
         return cache_->set(k,cache_->val2store(v));
@@ -211,12 +212,13 @@ public:
 
     /// flush dirty item to disk
     /// @return number of bytes written
-    unsigned flushDirty()
+    unsigned flushDirty( util::msectime_type now )
     {
         // fast check w/o locking
         if ( dirtyHash_.Count() == 0 ) return 0;
         typename DirtyList::iterator di;
         unsigned dhc, cqc, oldChanges;
+        const char* reason = "?";
         {
             MutexGuard mg(dirtyMon_);
             dhc = unsigned(dirtyHash_.Count());
@@ -227,6 +229,23 @@ public:
             // accessing dirtyList item via iterator is safe
             di = dirtyList_.begin();
             oldChanges = di->changes;
+
+            // low mark check
+            if (moreToFlush_) {
+                // we have more items to flush
+                reason = (moreToFlush_ == 1) ? "last" : "more";
+            } else if ( dhc > fc_.flushLowMark ) {
+                // we have reached low mark
+                moreToFlush_ = fc_.flushCount;
+                reason = "lowmark";
+            } else if ( now - di->addTime > fc_.flushInterval ) {
+                // too old item
+                reason = "tooold";
+            } else {
+                // nothing to flush
+                return 0;
+            }
+
         }
 
         value_type* dv = cache_->store2val(di->stored);
@@ -240,8 +259,8 @@ public:
         const unsigned written = unsigned(serout_->getOwnedBuffer()->size());
 
         if (log_) {
-            smsc_log_debug(log_,"flushing dirty [dsz=%u,qsz=%u] key=%s ptr=%p bsz=%u",
-                           dhc, cqc, di->key.toString().c_str(), dv, written);
+            smsc_log_debug(log_,"flushing dirty (%s) [dsz=%u,qsz=%u] key=%s ptr=%p bsz=%u",
+                           reason, dhc, cqc, di->key.toString().c_str(), dv, written);
         }
 
         try {
@@ -267,6 +286,7 @@ public:
                     smsc_log_debug(log_,"key=%s is still dirty after flush",
                                    di->key.toString().c_str());
                 }
+                di->addTime = now;
                 *dirtyHash_.GetPtr(di->key) = 
                     dirtyList_.insert(dirtyList_.end(),*di);
             } else {
@@ -278,6 +298,7 @@ public:
                 dirtyHash_.Delete(di->key);
             }
             dirtyList_.erase(di);
+            if (moreToFlush_>0) --moreToFlush_;
         }
         return written;
     }
@@ -391,7 +412,7 @@ private:
     inline bool addDirty( const key_type& k, stored_type sv )
     {
         // util::msectime_type now = util::currentTimeMillis();
-        if ( dirtyHash_.Count() > maxFlushQueueSize_ ) {
+        if ( dirtyHash_.Count() > fc_.flushHighMark ) {
             if (log_) {
                 smsc_log_debug(log_,"dirty queue is filled, sz=%u", unsigned(dirtyHash_.Count()));
             }
@@ -400,7 +421,12 @@ private:
         if (log_) {
             smsc_log_debug(log_,"adding dirty key=%s",k.toString().c_str());
         }
-        dirtyHash_.Insert(k,dirtyList_.insert(dirtyList_.end(), Dirty(k,sv)));
+        typename DirtyList::iterator di = dirtyList_.insert(dirtyList_.end(),Dirty());
+        di->key = k;
+        di->stored = sv;
+        di->changes = 0;
+        di->addTime = util::currentTimeMillis();
+        dirtyHash_.Insert(k,di);
         dirtyMon_.notify();
         return true;
     }
@@ -437,7 +463,9 @@ private:
         Dirty d;
         while ( cleanQueue_.Pop(d) ) {
             if ( d.key == k ) {
-                if (log_) smsc_log_debug(log_,"cleanq pop key=%s val=%p",k.toString().c_str(),cache_->store2val(d.stored));
+                if (log_) {
+                    smsc_log_debug(log_,"cleanq pop key=%s val=%p",k.toString().c_str(),cache_->store2val(d.stored));
+                }
                 return d.stored;
             }
             cache_->set(d.key,d.stored);
@@ -484,14 +512,15 @@ private:
 
     mutable unsigned pfget_;
     mutable unsigned bget_;
-    unsigned pfset_;
-    unsigned bset_;
+    unsigned         pfset_;
+    unsigned         bset_;
 
-    unsigned maxFlushQueueSize_;
+    FlushConfig           fc_;
     smsc::logger::Logger* log_;
 
     DirtyList           dirtyList_;
     DirtyHash           dirtyHash_;
+    unsigned            moreToFlush_;
 };
 
 }

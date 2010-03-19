@@ -7,6 +7,8 @@
 #include "logger/Logger.h"
 #include "core/threads/Thread.hpp"
 #include "core/synchronization/EventMonitor.hpp"
+#include "FlushConfig.h"
+#include "scag/util/Time.h"
 
 namespace scag2 {
 namespace util {
@@ -17,7 +19,7 @@ class DiskFlusher : public smsc::core::threads::Thread
 protected:
     struct DiskFlusherItemBase {
         virtual ~DiskFlusherItemBase() {}
-        virtual unsigned flush() = 0;
+        virtual unsigned flush(util::msectime_type now) = 0;
         virtual void flushIOStatistics( unsigned& pfget,
                                         unsigned& kbget,
                                         unsigned& pfset,
@@ -27,8 +29,8 @@ protected:
     template < class DiskStorage > class DiskFlusherItem : public DiskFlusherItemBase {
     public:
         DiskFlusherItem( DiskStorage* store ) : store_(store) {}
-        virtual unsigned flush() {
-            return store_->flushDirty();
+        virtual unsigned flush( util::msectime_type now ) {
+            return store_->flushDirty(now);
         }
         virtual void flushIOStatistics( unsigned& pfget,
                                         unsigned& kbget,
@@ -43,23 +45,21 @@ protected:
     };
 
 public:
-    DiskFlusher( const std::string& name, unsigned maxSpeed = 1000 ) :
+    DiskFlusher( const std::string& name, const FlushConfig& fc ) :
     name_(name),
     log_(smsc::logger::Logger::getInstance(("dflush." + name).c_str())),
-    maxSpeed_(std::max(maxSpeed,10U)),
+    flushConfig_(fc),
     started_(false) {}
 
     const std::string& getName() const { return name_; }
 
     ~DiskFlusher();
 
-    void start( unsigned maxFlushSpeed = 0 ) {
+    void start() 
+    {
         if (started_) return;
         MutexGuard mg(mon_);
         started_ = true;
-        if ( maxFlushSpeed ) {
-            maxSpeed_ = std::max(maxFlushSpeed,10U);
-        }
         Start();
     }
 
@@ -71,12 +71,6 @@ public:
             mon_.notifyAll();
         }
         WaitFor();
-    }
-
-    void clear() {
-        MutexGuard mg(mon_);
-        assert(!started_);
-        items_.clear();
     }
 
     void wakeup() {
@@ -100,15 +94,17 @@ public:
                             unsigned& kbset );
 
 private:
+    void clear();
+
     DiskFlusher();
 
 private:
     std::string                               name_;
     smsc::logger::Logger*                     log_;
     smsc::core::synchronization::EventMonitor mon_;
-    std::vector< DiskFlusherItemBase* >       items_; // not owned
-    unsigned maxSpeed_;
-    bool     started_;
+    std::vector< DiskFlusherItemBase* >       items_; // owned
+    FlushConfig                               flushConfig_;
+    bool                                      started_;
 };
 
 }
