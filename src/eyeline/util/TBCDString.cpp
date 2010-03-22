@@ -149,7 +149,7 @@ char TBCDString::tbcd2char(unsigned char bcd)
       return 0; \
     /* high semioctet */ \
     unsigned char sym = (bcd_buf[i] >> 4); \
-    str[k] = tbcd2char(bcd_buf[i]); \
+    str[k] = tbcd2char(sym); \
     if (!str[k++]) { \
       /* either filler or illegal char encoding */ \
       return (sym == 0x0F) ? k : 0; \
