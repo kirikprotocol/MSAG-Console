@@ -105,19 +105,19 @@ size_t GlobalTitle::toString(char * use_buf, size_t max_len) const
 
   switch (_hdr.kind) {
   case gtiNoA_only: {
-    n += snprintf(use_buf + rval, max_len - rval, ".%s(%u)",
+    n = snprintf(use_buf + rval, max_len - rval, ".%s(%u)",
                   GlobalTitle::nmNatureOfAddress(_hdr.parm.NoA.getNoA()), _hdr.parm.NoA.val);
     CHECK_RES(n, rval, max_len);
   } break;
 
   case gtiTrT_only: {
-    n += snprintf(use_buf + rval, max_len - rval, ".%s(%u)",
+    n = snprintf(use_buf + rval, max_len - rval, ".%s(%u)",
                   GlobalTitle::nmTranslationType(_hdr.parm.TrT.getTrType()), _hdr.parm.TrT.val);
     CHECK_RES(n, rval, max_len);
   } break;
 
   case gtiTrT_NPi_Sch: {
-    n += snprintf(use_buf + rval, max_len - rval, ".%s(%u).%s(%u).%s(%u)",
+    n = snprintf(use_buf + rval, max_len - rval, ".%s(%u).%s(%u).%s(%u)",
                   GlobalTitle::nmTranslationType(_hdr.parm.TrT.getTrType()), _hdr.parm.TNS.trT,
                   GlobalTitle::nmNumberingPlan(_hdr.parm.TNS.getNPi()), _hdr.parm.TNS.npi,
                   GlobalTitle::nmEncodingScheme(_hdr.parm.TNS.getScheme()), _hdr.parm.TNS.sch);
@@ -125,7 +125,7 @@ size_t GlobalTitle::toString(char * use_buf, size_t max_len) const
   } break; 
 
   case gtiInternational: {
-    n += snprintf(use_buf + rval, max_len - rval, ".%s(%u).%s(%u).%s(%u).%s(%u)",
+    n = snprintf(use_buf + rval, max_len - rval, ".%s(%u).%s(%u).%s(%u).%s(%u)",
                   GlobalTitle::nmTranslationType(_hdr.parm.All.getTrType()), _hdr.parm.All.trT,
                   GlobalTitle::nmNumberingPlan(_hdr.parm.All.getNPi()), _hdr.parm.All.npi,
                   GlobalTitle::nmEncodingScheme(_hdr.parm.All.getScheme()), _hdr.parm.All.sch,
@@ -136,7 +136,7 @@ size_t GlobalTitle::toString(char * use_buf, size_t max_len) const
   } //eosw
 
   if (_signals.length()) {
-    n += snprintf(use_buf + rval, max_len - rval, ".%s", _signals.c_str());
+    n = snprintf(use_buf + rval, max_len - rval, ".%s", _signals.c_str());
     CHECK_RES(n, rval, max_len);
   }
 
