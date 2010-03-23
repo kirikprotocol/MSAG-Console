@@ -5,12 +5,14 @@
 #ident "@(#)$Id$"
 #define __CPP_MAXSIZEOF_DEFS__
 
+#include <sys/types.h>
+
 namespace eyeline {
 namespace util {
 
 template <int a, int b>
 struct MaxInt_T {
-  enum {VALUE = a > b ? a : b};
+  enum { VALUE = a > b ? a : b};
 }; 
 template <int a, int b, int c>
 struct MaxIntOf3_T {
@@ -51,6 +53,11 @@ struct MaxSizeOf6_T {
   enum { MAX34 = MaxInt_T<sizeof(T3), sizeof(T4)>::VALUE };
   enum { MAX56 = MaxInt_T<sizeof(T5), sizeof(T6)>::VALUE };
   enum { VALUE = MaxIntOf3_T<MAX12, MAX34, MAX56>::VALUE };
+};
+
+template <size_t _SZOArg, class _TArg>
+struct MultiplierOfSize_T {
+  enum { VALUE = (_SZOArg + sizeof(_TArg) -1)/sizeof(_TArg) };
 };
 
 } //util
