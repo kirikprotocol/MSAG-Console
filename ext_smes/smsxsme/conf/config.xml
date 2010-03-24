@@ -35,6 +35,7 @@
     <param name="source.address">147</param>
     <param name="reply.invitation">Группа:{size} номеров.</param>
 
+    <param name="store.type">db</param>  <!-- 'db' or 'file'-->
     <param name="store.dir">webapps/smsx/WEB-INF/store</param>
     <param name="replies.cache.size">1000</param>
     <param name="statuses.cache.size">1000</param>
