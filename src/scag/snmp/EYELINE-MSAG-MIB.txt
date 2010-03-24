@@ -3,18 +3,84 @@
 -- 2008-12-09  Dmitry Bukin     created
 -- 2010-01-26  Dmitry Bukin     renamed to EYELINE prefix, more traps added
 
-    SIBINCO-MSAG-MIB DEFINITIONS ::= BEGIN
+    EYELINE-MSAG-MIB DEFINITIONS ::= BEGIN
     IMPORTS
         sibinco 
-    FROM SIBINCO-SMSC-MIB;
+    FROM SIBINCO-SMSC-MIB
+        DisplayString
+    FROM SNMPv2-TC;
 
     -- sibinco is 1.3.6.1.4.1.26757
+    -- sibinco is iso.org.dod.internet.private.enterprises.sibinco
 
     -- 1.3.6.1.4.1.26757.2
     msag OBJECT IDENTIFIER ::= { sibinco 2 }
 
     -- 1.3.6.1.4.1.26757.2.0
     msagnotifications OBJECT IDENTIFIER ::= { msag 0 }
+
+    -- 1.3.6.1.4.1.26757.2.1
+    msagDescr OBJECT-TYPE
+    SYNTAX  DisplayString
+    MAX-ACCESS  read-only
+    STATUS  current
+    DESCRIPTION
+    "Version string"
+    ::= { msag 1 }
+
+    -- 1.3.6.1.4.1.26757.2.4
+    msagCounterTable OBJECT-TYPE
+    SYNTAX  SEQUENCE OF MsagCounterEntry
+    MAX-ACCESS  not-accessible
+    STATUS  current
+    DESCRIPTION
+    "MSAG Counter table."
+    ::= { msag 4 }
+
+    -- 1.3.6.1.4.1.26757.2.4.1
+    msagCounterEntry OBJECT-TYPE
+    SYNTAX  MsagCounterEntry
+    MAX-ACCESS  not-accessible
+    STATUS  current
+    DESCRIPTION
+    "MSAG Counter entry."
+    INDEX { msagCounterIndex }
+    ::= { msagCounterTable 1 }
+
+    MsagCounterEntry ::=
+    SEQUENCE {
+    msagCounterIndex INTEGER,
+    msagCounterName  DisplayString,
+    msagCounterValue Counter64
+    }
+
+    -- 1.3.6.1.4.1.26757.2.4.1.1
+    msagCounterIndex OBJECT-TYPE
+    SYNTAX INTEGER(0..32768)
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+    "MSAG Counter Index"
+    ::= { msagCounterEntry 1 }
+
+    -- 1.3.6.1.4.1.26757.2.4.1.2
+    msagCounterName OBJECT-TYPE
+    SYNTAX DisplayString (SIZE (0..48))
+    MAX-ACCESS  read-only
+    STATUS  current
+    DESCRIPTION
+    "MSAG Counter Name."
+    ::= { msagCounterEntry 2 }
+
+    -- 1.3.6.1.4.1.26757.2.4.1.3
+    msagCounterValue OBJECT-TYPE
+    SYNTAX Counter64
+    MAX-ACCESS read-only
+    STATUS  current
+    DESCRIPTION
+    "MSAG Counter Value."
+    ::= { msagCounterEntry 3 }
+
 
 -- trap section
 
@@ -36,7 +102,8 @@
     major(4),
     critical(5)
     }
-    MAX-ACCESS  read-write
+    -- MAX-ACCESS  read-write
+    MAX-ACCESS not-accessible
     STATUS      current
     DESCRIPTION "Severity of alert"
     ::= { msag 7 }
@@ -44,7 +111,8 @@
     -- 1.3.6.1.4.1.26757.2.8
     alertId OBJECT-TYPE
     SYNTAX  DisplayString
-    MAX-ACCESS  read-write
+    -- MAX-ACCESS  read-write
+    MAX-ACCESS  not-accessible
     STATUS      current
     DESCRIPTION "Identifier of alert (e.g. object id)"
     ::= { msag 8 }
@@ -52,7 +120,8 @@
     -- 1.3.6.1.4.1.26757.2.9
     alertObjCategory OBJECT-TYPE
     SYNTAX  DisplayString
-    MAX-ACCESS  read-write
+    -- MAX-ACCESS  read-write
+    MAX-ACCESS  not-accessible
     STATUS      current
     DESCRIPTION "Object category."
     ::= { msag 9 }
@@ -79,7 +148,7 @@
 
     -- 1.3.6.1.4.1.26757.2.0.6
     -- trap is sent to report about config loading
-    msagLoadConfig NOTIFICATION_TYPE
+    msagLoadConfig NOTIFICATION-TYPE
     OBJECTS { alertMessage, alertSeverity, alertObjCategory, alertId }
     STATUS current
     DESCRIPTION
@@ -88,7 +157,7 @@
     
     -- 1.3.6.1.4.1.26757.2.0.7
     -- trap is sent to report the total msag traffic events
-    msagTraffic NOTIFICATION_TYPE
+    msagTraffic NOTIFICATION-TYPE
     OBJECTS { alertMessage, alertSeverity, alertObjCategory, alertId }
     STATUS current
     DESCRIPTION
@@ -97,7 +166,7 @@
     
     -- 1.3.6.1.4.1.26757.2.0.8
     -- trap is sent to report the total msag traffic events
-    msagSMPPEndPointTraffic NOTIFICATION_TYPE
+    msagSMPPEndPointTraffic NOTIFICATION-TYPE
     OBJECTS { alertMessage, alertSeverity, alertObjCategory, alertId }
     STATUS current
     DESCRIPTION
@@ -105,7 +174,7 @@
     ::= { msagnotifications 8 }
     
     -- 1.3.6.1.4.1.26757.2.0.9
-    msagSMPPQueueLimit NOTIFICATION_TYPE
+    msagSMPPQueueLimit NOTIFICATION-TYPE
     OBJECTS { alertMessage, alertSeverity, alertObjCategory, alertId }
     STATUS current
     DESCRIPTION
@@ -113,7 +182,7 @@
     ::= { msagnotifications 9 }
 
     -- 1.3.6.1.4.1.26757.2.0.10
-    msagSessionLimit NOTIFICATION_TYPE
+    msagSessionLimit NOTIFICATION-TYPE
     OBJECTS { alertMessage, alertSeverity, alertObjCategory, alertId }
     STATUS current
     DESCRIPTION
@@ -121,7 +190,7 @@
     ::= { msagnotifications 10 }
 
     -- 1.3.6.1.4.1.26757.2.0.11
-    msagSMPPConnect NOTIFICATION_TYPE
+    msagSMPPConnect NOTIFICATION-TYPE
     OBJECTS { alertMessage, alertSeverity, alertObjCategory, alertId }
     STATUS current
     DESCRIPTION
