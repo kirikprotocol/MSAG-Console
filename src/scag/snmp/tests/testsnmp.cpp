@@ -16,7 +16,7 @@ int main( int argc, char** argv )
     smsc::logger::Logger::Init();
 
 #ifdef SNMP
-    std::string socket = "udp:217.73.202.90:162";
+    std::string socket;
     if ( argc > 1 ) {
         socket = argv[1];
     }
