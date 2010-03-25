@@ -169,9 +169,8 @@ typedef struct msagCounterTable_ref_rowreq_ctx_s {
     msagCounterTable_rowreq_ctx *
                   msagCounterTable_row_find_by_mib_index(msagCounterTable_mib_index *mib_idx);
 
-extern oid msagCounterTable_oid[];
+extern oid* msagCounterTable_oid;
 extern int msagCounterTable_oid_size;
-
 
 #include "msagCounterTable_interface.h"
 #include "msagCounterTable_data_access.h"

@@ -22,10 +22,10 @@
 
 #include "msagCounterTable_interface.h"
 
-oid msagCounterTable_oid[] = { MSAGCOUNTERTABLE_OID };
-int msagCounterTable_oid_size = OID_LENGTH(msagCounterTable_oid);
+int msagCounterTable_oid_size = 0; /* OID_LENGTH(msagCounterTable_oid); */
+oid* msagCounterTable_oid = 0;/* { MSAGCOUNTERTABLE_OID }; */
 
-    msagCounterTable_registration  msagCounterTable_user_context;
+msagCounterTable_registration  msagCounterTable_user_context;
 
 void initialize_table_msagCounterTable(void);
 void shutdown_table_msagCounterTable(void);
@@ -34,8 +34,7 @@ void shutdown_table_msagCounterTable(void);
 /**
  * Initializes the msagCounterTable module
  */
-void
-init_msagCounterTable(void)
+void init_msagCounterTable(void)
 {
     DEBUGMSGTL(("verbose:msagCounterTable:init_msagCounterTable","called\n"));
 
@@ -54,8 +53,7 @@ init_msagCounterTable(void)
 /**
  * Shut-down the msagCounterTable module (agent is exiting)
  */
-void
-shutdown_msagCounterTable(void)
+void shutdown_msagCounterTable(void)
 {
     if (should_init("msagCounterTable"))
         shutdown_table_msagCounterTable();
@@ -66,8 +64,7 @@ shutdown_msagCounterTable(void)
  * Initialize the table msagCounterTable 
  *    (Define its contents and how it's structured)
  */
-void
-initialize_table_msagCounterTable(void)
+void initialize_table_msagCounterTable(void)
 {
     msagCounterTable_registration * user_context;
     u_long flags;
@@ -98,6 +95,12 @@ initialize_table_msagCounterTable(void)
     /*
      * call interface initialization code
      */
+
+    /*
+     * Obtain msag oid and its length.
+     */
+    msagCounterTable_oid = (oid*) msagCounterTable_get_table_oid( &msagCounterTable_oid_size );
+
     _msagCounterTable_initialize_interface(user_context, flags);
 } /* initialize_table_msagCounterTable */
 

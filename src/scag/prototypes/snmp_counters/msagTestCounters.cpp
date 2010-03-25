@@ -104,10 +104,6 @@ int main( int argc, char** argv )
     
     snmp_enable_stderrlog();
 
-    smsc_log_debug(mainlog,"snmp port specs: %s\n",
-                   netsnmp_ds_get_string(NETSNMP_DS_APPLICATION_ID, 
-                                         NETSNMP_DS_AGENT_PORTS));
-
     netsnmp_ds_set_boolean( NETSNMP_DS_APPLICATION_ID,
                             NETSNMP_DS_AGENT_ROLE, 1 ); // we are a subagent
 
@@ -120,6 +116,10 @@ int main( int argc, char** argv )
         netsnmp_ds_set_string(NETSNMP_DS_APPLICATION_ID,
                               NETSNMP_DS_AGENT_X_SOCKET, agentx_socket);
     }
+
+    smsc_log_debug(mainlog,"================\n\n\n  Starting net-snmp counter table specific init\n\n\n");
+    const uint32_t tableoid[] = { 1,3,6,1,4,1,26757,2,4 };
+    msagCounterTable_set_table_oid( tableoid, sizeof(tableoid)/sizeof(tableoid[0]) );
 
     smsc_log_debug(mainlog,"registering a counter table creator");
     msagCounterTable_register_list_creator( list_creator );

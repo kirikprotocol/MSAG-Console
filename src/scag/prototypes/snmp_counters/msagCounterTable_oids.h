@@ -13,7 +13,9 @@ extern "C" {
 
 
 /* column number definitions for table msagCounterTable */
-#define MSAGCOUNTERTABLE_OID              1,3,6,1,4,1,26757,2,4
+/* NOTE: oid is externally configured */
+/* #define MSAGCOUNTERTABLE_OID              1,3,6,1,4,1,26757,2,4 */
+/* #define PVSSCOUNTERTABLE_OID              1,3,6,1,4,1,26757,3,4 */
 
 #define COLUMN_MSAGCOUNTERINDEX         1
     

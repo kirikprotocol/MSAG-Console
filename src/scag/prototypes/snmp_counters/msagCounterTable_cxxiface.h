@@ -29,9 +29,16 @@ void msagCounterTable_release_counter_list( msagCounterTable_list_element* list 
 /// obtain the current value of cache timeout (seconds)
 int msagCounterTable_get_cache_timeout( void );
 
-/// it is invoked from C++
+/// actual type of return value depends on netsnmp-config
+void* msagCounterTable_get_table_oid( int* oidlen );
+
+/// functions which are invoked from C++
+void msagCounterTable_set_cache_timeout( int seconds );
+
 typedef msagCounterTable_list_element* (msagCounterTable_list_creator)( msagCounterTable_list_element* );
 void msagCounterTable_register_list_creator( msagCounterTable_list_creator* fun );
+
+void msagCounterTable_set_table_oid( const uint32_t* theoid, int oidlen );
 
 #ifdef __cplusplus
 } // extern "C" {
