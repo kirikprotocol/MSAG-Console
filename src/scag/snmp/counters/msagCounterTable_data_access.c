@@ -50,7 +50,7 @@ static MsagCounterTableElement* head = NULL;
  * @retval MFD_ERROR   : unrecoverable error.
  */
 int
-msagCounterTable_init_data(msagCounterTable_registration * msagCounterTable_reg)
+msagCounterTable_init_data(msagCounterTable_registration_ptr msagCounterTable_reg)
 {
     DEBUGMSGTL(("verbose:msagCounterTable:msagCounterTable_init_data","called\n"));
 
@@ -140,34 +140,6 @@ msagCounterTable_container_init(netsnmp_container **container_ptr_ptr,
     cache->timeout = msagCounterTable_cacheTimeout; /* seconds */
 } /* msagCounterTable_container_init */
 
-/**
- * container shutdown
- *
- * @param container_ptr A pointer to the container.
- *
- *  This function is called at shutdown to allow you to customize certain
- *  aspects of the access method. For the most part, it is for advanced
- *  users. The default code should suffice for most cases.
- *
- *  This function is called before msagCounterTable_container_free().
- *
- * @remark
- *  This would also be a good place to do any cleanup needed
- *  for you data source. For example, closing a connection to another
- *  process that supplied the data, closing a database, etc.
- */
-void
-msagCounterTable_container_shutdown(netsnmp_container *container_ptr)
-{
-    DEBUGMSGTL(("verbose:msagCounterTable:msagCounterTable_container_shutdown","called\n"));
-    
-    if (NULL == container_ptr) {
-        snmp_log(LOG_ERR,"bad params to msagCounterTable_container_shutdown\n");
-        return;
-    }
-
-} /* msagCounterTable_container_shutdown */
-
 
 static void uint64_to_U64(uint64_t val1, U64* val2)
 {
@@ -209,7 +181,8 @@ static void uint64_to_U64(uint64_t val1, U64* val2)
  *  data here.
  *
  */
-int msagCounterTable_container_load(netsnmp_container *container)
+int
+msagCounterTable_cache_load(netsnmp_container *container)
 {
     msagCounterTable_rowreq_ctx *rowreq_ctx = NULL;
 
@@ -224,7 +197,7 @@ int msagCounterTable_container_load(netsnmp_container *container)
     int retval = MFD_SUCCESS;
     MsagCounterTableElement *list;
 
-    DEBUGMSGTL(("verbose:msagCounterTable:msagCounterTable_container_load","called\n"));
+    DEBUGMSGTL(("verbose:msagCounterTable:msagCounterTable_cache_load","called\n"));
     
     if (msagCounterTable_creator) head = (*msagCounterTable_creator)( head );
 
@@ -237,7 +210,7 @@ int msagCounterTable_container_load(netsnmp_container *container)
             continue;
         }
 
-        rowreq_ctx = msagCounterTable_allocate_rowreq_ctx(NULL);
+        rowreq_ctx = msagCounterTable_allocate_rowreq_ctx();
         if ( NULL == rowreq_ctx ) {
             snmp_log(LOG_ERR,"memory allocation failed\n");
             retval = MFD_RESOURCE_UNAVAILABLE;
@@ -266,7 +239,7 @@ int msagCounterTable_container_load(netsnmp_container *container)
         ++msagCounterIndex;
     }
 
-    DEBUGMSGT(("verbose:msagCounterTable:msagCounterTable_container_load",
+    DEBUGMSGT(("verbose:msagCounterTable:msagCounterTable_cache_load",
                "inserted %d records, %s\n", count,
                (retval == MFD_SUCCESS ? "ok" : "fail") ));
 
@@ -287,7 +260,7 @@ int msagCounterTable_container_load(netsnmp_container *container)
  *
  */
 void
-msagCounterTable_container_free(netsnmp_container *container)
+msagCounterTable_cache_free(netsnmp_container *container)
 {
     DEBUGMSGTL(("verbose:msagCounterTable:msagCounterTable_container_free","called\n"));
 

@@ -8,7 +8,7 @@
 
 // The purpose of the header is to decouple the feeder from net-snmp completely!
 
-#include "stdint.h"
+#include "util/int.h"
 
 #ifdef __cplusplus
 extern "C" {

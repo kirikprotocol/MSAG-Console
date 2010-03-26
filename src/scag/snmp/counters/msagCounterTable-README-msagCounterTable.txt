@@ -16,7 +16,7 @@ msagCounterTable README
   ------------------------------------------------------------
   Some variables used for code generation may be set to affect the code
   generation. You may override these variables by setting them in the
-  file defaults/table-msagCounterTable.m2d, and then re-running mib2c.
+  file default-table-msagCounterTable.m2d, and then re-running mib2c.
 
     m2c_table_settable (currently '0')
     --------------------------------------------------------
@@ -48,16 +48,16 @@ msagCounterTable README
     Syntax: @eval $m2c_table_row_creation = 0@
 
 
-    m2c_context_reg (currently 'netsnmp_data_list')
+    m2c_context_reg (currently 'netsnmp_data_list *')
     --------------------------------------------------------
     This variable contains the structure name to typedef for the
-    msagCounterTable_registration.
+    msagCounterTable_registration_ptr.
 
     During initilization, you will provide a pointer to a structure of
     this type. This pointer is used as a parameter to many functions so
     that you have access to your registration data. The default is a
     netsnmp_data_list pointer, which will allow you to keep multiple
-    pointers tagged by a text name. If you have a new or existing structure
+    pointers tagges by a text name. If you have a new or existing structure
     you would rather use, you can redefine this variable.
     
 
@@ -101,7 +101,7 @@ msagCounterTable README
     Syntax: @eval $m2c_data_allocate = 1@
 
 
-    m2c_data_init (currently '1')
+    m2c_data_init (currently '0')
     --------------------------------------------------------
     This variable determines whether or not the data context (see above)
     or any other items you have added to the table context requires
@@ -113,7 +113,7 @@ msagCounterTable README
       msagCounterTable_rowreq_ctx_init
       msagCounterTable_rowreq_ctx_cleanup
 
-    Syntax: @eval 1 = 1@
+    Syntax: @eval 0 = 1@
 
 
     m2c_table_access (currently 'container-cached')
@@ -180,29 +180,27 @@ File: msagCounterTable_data_access.[c|h]
   -----------------
   TODO : Set MIB index values
   FUNC : msagCounterTable_indexes_set
-  WHERE: msagCounterTable_data_access.c
-
-  This is a convenience function for setting the index context from
-  the native C data. Where necessary, value mapping should be done.
-
-  This function should update the table index values (found in
-  tbl_idx) for the given raw data.
 
   
-  container summary
-  ------------------------
-    The container data access code is for cases when you want to
-    store your data in the agent/sub-agent.
-
-    ... to be continued...
-
-
-  cache summary
+  container-cached summary
   ------------------------
     The container-cached data access code is for cases when you want to
     cache your data in the agent/sub-agent.
 
     ... to be continued...
+
+
+  Updating the Index
+  ------------------
+    TODO : update index for the raw data
+    FUNC : msagCounterTable_indexes_set
+    WHERE: msagCounterTable_data_access.c
+
+    This is a convenience function for setting the index context from
+    the native C data. Where necessary, value mapping should be done.
+
+    This function should update the table index values (found in
+    tbl_idx) for the given raw data.
 
 
 
@@ -423,7 +421,7 @@ Table / column details
  **********************************************************************
  **********************************************************************/
 /*
- * EYELINE-MSAG-MIB::msagCounterTable is subid 4 of msag.
+ * msagCounterTable is subid 4 of msag.
  * Its status is Current.
  * OID: .1.3.6.1.4.1.26757.2.4, length: 9
 */

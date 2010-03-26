@@ -28,10 +28,8 @@ int msagCounterTable_cacheTimeout = 10;
 msagCounterTable_creator_t *msagCounterTable_creator = NULL;
 msagCounterTable_destructor_t *msagCounterTable_destructor = NULL;
 
-msagCounterTable_registration  msagCounterTable_user_context;
-
 void initialize_table_msagCounterTable(void);
-void shutdown_table_msagCounterTable(void);
+/* void shutdown_table_msagCounterTable(void); */
 
 
 /**
@@ -56,12 +54,14 @@ void init_msagCounterTable(void)
 /**
  * Shut-down the msagCounterTable module (agent is exiting)
  */
+/*
 void shutdown_msagCounterTable(void)
 {
     if (should_init("msagCounterTable"))
         shutdown_table_msagCounterTable();
 
 }
+ */
 
 /**
  * Initialize the table msagCounterTable 
@@ -69,7 +69,7 @@ void shutdown_msagCounterTable(void)
  */
 void initialize_table_msagCounterTable(void)
 {
-    msagCounterTable_registration * user_context;
+    msagCounterTable_registration_ptr user_context;
     u_long flags;
 
     DEBUGMSGTL(("verbose:msagCounterTable:initialize_table_msagCounterTable","called\n"));
@@ -104,14 +104,13 @@ void initialize_table_msagCounterTable(void)
 /**
  * Shutdown the table msagCounterTable 
  */
+/*
 void
 shutdown_table_msagCounterTable(void)
 {
-    /*
-     * call interface shutdown code
-     */
     _msagCounterTable_shutdown_interface(&msagCounterTable_user_context);
 }
+ */
 
 /**
  * extra context initialization (eg default values)
@@ -160,7 +159,7 @@ void msagCounterTable_rowreq_ctx_cleanup(msagCounterTable_rowreq_ctx *rowreq_ctx
  * @retval MFD_ERROR                : other error
  */
 int
-msagCounterTable_pre_request(msagCounterTable_registration * user_context)
+msagCounterTable_pre_request(msagCounterTable_registration_ptr user_context)
 {
     DEBUGMSGTL(("verbose:msagCounterTable:msagCounterTable_pre_request","called\n"));
 
@@ -186,7 +185,7 @@ msagCounterTable_pre_request(msagCounterTable_registration * user_context)
  * @retval MFD_ERROR   : other error (ignored)
  */
 int
-msagCounterTable_post_request(msagCounterTable_registration * user_context, int rc)
+msagCounterTable_post_request(msagCounterTable_registration_ptr user_context)
 {
     DEBUGMSGTL(("verbose:msagCounterTable:msagCounterTable_post_request","called\n"));
 

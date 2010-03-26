@@ -33,7 +33,7 @@ extern "C" {
 */
 
 
-int msagCounterTable_init_data(msagCounterTable_registration * msagCounterTable_reg);
+int msagCounterTable_init_data(msagCounterTable_registration_ptr msagCounterTable_reg);
 
 
     /*
@@ -44,11 +44,6 @@ int msagCounterTable_init_data(msagCounterTable_registration * msagCounterTable_
 
 void msagCounterTable_container_init(netsnmp_container **container_ptr_ptr,
                              netsnmp_cache *cache);
-void msagCounterTable_container_shutdown(netsnmp_container *container_ptr);
-
-int msagCounterTable_container_load(netsnmp_container *container);
-void msagCounterTable_container_free(netsnmp_container *container);
-
 int msagCounterTable_cache_load(netsnmp_container *container);
 void msagCounterTable_cache_free(netsnmp_container *container);
 

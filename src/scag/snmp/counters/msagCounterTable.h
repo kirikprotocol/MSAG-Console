@@ -19,18 +19,17 @@ extern "C" {
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
 #include <net-snmp/agent/net-snmp-agent-includes.h>
-// #include <net-snmp/agent/table.h>
-// #include <net-snmp/library/asn1.h>
-// #include <net-snmp/utilities.h>
 
 /* other required module components */
     /* *INDENT-OFF*  */
-config_add_mib(EYELINE-MSAG-MIB)
-config_require(EYELINE-MSAG-MIB/msagCounterTable/msagCounterTable_interface)
-config_require(EYELINE-MSAG-MIB/msagCounterTable/msagCounterTable_data_access)
-config_require(EYELINE-MSAG-MIB/msagCounterTable/msagCounterTable_data_get)
-config_require(EYELINE-MSAG-MIB/msagCounterTable/msagCounterTable_data_set)
-    /* *INDENT-ON*  */
+/*
+config_add_mib(EYELINE-MSAG-MIB);
+config_require(EYELINE-MSAG-MIB/msagCounterTable/msagCounterTable_interface);
+config_require(EYELINE-MSAG-MIB/msagCounterTable/msagCounterTable_data_access);
+config_require(EYELINE-MSAG-MIB/msagCounterTable/msagCounterTable_data_get);
+config_require(EYELINE-MSAG-MIB/msagCounterTable/msagCounterTable_data_set);
+*/
+ /* *INDENT-ON*  */
 
 /* OID and column number definitions for msagCounterTable */
 #include "msagCounterTable_oids.h"
@@ -45,7 +44,7 @@ config_require(EYELINE-MSAG-MIB/msagCounterTable/msagCounterTable_data_set)
  * function declarations
  */
 void init_msagCounterTable(void);
-void shutdown_msagCounterTable(void);
+/* void shutdown_msagCounterTable(void); */
 
 /* *********************************************************************
  * Table declarations
@@ -72,7 +71,7 @@ void shutdown_msagCounterTable(void);
     /*
      * TODO:101:o: |-> Review msagCounterTable registration context.
      */
-typedef netsnmp_data_list msagCounterTable_registration;
+typedef netsnmp_data_list* msagCounterTable_registration_ptr;
 
 /**********************************************************************/
 /*
@@ -147,6 +146,11 @@ typedef struct msagCounterTable_rowreq_ctx_s {
      */
     
     /*
+     * implementor's context pointer (provided during registration)
+     */
+    msagCounterTable_registration_ptr msagCounterTable_reg;
+
+    /*
      * storage for future expansion
      */
     netsnmp_data_list             *msagCounterTable_data_list;
@@ -160,17 +164,9 @@ typedef struct msagCounterTable_ref_rowreq_ctx_s {
 /* *********************************************************************
  * function prototypes
  */
-    int msagCounterTable_pre_request(msagCounterTable_registration * user_context);
-    int msagCounterTable_post_request(msagCounterTable_registration * user_context,
-        int rc);
+    int msagCounterTable_pre_request(msagCounterTable_registration_ptr user_context);
+    int msagCounterTable_post_request(msagCounterTable_registration_ptr user_context);
 
-    int msagCounterTable_rowreq_ctx_init(msagCounterTable_rowreq_ctx *rowreq_ctx,
-                                   void *user_init_ctx);
-    void msagCounterTable_rowreq_ctx_cleanup(msagCounterTable_rowreq_ctx *rowreq_ctx);
-
-
-    msagCounterTable_rowreq_ctx *
-                  msagCounterTable_row_find_by_mib_index(msagCounterTable_mib_index *mib_idx);
 
 extern oid* msagCounterTable_oid;
 extern int msagCounterTable_oid_size;
