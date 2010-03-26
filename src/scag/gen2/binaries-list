@@ -45,7 +45,9 @@ scag/msag           gwmain2        \
   -lscag-config-pers -lscag-config-lcm \
   -lscag-config-base \
   \
-  $(if $(filter YES,$(SNMP)),-lscag-snmp) \
+switch SNMP
+YES: -lscag-snmp -lscag-snmp-counters \
+endswitch
   \
   -lscag-util-properties \
   -lscag-util-storage \
@@ -75,7 +77,9 @@ scag/msag           gwmain2        \
   @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
   -lutil-URCdb -lutil \
   $(__LIBRARIES) \
-  $(SNMP_LIBS_CORE) \
+switch SNMP
+YES: $(SNMP_LIBS_CORE) \
+endswitch
   $(SSL_LIB) \
   -lpthread -lrt -ldl \
   $(LIBMALLOC)  

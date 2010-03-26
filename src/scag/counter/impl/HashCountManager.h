@@ -36,7 +36,7 @@ public:
     virtual void notify( const char* cname, CntSeverity& sev,
                          int64_t value, const ActionLimit& params )
     {
-        notificationManager_->notify(cname,sev,value,params);
+        notificationManager_->notifyOnLimit(cname,sev,value,params);
     }
 
     virtual void reloadObserver( const char* id ); // throw
@@ -45,6 +45,9 @@ public:
     /// loading counters config file. This method is not seen in base class.
     /// so it may be invoked only once, just after creation of HashCountManager.
     void loadConfigFile();
+
+    /// this method is used for counter reporting via snmp
+    virtual MsagCounterTableElement* updateSnmpCounterList( MsagCounterTableElement* list );
 
 protected:
     /// retrieve the counter of type T with name 'name'
@@ -69,6 +72,7 @@ private:
 
     smsc::core::synchronization::Mutex         hashMutex_;
     smsc::core::buffers::Hash< Counter* >      hash_;
+    std::vector< Counter* >                    snmpCounterList_;
 
     smsc::core::synchronization::EventMonitor  disposeMon_; // we are waiting on it
 

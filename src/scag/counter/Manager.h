@@ -3,6 +3,7 @@
 
 #include "Counter.h"
 #include "util/Exception.hpp"
+#include "scag/snmp/MsagCounterTableElement.h"
 
 namespace scag2 {
 namespace counter {
@@ -22,25 +23,7 @@ protected:
 public:
     virtual ~Manager();
 
-    /*
-    template < class T > CounterPtr< T > getCounter( const char* name ) {
-        CounterPtrAny ptr = getAnyCounter(name);
-        CounterPtr< T > res;
-        if (ptr.get() && ptr->getType() == T::getStaticType() ) {
-            res.reset( static_cast<T*>(ptr.get()) );
-        }
-        return res;
-    }
-     */
-
-    // the same notes as for registerAnyCounter
-    /*
-    template <class T> CounterPtr< T > registerCounter( T* c )
-    {
-        CounterPtr< T > res( static_cast< T* >(registerAnyCounter(c).get()) );
-        return res;
-    }
-     */
+    virtual MsagCounterTableElement* updateSnmpCounterList( MsagCounterTableElement* list ) = 0;
 
     inline CounterPtrAny registerAnyCounter( Counter* c )
     {

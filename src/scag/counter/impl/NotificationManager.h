@@ -19,8 +19,8 @@ public:
     virtual ~NotificationManager();
 
     virtual void advanceTime( usec_type curTime );
-    void notify( const char* cname, CntSeverity& sev,
-                 int64_t value, const ActionLimit& limit );
+    void notifyOnLimit( const char* cname, CntSeverity& sev,
+                        int64_t value, const ActionLimit& limit );
 
 protected:
     virtual TimeSliceGroup* getTimeSliceGroup() const { return 0; }

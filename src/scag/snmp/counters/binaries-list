@@ -1,0 +1,11 @@
+-skip     msagCounterTable_subagent
+
+scag/tests/msagTestCounters   msagTestCounters \
+  -lscag-snmp-counters \
+  -lcore-buffers \
+  @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
+  -lutil \
+  $(SNMP_LIBS_CORE) \
+  $(SSL_LIB) \
+  -lpthread -lrt -ldl \
+  $(LIBMALLOC)  

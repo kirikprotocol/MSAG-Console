@@ -35,7 +35,9 @@ int SnmpTrapThread::Execute()
             snmp_->sendTrap(*tr);
         }
         if ( stopping_ ) break;
-        queue_.Wait();
+        // now, when we are processing snmp requests
+        // we should not wait on the queue
+        // queue_.Wait();
     }
     // snmp should be still valid here
     while ( queue_.Pop(tr) ) {

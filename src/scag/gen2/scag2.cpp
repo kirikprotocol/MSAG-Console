@@ -83,6 +83,21 @@ FromSessionQueue fsq;
 
 smsc::logger::Logger* log;
 
+/// adapter methods between counters and snmp
+MsagCounterTableElement* counterListCtor( MsagCounterTableElement* list )
+{
+    return scag2::counter::Manager::getInstance().updateSnmpCounterList(list);
+}
+
+void counterListDtor( MsagCounterTableElement* list )
+{
+    while (list) {
+        MsagCounterTableElement* next = list->next;
+        delete list;
+        list = next;
+    }
+}
+
 } // namespace
 
 
@@ -387,12 +402,13 @@ void Scag::init( unsigned mynode )
         const bool enabled = cfg.getConfig()->getBool("snmp.enabled");
         if ( enabled ) {
             const std::string socket = cfg.getConfig()->getString("snmp.socket");
-            // if ( ! socket.empty() ) {
-                smsc_log_info(log,"creating snmpwrapper @ '%s'", socket.c_str());
-                snmp_.reset(new snmp::SnmpWrapper(socket));
-                snmpthread_.reset(new snmp::SnmpTrapThread(snmp_.get()));
-                snmpthread_->Start();
-            // }
+            smsc_log_info(log,"creating snmpwrapper @ '%s'", socket.c_str());
+            snmp_.reset(new snmp::SnmpWrapper(socket));
+            snmp_->initMsag( counterListCtor,
+                             counterListDtor,
+                             10 );
+            snmpthread_.reset(new snmp::SnmpTrapThread(snmp_.get()));
+            snmpthread_->Start();
         }
     } catch (std::exception& e) {
         smsc_log_warn(log, "cannot initialize snmp: %s", e.what());

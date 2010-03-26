@@ -3,6 +3,7 @@
 #include <net-snmp/agent/net-snmp-agent-includes.h>
 #include <string.h>
 #include "SnmpWrapper.h"
+#include "scag/snmp/counters/msagCounterTable_cxxiface.h"
 
 namespace {
 
@@ -63,10 +64,6 @@ log_(0)
                                NETSNMP_DS_AGENT_X_SOCKET, theSocket.c_str() ); // setting a connection
     }
 
-    init_agent( ::msagnamed );  // initialize the agent library
-    ::init_msag();             // initialize mib code
-    init_snmp( ::msagname );   // read .conf files
-    smsc_log_info(log_,"snmp wrapper inited");
 }
 
 
@@ -188,6 +185,19 @@ void SnmpWrapper::sendTrap( const TrapRecord& rec )
 
     } // switch on record type
 
+}
+
+
+void SnmpWrapper::initMsag( msagCounterTable_creator_t* creator,
+                            msagCounterTable_destructor_t* destructor,
+                            int cacheTimeout )
+{
+    smsc_log_info(log_,"initializing msag snmp support");
+    init_agent( ::msagnamed );  // initialize the agent library
+    ::init_msag();              // initialize mib code
+    ::initMsagCounterTable( creator, destructor, cacheTimeout );
+    init_snmp( ::msagname );   // read .conf files
+    smsc_log_info(log_,"msag snmp support inited");
 }
 
 }

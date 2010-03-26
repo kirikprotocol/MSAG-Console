@@ -167,6 +167,10 @@ HashCountManager::~HashCountManager()
         for ( smsc::core::buffers::Hash<Counter*>::Iterator iter(&hash_); iter.Next(key,ptr); ) {
             if ( *ptr ) {
                 if ( checkDisposal(*ptr,counttime_max) ) {
+                    Counter* nullPtr = 0;
+                    std::replace( snmpCounterList_.begin(),
+                                  snmpCounterList_.end(),
+                                  *ptr, nullPtr );
                     destroy(*ptr);
                     *ptr = 0;
                 } else {
@@ -250,6 +254,60 @@ void HashCountManager::loadConfigFile()
 }
 
 
+MsagCounterTableElement* HashCountManager::updateSnmpCounterList( MsagCounterTableElement* list )
+{
+    smsc_log_debug(log_,"request for snmp counter table update");
+    MutexGuard mg(hashMutex_);
+    if ( snmpCounterList_.empty() ) return list;
+    smsc_log_debug(log_,"request for snmp counter table %p update, sz=%u",
+                   list, unsigned(snmpCounterList_.size()));
+    MsagCounterTableElement *head = list;
+    MsagCounterTableElement *prev = list;
+    for ( std::vector< Counter* >::const_iterator i = snmpCounterList_.begin();
+          i != snmpCounterList_.end();
+          ++i ) {
+        if ( list ) {
+            if (*i) {
+                list->enabled = true;
+                const uint64_t newval = (*i)->getValue();
+                smsc_log_debug(log_,"updating %s/%s, val=%llu/%llu",
+                               list->name,(*i)->getName().c_str(),
+                               list->value, newval);
+                list->value = newval;
+            } else {
+                smsc_log_debug(log_,"disabling %s",list->name);
+                list->enabled = false;
+                list->value = 0;
+            }
+        } else {
+            list = new MsagCounterTableElement;
+            memset(list,0,sizeof(MsagCounterTableElement));
+            if ( prev ) { prev->next = list; }
+            else { head = list; }
+            if (*i) {
+                const std::string& cname = (*i)->getName();
+                list->namelen = int(std::min(cname.size(),sizeof(list->name)-1));
+                memcpy(list->name,cname.c_str(),list->namelen);
+                list->enabled = true;
+                list->value = (*i)->getValue();
+            } else {
+                const char* cname = "sys.unknown";
+                list->namelen = strlen(cname);
+                memcpy(list->name,cname,list->namelen);
+                list->enabled = false;
+                list->value = 0;
+            }
+            smsc_log_debug(log_,"adding %s%s, val=%llu",
+                           list->enabled ? "" : "(dis) ",
+                           list->name,list->value);
+        }
+        prev = list;
+        list = prev->next;
+    }
+    return head;
+}
+
+
 CounterPtrAny HashCountManager::getAnyCounter( const char* name )
 {
     if (!name) return CounterPtrAny();
@@ -279,6 +337,10 @@ CounterPtrAny HashCountManager::doRegisterAnyCounter( Counter* ccc, bool& wasReg
         return CounterPtrAny(*ptr);
     }
     wasRegistered = true;
+    static const char* syspfx = "sys.";
+    if ( 0 == strncmp(syspfx,ccc->getName().c_str(),strlen(syspfx)) ) {
+        snmpCounterList_.push_back(cnt.get());
+    }
     hash_.Insert(ccc->getName().c_str(),cnt.release());
     return CounterPtrAny(ccc);
 }
@@ -431,6 +493,11 @@ int HashCountManager::Execute()
                   i != workingQueue.end();
                   ++i ) {
                 if ( checkDisposal(*i,now) ) {
+                    // it is ready to be destroyed
+                    Counter* nullPtr = 0;
+                    std::replace( snmpCounterList_.begin(),
+                                  snmpCounterList_.end(),
+                                  *i, nullPtr );
                     hash_.Delete( (*i)->getName().c_str() );
                     destroy(*i);
                 }

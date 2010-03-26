@@ -70,8 +70,8 @@ void NotificationManager::advanceTime( usec_type curTime )
 }
 
 
-void NotificationManager::notify( const char* c, CntSeverity& sev,
-                                  int64_t value, const ActionLimit& limit )
+void NotificationManager::notifyOnLimit( const char* c, CntSeverity& sev,
+                                         int64_t value, const ActionLimit& limit )
 {
     smsc_log_debug(log_,"notifying '%s' value=%lld %s limit=%lld status=%s",
                    c, value, opTypeToString(limit.optype),
