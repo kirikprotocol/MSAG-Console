@@ -96,6 +96,11 @@ sub generate{
     {
       open(my $f,$dirname.'/binaries-list');
       my $line = "";
+      # switchMode:
+      # 0 - not in switch;
+      # 1 - in switch, value is not found yet;
+      # 2 - in switch, under value found;
+      # 3 - in switch, value found, but now we are not under it.
       my $switchMode;
       my $switchValue;
       while(<$f>)
@@ -103,52 +108,66 @@ sub generate{
         s/[\x0d\x0a]//g;
         next if /^\s*$/;
         my $ln = $_;
-        if ( '\\' eq substr($ln,-1) )
-        {
-            $line .= substr($ln,0,length($ln)-1);
-            next;
-        }
-        $line .= $ln;
-        if ( $line =~ /^\s*#/ )
-        {
-            $line = "";
-            next;
-        }
-        if($line=~/^switch\s+(.*)$/)
+
+        # print STDERR "ln=[$ln]\n";
+        if($ln=~/^switch\s+(.*)$/)
         {
           $switchMode=1;
           $switchValue=$ENV{$1};
-          $line='';
+          # print STDERR "switch on $1, value=$switchValue\n";
           next;
         }
-        if($line=~/^end switch$/)
+        if($ln=~/^end switch$/ || $ln=~/^endswitch$/ )
         {
+          # print STDERR "end switch\n";
           $switchMode=0;
-          $line='';
           next;
         }
-        if($switchMode && $line=~/(.*?):(.*)/)
+        if($switchMode)
         {
-          if($1 eq $switchValue)
+          if ($ln=~/(.*?):(.*)/)
           {
-            $line=$2;
-            $switchMode=2;
-          }elsif($1 eq 'default' && $switchMode==1)
-          {
-            $line=$2;
-          }else
-          {
-            $line='';
-            next;
+            if($1 eq $switchValue)
+            {
+              $ln=$2;
+              $switchMode=2;
+              # print STDERR "switch matched: $1 -> ln=[$ln]\n";
+            }elsif($1 eq 'default' && $switchMode==1)
+            {
+              $ln=$2;
+              $switchMode=2;
+              # print STDERR "switch matched default: -> ln=[$ln]\n";
+            }else{
+              # wrong switch
+              if ($switchMode==2) {
+                  $switchMode=3;
+              }
+              next;
+            }
           }
+          if ($switchMode!=2) {
+              next;
+          }
+          # print STDERR "passed switch: ln=[$ln]\n";
         }
-        if ( $line =~ /^\s*#/ || $line eq '')
+
+        if (length($line)>0 && substr($line,-1) eq '\\')
         {
-            $line = "";
+            $line = substr($line,0,-1) . $ln;
+        } else {
+            $line = $ln;
+        }
+        if (length($line)>0 && substr($line,-1) eq '\\' )
+        {
             next;
         }
         $line=~s/^\s+//;
-        
+        $line=~s/#.*$//;
+        if ( $line eq '' )
+        {
+            next;
+        }
+        # print STDERR "line to parse: $line\n";
         my ($binname,$srcname,$libs) = split(/\s+/,$line,3);
         $line = "";
         $binsrc{$srcname.'.cpp'}=1;
