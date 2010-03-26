@@ -36,9 +36,6 @@ struct UMRUSR
 struct SmppEntity
 {
 private:
-    // static const char* cntTrafficSme;// = "sys.traffic.smpp.sme";
-    // static const char* cntTrafficSmsc;// = "sys.traffic.smpp.smsc";
-private:
     static const int sarTimeout = 300; // 5 min
 
     struct SarData {
@@ -68,8 +65,6 @@ public:
       // queueCount->reset();
   }
   SmppEntity(const SmppEntityInfo& argInfo)
-    // incCnt(counter::Manager::getInstance().createCounter("sys.traffic.smpp",
-    // ""))
   {
       log_ = smsc::logger::Logger::getInstance("smpp.ent");
       reset();

@@ -1072,6 +1072,7 @@ void SmppManagerImpl::putCommand( SmppChannel* ct, std::auto_ptr<SmppCommand> cm
             ct->putCommand(resp);
         } else {
             queue.Push( cmd.release() );
+            queueCount->setValue(queue.Count());
             if ( entPtr->info.sendLimit>0 ) {
                 entPtr->incCnt->increment();
                 //smsc_log_debug(limitsLog,"cnt=%d",entPtr->incCnt.Get());
@@ -1116,6 +1117,7 @@ void SmppManagerImpl::sendReceipt(Address& from, Address& to, int state, const c
                    from.toString().c_str(), to.toString().c_str(), state, msgId, dst_sme_id);
     MutexGuard mg(queueMon);
     queue.Push(cmd.release());
+    queueCount->setValue(queue.Count());
     queueMon.notify();
 }
 
@@ -1183,6 +1185,7 @@ bool SmppManagerImpl::getCommand(SmppCommand*& cmd)
     }
     else
     {
+        queueCount->setValue(0);
         return false;
     }
     return true;
