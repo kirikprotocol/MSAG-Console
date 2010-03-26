@@ -1,6 +1,9 @@
 History in reverse order
 ----------------------------------------------------
 
+2010-03-26 13:00 bukind
+ bugfix: when task is disabled, its inProcess flag was not reset
+
 2010-03-19 16:55 bukind
  feature: support for incoming DATA_SM receipts
 

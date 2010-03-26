@@ -492,6 +492,7 @@ void Task::update(ConfigView *config)
     store.Init();
   }
   info=newinfo;
+  setEnabled(info.enabled);
   {
     MutexGuard mg(inGenerationMon);
     if(!bInGeneration)
