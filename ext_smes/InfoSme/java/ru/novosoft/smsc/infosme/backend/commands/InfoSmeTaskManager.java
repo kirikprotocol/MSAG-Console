@@ -157,11 +157,15 @@ public class InfoSmeTaskManager implements Runnable{
       final int maxMessagesPerSecond = smeContext.getInfoSmeConfig().getMaxMessagesPerSecond();
 
       long currentTime = task.getStartDate() == null ? System.currentTimeMillis() : task.getStartDate().getTime();
-      Collection messages = getMessages(is, maxMessagesPerSecond, new Date(currentTime), rtree, smeContext);
-      while (messages != null && !messages.isEmpty()) {
-        smeContext.getInfoSme().addDeliveryMessages(task.getId(), messages);
-        currentTime += 1000;
-        messages = getMessages(is, maxMessagesPerSecond,  new Date(currentTime), rtree, smeContext);
+      List messages = new ArrayList(maxMessagesPerSecond + 1);
+      boolean res = getMessages(is, maxMessagesPerSecond, new Date(currentTime), rtree, smeContext, messages);
+      while (res) {
+        if (!messages.isEmpty()) {
+          smeContext.getInfoSme().addDeliveryMessages(task.getId(), messages);
+          messages.clear();
+          currentTime += 1000;      
+        }
+        res = getMessages(is, maxMessagesPerSecond,  new Date(currentTime), rtree, smeContext, messages);
       }
 
       smeContext.getInfoSme().endDeliveryMessageGeneration(task.getId());
@@ -222,11 +226,9 @@ public class InfoSmeTaskManager implements Runnable{
     }
   }
 
-  private List getMessages(BufferedReader is, int limit, Date sendDate,
-                           TemplatesRadixTree rtree, InfoSmeContext smeContext) throws IOException, AdminException {
-    final List list = new ArrayList(limit);
-
-    String line;
+  private boolean getMessages(BufferedReader is, int limit, Date sendDate,
+                           TemplatesRadixTree rtree, InfoSmeContext smeContext, List list) throws IOException, AdminException {
+    String line = null;
     BlackListManager blm = smeContext.getBlackListManager();
     for (int i=0; i < limit && ((line = is.readLine()) != null); i++) {
 
@@ -255,7 +257,8 @@ public class InfoSmeTaskManager implements Runnable{
       }
     }
 
-    return list;
+    return line != null;
+
   }
 
   private static class Distribution {
