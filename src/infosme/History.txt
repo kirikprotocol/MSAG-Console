@@ -1,6 +1,9 @@
 History in reverse order
 ----------------------------------------------------
 
+----------------------------------------------------
+infosme-build-20100329 12:20 bukind
+
 2010-03-26 13:00 bukind
  bugfix: when task is disabled, its inProcess flag was not reset
 
