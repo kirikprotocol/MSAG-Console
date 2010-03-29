@@ -31,7 +31,16 @@ int DiskFlusher::Execute()
     unsigned written = 0;  // the number of written bytes in the last write
     unsigned curItem = 0;  // index of current processing item
 
-    counter::TimeSnapshot speedLimiter("sys.dflush." + name_,5,minSleepTime);
+    // registering a speed limiter
+    counter::CounterPtr<counter::TimeSnapshot> speedLimiter;
+    {
+        const std::string cntName("sys.dflush." + name_);
+        counter::Manager& mgr = counter::Manager::getInstance();
+        counter::ObserverPtr o = mgr.getObserver(cntName.c_str());
+        counter::CounterPtrAny anyPtr = mgr.registerAnyCounter
+            (new counter::TimeSnapshot(cntName,5,minSleepTime));
+        speedLimiter = static_cast<const counter::CounterPtr<counter::TimeSnapshot>& >(anyPtr);
+    }
 
     smsc_log_info(log_,"started, %s", flushConfig_.toString().c_str());
 
@@ -53,12 +62,12 @@ int DiskFlusher::Execute()
         } else {
 
             // normal operation
-            speedLimiter.accumulate(now*1000,written);
+            speedLimiter->accumulate(now*1000,written);
 
             int64_t totalWritten;
             unsigned writeTime;
-            speedLimiter.getMaxDerivative( totalWritten, writeTime );
-            writeTime *= speedLimiter.getResolution()/1000; // convert to msec
+            speedLimiter->getMaxDerivative( totalWritten, writeTime );
+            writeTime *= speedLimiter->getResolution()/1000; // convert to msec
 
             /// speed in b/ms == kb/s
             speedKbs = totalWritten / writeTime;

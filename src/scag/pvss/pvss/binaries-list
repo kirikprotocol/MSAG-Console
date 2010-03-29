@@ -6,6 +6,7 @@
 scag/pvss                            pvss          \
         -lscag-pvss-api-pvap \
         -lscag-pvss-pvss \
+        -lscag-counter-impl \
         -lscag-pvss-pvss-old \
         -lscag-pvss-api-core-server \
         -lscag-pvss-api-core \
@@ -15,6 +16,9 @@ scag/pvss                            pvss          \
 	-lscag-pvss-profile \
         -lscag-pvss-common \
         -lscag-util-storage \
+switch SNMP
+YES: -lscag-snmp -lscag-snmp-counters \
+endswitch
         -lscag-counter \
         -lscag-util-singleton \
 	-lscag-util-multiplexer \
@@ -29,6 +33,9 @@ scag/pvss                            pvss          \
         @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
         -lutil \
         $(__LIBRARIES) \
+switch SNMP
+YES: $(SNMP_LIBS_CORE) \
+endswitch
         -lpthread -lrt -ldl
 
 scag/tests/pvss-read-abonent-entry readEntry \

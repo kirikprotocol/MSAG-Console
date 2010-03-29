@@ -2,6 +2,7 @@
 #define _SCAG_COUNTER_IMPL_HASHCOUNTMANAGER_H
 
 #include <vector>
+#include <map>
 #include "scag/counter/Manager.h"
 #include "core/buffers/Hash.hpp"
 #include "core/synchronization/Mutex.hpp"
@@ -68,11 +69,17 @@ protected:
     virtual int Execute();
 
 private:
+    
+    /// note: this method does not remove entry from hash_,
+    /// but it does delete the Counter!
+    void releaseAndDestroy( Counter* cnt );
+
+private:
     smsc::logger::Logger*                      log_;
 
     smsc::core::synchronization::Mutex         hashMutex_;
     smsc::core::buffers::Hash< Counter* >      hash_;
-    std::vector< Counter* >                    snmpCounterList_;
+    std::map< std::string, Counter* >          snmpCounterList_;
 
     smsc::core::synchronization::EventMonitor  disposeMon_; // we are waiting on it
 

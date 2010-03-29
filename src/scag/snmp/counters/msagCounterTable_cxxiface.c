@@ -19,6 +19,7 @@ void initMsagCounterTable( msagCounterTable_creator_t*    creator,
     // init_snmp("msagCounterTable");   // reading config
 }
 
+
 void shutdownMsagCounterTable()
 {
     // snmp_shutdown("msagCounterTable");
@@ -26,7 +27,6 @@ void shutdownMsagCounterTable()
     msagCounterTable_oid_size = 0;
     msagCounterTable_creator = 0;
 }
-
 
 
 void initPvssCounterTable( msagCounterTable_creator_t*    creator,

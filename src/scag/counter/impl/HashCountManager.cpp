@@ -37,95 +37,6 @@ namespace impl {
 
 using namespace smsc::core::synchronization;
 
-/*
-class HashCountManager::TimeSliceMgrImpl : public TimeSliceManager
-{
-private:
-    static const usec_type idleSlice = 1*minSlice*usecFactor;
-    
-public:
-    TimeSliceMgrImpl( usec_type             curTime,
-                      smsc::logger::Logger* logger ) :
-    log_(logger),
-    lastTime_(curTime) {
-        smsc_log_info(log_,"ctor");
-    }
-    virtual ~TimeSliceMgrImpl();
-
-    usec_type lastTime() const { return lastTime_; }
-
-    /// process all groups up to curtime
-    usec_type process( usec_type curTime );
-
-    virtual void addItem( TimeSliceItem& item, unsigned slices )
-    {
-        const usec_type slice = slices * minSlice * usecFactor;
-        MutexGuard mg(lock_);
-        TimeSliceGroup* grp;
-        {
-            TimeSliceGroup** ptr = groupHash_.GetPtr(slice);
-            if ( ptr ) {
-                grp = *ptr;
-            } else {
-                // no such group
-                smsc_log_debug(log_,"group %u is created",slices);
-                grp = createGroup(slice);
-                groupHash_.Insert(slice,grp);
-                groupMap_.insert(std::make_pair(lastTime_+slice,grp));
-            }
-        }
-        grp->addItem( item );
-    }
-
-private:
-    typedef std::multimap< usec_type, TimeSliceGroup* > GroupMap;
-    typedef smsc::core::buffers::IntHash64< TimeSliceGroup* > GroupHash;
-    
-private:
-    Mutex                     lock_;
-    smsc::logger::Logger*     log_;
-    GroupHash                 groupHash_;
-    GroupMap                  groupMap_; // owned
-    usec_type                 lastTime_;
-};
-
-
-usec_type HashCountManager::TimeSliceMgrImpl::process( usec_type curTime )
-{
-    usec_type retval;
-    MutexGuard mg(lock_);
-    if ( groupMap_.empty() ) {
-        retval = curTime + idleSlice;
-    } else {
-        while ( true ) {
-            GroupMap::iterator i = groupMap_.begin();
-            if ( i->first > curTime ) {
-                retval = i->first;
-                break;
-            }
-            TimeSliceGroup* grp = i->second;
-            const usec_type nextTime = grp->advanceTime(curTime);
-            groupMap_.erase(i);
-            groupMap_.insert(std::make_pair(nextTime,grp));
-        }
-    }
-    lastTime_ = curTime;
-    return retval;
-}
-
-
-HashCountManager::TimeSliceMgrImpl::~TimeSliceMgrImpl()
-{
-    smsc_log_info(log_,"dtor");
-    groupHash_.Empty();
-    for ( GroupMap::iterator i = groupMap_.begin(); i != groupMap_.end(); ++i ) {
-        delete i->second;
-    }
-}
-
-// ======================================================================
-*/
-
 HashCountManager::HashCountManager( TemplateManager* tmplmgr, unsigned notifySlices ) :
 Manager(),
 smsc::core::threads::Thread(),
@@ -167,11 +78,7 @@ HashCountManager::~HashCountManager()
         for ( smsc::core::buffers::Hash<Counter*>::Iterator iter(&hash_); iter.Next(key,ptr); ) {
             if ( *ptr ) {
                 if ( checkDisposal(*ptr,counttime_max) ) {
-                    Counter* nullPtr = 0;
-                    std::replace( snmpCounterList_.begin(),
-                                  snmpCounterList_.end(),
-                                  *ptr, nullPtr );
-                    destroy(*ptr);
+                    releaseAndDestroy(*ptr);
                     *ptr = 0;
                 } else {
                     smsc_log_debug(log_,"counter '%s' is still locked",(*ptr)->getName().c_str());
@@ -263,46 +170,37 @@ MsagCounterTableElement* HashCountManager::updateSnmpCounterList( MsagCounterTab
                    list, unsigned(snmpCounterList_.size()));
     MsagCounterTableElement *head = list;
     MsagCounterTableElement *prev = list;
-    for ( std::vector< Counter* >::const_iterator i = snmpCounterList_.begin();
+    for ( std::map< std::string, Counter* >::const_iterator i = snmpCounterList_.begin();
           i != snmpCounterList_.end();
           ++i ) {
-        if ( list ) {
-            if (*i) {
-                list->enabled = true;
-                const uint64_t newval = (*i)->getValue();
-                smsc_log_debug(log_,"updating %s/%s, val=%llu/%llu",
-                               list->name,(*i)->getName().c_str(),
-                               list->value, newval);
-                list->value = newval;
-            } else {
-                smsc_log_debug(log_,"disabling %s",list->name);
-                list->enabled = false;
-                list->value = 0;
-            }
-        } else {
+
+        if ( ! i->second ) continue; // skipping destroyed
+
+        const std::string& cname = i->second->getName();
+
+        if ( !list ) {
             list = new MsagCounterTableElement;
             memset(list,0,sizeof(MsagCounterTableElement));
             if ( prev ) { prev->next = list; }
             else { head = list; }
-            if (*i) {
-                const std::string& cname = (*i)->getName();
-                list->namelen = int(std::min(cname.size(),sizeof(list->name)-1));
-                memcpy(list->name,cname.c_str(),list->namelen);
-                list->enabled = true;
-                list->value = (*i)->getValue();
-            } else {
-                const char* cname = "sys.unknown";
-                list->namelen = strlen(cname);
-                memcpy(list->name,cname,list->namelen);
-                list->enabled = false;
-                list->value = 0;
-            }
-            smsc_log_debug(log_,"adding %s%s, val=%llu",
-                           list->enabled ? "" : "(dis) ",
-                           list->name,list->value);
+            smsc_log_debug(log_,"adding %s, val=%llu",cname.c_str(),i->second->getValue());
         }
+
+        list->namelen = int(std::min(cname.size(),sizeof(list->name)-1));
+        memcpy(list->name, cname.c_str(), list->namelen);
+        list->enabled = true;
+        list->value = i->second->getValue();
+
         prev = list;
         list = prev->next;
+    }
+    // destroying the tail of the list
+    if (prev) { prev->next = 0; }
+    if ( head == list ) { head = 0; }
+    while ( list ) {
+        prev = list->next;
+        delete list;
+        list = prev;
     }
     return head;
 }
@@ -339,7 +237,7 @@ CounterPtrAny HashCountManager::doRegisterAnyCounter( Counter* ccc, bool& wasReg
     wasRegistered = true;
     static const char* syspfx = "sys.";
     if ( 0 == strncmp(syspfx,ccc->getName().c_str(),strlen(syspfx)) ) {
-        snmpCounterList_.push_back(cnt.get());
+        snmpCounterList_.insert(std::make_pair(ccc->getName(),cnt.get()));
     }
     hash_.Insert(ccc->getName().c_str(),cnt.release());
     return CounterPtrAny(ccc);
@@ -494,12 +392,8 @@ int HashCountManager::Execute()
                   ++i ) {
                 if ( checkDisposal(*i,now) ) {
                     // it is ready to be destroyed
-                    Counter* nullPtr = 0;
-                    std::replace( snmpCounterList_.begin(),
-                                  snmpCounterList_.end(),
-                                  *i, nullPtr );
                     hash_.Delete( (*i)->getName().c_str() );
-                    destroy(*i);
+                    releaseAndDestroy(*i);
                 }
             }
             workingQueue.clear();
@@ -514,6 +408,18 @@ int HashCountManager::Execute()
     smsc_log_info(log_,"stopped");
     return 0;
 }
+
+
+void HashCountManager::releaseAndDestroy( Counter* cnt )
+{
+    if ( !cnt ) return;
+    std::map< std::string, Counter* >::iterator i =
+        snmpCounterList_.find( cnt->getName() );
+    if ( i == snmpCounterList_.end() ) return;
+    snmpCounterList_.erase(i);
+    destroy(cnt);
+}
+
 
 }
 }

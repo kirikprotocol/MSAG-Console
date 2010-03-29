@@ -12,6 +12,8 @@
 
 #include "scag/util/Inst.h"
 
+#include "scag/counter/Manager.h"
+
 #include "scag/pvss/api/pvap/PvapProtocol.h"
 #include "scag/pvss/api/core/server/ServerCore.h"
 #include "scag/pvss/api/core/server/ServerContext.h"
@@ -26,6 +28,15 @@
 #include "BackupProcessor.h"
 #include "util/config/ConfString.h"
 
+#include "scag/counter/impl/HashCountManager.h"
+#include "scag/counter/impl/TemplateManagerImpl.h"
+#include "scag/counter/impl/ConfigReader.h"
+
+#ifdef SNMP
+#include "scag/snmp/SnmpWrapper.h"
+#include "scag/snmp/SnmpTrapThread.h"
+#endif
+
 using namespace smsc::util::config;
 using namespace scag2::pvss;
 using namespace scag2::pvss::core;
@@ -36,6 +47,25 @@ using smsc::util::Exception;
 // EventMonitor waitObj;
 PersServer *persServer = NULL;
 std::auto_ptr<BackupProcessor> backupProcessor;
+
+
+#ifdef SNMP
+
+MsagCounterTableElement* counterListCtor( MsagCounterTableElement* list )
+{
+    return scag2::counter::Manager::getInstance().updateSnmpCounterList(list);
+}
+
+void counterListDtor( MsagCounterTableElement* list )
+{
+    while (list) {
+        MsagCounterTableElement* next = list->next;
+        delete list;
+        list = next;
+    }
+}
+
+#endif
 
 extern "C" void appSignalHandler(int sig)
 {
@@ -218,6 +248,9 @@ int main(int argc, char* argv[]) {
 
   Logger::Init(); 
 
+    // counter manager
+
+
   atexit(atExitHandler);
 
   sigset_t set;
@@ -233,6 +266,28 @@ int main(int argc, char* argv[]) {
   sigset(SIGHUP, appSignalHandler);   
   int resultCode = 0;
   Logger* logger = Logger::getInstance("pvss.main");
+
+    try {
+        smsc_log_info(logger,"creating counter manager...");
+        scag2::counter::impl::TemplateManagerImpl* tmgr =
+            new scag2::counter::impl::TemplateManagerImpl();
+        tmgr->init();
+        scag2::counter::impl::HashCountManager* mgr =
+            new scag2::counter::impl::HashCountManager(tmgr,10);
+        mgr->loadConfigFile();
+        mgr->start();
+    } catch ( std::exception& e ) {
+        smsc_log_error(logger,"exc in counter mgr: %s",e.what());
+        std::terminate();
+    } catch ( ... ) {
+        smsc_log_error(logger,"exc in counter mgr");
+        std::terminate();
+    }
+
+#ifdef SNMP
+    std::auto_ptr< scag2::snmp::SnmpWrapper >    snmp;
+    std::auto_ptr< scag2::snmp::SnmpTrapThread > snmpThread;
+#endif
 
     // parsing the command line
     bool recovery = false;
@@ -405,6 +460,38 @@ int main(int argc, char* argv[]) {
             infCfg.reset(new InfrastructStorageConfig(infStorageConfig, "InfrastructStorage", logger));
         }
 
+#ifdef SNMP
+        // making snmp counters
+        try {
+
+            const bool enabled = persConfig.getBool("snmp.enabled");
+            if (enabled) {
+                std::string socket;
+                try {
+                    socket = smsc::util::config::ConfString(persConfig.getString("snmp.socket")).str();
+                } catch (...) {
+                }
+                int cacheTimeout = 10;
+                try {
+                    cacheTimeout = persConfig.getInt("snmp.cacheTimeout");
+                } catch (...) {
+                    smsc_log_warn(logger,"value <snmp.cacheTimeout> is missed, using %u", cacheTimeout);
+                }
+                smsc_log_info(logger,"creating snmpwrapper @ '%s'", socket.c_str());
+                snmp.reset(new scag2::snmp::SnmpWrapper(socket));
+                snmp->initPvss( counterListCtor,
+                                counterListDtor,
+                                cacheTimeout );
+                snmpThread.reset(new scag2::snmp::SnmpTrapThread(snmp.get()));
+                snmpThread->Start();
+            }
+        } catch (std::exception& e) {
+            smsc_log_warn(logger, "cannot initialize snmp: %s", e.what());
+        } catch (...) {
+            smsc_log_warn(logger, "cannot initialize snmp: unknown exception" );
+        }
+#endif
+
         PvssDispatcher pvssDispatcher(nodeCfg,abntCfg,infCfg.get());
 
         try {
@@ -492,5 +579,9 @@ int main(int argc, char* argv[]) {
         smsc_log_error(logger, "Unknown exception: '...' caught. Exiting.");
         resultCode = -5;
     }
+
+#ifdef SNMP
+    if (snmpThread.get()) snmpThread->Stop();
+#endif
     return resultCode;
 }

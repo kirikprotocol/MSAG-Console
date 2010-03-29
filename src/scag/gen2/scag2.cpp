@@ -33,7 +33,6 @@
 #include "scag/counter/impl/HashCountManager.h"
 #include "scag/counter/impl/TemplateManagerImpl.h"
 #include "scag/counter/impl/ConfigReader.h"
-#include "scag/counter/ActionTable.h"
 
 namespace {
 
@@ -161,95 +160,6 @@ void Scag::init( unsigned mynode )
         smsc_log_error(log,"exc in counter mgr");
         abort();
     }
-
-    /*
-    {
-        smsc_log_info(log,"Adding a few counter templates");
-        counter::Manager& mgr = counter::Manager::getInstance();
-        counter::TemplateManager* tmgr = mgr.getTemplateManager();
-        if (!tmgr) {
-            throw SCAGException("no template manager is found in counter manager");
-        }
-        {
-            const char* cname = "sys.traffic.global.smpp";
-            counter::ActionTable* o = new counter::ActionTable();
-            counter::ActionList* al = new counter::ActionList();
-            al->push_back(counter::ActionLimit(95,counter::GT,counter::CRITICAL));
-            al->push_back(counter::ActionLimit(90,counter::GT,counter::MAJOR));
-            al->push_back(counter::ActionLimit(80,counter::GT,counter::MINOR));
-            al->push_back(counter::ActionLimit(70,counter::GT,counter::WARNING));
-            o->setNewActions(al);
-            tmgr->replaceObserver(cname,o);
-            tmgr->replaceTemplate( cname,
-                                   counter::CounterTemplate::create
-                                   ("timesnapshot", o, 10, 20));
-        }
-        {
-            const char* names[] = { "sys.traffic.smpp.sme", "sys.traffic.smpp.smsc", 0 };
-            for ( const char** cname = names; *cname != 0; ++cname ) {
-                counter::ActionTable* o = new counter::ActionTable();
-                counter::ActionList* al = new counter::ActionList();
-                al->push_back(counter::ActionLimit(95,counter::GT,counter::CRITICAL));
-                al->push_back(counter::ActionLimit(90,counter::GT,counter::MAJOR));
-                al->push_back(counter::ActionLimit(80,counter::GT,counter::MINOR));
-                al->push_back(counter::ActionLimit(70,counter::GT,counter::WARNING));
-                o->setNewActions(al);
-                tmgr->replaceObserver(*cname,o);
-                tmgr->replaceTemplate(*cname,
-                                      counter::CounterTemplate::create
-                                      ("timesnapshot", o, 5, 100));
-            }
-        }
-        {
-            const char* cname = "sys.smpp.queue.global";
-            counter::ActionTable* o = new counter::ActionTable();
-            counter::ActionList* al = new counter::ActionList();
-            al->push_back(counter::ActionLimit(95,counter::GT,counter::CRITICAL));
-            al->push_back(counter::ActionLimit(90,counter::GT,counter::MAJOR));
-            al->push_back(counter::ActionLimit(80,counter::GT,counter::MINOR));
-            al->push_back(counter::ActionLimit(70,counter::GT,counter::WARNING));
-            o->setNewActions(al);
-            tmgr->replaceObserver(cname,o);
-            tmgr->replaceTemplate( cname,
-                                   counter::CounterTemplate::create
-                                   ("accumulator",o));
-        }
-        {
-            const char* names[] = { "sys.smpp.queue.in", "sys.smpp.queue.out", 0 };
-            for ( const char** cname = names; *cname != 0; ++cname ) {
-                counter::ActionTable* o = new counter::ActionTable();
-                counter::ActionList* al = new counter::ActionList();
-                al->push_back(counter::ActionLimit(95,counter::GT,counter::CRITICAL));
-                al->push_back(counter::ActionLimit(90,counter::GT,counter::MAJOR));
-                al->push_back(counter::ActionLimit(80,counter::GT,counter::MINOR));
-                al->push_back(counter::ActionLimit(70,counter::GT,counter::WARNING));
-                o->setNewActions(al);
-                tmgr->replaceObserver(*cname,o);
-                tmgr->replaceTemplate(*cname,
-                                      counter::CounterTemplate::create
-                                      ("accumulator", o));
-            }
-        }
-        {
-            const char* names[] = { "total", "active", "locked", 0 };
-            for ( const char** pname = names; *pname != 0; ++pname ) {
-                char buf[60];
-                sprintf(buf,"sys.sessions.%s",*pname);
-                counter::ActionTable* o = new counter::ActionTable();
-                counter::ActionList* al = new counter::ActionList();
-                al->push_back(counter::ActionLimit(95,counter::GT,counter::CRITICAL));
-                al->push_back(counter::ActionLimit(90,counter::GT,counter::MAJOR));
-                al->push_back(counter::ActionLimit(80,counter::GT,counter::MINOR));
-                al->push_back(counter::ActionLimit(70,counter::GT,counter::WARNING));
-                o->setNewActions(al);
-                tmgr->replaceObserver(buf,o);
-                tmgr->replaceTemplate(buf,
-                                      counter::CounterTemplate::create
-                                      ("accumulator", o));
-            }
-        }
-    }
-     */
 
     std::auto_ptr<pvss::core::client::Client> pvssClnt;
     try {
@@ -401,12 +311,22 @@ void Scag::init( unsigned mynode )
     try {
         const bool enabled = cfg.getConfig()->getBool("snmp.enabled");
         if ( enabled ) {
-            const std::string socket = cfg.getConfig()->getString("snmp.socket");
+            std::string socket;
+            try {
+                socket = cfg.getConfig()->getString("snmp.socket");
+            } catch ( ConfigException& ) {
+            }
+            int cacheTimeout = 10;
+            try {
+                cacheTimeout = cfg.getConfig()->getInt("snmp.cacheTimeout");
+            } catch ( ConfigException& ) {
+                smsc_log_warn(log,"value <snmp.cacheTimeout> is missed, using %u", cacheTimeout);
+            }
             smsc_log_info(log,"creating snmpwrapper @ '%s'", socket.c_str());
             snmp_.reset(new snmp::SnmpWrapper(socket));
             snmp_->initMsag( counterListCtor,
                              counterListDtor,
-                             10 );
+                             cacheTimeout );
             snmpthread_.reset(new snmp::SnmpTrapThread(snmp_.get()));
             snmpthread_->Start();
         }

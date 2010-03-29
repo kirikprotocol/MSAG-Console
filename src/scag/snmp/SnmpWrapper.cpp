@@ -9,6 +9,8 @@ namespace {
 
 const char* msagnamed = "msagd";
 const char* msagname = "msag";
+const char* pvssnamed = "pvssd";
+const char* pvssname = "pvss";
 
 // oid snmptrap_oid[] = {1, 3, 6, 1, 6, 3, 1, 1, 4, 1, 0};
 oid alertMessage_oid[] = { 1,3,6,1,4,1,26757,2,5, 0 };
@@ -27,6 +29,11 @@ oid msagSessionLimit_oid[] = { 1,3,6,1,4,1,26757,2,0,10 };
 oid msagSMPPConnect_oid[] = { 1,3,6,1,4,1,26757,2,0,11 };
 
 void init_msag()
+{
+    // do nothing right now
+}
+
+void init_pvss()
 {
     // do nothing right now
 }
@@ -198,6 +205,19 @@ void SnmpWrapper::initMsag( msagCounterTable_creator_t* creator,
     ::initMsagCounterTable( creator, destructor, cacheTimeout );
     init_snmp( ::msagname );   // read .conf files
     smsc_log_info(log_,"msag snmp support inited");
+}
+
+
+void SnmpWrapper::initPvss( msagCounterTable_creator_t* creator,
+                            msagCounterTable_destructor_t* destructor,
+                            int cacheTimeout )
+{
+    smsc_log_info(log_,"initializing pvss snmp support");
+    init_agent( ::pvssnamed );  // initialize the agent library
+    ::init_pvss();              // initialize mib code
+    ::initPvssCounterTable( creator, destructor, cacheTimeout );
+    init_snmp( ::pvssname );   // read .conf files
+    smsc_log_info(log_,"pvss snmp support inited");
 }
 
 }

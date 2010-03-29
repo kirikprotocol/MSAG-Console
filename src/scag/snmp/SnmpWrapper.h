@@ -21,9 +21,9 @@ public:
     void initMsag( msagCounterTable_creator_t* creator,
                    msagCounterTable_destructor_t* destructor,
                    int cacheTimeout = 10 );
-    // void initPvssCounterTable( msagCounterTable_creator_t* creator,
-    // msagCounterTable_destructor_t* destructor,
-    // int cacheTimeout = 10 );
+    void initPvss( msagCounterTable_creator_t* creator,
+                   msagCounterTable_destructor_t* destructor,
+                   int cacheTimeout = 10 );
 
 private:
     smsc::logger::Logger* log_;
