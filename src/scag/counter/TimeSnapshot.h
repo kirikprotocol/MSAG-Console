@@ -88,7 +88,7 @@ public:
     // virtual unsigned getBaseInterval() const { return unsigned(nbins_*resol_/usecFactor); }
 
     /// return the resolution (microseconds), i.e. the width of one bin
-    unsigned getResolution() const { return resol_; }
+    unsigned getResolution() const { return unsigned(resol_); }
 
 protected:
     using Snapshot::accumulate;
