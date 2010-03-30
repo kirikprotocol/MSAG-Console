@@ -88,8 +88,8 @@ public:
     /// return false if the attribute is not defined.
     virtual bool getValue( Valtype a, int64_t& value ) const = 0;
 
-    /// return the interval (right now is used only in TimeSnapshot).
-    virtual unsigned getBaseInterval() const { return 1; }
+    // return the interval (right now is used only in TimeSnapshot).
+    // virtual unsigned getBaseInterval() const { return 1; }
 
 protected:
     /// guaranteed to be invoked after registration

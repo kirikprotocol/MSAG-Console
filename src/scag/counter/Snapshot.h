@@ -25,7 +25,7 @@ public:
     // static CountType getStaticType() { return smsc::util::TypeInfo< Snapshot >::typeValue(); }
 
     Snapshot( const std::string& name,
-              unsigned nbins,          // number of bins in the snapshot
+              unsigned       nbins,        // number of bins in the snapshot
               Observer*      observer = 0,
               counttime_type disposeDelayTime = 0 ) :
     Counter(name,observer,disposeDelayTime),
@@ -77,7 +77,7 @@ public:
         case VALUE:
         case COUNT:
         case SUM: {
-            smsc::core::synchronization::MutexGuard mg(countMutex_);
+            // smsc::core::synchronization::MutexGuard mg(countMutex_);
             value = integral_; return true;
         }
         default: break;

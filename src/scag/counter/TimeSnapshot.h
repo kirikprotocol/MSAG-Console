@@ -27,10 +27,10 @@ public:
                   Observer*               observer = 0,
                   counttime_type disposeDelayTime = 0 ) :
     Snapshot(name,unsigned(nseconds*1000ULL/msecresol),observer,disposeDelayTime),
+    resol_(msecresol*1000LL),
+    nseconds_(nseconds),
     group_(0)
     {
-        // assert( width/1000 > usec_type(msecresol) );
-        resol_ = msecresol*1000LL;
         smsc_log_debug(loga_,"ctor %p %s '%s'",this,getTypeName(),getName().c_str());
     }
 
@@ -41,7 +41,7 @@ public:
     virtual TimeSnapshot* clone( const std::string& name,
                                  counttime_type     disposeTime = 0 ) const
     {
-        return new TimeSnapshot(name,unsigned(resol_*nbins_/usecFactor),
+        return new TimeSnapshot(name,nseconds_,
                                 unsigned(resol_/1000),observer_.get(),disposeTime);
     }
 
@@ -49,7 +49,7 @@ public:
 
     virtual int64_t increment( int64_t x = 1, int w = 1 ) {
         const int64_t bin = int64_t(TSource::getUSec()/resol_);
-        return Snapshot::accumulate(bin,w);
+        return Snapshot::accumulate(bin,w) / nseconds_;
     }
 
     virtual void advanceTime( usec_type curtime ) {
@@ -61,17 +61,20 @@ public:
     int64_t accumulate( usec_type curtime, int w = 1 )
     {
         const int64_t x = int64_t(curtime/resol_);
-        return Snapshot::accumulate(x,w);
+        return Snapshot::accumulate(x,w) / nseconds_;
     }
 
     virtual int64_t getValue() const
     {
-        return integral_;
+        return integral_ / nseconds_;
     }
 
     virtual bool getValue( Valtype a, int64_t& value ) const {
         switch (a) {
-        case VALUE:
+        case VALUE: {
+            value = integral_ / nseconds_;
+            return true;
+        }
         case COUNT:
         case SUM: {
             value = integral_;
@@ -82,7 +85,7 @@ public:
         return false;
     }
 
-    virtual unsigned getBaseInterval() const { return unsigned(nbins_*resol_/usecFactor); }
+    // virtual unsigned getBaseInterval() const { return unsigned(nbins_*resol_/usecFactor); }
 
     /// return the resolution (microseconds), i.e. the width of one bin
     unsigned getResolution() const { return resol_; }
@@ -107,6 +110,7 @@ protected:
 
 protected:
     usec_type       resol_;
+    unsigned        nseconds_;
     TimeSliceGroup* group_;
 };
 

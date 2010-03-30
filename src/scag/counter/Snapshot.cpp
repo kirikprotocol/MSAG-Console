@@ -58,7 +58,9 @@ int64_t Snapshot::accumulate( int64_t x, int inc )
         slot_[cur] += inc;
         integral_ += inc;
     }
-    if ( observer_.get() && pv != integral_ ) observer_->modified(getName().c_str(),oldsev_,integral_,maxval_);
+    if ( observer_.get() && pv != integral_ ) {
+        observer_->modified(getName().c_str(),oldsev_,getValue(),maxval_);
+    }
     return integral_;
 }
 
