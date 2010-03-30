@@ -89,6 +89,7 @@ private:
     counter::CounterPtrAny  totalSessions_;
     counter::CounterPtrAny  loadedSessions_;
     counter::CounterPtrAny  lockedSessions_;
+    counter::CounterPtrAny  storedCommands_;
 };
 
 } // namespace sessions

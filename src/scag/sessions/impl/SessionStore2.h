@@ -71,8 +71,6 @@ public:
                                 std::auto_ptr<SCAGCommand>& cmd,
                                 bool                        create );
 
-    // unsigned storedCommands() const;
-
     bool expireSessions( const std::vector< SessionKey >& expired,
                          const std::vector< std::pair<SessionKey,time_t> >& flush );
 
@@ -122,13 +120,10 @@ private:
     bool                        diskio_;
 
     // statistics
-    // unsigned                    totalSessions_;
-    // unsigned                    loadedSessions_;
-    // unsigned                    lockedSessions_;
     counter::CounterPtrAny      totalSessions_;
     counter::CounterPtrAny      loadedSessions_;
     counter::CounterPtrAny      lockedSessions_;
-    unsigned                    storedCommands_;
+    counter::CounterPtrAny      storedCommands_;
 
     unsigned                    maxqueuesize_;
     unsigned                    maxcachesize_;

@@ -63,7 +63,11 @@ void CompositeSessionStore::init( unsigned nodeNumber,
         lockedSessions_ = mgr.registerAnyCounter
             (new counter::Accumulator("sys.sessions.locked",
                                       mgr.getObserver("sys.sessions.locked").get()));
-        if (!totalSessions_.get() || !loadedSessions_.get() || !lockedSessions_.get())
+        storedCommands_ = mgr.registerAnyCounter
+            (new counter::Accumulator("sys.sessions.cmdqueue",
+                                      mgr.getObserver("sys.sessions.cmdqueue").get()));
+        if (!totalSessions_.get() || !loadedSessions_.get() ||
+            !lockedSessions_.get() || !storedCommands_.get() )
             throw std::runtime_error("cannot create session counters");
         // totalSessions_->setMaxVal(2000);
         // loadedSessions_->setMaxVal(500);

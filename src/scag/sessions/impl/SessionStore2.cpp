@@ -98,10 +98,11 @@ void SessionStoreImpl::init( unsigned eltNumber,
         totalSessions_ = cntmgr.getAnyCounter("sys.sessions.total");
         loadedSessions_ = cntmgr.getAnyCounter("sys.sessions.active");
         lockedSessions_ = cntmgr.getAnyCounter("sys.sessions.locked");
-        if (!totalSessions_.get() || !loadedSessions_.get() || !lockedSessions_.get())
+        storedCommands_ = cntmgr.getAnyCounter("sys.sessions.cmdqueue");
+        if (!totalSessions_.get() || !loadedSessions_.get() ||
+            !lockedSessions_.get() || !storedCommands_.get() )
             throw std::runtime_error("cannot create session counters");
     }
-    storedCommands_ = 0;
 
     maxcachesize_ = 0;   // maximum of loadedSessions
     maxqueuesize_ = 0;   // maximum length of one session command queue
@@ -280,7 +281,8 @@ ActiveSession SessionStoreImpl::fetchSession( const SessionKey&           key,
                 // smsc_log_debug(log_, "session is locked, put cmd=%p cmd->serial=%u to session queue, sz=%u",
                 // com, com->getSerial(), sz );
                 if ( unsigned(sqsz) > maxqueuesize_ ) maxqueuesize_ = unsigned(sqsz);
-                if ( ++storedCommands_ > maxcommands_ ) maxcommands_ = storedCommands_;
+                const unsigned scv = storedCommands_->increment();
+                if ( scv > maxcommands_ ) maxcommands_ = scv;
                 session = 0;
                 break;
             }
@@ -459,6 +461,7 @@ void SessionStoreImpl::releaseSession( Session& session )
         expiration = session.expirationTime();
         nextcmd = session.popCommand();
         if ( nextcmd ) {
+            storedCommands_->increment(-1);
             setCommandSession( *nextcmd, &session );
             nextuid = nextcmd->getSerial();
         } else {
@@ -704,6 +707,7 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
             if ( nextcmd ) {
                 // a command has appeared on the queue
                 // ++lockedSessions_;
+                storedCommands_->increment(-1);
                 lockedSessions_->increment();
                 setCommandSession( *nextcmd, session );
                 session->setCurrentCommand( nextcmd->getSerial() );
@@ -857,6 +861,7 @@ bool SessionStoreImpl::doSessionFinalization( Session& session, bool keep )
     SCAGCommand* nextcmd = session.popCommand();
     if ( nextcmd ) {
         // ++lockedSessions_;
+        storedCommands_->increment(-1);
         lockedSessions_->increment();
         setCommandSession( *nextcmd, &session );
         session.setCurrentCommand( nextcmd->getSerial() );
@@ -900,9 +905,12 @@ bool SessionStoreImpl::carryNextCommand( Session&     session,
         try {
             if (dolock) cacheLock_.Lock();
             SCAGCommand* com;
+            int v = 0;
             while ( 0 != (com = session.popCommand()) ) {
                 comlist.push_back( com );
+                ++v;
             }
+            storedCommands_->increment(-v);
             // reset the state
             // --lockedSessions_;
             lockedSessions_->increment(-1);

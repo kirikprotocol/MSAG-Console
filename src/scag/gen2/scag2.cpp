@@ -319,7 +319,7 @@ void Scag::init( unsigned mynode )
             int cacheTimeout = 10;
             try {
                 cacheTimeout = cfg.getConfig()->getInt("snmp.cacheTimeout");
-            } catch ( ConfigException& ) {
+            } catch (...) {
                 smsc_log_warn(log,"value <snmp.cacheTimeout> is missed, using %u", cacheTimeout);
             }
             smsc_log_info(log,"creating snmpwrapper @ '%s'", socket.c_str());
