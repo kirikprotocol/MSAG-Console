@@ -82,13 +82,13 @@ void TaskProcessor::init( ConfigView* config )
     
     try { protocolId = config->getInt("ProtocolId"); }
     catch(ConfigException& exc) { protocolId = 0; };
-    try { svcType = config->getString("SvcType"); }
+    try { svcType = ConfString(config->getString("SvcType")).str(); }
     catch(ConfigException& exc) { svcType = 0; };
     
-    responseWaitTime = parseTime(config->getString("responceWaitTime"));
+    responseWaitTime = parseTime(ConfString(config->getString("responceWaitTime")).c_str());
     if (responseWaitTime <= 0) 
         throw ConfigException("Invalid value for 'responceWaitTime' parameter.");
-    receiptWaitTime = parseTime(config->getString("receiptWaitTime"));
+    receiptWaitTime = parseTime(ConfString(config->getString("receiptWaitTime")).c_str());
     if (receiptWaitTime <= 0) 
         throw ConfigException("Invalid value for 'receiptWaitTime' parameter.");
 
@@ -131,7 +131,7 @@ void TaskProcessor::init( ConfigView* config )
     messageSender->init( *this, config );
     finalStateSaver_.reset( new FinalStateSaver(storeLocation) );
 
-    statistics = new StatisticsManager(config->getString("statStoreLocation"),this);
+    statistics = new StatisticsManager(ConfString(config->getString("statStoreLocation")).c_str(),this);
     if (statistics) statistics->Start();
 
     smsc_log_info(log_, "Loading tasks ...");
@@ -191,6 +191,7 @@ TaskProcessor::~TaskProcessor()
   this->Stop();
   taskManager.Stop();
   eventManager.Stop();
+  if (statistics) statistics->Stop();
   
   {
       MutexGuard guard(tasksLock);
@@ -738,6 +739,7 @@ void TaskProcessor::changeDeliveryMessageInfoByRecordId(uint32_t taskId,
   if(task->changeDeliveryMessageInfoByRecordId(msgState, unixTime, recordId,newMsgId))
   {
     smsc_log_debug(log_,"msgId=#%s changed to #%llx",recordId.c_str(),newMsgId);
+    awakeSignal();
   }else
   {
     smsc_log_debug(log_,"changeDeliveryMessageInfoByRecordId failed msgId=#%s",recordId.c_str());
@@ -753,6 +755,7 @@ void TaskProcessor::changeDeliveryMessageInfoByCompositCriterion(uint32_t taskId
   Task* task = taskGuard.get();
   if (!task) throw Exception("TaskProcessor::changeDeliveryMessageInfoByCompositCriterion::: can't get task by taskId='%d'", taskId);
   task->changeDeliveryMessageInfoByCompositCriterion(msgState, unixTime, searchCrit);
+    awakeSignal();
 }
 
 void TaskProcessor::deleteDeliveryMessageByRecordId(uint32_t taskId,
@@ -851,6 +854,7 @@ TaskProcessor::endDeliveryMessagesGeneration(uint32_t taskId)
   Task* task = taskGuard.get();
   if (!task) throw Exception("TaskProcessor::endDeliveryMessagesGeneration::: can't get task by taskId='%d'", taskId);
   task->endDeliveryMessagesGeneration();
+    awakeSignal();
 }
 
 void
@@ -862,6 +866,7 @@ TaskProcessor::changeDeliveryTextMessageByCompositCriterion(uint32_t taskId,
   Task* task = taskGuard.get();
   if (!task) throw Exception("TaskProcessor::changeDeliveryTextMessageByCompositCriterion::: can't get task by taskId='%d'", taskId);
   task->changeDeliveryTextMessageByCompositCriterion(textMsg, searchCrit);
+    awakeSignal();
 }
 
   

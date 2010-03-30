@@ -202,7 +202,7 @@ void TaskInfo::init( ConfigView* config )
         if ( useUssdPush ) {
             // overriding things
             transactionMode = true;
-            flash = false;
+            // flash = false;
             useDataSm = false;
         }
 

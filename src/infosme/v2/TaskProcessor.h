@@ -185,7 +185,7 @@ private:
     StatisticsManager*  statistics;
 
     int     protocolId;
-    char*   svcType;
+    std::string svcType;
     std::string address;
 
     void processWaitingEvents(time_t time);
@@ -213,7 +213,7 @@ public:
     virtual ~TaskProcessor();
 
     int getProtocolId() const { return protocolId; };
-    const char* getSvcType() const { return (svcType) ? svcType:"InfoSme"; };
+    const char* getSvcType() const { return svcType.empty() ? "InfoSme" : svcType.c_str(); };
     const char* getAddress() const { return address.c_str(); };
 
     int getResponseWaitTime() const { return responseWaitTime; }
@@ -263,8 +263,8 @@ public:
 
     virtual void awakeSignal() {
         MutexGuard mg(startLock);
-        startLock.notifyAll();
         notified_ = true;
+        startLock.notifyAll();
     };
 
     bool getStatistics(uint32_t taskId, TaskStat& stat) {

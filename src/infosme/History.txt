@@ -1,6 +1,18 @@
 History in reverse order
 ----------------------------------------------------
 
+2010-03-30 10:40 bukind
+ porting fixes & features into v2:
+ - not opening processed files;
+ - final msgs are purged from memory;
+ - forcing msg load when needed to set state DELETED;
+ - avoiding string memleak when loading configs;
+ - support for DATA_SM pdus;
+ - fix for inProcess flag disabling when set task state="disable"
+ - stopping statmgr when stopping task processor (caused core)
+ - awakening TaskProcessor when task state is changed
+ - removing forced flash=false when using datasmpush
+
 ----------------------------------------------------
 infosme-build-20100329 12:20 bukind
 

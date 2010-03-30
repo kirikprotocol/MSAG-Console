@@ -53,7 +53,12 @@ infoSme_T_storageWasDestroyed(false)
         smsc_log_debug(logger,"making a directory %s",location.c_str());
         smsc::core::buffers::File::MkDir(location.c_str());
     }
-    setInfo(taskInfo);
+    try {
+        setInfo(taskInfo);
+    } catch (...) {
+        if (formatter) delete formatter;
+        throw;
+    }
 }
 
 Task::~Task()
@@ -90,6 +95,9 @@ void Task::setInfo( const TaskInfo& taskInfo )
         active_ = false;
     }
     info = taskInfo;
+
+    // needed to reset inprocess flag
+    setEnabled(taskInfo.enabled);
 
     if ( ! formatter && !info.msgTemplate.empty() ) {
         formatter = new OutputFormatter(info.msgTemplate.c_str());

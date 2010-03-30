@@ -43,6 +43,7 @@
 
 #include "version.inc"
 #include "util/regexp/RegExp.hpp"
+#include "util/config/ConfString.h"
 
 using namespace smsc::sme;
 using namespace smsc::smpp;
@@ -248,7 +249,8 @@ int main(int argc, char** argv)
             }
 
             {
-                std::string fn=ConfString(tpConfig.getString("storeLocation")).str();
+                smsc::util::config::ConfString fnStr(tpConfig.getString("storeLocation"));
+                std::string fn = fnStr.str();
                 if(fn.length() && *fn.rbegin()!='/')
                 {
                     fn+='/';
@@ -269,7 +271,8 @@ int main(int argc, char** argv)
 
         {
             ConfigView adminConfig(manager, "InfoSme.Admin");
-            adminListener->init(adminConfig.getString("host"), adminConfig.getInt("port"));
+            adminListener->init(smsc::util::config::ConfString(adminConfig.getString("host")).c_str(),
+                                adminConfig.getInt("port"));
             bAdminListenerInited = true;
         }
 
