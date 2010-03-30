@@ -1,6 +1,9 @@
 History in reverse order
 ----------------------------------------------------
 
+----------------------------------------------------
+infosme2-build-20100330 11:00 bukind v2.0
+
 2010-03-30 10:40 bukind
  porting fixes & features into v2:
  - not opening processed files;

@@ -22,6 +22,11 @@ inline int tm2xdate( const struct tm& t )
     return (((year << 8) | mon) << 8) | day;
 }
 
+inline smsc::core::buffers::File::offset_type getOffset( uint64_t msgId )
+{
+    return smsc::core::buffers::File::offset_type(msgId & 0xffffffffull);
+}
+
 }
 
 

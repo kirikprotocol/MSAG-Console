@@ -83,7 +83,7 @@ void TaskProcessor::init( ConfigView* config )
     try { protocolId = config->getInt("ProtocolId"); }
     catch(ConfigException& exc) { protocolId = 0; };
     try { svcType = ConfString(config->getString("SvcType")).str(); }
-    catch(ConfigException& exc) { svcType = 0; };
+    catch(ConfigException& exc) { svcType.clear(); };
     
     responseWaitTime = parseTime(ConfString(config->getString("responceWaitTime")).c_str());
     if (responseWaitTime <= 0) 

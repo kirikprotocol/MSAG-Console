@@ -460,7 +460,7 @@ bool SmscConnector::send( Task& task, Message& msg )
             smsc::sms::Address oa, da;
             const std::string& oaStr = 
                 info.address.empty() ? processor_.getAddress() : info.address;
-            if ( !oaStr || !info.convertMSISDNStringToAddress(oaStr.c_str(),oa) ) {
+            if ( !info.convertMSISDNStringToAddress(oaStr.c_str(),oa) ) {
                 if (log_->isErrorEnabled()) {
                     sprintf(whatbuf,"invalid oa: %s",oaStr.c_str());
                     what = whatbuf;
