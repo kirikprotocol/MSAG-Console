@@ -5,6 +5,9 @@
 #include "scag/pvss/api/packets/ProfileRequest.h"
 #include "scag/util/WatchedThreadedTask.h"
 #include "core/threads/ThreadPool.hpp"
+#include "scag/counter/Accumulator.h"
+#include "scag/counter/Manager.h"
+#include "util/PtrDestroy.h"
 
 namespace {
 
@@ -29,23 +32,84 @@ namespace pvss  {
 
 using scag::util::storage::StorageNumbering;
 
+
+class PvssDispatcher::DiskManager
+{
+public:
+    DiskManager( unsigned idx,
+                 unsigned addSpeed,
+                 const AbonentStorageConfig& abntCfg ) :
+    dataFileManager_(0), diskFlusher_(0)
+    {
+        char buf[15];
+        sprintf(buf,"%03u",idx);
+        dataFileManager_ = new util::storage::DataFileManager(1,addSpeed,abntCfg.fileSize/2);
+        diskFlusher_ = new util::storage::DiskFlusher(buf,abntCfg.flushConfig);
+        
+        counter::Manager& mgr = counter::Manager::getInstance();
+        const std::string name = buf;
+        cntpfr_ = mgr.registerAnyCounter( new counter::Accumulator("sys.profiles." + name + ".r") );
+        cntpfw_ = mgr.registerAnyCounter( new counter::Accumulator("sys.profiles." + name + ".w") );
+        cntkbr_ = mgr.registerAnyCounter( new counter::Accumulator("sys.kbytes." + name + ".r") );
+        cntkbw_ = mgr.registerAnyCounter( new counter::Accumulator("sys.kbytes." + name + ".w") );
+    }
+
+    ~DiskManager() {
+        delete diskFlusher_;
+        delete dataFileManager_;
+    }
+
+    DataFileManager& getFileManager() { return *dataFileManager_; }
+    DiskFlusher& getFlusher() { return *diskFlusher_; }
+
+    void start() {
+        diskFlusher_->start();
+    }
+
+    void stop() {
+        dataFileManager_->shutdown();
+        diskFlusher_->stop();
+    }
+
+    void flushIOStatistics( unsigned& pfget, unsigned& kbget,
+                            unsigned& pfset, unsigned& kbset ) {
+        diskFlusher_->flushIOStatistics(pfget,kbget,pfset,kbset);
+        cntpfr_->increment(pfget);
+        cntpfw_->increment(pfset);
+        cntkbr_->increment(kbget);
+        cntkbw_->increment(kbset);
+    }
+
+    const std::string& getName() const { return name_; }
+
+private:
+    std::string            name_;
+    DataFileManager*       dataFileManager_; // owned
+    DiskFlusher*           diskFlusher_;     // owned
+    counter::CounterPtrAny cntpfr_;
+    counter::CounterPtrAny cntpfw_;
+    counter::CounterPtrAny cntkbr_;
+    counter::CounterPtrAny cntkbw_;
+};
+
+
 PvssDispatcher::PvssDispatcher(const NodeConfig& nodeCfg,
                                const AbonentStorageConfig& abntCfg,
                                const InfrastructStorageConfig* infCfg) :
 nodeCfg_(nodeCfg), createdLocations_(0), infrastructIndex_(nodeCfg_.locationsCount),
-logger_(Logger::getInstance("pvss.disp"))
+logger_(Logger::getInstance("pvss.disp")),
+infraFlusher_(0)
 {
     StorageNumbering::setInstance(nodeCfg.nodesCount);
     unsigned addSpeed = nodeCfg_.expectedSpeed / nodeCfg_.disksCount;
-    for (int i = 0; i < nodeCfg_.disksCount; ++i) {
-        dataFileManagers_.push_back(new scag::util::storage::DataFileManager(1, addSpeed, abntCfg.fileSize / 2));
-        char buf[15];
-        sprintf(buf,"%02u",i);
-        diskFlushers_.push_back( new scag::util::storage::DiskFlusher(buf,abntCfg.flushConfig) );
+    for (unsigned i = 0; i < nodeCfg_.disksCount; ++i) {
+        diskManagers_.push_back( new DiskManager( i, addSpeed, abntCfg) );
     }
     if (infCfg) {
-        diskFlushers_.push_back( new scag::util::storage::DiskFlusher("inf",infCfg->flushConfig) );
+        infraFlusher_ = new scag::util::storage::DiskFlusher("inf",infCfg->flushConfig);
     }
+    cntAbonents_ = counter::Manager::getInstance().registerAnyCounter
+        ( new counter::Accumulator("sys.profiles.abn.total") );
     smsc_log_info(logger_, "nodeNumber:%d, nodesCount:%d, storagesCount:%d, locationsCount:%d, disksCount:%d",
                   nodeCfg_.nodeNumber, nodeCfg_.nodesCount, nodeCfg_.storagesCount, nodeCfg_.locationsCount, nodeCfg_.disksCount);
 }
@@ -98,6 +162,7 @@ std::string PvssDispatcher::reportStatistics() const
         }
     }
     char buf[100];
+    cntAbonents_->setValue(total);
     snprintf(buf,sizeof(buf)," abonents=%lu locations=%u storages=%u",total,nodeCfg_.locationsCount,nodeCfg_.storagesCount);
     rv += buf;
     return rv;
@@ -110,8 +175,13 @@ std::string PvssDispatcher::flushIOStatistics( unsigned scale,
     std::string rv;
     rv.reserve(200);
     const unsigned d = dt/2;
-    for ( unsigned idx = 0; idx < nodeCfg_.disksCount; ++idx ) {
-        DiskFlusher* df = diskFlushers_[idx];
+    unsigned idx = 0;
+    for ( std::vector< DiskManager* >::const_iterator i = diskManagers_.begin();
+          i != diskManagers_.end();
+          ++i ) {
+        // unsigned idx = 0; idx < nodeCfg_.disksCount; ++idx ) {
+        // DiskFlusher* df = diskFlushers_[idx];
+        DiskManager* df = *i;
         if ( !df ) continue;
         unsigned pfget, kbget, pfset, kbset;
         pfget = kbget = pfset = kbset = 0;
@@ -123,6 +193,7 @@ std::string PvssDispatcher::flushIOStatistics( unsigned scale,
         if (idx%4==0 && idx>0) {
             rv.append("\n           ");
         }
+        ++idx;
         rv.append(buf);
     }
     if ( infrastructLogic_.get() ) {
@@ -152,11 +223,12 @@ void PvssDispatcher::createLogics( bool makedirs, const AbonentStorageConfig& ab
                 continue;
             }
         }
+        DiskManager* dmgr = diskManagers_[diskNumber];
         AbonentLogic* logic = new AbonentLogic( *this,
                                                 locationNumber,
                                                 abntcfg,
-                                                *dataFileManagers_[diskNumber],
-                                                *diskFlushers_[diskNumber]);
+                                                dmgr->getFileManager(),
+                                                dmgr->getFlusher() );
         abonentLogics_.Push(logic);
         ++createdLocations_;
     }
@@ -168,7 +240,7 @@ void PvssDispatcher::createLogics( bool makedirs, const AbonentStorageConfig& ab
         }
         infrastructLogic_.reset( new InfrastructLogic(*this,
                                                       *infcfg,
-                                                      *diskFlushers_[nodeCfg_.disksCount]));
+                                                      *infraFlusher_));
     }
 }
 
@@ -178,25 +250,18 @@ void PvssDispatcher::init()
     // we have to init all logics in parallel
     // smsc::core::threads::ThreadPool tp;
     smsc::core::buffers::Array< LogicTask* > initTasks;
-    for ( unsigned i = 0; i < abonentLogics_.Count(); ++i ) {
+    for ( unsigned i = 0; i < unsigned(abonentLogics_.Count()); ++i ) {
         LogicTask* task = abonentLogics_[i]->startInit();
         if ( task ) initTasks.Push(task);
-        /*
-        LogicInitTask* task = new LogicInitTask(abonentLogics_[i]);
-        dataFileManagers_[abonentLogics_[i]->getLocationNumber()]
-        serverCore->startTask( task, false );
-         */
     }
 
     if ( infrastructLogic_.get() ) {
         LogicTask* task = infrastructLogic_->startInit();
         if ( task ) initTasks.Push(task);
-        // serverCore->startSubTask(task, false);
-        // infrastructLogic_->init(*infcfg);
     }
 
     // make sure all the tasks are started and finished
-    for ( unsigned i = 0; i < initTasks.Count(); ++i ) {
+    for ( unsigned i = 0; i < unsigned(initTasks.Count()); ++i ) {
         LogicTask* task = initTasks[i];
         task->waitUntilStarted();
         task->waitUntilReleased();
@@ -204,7 +269,7 @@ void PvssDispatcher::init()
 
     // checking for results, cleanup
     std::string failure;
-    for ( unsigned i = 0; i < initTasks.Count(); ++i ) {
+    for ( unsigned i = 0; i < unsigned(initTasks.Count()); ++i ) {
         LogicTask* task = initTasks[i];
         std::string fail = task->getFailure();
         if ( !fail.empty() ) {
@@ -217,12 +282,12 @@ void PvssDispatcher::init()
     if ( !failure.empty() ) throw smsc::util::Exception(failure.c_str());
 
     // starting flushers
-    for ( std::vector<scag::util::storage::DiskFlusher*>::const_iterator i = diskFlushers_.begin();
-          i != diskFlushers_.end();
+    for ( std::vector<DiskManager*>::const_iterator i = diskManagers_.begin();
+          i != diskManagers_.end();
           ++i ) {
         (*i)->start();
     }
-
+    if ( infraFlusher_ ) infraFlusher_->start();
     smsc_log_info(logger_,"all storages inited, stats: %s", reportStatistics().c_str());
 }
 
@@ -230,7 +295,7 @@ void PvssDispatcher::init()
 void PvssDispatcher::rebuildIndex( unsigned maxSpeed )
 {
     smsc::core::buffers::Array< LogicTask* > rebuildTasks;
-    for ( unsigned i = 0; i < abonentLogics_.Count(); ++i ) {
+    for ( unsigned i = 0; i < unsigned(abonentLogics_.Count()); ++i ) {
         LogicTask* task = abonentLogics_[i]->startRebuildIndex(maxSpeed);
         if (task) rebuildTasks.Push(task);
     }
@@ -241,7 +306,7 @@ void PvssDispatcher::rebuildIndex( unsigned maxSpeed )
     }
 
     // make sure all the tasks are started and finished
-    for ( unsigned i = 0; i < rebuildTasks.Count(); ++i ) {
+    for ( unsigned i = 0; i < unsigned(rebuildTasks.Count()); ++i ) {
         LogicTask* task = rebuildTasks[i];
         task->waitUntilStarted();
         task->waitUntilReleased();
@@ -249,7 +314,7 @@ void PvssDispatcher::rebuildIndex( unsigned maxSpeed )
 
     // checking for results, cleanup
     std::string failure;
-    for ( unsigned i = 0; i < rebuildTasks.Count(); ++i ) {
+    for ( unsigned i = 0; i < unsigned(rebuildTasks.Count()); ++i ) {
         LogicTask* task = rebuildTasks[i];
         std::string fail = task->getFailure();
         if ( !fail.empty() ) {
@@ -287,41 +352,32 @@ void PvssDispatcher::shutdown() {
     smsc_log_info(logger_,"shutting down a pvss dispatcher");
     uint16_t created = createdLocations_;
 
-    // stopping all file managers
-    for ( std::vector< DataFileManager* >::iterator i = dataFileManagers_.begin();
-          i != dataFileManagers_.end();
+    // stopping all disk managers
+    for ( std::vector< DiskManager* >::const_iterator i = diskManagers_.begin();
+          i != diskManagers_.end();
           ++i ) {
-        if ( *i ) {
-            (*i)->shutdown();
-        }
-    }
-
-    // stopping all disk flushers
-    for ( std::vector< DiskFlusher* >::const_iterator i = diskFlushers_.begin();
-          i != diskFlushers_.end();
-          ++i ) {
+        // dfm.shutdown + df.stop
         (*i)->stop();
-        delete *i;
     }
-    diskFlushers_.clear();
+    if ( infraFlusher_ ) {
+        infraFlusher_->stop();
+        delete infraFlusher_;
+        infraFlusher_ = 0;
+    }
 
-  for (unsigned i = 0; i < created; ++i) {
-    delete abonentLogics_[i];
-    --createdLocations_;
-  }
-  for (unsigned i = 0; i < dataFileManagers_.size(); ++i) {
-    if (dataFileManagers_[i]) {
-      delete dataFileManagers_[i];
+    for (unsigned i = 0; i < created; ++i) {
+        delete abonentLogics_[i];
+        --createdLocations_;
     }
-  }
-  dataFileManagers_.clear();
+    for_each(diskManagers_.begin(), diskManagers_.end(), smsc::util::PtrDestroy());
+    diskManagers_.clear();
 }
+
 
 PvssDispatcher::~PvssDispatcher() {
-  shutdown();
+    shutdown();
     smsc_log_info(logger_,"dtor pvss dispatcher");
 }
-
 
 }//pvss
 }//scag2

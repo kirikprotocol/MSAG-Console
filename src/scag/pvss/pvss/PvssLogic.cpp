@@ -14,6 +14,8 @@
 #include "scag/pvss/api/packets/IncModCommand.h"
 #include "scag/pvss/api/packets/SetCommand.h"
 #include "util/config/ConfString.h"
+#include "scag/counter/Accumulator.h"
+#include "scag/counter/Manager.h"
 
 #include "scag/util/storage/CachedDelayedThreadedDiskStorage.h"
 
@@ -492,7 +494,14 @@ public:
     log_(0),
     storage_(0),
     diskFlusher_(&flusher)
-    {}
+    {
+        counter::Manager& mgr = counter::Manager::getInstance();
+        cntpfr_ = mgr.registerAnyCounter(new counter::Accumulator("sys.profiles." + name_ + ".r"));
+        cntpfw_ = mgr.registerAnyCounter(new counter::Accumulator("sys.profiles." + name_ + ".w"));
+        cntkbr_ = mgr.registerAnyCounter(new counter::Accumulator("sys.kbytes." + name_ + ".r"));
+        cntkbw_ = mgr.registerAnyCounter(new counter::Accumulator("sys.kbytes." + name_ + ".w"));
+        cntTotal_ = mgr.registerAnyCounter(new counter::Accumulator("sys.profiles." + name_ + ".total"));
+    }
     
     void init( const std::string& name,
                const InfrastructStorageConfig& cfg,
@@ -565,7 +574,9 @@ public:
                             unsigned dt );
 
     unsigned long filledDataSize() const {
-        return static_cast<unsigned long>(storage_->filledDataSize());
+        unsigned long v = static_cast<unsigned long>(storage_->filledDataSize());
+        cntTotal_->setValue(v);
+        return v;
     }
     
 private:
@@ -582,6 +593,11 @@ private:
     InfrastructStorage*     storage_;
     DiskFlusher*            diskFlusher_;
     LockableProfile         dummyProfile_;  // is used to be locked when there is no profile
+    counter::CounterPtrAny  cntpfr_;
+    counter::CounterPtrAny  cntpfw_;
+    counter::CounterPtrAny  cntkbr_;
+    counter::CounterPtrAny  cntkbw_;
+    counter::CounterPtrAny  cntTotal_;
 };
 
 
@@ -705,6 +721,10 @@ void InfrastructLogic::InfraLogic::flushIOStatistics( std::string& rv,
         unsigned pfget, kbget, pfset, kbset;
         pfget = kbget = pfset = kbset = 0;
         storage_->flushIOStatistics(pfget,kbget,pfset,kbset);
+        cntpfr_->increment(pfget);
+        cntpfw_->increment(pfset);
+        cntkbr_->increment(kbget);
+        cntkbw_->increment(kbset);
         char buf[100];
         const unsigned d = dt/2;
         sprintf(buf," %s:%u(%u)/%u(%u)",name_.c_str(),

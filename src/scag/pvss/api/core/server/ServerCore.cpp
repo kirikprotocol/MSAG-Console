@@ -10,6 +10,8 @@
 #include "scag/pvss/api/packets/ResponseVisitor.h"
 #include "scag/pvss/api/packets/RequestVisitor.h"
 #include "scag/pvss/api/packets/ProfileRequest.h"
+#include "scag/counter/Accumulator.h"
+#include "scag/counter/Manager.h"
 
 namespace {
 
@@ -37,7 +39,6 @@ namespace scag2 {
 namespace pvss {
 namespace core {
 namespace server {
-
 
 ServerCore::ServerCore( ServerConfig* config, Protocol* protocol ) :
 Core(config,protocol), Server(),
@@ -325,6 +326,11 @@ int ServerCore::doExecute()
     smsc_log_info(log_,"Server started");
     Statistics totalStat;
     Statistics lastStat;
+    // register counters to be delivered via snmp
+    counter::Manager& mgr = counter::Manager::getInstance();
+    counter::CounterPtrAny cntConn = mgr.registerAnyCounter( new counter::Accumulator("sys.connections.new") );
+    counter::CounterPtrAny cntTotalReq  = mgr.registerAnyCounter( new counter::Accumulator("sys.requests.total") );
+    counter::CounterPtrAny cntReqPerSec  = mgr.registerAnyCounter( new counter::Accumulator("sys.requests.speed") );
     while (!isStopping)
     {
         // smsc_log_debug(log_,"cycling clientCore");
@@ -381,14 +387,20 @@ int ServerCore::doExecute()
             fullstat.append("\n          last err: ");
             fullstat.append(caught);
         }
+        util::msectime_type e10ms;
+        const unsigned scale = lastStat.prescale(e10ms);
         if ( syncDispatcher_ ) {
             fullstat.append("\n  R/W [pf/s(kb/s)]:");
-            util::msectime_type e10ms;
-            unsigned scale = lastStat.prescale(e10ms);
             fullstat.append(syncDispatcher_->flushIOStatistics(scale,unsigned(e10ms)));
             fullstat.append("\n    Data: ");
             fullstat.append(syncDispatcher_->reportStatistics());
         }
+
+        // counters
+        cntConn->setValue(conns);
+        cntTotalReq->setValue(totalStat.requests);
+        cntReqPerSec->setValue((lastStat.requests*scale+e10ms/2)/e10ms);
+
         smsc_log_info(log_,"%s",fullstat.c_str());
 
     }

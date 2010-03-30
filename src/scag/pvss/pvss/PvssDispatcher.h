@@ -8,6 +8,7 @@
 
 #include "scag/pvss/api/core/server/Dispatcher.h"
 #include "scag/pvss/pvss/PvssLogic.h"
+#include "scag/counter/Counter.h"
 
 namespace scag {
 namespace util {
@@ -73,15 +74,18 @@ private:
 private:
   unsigned getErrorIndex() const { return static_cast<unsigned>(-1); }
 
+    class DiskManager;
+
 private:
-  const NodeConfig nodeCfg_;
-  uint16_t createdLocations_;
-  unsigned infrastructIndex_;
-  std::auto_ptr<InfrastructLogic> infrastructLogic_;
-  Logger *logger_;
-  Array<AbonentLogic*> abonentLogics_;
-  vector<scag::util::storage::DataFileManager*> dataFileManagers_;
-    vector<scag::util::storage::DiskFlusher*> diskFlushers_;
+    const NodeConfig nodeCfg_;
+    uint16_t createdLocations_;
+    unsigned infrastructIndex_;
+    std::auto_ptr<InfrastructLogic> infrastructLogic_;
+    Logger *logger_;
+    Array<AbonentLogic*> abonentLogics_;
+    std::vector< DiskManager* > diskManagers_;  // owned
+    DiskFlusher*  infraFlusher_;
+    counter::CounterPtrAny cntAbonents_;
 };
 
 }//pvss

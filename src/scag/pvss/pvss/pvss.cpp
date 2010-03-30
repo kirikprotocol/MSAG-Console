@@ -45,7 +45,7 @@ using smsc::logger::Logger;
 using smsc::util::Exception;
 
 // EventMonitor waitObj;
-PersServer *persServer = NULL;
+std::auto_ptr<PersServer> persServer;
 std::auto_ptr<BackupProcessor> backupProcessor;
 
 
@@ -73,7 +73,7 @@ extern "C" void appSignalHandler(int sig)
     smsc_log_warn(logger, "Signal %d handled !", sig);
     if (sig==SIGTERM || sig==SIGINT)
     {
-       if (persServer) persServer->stop();
+        if (persServer.get()) persServer->stop();
         if (backupProcessor.get()) backupProcessor->stop();
         // {
         // MutexGuard mg(waitObj);
@@ -545,8 +545,8 @@ int main(int argc, char* argv[]) {
         ReaderTaskManager readers(syncConfig);
         WriterTaskManager writers(syncConfig);
 
-        persServer = new PersServer(static_cast<ServerCore&>(*server.get()), readers, writers, persProtocol,
-                                    syncConfig.getPerfCounterOn(), syncConfig.getPerfCounterPeriod());
+        persServer.reset(new PersServer(static_cast<ServerCore&>(*server.get()), readers, writers, persProtocol,
+                                        syncConfig.getPerfCounterOn(), syncConfig.getPerfCounterPeriod()));
         persServer->init(host.c_str(), syncConfig.getPort());
         persServer->Execute();
 
@@ -566,6 +566,9 @@ int main(int argc, char* argv[]) {
     //server->shutdown();
 
         smsc_log_error(logger, "PersServer stopped");
+        persServer.reset(0);
+        smsc_log_error(logger, "PersServer destroyed");
+
     } catch (const smsc::util::config::ConfigException& exc) {
         smsc_log_error(logger, "Configuration invalid. Details: %s Exiting.", exc.what());
         resultCode = -2;
