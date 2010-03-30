@@ -337,7 +337,6 @@ snmpqueue_(snmpqueue)
         counter::ObserverPtr o = mgr.getObserver(::smppCounterName);
         licenseCounter =
             mgr.registerAnyCounter( new counter::TimeSnapshot(::smppCounterName,10,20,o.get()) );
-        // licenseCounter->setMaxVal(licenseCounter->getBaseInterval()*maxsms);
     }
   running=false;
   lastUid=0;
@@ -1026,8 +1025,9 @@ void SmppManagerImpl::putCommand( SmppChannel* ct, std::auto_ptr<SmppCommand> cm
 
     MutexGuard mg(queueMon);
     int licLimit=ConfigManager::Instance().getLicense().maxsms;
-    // int cntValue=licenseCounter.Get()/10;
-    const int cntValue = licenseCounter->increment(0,0)/licenseCounter->getBaseInterval();
+    // NOTE: counter already gives value averaged to the number of seconds
+    // this call actually does not increment, but adjust current time.
+    const int cntValue = licenseCounter->increment(0,0);
     if(cntValue>licLimit)
     {
         bool allow=false;
@@ -1052,13 +1052,13 @@ void SmppManagerImpl::putCommand( SmppChannel* ct, std::auto_ptr<SmppCommand> cm
     }
     
     // int cnt = entPtr->incCnt.Get();
-    int cnt = int(entPtr->incCnt->increment(0,0));
-    if (entPtr->info.sendLimit>0 &&
-        unsigned(cnt/entPtr->incCnt->getBaseInterval()) >= unsigned(entPtr->info.sendLimit) &&
+    unsigned cnt = unsigned(entPtr->incCnt->increment(0,0));
+    if (entPtr->info.sendLimit>0 && 
+        cnt >= unsigned(entPtr->info.sendLimit) &&
         cmd->getCommandId()==SUBMIT &&
         !cmd->get_sms()->hasIntProperty(smsc::sms::Tag::SMPP_USSD_SERVICE_OP))
     {
-        smsc_log_warn(limitsLog,"Denied submit from '%s' by sendLimit:%d/%d",entPtr->info.systemId.c_str(),cnt/entPtr->incCnt->getBaseInterval(),entPtr->info.sendLimit);
+        smsc_log_warn(limitsLog,"Denied submit from '%s' by sendLimit:%d/%d",entPtr->info.systemId.c_str(),cnt,entPtr->info.sendLimit);
         std::auto_ptr<SmppCommand> resp = mkErrResp(i,cmd->get_dialogId(),smsc::system::Status::MSGQFUL);
         ct->putCommand(resp);
     } else if ( queue.Count()>=queueLimit && !cmd->get_sms()->hasIntProperty(smsc::sms::Tag::SMPP_USSD_SERVICE_OP)) {
@@ -1073,12 +1073,8 @@ void SmppManagerImpl::putCommand( SmppChannel* ct, std::auto_ptr<SmppCommand> cm
         } else {
             queue.Push( cmd.release() );
             queueCount->setValue(queue.Count());
-            if ( entPtr->info.sendLimit>0 ) {
-                entPtr->incCnt->increment();
-                //smsc_log_debug(limitsLog,"cnt=%d",entPtr->incCnt.Get());
-            }
+            entPtr->incCnt->increment();
             entPtr->incQueueCount();
-            // licenseCounter.Inc();
             licenseCounter->increment();
         }
     }

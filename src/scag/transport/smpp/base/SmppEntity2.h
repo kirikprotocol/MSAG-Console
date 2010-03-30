@@ -84,12 +84,6 @@ public:
               throw exceptions::SCAGException("entity '%s' cannot create counter '%s'",
                                               info.systemId.c_str(), buf);
           }
-          /*
-          const unsigned sendLimit = (info.sendLimit>0)?info.sendLimit:100000;
-          if (sendLimit>0) {
-              incCnt->setMaxVal(incCnt->getBaseInterval()*sendLimit);
-          }
-           */
       }
       seq = 1;
       slicingSeq8 = 0;
