@@ -125,22 +125,39 @@ struct Address
     AddressValue addr_value;
     int iplan,itype;
     memset(addr_value,0,sizeof(addr_value));
-    int scaned = sscanf(text,".%d.%d.%20s",
-      &itype,
-      &iplan,
+    int scanned = sscanf(text,".5.0.%20s",
       addr_value);
-    if ( scaned != 3 )
+    if(scanned==1)
     {
-      scaned = sscanf(text,"+%20[0123456789?]s",addr_value);
-      if ( scaned )
+      itype=5;
+      iplan=0;
+    }else
+    {
+      scanned = sscanf(text,".%d.1.%20[0123456789?]s",&itype,addr_value);
+      if(scanned==2)
+      {
+        iplan=1;
+        scanned=1;
+        if( itype!=0 && itype!=1)
+        {
+          char buf[32];
+          sprintf(buf,"invalid ton=%d",itype);
+          throw runtime_error(buf);
+        }
+      }
+    }
+    if ( scanned != 1 )
+    {
+      scanned = sscanf(text,"+%20[0123456789?]s",addr_value);
+      if ( scanned )
       {
         iplan = 1;//ISDN
         itype = 1;//INTERNATIONAL
       }
       else
       {
-        scaned = sscanf(text,"%20[0123456789?]s",addr_value);
-        if ( !scaned )
+        scanned = sscanf(text,"%20[0123456789?]s",addr_value);
+        if ( !scanned )
           throw runtime_error(string("bad address ")+text);
         else
         {
@@ -1400,7 +1417,7 @@ struct SMS
     billingRecord = billing;
   };
 
-  inline bool billingRequired()
+  inline bool billingRequired()const
   {
     return billingRecord==BILLING_NORMAL   || billingRecord==BILLING_MT ||
            billingRecord==BILLING_ONSUBMIT || billingRecord==BILLING_CDR;
