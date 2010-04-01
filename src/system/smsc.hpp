@@ -524,7 +524,7 @@ public:
   bool ReportDelivery(int dlgId,const SMS& sms,bool final,int policy)
   {
     try{
-      if(sms.billingRecord &&
+      if(sms.billingRequired() &&
           (
             sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY)==policy ||
             policy==chargeAlways
