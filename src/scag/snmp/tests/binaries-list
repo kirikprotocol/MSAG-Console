@@ -18,4 +18,5 @@ scag/tests/testsnmpsmsc	testsmsc	\
 scag/tests/testMultiSubagents testMultiSubagents \
    $(__LIBRARIES) \
    $(SNMP_LIBS_CORE) \
+   $(SSL_LIB) \
    -lpthread -lrt -ldl $(LIBMALLOC)
