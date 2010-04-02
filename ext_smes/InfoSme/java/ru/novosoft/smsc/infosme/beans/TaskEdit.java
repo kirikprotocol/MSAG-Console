@@ -91,7 +91,7 @@ public class TaskEdit extends InfoSmeBean
 
   private Task getTask(User user) throws  AdminException {
     if (!create)
-      return getInfoSmeContext().getInfoSmeConfig().getTask(getId());
+      return getInfoSmeContext().getInfoSmeConfig().getTask(getId()).cloneTask();
     else {
       return getInfoSmeContext().getInfoSmeConfig().createTask(user);
     }

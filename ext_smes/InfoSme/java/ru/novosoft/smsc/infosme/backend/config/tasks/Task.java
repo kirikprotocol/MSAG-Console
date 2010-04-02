@@ -91,6 +91,8 @@ public class Task extends Observable
   private boolean secretFlash;
   private String secretMessage="";
 
+  private String storeLocation;
+
   Task(String id, String storeLocation) {
     this.id = id;
     activeWeekDaysSet = new HashSet(WEEK_DAYS.length);
@@ -98,6 +100,7 @@ public class Task extends Observable
     if (delivery)
       provider = Task.INFOSME_EXT_PROVIDER;
     this.modified = true;
+    this.storeLocation = storeLocation;
     location = storeLocation + File.separatorChar + id;
   }
 
@@ -778,5 +781,70 @@ public class Task extends Observable
 
   public boolean isModified() {
     return modified;
+  }
+
+  public Task cloneTask() {
+    Task t = new Task(this.id, this.storeLocation);
+
+    t.modified = this.modified;
+
+    // General
+    t.owner = this.owner;
+    t.name = this.name;
+    t.address = this.address;
+    t.provider = this.provider;
+    t.enabled = this.enabled;
+    t.priority = this.priority;
+    t.replaceMessage = this.replaceMessage;
+    t.svcType = this.svcType;
+    t.useDataSm = this.useDataSm;
+    t.useUssdPush = this.useUssdPush;
+
+    // Retry on fail
+    t.retryOnFail = this.retryOnFail;
+    t.retryPolicy = this.retryPolicy;
+//   t.retryTime = this."";
+
+
+    // Time arguments
+    t.endDate = this.endDate == null ? null : new Date(this.endDate.getTime());
+    t.startDate = this.startDate == null ? null : new Date(this.startDate.getTime());
+    t.validityPeriod = this.validityPeriod == null ? null : new Date(this.validityPeriod.getTime()) ;
+    t.validityDate= this.validityDate == null ? null : new Date(this.validityDate.getTime());
+    t.activePeriodStart = this.activePeriodStart == null ? null : new Date(this.activePeriodStart.getTime());
+    t.activePeriodEnd = this.activePeriodEnd == null ? null : new Date(this.activePeriodEnd.getTime());
+    t.activeWeekDaysSet = this.activeWeekDaysSet == null ? null : new HashSet(this.activeWeekDaysSet);
+
+    // Other
+    t.query = this.query;
+    t.template = this.template;
+    t.text = this.text;
+    t.dsTimeout = this.dsTimeout;
+    t.messagesCacheSize = this.messagesCacheSize;
+    t.messagesCacheSleep = this.messagesCacheSleep;
+    t.transactionMode = this.transactionMode;
+    t.keepHistory = this.keepHistory;
+    // temporary switched to true
+    t.saveFinalState = this.saveFinalState;
+    t.flash = this.flash;
+    t.uncommitedInGeneration = this.uncommitedInGeneration;
+    t.uncommitedInProcess = this.uncommitedInProcess;
+    t.trackIntegrity = this.trackIntegrity;
+    t.delivery = this.delivery;
+
+    // for new deliveries
+    t.regionId = this.regionId;
+    t.deliveriesFile = this.deliveriesFile == null ? null : new File(this.deliveriesFile.getAbsolutePath());
+    t.deliveriesFileContainsTexts = this.deliveriesFileContainsTexts;
+    t.actualRecordsSize = this.actualRecordsSize;
+    t.messagesHaveLoaded = this.messagesHaveLoaded;
+    t.location = this.location;
+    // for secret
+    t.secret = this.secret;
+    t.secretFlash = this.secretFlash;
+    t.secretMessage = this.secretMessage;
+
+    return  t;
+
   }
 }
