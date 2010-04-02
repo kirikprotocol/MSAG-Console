@@ -24,7 +24,7 @@ int main( int argc, char** argv )
 
     TrapRecord trap;
     trap.recordType = TrapRecord::Trap;
-    trap.status = TrapRecord::STATNEW;
+    trap.status = TrapRecord::TRAPTNEWALERT;
     trap.id = "echo1";
     trap.category = "SME";
     trap.severity = TrapRecord::MAJOR;

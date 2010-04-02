@@ -1,0 +1,38 @@
+-- Copyright 2008 Sibinco. All Rights Reserved
+-- HISTORY
+-- 2010-04-02  Dmitry Bukin     created
+
+    EYELINE-TESTMULTI-MIB DEFINITIONS ::= BEGIN
+    IMPORTS
+        TimeTicks
+    FROM SNMPv2-SMI
+        sibinco 
+    FROM SIBINCO-SMSC-MIB
+        DisplayString
+    FROM SNMPv2-TC;
+
+    -- sibinco is 1.3.6.1.4.1.26757
+    -- sibinco is iso.org.dod.internet.private.enterprises.sibinco
+
+    -- 1.3.6.1.4.1.26757.9999
+    testMulti OBJECT IDENTIFIER ::= { sibinco 9999 }
+
+    -- 1.3.6.1.4.1.26757.9999.1
+    testMultiStatus OBJECT-TYPE
+    SYNTAX INTEGER
+    MAX-ACCESS read-only
+    STATUS  current
+    DESCRIPTION
+    "Current status (R/W)"
+    ::= { testMulti 1 }
+
+    -- 1.3.6.1.4.1.26757.9999.2
+    testMultiUpTime OBJECT-TYPE
+    SYNTAX TimeTicks
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+    "The time (in hundredths of a second) since the startup."
+    ::= { testMulti 2 }
+
+    END

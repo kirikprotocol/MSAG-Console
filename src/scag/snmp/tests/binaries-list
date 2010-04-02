@@ -1,4 +1,6 @@
 scag/tests/testsnmp	testsnmp	\
+   -lscag-snmp \
+   -lscag-snmp-counters \
    @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
    $(__LIBRARIES) \
    $(if $(filter YES,$(SNMP)),-lscag-snmp) \
@@ -11,4 +13,9 @@ scag/tests/testsnmpsmsc	testsmsc	\
    $(__LIBRARIES) \
    $(SNMP_LIBS_CORE) \
   $(SSL_LIB) \
+   -lpthread -lrt -ldl $(LIBMALLOC)
+
+scag/tests/testMultiSubagents testMultiSubagents \
+   $(__LIBRARIES) \
+   $(SNMP_LIBS_CORE) \
    -lpthread -lrt -ldl $(LIBMALLOC)
