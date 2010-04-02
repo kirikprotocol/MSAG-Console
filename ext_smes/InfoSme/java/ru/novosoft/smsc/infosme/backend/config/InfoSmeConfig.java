@@ -327,11 +327,40 @@ public class InfoSmeConfig {
     task.setStartDate(new Date());
   }
 
-  public void addTask(Task t) {
+  private static void validateTask(Task t) throws AdminException{
+    if (t.getPriority() <= 0 || t.getPriority() > 1000) {
+      throw new AdminException("Task priority should be positive and less than 1000: "+t.getPriority());
+    }
+    if(t.getAddress() != null && t.getAddress().length() > 0) {
+      char c = t.getAddress().charAt(0);
+      if(c != '+' && !Character.isDigit(c)) {
+        throw new AdminException("Task address is wrong "+t.getAddress());
+      }
+      for(int i = 1; i <= t.getAddress().length() - 1; i++) {
+        if(!Character.isDigit(t.getAddress().charAt(i))) {
+          throw new AdminException("Task address is wrong "+t.getAddress());
+        }
+      }
+    }
+    if (t.isRetryOnFail() && (t.getRetryPolicy() == null || t.getRetryPolicy().length() == 0)) {
+      throw new AdminException("Task retry time specified incorrectly");
+    }
+    if(t.getValidityDate() == null && t.getValidityPeriod() == null) {
+      throw new AdminException("Task's validity period/date specified incorrectly");
+    }
+    if((t.getActivePeriodStart() == null && t.getActivePeriodEnd() != null) ||
+        (t.getActivePeriodStart() != null && t.getActivePeriodEnd() == null)) {
+      throw new AdminException("Task's active period specified incorrectly");
+    }
+  }
+
+  public void addTask(Task t) throws AdminException{
+    validateTask(t);
     taskManager.addTask(t);
   }
 
   public synchronized void addAndApplyTask(Task t) throws AdminException {
+    validateTask(t);
     try {
       Config cfg = ctx.loadCurrentConfig();
       boolean modified = taskManager.containsTaskWithId(t.getId());
