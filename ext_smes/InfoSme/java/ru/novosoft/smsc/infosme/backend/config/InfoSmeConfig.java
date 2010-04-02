@@ -1,6 +1,7 @@
 package ru.novosoft.smsc.infosme.backend.config;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.preferences.UserPreferences;
 import ru.novosoft.smsc.admin.region.Region;
 import ru.novosoft.smsc.admin.users.User;
 import ru.novosoft.smsc.admin.journal.SubjectTypes;
@@ -327,7 +328,13 @@ public class InfoSmeConfig {
     task.setStartDate(new Date());
   }
 
-  private static void validateTask(Task t) throws AdminException{
+  public static void validateSiebelParams(TaskParams p) throws AdminException{
+    p.setValidityDate(new Date());
+    p.setPriority(10);
+    validate(p);
+  }
+
+  private static void validate(TaskParams t) throws AdminException{
     if (t.getPriority() <= 0 || t.getPriority() > 1000) {
       throw new AdminException("Task priority should be positive and less than 1000: "+t.getPriority());
     }
@@ -352,6 +359,28 @@ public class InfoSmeConfig {
         (t.getActivePeriodStart() != null && t.getActivePeriodEnd() == null)) {
       throw new AdminException("Task's active period specified incorrectly");
     }
+  }
+
+  private static void validateTask(Task t) throws AdminException{
+    TaskParams p = new TaskParams();
+    p.setActivePeriodEnd(t.getActivePeriodEnd());
+    p.setActivePeriodStart(t.getActivePeriodStart());
+    p.setAddress(t.getAddress());
+    p.setPriority(t.getPriority());
+    p.setRetryOnFail(t.isRetryOnFail());
+    p.setRetryPolicy(t.getRetryPolicy());
+    p.setValidityPeriod(t.getValidityPeriod());
+    validate(p);
+  }
+
+  public static void validateInfoSmePreferences(UserPreferences prefs) throws AdminException{
+    TaskParams p = new TaskParams();
+    p.setActivePeriodEnd(prefs.getInfosmePeriodEnd());
+    p.setActivePeriodStart(prefs.getInfosmePeriodStart());
+    p.setAddress(prefs.getInfosmeSourceAddress());
+    p.setPriority(prefs.getInfosmePriority());
+    p.setValidityPeriod(prefs.getInfosmeValidityPeriod());
+    validate(p);
   }
 
   public void addTask(Task t) throws AdminException{
@@ -1236,5 +1265,82 @@ public class InfoSmeConfig {
 
   public Boolean getUssdPushFeature() {
     return ussdPushFeature;
+  }
+
+
+  public static class TaskParams {
+
+    private int priority;
+    private String address;
+    private boolean retryOnFail;
+    private String retryPolicy;
+    private Date validityDate;
+    private Date validityPeriod;
+    private Date activePeriodStart;
+    private Date activePeriodEnd;
+
+    public int getPriority() {
+      return priority;
+    }
+
+    public void setPriority(int priority) {
+      this.priority = priority;
+    }
+
+    public String getAddress() {
+      return address;
+    }
+
+    public void setAddress(String address) {
+      this.address = address;
+    }
+
+    public boolean isRetryOnFail() {
+      return retryOnFail;
+    }
+
+    public void setRetryOnFail(boolean retryOnFail) {
+      this.retryOnFail = retryOnFail;
+    }
+
+    public String getRetryPolicy() {
+      return retryPolicy;
+    }
+
+    public void setRetryPolicy(String retryPolicy) {
+      this.retryPolicy = retryPolicy;
+    }
+
+    public Date getValidityDate() {
+      return validityDate;
+    }
+
+    public void setValidityDate(Date validityDate) {
+      this.validityDate = validityDate;
+    }
+
+    public Date getValidityPeriod() {
+      return validityPeriod;
+    }
+
+    public void setValidityPeriod(Date validityPeriod) {
+      this.validityPeriod = validityPeriod;
+    }
+
+    public Date getActivePeriodStart() {
+      return activePeriodStart;
+    }
+
+    public void setActivePeriodStart(Date activePeriodStart) {
+      this.activePeriodStart = activePeriodStart;
+    }
+
+    public Date getActivePeriodEnd() {
+      return activePeriodEnd;
+    }
+
+    public void setActivePeriodEnd(Date activePeriodEnd) {
+      this.activePeriodEnd = activePeriodEnd;
+    }
   }
 }

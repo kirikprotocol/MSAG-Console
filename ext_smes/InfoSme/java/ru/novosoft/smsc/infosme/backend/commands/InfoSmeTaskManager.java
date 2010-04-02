@@ -159,11 +159,11 @@ public class InfoSmeTaskManager implements Runnable{
       long currentTime = task.getStartDate() == null ? System.currentTimeMillis() : task.getStartDate().getTime();
       List messages = new ArrayList(maxMessagesPerSecond + 1);
       boolean res = getMessages(is, maxMessagesPerSecond, new Date(currentTime), rtree, smeContext, messages);
-      while (res) {
+      while (res || !messages.isEmpty()) {
         if (!messages.isEmpty()) {
           smeContext.getInfoSme().addDeliveryMessages(task.getId(), messages);
           messages.clear();
-          currentTime += 1000;      
+          currentTime += 1000;
         }
         res = getMessages(is, maxMessagesPerSecond,  new Date(currentTime), rtree, smeContext, messages);
       }
@@ -227,7 +227,7 @@ public class InfoSmeTaskManager implements Runnable{
   }
 
   private boolean getMessages(BufferedReader is, int limit, Date sendDate,
-                           TemplatesRadixTree rtree, InfoSmeContext smeContext, List list) throws IOException, AdminException {
+                              TemplatesRadixTree rtree, InfoSmeContext smeContext, List list) throws IOException, AdminException {
     String line = null;
     BlackListManager blm = smeContext.getBlackListManager();
     for (int i=0; i < limit && ((line = is.readLine()) != null); i++) {

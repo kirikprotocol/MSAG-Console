@@ -2,6 +2,7 @@ package ru.novosoft.smsc.infosme.backend;
 
 import org.xml.sax.SAXException;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.preferences.UserPreferences;
 import ru.novosoft.smsc.infosme.backend.config.InfoSmeConfig;
 import ru.novosoft.smsc.infosme.backend.siebel.SiebelDataProvider;
 import ru.novosoft.smsc.infosme.backend.siebel.SiebelTaskManager;
@@ -280,5 +281,14 @@ public class InfoSmeContext implements SMEAppContext
 
   public Boolean getUssdFeature() {
     return infoSmeConfig.getUssdPushFeature();
+  }
+
+  public String validateInfosmePrefs(UserPreferences preferences){
+    try{
+      InfoSmeConfig.validateInfoSmePreferences(preferences);
+      return null;
+    }catch(AdminException e) {
+      return e.getMessage();
+    }
   }
 }

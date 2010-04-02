@@ -133,6 +133,15 @@ public class UsersEdit extends UsersEditBean {
       if(isUssdPushFeature()) {
         prefs.setInfosmeUssdPush(Boolean.valueOf(infoSmeUssdPush));
       }
+      try {
+        String errors = validateInfosmePrefs(prefs);
+        if(errors != null) {
+          return error(errors);
+        }
+      } catch (Exception e) {
+        logger.error(e,e);
+        return error(e.getMessage() == null ? "Unknown" : e.getMessage());
+      }
       if (timezone != null)
         prefs.setTimezone(TimeZone.getTimeZone(timezone));
       journalAppend(SubjectTypes.TYPE_user, login, Actions.ACTION_MODIFY);

@@ -16,6 +16,7 @@ import ru.novosoft.smsc.util.xml.WebXml;
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 import java.text.SimpleDateFormat;
+import java.lang.reflect.InvocationTargetException;
 
 public abstract class UsersEditBean extends SmscBean {
   protected UserManager userManager = null;
@@ -436,14 +437,22 @@ public abstract class UsersEditBean extends SmscBean {
 
   private static Object infoSmeContext;
 
+  protected String validateInfosmePrefs(UserPreferences preferences) throws Exception{
+    return (String)loadInfoSme().getClass().getMethod("validateInfosmePrefs", new Class[]{UserPreferences.class}).invoke(infoSmeContext, new Object[]{preferences});
+  }
+
+  private Object loadInfoSme() throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+    if(infoSmeContext == null) {
+      infoSmeContext = Class.forName("ru.novosoft.smsc.infosme.backend.InfoSmeContext").
+          getMethod("getInstance", new Class[]{SMSCAppContext.class, String.class}).
+          invoke(null, new Object[]{appContext, "InfoSme"});
+    }
+    return infoSmeContext;
+  }
+
   public boolean isUssdPushFeature() {
     try{
-      if(infoSmeContext == null) {
-        infoSmeContext = Class.forName("ru.novosoft.smsc.infosme.backend.InfoSmeContext").
-            getMethod("getInstance", new Class[]{SMSCAppContext.class, String.class}).
-            invoke(null, new Object[]{appContext, "InfoSme"});
-      }
-      Boolean result = (Boolean)infoSmeContext.getClass().getMethod("getUssdFeature", new Class[]{}).invoke(infoSmeContext, new Object[]{});
+      Boolean result = (Boolean)loadInfoSme().getClass().getMethod("getUssdFeature", new Class[]{}).invoke(infoSmeContext, new Object[]{});
       return result != null && result.booleanValue();
     }catch(Throwable e) {
       logger.error(e,e);

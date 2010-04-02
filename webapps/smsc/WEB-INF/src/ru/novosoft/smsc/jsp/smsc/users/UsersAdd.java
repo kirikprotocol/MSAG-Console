@@ -83,6 +83,15 @@ public class UsersAdd extends UsersEditBean {
       if (timezone != null)
         prefs.setTimezone(TimeZone.getTimeZone(timezone));
       try{
+        String errors = validateInfosmePrefs(prefs);
+        if(errors != null) {
+          return error(errors);
+        }
+      }catch(Exception e) {
+        logger.error(e,e);
+        return error(e.getMessage() == null ? "Unknown" : e.getMessage());         
+      }
+      try{
         if (userManager.addUser(new User(login, password.trim(), roles, firstName, lastName, dept, workPhone, homePhone, cellPhone, email, prefs))) {
           request.getSession().setAttribute("USER_LOGIN_ADD_EDIT", login);
           journalAppend(SubjectTypes.TYPE_user, login, Actions.ACTION_ADD);
@@ -92,7 +101,7 @@ public class UsersAdd extends UsersEditBean {
           return error(SMSCErrors.error.unknown);
       }catch(AdminException e) {
         logger.error(e,e);
-        return error(SMSCErrors.error.unknown);
+        return error(e.getMessage());
       }
     } else {
       return error(SMSCErrors.error.users.userAlreadyExists, login);
