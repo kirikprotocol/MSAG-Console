@@ -61,7 +61,7 @@ public class UsersAdd extends UsersEditBean {
       try{
         prefs.setInfosmePeriodEnd(tf.parse(infosmeActivePeriodEnd));
         prefs.setInfosmePeriodStart(tf.parse(infosmeActivePeriodStart));
-        prefs.setInfosmeValidityPeriod(tf.parse(infosmeValidityPeriod));
+        prefs.setInfosmeValidityPeriod(Integer.valueOf(infosmeValidityPeriod));
       }catch(ParseException e) {
         logger.error(e,e);
         return error(e.getMessage());

@@ -20,7 +20,6 @@ import ru.novosoft.smsc.infosme.backend.config.tasks.Task;
 import ru.novosoft.smsc.infosme.backend.config.tasks.TaskManager;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.Functions;
-import ru.novosoft.smsc.jsp.SMSCAppContext;
 
 import java.util.*;
 import java.text.SimpleDateFormat;
@@ -328,71 +327,86 @@ public class InfoSmeConfig {
     task.setStartDate(new Date());
   }
 
-  public static void validateSiebelParams(TaskParams p) throws AdminException{
-    p.setValidityDate(new Date());
-    p.setPriority(10);
+  public static void validateSiebelOptions(Date siebelActivePeriodStart, Date siebelActivePeriodEnd,
+         boolean retryOnFail, String retryPolicy) throws AdminException{
+    TaskValidityParams p = new TaskValidityParams();
+    p.activePeriodEnd = siebelActivePeriodEnd;
+    p.activePeriodStart = siebelActivePeriodStart;
+    p.retryOnFail = retryOnFail;
+    p.retryPolicy = retryPolicy;
+    p.validityDate = new Date();
+    p.priority = 10;
     validate(p);
   }
 
-  private static void validate(TaskParams t) throws AdminException{
-    if (t.getPriority() <= 0 || t.getPriority() > 1000) {
-      throw new AdminException("Task priority should be positive and less than 1000: "+t.getPriority());
+  private static void validate(TaskValidityParams t) throws AdminException{
+    if (t.priority <= 0 || t.priority > 1000) {
+      throw new AdminException("Task priority should be positive and less than 1000: "+t.priority);
     }
-    if(t.getAddress() != null && t.getAddress().length() > 0) {
-      char c = t.getAddress().charAt(0);
+    if(t.address != null && t.address.length() > 0) {
+      char c = t.address.charAt(0);
       if(c != '+' && !Character.isDigit(c)) {
-        throw new AdminException("Task address is wrong "+t.getAddress());
+        throw new AdminException("Task address is wrong "+t.address);
       }
-      for(int i = 1; i <= t.getAddress().length() - 1; i++) {
-        if(!Character.isDigit(t.getAddress().charAt(i))) {
-          throw new AdminException("Task address is wrong "+t.getAddress());
+      for(int i = 1; i <= t.address.length() - 1; i++) {
+        if(!Character.isDigit(t.address.charAt(i))) {
+          throw new AdminException("Task address is wrong "+t.address);
         }
       }
     }
-    if (t.isRetryOnFail() && (t.getRetryPolicy() == null || t.getRetryPolicy().length() == 0)) {
+    if (t.retryOnFail && (t.retryPolicy == null || t.retryPolicy.length() == 0)) {
       throw new AdminException("Task retry time specified incorrectly");
     }
-    if(t.getValidityDate() == null && t.getValidityPeriod() == null) {
+    if((t.validityDate == null && t.validityPeriod == null) || (t.validityPeriod != null && (t.validityPeriod.intValue() <= 0
+        || t.validityPeriod.intValue() >= 100))) {
       throw new AdminException("Task's validity period/date specified incorrectly");
     }
-    if((t.getActivePeriodStart() == null && t.getActivePeriodEnd() != null) ||
-        (t.getActivePeriodStart() != null && t.getActivePeriodEnd() == null)) {
+    if((t.activePeriodStart == null && t.activePeriodEnd != null) ||
+        (t.activePeriodStart != null && t.activePeriodEnd == null)) {
+      throw new AdminException("Task's active period specified incorrectly");
+    }
+    SimpleDateFormat sdf = new SimpleDateFormat("HH");
+    if(t.activePeriodEnd != null && t.activePeriodStart != null &&
+        Integer.parseInt(sdf.format(t.activePeriodStart)) == 0 && Integer.parseInt(sdf.format(t.activePeriodEnd)) == 0) {
       throw new AdminException("Task's active period specified incorrectly");
     }
   }
 
-  private static void validateTask(Task t) throws AdminException{
-    TaskParams p = new TaskParams();
-    p.setActivePeriodEnd(t.getActivePeriodEnd());
-    p.setActivePeriodStart(t.getActivePeriodStart());
-    p.setAddress(t.getAddress());
-    p.setPriority(t.getPriority());
-    p.setRetryOnFail(t.isRetryOnFail());
-    p.setRetryPolicy(t.getRetryPolicy());
-    p.setValidityPeriod(t.getValidityPeriod());
-    validate(p);
-  }
 
   public static void validateInfoSmePreferences(UserPreferences prefs) throws AdminException{
-    TaskParams p = new TaskParams();
-    p.setActivePeriodEnd(prefs.getInfosmePeriodEnd());
-    p.setActivePeriodStart(prefs.getInfosmePeriodStart());
-    p.setAddress(prefs.getInfosmeSourceAddress());
-    p.setPriority(prefs.getInfosmePriority());
-    p.setValidityPeriod(prefs.getInfosmeValidityPeriod());
+    TaskValidityParams p = new TaskValidityParams();
+    p.activePeriodEnd = prefs.getInfosmePeriodEnd();
+    p.activePeriodStart = prefs.getInfosmePeriodStart();
+    p.address = prefs.getInfosmeSourceAddress();
+    p.priority = prefs.getInfosmePriority();
+    p.validityPeriod = prefs.getInfosmeValidityPeriod();
     validate(p);
   }
 
+  public static void validate(Task t) throws AdminException{
+    TaskValidityParams p = new TaskValidityParams();
+    p.activePeriodEnd = t.getActivePeriodEnd();
+    p.activePeriodStart = t.getActivePeriodStart();
+    p.address = t.getAddress();
+    p.priority = t.getPriority();
+    p.validityPeriod = t.getValidityPeriod();
+    p.validityDate = t.getValidityDate();
+    p.retryOnFail = t.isRetryOnFail();
+    p.retryPolicy = t.getRetryPolicy();
+    validate(p);
+  }
+
+
   public void addTask(Task t) throws AdminException{
-    validateTask(t);
+    validate(t);
     taskManager.addTask(t);
   }
 
   public synchronized void addAndApplyTask(Task t) throws AdminException {
-    validateTask(t);
+    validate(t);
     try {
       Config cfg = ctx.loadCurrentConfig();
-      boolean modified = taskManager.containsTaskWithId(t.getId());
+      boolean modified = t.getId() != null && taskManager.containsTaskWithId(t.getId());
       taskManager.addTask(t, cfg);
       cfg.save();
       ctx.getAppContext().getJournal().append(t.getOwner(), "", SubjectTypes.TYPE_infosme, t.getId(), modified ? Actions.ACTION_MODIFY : Actions.ACTION_ADD, "Type", "Task");
@@ -1267,80 +1281,19 @@ public class InfoSmeConfig {
     return ussdPushFeature;
   }
 
+private static class TaskValidityParams {
 
-  public static class TaskParams {
+  private int priority;
+  private String address;
+  private boolean retryOnFail;
+  private String retryPolicy;
+  private Date validityDate;
+  private Integer validityPeriod;
+  private Date activePeriodStart;
+  private Date activePeriodEnd;
 
-    private int priority;
-    private String address;
-    private boolean retryOnFail;
-    private String retryPolicy;
-    private Date validityDate;
-    private Date validityPeriod;
-    private Date activePeriodStart;
-    private Date activePeriodEnd;
 
-    public int getPriority() {
-      return priority;
-    }
+}
 
-    public void setPriority(int priority) {
-      this.priority = priority;
-    }
 
-    public String getAddress() {
-      return address;
-    }
-
-    public void setAddress(String address) {
-      this.address = address;
-    }
-
-    public boolean isRetryOnFail() {
-      return retryOnFail;
-    }
-
-    public void setRetryOnFail(boolean retryOnFail) {
-      this.retryOnFail = retryOnFail;
-    }
-
-    public String getRetryPolicy() {
-      return retryPolicy;
-    }
-
-    public void setRetryPolicy(String retryPolicy) {
-      this.retryPolicy = retryPolicy;
-    }
-
-    public Date getValidityDate() {
-      return validityDate;
-    }
-
-    public void setValidityDate(Date validityDate) {
-      this.validityDate = validityDate;
-    }
-
-    public Date getValidityPeriod() {
-      return validityPeriod;
-    }
-
-    public void setValidityPeriod(Date validityPeriod) {
-      this.validityPeriod = validityPeriod;
-    }
-
-    public Date getActivePeriodStart() {
-      return activePeriodStart;
-    }
-
-    public void setActivePeriodStart(Date activePeriodStart) {
-      this.activePeriodStart = activePeriodStart;
-    }
-
-    public Date getActivePeriodEnd() {
-      return activePeriodEnd;
-    }
-
-    public void setActivePeriodEnd(Date activePeriodEnd) {
-      this.activePeriodEnd = activePeriodEnd;
-    }
-  }
 }

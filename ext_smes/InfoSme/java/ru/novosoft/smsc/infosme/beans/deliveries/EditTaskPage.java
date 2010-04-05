@@ -75,6 +75,7 @@ public class EditTaskPage extends DeliveriesPage {
     task.setFlash(pageData.flash);
 
     task.setActiveWeekDays(Arrays.asList(pageData.activeWeekDays));
+    InfoSmeConfig.validate(task);
 
 //    if (!isUserAdmin(request))
 //      calculateRetryOnFail(task);
@@ -103,7 +104,7 @@ public class EditTaskPage extends DeliveriesPage {
     long result = pageData.getInfoSmeContext().getInfoSme().sendSms(pageData.sourceAddress, pageData.testSmsAddress, pageData.text, pageData.flash);
 
     if (result != 0)
-      throw new AdminException(pageData.getAppContext().getLocaleString(request.getUserPrincipal(), "infosme.error.test_sms_delivery_error") + ": " + pageData.getAppContext().getLocaleString(request.getUserPrincipal(),"smsc.errcode." + result));    
+      throw new AdminException(pageData.getAppContext().getLocaleString(request.getUserPrincipal(), "infosme.error.test_sms_delivery_error") + ": " + pageData.getAppContext().getLocaleString(request.getUserPrincipal(),"smsc.errcode." + result));
 
     return this;
   }
@@ -127,14 +128,14 @@ public class EditTaskPage extends DeliveriesPage {
     if (r != null) {
       pageData.endDate = task.getEndDate() == null ? "" : df.format(r.getRegionTime(task.getEndDate()));
       pageData.startDate = task.getStartDate() == null ? "" : df.format(r.getRegionTime(task.getStartDate()));
-      pageData.validityPeriod = task.getValidityPeriod() == null ? "" : tf.format(task.getValidityPeriod());
+      pageData.validityPeriod = task.getValidityPeriod() == null ? "" : String.valueOf(task.getValidityPeriod());
       pageData.validityDate = task.getValidityDate() == null ? "" : df.format(r.getRegionTime(task.getValidityDate()));
       pageData.activePeriodStart = task.getActivePeriodStart() == null ? "" : tf.format(r.getRegionTime(task.getActivePeriodStart()));
       pageData.activePeriodEnd = task.getActivePeriodEnd() == null ? "" : tf.format(r.getRegionTime(task.getActivePeriodEnd()));
     } else {
       pageData.endDate = task.getEndDate() == null ? "" : df.format(task.getEndDate());
       pageData.startDate = task.getStartDate() == null ? "" : df.format(task.getStartDate());
-      pageData.validityPeriod = task.getValidityPeriod() == null ? "" : tf.format(task.getValidityPeriod());
+      pageData.validityPeriod = task.getValidityPeriod() == null ? "" : String.valueOf(task.getValidityPeriod());
       pageData.validityDate = task.getValidityDate() == null ? "" : df.format(task.getValidityDate());
       pageData.activePeriodStart = task.getActivePeriodStart() == null ? "" : tf.format(task.getActivePeriodStart());
       pageData.activePeriodEnd = task.getActivePeriodEnd() == null ? "" : tf.format(task.getActivePeriodEnd());
@@ -157,19 +158,79 @@ public class EditTaskPage extends DeliveriesPage {
     try {
       Region r = pageData.getAppContext().getRegionsManager().getRegionById(task.getRegionId());
       if (r != null) {
-        task.setEndDate(pageData.endDate.trim().length() == 0 ? null : r.getLocalTime(df.parse(pageData.endDate)));
-        task.setStartDate(pageData.startDate.trim().length() == 0 ? null : r.getLocalTime(df.parse(pageData.startDate)));
-        task.setValidityPeriod(pageData.validityPeriod.trim().length() == 0 ? null : tf.parse(pageData.validityPeriod));
-        task.setValidityDate(pageData.validityDate.trim().length() == 0 ? null : r.getLocalTime(df.parse(pageData.validityDate)));
-        task.setActivePeriodStart(pageData.activePeriodStart.trim().length() == 0 ? null : r.getLocalTime(tf.parse(pageData.activePeriodStart)));
-        task.setActivePeriodEnd(pageData.activePeriodEnd.trim().length() == 0 ? null : r.getLocalTime(tf.parse(pageData.activePeriodEnd)));
+        try{
+          task.setEndDate(pageData.endDate.trim().length() == 0 ? null : r.getLocalTime(df.parse(pageData.endDate)));
+        }catch(Exception e) {
+          pageData.endDate = "";
+          throw e;
+        }
+        try{
+          task.setStartDate(pageData.startDate.trim().length() == 0 ? null : r.getLocalTime(df.parse(pageData.startDate)));
+        }catch(Exception e) {
+          pageData.startDate = "";
+          throw e;
+        }
+        try{
+          task.setValidityPeriod(pageData.validityPeriod.trim().length() == 0 ? null : Integer.valueOf(pageData.validityPeriod));
+        }catch(Exception e) {
+          pageData.validityPeriod = "";
+          throw e;
+        }
+        try{
+          task.setValidityDate(pageData.validityDate.trim().length() == 0 ? null : r.getLocalTime(df.parse(pageData.validityDate)));
+        }catch(Exception e) {
+          pageData.validityDate = "";
+          throw e;
+        }
+        try{
+          task.setActivePeriodStart(pageData.activePeriodStart.trim().length() == 0 ? null : r.getLocalTime(tf.parse(pageData.activePeriodStart)));
+        }catch(Exception e) {
+          pageData.activePeriodStart = "";
+          throw e;
+        }
+        try{
+          task.setActivePeriodEnd(pageData.activePeriodEnd.trim().length() == 0 ? null : r.getLocalTime(tf.parse(pageData.activePeriodEnd)));
+        }catch(Exception e) {
+          pageData.activePeriodEnd = "";
+          throw e;
+        }
       } else {
-        task.setEndDate(pageData.endDate.trim().length() == 0 ? null : df.parse(pageData.endDate));
-        task.setStartDate(pageData.startDate.trim().length() == 0 ? null : df.parse(pageData.startDate));
-        task.setValidityPeriod(pageData.validityPeriod.trim().length() == 0 ? null : tf.parse(pageData.validityPeriod));
-        task.setValidityDate(pageData.validityDate.trim().length() == 0 ? null : df.parse(pageData.validityDate));
-        task.setActivePeriodStart(pageData.activePeriodStart.trim().length() == 0 ? null : tf.parse(pageData.activePeriodStart));
-        task.setActivePeriodEnd(pageData.activePeriodEnd.trim().length() == 0 ? null : tf.parse(pageData.activePeriodEnd));
+        try{
+          task.setEndDate(pageData.endDate.trim().length() == 0 ? null : df.parse(pageData.endDate));
+        }catch(Exception e) {
+          pageData.endDate = "";
+          throw e;
+        }
+        try{
+          task.setStartDate(pageData.startDate.trim().length() == 0 ? null : df.parse(pageData.startDate));
+        }catch(Exception e) {
+          pageData.startDate = "";
+          throw e;
+        }
+        try{
+          task.setValidityPeriod(pageData.validityPeriod.trim().length() == 0 ? null : Integer.valueOf(pageData.validityPeriod));
+        }catch(Exception e) {
+          pageData.validityPeriod = "";
+          throw e;
+        }
+        try{
+          task.setValidityDate(pageData.validityDate.trim().length() == 0 ? null : df.parse(pageData.validityDate));
+        }catch(Exception e) {
+          pageData.validityDate = "";
+          throw e;
+        }
+        try{
+          task.setActivePeriodStart(pageData.activePeriodStart.trim().length() == 0 ? null : tf.parse(pageData.activePeriodStart));
+        }catch(Exception e) {
+          pageData.activePeriodStart = "";
+          throw e;
+        }
+        try{
+          task.setActivePeriodEnd(pageData.activePeriodEnd.trim().length() == 0 ? null : tf.parse(pageData.activePeriodEnd));
+        }catch(Exception e) {
+          pageData.activePeriodEnd = "";
+          throw e;
+        }
       }
     } catch (Throwable e) {
       e.printStackTrace();

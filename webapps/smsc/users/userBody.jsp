@@ -168,7 +168,7 @@
                     <tr class=row<%=rowN++&1%>>
                       <th><%= getLocString("infosme.label.validity_period")%></th>
                       <td>
-                        <input class=timeField id=infosmeValidityPeriod name=infosmeValidityPeriod value="<%=StringEncoderDecoder.encode(bean.getInfosmeValidityPeriod())%>" maxlength=20 style="z-index:22;"><button class=timeButton type=button onclick="return showTime(infosmeValidityPeriod, false, true);">...</button>
+                        <input class=txt id=infosmeValidityPeriod name=infosmeValidityPeriod value="<%=StringEncoderDecoder.encode(bean.getInfosmeValidityPeriod())%>" maxlength=20 style="z-index:22;">
                        </td>
                     </tr>
                     <tr class=row<%=rowN++&1%>>

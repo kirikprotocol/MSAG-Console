@@ -135,7 +135,7 @@ public class TaskManager {
   }
 
   public synchronized Task createTask() throws AdminException {
-      Task t = new Task(String.valueOf(getId()), storeLocation);
+      Task t = new Task(storeLocation);
       if ( ussdPushFeature ) {
           t.setUseUssdPush(0);
       }
@@ -146,7 +146,10 @@ public class TaskManager {
         return ussdPushFeature;
     }
 
-  public synchronized void addTask(Task t) {
+  public synchronized void addTask(Task t) throws AdminException {
+    if(t.getId() == null) {
+      t.setId(String.valueOf(getId()));
+    }
     tasks.put(t.getId(), t);
   }
 

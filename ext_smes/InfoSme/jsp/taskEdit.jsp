@@ -187,7 +187,7 @@
 <tr class=row<%=rowN++&1%>>
   <th><%= getLocString("infosme.label.vperiod_date")%></th>
   <td><%if (bean.isSmeRunning()) {
-    %><input class=timeField id=validityPeriod name=validityPeriod value="<%=StringEncoderDecoder.encode(bean.getValidityPeriod())%>" maxlength=20 style="z-index:22;"><button class=timeButton type=button onclick="return showTime(validityPeriod, false, true);">...</button>
+    %><input class=txt id=validityPeriod name=validityPeriod value="<%=StringEncoderDecoder.encode(bean.getValidityPeriod())%>" maxlength=20 style="z-index:22;">
     &nbsp;<%= getLocString("infosme.label.vperiod_date_or")%>&nbsp;
     <input class=calendarField id=validityDate name=validityDate value="<%=StringEncoderDecoder.encode(bean.getValidityDate())%>" maxlength=20 style="z-index:22;"><button class=calendarButton type=button onclick="return showCalendar(validityDate, false, true);">...</button><%
   } else {

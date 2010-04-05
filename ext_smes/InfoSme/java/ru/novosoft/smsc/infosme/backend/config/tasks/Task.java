@@ -23,7 +23,7 @@ import org.apache.log4j.Category;
 public class Task extends Observable
 {
   private static final Category logger = Category.getInstance(Task.class);
-  
+
   public final static String[] WEEK_DAYS = {"Mon","Tue","Wed","Thu","Fri","Sat","Sun"};
   private final static String DEFAULT_ACTIVE_WEEK_DAYS = "Mon,Tue,Wed,Thu,Fri";
   private final static SimpleDateFormat df = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
@@ -35,7 +35,7 @@ public class Task extends Observable
   private boolean modified;
 
   // General
-  private final String id;
+  private String id;
   private String owner = "";
   private String name = "";
   private String address = "";
@@ -56,7 +56,7 @@ public class Task extends Observable
   // Time arguments
   private Date endDate = null;
   private Date startDate = null;
-  private Date validityPeriod = null;
+  private Integer validityPeriod = null;
   private Date validityDate = null;
   private Date activePeriodStart = null;
   private Date activePeriodEnd = null;
@@ -71,7 +71,7 @@ public class Task extends Observable
   private int messagesCacheSleep = 0;
   private boolean transactionMode = false;
   private boolean keepHistory = false;
-    // temporary switched to true
+  // temporary switched to true
   private boolean saveFinalState = false;
   private boolean flash = false;
   private int uncommitedInGeneration = 0;
@@ -93,20 +93,19 @@ public class Task extends Observable
 
   private String storeLocation;
 
-  Task(String id, String storeLocation) {
-    this.id = id;
+  Task(String storeLocation) {
     activeWeekDaysSet = new HashSet(WEEK_DAYS.length);
     Functions.addValuesToCollection(this.activeWeekDaysSet, DEFAULT_ACTIVE_WEEK_DAYS, ",", true);
     if (delivery)
       provider = Task.INFOSME_EXT_PROVIDER;
     this.modified = true;
     this.storeLocation = storeLocation;
-    location = storeLocation + File.separatorChar + id;
   }
 
   Task(Config config, String id, String storeLocation) throws Config.WrongParamTypeException, Config.ParamNotFoundException,
-          IOException, ParserConfigurationException, SAXException {
-    this(id, storeLocation);
+      IOException, ParserConfigurationException, SAXException {
+    this(storeLocation);
+    setId(id);
     File configFile = new File(location, CONFIG_FILE_NAME);
     if (configFile.exists()) {
       loadConfig(new Config(configFile), "");
@@ -115,6 +114,11 @@ public class Task extends Observable
       loadConfig(config, TaskDataSource.TASKS_PREFIX + '.' + StringEncoderDecoder.encodeDot(id) + '.');
       logger.info("Task " + id + " loaded from common config");
     }
+  }
+
+  void setId(String id) {
+    this.id = id;
+    location = storeLocation + File.separatorChar + id;
   }
 
   private void loadConfig(Config config, String prefix) throws Config.ParamNotFoundException, Config.WrongParamTypeException {
@@ -136,7 +140,7 @@ public class Task extends Observable
     Functions.addValuesToCollection(this.activeWeekDaysSet, activeWeekDaysStr, ",", true);
 
     transactionMode = config.getBool(prefix + "transactionMode");
-    validityPeriod = getDateFromConfig(config, prefix + "validityPeriod", tf);
+    validityPeriod = parseValidityPeriod(config, prefix + "validityPeriod");
     validityDate = getDateFromConfig(config, prefix + "validityDate", df);
     replaceMessage = config.getBool(prefix + "replaceMessage");
     svcType = config.getString(prefix + "svcType");
@@ -173,20 +177,36 @@ public class Task extends Observable
       secretMessage = "";
     }
 
-      try {
-          boolean tmp = config.getBool(prefix + "useUssdPush" );
-          useUssdPush = tmp ? 1 : 0;
-      } catch ( Exception e ) {
-          useUssdPush = -1;
-      }
-      if ( useUssdPush > 0 ) {
-          // true
-          useDataSm = false;
-          transactionMode = true;
-          flash = false;
-      }
+    try {
+      boolean tmp = config.getBool(prefix + "useUssdPush" );
+      useUssdPush = tmp ? 1 : 0;
+    } catch ( Exception e ) {
+      useUssdPush = -1;
+    }
+    if ( useUssdPush > 0 ) {
+      // true
+      useDataSm = false;
+      transactionMode = true;
+      flash = false;
+    }
 
     this.modified = false;
+  }
+
+  private static Integer parseValidityPeriod(Config config, String paramName) {
+    if(config.containsParameter(paramName)) {
+      try {
+        String str = config.getString(paramName);
+        if(str.length() > 0) {
+          str = str.substring(0, str.indexOf(":"));
+          return new Integer(Integer.parseInt(str));
+        }
+      } catch (Exception e) {
+        return null;
+      }
+    }
+    return null;
+
   }
 
   private static Date getDateFromConfig(Config config, String paramName, SimpleDateFormat df) {
@@ -202,6 +222,9 @@ public class Task extends Observable
   }
 
   private File createConfigFile() throws IOException {
+    if(id == null) {
+      throw new IllegalArgumentException("Id is not set!");
+    }
     File configFile = new File(location, CONFIG_FILE_NAME);
     if (!configFile.createNewFile()) {
       return configFile;
@@ -220,6 +243,9 @@ public class Task extends Observable
   //void storeToConfig(Config config)
   void storeToConfig() throws IOException, SAXException, ParserConfigurationException, WrongParamTypeException
   {
+    if(id == null) {
+      throw new IllegalArgumentException("Id is not set");
+    }
     //final String prefix = separateConfig ? "" : TaskDataSource.TASKS_PREFIX + '.' + StringEncoderDecoder.encodeDot(id) + '.';
     String prefix = "";
     File configDir = new File(location);
@@ -241,7 +267,7 @@ public class Task extends Observable
     config.setString(prefix + "startDate", startDate == null ? "" : df.format(startDate));
     config.setString(prefix + "endDate", endDate == null ? "" : df.format(endDate));
     config.setString(prefix + "retryPolicy", retryPolicy);
-    config.setString(prefix + "validityPeriod", validityPeriod == null ? "" : tf.format(validityPeriod));
+    config.setString(prefix + "validityPeriod", validityPeriod == null ? "" : validityPeriod+":00:00");
     config.setString(prefix + "validityDate", validityDate == null ? "" : df.format(validityDate));
     config.setString(prefix + "activePeriodStart", activePeriodStart == null ? "" : tf.format(activePeriodStart));
     config.setString(prefix + "activePeriodEnd", activePeriodEnd == null ? "" : tf.format(activePeriodEnd));
@@ -270,6 +296,9 @@ public class Task extends Observable
   }
 
   public void remove(Config config) {
+    if(id == null) {
+      throw new IllegalArgumentException("Id is not set");
+    }
     File configFile = new File(location, CONFIG_FILE_NAME);
     if (configFile.exists()) {
       configFile.renameTo(new File(location, CONFIG_FILE_NAME + ".bak"));
@@ -279,6 +308,9 @@ public class Task extends Observable
   }
 
   public void change(Config config) throws IOException, SAXException, ParserConfigurationException, WrongParamTypeException {
+    if(id == null) {
+      throw new IllegalArgumentException("Id is not set");
+    }
     File configFile = new File(location, CONFIG_FILE_NAME);
     if (configFile.exists()) {
       this.storeToConfig();
@@ -288,46 +320,62 @@ public class Task extends Observable
     }
   }
 
-  public boolean equals(Object obj)
-  {
-    if (obj instanceof Task) {
-      Task task = (Task) obj;
-      return this.id.equals(task.id)
-              && this.name.equals(task.name)
-              && this.address.equals(task.address)
-              && this.provider.equals(task.provider)
-              && this.enabled == task.enabled
-              && this.priority == task.priority
-              && this.retryOnFail == task.retryOnFail
-              && this.replaceMessage == task.replaceMessage
-              && this.svcType.equals(task.svcType)
-              && this.endDate.equals(task.endDate)
-              && this.startDate.equals(task.startDate)
-              && this.validityPeriod.equals(task.validityPeriod)
-              && this.validityDate.equals(task.validityDate)
-              && this.activePeriodStart.equals(task.activePeriodStart)
-              && this.activePeriodEnd.equals(task.activePeriodEnd)
-              && this.query.equals(task.query)
-              && this.template.equals(task.template)
-              && this.dsTimeout == task.dsTimeout
-              && this.messagesCacheSize == task.messagesCacheSize
-              && this.messagesCacheSleep == task.messagesCacheSleep
-              && this.transactionMode == task.transactionMode
-              && this.uncommitedInGeneration == task.uncommitedInGeneration
-              && this.uncommitedInProcess == task.uncommitedInProcess
-              && this.trackIntegrity == task.trackIntegrity
-              && this.keepHistory == task.keepHistory
-              && this.saveFinalState == task.saveFinalState
-              && this.useDataSm == task.useDataSm
-              && this.useUssdPush == task.useUssdPush
-              && this.activeWeekDaysSet.equals(task.activeWeekDaysSet)
-              && this.retryPolicy.equals(task.retryPolicy)
-              && this.secret == task.secret
-              && this.secretFlash == task.secretFlash
-              && this.secretMessage.equals(task.secretMessage)
-              && this.owner.equals(task.owner);
-    } else
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
+    final Task task = (Task) o;
+
+    if (actualRecordsSize != task.actualRecordsSize) return false;
+    if (deliveriesFileContainsTexts != task.deliveriesFileContainsTexts) return false;
+    if (delivery != task.delivery) return false;
+    if (dsTimeout != task.dsTimeout) return false;
+    if (enabled != task.enabled) return false;
+    if (flash != task.flash) return false;
+    if (keepHistory != task.keepHistory) return false;
+    if (messagesCacheSize != task.messagesCacheSize) return false;
+    if (messagesCacheSleep != task.messagesCacheSleep) return false;
+    if (messagesHaveLoaded != task.messagesHaveLoaded) return false;
+    if (modified != task.modified) return false;
+    if (priority != task.priority) return false;
+    if (regionId != task.regionId) return false;
+    if (replaceMessage != task.replaceMessage) return false;
+    if (retryOnFail != task.retryOnFail) return false;
+    if (saveFinalState != task.saveFinalState) return false;
+    if (secret != task.secret) return false;
+    if (secretFlash != task.secretFlash) return false;
+    if (trackIntegrity != task.trackIntegrity) return false;
+    if (transactionMode != task.transactionMode) return false;
+    if (uncommitedInGeneration != task.uncommitedInGeneration) return false;
+    if (uncommitedInProcess != task.uncommitedInProcess) return false;
+    if (useDataSm != task.useDataSm) return false;
+    if (useUssdPush != task.useUssdPush) return false;
+    if (activePeriodEnd != null ? !activePeriodEnd.equals(task.activePeriodEnd) : task.activePeriodEnd != null)
       return false;
+    if (activePeriodStart != null ? !activePeriodStart.equals(task.activePeriodStart) : task.activePeriodStart != null)
+      return false;
+    if (activeWeekDaysSet != null ? !activeWeekDaysSet.equals(task.activeWeekDaysSet) : task.activeWeekDaysSet != null)
+      return false;
+    if (address != null ? !address.equals(task.address) : task.address != null) return false;
+    if (deliveriesFile != null ? !deliveriesFile.equals(task.deliveriesFile) : task.deliveriesFile != null) return false;
+    if (endDate != null ? !endDate.equals(task.endDate) : task.endDate != null) return false;
+    if (id != null ? !id.equals(task.id) : task.id != null) return false;
+    if (location != null ? !location.equals(task.location) : task.location != null) return false;
+    if (name != null ? !name.equals(task.name) : task.name != null) return false;
+    if (owner != null ? !owner.equals(task.owner) : task.owner != null) return false;
+    if (provider != null ? !provider.equals(task.provider) : task.provider != null) return false;
+    if (query != null ? !query.equals(task.query) : task.query != null) return false;
+    if (retryPolicy != null ? !retryPolicy.equals(task.retryPolicy) : task.retryPolicy != null) return false;
+    if (secretMessage != null ? !secretMessage.equals(task.secretMessage) : task.secretMessage != null) return false;
+    if (startDate != null ? !startDate.equals(task.startDate) : task.startDate != null) return false;
+    if (storeLocation != null ? !storeLocation.equals(task.storeLocation) : task.storeLocation != null) return false;
+    if (svcType != null ? !svcType.equals(task.svcType) : task.svcType != null) return false;
+    if (template != null ? !template.equals(task.template) : task.template != null) return false;
+    if (text != null ? !text.equals(task.text) : task.text != null) return false;
+    if (validityDate != null ? !validityDate.equals(task.validityDate) : task.validityDate != null) return false;
+    if (validityPeriod != null ? !validityPeriod.equals(task.validityPeriod) : task.validityPeriod != null) return false;
+
+    return true;
   }
 
   public String toString() {
@@ -482,11 +530,11 @@ public class Task extends Observable
     modified = true;
   }
 
-  public Date getValidityPeriod() {
+  public Integer getValidityPeriod() {
     return validityPeriod;
   }
 
-  public void setValidityPeriod(Date validityPeriod) {
+  public void setValidityPeriod(Integer validityPeriod) {
     this.validityPeriod = validityPeriod;
     modified = true;
   }
@@ -575,10 +623,10 @@ public class Task extends Observable
   }
 
   public void setTransactionMode(boolean transactionMode) {
-      if ( this.useUssdPush <= 0 ) {
-          this.transactionMode = transactionMode;
-          modified = true;
-      }
+    if ( this.useUssdPush <= 0 ) {
+      this.transactionMode = transactionMode;
+      modified = true;
+    }
   }
 
   public int getUncommitedInGeneration() {
@@ -631,28 +679,28 @@ public class Task extends Observable
   }
 
   public void setUseDataSm(boolean useDataSm) {
-      if ( useUssdPush <= 0 ) {
-          this.useDataSm = useDataSm;
-          modified = true;
-      }
+    if ( useUssdPush <= 0 ) {
+      this.useDataSm = useDataSm;
+      modified = true;
+    }
   }
 
-    /// <0 -- not active
-    /// >0 -- true
-    public int getUseUssdPush() {
-        return useUssdPush;
+  /// <0 -- not active
+  /// >0 -- true
+  public int getUseUssdPush() {
+    return useUssdPush;
+  }
+
+  public void setUseUssdPush(int useUssdPush) {
+    if (logger.isInfoEnabled()) logger.info("setting useUssdPush=" + useUssdPush );
+    if ( useUssdPush > 0 ) {
+      this.useDataSm = false;
+      this.flash = false;
+      this.transactionMode = true;
     }
-    
-    public void setUseUssdPush(int useUssdPush) {
-        if (logger.isInfoEnabled()) logger.info("setting useUssdPush=" + useUssdPush );
-        if ( useUssdPush > 0 ) {
-            this.useDataSm = false;
-            this.flash = false;
-            this.transactionMode = true;
-        }
-        this.useUssdPush = useUssdPush;
-        modified = true;
-    }
+    this.useUssdPush = useUssdPush;
+    modified = true;
+  }
 
   public Collection getActiveWeekDays() {
     return activeWeekDaysSet;
@@ -699,10 +747,10 @@ public class Task extends Observable
   }
 
   public void setFlash(boolean flash) {
-      if ( useUssdPush <= 0 ) {
-          this.flash = flash;
-          modified = true;
-      }
+    if ( useUssdPush <= 0 ) {
+      this.flash = flash;
+      modified = true;
+    }
   }
 
   public boolean isMessagesHaveLoaded() {
@@ -784,7 +832,10 @@ public class Task extends Observable
   }
 
   public Task cloneTask() {
-    Task t = new Task(this.id, this.storeLocation);
+    Task t = new Task(this.storeLocation);
+    if(this.id != null) {
+      t.setId(this.id);
+    }
 
     t.modified = this.modified;
 
@@ -809,7 +860,7 @@ public class Task extends Observable
     // Time arguments
     t.endDate = this.endDate == null ? null : new Date(this.endDate.getTime());
     t.startDate = this.startDate == null ? null : new Date(this.startDate.getTime());
-    t.validityPeriod = this.validityPeriod == null ? null : new Date(this.validityPeriod.getTime()) ;
+    t.validityPeriod = this.validityPeriod;
     t.validityDate= this.validityDate == null ? null : new Date(this.validityDate.getTime());
     t.activePeriodStart = this.activePeriodStart == null ? null : new Date(this.activePeriodStart.getTime());
     t.activePeriodEnd = this.activePeriodEnd == null ? null : new Date(this.activePeriodEnd.getTime());

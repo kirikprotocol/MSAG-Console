@@ -52,7 +52,7 @@ public class UsersEdit extends UsersEditBean {
           email = user.getEmail();
 
           infosmePriority = user.getPrefs().getInfosmePriority();
-          infosmeValidityPeriod = tf.format(user.getPrefs().getInfosmeValidityPeriod());
+          infosmeValidityPeriod = String.valueOf(user.getPrefs().getInfosmeValidityPeriod());
           infosmeReplaceMessage = user.getPrefs().isInfosmeReplaceMessage();
           infosmeSvcType = user.getPrefs().getInfosmeSvcType();
           infosmeActivePeriodStart = tf.format(user.getPrefs().getInfosmePeriodStart());
@@ -116,8 +116,8 @@ public class UsersEdit extends UsersEditBean {
       try{
         prefs.setInfosmePeriodEnd(tf.parse(infosmeActivePeriodEnd));
         prefs.setInfosmePeriodStart(tf.parse(infosmeActivePeriodStart));
-        prefs.setInfosmeValidityPeriod(tf.parse(infosmeValidityPeriod));
-      }catch(ParseException e) {
+        prefs.setInfosmeValidityPeriod(Integer.valueOf(infosmeValidityPeriod));
+      }catch(Exception e) {
         logger.error(e,e);
         return error(e.getMessage());
       }

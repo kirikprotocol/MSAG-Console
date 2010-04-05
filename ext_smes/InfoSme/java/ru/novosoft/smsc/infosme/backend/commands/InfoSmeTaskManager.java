@@ -42,6 +42,9 @@ public class InfoSmeTaskManager implements Runnable{
   }
 
   private void removeTask(Task task, InfoSmeContext infoSmeContext) {
+    if(task.getId() == null) {
+      return;
+    }
     try {
       infoSmeContext.getInfoSmeConfig().removeAndApplyTask(task.getOwner(), task.getId());
       infoSmeContext.getInfoSme().removeTask(task.getId());
@@ -143,7 +146,7 @@ public class InfoSmeTaskManager implements Runnable{
     try {
       task.setMessagesHaveLoaded(false);
 
-      if (!smeContext.getInfoSmeConfig().containsTaskWithId(task.getId())) {
+      if (task.getId() == null || !smeContext.getInfoSmeConfig().containsTaskWithId(task.getId())) {
         smeContext.getInfoSmeConfig().addAndApplyTask(task);
         smeContext.getInfoSme().addTask(task.getId());
       }

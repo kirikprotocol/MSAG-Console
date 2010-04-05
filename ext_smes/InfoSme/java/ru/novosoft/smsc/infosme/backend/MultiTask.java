@@ -87,7 +87,7 @@ public class MultiTask {
 //      ((Task)iter.next()).setRetryTime(retryTime);
 //  }
 
-  public void setValidityPeriod(Date validityPeriod) {
+  public void setValidityPeriod(Integer validityPeriod) {
     for (Iterator iter = tasks().iterator(); iter.hasNext();)
       ((Task)iter.next()).setValidityPeriod(validityPeriod);
   }

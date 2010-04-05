@@ -256,7 +256,7 @@ public abstract class UsersEditBean extends SmscBean {
 
 
   protected int infosmePriority = 10;
-  protected String infosmeValidityPeriod = "01:00:00";
+  protected String infosmeValidityPeriod = "1";
   protected boolean infosmeReplaceMessage = false;
   protected String infosmeSvcType = "";
   protected String infosmeActivePeriodStart = "10:00:00";

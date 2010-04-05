@@ -199,12 +199,12 @@ public class Options extends InfoSmeBean
   private int save()
   {
     try{
-      InfoSmeConfig.TaskParams tp = new InfoSmeConfig.TaskParams();
-      tp.setActivePeriodEnd(siebelActivePeriodEnd.trim().length() == 0 ? null : tf.parse(siebelActivePeriodEnd));
-      tp.setActivePeriodStart(siebelActivePeriodStart.trim().length() == 0 ? null : tf.parse(siebelActivePeriodStart));
-      tp.setRetryOnFail(siebelRetryOnFail);
-      tp.setRetryPolicy(siebelRetryPolicy);
-      InfoSmeConfig.validateSiebelParams(tp);
+      InfoSmeConfig.validateSiebelOptions(
+          siebelActivePeriodEnd.trim().length() == 0 ? null : tf.parse(siebelActivePeriodEnd),
+          siebelActivePeriodStart.trim().length() == 0 ? null : tf.parse(siebelActivePeriodStart),
+          siebelRetryOnFail,
+          siebelRetryPolicy
+      );
 
       getConfig().setAddress(address);
       getConfig().setSvcType(svcType);

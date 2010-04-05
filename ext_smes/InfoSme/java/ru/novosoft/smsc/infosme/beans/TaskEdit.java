@@ -142,7 +142,7 @@ public class TaskEdit extends InfoSmeBean
     svcType = task.getSvcType();
     endDate = task.getEndDate() == null ? "" : df.format(user.getUserTime(task.getEndDate()));
     startDate = task.getStartDate() == null ? "" : df.format(user.getUserTime(task.getStartDate()));
-    validityPeriod = task.getValidityPeriod() == null ? "" : tf.format(task.getValidityPeriod());
+    validityPeriod = task.getValidityPeriod() == null ? "" : String.valueOf(task.getValidityPeriod());
     validityDate = task.getValidityDate() == null ? "" : df.format(user.getUserTime(task.getValidityDate()));
     activePeriodStart = task.getActivePeriodStart() == null ? "" : tf.format(user.getUserTime(task.getActivePeriodStart()));
     activePeriodEnd = task.getActivePeriodEnd() == null ? "" : tf.format(user.getUserTime(task.getActivePeriodEnd()));
@@ -208,10 +208,10 @@ public class TaskEdit extends InfoSmeBean
       task.setUncommitedInGeneration(uncommitedInGeneration);
       task.setUncommitedInProcess(uncommitedInProcess);
       try {
-        task.setValidityPeriod(validityPeriod.trim().length() == 0? null : tf.parse(validityPeriod));
+        task.setValidityPeriod((validityPeriod == null || validityPeriod.trim().length() == 0) ? null : Integer.valueOf(validityPeriod));
         task.setValidityDate(validityDate.trim().length() == 0 ? null : user.getLocalTime(df.parse(validityDate)));
       } catch (Throwable e) {
-        throw new AdminException("Invalid field format");
+        throw new AdminException("Invalid validity date/period format");
       }
       task.setRetryPolicy(retryPolicy);
       task.setOwner(owner);

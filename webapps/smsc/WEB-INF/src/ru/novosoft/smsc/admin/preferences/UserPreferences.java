@@ -106,7 +106,7 @@ public class UserPreferences {
   private Boolean infosmeUssdPush;
   private Date infosmePeriodStart = null;
   private Date infosmePeriodEnd = null;
-  private Date infosmeValidityPeriod = null;
+  private Integer infosmeValidityPeriod = null;
   private Collection infosmeWeekDaysSet = new HashSet(7);
   private int infosmeCacheSize = 0;
   private int infosmeCacheSleep = 0;
@@ -495,7 +495,7 @@ public class UserPreferences {
       infosmePeriodStart = tf.parse("10:00:00");
       infosmePeriodEnd = tf.parse("21:00:00");
 
-      infosmeValidityPeriod = tf.parse("01:00:00");
+      infosmeValidityPeriod = new Integer(1);
       infosmeCacheSize = 2000;
       infosmeCacheSleep = 10;
       infosmeUncommitGeneration = 100;
@@ -553,7 +553,7 @@ public class UserPreferences {
           } else if(name.equals("infosme.uncommitedInProcess")) {
             infosmeUncommitProcess = Integer.parseInt(value);
           } else if(name.equals("infosme.validityPeriod")) {
-            infosmeValidityPeriod = tf.parse(value);
+            infosmeValidityPeriod = Integer.valueOf(value.substring(0, value.indexOf(":")));
           } else if(name.equals("infosme.priority")) {
             infosmePriority = Integer.parseInt(value);
           } else if(name.equals("infosme.sourceAddress")) {
@@ -604,7 +604,7 @@ public class UserPreferences {
     result += "\t\t<pref name=\"infosme.transactionMode\" value=\"" + infosmeTrMode + "\"/>\n";
     result += "\t\t<pref name=\"infosme.uncommitedInGeneration\" value=\"" + infosmeUncommitGeneration + "\"/>\n";
     result += "\t\t<pref name=\"infosme.uncommitedInProcess\" value=\"" + infosmeUncommitProcess + "\"/>\n";
-    result += "\t\t<pref name=\"infosme.validityPeriod\" value=\"" + tf.format(infosmeValidityPeriod) + "\"/>\n";
+    result += "\t\t<pref name=\"infosme.validityPeriod\" value=\"" + infosmeValidityPeriod+":00:00" + "\"/>\n";
     result += "\t\t<pref name=\"infosme.priority\" value=\"" + infosmePriority + "\"/>\n";
 
     return result;
@@ -766,11 +766,11 @@ public class UserPreferences {
     this.infosmeTrackIntegrity = infosmeTrackIntegrity;
   }
 
-  public Date getInfosmeValidityPeriod() {
+  public Integer getInfosmeValidityPeriod() {
     return infosmeValidityPeriod;
   }
 
-  public void setInfosmeValidityPeriod(Date infosmeValidityPeriod) {
+  public void setInfosmeValidityPeriod(Integer infosmeValidityPeriod) {
     this.infosmeValidityPeriod = infosmeValidityPeriod;
   }
 

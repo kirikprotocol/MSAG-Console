@@ -12,7 +12,6 @@ import ru.novosoft.smsc.infosme.backend.radixtree.TemplatesRadixTree;
 import ru.novosoft.smsc.infosme.beans.InfoSmeBean;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -156,6 +155,9 @@ public class SiebelTaskManager implements Runnable {
       }
 
       t = createTask(st, buildTaskName(st.getWaveId()));
+
+      InfoSmeConfig.validate(t);
+      
       ResultSet messages = null;
       try {
         messages = provider.getMessages(st.getWaveId());
@@ -397,7 +399,9 @@ public class SiebelTaskManager implements Runnable {
     } catch (Exception e) {
       logger.error(e, e);
       try {
-        _removeTask(task);
+        if(task.getId() != null && smeContext.getInfoSmeConfig().containsTaskWithId(task.getId())) {
+          _removeTask(task);
+        }
       } catch (Throwable ex) {
         logger.error(ex, ex);
       }
@@ -453,7 +457,6 @@ public class SiebelTaskManager implements Runnable {
 
   private Task createTask(SiebelTask siebelTask, String taskName) throws SiebelException {
     try {
-      SimpleDateFormat tf = new SimpleDateFormat("HH:mm:ss");
       InfoSmeConfig cfg = ctx.getInfoSmeConfig();
       Task task = ctx.getInfoSmeConfig().createTask();
       task.setName(taskName);
@@ -471,7 +474,10 @@ public class SiebelTaskManager implements Runnable {
       task.setTrackIntegrity(cfg.isSiebelTTrackIntegrity());
       task.setFlash(siebelTask.isFlash());
       task.setReplaceMessage(cfg.isSiebelTReplaceMessage());
-      task.setRetryOnFail(cfg.isSiebelTRetryOnFail());
+      if(cfg.isSiebelTRetryOnFail()) {
+        task.setRetryOnFail(true);
+        task.setRetryPolicy(cfg.getSiebelTRetryPolicy());
+      }
       task.setSvcType(cfg.getSiebelTSvcType());
       task.setActivePeriodStart(cfg.getSiebelTPeriodStart());
       task.setActivePeriodEnd(cfg.getSiebelTPeriodEnd());
@@ -479,13 +485,9 @@ public class SiebelTaskManager implements Runnable {
       task.setDelivery(true);
       task.setSaveFinalState(true);
       if (siebelTask.getExpPeriod() != null && siebelTask.getExpPeriod().intValue() != 0) {
-        if (siebelTask.getExpPeriod().intValue() > 24) {
-          siebelTask.setExpPeriod(new Integer(24));
-        }
-        String prefix = (siebelTask.getExpPeriod().intValue() < 10) ? "0" : "";
-        task.setValidityPeriod(tf.parse(prefix + siebelTask.getExpPeriod() + ":00:00"));
+        task.setValidityPeriod(siebelTask.getExpPeriod());
       } else {
-        task.setValidityPeriod(tf.parse("01:00:00"));
+        task.setValidityPeriod(new Integer(1));
       }
 
       task.setStartDate(new Date());
