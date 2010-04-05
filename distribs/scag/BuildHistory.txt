@@ -586,10 +586,14 @@ TO ALL: Insert log record for all significant changes & fixes here.
 2010-03-19 16:20 bukind
   msag: feature: exclusive bit fields
 
---- current fixes ---
+=================================================================================================================
+2010-04-05 13:20 bukind pvss-build-20100405
 2010-03-30 15:45 bukind
   pvss: bugfix: does not sleep on stop
   pvss: feature: snmp counters
+
+--- current fixes ---
+2010-03-30 15:45 bukind
   msag: feature: snmp counters
 
 2010-04-05 12:50 bukind
