@@ -203,7 +203,7 @@ void SessionManagerImpl::Stop()
 
             // all sessions have been returned to store
             // notify expire thread
-            smsc_log_info( log_, "all sessions are in expire pool" );
+            smsc_log_debug( log_, "all sessions are in expire pool" );
             started_ = false;
             expireMonitor_.notify();
         }
