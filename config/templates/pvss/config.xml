@@ -12,6 +12,12 @@
         <param name="storageQueueSize" type="int">@pvss.storage_queue_size@</param>
         <param name="expectedSpeed" type="int">500</param> <!-- total input speed req/s -->
     
+        <section name="snmp">
+            <param name="enabled" type="bool">true</param>
+            <param name="socket" type="string"></param>
+            <param name="cacheTimeout" type="int">10</param>
+        </section>
+
         <section name="SyncTransport">
             <param name="port" type="int">@pvss.sync.port@</param>
             <param name="maxClientsCount" type="int">@pvss.sync.max_clients_count@</param>
