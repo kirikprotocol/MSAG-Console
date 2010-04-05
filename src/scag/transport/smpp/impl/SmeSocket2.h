@@ -59,7 +59,13 @@ struct SmeSocket:SmppSocket{
       }
     }
 
-    putCommand(SmppCommand::makeCommand(resp,pdu->get_sequenceNumber(),code,0));
+    std::auto_ptr<BindRespCommand> brc;
+    if (code==St::OK) {
+        brc.reset(new BindRespCommand);
+        brc->sysId = "msag";
+        brc->interfaceVersion = std::min(bnd.get_interfaceVersion(),uint8_t(0x34));
+    }
+    putCommand(SmppCommand::makeCommand(resp,pdu->get_sequenceNumber(),code,brc.release()));
     return true;
   }
 };

@@ -1111,6 +1111,11 @@ SmppHeader* SmppCommand::makePdu(uint32_t smeFlags)
             pdu->header.set_commandId(SmppCommandSet::BIND_RECIEVER_RESP);
             pdu->header.set_sequenceNumber(get_dialogId());
             pdu->header.set_commandStatus(get_status());
+            BindRespCommand* brc = get_bindRespCommand();
+            if (brc) {
+                pdu->set_systemId(brc->sysId.c_str());
+                if (brc->interfaceVersion) pdu->set_scInterfaceVersion(brc->interfaceVersion);
+            }
             return reinterpret_cast<SmppHeader*>(pdu.release());
         }
     case BIND_TRANSMITTER_RESP:
@@ -1119,6 +1124,11 @@ SmppHeader* SmppCommand::makePdu(uint32_t smeFlags)
             pdu->header.set_commandId(SmppCommandSet::BIND_TRANSMITTER_RESP);
             pdu->header.set_sequenceNumber(get_dialogId());
             pdu->header.set_commandStatus(get_status());
+            BindRespCommand* brc = get_bindRespCommand();
+            if (brc) {
+                pdu->set_systemId(brc->sysId.c_str());
+                if (brc->interfaceVersion) pdu->set_scInterfaceVersion(brc->interfaceVersion);
+            }
             return reinterpret_cast<SmppHeader*>(pdu.release());
         }
     case BIND_TRANCIEVER_RESP:
@@ -1127,6 +1137,11 @@ SmppHeader* SmppCommand::makePdu(uint32_t smeFlags)
             pdu->header.set_commandId(SmppCommandSet::BIND_TRANCIEVER_RESP);
             pdu->header.set_sequenceNumber(get_dialogId());
             pdu->header.set_commandStatus(get_status());
+            BindRespCommand* brc = get_bindRespCommand();
+            if (brc) {
+                pdu->set_systemId(brc->sysId.c_str());
+                if (brc->interfaceVersion) pdu->set_scInterfaceVersion(brc->interfaceVersion);
+            }
             return reinterpret_cast<SmppHeader*>(pdu.release());
         }
     case ALERT_NOTIFICATION:

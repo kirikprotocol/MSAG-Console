@@ -331,6 +331,13 @@ struct BindCommand
 };
 
 
+struct BindRespCommand
+{
+    std::string sysId;
+    int interfaceVersion;
+};
+
+
 struct AlertNotification
 {
     AlertNotification(PduAlertNotification* pdu)
@@ -634,6 +641,10 @@ public:
 
     BindCommand& get_bindCommand() {
         return * reinterpret_cast< BindCommand* >(dta_);
+    }
+
+    BindRespCommand* get_bindRespCommand() {
+        return reinterpret_cast< BindRespCommand* >(dta_);
     }
 
     AlertNotification& get_alertNotification() {
