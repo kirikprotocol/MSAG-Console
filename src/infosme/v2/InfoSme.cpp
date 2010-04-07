@@ -44,6 +44,9 @@
 #include "version.inc"
 #include "util/regexp/RegExp.hpp"
 #include "util/config/ConfString.h"
+#include "util/findConfigFile.h"
+#include "util/crc32.h"
+#include "license/check/license.hpp"
 
 using namespace smsc::sme;
 using namespace smsc::smpp;
@@ -187,6 +190,95 @@ extern "C" void atExitHandler(void)
     smsc::logger::Logger::Shutdown();
 }
 
+
+unsigned checkLicenseFile()
+{
+    static time_t licenseFileMTime = 0;
+    static unsigned maxsms = 0;
+    const std::string licenseFile = smsc::util::findConfigFile("license.ini");
+    const std::string licenseSig = smsc::util::findConfigFile("license.sig");
+    struct stat fst;
+    if (::stat(licenseFile.c_str(),&fst) != 0) {
+        throw smsc::util::Exception("License file is not found: %s", licenseFile.c_str());
+    }
+    if (fst.st_mtime == licenseFileMTime) {
+        return maxsms;
+    }
+
+    static const char *lkeys[]=
+    {
+            "Organization",
+            "Hostids",
+            "MaxSmsThroughput",
+            // "MaxHttpThroughput",
+            // "MaxMmsThroughput",
+            "LicenseExpirationDate",
+            "LicenseType",
+            "Product"
+    };
+    smsc::core::buffers::Hash<std::string> licconfig;
+    if (!smsc::license::check::CheckLicense(licenseFile.c_str(),licenseSig.c_str(),
+                                            licconfig,lkeys,sizeof(lkeys)/sizeof(lkeys[0])))
+    {
+        throw smsc::util::Exception("Invalid license");
+    }
+    licenseFileMTime=fst.st_mtime;
+    maxsms = unsigned(atoi(licconfig["MaxSmsThroughput"].c_str()));
+    if ( maxsms > 10000 ) {
+        throw smsc::util::Exception("Too big value for MaxSmsThroughput: %u", maxsms);
+    }
+
+    time_t expdate;
+    {
+        int y,m,d;
+        sscanf(licconfig["LicenseExpirationDate"].c_str(),"%d-%d-%d",&y,&m,&d);
+        struct tm t={0,};
+        t.tm_year=y-1900;
+        t.tm_mon=m-1;
+        t.tm_mday=d;
+        expdate = mktime(&t);
+    }
+    bool ok = false;
+    {
+        long hostid;
+        std::string ids=licconfig["Hostids"];
+        std::string::size_type pos=0;
+        do {
+            sscanf(ids.c_str() + pos,"%lx", &hostid);
+            if (hostid == gethostid())
+            {
+                ok = true;
+                break;
+            }
+            
+            pos = ids.find(',', pos);
+            if (pos!=std::string::npos) pos++;
+        } while(pos!=std::string::npos);
+    }
+    if (!ok) {
+        throw std::runtime_error("code 1");
+    }
+    if ( smsc::util::crc32(0,licconfig["Product"].c_str(),
+                           licconfig["Product"].length())!=0x7fb78bee) {
+        // not "infosme"
+        throw std::runtime_error("code 2");
+    }
+    if (expdate < time(0)) {
+        char x[]=
+        {
+            'L'^0x4c,'i'^0x4c,'c'^0x4c,'e'^0x4c,'n'^0x4c,'s'^0x4c,'e'^0x4c,' '^0x4c,'E'^0x4c,'x'^0x4c,'p'^0x4c,'i'^0x4c,'r'^0x4c,'e'^0x4c,'d'^0x4c,
+        };
+        std::string s;
+        for (unsigned i=0;i<sizeof(x);i++)
+        {
+            s+=x[i]^0x4c;
+        }
+        throw std::runtime_error(s);
+    }
+    return maxsms;
+}
+
+
 int main(int argc, char** argv)
 {
   try {
@@ -222,6 +314,9 @@ int main(int argc, char** argv)
 
     try
     {
+        // checking license file
+        maxMessagesPerSecond = checkLicenseFile();
+
         Manager::init("config.xml");
         Manager& manager = Manager::getInstance();
 
@@ -235,6 +330,7 @@ int main(int argc, char** argv)
         TaskProcessor processor;
         {
             ConfigView tpConfig(manager, "InfoSme");
+            /*
             maxMessagesPerSecond++;
 
             try { maxMessagesPerSecond = tpConfig.getInt("maxMessagesPerSecond"); } catch (...) {};
@@ -247,6 +343,7 @@ int main(int argc, char** argv)
                 smsc_log_warn(logger, "Parameter 'maxMessagesPerSecond' value '%d' is too big. "
                               "The preffered max value is 100", maxMessagesPerSecond);
             }
+             */
 
             {
                 smsc::util::config::ConfString fnStr(tpConfig.getString("storeLocation"));

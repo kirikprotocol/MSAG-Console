@@ -14,8 +14,13 @@ infosme/InfoSme   	  InfoSme	 \
  -lutil-templates -lutil-config -lutil-config-route -lutil-config-region -lutil-xml \
  -lutil \
  -lutil-recoder-recode_dll \
+ -llicense-check \
  -lcore-threads -lcore-buffers \
  -lpthread $(XERCES_LIB) \
- -lsms $(__LIBRARIES) -lrt -ldl -L$(SMSC_BUILDDIR)/bin \
+ -lsms \
+ $(__LIBRARIES) \
+ $(SSL_LIB) \
+ -lrt -ldl -L$(SMSC_BUILDDIR)/bin \
  -llogger -lnsl -lutil-mirrorfile \
- -L$(SMSC_BUILDDIR)/bin/db/exceptions/ -ldb_exc @db/exceptions/libdb_exc.so @liblogger.so
+ -L$(SMSC_BUILDDIR)/bin/db/exceptions/ -ldb_exc @db/exceptions/libdb_exc.so \
+ @liblogger.so

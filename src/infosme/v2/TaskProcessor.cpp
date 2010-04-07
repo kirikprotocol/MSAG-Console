@@ -322,7 +322,7 @@ int TaskProcessor::Execute()
                 TaskGuard* tg;
                 unsigned activeOpenMessages = 0, totalOpenMessages = 0;
                 unsigned activeTasksCount = 0;
-                for ( TaskHash::Iterator it(tasks); it.Next(key,guard); ) {
+                for ( TaskHash::Iterator it(tasks); it.Next(key,tg); ) {
                     if (!tg) continue;
                     Task* task = tg->get();
                     if (!task) continue;
@@ -337,7 +337,7 @@ int TaskProcessor::Execute()
                                   key,task->getName().c_str(),openMessages);
                 }
                 smsc_log_info(log_,"Stats follows: tasks active/total=%u/%u msgs=%u/%u",
-                              activeTasksCount(), tasks.Count(),
+                              activeTasksCount, tasks.Count(),
                               activeOpenMessages,totalOpenMessages);
             }
 

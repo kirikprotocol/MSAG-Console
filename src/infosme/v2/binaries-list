@@ -19,7 +19,9 @@ infosme/infosme2   	  InfoSme \
  -lutil-xml $(XERCES_LIB) \
  @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
  -lutil \
+ -llicense-check \
  $(__LIBRARIES) \
+ $(SSL_LIB) \
  -lpthread -lrt -ldl
 
 infosme/splitTaskSection splitTaskSection \
