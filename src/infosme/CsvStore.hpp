@@ -49,6 +49,7 @@ public:
   void closeAllFiles();
     // if all messages have been read and their states are final
     bool isProcessed();
+    void collectStatistics( unsigned& openMsgs );
 
   struct Directory;
   struct CsvFile{

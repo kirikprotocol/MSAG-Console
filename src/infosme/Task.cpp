@@ -1061,6 +1061,13 @@ bool Task::isReady(time_t time, bool checkActivePeriod)
   return true;
 }
 
+
+void Task::collectStatistics( unsigned& openMsgs )
+{
+    store.collectStatistics( openMsgs );
+}
+
+
 bool Task::insertDeliveryMessage(uint8_t msgState,
                                  const std::string& address,
                                  time_t messageDate,

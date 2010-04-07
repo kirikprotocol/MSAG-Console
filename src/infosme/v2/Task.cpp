@@ -198,6 +198,13 @@ void Task::trackIntegrity(bool clear, bool del)
     }
 }
 
+
+void Task::collectStatistics( unsigned& openMsgs )
+{
+    store.collectStatistics( openMsgs );
+}
+
+
 bool Task::beginGeneration(Statistics* statistics)
 {
     smsc_log_debug(logger, "beginGeneration method being called on task '%d/%s'",

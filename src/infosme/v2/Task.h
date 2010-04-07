@@ -136,6 +136,9 @@ public:
     void getPrefetched( Message& msg );
     void checkActivity( time_t now, tm& localTime );
 
+    /// collect tasks statistics, right now only the number of open messages
+    void collectStatistics( unsigned& openMsgs );
+
     /**
      * Запускает процесс генерации сообщений для отправки в спец.таблицу задачи.
      * Выполняестся на ThreadPool'е по команде от Scheduler'а

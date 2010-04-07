@@ -125,6 +125,9 @@ public:
 
     bool isReady(time_t time, bool checkActivePeriod = true);
 
+    /// collect tasks statistics, right now only the number of open messages
+    void collectStatistics( unsigned& openMsgs );
+
     /**
      * Запускает процесс генерации сообщений для отправки в спец.таблицу задачи.
      * Выполняестся на ThreadPool'е по команде от Scheduler'а

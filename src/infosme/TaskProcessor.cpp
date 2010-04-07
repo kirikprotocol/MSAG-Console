@@ -455,7 +455,7 @@ int TaskProcessor::Execute()
     taskGuards.reserve(100);
     time_t prevTime = time(NULL);
     IntHash< Task* > activeTasks;
-
+    time_t statTime = prevTime;
     while (!bNeedExit)
     {
         time_t currentTime = time(NULL);
@@ -555,6 +555,32 @@ int TaskProcessor::Execute()
         }
 
         processWaitingEvents(time(NULL)); // ?? or time(NULL)
+
+        if ( currentTime - statTime > 60 ) {
+            // printout the statistics
+            statTime = currentTime;
+            // collect statistics on all active tasks
+            MutexGuard mg(tasksLock);
+            int key;
+            Task* task;
+            unsigned activeOpenMessages = 0, totalOpenMessages = 0;
+            for ( IntHash<Task*>::Iterator it = tasks.First(); it.Next(key,task); ) {
+                if ( !task ) continue;
+                // collect the number of messages in the task
+                unsigned openMessages;
+                task->collectStatistics( openMessages );
+                totalOpenMessages += openMessages;
+                if ( activeTasks.GetPtr(key) ) {
+                    activeOpenMessages += openMessages;
+                }
+                smsc_log_info(log_,"task %u/'%s' msgs=%u",
+                              key,task->getName().c_str(),openMessages);
+            }
+            smsc_log_info(log_,"Stats follows: tasks active/total=%u/%u msgs=%u/%u",
+                          activeTasks.Count(), tasks.Count(),
+                          activeOpenMessages,totalOpenMessages);
+        }
+
         if (!bNeedExit && processed <= 0) {
             // smsc_log_debug(log_,"TaskProc: processed=%d waiting %d",processed,switchTimeout);
             awake.Wait(switchTimeout);

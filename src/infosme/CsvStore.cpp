@@ -182,6 +182,20 @@ bool CsvStore::isProcessed()
 }
 
 
+void CsvStore::collectStatistics( unsigned& openMsgs )
+{
+    openMsgs = 0;
+    sync::MutexGuard mg(mtx);
+    for ( DirMap::const_iterator dit = dirs.begin(); dit != dirs.end(); ++dit ) {
+        Directory& dir = *dit->second;
+        for ( FileMap::const_iterator fit = dir.files.begin(); fit != dir.files.end(); ++fit ) {
+            CsvFile* f = fit->second;
+            openMsgs += f->openMessages;
+        }
+    }
+}
+
+
 bool CsvStore::getNextMessage(Message &message)
 {
   sync::MutexGuard mg(mtx);

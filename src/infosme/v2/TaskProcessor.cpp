@@ -279,7 +279,7 @@ int TaskProcessor::Execute()
     msectime_type movingStart = startTime;
     msectime_type nextWakeTime = startTime;
     msectime_type lastNotifyTime = startTime;
-    // msectime_type lastStatTime = startTime;
+    msectime_type lastStatTime = startTime;
 
     bool wasNotified = false;
     try {
@@ -308,14 +308,38 @@ int TaskProcessor::Execute()
 
             // 2. flipping start time
             if ( deltaTime > 1000000 ) {
-                movingStart = currentTime;
+                movingStart += deltaTime;
                 deltaTime = 0;
                 smsc_log_info(log_,"making a flip for a startTime");
             }
 
             smsc_log_debug(log_,"new pass at %u, notified=%u",deltaTime,wasNotified);
 
-            // 3. FIXME: dumping statistics
+            // 3. dumping statistics
+            if ( currentTime - lastStatTime > 60000 ) { // one minute
+                MutexGuard mg(tasksLock);
+                int key;
+                TaskGuard* tg;
+                unsigned activeOpenMessages = 0, totalOpenMessages = 0;
+                unsigned activeTasksCount = 0;
+                for ( TaskHash::Iterator it(tasks); it.Next(key,guard); ) {
+                    if (!tg) continue;
+                    Task* task = tg->get();
+                    if (!task) continue;
+                    unsigned openMessages;
+                    task->collectStatistics(openMessages);
+                    totalOpenMessages += openMessages;
+                    if (task->isActive()) {
+                        ++activeTasksCount;
+                        activeOpenMessages += openMessages;
+                    }
+                    smsc_log_info(log_,"task %u/'%s' msgs=%u",
+                                  key,task->getName().c_str(),openMessages);
+                }
+                smsc_log_info(log_,"Stats follows: tasks active/total=%u/%u msgs=%u/%u",
+                              activeTasksCount(), tasks.Count(),
+                              activeOpenMessages,totalOpenMessages);
+            }
 
             // 4. processing notification
             MutexGuard mg(tasksLock);
