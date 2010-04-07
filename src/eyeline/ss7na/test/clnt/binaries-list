@@ -1,0 +1,3 @@
+eyeline/ss7na/test/ping_pong           ping_pong    -leyeline-ss7na-libsccp -leyeline-ss7na-libsccp-messages -leyeline-sccp \
+       -leyeline-ss7na-common -leyeline-corex-io-network -leyeline-corex-io -leyeline-utilx -leyeline-util -L$(SMSC_BUILDDIR)/bin -llogger \
+       -lutil-config -lutil-xml -lthread -lrt -lutil -lcore-threads $(XERCES_LIB) -lresolv -lsocket -lnsl
