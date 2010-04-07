@@ -1,6 +1,9 @@
 History in reverse order
 ----------------------------------------------------
 
+2010-04-07 14:00 bukind
+ task statistics on open messages
+
 ----------------------------------------------------
 infosme2-build-20100330 11:00 bukind v2.0
 
