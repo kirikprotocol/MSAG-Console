@@ -205,32 +205,53 @@ int main(int argc,char* argv[])
     }
   }*/
 
-  string msg;
   const char *smscKeys[]=
   {
-"Organization",
-"Hostids",
-"MaxSmsThroughput",
-"LicenseExpirationDate",
-"LicenseType",
-"Product"
+          "Organization",
+          "Hostids",
+          "MaxSmsThroughput",
+          "LicenseExpirationDate",
+          "LicenseType",
+          "Product",
+          0
   };
   const char* scagKeys[]=
   {
-"Organization",
-"Hostids",
-"MaxSmsThroughput",
-"MaxHttpThroughput",
-"MaxMmsThroughput",
-"LicenseExpirationDate",
-"LicenseType",
-"Product"
+          "Organization",
+          "Hostids",
+          "MaxSmsThroughput",
+          "MaxHttpThroughput",
+          "MaxMmsThroughput",
+          "LicenseExpirationDate",
+          "LicenseType",
+          "Product",
+          0
   };
-  const char** lkeys=strcmp(argv[1],"smsc")==0?smscKeys:strcmp(argv[1],"scag")==0?scagKeys:0;
-  size_t keysCount=strcmp(argv[1],"smsc")==0?sizeof(smscKeys)/sizeof(smscKeys[0]):strcmp(argv[1],"scag")==0?sizeof(scagKeys)/sizeof(scagKeys[0]):1;
-  
-  for(int i=0;i<keysCount;i++)
-  {
+    const char* infosmeKeys[] =
+    {
+          "Organization",
+          "Hostids",
+          "MaxSmsThroughput",
+          "LicenseExpirationDate",
+          "LicenseType",
+          "Product",
+          0
+    };
+    const char** lkeys = 0;
+    if (strcmp(argv[1],"smsc")==0 ) {
+        lkeys = smscKeys;
+    } else if ( strcmp(argv[1],"scag")==0 ) {
+        lkeys = scagKeys;
+    } else if ( strcmp(argv[1],"infosme")==0 ) {
+        lkeys = infosmeKeys;
+    }
+    if (!lkeys) {
+      fprintf(stderr,"Product %s is not supported\n",argv[1]);
+      return -1;
+    }
+
+  std::string msg;
+  for ( size_t i = 0; lkeys[i] != 0; ++i ) {
     msg+=lkeys[i];
     msg+='=';
     if(!lic.Exists(lkeys[i]))
