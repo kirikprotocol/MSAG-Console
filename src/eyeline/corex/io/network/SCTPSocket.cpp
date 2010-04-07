@@ -2,6 +2,7 @@
 #include <netdb.h>
 #include <unistd.h>
 
+#include "eyeline/corex/io/IOExceptions.hpp"
 #include "eyeline/utilx/Exception.hpp"
 #include "SCTPSocket.hpp"
 
@@ -44,14 +45,14 @@ SCTPSocket::SCTPSocket(in_port_t port)
   _server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 }
 
-SCTPSocket::SCTPSocket(int sockfd)
-  : _sockfd(sockfd)
+SCTPSocket::SCTPSocket(int sock_fd)
+  : _sockfd(sock_fd)
 {
   if ( _sockfd < 0 )
     throw smsc::util::SystemError("SCTPSocket::SCTPSocket::: input socket fd value is less than 0");
 
-  _inputStream = new SctpInputStream(this, sockfd);
-  _outputStream = new SctpOutputStream(this, sockfd);
+  _inputStream = new SctpInputStream(this, _sockfd);
+  _outputStream = new SctpOutputStream(this, _sockfd);
 
   struct sctp_event_subscribe evnts;
 
@@ -73,7 +74,7 @@ SCTPSocket::~SCTPSocket()
 }
 
 void
-SCTPSocket::fillAddressString(struct sockaddr *saddr, int addrsNum, char *addresses_info, size_t addresses_info_sz)
+SCTPSocket::fillAddressString(struct sockaddr *saddr, int addrs_num, char *addresses_info, size_t addresses_info_sz)
 {
   struct sockaddr_in* ipv4_addr;
 
@@ -83,7 +84,7 @@ SCTPSocket::fillAddressString(struct sockaddr *saddr, int addrsNum, char *addres
   char lport[16];
   char ip_address[32];
   sprintf(lport, ",%d", ntohs(ipv4_addr->sin_port));
-  for (int i=0; i<addrsNum; ++i) {
+  for (int i=0; i<addrs_num; ++i) {
     if (ipv4_addr->sin_family == AF_INET) {
       inet_ntop(AF_INET, &ipv4_addr->sin_addr, ip_address, static_cast<int>(sizeof(ip_address)));
       if ( i > 0 )
@@ -191,6 +192,7 @@ SCTPSocket::connect()
     if ( hp->h_addrtype != AF_INET )
       throw smsc::util::Exception("SCTPSocket::connect::: gethostbyname() returned unsupported addrtype [%d]", hp->h_addrtype);
 
+    bool connRefused = false;
     for(char** pptr = hp->h_addr_list; *pptr; ++pptr) {
       memcpy(&_server_addr.sin_addr, *pptr, sizeof(_server_addr.sin_addr));
       if ( ::connect(_sockfd, (sockaddr*)&_server_addr, static_cast<int>(sizeof(_server_addr))) == 0 ) {
@@ -198,9 +200,13 @@ SCTPSocket::connect()
         _inputStream = new SctpInputStream(this, _sockfd); _outputStream = new SctpOutputStream(this, _sockfd);
         return;
       }
+      if ( errno = ECONNREFUSED )
+        connRefused = true;
     }
-
-    throw smsc::util::Exception("SCTPSocket::connect::: can't establish connect");
+    if ( connRefused )
+      throw ConnectionFailedException("SCTPSocket::connect::: connection refused");
+    else
+      throw smsc::util::Exception("SCTPSocket::connect::: can't establish connect");
   } else {
     if ( ::connect(_sockfd, (sockaddr*)&_server_addr, static_cast<int>(sizeof(_server_addr))) < 0 )
       throw smsc::util::SystemError("SCTPSocket::connect::: can't establish connect");
@@ -238,31 +244,31 @@ SCTPSocket::_getDescriptor()
 }
 
 void
-SCTPSocket::bindx(const std::string localAddresses[], size_t addressesCount, in_port_t localPort)
+SCTPSocket::bindx(const std::string local_addrs[], size_t addrs_count, in_port_t local_port)
 {
-  if ( addressesCount > 0 ) {
+  if ( addrs_count > 0 ) {
     sockaddr_in localIfaceAddress;
 
     localIfaceAddress.sin_family = AF_INET;
-    localIfaceAddress.sin_port = htons(localPort);
-    if ( inet_pton(AF_INET, localAddresses[0].c_str(), &localIfaceAddress.sin_addr) < 1 )
+    localIfaceAddress.sin_port = htons(local_port);
+    if ( inet_pton(AF_INET, local_addrs[0].c_str(), &localIfaceAddress.sin_addr) < 1 )
       throw smsc::util::Exception("SCTPSocket::bindx::: local interface address mustn't be host name");
 
     if ( ::bind(_sockfd, (struct sockaddr*)&localIfaceAddress, static_cast<int>(sizeof(localIfaceAddress))) )
       throw smsc::util::SystemError("SCTPSocket::bindx::: call to bind() failed");
 
-    if ( addressesCount > 1 ) {
+    if ( addrs_count > 1 ) {
       struct sockaddr_in *bindxAddrList;
-      bindxAddrList = new sockaddr_in[addressesCount-1];
+      bindxAddrList = new sockaddr_in[addrs_count-1];
 
-      for (int i=0; i<addressesCount-1; i++) {
-        if ( inet_pton(AF_INET, localAddresses[i+1].c_str(), &localIfaceAddress.sin_addr) < 1 )
+      for (int i=0; i<addrs_count-1; i++) {
+        if ( inet_pton(AF_INET, local_addrs[i+1].c_str(), &localIfaceAddress.sin_addr) < 1 )
           throw smsc::util::Exception("SCTPSocket::bindx::: local interface address mustn't be host name");
         bindxAddrList[i] = localIfaceAddress;
       }
 
-      if ( addressesCount > 1 ) {
-        if ( ::sctp_bindx(_sockfd, bindxAddrList, static_cast<int>(addressesCount-1), SCTP_BINDX_ADD_ADDR) ) {
+      if ( addrs_count > 1 ) {
+        if ( ::sctp_bindx(_sockfd, bindxAddrList, static_cast<int>(addrs_count-1), SCTP_BINDX_ADD_ADDR) ) {
           delete [] bindxAddrList;
           throw smsc::util::SystemError("SCTPSocket::bindx::: call to sctp_bindx() failed");
         }
@@ -273,18 +279,18 @@ SCTPSocket::bindx(const std::string localAddresses[], size_t addressesCount, in_
 }
 
 SctpOutputStream::SctpOutputStream(IOObject* owner, int fd)
-  : _owner(owner), _fd(fd)/*, _streamNo(0), _sendFlags(0)*/ {}
+  : _owner(owner), _fd(fd) {}
 
 ssize_t
-SctpOutputStream::write(const uint8_t *buf, size_t bufSz, uint16_t streamNo, bool ordered) const
+SctpOutputStream::write(const uint8_t *buf, size_t buf_sz, uint16_t stream_no, bool ordered) const
 {
   uint32_t sendFlags=0;
   if ( ordered ) sendFlags |= MSG_UNORDERED;
   else sendFlags &= ~MSG_UNORDERED;
 
-  ssize_t result = sctp_sendmsg(_fd, buf,  bufSz,
+  ssize_t result = sctp_sendmsg(_fd, buf,  buf_sz,
                                 NULL, 0, 0,
-                                sendFlags,  streamNo,  0, -1);
+                                sendFlags,  stream_no,  0, -1);
 
 
   if ( result < 0 ) {
@@ -316,7 +322,7 @@ SctpInputStream::SctpInputStream(IOObject* owner, int fd)
 }
 
 ssize_t
-SctpInputStream::read(uint8_t *buf, size_t bufSz)
+SctpInputStream::read(uint8_t *buf, size_t buf_sz)
 {
   sockaddr_in from;
   socklen_t fromlen = sizeof(from);
@@ -324,7 +330,7 @@ SctpInputStream::read(uint8_t *buf, size_t bufSz)
   ssize_t result;
   do {
     msg_flags=0;
-    result = sctp_recvmsg(_fd, buf, bufSz,  (sockaddr*)&from, &fromlen, &_sinfo, &msg_flags);
+    result = sctp_recvmsg(_fd, buf, buf_sz, (sockaddr*)&from, &fromlen, &_sinfo, &msg_flags);
 
     if ( msg_flags & MSG_NOTIFICATION ) {
       sctp_notification* snp = (sctp_notification*)buf;
