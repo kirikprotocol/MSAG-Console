@@ -56,6 +56,8 @@ template<int BUFSZ>
 void
 RingBuffer<BUFSZ>::readArray(uint8_t* destBuffer, size_t arraySz)
 {
+  if ( !arraySz )
+    return;
   if ( !_count )
     throw smsc::util::Exception("RingBuffer<BUFSZ>::readArray::: ring buffer is empty");
   size_t bytesToEnd = sizeof(_buffer) - _head;
