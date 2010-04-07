@@ -6,6 +6,7 @@
 #include "eyeline/ss7na/m3ua_gw/mtp3/sap/MTPSapInstance.hpp"
 #include "eyeline/ss7na/m3ua_gw/mtp3/PointsDefinitionRegistry.hpp"
 #include "messages/MemoryAllocator.hpp"
+#include "SLSGenerator.hpp"
 
 namespace eyeline {
 namespace ss7na {
@@ -282,7 +283,7 @@ MessageHandlers::forwardMessageToMTP3(const std::string& route_id,
     sls = _sequenceControl % 15;
     mtp3SapInfo = mtp3SapPolicy->getValue(_sequenceControl);
   } else {
-    sls = getNextSsl();
+    sls = SLSGenerator::getInstance().getNextSsl();
     mtp3SapInfo = mtp3SapPolicy->getValue();
   }
 
@@ -308,18 +309,6 @@ MessageHandlers::forwardMessageToMTP3(const std::string& route_id,
   } while(mtp3SapInfo != firstMtpSapInfo);
 
   throw common::TranslationFailure(common::MTP_FAILURE, "MessageHandlers::forwardMessageToMTP3::: no one MTP3Sap is accessible");
-}
-
-smsc::core::synchronization::Mutex
-MessageHandlers::_lockForSlsGen;
-
-uint8_t
-MessageHandlers::_generatedSls;
-
-uint8_t
-MessageHandlers::getNextSsl() {
-  smsc::core::synchronization::MutexGuard synchronize(_lockForSlsGen);
-  return ++_generatedSls % 15;
 }
 
 }}}}

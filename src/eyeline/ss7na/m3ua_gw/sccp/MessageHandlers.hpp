@@ -2,7 +2,6 @@
 # define __EYELINE_SS7NA_M3UAGW_SCCP_MESSAGEHANDLERS_HPP__
 
 # include "logger/Logger.h"
-# include "core/synchronization/Mutex.hpp"
 # include "eyeline/ss7na/m3ua_gw/io_dispatcher/ConnectMgr.hpp"
 # include "eyeline/ss7na/m3ua_gw/sccp/messages/UDT.hpp"
 # include "eyeline/ss7na/m3ua_gw/sccp/messages/UDTS.hpp"
@@ -98,9 +97,6 @@ private:
   mtp3::sap::MTPSapInstance& _mtp3SapInstance;
   uint8_t _sequenceControl;
   bool _isSetSequenceControl;
-
-  static smsc::core::synchronization::Mutex _lockForSlsGen;
-  static uint8_t _generatedSls;
 };
 
 }}}}
