@@ -10,6 +10,7 @@
 #include "eyeline/ss7na/m3ua_gw/mtp3/sap/MTPSapInstance.hpp"
 #include "eyeline/ss7na/m3ua_gw/mtp3/PointsDefinitionRegistry.hpp"
 #include "eyeline/ss7na/libsccp/messages/N_PCSTATE_IND_Message.hpp"
+#include "SLSGenerator.hpp"
 
 namespace eyeline {
 namespace ss7na {
@@ -110,7 +111,7 @@ MTP3IndicationsProcessor::formMtpTransferReq(const mtp3::primitives::MTP_Transfe
     negative_message.serialize(&tp);
     mtp3::primitives::MTP_Transfer_Req mtpPrimitive(mtp_ind_primitive.getDPC(),
                                                     mtp_ind_primitive.getOPC(),
-                                                    mtp_ind_primitive.getSLS(),
+                                                    SLSGenerator::getInstance().getNextSsl(),
                                                     mtp_ind_primitive.getServiceIndicator(),
                                                     mtp_ind_primitive.getNetworkIndicator(),
                                                     mtp_ind_primitive.getMsgPrio(),
