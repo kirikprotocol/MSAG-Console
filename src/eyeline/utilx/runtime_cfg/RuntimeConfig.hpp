@@ -17,27 +17,38 @@ public:
   RuntimeConfig();
   virtual ~RuntimeConfig() {}
 
-  void initialize(CompositeParameter* fullConfiguration);
-  virtual void initialize(smsc::util::config::ConfigView* xmlConfig) = 0;
+  void initialize(CompositeParameter* full_configuration);
+  virtual void initialize(smsc::util::config::ConfigView& xmlConfig) = 0;
 
-  template <class PARAMETER_TYPE> PARAMETER_TYPE& find(const std::string& parameterName);
-  void registerParameterObserver(const std::string& parameterName, ParameterObserver* handler);
+  template <class PARAMETER_TYPE> PARAMETER_TYPE& find(const std::string& param_name);
+  void registerParameterObserver(const std::string& full_param_name,
+                                 ParameterObserver* handler);
 
-  void notifyAddParameterEvent(const CompositeParameter& context, Parameter* addedParameter);
-  CompositeParameter* notifyAddParameterEvent(const CompositeParameter& context, CompositeParameter* addedParameter);
-  void notifyAddParameterEvent(CompositeParameter* context, Parameter* addedParameter);
+  void notifyAddParameterEvent(const CompositeParameter& context, Parameter* added_param);
+  CompositeParameter* notifyAddParameterEvent(const CompositeParameter& context,
+                                              CompositeParameter* added_param);
+  void notifyAddParameterEvent(CompositeParameter* context, Parameter* added_param);
 
-  void notifyChangeParameterEvent(const CompositeParameter& context, const Parameter& modifiedParameter);
-  void notifyChangeParameterEvent(CompositeParameter* context, const Parameter& modifiedParameter);
+  void notifyChangeParameterEvent(const CompositeParameter& context,
+                                  const Parameter& modified_param);
+  void notifyChangeParameterEvent(CompositeParameter* context,
+                                  const Parameter& modified_param);
 
-  void notifyRemoveParameterEvent(const Parameter& modifiedParameter);
-  void notifyRemoveParameterEvent(const CompositeParameter& context, const Parameter& modifiedParameter);
+  void notifyRemoveParameterEvent(const Parameter& modified_param);
+  void notifyRemoveParameterEvent(const CompositeParameter& context,
+                                  const Parameter& modified_param);
 
   std::string printConfig() const;
 
 protected:
-  CompositeParameter& findLastNodeParameter(const std::string& parameterName, std::string* leafParameterName);
-  void addParameter(CompositeParameter* compositeParameter, const std::string& paramName, const std::string& paramValue);
+  CompositeParameter& findLastNodeParameter(const std::string& param_name,
+                                            std::string* leaf_param_name);
+  void addParameter(CompositeParameter* composite_param,
+                    const std::string& param_name,
+                    const std::string& param_value);
+  void parseCommaSeparatedValue(const std::string& comma_sep_value,
+                                utilx::runtime_cfg::CompositeParameter* composite_param,
+                                const char* param_name);
 
 private:
   CompositeParameter* _config;
