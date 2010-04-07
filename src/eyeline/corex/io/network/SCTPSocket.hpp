@@ -65,7 +65,7 @@ public:
 
   virtual std::string toString() const;
 
-  void bindx(const std::string localAddresses[], size_t addressesNum, in_port_t localPort);
+  void bindx(const std::string local_addrs[], size_t addrs_num, in_port_t local_port);
 protected:
   explicit SCTPSocket(int sockfd);
   explicit SCTPSocket(in_port_t port);
@@ -75,7 +75,7 @@ protected:
   SCTPSocket(const SCTPSocket&);
   SCTPSocket& operator=(const SCTPSocket&);
 
-  void fillAddressString(struct sockaddr *saddr, int addrsNum, char *addresses_info, size_t addresses_info_sz);
+  void fillAddressString(struct sockaddr *saddr, int addrs_num, char *addresses_info, size_t addresses_info_sz);
   void fillToStringInfo();
 
   virtual int _getDescriptor();
