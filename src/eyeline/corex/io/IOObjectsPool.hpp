@@ -38,12 +38,14 @@ public:
 
   corex::io::network::ServerSocket* getNextReadyServerSocket();
 private:
+  int calcPolledFds(int* sockets_count);
   bool updatePollIndexes(int fd, short event=0);
 
   struct pollfd *_fds, *_snaphots_fds;
   int* _used_fds;
   int _maxPoolSize, _socketsCount;
-
+  int _signallingPipe[2];
+  bool _pollingIsActive;
   enum { INFTIM = -1 };
 
   typedef std::map<int, InputStream*> in_mask_t;
