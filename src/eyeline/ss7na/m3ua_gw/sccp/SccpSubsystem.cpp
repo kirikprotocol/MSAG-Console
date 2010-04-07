@@ -26,11 +26,14 @@
 #include "sap/initializer.hpp"
 #include "sap/ApplicationsRegistry.hpp"
 #include "sap/LibSccpConnectAcceptor.hpp"
-#include "PolicyRegistry.hpp"
-#include "MTP3SapSelectPolicy.hpp"
+
 #include "scmg/initializer.hpp"
 #include "scmg/MessagesFactory.hpp"
 #include "scmg/SCMGMessageProcessor.hpp"
+
+#include "SLSGenerator.hpp"
+#include "MTP3SapSelectPolicy.hpp"
+#include "PolicyRegistry.hpp"
 
 namespace eyeline {
 namespace ss7na {
@@ -76,6 +79,7 @@ SccpSubsystem::initialize(utilx::runtime_cfg::RuntimeConfig& rconfig)
   scmg::SCMGMessageProcessor::init();
   PolicyRegistry<MTP3SapSelectPolicy>::init();
   PolicyRegistry<SCCPUserSelectPolicy>::init();
+  SLSGenerator::init();
 
   runtime_cfg::RuntimeConfig::getInstance().registerParameterObserver("config.commit", this);
   runtime_cfg::RuntimeConfig::getInstance().registerParameterObserver("config.local_address", this);
