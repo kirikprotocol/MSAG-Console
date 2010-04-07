@@ -566,6 +566,7 @@ bool SmscConnector::send( Task& task, Message& msg )
                 fillSmppPduFromSms(&submitSm, &sms);
                 session_->getAsyncTransmitter()->sendPdu(&(submitSm.get_header()));
             }
+            TrafficControl::incOutgoing();
 
             // success
             msguard.processed();
