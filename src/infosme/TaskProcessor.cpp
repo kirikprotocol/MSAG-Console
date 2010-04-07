@@ -572,11 +572,11 @@ int TaskProcessor::Execute()
                 totalOpenMessages += openMessages;
                 if ( activeTasks.GetPtr(key) ) {
                     activeOpenMessages += openMessages;
+                    smsc_log_info(log_,"task %u/'%s' msgs=%u",
+                                  key,task->getName().c_str(),openMessages);
                 }
-                smsc_log_info(log_,"task %u/'%s' msgs=%u",
-                              key,task->getName().c_str(),openMessages);
             }
-            smsc_log_info(log_,"Stats follows: tasks active/total=%u/%u msgs=%u/%u",
+            smsc_log_info(log_,"Stats: tasks active/total=%u/%u msgs=%u/%u",
                           activeTasks.Count(), tasks.Count(),
                           activeOpenMessages,totalOpenMessages);
         }

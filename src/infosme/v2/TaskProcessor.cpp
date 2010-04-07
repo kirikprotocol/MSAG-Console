@@ -332,11 +332,11 @@ int TaskProcessor::Execute()
                     if (task->isActive()) {
                         ++activeTasksCount;
                         activeOpenMessages += openMessages;
+                        smsc_log_info(log_,"task %u/'%s' msgs=%u",
+                                      key,task->getName().c_str(),openMessages);
                     }
-                    smsc_log_info(log_,"task %u/'%s' msgs=%u",
-                                  key,task->getName().c_str(),openMessages);
                 }
-                smsc_log_info(log_,"Stats follows: tasks active/total=%u/%u msgs=%u/%u",
+                smsc_log_info(log_,"Stats: tasks active/total=%u/%u msgs=%u/%u",
                               activeTasksCount, tasks.Count(),
                               activeOpenMessages,totalOpenMessages);
             }
