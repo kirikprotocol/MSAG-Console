@@ -1,15 +1,18 @@
+#include <unistd.h>
 #include <assert.h>
 #include <algorithm>
 #include <utility>
 #include "util/Exception.hpp"
 #include "eyeline/utilx/Exception.hpp"
+#include "logger/Logger.h"
 
 namespace eyeline {
 namespace corex {
 namespace io {
 
 template <class LOCK>
-IOObjectsPool_tmpl<LOCK>::IOObjectsPool_tmpl(int maxPoolSize) {
+IOObjectsPool_tmpl<LOCK>::IOObjectsPool_tmpl(int maxPoolSize)
+: _pollingIsActive(false) {
   if ( !(_fds = new struct pollfd [maxPoolSize]) ||
        !(_snaphots_fds = new struct pollfd [maxPoolSize]) )
     throw smsc::util::SystemError("IOObjectsPool_tmpl::IOObjectsPool_tmpl::: can't allocate memory for _fds");
@@ -19,15 +22,21 @@ IOObjectsPool_tmpl<LOCK>::IOObjectsPool_tmpl(int maxPoolSize) {
   memset(reinterpret_cast<uint8_t*>(_fds), 0, sizeof(struct pollfd) * maxPoolSize);
   memset(reinterpret_cast<uint8_t*>(_snaphots_fds), 0, sizeof(struct pollfd)*maxPoolSize);
 
+  if ( ::pipe(_signallingPipe) < 0)
+    throw smsc::util::SystemError("IOObjectsPool_tmpl::IOObjectsPool_tmpl::: call to pipe failed");
+
+  _fds[0].events = POLLRDNORM;
+  _fds[0].fd = _signallingPipe[0];
+
   _maxPoolSize = maxPoolSize;
-  _socketsCount = 0;
+  _socketsCount = 1;
   for(int i=0; i<_maxPoolSize; ++i)
     _used_fds[i] = -1;
 }
 
 template <class LOCK>
 int
-IOObjectsPool_tmpl<LOCK>::listen(uint32_t timeout)
+IOObjectsPool_tmpl<LOCK>::calcPolledFds(int* sockets_count)
 {
   int retVal = OK_NO_EVENTS;
 
@@ -42,31 +51,49 @@ IOObjectsPool_tmpl<LOCK>::listen(uint32_t timeout)
   if ( !_newConnectionEventsReady.empty() )
     retVal |= OK_ACCEPT_READY;
 
-  int socketsCount=0;
-  if ( retVal != OK_NO_EVENTS ) {
-    _lock.Unlock();
-    return retVal;
-  } else {
+  if ( retVal == OK_NO_EVENTS ) {
     memcpy(reinterpret_cast<uint8_t*>(_snaphots_fds), reinterpret_cast<uint8_t*>(_fds), _maxPoolSize * sizeof(struct pollfd));
-    socketsCount = _socketsCount;
-    _lock.Unlock();
+    *sockets_count = _socketsCount;
+    _pollingIsActive = true;
   }
+  _lock.Unlock();
 
-  int st;
-  if ( timeout )
-    st = ::poll(_snaphots_fds, socketsCount, timeout);
-  else
-    st = ::poll(_snaphots_fds, socketsCount, INFTIM);
+  return retVal;
+}
 
-  if ( st < 0 ) {
-    if ( errno == EINTR )
-      throw utilx::InterruptedException("IOObjectsPool_tmpl::listen::: poll() was interrupted");
+template <class LOCK>
+int
+IOObjectsPool_tmpl<LOCK>::listen(uint32_t timeout)
+{
+  int retVal = OK_NO_EVENTS, st=0;
+  do {
+    int socketsCount=0;
+    retVal = calcPolledFds(&socketsCount);
+    if ( retVal != OK_NO_EVENTS)
+      return retVal;
+
+    if ( timeout )
+      st = ::poll(_snaphots_fds, socketsCount, timeout);
     else
-      throw smsc::util::SystemError("IOObjectsPool_tmpl::listen::: call to poll() failed");
-  } else if ( !st )
-    return TIMEOUT;
+      st = ::poll(_snaphots_fds, socketsCount, INFTIM);
+
+    if ( st < 0 ) {
+      if ( errno == EINTR )
+        throw utilx::InterruptedException("IOObjectsPool_tmpl::listen::: poll() was interrupted");
+      else
+        throw smsc::util::SystemError("IOObjectsPool_tmpl::listen::: call to poll() failed");
+    } else if ( !st )
+      return TIMEOUT;
+
+    if ( _snaphots_fds[0].revents & POLLRDNORM ) {
+      uint8_t signallingByte;
+      read(_signallingPipe[0], &signallingByte, sizeof(signallingByte));
+    } else
+      break;
+  } while(true);
 
   smsc::core::synchronization::MutexGuardTmpl<LOCK> guard(_lock);
+  _pollingIsActive = false;
   for (int j=0; j<_socketsCount; ++j) {
     int readyFd;
     if ( (readyFd = _snaphots_fds[j].fd) > -1 && _snaphots_fds[j].revents ) {
@@ -121,6 +148,11 @@ IOObjectsPool_tmpl<LOCK>::insert(InputStream* iStream)
 {
   int fd = iStream->getOwner()->getDescriptor();
   int idx;
+  {
+    smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("io");
+    smsc_log_debug(logger, "IOObjectsPool_tmpl::insert::: istream, fd=%d", fd);
+  }
+
   smsc::core::synchronization::MutexGuardTmpl<LOCK> guard(_lock);
 
   if ( (idx=_used_fds[fd]) == -1 ) {
@@ -135,6 +167,10 @@ IOObjectsPool_tmpl<LOCK>::insert(InputStream* iStream)
   } else {
     _fds[idx].events |= POLLRDNORM;
     _inMask.insert(std::make_pair(fd, iStream));
+  }
+  if ( _pollingIsActive ) {
+    uint8_t signallingByte = 0;
+    write(_signallingPipe[1], &signallingByte, sizeof(signallingByte));
   }
 }
 
@@ -159,6 +195,10 @@ IOObjectsPool_tmpl<LOCK>::insert(OutputStream* oStream)
     _fds[idx].events |= POLLWRNORM;
     _outMask.insert(std::make_pair(fd, oStream));
   }
+  if ( _pollingIsActive ) {
+    uint8_t signallingByte = 0;
+    write(_signallingPipe[1], &signallingByte, sizeof(signallingByte));
+  }
 }
 
 template <class LOCK>
@@ -175,6 +215,10 @@ IOObjectsPool_tmpl<LOCK>::insert(corex::io::network::ServerSocket* socket)
     _fds[_socketsCount].events = POLLRDNORM;
     _used_fds[fd] = _socketsCount++;
     _acceptMask.insert(std::make_pair(fd, socket));
+    if ( _pollingIsActive ) {
+      uint8_t signallingByte = 0;
+      write(_signallingPipe[1], &signallingByte, sizeof(signallingByte));
+    }
   }
 }
 
