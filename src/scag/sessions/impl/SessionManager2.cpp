@@ -226,6 +226,8 @@ int SessionManagerImpl::Execute()
     // MutexGuard mg(expireMonitor_);
     bool alldone = true;
     bool started = true;
+    typedef std::vector< std::pair<SessionKey,time_t> > SessVec;
+    SessVec curset;
     while( true ) {
 
         // smsc_log_debug(log_,"sessman rolling");
@@ -269,7 +271,9 @@ int SessionManagerImpl::Execute()
                     i = *ptr;
                     ExpireMap::iterator ei = findExpire(i->expire,e.key);
                     if ( i->access != maxtime ) --activeSessions_;
-                    i->access = e.access;
+                    if ( e.access > i->access || i->access == maxtime ) {
+                        i->access = e.access;
+                    }
                     if ( i->expire == e.expire ) continue;
                     i->expire = e.expire;
                     expireMap_.erase( ei );
@@ -290,8 +294,33 @@ int SessionManagerImpl::Execute()
             delete list;
         }
 
-        curtmo = deftmo;
         time_t now = time(0);
+        if ( ! curset.empty() ) {
+            const time_t expireTimeRet = now+5;
+            smsc_log_debug(log_,"%u sessions has returned from previous expiration",unsigned(curset.size()));
+            ExpireMap::iterator mi = expireMap_.lower_bound(expireTimeRet);
+            for ( SessVec::const_iterator i = curset.begin();
+                  i != curset.end();
+                  ++i ) {
+                ExpireList::iterator* ptr = expireHash_.GetPtr(KeyPtr(&(i->first)));
+                if ( !ptr ) {
+                    // if not found
+                    smsc_log_debug(log_,"adding returned key=%s",i->first.toString().c_str());
+                    if (i->second != maxtime) {
+                        if ( i->second < oldestsession_ ) oldestsession_ = i->second;
+                        ++activeSessions_;
+                        alldone = false;
+                    }
+                    expireList_.push_front( Expire(expireTimeRet,i->second,i->first) );
+                    ExpireList::iterator it = expireList_.begin();
+                    expireHash_.Insert( KeyPtr(*it), it );
+                    expireMap_.insert(mi,std::make_pair(expireTimeRet,it));
+                }
+            }
+            curset.clear();
+        }
+
+        curtmo = deftmo;
         int next = -666;
         if ( ! expireMap_.empty() ) {
             next = int(expireMap_.begin()->first - now);
@@ -312,7 +341,6 @@ int SessionManagerImpl::Execute()
 
         // smsc_log_debug( log_, "act/tot=%u/%u", activeSessions_, expireMap_.size() );
 
-        std::vector< SessionKey > curset;
         if ( started ) {
             ExpireMap::iterator i = expireMap_.upper_bound(now);
             /*
@@ -333,7 +361,7 @@ int SessionManagerImpl::Execute()
                     // is living session
                     --activeSessions_;
                 }
-                curset.push_back( j->second->key );
+                curset.push_back( std::make_pair(j->second->key,j->second->access) );
                 expireHash_.Delete( KeyPtr(*j->second) );
                 expireList_.erase( j->second );
             }
@@ -343,9 +371,7 @@ int SessionManagerImpl::Execute()
         if ( ! expireMap_.empty() )
             next = int(expireMap_.begin()->first - now);
 
-        // const size_t expiredCount = curset.size();
-
-        std::vector< std::pair<SessionKey,time_t> > flushset;
+        SessVec flushset;
         if ( activeSessions_ > 0 && ! started ) {
 
             // all active sessions should be dumped to disk

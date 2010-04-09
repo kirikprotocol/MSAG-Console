@@ -6,6 +6,7 @@
 #include "scag/sessions/base/SessionFinalizer.h"
 #include "scag/sessions/base/SessionExpirationQueue.h"
 #include "scag/util/UnlockMutexGuard.h"
+#include "scag/util/RelockMutexGuard.h"
 #include "scag/util/io/Print.h"
 #include "core/threads/Thread.hpp"
 #include "scag/counter/Manager.h"
@@ -16,6 +17,7 @@ namespace sessions {
 using namespace transport;
 using namespace scag::util::storage;
 using scag::util::UnlockMutexGuard;
+using scag::util::RelockMutexGuard;
 using smsc::core::threads::Thread;
 
     /*
@@ -534,7 +536,7 @@ unsigned SessionStoreImpl::storedCommands() const
  */
 
 
-bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
+bool SessionStoreImpl::expireSessions( std::vector<std::pair<SessionKey,time_t> >& expired,
                                        const std::vector<std::pair<SessionKey,time_t> >& flush )
 {
     assert( expired.size() > 0 || flush.size() > 0 );
@@ -543,8 +545,11 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
 
     time_t now = time(0);
     Session* session = 0;
-    std::vector< SessionKey >::const_iterator i = expired.begin();
-    std::vector< std::pair<SessionKey,time_t> >::const_iterator j = flush.begin();
+    typedef std::vector<std::pair<SessionKey,time_t> > SessVec;
+    SessVec::const_iterator i = expired.begin();
+    SessVec::const_iterator j = flush.begin();
+    SessVec retVec;
+
     // unsigned longcall = 0;
     unsigned notexpired = 0;
 
@@ -592,7 +597,7 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
         
         if ( session && ( ++count % 50 == 0 ) ) Thread::Yield();
 
-        MutexGuard mg(cacheLock_);
+        RelockMutexGuard mg(cacheLock_);
             
         if ( session ) {
             if ( ! doSessionFinalization(*session,keep) )
@@ -602,9 +607,10 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
         // take the next session in the list
 
         const SessionKey* pkey;
-        time_t lastaccess;
+        time_t lastaccess = 0;
+        SessVec::const_iterator curi = i;
         if ( i != expired.end() ) {
-            pkey = &(*i);
+            pkey = &(i->first);
             finw = true;
             ++i;
         } else if ( j != flush.end() ) {
@@ -683,6 +689,9 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
             // smsc_log_debug(log_,"key=%s session=%p is locked, cmd=%u, skipped",
             // key.toString().c_str(), session, session->currentCommand() );
             ++notexpired;
+            if ( curi != expired.end() ) {
+                retVec.push_back(*curi);
+            }
             session = 0;
             continue;
         }
@@ -699,6 +708,9 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
             const time_t newlastaccess = session->lastAccessTime();
             if ( lastaccess != newlastaccess ) {
                 ++notexpired;
+                if ( curi != expired.end() ) {
+                    retVec.push_back(*i);
+                }
                 session = 0;
                 continue;
             }
@@ -714,6 +726,9 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
                 if ( carryNextCommand(*session,nextcmd,false) ) {
                     // some activity on this session
                     ++notexpired;
+                    if (curi != expired.end()) {
+                        retVec.push_back(*i);
+                    }
                     session = 0;
                     continue;
                 }
@@ -740,6 +755,9 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
                     // smsc_log_debug(log_,"key=%s session=%p is not expired yet",
                     // key.toString().c_str(), session );
                     ++notexpired;
+                    if (curi != expired.end()) {
+                        retVec.push_back(*i);
+                    }
                     session = 0;
                     continue;
                 }
@@ -753,6 +771,10 @@ bool SessionStoreImpl::expireSessions( const std::vector< SessionKey >& expired,
         lockedSessions_->increment();
 
     } // while
+
+    if ( retVec.size() > 0 ) {
+        expired = retVec;
+    }
 
     // smsc_log_debug( log_, "sessions not expired: %u, longcalled: %u", notexpired, longcall );
     return (notexpired == 0);
@@ -868,6 +890,7 @@ bool SessionStoreImpl::doSessionFinalization( Session& session, bool keep )
         // session has been already finalized, so clear it up
         if (!keep) session.clear();
         carryNextCommand( session, nextcmd, false );
+        smsc_log_warn(log_,"session %p/%s is not finalized, newcmd arrived");
         return false;
     } else {
         // no more commands, delete the session

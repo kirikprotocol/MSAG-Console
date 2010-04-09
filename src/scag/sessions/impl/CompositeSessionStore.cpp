@@ -145,20 +145,19 @@ unsigned CompositeSessionStore::storedCommands() const
  */
 
 
-bool CompositeSessionStore::expireSessions( const std::vector< SessionKey >& expired,
+bool CompositeSessionStore::expireSessions( std::vector< std::pair<SessionKey,time_t> >& expired,
                                             const std::vector< std::pair<SessionKey,time_t> >& flush )
 {
     typedef std::set< unsigned > keys_type;
-    typedef std::map< unsigned, std::vector< SessionKey > > edispatch_type;
     typedef std::map< unsigned, std::vector< std::pair<SessionKey,time_t> > > fdispatch_type;
     keys_type keys;
-    edispatch_type edispatch;
+    fdispatch_type edispatch;
     fdispatch_type fdispatch;
     const StorageNumbering& n = StorageNumbering::instance();
-    for ( std::vector< SessionKey >::const_iterator i = expired.begin();
+    for ( std::vector< std::pair<SessionKey,time_t> >::const_iterator i = expired.begin();
           i != expired.end();
           ++i ) {
-        const unsigned k = n.storage( i->toIndex() );
+        const unsigned k = n.storage( i->first.toIndex() );
         keys.insert(k);
         edispatch[k].push_back( *i );
     }
@@ -170,9 +169,9 @@ bool CompositeSessionStore::expireSessions( const std::vector< SessionKey >& exp
         fdispatch[k].push_back( *i );
     }
     bool res = true;
-    const std::vector< SessionKey > enull;
-    const std::vector< std::pair<SessionKey,time_t> > fnull;
+    std::vector< std::pair<SessionKey,time_t> > fnull;
     Thread::Yield();
+    expired.clear();
     for ( keys_type::const_iterator i = keys.begin();
           i != keys.end();
           ++i ) {
@@ -181,11 +180,18 @@ bool CompositeSessionStore::expireSessions( const std::vector< SessionKey >& exp
             smsc_log_error( log_, "cannot find storage #%u", *i );
             throw SCAGException( "sess.man: cannot find storage #%u", *i );
         }
-        edispatch_type::const_iterator ei = edispatch.find(*i);
+        fdispatch_type::iterator ei = edispatch.find(*i);
         fdispatch_type::const_iterator fi = fdispatch.find(*i);
         if ( !storages_[*i]->expireSessions
-             ( ei == edispatch.end() ? enull : ei->second,
-               fi == fdispatch.end() ? fnull : fi->second ) ) res = false;
+             ( ei == edispatch.end() ? fnull : ei->second,
+               fi == fdispatch.end() ? fnull : fi->second ) ) {
+            if (ei != edispatch.end()) {
+                expired.insert(expired.end(),
+                               ei->second.begin(),
+                               ei->second.end());
+            }
+            res = false;
+        }
         Thread::Yield();
     }
     return res;

@@ -71,7 +71,9 @@ public:
                                 std::auto_ptr<SCAGCommand>& cmd,
                                 bool                        create );
 
-    bool expireSessions( const std::vector< SessionKey >& expired,
+    /// request to expire a set of sessions and to flush a set to disk.
+    /// The set of expired sessions is modified.
+    bool expireSessions( std::vector< std::pair<SessionKey,time_t> >& expired,
                          const std::vector< std::pair<SessionKey,time_t> >& flush );
 
     void sessionFinalized( Session& s );

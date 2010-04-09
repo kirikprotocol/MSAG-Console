@@ -69,7 +69,7 @@ private:
     };
 
     struct KeyPtr {
-        explicit KeyPtr( SessionKey* k ) : key(k) {}
+        explicit KeyPtr( const SessionKey* k ) : key(k) {}
         explicit KeyPtr( Expire& ek ) : key(&ek.key) {}
         bool operator == ( const KeyPtr& o ) const {
             return *o.key == *key;
@@ -78,7 +78,7 @@ private:
             return SessionKey::CalcHash( *k.key );
         }
     public:
-        SessionKey* key;
+        const SessionKey* key;
     };
 
     typedef std::list< Expire >                               ExpireList;
