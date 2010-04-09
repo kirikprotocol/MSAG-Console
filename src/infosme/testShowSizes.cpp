@@ -3,6 +3,24 @@
 #include "CsvStore.hpp"
 #include "core/buffers/FixedLengthString.hpp"
 
+
+using smsc::core::buffers::FixedLengthString;
+
+struct TestMsg
+{
+    uint64_t    id;
+    time_t      date;
+    FixedLengthString<16> abonent;
+    char*       userData;
+    unsigned    regionId;
+    unsigned    message;
+};
+
+struct TestRec {
+    TestMsg msg;
+    uint8_t state;
+};
+
 int main()
 {
     smsc::infosme::CsvStore::CsvFile::Record rec;
@@ -12,5 +30,9 @@ int main()
     printf("sizeof(CsvStore::Rec)=%u\n",sizeof(rec));
     printf("sizeof(Message)=%u\n",sizeof(rec.msg));
     printf("Please add 5 + %u + len(userData)+1 + len(message)+1\n",rec.msg.abonent.size()+1);
+    printf("\n");
+    printf("sizeof(TestMsg)=%u\n",sizeof(TestMsg));
+    printf("sizeof(TestRec)=%u\n",sizeof(TestRec));
+    printf("Please add len(userData)+1\n");
     return 0;
 }
