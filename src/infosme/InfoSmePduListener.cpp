@@ -105,7 +105,11 @@ void InfoSmePduListener::processReceipt (SmppHeader *pdu) {
         smResp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
         smResp.set_messageId("");
         smResp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
-        asyncTransmitter->sendDeliverySmResp(smResp);
+        if (performanceTester_.get()) {
+            performanceTester_->sendDeliverySmResp(smResp);
+        } else {
+            asyncTransmitter->sendDeliverySmResp(smResp);
+        }
         break;
     }
     case SmppCommandSet::DATA_SM_RESP: {
@@ -113,7 +117,11 @@ void InfoSmePduListener::processReceipt (SmppHeader *pdu) {
         smResp.get_header().set_commandId(SmppCommandSet::DATA_SM_RESP);
         smResp.set_messageId("");
         smResp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
-        asyncTransmitter->sendDataSmResp(smResp);
+        if (performanceTester_.get()) {
+            performanceTester_->sendDataSmResp(smResp);
+        } else {
+            asyncTransmitter->sendDataSmResp(smResp);
+        }
         break;
     }
     default:

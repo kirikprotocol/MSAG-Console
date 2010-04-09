@@ -146,8 +146,13 @@ void InfoSmeMessageSender::reloadSmscAndRegions( Manager& manager )
           i != connNames.get()->end(); ++i ) {
         const std::string sectName( csn + "." + *i );
         ConfigView cview(manager,sectName.c_str());
+        bool perftest = false;
+        try {
+            perftest = manager.getBool("InfoSme.performanceTest");
+        } catch (...) {
+        }
         smsc::sme::SmeConfig cfg = SmscConnector::readSmeConfig(cview);
-        SmscConnector* conn = addConnector(cfg,*i);
+        SmscConnector* conn = addConnector(cfg,*i,perftest);
         if ( *i == defId ) {
             defaultConnector_ = conn;
         }
@@ -250,7 +255,9 @@ void InfoSmeMessageSender::processWaitingEvents( time_t tm )
 }
 
 
-SmscConnector* InfoSmeMessageSender::addConnector( const smsc::sme::SmeConfig& cfg, const std::string& smscid )
+SmscConnector* InfoSmeMessageSender::addConnector( const smsc::sme::SmeConfig& cfg,
+                                                   const std::string& smscid,
+                                                   bool  performanceTest )
 {
     SmscConnector** ptr = connectors_.GetPtr(smscid.c_str());
     SmscConnector* p = 0;
@@ -260,7 +267,7 @@ SmscConnector* InfoSmeMessageSender::addConnector( const smsc::sme::SmeConfig& c
         p->updateConfig(cfg);
     } else {
         smsc_log_info(log_,"creating a new smsc connector %s", smscid.c_str());
-        p = new SmscConnector(processor_,cfg,smscid);
+        p = new SmscConnector(processor_,cfg,smscid,performanceTest);
         connectors_.Insert( smscid.c_str(), p );
         if (started_) { p->Start(); }
     }

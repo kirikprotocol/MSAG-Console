@@ -115,60 +115,6 @@ unrespondedMessagesMax(1)
     finalStateSaver_.reset( new FinalStateSaver(storeLocation) );
 
     smsc_log_info(log_, "Loading tasks ...");
-/*
-    std::auto_ptr<ConfigView> tasksCfgGuard(config->getSubConfig("Tasks"));
-    ConfigView* tasksCfg = tasksCfgGuard.get();
-    std::auto_ptr< std::set<std::string> > setGuard(tasksCfg->getShortSectionNames());
-    std::set<std::string>* set = setGuard.get();
-    for (std::set<std::string>::iterator i=set->begin();i!=set->end();i++)
-    {
-        try
-        {
-            const char* taskId = (const char *)i->c_str();
-            if (!taskId || taskId[0] == '\0')
-                throw ConfigException("Task id empty or wasn't specified");
-            smsc_log_info(log_, "Loading task '%s' ...", taskId);
-            
-            std::auto_ptr<ConfigView> taskConfigGuard(tasksCfg->getSubConfig(taskId));
-            ConfigView* taskConfig = taskConfigGuard.get();
-
-            bool delivery = false;
-            try { delivery = taskConfig->getBool("delivery"); }
-            catch (ConfigException& ce) { delivery = false; }
-
-            std::string location=storeLocation+taskId;
-            if(!buf::File::Exists(location.c_str()))
-            {
-              buf::File::MkDir(location.c_str());
-            }
-            
-            DataSource* taskDs = 0;
-            if (!delivery)
-            {
-                const char* dsId = taskConfig->getString("dsId");
-                if (!dsId || dsId[0] == '\0')
-                    throw ConfigException("DataSource id for task '%s' empty or wasn't specified",
-                                          taskId);
-                taskDs = provider.getDataSource(dsId);
-                if (!taskDs)
-                    throw ConfigException("Failed to obtail DataSource driver '%s' for task '%s'", 
-                                          dsId, taskId);
-            }
-            uint32_t taskIdVal=atoi(taskId);
-            Task* task = new Task(taskConfig, taskIdVal, location, taskDs, finalStateSaver_.get() );
-            if (task && !putTask(task)) {
-                task->finalize();
-                throw ConfigException("Failed to add task. Task with id '%s' already registered.",
-                                      taskId);
-            }
-        }
-        catch (ConfigException& exc)
-        {
-            smsc_log_error(log_, "Load of tasks failed ! Config exception: %s", exc.what());
-            throw;
-        }
-    }
-*/
 
     std::auto_ptr< ConfigView > taskConfig;
     std::auto_ptr< std::set< std::string> > taskNames;

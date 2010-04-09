@@ -10,6 +10,7 @@
 #include "core/threads/Thread.hpp"
 #include "core/synchronization/EventMonitor.hpp"
 #include "InfoSmePduListener.h"
+#include "PerformanceTester.h"
 #include "core/buffers/Array.hpp"
 #include "core/buffers/IntHash.hpp"
 #include "core/buffers/XHash.hpp"
@@ -84,13 +85,13 @@ private:
         ReceiptTimer(time_t timer, const ReceiptId& rcptId) : timer(timer), receiptId(rcptId) {}
     };
 
-
 public:
     static SmeConfig readSmeConfig( ConfigView& config ); // throw ConfigException
 
     SmscConnector(TaskProcessor& processor,
                   const smsc::sme::SmeConfig& cfg,
-                  const string& smscId );
+                  const string& smscId,
+                  bool doPerformanceTests = false );
     virtual ~SmscConnector();
 
     int Execute();
@@ -138,7 +139,8 @@ private:
     // monitor which guards session destruction and self destruction
     EventMonitor destroyMonitor_;
     InfoSmePduListener listener_;
-    std::auto_ptr<SmppSession> session_;
+    std::auto_ptr<SmppSession>       session_;
+    std::auto_ptr<PerformanceTester> performanceTester_;
     int usage_; // how many dependant objects are on this
     JStoreWrapper*                                  jstore_;
     RegionTrafficControl*                           trafficControl_;
