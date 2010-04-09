@@ -2,6 +2,8 @@
 # this file contains binaries definitions
 
 # binary name source name libraries         
+infosme/tests/testShowSizes   testShowSizes
+
 infosme/InfoSme   	  InfoSme	 \
  -ldl \
  -linfosme \
