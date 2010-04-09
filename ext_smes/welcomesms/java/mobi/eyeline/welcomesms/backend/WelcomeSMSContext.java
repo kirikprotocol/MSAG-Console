@@ -1,4 +1,4 @@
-package mobi.eyeline.welcomesms;
+package mobi.eyeline.welcomesms.backend;
 
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
@@ -25,6 +25,10 @@ public class WelcomeSMSContext {
 
   private static final Category logger = Category.getInstance(WelcomeSMSContext.class);
 
+  private NetworksManager networksManager;
+
+  private LocationService locationService;
+
   public static WelcomeSMSContext getInstance(SMSCAppContext appContext) throws AdminException {
     if (instance == null) {
       instance = new WelcomeSMSContext(appContext);
@@ -33,10 +37,14 @@ public class WelcomeSMSContext {
   }
 
   private WelcomeSMSContext(SMSCAppContext appContext) throws AdminException{
+    String serviceFolder = appContext.getHostsManager().getServiceInfo("WelcomeSMS").
+        getServiceFolder().getAbsolutePath();
+    String configDir = serviceFolder + File.separatorChar+ "conf";
     try{
       this.appContext = appContext;
       resetConfig();
-
+      networksManager = new NetworksManager(configDir, config);
+      locationService = new LocationService(new File(configDir, "countries.csv"));
       //todo init
 
     } catch(Exception e) {
@@ -61,5 +69,13 @@ public class WelcomeSMSContext {
 
   public Config getConfig() {
     return config;
+  }
+
+  public NetworksManager getNetworksManager() {
+    return networksManager;
+  }
+
+  public LocationService getLocationService() {
+    return locationService;
   }
 }

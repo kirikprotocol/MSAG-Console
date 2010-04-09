@@ -6,7 +6,7 @@ import ru.novosoft.smsc.util.config.Config;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
-import mobi.eyeline.welcomesms.WelcomeSMSContext;
+import mobi.eyeline.welcomesms.backend.WelcomeSMSContext;
 
 /**
  * author: alkhal
