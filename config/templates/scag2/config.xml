@@ -101,6 +101,7 @@
         <!-- The socket to connect to agentX.  It is better be specified 
              via snmp config file, see "man snmpd.conf"  -->
         <param name="socket" type="string"></param>
+        <param name="cacheTimeout" type="int">10</param>
     </section>
 
     <section name="HttpTransport">
