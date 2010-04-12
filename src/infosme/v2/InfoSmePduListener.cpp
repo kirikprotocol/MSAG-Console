@@ -38,7 +38,7 @@ void InfoSmePduListener::processReceipt (SmppHeader *pdu) {
     case SmppCommandSet::DELIVERY_SM:
         fetchSmsFromSmppPdu((PduXSm*)pdu, &sms);
         break;
-    case SmppCommandSet::DATA_SM_RESP:
+    case SmppCommandSet::DATA_SM:
         fetchSmsFromDataSmPdu((PduDataSm*)pdu, &sms);
         break;
     default:
@@ -105,7 +105,7 @@ void InfoSmePduListener::processReceipt (SmppHeader *pdu) {
         asyncTransmitter->sendDeliverySmResp(smResp);
         break;
     }
-    case SmppCommandSet::DATA_SM_RESP: {
+    case SmppCommandSet::DATA_SM: {
         PduDataSmResp smResp;
         smResp.get_header().set_commandId(SmppCommandSet::DATA_SM_RESP);
         smResp.set_messageId("");

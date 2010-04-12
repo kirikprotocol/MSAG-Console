@@ -43,7 +43,7 @@ void InfoSmeMessageSender::start()
     char *key = 0;
     while(it.Next(key, connector)) {
         if (connector) {
-            connector->Start();
+            connector->start();
         }
     }
 }
@@ -269,7 +269,7 @@ SmscConnector* InfoSmeMessageSender::addConnector( const smsc::sme::SmeConfig& c
         smsc_log_info(log_,"creating a new smsc connector %s", smscid.c_str());
         p = new SmscConnector(processor_,cfg,smscid,performanceTest);
         connectors_.Insert( smscid.c_str(), p );
-        if (started_) { p->Start(); }
+        if (started_) { p->start(); }
     }
     return p;
 }

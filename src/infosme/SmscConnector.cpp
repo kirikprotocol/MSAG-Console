@@ -2,6 +2,7 @@
 #include "SmscConnector.h"
 #include "TrafficControl.hpp"
 #include "TaskProcessor.h"
+#include "PerformanceTester.h"
 #include "core/buffers/JStore.hpp"
 #include "util/config/region/RegionFinder.hpp"
 
@@ -251,7 +252,7 @@ smsc::sme::SmeConfig SmscConnector::readSmeConfig( ConfigView& config )
 SmscConnector::SmscConnector( TaskProcessor& processor,
                               const smsc::sme::SmeConfig& cfg,
                               const string& smscId,
-                              doPerformanceTests ) :
+                              bool doPerformanceTests ) :
 smscId_(smscId),
 log_(Logger::getInstance("smsc.infosme.connector")),
 processor_(processor),
@@ -293,9 +294,18 @@ SmscConnector::~SmscConnector()
     if ( trafficControl_ ) { delete trafficControl_; }
 }
 
+void SmscConnector::start()
+{
+    MutexGuard mg(stateMonitor_);
+    stopped_ = false;
+    if (performanceTester_.get()) performanceTester_->start();
+    Start();
+}
+
 void SmscConnector::stop() {
     MutexGuard mg(stateMonitor_);
     stopped_ = true;
+    if (performanceTester_.get()) performanceTester_->stop();
     stateMonitor_.notify();
 }
 

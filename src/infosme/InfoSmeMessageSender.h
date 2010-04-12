@@ -42,7 +42,9 @@ public:
 private:
 
     virtual SmscConnector* getSmscConnector(const std::string& regionId);
-    SmscConnector* addConnector( const smsc::sme::SmeConfig& cfg, const std::string& smscid );
+    SmscConnector* addConnector( const smsc::sme::SmeConfig& cfg,
+                                 const std::string& smscid,
+                                 bool               perftest = false );
     void addRegionMapping( const std::string& regionId, const std::string& smscId );
 
 private:

@@ -41,7 +41,7 @@ class Task;
 class TaskProcessor;
 class StatisticsManager;
 
-class SmscConnector : public smsc::core::threads::Thread 
+class SmscConnector : protected smsc::core::threads::Thread 
 {
 private:
     typedef enum { processResponseMethod, processReceiptMethod } EventMethod;
@@ -94,7 +94,7 @@ public:
                   bool doPerformanceTests = false );
     virtual ~SmscConnector();
 
-    int Execute();
+    void start();
     void stop();
     void reconnect();
     void updateConfig( const smsc::sme::SmeConfig& config );
@@ -110,6 +110,7 @@ public:
     void processWaitingEvents( time_t tm );
 
 private:
+    virtual int Execute();
     // bool convertMSISDNStringToAddress(const char* string, smsc::sms::Address& address);
 
     // merge state for given receipt

@@ -100,7 +100,7 @@ uint64_t Task::MessageRegionCache::fetchMessageId()
     uint64_t rv = 0;
     do {
         if ( (*iter_)->isSuspended ) {
-            smsc_log_debug(log_,"cached region %s is suspended",(*iter_)->regionId.c_str());
+            // smsc_log_debug(log_,"cached region %s is suspended",(*iter_)->regionId.c_str());
         } else if ( (*iter_)->messages.empty() ) {
             // smsc_log_debug(log_,"cached region %s is empty", (*iter_)->regionId.c_str());
         } else {
