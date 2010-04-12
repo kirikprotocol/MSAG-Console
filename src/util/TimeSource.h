@@ -81,7 +81,9 @@ struct TimeSourceSetup {
     typedef TimeSourceGettimeofday AbsUSec;
     typedef TimeSourceGethrtime    HRTime;
 #else
-#if defined(__i386) || defined(__i386__) || defined(__ia64) || defined(__ia64__)
+#if defined(__i386) || defined(__i386__) || \
+    defined(__ia64) || defined(__ia64__) || \
+    defined(__x86_64) || defined (__x86_64__)
     typedef TimeSourceTime         AbsSec;
     typedef TimeSourceGettimeofday AbsUSec;
     typedef TimeSourceClockGettime HRTime;
