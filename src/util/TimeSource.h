@@ -46,7 +46,7 @@ struct TimeSourceGettimeofday {
 };
 
 
-#if defined(linux)
+#if defined(linux) || defined(__x86_64) || defined(__x86_64__)
 struct TimeSourceClockGettime {
     typedef int64_t hrtime_type;
     static const hrtime_type ticksPerSec = 1000000000U;
