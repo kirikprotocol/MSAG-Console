@@ -92,6 +92,27 @@
     <param name="messagefailednoprofile" type="string">#template=emailsmemessagefailednoprofile#</param>
     <param name="messagefailedsendmail" type="string">#template=emailsmemessagefailedsendmail#</param>
     <param name="messagefailedsystem" type="string">#template=emailsmemessagefailedsystem#</param>
+    <section name="helpdesk">
+      <param name="alias" type="string">#template=helpdesk.emailsmealias#{alias}="$$string import=alias$$"</param>
+      <param name="aliasfailed" type="string">#template=helpdesk.emailsmealiasfailed#{alias}="$$string import=alias$$"</param>
+      <param name="aliasbusy" type="string">#template=helpdesk.emailsmealiasbusy#{alias}="$$string import=alias$$"</param>
+      <param name="noalias" type="string">#template=helpdesk.emailsmenoalias#</param>
+      <param name="forward" type="string">#template=helpdesk.emailsmeforward#{address}="$$string import=email$$"</param>
+      <param name="forwardfailed" type="string">#template=helpdesk.emailsmeforwardfailed#{address}="$$string import=email$$"</param>
+      <param name="forwardoff" type="string">#template=helpdesk.emailsmeforwardoff#</param>
+      <param name="realname" type="string">#template=helpdesk.emailsmerealname#{realname}="$$string import=realname$$"</param>
+      <param name="norealname" type="string">#template=helpdesk.emailsmenorealname#{realname}="$$string import=realname$$"</param>
+      <param name="numberon" type="string">#template=helpdesk.emailsmenumberon#</param>
+      <param name="numberoff" type="string">#template=helpdesk.emailsmenumberoff#</param>
+      <param name="numberfailed" type="string">#template=helpdesk.emailsmenumberfailed#</param>
+      <param name="systemerror" type="string">#template=helpdesk.emailsmesystemerror#</param>
+      <param name="unknowncommand" type="string">#template=helpdesk.emailsmeunknowncommand#</param>
+      <param name="messagesent" type="string">#template=helpdesk.emailsmemessagesent#{to}="$$string import=to$$"</param>
+      <param name="messagefailedlimit" type="string">#template=helpdesk.emailsmemessagefailedlimit#</param>
+      <param name="messagefailednoprofile" type="string">#template=helpdesk.emailsmemessagefailednoprofile#</param>
+      <param name="messagefailedsendmail" type="string">#template=helpdesk.emailsmemessagefailedsendmail#</param>
+      <param name="messagefailedsystem" type="string">#template=helpdesk.emailsmemessagefailedsystem#</param>
+    </section>
   </section>
 
 </config>
