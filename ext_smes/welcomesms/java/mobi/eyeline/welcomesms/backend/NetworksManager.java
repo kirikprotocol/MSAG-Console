@@ -127,7 +127,7 @@ class NetworksManager {
       if(network.getName().equals(n.getName()) && (n.getId() == null || n.getId().intValue() != network.getId().intValue())) {
         throw new AdminException("Network with such name already exists: "+n.getName());
       }
-      if(network.getMcc() == n.getMcc() && network.getMnc() == network.getMnc() && (n.getId() == null || n.getId().intValue() != network.getId().intValue())) {
+      if(network.getMcc() == n.getMcc() && network.getMnc() == n.getMnc() && (n.getId() == null || n.getId().intValue() != network.getId().intValue())) {
         throw new AdminException("Pair of mcc and mnc is already exist. Network: "+network.getName());
       }
     }
