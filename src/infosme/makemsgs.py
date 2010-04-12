@@ -73,7 +73,7 @@ class MsgMaker(object) :
     def createTaskMessages( self, output ) :
         total = 0
         persec = 0
-        next = datetime.now() + timedelta(0,60,0)
+        next = datetime.now() + timedelta(0,20,0)
         onesecond = timedelta(0,1,0)
         prevhour = next.hour
         def __timestem() : return '%02u%02u%02u' % (next.hour, next.minute, next.second)
