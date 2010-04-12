@@ -155,6 +155,7 @@ struct RouteInfo
   bool hide;
   bool forceDelivery;
   bool transit;
+  bool allowBlocked;
   ReplyPath replyPath;
   int serviceId;
   smsc::acls::AclIdent aclId;
@@ -167,8 +168,8 @@ struct RouteInfo
   std::string forwardTo;
   std::string srcSubj; // for duplucate route debugging purposes only
   std::string dstSubj;
+  std::string backupSme;
   TrafficRules trafRules;
-  bool allowBlocked;
   int32_t providerId;
   BillingId billingId;
   int32_t categoryId;

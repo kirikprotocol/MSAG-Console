@@ -222,6 +222,14 @@ throw (SubjectNotFoundException)
   XmlStr billingRuleId(elem.getAttribute(XmlStr("billingId")));
   const signed long categoryId = atol(XmlStr(elem.getAttribute(XmlStr("categoryId"))));
   XmlStr transit(elem.getAttribute(XmlStr("transit")));
+  const XMLCh* backupSmeAttr=elem.getAttribute(XmlStr("backupSme"));
+  XMLCh null=0;
+  if(backupSmeAttr==0)
+  {
+    backupSmeAttr=&null;
+  }
+
+  XmlStr backupSme(backupSmeAttr);
 
   std::string routeid(id);
   if(routeid.length()>32)
@@ -250,7 +258,9 @@ throw (SubjectNotFoundException)
                                    providerId,
                                    (const char * const)billingRuleId,
                                    categoryId,
-                                   strcmp("true",transit)==0)
+                                   strcmp("true",transit)==0,
+                                   backupSme.c_str()
+                               )
                          );
 
   DOMNodeList *srcs = elem.getElementsByTagName(XmlStr("source"));

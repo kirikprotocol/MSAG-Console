@@ -1331,6 +1331,11 @@ StateType StateMachine::submit(Tuple& t)
     return ERROR_STATE;
   }
 
+  if(!c.ri.backupSme.empty())
+  {
+    sms->setStrProperty(Tag::SMSC_BACKUP_SME,c.ri.backupSme.c_str());
+  }
+
   c.generateDeliver=true; // do not generate in case of merge-concat
   c.createSms=scsCreate;
 
@@ -2866,13 +2871,20 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     return ERROR_STATE;
   }
 
+  smsc_log_debug(smsLog,"FWD: last result=%d",sms.getLastResult());
   if(sms.hasStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID) &&
      sms.hasStrProperty(Tag::SMSC_DIVERTED_TO))
   {
     smsc_log_debug(smsLog,"FWD: diverted receipt for %s",sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str());
     dest_proxy_index=smsc->getSmeIndex(sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str());
     dest_proxy=smsc->getSmeProxy(sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str());
+  }else if(sms.getLastResult()==Status::BACKUPSMERESCHEDULE && sms.hasStrProperty(Tag::SMSC_BACKUP_SME))
+  {
+    smsc_log_debug(smsLog,"FWD: reroute to backup sme %s",sms.getStrProperty(Tag::SMSC_BACKUP_SME).c_str());
+    dest_proxy_index=smsc->getSmeIndex(sms.getStrProperty(Tag::SMSC_BACKUP_SME).c_str());
+    dest_proxy=smsc->getSmeProxy(sms.getStrProperty(Tag::SMSC_BACKUP_SME).c_str());
   }
+
 
   if(!dest_proxy)
   {
@@ -3374,7 +3386,13 @@ StateType StateMachine::deliveryResp(Tuple& t)
     }
   }
 
-
+  if((GET_STATUS_CODE(t.command->get_resp()->get_status())==Status::MAP_NO_RESPONSE_FROM_PEER ||
+     GET_STATUS_CODE(t.command->get_resp()->get_status())==Status::BLOCKEDMSC) &&
+     sms.hasStrProperty(Tag::SMSC_BACKUP_SME)
+  )
+  {
+    t.command->get_resp()->set_status(MAKE_COMMAND_STATUS(CMD_ERR_TEMP,Status::BACKUPSMERESCHEDULE));
+  }
 
   if(GET_STATUS_TYPE(t.command->get_resp()->get_status())!=CMD_OK)
   {

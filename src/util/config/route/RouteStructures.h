@@ -149,6 +149,7 @@ private:
   const signed long categoryId;
   std::string billingRuleId;
   bool transit;
+  std::string backupSme;
 
 
   friend class smsc::util::config::route::RouteConfig;
@@ -157,16 +158,24 @@ public:
   Route()
     : id(), priority(0), sources(), destinations(), billing(0), archiving(false), enabling(true),suppressDeliveryReports(false), hide(true), replyPath(smsc::router::ReplyPathPass), serviceId(0), srcSmeSystemId(), deliveryMode(smsc::sms::SMSC_DEFAULT_MSG_MODE), forwardTo(), aclId((AclIdent)-1), forceDelivery(false), allowBlocked(false), providerId(-1),categoryId(-1),transit(false)
   {}
-  Route(const Route &r)
+  /*Route(const Route &r)
     : id(r.id), priority(r.priority), sources(r.sources), destinations(r.destinations),
     billing(r.billing), archiving(r.archiving), enabling(r.enabling),suppressDeliveryReports(r.suppressDeliveryReports), serviceId(r.serviceId),
     active(r.active),hide(r.hide),replyPath(r.replyPath),
     srcSmeSystemId(r.srcSmeSystemId), deliveryMode(r.deliveryMode), forwardTo(r.forwardTo),trafrules(r.trafrules), aclId(r.aclId), forceDelivery(r.forceDelivery), allowBlocked(r.allowBlocked), providerId(r.providerId), billingRuleId(r.billingRuleId),categoryId(r.categoryId)
-  {}
-  Route(const std::string & rid, const int prior, uint8_t isBilling, bool isArchiving, bool isEnabling, bool isSuppressDR, bool isActive,bool isHide,smsc::router::ReplyPath replyPath, int _serviceId, const std::string & _srcSmeSystemId, const uint8_t _deliveryMode, const std::string & _forwardTo,const std::string& _trafrules, const AclIdent aclId, const bool forceDelivery, const bool allowBlocked, const signed long providerId, const std::string billingRuleId,const signed long categoryId,bool transit)
+  {}*/
+  Route(const std::string & rid, const int prior, uint8_t isBilling, bool isArchiving,
+      bool isEnabling, bool isSuppressDR, bool isActive,bool isHide,smsc::router::ReplyPath replyPath,
+      int _serviceId, const std::string & _srcSmeSystemId, const uint8_t _deliveryMode,
+      const std::string & _forwardTo,const std::string& _trafrules, const AclIdent aclId,
+      const bool forceDelivery, const bool allowBlocked, const signed long providerId,
+      const std::string billingRuleId,const signed long categoryId,bool transit,const std::string& argBackupSme)
     : id(rid), priority(prior), sources(), destinations(),
-    billing(isBilling), archiving(isArchiving), enabling(isEnabling), suppressDeliveryReports(isSuppressDR), active(isActive), hide(isHide),replyPath(replyPath),serviceId(_serviceId),
-    srcSmeSystemId(_srcSmeSystemId), deliveryMode(_deliveryMode), forwardTo(_forwardTo),trafrules(_trafrules), aclId(aclId), forceDelivery(forceDelivery), allowBlocked(allowBlocked), providerId(providerId), billingRuleId(billingRuleId),categoryId(categoryId),transit(transit)
+    billing(isBilling), archiving(isArchiving), enabling(isEnabling), suppressDeliveryReports(isSuppressDR),
+    active(isActive), hide(isHide),replyPath(replyPath),serviceId(_serviceId),
+    srcSmeSystemId(_srcSmeSystemId), deliveryMode(_deliveryMode), forwardTo(_forwardTo),trafrules(_trafrules),
+    aclId(aclId), forceDelivery(forceDelivery), allowBlocked(allowBlocked), providerId(providerId),
+    billingRuleId(billingRuleId),categoryId(categoryId),transit(transit),backupSme(argBackupSme)
   {}
 
   ~Route()
@@ -186,7 +195,7 @@ public:
   const smsc::router::ReplyPath getReplyPath() const{return replyPath;}
   const char * const getId() const {return id.c_str();}
   int getPriority() {return priority;}
-  const std::string & getIdString() const {return id;}
+  const std::string& getIdString() const {return id;}
   int getServiceId() const {return serviceId;}
   const std::string & getSrcSmeSystemId() const { return srcSmeSystemId; }
   const uint8_t getDeliveryMode() const {return this->deliveryMode;}
@@ -196,9 +205,10 @@ public:
   const bool isForceDelivery() const { return this->forceDelivery; }
   const bool isAllowBlocked() const { return this->allowBlocked; }
   const signed long getProviderId() const {return this->providerId;}
-  const std::string getBillingRuleId() const {return this->billingRuleId;}
+  const std::string& getBillingRuleId() const {return this->billingRuleId;}
   const signed long getCategoryId()const{return this->categoryId;}
   const bool isTransit(){return this->transit;}
+  const std::string getBackupSme(){return this->backupSme;}
 };
 //typedef std::vector<Route> RouteVector;
 typedef std::vector<Route*> RoutePVector;
