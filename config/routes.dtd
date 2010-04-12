@@ -15,8 +15,8 @@
 	forwardTo CDATA #IMPLIED
 	hide CDATA #IMPLIED
 	forceReplayPath CDATA #IMPLIED
-trafficRules CDATA #IMPLIED
-providerId CDATA "-1" 
+  trafficRules CDATA #IMPLIED
+  providerId CDATA "-1" 
 	replayPath (pass|force|suppress) "pass"
 	forceDelivery (true|false) "false"
 	aclId CDATA "-1"
@@ -24,6 +24,7 @@ providerId CDATA "-1"
   billingId CDATA ""
   categoryId CDATA "-1"
   transit (true|false) "false"
+  backupSme CDATA #IMPLIED
 >
 <!ELEMENT notes (#PCDATA)>
 <!ELEMENT source (subject | mask)>
