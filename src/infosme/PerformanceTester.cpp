@@ -85,9 +85,12 @@ SmppHeader* PerformanceTester::sendPdu( SmppHeader* pdu )
             PduPartSm& msg = recp->get_message();
             msg.set_source(sm->get_message().get_dest());
             msg.set_dest(sm->get_message().get_source());
-            // msg->set_ecmClass();
+            msg.set_esmClass(0x4);
             msg.set_priorityFlag(0);
-            recp->get_optional().set_receiptedMessageId(msgId);
+            SmppOptional& opts = recp->get_optional();
+            opts.set_receiptedMessageId(msgId);
+            opts.set_messageState(SmppMessageState::DELIVERED);
+            // opts.set_networkErrorCode(0);
             // listener_->handleEvent((SmppHeader*)recp.release());
         }
         break;
