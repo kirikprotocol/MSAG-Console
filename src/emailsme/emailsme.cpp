@@ -856,6 +856,7 @@ namespace cfg{
   bool sendSuccessAnswer=true;
 
   std::string helpDeskAddress="";
+  bool regionsEnabled=false;
 
   bool useTransformRegexp=false;
   // RegExp reTransform;
@@ -1184,7 +1185,9 @@ void sendAnswer(const Address& orgAddr,bool hdMode,const char* msgName,const cha
       ce.exportStr(paramName,paramValue?paramValue:"");
     }
     std::string text;
-    cfg::answerFormats[msgName]->format(text,ga,ce);
+    std::string msgNameStr=hdMode?"helpdesk.":"";
+    msgNameStr+=msgName;
+    cfg::answerFormats[msgNameStr.c_str()]->format(text,ga,ce);
     sms.setDestinationAddress(orgAddr);
     sms.destinationAddress.type=1;
     sms.destinationAddress.plan=1;
@@ -1224,7 +1227,7 @@ int processSms(const char* text,const char* fromaddress,const char* toaddress)
   bool hdMode=false;
   try{
     string addr,subj,body,from,fromdecor;
-    if(cfg::helpDeskAddress.length() && cfg::helpDeskAddress==toaddress)
+    if(cfg::helpDeskAddress.length() && cfg::regionsEnabled && cfg::helpDeskAddress==toaddress)
     {
       using namespace smsc::util::config::region;
       const Region* reg=RegionFinder::getInstance().findRegionByAddress(fromaddress);
@@ -2971,6 +2974,7 @@ int main(int argc,char* argv[])
     try
     {
       initRegions(cfgman.getString("admin.regionsconfig"),cfgman.getString("admin.routesconfig"));
+      cfg::regionsEnabled=true;
     } catch(std::exception& e)
     {
       __warning2__("regions support disabled, exception: %s", e.what());
@@ -3198,6 +3202,14 @@ int main(int argc,char* argv[])
         std::string fullCfgString="answers.";
         fullCfgString+=answers[i];
         cfg::answerFormats.Insert(answers[i],new OutputFormatter(cfgman.getString(fullCfgString.c_str())));
+      }
+      for(int i=0;i<sizeof(answers)/sizeof(answers[0]);i++)
+      {
+        std::string fullCfgString="answers.helpdesk.";
+        fullCfgString+=answers[i];
+        std::string msgName="helpdesk.";
+        msgName+=answers[i];
+        cfg::answerFormats.Insert(msgName.c_str(),new OutputFormatter(cfgman.getString(fullCfgString.c_str())));
       }
     }
 
