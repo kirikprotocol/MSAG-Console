@@ -36,7 +36,7 @@ public class NetworkDataSource extends AbstractDataSource {
   public QueryResultSet query(Query query_to_run) {
     init(query_to_run);
     try {
-      for (Iterator iter = context.getNetworksManager().getNetworks().iterator(); iter.hasNext();) {
+      for (Iterator iter = context.getNetworks().iterator(); iter.hasNext();) {
         Network t = (Network)iter.next();
         NetworkDataItem item = new NetworkDataItem(t.getId(), t.getName(), t.getMcc(), t.getMnc(), t.getCountryId());
         add(item);

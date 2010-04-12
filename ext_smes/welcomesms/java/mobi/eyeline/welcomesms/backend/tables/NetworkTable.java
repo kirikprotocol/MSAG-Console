@@ -75,10 +75,10 @@ public class NetworkTable extends PagedStaticTableHelper {
   protected void fillTable(int start, int size) throws TableHelperException {
     try {
       buildSortOrder();
-      final QueryResultSet quizesList = ds.query(new NetworkQuery(size, filter, sortOrder, start));
+      final QueryResultSet networks = ds.query(new NetworkQuery(size, filter, sortOrder, start));
 
-      for (int i = 0; i < quizesList.size(); i++) {
-        final NetworkDataItem item = (NetworkDataItem) quizesList.get(i);
+      for (int i = 0; i < networks.size(); i++) {
+        final NetworkDataItem item = (NetworkDataItem) networks.get(i);
 
         final Row row = createNewRow();
 
@@ -94,7 +94,7 @@ public class NetworkTable extends PagedStaticTableHelper {
         row.addCell(mccColumn, new StringCell(id.toString(), Integer.toString(mcc), false));
         row.addCell(mncColumn, new StringCell(id.toString(), Integer.toString(mnc), false));
       }
-      totalSize = quizesList.getTotalSize();
+      totalSize = networks.getTotalSize();
 
     } catch (Exception e) {
       throw new TableHelperException(e);

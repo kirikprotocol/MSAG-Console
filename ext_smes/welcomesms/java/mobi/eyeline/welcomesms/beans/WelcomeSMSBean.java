@@ -5,6 +5,7 @@ import ru.novosoft.smsc.util.config.Config;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.Map;
 
 import mobi.eyeline.welcomesms.backend.WelcomeSMSContext;
 
@@ -34,8 +35,8 @@ public class WelcomeSMSBean extends PageBean {
       welcomeSMSContext = WelcomeSMSContext.getInstance(appContext);
       config = welcomeSMSContext.getConfig();
     } catch (Throwable e) {
-      logger.error("Couldn't get Quiz config", e);
-      return error("infosme.error.config_load", e);
+      logger.error("Couldn't get config", e);
+      return error(e.getMessage());
     }
 
     return result;
@@ -61,6 +62,10 @@ public class WelcomeSMSBean extends PageBean {
 
   public WelcomeSMSContext getWelcomeSMSContext() {
     return welcomeSMSContext;
+  }
+
+  public Map getCountries() {
+    return welcomeSMSContext.getLocationService().getCountries();
   }
 
   public String getMbMenu() {

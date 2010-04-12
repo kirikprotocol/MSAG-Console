@@ -27,7 +27,7 @@ public class LocationService {
   }
 
   /** @noinspection EmptyCatchBlock*/
-  public void reload() throws IOException{
+  void reload() throws IOException{
     BufferedReader reader = null;
     Map tmp = new HashMap(300);
     try{

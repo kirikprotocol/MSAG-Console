@@ -5,7 +5,6 @@ import ru.novosoft.smsc.jsp.util.helper.statictable.PagedStaticTableHelper;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
-import java.util.Map;
 
 import mobi.eyeline.welcomesms.backend.datasources.NetworkFilter;
 import mobi.eyeline.welcomesms.backend.datasources.NetworkDataSource;
@@ -93,7 +92,7 @@ public class Networks extends WelcomeSMSBean{
 
   private int processDelete(HttpServletRequest request) {
     try {
-      welcomeSMSContext.getNetworksManager().removeNetworks(tableHelper.getSelected(request));
+      welcomeSMSContext.removeNetworks(tableHelper.getSelected(request));
       tableHelper.setStartPosition(0);
     } catch (Exception e) {
       logger.error(e,e);
@@ -101,10 +100,6 @@ public class Networks extends WelcomeSMSBean{
     }
 
     return RESULT_OK;
-  }
-
-  public Map getCountries() {
-    return welcomeSMSContext.getLocationService().getCountries();
   }
 
   private int processAdd() {

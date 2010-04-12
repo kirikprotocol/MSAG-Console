@@ -16,7 +16,7 @@ import org.apache.log4j.Logger;
 /**
  * author: alkhal
  */
-public class NetworksManager {
+class NetworksManager {
 
   private static final Logger logger = Logger.getLogger(NetworksManager.class);
 
@@ -85,23 +85,27 @@ public class NetworksManager {
     }
   }
 
-  private synchronized int getId() throws AdminException {
+  private synchronized Integer getId() throws AdminException {
     try {
       id++;
       idFile.seek(idFile.length());
       idFile.writeInt(id);
-      return id;
+      return new Integer(id);
     } catch (IOException e) {
       logger.error(e, e);
       throw new AdminException(e.getMessage());
     }
   }
 
-  public Collection getNetworks() throws AdminException {
+  synchronized Collection getNetworks() {
     return networks.values();
   }
 
-  public synchronized void saveNetwork(Network n) throws AdminException, Config.WrongParamTypeException, IOException {
+  synchronized Network getNetwork(int id) {
+    return (Network)networks.get(new Integer(id));
+  }
+
+  synchronized void saveNetwork(Network n) throws AdminException, Config.WrongParamTypeException, IOException {
     if(n == null) {
       throw new AdminException("Network is null");
     }
@@ -117,22 +121,24 @@ public class NetworksManager {
     if(n.getCountryId() == null || n.getCountryId().trim().length() == 0) {
       throw new AdminException("Please select country");
     }
+    Iterator i = networks.values().iterator();
+    while(i.hasNext()) {
+      Network network = (Network)i.next();
+      if(network.getName().equals(n.getName()) && (n.getId() == null || n.getId().intValue() != network.getId().intValue())) {
+        throw new AdminException("Network with such name already exists: "+n.getName());
+      }
+      if(network.getMcc() == n.getMcc() && network.getMnc() == network.getMnc() && (n.getId() == null || n.getId().intValue() != network.getId().intValue())) {
+        throw new AdminException("Pair of mcc and mnc is already exist. Network: "+network.getName());
+      }
+    }
     if(n.getId() == null) {
       n.setId(getId());
-    }else{
-      Iterator i = networks.values().iterator();
-      while(i.hasNext()) {
-        Network network = (Network)i.next();
-        if(network.getName().equals(n.getName())) {
-          throw new AdminException("Network with such name already exists: "+n.getName());
-        }
-      }
     }
     networks.put(n.getId(), n);
     n.save(config);
   }
 
-  public synchronized void removeNetworks(Collection ids) throws Config.WrongParamTypeException, IOException {
+  synchronized void removeNetworks(Collection ids) throws Config.WrongParamTypeException, IOException {
     if(ids == null) {
       return;
     }

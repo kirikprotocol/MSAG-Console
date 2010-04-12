@@ -27,8 +27,8 @@ public class Network {
     return id;
   }
 
-  public void setId(int id) {
-    this.id = new Integer(id);
+  public void setId(Integer id) {
+    this.id = id;
   }
 
   public int getMcc() {

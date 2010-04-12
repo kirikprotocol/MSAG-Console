@@ -6,6 +6,7 @@ import ru.novosoft.smsc.admin.AdminException;
 
 import java.io.IOException;
 import java.io.File;
+import java.util.Collection;
 
 import org.xml.sax.SAXException;
 import org.apache.log4j.Category;
@@ -51,6 +52,36 @@ public class WelcomeSMSContext {
       logger.error(e,e);
       throw new AdminException(e.getMessage());
     }
+  }
+
+ public synchronized Collection getNetworks() {
+    return networksManager.getNetworks();
+  }
+
+  public synchronized Network getNetwork(int id) {
+    return networksManager.getNetwork(id);
+  }
+
+  public synchronized void saveNetwork(Network n) throws AdminException{
+    try{
+      networksManager.saveNetwork(n);
+    }catch(AdminException e){
+      logger.error(e,e);
+      throw e;
+    }catch(Exception e) {
+      logger.error(e,e);
+      throw new AdminException(e.getMessage());
+    }  
+  }
+
+  public synchronized void removeNetworks(Collection ids) throws AdminException {
+    try{
+      networksManager.removeNetworks(ids);
+    }catch(Exception e){
+      logger.error(e,e);
+      throw new AdminException(e.getMessage());
+    }
+
   }
 
   public void resetConfig() throws AdminException, SAXException, ParserConfigurationException, IOException {
