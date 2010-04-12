@@ -1,6 +1,8 @@
 #!/bin/env python
 
 import getopt
+import sys
+import os
 from datetime import datetime, timedelta
 
 #
@@ -44,22 +46,26 @@ class MsgMaker(object) :
 
         if not self.srcfile :
             raise ValueError, 'Please specify a file name with subscriber+message'
-        elif self.speed <= 1 :
+        elif self.speed <= 0 :
             raise ValueError, 'Please specify speed >= 1'
+        elif self.messages <= 0 :
+            raise ValueError, 'Please specify number of messages >= 1'
         elif not self.output :
             raise ValueError, 'Please specify output directory'
         elif not os.path.isdir(self.output) :
             raise ValueError, 'Output directory %s must exist' % self.output
 
         fd = open(self.srcfile,'r')
-        lines = [ x.strip() for x in fd.lines()]
+        lines = [ x.strip() for x in fd.readlines()]
         fd.close()
-        self.whomsg = [ x.split(',',2) for x in lines ]
+        # print 'lines=',lines
+        self.whoregmsg = [ tuple(y.strip() for y in x.split(',',2)) for x in lines ]
+        # print self.whoregmsg
         # check that all abonents have messages
-        badusers = filter( lambda x : len(x) != 3, self.whomsg )
+        badusers = filter( lambda x : len(x) != 3, self.whoregmsg )
         if badusers :
             raise ValueError, 'Invalid messages found: %s' % badusers
-        elif not self.whomsg :
+        elif not self.whoregmsg :
             raise ValueError, 'File %s contains no messages' % self.srcfile
         return
 
@@ -74,17 +80,19 @@ class MsgMaker(object) :
         timestem = __timestem()
         fd = None
         while total < self.messages :
-            for abnt, reg, msg in self.whomsg :
+            for abnt, reg, msg in self.whoregmsg :
                 if not fd :
                     # opening a new file, writing a header
-                    dirstem = '%02u%02u%02u' % (next.year % 100, next.month, next.day)
-                    dirname = os.path.join(self.output,dirstem)
-                    os.mkdir(dirname)
+                    datestem = '%02u%02u%02u' % (next.year % 100, next.month, next.day)
+                    dirname = os.path.join(self.output,datestem)
+                    if not os.path.isdir(dirname):
+                        os.mkdir(dirname)                        
+                        pass
                     fn = os.path.join(dirname,'%02s.csv' % next.hour)
                     fd = open(fn,'w')
                     fd.write('STATE,DATE,ABONENT,REGION,USERDATA,MESSAGE\n')
                     pass
-                fd.write('0,%s%s,%s,%s,,"%s"' % (datestem,timestem,abnt,reg,msg))
+                fd.write('0,%s%s,%s,%s,,"%s"\n' % (datestem,timestem,abnt,reg,msg))
                 total += 1
                 if total >= self.messages : break
                 persec += 1
@@ -101,8 +109,8 @@ class MsgMaker(object) :
                         pass
                     pass
                 pass
-            if fd : fd.close()
             pass
+        if fd : fd.close()
         return
 
     pass
