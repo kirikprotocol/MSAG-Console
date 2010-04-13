@@ -513,10 +513,12 @@ bool Task::enrouteMessage(uint64_t msgId)
 
 void Task::putToSuspendedMessagesQueue( const Message& suspendedMessage )
 {
+    /*
     smsc_log_info(logger, "task %u/'%s' message %llx region %d is suspended",
                   info.uid, info.name.c_str(),
                   suspendedMessage.id,
                   suspendedMessage.regionId );
+     */
     MutexGuard mg(lock_);
     doSuspendMessage(suspendedMessage);
 }

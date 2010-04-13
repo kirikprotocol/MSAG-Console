@@ -12,6 +12,7 @@ namespace infosme {
 InfoSmePduListener::InfoSmePduListener( SmscConnector& proc, Logger* log) :
 processor(proc),
 syncTransmitter(0), asyncTransmitter(0),
+performanceTester_(0),
 logger(log),
 parser_(new smsc::sms::IllFormedReceiptParser)
 {}
@@ -27,6 +28,10 @@ void InfoSmePduListener::setSyncTransmitter(SmppTransmitter *transmitter) {
 
 void InfoSmePduListener::setAsyncTransmitter(SmppTransmitter *transmitter) {
   asyncTransmitter = transmitter;
+}
+
+void InfoSmePduListener::setPerformanceTester(PerformanceTester* pt) {
+    performanceTester_ = pt;
 }
 
 void InfoSmePduListener::processReceipt (SmppHeader *pdu) {
@@ -102,7 +107,12 @@ void InfoSmePduListener::processReceipt (SmppHeader *pdu) {
         smResp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
         smResp.set_messageId("");
         smResp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
-        asyncTransmitter->sendDeliverySmResp(smResp);
+        // asyncTransmitter->sendDeliverySmResp(smResp);
+        if (performanceTester_) {
+            performanceTester_->sendDeliverySmResp(smResp);
+        } else {
+            asyncTransmitter->sendDeliverySmResp(smResp);
+        }
         break;
     }
     case SmppCommandSet::DATA_SM: {
@@ -110,7 +120,12 @@ void InfoSmePduListener::processReceipt (SmppHeader *pdu) {
         smResp.get_header().set_commandId(SmppCommandSet::DATA_SM_RESP);
         smResp.set_messageId("");
         smResp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
-        asyncTransmitter->sendDataSmResp(smResp);
+        // asyncTransmitter->sendDataSmResp(smResp);
+        if (performanceTester_) {
+            performanceTester_->sendDataSmResp(smResp);
+        } else {
+            asyncTransmitter->sendDataSmResp(smResp);
+        }
         break;
     }
     default:

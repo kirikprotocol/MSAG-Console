@@ -1,6 +1,8 @@
 History in reverse order
 ----------------------------------------------------
 
+2010-04-13 10:40 bukind
+ porting performance tester to v2
 2010-04-12 14:45 bukind
  performance test support (no transport layer), v1 only
 2010-04-12 14:45 bukind

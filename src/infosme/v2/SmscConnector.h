@@ -10,6 +10,7 @@
 #include "core/threads/Thread.hpp"
 #include "core/synchronization/EventMonitor.hpp"
 #include "InfoSmePduListener.h"
+#include "PerformanceTester.h"
 #include "core/buffers/Array.hpp"
 #include "core/buffers/IntHash.hpp"
 #include "core/buffers/XHash.hpp"
@@ -40,7 +41,7 @@ class Task;
 class TaskProcessor;
 class StatisticsManager;
 
-class SmscConnector : public smsc::core::threads::Thread 
+class SmscConnector : protected smsc::core::threads::Thread 
 {
 private:
     typedef enum { processResponseMethod, processReceiptMethod } EventMethod;
@@ -89,10 +90,11 @@ public:
     static SmeConfig readSmeConfig( ConfigView& config ); // throw ConfigException
 
     SmscConnector(TaskProcessor& processor,
-                  const string& smscId );
+                  const string& smscId,
+                  bool doPerfTests = false );
     virtual ~SmscConnector();
 
-    int Execute();
+    void start();
     void stop();
     void reconnect();
     void updateConfig( const smsc::sme::SmeConfig& config );
@@ -109,18 +111,12 @@ public:
     bool send( Task& task, Message& msg );
 
 private:
-    // bool convertMSISDNStringToAddress(const char* string, smsc::sms::Address& address);
+    virtual int Execute();
 
     // merge state for given receipt
     bool mergeReceiptState( const ReceiptId& receiptId, ReceiptData& rd );
     void processResponse( const ResponseData& rd, bool internal = false );
     void processReceipt( const ResponseData& rd, bool internal = false );
-    /*
-    bool send( const std::string& abonent,
-               const std::string& message,
-               const TaskInfo& info,
-               int seqNum );
-     */
     // cleanup all hashes except receipts
     void clearHashes();
 
@@ -138,7 +134,8 @@ private:
     // monitor which guards session destruction and self destruction
     EventMonitor destroyMonitor_;
     InfoSmePduListener listener_;
-    std::auto_ptr<SmppSession> session_;
+    std::auto_ptr<SmppSession>                      session_;
+    std::auto_ptr<PerformanceTester>                performanceTester_;
     int usage_; // how many dependant objects are on this
     JStoreWrapper*                                  jstore_;
     // RegionTrafficControl*                           trafficControl_;

@@ -67,7 +67,7 @@ void InfoSmeMessageSender::start()
     char *key = 0;
     while(it.Next(key, connector)) {
         if (connector) {
-            connector->Start();
+            connector->start();
         }
     }
 }
@@ -135,6 +135,12 @@ void InfoSmeMessageSender::init( TaskProcessor& processor,
     smsc_log_info(log_,"init");
     if ( ! config ) {
         throw ConfigException("config is null");
+    }
+
+    bool perftest = false;
+    try {
+        perftest = config->getBool("performanceTest");
+    } catch (...) {
     }
 
     ConfString routeFile(config->getString("route_config_filename"));
@@ -210,14 +216,14 @@ void InfoSmeMessageSender::init( TaskProcessor& processor,
             p = *ptr;
         } else {
             smsc_log_info(log_,"creating a new smsc connector '%s'",i->c_str());
-            p = new SmscConnector(processor,*i);
+            p = new SmscConnector(processor,*i,perftest);
             connectors_.Insert( i->c_str(), p );
         }
         smsc_log_info(log_,"updating config for smsc '%s'",i->c_str());
         p->updateConfig(cfg);
         if ( !ptr ) {
             // need start
-            p->Start(); 
+            p->start();
         }
         if ( *i == defConn.str() ) {
             defaultConnector_ = p;
@@ -283,149 +289,6 @@ void InfoSmeMessageSender::init( TaskProcessor& processor,
     smsc_log_info(log_,"init finished");
 }
 
-/*
-void InfoSmeMessageSender::reloadSmscAndRegions( Manager& manager )
-{
-    const std::string csn("InfoSme.SMSCConnectors");
-    ConfigView ccv(manager,csn.c_str());
-
-    // get the default connector id
-    const std::string defId = ccv.getString("default", "default SMSC Connector id not set");
-
-    // create connectors
-    std::auto_ptr<CStrSet> connNames(ccv.getShortSectionNames());
-    defaultConnector_ = 0;
-    {
-        // delete connectors that are not found in new set
-        std::set< std::string > badConnectors;
-        std::vector< SmscConnector* > badConns;
-        SmscConnector* connector;
-        char *key = 0;
-        for ( ConnectorIterator it = connectors_.getIterator(); it.Next(key,connector); ) {
-            if ( connNames->find(key) != connNames->end() ) {
-                badConnectors.insert(key);
-                if ( connector ) {
-                    connector->stop();
-                    badConns.push_back( connector );
-                }
-            }
-        }
-        for ( std::set< std::string >::const_iterator i = badConnectors.begin();
-              i != badConnectors.end();
-              ++i ) {
-            connectors_.Delete( i->c_str() );
-            smsc_log_debug(log_,"smsc connector %s is removed from connector list",i->c_str());
-        }
-        for ( std::vector< SmscConnector* >::const_iterator i = badConns.begin();
-              i != badConns.end();
-              ++i ) {
-            delete *i;
-        }
-    }
-
-    const bool oldStarted = started_;
-    stop();
-
-    // add new connectors
-    for ( CStrSet::iterator i = connNames.get()->begin();
-          i != connNames.get()->end(); ++i ) {
-        const std::string sectName( csn + "." + *i );
-        smsc::sme::SmeConfig cfg = SmscConnector::readSmeConfig(ConfigView(manager,sectName.c_str()));
-        SmscConnector* conn = addConnector(cfg,*i);
-        if ( *i == defId ) {
-            defaultConnector_ = conn;
-        }
-    }
-    if ( !defaultConnector_ ) {
-        throw ConfigException("the section for default SMSC Connector is not found");
-    } else {
-        smsc_log_debug(log_,"the default smsc is %s", defaultConnector_->getSmscId().c_str() );
-    }
-
-    // delete all regions-to-smsc mapping
-    smsc_log_debug(log_,"resetting all region mapping in region finder");
-    region::RegionFinder::getInstance().unsafeReset();
-    regions_.Empty();
-
-    // regions
-    ConfigView tpConfig(manager,"InfoSme");
-    const char* route_xml_file = tpConfig.getString("route_config_filename");
-    const char* regions_xml_file = tpConfig.getString("regions_config_filename");
-    regionsConfig_.reset(new region::RegionsConfig(regions_xml_file));
-    region::RegionsConfig::status st = regionsConfig_->load();
-    if ( st == region::RegionsConfig::success )
-        smsc_log_info(log_, "config file %s has been loaded successful", regions_xml_file);
-    else
-        throw ConfigException("can't load config file %s", regions_xml_file);
-
-    route::RouteConfig routeConfig;
-    if ( routeConfig.load(route_xml_file) == route::RouteConfig::success )
-        smsc_log_info(log_, "config file %s has been loaded successful", route_xml_file);
-    else
-        throw ConfigException("can't load config file %s", route_xml_file);
-
-    region::Region* region;
-    region::RegionsConfig::RegionsIterator regsIter = regionsConfig_->getIterator();
-    while (regsIter.fetchNext(region) == region::RegionsConfig::success) {
-        try {
-            region->expandSubjectRefs(routeConfig);
-        } catch ( std::exception& e ) {
-            smsc_log_error(log_,"Problem in configuration of region '%s'",region->getId().c_str());
-            throw ConfigException("Region '%s' misconfigured, exc: %s",region->getId().c_str(),e.what());
-        }
-        region::Region::MasksIterator maskIter = region->getMasksIterator();
-        std::string addressMask;
-        while(maskIter.fetchNext(addressMask)) {
-            smsc_log_debug(log_,"registering mask '%s' for region %s/'%s'",
-                           addressMask.c_str(),
-                           region->getId().c_str(),
-                           region->getName().c_str());
-            region::RegionFinder::getInstance().registerAddressMask(addressMask, region);
-        }
-        smsc_log_debug(log_,"region %s/'%s' maps to SMSC '%s'",
-                       region->getId().c_str(),
-                       region->getName().c_str(),
-                       region->getInfosmeSmscId().c_str());
-        addRegionMapping( region->getId(), region->getInfosmeSmscId() );
-    }
-    const region::RegionDefault& regdef = regionsConfig_->getDefaultRegion();
-    smsc_log_debug(log_,"registering a default region %s/'%s'",
-                   regdef.getId().c_str(), regdef.getName().c_str() );
-    region::RegionFinder::getInstance().registerDefaultRegion(&regdef);
-
-    if ( oldStarted ) start();
-}
- */
-
-
-/*
-bool InfoSmeMessageSender::send( Task* task, Message& message )
-{
-    // get region by message.regionId
-    const region::Region* region = region::RegionFinder::getInstance().getRegionById(message.regionId);
-    if ( ! region ) {
-        const TaskInfo& info = task->getInfo();
-        smsc_log_info(log_,"TaskId=[%d/%s]: msgId=%llx region '%s' is not found, using default",
-                      info.uid, info.name.c_str(), message.id, message.regionId.c_str() );
-        region = region::RegionFinder::getInstance().getDefaultRegion();
-        if ( !region ) {
-            smsc_log_error(log_,"default region is not found");
-            return false;
-        }
-    }
-
-    SmscConnector* connector = getSmscConnector(region->getId());
-    if ( ! connector ) {
-        const TaskInfo& info = task->getInfo();
-        smsc_log_error(log_,"TaskId=[%d/%s]: msgId=%llx cannot find connector by regionId=%s",
-                       info.uid, info.name.c_str(), message.id, region->getId().c_str());
-        TaskProcessor::retryMessage(task,message.id);
-        return false;
-    }
-    return connector->send( task, message, region );
-}
- */
-
 
 unsigned InfoSmeMessageSender::send( unsigned curTime, unsigned sleepTime )
 {
@@ -458,48 +321,6 @@ int InfoSmeMessageSender::findRegionByAddress( const char* addr )
     return Message::stringToRegionId(foundRegion->getId());
 }
 
-
-/*
-SmscConnector* InfoSmeMessageSender::addConnector( const smsc::sme::SmeConfig& cfg, const std::string& smscid )
-{
-    SmscConnector** ptr = connectors_.GetPtr(smscid.c_str());
-    SmscConnector* p = 0;
-    if ( ptr ) {
-        p = *ptr;
-        smsc_log_info(log_,"updating config for smsc %s", smscid.c_str());
-        p->updateConfig(cfg);
-    } else {
-        smsc_log_info(log_,"creating a new smsc connector %s", smscid.c_str());
-        p = new SmscConnector(processor_,cfg,smscid);
-        connectors_.Insert( smscid.c_str(), p );
-        if (started_) { p->Start(); }
-    }
-    return p;
-}
-
-
-void InfoSmeMessageSender::addRegionMapping( const std::string& regionId, const std::string& smscIdinput )
-{
-    if (regions_.Exists(regionId.c_str())) {
-        throw ConfigException("Region already exists: '%s'", regionId.c_str());
-    }
-
-    const std::string* smscId = &smscIdinput;
-    if ( smscId->empty() ) {
-        smsc_log_info( log_, "Default SMSC Connector '%s' for region '%s' will be used.",
-                       defaultConnector_->getSmscId().c_str(), regionId.c_str());
-        smscId = &defaultConnector_->getSmscId();
-    }
-    if (!connectors_.Exists(smscId->c_str())) {
-        smsc_log_info(log_, "SMSC Connector '%s' for region '%s' unknown. Default SMSC Connector '%s' will be used.",
-                      smscId->c_str(), regionId.c_str(), defaultConnector_->getSmscId().c_str());
-        smscId = &defaultConnector_->getSmscId();
-    }
-
-    smsc_log_info(log_, "SMSC Connector '%s' for region '%s' will be used.", smscId->c_str(), regionId.c_str());
-    regions_.Insert(regionId.c_str(), *smscId);
-}
- */
 
 void InfoSmeMessageSender::createRegionSender( const region::Region* region )
 {

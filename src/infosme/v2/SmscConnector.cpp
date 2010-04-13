@@ -205,7 +205,8 @@ smsc::sme::SmeConfig SmscConnector::readSmeConfig( ConfigView& config )
 
 
 SmscConnector::SmscConnector( TaskProcessor& processor,
-                              const string& smscId):
+                              const string& smscId,
+                              bool doPerfTests ):
 smscId_(smscId),
 log_(Logger::getInstance("smsc.infosme.connector")),
 processor_(processor),
@@ -220,11 +221,14 @@ jstore_(0)
 {
     listener_.setSyncTransmitter(session_->getSyncTransmitter());
     listener_.setAsyncTransmitter(session_->getAsyncTransmitter());
+    if (doPerformanceTests) {
+        performanceTester_.reset(new PerformanceTester(smscId_,listener_));
+        listener_.setPerformanceTester(performanceTester_.get());
+    }
     jstore_ = new JStoreWrapper(processor_.getStoreLocation(),
                                 smscId_,
                                 processor_.getMappingRollTime(),
                                 processor_.getMappingMaxChanges() );
-    // trafficControl_ = new RegionTrafficControl(log_);
 }
 
 
@@ -240,12 +244,20 @@ SmscConnector::~SmscConnector()
     }
     clearHashes();
     if ( jstore_ ) { delete jstore_; }
-    // if ( trafficControl_ ) { delete trafficControl_; }
+}
+
+void SmscConnector::start()
+{
+    MutexGuard mg(stateMonitor_);
+    stopped_ = false;
+    if (performanceTester_.get()) performanceTester_->start();
+    Start();
 }
 
 void SmscConnector::stop() {
     MutexGuard mg(stateMonitor_);
     stopped_ = true;
+    if (performanceTester_.get()) performanceTester_->stop();
     stateMonitor_.notify();
 }
 
@@ -292,7 +304,13 @@ int SmscConnector::Execute() {
                 MutexGuard mg(destroyMonitor_);
                 session_->close(); // make sure the session is stopped
                 clearHashes();
-                session_->connect();
+                // session_->connect();
+                if ( performanceTester_.get() ) {
+                    smsc_log_info(log_,"Skipping session connection for performance test");
+                    performanceTester_->connect();
+                } else {
+                    session_->connect();
+                }
             }
 
             {
@@ -557,14 +575,26 @@ bool SmscConnector::send( Task& task, Message& msg )
                 dataSm.get_header().set_sequenceNumber(seqNum);
                 dataSm.get_header().set_commandId(SmppCommandSet::DATA_SM);
                 fillDataSmFromSms(&dataSm, &sms);
-                session_->getAsyncTransmitter()->sendPdu(&(dataSm.get_header()));
+                // session_->getAsyncTransmitter()->sendPdu(&(dataSm.get_header()));
+                if (performanceTester_.get()) {
+                    smsc_log_debug(log_,"skipping send data_sm for perftest");
+                    performanceTester_->sendPdu( &(dataSm.get_header()));
+                } else {
+                    asyncTransmitter->sendPdu(&(dataSm.get_header()));
+                }
             } else {
                 smsc_log_debug(log_, "Send SUBMIT_SM");
                 PduSubmitSm submitSm;
                 submitSm.get_header().set_sequenceNumber(seqNum);
                 submitSm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
                 fillSmppPduFromSms(&submitSm, &sms);
-                session_->getAsyncTransmitter()->sendPdu(&(submitSm.get_header()));
+                // session_->getAsyncTransmitter()->sendPdu(&(submitSm.get_header()));
+                if (performanceTester_.get()) {
+                    smsc_log_debug(log_,"skipping send submit_sm for perftest");
+                    performanceTester_->sendPdu(&(submitSm.get_header()));
+                } else {
+                    asyncTransmitter->sendPdu(&(submitSm.get_header()));
+                }
             }
             TrafficControl::incOutgoing();
 

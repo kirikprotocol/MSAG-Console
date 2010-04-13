@@ -134,11 +134,15 @@ void TrafficControl::incOutgoing()
 
   int out = outgoing.Get();
 
+    bool firstTime = true;
   while (out >= maxMessagesPerSecond) {
     // traffic limit reached
-    smsc_log_info(logger, "wait limit (out=%d, max=%d)",
-                  out, maxMessagesPerSecond);
-    trafficMonitor.wait(1000/maxMessagesPerSecond);
+      if (firstTime) {
+          smsc_log_info(logger, "wait limit (out=%d, max=%d)",
+                        out, maxMessagesPerSecond);
+          firstTime = false;
+      }
+    trafficMonitor.wait(std::max(1000/maxMessagesPerSecond,1));
     out = outgoing.Get();
   }
 }
