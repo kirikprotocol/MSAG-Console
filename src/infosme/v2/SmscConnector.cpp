@@ -206,7 +206,7 @@ smsc::sme::SmeConfig SmscConnector::readSmeConfig( ConfigView& config )
 
 SmscConnector::SmscConnector( TaskProcessor& processor,
                               const string& smscId,
-                              bool doPerfTests ):
+                              bool doPerformanceTests ):
 smscId_(smscId),
 log_(Logger::getInstance("smsc.infosme.connector")),
 processor_(processor),
@@ -441,8 +441,9 @@ bool SmscConnector::send( Task& task, Message& msg )
         } else if ( !session_.get() ) {
             what = "no session";
             break;
-        } else if ( session_->isClosed() ) {
-            what = "session is closed";
+        } else if ( !connected_ ) {
+            // session_->isClosed() ) {
+            what = "not connected";
             break;
         } else if ( ! session_->getAsyncTransmitter() ) {
             what = "session has no transmitter";
@@ -580,7 +581,7 @@ bool SmscConnector::send( Task& task, Message& msg )
                     smsc_log_debug(log_,"skipping send data_sm for perftest");
                     performanceTester_->sendPdu( &(dataSm.get_header()));
                 } else {
-                    asyncTransmitter->sendPdu(&(dataSm.get_header()));
+                    session_->getAsyncTransmitter()->sendPdu(&(dataSm.get_header()));
                 }
             } else {
                 smsc_log_debug(log_, "Send SUBMIT_SM");
@@ -593,7 +594,7 @@ bool SmscConnector::send( Task& task, Message& msg )
                     smsc_log_debug(log_,"skipping send submit_sm for perftest");
                     performanceTester_->sendPdu(&(submitSm.get_header()));
                 } else {
-                    asyncTransmitter->sendPdu(&(submitSm.get_header()));
+                    session_->getAsyncTransmitter()->sendPdu(&(submitSm.get_header()));
                 }
             }
             TrafficControl::incOutgoing();

@@ -54,7 +54,7 @@ receiptWaitTime(0),
 mappingRollTime(0),
 mappingMaxChanges(0),
 dsStatConnection(0),
-statistics(0), protocolId(0), svcType(0),
+statistics(0), protocolId(0),
 unrespondedMessagesMax(1)
 // unrespondedMessagesSleep(10)
 {
@@ -317,6 +317,7 @@ int TaskProcessor::Execute()
 
             // 3. dumping statistics
             if ( currentTime - lastStatTime > 60000 ) { // one minute
+                lastStatTime = currentTime;
                 MutexGuard mg(tasksLock);
                 int key;
                 TaskGuard* tg;
