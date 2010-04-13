@@ -1,6 +1,6 @@
 #include "PerformanceTester.h"
 #include "InfoSmePduListener.h"
-#include "util/TimeSource.h"
+#include <map>
 
 namespace {
 
@@ -153,27 +153,30 @@ int PerformanceTester::Execute()
 {
     smsc_log_info(log_,"PerformanceTester for %s is started", smscId_.c_str());
     SmppHeader* hdr;
-    typedef smsc::util::TimeSourceSetup::AbsUSec USec;
-    typedef USec::usec_type usec_type;
-    usec_type startTime = USec::getUSec();
-    const usec_type statInterval = 10 * USec::ticksPerSec;
+    msectime_type startTime = currentTimeMillis();
+    const msectime_type statInterval = 10000;
+    typedef std::multimap<msectime_type,SmppHeader*> TimeQueue;
+    TimeQueue timeQueue;
+    msectime_type nextTime = startTime;
     while (true) {
-        const usec_type now = USec::getUSec();
+
+        const msectime_type now = currentTimeMillis();
+        bool isStopping = false;
         {
             MutexGuard mg(mon_);
 
-            const usec_type interval = now - startTime;
+            const msectime_type interval = now - startTime;
             if ( interval >= statInterval ) {
                 // statistics
-                const usec_type intms = (interval+500)/1000;
-                const usec_type ints = (interval+USec::ticksPerSec/2)/USec::ticksPerSec;
-                const usec_type halfInt = ints/2;
-                smsc_log_info(log_, "Statistics (%s): interval=%llu ms qsz=%u\n"
+                const unsigned ints = unsigned((interval+500)/1000);
+                const unsigned halfInt = ints/2;
+                smsc_log_info(log_, "Statistics (%s): interval=%llums iqsz=%u oqsz=%u\n"
                               "  Total      : sent=%llu resp=%llu recp=%llu\n"
                               "  Speed (1/s): sent=%llu resp=%llu recp=%llu",
                               smscId_.c_str(),
-                              intms,
-                              events_.evaluateCount(),
+                              interval,
+                              unsigned(inputQueue_.evaluateCount()),
+                              unsigned(timeQueue.size()),
                               sent_, resp_, recp_,
                               (sent_+halfInt)/ints,
                               (resp_+halfInt)/ints,
@@ -182,21 +185,43 @@ int PerformanceTester::Execute()
                 startTime = now;
                 sent_ = resp_ = recp_ = 0;
             }
-
-            if ( ! events_.Pop(hdr) ) {
-                if (!started_) break;
-                // we have to wait a little
-                mon_.wait(100);
+            isStopping = !started_;
+            int waitTime = int(nextTime - now);
+            if ( started_ && waitTime > 30 ) {
+                mon_.wait(waitTime);
                 continue;
             }
         }
-        try {
-            listener_->handleEvent(hdr);
-        } catch ( std::exception& e ) {
-            smsc_log_warn(log_,"exception in handling: %s",e.what());
-        } catch (...) {
-            smsc_log_warn(log_,"unknown exception in handling");
+
+        // reading all input queue
+        {
+            SmppEntry entry;
+            while ( inputQueue_.Pop(entry) ) {
+                timeQueue.insert(std::make_pair(entry.recvTime,entry.pdu));
+            }
         }
+
+        // processing all sms
+        TimeQueue::iterator imax = isStopping ? timeQueue.end() : timeQueue.upper_bound(now);
+
+        for ( TimeQueue::const_iterator i = timeQueue.begin();
+              i != imax; ++i ) {
+
+            try {
+                listener_->handleEvent(i->second);
+            } catch ( std::exception& e ) {
+                smsc_log_warn(log_,"exception in handling: %s",e.what());
+            } catch (...) {
+                smsc_log_warn(log_,"unknown exception in handling");
+            }
+        }
+        timeQueue.erase(timeQueue.begin(), imax);
+        if ( !timeQueue.empty() ) {
+            nextTime = timeQueue.begin()->first;
+        } else {
+            nextTime = now + 100;
+        }
+        if (isStopping) break;
     }
     smsc_log_info(log_,"PerformanceTester for %s is stopped", smscId_.c_str());
     return 0;
@@ -205,31 +230,40 @@ int PerformanceTester::Execute()
 
 void PerformanceTester::pushEvents( SmppHeader* submit, PduXSmResp* resp, PduXSm* recp )
 {
-    MutexGuard mg(mon_);
-    if (!started_) {
-        delete resp;
-        delete recp;
-        return;
+    {
+        MutexGuard mg(mon_);
+        if (!started_) {
+            delete resp;
+            delete recp;
+            return;
+        }
+        if (submit) ++sent_;
+        if (resp) ++resp_;
+        if (recp) ++recp_;
+        if (inputQueue_.evaluateCount() > 100) {
+            mon_.notify();
+        }
     }
     if (submit) {
-        ++sent_;
         smsc_log_debug(log_,"sending submit #%u",submit->get_sequenceNumber());
     }
+    const msectime_type now = currentTimeMillis();
     if (resp) {
-        ++resp_;
         smsc_log_debug(log_,"recving submit_resp #%u, msgid='%s'",
                        resp->get_header().get_sequenceNumber(),
                        resp->get_messageId());
-        events_.Push((SmppHeader*)resp);
+        const unsigned deltaResp = 10 + 
+            unsigned(reinterpret_cast<uint64_t>(static_cast<void*>(resp)) % 100);
+        inputQueue_.Push(SmppEntry(now+deltaResp,(SmppHeader*)resp));
     }
     if (recp) {
-        ++recp_;
         smsc_log_debug(log_,"recving delivery(receipt) #%u, msgid='%s'",
                        recp->get_header().get_sequenceNumber(),
                        recp->get_optional().get_receiptedMessageId());
-        events_.Push((SmppHeader*)recp);
+        const unsigned deltaRecp = 3000 +
+            unsigned(reinterpret_cast<uint64_t>(static_cast<void*>(resp)) % 3000);
+        inputQueue_.Push(SmppEntry(now+deltaRecp,(SmppHeader*)recp));
     }
-    mon_.notify();
 }
 
 }

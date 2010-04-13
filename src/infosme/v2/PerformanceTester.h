@@ -7,6 +7,7 @@
 #include "core/synchronization/Mutex.hpp"
 #include "core/synchronization/EventMonitor.hpp"
 #include "core/buffers/FastMTQueue.hpp"
+#include "MsecTime.h"
 
 namespace smsc {
 namespace infosme {
@@ -46,8 +47,16 @@ private:
     smsc::core::synchronization::Mutex seqLock_;
     int32_t                            seqNum_;
 
+    struct SmppEntry {
+        SmppEntry() {}
+        SmppEntry( msectime_type t, smsc::smpp::SmppHeader* h ) : recvTime(t), pdu(h) {}
+    public:
+        msectime_type           recvTime;
+        smsc::smpp::SmppHeader* pdu;
+    };
+    typedef smsc::core::buffers::FastMTQueue< SmppEntry > InputQueue;
+    InputQueue inputQueue_;
     smsc::core::synchronization::EventMonitor mon_;
-    smsc::core::buffers::FastMTQueue< smsc::smpp::SmppHeader* > events_;
 
     // statistics
     uint64_t  sent_;  // number of outgoing submits
