@@ -562,6 +562,7 @@ void CsvStore::CsvFile::Close(bool argProcessed)
   processed=argProcessed;
   f.Close();
   timeMap.clear();
+  curMsg = timeMap.end();
   msgMap.clear();
   openMessages = 0;
 }
@@ -618,7 +619,7 @@ CsvStore::CsvFile::GetRecordResult CsvStore::CsvFile::getNextRecord(CsvStore::Cs
   {
     while(curMsg->second.state>WAIT)
     {
-      curMsg++;
+      ++curMsg;
       if(curMsg==timeMap.end())
       {
         readAll=true;
@@ -627,7 +628,7 @@ CsvStore::CsvFile::GetRecordResult CsvStore::CsvFile::getNextRecord(CsvStore::Cs
     }
   }
   rec=curMsg->second;
-  curMsg++;
+  ++curMsg;
   return grrRecordOk;
 }
 
@@ -733,6 +734,7 @@ void CsvStore::CsvFile::setState(uint64_t msgId, uint8_t state, Message* msg)
       msg->userData = rec.msg.userData;
   }
   if ( state > ENROUTE ) {
+      if ( curMsg == it->second ) { ++curMsg; }
       timeMap.erase(it->second);
       msgMap.erase(it);
   }
@@ -787,7 +789,7 @@ uint64_t CsvStore::CsvFile::AppendRecord(uint8_t state,time_t fdate,const Messag
   MessageMap::iterator it=msgMap.insert(MessageMap::value_type(msgId,tmIt)).first;
   if(curMsg==timeMap.end() || curMsg->second.msg.date>fdate)
   {
-    curMsg=tmIt;
+      curMsg=tmIt;
   }
   char timestamp[16];// YYMMDDhhmmss
   struct tm t;
@@ -861,6 +863,7 @@ void CsvStore::CsvFile::setStateAndDate(uint64_t msgId,uint8_t state, time_t fda
       msg->userData = rec.msg.userData;
   }
   if ( state > ENROUTE ) {
+      if (curMsg == it->second) { ++curMsg; }
       timeMap.erase(it->second);
       msgMap.erase(it);
   }
