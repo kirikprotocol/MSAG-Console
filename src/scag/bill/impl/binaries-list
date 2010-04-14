@@ -1,0 +1,42 @@
+scag/tests/testBillId testBillId \
+  -lscag-bill-impl \
+  -lscag-config-impl \
+  -lscag-stat-impl \
+  \
+  -lscag-bill-ewallet-client \
+  -lscag-bill-ewallet-proto \
+  \
+  -lscag-bill-ewallet \
+  -lscag-stat-base \
+  -lscag-bill-base \
+  \
+  -lscag-config \
+  -lscag-config-smpp \
+  -lscag-config-stat \
+  -lscag-config-bill \
+  -lscag-config-sessn \
+  -lscag-config-route \
+  -lscag-config-http \
+  -lscag-config-pers \
+  -lscag-config-lcm \
+  -lscag-config-base \
+  \
+  -lscag-util-io \
+  -lscag-util-singleton \
+  -lscag-util \
+  -lscag-exc \
+  \
+  -lcore-network \
+  -lcore-threads \
+  \
+  -llicense-check \
+  \
+  -lutil-xml \
+  -lutil \
+  \
+  @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
+  -llogger \
+  $(XERCES_LIB) \
+  $(SSL_LIB) \
+  -lpthread -lrt -ldl \
+  $(LIBMALLOC)

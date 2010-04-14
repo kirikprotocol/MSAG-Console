@@ -33,6 +33,8 @@ using smsc::logger::Logger;
 using smsc::core::network::Socket;
 #endif
 
+class BillingManagerImplTester;
+
 class BillingManagerImpl :
 public BillingManager,
 public Thread,
@@ -43,6 +45,8 @@ public EwalletCallParams::TransactionRegistrator
     , public smsc::inman::interaction::ConnectListenerITF
 #endif
 {
+    friend class BillingManagerImplTester;
+
     struct BillTransaction
     {
         TransactionStatus status;
