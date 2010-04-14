@@ -28,6 +28,7 @@ public:
     unsigned                 flushlimittime;     // in seconds
     unsigned                 initUploadCount;
     unsigned                 initUploadInterval; // in ms
+    unsigned                 expireInterval;     // in ms
     bool                     diskio;
 
 private:

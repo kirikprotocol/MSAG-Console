@@ -95,6 +95,9 @@ void SessionManagerImpl::init( const scag2::config::SessionManagerConfig& cfg,
     cmdqueue_ = &cmdqueue;
     config_ = cfg;
     // expireSchedule = time(NULL) + DEFAULT_EXPIRE_INTERVAL;
+    if ( cfg.expireInterval >= 1000 ) {
+        Session::setDefaultLiveTime( cfg.expireInterval / 1000 );
+    }
 
     // if (!log_) log_ = Logger::getInstance("sess.mgr");
 

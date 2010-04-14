@@ -21,7 +21,6 @@ namespace config {
 
     void SessionManagerConfig::init(const ConfigView& cv) throw(ConfigException)
     {
-        unsigned expire = 0;
         // dir = getString(cv,"location");
         clear();
         getInt(cv, "indexgrowth", indexgrowth );
@@ -32,7 +31,7 @@ namespace config {
         getInt(cv, "initUploadCount", initUploadCount );
         getInt(cv, "initUploadInterval", initUploadInterval );
         try {
-            getInt(cv, "expireInterval", expire);
+            getInt(cv, "expireInterval", expireInterval);
         } catch (...) {}
 
         getBool(cv, "diskio", diskio);
@@ -59,9 +58,11 @@ namespace config {
         }
 
         // ugly: applying config right after creation
+        /*
         if ( expire >= 1000 ) {
             sessions::Session::setDefaultLiveTime( expire / 1000 );
         }
+         */
     }
 
 
@@ -78,6 +79,7 @@ namespace config {
                  flushlimittime == smc.flushlimittime &&
                  initUploadCount == smc.initUploadCount &&
                  initUploadInterval == smc.initUploadInterval &&
+                 expireInterval == smc.expireInterval &&
                  diskio == smc.diskio );
 }
 
@@ -135,6 +137,7 @@ void SessionManagerConfig::clear()
     flushlimittime = 120;
     initUploadCount = 10;
     initUploadInterval = 100;
+    expireInterval = 10000;
     diskio = true;
 }
 
