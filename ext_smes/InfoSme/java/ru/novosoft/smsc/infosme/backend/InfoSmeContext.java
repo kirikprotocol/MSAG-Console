@@ -18,10 +18,8 @@ import ru.novosoft.smsc.util.config.Config;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Collection;
-import java.util.Properties;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 /**
  * Created by igork
@@ -66,6 +64,11 @@ public class InfoSmeContext implements SMEAppContext
   private SiebelTaskManager siebelTaskManager;
   private SiebelFinalStateThread siebelFinalStateThread;
 
+  private int maxSmsThroughput;
+  private Date expDate;
+
+  private InfoSmeLicense license;
+
   private InfoSmeContext(SMSCAppContext appContext, String smeId)
       throws AdminException, ParserConfigurationException, SAXException, IOException,
       Config.WrongParamTypeException, Config.ParamNotFoundException
@@ -76,6 +79,13 @@ public class InfoSmeContext implements SMEAppContext
     String serviceFolder = appContext.getHostsManager().getServiceInfo(smeId).getServiceFolder().getAbsolutePath();
     File configDir = new File(serviceFolder, "conf");
     this.infoSmeConfig = new InfoSmeConfig(configDir.getAbsolutePath(), this);
+    this.license = new InfoSmeLicense(new File(configDir, "license.ini"));
+    try{
+      this.maxSmsThroughput = Integer.parseInt(license.getProperty("MaxSmsThroughput"));
+      this.expDate = new SimpleDateFormat("yyyy-MM-dd").parse(license.getProperty("LicenseExpirationDate"));
+    }catch (Exception e) {
+      throw new AdminException(e.getMessage());
+    }
     this.infoSme = new InfoSme(appContext.getHostsManager().getServiceInfo(this.smeId),
         infoSmeConfig.getAdminHost(),
         infoSmeConfig.getAdminPort());
@@ -83,6 +93,7 @@ public class InfoSmeContext implements SMEAppContext
     this.blackListManager = new BlackListManager(appContext.getPersonalizationClientPool());
     this.taskManager = new InfoSmeTaskManager(appContext);
     this.taskManager.start();
+
 
 
     String msgStoreDir = this.infoSmeConfig.getStoreLocation();
@@ -281,6 +292,18 @@ public class InfoSmeContext implements SMEAppContext
 
   public Boolean getUssdFeature() {
     return infoSmeConfig.getUssdPushFeature();
+  }
+
+  public InfoSmeLicense getLicense() {
+    return license;
+  }
+
+  public int getMaxSmsThroughput() {
+    return maxSmsThroughput;
+  }
+
+  public Date getExpDate() {
+    return (Date)expDate.clone();
   }
 
   public String validateInfosmePrefs(UserPreferences preferences){

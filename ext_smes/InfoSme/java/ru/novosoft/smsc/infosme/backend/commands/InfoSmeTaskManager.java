@@ -157,7 +157,7 @@ public class InfoSmeTaskManager implements Runnable{
 
       is = new BufferedReader(new InputStreamReader(new FileInputStream(file), Functions.getLocaleEncoding()));
 
-      final int maxMessagesPerSecond = smeContext.getInfoSmeConfig().getMaxMessagesPerSecond();
+      final int maxMessagesPerSecond = smeContext.getMaxSmsThroughput();
 
       long currentTime = task.getStartDate() == null ? System.currentTimeMillis() : task.getStartDate().getTime();
       List messages = new ArrayList(maxMessagesPerSecond + 1);

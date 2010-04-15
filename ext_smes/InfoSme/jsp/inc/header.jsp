@@ -1,5 +1,7 @@
+<%@ page import="java.util.Date" %>
 <%@ include file="/WEB-INF/inc/sme_menu.jsp"%>
 <%
+
 	sme_menu_begin(out);
     if (bean.isUserAdmin(request)) {
 	    sme_menu_button(out, "mbMenu",  "apply",      getLocString("infosme.menu.statuses"), "");
@@ -20,4 +22,7 @@
     sme_menu_space(out);
     sme_menu_button(out, "mbMenu",  "stat",      getLocString("infosme.menu.statistics"),"");
 	sme_menu_end(out);
+  if(bean.getInfoSmeContext().getExpDate().before(new Date())) {
+    %><font color="red"><%=getLocString("infosme.license.expire")%></font><%
+  }
 %>

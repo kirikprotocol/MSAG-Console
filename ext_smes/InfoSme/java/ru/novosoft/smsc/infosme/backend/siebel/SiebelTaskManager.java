@@ -364,7 +364,7 @@ public class SiebelTaskManager implements Runnable {
       TemplatesRadixTree rtree = new TemplatesRadixTree();
       initiateRadixTree(rtree);
 
-      final int maxMessagesPerSecond = smeContext.getInfoSmeConfig().getMaxMessagesPerSecond();
+      final int maxMessagesPerSecond = smeContext.getMaxSmsThroughput();
 
       long currentTime = task.getStartDate() == null ? System.currentTimeMillis() : task.getStartDate().getTime();
 

@@ -92,7 +92,7 @@ public class DeliveriesGenerationThread extends Thread {
         infoSmeContext.getInfoSme().addTask(((Task)iter.next()).getId());
 
 
-      final int maxMessagesPerSecond = infoSmeContext.getInfoSmeConfig().getMaxMessagesPerSecond();
+      final int maxMessagesPerSecond = infoSmeContext.getMaxSmsThroughput();
 
       // Fill genInfos
       for (Iterator iter = task.tasks().iterator(); iter.hasNext();) {
