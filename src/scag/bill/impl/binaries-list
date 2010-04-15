@@ -37,6 +37,7 @@ scag/tests/testBillId testBillId \
   @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
   -llogger \
   $(XERCES_LIB) \
+  $(SOCKETLIB) -lnsl \
   $(SSL_LIB) \
   -lpthread -lrt -ldl \
   $(LIBMALLOC)

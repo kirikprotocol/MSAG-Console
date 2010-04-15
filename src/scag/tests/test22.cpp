@@ -29,8 +29,8 @@ struct C {
         // 1.
         b.inner::A::exec();
 
-        // 2.
-        b.A::exec();
+        // 2. is not working for CC
+        // b.A::exec();
     }
     B b;
 };
