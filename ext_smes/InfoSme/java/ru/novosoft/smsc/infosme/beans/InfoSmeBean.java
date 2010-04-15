@@ -67,6 +67,10 @@ public class InfoSmeBean extends PageBean
       return error("infosme.error.config_load", e);
     }
 
+    if(infoSmeContext.getLicense().getLicenseExpirationDate().before(new Date())) {
+      warning("infosme.license.expire");
+    }
+
     return result;
   }
 

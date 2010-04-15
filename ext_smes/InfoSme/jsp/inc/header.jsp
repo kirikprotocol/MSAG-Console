@@ -22,7 +22,4 @@
     sme_menu_space(out);
     sme_menu_button(out, "mbMenu",  "stat",      getLocString("infosme.menu.statistics"),"");
 	sme_menu_end(out);
-  if(bean.getInfoSmeContext().getExpDate().before(new Date())) {
-    %><font color="red"><%=getLocString("infosme.license.expire")%></font><%
-  }
 %>

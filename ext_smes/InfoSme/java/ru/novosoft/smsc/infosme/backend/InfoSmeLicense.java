@@ -6,6 +6,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Properties;
 
 /**
@@ -16,19 +19,21 @@ public class InfoSmeLicense {
 
   private static final Category category = Category.getInstance(InfoSmeLicense.class);
 
+  private final Properties properties = new Properties();
+
   private static InfoSmeLicense instance;
 
   private final File file;
 
-  private final Properties properties = new Properties();
+  private String organization;
+  private String hostids;
+  private int maxSmsThroughput;
+  private Date licenseExpirationDate;
+  private String licenseType;
+  private String product;
 
-  private synchronized static void init(File file) throws IOException {
-    if(instance == null) {
-      instance = new InfoSmeLicense(file);
-    }
-  }
 
-  InfoSmeLicense(File f) throws IOException{
+  InfoSmeLicense(File f) throws IOException, ParseException {
     if(f == null || !f.exists()) {
       throw new IllegalArgumentException("License is not found: "+(f == null ? null : f.getAbsolutePath()));
     }
@@ -44,15 +49,43 @@ public class InfoSmeLicense {
         }catch (IOException e){}
       }
     }
+    this.organization = properties.getProperty("Organization");
+    this.hostids = properties.getProperty("Hostids");
+    this.maxSmsThroughput = Integer.parseInt(properties.getProperty("MaxSmsThroughput"));
+    this.licenseExpirationDate = new SimpleDateFormat("yyyy-MM-dd").parse(properties.getProperty("LicenseExpirationDate"));
+    this.licenseType = properties.getProperty("LicenseType");
+    this.product = properties.getProperty("Product");
   }
 
-  public String getProperty(String name) {
-    return properties.getProperty(name);
+  public static InfoSmeLicense getInstance() {
+    return instance;
   }
 
-  public boolean contains(String name) {
-    return properties.containsKey(name);
-  }  
+  public File getFile() {
+    return file;
+  }
 
+  public String getOrganization() {
+    return organization;
+  }
 
+  public String getHostids() {
+    return hostids;
+  }
+
+  public int getMaxSmsThroughput() {
+    return maxSmsThroughput;
+  }
+
+  public String getLicenseType() {
+    return licenseType;
+  }
+
+  public String getProduct() {
+    return product;
+  }
+
+  public Date getLicenseExpirationDate() {
+    return (Date)licenseExpirationDate.clone();
+  }
 }
