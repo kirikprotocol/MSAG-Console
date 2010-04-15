@@ -751,6 +751,8 @@ public class InfoSmeConfig {
       cfg.setString("InfoSme.Admin.host", adminHost);
       cfg.setInt("InfoSme.Admin.port", adminPort);
 
+
+      cfg.removeSection("InfoSme.SMSCConnectors");
       if(defSmscConn != null) {
         if(smscConns.get(defSmscConn.getName()) == null) {
           throw new AdminException("Default smsc not found with name="+ defSmscConn.getName());
