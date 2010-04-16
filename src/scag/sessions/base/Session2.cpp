@@ -37,6 +37,7 @@ inline void getlog() {
 
 /// session default live time (in seconds)
 unsigned sessionLiveTime = 60;
+unsigned sessionUssdLiveTime = 60;
 
 using namespace scag2::sessions;
 using namespace scag2::exceptions;
@@ -772,7 +773,7 @@ Operation* Session::createOperation( SCAGCommand& cmd, int operationType )
     // increase session live time
     time_t now = time(0);
     const unsigned liveTime = operationType == transport::CO_USSD_DIALOG ?
-        ussdLiveTime() ? defaultLiveTime();
+        ussdLiveTime() : defaultLiveTime();
     time_t expire = now + liveTime;
     if ( expire > expirationTime_ ) expirationTime_ = expire;
     smsc_log_debug( log_, "session=%p/%s createOp(cmd=%p) => op=%p opid=%u type=%d(%s), etime=%d",
