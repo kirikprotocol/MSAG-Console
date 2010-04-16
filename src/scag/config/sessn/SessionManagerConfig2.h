@@ -29,6 +29,7 @@ public:
     unsigned                 initUploadCount;
     unsigned                 initUploadInterval; // in ms
     unsigned                 expireInterval;     // in ms
+    unsigned                 ussdExpireInterval; // in ms
     bool                     diskio;
 
 private:

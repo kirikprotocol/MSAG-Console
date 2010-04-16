@@ -33,6 +33,9 @@ namespace config {
         try {
             getInt(cv, "expireInterval", expireInterval);
         } catch (...) {}
+        try {
+            getInt(cv, "ussdExpireInterval", ussdExpireInterval);
+        } catch (...) {}
 
         getBool(cv, "diskio", diskio);
 
@@ -80,6 +83,7 @@ namespace config {
                  initUploadCount == smc.initUploadCount &&
                  initUploadInterval == smc.initUploadInterval &&
                  expireInterval == smc.expireInterval &&
+                 ussdExpireInterval == smc.ussdExpireInterval &&
                  diskio == smc.diskio );
 }
 
@@ -138,6 +142,7 @@ void SessionManagerConfig::clear()
     initUploadCount = 10;
     initUploadInterval = 100;
     expireInterval = 10000;
+    ussdExpireInterval = 60000;
     diskio = true;
 }
 

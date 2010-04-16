@@ -320,6 +320,19 @@ void Session::setDefaultLiveTime( unsigned tmo )
     smsc_log_info(log_,"setting default session live time %u", tmo);
 }
 
+unsigned Session::ussdLiveTime()
+{
+    return sessionUssdLiveTime;
+}
+
+void Session::setUssdLiveTime( unsigned tmo )
+{
+    sessionUssdLiveTime = tmo;
+    ::getlog();
+    smsc_log_info(log_,"setting default ussd session live time %u", tmo);
+}
+
+
 bool Session::isReadOnlyProperty( const char* name )
 {
     return ::ReadOnlyPropertiesHash.GetPtr(name);
@@ -716,7 +729,9 @@ Operation* Session::setCurrentOperation( opid_type opid, bool updateExpire )
     currentOperationId_ = opid;
     if ( updateExpire ) {
         const time_t now = time(0);
-        const time_t expire = now + defaultLiveTime();
+        const unsigned liveTime = optype == transport::CO_USSD_DIALOG ?
+            ussdLiveTime() : defaultLiveTime();
+        const time_t expire = now + liveTime;
         if ( expire > expirationTime_ ) expirationTime_ = expire;
     }
     smsc_log_debug( log_, "session=%p/%s setOp(opid=%u) => op=%p type=%d(%s) etime=%d",
@@ -756,7 +771,9 @@ Operation* Session::createOperation( SCAGCommand& cmd, int operationType )
 
     // increase session live time
     time_t now = time(0);
-    time_t expire = now + defaultLiveTime();
+    const unsigned liveTime = operationType == transport::CO_USSD_DIALOG ?
+        ussdLiveTime() ? defaultLiveTime();
+    time_t expire = now + liveTime;
     if ( expire > expirationTime_ ) expirationTime_ = expire;
     smsc_log_debug( log_, "session=%p/%s createOp(cmd=%p) => op=%p opid=%u type=%d(%s), etime=%d",
                     this, sessionKey().toString().c_str(),

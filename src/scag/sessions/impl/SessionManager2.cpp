@@ -98,6 +98,9 @@ void SessionManagerImpl::init( const scag2::config::SessionManagerConfig& cfg,
     if ( cfg.expireInterval >= 1000 ) {
         Session::setDefaultLiveTime( cfg.expireInterval / 1000 );
     }
+    if ( cfg.ussdExpireInterval >= 1000 ) {
+        Session::setUssdLiveTime( cfg.ussdExpireInterval / 1000 );
+    }
 
     // if (!log_) log_ = Logger::getInstance("sess.mgr");
 
