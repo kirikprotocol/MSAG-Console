@@ -1,6 +1,9 @@
 History in reverse order
 ----------------------------------------------------
 
+----------------------------------------------------
+infosme-build-20100416 11:30 bukind
+
 2010-04-14 16:30 bukind
  bugfix: CsvStore::curMsg invalidated after timeMap.erase(), v1&2 fixed
 2010-04-13 10:40 bukind
