@@ -1116,7 +1116,7 @@ IntHash<AccessType> SmppCommandAdapter::initFieldsAccess( EventHandlerType eh )
     case EH_DATA_SM:
         hs.Insert(Tag::SMPP_PROTOCOL_ID,atRead);
         hs.Insert(Tag::SMPP_PRIORITY,atRead);
-        hs.Insert(Tag::SMPP_SCHEDULE_DELIVERY_TIME ,atRead);
+        // hs.Insert(Tag::SMPP_SCHEDULE_DELIVERY_TIME ,atRead);
         hs.Insert(SMS_VALIDITY_PERIOD              ,atRead);
         hs.Insert(Tag::SMPP_REPLACE_IF_PRESENT_FLAG,atRead);
         hs.Insert(DC_BINARY         ,atRead);
@@ -1311,7 +1311,7 @@ Hash<int> SmppCommandAdapter::initFieldNames( EventHandlerType eh )
 
     case EH_SUBMIT_SM:
         
-        hs["schedule_delivery_time"]        = Tag::SMPP_SCHEDULE_DELIVERY_TIME;
+        // hs["schedule_delivery_time"]        = Tag::SMPP_SCHEDULE_DELIVERY_TIME;
         hs["validity_period"]               = SMS_VALIDITY_PERIOD;
         hs["replace_if_present_flag"]       = Tag::SMPP_REPLACE_IF_PRESENT_FLAG;
         // hs["sm_default_msg_id"]
