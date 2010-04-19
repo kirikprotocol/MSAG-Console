@@ -1400,7 +1400,7 @@ void* SmeUpdateCommand::serialize(uint32_t &len)
   buf.WriteNetInt32(si.schedlimit);
   buf.WriteNetInt32(si.providerId);
   buf.WriteNetInt32(si.accessMask);
-  buf.WriteNetInt64(si.flags);
+  buf.WriteNetInt32(si.flags);
 
   uint8_t val;
 
