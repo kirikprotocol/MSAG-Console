@@ -62,6 +62,9 @@ public abstract class RouteGenCommand extends CommandClass
     protected boolean allowBlocked = false;
     protected boolean isAllowBlocked = false;
 
+    protected String backupSme = null;
+    protected boolean isBackupSme = false;
+
     public void setRoute(String route) {
         this.route = route;
     }
@@ -104,6 +107,9 @@ public abstract class RouteGenCommand extends CommandClass
     }
     public void setCategoryName(String categoryName) {
         this.categoryName = categoryName; isCategoryName = true;
+    }
+    public void setBackupSme(String backupSme) {
+        this.backupSme = backupSme; isBackupSme = true;
     }
 }
 

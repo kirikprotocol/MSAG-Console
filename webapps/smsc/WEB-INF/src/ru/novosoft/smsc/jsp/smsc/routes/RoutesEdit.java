@@ -51,6 +51,7 @@ public class RoutesEdit extends RouteBody {
                 archiving = r.isArchiving();
                 serviceId = r.getServiceId();
                 srcSmeId = r.getSrcSmeId();
+                backupSmeId = r.getBackupSmeId();
                 suppressDeliveryReports = r.isSuppressDeliveryReports();
                 active = r.isActive();
                 checkedSources = (String[]) r.getSources().getSubjectNames().toArray(new String[0]);
@@ -184,8 +185,10 @@ public class RoutesEdit extends RouteBody {
             if ((categoryIdStr != null && categoryIdStr.length() > 0))
                 categoryId = Long.parseLong(categoryIdStr);
             oldRoute = routeSubjectManager.getRoutes().remove(oldRouteId);
-            routeSubjectManager.getRoutes().put(new Route(routeId, priority, permissible, billing, transit, archiving, suppressDeliveryReports, active, serviceId, sources, destinations, srcSmeId,
-                    deliveryMode, forwardTo, hide, replayPath, notes, forceDelivery, aclId, allowBlocked, providerId, categoryId));
+            Route r = new Route(routeId, priority, permissible, billing, transit, archiving, suppressDeliveryReports, active, serviceId, sources, destinations, srcSmeId,
+                    deliveryMode, forwardTo, hide, replayPath, notes, forceDelivery, aclId, allowBlocked, providerId, categoryId);
+            r.setBackupSmeId(backupSmeId);
+            routeSubjectManager.getRoutes().put(r);
             if (oldRouteId.equals(routeId))
                 journalAppend(SubjectTypes.TYPE_route, routeId, Actions.ACTION_MODIFY);
             else

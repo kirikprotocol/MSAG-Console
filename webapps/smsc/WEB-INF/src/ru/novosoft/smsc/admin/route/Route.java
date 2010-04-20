@@ -54,6 +54,7 @@ public class Route
   private boolean allowBlocked;
   private long providerId;
   private long categoryId;
+  private String backupSmeId;
 
   public Route(final String routeName, final int priority, final boolean isEnabling, final byte billing,final boolean isTransit, final boolean isArchiving,
                final boolean isSuppressDeliveryReports, final boolean active, final int serviceId, final SourceList sources,
@@ -170,7 +171,7 @@ public class Route
     providerId = providerIdStr != null && providerIdStr.trim().length() > 0 ? Long.decode(providerIdStr).longValue() : -1;
     final String categoryIdStr = routeElem.getAttribute("categoryId");
     categoryId = categoryIdStr != null && categoryIdStr.trim().length() > 0 ? Long.decode(categoryIdStr).longValue() : -1;
-
+    backupSmeId = routeElem.getAttribute("backupSme");
   }
 
   public static byte getReplayPathValue(final String replayPathStr)
@@ -343,7 +344,7 @@ public class Route
 
   public PrintWriter store(final PrintWriter out)
   {
-    out.println("  <route id=\"" + StringEncoderDecoder.encode(getName())
+    out.print("  <route id=\"" + StringEncoderDecoder.encode(getName())
             + "\" billing=\"" + getBillingString()
             + "\" transit=\"" + isTransit()
             + "\" archiving=\"" + isArchiving()
@@ -361,8 +362,11 @@ public class Route
             + "\" aclId=\"" + getAclId()
             + "\" allowBlocked=\"" + isAllowBlocked()
             + "\" providerId=\"" + getProviderId()
-            + "\" categoryId=\"" + getCategoryId()
-            + "\">");
+            + "\" categoryId=\"" + getCategoryId() + "\"");
+    if (backupSmeId != null && backupSmeId.trim().length() > 0)
+      out.print(" backupSme=\"" + backupSmeId + "\"");
+    out.println(">");
+
     if (notes != null)
       out.println("    <notes>" + StringEncoderDecoder.encode(notes) + "</notes>");
     getSources().store(out);
@@ -521,4 +525,13 @@ public class Route
     this.categoryId = categoryId;
   }
 
+  public String getBackupSmeId()
+  {
+    return backupSmeId;
+  }
+
+  public void setBackupSmeId(String backupSmeId)
+  {
+    this.backupSmeId = backupSmeId;
+  }
 }

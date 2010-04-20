@@ -64,6 +64,11 @@ public class RouteAlterCommand extends RouteGenCommand
         if (sme == null) throw new Exception("SME '" + srcSmeId + "' not found (srcSmeId)");
       }
 
+      if (isBackupSme && backupSme.length() > 0) {
+        SME sme = ctx.getSmeManager().get(backupSme);
+        if (sme == null) throw new Exception("SME '" + backupSme + "' not found (backupSme)");
+      }
+
       if (isForwardTo && (!isSrcSmeId || !srcSmeId.equalsIgnoreCase("MAP_PROXY")))
         throw new Exception("Option 'fwd' is valid only for srcSmeId='MAP_PROXY'");
 
@@ -191,6 +196,7 @@ public class RouteAlterCommand extends RouteGenCommand
       if (isForceDelivery) newRoute.setForceDelivery(forceDelivery);
       if (isAclId) newRoute.setAclId(aclId);
       if (isAllowBlocked) newRoute.setAllowBlocked(allowBlocked);
+      if (isBackupSme) newRoute.setBackupSmeId(backupSme);
 
       list.remove(oldRoute.getName());
       list.put(newRoute);

@@ -27,6 +27,7 @@ public class RouteBody extends SmscBean
   protected boolean active = false;
   protected int serviceId = 0;
   protected String srcSmeId = null;
+  protected String backupSmeId = null;
 
   protected String[] checkedSources = null;
   protected String[] srcMasks = null;
@@ -292,6 +293,16 @@ public class RouteBody extends SmscBean
   public void setSrcSmeId(final String srcSmeId)
   {
     this.srcSmeId = srcSmeId;
+  }
+
+  public String getBackupSmeId() 
+  {
+    return backupSmeId;
+  }
+
+  public void setBackupSmeId(String backupSmeId)
+  {
+    this.backupSmeId = backupSmeId;
   }
 
   public String getProviderIdStr()

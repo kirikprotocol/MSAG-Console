@@ -45,6 +45,11 @@ public class RouteAddCommand extends RouteGenCommand
             if (sme == null) throw new Exception("SME '" + srcSmeId + "' not found (srcSmeId)");
           }
 
+          if (isBackupSme) {
+            SME sme = ctx.getSmeManager().get(backupSme);
+            if (sme == null) throw new Exception("SME '" + backupSme + "' not found (backupSme)");
+          }
+
           long providerId = -1;
           if (isProviderName) {
               Provider provider = ctx.getProviderManager().getProviderByName(providerName);
@@ -104,6 +109,9 @@ public class RouteAddCommand extends RouteGenCommand
                                 hide, (isReplayPath) ? replayPath : REPLAY_PATH_PASS,
                                 notes, forceDelivery, ((isAclId) ? aclId : -1),
                                 (isAllowBlocked) ? allowBlocked : false, providerId, categoryId);
+
+          if (isBackupSme)
+            smscRoute.setBackupSmeId(backupSme);
 
           if (priority < 0 || priority > 32000)
             throw new Exception("Priority value should be between 0 and 32000");

@@ -130,7 +130,20 @@
                 force</option>
             <option value="<%=Route.REPLAY_PATH_SUPPRESS%>" <%=bean.getReplayPath() == Route.REPLAY_PATH_SUPPRESS ? "selected" : ""%>>
                 suppress</option>
-        </td>
+        </select></td>
+    </tr>
+    <tr>
+        <th><%=getLocString("routes.backupSme")%></th>
+        <td><select name="backupSmeId" id="backupSmeId">
+            <option value="" <%=(bean.getBackupSmeId() == null || bean.getBackupSmeId().length() == 0) ? "selected" : ""%>></option>
+            <%for (Iterator j = bean.getAllSmes().iterator(); j.hasNext();) {
+                String smeId = (String) j.next();
+                String encSmeId = StringEncoderDecoder.encode(smeId);
+            %><option
+                value="<%=encSmeId%>" <%=smeId.equals(bean.getBackupSmeId()) ? "selected" : ""%>><%=encSmeId%></option><%
+            }
+        %>
+        </select></td>
     </tr>
 
 </table>

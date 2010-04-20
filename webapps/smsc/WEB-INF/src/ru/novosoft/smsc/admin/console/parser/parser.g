@@ -340,6 +340,7 @@ addroute returns [RouteAddCommand cmd] {
 	  (TGT_CATEGORY { cmd.setCategoryName(getnameid("category name")); })?
 	  (OPT_SRCSME { cmd.setSrcSmeId(getnameid("srcSmeId value"));   })?
 	  (OPT_FWD    { cmd.setForwardTo(getnameid("forwardTo value")); })?
+	  (OPT_BACKUP { cmd.setBackupSme(getnameid("backupSme value")); })?
 	  route_src[cmd]
 	  route_dst[cmd, true]
 	;
@@ -395,6 +396,7 @@ altroute returns [RouteAlterCommand cmd] {
 	  (TGT_CATEGORY { cmd.setCategoryName(getnameid("category name")); })?
 	  (OPT_SRCSME  { cmd.setSrcSmeId(getnameid("srcSmeId value"));   })?
 	  (OPT_FWD     { cmd.setForwardTo(getnameid("forwardTo value")); })?
+	  (OPT_BACKUP { cmd.setBackupSme(getnameid("backupSme value")); })?
 	  (
 		((ACT_ADD    { cmd.setAction(RouteAlterCommand.ACTION_ADD); addAction=true;  })
 		|(ACT_DELETE { cmd.setAction(RouteAlterCommand.ACTION_DEL); addAction=false; }))

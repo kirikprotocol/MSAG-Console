@@ -853,6 +853,7 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_SRC:
 		case OPT_FWD:
 		case OPT_SRCSME:
+		case OPT_BACKUP:
 		{
 			break;
 		}
@@ -875,6 +876,7 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_SRC:
 		case OPT_FWD:
 		case OPT_SRCSME:
+		case OPT_BACKUP:
 		{
 			break;
 		}
@@ -896,6 +898,7 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_SRC:
 		case OPT_FWD:
 		case OPT_SRCSME:
+		case OPT_BACKUP:
 		{
 			break;
 		}
@@ -916,6 +919,7 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_SRC:
 		case OPT_FWD:
 		case OPT_SRCSME:
+		case OPT_BACKUP:
 		{
 			break;
 		}
@@ -935,6 +939,7 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		case OPT_SRC:
 		case OPT_FWD:
+		case OPT_BACKUP:
 		{
 			break;
 		}
@@ -950,6 +955,25 @@ public CommandParser(ParserSharedInputState state) {
 		{
 			match(OPT_FWD);
 			cmd.setForwardTo(getnameid("forwardTo value"));
+			break;
+		}
+		case OPT_SRC:
+		case OPT_BACKUP:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		{
+		switch ( LA(1)) {
+		case OPT_BACKUP:
+		{
+			match(OPT_BACKUP);
+			cmd.setBackupSme(getnameid("backupSme value"));
 			break;
 		}
 		case OPT_SRC:
@@ -1924,6 +1948,7 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_RP:
 		case OPT_FD:
 		case OPT_TRANSIT:
+		case OPT_BACKUP:
 		{
 			break;
 		}
@@ -1952,6 +1977,7 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_DM:
 		case OPT_FWD:
 		case OPT_SRCSME:
+		case OPT_BACKUP:
 		{
 			break;
 		}
@@ -1978,6 +2004,7 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_DM:
 		case OPT_FWD:
 		case OPT_SRCSME:
+		case OPT_BACKUP:
 		{
 			break;
 		}
@@ -2003,6 +2030,7 @@ public CommandParser(ParserSharedInputState state) {
 		case TGT_CATEGORY:
 		case OPT_FWD:
 		case OPT_SRCSME:
+		case OPT_BACKUP:
 		{
 			break;
 		}
@@ -2027,6 +2055,7 @@ public CommandParser(ParserSharedInputState state) {
 		case TGT_CATEGORY:
 		case OPT_FWD:
 		case OPT_SRCSME:
+		case OPT_BACKUP:
 		{
 			break;
 		}
@@ -2050,6 +2079,7 @@ public CommandParser(ParserSharedInputState state) {
 		case TGT_CATEGORY:
 		case OPT_FWD:
 		case OPT_SRCSME:
+		case OPT_BACKUP:
 		{
 			break;
 		}
@@ -2072,6 +2102,7 @@ public CommandParser(ParserSharedInputState state) {
 		case ACT_DELETE:
 		case OPT_FWD:
 		case OPT_SRCSME:
+		case OPT_BACKUP:
 		{
 			break;
 		}
@@ -2093,6 +2124,7 @@ public CommandParser(ParserSharedInputState state) {
 		case ACT_ADD:
 		case ACT_DELETE:
 		case OPT_FWD:
+		case OPT_BACKUP:
 		{
 			break;
 		}
@@ -2108,6 +2140,27 @@ public CommandParser(ParserSharedInputState state) {
 		{
 			match(OPT_FWD);
 			cmd.setForwardTo(getnameid("forwardTo value"));
+			break;
+		}
+		case EOF:
+		case ACT_ADD:
+		case ACT_DELETE:
+		case OPT_BACKUP:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		{
+		switch ( LA(1)) {
+		case OPT_BACKUP:
+		{
+			match(OPT_BACKUP);
+			cmd.setBackupSme(getnameid("backupSme value"));
 			break;
 		}
 		case EOF:
@@ -4106,6 +4159,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_RP:
 			case OPT_FD:
 			case OPT_TRANSIT:
+			case OPT_BACKUP:
 			{
 				break;
 			}
@@ -4154,6 +4208,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_RP:
 			case OPT_FD:
 			case OPT_TRANSIT:
+			case OPT_BACKUP:
 			{
 				break;
 			}
@@ -4220,6 +4275,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_SRCSME:
 			case OPT_FD:
 			case OPT_TRANSIT:
+			case OPT_BACKUP:
 			{
 				break;
 			}
@@ -4279,6 +4335,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_SRCSME:
 			case OPT_FD:
 			case OPT_TRANSIT:
+			case OPT_BACKUP:
 			{
 				break;
 			}
@@ -4337,6 +4394,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_FWD:
 			case OPT_SRCSME:
 			case OPT_TRANSIT:
+			case OPT_BACKUP:
 			{
 				break;
 			}
@@ -4394,6 +4452,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_DM:
 			case OPT_FWD:
 			case OPT_SRCSME:
+			case OPT_BACKUP:
 			{
 				break;
 			}
@@ -4446,6 +4505,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_DM:
 			case OPT_FWD:
 			case OPT_SRCSME:
+			case OPT_BACKUP:
 			{
 				break;
 			}
@@ -4484,6 +4544,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_DM:
 			case OPT_FWD:
 			case OPT_SRCSME:
+			case OPT_BACKUP:
 			{
 				break;
 			}
@@ -4520,6 +4581,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_DM:
 			case OPT_FWD:
 			case OPT_SRCSME:
+			case OPT_BACKUP:
 			{
 				break;
 			}
@@ -4554,6 +4616,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_DM:
 			case OPT_FWD:
 			case OPT_SRCSME:
+			case OPT_BACKUP:
 			{
 				break;
 			}
@@ -4593,14 +4656,14 @@ public CommandParser(ParserSharedInputState state) {
 			{
 			addsubj_mask(cmd);
 			{
-			_loop120:
+			_loop122:
 			do {
 				if ((LA(1)==COMMA)) {
 					match(COMMA);
 					addsubj_mask(cmd);
 				}
 				else {
-					break _loop120;
+					break _loop122;
 				}
 				
 			} while (true);
@@ -6530,27 +6593,27 @@ public CommandParser(ParserSharedInputState state) {
 			}
 			}
 			{
-			_loop323:
+			_loop325:
 			do {
 				if ((LA(1)==ACT_ADD)) {
 					match(ACT_ADD);
 					cmd.addMask(getnameid("closed group mask to add"));
 				}
 				else {
-					break _loop323;
+					break _loop325;
 				}
 				
 			} while (true);
 			}
 			{
-			_loop325:
+			_loop327:
 			do {
 				if ((LA(1)==ACT_DELETE)) {
 					match(ACT_DELETE);
 					cmd.delMask(getnameid("closed group mask to delete"));
 				}
 				else {
-					break _loop325;
+					break _loop327;
 				}
 				
 			} while (true);
@@ -6766,6 +6829,7 @@ public CommandParser(ParserSharedInputState state) {
 		"\"divert\"",
 		"\"dm\"",
 		"\"fwd\"",
+		"\"backupsme\"",
 		"\"srcsme\"",
 		"\"set\"",
 		"\"clear\"",
@@ -6851,7 +6915,8 @@ public CommandParser(ParserSharedInputState state) {
 		"comma character ','",
 		"ESC",
 		"DIGIT",
-		"TSTR"
+		"TSTR",
+		"OPT_BACKUP"
 	};
 	
 	

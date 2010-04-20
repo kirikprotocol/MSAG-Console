@@ -101,6 +101,7 @@ tokens {
   OPT_DIVERT    = "divert";
   OPT_DM        = "dm";
   OPT_FWD       = "fwd";
+  OPT_BACKCSME  = "backupsme";
   OPT_SRCSME    = "srcsme";
   OPT_SET       = "set";
   OPT_CLEAR     = "clear";
