@@ -14,6 +14,7 @@ public abstract class SmsSource {
   private final static byte STR_TAG_TYPE = 1;
   private final static byte BIN_TAG_TYPE = 2;
 
+  private final static short SMSC_BACKUP_SME_TAG = 0;
   private final static short SMPP_ESM_CLASS_TAG = 2;
   private final static short SMPP_DATA_CODING_TAG = 3;
   private final static short SMPP_SHORT_MESSAGE_TAG = 28;
@@ -61,6 +62,13 @@ public abstract class SmsSource {
         //System.out.println("Tag: "+tag+" Type: "+type+" Len: "+len);
 
         switch (tag) {
+          case SMSC_BACKUP_SME_TAG: {
+            byte msgText[] = new byte[textLen = len];
+            stream.read(msgText, 0, textLen);
+            text = msgText;
+            row.addBodyParameter(tag, msgText);
+            break;
+          }
           case SMPP_SHORT_MESSAGE_TAG:
           case SMPP_MESSAGE_PAYLOAD_TAG: {
             byte msgText[] = new byte[textLen = len];
