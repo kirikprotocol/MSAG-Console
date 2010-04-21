@@ -40,9 +40,9 @@ Hash<int> ActionTLV::InitTypes()
 
 bool ActionTLV::getOptionalProperty(SMS& data, const char*& buff, uint32_t& len)
 {
-    if(!data.hasBinProperty(Tag::SMSC_UNKNOWN_OPTIONALS))
+    if(!data.hasBinProperty(smsc::sms::Tag::SMSC_UNKNOWN_OPTIONALS))
         return false;
-    buff = data.getBinProperty(Tag::SMSC_UNKNOWN_OPTIONALS, &len);
+    buff = data.getBinProperty(smsc::sms::Tag::SMSC_UNKNOWN_OPTIONALS, &len);
     if (len < 4)
     {
         smsc_log_warn(logger, "Unknown optional field is less then 4 bytes");
@@ -122,7 +122,7 @@ bool ActionTLV::delUnknown(SMS& data, uint16_t fieldId)
         i = i + 4 + *(uint16_t *)(buff + i + 2);
         if(i < len)
             tmp.append(buff + i, len - i);
-        data.setBinProperty(Tag::SMSC_UNKNOWN_OPTIONALS, tmp.data(), tmp.size());
+        data.setBinProperty(smsc::sms::Tag::SMSC_UNKNOWN_OPTIONALS, tmp.data(), tmp.size());
         return true;
     }
     return false;
@@ -251,7 +251,7 @@ void ActionTLV::setUnknown(SMS& data, uint16_t fieldId, Property* prop, const st
       break;
     }
     }
-    data.setBinProperty(Tag::SMSC_UNKNOWN_OPTIONALS, tmp.data(), tmp.size());
+    data.setBinProperty(smsc::sms::Tag::SMSC_UNKNOWN_OPTIONALS, tmp.data(), tmp.size());
 }
 
 void ActionTLV::init(const SectionParams& params,PropertyObject propertyObject)

@@ -93,20 +93,7 @@ public:
         if (!sms) throw SCAGException("Command Bridge Error: Cannot get SMS from SmppCommand");
         return *sms;
     }
-/*
-    static void setAbonentAddr(SmppCommand& command)
-    {
-        switch (command->get_smsCommand().dir)
-        {
-        case dsdSc2Srv:
-            AssignAddress(sms->destinationAddress, property.getStr().c_str());
-            break;
-        case dsdSrv2Sc:
-            AssignAddress(sms->originatingAddress, property.getStr().c_str());
-            break;
-        }
-    }
-*/
+
     static Address getAbonentAddr(SmppCommand& command)  
     {
         Address resultAddr;
@@ -165,26 +152,6 @@ public:
         return resultAddr;
 
     }
-
-
-
-/*    static int16_t getUMR(const SCAGCommand& command)  
-    {
-//        Tag::SMPP_SAR_MSG_REF_NUM
-
-        SCAGCommand& _command = const_cast<SCAGCommand&>(command);
-
-        SmppCommand * smppCommand = dynamic_cast<SmppCommand *>(&_command);
-        if (!smppCommand) throw SCAGException("Command Bridge Error: SCAGCommand is not smpp-type");
-
-
-        SMS& sms = getSMS(*smppCommand);
-
-        if (sms.hasIntProperty(Tag::SMPP_SAR_MSG_REF_NUM)) 
-            return sms.getIntProperty(Tag::SMPP_SAR_MSG_REF_NUM);
-
-        return 0;
-    }*/
 
     static actions::CommandProperty getCommandProperty( SCAGCommand& command, const Address& abonentAddr, uint8_t operationType );
     static void CheckCommandProperty( SCAGCommand& command,

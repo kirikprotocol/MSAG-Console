@@ -144,8 +144,8 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st,
     bool isUSSDClosed = false;
 
     int8_t ussd_op = 
-        sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ?
-        int8_t(sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP)) : int8_t(-1);
+        sms->hasIntProperty(smsc::sms::Tag::SMPP_USSD_SERVICE_OP) ?
+        int8_t(sms->getIntProperty(smsc::sms::Tag::SMPP_USSD_SERVICE_OP)) : int8_t(-1);
 
     // fix for ussd_op == 35 is already applied in state machine
 
@@ -155,14 +155,17 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st,
 
         /* if (receiptMessageId)
             optype_ = CO_RECEIPT;
-        else */ if ( ussd_op != -1 )
+        else */ 
+        if ( ussd_op != -1 )
         {
             optype_ = CO_USSD_DIALOG;
-            if ( ussd_op == smsc::smpp::UssdServiceOpValue::PSSR_INDICATION ) {
+            if ( ussd_op == smsc::sms::USSD_PSSR_IND ) {
                 wantOpenUSSD = true;
-            } else if ( ussd_op == smsc::smpp::UssdServiceOpValue::USSN_CONFIRM ) {
+            } else if ( ussd_op == smsc::sms::USSD_USSN_CONF ||
+                        ussd_op == smsc::sms::USSD_USSR_CONF_LAST ||
+                        ussd_op == smsc::sms::USSD_USSREL_IND ) {
                 isUSSDClosed = true;
-            } else if ( ussd_op != smsc::smpp::UssdServiceOpValue::USSR_CONFIRM ) {
+            } else if ( ussd_op != smsc::sms::USSD_USSR_CONF ) {
                 // wrong operation
                 fail( "USSD Delivery: wrong ussd_op", st, 
                       smsc::system::Status::USSDDLGREFMISM );
@@ -177,14 +180,21 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st,
         if (ussd_op != -1)
         {
             optype_ = CO_USSD_DIALOG;
-            if ( ussd_op == smsc::smpp::UssdServiceOpValue::USSR_REQUEST ||
-                 ussd_op == smsc::smpp::UssdServiceOpValue::USSN_REQUEST ) {
-                if ( ! sms->hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE) ) {
+            if ( ussd_op == smsc::sms::USSD_USSR_REQ ||
+                 ussd_op == smsc::sms::USSD_USSN_REQ ||
+                 ussd_op == smsc::sms::USSD_USSR_REQ_LAST ||
+                 ussd_op == smsc::sms::USSD_USSR_REQ_VLR ||
+                 ussd_op == smsc::sms::USSD_USSN_REQ_VLR ||
+                 ussd_op == smsc::sms::USSD_USSR_REQ_VLR_LAST ) {
+                if ( ! sms->hasIntProperty(smsc::sms::Tag::SMPP_USER_MESSAGE_REFERENCE) ) {
                     // umr is absent
                     cmd_->setFlag( SmppCommandFlags::SERVICE_INITIATED_USSD_DIALOG );
                     wantOpenUSSD = true;
                 }
-            } else if ( ussd_op == smsc::smpp::UssdServiceOpValue::PSSR_RESPONSE ) {
+            } else if ( ussd_op == smsc::sms::USSD_PSSR_RESP ||
+                        ussd_op == smsc::sms::USSD_USSN_REQ_VLR_LAST ||
+                        ussd_op == smsc::sms::USSD_USSN_REQ_LAST ||
+                        ussd_op == smsc::sms::USSD_USSREL_REQ ) {
                 isUSSDClosed = true;
             } else {
                 // invalid op
@@ -287,8 +297,8 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st,
                 return;
             }
 
-            if ( sms->hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE) ) {
-                umr = sms->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
+            if ( sms->hasIntProperty(smsc::sms::Tag::SMPP_USER_MESSAGE_REFERENCE) ) {
+                umr = sms->getIntProperty(smsc::sms::Tag::SMPP_USER_MESSAGE_REFERENCE);
             } else if ( ! wantOpenUSSD ) {
                 fail( "USSD: no UMR is specified", st,
                       smsc::system::Status::USSDDLGREFMISM );
@@ -307,7 +317,7 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st,
                 }
                 op = session_->createOperation( *cmd_.get(), optype_ );
                 found_ussd = session_->getUSSDOperationId();
-                if ( umr < 0 ) {
+                if ( umr == -1 ) {
                     op->setFlag( OperationFlags::SERVICE_INITIATED_USSD_DIALOG );
                     umr = 0; // ask to set umr in delivery
                 }

@@ -24,14 +24,6 @@ namespace smpp {
 using namespace smsc::core::buffers;
 using namespace smsc::core::synchronization;
 
-/*
-struct UMRUSR
-{
-  IntHash<int> UMRtoUSR;
-  IntHash<int> USRtoUMR;
-};
- */
-
 
 struct SmppEntity
 {

@@ -137,17 +137,17 @@ public:
         
     bool hasServiceOp()
     {
-        return CommandBridge::getSMS(command).hasIntProperty(Tag::SMPP_USSD_SERVICE_OP);
+        return CommandBridge::getSMS(command).hasIntProperty(smsc::sms::Tag::SMPP_USSD_SERVICE_OP);
     }
 
     int getServiceOp()
     {
-        return CommandBridge::getSMS(command).getIntProperty(Tag::SMPP_USSD_SERVICE_OP);
+        return CommandBridge::getSMS(command).getIntProperty(smsc::sms::Tag::SMPP_USSD_SERVICE_OP);
     }
 
     void setServiceOp(int value)
     {
-        CommandBridge::getSMS(command).setIntProperty(Tag::SMPP_USSD_SERVICE_OP, value);
+        CommandBridge::getSMS(command).setIntProperty(smsc::sms::Tag::SMPP_USSD_SERVICE_OP, value);
     }
 
     void setOA(Address& addr)

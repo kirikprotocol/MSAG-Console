@@ -11,7 +11,7 @@
 #include "logger/Logger.h"
 #include "scag/transport/smpp/router/route_types.h"
 #include "scag/transport/SCAGCommand2.h"
-#include "smpp/smpp_sms.h"
+// #include "smpp/smpp_sms.h"
 #include "smpp/smpp_structures.h"
 #include "smpp/smpp_time.h"
 #include "sms/sms.h"
@@ -340,12 +340,14 @@ struct BindRespCommand
 
 struct AlertNotification
 {
-    AlertNotification(PduAlertNotification* pdu)
+    AlertNotification(PduAlertNotification* pdu);
+    /*
     {
         src=PduAddress2Address(pdu->get_source());
         dst=PduAddress2Address(pdu->get_esme());
         status=pdu->optional.get_msAvailableStatus();
     }
+     */
     Address src;
     Address dst;
     int status;
@@ -507,16 +509,6 @@ protected:
 class SmppCommand: public SCAGCommand, protected _SmppCommand
 {
 public:
-    // default sme flags used to convert SMS to/from Pdu
-    static const uint32_t defaultSmeFlags =
-        smsc::smeman::sfCarryOrgDescriptor |
-        smsc::smeman::sfCarryOrgAbonentInfo |
-        smsc::smeman::sfCarrySccpInfo;
-        // smsc::smeman::sfFillExtraDescriptor |
-        // smsc::smeman::sfForceReceiptToSme |
-        // smsc::smeman::sfForceGsmDatacoding |  // dont allow ms_validity, etc.
-        // smsc::smeman::sfSmppPlus;
-
     // specialized constructors (meta constructors)
     static std::auto_ptr<SmppCommand> makeCommandSm(CommandId command, const SMS& sms,uint32_t dialogId);
     static std::auto_ptr<SmppCommand> makeSubmitSm(const SMS& sms,uint32_t dialogId);
@@ -546,7 +538,7 @@ public:
     static void changeSliceRefNum( SMS& sms, uint32_t sarmr );
 
 protected:
-    static void makeSMSBody( SMS* sms, const SmppHeader* pdu, uint32_t smeFlags );
+    static void makeSMSBody( SMS* sms, const SmppHeader* pdu);
 
     static std::auto_ptr<SmppCommand> makeCommandSmResp(CommandId cmdid, const char* messageId, uint32_t dialogId, uint32_t status, bool dataSm=false );
 
@@ -656,8 +648,8 @@ public:
     virtual ~SmppCommand() {
         dispose();
     }
-    SmppCommand( SmppHeader* pdu, uint32_t smeFlags = defaultSmeFlags );
-    SmppHeader* makePdu( uint32_t smeFlags = defaultSmeFlags);
+    SmppCommand( SmppHeader* pdu);
+    SmppHeader* makePdu();
 
     /// cloning the command (not all command types are allowed to be cloned)
     virtual std::auto_ptr<SmppCommand> clone();

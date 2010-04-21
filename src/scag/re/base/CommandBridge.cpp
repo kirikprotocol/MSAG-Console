@@ -184,7 +184,7 @@ int CommandBridge::getProtocolForEvent(SCAGCommand& command)
         SmppCommand * smppCommand = dynamic_cast<SmppCommand *>(&command);
         SMS& sms = getSMS(*smppCommand);
 
-        if (sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP)) return PROTOCOL_SMPP_USSD;
+        if (sms.hasIntProperty(smsc::sms::Tag::SMPP_USSD_SERVICE_OP)) return PROTOCOL_SMPP_USSD;
         return PROTOCOL_SMPP_SMS;
     } 
     else if (cmdType == HTTP) {
@@ -221,7 +221,7 @@ actions::CommandProperty CommandBridge::getCommandProperty(SCAGCommand& command,
     int providerId = istr.GetProviderID(serviceId);
     uint8_t hi = getSMPPHandlerType(command);
     SMS& sms = getSMS(smppcommand);
-    int msgRef = sms.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE) ? sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE):-1;
+    int msgRef = sms.hasIntProperty(smsc::sms::Tag::SMPP_USER_MESSAGE_REFERENCE) ? sms.getIntProperty(smsc::sms::Tag::SMPP_USER_MESSAGE_REFERENCE):-1;
     Property routeId;
     routeId.setStr(sms.getRouteId());
 
