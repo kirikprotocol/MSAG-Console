@@ -37,6 +37,7 @@
             <!-- NOTE: don't put this section into web frontend -->
         </section>
         <param name="expireInterval" type="int">@session.expireInterval@</param>
+        <param name="ussdExpireInterval" type="int">@session.ussdExpireInterval@</param>
         <param name="indexgrowth" type="int">1000</param> <!-- an increment of index file -->
         <param name="pagesize" type="int">512</param> <!-- the page/block size -->
         <param name="prealloc" type="int">100</param> <!-- number of pages to preallocate -->
