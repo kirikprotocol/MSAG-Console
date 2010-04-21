@@ -338,6 +338,32 @@
   <security-constraint>
     <web-resource-collection>
       <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/providers/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>providers</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/categories/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>categories</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
       <url-pattern>/smsc/aliases/*</url-pattern>
     </web-resource-collection>
     <auth-constraint>
