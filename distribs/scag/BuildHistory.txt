@@ -592,18 +592,17 @@ TO ALL: Insert log record for all significant changes & fixes here.
   pvss: bugfix: does not sleep on stop
   pvss: feature: snmp counters
 
---- current fixes ---
+=================================================================================================================
+2010-04-21 13:20 bukind msag-build-20100421
 2010-03-30 15:45 bukind
   msag: feature: snmp counters
-
 2010-04-05 12:50 bukind
   msag: passing systemId and interfaceVersion in BIND_RESP
-
 2010-04-09 14:00 bukind
   msag: bugfix: session expiration loss
-
 2010-04-16 11:47 bukind
   msag: feature: separate live time for ussd operation
-
 2010-04-21 12:30 bukind
   msag: feature: smpp+ support in ussd
+
+--- current fixes ---
