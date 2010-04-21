@@ -442,21 +442,6 @@ inline void fetchOptionals(SmppOptional& optional,SMS* sms,uint32_t smeFlags=0)
   if((smeFlags&sfSmppPlus) && optional.has_ussd_session_id())
   {
     sms->setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,optional.get_ussd_session_id());
-    if (smeFlags&sfCarryOrgDescriptor) 
-    {
-      if (optional.has_imsi())
-      {
-        sms->setStrProperty(Tag::SMSC_IMSI_ADDRESS,optional.get_imsi());
-      }
-      if (optional.has_vlr_number())
-      {
-        sms->setStrProperty(Tag::SMSC_MSC_ADDRESS,optional.get_vlr_number());
-      }
-    }
-    if(optional.has_hlr_address() && (smeFlags&sfCarrySccpInfo))
-    {
-      sms->setStrProperty(Tag::SMSC_SCCP_OA,optional.get_hlr_address());
-    }
   }
 
   if(optional.has_unknownFields())
