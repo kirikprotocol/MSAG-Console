@@ -62,21 +62,25 @@
       <td align="center"><%= getLocString("emailsme.label.transmitted_fail")%></td>
     </tr>
 <%
+  ArrayList keys = new ArrayList(statistics.keySet());
+  Collections.sort(keys);
+
   SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy");
-  for (Iterator i = statistics.entrySet().iterator(); i.hasNext();) {
-    Map.Entry entry = (Map.Entry)i.next();
-    Statistic stat = (Statistic)entry.getValue();
-    String date = formatter.format(entry.getKey());
+  for (int i=keys.size()-1; i >= 0; i--) {
+    Object key = keys.get(i);
+    String date = formatter.format(key);
     String dateHex = StringEncoderDecoder.encodeHEX(date);
+    Statistic stat = (Statistic)statistics.get(key);
+
 %>
     <tr class=row0>
-      <td><div id="p<%=dateHex%>" class="collapsing_list_<%=i.hasNext() ? "closed" : "opened"%>" onClick="toggleVisible(this, document.getElementById('c<%=dateHex%>'));"><%=date%></div></td>
+      <td><div id="p<%=dateHex%>" class="collapsing_list_<%=i>0 ? "closed" : "opened"%>" onClick="toggleVisible(this, document.getElementById('c<%=dateHex%>'));"><%=date%></div></td>
       <td align="center"><%=stat.getTotalReceivedOk()%></td>
       <td align="center"><%=stat.getTotalReceivedFail()%></td>
       <td align="center"><%=stat.getTotalTransmittedOk()%></td>
       <td align="center"><%=stat.getTotalTransmittedFail()%></td>
     </tr>
-    <tr id="c<%=dateHex%>" style="display:<%=i.hasNext() ? "none" : ""%>">
+    <tr id="c<%=dateHex%>" style="display:<%=i>0 ? "none" : ""%>">
       <td colspan=5>
         <table class=list cellspacing=0 cellpadding=0 border=0>
           <col width="60%">
