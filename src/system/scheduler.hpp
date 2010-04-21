@@ -71,6 +71,7 @@ public:
   {
     primaryFile.SetUnbuffered();
     primaryFile.WOpen(fn.c_str());
+    primaryFile.EnableDirectIO();
     primaryFile.Write(storeSig,sizeof(storeSig)-1);
     primaryFile.WriteNetInt32(storeVer);
     fileSize=0;

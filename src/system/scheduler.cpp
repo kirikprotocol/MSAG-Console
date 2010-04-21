@@ -456,15 +456,27 @@ int LocalFileStore::Execute()
       bool ok=true;
       try{
         int i=0;
-        for(IdSeqPairList::iterator it=snap.begin();it!=snap.end();it++)
+        uint64_t blockStart=getmillis();
+        //Target: 2Mb/sec
+        //Estimation: 512b/sms
+        //4000 sms/sec =~ 2Mb/sec
+        //interval 10ms -> 40/10ms
+
+        for(IdSeqPairList::iterator it=snap.begin();it!=snap.end() && running;it++)
         {
           smsc_log_debug(log,"roll:id=%lld, seq=%d",it->first,it->second);
           sched.StoreSms(it->first,it->second);
           i++;
-          if((i%200)==0)
+          if((i%40)==0)
           {
-//            Thread::Yield();
-            millisleep(10);
+            uint64_t curTime=getmillis();
+            int opTime=(int)(curTime-blockStart);
+            int sleepTime=10-opTime;
+            if(sleepTime>0)
+            {
+              millisleep(sleepTime);
+            }
+            blockStart=getmillis();
           }
         }
       }catch(exception& e)
