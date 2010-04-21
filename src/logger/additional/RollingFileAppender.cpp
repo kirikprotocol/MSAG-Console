@@ -80,6 +80,7 @@ RollingFileAppender::RollingFileAppender(const char * const _name, const Propert
     else
       file.RWCreate(filename.get());
     currentFilePos=file.Pos();
+    file.EnableDirectIO();
     //file = fopen(filename.get(), "a");
     //currentFilePos = ftell(file);
   }catch(std::exception& e)
@@ -111,11 +112,13 @@ void RollingFileAppender::rollover() throw()
       // Open a new file
       //file = fopen(filename.get(), "w");
       file.WOpen(filename.get());
+      file.EnableDirectIO();
     } else {
       //fclose(file);
       //file = fopen(filename.get(), "w");
       file.Close();
       file.WOpen(filename.get());
+      file.EnableDirectIO();
     }
   }catch(std::exception& e)
   {
@@ -160,7 +163,7 @@ void RollingFileAppender::log(timeval tp,const char logLevelName, const char * c
       if (currentFilePos > maxFileSize)
         rollover();
     }
-    
+
   } catch(std::exception& e)
   {
     fprintf(stderr,"EXCEPTION IN LOGGER:%s\n",e.what());
