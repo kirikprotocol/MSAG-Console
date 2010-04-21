@@ -143,7 +143,7 @@ inline void fillOptionalMsag(SmppOptional& optional,SMS* sms)
     const uint32_t umr = sms->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
     if (umr & 0x80000000) {
         // smpp+
-        optional.set_ussd_session_id(umr);
+        optional.set_ussd_session_id(umr & 0x7fffffff);
         if(sms->hasStrProperty(Tag::SMSC_IMSI_ADDRESS)) //  && (smeFlags&sfCarryOrgDescriptor))
         {
             optional.set_imsi(sms->getStrProperty(Tag::SMSC_IMSI_ADDRESS).c_str());
