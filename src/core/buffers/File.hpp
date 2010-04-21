@@ -900,6 +900,27 @@ public:
     }
   }
 
+  int FSync()
+  {
+    Check();
+    return fsync(fd);
+  }
+
+  void EnableDirectIO()
+  {
+#ifdef __SunOS
+    directio(fd,DIRECTIO_ON);
+#endif
+  }
+
+  void DisableDirectIO()
+  {
+#ifdef __SunOS
+    directio(fd,DIRECTIO_OFF);
+#endif
+  }
+
+
   void setMaxFlushSpeed(int mxflsp)
   {
     maxFlushSpeed=mxflsp;
