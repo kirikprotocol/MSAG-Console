@@ -3,6 +3,7 @@
 
 #include <ctime>
 #include <sys/time.h>
+#include "util/int.h"
 
 namespace smsc {
 namespace util {
