@@ -604,3 +604,6 @@ TO ALL: Insert log record for all significant changes & fixes here.
 
 2010-04-16 11:47 bukind
   msag: feature: separate live time for ussd operation
+
+2010-04-21 12:30 bukind
+  msag: feature: smpp+ support in ussd
