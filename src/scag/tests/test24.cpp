@@ -26,9 +26,9 @@ void writeLog( int fd,
                const char* receipt )
 {
     char buf[200];
-    int n = sprintf(buf,"%u,%u,%u,%u,%s,%llx,%s\n",state,msgId,regionId,textId,userdata,msgpos,receipt);
+    int n = std::sprintf(buf,"%u,%u,%u,%u,%s,%llx,%s\n",state,msgId,regionId,textId,userdata,msgpos,receipt);
     if ( write(fd,buf,n) < 0 ) {
-        fprintf(stderr,"write failed: %d\n",errno);
+        std::fprintf(stderr,"write failed: %d\n",errno);
         std::terminate();
     }
 }
@@ -43,13 +43,13 @@ void readLog( const char* buf, size_t buflen )
     uint64_t msgpos;
     char userdata[64];
     char receipt[128];
-    sscanf(buf,"%u,%u,%u,%u,%[^,]s,%llx,%s",&state,&msgId,&regionId,&textId,userdata,&msgpos,receipt);
+    std::sscanf(buf,"%u,%u,%u,%u,%[^,]s,%llx,%s",&state,&msgId,&regionId,&textId,userdata,&msgpos,receipt);
 }
 
 
 void usage( const char* prog )
 {
-    fprintf( stderr, "usage: %s (r|w) FILENAME\n",prog);
+    std::fprintf( stderr, "usage: %s (r|w) FILENAME\n",prog);
     std::terminate();
 }
 
@@ -64,17 +64,17 @@ int main( int argc, char** argv )
     }
 
     bool reading;
-    if ( strchr(argv[1],'r') ) {
+    if ( std::strchr(argv[1],'r') ) {
         // reading
         reading = true;
-    } else if ( strchr(argv[1],'w') ) {
+    } else if ( std::strchr(argv[1],'w') ) {
         reading = false;
     } else {
         usage(argv[0]);
     }
 #if defined(sun)
     bool usedirectio;
-    if ( strchr(argv[1],'d') ) {
+    if ( std::strchr(argv[1],'d') ) {
         usedirectio = true;
     } else {
         usedirectio = false;
@@ -90,7 +90,7 @@ int main( int argc, char** argv )
         // reading
         int fd = open(fname,O_RDONLY);
         if ( fd < 0 ) {
-            fprintf(stderr,"cannot open %s for reading: %d\n",fname,fd);
+            std::fprintf(stderr,"cannot open %s for reading: %d\n",fname,fd);
             std::terminate();
         }
 #if defined(sun)        
@@ -107,14 +107,14 @@ int main( int argc, char** argv )
             char* buf = rbuf+rpos;
             ssize_t n = read(fd,buf,std::min(prefsize,sizeof(rbuf)-rpos));
             if ( n == -1 ) {
-                fprintf(stderr,"read failed: %d\n",n);
+                std::fprintf(stderr,"read failed: %d\n",errno);
                 break;
             } else if ( n == 0 ) {
-                fprintf(stderr,"eof\n");
+                std::fprintf(stderr,"eof\n");
                 break;
             }
             char* np;
-            while ( (np = static_cast<char*>(memchr(buf,'\n',n))) ) {
+            while ( (np = static_cast<char*>(std::memchr(buf,'\n',n))) ) {
                 *np = '\0';
                 size_t delta = np - buf;
                 if ( nrecords ) {
@@ -128,7 +128,7 @@ int main( int argc, char** argv )
                 if ( n == 0 ) break;
             }
             if (n>0) {
-                memmove(rbuf,buf,n);
+                std::memmove(rbuf,buf,n);
             }
             rpos = n;
         }
@@ -137,7 +137,7 @@ int main( int argc, char** argv )
         // writing
         int fd = open(fname,O_CREAT|O_TRUNC|O_WRONLY,0777);
         if ( fd < 0 ) {
-            fprintf(stderr,"cannot open %s for writing: %d\n",fname,fd);
+            std::fprintf(stderr,"cannot open %s for writing: %d\n",fname,fd);
             std::terminate();
         }
 #if defined(sun)        
@@ -146,7 +146,7 @@ int main( int argc, char** argv )
         }
 #endif
         const char* header = "#state,msgId,regId,textId,userData,msgPos,receipt\n";
-        write(fd,header,strlen(header));
+        write(fd,header,std::strlen(header));
         for ( uint32_t i = 1; i <= nrecords; ++i ) {
             const uint32_t msgId = i;
             const uint32_t regionId = i % 5 + 1;
@@ -155,10 +155,10 @@ int main( int argc, char** argv )
                 msgId % messagesPerFile;
             const uint8_t state = i % 3;
             char userdata[30];
-            sprintf(userdata,"%x%x",unsigned(i^0xcececece),unsigned(i^0xfafafafa));
+            std::sprintf(userdata,"%x%x",unsigned(i^0xcececece),unsigned(i^0xfafafafa));
             char receipt[40];
             if ( state == 2 ) {
-                sprintf(receipt,"%llx%llx",msgpos^0xfefefefefefefefeULL,i^0xababababababababULL);
+                std::sprintf(receipt,"%llx%llx",msgpos^0xfefefefefefefefeULL,i^0xababababababababULL);
             } else {
                 receipt[0] = '\0';
             }
@@ -173,6 +173,6 @@ int main( int argc, char** argv )
     const uint64_t runtime =
         (finish.tv_sec*1000ULL+finish.tv_usec/1000) -
         (start.tv_sec*1000ULL+start.tv_usec/1000);
-    printf("total running time of %s %u records: %llu msec\n",
-           reading ? "reading" : "writing", unsigned(nrecords), runtime);
+    std::printf("total running time of %s %u records: %llu msec\n",
+                reading ? "reading" : "writing", unsigned(nrecords), runtime);
 }
