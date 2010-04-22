@@ -41,5 +41,7 @@
 
 -scag/tests/testXTree  testXTree
 
-scag/tests/test21     test21
-scag/tests/test22     test22
+-scag/tests/test21     test21
+-scag/tests/test22     test22
+-scag/tests/test23     test23
+scag/tests/test24     test24
