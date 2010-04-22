@@ -541,4 +541,13 @@ B3119: Mar 17, 2010
     exportstats Add write totals feature
     Webadm	Fix distr list creation error
     emailsme	undef bodyhandle fix
-    
+
+B3120: Apr 22, 2010
+    SMSC	directio advise for scheduler and logger
+    SMSC	scheduler rolling speed limit
+    SMSC	Backup SME feature on route for undelivered messages by NO_RESP_FROM_PEER and MSC_BLOCKED 
+    SMSC	fix for replication of SME info to backup instance of SMSC
+    emailsme 	web Sort stats by date
+    emailsme	helpdesk mode answers advanced
+    emailsme 	delivery_resp with status 0 on logical errors, like invalid format of user request
+    emailsme	symbol ' can be used in subject   
