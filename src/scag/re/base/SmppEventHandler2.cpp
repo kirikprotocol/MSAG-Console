@@ -47,18 +47,20 @@ void SmppEventHandler::process( SCAGCommand& command, Session& session, RuleStat
         smsc_log_error(logger, "EventHandler: error in actions processing. Details: %s", e.what());
         rs.status = STATUS_FAILED;
     }
-    hrt.mark("ev.run");
+    // hrt.mark("ev.run");
 
     if (!session.getLongCallContext().continueExec) {
       const std::string* kw = session.getCurrentOperation() ? session.getCurrentOperation()->getKeywords() : 0;
       cp.keywords = kw ? *kw : "";
     }
 
+    /*
     if ( smppcommand.get_status() > 0) {
         rs.result = smppcommand.get_status();
         rs.status = STATUS_FAILED;
         smsc_log_debug( logger, "Command status=%d(%x) overrides RE status", rs.result, rs.result );
     }
+     */
     hrt.mark("ev.post");
     return;
 }
