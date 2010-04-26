@@ -3,7 +3,7 @@ TEMPLATE_PROPS=msag.properties.niagara.ext
 # Uncomment it to create usual build
 # Comment it to create date separated build (to track external installations)
 #BUILD_DIR=/opt/home/msag_test/distribs/upload.v1/pers.m1_13.03.2009/build2
-BUILD_DIR=/opt/home/msag_test/msag_build-20090710
+BUILD_DIR=/opt/home/msag_test/msag_build-20100423
 
 # Change it for building updates for external installations
 # DISTR_DIR=/opt/home/msag_test/distribs/msag.up
