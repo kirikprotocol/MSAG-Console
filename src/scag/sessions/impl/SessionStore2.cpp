@@ -890,7 +890,8 @@ bool SessionStoreImpl::doSessionFinalization( Session& session, bool keep )
         // session has been already finalized, so clear it up
         if (!keep) session.clear();
         carryNextCommand( session, nextcmd, false );
-        smsc_log_warn(log_,"session %p/%s is not finalized, newcmd arrived");
+        // smsc_log_warn(log_,"session %p/%s is not finalized, newcmd arrived",
+        // &session, session.sessionKey().toString().c_str());
         return false;
     } else {
         // no more commands, delete the session
