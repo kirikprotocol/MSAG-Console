@@ -36,7 +36,9 @@ endswitch
 switch SNMP
 YES: $(SNMP_LIBS_CORE) \
 endswitch
-        -lpthread -lrt -ldl
+        $(SSL_LIB) \
+        -lpthread -lrt -ldl \
+        $(LIBMALLOC)
 
 scag/tests/pvss-read-abonent-entry readEntry \
 	-lscag-pvss-profile \
