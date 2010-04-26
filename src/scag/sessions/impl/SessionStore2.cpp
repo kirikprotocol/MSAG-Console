@@ -709,7 +709,7 @@ bool SessionStoreImpl::expireSessions( std::vector<std::pair<SessionKey,time_t> 
             if ( lastaccess != newlastaccess ) {
                 ++notexpired;
                 if ( curi != expired.end() ) {
-                    retVec.push_back(*i);
+                    retVec.push_back(*curi);
                 }
                 session = 0;
                 continue;
@@ -727,7 +727,7 @@ bool SessionStoreImpl::expireSessions( std::vector<std::pair<SessionKey,time_t> 
                     // some activity on this session
                     ++notexpired;
                     if (curi != expired.end()) {
-                        retVec.push_back(*i);
+                        retVec.push_back(*curi);
                     }
                     session = 0;
                     continue;
@@ -756,7 +756,7 @@ bool SessionStoreImpl::expireSessions( std::vector<std::pair<SessionKey,time_t> 
                     // key.toString().c_str(), session );
                     ++notexpired;
                     if (curi != expired.end()) {
-                        retVec.push_back(*i);
+                        retVec.push_back(*curi);
                     }
                     session = 0;
                     continue;
