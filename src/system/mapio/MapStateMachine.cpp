@@ -1849,6 +1849,10 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
       dialog->state = MAPST_WaitUSSDErrorClose;
       checkMapReq( Et96MapDelimiterReq( dialog->ssn INSTDLGARG(dialog), dialog->dialogid_map, 0, 0 ), __func__);
       return;
+    } else {
+      dialog->state = MAPST_END;
+      DropMapDialog(dialog);
+      return;
     }
   }
 
@@ -1887,22 +1891,23 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
     mkMapAddress( &origRef, dialog->sms->getOriginatingAddress() );
     ET96MAP_IMSI_OR_MSISDN_T destRef;
     memset(&destRef,0,sizeof(destRef));
-    if( dialog->s_imsi.length() > 0 )
-    {
-      mkIMSIOrMSISDNFromIMSI( &destRef, dialog->s_imsi );
-    }
-    else
-    {
-      mkIMSIOrMSISDNFromAddress( &destRef, dialog->sms->getDestinationAddress() );
-    }
-
     if(dialog->sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP)>=smsc::sms::USSD_USSR_REQ_VLR && dialog->sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP)<=smsc::sms::USSD_USSN_REQ_LAST)
     {
+      if( dialog->s_imsi.length() > 0 )
+      {
+        mkIMSIOrMSISDNFromIMSI( &destRef, dialog->s_imsi );
+      } else {
+        SendErrToSmsc(dialog->dialogid_smsc,MAKE_ERRORCODE(CMD_ERR_PERM,Status::SYSERR),dialog->isUSSD,dialog->ussdMrRef);
+        dialog->state = MAPST_END;
+        DropMapDialog(dialog);
+        return;
+      }
       ET96MAP_SS7_ADDR_T destAddr=dialog->destMscAddr;
       destAddr.ss7Addr[1]=7;
       checkMapReq( Et96MapOpenReq( dialog->ssn INSTDLGARG(dialog), dialog->dialogid_map, &appContext, &destAddr, GetUSSDAddr(), &destRef, 0/*&origRef*/, 0/*&specificInfo*/ ), __func__);
     }else
     {
+      mkIMSIOrMSISDNFromAddress( &destRef, dialog->sms->getDestinationAddress() );
       checkMapReq( Et96MapOpenReq( dialog->ssn INSTDLGARG(dialog), dialog->dialogid_map, &appContext, &dialog->mshlrAddr, GetUSSDAddr(), &destRef, &origRef, &specificInfo ), __func__);
     }
   }
