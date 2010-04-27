@@ -864,12 +864,14 @@ void StateMachine::processSm( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* 
             break;
         }
 
+        /*
         if (st.status != re::STATUS_FAILED && cmd->get_status() > 0) {
             // this is moved from smpp handler
             st.status = re::STATUS_FAILED;
             st.result = cmd->get_status();
             smsc_log_debug(log_,"command status=%d(%x) overrides RE status",st.result,st.result);
         }
+         */
 
         if (st.status == re::STATUS_OK && ri.statistics) {
           smsc_log_debug(log_, "%s: register traffic info event, keywords='%s'", where, cp.keywords.c_str());
