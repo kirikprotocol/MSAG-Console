@@ -119,6 +119,8 @@ public:
   {
     localFileStore.Stop();
     localFileStore.WaitFor();
+    // do NOT delete these to speed-up shutdown
+    /*
     for(std::vector<StoreData*>::iterator it=storeDataPool.begin();it!=storeDataPool.end();it++)
     {
       delete *it;
@@ -139,6 +141,7 @@ public:
       it->second->Clear();
       delete it->second;
     }
+    */
   }
   int Execute();
   const char* taskName(){return "scheduler";}
