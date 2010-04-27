@@ -125,25 +125,18 @@ struct Address
     AddressValue addr_value;
     int iplan,itype;
     memset(addr_value,0,sizeof(addr_value));
-    int scanned = sscanf(text,".5.0.%20s",
-      addr_value);
-    if(scanned==1)
+    int scanned = sscanf(text,".5.%d.%20s",
+      &iplan,addr_value);
+    if(scanned==2)
     {
       itype=5;
-      iplan=0;
+      scanned=1;
     }else
     {
-      scanned = sscanf(text,".%d.1.%20[0123456789?]s",&itype,addr_value);
-      if(scanned==2)
+      scanned = sscanf(text,".%d.%d.%20[0123456789?]s",&itype,&iplan,addr_value);
+      if(scanned==3)
       {
-        iplan=1;
         scanned=1;
-        if( itype!=0 && itype!=1)
-        {
-          char buf[32];
-          sprintf(buf,"invalid ton=%d",itype);
-          throw runtime_error(buf);
-        }
       }
     }
     if ( scanned != 1 )
