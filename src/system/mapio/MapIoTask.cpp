@@ -66,7 +66,7 @@ extern "C" {
   {
     __map_warn2__("%s: confirmation received ssn=%d rinst=%d status=%d",__func__,lssn,INSTARG0(rinst),status);
     bool isBound=false;
-    if( status == 0  || status==1)
+    if( status == 0  /*|| status==1*/)//already bound is error
     {
       for( int i = 0; i < MapDialogContainer::numLocalSSNs; i++ )
       {
@@ -981,8 +981,10 @@ int MapIoTask::Execute()
       continue;
     }
     didx=255;
-    if(message.primitive!=MAP_BIND_CONF && message.primitive!=MAP_STATE_IND &&
-       message.primitive!=MAP_GET_AC_VERSION_CONF)
+    if(message.primitive==MAP_BIND_CONF && message.primitive==MAP_STATE_IND)
+    {
+      didx=0;
+    }else if(message.primitive!=MAP_GET_AC_VERSION_CONF)
     {
       ET96MAP_DIALOGUE_ID_T dlgId=((ET96MAP_DIALOGUE_ID_T)message.msg_p[2])|(((ET96MAP_DIALOGUE_ID_T)message.msg_p[3])<<8);
         //(message.msg_p[2]<<8)| message.msg_p[3];
