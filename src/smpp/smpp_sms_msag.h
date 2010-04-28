@@ -138,10 +138,12 @@ inline void fillOptionalMsag(SmppOptional& optional,SMS* sms)
     optional.set_sccp_da(sms->getStrProperty(Tag::SMSC_SCCP_DA).c_str());
   }
 
-  if(sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
-  {
-    const uint32_t umr = sms->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
-    if (umr & 0x80000000) {
+    uint32_t umr = 0;
+    if (sms->hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE)) {
+        umr = sms->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
+    }
+    if ((umr & 0x80000000) && (sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
+    {
         // smpp+
         optional.set_ussd_session_id(umr & 0x7fffffff);
         if(sms->hasStrProperty(Tag::SMSC_IMSI_ADDRESS)) //  && (smeFlags&sfCarryOrgDescriptor))
@@ -162,7 +164,9 @@ inline void fillOptionalMsag(SmppOptional& optional,SMS* sms)
         }
     } else {
         // smpp NOT +
-        optional.set_userMessageReference(umr);
+        if ( sms->hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE) ) {
+            optional.set_userMessageReference(umr);
+        }
         if ( sms->hasStrProperty(Tag::SMSC_IMSI_ADDRESS)) 
         {
             optional.set_imsi_address(sms->getStrProperty(Tag::SMSC_IMSI_ADDRESS).c_str());
@@ -176,7 +180,6 @@ inline void fillOptionalMsag(SmppOptional& optional,SMS* sms)
             optional.set_sccp_oa(sms->getStrProperty(Tag::SMSC_SCCP_OA).c_str());
         }
     }
-  }
 
   if(sms->hasIntProperty(Tag::SMPP_ITS_SESSION_INFO))
   {
