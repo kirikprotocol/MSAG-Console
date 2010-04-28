@@ -142,7 +142,7 @@ inline void fillOptionalMsag(SmppOptional& optional,SMS* sms)
     if (sms->hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE)) {
         umr = sms->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
     }
-    if ((umr & 0x80000000) && (sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
+    if ((umr & 0x80000000) && (sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP)))
     {
         // smpp+
         optional.set_ussd_session_id(umr & 0x7fffffff);
