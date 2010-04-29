@@ -515,7 +515,7 @@ void CancelCmd(SmppSession& ss,const string& args)
   q.get_dest().set_numberingPlan(s.getDestinationAddress().plan);
   q.get_dest().set_value(s.getDestinationAddress().value);
   //printf("Cancelling:%s\n",resp->get_messageId());*/
-  SmppTransmitter* tr=ss.getSyncTransmitter();
+  SmppTransmitter* tr=ss.getAsyncTransmitter();
   PduCancelSmResp *cresp=tr->cancel(q);
   if(cresp)
   {
@@ -1535,13 +1535,26 @@ public:
         {
           s.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,USSD_PSSR_RESP);
         }
-        PduSubmitSm sm;
-        sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
-        fillSmppPduFromSms(&sm,&s,0);
-        atrans->submit(sm);
-        if(!silent)
+        if(dataSm)
         {
-          IncomOut("Autoanswered: seq=%d\n",sm.get_header().get_sequenceNumber());
+          PduDataSm sm;
+          sm.get_header().set_commandId(SmppCommandSet::DATA_SM);
+          fillDataSmFromSms(&sm,&s,0);
+          atrans->data(sm);
+          if(!silent)
+          {
+            IncomOut("Autoanswered: seq=%d\n",sm.get_header().get_sequenceNumber());
+          }
+        }else
+        {
+          PduSubmitSm sm;
+          sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
+          fillSmppPduFromSms(&sm,&s,0);
+          atrans->submit(sm);
+          if(!silent)
+          {
+            IncomOut("Autoanswered: seq=%d\n",sm.get_header().get_sequenceNumber());
+          }
         }
       }
 
