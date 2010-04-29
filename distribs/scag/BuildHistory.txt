@@ -623,13 +623,13 @@ TO ALL: Insert log record for all significant changes & fixes here.
   msag: bugfix: umr was lost for non-ussd PDUs
 
 =================================================================================================================
-2010-04-29 13:30 bukind msag-build-20100429
+2010-04-29 17:56 bukind msag-build-20100429
 2010-04-29 13:30 bukind
   msag: bugfix: old-style check of umr validity (<0 instead of ==-1)
-
---- current fixes ---
 2010-04-29 16:00 bukind
   msag: bugfix: dir uninited at returning from resp long-call
   msag: bugfix: ussd_session_id in now ignored if no ussdServiceOp present
 2010-04-29 17:37 bukind
   msag: bugfix: rerouted smpp cmds should not have continueExec
+
+--- current fixes ---
