@@ -204,6 +204,7 @@ void RuleEngineImpl::process( SCAGCommand& command, Session& session, RuleStatus
         if ( session.getLongCallContext().continueExec ) {
             // take rule from action context
             __require__( session.getLongCallContext().getActionContext() );
+            smsc_log_debug(logger,"taking rule from actionContext");
             rulePtr = session.getLongCallContext().getActionContext()->getRule();
         } else {
             Rule** rp = rulesRef.rules->rules.GetPtr(key);
@@ -266,6 +267,7 @@ void RuleEngineImpl::process( SCAGCommand& command, Session& session, RuleStatus
         // session.getLongCallContext().continueExec = true;
         session.getLongCallContext().getActionContext()->setRule( *rulePtr );
     } else {
+        session.getLongCallContext().continueExec = false;
         hrt.mark("re.post");
     }
     // else 

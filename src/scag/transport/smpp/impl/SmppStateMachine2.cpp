@@ -784,6 +784,7 @@ void StateMachine::processSm( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* 
             sms.setSourceSmeId(src->getSystemId());
             sms.setDestinationSmeId(dst->getSystemId());
             cmd->setServiceId(ri.serviceId);
+            smscmd.setRouteInfo( ri );
             
             if ( cmd->getCommandId() == DATASM ) {
                 if(src->info.type==etService)
@@ -810,7 +811,6 @@ void StateMachine::processSm( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* 
                        routeId.c_str(),
                        ri.transit ? "(transit)" : "");
 
-        if ( ! routeset ) smscmd.setRouteInfo( ri );
         const bool keyisdest = ( cmd->getCommandId() == SUBMIT ? true :
                            ( cmd->getCommandId() == DELIVERY ? false :
                              ( src->info.type == etService ? true : false )));
@@ -850,6 +850,12 @@ void StateMachine::processSm( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* 
             return;
         }
 
+        if (session.get()) {
+            // a fix for brain-dead longcall realization not clearing continueExec
+            smsc_log_debug(log_,"forcing no longcall");
+            session->getLongCallContext().continueExec = false;
+        }
+
         if ( hrt.mark("stm.rerule") > 100000 ) hrt.comment("/HRTWARN");
 
         routeset = false; // in case rerouting happens
@@ -864,15 +870,6 @@ void StateMachine::processSm( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* 
             st.result = smsc::system::Status::NOROUTE;
             break;
         }
-
-        /*
-        if (st.status != re::STATUS_FAILED && cmd->get_status() > 0) {
-            // this is moved from smpp handler
-            st.status = re::STATUS_FAILED;
-            st.result = cmd->get_status();
-            smsc_log_debug(log_,"command status=%d(%x) overrides RE status",st.result,st.result);
-        }
-         */
 
         if (st.status == re::STATUS_OK && ri.statistics) {
           smsc_log_debug(log_, "%s: register traffic info event, keywords='%s'", where, cp.keywords.c_str());

@@ -50,7 +50,8 @@ void SmppOperationMaker::process( re::RuleStatus& st, scag2::re::actions::Comman
             setupOperation( st, cp );
             hrt.mark("opmk.mkop");
             if ( st.status == re::STATUS_OK ) {
-                smsc_log_debug(log_, "%s: RuleEngine processing...", where_ );            
+                smsc_log_debug(log_, "%s: RuleEngine processing..., continueExec=%u",
+                               where_, session_->getLongCallContext().continueExec ? 1 : 0);
                 where = "process";
                 re::RuleEngine::Instance().process( *cmd_.get(), *session_.get(), st, cp, &hrt );
                 hrt.mark("opmk.exec");
@@ -121,7 +122,7 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st,
         const std::string* kw = op->getKeywords();
         if ( kw && !kw->empty() ) { cp.keywords = *kw; }
 
-        session_->getLongCallContext().continueExec = true;
+        // session_->getLongCallContext().continueExec = true;
         smsc_log_debug( log_, "cmd=%p continue op=%p opid=%d type=%d(%s) (no preprocess)",
                         cmd_.get(), op, cmd_->getOperationId(),
                         op->type(), commandOpName(op->type()) );
