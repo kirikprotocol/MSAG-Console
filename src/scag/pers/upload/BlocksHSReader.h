@@ -102,14 +102,14 @@ public:
       addresses.push_back(Key(".1.1.21000001231"));
       addresses.push_back(Key(".1.1.254"));
 
-      straddresses.push_back(".1.1.5434990229");
+      //straddresses.push_back(".1.1.5434990229");
       straddresses.push_back(".1.1.21000000022");
       straddresses.push_back(".1.1.21000000823");
-      straddresses.push_back(".1.1.21000001142");
-      straddresses.push_back(".1.1.21000001148");
-      straddresses.push_back(".1.1.21000001149");
-      straddresses.push_back(".1.1.21000001230");
-      straddresses.push_back(".1.1.21000001231");
+      //straddresses.push_back(".1.1.21000001142");
+      //straddresses.push_back(".1.1.21000001148");
+      //straddresses.push_back(".1.1.21000001149");
+      //straddresses.push_back(".1.1.21000001230");
+      //straddresses.push_back(".1.1.21000001231");
       straddresses.push_back(".1.1.254");
     }
 
