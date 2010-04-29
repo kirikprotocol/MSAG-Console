@@ -947,7 +947,7 @@ void SmppCommandAdapter::writeSmField(int fieldId,AdapterProperty& property)
     } else {
 
         switch (fieldId) {
-        case smsc::sms::Tag::SMPP_USER_MESSAGE_REFERENCE:
+        case smsc::sms::Tag::SMPP_USER_MESSAGE_REFERENCE: {
             uint32_t flag = 0;
             if ( data.hasIntProperty(fieldId) ) {
                 flag = data.getIntProperty(fieldId) & 0x80000000;
@@ -955,6 +955,7 @@ void SmppCommandAdapter::writeSmField(int fieldId,AdapterProperty& property)
             const uint32_t umr = (uint32_t(property.getInt()) & 0x7fffffff) | flag;
             data.setIntProperty(fieldId,umr);
             break;
+        }
         case smsc::sms::Tag::SMPP_SM_LENGTH:
         case smsc::sms::Tag::SMPP_USER_RESPONSE_CODE:
         case smsc::sms::Tag::SMPP_LANGUAGE_INDICATOR:
