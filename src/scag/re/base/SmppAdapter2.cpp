@@ -948,12 +948,13 @@ void SmppCommandAdapter::writeSmField(int fieldId,AdapterProperty& property)
 
         switch (fieldId) {
         case smsc::sms::Tag::SMPP_USER_MESSAGE_REFERENCE:
-            // was fixme: should we also set session UMR?
-            // if ( ! command.getSession() )
-            // throw SCAGException( "command has no session to change umr in" );
-            // if ( command.getSession()->getUSSDref() != -1 ) {
-            // command.getSession()->setUSSDref( unsigned(property.getInt()) );
-            // }
+            uint32_t flag = 0;
+            if ( data.hasIntProperty(fieldId) ) {
+                flag = data.getIntProperty(fieldId) & 0x80000000;
+            }
+            const uint32_t umr = (uint32_t(property.getInt()) & 0x7fffffff) | flag;
+            data.setIntProperty(fieldId,umr);
+            break;
         case smsc::sms::Tag::SMPP_SM_LENGTH:
         case smsc::sms::Tag::SMPP_USER_RESPONSE_CODE:
         case smsc::sms::Tag::SMPP_LANGUAGE_INDICATOR:
