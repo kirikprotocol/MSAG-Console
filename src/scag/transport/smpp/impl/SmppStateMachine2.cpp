@@ -556,6 +556,7 @@ void StateMachine::processSmResp( std::auto_ptr<SmppCommand> aucmd,
 
             dst = cmd->getDstEntity();
             sms = cmd->get_resp()->getOrgCmd()->get_sms();
+            if ( dir == dsdUnknown ) dir = cmd->get_resp()->getOrgCmd()->get_smsCommand().dir;
 
         }
 

@@ -280,16 +280,17 @@ std::auto_ptr<SmppCommand> SmppCommand::makeCommand(CommandId cmdId,uint32_t dia
 }
 
 
-/*
 template <class Pdu> inline void dumpPdu( smsc::logger::Logger* logg,
                                           const char* fmt,
                                           const Pdu*  pdu )
 {
+    /*
     if (logg->isDebugEnabled()) {
         util::PrintStdString dump;
         const_cast<Pdu*>(pdu)->dump(&dump);
         smsc_log_debug(logg,fmt,dump.buf());
     }
+     */
 }
 
 
@@ -297,6 +298,7 @@ void dumpSms( smsc::logger::Logger* logg,
               const char* where,
               SMS* sms )
 {
+    /*
     if (!logg->isDebugEnabled()) return;
     util::HexDump hd;
     util::HexDump::string_type dump;
@@ -307,16 +309,20 @@ void dumpSms( smsc::logger::Logger* logg,
     smsc_log_debug(logg,"sms %s: sz=%u %s %s",
                    where, unsigned(body.getBufferLength()),
                    hd.c_str(dump), pss.buf());
+     */
 }
- */
 
 
 void SmppCommand::makeSMSBody(SMS* sms,const SmppHeader* pdu)
 {
     const PduXSm* xsm = reinterpret_cast<const PduXSm*>(pdu);
-    // dumpPdu(log_,"pduXsm at input: %s",xsm);
+    if (log_->isDebugEnabled()) {
+        dumpPdu(log_,"pduXsm at input: %s",xsm);
+    }
     fetchSmsFromSmppPduMsag((PduXSm*)xsm,sms);
-    // dumpSms(log_,"after conversion",sms);
+    if (log_->isDebugEnabled()) {
+        dumpSms(log_,"after conversion",sms);
+    }
     SMS &s=*sms;
     if(s.getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)!=0x3 && s.getIntProperty(Tag::SMPP_ESM_CLASS)&0x40)
     {
@@ -674,8 +680,14 @@ SCAGCommand(), _SmppCommand()
                 cmdid_ = DATASM;
                 PduDataSm* dsm = reinterpret_cast<PduDataSm*>(pdu);
                 dta_ = new SmsCommand;
+                if (log_->isDebugEnabled()) {
+                    dumpPdu(log_,"cmdctor: %s",dsm);
+                }
                 if ( !fetchSmsFromDataSmPduMsag( dsm, get_sms()) )
                     throw smsc::util::Exception("Invalid data coding");
+                if (log_->isDebugEnabled()) {
+                    dumpSms(log_,"after conversion:",get_sms());
+                }
                 get_sms()->setIntProperty(Tag::SMPP_DATA_SM,1);
                 shared_ = & get_smsCommand();
                 goto end_construct;
@@ -873,9 +885,13 @@ SmppHeader* SmppCommand::makePdu()
             auto_ptr<PduXSm> xsm(new PduXSm);
             xsm->header.set_commandId(SmppCommandSet::SUBMIT_SM);
             xsm->header.set_sequenceNumber(get_dialogId());
-            // dumpSms(log_,"before conversion",get_sms());
+            if (log_->isDebugEnabled()) {
+                dumpSms(log_,"before conversion",get_sms());
+            }
             fillSmppPduFromSmsMsag(xsm.get(), get_sms());
-            // dumpPdu(log_,"makePdu (submit): %s",xsm.get());
+            if (log_->isDebugEnabled()) {
+                dumpPdu(log_,"makePdu (submit): %s",xsm.get());
+            }
             return reinterpret_cast<SmppHeader*>(xsm.release());
         }
     case DELIVERY:
@@ -884,18 +900,28 @@ SmppHeader* SmppCommand::makePdu()
                 auto_ptr<PduDataSm> xsm(new PduDataSm);
                 xsm->header.set_commandId(SmppCommandSet::DATA_SM);
                 xsm->header.set_sequenceNumber(get_dialogId());
+                if (log_->isDebugEnabled()) {
+                    dumpSms(log_,"before conversion",get_sms());
+                }
                 fillDataSmFromSmsMsag(xsm.get(),get_sms());
+                if (log_->isDebugEnabled()) {
+                    dumpPdu(log_,"makePdu (datasm): %s",xsm.get());
+                }
                 return reinterpret_cast<SmppHeader*>(xsm.release());
             } else {
                 auto_ptr<PduXSm> xsm(new PduXSm);
                 xsm->header.set_commandId(SmppCommandSet::DELIVERY_SM);
                 xsm->header.set_sequenceNumber(get_dialogId());
-                // dumpSms(log_,"before conversion",get_sms());
+                if (log_->isDebugEnabled()) {
+                    dumpSms(log_,"before conversion",get_sms());
+                }
                 fillSmppPduFromSmsMsag(xsm.get(),get_sms());
                 xsm->message.set_scheduleDeliveryTime("");
                 xsm->message.set_validityPeriod("");
                 xsm->message.set_replaceIfPresentFlag(0);
-                // dumpPdu(log_,"makePdu (delivery): %s",xsm.get());
+                if (log_->isDebugEnabled()) {
+                    dumpPdu(log_,"makePdu (delivery): %s",xsm.get());
+                }
                 return reinterpret_cast<SmppHeader*>(xsm.release());
             }
         }
@@ -954,7 +980,13 @@ SmppHeader* SmppCommand::makePdu()
             auto_ptr<PduDataSm> xsm(new PduDataSm);
             xsm->header.set_commandId(SmppCommandSet::DATA_SM);
             xsm->header.set_sequenceNumber(get_dialogId());
+            if (log_->isDebugEnabled()) {
+                dumpSms(log_,"before conversion",get_sms());
+            }
             fillDataSmFromSmsMsag(xsm.get(),get_sms());
+            if (log_->isDebugEnabled()) {
+                dumpPdu(log_,"makePdu (datasm): %s",xsm.get());
+            }
             return reinterpret_cast<SmppHeader*>(xsm.release());
         }
     case DATASM_RESP:
