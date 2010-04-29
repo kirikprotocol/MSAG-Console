@@ -437,7 +437,7 @@ inline void fetchOptionalsMsag(SmppOptional& optional,SMS* sms)
     sms->setIntProperty(Tag::SMPP_ITS_SESSION_INFO,val);
   }
 
-  if(optional.has_ussd_session_id())
+  if(optional.has_ussd_session_id() && optional.has_ussdServiceOp())
   {
       // smpp+
       sms->setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,
