@@ -738,7 +738,7 @@ void StateMachine::processSm( std::auto_ptr<SmppCommand> aucmd, util::HRTiming* 
 
         if ( ! routeset ) {
 
-            if ( rcnt > 0 && ussd_op >= 0 ) {
+            if ( rcnt > 0 && ussd_op != -1 ) {
                 smsc_log_warn(log_, "%s(USSD): Rerouting for USSD dialog not allowed",
                               where );
                 ri = router::RouteInfo();

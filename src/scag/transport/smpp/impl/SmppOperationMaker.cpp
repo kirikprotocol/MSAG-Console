@@ -144,9 +144,9 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st,
     bool wantOpenUSSD = false;
     bool isUSSDClosed = false;
 
-    int8_t ussd_op = 
+    const int ussd_op = 
         sms->hasIntProperty(smsc::sms::Tag::SMPP_USSD_SERVICE_OP) ?
-        int8_t(sms->getIntProperty(smsc::sms::Tag::SMPP_USSD_SERVICE_OP)) : int8_t(-1);
+        int(sms->getIntProperty(smsc::sms::Tag::SMPP_USSD_SERVICE_OP)) : -1;
 
     // fix for ussd_op == 35 is already applied in state machine
 
@@ -501,12 +501,15 @@ void SmppOperationMaker::postProcess( re::RuleStatus& st,
     const opid_type opid = cmd_->getOperationId();
     do { // fake loop
 
-        Operation* op = session_->getCurrentOperation();
         if ( st.status == re::STATUS_LONG_CALL ) {
             what = "gone to longcall";
             break;
+        } else if ( st.status == re::STATUS_FAILED ) {
+            what = "failed already";
+            break;
         }
 
+        Operation* op = session_->getCurrentOperation();
         if ( ! op ) {
             st.status = re::STATUS_FAILED;
             st.result = smsc::system::Status::SYSERR;
