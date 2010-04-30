@@ -17,8 +17,8 @@
       response.sendRedirect("messages.jsp?taskId=" + bean.getId() + "&initialized=true");
       return;
     case TaskEdit.RESULT_STATISTICS:
-      response.sendRedirect("stat.jsp?taskId=" + bean.getId() +"&fromDate="+(bean.getStartDate() == null ? "" : bean.getStartDate())
-          + "&tillDate="+(bean.getEndDate() == null ? "" : bean.getEndDate()) + "&initialized=true");
+      response.sendRedirect("stat.jsp?taskId=" + bean.getId() +"&fromDate="+URLEncoder.encode(bean.getStartDate() == null ? "" : bean.getStartDate())
+          + "&tillDate="+URLEncoder.encode(bean.getEndDate() == null ? "" : bean.getEndDate()) + "&initialized=true");
       return;
 		default:{%><%@ include file="inc/menu_switch.jsp"%><%}
 	}
