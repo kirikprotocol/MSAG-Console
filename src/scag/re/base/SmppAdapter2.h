@@ -73,6 +73,7 @@ class SmppCommandAdapter : public CommandAccessor
             USSD_PSSR_RESP          = 142,
             USSD_USSR_CONF          = 143,
             USSD_USSN_CONF          = 144,
+            // FIXME: TODO: add necessary fields for USSD_XXX_SMPP+
 
             ST_ENROUTE              = 145,
             ST_DELIVERED            = 146, 
