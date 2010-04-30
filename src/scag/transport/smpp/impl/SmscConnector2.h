@@ -41,13 +41,14 @@ public:
   }
   void shutdown()
   {
-    active=false;
+      active=false;
+      tp.shutdown();
   }
   const std::string& getBindHost()
   {
     return bindHost;
   }
-protected:
+private:
   smsc::logger::Logger* log;
   ThreadPool tp;
   SmppSMInterface* sm;
