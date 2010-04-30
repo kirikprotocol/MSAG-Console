@@ -189,12 +189,17 @@ void SessionManagerImpl::Stop()
         if ( store_.get() ) {
             store_->stop();
 
+            smsc_log_debug(log_,"store is signalled to stop");
+
             unsigned sessionLockedCount = 0;
             for ( int passes = 0; ; ) {
 
                 unsigned sessionCount, sessionLoadedCount, newSessionLockedCount;
                 store_->getSessionsCount( sessionCount, sessionLoadedCount,
                                           newSessionLockedCount );
+                smsc_log_debug(log_,"session count pass=%u tot/ldd/lck=%u/%u/%u",
+                               passes,
+                               sessionCount,sessionLoadedCount,newSessionLockedCount);
                 if ( newSessionLockedCount == 0 ) break;
                 if ( sessionLockedCount == newSessionLockedCount )
                     ++passes;

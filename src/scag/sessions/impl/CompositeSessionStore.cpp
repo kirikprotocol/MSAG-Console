@@ -208,7 +208,6 @@ void CompositeSessionStore::getSessionsCount( unsigned& sessionsCount,
                                               unsigned& sessionsLoadedCount,
                                               unsigned& sessionsLockedCount ) const
 {
-    if ( stopped_ ) return;
     sessionsCount = totalSessions_->getValue();
     sessionsLoadedCount = loadedSessions_->getValue();
     sessionsLockedCount = lockedSessions_->getValue();
