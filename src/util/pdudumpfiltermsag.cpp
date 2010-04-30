@@ -20,13 +20,27 @@ void putnet(vector<char>& pdu,int val)
 int main(int argc,char* argv[])
 {
   Logger::initForTest( Logger::LEVEL_INFO );
-  if(argc!=3)
+  FILE* in;
+  FILE* out;
+  if(argc==1)
   {
-    printf("usage: pdudumpfilter infile outfile\n");
+      in = stdin;
+      out = stdout;
+  } else if (argc==2)
+  {
+      in = fopen(argv[1],"rt");
+      out = stdout;
+  } else if (argc==3)
+  {
+      in = fopen(argv[1],"rt");
+      out = fopen(argv[2],"rt");
+  } else
+  {
+    printf("usage: pdudumpfiltermsag [infile [outfile]]\n");
     return -1;
   }
-  FILE *in=fopen(argv[1],"rt");
-  FILE *out=fopen(argv[2],"wt");
+  // FILE *in=fopen(argv[1],"rt");
+  // FILE *out=fopen(argv[2],"wt");
   RegExp::InitLocale();
   RegExp re;
   re.Compile("/smpp\\.dmp[^:]*:[^:]+[\\d\\.]+:[^:]+: ([\\dabcdef])/",OP_PERLSTYLE|OP_OPTIMIZE);
@@ -82,7 +96,7 @@ int main(int argc,char* argv[])
       }
     }
   }
-  fclose(in);
-  fclose(out);
+  if (in != stdin) {fclose(in);}
+  if (out != stdout) {fclose(out);}
   return 0;
 }
