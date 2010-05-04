@@ -1857,7 +1857,8 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
   }
 
   int serviceOp = dialog->sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP);
-  if( serviceOp == USSD_USSR_REQ || serviceOp==USSD_USSR_REQ_LAST)
+  if( serviceOp == USSD_USSR_REQ || serviceOp==USSD_USSR_REQ_LAST ||
+      serviceOp==USSD_USSR_REQ_VLR || serviceOp==USSD_USSR_REQ_VLR_LAST)
   {
     dialog->state = MAPST_WaitUSSDReqConf;
   } else
@@ -1876,7 +1877,8 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
     specificInfo.specificData[2] = dialog->m_msAddr.typeOfAddress;
     memcpy( specificInfo.specificData+3, dialog->m_msAddr.address, (dialog->m_msAddr.addressLength+1)/2 );
 
-    if( serviceOp == USSD_USSR_REQ || serviceOp==USSD_USSR_REQ_LAST)
+    if( serviceOp == USSD_USSR_REQ || serviceOp==USSD_USSR_REQ_LAST ||
+        serviceOp==USSD_USSR_REQ_VLR || serviceOp==USSD_USSR_REQ_VLR_LAST)
     {
       dialog->state = MAPST_WaitUSSDReqOpenConf;
     } else
@@ -1926,6 +1928,15 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
 void MAPIO_PutCommand(const SmscCommand& cmd ){
 //  MutexGuard mapMutexGuard(mapMutex);
   MAPIO_PutCommand(cmd, 0 );
+}
+
+static bool isValidUssdOp(int serviceOp)
+{
+  return serviceOp == USSD_USSR_REQ || serviceOp == USSD_USSN_REQ ||
+      serviceOp == USSD_PSSR_RESP || serviceOp == USSD_USSR_REQ_LAST ||
+      serviceOp == USSD_USSN_REQ_LAST || serviceOp == USSD_USSR_REQ_VLR ||
+      serviceOp == USSD_USSR_REQ_VLR_LAST || serviceOp == USSD_USSN_REQ_VLR ||
+      serviceOp == USSD_USSN_REQ_VLR_LAST || serviceOp == USSD_USSREL_REQ;
 }
 
 static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
@@ -2003,9 +2014,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
           return;
         }
 
-        if(serviceOp == USSD_USSR_REQ || serviceOp == USSD_USSN_REQ ||
-           serviceOp == USSD_PSSR_RESP || serviceOp == USSD_USSR_REQ_LAST ||
-           serviceOp == USSD_USSN_REQ_LAST)
+        if(isValidUssdOp(serviceOp))
         {
           if( dlg_found )
           {
@@ -2489,6 +2498,7 @@ USHORT_T Et96MapOpenConf (
     case MAPST_WaitUSSDNotifyOpenConf:
       if( openResult == ET96MAP_RESULT_NOT_OK)
       {
+        eraseUssdLock(dialog.get(), __func__);
         int err=DoProvErrorProcessing(provErrCode_p);
         if(err)
         {
@@ -2826,7 +2836,9 @@ USHORT_T Et96MapCloseInd(
             MapDialogContainer::getInstance()->reAssignDialog(dialog->instanceId,dialogueId,dialog->ssn,USSD_SSN,radtNIUSSD); // This is for network initiated sessions
             int serviceOp = dialog->sms.get()->getIntProperty( Tag::SMPP_USSD_SERVICE_OP );
             if( serviceOp == USSD_USSR_REQ || serviceOp == USSD_USSN_REQ ||
-                serviceOp == USSD_USSR_REQ_LAST || serviceOp == USSD_USSN_REQ_LAST)
+                serviceOp == USSD_USSR_REQ_LAST || serviceOp == USSD_USSN_REQ_LAST ||
+                serviceOp == USSD_USSR_REQ_VLR || serviceOp == USSD_USSR_REQ_VLR_LAST ||
+                serviceOp == USSD_USSN_REQ_VLR || serviceOp == USSD_USSN_REQ_VLR_LAST)
             {
               DoUSSDRequestOrNotifyReq(dialog.get());
             } else
