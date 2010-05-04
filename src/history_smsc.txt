@@ -551,3 +551,11 @@ B3120: Apr 22, 2010
     emailsme	helpdesk mode answers advanced
     emailsme 	delivery_resp with status 0 on logical errors, like invalid format of user request
     emailsme	symbol ' can be used in subject   
+
+B3121: May 04, 2010
+    SMSC	process bond_conf and status_ind in one thread
+    SMSC	treat 'already bound' in bind cond as error
+    SMSC	do not free memory in destructor to speed-up shutdown
+    SMSC	address constructor checks strictness lowered
+    SMSC	Fill dest ref from msisdn for HLR USDD NI, from imsi for vlr USSD NI
+    SMSC	fix for error USSD NI handling
