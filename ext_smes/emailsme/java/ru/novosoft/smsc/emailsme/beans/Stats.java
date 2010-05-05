@@ -23,7 +23,10 @@ public class Stats extends SmeBean {
   private String mbQuery;
   private StatisticsFilter filter;
   private StatisticsDataSource ds;
-  private Map stats;
+  private List stats;
+
+  private String sort = "Date";
+  private boolean initialized;
 
   public Stats() {
     long now = System.currentTimeMillis();
@@ -55,7 +58,7 @@ public class Stats extends SmeBean {
     if (result != RESULT_OK)
       return result;
 
-    if (mbQuery != null) {
+    if (mbQuery != null || initialized) {
       processQuery();
       mbQuery = null;
     }
@@ -69,7 +72,7 @@ public class Stats extends SmeBean {
     try {
       QueryResultSet rs = ds.query(query);
 
-      stats = new HashMap();
+      HashMap statsMap = new HashMap();
 
       for (Iterator iter = rs.iterator(); iter.hasNext();) {
         StatisticDataItem item = (StatisticDataItem)iter.next();
@@ -80,13 +83,30 @@ public class Stats extends SmeBean {
         cal.set(Calendar.SECOND, 0);
         cal.set(Calendar.MILLISECOND, 0);
 
-        Statistic s = (Statistic)stats.get(cal.getTime());
+        Statistic s = (Statistic)statsMap.get(cal.getTime());
         if (s == null) {
           s = new Statistic(item.getDate());
-          stats.put(cal.getTime(), s);
+          statsMap.put(cal.getTime(), s);
         }
         s.addStat(item.getHour(), item.getReceivedOk(), item.getReceivedFail(), item.getTransmitedOk(), item.getTransmitedFail());
       }
+
+      ArrayList keys = new ArrayList(statsMap.keySet());
+      final String sortStr = getSort();
+
+      Collections.sort(keys, new Comparator(){
+        public int compare(Object o1, Object o2) {
+          int res = ((Date)o1).compareTo((Date)o2);
+          if (sortStr.charAt(0) == '-')
+            res = res * -1;
+          return res;
+        }
+      });
+
+      stats = new ArrayList();
+      for (int i=0; i<keys.size(); i++)
+        stats.add(statsMap.get(keys.get(i)));
+
 
     } catch (Throwable e) {
       logger.error(e,e);
@@ -139,7 +159,23 @@ public class Stats extends SmeBean {
     this.mbQuery = mbQuery;
   }
 
-  public Map getStats() {
+  public List getStats() {
     return stats;
+  }
+
+  public String getSort() {
+    return sort;
+  }
+
+  public void setSort(String sort) {
+    this.sort = sort;
+  }
+
+  public boolean isInitialized() {
+    return initialized;
+  }
+
+  public void setInitialized(boolean initialized) {
+    this.initialized = initialized;
   }
 }

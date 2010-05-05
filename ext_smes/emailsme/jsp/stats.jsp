@@ -37,8 +37,8 @@
   page_menu_end(out);
 %>
 <%
-  java.util.Map statistics = bean.getStats();
-  if (statistics != null) {%>
+  List stats = bean.getStats();
+  if (stats != null) {%>
 <div class=content>
   <script type="text/javascript">
     function toggleVisible(p, c) {
@@ -46,7 +46,21 @@
       p.className = o ? "collapsing_list_closed"  : "collapsing_list_opened";
       c.style.display = o ? "none" : "";
     }
+    function setSort(sorting) {
+        if (sorting == "<%= bean.getSort() %>") {
+            opForm.getElementById("sort").value = "-<%= bean.getSort() %>";
+        } else {
+            opForm.getElementById("sort").value = sorting;
+        }
+
+        opForm.submit();
+
+        return false;
+    }
   </script>
+
+  <input type=hidden name=sort id="sort">
+  <input type=hidden name=initialized id="initialized" value="true">
 
   <table class=list cellspacing=0>
     <col width="60%">
@@ -55,22 +69,24 @@
     <col width="10%">
     <col width="10%">
     <tr>
-      <td><%= getLocString("emailsme.label.date")%></td>
-      <td align="center"><%= getLocString("emailsme.label.received_ok")%></td>
-      <td align="center"><%= getLocString("emailsme.label.received_fail")%></td>
-      <td align="center"><%= getLocString("emailsme.label.transmitted_ok")%></td>
-      <td align="center"><%= getLocString("emailsme.label.transmitted_fail")%></td>
+      <th>
+        <a href="javascript:setSort('Date')" <%= bean.getSort().endsWith("Date") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : "" %>
+           title="<%= getLocString("emailsme.label.date") %>"><%= getLocString("emailsme.label.date") %></a>
+      </th>
+      <th align="center"><%= getLocString("emailsme.label.received_ok")%></th>
+      <th align="center"><%= getLocString("emailsme.label.received_fail")%></th>
+      <th align="center"><%= getLocString("emailsme.label.transmitted_ok")%></th>
+      <th align="center"><%= getLocString("emailsme.label.transmitted_fail")%></th>
     </tr>
 <%
-  ArrayList keys = new ArrayList(statistics.keySet());
-  Collections.sort(keys);
+
+
 
   SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy");
-  for (int i=keys.size()-1; i >= 0; i--) {
-    Object key = keys.get(i);
-    String date = formatter.format(key);
+  for (int i=stats.size()-1; i >= 0; i--) {
+    Statistic stat = (Statistic)stats.get(i);
+    String date = formatter.format(stat.getDate());
     String dateHex = StringEncoderDecoder.encodeHEX(date);
-    Statistic stat = (Statistic)statistics.get(key);
 
 %>
     <tr class=row0>
