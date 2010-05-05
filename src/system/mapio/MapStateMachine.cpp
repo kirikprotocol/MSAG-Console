@@ -1893,12 +1893,13 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
     mkMapAddress( &origRef, dialog->sms->getOriginatingAddress() );
     ET96MAP_IMSI_OR_MSISDN_T destRef;
     memset(&destRef,0,sizeof(destRef));
-    if(dialog->sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP)>=smsc::sms::USSD_USSR_REQ_VLR && dialog->sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP)<=smsc::sms::USSD_USSN_REQ_LAST)
+    if(dialog->sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP)>=smsc::sms::USSD_USSR_REQ_VLR && dialog->sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP)<=smsc::sms::USSD_USSN_REQ_VLR_LAST)
     {
       if( dialog->s_imsi.length() > 0 )
       {
         mkIMSIOrMSISDNFromIMSI( &destRef, dialog->s_imsi );
-      } else {
+      } else
+      {
         SendErrToSmsc(dialog->dialogid_smsc,MAKE_ERRORCODE(CMD_ERR_PERM,Status::SYSERR),dialog->isUSSD,dialog->ussdMrRef);
         dialog->state = MAPST_END;
         DropMapDialog(dialog);
@@ -2103,6 +2104,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
               SendErrToSmsc(dialogid_smsc,MAKE_ERRORCODE(CMD_ERR_TEMP,Status::SYSERR));
               return;
             }
+            dialog->lastUssdMessage=serviceOp==USSD_USSR_REQ_LAST || serviceOp==USSD_USSN_REQ_LAST || serviceOp==USSD_USSR_REQ_VLR_LAST || serviceOp==USSD_USSN_REQ_VLR_LAST;
             dialog->dropChain = false;
             dialog->wasDelivered = false;
             dialog->hlrWasNotified = false;
