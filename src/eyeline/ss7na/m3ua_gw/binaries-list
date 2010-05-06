@@ -3,7 +3,8 @@ eyeline/ss7na/m3ua/m3ua_gateway           m3ua_gateway    -leyeline-ss7na-m3ua_g
       -leyeline-ss7na-m3ua_gw-mtp3 -leyeline-ss7na-m3ua_gw-mtp3-m3ua_stack -leyeline-ss7na-m3ua_gw-mtp3-m3ua_stack-messages \
       -leyeline-ss7na-m3ua_gw-mtp3-sap -leyeline-ss7na-m3ua_gw-mtp3-msu_processor -leyeline-ss7na-m3ua_gw-sccp \
       -leyeline-ss7na-m3ua_gw-sccp-messages -leyeline-ss7na-m3ua_gw-sccp-router -leyeline-ss7na-m3ua_gw-sccp-sap \
-      -leyeline-ss7na-m3ua_gw-sccp-scmg -leyeline-ss7na-m3ua_gw-sccp-scmg-messages -leyeline-ss7na-common-sig \
+      -leyeline-ss7na-m3ua_gw-sccp-scmg -leyeline-ss7na-m3ua_gw-sccp-scmg-messages -leyeline-ss7na-m3ua_gw-lm_subsystem \
+      -leyeline-ss7na-m3ua_gw-lm_subsystem-lm_commands -leyeline-ss7na-common-lm_subsystem -leyeline-ss7na-common-sig \
       -leyeline-utilx -leyeline-ss7na-m3ua_gw-runtime_cfg -leyeline-ss7na-libsccp-messages -leyeline-ss7na-common-sccp_sap \
       -leyeline-ss7na-common-io_dispatcher -leyeline-ss7na-common -leyeline-sccp -leyeline-util -leyeline-corex-io-network \
       -leyeline-corex-io -leyeline-utilx-runtime_cfg -leyeline-utilx -L$(SMSC_BUILDDIR)/bin -llogger -lutil-config -lutil-xml \
