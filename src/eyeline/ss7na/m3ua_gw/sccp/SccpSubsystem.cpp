@@ -1,11 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
 #include <netinet/in.h>
 
 #include "util/Exception.hpp"
-#include "eyeline/utilx/strtol.hpp"
 #include "eyeline/utilx/runtime_cfg/RuntimeConfig.hpp"
 
 #include "eyeline/ss7na/common/sccp_sap/ProtocolStates.hpp"
@@ -39,9 +37,6 @@ namespace eyeline {
 namespace ss7na {
 namespace m3ua_gw {
 namespace sccp {
-
-utilx::ThreadSpecificData<bool>
-SccpSubsystem::_threadScopeModificationFlag;
 
 SccpSubsystem::SccpSubsystem()
   : common::ApplicationSubsystem("SccpSubsystem", "sccp")
@@ -81,21 +76,11 @@ SccpSubsystem::initialize(utilx::runtime_cfg::RuntimeConfig& rconfig)
   PolicyRegistry<SCCPUserSelectPolicy>::init();
   SLSGenerator::init();
 
-  runtime_cfg::RuntimeConfig::getInstance().registerParameterObserver("config.commit", this);
-  runtime_cfg::RuntimeConfig::getInstance().registerParameterObserver("config.local_address", this);
-  runtime_cfg::RuntimeConfig::getInstance().registerParameterObserver("config.local_port", this);
-  runtime_cfg::RuntimeConfig::getInstance().registerParameterObserver("config.sccp_users", this);
-  runtime_cfg::RuntimeConfig::getInstance().registerParameterObserver("config.sccp_users.commit", this);
-  runtime_cfg::RuntimeConfig::getInstance().registerParameterObserver("config.sccp_users.userid", this);
-
   utilx::runtime_cfg::Parameter& listeningHostParameter = rconfig.find<utilx::runtime_cfg::Parameter>("config.local_address");
   utilx::runtime_cfg::Parameter& listeningPortParameter = rconfig.find<utilx::runtime_cfg::Parameter>("config.local_port");
 
   std::string localHost = listeningHostParameter.getValue();
-  in_port_t localPort = (in_port_t)utilx::strtol(listeningPortParameter.getValue().c_str(), (char **)NULL, 10);
-  if ( localPort == 0 && errno )
-    throw smsc::util::Exception("SccpSubsystem::initialize::: invalid config.local_port value='%s'",
-                                listeningPortParameter.getValue().c_str());
+  in_port_t localPort = static_cast<in_port_t>(listeningPortParameter.getIntValue());
 
   utilx::runtime_cfg::CompositeParameter& sccpUsers = rconfig.find<utilx::runtime_cfg::CompositeParameter>("config.sccp_users");
 
@@ -114,75 +99,22 @@ SccpSubsystem::initialize(utilx::runtime_cfg::RuntimeConfig& rconfig)
   initializeConnectAcceptor(localHost, localPort);
 
   utilx::runtime_cfg::Parameter& reassemblyTimerParameter = rconfig.find<utilx::runtime_cfg::Parameter>("config.reassembly_timer");
-  unsigned timerValue = (unsigned)utilx::strtol(reassemblyTimerParameter.getValue().c_str(), (char **)NULL, 10);
-  if ( timerValue == 0 && errno )
-    throw smsc::util::Exception("SccpSubsystem::initialize::: invalid config.reassembly_timer value='%s'",
-                                reassemblyTimerParameter.getValue().c_str());
-
-  ReassemblyProcessor::getInstance().initialize(timerValue);
+  ReassemblyProcessor::getInstance().initialize(reassemblyTimerParameter.getIntValue());
 }
 
 void
-SccpSubsystem::addParameterEventHandler(const utilx::runtime_cfg::CompositeParameter& context,
-                                           utilx::runtime_cfg::Parameter* added_parameter)
+SccpSubsystem::reinitConnectAcceptor()
 {
-  if ( context.getFullName() == "config.sua_applications" ) {
-    utilx::runtime_cfg::RuntimeConfig& runtimeConfig = runtime_cfg::RuntimeConfig::getInstance();
-    utilx::runtime_cfg::CompositeParameter& suaApplicationsParam = runtimeConfig.find<utilx::runtime_cfg::CompositeParameter>("config.sua_applications");
-
-    if ( added_parameter->getName() == "application" ) {
-      smsc_log_debug(_logger, "SccpSubsystem::addParameterEventHandler::: handle added parameter 'config.sua_applications.application'='%s'", added_parameter->getValue().c_str());
-
-      if ( !checkParameterExist(&suaApplicationsParam, added_parameter) )
-        suaApplicationsParam.addParameter(added_parameter);
-    }
-  }
-}
-
-void
-SccpSubsystem::changeParameterEventHandler(const utilx::runtime_cfg::CompositeParameter& context,
-                                              const utilx::runtime_cfg::Parameter& modified_parameter)
-{
-  if ( context.getFullName() == "config" ) {
-    utilx::runtime_cfg::RuntimeConfig& runtimeConfig = runtime_cfg::RuntimeConfig::getInstance();
-    utilx::runtime_cfg::CompositeParameter& rootConfigParam = runtimeConfig.find<utilx::runtime_cfg::CompositeParameter>("config");
-
-    if ( modified_parameter.getName() == "commit" )
-      applyParametersChange();
-    else {
-      if ( modified_parameter.getName() != "local_address" &&
-           modified_parameter.getName() != "local_port" )
-        return;
-
-      smsc_log_debug(_logger, "SccpSubsystem::changeParameterEventHandler::: handle modified parameter 'config.%s'='%s'", modified_parameter.getName().c_str(), modified_parameter.getValue().c_str());
-      utilx::runtime_cfg::Parameter* foundParam = rootConfigParam.getParameter<utilx::runtime_cfg::Parameter>(modified_parameter.getName());
-      if ( !foundParam )
-        throw smsc::util::Exception("SccpSubsystem::changeParameterEventHandler::: parameter '%s' not found in current configuration", modified_parameter.getName().c_str());
-
-      foundParam->setValue(modified_parameter.getValue());
-      _threadScopeModificationFlag.set(true);
-    }
-  }
-}
-
-void
-SccpSubsystem::applyParametersChange()
-{
-  smsc_log_debug(_logger, "SccpSubsystem::applyParametersChange::: Enter it");
-
-  if ( !_threadScopeModificationFlag.get(false) ) return;
-
-  _threadScopeModificationFlag.set(false);
-
   utilx::runtime_cfg::RuntimeConfig& rconfig = runtime_cfg::RuntimeConfig::getInstance();
 
   utilx::runtime_cfg::Parameter& listeningHostParameter = rconfig.find<utilx::runtime_cfg::Parameter>("config.local_address");
   utilx::runtime_cfg::Parameter& listeningPortParameter = rconfig.find<utilx::runtime_cfg::Parameter>("config.local_port");
 
   std::string localHost = listeningHostParameter.getValue();
-  in_port_t localPort = (in_port_t)utilx::strtol(listeningPortParameter.getValue().c_str(), (char **)NULL, 10);
-  if ( localPort == 0 && errno )
-    throw smsc::util::Exception("SccpSubsystem::applyParametersChange::: invalid config.local_port value");
+  in_port_t localPort = static_cast<in_port_t>(listeningPortParameter.getIntValue());
+
+  smsc_log_debug(_logger, "SccpSubsystem::reinitConnectAcceptor::: try reinit listening interface: listening address='%s', port=%d",
+                 localHost.c_str(), localPort);
 
   delete io_dispatcher::ConnectMgr::getInstance().removeConnectAcceptor(_acceptorName, false); // false --> don't remove current active client's connections
   initializeConnectAcceptor(localHost, localPort);
@@ -236,9 +168,7 @@ SccpSubsystem::processRouteInfoToSccpUser(utilx::runtime_cfg::CompositeParameter
   const std::string& gt = translation_entry_param->getParameter<utilx::runtime_cfg::Parameter>("gt")->getValue();
   utilx::runtime_cfg::Parameter* ssnParam = translation_entry_param->getParameter<utilx::runtime_cfg::Parameter>("ssn");
   if ( ssnParam ) {
-    uint8_t ssn = static_cast<uint8_t>(utilx::strtol(ssnParam->getValue().c_str(), NULL, 10));
-    if ( ssn == 0 && errno )
-      throw smsc::util::Exception("SccpSubsystem::processRouteInfoToSccpUser::: invalid value for parameter config.translation-table.entry.ssn");
+    uint8_t ssn = static_cast<uint8_t>(ssnParam->getIntValue());
     translation_table->addTranslationEntry(gt, ssn, routeId);
   } else
     translation_table->addTranslationEntry(gt, routeId, false);
@@ -269,9 +199,7 @@ SccpSubsystem::processRouteInfoToMTP3(utilx::runtime_cfg::CompositeParameter* tr
   if ( !lpcParam )
     throw smsc::util::Exception("SccpSubsystem::processRouteInfoToMTP3::: parameter config.translation-table.entry.lpc is absent");
 
-  common::point_code_t lpc = static_cast<common::point_code_t>(utilx::strtol(lpcParam->getValue().c_str(), NULL, 10));
-  if ( lpc == 0 && errno )
-    throw smsc::util::Exception("SccpSubsystem::processRouteInfoToMTP3::: invalid value for parameter config.translation-table.entry.lpc");
+  common::point_code_t lpc = static_cast<common::point_code_t>(lpcParam->getIntValue());
 
   translation_table->addTranslationEntry(gt, routeId, true);
   addMTP3Policy(routeId, lpc, dpcsParam, trafficMode);
@@ -290,7 +218,7 @@ SccpSubsystem::initializeConnectAcceptor(const std::string& local_host,
 }
 
 std::string
-SccpSubsystem::makeAddressFamilyPrefix(const std::string& gt_mask_value) const
+SccpSubsystem::makeAddressFamilyPrefix(const std::string& gt_mask_value)
 {
   std::string gtAddressFamilyPrefix;
 
@@ -314,38 +242,49 @@ SccpSubsystem::addSccpUserPolicy(const std::string& route_id,
                                  utilx::runtime_cfg::CompositeParameter* sccp_users_param,
                                  const std::string& traffic_mode)
 {
+  utilx::runtime_cfg::CompositeParameter::Iterator<utilx::runtime_cfg::Parameter>
+      userIdIterator = sccp_users_param->getIterator<utilx::runtime_cfg::Parameter>("userid");
+
+  std::list<std::string> userIdsList;
+  while (userIdIterator.hasElement()) {
+    userIdsList.push_back((userIdIterator.getCurrentElement()->getValue()));
+    userIdIterator.next();
+  }
+
+  addSccpUserPolicy(route_id, userIdsList, traffic_mode);
+}
+
+void
+SccpSubsystem::addSccpUserPolicy(const std::string& route_id,
+                                 const std::list<std::string>& sccp_users,
+                                 const std::string& traffic_mode)
+{
   SCCPUserSelectPolicyRefPtr sccpUserSelectPolicyRefPtr =
       PolicyRegistry<SCCPUserSelectPolicy>::getInstance().lookup(route_id);
   if ( sccpUserSelectPolicyRefPtr.Get() )
     throw smsc::util::Exception("SccpSubsystem::addSccpUserPolicy::: SCCPUserSelectPolicy for route_id='%s' has already registered",
                                 route_id.c_str());
 
-  utilx::runtime_cfg::CompositeParameter::Iterator<utilx::runtime_cfg::Parameter>
-    userIdIterator = sccp_users_param->getIterator<utilx::runtime_cfg::Parameter>("userid");
-  if ( !userIdIterator.hasElement() )
-    throw smsc::util::Exception("SccpSubsystem::addSccpUserPolicy::: parameter config.translation-table.entry.sccp_users.userid is missed");
+  if ( sccp_users.empty() )
+    throw smsc::util::Exception("SccpSubsystem::addSccpUserPolicy::: sccp_users is empty");
 
   if ( traffic_mode == "loadshare" ) {
     SCCPUserRoundRobinPolicy* sccpUserSelectPolicy = new SCCPUserRoundRobinPolicy();
 
-    while (userIdIterator.hasElement()) {
-      utilx::runtime_cfg::Parameter* nextParameter = userIdIterator.getCurrentElement();
+    for (std::list<std::string>::const_iterator iter = sccp_users.begin(), end_iter = sccp_users.end();
+         iter != end_iter; ++iter) {
       smsc_log_debug(_logger, "SccpSubsystem::addSccpUserPolicy::: add appId='%s' to SCCPUserRoundRobinPolicy for route_id='%s'",
-                     nextParameter->getValue().c_str(), route_id.c_str());
-      sccpUserSelectPolicy->addValue(nextParameter->getValue());
-      userIdIterator.next();
+                     (*iter).c_str(), route_id.c_str());
+      sccpUserSelectPolicy->addValue(*iter);
     }
 
     sccpUserSelectPolicyRefPtr = sccpUserSelectPolicy;
   } else if ( traffic_mode == "dedicated" ) {
     SCCPUserDedicatedPolicy* sccpUserSelectPolicy = new SCCPUserDedicatedPolicy();
-    utilx::runtime_cfg::Parameter* nextParameter = userIdIterator.getCurrentElement();
+
     smsc_log_debug(_logger, "SccpSubsystem::addSccpUserPolicy::: set appId='%s' for SCCPUserDedicatedPolicy for route_id='%s'",
-                   nextParameter->getValue().c_str(), route_id.c_str());
-    sccpUserSelectPolicy->setValue(nextParameter->getValue());
-    userIdIterator.next();
-    if ( userIdIterator.hasElement() )
-      throw smsc::util::Exception("SccpSubsystem::addSccpUserPolicy::: wrong configuration - for 'dedicated' policy there are more than one value for parameter config.translation-table.entry.sccp_users.userid");
+                   (*(sccp_users.begin())).c_str(), route_id.c_str());
+    sccpUserSelectPolicy->setValue(*(sccp_users.begin()));
 
     sccpUserSelectPolicyRefPtr = sccpUserSelectPolicy;
   } else
@@ -360,28 +299,42 @@ SccpSubsystem::addMTP3Policy(const std::string& route_id,
                              utilx::runtime_cfg::CompositeParameter* dpcs_param,
                              const std::string& traffic_mode)
 {
+  utilx::runtime_cfg::CompositeParameter::Iterator<utilx::runtime_cfg::Parameter>
+    pcIterator = dpcs_param->getIterator<utilx::runtime_cfg::Parameter>("pc");
+
+  std::list<common::point_code_t> dpcs;
+  while ( pcIterator.hasElement() ) {
+    common::point_code_t dpc = static_cast<common::point_code_t>(pcIterator.getCurrentElement()->getIntValue());
+    dpcs.push_back(dpc);
+    pcIterator.next();
+  }
+  addMTP3Policy(route_id, lpc, dpcs, traffic_mode);
+}
+
+void
+SccpSubsystem::addMTP3Policy(const std::string& route_id,
+                             common::point_code_t lpc,
+                             const std::list<common::point_code_t>& dpcs,
+                             const std::string& traffic_mode)
+{
   MTP3SapSelectPolicyRefPtr mtp3SapPolicyRefPtr =
       PolicyRegistry<MTP3SapSelectPolicy>::getInstance().lookup(route_id);
   if ( mtp3SapPolicyRefPtr.Get() )
     throw smsc::util::Exception("SccpSubsystem::addMTP3Policy::: MTP3SapSelectPolicy for route_id='%s' has already registered",
                                 route_id.c_str());
 
-  utilx::runtime_cfg::CompositeParameter::Iterator<utilx::runtime_cfg::Parameter>
-    pcIterator = dpcs_param->getIterator<utilx::runtime_cfg::Parameter>("pc");
-  if ( !pcIterator.hasElement() )
-    throw smsc::util::Exception("SccpSubsystem::addMTP3Policy::: parameter config.translation-table.entry.dpcs.pc is missed");
+  if ( dpcs.empty() )
+    throw smsc::util::Exception("SccpSubsystem::addMTP3Policy::: dpcs is empty");
 
   if ( traffic_mode == "loadshare" ) {
     MTP3SapRoundRobinPolicy* mtp3SapSelectPolicy = new MTP3SapRoundRobinPolicy();
-    while ( pcIterator.hasElement() ) {
-      common::point_code_t dpc = static_cast<common::point_code_t>(utilx::strtol(pcIterator.getCurrentElement()->getValue().c_str(), NULL, 10));
-      if ( dpc == 0 && errno )
-        throw smsc::util::Exception("SccpSubsystem::addMTP3Policy::: invalid value for parameter config.translation-table.dpcs.dpc");
+    for ( std::list<common::point_code_t>::const_iterator iter = dpcs.begin(), end_iter = dpcs.end();
+          iter != end_iter; ++iter ) {
+      common::point_code_t dpc = *iter;
 
       mtp3SapSelectPolicy->addValue(MTP3SapInfo(lpc, dpc));
       smsc_log_debug(_logger, "SccpSubsystem::addMTP3Policy::: add pair lpc=%u/dpc=%u to MTP3SapRoundRobinPolicy for route_id='%s'",
                      lpc, dpc, route_id.c_str());
-      pcIterator.next();
     }
 
     mtp3SapPolicyRefPtr = mtp3SapSelectPolicy;
@@ -389,18 +342,11 @@ SccpSubsystem::addMTP3Policy(const std::string& route_id,
                    route_id.c_str());
   } else if ( traffic_mode == "dedicated" ) {
     MTP3SapDedicatedPolicy* mtp3SapSelectPolicy = new MTP3SapDedicatedPolicy();
-    utilx::runtime_cfg::Parameter* nextParameter = pcIterator.getCurrentElement();
-    common::point_code_t dpc = static_cast<common::point_code_t>(utilx::strtol(nextParameter->getValue().c_str(), NULL, 10));
-    if ( dpc == 0 && errno )
-      throw smsc::util::Exception("SccpSubsystem::addMTP3Policy::: invalid value='%s' for parameter config.translation-table.dpcs.dpc",
-                                  nextParameter->getValue().c_str());
+    common::point_code_t dpc = *(dpcs.begin());
 
     smsc_log_debug(_logger, "SccpSubsystem::addMTP3Policy::: set pair lpc=%u/dpc=%u for MTP3DedicatedPolicy for route_id='%s'",
                    lpc, dpc, route_id.c_str());
     mtp3SapSelectPolicy->setValue(MTP3SapInfo(lpc, dpc));
-    pcIterator.next();
-    if ( pcIterator.hasElement() )
-      throw smsc::util::Exception("SccpSubsystem::addMTP3Policy::: wrong configuration - for 'dedicated' policy there are more than one value for parameter config.translation-table.entry.dpcs.pc");
 
     mtp3SapPolicyRefPtr = mtp3SapSelectPolicy;
     smsc_log_debug(_logger, "SccpSubsystem::addMTP3Policy::: add MTP3SapDedicatedPolicy to PolicyRegistry<MTP3SapSelectPolicy> for route_id='%s'",
