@@ -4,7 +4,6 @@
 # include <sys/types.h>
 # include "core/threads/ThreadPool.hpp"
 
-# include "eyeline/utilx/runtime_cfg/ParameterObserver.hpp"
 # include "eyeline/ss7na/common/ApplicationSubsystem.hpp"
 # include "eyeline/ss7na/common/io_dispatcher/ConnectMgr.hpp"
 
@@ -13,8 +12,7 @@ namespace ss7na {
 namespace common {
 namespace io_dispatcher {
 
-class IODispatcherSubsystem : public common::ApplicationSubsystem,
-                              public utilx::runtime_cfg::ParameterObserver {
+class IODispatcherSubsystem : public common::ApplicationSubsystem {
 public:
   IODispatcherSubsystem::IODispatcherSubsystem(ConnectMgr& c_mgr)
     : ApplicationSubsystem("IODispatcherSubsystem", "io_dsptch"),
@@ -24,11 +22,13 @@ public:
   virtual void start();
   virtual void stop();
 
+  void updateStateMachinesCount(unsigned new_state_machines_count);
+
 protected:
   using utilx::Subsystem::initialize;
   void initialize();
 
-  size_t _stateMachinesCount;
+  unsigned _stateMachinesCount;
 
 private:
   smsc::core::threads::ThreadPool _threadsPool;
