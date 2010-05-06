@@ -29,6 +29,10 @@ public:
 
   void schedule(const LinkPtr& broken_link);
 
+  void setReconnectPeriod(unsigned reconnect_attempt_period) {
+    _reconnectAttemptPeriod = reconnect_attempt_period;
+  }
+
 private:
   Reconnector()
   : _logger(smsc::logger::Logger::getInstance("io_dsptch")),
