@@ -4,14 +4,14 @@ namespace eyeline {
 namespace load_balancer {
 namespace io_subsystem {
 
-MessagePublisher::MessagePublisher(unsigned maxEventsQueueSz)
-  :_eventsQueue(maxEventsQueueSz)
+MessagePublisher::MessagePublisher(unsigned max_events_queue_sz)
+  :_eventsQueue(max_events_queue_sz)
 {}
 
 void
-MessagePublisher::publish(IOEvent* newIoEvent)
+MessagePublisher::publish(IOEvent* new_io_event)
 {
-  putEventToQueue(newIoEvent);
+  putEventToQueue(new_io_event);
 }
 
 IOEvent*
@@ -21,10 +21,10 @@ MessagePublisher::getIOEvent()
 }
 
 void
-MessagePublisher::putEventToQueue(IOEvent* newEvent)
+MessagePublisher::putEventToQueue(IOEvent* new_event)
 {
   smsc::core::synchronization::MutexGuard synchronize(_eventsMonitor);
-  _eventsQueue.enqueue(newEvent);
+  _eventsQueue.enqueue(new_event);
   _eventsMonitor.notify();
 }
 

@@ -13,9 +13,9 @@ namespace io_subsystem {
 
 class IdleLinksMonitor {
 public:
-  void insert(const LinkId& newLinkId, time_t keepAliveEpocheTime);
-  void remove(const LinkId& linkId);
-  bool fetchExpiredLink(LinkId* inactiveLinkId);
+  void insert(const LinkId& new_link_id, time_t keep_alive_epoche_time);
+  void remove(const LinkId& link_id);
+  bool fetchExpiredLink(LinkId* inactive_link_id);
 private:
   struct I1;
   struct I2;

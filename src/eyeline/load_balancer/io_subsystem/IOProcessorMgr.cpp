@@ -92,9 +92,9 @@ IOProcessorMgr::_shutdown()
 }
 
 void
-IOProcessorMgr::setParameters(const IOParameters& ioParameters)
+IOProcessorMgr::setParameters(const IOParameters& io_parameters)
 {
-  _ioParameters = ioParameters;
+  _ioParameters = io_parameters;
   _ioParametersWasSet = true;
 }
 

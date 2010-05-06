@@ -5,24 +5,24 @@ namespace load_balancer {
 namespace io_subsystem {
 
 Packet*
-PacketFormattingStrategy::receive(corex::io::InputStream* iStream)
+PacketFormattingStrategy::receive(corex::io::InputStream* i_stream)
 {
   if ( !hasBeenPacketHeaderReadCompletely() ) {
-    readNextPartOfPacketHeader(iStream);
+    readNextPartOfPacketHeader(i_stream);
     if ( hasBeenTotalPacketReadCompletely() )
       return getCompletePacket();
     return NULL;
   }
 
   if ( !hasBeenPacketBodyReadCompletely() ) {
-    readNextPartOfPacketBody(iStream);
+    readNextPartOfPacketBody(i_stream);
     if ( hasBeenTotalPacketReadCompletely() )
       return getCompletePacket();
     return NULL;
   }
 
   if ( !hasBeenPacketTailerReadCompletely() ) {
-    readNextPartOfPacketTailer(iStream);
+    readNextPartOfPacketTailer(i_stream);
     if ( !hasBeenTotalPacketReadCompletely() )
       return NULL;
   }

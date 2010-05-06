@@ -22,7 +22,7 @@ struct Packet {
   size_t addValue(uint16_t value);
   size_t addValue(uint32_t value);
 
-  size_t addValue(const uint8_t* value, size_t valueLength);
+  size_t addValue(const uint8_t* value, size_t value_length);
 
   size_t extractValue(uint8_t* value, size_t offset) const;
   size_t extractValue(uint16_t* value, size_t offset) const;

@@ -14,12 +14,12 @@ namespace io_subsystem {
 
 class MessagePublisher {
 public:
-  MessagePublisher(unsigned maxEventsQueueSz);
+  MessagePublisher(unsigned max_events_queue_sz);
 
-  void publish(IOEvent* newIoEvent);
+  void publish(IOEvent* new_ioEvent);
   IOEvent* getIOEvent();
 protected:
-  void putEventToQueue(IOEvent* newEvent);
+  void putEventToQueue(IOEvent* new_event);
   IOEvent* getEventFromQueue();
 private:
   smsc::core::synchronization::EventMonitor _eventsMonitor;

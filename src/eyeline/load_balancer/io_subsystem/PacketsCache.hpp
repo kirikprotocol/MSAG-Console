@@ -27,11 +27,11 @@ public:
     size_t offset;
   };
 
-  void storePacketInCache(corex::io::OutputStream* oStream, const Packet* packet);
-  cache_element getPacket(corex::io::OutputStream* oStream);
+  void storePacketInCache(corex::io::OutputStream* o_stream, const Packet* packet);
+  cache_element getPacket(corex::io::OutputStream* o_stream);
   // return true if there isn't any more packet in cache for this ostream
-  bool commitWrittenPacketBytes(corex::io::OutputStream* oStream, ssize_t writtenBytes);
-  void removePacketsFromCache(corex::io::OutputStream* oStream);
+  bool commitWrittenPacketBytes(corex::io::OutputStream* o_stream, ssize_t written_bytes);
+  void removePacketsFromCache(corex::io::OutputStream* o_stream);
 private:
   smsc::logger::Logger* _logger;
   typedef std::list<cache_element> packets_t;

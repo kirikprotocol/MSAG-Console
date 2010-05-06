@@ -11,7 +11,7 @@ namespace io_subsystem {
 
 class InputEventProcessor : public smsc::core::threads::ThreadedTask {
 public:
-  InputEventProcessor(MessagePublisher& messagePublisher, unsigned procNum);
+  InputEventProcessor(MessagePublisher& message_publisher, unsigned proc_num);
 
   virtual int Execute();
   virtual const char* taskName() { return _taskName; };

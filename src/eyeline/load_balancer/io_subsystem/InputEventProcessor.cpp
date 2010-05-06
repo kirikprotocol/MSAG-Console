@@ -8,10 +8,11 @@ namespace eyeline {
 namespace load_balancer {
 namespace io_subsystem {
 
-InputEventProcessor::InputEventProcessor(MessagePublisher& messagePublisher, unsigned procNum)
-  : _messagePublisher(messagePublisher), _logger(smsc::logger::Logger::getInstance("ioEventProc"))
+InputEventProcessor::InputEventProcessor(MessagePublisher& message_publisher,
+                                         unsigned proc_num)
+  : _messagePublisher(message_publisher), _logger(smsc::logger::Logger::getInstance("ioEventProc"))
 {
-  snprintf(_taskName, sizeof(_taskName), "ioEventProc_%u", procNum);
+  snprintf(_taskName, sizeof(_taskName), "ioEventProc_%u", proc_num);
 }
 
 int

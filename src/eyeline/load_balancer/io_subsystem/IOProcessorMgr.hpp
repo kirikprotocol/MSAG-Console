@@ -35,7 +35,7 @@ public:
 
   void startup();
   void shutdown();
-  void setParameters(const IOParameters& ioParameters);
+  void setParameters(const IOParameters& io_parameters);
 
   IOProcessorRefPtr getIOProcessor(unsigned io_proc_id);
 protected:

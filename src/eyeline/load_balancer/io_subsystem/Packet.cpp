@@ -48,16 +48,16 @@ Packet::addValue(uint32_t value)
 }
 
 size_t
-Packet::addValue(const uint8_t* value, size_t valueLength)
+Packet::addValue(const uint8_t* value, size_t value_length)
 {
-  if ( !valueLength )
+  if ( !value_length )
     return packet_data_len;
 
-  if ( packet_data_len + valueLength > MAX_PACKET_LEN )
-    throw utilx::SerializationException("Packet::addValue(byte array)::: result packet's data is too long - max packet size=%d, packet_data_len=%d, value size=%d", MAX_PACKET_LEN, packet_data_len, valueLength);
+  if ( packet_data_len + value_length > MAX_PACKET_LEN )
+    throw utilx::SerializationException("Packet::addValue(byte array)::: result packet's data is too long - max packet size=%d, packet_data_len=%d, value size=%d", MAX_PACKET_LEN, packet_data_len, value_length);
 
-  memcpy(packet_data + packet_data_len, value, valueLength);
-  packet_data_len += valueLength;
+  memcpy(packet_data + packet_data_len, value, value_length);
+  packet_data_len += value_length;
 
   return packet_data_len;
 }

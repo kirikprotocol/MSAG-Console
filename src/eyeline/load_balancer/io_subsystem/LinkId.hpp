@@ -10,8 +10,8 @@ namespace io_subsystem {
 
 class LinkId {
 public:
-  explicit LinkId(const std::string& linkIdValue="")
-  : _linkIdStr(linkIdValue)
+  explicit LinkId(const std::string& link_id_value="")
+  : _linkIdStr(link_id_value)
   {}
 
   std::string toString() const { return _linkIdStr; }
