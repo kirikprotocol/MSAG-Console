@@ -20,7 +20,10 @@ public:
 
   using utilx::runtime_cfg::RuntimeConfig::initialize;
 
-  virtual void initialize(smsc::util::config::ConfigView& m3uagw_cfg);
+  virtual void initialize(smsc::util::config::ConfigView& m3uagw_cfg,
+                          const char* cfg_file);
+
+  void commit();
 
 private:
   void processSccpUsersSection(smsc::util::config::ConfigView& m3ua_cfg,
@@ -38,7 +41,20 @@ private:
   void processPointsDefinitionSection(smsc::util::config::ConfigView& m3ua_cfg,
                                       utilx::runtime_cfg::CompositeParameter* m3ua_cfg_param);
 
+  void prepareSccpUsersSection(smsc::util::config::Config* xml_conf);
+
+  void prepareSgpLinksSection(smsc::util::config::Config* xml_conf);
+
+  void preparePointsDefinition(smsc::util::config::Config* xml_conf);
+
+  void prepareMtp3RoutingTable(smsc::util::config::Config* xml_conf);
+
+  void prepareTranslationTable(smsc::util::config::Config* xml_conf);
+
+  void saveXmlConfig(smsc::util::config::Config& xml_conf);
+
   smsc::logger::Logger* _logger;
+  const char* _cfgFile;
 };
 
 }}}}
