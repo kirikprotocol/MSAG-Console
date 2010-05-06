@@ -2,6 +2,7 @@
 # define __EYELINE_SS7NA_M3UAGW_SCCP_ROUTER_GTTRANSLATIONTABLESREGISTRY_HPP__
 
 # include <map>
+# include <list>
 # include <string>
 # include "logger/Logger.h"
 # include "core/synchronization/Mutex.hpp"
@@ -23,6 +24,8 @@ public:
 
   void registerGTTranslationTable(const std::string& gt_address_family_prefix,
                                   GTTranslationTable* translation_table);
+
+  void getKnownTranslationTables(std::list<GTTranslationTable*> *known_translation_tables);
 
 private:
   smsc::core::synchronization::Mutex _synchonize;

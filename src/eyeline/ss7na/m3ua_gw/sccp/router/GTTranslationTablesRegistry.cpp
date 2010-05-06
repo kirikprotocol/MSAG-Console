@@ -38,4 +38,13 @@ GTTranslationTablesRegistry::registerGTTranslationTable(const std::string& gt_ad
                                                    translation_table));
 }
 
+void
+GTTranslationTablesRegistry::getKnownTranslationTables(std::list<GTTranslationTable*> *known_translation_tables)
+{
+  for(translation_table_registry_t::iterator iter = _translationTablesRegistry.begin(), end_iter = _translationTablesRegistry.end();
+      iter != end_iter; ++iter) {
+    known_translation_tables->push_back(iter->second);
+  }
+}
+
 }}}}}
