@@ -6,8 +6,8 @@
 namespace eyeline {
 namespace utilx {
 
-const std::string&
-toLowerCaseString(std::string& strValue);
+std::string
+toLowerCaseString(std::string strValue);
 
 }}
 
