@@ -57,7 +57,8 @@ protected:
   uint8_t _callingAddr[255];
   uint8_t _reasonForReturn;
   uint16_t _userDataLen;
-  uint8_t _userData[common::TP::MAX_PACKET_SIZE];
+  uint8_t _userDataBuf[common::TP::MAX_PACKET_SIZE];
+  const uint8_t* _userData;
   uint8_t _importance;
 
   static const unsigned FIXED_MSG_PART_SZ = _MSGCODE_SZ + sizeof(uint8_t) /*_fieldsMask*/ +

@@ -66,7 +66,8 @@ private:
       sizeof(uint8_t) /*_returnOption*/ + sizeof(uint8_t) /*_calledAddrLen*/ +
       sizeof(uint8_t) /*_callingAddrLen*/ + sizeof(uint16_t) /*_userDataLen*/;
 
-  uint8_t _userData[common::TP::MAX_PACKET_SIZE];
+  uint8_t _userDataBuf[common::TP::MAX_PACKET_SIZE];
+  const uint8_t* _userData;
 
   static const uint32_t _MSG_CODE=0x03;
   enum { SET_SEQUENCE_CONTROL = 0x01, SET_IMPORTANCE = 0x02, SET_HOP_COUNTER = 0x04 };
