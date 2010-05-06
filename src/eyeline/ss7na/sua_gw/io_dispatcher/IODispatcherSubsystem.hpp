@@ -3,7 +3,6 @@
 
 # include "eyeline/utilx/Singleton.hpp"
 # include "eyeline/utilx/runtime_cfg/RuntimeConfig.hpp"
-# include "eyeline/utilx/runtime_cfg/ParameterObserver.hpp"
 # include "eyeline/ss7na/common/io_dispatcher/IODispatcherSubsystem.hpp"
 # include "eyeline/ss7na/sua_gw/io_dispatcher/ConnectMgr.hpp"
 
@@ -18,9 +17,6 @@ public:
   using IODispatcherSubsystem::initialize;
   virtual void initialize(utilx::runtime_cfg::RuntimeConfig& rconfig);
 
-  using utilx::runtime_cfg::ParameterObserver::changeParameterEventHandler;
-  virtual void changeParameterEventHandler(const utilx::runtime_cfg::CompositeParameter& context,
-                                           const utilx::runtime_cfg::Parameter& modified_parameter);
 private:
   ConnectMgr& getInitedConnectMgr() {
     ConnectMgr::init();

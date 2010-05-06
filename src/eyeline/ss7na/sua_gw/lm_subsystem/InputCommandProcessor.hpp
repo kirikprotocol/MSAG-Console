@@ -3,23 +3,24 @@
 
 # include <deque>
 # include "logger/Logger.h"
-# include "eyeline/utilx/Singleton.hpp"
-# include "eyeline/ss7na/sua_gw/lm_subsystem/LM_CommandsInterpreter.hpp"
+# include "eyeline/ss7na/common/lm_subsystem/LM_CommandsInterpreter.hpp"
+# include "eyeline/ss7na/sua_gw/lm_subsystem/RootLayerCommandsInterpreter.hpp"
 
 namespace eyeline {
 namespace ss7na {
 namespace sua_gw {
 namespace lm_subsystem {
 
-class InputCommandProcessor : public utilx::Singleton<InputCommandProcessor> {
+class InputCommandProcessor : public common::lm_subsystem::InputCommandProcessor {
 public:
-  InputCommandProcessor();
-  std::string process(const std::string& inputCommandLine);
-  std::string getUserPrompt();
-private:
-  smsc::logger::Logger* _logger;
+  InputCommandProcessor() {
+    _commandInterpreters.push_back(common::lm_subsystem::lm_commands_interpreter_refptr_t(new RootLayerCommandsInterpreter()));
+  }
 
-  std::deque<lm_commands_interpreter_refptr_t> _commandInterpreters;
+protected:
+  virtual common::lm_subsystem::LM_CommandsInterpreter* createRootCmdInterpreter() const {
+    return new RootLayerCommandsInterpreter();
+  }
 };
 
 }}}}

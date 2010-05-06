@@ -8,27 +8,30 @@ namespace ss7na {
 namespace sua_gw {
 namespace lm_subsystem {
 
-LM_CommandsInterpreter::interpretation_result
-TranslationTableCommandsInterpreter::interpretCommandLine(utilx::StringTokenizer& stringTokenizer)
+common::lm_subsystem::LM_CommandsInterpreter::interpretation_result
+TranslationTableCommandsInterpreter::interpretCommandLine(utilx::StringTokenizer& string_tokenizer)
 {
-  interpretation_result parseResult(lm_commands_refptr_t(NULL), lm_commands_interpreter_refptr_t(NULL), false);
-  if ( stringTokenizer.hasNextToken() ) {
-    const std::string& tokenValue = utilx::toLowerCaseString(stringTokenizer.nextToken());
+  interpretation_result parseResult(NULL,
+                                    common::lm_subsystem::lm_commands_interpreter_refptr_t(NULL),
+                                    false);
+
+  if ( string_tokenizer.hasNextToken() ) {
+    const std::string& tokenValue = utilx::toLowerCaseString(string_tokenizer.nextToken());
     if ( tokenValue == "add" ) {
-      if ( stringTokenizer.hasNextToken() &&
-           utilx::toLowerCaseString(stringTokenizer.nextToken()) == "translation-rule" &&
-           stringTokenizer.hasNextToken() ) {
-        const std::string& ruleName = stringTokenizer.nextToken();
+      if ( string_tokenizer.hasNextToken() &&
+           utilx::toLowerCaseString(string_tokenizer.nextToken()) == "translation-rule" &&
+           string_tokenizer.hasNextToken() ) {
+        const std::string& ruleName = string_tokenizer.nextToken();
         parseResult.command = new lm_commands::LM_TranslationTable_AddTranslationRuleCommand(ruleName);
         parseResult.interpreter = new TranslationRuleCommandsInterpreter(ruleName);
       } else
-        throw InvalidCommandLineException("TranslationTableCommandsInterpreter::interpretCommandLine::: invalid 'add' command's arguments");
+        throw common::lm_subsystem::InvalidCommandLineException("TranslationTableCommandsInterpreter::interpretCommandLine::: invalid 'add' command's arguments");
     } else if ( tokenValue != "exit" && tokenValue != "quit" )
-      throw InvalidCommandLineException("TranslationTableCommandsInterpreter::interpretCommandLine::: invalid input");
+      throw common::lm_subsystem::InvalidCommandLineException("TranslationTableCommandsInterpreter::interpretCommandLine::: invalid input");
     else
       parseResult.popUpCurrentInterpreter = true;
   } else
-    throw InvalidCommandLineException("TranslationTableCommandsInterpreter::interpretCommandLine::: empty input");
+    throw common::lm_subsystem::InvalidCommandLineException("TranslationTableCommandsInterpreter::interpretCommandLine::: empty input");
   return parseResult;
 }
 

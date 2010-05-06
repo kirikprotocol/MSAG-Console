@@ -113,13 +113,6 @@ SuaStackSubsystem::initialize(utilx::runtime_cfg::RuntimeConfig& rconfig)
 
   ReassemblyProcessor::getInstance().initialize(reassembleTimerValue);
 
-  runtime_cfg::RuntimeConfig::getInstance().registerParameterObserver("config.traffic-mode-for-sgp", this);
-  runtime_cfg::RuntimeConfig::getInstance().registerParameterObserver("config.sgp_links.link", this);
-  runtime_cfg::RuntimeConfig::getInstance().registerParameterObserver("config.sgp_links.link.local_address", this);
-  runtime_cfg::RuntimeConfig::getInstance().registerParameterObserver("config.sgp_links.link.local_port", this);
-  runtime_cfg::RuntimeConfig::getInstance().registerParameterObserver("config.sgp_links.link.remote_address", this);
-  runtime_cfg::RuntimeConfig::getInstance().registerParameterObserver("config.sgp_links.link.remote_port", this);
-
   try {
     utilx::runtime_cfg::Parameter& trafficModeForSGP = rconfig.find<utilx::runtime_cfg::Parameter>("config.traffic-mode-for-sgp");
     AspMaintenanceMessageHandlers::getInstance().setSGPTrafficMode(trafficModeForSGP.getValue());
@@ -168,67 +161,6 @@ SuaStackSubsystem::initialize(utilx::runtime_cfg::RuntimeConfig& rconfig)
 
     linkIterator.next();
   }
-}
-
-void
-SuaStackSubsystem::changeParameterEventHandler(const utilx::runtime_cfg::CompositeParameter& context,
-                                               const utilx::runtime_cfg::Parameter& modified_parameter)
-{
-  if ( context.getFullName() == "config" ) {
-    utilx::runtime_cfg::RuntimeConfig& runtimeConfig = runtime_cfg::RuntimeConfig::getInstance();
-    utilx::runtime_cfg::CompositeParameter& rootConfigParam = runtimeConfig.find<utilx::runtime_cfg::CompositeParameter>("config");
-
-    if ( modified_parameter.getFullName() == "traffic-mode-for-sgp" ) {
-      smsc_log_debug(_logger, "SuaStackSubsystem::handle::: handle modified 'config.traffic-mode-for-sgp' parameter=[%s]", modified_parameter.getValue().c_str());
-      utilx::runtime_cfg::Parameter* trafficModeParam = rootConfigParam.getParameter<utilx::runtime_cfg::Parameter>("traffic-mode-for-sgp");
-      if ( trafficModeParam )
-        trafficModeParam->setValue(modified_parameter.getValue());
-    }
-  }
-}
-
-void
-SuaStackSubsystem::addParameterEventHandler(const utilx::runtime_cfg::CompositeParameter& context,
-                                            utilx::runtime_cfg::Parameter* added_parameter)
-{
-  if ( context.getFullName() == "config.sgp_links.link" ) {
-    utilx::runtime_cfg::CompositeParameter* linkParam = findContextParentParameter(runtime_cfg::RuntimeConfig::getInstance(),
-                                                                                   context);
-
-    if ( !linkParam ) return;
-
-    if ( added_parameter->getName() != "local_address" &&
-         added_parameter->getName() != "local_port" &&
-         added_parameter->getName() != "remote_address" &&
-         added_parameter->getName() != "remote_port" ) return;
-
-    smsc_log_debug(_logger, "SuaStackSubsystem::handle::: handle added parameter '%s'='%s' for Link=[%s]", added_parameter->getName().c_str(), added_parameter->getValue().c_str(), context.getValue().c_str());
-
-    if ( !checkParameterExist(linkParam, added_parameter) )
-      linkParam->addParameter(added_parameter);
-  }
-}
-
-utilx::runtime_cfg::CompositeParameter*
-SuaStackSubsystem::addParameterEventHandler(const utilx::runtime_cfg::CompositeParameter& context,
-                                            utilx::runtime_cfg::CompositeParameter* added_parameter)
-{
-  if ( context.getFullName() == "config.sgp_links" ) {
-    // this condition is true when called LM_SGPLinks_AddLinkCommand::executeCommand()
-    utilx::runtime_cfg::CompositeParameter& sgpLinksParameter = 
-      runtime_cfg::RuntimeConfig::getInstance().find<utilx::runtime_cfg::CompositeParameter>("config.sgp_links");
-
-    if ( added_parameter->getName() != "link" )
-      generateExceptionAndForcePopUpCurrentInterpreter("Error: Invalid input", "SuaStackSubsystem::addParameterEventHandler::: invalid parameter '%s' for context '%s'", added_parameter->getName().c_str(), context.getName().c_str());
-
-
-    if ( checkParameterExist(&sgpLinksParameter, added_parameter) )
-      generateExceptionAndForcePopUpCurrentInterpreter("Inconsistent config modification request - link with such value already exists", "SuaStackSubsystem::addParameterEventHandler::: can't process parameter '%s'='%s' - the parameter with such value already exist", added_parameter->getName().c_str(), added_parameter->getValue().c_str());
-
-    sgpLinksParameter.addParameter(added_parameter);
-    return added_parameter;
-  } else
-    generateExceptionAndForcePopUpCurrentInterpreter("Error: Invalid input", "SuaStackSubsystem::addParameterEventHandler::: invalid parameter '%s' for context '%s'", added_parameter->getName().c_str(), context.getName().c_str());
 }
 
 void

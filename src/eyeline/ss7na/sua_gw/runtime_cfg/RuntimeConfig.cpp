@@ -84,7 +84,8 @@ RuntimeConfig::processRoutingKeysSection(smsc::util::config::ConfigView& sua_lay
 }
 
 void
-RuntimeConfig::initialize(smsc::util::config::ConfigView& sua_layer_cfg)
+RuntimeConfig::initialize(smsc::util::config::ConfigView& sua_layer_cfg,
+                          const char* cfg_file)
 {
   utilx::runtime_cfg::CompositeParameter* suaConfigCompositeParameter = new utilx::runtime_cfg::CompositeParameter("config");
 

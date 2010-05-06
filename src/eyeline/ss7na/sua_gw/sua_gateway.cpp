@@ -14,7 +14,6 @@
 #include "sccp_sap/SccpSapSubsystem.hpp"
 #include "messages_router/MessagesRouterSubsystem.hpp"
 #include "lm_subsystem/LMSubsystem.hpp"
-#include "lm_subsystem/InputCommandProcessor.hpp"
 
 static bool
 _initialize_singleton_instances()
@@ -50,7 +49,7 @@ int main(int argc, char** argv)
     smsc::util::config::ConfigView suaConfigView(manager, "SuaLayer");
 
     eyeline::utilx::runtime_cfg::RuntimeConfig& rconfig = eyeline::ss7na::sua_gw::runtime_cfg::RuntimeConfig::getInstance();
-    rconfig.initialize(suaConfigView);
+    rconfig.initialize(suaConfigView, cfgFile);
 
     smsc_log_info(logger, "main::: try to initialize all subsystems");
 

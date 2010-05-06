@@ -6,32 +6,26 @@
 
 # include "eyeline/utilx/Singleton.hpp"
 # include "eyeline/utilx/runtime_cfg/RuntimeConfig.hpp"
-# include "eyeline/utilx/runtime_cfg/ParameterObserver.hpp"
 
-# include "eyeline/ss7na/common/ApplicationSubsystem.hpp"
-# include "eyeline/ss7na/sua_gw/lm_subsystem/UserInteractionProcessor.hpp"
+# include "eyeline/ss7na/common/lm_subsystem/LMSubsystem.hpp"
+# include "eyeline/ss7na/sua_gw/lm_subsystem/InputCommandProcessor.hpp"
 
 namespace eyeline {
 namespace ss7na {
 namespace sua_gw {
 namespace lm_subsystem {
 
-class LMSubsystem : public common::ApplicationSubsystem,
-                    public utilx::runtime_cfg::ParameterObserver,
+class LMSubsystem : public common::lm_subsystem::LMSubsystem,
                     public utilx::Singleton<LMSubsystem*> {
 public:
-  LMSubsystem();
-
-  virtual void start();
-  virtual void stop();
-  virtual void waitForCompletion();
-
-  virtual void initialize(utilx::runtime_cfg::RuntimeConfig& rconfig);
+  using common::lm_subsystem::LMSubsystem::initialize;
+  void initialize(utilx::runtime_cfg::RuntimeConfig& rconfig);
 
 private:
-  UserInteractionProcessor* _userInteractionProcessor;
-  std::string _host;
-  in_port_t _port;
+  LMSubsystem() {}
+  friend class utilx::Singleton<LMSubsystem*>;
+
+  InputCommandProcessor _inputCmdProcessor;
 };
 
 }}}}

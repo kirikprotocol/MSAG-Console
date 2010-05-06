@@ -20,7 +20,8 @@ public:
 
   using utilx::runtime_cfg::RuntimeConfig::initialize;
 
-  virtual void initialize(smsc::util::config::ConfigView& xmlConfig);
+  virtual void initialize(smsc::util::config::ConfigView& xmlConfig,
+                          const char* cfg_file);
 private:
   void processRoutingKeysSection(smsc::util::config::ConfigView& suaLayerCfg,
                                  const char* rkSectionName, // e.g. "incoming-routing-keys"

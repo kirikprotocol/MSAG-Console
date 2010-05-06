@@ -28,22 +28,4 @@ IODispatcherSubsystem::initialize(utilx::runtime_cfg::RuntimeConfig& rconfig)
   common::io_dispatcher::Reconnector::getInstance().initialize(&connMgr, reconnectInterval);
 }
 
-void
-IODispatcherSubsystem::changeParameterEventHandler(const utilx::runtime_cfg::CompositeParameter& context,
-                                                   const utilx::runtime_cfg::Parameter& modified_parameter)
-{
-  if ( context.getFullName() == "config" ) {
-    if ( modified_parameter.getFullName() != "state_machines_count" ) return;
-
-    utilx::runtime_cfg::RuntimeConfig& runtimeConfig = runtime_cfg::RuntimeConfig::getInstance();
-    utilx::runtime_cfg::CompositeParameter& rootConfigParam = runtimeConfig.find<utilx::runtime_cfg::CompositeParameter>("config");
-
-    smsc_log_debug(_logger, "IODispatcherSubsystem::handle::: handle modified parameter 'config.%s'='%s'", modified_parameter.getName().c_str(), modified_parameter.getValue().c_str());
-
-    utilx::runtime_cfg::Parameter* foundParam = rootConfigParam.getParameter<utilx::runtime_cfg::Parameter>(modified_parameter.getName());
-    if ( foundParam )
-      foundParam->setValue(modified_parameter.getValue());
-  }
-}
-
 }}}}
