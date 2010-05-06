@@ -13,7 +13,7 @@ namespace libsccp {
 N_NOTICE_IND_Message::N_NOTICE_IND_Message()
   : LibsccpMessage(_MSG_CODE),
     _fieldsMask(0), _calledAddrLen(0), _callingAddrLen(0),
-    _reasonForReturn(0), _userDataLen(0), _importance(0)
+    _reasonForReturn(0), _userDataLen(0), _userData(NULL), _importance(0)
 {}
 
 N_NOTICE_IND_Message::N_NOTICE_IND_Message(const N_UNITDATA_REQ_Message& message,
@@ -81,7 +81,8 @@ N_NOTICE_IND_Message::deserialize(const common::TP& packet_buf)
   offset = common::extractField(packet_buf, offset, &_reasonForReturn);
 
   offset = common::extractField(packet_buf, offset, &_userDataLen);
-  offset = common::extractField(packet_buf, offset, _userData, _userDataLen);
+  offset = common::extractField(packet_buf, offset, _userDataBuf, _userDataLen);
+  _userData = _userDataBuf;
 
   if ( _fieldsMask & SET_IMPORTANCE )
     offset = common::extractField(packet_buf, offset, &_importance);
@@ -171,13 +172,13 @@ N_NOTICE_IND_Message::getCallingAddress() const
 void
 N_NOTICE_IND_Message::setUserData(const uint8_t* data, uint16_t data_len)
 {
-  unsigned valriableMsgSize = ((_fieldsMask & SET_IMPORTANCE) ? sizeof(_importance) : 0) +
+  unsigned valriableMsgSize = ((_fieldsMask & SET_IMPORTANCE) ? static_cast<unsigned>(sizeof(_importance)) : 0) +
       _callingAddrLen + _calledAddrLen;
   if ( data_len + FIXED_MSG_PART_SZ + valriableMsgSize > common::TP::MAX_PACKET_SIZE)
     throw smsc::util::Exception("N_NOTICE_IND_Message::setUserData::: too long userdata=%d", data_len);
 
   _userDataLen = data_len;
-  memcpy(_userData, data, data_len);
+  _userData = data;
 }
 
 utilx::variable_data_t
