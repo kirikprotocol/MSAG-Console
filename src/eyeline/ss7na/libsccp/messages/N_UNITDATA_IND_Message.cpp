@@ -13,7 +13,7 @@ namespace libsccp {
 N_UNITDATA_IND_Message::N_UNITDATA_IND_Message()
   : LibsccpMessage(_MSG_CODE),
     _fieldsMask(0), _sequenceControl(0),
-    _calledAddrLen(0), _callingAddrLen(0), _userDataLen(0)
+    _calledAddrLen(0), _callingAddrLen(0), _userDataLen(0), _userData(NULL)
 {}
 
 size_t
@@ -165,14 +165,13 @@ N_UNITDATA_IND_Message::getCallingAddress() const
 void
 N_UNITDATA_IND_Message::setUserData(const uint8_t* data, uint16_t data_len)
 {
-  unsigned valriableMsgSize = ((_fieldsMask & SET_SEQUENCE_CONTROL) ? sizeof(_sequenceControl) : 0) +
+  unsigned valriableMsgSize = ((_fieldsMask & SET_SEQUENCE_CONTROL) ? static_cast<unsigned>(sizeof(_sequenceControl)) : 0) +
        _callingAddrLen + _calledAddrLen;
   if ( data_len + FIXED_MSG_PART_SZ + valriableMsgSize > common::TP::MAX_PACKET_SIZE)
     throw smsc::util::Exception("N_UNITDATA_IND_Message::setUserData::: too long userdata=%d", data_len);
 
   _userDataLen = data_len;
   _userData = data;
-  //memcpy(_userData, data, data_len);
 }
 
 utilx::variable_data_t
