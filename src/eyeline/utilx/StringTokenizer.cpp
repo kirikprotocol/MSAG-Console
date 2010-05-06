@@ -40,9 +40,9 @@ StringTokenizer::nextToken()
   _token_beginning = _inputString.find_first_not_of(_delimiters, _token_beginning);
 
   if ( _toLowerCaseConversion )
-    toLowerCaseString(foundLexem);
-
-  return foundLexem;
+    return toLowerCaseString(foundLexem);
+  else
+    return foundLexem;
 }
 
 }}
