@@ -13,15 +13,17 @@ class CompositeParameter;
 class Parameter {
 public:
   Parameter(const std::string& name, const std::string& value);
-  Parameter(const std::string& name, unsigned int value);
+  Parameter(const std::string& name, int value);
 
   virtual ~Parameter() {}
 
   const std::string& getName() const;
 
   const std::string& getValue() const;
+  int getIntValue() const;
 
   void setValue(const std::string& value);
+  void setIntValue(int value);
 
   const std::string& getFullName() const;
 
@@ -30,8 +32,10 @@ public:
   virtual bool isComposite() const { return false; }
 
   typedef std::multimap<std::string, Parameter*>::iterator iterator_type_t;
+  typedef std::multimap<std::string, Parameter*> container_type_t;
 
   std::string printParamaterValue() const;
+
 protected:
   explicit Parameter(const std::string& name);
 
@@ -40,7 +44,10 @@ protected:
 
 private:
   std::string _name, _fullName, _value;
-  bool _isSetValue;
+  bool _isSetValue, _isSetIntValue;
+  int _intValue;
+  Parameter(const Parameter& rhs);
+  Parameter& operator=(const Parameter& rhs);
 };
 
 }}}
