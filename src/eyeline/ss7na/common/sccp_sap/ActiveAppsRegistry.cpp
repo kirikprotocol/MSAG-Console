@@ -53,11 +53,12 @@ ActiveAppsRegistry::remove(const LinkId& link_id_to_application)
 
   smsc::core::synchronization::MutexGuard synchronize(_lock);
 
-  smsc_log_info(_logger, "ActiveAppsRegistry::remove::: unregister application for link with id='%s'",
-                link_id_to_application.getValue().c_str());
   active_links_t::iterator iter = _activeLinks.find(link_id_to_application);
   if ( iter == _activeLinks.end() )
     return;
+
+  smsc_log_info(_logger, "ActiveAppsRegistry::remove::: unregister application for link with id='%s'",
+                link_id_to_application.getValue().c_str());
 
   const app_info& appInfo = iter->second->second;
   for(unsigned i=0; i < appInfo.maxSsnNum; ++i) {

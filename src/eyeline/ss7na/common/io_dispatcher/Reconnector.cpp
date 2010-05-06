@@ -39,7 +39,6 @@ Reconnector::Execute()
   while (!_shutdownInProgress) {
     try {
       bool sleepInfinitiy = false;
-      //_notReconnectedLinks
       if ( !_notReconnectedLinks.empty() )
         _brokenLinksInProcessing.splice(_brokenLinksInProcessing.end(),
                                         _notReconnectedLinks, _notReconnectedLinks.begin());

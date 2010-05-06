@@ -32,7 +32,7 @@ protected:
 
   template<class PARAMETER_TYPE>
   bool checkParameterExist(utilx::runtime_cfg::CompositeParameter* composite_param,
-                           PARAMETER_TYPE* added_param);
+                           const PARAMETER_TYPE& added_param);
 
   void checkConsistentRuntimeCommand(utilx::runtime_cfg::CompositeParameter* compostite_param_in_runtime_cfg,
                                      const std::string& requested_param,
@@ -42,9 +42,6 @@ protected:
   findContextParentParameter(utilx::runtime_cfg::RuntimeConfig& runtime_config,
                              const utilx::runtime_cfg::CompositeParameter& context);
 
-  void generateExceptionAndForcePopUpCurrentInterpreter(const std::string& message_to_user,
-                                                        const char * fmt, ...);
-
   smsc::logger::Logger* _logger;
   std::string _name;
 };
@@ -52,12 +49,12 @@ protected:
 template<class PARAMETER_TYPE>
 bool
 ApplicationSubsystem::checkParameterExist(utilx::runtime_cfg::CompositeParameter* composite_param,
-                                          PARAMETER_TYPE* added_param)
+                                          const PARAMETER_TYPE& added_param)
 {
-  utilx::runtime_cfg::CompositeParameter::Iterator<PARAMETER_TYPE> existenceParamIterator = composite_param->getIterator<PARAMETER_TYPE>(added_param->getName());
+  utilx::runtime_cfg::CompositeParameter::Iterator<PARAMETER_TYPE> existenceParamIterator = composite_param->getIterator<PARAMETER_TYPE>(added_param.getName());
 
   while ( existenceParamIterator.hasElement() ) {
-    if ( existenceParamIterator.getCurrentElement()->getValue() == added_param->getValue() )
+    if ( existenceParamIterator.getCurrentElement()->getValue() == added_param.getValue() )
       return true;
 
     existenceParamIterator.next();
