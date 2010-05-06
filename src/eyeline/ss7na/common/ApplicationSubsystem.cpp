@@ -18,21 +18,6 @@ ApplicationSubsystem::checkConsistentRuntimeCommand(utilx::runtime_cfg::Composit
   }
 }
 
-void
-ApplicationSubsystem::generateExceptionAndForcePopUpCurrentInterpreter(const std::string& message_to_user,
-                                                                       const char * fmt, ...)
-{
-  va_list arglist;
-  va_start(arglist,fmt);
-  std::string message;
-  smsc::util::vformat(message, fmt, arglist);
-  va_end(arglist);
-
-  utilx::runtime_cfg::InconsistentConfigCommandException generatedException(message_to_user, message.c_str());
-  generatedException.forcePopUpCurrentCommandInterpreter();
-  throw generatedException;
-}
-
 utilx::runtime_cfg::CompositeParameter*
 ApplicationSubsystem::findContextParentParameter(utilx::runtime_cfg::RuntimeConfig& runtime_config,
                                                  const utilx::runtime_cfg::CompositeParameter& context)
