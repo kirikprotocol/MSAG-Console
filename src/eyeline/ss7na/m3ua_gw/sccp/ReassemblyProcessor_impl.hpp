@@ -38,10 +38,11 @@ ReassemblyProcessor::reassemble(const MSG& next_msg_part,
     std::pair<reassembleRegistry::iterator, bool> insRes =
         _activeReassembleProcess.insert(std::make_pair(searchKey, ReassembleInfo()));
     iter = insRes.first;
+    smsc::core::synchronization::MutexGuard timerMomitorSynch(_timerMonitorLock);
     iter->second.timerId =
-        _timerMonitor.schedule(_reassemblyTimer,
-                               new ReassemblyTimerExpirationHandler(next_msg_part.getCallingAddress(),
-                                                                    segmentation.getLocalReference()));
+        _timerMonitor->schedule(_reassemblyTimer,
+                                new ReassemblyTimerExpirationHandler(next_msg_part.getCallingAddress(),
+                                                                     segmentation.getLocalReference()));
   } else if ( iter->second.destroyed )
     throw common::SCCPException(common::DESTINATION_CANNOT_PERFORM_REASSEMBLY,
                                 "ReassemblyProcessor::reassemble::: active reassemble process has been destroyed");
@@ -72,7 +73,14 @@ ReassemblyProcessor::reassemble(const MSG& next_msg_part,
       delete iter->second.msgPart[idx];
     } while (--idx >= 0);
     *real_data_sz = offset;
-    _timerMonitor.cancel(iter->second.timerId);
+    smsc::core::synchronization::MutexGuard timerMomitorSynch(_timerMonitorLock);
+    if ( !_timerMonitor->cancel(iter->second.timerId) ) {
+      for (cancelled_tmonitors::iterator c_iter = _cancelledTimerMonitors.begin(), c_end_iter = _cancelledTimerMonitors.end();
+           c_iter != c_end_iter; ++c_iter) {
+        if ( (*c_iter)->cancel(iter->second.timerId) )
+          break;
+      }
+    }
     _activeReassembleProcess.erase(iter);
     return FullMessageReassembled;
   }

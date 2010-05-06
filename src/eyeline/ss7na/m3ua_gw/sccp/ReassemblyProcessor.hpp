@@ -2,6 +2,7 @@
 # define __EYELINE_SS7NA_M3UAGW_SCCP_REASSSEMBLYPROCESSOR_HPP__
 
 # include <map>
+# include <list>
 # include <string.h>
 # include <sys/types.h>
 # include "logger/Logger.h"
@@ -23,8 +24,29 @@ class ReassemblyProcessor : public utilx::Singleton<ReassemblyProcessor> {
 public:
   void initialize(unsigned reassembly_timer) {
     _reassemblyTimer = reassembly_timer;
-    _timerMonitor.initialize(reassembly_timer + 1);
+    _timerMonitor->initialize(reassembly_timer + 1);
   }
+  void reinitialize(unsigned reassembly_timer) {
+    smsc_log_debug(_logger, "ReassemblyProcessor::reinitialize::: reassembly_timer=%u",
+                   reassembly_timer);
+    if ( _reassemblyTimer == reassembly_timer )
+      return;
+
+    smsc::core::synchronization::MutexGuard synchronize(_timerMonitorLock);
+    for ( cancelled_tmonitors::iterator iter = _cancelledTimerMonitors.begin(), end_iter = _cancelledTimerMonitors.end();
+         iter != end_iter; ) {
+      if ( (*iter)->stopped() ) {
+        delete *iter;
+        _cancelledTimerMonitors.erase(iter++);
+      } else
+        iter++;
+    }
+    _timerMonitor->shutdown();
+    _cancelledTimerMonitors.push_back(_timerMonitor);
+    _timerMonitor = new utilx::TimeoutMonitor(++_timeoutIdSeed);
+    _timerMonitor->initialize(reassembly_timer + 1);
+  }
+
   // return true if full message has been reassembled.
   // In this case buff_for_msg_data will contain full assembled message data.
   template <class MSG>
@@ -37,7 +59,8 @@ public:
   enum { NeedNextMessagePart = false, FullMessageReassembled = true };
 private:
   ReassemblyProcessor()
-  : _reassemblyTimer(0), _logger(smsc::logger::Logger::getInstance("sccp"))
+  : _reassemblyTimer(0), _logger(smsc::logger::Logger::getInstance("sccp")),
+    _timerMonitor(new utilx::TimeoutMonitor()), _timeoutIdSeed(0)
   {}
 
   friend class utilx::Singleton<ReassemblyProcessor>;
@@ -86,7 +109,11 @@ private:
   smsc::core::synchronization::Mutex _registryLock;
   unsigned _reassemblyTimer;
   smsc::logger::Logger* _logger;
-  utilx::TimeoutMonitor _timerMonitor;
+  utilx::TimeoutMonitor* _timerMonitor;
+  unsigned _timeoutIdSeed;
+  typedef std::list<utilx::TimeoutMonitor*> cancelled_tmonitors;
+  cancelled_tmonitors _cancelledTimerMonitors;
+  smsc::core::synchronization::Mutex _timerMonitorLock;
 };
 
 }}}}
