@@ -10,12 +10,9 @@
 
 #include "runtime_cfg/RuntimeConfig.hpp"
 #include "io_dispatcher/IODispatcherSubsystem.hpp"
+#include "lm_subsystem/LMSubsystem.hpp"
 #include "mtp3/MTP3Subsystem.hpp"
 #include "sccp/SccpSubsystem.hpp"
-
-//#include "messages_router/MessagesRouterSubsystem.hpp"
-//#include "lm_subsystem/LMSubsystem.hpp"
-//#include "lm_subsystem/InputCommandProcessor.hpp"
 
 int main(int argc, char** argv)
 {
@@ -39,11 +36,11 @@ int main(int argc, char** argv)
     eyeline::ss7na::m3ua_gw::io_dispatcher::IODispatcherSubsystem::init();
     eyeline::ss7na::m3ua_gw::mtp3::MTP3Subsystem::init();
     eyeline::ss7na::m3ua_gw::sccp::SccpSubsystem::init();
-    //eyeline::ss7na::m3ua_gw::lm_subsystem::LMSubsystem::init();
+    eyeline::ss7na::m3ua_gw::lm_subsystem::LMSubsystem::init();
 
     eyeline::utilx::runtime_cfg::RuntimeConfig& rconfig =
         eyeline::ss7na::m3ua_gw::runtime_cfg::RuntimeConfig::getInstance();
-    rconfig.initialize(m3uaConfigView);
+    rconfig.initialize(m3uaConfigView, cfgFile);
 
     smsc_log_info(logger, "main::: try to initialize all subsystems");
     eyeline::ss7na::m3ua_gw::io_dispatcher::IODispatcherSubsystem::getInstance()->initialize(rconfig);
@@ -55,8 +52,8 @@ int main(int argc, char** argv)
     eyeline::ss7na::m3ua_gw::sccp::SccpSubsystem::getInstance()->initialize(rconfig);
     smsc_log_info(logger, "main::: SccpSapSubsystem has been initialized");
 
-//    eyeline::ss7na::m3ua_gw::lm_subsystem::LMSubsystem::getInstance()->initialize(rconfig);
-//    smsc_log_info(logger, "main::: LMSubsystem has been initialized");
+    eyeline::ss7na::m3ua_gw::lm_subsystem::LMSubsystem::getInstance()->initialize(rconfig);
+    smsc_log_info(logger, "main::: LMSubsystem has been initialized");
 
     eyeline::utilx::SubsystemsManager::getInstance()->initialize();
     eyeline::utilx::SubsystemsManager::getInstance()->registerSubsystem(eyeline::ss7na::m3ua_gw::io_dispatcher::IODispatcherSubsystem::getInstance());
@@ -64,7 +61,7 @@ int main(int argc, char** argv)
                                                                         eyeline::ss7na::m3ua_gw::io_dispatcher::IODispatcherSubsystem::getInstance());
     eyeline::utilx::SubsystemsManager::getInstance()->registerSubsystem(eyeline::ss7na::m3ua_gw::mtp3::MTP3Subsystem::getInstance(),
                                                                         eyeline::ss7na::m3ua_gw::io_dispatcher::IODispatcherSubsystem::getInstance());
-//    eyeline::utilx::SubsystemsManager::getInstance()->registerSubsystem(eyeline::ss7na::m3ua_gw::lm_subsystem::LMSubsystem::getInstance());
+    eyeline::utilx::SubsystemsManager::getInstance()->registerSubsystem(eyeline::ss7na::m3ua_gw::lm_subsystem::LMSubsystem::getInstance());
 
     smsc_log_info(logger, "main::: try start all subsystems");
     eyeline::utilx::SubsystemsManager::getInstance()->startup();
