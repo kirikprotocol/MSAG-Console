@@ -40,6 +40,6 @@ data:handler.include=ControllerProtocolHandler.hpp
 data:handler.class=ControllerProtocolHandler
 
 data:msgns=messages::
-data:msginc.path=eyeline/clustercontroller/protocol/messages/
+data:msginc.path=messages/
 
 data:filename.suffix=

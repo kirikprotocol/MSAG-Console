@@ -1,6 +1,7 @@
 include messages.def
 
 protocol ControllerProtocol
+  //web&lb->cc->smsc
   ApplyRoutes 1
   ApplyReschedule 2
   ApplyLocaleResource 3
@@ -15,11 +16,8 @@ protocol ControllerProtocol
   UpdateProfile 12
   DeleteProfile 13
   CancelSms 14
-  MscRegister 15
-  MscUnregister 16
-  MscBlock 17
-  MscClear 18
-  MscList 19
+  MscAdd 15
+  MscRemove 16
   SmeAdd 20
   SmeUpdate 21
   SmeRemove 22
@@ -35,7 +33,7 @@ protocol ControllerProtocol
   AclLookup 32
   AclRemoveAddresses 33
   AclAddAddresses 34
-  DlPrcList 35
+/*  DlPrcList 35
   DlPrcAdd 36
   DlPrcDelete 37
   DlPrcGet 38
@@ -52,7 +50,7 @@ protocol ControllerProtocol
   DlList 49
   DlAlter 50
   DlCopy 51
-  DlRename 52
+  DlRename 52*/
   CgmAddGroup 53
   CgmDeleteGroup 54
   CgmAddAddr 55
@@ -63,18 +61,27 @@ protocol ControllerProtocol
   CgmListAbonents 60
   AliasAdd 61
   AliasDel 62
+  UpdateProfileAbntResp 63
+  /*
+  DlMemAddAbntResp 64
+  DlMemDeleteAbntResp 65
+  DlSbmAddAbntResp 66
+  DlSbmDelAbntResp 67
+  DlAddAbntResp 68
+  DlDeleteAbntResp 69
+  DlCopyAbntResp 70
+  DlRenameAbntResp 71
+  */
 
 //load balancer
   GetServicesStatus 101
   DisconnectService 102
 
 //smsc runtime
-  MultipartMessageRequest 201
-  ReplaceIfPresentRequest 202
-  LockProfiler 203
-  UnlockProfiler 204
-  LockMscManager 205
-  UnlockMscManager 206
+//  MultipartMessageRequest 201
+//  ReplaceIfPresentRequest 202
+  LockConfig 203
+  UnlockConfig 204
 
 //auth
   RegisterAsLoadBalancer 301
@@ -82,7 +89,7 @@ protocol ControllerProtocol
   RegisterAsSmsc 303
 
 
-//responses
+//smsc->cc->web&lb
   ApplyRoutesResp 1001
   ApplyRescheduleResp 1002
   ApplyLocaleResourceResp 1003
@@ -97,11 +104,8 @@ protocol ControllerProtocol
   UpdateProfileResp 1012
   DeleteProfileResp 1013
   CancelSmsResp 1014
-  MscRegisterResp 1015
-  MscUnregisterResp 1016
-  MscBlockResp 1017
-  MscClearResp 1018
-  MscListResp 1019
+  MscAddResp 1015
+  MscRemoveResp 1016
   SmeAddResp 1020
   SmeUpdateResp 1021
   SmeRemoveResp 1022
@@ -117,6 +121,7 @@ protocol ControllerProtocol
   AclLookupResp 1032
   AclRemoveAddressesResp 1033
   AclAddAddressesResp 1034
+  /*
   DlPrcListResp 1035
   DlPrcAddResp 1036
   DlPrcDeleteResp 1037
@@ -135,6 +140,7 @@ protocol ControllerProtocol
   DlAlterResp 1050
   DlCopyResp 1051
   DlRenameResp 1052
+  */
   CgmAddGroupResp 1053
   CgmDeleteGroupResp 1054
   CgmAddAddrResp 1055
@@ -145,13 +151,24 @@ protocol ControllerProtocol
   CgmListAbonentsResp 1060
   AliasAddResp 1061
   AliasDelResp 1062
+  UpdateProfileAbnt 1063
+  /*
+  DlMemAddAbnt 1064
+  DlMemDeleteAbnt 1065
+  DlSbmAddAbnt 1066
+  DlSbmDelAbnt 1067
+  DlAddAbnt 1068
+  DlDeleteAbnt 1069
+  DlCopyAbnt 1070
+  DlRenameAbnt 1071
+  */
 
 //load balancer
   GetServicesStatusResp 1101
   DisconnectServiceResp 1102
 
 //smsc runtime
-  MultipartMessageRequestResp 1201
-  ReplaceIfPresentRequestResp 1202
-  LockProfilerResp            1203
+//  MultipartMessageRequestResp 1201
+//  ReplaceIfPresentRequestResp 1202
+  LockConfigResp              1203
 end

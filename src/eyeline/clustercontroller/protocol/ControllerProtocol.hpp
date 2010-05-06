@@ -3,73 +3,100 @@
 #include "eyeline/protogen/framework/SerializerBuffer.hpp"
 #include "eyeline/protogen/framework/Exceptions.hpp"
 #include "ControllerProtocolHandler.hpp"
-#include "eyeline/clustercontroller/protocol/messages/ApplyRoutes.hpp"
-#include "eyeline/clustercontroller/protocol/messages/ApplyReschedule.hpp"
-#include "eyeline/clustercontroller/protocol/messages/ApplyLocaleResource.hpp"
-#include "eyeline/clustercontroller/protocol/messages/ApplyTimeZones.hpp"
-#include "eyeline/clustercontroller/protocol/messages/ApplyFraudControl.hpp"
-#include "eyeline/clustercontroller/protocol/messages/ApplyMapLimits.hpp"
-#include "eyeline/clustercontroller/protocol/messages/ApplySnmp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/TraceRoute.hpp"
-#include "eyeline/clustercontroller/protocol/messages/LoadRoutes.hpp"
-#include "eyeline/clustercontroller/protocol/messages/LookupProfile.hpp"
-#include "eyeline/clustercontroller/protocol/messages/LookupProfileEx.hpp"
-#include "eyeline/clustercontroller/protocol/messages/UpdateProfile.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DeleteProfile.hpp"
-#include "eyeline/clustercontroller/protocol/messages/CancelSms.hpp"
-#include "eyeline/clustercontroller/protocol/messages/MscRegister.hpp"
-#include "eyeline/clustercontroller/protocol/messages/MscUnregister.hpp"
-#include "eyeline/clustercontroller/protocol/messages/MscBlock.hpp"
-#include "eyeline/clustercontroller/protocol/messages/MscClear.hpp"
-#include "eyeline/clustercontroller/protocol/messages/MscList.hpp"
-#include "eyeline/clustercontroller/protocol/messages/SmeAdd.hpp"
-#include "eyeline/clustercontroller/protocol/messages/SmeUpdate.hpp"
-#include "eyeline/clustercontroller/protocol/messages/SmeRemove.hpp"
-#include "eyeline/clustercontroller/protocol/messages/SmeStatus.hpp"
-#include "eyeline/clustercontroller/protocol/messages/SmeDisconnect.hpp"
-#include "eyeline/clustercontroller/protocol/messages/LoggerGetCategories.hpp"
-#include "eyeline/clustercontroller/protocol/messages/LoggerSetCategories.hpp"
-#include "eyeline/clustercontroller/protocol/messages/AclGet.hpp"
-#include "eyeline/clustercontroller/protocol/messages/AclList.hpp"
-#include "eyeline/clustercontroller/protocol/messages/AclRemove.hpp"
-#include "eyeline/clustercontroller/protocol/messages/AclCreate.hpp"
-#include "eyeline/clustercontroller/protocol/messages/AclUpdate.hpp"
-#include "eyeline/clustercontroller/protocol/messages/AclLookup.hpp"
-#include "eyeline/clustercontroller/protocol/messages/AclRemoveAddresses.hpp"
-#include "eyeline/clustercontroller/protocol/messages/AclAddAddresses.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlPrcList.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlPrcAdd.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlPrcDelete.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlPrcGet.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlPrcAlter.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlMemAdd.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlMemDelete.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlMemGet.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlSbmAdd.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlSbmDel.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlSbmList.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlAdd.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlDelete.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlGet.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlList.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlAlter.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlCopy.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlRename.hpp"
-#include "eyeline/clustercontroller/protocol/messages/CgmAddGroup.hpp"
-#include "eyeline/clustercontroller/protocol/messages/CgmDeleteGroup.hpp"
-#include "eyeline/clustercontroller/protocol/messages/CgmAddAddr.hpp"
-#include "eyeline/clustercontroller/protocol/messages/CgmCheck.hpp"
-#include "eyeline/clustercontroller/protocol/messages/CgmDelAddr.hpp"
-#include "eyeline/clustercontroller/protocol/messages/CgmAddAbonent.hpp"
-#include "eyeline/clustercontroller/protocol/messages/CgmDelAbonent.hpp"
-#include "eyeline/clustercontroller/protocol/messages/CgmListAbonents.hpp"
-#include "eyeline/clustercontroller/protocol/messages/AliasAdd.hpp"
-#include "eyeline/clustercontroller/protocol/messages/AliasDel.hpp"
-#include "eyeline/clustercontroller/protocol/messages/GetServicesStatus.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DisconnectService.hpp"
-#include "eyeline/clustercontroller/protocol/messages/MultipartMessageRequestResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/ReplaceIfPresentRequestResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/LockProfilerResp.hpp"
+#include "messages/ApplyRoutes.hpp"
+#include "messages/ApplyReschedule.hpp"
+#include "messages/ApplyLocaleResource.hpp"
+#include "messages/ApplyTimeZones.hpp"
+#include "messages/ApplyFraudControl.hpp"
+#include "messages/ApplyMapLimits.hpp"
+#include "messages/ApplySnmp.hpp"
+#include "messages/TraceRoute.hpp"
+#include "messages/LoadRoutes.hpp"
+#include "messages/LookupProfile.hpp"
+#include "messages/LookupProfileEx.hpp"
+#include "messages/UpdateProfile.hpp"
+#include "messages/DeleteProfile.hpp"
+#include "messages/CancelSms.hpp"
+#include "messages/MscAdd.hpp"
+#include "messages/MscRemove.hpp"
+#include "messages/SmeAdd.hpp"
+#include "messages/SmeUpdate.hpp"
+#include "messages/SmeRemove.hpp"
+#include "messages/SmeStatus.hpp"
+#include "messages/SmeDisconnect.hpp"
+#include "messages/LoggerGetCategories.hpp"
+#include "messages/LoggerSetCategories.hpp"
+#include "messages/AclGet.hpp"
+#include "messages/AclList.hpp"
+#include "messages/AclRemove.hpp"
+#include "messages/AclCreate.hpp"
+#include "messages/AclUpdate.hpp"
+#include "messages/AclLookup.hpp"
+#include "messages/AclRemoveAddresses.hpp"
+#include "messages/AclAddAddresses.hpp"
+#include "messages/CgmAddGroup.hpp"
+#include "messages/CgmDeleteGroup.hpp"
+#include "messages/CgmAddAddr.hpp"
+#include "messages/CgmCheck.hpp"
+#include "messages/CgmDelAddr.hpp"
+#include "messages/CgmAddAbonent.hpp"
+#include "messages/CgmDelAbonent.hpp"
+#include "messages/CgmListAbonents.hpp"
+#include "messages/AliasAdd.hpp"
+#include "messages/AliasDel.hpp"
+#include "messages/UpdateProfileAbntResp.hpp"
+#include "messages/GetServicesStatus.hpp"
+#include "messages/DisconnectService.hpp"
+#include "messages/LockConfig.hpp"
+#include "messages/UnlockConfig.hpp"
+#include "messages/RegisterAsLoadBalancer.hpp"
+#include "messages/RegisterAsWebapp.hpp"
+#include "messages/RegisterAsSmsc.hpp"
+#include "messages/ApplyRoutesResp.hpp"
+#include "messages/ApplyRescheduleResp.hpp"
+#include "messages/ApplyLocaleResourceResp.hpp"
+#include "messages/ApplyTimeZonesResp.hpp"
+#include "messages/ApplyFraudControlResp.hpp"
+#include "messages/ApplyMapLimitsResp.hpp"
+#include "messages/ApplySnmpResp.hpp"
+#include "messages/TraceRouteResp.hpp"
+#include "messages/LoadRoutesResp.hpp"
+#include "messages/LookupProfileResp.hpp"
+#include "messages/LookupProfileExResp.hpp"
+#include "messages/UpdateProfileResp.hpp"
+#include "messages/DeleteProfileResp.hpp"
+#include "messages/CancelSmsResp.hpp"
+#include "messages/MscAddResp.hpp"
+#include "messages/MscRemoveResp.hpp"
+#include "messages/SmeAddResp.hpp"
+#include "messages/SmeUpdateResp.hpp"
+#include "messages/SmeRemoveResp.hpp"
+#include "messages/SmeStatusResp.hpp"
+#include "messages/SmeDisconnectResp.hpp"
+#include "messages/LoggerGetCategoriesResp.hpp"
+#include "messages/LoggerSetCategoriesResp.hpp"
+#include "messages/AclGetResp.hpp"
+#include "messages/AclListResp.hpp"
+#include "messages/AclRemoveResp.hpp"
+#include "messages/AclCreateResp.hpp"
+#include "messages/AclUpdateResp.hpp"
+#include "messages/AclLookupResp.hpp"
+#include "messages/AclRemoveAddressesResp.hpp"
+#include "messages/AclAddAddressesResp.hpp"
+#include "messages/CgmAddGroupResp.hpp"
+#include "messages/CgmDeleteGroupResp.hpp"
+#include "messages/CgmAddAddrResp.hpp"
+#include "messages/CgmCheckResp.hpp"
+#include "messages/CgmDelAddrResp.hpp"
+#include "messages/CgmAddAbonentResp.hpp"
+#include "messages/CgmDelAbonentResp.hpp"
+#include "messages/CgmListAbonentsResp.hpp"
+#include "messages/AliasAddResp.hpp"
+#include "messages/AliasDelResp.hpp"
+#include "messages/UpdateProfileAbnt.hpp"
+#include "messages/GetServicesStatusResp.hpp"
+#include "messages/DisconnectServiceResp.hpp"
+#include "messages/LockConfigResp.hpp"
 
 namespace eyeline {
 namespace clustercontroller {
@@ -92,11 +119,8 @@ public:
     tag_UpdateProfile=12,
     tag_DeleteProfile=13,
     tag_CancelSms=14,
-    tag_MscRegister=15,
-    tag_MscUnregister=16,
-    tag_MscBlock=17,
-    tag_MscClear=18,
-    tag_MscList=19,
+    tag_MscAdd=15,
+    tag_MscRemove=16,
     tag_SmeAdd=20,
     tag_SmeUpdate=21,
     tag_SmeRemove=22,
@@ -112,24 +136,6 @@ public:
     tag_AclLookup=32,
     tag_AclRemoveAddresses=33,
     tag_AclAddAddresses=34,
-    tag_DlPrcList=35,
-    tag_DlPrcAdd=36,
-    tag_DlPrcDelete=37,
-    tag_DlPrcGet=38,
-    tag_DlPrcAlter=39,
-    tag_DlMemAdd=40,
-    tag_DlMemDelete=41,
-    tag_DlMemGet=42,
-    tag_DlSbmAdd=43,
-    tag_DlSbmDel=44,
-    tag_DlSbmList=45,
-    tag_DlAdd=46,
-    tag_DlDelete=47,
-    tag_DlGet=48,
-    tag_DlList=49,
-    tag_DlAlter=50,
-    tag_DlCopy=51,
-    tag_DlRename=52,
     tag_CgmAddGroup=53,
     tag_CgmDeleteGroup=54,
     tag_CgmAddAddr=55,
@@ -140,12 +146,11 @@ public:
     tag_CgmListAbonents=60,
     tag_AliasAdd=61,
     tag_AliasDel=62,
+    tag_UpdateProfileAbntResp=63,
     tag_GetServicesStatus=101,
     tag_DisconnectService=102,
-    tag_MultipartMessageRequest=201,
-    tag_ReplaceIfPresentRequest=202,
-    tag_LockProfiler=203,
-    tag_UnlockProfiler=204,
+    tag_LockConfig=203,
+    tag_UnlockConfig=204,
     tag_RegisterAsLoadBalancer=301,
     tag_RegisterAsWebapp=302,
     tag_RegisterAsSmsc=303,
@@ -163,11 +168,8 @@ public:
     tag_UpdateProfileResp=1012,
     tag_DeleteProfileResp=1013,
     tag_CancelSmsResp=1014,
-    tag_MscRegisterResp=1015,
-    tag_MscUnregisterResp=1016,
-    tag_MscBlockResp=1017,
-    tag_MscClearResp=1018,
-    tag_MscListResp=1019,
+    tag_MscAddResp=1015,
+    tag_MscRemoveResp=1016,
     tag_SmeAddResp=1020,
     tag_SmeUpdateResp=1021,
     tag_SmeRemoveResp=1022,
@@ -183,24 +185,6 @@ public:
     tag_AclLookupResp=1032,
     tag_AclRemoveAddressesResp=1033,
     tag_AclAddAddressesResp=1034,
-    tag_DlPrcListResp=1035,
-    tag_DlPrcAddResp=1036,
-    tag_DlPrcDeleteResp=1037,
-    tag_DlPrcGetResp=1038,
-    tag_DlPrcAlterResp=1039,
-    tag_DlMemAddResp=1040,
-    tag_DlMemDeleteResp=1041,
-    tag_DlMemGetResp=1042,
-    tag_DlSbmAddResp=1043,
-    tag_DlSbmDelResp=1044,
-    tag_DlSbmListResp=1045,
-    tag_DlAddResp=1046,
-    tag_DlDeleteResp=1047,
-    tag_DlGetResp=1048,
-    tag_DlListResp=1049,
-    tag_DlAlterResp=1050,
-    tag_DlCopyResp=1051,
-    tag_DlRenameResp=1052,
     tag_CgmAddGroupResp=1053,
     tag_CgmDeleteGroupResp=1054,
     tag_CgmAddAddrResp=1055,
@@ -211,11 +195,10 @@ public:
     tag_CgmListAbonentsResp=1060,
     tag_AliasAddResp=1061,
     tag_AliasDelResp=1062,
+    tag_UpdateProfileAbnt=1063,
     tag_GetServicesStatusResp=1101,
     tag_DisconnectServiceResp=1102,
-    tag_MultipartMessageRequestResp=1201,
-    tag_ReplaceIfPresentRequestResp=1202,
-    tag_LockProfilerResp=1203
+    tag_LockConfigResp=1203
   };
  
   ControllerProtocol():handler(0)
@@ -240,11 +223,8 @@ public:
   void encodeMessage(const messages::UpdateProfile& msg,protogen::framework::SerializerBuffer* ss);
   void encodeMessage(const messages::DeleteProfile& msg,protogen::framework::SerializerBuffer* ss);
   void encodeMessage(const messages::CancelSms& msg,protogen::framework::SerializerBuffer* ss);
-  void encodeMessage(const messages::MscRegister& msg,protogen::framework::SerializerBuffer* ss);
-  void encodeMessage(const messages::MscUnregister& msg,protogen::framework::SerializerBuffer* ss);
-  void encodeMessage(const messages::MscBlock& msg,protogen::framework::SerializerBuffer* ss);
-  void encodeMessage(const messages::MscClear& msg,protogen::framework::SerializerBuffer* ss);
-  void encodeMessage(const messages::MscList& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::MscAdd& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::MscRemove& msg,protogen::framework::SerializerBuffer* ss);
   void encodeMessage(const messages::SmeAdd& msg,protogen::framework::SerializerBuffer* ss);
   void encodeMessage(const messages::SmeUpdate& msg,protogen::framework::SerializerBuffer* ss);
   void encodeMessage(const messages::SmeRemove& msg,protogen::framework::SerializerBuffer* ss);
@@ -260,24 +240,6 @@ public:
   void encodeMessage(const messages::AclLookup& msg,protogen::framework::SerializerBuffer* ss);
   void encodeMessage(const messages::AclRemoveAddresses& msg,protogen::framework::SerializerBuffer* ss);
   void encodeMessage(const messages::AclAddAddresses& msg,protogen::framework::SerializerBuffer* ss);
-  void encodeMessage(const messages::DlPrcList& msg,protogen::framework::SerializerBuffer* ss);
-  void encodeMessage(const messages::DlPrcAdd& msg,protogen::framework::SerializerBuffer* ss);
-  void encodeMessage(const messages::DlPrcDelete& msg,protogen::framework::SerializerBuffer* ss);
-  void encodeMessage(const messages::DlPrcGet& msg,protogen::framework::SerializerBuffer* ss);
-  void encodeMessage(const messages::DlPrcAlter& msg,protogen::framework::SerializerBuffer* ss);
-  void encodeMessage(const messages::DlMemAdd& msg,protogen::framework::SerializerBuffer* ss);
-  void encodeMessage(const messages::DlMemDelete& msg,protogen::framework::SerializerBuffer* ss);
-  void encodeMessage(const messages::DlMemGet& msg,protogen::framework::SerializerBuffer* ss);
-  void encodeMessage(const messages::DlSbmAdd& msg,protogen::framework::SerializerBuffer* ss);
-  void encodeMessage(const messages::DlSbmDel& msg,protogen::framework::SerializerBuffer* ss);
-  void encodeMessage(const messages::DlSbmList& msg,protogen::framework::SerializerBuffer* ss);
-  void encodeMessage(const messages::DlAdd& msg,protogen::framework::SerializerBuffer* ss);
-  void encodeMessage(const messages::DlDelete& msg,protogen::framework::SerializerBuffer* ss);
-  void encodeMessage(const messages::DlGet& msg,protogen::framework::SerializerBuffer* ss);
-  void encodeMessage(const messages::DlList& msg,protogen::framework::SerializerBuffer* ss);
-  void encodeMessage(const messages::DlAlter& msg,protogen::framework::SerializerBuffer* ss);
-  void encodeMessage(const messages::DlCopy& msg,protogen::framework::SerializerBuffer* ss);
-  void encodeMessage(const messages::DlRename& msg,protogen::framework::SerializerBuffer* ss);
   void encodeMessage(const messages::CgmAddGroup& msg,protogen::framework::SerializerBuffer* ss);
   void encodeMessage(const messages::CgmDeleteGroup& msg,protogen::framework::SerializerBuffer* ss);
   void encodeMessage(const messages::CgmAddAddr& msg,protogen::framework::SerializerBuffer* ss);
@@ -288,11 +250,59 @@ public:
   void encodeMessage(const messages::CgmListAbonents& msg,protogen::framework::SerializerBuffer* ss);
   void encodeMessage(const messages::AliasAdd& msg,protogen::framework::SerializerBuffer* ss);
   void encodeMessage(const messages::AliasDel& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::UpdateProfileAbntResp& msg,protogen::framework::SerializerBuffer* ss);
   void encodeMessage(const messages::GetServicesStatus& msg,protogen::framework::SerializerBuffer* ss);
   void encodeMessage(const messages::DisconnectService& msg,protogen::framework::SerializerBuffer* ss);
-  void encodeMessage(const messages::MultipartMessageRequestResp& msg,protogen::framework::SerializerBuffer* ss);
-  void encodeMessage(const messages::ReplaceIfPresentRequestResp& msg,protogen::framework::SerializerBuffer* ss);
-  void encodeMessage(const messages::LockProfilerResp& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::LockConfig& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::UnlockConfig& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::RegisterAsLoadBalancer& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::RegisterAsWebapp& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::RegisterAsSmsc& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::ApplyRoutesResp& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::ApplyRescheduleResp& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::ApplyLocaleResourceResp& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::ApplyTimeZonesResp& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::ApplyFraudControlResp& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::ApplyMapLimitsResp& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::ApplySnmpResp& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::TraceRouteResp& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::LoadRoutesResp& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::LookupProfileResp& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::LookupProfileExResp& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::UpdateProfileResp& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::DeleteProfileResp& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::CancelSmsResp& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::MscAddResp& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::MscRemoveResp& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::SmeAddResp& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::SmeUpdateResp& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::SmeRemoveResp& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::SmeStatusResp& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::SmeDisconnectResp& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::LoggerGetCategoriesResp& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::LoggerSetCategoriesResp& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::AclGetResp& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::AclListResp& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::AclRemoveResp& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::AclCreateResp& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::AclUpdateResp& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::AclLookupResp& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::AclRemoveAddressesResp& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::AclAddAddressesResp& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::CgmAddGroupResp& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::CgmDeleteGroupResp& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::CgmAddAddrResp& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::CgmCheckResp& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::CgmDelAddrResp& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::CgmAddAbonentResp& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::CgmDelAbonentResp& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::CgmListAbonentsResp& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::AliasAddResp& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::AliasDelResp& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::UpdateProfileAbnt& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::GetServicesStatusResp& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::DisconnectServiceResp& msg,protogen::framework::SerializerBuffer* ss);
+  void encodeMessage(const messages::LockConfigResp& msg,protogen::framework::SerializerBuffer* ss);
 protected:
   ControllerProtocolHandler* handler;
 };

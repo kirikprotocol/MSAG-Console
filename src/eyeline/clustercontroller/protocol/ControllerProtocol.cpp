@@ -1,75 +1,98 @@
 #include "ControllerProtocol.hpp"
-#include "eyeline/clustercontroller/protocol/messages/MultipartMessageRequest.hpp"
-#include "eyeline/clustercontroller/protocol/messages/ReplaceIfPresentRequest.hpp"
-#include "eyeline/clustercontroller/protocol/messages/LockProfiler.hpp"
-#include "eyeline/clustercontroller/protocol/messages/UnlockProfiler.hpp"
-#include "eyeline/clustercontroller/protocol/messages/RegisterAsLoadBalancer.hpp"
-#include "eyeline/clustercontroller/protocol/messages/RegisterAsWebapp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/RegisterAsSmsc.hpp"
-#include "eyeline/clustercontroller/protocol/messages/ApplyRoutesResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/ApplyRescheduleResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/ApplyLocaleResourceResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/ApplyTimeZonesResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/ApplyFraudControlResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/ApplyMapLimitsResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/ApplySnmpResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/TraceRouteResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/LoadRoutesResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/LookupProfileResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/LookupProfileExResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/UpdateProfileResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DeleteProfileResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/CancelSmsResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/MscRegisterResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/MscUnregisterResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/MscBlockResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/MscClearResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/MscListResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/SmeAddResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/SmeUpdateResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/SmeRemoveResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/SmeStatusResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/SmeDisconnectResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/LoggerGetCategoriesResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/LoggerSetCategoriesResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/AclGetResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/AclListResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/AclRemoveResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/AclCreateResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/AclUpdateResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/AclLookupResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/AclRemoveAddressesResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/AclAddAddressesResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlPrcListResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlPrcAddResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlPrcDeleteResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlPrcGetResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlPrcAlterResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlMemAddResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlMemDeleteResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlMemGetResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlSbmAddResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlSbmDelResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlSbmListResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlAddResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlDeleteResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlGetResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlListResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlAlterResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlCopyResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlRenameResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/CgmAddGroupResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/CgmDeleteGroupResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/CgmAddAddrResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/CgmCheckResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/CgmDelAddrResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/CgmAddAbonentResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/CgmDelAbonentResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/CgmListAbonentsResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/AliasAddResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/AliasDelResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/GetServicesStatusResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DisconnectServiceResp.hpp"
+#include "messages/ApplyRoutes.hpp"
+#include "messages/ApplyReschedule.hpp"
+#include "messages/ApplyLocaleResource.hpp"
+#include "messages/ApplyTimeZones.hpp"
+#include "messages/ApplyFraudControl.hpp"
+#include "messages/ApplyMapLimits.hpp"
+#include "messages/ApplySnmp.hpp"
+#include "messages/TraceRoute.hpp"
+#include "messages/LoadRoutes.hpp"
+#include "messages/LookupProfile.hpp"
+#include "messages/LookupProfileEx.hpp"
+#include "messages/UpdateProfile.hpp"
+#include "messages/DeleteProfile.hpp"
+#include "messages/CancelSms.hpp"
+#include "messages/MscAdd.hpp"
+#include "messages/MscRemove.hpp"
+#include "messages/SmeAdd.hpp"
+#include "messages/SmeUpdate.hpp"
+#include "messages/SmeRemove.hpp"
+#include "messages/SmeStatus.hpp"
+#include "messages/SmeDisconnect.hpp"
+#include "messages/LoggerGetCategories.hpp"
+#include "messages/LoggerSetCategories.hpp"
+#include "messages/AclGet.hpp"
+#include "messages/AclList.hpp"
+#include "messages/AclRemove.hpp"
+#include "messages/AclCreate.hpp"
+#include "messages/AclUpdate.hpp"
+#include "messages/AclLookup.hpp"
+#include "messages/AclRemoveAddresses.hpp"
+#include "messages/AclAddAddresses.hpp"
+#include "messages/CgmAddGroup.hpp"
+#include "messages/CgmDeleteGroup.hpp"
+#include "messages/CgmAddAddr.hpp"
+#include "messages/CgmCheck.hpp"
+#include "messages/CgmDelAddr.hpp"
+#include "messages/CgmAddAbonent.hpp"
+#include "messages/CgmDelAbonent.hpp"
+#include "messages/CgmListAbonents.hpp"
+#include "messages/AliasAdd.hpp"
+#include "messages/AliasDel.hpp"
+#include "messages/UpdateProfileAbntResp.hpp"
+#include "messages/GetServicesStatus.hpp"
+#include "messages/DisconnectService.hpp"
+#include "messages/LockConfig.hpp"
+#include "messages/UnlockConfig.hpp"
+#include "messages/RegisterAsLoadBalancer.hpp"
+#include "messages/RegisterAsWebapp.hpp"
+#include "messages/RegisterAsSmsc.hpp"
+#include "messages/ApplyRoutesResp.hpp"
+#include "messages/ApplyRescheduleResp.hpp"
+#include "messages/ApplyLocaleResourceResp.hpp"
+#include "messages/ApplyTimeZonesResp.hpp"
+#include "messages/ApplyFraudControlResp.hpp"
+#include "messages/ApplyMapLimitsResp.hpp"
+#include "messages/ApplySnmpResp.hpp"
+#include "messages/TraceRouteResp.hpp"
+#include "messages/LoadRoutesResp.hpp"
+#include "messages/LookupProfileResp.hpp"
+#include "messages/LookupProfileExResp.hpp"
+#include "messages/UpdateProfileResp.hpp"
+#include "messages/DeleteProfileResp.hpp"
+#include "messages/CancelSmsResp.hpp"
+#include "messages/MscAddResp.hpp"
+#include "messages/MscRemoveResp.hpp"
+#include "messages/SmeAddResp.hpp"
+#include "messages/SmeUpdateResp.hpp"
+#include "messages/SmeRemoveResp.hpp"
+#include "messages/SmeStatusResp.hpp"
+#include "messages/SmeDisconnectResp.hpp"
+#include "messages/LoggerGetCategoriesResp.hpp"
+#include "messages/LoggerSetCategoriesResp.hpp"
+#include "messages/AclGetResp.hpp"
+#include "messages/AclListResp.hpp"
+#include "messages/AclRemoveResp.hpp"
+#include "messages/AclCreateResp.hpp"
+#include "messages/AclUpdateResp.hpp"
+#include "messages/AclLookupResp.hpp"
+#include "messages/AclRemoveAddressesResp.hpp"
+#include "messages/AclAddAddressesResp.hpp"
+#include "messages/CgmAddGroupResp.hpp"
+#include "messages/CgmDeleteGroupResp.hpp"
+#include "messages/CgmAddAddrResp.hpp"
+#include "messages/CgmCheckResp.hpp"
+#include "messages/CgmDelAddrResp.hpp"
+#include "messages/CgmAddAbonentResp.hpp"
+#include "messages/CgmDelAbonentResp.hpp"
+#include "messages/CgmListAbonentsResp.hpp"
+#include "messages/AliasAddResp.hpp"
+#include "messages/AliasDelResp.hpp"
+#include "messages/UpdateProfileAbnt.hpp"
+#include "messages/GetServicesStatusResp.hpp"
+#include "messages/DisconnectServiceResp.hpp"
+#include "messages/LockConfigResp.hpp"
 
 namespace eyeline {
 namespace clustercontroller {
@@ -93,30 +116,324 @@ void ControllerProtocol::decodeAndHandleMessage(protogen::framework::SerializerB
   uint32_t seq=ss.readInt32();
   switch(tag)
   {
-    case tag_MultipartMessageRequest:
+    case tag_ApplyRoutes:
     {
-      messages::MultipartMessageRequest msg;
+      messages::ApplyRoutes msg;
       msg.deserialize(ss);
       msg.setSeqNum(seq);
       handler->handle(msg);
     }break;
-    case tag_ReplaceIfPresentRequest:
+    case tag_ApplyReschedule:
     {
-      messages::ReplaceIfPresentRequest msg;
+      messages::ApplyReschedule msg;
       msg.deserialize(ss);
       msg.setSeqNum(seq);
       handler->handle(msg);
     }break;
-    case tag_LockProfiler:
+    case tag_ApplyLocaleResource:
     {
-      messages::LockProfiler msg;
+      messages::ApplyLocaleResource msg;
       msg.deserialize(ss);
       msg.setSeqNum(seq);
       handler->handle(msg);
     }break;
-    case tag_UnlockProfiler:
+    case tag_ApplyTimeZones:
     {
-      messages::UnlockProfiler msg;
+      messages::ApplyTimeZones msg;
+      msg.deserialize(ss);
+      msg.setSeqNum(seq);
+      handler->handle(msg);
+    }break;
+    case tag_ApplyFraudControl:
+    {
+      messages::ApplyFraudControl msg;
+      msg.deserialize(ss);
+      msg.setSeqNum(seq);
+      handler->handle(msg);
+    }break;
+    case tag_ApplyMapLimits:
+    {
+      messages::ApplyMapLimits msg;
+      msg.deserialize(ss);
+      msg.setSeqNum(seq);
+      handler->handle(msg);
+    }break;
+    case tag_ApplySnmp:
+    {
+      messages::ApplySnmp msg;
+      msg.deserialize(ss);
+      msg.setSeqNum(seq);
+      handler->handle(msg);
+    }break;
+    case tag_TraceRoute:
+    {
+      messages::TraceRoute msg;
+      msg.deserialize(ss);
+      msg.setSeqNum(seq);
+      handler->handle(msg);
+    }break;
+    case tag_LoadRoutes:
+    {
+      messages::LoadRoutes msg;
+      msg.deserialize(ss);
+      msg.setSeqNum(seq);
+      handler->handle(msg);
+    }break;
+    case tag_LookupProfile:
+    {
+      messages::LookupProfile msg;
+      msg.deserialize(ss);
+      msg.setSeqNum(seq);
+      handler->handle(msg);
+    }break;
+    case tag_LookupProfileEx:
+    {
+      messages::LookupProfileEx msg;
+      msg.deserialize(ss);
+      msg.setSeqNum(seq);
+      handler->handle(msg);
+    }break;
+    case tag_UpdateProfile:
+    {
+      messages::UpdateProfile msg;
+      msg.deserialize(ss);
+      msg.setSeqNum(seq);
+      handler->handle(msg);
+    }break;
+    case tag_DeleteProfile:
+    {
+      messages::DeleteProfile msg;
+      msg.deserialize(ss);
+      msg.setSeqNum(seq);
+      handler->handle(msg);
+    }break;
+    case tag_CancelSms:
+    {
+      messages::CancelSms msg;
+      msg.deserialize(ss);
+      msg.setSeqNum(seq);
+      handler->handle(msg);
+    }break;
+    case tag_MscAdd:
+    {
+      messages::MscAdd msg;
+      msg.deserialize(ss);
+      msg.setSeqNum(seq);
+      handler->handle(msg);
+    }break;
+    case tag_MscRemove:
+    {
+      messages::MscRemove msg;
+      msg.deserialize(ss);
+      msg.setSeqNum(seq);
+      handler->handle(msg);
+    }break;
+    case tag_SmeAdd:
+    {
+      messages::SmeAdd msg;
+      msg.deserialize(ss);
+      msg.setSeqNum(seq);
+      handler->handle(msg);
+    }break;
+    case tag_SmeUpdate:
+    {
+      messages::SmeUpdate msg;
+      msg.deserialize(ss);
+      msg.setSeqNum(seq);
+      handler->handle(msg);
+    }break;
+    case tag_SmeRemove:
+    {
+      messages::SmeRemove msg;
+      msg.deserialize(ss);
+      msg.setSeqNum(seq);
+      handler->handle(msg);
+    }break;
+    case tag_SmeStatus:
+    {
+      messages::SmeStatus msg;
+      msg.deserialize(ss);
+      msg.setSeqNum(seq);
+      handler->handle(msg);
+    }break;
+    case tag_SmeDisconnect:
+    {
+      messages::SmeDisconnect msg;
+      msg.deserialize(ss);
+      msg.setSeqNum(seq);
+      handler->handle(msg);
+    }break;
+    case tag_LoggerGetCategories:
+    {
+      messages::LoggerGetCategories msg;
+      msg.deserialize(ss);
+      msg.setSeqNum(seq);
+      handler->handle(msg);
+    }break;
+    case tag_LoggerSetCategories:
+    {
+      messages::LoggerSetCategories msg;
+      msg.deserialize(ss);
+      msg.setSeqNum(seq);
+      handler->handle(msg);
+    }break;
+    case tag_AclGet:
+    {
+      messages::AclGet msg;
+      msg.deserialize(ss);
+      msg.setSeqNum(seq);
+      handler->handle(msg);
+    }break;
+    case tag_AclList:
+    {
+      messages::AclList msg;
+      msg.deserialize(ss);
+      msg.setSeqNum(seq);
+      handler->handle(msg);
+    }break;
+    case tag_AclRemove:
+    {
+      messages::AclRemove msg;
+      msg.deserialize(ss);
+      msg.setSeqNum(seq);
+      handler->handle(msg);
+    }break;
+    case tag_AclCreate:
+    {
+      messages::AclCreate msg;
+      msg.deserialize(ss);
+      msg.setSeqNum(seq);
+      handler->handle(msg);
+    }break;
+    case tag_AclUpdate:
+    {
+      messages::AclUpdate msg;
+      msg.deserialize(ss);
+      msg.setSeqNum(seq);
+      handler->handle(msg);
+    }break;
+    case tag_AclLookup:
+    {
+      messages::AclLookup msg;
+      msg.deserialize(ss);
+      msg.setSeqNum(seq);
+      handler->handle(msg);
+    }break;
+    case tag_AclRemoveAddresses:
+    {
+      messages::AclRemoveAddresses msg;
+      msg.deserialize(ss);
+      msg.setSeqNum(seq);
+      handler->handle(msg);
+    }break;
+    case tag_AclAddAddresses:
+    {
+      messages::AclAddAddresses msg;
+      msg.deserialize(ss);
+      msg.setSeqNum(seq);
+      handler->handle(msg);
+    }break;
+    case tag_CgmAddGroup:
+    {
+      messages::CgmAddGroup msg;
+      msg.deserialize(ss);
+      msg.setSeqNum(seq);
+      handler->handle(msg);
+    }break;
+    case tag_CgmDeleteGroup:
+    {
+      messages::CgmDeleteGroup msg;
+      msg.deserialize(ss);
+      msg.setSeqNum(seq);
+      handler->handle(msg);
+    }break;
+    case tag_CgmAddAddr:
+    {
+      messages::CgmAddAddr msg;
+      msg.deserialize(ss);
+      msg.setSeqNum(seq);
+      handler->handle(msg);
+    }break;
+    case tag_CgmCheck:
+    {
+      messages::CgmCheck msg;
+      msg.deserialize(ss);
+      msg.setSeqNum(seq);
+      handler->handle(msg);
+    }break;
+    case tag_CgmDelAddr:
+    {
+      messages::CgmDelAddr msg;
+      msg.deserialize(ss);
+      msg.setSeqNum(seq);
+      handler->handle(msg);
+    }break;
+    case tag_CgmAddAbonent:
+    {
+      messages::CgmAddAbonent msg;
+      msg.deserialize(ss);
+      msg.setSeqNum(seq);
+      handler->handle(msg);
+    }break;
+    case tag_CgmDelAbonent:
+    {
+      messages::CgmDelAbonent msg;
+      msg.deserialize(ss);
+      msg.setSeqNum(seq);
+      handler->handle(msg);
+    }break;
+    case tag_CgmListAbonents:
+    {
+      messages::CgmListAbonents msg;
+      msg.deserialize(ss);
+      msg.setSeqNum(seq);
+      handler->handle(msg);
+    }break;
+    case tag_AliasAdd:
+    {
+      messages::AliasAdd msg;
+      msg.deserialize(ss);
+      msg.setSeqNum(seq);
+      handler->handle(msg);
+    }break;
+    case tag_AliasDel:
+    {
+      messages::AliasDel msg;
+      msg.deserialize(ss);
+      msg.setSeqNum(seq);
+      handler->handle(msg);
+    }break;
+    case tag_UpdateProfileAbntResp:
+    {
+      messages::UpdateProfileAbntResp msg;
+      msg.deserialize(ss);
+      msg.setSeqNum(seq);
+      handler->handle(msg);
+    }break;
+    case tag_GetServicesStatus:
+    {
+      messages::GetServicesStatus msg;
+      msg.deserialize(ss);
+      msg.setSeqNum(seq);
+      handler->handle(msg);
+    }break;
+    case tag_DisconnectService:
+    {
+      messages::DisconnectService msg;
+      msg.deserialize(ss);
+      msg.setSeqNum(seq);
+      handler->handle(msg);
+    }break;
+    case tag_LockConfig:
+    {
+      messages::LockConfig msg;
+      msg.deserialize(ss);
+      msg.setSeqNum(seq);
+      handler->handle(msg);
+    }break;
+    case tag_UnlockConfig:
+    {
+      messages::UnlockConfig msg;
       msg.deserialize(ss);
       msg.setSeqNum(seq);
       handler->handle(msg);
@@ -240,37 +557,16 @@ void ControllerProtocol::decodeAndHandleMessage(protogen::framework::SerializerB
       msg.setSeqNum(seq);
       handler->handle(msg);
     }break;
-    case tag_MscRegisterResp:
+    case tag_MscAddResp:
     {
-      messages::MscRegisterResp msg;
+      messages::MscAddResp msg;
       msg.deserialize(ss);
       msg.setSeqNum(seq);
       handler->handle(msg);
     }break;
-    case tag_MscUnregisterResp:
+    case tag_MscRemoveResp:
     {
-      messages::MscUnregisterResp msg;
-      msg.deserialize(ss);
-      msg.setSeqNum(seq);
-      handler->handle(msg);
-    }break;
-    case tag_MscBlockResp:
-    {
-      messages::MscBlockResp msg;
-      msg.deserialize(ss);
-      msg.setSeqNum(seq);
-      handler->handle(msg);
-    }break;
-    case tag_MscClearResp:
-    {
-      messages::MscClearResp msg;
-      msg.deserialize(ss);
-      msg.setSeqNum(seq);
-      handler->handle(msg);
-    }break;
-    case tag_MscListResp:
-    {
-      messages::MscListResp msg;
+      messages::MscRemoveResp msg;
       msg.deserialize(ss);
       msg.setSeqNum(seq);
       handler->handle(msg);
@@ -380,132 +676,6 @@ void ControllerProtocol::decodeAndHandleMessage(protogen::framework::SerializerB
       msg.setSeqNum(seq);
       handler->handle(msg);
     }break;
-    case tag_DlPrcListResp:
-    {
-      messages::DlPrcListResp msg;
-      msg.deserialize(ss);
-      msg.setSeqNum(seq);
-      handler->handle(msg);
-    }break;
-    case tag_DlPrcAddResp:
-    {
-      messages::DlPrcAddResp msg;
-      msg.deserialize(ss);
-      msg.setSeqNum(seq);
-      handler->handle(msg);
-    }break;
-    case tag_DlPrcDeleteResp:
-    {
-      messages::DlPrcDeleteResp msg;
-      msg.deserialize(ss);
-      msg.setSeqNum(seq);
-      handler->handle(msg);
-    }break;
-    case tag_DlPrcGetResp:
-    {
-      messages::DlPrcGetResp msg;
-      msg.deserialize(ss);
-      msg.setSeqNum(seq);
-      handler->handle(msg);
-    }break;
-    case tag_DlPrcAlterResp:
-    {
-      messages::DlPrcAlterResp msg;
-      msg.deserialize(ss);
-      msg.setSeqNum(seq);
-      handler->handle(msg);
-    }break;
-    case tag_DlMemAddResp:
-    {
-      messages::DlMemAddResp msg;
-      msg.deserialize(ss);
-      msg.setSeqNum(seq);
-      handler->handle(msg);
-    }break;
-    case tag_DlMemDeleteResp:
-    {
-      messages::DlMemDeleteResp msg;
-      msg.deserialize(ss);
-      msg.setSeqNum(seq);
-      handler->handle(msg);
-    }break;
-    case tag_DlMemGetResp:
-    {
-      messages::DlMemGetResp msg;
-      msg.deserialize(ss);
-      msg.setSeqNum(seq);
-      handler->handle(msg);
-    }break;
-    case tag_DlSbmAddResp:
-    {
-      messages::DlSbmAddResp msg;
-      msg.deserialize(ss);
-      msg.setSeqNum(seq);
-      handler->handle(msg);
-    }break;
-    case tag_DlSbmDelResp:
-    {
-      messages::DlSbmDelResp msg;
-      msg.deserialize(ss);
-      msg.setSeqNum(seq);
-      handler->handle(msg);
-    }break;
-    case tag_DlSbmListResp:
-    {
-      messages::DlSbmListResp msg;
-      msg.deserialize(ss);
-      msg.setSeqNum(seq);
-      handler->handle(msg);
-    }break;
-    case tag_DlAddResp:
-    {
-      messages::DlAddResp msg;
-      msg.deserialize(ss);
-      msg.setSeqNum(seq);
-      handler->handle(msg);
-    }break;
-    case tag_DlDeleteResp:
-    {
-      messages::DlDeleteResp msg;
-      msg.deserialize(ss);
-      msg.setSeqNum(seq);
-      handler->handle(msg);
-    }break;
-    case tag_DlGetResp:
-    {
-      messages::DlGetResp msg;
-      msg.deserialize(ss);
-      msg.setSeqNum(seq);
-      handler->handle(msg);
-    }break;
-    case tag_DlListResp:
-    {
-      messages::DlListResp msg;
-      msg.deserialize(ss);
-      msg.setSeqNum(seq);
-      handler->handle(msg);
-    }break;
-    case tag_DlAlterResp:
-    {
-      messages::DlAlterResp msg;
-      msg.deserialize(ss);
-      msg.setSeqNum(seq);
-      handler->handle(msg);
-    }break;
-    case tag_DlCopyResp:
-    {
-      messages::DlCopyResp msg;
-      msg.deserialize(ss);
-      msg.setSeqNum(seq);
-      handler->handle(msg);
-    }break;
-    case tag_DlRenameResp:
-    {
-      messages::DlRenameResp msg;
-      msg.deserialize(ss);
-      msg.setSeqNum(seq);
-      handler->handle(msg);
-    }break;
     case tag_CgmAddGroupResp:
     {
       messages::CgmAddGroupResp msg;
@@ -576,6 +746,13 @@ void ControllerProtocol::decodeAndHandleMessage(protogen::framework::SerializerB
       msg.setSeqNum(seq);
       handler->handle(msg);
     }break;
+    case tag_UpdateProfileAbnt:
+    {
+      messages::UpdateProfileAbnt msg;
+      msg.deserialize(ss);
+      msg.setSeqNum(seq);
+      handler->handle(msg);
+    }break;
     case tag_GetServicesStatusResp:
     {
       messages::GetServicesStatusResp msg;
@@ -586,6 +763,13 @@ void ControllerProtocol::decodeAndHandleMessage(protogen::framework::SerializerB
     case tag_DisconnectServiceResp:
     {
       messages::DisconnectServiceResp msg;
+      msg.deserialize(ss);
+      msg.setSeqNum(seq);
+      handler->handle(msg);
+    }break;
+    case tag_LockConfigResp:
+    {
+      messages::LockConfigResp msg;
       msg.deserialize(ss);
       msg.setSeqNum(seq);
       handler->handle(msg);
@@ -693,38 +877,17 @@ void ControllerProtocol::encodeMessage(const messages::CancelSms& msg,protogen::
   ss->writeInt32(msg.getSeqNum());
   msg.serialize(*ss);
 }
-void ControllerProtocol::encodeMessage(const messages::MscRegister& msg,protogen::framework::SerializerBuffer* ss)
+void ControllerProtocol::encodeMessage(const messages::MscAdd& msg,protogen::framework::SerializerBuffer* ss)
 {
   ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
-  ss->writeInt32(tag_MscRegister);
+  ss->writeInt32(tag_MscAdd);
   ss->writeInt32(msg.getSeqNum());
   msg.serialize(*ss);
 }
-void ControllerProtocol::encodeMessage(const messages::MscUnregister& msg,protogen::framework::SerializerBuffer* ss)
+void ControllerProtocol::encodeMessage(const messages::MscRemove& msg,protogen::framework::SerializerBuffer* ss)
 {
   ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
-  ss->writeInt32(tag_MscUnregister);
-  ss->writeInt32(msg.getSeqNum());
-  msg.serialize(*ss);
-}
-void ControllerProtocol::encodeMessage(const messages::MscBlock& msg,protogen::framework::SerializerBuffer* ss)
-{
-  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
-  ss->writeInt32(tag_MscBlock);
-  ss->writeInt32(msg.getSeqNum());
-  msg.serialize(*ss);
-}
-void ControllerProtocol::encodeMessage(const messages::MscClear& msg,protogen::framework::SerializerBuffer* ss)
-{
-  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
-  ss->writeInt32(tag_MscClear);
-  ss->writeInt32(msg.getSeqNum());
-  msg.serialize(*ss);
-}
-void ControllerProtocol::encodeMessage(const messages::MscList& msg,protogen::framework::SerializerBuffer* ss)
-{
-  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
-  ss->writeInt32(tag_MscList);
+  ss->writeInt32(tag_MscRemove);
   ss->writeInt32(msg.getSeqNum());
   msg.serialize(*ss);
 }
@@ -833,132 +996,6 @@ void ControllerProtocol::encodeMessage(const messages::AclAddAddresses& msg,prot
   ss->writeInt32(msg.getSeqNum());
   msg.serialize(*ss);
 }
-void ControllerProtocol::encodeMessage(const messages::DlPrcList& msg,protogen::framework::SerializerBuffer* ss)
-{
-  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
-  ss->writeInt32(tag_DlPrcList);
-  ss->writeInt32(msg.getSeqNum());
-  msg.serialize(*ss);
-}
-void ControllerProtocol::encodeMessage(const messages::DlPrcAdd& msg,protogen::framework::SerializerBuffer* ss)
-{
-  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
-  ss->writeInt32(tag_DlPrcAdd);
-  ss->writeInt32(msg.getSeqNum());
-  msg.serialize(*ss);
-}
-void ControllerProtocol::encodeMessage(const messages::DlPrcDelete& msg,protogen::framework::SerializerBuffer* ss)
-{
-  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
-  ss->writeInt32(tag_DlPrcDelete);
-  ss->writeInt32(msg.getSeqNum());
-  msg.serialize(*ss);
-}
-void ControllerProtocol::encodeMessage(const messages::DlPrcGet& msg,protogen::framework::SerializerBuffer* ss)
-{
-  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
-  ss->writeInt32(tag_DlPrcGet);
-  ss->writeInt32(msg.getSeqNum());
-  msg.serialize(*ss);
-}
-void ControllerProtocol::encodeMessage(const messages::DlPrcAlter& msg,protogen::framework::SerializerBuffer* ss)
-{
-  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
-  ss->writeInt32(tag_DlPrcAlter);
-  ss->writeInt32(msg.getSeqNum());
-  msg.serialize(*ss);
-}
-void ControllerProtocol::encodeMessage(const messages::DlMemAdd& msg,protogen::framework::SerializerBuffer* ss)
-{
-  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
-  ss->writeInt32(tag_DlMemAdd);
-  ss->writeInt32(msg.getSeqNum());
-  msg.serialize(*ss);
-}
-void ControllerProtocol::encodeMessage(const messages::DlMemDelete& msg,protogen::framework::SerializerBuffer* ss)
-{
-  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
-  ss->writeInt32(tag_DlMemDelete);
-  ss->writeInt32(msg.getSeqNum());
-  msg.serialize(*ss);
-}
-void ControllerProtocol::encodeMessage(const messages::DlMemGet& msg,protogen::framework::SerializerBuffer* ss)
-{
-  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
-  ss->writeInt32(tag_DlMemGet);
-  ss->writeInt32(msg.getSeqNum());
-  msg.serialize(*ss);
-}
-void ControllerProtocol::encodeMessage(const messages::DlSbmAdd& msg,protogen::framework::SerializerBuffer* ss)
-{
-  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
-  ss->writeInt32(tag_DlSbmAdd);
-  ss->writeInt32(msg.getSeqNum());
-  msg.serialize(*ss);
-}
-void ControllerProtocol::encodeMessage(const messages::DlSbmDel& msg,protogen::framework::SerializerBuffer* ss)
-{
-  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
-  ss->writeInt32(tag_DlSbmDel);
-  ss->writeInt32(msg.getSeqNum());
-  msg.serialize(*ss);
-}
-void ControllerProtocol::encodeMessage(const messages::DlSbmList& msg,protogen::framework::SerializerBuffer* ss)
-{
-  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
-  ss->writeInt32(tag_DlSbmList);
-  ss->writeInt32(msg.getSeqNum());
-  msg.serialize(*ss);
-}
-void ControllerProtocol::encodeMessage(const messages::DlAdd& msg,protogen::framework::SerializerBuffer* ss)
-{
-  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
-  ss->writeInt32(tag_DlAdd);
-  ss->writeInt32(msg.getSeqNum());
-  msg.serialize(*ss);
-}
-void ControllerProtocol::encodeMessage(const messages::DlDelete& msg,protogen::framework::SerializerBuffer* ss)
-{
-  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
-  ss->writeInt32(tag_DlDelete);
-  ss->writeInt32(msg.getSeqNum());
-  msg.serialize(*ss);
-}
-void ControllerProtocol::encodeMessage(const messages::DlGet& msg,protogen::framework::SerializerBuffer* ss)
-{
-  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
-  ss->writeInt32(tag_DlGet);
-  ss->writeInt32(msg.getSeqNum());
-  msg.serialize(*ss);
-}
-void ControllerProtocol::encodeMessage(const messages::DlList& msg,protogen::framework::SerializerBuffer* ss)
-{
-  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
-  ss->writeInt32(tag_DlList);
-  ss->writeInt32(msg.getSeqNum());
-  msg.serialize(*ss);
-}
-void ControllerProtocol::encodeMessage(const messages::DlAlter& msg,protogen::framework::SerializerBuffer* ss)
-{
-  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
-  ss->writeInt32(tag_DlAlter);
-  ss->writeInt32(msg.getSeqNum());
-  msg.serialize(*ss);
-}
-void ControllerProtocol::encodeMessage(const messages::DlCopy& msg,protogen::framework::SerializerBuffer* ss)
-{
-  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
-  ss->writeInt32(tag_DlCopy);
-  ss->writeInt32(msg.getSeqNum());
-  msg.serialize(*ss);
-}
-void ControllerProtocol::encodeMessage(const messages::DlRename& msg,protogen::framework::SerializerBuffer* ss)
-{
-  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
-  ss->writeInt32(tag_DlRename);
-  ss->writeInt32(msg.getSeqNum());
-  msg.serialize(*ss);
-}
 void ControllerProtocol::encodeMessage(const messages::CgmAddGroup& msg,protogen::framework::SerializerBuffer* ss)
 {
   ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
@@ -1029,6 +1066,13 @@ void ControllerProtocol::encodeMessage(const messages::AliasDel& msg,protogen::f
   ss->writeInt32(msg.getSeqNum());
   msg.serialize(*ss);
 }
+void ControllerProtocol::encodeMessage(const messages::UpdateProfileAbntResp& msg,protogen::framework::SerializerBuffer* ss)
+{
+  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
+  ss->writeInt32(tag_UpdateProfileAbntResp);
+  ss->writeInt32(msg.getSeqNum());
+  msg.serialize(*ss);
+}
 void ControllerProtocol::encodeMessage(const messages::GetServicesStatus& msg,protogen::framework::SerializerBuffer* ss)
 {
   ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
@@ -1043,24 +1087,353 @@ void ControllerProtocol::encodeMessage(const messages::DisconnectService& msg,pr
   ss->writeInt32(msg.getSeqNum());
   msg.serialize(*ss);
 }
-void ControllerProtocol::encodeMessage(const messages::MultipartMessageRequestResp& msg,protogen::framework::SerializerBuffer* ss)
+void ControllerProtocol::encodeMessage(const messages::LockConfig& msg,protogen::framework::SerializerBuffer* ss)
 {
   ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
-  ss->writeInt32(tag_MultipartMessageRequestResp);
+  ss->writeInt32(tag_LockConfig);
   ss->writeInt32(msg.getSeqNum());
   msg.serialize(*ss);
 }
-void ControllerProtocol::encodeMessage(const messages::ReplaceIfPresentRequestResp& msg,protogen::framework::SerializerBuffer* ss)
+void ControllerProtocol::encodeMessage(const messages::UnlockConfig& msg,protogen::framework::SerializerBuffer* ss)
 {
   ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
-  ss->writeInt32(tag_ReplaceIfPresentRequestResp);
+  ss->writeInt32(tag_UnlockConfig);
   ss->writeInt32(msg.getSeqNum());
   msg.serialize(*ss);
 }
-void ControllerProtocol::encodeMessage(const messages::LockProfilerResp& msg,protogen::framework::SerializerBuffer* ss)
+void ControllerProtocol::encodeMessage(const messages::RegisterAsLoadBalancer& msg,protogen::framework::SerializerBuffer* ss)
 {
   ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
-  ss->writeInt32(tag_LockProfilerResp);
+  ss->writeInt32(tag_RegisterAsLoadBalancer);
+  ss->writeInt32(msg.getSeqNum());
+  msg.serialize(*ss);
+}
+void ControllerProtocol::encodeMessage(const messages::RegisterAsWebapp& msg,protogen::framework::SerializerBuffer* ss)
+{
+  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
+  ss->writeInt32(tag_RegisterAsWebapp);
+  ss->writeInt32(msg.getSeqNum());
+  msg.serialize(*ss);
+}
+void ControllerProtocol::encodeMessage(const messages::RegisterAsSmsc& msg,protogen::framework::SerializerBuffer* ss)
+{
+  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
+  ss->writeInt32(tag_RegisterAsSmsc);
+  ss->writeInt32(msg.getSeqNum());
+  msg.serialize(*ss);
+}
+void ControllerProtocol::encodeMessage(const messages::ApplyRoutesResp& msg,protogen::framework::SerializerBuffer* ss)
+{
+  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
+  ss->writeInt32(tag_ApplyRoutesResp);
+  ss->writeInt32(msg.getSeqNum());
+  msg.serialize(*ss);
+}
+void ControllerProtocol::encodeMessage(const messages::ApplyRescheduleResp& msg,protogen::framework::SerializerBuffer* ss)
+{
+  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
+  ss->writeInt32(tag_ApplyRescheduleResp);
+  ss->writeInt32(msg.getSeqNum());
+  msg.serialize(*ss);
+}
+void ControllerProtocol::encodeMessage(const messages::ApplyLocaleResourceResp& msg,protogen::framework::SerializerBuffer* ss)
+{
+  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
+  ss->writeInt32(tag_ApplyLocaleResourceResp);
+  ss->writeInt32(msg.getSeqNum());
+  msg.serialize(*ss);
+}
+void ControllerProtocol::encodeMessage(const messages::ApplyTimeZonesResp& msg,protogen::framework::SerializerBuffer* ss)
+{
+  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
+  ss->writeInt32(tag_ApplyTimeZonesResp);
+  ss->writeInt32(msg.getSeqNum());
+  msg.serialize(*ss);
+}
+void ControllerProtocol::encodeMessage(const messages::ApplyFraudControlResp& msg,protogen::framework::SerializerBuffer* ss)
+{
+  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
+  ss->writeInt32(tag_ApplyFraudControlResp);
+  ss->writeInt32(msg.getSeqNum());
+  msg.serialize(*ss);
+}
+void ControllerProtocol::encodeMessage(const messages::ApplyMapLimitsResp& msg,protogen::framework::SerializerBuffer* ss)
+{
+  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
+  ss->writeInt32(tag_ApplyMapLimitsResp);
+  ss->writeInt32(msg.getSeqNum());
+  msg.serialize(*ss);
+}
+void ControllerProtocol::encodeMessage(const messages::ApplySnmpResp& msg,protogen::framework::SerializerBuffer* ss)
+{
+  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
+  ss->writeInt32(tag_ApplySnmpResp);
+  ss->writeInt32(msg.getSeqNum());
+  msg.serialize(*ss);
+}
+void ControllerProtocol::encodeMessage(const messages::TraceRouteResp& msg,protogen::framework::SerializerBuffer* ss)
+{
+  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
+  ss->writeInt32(tag_TraceRouteResp);
+  ss->writeInt32(msg.getSeqNum());
+  msg.serialize(*ss);
+}
+void ControllerProtocol::encodeMessage(const messages::LoadRoutesResp& msg,protogen::framework::SerializerBuffer* ss)
+{
+  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
+  ss->writeInt32(tag_LoadRoutesResp);
+  ss->writeInt32(msg.getSeqNum());
+  msg.serialize(*ss);
+}
+void ControllerProtocol::encodeMessage(const messages::LookupProfileResp& msg,protogen::framework::SerializerBuffer* ss)
+{
+  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
+  ss->writeInt32(tag_LookupProfileResp);
+  ss->writeInt32(msg.getSeqNum());
+  msg.serialize(*ss);
+}
+void ControllerProtocol::encodeMessage(const messages::LookupProfileExResp& msg,protogen::framework::SerializerBuffer* ss)
+{
+  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
+  ss->writeInt32(tag_LookupProfileExResp);
+  ss->writeInt32(msg.getSeqNum());
+  msg.serialize(*ss);
+}
+void ControllerProtocol::encodeMessage(const messages::UpdateProfileResp& msg,protogen::framework::SerializerBuffer* ss)
+{
+  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
+  ss->writeInt32(tag_UpdateProfileResp);
+  ss->writeInt32(msg.getSeqNum());
+  msg.serialize(*ss);
+}
+void ControllerProtocol::encodeMessage(const messages::DeleteProfileResp& msg,protogen::framework::SerializerBuffer* ss)
+{
+  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
+  ss->writeInt32(tag_DeleteProfileResp);
+  ss->writeInt32(msg.getSeqNum());
+  msg.serialize(*ss);
+}
+void ControllerProtocol::encodeMessage(const messages::CancelSmsResp& msg,protogen::framework::SerializerBuffer* ss)
+{
+  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
+  ss->writeInt32(tag_CancelSmsResp);
+  ss->writeInt32(msg.getSeqNum());
+  msg.serialize(*ss);
+}
+void ControllerProtocol::encodeMessage(const messages::MscAddResp& msg,protogen::framework::SerializerBuffer* ss)
+{
+  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
+  ss->writeInt32(tag_MscAddResp);
+  ss->writeInt32(msg.getSeqNum());
+  msg.serialize(*ss);
+}
+void ControllerProtocol::encodeMessage(const messages::MscRemoveResp& msg,protogen::framework::SerializerBuffer* ss)
+{
+  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
+  ss->writeInt32(tag_MscRemoveResp);
+  ss->writeInt32(msg.getSeqNum());
+  msg.serialize(*ss);
+}
+void ControllerProtocol::encodeMessage(const messages::SmeAddResp& msg,protogen::framework::SerializerBuffer* ss)
+{
+  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
+  ss->writeInt32(tag_SmeAddResp);
+  ss->writeInt32(msg.getSeqNum());
+  msg.serialize(*ss);
+}
+void ControllerProtocol::encodeMessage(const messages::SmeUpdateResp& msg,protogen::framework::SerializerBuffer* ss)
+{
+  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
+  ss->writeInt32(tag_SmeUpdateResp);
+  ss->writeInt32(msg.getSeqNum());
+  msg.serialize(*ss);
+}
+void ControllerProtocol::encodeMessage(const messages::SmeRemoveResp& msg,protogen::framework::SerializerBuffer* ss)
+{
+  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
+  ss->writeInt32(tag_SmeRemoveResp);
+  ss->writeInt32(msg.getSeqNum());
+  msg.serialize(*ss);
+}
+void ControllerProtocol::encodeMessage(const messages::SmeStatusResp& msg,protogen::framework::SerializerBuffer* ss)
+{
+  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
+  ss->writeInt32(tag_SmeStatusResp);
+  ss->writeInt32(msg.getSeqNum());
+  msg.serialize(*ss);
+}
+void ControllerProtocol::encodeMessage(const messages::SmeDisconnectResp& msg,protogen::framework::SerializerBuffer* ss)
+{
+  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
+  ss->writeInt32(tag_SmeDisconnectResp);
+  ss->writeInt32(msg.getSeqNum());
+  msg.serialize(*ss);
+}
+void ControllerProtocol::encodeMessage(const messages::LoggerGetCategoriesResp& msg,protogen::framework::SerializerBuffer* ss)
+{
+  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
+  ss->writeInt32(tag_LoggerGetCategoriesResp);
+  ss->writeInt32(msg.getSeqNum());
+  msg.serialize(*ss);
+}
+void ControllerProtocol::encodeMessage(const messages::LoggerSetCategoriesResp& msg,protogen::framework::SerializerBuffer* ss)
+{
+  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
+  ss->writeInt32(tag_LoggerSetCategoriesResp);
+  ss->writeInt32(msg.getSeqNum());
+  msg.serialize(*ss);
+}
+void ControllerProtocol::encodeMessage(const messages::AclGetResp& msg,protogen::framework::SerializerBuffer* ss)
+{
+  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
+  ss->writeInt32(tag_AclGetResp);
+  ss->writeInt32(msg.getSeqNum());
+  msg.serialize(*ss);
+}
+void ControllerProtocol::encodeMessage(const messages::AclListResp& msg,protogen::framework::SerializerBuffer* ss)
+{
+  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
+  ss->writeInt32(tag_AclListResp);
+  ss->writeInt32(msg.getSeqNum());
+  msg.serialize(*ss);
+}
+void ControllerProtocol::encodeMessage(const messages::AclRemoveResp& msg,protogen::framework::SerializerBuffer* ss)
+{
+  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
+  ss->writeInt32(tag_AclRemoveResp);
+  ss->writeInt32(msg.getSeqNum());
+  msg.serialize(*ss);
+}
+void ControllerProtocol::encodeMessage(const messages::AclCreateResp& msg,protogen::framework::SerializerBuffer* ss)
+{
+  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
+  ss->writeInt32(tag_AclCreateResp);
+  ss->writeInt32(msg.getSeqNum());
+  msg.serialize(*ss);
+}
+void ControllerProtocol::encodeMessage(const messages::AclUpdateResp& msg,protogen::framework::SerializerBuffer* ss)
+{
+  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
+  ss->writeInt32(tag_AclUpdateResp);
+  ss->writeInt32(msg.getSeqNum());
+  msg.serialize(*ss);
+}
+void ControllerProtocol::encodeMessage(const messages::AclLookupResp& msg,protogen::framework::SerializerBuffer* ss)
+{
+  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
+  ss->writeInt32(tag_AclLookupResp);
+  ss->writeInt32(msg.getSeqNum());
+  msg.serialize(*ss);
+}
+void ControllerProtocol::encodeMessage(const messages::AclRemoveAddressesResp& msg,protogen::framework::SerializerBuffer* ss)
+{
+  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
+  ss->writeInt32(tag_AclRemoveAddressesResp);
+  ss->writeInt32(msg.getSeqNum());
+  msg.serialize(*ss);
+}
+void ControllerProtocol::encodeMessage(const messages::AclAddAddressesResp& msg,protogen::framework::SerializerBuffer* ss)
+{
+  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
+  ss->writeInt32(tag_AclAddAddressesResp);
+  ss->writeInt32(msg.getSeqNum());
+  msg.serialize(*ss);
+}
+void ControllerProtocol::encodeMessage(const messages::CgmAddGroupResp& msg,protogen::framework::SerializerBuffer* ss)
+{
+  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
+  ss->writeInt32(tag_CgmAddGroupResp);
+  ss->writeInt32(msg.getSeqNum());
+  msg.serialize(*ss);
+}
+void ControllerProtocol::encodeMessage(const messages::CgmDeleteGroupResp& msg,protogen::framework::SerializerBuffer* ss)
+{
+  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
+  ss->writeInt32(tag_CgmDeleteGroupResp);
+  ss->writeInt32(msg.getSeqNum());
+  msg.serialize(*ss);
+}
+void ControllerProtocol::encodeMessage(const messages::CgmAddAddrResp& msg,protogen::framework::SerializerBuffer* ss)
+{
+  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
+  ss->writeInt32(tag_CgmAddAddrResp);
+  ss->writeInt32(msg.getSeqNum());
+  msg.serialize(*ss);
+}
+void ControllerProtocol::encodeMessage(const messages::CgmCheckResp& msg,protogen::framework::SerializerBuffer* ss)
+{
+  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
+  ss->writeInt32(tag_CgmCheckResp);
+  ss->writeInt32(msg.getSeqNum());
+  msg.serialize(*ss);
+}
+void ControllerProtocol::encodeMessage(const messages::CgmDelAddrResp& msg,protogen::framework::SerializerBuffer* ss)
+{
+  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
+  ss->writeInt32(tag_CgmDelAddrResp);
+  ss->writeInt32(msg.getSeqNum());
+  msg.serialize(*ss);
+}
+void ControllerProtocol::encodeMessage(const messages::CgmAddAbonentResp& msg,protogen::framework::SerializerBuffer* ss)
+{
+  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
+  ss->writeInt32(tag_CgmAddAbonentResp);
+  ss->writeInt32(msg.getSeqNum());
+  msg.serialize(*ss);
+}
+void ControllerProtocol::encodeMessage(const messages::CgmDelAbonentResp& msg,protogen::framework::SerializerBuffer* ss)
+{
+  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
+  ss->writeInt32(tag_CgmDelAbonentResp);
+  ss->writeInt32(msg.getSeqNum());
+  msg.serialize(*ss);
+}
+void ControllerProtocol::encodeMessage(const messages::CgmListAbonentsResp& msg,protogen::framework::SerializerBuffer* ss)
+{
+  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
+  ss->writeInt32(tag_CgmListAbonentsResp);
+  ss->writeInt32(msg.getSeqNum());
+  msg.serialize(*ss);
+}
+void ControllerProtocol::encodeMessage(const messages::AliasAddResp& msg,protogen::framework::SerializerBuffer* ss)
+{
+  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
+  ss->writeInt32(tag_AliasAddResp);
+  ss->writeInt32(msg.getSeqNum());
+  msg.serialize(*ss);
+}
+void ControllerProtocol::encodeMessage(const messages::AliasDelResp& msg,protogen::framework::SerializerBuffer* ss)
+{
+  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
+  ss->writeInt32(tag_AliasDelResp);
+  ss->writeInt32(msg.getSeqNum());
+  msg.serialize(*ss);
+}
+void ControllerProtocol::encodeMessage(const messages::UpdateProfileAbnt& msg,protogen::framework::SerializerBuffer* ss)
+{
+  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
+  ss->writeInt32(tag_UpdateProfileAbnt);
+  ss->writeInt32(msg.getSeqNum());
+  msg.serialize(*ss);
+}
+void ControllerProtocol::encodeMessage(const messages::GetServicesStatusResp& msg,protogen::framework::SerializerBuffer* ss)
+{
+  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
+  ss->writeInt32(tag_GetServicesStatusResp);
+  ss->writeInt32(msg.getSeqNum());
+  msg.serialize(*ss);
+}
+void ControllerProtocol::encodeMessage(const messages::DisconnectServiceResp& msg,protogen::framework::SerializerBuffer* ss)
+{
+  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
+  ss->writeInt32(tag_DisconnectServiceResp);
+  ss->writeInt32(msg.getSeqNum());
+  msg.serialize(*ss);
+}
+void ControllerProtocol::encodeMessage(const messages::LockConfigResp& msg,protogen::framework::SerializerBuffer* ss)
+{
+  ss->writeInt32(4+4+msg.length<protogen::framework::SerializerBuffer>());
+  ss->writeInt32(tag_LockConfigResp);
   ss->writeInt32(msg.getSeqNum());
   msg.serialize(*ss);
 }

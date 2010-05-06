@@ -3,6 +3,7 @@
 
 #include "core/network/Socket.hpp"
 #include "core/buffers/CyclicQueue.hpp"
+#include "ConfigLocks.hpp"
 #include <string>
 
 namespace eyeline{
@@ -68,12 +69,23 @@ public:
     wrBufferSize=0;
     inOutMul=false;
     dead=false;
+    for(int i=0;i<ctConfigsCount;i++)loadedConfigs[i]=false;
   }
 
   ~ProtocolSocket()
   {
     delete [] rdBuffer;
     delete sck;
+  }
+
+  void markConfigAsLoaded(ConfigType argCt)
+  {
+    loadedConfigs[argCt]=true;
+  }
+
+  bool isConfigLoaded(ConfigType argCt)const
+  {
+    return loadedConfigs[argCt];
   }
 
   void setConnectType(ConnType argCt)
@@ -83,6 +95,15 @@ public:
   ConnType getConnectType()const
   {
     return ct;
+  }
+
+  void setNodeIdx(int argNodeIdx)
+  {
+    nodeIdx=argNodeIdx;
+  }
+  int getNodeIdx()const
+  {
+    return nodeIdx;
   }
 
   net::Socket* getSocket()const
@@ -145,6 +166,7 @@ public:
 protected:
   net::Socket* sck;
   int connId;
+  int nodeIdx;
   ConnType ct;
   char* rdBuffer;
   const char* wrBuffer;
@@ -157,6 +179,7 @@ protected:
   bool havePacketSize;
   bool inOutMul;
   bool dead;
+  bool loadedConfigs[ctConfigsCount];
 };
 
 

@@ -1,6 +1,7 @@
 include messages.def
 
 protocol ControllerSmscProtocol
+  //cc->smsc
   ApplyRoutes 1
   ApplyReschedule 2
   ApplyLocaleResource 3
@@ -32,6 +33,7 @@ protocol ControllerSmscProtocol
   AclLookup 32
   AclRemoveAddresses 33
   AclAddAddresses 34
+  /*
   DlPrcList 35
   DlPrcAdd 36
   DlPrcDelete 37
@@ -50,6 +52,7 @@ protocol ControllerSmscProtocol
   DlAlter 50
   DlCopy 51
   DlRename 52
+  */
   CgmAddGroup 53
   CgmDeleteGroup 54
   CgmAddAddr 55
@@ -60,6 +63,17 @@ protocol ControllerSmscProtocol
   CgmListAbonents 60
   AliasAdd 61
   AliasDel 62
+  UpdateProfileAbntResp 63
+  /*
+  DlMemAddAbntResp 64
+  DlMemDeleteAbntResp 65
+  DlSbmAddAbntResp 66
+  DlSbmDelAbntResp 67
+  DlAddAbntResp 68
+  DlDeleteAbntResp 69
+  DlCopyAbntResp 70
+  DlRenameAbntResp 71
+  */
 
 //load balancer
   GetServicesStatus 101
@@ -68,18 +82,14 @@ protocol ControllerSmscProtocol
 //smsc runtime
   MultipartMessageRequest 201
   ReplaceIfPresentRequest 202
-  LockProfiler 203
-  UnlockProfiler 204
-  LockMscManager 205
-  UnlockMscManager 206
+  LockConfig 203
+  UnlockConfig 204
 
 //auth
-  RegisterAsLoadBalancer 301
-  RegisterAsWebapp 302
   RegisterAsSmsc 303
 
 
-//responses
+//smsc->cc
   ApplyRoutesResp 1001
   ApplyRescheduleResp 1002
   ApplyLocaleResourceResp 1003
@@ -111,6 +121,7 @@ protocol ControllerSmscProtocol
   AclLookupResp 1032
   AclRemoveAddressesResp 1033
   AclAddAddressesResp 1034
+  /*
   DlPrcListResp 1035
   DlPrcAddResp 1036
   DlPrcDeleteResp 1037
@@ -129,6 +140,7 @@ protocol ControllerSmscProtocol
   DlAlterResp 1050
   DlCopyResp 1051
   DlRenameResp 1052
+  */
   CgmAddGroupResp 1053
   CgmDeleteGroupResp 1054
   CgmAddAddrResp 1055
@@ -139,6 +151,17 @@ protocol ControllerSmscProtocol
   CgmListAbonentsResp 1060
   AliasAddResp 1061
   AliasDelResp 1062
+  UpdateProfileAbnt 1063
+  /*
+  DlMemAddAbnt 1064
+  DlMemDeleteAbnt 1065
+  DlSbmAddAbnt 1066
+  DlSbmDelAbnt 1067
+  DlAddAbnt 1068
+  DlDeleteAbnt 1069
+  DlCopyAbnt 1070
+  DlRenameAbnt 1071
+  */
 
 //load balancer
   GetServicesStatusResp 1101
@@ -147,6 +170,5 @@ protocol ControllerSmscProtocol
 //smsc runtime
   MultipartMessageRequestResp 1201
   ReplaceIfPresentRequestResp 1202
-  LockProfilerResp            1203
-  LockMscManagerResp          1205
+  LockConfigResp            1203
 end

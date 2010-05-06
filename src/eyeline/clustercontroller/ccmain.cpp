@@ -4,6 +4,8 @@
 #include "logger/Logger.h"
 #include "util/config/Manager.h"
 #include "protocol/messages/GetServicesStatus.hpp"
+#include "eyeline/clustercontroller/ConfigLockManager.hpp"
+#include "eyeline/clustercontroller/profiler/ProfilerConfig.hpp"
 
 int main()
 {
@@ -12,7 +14,9 @@ int main()
   smsc::util::config::Manager::init("config.xml");
   try{
     using namespace eyeline::clustercontroller;
+    profiler::ProfilerConfig::Init("");
     NetworkProtocol::Init();
+    ConfigLockManager::Init();
     char buf[128];
     printf("Cluster controller console\n");
     while(fgets(buf,(int)sizeof(buf),stdin))
@@ -66,6 +70,7 @@ int main()
       }
     }
     NetworkProtocol::Deinit();
+    ConfigLockManager::Shutdown();
   }catch(std::exception& e)
   {
     fprintf(stderr,"Startup exception: '%s'\n",e.what());

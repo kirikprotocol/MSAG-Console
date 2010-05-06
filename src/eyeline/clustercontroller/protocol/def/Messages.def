@@ -27,7 +27,13 @@ end
 
 message Response
   property noseq=true
-  uint32 status 1
+  uint32 status 1 
+end
+
+message MultiResponse
+  property noseq=true
+  uint32 status 1 array
+  byte ids 2 array 
 end
 
 message ApplyRoutes
@@ -35,7 +41,8 @@ end
 
 message ApplyRoutesResp
   property ccmsg=true
-  Response resp 1
+  property webappmsg=true
+  MultiResponse resp 1 
 end
 
 message ApplyReschedule
@@ -43,7 +50,8 @@ end
 
 message ApplyRescheduleResp
   property ccmsg=true
-  Response resp 1
+  property webappmsg=true
+  MultiResponse resp 1
 end
 
 message ApplyLocaleResource
@@ -52,7 +60,8 @@ end
 
 message ApplyLocaleResourceResp
   property ccmsg=true
-  Response resp 1
+  property webappmsg=true
+  MultiResponse resp 1
 end
 
 message ApplyTimeZones
@@ -60,7 +69,8 @@ end
 
 message ApplyTimeZonesResp
   property ccmsg=true
-  Response resp 1
+  property webappmsg=true
+  MultiResponse resp 1
 end
 
 message ApplyFraudControl
@@ -68,7 +78,8 @@ end
 
 message ApplyFraudControlResp
   property ccmsg=true
-  Response resp 1
+  property webappmsg=true
+  MultiResponse resp 1
 end
 
 message ApplyMapLimits
@@ -77,7 +88,8 @@ end
 
 message ApplyMapLimitsResp
   property ccmsg=true
-  Response resp 1
+  property webappmsg=true
+  MultiResponse resp 1
 end
 
 message ApplySnmp
@@ -86,7 +98,8 @@ end
 
 message ApplySnmpResp
   property ccmsg=true
-  Response resp 1
+  property webappmsg=true
+  MultiResponse resp 1
 end
 
 message TraceRoute
@@ -97,6 +110,7 @@ end
 
 message TraceRouteResp
   property ccmsg=true
+  property webappmsg=true
   Response resp 1
   string aliasInfo 2
   string foundInfo 3
@@ -121,6 +135,7 @@ end
 
 message LoadRoutesResp
   property ccmsg=true
+  property webappmsg=true
   Response resp 1
   stringlist trace 2 opt
 end
@@ -155,6 +170,7 @@ end
 
 message LookupProfileResp
   property ccmsg=true
+  property webappmsg=true
   Response resp 1
   Profile prof 2
 end
@@ -166,6 +182,7 @@ end
 
 message LookupProfileExResp
   property ccmsg=true
+  property webappmsg=true
   Response resp 1
   byte matchType 2
   Profile prof 3
@@ -178,8 +195,20 @@ end
 
 message UpdateProfileResp
   property ccmsg=true
+  property webappmsg=true
   Response resp 1
   byte result 2
+end
+
+message UpdateProfileAbnt
+  property ccmsg=true
+  string address 1
+  Profile prof 2
+end
+
+
+message UpdateProfileAbntResp
+  Response resp 1
 end
 
 message DeleteProfile
@@ -188,6 +217,7 @@ end
 
 message DeleteProfileResp
   property ccmsg=true
+  property webappmsg=true
   Response resp 1
 end
 
@@ -199,8 +229,8 @@ end
 
 message CancelSmsResp
   property ccmsg=true
+  property webappmsg=true
   Response resp 1
-  string statusText 2
 end
 
 message MscAdd
@@ -209,6 +239,7 @@ end
 
 message MscAddResp
   property ccmsg=true
+  property webappmsg=true
   Response resp 1
 end
 
@@ -218,6 +249,7 @@ end
 
 message MscRemoveResp
   property ccmsg=true
+  property webappmsg=true
   Response resp 1
 end
 
@@ -251,7 +283,8 @@ end
 
 message SmeAddResp
   property ccmsg=true
-  Response resp 1
+  property webappmsg=true
+  MultiResponse resp 1
 end
 
 message SmeUpdate
@@ -260,7 +293,8 @@ end
 
 message SmeUpdateResp
   property ccmsg=true
-  Response resp 1
+  property webappmsg=true
+  MultiResponse resp 1
 end
 
 message SmeRemove
@@ -269,7 +303,8 @@ end
 
 message SmeRemoveResp
   property ccmsg=true
-  Response resp 1
+  property webappmsg=true
+  MultiResponse resp 1
 end
 
 message SmeStatus
@@ -286,6 +321,7 @@ end
 
 message SmeStatusResp
   property ccmsg=true
+  property webappmsg=true
   Response resp 1
   SmeStatusInfo status 2 array
 end
@@ -296,6 +332,7 @@ end
 
 message SmeDisconnectResp
   property ccmsg=true
+  property webappmsg=true
   Response resp 1
 end
 
@@ -310,6 +347,7 @@ end
 
 message LoggerGetCategoriesResp
   property ccmsg=true
+  property webappmsg=true
   Response resp 1
   CategoryInfo categories 2 array
 end
@@ -320,6 +358,7 @@ end
 
 message LoggerSetCategoriesResp
   property ccmsg=true
+  property webappmsg=true
   Response resp 1
 end
 
@@ -337,6 +376,7 @@ end
 
 message AclGetResp
   property ccmsg=true
+  property webappmsg=true
   Response resp 1
   AclInfo acl 2 opt
 end
@@ -346,6 +386,7 @@ end
 
 message AclListResp
   property ccmsg=true
+  property webappmsg=true
   Response resp 1
   AclInfo aclList 2 array opt
 end
@@ -356,6 +397,7 @@ end
 
 message AclRemoveResp
   property ccmsg=true
+  property webappmsg=true
   Response resp 1
 end
 
@@ -368,6 +410,7 @@ end
 
 message AclCreateResp
   property ccmsg=true
+  property webappmsg=true
   Response resp 1
   uint32 id 2 opt
 end
@@ -378,6 +421,7 @@ end
 
 message AclUpdateResp
   property ccmsg=true
+  property webappmsg=true
   Response resp 1
 end
 
@@ -388,6 +432,7 @@ end
 
 message AclLookupResp
   property ccmsg=true
+  property webappmsg=true
   Response resp 1
   stringlist result 2
 end
@@ -399,6 +444,7 @@ end
 
 message AclRemoveAddressesResp
   property ccmsg=true
+  property webappmsg=true
   Response resp 1
 end
 
@@ -409,9 +455,11 @@ end
 
 message AclAddAddressesResp
   property ccmsg=true
+  property webappmsg=true
   Response resp 1
 end
 
+/*
 message DlPrcList
   string address 1 opt
 end
@@ -425,6 +473,7 @@ end
 
 message DlPrcListResp
   property ccmsg=true
+  property webappmsg=true
   Response resp 1
   PrcInfo result 2 array
 end
@@ -435,6 +484,7 @@ end
 
 message DlPrcAddResp
   property ccmsg=true
+  property webappmsg=true
   Response resp 1
 end
 
@@ -444,6 +494,7 @@ end
 
 message DlPrcDeleteResp
   property ccmsg=true
+  property webappmsg=true
   Response resp 1
 end
 
@@ -453,6 +504,7 @@ end
 
 message DlPrcGetResp
   property ccmsg=true
+  property webappmsg=true
   Response resp 1
   PrcInfo result 2
 end
@@ -465,6 +517,7 @@ end
 
 message DlPrcAlterResp
   property ccmsg=true
+  property webappmsg=true
   Response resp 1
 end
 
@@ -475,6 +528,18 @@ end
 
 message DlMemAddResp
   property ccmsg=true
+  property webappmsg=true
+  Response resp 1
+end
+
+message DlMemAddAbnt
+  property ccmsg=true
+  property webappmsg=true
+  string dlName 1
+  string address 2
+end
+
+message DlMemAddAbntResp
   Response resp 1
 end
 
@@ -485,8 +550,21 @@ end
 
 message DlMemDeleteResp
   property ccmsg=true
+  property webappmsg=true
   Response resp 1
 end
+
+message DlMemDeleteAbnt
+  property ccmsg=true
+  property webappmsg=true
+  string dlName 1
+  string address 2
+end
+
+message DlMemDeleteAbntResp
+  Response resp 1
+end
+
 
 message DlMemGet
   string dlName 1
@@ -494,6 +572,7 @@ end
 
 message DlMemGetResp
   property ccmsg=true
+  property webappmsg=true
   Response resp 1
   stringlist result 2
 end
@@ -505,8 +584,21 @@ end
 
 message DlSbmAddResp
   property ccmsg=true
+  property webappmsg=true
   Response resp 1
 end
+
+message DlSbmAddAbnt
+  property ccmsg=true
+  property webappmsg=true
+  string dlName 1
+  string address 2
+end
+
+message DlSbmAddAbntResp
+  Response resp 1
+end
+
 
 message DlSbmDel
   string dlName 1
@@ -515,6 +607,18 @@ end
 
 message DlSbmDelResp
   property ccmsg=true
+  property webappmsg=true
+  Response resp 1
+end
+
+message DlSbmDelAbnt
+  property ccmsg=true
+  property webappmsg=true
+  string dlName 1
+  string address 2
+end
+
+message DlSbmDelAbntResp
   Response resp 1
 end
 
@@ -524,6 +628,7 @@ end
 
 message DlSbmListResp
   property ccmsg=true
+  property webappmsg=true
   Response resp 1
   stringlist result 2
 end
@@ -536,6 +641,19 @@ end
 
 message DlAddResp
   property ccmsg=true
+  property webappmsg=true
+  Response resp 1
+end
+
+message DlAddAbnt
+  property ccmsg=true
+  property webappmsg=true
+  string dlName 1
+  string owner 2 opt
+  uint32 maxElements 3
+end
+
+message DlAddAbntResp
   Response resp 1
 end
 
@@ -546,6 +664,18 @@ end
 
 message DlDeleteResp
   property ccmsg=true
+  property webappmsg=true
+  Response resp 1
+end
+
+message DlDeleteAbnt
+  property ccmsg=true
+  property webappmsg=true
+  string dlName 1
+  string owner 2
+end
+
+message DlDeleteAbntResp
   Response resp 1
 end
 
@@ -555,6 +685,7 @@ end
 
 message DlGetResp
   property ccmsg=true
+  property webappmsg=true
   Response resp 1
   string name 2
   string owner 3 opt
@@ -575,6 +706,7 @@ end
 
 message DlListResp
   property ccmsg=true
+  property webappmsg=true
   Response resp 1
   DlListInfo result 2 array
 end
@@ -586,6 +718,7 @@ end
 
 message DlAlterResp
   property ccmsg=true
+  property webappmsg=true
   Response resp 1
 end
 
@@ -596,8 +729,21 @@ end
 
 message DlCopyResp
   property ccmsg=true
+  property webappmsg=true
   Response resp 1
 end
+
+message DlCopyAbnt
+  property ccmsg=true
+  property webappmsg=true
+  string srcDlName 1
+  string dstDlName 2
+end
+
+message DlCopyAbntResp
+  Response resp 1
+end
+
 
 message DlRename
   string srcDlName 1
@@ -606,9 +752,21 @@ end
 
 message DlRenameResp
   property ccmsg=true
+  property webappmsg=true
   Response resp 1
 end
 
+message DlRenameAbnt
+  property ccmsg=true
+  property webappmsg=true
+  string srcDlName 1
+  string dstDlName 2
+end
+
+message DlRenameAbntResp
+  Response resp 1
+end
+*/
 message CgmAddGroup
   uint32 id 1
   string name 2
@@ -616,6 +774,7 @@ end
 
 message CgmAddGroupResp
   property ccmsg=true
+  property webappmsg=true
   Response resp 1
 end
 
@@ -625,6 +784,7 @@ end
 
 message CgmDeleteGroupResp
   property ccmsg=true
+  property webappmsg=true
   Response resp 1
 end
 
@@ -635,6 +795,7 @@ end
 
 message CgmAddAddrResp
   property ccmsg=true
+  property webappmsg=true
   Response resp 1
 end
 
@@ -645,6 +806,7 @@ end
 
 message CgmCheckResp
   property ccmsg=true
+  property webappmsg=true
   Response resp 1
   bool result 2
 end
@@ -656,6 +818,7 @@ end
 
 message CgmDelAddrResp
   property ccmsg=true
+  property webappmsg=true
   Response resp 1
 end
 
@@ -666,6 +829,7 @@ end
 
 message CgmAddAbonentResp
   property ccmsg=true
+  property webappmsg=true
   Response resp 1
 end
 
@@ -676,6 +840,7 @@ end
 
 message CgmDelAbonentResp
   property ccmsg=true
+  property webappmsg=true
   Response resp 1
 end
 
@@ -685,6 +850,7 @@ end
 
 message CgmListAbonentsResp
   property ccmsg=true
+  property webappmsg=true
   Response resp 1
   stringlist result 2
 end
@@ -697,6 +863,7 @@ end
 
 message AliasAddResp
   property ccmsg=true
+  property webappmsg=true
   Response resp 1
 end
 
@@ -706,6 +873,7 @@ end
 
 message AliasDelResp
   property ccmsg=true
+  property webappmsg=true
   Response resp 1
 end
 
@@ -722,6 +890,7 @@ end
 
 message GetServicesStatusResp
   property ccmsg=true
+  property webappmsg=true
   Response resp 1
   ServiceStatus status 2 array
 end
@@ -732,11 +901,13 @@ end
 
 message DisconnectServiceResp
   property ccmsg=true
+  property webappmsg=true
   Response resp 1
 end
 
 message MultipartMessageRequest
   property ccmsg=true
+  property webappmsg=true
   byte msg 1 array
 end
 
@@ -746,6 +917,7 @@ end
 
 message ReplaceIfPresentRequest
   property ccmsg=true
+  property webappmsg=true
   byte msg 1 array
 end
 
@@ -753,28 +925,20 @@ message ReplaceIfPresentRequestResp
   Response resp 1
 end
 
-message LockProfiler
+message LockConfig
   property ccmsg=true
+  byte configType 1
+  bool writeLock 2
 end
 
-message LockProfilerResp
+message LockConfigResp
   Response resp 1
+  property webappmsg=true
 end
 
-message UnlockProfiler
+message UnlockConfig
   property ccmsg=true
-end
-
-message LockMscManager
-  property ccmsg=true
-end
-
-message LockMscManagerResp
-  Response resp 1
-end
-
-message UnlockMscManager
-  property ccmsg=true
+  byte configType 1
 end
 
 message RegisterAsLoadBalancer

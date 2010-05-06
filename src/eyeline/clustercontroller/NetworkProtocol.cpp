@@ -2,6 +2,7 @@
 #include "util/config/Manager.h"
 #include "util/Exception.hpp"
 #include "protocol/ControllerProtocolHandler.hpp"
+#include "eyeline/clustercontroller/ConfigLockManager.hpp"
 
 namespace eyeline{
 namespace clustercontroller{
@@ -31,6 +32,18 @@ NetworkProtocol* NetworkProtocol::getInstance()
   return instance;
 }
 
+void NetworkProtocol::setConnNodeIdx(int connId,int nodeIdx)
+{
+  sync::MutexGuard mg(clntsMon);
+  SocketsMap::iterator it=clnts.find(connId);
+  if(it==clnts.end())
+  {
+    smsc_log_warn(log,"Attempt to set nodeIdx for non-existent connId=%d",connId);
+    return;
+  }
+  it->second->setNodeIdx(nodeIdx);
+}
+
 void NetworkProtocol::setConnType(int connId,ConnType ct)
 {
   sync::MutexGuard mg(clntsMon);
@@ -42,6 +55,19 @@ void NetworkProtocol::setConnType(int connId,ConnType ct)
   }
   it->second->setConnectType(ct);
 }
+
+void NetworkProtocol::markConfigAsLoaded(int connId,ConfigType ct)
+{
+  sync::MutexGuard mg(clntsMon);
+  SocketsMap::iterator it=clnts.find(connId);
+  if(it==clnts.end())
+  {
+    smsc_log_warn(log,"Attempt to set connType for non-existent connId=%d",connId);
+    return;
+  }
+  it->second->markConfigAsLoaded(ct);
+}
+
 
 void NetworkProtocol::getConnIdsOfType(ConnType ct,std::vector<int>& ids)
 {
@@ -170,7 +196,9 @@ void NetworkProtocol::readPackets()
       }
       for(std::vector<SocketsMap::iterator>::iterator it=toKill.begin(),end=toKill.end();it!=end;it++)
       {
-        smsc_log_info(log,"Deleting connId=%d",(*it)->second->getConnId());
+        int connId=(*it)->second->getConnId();
+        smsc_log_info(log,"Deleting connId=%d",connId);
+        ConfigLockManager::getInstance()->UnlockByConn(connId);
         delete (*it)->second;
         clnts.erase(*it);
       }

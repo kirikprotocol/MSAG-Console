@@ -1,143 +1,161 @@
 #ifndef __EYELINE_CLUSTERCONTROLLER_PROTOCOL_CONTROLLERPROTOCOLHANDLER_HPP__
 #define __EYELINE_CLUSTERCONTROLLER_PROTOCOL_CONTROLLERPROTOCOLHANDLER_HPP__ 1
-#include "eyeline/clustercontroller/protocol/messages/ApplyRoutes.hpp"
-#include "eyeline/clustercontroller/protocol/messages/ApplyReschedule.hpp"
-#include "eyeline/clustercontroller/protocol/messages/ApplyLocaleResource.hpp"
-#include "eyeline/clustercontroller/protocol/messages/ApplyTimeZones.hpp"
-#include "eyeline/clustercontroller/protocol/messages/ApplyFraudControl.hpp"
-#include "eyeline/clustercontroller/protocol/messages/ApplyMapLimits.hpp"
-#include "eyeline/clustercontroller/protocol/messages/ApplySnmp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/TraceRoute.hpp"
-#include "eyeline/clustercontroller/protocol/messages/LoadRoutes.hpp"
-#include "eyeline/clustercontroller/protocol/messages/LookupProfile.hpp"
-#include "eyeline/clustercontroller/protocol/messages/LookupProfileEx.hpp"
-#include "eyeline/clustercontroller/protocol/messages/UpdateProfile.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DeleteProfile.hpp"
-#include "eyeline/clustercontroller/protocol/messages/CancelSms.hpp"
-#include "eyeline/clustercontroller/protocol/messages/MscRegister.hpp"
-#include "eyeline/clustercontroller/protocol/messages/MscUnregister.hpp"
-#include "eyeline/clustercontroller/protocol/messages/MscBlock.hpp"
-#include "eyeline/clustercontroller/protocol/messages/MscClear.hpp"
-#include "eyeline/clustercontroller/protocol/messages/MscList.hpp"
-#include "eyeline/clustercontroller/protocol/messages/SmeAdd.hpp"
-#include "eyeline/clustercontroller/protocol/messages/SmeUpdate.hpp"
-#include "eyeline/clustercontroller/protocol/messages/SmeRemove.hpp"
-#include "eyeline/clustercontroller/protocol/messages/SmeStatus.hpp"
-#include "eyeline/clustercontroller/protocol/messages/SmeDisconnect.hpp"
-#include "eyeline/clustercontroller/protocol/messages/LoggerGetCategories.hpp"
-#include "eyeline/clustercontroller/protocol/messages/LoggerSetCategories.hpp"
-#include "eyeline/clustercontroller/protocol/messages/AclGet.hpp"
-#include "eyeline/clustercontroller/protocol/messages/AclList.hpp"
-#include "eyeline/clustercontroller/protocol/messages/AclRemove.hpp"
-#include "eyeline/clustercontroller/protocol/messages/AclCreate.hpp"
-#include "eyeline/clustercontroller/protocol/messages/AclUpdate.hpp"
-#include "eyeline/clustercontroller/protocol/messages/AclLookup.hpp"
-#include "eyeline/clustercontroller/protocol/messages/AclRemoveAddresses.hpp"
-#include "eyeline/clustercontroller/protocol/messages/AclAddAddresses.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlPrcList.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlPrcAdd.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlPrcDelete.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlPrcGet.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlPrcAlter.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlMemAdd.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlMemDelete.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlMemGet.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlSbmAdd.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlSbmDel.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlSbmList.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlAdd.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlDelete.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlGet.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlList.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlAlter.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlCopy.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlRename.hpp"
-#include "eyeline/clustercontroller/protocol/messages/CgmAddGroup.hpp"
-#include "eyeline/clustercontroller/protocol/messages/CgmDeleteGroup.hpp"
-#include "eyeline/clustercontroller/protocol/messages/CgmAddAddr.hpp"
-#include "eyeline/clustercontroller/protocol/messages/CgmCheck.hpp"
-#include "eyeline/clustercontroller/protocol/messages/CgmDelAddr.hpp"
-#include "eyeline/clustercontroller/protocol/messages/CgmAddAbonent.hpp"
-#include "eyeline/clustercontroller/protocol/messages/CgmDelAbonent.hpp"
-#include "eyeline/clustercontroller/protocol/messages/CgmListAbonents.hpp"
-#include "eyeline/clustercontroller/protocol/messages/AliasAdd.hpp"
-#include "eyeline/clustercontroller/protocol/messages/AliasDel.hpp"
-#include "eyeline/clustercontroller/protocol/messages/GetServicesStatus.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DisconnectService.hpp"
-#include "eyeline/clustercontroller/protocol/messages/MultipartMessageRequest.hpp"
-#include "eyeline/clustercontroller/protocol/messages/ReplaceIfPresentRequest.hpp"
-#include "eyeline/clustercontroller/protocol/messages/LockProfiler.hpp"
-#include "eyeline/clustercontroller/protocol/messages/UnlockProfiler.hpp"
-#include "eyeline/clustercontroller/protocol/messages/RegisterAsLoadBalancer.hpp"
-#include "eyeline/clustercontroller/protocol/messages/RegisterAsWebapp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/RegisterAsSmsc.hpp"
-#include "eyeline/clustercontroller/protocol/messages/ApplyRoutesResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/ApplyRescheduleResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/ApplyLocaleResourceResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/ApplyTimeZonesResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/ApplyFraudControlResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/ApplyMapLimitsResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/ApplySnmpResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/TraceRouteResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/LoadRoutesResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/LookupProfileResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/LookupProfileExResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/UpdateProfileResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DeleteProfileResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/CancelSmsResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/MscRegisterResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/MscUnregisterResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/MscBlockResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/MscClearResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/MscListResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/SmeAddResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/SmeUpdateResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/SmeRemoveResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/SmeStatusResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/SmeDisconnectResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/LoggerGetCategoriesResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/LoggerSetCategoriesResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/AclGetResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/AclListResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/AclRemoveResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/AclCreateResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/AclUpdateResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/AclLookupResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/AclRemoveAddressesResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/AclAddAddressesResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlPrcListResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlPrcAddResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlPrcDeleteResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlPrcGetResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlPrcAlterResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlMemAddResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlMemDeleteResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlMemGetResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlSbmAddResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlSbmDelResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlSbmListResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlAddResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlDeleteResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlGetResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlListResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlAlterResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlCopyResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DlRenameResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/CgmAddGroupResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/CgmDeleteGroupResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/CgmAddAddrResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/CgmCheckResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/CgmDelAddrResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/CgmAddAbonentResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/CgmDelAbonentResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/CgmListAbonentsResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/AliasAddResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/AliasDelResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/GetServicesStatusResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/DisconnectServiceResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/MultipartMessageRequestResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/ReplaceIfPresentRequestResp.hpp"
-#include "eyeline/clustercontroller/protocol/messages/LockProfilerResp.hpp"
+#include "messages/ApplyRoutes.hpp"
+#include "messages/ApplyReschedule.hpp"
+#include "messages/ApplyLocaleResource.hpp"
+#include "messages/ApplyTimeZones.hpp"
+#include "messages/ApplyFraudControl.hpp"
+#include "messages/ApplyMapLimits.hpp"
+#include "messages/ApplySnmp.hpp"
+#include "messages/TraceRoute.hpp"
+#include "messages/LoadRoutes.hpp"
+#include "messages/LookupProfile.hpp"
+#include "messages/LookupProfileEx.hpp"
+#include "messages/UpdateProfile.hpp"
+#include "messages/DeleteProfile.hpp"
+#include "messages/CancelSms.hpp"
+#include "messages/MscAdd.hpp"
+#include "messages/MscRemove.hpp"
+#include "messages/SmeAdd.hpp"
+#include "messages/SmeUpdate.hpp"
+#include "messages/SmeRemove.hpp"
+#include "messages/SmeStatus.hpp"
+#include "messages/SmeDisconnect.hpp"
+#include "messages/LoggerGetCategories.hpp"
+#include "messages/LoggerSetCategories.hpp"
+#include "messages/AclGet.hpp"
+#include "messages/AclList.hpp"
+#include "messages/AclRemove.hpp"
+#include "messages/AclCreate.hpp"
+#include "messages/AclUpdate.hpp"
+#include "messages/AclLookup.hpp"
+#include "messages/AclRemoveAddresses.hpp"
+#include "messages/AclAddAddresses.hpp"
+/*
+#include "messages/DlPrcList.hpp"
+#include "messages/DlPrcAdd.hpp"
+#include "messages/DlPrcDelete.hpp"
+#include "messages/DlPrcGet.hpp"
+#include "messages/DlPrcAlter.hpp"
+#include "messages/DlMemAdd.hpp"
+#include "messages/DlMemDelete.hpp"
+#include "messages/DlMemGet.hpp"
+#include "messages/DlSbmAdd.hpp"
+#include "messages/DlSbmDel.hpp"
+#include "messages/DlSbmList.hpp"
+#include "messages/DlAdd.hpp"
+#include "messages/DlDelete.hpp"
+#include "messages/DlGet.hpp"
+#include "messages/DlList.hpp"
+#include "messages/DlAlter.hpp"
+#include "messages/DlCopy.hpp"
+#include "messages/DlRename.hpp"
+*/
+#include "messages/CgmAddGroup.hpp"
+#include "messages/CgmDeleteGroup.hpp"
+#include "messages/CgmAddAddr.hpp"
+#include "messages/CgmCheck.hpp"
+#include "messages/CgmDelAddr.hpp"
+#include "messages/CgmAddAbonent.hpp"
+#include "messages/CgmDelAbonent.hpp"
+#include "messages/CgmListAbonents.hpp"
+#include "messages/AliasAdd.hpp"
+#include "messages/AliasDel.hpp"
+#include "messages/GetServicesStatus.hpp"
+#include "messages/DisconnectService.hpp"
+#include "messages/MultipartMessageRequest.hpp"
+#include "messages/ReplaceIfPresentRequest.hpp"
+#include "messages/LockConfig.hpp"
+#include "messages/UnlockConfig.hpp"
+#include "messages/RegisterAsLoadBalancer.hpp"
+#include "messages/RegisterAsWebapp.hpp"
+#include "messages/RegisterAsSmsc.hpp"
+#include "messages/ApplyRoutesResp.hpp"
+#include "messages/ApplyRescheduleResp.hpp"
+#include "messages/ApplyLocaleResourceResp.hpp"
+#include "messages/ApplyTimeZonesResp.hpp"
+#include "messages/ApplyFraudControlResp.hpp"
+#include "messages/ApplyMapLimitsResp.hpp"
+#include "messages/ApplySnmpResp.hpp"
+#include "messages/TraceRouteResp.hpp"
+#include "messages/LoadRoutesResp.hpp"
+#include "messages/LookupProfileResp.hpp"
+#include "messages/LookupProfileExResp.hpp"
+#include "messages/UpdateProfileResp.hpp"
+#include "messages/DeleteProfileResp.hpp"
+#include "messages/CancelSmsResp.hpp"
+#include "messages/MscAddResp.hpp"
+#include "messages/MscRemoveResp.hpp"
+#include "messages/SmeAddResp.hpp"
+#include "messages/SmeUpdateResp.hpp"
+#include "messages/SmeRemoveResp.hpp"
+#include "messages/SmeStatusResp.hpp"
+#include "messages/SmeDisconnectResp.hpp"
+#include "messages/LoggerGetCategoriesResp.hpp"
+#include "messages/LoggerSetCategoriesResp.hpp"
+#include "messages/AclGetResp.hpp"
+#include "messages/AclListResp.hpp"
+#include "messages/AclRemoveResp.hpp"
+#include "messages/AclCreateResp.hpp"
+#include "messages/AclUpdateResp.hpp"
+#include "messages/AclLookupResp.hpp"
+#include "messages/AclRemoveAddressesResp.hpp"
+#include "messages/AclAddAddressesResp.hpp"
+/*
+#include "messages/DlPrcListResp.hpp"
+#include "messages/DlPrcAddResp.hpp"
+#include "messages/DlPrcDeleteResp.hpp"
+#include "messages/DlPrcGetResp.hpp"
+#include "messages/DlPrcAlterResp.hpp"
+#include "messages/DlMemAddResp.hpp"
+#include "messages/DlMemDeleteResp.hpp"
+#include "messages/DlMemGetResp.hpp"
+#include "messages/DlSbmAddResp.hpp"
+#include "messages/DlSbmDelResp.hpp"
+#include "messages/DlSbmListResp.hpp"
+#include "messages/DlAddResp.hpp"
+#include "messages/DlDeleteResp.hpp"
+#include "messages/DlGetResp.hpp"
+#include "messages/DlListResp.hpp"
+#include "messages/DlAlterResp.hpp"
+#include "messages/DlCopyResp.hpp"
+#include "messages/DlRenameResp.hpp"
+*/
+#include "messages/CgmAddGroupResp.hpp"
+#include "messages/CgmDeleteGroupResp.hpp"
+#include "messages/CgmAddAddrResp.hpp"
+#include "messages/CgmCheckResp.hpp"
+#include "messages/CgmDelAddrResp.hpp"
+#include "messages/CgmAddAbonentResp.hpp"
+#include "messages/CgmDelAbonentResp.hpp"
+#include "messages/CgmListAbonentsResp.hpp"
+#include "messages/AliasAddResp.hpp"
+#include "messages/AliasDelResp.hpp"
+#include "messages/GetServicesStatusResp.hpp"
+#include "messages/DisconnectServiceResp.hpp"
+#include "messages/MultipartMessageRequestResp.hpp"
+#include "messages/ReplaceIfPresentRequestResp.hpp"
+#include "messages/LockConfigResp.hpp"
+#include "messages/UpdateProfileAbnt.hpp"
+#include "messages/UpdateProfileAbntResp.hpp"
+/*
+#include "messages/DlMemAddAbnt.hpp"
+#include "messages/DlMemDeleteAbnt.hpp"
+#include "eyeline/clustercontroller/protocol/messages/DlSbmAddAbnt.hpp"
+#include "eyeline/clustercontroller/protocol/messages/DlSbmDelAbnt.hpp"
+#include "messages/DlAddAbnt.hpp"
+#include "messages/DlDeleteAbnt.hpp"
+#include "messages/DlCopyAbnt.hpp"
+#include "eyeline/clustercontroller/protocol/messages/DlRenameAbnt.hpp"
+#include "eyeline/clustercontroller/protocol/messages/DlMemAddAbntResp.hpp"
+#include "eyeline/clustercontroller/protocol/messages/DlMemDeleteAbntResp.hpp"
+#include "eyeline/clustercontroller/protocol/messages/DlSbmAddAbntResp.hpp"
+#include "eyeline/clustercontroller/protocol/messages/DlSbmDelAbntResp.hpp"
+#include "eyeline/clustercontroller/protocol/messages/DlAddAbntResp.hpp"
+#include "eyeline/clustercontroller/protocol/messages/DlDeleteAbntResp.hpp"
+#include "eyeline/clustercontroller/protocol/messages/DlCopyAbntResp.hpp"
+#include "eyeline/clustercontroller/protocol/messages/DlRenameAbntResp.hpp"
+*/
 
 namespace eyeline {
 namespace clustercontroller {
@@ -148,10 +166,72 @@ public:
   {
 
   }
+  void handle(const messages::ApplyRoutes& msg);
+  void handle(const messages::ApplyReschedule& msg);
+  void handle(const messages::ApplyLocaleResource& msg);
+  void handle(const messages::ApplyTimeZones& msg);
+  void handle(const messages::ApplyFraudControl& msg);
+  void handle(const messages::ApplyMapLimits& msg);
+  void handle(const messages::ApplySnmp& msg);
+  void handle(const messages::TraceRoute& msg);
+  void handle(const messages::LoadRoutes& msg);
+  void handle(const messages::LookupProfile& msg);
+  void handle(const messages::LookupProfileEx& msg);
+  void handle(const messages::UpdateProfile& msg);
+  void handle(const messages::DeleteProfile& msg);
+  void handle(const messages::CancelSms& msg);
+  void handle(const messages::MscAdd& msg);
+  void handle(const messages::MscRemove& msg);
+  void handle(const messages::SmeAdd& msg);
+  void handle(const messages::SmeUpdate& msg);
+  void handle(const messages::SmeRemove& msg);
+  void handle(const messages::SmeStatus& msg);
+  void handle(const messages::SmeDisconnect& msg);
+  void handle(const messages::LoggerGetCategories& msg);
+  void handle(const messages::LoggerSetCategories& msg);
+  void handle(const messages::AclGet& msg);
+  void handle(const messages::AclList& msg);
+  void handle(const messages::AclRemove& msg);
+  void handle(const messages::AclCreate& msg);
+  void handle(const messages::AclUpdate& msg);
+  void handle(const messages::AclLookup& msg);
+  void handle(const messages::AclRemoveAddresses& msg);
+  void handle(const messages::AclAddAddresses& msg);
+  /*
+  void handle(const messages::DlPrcList& msg);
+  void handle(const messages::DlPrcAdd& msg);
+  void handle(const messages::DlPrcDelete& msg);
+  void handle(const messages::DlPrcGet& msg);
+  void handle(const messages::DlPrcAlter& msg);
+  void handle(const messages::DlMemAdd& msg);
+  void handle(const messages::DlMemDelete& msg);
+  void handle(const messages::DlMemGet& msg);
+  void handle(const messages::DlSbmAdd& msg);
+  void handle(const messages::DlSbmDel& msg);
+  void handle(const messages::DlSbmList& msg);
+  void handle(const messages::DlAdd& msg);
+  void handle(const messages::DlDelete& msg);
+  void handle(const messages::DlGet& msg);
+  void handle(const messages::DlList& msg);
+  void handle(const messages::DlAlter& msg);
+  void handle(const messages::DlCopy& msg);
+  void handle(const messages::DlRename& msg);*/
+  void handle(const messages::CgmAddGroup& msg);
+  void handle(const messages::CgmDeleteGroup& msg);
+  void handle(const messages::CgmAddAddr& msg);
+  void handle(const messages::CgmCheck& msg);
+  void handle(const messages::CgmDelAddr& msg);
+  void handle(const messages::CgmAddAbonent& msg);
+  void handle(const messages::CgmDelAbonent& msg);
+  void handle(const messages::CgmListAbonents& msg);
+  void handle(const messages::AliasAdd& msg);
+  void handle(const messages::AliasDel& msg);
+  void handle(const messages::GetServicesStatus& msg);
+  void handle(const messages::DisconnectService& msg);
   void handle(const messages::MultipartMessageRequest& msg);
   void handle(const messages::ReplaceIfPresentRequest& msg);
-  void handle(const messages::LockProfiler& msg);
-  void handle(const messages::UnlockProfiler& msg);
+  void handle(const messages::LockConfig& msg);
+  void handle(const messages::UnlockConfig& msg);
   void handle(const messages::RegisterAsLoadBalancer& msg);
   void handle(const messages::RegisterAsWebapp& msg);
   void handle(const messages::RegisterAsSmsc& msg);
@@ -169,11 +249,8 @@ public:
   void handle(const messages::UpdateProfileResp& msg);
   void handle(const messages::DeleteProfileResp& msg);
   void handle(const messages::CancelSmsResp& msg);
-  void handle(const messages::MscRegisterResp& msg);
-  void handle(const messages::MscUnregisterResp& msg);
-  void handle(const messages::MscBlockResp& msg);
-  void handle(const messages::MscClearResp& msg);
-  void handle(const messages::MscListResp& msg);
+  void handle(const messages::MscAddResp& msg);
+  void handle(const messages::MscRemoveResp& msg);
   void handle(const messages::SmeAddResp& msg);
   void handle(const messages::SmeUpdateResp& msg);
   void handle(const messages::SmeRemoveResp& msg);
@@ -189,6 +266,7 @@ public:
   void handle(const messages::AclLookupResp& msg);
   void handle(const messages::AclRemoveAddressesResp& msg);
   void handle(const messages::AclAddAddressesResp& msg);
+  /*
   void handle(const messages::DlPrcListResp& msg);
   void handle(const messages::DlPrcAddResp& msg);
   void handle(const messages::DlPrcDeleteResp& msg);
@@ -206,7 +284,7 @@ public:
   void handle(const messages::DlListResp& msg);
   void handle(const messages::DlAlterResp& msg);
   void handle(const messages::DlCopyResp& msg);
-  void handle(const messages::DlRenameResp& msg);
+  void handle(const messages::DlRenameResp& msg);*/
   void handle(const messages::CgmAddGroupResp& msg);
   void handle(const messages::CgmDeleteGroupResp& msg);
   void handle(const messages::CgmAddAddrResp& msg);
@@ -219,8 +297,41 @@ public:
   void handle(const messages::AliasDelResp& msg);
   void handle(const messages::GetServicesStatusResp& msg);
   void handle(const messages::DisconnectServiceResp& msg);
+  void handle(const messages::MultipartMessageRequestResp& msg);
+  void handle(const messages::ReplaceIfPresentRequestResp& msg);
+  void handle(const messages::LockConfigResp& msg);
+  void handle(const messages::UpdateProfileAbnt& msg);
+  void handle(const messages::UpdateProfileAbntResp& msg);
+
+/*
+  void handle(const messages::DlMemAddAbnt& msg);
+  void handle(const messages::DlMemDeleteAbnt& msg);
+  void handle(const messages::DlSbmAddAbnt& msg);
+  void handle(const messages::DlSbmDelAbnt& msg);
+  void handle(const messages::DlAddAbnt& msg);
+  void handle(const messages::DlDeleteAbnt& msg);
+  void handle(const messages::DlCopyAbnt& msg);
+  void handle(const messages::DlRenameAbnt& msg);
+  void handle(const messages::DlMemAddAbntResp& msg);
+  void handle(const messages::DlMemDeleteAbntResp& msg);
+  void handle(const messages::DlSbmAddAbntResp& msg);
+  void handle(const messages::DlSbmDelAbntResp& msg);
+  void handle(const messages::DlAddAbntResp& msg);
+  void handle(const messages::DlDeleteAbntResp& msg);
+  void handle(const messages::DlCopyAbntResp& msg);
+  void handle(const messages::DlRenameAbntResp& msg);
+*/
+
 protected:
   int connId;
+  template <class MSG_T,class MSG_RESP_T>
+  void prepareResp(MSG_T& msg,MSG_RESP_T& respMsg,uint32_t status)
+  {
+    respMsg.setSeqNum(msg.getSeqNum());
+    messages::Response resp;
+    resp.setStatus(status);
+    respMsg.setResp(resp);
+  }
 };
 
 

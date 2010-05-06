@@ -1,1 +1,4 @@
-eyeline/ClusterController ccmain -leyeline-clustercontroller -leyeline-clustercontroller-protocol -lcore-network -lsocket -lnsl -lutil -lcore-threads -lutil-config $(XERCES_LIB) -lutil-xml -llogger
+eyeline/ClusterController ccmain -leyeline-clustercontroller -leyeline-clustercontroller-protocol \
+-leyeline-clustercontroller-profiler -lsmsc-resourcemanager \
+-lutil-templates -lutil-recoder-recode_dll -lsms -lsmsc-closedgroups \
+-lcore-network -lsocket -lnsl -lutil -lcore-threads -lutil-config $(XERCES_LIB) -lutil-xml -llogger
