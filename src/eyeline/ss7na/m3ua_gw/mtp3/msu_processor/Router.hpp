@@ -31,6 +31,7 @@ public:
 
   void addRoutingTable(common::point_code_t lpc, RoutingTable* routing_table);
   RoutingTable* getRoutingTable(common::point_code_t lpc) const;
+  bool removeRoutingTable(common::point_code_t lpc);
 
 private:
   smsc::core::buffers::IntHash<RoutingTable*> _routingTables;

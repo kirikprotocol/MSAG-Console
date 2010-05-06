@@ -43,4 +43,16 @@ Router::getRoutingTable(common::point_code_t lpc) const
     return *routingTablePtr;
 }
 
+bool
+Router::removeRoutingTable(common::point_code_t lpc)
+{
+  RoutingTable** routingTablePtr = _routingTables.GetPtr(lpc);
+  if ( routingTablePtr ) {
+    delete *routingTablePtr;
+    _routingTables.Delete(lpc);
+    return true;
+  } else
+    return false;
+}
+
 }}}}}
