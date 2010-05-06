@@ -4,9 +4,8 @@
 # include <string>
 # include <map>
 # include <util/config/ConfigView.h>
-# include <eyeline/utilx/runtime_cfg/CompositeParameter.hpp>
-# include <eyeline/utilx/runtime_cfg/ParameterObserver.hpp>
-# include <eyeline/utilx/Singleton.hpp>
+# include "eyeline/utilx/runtime_cfg/CompositeParameter.hpp"
+# include "eyeline/utilx/Singleton.hpp"
 
 namespace eyeline {
 namespace utilx {
@@ -18,25 +17,10 @@ public:
   virtual ~RuntimeConfig() {}
 
   void initialize(CompositeParameter* full_configuration);
-  virtual void initialize(smsc::util::config::ConfigView& xmlConfig) = 0;
+  virtual void initialize(smsc::util::config::ConfigView& xmlConfig,
+                          const char* cfg_file) = 0;
 
   template <class PARAMETER_TYPE> PARAMETER_TYPE& find(const std::string& param_name);
-  void registerParameterObserver(const std::string& full_param_name,
-                                 ParameterObserver* handler);
-
-  void notifyAddParameterEvent(const CompositeParameter& context, Parameter* added_param);
-  CompositeParameter* notifyAddParameterEvent(const CompositeParameter& context,
-                                              CompositeParameter* added_param);
-  void notifyAddParameterEvent(CompositeParameter* context, Parameter* added_param);
-
-  void notifyChangeParameterEvent(const CompositeParameter& context,
-                                  const Parameter& modified_param);
-  void notifyChangeParameterEvent(CompositeParameter* context,
-                                  const Parameter& modified_param);
-
-  void notifyRemoveParameterEvent(const Parameter& modified_param);
-  void notifyRemoveParameterEvent(const CompositeParameter& context,
-                                  const Parameter& modified_param);
 
   std::string printConfig() const;
 
@@ -49,12 +33,12 @@ protected:
   void parseCommaSeparatedValue(const std::string& comma_sep_value,
                                 utilx::runtime_cfg::CompositeParameter* composite_param,
                                 const char* param_name);
+  void parseCommaSeparatedIntValue(const std::string& comma_sep_value,
+                                   utilx::runtime_cfg::CompositeParameter* composite_param,
+                                   const char* param_name);
 
 private:
   CompositeParameter* _config;
-  typedef std::map<std::string, ParameterObserver*> registeredParameterHandlers_t;
-
-  registeredParameterHandlers_t _registredParameterHandlers;
 
   bool _wasInitialized;
 };
