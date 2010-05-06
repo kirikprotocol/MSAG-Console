@@ -31,6 +31,8 @@ public:
                                    uint8_t destination_ssn,
                                    const std::string& route_id);
 
+  bool removeTranslationEntry(const std::string& route_id);
+
 protected:
   smsc::logger::Logger* _logger;
 
@@ -56,6 +58,9 @@ protected:
   rtable_t _routingTable;
 
   smsc::core::synchronization::Mutex _routingTableLock;
+
+  typedef std::map<std::string /*route_id*/, std::string /*gt_mask_value*/> known_gtmask_t;
+  known_gtmask_t _knownGtMask;
 
   bool translationResultIncludesSsn(const RouteTableEntry* route_entry);
 

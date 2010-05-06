@@ -101,10 +101,15 @@ GTTranslationTable::addTranslationEntry(const std::string& gt_mask_value,
     if ( _routingTable.Find(gt_mask_value.c_str(), routeEntry) ) {
       smsc::core::synchronization::MutexGuard routeEntrySynchronize(routeEntry->routingEntryLock);
 
+      _knownGtMask.erase(routeEntry->routeId);
+      _knownGtMask.insert(std::make_pair(route_id, gt_mask_value));
+
       routeEntry->routeId = route_id;
-    } else
+    } else {
+      _knownGtMask.insert(std::make_pair(route_id, gt_mask_value));
       _routingTable.Insert(gt_mask_value.c_str(), new RouteTableEntry(route_id,
                                                                       route_to_MTP3));
+    }
   }
 }
 
@@ -123,11 +128,27 @@ GTTranslationTable::addTranslationEntry(const std::string& gt_mask_value,
       smsc::core::synchronization::MutexGuard routeEntrySynchronize(routeEntry->routingEntryLock);
 
       routeEntry->routeBySsn.insert(std::make_pair(destination_ssn, route_id));
-    } else
+    } else {
+      _knownGtMask.insert(std::make_pair(route_id, gt_mask_value));
       _routingTable.Insert(gt_mask_value.c_str(), new RouteTableEntry(destination_ssn,
                                                                       route_id,
                                                                       false));
+    }
   }
+}
+
+bool
+GTTranslationTable::removeTranslationEntry(const std::string& route_id)
+{
+  smsc::core::synchronization::MutexGuard synchronize(_routingTableLock);
+  known_gtmask_t::iterator iter = _knownGtMask.find(route_id);
+
+  if ( iter == _knownGtMask.end() )
+    return false;
+
+  _routingTable.Delete(iter->second.c_str());
+
+  return true;
 }
 
 std::string
