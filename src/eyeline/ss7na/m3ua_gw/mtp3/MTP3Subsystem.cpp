@@ -1,11 +1,10 @@
 #include "MTP3Subsystem.hpp"
 
 #include <stdlib.h>
-#include <netinet/in.h>
 #include <errno.h>
 
-#include "eyeline/utilx/strtol.hpp"
 #include "eyeline/utilx/SubsystemsManager.hpp"
+#include "eyeline/utilx/runtime_cfg/Exception.hpp"
 
 #include "eyeline/ss7na/common/types.hpp"
 #include "eyeline/ss7na/common/io_dispatcher/ProtocolStateController.hpp"
@@ -97,13 +96,6 @@ MTP3Subsystem::initialize(utilx::runtime_cfg::RuntimeConfig& rconfig)
   msu_processor::Distributor::init();
   msu_processor::Router::init();
 
-  runtime_cfg::RuntimeConfig::getInstance().registerParameterObserver("config.asp_traffic_mode", this);
-  runtime_cfg::RuntimeConfig::getInstance().registerParameterObserver("config.sgp_links.link", this);
-  runtime_cfg::RuntimeConfig::getInstance().registerParameterObserver("config.sgp_links.link.local_address", this);
-  runtime_cfg::RuntimeConfig::getInstance().registerParameterObserver("config.sgp_links.link.local_port", this);
-  runtime_cfg::RuntimeConfig::getInstance().registerParameterObserver("config.sgp_links.link.remote_address", this);
-  runtime_cfg::RuntimeConfig::getInstance().registerParameterObserver("config.sgp_links.link.remote_port", this);
-
   try {
     m3ua_stack::AspMaintenanceMessageHandlers::setSGPTrafficMode(rconfig.find<utilx::runtime_cfg::Parameter>("config.asp_traffic_mode").getValue());
   } catch (std::exception& ex) {}
@@ -111,67 +103,6 @@ MTP3Subsystem::initialize(utilx::runtime_cfg::RuntimeConfig& rconfig)
   configurePoints(rconfig);
   fillInRoutingTable(rconfig);
   activateLinksToSGP(rconfig);
-}
-
-void
-MTP3Subsystem::changeParameterEventHandler(const utilx::runtime_cfg::CompositeParameter& context,
-                                                const utilx::runtime_cfg::Parameter& modified_parameter)
-{
-  if ( context.getFullName() == "config" ) {
-    utilx::runtime_cfg::RuntimeConfig& runtimeConfig = runtime_cfg::RuntimeConfig::getInstance();
-    utilx::runtime_cfg::CompositeParameter& rootConfigParam = runtimeConfig.find<utilx::runtime_cfg::CompositeParameter>("config");
-
-    if ( modified_parameter.getFullName() == "asp_traffic_mode" ) {
-      smsc_log_debug(_logger, "MTP3Subsystem::handle::: handle modified 'config.asp_traffic_mode' parameter=[%s]", modified_parameter.getValue().c_str());
-      utilx::runtime_cfg::Parameter* trafficModeParam = rootConfigParam.getParameter<utilx::runtime_cfg::Parameter>("asp_traffic_mode");
-      if ( trafficModeParam )
-        trafficModeParam->setValue(modified_parameter.getValue());
-    }
-  }
-}
-
-void
-MTP3Subsystem::addParameterEventHandler(const utilx::runtime_cfg::CompositeParameter& context,
-                                             utilx::runtime_cfg::Parameter* added_parameter)
-{
-  if ( context.getFullName() == "config.sgp_links.link" ) {
-    utilx::runtime_cfg::CompositeParameter* linkParam = findContextParentParameter(runtime_cfg::RuntimeConfig::getInstance(),
-                                                                                   context);
-
-    if ( !linkParam ) return;
-
-    if ( added_parameter->getName() != "local_address" &&
-         added_parameter->getName() != "local_port" &&
-         added_parameter->getName() != "remote_address" &&
-         added_parameter->getName() != "remote_port" ) return;
-
-    smsc_log_debug(_logger, "MTP3Subsystem::handle::: handle added parameter '%s'='%s' for Link=[%s]", added_parameter->getName().c_str(), added_parameter->getValue().c_str(), context.getValue().c_str());
-
-    if ( !checkParameterExist(linkParam, added_parameter) )
-      linkParam->addParameter(added_parameter);
-  }
-}
-
-utilx::runtime_cfg::CompositeParameter*
-MTP3Subsystem::addParameterEventHandler(const utilx::runtime_cfg::CompositeParameter& context,
-                                             utilx::runtime_cfg::CompositeParameter* added_parameter)
-{
-  if ( context.getFullName() == "config.sgp_links" ) {
-    // this condition is true when called LM_SGPLinks_AddLinkCommand::executeCommand()
-    utilx::runtime_cfg::CompositeParameter& sgpLinksParameter = 
-      runtime_cfg::RuntimeConfig::getInstance().find<utilx::runtime_cfg::CompositeParameter>("config.sgp_links");
-
-    if ( added_parameter->getName() != "link" )
-      generateExceptionAndForcePopUpCurrentInterpreter("Error: Invalid input", "MTP3Subsystem::addParameterEventHandler::: invalid parameter '%s' for context '%s'", added_parameter->getName().c_str(), context.getName().c_str());
-
-    if ( checkParameterExist(&sgpLinksParameter, added_parameter) )
-      generateExceptionAndForcePopUpCurrentInterpreter("Inconsistent config modification request - link with such value already exists", "MTP3Subsystem::addParameterEventHandler::: can't process parameter '%s'='%s' - the parameter with such value already exist", added_parameter->getName().c_str(), added_parameter->getValue().c_str());
-
-    sgpLinksParameter.addParameter(added_parameter);
-    return added_parameter;
-  } else
-    generateExceptionAndForcePopUpCurrentInterpreter("Error: Invalid input", "MTP3Subsystem::addParameterEventHandler::: invalid parameter '%s' for context '%s'", added_parameter->getName().c_str(), context.getName().c_str());
-  return NULL; // to exclude compiler warning "The last statement should return a value."
 }
 
 void
@@ -200,8 +131,8 @@ MTP3Subsystem::notifyLinkShutdownCompletion()
 
 void
 MTP3Subsystem::extractAddressParameters(std::vector<std::string>* addrs,
-                                             utilx::runtime_cfg::CompositeParameter* next_parameter,
-                                             const std::string& param_name)
+                                        utilx::runtime_cfg::CompositeParameter* next_parameter,
+                                        const std::string& param_name)
 {
   utilx::runtime_cfg::CompositeParameter::Iterator<utilx::runtime_cfg::Parameter> addrIterator = next_parameter->getIterator<utilx::runtime_cfg::Parameter>(param_name);
   while (addrIterator.hasElement()) {
@@ -223,11 +154,11 @@ MTP3Subsystem::configurePoints(utilx::runtime_cfg::RuntimeConfig& rconfig)
 
     utilx::runtime_cfg::Parameter* lpcParam =
         nextParameter->getParameter<utilx::runtime_cfg::Parameter>("lpc");
-    common::point_code_t lpc = static_cast<common::point_code_t>(atoi(lpcParam->getValue().c_str()));
+    common::point_code_t lpc = lpcParam->getIntValue();
 
     utilx::runtime_cfg::Parameter* niParam =
         nextParameter->getParameter<utilx::runtime_cfg::Parameter>("ni");
-    uint8_t ni = static_cast<uint8_t>(atoi(niParam->getValue().c_str()));
+    uint8_t ni = static_cast<uint8_t>(niParam->getIntValue());
 
     utilx::runtime_cfg::Parameter* standardParam =
         nextParameter->getParameter<utilx::runtime_cfg::Parameter>("standard");
@@ -248,10 +179,7 @@ MTP3Subsystem::fillInRoutingTable(utilx::runtime_cfg::RuntimeConfig& rconfig)
     utilx::runtime_cfg::CompositeParameter* nextParameter = tableIterator.getCurrentElement();
 
     const std::string& routingTableId = nextParameter->getValue();
-    common::point_code_t lpc = static_cast<common::point_code_t>(utilx::strtol(nextParameter->getParameter<utilx::runtime_cfg::Parameter>("lpc")->getValue().c_str(), NULL, 10));
-    if ( lpc == 0 && errno )
-      throw smsc::util::Exception("MTP3Subsystem::fillUpRoutingTable::: invalid value of config.mtp3-routing-tables.table.lpc parameter=[%s]",
-                                  nextParameter->getParameter<utilx::runtime_cfg::Parameter>("lpc")->getValue().c_str());
+    common::point_code_t lpc = static_cast<common::point_code_t>(nextParameter->getParameter<utilx::runtime_cfg::Parameter>("lpc")->getIntValue());
 
     msu_processor::RoutingTable* routingTable = new msu_processor::RoutingTable();
 
@@ -262,11 +190,7 @@ MTP3Subsystem::fillInRoutingTable(utilx::runtime_cfg::RuntimeConfig& rconfig)
       const std::string& entryName = entryParameter->getValue();
       const utilx::runtime_cfg::Parameter* dpcParam = entryParameter->getParameter<utilx::runtime_cfg::Parameter>("dpc");
       const utilx::runtime_cfg::Parameter* sgpLinkParam = entryParameter->getParameter<utilx::runtime_cfg::Parameter>("sgp_link");
-      common::point_code_t dpc = static_cast<common::point_code_t>(utilx::strtol(dpcParam->getValue().c_str(), NULL, 10));
-      if ( dpc == 0 && errno )
-        throw smsc::util::Exception("MTP3Subsystem::fillUpRoutingTable::: invalid value of config.mtp3-routing-tables.table.entry.dpc parameter=[%s]",
-                                    dpcParam->getValue().c_str());
-
+      common::point_code_t dpc = static_cast<common::point_code_t>(dpcParam->getIntValue());
       common::LinkId sgpLinkId(sgpLinkParam->getValue());
       routingTable->addRoute(dpc, sgpLinkId);
       AdjacentDPCRegistry::getInstance().insert(dpc, sgpLinkId);
@@ -280,6 +204,17 @@ MTP3Subsystem::fillInRoutingTable(utilx::runtime_cfg::RuntimeConfig& rconfig)
 }
 
 void
+MTP3Subsystem::addMtp3Route(common::point_code_t lpc, common::point_code_t dpc,
+                            const common::LinkId& sgp_link_id)
+{
+  msu_processor::RoutingTable* routingTable =
+      msu_processor::Router::getInstance().getRoutingTable(lpc);
+  if ( !routingTable )
+    throw smsc::util::Exception("MTP3Subsystem::addMtp3Route::: routing table not found for lpc=%u", lpc);
+  routingTable->addRoute(dpc, sgp_link_id);
+}
+
+void
 MTP3Subsystem::activateLinksToSGP(utilx::runtime_cfg::RuntimeConfig& rconfig)
 {
   utilx::runtime_cfg::CompositeParameter& sgpLinksParameter = rconfig.find<utilx::runtime_cfg::CompositeParameter>("config.sgp_links");
@@ -289,14 +224,12 @@ MTP3Subsystem::activateLinksToSGP(utilx::runtime_cfg::RuntimeConfig& rconfig)
   while (linkIterator.hasElement()) {
     utilx::runtime_cfg::CompositeParameter* nextParameter = linkIterator.getCurrentElement();
 
-    common::LinkId linkIdToSgp(nextParameter->getValue());
-
     std::vector<std::string> l_addr, r_addr;
-    in_port_t r_port = atoi(nextParameter->getParameter<utilx::runtime_cfg::Parameter>("remote_port")->getValue().c_str());
+    in_port_t r_port = static_cast<in_port_t>(nextParameter->getParameter<utilx::runtime_cfg::Parameter>("remote_port")->getIntValue());
     utilx::runtime_cfg::Parameter* localPortCfgParam = nextParameter->getParameter<utilx::runtime_cfg::Parameter>("local_port");
     in_port_t l_port = 0;
     if ( localPortCfgParam )
-      l_port = atoi(localPortCfgParam->getValue().c_str());
+      l_port = localPortCfgParam->getIntValue();
 
     extractAddressParameters(&l_addr,
                              nextParameter->getParameter<utilx::runtime_cfg::CompositeParameter>("local_addresses"),
@@ -305,29 +238,40 @@ MTP3Subsystem::activateLinksToSGP(utilx::runtime_cfg::RuntimeConfig& rconfig)
                              nextParameter->getParameter<utilx::runtime_cfg::CompositeParameter>("remote_addresses"),
                              "address");
 
-    smsc_log_info(_logger, "MTP3Subsystem::initialize::: create new M3uaConnect, linkId=[%s]", linkIdToSgp.getValue().c_str());
-
-    m3ua_stack::M3uaConnect* m3uaConnect;
-    if ( l_port )
-      m3uaConnect = new m3ua_stack::M3uaConnect(r_addr, r_port, l_addr, l_port, linkIdToSgp);
-    else
-      m3uaConnect = new m3ua_stack::M3uaConnect(r_addr, r_port, linkIdToSgp);
-
-    m3uaConnect->setListener(this);
-
-    smsc_log_info(_logger, "MTP3Subsystem::initialize::: try establish sctp association");
-    m3uaConnect->sctpEstablish();
-    ++_establishedLinks;
-    SGPLinkIdsRegistry::getInstance().insert(linkIdToSgp);
-    smsc_log_info(_logger, "MTP3Subsystem::initialize::: add M3uaConnect to ConnectMgr");
-    io_dispatcher::ConnectMgr::getInstance().addLink(m3uaConnect->getLinkId(), m3uaConnect);
-
-    m3uaConnect->up(); // activation for m3uaConnect will be made in AspMaintenanceMessageHandlers::handle(const UPAckMessage& message, io_dispatcher::Link* connect)
-
-    _sgpLinkIds.push_back(m3uaConnect->getLinkId());
+    activateLinkToSGP(common::LinkId(nextParameter->getValue()),
+                      r_addr, r_port, l_addr, l_port);
 
     linkIterator.next();
   }
+}
+
+void
+MTP3Subsystem::activateLinkToSGP(const common::LinkId& link_id,
+                                 const std::vector<std::string>& r_addr,
+                                 in_port_t r_port,
+                                 const std::vector<std::string>& l_addr,
+                                 in_port_t l_port)
+{
+  smsc_log_info(_logger, "MTP3Subsystem::activateLinkToSGP::: create new M3uaConnect, linkId=[%s]", link_id.getValue().c_str());
+
+  m3ua_stack::M3uaConnect* m3uaConnect;
+  if ( l_port )
+    m3uaConnect = new m3ua_stack::M3uaConnect(r_addr, r_port, l_addr, l_port, link_id);
+  else
+    m3uaConnect = new m3ua_stack::M3uaConnect(r_addr, r_port, link_id);
+
+  m3uaConnect->setListener(this);
+
+  smsc_log_info(_logger, "MTP3Subsystem::activateLinkToSGP::: try establish sctp association");
+  m3uaConnect->sctpEstablish();
+  ++_establishedLinks;
+  SGPLinkIdsRegistry::getInstance().insert(link_id);
+  smsc_log_info(_logger, "MTP3Subsystem::activateLinkToSGP::: add M3uaConnect to ConnectMgr");
+  io_dispatcher::ConnectMgr::getInstance().addLink(m3uaConnect->getLinkId(), m3uaConnect);
+
+  m3uaConnect->up(); // activation for m3uaConnect will be made in AspMaintenanceMessageHandlers::handle(const UPAckMessage& message, io_dispatcher::Link* connect)
+
+  _sgpLinkIds.push_back(m3uaConnect->getLinkId());
 }
 
 }}}}
