@@ -23,6 +23,7 @@ import ru.novosoft.smsc.util.Functions;
 
 import java.util.*;
 import java.text.SimpleDateFormat;
+import java.util.regex.Pattern;
 
 /**
  * User: artem
@@ -339,19 +340,17 @@ public class InfoSmeConfig {
     validate(p);
   }
 
+  private static final Pattern addressPattern1 = Pattern.compile("^((\\.[0-6]\\.(0|1|3|4|6|8|9|10|14|18)\\.)|(\\+))?\\d{1,20}$");
+
+  private static final Pattern addressPattern2 = Pattern.compile("^\\.5\\.0\\.[ _\\-:0-9A-Za-z]{1,20}$");
+
   private static void validate(TaskValidityParams t) throws AdminException{
     if (t.priority <= 0 || t.priority > 1000) {
       throw new AdminException("Task priority should be positive and less than 1000: "+t.priority);
     }
     if(t.address != null && t.address.length() > 0) {
-      char c = t.address.charAt(0);
-      if(c != '+' && !Character.isDigit(c)) {
+      if(!addressPattern1.matcher(t.address).matches() && !addressPattern2.matcher(t.address).matches()) {
         throw new AdminException("Task address is wrong "+t.address);
-      }
-      for(int i = 1; i <= t.address.length() - 1; i++) {
-        if(!Character.isDigit(t.address.charAt(i))) {
-          throw new AdminException("Task address is wrong "+t.address);
-        }
       }
     }
     if (t.retryOnFail && (t.retryPolicy == null || t.retryPolicy.length() == 0)) {
