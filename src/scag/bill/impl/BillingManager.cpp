@@ -20,6 +20,45 @@
 #include "inman/services/smbill/SmBillDefs.hpp"
 #endif
 
+namespace {
+
+class TestReloader : public smsc::core::threads::Thread
+{
+public:
+    TestReloader() : stopped_(false) {}
+    virtual ~TestReloader() {
+        Stop();
+    }
+    void Stop()
+    {
+        if (stopped_) return;
+        {
+            MutexGuard mg(mon_);
+            stopped_ = true;
+            mon_.notifyAll();
+        }
+        WaitFor();
+    }
+    virtual int Execute() {
+        while ( !stopped_ ) {
+            scag2::bill::BillingManager::Instance().getInfrastructure().ReloadTariffMatrix();
+            MutexGuard mg(mon_);
+            if (stopped_) break;
+            mon_.wait(15000);
+        }
+        return 0;
+    }
+
+private:
+    smsc::core::synchronization::EventMonitor mon_;
+    bool stopped_;
+};
+
+TestReloader* testReloader = 0;
+
+}
+
+
 namespace scag2 {
 namespace bill {
 
@@ -945,11 +984,20 @@ void BillingManagerImpl::Start()
     }
     #endif
     if (ewalletClient_.get()) { ewalletClient_->startup(); }
+    if (!testReloader) {
+        testReloader = new TestReloader();
+    }
+    testReloader->Start();
 }
 
 void BillingManagerImpl::Stop()
 {
     MutexGuard guard(stopLock);
+    if (testReloader) {
+        testReloader->Stop();
+        delete testReloader;
+        testReloader = 0;
+    }
     if (ewalletClient_.get()) { ewalletClient_->shutdown(); }
     #ifdef MSAG_INMAN_BILL
     if(m_bStarted)

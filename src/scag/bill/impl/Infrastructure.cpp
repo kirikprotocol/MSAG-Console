@@ -18,6 +18,7 @@
 #include "scag/util/singleton/XercesSingleton.h"
 #include "XMLHandlers.h"
 #include "Infrastructure.h"
+#include "scag/util/HRTimer.h"
 
 namespace scag2 {
 namespace bill {
@@ -149,6 +150,11 @@ void InfrastructureImpl::ReloadTariffMatrix()
 {
     MutexGuard mt(TariffMatrixReloadMutex);
 
+    std::string res;
+    res.reserve(200);
+    util::HRTiming hr(res);
+    hr.reset(res);
+
     smsc_log_info(logger, "ReloadTariffMatrix Started");
 
     IntHash<uint32_t> *cat_hash = new IntHash<uint32_t>();
@@ -161,12 +167,15 @@ void InfrastructureImpl::ReloadTariffMatrix()
         XMLTariffMatrixHandler handler(cat_hash, mt_hash, cat_str_hash, mt_str_hash, t_hash);
         ParseFile(TariffMatrixFile.c_str(), &handler);
 
+        hr.mark("parsed");
         MutexGuard mt1(TariffMatrixMapMutex);
+        hr.mark("locked");
         delete category_hash;
         delete media_type_hash;
         delete category_str_hash;
         delete media_type_str_hash;
         delete tariff_hash;
+        hr.mark("dtor");
         category_hash = cat_hash;
         media_type_hash = mt_hash;
         category_str_hash = cat_str_hash;
@@ -183,8 +192,21 @@ void InfrastructureImpl::ReloadTariffMatrix()
         delete t_hash;
         throw;
     }
-
-    smsc_log_info(logger, "ReloadTariffMatrix Finished");
+    hr.mark("done");
+    smsc_log_info(logger, "ReloadTariffMatrix Finished, %s, cat=%u/%u, med=%u/%u, catstr=%u/%u/%u medstr=%u/%u/%u, tar=%u/%u",
+                  res.c_str(),
+                  category_hash->Count(),
+                  category_hash->Size(),
+                  media_type_hash->Count(),
+                  media_type_hash->Size(),
+                  category_str_hash->GetCount(),
+                  category_str_hash->GetBucketsCount(),
+                  category_str_hash->GetUsage(),
+                  media_type_str_hash->GetCount(),
+                  media_type_str_hash->GetBucketsCount(),
+                  media_type_str_hash->GetUsage(),
+                  tariff_hash->Count(),
+                  tariff_hash->Size() );
 }
 
 uint32_t InfrastructureImpl::GetProviderID(uint32_t service_id)
