@@ -356,17 +356,13 @@ public class InfoSmeConfig {
     if (t.retryOnFail && (t.retryPolicy == null || t.retryPolicy.length() == 0)) {
       throw new AdminException("Task retry time specified incorrectly");
     }
-    if((t.validityDate == null && t.validityPeriod == null) || (t.validityPeriod != null && (t.validityPeriod.intValue() <= 0
-        || t.validityPeriod.intValue() >= 100))) {
+    if((t.validityDate == null && t.validityPeriod == null) ||
+        (t.validityPeriod != null && ((t.validityPeriod.intValue() == 0 && t.validityDate == null) || (t.validityPeriod.intValue() < 0
+        || t.validityPeriod.intValue() >= 100)))) {
       throw new AdminException("Task's validity period/date specified incorrectly");
     }
     if((t.activePeriodStart == null && t.activePeriodEnd != null) ||
         (t.activePeriodStart != null && t.activePeriodEnd == null)) {
-      throw new AdminException("Task's active period specified incorrectly");
-    }
-    SimpleDateFormat sdf = new SimpleDateFormat("HH");
-    if(t.activePeriodEnd != null && t.activePeriodStart != null &&
-        Integer.parseInt(sdf.format(t.activePeriodStart)) == 0 && Integer.parseInt(sdf.format(t.activePeriodEnd)) == 0) {
       throw new AdminException("Task's active period specified incorrectly");
     }
   }
