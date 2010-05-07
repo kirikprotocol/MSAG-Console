@@ -552,6 +552,7 @@ public:
   }
 
   int GetCount() const {return _count;}
+  int GetBucketsCount() const {return _bucketsnum;}
   int GetUsage()
   {
     int cnt=0;

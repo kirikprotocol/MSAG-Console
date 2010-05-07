@@ -175,7 +175,6 @@ public:
     return &values[idx];
   }
 
-
   bool Get(int key,T& value)const
   {
 //    printf("get:%d\n",key);fflush(stdout);
@@ -240,6 +239,36 @@ public:
     return true;
   }
 
+  bool Pop(int key,T& value)
+  {
+    //printf("del:%d\n",key);fflush(stdout);
+    if(size==0)
+    {
+      return false;
+    }
+    unsigned int idx;
+    int attempt=0;
+    do{
+      idx=Index(key,attempt);
+      if(refcounts[idx]==0 || attempt>INTHASH_MAX_CHAIN_LENGTH)
+      {
+        //printf("del:not found\n");fflush(stdout);
+        return false;
+      }
+      AddRef(idx,attempt);
+    }while((refcounts[idx]&0x80000000)==0 || keys[idx]!=key);
+    //printf("del:ok\n");fflush(stdout);
+    value = values[idx];
+    refcounts[idx]&=0x7fffffff;
+    for(int i=0;i<attempt;i++)
+    {
+      //printf("dele:%d\n",reflist[i]);fflush(stdout);
+      refcounts[reflist[i]]--;
+    }
+    count--;
+    return true;
+  }
+
   class Iterator{
   public:
     Iterator(const IntHash& owner):idx(0),h(&owner){}
@@ -288,6 +317,7 @@ public:
   }
 
   int Count() const {return count;}
+    int Size() const {return size;}
 
   void Empty()
   {
