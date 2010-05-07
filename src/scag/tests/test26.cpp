@@ -1,5 +1,8 @@
 #include <iostream>
 #include "util/int.h"
+#include "core/synchronization/Condition.hpp"
+#include "core/synchronization/Mutex.hpp"
+#include "core/synchronization/EventMonitor.hpp"
 
 struct Empty
 {
@@ -35,5 +38,8 @@ int main()
     SHOWSIZE(struct EmptyHolder);
     SHOWSIZE(struct A);
     SHOWSIZE(struct AHolder);
+    SHOWSIZE(smsc::core::synchronization::Condition);
+    SHOWSIZE(smsc::core::synchronization::Mutex);
+    SHOWSIZE(smsc::core::synchronization::EventMonitor);
     return 0;
 }
