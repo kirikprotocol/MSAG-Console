@@ -193,9 +193,16 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st,
                     wantOpenUSSD = true;
                 }
             } else if ( ussd_op == smsc::sms::USSD_PSSR_RESP ||
-                        ussd_op == smsc::sms::USSD_USSN_REQ_VLR_LAST ||
-                        ussd_op == smsc::sms::USSD_USSN_REQ_LAST ||
                         ussd_op == smsc::sms::USSD_USSREL_REQ ) {
+                isUSSDClosed = true;
+            } else if ( ussd_op == smsc::sms::USSD_USSN_REQ_VLR_LAST ||
+                        ussd_op == smsc::sms::USSD_USSN_REQ_LAST ) {
+                // commands that may open dialog (and close it unconditionally)
+                if ( ! sms->hasIntProperty(smsc::sms::Tag::SMPP_USER_MESSAGE_REFERENCE) ) {
+                    // umr is absent
+                    cmd_->setFlag( SmppCommandFlags::SERVICE_INITIATED_USSD_DIALOG );
+                    wantOpenUSSD = true;
+                }
                 isUSSDClosed = true;
             } else {
                 // invalid op
