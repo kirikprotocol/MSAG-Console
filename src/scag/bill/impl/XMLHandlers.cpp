@@ -375,9 +375,12 @@ void XMLTariffMatrixHandler::endElement(const XMLCh* const nm)
                     category_hash->Insert(bill_category_id, cat);
                 }
 
+                /*
                 uint32_t id = (cat & 0x1ff) << 23;
                 id |= (mt & 0x1FF) << 14;
                 id |= bill_operator_id & 0xFFF;
+                 */
+                const uint32_t id = TariffRec::makeHashKeyChecked(cat,mt,bill_operator_id);
 
                 smsc_log_debug(logger,"end_billing: store ci:%d, mt:%d, sn:%s, price:%s, op_id:%d, curr:%s, mt_idx:%d, cat_idx:%d, bill_type: %d", bill_category_id, bill_media_type_id, bill_service_number.c_str(), bill_price.c_str(), bill_operator_id, bill_currency.c_str(), media_type_idx, category_idx, bill_type);
 

@@ -166,21 +166,22 @@ void InfrastructureImpl::ReloadTariffMatrix()
     try{
         XMLTariffMatrixHandler handler(cat_hash, mt_hash, cat_str_hash, mt_str_hash, t_hash);
         ParseFile(TariffMatrixFile.c_str(), &handler);
-
         hr.mark("parsed");
-        MutexGuard mt1(TariffMatrixMapMutex);
-        hr.mark("locked");
-        delete category_hash;
-        delete media_type_hash;
-        delete category_str_hash;
-        delete media_type_str_hash;
-        delete tariff_hash;
+        {
+            MutexGuard mt1(TariffMatrixMapMutex);
+            hr.mark("locked");
+            std::swap(category_hash,cat_hash);
+            std::swap(media_type_hash,mt_hash);
+            std::swap(category_str_hash,cat_str_hash);
+            std::swap(media_type_str_hash,mt_str_hash);
+            std::swap(tariff_hash,t_hash);
+        }
+        delete cat_hash;
+        delete mt_hash;
+        delete cat_str_hash;
+        delete mt_str_hash;
+        delete t_hash;
         hr.mark("dtor");
-        category_hash = cat_hash;
-        media_type_hash = mt_hash;
-        category_str_hash = cat_str_hash;
-        media_type_str_hash = mt_str_hash;
-        tariff_hash = t_hash;
     }
     catch(Exception& e)
     {
@@ -263,10 +264,16 @@ TariffRec* InfrastructureImpl::GetTariff(uint32_t operator_id, uint32_t category
         if(category_hash == NULL || media_type_hash == NULL || tariff_hash == NULL)
             return NULL;
 
+        /*
         uint32_t id = (category_hash->Get(category) & 0x1ff) << 23;
            id |= (media_type_hash->Get(mt) & 0x1FF) << 14;
            id |= operator_id & 0xFFF;
+         */
 
+        const uint32_t id = 
+            TariffRec::makeHashKeyChecked(category_hash->Get(category),
+                                          media_type_hash->Get(mt),
+                                          operator_id);
         tr = new TariffRec(tariff_hash->Get(id));
 
         return tr;
@@ -304,11 +311,10 @@ bool InfrastructureImpl::GetTariff(uint32_t operator_id, uint32_t category, uint
     
     try{
 
-        uint32_t id = (category_hash->Get(category) & 0x1ff) << 23;
-        
-        id |= (media_type_hash->Get(mt) & 0x1FF) << 14;
-        id |= operator_id & 0xFFF;
-
+        const uint32_t id = 
+            TariffRec::makeHashKeyChecked(category_hash->Get(category),
+                                          media_type_hash->Get(mt),
+                                          operator_id);
         tr = tariff_hash->Get(id);
         return true;
     }

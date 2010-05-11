@@ -23,6 +23,11 @@ enum { // bill type
 class TariffRec
 {
 public:
+    inline static uint32_t makeHashKeyChecked( uint32_t cat, uint32_t media, uint32_t oper ) {
+        return ((cat % 0x1ff) * 0x1ff + (media % 0x1ff))*0xfff + (oper % 0xfff);
+    }
+
+public:
     std::string ServiceNumber;
     std::string Currency;
     uint32_t MediaTypeId;
