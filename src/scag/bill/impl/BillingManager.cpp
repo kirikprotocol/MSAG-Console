@@ -20,6 +20,7 @@
 #include "inman/services/smbill/SmBillDefs.hpp"
 #endif
 
+#ifdef MSAG_BILL_TESTRELOADER
 namespace {
 
 class TestReloader : public smsc::core::threads::Thread
@@ -57,7 +58,7 @@ private:
 TestReloader* testReloader = 0;
 
 }
-
+#endif
 
 namespace scag2 {
 namespace bill {
@@ -984,20 +985,24 @@ void BillingManagerImpl::Start()
     }
     #endif
     if (ewalletClient_.get()) { ewalletClient_->startup(); }
+#ifdef MSAG_BILL_TESTRELOADER
     if (!testReloader) {
         testReloader = new TestReloader();
     }
     testReloader->Start();
+#endif /* MSAG_BILL_TESTRELOADER */
 }
 
 void BillingManagerImpl::Stop()
 {
     MutexGuard guard(stopLock);
+#ifdef MSAG_BILL_TESTRELOADER
     if (testReloader) {
         testReloader->Stop();
         delete testReloader;
         testReloader = 0;
     }
+#endif
     if (ewalletClient_.get()) { ewalletClient_->shutdown(); }
     #ifdef MSAG_INMAN_BILL
     if(m_bStarted)
