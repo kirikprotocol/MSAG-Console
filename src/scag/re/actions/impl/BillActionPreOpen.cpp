@@ -127,6 +127,9 @@ BillOpenCallParamsData* BillActionPreOpen::makeParamsData( ActionContext& contex
         return 0;
     }
 
+    smsc_log_debug(logger,"tariff record is found, type=%d: cat=%d mt=%d",
+                   tariffRec->billType, cat,mt);
+
     if (tariffRec->billType == bill::infrastruct::NONE)
     {
         smsc_log_warn(logger, "Billing disabled for this tariff entry. ServiceNumber=%s, CategoryId=%d, MediaTypeId=%d",
