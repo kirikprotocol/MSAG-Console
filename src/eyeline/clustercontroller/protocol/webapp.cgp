@@ -1,0 +1,17 @@
+source=ControllerProtocol.def
+
+search.path=tmpl/
+search.path=def/
+
+out.dir=./java/messages/
+
+message.template=message-java.tmpl
+protocol.template=proto-java.tmpl
+out.extension=java
+out.protocol.prefix=../protocol/
+
+
+option:ccmode=false
+
+data:msg_package=messages
+data:proto_package=protocol
