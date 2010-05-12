@@ -26,10 +26,11 @@ void protobuf_AssignDesc_myfirst_2eproto() {
       "myfirst.proto");
   GOOGLE_CHECK(file != NULL);
   Bind_descriptor_ = file->message_type(0);
-  static const int Bind_offsets_[3] = {
+  static const int Bind_offsets_[4] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Bind, id_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Bind, login_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Bind, password_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Bind, value_),
   };
   Bind_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
@@ -72,8 +73,9 @@ void protobuf_AddDesc_myfirst_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-    "\n\rmyfirst.proto\"3\n\004Bind\022\n\n\002id\030\001 \001(\005\022\r\n\005l"
-    "ogin\030\002 \001(\t\022\020\n\010password\030\003 \001(\t", 68);
+    "\n\rmyfirst.proto\"B\n\004Bind\022\n\n\002id\030\001 \001(\005\022\r\n\005l"
+    "ogin\030\002 \001(\t\022\020\n\010password\030\003 \001(\t\022\r\n\005value\030\004 "
+    "\001(\003", 83);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "myfirst.proto", &protobuf_RegisterTypes);
   Bind::default_instance_ = new Bind();
@@ -97,6 +99,7 @@ const ::std::string Bind::_default_password_;
 const int Bind::kIdFieldNumber;
 const int Bind::kLoginFieldNumber;
 const int Bind::kPasswordFieldNumber;
+const int Bind::kValueFieldNumber;
 #endif  // !_MSC_VER
 
 Bind::Bind()
@@ -118,6 +121,7 @@ void Bind::SharedCtor() {
   id_ = 0;
   login_ = const_cast< ::std::string*>(&_default_login_);
   password_ = const_cast< ::std::string*>(&_default_password_);
+  value_ = GOOGLE_LONGLONG(0);
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -169,6 +173,7 @@ void Bind::Clear() {
         password_->clear();
       }
     }
+    value_ = GOOGLE_LONGLONG(0);
   }
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
   mutable_unknown_fields()->Clear();
@@ -225,6 +230,22 @@ bool Bind::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
+        if (input->ExpectTag(32)) goto parse_value;
+        break;
+      }
+      
+      // optional int64 value = 4;
+      case 4: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+         parse_value:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int64, ::google::protobuf::internal::WireFormatLite::TYPE_INT64>(
+                 input, &value_)));
+          _set_bit(3);
+        } else {
+          goto handle_uninterpreted;
+        }
         if (input->ExpectAtEnd()) return true;
         break;
       }
@@ -270,6 +291,11 @@ void Bind::SerializeWithCachedSizes(
       3, this->password(), output);
   }
   
+  // optional int64 value = 4;
+  if (_has_bit(3)) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt64(4, this->value(), output);
+  }
+  
   if (!unknown_fields().empty()) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         unknown_fields(), output);
@@ -303,6 +329,11 @@ void Bind::SerializeWithCachedSizes(
         3, this->password(), target);
   }
   
+  // optional int64 value = 4;
+  if (_has_bit(3)) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(4, this->value(), target);
+  }
+  
   if (!unknown_fields().empty()) {
     target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
         unknown_fields(), target);
@@ -333,6 +364,13 @@ int Bind::ByteSize() const {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::StringSize(
           this->password());
+    }
+    
+    // optional int64 value = 4;
+    if (has_value()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::Int64Size(
+          this->value());
     }
     
   }
@@ -371,6 +409,9 @@ void Bind::MergeFrom(const Bind& from) {
     if (from._has_bit(2)) {
       set_password(from.password());
     }
+    if (from._has_bit(3)) {
+      set_value(from.value());
+    }
   }
   mutable_unknown_fields()->MergeFrom(from.unknown_fields());
 }
@@ -397,6 +438,7 @@ void Bind::Swap(Bind* other) {
     std::swap(id_, other->id_);
     std::swap(login_, other->login_);
     std::swap(password_, other->password_);
+    std::swap(value_, other->value_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.Swap(&other->_unknown_fields_);
     std::swap(_cached_size_, other->_cached_size_);

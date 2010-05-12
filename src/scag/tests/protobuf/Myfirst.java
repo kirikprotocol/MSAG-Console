@@ -54,6 +54,13 @@ public final class Myfirst {
     public boolean hasPassword() { return hasPassword; }
     public java.lang.String getPassword() { return password_; }
     
+    // optional int64 value = 4;
+    public static final int VALUE_FIELD_NUMBER = 4;
+    private boolean hasValue;
+    private long value_ = 0L;
+    public boolean hasValue() { return hasValue; }
+    public long getValue() { return value_; }
+    
     private void initFields() {
     }
     public final boolean isInitialized() {
@@ -71,6 +78,9 @@ public final class Myfirst {
       }
       if (hasPassword()) {
         output.writeString(3, getPassword());
+      }
+      if (hasValue()) {
+        output.writeInt64(4, getValue());
       }
       getUnknownFields().writeTo(output);
     }
@@ -92,6 +102,10 @@ public final class Myfirst {
       if (hasPassword()) {
         size += com.google.protobuf.CodedOutputStream
           .computeStringSize(3, getPassword());
+      }
+      if (hasValue()) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(4, getValue());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -260,6 +274,9 @@ public final class Myfirst {
         if (other.hasPassword()) {
           setPassword(other.getPassword());
         }
+        if (other.hasValue()) {
+          setValue(other.getValue());
+        }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
       }
@@ -295,6 +312,10 @@ public final class Myfirst {
             }
             case 26: {
               setPassword(input.readString());
+              break;
+            }
+            case 32: {
+              setValue(input.readInt64());
               break;
             }
           }
@@ -362,6 +383,24 @@ public final class Myfirst {
         return this;
       }
       
+      // optional int64 value = 4;
+      public boolean hasValue() {
+        return result.hasValue();
+      }
+      public long getValue() {
+        return result.getValue();
+      }
+      public Builder setValue(long value) {
+        result.hasValue = true;
+        result.value_ = value;
+        return this;
+      }
+      public Builder clearValue() {
+        result.hasValue = false;
+        result.value_ = 0L;
+        return this;
+      }
+      
       // @@protoc_insertion_point(builder_scope:Bind)
     }
     
@@ -388,8 +427,9 @@ public final class Myfirst {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\rmyfirst.proto\"3\n\004Bind\022\n\n\002id\030\001 \001(\005\022\r\n\005l" +
-      "ogin\030\002 \001(\t\022\020\n\010password\030\003 \001(\t"
+      "\n\rmyfirst.proto\"B\n\004Bind\022\n\n\002id\030\001 \001(\005\022\r\n\005l" +
+      "ogin\030\002 \001(\t\022\020\n\010password\030\003 \001(\t\022\r\n\005value\030\004 " +
+      "\001(\003"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -401,7 +441,7 @@ public final class Myfirst {
           internal_static_Bind_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_Bind_descriptor,
-              new java.lang.String[] { "Id", "Login", "Password", },
+              new java.lang.String[] { "Id", "Login", "Password", "Value", },
               Myfirst.Bind.class,
               Myfirst.Bind.Builder.class);
           return null;

@@ -115,6 +115,13 @@ class Bind : public ::google::protobuf::Message {
   inline void set_password(const char* value, size_t size);
   inline ::std::string* mutable_password();
   
+  // optional int64 value = 4;
+  inline bool has_value() const;
+  inline void clear_value();
+  static const int kValueFieldNumber = 4;
+  inline ::google::protobuf::int64 value() const;
+  inline void set_value(::google::protobuf::int64 value);
+  
   // @@protoc_insertion_point(class_scope:Bind)
  private:
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
@@ -125,11 +132,12 @@ class Bind : public ::google::protobuf::Message {
   static const ::std::string _default_login_;
   ::std::string* password_;
   static const ::std::string _default_password_;
+  ::google::protobuf::int64 value_;
   friend void  protobuf_AddDesc_myfirst_2eproto();
   friend void protobuf_AssignDesc_myfirst_2eproto();
   friend void protobuf_ShutdownFile_myfirst_2eproto();
   
-  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
   
   // WHY DOES & HAVE LOWER PRECEDENCE THAN != !?
   inline bool _has_bit(int index) const {
@@ -250,6 +258,22 @@ inline ::std::string* Bind::mutable_password() {
     password_ = new ::std::string;
   }
   return password_;
+}
+
+// optional int64 value = 4;
+inline bool Bind::has_value() const {
+  return _has_bit(3);
+}
+inline void Bind::clear_value() {
+  value_ = GOOGLE_LONGLONG(0);
+  _clear_bit(3);
+}
+inline ::google::protobuf::int64 Bind::value() const {
+  return value_;
+}
+inline void Bind::set_value(::google::protobuf::int64 value) {
+  _set_bit(3);
+  value_ = value;
 }
 
 
