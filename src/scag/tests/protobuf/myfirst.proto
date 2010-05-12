@@ -1,0 +1,5 @@
+message Bind {
+   optional int32 id = 1;
+   optional string login = 2;
+   optional string password = 3;
+}
