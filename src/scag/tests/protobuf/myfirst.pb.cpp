@@ -12,6 +12,9 @@
 
 namespace {
 
+const ::google::protobuf::Descriptor* AbonentAddress_descriptor_ = NULL;
+const ::google::protobuf::internal::GeneratedMessageReflection*
+  AbonentAddress_reflection_ = NULL;
 const ::google::protobuf::Descriptor* Bind_descriptor_ = NULL;
 const ::google::protobuf::internal::GeneratedMessageReflection*
   Bind_reflection_ = NULL;
@@ -25,12 +28,28 @@ void protobuf_AssignDesc_myfirst_2eproto() {
     ::google::protobuf::DescriptorPool::generated_pool()->FindFileByName(
       "myfirst.proto");
   GOOGLE_CHECK(file != NULL);
-  Bind_descriptor_ = file->message_type(0);
-  static const int Bind_offsets_[4] = {
+  AbonentAddress_descriptor_ = file->message_type(0);
+  static const int AbonentAddress_offsets_[1] = {
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(AbonentAddress, address_),
+  };
+  AbonentAddress_reflection_ =
+    new ::google::protobuf::internal::GeneratedMessageReflection(
+      AbonentAddress_descriptor_,
+      AbonentAddress::default_instance_,
+      AbonentAddress_offsets_,
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(AbonentAddress, _has_bits_[0]),
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(AbonentAddress, _unknown_fields_),
+      -1,
+      ::google::protobuf::DescriptorPool::generated_pool(),
+      ::google::protobuf::MessageFactory::generated_factory(),
+      sizeof(AbonentAddress));
+  Bind_descriptor_ = file->message_type(1);
+  static const int Bind_offsets_[5] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Bind, id_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Bind, login_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Bind, password_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Bind, value_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Bind, destination_),
   };
   Bind_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
@@ -56,12 +75,16 @@ inline void protobuf_AssignDescriptorsOnce() {
 void protobuf_RegisterTypes(const ::std::string&) {
   protobuf_AssignDescriptorsOnce();
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
+    AbonentAddress_descriptor_, &AbonentAddress::default_instance());
+  ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
     Bind_descriptor_, &Bind::default_instance());
 }
 
 }  // namespace
 
 void protobuf_ShutdownFile_myfirst_2eproto() {
+  delete AbonentAddress::default_instance_;
+  delete AbonentAddress_reflection_;
   delete Bind::default_instance_;
   delete Bind_reflection_;
 }
@@ -73,12 +96,15 @@ void protobuf_AddDesc_myfirst_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-    "\n\rmyfirst.proto\"B\n\004Bind\022\n\n\002id\030\001 \001(\005\022\r\n\005l"
-    "ogin\030\002 \001(\t\022\020\n\010password\030\003 \001(\t\022\r\n\005value\030\004 "
-    "\001(\003", 83);
+    "\n\rmyfirst.proto\"!\n\016AbonentAddress\022\017\n\007add"
+    "ress\030\001 \002(\t\"h\n\004Bind\022\n\n\002id\030\001 \001(\005\022\r\n\005login\030"
+    "\002 \001(\t\022\020\n\010password\030\003 \001(\t\022\r\n\005value\030\004 \001(\003\022$"
+    "\n\013destination\030\005 \003(\0132\017.AbonentAddress", 156);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "myfirst.proto", &protobuf_RegisterTypes);
+  AbonentAddress::default_instance_ = new AbonentAddress();
   Bind::default_instance_ = new Bind();
+  AbonentAddress::default_instance_->InitAsDefaultInstance();
   Bind::default_instance_->InitAsDefaultInstance();
   ::google::protobuf::internal::OnShutdown(&protobuf_ShutdownFile_myfirst_2eproto);
 }
@@ -93,6 +119,232 @@ struct StaticDescriptorInitializer_myfirst_2eproto {
 
 // ===================================================================
 
+const ::std::string AbonentAddress::_default_address_;
+#ifndef _MSC_VER
+const int AbonentAddress::kAddressFieldNumber;
+#endif  // !_MSC_VER
+
+AbonentAddress::AbonentAddress()
+  : ::google::protobuf::Message() {
+  SharedCtor();
+}
+
+void AbonentAddress::InitAsDefaultInstance() {
+}
+
+AbonentAddress::AbonentAddress(const AbonentAddress& from)
+  : ::google::protobuf::Message() {
+  SharedCtor();
+  MergeFrom(from);
+}
+
+void AbonentAddress::SharedCtor() {
+  _cached_size_ = 0;
+  address_ = const_cast< ::std::string*>(&_default_address_);
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+}
+
+AbonentAddress::~AbonentAddress() {
+  SharedDtor();
+}
+
+void AbonentAddress::SharedDtor() {
+  if (address_ != &_default_address_) {
+    delete address_;
+  }
+  if (this != default_instance_) {
+  }
+}
+
+void AbonentAddress::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const ::google::protobuf::Descriptor* AbonentAddress::descriptor() {
+  protobuf_AssignDescriptorsOnce();
+  return AbonentAddress_descriptor_;
+}
+
+const AbonentAddress& AbonentAddress::default_instance() {
+  if (default_instance_ == NULL) protobuf_AddDesc_myfirst_2eproto();  return *default_instance_;
+}
+
+AbonentAddress* AbonentAddress::default_instance_ = NULL;
+
+AbonentAddress* AbonentAddress::New() const {
+  return new AbonentAddress;
+}
+
+void AbonentAddress::Clear() {
+  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    if (_has_bit(0)) {
+      if (address_ != &_default_address_) {
+        address_->clear();
+      }
+    }
+  }
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+  mutable_unknown_fields()->Clear();
+}
+
+bool AbonentAddress::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!(EXPRESSION)) return false
+  ::google::protobuf::uint32 tag;
+  while ((tag = input->ReadTag()) != 0) {
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // required string address = 1;
+      case 1: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_address()));
+          ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+            this->address().data(), this->address().length(),
+            ::google::protobuf::internal::WireFormat::PARSE);
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectAtEnd()) return true;
+        break;
+      }
+      
+      default: {
+      handle_uninterpreted:
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+          return true;
+        }
+        DO_(::google::protobuf::internal::WireFormat::SkipField(
+              input, tag, mutable_unknown_fields()));
+        break;
+      }
+    }
+  }
+  return true;
+#undef DO_
+}
+
+void AbonentAddress::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // required string address = 1;
+  if (_has_bit(0)) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->address().data(), this->address().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    ::google::protobuf::internal::WireFormatLite::WriteString(
+      1, this->address(), output);
+  }
+  
+  if (!unknown_fields().empty()) {
+    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
+        unknown_fields(), output);
+  }
+}
+
+::google::protobuf::uint8* AbonentAddress::SerializeWithCachedSizesToArray(
+    ::google::protobuf::uint8* target) const {
+  // required string address = 1;
+  if (_has_bit(0)) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->address().data(), this->address().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
+        1, this->address(), target);
+  }
+  
+  if (!unknown_fields().empty()) {
+    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
+        unknown_fields(), target);
+  }
+  return target;
+}
+
+int AbonentAddress::ByteSize() const {
+  int total_size = 0;
+  
+  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    // required string address = 1;
+    if (has_address()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::StringSize(
+          this->address());
+    }
+    
+  }
+  if (!unknown_fields().empty()) {
+    total_size +=
+      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
+        unknown_fields());
+  }
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = total_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void AbonentAddress::MergeFrom(const ::google::protobuf::Message& from) {
+  GOOGLE_CHECK_NE(&from, this);
+  const AbonentAddress* source =
+    ::google::protobuf::internal::dynamic_cast_if_available<const AbonentAddress*>(
+      &from);
+  if (source == NULL) {
+    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+  } else {
+    MergeFrom(*source);
+  }
+}
+
+void AbonentAddress::MergeFrom(const AbonentAddress& from) {
+  GOOGLE_CHECK_NE(&from, this);
+  if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    if (from._has_bit(0)) {
+      set_address(from.address());
+    }
+  }
+  mutable_unknown_fields()->MergeFrom(from.unknown_fields());
+}
+
+void AbonentAddress::CopyFrom(const ::google::protobuf::Message& from) {
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+void AbonentAddress::CopyFrom(const AbonentAddress& from) {
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool AbonentAddress::IsInitialized() const {
+  if ((_has_bits_[0] & 0x00000001) != 0x00000001) return false;
+  
+  return true;
+}
+
+void AbonentAddress::Swap(AbonentAddress* other) {
+  if (other != this) {
+    std::swap(address_, other->address_);
+    std::swap(_has_bits_[0], other->_has_bits_[0]);
+    _unknown_fields_.Swap(&other->_unknown_fields_);
+    std::swap(_cached_size_, other->_cached_size_);
+  }
+}
+
+::google::protobuf::Metadata AbonentAddress::GetMetadata() const {
+  protobuf_AssignDescriptorsOnce();
+  ::google::protobuf::Metadata metadata;
+  metadata.descriptor = AbonentAddress_descriptor_;
+  metadata.reflection = AbonentAddress_reflection_;
+  return metadata;
+}
+
+
+// ===================================================================
+
 const ::std::string Bind::_default_login_;
 const ::std::string Bind::_default_password_;
 #ifndef _MSC_VER
@@ -100,6 +352,7 @@ const int Bind::kIdFieldNumber;
 const int Bind::kLoginFieldNumber;
 const int Bind::kPasswordFieldNumber;
 const int Bind::kValueFieldNumber;
+const int Bind::kDestinationFieldNumber;
 #endif  // !_MSC_VER
 
 Bind::Bind()
@@ -175,6 +428,7 @@ void Bind::Clear() {
     }
     value_ = GOOGLE_LONGLONG(0);
   }
+  destination_.Clear();
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
   mutable_unknown_fields()->Clear();
 }
@@ -246,6 +500,21 @@ bool Bind::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
+        if (input->ExpectTag(42)) goto parse_destination;
+        break;
+      }
+      
+      // repeated .AbonentAddress destination = 5;
+      case 5: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_destination:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+                input, add_destination()));
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(42)) goto parse_destination;
         if (input->ExpectAtEnd()) return true;
         break;
       }
@@ -296,6 +565,12 @@ void Bind::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::WriteInt64(4, this->value(), output);
   }
   
+  // repeated .AbonentAddress destination = 5;
+  for (int i = 0; i < this->destination_size(); i++) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+      5, this->destination(i), output);
+  }
+  
   if (!unknown_fields().empty()) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         unknown_fields(), output);
@@ -332,6 +607,13 @@ void Bind::SerializeWithCachedSizes(
   // optional int64 value = 4;
   if (_has_bit(3)) {
     target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(4, this->value(), target);
+  }
+  
+  // repeated .AbonentAddress destination = 5;
+  for (int i = 0; i < this->destination_size(); i++) {
+    target = ::google::protobuf::internal::WireFormatLite::
+      WriteMessageNoVirtualToArray(
+        5, this->destination(i), target);
   }
   
   if (!unknown_fields().empty()) {
@@ -374,6 +656,14 @@ int Bind::ByteSize() const {
     }
     
   }
+  // repeated .AbonentAddress destination = 5;
+  total_size += 1 * this->destination_size();
+  for (int i = 0; i < this->destination_size(); i++) {
+    total_size +=
+      ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+        this->destination(i));
+  }
+  
   if (!unknown_fields().empty()) {
     total_size +=
       ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
@@ -399,6 +689,7 @@ void Bind::MergeFrom(const ::google::protobuf::Message& from) {
 
 void Bind::MergeFrom(const Bind& from) {
   GOOGLE_CHECK_NE(&from, this);
+  destination_.MergeFrom(from.destination_);
   if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
     if (from._has_bit(0)) {
       set_id(from.id());
@@ -430,6 +721,9 @@ void Bind::CopyFrom(const Bind& from) {
 
 bool Bind::IsInitialized() const {
   
+  for (int i = 0; i < destination_size(); i++) {
+    if (!this->destination(i).IsInitialized()) return false;
+  }
   return true;
 }
 
@@ -439,6 +733,7 @@ void Bind::Swap(Bind* other) {
     std::swap(login_, other->login_);
     std::swap(password_, other->password_);
     std::swap(value_, other->value_);
+    destination_.Swap(&other->destination_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.Swap(&other->_unknown_fields_);
     std::swap(_cached_size_, other->_cached_size_);

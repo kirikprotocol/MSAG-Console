@@ -1,6 +1,11 @@
+message AbonentAddress {
+   required string address = 1;
+}
+
 message Bind {
    optional int32 id = 1;
    optional string login = 2;
    optional string password = 3;
    optional int64 value = 4;
+   repeated AbonentAddress destination = 5;
 }

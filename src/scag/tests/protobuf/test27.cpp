@@ -5,13 +5,29 @@
 
 using namespace scag2::util;
 
+std::ostream& operator << ( std::ostream& o, const AbonentAddress& a )
+{
+    o << "<AbonentAddress ";
+    if ( a.has_address() ) o << " address=\"" << a.address() << "\"";
+    return o << ">";
+}
+
 std::ostream& operator << ( std::ostream& o, const Bind& b )
 {
     o << "<Bind";
     if ( b.has_id() ) o << " id=" << b.id();
-    if ( b.has_login() ) o << " login=" << b.login();
-    if ( b.has_password() ) o << " password=" << b.password();
+    if ( b.has_login() ) o << " login=\"" << b.login() << "\"";
+    if ( b.has_password() ) o << " password=\"" << b.password() << "\"";
     if ( b.has_value() ) o << " value=" << b.value();
+    const int ds = b.destination_size();
+    if ( ds > 0 ) {
+        o << " destination=[";
+        for ( int i = 0; i < ds; ++i ) {
+            if ( i > 0 ) o << ", ";
+            o << b.destination(i);
+        }
+        o << "]";
+    }
     return o << ">";
 }
 
@@ -22,6 +38,9 @@ int main()
     b.set_login( "hello, world" );
     b.set_password( "topsecret" );
     b.set_value( 0x123456789abcdefULL );
+
+    b.add_destination()->set_address(".1.1.79137654079");
+    b.add_destination()->set_address(".1.1.79537699490");
 
     std::cout << "Bind constructed:" << b << std::endl;
 

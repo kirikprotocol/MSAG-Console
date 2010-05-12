@@ -6,6 +6,294 @@ public final class Myfirst {
   public static void registerAllExtensions(
       com.google.protobuf.ExtensionRegistry registry) {
   }
+  public static final class AbonentAddress extends
+      com.google.protobuf.GeneratedMessage {
+    // Use AbonentAddress.newBuilder() to construct.
+    private AbonentAddress() {
+      initFields();
+    }
+    private AbonentAddress(boolean noInit) {}
+    
+    private static final AbonentAddress defaultInstance;
+    public static AbonentAddress getDefaultInstance() {
+      return defaultInstance;
+    }
+    
+    public AbonentAddress getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+    
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return Myfirst.internal_static_AbonentAddress_descriptor;
+    }
+    
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return Myfirst.internal_static_AbonentAddress_fieldAccessorTable;
+    }
+    
+    // required string address = 1;
+    public static final int ADDRESS_FIELD_NUMBER = 1;
+    private boolean hasAddress;
+    private java.lang.String address_ = "";
+    public boolean hasAddress() { return hasAddress; }
+    public java.lang.String getAddress() { return address_; }
+    
+    private void initFields() {
+    }
+    public final boolean isInitialized() {
+      if (!hasAddress) return false;
+      return true;
+    }
+    
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (hasAddress()) {
+        output.writeString(1, getAddress());
+      }
+      getUnknownFields().writeTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+    
+      size = 0;
+      if (hasAddress()) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeStringSize(1, getAddress());
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+    
+    public static Myfirst.AbonentAddress parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data).buildParsed();
+    }
+    public static Myfirst.AbonentAddress parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data, extensionRegistry)
+               .buildParsed();
+    }
+    public static Myfirst.AbonentAddress parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data).buildParsed();
+    }
+    public static Myfirst.AbonentAddress parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data, extensionRegistry)
+               .buildParsed();
+    }
+    public static Myfirst.AbonentAddress parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input).buildParsed();
+    }
+    public static Myfirst.AbonentAddress parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input, extensionRegistry)
+               .buildParsed();
+    }
+    public static Myfirst.AbonentAddress parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      Builder builder = newBuilder();
+      if (builder.mergeDelimitedFrom(input)) {
+        return builder.buildParsed();
+      } else {
+        return null;
+      }
+    }
+    public static Myfirst.AbonentAddress parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      Builder builder = newBuilder();
+      if (builder.mergeDelimitedFrom(input, extensionRegistry)) {
+        return builder.buildParsed();
+      } else {
+        return null;
+      }
+    }
+    public static Myfirst.AbonentAddress parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input).buildParsed();
+    }
+    public static Myfirst.AbonentAddress parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input, extensionRegistry)
+               .buildParsed();
+    }
+    
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(Myfirst.AbonentAddress prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+    
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder> {
+      private Myfirst.AbonentAddress result;
+      
+      // Construct using Myfirst.AbonentAddress.newBuilder()
+      private Builder() {}
+      
+      private static Builder create() {
+        Builder builder = new Builder();
+        builder.result = new Myfirst.AbonentAddress();
+        return builder;
+      }
+      
+      protected Myfirst.AbonentAddress internalGetResult() {
+        return result;
+      }
+      
+      public Builder clear() {
+        if (result == null) {
+          throw new IllegalStateException(
+            "Cannot call clear() after build().");
+        }
+        result = new Myfirst.AbonentAddress();
+        return this;
+      }
+      
+      public Builder clone() {
+        return create().mergeFrom(result);
+      }
+      
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return Myfirst.AbonentAddress.getDescriptor();
+      }
+      
+      public Myfirst.AbonentAddress getDefaultInstanceForType() {
+        return Myfirst.AbonentAddress.getDefaultInstance();
+      }
+      
+      public boolean isInitialized() {
+        return result.isInitialized();
+      }
+      public Myfirst.AbonentAddress build() {
+        if (result != null && !isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return buildPartial();
+      }
+      
+      private Myfirst.AbonentAddress buildParsed()
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        if (!isInitialized()) {
+          throw newUninitializedMessageException(
+            result).asInvalidProtocolBufferException();
+        }
+        return buildPartial();
+      }
+      
+      public Myfirst.AbonentAddress buildPartial() {
+        if (result == null) {
+          throw new IllegalStateException(
+            "build() has already been called on this Builder.");
+        }
+        Myfirst.AbonentAddress returnMe = result;
+        result = null;
+        return returnMe;
+      }
+      
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof Myfirst.AbonentAddress) {
+          return mergeFrom((Myfirst.AbonentAddress)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+      
+      public Builder mergeFrom(Myfirst.AbonentAddress other) {
+        if (other == Myfirst.AbonentAddress.getDefaultInstance()) return this;
+        if (other.hasAddress()) {
+          setAddress(other.getAddress());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+      
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder(
+            this.getUnknownFields());
+        while (true) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              this.setUnknownFields(unknownFields.build());
+              return this;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                this.setUnknownFields(unknownFields.build());
+                return this;
+              }
+              break;
+            }
+            case 10: {
+              setAddress(input.readString());
+              break;
+            }
+          }
+        }
+      }
+      
+      
+      // required string address = 1;
+      public boolean hasAddress() {
+        return result.hasAddress();
+      }
+      public java.lang.String getAddress() {
+        return result.getAddress();
+      }
+      public Builder setAddress(java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  result.hasAddress = true;
+        result.address_ = value;
+        return this;
+      }
+      public Builder clearAddress() {
+        result.hasAddress = false;
+        result.address_ = getDefaultInstance().getAddress();
+        return this;
+      }
+      
+      // @@protoc_insertion_point(builder_scope:AbonentAddress)
+    }
+    
+    static {
+      defaultInstance = new AbonentAddress(true);
+      Myfirst.internalForceInit();
+      defaultInstance.initFields();
+    }
+    
+    // @@protoc_insertion_point(class_scope:AbonentAddress)
+  }
+  
   public static final class Bind extends
       com.google.protobuf.GeneratedMessage {
     // Use Bind.newBuilder() to construct.
@@ -61,9 +349,24 @@ public final class Myfirst {
     public boolean hasValue() { return hasValue; }
     public long getValue() { return value_; }
     
+    // repeated .AbonentAddress destination = 5;
+    public static final int DESTINATION_FIELD_NUMBER = 5;
+    private java.util.List<Myfirst.AbonentAddress> destination_ =
+      java.util.Collections.emptyList();
+    public java.util.List<Myfirst.AbonentAddress> getDestinationList() {
+      return destination_;
+    }
+    public int getDestinationCount() { return destination_.size(); }
+    public Myfirst.AbonentAddress getDestination(int index) {
+      return destination_.get(index);
+    }
+    
     private void initFields() {
     }
     public final boolean isInitialized() {
+      for (Myfirst.AbonentAddress element : getDestinationList()) {
+        if (!element.isInitialized()) return false;
+      }
       return true;
     }
     
@@ -81,6 +384,9 @@ public final class Myfirst {
       }
       if (hasValue()) {
         output.writeInt64(4, getValue());
+      }
+      for (Myfirst.AbonentAddress element : getDestinationList()) {
+        output.writeMessage(5, element);
       }
       getUnknownFields().writeTo(output);
     }
@@ -106,6 +412,10 @@ public final class Myfirst {
       if (hasValue()) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt64Size(4, getValue());
+      }
+      for (Myfirst.AbonentAddress element : getDestinationList()) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(5, element);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -249,6 +559,10 @@ public final class Myfirst {
           throw new IllegalStateException(
             "build() has already been called on this Builder.");
         }
+        if (result.destination_ != java.util.Collections.EMPTY_LIST) {
+          result.destination_ =
+            java.util.Collections.unmodifiableList(result.destination_);
+        }
         Myfirst.Bind returnMe = result;
         result = null;
         return returnMe;
@@ -276,6 +590,12 @@ public final class Myfirst {
         }
         if (other.hasValue()) {
           setValue(other.getValue());
+        }
+        if (!other.destination_.isEmpty()) {
+          if (result.destination_.isEmpty()) {
+            result.destination_ = new java.util.ArrayList<Myfirst.AbonentAddress>();
+          }
+          result.destination_.addAll(other.destination_);
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -316,6 +636,12 @@ public final class Myfirst {
             }
             case 32: {
               setValue(input.readInt64());
+              break;
+            }
+            case 42: {
+              Myfirst.AbonentAddress.Builder subBuilder = Myfirst.AbonentAddress.newBuilder();
+              input.readMessage(subBuilder, extensionRegistry);
+              addDestination(subBuilder.buildPartial());
               break;
             }
           }
@@ -401,6 +727,57 @@ public final class Myfirst {
         return this;
       }
       
+      // repeated .AbonentAddress destination = 5;
+      public java.util.List<Myfirst.AbonentAddress> getDestinationList() {
+        return java.util.Collections.unmodifiableList(result.destination_);
+      }
+      public int getDestinationCount() {
+        return result.getDestinationCount();
+      }
+      public Myfirst.AbonentAddress getDestination(int index) {
+        return result.getDestination(index);
+      }
+      public Builder setDestination(int index, Myfirst.AbonentAddress value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        result.destination_.set(index, value);
+        return this;
+      }
+      public Builder setDestination(int index, Myfirst.AbonentAddress.Builder builderForValue) {
+        result.destination_.set(index, builderForValue.build());
+        return this;
+      }
+      public Builder addDestination(Myfirst.AbonentAddress value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        if (result.destination_.isEmpty()) {
+          result.destination_ = new java.util.ArrayList<Myfirst.AbonentAddress>();
+        }
+        result.destination_.add(value);
+        return this;
+      }
+      public Builder addDestination(Myfirst.AbonentAddress.Builder builderForValue) {
+        if (result.destination_.isEmpty()) {
+          result.destination_ = new java.util.ArrayList<Myfirst.AbonentAddress>();
+        }
+        result.destination_.add(builderForValue.build());
+        return this;
+      }
+      public Builder addAllDestination(
+          java.lang.Iterable<? extends Myfirst.AbonentAddress> values) {
+        if (result.destination_.isEmpty()) {
+          result.destination_ = new java.util.ArrayList<Myfirst.AbonentAddress>();
+        }
+        super.addAll(values, result.destination_);
+        return this;
+      }
+      public Builder clearDestination() {
+        result.destination_ = java.util.Collections.emptyList();
+        return this;
+      }
+      
       // @@protoc_insertion_point(builder_scope:Bind)
     }
     
@@ -413,6 +790,11 @@ public final class Myfirst {
     // @@protoc_insertion_point(class_scope:Bind)
   }
   
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_AbonentAddress_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_AbonentAddress_fieldAccessorTable;
   private static com.google.protobuf.Descriptors.Descriptor
     internal_static_Bind_descriptor;
   private static
@@ -427,21 +809,30 @@ public final class Myfirst {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\rmyfirst.proto\"B\n\004Bind\022\n\n\002id\030\001 \001(\005\022\r\n\005l" +
-      "ogin\030\002 \001(\t\022\020\n\010password\030\003 \001(\t\022\r\n\005value\030\004 " +
-      "\001(\003"
+      "\n\rmyfirst.proto\"!\n\016AbonentAddress\022\017\n\007add" +
+      "ress\030\001 \002(\t\"h\n\004Bind\022\n\n\002id\030\001 \001(\005\022\r\n\005login\030" +
+      "\002 \001(\t\022\020\n\010password\030\003 \001(\t\022\r\n\005value\030\004 \001(\003\022$" +
+      "\n\013destination\030\005 \003(\0132\017.AbonentAddress"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
         public com.google.protobuf.ExtensionRegistry assignDescriptors(
             com.google.protobuf.Descriptors.FileDescriptor root) {
           descriptor = root;
-          internal_static_Bind_descriptor =
+          internal_static_AbonentAddress_descriptor =
             getDescriptor().getMessageTypes().get(0);
+          internal_static_AbonentAddress_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_AbonentAddress_descriptor,
+              new java.lang.String[] { "Address", },
+              Myfirst.AbonentAddress.class,
+              Myfirst.AbonentAddress.Builder.class);
+          internal_static_Bind_descriptor =
+            getDescriptor().getMessageTypes().get(1);
           internal_static_Bind_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_Bind_descriptor,
-              new java.lang.String[] { "Id", "Login", "Password", "Value", },
+              new java.lang.String[] { "Id", "Login", "Password", "Value", "Destination", },
               Myfirst.Bind.class,
               Myfirst.Bind.Builder.class);
           return null;

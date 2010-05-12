@@ -30,9 +30,103 @@ void  protobuf_AddDesc_myfirst_2eproto();
 void protobuf_AssignDesc_myfirst_2eproto();
 void protobuf_ShutdownFile_myfirst_2eproto();
 
+class AbonentAddress;
 class Bind;
 
 // ===================================================================
+
+class AbonentAddress : public ::google::protobuf::Message {
+ public:
+  AbonentAddress();
+  virtual ~AbonentAddress();
+  
+  AbonentAddress(const AbonentAddress& from);
+  
+  inline AbonentAddress& operator=(const AbonentAddress& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+  
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+  
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const AbonentAddress& default_instance();
+  
+  void Swap(AbonentAddress* other);
+  
+  // implements Message ----------------------------------------------
+  
+  AbonentAddress* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const AbonentAddress& from);
+  void MergeFrom(const AbonentAddress& from);
+  void Clear();
+  bool IsInitialized() const;
+  
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+  
+  ::google::protobuf::Metadata GetMetadata() const;
+  
+  // nested types ----------------------------------------------------
+  
+  // accessors -------------------------------------------------------
+  
+  // required string address = 1;
+  inline bool has_address() const;
+  inline void clear_address();
+  static const int kAddressFieldNumber = 1;
+  inline const ::std::string& address() const;
+  inline void set_address(const ::std::string& value);
+  inline void set_address(const char* value);
+  inline void set_address(const char* value, size_t size);
+  inline ::std::string* mutable_address();
+  
+  // @@protoc_insertion_point(class_scope:AbonentAddress)
+ private:
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+  mutable int _cached_size_;
+  
+  ::std::string* address_;
+  static const ::std::string _default_address_;
+  friend void  protobuf_AddDesc_myfirst_2eproto();
+  friend void protobuf_AssignDesc_myfirst_2eproto();
+  friend void protobuf_ShutdownFile_myfirst_2eproto();
+  
+  ::google::protobuf::uint32 _has_bits_[(1 + 31) / 32];
+  
+  // WHY DOES & HAVE LOWER PRECEDENCE THAN != !?
+  inline bool _has_bit(int index) const {
+    return (_has_bits_[index / 32] & (1u << (index % 32))) != 0;
+  }
+  inline void _set_bit(int index) {
+    _has_bits_[index / 32] |= (1u << (index % 32));
+  }
+  inline void _clear_bit(int index) {
+    _has_bits_[index / 32] &= ~(1u << (index % 32));
+  }
+  
+  void InitAsDefaultInstance();
+  static AbonentAddress* default_instance_;
+};
+// -------------------------------------------------------------------
 
 class Bind : public ::google::protobuf::Message {
  public:
@@ -122,6 +216,18 @@ class Bind : public ::google::protobuf::Message {
   inline ::google::protobuf::int64 value() const;
   inline void set_value(::google::protobuf::int64 value);
   
+  // repeated .AbonentAddress destination = 5;
+  inline int destination_size() const;
+  inline void clear_destination();
+  static const int kDestinationFieldNumber = 5;
+  inline const ::AbonentAddress& destination(int index) const;
+  inline ::AbonentAddress* mutable_destination(int index);
+  inline ::AbonentAddress* add_destination();
+  inline const ::google::protobuf::RepeatedPtrField< ::AbonentAddress >&
+      destination() const;
+  inline ::google::protobuf::RepeatedPtrField< ::AbonentAddress >*
+      mutable_destination();
+  
   // @@protoc_insertion_point(class_scope:Bind)
  private:
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
@@ -133,11 +239,12 @@ class Bind : public ::google::protobuf::Message {
   ::std::string* password_;
   static const ::std::string _default_password_;
   ::google::protobuf::int64 value_;
+  ::google::protobuf::RepeatedPtrField< ::AbonentAddress > destination_;
   friend void  protobuf_AddDesc_myfirst_2eproto();
   friend void protobuf_AssignDesc_myfirst_2eproto();
   friend void protobuf_ShutdownFile_myfirst_2eproto();
   
-  ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
   
   // WHY DOES & HAVE LOWER PRECEDENCE THAN != !?
   inline bool _has_bit(int index) const {
@@ -157,6 +264,52 @@ class Bind : public ::google::protobuf::Message {
 
 
 // ===================================================================
+
+// AbonentAddress
+
+// required string address = 1;
+inline bool AbonentAddress::has_address() const {
+  return _has_bit(0);
+}
+inline void AbonentAddress::clear_address() {
+  if (address_ != &_default_address_) {
+    address_->clear();
+  }
+  _clear_bit(0);
+}
+inline const ::std::string& AbonentAddress::address() const {
+  return *address_;
+}
+inline void AbonentAddress::set_address(const ::std::string& value) {
+  _set_bit(0);
+  if (address_ == &_default_address_) {
+    address_ = new ::std::string;
+  }
+  address_->assign(value);
+}
+inline void AbonentAddress::set_address(const char* value) {
+  _set_bit(0);
+  if (address_ == &_default_address_) {
+    address_ = new ::std::string;
+  }
+  address_->assign(value);
+}
+inline void AbonentAddress::set_address(const char* value, size_t size) {
+  _set_bit(0);
+  if (address_ == &_default_address_) {
+    address_ = new ::std::string;
+  }
+  address_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* AbonentAddress::mutable_address() {
+  _set_bit(0);
+  if (address_ == &_default_address_) {
+    address_ = new ::std::string;
+  }
+  return address_;
+}
+
+// -------------------------------------------------------------------
 
 // Bind
 
@@ -274,6 +427,31 @@ inline ::google::protobuf::int64 Bind::value() const {
 inline void Bind::set_value(::google::protobuf::int64 value) {
   _set_bit(3);
   value_ = value;
+}
+
+// repeated .AbonentAddress destination = 5;
+inline int Bind::destination_size() const {
+  return destination_.size();
+}
+inline void Bind::clear_destination() {
+  destination_.Clear();
+}
+inline const ::AbonentAddress& Bind::destination(int index) const {
+  return destination_.Get(index);
+}
+inline ::AbonentAddress* Bind::mutable_destination(int index) {
+  return destination_.Mutable(index);
+}
+inline ::AbonentAddress* Bind::add_destination() {
+  return destination_.Add();
+}
+inline const ::google::protobuf::RepeatedPtrField< ::AbonentAddress >&
+Bind::destination() const {
+  return destination_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::AbonentAddress >*
+Bind::mutable_destination() {
+  return &destination_;
 }
 
 
