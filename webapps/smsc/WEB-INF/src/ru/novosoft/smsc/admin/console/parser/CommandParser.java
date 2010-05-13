@@ -3399,7 +3399,7 @@ public CommandParser(ParserSharedInputState state) {
 		
 		{
 		match(OPT_TASK);
-		cmd.setFile(getnameid("task file"));
+		cmd.setFile(getnameid("task file")); cmd.setSplitByRegions(getnameid("split")); 
 		}
 		return cmd;
 	}

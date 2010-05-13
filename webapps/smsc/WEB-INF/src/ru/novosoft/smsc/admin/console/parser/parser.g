@@ -1107,7 +1107,7 @@ delemailsme returns [EmailSmeDelCommand cmd] {
 /* ------------------ Info Sme ----------------------------- */
 infosmeimport returns [InfosmeImportCommand cmd] {
     cmd = new InfosmeImportCommand();
-} : ( OPT_TASK { cmd.setFile(getnameid("task file")); });
+} : ( OPT_TASK { cmd.setFile(getnameid("task file")); cmd.setSplitByRegions(getnameid("split")); });
 
 infosmedistr returns [Command cmd] {
       cmd = null;

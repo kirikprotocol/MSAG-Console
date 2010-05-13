@@ -66,7 +66,7 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
     return true;
   }
 
-  public void importFile(CommandContext ctx, String file) {
+  public void importFile(CommandContext ctx, String file, boolean splitByRegions) {
     try {
       // Check user
       if (!checkUserPermissions(ctx))
@@ -104,7 +104,7 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
       if (task == null)
         task = context.getInfoSmeConfig().createTask(user, name);
 
-      if(!context.getTaskManager().addTask(task, user, file)) {
+      if(!context.getTaskManager().addTask(task, user, file, splitByRegions)) {
         throw new AdminException("Can't add task: "+file);
       }
       ctx.setMessage("File " + file + " was added to process queue");
@@ -262,7 +262,7 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
       User user = getUser(ctx);
       Task t = createTask(context, d, user);
 
-      if(!context.getTaskManager().addTask(t, user, d.getFile())) {
+      if(!context.getTaskManager().addTask(t, user, d.getFile(), false)) {
         throw new AdminException("Can't add task: "+d.getFile());
       }
 
