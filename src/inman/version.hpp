@@ -4,7 +4,7 @@
 
 /* -- NOTE: these defines must be set by release builder -- */
 #define INMAN_BUILD_NUM   3117
-#define INMAN_BUILD_DATE  "Dec 12 2009"
+#define INMAN_BUILD_DATE  "May 13 2010"
 /* -- -------------------------------------------------- -- */
 
 /* -- NOTE: these defines are set by developers -- */
