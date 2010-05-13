@@ -11,6 +11,7 @@ class GetResponse;
 class SetResponse;
 class IncResponse;
 class BatchResponse;
+class GetProfileResponse;
 
 ///
 /// interface ProfileResponseVisitor
@@ -24,6 +25,7 @@ public:
     virtual bool visitGetResponse( GetResponse& resp )     /* throw (PvapException) */  = 0;
     virtual bool visitIncResponse( IncResponse& resp )     /* throw (PvapException) */  = 0;
     virtual bool visitBatchResponse( BatchResponse& resp ) /* throw (PvapException) */  = 0;
+    virtual bool visitGetProfileResponse( GetProfileResponse& resp ) { return false; }
 };
 
 } // namespace pvss

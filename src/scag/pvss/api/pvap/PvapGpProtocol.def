@@ -1,0 +1,5 @@
+include PvapGpMessages.def
+
+protocol PVAPGP
+    GP_RESP  0x8009
+end

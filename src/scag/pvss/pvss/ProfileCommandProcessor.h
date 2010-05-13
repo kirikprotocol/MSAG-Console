@@ -42,9 +42,7 @@ protected:
     bool visitIncCommand(IncCommand &cmd) /* throw(PvapException) */ ;
     bool visitIncModCommand(IncModCommand &cmd) /* throw(PvapException) */ ;
     bool visitSetCommand(SetCommand &cmd) /* throw(PvapException) */ ;
-    // BatchResponseComponent* getBatchResponseComponent();
-    // const string& getDBLog() const;
-    // void clearDBLog();
+    bool visitGetProfileCommand(GetProfileCommand& cmd);
 
 private:
     uint8_t incModProperty(Property& property, uint32_t mod, uint32_t &result);

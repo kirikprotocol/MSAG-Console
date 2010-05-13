@@ -71,6 +71,8 @@ public:
     void handle( BC_INC_MOD& object )      { filler_.push(object.pop()); }
     void handle( BC_BATCH& object )        { filler_.fail(); }
     void handle( BC_BATCH_RESP& object )   { filler_.fail(); }
+    void handle( BC_GETPROF& object )      { filler_.fail(); }
+    void handle( BC_GETPROF_RESP& object ) { filler_.fail(); }
 private:
     BatchCommandFiller& filler_;
 };

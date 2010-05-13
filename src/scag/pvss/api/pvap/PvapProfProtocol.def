@@ -13,4 +13,6 @@ protocol PVAPPROF
     // BC_INC_MOD_RESP 0x8005
     BC_BATCH        0x0007
     BC_BATCH_RESP   0x8007
+    BC_GETPROF      0x000b
+    BC_GETPROF_RESP 0x800b
 end

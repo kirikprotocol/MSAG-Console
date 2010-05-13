@@ -125,6 +125,14 @@ public:
         // smsc_log_debug(log_,"dtor %p %s",this,toString().c_str());
     }
 
+    void clear() {
+        type = PropertyType(0);
+        s_val.clear();
+        i_val = 0;
+        time_policy = INFINIT;
+        propertyStr_.clear();
+    }
+
     bool operator == ( const Property& prop ) const {
         if ( type != prop.type ||
              name != prop.name || 

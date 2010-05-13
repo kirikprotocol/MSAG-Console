@@ -11,6 +11,7 @@ class GetCommand;
 class IncCommand;
 class IncModCommand;
 class BatchCommand;
+class GetProfileCommand;
 class PvapException;
 
 class ProfileCommandVisitor
@@ -23,6 +24,7 @@ public:
     virtual bool visitIncCommand( IncCommand& cmd ) /* throw(PvapException) */  = 0;
     virtual bool visitIncModCommand( IncModCommand& cmd ) /* throw(PvapException) */  = 0;
     virtual bool visitBatchCommand( BatchCommand& cmd ) /* throw(PvapException) */  = 0;
+    virtual bool visitGetProfileCommand( GetProfileCommand& cmd ) { return false; }
 };
 
 } // namespace pvss

@@ -43,6 +43,12 @@ public:
         return true;
     }
     
+    virtual bool visitGetProfileCommand( GetProfileCommand& cmd ) throw (PvapException) {
+        BC_GETPROF msg(&cmd);
+        pvapbc.encodeMessage(msg,writer);
+        return true;
+    }
+
     const BufferWriter& getWriter() const { return writer; }
 private:
     Protocol::Buffer buffer;
@@ -67,6 +73,8 @@ public:
     void handle( BC_INC_MOD& object )      { filler_.push(object.pop()); }
     void handle( BC_BATCH& object )        { filler_.push(object.pop()); }
     void handle( BC_BATCH_RESP& object )   { filler_.fail(); }
+    void handle( BC_GETPROF& object )      { filler_.push(object.pop()); }
+    void handle( BC_GETPROF_RESP& object ) { filler_.fail(); }
 private:
     ProfileCommandFiller& filler_;
 };

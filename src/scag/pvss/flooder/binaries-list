@@ -50,12 +50,20 @@ scag/pvss-flooder2  flooder2 \
     -lpthread -lrt -ldl \
     $(LIBMALLOC)
 
-#scag/filetest  filetest \
-#    -lscag-util \
-#    -lcore-buffers \
-#    -lutil \
-#    @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
-#    $(__LIBRARIES) \
-#    $(SSL_LIB) \
-#    -lpthread -lrt -ldl \
-#    $(LIBMALLOC)
+scag/pvss-getProfile  testGetProfile \
+    -lscag-pvss-api-pvap \
+    -lscag-pvss-api-core-client-impl \
+    -lscag-pvss-api-core \
+    -lscag-pvss-api-packets \
+    -lscag-pvss-data \
+    -lscag-pvss-common \
+    -lscag-util-io \
+    -lscag-util-storage \
+    -lscag-util \
+    -lcore-network $(SOCKETLIB) -lnsl \
+    -lcore-threads \
+    @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
+    $(__LIBRARIES) \
+    $(SSL_LIB) \
+    -lpthread -lrt -ldl \
+    $(LIBMALLOC)

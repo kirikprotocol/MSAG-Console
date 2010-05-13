@@ -98,3 +98,15 @@ message BC_BATCH_RESP // 0x8007
     byte statusValue 1
     BatchCmdArray batchContent 38 helperClass="BatchResponseFiller"
 end
+
+message BC_GETPROF
+    version 2.0
+    property inheritsFrom="GetProfileCommand"
+end
+
+message BC_GETPROF_RESP
+    version 2.0
+    property inheritsFrom="GetProfileResponse"
+    byte statusValue 1
+    BatchCmdArray content 39 helperClass="GetProfileResponseFiller"
+end

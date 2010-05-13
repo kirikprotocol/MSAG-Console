@@ -1,0 +1,26 @@
+# NOTE: this file contains specification for PVAP 2.0 inner get_prof extension
+#
+# Usage: protogen pvapgp2.0.cgp
+# NOTE: GP_*.*, PVAPGP.* will be overwritten
+
+source=PvapGpProtocol.def
+
+search.path=./
+out.dir=./generated-cpp/
+out.dir=./generated-java/
+
+message.template=message-cpp.tmpl
+message.template=message-java.tmpl
+protocol.template=proto-cpp.tmpl
+protocol.template=proto-java.tmpl
+out.extension=hpp
+out.extension=java
+
+option:options.throwOnUnsetGet=true
+option:options.hasSeqNum=false
+
+data:namespace:1=scag2
+data:namespace:2=pvss
+data:namespace:3=pvap
+
+data:package=com.eyelinecom.whoisd.pvss

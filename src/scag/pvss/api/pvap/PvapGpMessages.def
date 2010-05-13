@@ -1,0 +1,10 @@
+include types.def
+
+// NOTE: it is not necessary to have unique tags for fields of distinguished messages
+// but I consider this highly comfortable.
+
+message GP_RESP
+    version 2.0
+    property inheritsFrom="GetProfileResponseComponent"
+    ascii  varName     20
+end

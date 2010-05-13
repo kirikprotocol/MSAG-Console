@@ -19,6 +19,8 @@
 #include "BC_INC_MOD.hpp"
 #include "BC_BATCH.hpp"
 #include "BC_BATCH_RESP.hpp"
+#include "BC_GETPROF.hpp"
+#include "BC_GETPROF_RESP.hpp"
 
 namespace scag2 {
 namespace pvss {
@@ -39,6 +41,8 @@ public:
         tag_BC_INC_MOD=5,
         tag_BC_BATCH=7,
         tag_BC_BATCH_RESP=32775,
+        tag_BC_GETPROF=8,
+        tag_BC_GETPROF_RESP=32776,
         tag_NO_TAG = 0xffff
     };
 
@@ -57,6 +61,8 @@ public:
         virtual void handle( BC_INC_MOD& obj ) = 0;
         virtual void handle( BC_BATCH& obj ) = 0;
         virtual void handle( BC_BATCH_RESP& obj ) = 0;
+        virtual void handle( BC_GETPROF& obj ) = 0;
+        virtual void handle( BC_GETPROF_RESP& obj ) = 0;
     };
 
     PVAPPROF( unsigned options = 0 ) : handler(0), options_(options) {}
@@ -156,6 +162,20 @@ public:
             handler->handle(msg);
             break;
         }
+        case tag_BC_GETPROF: {
+            // printf( "tag %d (%s)\n", tag, "BC_GETPROF" );
+            BC_GETPROF msg;
+            msg.deserialize(*this,ss);
+            handler->handle(msg);
+            break;
+        }
+        case tag_BC_GETPROF_RESP: {
+            // printf( "tag %d (%s)\n", tag, "BC_GETPROF_RESP" );
+            BC_GETPROF_RESP msg;
+            msg.deserialize(*this,ss);
+            handler->handle(msg);
+            break;
+        }
         default:
             throw InvalidMessageTypeException(seqNum,tag);
         }
@@ -235,6 +255,20 @@ public:
         throw (PvapException)
     {
         ss.writeTag(tag_BC_BATCH_RESP);
+        msg.serialize(*this,ss);
+    }
+
+    void encodeMessage( const BC_GETPROF& msg, BufferWriter& ss ) const
+        throw (PvapException)
+    {
+        ss.writeTag(tag_BC_GETPROF);
+        msg.serialize(*this,ss);
+    }
+
+    void encodeMessage( const BC_GETPROF_RESP& msg, BufferWriter& ss ) const
+        throw (PvapException)
+    {
+        ss.writeTag(tag_BC_GETPROF_RESP);
         msg.serialize(*this,ss);
     }
 

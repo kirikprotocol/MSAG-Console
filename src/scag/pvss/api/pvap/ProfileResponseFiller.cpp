@@ -37,6 +37,11 @@ public:
         pvapbc.encodeMessage(msg,writer);
         return true;
     }
+    virtual bool visitGetProfileResponse( GetProfileResponse& cmd ) throw (PvapException) {
+        BC_GETPROF_RESP msg(&cmd);
+        pvapbc.encodeMessage(msg,writer);
+        return true;
+    }
     
     const BufferWriter& getWriter() const { return writer; }
 private:
@@ -62,6 +67,8 @@ public:
     void handle( BC_INC_MOD& object )      { filler_.fail(); }
     void handle( BC_BATCH& object )        { filler_.fail(); }
     void handle( BC_BATCH_RESP& object )   { filler_.push(object.pop()); }
+    void handle( BC_GETPROF& object )      { filler_.fail(); }
+    void handle( BC_GETPROF_RESP& object ) { filler_.push(object.pop()); }
 private:
     ProfileResponseFiller& filler_;
 };

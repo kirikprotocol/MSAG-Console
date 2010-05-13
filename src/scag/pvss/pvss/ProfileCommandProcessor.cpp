@@ -15,6 +15,8 @@
 #include "scag/pvss/api/packets/IncModCommand.h"
 #include "scag/pvss/api/packets/SetCommand.h"
 #include "scag/pvss/api/packets/SetResponse.h"
+#include "scag/pvss/api/packets/GetProfileCommand.h"
+#include "scag/pvss/api/packets/GetProfileResponse.h"
 #include "scag/pvss/profile/ProfileBackup.h"
 
 namespace scag2 {
@@ -117,6 +119,26 @@ bool ProfileCommandProcessor::visitBatchCommand(BatchCommand &cmd) /* throw(Pvap
         for (BatchIterator i = content.begin(); i != content.end(); ++i) {
             (*i)->visit(proc);
             resp->addComponent(static_cast<BatchResponseComponent*>(proc.getResponse()));
+        }
+    }
+    return true;
+}
+
+
+bool ProfileCommandProcessor::visitGetProfileCommand(GetProfileCommand& cmd)
+{
+    GetProfileResponse* resp = new GetProfileResponse(StatusType::OK);
+    response_.reset(resp);
+    if ( !profile_ ) {
+        response_->setStatus(StatusType::PROPERTY_NOT_FOUND);
+        return false;
+    }
+    const PropertyHash& ph = profile_->getProperties();
+    char* pk;
+    Property* prop;
+    for ( PropertyHash::Iterator i(&ph); i.Next(pk,prop); ) {
+        if (prop) {
+            resp->addComponent( new GetProfileResponseComponent(pk) );
         }
     }
     return true;
