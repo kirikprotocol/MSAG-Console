@@ -86,7 +86,8 @@ ICServiceAC::RCode ICSSmBilling::_icsInit(void)
 
 ICServiceAC::RCode ICSSmBilling::_icsStart(void)
 {
-    roller->Start();
+    if (roller.get())
+        roller->Start();
     if (wCfg.abtTimeout.Value() && !wCfg.abtTimeout.Start()) {
         smsc_log_fatal(logger, "%s: TimeWatcher[abt] startup failure!", _logId);
         return ICServiceAC::icsRcError;
