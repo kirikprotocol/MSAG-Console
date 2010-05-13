@@ -48,13 +48,13 @@
     }
     function setSort(sorting) {
         if (sorting == "<%= bean.getSort() %>") {
-            opForm.getElementById("sort").value = "-<%= bean.getSort() %>";
+            opForm.sort.value = "-<%= bean.getSort() %>";
         } else {
-            opForm.getElementById("sort").value = sorting;
+            opForm.sort.value = sorting;
         }
 
         opForm.submit();
-
+                             
         return false;
     }
   </script>
