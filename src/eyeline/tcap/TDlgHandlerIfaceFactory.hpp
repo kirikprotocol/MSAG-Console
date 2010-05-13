@@ -10,6 +10,7 @@ namespace tcap {
 class TDlgHandlerIfaceFactory {
 public:
   virtual TDlgHandlerIface* createTDlgHandlerIface() = 0;
+  virtual void releaseHandler(TDlgHandlerIface* handler) = 0;
 };
 
 }}
