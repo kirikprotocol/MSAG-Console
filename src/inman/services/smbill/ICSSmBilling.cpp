@@ -102,7 +102,8 @@ ICServiceAC::RCode ICSSmBilling::_icsStart(void)
 //Stops service
 void  ICSSmBilling::_icsStop(bool do_wait/* = false*/)
 {
-    roller->Stop(do_wait);
+    if (roller.get())
+        roller->Stop(do_wait);
     if (do_wait) {
         //abort all sessions
         SessionsRegistry::const_iterator it = sesMgrs.begin();
