@@ -450,6 +450,9 @@ If you have it somewhere, you may specify it on command line via -DPROTOGEN=full
         <exec executable="${PROTOGEN}" dir="${SRC_DIR}/scag/pvss/api/pvap" failonerror="true">
             <arg value="pvapbc2.0.cgp"/>
         </exec>
+        <exec executable="${PROTOGEN}" dir="${SRC_DIR}/scag/pvss/api/pvap" failonerror="true">
+            <arg value="pvapgp2.0.cgp"/>
+        </exec>
     </target>
 
     <target name="-make.ewalletp" if="SETUP_MAKE_EWALLETP">
