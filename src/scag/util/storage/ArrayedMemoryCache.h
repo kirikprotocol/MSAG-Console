@@ -39,7 +39,11 @@ private:
 public:
     ArrayedMemoryCache( smsc::logger::Logger* thelog = 0,
                        unsigned int cachesize = 10000 ) :
+#ifdef INTHASH_USAGE_CHECKING
+    hash_(cachesize,SMSCFILELINE),
+#else
     hash_(cachesize),
+#endif
     cachelog_(thelog),
     cachesize_(cachesize) {
     }

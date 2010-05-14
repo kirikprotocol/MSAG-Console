@@ -23,6 +23,12 @@ private:
     typedef smsc::core::buffers::IntHash< ProcessingList::iterator > ProcessingMap;
 
 public:
+    ContextRegistry()
+#ifdef INTHASH_USAGE_CHECKING
+    : map_(SMSCFILELINE)
+#endif
+    {}
+
     class Ctx
     {
         friend class ContextRegistry;

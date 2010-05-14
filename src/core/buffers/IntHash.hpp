@@ -7,6 +7,12 @@
 #include <string>
 #include <stdexcept>
 
+#ifdef INTHASH_USAGE_CHECKING
+#include <cstdio>
+#include "util/fileline.h"
+#include "core/synchronization/Mutex.hpp"
+#endif
+
 namespace smsc{
 namespace core{
 namespace buffers{
@@ -14,7 +20,11 @@ namespace buffers{
 template <class T>
 class IntHash{
 public:
+#ifdef INTHASH_USAGE_CHECKING
+  IntHash( const char* id ) : id_(id)
+#else
   IntHash()
+#endif
   {
     keys=0;
     values=0;
@@ -25,9 +35,11 @@ public:
 
     reflist=0;
     reflistsize=0;
-
   }
   IntHash(const IntHash& src)
+#ifdef INTHASH_USAGE_CHECKING
+        : id_(src.id_)
+#endif
   {
     keys=0;
     values=0;
@@ -44,6 +56,10 @@ public:
 
   IntHash& operator=(const IntHash& src)
   {
+    if (this == &src) return *this;
+#ifdef INTHASH_USAGE_CHECKING
+    id_ = src.id_;
+#endif
     Empty();
     size=src.size;
     count=src.count;
@@ -59,7 +75,11 @@ public:
     return *this;
   }
 
+#ifdef INTHASH_USAGE_CHECKING
+  explicit IntHash(int n, const char* id ) : id_(id)
+#else
   explicit IntHash(int n)
+#endif
   {
     keys=0;
     values=0;
@@ -409,9 +429,28 @@ protected:
     if(okeys)delete [] okeys;
     if(oval)delete [] oval;
     if(orefs)delete [] orefs;
+#ifdef INTHASH_USAGE_CHECKING
+    if (size > 1024 && (unsigned(count) * 128U < unsigned(size)) && id_) {
+        smsc::core::synchronization::MutexGuard mg(idMutex_);
+        if (id_) {
+            fprintf(stderr,"inthash %s has bad usage: size=%u count=%u\n",
+                    id_, unsigned(size), unsigned(count) );
+            id_ = 0;
+        }
+    }
+#endif
   }
 
+#ifdef INTHASH_USAGE_CHECKING
+  static smsc::core::synchronization::Mutex idMutex_;
+  const char* id_;
+#endif
+
 }; //IntHash
+
+#ifdef INTHASH_USAGE_CHECKING
+template < class T > smsc::core::synchronization::Mutex IntHash< T >::idMutex_;
+#endif
 
 }//buffers
 }//core

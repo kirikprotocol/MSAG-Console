@@ -298,6 +298,9 @@ private:
     {
         typedef smsc::core::buffers::IntHash< smsc::core::buffers::Hash< unsigned > > Count;
     public:
+#ifdef INTHASH_USAGE_CHECKING
+        ExceptionCount() : count_(SMSCFILELINE) {}
+#endif
         std::string toString() const;
         void add( const ExceptionCount& c );
         void count( PvssException::Type et, const char* where );

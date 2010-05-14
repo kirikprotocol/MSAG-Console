@@ -183,6 +183,9 @@ public:
                   DataFileManager& manager,
                   DiskFlusher&     diskFlusher ) :
     PvssLogic(dispatcher),
+#ifdef INTHASH_USAGE_CHECKING
+    elementStorages_(SMSCFILELINE),
+#endif
     locationNumber_(locationNumber),
     config_(cfg),
     dataFileManager_(manager),

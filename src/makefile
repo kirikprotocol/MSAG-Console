@@ -187,6 +187,10 @@ ifeq ($(NOMAPPROXY),YES)
 CXXFLAGS := $(CXXFLAGS) -DNOMAPPROXY
 endif
 
+ifeq ($(INTHASHUSAGECHECKING),YES)
+CXXFLAGS := $(CXXFLAGS) -DINTHASH_USAGE_CHECKING
+endif
+
 ifeq ($(SNMP),YES)
 ifeq ($(CXX),CC)
 SNMP_LIBS_CORE = -lnetsnmpagent -lnetsnmphelpers -lnetsnmpmibs -lnetsnmp -lkstat -ladm -lpicl
