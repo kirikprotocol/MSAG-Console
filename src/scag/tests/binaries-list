@@ -44,6 +44,7 @@
 -scag/tests/test21     test21
 -scag/tests/test22     test22
 -scag/tests/test23     test23
-scag/tests/test24     test24
+-scag/tests/test24     test24
 -scag/tests/test25     test25
-scag/tests/test26     test26
+-scag/tests/test26     test26
+scag/tests/test28     test28
