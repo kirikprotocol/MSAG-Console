@@ -1,0 +1,8 @@
+#ifndef _SMSC_UTIL_FILELINE_H
+#define _SMSC_UTIL_FILELINE_H
+
+#define SMSCSTRINGIFY(x) #x
+#define SMSCTOSTRING(x) SMSCSTRINGIFY(x)
+#define SMSCFILELINE __FILE__ ":" SMSCTOSTRING(__LINE__)
+
+#endif
