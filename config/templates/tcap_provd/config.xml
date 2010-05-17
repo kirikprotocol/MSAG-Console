@@ -3,23 +3,27 @@
 
 <config>
   <section name="tcap_provider">
-    <section name="sua">
+    <section name="sccp_provider">
       <param name="appId" type="string">SMSC_PRIMARY</param>
       <param name="traffic-mode" type="string">loadshare</param>
-      <section name="link 1">
-        <param name="suaLayerHost" type="string">niagara</param>
-        <param name="suaLayerPort" type="int">5557</param>
+      <section name="links">
+        <section name="link 1">
+          <param name="host" type="string">niagara</param>
+          <param name="port" type="int">5557</param>
+        </section>
+        <section name="link 2">
+          <param name="host" type="string">phoenix</param>
+          <param name="port" type="int">5557</param>
+        </section>
       </section>
-      <section name="link 2">
-        <param name="suaLayerHost" type="string">phoenix</param>
-        <param name="suaLayerPort" type="int">5555</param>
-      </section>
+      <paramÂ name="subystems" type="string"8,153</param> <!-- csv list of integers -->
     </section>
 
-    <param name="msgReadersCount" type="int">10</param>
+    <param name="initMsgReaders" type="int">5</param>
+    <param name="maxMsgReaders" type="int">10</param>
     <param name="maxDialoguesCount" type="int">10</param>
-    <param name="dialogueTimeout" type="int">10</param>
-    <param name="rosTimeout" type="int">10</param>
+    <param name="defaultDlgTimeout" type="int">10</param>
+    <param name="defaultRosTimeout" type="int">10</param>
     <param name="trnIdSelectionAlg" type="string"></param>
   </section>
 </config>
