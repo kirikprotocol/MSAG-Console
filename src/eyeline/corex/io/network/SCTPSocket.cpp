@@ -175,6 +175,7 @@ SCTPSocket::connect()
   if ( _dst_host == "" )
     throw smsc::util::Exception("SCTPSocket::connect::: destination host wasn't specified");
 
+  errno = 0;
   if ( inet_pton(AF_INET, _dst_host.c_str(), &_server_addr.sin_addr) < 1 ) {
     struct hostent *hp;
     struct hostent h_result;
@@ -208,8 +209,12 @@ SCTPSocket::connect()
     else
       throw smsc::util::Exception("SCTPSocket::connect::: can't establish connect");
   } else {
-    if ( ::connect(_sockfd, (sockaddr*)&_server_addr, static_cast<int>(sizeof(_server_addr))) < 0 )
-      throw smsc::util::SystemError("SCTPSocket::connect::: can't establish connect");
+    if ( ::connect(_sockfd, (sockaddr*)&_server_addr, static_cast<int>(sizeof(_server_addr))) < 0 ) {
+      if ( errno = ECONNREFUSED )
+        throw ConnectionFailedException("SCTPSocket::connect::: connection refused");
+      else
+        throw smsc::util::SystemError("SCTPSocket::connect::: can't establish connect");
+    }
 
     fillToStringInfo();
     _inputStream = new SctpInputStream(this, _sockfd); _outputStream = new SctpOutputStream(this, _sockfd);
