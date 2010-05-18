@@ -3,6 +3,8 @@
 
 # include "logger/Logger.h"
 # include "core/buffers/IntHash.hpp"
+# include "core/buffers/RefPtr.hpp"
+# include "core/synchronization/Mutex.hpp"
 # include "eyeline/utilx/Singleton.hpp"
 # include "eyeline/ss7na/common/Exception.hpp"
 # include "eyeline/ss7na/m3ua_gw/mtp3/msu_processor/RoutingTable.hpp"
@@ -14,6 +16,8 @@ namespace ss7na {
 namespace m3ua_gw {
 namespace mtp3 {
 namespace msu_processor {
+
+typedef smsc::core::buffers::RefPtr<RoutingTable, smsc::core::synchronization::Mutex> RoutingTableRefPtr;
 
 class Router : public utilx::Singleton<Router> {
 public:
@@ -30,11 +34,12 @@ public:
   common::LinkId route(common::point_code_t lpc, common::point_code_t dpc) const;
 
   void addRoutingTable(common::point_code_t lpc, RoutingTable* routing_table);
-  RoutingTable* getRoutingTable(common::point_code_t lpc) const;
+  RoutingTableRefPtr getRoutingTable(common::point_code_t lpc) const;
   bool removeRoutingTable(common::point_code_t lpc);
 
 private:
-  smsc::core::buffers::IntHash<RoutingTable*> _routingTables;
+  smsc::core::buffers::IntHash<RoutingTableRefPtr> _routingTables;
+  mutable smsc::core::synchronization::Mutex _lock;
   smsc::logger::Logger* _logger;
 };
 
