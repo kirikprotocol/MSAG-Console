@@ -1,5 +1,6 @@
 #include "Router.hpp"
 #include "eyeline/ss7na/common/types.hpp"
+#include "core/synchronization/MutexGuard.hpp"
 
 namespace eyeline {
 namespace ss7na {
@@ -10,8 +11,8 @@ namespace msu_processor {
 common::LinkId
 Router::route(common::point_code_t lpc, common::point_code_t dpc) const
 {
-  RoutingTable* routingTable = getRoutingTable(lpc);
-  if (!routingTable) {
+  RoutingTableRefPtr routingTable = getRoutingTable(lpc);
+  if (!routingTable.Get()) {
     smsc_log_error(_logger, "Router::route::: routing table not found for lpc=%u",
                    lpc);
     throw common::MTP3RouteNotFound("Router::route::: can't get route for lpc=[%u]", lpc);
@@ -28,17 +29,20 @@ Router::route(common::point_code_t lpc, common::point_code_t dpc) const
 void
 Router::addRoutingTable(common::point_code_t lpc, RoutingTable* routing_table)
 {
-  _routingTables.Insert(lpc, routing_table);
+  smsc::core::synchronization::MutexGuard synchronize(_lock);
+  _routingTables.Insert(lpc, RoutingTableRefPtr(routing_table));
 }
 
-RoutingTable*
+RoutingTableRefPtr
 Router::getRoutingTable(common::point_code_t lpc) const
 {
-  RoutingTable** routingTablePtr = _routingTables.GetPtr(lpc);
+  smsc::core::synchronization::MutexGuard synchronize(_lock);
+
+  RoutingTableRefPtr* routingTablePtr = _routingTables.GetPtr(lpc);
   if (!routingTablePtr) {
     smsc_log_error(_logger, "Router::getRoutingTable::: can't get routing table for lpc=%u",
                    lpc);
-    return NULL;
+    return RoutingTableRefPtr();
   } else
     return *routingTablePtr;
 }
@@ -46,9 +50,11 @@ Router::getRoutingTable(common::point_code_t lpc) const
 bool
 Router::removeRoutingTable(common::point_code_t lpc)
 {
-  RoutingTable** routingTablePtr = _routingTables.GetPtr(lpc);
+  smsc::core::synchronization::MutexGuard synchronize(_lock);
+
+  RoutingTableRefPtr* routingTablePtr = _routingTables.GetPtr(lpc);
   if ( routingTablePtr ) {
-    delete *routingTablePtr;
+    *routingTablePtr = RoutingTableRefPtr();
     _routingTables.Delete(lpc);
     return true;
   } else
