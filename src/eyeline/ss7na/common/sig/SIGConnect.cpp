@@ -71,15 +71,12 @@ SIGConnect::reinit()
     throw smsc::util::SystemError("SIGConnect::reinit::: can't create SCTPSocket");
   _socket->bindx(&_localAddrList[0], _localAddrList.size(), _l_port);
 
-  smsc_log_debug(_logger, "SIGConnect::reinit::: _socket reinited - _peerAddrList=%s, _r_port=%u, sockfd=%d",
-                 _peerAddrList[0].c_str(), _r_port, _socket->getDescriptor());
   changeProtocolState(SctpReleaseInd());
 }
 
 SIGConnect::~SIGConnect()
 {
   try {
-    smsc_log_debug(_logger, "SIGConnect::~SIGConnect::: destroy object, fd=%d", _socket->getDescriptor());
     sctpRelease();
   } catch (...) {}
   delete _socket;
