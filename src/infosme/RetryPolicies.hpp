@@ -69,6 +69,9 @@ public:
 protected:
   typedef buf::IntHash<int> Code2Time;
   struct Policy{
+#ifdef INTHASH_USAGE_CHECKING
+    Policy() : c2t(SMSCFILELINE) {}
+#endif
     Code2Time c2t;
     int deftime;
   };

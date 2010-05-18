@@ -44,6 +44,9 @@ RetryPolicies TaskProcessor::retryPlcs;
 TaskProcessor::TaskProcessor(ConfigView* config) :
 TaskProcessorAdapter(), InfoSmeAdmin(), Thread(),
 log_(Logger::getInstance("smsc.infosme.TaskProcessor")), 
+#ifdef INTHASH_USAGE_CHECKING
+tasks(SMSCFILELINE),
+#endif
 bStarted(false),
 bNeedExit(false),
 messageSender(0), 
@@ -400,7 +403,11 @@ int TaskProcessor::Execute()
     std::vector< TaskGuard* > taskGuards;
     taskGuards.reserve(100);
     time_t prevTime = time(NULL);
+#ifdef INTHASH_USAGE_CHECKING
+    IntHash< Task* > activeTasks(SMSCFILELINE);
+#else
     IntHash< Task* > activeTasks;
+#endif
     time_t statTime = prevTime;
     while (!bNeedExit)
     {

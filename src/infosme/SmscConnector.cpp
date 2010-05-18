@@ -264,6 +264,9 @@ session_(new SmppSession(cfg, &listener_)),
 usage_(0),
 jstore_(0),
 trafficControl_(0)
+#ifdef INTHASH_USAGE_CHECKING
+,taskIdsBySeqNum(SMSCFILELINE)
+#endif
 {
     listener_.setSyncTransmitter(session_->getSyncTransmitter());
     listener_.setAsyncTransmitter(session_->getAsyncTransmitter());

@@ -743,6 +743,9 @@ public:
     strans(*this),
     atrans(*this),
     closed(true)
+#ifdef INTHASH_USAGE_CHECKING
+    ,lock(SMSCFILELINE)
+#endif
   {
     log=smsc::logger::Logger::getInstance("smpp.ses");
     smsc_log_info(log,"SmppSession: create session %s:%p", config.sid.c_str(),this);

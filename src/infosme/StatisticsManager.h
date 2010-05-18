@@ -12,6 +12,7 @@
 
 #include <db/DataSource.h>
 #include <logger/Logger.h>
+#include <memory>
 
 #include "InfoSmeAdmin.h"
 #include "core/buffers/File.hpp"
@@ -34,7 +35,7 @@ namespace smsc { namespace infosme
     
         smsc::logger::Logger *logger;
         
-        IntHash<TaskStat>      statistics[2];
+        std::auto_ptr<IntHash<TaskStat> > statistics[2];
 
         std::string storeLocation;
 

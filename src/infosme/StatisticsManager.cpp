@@ -6,7 +6,7 @@ namespace smsc { namespace infosme
 
 StatisticsManager::StatisticsManager(const std::string& argLocation,InfoSmeAdmin* argAdmin)
     : Statistics(), Thread(), logger(Logger::getInstance("smsc.infosme.StatisticsManager")),
-            currentIndex(0), bExternalFlush(false), bStarted(false), bNeedExit(false)
+    currentIndex(0), bExternalFlush(false), bStarted(false), bNeedExit(false)
 {
   admin=argAdmin;
   storeLocation=argLocation;
@@ -17,6 +17,13 @@ StatisticsManager::StatisticsManager(const std::string& argLocation,InfoSmeAdmin
   {
     storeLocation="./";
   }
+#ifdef INTHASH_USAGE_CHECKING
+  statistics[0].reset(new IntHash<TaskStat>(SMSCFILELINE));
+  statistics[1].reset(new IntHash<TaskStat>(SMSCFILELINE));
+#else
+  statistics[0].reset(new IntHash<TaskStat>());
+  statistics[1].reset(new IntHash<TaskStat>());
+#endif
 }
 StatisticsManager::~StatisticsManager()
 {
@@ -27,7 +34,7 @@ bool StatisticsManager::getStatistics(uint32_t taskId, TaskStat& stat)
 {
   MutexGuard guard(switchLock);
   
-  TaskStat* st = statistics[currentIndex].GetPtr(taskId);
+  TaskStat* st = statistics[currentIndex]->GetPtr(taskId);
   if (st)
   {
     stat = *st;
@@ -39,40 +46,40 @@ void StatisticsManager::incGenerated(uint32_t taskId, unsigned inc)
 {
   MutexGuard guard(switchLock);
   
-  TaskStat* stat = statistics[currentIndex].GetPtr(taskId);
-  if (!stat) statistics[currentIndex].Insert(taskId, TaskStat(inc, 0, 0, 0));
+  TaskStat* stat = statistics[currentIndex]->GetPtr(taskId);
+  if (!stat) statistics[currentIndex]->Insert(taskId, TaskStat(inc, 0, 0, 0));
   else stat->generated += inc;
-  stat = statistics[currentIndex].GetPtr(taskId);
+  stat = statistics[currentIndex]->GetPtr(taskId);
   smsc_log_debug(logger, "StatisticsManager::incGenerated::: modify statistic in hash: task_id=%d,stat.generated=%d,stat.delivered=%d,stat.retried=%d,stat.failed=%d", taskId,stat->generated,stat->delivered,stat->retried,stat->failed);
 }
 void StatisticsManager::incDelivered(uint32_t taskId, unsigned inc)
 {
   MutexGuard  guard(switchLock);
   
-  TaskStat* stat = statistics[currentIndex].GetPtr(taskId);
-  if (!stat) statistics[currentIndex].Insert(taskId, TaskStat(0, inc, 0, 0));
+  TaskStat* stat = statistics[currentIndex]->GetPtr(taskId);
+  if (!stat) statistics[currentIndex]->Insert(taskId, TaskStat(0, inc, 0, 0));
   else stat->delivered += inc;
-  stat = statistics[currentIndex].GetPtr(taskId);
+  stat = statistics[currentIndex]->GetPtr(taskId);
   smsc_log_debug(logger, "StatisticsManager::incDelivered::: modify statistic in hash: task_id=%d,stat.generated=%d,stat.delivered=%d,stat.retried=%d,stat.failed=%d", taskId,stat->generated,stat->delivered,stat->retried,stat->failed);
 }
 void StatisticsManager::incRetried(uint32_t taskId, unsigned inc)
 {
   MutexGuard guard(switchLock);
   
-  TaskStat* stat = statistics[currentIndex].GetPtr(taskId);
-  if (!stat) statistics[currentIndex].Insert(taskId, TaskStat(0, 0, inc, 0));
+  TaskStat* stat = statistics[currentIndex]->GetPtr(taskId);
+  if (!stat) statistics[currentIndex]->Insert(taskId, TaskStat(0, 0, inc, 0));
   else stat->retried += inc;
-  stat = statistics[currentIndex].GetPtr(taskId);
+  stat = statistics[currentIndex]->GetPtr(taskId);
   smsc_log_debug(logger, "StatisticsManager::incRetried::: modify statistic in hash: task_id=%d,stat.generated=%d,stat.delivered=%d,stat.retried=%d,stat.failed=%d", taskId,stat->generated,stat->delivered,stat->retried,stat->failed);
 }
 void StatisticsManager::incFailed(uint32_t taskId, unsigned inc)
 {
   MutexGuard guard(switchLock);
   
-  TaskStat* stat = statistics[currentIndex].GetPtr(taskId);
-  if (!stat) statistics[currentIndex].Insert(taskId, TaskStat(0, 0, 0, inc));
+  TaskStat* stat = statistics[currentIndex]->GetPtr(taskId);
+  if (!stat) statistics[currentIndex]->Insert(taskId, TaskStat(0, 0, 0, inc));
   else stat->failed += inc;
-  stat = statistics[currentIndex].GetPtr(taskId);
+  stat = statistics[currentIndex]->GetPtr(taskId);
   smsc_log_debug(logger, "StatisticsManager::incFailed::: modify statistic in hash: task_id=%d,stat.generated=%d,stat.delivered=%d,stat.retried=%d,stat.failed=%d", taskId,stat->generated,stat->delivered,stat->retried,stat->failed);
 }
 
@@ -231,7 +238,7 @@ void StatisticsManager::flushCounters(short index)
       fullPath+=fileName;
       int taskId;
       TaskStat* st;
-      IntHash<TaskStat>::Iterator it=statistics[index].First();
+      IntHash<TaskStat>::Iterator it=statistics[index]->First();
       char buf[128];
       std::string line;
       while(it.Next(taskId,st))
@@ -297,7 +304,7 @@ void StatisticsManager::flushCounters(short index)
         smsc_log_error(logger, "Error occurred during statistics flushing. Details: %s", exc.what());
     }
 
-    statistics[index].Empty();
+    statistics[index]->Empty();
 }
 
 }}
