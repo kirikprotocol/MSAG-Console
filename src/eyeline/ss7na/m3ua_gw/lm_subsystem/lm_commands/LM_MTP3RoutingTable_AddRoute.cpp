@@ -58,9 +58,9 @@ LM_MTP3RoutingTable_AddRoute::updateConfiguration()
     routingTable->addRoute(_dpc, common::LinkId(_sgpLinkId));
     mtp3::msu_processor::Router::getInstance().addRoutingTable(_lpc, routingTable);
   } else {
-    mtp3::msu_processor::RoutingTable* routingTable =
+    mtp3::msu_processor::RoutingTableRefPtr routingTable =
         mtp3::msu_processor::Router::getInstance().getRoutingTable(_lpc);
-    if ( !routingTable )
+    if ( !routingTable.Get() )
       throw common::lm_subsystem::InvalidCommandLineException("LM_MTP3RoutingTable_AddRoute::updateConfiguration::: there isn't routingTable for lpc=%u",
                                                               _lpc);
     routingTable->addRoute(_dpc, common::LinkId(_sgpLinkId));

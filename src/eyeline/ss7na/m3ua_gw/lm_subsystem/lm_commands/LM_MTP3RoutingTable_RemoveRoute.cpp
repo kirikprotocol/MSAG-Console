@@ -100,10 +100,10 @@ LM_MTP3RoutingTable_RemoveRoute::removeRoute(utilx::runtime_cfg::CompositeParame
 
   mtp3::AdjacentDPCRegistry::getInstance().remove(linkId);
 
-  mtp3::msu_processor::RoutingTable* routingTable =
+  mtp3::msu_processor::RoutingTableRefPtr routingTable =
       mtp3::msu_processor::Router::getInstance().getRoutingTable(lpc);
 
-  if ( !routingTable )
+  if ( !routingTable.Get() )
     throw common::lm_subsystem::InvalidCommandLineException("LM_MTP3RoutingTable_RemoveRoute::removeRoute::: there isn't routingTable for lpc='%u'",
                                                             lpc);
   utilx::runtime_cfg::Parameter* dpcParam =
