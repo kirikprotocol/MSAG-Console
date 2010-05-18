@@ -717,7 +717,7 @@ void CsvStore::CsvFile::setState(uint64_t msgId, uint8_t state, Message* msg)
   if(rec.state<=ENROUTE && state>ENROUTE)
   {
     openMessages--;
-    printf("open messages=%d\n",openMessages);
+    // printf("open messages=%d\n",openMessages);
   }
   rec.state=state;
   uint64_t off;
