@@ -109,7 +109,7 @@ void
 MTP3Subsystem::waitForCompletion()
 {
   smsc::core::synchronization::MutexGuard lock(_allLinksShutdownMonitor);
-  while(_establishedLinks > 0)
+  while (_establishedLinks > 0)
     _allLinksShutdownMonitor.wait();
 
   for (std::vector<common::LinkId>::iterator iter = _sgpLinkIds.begin(), end_iter = _sgpLinkIds.end();
@@ -125,6 +125,9 @@ void
 MTP3Subsystem::notifyLinkShutdownCompletion()
 {
   smsc::core::synchronization::MutexGuard lock(_allLinksShutdownMonitor);
+  if ( !_establishedLinks )
+    return;
+
   --_establishedLinks;
   if ( !_establishedLinks ) _allLinksShutdownMonitor.notify();
 }
@@ -207,9 +210,9 @@ void
 MTP3Subsystem::addMtp3Route(common::point_code_t lpc, common::point_code_t dpc,
                             const common::LinkId& sgp_link_id)
 {
-  msu_processor::RoutingTable* routingTable =
+  msu_processor::RoutingTableRefPtr routingTable =
       msu_processor::Router::getInstance().getRoutingTable(lpc);
-  if ( !routingTable )
+  if ( !routingTable.Get() )
     throw smsc::util::Exception("MTP3Subsystem::addMtp3Route::: routing table not found for lpc=%u", lpc);
   routingTable->addRoute(dpc, sgp_link_id);
 }
@@ -255,6 +258,7 @@ MTP3Subsystem::activateLinkToSGP(const common::LinkId& link_id,
   smsc_log_info(_logger, "MTP3Subsystem::activateLinkToSGP::: create new M3uaConnect, linkId=[%s]", link_id.getValue().c_str());
 
   m3ua_stack::M3uaConnect* m3uaConnect;
+
   if ( l_port )
     m3uaConnect = new m3ua_stack::M3uaConnect(r_addr, r_port, l_addr, l_port, link_id);
   else
@@ -262,16 +266,22 @@ MTP3Subsystem::activateLinkToSGP(const common::LinkId& link_id,
 
   m3uaConnect->setListener(this);
 
-  smsc_log_info(_logger, "MTP3Subsystem::activateLinkToSGP::: try establish sctp association");
-  m3uaConnect->sctpEstablish();
-  ++_establishedLinks;
-  SGPLinkIdsRegistry::getInstance().insert(link_id);
-  smsc_log_info(_logger, "MTP3Subsystem::activateLinkToSGP::: add M3uaConnect to ConnectMgr");
-  io_dispatcher::ConnectMgr::getInstance().addLink(m3uaConnect->getLinkId(), m3uaConnect);
+  try {
+    common::io_dispatcher::LinkPtr connectGuard(m3uaConnect);
+    smsc_log_info(_logger, "MTP3Subsystem::activateLinkToSGP::: try establish sctp association");
+    m3uaConnect->sctpEstablish();
 
-  m3uaConnect->up(); // activation for m3uaConnect will be made in AspMaintenanceMessageHandlers::handle(const UPAckMessage& message, io_dispatcher::Link* connect)
+    SGPLinkIdsRegistry::getInstance().insert(link_id);
+    smsc_log_info(_logger, "MTP3Subsystem::activateLinkToSGP::: add M3uaConnect to ConnectMgr");
+    io_dispatcher::ConnectMgr::getInstance().addLink(m3uaConnect->getLinkId(), connectGuard);
 
-  _sgpLinkIds.push_back(m3uaConnect->getLinkId());
+    m3uaConnect->up(); // activation for m3uaConnect will be made in AspMaintenanceMessageHandlers::handle(const UPAckMessage& message, io_dispatcher::Link* connect)
+    smsc::core::synchronization::MutexGuard lock(_allLinksShutdownMonitor);
+    ++_establishedLinks;
+    _sgpLinkIds.push_back(m3uaConnect->getLinkId());
+  } catch (...) {
+    io_dispatcher::ConnectMgr::getInstance().removeLink(m3uaConnect->getLinkId());
+  }
 }
 
 }}}}
