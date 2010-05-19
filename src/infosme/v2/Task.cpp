@@ -45,7 +45,8 @@ dsOwn(_dsOwn),
 prefetched_(false),
 messagesInCache_(0),
 store(location),
-bInProcess(false), bInGeneration(false),
+// bInProcess(false), 
+bInGeneration(false),
 infoSme_T_storageWasDestroyed(false)
 {
     smsc_log_debug(logger,"task %u/'%s' ctor",taskInfo.uid,taskInfo.name.c_str());
@@ -97,7 +98,7 @@ void Task::setInfo( const TaskInfo& taskInfo )
     info = taskInfo;
 
     // needed to reset inprocess flag
-    setEnabled(taskInfo.enabled);
+    // setEnabled(taskInfo.enabled);
 
     if ( ! formatter && !info.msgTemplate.empty() ) {
         formatter = new OutputFormatter(info.msgTemplate.c_str());
@@ -214,7 +215,7 @@ bool Task::beginGeneration(Statistics* statistics)
 
     {
         MutexGuard guard(inGenerationMon);
-        if (bInGeneration || (info.trackIntegrity && isInProcess())) 
+        if (bInGeneration || (info.trackIntegrity && isActive()))
         {
           return false;
         }
@@ -528,7 +529,9 @@ bool Task::prefetchMessage( time_t now, int regionId )
 {
     MutexGuard mg(lock_);
 
-    if ( !active_ ) return false;
+    if ( !active_ ) {
+        return false;
+    }
     if ( prefetched_ ) {
         if ( prefetch_.regionId == regionId ) {
             if ( prefetch_.date <= now ) {

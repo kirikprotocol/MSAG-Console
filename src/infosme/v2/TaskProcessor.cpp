@@ -634,7 +634,7 @@ Array<std::string> TaskProcessor::getProcessingTasks()
     TaskHash::Iterator it=tasks.First();
     while (it.Next(key, task))
     {
-        if (task.get() && task->isInProcess())
+      if (task.get() && task->isActive())
       {
         processingTasks.Push(task->getIdStr());
       }

@@ -84,10 +84,12 @@ public:
         MutexGuard guard(finalizingLock);
         return bFinalizing;
     }
+    /*
     inline bool isInProcess() {
         MutexGuard guard(inProcessLock);
         return bInProcess;
     }
+     */
     inline bool isInGeneration() {
         MutexGuard guard(inGenerationMon);
         return bInGeneration;
@@ -122,7 +124,7 @@ public:
     }
     inline bool setEnabled(bool enabled=true) {
         MutexGuard guard(enableLock);
-        if (!enabled) setInProcess(false);
+        // if (!enabled) setInProcess(false);
         return info.enabled = enabled;
     }
     inline const TaskInfo& getInfo() {
@@ -260,11 +262,13 @@ private:
     // void init(ConfigView* config, uint32_t taskId);
     ~Task();
 
+    /*
     inline bool setInProcess(bool inProcess) {
         MutexGuard guard(inProcessLock);
         bInProcess = inProcess;
         return bInProcess;
     }
+     */
 
     // bool fetchMessageFromCache(Message& message);
 
@@ -314,8 +318,9 @@ protected:
 
     Mutex       createTableLock, enableLock;
     EventMonitor inGenerationMon;
-    Mutex       inProcessLock;
-    bool        bInProcess, bInGeneration;
+    // Mutex       inProcessLock;
+    // bool        bInProcess, bInGeneration;
+    bool        bInGeneration;
     bool        infoSme_T_storageWasDestroyed;
 
 };
