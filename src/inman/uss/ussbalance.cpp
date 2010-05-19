@@ -7,7 +7,7 @@ static char const ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_OFF */
 
 #include "inman/uss/ussversion.hpp"
-#include "inman/common/XCFManager.hpp"
+#include "util/config/XCFManager.hpp"
 using smsc::util::config::XCFManager;
 
 #include "UssSrvCfgReader.hpp"

@@ -5,8 +5,8 @@
 #ident "@(#)$Id$"
 #define __INMAN_ICSERVICE_CFG_READER_HPP__
 
-#include "inman/common/XCFManager.hpp"
-#include "inman/common/XCFView.hpp"
+#include "util/config/XCFManager.hpp"
+#include "util/config/XCFView.hpp"
 #include "inman/services/ICSrvDefs.hpp"
 
 namespace smsc  {

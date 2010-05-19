@@ -6,7 +6,7 @@
 #define __INMAN_TCAP_CFGS_PARSERS_HPP__
 
 #include "inman/inap/TCDspDefs.hpp"
-#include "inman/common/XCFView.hpp"
+#include "util/config/XCFView.hpp"
 
 #ifdef EIN_HD
 #include "inman/inap/SS7HDCfgParser.hpp"
