@@ -1,0 +1,111 @@
+<project name="MCAIA">
+
+  <property name="esme_name" value="MCAIA"/>
+  <property name="SMSC_DIR" value=".."/>
+  <property file="${SMSC_DIR}/webapps/build.properties"/>
+  <property file="${SMSC_DIR}/src/build.properties"/>
+  <property environment="env"/>
+  <property name="TEMPLATE_PROPS" value="should be defined in calling script"/>
+  <property name="TEMPL_DIR" value="${SMSC_DIR}/config/templates"/>
+
+  <property name="esme_bin_path" value="should be defined in calling script"/>
+  <property name="esme_bin_name" value="should be defined in calling script"/>
+  <property name="DISTR_DIR" value="${BUILD_DIR}/distr"/>
+  <property name="SRC_DIR" value="${SMSC_DIR}/src"/>
+  <property name="BUILD_BIN" value="${BUILD_DIR}/bin"/>
+  <property name="exploded" location="${BUILD_DIR}/exploded/${esme_name}"/>
+  <property name="java_out" location="${BUILD_DIR}/classes/${esme_name}"/>
+  
+
+  <property name="CFG_DIR" value="conf"/>
+  <property name="BIN_DIR" value="bin"/>
+  <property name="JAVA_SRC" value="java/src"/>
+  <property name="TEST_SRC" value="java/test"/>
+  <property name="JAVA_LIB" value="java/lib"/>
+
+  <!--<property name="BUILD_DIR" value="BUILD"/>-->
+  <!--<property name="DISTR_DIR" value="${BUILD_DIR}/distr"/>-->
+  
+  <target name="generate">
+    <taskdef name="protogen" classname="mobi.eyeline.protogen.ant.Protogen">
+    <classpath>
+	<fileset dir="proto/lib" includes="ant.jar, protogen.jar"/>
+    </classpath>
+    </taskdef>
+    <protogen defFile="ClientProtocol.def" outDir="java/src" msgPackage="mobi.eyeline.mcaia.protocol" language="java">
+	<cgp name="search.path" value="proto"/>
+	<cgp name="search.path" value="proto/tmpl"/>
+    </protogen>
+    <protogen defFile="ServerProtocol.def" outDir="cpp" language="c++"
+              msgPackage="eyeline.mcaia.protocol.messages" 
+	      protoPackage="eyeline.mcaia.protocol">
+	<cgp name="search.path" value="proto"/>
+	<cgp name="search.path" value="proto/tmpl"/>
+	<option name="options.throwOnUnsetGet" value="true"/>
+	<data name="handler.include" value="IAProtocolHandler.hpp"/>
+	<data name="handler.class" value="IAProtocolHandler"/>
+	<data name="msgns" value="messages::"/>
+	<data name="msginc.path" value="messages/"/>
+	<data name="filename.suffix" value=""/>
+    </protogen>
+  </target>
+
+  <target name="prepare">
+    <mkdir dir="${java_out}"/>
+    <mkdir dir="${exploded}/lib"/>
+    <!--<mkdir dir="${DISTR_DIR}/services/${esme_name}/logs"/>-->
+    <!--<mkdir dir="${DISTR_DIR}/services/${esme_name}/store/journals/archives"/>-->
+    <!--<mkdir dir="${DISTR_DIR}/services/${esme_name}/store/events"/>-->
+  </target>
+
+  <target name="compile" depends="prepare">
+    <javac srcdir="${JAVA_SRC}" destdir="${java_out}" debug="off">
+      <classpath>
+        <fileset dir="${JAVA_LIB}" includes="*.jar"/>
+      </classpath>
+    </javac>
+  </target>
+
+  <target name="compile_with_tests" depends="compile">
+    <javac srcdir="${TEST_SRC}" destdir="${java_out}">
+      <classpath>
+        <fileset dir="${JAVA_LIB}" includes="*.jar"/>
+        <fileset dir="${java_out}"/>
+      </classpath>
+    </javac>
+  </target>
+
+
+  <target name="build" depends="compile">
+    <jar basedir="${java_out}" jarfile="${exploded}/lib/mcaia.jar"/>
+  </target>
+
+  <target name="distr" depends="build, update">
+    <copydir src="${TEMPL_DIR}/${esme_name}" dest="${DISTR_DIR}/services/${esme_name}/conf"/>
+  </target>
+
+  <target name="build_with_tests" depends="compile_with_tests">
+    <jar basedir="${java_out}" jarfile="${exploded}/lib/mcahdb.jar"/>
+  </target>
+
+  <target name="distr_with_tests" depends="build_with_tests, update_with_tests">
+    <copydir src="${TEMPL_DIR}/${esme_name}" dest="${DISTR_DIR}/services/${esme_name}/conf"/>
+  </target>    
+
+  <target name="update" depends="build">
+    <copydir src="${BIN_DIR}" dest="${DISTR_DIR}/services/${esme_name}/bin">
+      <exclude name="starttest.sh"/>
+      <exclude name="stoptest.sh"/>
+    </copydir>
+    <chmod dir="${DISTR_DIR}/services/${esme_name}/bin" perm="ugo+rx" includes="*"/>
+    <chmod dir="${DISTR_DIR}/services/${esme_name}/bin" perm="ugo+rx" includes="**/*.sh"/>
+    <copydir src="${JAVA_LIB}" dest="${DISTR_DIR}/services/${esme_name}/lib"/>
+    <copyfile src="${exploded}/lib/mcaia.jar" dest="${DISTR_DIR}/services/${esme_name}/lib/mcaia.jar"/>
+  </target>
+
+  <target name="update_with_tests" depends="update">
+    <copydir src="${BIN_DIR}" dest="${DISTR_DIR}/services/${esme_name}/bin"/>
+    <chmod dir="${DISTR_DIR}/services/${esme_name}/bin" perm="ugo+rx" includes="*"/>
+  </target>
+
+</project>

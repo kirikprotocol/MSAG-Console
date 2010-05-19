@@ -1,0 +1,11 @@
+include types.def
+
+enum byte Status
+    OK 0
+    InvalidCalledAddress 1
+    QueueFull 2
+end
+
+message BusyResponse:BusyRequest 2 
+  Status status 4
+end

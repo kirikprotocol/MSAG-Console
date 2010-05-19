@@ -1,0 +1,7 @@
+include BusyRequest.def
+include BusyResponse.def
+
+protocol ClientProtocol
+  BusyRequest  inmsg
+  BusyResponse outmsg
+end
