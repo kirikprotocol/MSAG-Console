@@ -4,7 +4,7 @@ static const char ident[] = "@(#)$Id$";
 
 #include "inman/services/iapSRI/IAPrvdSRICfgReader.hpp"
 #include "inman/inap/TCXCfgParser.hpp"
-#include "inman/common/strutil.hpp"
+#include "util/strutil.hpp"
 
 namespace smsc {
 namespace inman {

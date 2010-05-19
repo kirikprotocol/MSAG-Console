@@ -2,16 +2,13 @@
 static char const ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_OFF */
 
-
 #include "inman/services/ICSCfgReader.hpp"
 #include "inman/services/ICSRegistry.hpp"
 
-#include "inman/common/CSVList.hpp"
+#include "util/csv/CSVArrayOf.hpp"
 
 namespace smsc  {
 namespace inman {
-
-using smsc::util::CSVList;
 
 //Parses ICService loadUp parameter and loads required service
 //loadUp parameter has format: "CfgSectionName" = "LoadUpValue"
@@ -20,8 +17,8 @@ using smsc::util::CSVList;
 ICSUId processICSLoadUp(const char * nm_sec, const char * value, Logger * use_log)
     /* throw(ConfigException)*/
 {
-  CSVList prm(value, ':');
-  if (!prm.size())
+  util::csv::CSVArrayOfStr prm(2, ':');
+  if (!prm.fromStr(value))
     throw ConfigException("loadUp value '%s' is invalid", value);
 
   ICSUId uid = ICSIdent::icsIdUnknown;

@@ -115,7 +115,7 @@ void CAPSmTaskAC::onDPSMSResult(TCDialogID dlg_id, unsigned char rp_cause,
             res->doCharge = false;
             //check first for RPCause that forces interaction retrying
             const RPCauseATT * rAtt = abScf->retryRPC.exist(rp_cause);
-            if (rAtt && (res->attNum < (rAtt->second + 1))) {
+            if (rAtt && (res->attNum < (rAtt->_att + 1))) {
                 daList.push_front(res);
                 corpses.push_back(res->dlgRes->releaseDlg());
                 res->resetRes();

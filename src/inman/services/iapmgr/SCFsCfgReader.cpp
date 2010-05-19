@@ -2,14 +2,15 @@
 static const char ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_OFF */
 
-#include "inman/common/CSVList.hpp"
-using smsc::util::CSVList;
-
+#include "util/csv/CSVArrayOf.hpp"
 #include "inman/services/iapmgr/SCFsCfgReader.hpp"
 
 namespace smsc {
 namespace inman {
 namespace iapmgr {
+
+using util::csv::CSVArrayOfStr;
+
 /* ************************************************************************** *
  * class SCFsCfgReader implementation:
  * ************************************************************************** */
@@ -62,10 +63,11 @@ bool SCFsCfgReader::readSKeyMap(SKAlgorithm_SKMap * alg, XConfigView & xlt_cfg)
 
 //Parses service key algorithm formatted as:
 //  "[algId :] algArg [: algParams] "
-SKAlgorithmAC * SCFsCfgReader::readSkeyAlg(XConfigView & scf_cfg, TDPCategory::Id tdp_type, const char * str)
+SKAlgorithmAC * 
+  SCFsCfgReader::readSkeyAlg(XConfigView & scf_cfg, TDPCategory::Id tdp_type, const char * str)
 {
-  CSVList algStr(str, ':');
-  CSVList::size_type n = algStr.size();
+  CSVArrayOfStr             algStr(3, ':');
+  CSVArrayOfStr::size_type  n = algStr.fromStr(str);
   if (!n)
     return NULL;
   if (n == 1) //just a value
@@ -141,12 +143,12 @@ INScfCFG * SCFsCfgReader::readSCFCfg(XConfigView & cfg_sec,
   try { cstr = cfg_sec.getString("RPCList_reject");
   } catch (const ConfigException & exc) { }
   if (cstr) {
-    try { pin->rejectRPC.init(cstr);
+    try { pin->rejectRPC.fromStr(cstr);
     } catch (const std::exception & exc) {
       throw ConfigException("RPCList_reject: %s", exc.what());
     }
   }
-  if ((pin->rejectRPC.size() <= 1) || !pin->rejectRPC.print(cppStr))
+  if ((pin->rejectRPC.size() <= 1) || !pin->rejectRPC.toString(cppStr))
     cppStr += "unsupported";
   smsc_log_info(logger, cppStr.c_str());
 
@@ -156,7 +158,7 @@ INScfCFG * SCFsCfgReader::readSCFCfg(XConfigView & cfg_sec,
   try { cstr = cfg_sec.getString("RPCList_retry");
   } catch (const ConfigException & exc) { }
   if (cstr) {
-    try { pin->retryRPC.init(cstr); }
+    try { pin->retryRPC.fromStr(cstr); }
     catch (std::exception& exc) {
       throw ConfigException("RPCList_retry: %s", exc.what());
     }
@@ -164,10 +166,10 @@ INScfCFG * SCFsCfgReader::readSCFCfg(XConfigView & cfg_sec,
   //adjust default attempt setings for given RPCauses
   for (RPCListATT::iterator it = pin->retryRPC.begin();
                           it != pin->retryRPC.end(); ++it) {
-    if (!it->second)
-      it->second++;
+    if (!it->_att)
+      ++(it->_att);
   }
-  if (!pin->retryRPC.print(cppStr))
+  if (!pin->retryRPC.toString(cppStr))
     cppStr += "unsupported";
   smsc_log_info(logger, cppStr.c_str());
 
