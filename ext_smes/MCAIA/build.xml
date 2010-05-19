@@ -26,7 +26,7 @@
   <!--<property name="BUILD_DIR" value="BUILD"/>-->
   <!--<property name="DISTR_DIR" value="${BUILD_DIR}/distr"/>-->
   
-  <target name="generate">
+  <target name="generate_java">
     <taskdef name="protogen" classname="mobi.eyeline.protogen.ant.Protogen">
     <classpath>
 	<fileset dir="proto/lib" includes="ant.jar, protogen.jar"/>
@@ -36,6 +36,13 @@
 	<cgp name="search.path" value="proto"/>
 	<cgp name="search.path" value="proto/tmpl"/>
     </protogen>
+   </target>
+  <target name="generate_cpp">
+    <taskdef name="protogen" classname="mobi.eyeline.protogen.ant.Protogen">
+    <classpath>
+	<fileset dir="proto/lib" includes="ant.jar, protogen.jar"/>
+    </classpath>
+    </taskdef>
     <protogen defFile="ServerProtocol.def" outDir="cpp" language="c++"
               msgPackage="eyeline.mcaia.protocol.messages" 
 	      protoPackage="eyeline.mcaia.protocol">
