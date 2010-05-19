@@ -1,4 +1,4 @@
-include types.def
+include Types.def
 
 enum byte Status
     OK 0

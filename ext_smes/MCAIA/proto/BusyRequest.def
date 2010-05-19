@@ -1,4 +1,4 @@
-include types.def
+include Types.def
 
 message BusyRequest 1
   string caller 1
