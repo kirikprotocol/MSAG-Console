@@ -18,7 +18,7 @@ public:
   void dispatch(const m3ua_stack::messages::TLV_ProtocolData& protocol_data) const;
 
 protected:
-  explicit Distributor()
+  Distributor()
   : _logger(smsc::logger::Logger::getInstance("msu_proc")),
     _mtp3SapInstance(sap::MTPSapInstance::getInstance())
   {}
