@@ -13,6 +13,9 @@ using namespace smsc::util::config;
 InfoSmeMessageSender::InfoSmeMessageSender( TaskDispatcher& disp ) :
 log_(smsc::logger::Logger::getInstance("msgsend")),
 dispatcher_(&disp),
+#ifdef INTHASH_USAGE_CHECKING
+senders_(SMSCFILELINE),
+#endif
 defaultConnector_(0),
 started_(false),
 scoredList_(*this,10000,log_)

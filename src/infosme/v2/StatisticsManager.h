@@ -1,6 +1,7 @@
 #ifndef SMSC_INFO_SME_STATISTICS_MANAGER
 #define SMSC_INFO_SME_STATISTICS_MANAGER
 
+#include <memory>
 #include "Statistics.h"
 
 #include <core/synchronization/Mutex.hpp>
@@ -34,7 +35,7 @@ namespace smsc { namespace infosme
     
         smsc::logger::Logger *logger;
         
-        IntHash<TaskStat>      statistics[2];
+        std::auto_ptr<IntHash<TaskStat> > statistics[2];
 
         std::string storeLocation;
 

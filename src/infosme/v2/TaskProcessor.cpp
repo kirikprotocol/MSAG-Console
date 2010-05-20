@@ -46,6 +46,9 @@ InfoSmeAdmin(), Thread(),
 log_(Logger::getInstance("is2.proc")), 
 dispatcher_(5000),
 provider(0),
+#ifdef INTHASH_USAGE_CHECKING
+tasks(SMSCFILELINE),
+#endif
 bStarted(false),
 bNeedExit(false),
 messageSender(new InfoSmeMessageSender(dispatcher_)),
