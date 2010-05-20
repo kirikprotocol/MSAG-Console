@@ -164,12 +164,13 @@ unsigned TaskDispatcher::scoredObjIsReady( unsigned deltaTime, ScoredObjType& ta
 
 int TaskDispatcher::processScoredObj( unsigned curTime, ScoredObjType& task )
 {
+    int nchunks;
     try {
 
         Message msg;
         task.getPrefetched( msg );
         // MessageGuard mg(task,msg);
-        int nchunks = currentSender_->send(curTime, task, msg);
+        nchunks = currentSender_->send(curTime, task, msg);
         if ( nchunks <= 0 ) {
             return -1000;
         }

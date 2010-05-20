@@ -205,6 +205,8 @@ private:
                                        const InfoSme_Tasks_Stat_SearchCriterion& searchCrit);
 
     int unrespondedMessagesMax;
+    int maxMessageChunkSize_;
+
 public:
 
     TaskProcessor(ConfigView* config);
@@ -220,6 +222,7 @@ public:
     size_t getMappingMaxChanges() const { return mappingMaxChanges; }
     const std::string& getStoreLocation() const { return storeLocation; }
     int getUnrespondedMessagesMax() const { return unrespondedMessagesMax; }
+    int getMaxMessageChunkSize() const { return maxMessageChunkSize_; }
 
     virtual int Execute();
     void Start();

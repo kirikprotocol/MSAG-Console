@@ -646,9 +646,10 @@ bool SmscConnector::send( Task* task, Message& message,
             break;
         }
 
-        if (outLen > MAX_MESSAGE_CHUNK_LENGTH) {
+        const int chunkLen = processor_.getMaxMessageChunkSize();
+        if (chunkLen > 0 && outLen > chunkLen ) {
             // SMS will be splitted into nchunks chunks (estimation)
-            nchunks = (outLen-1) / MAX_MESSAGE_CHUNK_LENGTH + 1;
+            nchunks = (outLen-1) / chunkLen + 1;
             if (speedLimiter) speedLimiter->Inc(nchunks-1);
         }
 

@@ -19,10 +19,6 @@
 const int   MAX_ALLOWED_PAYLOAD_LENGTH = 65535;
 const int   MAX_ALLOWED_MESSAGE_LENGTH = 254;
 
-// NOTE: this value is used to estimate the number of chunks
-// the SMS will be cut into.
-const int   MAX_MESSAGE_CHUNK_LENGTH = 133;
-
 namespace smsc {
 
 namespace util {

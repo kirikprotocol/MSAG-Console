@@ -56,7 +56,8 @@ mappingRollTime(0),
 mappingMaxChanges(0),
 dsStatConnection(0),
 statistics(0), protocolId(0),
-unrespondedMessagesMax(1)
+unrespondedMessagesMax(1),
+maxMessageChunkSize_(0)
 // unrespondedMessagesSleep(10)
 {
     smsc_log_info(log_, "Loading ...");
@@ -90,6 +91,28 @@ unrespondedMessagesMax(1)
     if (unrespondedMessagesMax > 500) {
       smsc_log_warn(log_, "Parameter 'unrespondedMessagesMax' value '%d' is too big. "
                     "The preffered max value is 500", unrespondedMessagesMax);
+    }
+
+    {
+        const char* pn = "maxMessageChunkSize";
+        try {
+            maxMessageChunkSize_ = config->getInt(pn);
+        } catch (...) {
+            maxMessageChunkSize_ = 0;
+            smsc_log_warn(log_,"Parameter '%s' is invalid. Using default value %d",pn,maxMessageChunkSize_);
+        }
+        if ( maxMessageChunkSize_ != 0 ) {
+            int newval = maxMessageChunkSize_;
+            if ( newval < 133 ) {
+                newval = 133;
+            } else if ( newval > 160 ) {
+                newval = 160;
+            }
+            if (newval != maxMessageChunkSize_) {
+                smsc_log_warn(log_,"Parameter '%s' value %d adjusted to %d",pn,maxMessageChunkSize_,newval);
+                maxMessageChunkSize_ = newval;
+            }
+        }
     }
     
     std::auto_ptr<ConfigView> retryPlcCfg(config->getSubConfig("RetryPolicies"));
