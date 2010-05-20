@@ -30,6 +30,13 @@ struct MessageInfo
   {
     return static_cast<SccpMessageId::MsgCode_e>(messageType);
   }
+
+  void clear(void)
+  {
+    messageType = SccpMessageId::UNKNOWN_MSGCODE;
+    connectNum = 0;
+    msgData.reset();
+  }
 };
 
 }}}
