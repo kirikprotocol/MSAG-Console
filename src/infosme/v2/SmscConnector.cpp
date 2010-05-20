@@ -238,9 +238,13 @@ jstore_(0)
     ReceiptId key;
     TaskMsgId value;
     MutexGuard recptGuard(receiptWaitQueueLock);
+    unsigned count = 0;
     for ( jstore_->jstore.First(); jstore_->jstore.Next(key,value); ) {
         receiptWaitQueue.Push(ReceiptTimer(expireTime,key));
+        smsc_log_debug(log_,"restoring receipt timer for %s",key);
+        ++count;
     }
+    smsc_log_info(log_,"smsc %s: %u receipt timers restored",smscId.c_str(),count);
 }
 
 
