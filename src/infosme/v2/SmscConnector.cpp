@@ -159,6 +159,7 @@ struct SmscConnector::JStoreWrapper
     ~JStoreWrapper() {
         jstore.Stop();
     }
+
 private:
     JStoreWrapper();
 };
@@ -232,6 +233,14 @@ jstore_(0)
                                 smscId_,
                                 processor_.getMappingRollTime(),
                                 processor_.getMappingMaxChanges() );
+    // we have to restore all timers
+    const time_t expireTime = time(0) + processor_.getReceiptWaitTime();
+    ReceiptId key;
+    TaskMsgId value;
+    MutexGuard recptGuard(receiptWaitQueueLock);
+    for ( jstore_->jstore.First(); jstore_->jstore.Next(key,value); ) {
+        receiptWaitQueue.Push(ReceiptTimer(expireTime,key));
+    }
 }
 
 
