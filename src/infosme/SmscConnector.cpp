@@ -165,8 +165,11 @@ class SmscConnector::RegionTrafficControl
 public:
     RegionTrafficControl( smsc::logger::Logger* logger ) : log_(logger) {}
     ~RegionTrafficControl();
+
+    /// This method count the limit
     bool speedLimitReached( Task* task, const Message& message,
-                            const smsc::util::config::region::Region* region );
+                            const smsc::util::config::region::Region* region,
+                            TimeSlotCounter<int>** cptr = 0 );
 private:
     smsc::logger::Logger* log_;
     typedef std::map<std::string, TimeSlotCounter<int>* > timeSlotsHashByRegion_t;
@@ -185,12 +188,14 @@ SmscConnector::RegionTrafficControl::~RegionTrafficControl()
 
 
 bool SmscConnector::RegionTrafficControl::speedLimitReached( Task* task, const Message& message,
-                                                             const smsc::util::config::region::Region* region )
+                                                             const smsc::util::config::region::Region* region,
+                                                             TimeSlotCounter<int>** cptr )
 {
     uint32_t taskId = task->getId();
     // smsc_log_debug( log_, "TaskProcessor::controlTrafficSpeedByRegion::: TaskId=[%d]: check region(regionId=%s) bandwidth limit exceeding", taskId, message.regionId.c_str());
     if ( ! region ) {
         // smsc_log_debug(log_,"TaskProcessor::controlTraffic no region %s found",message.regionId.c_str());
+        if (cptr) *cptr = 0;
         return true;
     }
 
@@ -201,13 +206,16 @@ bool SmscConnector::RegionTrafficControl::speedLimitReached( Task* task, const M
         iter = timeSlotsHashByRegion_.insert(iter,std::make_pair(message.regionId, new TimeSlotCounter<int>(1,1)));
     }
     TimeSlotCounter<int>* outgoing = iter->second;
+    if (cptr) *cptr = outgoing;
     int out = outgoing->Get();
 
     bool regionTrafficLimitReached = (out >= region->getBandwidth());
     // smsc_log_debug(log_, "TaskProcessor::controlTrafficSpeedByRegion::: TaskId=[%d]: regionTrafficLimitReached=%d, region bandwidth=%d, current sent messages during one second=%d",
     //                taskId, regionTrafficLimitReached, region->getBandwidth(), out);
     // check max messages per sec. limit. if limit was reached then put message to queue of suspended messages.
-    if ( regionTrafficLimitReached ) { return true; }
+    if ( regionTrafficLimitReached ) {
+        return true;
+    }
 
     outgoing->Inc();
     return false;
@@ -495,7 +503,8 @@ bool SmscConnector::send( Task* task, Message& message,
         return false;
     }
 
-    if ( trafficControl_->speedLimitReached(task,message,region) ) {
+    TimeSlotCounter<int>* speedLimiter;
+    if ( trafficControl_->speedLimitReached(task,message,region,&speedLimiter) ) {
         msguard.suspended();
         smsc_log_info(log_, "TaskId=[%d/%s]: Traffic for region %s with id %s was suspended",
                       info.uid, info.name.c_str(),
@@ -533,6 +542,7 @@ bool SmscConnector::send( Task* task, Message& message,
     }
 
     bool needreconnect = false;
+    unsigned nchunks = 1;
     do {
 
         // if ( ! send(message.abonent,message.message,info,seqNum) ) {
@@ -625,9 +635,8 @@ bool SmscConnector::send( Task* task, Message& message,
                 sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE, out, (unsigned)outLen);
                 sms.setIntProperty(Tag::SMPP_SM_LENGTH, (unsigned)outLen);
             } else {
-                sms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD, out,
-                                   (unsigned)((outLen <= MAX_ALLOWED_PAYLOAD_LENGTH) ?
-                                              outLen :  MAX_ALLOWED_PAYLOAD_LENGTH));
+                if (outLen > MAX_ALLOWED_PAYLOAD_LENGTH) outLen = MAX_ALLOWED_PAYLOAD_LENGTH;
+                sms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD, out, (unsigned)outLen);
             }
         }
         catch (...) {
@@ -635,6 +644,12 @@ bool SmscConnector::send( Task* task, Message& message,
             if (msgBuf) delete msgBuf; msgBuf = 0;
             msguard.failed(smsc::system::Status::SYSERR);
             break;
+        }
+
+        if (outLen > MAX_MESSAGE_CHUNK_LENGTH) {
+            // SMS will be splitted into nchunks chunks (estimation)
+            nchunks = (outLen-1) / MAX_MESSAGE_CHUNK_LENGTH + 1;
+            if (speedLimiter) speedLimiter->Inc(nchunks-1);
         }
 
         if (msgBuf) delete msgBuf;
@@ -679,7 +694,7 @@ bool SmscConnector::send( Task* task, Message& message,
                     asyncTransmitter->sendPdu(&(submitSm.get_header()));
                 }
             }
-            TrafficControl::incOutgoing();
+            TrafficControl::incOutgoing( nchunks );
         } catch (const std::exception& ex) {
             smsc_log_warn(log_, "SmscConnector::send exception: %s", ex.what());
             msguard.suspended();

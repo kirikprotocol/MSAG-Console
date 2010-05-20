@@ -40,8 +40,8 @@ public:
     }
 
     // advance a nextTime in future
-    inline void consumeQuant() {
-        wouldSend_ += 1000;
+    inline void consumeQuant( int number = 1 ) {
+        wouldSend_ += 1000 * number;
         nextTime_ = wouldSend_ / speed_;
     }
 

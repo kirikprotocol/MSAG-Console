@@ -426,7 +426,7 @@ bool SmscConnector::invokeProcessResponse( const ResponseData& rd )
 }
 
 
-bool SmscConnector::send( Task& task, Message& msg )
+int SmscConnector::send( Task& task, Message& msg )
 {
     char whatbuf[100];
     const char* what = "";
@@ -437,6 +437,8 @@ bool SmscConnector::send( Task& task, Message& msg )
     MutexGuard mg(destroyMonitor_);
     smsc_log_debug(log_,"smsc '%s': send msg %llx of task %u/'%s'",
                    smscId_.c_str(), msg.id, task.getId(), task.getName().c_str() );
+
+    unsigned nchunks = 1;
     do {
         if ( stopped_ ) {
             what = "stopped";
@@ -548,9 +550,10 @@ bool SmscConnector::send( Task& task, Message& msg )
                     sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE, out, (unsigned)outLen);
                     sms.setIntProperty(Tag::SMPP_SM_LENGTH, (unsigned)outLen);
                 } else {
-                    sms.setBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD, out,
-                                       (unsigned)((outLen <= MAX_ALLOWED_PAYLOAD_LENGTH) ?
-                                                  outLen :  MAX_ALLOWED_PAYLOAD_LENGTH));
+                    if (outLen > MAX_ALLOWED_PAYLOAD_LENGTH) {
+                        outLen = MAX_ALLOWED_PAYLOAD_LENGTH;
+                    }
+                    sms.setBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD, out, (unsigned)outLen);
                 }
             } catch (...) {
                 if (msgBuf) delete msgBuf; msgBuf = 0;
@@ -566,8 +569,13 @@ bool SmscConnector::send( Task& task, Message& msg )
                 } catch (...) {
                     smsc_log_error(log_,"ussdpush: cannot set USSN_REQ");
                     msguard.failed(smsc::system::Status::SYSERR);
-                    return false;
+                    return 0;
                 }
+            }
+
+            if (outLen>MAX_MESSAGE_CHUNK_LENGTH) {
+                // SMS will be splitted into nchunks chunks (estimation)
+                nchunks = (outLen-1) / MAX_MESSAGE_CHUNK_LENGTH + 1;
             }
 
             if (info.useDataSm) {
@@ -600,7 +608,7 @@ bool SmscConnector::send( Task& task, Message& msg )
                     session_->getAsyncTransmitter()->sendPdu(&(submitSm.get_header()));
                 }
             }
-            TrafficControl::incOutgoing();
+            TrafficControl::incOutgoing(nchunks);
 
             // success
             msguard.processed();
@@ -618,7 +626,7 @@ bool SmscConnector::send( Task& task, Message& msg )
     if ( msguard.isProcessed() ) {
         smsc_log_debug(log_,"smsc '%s': msg %llx, abnt %s, task %u/'%s' sent",
                        smscId_.c_str(), msg.id, msg.abonent.c_str(), task.getId(), task.getName().c_str() );
-        return true;
+        return nchunks;
     }
 
     if ( seqNum != 0 ) {
@@ -630,7 +638,7 @@ bool SmscConnector::send( Task& task, Message& msg )
     smsc_log_error(log_,"smsc '%s': %s msg %llx, abnt %s, task %u/'%s': %s", smscId_.c_str(),
                    msguard.isFailed() ? "failed" : "suspended",
                    msg.id, msg.abonent.c_str(), task.getId(), task.getName().c_str(), what );
-    return false;
+    return 0;
 }
 
 

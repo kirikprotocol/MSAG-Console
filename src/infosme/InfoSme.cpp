@@ -132,10 +132,10 @@ static int  maxMessagesPerSecond     = 50;
 
 #include "TrafficControl.hpp"
 
-void TrafficControl::incOutgoing()
+void TrafficControl::incOutgoing( unsigned nchunks )
 {
   MutexGuard guard(trafficMonitor);
-  outgoing.Inc();
+  outgoing.Inc( nchunks );
   if (TrafficControl::stopped) return;
 
   int out = outgoing.Get();

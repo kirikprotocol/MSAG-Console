@@ -9,7 +9,7 @@ using smsc::core::synchronization::EventMonitor;
 class TrafficControl {
 
 public:
-  static void incOutgoing();
+  static void incOutgoing( unsigned nchunks );
   static void incIncoming();
   static void stopControl();
   static void startControl();

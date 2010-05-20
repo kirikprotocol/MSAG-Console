@@ -108,7 +108,10 @@ public:
     bool invokeProcessResponse( const ResponseData& data );
     // bool send( Task* task, Message& message, const smsc::util::config::region::Region* region );
     void processWaitingEvents( time_t tm );
-    bool send( Task& task, Message& msg );
+
+    /// send a message
+    /// @return number of chunks sent or 0
+    int send( Task& task, Message& msg );
 
 private:
     virtual int Execute();

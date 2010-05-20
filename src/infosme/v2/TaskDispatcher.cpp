@@ -169,7 +169,8 @@ int TaskDispatcher::processScoredObj( unsigned curTime, ScoredObjType& task )
         Message msg;
         task.getPrefetched( msg );
         // MessageGuard mg(task,msg);
-        if ( ! currentSender_->send(curTime, task, msg) ) {
+        int nchunks = currentSender_->send(curTime, task, msg);
+        if ( nchunks <= 0 ) {
             return -1000;
         }
 
@@ -177,7 +178,7 @@ int TaskDispatcher::processScoredObj( unsigned curTime, ScoredObjType& task )
         smsc_log_warn(log_,"processObj, exc: %s", e.what());
         return -1000;
     }
-    return 1000/task.getPriority();
+    return 1000*nchunks/task.getPriority();
 }
 
 }

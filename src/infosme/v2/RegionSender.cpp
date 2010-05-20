@@ -25,15 +25,16 @@ RegionSender::~RegionSender()
 }
 
 
-bool RegionSender::send( unsigned curTime, Task& task, Message& msg )
+int RegionSender::send( unsigned curTime, Task& task, Message& msg )
 {
-    if ( conn_.send(task,msg) ) {
-        speedControl_.consumeQuant();
+    int nchunks = conn_.send(task,msg);
+    if ( nchunks > 0 ) {
+        speedControl_.consumeQuant(nchunks);
         ++sent_;
-        return true;
+        return nchunks;
     }
     speedControl_.suspend( curTime + 5000 );
-    return false;
+    return 0;
 }
 
 }

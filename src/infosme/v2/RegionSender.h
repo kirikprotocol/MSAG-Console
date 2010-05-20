@@ -31,7 +31,9 @@ public:
         return speedControl_.suspend(nextTime);
     }
 
-    bool send( unsigned curTime, Task& task, Message& msg );
+    /// send a message
+    /// @return number of chunks has been sent, or 0
+    int send( unsigned curTime, Task& task, Message& msg );
     SmscConnector& getSmscConnector() { return conn_; }
 
 private:
