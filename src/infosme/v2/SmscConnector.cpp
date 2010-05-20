@@ -237,14 +237,18 @@ jstore_(0)
     const time_t expireTime = time(0) + processor_.getReceiptWaitTime();
     ReceiptId key;
     TaskMsgId value;
-    MutexGuard recptGuard(receiptWaitQueueLock);
+    // MutexGuard recptGuard(receiptWaitQueueLock);
     unsigned count = 0;
+    ReceiptData receipt; // receipted = false
     for ( jstore_->jstore.First(); jstore_->jstore.Next(key,value); ) {
         receiptWaitQueue.Push(ReceiptTimer(expireTime,key));
-        smsc_log_debug(log_,"restoring receipt timer for %s",key);
+        receipts.Insert(key,receipt);
+        smsc_log_debug(log_,"restoring receipt timer for '%s'",key.getMessageId());
         ++count;
     }
-    smsc_log_info(log_,"smsc %s: %u receipt timers restored",smscId.c_str(),count);
+    if ( count > 0 ) {
+        smsc_log_info(log_,"smsc %s: %u receipt timers restored",smscId.c_str(),count);
+    }
 }
 
 

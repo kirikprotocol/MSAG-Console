@@ -369,13 +369,15 @@ int TaskProcessor::Execute()
             }
 
             // 4. processing notification
-            MutexGuard mg(tasksLock);
-            while ( wasNotified || (currentTime - lastNotifyTime) > 30000 ) {
-                lastNotifyTime = currentTime;
-                wasNotified = false;
-                smsc_log_debug(log_,"notified=%u or time passed",wasNotified);
-                checkTaskActivity();
-                dispatcher_.removeInactiveTasks();
+            {
+                MutexGuard mg(tasksLock);
+                while ( wasNotified || (currentTime - lastNotifyTime) > 30000 ) {
+                    lastNotifyTime = currentTime;
+                    wasNotified = false;
+                    smsc_log_debug(log_,"notified=%u or time passed",wasNotified);
+                    checkTaskActivity();
+                    dispatcher_.removeInactiveTasks();
+                }
             }
 
             // 5. processing
