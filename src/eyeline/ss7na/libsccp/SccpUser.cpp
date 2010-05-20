@@ -20,52 +20,34 @@ namespace ss7na {
 namespace libsccp {
 
 SccpUser::SccpUser()
-  : _wasInitialized(false), _logger(smsc::logger::Logger::getInstance("libsua")),
-    _lastUsedConnIdx(0), _socketPool(MAX_SOCKET_POOL_SIZE)
-{
-  availableData=0;
-}
+  : _wasInitialized(false), _trafficMode(SccpConfig::trfLOADSHARE)
+  , _lastUsedConnIdx(0), _availableData(0), _socketPool(MAX_SOCKET_POOL_SIZE)
+  , _logger(smsc::logger::Logger::getInstance("libsscp"))
+{ }
 
-SccpApi::ErrorCode_e
-SccpUser::init(smsc::util::config::ConfigView* config)
+SccpApi::ErrorCode_e SccpUser::init(const SccpConfig & sccp_cfg)
 {
   if ( !_wasInitialized ) {
-    try {
-      _appId = config->getString("appId", "SccpUser::init::: appId parameter wasn't set");
-      std::string trafficMode = config->getString("traffic-mode", "SccpUser::init::: traffic-mode parameter wasn't set");
-      _trafficMode = convertStringToTrafficModeValue(utilx::toLowerCaseString(trafficMode), "SccpUser::init");
-      smsc_log_info(_logger, "loading links configuration ...");
-
-      std::auto_ptr< std::set<std::string> > setGuard(config->getShortSectionNames());
-
-      unsigned int linkIdx=0;
-      for (std::set<std::string>::iterator i=setGuard->begin(), end_iter = setGuard->end();
-           i!=end_iter;i++)
-      {
-        try
-        {
-          const std::string& linkName = *i;
-          smsc_log_info(_logger, "loading link '%s' ...", linkName.c_str());
-
-          std::auto_ptr<smsc::util::config::ConfigView> linkConfigGuard(config->getSubConfig(linkName.c_str()));
-
-          LinkInfo linkInfo(linkName,
-                            linkConfigGuard->getString("host", "host parameter wasn't set"),
-                            linkConfigGuard->getInt("port", "port parameter wasn't set"));
-
-          _knownLinks.push_back(linkInfo);
-          smsc_log_info(_logger, "registered link=[%s], linkId=%d", linkInfo.toString().c_str(), linkIdx);
-          ++linkIdx;
-        } catch (smsc::util::config::ConfigException& ce) {}
-      }
-      _wasInitialized = true;
-    } catch (std::exception& ex) {
-      smsc_log_error(_logger, "SccpUser::init::: caught unexpected exception=[%s]", ex.what());
-      return SYSTEM_MALFUNCTION;
+    _appId = sccp_cfg._appId;
+    _trafficMode = sccp_cfg._trafficMode;
+    smsc_log_info(_logger, "SccpUser::init(): appId='%s', trafficMode: %s",
+                  _appId.c_str(), sccp_cfg.nmTrafficMode());
+    //register configured links
+    _knownLinks.reserve(sccp_cfg._links.size());
+    unsigned i = 0;
+    for (SccpConfig::LinksArray::const_iterator cit = sccp_cfg._links.begin();
+                                      cit != sccp_cfg._links.end(); ++cit, ++i) {
+      LinkInfo  linkInfo(*cit);
+      _knownLinks.push_back(linkInfo);
+      smsc_log_info(_logger, "SccpUser: registered link[%u]=[%s]", i, linkInfo.toString().c_str());
     }
+    _wasInitialized = true;
+    return SccpApi::OK;
   }
-  return OK;
+  smsc_log_error(_logger, "SccpUser::init(): duplicate initialization");
+  throw smsc::util::Exception("SccpUser::init(): duplicate initialization");
 }
+
 
 SccpApi::ErrorCode_e
 SccpUser::close()
@@ -73,11 +55,11 @@ SccpUser::close()
   try {
     while ( !_knownLinks.empty() ) {
       LinkInfo& linkInfo = _knownLinks[0];
-      if ( linkInfo.inputStream )
-        _socketPool.remove(linkInfo.inputStream);
-      if ( linkInfo.socket ) {
-        linkInfo.socket->close();
-        delete linkInfo.socket;
+      if ( linkInfo._inputStream )
+        _socketPool.remove(linkInfo._inputStream);
+      if ( linkInfo._socket ) {
+        linkInfo._socket->close();
+        delete linkInfo._socket;
       }
     }
   } catch (smsc::util::SystemError& ex) {
@@ -107,12 +89,12 @@ SccpUser::connect(unsigned int connect_num)
   smsc_log_info(_logger, "try establish connection for link=[%s], linkId=%d", linkInfo.toString().c_str(), connect_num);
 
   try {
-    if ( linkInfo.connectionState == linkNOT_CONNECTED ) {
-      linkInfo.socket = new corex::io::network::TCPSocket(linkInfo.host, linkInfo.port);
-      linkInfo.socket->connect();
-      linkInfo.inputStream = new LinkInputStream(linkInfo.socket->getInputStream(), connect_num);
+    if ( linkInfo._connState == linkNOT_CONNECTED ) {
+      linkInfo._socket = new corex::io::network::TCPSocket(linkInfo._host, linkInfo._port);
+      linkInfo._socket->connect();
+      linkInfo._inputStream = new LinkInputStream(linkInfo._socket->getInputStream(), connect_num);
 
-      linkInfo.connectionState = linkCONNECTED;
+      linkInfo._connState = linkCONNECTED;
       smsc_log_info(_logger, "connection for link=[%s] has been established, linkId=%d", linkInfo.toString().c_str(), connect_num);
     } else
       smsc_log_error(_logger, "connection [%s] has been already established, linkId=%d", linkInfo.toString().c_str(), connect_num);
@@ -143,12 +125,12 @@ SccpUser::disconnect(unsigned int connect_num)
   smsc_log_info(_logger, "try release connection for link=[%s], linkId=%d", linkInfo.toString().c_str(), connect_num);
 
   try {
-    if ( linkInfo.connectionState == linkCONNECTED ) {
-      _socketPool.remove(linkInfo.inputStream);
-      delete linkInfo.inputStream; linkInfo.inputStream = NULL;
-      linkInfo.socket->close();
-      linkInfo.connectionState = linkNOT_CONNECTED;
-      delete linkInfo.socket; linkInfo.socket = NULL;
+    if ( linkInfo._connState == linkCONNECTED ) {
+      _socketPool.remove(linkInfo._inputStream);
+      delete linkInfo._inputStream; linkInfo._inputStream = NULL;
+      linkInfo._socket->close();
+      linkInfo._connState = linkNOT_CONNECTED;
+      delete linkInfo._socket; linkInfo._socket = NULL;
       smsc_log_info(_logger, "connection for link=[%s] has been released, linkId=%d", linkInfo.toString().c_str(), connect_num);
 
       return OK;
@@ -178,7 +160,7 @@ SccpUser::bind(unsigned int connect_num, uint8_t* ssn_list, uint8_t ssn_list_sz)
   LinkInfo& linkInfo = _knownLinks[connect_num];
 
   try {
-    if ( linkInfo.connectionState == linkCONNECTED ) {
+    if ( linkInfo._connState == linkCONNECTED ) {
       common::TP tp;
       BindMessage bindMessage;
       bindMessage.setAppId(_appId);
@@ -186,9 +168,9 @@ SccpUser::bind(unsigned int connect_num, uint8_t* ssn_list, uint8_t ssn_list_sz)
       bindMessage.serialize(&tp);
 
       smsc_log_info(_logger, "send Bind message=[%s] to link=[%s], linkId=%d", bindMessage.toString().c_str(), linkInfo.toString().c_str(), connect_num);
-      linkInfo.socket->getOutputStream()->write(tp.packetBody, tp.packetLen);
+      linkInfo._socket->getOutputStream()->write(tp.packetBody, tp.packetLen);
 
-      corex::io::InputStream* iStream = linkInfo.socket->getInputStream();
+      corex::io::InputStream* iStream = linkInfo._socket->getInputStream();
       tp.packetLen = sizeof(uint32_t);
       size_t offset=0;
       do {
@@ -212,13 +194,13 @@ SccpUser::bind(unsigned int connect_num, uint8_t* ssn_list, uint8_t ssn_list_sz)
       BindConfirmMessage bindConfirmMessage;
       bindConfirmMessage.deserialize(tp);
       if ( bindConfirmMessage.getStatus() == BindConfirmMessage::BIND_OK ) {
-        linkInfo.connectionState = linkBINDED;
-        _socketPool.insert(linkInfo.inputStream);
+        linkInfo._connState = linkBINDED;
+        _socketPool.insert(linkInfo._inputStream);
       }
       //NOTE: bind result related values of SuaApi::ErrorCode_e biuniquely conform
       //to corresponding BindConfirmMessage::BindResult_e values !!!
       return static_cast<ErrorCode_e>(bindConfirmMessage.getStatus());
-    } else if ( linkInfo.connectionState == linkBINDED )
+    } else if ( linkInfo._connState == linkBINDED )
       return ALREADY_BINDED;
     else {
       smsc_log_error(_logger, "SccpUser::bind::: connection for link=[%s] hasn't been established, linkId=%d", linkInfo.toString().c_str(), connect_num);
@@ -246,15 +228,15 @@ SccpUser::unbind(unsigned int connect_num)
   LinkInfo& linkInfo = _knownLinks[connect_num];
 
   try {
-    if ( linkInfo.connectionState == linkBINDED ) {
+    if ( linkInfo._connState == linkBINDED ) {
       common::TP tp;
       UnbindMessage unbindMessage;
       unbindMessage.serialize(&tp);
 
       smsc_log_info(_logger, "send Unbind message to link=[%s], linkId=%d", linkInfo.toString().c_str(), connect_num);
 
-      linkInfo.socket->getOutputStream()->write(tp.packetBody, tp.packetLen);
-      linkInfo.connectionState = linkCONNECTED;
+      linkInfo._socket->getOutputStream()->write(tp.packetBody, tp.packetLen);
+      linkInfo._connState = linkCONNECTED;
 
       return OK;
     } else
@@ -328,8 +310,8 @@ SccpUser::unitdata_req(const uint8_t* message,
 
     LinkInfo& linkInfo = _knownLinks[connect_num];
 
-    if ( linkInfo.connectionState == linkBINDED ) {
-      linkInfo.socket->getOutputStream()->write(tp.packetBody, tp.packetLen);
+    if ( linkInfo._connState == linkBINDED ) {
+      linkInfo._socket->getOutputStream()->write(tp.packetBody, tp.packetLen);
       smsc_log_info(_logger, "send message=[%s] to link=[%s], linkId=%d", utilx::hexdmp(tp.packetBody, tp.packetLen).c_str(), linkInfo.toString().c_str(), connect_num);
       return CallResult(OK, connect_num);
     } else {
@@ -362,9 +344,9 @@ SccpUser::msgRecv(MessageInfo* msg_info, uint32_t timeout)
       _socketPool.listen();
 
     corex::io::InputStream* iStream=0;
-    while ( availableData || (iStream = _socketPool.getNextReadyInputStream()) ) {
-      if(availableData)
-        iStream=availableData->owner;
+    while ( _availableData || (iStream = _socketPool.getNextReadyInputStream()) ) {
+      if(_availableData)
+        iStream=_availableData->owner;
 
       packets_cache_t::iterator iter = _packetsCache.find(iStream);
       if ( iter == _packetsCache.end() )
@@ -373,7 +355,7 @@ SccpUser::msgRecv(MessageInfo* msg_info, uint32_t timeout)
         iter = ins_res.first;
       }
 
-      CacheEntry* cacheEntry = availableData?availableData:iter->second;
+      CacheEntry* cacheEntry = _availableData ? _availableData : iter->second;
       cacheEntry->owner=iStream;
 
       if ( cacheEntry->expectedMessageSize == 0 || 
@@ -424,11 +406,11 @@ SccpUser::msgRecv(MessageInfo* msg_info, uint32_t timeout)
         if(cacheEntry->ringBuf.getSizeOfAvailData()>=4) {
           cacheEntry->expectedMessageSize=cacheEntry->ringBuf.readUint32();
           if(cacheEntry->expectedMessageSize<=cacheEntry->ringBuf.getSizeOfAvailData())
-            availableData=cacheEntry;
+            _availableData=cacheEntry;
           else
-            availableData=0;
+            _availableData=0;
         } else
-          availableData=0;
+          _availableData=0;
 
         return OK;
       }
@@ -454,9 +436,9 @@ SccpUser::getConnectsCount() const
 unsigned
 SccpUser::getConnNumByPolicy()
 {
-  if ( _trafficMode == OVERRIDE) {
+  if ( _trafficMode == SccpConfig::trfOVERRIDE) {
     return _lastUsedConnIdx;
-  } else if ( _trafficMode = LOADSHARE ) {
+  } else if ( _trafficMode = SccpConfig::trfLOADSHARE ) {
     smsc::core::synchronization::MutexGuard synchronize(_lastUsedConnIdxLock);
     _lastUsedConnIdx = static_cast<unsigned>((_lastUsedConnIdx + 1) % _knownLinks.size());
     return _lastUsedConnIdx;
@@ -464,64 +446,12 @@ SccpUser::getConnNumByPolicy()
     throw SccpLibException("SccpUser::getConnNumByPolicy::: invalid traffic mode=[%d]", _trafficMode);
 }
 
-SccpUser::LinkInfo::LinkInfo()
-  : port(0),
-    socket(NULL), connectionState(linkNOT_CONNECTED), inputStream(NULL) {}
-
-SccpUser::LinkInfo::LinkInfo(const std::string& link_name, const std::string& a_host, in_port_t port)
-  : linkName(link_name), host(a_host), port(port),
-    socket(NULL), connectionState(linkNOT_CONNECTED), inputStream(NULL)
-{
-  if ( link_name == "" ) throw SccpLibException("LinkInfo::LinkInfo::: empty link name value");
-  if ( host == "" ) throw SccpLibException("LinkInfo::LinkInfo::: empty host value");
-}
-
 std::string
 SccpUser::LinkInfo::toString() const
 {
   char strBuf[256];
-  snprintf(strBuf, sizeof(strBuf), "link=[%s],host=[%s],port=[%d]",linkName.c_str(), host.c_str(), port);
+  snprintf(strBuf, sizeof(strBuf), "link=[%s],host=[%s],port=[%d]", _name.c_str(), _host.c_str(), _port);
   return std::string(strBuf);
-}
-
-SccpUser::LinkInputStream::LinkInputStream(corex::io::InputStream* i_stream, unsigned int connect_num)
-  : _iStream(i_stream), _connectNum(connect_num) {}
-
-ssize_t
-SccpUser::LinkInputStream::read(uint8_t *buf, size_t buf_sz)
-{
-  return _iStream->read(buf, buf_sz);
-}
-
-ssize_t
-SccpUser::LinkInputStream::readv(const struct iovec *iov, int iovcnt)
-{
-  return _iStream->readv(iov, iovcnt);
-}
-
-corex::io::IOObject*
-SccpUser::LinkInputStream::getOwner()
-{
-  return _iStream->getOwner();
-}
-
-unsigned int
-SccpUser::LinkInputStream::getConnectNum() const
-{
-  return _connectNum;
-}
-
-SccpUser::traffic_mode_t
-SccpUser::convertStringToTrafficModeValue(const std::string& traffic_mode, const std::string& where)
-{
-  if ( traffic_mode == "loadshare" )
-    return LOADSHARE;
-  else if ( traffic_mode == "override" )
-    return OVERRIDE;
-  else {
-    const std::string fmtStr = where + "convertStringToTrafficModeValue::: wrong traffic-mode parameter value=[%s]";
-    throw smsc::util::Exception(fmtStr.c_str(), traffic_mode.c_str());
-  }
 }
 
 }}}

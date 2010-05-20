@@ -5,10 +5,9 @@
 #ident "@(#)$Id$"
 # define __EYELINE_SS7NA_LIBSCCP_SCCPAPI_HPP__
 
-# include "util/config/ConfigView.h"
-
 # include "eyeline/ss7na/libsccp/MessageInfo.hpp"
 # include "eyeline/ss7na/libsccp/MessageProperties.hpp"
+# include "eyeline/ss7na/libsccp/SccpConfig.hpp"
 # include "eyeline/sccp/SCCPAddress.hpp"
 
 namespace eyeline {
@@ -32,7 +31,7 @@ public:
 
   virtual ~SccpApi() {}
 
-  virtual ErrorCode_e init(smsc::util::config::ConfigView* config) = 0;
+  virtual ErrorCode_e init(const SccpConfig & sua_cfg) = 0;
 
   virtual ErrorCode_e close() = 0;
 
