@@ -1,6 +1,12 @@
 History in reverse order
 ----------------------------------------------------
 
+----------------------------------------------------
+infosme-build-20100520 13:10 bukind (v1,v2)
+
+2010-05-20 13:00 bukind
+ feature: ability to limit traffic based on SMS parts, not whole SMS.
+
 2010-05-19 14:50 bukind
  bugfix: processingTasks() is not working in v2: inProcess() is replaced with isActive()
 
