@@ -5,17 +5,12 @@ static char const ident[] = "$Id$";
 #include "eyeline/ss7na/libsccp/xcfg/LibSccpCfgReader.hpp"
 
 #include "util/strutil.hpp"
-#include "util/csv/CSValueTraitsInt.hpp"
-#include "util/csv/CSVArrayOf.hpp"
-
 
 namespace eyeline  {
 namespace ss7na {
 namespace libsccp {
 
 using smsc::util::config::CStrSet;
-
-typedef smsc::util::csv::CSVArrayOf_T<uint8_t>  XSSNsArray;
 
 /* ************************************************************************* *
  * class LibSccpCfgReader implementation
@@ -67,26 +62,6 @@ void LibSccpCfgReader::readConfig(XConfigView * root_sec, SccpConfig & st_cfg)
   if (!cstr)
     throw ConfigException("'%s.traffic-mode' parameter is invalid or missing",
                           cfgSec->relSection());
-
-  //<param name="subsystems" type="string">
-  cstr = 0;
-  try { cstr = cfgSec->getString("subsystems"); }
-  catch (...) { cstr = 0; }
-
-  if (cstr) {
-    XSSNsArray  subSNs((XSSNsArray::size_type)4);
-    try {
-      if (!subSNs.fromStr(cstr))
-        cstr = 0;
-    } catch (const std::exception & ex) {
-      throw ConfigException("'%s.subsystems' parameter is invalid (%s)",
-                            cfgSec->relSection(), ex.what());
-    }
-    st_cfg._subSNs = subSNs;
-  }
-  if (!cstr)
-    throw ConfigException("'subsystems' parameter is invalid or missing");
-
 
   //<section name="links">
   if (!cfgSec->findSubSection("links"))

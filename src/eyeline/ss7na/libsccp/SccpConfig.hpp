@@ -36,13 +36,10 @@ struct SccpConfig {
   };
 
   typedef std::vector<LinkId>   LinksArray;
-  typedef std::vector<uint8_t>  SSNsArray;
 
   std::string     _appId; //no longer than 255 chars
   TrafficMode_e   _trafficMode;
   LinksArray      _links;
-  SSNsArray       _subSNs;
-
 
   SccpConfig() : _trafficMode(trfLOADSHARE)
   { }
