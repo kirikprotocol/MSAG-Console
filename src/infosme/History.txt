@@ -2,7 +2,7 @@ History in reverse order
 ----------------------------------------------------
 
 ----------------------------------------------------
-infosme-build-20100520 16:50 bukind (v2)
+infosme-build-20100521 11:00 bukind (v2)
 
 2010-05-20 16:45 bukind
  bugfix: v2 had a dead lock on expired responses & receipts
