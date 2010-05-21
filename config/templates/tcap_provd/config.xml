@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!DOCTYPE config SYSTEM "file://configuration.dtd">
-
+<!-- "$Id$" -->
 <config>
   <section name="tcap_provider">
     <section name="sccp_provider">
-      <param name="appId" type="string">SMSC_PRIMARY</param>
-      <param name="traffic-mode" type="string">loadshare</param>
+      <param name="appId" type="string">SMSC_PRIMARY</param> <!--
+      no longer than 255 chars -->
+      <param name="traffic-mode" type="string">loadshare</param> <!--
+      options: 'loadshare', 'override' -->
       <section name="links">
         <section name="link 1">
           <param name="host" type="string">niagara</param>
@@ -16,14 +18,15 @@
           <param name="port" type="int">5557</param>
         </section>
       </section>
-      <paramÂ name="subystems" type="string"8,153</param> <!-- csv list of integers -->
     </section>
 
+    <param name="subSystems" type="string">8,153</param> <!--
+    csv list of uint8_t -->
     <param name="initMsgReaders" type="int">5</param>
     <param name="maxMsgReaders" type="int">10</param>
     <param name="maxDialoguesCount" type="int">10</param>
-    <param name="defaultDlgTimeout" type="int">10</param>
-    <param name="defaultRosTimeout" type="int">10</param>
+    <param name="defaultDlgTimeout" type="int">300</param> <!-- uint16_t, default: 300 -->
+    <param name="defaultRosTimeout" type="int">60</param> <!-- uint16_t, default: 60 -->
     <param name="trnIdSelectionAlg" type="string"></param>
   </section>
 </config>
