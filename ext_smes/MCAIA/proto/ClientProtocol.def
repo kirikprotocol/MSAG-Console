@@ -5,3 +5,8 @@ protocol ClientProtocol
   BusyRequest  inmsg
   BusyResponse outmsg
 end
+
+protocol TestServerProtocol
+  BusyRequest  outmsg
+  BusyResponse inmsg
+end
