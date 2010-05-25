@@ -233,6 +233,10 @@ jstore_(0)
                                 smscId_,
                                 processor_.getMappingRollTime(),
                                 processor_.getMappingMaxChanges() );
+    /*
+     * NOTE: artem does not want to resend all enroute messages
+     * so the code is commented out right now.
+
     // we have to restore all timers
     const time_t expireTime = time(0) + processor_.getReceiptWaitTime();
     ReceiptId key;
@@ -249,6 +253,7 @@ jstore_(0)
     if ( count > 0 ) {
         smsc_log_info(log_,"smsc %s: %u receipt timers restored",smscId.c_str(),count);
     }
+     */
 }
 
 
