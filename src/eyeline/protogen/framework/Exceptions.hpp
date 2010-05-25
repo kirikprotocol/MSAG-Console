@@ -5,6 +5,7 @@
 #include <string>
 #include <stdio.h>
 
+namespace eyeline{
 namespace protogen{
 namespace framework{
 
@@ -137,6 +138,27 @@ public:
   }
 };
 
+class InvalidEnumValue:public BaseException{
+public:
+  InvalidEnumValue(const std::string& name,int64_t value)
+  {
+    msg="Invalid value of enum ";
+    msg+=name;
+    msg+=":";
+    char buf[32];
+    sprintf(buf,"%lld",value);
+    msg+=buf;
+  }
+  InvalidEnumValue(std::string name,const std::string& value)
+  {
+    msg="Invalid value of enum ";
+    msg+=name;
+    msg+=":";
+    msg+=value;
+  }
+};
+
+}
 }
 }
 

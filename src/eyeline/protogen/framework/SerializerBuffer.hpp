@@ -9,6 +9,7 @@
 #include <wchar.h>
 #include "eyeline/protogen/framework/Exceptions.hpp"
 
+namespace eyeline{
 namespace protogen{
 namespace framework{
 
@@ -47,15 +48,15 @@ public:
   enum{endOfMessage_tag=0xffff};
 
 protected:
-  uint8_t htonX(uint8_t val)
+  int8_t htonX(int8_t val)
   {
     return val;
   }
-  uint16_t htonX(uint16_t val)
+  int16_t htonX(int16_t val)
   {
     return htons(val);
   }
-  uint32_t htonX(uint32_t val)
+  int32_t htonX(int32_t val)
   {
     return htonl(val);
   }
@@ -74,67 +75,66 @@ public:
     memcpy(buf+pos,&netvalue,2);
     pos+=2;
   }
-  void writeByte(uint8_t value)
+  void writeByte(int8_t value)
   {
     memcpy(buf+pos,&value,1);
     pos+=1;
   }
-  void writeInt16(uint16_t value)
+  void writeInt16(int16_t value)
   {
     resize(2);
-    uint16_t netvalue=htons(value);
+    int16_t netvalue=htons(value);
     memcpy(buf+pos,&netvalue,2);
     pos+=2;
   }
-  void writeInt32(uint32_t value)
+  void writeInt32(int32_t value)
   {
     resize(4);
-    uint32_t netvalue=htonl(value);
+    int32_t netvalue=htonl(value);
     memcpy(buf+pos,&netvalue,4);
     pos+=4;
   }
   void writeStr(const std::string& value)
   {
-    resize(value.length()*2);
-    //memcpy(buf+pos,value.c_str(),value.length());
+    resize(value.length()*2+lengthTypeSize);
+    writeLength((LengthType)value.length()*2);
     for(size_t i=0;i<value.length();i++)
     {
       writeInt16(btowc((unsigned char)value[i]));
     }
-    //pos+=value.length();
   }
 
   void writeBool(bool value)
   {
     resize(1);
-    uint8_t data=value?1:0;
+    int8_t data=value?1:0;
     memcpy(buf+pos,&data,1);
     pos+=1;
   }
 
-  void writeByteLV(uint8_t value)
+  void writeByteLV(int8_t value)
   {
     writeLength(1);
     writeByte(value);
   }
 
-  void writeInt16LV(uint16_t value)
+  void writeInt16LV(int16_t value)
   {
     writeLength(2);
     writeInt16(value);
   }
 
-  void writeInt32LV(uint32_t value)
+  void writeInt32LV(int32_t value)
   {
     writeLength(4);
     writeInt32(value);
   }
 
-  void writeInt64LV(uint64_t value)
+  void writeInt64LV(int64_t value)
   {
     writeLength(8);
-    writeInt32((uint32_t)(value>>32));
-    writeInt32((uint32_t)(value&0xffffffffu));
+    writeInt32((int32_t)(value>>32));
+    writeInt32((int32_t)(value&0xffffffffu));
   }
 
   void writeBoolLV(bool value)
@@ -145,36 +145,26 @@ public:
 
   void writeStrLV(const std::string& value)
   {
-    writeLength((LengthType)value.length()*2);
     writeStr(value);
-  }
-
-  void writeStrLstLV(const std::vector<std::string>& value)
-  {
-    writeLength(fieldSize(value));
-    for(std::vector<std::string>::const_iterator it=value.begin(),end=value.end();it!=end;it++)
-    {
-      writeStrLV(*it);
-    }
   }
 
   static LengthType fieldSize(bool)
   {
     return 1;
   }
-  static LengthType fieldSize(uint8_t)
+  static LengthType fieldSize(int8_t)
   {
     return 1;
   }
-  static LengthType fieldSize(uint16_t)
+  static LengthType fieldSize(int16_t)
   {
     return 2;
   }
-  static LengthType fieldSize(uint32_t)
+  static LengthType fieldSize(int32_t)
   {
     return 4;
   }
-  static LengthType fieldSize(uint64_t)
+  static LengthType fieldSize(int64_t)
   {
     return 8;
   }
@@ -188,7 +178,7 @@ public:
     LengthType rv=0;
     for(std::vector<std::string>::const_iterator it=value.begin(),end=value.end();it!=end;it++)
     {
-      rv+=fieldSize(*it);
+      rv+=lengthTypeSize+fieldSize(*it);
     }
     return rv;
   }
@@ -232,48 +222,48 @@ public:
     pos+=tagTypeSize;
     return htonX(rv);
   }
-  uint8_t readByte()
+  int8_t readByte()
   {
     if(pos+1>dataSize)
     {
       throw ReadBeyonEof();
     }
-    uint8_t rv;
+    int8_t rv;
     memcpy(&rv,buf+pos,1);
     pos++;
     return rv;
   }
-  uint16_t readInt16()
+  int16_t readInt16()
   {
     if(pos+2>dataSize)
     {
       throw ReadBeyonEof();
     }
-    uint16_t rv;
+    int16_t rv;
     memcpy(&rv,buf+pos,2);
     pos+=2;
     return htons(rv);
   }
-  uint32_t readInt32()
+  int32_t readInt32()
   {
     if(pos+4>dataSize)
     {
       throw ReadBeyonEof();
     }
-    uint32_t rv;
+    int32_t rv;
     memcpy(&rv,buf+pos,4);
     pos+=4;
     return htonl(rv);
   }
-  uint64_t readInt64()
+  int64_t readInt64()
   {
     if(pos+8>dataSize)
     {
       throw ReadBeyonEof();
     }
-    uint64_t rv;
-    uint32_t tmp1;
-    uint32_t tmp2;
+    int64_t rv;
+    int32_t tmp1;
+    int32_t tmp2;
     memcpy(&tmp1,buf+pos,4);
     pos+=4;
     memcpy(&tmp2,buf+pos,4);
@@ -289,15 +279,15 @@ public:
     {
       throw ReadBeyonEof();
     }
-    uint8_t rv;
+    int8_t rv;
     memcpy(&rv,buf+pos,1);
     pos+=1;
     return rv==1;
   }
 
-  std::string readStrLV()
+  std::string readStr()
   {
-    uint16_t length=readLength();
+    int16_t length=readLength();
     if(pos+length>dataSize)
     {
       throw ReadBeyonEof();
@@ -307,28 +297,23 @@ public:
     {
       rv+=wctob(readInt16());
     }
-    //rv.assign(buf+pos,length);
-    //pos+=length;
     return rv;
   }
 
-  void readStrLstLV(std::vector<std::string>& value)
+  std::string readStrLV()
   {
-    uint16_t length=readLength();
+    int16_t length=readLength();
     if(pos+length>dataSize)
     {
       throw ReadBeyonEof();
     }
-    uint16_t rd=0;
-    std::string val;
-    while(rd<length)
+    std::string rv;
+    for(int i=0;i<length/2;i++)
     {
-      val=readStrLV();
-      value.push_back(val);
-      rd+=fieldSize(val);
+      rv+=wctob(readInt16());
     }
+    return rv;
   }
-
 
   bool readBoolLV()
   {
@@ -340,7 +325,7 @@ public:
     return readBool();
   }
 
-  uint8_t readByteLV()
+  int8_t readByteLV()
   {
     LengthType len=readLength();
     if(len!=1)
@@ -351,7 +336,7 @@ public:
   }
 
 
-  uint16_t readInt16LV()
+  int16_t readInt16LV()
   {
     LengthType len=readLength();
     if(len!=2)
@@ -361,7 +346,7 @@ public:
     return readInt16();
   }
 
-  uint32_t readInt32LV()
+  int32_t readInt32LV()
   {
     LengthType len=readLength();
     if(len!=4)
@@ -371,18 +356,18 @@ public:
     return readInt32();
   }
 
-  uint64_t readInt64LV()
+  int64_t readInt64LV()
   {
     LengthType len=readLength();
     if(len!=8)
     {
-      throw InvalidValueLength("uint64",len);
+      throw InvalidValueLength("int64",len);
     }
     return readInt64();
   }
 
 
-  void skip(uint32_t bytes)
+  void skip(int32_t bytes)
   {
     if(pos+bytes>dataSize)
     {
@@ -418,7 +403,7 @@ public:
     dataSize=size;
     ownedBuffer=false;
   }
-  char* prepareBuffer(uint32_t size)
+  char* prepareBuffer(int32_t size)
   {
     pos=0;
     resize(size);
@@ -463,6 +448,7 @@ protected:
   }
 };
 
+}
 }
 }
 
