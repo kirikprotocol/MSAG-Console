@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <string>
 #include <stdio.h>
+#include <inttypes.h>
 
 namespace eyeline{
 namespace protogen{
