@@ -40,6 +40,10 @@ public:
       : ssnRouted(false), gti(GlobalTitle::gtiNone), hasSSN(false), hasSPC(false)
     { }
 
+    bool empty(void) const
+    {
+      return (gti == GlobalTitle::gtiNone) && !(ssnRouted | hasSSN | hasSPC);
+    }
     //indicators octet layout:
     //uint8_t reserved : 1; //0 - reserved for national use
     //uint8_t routing  : 1; //1 - route by SSN, 0 - by GT
@@ -99,6 +103,8 @@ public:
     _ind.hasSSN = (bool)(_ssn != 0);
     _ind.hasSPC = (bool)(_spc != 0);
   }
+
+  bool empty(void) const { return _ind.empty(); }
 
   void construct(const GlobalTitle & use_gt,
                  uint8_t use_ssn, Routing_e use_route = routeGT)
