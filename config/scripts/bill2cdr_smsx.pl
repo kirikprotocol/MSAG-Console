@@ -15,6 +15,7 @@ use constant PREPAID=>2;
 use constant CHARGE_SUBMIT=>0;
 use constant CHARGE_DELIVERY=>1;
 use constant CHARGE_DATACOLLECTED=>2;
+use constant CHARGE_SUBMIT_COLLECTED=>3;
 
 my $f;
 open($f,'>>/data/conf/scripts/lock') || die "Failed to open lock file:$!";
@@ -328,7 +329,7 @@ sub process{
       $makeOutRec=0;
     }
 
-    if($infields->{CHARGE}==CHARGE_DATACOLLECTED)
+    if($infields->{CHARGE}==CHARGE_DATACOLLECTED || $infields->{CHARGE}==CHARGE_SUBMIT_COLLECTED)
     {
       $makeOutRec=0;
       $extraOut=undef;
