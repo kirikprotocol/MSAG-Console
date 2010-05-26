@@ -1038,7 +1038,7 @@ bool Task::isReady(time_t time, bool checkActivePeriod)
       if (!info.activeWeekDays.isWeekDay((dt.tm_wday == 0) ? 6:(dt.tm_wday-1)))
           return false;
 
-      if (info.activePeriodStart > 0 && info.activePeriodEnd > 0)
+      if (info.activePeriodStart >= 0 && info.activePeriodEnd >= 0)
       {
           //if (info.activePeriodStart > info.activePeriodEnd) return false;
 

@@ -647,7 +647,7 @@ void Task::checkActivity( time_t now, tm& loctm )
             break;
         }
 
-        if ( info.activePeriodStart > 0 && info.activePeriodEnd > 0 ) {
+        if ( info.activePeriodStart >= 0 && info.activePeriodEnd >= 0 ) {
 
             const time_t daytime = (loctm.tm_hour*60+loctm.tm_min)*60+loctm.tm_sec;
 
