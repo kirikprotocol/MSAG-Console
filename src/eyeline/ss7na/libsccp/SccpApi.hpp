@@ -35,22 +35,24 @@ public:
 
   virtual ErrorCode_e close(void) = 0;
 
-  //NOTE: 'connect_num' is an index of LinkId from SccpConfig._links array
+  //NOTE: 'connect_num' is an index of SCSPLink from SccpConfig._links array
   virtual ErrorCode_e connect(unsigned int connect_num) = 0;
 
   virtual ErrorCode_e disconnect(unsigned int connect_num) = 0;
 
-  //Instructs the SCCP provider that given connect serves (is binded to) specified SubSystems.
-  //If 'conn_sccp_adr' is not NULL, returns SCCPAddress assigned to this connect by SCCP provider
-  virtual ErrorCode_e bind(unsigned int connect_num, const uint8_t * ssn_list, uint8_t ssn_list_sz,
-                           sccp::SCCPAddress * conn_sccp_adr = 0) = 0;
-
+  //Instructs the SCCP Service Provider that given connect serves (is
+  //binded to) specified SubSystems. In case of success, SCCP provider
+  //asigns SCCPAddress to this connect.
+  virtual ErrorCode_e bind(unsigned int connect_num, const uint8_t * ssn_list, uint8_t ssn_list_sz) = 0;
+  //
   virtual ErrorCode_e unbind(unsigned int connect_num) = 0;
 
   //Returns number of configured connects
   virtual unsigned int getConnectsCount(void) const = 0;
   //Returns non OK in case of unknown 'connect_num'
-  virtual ErrorCode_e getConnectInfo(LinkId & link_info, unsigned int connect_num) const = 0;
+  virtual ErrorCode_e getConnectState(SCSPLinkState & link_state, unsigned int connect_num) const = 0;
+  //Returns non OK in case of unknown 'connect_num'
+  virtual ErrorCode_e getConnectInfo(SCSPLink & link_info, unsigned int connect_num) const = 0;
 
 
   struct CallResult {

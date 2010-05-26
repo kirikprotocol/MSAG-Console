@@ -21,11 +21,11 @@ private:
 
 protected:
   void readLinkParms(XConfigView * outer_sec, const char * nm_sec,
-                     SccpConfig::LinksArray & links_arr)
+                     SccpConfig::SCSPLinksArray & links_arr)
        throw(ConfigException);
 
   //return false if no links is defined
-  bool readLinks(XConfigView * outer_sec, SccpConfig::LinksArray & links_arr)
+  bool readLinks(XConfigView * outer_sec, SccpConfig::SCSPLinksArray & links_arr)
        throw(ConfigException);
 
 public:

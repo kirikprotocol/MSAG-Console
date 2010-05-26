@@ -72,7 +72,7 @@ void LibSccpCfgReader::readConfig(XConfigView * root_sec, SccpConfig & st_cfg)
 
 //return false if no links is defined
 bool LibSccpCfgReader::readLinks(XConfigView * outer_sec,
-                                SccpConfig::LinksArray & links_arr)
+                                SccpConfig::SCSPLinksArray & links_arr)
      throw(ConfigException)
 {
   links_arr.clear();
@@ -87,7 +87,7 @@ bool LibSccpCfgReader::readLinks(XConfigView * outer_sec,
 
 
 void LibSccpCfgReader::readLinkParms(XConfigView * outer_sec, const char * nm_sec,
-                                    SccpConfig::LinksArray & links_arr)
+                                    SccpConfig::SCSPLinksArray & links_arr)
      throw(ConfigException)
 {
   std::auto_ptr<XConfigView> cfgSec(outer_sec->getSubConfig(nm_sec));
@@ -105,7 +105,7 @@ void LibSccpCfgReader::readLinkParms(XConfigView * outer_sec, const char * nm_se
   if (!tInt || tInt > (in_port_t)(-1))
     throw ConfigException("'%s.port' parameter is invalid or missing", cfgSec->relSection());
 
-  links_arr.push_back(LinkId(nm_sec, cstr, (in_port_t)tInt));
+  links_arr.push_back(SCSPLink(nm_sec, cstr, (in_port_t)tInt));
   return;
 }
 

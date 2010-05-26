@@ -45,7 +45,7 @@ SccpApi::ErrorCode_e SccpUser::init(const SccpConfig & sccp_cfg) /*throw(std::ex
   //register configured links
   _knownLinks.reserve(sccp_cfg._links.size());
   unsigned i = 0;
-  for (SccpConfig::LinksArray::const_iterator cit = sccp_cfg._links.begin();
+  for (SccpConfig::SCSPLinksArray::const_iterator cit = sccp_cfg._links.begin();
                                     cit != sccp_cfg._links.end(); ++cit, ++i) {
     LinkInfo  linkInfo(*cit);
     _knownLinks.push_back(linkInfo);
@@ -92,12 +92,12 @@ SccpApi::ErrorCode_e SccpUser::connect(unsigned int connect_num)
   smsc_log_debug(_logger, "SccpUser: establishing connection for %s ..", linkInfo.toString(connect_num).c_str());
 
   try {
-    if ( linkInfo._connState == LinkId::linkNOT_CONNECTED ) {
-      linkInfo._socket = new corex::io::network::TCPSocket(linkInfo._host, linkInfo._port);
+    if ( linkInfo._state._connStatus == SCSPLinkState::linkNOT_CONNECTED ) {
+      linkInfo._socket = new corex::io::network::TCPSocket(linkInfo._id._host, linkInfo._id._port);
       linkInfo._socket->connect();
       linkInfo._inputStream = new LinkInputStream(linkInfo._socket->getInputStream(), connect_num);
 
-      linkInfo._connState = LinkId::linkCONNECTED;
+      linkInfo._state._connStatus = SCSPLinkState::linkCONNECTED;
       smsc_log_info(_logger, "SccpUser: connection is established, %s", linkInfo.toString(connect_num).c_str());
     } else
       smsc_log_warn(_logger, "SccpUser: connection has been already established, %s",
@@ -128,11 +128,11 @@ SccpApi::ErrorCode_e
                  linkInfo.toString(connect_num).c_str());
 
   try {
-    if ( linkInfo._connState == LinkId::linkCONNECTED ) {
+    if ( linkInfo._state._connStatus == SCSPLinkState::linkCONNECTED ) {
       _socketPool.remove(linkInfo._inputStream);
       delete linkInfo._inputStream; linkInfo._inputStream = NULL;
       linkInfo._socket->close();
-      linkInfo._connState = LinkId::linkNOT_CONNECTED;
+      linkInfo._state._connStatus = SCSPLinkState::linkNOT_CONNECTED;
       delete linkInfo._socket; linkInfo._socket = NULL;
       smsc_log_info(_logger, "SccpUser: connection has been released, %s",
                     linkInfo.toString(connect_num).c_str());
@@ -151,8 +151,7 @@ SccpApi::ErrorCode_e
 }
 
 SccpApi::ErrorCode_e
-  SccpUser::bind(unsigned int connect_num, const uint8_t * ssn_list, uint8_t ssn_list_sz,
-               sccp::SCCPAddress * conn_sccp_adr/* = 0*/)
+  SccpUser::bind(unsigned int connect_num, const uint8_t * ssn_list, uint8_t ssn_list_sz)
 {
   MutexGuard synchronize(_lock);
   if ( !_wasInitialized )
@@ -163,7 +162,7 @@ SccpApi::ErrorCode_e
   LinkInfo& linkInfo = _knownLinks[connect_num];
 
   try {
-    if ( linkInfo._connState == LinkId::linkCONNECTED ) {
+    if ( linkInfo._state._connStatus == SCSPLinkState::linkCONNECTED ) {
       common::TP tp;
       BindMessage bindMessage;
       bindMessage.setAppId(_appId);
@@ -199,10 +198,8 @@ SccpApi::ErrorCode_e
       BindConfirmMessage bindConfirmMessage;
       bindConfirmMessage.deserialize(tp);
       if ( bindConfirmMessage.getStatus() == BindConfirmMessage::BIND_OK ) {
-        linkInfo._connState = LinkId::linkBINDED;
-        linkInfo._sccpAddr = bindConfirmMessage.getSCCPAddress();
-        if (conn_sccp_adr)
-          *conn_sccp_adr = linkInfo._sccpAddr;
+        linkInfo._state._connStatus = SCSPLinkState::linkBINDED;
+        linkInfo._state._sccpAddr = bindConfirmMessage.getSCCPAddress();
         _socketPool.insert(linkInfo._inputStream);
       }
       //NOTE: bind result related values of SuaApi::ErrorCode_e biuniquely conform
@@ -216,7 +213,7 @@ SccpApi::ErrorCode_e
     smsc_log_error(_logger, "SccpUser::bind::: caught unexpected exception=[%s]", ex.what());
     return SYSTEM_MALFUNCTION;
   }
-  if ( linkInfo._connState == LinkId::linkBINDED )
+  if ( linkInfo._state._connStatus == SCSPLinkState::linkBINDED )
     return ALREADY_BINDED;
   smsc_log_error(_logger, "SccpUser::bind::: connection hasn't been established, %s",
                  linkInfo.toString(connect_num).c_str());
@@ -235,7 +232,7 @@ SccpApi::ErrorCode_e
   LinkInfo& linkInfo = _knownLinks[connect_num];
 
   try {
-    if ( linkInfo._connState == LinkId::linkBINDED ) {
+    if ( linkInfo._state._connStatus == SCSPLinkState::linkBINDED ) {
       common::TP tp;
       UnbindMessage unbindMessage;
       unbindMessage.serialize(&tp);
@@ -243,7 +240,7 @@ SccpApi::ErrorCode_e
       smsc_log_info(_logger, "sending Unbind message to %s ..", linkInfo.toString(connect_num).c_str());
 
       linkInfo._socket->getOutputStream()->write(tp.packetBody, tp.packetLen);
-      linkInfo._connState = LinkId::linkCONNECTED;
+      linkInfo._state._connStatus = SCSPLinkState::linkCONNECTED;
       return OK;
     }
   } catch (const smsc::util::SystemError & ex) {
@@ -316,7 +313,7 @@ SccpApi::ErrorCode_e
 
     LinkInfo& linkInfo = _knownLinks[connect_num];
 
-    if ( linkInfo._connState == LinkId::linkBINDED ) {
+    if ( linkInfo._state._connStatus == SCSPLinkState::linkBINDED ) {
       linkInfo._socket->getOutputStream()->write(tp.packetBody, tp.packetLen);
       smsc_log_debug(_logger, "sent UDT message=[%s] to %s",
                     utilx::hexdmp(tp.packetBody, tp.packetLen).c_str(),
@@ -441,7 +438,7 @@ unsigned SccpUser::getConnectsCount(void) const
 }
 
 SccpApi::ErrorCode_e 
-  SccpUser::getConnectInfo(LinkId & link_info, unsigned int connect_num) const
+  SccpUser::getConnectInfo(SCSPLink & link_info, unsigned int connect_num) const
 {
   MutexGuard synchronize(_lock);
   if ( !_wasInitialized )
@@ -452,6 +449,20 @@ SccpApi::ErrorCode_e
   link_info = _knownLinks[connect_num];
   return OK;
 }
+
+SccpApi::ErrorCode_e 
+  SccpUser::getConnectState(SCSPLinkState & link_state, unsigned int connect_num) const
+{
+  MutexGuard synchronize(_lock);
+  if ( !_wasInitialized )
+    return LIB_NOT_INITIALIZED;
+  if (connect_num >= _knownLinks.size() )
+    return WRONG_CONNECT_NUM;
+
+  link_state = _knownLinks[connect_num]._state;
+  return OK;
+}
+
 
 unsigned SccpUser::getConnNumByPolicy(void)
 {
@@ -472,10 +483,10 @@ std::string
   char strBuf[sizeof(unsigned)*3 + sizeof("link[%u] = ")];
   snprintf(strBuf, sizeof(strBuf), "link[%u] = ", connect_num);
   rval += strBuf;
-  rval += _name;
+  rval += _id._name;
   rval += " {'";
-  rval += _host;
-  snprintf(strBuf, sizeof(strBuf), ":%u'}", _port);
+  rval += _id._host;
+  snprintf(strBuf, sizeof(strBuf), ":%u'}", _id._port);
   rval += strBuf;
   return rval;
 }

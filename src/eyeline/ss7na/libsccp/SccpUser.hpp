@@ -34,22 +34,24 @@ public:
 
   virtual ErrorCode_e close(void);
 
-  //NOTE: 'connect_num' is an index of LinkId from SccpConfig._links array
+  //NOTE: 'connect_num' is an index of SCSPLink from SccpConfig._links array
   virtual ErrorCode_e connect(unsigned int connect_num);
 
   virtual ErrorCode_e disconnect(unsigned int connect_num);
 
-  //Instructs the SCCP provider that given connect serves (is binded to) specified SubSystems.
-  //If 'conn_sccp_adr' is not NULL, returns SCCPAddress assigned to this connect by SCCP provider
-  virtual ErrorCode_e bind(unsigned int connect_num, const uint8_t * ssn_list, uint8_t ssn_list_sz,
-                           sccp::SCCPAddress * conn_sccp_adr = 0);
+  //Instructs the SCCP Service Provider that given connect serves (is
+  //binded to) specified SubSystems. In case of success, SCCP provider
+  //asigns SCCPAddress to this connect.
+  virtual ErrorCode_e bind(unsigned int connect_num, const uint8_t * ssn_list, uint8_t ssn_list_sz);
 
   virtual ErrorCode_e unbind(unsigned int connect_num);
 
   //Returns number of configured connects
   virtual unsigned int getConnectsCount(void) const;
+  //Returns non OK in case of unknown 'connect_num'
+  virtual ErrorCode_e getConnectState(SCSPLinkState & link_state, unsigned int connect_num) const;
   //Returns NULL in case of unknown 'connect_num'
-  virtual ErrorCode_e getConnectInfo(LinkId & link_info, unsigned int connect_num) const;
+  virtual ErrorCode_e getConnectInfo(SCSPLink & link_info, unsigned int connect_num) const;
 
   using SccpApi::unitdata_req;
 
@@ -109,14 +111,14 @@ private:
     }
   };
 
-  struct LinkInfo : public LinkId {
+  struct LinkInfo : public SCSPLink {
     corex::io::network::TCPSocket * _socket;
     LinkInputStream *               _inputStream;
 
-    LinkInfo() : LinkId()
+    LinkInfo() : SCSPLink()
       , _socket(NULL), _inputStream(NULL)
     { }
-    LinkInfo(const LinkId & use_link_id) : LinkId(use_link_id)
+    LinkInfo(const SCSPLink & use_link) : SCSPLink(use_link)
       , _socket(NULL), _inputStream(NULL)
     {  }
     ~LinkInfo()
