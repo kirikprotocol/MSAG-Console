@@ -105,7 +105,7 @@ void LibSccpCfgReader::readLinkParms(XConfigView * outer_sec, const char * nm_se
   if (!tInt || tInt > (in_port_t)(-1))
     throw ConfigException("'%s.port' parameter is invalid or missing", cfgSec->relSection());
 
-  links_arr.push_back(SccpConfig::LinkId(nm_sec, cstr, (in_port_t)tInt));
+  links_arr.push_back(LinkId(nm_sec, cstr, (in_port_t)tInt));
   return;
 }
 

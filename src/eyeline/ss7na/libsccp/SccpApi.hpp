@@ -8,7 +8,6 @@
 # include "eyeline/ss7na/libsccp/MessageInfo.hpp"
 # include "eyeline/ss7na/libsccp/MessageProperties.hpp"
 # include "eyeline/ss7na/libsccp/SccpConfig.hpp"
-# include "eyeline/sccp/SCCPAddress.hpp"
 
 namespace eyeline {
 namespace ss7na {
@@ -31,17 +30,28 @@ public:
 
   virtual ~SccpApi() {}
 
-  virtual ErrorCode_e init(const SccpConfig & sua_cfg) = 0;
+  //Throws in case of unexpected init() call
+  virtual ErrorCode_e init(const SccpConfig & sua_cfg) /*throw(std::exception)*/ = 0;
 
-  virtual ErrorCode_e close() = 0;
+  virtual ErrorCode_e close(void) = 0;
 
+  //NOTE: 'connect_num' is an index of LinkId from SccpConfig._links array
   virtual ErrorCode_e connect(unsigned int connect_num) = 0;
 
   virtual ErrorCode_e disconnect(unsigned int connect_num) = 0;
 
-  virtual ErrorCode_e bind(unsigned int connect_num, uint8_t* ssn_list, uint8_t ssn_list_sz) = 0;
+  //Instructs the SCCP provider that given connect serves (is binded to) specified SubSystems.
+  //If 'conn_sccp_adr' is not NULL, returns SCCPAddress assigned to this connect by SCCP provider
+  virtual ErrorCode_e bind(unsigned int connect_num, const uint8_t * ssn_list, uint8_t ssn_list_sz,
+                           sccp::SCCPAddress * conn_sccp_adr = 0) = 0;
 
   virtual ErrorCode_e unbind(unsigned int connect_num) = 0;
+
+  //Returns number of configured connects
+  virtual unsigned int getConnectsCount(void) const = 0;
+  //Returns non OK in case of unknown 'connect_num'
+  virtual ErrorCode_e getConnectInfo(LinkId & link_info, unsigned int connect_num) const = 0;
+
 
   struct CallResult {
     CallResult(ErrorCode_e operation_result, unsigned int connect_num)
@@ -66,7 +76,7 @@ public:
                           const sccp::SCCPAddress& calling_addr,
                           const MessageProperties& msg_properties);
 
-  virtual CallResult unitdata_req(const uint8_t* message,
+  virtual ErrorCode_e unitdata_req(const uint8_t* message,
                                   uint16_t message_size,
                                   const uint8_t* called_addr,
                                   uint8_t called_addr_len,
@@ -75,7 +85,7 @@ public:
                                   const MessageProperties& msg_properties,
                                   unsigned int connect_num) = 0;
 
-  CallResult unitdata_req(const uint8_t* message,
+  ErrorCode_e unitdata_req(const uint8_t* message,
                           uint16_t message_size,
                           const sccp::SCCPAddress& called_addr,
                           const sccp::SCCPAddress& calling_addr,
@@ -84,10 +94,9 @@ public:
 
   virtual ErrorCode_e msgRecv(MessageInfo* msg_info, uint32_t timeout=0) = 0;
 
-  virtual unsigned getConnectsCount() const = 0;
 };
 
 }}}
 
-#endif
+#endif /* __EYELINE_SS7NA_LIBSCCP_SCCPAPI_HPP__ */
 

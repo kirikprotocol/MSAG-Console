@@ -23,7 +23,7 @@ SccpApi::unitdata_req(const uint8_t* message,
                       msg_properties);
 }
 
-SccpApi::CallResult
+SccpApi::ErrorCode_e
 SccpApi::unitdata_req(const uint8_t* message,
                       uint16_t message_size,
                       const sccp::SCCPAddress& called_addr,

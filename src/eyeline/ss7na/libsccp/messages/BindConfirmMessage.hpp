@@ -1,6 +1,7 @@
 #ifndef __EYELINE_SS7NA_LIBSCCP_MESSAGES_BINDCONFIRMMESSAGE_HPP__
 # define __EYELINE_SS7NA_LIBSCCP_MESSAGES_BINDCONFIRMMESSAGE_HPP__
 
+# include "eyeline/sccp/SCCPAddress.hpp"
 # include "eyeline/ss7na/libsccp/messages/LibsccpMessage.hpp"
 
 namespace eyeline {
@@ -27,11 +28,15 @@ public:
   uint32_t getStatus() const { return _status; }
   void setStatus(status_t status) { _status = status; }
 
+  const sccp::SCCPAddress & getSCCPAddress(void) const { return _sccpAddr; }
+  void setSCCPAddress(const sccp::SCCPAddress & sccp_addr) { _sccpAddr = sccp_addr; }
+
 protected:
   virtual uint32_t getLength() const;
 
 private:
-  uint32_t _status;
+  uint32_t          _status;
+  sccp::SCCPAddress _sccpAddr; //TODO: implement serialization/deserialization!!!
 
   static const uint32_t _MSG_CODE=0x81;
 

@@ -24,18 +24,32 @@ namespace libsccp {
 class SccpUser : public SccpApi {
 public:
   SccpUser();
+  ~SccpUser();
 
-  virtual ErrorCode_e init(const SccpConfig & sua_cfg);
+  // ---------------------------------------------------
+  // -- SccpApi interface methods
+  // ---------------------------------------------------
+  //Throws in case of unexpected init() call
+  virtual ErrorCode_e init(const SccpConfig & sua_cfg) /*throw(std::exception)*/;
 
-  virtual ErrorCode_e close();
+  virtual ErrorCode_e close(void);
 
+  //NOTE: 'connect_num' is an index of LinkId from SccpConfig._links array
   virtual ErrorCode_e connect(unsigned int connect_num);
 
   virtual ErrorCode_e disconnect(unsigned int connect_num);
 
-  virtual ErrorCode_e bind(unsigned int connect_num, uint8_t* ssn_list, uint8_t ssn_list_sz);
+  //Instructs the SCCP provider that given connect serves (is binded to) specified SubSystems.
+  //If 'conn_sccp_adr' is not NULL, returns SCCPAddress assigned to this connect by SCCP provider
+  virtual ErrorCode_e bind(unsigned int connect_num, const uint8_t * ssn_list, uint8_t ssn_list_sz,
+                           sccp::SCCPAddress * conn_sccp_adr = 0);
 
   virtual ErrorCode_e unbind(unsigned int connect_num);
+
+  //Returns number of configured connects
+  virtual unsigned int getConnectsCount(void) const;
+  //Returns NULL in case of unknown 'connect_num'
+  virtual ErrorCode_e getConnectInfo(LinkId & link_info, unsigned int connect_num) const;
 
   using SccpApi::unitdata_req;
 
@@ -47,7 +61,7 @@ public:
                                   uint8_t calling_addr_len,
                                   const MessageProperties& msg_properties);
 
-  virtual CallResult unitdata_req(const uint8_t* message,
+  virtual ErrorCode_e unitdata_req(const uint8_t* message,
                                   uint16_t message_size,
                                   const uint8_t* called_addr,
                                   uint8_t called_addr_len,
@@ -58,14 +72,12 @@ public:
 
   virtual ErrorCode_e msgRecv(MessageInfo* msg_info, uint32_t timeout=0);
 
-  virtual unsigned getConnectsCount() const;
+
 protected:
-  virtual unsigned getConnNumByPolicy();
+  unsigned getConnNumByPolicy(void);
 
 private:
   static const unsigned MAX_SOCKET_POOL_SIZE = 64;
-
-  enum LinkState_e { linkNOT_CONNECTED, linkCONNECTED, linkBINDED };
 
   class LinkInputStream : public corex::io::InputStream {
   private:
@@ -97,22 +109,20 @@ private:
     }
   };
 
-  struct LinkInfo : public SccpConfig::LinkId {
+  struct LinkInfo : public LinkId {
     corex::io::network::TCPSocket * _socket;
-    LinkState_e                     _connState;
     LinkInputStream *               _inputStream;
 
-    LinkInfo() : SccpConfig::LinkId()
-      , _socket(NULL), _connState(linkNOT_CONNECTED), _inputStream(NULL)
+    LinkInfo() : LinkId()
+      , _socket(NULL), _inputStream(NULL)
     { }
-    LinkInfo(const SccpConfig::LinkId & use_link_id)
-      : SccpConfig::LinkId(use_link_id)
-      , _socket(NULL), _connState(linkNOT_CONNECTED), _inputStream(NULL)
+    LinkInfo(const LinkId & use_link_id) : LinkId(use_link_id)
+      , _socket(NULL), _inputStream(NULL)
     {  }
     ~LinkInfo()
     { }
 
-    std::string toString(void) const;
+    std::string toString(unsigned int connect_num) const;
   };
 
   struct CacheEntry {
