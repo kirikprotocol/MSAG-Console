@@ -2,6 +2,11 @@ History in reverse order
 ----------------------------------------------------
 
 ----------------------------------------------------
+infosme-build-20100525 11:30 bukind (v2)
+2010-05-25 11:20 bukind
+ feature (removed): v2 receipt waiting timers are not restored at start anymore
+
+----------------------------------------------------
 infosme-build-20100521 11:00 bukind (v2)
 
 2010-05-20 16:45 bukind
