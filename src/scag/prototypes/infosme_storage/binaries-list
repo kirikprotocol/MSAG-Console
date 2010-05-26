@@ -1,0 +1,12 @@
+scag/prototypes/infosme-test1  test1 \
+ -lscag-prototypes-infosme_storage \
+ -lscag-util-io \
+ -lcore-threads \
+ -lutil \
+  @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
+ -lpthread -lrt -ldl
+
+- InputStorage1
+- InputMessageFile
+- DataFile
+- ActivityLog
