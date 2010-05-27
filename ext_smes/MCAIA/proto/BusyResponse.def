@@ -3,7 +3,9 @@ include Types.def
 enum byte Status
     OK 0
     InvalidCalledAddress 1
-    QueueFull 2
+    ExecutingError 2
+    Timedout 3
+    Rejected 4
 end
 
 message BusyResponse:BusyRequest 2 

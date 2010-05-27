@@ -10,7 +10,8 @@ public enum Status {
     OK((byte)0),
     InvalidCalledAddress((byte)1),
     ExecutingError((byte)2),
-    Timedout((byte)3);
+    Timedout((byte)3),
+    Rejected((byte)4);
   
   byte value;
   public byte getValue() {

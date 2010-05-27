@@ -35,6 +35,7 @@ public class BusyResponse extends BusyRequest {
  
   public void debug(StringBuilder sb) {
     super.debug(sb);
+    sb.append(';');
 
     if(statusFlag) { sb.append("status=") .append(status); }
   }
