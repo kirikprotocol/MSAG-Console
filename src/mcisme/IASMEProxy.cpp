@@ -109,6 +109,8 @@ IASMEProxy::prepareNextBufferForWrite()
   busyReq.setCause(nextEvent.cause);
   busyReq.setFlags(nextEvent.flags);
 
+  smsc_log_debug(_logger, "IASMEProxy::prepareNextBufferForWrite::: got event='%s' from queue",
+                 nextEvent.toString().c_str());
   _buf.rewind();
   mcaia::ServerProtocol protocol;
   protocol.encodeMessage(busyReq, &_buf);
@@ -135,6 +137,9 @@ IASMEProxy::processNextRequest()
       return;
     }
     _totalWrittenBytes += nbytes;
+    smsc_log_debug(_logger, "IASMEProxy::processNextRequest::: %u bytes has been written to socket, rest bytes count=%u",
+                   nbytes, bufSz - _totalWrittenBytes);
+
     if ( _totalWrittenBytes == bufSz ) {
       _totalWrittenBytes = 0;
       if ( _eventsQueue.isEmpty() ) {
@@ -157,6 +162,10 @@ IASMEProxy::acceptConnection()
   } else {
     core::synchronization::MutexGuard synchronize(_lock);
     _socketToPeer = _listeningSocket->Accept();
+    char peerAddr[1024];
+    _socketToPeer->GetPeer(peerAddr);
+    smsc_log_info(_logger, "IASMEProxy::acceptConnection::: accepted connection from peer=%s",
+                  peerAddr);
   }
 }
 
@@ -199,6 +208,7 @@ IASMEProxy::processResponse()
     _bytesHasBeenRead += st;
     if ( _bytesHasBeenRead == _messageBodyLen ) {
       _bytesHasBeenRead = 0;
+      smsc_log_debug(_logger, "IASMEProxy::processResponse::: read total response message");
       mcaia::ServerProtocol protocol;
       protocol.assignHandler(_taskProcessor);
       try {
@@ -215,6 +225,8 @@ IASMEProxy::processResponse()
 bool
 IASMEProxy::sendRequest(const misscall::MissedCallEvent& event)
 {
+  smsc_log_debug(_logger, "IASMEProxy::sendRequest::: schedule event='%s' for processing",
+                 event.toString().c_str());
   if ( _eventsQueue.enqueue(event) ) {
     uint8_t signallingByte=0;
     if ( write(_signallingWrSide, &signallingByte, sizeof(signallingByte)) !=
