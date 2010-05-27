@@ -1,4 +1,4 @@
-<project name="MCAIA">
+<project name="MCAIA" default="MCAIA">
 
   <property name="esme_name" value="MCAIA"/>
   <property name="SMSC_DIR" value=".."/>
@@ -44,15 +44,14 @@
     </classpath>
     </taskdef>
     <protogen defFile="ServerProtocol.def" outDir="cpp" language="c++"
-              msgPackage="eyeline.mcaia.protocol.messages" 
-	      protoPackage="eyeline.mcaia.protocol">
+              msgPackage="smsc.mcisme.mcaia">
 	<cgp name="search.path" value="proto"/>
 	<cgp name="search.path" value="proto/tmpl"/>
 	<option name="options.throwOnUnsetGet" value="true"/>
-	<data name="handler.include" value="IAProtocolHandler.hpp"/>
+	<data name="handler.include" value="mcisme/IAProtocolHandler.hpp"/>
 	<data name="handler.class" value="IAProtocolHandler"/>
-	<data name="msgns" value="messages::"/>
-	<data name="msginc.path" value="messages/"/>
+	<data name="msgns" value=""/>
+	<data name="msginc.path" value="mcisme/mcaia/"/>
 	<data name="filename.suffix" value=""/>
     </protogen>
   </target>
