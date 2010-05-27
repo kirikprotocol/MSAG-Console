@@ -243,4 +243,11 @@
             </section>
         </section>
     </section>
+    <section name="IASME">
+       <param name="listen_iface" type="string">0.0.0.0</param>
+       <param name="listen_port" type="int">9999</param>
+       <!-- if next parameter is absent then default value is equal to 10 -->
+       <param name="max_iasme_events_queue_sz" type="int">10</param>
+    </section>
+
 </config>
