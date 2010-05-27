@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE scenarios SYSTEM "file:///scenarios.dtd">
+<scenarios>
+  <scenario id="MAIN" active="YES" resources="resources.xml" ussd="PHASE2" sms="USSDNIPLUS">
+    <execSet file="executors.xml"/>
+    <pageSet file="pages.xml"/>
+ </scenario>
+</scenarios>

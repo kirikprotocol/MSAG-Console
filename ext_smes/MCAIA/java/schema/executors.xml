@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE execSet SYSTEM "file:///execSet.dtd">
+
+<execSet>
+    <executor name="error" class="mobi.eyeline.smpp.appgw.scenario.executors.ErrorPageExecutor">
+    </executor>
+    <executor name="entry" class="mobi.eyeline.mcaia.appgw.EntryExecutor">
+        <bundle name="resources" alias="resources"/>
+    </executor>
+    <executor name="setanswer" class="mobi.eyeline.mcaia.appgw.SetAnswerExecutor">
+        <bundle name="resources" alias="resources"/>
+        <initParam name="confirm" value="Ваш ответ установлен"/>
+    </executor>
+</execSet>

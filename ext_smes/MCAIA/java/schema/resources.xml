@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE resources SYSTEM "file:///resources.dtd">
+
+<resources>
+  <bundle name="resources">
+    <!--str name="StringSample" value="Sample.String"/-->
+    <!--int name="IntSample" value="0"/-->
+  </bundle>
+</resources>

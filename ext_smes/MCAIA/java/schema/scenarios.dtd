@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!ELEMENT scenarios (scenario+)>
+
+<!--
+SMS:
+  YES - dialog via SMS
+  USSDNI - initialize USSD dialog (WARNING! In this case "ussd" value should be PHASE2.)
+-->
+<!ELEMENT scenario (scenarioPreProcessor?,scenarioPostProcessor?,requestPreProcessor?,requestPostProcessor?,errorHandler?,execSet*,pageSet+)>
+<!ATTLIST scenario id                CDATA #REQUIRED
+                   active            (YES|NO) "NO"
+                   regexShortcuts    (YES|NO) "NO"
+                   ussd              (NO|PHASE1|PHASE2) "PHASE2"
+                   sms               (NO|YES|USSDNI|USSDNIPLUS) "USSDNI"
+                   resources         CDATA #IMPLIED
+                   wrongShortcutPage CDATA #IMPLIED
+		   globalErrorPage   CDATA #IMPLIED>
+
+<!ELEMENT scenarioPreProcessor (initParam|bundle)*>
+<!ATTLIST scenarioPreProcessor class CDATA #REQUIRED>
+
+<!ELEMENT scenarioPostProcessor (initParam|bundle)*>
+<!ATTLIST scenarioPostProcessor class CDATA #REQUIRED>
+
+<!ELEMENT requestPreProcessor (initParam|bundle)*>
+<!ATTLIST requestPreProcessor class CDATA #REQUIRED>
+
+<!ELEMENT requestPostProcessor (initParam|bundle)*>
+<!ATTLIST requestPostProcessor class CDATA #REQUIRED>
+
+<!ELEMENT errorHandler (initParam|bundle)*>
+<!ATTLIST errorHandler class CDATA #REQUIRED>
+
+<!ELEMENT execSet EMPTY>
+<!ATTLIST execSet file CDATA #REQUIRED>
+
+<!ELEMENT pageSet EMPTY>
+<!ATTLIST pageSet file CDATA #REQUIRED>
+
+
+<!ENTITY % init SYSTEM "file:///init.dtd">
+%init;

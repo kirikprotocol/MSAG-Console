@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pageSet SYSTEM "file:///pageset.dtd">
+<pageSet>
+
+  <!--MAIN PAGE-->
+  <page id="MAIN_PAGE" question="0" commandType="integer">
+      <pagePreProcessor class="mobi.eyeline.mcaia.appgw.MainPreProcessor"/>
+      <pageExecutor name="entry">
+          <initParam name="text">
+Вам звонили {0}.
+1 установить ответ
+0 выход
+          </initParam>
+      </pageExecutor>
+    <command name="0" target="EXIT_PAGE"/>
+    <command name="1" target="SELECT_ANSWER_PAGE"/>
+  </page>
+
+  <page id="SELECT_ANSWER_PAGE" question="0" commandType="integer">
+      <segment>
+          <data>
+1 совещание
+2 занят
+3 не беспокоить
+          </data>
+      </segment>
+      <command name="1" target="MEETING_PAGE"/>
+      <command name="2" target="BUSY_PAGE"/>
+      <command name="3" target="DONOT_DISTURB_PAGE"/>
+  </page>
+
+  <page id="MEETING_PAGE" question="0">
+      <pagePostProcessor class="mobi.eyeline.mcaia.appgw.FinalProcessor">
+          <initParam name="status" value="OK"/>
+      </pagePostProcessor>
+      <pageExecutor name="setanswer">
+          <initParam name="answer" value="Я на совещании, перезвоните через час"/>
+      </pageExecutor>
+  </page>
+
+    <page id="BUSY_PAGE" question="0">
+        <pagePostProcessor class="mobi.eyeline.mcaia.appgw.FinalProcessor">
+            <initParam name="status" value="OK"/>
+        </pagePostProcessor>
+        <pageExecutor name="setanswer">
+            <initParam name="answer" value="Я очень занят, перезвоните через час"/>
+        </pageExecutor>
+    </page>
+
+    <page id="DONOT_DISTURB_PAGE" question="0">
+        <pagePostProcessor class="mobi.eyeline.mcaia.appgw.FinalProcessor">
+            <initParam name="status" value="OK"/>
+        </pagePostProcessor>
+        <pageExecutor name="setanswer">
+            <initParam name="answer" value="Мне некогда, перезвоню завтра"/>
+        </pageExecutor>
+    </page>
+
+  <page id="EXIT_PAGE" question="0" >
+      <pagePostProcessor class="mobi.eyeline.mcaia.appgw.FinalProcessor">
+          <initParam name="status" value="OK"/> <!-- todo return not ok -->
+      </pagePostProcessor>
+      <segment>
+          <data>Good bye</data>
+      </segment>
+  </page>
+</pageSet>

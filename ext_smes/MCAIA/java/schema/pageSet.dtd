@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!ELEMENT pageSet (page+)>
+
+<!ELEMENT page (pagePreProcessor?,pagePostProcessor?,(pageExecutor|segment+),command*)>
+<!ATTLIST page id            CDATA #REQUIRED
+               question      CDATA #REQUIRED
+               shortcut      CDATA #IMPLIED
+               errorPageId   CDATA #IMPLIED
+               errorPage     (yes|no) #IMPLIED
+               commandType   (integer|string) #IMPLIED>
+
+<!ELEMENT segment (data|segmentExecutor)>
+<!ATTLIST segment chrType    (NO|YES) #IMPLIED
+                  trType     (USSD|SMS|MMS|WAP|HTTP) #IMPLIED
+                  ctType     CDATA #IMPLIED
+                  nextTrType (USSD|SMS|MMS|WAP|HTTP) #IMPLIED
+                  nextCtType CDATA #IMPLIED>
+
+<!ELEMENT data (#PCDATA)>
+
+<!ELEMENT command EMPTY>
+<!ATTLIST command name    CDATA #REQUIRED
+                  target  CDATA #REQUIRED>
+
+<!ELEMENT pagePreProcessor (initParam|bundle)*>
+<!ATTLIST pagePreProcessor class CDATA #REQUIRED>
+
+<!ELEMENT pagePostProcessor (initParam|bundle)*>
+<!ATTLIST pagePostProcessor class CDATA #REQUIRED>
+
+<!ELEMENT pageExecutor (initParam|bundle)*>
+<!ATTLIST pageExecutor name CDATA #REQUIRED>
+
+<!ELEMENT segmentExecutor (initParam|bundle)*>
+<!ATTLIST segmentExecutor name CDATA #REQUIRED>
+
+
+<!ELEMENT externalpage (ussd,(nsm|ems|seo|wappush|sms)*)>
+<!ELEMENT ussd (#PCDATA)>
+<!ELEMENT sms (#PCDATA)>
+<!ELEMENT nsm (#PCDATA)>
+<!ELEMENT ems (#PCDATA)>
+<!ELEMENT seo (#PCDATA)>
+<!ELEMENT wappush (#PCDATA)>
+<!ATTLIST wappush link CDATA #REQUIRED
+                  text CDATA #REQUIRED>
+
+<!ENTITY % init SYSTEM "file:///init.dtd">
+%init;
+
+
+

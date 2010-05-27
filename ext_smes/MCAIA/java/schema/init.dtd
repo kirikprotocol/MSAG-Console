@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!ELEMENT initParam (#PCDATA)>
+<!ATTLIST initParam name  CDATA #REQUIRED
+                    value CDATA #IMPLIED>
+
+<!ELEMENT bundle EMPTY>
+<!ATTLIST bundle name CDATA #REQUIRED
+                 alias CDATA #IMPLIED>

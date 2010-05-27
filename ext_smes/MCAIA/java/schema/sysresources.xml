@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE resources SYSTEM "file:///resources.dtd">
+
+<resources>
+  <bundle name="ScenarioError">
+      <!--str name="default.content.type" value="..."/-->
+      <!--str name="default.charging" value="YES|NO"/-->
+      <!--str name="default.transport.type" value="USSD|SMS|WAP|..."/-->
+      <str name="EXAMPLE" value="Just for example"/>
+      <str name="EXAMPLE.content.type" value="CT"/>
+      <str name="EXAMPLE.charging" value="YES"/>
+      <str name="EXAMPLE.transport.type" value="USSD"/>
+      
+      <str name="UNEXPECTED_EXCEPTION" value="Ошибка сервиса, попробуйте позже"/>
+      <str name="USER_SPECIFIC_ERROR" value="Ошибка сервиса, попробуйте позже"/>
+      <str name="INVALID_REQUEST_TYPE" value="Неправильный тип запроса"/>
+      <str name="SCENARIO_NOT_FOUND" value="Сервис не найден"/>
+      <str name="MAX_SESSIONS_QUANTITY_REACHED" value="Слишком много пользователей, попробуйте позже"/>
+      <str name="PAGE_NOT_FOUND" value="Страница не найдена"/>
+      <str name="PAGE_IS_FINAL" value="Последняя страница, невозможно выполнить запрос"/>
+      <str name="UNAVAILABLE_COMMAND" value="Неправильная команда, введите пункт меню"/>
+      <str name="PAGE_IS_EMPTY" value="Страница пуста, попробуйте позже"/>
+      <str name="JUMP_CYCLE_DETECTED" value="Ошибка, обнаружен цикл"/>
+      <str name="RESOURCE_ERROR" value="Ошибка, ресурс не найден"/>
+      <str name="INVALID_JUMP_TARGET" value="Ошибка в обработке, попробуйте позже"/>
+      <str name="SCENARIO_PRE_PROCESSOR_EXCEPTION" value="Ошибка в предобработке, попробуйте позже"/>
+      <str name="SCENARIO_POST_PROCESSOR_EXCEPTION" value="Ошибка в постобработке, попробуйте позже"/>
+      <str name="PAGE_PRE_PROCESSOR_EXCEPTION" value="Ошибка в предобработке, попробуйте позже"/>
+      <str name="PAGE_POST_PROCESSOR_EXCEPTION" value="Ошибка в постобработке, попробуйте позже"/>
+      <str name="PAGE_EXECUTOR_EXCEPTION" value="Ошибка в обработке, попробуйте позже"/>
+      <str name="PAGE_EXECUTOR_EMPTY_RESPONSE" value="Ошибка в обработке, попробуйте позже"/>
+      <str name="SEGMENT_EXECUTOR_EXCEPTION" value="Ошибка в обработке, попробуйте позже"/>
+      <str name="SEGMENT_EXECUTOR_EMPTY_RESPONSE" value="Ошибка в обработке, попробуйте позже"/>
+      <str name="HTTP_REQUEST_EXCEPTION" value="Ошибка формирования HTTP запроса"/>
+      <str name="HTTP_BAD_RESPONSE_TYPE" value="Неправильный тип HTTP ответа"/>
+      <str name="HTTP_BAD_RESPONSE_CODE" value="Неправильный код HTTP ответа"/>
+      <str name="HTTP_BAD_RESPONSE_LENG" value="Неправильный размер HTTP ответа"/>
+      <str name="HTTP_RESPONSE_EXCEPTION" value="Ошибка формирования HTTP запроса"/>
+      <str name="SQL_EXCEPTION" value="Ошибка работы с базой данных"/>
+  </bundle>
+</resources>
