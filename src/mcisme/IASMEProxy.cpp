@@ -61,10 +61,7 @@ IASMEProxy::Execute()
         break;
 
       if ( st < 0 ) {
-        char strerrbuf[1024];
-        strerror_r(errno, strerrbuf, sizeof(strerrbuf));
-
-        smsc_log_error(_logger, "IASMEProxy::Execute::: call to poll failed [%s]", strerrbuf);
+        smsc_log_error(_logger, "IASMEProxy::Execute::: call to poll failed [%s]", strerror(errno));
       } else {
         if ( fds[0].revents & ( POLLRDNORM | POLLERR ) )
           processScheduledRequest();
@@ -89,10 +86,7 @@ IASMEProxy::processScheduledRequest()
   uint8_t signallingByte=0;
   if ( read(_signallingRdSide, &signallingByte, sizeof(signallingByte)) !=
        sizeof(signallingByte) ) {
-    char errBuf[1024];
-    errBuf[0] = 0;
-    strerror_r(errno, errBuf, sizeof(errBuf));
-    smsc_log_error(_logger, "IASMEProxy::sendRequest::: call to read failed: '%s'", errBuf);
+    smsc_log_error(_logger, "IASMEProxy::sendRequest::: call to read failed: '%s'", strerror(errno));
     return;
   }
   _checkFdWriteable = true;
@@ -131,10 +125,8 @@ IASMEProxy::processNextRequest()
     int nbytes = _socketToPeer->Write(msgData + _totalWrittenBytes,
                                       static_cast<int>(bufSz - _totalWrittenBytes));
     if ( nbytes < 0 ) {
-      char errBuf[1024];
-      strerror_r(errno, errBuf, sizeof(errBuf));
       smsc_log_error(_logger, "IASMEProxy::processNextRequest::: write to socket failed: %s",
-                     errBuf);
+                     strerror(errno));
       _totalWrittenBytes = 0;
       _checkFdWriteable = false;
       _currentBuf = NULL;
@@ -176,10 +168,8 @@ IASMEProxy::readData(char* buf, int bytes_to_read)
     return st;
   else {
     if ( st < 0 ) {
-      char errMsg[1024];
-      strerror_r(errno, errMsg, sizeof(errMsg));
       smsc_log_error(_logger, "IASMEProxy::readData::: read from socket failed: '%s'",
-                     errMsg);
+                     strerror(errno));
     } else
       smsc_log_info(_logger, "IASMEProxy::readData::: connection to server closed by remote side");
 
