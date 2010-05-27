@@ -38,6 +38,12 @@ struct MissedCallEvent{
   uint8_t cause;
   uint8_t flags;
   bool gotFromIAMSME;
+  std::string toString() const {
+    char strBuf[1024];
+    snprintf(strBuf, sizeof(strBuf), "from=%s,to=%s,time=0x%x,cause=%u,flags=%u,gotFromIAMSME=%u",
+             from.c_str(), to.c_str(), time, cause, flags, gotFromIAMSME);
+    return strBuf;
+  }
 };
 class MissedCallListener{
   public:
