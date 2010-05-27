@@ -160,8 +160,14 @@ IASMEProxy::acceptConnection()
     // terminate accepted connection because of one active connection already exists
     delete acceptedSocket;
   } else {
+    errno = 0;
     core::synchronization::MutexGuard synchronize(_lock);
     _socketToPeer = _listeningSocket->Accept();
+    if ( !_socketToPeer ) {
+      smsc_log_error(_logger, "IASMEProxy::acceptConnection::: can't accept connection - '%s'",
+                     strerror(errno));
+      return;
+    }
     char peerAddr[1024];
     _socketToPeer->GetPeer(peerAddr);
     smsc_log_info(_logger, "IASMEProxy::acceptConnection::: accepted connection from peer=%s",
