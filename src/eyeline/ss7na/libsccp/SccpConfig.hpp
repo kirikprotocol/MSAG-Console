@@ -10,22 +10,23 @@
 #include <string>
 #include <vector>
 
-#include "eyeline/sccp/SCCPAddress.hpp"
-
 namespace eyeline {
 namespace ss7na {
 namespace libsccp {
 
-//SCCP Service Provider link ident
-struct SCSPLinkId {
+//SCCP Service Provider link
+struct SCSPLink {
+  enum State_e { linkNOT_CONNECTED = 0, linkCONNECTED, linkBINDED };
+
   std::string _name;
   std::string _host;
   in_port_t   _port;
+  State_e     _state;
 
-  SCSPLinkId() : _port(0)
+  SCSPLink() : _port(0), _state(linkNOT_CONNECTED)
   { }
-  SCSPLinkId(const char * use_name, const char * use_host, in_port_t use_port)
-    : _port(use_port)
+  SCSPLink(const char * use_name, const char * use_host, in_port_t use_port)
+    : _port(use_port), _state(linkNOT_CONNECTED)
   {
     if (use_host)
       _host = use_host;
@@ -33,32 +34,6 @@ struct SCSPLinkId {
       _name = use_name;
   }
 };
-
-//SCCP Service Provider link state
-struct SCSPLinkState {
-  enum Status_e { linkNOT_CONNECTED = 0, linkCONNECTED, linkBINDED };
-
-  Status_e          _connStatus;
-  sccp::SCCPAddress _sccpAddr;
-
-  SCSPLinkState() : _connStatus(linkNOT_CONNECTED)
-  { }
-};
-
-//SCCP Service Provider link
-struct SCSPLink {
-  SCSPLinkId    _id;
-  SCSPLinkState _state;
-
-  SCSPLink()
-  { }
-  SCSPLink(const char * use_name, const char * use_host, in_port_t use_port)
-    : _id(use_name, use_host, use_port)
-  { }
-};
-
-
-typedef SCSPLinkState::Status_e SCSPLinkStatus_e;
 
 struct SccpConfig {
   enum TrafficMode_e {

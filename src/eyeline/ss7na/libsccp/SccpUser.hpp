@@ -48,10 +48,14 @@ public:
 
   //Returns number of configured connects
   virtual unsigned int getConnectsCount(void) const;
-  //Returns non OK in case of unknown 'connect_num'
-  virtual ErrorCode_e getConnectState(SCSPLinkState & link_state, unsigned int connect_num) const;
-  //Returns NULL in case of unknown 'connect_num'
+  //Returns non OK in case of unknown 'connect_num' or uninitialized lib
+  virtual ErrorCode_e getConnectState(SCSPLink::State_e & link_state, unsigned int connect_num) const;
+  //Returns NULL in case of unknown 'connect_num' or uninitialized lib
   virtual ErrorCode_e getConnectInfo(SCSPLink & link_info, unsigned int connect_num) const;
+
+  //Reserves connect for interaction with SCCP Service Provider.
+  //Connect is selected according to configured policy.
+  virtual unsigned int getConnNumByPolicy(void);
 
   using SccpApi::unitdata_req;
 
@@ -73,10 +77,6 @@ public:
                                   unsigned int connect_num);
 
   virtual ErrorCode_e msgRecv(MessageInfo* msg_info, uint32_t timeout=0);
-
-
-protected:
-  unsigned getConnNumByPolicy(void);
 
 private:
   static const unsigned MAX_SOCKET_POOL_SIZE = 64;
@@ -141,7 +141,6 @@ private:
   typedef std::map<corex::io::InputStream*, CacheEntry*> packets_cache_t;
 
   /* -- */
-  bool                      _wasInitialized;
   std::string               _appId;
   SccpConfig::TrafficMode_e _trafficMode;
   unsigned int              _lastUsedConnIdx;
@@ -154,6 +153,9 @@ private:
   mutable smsc::core::synchronization::Mutex _lock;
   smsc::core::synchronization::Mutex _receiveSynchronizeLock;
   smsc::core::synchronization::Mutex _lastUsedConnIdxLock;
+
+
+  bool wasInitialized(void) const { return !_knownLinks.empty(); }
 };
 
 }}}

@@ -9,6 +9,8 @@
 # include "eyeline/ss7na/libsccp/MessageProperties.hpp"
 # include "eyeline/ss7na/libsccp/SccpConfig.hpp"
 
+# include "eyeline/sccp/SCCPAddress.hpp"
+
 namespace eyeline {
 namespace ss7na {
 namespace libsccp {
@@ -49,10 +51,14 @@ public:
 
   //Returns number of configured connects
   virtual unsigned int getConnectsCount(void) const = 0;
-  //Returns non OK in case of unknown 'connect_num'
-  virtual ErrorCode_e getConnectState(SCSPLinkState & link_state, unsigned int connect_num) const = 0;
-  //Returns non OK in case of unknown 'connect_num'
+  //Returns non OK in case of unknown 'connect_num' or uninitialized lib
+  virtual ErrorCode_e getConnectState(SCSPLink::State_e & link_state, unsigned int connect_num) const = 0;
+  //Returns non OK in case of unknown 'connect_num' or uninitialized lib
   virtual ErrorCode_e getConnectInfo(SCSPLink & link_info, unsigned int connect_num) const = 0;
+
+  //Reserves connect for interaction with SCCP Service Provider.
+  //Connect is selected according to configured policy.
+  virtual unsigned int getConnNumByPolicy(void) = 0;
 
 
   struct CallResult {

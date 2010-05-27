@@ -22,7 +22,7 @@ namespace libsccp {
 using smsc::core::synchronization::MutexGuard;
 
 SccpUser::SccpUser()
-  : _wasInitialized(false), _trafficMode(SccpConfig::trfLOADSHARE)
+  : _trafficMode(SccpConfig::trfLOADSHARE)
   , _lastUsedConnIdx(0), _availableData(0), _socketPool(MAX_SOCKET_POOL_SIZE)
   , _logger(smsc::logger::Logger::getInstance("libsscp"))
 { }
@@ -34,9 +34,13 @@ SccpUser::~SccpUser()
 SccpApi::ErrorCode_e SccpUser::init(const SccpConfig & sccp_cfg) /*throw(std::exception)*/
 {
   MutexGuard synchronize(_lock);
-  if (_wasInitialized ) {
+  if (wasInitialized()) {
     smsc_log_error(_logger, "SccpUser::init(): duplicate initialization");
     throw smsc::util::Exception("SccpUser::init(): duplicate initialization");
+  }
+  if (sccp_cfg._links.empty()) {
+    smsc_log_error(_logger, "SccpUser::init(): no links defined");
+    throw smsc::util::Exception("SccpUser::init(): no links defined");
   }
   _appId = sccp_cfg._appId;
   _trafficMode = sccp_cfg._trafficMode;
@@ -51,7 +55,6 @@ SccpApi::ErrorCode_e SccpUser::init(const SccpConfig & sccp_cfg) /*throw(std::ex
     _knownLinks.push_back(linkInfo);
     smsc_log_info(_logger, "SccpUser: registered %s", linkInfo.toString(i).c_str());
   }
-  _wasInitialized = true;
   return SccpApi::OK;
 }
 
@@ -69,10 +72,10 @@ SccpApi::ErrorCode_e SccpUser::close()
         delete linkInfo._socket;
       }
     }
-  } catch (smsc::util::SystemError& ex) {
+  } catch (const smsc::util::SystemError& ex) {
     smsc_log_error(_logger, "SccpUser::close(): caught SystemError exception=[%s]", ex.what());
     return SYSTEM_ERROR;
-  } catch (smsc::util::Exception& ex) {
+  } catch (const std::exception& ex) {
     smsc_log_error(_logger, "SccpUser::close(): caught unexpected exception=[%s]", ex.what());
     return SYSTEM_MALFUNCTION;
   }
@@ -82,7 +85,7 @@ SccpApi::ErrorCode_e SccpUser::close()
 SccpApi::ErrorCode_e SccpUser::connect(unsigned int connect_num)
 {
   MutexGuard synchronize(_lock);
-  if ( !_wasInitialized )
+  if (!wasInitialized())
     return LIB_NOT_INITIALIZED;
   if ( connect_num >= _knownLinks.size() )
     return WRONG_CONNECT_NUM;
@@ -92,12 +95,12 @@ SccpApi::ErrorCode_e SccpUser::connect(unsigned int connect_num)
   smsc_log_debug(_logger, "SccpUser: establishing connection for %s ..", linkInfo.toString(connect_num).c_str());
 
   try {
-    if ( linkInfo._state._connStatus == SCSPLinkState::linkNOT_CONNECTED ) {
-      linkInfo._socket = new corex::io::network::TCPSocket(linkInfo._id._host, linkInfo._id._port);
+    if ( linkInfo._state == SCSPLink::linkNOT_CONNECTED ) {
+      linkInfo._socket = new corex::io::network::TCPSocket(linkInfo._host, linkInfo._port);
       linkInfo._socket->connect();
       linkInfo._inputStream = new LinkInputStream(linkInfo._socket->getInputStream(), connect_num);
 
-      linkInfo._state._connStatus = SCSPLinkState::linkCONNECTED;
+      linkInfo._state = SCSPLink::linkCONNECTED;
       smsc_log_info(_logger, "SccpUser: connection is established, %s", linkInfo.toString(connect_num).c_str());
     } else
       smsc_log_warn(_logger, "SccpUser: connection has been already established, %s",
@@ -117,7 +120,7 @@ SccpApi::ErrorCode_e
   SccpUser::disconnect(unsigned int connect_num)
 {
   MutexGuard synchronize(_lock);
-  if ( !_wasInitialized )
+  if (!wasInitialized())
     return LIB_NOT_INITIALIZED;
   if ( connect_num >= _knownLinks.size() )
     return WRONG_CONNECT_NUM;
@@ -128,11 +131,11 @@ SccpApi::ErrorCode_e
                  linkInfo.toString(connect_num).c_str());
 
   try {
-    if ( linkInfo._state._connStatus == SCSPLinkState::linkCONNECTED ) {
+    if ( linkInfo._state == SCSPLink::linkCONNECTED ) {
       _socketPool.remove(linkInfo._inputStream);
       delete linkInfo._inputStream; linkInfo._inputStream = NULL;
       linkInfo._socket->close();
-      linkInfo._state._connStatus = SCSPLinkState::linkNOT_CONNECTED;
+      linkInfo._state = SCSPLink::linkNOT_CONNECTED;
       delete linkInfo._socket; linkInfo._socket = NULL;
       smsc_log_info(_logger, "SccpUser: connection has been released, %s",
                     linkInfo.toString(connect_num).c_str());
@@ -154,7 +157,7 @@ SccpApi::ErrorCode_e
   SccpUser::bind(unsigned int connect_num, const uint8_t * ssn_list, uint8_t ssn_list_sz)
 {
   MutexGuard synchronize(_lock);
-  if ( !_wasInitialized )
+  if (!wasInitialized())
     return LIB_NOT_INITIALIZED;
   if ( connect_num >= _knownLinks.size() )
     return WRONG_CONNECT_NUM;
@@ -162,7 +165,7 @@ SccpApi::ErrorCode_e
   LinkInfo& linkInfo = _knownLinks[connect_num];
 
   try {
-    if ( linkInfo._state._connStatus == SCSPLinkState::linkCONNECTED ) {
+    if ( linkInfo._state == SCSPLink::linkCONNECTED ) {
       common::TP tp;
       BindMessage bindMessage;
       bindMessage.setAppId(_appId);
@@ -198,8 +201,7 @@ SccpApi::ErrorCode_e
       BindConfirmMessage bindConfirmMessage;
       bindConfirmMessage.deserialize(tp);
       if ( bindConfirmMessage.getStatus() == BindConfirmMessage::BIND_OK ) {
-        linkInfo._state._connStatus = SCSPLinkState::linkBINDED;
-        linkInfo._state._sccpAddr = bindConfirmMessage.getSCCPAddress();
+        linkInfo._state = SCSPLink::linkBINDED;
         _socketPool.insert(linkInfo._inputStream);
       }
       //NOTE: bind result related values of SuaApi::ErrorCode_e biuniquely conform
@@ -213,7 +215,7 @@ SccpApi::ErrorCode_e
     smsc_log_error(_logger, "SccpUser::bind::: caught unexpected exception=[%s]", ex.what());
     return SYSTEM_MALFUNCTION;
   }
-  if ( linkInfo._state._connStatus == SCSPLinkState::linkBINDED )
+  if ( linkInfo._state == SCSPLink::linkBINDED )
     return ALREADY_BINDED;
   smsc_log_error(_logger, "SccpUser::bind::: connection hasn't been established, %s",
                  linkInfo.toString(connect_num).c_str());
@@ -224,15 +226,20 @@ SccpApi::ErrorCode_e
   SccpUser::unbind(unsigned int connect_num)
 {
   MutexGuard synchronize(_lock);
-  if ( !_wasInitialized )
+  if (!wasInitialized())
     return LIB_NOT_INITIALIZED;
   if ( connect_num >= _knownLinks.size() )
     return WRONG_CONNECT_NUM;
 
   LinkInfo& linkInfo = _knownLinks[connect_num];
+  if (linkInfo._state != SCSPLink::linkBINDED) {
+    smsc_log_warn(_logger, "SccpUser::unbind(): connection hasn't been binded, %s",
+                   linkInfo.toString(connect_num).c_str());
+    return NOT_BINDED;
+  }
 
   try {
-    if ( linkInfo._state._connStatus == SCSPLinkState::linkBINDED ) {
+    if (linkInfo._state == SCSPLink::linkBINDED) {
       common::TP tp;
       UnbindMessage unbindMessage;
       unbindMessage.serialize(&tp);
@@ -240,8 +247,7 @@ SccpApi::ErrorCode_e
       smsc_log_info(_logger, "sending Unbind message to %s ..", linkInfo.toString(connect_num).c_str());
 
       linkInfo._socket->getOutputStream()->write(tp.packetBody, tp.packetLen);
-      linkInfo._state._connStatus = SCSPLinkState::linkCONNECTED;
-      return OK;
+      linkInfo._state = SCSPLink::linkCONNECTED;
     }
   } catch (const smsc::util::SystemError & ex) {
     smsc_log_error(_logger, "SccpUser::unbind::: caught SystemError exception=[%s]", ex.what());
@@ -250,7 +256,7 @@ SccpApi::ErrorCode_e
     smsc_log_error(_logger, "SccpUser::unbind::: caught unexpected exception=[%s]", ex.what());
     return SYSTEM_MALFUNCTION;
   }
-  return NOT_BINDED;
+  return OK;
 }
 
 SccpApi::CallResult
@@ -280,66 +286,65 @@ SccpApi::ErrorCode_e
                       unsigned int connect_num)
 {
   //TODO: avoid excessive memcpy() in serialization
-  if ( !_wasInitialized )
+  MutexGuard synchronize(_lock);
+  if (!wasInitialized())
     return LIB_NOT_INITIALIZED;
+  if (connect_num >= _knownLinks.size())
+    return WRONG_CONNECT_NUM;
 
-  N_UNITDATA_REQ_Message unitdataReqMessage;
-
-  if (msg_properties.hasSequenceControl())
-    unitdataReqMessage.setSequenceControl(msg_properties.getSequenceControl());
-
-  unitdataReqMessage.setReturnOption(msg_properties.getReturnOnError());
-
-  if (msg_properties.hasImportance())
-    unitdataReqMessage.setImportance(msg_properties.getImportance());
-
-  if (msg_properties.hasHopCount())
-    unitdataReqMessage.setHopCounter(msg_properties.getHopCount());
-
-  unitdataReqMessage.setCalledAddress(called_addr, called_addr_len);
-
-  unitdataReqMessage.setCallingAddress(calling_addr, calling_addr_len);
-
-  unitdataReqMessage.setUserData(message, message_size);
-
-  common::TP tp;
-  unitdataReqMessage.serialize(&tp);
+  LinkInfo& linkInfo = _knownLinks[connect_num];
+  if (linkInfo._state != SCSPLink::linkBINDED) {
+    smsc_log_error(_logger, "SccpUser::unitdata_req(): connection hasn't been binded, %s",
+                   linkInfo.toString(connect_num).c_str());
+    return NOT_BINDED;
+  }
 
   try {
-    MutexGuard synchronize(_lock);
+    N_UNITDATA_REQ_Message unitdataReqMessage;
 
-    if ( connect_num >= _knownLinks.size() )
-      return WRONG_CONNECT_NUM;
+    if (msg_properties.hasSequenceControl())
+      unitdataReqMessage.setSequenceControl(msg_properties.getSequenceControl());
 
-    LinkInfo& linkInfo = _knownLinks[connect_num];
+    unitdataReqMessage.setReturnOption(msg_properties.getReturnOnError());
 
-    if ( linkInfo._state._connStatus == SCSPLinkState::linkBINDED ) {
-      linkInfo._socket->getOutputStream()->write(tp.packetBody, tp.packetLen);
-      smsc_log_debug(_logger, "sent UDT message=[%s] to %s",
-                    utilx::hexdmp(tp.packetBody, tp.packetLen).c_str(),
-                    linkInfo.toString(connect_num).c_str());
-      return OK;
-    } else {
-      smsc_log_error(_logger, "SccpUser::unitdata_req(): connection hasn't been binded, %s",
-                     linkInfo.toString(connect_num).c_str());
-      return NOT_BINDED;
-    }
-  } catch (smsc::util::SystemError& ex) {
+    if (msg_properties.hasImportance())
+      unitdataReqMessage.setImportance(msg_properties.getImportance());
+
+    if (msg_properties.hasHopCount())
+      unitdataReqMessage.setHopCounter(msg_properties.getHopCount());
+
+    unitdataReqMessage.setCalledAddress(called_addr, called_addr_len);
+    unitdataReqMessage.setCallingAddress(calling_addr, calling_addr_len);
+    unitdataReqMessage.setUserData(message, message_size);
+
+    common::TP tp;
+    unitdataReqMessage.serialize(&tp);
+
+    linkInfo._socket->getOutputStream()->write(tp.packetBody, tp.packetLen);
+    smsc_log_debug(_logger, "sent UDT message=[%s] to %s",
+                  utilx::hexdmp(tp.packetBody, tp.packetLen).c_str(),
+                  linkInfo.toString(connect_num).c_str());
+
+  } catch (const smsc::util::SystemError& ex) {
     smsc_log_error(_logger, "SccpUser::unitdata_req(): caught SystemError exception=[%s]", ex.what());
     return SYSTEM_ERROR;
-  } catch (smsc::util::Exception& ex) {
+  } catch (const std::exception& ex) {
     smsc_log_error(_logger, "SccpUser::unitdata_req(): caught unexpected exception=[%s]", ex.what());
     return SYSTEM_MALFUNCTION;
   }
+  return OK;
 }
 
 SccpApi::ErrorCode_e
   SccpUser::msgRecv(MessageInfo* msg_info, uint32_t timeout)
 {
-  smsc::core::synchronization::MutexGuard synchronize(_receiveSynchronizeLock);
-  if ( !_wasInitialized )
-    return LIB_NOT_INITIALIZED;
+  {
+    MutexGuard synchronize(_lock);
+    if (!wasInitialized())
+      return LIB_NOT_INITIALIZED;
+  }
 
+  MutexGuard synchronize(_receiveSynchronizeLock);
   try {
     if ( timeout ) {
       int res = _socketPool.listen(timeout);
@@ -441,7 +446,7 @@ SccpApi::ErrorCode_e
   SccpUser::getConnectInfo(SCSPLink & link_info, unsigned int connect_num) const
 {
   MutexGuard synchronize(_lock);
-  if ( !_wasInitialized )
+  if (!wasInitialized())
     return LIB_NOT_INITIALIZED;
   if (connect_num >= _knownLinks.size() )
     return WRONG_CONNECT_NUM;
@@ -451,10 +456,10 @@ SccpApi::ErrorCode_e
 }
 
 SccpApi::ErrorCode_e 
-  SccpUser::getConnectState(SCSPLinkState & link_state, unsigned int connect_num) const
+  SccpUser::getConnectState(SCSPLink::State_e & link_state, unsigned int connect_num) const
 {
   MutexGuard synchronize(_lock);
-  if ( !_wasInitialized )
+  if (!wasInitialized())
     return LIB_NOT_INITIALIZED;
   if (connect_num >= _knownLinks.size() )
     return WRONG_CONNECT_NUM;
@@ -483,10 +488,10 @@ std::string
   char strBuf[sizeof(unsigned)*3 + sizeof("link[%u] = ")];
   snprintf(strBuf, sizeof(strBuf), "link[%u] = ", connect_num);
   rval += strBuf;
-  rval += _id._name;
+  rval += _name;
   rval += " {'";
-  rval += _id._host;
-  snprintf(strBuf, sizeof(strBuf), ":%u'}", _id._port);
+  rval += _host;
+  snprintf(strBuf, sizeof(strBuf), ":%u'}", _port);
   rval += strBuf;
   return rval;
 }
