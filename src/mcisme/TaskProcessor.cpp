@@ -2,17 +2,20 @@
 #include <algorithm>
 #include <iconv.h>
 #include <string>
-
-#include <sme/SmppBase.hpp>
-#include <sms/sms.h>
-#include <system/status.h>
-#include <system/common/TimeZoneMan.hpp>
-#include <scag/util/encodings/Encodings.h>
 #include <time.h>
-#include <util/smstext.h>
+#include <netinet/in.h>
+
+#include "sme/SmppBase.hpp"
+#include "system/status.h"
+#include "sms/sms.h"
+#include "system/common/TimeZoneMan.hpp"
+#include "scag/util/encodings/Encodings.h"
+
+#include "util/smstext.h"
 
 #include "TaskProcessor.h"
 #include "misscall/callproc.hpp"
+#include "Exceptions.hpp"
 #include "FSStorage.hpp"
 #include "AbntAddr.hpp"
 #include "Profiler.h"
@@ -40,7 +43,7 @@ static time_t parseDateTime(const char* str)
 {
   int year, month, day, hour, minute, second;
   if (!str || str[0] == '\0' ||
-      sscanf(str, "%02d.%02d.%4d %02d:%02d:%02d", 
+      sscanf(str, "%02d.%02d.%4d %02d:%02d:%02d",
              &day, &month, &year, &hour, &minute, &second) != 6) return -1;
 
   tm  dt; dt.tm_isdst = -1;
@@ -53,7 +56,7 @@ static time_t parseDate(const char* str)
 {
   int year, month, day;
   if (!str || str[0] == '\0' ||
-      sscanf(str, "%02d.%02d.%4d", 
+      sscanf(str, "%02d.%02d.%4d",
              &day, &month, &year) != 3) return -1;
 
   tm  dt; dt.tm_isdst = -1;
@@ -66,7 +69,7 @@ static int parseTime(const char* str)
 {
   int hour, minute, second;
   if (!str || str[0] == '\0' ||
-      sscanf(str, "%02d:%02d:%02d", 
+      sscanf(str, "%02d:%02d:%02d",
              &hour, &minute, &second) != 3) return -1;
 
   return hour*3600+minute*60+second;
@@ -89,16 +92,17 @@ inline static bool checkEventMask(uint8_t userMask, uint8_t eventCause)
 }
 
 TaskProcessor::TaskProcessor(ConfigView* config)
-  : Thread(), MissedCallListener(), AdminInterface(), 
-    logger(Logger::getInstance("mci.TaskProc")), 
+  : Thread(), MissedCallListener(), AdminInterface(),
+    logger(Logger::getInstance("mci.TaskProc")),
     profileStorage(ProfilesStorage::GetInstance()),
     protocolId(0), daysValid(1), advertising(0),
     templateManager(0), mciModule(0), messageSender(0),
     statistics(0), maxInQueueSize(10000), // maxOutQueueSize(10000),
-    bStarted(false), bInQueueOpen(false), bOutQueueOpen(false), bStopProcessing(false), pStorage(0), pDeliveryQueue(0)
+    bStarted(false), bInQueueOpen(false), bOutQueueOpen(false), bStopProcessing(false),
+    pStorage(0), pDeliveryQueue(0), _iasmeProxy(NULL)
 {
   smsc_log_info(logger, "Loading ...");
-	
+
   address = config->getString("Address");
   if ((address.length()==0) || !isMSISDNAddress(address.c_str()))
     throw ConfigException("Address string '%s' is invalid", (address.length()!=0) ? address.c_str():"-");
@@ -159,18 +163,18 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     uint32_t tsmLong = 0;
     if (!tsmStr || !tsmStr[0] || sscanf(tsmStr, "%x", &tsmLong) != 1)
       throw ConfigException("Parameter <MCISme.Circuits.%s.tsm> value is empty or invalid."
-                            " Expecting hex string, found '%s'.", 
+                            " Expecting hex string, found '%s'.",
                             circuitsMsc, tsmStr ? tsmStr:"null");
     circuits.ts = tsmLong;
     circuitsMap.Insert(circuitsMsc, circuits);
   }
-  if (circuitsMap.GetCount() <= 0) 
+  if (circuitsMap.GetCount() <= 0)
     throw ConfigException("No one valid MSC section <MCISme.Circuits.XXX> defined.");
 
   std::vector<Rule> rules; // loadup all redirection rules
   std::auto_ptr<ConfigView> rulesCfgGuard(config->getSubConfig("Rules"));
   ConfigView* rulesCfg = rulesCfgGuard.get();
-  if (rulesCfg) 
+  if (rulesCfg)
   {
     std::auto_ptr< std::set<std::string> > rulesSetGuard(rulesCfg->getShortSectionNames());
     std::set<std::string>* rulesSet = rulesSetGuard.get();
@@ -221,8 +225,8 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     releaseSettings.strategy = REDIRECT_STRATEGY;
   }
   if (releaseSettings.strategy != PREFIXED_STRATEGY && releaseSettings.strategy != REDIREC_RULE_STRATEGY &&
-      releaseSettings.strategy != REDIRECT_STRATEGY && releaseSettings.strategy != MIXED_STRATEGY) 
-    throw ConfigException("Parameter <MCISme.Reasons.strategy> value '%d' is invalid.", 
+      releaseSettings.strategy != REDIRECT_STRATEGY && releaseSettings.strategy != MIXED_STRATEGY)
+    throw ConfigException("Parameter <MCISme.Reasons.strategy> value '%d' is invalid.",
                           releaseSettings.strategy);
   releaseCallsStrategy = releaseSettings.strategy;
   releaseSettings.busyCause           = releaseSettingsCfg->getInt ("Busy.cause");
@@ -235,11 +239,11 @@ TaskProcessor::TaskProcessor(ConfigView* config)
   releaseSettings.absentInform        = releaseSettingsCfg->getBool("Absent.inform") ? 1:0;
   releaseSettings.otherCause          = releaseSettingsCfg->getInt ("Other.cause");
   releaseSettings.otherInform         = releaseSettingsCfg->getBool("Other.inform") ? 1:0;
-    
-  const char* redirectionAddress = (releaseSettings.strategy == MIXED_STRATEGY) ? 
+
+  const char* redirectionAddress = (releaseSettings.strategy == MIXED_STRATEGY) ?
     config->getString("redirectionAddress") : 0;
   if (redirectionAddress && !isMSISDNAddress(redirectionAddress))
-    throw ConfigException("Redirection address string '%s' is invalid", 
+    throw ConfigException("Redirection address string '%s' is invalid",
                           redirectionAddress ? redirectionAddress:"-");
 
   string countryCode;
@@ -391,7 +395,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
 
   string statDir;
   try {
-    statDir = statCfg->getString("statDir"); 
+    statDir = statCfg->getString("statDir");
   } catch (...){
     statDir = "stat";
     smsc_log_warn(logger, "Parameter <MCISme.Statistics.location> missed. Default value is 'stat'.");
@@ -474,18 +478,35 @@ TaskProcessor::TaskProcessor(ConfigView* config)
   smsc_log_warn(logger, "ret = %d", ret);
 
   string sResponseWaitTime;
-  try { sResponseWaitTime = config->getString("responceWaitTime"); } catch (...){sResponseWaitTime = "00:00:60";
-    smsc_log_warn(logger, "Parameter <MCISme.responceWaitTime> missed. Default value is '00:00:30'.");}
+  try {
+    sResponseWaitTime = config->getString("responceWaitTime");
+  } catch (...) {
+    sResponseWaitTime = "00:00:60";
+    smsc_log_warn(logger, "Parameter <MCISme.responceWaitTime> missed. Default value is '00:00:60'.");
+  }
   responseWaitTime = parseTime(sResponseWaitTime.c_str());
 
   timeoutMonitor = new TimeoutMonitor(this);
   pDeliveryQueue->SetResponseWaitTime(responseWaitTime);
 
+  std::auto_ptr<ConfigView> iasmeCfgGuard(config->getSubConfig("IASME"));
+  ConfigView* iasmeCfg = iasmeCfgGuard.get();
+  if (iasmeCfg) {
+    const char* listeningIface = iasmeCfg->getString("listen_iface", NULL, false);
+    in_port_t listeningPort = iasmeCfg->getInt("listen_port");
+    unsigned maxIASMEQueueSz = 10;
+    try {
+      maxIASMEQueueSz = iasmeCfg->getInt("max_iasme_events_queue_sz");
+    } catch (...) {}
+    _iasmeProxy = new IASMEProxy(listeningIface, listeningPort, this, maxIASMEQueueSz);
+    _iasmeProxy->Start();
+  }
   smsc_log_info(logger, "Load success.");
 }
 
 TaskProcessor::~TaskProcessor()
 {
+  _iasmeProxy->stop();
   try {
     this->Stop();
   } catch (...) {}
@@ -609,10 +630,6 @@ int TaskProcessor::Execute()
       }
 
       AbntAddr to(event.to.c_str()), from(event.from.c_str());
-      MCEvent  outEvent;
-      outEvent = from;
-      outEvent.dt = time(0);
-      outEvent.missCallFlags = event.flags;
 
       AbonentProfile profile;
       profileStorage->Get(to, profile);
@@ -621,16 +638,12 @@ int TaskProcessor::Execute()
         smsc_log_debug(logger, "Event %s->%s skipped because inform disabled for abonent %s and forceInform is false.", event.from.c_str(), event.to.c_str(), to.toString().c_str());
       else if (checkEventMask(profile.eventMask, event.cause))
       {
-        AbonentProfile callerProfile;
-        profileStorage->Get(from, callerProfile);
-
-        time_t schedTime = pDeliveryQueue->calculateSchedTime((event.cause&0x02)==0x02); //0x02 - BUSY
-        pStorage->addEvent(to, outEvent, schedTime);
-        pDeliveryQueue->Schedule(to, ((event.cause&0x02)==0x02), schedTime);
-
-        store_A_Event_in_logstore(from, to, profile, callerProfile);
-        statistics->incMissed();
-        smsc_log_debug(logger, "Abonent %s (cause = 0x%02X) was added to Scheduled Delivery Queue", to.toString().c_str(), event.cause);
+        if ( _iasmeProxy && _iasmeProxy->isConnected() &&
+            (event.cause&BUSY)==BUSY && !event.gotFromIAMSME ) {
+          if ( !forwardEventToIASME(event) )
+            processLocally(from, to, event, profile);
+        } else
+          processLocally(from, to, event, profile);
       }
       else
         smsc_log_debug(logger, "Event: for abonent %s skipped (userMask=%02X, eventCause=%02X)", to.getText().c_str(), profile.eventMask, event.cause);
@@ -642,6 +655,35 @@ int TaskProcessor::Execute()
   }
   exitedEvent.Signal();
   return 0;
+}
+
+void
+TaskProcessor::processLocally(const AbntAddr& from, const AbntAddr& to,
+                              const MissedCallEvent& event,
+                              const AbonentProfile& profile)
+{
+  AbonentProfile callerProfile;
+  profileStorage->Get(from, callerProfile);
+
+  MCEvent  outEvent;
+  outEvent = from;
+  outEvent.dt = time(0);
+  outEvent.missCallFlags = event.flags;
+
+  time_t schedTime = pDeliveryQueue->calculateSchedTime((event.cause&BUSY)==BUSY);
+  pStorage->addEvent(to, outEvent, schedTime);
+  pDeliveryQueue->Schedule(to, ((event.cause&BUSY)==BUSY), schedTime);
+
+  store_A_Event_in_logstore(from, to, profile, callerProfile);
+  statistics->incMissed();
+  smsc_log_debug(logger, "Abonent %s (cause = 0x%02X) was added to Scheduled Delivery Queue",
+                 to.toString().c_str(), event.cause);
+}
+
+bool
+TaskProcessor::forwardEventToIASME(const MissedCallEvent &event)
+{
+  return _iasmeProxy->sendRequest(event);
 }
 
 void
@@ -787,7 +829,7 @@ void
 TaskProcessor::store_A_Event_in_logstore(const AbntAddr& callingAbonent,
                                          const AbntAddr& calledAbonent,
                                          const AbonentProfile& abntProfile,
-					 const AbonentProfile& callerProfile )
+                                         const AbonentProfile& callerProfile )
 {
   smsc_log_debug(logger, "TaskProcessor::store_A_Event_in_logstore::: add event to logstore: calledAbonent=%s,callingAbonent=%s,abntProfile.notify=%d,abntProfile.wantNotifyMe=%d", calledAbonent.getText().c_str(), callingAbonent.getText().c_str(), abntProfile.notify, abntProfile.wantNotifyMe);
   MCAEventsStorageRegister::getMCAEventsStorage().addEvent(Event_GotMissedCall(callingAbonent.getText(), calledAbonent.getText(), abntProfile.notify, callerProfile.wantNotifyMe));
@@ -1023,7 +1065,7 @@ void TaskProcessor::closeInQueue() {
   inQueueMonitor.notifyAll();
 }
 
-bool TaskProcessor::putToInQueue(const MissedCallEvent& event, 
+bool TaskProcessor::putToInQueue(const MissedCallEvent& event,
                                  bool skip/*=true. Skip event when queue is full*/)
 {
   MutexGuard guard(inQueueMonitor);
@@ -1117,5 +1159,25 @@ string TaskProcessor::getSchedItems(void)
   return result;
 }
 
+void
+TaskProcessor::handle(const mcaia::BusyResponse& msg)
+{
+  if ( msg.getStatus() == mcaia::Status::OK ) {
+    smsc_log_info(logger, "TaskProcessor::handle::: got successful BusyResponse message='%s', stop further processing of corresponding missed call event",
+                  msg.toString().c_str());
+    return;
+  }
+  smsc_log_info(logger, "TaskProcessor::handle::: got unsuccessful BusyResponse message='%s', continue further processing of corresponding missed call event",
+                msg.toString().c_str());
+  misscall::MissedCallEvent eventInResponse;
+  eventInResponse.gotFromIAMSME = true;
+
+  eventInResponse.to = msg.getCalled();
+  eventInResponse.from = msg.getCaller();
+  eventInResponse.cause = msg.getCause();
+  eventInResponse.flags = msg.getFlags();
+  eventInResponse.time = msg.getDate();
+  missed(eventInResponse);
 }
-}
+
+}}

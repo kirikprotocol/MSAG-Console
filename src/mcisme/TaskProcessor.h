@@ -15,38 +15,40 @@
 #include <inttypes.h>
 #include <string>
 
-#include <logger/Logger.h>
+#include "logger/Logger.h"
 
-#include <util/Exception.hpp>
-#include <util/config/ConfigView.h>
-#include <util/config/ConfigException.h>
+#include "util/Exception.hpp"
+#include "util/config/ConfigView.h"
+#include "util/config/ConfigException.h"
 
-#include <core/buffers/Array.hpp>
-#include <core/buffers/Hash.hpp>
-#include <core/buffers/IntHash.hpp>
-#include <core/buffers/CyclicQueue.hpp>
+#include "core/buffers/Array.hpp"
+#include "core/buffers/Hash.hpp"
+#include "core/buffers/IntHash.hpp"
+#include "core/buffers/CyclicQueue.hpp"
 
-#include <core/threads/Thread.hpp>
-#include <core/threads/ThreadPool.hpp>
-#include <core/synchronization/Mutex.hpp>
-#include <core/synchronization/Event.hpp>
-#include <core/synchronization/EventMonitor.hpp>
+#include "core/threads/Thread.hpp"
+#include "core/threads/ThreadPool.hpp"
+#include "core/synchronization/Mutex.hpp"
+#include "core/synchronization/Event.hpp"
+#include "core/synchronization/EventMonitor.hpp"
 
-#include <system/smscsignalhandlers.h>
+#include "system/smscsignalhandlers.h"
 
-#include <mcisme/OutputMessageProcessorsDispatcher.hpp>
+#include "mcisme/OutputMessageProcessorsDispatcher.hpp"
 
-#include "MCIModule.h"
-#include "MCISmeAdmin.h"
-#include "TemplateManager.h"
-#include "StatisticsManager.h"
-#include "Messages.h"
-#include "Storage.hpp"
-#include "DeliveryQueue.hpp"
-#include "AbntAddr.hpp"
-#include "ProfilesStorage.hpp"
-#include "TimeoutMonitor.hpp"
-#include "advert/Advertising.h"
+#include "mcisme/MCIModule.h"
+#include "mcisme/MCISmeAdmin.h"
+#include "mcisme/TemplateManager.h"
+#include "mcisme/StatisticsManager.h"
+#include "mcisme/Messages.h"
+#include "mcisme/Storage.hpp"
+#include "mcisme/DeliveryQueue.hpp"
+#include "mcisme/AbntAddr.hpp"
+#include "mcisme/ProfilesStorage.hpp"
+#include "mcisme/TimeoutMonitor.hpp"
+#include "mcisme/IASMEProxy.hpp"
+#include "mcisme/advert/Advertising.h"
+#include "mcisme/IAProtocolHandler.hpp"
 
 namespace smsc {
 namespace mcisme {
@@ -95,7 +97,8 @@ public:
   }
 };
 
-class TaskProcessor : public Thread, public MissedCallListener, public AdminInterface
+class TaskProcessor : public Thread, public MissedCallListener,
+                      public AdminInterface, public IAProtocolHandler
 {
   std::string test_number;
 
@@ -163,6 +166,7 @@ class TaskProcessor : public Thread, public MissedCallListener, public AdminInte
   size_t _maxMessageSize;
 
   OutputMessageProcessorsDispatcher* _outputMessageProcessorsDispatcher;
+  IASMEProxy* _iasmeProxy;
 
   void openInQueue();
   void closeInQueue();
@@ -208,6 +212,11 @@ class TaskProcessor : public Thread, public MissedCallListener, public AdminInte
     MutexGuard Lock(smsInfoMutex);
     smsInfo.Delete(seqNum);
   }
+  void processLocally(const AbntAddr& from, const AbntAddr& to,
+                      const MissedCallEvent& event,
+                      const AbonentProfile& profile);
+  bool forwardEventToIASME(const MissedCallEvent &event);
+
 public:
 
   TaskProcessor(ConfigView* config);
@@ -246,7 +255,7 @@ public:
   void Start(); void Stop();
   void Pause(void);
 
-  virtual void missed(MissedCallEvent event) {
+  virtual void missed(const MissedCallEvent& event) {
     putToInQueue(event);
   }
 
@@ -281,6 +290,8 @@ public:
   }
   virtual string getSchedItem(const string& Abonent);
   virtual string getSchedItems(void);
+
+  virtual void handle(const mcaia::BusyResponse& msg);
 };
 
 }

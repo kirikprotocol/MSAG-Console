@@ -37,10 +37,11 @@ struct MissedCallEvent{
   time_t time;
   uint8_t cause;
   uint8_t flags;
+  bool gotFromIAMSME;
 };
 class MissedCallListener{
   public:
-    virtual void missed(MissedCallEvent event) = 0;
+    virtual void missed(const MissedCallEvent& event) = 0;
 };
 struct Circuits {
   uint32_t ts;
@@ -89,7 +90,7 @@ public:
   virtual void stop();
   virtual void addMissedCallListener(MissedCallListener* listener);
   virtual void removeMissedCallListener();
-  virtual void fireMissedCallEvent(MissedCallEvent& event);
+  virtual void fireMissedCallEvent(const MissedCallEvent& event);
   virtual void setCircuits(Hash<Circuits>& cics);
   virtual void setRules(vector<Rule>& rules);
   virtual void setReleaseSettings(ReleaseSettings params);

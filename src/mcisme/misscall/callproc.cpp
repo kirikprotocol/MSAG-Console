@@ -403,7 +403,7 @@ void MissedCallProcessor::removeMissedCallListener()
   MutexGuard g(lock);
   listener = 0;
 }
-void MissedCallProcessor::fireMissedCallEvent(MissedCallEvent& event)
+void MissedCallProcessor::fireMissedCallEvent(const MissedCallEvent& event)
 {
   if (listener)
   {
@@ -930,6 +930,7 @@ void registerEvent(EINSS7_I97_CALLINGNUMB_T *calling, EINSS7_I97_CALLEDNUMB_T *c
         unpack_addr(cdaddr+1, called->addrSign_p, called->noOfAddrSign);
       }
       event.to = cdaddr;
+      event.gotFromIAMSME = false;
       smsc_log_debug(missedCallProcessorLogger,"send event: %s->%s, flags=0x%x, type=0x%x",event.from.c_str(),event.to.c_str(), event.flags, event.cause);
       MissedCallProcessor::instance()->fireMissedCallEvent(event);
     }
@@ -1088,6 +1089,7 @@ void registerEvent(EINSS7_I97_CALLINGNUMB_T *calling,
         unpack_addr(cdaddr+1, called->addrSign_p, called->noOfAddrSign);
       }
       event.to = cdaddr;
+      event.gotFromIAMSME = false;
       smsc_log_debug(missedCallProcessorLogger,"send event: %s->%s, flags=0x%x, type=0x%x",event.from.c_str(),event.to.c_str(), event.flags, event.cause);
       MissedCallProcessor::instance()->fireMissedCallEvent(event);
     }
