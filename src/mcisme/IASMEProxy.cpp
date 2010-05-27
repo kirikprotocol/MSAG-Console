@@ -48,7 +48,7 @@ IASMEProxy::Execute()
 
       if ( _socketToPeer ) {
         fds[2].events = POLLRDNORM;
-        fds[2].fd = _listeningSocket->getSocket();
+        fds[2].fd = _socketToPeer->getSocket();
         if ( _checkFdWriteable )
           fds[2].events |= POLLWRNORM;
         numOfFds = 3;
