@@ -120,8 +120,9 @@ public class SiebelTask {
     public final static Status IN_PROCESS = new Status("IN PROCESS", false);
     public final static Status PROCESSED = new Status("PROCESSED", false);
 
-    private String value;
-    private boolean createdBySiebel;
+    private final String value;
+    private final boolean createdBySiebel;
+
     private Status(String value, boolean createdBySiebel) {
       this.value = value;
       this.createdBySiebel = createdBySiebel;
@@ -136,30 +137,29 @@ public class SiebelTask {
     }
 
     public static Status valueOf(String st) {
-      if(ENQUEUED.value.equals(st)) {
+      if (ENQUEUED.value.equals(st)) {
         return ENQUEUED;
-      } else if(PAUSED.value.equals(st)) {
+      } else if (PAUSED.value.equals(st)) {
         return PAUSED;
-      } else if(STOPPED.value.equals(st)) {
+      } else if (STOPPED.value.equals(st)) {
         return STOPPED;
-      } else if(IN_PROCESS.value.equals(st)) {
+      } else if (IN_PROCESS.value.equals(st)) {
         return IN_PROCESS;
-      } else if(PROCESSED.value.equals(st)) {
+      } else if (PROCESSED.value.equals(st)) {
         return PROCESSED;
       } else {
-        throw new IllegalArgumentException("Unknown state: "+st);
+        throw new IllegalArgumentException("Unknown state: " + st);
       }
     }
-    
+
     public boolean equals(Object o) {
       if (this == o) return true;
       if (o == null || getClass() != o.getClass()) return false;
 
       Status that = (Status) o;
 
-      if (value != null ? !value.equals(that.value) : that.value != null) return false;
+      return !(value != null ? !value.equals(that.value) : that.value != null);
 
-      return true;
     }
 
   }

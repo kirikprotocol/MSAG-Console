@@ -10,7 +10,11 @@ import java.util.Map;
  * To change this template use File | Settings | File Templates.
  */
 public interface DataSource {
-    /// set final states for messages, see SiebelDataProvider.updateDeliveryStates
-    public void saveFinalStates( Map states);
-    public void taskHasFinished( String taskName );
+  /// set final states for messages, see SiebelDataProvider.updateDeliveryStates
+
+  public void saveFinalStates(Map states);
+
+  public void taskHasFinished(String taskName);
+
+  public boolean hasUnfinished(String waveId);
 }

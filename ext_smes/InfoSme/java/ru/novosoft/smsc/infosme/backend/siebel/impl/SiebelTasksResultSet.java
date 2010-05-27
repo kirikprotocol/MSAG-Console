@@ -1,9 +1,9 @@
 package ru.novosoft.smsc.infosme.backend.siebel.impl;
 
-import ru.novosoft.smsc.infosme.backend.siebel.ResultSet;
-import ru.novosoft.smsc.infosme.backend.siebel.SiebelTask;
-import ru.novosoft.smsc.infosme.backend.siebel.SiebelException;
 import org.apache.log4j.Logger;
+import ru.novosoft.smsc.infosme.backend.siebel.ResultSet;
+import ru.novosoft.smsc.infosme.backend.siebel.SiebelException;
+import ru.novosoft.smsc.infosme.backend.siebel.SiebelTask;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -22,7 +22,7 @@ public class SiebelTasksResultSet implements ResultSet {
   private PreparedStatement prepStatement;
   private final Properties sql;
 
-  public SiebelTasksResultSet(java.sql.ResultSet resultSet, Connection connection, PreparedStatement prepStatement, Properties sql){
+  public SiebelTasksResultSet(java.sql.ResultSet resultSet, Connection connection, PreparedStatement prepStatement, Properties sql) {
     this.connection = connection;
     this.sqlResult = resultSet;
     this.prepStatement = prepStatement;

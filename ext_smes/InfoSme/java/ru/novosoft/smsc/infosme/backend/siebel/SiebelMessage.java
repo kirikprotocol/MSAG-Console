@@ -106,18 +106,19 @@ public class SiebelMessage {
 
   public static class State {
 
-    public static State ENROUTE = new State("ENROUTE");
-    public static State DELIVERED = new State("DELIVERED");
-    public static State EXPIRED = new State("EXPIRED");
-    public static State DELETED = new State("DELETED");
-    public static State UNDELIVERABLE = new State("UNDELIVERABLE");
-    public static State ACCEPTED = new State("ACCEPTED");
-    public static State UNKNOWN = new State("UNKNOWN");
-    public static State REJECTED = new State("REJECTED");
-    public static State ERROR = new State("ERROR");
+    public static final State ENROUTE = new State("ENROUTE");
+    public static final State DELIVERED = new State("DELIVERED");
+    public static final State EXPIRED = new State("EXPIRED");
+    public static final State DELETED = new State("DELETED");
+    public static final State UNDELIVERABLE = new State("UNDELIVERABLE");
+    public static final State ACCEPTED = new State("ACCEPTED");
+    public static final State UNKNOWN = new State("UNKNOWN");
+    public static final State REJECTED = new State("REJECTED");
+    public static final State ERROR = new State("ERROR");
 
 
-    private String value;
+    private final String value;
+
     private State(String value) {
       this.value = value;
     }
@@ -127,26 +128,26 @@ public class SiebelMessage {
     }
 
     public static State valueOf(String st) {
-      if(ENROUTE.value.equals(st)) {
+      if (ENROUTE.value.equals(st)) {
         return ENROUTE;
-      } else if(DELIVERED.value.equals(st)) {
+      } else if (DELIVERED.value.equals(st)) {
         return DELIVERED;
-      } else if(EXPIRED.value.equals(st)) {
+      } else if (EXPIRED.value.equals(st)) {
         return EXPIRED;
-      } else if(DELETED.value.equals(st)) {
+      } else if (DELETED.value.equals(st)) {
         return DELETED;
-      } else if(UNDELIVERABLE.value.equals(st)) {
+      } else if (UNDELIVERABLE.value.equals(st)) {
         return UNDELIVERABLE;
-      } else if(ACCEPTED.value.equals(st)) {
+      } else if (ACCEPTED.value.equals(st)) {
         return ACCEPTED;
-      } else if(UNKNOWN.value.equals(st)) {
+      } else if (UNKNOWN.value.equals(st)) {
         return UNKNOWN;
-      } else if(REJECTED.value.equals(st)) {
+      } else if (REJECTED.value.equals(st)) {
         return REJECTED;
-      } else if(ERROR.value.equals(st)) {
+      } else if (ERROR.value.equals(st)) {
         return ERROR;
       } else {
-        throw new IllegalArgumentException("Unknown state: "+st);
+        throw new IllegalArgumentException("Unknown state: " + st);
       }
     }
 
@@ -156,9 +157,8 @@ public class SiebelMessage {
 
       State state = (State) o;
 
-      if (value != null ? !value.equals(state.value) : state.value != null) return false;
+      return !(value != null ? !value.equals(state.value) : state.value != null);
 
-      return true;
     }
   }
 

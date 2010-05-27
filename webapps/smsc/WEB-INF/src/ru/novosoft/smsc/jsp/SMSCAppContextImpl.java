@@ -179,7 +179,6 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
       Config localeConfig = new Config(new File(webappConfig.getString("system.localization file")));
       LocaleMessages.init(localeConfig); // ������ ���������� ������, ��� �����������
       File usersConfig = new File(webappConfig.getString("system.users file"));
-      System.out.println("Init UserManager");
       userManager = new UserManager(usersConfig);
       providerManager = new ProviderManager(webappConfig);
       categoryManager = new CategoryManager(webappConfig);

@@ -13,10 +13,8 @@ import java.util.Map;
  */
 public class DataSourceAdapter implements DataSource {
 
-  private static final String siebelTaskPrefix = "siebel_";
-
-  private SiebelDataProvider provider_;
-  private Category log_;
+  private final SiebelDataProvider provider_;
+  private final Category log_;
 
   DataSourceAdapter(SiebelDataProvider provider, Category log) {
     this.provider_ = provider;
@@ -31,13 +29,7 @@ public class DataSourceAdapter implements DataSource {
     }
   }
 
-  public void taskHasFinished(String taskName) {
-    if (taskName.length() <= siebelTaskPrefix.length() ||
-        !taskName.startsWith(siebelTaskPrefix)) {
-      log_.error("task name " + taskName + " is not siebel");
-      return;
-    }
-    String waveId = taskName.substring(siebelTaskPrefix.length());
+  public void taskHasFinished(String waveId) {
     try {
       if (provider_.getTaskStatus(waveId) == SiebelTask.Status.IN_PROCESS) {
         provider_.setTaskStatus(waveId, SiebelTask.Status.PROCESSED);
@@ -47,6 +39,15 @@ public class DataSourceAdapter implements DataSource {
       }
     } catch (SiebelException e) {
       log_.error("cannot set wave " + waveId + " status: " + e.getMessage());
+    }
+  }
+
+  public boolean hasUnfinished(String waveId) {
+    try {
+      return provider_.containsUnfinished(waveId);
+    } catch (SiebelException e) {
+      log_.error("Can't get unfinished messages", e);
+      return true;
     }
   }
 }

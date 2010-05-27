@@ -1,20 +1,19 @@
 package ru.novosoft.smsc.infosme.backend.siebel.impl;
 
 import org.apache.log4j.Logger;
+import ru.novosoft.smsc.infosme.backend.siebel.ResultSet;
+import ru.novosoft.smsc.infosme.backend.siebel.SiebelException;
+import ru.novosoft.smsc.infosme.backend.siebel.SiebelMessage;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Properties;
 
-import ru.novosoft.smsc.infosme.backend.siebel.ResultSet;
-import ru.novosoft.smsc.infosme.backend.siebel.SiebelMessage;
-import ru.novosoft.smsc.infosme.backend.siebel.SiebelException;
-
 /**
  * author: alkhal
  */
-public class SiebelMessagesResultSet implements ResultSet{
+public class SiebelMessagesResultSet implements ResultSet {
 
   private static final Logger logger = Logger.getLogger(SiebelMessagesResultSet.class);
   private java.sql.ResultSet sqlResult;
@@ -22,7 +21,7 @@ public class SiebelMessagesResultSet implements ResultSet{
   private PreparedStatement prepStatement;
   private final Properties sql;
 
-  public SiebelMessagesResultSet(java.sql.ResultSet resultSet, Connection connection, PreparedStatement prepStatement, Properties sql){
+  public SiebelMessagesResultSet(java.sql.ResultSet resultSet, Connection connection, PreparedStatement prepStatement, Properties sql) {
     this.connection = connection;
     this.sqlResult = resultSet;
     this.prepStatement = prepStatement;
@@ -45,7 +44,7 @@ public class SiebelMessagesResultSet implements ResultSet{
       siebelMessage.setLastUpd(new java.sql.Date(sqlResult.getTimestamp(sql.getProperty("message.last.upd")).getTime()));
       siebelMessage.setMessage(sqlResult.getString(sql.getProperty("message.message")));
       String ms = sqlResult.getString(sql.getProperty("message.message.state"));
-      if(ms != null) {
+      if (ms != null) {
         siebelMessage.setMessageState(SiebelMessage.State.valueOf(ms));
       }
       siebelMessage.setMsisdn(sqlResult.getString(sql.getProperty("message.msisdn")));

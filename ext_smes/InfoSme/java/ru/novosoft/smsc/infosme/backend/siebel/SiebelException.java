@@ -3,7 +3,7 @@ package ru.novosoft.smsc.infosme.backend.siebel;
 /**
  * author: alkhal
  */
-public class SiebelException extends Exception{
+public class SiebelException extends Exception {
   public SiebelException() {
     super();
   }
