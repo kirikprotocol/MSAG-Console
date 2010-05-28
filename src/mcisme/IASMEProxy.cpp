@@ -19,7 +19,7 @@ IASMEProxy::IASMEProxy(const char* listening_iface,
                        size_t max_queue_sz)
 : _eventsQueue(max_queue_sz), _isRunning(true), _logger(logger::Logger::getInstance("iasme")),
   _taskProcessor(task_processor), _socketToPeer(NULL), _checkFdWriteable(false),
-  _buf(1024), _currentBuf(NULL), _totalWrittenBytes(0)
+  _buf(1024), _currentBuf(NULL), _totalWrittenBytes(0), _bytesHasBeenRead(0), _messageBodyLen(0)
 {
   _listeningSocket = new core::network::Socket();
   errno = 0;
