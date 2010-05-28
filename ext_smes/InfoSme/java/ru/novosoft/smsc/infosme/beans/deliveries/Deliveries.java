@@ -45,8 +45,7 @@ public class Deliveries extends InfoSmeBean {
       return result;
 
     pageData.owner = pageData.getAppContext().getUserManager().getUser(request.getRemoteUser());
-
-    System.out.println(request.getParameter("transactionMode"));
+    
     setTransactionMode(request.getParameter("transactionMode") != null );
     setUseDataSm(request.getParameter("useDataSm") != null) ;
     setUseUssdPush(request.getParameter("useUssdPush") != null);
