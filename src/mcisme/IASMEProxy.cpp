@@ -39,7 +39,7 @@ IASMEProxy::Execute()
 {
   while ( _isRunning ) {
     try {
-      struct pollfd fds[3];
+      struct pollfd fds[3] = {0};
       nfds_t numOfFds;
 
       fds[0].events = POLLRDNORM;
