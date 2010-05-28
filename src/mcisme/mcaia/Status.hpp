@@ -16,7 +16,9 @@ public:
   typedef int8_t type;
   static const type OK;
   static const type InvalidCalledAddress;
-  static const type QueueFull;
+  static const type ExecutingError;
+  static const type Timedout;
+  static const type Rejected;
   static bool isValidValue(const type& value)
   {
     return nameByValue.find(value)!=nameByValue.end();
@@ -53,8 +55,12 @@ protected:
       valueByName.insert(std::map<std::string,type>::value_type("OK",0));
       nameByValue.insert(std::map<type,std::string>::value_type(1,"InvalidCalledAddress"));
       valueByName.insert(std::map<std::string,type>::value_type("InvalidCalledAddress",1));
-      nameByValue.insert(std::map<type,std::string>::value_type(2,"QueueFull"));
-      valueByName.insert(std::map<std::string,type>::value_type("QueueFull",2));
+      nameByValue.insert(std::map<type,std::string>::value_type(2,"ExecutingError"));
+      valueByName.insert(std::map<std::string,type>::value_type("ExecutingError",2));
+      nameByValue.insert(std::map<type,std::string>::value_type(3,"Timedout"));
+      valueByName.insert(std::map<std::string,type>::value_type("Timedout",3));
+      nameByValue.insert(std::map<type,std::string>::value_type(4,"Rejected"));
+      valueByName.insert(std::map<std::string,type>::value_type("Rejected",4));
     }
   };
   static StaticInitializer staticInitializer;
