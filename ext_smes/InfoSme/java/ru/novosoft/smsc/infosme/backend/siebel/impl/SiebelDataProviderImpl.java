@@ -519,4 +519,20 @@ public class SiebelDataProviderImpl implements SiebelDataProvider {
     }
   }
 
+  public static void main(String args[]) throws SiebelException {
+    SiebelDataProviderImpl d = new SiebelDataProviderImpl();
+    Properties props = new Properties();
+    props.setProperty("jdbc.source", "jdbc:oracle:thin:@10.0.172.197:1544:SIBDB");
+    props.setProperty("jdbc.driver", "oracle.jdbc.driver.OracleDriver");
+    props.setProperty("jdbc.user", "SMS_SENDER");
+    props.setProperty("jdbc.pass", "dsldk2lncflknS");
+    System.out.println("Connecting...");
+    d.connect(props);
+    System.out.println("Connected. Fetching tasks...");
+    long start = System.currentTimeMillis();
+      SiebelMessage m = d.getMessage("1-3964199480");
+    System.out.println((System.currentTimeMillis() - start) /  1000);
+    d.shutdown();
+  }
+
 }

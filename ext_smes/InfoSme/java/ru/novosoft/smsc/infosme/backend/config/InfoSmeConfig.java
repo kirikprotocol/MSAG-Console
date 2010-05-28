@@ -35,6 +35,7 @@ public class InfoSmeConfig {
   public final static String[] WEEK_DAYS = {"Mon","Tue","Wed","Thu","Fri","Sat","Sun"};
   private final static String DEFAULT_ACTIVE_WEEK_DAYS = "Mon,Tue,Wed,Thu,Fri";
   private static final SimpleDateFormat tf = new SimpleDateFormat("HH:mm:ss");
+  private static final SimpleDateFormat df = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss");
 
   // Common options
   private Boolean ussdPushFeature;
@@ -627,9 +628,9 @@ public class InfoSmeConfig {
         siebelTSvcType = cfg.getString(prefix + ".svcType");
         siebelTRetryPolicy = cfg.getString(prefix + ".retryPolicy");
         String tmp = cfg.getString(prefix + ".activePeriodStart");
-        siebelTPeriodStart = (tmp == null || tmp.trim().length() == 0) ? null : tf.parse(tmp);
+        siebelTPeriodStart = (tmp == null || tmp.trim().length() == 0) ? null : df.parse("2010.01.01 " + tmp);
         tmp = cfg.getString(prefix + ".activePeriodEnd");
-        siebelTPeriodEnd = (tmp == null || tmp.trim().length() == 0) ? null : tf.parse(tmp);
+        siebelTPeriodEnd = (tmp == null || tmp.trim().length() == 0) ? null : df.parse("2010.01.01 " + tmp);
 
         siebelTCacheSize = cfg.getInt(prefix + ".messagesCacheSize");
         siebelTCacheSleep = cfg.getInt(prefix + ".messagesCacheSleep");

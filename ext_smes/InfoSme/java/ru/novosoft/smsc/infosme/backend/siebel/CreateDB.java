@@ -52,10 +52,10 @@ public class CreateDB {
         }
       }
     } else {
-      props.setProperty("jdbc.source", "jdbc:mysql://mangal/summer_edu");
-      props.setProperty("jdbc.driver", "com.mysql.jdbc.Driver");
-      props.setProperty("jdbc.user", "student");
-      props.setProperty("jdbc.pass", "student");
+      props.setProperty("jdbc.source", "jdbc:oracle:thin:@max:1521:orcl");
+      props.setProperty("jdbc.driver", "oracle.jdbc.driver.OracleDriver");
+      props.setProperty("jdbc.user", "sms");
+      props.setProperty("jdbc.pass", "sms");
     }
     if (arguments.containsKey("-s")) {
       wavesize = Integer.parseInt((String) arguments.get("-s"));
@@ -116,10 +116,14 @@ public class CreateDB {
               prepStatement.setString(3, Integer.toString(msgid));
               prepStatement.setTimestamp(4, new Timestamp(System.currentTimeMillis()));
               prepStatement.setTimestamp(5, new Timestamp(System.currentTimeMillis()));
-              if (i % 10 != 0) {
-                prepStatement.setString(6, "+" + Long.toString(Long.parseLong("79130000000") + i));
-              } else {
+              if (i%10 == 0) {
                 prepStatement.setString(6, "invalid_msisdn");
+              } else if (i%10 == 1) {
+                prepStatement.setString(6, "+" + Long.toString(Long.parseLong("79520000000") + i));
+              } else if (i%10 > 1 && i%10 <= 5) {
+                prepStatement.setString(6, "+" + Long.toString(Long.parseLong("79160000000") + i));
+              } else {
+                prepStatement.setString(6, "+" + Long.toString(Long.parseLong("79130000000") + i));
               }
               prepStatement.setString(7, "TestTest");
 //            if(random.nextInt(2)==0) {
@@ -170,11 +174,11 @@ public class CreateDB {
             prepStatement.setString(3, Integer.toString(wid));
             prepStatement.setTimestamp(4, new Timestamp(System.currentTimeMillis()));
             prepStatement.setTimestamp(5, new Timestamp(System.currentTimeMillis()));
-            prepStatement.setString(6, Integer.toString(wid + 1));
-            prepStatement.setString(7, "Y");
-            prepStatement.setString(8, "Y");
-            prepStatement.setString(9, "N");
-            prepStatement.setString(10, Integer.toString(wid + 1));
+            prepStatement.setString(6, Integer.toString(wid+1));
+            prepStatement.setString(7,"Y");
+            prepStatement.setString(8,"Y");
+            prepStatement.setString(9,"N");
+            prepStatement.setString(10, "48");
             prepStatement.setString(11, SiebelTask.Status.ENQUEUED.toString());
 
             prepStatement.addBatch();
@@ -255,4 +259,3 @@ public class CreateDB {
     }
   }
 }
-

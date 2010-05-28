@@ -130,20 +130,25 @@ public class EditTaskPage extends DeliveriesPage {
     SimpleDateFormat df = new SimpleDateFormat(DeliveriesPageData.PAGE_DATE_FORMAT);
     SimpleDateFormat tf = new SimpleDateFormat(DeliveriesPageData.PAGE_TIME_FORMAT);
     if (r != null) {
-      pageData.endDate = task.getEndDate() == null ? "" : df.format(r.getRegionTime(task.getEndDate()));
-      pageData.startDate = task.getStartDate() == null ? "" : df.format(r.getRegionTime(task.getStartDate()));
       pageData.validityPeriod = task.getValidityPeriod() == null ? "" : String.valueOf(task.getValidityPeriod());
       pageData.validityDate = task.getValidityDate() == null ? "" : df.format(r.getRegionTime(task.getValidityDate()));
       pageData.activePeriodStart = task.getActivePeriodStart() == null ? "" : tf.format(r.getRegionTime(task.getActivePeriodStart()));
       pageData.activePeriodEnd = task.getActivePeriodEnd() == null ? "" : tf.format(r.getRegionTime(task.getActivePeriodEnd()));
     } else {
-      pageData.endDate = task.getEndDate() == null ? "" : df.format(task.getEndDate());
-      pageData.startDate = task.getStartDate() == null ? "" : df.format(task.getStartDate());
       pageData.validityPeriod = task.getValidityPeriod() == null ? "" : String.valueOf(task.getValidityPeriod());
       pageData.validityDate = task.getValidityDate() == null ? "" : df.format(task.getValidityDate());
       pageData.activePeriodStart = task.getActivePeriodStart() == null ? "" : tf.format(task.getActivePeriodStart());
       pageData.activePeriodEnd = task.getActivePeriodEnd() == null ? "" : tf.format(task.getActivePeriodEnd());
     }
+
+    if (r != null && (pageData.splitDeliveriesFile && !pageData.useSameSettingsForAllRegions)) {
+      pageData.endDate = task.getEndDate() == null ? "" : df.format(r.getRegionTime(task.getEndDate()));
+      pageData.startDate = task.getStartDate() == null ? "" : df.format(r.getRegionTime(task.getStartDate()));
+    } else {
+      pageData.endDate = task.getEndDate() == null ? "" : df.format(task.getEndDate());
+      pageData.startDate = task.getStartDate() == null ? "" : df.format(task.getStartDate());
+    }
+    
     pageData.recondsNumber = String.valueOf(task.getActualRecordsSize());
     pageData.retryPolicy = task.getRetryPolicy();
     pageData.secret = task.isSecret();
@@ -158,7 +163,6 @@ public class EditTaskPage extends DeliveriesPage {
   private void pageToTask(Task task) throws AdminException {
     task.setRetryOnFail(pageData.retryOnFail);
     SimpleDateFormat df = new SimpleDateFormat(DeliveriesPageData.PAGE_DATE_FORMAT);
-    SimpleDateFormat tf = new SimpleDateFormat(DeliveriesPageData.PAGE_TIME_FORMAT);
     try {
       Region r = pageData.getAppContext().getRegionsManager().getRegionById(task.getRegionId());
       if (r != null) {
@@ -187,13 +191,13 @@ public class EditTaskPage extends DeliveriesPage {
           throw e;
         }
         try{
-          task.setActivePeriodStart(pageData.activePeriodStart.trim().length() == 0 ? null : r.getLocalTime(tf.parse(pageData.activePeriodStart)));
+          task.setActivePeriodStart(pageData.activePeriodStart.trim().length() == 0 ? null : r.getLocalTime(df.parse("2010.01.01 " + pageData.activePeriodStart)));
         }catch(Exception e) {
           pageData.activePeriodStart = "";
           throw e;
         }
         try{
-          task.setActivePeriodEnd(pageData.activePeriodEnd.trim().length() == 0 ? null : r.getLocalTime(tf.parse(pageData.activePeriodEnd)));
+          task.setActivePeriodEnd(pageData.activePeriodEnd.trim().length() == 0 ? null : r.getLocalTime(df.parse("2010.01.01 " + pageData.activePeriodEnd)));
         }catch(Exception e) {
           pageData.activePeriodEnd = "";
           throw e;
@@ -224,13 +228,13 @@ public class EditTaskPage extends DeliveriesPage {
           throw e;
         }
         try{
-          task.setActivePeriodStart(pageData.activePeriodStart.trim().length() == 0 ? null : tf.parse(pageData.activePeriodStart));
+          task.setActivePeriodStart(pageData.activePeriodStart.trim().length() == 0 ? null : df.parse("2010.01.01 " + pageData.activePeriodStart));
         }catch(Exception e) {
           pageData.activePeriodStart = "";
           throw e;
         }
         try{
-          task.setActivePeriodEnd(pageData.activePeriodEnd.trim().length() == 0 ? null : tf.parse(pageData.activePeriodEnd));
+          task.setActivePeriodEnd(pageData.activePeriodEnd.trim().length() == 0 ? null : df.parse("2010.01.01 " + pageData.activePeriodEnd));
         }catch(Exception e) {
           pageData.activePeriodEnd = "";
           throw e;
