@@ -101,7 +101,7 @@ public class DeliveriesPageData {
     oldActiveTaskRegionId = -1;
     name = null;
     splitDeliveriesFile=true;
-    useSameSettingsForAllRegions=false;
+    useSameSettingsForAllRegions=true;
     transliterate = false;
     transactionMode = false;
     useDataSm = false;
