@@ -180,7 +180,7 @@
 <tr class=row<%=rowN++&1%>>
   <th><label for=siebelTransactionMode><%= getLocString("infosme.label.transaction_mode")%></label></th>
   <td>
-    <input class=check type=checkbox id=siebelTransactionMode name=transactionMode <%=bean.isSiebelTransactionMode() ? "checked" : ""%>>
+    <input class=check type=checkbox id=siebelTransactionMode name=siebelTransactionMode <%=bean.isSiebelTransactionMode() ? "checked" : ""%>>
   </td>
 </tr>
 

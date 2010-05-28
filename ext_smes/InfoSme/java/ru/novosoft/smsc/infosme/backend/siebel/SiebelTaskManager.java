@@ -138,6 +138,14 @@ public class SiebelTaskManager implements Runnable {
         logger.debug("Siebel: set tasK status to " + SiebelTask.Status.IN_PROCESS);
     }
   }
+  private void _setTaskStatusInProcessed(SiebelTask st) throws SiebelException {
+    if (provider.getTaskStatus(st.getWaveId()) == SiebelTask.Status.ENQUEUED) {
+      provider.setTaskStatus(st.getWaveId(), SiebelTask.Status.PROCESSED);
+      if (logger.isDebugEnabled())
+        logger.debug("Siebel: set tasK status to " + SiebelTask.Status.PROCESSED);
+    }
+
+  }
 
   private void beginTask(SiebelTask st, MultiTask t) throws SiebelException {
     try {
@@ -165,19 +173,24 @@ public class SiebelTaskManager implements Runnable {
       InfoSmeConfig.validate(t.originTask);
 
       ResultSet messages = null;
+      boolean hasMessages;
       try {
         if (logger.isDebugEnabled()) {
           logger.debug("Siebel: task is new or doesn't contain some parts. Generate it. WaveId=" + st.getWaveId());
         }
         messages = provider.getMessages(st.getWaveId());
-        addMessages(ctx, t, messages);
+        hasMessages = addMessages(ctx, t, messages) != 0;
         t.done();
       } finally {
         if (messages != null) {
           messages.close();
         }
       }
-      _setTaskStatusInProcess(st);
+      if(hasMessages) {
+        _setTaskStatusInProcess(st);
+      }else {
+        _setTaskStatusInProcessed(st);
+      }
     } catch (AdminException e) {
       throw new SiebelException(e);
     }
@@ -358,12 +371,13 @@ public class SiebelTaskManager implements Runnable {
     }
   }
 
-  private void addMessages(InfoSmeContext smeContext, MultiTask task, ResultSet messages) throws SiebelException {
+  private int addMessages(InfoSmeContext smeContext, MultiTask task, ResultSet messages) throws SiebelException {
     try {
 
       if (logger.isDebugEnabled()) {
         logger.debug("Siebel: starting task generation...");
       }
+      int countMessages = 0;
 
       TemplatesRadixTree rtree = new TemplatesRadixTree();
       initiateRadixTree(rtree);
@@ -392,6 +406,7 @@ public class SiebelTaskManager implements Runnable {
               task.tasks.put(regionId, taskPart);
             }
             taskPart.addMessage(msg);
+            countMessages++;
           } else {
             unloaded.add(sM.getClcId());
           }
@@ -410,9 +425,9 @@ public class SiebelTaskManager implements Runnable {
       }
 
       if (logger.isDebugEnabled()) {
-        logger.debug("Siebel: task generation ok...");
+        logger.debug("Siebel: task generation ok: "+countMessages+" messages");
       }
-
+      return countMessages;
     } catch (AdminException e) {
       logger.error(e, e);
       try {
