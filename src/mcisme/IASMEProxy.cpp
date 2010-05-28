@@ -69,12 +69,12 @@ IASMEProxy::Execute()
           processScheduledRequest();
         if ( !_isRunning )
           break;
-        if ( fds[1].revents & POLLRDNORM )
-          acceptConnection();
         if ( fds[2].revents & ( POLLRDNORM | POLLERR ) )
           processResponse();
         if ( fds[2].revents & ( POLLWRNORM | POLLERR ) )
           processNextRequest();
+        if ( fds[1].revents & POLLRDNORM )
+          acceptConnection();
       }
     } catch (std::exception& ex) {
       smsc_log_error(_logger, "IASMEProxy::Execute::: caught exception '%s'",
