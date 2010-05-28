@@ -22,8 +22,10 @@ IASMEProxy::IASMEProxy(const char* listening_iface,
   _buf(1024), _currentBuf(NULL), _totalWrittenBytes(0)
 {
   _listeningSocket = new core::network::Socket();
-  _listeningSocket->ReuseAddr();
-  _listeningSocket->InitServer(listening_iface, listening_port, 0);
+  errno = 0;
+  if ( _listeningSocket->InitServer(listening_iface, listening_port, 0, 1, 1) < 0 )
+    throw util::Exception("IASMEProxy::IASMEProxy::: InitServer failed - %s",
+                          strerror(errno));
   _listeningSocket->StartServer();
 
   int fds[2];
@@ -65,6 +67,8 @@ IASMEProxy::Execute()
       } else {
         if ( fds[0].revents & ( POLLRDNORM | POLLERR ) )
           processScheduledRequest();
+        if ( !_isRunning )
+          break;
         if ( fds[1].revents & POLLRDNORM )
           acceptConnection();
         if ( fds[2].revents & ( POLLRDNORM | POLLERR ) )
@@ -179,13 +183,11 @@ int
 IASMEProxy::readData(char* buf, int bytes_to_read)
 {
   int st = _socketToPeer->Read(buf, bytes_to_read);
-  if ( st > 0 )
-    return st;
-  else {
-    if ( st < 0 ) {
+  if ( st <= 0 ) {
+    if ( st < 0 )
       smsc_log_error(_logger, "IASMEProxy::readData::: read from socket failed: '%s'",
                      strerror(errno));
-    } else
+    else
       smsc_log_info(_logger, "IASMEProxy::readData::: connection to server closed by remote side");
 
     core::synchronization::MutexGuard synchronize(_lock);
@@ -200,30 +202,31 @@ IASMEProxy::processResponse()
 {
   if ( !_messageBodyLen ) {
     int st = readData(_header.buf + _bytesHasBeenRead, sizeof(_header.buf) - _bytesHasBeenRead);
-    if ( st <= 0 )
+    if ( st <= 0 ) {
+      _bytesHasBeenRead = 0; _messageBodyLen = 0;
       return;
+    }
     _bytesHasBeenRead += st;
     if ( _bytesHasBeenRead == sizeof(_header.buf) ) {
       _messageBodyLen = ntohl(_header.value);
+      smsc_log_debug(_logger, "IASMEProxy::processResponse::: length prefix=%u", _messageBodyLen);
       _bytesHasBeenRead = 0;
     }
   } else {
     int st = readData(_bufferForBody + _bytesHasBeenRead, _messageBodyLen - _bytesHasBeenRead);
-    if ( st <= 0 )
+    if ( st <= 0 ) {
+      _bytesHasBeenRead = 0; _messageBodyLen = 0;
       return;
+    }
     _bytesHasBeenRead += st;
     if ( _bytesHasBeenRead == _messageBodyLen ) {
+      uint32_t messageBodyLen  = _messageBodyLen;
       _bytesHasBeenRead = 0;
+      _messageBodyLen = 0;
       smsc_log_debug(_logger, "IASMEProxy::processResponse::: read total response message");
       mcaia::ServerProtocol protocol;
       protocol.assignHandler(_taskProcessor);
-      try {
-        protocol.decodeAndHandleMessage(_bufferForBody, static_cast<size_t>(_messageBodyLen));
-      } catch (...) {
-        _messageBodyLen = 0;
-        throw;
-      }
-      _messageBodyLen = 0;
+      protocol.decodeAndHandleMessage(_bufferForBody, static_cast<size_t>(messageBodyLen));
     }
   }
 }
