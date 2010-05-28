@@ -13,6 +13,8 @@
       <th><%= getLocString("infosme.label.source_address")%></th>
       <td><input class=txt name=sourceAddress value="<%=StringEncoderDecoder.encode(deliveries_bean.getSourceAddress())%>"></td>
     </tr>
+
+    <% if (deliveries_bean.isSplitDeliveriesFile() && !deliveries_bean.isUseSameSettingsForAllRegions()) { %>
     <tr class=row<%=rowN++&1%>>
       <th><%= getLocString("infosme.label.region")%></th>
       <td>
@@ -33,6 +35,7 @@
       <th><%= getLocString("infosme.label.abonentsNumber")%></th>
       <td><%=StringEncoderDecoder.encode(deliveries_bean.getRecordsNumber())%></td>
     </tr>
+    <% } %>
     <tr class=row<%=rowN++&1%>>
       <th><%= getLocString("infosme.label.active_period")%></th>
       <td>
@@ -101,7 +104,7 @@
     </tr>
     <tr class=row<%=rowN++&1%>>
       <th><label for="transactionMode"><%= getLocString("infosme.label.transaction_mode")%></label></th>
-      <td><input class=check type=checkbox id=transactionMode name=transactionMode value=true <%=deliveries_bean.isTransactionMode() ? "checked" : ""%>></td>
+      <td><input class=check type=checkbox id=transactionMode name=transactionMode <%=deliveries_bean.isTransactionMode() ? "checked" : ""%>></td>
     </tr>
     <tr class=row<%=rowN++&1%>>
       <th><label for="useDataSm"><%= getLocString("infosme.label.use_data_sm")%></label></th>

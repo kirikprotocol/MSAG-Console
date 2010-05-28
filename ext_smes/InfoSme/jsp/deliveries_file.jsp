@@ -14,7 +14,11 @@
     </tr>
     <tr class=row1>
       <th><%= getLocString("infosme.label.split_file")%></th>
-      <td><input class=check type=checkbox name=splitDeliveriesFile id=splitDeliveriesFile <%=deliveries_bean.isSplitDeliveriesFile() ? "checked" : ""%>></td>
+      <td><input class=check type=checkbox name="splitDeliveriesFile" id="splitDeliveriesFile" <%=deliveries_bean.isSplitDeliveriesFile() ? "checked" : ""%> onchange="checkSplitFile()"></td>
+    </tr>
+    <tr class=row0>
+      <th><%= getLocString("infosme.label.use_same_settings_for_all_regions")%></th>
+      <td><input class=check type=checkbox name="useSameSettingsForAllRegions" id="useSameSettingsForAllRegions" <%=deliveries_bean.isUseSameSettingsForAllRegions() ? "checked" : ""%>></td>
     </tr>
   </table>
 </div>
@@ -32,6 +36,10 @@
     document.getElementById('mbNext').disabled = (document.getElementById('<%=DeliveriesPageData.ABONENTS_FILE_PARAM%>').value.length <= 0);
   }
 
+  function checkSplitFile() {
+    document.getElementById('useSameSettingsForAllRegions').disabled = !document.getElementById('splitDeliveriesFile').checked
+  }
+
   function clickNext() {
     opForm.action="<%=CPATH+"/upload"%>";
     opForm.method="POST";
@@ -40,5 +48,7 @@
     opForm.submit();
     return true;
   }
+
+  checkSplitFile()
 </script>
 

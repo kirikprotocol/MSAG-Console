@@ -46,6 +46,11 @@ public class Deliveries extends InfoSmeBean {
 
     pageData.owner = pageData.getAppContext().getUserManager().getUser(request.getRemoteUser());
 
+    System.out.println(request.getParameter("transactionMode"));
+    setTransactionMode(request.getParameter("transactionMode") != null );
+    setUseDataSm(request.getParameter("useDataSm") != null) ;
+    setUseUssdPush(request.getParameter("useUssdPush") != null);
+
     try {
       if (mbNext != null) {
         mbNext = null;
@@ -360,6 +365,14 @@ public class Deliveries extends InfoSmeBean {
 
   public void setSplitDeliveriesFile(boolean val) {
     this.pageData.splitDeliveriesFile = val;
+  }
+
+  public boolean isUseSameSettingsForAllRegions() {
+    return this.pageData.useSameSettingsForAllRegions;
+  }
+
+  public void setUseSameSettingsForAllRegions(boolean value) {
+    this.pageData.useSameSettingsForAllRegions = value;
   }
 
   public List getRetryPolicies() throws AdminException {

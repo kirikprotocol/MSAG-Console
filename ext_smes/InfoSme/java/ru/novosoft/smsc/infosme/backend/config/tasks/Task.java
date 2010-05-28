@@ -623,10 +623,8 @@ public class Task extends Observable
   }
 
   public void setTransactionMode(boolean transactionMode) {
-    if ( this.useUssdPush <= 0 ) {
-      this.transactionMode = transactionMode;
-      modified = true;
-    }
+    this.transactionMode = transactionMode;
+    modified = true;
   }
 
   public int getUncommitedInGeneration() {

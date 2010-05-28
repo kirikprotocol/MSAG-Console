@@ -85,8 +85,12 @@ public class EditTaskPage extends DeliveriesPage {
   public DeliveriesPage mbNext(HttpServletRequest request) throws AdminException {
     pageToTask(pageData.getTask().getTask(pageData.oldActiveTaskRegionId));
 
-    for (Iterator iter = pageData.getTask().tasks().iterator(); iter.hasNext();)
-      checkAndPrepareTask((Task) iter.next());
+    for (Iterator iter = pageData.getTask().tasks().iterator(); iter.hasNext();) {
+      Task t = (Task) iter.next();
+      if (pageData.useSameSettingsForAllRegions)
+        pageToTask(t);
+      checkAndPrepareTask(t);
+    }
 
     return new GenerateDeliveriesPage(pageData);
   }

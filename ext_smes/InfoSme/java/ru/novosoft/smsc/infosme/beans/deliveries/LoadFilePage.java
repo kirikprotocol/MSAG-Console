@@ -34,6 +34,11 @@ public class LoadFilePage extends DeliveriesPage {
     else
       pageData.setSplitDeliveriesFile(false);
 
+    if (multi.getParameter("useSameSettingsForAllRegions") != null)
+      pageData.setUseSameSettingsForAllRegions(true);
+    else
+      pageData.setUseSameSettingsForAllRegions(false);
+
     // Receive and analize file
     MultipartDataSource dataFile = null;
     InputStream is = null;

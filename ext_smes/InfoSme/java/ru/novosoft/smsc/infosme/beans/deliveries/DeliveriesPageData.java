@@ -70,6 +70,7 @@ public class DeliveriesPageData {
   public User owner;
 
   public boolean splitDeliveriesFile = true;
+  public boolean useSameSettingsForAllRegions = true;
   public boolean deliveriesFileContainsText = true;
 
   // process file progress attributes
@@ -99,7 +100,8 @@ public class DeliveriesPageData {
     activeTaskRegionId = -1;
     oldActiveTaskRegionId = -1;
     name = null;
-    splitDeliveriesFile=false;
+    splitDeliveriesFile=true;
+    useSameSettingsForAllRegions=false;
     transliterate = false;
     transactionMode = false;
     useDataSm = false;
@@ -206,7 +208,15 @@ public class DeliveriesPageData {
 
   public void setSplitDeliveriesFile(boolean splitDeliveriesFile) {
     this.splitDeliveriesFile = splitDeliveriesFile;
-  } 
+  }
+
+  public boolean isUseSameSettingsForAllRegions() {
+    return useSameSettingsForAllRegions;
+  }
+
+  public void setUseSameSettingsForAllRegions(boolean useSameSettingsForAllRegions) {
+    this.useSameSettingsForAllRegions = useSameSettingsForAllRegions;
+  }
 
   public List getRetryPolicies() throws AdminException {
     QueryResultSet rs = new RetryPolicyDataSource().query(infoSmeContext.getInfoSmeConfig(), new RetryPolicyQuery(1000, "name", 0));
