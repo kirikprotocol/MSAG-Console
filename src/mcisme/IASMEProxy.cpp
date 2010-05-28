@@ -200,8 +200,10 @@ IASMEProxy::readData(char* buf, int bytes_to_read)
 void
 IASMEProxy::processResponse()
 {
+  smsc_log_debug(_logger, "IASMEProxy::processResponse::: enter it");
   if ( !_messageBodyLen ) {
     int st = readData(_header.buf + _bytesHasBeenRead, sizeof(_header.buf) - _bytesHasBeenRead);
+    smsc_log_debug(_logger, "IASMEProxy::processResponse::: readData returned, st = %d", st);
     if ( st <= 0 ) {
       _bytesHasBeenRead = 0; _messageBodyLen = 0;
       return;
@@ -214,11 +216,13 @@ IASMEProxy::processResponse()
     }
   } else {
     int st = readData(_bufferForBody + _bytesHasBeenRead, _messageBodyLen - _bytesHasBeenRead);
+    smsc_log_debug(_logger, "IASMEProxy::processResponse::: try read body, st = %d, expected messageBodyLen=%d", st, _messageBodyLen); 
     if ( st <= 0 ) {
       _bytesHasBeenRead = 0; _messageBodyLen = 0;
       return;
     }
     _bytesHasBeenRead += st;
+    smsc_log_debug(_logger, "IASMEProxy::processResponse::: _bytesHasBeenRead=%d", _bytesHasBeenRead);
     if ( _bytesHasBeenRead == _messageBodyLen ) {
       uint32_t messageBodyLen  = _messageBodyLen;
       _bytesHasBeenRead = 0;
