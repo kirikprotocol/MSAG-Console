@@ -1,6 +1,9 @@
 History in reverse order
 ----------------------------------------------------
 
+----------------------------------------------------
+infosme-build-20100527 12:00 bukind (v1,v2)
+
 2010-05-26 16:39 bukind
  bugfix: activePeriod check off-by-one error v1 & v2
 
