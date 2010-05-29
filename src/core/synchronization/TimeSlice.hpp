@@ -16,14 +16,14 @@ namespace synchronization {
 
 class TimeSlice {
 public:
-    enum UnitType { //timeout measurement unit
+    enum UnitType_e { //timeout measurement unit
         tuSecs = 0       //seconds
         , tuMSecs = 1    //milliseconds
         , tuUSecs = 2    //microseconds
         , tuNSecs = 3    //nanoseconds
     };
 
-    static const char * nmUnit(UnitType tu_id)
+    static const char * nmUnit(UnitType_e tu_id)
     {
         switch (tu_id) {
         case tuNSecs: return "NSecs";
@@ -33,11 +33,6 @@ public:
         }
         return "Secs";
     }
-    static long _Factor(UnitType tu_id)
-    {
-        static const long _factorN[4] = { 1, 1000, 1000000L, 1000000000L};
-        return _factorN[tu_id];
-    }
 
     static void getRealTime(struct timespec & tv)
     {   //Note: on Solaris requires -D__EXTENSIONS__
@@ -45,7 +40,7 @@ public:
     }
 
 protected:
-    UnitType    unitId;
+    UnitType_e  unitId;
     long        tmoVal;
 
     //helper structure for comparison of two timeouts measured in different units
@@ -57,21 +52,22 @@ protected:
             : vHigh(vh), vLow(vl)
         { }
 
-        inline bool operator== (const struct TwoFraction & tm2)
+        inline bool operator== (const struct TwoFraction & tm2) const
         {
             return ((vHigh == tm2.vHigh) && (vLow == tm2.vLow));
         }
 
-        inline bool operator< (const struct TwoFraction& tm2)
+        inline bool operator< (const struct TwoFraction& tm2) const
         {
-            if (vHigh < vHigh)
-                return true;
-            if (vHigh > tm2.vHigh)
-                return false;
-            //equal high fraction, compare lower one
-            return vLow < tm2.vLow;
+            return (vHigh == tm2.vHigh) ? (vLow < tm2.vLow) : (vHigh < tm2.vHigh);
         }
     };
+
+    static long _Factor(UnitType_e tu_id)
+    {
+        static const long _factorN[4] = { 1, 1000, 1000000L, 1000000000L};
+        return _factorN[tu_id];
+    }
 
     void normalize(const TimeSlice & tmo2, TwoFraction & v1, TwoFraction & v2) const
     {
@@ -90,7 +86,7 @@ protected:
 
 public:
     //timeout is either in millisecs or seconds
-    TimeSlice(long use_tmo = 0, UnitType use_unit = tuSecs)
+    TimeSlice(long use_tmo = 0, UnitType_e use_unit = tuSecs)
         : unitId(use_unit), tmoVal(use_tmo)
     { }
     ~TimeSlice()
@@ -98,7 +94,7 @@ public:
 
     const char * nmUnit(void) const { return nmUnit(unitId); }
 
-    UnitType Units(void) const { return unitId; }
+    UnitType_e Units(void) const { return unitId; }
     long     Value(void) const { return tmoVal; }
 
     //Note: It's a safe to call:

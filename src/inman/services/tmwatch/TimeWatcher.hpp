@@ -64,7 +64,7 @@ public:
     {
         val.tmo = use_tmo;
     }
-    SWTgtTime(long use_tmo = 0, TimeSlice::UnitType use_unit = TimeSlice::tuSecs)
+    SWTgtTime(long use_tmo = 0, TimeSlice::UnitType_e use_unit = TimeSlice::tuSecs)
         : kind(valTmo)
     {
         val.tmo = TimeSlice(use_tmo, use_unit);
@@ -643,7 +643,7 @@ protected:
     TimeWatcherTMO * _tw;
 
 public:
-    TimeoutHDL(long use_tmo = 0, UnitType use_unit = tuSecs)
+    TimeoutHDL(long use_tmo = 0, UnitType_e use_unit = tuSecs)
         : TimeSlice(use_tmo, use_unit), _tw(0)
     { }
     ~TimeoutHDL()
