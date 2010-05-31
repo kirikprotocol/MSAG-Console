@@ -48,7 +48,7 @@ private:
     time_t scheduledProcessingTime;
   };
 
-  void tryReconnect(const broken_link_info& broken_link_info);
+  void tryReconnect(broken_link_info& broken_link_info);
   void moveFailedLinkToNotReconnectedList(const broken_link_info& broken_link_info);
   void waitForPeriodAndGetNewBrokenLinks(bool sleep_infinitiy);
 
