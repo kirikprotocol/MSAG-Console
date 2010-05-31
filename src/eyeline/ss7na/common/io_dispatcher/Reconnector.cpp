@@ -74,7 +74,7 @@ Reconnector::Execute()
 void
 Reconnector::tryReconnect(broken_link_info& broken_link_info)
 {
-  const LinkPtr& brokenLink = broken_link_info.brokenLink;
+  LinkPtr& brokenLink = broken_link_info.brokenLink;
   sig::SIGConnect* sigLink = static_cast<sig::SIGConnect*>(brokenLink.Get());
   try {
     sigLink->reinit();
