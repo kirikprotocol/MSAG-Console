@@ -1,4 +1,5 @@
 #ifndef __SMSC_CORE_BUFFERS_FIXEDLENGTHSTRING_HPP__
+#ident "@(#)$Id$"
 #define __SMSC_CORE_BUFFERS_FIXEDLENGTHSTRING_HPP__
 
 #include <string.h>
@@ -29,6 +30,30 @@ struct FixedLengthString{
   {
     *this=argStr.str;
   }
+
+  FixedLengthString& operator+=(const char arg_char)
+  {
+    size_t len = strlen(str);
+    if ((len + 1) < N) {
+      str[len] = arg_char;
+      str[len + 1] = 0;
+    }
+    return *this;
+  }
+
+  FixedLengthString& operator+=(const char* argStr)
+  {
+    strncat(str, argStr, N);
+    str[N-1]=0;
+    return *this;
+  }
+
+  template <size_t M>
+  FixedLengthString& operator+=(const FixedLengthString<M>& argStr)
+  {
+    return operator+=(argStr.str);
+  }
+
   FixedLengthString& operator=(const char* argStr)
   {
     strncpy(str,argStr,N);
