@@ -1,4 +1,5 @@
 #ifndef __REFPTR_HPP__
+#ident "@(#)$Id$"
 #define __REFPTR_HPP__
 
 namespace smsc{
@@ -67,14 +68,29 @@ public:
   {
     return *data->ptr;
   }
+  const T& operator*() const
+  {
+    return *data->ptr;
+  }
+
   T* operator->()
   {
     return data->ptr;
   }
+  const T* operator->() const
+  {
+    return data->ptr;
+  }
+
   T* Get()
   {
     return data->ptr;
   }
+  const T* Get() const
+  {
+    return data->ptr;
+  }
+
 protected:
   void Ref()const
   {
