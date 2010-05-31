@@ -2,7 +2,6 @@
 #include "lm_commands/LM_M3ua_Commit.hpp"
 #include "lm_commands/LM_TranslationRule_AddDpc.hpp"
 #include "lm_commands/LM_TranslationRule_AddSccpUser.hpp"
-#include "lm_commands/LM_TranslationRule_SetLpc.hpp"
 #include "lm_commands/LM_TranslationRule_TrafficMode.hpp"
 #include "lm_commands/LM_TranslationRule_OkCmd.hpp"
 #include "eyeline/utilx/toLowerCaseString.hpp"
