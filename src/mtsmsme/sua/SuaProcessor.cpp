@@ -3,6 +3,7 @@ static char const ident[] = "$Id$";
 #include "mtsmsme/processor/util.hpp"
 #include "logger/Logger.h"
 #include "util/config/Manager.h"
+#include "util/config/ConfigView.h"
 #include "mtsmsme/sua/SuaProcessor.hpp"
 #include "sms/sms.h"
 #include "eyeline/ss7na/libsccp/SccpApiFactory.hpp"
@@ -252,12 +253,12 @@ void SuaProcessor::send(uint8_t cdlen, uint8_t *cd,
   //msgProperties.hopCount = 2;
   //msgProperties.fieldsMask = libsua::MessageProperties::SET_HOP_COUNT;
   libsccp::SccpApi& sccpApi = libsccp::SccpApiFactory::getSccpApiIface();
-  libsccp::SccpApi::CallResult result =
+  libsccp::SccpApi::ErrorCode_e result =
       sccpApi.unitdata_req(udp, ulen,
                                cd, cdlen,
                                cl, cllen,
                                msgProperties, 0);
-  if (result.operationResult != libsccp::SccpApi::OK)
+  if (result != libsccp::SccpApi::OK)
     smsc_log_error(logger,
                    "libSuaTest::unitdat_req failed with code %d",result.operationResult);
 }
