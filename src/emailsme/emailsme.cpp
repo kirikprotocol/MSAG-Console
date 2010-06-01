@@ -2499,6 +2499,7 @@ int EmailProcessor::sendSms(std::string from,const std::string to,const char* ms
 
   //cfg::annotationSize
 
+  smsc_log_debug(log,"toDomain=%s, hdmaildomain=%s",toDomain.c_str(),cfg::hdmaildomain.c_str());
 
   SMS sms;
   sms.setOriginatingAddress(toDomain==cfg::hdmaildomain?cfg::helpDeskAddress.c_str():cfg::sourceAddress.c_str());
