@@ -196,36 +196,22 @@ void CsvStore::collectStatistics( unsigned& openMsgs )
 }
 
 
-bool CsvStore::getNextMessage(Message &message)
+int CsvStore::getLocalHour() const
 {
-  sync::MutexGuard mg(mtx);
-  time_t now=time(NULL);
+    time_t now=time(0);
     struct tm t;
     localtime_r(&now,&t);
-  if(!closeSet.empty())//some files are ready to be closed
-  {
-    typedef std::vector<CloseSet::iterator> KillVector;
-    KillVector tokill;
-    for(CloseSet::iterator it=closeSet.begin();it!=closeSet.end();it++)
-    {
-      const int hour= hex2dec( (*it) & 0xff );
-        // hour = ((hour&0xf0)>>4)*10+(hour&0x0f);
-      if(t.tm_hour!=hour)//check if current to file hour is already passed
-      {
-        smsc_log_debug(log,"Try to close file:%x(hour=%d, curHour=%d",*it,hour,t.tm_hour);
-        uint64_t msgId=*it;
-        msgId<<=32;
-        uint64_t off;
-        CsvFile& f=findFile(__func__,msgId,off);
-        f.Close();
-        tokill.push_back(it);
-      }
-    }
-    for(KillVector::iterator it=tokill.begin();it!=tokill.end();it++)
-    {
-      closeSet.erase(*it);
-    }
-  }
+    return t.tm_hour;
+}
+    
+
+bool CsvStore::getNextMessage(Message &message)
+{
+  time_t now=time(NULL);
+  struct tm t;
+  localtime_r(&now,&t);
+  closeProcessedFiles( t.tm_hour );
+  sync::MutexGuard mg(mtx);
 
     while (true) {
 
@@ -284,6 +270,36 @@ bool CsvStore::getNextMessage(Message &message)
 
     } // the main loop over dirs/files
 }
+
+
+void CsvStore::closeProcessedFiles( int localHour )
+{
+  if(!closeSet.empty())//some files are ready to be closed
+  {
+    typedef std::vector<CloseSet::iterator> KillVector;
+    KillVector tokill;
+    for(CloseSet::iterator it=closeSet.begin();it!=closeSet.end();it++)
+    {
+      const int hour= hex2dec( (*it) & 0xff );
+        // hour = ((hour&0xf0)>>4)*10+(hour&0x0f);
+      if(localHour!=hour)//check if current to file hour is already passed
+      {
+        smsc_log_debug(log,"Try to close file:%x(hour=%d, curHour=%d",*it,hour,localHour);
+        uint64_t msgId=*it;
+        msgId<<=32;
+        uint64_t off;
+        CsvFile& f=findFile(__func__,msgId,off);
+        f.Close();
+        tokill.push_back(it);
+      }
+    }
+    for(KillVector::iterator it=tokill.begin();it!=tokill.end();it++)
+    {
+      closeSet.erase(*it);
+    }
+  }
+}
+
 
 //extract from msgId date and hour and find corresponding CsvFile object.
 //extracted from msgId msg offset returned

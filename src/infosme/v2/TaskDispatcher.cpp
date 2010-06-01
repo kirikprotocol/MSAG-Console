@@ -135,6 +135,7 @@ void TaskDispatcher::removeInactiveTasks()
                   iter != taskMap_.end(); ++iter ) {
                 iter->second.remove( ScoredList< TaskDispatcher >::isEqual(task) );
             }
+            task->closeProcessedFiles();
             toDel.push_back(i);
         }
     }

@@ -452,9 +452,13 @@ int TaskProcessor::Execute()
                 activeTasks.Empty();
                 IntHash<Task*>::Iterator it = tasks.First();
                 while ( !bNeedExit && it.Next(key,task) ) {
-                    if (task && task->isReady(currentTime,true) ) {
+                    if (!task) {
+                        // nothing
+                    } else if ( task->isReady(currentTime,true) ) {
                         activeTasks.Insert(key,task);
                         taskGuards.push_back(new TaskGuard(task));
+                    } else {
+                        task->closeProcessedFiles();
                     }
                 }
             } else {

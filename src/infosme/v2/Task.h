@@ -182,6 +182,9 @@ public:
      * @return              false если сообщений нет.
      */
     bool getNextMessage(Message& message);
+    void closeProcessedFiles() {
+        store.closeProcessedFiles(store.getLocalHour());
+    }
 
     /**
      * Финализирует/удаляет сообщение. Выполняется из TaskProcessor'а
@@ -285,7 +288,7 @@ private:
             }
             uc = usersCount;
         }
-        smsc_log_debug(logger,"task %u count%c1=%u",info.uid,v?'+':'-',usersCount);
+        // smsc_log_debug(logger,"task %u count%c1=%u",info.uid,v?'+':'-',usersCount);
         return (usersCount == 0);
     }
 

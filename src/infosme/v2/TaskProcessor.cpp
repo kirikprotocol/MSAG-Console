@@ -361,6 +361,8 @@ int TaskProcessor::Execute()
                         activeOpenMessages += openMessages;
                         smsc_log_info(log_,"task %u/'%s' msgs=%u",
                                       key,task->getName().c_str(),openMessages);
+                    } else {
+                        task->closeProcessedFiles();
                     }
                 }
                 smsc_log_info(log_,"Stats: tasks active/total=%u/%u msgs=%u/%u",

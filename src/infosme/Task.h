@@ -170,6 +170,11 @@ public:
      */
     bool getNextMessage(Message& message);
 
+    /// this method simply close processed files.
+    void closeProcessedFiles() {
+        store.closeProcessedFiles(store.getLocalHour());
+    }
+
     /**
      * Финализирует/удаляет сообщение. Выполняется из TaskProcessor'а
      * Финализация/удаление регулируется флагом info.keepHistory

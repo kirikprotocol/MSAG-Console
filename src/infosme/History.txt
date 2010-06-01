@@ -1,6 +1,9 @@
 History in reverse order
 ----------------------------------------------------
 
+2010-06-01 16:10 bukind
+  feature: closeProcessedFiles invoked periodically to close outdated processed files
+
 ----------------------------------------------------
 infosme-build-20100527 12:00 bukind (v1,v2)
 

@@ -1014,6 +1014,7 @@ bool Task::getNextMessage(Message& message)
     // return setInProcess(false);
 }
 
+
 bool Task::isReady(time_t time, bool checkActivePeriod)
 {
   if ( !isEnabled() || isFinalizing() || 

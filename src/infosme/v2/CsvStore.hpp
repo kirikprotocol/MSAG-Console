@@ -38,6 +38,8 @@ public:
   void Init();
   uint32_t Delete(bool onlynew);
 
+  int getLocalHour() const;
+  void closeProcessedFiles( int localHour );
   bool getNextMessage(Message& message);
   uint64_t createMessage(time_t date,const Message& message,uint8_t state=NEW);
   void enrouteMessage(uint64_t msgId);

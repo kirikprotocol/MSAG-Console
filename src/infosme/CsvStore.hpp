@@ -38,7 +38,16 @@ public:
   void Init();
   uint32_t Delete(bool onlynew);
 
+  /// get current hour (localtime)
+  int getLocalHour() const {
+      time_t now = time(0);
+      struct tm t;
+      localtime_r(&now,&t);
+      return t.tm_hour;
+  }
   bool getNextMessage(Message& message);
+  void closeProcessedFiles( int localHour );
+
   uint64_t createMessage(time_t date,const Message& message,uint8_t state=NEW);
   void enrouteMessage(uint64_t msgId);
   void loadMessage(uint64_t msgId,Message& message,uint8_t& state);
