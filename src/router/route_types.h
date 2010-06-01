@@ -145,6 +145,11 @@ struct TrafficRules{
   }
 };
 
+struct RoutePoint{
+  smsc::sms::Address source;
+  smsc::sms::Address dest;
+};
+
 struct RouteInfo
 {
   RoutePriority priority;
@@ -162,8 +167,6 @@ struct RouteInfo
   RouteId routeId;
   smsc::smeman::SmeSystemId smeSystemId;
   smsc::smeman::SmeSystemId srcSmeSystemId;
-  smsc::sms::Address source;
-  smsc::sms::Address dest;
   uint8_t deliveryMode;
   std::string forwardTo;
   std::string srcSubj; // for duplucate route debugging purposes only

@@ -16,7 +16,7 @@ class RouteAdmin
 {
 public :
   // RouteAdministrator implementaion
-  virtual void addRoute(const RouteInfo& routeInfo) = 0;
+  virtual void addRoute(RouteInfo* routeInfo,const RoutePoint& rp) = 0;
   /*virtual void removeRoute(RouteId id) = 0;
   virtual void modifyRoute(RouteId id,const RouteInfo& routeInfo) = 0;*/
 };

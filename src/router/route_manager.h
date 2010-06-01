@@ -13,6 +13,7 @@
 #include "sms/sms.h"
 
 #include <vector>
+#include <set>
 
 namespace smsc {
 namespace router {
@@ -35,13 +36,14 @@ struct RouteValue
 
 struct RouteRecord
 {
-  RouteInfo info; // has address
+  const RouteInfo* info; // has address
+  RoutePoint rp;
   SmeIndex proxyIdx;
   SmeIndex srcProxyIdx;
   RouteRecord* alternate_pair;
+  RouteRecord* next;
   uint8_t src_def;
   uint8_t dest_def;
-  RouteRecord* next;
   RouteRecord() : next(0) {}
 };
 
@@ -111,6 +113,8 @@ protected:
   vector<string> trace_;
   bool trace_enabled_;
 
+  std::set<RouteInfo*> infoSet;
+
   static bool smeRoutersEnabled;
 
   static void ClearList(RouteRecord*& list)
@@ -153,7 +157,7 @@ public :
   void assign(SmeTable* smetable); // for detach call with NULL;
   //RouteIterator* iterator();
   // RouteAdministrator implementaion
-  virtual void addRoute(const RouteInfo& routeInfo);
+  virtual void addRoute(RouteInfo* routeInfo,const RoutePoint& rp);
   virtual void commit(bool = false);
   virtual void cancel();
   /*virtual void removeRoute(RouteId id);
@@ -166,7 +170,7 @@ public :
   //
   // return true when route found
   //    otherwise return false
-  // в указатель на прокси записывается прокси для маршрута (может быть 0)
+  // пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ 0)
   //
   virtual bool lookup(const Address& source, const Address& dest, SmeProxy*& proxy, int* idx=0,RouteInfo* info=0);
   virtual bool lookup(int srcidx, const Address& source, const Address& dest, SmeProxy*& proxy, int* idx=0,RouteInfo* info=0);
