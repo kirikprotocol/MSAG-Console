@@ -2,8 +2,8 @@
   $Id$
 */
 
-#if !defined __Cpp_Header__smeman_smetyes_h__
-#define __Cpp_Header__smeman_smetyes_h__
+#if !defined __Cpp_Header_smeman_smetypes_h__
+#define __Cpp_Header_smeman_smetypes_h__
 
 #include <string>
 #include <inttypes.h>
