@@ -89,8 +89,8 @@ void SuaProcessor::Stop()
  */
 enum State{
       INIT,
-      SUABINDING,
-      SUABINDERROR,
+      SCCPBINDING,
+      SCCPBINDERROR,
       WORKING
 } state;
 
@@ -99,8 +99,8 @@ static std::string getStateDescription(State cstate)
   switch(cstate)
   {
     case INIT: return "INIT";
-    case SUABINDING: return "SUABINDING";
-    case SUABINDERROR: return "SUABINDERROR";
+    case SCCPBINDING: return "SCCPBINDING";
+    case SCCPBINDERROR: return "SCCPBINDERROR";
     case WORKING: return "WORKING";
   }
 }
@@ -171,34 +171,46 @@ int SuaProcessor::Run()
   smsc::util::config::ConfigView libsuaConfigView(manager, "sua");
 
   libsccp::SccpApiFactory::init();
-  libsccp::SccpApi& suaApi = libsccp::SccpApiFactory::getSccpApiIface();
-  suaApi.init(&libsuaConfigView);
+  libsccp::SccpApi& sccpApi = libsccp::SccpApiFactory::getSccpApiIface();
+  sccpApi.init(&libsuaConfigView);
 
+  uint8_t ssnList[] = { 191 };
+/*
+  for(unsigned idx = 0; idx < sccpApi.getConnectsCount(); ++idx) {
+    sccpApi.connect(idx);
+    eyeline::ss7na::libsccp::SccpApi::ErrorCode_e retResult;
+    retResult = sccpApi.bind(idx, ssnList, static_cast<uint8_t>(sizeof(ssnList)));
+    if ( retResult != eyeline::ss7na::libsccp::SccpApi::OK ) {
+      smsc_log_error(logger, "bind failed: err code = %u", retResult);
+      exit(1);
+    }
+  }
+ */
   changeState(INIT);
-  for(int i=0; i < suaApi.sua_getConnectsCount(); ++i)
+  for(int i=0; i < sccpApi.getConnectsCount(); ++i)
   {
     //int result;
-    if ((result = suaApi.sua_connect(i)) != 0)
+    if ((result = sccpApi.connect(i)) != 0)
     {
       smsc_log_error(logger,
-                     "libSuaTest::: call sua_connect(connectNum=%d)"
+                     "libSuaTest::: call connect(connectNum=%d)"
                      " failed with code %d", i,result);
-      changeState(SUABINDERROR);
+      changeState(SCCPBINDERROR);
       return -1;
     }
-    if ((result = suaApi.bind(i)) != 0)
+    if ((result = sccpApi.bind(i,ssnList,static_cast<uint8_t>(sizeof(ssnList)))) != 0)
     {
       smsc_log_error(logger,
                      "libSuaTest::call sua_bind(connectNum=%d)"
                      " failed with code %d", i,result);
-      changeState(SUABINDERROR);
+      changeState(SCCPBINDERROR);
       return -1;
     }
   }
 
   changeState(WORKING);
   going = 1;
-  libsua::MessageInfo message;
+  libsccp::MessageInfo message;
   while (going)
   {
     switch (state)
@@ -207,10 +219,10 @@ int SuaProcessor::Run()
         registrator->process();
         break;
     }
-    result = suaApi.msgRecv(&message,1000);
-    if (result == libsua::SuaApi::SOCKET_TIMEOUT)
+    result = sccpApi.msgRecv(&message,1000);
+    if (result == libsccp::SccpApi::SOCKET_TIMEOUT)
       continue;
-    if (result != libsua::SuaApi::OK)
+    if (result != libsccp::SccpApi::OK)
     {
       smsc_log_error(logger,"MsgRecv failed: %d", result);
       going = 0;
@@ -220,12 +232,12 @@ int SuaProcessor::Run()
     message.msgData.setPos(0);//release buffer
     //smsc_log_debug(logger, "got new message=[%s]", dump(message.msgData.GetPos(),message.msgData.get()).c_str());
   }
-  for(int i=0; i < suaApi.sua_getConnectsCount(); ++i)
+  for(int i=0; i < sccpApi.getConnectsCount(); ++i)
   {
-    smsc_log_info(logger, "libSuaTest::: call sua_unbind(connectNum=%d)", i);
-    suaApi.unbind(i);
-    smsc_log_info(logger, "libSuaTest::: call sua_disconnect(connectNum=%d)", i);
-    suaApi.sua_disconnect(i);
+    smsc_log_info(logger, "libSuaTest::: call unbind(connectNum=%d)", i);
+    sccpApi.unbind(i);
+    smsc_log_info(logger, "libSuaTest::: call disconnect(connectNum=%d)", i);
+    sccpApi.disconnect(i);
   }
   return 0; //return result;
 }
@@ -234,17 +246,17 @@ void SuaProcessor::send(uint8_t cdlen, uint8_t *cd,
                         uint8_t cllen, uint8_t *cl,
                         uint16_t ulen, uint8_t *udp)
 {
-  libsua::MessageProperties msgProperties;
+  libsccp::MessageProperties msgProperties;
   msgProperties.setReturnOnError(true);
   //msgProperties.hopCount = 2;
   //msgProperties.fieldsMask = libsua::MessageProperties::SET_HOP_COUNT;
-  libsua::SuaApi& suaApi = libsua::SuaApiFactory::getSuaApiIface();
-  libsua::SuaApi::CallResult result =
-      suaApi.unitdata_req(udp, ulen,
+  libsccp::SccpApi& sccpApi = libsccp::SccpApiFactory::getSccpApiIface();
+  libsccp::SccpApi::CallResult result =
+      sccpApi.unitdata_req(udp, ulen,
                                cd, cdlen,
                                cl, cllen,
                                msgProperties, 0);
-  if (result.operationResult != libsua::SuaApi::OK)
+  if (result.operationResult != libsccp::SccpApi::OK)
     smsc_log_error(logger,
                    "libSuaTest::unitdat_req failed with code %d",result.operationResult);
 }
