@@ -574,6 +574,7 @@ int Scheduler::Execute()
             }
           }
           info2(log,"rescheduled %d sms for smeId=%s",(int)it->second.chainSet.size(),Smsc::getInstance().getSmeInfo(idx).systemId.c_str());
+
         }catch(std::exception& e)
         {
           warn2(log,"Exception during SMEALERT:%s",e.what());
