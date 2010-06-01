@@ -170,9 +170,9 @@ int SuaProcessor::Run()
 
   smsc::util::config::ConfigView libsuaConfigView(manager, "sua");
 
-  libsua::SuaApiFactory::init();
-  libsua::SuaApi& suaApi = libsua::SuaApiFactory::getSuaApiIface();
-  suaApi.sua_init(&libsuaConfigView);
+  libsccp::SccpApiFactory::init();
+  libsccp::SccpApi& suaApi = libsccp::SccpApiFactory::getSccpApiIface();
+  suaApi.init(&libsuaConfigView);
 
   changeState(INIT);
   for(int i=0; i < suaApi.sua_getConnectsCount(); ++i)
