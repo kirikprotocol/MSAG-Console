@@ -67,7 +67,7 @@ public:
     /// if the object is processed successfully, the score is incremented,
     /// otherwise score is also incremented for -increment.
     /// if no object is ready or has been processed then
-    /// the time to sleep (ms) is returned (>0), otherwise 0 is returned.
+    /// the time to sleep (time units) is returned (>0), otherwise 0 is returned.
     unsigned processOnce( unsigned deltaTime, unsigned sleepTime )
     {
         unsigned wantToSleep = sleepTime;
@@ -197,11 +197,13 @@ protected:
             const unsigned medi = objects_[objects_.size()/2].score;
             if ( diff > maxdiff_*2 ) {
                 needfix = true;
-                if (log_) smsc_log_debug(log_,"too big diff b/w top and bottom: %u, median: %u", diff, medi );
+                if (log_) {
+                    smsc_log_debug(log_,"too big diff b/w top and bottom: %u, median: %u", diff, medi );
+                }
             }
             if ( medi > 1000000 ) {
                 needfix = true;
-                if (log_) smsc_log_debug(log_,"too big median: %u", medi );
+                if (log_) { smsc_log_debug(log_,"too big median: %u", medi ); }
             }
             if ( needfix ) {
                 const unsigned minscore = medi > maxdiff_/2 ? medi - maxdiff_/2 : 0;

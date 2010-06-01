@@ -6,16 +6,17 @@
 namespace smsc {
 namespace infosme {
 
-class SpeedControl
+template < unsigned TUPERSEC = 1000U, typename COUNTTYPE = unsigned > class SpeedControl
 {
 public:
     // the constructor of the speed object,
     // @param speed    -- the necessary speed
     // @param maxDelay -- the maximum delay in msec to the deltaTime
-    SpeedControl( unsigned speed = 1, unsigned maxDelay = 1000 ) :
-    speed_(speed), nextTime_(0), maxDelay_(maxDelay), wouldSend_(0) {
+    SpeedControl( unsigned speed = 1, unsigned maxDelay = TUPERSEC ) :
+    wouldSend_(0),
+    speed_(speed), nextTime_(0), maxDelay_(maxDelay) {
         assert( speed > 0 );
-        assert( maxDelay >= 1000 );
+        assert( maxDelay >= TUPERSEC );
     }
 
     inline unsigned getSpeed() const { return speed_; }
@@ -36,13 +37,13 @@ public:
     // suspend execution until deltaTime
     inline void suspend( unsigned deltaTime ) {
         nextTime_ = deltaTime;
-        wouldSend_ = nextTime_ * speed_;
+        wouldSend_ = COUNTTYPE(nextTime_)*speed_;
     }
 
     // advance a nextTime in future
     inline void consumeQuant( int number = 1 ) {
-        wouldSend_ += 1000 * number;
-        nextTime_ = wouldSend_ / speed_;
+        wouldSend_ += TUPERSEC * number;
+        nextTime_ = unsigned(wouldSend_ / speed_);
     }
 
     /*
@@ -62,10 +63,10 @@ public:
     }
 
 protected:
-    unsigned speed_;     // in msg/sec
-    unsigned nextTime_;  // the time when the object become ready
-    unsigned maxDelay_;
-    unsigned wouldSend_;
+    COUNTTYPE wouldSend_;
+    unsigned  speed_;     // in msg/sec
+    unsigned  nextTime_;  // the time when the object become ready
+    unsigned  maxDelay_;
 };
 
 }
