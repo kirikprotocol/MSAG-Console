@@ -24,7 +24,7 @@ using smsc::core::synchronization::Mutex;
 using smsc::core::synchronization::MutexGuard;
 using smsc::mtsmsme::processor::util::getReturnCodeDescription;
 using smsc::mtsmsme::processor::util::dump;
-using namespace eyeline::ss7na::libsccp;
+using namespace eyeline::ss7na;
 
 #define MAXENTRIES 1000
 #define MAXSEGM 272
@@ -112,19 +112,19 @@ static void changeState(State nstate)
                  getStateDescription(state).c_str());
 }
 //extern std::string hexdmp(const uchar_t* buf, uint32_t bufSz);
-static void suaHandleInd(libsua::MessageInfo& message, SccpUser& listener)
+static void suaHandleInd(libsccp::MessageInfo& message, SccpUser& listener)
 {
   smsc_log_debug(logger,
                  "got new message type=%d data[%d]={%s} from connection=%d",
                  message.messageType,message.msgData.getPos(),
                  dump(message.msgData.getPos(),message.msgData.get()).c_str(),
-                 message.suaConnectNum);
+                 message.connectNum);
   switch ((int)message.messageType)
   {
-    case libsua::SUAMessageId::N_UNITDATA_IND_MSGCODE :
+    case libsccp::SccpMessageId::N_UNITDATA_IND_MSGCODE:
     {
       //decode with libsua
-      libsua::N_UNITDATA_IND_Message ind;
+      libsccp::N_UNITDATA_IND_Message ind;
       ind.deserialize(message.msgData.get(), message.msgData.getPos());
       listener.NUNITDATA(ind.getCalledAddress().dataLen,
                          (uint8_t*)ind.getCalledAddress().data,
@@ -147,9 +147,9 @@ static void suaHandleInd(libsua::MessageInfo& message, SccpUser& listener)
       listener.NUNITDATA(cdlen,cd,cllen,cl,ulen,udp);
       break;
     }
-    case libsua::SUAMessageId::N_NOTICE_IND_MSGCODE :
+    case libsccp::SccpMessageId::N_NOTICE_IND_MSGCODE:
     {
-      libsua::N_NOTICE_IND_Message ind;
+      libsccp::N_NOTICE_IND_Message ind;
       ind.deserialize(message.msgData.get(), message.msgData.getPos());
       smsc_log_info(logger,"N_NOTICE_IND_MSGCODE REASON=%d",ind.getReasonForReturn());
       listener.NNOTICE(ind.getCalledAddress().dataLen,
