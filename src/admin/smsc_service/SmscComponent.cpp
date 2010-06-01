@@ -1122,10 +1122,7 @@ Variant SmscComponent::traceRoute(const Arguments &args)
             bTemporalRoutesManagerConfigLoaded = true;
         }
 
-        SmeProxy* proxy = 0;
-        RouteInfo info;
         bool found = false;
-        info.enabling = true;
 
         //-1:   Dealiased destination
         // 0:   Message (Route found | Route found (disabled) | Route not found)
@@ -1148,20 +1145,18 @@ Variant SmscComponent::traceRoute(const Arguments &args)
           dstAddr=addrBuf;
         }
 
+        SmeIndex index = -1;
+        smsc::router::RouteResult rr;
+
         if (srcSysId)
         {
-            SmeIndex index = smsc_app_runner->getApp()->getSmeIndex(srcSysId);
+            index = smsc_app_runner->getApp()->getSmeIndex(srcSysId);
             if (index == -1)
                 throw AdminException("Trace route failed. Sme for system id '%s' not found", srcSysId);
 
-            found = smsc_app_runner->getApp()->getTestRouterInstance()->
-                lookup(index, Address(srcAddr), Address(dstAddr), proxy, 0, &info);
         }
-        else
-        {
-            found = smsc_app_runner->getApp()->getTestRouterInstance()->
-                lookup(Address(srcAddr), Address(dstAddr), proxy, 0, &info);
-        }
+        found = smsc_app_runner->getApp()->getTestRouterInstance()->
+            lookup(index, Address(srcAddr), Address(dstAddr), rr);
 
         vector<std::string> traceBuff;
         smsc_app_runner->getApp()->getTestRouterInstance()->getTrace(traceBuff);
@@ -1169,7 +1164,7 @@ Variant SmscComponent::traceRoute(const Arguments &args)
 
         if (!found)
         {
-          if (info.enabling == false)
+          if (rr.found == false)
           {
             result.appendValueToStringList("Route found (disabled)");
             found = true;
@@ -1186,16 +1181,18 @@ Variant SmscComponent::traceRoute(const Arguments &args)
         if (found)
         {
             char routeText[2048];
-            char srcAddressText[64]; char dstAddressText[64];
-            info.source.getText(srcAddressText, sizeof(srcAddressText));
-            info.dest  .getText(dstAddressText, sizeof(dstAddressText));
+            //char srcAddressText[64]; char dstAddressText[64];
 
-            std::auto_ptr<char> encRouteId(getEncodedString(info.routeId.c_str()));
-            std::auto_ptr<char> encSrcAddressText(getEncodedString(srcAddressText));
-            std::auto_ptr<char> encDstAddressText(getEncodedString(dstAddressText));
-            std::auto_ptr<char> encSmeSystemId(getEncodedString(info.smeSystemId.c_str()));
-            std::auto_ptr<char> encForwardTo(getEncodedString(info.forwardTo.c_str()));
-            std::auto_ptr<char> encSrcSmeSystemId(getEncodedString(info.srcSmeSystemId.c_str()));
+
+            //info.source.getText(srcAddressText, sizeof(srcAddressText));
+            //info.dest  .getText(dstAddressText, sizeof(dstAddressText));
+
+            std::auto_ptr<char> encRouteId(getEncodedString(rr.info.routeId.c_str()));
+            std::auto_ptr<char> encSrcAddressText(getEncodedString(rr.rp.source.toString().c_str()));
+            std::auto_ptr<char> encDstAddressText(getEncodedString(rr.rp.dest.toString().c_str()));
+            std::auto_ptr<char> encSmeSystemId(getEncodedString(rr.info.smeSystemId.c_str()));
+            std::auto_ptr<char> encForwardTo(getEncodedString(rr.info.forwardTo.c_str()));
+            std::auto_ptr<char> encSrcSmeSystemId(getEncodedString(rr.info.srcSmeSystemId.c_str()));
 
             sprintf(routeText, "route id:%s;source address:%s;destination address:%s;"
                                "sme system id:%s;source sme system id:%s;"
@@ -1203,9 +1200,9 @@ Variant SmscComponent::traceRoute(const Arguments &args)
                                "billing:%s;archiving:%s;enabling:%s;suppress delivery reports:%s",
                     encRouteId.get(), encSrcAddressText.get(), encDstAddressText.get(),
                     encSmeSystemId.get(), encSrcSmeSystemId.get(),
-                    info.priority, info.serviceId, info.deliveryMode, encForwardTo.get(),
-                    (info.billing) ? "yes":"no" , (info.archived) ? "yes":"no",
-                    (info.enabling) ? "yes":"no", (info.suppressDeliveryReports) ? "yes":"no");
+                    rr.info.priority, rr.info.serviceId, rr.info.deliveryMode, encForwardTo.get(),
+                    (rr.info.billing) ? "yes":"no" , (rr.info.archived) ? "yes":"no",
+                    (rr.info.enabling) ? "yes":"no", (rr.info.suppressDeliveryReports) ? "yes":"no");
 
             result.appendValueToStringList(routeText);
         }

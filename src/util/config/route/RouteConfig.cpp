@@ -214,7 +214,6 @@ throw (SubjectNotFoundException)
   XmlStr srcSmeSystemId(elem.getAttribute(XmlStr("srcSmeId")));
   XmlStr deliveryModeStr(elem.getAttribute(XmlStr("deliveryMode")));
   XmlStr forwardToStr(elem.getAttribute(XmlStr("forwardTo")));
-  XmlStr trafRulesStr(elem.getAttribute(XmlStr("trafficRules")));
   const AclIdent aclId(atoi(XmlStr(elem.getAttribute(XmlStr("aclId")))));
   XmlStr forceDelivery(elem.getAttribute(XmlStr("forceDelivery")));
   XmlStr allowBlocked(elem.getAttribute(XmlStr("allowBlocked")));
@@ -251,7 +250,6 @@ throw (SubjectNotFoundException)
                                    std::string(srcSmeSystemId),
                                    strToDeliveryMode(deliveryModeStr),
                                    std::string(forwardToStr),
-                                   std::string(trafRulesStr),
                                    aclId,
                                    strcmp("true", forceDelivery) == 0,
                                    strcmp("true", allowBlocked) == 0,

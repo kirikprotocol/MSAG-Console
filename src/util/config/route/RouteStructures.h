@@ -141,7 +141,6 @@ private:
   std::string srcSmeSystemId;
   const uint8_t deliveryMode;
   std::string forwardTo;
-  std::string trafrules;
   const AclIdent aclId;
   const bool forceDelivery;
   const bool allowBlocked;
@@ -167,13 +166,13 @@ public:
   Route(const std::string & rid, const int prior, uint8_t isBilling, bool isArchiving,
       bool isEnabling, bool isSuppressDR, bool isActive,bool isHide,smsc::router::ReplyPath replyPath,
       int _serviceId, const std::string & _srcSmeSystemId, const uint8_t _deliveryMode,
-      const std::string & _forwardTo,const std::string& _trafrules, const AclIdent aclId,
+      const std::string & _forwardTo,const AclIdent aclId,
       const bool forceDelivery, const bool allowBlocked, const signed long providerId,
       const std::string billingRuleId,const signed long categoryId,bool transit,const std::string& argBackupSme)
     : id(rid), priority(prior), sources(), destinations(),
     billing(isBilling), archiving(isArchiving), enabling(isEnabling), suppressDeliveryReports(isSuppressDR),
     active(isActive), hide(isHide),replyPath(replyPath),serviceId(_serviceId),
-    srcSmeSystemId(_srcSmeSystemId), deliveryMode(_deliveryMode), forwardTo(_forwardTo),trafrules(_trafrules),
+    srcSmeSystemId(_srcSmeSystemId), deliveryMode(_deliveryMode), forwardTo(_forwardTo),
     aclId(aclId), forceDelivery(forceDelivery), allowBlocked(allowBlocked), providerId(providerId),
     billingRuleId(billingRuleId),categoryId(categoryId),transit(transit),backupSme(argBackupSme)
   {}
@@ -200,7 +199,6 @@ public:
   const std::string & getSrcSmeSystemId() const { return srcSmeSystemId; }
   const uint8_t getDeliveryMode() const {return this->deliveryMode;}
   const std::string & getForwardTo() const {return this->forwardTo;}
-  const std::string& getTrafRules()const{return this->trafrules;}
   const AclIdent getAclId() const { return this->aclId; }
   const bool isForceDelivery() const { return this->forceDelivery; }
   const bool isAllowBlocked() const { return this->allowBlocked; }

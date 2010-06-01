@@ -60,7 +60,6 @@ void loadRoutes(RouteManager* rm,const RouteConfig& rc,bool traceit)
           rinfo->replyPath=route->getReplyPath();
           rinfo->deliveryMode = route->getDeliveryMode();
           rinfo->forwardTo = route->getForwardTo();
-          rinfo->trafRules=TrafficRules(route->getTrafRules());
           rinfo->forceDelivery=route->isForceDelivery();
           rinfo->aclId=route->getAclId();
           rinfo->allowBlocked=route->isAllowBlocked();
@@ -89,6 +88,7 @@ void loadRoutes(RouteManager* rm,const RouteConfig& rc,bool traceit)
             {
               __warning2__("[route skiped] %s -> %s: %s",
                            route->getSrcSmeSystemId().c_str(), dest.getSmeIdString().c_str(), e.what());
+              continue;
             }
             const MaskVector& src_masks = src.getMasks();
             for(MaskVector::const_iterator src_mask_it = src_masks.begin();
@@ -97,9 +97,6 @@ void loadRoutes(RouteManager* rm,const RouteConfig& rc,bool traceit)
             {
               try{
                 makeAddress(rp.source,*src_mask_it);
-                //              __trace2__("dest mask: %s",dest_mask_it->c_str());
-                //              __trace2__("src mask: %s",src_mask_it->c_str());
-                //              print(rinfo);
                 rm->addRoute(rinfo,rp);
               }
               catch(exception& e)

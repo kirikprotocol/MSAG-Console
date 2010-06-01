@@ -155,15 +155,13 @@ int AbonentInfoSme::Execute()
         {
           d=a;
         }
-        smsc::router::RouteInfo ri;
-        int dest_proxy_index;
-        SmeProxy *dest_proxy=NULL;
+        smsc::router::RouteResult rr;
         int src_proxy_index=-1;
         if(sms->getSourceSmeId()[0])
         {
           src_proxy_index=smsc->getSmeIndex(sms->getSourceSmeId());
         }
-        bool has_route = smsc->routeSms(sms->getOriginatingAddress(),d,dest_proxy_index,dest_proxy,&ri,src_proxy_index);
+        bool has_route = smsc->routeSms(src_proxy_index,sms->getOriginatingAddress(),d,rr);
 
         Address oa=sms->getOriginatingAddress();
         Address da=sms->getDestinationAddress();
@@ -176,13 +174,13 @@ int AbonentInfoSme::Execute()
         cmd->get_abonentStatus().isMobileRequest=(da==hrSrc);
 
         int status=AbonentStatus::UNKNOWNVALUE;
-        if(!has_route || !dest_proxy)
+        if(!has_route || !rr.destProxy)
         {
           status=AbonentStatus::OFFLINE;
         }
         else
         {
-          if(ri.smeSystemId!="MAP_PROXY")status=AbonentStatus::ONLINE;
+          if(rr.info.smeSystemId!="MAP_PROXY")status=AbonentStatus::ONLINE;
         }
 
         char a1[32];

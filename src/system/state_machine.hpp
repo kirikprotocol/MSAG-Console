@@ -162,8 +162,6 @@ protected:
     SbmContext(Tuple& argT):t(argT)
     {
       sms=0;
-      dest_proxy=0;
-      dest_proxy_index=-1;
       fromMap=false;
       toMap=false;
       fromDistrList=false;
@@ -176,8 +174,7 @@ protected:
       createSms=scsCreate;
     }
     SMS* sms;
-    SmeProxy* dest_proxy;
-    int dest_proxy_index;
+    smsc::router::RouteResult rr;
     SmeProxy* src_proxy;
     Tuple& t;
     bool fromMap;
@@ -188,7 +185,6 @@ protected:
     bool noDestChange;
     Address dst;
     bool has_route;
-    RouteInfo ri;
     StateType rvstate;
     bool isForwardTo;
     bool generateDeliver;

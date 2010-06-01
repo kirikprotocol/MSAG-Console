@@ -190,7 +190,7 @@ public:
   void mainLoop(int);
   void shutdown();
   TaskContainer tasks;
-  bool routeSms(const Address& org,const Address& dst, int& dest_idx,SmeProxy*& proxy,smsc::router::RouteInfo* ri,SmeIndex idx=-1);
+  bool routeSms(SmeIndex srcIdx,const Address& org,const Address& dst, smsc::router::RouteResult& rr);
 
   bool AliasToAddress(const Address& alias,Address& addr)
   {

@@ -192,15 +192,13 @@ int main(int argc,char* argv[])
     {
       throw std::runtime_error("Invalid source sme id");
     }
-    int idx;
-    RouteInfo ri;
-    smsc::smeman::SmeProxy* prx;
+    RouteResult rr;
     hrtime_t lookup_start=gethrtime();
-    bool lookupresult=rm.lookup(smeIdx,src,dst,prx,&idx,&ri);
+    bool lookupresult=rm.lookup(smeIdx,src,dst,rr);
     hrtime_t lookup_end=gethrtime();
     if(lookupresult)
     {
-      printf("Found:%s\n",ri.routeId.c_str());
+      printf("Found:%s\n",rr.info.routeId.c_str());
     }else
     {
       printf("Not found\n");

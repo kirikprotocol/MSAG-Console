@@ -25,19 +25,9 @@ using std::auto_ptr;
 
 #define __CMD__(x) smsc::smeman::x
 
-bool Smsc::routeSms(const Address& org,const Address& dst, int& dest_idx,SmeProxy*& proxy,
-  smsc::router::RouteInfo* ri,SmeIndex idx)
+bool Smsc::routeSms(SmeIndex srcIdx,const Address& org,const Address& dst, smsc::router::RouteResult& rr)
 {
-  proxy = 0;
-  bool ok ;
-  if(idx==-1)
-  {
-    ok=getRouterInstance()->lookup(org,dst,proxy,&dest_idx,ri);
-  }else
-  {
-    ok=getRouterInstance()->lookup(idx,org,dst,proxy,&dest_idx,ri);
-  }
-  return ok;
+  return getRouterInstance()->lookup(srcIdx,org,dst,rr);
 }
 
 bool isUSSDSessionSms(SMS* sms)

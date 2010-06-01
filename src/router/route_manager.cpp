@@ -220,7 +220,6 @@ __synchronized__
       }
     }
   }
-  infoSet.insert(routeInfo);
   r->info = routeInfo;
   r->rp=rp;
   r->src_def = calcDefLengthAndCheck(&r->rp.source);
@@ -614,6 +613,12 @@ void RouteManager::commit(bool traceit)
 {
   __trace__("commit!");
 
+  for(std::set<const RouteInfo*>::iterator it=infoSet.begin(),end=infoSet.end();it!=end;++it)
+  {
+    delete *it;
+  }
+  infoSet.clear();
+
   int idx=0;
   bool main=true;
   std::vector<RouteRecord*> table;
@@ -647,6 +652,7 @@ void RouteManager::commit(bool traceit)
     {
       __require__(r != 0);
       table[i] = r;
+      infoSet.insert(r->info);
       r = r->next;
     }
     __qsort__(&table[0],count,sizeof(RouteRecord*),compare_patterns);
@@ -718,12 +724,13 @@ void RouteManager::cancel()
 }
 
 // RoutingTable implementation
-bool RouteManager::lookup(int srcidx, const Address& source, const Address& dest, SmeProxy*& proxy, int* idx, RouteInfo* info)
+bool RouteManager::lookup(int srcidx, const Address& source, const Address& dest, RouteResult& rr)
 {
 __synchronized__
   //if ( info ) *info = 0;
-  if ( idx ) *idx = 0;
-  proxy = 0;
+  rr.destSmeIdx = -1;
+  rr.destProxy = 0;
+  rr.found = false;
   __require__(sme_table);
   // ....
 
@@ -808,7 +815,7 @@ __synchronized__
     return false; // �� ������
   }
 
-  proxy = sme_table->getSmeProxy(rec->proxyIdx);
+  rr.destProxy = sme_table->getSmeProxy(rec->proxyIdx);
 
   if ( trace_enabled_ )
   {
@@ -818,14 +825,9 @@ __synchronized__
       << AddrToString(rec->rp.dest) << "(" << rec->info->smeSystemId.c_str() << ")";
     trace_.push_back(ost.str());
   }
-  if ( info )
-  {
-    *info = *rec->info;
-  }
-  if ( idx && rec->info->enabling )
-  {
-    *idx = rec->proxyIdx;
-  }
+  rr.info = *rec->info;
+  rr.found=true;
+  rr.destSmeIdx = rec->proxyIdx;
   if (!rec->info->enabling)
   {
     if(trace_enabled_)
@@ -838,9 +840,9 @@ __synchronized__
 }
 
 // RoutingTable implementation
-bool RouteManager::lookup(const Address& source, const Address& dest, SmeProxy*& proxy, int* idx, RouteInfo* info)
+bool RouteManager::lookup(const Address& source, const Address& dest, RouteResult& rr)
 {
-  return lookup(-1,source,dest,proxy,idx,info);
+  return lookup(-1,source,dest,rr);
 }
 
 void RouteManager::getTrace(vector<string>& tracelist)

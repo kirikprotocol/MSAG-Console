@@ -113,7 +113,7 @@ protected:
   vector<string> trace_;
   bool trace_enabled_;
 
-  std::set<RouteInfo*> infoSet;
+  std::set<const RouteInfo*> infoSet;
 
   static bool smeRoutersEnabled;
 
@@ -146,6 +146,11 @@ public :
         *it=0;
       }
     }
+    for(std::set<const RouteInfo*>::iterator it=infoSet.begin(),end=infoSet.end();it!=end;++it)
+    {
+      delete *it;
+    }
+    infoSet.clear();
     smeRouters.clear();
   }
 
@@ -172,8 +177,8 @@ public :
   //    otherwise return false
   // � ��������� �� ������ ������������ ������ ��� �������� (����� ���� 0)
   //
-  virtual bool lookup(const Address& source, const Address& dest, SmeProxy*& proxy, int* idx=0,RouteInfo* info=0);
-  virtual bool lookup(int srcidx, const Address& source, const Address& dest, SmeProxy*& proxy, int* idx=0,RouteInfo* info=0);
+  virtual bool lookup(const Address& source, const Address& dest, RouteResult& rr);
+  virtual bool lookup(int srcidx, const Address& source, const Address& dest, RouteResult& rr);
   virtual void getTrace(vector<string>&);
   virtual void enableTrace(bool);
 };
