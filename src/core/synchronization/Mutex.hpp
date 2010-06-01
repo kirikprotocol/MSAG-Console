@@ -43,7 +43,7 @@ public:
     }
     void Unlock()
     {
-        ltid = -1;
+        ltid = (pthread_t)-1;
         pthread_mutex_unlock(&mutex);
     }
     bool TryLock()
