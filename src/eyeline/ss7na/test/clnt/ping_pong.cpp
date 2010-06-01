@@ -3,7 +3,7 @@
 
 #include "logger/Logger.h"
 #include "util/Exception.hpp"
-#include "util/config/Manager.h"
+#include "util/config/XCFManager.hpp"
 
 #include "eyeline/sccp/SCCPAddress.hpp"
 #include "eyeline/sccp/GlobalTitle.hpp"
@@ -11,6 +11,8 @@
 #include "eyeline/ss7na/libsccp/types.hpp"
 #include "eyeline/ss7na/libsccp/SccpApi.hpp"
 #include "eyeline/ss7na/libsccp/SccpApiFactory.hpp"
+#include "eyeline/ss7na/libsccp/xcfg/LibSccpCfgReader.hpp"
+
 #include "eyeline/ss7na/libsccp/MessageProperties.hpp"
 #include "eyeline/ss7na/libsccp/messages/LibsccpMessage.hpp"
 #include "eyeline/ss7na/libsccp/messages/N_UNITDATA_IND_Message.hpp"
@@ -18,6 +20,14 @@
 #include "eyeline/ss7na/libsccp/messages/N_PCSTATE_IND_Message.hpp"
 #include "eyeline/ss7na/libsccp/messages/N_STATE_IND_Message.hpp"
 #include "eyeline/ss7na/libsccp/messages/N_COORD_IND_Message.hpp"
+
+using smsc::util::config::XCFManager;
+using smsc::util::config::Config;
+using eyeline::ss7na::libsccp::SccpConfig;
+using eyeline::ss7na::libsccp::SccpApi;
+using eyeline::ss7na::libsccp::SccpApiFactory;
+using eyeline::ss7na::libsccp::LibSccpCfgReader;
+
 
 smsc::logger::Logger *logger;
 
@@ -62,8 +72,7 @@ parseMessage(eyeline::ss7na::libsccp::MessageInfo& msgInfo)
 void
 bind()
 {
-  eyeline::ss7na::libsccp::SccpApi& sccpApi =
-      eyeline::ss7na::libsccp::SccpApiFactory::getSccpApiIface();
+  SccpApi & sccpApi = SccpApiFactory::getSccpApiIface();
 
   uint8_t ssnList[] = { 7, 147 };
   for(unsigned idx = 0; idx < sccpApi.getConnectsCount(); ++idx) {
@@ -80,8 +89,7 @@ bind()
 void
 ping(const char* called_addr, const char* calling_addr)
 {
-  eyeline::ss7na::libsccp::SccpApi& sccpApi =
-      eyeline::ss7na::libsccp::SccpApiFactory::getSccpApiIface();
+  SccpApi & sccpApi = SccpApiFactory::getSccpApiIface();
 
   eyeline::sccp::SCCPAddress calledAddr(eyeline::sccp::GlobalTitle(0,
                                                                    eyeline::sccp::GlobalTitle::npiISDNTele_e164,
@@ -120,8 +128,7 @@ ping(const char* called_addr, const char* calling_addr)
 void
 pong()
 {
-  eyeline::ss7na::libsccp::SccpApi& sccpApi =
-      eyeline::ss7na::libsccp::SccpApiFactory::getSccpApiIface();
+  SccpApi & sccpApi = SccpApiFactory::getSccpApiIface();
 
   while(true) {
     eyeline::ss7na::libsccp::MessageInfo msgInfo;
@@ -150,6 +157,7 @@ pong()
   }
 }
 
+
 int main(int argc, char** argv)
 {
   smsc::logger::Logger::Init();
@@ -169,14 +177,17 @@ int main(int argc, char** argv)
     return 1;
   }
   try {
-    smsc::util::config::Manager::init(cfgFile);
-    smsc::util::config::Manager& manager = smsc::util::config::Manager::getInstance();
+    SccpConfig        sccpCfgParms;
+    LibSccpCfgReader  cfgReader("libsccp");
+    {
+      std::auto_ptr<Config> xConfig(XCFManager::getInstance().getConfig(cfgFile)); //throws
+      cfgReader.readConfig(*xConfig.get(), sccpCfgParms); //throws
+    }
 
-    smsc::util::config::ConfigView libsccpConfigView(manager, "libsccp");
+    SccpApiFactory::init();
+    SccpApi & sccpApi = SccpApiFactory::getSccpApiIface();
 
-    eyeline::ss7na::libsccp::SccpApiFactory::init();
-    if ( eyeline::ss7na::libsccp::SccpApiFactory::getSccpApiIface().init(&libsccpConfigView) !=
-         eyeline::ss7na::libsccp::SccpApi::OK ) {
+    if (sccpApi.init(sccpCfgParms) != SccpApi::OK) { //throws
       smsc_log_error(logger, "main::: SccpApi initialization failed. Terminated.");
       return 1;
     }
