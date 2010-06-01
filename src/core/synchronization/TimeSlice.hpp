@@ -36,7 +36,15 @@ public:
 
     static void getRealTime(struct timespec & tv)
     {   //Note: on Solaris requires -D__EXTENSIONS__
+#ifdef __MACH__
+        timeval ltv;
+        gettimeofday(&ltv,0);
+        tv.tv_sec=ltv.tv_sec;
+        tv.tv_nsec=ltv.tv_usec*1000;
+        
+#else
         clock_gettime(CLOCK_REALTIME, &tv);
+#endif
     }
 
 protected:
