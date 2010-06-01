@@ -1,33 +1,42 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!DOCTYPE config SYSTEM "file://configuration.dtd">
 <!-- "$Id$" -->
+
+<!--Tcap Provider configuration file -->
+<!--NOTE: Tcap Provider uses LibSccp to interact with remote SCCP Provider -->
 <config>
-  <section name="tcap_provider">
-    <section name="sccp_provider">
-      <param name="appId" type="string">SMSC_PRIMARY</param> <!--
-      no longer than 255 chars -->
-      <param name="traffic-mode" type="string">loadshare</param> <!--
-      options: 'loadshare', 'override' -->
-      <section name="links">
-        <section name="link 1">
-          <param name="host" type="string">niagara</param>
-          <param name="port" type="int">5557</param>
-        </section>
-        <section name="link 2">
-          <param name="host" type="string">phoenix</param>
-          <param name="port" type="int">5557</param>
-        </section>
+
+  <!-- LibSccp configuration parameters -->
+  <section name="libsccp">
+    <param name="appId" type="string">SMSC_PRIMARY</param> <!--
+    no longer than 255 chars -->
+    <param name="traffic-mode" type="string">loadshare</param> <!--
+    options: 'loadshare', 'override' -->
+    <section name="links">
+      <section name="link 1">
+        <param name="host" type="string">niagara</param>
+        <param name="port" type="int">5557</param>
+      </section>
+      <section name="link 2">
+        <param name="host" type="string">phoenix</param>
+        <param name="port" type="int">5557</param>
       </section>
     </section>
+  </section>
 
-    <param name="subSystems" type="string">8,153</param> <!--
+  <!--Tcap Provider configuration parameters -->
+  <section name="tcap_provider">
+    <param name="ownGT" type="string">791398699811</param> <!--
+    own address (ISDN international signals) -->
+    <param name="subSystems" type="string">8, 153</param> <!--
     csv list of uint8_t -->
     <param name="initMsgReaders" type="int">5</param>
     <param name="maxMsgReaders" type="int">10</param>
-    <param name="maxDialoguesCount" type="int">10</param>
+    <param name="maxDialoguesCount" type="int">500</param>
     <param name="defaultDlgTimeout" type="int">300</param> <!-- uint16_t, default: 300 -->
     <param name="defaultRosTimeout" type="int">60</param> <!-- uint16_t, default: 60 -->
-    <param name="trnIdSelectionAlg" type="string"></param>
+    <param name="trnIdSelectionAlg" type="string">TODO</param>
   </section>
+
 </config>
 
