@@ -4,11 +4,11 @@ static char const ident[] = "$Id$";
 #include "logger/Logger.h"
 #include "mtsmsme/sua/SuaProcessor.hpp"
 #include "sms/sms.h"
-#include <eyeline/sua/libsua/SuaApiFactory.hpp>
-#include <eyeline/sua/libsua/MessageProperties.hpp>
-#include <eyeline/sua/libsua/MessageInfo.hpp>
-#include <eyeline/sua/libsua/messages/N_UNITDATA_IND_Message.hpp>
-#include <eyeline/sua/libsua/messages/N_NOTICE_IND_Message.hpp>
+#include "eyeline/ss7na/libsccp/SccpApiFactory.hpp"
+#include "eyeline/ss7na/libsccp/MessageProperties.hpp"
+#include "eyeline/ss7na/libsccp/MessageInfo.hpp"
+#include "eyeline/ss7na/libsccp/messages/N_UNITDATA_IND_Message.hpp"
+#include "eyeline/ss7na/libsccp/messages/N_NOTICE_IND_Message.hpp"
 
 using namespace std;
 namespace smsc{
@@ -24,7 +24,7 @@ using smsc::core::synchronization::Mutex;
 using smsc::core::synchronization::MutexGuard;
 using smsc::mtsmsme::processor::util::getReturnCodeDescription;
 using smsc::mtsmsme::processor::util::dump;
-using namespace eyeline::sua;
+using namespace eyeline::ss7na::libsccp;
 
 #define MAXENTRIES 1000
 #define MAXSEGM 272
