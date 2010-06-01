@@ -2,8 +2,7 @@ static char const ident[] = "$Id$";
 #include "mtsmsme/processor/Processor.h"
 #include "mtsmsme/processor/util.hpp"
 #include "logger/Logger.h"
-#include "util/config/Manager.h"
-#include "util/config/ConfigView.h"
+#include "util/config/XCFManager.hpp"
 #include "mtsmsme/sua/SuaProcessor.hpp"
 #include "sms/sms.h"
 #include "eyeline/ss7na/libsccp/SccpApiFactory.hpp"
@@ -166,15 +165,23 @@ static void suaHandleInd(libsccp::MessageInfo& message, SccpUser& listener)
 int SuaProcessor::Run()
 {
   int result;
-  smsc::util::config::Manager::deinit();
-  smsc::util::config::Manager::init("sua.xml");
-  smsc::util::config::Manager& manager = smsc::util::config::Manager::getInstance();
 
-  smsc::util::config::ConfigView libsuaConfigView(manager, "sua");
+  using smsc::util::config::XCFManager;
+  using smsc::util::config::Config;
+  libsccp::SccpConfig sccpCfgParms;
+  libsccp::LibSccpCfgReader cfgReader("sua");
+  {
+    std::auto_ptr<Config> xConfig(XCFManager::getInstance().getConfig(cfgFile)); //throws
+    cfgReader.readConfig(*xConfig.get(), sccpCfgParms); //throws
+  }
 
   libsccp::SccpApiFactory::init();
   libsccp::SccpApi& sccpApi = libsccp::SccpApiFactory::getSccpApiIface();
-  sccpApi.init(&libsuaConfigView);
+
+  if (sccpApi.init(sccpCfgParms) != SccpApi::OK) { //throws
+    smsc_log_error(logger, "main::: SccpApi initialization failed. Terminated.");
+    return 1;
+  }
 
   uint8_t ssnList[] = { 191 };
 /*
@@ -260,7 +267,7 @@ void SuaProcessor::send(uint8_t cdlen, uint8_t *cd,
                                msgProperties, 0);
   if (result != libsccp::SccpApi::OK)
     smsc_log_error(logger,
-                   "libSuaTest::unitdat_req failed with code %d",result.operationResult);
+                   "libSuaTest::unitdat_req failed with code %d",result);
 }
 }//namespace processor
 }//namespace mtsmsme
