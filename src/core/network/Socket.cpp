@@ -247,7 +247,7 @@ int Socket::Gets(char *buf, int len)
     if(ch==-1)return SOCKET_ERROR;
     buf[i] = ch;
     i++;
-    if(i>1 && (buf[i-2]==0x0d && buf[i-1]==0x0a) || (buf[i-1]==0x0a))break;
+    if((i>1 && (buf[i-2]==0x0d && buf[i-1]==0x0a)) || (buf[i-1]==0x0a))break;
   }
   buf[i] = 0;
 

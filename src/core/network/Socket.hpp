@@ -181,7 +181,7 @@ public:
 
   static void PrintAddrPort( const sockaddr_in& addr, char* buf )
   {
-#ifdef linux
+#ifndef __sun
     unsigned char *a=(unsigned char*)&addr.sin_addr.s_addr;
 #else
     unsigned char *a=(unsigned char*)&addr.sin_addr.S_un.S_addr;
