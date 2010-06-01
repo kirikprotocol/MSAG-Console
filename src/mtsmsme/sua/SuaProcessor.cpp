@@ -2,6 +2,7 @@ static char const ident[] = "$Id$";
 #include "mtsmsme/processor/Processor.h"
 #include "mtsmsme/processor/util.hpp"
 #include "logger/Logger.h"
+#include "util/config/Manager.h"
 #include "mtsmsme/sua/SuaProcessor.hpp"
 #include "sms/sms.h"
 #include "eyeline/ss7na/libsccp/SccpApiFactory.hpp"
