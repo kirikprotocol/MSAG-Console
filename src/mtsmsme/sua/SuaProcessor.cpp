@@ -5,6 +5,7 @@ static char const ident[] = "$Id$";
 #include "util/config/XCFManager.hpp"
 #include "mtsmsme/sua/SuaProcessor.hpp"
 #include "sms/sms.h"
+#include "eyeline/ss7na/libsccp/xcfg/LibSccpCfgReader.hpp"
 #include "eyeline/ss7na/libsccp/SccpApiFactory.hpp"
 #include "eyeline/ss7na/libsccp/MessageProperties.hpp"
 #include "eyeline/ss7na/libsccp/MessageInfo.hpp"
@@ -168,10 +169,11 @@ int SuaProcessor::Run()
 
   using smsc::util::config::XCFManager;
   using smsc::util::config::Config;
+
   libsccp::SccpConfig sccpCfgParms;
   libsccp::LibSccpCfgReader cfgReader("sua");
   {
-    std::auto_ptr<Config> xConfig(XCFManager::getInstance().getConfig(cfgFile)); //throws
+    std::auto_ptr<Config> xConfig(XCFManager::getInstance().getConfig("sua.xml")); //throws
     cfgReader.readConfig(*xConfig.get(), sccpCfgParms); //throws
   }
 
