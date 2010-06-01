@@ -178,7 +178,7 @@ int SuaProcessor::Run()
   libsccp::SccpApiFactory::init();
   libsccp::SccpApi& sccpApi = libsccp::SccpApiFactory::getSccpApiIface();
 
-  if (sccpApi.init(sccpCfgParms) != SccpApi::OK) { //throws
+  if (sccpApi.init(sccpCfgParms) != libsccp::SccpApi::OK) { //throws
     smsc_log_error(logger, "main::: SccpApi initialization failed. Terminated.");
     return 1;
   }
