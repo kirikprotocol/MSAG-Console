@@ -12,6 +12,7 @@ namespace eyeline  {
 namespace ss7na {
 namespace libsccp {
 
+using smsc::util::config::Config;
 using smsc::util::config::XConfigView;
 using smsc::util::config::ConfigException;
 
@@ -28,8 +29,11 @@ protected:
   bool readLinks(XConfigView * outer_sec, SccpConfig::SCSPLinksArray & links_arr)
        throw(ConfigException);
 
+  void readTgtSection(XConfigView * outer_sec, SccpConfig & st_cfg)
+    throw(ConfigException);
+
 public:
-  LibSccpCfgReader(const char * abs_nm_sec = "sccp_provider")
+  LibSccpCfgReader(const char * abs_nm_sec = "libsccp")
     : _nmSec(abs_nm_sec)
   { }
   ~LibSccpCfgReader()
@@ -37,7 +41,10 @@ public:
 
   const char * nmCfgSection(void) const { return _nmSec; }
 
-  void readConfig(XConfigView * root_sec, SccpConfig & st_cfg)
+  void readConfig(XConfigView * outer_sec, SccpConfig & st_cfg)
+      throw(ConfigException);
+
+  void readConfig(Config & root_sec, SccpConfig & st_cfg)
       throw(ConfigException);
 };
 

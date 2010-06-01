@@ -15,60 +15,77 @@ using smsc::util::config::CStrSet;
 /* ************************************************************************* *
  * class LibSccpCfgReader implementation
  * ************************************************************************* */
-void LibSccpCfgReader::readConfig(XConfigView * root_sec, SccpConfig & st_cfg)
+void LibSccpCfgReader::readConfig(Config & root_sec, SccpConfig & st_cfg)
     throw(ConfigException)
 {
-  if (!root_sec->findSubSection(_nmSec))
+  if (!root_sec.findSection(_nmSec))
     throw ConfigException("'%s' section is missing", _nmSec);
 
-  std::auto_ptr<XConfigView> cfgSec(root_sec->getSubConfig(_nmSec));
-
-  const char * cstr = 0;
-
-  //<param name="appId" type="string">
-  st_cfg._appId.clear();
-  try { cstr = cfgSec->getString("appId"); }
-  catch (...) { cstr = 0; }
-
-  if (cstr) {
-    st_cfg._appId = cstr;
-    smsc::util::str_cut_blanks(st_cfg._appId);
-    if (st_cfg._appId.size() > 255)
-      throw ConfigException("'%s.appId' parameter value is longer than 255 chars",
-                            cfgSec->relSection());
-  }
-  if (st_cfg._appId.empty())
-    throw ConfigException("'%s.appId' parameter is invalid or missing",
-                          cfgSec->relSection());
-
-  //<param name="traffic-mode" type="string">
-  cstr = 0;
-  try { cstr = cfgSec->getString("traffic-mode"); }
-  catch (...) { cstr = 0; }
-
-  if (cstr) {
-    std::string tstr(cstr);
-    smsc::util::str_cut_blanks(tstr);
-    if (!tstr.empty()) {
-      if (!strcmp("loadshare", tstr.c_str()))
-        st_cfg._trafficMode = SccpConfig::trfLOADSHARE;
-      else if (!strcmp("override", tstr.c_str()))
-        st_cfg._trafficMode = SccpConfig::trfOVERRIDE;
-      else
-        cstr = 0;
-    } else
-      cstr = 0;
-  }
-  if (!cstr)
-    throw ConfigException("'%s.traffic-mode' parameter is invalid or missing",
-                          cfgSec->relSection());
-
-  //<section name="links">
-  if (!cfgSec->findSubSection("links"))
-    throw ConfigException("'%s.links' subsection is missing", cfgSec->relSection());
-  if (!readLinks(cfgSec.get(), st_cfg._links))
-    throw ConfigException("'%s.links' subsection is invalid", cfgSec->relSection());
+  XConfigView cfgSec(root_sec, _nmSec);
+  readTgtSection(&cfgSec, st_cfg);
 }
+
+void LibSccpCfgReader::readConfig(XConfigView * outer_sec, SccpConfig & st_cfg)
+    throw(ConfigException)
+{
+  if (!outer_sec->findSubSection(_nmSec))
+    throw ConfigException("'%s' section is missing", _nmSec);
+
+  std::auto_ptr<XConfigView> cfgSec(outer_sec->getSubConfig(_nmSec));
+  readTgtSection(cfgSec.get(), st_cfg);
+}
+
+
+void LibSccpCfgReader::readTgtSection(XConfigView * cfg_sec, SccpConfig & st_cfg)
+    throw(ConfigException)
+{
+    const char * cstr = 0;
+
+    //<param name="appId" type="string">
+    st_cfg._appId.clear();
+    try { cstr = cfg_sec->getString("appId"); }
+    catch (...) { cstr = 0; }
+
+    if (cstr) {
+      st_cfg._appId = cstr;
+      smsc::util::str_cut_blanks(st_cfg._appId);
+      if (st_cfg._appId.size() > 255)
+        throw ConfigException("'%s.appId' parameter value is longer than 255 chars",
+                              cfg_sec->relSection());
+    }
+    if (st_cfg._appId.empty())
+      throw ConfigException("'%s.appId' parameter is invalid or missing",
+                            cfg_sec->relSection());
+
+    //<param name="traffic-mode" type="string">
+    cstr = 0;
+    try { cstr = cfg_sec->getString("traffic-mode"); }
+    catch (...) { cstr = 0; }
+
+    if (cstr) {
+      std::string tstr(cstr);
+      smsc::util::str_cut_blanks(tstr);
+      if (!tstr.empty()) {
+        if (!strcmp("loadshare", tstr.c_str()))
+          st_cfg._trafficMode = SccpConfig::trfLOADSHARE;
+        else if (!strcmp("override", tstr.c_str()))
+          st_cfg._trafficMode = SccpConfig::trfOVERRIDE;
+        else
+          cstr = 0;
+      } else
+        cstr = 0;
+    }
+    if (!cstr)
+      throw ConfigException("'%s.traffic-mode' parameter is invalid or missing",
+                            cfg_sec->relSection());
+
+    //<section name="links">
+    if (!cfg_sec->findSubSection("links"))
+      throw ConfigException("'%s.links' subsection is missing", cfg_sec->relSection());
+    if (!readLinks(cfg_sec, st_cfg._links))
+      throw ConfigException("'%s.links' subsection is invalid", cfg_sec->relSection());
+}
+
 
 //return false if no links is defined
 bool LibSccpCfgReader::readLinks(XConfigView * outer_sec,
