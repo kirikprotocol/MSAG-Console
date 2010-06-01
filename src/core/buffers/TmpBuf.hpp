@@ -30,7 +30,8 @@ public:
     : heapBuf(0), realBuf(_stack.buf), heapSize(0), pos(0)
   {
     _stack.aligner = 0;
-    if (size > SZ) {
+    if (size > SZ)
+    {
       realBuf = heapBuf = new T[size];
       heapSize = size;
     }
@@ -47,13 +48,14 @@ public:
     pos=0;
   }
 
-    void setExtBuf( T* extbuf, size_t extbufsize ) {
-        if ( heapBuf ) delete [] heapBuf;
-        realBuf = extbuf;
-        heapBuf = 0;
-        heapSize = extbufsize;
-        pos = 0;
-    }
+  void setExtBuf( T* extbuf, size_t extbufsize )
+  {
+    if ( heapBuf ) delete [] heapBuf;
+    realBuf = extbuf;
+    heapBuf = 0;
+    heapSize = extbufsize;
+    pos = 0;
+  }
 
 
     /// NOTE: buffer content is not preserved!
@@ -73,23 +75,25 @@ public:
   }
 
     /// NOTE: buffer content is preserved
-    void reserve( size_t sz )
+  void reserve( size_t sz )
+  {
+    if ( sz > SZ )
     {
-        if ( sz > SZ ) {
-            if ( sz > heapSize ) {
-                T* newbuf = new T[sz];
-                memcpy( newbuf, realBuf, pos );
-                if (heapBuf) delete [] heapBuf;
-                heapBuf = newbuf;
-                heapSize = sz;
-                realBuf = heapBuf;
-            }
-        }
+      if ( sz > heapSize )
+      {
+        T* newbuf = new T[sz];
+        memcpy( newbuf, realBuf, pos );
+        if (heapBuf) delete [] heapBuf;
+        heapBuf = newbuf;
+        heapSize = sz;
+        realBuf = heapBuf;
+      }
     }
+  }
 
   size_t  getSize(void) const
   {
-      return heapSize ? heapSize : SZ;
+    return heapSize ? heapSize : SZ;
   }
 
   void Append(const T* data,size_t count)
@@ -139,15 +143,15 @@ public:
   //Checks for ABR, returns number of objects have been red
   int ReadSafe(T* dst,size_t count)
   {
-      size_t maxPos = heapSize ? heapSize : SZ;
+    size_t maxPos = heapSize ? heapSize : SZ;
 
-      if ((pos + count) >= maxPos)
-          count = maxPos - pos;
-      if (count) {
-          std::copy(realBuf + pos, realBuf + pos + count, dst);
-          pos += count;
-      }
-      return count;
+    if ((pos + count) >= maxPos)
+      count = maxPos - pos;
+    if (count) {
+      std::copy(realBuf + pos, realBuf + pos + count, dst);
+      pos += count;
+    }
+    return count;
   }
 
   T* GetCurPtr()
