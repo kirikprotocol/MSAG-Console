@@ -1,6 +1,6 @@
 #include "eyeline/ss7na/libsccp/SccpApiFactory.hpp"
-#include "eyeline/ss7na/libsccp/MessageProperties.hpp"
 #include "eyeline/ss7na/libsccp/MessageInfo.hpp"
+#include "eyeline/ss7na/libsccp/MessageProperties.hpp"
 #include "eyeline/ss7na/libsccp/messages/N_UNITDATA_IND_Message.hpp"
 #include "eyeline/ss7na/libsccp/messages/N_NOTICE_IND_Message.hpp"
 #include "core/threads/Thread.hpp"
@@ -39,7 +39,7 @@ class SuaListener : public Thread {
     TCO& tco;
     bool going;
   public:
-    SuaListener(llibsccp::SccpApi& suaApi, TCO& _tco) :
+    SuaListener(libsccp::SccpApi& suaApi, TCO& _tco) :
       Thread(), api(suaApi), going(true), tco(_tco) {}
     virtual int Execute()
     {
@@ -64,10 +64,10 @@ class SuaListener : public Thread {
         {
           switch ((int)message.messageType)
           {
-            case libsua::SUAMessageId::N_UNITDATA_IND_MSGCODE :
+            case libsccp::SccpMessageId::N_UNITDATA_IND_MSGCODE :
             {
               //decode with libsua
-              libsua::N_UNITDATA_IND_Message ind;
+              libsccp::N_UNITDATA_IND_Message ind;
               ind.deserialize(message.msgData.get(), message.msgData.getPos());
               tco.NUNITDATA(ind.getCalledAddress().dataLen,
                             (uint8_t*)ind.getCalledAddress().data,
