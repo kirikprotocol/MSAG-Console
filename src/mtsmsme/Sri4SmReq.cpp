@@ -102,12 +102,10 @@ class SuaListener : public Thread {
     void Stop() { going = false; }
 };
 class SuaSender : public SccpSender {
-
   private:
     libsccp::SccpApi& api;
   public:
-    SuaSender(llibsccp::SccpApi& suaApi) : api(suaApi) {}
-
+    SuaSender(libsccp::SccpApi& suaApi) : api(suaApi) {}
     void send(uint8_t cdlen, uint8_t *cd,
               uint8_t cllen, uint8_t *cl,
               uint16_t ulen, uint8_t *udp)
