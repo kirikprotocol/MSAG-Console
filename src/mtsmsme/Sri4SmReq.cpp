@@ -1,8 +1,8 @@
-#include <eyeline/sua/libsua/SuaApiFactory.hpp>
-#include <eyeline/sua/libsua/MessageProperties.hpp>
-#include <eyeline/sua/libsua/MessageInfo.hpp>
-#include <eyeline/sua/libsua/messages/N_UNITDATA_IND_Message.hpp>
-#include <eyeline/sua/libsua/messages/N_NOTICE_IND_Message.hpp>
+#include "eyeline/ss7na/libsccp/SccpApiFactory.hpp"
+#include "eyeline/ss7na/libsccp/MessageProperties.hpp"
+#include "eyeline/ss7na/libsccp/MessageInfo.hpp"
+#include "eyeline/ss7na/libsccp/messages/N_UNITDATA_IND_Message.hpp"
+#include "eyeline/ss7na/libsccp/messages/N_NOTICE_IND_Message.hpp"
 #include "core/threads/Thread.hpp"
 #include "mtsmsme/processor/SccpSender.hpp"
 #include "mtsmsme/processor/TCO.hpp"
@@ -29,7 +29,7 @@ using smsc::mtsmsme::comp::SendRoutingInfoForSMReq;
 using smsc::mtsmsme::processor::util::packSCCPAddress;
 using smsc::mtsmsme::processor::util::dump;
 using std::string;
-using namespace eyeline::sua;
+using namespace eyeline::ss7na;
 
 
 static Logger *logger = 0;
@@ -100,24 +100,26 @@ class SuaListener : public Thread {
     void Stop() { going = false; }
 };
 class SuaSender : public SccpSender {
+  using namespace eyeline::ss7na;
   private:
-    libsua::SuaApi& api;
+    libsccp::SccpApi& api;
   public:
     SuaSender(libsua::SuaApi& suaApi) : api(suaApi) {}
+    SuaSender(libs) {}
     void send(uint8_t cdlen, uint8_t *cd,
               uint8_t cllen, uint8_t *cl,
               uint16_t ulen, uint8_t *udp)
     {
-      libsua::MessageProperties msgProperties;
+      libsccp::MessageProperties msgProperties;
       msgProperties.setReturnOnError(true);
       msgProperties.setHopCount(2);
-      libsua::SuaApi& suaApi = libsua::SuaApiFactory::getSuaApiIface();
-      libsua::SuaApi::CallResult res =
+      libsccp::SccpApi& suaApi = libsccp::SccpApiFactory::getSccpApiIface();
+      libsccp::SccpApi::ErrorCode_e res =
           suaApi.unitdata_req(udp, ulen,
                                     cd, cdlen,
                                     cl, cllen,
                                     msgProperties, 0);
-      smsc_log_info(logger, "unitdata_req  with code %d",res.operationResult);
+      smsc_log_info(logger, "unitdata_req  with code %d",res);
     }
 };
 int main(int argc, char** argv)
@@ -133,22 +135,24 @@ int main(int argc, char** argv)
 
     smsc::util::config::ConfigView libsuaConfigView(manager, "sua");
 
-    libsua::SuaApiFactory::init();
-    libsua::SuaApi& suaApi = libsua::SuaApiFactory::getSuaApiIface();
-    suaApi.sua_init(&libsuaConfigView);
+    libsccp::SccpApiFactory::init();
+    libsccp::SccpApi& sccpApi = libsccp::SccpApiFactory::getSccpApiIface();
+    sccpApi.sua_init(&libsuaConfigView);
 
-    for(int i=0; i < suaApi.sua_getConnectsCount(); ++i)
+    uint8_t ssnList[] = { 191 };
+
+    for(int i=0; i < sccpApi.getConnectsCount(); ++i)
     {
-      suaApi.sua_connect(i);
-      smsc_log_info(logger, "sua_connect(connectNum=%d)", i);
+      sccpApi.connect(i);
+      smsc_log_info(logger, "connect(connectNum=%d)", i);
       int res;
-      if ( ( res = suaApi.bind(i) ) != 0 )
-        smsc_log_info(logger, "call sua_bind(connectNum=%d) with code %d", i, res);
+      if ( ( res = sccpApi.bind(i,ssnList,static_cast<uint8_t>(sizeof(ssnList)))) != 0 )
+        smsc_log_info(logger, "call bind(connectNum=%d) with code %d", i, res);
     }
     TCO* mtsms = new TCO(10);
-    SuaListener* listener = new SuaListener(suaApi,*mtsms);
+    SuaListener* listener = new SuaListener(sccpApi,*mtsms);
     listener->Start();
-    SccpSender* sccpsender = new SuaSender(suaApi);
+    SccpSender* sccpsender = new SuaSender(sccpApi);
     mtsms->setSccpSender(sccpsender);
     int count = 0;
     int8_t invoke_id = 0;
@@ -175,13 +179,13 @@ int main(int argc, char** argv)
       }
       sleep(10);
     }
-    for(int i=0; i < suaApi.sua_getConnectsCount(); ++i)
+    for(int i=0; i < sccpApi.getConnectsCount(); ++i)
     {
-      smsc_log_info(logger, "libSuaTest::: call sua_unbind(connectNum=%d)", i);
-      suaApi.unbind(i);
+      smsc_log_info(logger, "libSuaTest::: call unbind(connectNum=%d)", i);
+      sccpApi.unbind(i);
 
-      smsc_log_info(logger, "libSuaTest::: call sua_disconnect(connectNum=%d)", i);
-      suaApi.sua_disconnect(i);
+      smsc_log_info(logger, "libSuaTest::: call disconnect(connectNum=%d)", i);
+      sccpApi.disconnect(i);
     }
 listener->Stop();
   } catch (std::exception& ex)
