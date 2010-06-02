@@ -2966,10 +2966,10 @@ USHORT_T Et96MapPAbortInd(
           sms.setMessageReference(0);
           sms.setStrProperty(Tag::SMSC_SCCP_OA,dialog->origAddress.c_str());
           sms.setStrProperty(Tag::SMSC_SCCP_DA,dialog->destAddress.c_str());
-          if(sms.haveBinProperty(Tag::SMPP_SHORT_MESSAGE)
+          if(sms.hasBinProperty(Tag::SMPP_SHORT_MESSAGE))
           {
             sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,"",0);
-            sms.setIntProperty(Tag::SMPP_MESSAGE_LENGTH,0);
+            sms.setIntProperty(Tag::SMPP_SM_LENGTH,0);
           }else
           {
             sms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,"",0);
