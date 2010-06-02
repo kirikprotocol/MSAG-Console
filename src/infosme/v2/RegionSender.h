@@ -44,7 +44,7 @@ private:
     smsc::logger::Logger*                     log_;
     const smsc::util::config::region::Region& region_;
     SmscConnector&                            conn_;
-    SpeedControl                              speedControl_;
+    SpeedControl<>                            speedControl_;
     uint64_t                                  sent_;
     int                                       id_;
 };

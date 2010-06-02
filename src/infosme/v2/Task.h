@@ -317,7 +317,7 @@ protected:
 
     RegionMap    regionMap_;
     CsvStore     store;
-    SpeedControl speedControl_;
+    SpeedControl<> speedControl_;
 
     Mutex       createTableLock, enableLock;
     EventMonitor inGenerationMon;
