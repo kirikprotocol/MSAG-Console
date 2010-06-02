@@ -3,6 +3,8 @@
 #include "eyeline/ss7na/libsccp/MessageProperties.hpp"
 #include "eyeline/ss7na/libsccp/messages/N_UNITDATA_IND_Message.hpp"
 #include "eyeline/ss7na/libsccp/messages/N_NOTICE_IND_Message.hpp"
+#include "util/config/XCFManager.hpp"
+#include "eyeline/ss7na/libsccp/xcfg/LibSccpCfgReader.hpp"
 #include "core/threads/Thread.hpp"
 #include "mtsmsme/processor/SccpSender.hpp"
 #include "mtsmsme/processor/TCO.hpp"
@@ -100,12 +102,12 @@ class SuaListener : public Thread {
     void Stop() { going = false; }
 };
 class SuaSender : public SccpSender {
-  using namespace eyeline::ss7na;
+
   private:
     libsccp::SccpApi& api;
   public:
-    SuaSender(libsua::SuaApi& suaApi) : api(suaApi) {}
-    SuaSender(libs) {}
+    SuaSender(llibsccp::SccpApi& suaApi) : api(suaApi) {}
+
     void send(uint8_t cdlen, uint8_t *cd,
               uint8_t cllen, uint8_t *cl,
               uint16_t ulen, uint8_t *udp)
@@ -126,18 +128,26 @@ int main(int argc, char** argv)
 {
   smsc::logger::Logger::Init();
   logger = smsc::logger::Logger::getInstance("sri4smreq");
-
   try
   {
-    smsc_log_info(logger, "Send Routing Info For SM generator");
-    smsc::util::config::Manager::init("sua.xml");
-    smsc::util::config::Manager& manager = smsc::util::config::Manager::getInstance();
+    using smsc::util::config::XCFManager;
+    using smsc::util::config::Config;
 
-    smsc::util::config::ConfigView libsuaConfigView(manager, "sua");
+    libsccp::SccpConfig sccpCfgParms;
+    libsccp::LibSccpCfgReader cfgReader("sua");
+    {
+      std::auto_ptr<Config> xConfig(XCFManager::getInstance().getConfig("sua.xml")); //throws
+      cfgReader.readConfig(*xConfig.get(), sccpCfgParms); //throws
+    }
 
     libsccp::SccpApiFactory::init();
     libsccp::SccpApi& sccpApi = libsccp::SccpApiFactory::getSccpApiIface();
-    sccpApi.sua_init(&libsuaConfigView);
+
+    if (sccpApi.init(sccpCfgParms) != libsccp::SccpApi::OK) { //throws
+      smsc_log_error(logger, "main::: SccpApi initialization failed. Terminated.");
+      return 1;
+    }
+
 
     uint8_t ssnList[] = { 191 };
 
