@@ -35,22 +35,22 @@ using namespace eyeline::ss7na;
 static Logger *logger = 0;
 class SuaListener : public Thread {
   private:
-    libsua::SuaApi& api;
+    libsccp::SccpApi& api;
     TCO& tco;
     bool going;
   public:
-    SuaListener(libsua::SuaApi& suaApi, TCO& _tco) :
+    SuaListener(llibsccp::SccpApi& suaApi, TCO& _tco) :
       Thread(), api(suaApi), going(true), tco(_tco) {}
     virtual int Execute()
     {
       int result;
-      libsua::MessageInfo message;
+      libsccp::MessageInfo message;
       while (going)
       {
         result = api.msgRecv(&message,1000);
-        if (result == libsua::SuaApi::SOCKET_TIMEOUT)
+        if (result == libsccp::SccpApi::SOCKET_TIMEOUT)
           continue;
-        if (result != libsua::SuaApi::OK)
+        if (result != libsccp::SccpApi::OK)
         {
           smsc_log_error(logger,"MsgRecv failed: %d", result);
           going = 0;
@@ -60,7 +60,7 @@ class SuaListener : public Thread {
                          "got new message type=%d data[%d]={%s} from connection=%d",
                          message.messageType,message.msgData.getPos(),
                          dump(message.msgData.getPos(),message.msgData.get()).c_str(),
-                         message.suaConnectNum);
+                         message.connectNum);
         {
           switch ((int)message.messageType)
           {
