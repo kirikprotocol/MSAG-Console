@@ -146,6 +146,7 @@ static const int MSGWLISTFULL=1185; //
 static const int SYSFAILURE=1186; // 34 - System Failure
 static const int DATAMISSING=1187; // 35 - Data Missing !
 static const int UNEXPDATA=1188; // 36 - Unexpected Data value
+static const int USSDSESSIONTERMABN=1217;// smpp+ error
 static const int UNKALPHABET=1223; // 71 - Unknown alphabet !
 static const int USSDBUSY=1224; // 72 - USSD busy
 static const int INVPRBRESLIM=1258; // 106 - Invoke problem. Resource limitation
@@ -1369,7 +1370,7 @@ static const bool errorStatus[1280] = {
 1, // reserved
 1, // reserved
 1, // reserved
-1, // reserved
+1, // 1217 USSDSESSIONTERMABN
 1, // reserved
 1, // reserved
 1, // reserved
