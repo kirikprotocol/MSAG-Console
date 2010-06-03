@@ -35,12 +35,13 @@ using smsc::mtsmsme::processor::BeginMsg;
 using smsc::mtsmsme::processor::util::packNumString2BCD91;
 using smsc::mtsmsme::processor::util::dump;
 
-static char msca[] = "791398600223"; // MSC address
+static char msca[] = "791398699923"; // MSC address
 static char vlra[] = "79139860004"; //VLR address
 static char hlra[] = "79139860004"; //HLR address
-static char sca[]  = "79139869982"; // service center address
-static char rndmsto_pattern[]   = "791398600222%04d";
-static char rndmsfrom_pattern[] = "791398600221%04d";
+//static char sca[]  = "791398699926"; // service center address SCS HD
+static char sca[]  = "79139869990"; // service center address
+static char rndmsto_pattern[]   = "791398699922%04d";
+static char rndmsfrom_pattern[] = "791398699921%04d";
 static int speed = 300;
 
 
@@ -185,7 +186,7 @@ int main(int argc, char** argv)
     StatFlusher trener;
     trener.Start();
     EmptyRequestSender fakeSender;
-    TCO mtsms(10000);
+    TCO mtsms(100000);
     EmptySubscriberRegistrator fakeHLR(&mtsms);
     mtsms.setRequestSender(&fakeSender);
     GopotaListener listener(&mtsms, &fakeHLR);
