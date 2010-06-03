@@ -36,7 +36,7 @@ using std::string;
 
 static char msca[] = "79139860004"; // MSC address
 static char vlra[] = "79139860004"; //VLR address
-static char hlra[] = "791398600225"; //HLR address
+static char hlra[] = "791398699925"; //HLR address
 
 
 static Logger *logger = 0;
@@ -46,11 +46,11 @@ class EmptyRequestSender: public RequestSender {
     request->setSendResult(0); return true;
   }
 };
-static char etalon[]        = "791398600221xxxx";
-static char sender[]        = "791398600221xxxx";
-static char receiver[]      = "791398600222xxxx";
-static char sender_msc[]    = "791398600223";
-static char receiver_msc[]  = "791398600224";
+static char etalon[]        = "791398699921xxxx";
+static char sender[]        = "791398699921xxxx";
+static char receiver[]      = "791398699922xxxx";
+static char sender_msc[]    = "791398699923";
+static char receiver_msc[]  = "791398699924";
 static char sender_imsi[]   = "25001389998xxxx";
 static char receiver_imsi[] = "25001389999xxxx";
 class EmptySubscriberRegistrator: public SubscriberRegistrator {
