@@ -1,9 +1,96 @@
-#mtsmsme/sccp/mschlr mschlr  -L$(SMSC_BUILDDIR)/bin -llogger -lsms -lutil-config -lutil-xml -lutil $(XERCES_LIB) -lcore-threads -lcore-network  -lnsl $(SOCKETLIB) -lmtsmsme-processor -lmtsmsme-sccp -lmtsmsme-processor -lmtsmsme-comp -lmtsmsme-codec-mapsmdatatypes -lmtsmsme-codec-mapsmdatatypesv1 -lmtsmsme-codec-maperdatatypes -lmtsmsme-codec-mapmsdatatypes -lmtsmsme-codec-tcap -lmtsmsme-codec-ros -lmtsmsme-codec-mapcommondatatypes -lmtsmsme-codec-mapextensiondatatypes -lmtsmsme-codec-mapchdatatypes -lmtsmsme-processor-asn1rt -L$(SS7_STACK_HOME)/lib -l$(SS7_LIBRARY_NAME) -lmtsmsme-sccp -lmtsmsme-processor -lmtsmsme-comp -lsms -lthread -ldl -lrt
-#mtsmsme/sccp/mosmgen mosmgen  -L$(SMSC_BUILDDIR)/bin -llogger -lsms -lutil-config -lutil-xml -lutil $(XERCES_LIB) -lcore-threads -lcore-network  -lnsl $(SOCKETLIB) -lmtsmsme-processor -lmtsmsme-sccp -lmtsmsme-processor -lmtsmsme-comp -lmtsmsme-codec-mapsmdatatypes -lmtsmsme-codec-mapsmdatatypesv1 -lmtsmsme-codec-maperdatatypes -lmtsmsme-codec-mapmsdatatypes -lmtsmsme-codec-tcap -lmtsmsme-codec-ros -lmtsmsme-codec-mapcommondatatypes -lmtsmsme-codec-mapextensiondatatypes -lmtsmsme-codec-mapchdatatypes -lmtsmsme-processor-asn1rt -L$(SS7_STACK_HOME)/lib -l$(SS7_LIBRARY_NAME) -lmtsmsme-sccp -lmtsmsme-processor -lmtsmsme-comp -lsms -lthread -ldl -lrt
-#mtsmsme/sccp/msc-sri msc-sri  -L$(SMSC_BUILDDIR)/bin -llogger -lsms -lutil-config -lutil-xml -lutil $(XERCES_LIB) -lcore-threads -lcore-network  -lnsl $(SOCKETLIB) -lmtsmsme-processor -lmtsmsme-sccp -lmtsmsme-processor -lmtsmsme-comp -lmtsmsme-codec-mapchdatatypes -lmtsmsme-codec-mapsmdatatypes -lmtsmsme-codec-mapsmdatatypesv1 -lmtsmsme-codec-maperdatatypes -lmtsmsme-codec-mapmsdatatypes -lmtsmsme-codec-tcap -lmtsmsme-codec-ros -lmtsmsme-codec-mapcommondatatypes -lmtsmsme-codec-mapbscode -lmtsmsme-codec-maptscode -lmtsmsme-codec-mapssdatatypes -lmtsmsme-codec-mapsscode -lmtsmsme-codec-mapextensiondatatypes -lmtsmsme-codec-mapchdatatypes -lmtsmsme-processor-asn1rt -L$(SS7_STACK_HOME)/lib -l$(SS7_LIBRARY_NAME) -lmtsmsme-sccp -lmtsmsme-processor -lmtsmsme-comp -lsms -lthread -ldl -lrt
-#mtsmsme/sua/mschlr mschlr  -L$(SMSC_BUILDDIR)/bin -llogger -lsms -lutil-config -lutil-xml -lutil $(XERCES_LIB) -lcore-threads -lcore-network  -lnsl $(SOCKETLIB) -lmtsmsme-processor -lmtsmsme-sua -leyeline-sua-libsua-messages -leyeline-sua-libsua -leyeline-sua-communication-sua_messages -leyeline-sua-communication-libsua_messages -leyeline-sua-communication -leyeline-sua-sua_layer-io_dispatcher -leyeline-sua-communication -leyeline-sua-communication-sua_messages -leyeline-corex-io-network -leyeline-corex-io -leyeline-utilx -lmtsmsme-processor -lmtsmsme-comp -lmtsmsme-codec-mapsmdatatypes -lmtsmsme-codec-mapsmdatatypesv1 -lmtsmsme-codec-maperdatatypes -lmtsmsme-codec-mapmsdatatypes -lmtsmsme-codec-tcap -lmtsmsme-codec-ros -lmtsmsme-codec-mapcommondatatypes -lmtsmsme-codec-mapextensiondatatypes -lmtsmsme-codec-mapchdatatypes -lmtsmsme-processor-asn1rt -lmtsmsme-sua -lmtsmsme-processor -lmtsmsme-comp -lsms -lthread -ldl -lrt  -lutil-config -lutil-xml
-#mtsmsme/sua/mosmgen mosmgen  -L$(SMSC_BUILDDIR)/bin -llogger -lsms -lutil-config -lutil-xml -lutil $(XERCES_LIB) -lcore-threads -lcore-network  -lnsl $(SOCKETLIB) -lmtsmsme-processor -lmtsmsme-sua -leyeline-sua-libsua-messages -leyeline-sua-libsua -leyeline-sua-communication-sua_messages -leyeline-sua-communication-libsua_messages -leyeline-sua-communication -leyeline-sua-sua_layer-io_dispatcher -leyeline-sua-communication -leyeline-sua-communication-sua_messages -leyeline-corex-io-network -leyeline-corex-io -leyeline-utilx -lmtsmsme-processor -lmtsmsme-comp -lmtsmsme-codec-mapsmdatatypes -lmtsmsme-codec-mapsmdatatypesv1 -lmtsmsme-codec-maperdatatypes -lmtsmsme-codec-mapmsdatatypes -lmtsmsme-codec-tcap -lmtsmsme-codec-ros -lmtsmsme-codec-mapcommondatatypes -lmtsmsme-codec-mapextensiondatatypes -lmtsmsme-codec-mapchdatatypes -lmtsmsme-processor-asn1rt -L$(SS7_STACK_HOME)/lib -l$(SS7_LIBRARY_NAME) -lmtsmsme-sua -lmtsmsme-processor -lmtsmsme-comp -lsms -lthread -ldl -lrt -lutil-config -lutil-xml
-#mtsmsme/sua/msc-mosm msc-mosm  -L$(SMSC_BUILDDIR)/bin -llogger -lsms -lutil-config -lutil-xml -lutil $(XERCES_LIB) -lcore-threads -lcore-network  -lnsl $(SOCKETLIB) -lmtsmsme-processor -lmtsmsme-sua -leyeline-sua-libsua-messages -leyeline-sua-libsua -leyeline-sua-communication-sua_messages -leyeline-sua-communication-libsua_messages -leyeline-sua-communication -leyeline-sua-sua_layer-io_dispatcher -leyeline-sua-communication -leyeline-sua-communication-sua_messages -leyeline-corex-io-network -leyeline-corex-io -leyeline-utilx -lmtsmsme-processor -lmtsmsme-comp -lmtsmsme-codec-mapsmdatatypes -lmtsmsme-codec-mapsmdatatypesv1 -lmtsmsme-codec-maperdatatypes -lmtsmsme-codec-mapmsdatatypes -lmtsmsme-codec-tcap -lmtsmsme-codec-ros -lmtsmsme-codec-mapcommondatatypes -lmtsmsme-codec-mapextensiondatatypes -lmtsmsme-codec-mapchdatatypes -lmtsmsme-processor-asn1rt -lmtsmsme-sua -lmtsmsme-processor -lmtsmsme-comp -lsms -lthread -ldl -lrt  -lutil-config -lutil-xml -lutil
-#mtsmsme/sua/msc-sri4sm msc-sri4sm -L$(SMSC_BUILDDIR)/bin -llogger -lsms -lutil-config -lutil-xml -lutil $(XERCES_LIB) -lcore-threads -lcore-network  -lnsl $(SOCKETLIB) -lmtsmsme-processor -lmtsmsme-sua -leyeline-sua-libsua-messages -leyeline-sua-libsua -leyeline-sua-communication-sua_messages -leyeline-sua-communication-libsua_messages -leyeline-sua-communication -leyeline-sua-sua_layer-io_dispatcher -leyeline-sua-communication -leyeline-sua-communication-sua_messages -leyeline-corex-io-network -leyeline-corex-io -leyeline-utilx -lmtsmsme-processor -lmtsmsme-comp -lmtsmsme-codec-mapsmdatatypes -lmtsmsme-codec-mapsmdatatypesv1 -lmtsmsme-codec-maperdatatypes -lmtsmsme-codec-mapmsdatatypes -lmtsmsme-codec-tcap -lmtsmsme-codec-ros -lmtsmsme-codec-mapcommondatatypes -lmtsmsme-codec-mapextensiondatatypes -lmtsmsme-codec-mapchdatatypes -lmtsmsme-processor-asn1rt -lmtsmsme-sua -lmtsmsme-processor -lmtsmsme-comp -lsms -lthread -ldl -lrt  -lutil-config -lutil-xml -lutil
-#mtsmsme/sua/msc-mtsm msc-mtsm  -L$(SMSC_BUILDDIR)/bin -llogger -lsms -lutil-config -lutil-xml -lutil $(XERCES_LIB) -lcore-threads -lcore-network  -lnsl $(SOCKETLIB) -lmtsmsme-processor -lmtsmsme-sua -leyeline-sua-libsua-messages -leyeline-sua-libsua -leyeline-sua-communication-sua_messages -leyeline-sua-communication-libsua_messages -leyeline-sua-communication -leyeline-sua-sua_layer-io_dispatcher -leyeline-sua-communication -leyeline-sua-communication-sua_messages -leyeline-corex-io-network -leyeline-corex-io -leyeline-utilx -lmtsmsme-processor -lmtsmsme-comp -lmtsmsme-codec-mapsmdatatypes -lmtsmsme-codec-mapsmdatatypesv1 -lmtsmsme-codec-maperdatatypes -lmtsmsme-codec-mapmsdatatypes -lmtsmsme-codec-tcap -lmtsmsme-codec-ros -lmtsmsme-codec-mapcommondatatypes -lmtsmsme-codec-mapextensiondatatypes -lmtsmsme-codec-mapchdatatypes -lmtsmsme-processor-asn1rt -lmtsmsme-sua -lmtsmsme-processor -lmtsmsme-comp -lsms -lthread -ldl -lrt  -lutil-config -lutil-xml -lutil
-#mtsmsme/sua/hlr hlr -L$(SMSC_BUILDDIR)/bin -llogger -lsms -lutil-config -lutil-xml -lutil $(XERCES_LIB) -lcore-threads -lcore-network  -lnsl $(SOCKETLIB) -lmtsmsme-processor -lmtsmsme-sua -leyeline-sua-libsua-messages -leyeline-sua-libsua -leyeline-sua-communication-sua_messages -leyeline-sua-communication-libsua_messages -leyeline-sua-communication -leyeline-sua-sua_layer-io_dispatcher -leyeline-sua-communication -leyeline-sua-communication-sua_messages -leyeline-corex-io-network -leyeline-corex-io -leyeline-utilx -lmtsmsme-processor -lmtsmsme-comp -lmtsmsme-codec-mapsmdatatypes -lmtsmsme-codec-mapsmdatatypesv1 -lmtsmsme-codec-maperdatatypes -lmtsmsme-codec-mapmsdatatypes -lmtsmsme-codec-tcap -lmtsmsme-codec-ros -lmtsmsme-codec-mapcommondatatypes -lmtsmsme-codec-mapextensiondatatypes -lmtsmsme-codec-mapchdatatypes -lmtsmsme-processor-asn1rt -lmtsmsme-sua -lmtsmsme-processor -lmtsmsme-comp -lsms -lthread -ldl -lrt  -lutil-config -lutil-xml -lutil
+#mtsmsme/sccp/mschlr mschlr        -lmtsmsme-sccp \
+    -lmtsmsme-processor \
+    -lmtsmsme-comp -lmtsmsme-codec-mapsmdatatypes -lmtsmsme-codec-mapsmdatatypesv1 \
+    -lmtsmsme-codec-mapchdatatypes -lmtsmsme-codec-mapmsdatatypes -lmtsmsme-codec-maperdatatypes \
+    -lmtsmsme-codec-mapcommondatatypes -lmtsmsme-codec-mapssdatatypes -lmtsmsme-codec-maptscode \
+    -lmtsmsme-codec-mapbscode -lmtsmsme-codec-mapsscode -lmtsmsme-codec-mapextensiondatatypes \
+    -lmtsmsme-codec-tcap -lmtsmsme-codec-ros -lmtsmsme-processor-asn1rt \
+    -L$(SS7_STACK_HOME)/lib -l$(SS7_LIBRARY_NAME) -lmtsmsme-sccp \
+    -L$(SMSC_BUILDDIR)/bin -llogger -lsms -lutil-config -lutil-xml -lthread -lutil \
+    -lcore-threads -lcore-network $(XERCES_LIB) $(SOCKETLIB) -lnsl -ldl -lrt
+#mtsmsme/sccp/mosmgen mosmgen      -lmtsmsme-sccp \
+    -lmtsmsme-processor \
+    -lmtsmsme-comp -lmtsmsme-codec-mapsmdatatypes -lmtsmsme-codec-mapsmdatatypesv1 \
+    -lmtsmsme-codec-mapchdatatypes -lmtsmsme-codec-mapmsdatatypes -lmtsmsme-codec-maperdatatypes \
+    -lmtsmsme-codec-mapcommondatatypes -lmtsmsme-codec-mapssdatatypes -lmtsmsme-codec-maptscode \
+    -lmtsmsme-codec-mapbscode -lmtsmsme-codec-mapsscode -lmtsmsme-codec-mapextensiondatatypes \
+    -lmtsmsme-codec-tcap -lmtsmsme-codec-ros -lmtsmsme-processor-asn1rt \
+    -L$(SS7_STACK_HOME)/lib -l$(SS7_LIBRARY_NAME) -lmtsmsme-sccp \
+    -L$(SMSC_BUILDDIR)/bin -llogger -lsms -lutil-config -lutil-xml -lthread -lutil \
+    -lcore-threads -lcore-network $(XERCES_LIB) $(SOCKETLIB) -lnsl -ldl -lrt
+#mtsmsme/sccp/msc-sri msc-sri      -lmtsmsme-sccp \
+    -lmtsmsme-processor \
+    -lmtsmsme-comp -lmtsmsme-codec-mapsmdatatypes -lmtsmsme-codec-mapsmdatatypesv1 \
+    -lmtsmsme-codec-mapchdatatypes -lmtsmsme-codec-mapmsdatatypes -lmtsmsme-codec-maperdatatypes \
+    -lmtsmsme-codec-mapcommondatatypes -lmtsmsme-codec-mapssdatatypes -lmtsmsme-codec-maptscode \
+    -lmtsmsme-codec-mapbscode -lmtsmsme-codec-mapsscode -lmtsmsme-codec-mapextensiondatatypes \
+    -lmtsmsme-codec-tcap -lmtsmsme-codec-ros -lmtsmsme-processor-asn1rt \
+    -L$(SS7_STACK_HOME)/lib -l$(SS7_LIBRARY_NAME) -lmtsmsme-sccp \
+    -L$(SMSC_BUILDDIR)/bin -llogger -lsms -lutil-config -lutil-xml -lthread -lutil \
+    -lcore-threads -lcore-network $(XERCES_LIB) $(SOCKETLIB) -lnsl -ldl -lrt
+#mtsmsme/sua/mschlr mschlr         -lmtsmsme-sua \
+    -lmtsmsme-processor \
+    -leyeline-ss7na-libsccp-xcfg -leyeline-ss7na-libsccp -leyeline-ss7na-libsccp-messages -leyeline-sccp \
+    -leyeline-ss7na-common -leyeline-corex-io-network -leyeline-corex-io -leyeline-utilx -leyeline-util \
+    -lmtsmsme-comp -lmtsmsme-codec-mapsmdatatypes -lmtsmsme-codec-mapsmdatatypesv1 \
+    -lmtsmsme-codec-mapchdatatypes -lmtsmsme-codec-mapmsdatatypes -lmtsmsme-codec-maperdatatypes \
+    -lmtsmsme-codec-mapcommondatatypes -lmtsmsme-codec-mapssdatatypes -lmtsmsme-codec-maptscode \
+    -lmtsmsme-codec-mapbscode -lmtsmsme-codec-mapsscode -lmtsmsme-codec-mapextensiondatatypes \
+    -lmtsmsme-codec-tcap -lmtsmsme-codec-ros -lmtsmsme-processor-asn1rt \
+    -L$(SMSC_BUILDDIR)/bin -llogger -lsms -lutil-config -lutil-xml -lthread -lutil \
+    -lcore-threads -lcore-network $(XERCES_LIB) $(SOCKETLIB) -lnsl -ldl -lrt
+#mtsmsme/sua/mosmgen mosmgen       -lmtsmsme-sua \
+    -lmtsmsme-processor \
+    -leyeline-ss7na-libsccp-xcfg -leyeline-ss7na-libsccp -leyeline-ss7na-libsccp-messages -leyeline-sccp \
+    -leyeline-ss7na-common -leyeline-corex-io-network -leyeline-corex-io -leyeline-utilx -leyeline-util \
+    -lmtsmsme-comp -lmtsmsme-codec-mapsmdatatypes -lmtsmsme-codec-mapsmdatatypesv1 \
+    -lmtsmsme-codec-mapchdatatypes -lmtsmsme-codec-mapmsdatatypes -lmtsmsme-codec-maperdatatypes \
+    -lmtsmsme-codec-mapcommondatatypes -lmtsmsme-codec-mapssdatatypes -lmtsmsme-codec-maptscode \
+    -lmtsmsme-codec-mapbscode -lmtsmsme-codec-mapsscode -lmtsmsme-codec-mapextensiondatatypes \
+    -lmtsmsme-codec-tcap -lmtsmsme-codec-ros -lmtsmsme-processor-asn1rt \
+    -L$(SMSC_BUILDDIR)/bin -llogger -lsms -lutil-config -lutil-xml -lthread -lrt -lutil \
+    -lcore-threads -lcore-network $(XERCES_LIB) $(SOCKETLIB) -lnsl -ldl
+#mtsmsme/sua/msc-mosm msc-mosm     -lmtsmsme-sua \
+    -lmtsmsme-processor \
+    -leyeline-ss7na-libsccp-xcfg -leyeline-ss7na-libsccp -leyeline-ss7na-libsccp-messages -leyeline-sccp \
+    -leyeline-ss7na-common -leyeline-corex-io-network -leyeline-corex-io -leyeline-utilx -leyeline-util \
+    -lmtsmsme-comp -lmtsmsme-codec-mapsmdatatypes -lmtsmsme-codec-mapsmdatatypesv1 \
+    -lmtsmsme-codec-mapchdatatypes -lmtsmsme-codec-mapmsdatatypes -lmtsmsme-codec-maperdatatypes \
+    -lmtsmsme-codec-mapcommondatatypes -lmtsmsme-codec-mapssdatatypes -lmtsmsme-codec-maptscode \
+    -lmtsmsme-codec-mapbscode -lmtsmsme-codec-mapsscode -lmtsmsme-codec-mapextensiondatatypes \
+    -lmtsmsme-codec-tcap -lmtsmsme-codec-ros -lmtsmsme-processor-asn1rt \
+    -L$(SMSC_BUILDDIR)/bin -llogger -lsms -lutil-config -lutil-xml -lthread -lrt -lutil \
+    -lcore-threads -lcore-network $(XERCES_LIB) $(SOCKETLIB) -lnsl -ldl
+#mtsmsme/sua/msc-sri4sm msc-sri4sm  -lmtsmsme-sua \
+    -lmtsmsme-processor \
+    -leyeline-ss7na-libsccp-xcfg -leyeline-ss7na-libsccp -leyeline-ss7na-libsccp-messages -leyeline-sccp \
+    -leyeline-ss7na-common -leyeline-corex-io-network -leyeline-corex-io -leyeline-utilx -leyeline-util \
+    -lmtsmsme-comp -lmtsmsme-codec-mapsmdatatypes -lmtsmsme-codec-mapsmdatatypesv1 \
+    -lmtsmsme-codec-mapchdatatypes -lmtsmsme-codec-mapmsdatatypes -lmtsmsme-codec-maperdatatypes \
+    -lmtsmsme-codec-mapcommondatatypes -lmtsmsme-codec-mapssdatatypes -lmtsmsme-codec-maptscode \
+    -lmtsmsme-codec-mapbscode -lmtsmsme-codec-mapsscode -lmtsmsme-codec-mapextensiondatatypes \
+    -lmtsmsme-codec-tcap -lmtsmsme-codec-ros -lmtsmsme-processor-asn1rt \
+    -L$(SMSC_BUILDDIR)/bin -llogger -lsms -lutil-config -lutil-xml -lthread -lrt -lutil \
+    -lcore-threads -lcore-network $(XERCES_LIB) $(SOCKETLIB) -lnsl -ldl
+#mtsmsme/sua/msc-mtsm msc-mtsm     -lmtsmsme-sua \
+    -lmtsmsme-processor \
+    -leyeline-ss7na-libsccp-xcfg -leyeline-ss7na-libsccp -leyeline-ss7na-libsccp-messages -leyeline-sccp \
+    -leyeline-ss7na-common -leyeline-corex-io-network -leyeline-corex-io -leyeline-utilx -leyeline-util \
+    -lmtsmsme-comp -lmtsmsme-codec-mapsmdatatypes -lmtsmsme-codec-mapsmdatatypesv1 \
+    -lmtsmsme-codec-mapchdatatypes -lmtsmsme-codec-mapmsdatatypes -lmtsmsme-codec-maperdatatypes \
+    -lmtsmsme-codec-mapcommondatatypes -lmtsmsme-codec-mapssdatatypes -lmtsmsme-codec-maptscode \
+    -lmtsmsme-codec-mapbscode -lmtsmsme-codec-mapsscode -lmtsmsme-codec-mapextensiondatatypes \
+    -lmtsmsme-codec-tcap -lmtsmsme-codec-ros -lmtsmsme-processor-asn1rt \
+    -L$(SMSC_BUILDDIR)/bin -llogger -lsms -lutil-config -lutil-xml -lthread -lrt -lutil \
+    -lcore-threads -lcore-network $(XERCES_LIB) $(SOCKETLIB) -lnsl -ldl
+#mtsmsme/sua/hlr hlr               -lmtsmsme-sua \
+    -lmtsmsme-processor \
+    -leyeline-ss7na-libsccp-xcfg -leyeline-ss7na-libsccp -leyeline-ss7na-libsccp-messages -leyeline-sccp \
+    -leyeline-ss7na-common -leyeline-corex-io-network -leyeline-corex-io -leyeline-utilx -leyeline-util \
+    -lmtsmsme-comp -lmtsmsme-codec-mapsmdatatypes -lmtsmsme-codec-mapsmdatatypesv1 \
+    -lmtsmsme-codec-mapchdatatypes -lmtsmsme-codec-mapmsdatatypes -lmtsmsme-codec-maperdatatypes \
+    -lmtsmsme-codec-mapcommondatatypes -lmtsmsme-codec-mapssdatatypes -lmtsmsme-codec-maptscode \
+    -lmtsmsme-codec-mapbscode -lmtsmsme-codec-mapsscode -lmtsmsme-codec-mapextensiondatatypes \
+    -lmtsmsme-codec-tcap -lmtsmsme-codec-ros -lmtsmsme-processor-asn1rt \
+    -L$(SMSC_BUILDDIR)/bin -llogger -lsms -lutil-config -lutil-xml -lthread -lrt -lutil \
+    -lcore-threads -lcore-network $(XERCES_LIB) $(SOCKETLIB) -lnsl -ldl
