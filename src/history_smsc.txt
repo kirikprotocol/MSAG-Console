@@ -559,3 +559,11 @@ B3121: May 04, 2010
     SMSC	address constructor checks strictness lowered
     SMSC	Fill dest ref from msisdn for HLR USDD NI, from imsi for vlr USSD NI
     SMSC	fix for error USSD NI handling
+
+B3121: Jun 02, 2010
+    SMSC	USSD_RELEASE_REQ check state of dialog, send SubmitResp on pending Request/Notify with code 1217-USSDSESSIONTERMABN
+    SMSC	Router optimized to use less memory, faster load
+    SMSC	Cleanup prev sms when generating USSD_USSREL_IND message
+    SMSC        Network initiated USSD_USSN_LAST, USSD_*_VLR fix
+    SMSC	Fix for reschedule diverted SMS, causes incorrect CDR records in CHARGE_ON_SUBMIT mode
+    MCA		Add external processing facility for BUSY events
