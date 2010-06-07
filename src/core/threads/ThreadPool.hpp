@@ -1,11 +1,11 @@
 #ifndef __CORE_THREADS_THREADPOOL_HPP__
-#define __CORE_THREADS_THREADPOOL_HPP__
 #ident "$Id$"
+#define __CORE_THREADS_THREADPOOL_HPP__
 
-#include "Thread.hpp"
-#include "ThreadedTask.hpp"
+#include "core/threads/Thread.hpp"
+#include "core/threads/ThreadedTask.hpp"
 #include "core/synchronization/Event.hpp"
-#include "core/synchronization/Mutex.hpp"
+#include "core/synchronization/EventMonitor.hpp"
 #include "core/buffers/Array.hpp"
 #ifdef _WIN32
 #include <stdio.h>
@@ -22,46 +22,46 @@ namespace threads{
 using namespace smsc::core::synchronization;
 using namespace smsc::core::buffers;
 
-class ThreadPool;
+class ThreadPool{
+protected:
+  class PooledThread : public Thread {
+  public:
+    PooledThread(ThreadPool* newowner)
+      : Thread(), owner(newowner), task(NULL)
+    { }
 
-class PooledThread:public Thread{
-public:
-  PooledThread(ThreadPool* newowner):Thread(),owner(newowner),task(NULL) {}
+    virtual int Execute();
 
-  virtual int Execute();
+    void assignTask(ThreadedTask* newtask)
+    {
+      task=newtask;
+    }
+    void processTask()
+    {
+      taskEvent.Signal();
+    }
+    void stopTask()
+    {
+      if(task)task->stop();
+    }
+    const char* taskName()
+    {
+      return task ? task->taskName() : "";
+    }
 
-  void assignTask(ThreadedTask* newtask)
-  {
-    task=newtask;
-  }
-  void processTask()
-  {
-    taskEvent.Signal();
-  }
-  void stopTask()
-  {
-    if(task)task->stop();
-  }
-  const char* taskName()
-  {
-    if(task)return task->taskName();else return "";
-  }
-
-  ThreadedTask* releaseTask(void)
-  {
+    ThreadedTask* releaseTask(void)
+    {
       ThreadedTask * tmp = task;
       task = NULL;
       return tmp;
-  }    
-  
-protected:
-  Event taskEvent;
-  ThreadPool *owner;
-  ThreadedTask* task;
-};//PooledThread
+    }    
 
+  protected:
+    Event taskEvent;
+    ThreadPool *owner;
+    ThreadedTask* task;
+  };
 
-class ThreadPool{
 public:
   ThreadPool();
   ~ThreadPool();
@@ -76,33 +76,33 @@ public:
     maxThreads=count;
   }
 
-  void startTask(ThreadedTask* task, bool delOnCompletion = true);
+  void startTask(ThreadedTask* task);
+  void startTask(ThreadedTask* task, bool delOnCompletion);
 
   void releaseThread(PooledThread* thread);
 
   void stopNotify();
-  void shutdown(uint32_t timeout = 180);
+  void shutdown(TimeSlice::UnitType_e time_unit, long use_tmo);
+  void shutdown(uint32_t timeout_secs = 180)
+  {
+    shutdown(TimeSlice::tuSecs, timeout_secs);
+  }
 
-  int getPendingTasksCount()
+  int getPendingTasksCount() const
   {
     MutexGuard mg(lock);
     return pendingTasks.Count();
   }
-
-  MemoryHeap* getMemoryHeap(const char* taskname,int rawheapsize,int blocksheapquantum);
-
-  void Wait()
+  //Returns number of threads executing tasks currently.
+  int getActiveThreads(void) const
   {
-#ifdef _WIN32
-    Sleep(1000);
-#else
-    sleep(1);
-#endif
+    MutexGuard mg(lock);
+    return usedThreads.Count();
   }
 
 private:
-  Mutex lock;
-//  MemoryManager mm;
+  mutable EventMonitor lock;
+
   struct ThreadInfo {
       PooledThread * ptr;
       bool          destructing; //threaded task is releasing its resources
@@ -143,4 +143,5 @@ private:
 }//core
 }//smsc
 
-#endif
+#endif /* __CORE_THREADS_THREADPOOL_HPP__ */
+
