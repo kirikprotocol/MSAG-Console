@@ -90,23 +90,38 @@ public:
                     if ( objSleep < wantToSleep ) wantToSleep = objSleep;
                     continue;
                 }
-
-                // object is ready
-                int increment = proc_.processScoredObj( deltaTime, *i->obj );
-                if ( increment < 0 ) {
-                    // could not process
-                    i->score += unsigned(-increment);
-                    movedObjects_.push_back(*i);
-                    i->obj = 0;
-                    continue;
+                if (log_ && log_->isDebugEnabled()) {
+                    std::string s;
+                    proc_.scoredObjToString(s,*i->obj);
+                    smsc_log_debug(log_,"obj #%u (%s) score=%u is ready",
+                                   unsigned(std::distance(objects_.begin(),i)),
+                                   s.c_str(), i->score );
                 }
 
-                // object is processed
-                i->score += unsigned(increment);
+                // object is ready
+                const int increment = proc_.processScoredObj( deltaTime, *i->obj );
+                i->score += increment < 0 ? unsigned(-increment) : increment;
+
+                if (log_ && log_->isDebugEnabled()) {
+                    std::string s;
+                    proc_.scoredObjToString(s,*i->obj);
+                    smsc_log_debug(log_,"obj #%u (%s) score=%u is %sprocessed, inc=%d",
+                                   unsigned(std::distance(objects_.begin(),i)),
+                                   s.c_str(), i->score,
+                                   increment > 0 ? "" : "NOT ",
+                                   increment );
+                }
+
                 movedObjects_.push_back(*i);
                 i->obj = 0;
-                wantToSleep = 0;
-                break;
+
+                if ( increment > 0 ) {
+                    // object is processed
+                    wantToSleep = 0;
+                    break;
+                }
+
+                // not processed
             }
 
         } catch (...) {
@@ -203,7 +218,9 @@ protected:
             }
             if ( medi > 1000000 ) {
                 needfix = true;
-                if (log_) { smsc_log_debug(log_,"too big median: %u", medi ); }
+                if (log_) {
+                    smsc_log_debug(log_,"too big median: %u", medi );
+                }
             }
             if ( needfix ) {
                 const unsigned minscore = medi > maxdiff_/2 ? medi - maxdiff_/2 : 0;
