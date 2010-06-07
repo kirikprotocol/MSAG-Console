@@ -50,7 +50,7 @@ private:
 
 
 
-RegionalStorage::RegionalStorage( const TaskInfo& taskInfo,
+RegionalStorage::RegionalStorage( const DlvInfo&  dlvInfo,
                                   regionid_type   regionId,
                                   StoreLog&       storeLog,
                                   MessageSource&  messageSource ) :
@@ -60,11 +60,11 @@ validItems_(messageList_.begin()),
 alog_(&storeLog),
 messageSource_(&messageSource),
 uploadTasks_(0),
-taskInfo_(&taskInfo),
+dlvInfo_(&dlvInfo),
 regionId_(regionId),
 usage_(0)
 {
-    smsc_log_debug(log_,"ctor task=%u region=%u",taskInfo_->getTaskId(),regionId);
+    smsc_log_debug(log_,"ctor task=%u region=%u",dlvInfo_->getDlvId(),regionId);
 }
 
 
@@ -85,7 +85,7 @@ bool RegionalStorage::getMessage( msgid_type msgId, Message& msg )
     MsgIter* ptr = messageHash_.GetPtr(msgId);
     if (!ptr) {
         smsc_log_debug(log_,"Message %u:%u is not found in region %u",
-                       taskInfo_->getTaskId(), msgId, regionId_ );
+                       dlvInfo_->getDlvId(), msgId, regionId_ );
         return false; 
     }
     msg = (*ptr)->msg;
@@ -102,15 +102,20 @@ bool RegionalStorage::getNextMessage( msgtime_type currentTime, Message& msg )
 
         /// check if we need to request new messages
         if ( !uploadTasks_ &&
-             unsigned(newQueue_.Count()) < taskInfo_->getMinNewQueueSize() &&
-             resendQueue_.size() < taskInfo_->getMaxResendQueueSize() ) {
+             unsigned(newQueue_.Count()) < dlvInfo_->getMinNewQueueSize() &&
+             resendQueue_.size() < dlvInfo_->getMaxResendQueueSize() ) {
             ++uploadTasks_;
+            const unsigned newQueueSize = unsigned(newQueue_.Count());
+            const unsigned resendQueueSize = unsigned(resendQueue_.size());
             mg.Unlock();
             try {
+                smsc_log_debug(log_,"%u/%u wants to request new messages as it has new/resend=%u/%u",
+                               dlvInfo_->getDlvId(), getRegionId(),
+                               newQueueSize, resendQueueSize);
                 messageSource_->requestNewMessages(*this,
-                                                   getTaskId(),
+                                                   getDlvId(),
                                                    getRegionId(),
-                                                   taskInfo_->getUploadCount());
+                                                   dlvInfo_->getUploadCount());
                 mg.Lock();
             } catch (std::exception& e ) {
                 smsc_log_warn(log_,"exception requesting new msgs: %s",e.what());
@@ -148,11 +153,12 @@ bool RegionalStorage::getNextMessage( msgtime_type currentTime, Message& msg )
 
     Message& m = iter->msg;
     m.lastTime = currentTime;
+    // FIXME: reset m.timeLeft for new messages
     m.state = MsgState::process;
     msg = m;
     smsc_log_debug(log_,"taking message %u/%u/%u from %s",
-                   taskInfo_->getTaskId(),m.msgId,regionId_,from);
-    alog_->writeMessage(taskInfo_->getTaskId(),regionId_,m);
+                   dlvInfo_->getDlvId(),m.msgId,regionId_,from);
+    alog_->writeMessage(dlvInfo_->getDlvId(),regionId_,m);
     return true;
 }
 
@@ -165,14 +171,14 @@ void RegionalStorage::messageSent( msgid_type msgId,
     MsgIter* ptr = messageHash_.GetPtr(msgId);
     if (!ptr) {
         throw smsc::util::Exception("message %u:%u is not found in region %u",
-                                    taskInfo_->getTaskId(),msgId,regionId_);
+                                    dlvInfo_->getDlvId(),msgId,regionId_);
     }
     MsgLock ml(*ptr,this);
     mg.Unlock();
     Message& m = (*ptr)->msg;
     m.lastTime = currentTime;
     m.state = MsgState::sent;
-    alog_->writeMessage(taskInfo_->getTaskId(),regionId_,m);
+    alog_->writeMessage(dlvInfo_->getDlvId(),regionId_,m);
 }
 
 
@@ -186,13 +192,13 @@ void RegionalStorage::retryMessage( msgid_type   msgId,
     if ( !messageHash_.Pop(msgId,iter) ) {
         // not found
         throw smsc::util::Exception("message %u:%u is not found in region %u",
-                                    taskInfo_->getTaskId(), msgId, regionId_);
+                                    dlvInfo_->getDlvId(), msgId, regionId_);
     }
     MsgLock ml(iter,this);
     Message& m = iter->msg;
     // fixing time left according
     m.timeLeft -= currentTime - m.lastTime;
-    if ( m.timeLeft > taskInfo_->getMinRetryTime() ) {
+    if ( m.timeLeft > dlvInfo_->getMinRetryTime() ) {
         // there is enough validity time to try the next time
         if ( m.timeLeft < retryDelay ) retryDelay = m.timeLeft;
         retryDelay += currentTime;
@@ -202,8 +208,8 @@ void RegionalStorage::retryMessage( msgid_type   msgId,
         m.state = MsgState::retry;
         char fmtime[20];
         smsc_log_debug(log_,"put message %u:%u into region %u retry at %s",
-                       taskInfo_->getTaskId(), msgId, regionId_, formatMsgTime(fmtime,retryDelay) );
-        alog_->writeMessage(taskInfo_->getTaskId(),regionId_,m);
+                       dlvInfo_->getDlvId(), msgId, regionId_, formatMsgTime(fmtime,retryDelay) );
+        alog_->writeMessage(dlvInfo_->getDlvId(),regionId_,m);
     } else {
         // not enough time to retry
         // moving element to a not-valid part of the list
@@ -213,8 +219,8 @@ void RegionalStorage::retryMessage( msgid_type   msgId,
         m.lastTime = currentTime;
         m.state = MsgState::expired;
         smsc_log_debug(log_,"message %u:%u is expired in region %u, smpp=%u",
-                       taskInfo_->getTaskId(), msgId, regionId_, smppState );
-        alog_->writeMessage(taskInfo_->getTaskId(),regionId_,m);
+                       dlvInfo_->getDlvId(), msgId, regionId_, smppState );
+        alog_->writeMessage(dlvInfo_->getDlvId(),regionId_,m);
         destroy(m);
     }
 }
@@ -229,7 +235,7 @@ void RegionalStorage::finalizeMessage( msgid_type   msgId,
     MsgIter iter;
     if ( !messageHash_.Pop(msgId,iter) ) {
         throw smsc::util::Exception("message %u:%u is not found in region %u",
-                                    taskInfo_->getTaskId(), msgId, regionId_ );
+                                    dlvInfo_->getDlvId(), msgId, regionId_ );
     }
     MsgLock ml(iter,this);
     assert(validItems_ == iter);
@@ -239,8 +245,8 @@ void RegionalStorage::finalizeMessage( msgid_type   msgId,
     m.lastTime = currentTime;
     m.state = state;
     smsc_log_debug(log_,"message %u:%u is finalized in region %u, state=%u, smpp=%u",
-                   taskInfo_->getTaskId(),msgId,regionId_,state,smppState);
-    alog_->writeMessage(taskInfo_->getTaskId(),regionId_,m);
+                   dlvInfo_->getDlvId(),msgId,regionId_,state,smppState);
+    alog_->writeMessage(dlvInfo_->getDlvId(),regionId_,m);
     destroy(m);
 }
 
@@ -253,28 +259,35 @@ void RegionalStorage::addNewMessages( msgtime_type currentTime,
     smsc_log_debug(log_,"adding new messages to storage");
     for ( MsgIter i = iter1; i != iter2; ++i ) {
         Message& m = i->msg;
-        m.lastTime = currentTime;
+        // m.lastTime = currentTime;
         m.state = MsgState::input;
-        alog_->writeMessage(taskInfo_->getTaskId(),regionId_,m);
+        alog_->writeMessage(dlvInfo_->getDlvId(),regionId_,m);
     }
     MutexGuard mg(cacheLock_);
     for ( MsgIter i = iter1; i != iter2; ++i ) {
         smsc_log_debug(log_,"inserting msg %u into new queue",i->msg.msgId);
         newQueue_.Push(i);
     }
-    messageList_.splice( messageList_.begin(), listFrom, iter1, iter2 );
+    messageList_.splice( validItems_, listFrom, iter1, iter2 );
+    validItems_ = iter1;
     if ( log_->isDebugEnabled() ) {
         std::string s;
         s.reserve(300);
         unsigned count = 0;
         for ( MsgIter i = messageList_.begin(); i != messageList_.end(); ++i ) {
+            if ( i == storingIter_ ) {
+                s.append(" s");
+            }
+            if ( i == validItems_ ) {
+                s.append(" v");
+            }
             char buf[10];
             sprintf(buf," %u",i->msg.msgId);
             s.append(buf);
             ++count;
         }
         smsc_log_debug(log_,"messages (%u) in %u/%u: %s",
-                       count,taskInfo_->getTaskId(),regionId_,s.c_str());
+                       count,dlvInfo_->getDlvId(),regionId_,s.c_str());
     }
 }
 
@@ -304,7 +317,7 @@ void RegionalStorage::rollOver()
         {
             MsgLock ml(iter,this);
             mg.Unlock();
-            alog_->writeMessage(taskInfo_->getTaskId(),regionId_,iter->msg);
+            alog_->writeMessage(dlvInfo_->getDlvId(),regionId_,iter->msg);
         }
         // FIXME: restriction on throughput
         mg.Lock();
@@ -322,7 +335,7 @@ void RegionalStorage::uploadFinished()
 
 void RegionalStorage::destroy( Message& msg )
 {
-    smsc_log_debug(log_,"dtor message (%u/%u)",taskInfo_->getTaskId(),msg.msgId);
+    smsc_log_debug(log_,"dtor message (%u/%u)",dlvInfo_->getDlvId(),msg.msgId);
 }
 
 

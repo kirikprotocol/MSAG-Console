@@ -7,11 +7,15 @@ namespace scag2 {
 namespace prototypes {
 namespace infosme {
 
-class TaskInfo
+class DlvInfo
 {
 public:
-    TaskInfo( taskid_type taskId ) : taskId_(taskId) {}
-    taskid_type getTaskId() const { return taskId_; }
+    DlvInfo( dlvid_type dlvid ) : dlvid_(dlvid) {}
+
+    dlvid_type getDlvId() const { return dlvid_; }
+
+    unsigned getPriority() const { return 1; }
+
     msgtime_type getMinRetryTime() const {
         return msgtime_type(10);
     }
@@ -26,7 +30,7 @@ public:
     }
 
 private:
-    taskid_type taskId_;
+    dlvid_type dlvid_;
 };
 
 }

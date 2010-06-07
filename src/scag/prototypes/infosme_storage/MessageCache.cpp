@@ -122,8 +122,12 @@ void MessageCache::finalizeMessage( msgid_type msgId,
  */
 
 
-MessageCache::MessageCache( const TaskInfo& taskInfo ) :
-taskInfo_(&taskInfo)
+MessageCache::MessageCache( const DlvInfo& dlvInfo,
+                            StoreLog&      storeLog,
+                            MessageSource& messageSource ) :
+dlvInfo_(&dlvInfo),
+messageSource_(&messageSource),
+storeLog_(&storeLog)
 {
 }
 
@@ -132,7 +136,13 @@ RegionalStoragePtr MessageCache::getRegionalStorage( regionid_type regionId )
 {
     MutexGuard mg(cacheLock_);
     RegionalStoragePtr* ptr = storages_.GetPtr(regionId);
-    if (!ptr) return RegionalStoragePtr();
+    if (!ptr) {
+        return storages_.Insert(regionId,
+                                RegionalStoragePtr(new RegionalStorage(*dlvInfo_,
+                                                                       regionId,
+                                                                       *storeLog_,
+                                                                       *messageSource_)) );
+    }
     return *ptr;
 }
 
@@ -158,15 +168,16 @@ void MessageCache::rollOver()
 }
 
 
+/*
 void MessageCache::addRegionalStorage( RegionalStoragePtr storage )
 {
     if (!storage.get()) {
         throw smsc::util::Exception("MessageCache: storage to be added in task %u is NULL",
-                                    taskInfo_->getTaskId() );
+                                    dlvInfo_->getDlvId() );
     }
-    if ( &(storage->getTaskInfo()) != taskInfo_ ) {
-        throw smsc::util::Exception("MessageCache: storage %u for task %u has different taskInfo",
-                                    storage->getRegionId(), taskInfo_->getTaskId() );
+    if ( &(storage->getDlvInfo()) != dlvInfo_ ) {
+        throw smsc::util::Exception("MessageCache: storage %u for task %u has different dlvInfo",
+                                    storage->getRegionId(), dlvInfo_->getDlvId() );
     }
 
     MutexGuard mg(cacheLock_);
@@ -174,10 +185,11 @@ void MessageCache::addRegionalStorage( RegionalStoragePtr storage )
     if (ptr) {
         throw smsc::util::Exception("region %u already exists in task %u",
                                     storage->getRegionId(),
-                                    taskInfo_->getTaskId() );
+                                    dlvInfo_->getDlvId() );
     }
     storages_.Insert(storage->getRegionId(),storage);
 }
+ */
 
 }
 }

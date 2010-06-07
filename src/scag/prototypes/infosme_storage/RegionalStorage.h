@@ -38,18 +38,18 @@ private:
 
 public:
 
-    RegionalStorage( const TaskInfo& taskInfo,
+    RegionalStorage( const DlvInfo&  dlvInfo,
                      regionid_type   regionId,
                      StoreLog&       storeLog,
                      MessageSource&  messageSource );
 
 
-    ~RegionalStorage();
+    virtual ~RegionalStorage();
 
 
     regionid_type getRegionId() const { return regionId_; }
-    const TaskInfo& getTaskInfo() const { return *taskInfo_; }
-    taskid_type getTaskId() const { return taskInfo_->getTaskId(); }
+    const DlvInfo& getDlvInfo() const { return *dlvInfo_; }
+    dlvid_type getDlvId() const { return dlvInfo_->getDlvId(); }
 
     /// get the message with given messageid.
     /// this method accesses active messages only.
@@ -68,9 +68,10 @@ public:
 
     /// change message state when temporal failure received.
     /// message is removed from the cache.
+    /// @param retryDelay - how many seconds to wait until the next retry.
     void retryMessage( msgid_type msgId,
                        msgtime_type currentTime,
-                       msgtime_type retryTime,
+                       msgtime_type retryDelay,
                        int smppState );
 
     /// finalize message. message is removed from cache.
@@ -120,7 +121,7 @@ private:
     MessageSource*                    messageSource_;
     unsigned                          uploadTasks_; // a number of upload tasks
 
-    const TaskInfo*                   taskInfo_;
+    const DlvInfo*                    dlvInfo_;
     regionid_type                     regionId_;
     unsigned                          usage_;
 
@@ -154,6 +155,13 @@ public:
     }
     RegionalStorage* operator-> () {
         return ptr_;
+    }
+    void reset( RegionalStorage* p ) {
+        if ( p != ptr_ ) {
+            if (p) { p->usage(true); }
+            if (ptr_) { ptr_->usage(false); }
+            ptr_ = p;
+        }
     }
 
 private:

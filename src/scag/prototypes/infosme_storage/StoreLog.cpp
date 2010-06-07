@@ -14,6 +14,7 @@ namespace prototypes {
 namespace infosme {
 
 StoreLog::StoreLog( const char* fpath ) :
+log_(smsc::logger::Logger::getInstance("storelog")),
 fd_(-1), version_(1)
 {
     if ( !fpath ) {
@@ -33,7 +34,7 @@ StoreLog::~StoreLog()
 }
 
 
-void StoreLog::writeMessage( taskid_type   taskId,
+void StoreLog::writeMessage( dlvid_type    dlvId,
                              regionid_type regionId,
                              Message&      msg )
 {
@@ -67,13 +68,14 @@ void StoreLog::writeMessage( taskid_type   taskId,
 
     char buf[200];
     char* p = buf;
-    p += sprintf(buf,"%u,%u,%u,",version_,taskId,regionId);
+    p += sprintf(buf,"%u,%u,%u,",version_,dlvId,regionId);
     p = msg.printToBuf(version_,p);
-    *p = '\n';
-    *++p = '\0';
-    const int fd = fileno(stdout);
-    write(fd,buf,size_t(p-buf));
-    fsync(fd);
+    // *p = '\n';
+    // *++p = '\0';
+    // const int fd = fileno(stdout);
+    // write(fd,buf,size_t(p-buf));
+    // fsync(fd);
+    smsc_log_debug(log_,"%s",buf);
 }
 
 }

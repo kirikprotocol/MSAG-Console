@@ -48,7 +48,7 @@ public:
     // return a message upload task, the task is already inserted into message upload pool
     // NOTE: TODO: only throw exception if the MessageUploadTask cannot be created.
     virtual void requestNewMessages( MessageUploadRequester& requester,
-                                     taskid_type             taskId,
+                                     dlvid_type              taskId,
                                      regionid_type           regionId,
                                      unsigned                count ) = 0;
 };

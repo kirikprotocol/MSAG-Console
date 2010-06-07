@@ -15,7 +15,9 @@ class RegionalStoragePtr;
 class MessageCache
 {
 public:
-    MessageCache( const TaskInfo& taskInfo );
+    MessageCache( const DlvInfo& dlvInfo,
+                  StoreLog&      storeLog,
+                  MessageSource& messageSource );
 
     /// get the regional storage for given region.
     RegionalStoragePtr getRegionalStorage( regionid_type regionId );
@@ -23,15 +25,17 @@ public:
     /// rolling over the storage.
     void rollOver();
 
-    /// add a new regional storage.
-    void addRegionalStorage( RegionalStoragePtr storage );
+    const DlvInfo& getDlvInfo() const { return *dlvInfo_; }
 
-    const TaskInfo& getTaskInfo() const { return *taskInfo_; }
+    // add a new regional storage.
+    // void addRegionalStorage( RegionalStoragePtr storage );
 
 private:
     smsc::core::synchronization::Mutex                 cacheLock_;
     smsc::core::buffers::IntHash< RegionalStoragePtr > storages_;
-    const TaskInfo*                                    taskInfo_;
+    const DlvInfo*                                     dlvInfo_;
+    MessageSource*                                     messageSource_;
+    StoreLog*                                          storeLog_;
 };
 
 }
