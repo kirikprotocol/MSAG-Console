@@ -165,6 +165,17 @@ public:
         normalize(tmo2, v1, v2);
         return v1 < v2;
     }
+
+    TimeSlice & operator/ (unsigned use_divisor)
+    {
+        while ((unitId < tuNSecs) && (tmoVal < use_divisor)) {
+            unitId = static_cast<UnitType_e>(unitId + 1);
+            tmoVal *= 1000;
+        }
+        tmoVal = (tmoVal / use_divisor)
+                    + ((tmoVal % use_divisor) + use_divisor - 1)/use_divisor;
+        return *this;
+    }
 };
 
 } //synchronization
