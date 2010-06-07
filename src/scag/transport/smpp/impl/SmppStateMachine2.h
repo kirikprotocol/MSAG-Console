@@ -21,6 +21,10 @@ namespace smpp {
 class StateMachine: public smsc::core::threads::ThreadedTask
 {
 public:
+    /// init registry.
+    /// must be invoked before any StateMachine ctor.
+    static void initRegistry( unsigned respTimeout );
+
     StateMachine( SmppCommandQueue* argQueue, SmppRouter* argRouteMan ) :
     queue_(argQueue), routeMan_(argRouteMan), log_(0)
     {

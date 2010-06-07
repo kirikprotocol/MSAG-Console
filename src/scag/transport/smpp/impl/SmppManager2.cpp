@@ -488,6 +488,28 @@ void SmppManagerImpl::Init(const char* cfgFile)
   }
    */
 
+    {
+        const unsigned defaultRespTimeout = 70;
+        unsigned respTimeout;
+        try{
+            respTimeout = unsigned(ConfigManager::Instance().getConfig()->getInt("smpp.core.respTimeout"));
+        } catch(HashInvalidKeyException& e) {
+            respTimeout = defaultRespTimeout;
+            smsc_log_warn(log,"smpp.core.respTimeout is not found! Using default (%u)",
+                          respTimeout);
+        }
+        if ( respTimeout < 60 ) {
+            smsc_log_warn(log,"smpp.core.respTimeout is too small (%u), using %u",
+                          respTimeout,defaultRespTimeout);
+            respTimeout = defaultRespTimeout;
+        } else if ( respTimeout > 1000 ) {
+            smsc_log_warn(log,"smpp.core.respTimeout is too big (%u), using %u",
+                          respTimeout,defaultRespTimeout);
+            respTimeout = defaultRespTimeout;
+        }
+        StateMachine::initRegistry(respTimeout);
+    }
+    
   smsc_log_info(log,"Starting %d state machines",stmCnt);
   for(int i=0;i<stmCnt;i++)
   {

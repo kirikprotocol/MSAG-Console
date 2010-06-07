@@ -48,6 +48,8 @@ struct StateMachine::ResponseRegistry
 {
     ResponseRegistry() : log(0), timeout(60) {}
 
+    void setTimeout( unsigned tmo ) { timeout = tmo; }
+
     ~ResponseRegistry() {
         // FIXME: cleanup all items in reg
     }
@@ -218,6 +220,13 @@ StateMachine::ResponseRegistry StateMachine::reg_;
 
 sync::Mutex StateMachine::expMtx_;
 bool StateMachine::expProc_ = false;
+
+
+void StateMachine::initRegistry( unsigned respTimeout )
+{
+    MutexGuard mg(expMtx_);
+    reg_.setTimeout(respTimeout);
+}
 
 
 int StateMachine::Execute()
