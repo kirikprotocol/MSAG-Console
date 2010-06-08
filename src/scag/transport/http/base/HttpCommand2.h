@@ -43,7 +43,8 @@ struct TransactionContext {
     std::string site;
     std::string sitePath;    
     std::string siteFileName;
-    
+    std::string url;
+
     int ruleId;
     // uint16_t usr;
 
@@ -402,6 +403,9 @@ public:
     void setFailedBeforeSessionCreate(bool failed) { failedBeforeSessionCreate = failed; };
 
     bool getPostParams(std::string& params);
+
+    /// return the full url
+    const std::string& getUrl();
 
 protected:
     void serializeQuery(std::string& s);

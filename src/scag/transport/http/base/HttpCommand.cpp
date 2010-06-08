@@ -469,6 +469,25 @@ const std::string& HttpRequest::serialize()
 //    }
 }
 
+
+const std::string& HttpRequest::getUrl()
+{
+    if ( ! trc.url.empty() ) return trc.url;
+    char buf[200];
+    snprintf(buf,sizeof(buf),"%s:%u",getSite().c_str(),getSitePort());
+    std::string headers(buf);
+    headers += getSitePath();
+    headers += getSiteFileName();
+    headers += getURLField();        
+    if (queryParameters.GetCount() && httpMethod == GET) {
+        headers += '?';
+        serializeQuery(headers);
+    }
+    trc.url.swap(headers);
+    return trc.url;
+}
+
+
 const std::string& HttpResponse::serialize()
 {
 //    if (headers.empty()) {

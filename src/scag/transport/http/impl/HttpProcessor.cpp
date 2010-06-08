@@ -21,71 +21,6 @@ namespace http {
 using namespace sessions;
 using smsc::util::Exception;
 using scag2::re::actions::CommandProperty;
-/*
-HttpProcessor& HttpProcessor::Instance()
-{
-    if (!inited) 
-    {
-        MutexGuard guard(initLock);
-        if (!inited) 
-            throw std::runtime_error("HttpProcessor not inited!");
-    }
-    return SingleHP::Instance();
-}
-
-void HttpProcessor::Init(const std::string& cfg)
-{
-    if (!inited)
-    {
-        MutexGuard guard(initLock);
-        if(!inited) {
-            HttpProcessorImpl& hp = SingleHP::Instance();
-            hp.init(cfg);
-            inited = true;
-        }
-    }
-}
- */
-
-/*bool HttpProcessorImpl::parseURLFields(char* pos, char* end, HttpRequest& cx)
-{
-    mid = pos;
-    while (mid <= end && (isalnum(*mid) || *mid == '+' || *mid == '.'))
-        mid++;
-
-    len = mid - pos;
-    if (!(mid <= end && 1 <= len && len <= 20))
-    {
-        smsc_log_debug(logger, "if (!(mid <= end && 1 <= len && len <= 20))");
-        return false;
-    }
-
-    str.assign(pos, len);
-//        Address addr(str.c_str());
-    cx.setAbonent(str);
-
-    if(*mid == '_')
-    {
-        mid++;
-        len = end - mid;
-        str.assign(mid, len);
-
-        pos = str.c_str();
-        while (isdigit(*pos))
-            pos++;
-        if (*pos || !(1 <= len && len <= 5))
-          return false;
-
-        len = atoi(str.c_str());
-        if (len > USHRT_MAX | !len)
-        {
-            smsc_log_debug(logger, "if (len > USHRT_MAX | !len)");
-            return false;
-        }
-
-        cx.setUSR(len);
-    }
-}*/
 
 
 bool HttpProcessorImpl::parsePath(const std::string &path, HttpRequest& cx)
@@ -448,8 +383,8 @@ int HttpProcessorImpl::processRequest(HttpRequest& request)
             }
 
             if (r.statistics) {
-              smsc_log_debug(logger, "process request: register traffic info event");
-              scag2::re::CommandBridge::RegisterTrafficEvent(cp, se->sessionPrimaryKey(), "");
+              smsc_log_debug(logger, "process request: register traffic info event, url=%s", request.getUrl().c_str());
+              scag2::re::CommandBridge::RegisterTrafficEvent(cp, se->sessionPrimaryKey(), request.getUrl().c_str());
             }
 
             if (rs.status == re::STATUS_OK)
@@ -543,8 +478,8 @@ int HttpProcessorImpl::processResponse(HttpResponse& response)
             }
 
             if (response.getStatistics()) {
-              smsc_log_debug(logger, "process response: register traffic info event");
-              scag2::re::CommandBridge::RegisterTrafficEvent(cp, se->sessionPrimaryKey(), "");
+              smsc_log_debug(logger, "process response: register traffic info event, url=%s", response.trc.url.c_str() );
+              scag2::re::CommandBridge::RegisterTrafficEvent(cp, se->sessionPrimaryKey(), response.trc.url.c_str() );
             }
 
             if (rs.status == re::STATUS_OK )
@@ -646,8 +581,8 @@ int HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
             }
 
             if (response.getStatistics()) {
-              smsc_log_debug(logger, "process status response: register traffic info event");
-              scag2::re::CommandBridge::RegisterTrafficEvent(cp, se->sessionPrimaryKey(), "");
+              smsc_log_debug(logger, "process status response: register traffic info event, url=%s", response.trc.url.c_str() );
+              scag2::re::CommandBridge::RegisterTrafficEvent(cp, se->sessionPrimaryKey(), response.trc.url.c_str() );
             }
             
             if(rs.status == re::STATUS_OK && delivered)

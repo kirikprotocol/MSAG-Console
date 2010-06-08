@@ -282,7 +282,8 @@ void CommandBridge::RegisterTrafficEvent(const actions::CommandProperty& command
     ev->Header.sCommandStatus = commandProperty.status;
     ev->Header.iOperatorId = commandProperty.operatorId;
     
-    if (handlerId == EH_SUBMIT_SM || handlerId == EH_DELIVER_SM || handlerId == EH_DATA_SM) {
+    if (handlerId == EH_SUBMIT_SM || handlerId == EH_DELIVER_SM || handlerId == EH_DATA_SM ||
+        handlerId == EH_HTTP_REQUEST || handlerId == EH_HTTP_RESPONSE || handlerId == EH_HTTP_DELIVERY ) {
       ev->pMessageText.append(messageBody.data(), messageBody.size());
     }
 
