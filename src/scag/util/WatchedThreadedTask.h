@@ -17,14 +17,14 @@ protected:
 public:
     virtual void onRelease() {
         stop();
-        MutexGuard mg(releaseMon_);
+        smsc::core::synchronization::MutexGuard mg(releaseMon_);
         ThreadedTask::onRelease();
         releaseMon_.notify();
     }
 
     void waitUntilReleased() {
         if (isReleased) return;
-        MutexGuard mg(releaseMon_);
+        smsc::core::synchronization::MutexGuard mg(releaseMon_);
         while ( !isReleased ) {
             releaseMon_.wait(500);
         }
@@ -33,7 +33,7 @@ public:
     void waitUntilStarted() {
         if (isStarted_) return;
         if (stopping()) return;
-        MutexGuard mg(releaseMon_);
+        smsc::core::synchronization::MutexGuard mg(releaseMon_);
         while ( !isStarted_ ) {
             if ( stopping() ) return;
             releaseMon_.wait(100);
@@ -50,7 +50,7 @@ public:
 
     virtual int Execute() {
         {
-            MutexGuard mg(releaseMon_);
+            smsc::core::synchronization::MutexGuard mg(releaseMon_);
             isReleased = false;
             isStarted_ = true;
             releaseMon_.notify();

@@ -2,6 +2,7 @@
 #define SCAG_BILL_EWALLET_PROTO_SOCKETTASK_H
 
 #include "scag/util/WatchedThreadedTask.h"
+#include "core/buffers/Array.hpp"
 #include "Socket.h"
 #include "logger/Logger.h"
 
