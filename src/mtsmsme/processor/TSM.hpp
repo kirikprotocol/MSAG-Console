@@ -76,10 +76,10 @@ class TSM
     Logger* logger;
     TsmComletionListener* listener;
     void startwdtimer(int seconds);
-  private:
     typedef enum { IDLE = 0, IR = 1, IS = 2, ACTIVE = 3, STOP = 4
     } TR_STATE_T;
     TR_STATE_T st;
+  private:
     vector<unsigned char> internal_arg;
     uint8_t internal_opcode;
     uint8_t internal_invokeId;
