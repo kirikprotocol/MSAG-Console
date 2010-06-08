@@ -89,14 +89,13 @@ extern "C" typedef void (*SignalHandler)(int);
 void ThreadPool::shutdown(TimeSlice::UnitType_e time_unit, long use_tmo)
 {
   sigset(SIGUSR1,(SignalHandler)disp);
-  TimeSlice timeout(use_tmo, time_unit);
+  TimeSlice timeout(use_tmo ? use_tmo : 1, use_tmo ? time_unit : TimeSlice::tuSecs);
 
   TimeSlice firstTmo;
   if (TimeSlice(10, TimeSlice::tuSecs) < timeout) {
     firstTmo = TimeSlice(1, TimeSlice::tuSecs);
-  } else if (timeout < TimeSlice(10, TimeSlice::tuUSecs)) {
-    firstTmo = TimeSlice(1, TimeSlice::tuUSecs);
-    timeout =  TimeSlice(10, TimeSlice::tuUSecs);
+  } else if (timeout < TimeSlice(10, TimeSlice::tuMSecs)) {
+    firstTmo = TimeSlice(1, TimeSlice::tuMSecs);
   } else
     firstTmo = timeout/10;
 
@@ -127,28 +126,33 @@ void ThreadPool::shutdown(TimeSlice::UnitType_e time_unit, long use_tmo)
   //wait either last released thread signal or first timeout expiration
   lock.wait(firstTmo);
 
-  //check for unexpectedly lasting threads
+   //check for unexpectedly lasting threads
   if (usedThreads.Count())
   {
-    //send a signal to lasting thread in order to awake it if it's blocked
-    trace2("Waiting when all threads will be finished:%d",usedThreads.Count());
-    for(int i=0; i<usedThreads.Count(); ++i)
-    {
-      if (!usedThreads[i].destructing)
+    do {
+      //send a signal to lasting thread in order to awake it if it's blocked
+      trace2("Waiting when all threads will be finished:%d",usedThreads.Count());
+      for (int i=0; i<usedThreads.Count(); ++i)
       {
-        __warning2__("Unfinished task:%s",usedThreads[i].ptr->taskName());
-        usedThreads[i].ptr->stopTask();
-        usedThreads[i].ptr->Kill(SIGUSR1);
+        if (!usedThreads[i].destructing)
+        {
+          __warning2__("Unfinished task:%s",usedThreads[i].ptr->taskName());
+          usedThreads[i].ptr->stopTask();
+          usedThreads[i].ptr->Kill(SIGUSR1);
+        }
       }
-    }
-    //wait up to maximum allowed time and generate core dump
-    //if there are threads still active
-    lock.wait(maxTime);
+      //wait up to maximum allowed time
+      lock.wait(maxTime);
+      if (!use_tmo) //shift maximum allowed time
+        maxTime = timeout.adjust2Nano();
+      /**/
+    } while (!use_tmo && usedThreads.Count());
+  }
 #ifndef LEAKTRACE
-    if (usedThreads.Count())
+  if (usedThreads.Count())
       abort(); //generate core dump
 #endif
-  }
+
   //finish unused threads
   for(int i=0; i<freeThreads.Count(); ++i)
   {
