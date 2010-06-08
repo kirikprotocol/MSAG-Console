@@ -29,13 +29,6 @@ struct TSMSTAT {
 class TSM
 {
   public:
-    enum STATE {
-      IDLE = 0,
-      IR = 1,
-      ACTIVE = 2,
-      STOP = 3
-    };
-  public:
     // remove external transaction id generation, get limit only
     // constructor with TrId will ignore external id
     TSM(TrId _ltrid,AC& ac,TCO* _tco);
@@ -76,7 +69,6 @@ class TSM
     TrId rtrid;
     AC appcntx;
     TCO* tco;
-    STATE st;
     uint8_t laddr[20];
     uint8_t laddrlen;
     uint8_t raddr[20];
@@ -85,6 +77,9 @@ class TSM
     TsmComletionListener* listener;
     void startwdtimer(int seconds);
   private:
+    typedef enum { IDLE = 0, IR = 1, IS = 2, ACTIVE = 3, STOP = 4
+    } TR_STATE_T;
+    TR_STATE_T st;
     vector<unsigned char> internal_arg;
     uint8_t internal_opcode;
     uint8_t internal_invokeId;
