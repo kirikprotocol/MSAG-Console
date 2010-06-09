@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE counters SYSTEM "counters.dtd">
+
+<counters>
+    <ca_tables>
+        <ca_table id="sys.traffic.global.smpp" system="true">
+            <limits min="0" max="10">
+	    </limits>
+        </ca_table>
+
+        <ca_table id="sys.traffic.smpp.sme" system="true">
+            <limits min="0" max="10">
+            </limits>
+        </ca_table>
+
+        <ca_table id="sys.traffic.smpp.smsc" system="true">
+            <limits min="0" max="100">
+            </limits>
+        </ca_table>
+
+        <ca_table id="sys.smpp.queue.global" system="true">
+            <limits min="0" max="100">
+            </limits>
+        </ca_table>
+
+        <ca_table id="sys.smpp.queue.in" system="true">
+            <limits min="0" max="100">
+            </limits>
+        </ca_table>
+
+        <ca_table id="sys.smpp.queue.out" system="true">
+            <limits min="0" max="100">
+            </limits>
+        </ca_table>
+
+        <ca_table id="sys.sessions.total" system="true">
+            <limits min="0" max="100">
+            </limits>
+        </ca_table>
+
+        <ca_table id="sys.sessions.active" system="true">
+            <limits min="0" max="100">
+            </limits>
+        </ca_table>
+
+        <ca_table id="sys.sessions.locked" system="true">
+            <limits min="0" max="100">
+            </limits>
+        </ca_table>
+
+        <ca_table id="user.table1" system="false">
+            <limits min="100" max="500">
+                <!-- limit percent="5" severity="NORMAL"/ -->
+		<limit percent="50" severity="WARNING"/>
+		<limit percent="75" severity="MAJOR"/>
+            </limits>
+            <!-- param name="some_user_param" type="string">101</param -->
+        </ca_table>
+
+        <ca_table id="user.defaultTable" system="false">
+            <limits min="0" max="100">
+                <!-- limit percent="5" severity="NORMAL"/ -->
+		<limit percent="70" severity="WARNING"/>
+		<limit percent="80" severity="MINOR"/>
+                <limit percent="90" severity="MAJOR"/>
+                <limit percent="95" severity="CRITICAL"/>
+            </limits>
+            <!-- param name="some_user_param" type="string">101</param -->
+        </ca_table>
+    </ca_tables>
+    
+    <templates>
+        <template id="SimpleAcc" type="ACCUMULATOR">
+	    <ca id="user.defaultTable"/>
+	</template>
+        <template id="SimpleAvg" type="AVERAGE">
+            <ca id="user.table1"/>
+            <param name="nseconds" type="int">10</param>
+	</template>
+	<template id="SimpleIntegral" type="INTEGRAL">
+	    <ca id="user.defaultTable"/>
+            <param name="nseconds" type="int">10</param>
+            <param name="msecresol" type="int">100</param>
+	</template>
+    </templates>
+
+</counters>

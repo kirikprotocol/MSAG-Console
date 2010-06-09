@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE counters SYSTEM "counters.dtd">
+
+<counters>
+    <ca_tables>
+        <ca_table id="sys.profiles.abn.total" system="true">
+            <limits min="0" max="100">
+	    </limits>
+        </ca_table>
+
+    </ca_tables>
+    
+    <templates>
+        <template id="SimpleAcc" type="ACCUMULATOR">
+	    <ca id="user.defaultTable"/>
+	</template>
+        <template id="SimpleAvg" type="AVERAGE">
+            <ca id="user.table1"/>
+            <param name="nseconds" type="int">10</param>
+	</template>
+	<template id="SimpleIntegral" type="INTEGRAL">
+	    <ca id="user.defaultTable"/>
+            <param name="nseconds" type="int">10</param>
+            <param name="msecresol" type="int">100</param>
+	</template>
+    </templates>
+
+</counters>
