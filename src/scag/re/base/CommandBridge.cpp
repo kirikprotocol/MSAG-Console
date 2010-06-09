@@ -237,7 +237,8 @@ void CommandBridge::CheckCommandProperty(SCAGCommand& command, const actions::Co
     if (cp.operatorId == 0) {
       RegisterAlarmEvent( 1, cp.abonentAddr.toString(), sessions::PROTOCOL_HTTP, hc.getServiceId(),
                           hc.getProviderId(), 0, 0, primaryKey,
-                          hc.getCommandId() == transport::http::HTTP_RESPONSE ? 'O' : 'I');
+                          hc.getCommandId() == transport::http::HTTP_RESPONSE ? 'O' : 'I',
+                          hc.getUrl().c_str() );
 
       throw SCAGException("CheckCommandProperty: Cannot find OperatorID for %s abonent", cp.abonentAddr.toString().c_str());
     }
@@ -306,7 +307,8 @@ void CommandBridge::RegisterTrafficEvent(const actions::CommandProperty& command
 
 void CommandBridge::RegisterAlarmEvent(uint32_t eventId, const std::string& addr, uint8_t protocol,
                                        uint32_t serviceId, uint32_t providerId, uint32_t operatorId,
-                                       uint16_t commandStatus, const sessions::SessionPrimaryKey& sessionPrimaryKey, char dir)
+                                       uint16_t commandStatus, const sessions::SessionPrimaryKey& sessionPrimaryKey,
+                                       char dir, const char* msg )
 {
     SaccAlarmEvent* ev = new SaccAlarmEvent();
 
@@ -325,6 +327,10 @@ void CommandBridge::RegisterAlarmEvent(uint32_t eventId, const std::string& addr
 
     ev->Header.pSessionKey = sessionPrimaryKey.toString();
     ev->cDirection = dir;
+
+    if ( msg && strlen(msg) > 0 ) {
+        ev->pMessageText.append(msg);
+    }
 
     Statistics::Instance().registerSaccEvent(ev);
 }

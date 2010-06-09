@@ -479,8 +479,8 @@ int HttpProcessorImpl::processResponse(HttpResponse& response)
             }
 
             if (response.getStatistics()) {
-              smsc_log_debug(logger, "process response: register traffic info event, url=%s", response.trc.url.c_str() );
-              scag2::re::CommandBridge::RegisterTrafficEvent(cp, se->sessionPrimaryKey(), response.trc.url.c_str() );
+              smsc_log_debug(logger, "process response: register traffic info event, url=%s", response.getUrl().c_str() );
+              scag2::re::CommandBridge::RegisterTrafficEvent(cp, se->sessionPrimaryKey(), response.getUrl().c_str() );
             }
 
             if (rs.status == re::STATUS_OK )
@@ -582,8 +582,8 @@ int HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
             }
 
             if (response.getStatistics()) {
-              smsc_log_debug(logger, "process status response: register traffic info event, url=%s", response.trc.url.c_str() );
-              scag2::re::CommandBridge::RegisterTrafficEvent(cp, se->sessionPrimaryKey(), response.trc.url.c_str() );
+              smsc_log_debug(logger, "process status response: register traffic info event, url=%s", response.getUrl().c_str() );
+              scag2::re::CommandBridge::RegisterTrafficEvent(cp, se->sessionPrimaryKey(), response.getUrl().c_str() );
             }
             
             if(rs.status == re::STATUS_OK && delivered)

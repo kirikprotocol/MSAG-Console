@@ -377,6 +377,33 @@ void HttpCommand::setMessageBinary(uint8_t* body, int length, const std::string&
     textContent.clear();
 }
 
+
+HttpRequest::HttpRequest(HttpContext* cx, TransactionContext& tcx) :
+HttpCommand(cx, tcx, HTTP_REQUEST),
+queryParametersIterator(queryParameters), isInitialRequest(false),
+failedBeforeSessionCreate(false)
+{}
+
+
+const std::string& HttpRequest::getUrl()
+{
+    if ( trc.url.empty() ) {
+        char buf[200];
+        snprintf(buf,sizeof(buf),"%s:%u",getSite().c_str(),getSitePort());
+        std::string headers(buf);
+        headers += getSitePath();
+        headers += getSiteFileName();
+        headers += getURLField();        
+        if (queryParameters.GetCount() && httpMethod == GET) {
+            headers += '?';
+            serializeQuery(headers);
+        }
+        trc.url.swap(headers);
+    }
+    return trc.url;
+}
+
+
 void HttpRequest::serializeQuery(std::string& s)
 {
     bool n = false;
@@ -468,24 +495,6 @@ const std::string& HttpRequest::serialize()
         headers += CRLF;
         return headers;
 //    }
-}
-
-
-const std::string& HttpRequest::getUrl()
-{
-    if ( ! trc.url.empty() ) return trc.url;
-    char buf[200];
-    snprintf(buf,sizeof(buf),"%s:%u",getSite().c_str(),getSitePort());
-    std::string headers(buf);
-    headers += getSitePath();
-    headers += getSiteFileName();
-    headers += getURLField();        
-    if (queryParameters.GetCount() && httpMethod == GET) {
-        headers += '?';
-        serializeQuery(headers);
-    }
-    trc.url.swap(headers);
-    return trc.url;
 }
 
 

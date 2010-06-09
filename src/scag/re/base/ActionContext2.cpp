@@ -215,14 +215,14 @@ void ActionContext::delProperty( const std::string& var )
         if (!command_) {
             throw SCAGException("ActionContext:delProperty(%s): command is not set", var.c_str());
         }
-        command_->delProperty(var);
+        command_->delProperty(name);
         break;
     }
     default:
         throw SCAGException( "ActionContext:delProperry(%s): unknowns cannot be deleted", var.c_str());
     }
     if (scope) {
-        scope->delProperty(var);
+        scope->delProperty(name);
     }
 }
 

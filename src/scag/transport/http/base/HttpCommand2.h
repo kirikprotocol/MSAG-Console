@@ -165,6 +165,8 @@ public:
 
     virtual void print( util::Print& p ) const;
 
+    virtual const std::string& getUrl() = 0;
+
     // All values accessible by command context methods
     // should be passed to HttpResponse via HttpRequest 
 
@@ -358,9 +360,9 @@ class HttpRequest : public HttpCommand {
 public:
     typedef StringHashIterator ParameterIterator;
 
-    HttpRequest(HttpContext* cx, TransactionContext& tcx) : HttpCommand(cx, tcx, HTTP_REQUEST),
-        queryParametersIterator(queryParameters), isInitialRequest(false),
-        failedBeforeSessionCreate(false) {}
+    HttpRequest(HttpContext* cx, TransactionContext& tcx);
+
+    virtual const std::string& getUrl();
 
     HttpMethod getMethod() {
         return httpMethod;
@@ -404,9 +406,6 @@ public:
 
     bool getPostParams(std::string& params);
 
-    /// return the full url
-    const std::string& getUrl();
-
 protected:
     void serializeQuery(std::string& s);
 
@@ -432,6 +431,10 @@ class HttpResponse : public HttpCommand {
 
 public:
     HttpResponse(HttpContext* cx, TransactionContext& tcx) : HttpCommand(cx, tcx, HTTP_RESPONSE), fake(false) {};
+
+    virtual const std::string& getUrl() {
+        return trc.url;
+    }
 
     const std::string& getStatusLine() {
         return statusLine;

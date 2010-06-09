@@ -164,9 +164,11 @@ public:
                                       const std::string& messageBody,
                                       util::HRTiming* hrt = 0 );
     
+protected:
     static void RegisterAlarmEvent( uint32_t eventId, const std::string& addr, uint8_t protocol,
                                     uint32_t serviceId, uint32_t providerId, uint32_t operatorId,
-                                    uint16_t commandStatus, const sessions::SessionPrimaryKey& sessionPrimaryKey, char dir );
+                                    uint16_t commandStatus, const sessions::SessionPrimaryKey& sessionPrimaryKey,
+                                    char dir, const char* msg = 0 );
 };
 
 
