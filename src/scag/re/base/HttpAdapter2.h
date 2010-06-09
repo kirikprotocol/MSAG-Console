@@ -36,6 +36,8 @@ public:
 
     virtual void changed(util::properties::AdapterProperty& property);
     virtual util::properties::Property* getProperty(const std::string& name);
+    virtual void delProperty( const std::string& name );
+
     virtual ~HttpCommandAdapter();
 
     static AccessType CheckAccess( int handlerType, const std::string& name );

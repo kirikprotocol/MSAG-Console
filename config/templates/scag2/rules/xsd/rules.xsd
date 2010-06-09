@@ -143,6 +143,12 @@
                 </complexType>    
             </element>
             
+            <element name="del">
+                <complexType>
+                    <attribute name="var" type="scag:Var" use="required"/>
+                </complexType>
+            </element>
+
             <element name="longcalltest"/>
 
             <element name="return">

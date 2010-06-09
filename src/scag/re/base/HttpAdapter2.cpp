@@ -186,6 +186,22 @@ Property* HttpCommandAdapter::getProperty(const std::string& name)
     return 0;
 }
 
+
+void HttpCommandAdapter::delProperty( const std::string& name )
+{
+    if ( !strncmp(name.c_str(),"header-",7) ) {
+        command.removeHeaderField(name.c_str()+7);
+    } else if ( !strncmp(name.c_str(),"param-",6) &&
+                command.getCommandId() == HTTP_REQUEST ) {
+        HttpRequest& cmd = static_cast<HttpRequest&>(command);
+        cmd.delQueryParameter(name.c_str()+6);
+    } else {
+        smsc::logger::Logger* logr = smsc::logger::Logger::getInstance("http.adapt");
+        smsc_log_warn(logr,"delProperty(%s): not allowed to del");
+    }
+}
+
+
 void HttpCommandAdapter::changed(AdapterProperty& property)
 {
     if(command.getCommandId() == HTTP_RESPONSE)

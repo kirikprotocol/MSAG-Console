@@ -23,6 +23,7 @@ namespace session {
 
         virtual void changed(AdapterProperty& property);
         virtual Property* getProperty(const std::string& name);
+        virtual void delProperty( const std::string& name ) {}
 	
         virtual transport::SCAGCommand& getSCAGCommand() {
             throw scag::exceptions::SCAGException("Cannot use command in the session adapter"); 

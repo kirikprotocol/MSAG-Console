@@ -98,6 +98,13 @@ public:
         return p;
     }
 
+    virtual void delProperty( const std::string& name )
+    {
+        if ( !isReadonly(name) ) {
+            SessionPropertyScope::delProperty(name);
+        }
+    }
+
 protected:
     virtual bool isReadonly( const std::string& name ) const {
         return ( readonly_->find( name ) == readonly_->end() ? false : true );
@@ -226,6 +233,12 @@ Property* SessionPropertyScope::getProperty( const std::string& name )
         properties_.Insert( name.c_str(), res );
     }
     return res;
+}
+
+
+void SessionPropertyScope::delProperty( const std::string& name )
+{
+    properties_.Delete( name.c_str() );
 }
 
 

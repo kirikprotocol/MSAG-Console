@@ -131,6 +131,8 @@ public:
 
     virtual void changed(AdapterProperty& property);
     virtual Property* getProperty(const std::string& name);
+    virtual void delProperty( const std::string& name );
+
     //virtual void fillChargeOperation(smsc::inman::interaction::ChargeSms& op, TariffRec& tariffRec);
     //virtual void fillRespOperation(smsc::inman::interaction::DeliverySmsResult& op, TariffRec& tariffRec);
 

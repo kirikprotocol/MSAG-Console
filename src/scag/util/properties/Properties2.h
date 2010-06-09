@@ -146,6 +146,7 @@ struct Changeable
      * @param   property    changed property
      */
     virtual void changed(AdapterProperty& property) = 0;
+
     virtual ~Changeable() {}
         
 protected:
@@ -167,6 +168,8 @@ struct PropertyManager : public Changeable
      * @return  property    existed property, new property or null
      */
     virtual Property* getProperty( const std::string& name ) = 0;
+    virtual void delProperty( const std::string& name ) = 0;
+
     virtual ~PropertyManager() {};
 
 public:

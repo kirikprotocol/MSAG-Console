@@ -178,6 +178,55 @@ Property* ActionContext::getProperty( const std::string& var )
 }
 
 
+void ActionContext::delProperty( const std::string& var )
+{
+    FieldType prefix;
+    const char* name;
+    prefix = Separate(var,name);
+    SessionPropertyScope* scope = 0;
+
+    switch (prefix) {
+    case ftGlobal: {
+        scope = session_->getGlobalScope();
+        break;
+    }
+    case ftService: {
+        if ( !commandProperty_ ) {
+            throw SCAGException( "ActionContext:delProperty(%s): command is not set", var.c_str());
+        }
+        scope = session_->getServiceScope( commandProperty_->serviceId );
+        break;
+    }
+    case ftContext: {
+        if ( ! session_->getCurrentOperation() ) {
+            throw SCAGException( "ActionContext:delProperty(%s): no current operation", var.c_str());
+        }
+        scope = session_->getContextScope( session_->getCurrentOperation()->getContextScope() );
+        break;
+    }
+    case ftOperation: {
+        scope = session_->getOperationScope();
+        break;
+    }
+    case ftConst: {
+        throw SCAGException( "ActionContext:delProperty(%s): constants cannot be deleted", var.c_str());
+    }
+    case ftField: {
+        if (!command_) {
+            throw SCAGException("ActionContext:delProperty(%s): command is not set", var.c_str());
+        }
+        command_->delProperty(var);
+        break;
+    }
+    default:
+        throw SCAGException( "ActionContext:delProperry(%s): unknowns cannot be deleted", var.c_str());
+    }
+    if (scope) {
+        scope->delProperty(var);
+    }
+}
+
+
 void ActionContext::getBillingInfoStruct( bill::BillingInfoStruct& bis )
 {
     bis.AbonentNumber = commandProperty_->abonentAddr.toString().c_str();

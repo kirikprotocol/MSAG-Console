@@ -43,6 +43,8 @@ public:
     SessionPropertyScope( Session* patron );
     virtual ~SessionPropertyScope();
     virtual Property* getProperty( const std::string& name );
+    virtual void delProperty( const std::string& name );
+
     util::io::Serializer& serialize( util::io::Serializer& s ) const;
     util::io::Deserializer& deserialize( util::io::Deserializer& s ) 
         /* throw (util::io::DeserializerException) */; 

@@ -186,6 +186,9 @@ public:
     /// get property, variable prefix defines the scope
     Property* getProperty(const std::string& var);
 
+    /// delete property by name, variable prefix defines the scope
+    void delProperty( const std::string& var );
+
     CommandProperty& getCommandProperty() { return *commandProperty_; }
 
     /// fill billing infostructure with data

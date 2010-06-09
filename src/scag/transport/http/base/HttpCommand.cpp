@@ -291,7 +291,8 @@ void HttpRequest::delQueryParameter(const std::string& paramName) {
 }
 
 void HttpRequest::delHeaderField(const std::string& name) {
-  headerFields.Delete(name.c_str());
+    removeHeaderField(name);
+    // headerFields.Delete(name.c_str());
 }
 
 

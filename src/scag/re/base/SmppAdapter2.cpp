@@ -204,6 +204,13 @@ Property* SmppCommandAdapter::getProperty(const std::string& name)
 }
 
 
+void SmppCommandAdapter::delProperty( const std::string& name )
+{
+    smsc::logger::Logger* logr = smsc::logger::Logger::getInstance("smpp.adapt");
+    smsc_log_warn(logr,"delProperty(%s) is not implemented",name.c_str());
+}
+
+
 AdapterProperty* SmppCommandAdapter::createSmProperty( const std::string& name, int fieldId )
 {
     AdapterProperty* property = 0;

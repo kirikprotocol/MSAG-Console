@@ -3,6 +3,7 @@
 #include "ActionIf2.h"
 #include "ActionReturn2.h"
 #include "ActionSet2.h"
+#include "ActionDel.h"
 #include "DateTimeAction2.h"
 #include "ActionBinOperations2.h"
 #include "ActionLog2.h"
@@ -63,6 +64,7 @@ Action * MainActionFactory::CreateAction( const std::string& name ) const
     do { // fake loop
 
         if (name=="set") return new ActionSet();
+        if (name=="del") return new ActionDel();
         if (name=="return") return new ActionReturn();
         if (name=="match") return new ActionMatch();
 

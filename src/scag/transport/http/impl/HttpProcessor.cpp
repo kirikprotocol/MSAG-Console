@@ -329,15 +329,16 @@ int HttpProcessorImpl::processRequest(HttpRequest& request)
                 if (r.statistics) {
                   //TODO: register traffic info event for transit route
                   //TODO: how we can create SessionKey if request.getAbonent().length() == 0
-                  smsc_log_debug(logger, "process request: register traffic info event for transit route not implemented");
-                  /*
-                  CommandProperty cp(scag2::re::CommandBridge::getCommandProperty(request, sessionKey.address(),
-                                                                                  static_cast<uint8_t>(request.getOperationId())));
-                  SessionPrimaryKey primaryKey(sessionKey);
-                  timeval tv = { time(0), 0 };
-                  primaryKey.setBornTime(tv);
-                  scag2::re::CommandBridge::RegisterTrafficEvent(cp, primaryKey, "", 0);
-                  */
+                    smsc_log_debug(logger, "process transit request: register traffic info event, url=%s", request.getUrl().c_str() );
+                    const SessionKey sessionKey( request.getAbonent() );
+                    CommandProperty cp ( scag2::re::CommandBridge::getCommandProperty
+                                         (request, sessionKey.address(),
+                                          static_cast<uint8_t>(request.getOperationId())));
+                    SessionPrimaryKey primaryKey(sessionKey);
+                    timeval tv = { time(0), 0 };
+                    primaryKey.setBornTime(tv);
+                    scag2::re::CommandBridge::RegisterTrafficEvent(cp, primaryKey,
+                                                                   request.getUrl().c_str(), 0);
                 }
                 registerEvent(stat::events::http::REQUEST_OK, request);            
                 return scag::re::STATUS_OK;
