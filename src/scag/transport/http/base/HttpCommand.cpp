@@ -93,7 +93,7 @@ const std::string& Cookie::getParam(const char * nm)
     return empty;
 }
 
-void Cookie::setParam(const char* nm, std::string& val)
+void Cookie::setParam(const char* nm, const std::string& val)
 {
     params.Insert(nm, val);
 }
@@ -120,7 +120,7 @@ HttpCommand::~HttpCommand()
         if(*valptr) delete *valptr;
 }
 
-void HttpRequest::delCookie(const std::string& name) {
+void HttpCommand::delCookie(const std::string& name) {
   Cookie **c = cookies.GetPtr(name.c_str());
   if (!c) {
     return;

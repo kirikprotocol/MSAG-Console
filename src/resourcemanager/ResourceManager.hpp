@@ -4,6 +4,7 @@
 #include <string>
 #include <map>
 #include <list>
+#include <memory>
 #include <resourcemanager/LocaleResources.hpp>
 #include <util/Exception.hpp>
 #include "core/synchronization/Mutex.hpp"

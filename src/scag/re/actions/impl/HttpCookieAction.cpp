@@ -12,110 +12,133 @@ using namespace transport::http;
 void CookieAction::init(const SectionParams& params, PropertyObject propertyObject)
 {
     // const char * name = 0;
-    bool bExist;
+    /*
+     bool bExist;
 
     CheckParameter(params, propertyObject, "cookie", "name", true, true, strName, bExist);
     CheckParameter(params, propertyObject, "cookie", "value", true, set, strValue, bExist);
     CheckParameter(params, propertyObject, "cookie", "path", false, set, strPath, bPathExist);
     CheckParameter(params, propertyObject, "cookie", "domain", false, set, strDomain, bDomainExist);
     CheckParameter(params, propertyObject, "cookie", "expires", false, set, strExpires, bExpiresExist);
+     */
 
-    smsc_log_debug(logger, "Inited '%s-CookieAction': name=%s, value=%s, path=%s, domain=%s, expires=%s", set ? "set" : "get", strName.c_str(), strValue.c_str(), strPath.c_str(), strDomain.c_str(), strExpires.c_str());
+    name_.init(params,propertyObject);
+    value_.init(params,propertyObject);
+    path_.init(params,propertyObject);
+    domain_.init(params,propertyObject);
+    expires_.init(params,propertyObject);
+    smsc_log_debug(logger, "Action '%s' inited: name=%s, value=%s, path=%s, domain=%s, expires=%s",
+                   opname(), name_.getStringValue(), value_.getStringValue(), path_.getStringValue(),
+                   domain_.getStringValue(), expires_.getStringValue());
 }
+
 
 bool CookieAction::run(ActionContext& context)
 {
-    smsc_log_debug(logger, "Run '%s-CookieAction': name=%s, value=%s, path=%s, domain=%s, expires=%s", set ? "set" : "get", strName.c_str(), strValue.c_str(), strPath.c_str(), strDomain.c_str(), strExpires.c_str());
+    smsc_log_debug(logger, "Run '%s': name=%s, value=%s, path=%s, domain=%s, expires=%s",
+                   opname(), name_.getStringValue(), value_.getStringValue(),
+                   path_.getStringValue(), domain_.getStringValue(), expires_.getStringValue());
 
-    std::string nm, val, path, domain, expires;
-
-    if(!getStrProperty(context, strName, "name", nm) || !nm.length())
-        return false;
+    const char* nm = name_.getValue(context);
+    if ( !nm || !strlen(nm) ) return false;
 
     HttpCommand& hc = (HttpCommand&)context.getSCAGCommand();
 
-    if(set)
+    switch (atype_) 
     {
-        if(!getStrProperty(context, strValue, "value", val))
-            return false;
+    case SET: {
+        const char* val = value_.getValue(context);
+        if (!val) return false;
 
-        if(!val.length())
+        if(!strlen(val))
         {
-            smsc_log_debug(logger, "'CookieAction 'Empty 'value' parameter %s", strValue.c_str());
+            smsc_log_debug(logger, "'%s' 'Empty 'value' parameter %s",
+                           opname(), value_.getStringValue());
             return false;
         }
 
         Cookie* c = hc.setCookie(nm, val);
 
-        if(!setCookieParam(context, strPath, "path", bPathExist, c) || 
-            !setCookieParam(context, strDomain, "domain", bDomainExist, c) || 
-            !setCookieParam(context, strExpires, "expires", bExpiresExist, c))
-                return false;
+        if (!setCookieParam(context, path_, c) || 
+            !setCookieParam(context, domain_, c) || 
+            !setCookieParam(context, expires_, c) )
+            return false;
 
-        smsc_log_debug(logger, "Cookie is set name=%s, value=%s, path=%s, domain=%s, expires=%s", nm.c_str(), c->value.c_str(), c->getParam("path").c_str(), c->getParam("domain").c_str(), c->getParam("expires").c_str());
+        smsc_log_debug(logger, "Cookie is set name=%s, value=%s, path=%s, domain=%s, expires=%s",
+                       nm, c->value.c_str(), c->getParam("path").c_str(), c->getParam("domain").c_str(), c->getParam("expires").c_str());
+        break;
     }
-    else
-    {
+    case GET: {
+
         Cookie* c = hc.getCookie(nm);
-        if(c)
+        if (c)
         {
-            Property* p;
-            if (!(p = context.getProperty(strValue))) 
+            Property* p = value_.getProperty(context);
+            if (!p)
             {
-                smsc_log_warn(logger,"Action 'Cookie': invalid 'value' property '%s'", strValue.c_str());
+                smsc_log_warn(logger,"Action '%s': invalid 'value' property '%s'",
+                              opname(), value_.getStringValue());
                 return false;
             }
             const Property::string_type sss(c->value.c_str(),c->value.size());
             p->setStr(sss);
 
-            if(!getCookieParam(context, strPath, "path", bPathExist, c) ||
-                !getCookieParam(context, strDomain, "domain", bDomainExist, c) ||
-                !getCookieParam(context, strExpires, "expires", bExpiresExist, c))
-                    return false;
+            if(!getCookieParam(context, path_, c) ||
+               !getCookieParam(context, domain_, c) ||
+               !getCookieParam(context, expires_, c))
+                return false;
 
-            smsc_log_debug(logger, "Cookie is got name=%s, value=%s, path=%s, domain=%s, expires=%s", nm.c_str(), c->value.c_str(), c->getParam("path").c_str(), c->getParam("domain").c_str(), c->getParam("expires").c_str());
+            smsc_log_debug(logger, "Cookie is got name=%s, value=%s, path=%s, domain=%s, expires=%s",
+                           nm, c->value.c_str(), c->getParam("path").c_str(), c->getParam("domain").c_str(), c->getParam("expires").c_str());
+        } else {
+            smsc_log_debug(logger, "Cookie doesn't exists name=%s", nm);
         }
-        else
-            smsc_log_debug(logger, "Cookie doesn't exists name=%s", nm.c_str());
+        break;
     }
-
+    case DEL : {
+        hc.delCookie(nm);
+        break;
+    }
+    } // switch
     return true;
 }
 
-bool CookieAction::setCookieParam(ActionContext& context, std::string& str, const char *param_name, bool exists, Cookie *c)
+
+bool CookieAction::setCookieParam( ActionContext& context, StringField& f, Cookie *c)
 {
-    std::string p;
-
-    if(exists)
+    if(f.isFound())
     {
-        if(!getStrProperty(context, str, param_name, p))
-            return false;
+        const char* p = f.getValue(context);
+        if (!p) return false;
 
-        if(p.length())
-            c->setParam(param_name, p);
+        if(strlen(p))
+            c->setParam(f.getName(), std::string(p));
         else
-            smsc_log_debug(logger, "'CookieAction' Empty %s parameter", param_name);
+            smsc_log_debug(logger, "'%s' Empty %s parameter", opname(), f.getName());
     }
     return true;
 }
 
-bool CookieAction::getCookieParam(ActionContext& context, std::string& str, const char *param_name, bool exists, Cookie *c)
+
+bool CookieAction::getCookieParam(ActionContext& context, StringField& f, Cookie *c)
 {
     Property* p;
-    if(exists)
+    if(f.isFound())
     {
-        if (!(p = context.getProperty(str))) 
+        Property* p = f.getProperty(context);
+        if (!p)
         {
-            smsc_log_warn(logger,"Action 'Cookie': invalid '%s' property '%s'", param_name, str.c_str());
+            smsc_log_warn(logger,"Action '%s': invalid '%s' property '%s'", opname(), f.getName(), f.getStringValue());
             return false;
         }
-        const std::string& ss(c->getParam(param_name));
+        const std::string& ss(c->getParam(f.getName()));
         const Property::string_type sss(ss.c_str(),ss.size());
         p->setStr(sss);
     }
     return true;
 }
 
+/*
 bool CookieAction::getStrProperty(ActionContext& context, std::string& str, const char *field_name, std::string& val)
 {
     const char *name;
@@ -134,6 +157,7 @@ bool CookieAction::getStrProperty(ActionContext& context, std::string& str, cons
         val = str;
     return true;
 }
+ */
 
 IParserHandler * CookieAction::StartXMLSubSection(const std::string& name, const SectionParams& params,const ActionFactory& factory)
 {

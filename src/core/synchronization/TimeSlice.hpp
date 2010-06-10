@@ -168,7 +168,7 @@ public:
 
     TimeSlice & operator/ (unsigned use_divisor)
     {
-        while ((unitId < tuNSecs) && (tmoVal < use_divisor)) {
+        while ((unitId < tuNSecs) && (unsigned(tmoVal) < use_divisor)) {
             unitId = static_cast<UnitType_e>(unitId + 1);
             tmoVal *= 1000;
         }

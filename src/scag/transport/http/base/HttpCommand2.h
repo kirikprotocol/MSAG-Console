@@ -109,7 +109,7 @@ public:
 
     void serialize(std::string& s, bool set = false);
     const std::string& getParam(const char * name);
-    void setParam(const char* nm, std::string& val);
+    void setParam(const char* nm, const std::string& val);
     void setParam(const char* nm, uint32_t ncnt, const char* val, uint32_t vcnt);
 };
 
@@ -287,7 +287,7 @@ public:
 
     Cookie* getCookie(const std::string& name);
     Cookie* setCookie(const std::string& name, const std::string& value);
-
+    void delCookie(const std::string& name);
 
 protected:
     virtual void setSession( scag2::sessions::Session* s ) { session_ = s; };
@@ -394,7 +394,7 @@ public:
     void setQueryParameterEncoded(const std::string& paramName, const std::string& _paramValue);
     void delQueryParameter(const std::string& paramName);
 
-    void delCookie(const std::string& name);
+    // void delCookie(const std::string& name);
 
     void delHeaderField(const std::string& name);
 

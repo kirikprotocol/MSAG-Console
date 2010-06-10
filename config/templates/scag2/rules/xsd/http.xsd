@@ -9,6 +9,15 @@
 
     <group name="Actions">
         <choice>
+            <element name="del-cookie">
+                <complexType>
+                    <attribute name="name" type="scag:Value" use="required"/>
+                    <attribute name="path" type="scag:Value" use="optional"/>
+                    <attribute name="domain" type="scag:Value" use="optional"/>
+                    <attribute name="expires" type="scag:Value" use="optional"/>
+               </complexType>
+            </element>
+
             <element name="get-cookie">
                 <complexType>
                     <attribute name="name" type="scag:Value" use="required"/>
