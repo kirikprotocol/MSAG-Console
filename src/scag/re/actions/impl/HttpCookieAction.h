@@ -21,10 +21,10 @@ public:
     CookieAction( ActionType at = GET ) :
     atype_(at),
     name_(*this,"name",true,true),
-    value_(*this,"value",true,at == SET),
-    path_(*this,"path",true,at == SET),
-    domain_(*this,"domain",true,at == SET),
-    expires_(*this,"expires",true,at == SET) {}
+    value_(*this,"value",at != DEL,at == SET),
+    path_(*this,"path",false,at == SET),
+    domain_(*this,"domain",false,at == SET),
+    expires_(*this,"expires",false,at == SET) {}
 
     virtual ~CookieAction() {}
     virtual bool run(ActionContext& context);

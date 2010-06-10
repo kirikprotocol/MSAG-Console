@@ -194,7 +194,7 @@ Action * MainActionFactory::CreateAction( const std::string& name ) const
 
         if (name=="http:get-cookie") return new CookieAction(CookieAction::GET);
         if (name=="http:set-cookie") return new CookieAction(CookieAction::SET);
-        if (name=="http:det-cookie") return new CookieAction(CookieAction::DEL);
+        if (name=="http:del-cookie") return new CookieAction(CookieAction::DEL);
 
     /* 
     if (name=="traffic:check") return new ActionTrafficCheck();
