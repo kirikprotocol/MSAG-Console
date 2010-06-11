@@ -2253,30 +2253,32 @@ StateType StateMachine::submitChargeResp(Tuple& t)
     ResponseGuard(SMS* s,SmeProxy* p,StateMachine *st,SMSId id):sms(s),prx(p),sm(st),msgId(id){}
     ~ResponseGuard()
     {
-      if(!sms)return;
-
-      if(sms->lastResult!=Status::OK)
+      if(sms)
       {
-        sm->onDeliveryFail(msgId,*sms);
-      }
 
-      bool sandf=(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0 ||
-                 (sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x3;
-
-      if(!sandf && sms->lastResult!=Status::OK)
-      {
-        SmscCommand resp = SmscCommand::makeSubmitSmResp
-            (
-                "0",
-                sms->dialogId,
-                sms->lastResult,
-                sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
-            );
-        try{
-          prx->putCommand(resp);
-        }catch(...)
+        if(sms->lastResult!=Status::OK)
         {
-          warn1(sm->smsLog,"SUBMIT: failed to put response command");
+          sm->onDeliveryFail(msgId,*sms);
+        }
+
+        bool sandf=(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0 ||
+            (sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x3;
+
+        if(!sandf && sms->lastResult!=Status::OK)
+        {
+          SmscCommand resp = SmscCommand::makeSubmitSmResp
+              (
+                  "0",
+                  sms->dialogId,
+                  sms->lastResult,
+                  sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
+              );
+          try{
+            prx->putCommand(resp);
+          }catch(...)
+          {
+            warn1(sm->smsLog,"SUBMIT: failed to put response command");
+          }
         }
       }
     }
@@ -3681,9 +3683,6 @@ StateType StateMachine::deliveryResp(Tuple& t)
       //  send concatenated
       //
 
-      SmeProxy *dest_proxy=0;
-      int dest_proxy_index;
-
       Address dst=sms.getDealiasedDestinationAddress();
 
       // for interfaceVersion==0x50
@@ -3730,11 +3729,11 @@ StateType StateMachine::deliveryResp(Tuple& t)
          sms.hasStrProperty(Tag::SMSC_DIVERTED_TO))
       {
         smsc_log_debug(smsLog,"CONCAT: diverted receipt for %s",sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str());
-        dest_proxy_index=smsc->getSmeIndex(sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str());
-        dest_proxy=smsc->getSmeProxy(sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str());
+        rr.destSmeIdx=smsc->getSmeIndex(sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str());
+        rr.destProxy=smsc->getSmeProxy(sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str());
       }
 
-      if(!dest_proxy)
+      if(!rr.destProxy)
       {
         smsc_log_info(smsLog,"CONCAT: dest sme %s not connected msgId=%lld;oa=%s;da=%s",sms.getDestinationSmeId(),t.msgId,
             sms.getOriginatingAddress().toString().c_str(),
@@ -3759,21 +3758,21 @@ StateType StateMachine::deliveryResp(Tuple& t)
       // create task
 
       uint32_t dialogId2;
-      uint32_t uniqueId=dest_proxy->getUniqueId();
+      uint32_t uniqueId=rr.destProxy->getUniqueId();
 
       TaskGuard tg;
       tg.smsc=smsc;
       tg.uniqueId=uniqueId;
 
       try{
-        dialogId2 = dest_proxy->getNextSequenceNumber();
+        dialogId2 = rr.destProxy->getNextSequenceNumber();
         tg.dialogId=dialogId2;
 
         Task task(uniqueId,dialogId2,dgortr?new SMS(sms):0);
         task.messageId=t.msgId;
         task.inDlgId=t.command->get_resp()->get_inDlgId();
         task.diverted=t.command->get_resp()->get_diverted();
-        if ( smsc->tasks.createTask(task,dest_proxy->getPreferredTimeout()) )
+        if ( smsc->tasks.createTask(task,rr.destProxy->getPreferredTimeout()) )
         {
           tg.active=true;
         }
@@ -3801,7 +3800,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
       try{
         // send delivery
         Address src;
-        if(smsc->getSmeInfo(dest_proxy->getIndex()).wantAlias &&
+        if(smsc->getSmeInfo(rr.destProxy->getIndex()).wantAlias &&
            sms.getIntProperty(Tag::SMSC_HIDE)==HideOption::hoEnabled &&
            rr.info.hide &&
            smsc->AddressToAlias(sms.getOriginatingAddress(),src))
@@ -3841,7 +3840,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
 
         smsc_log_debug(smsLog,"CONCAT: Id=%lld;esm_class=%x",t.msgId,sms.getIntProperty(Tag::SMPP_ESM_CLASS));
         SmscCommand delivery = SmscCommand::makeDeliverySm(sms,dialogId2);
-        dest_proxy->putCommand(delivery);
+        rr.destProxy->putCommand(delivery);
         tg.active=false;
       }
       catch(ExtractPartFailedException& e)
@@ -4990,7 +4989,7 @@ void StateMachine::finalizeSms(SMSId id,SMS& sms)
 #ifdef SMSEXTRA
 bool StateMachine::ExtraProcessing(SbmContext& c)
 {
-  bool toSmsx=c.dest_proxy && !strcmp(c.dest_proxy->getSystemId(),"smsx");
+  bool toSmsx=c.rr.destProxy && !strcmp(c.rr.destProxy->getSystemId(),"smsx");
   bool isMultipart=c.sms->hasBinProperty(Tag::SMSC_CONCATINFO) || c.sms->hasIntProperty(Tag::SMSC_MERGE_CONCAT);
 
   if((((c.fromMap || c.fromDistrList) && c.toMap) || (c.fromMap && toSmsx))&& !isMultipart)
@@ -5068,9 +5067,7 @@ bool StateMachine::ExtraProcessing(SbmContext& c)
       c.createSms=scsDoNotCreate;
       c.noPartitionSms=true;
       try{
-        c.has_route=smsc->routeSms(c.sms->getOriginatingAddress(),
-                                c.dst,
-                                c.dest_proxy_index,c.dest_proxy,&c.ri,c.src_proxy->getSmeIndex());
+        c.has_route=smsc->routeSms(c.src_proxy->getSmeIndex(),c.sms->getOriginatingAddress(),c.dst,c.rr);
       }catch(std::exception& e)
       {
         warn2(smsLog,"Routing %s->%s failed:%s",c.sms->getOriginatingAddress().toString().c_str(),
