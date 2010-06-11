@@ -1,6 +1,7 @@
 #define FILEVER "$Id$"
 #include <stdio.h>
 #include <string.h>
+#include <locale.h>
 #include "sme/SmppBase.hpp"
 #include "sms/sms.h"
 #include "util/smstext.h"
@@ -1960,9 +1961,10 @@ void IncUsageCounter(const string& address)
 }
 */
 
-std::string RxSubst(const std::string& src,const std::string& pat,SMatch* m,int n)
+std::string RxSubst(const std::string& src,const std::string& pat,SMatch* m,int n,PMatchHash hm=0)
 {
   std::string result;
+  std::string nm;
   for(int i=0;i<pat.length();i++)
   {
     if(pat[i]!='$')
@@ -1973,6 +1975,20 @@ std::string RxSubst(const std::string& src,const std::string& pat,SMatch* m,int 
     {
       if(i<pat.length()+1)
       {
+        if(pat[i+1]=='{')
+        {
+          i+=2;
+          nm="";
+          while(i<pat.length() && pat[i]!='}')
+          {
+            nm+=pat[i];
+          }
+          SMatch* pm=hm->GetPtr(nm.c_str());
+          if(pm)
+          {
+            result+=src.substr(pm->start,pm->end-pm->start);
+          }
+        }else
         if(!isdigit(pat[i+1]))
         {
           result+=pat[i+1];
@@ -2321,7 +2337,10 @@ public:
   static void startEmailProcessing(Socket* s);
   void assignTransformRegexp(const char* reSrc)
   {
-    reTransform.Compile(reSrc,OP_OPTIMIZE);
+    if(reTransform.Compile(reSrc,OP_OPTIMIZE)==0)
+    {
+      smsc_log_warn(log,"Failed to compile username transform regexp:%d",reTransform.LastError());
+    }
   }
   bool isBusy()const
   {
@@ -2339,6 +2358,17 @@ public:
     MutexGuard mg(mon);
     mon.notifyAll();
   }
+  void addTextTransform(const char* rxsrc,const char* pat)
+  {
+    std::auto_ptr<RegExp> rx(new RegExp);
+    if(rx->Compile(rxsrc,OP_OPTIMIZE)!=0)
+    {
+      smsc_log_warn(log,"Failed to compile email text transformation regexp:%d",rx->LastError());
+      return;
+    }
+    textTransformRx.push_back(rx.release());
+    textTransformPat.push_back(pat);
+  }
 protected:
   int idx;
   bool needToStop;
@@ -2349,6 +2379,8 @@ protected:
   bool busy;
   bool needRestartChild;
   int mr;
+  std::vector<RegExp*> textTransformRx;
+  std::vector<std::string> textTransformPat;
   static smsc::logger::Logger* log;
   static int busyCount;
   static EventMonitor mon;
@@ -2540,6 +2572,19 @@ int EmailProcessor::sendSms(std::string from,const std::string to,const char* ms
   GetNextLine(newmsg.get(),len,pos,from);
   GetNextLine(newmsg.get(),len,pos,subj);
   string text=newmsg.get()+pos;
+
+  SMatch m[10];
+  Hash<SMatch> hm;
+  for(size_t i=0;i<textTransformRx.size();i++)
+  {
+    int n=10;
+    if(textTransformRx[i]->Match(text.c_str(),text.c_str()+text.length(),m,n,&hm))
+    {
+      smsc_log_info(log,"Text transformation regexp %lu matched.",i);
+      text=RxSubst(text,textTransformPat[i],m,n);
+      break;
+    }
+  }
 
   ContextEnvironment ce;
   EmptyGetAdapter ga;
@@ -2874,6 +2919,12 @@ int main(int argc,char* argv[])
   smsc::logger::Logger::Init();
   atexit(atExitHandler);
 
+  if(setlocale(LC_CTYPE,"")==0)
+  {
+    fprintf(stderr,"Failed to set LC_CTYPE\n");
+  }
+
+
   sigset(16,disp);
   sigset(SIGINT,ctrlc);
   sigset(SIGTERM,ctrlc);
@@ -3155,11 +3206,33 @@ int main(int argc,char* argv[])
       __warning__("mail.threadsCount cannot be less than 1");
       cfg::mailthreadsCount=1;
     }
+
+    std::vector<std::pair<std::string,std::string> > emailTransformations;
+    try{
+      int i=1;
+      char bufRx[64];
+      char bufPat[64];
+      for(;;)
+      {
+        sprintf(bufRx,"mail.transformation%d.regexp",i);
+        sprintf(bufPat,"mail.transformation%d.pattern",i);
+        i++;
+        emailTransformations.push_back(std::make_pair(cfgman.getString(bufRx),cfgman.getString(bufPat)));
+      }
+    }catch(...)
+    {
+
+    }
+
     util::PipesInit(cfg::mailthreadsCount);
     cfg::mailThreads=new EmailProcessor[cfg::mailthreadsCount];
     for(int i=0;i<cfg::mailthreadsCount;i++)
     {
       cfg::mailThreads[i].assignTransformRegexp(reSrc.c_str());
+      for(size_t j=0;j<emailTransformations.size();j++)
+      {
+        cfg::mailThreads[i].addTextTransform(emailTransformations[i].first.c_str(),emailTransformations[i].second.c_str());
+      }
       cfg::mailThreads[i].Start();
     }
 
