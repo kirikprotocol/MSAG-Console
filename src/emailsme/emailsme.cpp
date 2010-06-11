@@ -2361,7 +2361,7 @@ public:
   void addTextTransform(const char* rxsrc,const char* pat)
   {
     std::auto_ptr<RegExp> rx(new RegExp);
-    if(rx->Compile(rxsrc,OP_OPTIMIZE)!=0)
+    if(rx->Compile(rxsrc,OP_OPTIMIZE)==0)
     {
       smsc_log_warn(log,"Failed to compile email text transformation regexp:%d",rx->LastError());
       return;
