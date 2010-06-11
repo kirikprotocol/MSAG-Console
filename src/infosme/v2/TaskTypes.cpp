@@ -147,7 +147,7 @@ void TaskInfo::init( ConfigView* config )
             } catch (...) {
                 smsc_log_warn(log_, "Task %u: <activeWeekDays> parameter missed. "
                               "Using default: Mon,Tue,Wed,Thu,Fri", uid);
-                activeWeekDays.weekDays = 0x7c;
+                activeWeekDays.weekDays = 0x1f;
             }
             if ( !awd.empty() && !activeWeekDays.setWeekDays(awd.c_str()) ) {
                 throw ConfigException("active week days set listed incorrectly: '%s'",awd.c_str());

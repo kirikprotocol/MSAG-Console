@@ -310,7 +310,7 @@ void Task::init(ConfigView* config, uint32_t taskId)
   catch (...) { 
       smsc_log_warn(logger, "<activeWeekDays> parameter missed for task '%d'. "
                             "Using default: Mon,Tue,Wed,Thu,Fri", info.uid);
-      info.activeWeekDays.weekDays = 0x7c; awd.clear();
+      info.activeWeekDays.weekDays = 0x1f; awd.clear();
   }
   if (!awd.empty()) {
       if (!info.activeWeekDays.setWeekDays(awd.c_str()))
@@ -445,7 +445,7 @@ void Task::update(ConfigView *config)
   catch (...) { 
       smsc_log_warn(logger, "<activeWeekDays> parameter missed for task '%d'. "
                             "Using default: Mon,Tue,Wed,Thu,Fri", newinfo.uid);
-      newinfo.activeWeekDays.weekDays = 0x7c; awd.clear();
+      newinfo.activeWeekDays.weekDays = 0x1f; awd.clear();
   }
   if (!awd.empty()) {
       if (!newinfo.activeWeekDays.setWeekDays(awd.c_str()))
