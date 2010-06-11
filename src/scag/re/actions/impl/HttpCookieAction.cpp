@@ -50,20 +50,23 @@ bool CookieAction::run(ActionContext& context)
         const char* val = value_.getValue(context);
         if (!val) return false;
 
-        if(!strlen(val))
+        const size_t vallen = strlen(val);
+        if(!vallen && !hc.isResponse())
         {
-            smsc_log_debug(logger, "'%s' 'Empty 'value' parameter %s",
+            smsc_log_debug(logger, "'%s' 'Empty 'value' parameter %s, use del-cookie",
                            opname(), value_.getStringValue());
             return false;
         }
 
         Cookie* c = hc.setCookie(nm, val);
 
-        if (!setCookieParam(context, path_, c) || 
-            !setCookieParam(context, domain_, c) || 
-            !setCookieParam(context, expires_, c) )
-            return false;
-
+        if ( vallen ) {
+            if ( !setCookieParam(context, path_, c) ||
+                 !setCookieParam(context, domain_, c) || 
+                 !setCookieParam(context, expires_, c) ) {
+                return false;
+            }
+        }
         smsc_log_debug(logger, "Cookie is set name=%s, value=%s, path=%s, domain=%s, expires=%s",
                        nm, c->value.c_str(), c->getParam("path").c_str(), c->getParam("domain").c_str(), c->getParam("expires").c_str());
         break;

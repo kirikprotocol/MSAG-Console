@@ -66,6 +66,8 @@ void Cookie::serialize(std::string& s, bool set)
         {
             s += "=";
             s += value;
+        } else if (set) {
+            s += "=dummy;max-age=0";
         }
         s += ";";
     }
