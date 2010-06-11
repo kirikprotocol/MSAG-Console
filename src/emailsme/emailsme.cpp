@@ -3231,7 +3231,7 @@ int main(int argc,char* argv[])
       cfg::mailThreads[i].assignTransformRegexp(reSrc.c_str());
       for(size_t j=0;j<emailTransformations.size();j++)
       {
-        cfg::mailThreads[i].addTextTransform(emailTransformations[i].first.c_str(),emailTransformations[i].second.c_str());
+        cfg::mailThreads[i].addTextTransform(emailTransformations[j].first.c_str(),emailTransformations[j].second.c_str());
       }
       cfg::mailThreads[i].Start();
     }
