@@ -47,7 +47,7 @@ struct TimeSourceGettimeofday {
 };
 
 
-#if defined(linux) || defined(__x86_64) || defined(__x86_64__)
+#if defined(linux) || defined(__MACH__) || defined(__x86_64) || defined(__x86_64__)
 struct TimeSourceClockGettime {
     typedef int64_t hrtime_type;
     static const hrtime_type ticksPerSec = 1000000000U;
@@ -77,7 +77,7 @@ struct TimeSourceGethrtime {
 
 /// contains cheapest selection for time sources.
 struct TimeSourceSetup {
-#if defined(__sparc) || defined(__sparc__)
+#if defined(__sparc) || defined(__sparc__) || defined(__sun)
     typedef TimeSourceGettimeofday AbsSec;
     typedef TimeSourceGettimeofday AbsUSec;
     typedef TimeSourceGethrtime    HRTime;
