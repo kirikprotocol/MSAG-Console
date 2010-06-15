@@ -8,6 +8,7 @@
 #include "core/threads/ThreadedTask.hpp"
 #include "smpp/smpp.h"
 #include "core/buffers/IntHash.hpp"
+#include "core/buffers/Array.hpp"
 #include "profiler-types.hpp"
 #include "profile-notifier-iface.hpp"
 #include "alias/AliasMan.hpp"
