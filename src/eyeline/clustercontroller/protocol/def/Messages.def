@@ -517,12 +517,18 @@ end
 message GetServicesStatus 101
 end
 
+enum byte ServiceConnectType
+  loadBalancer
+  direct
+end
+
 message ServiceStatus 
   property innerMessage=true
   string serviceName 1
-  string peerAddress 2
-  string bindMode 3
+  string peerAddress 2 array
+  SmeBindMode bindMode 3
   bool boundSmsc 4 array
+  ServiceConnectType connType 5
 end
 
 message GetServicesStatusResp 1101
