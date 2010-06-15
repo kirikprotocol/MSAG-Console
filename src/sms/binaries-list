@@ -1,1 +1,1 @@
-testHS testHS -lsms -L$(SMSC_BUILDDIR)/bin -llogger $(SOCKETLIB) -lnsl
+-testHS testHS -lsms -L$(SMSC_BUILDDIR)/bin -llogger $(SOCKETLIB) -lnsl
