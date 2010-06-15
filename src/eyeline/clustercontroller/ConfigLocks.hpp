@@ -26,6 +26,7 @@ enum ConfigType{
   ctSnmp,
   ctTimeZones,//+
   ctFraud,//+
+  ctAcl,//+
 
   ctConfigsCount
 };

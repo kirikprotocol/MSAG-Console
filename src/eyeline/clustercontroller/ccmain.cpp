@@ -6,15 +6,26 @@
 #include "protocol/messages/GetServicesStatus.hpp"
 #include "eyeline/clustercontroller/ConfigLockManager.hpp"
 #include "eyeline/clustercontroller/profiler/ProfilerConfig.hpp"
+#include "smsc/closedgroups/ClosedGroupsManager.hpp"
+#include "router/RouterConfig.hpp"
+#include "alias/AliasConfig.hpp"
+#include "eyeline/clustercontroller/acl/AclConfig.hpp"
 
 int main()
 {
   using namespace eyeline::clustercontroller::protocol::messages;
   smsc::logger::Logger::Init();
-  smsc::util::config::Manager::init("config.xml");
   try{
+    smsc::util::config::Manager::init("config.xml");
+    smsc::util::config::Manager& cfg=  smsc::util::config::Manager::getInstance();
     using namespace eyeline::clustercontroller;
-    profiler::ProfilerConfig::Init("");
+    profiler::ProfilerConfig::Init(cfg.getString("configs.profiler"));
+    smsc::closedgroups::ClosedGroupsManager::Init();
+    smsc::closedgroups::ClosedGroupsManager::getInstance()->Load(cfg.getString("configs.closedgroups"));
+    smsc::closedgroups::ClosedGroupsManager::getInstance()->enableControllerMode();
+    router::RouterConfig::Init(cfg.getString("configs.router"),cfg.getString("configs.smeman"));
+    alias::AliasConfig::Init(cfg.getString("configs.aliasStore"));
+    acl::AclConfig::Init(cfg.getString("configs.aclStore"),cfg.getInt("configs.aclPreCreate"));
     NetworkProtocol::Init();
     ConfigLockManager::Init();
     char buf[128];
@@ -75,4 +86,5 @@ int main()
   {
     fprintf(stderr,"Startup exception: '%s'\n",e.what());
   }
+  return 0;
 }

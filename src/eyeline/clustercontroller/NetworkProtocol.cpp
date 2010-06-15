@@ -88,6 +88,13 @@ void NetworkProtocol::innerInit()
   const char* host=cfg.getString("listener.host");
   int port=cfg.getInt("listener.port");
   handlersCount=cfg.getInt("listener.handlersCount");
+  try{
+    respTimeout=cfg.getInt("listener.respTimeout");
+  }catch(...)
+  {
+    smsc_log_warn(log,"listener.respTimeout not found. Defaulting to 60.");
+    respTimeout=60;
+  }
   if(handlersCount<1)
   {
     handlersCount=1;
@@ -107,8 +114,12 @@ void NetworkProtocol::innerInit()
     throw smsc::util::Exception("Failed to start listener at %s:%d",host,port);
   }
   rdmp.add(&srvSocket);
+  rdThread.assignProto(this);
+  wrThread.assignProto(this);
+  tmThread.assignProto(this);
   rdThread.Start();
   wrThread.Start();
+  tmThread.Start();
   for(int i=0;i<handlersCount;i++)
   {
     handlers[i].idx=i;
@@ -122,6 +133,7 @@ NetworkProtocol::~NetworkProtocol()
   isStopping=true;
   rdThread.WaitFor();
   wrThread.WaitFor();
+  tmThread.WaitFor();
   for(int i=0;i<handlersCount;i++)handlers[i].WaitFor();
 }
 
@@ -321,7 +333,7 @@ void NetworkProtocol::handleCommands(int idx)
     }
     Packet p;
     handlers[idx].queue.Pop(p);
-    protocol::ControllerProtocolHandler cph(p.connId);
+    protocol::ControllerProtocolHandler cph(p.connId,log);
     protocol::ControllerProtocol cp;
     cp.assignHandler(&cph);
     try{
@@ -331,6 +343,48 @@ void NetworkProtocol::handleCommands(int idx)
       smsc_log_warn(log,"Exception during command handling:%s",e.what());
     }
     p.dispose();
+  }
+}
+
+void NetworkProtocol::processTimers()
+{
+  sync::MutexGuard mg(respMon);
+  while(!isStopping)
+  {
+    if(!respTimers.empty())
+    {
+      time_t now=smsc::util::TimeSourceSetup::AbsSec::getSeconds();
+      while(!respTimers.empty() && respTimers.begin()->first<now)
+      {
+        RespKey key=respTimers.begin()->second;
+        respTimers.erase(respTimers.begin());
+        RespMap::iterator it=respMap.find(key);
+        if(it==respMap.end())
+        {
+          continue;
+        }
+        if(it->second->isMultiResp())
+        {
+          MultiRespInfoBase* mr=(MultiRespInfoBase*)it->second;
+          respMap.erase(it);
+          mr->respIds.push_back(key.nodeIdx);
+          mr->statuses.push_back(1);
+          if(mr->respIds.size()==mr->reqIds.size())
+          {
+            mr->send();
+            delete mr;
+          }
+        }else
+        {
+          NormalRespInfoBase* nr=(NormalRespInfoBase*)it->second;
+          respMap.erase(it);
+          nr->status=1;
+          nr->send();
+
+        }
+      }
+    }
+    respMon.wait(1000);
   }
 }
 
@@ -349,6 +403,12 @@ int NetworkProtocol::WriterThread::Execute()
 int NetworkProtocol::HandlerThread::Execute()
 {
   proto->handleCommands(idx);
+  return 0;
+}
+
+int NetworkProtocol::TimersThread::Execute()
+{
+  proto->processTimers();
   return 0;
 }
 

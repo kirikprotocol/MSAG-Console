@@ -11,6 +11,7 @@
 #include "ProtocolSocket.hpp"
 #include "logger/Logger.h"
 #include "protocol/ControllerProtocol.hpp"
+#include "util/TimeSource.h"
 
 namespace eyeline{
 namespace clustercontroller{
@@ -24,11 +25,12 @@ namespace buf=smsc::core::buffers;
 
 class NetworkProtocol{
 public:
-  NetworkProtocol():rdThread(this),wrThread(this)
+  NetworkProtocol()
   {
     lastId=0;
     log=smsc::logger::Logger::getInstance("net.proto");
     outSeqId=0;
+    isStopping=false;
   }
   ~NetworkProtocol();
   static void Init();
@@ -72,16 +74,38 @@ public:
   }
 
   template <class CommandType,class RespType>
+  bool enqueueCommandAnyOfType(ConnType ct,int srcConnId,CommandType& cmd)
+  {
+    std::vector<int> ids;
+    getConnIdsOfType(ct,ids);
+    if(!ids.empty())
+    {
+      enqueueCommand(ids.front(),cmd);
+      time_t now=smsc::util::TimeSourceSetup::AbsSec::getSeconds();
+      sync::MutexGuard mg(respMon);
+      RespInfo<RespType>* respInfo=new RespInfo<RespType>();
+      respInfo->connId=srcConnId;
+      respInfo->seq=cmd.getSeqNum();
+      RespKey key(srcConnId,cmd.getSeqNum());
+      respMap.insert(RespMap::value_type(key,respInfo));
+      respTimers.insert(RespTimerMap::value_type(now+respTimeout,key));
+    }
+    return !ids.empty();
+  }
+
+
+  template <class CommandType,class RespType>
   size_t enqueueMultirespCommand(int srcConnId,CommandType& cmd,ConfigType ct)
   {
-    sync::MutexGuard mg(mrMon);
+    sync::MutexGuard mg(respMon);
     smsc_log_debug(log,"sending multiresp command from connId=%d",srcConnId);
     std::vector<int> ids;
     getConnIdsOfType(ctSmsc,ids);
     MultiRespInfo<RespType>* respInfo=new MultiRespInfo<RespType>();
     respInfo->connId=srcConnId;
     respInfo->seq=cmd.getSeqNum();
-    respInfo->count=0;
+    time_t now=smsc::util::TimeSourceSetup::AbsSec::getSeconds();
+    sync::MutexGuard mg2(clntsMon);
     for(std::vector<int>::iterator it=ids.begin(),end=ids.end();it!=end;it++)
     {
       SocketsMap::iterator sit=clnts.find(*it);
@@ -90,24 +114,61 @@ public:
       if(ps->isConfigLoaded(ct))
       {
         enqueueCommand(*it,cmd);
-        RespKey key(*it,cmd.getSeqNum());
+        RespKey key(*it,cmd.getSeqNum(),ps->getNodeIdx());
         smsc_log_debug(log,"enqueued command to connId=%d",*it);
-        multiResps.insert(MultiRespMap::value_type(key,respInfo));
-        respInfo->count++;
+        respInfo->reqIds.push_back(key.nodeIdx);
+        respMap.insert(RespMap::value_type(key,respInfo));
+        respTimers.insert(RespTimerMap::value_type(now+respTimeout,key));
       }
     }
-    return respInfo->count++;
+    return respInfo->reqIds.size();
   }
+
+  template <class CommandType,class RespType>
+  size_t enqueueMultirespCommandEx(int srcConnId,CommandType& cmd,RespType& resp,ConfigType ct)
+  {
+    sync::MutexGuard mg(respMon);
+    smsc_log_debug(log,"sending multiresp command from connId=%d",srcConnId);
+    std::vector<int> ids;
+    getConnIdsOfType(ctSmsc,ids);
+    MultiRespInfoEx<RespType>* respInfo=new MultiRespInfoEx<RespType>(resp);
+    respInfo->connId=srcConnId;
+    respInfo->seq=cmd.getSeqNum();
+    time_t now=smsc::util::TimeSourceSetup::AbsSec::getSeconds();
+    sync::MutexGuard mg2(clntsMon);
+    for(std::vector<int>::iterator it=ids.begin(),end=ids.end();it!=end;it++)
+    {
+      SocketsMap::iterator sit=clnts.find(*it);
+      if(sit==clnts.end())continue;
+      ProtocolSocket* ps=sit->second;
+      if(ps->isConfigLoaded(ct))
+      {
+        enqueueCommand(*it,cmd);
+        RespKey key(*it,cmd.getSeqNum(),ps->getNodeIdx());
+        smsc_log_debug(log,"enqueued command to connId=%d",*it);
+        respInfo->reqIds.push_back(key.nodeIdx);
+        respMap.insert(RespMap::value_type(key,respInfo));
+        respTimers.insert(RespTimerMap::value_type(now+respTimeout,key));
+      }
+    }
+    return respInfo->reqIds.size();
+  }
+
 
   template <class MultiResp>
   void registerMultiResp(int connId,const MultiResp& msg)
   {
-    sync::MutexGuard mg(mrMon);
+    sync::MutexGuard mg(respMon);
     const protocol::messages::MultiResponse& resp=msg.getResp();
-    MultiRespMap::iterator it=multiResps.find(RespKey(connId,msg.getSeqNum()));
-    if(it==multiResps.end())
+    RespMap::iterator it=respMap.find(RespKey(connId,msg.getSeqNum()));
+    if(it==respMap.end())
     {
       smsc_log_warn(log,"Received mutliresp, but no record found from connId=%d, seqNum=%d",connId,msg.getSeqNum());
+      return;
+    }
+    if(!it->second->isMultiResp())
+    {
+      smsc_log_warn(log,"Received mutliresp, but original request wasn't multireq connId=%d, seqNum=%d",connId,msg.getSeqNum());
       return;
     }
     if(resp.getStatus().empty() || resp.getIds().empty())
@@ -115,14 +176,37 @@ public:
       smsc_log_warn(log,"Received invalid mutliresp from connId=%d, seqNum=%d",connId,msg.getSeqNum());
       return;
     }
-    it->second->statuses.push_back(resp.getStatus().front());
-    it->second->ids.push_back(resp.getIds().front());
-    if(it->second->statuses.size()==it->second->count)
+    MultiRespInfoBase* mr=(MultiRespInfoBase*)it->second;
+    mr->statuses.push_back(resp.getStatus().front());
+    mr->respIds.push_back(resp.getIds().front());
+    if(mr->statuses.size()==mr->reqIds.size())
     {
       it->second->send();
       delete it->second;
-      multiResps.erase(it);
     }
+    respMap.erase(it);
+  }
+
+  template <class RespType>
+  void registerResp(int connId,const RespType& msg)
+  {
+    sync::MutexGuard mg(respMon);
+    RespMap::iterator it=respMap.find(RespKey(connId,msg.getSeqNum()));
+    if(it==respMap.end())
+    {
+      smsc_log_warn(log,"Received resp, but no record found from connId=%d, seqNum=%d",connId,msg.getSeqNum());
+      return;
+    }
+    if(it->second->isMultiResp())
+    {
+      smsc_log_warn(log,"Received resp, but original request was multireq connId=%d, seqNum=%d",connId,msg.getSeqNum());
+      return;
+    }
+    NormalRespInfoBase* nr=(NormalRespInfoBase*)it->second;
+    nr->status=msg.getResp().getStatus();
+    nr->send();
+    delete it->second;
+    respMap.erase(it);
   }
 
 protected:
@@ -134,42 +218,44 @@ protected:
   void readPackets();
   void writePackets();
   void handleCommands(int idx);
+  void processTimers();
 
   friend class ReaderThread;
   friend class WriterThread;
   friend class HandlerThread;
-  class ReaderThread:public thr::Thread{
-  public:
-    ReaderThread(NetworkProtocol* argProto):proto(argProto)
-    {
 
-    }
-    int Execute();
+  class MethodRunnerThread:public thr::Thread{
+  protected:
     NetworkProtocol* proto;
-  }rdThread;
-  class WriterThread:public thr::Thread{
-  public:
-    WriterThread(NetworkProtocol* argProto):proto(argProto)
-    {
-
-    }
-    int Execute();
-    NetworkProtocol* proto;
-  }wrThread;
-  class HandlerThread:public thr::Thread{
   public:
     void assignProto(NetworkProtocol* argProto)
     {
       proto=argProto;
     }
+  };
+
+  class ReaderThread:public MethodRunnerThread{
+  public:
     int Execute();
-    NetworkProtocol* proto;
+  }rdThread;
+  class WriterThread:public MethodRunnerThread{
+  public:
+    int Execute();
+  }wrThread;
+  class HandlerThread:public MethodRunnerThread{
+  public:
+    int Execute();
     buf::CyclicQueue<Packet> queue;
     sync::EventMonitor mon;
     int idx;
   };
   HandlerThread handlers[32];
   int handlersCount;
+
+  class TimersThread:public MethodRunnerThread{
+  public:
+    int Execute();
+  }tmThread;
 
   net::Socket srvSocket;
   net::Multiplexer rdmp,wrmp;
@@ -183,17 +269,26 @@ protected:
 
   int lastId;
 
+  time_t respTimeout;
+
   sync::EventMonitor outQueueMon;
   buf::CyclicQueue<Packet> outQueue;
 
-  struct MultiRespInfoBase{
+  struct RespInfoBase{
     int connId;
     uint32_t seq;
-    size_t count;
-    std::vector<uint32_t> statuses;
-    std::vector<uint8_t> ids;
-    virtual ~MultiRespInfoBase(){}
+    virtual ~RespInfoBase(){}
     virtual void send()=0;
+    virtual bool isMultiResp()const
+    {
+      return false;
+    }
+  };
+  struct MultiRespInfoBase:RespInfoBase{
+    std::vector<int8_t> reqIds;
+    std::vector<int32_t> statuses;
+    std::vector<int8_t> respIds;
+    virtual ~MultiRespInfoBase(){}
   };
 
   template <class T>
@@ -202,9 +297,51 @@ protected:
     {
       T msg;
       protocol::messages::MultiResponse resp;
-      resp.setIds(ids);
+      resp.setIds(respIds);
       resp.setStatus(statuses);
       msg.setResp(resp);
+      msg.setSeqNum(seq);
+      NetworkProtocol::getInstance()->enqueueCommand(connId,msg);
+    }
+    bool isMultiResp()const
+    {
+      return true;
+    }
+  };
+
+  template <class T>
+  struct MultiRespInfoEx:MultiRespInfoBase{
+    T msg;
+    MultiRespInfoEx(const T& argMsg):msg(argMsg)
+    {
+    }
+    void send()
+    {
+      protocol::messages::MultiResponse resp;
+      resp.setIds(respIds);
+      resp.setStatus(statuses);
+      msg.setResp(resp);
+      msg.setSeqNum(seq);
+      NetworkProtocol::getInstance()->enqueueCommand(connId,msg);
+    }
+    bool isMultiResp()const
+    {
+      return true;
+    }
+  };
+
+
+  struct NormalRespInfoBase:RespInfoBase{
+    int status;
+  };
+
+  template <class T>
+  struct RespInfo:NormalRespInfoBase{
+    void send()
+    {
+      T msg;
+      protocol::messages::Response resp;
+      resp.setStatus(status);
       msg.setSeqNum(seq);
       NetworkProtocol::getInstance()->enqueueCommand(connId,msg);
     }
@@ -213,7 +350,8 @@ protected:
   struct RespKey{
     int connId;
     int seqNum;
-    RespKey(int argConnId,int argSeqNum):connId(argConnId),seqNum(argSeqNum)
+    int nodeIdx;
+    RespKey(int argConnId,int argSeqNum,int argNodeIdx=0):connId(argConnId),seqNum(argSeqNum),nodeIdx(argNodeIdx)
     {
 
     }
@@ -222,9 +360,11 @@ protected:
       return connId<argOther.connId || (connId==argOther.connId && seqNum<argOther.seqNum);
     }
   };
-  typedef std::map<RespKey,MultiRespInfoBase*> MultiRespMap;
-  sync::EventMonitor mrMon;
-  MultiRespMap multiResps;
+  typedef std::map<RespKey,RespInfoBase*> RespMap;
+  sync::EventMonitor respMon;
+  RespMap respMap;
+  typedef std::multimap<time_t,RespKey> RespTimerMap;
+  RespTimerMap respTimers;
 };
 
 }

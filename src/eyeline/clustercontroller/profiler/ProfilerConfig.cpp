@@ -17,9 +17,8 @@ smsc::profiler::Profiler* ProfilerConfig::profiler=0;
 
 void ProfilerConfig::Init(const char* path)
 {
-  smsc::profiler::Profile p;
-  /*!!!TODO!!!*/
   profiler=new smsc::profiler::Profiler(0,"");
+  profiler->load(path);
   profiler->setControllerMode();
 }
 
