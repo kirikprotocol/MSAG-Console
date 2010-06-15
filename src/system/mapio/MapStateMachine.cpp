@@ -136,13 +136,13 @@ struct MAPDIALOG_FATAL_ERROR : public MAPDIALOG_ERROR
 {
   MAPDIALOG_FATAL_ERROR(const string& s,unsigned c=MAP_FALURE) :
   MAPDIALOG_ERROR(MAKE_ERRORCODE(CMD_ERR_FATAL,c),s){}
-  ~MAPDIALOG_FATAL_ERROR()throw(){}
+  virtual ~MAPDIALOG_FATAL_ERROR()throw(){}
 };
 struct MAPDIALOG_HEREISNO_ID : public MAPDIALOG_ERROR
 {
   MAPDIALOG_HEREISNO_ID(const string& s,unsigned c=MAP_FALURE) :
   MAPDIALOG_ERROR(0,s){}
-  ~MAPDIALOG_HEREISNO_ID()throw(){}
+  virtual ~MAPDIALOG_HEREISNO_ID()throw(){}
 };
 struct MAPDIALOG_TEMP_XERROR : public MAPDIALOG_XERROR
 {
@@ -1634,7 +1634,7 @@ static int makeUssdErrorText( MapDialog* dialog,char *text, unsigned* textLen, i
     }
   }else
   {
-    if(dc&smsc::profiler::ProfileCharsetOptions::Ucs2 && smsc::util::hasHighBit(out.c_str(),out.length()))
+    if((dc&smsc::profiler::ProfileCharsetOptions::Ucs2) && smsc::util::hasHighBit(out.c_str(),out.length()))
     {
       short buf[256];
       size_t len=ConvertMultibyteToUCS2(out.c_str(),out.length(),buf,sizeof(buf),CONV_ENCODING_CP1251);
