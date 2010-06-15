@@ -1,0 +1,100 @@
+include messages.def
+
+protocol ControllerProtocol
+  //web->cc->smsc
+  ApplyRoutes 
+  ApplyReschedule 
+  ApplyLocaleResource 
+  ApplyTimeZones 
+  ApplyFraudControl 
+  ApplyMapLimits 
+  ApplySnmp 
+  TraceRoute 
+  LoadTestRoutes 
+  LookupProfile 
+  LookupProfileEx 
+  UpdateProfile 
+  DeleteProfile 
+  CancelSms 
+  MscAdd 
+  MscRemove 
+  SmeAdd 
+  SmeUpdate 
+  SmeRemove 
+  SmeStatus 
+  SmeDisconnect 
+  LoggerGetCategories 
+  LoggerSetCategories 
+  AclGet 
+  AclList 
+  AclRemove 
+  AclCreate 
+  AclUpdate 
+  AclLookup 
+  AclRemoveAddresses 
+  AclAddAddresses 
+  CgmAddGroup 
+  CgmDeleteGroup 
+  CgmAddAddr 
+  CgmCheck 
+  CgmDelAddr 
+  CgmAddAbonent 
+  CgmDelAbonent 
+  CgmListAbonents 
+  AliasAdd 
+  AliasDel 
+
+//smsc runtime
+  LockConfig 
+  UnlockConfig 
+
+//auth
+  RegisterAsWebapp 
+
+//cc->web
+  ApplyRoutesResp inmsg
+  ApplyRescheduleResp inmsg
+  ApplyLocaleResourceResp inmsg
+  ApplyTimeZonesResp inmsg
+  ApplyFraudControlResp inmsg
+  ApplyMapLimitsResp inmsg
+  ApplySnmpResp inmsg
+  TraceRouteResp inmsg
+  LoadTestRoutesResp inmsg
+  LookupProfileResp inmsg
+  LookupProfileExResp inmsg
+  UpdateProfileResp inmsg
+  DeleteProfileResp inmsg
+  CancelSmsResp inmsg
+  MscAddResp inmsg
+  MscRemoveResp inmsg
+  SmeAddResp inmsg
+  SmeUpdateResp inmsg
+  SmeRemoveResp inmsg
+  SmeStatusResp inmsg
+  SmeDisconnectResp inmsg
+  LoggerGetCategoriesResp inmsg
+  LoggerSetCategoriesResp inmsg
+  AclGetResp inmsg
+  AclListResp inmsg
+  AclRemoveResp inmsg
+  AclCreateResp inmsg
+  AclUpdateResp inmsg
+  AclLookupResp inmsg
+  AclRemoveAddressesResp inmsg
+  AclAddAddressesResp inmsg
+  CgmAddGroupResp inmsg
+  CgmDeleteGroupResp inmsg
+  CgmAddAddrResp inmsg
+  CgmCheckResp inmsg
+  CgmDelAddrResp inmsg
+  CgmAddAbonentResp inmsg
+  CgmDelAbonentResp inmsg
+  CgmListAbonentsResp inmsg
+  AliasAddResp inmsg
+  AliasDelResp inmsg
+  UpdateProfileAbnt inmsg
+
+//smsc runtime
+  LockConfigResp inmsg
+end
