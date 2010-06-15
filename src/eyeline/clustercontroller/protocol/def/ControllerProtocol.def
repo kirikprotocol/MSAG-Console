@@ -2,173 +2,111 @@ include messages.def
 
 protocol ControllerProtocol
   //web&lb->cc->smsc
-  ApplyRoutes 1
-  ApplyReschedule 2
-  ApplyLocaleResource 3
-  ApplyTimeZones 4
-  ApplyFraudControl 5
-  ApplyMapLimits 6
-  ApplySnmp 7
-  TraceRoute 8
-  LoadRoutes 9
-  LookupProfile 10
-  LookupProfileEx 11
-  UpdateProfile 12
-  DeleteProfile 13
-  CancelSms 14
-  MscAdd 15
-  MscRemove 16
-  SmeAdd 20
-  SmeUpdate 21
-  SmeRemove 22
-  SmeStatus 23
-  SmeDisconnect 24
-  LoggerGetCategories 25
-  LoggerSetCategories 26
-  AclGet 27
-  AclList 28
-  AclRemove 29
-  AclCreate 30
-  AclUpdate 31
-  AclLookup 32
-  AclRemoveAddresses 33
-  AclAddAddresses 34
-/*  DlPrcList 35
-  DlPrcAdd 36
-  DlPrcDelete 37
-  DlPrcGet 38
-  DlPrcAlter 39
-  DlMemAdd 40
-  DlMemDelete 41
-  DlMemGet 42
-  DlSbmAdd 43
-  DlSbmDel 44
-  DlSbmList 45
-  DlAdd 46
-  DlDelete 47
-  DlGet 48
-  DlList 49
-  DlAlter 50
-  DlCopy 51
-  DlRename 52*/
-  CgmAddGroup 53
-  CgmDeleteGroup 54
-  CgmAddAddr 55
-  CgmCheck 56
-  CgmDelAddr 57
-  CgmAddAbonent 58
-  CgmDelAbonent 59
-  CgmListAbonents 60
-  AliasAdd 61
-  AliasDel 62
-  UpdateProfileAbntResp 63
-  /*
-  DlMemAddAbntResp 64
-  DlMemDeleteAbntResp 65
-  DlSbmAddAbntResp 66
-  DlSbmDelAbntResp 67
-  DlAddAbntResp 68
-  DlDeleteAbntResp 69
-  DlCopyAbntResp 70
-  DlRenameAbntResp 71
-  */
+  ApplyRoutes inoutmsg
+  ApplyReschedule inoutmsg
+  ApplyLocaleResource inoutmsg
+  ApplyTimeZones inoutmsg
+  ApplyFraudControl inoutmsg
+  ApplyMapLimits inoutmsg
+  ApplySnmp inoutmsg
+  TraceRoute inmsg
+  LoadTestRoutes inmsg
+  LookupProfile inmsg
+  LookupProfileEx inmsg
+  UpdateProfile inoutmsg
+  DeleteProfile inoutmsg
+  CancelSms inoutmsg
+  MscAdd inoutmsg
+  MscRemove inoutmsg
+  SmeAdd inoutmsg
+  SmeUpdate inoutmsg
+  SmeRemove inoutmsg
+  SmeStatus inoutmsg
+  SmeDisconnect inoutmsg
+  LoggerGetCategories inoutmsg
+  LoggerSetCategories inoutmsg
+  AclGet inmsg
+  AclList inmsg
+  AclRemove inoutmsg
+  AclCreate inoutmsg
+  AclUpdate inoutmsg
+  AclLookup inoutmsg
+  AclRemoveAddresses inoutmsg
+  AclAddAddresses inoutmsg
+  CgmAddGroup inoutmsg
+  CgmDeleteGroup inoutmsg
+  CgmAddAddr inoutmsg
+  CgmCheck inmsg
+  CgmDelAddr inoutmsg
+  CgmAddAbonent inoutmsg
+  CgmDelAbonent inoutmsg
+  CgmListAbonents inmsg
+  AliasAdd inoutmsg
+  AliasDel inoutmsg
+  UpdateProfileAbntResp
 
 //load balancer
-  GetServicesStatus 101
-  DisconnectService 102
+  GetServicesStatus inmsg
+  DisconnectService inmsg
 
 //smsc runtime
-//  MultipartMessageRequest 201
-//  ReplaceIfPresentRequest 202
-  LockConfig 203
-  UnlockConfig 204
+  LockConfig inmsg
+  UnlockConfig inmsg
 
 //auth
-  RegisterAsLoadBalancer 301
-  RegisterAsWebapp 302
-  RegisterAsSmsc 303
+  RegisterAsLoadBalancer inmsg
+  RegisterAsWebapp inmsg
+  RegisterAsSmsc inmsg
 
 
 //smsc->cc->web&lb
-  ApplyRoutesResp 1001
-  ApplyRescheduleResp 1002
-  ApplyLocaleResourceResp 1003
-  ApplyTimeZonesResp 1004
-  ApplyFraudControlResp 1005
-  ApplyMapLimitsResp 1006
-  ApplySnmpResp 1007
-  TraceRouteResp 1008
-  LoadRoutesResp 1009
-  LookupProfileResp 1010
-  LookupProfileExResp 1011
-  UpdateProfileResp 1012
-  DeleteProfileResp 1013
-  CancelSmsResp 1014
-  MscAddResp 1015
-  MscRemoveResp 1016
-  SmeAddResp 1020
-  SmeUpdateResp 1021
-  SmeRemoveResp 1022
-  SmeStatusResp 1023
-  SmeDisconnectResp 1024
-  LoggerGetCategoriesResp 1025
-  LoggerSetCategoriesResp 1026
-  AclGetResp 1027
-  AclListResp 1028
-  AclRemoveResp 1029
-  AclCreateResp 1030
-  AclUpdateResp 1031
-  AclLookupResp 1032
-  AclRemoveAddressesResp 1033
-  AclAddAddressesResp 1034
-  /*
-  DlPrcListResp 1035
-  DlPrcAddResp 1036
-  DlPrcDeleteResp 1037
-  DlPrcGetResp 1038
-  DlPrcAlterResp 1039
-  DlMemAddResp 1040
-  DlMemDeleteResp 1041
-  DlMemGetResp 1042
-  DlSbmAddResp 1043
-  DlSbmDelResp 1044
-  DlSbmListResp 1045
-  DlAddResp 1046
-  DlDeleteResp 1047
-  DlGetResp 1048
-  DlListResp 1049
-  DlAlterResp 1050
-  DlCopyResp 1051
-  DlRenameResp 1052
-  */
-  CgmAddGroupResp 1053
-  CgmDeleteGroupResp 1054
-  CgmAddAddrResp 1055
-  CgmCheckResp 1056
-  CgmDelAddrResp 1057
-  CgmAddAbonentResp 1058
-  CgmDelAbonentResp 1059
-  CgmListAbonentsResp 1060
-  AliasAddResp 1061
-  AliasDelResp 1062
-  UpdateProfileAbnt 1063
-  /*
-  DlMemAddAbnt 1064
-  DlMemDeleteAbnt 1065
-  DlSbmAddAbnt 1066
-  DlSbmDelAbnt 1067
-  DlAddAbnt 1068
-  DlDeleteAbnt 1069
-  DlCopyAbnt 1070
-  DlRenameAbnt 1071
-  */
+  ApplyRoutesResp inoutmsg
+  ApplyRescheduleResp inoutmsg
+  ApplyLocaleResourceResp inoutmsg
+  ApplyTimeZonesResp inoutmsg
+  ApplyFraudControlResp inoutmsg
+  ApplyMapLimitsResp inoutmsg
+  ApplySnmpResp inoutmsg
+  TraceRouteResp
+  LoadTestRoutesResp
+  LookupProfileResp
+  LookupProfileExResp
+  UpdateProfileResp inoutmsg
+  DeleteProfileResp inoutmsg
+  CancelSmsResp inoutmsg
+  MscAddResp inoutmsg
+  MscRemoveResp inoutmsg
+  SmeAddResp inoutmsg
+  SmeUpdateResp inoutmsg
+  SmeRemoveResp inoutmsg
+  SmeStatusResp inoutmsg
+  SmeDisconnectResp inoutmsg
+  LoggerGetCategoriesResp inoutmsg
+  LoggerSetCategoriesResp inoutmsg
+  AclGetResp
+  AclListResp
+  AclRemoveResp inoutmsg
+  AclCreateResp inoutmsg
+  AclUpdateResp inoutmsg
+  AclLookupResp
+  AclRemoveAddressesResp inoutmsg
+  AclAddAddressesResp inoutmsg
+  CgmAddGroupResp inoutmsg
+  CgmDeleteGroupResp inoutmsg
+  CgmAddAddrResp inoutmsg
+  CgmCheckResp
+  CgmDelAddrResp inoutmsg
+  CgmAddAbonentResp inoutmsg
+  CgmDelAbonentResp inoutmsg
+  CgmListAbonentsResp
+  AliasAddResp inoutmsg
+  AliasDelResp inoutmsg
+  UpdateProfileAbnt inmsg
 
 //load balancer
-  GetServicesStatusResp 1101
-  DisconnectServiceResp 1102
+  GetServicesStatusResp
+  DisconnectServiceResp 
 
 //smsc runtime
-//  MultipartMessageRequestResp 1201
-//  ReplaceIfPresentRequestResp 1202
-  LockConfigResp              1203
+  //LockConfigResp
 end

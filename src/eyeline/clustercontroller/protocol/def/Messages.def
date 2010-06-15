@@ -1,152 +1,144 @@
-type string
-type uint32
-type uint64
-type byte
-type bool
-type stringlist
-
-property opt _bool
-  optional true
-  mandatory false
-end
-
-property mnd _bool
-  default
-  optional false
-  mandatory true
-end
-
-property notarray _bool
-  default
-  array false
-end
-
-property array _bool
-  array true
-end
+include Types.def
 
 message Response
-  property noseq=true
-  uint32 status 1 
+  property innerMessage=true
+  int32 status 1
 end
 
 message MultiResponse
-  property noseq=true
-  uint32 status 1 array
-  byte ids 2 array 
+  property innerMessage=true
+  int32 status 1 array
+  byte ids 2 array
 end
 
-message ApplyRoutes
+message ApplyRoutes 1
 end
 
-message ApplyRoutesResp
-  property ccmsg=true
-  property webappmsg=true
-  MultiResponse resp 1 
-end
-
-message ApplyReschedule
-end
-
-message ApplyRescheduleResp
-  property ccmsg=true
-  property webappmsg=true
+message ApplyRoutesResp 1001
   MultiResponse resp 1
 end
 
-message ApplyLocaleResource
+message ApplyReschedule 2
 end
 
-
-message ApplyLocaleResourceResp
-  property ccmsg=true
-  property webappmsg=true
+message ApplyRescheduleResp 1002
   MultiResponse resp 1
 end
 
-message ApplyTimeZones
+message ApplyLocaleResource 3
 end
 
-message ApplyTimeZonesResp
-  property ccmsg=true
-  property webappmsg=true
+
+message ApplyLocaleResourceResp 1003
   MultiResponse resp 1
 end
 
-message ApplyFraudControl
+message ApplyTimeZones 4
 end
 
-message ApplyFraudControlResp
-  property ccmsg=true
-  property webappmsg=true
+message ApplyTimeZonesResp 1004
   MultiResponse resp 1
 end
 
-message ApplyMapLimits
+message ApplyFraudControl 5
 end
 
-
-message ApplyMapLimitsResp
-  property ccmsg=true
-  property webappmsg=true
+message ApplyFraudControlResp 1005
   MultiResponse resp 1
 end
 
-message ApplySnmp
+message ApplyMapLimits 6
 end
 
 
-message ApplySnmpResp
-  property ccmsg=true
-  property webappmsg=true
+message ApplyMapLimitsResp 1006
   MultiResponse resp 1
 end
 
-message TraceRoute
+message ApplySnmp 7
+end
+
+
+message ApplySnmpResp 1007
+  MultiResponse resp 1
+end
+
+message TraceRoute 8
   string dst 1
   string src 2
   string srcSysId 3
 end
 
-message TraceRouteResp
-  property ccmsg=true
-  property webappmsg=true
+enum byte RouteFindInfo
+  NotFound 0
+  FoundEnabled 1
+  FoundDisabled 2
+end
+
+enum byte BillingMode
+  BillOff 0
+  BillOn 1
+  BillMt 2
+  BillFr 3
+  BillOnSubmit 4
+  BillCdr 5
+end
+
+message TraceRouteResp 1008
   Response resp 1
   string aliasInfo 2
-  string foundInfo 3
+  RouteFindInfo foundInfo 3
   string routeId 4 opt
   string srcAddr 5 opt
   string dstAddr 6 opt
   string smeId 7 opt
   string srcSmeId 8 opt
-  uint32 priority 9 opt
-  uint32 serviceId 10 opt
-  uint32 deliveryMode 11 opt
+  int32 priority 9 opt
+  int32 serviceId 10 opt
+  byte deliveryMode 11 opt
   string forwardTo 12 opt
-  bool billing 13 opt
+  BillingMode billing 13 opt
   bool archiving 14 opt
   bool enabled 15 opt
   bool suppressDlvRep 16 opt
-  stringlist trace 17 opt
+  string trace 17 array opt
 end
 
-message LoadRoutes
+message LoadTestRoutes 9
 end
 
-message LoadRoutesResp
-  property ccmsg=true
-  property webappmsg=true
+message LoadTestRoutesResp 1009
   Response resp 1
-  stringlist trace 2 opt
+  string trace 2 array opt
+end
+
+enum byte ReportOptions
+  ReportNone 0
+  ReportFull 1
+  ReportFinal 2
+end
+
+enum byte ProfileCharset
+  Default 0
+  Latin1  1
+  Ucs2    8
+  Ucs2AndLatin1 9
+  UssdIn7BitFlag 0x80
+end
+
+enum byte HideOptions
+  HideDisabled 0
+  HideEnabled 1
+  HideSubstitute 2
 end
 
 message Profile
-  property noseq=true
+  property innerMessage=true
   string divert 1
   string locale 2
-  byte codepage 3
-  byte reportOptions 4
-  byte hide 5
+  ProfileCharset codepage 3
+  ReportOptions reportOptions 4
+  HideOptions hide 5
   bool hideModifiable 6
   bool divertActive 7
   bool divertActiveAbsent 8
@@ -156,803 +148,436 @@ message Profile
   bool divertModifiable 12
   bool udhConcat 13
   bool translit 14
-  uint32 closedGroupId 15
-  uint32 accessMaskIn 16
-  uint32 accessMaskOut 17
-  uint32 subscription 18 opt
+  int32 closedGroupId 15
+  int32 accessMaskIn 16
+  int32 accessMaskOut 17
+  int32 subscription 18 opt
   byte sponsored 19 opt
   string nick 20 opt
 end
 
-message LookupProfile
+message LookupProfile 10
   string address 1
 end
 
-message LookupProfileResp
-  property ccmsg=true
-  property webappmsg=true
+message LookupProfileResp 1010
   Response resp 1
   Profile prof 2
 end
 
 
-message LookupProfileEx
+message LookupProfileEx 11
   string address 1
 end
 
-message LookupProfileExResp
-  property ccmsg=true
-  property webappmsg=true
+enum byte ProfileMatchType
+  Default 0
+  Mask 1
+  Exact 2
+end
+
+message LookupProfileExResp 1011
   Response resp 1
-  byte matchType 2
+  ProfileMatchType matchType 2
   Profile prof 3
 end
 
-message UpdateProfile
+message UpdateProfile 12
   string address 1
   Profile prof 2
 end
 
-message UpdateProfileResp
-  property ccmsg=true
-  property webappmsg=true
-  Response resp 1
-  byte result 2
+message UpdateProfileResp 1012
+  MultiResponse resp 1
 end
 
-message UpdateProfileAbnt
-  property ccmsg=true
+message UpdateProfileAbnt 13
   string address 1
   Profile prof 2
 end
 
 
-message UpdateProfileAbntResp
+message UpdateProfileAbntResp 1013
   Response resp 1
 end
 
-message DeleteProfile
+message DeleteProfile 14
   string address 1
 end
 
-message DeleteProfileResp
-  property ccmsg=true
-  property webappmsg=true
-  Response resp 1
+message DeleteProfileResp 1014
+  MultiResponse resp 1
 end
 
-message CancelSms
-  stringlist ids 1
-  stringlist srcs 2
-  stringlist dsts 3
+message CancelSms 15
+  string ids 1 array
+  string srcs 2 array
+  string dsts 3 array
 end
 
-message CancelSmsResp
-  property ccmsg=true
-  property webappmsg=true
-  Response resp 1
+message CancelSmsResp 1015
+  MultiResponse resp 1
 end
 
-message MscAdd
+message MscAdd 16
   string msc 1
 end
 
-message MscAddResp
-  property ccmsg=true
-  property webappmsg=true
-  Response resp 1
+message MscAddResp 1016
+  MultiResponse resp 1
 end
 
-message MscRemove
+message MscRemove 17
   string msc 1
 end
 
-message MscRemoveResp
-  property ccmsg=true
-  property webappmsg=true
-  Response resp 1
+message MscRemoveResp 1017
+  MultiResponse resp 1
 end
 
+enum byte SmeBindMode
+  modeTx 0
+  modeRx 1
+  modeTrx 2
+  modeUnknown 3
+end
 
 message SmeParams
-  property noseq=true
+  property innerMessage=true
   string id 1
-  uint32 priority 2
-  uint32 typeOfNumber 3
-  uint32 numberingPlan 4
-  uint32 interfaceVersion 5
+  int32 priority 2
+  int32 typeOfNumber 3
+  int32 numberingPlan 4
+  int32 interfaceVersion 5
   string systemType 6
   string password 7
   string addrRange 8
-  uint32 smeN 9
+  int32 smeN 9
   bool wantAlias 10
   //bool forceDC 11
-  uint32 timeout 12
+  int32 timeout 12
   string receiptScheme 13
   bool disabled 14
   string mode 15
-  uint32 procLimit 16
-  uint32 schedLimit 17
-  uint32 accessMask 18
-  uint32 flags 19
+  int32 procLimit 16
+  int32 schedLimit 17
+  int32 accessMask 18
+  int32 flags 19
 end
 
-message SmeAdd
+message SmeAdd 18
   SmeParams params 1
 end
 
-message SmeAddResp
-  property ccmsg=true
-  property webappmsg=true
+message SmeAddResp 1018
   MultiResponse resp 1
 end
 
-message SmeUpdate
+message SmeUpdate 19
   SmeParams params 1
 end
 
-message SmeUpdateResp
-  property ccmsg=true
-  property webappmsg=true
+message SmeUpdateResp 1019
   MultiResponse resp 1
 end
 
-message SmeRemove
+message SmeRemove 20
   string smeId 1
 end
 
-message SmeRemoveResp
-  property ccmsg=true
-  property webappmsg=true
+message SmeRemoveResp 1020
   MultiResponse resp 1
 end
 
-message SmeStatus
+message SmeStatus 21
 end
 
 message SmeStatusInfo
-  property noseq=true
+  property innerMessage=true
   string systemId 1
   string status 2
-  string bindMode 3
+  SmeBindMode bindMode 3
   string peerIn 4
   string peerOut 5
 end
 
-message SmeStatusResp
-  property ccmsg=true
-  property webappmsg=true
+message SmeStatusResp 1021
   Response resp 1
   SmeStatusInfo status 2 array
 end
 
-message SmeDisconnect
-  stringlist sysIds 1
+message SmeDisconnect 22
+  string sysIds 1 array
 end
 
-message SmeDisconnectResp
-  property ccmsg=true
-  property webappmsg=true
+message SmeDisconnectResp 1022
   Response resp 1
 end
 
-message LoggerGetCategories
+message LoggerGetCategories 23
 end
 
 message CategoryInfo
-  property noseq=true
+  property innerMessage=true
   string name 1
   string level 2
 end
 
-message LoggerGetCategoriesResp
-  property ccmsg=true
-  property webappmsg=true
+message LoggerGetCategoriesResp 1023
   Response resp 1
-  CategoryInfo categories 2 array
+  CategoryInfo categories 2 array opt
 end
 
-message LoggerSetCategories
+message LoggerSetCategories 24
   CategoryInfo categories 1 array
 end
 
-message LoggerSetCategoriesResp
-  property ccmsg=true
-  property webappmsg=true
+message LoggerSetCategoriesResp 1024
   Response resp 1
 end
 
-message AclGet
-  uint32 aclId 1
+message AclGet 25
+  int32 aclId 1
+end
+
+enum byte AclCacheType
+  cacheNone 0x31
+  cacheDb   0x32
+  cacheFull 0x33
 end
 
 message AclInfo
-  property noseq=true
-  uint32 id 1
+  property innerMessage=true
+  int32 id 1
   string name 2
   string description 3
-  byte cacheType 4
+  AclCacheType cacheType 4
 end
 
-message AclGetResp
-  property ccmsg=true
-  property webappmsg=true
+message AclGetResp 1025
   Response resp 1
   AclInfo acl 2 opt
 end
 
-message AclList
+message AclList 26
 end
 
-message AclListResp
-  property ccmsg=true
-  property webappmsg=true
+message AclListResp 1026
   Response resp 1
   AclInfo aclList 2 array opt
 end
 
-message AclRemove
-  uint32 aclId 1
+message AclRemove 27
+  int32 aclId 1
 end
 
-message AclRemoveResp
-  property ccmsg=true
-  property webappmsg=true
-  Response resp 1
+message AclRemoveResp 1027
+  MultiResponse resp 1
 end
 
-message AclCreate
+message AclCreate 28
   string name 1
   string description 2
-  byte cacheType 3
-  stringlist addresses 4
+  AclCacheType cacheType 3
+  string addresses 4 array
 end
 
-message AclCreateResp
-  property ccmsg=true
-  property webappmsg=true
-  Response resp 1
-  uint32 id 2 opt
+message AclCreateResp 1028
+  MultiResponse resp 1
+  int32 id 2 opt
 end
 
-message AclUpdate
+message AclUpdate 29
   AclInfo acl 1
 end
 
-message AclUpdateResp
-  property ccmsg=true
-  property webappmsg=true
-  Response resp 1
+message AclUpdateResp 1029
+  MultiResponse resp 1
 end
 
-message AclLookup
-  uint32 aclId 1
+message AclLookup 30
+  int32 aclId 1
   string addrPrefix 2
 end
 
-message AclLookupResp
-  property ccmsg=true
-  property webappmsg=true
+message AclLookupResp 1030
   Response resp 1
-  stringlist result 2
+  string result 2 array
 end
 
-message AclRemoveAddresses
-  uint32 aclId 1
-  stringlist addrs 2
+message AclRemoveAddresses 31
+  int32 aclId 1
+  string addrs 2 array
 end
 
-message AclRemoveAddressesResp
-  property ccmsg=true
-  property webappmsg=true
-  Response resp 1
+message AclRemoveAddressesResp 1031
+  MultiResponse resp 1
 end
 
-message AclAddAddresses
-  uint32 aclId 1
-  stringlist addrs 2
+message AclAddAddresses 32
+  int32 aclId 1
+  string addrs 2 array
 end
 
-message AclAddAddressesResp
-  property ccmsg=true
-  property webappmsg=true
-  Response resp 1
-end
-
-/*
-message DlPrcList
-  string address 1 opt
-end
-
-message PrcInfo
-  property noseq=true
-  string address 1
-  uint32 maxLst 2
-  uint32 maxEl 3
-end
-
-message DlPrcListResp
-  property ccmsg=true
-  property webappmsg=true
-  Response resp 1
-  PrcInfo result 2 array
-end
-
-message DlPrcAdd
-  PrcInfo prc 1
-end
-
-message DlPrcAddResp
-  property ccmsg=true
-  property webappmsg=true
-  Response resp 1
-end
-
-message DlPrcDelete
-  string address 1
-end
-
-message DlPrcDeleteResp
-  property ccmsg=true
-  property webappmsg=true
-  Response resp 1
-end
-
-message DlPrcGet
-  string address 1
-end
-
-message DlPrcGetResp
-  property ccmsg=true
-  property webappmsg=true
-  Response resp 1
-  PrcInfo result 2
-end
-
-message DlPrcAlter
-  string address 1
-  uint32 maxLists 2
-  uint32 maxElements 3
-end
-
-message DlPrcAlterResp
-  property ccmsg=true
-  property webappmsg=true
-  Response resp 1
-end
-
-message DlMemAdd
-  string dlName 1
-  string address 2
-end
-
-message DlMemAddResp
-  property ccmsg=true
-  property webappmsg=true
-  Response resp 1
-end
-
-message DlMemAddAbnt
-  property ccmsg=true
-  property webappmsg=true
-  string dlName 1
-  string address 2
-end
-
-message DlMemAddAbntResp
-  Response resp 1
-end
-
-message DlMemDelete
-  string dlName 1
-  string address 2
-end
-
-message DlMemDeleteResp
-  property ccmsg=true
-  property webappmsg=true
-  Response resp 1
-end
-
-message DlMemDeleteAbnt
-  property ccmsg=true
-  property webappmsg=true
-  string dlName 1
-  string address 2
-end
-
-message DlMemDeleteAbntResp
-  Response resp 1
+message AclAddAddressesResp 1032
+  MultiResponse resp 1
 end
 
 
-message DlMemGet
-  string dlName 1
-end
-
-message DlMemGetResp
-  property ccmsg=true
-  property webappmsg=true
-  Response resp 1
-  stringlist result 2
-end
-
-message DlSbmAdd
-  string dlName 1
-  string address 2
-end
-
-message DlSbmAddResp
-  property ccmsg=true
-  property webappmsg=true
-  Response resp 1
-end
-
-message DlSbmAddAbnt
-  property ccmsg=true
-  property webappmsg=true
-  string dlName 1
-  string address 2
-end
-
-message DlSbmAddAbntResp
-  Response resp 1
-end
-
-
-message DlSbmDel
-  string dlName 1
-  string address 2
-end
-
-message DlSbmDelResp
-  property ccmsg=true
-  property webappmsg=true
-  Response resp 1
-end
-
-message DlSbmDelAbnt
-  property ccmsg=true
-  property webappmsg=true
-  string dlName 1
-  string address 2
-end
-
-message DlSbmDelAbntResp
-  Response resp 1
-end
-
-message DlSbmList
-  string dlName 1
-end
-
-message DlSbmListResp
-  property ccmsg=true
-  property webappmsg=true
-  Response resp 1
-  stringlist result 2
-end
-
-message DlAdd
-  string dlName 1
-  string owner 2 opt
-  uint32 maxElements 3
-end
-
-message DlAddResp
-  property ccmsg=true
-  property webappmsg=true
-  Response resp 1
-end
-
-message DlAddAbnt
-  property ccmsg=true
-  property webappmsg=true
-  string dlName 1
-  string owner 2 opt
-  uint32 maxElements 3
-end
-
-message DlAddAbntResp
-  Response resp 1
-end
-
-message DlDelete
-  string dlName 1
-  string owner 2
-end
-
-message DlDeleteResp
-  property ccmsg=true
-  property webappmsg=true
-  Response resp 1
-end
-
-message DlDeleteAbnt
-  property ccmsg=true
-  property webappmsg=true
-  string dlName 1
-  string owner 2
-end
-
-message DlDeleteAbntResp
-  Response resp 1
-end
-
-message DlGet
-  string dlName 1
-end
-
-message DlGetResp
-  property ccmsg=true
-  property webappmsg=true
-  Response resp 1
-  string name 2
-  string owner 3 opt
-  uint32 maxEl 4
-end
-
-message DlList
-  stringlist names 1 
-  stringlist owners 2 
-end
-
-message DlListInfo
-  property noseq=true
-  string name 1
-  string owner 2 opt
-  uint32 maxEl 3
-end
-
-message DlListResp
-  property ccmsg=true
-  property webappmsg=true
-  Response resp 1
-  DlListInfo result 2 array
-end
-
-message DlAlter
-  string dlName 1
-  uint32 maxElements 2
-end
-
-message DlAlterResp
-  property ccmsg=true
-  property webappmsg=true
-  Response resp 1
-end
-
-message DlCopy
-  string srcDlName 1
-  string dstDlName 2
-end
-
-message DlCopyResp
-  property ccmsg=true
-  property webappmsg=true
-  Response resp 1
-end
-
-message DlCopyAbnt
-  property ccmsg=true
-  property webappmsg=true
-  string srcDlName 1
-  string dstDlName 2
-end
-
-message DlCopyAbntResp
-  Response resp 1
-end
-
-
-message DlRename
-  string srcDlName 1
-  string dstDlName 2
-end
-
-message DlRenameResp
-  property ccmsg=true
-  property webappmsg=true
-  Response resp 1
-end
-
-message DlRenameAbnt
-  property ccmsg=true
-  property webappmsg=true
-  string srcDlName 1
-  string dstDlName 2
-end
-
-message DlRenameAbntResp
-  Response resp 1
-end
-*/
-message CgmAddGroup
-  uint32 id 1
+message CgmAddGroup 33
+  int32 id 1
   string name 2
 end
 
-message CgmAddGroupResp
-  property ccmsg=true
-  property webappmsg=true
-  Response resp 1
+message CgmAddGroupResp 1033
+  MultiResponse resp 1
 end
 
-message CgmDeleteGroup
-  uint32 id 1
+message CgmDeleteGroup 34
+  int32 id 1
 end
 
-message CgmDeleteGroupResp
-  property ccmsg=true
-  property webappmsg=true
-  Response resp 1
+message CgmDeleteGroupResp 1034
+  MultiResponse resp 1
 end
 
-message CgmAddAddr
-  uint32 id 1
+message CgmAddAddr 35
+  int32 id 1
   string addr 2
 end
 
-message CgmAddAddrResp
-  property ccmsg=true
-  property webappmsg=true
-  Response resp 1
+message CgmAddAddrResp 1035
+  MultiResponse resp 1
 end
 
-message CgmCheck
-  uint32 id 1
+message CgmCheck 36
+  int32 id 1
   string addr 2
 end
 
-message CgmCheckResp
-  property ccmsg=true
-  property webappmsg=true
+message CgmCheckResp 1036
   Response resp 1
   bool result 2
 end
 
-message CgmDelAddr
-  uint32 id 1
+message CgmDelAddr 37
+  int32 id 1
   string addr 2
 end
 
-message CgmDelAddrResp
-  property ccmsg=true
-  property webappmsg=true
-  Response resp 1
+message CgmDelAddrResp 1037
+  MultiResponse resp 1
 end
 
-message CgmAddAbonent
-  uint32 id 1
+message CgmAddAbonent 38
+  int32 id 1
   string addr 2
 end
 
-message CgmAddAbonentResp
-  property ccmsg=true
-  property webappmsg=true
-  Response resp 1
+message CgmAddAbonentResp 1038
+  MultiResponse resp 1
 end
 
-message CgmDelAbonent
-  uint32 id 1
+message CgmDelAbonent 39
+  int32 id 1
   string addr 2
 end
 
-message CgmDelAbonentResp
-  property ccmsg=true
-  property webappmsg=true
+message CgmDelAbonentResp 1039
+  MultiResponse resp 1
+end
+
+message CgmListAbonents 40
+  int32 id 1
+end
+
+message CgmListAbonentsResp 1040
   Response resp 1
+  string result 2 array
 end
 
-message CgmListAbonents
-  uint32 id 1
-end
-
-message CgmListAbonentsResp
-  property ccmsg=true
-  property webappmsg=true
-  Response resp 1
-  stringlist result 2
-end
-
-message AliasAdd
+message AliasAdd 41
   string addr 1
   string alias 2
   bool hide 3
 end
 
-message AliasAddResp
-  property ccmsg=true
-  property webappmsg=true
-  Response resp 1
+message AliasAddResp 1041
+  MultiResponse resp 1
 end
 
-message AliasDel
+message AliasDel 42
   string alias 1
 end
 
-message AliasDelResp
-  property ccmsg=true
-  property webappmsg=true
-  Response resp 1
+message AliasDelResp 1042
+  MultiResponse resp 1
 end
 
-message GetServicesStatus
+message GetServicesStatus 101
 end
 
-message ServiceStatus
-  property noseq=true
+message ServiceStatus 
+  property innerMessage=true
   string serviceName 1
   string peerAddress 2
   string bindMode 3
   bool boundSmsc 4 array
 end
 
-message GetServicesStatusResp
-  property ccmsg=true
-  property webappmsg=true
+message GetServicesStatusResp 1101
   Response resp 1
   ServiceStatus status 2 array
 end
 
-message DisconnectService
+message DisconnectService 102
   string serviceId 1
 end
 
-message DisconnectServiceResp
-  property ccmsg=true
-  property webappmsg=true
+message DisconnectServiceResp 1102
   Response resp 1
 end
 
-message MultipartMessageRequest
-  property ccmsg=true
-  property webappmsg=true
-  byte msg 1 array
+enum byte ConfigType
+  MainConfig 1
+  Profiles 2
+  Msc 3
+  Routes 4
+  Sme 5
+  ClosedGroups 6
+  Aliases 7
+  MapLimits 8
+  Regions 9
+  Resources 10
+  Reschedule 11
+  Snmp 12
+  TimeZones 13
+  Fraud 14
+  Acl 15
 end
 
-message MultipartMessageRequestResp
-  Response resp 1
-end
-
-message ReplaceIfPresentRequest
-  property ccmsg=true
-  property webappmsg=true
-  byte msg 1 array
-end
-
-message ReplaceIfPresentRequestResp
-  Response resp 1
-end
-
-message LockConfig
-  property ccmsg=true
-  byte configType 1
+message LockConfig 201
+  ConfigType configType 1
   bool writeLock 2
 end
 
-message LockConfigResp
+message LockConfigResp 1201
   Response resp 1
-  property webappmsg=true
 end
 
-message UnlockConfig
-  property ccmsg=true
-  byte configType 1
+message UnlockConfig 202
+  ConfigType configType 1
 end
 
-message RegisterAsLoadBalancer
-  property ccmsg=true
-  uint32 magic 1
+message RegisterAsLoadBalancer 301
+  int32 magic 1
 end
 
-message RegisterAsWebapp
-  property ccmsg=true
-  uint32 magic 1
+message RegisterAsWebapp 302
+  int32 magic 1
 end
 
-message RegisterAsSmsc
-  property ccmsg=true
-  uint32 magic 1
-  uint32 nodeIndex 2
+message RegisterAsSmsc 303
+  int32 magic 1
+  int32 nodeIndex 2
 end

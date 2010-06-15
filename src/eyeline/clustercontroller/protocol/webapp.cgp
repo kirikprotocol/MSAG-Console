@@ -1,17 +1,22 @@
 source=ControllerProtocol.def
 
-search.path=tmpl/
+search.path=/Users/skv/Documents/cpp/protogen/tmpl/
 search.path=def/
 
-out.dir=./java/messages/
+out.message.dir=./java/messages/
+out.protocol.dir=./java/protocol/
+out.enum.dir=./java/messages/
 
-message.template=message-java.tmpl
-protocol.template=proto-java.tmpl
+message.template=java-message.tmpl
+protocol.template=java-proto.tmpl
+protocol.template=java-proto-tag.tmpl
+enum.template=java-enum.tmpl
 out.extension=java
-out.protocol.prefix=../protocol/
+out.extension=java
+out.protocol.suffix=
+out.protocol.suffix=Tag
 
 
-option:ccmode=false
+data:msg.package=messages
+data:proto.package=protocol
 
-data:msg_package=messages
-data:proto_package=protocol
