@@ -1380,7 +1380,7 @@ int RegExp::InnerCompile(const prechar src,int srclength,int options)
             if(op->refindex>maxbackref)maxbackref=op->refindex;
           }else
           {
-            if(options&OP_STRICT && ISALPHA(src[i]))
+            if((options&OP_STRICT) && ISALPHA(src[i]))
             {
               return SetError(errInvalidEscape,i-1);
             }
@@ -1644,7 +1644,7 @@ int RegExp::InnerCompile(const prechar src,int srclength,int options)
               }
               default:
               {
-                if(options&OP_STRICT && ISALPHA(src[i]))
+                if((options&OP_STRICT) && ISALPHA(src[i]))
                 {
                   return SetError(errInvalidEscape,i-1);
                 }
@@ -2253,7 +2253,7 @@ int RegExp::InnerMatch(prechar str,const prechar strend,PMatch match,int& matchc
 #ifdef RELIB
   SMatchListItem ml;
 #endif
-  int inrangebracket=0;
+  //int inrangebracket=0;
   if(errorcode==errNotCompiled)return 0;
   if(matchcount<maxbackref)return SetError(errNotEnoughMatches,maxbackref);
 #ifdef NAMEDBRACKETS
@@ -2412,7 +2412,7 @@ int RegExp::InnerMatch(prechar str,const prechar strend,PMatch match,int& matchc
       {
         if(OP.bracket.index>=0 && OP.bracket.index<matchcount)
         {
-          if(inrangebracket)
+          //if(inrangebracket)
           {
             st->op=opOpenBracket;
             st->pos=op;
@@ -2447,7 +2447,7 @@ int RegExp::InnerMatch(prechar str,const prechar strend,PMatch match,int& matchc
           {
             m2=hmatch->GetPtr((char*)OP.nbracket.name);
           }
-          if(inrangebracket)
+          //if(inrangebracket)
           {
             st->op=opNamedBracket;
             st->pos=op;
@@ -2532,7 +2532,7 @@ int RegExp::InnerMatch(prechar str,const prechar strend,PMatch match,int& matchc
                   }
                 }
               }
-              inrangebracket--;
+              //inrangebracket--;
               continue;
             }
             if(st->min>0)st->min--;
@@ -2584,7 +2584,7 @@ int RegExp::InnerMatch(prechar str,const prechar strend,PMatch match,int& matchc
                   }
                 }
               }
-              inrangebracket--;
+              //inrangebracket--;
               continue;
             }
             if(OP.range.bracket.index>=0 && OP.range.bracket.index<matchcount)
@@ -2699,7 +2699,7 @@ int RegExp::InnerMatch(prechar str,const prechar strend,PMatch match,int& matchc
               }
             }
             st->max--;
-            inrangebracket--;
+            //inrangebracket--;
             if(st->max==0)continue;
             st->forward=str>ps->startstr?1:0;
             st->startstr=str;
@@ -3078,7 +3078,7 @@ int RegExp::InnerMatch(prechar str,const prechar strend,PMatch match,int& matchc
       case opBracketRange:
       case opBracketMinRange:
       {
-        if(inrangebracket && OP.range.bracket.index>=0 && OP.range.bracket.index<matchcount)
+        if(/*inrangebracket &&*/ OP.range.bracket.index>=0 && OP.range.bracket.index<matchcount)
         {
           st->op=opOpenBracket;
           st->pos=OP.range.bracket.pairindex;
@@ -3111,7 +3111,7 @@ int RegExp::InnerMatch(prechar str,const prechar strend,PMatch match,int& matchc
           op=OP.range.bracket.pairindex;
         }else
         {
-          inrangebracket++;
+          //inrangebracket++;
         }
         continue;
       }
@@ -3540,14 +3540,14 @@ int RegExp::InnerMatch(prechar str,const prechar strend,PMatch match,int& matchc
           }
           if(ps->min)
           {
-            inrangebracket--;
+            //inrangebracket--;
             continue;
           }
           if(ps->forward)
           {
             ps->forward=0;
             op=ps->pos->range.bracket.pairindex;
-            inrangebracket--;
+            //inrangebracket--;
             str=ps->savestr;
             if(OP.range.nextalt)
             {
@@ -3584,7 +3584,7 @@ int RegExp::InnerMatch(prechar str,const prechar strend,PMatch match,int& matchc
           }
           if(ps->max--==0)
           {
-            inrangebracket--;
+            //inrangebracket--;
             continue;
           }
           if(ps->forward)
@@ -3608,10 +3608,10 @@ int RegExp::InnerMatch(prechar str,const prechar strend,PMatch match,int& matchc
               st->savestr=str;
               PushState();
             }
-            inrangebracket++;
+            //inrangebracket++;
             break;
           }
-          inrangebracket--;
+          //inrangebracket--;
           continue;
         }
         case opOpenBracket:
