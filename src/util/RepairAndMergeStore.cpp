@@ -1,9 +1,11 @@
+#define NOLOGGERPLEASE
 #include "sms/sms_serializer.h"
 #include "core/buffers/File.hpp"
 #include "core/buffers/XHash.hpp"
 #include <vector>
 
 using namespace smsc::sms;
+using namespace smsc::core::buffers;
 
 struct LoadUpInfo;
 typedef std::vector<LoadUpInfo*> LoadUpVector;
@@ -113,6 +115,10 @@ int main(int argc,char* argv[])
 
       try{
         Deserialize(buf,item.sms,ver);
+        if(!item.sms.Invalidate(__FILE__,__LINE__))
+        {
+          continue;
+        }
         if(itemPtr)
         {
           *itemPtr=item;
