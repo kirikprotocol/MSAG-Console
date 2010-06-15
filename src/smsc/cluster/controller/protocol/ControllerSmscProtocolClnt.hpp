@@ -25,22 +25,17 @@
 #include "messages/SmeDisconnectResp.hpp"
 #include "messages/LoggerGetCategoriesResp.hpp"
 #include "messages/LoggerSetCategoriesResp.hpp"
-#include "messages/AclGetResp.hpp"
-#include "messages/AclListResp.hpp"
 #include "messages/AclRemoveResp.hpp"
 #include "messages/AclCreateResp.hpp"
 #include "messages/AclUpdateResp.hpp"
-#include "messages/AclLookupResp.hpp"
 #include "messages/AclRemoveAddressesResp.hpp"
 #include "messages/AclAddAddressesResp.hpp"
 #include "messages/CgmAddGroupResp.hpp"
 #include "messages/CgmDeleteGroupResp.hpp"
 #include "messages/CgmAddAddrResp.hpp"
-#include "messages/CgmCheckResp.hpp"
 #include "messages/CgmDelAddrResp.hpp"
 #include "messages/CgmAddAbonentResp.hpp"
 #include "messages/CgmDelAbonentResp.hpp"
-#include "messages/CgmListAbonentsResp.hpp"
 #include "messages/AliasAddResp.hpp"
 #include "messages/AliasDelResp.hpp"
 #include "messages/UpdateProfileAbnt.hpp"
@@ -74,22 +69,17 @@ public:
     tag_SmeDisconnect=22,
     tag_LoggerGetCategories=23,
     tag_LoggerSetCategories=24,
-    tag_AclGet=25,
-    tag_AclList=26,
     tag_AclRemove=27,
     tag_AclCreate=28,
     tag_AclUpdate=29,
-    tag_AclLookup=30,
     tag_AclRemoveAddresses=31,
     tag_AclAddAddresses=32,
     tag_CgmAddGroup=33,
     tag_CgmDeleteGroup=34,
     tag_CgmAddAddr=35,
-    tag_CgmCheck=36,
     tag_CgmDelAddr=37,
     tag_CgmAddAbonent=38,
     tag_CgmDelAbonent=39,
-    tag_CgmListAbonents=40,
     tag_AliasAdd=41,
     tag_AliasDel=42,
     tag_UpdateProfileAbntResp=1013,
@@ -117,22 +107,17 @@ public:
     tag_SmeDisconnectResp=1022,
     tag_LoggerGetCategoriesResp=1023,
     tag_LoggerSetCategoriesResp=1024,
-    tag_AclGetResp=1025,
-    tag_AclListResp=1026,
     tag_AclRemoveResp=1027,
     tag_AclCreateResp=1028,
     tag_AclUpdateResp=1029,
-    tag_AclLookupResp=1030,
     tag_AclRemoveAddressesResp=1031,
     tag_AclAddAddressesResp=1032,
     tag_CgmAddGroupResp=1033,
     tag_CgmDeleteGroupResp=1034,
     tag_CgmAddAddrResp=1035,
-    tag_CgmCheckResp=1036,
     tag_CgmDelAddrResp=1037,
     tag_CgmAddAbonentResp=1038,
     tag_CgmDelAbonentResp=1039,
-    tag_CgmListAbonentsResp=1040,
     tag_AliasAddResp=1041,
     tag_AliasDelResp=1042,
     tag_UpdateProfileAbnt=13,

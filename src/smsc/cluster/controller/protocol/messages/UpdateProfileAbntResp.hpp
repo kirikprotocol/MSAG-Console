@@ -1,15 +1,14 @@
-#ifndef __GENERATED_MESSAGE_SMSC_CLUSTER_CONTROLLER_PROTOCOL_MESSAGES_LOGGERGETCATEGORIESRESP_HPP__
-#define __GENERATED_MESSAGE_SMSC_CLUSTER_CONTROLLER_PROTOCOL_MESSAGES_LOGGERGETCATEGORIESRESP_HPP__
+#ifndef __GENERATED_MESSAGE_SMSC_CLUSTER_CONTROLLER_PROTOCOL_MESSAGES_UPDATEPROFILEABNTRESP_HPP__
+#define __GENERATED_MESSAGE_SMSC_CLUSTER_CONTROLLER_PROTOCOL_MESSAGES_UPDATEPROFILEABNTRESP_HPP__
 
 #include <inttypes.h>
 #include <string>
 #include <vector>
 #include "eyeline/protogen/framework/Exceptions.hpp"
 #include "Response.hpp"
-#include "CategoryInfo.hpp"
 
 
-#ident "@(#) LoggerGetCategoriesResp version 1.0"
+#ident "@(#) UpdateProfileAbntResp version 1.0"
 
 
 
@@ -20,9 +19,9 @@ namespace protocol{
 namespace messages{
 
 
-class LoggerGetCategoriesResp{
+class UpdateProfileAbntResp{
 public:
-  LoggerGetCategoriesResp()
+  UpdateProfileAbntResp()
   {
     Clear();
   }
@@ -30,13 +29,11 @@ public:
   {
     seqNum=0;
     respFlag=false;
-    categoriesFlag=false;
-    categories.clear();
   }
  
   static int32_t getTag()
   {
-    return 1023;
+    return 1013;
   }
 
   std::string toString()const
@@ -56,30 +53,6 @@ public:
       rv+=resp.toString();
       rv+=')';
     }
-    if(categoriesFlag)
-    {
-      if(rv.length()>0)
-      {
-        rv+=";";
-      }
-      rv+="categories=";
-      rv+="[";
-      bool first=true;
-      for(std::vector<CategoryInfo>::const_iterator it=categories.begin(),end=categories.end();it!=end;it++)
-      {
-        if(first)
-        {
-          first=false;
-        }else
-        {
-          rv+=",";
-        }
-        rv+="(";
-        rv+=it->toString();
-        rv+=")";
-      }
-      rv+="]";
-    }
     return rv;
   }
 
@@ -92,15 +65,6 @@ public:
       rv+=DataStream::tagTypeSize;
       rv+=DataStream::lengthTypeSize;
       rv+=resp.length<DataStream>();
-    }
-    if(categoriesFlag)
-    {
-      rv+=DataStream::tagTypeSize;
-      rv+=DataStream::lengthTypeSize;
-      for(std::vector<CategoryInfo>::const_iterator it=categories.begin(),end=categories.end();it!=end;it++)
-      {
-        rv+=it->length<DataStream>();
-      }
     }
     rv+=DataStream::tagTypeSize;
     return rv;
@@ -127,28 +91,6 @@ public:
   {
     return respFlag;
   }
-  const std::vector<CategoryInfo>& getCategories()const
-  {
-    if(!categoriesFlag)
-    {
-      throw eyeline::protogen::framework::FieldIsNullException("categories");
-    }
-    return categories;
-  }
-  void setCategories(const std::vector<CategoryInfo>& argValue)
-  {
-    categories=argValue;
-    categoriesFlag=true;
-  }
-  std::vector<CategoryInfo>& getCategoriesRef()
-  {
-    categoriesFlag=true;
-    return categories;
-  }
-  bool hasCategories()const
-  {
-    return categoriesFlag;
-  }
   template <class DataStream>
   void serialize(DataStream& ds)const
   {
@@ -162,20 +104,6 @@ public:
     ds.writeTag(respTag);
     ds.writeLength(resp.length<DataStream>());
     resp.serialize(ds);
-    if(categoriesFlag)
-    {
-      ds.writeTag(categoriesTag);
-    typename DataStream::LengthType len=0;
-    for(std::vector<CategoryInfo>::const_iterator it=categories.begin(),end=categories.end();it!=end;it++)
-    {
-      len+=it->length<DataStream>();
-    }
-    ds.writeLength(len);
-    for(std::vector<CategoryInfo>::const_iterator it=categories.begin(),end=categories.end();it!=end;it++)
-    {
-      it->serialize(ds);
-    }
-    }
     ds.writeTag(DataStream::endOfMessage_tag);
   }
 
@@ -188,7 +116,7 @@ public:
     //int8_t rdVersionMinor=ds.readByte();
     //if(rdVersionMajor!=versionMajor)
     //{
-    //  throw protogen::framework::IncompatibleVersionException("LoggerGetCategoriesResp");
+    //  throw protogen::framework::IncompatibleVersionException("UpdateProfileAbntResp");
     //}
     //seqNum=ds.readInt32();
     while(!endOfMessage)
@@ -206,29 +134,13 @@ public:
           ds.readLength();resp.deserialize(ds);
           respFlag=true;
         }break;
-        case categoriesTag:
-        {
-          if(categoriesFlag)
-          {
-            throw eyeline::protogen::framework::DuplicateFieldException("categories");
-          }
-
-          typename DataStream::LengthType len=ds.readLength(),rd=0;
-          while(rd<len)
-          {
-            categories.push_back(CategoryInfo());
-            categories.back().deserialize(ds);
-            rd+=categories.back().length<DataStream>();
-          }
-          categoriesFlag=true;
-        }break;
         case DataStream::endOfMessage_tag:
           endOfMessage=true;
           break;
         default:
           //if(rdVersionMinor==versionMinor)
           //{
-          //  throw protogen::framework::UnexpectedTag("LoggerGetCategoriesResp",tag);
+          //  throw protogen::framework::UnexpectedTag("UpdateProfileAbntResp",tag);
           //}
           ds.skip(ds.readLength());
       }
@@ -257,15 +169,12 @@ protected:
   //static const int8_t versionMinor=0;
 
   static const int32_t respTag=1;
-  static const int32_t categoriesTag=2;
 
   int32_t seqNum;
 
   Response resp;
-  std::vector<CategoryInfo> categories;
 
   bool respFlag;
-  bool categoriesFlag;
 };
 
 }

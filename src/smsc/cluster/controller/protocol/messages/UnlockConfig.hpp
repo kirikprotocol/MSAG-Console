@@ -1,14 +1,14 @@
-#ifndef __GENERATED_MESSAGE_SMSC_CLUSTER_CONTROLLER_PROTOCOL_MESSAGES_UPDATEPROFILERESP_HPP__
-#define __GENERATED_MESSAGE_SMSC_CLUSTER_CONTROLLER_PROTOCOL_MESSAGES_UPDATEPROFILERESP_HPP__
+#ifndef __GENERATED_MESSAGE_SMSC_CLUSTER_CONTROLLER_PROTOCOL_MESSAGES_UNLOCKCONFIG_HPP__
+#define __GENERATED_MESSAGE_SMSC_CLUSTER_CONTROLLER_PROTOCOL_MESSAGES_UNLOCKCONFIG_HPP__
 
 #include <inttypes.h>
 #include <string>
 #include <vector>
 #include "eyeline/protogen/framework/Exceptions.hpp"
-#include "MultiResponse.hpp"
+#include "ConfigType.hpp"
 
 
-#ident "@(#) UpdateProfileResp version 1.0"
+#ident "@(#) UnlockConfig version 1.0"
 
 
 
@@ -19,21 +19,21 @@ namespace protocol{
 namespace messages{
 
 
-class UpdateProfileResp{
+class UnlockConfig{
 public:
-  UpdateProfileResp()
+  UnlockConfig()
   {
     Clear();
   }
   void Clear()
   {
     seqNum=0;
-    respFlag=false;
+    configTypeFlag=false;
   }
  
   static int32_t getTag()
   {
-    return 1012;
+    return 202;
   }
 
   std::string toString()const
@@ -42,16 +42,14 @@ public:
     char buf[32];
     sprintf(buf,"seqNum=%d",seqNum);
     rv+=buf;
-    if(respFlag)
+    if(configTypeFlag)
     {
       if(rv.length()>0)
       {
         rv+=";";
       }
-      rv+="resp=";
-      rv+='(';
-      rv+=resp.toString();
-      rv+=')';
+      rv+="configType=";
+      rv+=ConfigType::getNameByValue(configType);
     }
     return rv;
   }
@@ -60,50 +58,54 @@ public:
   int32_t length()const
   {
     int32_t rv=0;
-    if(respFlag)
+    if(configTypeFlag)
     {
       rv+=DataStream::tagTypeSize;
       rv+=DataStream::lengthTypeSize;
-      rv+=resp.length<DataStream>();
+      rv+=DataStream::fieldSize(configType);
     }
     rv+=DataStream::tagTypeSize;
     return rv;
   }
-  const MultiResponse& getResp()const
+  const ConfigType::type& getConfigType()const
   {
-    if(!respFlag)
+    if(!configTypeFlag)
     {
-      throw eyeline::protogen::framework::FieldIsNullException("resp");
+      throw eyeline::protogen::framework::FieldIsNullException("configType");
     }
-    return resp;
+    return configType;
   }
-  void setResp(const MultiResponse& argValue)
+  void setConfigType(const ConfigType::type& argValue)
   {
-    resp=argValue;
-    respFlag=true;
+    if(!ConfigType::isValidValue(argValue))
+    {
+      throw eyeline::protogen::framework::InvalidEnumValue("ConfigType",argValue);
+    }
+    configType=argValue;
+    configTypeFlag=true;
   }
-  MultiResponse& getRespRef()
+  ConfigType::type& getConfigTypeRef()
   {
-    respFlag=true;
-    return resp;
+    configTypeFlag=true;
+    return configType;
   }
-  bool hasResp()const
+  bool hasConfigType()const
   {
-    return respFlag;
+    return configTypeFlag;
   }
   template <class DataStream>
   void serialize(DataStream& ds)const
   {
-    if(!respFlag)
+    if(!configTypeFlag)
     {
-      throw eyeline::protogen::framework::MandatoryFieldMissingException("resp");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("configType");
     }
     //ds.writeByte(versionMajor);
     //ds.writeByte(versionMinor);
     //ds.writeInt32(seqNum);
-    ds.writeTag(respTag);
-    ds.writeLength(resp.length<DataStream>());
-    resp.serialize(ds);
+    ds.writeTag(configTypeTag);
+    ds.writeByteLV(configType);
+ 
     ds.writeTag(DataStream::endOfMessage_tag);
   }
 
@@ -116,7 +118,7 @@ public:
     //int8_t rdVersionMinor=ds.readByte();
     //if(rdVersionMajor!=versionMajor)
     //{
-    //  throw protogen::framework::IncompatibleVersionException("UpdateProfileResp");
+    //  throw protogen::framework::IncompatibleVersionException("UnlockConfig");
     //}
     //seqNum=ds.readInt32();
     while(!endOfMessage)
@@ -124,15 +126,14 @@ public:
       DataStream::TagType tag=ds.readTag();
       switch(tag)
       {
-        case respTag:
+        case configTypeTag:
         {
-          if(respFlag)
+          if(configTypeFlag)
           {
-            throw eyeline::protogen::framework::DuplicateFieldException("resp");
+            throw eyeline::protogen::framework::DuplicateFieldException("configType");
           }
-
-          ds.readLength();resp.deserialize(ds);
-          respFlag=true;
+          configType=ds.readByteLV();
+          configTypeFlag=true;
         }break;
         case DataStream::endOfMessage_tag:
           endOfMessage=true;
@@ -140,14 +141,14 @@ public:
         default:
           //if(rdVersionMinor==versionMinor)
           //{
-          //  throw protogen::framework::UnexpectedTag("UpdateProfileResp",tag);
+          //  throw protogen::framework::UnexpectedTag("UnlockConfig",tag);
           //}
           ds.skip(ds.readLength());
       }
     }
-    if(!respFlag)
+    if(!configTypeFlag)
     {
-      throw eyeline::protogen::framework::MandatoryFieldMissingException("resp");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("configType");
     }
 
   }
@@ -168,13 +169,13 @@ protected:
   //static const int8_t versionMajor=1;
   //static const int8_t versionMinor=0;
 
-  static const int32_t respTag=1;
+  static const int32_t configTypeTag=1;
 
   int32_t seqNum;
 
-  MultiResponse resp;
+  ConfigType::type configType;
 
-  bool respFlag;
+  bool configTypeFlag;
 };
 
 }

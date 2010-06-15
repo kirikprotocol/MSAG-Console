@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 #include "eyeline/protogen/framework/Exceptions.hpp"
-#include "Response.hpp"
+#include "MultiResponse.hpp"
 
 
 #ident "@(#) AclCreateResp version 1.0"
@@ -86,7 +86,7 @@ public:
     rv+=DataStream::tagTypeSize;
     return rv;
   }
-  const Response& getResp()const
+  const MultiResponse& getResp()const
   {
     if(!respFlag)
     {
@@ -94,12 +94,12 @@ public:
     }
     return resp;
   }
-  void setResp(const Response& argValue)
+  void setResp(const MultiResponse& argValue)
   {
     resp=argValue;
     respFlag=true;
   }
-  Response& getRespRef()
+  MultiResponse& getRespRef()
   {
     respFlag=true;
     return resp;
@@ -226,7 +226,7 @@ protected:
 
   int32_t seqNum;
 
-  Response resp;
+  MultiResponse resp;
   int32_t id;
 
   bool respFlag;

@@ -18,22 +18,17 @@
 #include "messages/SmeDisconnect.hpp"
 #include "messages/LoggerGetCategories.hpp"
 #include "messages/LoggerSetCategories.hpp"
-#include "messages/AclGet.hpp"
-#include "messages/AclList.hpp"
 #include "messages/AclRemove.hpp"
 #include "messages/AclCreate.hpp"
 #include "messages/AclUpdate.hpp"
-#include "messages/AclLookup.hpp"
 #include "messages/AclRemoveAddresses.hpp"
 #include "messages/AclAddAddresses.hpp"
 #include "messages/CgmAddGroup.hpp"
 #include "messages/CgmDeleteGroup.hpp"
 #include "messages/CgmAddAddr.hpp"
-#include "messages/CgmCheck.hpp"
 #include "messages/CgmDelAddr.hpp"
 #include "messages/CgmAddAbonent.hpp"
 #include "messages/CgmDelAbonent.hpp"
-#include "messages/CgmListAbonents.hpp"
 #include "messages/AliasAdd.hpp"
 #include "messages/AliasDel.hpp"
 #include "messages/UpdateProfileAbntResp.hpp"
@@ -197,20 +192,6 @@ void ControllerSmscProtocol::decodeAndHandleMessage(eyeline::protogen::framework
       msg.setSeqNum(seq);
             handler->handle(msg);
     }break;
-    case tag_AclGet:
-    {
-      messages::AclGet msg;
-      msg.deserialize(ss);
-      msg.setSeqNum(seq);
-            handler->handle(msg);
-    }break;
-    case tag_AclList:
-    {
-      messages::AclList msg;
-      msg.deserialize(ss);
-      msg.setSeqNum(seq);
-            handler->handle(msg);
-    }break;
     case tag_AclRemove:
     {
       messages::AclRemove msg;
@@ -228,13 +209,6 @@ void ControllerSmscProtocol::decodeAndHandleMessage(eyeline::protogen::framework
     case tag_AclUpdate:
     {
       messages::AclUpdate msg;
-      msg.deserialize(ss);
-      msg.setSeqNum(seq);
-            handler->handle(msg);
-    }break;
-    case tag_AclLookup:
-    {
-      messages::AclLookup msg;
       msg.deserialize(ss);
       msg.setSeqNum(seq);
             handler->handle(msg);
@@ -274,13 +248,6 @@ void ControllerSmscProtocol::decodeAndHandleMessage(eyeline::protogen::framework
       msg.setSeqNum(seq);
             handler->handle(msg);
     }break;
-    case tag_CgmCheck:
-    {
-      messages::CgmCheck msg;
-      msg.deserialize(ss);
-      msg.setSeqNum(seq);
-            handler->handle(msg);
-    }break;
     case tag_CgmDelAddr:
     {
       messages::CgmDelAddr msg;
@@ -298,13 +265,6 @@ void ControllerSmscProtocol::decodeAndHandleMessage(eyeline::protogen::framework
     case tag_CgmDelAbonent:
     {
       messages::CgmDelAbonent msg;
-      msg.deserialize(ss);
-      msg.setSeqNum(seq);
-            handler->handle(msg);
-    }break;
-    case tag_CgmListAbonents:
-    {
-      messages::CgmListAbonents msg;
       msg.deserialize(ss);
       msg.setSeqNum(seq);
             handler->handle(msg);
