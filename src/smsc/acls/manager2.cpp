@@ -135,7 +135,11 @@ public:
   //struct AclLookuper
   virtual bool    isGranted(AclIdent aclid,const AclPhoneNumber& phone);
   // struct AclAbstractManager
-  virtual void LoadUp(smsc::util::config::Manager& cfgMgr);
+  virtual void LoadUp(const char* argAclStore,int argPreCreate);
+  virtual void enableControllerMode()
+  {
+    mgr_->enableControllerMode();
+  }
 };
 
 void AclManager2::UpdateAcl(AclIdent aid)
@@ -223,10 +227,10 @@ bool AclManager2::isGranted(AclIdent aclid,const AclPhoneNumber& phone)
     return mgr_->isGranted(aclid,phone);
 }
 
-void AclManager2::LoadUp(smsc::util::config::Manager& cfgMgr)
+void AclManager2::LoadUp(const char* argAclStore,int argPreCreate)
 {
   MutexGuard g(modify_locker_);
-  mgr_->LoadUp(cfgMgr);
+  mgr_->LoadUp(argAclStore,argPreCreate);
   vector<AclNamedIdent> acls;
   mgr_->enumerate(acls);
   for ( vector<AclNamedIdent>::iterator i = acls.begin(), iE = acls.end(); i != iE; ++i )

@@ -17,7 +17,6 @@ namespace controller{
 namespace protocol{
 namespace messages{
 
-typedef std::vector<std::string> string_list;
 
 class ServiceStatus{
 public:
@@ -31,7 +30,9 @@ public:
     peerAddressFlag=false;
     bindModeFlag=false;
     boundSmscFlag=false;
+    boundSmsc.clear();
   }
+ 
 
   std::string toString()const
   {
@@ -89,9 +90,9 @@ public:
   }
 
   template <class DataStream>
-  uint32_t length()const
+  int32_t length()const
   {
-    uint32_t rv=0;
+    int32_t rv=0;
     if(serviceNameFlag)
     {
       rv+=DataStream::tagTypeSize;
@@ -123,14 +124,19 @@ public:
   {
     if(!serviceNameFlag)
     {
-      throw protogen::framework::FieldIsNullException("serviceName");
+      throw eyeline::protogen::framework::FieldIsNullException("serviceName");
     }
     return serviceName;
   }
-  void setServiceName(const std::string& value)
+  void setServiceName(const std::string& argValue)
   {
-    serviceName=value;
+    serviceName=argValue;
     serviceNameFlag=true;
+  }
+  std::string& getServiceNameRef()
+  {
+    serviceNameFlag=true;
+    return serviceName;
   }
   bool hasServiceName()const
   {
@@ -140,14 +146,19 @@ public:
   {
     if(!peerAddressFlag)
     {
-      throw protogen::framework::FieldIsNullException("peerAddress");
+      throw eyeline::protogen::framework::FieldIsNullException("peerAddress");
     }
     return peerAddress;
   }
-  void setPeerAddress(const std::string& value)
+  void setPeerAddress(const std::string& argValue)
   {
-    peerAddress=value;
+    peerAddress=argValue;
     peerAddressFlag=true;
+  }
+  std::string& getPeerAddressRef()
+  {
+    peerAddressFlag=true;
+    return peerAddress;
   }
   bool hasPeerAddress()const
   {
@@ -157,14 +168,19 @@ public:
   {
     if(!bindModeFlag)
     {
-      throw protogen::framework::FieldIsNullException("bindMode");
+      throw eyeline::protogen::framework::FieldIsNullException("bindMode");
     }
     return bindMode;
   }
-  void setBindMode(const std::string& value)
+  void setBindMode(const std::string& argValue)
   {
-    bindMode=value;
+    bindMode=argValue;
     bindModeFlag=true;
+  }
+  std::string& getBindModeRef()
+  {
+    bindModeFlag=true;
+    return bindMode;
   }
   bool hasBindMode()const
   {
@@ -174,14 +190,19 @@ public:
   {
     if(!boundSmscFlag)
     {
-      throw protogen::framework::FieldIsNullException("boundSmsc");
+      throw eyeline::protogen::framework::FieldIsNullException("boundSmsc");
     }
     return boundSmsc;
   }
-  void setBoundSmsc(const std::vector<bool>& value)
+  void setBoundSmsc(const std::vector<bool>& argValue)
   {
-    boundSmsc=value;
+    boundSmsc=argValue;
     boundSmscFlag=true;
+  }
+  std::vector<bool>& getBoundSmscRef()
+  {
+    boundSmscFlag=true;
+    return boundSmsc;
   }
   bool hasBoundSmsc()const
   {
@@ -192,19 +213,19 @@ public:
   {
     if(!serviceNameFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("serviceName");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("serviceName");
     }
     if(!peerAddressFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("peerAddress");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("peerAddress");
     }
     if(!bindModeFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("bindMode");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("bindMode");
     }
     if(!boundSmscFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("boundSmsc");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("boundSmsc");
     }
     //ds.writeByte(versionMajor);
     //ds.writeByte(versionMinor);
@@ -229,8 +250,8 @@ public:
   {
     Clear();
     bool endOfMessage=false;
-    //uint8_t rdVersionMajor=ds.readByte();
-    //uint8_t rdVersionMinor=ds.readByte();
+    //int8_t rdVersionMajor=ds.readByte();
+    //int8_t rdVersionMinor=ds.readByte();
     //if(rdVersionMajor!=versionMajor)
     //{
     //  throw protogen::framework::IncompatibleVersionException("ServiceStatus");
@@ -238,14 +259,14 @@ public:
     //seqNum=ds.readInt32();
     while(!endOfMessage)
     {
-      uint32_t tag=ds.readTag();
+      DataStream::TagType tag=ds.readTag();
       switch(tag)
       {
         case serviceNameTag:
         {
           if(serviceNameFlag)
           {
-            throw protogen::framework::DuplicateFieldException("serviceName");
+            throw eyeline::protogen::framework::DuplicateFieldException("serviceName");
           }
           serviceName=ds.readStrLV();
           serviceNameFlag=true;
@@ -254,7 +275,7 @@ public:
         {
           if(peerAddressFlag)
           {
-            throw protogen::framework::DuplicateFieldException("peerAddress");
+            throw eyeline::protogen::framework::DuplicateFieldException("peerAddress");
           }
           peerAddress=ds.readStrLV();
           peerAddressFlag=true;
@@ -263,7 +284,7 @@ public:
         {
           if(bindModeFlag)
           {
-            throw protogen::framework::DuplicateFieldException("bindMode");
+            throw eyeline::protogen::framework::DuplicateFieldException("bindMode");
           }
           bindMode=ds.readStrLV();
           bindModeFlag=true;
@@ -272,7 +293,7 @@ public:
         {
           if(boundSmscFlag)
           {
-            throw protogen::framework::DuplicateFieldException("boundSmsc");
+            throw eyeline::protogen::framework::DuplicateFieldException("boundSmsc");
           }
           typename DataStream::LengthType len=ds.readLength(),rd=0;
           while(rd<len)
@@ -295,32 +316,34 @@ public:
     }
     if(!serviceNameFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("serviceName");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("serviceName");
     }
     if(!peerAddressFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("peerAddress");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("peerAddress");
     }
     if(!bindModeFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("bindMode");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("bindMode");
     }
     if(!boundSmscFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("boundSmsc");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("boundSmsc");
     }
 
   }
 
 
-protected:
-  //static const uint8_t versionMajor=1;
-  //static const uint8_t versionMinor=0;
+ 
 
-  static const uint32_t serviceNameTag=1;
-  static const uint32_t peerAddressTag=2;
-  static const uint32_t bindModeTag=3;
-  static const uint32_t boundSmscTag=4;
+protected:
+  //static const int8_t versionMajor=1;
+  //static const int8_t versionMinor=0;
+
+  static const int32_t serviceNameTag=1;
+  static const int32_t peerAddressTag=2;
+  static const int32_t bindModeTag=3;
+  static const int32_t boundSmscTag=4;
 
 
   std::string serviceName;

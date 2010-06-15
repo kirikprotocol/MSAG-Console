@@ -25,6 +25,9 @@
 #endif
 
 #include "profiler.hpp"
+#ifndef CCMODE
+#include "smsc/cluster/controller/NetworkDispatcher.hpp"
+#endif
 
 
 namespace smsc{
@@ -111,10 +114,18 @@ class ProfilesTable: public smsc::core::buffers::XHash<HashKey,Profile,HashFunc>
   Profile defaultProfile;
   smsc::logger::Logger* log;
 public:
-  ProfilesTable(const Profile& pr,int n):XHash<HashKey,Profile,HashFunc>(n)
+  ProfilesTable(int n):XHash<HashKey,Profile,HashFunc>(n)
   {
-    defaultProfile=pr;
     log=smsc::logger::Logger::getInstance("smsc.prof");
+  }
+  void refreshDefault()
+  {
+    HashKey k(".5.0.DEFAULT");
+    Profile* p=GetPtr(k);
+    if(p)
+    {
+      defaultProfile=*p;
+    }
   }
   Profile& find(const Address& address,bool& exact)
   {
@@ -165,17 +176,18 @@ public:
 };
 
 
-Profiler::Profiler(const Profile& pr,SmeRegistrar* psmeman,const char* sysId)
+Profiler::Profiler(SmeRegistrar* psmeman,const char* sysId)
 {
   state=VALID;
   managerMonitor=NULL;
-  profiles=new ProfilesTable(pr,1000000);
+  profiles=new ProfilesTable(1000000);
   systemId=sysId;
   smeman=psmeman;
   seq=1;
   prio=SmeProxyPriorityDefault;
   notifier=0;
   log=smsc::logger::Logger::getInstance("smsc.prof");
+  isControllerMode=false;
 #ifdef SMSEXTRA
   blklst=0;
 #endif
@@ -189,7 +201,10 @@ Profiler::~Profiler()
   delete blklst;
 #endif
   try{
-    smeman->unregisterSmeProxy(this);
+    if(smeman)
+    {
+      smeman->unregisterSmeProxy(this);
+    }
   }catch(...)
   {
   }
@@ -219,9 +234,13 @@ void Profiler::remove(const Address& address)
      (matchType==ProfilerMatchType::mtMask && matchAddr==address.toString().c_str())
     )
   {
-    /*
-     * !!!TODO!!!
-     */
+    if(isControllerMode)
+    {
+      storeFile.Seek(profRef.offset-AddressSize()-8-1);
+      storeFile.WriteByte(0);
+      storeFile.Flush();
+      holes.push_back(profRef.offset-AddressSize()-8-1);
+    }
 
     profiles->Delete(address);
   }
@@ -249,6 +268,11 @@ int Profiler::update(const Address& address,const Profile& profile)
     if(exact)
     {
       prof.assign(profile);
+      if(address==".5.0.DEFAULT")
+      {
+        prof.divertActive=false;
+        profiles->refreshDefault();
+      }
       fileUpdate(address,prof);
       debug2(log,"update %s/%#llx",address.toString().c_str(),prof.offset);
       rv=pusUpdated;
@@ -335,14 +359,17 @@ public:
 void Profiler::fileUpdate(const Address& addr,const Profile& profile)
 {
   /*
-   * !!TODO!!
+   *
   using namespace smsc::cluster;
   if(Interconnect::getInstance()->getRole()==SLAVE)return;*/
-  CreateOrOpenFileIfNeeded();
-  __trace2__("Profiler: Update(%llx) %s=%d,%d,%s,%d,%c,%s,%c,%c",profile.offset,addr.toString().c_str(),profile.reportoptions,profile.codepage,profile.locale.c_str(),profile.hide,profile.hideModifiable?'Y':'N',profile.divert.c_str(),profile.divertActive?'Y':'N',profile.divertModifiable?'Y':'N');
-  storeFile.Seek(profile.offset);
-  profile.Write(storeFile);
-  storeFile.Flush();
+  if(isControllerMode)
+  {
+    CreateOrOpenFileIfNeeded();
+    __trace2__("Profiler: Update(%llx) %s=%d,%d,%s,%d,%c,%s,%c,%c",profile.offset,addr.toString().c_str(),profile.reportoptions,profile.codepage,profile.locale.c_str(),profile.hide,profile.hideModifiable?'Y':'N',profile.divert.c_str(),profile.divertActive?'Y':'N',profile.divertModifiable?'Y':'N');
+    storeFile.Seek(profile.offset);
+    profile.Write(storeFile);
+    storeFile.Flush();
+  }
 
   /*if(Interconnect::getInstance()->getRole()==MASTER)
   {
@@ -391,6 +418,10 @@ void Profiler::fileUpdate(const Address& addr,const Profile& profile)
 
 void Profiler::fileInsert(const Address& addr,Profile& profile)
 {
+  if(!isControllerMode)
+  {
+    return;
+  }
   //using namespace smsc::cluster;
   //if(Interconnect::getInstance()->getRole()==SLAVE)return;
   __trace2__("Profiler: Insert %s=%d,%d,%s,%d,%c,%s,%c,%c",addr.toString().c_str(),profile.reportoptions,profile.codepage,profile.locale.c_str(),profile.hide,profile.hideModifiable?'Y':'N',profile.divert.c_str(),profile.divertActive?'Y':'N',profile.divertModifiable?'Y':'N');
@@ -499,7 +530,7 @@ static const int update_div_cond_OnBit=0x8000;
 
 
 
-void Profiler::internal_update(int flag,const Address& addr,int value,const char* svalue)
+Profile Profiler::internal_update(int flag,const Address& addr,int value,const char* svalue)
 {
   Profile profile;
   profile.assign(lookup(addr));
@@ -583,7 +614,8 @@ void Profiler::internal_update(int flag,const Address& addr,int value,const char
   {
     profile.translit=value;
   }
-  update(addr,profile);
+  //update(addr,profile);
+  return profile;
 }
 
 enum{
@@ -617,7 +649,8 @@ enum{
   msgDivertCapOn,
   msgDivertCapOff,
   msgTranslitOn,
-  msgTranslitOff
+  msgTranslitOff,
+  msgProfilerLocked
 #ifdef SMSEXTRA
   ,
   msgAliasOk,
@@ -636,6 +669,7 @@ enum{
 
 int Profiler::Execute()
 {
+#ifndef CCMODE
   SmscCommand cmd,resp;
   SMS *sms;
   //Array<SMS*> smsarr;
@@ -645,7 +679,6 @@ int Profiler::Execute()
 //  int coding;
 
 //  char *str=body;
-  int msg=-1;
   while(!isStopping)
   {
     if(!hasOutput())
@@ -656,355 +689,300 @@ int Profiler::Execute()
     try{
       cmd=getOutgoingCommand();
       if(cmd->cmdid==smsc::smeman::SUBMIT_RESP)continue;
-      if(cmd->cmdid!=smsc::smeman::DELIVERY)
+      if(cmd->cmdid==smsc::smeman::DELIVERY)
       {
-        __warning2__("Profiler: incorrect command submitted - %d",cmd->cmdid);
-        continue;
-      }
-      sms = cmd->get_sms();
-      int status=MAKE_COMMAND_STATUS(CMD_OK,0);
-      if((sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3c)!=0)
-      {
-        status=MAKE_COMMAND_STATUS(CMD_ERR_PERM,Status::INVESMCLASS);
-        resp=SmscCommand::makeDeliverySmResp(sms->getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str(),
-                                             cmd->get_dialogId(),status);
-        putIncomingCommand(resp);
-        continue;
-      };
-
-      if(sms->hasStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID))
-      {
-        __warning__("Profiler: received receipt!!!");
-        status=Status::OK;
-        resp=SmscCommand::makeDeliverySmResp("",cmd->get_dialogId(),status);
-        putIncomingCommand(resp);
-        continue;
-      }
-
-      if(sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) && sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP)!=1)
-      {
-        __warning__("Profiler: ussd service op != 1");
-        status=MAKE_COMMAND_STATUS(CMD_ERR_PERM,Status::INVOPTPARAMVAL);
-        resp=SmscCommand::makeDeliverySmResp(sms->getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str(),
-                                             cmd->get_dialogId(),status);
-        putIncomingCommand(resp);
-        continue;
-      }
-
-      Address& addr=sms->getOriginatingAddress();
-
-      try{
-        len=getSmsText(sms,body,(unsigned)sizeof(body));
-        if(len<0)throw Exception("sms for profiler too large");
-      }catch(...)
-      {
-        status=MAKE_COMMAND_STATUS(CMD_ERR_PERM,Status::INVOPTPARAMVAL);
-        resp=SmscCommand::makeDeliverySmResp(sms->getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str(),
-                                             cmd->get_dialogId(),status);
-        putIncomingCommand(resp);
-        __warning2__("INVALID MESSAGE SENT TO PROFILER FROM %s",addr.toString().c_str());
-        continue;
-      }
-
-      __trace2__("Profiler: received %s from .%d.%d.%.20s",body,addr.type,addr.plan,addr.value);
-
-      int i;
-
-      i=0;
-      while(!isalnum(body[i]) && body[i]!='*' && body[i]!='#' && i<len)i++;
-      msg=-1;
-      try{
-        if(sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP))
+        int msg=-1;
+        Profile p;
+        bool profileModified=false;
+        sms = cmd->get_sms();
+        int status=MAKE_COMMAND_STATUS(CMD_OK,0);
+        if((sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3c)!=0)
         {
-          __trace2__("ussd service op=%d",sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP));
-          char *str=body;
-          char *ptr=str;
-          while(ptr=strchr(ptr,'#'))*ptr='*';
+          status=MAKE_COMMAND_STATUS(CMD_ERR_PERM,Status::INVESMCLASS);
+          resp=SmscCommand::makeDeliverySmResp(sms->getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str(),
+              cmd->get_dialogId(),status);
+          putIncomingCommand(resp);
+          continue;
+        };
 
-          int code=-1;
-          int pos;
-          if(sscanf(str,"%d%n",&code,&pos)==1 && (str[pos]==0 || str[pos]=='*'))
+        if(sms->hasStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID))
+        {
+          __warning__("Profiler: received receipt!!!");
+          status=Status::OK;
+          resp=SmscCommand::makeDeliverySmResp("",cmd->get_dialogId(),status);
+          putIncomingCommand(resp);
+          continue;
+        }
+
+        if(sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) && sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP)!=1)
+        {
+          __warning__("Profiler: ussd service op != 1");
+          status=MAKE_COMMAND_STATUS(CMD_ERR_PERM,Status::INVOPTPARAMVAL);
+          resp=SmscCommand::makeDeliverySmResp(sms->getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str(),
+              cmd->get_dialogId(),status);
+          putIncomingCommand(resp);
+          continue;
+        }
+
+        Address& addr=sms->getOriginatingAddress();
+
+        try{
+          len=getSmsText(sms,body,(unsigned)sizeof(body));
+          if(len<0)throw Exception("sms for profiler too large");
+        }catch(...)
+        {
+          status=MAKE_COMMAND_STATUS(CMD_ERR_PERM,Status::INVOPTPARAMVAL);
+          resp=SmscCommand::makeDeliverySmResp(sms->getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str(),
+              cmd->get_dialogId(),status);
+          putIncomingCommand(resp);
+          __warning2__("INVALID MESSAGE SENT TO PROFILER FROM %s",addr.toString().c_str());
+          continue;
+        }
+
+        __trace2__("Profiler: received %s from .%d.%d.%.20s",body,addr.type,addr.plan,addr.value);
+
+        int i;
+
+        i=0;
+        while(!isalnum(body[i]) && body[i]!='*' && body[i]!='#' && i<len)i++;
+        msg=-1;
+        try{
+          if(sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP))
           {
-            __trace2__("Profiler: ussd op=%s(%d)",str,code);
-            if(ussdCmdMap.Exist(code))
+            __trace2__("ussd service op=%d",sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP));
+            char *str=body;
+            char *ptr=str;
+            while(ptr=strchr(ptr,'#'))*ptr='*';
+
+            int code=-1;
+            int pos;
+            if(sscanf(str,"%d%n",&code,&pos)==1 && (str[pos]==0 || str[pos]=='*'))
             {
-              string scmd=ussdCmdMap.Get(code);
-              if(scmd=="DIVERT TO")
+              __trace2__("Profiler: ussd op=%s(%d)",str,code);
+              if(ussdCmdMap.Exist(code))
               {
-                scmd+=' ';
-                if(str[pos]=='*')
+                string scmd=ussdCmdMap.Get(code);
+                if(scmd=="DIVERT TO")
                 {
-                  scmd.append(str+pos+1);
+                  scmd+=' ';
+                  if(str[pos]=='*')
+                  {
+                    scmd.append(str+pos+1);
+                  }
                 }
+                strcpy(body,scmd.c_str());
+                __trace2__("Profiler: command mapped to %s",body);
+                i=0;
+                len=(int)strlen(body);
               }
-              strcpy(body,scmd.c_str());
-              __trace2__("Profiler: command mapped to %s",body);
-              i=0;
-              len=(int)strlen(body);
             }
           }
-        }
-        string profCmd,orgArg,arg1,arg2;
-        profCmd=body+i;
-        if(splitString(profCmd,arg1))
-        {
-          splitString(arg1,arg2);
-        }
-        orgArg=arg1;
-        for(i=0;i<profCmd.length();i++)profCmd[i]=toupper(profCmd[i]);
-        for(i=0;i<arg1.length();i++)arg1[i]=toupper(arg1[i]);
-        for(i=0;i<arg2.length();i++)arg2[i]=toupper(arg2[i]);
+          string profCmd,orgArg,arg1,arg2;
+          profCmd=body+i;
+          if(splitString(profCmd,arg1))
+          {
+            splitString(arg1,arg2);
+          }
+          orgArg=arg1;
+          for(i=0;i<profCmd.length();i++)profCmd[i]=toupper(profCmd[i]);
+          for(i=0;i<arg1.length();i++)arg1[i]=toupper(arg1[i]);
+          for(i=0;i<arg2.length();i++)arg2[i]=toupper(arg2[i]);
 
 
-        if(profCmd=="REPORT")
-        {
-          if(arg1.length())
+          if(profCmd=="REPORT")
           {
-            if(arg1=="NONE")
+            if(arg1.length())
             {
-              msg=msgReportNone;
-              internal_update(_update_report,addr,ProfileReportOptions::ReportNone);
-            }
-            else
-            if(arg1=="FULL")
-            {
-              msg=msgReportFull;
-              internal_update(_update_report,addr,ProfileReportOptions::ReportFull);
-            }else
-            if(arg1=="FINAL")
-            {
-              msg=msgReportFinal;
-              internal_update(_update_report,addr,ProfileReportOptions::ReportFinal);
-            }
-          }
-        }else
-        if(profCmd=="LOCALE")
-        {
-          if(arg1.length()==0)
-          {
-            msg=-1;
-          }else
-          {
-            string loc=arg1;
-            for(int x=0;x<loc.length();x++)loc.at(x)=tolower(loc.at(x));
-            __trace2__("Profiler: new locale %s",loc.c_str());
-            if(ResourceManager::getInstance()->isValidLocale(loc))
-            {
-              internal_update(_update_locale,addr,0,loc.c_str());
-              msg=msgLocaleChanged;
-            }else
-            {
-              msg=msgLocaleUnknown;
-            }
-          }
-        }else
-        if(profCmd=="DEFAULT" || profCmd=="ENG")
-        {
-          msg=msgDefault;
-          internal_update(_update_charset,addr,ProfileCharsetOptions::Default);
-        }else
-        if(profCmd=="LATIN1")
-        {
-          msg=msgLatin1;
-          internal_update(_update_charset,addr,ProfileCharsetOptions::Latin1);
-        }else
-        if(profCmd=="UCS2ANDLAT")
-        {
-          msg=msgUCS2AndLat;
-          internal_update(_update_charset,addr,ProfileCharsetOptions::Ucs2AndLat);
-        }else
-        if(profCmd=="UCS2" || profCmd=="RUS")
-        {
-          msg=msgUCS2;
-          internal_update(_update_charset,addr,ProfileCharsetOptions::Ucs2);
-        }
-        if(profCmd=="USSD7BIT")
-        {
-          if(arg1=="ON")
-          {
-            internal_update(_update_charset_ussd,addr,1);
-            msg=msg7BitUssdOn;
-          }else if(arg1=="OFF")
-          {
-            internal_update(_update_charset_ussd,addr,0);
-            msg=msg7BitUssdOff;
-          }
-        }
-        else
-        if(profCmd=="HIDE")
-        {
-          msg=msgHide;
-          internal_update(_update_hide,addr,1);
-        }else
-        if(profCmd=="UNHIDE")
-        {
-          msg=msgUnhide;
-          internal_update(_update_hide,addr,0);
-        }else
-        if(profCmd=="DIVERT")
-        {
-          if(arg1=="TO")
-          {
-            string div=arg2;
-            __trace2__("divert address=%s",div.c_str());
-            try{
-              Address addrCheck(div.c_str());
-            }catch(...)
-            {
-              msg=msgInvalidParam;
-            }
-            if(msg==-1 && div.length()<21)
-            {
-              msg=msgDivertChanged;
-              internal_update(_update_divert,addr,0,div.c_str());
-            }
-          }
-          else if(arg1=="STATUS")
-          {
-            msg=msgDivertStatus;
-          }else
-          {
-            //(abs|absent)|(blk|blocked)|(bar|barred)|(cap|capacity)
-            if(arg2.length()==0)
-            {
-              if(arg1=="ON")
+              if(arg1=="NONE")
               {
-                msg=msgDivertOn;
-                internal_update(_update_divert_act,addr,true,0);
+                msg=msgReportNone;
+                p=internal_update(_update_report,addr,ProfileReportOptions::ReportNone);
+                profileModified=true;
+              }
+              else if(arg1=="FULL")
+              {
+                msg=msgReportFull;
+                p=internal_update(_update_report,addr,ProfileReportOptions::ReportFull);
+                profileModified=true;
+              }else if(arg1=="FINAL")
+              {
+                msg=msgReportFinal;
+                p=internal_update(_update_report,addr,ProfileReportOptions::ReportFinal);
+                profileModified=true;
+              }
+            }
+          }else if(profCmd=="LOCALE")
+          {
+            if(arg1.length()==0)
+            {
+              msg=-1;
+            }else
+            {
+              string loc=arg1;
+              for(int x=0;x<loc.length();x++)loc.at(x)=tolower(loc.at(x));
+              __trace2__("Profiler: new locale %s",loc.c_str());
+              if(ResourceManager::getInstance()->isValidLocale(loc))
+              {
+                p=internal_update(_update_locale,addr,0,loc.c_str());
+                profileModified=true;
+                msg=msgLocaleChanged;
               }else
-              if(arg1=="OFF")
               {
-                msg=msgDivertOff;
-                internal_update(_update_divert_act,addr,false,0);
+                msg=msgLocaleUnknown;
               }
+            }
+          }else if(profCmd=="DEFAULT" || profCmd=="ENG")
+          {
+            msg=msgDefault;
+            p=internal_update(_update_charset,addr,ProfileCharsetOptions::Default);
+            profileModified=true;
+          }else if(profCmd=="LATIN1")
+          {
+            msg=msgLatin1;
+            p=internal_update(_update_charset,addr,ProfileCharsetOptions::Latin1);
+            profileModified=true;
+          }else if(profCmd=="UCS2ANDLAT")
+          {
+            msg=msgUCS2AndLat;
+            p=internal_update(_update_charset,addr,ProfileCharsetOptions::Ucs2AndLat);
+            profileModified=true;
+          }else if(profCmd=="UCS2" || profCmd=="RUS")
+          {
+            msg=msgUCS2;
+            p=internal_update(_update_charset,addr,ProfileCharsetOptions::Ucs2);
+            profileModified=true;
+          }else if(profCmd=="USSD7BIT")
+          {
+            if(arg1=="ON")
+            {
+              p=internal_update(_update_charset_ussd,addr,1);
+              profileModified=true;
+              msg=msg7BitUssdOn;
+            }else if(arg1=="OFF")
+            {
+              p=internal_update(_update_charset_ussd,addr,0);
+              profileModified=true;
+              msg=msg7BitUssdOff;
+            }
+          }
+          else if(profCmd=="HIDE")
+          {
+            msg=msgHide;
+            p=internal_update(_update_hide,addr,1);
+            profileModified=true;
+          }else if(profCmd=="UNHIDE")
+          {
+            msg=msgUnhide;
+            p=internal_update(_update_hide,addr,0);
+            profileModified=true;
+          }else if(profCmd=="DIVERT")
+          {
+            if(arg1=="TO")
+            {
+              string div=arg2;
+              __trace2__("divert address=%s",div.c_str());
+              try{
+                Address addrCheck(div.c_str());
+              }catch(...)
+              {
+                msg=msgInvalidParam;
+              }
+              if(msg==-1 && div.length()<21)
+              {
+                msg=msgDivertChanged;
+                p=internal_update(_update_divert,addr,0,div.c_str());
+                profileModified=true;
+              }
+            }
+            else if(arg1=="STATUS")
+            {
+              msg=msgDivertStatus;
             }else
             {
-              int onbit=arg2=="ON"?update_div_cond_OnBit:0;
-              if(onbit || arg2=="OFF")
+              //(abs|absent)|(blk|blocked)|(bar|barred)|(cap|capacity)
+              if(arg2.length()==0)
               {
-                if(arg1=="ABS" || arg1=="ABSENT")
+                if(arg1=="ON")
                 {
-                  msg=onbit?msgDivertAbsOn:msgDivertAbsOff;
-                  internal_update(_update_divert_cond,addr,update_div_cond_Absent|onbit,0);
-                }else
-                if(arg1=="BLK" || arg1=="BLOCKED")
+                  msg=msgDivertOn;
+                  p=internal_update(_update_divert_act,addr,true,0);
+                  profileModified=true;
+                }else if(arg1=="OFF")
                 {
-                  msg=onbit?msgDivertBlkOn:msgDivertBlkOff;
-                  internal_update(_update_divert_cond,addr,update_div_cond_Blocked|onbit,0);
-                }else
-                if(arg1=="BAR" || arg1=="BARRED")
+                  msg=msgDivertOff;
+                  p=internal_update(_update_divert_act,addr,false,0);
+                  profileModified=true;
+                }
+              }else
+              {
+                int onbit=arg2=="ON"?update_div_cond_OnBit:0;
+                if(onbit || arg2=="OFF")
                 {
-                  msg=onbit?msgDivertBarOn:msgDivertBarOff;
-                  internal_update(_update_divert_cond,addr,update_div_cond_Barred|onbit,0);
-                }else
-                if(arg1=="CAP" || arg1=="CAPACITY")
-                {
-                  msg=onbit?msgDivertCapOn:msgDivertCapOff;
-                  internal_update(_update_divert_cond,addr,update_div_cond_Capacity|onbit,0);
+                  if(arg1=="ABS" || arg1=="ABSENT")
+                  {
+                    msg=onbit?msgDivertAbsOn:msgDivertAbsOff;
+                    p=internal_update(_update_divert_cond,addr,update_div_cond_Absent|onbit,0);
+                    profileModified=true;
+                  }else if(arg1=="BLK" || arg1=="BLOCKED")
+                  {
+                    msg=onbit?msgDivertBlkOn:msgDivertBlkOff;
+                    p=internal_update(_update_divert_cond,addr,update_div_cond_Blocked|onbit,0);
+                    profileModified=true;
+                  }else if(arg1=="BAR" || arg1=="BARRED")
+                  {
+                    msg=onbit?msgDivertBarOn:msgDivertBarOff;
+                    p=internal_update(_update_divert_cond,addr,update_div_cond_Barred|onbit,0);
+                    profileModified=true;
+                  }else if(arg1=="CAP" || arg1=="CAPACITY")
+                  {
+                    msg=onbit?msgDivertCapOn:msgDivertCapOff;
+                    p=internal_update(_update_divert_cond,addr,update_div_cond_Capacity|onbit,0);
+                    profileModified=true;
+                  }
                 }
               }
             }
+          }else if(profCmd=="CONCAT")
+          {
+            if(arg1=="ON")
+            {
+              msg=msgConcatOn;
+              p=internal_update(_update_udhconcat,addr,1,0);
+              profileModified=true;
+            }else if(arg1=="OFF")
+            {
+              msg=msgConcatOff;
+              p=internal_update(_update_udhconcat,addr,0,0);
+              profileModified=true;
+            }
+          }else if(profCmd=="TRANSLIT")
+          {
+            if(arg1=="ON" || arg1=="YES")
+            {
+              msg=msgTranslitOn;
+              p=internal_update(_update_translit,addr,1,0);
+              profileModified=true;
+            }else if(arg1=="OFF" || arg1=="NO")
+            {
+              msg=msgTranslitOff;
+              p=internal_update(_update_translit,addr,0,0);
+              profileModified=true;
+            }
           }
-        }else
-        if(profCmd=="CONCAT")
-        {
-          if(arg1=="ON")
-          {
-            msg=msgConcatOn;
-            internal_update(_update_udhconcat,addr,1,0);
-          }else
-          if(arg1=="OFF")
-          {
-            msg=msgConcatOff;
-            internal_update(_update_udhconcat,addr,0,0);
-          }
-        }else if(profCmd=="TRANSLIT")
-        {
-          if(arg1=="ON" || arg1=="YES")
-          {
-            msg=msgTranslitOn;
-            internal_update(_update_translit,addr,1,0);
-          }else if(arg1=="OFF" || arg1=="NO")
-          {
-            msg=msgTranslitOff;
-            internal_update(_update_translit,addr,0,0);
-          }
-        }
 #ifdef SMSEXTRA
-        else if(profCmd=="SETNICK")
-        {
-          try{
-            if(isValidAlias(orgArg))
-            {
-              std::string lcarg=orgArg;
-              for(int x=0;x<lcarg.length();x++)lcarg[x]=tolower(lcarg[x]);
-              if(blklst && blklst->check(lcarg))
-              {
-                msg=msgAliasInvalid;
-              }else
-              {
-                msg=msgAliasOk;
-                internal_update(_update_extra_nick,addr,0,orgArg.c_str());
-              }
-            }else
-            {
-              msg=msgAliasFailed;
-            }
-          }catch(...)
-          {
-            msg=msgAliasFailed;
-          }
-        }else if(profCmd=="CLEARNICK")
-        {
-          msg=msgAliasDeleted;
-          internal_update(_update_extra_nick,addr,0,"");
-        }
-/*
-        else if(profCmd=="NICK")
-        {
-          if(arg1=="NONE")
-          {
-            msg=msgAliasDeleted;
-            //internal_update(_update_extra|_update_hide,addr,0);
-            internal_update(_update_subscription_clear,addr,EXTRA_NICK);
-            internal_update(_update_extra_nick,addr,0,"");
-          }else if(arg1=="ON")
-          {
-            Profile p=lookup(sms->getOriginatingAddress());
-            if(p.nick.length()>0)
-            {
-              msg=msgAliasOn;
-              internal_update(_update_subscription_add,addr,EXTRA_NICK);
-            }else
-            {
-              msg=msgAliasNotFound;
-            }
-          }else if(arg1=="OFF")
-          {
-            Profile p=lookup(sms->getOriginatingAddress());
-            if(p.nick.length()>0)
-            {
-              msg=msgAliasOff;
-              internal_update(_update_subscription_clear,addr,EXTRA_NICK);
-            }else
-            {
-              msg=msgAliasNotFound;
-            }
-          }
-          else
+          /*else if(profCmd=="SETNICK")
           {
             try{
               if(isValidAlias(orgArg))
               {
                 std::string lcarg=orgArg;
-                for(int i=0;i<lcarg.length();i++)lcarg[i]=tolower(lcarg[i]);
+                for(int x=0;x<lcarg.length();x++)lcarg[x]=tolower(lcarg[x]);
                 if(blklst && blklst->check(lcarg))
                 {
                   msg=msgAliasInvalid;
                 }else
                 {
                   msg=msgAliasOk;
-                  internal_update(_update_subscription_add,addr,EXTRA_NICK);
                   internal_update(_update_extra_nick,addr,0,orgArg.c_str());
                 }
               }else
@@ -1015,97 +993,168 @@ int Profiler::Execute()
             {
               msg=msgAliasFailed;
             }
+          }else if(profCmd=="CLEARNICK")
+          {
+            msg=msgAliasDeleted;
+            internal_update(_update_extra_nick,addr,0,"");
+          }*/
+          else if(profCmd=="FLASH")
+          {
+            if(arg1=="NONE")
+            {
+              p=internal_update(_update_subscription_clear,addr,smsc::extra::EXTRA_FLASH);
+              profileModified=true;
+              msg=msgFlashOff;
+            }else if(arg1=="")
+            {
+              p=internal_update(_update_subscription_add,addr,smsc::extra::EXTRA_FLASH);
+              profileModified=true;
+              msg=msgFlashOn;
+            }else
+            {
+              msg=msgFlashFail;
+            }
           }
-*/
-        else if(profCmd=="FLASH")
+#endif
+        }catch(AccessDeniedException& e)
         {
-          if(arg1=="NONE")
+          msg=msgAccessDenied;
+        }
+
+        resp=SmscCommand::makeDeliverySmResp(sms->getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str(),
+            cmd->get_dialogId(),status);
+
+        putIncomingCommand(resp);
+        ProfileUpdateInfo pui;
+        pui.addr=addr;
+        pui.msg=msg;
+        pui.p=p;
+        if(profileModified)
+        {
+          smsc::cluster::controller::NetworkDispatcher& nd=smsc::cluster::controller::NetworkDispatcher::getInstance();
+          smsc::cluster::controller::protocol::messages::UpdateProfileAbnt up;
+          smsc::cluster::controller::protocol::messages::Profile prof;
+          //Profile p=lookup(addr);
+
+          prof.setAccessMaskIn(p.accessMaskIn);
+          prof.setAccessMaskOut(p.accessMaskOut);
+          prof.setClosedGroupId(p.closedGroupId);
+          prof.setCodepage(p.codepage);
+          prof.setDivert(p.divert);
+          prof.setDivertActive(p.divertActive);
+          prof.setDivertActiveAbsent(p.divertActiveAbsent);
+          prof.setDivertActiveBarred(p.divertActiveBarred);
+          prof.setDivertActiveBlocked(p.divertActiveBlocked);
+          prof.setDivertActiveCapacity(p.divertActiveCapacity);
+          prof.setDivertModifiable(p.divertModifiable);
+          prof.setHide(p.hide);
+          prof.setHideModifiable(p.hideModifiable);
+          prof.setLocale(p.locale);
+          //prof.setNick(p.n)
+          prof.setReportOptions(p.reportoptions);
+          prof.setTranslit(p.translit);
+          prof.setUdhConcat(p.udhconcat);
+#ifdef SMSEXTRA
+          prof.setSponsored(p.sponsored);
+          prof.setSubscription(p.subscription);
+          prof.setNick(p.nick);
+#endif
+          up.setAddress(addr.toString());
+          up.setProf(prof);
+          up.setSeqNum(nd.getNextSeq());
+          nd.enqueueMessage(up);
+          updateRequests.insert(ProfileUpdateMap::value_type(up.getSeqNum(),pui));
+        }else
+        {
+          updateRequests.insert(ProfileUpdateMap::value_type(0xffffffff,pui));
+          cmd=SmscCommand::makeCommand(PROFILEUPDATERESP,0xffffffff,1,0);
+        }
+      }
+      if(cmd->get_commandId()==PROFILEUPDATERESP)
+      {
+        ProfileUpdateMap::iterator it=updateRequests.find(cmd->get_dialogId());
+        if(it==updateRequests.end())
+        {
+          continue;
+        }
+        updateRequests.erase(it);
+        Address addr=it->second.addr;
+        int msg=it->second.msg;
+        Profile p=it->second.p;
+        SMS ans;
+        string msgstr,shortmsg;
+        if(cmd->get_status()==0)
+        {
+          update(addr,p);
+        }else
+        {
+          if(msg==-1)
           {
-            internal_update(_update_subscription_clear,addr,EXTRA_FLASH);
-            msg=msgFlashOff;
-          }else if(arg1=="")
-          {
-            internal_update(_update_subscription_add,addr,EXTRA_FLASH);
-            msg=msgFlashOn;
-          }else
-          {
-            msg=msgFlashFail;
+            msg=msgProfilerLocked;
           }
         }
-#endif
-      }catch(AccessDeniedException& e)
-      {
-        msg=msgAccessDenied;
-      }
-
-      resp=SmscCommand::makeDeliverySmResp(sms->getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str(),
-                                             cmd->get_dialogId(),status);
-
-      putIncomingCommand(resp);
-      SMS ans;
-      string msgstr,shortmsg;
-      Profile p=lookup(addr);
 #define SIMPLERESP(msg) \
-      case msg: \
-      { \
-        msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler." #msg);\
-        if(msgstr.length()==0)msgstr=#msg;\
-      }break
+    case msg: \
+    { \
+      msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler." #msg);\
+      if(msgstr.length()==0)msgstr=#msg;\
+    }break
 
 
-      switch(msg)
-      {
-        SIMPLERESP(msgReportNone);
-        SIMPLERESP(msgReportFull);
-        SIMPLERESP(msgReportFinal);
-        SIMPLERESP(msgDefault);
-        SIMPLERESP(msgUCS2);
-        SIMPLERESP(msgLatin1);
-        SIMPLERESP(msgUCS2AndLat);
-        SIMPLERESP(msgLocaleChanged);
-        SIMPLERESP(msgLocaleUnknown);
-        SIMPLERESP(msgHide);
-        SIMPLERESP(msgUnhide);
-        SIMPLERESP(msgDivertOn);
-        SIMPLERESP(msgDivertOff);
-        SIMPLERESP(msgDivertChanged);
-        SIMPLERESP(msgInvalidParam);
-        SIMPLERESP(msg7BitUssdOn);
-        SIMPLERESP(msg7BitUssdOff);
-        SIMPLERESP(msgConcatOn);
-        SIMPLERESP(msgConcatOff);
-        SIMPLERESP(msgDivertAbsOn);
-        SIMPLERESP(msgDivertAbsOff);
-        SIMPLERESP(msgDivertBlkOn);
-        SIMPLERESP(msgDivertBlkOff);
-        SIMPLERESP(msgDivertBarOn);
-        SIMPLERESP(msgDivertBarOff);
-        SIMPLERESP(msgDivertCapOn);
-        SIMPLERESP(msgDivertCapOff);
-        SIMPLERESP(msgTranslitOn);
-        SIMPLERESP(msgTranslitOff);
+        switch(msg)
+        {
+          SIMPLERESP(msgProfilerLocked);
+          SIMPLERESP(msgReportNone);
+          SIMPLERESP(msgReportFull);
+          SIMPLERESP(msgReportFinal);
+          SIMPLERESP(msgDefault);
+          SIMPLERESP(msgUCS2);
+          SIMPLERESP(msgLatin1);
+          SIMPLERESP(msgUCS2AndLat);
+          SIMPLERESP(msgLocaleChanged);
+          SIMPLERESP(msgLocaleUnknown);
+          SIMPLERESP(msgHide);
+          SIMPLERESP(msgUnhide);
+          SIMPLERESP(msgDivertOn);
+          SIMPLERESP(msgDivertOff);
+          SIMPLERESP(msgDivertChanged);
+          SIMPLERESP(msgInvalidParam);
+          SIMPLERESP(msg7BitUssdOn);
+          SIMPLERESP(msg7BitUssdOff);
+          SIMPLERESP(msgConcatOn);
+          SIMPLERESP(msgConcatOff);
+          SIMPLERESP(msgDivertAbsOn);
+          SIMPLERESP(msgDivertAbsOff);
+          SIMPLERESP(msgDivertBlkOn);
+          SIMPLERESP(msgDivertBlkOff);
+          SIMPLERESP(msgDivertBarOn);
+          SIMPLERESP(msgDivertBarOff);
+          SIMPLERESP(msgDivertCapOn);
+          SIMPLERESP(msgDivertCapOff);
+          SIMPLERESP(msgTranslitOn);
+          SIMPLERESP(msgTranslitOff);
 
 #ifdef SMSEXTRA
-        SIMPLERESP(msgAliasOk);
-        SIMPLERESP(msgAliasDuplicate);
-        SIMPLERESP(msgAliasInvalid);
-        SIMPLERESP(msgAliasFailed);
-        SIMPLERESP(msgAliasOn);
-        SIMPLERESP(msgAliasOff);
-        SIMPLERESP(msgAliasDeleted);
-        SIMPLERESP(msgAliasNotFound);
-        SIMPLERESP(msgFlashOn);
-        SIMPLERESP(msgFlashOff);
-        SIMPLERESP(msgFlashFail);
+          SIMPLERESP(msgAliasOk);
+          SIMPLERESP(msgAliasDuplicate);
+          SIMPLERESP(msgAliasInvalid);
+          SIMPLERESP(msgAliasFailed);
+          SIMPLERESP(msgAliasOn);
+          SIMPLERESP(msgAliasOff);
+          SIMPLERESP(msgAliasDeleted);
+          SIMPLERESP(msgAliasNotFound);
+          SIMPLERESP(msgFlashOn);
+          SIMPLERESP(msgFlashOff);
+          SIMPLERESP(msgFlashFail);
 #endif
 
-        //SIMPLERESP(msgAccessDenied);
-        case msgAccessDenied:
-        {
-          msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msgModificationDenied");
-        }break;
+          //SIMPLERESP(msgAccessDenied);
+          case msgAccessDenied:
+          {
+            msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msgModificationDenied");
+          }break;
 
-        /*
+          /*
         case msgReportNone:
         {
           msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msgReportNone");
@@ -1178,44 +1227,44 @@ int Profiler::Execute()
         {
           msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msg7BitUssdOff");
         }break;
-        */
-        case msgDivertStatus:
-        {
-          shortmsg=ResourceManager::getInstance()->getString(p.locale,"profiler.divstatus.short");
-          string en,dis;
-#define DIV_ST(fld,name) \
-          if(p.fld) \
-          { \
-            if(en.length()>0)en+=','; \
-            en+=ResourceManager::getInstance()->getString(p.locale,"profiler.divstatus." name); \
-          }else \
-          { \
-            if(dis.length()>0)dis+=','; \
-            dis+=ResourceManager::getInstance()->getString(p.locale,"profiler.divstatus." name); \
-          }
-
-          DIV_ST(divertActive,"unconditional");
-          DIV_ST(divertActiveAbsent,"absent");
-          DIV_ST(divertActiveBlocked,"blocked");
-          DIV_ST(divertActiveBarred,"barred");
-          DIV_ST(divertActiveCapacity,"capacity");
-#undef DIV_ST
-          try{
-            OutputFormatter *fmt=ResourceManager::getInstance()->getFormatter(p.locale,"profiler.divstatus.msg");
-            if(fmt)
-            {
-              DummyGetAdapter ga;
-              ContextEnvironment ce;
-              ce.exportStr("enabled",en.length()?en.c_str():ResourceManager::getInstance()->getString(p.locale,"profiler.divstatus.none").c_str());
-              ce.exportStr("disabled",dis.length()?dis.c_str():ResourceManager::getInstance()->getString(p.locale,"profiler.divstatus.none").c_str());
-              ce.exportStr("to",p.divert.c_str());
-              fmt->format(msgstr,ga,ce);
-            }
-          }catch(...)
+           */
+          case msgDivertStatus:
           {
-          }
-        }break;
-        /*
+            shortmsg=ResourceManager::getInstance()->getString(p.locale,"profiler.divstatus.short");
+            string en,dis;
+#define DIV_ST(fld,name) \
+    if(p.fld) \
+    { \
+      if(en.length()>0)en+=','; \
+      en+=ResourceManager::getInstance()->getString(p.locale,"profiler.divstatus." name); \
+    }else \
+    { \
+      if(dis.length()>0)dis+=','; \
+      dis+=ResourceManager::getInstance()->getString(p.locale,"profiler.divstatus." name); \
+    }
+
+            DIV_ST(divertActive,"unconditional");
+            DIV_ST(divertActiveAbsent,"absent");
+            DIV_ST(divertActiveBlocked,"blocked");
+            DIV_ST(divertActiveBarred,"barred");
+            DIV_ST(divertActiveCapacity,"capacity");
+#undef DIV_ST
+            try{
+              OutputFormatter *fmt=ResourceManager::getInstance()->getFormatter(p.locale,"profiler.divstatus.msg");
+              if(fmt)
+              {
+                DummyGetAdapter ga;
+                ContextEnvironment ce;
+                ce.exportStr("enabled",en.length()?en.c_str():ResourceManager::getInstance()->getString(p.locale,"profiler.divstatus.none").c_str());
+                ce.exportStr("disabled",dis.length()?dis.c_str():ResourceManager::getInstance()->getString(p.locale,"profiler.divstatus.none").c_str());
+                ce.exportStr("to",p.divert.c_str());
+                fmt->format(msgstr,ga,ce);
+              }
+            }catch(...)
+            {
+            }
+          }break;
+          /*
         case msgConcatOn:
         {
           msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msgConcatOn");
@@ -1250,36 +1299,36 @@ int Profiler::Execute()
         case msgDivertCapOff:
         {
         }break;
-        */
-        default:
+           */
+          default:
+          {
+            msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msgError");
+          };
+        }
+        __trace2__("Profiler: msgstr=%s",msgstr.c_str());
+        ans.setOriginatingAddress(originatingAddress.length()?originatingAddress.c_str():sms->getDestinationAddress());
+        ans.setDestinationAddress(sms->getOriginatingAddress());
+        char msc[]="";
+        char imsi[]="";
+        ans.setOriginatingDescriptor((uint8_t)strlen(msc),msc,(uint8_t)strlen(imsi),imsi,1);
+        ans.setDeliveryReport(0);
+        ans.setArchivationRequested(false);
+        ans.setEServiceType(serviceType.c_str());
+        ans.setIntProperty(smsc::sms::Tag::SMPP_ESM_CLASS,0);
+        ans.setIntProperty(smsc::sms::Tag::SMPP_PROTOCOL_ID,protocolId);
+        ans.setIntProperty(smsc::sms::Tag::SMPP_USER_MESSAGE_REFERENCE,
+            sms->getIntProperty(smsc::sms::Tag::SMPP_USER_MESSAGE_REFERENCE));
+        if(sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP)==1)
         {
-          msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msgError");
-        };
-      }
-      __trace2__("Profiler: msgstr=%s",msgstr.c_str());
-      ans.setOriginatingAddress(originatingAddress.length()?originatingAddress.c_str():sms->getDestinationAddress());
-      ans.setDestinationAddress(sms->getOriginatingAddress());
-      char msc[]="";
-      char imsi[]="";
-      ans.setOriginatingDescriptor((uint8_t)strlen(msc),msc,(uint8_t)strlen(imsi),imsi,1);
-      ans.setDeliveryReport(0);
-      ans.setArchivationRequested(false);
-      ans.setEServiceType(serviceType.c_str());
-      ans.setIntProperty(smsc::sms::Tag::SMPP_ESM_CLASS,0);
-      ans.setIntProperty(smsc::sms::Tag::SMPP_PROTOCOL_ID,protocolId);
-      ans.setIntProperty(smsc::sms::Tag::SMPP_USER_MESSAGE_REFERENCE,
-        sms->getIntProperty(smsc::sms::Tag::SMPP_USER_MESSAGE_REFERENCE));
-      if(sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP)==1)
-      {
-        ans.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,17);
-        // clear 0,1 bits and set them to datagram mode
-        ans.setIntProperty(smsc::sms::Tag::SMPP_ESM_CLASS,
-            (ans.getIntProperty(smsc::sms::Tag::SMPP_ESM_CLASS)&~0x03)|0x01);
-      }
+          ans.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,17);
+          // clear 0,1 bits and set them to datagram mode
+          ans.setIntProperty(smsc::sms::Tag::SMPP_ESM_CLASS,
+              (ans.getIntProperty(smsc::sms::Tag::SMPP_ESM_CLASS)&~0x03)|0x01);
+        }
 
-      Profile pr=lookup(addr);
-      __trace2__("profiler response:%s!",msgstr.c_str());
-      /*
+        Profile pr=lookup(addr);
+        __trace2__("profiler response:%s!",msgstr.c_str());
+        /*
       if(pr.codepage==ProfileCharsetOptions::Default)
       {
         //len=ConvertTextTo7Bit(msgstr,strlen(msgstr),body,sizeof(body),CONV_ENCODING_CP1251);
@@ -1296,29 +1345,30 @@ int Profiler::Execute()
       ans.setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,len);
       SmscCommand answer=SmscCommand::makeSumbmitSm(ans,getNextSequenceNumber());
       putIncomingCommand(answer);
-      */
-      /*splitSms(&ans,msgstr,strlen(msgstr),CONV_ENCODING_CP1251,pr.codepage,smsarr);
+         */
+        /*splitSms(&ans,msgstr,strlen(msgstr),CONV_ENCODING_CP1251,pr.codepage,smsarr);
       for(int i=0;i<smsarr.Count();i++)
       {
         SmscCommand answer=SmscCommand::makeSumbmitSm(*smsarr[i],getNextSequenceNumber());
         putIncomingCommand(answer);
         delete smsarr[i];
       }*/
-      if(msg==msgDivertStatus && ans.getIntProperty(Tag::SMPP_USSD_SERVICE_OP))
-      {
-        fillSms(&ans,shortmsg.c_str(),(int)shortmsg.length(),CONV_ENCODING_CP1251,ProfileCharsetOptions::Ucs2);
-        SmscCommand answer=SmscCommand::makeSumbmitSm(ans,getNextSequenceNumber());
-        putIncomingCommand(answer);
-        fillSms(&ans,msgstr.c_str(),(int)msgstr.length(),CONV_ENCODING_CP1251,ProfileCharsetOptions::Ucs2);
-        ans.getMessageBody().dropIntProperty(Tag::SMPP_USSD_SERVICE_OP);
-        ans.setIntProperty(Tag::SMPP_ESM_CLASS,ans.getIntProperty(Tag::SMPP_ESM_CLASS)&(~3));
-        answer=SmscCommand::makeSumbmitSm(ans,getNextSequenceNumber());
-        putIncomingCommand(answer);
-      }else
-      {
-        fillSms(&ans,msgstr.c_str(),(int)msgstr.length(),CONV_ENCODING_CP1251,ProfileCharsetOptions::Ucs2);
-        SmscCommand answer=SmscCommand::makeSumbmitSm(ans,getNextSequenceNumber());
-        putIncomingCommand(answer);
+        if(msg==msgDivertStatus && ans.getIntProperty(Tag::SMPP_USSD_SERVICE_OP))
+        {
+          fillSms(&ans,shortmsg.c_str(),(int)shortmsg.length(),CONV_ENCODING_CP1251,ProfileCharsetOptions::Ucs2);
+          SmscCommand answer=SmscCommand::makeSumbmitSm(ans,getNextSequenceNumber());
+          putIncomingCommand(answer);
+          fillSms(&ans,msgstr.c_str(),(int)msgstr.length(),CONV_ENCODING_CP1251,ProfileCharsetOptions::Ucs2);
+          ans.getMessageBody().dropIntProperty(Tag::SMPP_USSD_SERVICE_OP);
+          ans.setIntProperty(Tag::SMPP_ESM_CLASS,ans.getIntProperty(Tag::SMPP_ESM_CLASS)&(~3));
+          answer=SmscCommand::makeSumbmitSm(ans,getNextSequenceNumber());
+          putIncomingCommand(answer);
+        }else
+        {
+          fillSms(&ans,msgstr.c_str(),(int)msgstr.length(),CONV_ENCODING_CP1251,ProfileCharsetOptions::Ucs2);
+          SmscCommand answer=SmscCommand::makeSumbmitSm(ans,getNextSequenceNumber());
+          putIncomingCommand(answer);
+        }
       }
     }catch(exception& e)
     {
@@ -1328,6 +1378,7 @@ int Profiler::Execute()
       __warning__("EXCEPTION IN PROFILER: unknown");
     }
   }
+#endif //CCMODE
   return 0;
 }
 
@@ -1503,6 +1554,7 @@ void Profiler::load(const char* filename)
     profiles->add(addr,p);
   }
   */
+  profiles->refreshDefault();
 
 
   st=gethrtime()-st;

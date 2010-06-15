@@ -7,12 +7,13 @@ smsc/smsc smscmain -L$(SMSC_BUILDDIR)/bin \
 $(XERCES_LIB) -lutil -lutil-xml -lsmsc-smeman -lsmsc-config-smeman -lrt \
 -lutil -lstore -lsms $(MAP_LIBRARIES) $(XERCES_LIB) -ldl -lsmsc-mscman -lutil-recoder-recode_dll \
 -lsmsc-abonentinfo -lutil-templates -lutil-regexp -lsmsc-stat -llicense-check -lsmsc-resourcemanager \
--lsmsc-distrlist -llogger -lsmsc-common $(SSL_LIB) $(SNMP_LIBS) -lsmsc-mapio -lnsl \
+-llogger -lsmsc-common $(SSL_LIB) $(SNMP_LIBS) -lsmsc-mapio -lnsl \
 -lsmsc-snmp -lsmsc-snmp-smestattable -lsmsc-snmp-smeerrtable \
 -lsmsc-inmancomm -linman-interaction-msgbill -linman-interaction -linman-common -lutil-mirrorfile -lsmsc-closedgroups \
 -lsmsc-statemachine -lsmsc-scheduler -lsmsc-agents -lsmsc-common -lsmsc-abonentinfo -lsmsc-smscsme \
 -lsmsc-dpf -linman-storage -lsmsc-snmp -lsmsc-cluster-controller \
--lsmsc-cluster-controller-protocol -lpicl @liblogger.so
+-lsmsc-interconnect \
+-lsmsc-cluster-controller-protocol -lsmsc-cluster-controller-protocol-messages -lpicl @liblogger.so
 default:\
 smsc/smsc smscmain -L$(SMSC_BUILDDIR)/bin \
 -llogger -lstore -lsmsc-router -lsmsc-config-route -lsmsc  \
@@ -21,9 +22,10 @@ smsc/smsc smscmain -L$(SMSC_BUILDDIR)/bin \
 $(XERCES_LIB) -lutil -lutil-xml -lsmsc-smeman -lsmsc-config-smeman -lrt \
 -lutil -lstore -lsms $(MAP_LIBRARIES) $(XERCES_LIB) -ldl -lsmsc-mscman -lutil-recoder-recode_dll \
 -lsmsc-abonentinfo -lutil-templates -lutil-regexp -lsmsc-stat -llicense-check -lsmsc-resourcemanager \
--lsmsc-distrlist -llogger -lsmsc-common $(SSL_LIB) $(SNMP_LIBS) -lsmsc-mapio -lnsl \
+-llogger -lsmsc-common $(SSL_LIB) $(SNMP_LIBS) -lsmsc-mapio -lnsl \
 -lsmsc-inmancomm -linman-interaction-msgbill -linman-interaction -linman-common -lutil-mirrorfile -lsmsc-closedgroups \
 -lsmsc-statemachine -lsmsc-scheduler -lsmsc-agents -lsmsc-common -lsmsc-abonentinfo -lsmsc-smscsme \
 -lsmsc-dpf -linman-storage -lsmsc-snmp -lsmsc-cluster-controller \
--lsmsc-cluster-controller-protocol -lpicl @liblogger.so
+-lsmsc-interconnect \
+-lsmsc-cluster-controller-protocol  -lsmsc-cluster-controller-protocol-messages -lpicl @liblogger.so
 end switch

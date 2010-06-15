@@ -5,6 +5,9 @@
 #include <string>
 #include <vector>
 #include "eyeline/protogen/framework/Exceptions.hpp"
+#include "ProfileCharset.hpp"
+#include "ReportOptions.hpp"
+#include "HideOptions.hpp"
 
 
 #ident "@(#) Profile version 1.0"
@@ -17,7 +20,6 @@ namespace controller{
 namespace protocol{
 namespace messages{
 
-typedef std::vector<std::string> string_list;
 
 class Profile{
 public:
@@ -48,6 +50,7 @@ public:
     sponsoredFlag=false;
     nickFlag=false;
   }
+ 
 
   std::string toString()const
   {
@@ -78,8 +81,7 @@ public:
         rv+=";";
       }
       rv+="codepage=";
-      sprintf(buf,"%u",(unsigned int)codepage);
-      rv+=buf;
+      rv+=ProfileCharset::getNameByValue(codepage);
     }
     if(reportOptionsFlag)
     {
@@ -88,8 +90,7 @@ public:
         rv+=";";
       }
       rv+="reportOptions=";
-      sprintf(buf,"%u",(unsigned int)reportOptions);
-      rv+=buf;
+      rv+=ReportOptions::getNameByValue(reportOptions);
     }
     if(hideFlag)
     {
@@ -98,8 +99,7 @@ public:
         rv+=";";
       }
       rv+="hide=";
-      sprintf(buf,"%u",(unsigned int)hide);
-      rv+=buf;
+      rv+=HideOptions::getNameByValue(hide);
     }
     if(hideModifiableFlag)
     {
@@ -189,7 +189,7 @@ public:
         rv+=";";
       }
       rv+="closedGroupId=";
-      sprintf(buf,"%u",(unsigned int)closedGroupId);
+      sprintf(buf,"%d",closedGroupId);
       rv+=buf;
     }
     if(accessMaskInFlag)
@@ -199,7 +199,7 @@ public:
         rv+=";";
       }
       rv+="accessMaskIn=";
-      sprintf(buf,"%u",(unsigned int)accessMaskIn);
+      sprintf(buf,"%d",accessMaskIn);
       rv+=buf;
     }
     if(accessMaskOutFlag)
@@ -209,7 +209,7 @@ public:
         rv+=";";
       }
       rv+="accessMaskOut=";
-      sprintf(buf,"%u",(unsigned int)accessMaskOut);
+      sprintf(buf,"%d",accessMaskOut);
       rv+=buf;
     }
     if(subscriptionFlag)
@@ -219,7 +219,7 @@ public:
         rv+=";";
       }
       rv+="subscription=";
-      sprintf(buf,"%u",(unsigned int)subscription);
+      sprintf(buf,"%d",subscription);
       rv+=buf;
     }
     if(sponsoredFlag)
@@ -229,7 +229,7 @@ public:
         rv+=";";
       }
       rv+="sponsored=";
-      sprintf(buf,"%u",(unsigned int)sponsored);
+      sprintf(buf,"%d",(int)sponsored);
       rv+=buf;
     }
     if(nickFlag)
@@ -245,9 +245,9 @@ public:
   }
 
   template <class DataStream>
-  uint32_t length()const
+  int32_t length()const
   {
-    uint32_t rv=0;
+    int32_t rv=0;
     if(divertFlag)
     {
       rv+=DataStream::tagTypeSize;
@@ -375,14 +375,19 @@ public:
   {
     if(!divertFlag)
     {
-      throw protogen::framework::FieldIsNullException("divert");
+      throw eyeline::protogen::framework::FieldIsNullException("divert");
     }
     return divert;
   }
-  void setDivert(const std::string& value)
+  void setDivert(const std::string& argValue)
   {
-    divert=value;
+    divert=argValue;
     divertFlag=true;
+  }
+  std::string& getDivertRef()
+  {
+    divertFlag=true;
+    return divert;
   }
   bool hasDivert()const
   {
@@ -392,65 +397,97 @@ public:
   {
     if(!localeFlag)
     {
-      throw protogen::framework::FieldIsNullException("locale");
+      throw eyeline::protogen::framework::FieldIsNullException("locale");
     }
     return locale;
   }
-  void setLocale(const std::string& value)
+  void setLocale(const std::string& argValue)
   {
-    locale=value;
+    locale=argValue;
     localeFlag=true;
+  }
+  std::string& getLocaleRef()
+  {
+    localeFlag=true;
+    return locale;
   }
   bool hasLocale()const
   {
     return localeFlag;
   }
-  uint8_t getCodepage()const
+  const ProfileCharset::type& getCodepage()const
   {
     if(!codepageFlag)
     {
-      throw protogen::framework::FieldIsNullException("codepage");
+      throw eyeline::protogen::framework::FieldIsNullException("codepage");
     }
     return codepage;
   }
-  void setCodepage(uint8_t value)
+  void setCodepage(const ProfileCharset::type& argValue)
   {
-    codepage=value;
+    if(!ProfileCharset::isValidValue(argValue))
+    {
+      throw eyeline::protogen::framework::InvalidEnumValue("ProfileCharset",argValue);
+    }
+    codepage=argValue;
     codepageFlag=true;
+  }
+  ProfileCharset::type& getCodepageRef()
+  {
+    codepageFlag=true;
+    return codepage;
   }
   bool hasCodepage()const
   {
     return codepageFlag;
   }
-  uint8_t getReportOptions()const
+  const ReportOptions::type& getReportOptions()const
   {
     if(!reportOptionsFlag)
     {
-      throw protogen::framework::FieldIsNullException("reportOptions");
+      throw eyeline::protogen::framework::FieldIsNullException("reportOptions");
     }
     return reportOptions;
   }
-  void setReportOptions(uint8_t value)
+  void setReportOptions(const ReportOptions::type& argValue)
   {
-    reportOptions=value;
+    if(!ReportOptions::isValidValue(argValue))
+    {
+      throw eyeline::protogen::framework::InvalidEnumValue("ReportOptions",argValue);
+    }
+    reportOptions=argValue;
     reportOptionsFlag=true;
+  }
+  ReportOptions::type& getReportOptionsRef()
+  {
+    reportOptionsFlag=true;
+    return reportOptions;
   }
   bool hasReportOptions()const
   {
     return reportOptionsFlag;
   }
-  uint8_t getHide()const
+  const HideOptions::type& getHide()const
   {
     if(!hideFlag)
     {
-      throw protogen::framework::FieldIsNullException("hide");
+      throw eyeline::protogen::framework::FieldIsNullException("hide");
     }
     return hide;
   }
-  void setHide(uint8_t value)
+  void setHide(const HideOptions::type& argValue)
   {
-    hide=value;
+    if(!HideOptions::isValidValue(argValue))
+    {
+      throw eyeline::protogen::framework::InvalidEnumValue("HideOptions",argValue);
+    }
+    hide=argValue;
     hideFlag=true;
+  }
+  HideOptions::type& getHideRef()
+  {
+    hideFlag=true;
+    return hide;
   }
   bool hasHide()const
   {
@@ -460,14 +497,19 @@ public:
   {
     if(!hideModifiableFlag)
     {
-      throw protogen::framework::FieldIsNullException("hideModifiable");
+      throw eyeline::protogen::framework::FieldIsNullException("hideModifiable");
     }
     return hideModifiable;
   }
-  void setHideModifiable(bool value)
+  void setHideModifiable(bool argValue)
   {
-    hideModifiable=value;
+    hideModifiable=argValue;
     hideModifiableFlag=true;
+  }
+  bool& getHideModifiableRef()
+  {
+    hideModifiableFlag=true;
+    return hideModifiable;
   }
   bool hasHideModifiable()const
   {
@@ -477,14 +519,19 @@ public:
   {
     if(!divertActiveFlag)
     {
-      throw protogen::framework::FieldIsNullException("divertActive");
+      throw eyeline::protogen::framework::FieldIsNullException("divertActive");
     }
     return divertActive;
   }
-  void setDivertActive(bool value)
+  void setDivertActive(bool argValue)
   {
-    divertActive=value;
+    divertActive=argValue;
     divertActiveFlag=true;
+  }
+  bool& getDivertActiveRef()
+  {
+    divertActiveFlag=true;
+    return divertActive;
   }
   bool hasDivertActive()const
   {
@@ -494,14 +541,19 @@ public:
   {
     if(!divertActiveAbsentFlag)
     {
-      throw protogen::framework::FieldIsNullException("divertActiveAbsent");
+      throw eyeline::protogen::framework::FieldIsNullException("divertActiveAbsent");
     }
     return divertActiveAbsent;
   }
-  void setDivertActiveAbsent(bool value)
+  void setDivertActiveAbsent(bool argValue)
   {
-    divertActiveAbsent=value;
+    divertActiveAbsent=argValue;
     divertActiveAbsentFlag=true;
+  }
+  bool& getDivertActiveAbsentRef()
+  {
+    divertActiveAbsentFlag=true;
+    return divertActiveAbsent;
   }
   bool hasDivertActiveAbsent()const
   {
@@ -511,14 +563,19 @@ public:
   {
     if(!divertActiveBlockedFlag)
     {
-      throw protogen::framework::FieldIsNullException("divertActiveBlocked");
+      throw eyeline::protogen::framework::FieldIsNullException("divertActiveBlocked");
     }
     return divertActiveBlocked;
   }
-  void setDivertActiveBlocked(bool value)
+  void setDivertActiveBlocked(bool argValue)
   {
-    divertActiveBlocked=value;
+    divertActiveBlocked=argValue;
     divertActiveBlockedFlag=true;
+  }
+  bool& getDivertActiveBlockedRef()
+  {
+    divertActiveBlockedFlag=true;
+    return divertActiveBlocked;
   }
   bool hasDivertActiveBlocked()const
   {
@@ -528,14 +585,19 @@ public:
   {
     if(!divertActiveBarredFlag)
     {
-      throw protogen::framework::FieldIsNullException("divertActiveBarred");
+      throw eyeline::protogen::framework::FieldIsNullException("divertActiveBarred");
     }
     return divertActiveBarred;
   }
-  void setDivertActiveBarred(bool value)
+  void setDivertActiveBarred(bool argValue)
   {
-    divertActiveBarred=value;
+    divertActiveBarred=argValue;
     divertActiveBarredFlag=true;
+  }
+  bool& getDivertActiveBarredRef()
+  {
+    divertActiveBarredFlag=true;
+    return divertActiveBarred;
   }
   bool hasDivertActiveBarred()const
   {
@@ -545,14 +607,19 @@ public:
   {
     if(!divertActiveCapacityFlag)
     {
-      throw protogen::framework::FieldIsNullException("divertActiveCapacity");
+      throw eyeline::protogen::framework::FieldIsNullException("divertActiveCapacity");
     }
     return divertActiveCapacity;
   }
-  void setDivertActiveCapacity(bool value)
+  void setDivertActiveCapacity(bool argValue)
   {
-    divertActiveCapacity=value;
+    divertActiveCapacity=argValue;
     divertActiveCapacityFlag=true;
+  }
+  bool& getDivertActiveCapacityRef()
+  {
+    divertActiveCapacityFlag=true;
+    return divertActiveCapacity;
   }
   bool hasDivertActiveCapacity()const
   {
@@ -562,14 +629,19 @@ public:
   {
     if(!divertModifiableFlag)
     {
-      throw protogen::framework::FieldIsNullException("divertModifiable");
+      throw eyeline::protogen::framework::FieldIsNullException("divertModifiable");
     }
     return divertModifiable;
   }
-  void setDivertModifiable(bool value)
+  void setDivertModifiable(bool argValue)
   {
-    divertModifiable=value;
+    divertModifiable=argValue;
     divertModifiableFlag=true;
+  }
+  bool& getDivertModifiableRef()
+  {
+    divertModifiableFlag=true;
+    return divertModifiable;
   }
   bool hasDivertModifiable()const
   {
@@ -579,14 +651,19 @@ public:
   {
     if(!udhConcatFlag)
     {
-      throw protogen::framework::FieldIsNullException("udhConcat");
+      throw eyeline::protogen::framework::FieldIsNullException("udhConcat");
     }
     return udhConcat;
   }
-  void setUdhConcat(bool value)
+  void setUdhConcat(bool argValue)
   {
-    udhConcat=value;
+    udhConcat=argValue;
     udhConcatFlag=true;
+  }
+  bool& getUdhConcatRef()
+  {
+    udhConcatFlag=true;
+    return udhConcat;
   }
   bool hasUdhConcat()const
   {
@@ -596,99 +673,129 @@ public:
   {
     if(!translitFlag)
     {
-      throw protogen::framework::FieldIsNullException("translit");
+      throw eyeline::protogen::framework::FieldIsNullException("translit");
     }
     return translit;
   }
-  void setTranslit(bool value)
+  void setTranslit(bool argValue)
   {
-    translit=value;
+    translit=argValue;
     translitFlag=true;
+  }
+  bool& getTranslitRef()
+  {
+    translitFlag=true;
+    return translit;
   }
   bool hasTranslit()const
   {
     return translitFlag;
   }
-  uint32_t getClosedGroupId()const
+  int32_t getClosedGroupId()const
   {
     if(!closedGroupIdFlag)
     {
-      throw protogen::framework::FieldIsNullException("closedGroupId");
+      throw eyeline::protogen::framework::FieldIsNullException("closedGroupId");
     }
     return closedGroupId;
   }
-  void setClosedGroupId(uint32_t value)
+  void setClosedGroupId(int32_t argValue)
   {
-    closedGroupId=value;
+    closedGroupId=argValue;
     closedGroupIdFlag=true;
+  }
+  int32_t& getClosedGroupIdRef()
+  {
+    closedGroupIdFlag=true;
+    return closedGroupId;
   }
   bool hasClosedGroupId()const
   {
     return closedGroupIdFlag;
   }
-  uint32_t getAccessMaskIn()const
+  int32_t getAccessMaskIn()const
   {
     if(!accessMaskInFlag)
     {
-      throw protogen::framework::FieldIsNullException("accessMaskIn");
+      throw eyeline::protogen::framework::FieldIsNullException("accessMaskIn");
     }
     return accessMaskIn;
   }
-  void setAccessMaskIn(uint32_t value)
+  void setAccessMaskIn(int32_t argValue)
   {
-    accessMaskIn=value;
+    accessMaskIn=argValue;
     accessMaskInFlag=true;
+  }
+  int32_t& getAccessMaskInRef()
+  {
+    accessMaskInFlag=true;
+    return accessMaskIn;
   }
   bool hasAccessMaskIn()const
   {
     return accessMaskInFlag;
   }
-  uint32_t getAccessMaskOut()const
+  int32_t getAccessMaskOut()const
   {
     if(!accessMaskOutFlag)
     {
-      throw protogen::framework::FieldIsNullException("accessMaskOut");
+      throw eyeline::protogen::framework::FieldIsNullException("accessMaskOut");
     }
     return accessMaskOut;
   }
-  void setAccessMaskOut(uint32_t value)
+  void setAccessMaskOut(int32_t argValue)
   {
-    accessMaskOut=value;
+    accessMaskOut=argValue;
     accessMaskOutFlag=true;
+  }
+  int32_t& getAccessMaskOutRef()
+  {
+    accessMaskOutFlag=true;
+    return accessMaskOut;
   }
   bool hasAccessMaskOut()const
   {
     return accessMaskOutFlag;
   }
-  uint32_t getSubscription()const
+  int32_t getSubscription()const
   {
     if(!subscriptionFlag)
     {
-      throw protogen::framework::FieldIsNullException("subscription");
+      throw eyeline::protogen::framework::FieldIsNullException("subscription");
     }
     return subscription;
   }
-  void setSubscription(uint32_t value)
+  void setSubscription(int32_t argValue)
   {
-    subscription=value;
+    subscription=argValue;
     subscriptionFlag=true;
+  }
+  int32_t& getSubscriptionRef()
+  {
+    subscriptionFlag=true;
+    return subscription;
   }
   bool hasSubscription()const
   {
     return subscriptionFlag;
   }
-  uint8_t getSponsored()const
+  int8_t getSponsored()const
   {
     if(!sponsoredFlag)
     {
-      throw protogen::framework::FieldIsNullException("sponsored");
+      throw eyeline::protogen::framework::FieldIsNullException("sponsored");
     }
     return sponsored;
   }
-  void setSponsored(uint8_t value)
+  void setSponsored(int8_t argValue)
   {
-    sponsored=value;
+    sponsored=argValue;
     sponsoredFlag=true;
+  }
+  int8_t& getSponsoredRef()
+  {
+    sponsoredFlag=true;
+    return sponsored;
   }
   bool hasSponsored()const
   {
@@ -698,14 +805,19 @@ public:
   {
     if(!nickFlag)
     {
-      throw protogen::framework::FieldIsNullException("nick");
+      throw eyeline::protogen::framework::FieldIsNullException("nick");
     }
     return nick;
   }
-  void setNick(const std::string& value)
+  void setNick(const std::string& argValue)
   {
-    nick=value;
+    nick=argValue;
     nickFlag=true;
+  }
+  std::string& getNickRef()
+  {
+    nickFlag=true;
+    return nick;
   }
   bool hasNick()const
   {
@@ -716,71 +828,71 @@ public:
   {
     if(!divertFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("divert");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("divert");
     }
     if(!localeFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("locale");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("locale");
     }
     if(!codepageFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("codepage");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("codepage");
     }
     if(!reportOptionsFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("reportOptions");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("reportOptions");
     }
     if(!hideFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("hide");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("hide");
     }
     if(!hideModifiableFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("hideModifiable");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("hideModifiable");
     }
     if(!divertActiveFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("divertActive");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("divertActive");
     }
     if(!divertActiveAbsentFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("divertActiveAbsent");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("divertActiveAbsent");
     }
     if(!divertActiveBlockedFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("divertActiveBlocked");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("divertActiveBlocked");
     }
     if(!divertActiveBarredFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("divertActiveBarred");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("divertActiveBarred");
     }
     if(!divertActiveCapacityFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("divertActiveCapacity");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("divertActiveCapacity");
     }
     if(!divertModifiableFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("divertModifiable");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("divertModifiable");
     }
     if(!udhConcatFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("udhConcat");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("udhConcat");
     }
     if(!translitFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("translit");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("translit");
     }
     if(!closedGroupIdFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("closedGroupId");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("closedGroupId");
     }
     if(!accessMaskInFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("accessMaskIn");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("accessMaskIn");
     }
     if(!accessMaskOutFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("accessMaskOut");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("accessMaskOut");
     }
     //ds.writeByte(versionMajor);
     //ds.writeByte(versionMinor);
@@ -791,10 +903,13 @@ public:
     ds.writeStrLV(locale);
     ds.writeTag(codepageTag);
     ds.writeByteLV(codepage);
+ 
     ds.writeTag(reportOptionsTag);
     ds.writeByteLV(reportOptions);
+ 
     ds.writeTag(hideTag);
     ds.writeByteLV(hide);
+ 
     ds.writeTag(hideModifiableTag);
     ds.writeBoolLV(hideModifiable);
     ds.writeTag(divertActiveTag);
@@ -842,8 +957,8 @@ public:
   {
     Clear();
     bool endOfMessage=false;
-    //uint8_t rdVersionMajor=ds.readByte();
-    //uint8_t rdVersionMinor=ds.readByte();
+    //int8_t rdVersionMajor=ds.readByte();
+    //int8_t rdVersionMinor=ds.readByte();
     //if(rdVersionMajor!=versionMajor)
     //{
     //  throw protogen::framework::IncompatibleVersionException("Profile");
@@ -851,14 +966,14 @@ public:
     //seqNum=ds.readInt32();
     while(!endOfMessage)
     {
-      uint32_t tag=ds.readTag();
+      DataStream::TagType tag=ds.readTag();
       switch(tag)
       {
         case divertTag:
         {
           if(divertFlag)
           {
-            throw protogen::framework::DuplicateFieldException("divert");
+            throw eyeline::protogen::framework::DuplicateFieldException("divert");
           }
           divert=ds.readStrLV();
           divertFlag=true;
@@ -867,7 +982,7 @@ public:
         {
           if(localeFlag)
           {
-            throw protogen::framework::DuplicateFieldException("locale");
+            throw eyeline::protogen::framework::DuplicateFieldException("locale");
           }
           locale=ds.readStrLV();
           localeFlag=true;
@@ -876,7 +991,7 @@ public:
         {
           if(codepageFlag)
           {
-            throw protogen::framework::DuplicateFieldException("codepage");
+            throw eyeline::protogen::framework::DuplicateFieldException("codepage");
           }
           codepage=ds.readByteLV();
           codepageFlag=true;
@@ -885,7 +1000,7 @@ public:
         {
           if(reportOptionsFlag)
           {
-            throw protogen::framework::DuplicateFieldException("reportOptions");
+            throw eyeline::protogen::framework::DuplicateFieldException("reportOptions");
           }
           reportOptions=ds.readByteLV();
           reportOptionsFlag=true;
@@ -894,7 +1009,7 @@ public:
         {
           if(hideFlag)
           {
-            throw protogen::framework::DuplicateFieldException("hide");
+            throw eyeline::protogen::framework::DuplicateFieldException("hide");
           }
           hide=ds.readByteLV();
           hideFlag=true;
@@ -903,7 +1018,7 @@ public:
         {
           if(hideModifiableFlag)
           {
-            throw protogen::framework::DuplicateFieldException("hideModifiable");
+            throw eyeline::protogen::framework::DuplicateFieldException("hideModifiable");
           }
           hideModifiable=ds.readBoolLV();
           hideModifiableFlag=true;
@@ -912,7 +1027,7 @@ public:
         {
           if(divertActiveFlag)
           {
-            throw protogen::framework::DuplicateFieldException("divertActive");
+            throw eyeline::protogen::framework::DuplicateFieldException("divertActive");
           }
           divertActive=ds.readBoolLV();
           divertActiveFlag=true;
@@ -921,7 +1036,7 @@ public:
         {
           if(divertActiveAbsentFlag)
           {
-            throw protogen::framework::DuplicateFieldException("divertActiveAbsent");
+            throw eyeline::protogen::framework::DuplicateFieldException("divertActiveAbsent");
           }
           divertActiveAbsent=ds.readBoolLV();
           divertActiveAbsentFlag=true;
@@ -930,7 +1045,7 @@ public:
         {
           if(divertActiveBlockedFlag)
           {
-            throw protogen::framework::DuplicateFieldException("divertActiveBlocked");
+            throw eyeline::protogen::framework::DuplicateFieldException("divertActiveBlocked");
           }
           divertActiveBlocked=ds.readBoolLV();
           divertActiveBlockedFlag=true;
@@ -939,7 +1054,7 @@ public:
         {
           if(divertActiveBarredFlag)
           {
-            throw protogen::framework::DuplicateFieldException("divertActiveBarred");
+            throw eyeline::protogen::framework::DuplicateFieldException("divertActiveBarred");
           }
           divertActiveBarred=ds.readBoolLV();
           divertActiveBarredFlag=true;
@@ -948,7 +1063,7 @@ public:
         {
           if(divertActiveCapacityFlag)
           {
-            throw protogen::framework::DuplicateFieldException("divertActiveCapacity");
+            throw eyeline::protogen::framework::DuplicateFieldException("divertActiveCapacity");
           }
           divertActiveCapacity=ds.readBoolLV();
           divertActiveCapacityFlag=true;
@@ -957,7 +1072,7 @@ public:
         {
           if(divertModifiableFlag)
           {
-            throw protogen::framework::DuplicateFieldException("divertModifiable");
+            throw eyeline::protogen::framework::DuplicateFieldException("divertModifiable");
           }
           divertModifiable=ds.readBoolLV();
           divertModifiableFlag=true;
@@ -966,7 +1081,7 @@ public:
         {
           if(udhConcatFlag)
           {
-            throw protogen::framework::DuplicateFieldException("udhConcat");
+            throw eyeline::protogen::framework::DuplicateFieldException("udhConcat");
           }
           udhConcat=ds.readBoolLV();
           udhConcatFlag=true;
@@ -975,7 +1090,7 @@ public:
         {
           if(translitFlag)
           {
-            throw protogen::framework::DuplicateFieldException("translit");
+            throw eyeline::protogen::framework::DuplicateFieldException("translit");
           }
           translit=ds.readBoolLV();
           translitFlag=true;
@@ -984,7 +1099,7 @@ public:
         {
           if(closedGroupIdFlag)
           {
-            throw protogen::framework::DuplicateFieldException("closedGroupId");
+            throw eyeline::protogen::framework::DuplicateFieldException("closedGroupId");
           }
           closedGroupId=ds.readInt32LV();
           closedGroupIdFlag=true;
@@ -993,7 +1108,7 @@ public:
         {
           if(accessMaskInFlag)
           {
-            throw protogen::framework::DuplicateFieldException("accessMaskIn");
+            throw eyeline::protogen::framework::DuplicateFieldException("accessMaskIn");
           }
           accessMaskIn=ds.readInt32LV();
           accessMaskInFlag=true;
@@ -1002,7 +1117,7 @@ public:
         {
           if(accessMaskOutFlag)
           {
-            throw protogen::framework::DuplicateFieldException("accessMaskOut");
+            throw eyeline::protogen::framework::DuplicateFieldException("accessMaskOut");
           }
           accessMaskOut=ds.readInt32LV();
           accessMaskOutFlag=true;
@@ -1011,7 +1126,7 @@ public:
         {
           if(subscriptionFlag)
           {
-            throw protogen::framework::DuplicateFieldException("subscription");
+            throw eyeline::protogen::framework::DuplicateFieldException("subscription");
           }
           subscription=ds.readInt32LV();
           subscriptionFlag=true;
@@ -1020,7 +1135,7 @@ public:
         {
           if(sponsoredFlag)
           {
-            throw protogen::framework::DuplicateFieldException("sponsored");
+            throw eyeline::protogen::framework::DuplicateFieldException("sponsored");
           }
           sponsored=ds.readByteLV();
           sponsoredFlag=true;
@@ -1029,7 +1144,7 @@ public:
         {
           if(nickFlag)
           {
-            throw protogen::framework::DuplicateFieldException("nick");
+            throw eyeline::protogen::framework::DuplicateFieldException("nick");
           }
           nick=ds.readStrLV();
           nickFlag=true;
@@ -1047,107 +1162,109 @@ public:
     }
     if(!divertFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("divert");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("divert");
     }
     if(!localeFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("locale");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("locale");
     }
     if(!codepageFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("codepage");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("codepage");
     }
     if(!reportOptionsFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("reportOptions");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("reportOptions");
     }
     if(!hideFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("hide");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("hide");
     }
     if(!hideModifiableFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("hideModifiable");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("hideModifiable");
     }
     if(!divertActiveFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("divertActive");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("divertActive");
     }
     if(!divertActiveAbsentFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("divertActiveAbsent");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("divertActiveAbsent");
     }
     if(!divertActiveBlockedFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("divertActiveBlocked");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("divertActiveBlocked");
     }
     if(!divertActiveBarredFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("divertActiveBarred");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("divertActiveBarred");
     }
     if(!divertActiveCapacityFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("divertActiveCapacity");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("divertActiveCapacity");
     }
     if(!divertModifiableFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("divertModifiable");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("divertModifiable");
     }
     if(!udhConcatFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("udhConcat");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("udhConcat");
     }
     if(!translitFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("translit");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("translit");
     }
     if(!closedGroupIdFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("closedGroupId");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("closedGroupId");
     }
     if(!accessMaskInFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("accessMaskIn");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("accessMaskIn");
     }
     if(!accessMaskOutFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("accessMaskOut");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("accessMaskOut");
     }
 
   }
 
 
-protected:
-  //static const uint8_t versionMajor=1;
-  //static const uint8_t versionMinor=0;
+ 
 
-  static const uint32_t divertTag=1;
-  static const uint32_t localeTag=2;
-  static const uint32_t codepageTag=3;
-  static const uint32_t reportOptionsTag=4;
-  static const uint32_t hideTag=5;
-  static const uint32_t hideModifiableTag=6;
-  static const uint32_t divertActiveTag=7;
-  static const uint32_t divertActiveAbsentTag=8;
-  static const uint32_t divertActiveBlockedTag=9;
-  static const uint32_t divertActiveBarredTag=10;
-  static const uint32_t divertActiveCapacityTag=11;
-  static const uint32_t divertModifiableTag=12;
-  static const uint32_t udhConcatTag=13;
-  static const uint32_t translitTag=14;
-  static const uint32_t closedGroupIdTag=15;
-  static const uint32_t accessMaskInTag=16;
-  static const uint32_t accessMaskOutTag=17;
-  static const uint32_t subscriptionTag=18;
-  static const uint32_t sponsoredTag=19;
-  static const uint32_t nickTag=20;
+protected:
+  //static const int8_t versionMajor=1;
+  //static const int8_t versionMinor=0;
+
+  static const int32_t divertTag=1;
+  static const int32_t localeTag=2;
+  static const int32_t codepageTag=3;
+  static const int32_t reportOptionsTag=4;
+  static const int32_t hideTag=5;
+  static const int32_t hideModifiableTag=6;
+  static const int32_t divertActiveTag=7;
+  static const int32_t divertActiveAbsentTag=8;
+  static const int32_t divertActiveBlockedTag=9;
+  static const int32_t divertActiveBarredTag=10;
+  static const int32_t divertActiveCapacityTag=11;
+  static const int32_t divertModifiableTag=12;
+  static const int32_t udhConcatTag=13;
+  static const int32_t translitTag=14;
+  static const int32_t closedGroupIdTag=15;
+  static const int32_t accessMaskInTag=16;
+  static const int32_t accessMaskOutTag=17;
+  static const int32_t subscriptionTag=18;
+  static const int32_t sponsoredTag=19;
+  static const int32_t nickTag=20;
 
 
   std::string divert;
   std::string locale;
-  uint8_t codepage;
-  uint8_t reportOptions;
-  uint8_t hide;
+  ProfileCharset::type codepage;
+  ReportOptions::type reportOptions;
+  HideOptions::type hide;
   bool hideModifiable;
   bool divertActive;
   bool divertActiveAbsent;
@@ -1157,11 +1274,11 @@ protected:
   bool divertModifiable;
   bool udhConcat;
   bool translit;
-  uint32_t closedGroupId;
-  uint32_t accessMaskIn;
-  uint32_t accessMaskOut;
-  uint32_t subscription;
-  uint8_t sponsored;
+  int32_t closedGroupId;
+  int32_t accessMaskIn;
+  int32_t accessMaskOut;
+  int32_t subscription;
+  int8_t sponsored;
   std::string nick;
 
   bool divertFlag;

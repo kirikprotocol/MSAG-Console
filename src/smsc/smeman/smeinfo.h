@@ -1,8 +1,8 @@
 /*
   $Id$
 */
-#if !defined __Cpp_Header__smeman_smeinfo_h__
-#define __Cpp_Header__smeman_smeinfo_h__
+#if !defined __Cpp_Header_smsc_smeman_smeinfo_h__
+#define __Cpp_Header_smsc_smeman_smeinfo_h__
 
 #include <string>
 
@@ -20,7 +20,7 @@ struct SmeInfo
   uint8_t interfaceVersion;
   std::string rangeOfAddress;
   std::string systemType;
-  std::string password;
+  SmePassword password;
   std::string hostname;
   int port;
   SmeSystemId systemId;

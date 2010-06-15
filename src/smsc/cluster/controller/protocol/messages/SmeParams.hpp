@@ -17,7 +17,6 @@ namespace controller{
 namespace protocol{
 namespace messages{
 
-typedef std::vector<std::string> string_list;
 
 class SmeParams{
 public:
@@ -46,6 +45,7 @@ public:
     accessMaskFlag=false;
     flagsFlag=false;
   }
+ 
 
   std::string toString()const
   {
@@ -67,7 +67,7 @@ public:
         rv+=";";
       }
       rv+="priority=";
-      sprintf(buf,"%u",(unsigned int)priority);
+      sprintf(buf,"%d",priority);
       rv+=buf;
     }
     if(typeOfNumberFlag)
@@ -77,7 +77,7 @@ public:
         rv+=";";
       }
       rv+="typeOfNumber=";
-      sprintf(buf,"%u",(unsigned int)typeOfNumber);
+      sprintf(buf,"%d",typeOfNumber);
       rv+=buf;
     }
     if(numberingPlanFlag)
@@ -87,7 +87,7 @@ public:
         rv+=";";
       }
       rv+="numberingPlan=";
-      sprintf(buf,"%u",(unsigned int)numberingPlan);
+      sprintf(buf,"%d",numberingPlan);
       rv+=buf;
     }
     if(interfaceVersionFlag)
@@ -97,7 +97,7 @@ public:
         rv+=";";
       }
       rv+="interfaceVersion=";
-      sprintf(buf,"%u",(unsigned int)interfaceVersion);
+      sprintf(buf,"%d",interfaceVersion);
       rv+=buf;
     }
     if(systemTypeFlag)
@@ -134,7 +134,7 @@ public:
         rv+=";";
       }
       rv+="smeN=";
-      sprintf(buf,"%u",(unsigned int)smeN);
+      sprintf(buf,"%d",smeN);
       rv+=buf;
     }
     if(wantAliasFlag)
@@ -153,7 +153,7 @@ public:
         rv+=";";
       }
       rv+="timeout=";
-      sprintf(buf,"%u",(unsigned int)timeout);
+      sprintf(buf,"%d",timeout);
       rv+=buf;
     }
     if(receiptSchemeFlag)
@@ -190,7 +190,7 @@ public:
         rv+=";";
       }
       rv+="procLimit=";
-      sprintf(buf,"%u",(unsigned int)procLimit);
+      sprintf(buf,"%d",procLimit);
       rv+=buf;
     }
     if(schedLimitFlag)
@@ -200,7 +200,7 @@ public:
         rv+=";";
       }
       rv+="schedLimit=";
-      sprintf(buf,"%u",(unsigned int)schedLimit);
+      sprintf(buf,"%d",schedLimit);
       rv+=buf;
     }
     if(accessMaskFlag)
@@ -210,7 +210,7 @@ public:
         rv+=";";
       }
       rv+="accessMask=";
-      sprintf(buf,"%u",(unsigned int)accessMask);
+      sprintf(buf,"%d",accessMask);
       rv+=buf;
     }
     if(flagsFlag)
@@ -220,16 +220,16 @@ public:
         rv+=";";
       }
       rv+="flags=";
-      sprintf(buf,"%u",(unsigned int)flags);
+      sprintf(buf,"%d",flags);
       rv+=buf;
     }
     return rv;
   }
 
   template <class DataStream>
-  uint32_t length()const
+  int32_t length()const
   {
-    uint32_t rv=0;
+    int32_t rv=0;
     if(idFlag)
     {
       rv+=DataStream::tagTypeSize;
@@ -345,82 +345,107 @@ public:
   {
     if(!idFlag)
     {
-      throw protogen::framework::FieldIsNullException("id");
+      throw eyeline::protogen::framework::FieldIsNullException("id");
     }
     return id;
   }
-  void setId(const std::string& value)
+  void setId(const std::string& argValue)
   {
-    id=value;
+    id=argValue;
     idFlag=true;
+  }
+  std::string& getIdRef()
+  {
+    idFlag=true;
+    return id;
   }
   bool hasId()const
   {
     return idFlag;
   }
-  uint32_t getPriority()const
+  int32_t getPriority()const
   {
     if(!priorityFlag)
     {
-      throw protogen::framework::FieldIsNullException("priority");
+      throw eyeline::protogen::framework::FieldIsNullException("priority");
     }
     return priority;
   }
-  void setPriority(uint32_t value)
+  void setPriority(int32_t argValue)
   {
-    priority=value;
+    priority=argValue;
     priorityFlag=true;
+  }
+  int32_t& getPriorityRef()
+  {
+    priorityFlag=true;
+    return priority;
   }
   bool hasPriority()const
   {
     return priorityFlag;
   }
-  uint32_t getTypeOfNumber()const
+  int32_t getTypeOfNumber()const
   {
     if(!typeOfNumberFlag)
     {
-      throw protogen::framework::FieldIsNullException("typeOfNumber");
+      throw eyeline::protogen::framework::FieldIsNullException("typeOfNumber");
     }
     return typeOfNumber;
   }
-  void setTypeOfNumber(uint32_t value)
+  void setTypeOfNumber(int32_t argValue)
   {
-    typeOfNumber=value;
+    typeOfNumber=argValue;
     typeOfNumberFlag=true;
+  }
+  int32_t& getTypeOfNumberRef()
+  {
+    typeOfNumberFlag=true;
+    return typeOfNumber;
   }
   bool hasTypeOfNumber()const
   {
     return typeOfNumberFlag;
   }
-  uint32_t getNumberingPlan()const
+  int32_t getNumberingPlan()const
   {
     if(!numberingPlanFlag)
     {
-      throw protogen::framework::FieldIsNullException("numberingPlan");
+      throw eyeline::protogen::framework::FieldIsNullException("numberingPlan");
     }
     return numberingPlan;
   }
-  void setNumberingPlan(uint32_t value)
+  void setNumberingPlan(int32_t argValue)
   {
-    numberingPlan=value;
+    numberingPlan=argValue;
     numberingPlanFlag=true;
+  }
+  int32_t& getNumberingPlanRef()
+  {
+    numberingPlanFlag=true;
+    return numberingPlan;
   }
   bool hasNumberingPlan()const
   {
     return numberingPlanFlag;
   }
-  uint32_t getInterfaceVersion()const
+  int32_t getInterfaceVersion()const
   {
     if(!interfaceVersionFlag)
     {
-      throw protogen::framework::FieldIsNullException("interfaceVersion");
+      throw eyeline::protogen::framework::FieldIsNullException("interfaceVersion");
     }
     return interfaceVersion;
   }
-  void setInterfaceVersion(uint32_t value)
+  void setInterfaceVersion(int32_t argValue)
   {
-    interfaceVersion=value;
+    interfaceVersion=argValue;
     interfaceVersionFlag=true;
+  }
+  int32_t& getInterfaceVersionRef()
+  {
+    interfaceVersionFlag=true;
+    return interfaceVersion;
   }
   bool hasInterfaceVersion()const
   {
@@ -430,14 +455,19 @@ public:
   {
     if(!systemTypeFlag)
     {
-      throw protogen::framework::FieldIsNullException("systemType");
+      throw eyeline::protogen::framework::FieldIsNullException("systemType");
     }
     return systemType;
   }
-  void setSystemType(const std::string& value)
+  void setSystemType(const std::string& argValue)
   {
-    systemType=value;
+    systemType=argValue;
     systemTypeFlag=true;
+  }
+  std::string& getSystemTypeRef()
+  {
+    systemTypeFlag=true;
+    return systemType;
   }
   bool hasSystemType()const
   {
@@ -447,14 +477,19 @@ public:
   {
     if(!passwordFlag)
     {
-      throw protogen::framework::FieldIsNullException("password");
+      throw eyeline::protogen::framework::FieldIsNullException("password");
     }
     return password;
   }
-  void setPassword(const std::string& value)
+  void setPassword(const std::string& argValue)
   {
-    password=value;
+    password=argValue;
     passwordFlag=true;
+  }
+  std::string& getPasswordRef()
+  {
+    passwordFlag=true;
+    return password;
   }
   bool hasPassword()const
   {
@@ -464,31 +499,41 @@ public:
   {
     if(!addrRangeFlag)
     {
-      throw protogen::framework::FieldIsNullException("addrRange");
+      throw eyeline::protogen::framework::FieldIsNullException("addrRange");
     }
     return addrRange;
   }
-  void setAddrRange(const std::string& value)
+  void setAddrRange(const std::string& argValue)
   {
-    addrRange=value;
+    addrRange=argValue;
     addrRangeFlag=true;
+  }
+  std::string& getAddrRangeRef()
+  {
+    addrRangeFlag=true;
+    return addrRange;
   }
   bool hasAddrRange()const
   {
     return addrRangeFlag;
   }
-  uint32_t getSmeN()const
+  int32_t getSmeN()const
   {
     if(!smeNFlag)
     {
-      throw protogen::framework::FieldIsNullException("smeN");
+      throw eyeline::protogen::framework::FieldIsNullException("smeN");
     }
     return smeN;
   }
-  void setSmeN(uint32_t value)
+  void setSmeN(int32_t argValue)
   {
-    smeN=value;
+    smeN=argValue;
     smeNFlag=true;
+  }
+  int32_t& getSmeNRef()
+  {
+    smeNFlag=true;
+    return smeN;
   }
   bool hasSmeN()const
   {
@@ -498,31 +543,41 @@ public:
   {
     if(!wantAliasFlag)
     {
-      throw protogen::framework::FieldIsNullException("wantAlias");
+      throw eyeline::protogen::framework::FieldIsNullException("wantAlias");
     }
     return wantAlias;
   }
-  void setWantAlias(bool value)
+  void setWantAlias(bool argValue)
   {
-    wantAlias=value;
+    wantAlias=argValue;
     wantAliasFlag=true;
+  }
+  bool& getWantAliasRef()
+  {
+    wantAliasFlag=true;
+    return wantAlias;
   }
   bool hasWantAlias()const
   {
     return wantAliasFlag;
   }
-  uint32_t getTimeout()const
+  int32_t getTimeout()const
   {
     if(!timeoutFlag)
     {
-      throw protogen::framework::FieldIsNullException("timeout");
+      throw eyeline::protogen::framework::FieldIsNullException("timeout");
     }
     return timeout;
   }
-  void setTimeout(uint32_t value)
+  void setTimeout(int32_t argValue)
   {
-    timeout=value;
+    timeout=argValue;
     timeoutFlag=true;
+  }
+  int32_t& getTimeoutRef()
+  {
+    timeoutFlag=true;
+    return timeout;
   }
   bool hasTimeout()const
   {
@@ -532,14 +587,19 @@ public:
   {
     if(!receiptSchemeFlag)
     {
-      throw protogen::framework::FieldIsNullException("receiptScheme");
+      throw eyeline::protogen::framework::FieldIsNullException("receiptScheme");
     }
     return receiptScheme;
   }
-  void setReceiptScheme(const std::string& value)
+  void setReceiptScheme(const std::string& argValue)
   {
-    receiptScheme=value;
+    receiptScheme=argValue;
     receiptSchemeFlag=true;
+  }
+  std::string& getReceiptSchemeRef()
+  {
+    receiptSchemeFlag=true;
+    return receiptScheme;
   }
   bool hasReceiptScheme()const
   {
@@ -549,14 +609,19 @@ public:
   {
     if(!disabledFlag)
     {
-      throw protogen::framework::FieldIsNullException("disabled");
+      throw eyeline::protogen::framework::FieldIsNullException("disabled");
     }
     return disabled;
   }
-  void setDisabled(bool value)
+  void setDisabled(bool argValue)
   {
-    disabled=value;
+    disabled=argValue;
     disabledFlag=true;
+  }
+  bool& getDisabledRef()
+  {
+    disabledFlag=true;
+    return disabled;
   }
   bool hasDisabled()const
   {
@@ -566,82 +631,107 @@ public:
   {
     if(!modeFlag)
     {
-      throw protogen::framework::FieldIsNullException("mode");
+      throw eyeline::protogen::framework::FieldIsNullException("mode");
     }
     return mode;
   }
-  void setMode(const std::string& value)
+  void setMode(const std::string& argValue)
   {
-    mode=value;
+    mode=argValue;
     modeFlag=true;
+  }
+  std::string& getModeRef()
+  {
+    modeFlag=true;
+    return mode;
   }
   bool hasMode()const
   {
     return modeFlag;
   }
-  uint32_t getProcLimit()const
+  int32_t getProcLimit()const
   {
     if(!procLimitFlag)
     {
-      throw protogen::framework::FieldIsNullException("procLimit");
+      throw eyeline::protogen::framework::FieldIsNullException("procLimit");
     }
     return procLimit;
   }
-  void setProcLimit(uint32_t value)
+  void setProcLimit(int32_t argValue)
   {
-    procLimit=value;
+    procLimit=argValue;
     procLimitFlag=true;
+  }
+  int32_t& getProcLimitRef()
+  {
+    procLimitFlag=true;
+    return procLimit;
   }
   bool hasProcLimit()const
   {
     return procLimitFlag;
   }
-  uint32_t getSchedLimit()const
+  int32_t getSchedLimit()const
   {
     if(!schedLimitFlag)
     {
-      throw protogen::framework::FieldIsNullException("schedLimit");
+      throw eyeline::protogen::framework::FieldIsNullException("schedLimit");
     }
     return schedLimit;
   }
-  void setSchedLimit(uint32_t value)
+  void setSchedLimit(int32_t argValue)
   {
-    schedLimit=value;
+    schedLimit=argValue;
     schedLimitFlag=true;
+  }
+  int32_t& getSchedLimitRef()
+  {
+    schedLimitFlag=true;
+    return schedLimit;
   }
   bool hasSchedLimit()const
   {
     return schedLimitFlag;
   }
-  uint32_t getAccessMask()const
+  int32_t getAccessMask()const
   {
     if(!accessMaskFlag)
     {
-      throw protogen::framework::FieldIsNullException("accessMask");
+      throw eyeline::protogen::framework::FieldIsNullException("accessMask");
     }
     return accessMask;
   }
-  void setAccessMask(uint32_t value)
+  void setAccessMask(int32_t argValue)
   {
-    accessMask=value;
+    accessMask=argValue;
     accessMaskFlag=true;
+  }
+  int32_t& getAccessMaskRef()
+  {
+    accessMaskFlag=true;
+    return accessMask;
   }
   bool hasAccessMask()const
   {
     return accessMaskFlag;
   }
-  uint32_t getFlags()const
+  int32_t getFlags()const
   {
     if(!flagsFlag)
     {
-      throw protogen::framework::FieldIsNullException("flags");
+      throw eyeline::protogen::framework::FieldIsNullException("flags");
     }
     return flags;
   }
-  void setFlags(uint32_t value)
+  void setFlags(int32_t argValue)
   {
-    flags=value;
+    flags=argValue;
     flagsFlag=true;
+  }
+  int32_t& getFlagsRef()
+  {
+    flagsFlag=true;
+    return flags;
   }
   bool hasFlags()const
   {
@@ -652,75 +742,75 @@ public:
   {
     if(!idFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("id");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("id");
     }
     if(!priorityFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("priority");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("priority");
     }
     if(!typeOfNumberFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("typeOfNumber");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("typeOfNumber");
     }
     if(!numberingPlanFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("numberingPlan");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("numberingPlan");
     }
     if(!interfaceVersionFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("interfaceVersion");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("interfaceVersion");
     }
     if(!systemTypeFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("systemType");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("systemType");
     }
     if(!passwordFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("password");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("password");
     }
     if(!addrRangeFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("addrRange");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("addrRange");
     }
     if(!smeNFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("smeN");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("smeN");
     }
     if(!wantAliasFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("wantAlias");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("wantAlias");
     }
     if(!timeoutFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("timeout");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("timeout");
     }
     if(!receiptSchemeFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("receiptScheme");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("receiptScheme");
     }
     if(!disabledFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("disabled");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("disabled");
     }
     if(!modeFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("mode");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("mode");
     }
     if(!procLimitFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("procLimit");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("procLimit");
     }
     if(!schedLimitFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("schedLimit");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("schedLimit");
     }
     if(!accessMaskFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("accessMask");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("accessMask");
     }
     if(!flagsFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("flags");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("flags");
     }
     //ds.writeByte(versionMajor);
     //ds.writeByte(versionMinor);
@@ -769,8 +859,8 @@ public:
   {
     Clear();
     bool endOfMessage=false;
-    //uint8_t rdVersionMajor=ds.readByte();
-    //uint8_t rdVersionMinor=ds.readByte();
+    //int8_t rdVersionMajor=ds.readByte();
+    //int8_t rdVersionMinor=ds.readByte();
     //if(rdVersionMajor!=versionMajor)
     //{
     //  throw protogen::framework::IncompatibleVersionException("SmeParams");
@@ -778,14 +868,14 @@ public:
     //seqNum=ds.readInt32();
     while(!endOfMessage)
     {
-      uint32_t tag=ds.readTag();
+      DataStream::TagType tag=ds.readTag();
       switch(tag)
       {
         case idTag:
         {
           if(idFlag)
           {
-            throw protogen::framework::DuplicateFieldException("id");
+            throw eyeline::protogen::framework::DuplicateFieldException("id");
           }
           id=ds.readStrLV();
           idFlag=true;
@@ -794,7 +884,7 @@ public:
         {
           if(priorityFlag)
           {
-            throw protogen::framework::DuplicateFieldException("priority");
+            throw eyeline::protogen::framework::DuplicateFieldException("priority");
           }
           priority=ds.readInt32LV();
           priorityFlag=true;
@@ -803,7 +893,7 @@ public:
         {
           if(typeOfNumberFlag)
           {
-            throw protogen::framework::DuplicateFieldException("typeOfNumber");
+            throw eyeline::protogen::framework::DuplicateFieldException("typeOfNumber");
           }
           typeOfNumber=ds.readInt32LV();
           typeOfNumberFlag=true;
@@ -812,7 +902,7 @@ public:
         {
           if(numberingPlanFlag)
           {
-            throw protogen::framework::DuplicateFieldException("numberingPlan");
+            throw eyeline::protogen::framework::DuplicateFieldException("numberingPlan");
           }
           numberingPlan=ds.readInt32LV();
           numberingPlanFlag=true;
@@ -821,7 +911,7 @@ public:
         {
           if(interfaceVersionFlag)
           {
-            throw protogen::framework::DuplicateFieldException("interfaceVersion");
+            throw eyeline::protogen::framework::DuplicateFieldException("interfaceVersion");
           }
           interfaceVersion=ds.readInt32LV();
           interfaceVersionFlag=true;
@@ -830,7 +920,7 @@ public:
         {
           if(systemTypeFlag)
           {
-            throw protogen::framework::DuplicateFieldException("systemType");
+            throw eyeline::protogen::framework::DuplicateFieldException("systemType");
           }
           systemType=ds.readStrLV();
           systemTypeFlag=true;
@@ -839,7 +929,7 @@ public:
         {
           if(passwordFlag)
           {
-            throw protogen::framework::DuplicateFieldException("password");
+            throw eyeline::protogen::framework::DuplicateFieldException("password");
           }
           password=ds.readStrLV();
           passwordFlag=true;
@@ -848,7 +938,7 @@ public:
         {
           if(addrRangeFlag)
           {
-            throw protogen::framework::DuplicateFieldException("addrRange");
+            throw eyeline::protogen::framework::DuplicateFieldException("addrRange");
           }
           addrRange=ds.readStrLV();
           addrRangeFlag=true;
@@ -857,7 +947,7 @@ public:
         {
           if(smeNFlag)
           {
-            throw protogen::framework::DuplicateFieldException("smeN");
+            throw eyeline::protogen::framework::DuplicateFieldException("smeN");
           }
           smeN=ds.readInt32LV();
           smeNFlag=true;
@@ -866,7 +956,7 @@ public:
         {
           if(wantAliasFlag)
           {
-            throw protogen::framework::DuplicateFieldException("wantAlias");
+            throw eyeline::protogen::framework::DuplicateFieldException("wantAlias");
           }
           wantAlias=ds.readBoolLV();
           wantAliasFlag=true;
@@ -875,7 +965,7 @@ public:
         {
           if(timeoutFlag)
           {
-            throw protogen::framework::DuplicateFieldException("timeout");
+            throw eyeline::protogen::framework::DuplicateFieldException("timeout");
           }
           timeout=ds.readInt32LV();
           timeoutFlag=true;
@@ -884,7 +974,7 @@ public:
         {
           if(receiptSchemeFlag)
           {
-            throw protogen::framework::DuplicateFieldException("receiptScheme");
+            throw eyeline::protogen::framework::DuplicateFieldException("receiptScheme");
           }
           receiptScheme=ds.readStrLV();
           receiptSchemeFlag=true;
@@ -893,7 +983,7 @@ public:
         {
           if(disabledFlag)
           {
-            throw protogen::framework::DuplicateFieldException("disabled");
+            throw eyeline::protogen::framework::DuplicateFieldException("disabled");
           }
           disabled=ds.readBoolLV();
           disabledFlag=true;
@@ -902,7 +992,7 @@ public:
         {
           if(modeFlag)
           {
-            throw protogen::framework::DuplicateFieldException("mode");
+            throw eyeline::protogen::framework::DuplicateFieldException("mode");
           }
           mode=ds.readStrLV();
           modeFlag=true;
@@ -911,7 +1001,7 @@ public:
         {
           if(procLimitFlag)
           {
-            throw protogen::framework::DuplicateFieldException("procLimit");
+            throw eyeline::protogen::framework::DuplicateFieldException("procLimit");
           }
           procLimit=ds.readInt32LV();
           procLimitFlag=true;
@@ -920,7 +1010,7 @@ public:
         {
           if(schedLimitFlag)
           {
-            throw protogen::framework::DuplicateFieldException("schedLimit");
+            throw eyeline::protogen::framework::DuplicateFieldException("schedLimit");
           }
           schedLimit=ds.readInt32LV();
           schedLimitFlag=true;
@@ -929,7 +1019,7 @@ public:
         {
           if(accessMaskFlag)
           {
-            throw protogen::framework::DuplicateFieldException("accessMask");
+            throw eyeline::protogen::framework::DuplicateFieldException("accessMask");
           }
           accessMask=ds.readInt32LV();
           accessMaskFlag=true;
@@ -938,7 +1028,7 @@ public:
         {
           if(flagsFlag)
           {
-            throw protogen::framework::DuplicateFieldException("flags");
+            throw eyeline::protogen::framework::DuplicateFieldException("flags");
           }
           flags=ds.readInt32LV();
           flagsFlag=true;
@@ -956,122 +1046,124 @@ public:
     }
     if(!idFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("id");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("id");
     }
     if(!priorityFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("priority");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("priority");
     }
     if(!typeOfNumberFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("typeOfNumber");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("typeOfNumber");
     }
     if(!numberingPlanFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("numberingPlan");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("numberingPlan");
     }
     if(!interfaceVersionFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("interfaceVersion");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("interfaceVersion");
     }
     if(!systemTypeFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("systemType");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("systemType");
     }
     if(!passwordFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("password");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("password");
     }
     if(!addrRangeFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("addrRange");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("addrRange");
     }
     if(!smeNFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("smeN");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("smeN");
     }
     if(!wantAliasFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("wantAlias");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("wantAlias");
     }
     if(!timeoutFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("timeout");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("timeout");
     }
     if(!receiptSchemeFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("receiptScheme");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("receiptScheme");
     }
     if(!disabledFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("disabled");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("disabled");
     }
     if(!modeFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("mode");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("mode");
     }
     if(!procLimitFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("procLimit");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("procLimit");
     }
     if(!schedLimitFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("schedLimit");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("schedLimit");
     }
     if(!accessMaskFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("accessMask");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("accessMask");
     }
     if(!flagsFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("flags");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("flags");
     }
 
   }
 
 
-protected:
-  //static const uint8_t versionMajor=1;
-  //static const uint8_t versionMinor=0;
+ 
 
-  static const uint32_t idTag=1;
-  static const uint32_t priorityTag=2;
-  static const uint32_t typeOfNumberTag=3;
-  static const uint32_t numberingPlanTag=4;
-  static const uint32_t interfaceVersionTag=5;
-  static const uint32_t systemTypeTag=6;
-  static const uint32_t passwordTag=7;
-  static const uint32_t addrRangeTag=8;
-  static const uint32_t smeNTag=9;
-  static const uint32_t wantAliasTag=10;
-  static const uint32_t timeoutTag=12;
-  static const uint32_t receiptSchemeTag=13;
-  static const uint32_t disabledTag=14;
-  static const uint32_t modeTag=15;
-  static const uint32_t procLimitTag=16;
-  static const uint32_t schedLimitTag=17;
-  static const uint32_t accessMaskTag=18;
-  static const uint32_t flagsTag=19;
+protected:
+  //static const int8_t versionMajor=1;
+  //static const int8_t versionMinor=0;
+
+  static const int32_t idTag=1;
+  static const int32_t priorityTag=2;
+  static const int32_t typeOfNumberTag=3;
+  static const int32_t numberingPlanTag=4;
+  static const int32_t interfaceVersionTag=5;
+  static const int32_t systemTypeTag=6;
+  static const int32_t passwordTag=7;
+  static const int32_t addrRangeTag=8;
+  static const int32_t smeNTag=9;
+  static const int32_t wantAliasTag=10;
+  static const int32_t timeoutTag=12;
+  static const int32_t receiptSchemeTag=13;
+  static const int32_t disabledTag=14;
+  static const int32_t modeTag=15;
+  static const int32_t procLimitTag=16;
+  static const int32_t schedLimitTag=17;
+  static const int32_t accessMaskTag=18;
+  static const int32_t flagsTag=19;
 
 
   std::string id;
-  uint32_t priority;
-  uint32_t typeOfNumber;
-  uint32_t numberingPlan;
-  uint32_t interfaceVersion;
+  int32_t priority;
+  int32_t typeOfNumber;
+  int32_t numberingPlan;
+  int32_t interfaceVersion;
   std::string systemType;
   std::string password;
   std::string addrRange;
-  uint32_t smeN;
+  int32_t smeN;
   bool wantAlias;
-  uint32_t timeout;
+  int32_t timeout;
   std::string receiptScheme;
   bool disabled;
   std::string mode;
-  uint32_t procLimit;
-  uint32_t schedLimit;
-  uint32_t accessMask;
-  uint32_t flags;
+  int32_t procLimit;
+  int32_t schedLimit;
+  int32_t accessMask;
+  int32_t flags;
 
   bool idFlag;
   bool priorityFlag;

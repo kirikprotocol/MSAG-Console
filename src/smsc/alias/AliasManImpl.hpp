@@ -19,12 +19,17 @@ class AliasManImpl:public AliasManager
 public:
   AliasManImpl(const char* storeFile):store("ALIASMAN",0x00010000)
   {
+    allowFileModification=false;
     fileName=storeFile;
     log=smsc::logger::Logger::getInstance("aliasman");
   }
-  ~AliasManImpl()
+  virtual ~AliasManImpl()
   {
     clear();
+  }
+  void enableControllerMode()
+  {
+    allowFileModification=true;
   }
   void addAlias(const AliasInfo& ai)
   {
@@ -81,7 +86,10 @@ public:
     {
       addr2alias.Insert(bufAddr,recptr);
     }
-    recptr->offset=store.Append(*recptr);
+    if(allowFileModification)
+    {
+      recptr->offset=store.Append(*recptr);
+    }
   }
 
   void deleteAlias(const smsc::sms::Address& alias)
@@ -96,7 +104,11 @@ public:
     smsc_log_info(log,"deleteAlias:%s - ok",alias.toString().c_str());
     Record* recptr=*recptrptr;
     addr2alias.Delete(recptr->addr.toString().c_str());
-    store.Delete(recptr->offset);
+    if(allowFileModification)
+    {
+      store.Delete(recptr->offset);
+    }
+
     delete recptr;
     delete recptrptr;
   }
@@ -213,6 +225,7 @@ protected:
   sync::Mutex mtx;
   std::string fileName;
   smsc::logger::Logger* log;
+  bool allowFileModification;
 };
 
 }//alias

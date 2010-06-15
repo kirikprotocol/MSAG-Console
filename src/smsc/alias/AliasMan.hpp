@@ -22,6 +22,7 @@ public:
   virtual bool AliasToAddress(const smsc::sms::Address& alias,smsc::sms::Address& addr)=0;
   virtual bool AddressToAlias(const smsc::sms::Address& addr,smsc::sms::Address& alias)=0;
   virtual void Load()=0;
+  virtual void enableControllerMode()=0;
 };
 
 }//alias

@@ -17,7 +17,6 @@ namespace controller{
 namespace protocol{
 namespace messages{
 
-typedef std::vector<std::string> string_list;
 
 class CategoryInfo{
 public:
@@ -30,6 +29,7 @@ public:
     nameFlag=false;
     levelFlag=false;
   }
+ 
 
   std::string toString()const
   {
@@ -56,9 +56,9 @@ public:
   }
 
   template <class DataStream>
-  uint32_t length()const
+  int32_t length()const
   {
-    uint32_t rv=0;
+    int32_t rv=0;
     if(nameFlag)
     {
       rv+=DataStream::tagTypeSize;
@@ -78,14 +78,19 @@ public:
   {
     if(!nameFlag)
     {
-      throw protogen::framework::FieldIsNullException("name");
+      throw eyeline::protogen::framework::FieldIsNullException("name");
     }
     return name;
   }
-  void setName(const std::string& value)
+  void setName(const std::string& argValue)
   {
-    name=value;
+    name=argValue;
     nameFlag=true;
+  }
+  std::string& getNameRef()
+  {
+    nameFlag=true;
+    return name;
   }
   bool hasName()const
   {
@@ -95,14 +100,19 @@ public:
   {
     if(!levelFlag)
     {
-      throw protogen::framework::FieldIsNullException("level");
+      throw eyeline::protogen::framework::FieldIsNullException("level");
     }
     return level;
   }
-  void setLevel(const std::string& value)
+  void setLevel(const std::string& argValue)
   {
-    level=value;
+    level=argValue;
     levelFlag=true;
+  }
+  std::string& getLevelRef()
+  {
+    levelFlag=true;
+    return level;
   }
   bool hasLevel()const
   {
@@ -113,11 +123,11 @@ public:
   {
     if(!nameFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("name");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("name");
     }
     if(!levelFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("level");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("level");
     }
     //ds.writeByte(versionMajor);
     //ds.writeByte(versionMinor);
@@ -134,8 +144,8 @@ public:
   {
     Clear();
     bool endOfMessage=false;
-    //uint8_t rdVersionMajor=ds.readByte();
-    //uint8_t rdVersionMinor=ds.readByte();
+    //int8_t rdVersionMajor=ds.readByte();
+    //int8_t rdVersionMinor=ds.readByte();
     //if(rdVersionMajor!=versionMajor)
     //{
     //  throw protogen::framework::IncompatibleVersionException("CategoryInfo");
@@ -143,14 +153,14 @@ public:
     //seqNum=ds.readInt32();
     while(!endOfMessage)
     {
-      uint32_t tag=ds.readTag();
+      DataStream::TagType tag=ds.readTag();
       switch(tag)
       {
         case nameTag:
         {
           if(nameFlag)
           {
-            throw protogen::framework::DuplicateFieldException("name");
+            throw eyeline::protogen::framework::DuplicateFieldException("name");
           }
           name=ds.readStrLV();
           nameFlag=true;
@@ -159,7 +169,7 @@ public:
         {
           if(levelFlag)
           {
-            throw protogen::framework::DuplicateFieldException("level");
+            throw eyeline::protogen::framework::DuplicateFieldException("level");
           }
           level=ds.readStrLV();
           levelFlag=true;
@@ -177,22 +187,24 @@ public:
     }
     if(!nameFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("name");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("name");
     }
     if(!levelFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("level");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("level");
     }
 
   }
 
 
-protected:
-  //static const uint8_t versionMajor=1;
-  //static const uint8_t versionMinor=0;
+ 
 
-  static const uint32_t nameTag=1;
-  static const uint32_t levelTag=2;
+protected:
+  //static const int8_t versionMajor=1;
+  //static const int8_t versionMinor=0;
+
+  static const int32_t nameTag=1;
+  static const int32_t levelTag=2;
 
 
   std::string name;

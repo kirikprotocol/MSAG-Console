@@ -9,13 +9,6 @@
 #include "util/int.h"
 
 namespace smsc {
-
-namespace util{
-namespace config{
-class Manager;
-}
-}
-
 namespace acls {
 
 typedef std::string    AclPhoneNumber;
@@ -104,13 +97,15 @@ struct AclAbstractMgr : public AclEditor, public AclLookuper
 {
   //virtual void AddRef() = 0;
   //virtual void Release() = 0;
-  virtual void LoadUp(smsc::util::config::Manager& cfgMgr) = 0;
+  virtual void LoadUp(const char* argAclStore,int argPreCreate) = 0;
+  virtual void enableControllerMode()=0;
   //virtual void LoadUp(smsc::db::DataSource*) = 0;
   //virtual void Relax() = 0;
   //protected:
   virtual ~AclAbstractMgr() {}
   static AclAbstractMgr* Create();
   static AclAbstractMgr* Create2();
+
 };
 
 } // acls namespace

@@ -10,7 +10,7 @@
 #include "util/udh.hpp"
 
 #include "smsc.hpp"
-
+#include "interconnect/ClusterInterconnect.hpp"
 
 namespace smsc{
 
@@ -60,16 +60,17 @@ void Smsc::RejectSms(const SmscCommand& cmd)
     registerStatisticalEvent(StatEvents::etSubmitErr,sms);
     registerMsuStatEvent(StatEvents::etSubmitErr,sms);
 
-    src_proxy->putCommand
-    (
-      SmscCommand::makeSubmitSmResp
-      (
-        "0",
-        cmd->get_dialogId(),
-        Status::THROTTLED,
-        sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
-      )
-    );
+    SmscCommand resp=SmscCommand::makeSubmitSmResp
+        (
+          "0",
+          cmd->get_dialogId(),
+          Status::THROTTLED,
+          sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
+        );
+
+    resp->dstNodeIdx=cmd->dstNodeIdx;
+    resp->sourceId=cmd->sourceId;
+    src_proxy->putCommand(resp);
   }catch(...)
   {
     __warning__("Failed to send reject response to sme");
@@ -83,6 +84,7 @@ void Smsc::mainLoop(int idx)
   SmeIndex smscSmeIdx=smeman.lookup("smscsme");
   Event e;
   smsc::logger::Logger *log = smsc::logger::Logger::getInstance("smsc.mainLoop");
+  smsc::logger::Logger *logPF = smsc::logger::Logger::getInstance("mailLoop.perf");
 #ifndef linux
   thr_setprio(thr_self(),127);
 #endif
@@ -188,7 +190,7 @@ void Smsc::mainLoop(int idx)
         }
         last_tm = now;
         hrtime_t expEnd=gethrtime();
-        debug2(log,"expiration processing time:%lld",expEnd-expStart);
+        debug2(logPF,"expiration processing time:%lld",expEnd-expStart);
       }
     }while(!frame.size());
 
@@ -259,7 +261,10 @@ void Smsc::mainLoop(int idx)
         if(prio<0)prio=0;
         if(prio>=32)prio=31;
         (*i)->set_priority(prio);
-        (*i)->sourceId=i->getProxy()->getSystemId();
+        if((*i)->sourceId.empty())
+        {
+          (*i)->sourceId=i->getProxy()->getSystemId();
+        }
       }catch(exception& e)
       {
         __warning2__("Source proxy died after selection: %s",e.what());
@@ -288,10 +293,27 @@ void Smsc::mainLoop(int idx)
           hrtime_t cmdStart=gethrtime();
           processCommand((*i),enqueueVector,findTaskVector);
           hrtime_t cmdEnd=gethrtime();
-          debug2(log,"command %d processing time:%lld",(*i)->get_commandId(),cmdEnd-cmdStart);
-        }catch(...)
+          debug2(logPF,"command %d processing time:%lld",(*i)->get_commandId(),cmdEnd-cmdStart);
+        }catch(std::exception& e)
         {
-          __warning2__("command processing failed:%d",(*i)->get_commandId());
+          __warning2__("command processing failed(%d):%s",(*i)->get_commandId(),e.what());
+          if((*i)->get_commandId()==SUBMIT)
+          {
+            SmscCommand& cmd=*i;
+            SMS* sms=cmd->get_sms();
+            SmeProxy* src_proxy=cmd.getProxy();
+            SmscCommand resp=SmscCommand::makeSubmitSmResp
+                (
+                  "0",
+                  cmd->get_dialogId(),
+                  Status::SYSERR,
+                  sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
+                );
+
+            resp->dstNodeIdx=cmd->dstNodeIdx;
+            resp->sourceId=cmd->sourceId;
+            src_proxy->putCommand(resp);
+          }
         }
       }
     }
@@ -406,7 +428,7 @@ void Smsc::mainLoop(int idx)
           incTotalCounter(perSlot,(*i)->get_commandId()==FORWARD,fperSlot);
           sbmcnt++;
           hrtime_t cmdEnd=gethrtime();
-          debug2(log,"command %d processing time:%lld",(*i)->get_commandId(),cmdEnd-cmdStart);
+          debug2(logPF,"command %d processing time:%lld",(*i)->get_commandId(),cmdEnd-cmdStart);
         }catch(...)
         {
           __warning2__("command processing failed:%d",(*i)->get_commandId());
@@ -435,7 +457,21 @@ void Smsc::processCommand(SmscCommand& cmd,EventQueue::EnqueueVector& ev,FindTas
     case __CMD__(SUBMIT):
     {
       SMS &sms=*cmd->get_sms();
-      if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x40) && !strcmp(cmd.getProxy()->getSystemId(),"MAP_PROXY"))
+      bool isFromIcon=!strcmp(cmd.getProxy()->getSystemId(),"CLSTRICON");
+      if(sms.getIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG) && !isFromIcon)
+      {
+        uint64_t addr;
+        sscanf(sms.getDestinationAddress().value,"%lld",&addr);
+        int dstNode=(int)(addr%nodesCount);
+        cmd->dstNodeIdx=dstNode;
+        if(dstNode!=nodeIndex-1)
+        {
+          interconnect::ClusterInterconnect::getInstance()->putCommand(cmd);
+          return;
+        }
+      }
+      if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x40) &&
+          (!strcmp(cmd.getProxy()->getSystemId(),"MAP_PROXY") || isFromIcon))
       {
         unsigned int len;
         unsigned char *body;
@@ -453,6 +489,21 @@ void Smsc::processCommand(SmscCommand& cmd,EventQueue::EnqueueVector& ev,FindTas
         if(haveconcat && num>1)
         {
           __trace2__("sms from %s have concat info:mr=%u, %u/%u",sms.getOriginatingAddress().toString().c_str(),(unsigned)mr,(unsigned)idx,(unsigned)num);
+
+          if(!isFromIcon)
+          {
+            uint64_t addr;
+            sscanf(sms.getOriginatingAddress().value,"%lld",&addr);
+            int dstNode=(int)(addr%nodesCount);
+            cmd->dstNodeIdx=dstNode;
+            if(dstNode!=nodeIndex)
+            {
+              smsc_log_debug(logML,"redirecting multipart submit to node %d",dstNode);
+              interconnect::ClusterInterconnect::getInstance()->putCommand(cmd);
+              return;
+            }
+          }
+
           MergeCacheItem mci;
           mci.mr=mr;
           mci.oa=sms.getOriginatingAddress();
@@ -531,6 +582,18 @@ void Smsc::processCommand(SmscCommand& cmd,EventQueue::EnqueueVector& ev,FindTas
       registerMsuStatEvent(StatEvents::etSubmitOk,&sms);
       break;
     }
+    case __CMD__(SUBMIT_RESP):
+    {
+      SmeProxy* dstPrx=getSmeProxy(cmd->sourceId);
+      smsc_log_debug(logML,"redirect submit_resp to %s",cmd->sourceId.c_str());
+      try{
+        dstPrx->putCommand(cmd);
+      }catch(std::exception& e)
+      {
+        smsc_log_warn(logML,"putCommand exception:%s",e.what());
+      }
+      return;
+    }break;
     case __CMD__(DELIVERY_RESP):
     {
       //Task task;
@@ -655,7 +718,8 @@ void Smsc::processCommand(SmscCommand& cmd,EventQueue::EnqueueVector& ev,FindTas
     }
     case __CMD__(SUBMIT_MULTI_SM):
     {
-      distlstsme->putCommand(cmd);
+      //distlstsme->putCommand(cmd);
+      cmd.getProxy()->putCommand(smsc::smeman::SmscCommand::makeSubmitMultiResp("",cmd->get_dialogId(),Status::INVCMDID));
       return;
     }
     case __CMD__(FORWARD):

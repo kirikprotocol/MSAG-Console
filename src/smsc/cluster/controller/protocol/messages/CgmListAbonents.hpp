@@ -17,7 +17,6 @@ namespace controller{
 namespace protocol{
 namespace messages{
 
-typedef std::vector<std::string> string_list;
 
 class CgmListAbonents{
 public:
@@ -29,6 +28,11 @@ public:
   {
     seqNum=0;
     idFlag=false;
+  }
+ 
+  static int32_t getTag()
+  {
+    return 40;
   }
 
   std::string toString()const
@@ -44,16 +48,16 @@ public:
         rv+=";";
       }
       rv+="id=";
-      sprintf(buf,"%u",(unsigned int)id);
+      sprintf(buf,"%d",id);
       rv+=buf;
     }
     return rv;
   }
 
   template <class DataStream>
-  uint32_t length()const
+  int32_t length()const
   {
-    uint32_t rv=0;
+    int32_t rv=0;
     if(idFlag)
     {
       rv+=DataStream::tagTypeSize;
@@ -63,18 +67,23 @@ public:
     rv+=DataStream::tagTypeSize;
     return rv;
   }
-  uint32_t getId()const
+  int32_t getId()const
   {
     if(!idFlag)
     {
-      throw protogen::framework::FieldIsNullException("id");
+      throw eyeline::protogen::framework::FieldIsNullException("id");
     }
     return id;
   }
-  void setId(uint32_t value)
+  void setId(int32_t argValue)
   {
-    id=value;
+    id=argValue;
     idFlag=true;
+  }
+  int32_t& getIdRef()
+  {
+    idFlag=true;
+    return id;
   }
   bool hasId()const
   {
@@ -85,7 +94,7 @@ public:
   {
     if(!idFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("id");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("id");
     }
     //ds.writeByte(versionMajor);
     //ds.writeByte(versionMinor);
@@ -100,8 +109,8 @@ public:
   {
     Clear();
     bool endOfMessage=false;
-    //uint8_t rdVersionMajor=ds.readByte();
-    //uint8_t rdVersionMinor=ds.readByte();
+    //int8_t rdVersionMajor=ds.readByte();
+    //int8_t rdVersionMinor=ds.readByte();
     //if(rdVersionMajor!=versionMajor)
     //{
     //  throw protogen::framework::IncompatibleVersionException("CgmListAbonents");
@@ -109,14 +118,14 @@ public:
     //seqNum=ds.readInt32();
     while(!endOfMessage)
     {
-      uint32_t tag=ds.readTag();
+      DataStream::TagType tag=ds.readTag();
       switch(tag)
       {
         case idTag:
         {
           if(idFlag)
           {
-            throw protogen::framework::DuplicateFieldException("id");
+            throw eyeline::protogen::framework::DuplicateFieldException("id");
           }
           id=ds.readInt32LV();
           idFlag=true;
@@ -134,30 +143,32 @@ public:
     }
     if(!idFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("id");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("id");
     }
 
   }
 
-  uint32_t getSeqNum()const
+  int32_t getSeqNum()const
   {
     return seqNum;
   }
 
-  void setSeqNum(uint32_t value)
+  void setSeqNum(int32_t argValue)
   {
-    seqNum=value;
+    seqNum=argValue;
   }
 
+ 
+
 protected:
-  //static const uint8_t versionMajor=1;
-  //static const uint8_t versionMinor=0;
+  //static const int8_t versionMajor=1;
+  //static const int8_t versionMinor=0;
 
-  static const uint32_t idTag=1;
+  static const int32_t idTag=1;
 
-  uint32_t seqNum;
+  int32_t seqNum;
 
-  uint32_t id;
+  int32_t id;
 
   bool idFlag;
 };

@@ -53,17 +53,17 @@ void NetworkDispatcher::Shutdown()
 }
 
 
-void NetworkDispatcher::Init(int argNodeIndex)
+void NetworkDispatcher::Init(int argNodeIndex,const char* host,int port)
 {
   if(instance)
   {
     throw smsc::util::Exception("Duplicate NetworkDispatcher initialization");
   }
   instance=new NetworkDispatcher;
-  cfg::Config& cfg=cfg::Manager::getInstance().getConfig();
-  instance->host=cfg.getString("cluster.controller.host");
-  instance->port=cfg.getInt("cluster.controller.port");
+  instance->host=host;
+  instance->port=port;
   instance->nodeIndex=argNodeIndex;
+  instance->ctrlHandler.Init();
   instance->reader.Start();
   instance->writer.Start();
 }
@@ -160,6 +160,8 @@ void NetworkDispatcher::WriteLoop()
     outQueue.Pop(buf);
     if(sck.WriteAll(buf.data,(int)buf.dataSize)!=(int)buf.dataSize)
     {
+      smsc_log_warn(log,"Failed to send command");
+      smsc_log_debug(log,"dump:%s",buf.dump().c_str());
       Disconnect();
     }
     buf.release();

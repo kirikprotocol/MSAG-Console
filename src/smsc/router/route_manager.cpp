@@ -450,10 +450,10 @@ int addRouteIntoSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* rec,vector<st
               ostringstream ost;
               ost << "duplicated route '"
                 << r0->info.routeId << "':\n"
-                << "    " << AddrToString(r0->info.source) << "(" << r0->info.srcSmeSystemId << ")"
+                << "    " << AddrToString(r0->info.source) << "(" << r0->info.srcSmeSystemId.c_str() << ")"
                 << " [" << r0->info.srcSubj << "] "
                 << " ->\n"
-                << "    " << AddrToString(r0->info.dest) << "(" << r0->info.smeSystemId << ")"
+                << "    " << AddrToString(r0->info.dest) << "(" << r0->info.smeSystemId.c_str() << ")"
                 << " [" << r0->info.dstSubj << "]";
               trace_->push_back(ost.str());
             }
@@ -461,10 +461,10 @@ int addRouteIntoSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* rec,vector<st
               ostringstream ost;
               ost << "  exists as '"
                 << rec->info.routeId << "':\n"
-                << "    " <<AddrToString(rec->info.source) << "(" << rec->info.srcSmeSystemId << ")"
+                << "    " <<AddrToString(rec->info.source) << "(" << rec->info.srcSmeSystemId.c_str() << ")"
                 << " [" << rec->info.srcSubj << "] "
                 << " ->\n"
-                << "    " <<AddrToString(rec->info.dest) << "(" << rec->info.smeSystemId << ")"
+                << "    " <<AddrToString(rec->info.dest) << "(" << rec->info.smeSystemId.c_str() << ")"
                 << "[" << rec->info.dstSubj << "]";
               trace_->push_back(ost.str());
             }
@@ -769,7 +769,7 @@ bool RouteManager::lookup(int srcidx, const Address& source, const Address& dest
       if ( trace_enabled_ )
       {
         ostringstream ost;
-        ost << "found alternative route with src proxy: '" << rec->info.srcSmeSystemId << "'";
+        ost << "found alternative route with src proxy: '" << rec->info.srcSmeSystemId.c_str() << "'";
         trace_.push_back(ost.str());
       }
       break;
@@ -800,8 +800,8 @@ bool RouteManager::lookup(int srcidx, const Address& source, const Address& dest
   {
     ostringstream ost;
     ost << "route found, "
-      << AddrToString(rec->info.source) << "(" << rec->info.srcSmeSystemId << ") -> "
-      << AddrToString(rec->info.dest) << "(" << rec->info.smeSystemId << ")";
+      << AddrToString(rec->info.source) << "(" << rec->info.srcSmeSystemId.c_str() << ") -> "
+      << AddrToString(rec->info.dest) << "(" << rec->info.smeSystemId.c_str() << ")";
     trace_.push_back(ost.str());
   }
   if ( info )

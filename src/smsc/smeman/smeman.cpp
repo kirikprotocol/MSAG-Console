@@ -203,13 +203,13 @@ __synchronized__
   SmeIndex index = internalLookup(systemId);
   if ( index == INVALID_SME_INDEX )
   {
-    throw runtime_error(string("unknown systm id:")+systemId);
+    throw runtime_error(string("unknown systm id:")+systemId.c_str());
   }
   if ( records[index]->proxy )
   {
     __trace2__("Failed to register proxy with sid:%s",systemId.c_str());
     __warning__("Sme proxy with this systemId already registered");
-    throw runtime_error(string("proxy with id ")+systemId+" already exists");
+    throw runtime_error(string("proxy with id ")+systemId.c_str()+" already exists");
   }
   {
     MutexGuard guard(records[index]->mutex);
@@ -397,7 +397,7 @@ SmeIndex SmeManager::internalLookup(const SmeSystemId& systemId) const
     else
     {
       if ( (*p)->deleted ) continue;
-      if ( (*p)->info.systemId.compare(systemId) == 0 ) return (*p)->idx;
+      if ( (*p)->info.systemId==systemId ) return (*p)->idx;
     }
   }
   return INVALID_SME_INDEX;

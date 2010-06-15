@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include "eyeline/protogen/framework/Exceptions.hpp"
+#include "AclCacheType.hpp"
 
 
 #ident "@(#) AclCreate version 1.0"
@@ -17,7 +18,6 @@ namespace controller{
 namespace protocol{
 namespace messages{
 
-typedef std::vector<std::string> string_list;
 
 class AclCreate{
 public:
@@ -32,6 +32,12 @@ public:
     descriptionFlag=false;
     cacheTypeFlag=false;
     addressesFlag=false;
+    addresses.clear();
+  }
+ 
+  static int32_t getTag()
+  {
+    return 28;
   }
 
   std::string toString()const
@@ -65,8 +71,7 @@ public:
         rv+=";";
       }
       rv+="cacheType=";
-      sprintf(buf,"%u",(unsigned int)cacheType);
-      rv+=buf;
+      rv+=AclCacheType::getNameByValue(cacheType);
     }
     if(addressesFlag)
     {
@@ -77,7 +82,7 @@ public:
       rv+="addresses=";
       rv+="[";
       bool first=true;
-      for(string_list::const_iterator it=addresses.begin(),end=addresses.end();it!=end;it++)
+      for(std::vector<std::string>::const_iterator it=addresses.begin(),end=addresses.end();it!=end;it++)
       {
         if(first)
         {
@@ -94,9 +99,9 @@ public:
   }
 
   template <class DataStream>
-  uint32_t length()const
+  int32_t length()const
   {
-    uint32_t rv=0;
+    int32_t rv=0;
     if(nameFlag)
     {
       rv+=DataStream::tagTypeSize;
@@ -128,14 +133,19 @@ public:
   {
     if(!nameFlag)
     {
-      throw protogen::framework::FieldIsNullException("name");
+      throw eyeline::protogen::framework::FieldIsNullException("name");
     }
     return name;
   }
-  void setName(const std::string& value)
+  void setName(const std::string& argValue)
   {
-    name=value;
+    name=argValue;
     nameFlag=true;
+  }
+  std::string& getNameRef()
+  {
+    nameFlag=true;
+    return name;
   }
   bool hasName()const
   {
@@ -145,48 +155,67 @@ public:
   {
     if(!descriptionFlag)
     {
-      throw protogen::framework::FieldIsNullException("description");
+      throw eyeline::protogen::framework::FieldIsNullException("description");
     }
     return description;
   }
-  void setDescription(const std::string& value)
+  void setDescription(const std::string& argValue)
   {
-    description=value;
+    description=argValue;
     descriptionFlag=true;
+  }
+  std::string& getDescriptionRef()
+  {
+    descriptionFlag=true;
+    return description;
   }
   bool hasDescription()const
   {
     return descriptionFlag;
   }
-  uint8_t getCacheType()const
+  const AclCacheType::type& getCacheType()const
   {
     if(!cacheTypeFlag)
     {
-      throw protogen::framework::FieldIsNullException("cacheType");
+      throw eyeline::protogen::framework::FieldIsNullException("cacheType");
     }
     return cacheType;
   }
-  void setCacheType(uint8_t value)
+  void setCacheType(const AclCacheType::type& argValue)
   {
-    cacheType=value;
+    if(!AclCacheType::isValidValue(argValue))
+    {
+      throw eyeline::protogen::framework::InvalidEnumValue("AclCacheType",argValue);
+    }
+    cacheType=argValue;
     cacheTypeFlag=true;
+  }
+  AclCacheType::type& getCacheTypeRef()
+  {
+    cacheTypeFlag=true;
+    return cacheType;
   }
   bool hasCacheType()const
   {
     return cacheTypeFlag;
   }
-  const string_list& getAddresses()const
+  const std::vector<std::string>& getAddresses()const
   {
     if(!addressesFlag)
     {
-      throw protogen::framework::FieldIsNullException("addresses");
+      throw eyeline::protogen::framework::FieldIsNullException("addresses");
     }
     return addresses;
   }
-  void setAddresses(const string_list& value)
+  void setAddresses(const std::vector<std::string>& argValue)
   {
-    addresses=value;
+    addresses=argValue;
     addressesFlag=true;
+  }
+  std::vector<std::string>& getAddressesRef()
+  {
+    addressesFlag=true;
+    return addresses;
   }
   bool hasAddresses()const
   {
@@ -197,19 +226,19 @@ public:
   {
     if(!nameFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("name");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("name");
     }
     if(!descriptionFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("description");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("description");
     }
     if(!cacheTypeFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("cacheType");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("cacheType");
     }
     if(!addressesFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("addresses");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("addresses");
     }
     //ds.writeByte(versionMajor);
     //ds.writeByte(versionMinor);
@@ -220,8 +249,13 @@ public:
     ds.writeStrLV(description);
     ds.writeTag(cacheTypeTag);
     ds.writeByteLV(cacheType);
+ 
     ds.writeTag(addressesTag);
-    ds.writeStrLstLV(addresses);
+    ds.writeLength(DataStream::fieldSize(addresses));
+    for(std::vector<std::string>::const_iterator it=addresses.begin(),end=addresses.end();it!=end;it++)
+    {
+      ds.writeStr(*it);
+    }
     ds.writeTag(DataStream::endOfMessage_tag);
   }
 
@@ -230,8 +264,8 @@ public:
   {
     Clear();
     bool endOfMessage=false;
-    //uint8_t rdVersionMajor=ds.readByte();
-    //uint8_t rdVersionMinor=ds.readByte();
+    //int8_t rdVersionMajor=ds.readByte();
+    //int8_t rdVersionMinor=ds.readByte();
     //if(rdVersionMajor!=versionMajor)
     //{
     //  throw protogen::framework::IncompatibleVersionException("AclCreate");
@@ -239,14 +273,14 @@ public:
     //seqNum=ds.readInt32();
     while(!endOfMessage)
     {
-      uint32_t tag=ds.readTag();
+      DataStream::TagType tag=ds.readTag();
       switch(tag)
       {
         case nameTag:
         {
           if(nameFlag)
           {
-            throw protogen::framework::DuplicateFieldException("name");
+            throw eyeline::protogen::framework::DuplicateFieldException("name");
           }
           name=ds.readStrLV();
           nameFlag=true;
@@ -255,7 +289,7 @@ public:
         {
           if(descriptionFlag)
           {
-            throw protogen::framework::DuplicateFieldException("description");
+            throw eyeline::protogen::framework::DuplicateFieldException("description");
           }
           description=ds.readStrLV();
           descriptionFlag=true;
@@ -264,7 +298,7 @@ public:
         {
           if(cacheTypeFlag)
           {
-            throw protogen::framework::DuplicateFieldException("cacheType");
+            throw eyeline::protogen::framework::DuplicateFieldException("cacheType");
           }
           cacheType=ds.readByteLV();
           cacheTypeFlag=true;
@@ -273,9 +307,14 @@ public:
         {
           if(addressesFlag)
           {
-            throw protogen::framework::DuplicateFieldException("addresses");
+            throw eyeline::protogen::framework::DuplicateFieldException("addresses");
           }
-          ds.readStrLstLV(addresses);
+          typename DataStream::LengthType len=ds.readLength(),rd=0;
+          while(rd<len)
+          {
+            addresses.push_back(ds.readStr());
+            rd+=DataStream::fieldSize(addresses.back());
+          }
           addressesFlag=true;
         }break;
         case DataStream::endOfMessage_tag:
@@ -291,48 +330,50 @@ public:
     }
     if(!nameFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("name");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("name");
     }
     if(!descriptionFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("description");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("description");
     }
     if(!cacheTypeFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("cacheType");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("cacheType");
     }
     if(!addressesFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("addresses");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("addresses");
     }
 
   }
 
-  uint32_t getSeqNum()const
+  int32_t getSeqNum()const
   {
     return seqNum;
   }
 
-  void setSeqNum(uint32_t value)
+  void setSeqNum(int32_t argValue)
   {
-    seqNum=value;
+    seqNum=argValue;
   }
 
+ 
+
 protected:
-  //static const uint8_t versionMajor=1;
-  //static const uint8_t versionMinor=0;
+  //static const int8_t versionMajor=1;
+  //static const int8_t versionMinor=0;
 
-  static const uint32_t nameTag=1;
-  static const uint32_t descriptionTag=2;
-  static const uint32_t cacheTypeTag=3;
-  static const uint32_t addressesTag=4;
+  static const int32_t nameTag=1;
+  static const int32_t descriptionTag=2;
+  static const int32_t cacheTypeTag=3;
+  static const int32_t addressesTag=4;
 
-  uint32_t seqNum;
+  int32_t seqNum;
 
   std::string name;
   std::string description;
-  uint8_t cacheType;
-  string_list addresses;
+  AclCacheType::type cacheType;
+  std::vector<std::string> addresses;
 
   bool nameFlag;
   bool descriptionFlag;

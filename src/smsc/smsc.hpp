@@ -28,8 +28,8 @@
 #endif
 #include "smsc/smeman/smeman.h"
 #include "smsc/acls/interfaces.h"
-#include "smsc/distrlist/DistrListManager.h"
-#include "smsc/distrlist/DistrListProcess.h"
+//#include "smsc/distrlist/DistrListManager.h"
+//#include "smsc/distrlist/DistrListProcess.h"
 #include "smsc/stat/StatisticsManager.h"
 
 #include "performance.hpp"
@@ -45,8 +45,8 @@ using smsc::smeman::SmeProxy;
 using smsc::alias::AliasManager;
 using smsc::router::RouteManager;
 using smsc::router::RouteInfo;
-using smsc::distrlist::DistrListManager;
-using smsc::distrlist::DistrListProcess;
+//using smsc::distrlist::DistrListManager;
+//using smsc::distrlist::DistrListProcess;
 using smsc::config::route::RouteConfig;
 using smsc::acls::AclAbstractMgr;
 //class smsc::store::MessageStore;
@@ -166,7 +166,7 @@ public:
   {
     return *instance;
   }
-  void init(const SmscConfigs& cfg, const char * node);
+  void init(const SmscConfigs& cfg, int node);
   void run();
   void stop(){stopFlag=true;}
   bool getStopFlag()
@@ -211,17 +211,17 @@ public:
     return smeman.getSmeInfo(idx);
   }
 
-  smsc::smeman::SmeIndex getSmeIndex(const string& systemId)
+  smsc::smeman::SmeIndex getSmeIndex(const SmeSystemId& systemId)
   {
     return smeman.lookup(systemId);
   }
 
-  smsc::smeman::SmeInfo getSmeInfo(const string& systemId)
+  smsc::smeman::SmeInfo getSmeInfo(const SmeSystemId& systemId)
   {
     return smeman.getSmeInfo(smeman.lookup(systemId));
   }
 
-  SmeProxy* getSmeProxy(const string& systemId)
+  SmeProxy* getSmeProxy(const SmeSystemId& systemId)
   {
     smsc::smeman::SmeIndex idx=smeman.lookup(systemId);
     if(idx==-1)return 0;
@@ -302,7 +302,7 @@ public:
     }
   }
 
-  void registerStatisticalEvent(int eventType,const SMS* sms);
+  void registerStatisticalEvent(int eventType,const SMS* sms,bool msuOnly=false);
 
   void SaveStats()
   {
@@ -443,10 +443,12 @@ public:
     return aclmgr;
   }
 
-  smsc::distrlist::DistrListAdmin* getDlAdmin()
+  /*
+   * smsc::distrlist::DistrListAdmin* getDlAdmin()
   {
     return distlstman;
   }
+  */
 
   enum{smsWeight=10000};
 
@@ -513,7 +515,7 @@ public:
   bool ReportDelivery(int dlgId,const SMS& sms,bool final,int policy)
   {
     try{
-      if(sms.billingRecord &&
+      if(sms.billingRequired() &&
           (
             sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY)==policy ||
             policy==chargeAlways
@@ -626,8 +628,8 @@ protected:
 
 
   AclAbstractMgr   *aclmgr;
-  DistrListManager *distlstman;
-  DistrListProcess *distlstsme;
+  //DistrListManager *distlstman;
+  //DistrListProcess *distlstsme;
 
   Mutex perfMutex;
   uint64_t submitOkCounter;

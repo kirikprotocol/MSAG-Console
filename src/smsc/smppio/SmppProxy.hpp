@@ -135,6 +135,7 @@ public:
       throw InvalidProxyCommandException();
       return;
     }
+    bool wasEmpty=false;
     {
       MutexGuard g(mutexout);
       if(!opened)return;
@@ -169,23 +170,30 @@ public:
         shapeCounterOut.Inc(1);
       }
       debug2(log,"put command:total %d commands",outqueue.Count());
+      if(outqueue.Count()==0)
+      {
+        wasEmpty=true;
+      }
       outqueue.Push(cmd,cmd->get_priority());
     }
-    volatile SmppSocket * rSck=0;
-    volatile SmppSocket * tSck=0;
+    if(wasEmpty)
     {
-      MutexGuard g(mutex);
-      if(dualChannel)
+      volatile SmppSocket * rSck=0;
+      volatile SmppSocket * tSck=0;
       {
-        if(smppReceiverSocket)rSck=smppReceiverSocket;
-        if(smppTransmitterSocket)tSck=smppTransmitterSocket;
-      }else
-      {
-        if(smppReceiverSocket)rSck=smppReceiverSocket;
+        MutexGuard g(mutex);
+        if(dualChannel)
+        {
+          if(smppReceiverSocket)rSck=smppReceiverSocket;
+          if(smppTransmitterSocket)tSck=smppTransmitterSocket;
+        }else
+        {
+          if(smppReceiverSocket)rSck=smppReceiverSocket;
+        }
       }
+      if(rSck)rSck->notifyOutThread();
+      if(tSck)tSck->notifyOutThread();
     }
-    if(rSck)rSck->notifyOutThread();
-    if(tSck)tSck->notifyOutThread();
   }
   virtual bool getCommand(SmscCommand& cmd)
   {

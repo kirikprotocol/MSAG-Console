@@ -16,6 +16,9 @@
 #include "version.inc"
 #include "smsc.hpp"
 
+#include "smsc/cluster/controller/NetworkDispatcher.hpp"
+#include "smsc/cluster/controller/ConfigLockGuard.hpp"
+
 
 extern "C" void atExitHandler(void)
 {
@@ -32,29 +35,79 @@ int main(int argc,char* argv[])
     fprintf(stderr,"Failed to set LC_CTYPE\n");
   }
 
+  if(argc<3)
+  {
+    fprintf(stderr,"invalid number of command line arguments\n");
+    return 1;
+  }
+
+  int nodeIdx=0;
+  {
+    std::string node=argv[1];
+    std::string::size_type pos=node.find('=');
+    if(pos==std::string::npos || pos==0 || node.substr(0,pos+1)!="node=")
+    {
+      fprintf(stderr,"expected 'node=N' as first argument (found '%s')\n",node.substr(0,pos+1).c_str());
+      return 1;
+    }
+    nodeIdx=atoi(node.substr(pos+1).c_str());
+  }
+  std::string cchost=argv[2];
+  int ccport=0;
+  {
+    std::string::size_type pos=cchost.find(':');
+    if(pos==std::string::npos)
+    {
+      fprintf(stderr,"expected host:port of cluster controller as 2nd argument\n");
+      return 1;
+    }
+    ccport=atoi(cchost.substr(pos+1).c_str());
+    cchost.erase(pos);
+    if(ccport==0)
+    {
+      fprintf(stderr,"invalid port of cluster controller\n");
+      return 1;
+    }
+  }
+
   atexit(atExitHandler);
   smsc::clearThreadSignalMask();
 
   try{
+
+    smsc::cluster::controller::NetworkDispatcher::Init(nodeIdx,cchost.c_str(),ccport);
+
     smsc::logger::Logger *logger = smsc::logger::Logger::getInstance("smscmain");
     smsc_log_info(logger,"\n==========================\nStarting Smsc.\n==========================");
 
     smsc::SmscConfigs cfgs;
-    smsc::util::config::Manager::init(findConfigFile("config.xml"));
+    {
+      smsc::cluster::controller::ConfigLockGuard clg(eyeline::clustercontroller::ctMainConfig);
+      smsc::util::config::Manager::init(findConfigFile("config.xml"));
+    }
     cfgs.cfgman=&cfgs.cfgman->getInstance();
 
 
     smsc::Smsc::InitLicense();
 
     smsc_log_info(logger,  "Starting up %s", getStrVersion());
-    smsc::resourcemanager::ResourceManager::init(cfgs.cfgman->getString("core.locales"), cfgs.cfgman->getString("core.default_locale"));
+    {
+      smsc::cluster::controller::ConfigLockGuard clg(eyeline::clustercontroller::ctResources);
+      smsc::resourcemanager::ResourceManager::init(cfgs.cfgman->getString("core.locales"), cfgs.cfgman->getString("core.default_locale"));
+    }
     smsc_log_info(logger,  "Locale resources loaded" );
     smsc::config::smeman::SmeManConfig smemancfg;
-    smemancfg.load(findConfigFile("sme.xml"));
+    {
+      smsc::cluster::controller::ConfigLockGuard clg(eyeline::clustercontroller::ctSme);
+      smemancfg.load(findConfigFile("sme.xml"));
+    }
     cfgs.smemanconfig=&smemancfg;
     smsc_log_info(logger,  "SME configuration loaded" );
     smsc::config::route::RouteConfig rc;
-    rc.load(findConfigFile("routes.xml"));
+    {
+      smsc::cluster::controller::ConfigLockGuard clg(eyeline::clustercontroller::ctRoutes);
+      rc.load(findConfigFile("routes.xml"));
+    }
     cfgs.routesconfig=&rc;
     smsc_log_info(logger,  "Route configuration loaded" );
 
@@ -62,9 +115,7 @@ int main(int argc,char* argv[])
     smsc::Smsc *app=new smsc::Smsc;
     smsc::registerSmscSignalHandlers(app);
 
-    const char * node = argc < 2 ? "node=1" : argv[1];
-
-    app->init(cfgs, node);
+    app->init(cfgs, nodeIdx);
     app->run();
     app->shutdown();
     delete app;

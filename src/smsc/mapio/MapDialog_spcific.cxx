@@ -285,7 +285,7 @@ inline void mkMapAddress( ET96MAP_ADDRESS_T *addr, const char *saddr, unsigned l
   }
 }
 
-inline void mkIMSIOrMSISDNFromIMSI( ET96MAP_IMSI_OR_MSISDN_T *addr, string &s_imsi ) {
+inline void mkIMSIOrMSISDNFromIMSI( ET96MAP_IMSI_OR_MSISDN_T *addr, const string &s_imsi ) {
   size_t len = s_imsi.length();
   size_t sz = (len+1)/2;
   addr->imsiOrMsisdnLen = (UCHAR_T)sz;

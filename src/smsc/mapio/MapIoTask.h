@@ -547,12 +547,12 @@ MKDID(ET96MAP_DIALOGUE_ID_T dialogueid,ET96MAP_LOCAL_SSN_T lssn)
 
 struct ChainIsVeryLong : public runtime_error {
   ChainIsVeryLong(const char* s) : runtime_error(s) {}
-  ~ChainIsVeryLong()throw(){}
+  virtual ~ChainIsVeryLong()throw(){}
 };
 
 struct NextMMSPartWaiting : public runtime_error {
   NextMMSPartWaiting(const char* s) : runtime_error(s) {}
-  ~NextMMSPartWaiting()throw(){}
+  virtual ~NextMMSPartWaiting()throw(){}
 };
 
 enum ReAssignDialogType{
@@ -1510,11 +1510,11 @@ public:
   void Stop()
   {
     isStopping=true;
-    tp.Wait();
+    tp.shutdown();
     deinit();
   }
   int Execute();
-  ~MapIoTask()
+  virtual ~MapIoTask()
   {
     __mapdlg_trace__("Destroying MapIoTask");
     MapDialogContainer::setProxy( 0 );

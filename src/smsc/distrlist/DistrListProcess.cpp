@@ -12,6 +12,7 @@
 #endif
 
 #include "DistrListProcess.h"
+#include <sys/types.h>
 
 #define DLP_TIMEOUT 1000
 #define WAIT_SUBMISSION (60)
@@ -220,6 +221,19 @@ int DistrListProcess::Execute()
       {
         fullarg=arg.substr(1);
       }
+      enum DlOp{
+        dloNone,
+        dloAddList,
+        dloRemoveList,
+        dloCopyList,
+        dloRenameList,
+        dloAddMember,
+        dloRemoveMember,
+        dloAddSubmitter,
+        dloRemoveSubmitter
+      };
+      DlOp op=dloNone;
+      std::string tmplOk,tmplErr;
       try{
         if(cmdstr!="send" && arg.find('/')!=string::npos)
         {
@@ -518,7 +532,7 @@ int DistrListProcess::Execute()
             }
 
 #ifdef SMSEXTRA
-            newsms.setIntProperty(Tag::SMSC_EXTRAFLAGS,smsc::system::EXTRA_GROUPS);
+            newsms.setIntProperty(Tag::SMSC_EXTRAFLAGS,smsc::extra::EXTRA_GROUPS);
 #endif
             std::auto_ptr<ListTask> task(new ListTask);
             task->cmd=cmd;

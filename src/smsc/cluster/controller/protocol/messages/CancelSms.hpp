@@ -17,7 +17,6 @@ namespace controller{
 namespace protocol{
 namespace messages{
 
-typedef std::vector<std::string> string_list;
 
 class CancelSms{
 public:
@@ -29,8 +28,16 @@ public:
   {
     seqNum=0;
     idsFlag=false;
+    ids.clear();
     srcsFlag=false;
+    srcs.clear();
     dstsFlag=false;
+    dsts.clear();
+  }
+ 
+  static int32_t getTag()
+  {
+    return 15;
   }
 
   std::string toString()const
@@ -48,7 +55,7 @@ public:
       rv+="ids=";
       rv+="[";
       bool first=true;
-      for(string_list::const_iterator it=ids.begin(),end=ids.end();it!=end;it++)
+      for(std::vector<std::string>::const_iterator it=ids.begin(),end=ids.end();it!=end;it++)
       {
         if(first)
         {
@@ -70,7 +77,7 @@ public:
       rv+="srcs=";
       rv+="[";
       bool first=true;
-      for(string_list::const_iterator it=srcs.begin(),end=srcs.end();it!=end;it++)
+      for(std::vector<std::string>::const_iterator it=srcs.begin(),end=srcs.end();it!=end;it++)
       {
         if(first)
         {
@@ -92,7 +99,7 @@ public:
       rv+="dsts=";
       rv+="[";
       bool first=true;
-      for(string_list::const_iterator it=dsts.begin(),end=dsts.end();it!=end;it++)
+      for(std::vector<std::string>::const_iterator it=dsts.begin(),end=dsts.end();it!=end;it++)
       {
         if(first)
         {
@@ -109,9 +116,9 @@ public:
   }
 
   template <class DataStream>
-  uint32_t length()const
+  int32_t length()const
   {
-    uint32_t rv=0;
+    int32_t rv=0;
     if(idsFlag)
     {
       rv+=DataStream::tagTypeSize;
@@ -133,52 +140,67 @@ public:
     rv+=DataStream::tagTypeSize;
     return rv;
   }
-  const string_list& getIds()const
+  const std::vector<std::string>& getIds()const
   {
     if(!idsFlag)
     {
-      throw protogen::framework::FieldIsNullException("ids");
+      throw eyeline::protogen::framework::FieldIsNullException("ids");
     }
     return ids;
   }
-  void setIds(const string_list& value)
+  void setIds(const std::vector<std::string>& argValue)
   {
-    ids=value;
+    ids=argValue;
     idsFlag=true;
+  }
+  std::vector<std::string>& getIdsRef()
+  {
+    idsFlag=true;
+    return ids;
   }
   bool hasIds()const
   {
     return idsFlag;
   }
-  const string_list& getSrcs()const
+  const std::vector<std::string>& getSrcs()const
   {
     if(!srcsFlag)
     {
-      throw protogen::framework::FieldIsNullException("srcs");
+      throw eyeline::protogen::framework::FieldIsNullException("srcs");
     }
     return srcs;
   }
-  void setSrcs(const string_list& value)
+  void setSrcs(const std::vector<std::string>& argValue)
   {
-    srcs=value;
+    srcs=argValue;
     srcsFlag=true;
+  }
+  std::vector<std::string>& getSrcsRef()
+  {
+    srcsFlag=true;
+    return srcs;
   }
   bool hasSrcs()const
   {
     return srcsFlag;
   }
-  const string_list& getDsts()const
+  const std::vector<std::string>& getDsts()const
   {
     if(!dstsFlag)
     {
-      throw protogen::framework::FieldIsNullException("dsts");
+      throw eyeline::protogen::framework::FieldIsNullException("dsts");
     }
     return dsts;
   }
-  void setDsts(const string_list& value)
+  void setDsts(const std::vector<std::string>& argValue)
   {
-    dsts=value;
+    dsts=argValue;
     dstsFlag=true;
+  }
+  std::vector<std::string>& getDstsRef()
+  {
+    dstsFlag=true;
+    return dsts;
   }
   bool hasDsts()const
   {
@@ -189,25 +211,37 @@ public:
   {
     if(!idsFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("ids");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("ids");
     }
     if(!srcsFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("srcs");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("srcs");
     }
     if(!dstsFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("dsts");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("dsts");
     }
     //ds.writeByte(versionMajor);
     //ds.writeByte(versionMinor);
     //ds.writeInt32(seqNum);
     ds.writeTag(idsTag);
-    ds.writeStrLstLV(ids);
+    ds.writeLength(DataStream::fieldSize(ids));
+    for(std::vector<std::string>::const_iterator it=ids.begin(),end=ids.end();it!=end;it++)
+    {
+      ds.writeStr(*it);
+    }
     ds.writeTag(srcsTag);
-    ds.writeStrLstLV(srcs);
+    ds.writeLength(DataStream::fieldSize(srcs));
+    for(std::vector<std::string>::const_iterator it=srcs.begin(),end=srcs.end();it!=end;it++)
+    {
+      ds.writeStr(*it);
+    }
     ds.writeTag(dstsTag);
-    ds.writeStrLstLV(dsts);
+    ds.writeLength(DataStream::fieldSize(dsts));
+    for(std::vector<std::string>::const_iterator it=dsts.begin(),end=dsts.end();it!=end;it++)
+    {
+      ds.writeStr(*it);
+    }
     ds.writeTag(DataStream::endOfMessage_tag);
   }
 
@@ -216,8 +250,8 @@ public:
   {
     Clear();
     bool endOfMessage=false;
-    //uint8_t rdVersionMajor=ds.readByte();
-    //uint8_t rdVersionMinor=ds.readByte();
+    //int8_t rdVersionMajor=ds.readByte();
+    //int8_t rdVersionMinor=ds.readByte();
     //if(rdVersionMajor!=versionMajor)
     //{
     //  throw protogen::framework::IncompatibleVersionException("CancelSms");
@@ -225,34 +259,49 @@ public:
     //seqNum=ds.readInt32();
     while(!endOfMessage)
     {
-      uint32_t tag=ds.readTag();
+      DataStream::TagType tag=ds.readTag();
       switch(tag)
       {
         case idsTag:
         {
           if(idsFlag)
           {
-            throw protogen::framework::DuplicateFieldException("ids");
+            throw eyeline::protogen::framework::DuplicateFieldException("ids");
           }
-          ds.readStrLstLV(ids);
+          typename DataStream::LengthType len=ds.readLength(),rd=0;
+          while(rd<len)
+          {
+            ids.push_back(ds.readStr());
+            rd+=DataStream::fieldSize(ids.back());
+          }
           idsFlag=true;
         }break;
         case srcsTag:
         {
           if(srcsFlag)
           {
-            throw protogen::framework::DuplicateFieldException("srcs");
+            throw eyeline::protogen::framework::DuplicateFieldException("srcs");
           }
-          ds.readStrLstLV(srcs);
+          typename DataStream::LengthType len=ds.readLength(),rd=0;
+          while(rd<len)
+          {
+            srcs.push_back(ds.readStr());
+            rd+=DataStream::fieldSize(srcs.back());
+          }
           srcsFlag=true;
         }break;
         case dstsTag:
         {
           if(dstsFlag)
           {
-            throw protogen::framework::DuplicateFieldException("dsts");
+            throw eyeline::protogen::framework::DuplicateFieldException("dsts");
           }
-          ds.readStrLstLV(dsts);
+          typename DataStream::LengthType len=ds.readLength(),rd=0;
+          while(rd<len)
+          {
+            dsts.push_back(ds.readStr());
+            rd+=DataStream::fieldSize(dsts.back());
+          }
           dstsFlag=true;
         }break;
         case DataStream::endOfMessage_tag:
@@ -268,42 +317,44 @@ public:
     }
     if(!idsFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("ids");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("ids");
     }
     if(!srcsFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("srcs");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("srcs");
     }
     if(!dstsFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("dsts");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("dsts");
     }
 
   }
 
-  uint32_t getSeqNum()const
+  int32_t getSeqNum()const
   {
     return seqNum;
   }
 
-  void setSeqNum(uint32_t value)
+  void setSeqNum(int32_t argValue)
   {
-    seqNum=value;
+    seqNum=argValue;
   }
 
+ 
+
 protected:
-  //static const uint8_t versionMajor=1;
-  //static const uint8_t versionMinor=0;
+  //static const int8_t versionMajor=1;
+  //static const int8_t versionMinor=0;
 
-  static const uint32_t idsTag=1;
-  static const uint32_t srcsTag=2;
-  static const uint32_t dstsTag=3;
+  static const int32_t idsTag=1;
+  static const int32_t srcsTag=2;
+  static const int32_t dstsTag=3;
 
-  uint32_t seqNum;
+  int32_t seqNum;
 
-  string_list ids;
-  string_list srcs;
-  string_list dsts;
+  std::vector<std::string> ids;
+  std::vector<std::string> srcs;
+  std::vector<std::string> dsts;
 
   bool idsFlag;
   bool srcsFlag;

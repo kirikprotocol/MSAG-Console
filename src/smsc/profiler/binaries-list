@@ -2,7 +2,7 @@
 # this file contains binaries definitions
 
 # binary name source name libraries         
-smsc/util/repairProfile repair -L$(SMSC_BUILDDIR)/bin -llogger -lrt
-smsc/util/AllProfilesUpdate AllProfilesUpdate -lutil -lutil-config -lxerces-c -lutil-xml -L$(SMSC_BUILDDIR)/bin -llogger -lrt
-smsc/util/renameProfiles renameProfiles -lsms -lrt
-smsc/util/profilesDump profilesDump -lsms -lrt
+smsc/util/repairProfile repair -L$(SMSC_BUILDDIR)/bin -llogger -lrt @liblogger.so
+smsc/util/AllProfilesUpdate AllProfilesUpdate -lutil -lutil-config -lxerces-c -lutil-xml -L$(SMSC_BUILDDIR)/bin -llogger -lrt @liblogger.so
+smsc/util/renameProfiles renameProfiles -lsms -lrt @liblogger.so
+smsc/util/profilesDump profilesDump -lsms -lrt @liblogger.so

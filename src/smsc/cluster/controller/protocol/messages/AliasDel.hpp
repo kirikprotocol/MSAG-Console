@@ -17,7 +17,6 @@ namespace controller{
 namespace protocol{
 namespace messages{
 
-typedef std::vector<std::string> string_list;
 
 class AliasDel{
 public:
@@ -29,6 +28,11 @@ public:
   {
     seqNum=0;
     aliasFlag=false;
+  }
+ 
+  static int32_t getTag()
+  {
+    return 42;
   }
 
   std::string toString()const
@@ -50,9 +54,9 @@ public:
   }
 
   template <class DataStream>
-  uint32_t length()const
+  int32_t length()const
   {
-    uint32_t rv=0;
+    int32_t rv=0;
     if(aliasFlag)
     {
       rv+=DataStream::tagTypeSize;
@@ -66,14 +70,19 @@ public:
   {
     if(!aliasFlag)
     {
-      throw protogen::framework::FieldIsNullException("alias");
+      throw eyeline::protogen::framework::FieldIsNullException("alias");
     }
     return alias;
   }
-  void setAlias(const std::string& value)
+  void setAlias(const std::string& argValue)
   {
-    alias=value;
+    alias=argValue;
     aliasFlag=true;
+  }
+  std::string& getAliasRef()
+  {
+    aliasFlag=true;
+    return alias;
   }
   bool hasAlias()const
   {
@@ -84,7 +93,7 @@ public:
   {
     if(!aliasFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("alias");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("alias");
     }
     //ds.writeByte(versionMajor);
     //ds.writeByte(versionMinor);
@@ -99,8 +108,8 @@ public:
   {
     Clear();
     bool endOfMessage=false;
-    //uint8_t rdVersionMajor=ds.readByte();
-    //uint8_t rdVersionMinor=ds.readByte();
+    //int8_t rdVersionMajor=ds.readByte();
+    //int8_t rdVersionMinor=ds.readByte();
     //if(rdVersionMajor!=versionMajor)
     //{
     //  throw protogen::framework::IncompatibleVersionException("AliasDel");
@@ -108,14 +117,14 @@ public:
     //seqNum=ds.readInt32();
     while(!endOfMessage)
     {
-      uint32_t tag=ds.readTag();
+      DataStream::TagType tag=ds.readTag();
       switch(tag)
       {
         case aliasTag:
         {
           if(aliasFlag)
           {
-            throw protogen::framework::DuplicateFieldException("alias");
+            throw eyeline::protogen::framework::DuplicateFieldException("alias");
           }
           alias=ds.readStrLV();
           aliasFlag=true;
@@ -133,28 +142,30 @@ public:
     }
     if(!aliasFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("alias");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("alias");
     }
 
   }
 
-  uint32_t getSeqNum()const
+  int32_t getSeqNum()const
   {
     return seqNum;
   }
 
-  void setSeqNum(uint32_t value)
+  void setSeqNum(int32_t argValue)
   {
-    seqNum=value;
+    seqNum=argValue;
   }
 
+ 
+
 protected:
-  //static const uint8_t versionMajor=1;
-  //static const uint8_t versionMinor=0;
+  //static const int8_t versionMajor=1;
+  //static const int8_t versionMinor=0;
 
-  static const uint32_t aliasTag=1;
+  static const int32_t aliasTag=1;
 
-  uint32_t seqNum;
+  int32_t seqNum;
 
   std::string alias;
 

@@ -18,7 +18,6 @@ namespace controller{
 namespace protocol{
 namespace messages{
 
-typedef std::vector<std::string> string_list;
 
 class SmeAdd{
 public:
@@ -30,6 +29,11 @@ public:
   {
     seqNum=0;
     paramsFlag=false;
+  }
+ 
+  static int32_t getTag()
+  {
+    return 18;
   }
 
   std::string toString()const
@@ -53,9 +57,9 @@ public:
   }
 
   template <class DataStream>
-  uint32_t length()const
+  int32_t length()const
   {
-    uint32_t rv=0;
+    int32_t rv=0;
     if(paramsFlag)
     {
       rv+=DataStream::tagTypeSize;
@@ -69,14 +73,19 @@ public:
   {
     if(!paramsFlag)
     {
-      throw protogen::framework::FieldIsNullException("params");
+      throw eyeline::protogen::framework::FieldIsNullException("params");
     }
     return params;
   }
-  void setParams(const SmeParams& value)
+  void setParams(const SmeParams& argValue)
   {
-    params=value;
+    params=argValue;
     paramsFlag=true;
+  }
+  SmeParams& getParamsRef()
+  {
+    paramsFlag=true;
+    return params;
   }
   bool hasParams()const
   {
@@ -87,7 +96,7 @@ public:
   {
     if(!paramsFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("params");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("params");
     }
     //ds.writeByte(versionMajor);
     //ds.writeByte(versionMinor);
@@ -103,8 +112,8 @@ public:
   {
     Clear();
     bool endOfMessage=false;
-    //uint8_t rdVersionMajor=ds.readByte();
-    //uint8_t rdVersionMinor=ds.readByte();
+    //int8_t rdVersionMajor=ds.readByte();
+    //int8_t rdVersionMinor=ds.readByte();
     //if(rdVersionMajor!=versionMajor)
     //{
     //  throw protogen::framework::IncompatibleVersionException("SmeAdd");
@@ -112,14 +121,14 @@ public:
     //seqNum=ds.readInt32();
     while(!endOfMessage)
     {
-      uint32_t tag=ds.readTag();
+      DataStream::TagType tag=ds.readTag();
       switch(tag)
       {
         case paramsTag:
         {
           if(paramsFlag)
           {
-            throw protogen::framework::DuplicateFieldException("params");
+            throw eyeline::protogen::framework::DuplicateFieldException("params");
           }
 
           ds.readLength();params.deserialize(ds);
@@ -138,28 +147,30 @@ public:
     }
     if(!paramsFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("params");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("params");
     }
 
   }
 
-  uint32_t getSeqNum()const
+  int32_t getSeqNum()const
   {
     return seqNum;
   }
 
-  void setSeqNum(uint32_t value)
+  void setSeqNum(int32_t argValue)
   {
-    seqNum=value;
+    seqNum=argValue;
   }
 
+ 
+
 protected:
-  //static const uint8_t versionMajor=1;
-  //static const uint8_t versionMinor=0;
+  //static const int8_t versionMajor=1;
+  //static const int8_t versionMinor=0;
 
-  static const uint32_t paramsTag=1;
+  static const int32_t paramsTag=1;
 
-  uint32_t seqNum;
+  int32_t seqNum;
 
   SmeParams params;
 

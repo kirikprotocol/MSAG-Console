@@ -18,7 +18,6 @@ namespace controller{
 namespace protocol{
 namespace messages{
 
-typedef std::vector<std::string> string_list;
 
 class CancelSmsResp{
 public:
@@ -30,7 +29,11 @@ public:
   {
     seqNum=0;
     respFlag=false;
-    statusTextFlag=false;
+  }
+ 
+  static int32_t getTag()
+  {
+    return 1015;
   }
 
   std::string toString()const
@@ -50,33 +53,18 @@ public:
       rv+=resp.toString();
       rv+=')';
     }
-    if(statusTextFlag)
-    {
-      if(rv.length()>0)
-      {
-        rv+=";";
-      }
-      rv+="statusText=";
-      rv+=statusText;
-    }
     return rv;
   }
 
   template <class DataStream>
-  uint32_t length()const
+  int32_t length()const
   {
-    uint32_t rv=0;
+    int32_t rv=0;
     if(respFlag)
     {
       rv+=DataStream::tagTypeSize;
       rv+=DataStream::lengthTypeSize;
       rv+=resp.length<DataStream>();
-    }
-    if(statusTextFlag)
-    {
-      rv+=DataStream::tagTypeSize;
-      rv+=DataStream::lengthTypeSize;
-      rv+=DataStream::fieldSize(statusText);
     }
     rv+=DataStream::tagTypeSize;
     return rv;
@@ -85,46 +73,30 @@ public:
   {
     if(!respFlag)
     {
-      throw protogen::framework::FieldIsNullException("resp");
+      throw eyeline::protogen::framework::FieldIsNullException("resp");
     }
     return resp;
   }
-  void setResp(const Response& value)
+  void setResp(const Response& argValue)
   {
-    resp=value;
+    resp=argValue;
     respFlag=true;
+  }
+  Response& getRespRef()
+  {
+    respFlag=true;
+    return resp;
   }
   bool hasResp()const
   {
     return respFlag;
-  }
-  const std::string& getStatusText()const
-  {
-    if(!statusTextFlag)
-    {
-      throw protogen::framework::FieldIsNullException("statusText");
-    }
-    return statusText;
-  }
-  void setStatusText(const std::string& value)
-  {
-    statusText=value;
-    statusTextFlag=true;
-  }
-  bool hasStatusText()const
-  {
-    return statusTextFlag;
   }
   template <class DataStream>
   void serialize(DataStream& ds)const
   {
     if(!respFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("resp");
-    }
-    if(!statusTextFlag)
-    {
-      throw protogen::framework::MandatoryFieldMissingException("statusText");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("resp");
     }
     //ds.writeByte(versionMajor);
     //ds.writeByte(versionMinor);
@@ -132,8 +104,6 @@ public:
     ds.writeTag(respTag);
     ds.writeLength(resp.length<DataStream>());
     resp.serialize(ds);
-    ds.writeTag(statusTextTag);
-    ds.writeStrLV(statusText);
     ds.writeTag(DataStream::endOfMessage_tag);
   }
 
@@ -142,8 +112,8 @@ public:
   {
     Clear();
     bool endOfMessage=false;
-    //uint8_t rdVersionMajor=ds.readByte();
-    //uint8_t rdVersionMinor=ds.readByte();
+    //int8_t rdVersionMajor=ds.readByte();
+    //int8_t rdVersionMinor=ds.readByte();
     //if(rdVersionMajor!=versionMajor)
     //{
     //  throw protogen::framework::IncompatibleVersionException("CancelSmsResp");
@@ -151,27 +121,18 @@ public:
     //seqNum=ds.readInt32();
     while(!endOfMessage)
     {
-      uint32_t tag=ds.readTag();
+      DataStream::TagType tag=ds.readTag();
       switch(tag)
       {
         case respTag:
         {
           if(respFlag)
           {
-            throw protogen::framework::DuplicateFieldException("resp");
+            throw eyeline::protogen::framework::DuplicateFieldException("resp");
           }
 
           ds.readLength();resp.deserialize(ds);
           respFlag=true;
-        }break;
-        case statusTextTag:
-        {
-          if(statusTextFlag)
-          {
-            throw protogen::framework::DuplicateFieldException("statusText");
-          }
-          statusText=ds.readStrLV();
-          statusTextFlag=true;
         }break;
         case DataStream::endOfMessage_tag:
           endOfMessage=true;
@@ -186,39 +147,34 @@ public:
     }
     if(!respFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("resp");
-    }
-    if(!statusTextFlag)
-    {
-      throw protogen::framework::MandatoryFieldMissingException("statusText");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("resp");
     }
 
   }
 
-  uint32_t getSeqNum()const
+  int32_t getSeqNum()const
   {
     return seqNum;
   }
 
-  void setSeqNum(uint32_t value)
+  void setSeqNum(int32_t argValue)
   {
-    seqNum=value;
+    seqNum=argValue;
   }
 
+ 
+
 protected:
-  //static const uint8_t versionMajor=1;
-  //static const uint8_t versionMinor=0;
+  //static const int8_t versionMajor=1;
+  //static const int8_t versionMinor=0;
 
-  static const uint32_t respTag=1;
-  static const uint32_t statusTextTag=2;
+  static const int32_t respTag=1;
 
-  uint32_t seqNum;
+  int32_t seqNum;
 
   Response resp;
-  std::string statusText;
 
   bool respFlag;
-  bool statusTextFlag;
 };
 
 }

@@ -67,7 +67,9 @@ enum CommandId
   KILLMRCACHEITEM,        //26
   KILLEXPIREDTRANSACTIONS,//27
   INSMSCHARGERESPONSE,    //28
-  INFWDSMSCHARGERESPONSE  //29
+  INFWDSMSCHARGERESPONSE, //29
+  CLUSTERICONIDENT,       //30
+  PROFILEUPDATERESP       //31
 };
 
 enum CommandStatus{
@@ -471,12 +473,15 @@ struct INSmsChargeResponse{
     bool diverted;
     bool routeHide;
     Address dst;
+    bool generateDeliver;
 #ifdef SMSEXTRA
     bool noDestChange;
 #endif
     bool transit;
     smsc::router::ReplyPath replyPath;
     int priority;
+    int dstDlgIdx;
+    SmeSystemId sourceId;
 
     int inDlgId;
   };
@@ -520,6 +525,7 @@ struct _SmscCommand
   SmeProxy *proxy;
   int priority;
   SmeSystemId sourceId;
+  int dstNodeIdx;
   _SmscCommand() : ref_count(0), dta(0), proxy(0),priority(SmscCommandDefaultPriority){};
   ~_SmscCommand()
   {
@@ -595,6 +601,7 @@ struct _SmscCommand
     case SMEALERT:
     case KILLEXPIREDTRANSACTIONS:
     case UNBIND:
+    case CLUSTERICONIDENT:
       // nothing to delete
       break;
     default:

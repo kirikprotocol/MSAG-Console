@@ -16,6 +16,7 @@
 #include "smsc/alias/AliasMan.hpp"
 
 #include "ControllerHandler.hpp"
+#include "smsc/smeman/smsccmd.h"
 
 using smsc::config::route::RouteConfig;
 using smsc::smeman::SmeProxy;
@@ -30,6 +31,11 @@ namespace protocol {
 
 using smsc::Smsc;
 
+void ControllerHandler::Init()
+{
+  nodeIdx=NetworkDispatcher::getInstance().getNodeIndex();
+}
+
 void ControllerHandler::handle(const messages::ApplyRoutes& msg)
 {
   Smsc& smsc=Smsc::getInstance();
@@ -37,7 +43,7 @@ void ControllerHandler::handle(const messages::ApplyRoutes& msg)
   smsc.getConfigs()->smemanconfig->reload();
   smsc.reloadRoutes();
   messages::ApplyRoutesResp resp;
-  prepareResp(msg,resp,0);
+  prepareMultiResp(msg,resp,0);
   NetworkDispatcher::getInstance().enqueueMessage(resp);
 }
 void ControllerHandler::handle(const messages::ApplyReschedule& msg)
@@ -52,7 +58,7 @@ void ControllerHandler::handle(const messages::ApplyReschedule& msg)
     status=1;
   }
   messages::ApplyRescheduleResp resp;
-  prepareResp(msg,resp,status);
+  prepareMultiResp(msg,resp,status);
   NetworkDispatcher::getInstance().enqueueMessage(resp);
 }
 void ControllerHandler::handle(const messages::ApplyLocaleResource& msg)
@@ -61,7 +67,7 @@ void ControllerHandler::handle(const messages::ApplyLocaleResource& msg)
   smsc::util::config::Manager& cfgman=*smsc.getConfigs()->cfgman;
   smsc::resourcemanager::ResourceManager::reload(cfgman.getString("core.locales"), cfgman.getString("core.default_locale"));
   messages::ApplyLocaleResourceResp resp;
-  prepareResp(msg,resp,0);
+  prepareMultiResp(msg,resp,0);
   NetworkDispatcher::getInstance().enqueueMessage(resp);
 }
 void ControllerHandler::handle(const messages::ApplyTimeZones& msg)
@@ -75,7 +81,7 @@ void ControllerHandler::handle(const messages::ApplyTimeZones& msg)
     status=1;
   }
   messages::ApplyTimeZonesResp resp;
-  prepareResp(msg,resp,status);
+  prepareMultiResp(msg,resp,status);
   NetworkDispatcher::getInstance().enqueueMessage(resp);
 }
 void ControllerHandler::handle(const messages::ApplyFraudControl& msg)
@@ -89,7 +95,7 @@ void ControllerHandler::handle(const messages::ApplyFraudControl& msg)
     status=1;
   }
   messages::ApplyFraudControlResp resp;
-  prepareResp(msg,resp,status);
+  prepareMultiResp(msg,resp,status);
   NetworkDispatcher::getInstance().enqueueMessage(resp);
 }
 void ControllerHandler::handle(const messages::ApplyMapLimits& msg)
@@ -103,7 +109,7 @@ void ControllerHandler::handle(const messages::ApplyMapLimits& msg)
     status=1;
   }
   messages::ApplyMapLimitsResp resp;
-  prepareResp(msg,resp,status);
+  prepareMultiResp(msg,resp,status);
   NetworkDispatcher::getInstance().enqueueMessage(resp);
 }
 void ControllerHandler::handle(const messages::ApplySnmp& msg)
@@ -119,9 +125,10 @@ void ControllerHandler::handle(const messages::ApplySnmp& msg)
     status=1;
   }
   messages::ApplySnmpResp resp;
-  prepareResp(msg,resp,status);
+  prepareMultiResp(msg,resp,status);
   NetworkDispatcher::getInstance().enqueueMessage(resp);
 }
+/*
 void ControllerHandler::handle(const messages::TraceRoute& msg)
 {
   using smsc::config::route::RouteConfig;
@@ -167,7 +174,7 @@ void ControllerHandler::handle(const messages::TraceRoute& msg)
 
     if (msg.getSrcSysId().length())
     {
-      smsc::smeman::SmeIndex index = Smsc::getInstance().getSmeIndex(msg.getSrcSysId());
+      smsc::smeman::SmeIndex index = Smsc::getInstance().getSmeIndex(msg.getSrcSysId().c_str());
       if (index == -1)
       {
         throw smsc::util::Exception("TraceRoute:Sme with id '%s' not found",msg.getSrcSysId().c_str());
@@ -261,6 +268,37 @@ void ControllerHandler::handle(const messages::LoadRoutes& msg)
   NetworkDispatcher::getInstance().enqueueMessage(resp);
 }
 
+void ControllerHandler::handle(const messages::LookupProfile& msg)
+{
+  smsc::profiler::ProfilerInterface* profiler=Smsc::getInstance().getProfiler();
+  smsc::sms::Address address(msg.getAddress().c_str());
+  int matchType = smsc::profiler::ProfilerMatchType::mtExact;
+  std::string matchAddress;
+  smsc::profiler::Profile p=profiler->lookupEx(address, matchType, matchAddress);
+  messages::Profile prof;
+  messages::LookupProfileResp resp;
+  FillMsgFromProfile(prof,p);
+  resp.setProf(prof);
+  prepareResp(msg,resp,0);
+  NetworkDispatcher::getInstance().enqueueMessage(resp);
+}
+void ControllerHandler::handle(const messages::LookupProfileEx& msg)
+{
+  smsc::profiler::ProfilerInterface* profiler=Smsc::getInstance().getProfiler();
+  smsc::sms::Address address(msg.getAddress().c_str());
+  int matchType = smsc::profiler::ProfilerMatchType::mtExact;
+  std::string matchAddress;
+  smsc::profiler::Profile p=profiler->lookupEx(address, matchType, matchAddress);
+  messages::Profile prof;
+  messages::LookupProfileExResp resp;
+  FillMsgFromProfile(prof,p);
+  resp.setProf(prof);
+  resp.setMatchType(matchType);
+  prepareResp(msg,resp,0);
+  NetworkDispatcher::getInstance().enqueueMessage(resp);
+}
+*/
+
 static void FillMsgFromProfile(messages::Profile& prof,const smsc::profiler::Profile& p)
 {
   prof.setDivert(p.divert);
@@ -313,35 +351,6 @@ static void FillProfileFromMsg(smsc::profiler::Profile& p,const messages::Profil
 #endif
 }
 
-void ControllerHandler::handle(const messages::LookupProfile& msg)
-{
-  smsc::profiler::ProfilerInterface* profiler=Smsc::getInstance().getProfiler();
-  smsc::sms::Address address(msg.getAddress().c_str());
-  int matchType = smsc::profiler::ProfilerMatchType::mtExact;
-  std::string matchAddress;
-  smsc::profiler::Profile p=profiler->lookupEx(address, matchType, matchAddress);
-  messages::Profile prof;
-  messages::LookupProfileResp resp;
-  FillMsgFromProfile(prof,p);
-  resp.setProf(prof);
-  prepareResp(msg,resp,0);
-  NetworkDispatcher::getInstance().enqueueMessage(resp);
-}
-void ControllerHandler::handle(const messages::LookupProfileEx& msg)
-{
-  smsc::profiler::ProfilerInterface* profiler=Smsc::getInstance().getProfiler();
-  smsc::sms::Address address(msg.getAddress().c_str());
-  int matchType = smsc::profiler::ProfilerMatchType::mtExact;
-  std::string matchAddress;
-  smsc::profiler::Profile p=profiler->lookupEx(address, matchType, matchAddress);
-  messages::Profile prof;
-  messages::LookupProfileExResp resp;
-  FillMsgFromProfile(prof,p);
-  resp.setProf(prof);
-  resp.setMatchType(matchType);
-  prepareResp(msg,resp,0);
-  NetworkDispatcher::getInstance().enqueueMessage(resp);
-}
 
 static bool isMask(const smsc::sms::Address & address)
 {
@@ -384,9 +393,9 @@ void ControllerHandler::handle(const messages::DeleteProfile& msg)
 }
 void ControllerHandler::handle(const messages::CancelSms& msg)
 {
-  const messages::string_list& ids=msg.getIds();
-  const messages::string_list& srcs=msg.getSrcs();
-  const messages::string_list& dsts=msg.getDsts();
+  const std::vector<std::string>& ids=msg.getIds();
+  const std::vector<std::string>& srcs=msg.getSrcs();
+  const std::vector<std::string>& dsts=msg.getDsts();
   size_t sz=ids.size();
   if(sz!=srcs.size() || sz!=dsts.size())
   {
@@ -447,7 +456,7 @@ static void MsgToSmeInfo(const messages::SmeParams& sp,smsc::smeman::SmeInfo& si
   si.proclimit=sp.getProcLimit();
   si.schedlimit=sp.getSchedLimit();
   si.accessMask=sp.getAccessMask();
-  si.flags=sp.getAccessMask();
+  si.flags=sp.getFlags();
 }
 
 void ControllerHandler::handle(const messages::SmeAdd& msg)
@@ -463,7 +472,7 @@ void ControllerHandler::handle(const messages::SmeAdd& msg)
     smsc_log_warn(log,"SmeAdd: failed: %s",e.what());
   }
   messages::SmeAddResp resp;
-  prepareResp(msg,resp,status);
+  prepareMultiResp(msg,resp,status);
   NetworkDispatcher::getInstance().enqueueMessage(resp);
 }
 void ControllerHandler::handle(const messages::SmeUpdate& msg)
@@ -479,21 +488,21 @@ void ControllerHandler::handle(const messages::SmeUpdate& msg)
     smsc_log_warn(log,"SmeUpdate: failed: %s",e.what());
   }
   messages::SmeUpdateResp resp;
-  prepareResp(msg,resp,status);
+  prepareMultiResp(msg,resp,status);
   NetworkDispatcher::getInstance().enqueueMessage(resp);
 }
 void ControllerHandler::handle(const messages::SmeRemove& msg)
 {
   int status=0;
   try{
-    Smsc::getInstance().getSmeAdmin()->deleteSme(msg.getSmeId());
+    Smsc::getInstance().getSmeAdmin()->deleteSme(msg.getSmeId().c_str());
   }catch(std::exception& e)
   {
     status=1;
     smsc_log_warn(log,"SmeDelete: failed: %s",e.what());
   }
   messages::SmeRemoveResp resp;
-  prepareResp(msg,resp,status);
+  prepareMultiResp(msg,resp,status);
   NetworkDispatcher::getInstance().enqueueMessage(resp);
 }
 void ControllerHandler::handle(const messages::SmeStatus& msg)
@@ -517,10 +526,10 @@ void ControllerHandler::handle(const messages::SmeStatus& msg)
           SmeProxy * smeProxy = i->getSmeProxy();
           switch(smeProxy->getBindMode())
           {
-            case smsc::smeman::smeTRX:ssi.setBindMode("trx");break;
-            case smsc::smeman::smeTX:ssi.setBindMode("tx");break;
-            case smsc::smeman::smeRX:ssi.setBindMode("rx");break;
-            default:ssi.setBindMode("unknown");break;
+            case smsc::smeman::smeTRX:ssi.setBindMode(messages::SmeBindMode::modeTrx);break;
+            case smsc::smeman::smeTX:ssi.setBindMode(messages::SmeBindMode::modeTx);break;
+            case smsc::smeman::smeRX:ssi.setBindMode(messages::SmeBindMode::modeRx);break;
+            default:ssi.setBindMode(messages::SmeBindMode::modeUnknown);break;
           }
           char inIP[128], outIP[128];
           if (smeProxy->getPeers(inIP,outIP))
@@ -534,7 +543,7 @@ void ControllerHandler::handle(const messages::SmeStatus& msg)
           }
         }catch(std::exception& e)
         {
-          ssi.setBindMode("unknown");
+          ssi.setBindMode(messages::SmeBindMode::modeUnknown);
           ssi.setPeerIn("unknown");
           ssi.setPeerOut("unknown");
         }
@@ -553,10 +562,10 @@ void ControllerHandler::handle(const messages::SmeStatus& msg)
 }
 void ControllerHandler::handle(const messages::SmeDisconnect& msg)
 {
-  const messages::string_list& ids=msg.getSysIds();
+  const std::vector<std::string>& ids=msg.getSysIds();
   int status=0;
   try{
-    for(messages::string_list::const_iterator it=ids.begin(),end=ids.end();it!=end;it++)
+    for(std::vector<std::string>::const_iterator it=ids.begin(),end=ids.end();it!=end;it++)
     {
       for (std::auto_ptr<smsc::smeman::SmeIterator> i(Smsc::getInstance().getSmeAdmin()->iterator()); i.get() != NULL;)
       {
@@ -743,8 +752,8 @@ void ControllerHandler::handle(const messages::AclRemoveAddresses& msg)
   messages::AclRemoveAddressesResp resp;
   int status=0;
   try{
-    const messages::string_list& addrs=msg.getAddrs();
-    for(messages::string_list::const_iterator it=addrs.begin(),end=addrs.end();it!=end;it++)
+    const std::vector<std::string>& addrs=msg.getAddrs();
+    for(std::vector<std::string>::const_iterator it=addrs.begin(),end=addrs.end();it!=end;it++)
     {
       aclMgr->removePhone(msg.getAclId(),*it);
     }
@@ -762,8 +771,8 @@ void ControllerHandler::handle(const messages::AclAddAddresses& msg)
   messages::AclAddAddressesResp resp;
   int status=0;
   try{
-    const messages::string_list& addrs=msg.getAddrs();
-    for(messages::string_list::const_iterator it=addrs.begin(),end=addrs.end();it!=end;it++)
+    const std::vector<std::string>& addrs=msg.getAddrs();
+    for(std::vector<std::string>::const_iterator it=addrs.begin(),end=addrs.end();it!=end;it++)
     {
       aclMgr->addPhone(msg.getAclId(),*it);
     }
@@ -775,6 +784,7 @@ void ControllerHandler::handle(const messages::AclAddAddresses& msg)
   prepareResp(msg,resp,status);
   NetworkDispatcher::getInstance().enqueueMessage(resp);
 }
+/*
 void ControllerHandler::handle(const messages::DlPrcList& msg)
 {
   smsc::distrlist::DistrListAdmin* dladmin=Smsc::getInstance().getDlAdmin();
@@ -1135,7 +1145,7 @@ void ControllerHandler::handle(const messages::DlRename& msg)
   }
   prepareResp(msg,resp,status);
   NetworkDispatcher::getInstance().enqueueMessage(resp);
-}
+}*/
 void ControllerHandler::handle(const messages::CgmAddGroup& msg)
 {
   smsc::closedgroups::ClosedGroupsInterface* cgm=smsc::closedgroups::ClosedGroupsInterface::getInstance();
@@ -1247,7 +1257,7 @@ void ControllerHandler::handle(const messages::CgmListAbonents& msg)
   int status=0;
   messages::CgmListAbonentsResp resp;
   try{
-    messages::string_list result;
+    std::vector<std::string> result;
     std::vector<smsc::sms::Address> list;
     cgm->ListAbonents(msg.getId(),list);
     for(std::vector<smsc::sms::Address>::iterator it=list.begin();it!=list.end();it++)
@@ -1309,6 +1319,7 @@ void ControllerHandler::handle(const messages::DisconnectService& msg)
   //  prepareResp(msg,resp,status);
   //  NetworkDispatcher::getInstance().enqueueMessage(resp);
 }
+/*
 void ControllerHandler::handle(const messages::MultipartMessageRequestResp& msg)
 {
   //!!!TODO!!!
@@ -1321,17 +1332,56 @@ void ControllerHandler::handle(const messages::ReplaceIfPresentRequestResp& msg)
   //  prepareResp(msg,resp,status);
   //  NetworkDispatcher::getInstance().enqueueMessage(resp);
 }
-void ControllerHandler::handle(const messages::LockProfilerResp& msg)
+*/
+void ControllerHandler::handle(const messages::LockConfigResp& msg)
 {
+  NetworkDispatcher::getInstance().notifyOnMessageResp(msg.getSeqNum(),msg.getResp().getStatus());
   //!!!TODO!!!
   //  prepareResp(msg,resp,status);
   //  NetworkDispatcher::getInstance().enqueueMessage(resp);
 }
 
-void ControllerHandler::handle(const messages::LockMscManagerResp& msg)
+void ControllerHandler::handle(const messages::UpdateProfileAbntResp& msg)
 {
-  NetworkDispatcher::getInstance().notifyOnMessageResp(msg.getSeqNum(),msg.getResp().getStatus());
+  smsc::smeman::SmscCommand cmd=smsc::smeman::SmscCommand::makeCommand(smsc::smeman::PROFILEUPDATERESP,msg.getSeqNum(),msg.getResp().getStatus(),0);
+  Smsc::getInstance().getProfiler()->putCommand(cmd);
 }
+
+/*
+void ControllerHandler::handle(const messages::DlMemAddAbntResp& msg)
+{
+
+}
+void ControllerHandler::handle(const messages::DlMemDeleteAbntResp& msg)
+{
+
+}
+void ControllerHandler::handle(const messages::DlSbmAddAbntResp& msg)
+{
+
+}
+void ControllerHandler::handle(const messages::DlSbmDelAbntResp& msg)
+{
+
+}
+void ControllerHandler::handle(const messages::DlAddAbntResp& msg)
+{
+
+}
+void ControllerHandler::handle(const messages::DlDeleteAbntResp& msg)
+{
+}
+
+void ControllerHandler::handle(const messages::DlCopyAbntResp& msg)
+{
+
+}
+void ControllerHandler::handle(const messages::DlRenameAbntResp& msg)
+{
+
+}
+*/
+
 
 }
 }

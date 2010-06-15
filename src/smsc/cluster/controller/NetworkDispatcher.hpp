@@ -102,13 +102,13 @@ public:
   {
     return *instance;
   }
-  static void Init(int argNodeIndex);
+  static void Init(int argNodeIndex,const char* host,int port);
   static void Shutdown();
   void Stop();
   template <class MSG_T>
   void enqueueMessage(const MSG_T& msg)
   {
-    protogen::framework::SerializerBuffer buf(1024);
+    eyeline::protogen::framework::SerializerBuffer buf(1024);
     smscProto.encodeMessage(msg,&buf);
     Buffer b;
     b.data=buf.detachBuffer();
@@ -118,6 +118,12 @@ public:
     outQueueMon.notify();
   }
 
+  int getNextSeq()
+  {
+    sync::MutexGuard mg(sendMsgMtx);
+    return seqNum++;
+  }
+
   template <class MSG_T>
   int sendMessage(MSG_T& msg)
   {
@@ -125,6 +131,7 @@ public:
     int seq=seqNum++;
     smsc_log_debug(log,"send msg with seq=%d",seq);
     msg.setSeqNum(seq);
+    enqueueMessage(msg);
     SentMsgInfo smi;
     sentMsgs.Insert(seq,&smi);
     sync::TimeSlice ts(30,sync::TimeSlice::tuSecs);
@@ -148,6 +155,11 @@ public:
     }
     (*smiPtr)->result=result;
     (*smiPtr)->cnd.Signal();
+  }
+
+  int getNodeIndex()
+  {
+    return nodeIndex;
   }
 
 protected:

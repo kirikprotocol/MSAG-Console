@@ -104,10 +104,11 @@ protected:
   smsc::Smsc *smsc;
 
   smsc::logger::Logger* smsLog;
+  smsc::logger::Logger* perfLog;
 
   std::string serviceType;
   int protocolId;
-  std::string smscSmeId;
+  SmeSystemId smscSmeId;
 
   static Hash<std::list<std::string> > directiveAliases;
 
@@ -148,6 +149,14 @@ protected:
   void submitResp(Tuple&,SMS*,int);
 
   void finalizeSms(SMSId id,SMS& sms);
+
+  void onSubmitOk(SMSId id,SMS& sms);
+  void onSubmitFail(SMSId id,SMS& sms);
+  void onDeliveryOk(SMSId id,SMS& sms);
+  void onDeliveryFail(SMSId id,SMS& sms);
+  void onUndeliverable(SMSId id,SMS& sms);
+  void onForwardOk(SMSId id,SMS& sms);
+
 
 #ifdef SNMP
   void incSnmpCounterForError(int code,const char* sme);

@@ -467,7 +467,7 @@ int SmppInputThread::Execute()
                 SmeIndex proxyIndex;
 
                 try{
-                  proxyIndex=smeManager->lookup(sid);
+                  proxyIndex=smeManager->lookup(sid.c_str());
                 }catch(...)
                 {
                   warn2(log,"smeMan->lookup failed for %s",sid.c_str());

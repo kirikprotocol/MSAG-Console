@@ -38,8 +38,10 @@
 #endif
 
 #include "smsc.hpp"
-#include "smsc/cluster/controller/protocol/messages/LockMscManager.hpp"
-#include "smsc/cluster/controller/protocol/messages/UnlockMscManager.hpp"
+#include "smsc/cluster/controller/protocol/messages/LockConfig.hpp"
+#include "smsc/cluster/controller/protocol/messages/UnlockConfig.hpp"
+#include "smsc/cluster/controller/ConfigLockGuard.hpp"
+#include "smsc/interconnect/ClusterInterconnect.hpp"
 
 namespace smsc{
 
@@ -192,7 +194,7 @@ public:
         std::auto_ptr<uint8_t> smePerfData(smsc->getSmePerfData(smePerfDataSize));
         perfSmeListener->reportSmePerformance(smePerfData.get(), smePerfDataSize);
         info2(log,"ut=%.3lf;avg=%.3lf;last=%.3lf;cnt=%llu;eq=%d;equnl=%d;sched=%d;dpf=%d;sbm=%d;rej=%d;dlv=%d;fwd=%d;tmp=%d;prm=%d",ut,avg,rate,cnt,eqhash,equnl,d.inScheduler,d.dpfCount,
-              d.counters[0].lastSecond,d.counters[1].lastSecond,d.counters[2].lastSecond,d.counters[3].lastSecond,d.counters[4].lastSecond,d.counters[5].lastSecond);
+              d.counters[6].lastSecond,d.counters[7].lastSecond,d.counters[8].lastSecond,d.counters[9].lastSecond,d.counters[10].lastSecond,d.counters[11].lastSecond);
       }catch(std::exception& e)
       {
         warn2(log,"Exception in speed monitor:%s",e.what());
@@ -224,7 +226,7 @@ namespace common{
 extern void loadRoutes(smsc::router::RouteManager* rm,const smsc::config::route::RouteConfig& rc,bool traceit=false);
 }
 
-void Smsc::init(const SmscConfigs& cfg, const char * node)
+void Smsc::init(const SmscConfigs& cfg, int nodeIdx)
 {
   configs=&cfg;
 
@@ -234,18 +236,20 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
   try{
     tp.preCreateThreads(15);
 
+    nodeIndex=nodeIdx;
+    nodesCount=cfg.cfgman->getInt("cluster.nodesCount");
+
+    smsc::interconnect::ClusterInterconnect::Init(nodeIndex);
+
+    for(int i=0;i<nodesCount;i++)
     {
-      const char* nodeIdxVal=strchr(node,'=');
-      if(!nodeIdxVal)
-      {
-        throw smsc::util::Exception("Invalid command line node argument:%s",node);
-      }
-      nodeIndex=atoi(nodeIdxVal+1);
+      char bufHost[64];
+      char bufPort[64];
+      sprintf(bufHost,"cluster.interconnect.host%d",i+1);
+      sprintf(bufPort,"cluster.interconnect.port%d",i+1);
+      smsc::interconnect::ClusterInterconnect::getInstance()->addNode(cfg.cfgman->getString(bufHost),cfg.cfgman->getInt(bufPort));
     }
-
-
-    smsc::cluster::controller::NetworkDispatcher::Init(nodeIndex);
-
+    smsc::interconnect::ClusterInterconnect::getInstance()->Start();
 
 #ifdef SNMP
     {
@@ -253,11 +257,14 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
       smsc::snmp::smestattable::SmeStatTableSubagent::Init(&smeman,&smeStats);
       tp2.startTask(snmpAgent);
       snmpAgent->statusChange(SnmpAgent::INIT);
+      smsc::cluster::controller::ConfigLockGuard clg(eyeline::clustercontroller::ctSnmp);
       SnmpCounter::Init(findConfigFile("snmp.xml"));
     }
 #endif
 
     {
+      smsc::cluster::controller::ConfigLockGuard clgTz(eyeline::clustercontroller::ctTimeZones);
+      smsc::cluster::controller::ConfigLockGuard clgRt(eyeline::clustercontroller::ctRoutes);
       std::string tzCfg=findConfigFile("timezones.xml");
       std::string rtCfg=findConfigFile("routes.xml");
       common::TimeZoneManager::Init(tzCfg.c_str(),rtCfg.c_str());
@@ -346,21 +353,31 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
       __warning__("src sme routing disabled by default");
     }
 
-    aliaser=new smsc::alias::AliasManImpl(cfg.cfgman->getString("aliasman.storeFile"));
-
-    aliaser->Load();
+    {
+      smsc::cluster::controller::ConfigLockGuard clg(eyeline::clustercontroller::ctAliases);
+      aliaser=new smsc::alias::AliasManImpl(cfg.cfgman->getString("aliasman.storeFile"));
+      aliaser->Load();
+    }
     smsc_log_info(log, "Aliases loaded" );
 
     reloadRoutes();
     smsc_log_info(log, "Routes loaded" );
 
-    mapio::FraudControl::Init(findConfigFile("fraud.xml"));
-    mapio::MapLimits::Init(findConfigFile("maplimits.xml"));
+    {
+      smsc::cluster::controller::ConfigLockGuard clg(eyeline::clustercontroller::ctFraud);
+      mapio::FraudControl::Init(findConfigFile("fraud.xml"));
+    }
+    {
+      smsc::cluster::controller::ConfigLockGuard clg(eyeline::clustercontroller::ctMapLimits);
+      mapio::MapLimits::Init(findConfigFile("maplimits.xml"));
+    }
 
 
     scheduler=new scheduler::Scheduler();
 
-    scheduler->InitDpfTracker(cfg.cfgman->getString("dpf.storeDir"),
+    char dpfStoreCfg[64];
+    sprintf(dpfStoreCfg,"dpf.storeDir%d",nodeIndex);
+    scheduler->InitDpfTracker(cfg.cfgman->getString(dpfStoreCfg),
                               cfg.cfgman->getInt("dpf.timeOut1179"),
                               cfg.cfgman->getInt("dpf.timeOut1044"),
                               cfg.cfgman->getInt("dpf.maxChanges"),
@@ -391,11 +408,17 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
 
     smeman.registerInternallSmeProxy("scheduler",scheduler);
 
+    smeman.registerInternallSmeProxy("CLSTRICON",smsc::interconnect::ClusterInterconnect::getInstance());
+
 
     smsc_log_info(log, "Scheduler initialized" );
 
     inManCom=new inmancomm::INManComm(&smeman);
-    inManCom->Init(cfg.cfgman->getString("inman.host"),cfg.cfgman->getInt("inman.port"));
+    char inmanHost[64];
+    char inmanPort[64];
+    sprintf(inmanHost,"inman.host%d",nodeIndex);
+    sprintf(inmanPort,"inman.port%d",nodeIndex);
+    inManCom->Init(cfg.cfgman->getString(inmanHost),cfg.cfgman->getInt(inmanPort));
     inmancomm::INManComm::scAddr=cfg.cfgman->getString("core.service_center_address");
     smeman.registerInternallSmeProxy("INMANCOMM",inManCom);
     tp.startTask(inManCom);
@@ -416,7 +439,10 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
     }
 
     smsc::closedgroups::ClosedGroupsManager::Init();
-    smsc::closedgroups::ClosedGroupsManager::getInstance()->Load(findConfigFile("ClosedGroups.xml"));
+    {
+      smsc::cluster::controller::ConfigLockGuard clg(eyeline::clustercontroller::ctClosedGroups);
+      smsc::closedgroups::ClosedGroupsManager::getInstance()->Load(findConfigFile("ClosedGroups.xml"));
+    }
 
     {
 #ifdef SMSEXTRA
@@ -451,6 +477,7 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
     }
 
     try{
+      smsc::cluster::controller::ConfigLockGuard clg(eyeline::clustercontroller::ctReschedule);
       common::RescheduleCalculator::init(findConfigFile("schedule.xml"));
     }catch(std::exception& e)
     {
@@ -465,16 +492,18 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
       smsc_log_info(log, "Statistics manager starting..." );
       using smsc::util::config::ConfigView;
       std::auto_ptr<ConfigView> msConfig(new smsc::util::config::ConfigView(*cfg.cfgman, "MessageStore"));
-      const char* statisticsLocation = msConfig.get()->getString("statisticsDir");
+      char statDirCfg[64];
+      sprintf(statDirCfg,"statisticsDir%d",nodeIndex);
+      const char* statisticsLocation = msConfig.get()->getString(statDirCfg);
       statMan=new smsc::stat::StatisticsManager(statisticsLocation);
       tp2.startTask(statMan);
       smsc_log_info(log, "Statistics manager started" );
     }
 
     aclmgr = AclAbstractMgr::Create2();
-    aclmgr->LoadUp(*cfg.cfgman);
+    aclmgr->LoadUp(cfg.cfgman->getString("acl.storeDir"),cfg.cfgman->getInt("acl.preCreateSize"));
 
-    distlstman=new DistrListManager(*cfg.cfgman);
+    /*distlstman=new DistrListManager(*cfg.cfgman);
 
     distlstsme=new DistrListProcess(distlstman,&smeman);
     tp.startTask(distlstsme);
@@ -482,25 +511,14 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
 
     smeman.registerInternallSmeProxy("DSTRLST",distlstsme);
 
-    distlstman->init();
-
     {
-      cluster::controller::NetworkDispatcher& nd=cluster::controller::NetworkDispatcher::getInstance();
-      smsc::cluster::controller::protocol::messages::LockMscManager lockMsg;
-      smsc::cluster::controller::protocol::messages::UnlockMscManager unlockMsg;
-      int rv=nd.sendMessage(lockMsg);
-      if(rv!=0)
-      {
-        throw smsc::util::Exception("Failed to lock msc manager: code %d",rv);
-      }
-      try{
-        smsc::mscman::MscManager::startup();
-      }catch(...)
-      {
-        nd.enqueueMessage(unlockMsg);
-        throw;
-      }
-      nd.enqueueMessage(unlockMsg);
+      smsc::cluster::controller::ConfigLockGuard clg(eyeline::clustercontroller::ctDistrList);
+      distlstman->init();
+    }
+    */
+    {
+      smsc::cluster::controller::ConfigLockGuard clg(eyeline::clustercontroller::ctMsc);
+      smsc::mscman::MscManager::startup();
       smsc_log_info(log, "MSC manager started" );
     }
 
@@ -524,6 +542,7 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
         __warning2__("Failed to initialize profileNotifier:%s",e.what());
       }
 
+      /*
       char *rep=cfg.cfgman->getString("profiler.defaultReport");
       char *dc=cfg.cfgman->getString("profiler.defaultDataCoding");
 
@@ -573,10 +592,8 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
       } catch(smsc::util::config::ConfigException& ex){
         smsc_log_warn(log, "profiler.defaultAccessMaskOut not found, using hardcoded default(%d)",defProfile.accessMaskOut);
       }
-
-      profiler=new smsc::profiler::Profiler(defProfile,
-          &smeman,
-          cfg.cfgman->getString("profiler.systemId"));
+    */
+      profiler=new smsc::profiler::Profiler(&smeman,cfg.cfgman->getString("profiler.systemId"));
 
 #ifdef SMSEXTRA
       try{
@@ -614,9 +631,9 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
       }
     }
 
-    distlstsme->assignProfiler(profiler);
-    distlstsme->assignAliaser(aliaser);
-
+    //distlstsme->assignProfiler(profiler);
+    //distlstsme->assignAliaser(aliaser);
+/*
     try{
       distlstsme->originatingAddress=Address(cfg.cfgman->getString("distrList.originatingAddress")).toString().c_str();
     }catch(...)
@@ -630,9 +647,13 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
     {
       //optional parameter
     }
+    */
 
     smsc_log_info(log, "Profiler configured" );
-    profiler->load(cfg.cfgman->getString("profiler.storeFile"));
+    {
+      smsc::cluster::controller::ConfigLockGuard clg(eyeline::clustercontroller::ctProfiles);
+      profiler->load(cfg.cfgman->getString("profiler.storeFile"));
+    }
     smsc_log_info(log, "Profiler data loaded" );
 
 
@@ -702,8 +723,12 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
     smsc_log_info(log, "Cancel agent started" );
 
 
-    smscHost=cfg.cfgman->getString("smpp.host");
-    smscPort=cfg.cfgman->getInt("smpp.port");
+    char smppHostCfg[64];
+    char smppPortCfg[64];
+    sprintf(smppHostCfg,"smpp.host%d",nodeIndex);
+    sprintf(smppPortCfg,"smpp.port%d",nodeIndex);
+    smscHost=cfg.cfgman->getString(smppHostCfg);
+    smscPort=cfg.cfgman->getInt(smppPortCfg);
     ssockman.setSmppSocketTimeout(cfg.cfgman->getInt("smpp.readTimeout"));
     ssockman.setInactivityTime(cfg.cfgman->getInt("smpp.inactivityTime"));
     ssockman.setInactivityTimeOut(cfg.cfgman->getInt("smpp.inactivityTimeOut"));
@@ -750,27 +775,37 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
       __warning2__("mapIOTasksCount set to default %d",mapIOTasksCount);
     }
 #ifdef EIN_HD
-    localInst=cfg.cfgman->getString("map.localInstancies");
+    char localInstCfg[128];
+    sprintf(localInstCfg,"map.localInstancies%d",nodeIndex);
+    localInst=cfg.cfgman->getString(localInstCfg);
     remoteInst=cfg.cfgman->getString("map.remoteInstancies");
     CPMgmtAddress=cfg.cfgman->getString("map.cpMgmtAddress");
 #endif
     smsc_log_info(log, "MR cache loaded" );
 
     {
+      char perfHost[64];
+      char perfPort[64];
+      sprintf(perfHost,"core.performance.host%d",nodeIndex);
+      sprintf(perfPort,"core.performance.port%d",nodeIndex);
       PerformanceServer *perfSrv=new PerformanceServer
           (
-              cfg.cfgman->getString("core.performance.host"),
-              cfg.cfgman->getInt("core.performance.port"),
+              cfg.cfgman->getString(perfHost),
+              cfg.cfgman->getInt(perfPort),
               &perfDataDisp
           );
       tp2.startTask(perfSrv);
       smsc_log_info(log, "Performance server started" );
     }
     {
+      char perfHost[64];
+      char perfPort[64];
+      sprintf(perfHost,"core.smeperformance.host%d",nodeIndex);
+      sprintf(perfPort,"core.smeperformance.port%d",nodeIndex);
       PerformanceServer *perfSrv=new PerformanceServer
           (
-              cfg.cfgman->getString("core.smeperformance.host"),
-              cfg.cfgman->getInt("core.smeperformance.port"),
+              cfg.cfgman->getString(perfHost),
+              cfg.cfgman->getInt(perfPort),
               &perfSmeDataDisp
           );
       tp2.startTask(perfSrv);
@@ -908,6 +943,7 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
 
 #ifdef SMSEXTRA
     {
+      using namespace smsc::extra;
       ExtraInfo::Init();
       int bits[]={EXTRA_NICK,EXTRA_FLASH,EXTRA_CALEND,EXTRA_SECRET};
       const char* sections[]={"nick","flash","calendar","secret"};
@@ -926,15 +962,17 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
     }
 #endif
 
-#define GETDLOPTIONALCFGPARAM(n,t) \
+/*
+    #define GETDLOPTIONALCFGPARAM(n,t) \
   try{ distlstsme->n=cfg.cfgman->t("distrList."#n);}\
   catch(...) \
   { smsc_log_warn(log,"Config Parameter distrList."#n" not found in config. Using default value");}
+  */
 
-    GETDLOPTIONALCFGPARAM(autoCreatePrincipal,getBool);
-    GETDLOPTIONALCFGPARAM(defaultMaxLists,getInt);
-    GETDLOPTIONALCFGPARAM(defaultMaxElements,getInt);
-    GETDLOPTIONALCFGPARAM(sendSpeed,getInt);
+    //GETDLOPTIONALCFGPARAM(autoCreatePrincipal,getBool);
+    //GETDLOPTIONALCFGPARAM(defaultMaxLists,getInt);
+    //GETDLOPTIONALCFGPARAM(defaultMaxElements,getInt);
+    //GETDLOPTIONALCFGPARAM(sendSpeed,getInt);
 
 
     smsc_log_info(log, "SMSC init complete" );
@@ -1035,7 +1073,7 @@ void Smsc::run()
   // start rescheduler created in init
   // start on thread pool 2 to shutdown it after state machines
 
-    scheduler->InitMsgId(&smsc::util::config::Manager::getInstance());
+    scheduler->InitMsgId(&smsc::util::config::Manager::getInstance(),nodeIndex);
     tp2.startTask(scheduler);
 
 #ifdef SNMP
@@ -1119,7 +1157,7 @@ void Smsc::shutdown()
   smsc::closedgroups::ClosedGroupsManager::Shutdown();
 
 
-  delete distlstman;
+  //delete distlstman;
   delete aclmgr;
 
   smsc::mscman::MscManager::shutdown();
@@ -1190,7 +1228,7 @@ void Smsc::dumpSmsc()
   abort();
 }
 
-void Smsc::registerStatisticalEvent(int eventType, const SMS *sms)
+void Smsc::registerStatisticalEvent(int eventType, const SMS *sms,bool msuOnly)
 {
   using namespace smsc::stat;
   using namespace StatEvents;
@@ -1207,7 +1245,8 @@ void Smsc::registerStatisticalEvent(int eventType, const SMS *sms)
     {
       statMan->updateAccepted(*sms);
       MutexGuard g(perfMutex);
-      submitOkCounter++;
+      if(!msuOnly)submitOkCounter++;
+      msu_submitOkCounter++;
       smePerfMonitor.incAccepted(sms->getSourceSmeId());
 #ifdef SNMP
       SnmpCounter::getInstance().incCounter(SnmpCounter::cntAccepted,sms->getSourceSmeId());
@@ -1219,8 +1258,8 @@ void Smsc::registerStatisticalEvent(int eventType, const SMS *sms)
     {
       statMan->updateRejected(*sms);
       MutexGuard g(perfMutex);
-      submitErrCounter++;
-      msu_submitErrCounter+=sms->hasIntProperty(Tag::SMSC_ORIGINALPARTSNUM)?sms->getIntProperty(Tag::SMSC_ORIGINALPARTSNUM):1;
+      if(!msuOnly)submitErrCounter++;
+      msu_submitErrCounter++;
       smePerfMonitor.incRejected(sms->getSourceSmeId(), sms->getLastResult());
 #ifdef SNMP
       SnmpCounter::getInstance().incCounter(SnmpCounter::cntRejected,sms->getSourceSmeId());
@@ -1233,7 +1272,8 @@ void Smsc::registerStatisticalEvent(int eventType, const SMS *sms)
     {
       statMan->updateChanged(StatInfo(*sms,false));
       MutexGuard g(perfMutex);
-      deliverOkCounter++;
+      if(!msuOnly)deliverOkCounter++;
+      msu_deliverOkCounter++;
       smePerfMonitor.incDelivered(sms->getDestinationSmeId());
 #ifdef SNMP
       int smeIdx=smeman.lookup(sms->getDestinationSmeId());
@@ -1244,18 +1284,10 @@ void Smsc::registerStatisticalEvent(int eventType, const SMS *sms)
     case etDeliverErr:
     {
       statMan->updateTemporal(StatInfo(*sms,false));
-      int msuCnt=1;
-      if(sms->hasBinProperty(Tag::SMSC_CONCATINFO))
-      {
-        ConcatInfo* ci=0;
-        unsigned len;
-        ci=(ConcatInfo*)sms->getBinProperty(Tag::SMSC_CONCATINFO,&len);
-        msuCnt=ci->num-sms->getConcatSeqNum();
-      }
 
       MutexGuard g(perfMutex);
-      deliverErrTempCounter++;
-      msu_deliverErrTempCounter+=msuCnt;
+      if(!msuOnly)deliverErrTempCounter++;
+      msu_deliverErrTempCounter++;
       smePerfMonitor.incFailed(sms->getDestinationSmeId(), sms->getLastResult());
 #ifdef SNMP
       int smeIdx=smeman.lookup(sms->getDestinationSmeId());
@@ -1265,18 +1297,10 @@ void Smsc::registerStatisticalEvent(int eventType, const SMS *sms)
     }break;
     case etUndeliverable:
     {
-      int msuCnt=1;
-      if(sms->hasBinProperty(Tag::SMSC_CONCATINFO))
-      {
-        ConcatInfo* ci=0;
-        unsigned len;
-        ci=(ConcatInfo*)sms->getBinProperty(Tag::SMSC_CONCATINFO,&len);
-        msuCnt=ci->num-sms->getConcatSeqNum();
-      }
       statMan->updateChanged(StatInfo(*sms,false));
       MutexGuard g(perfMutex);
-      deliverErrPermCounter++;
-      msu_deliverErrPermCounter+=msuCnt;
+      if(!msuOnly)deliverErrPermCounter++;
+      msu_deliverErrPermCounter++;
       smePerfMonitor.incFailed(sms->getDestinationSmeId(), sms->getLastResult());
 #ifdef SNMP
       int smeIdx=smeman.lookup(sms->getDestinationSmeId());
@@ -1288,7 +1312,7 @@ void Smsc::registerStatisticalEvent(int eventType, const SMS *sms)
     {
       statMan->updateScheduled(StatInfo(*sms,false));
       MutexGuard g(perfMutex);
-      rescheduleCounter++;
+      if(!msuOnly)rescheduleCounter++;
       msu_rescheduleCounter++;
       smePerfMonitor.incRescheduled(sms->getDestinationSmeId());
 #ifdef SNMP

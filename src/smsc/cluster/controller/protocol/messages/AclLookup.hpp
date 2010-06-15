@@ -17,7 +17,6 @@ namespace controller{
 namespace protocol{
 namespace messages{
 
-typedef std::vector<std::string> string_list;
 
 class AclLookup{
 public:
@@ -30,6 +29,11 @@ public:
     seqNum=0;
     aclIdFlag=false;
     addrPrefixFlag=false;
+  }
+ 
+  static int32_t getTag()
+  {
+    return 30;
   }
 
   std::string toString()const
@@ -45,7 +49,7 @@ public:
         rv+=";";
       }
       rv+="aclId=";
-      sprintf(buf,"%u",(unsigned int)aclId);
+      sprintf(buf,"%d",aclId);
       rv+=buf;
     }
     if(addrPrefixFlag)
@@ -61,9 +65,9 @@ public:
   }
 
   template <class DataStream>
-  uint32_t length()const
+  int32_t length()const
   {
-    uint32_t rv=0;
+    int32_t rv=0;
     if(aclIdFlag)
     {
       rv+=DataStream::tagTypeSize;
@@ -79,18 +83,23 @@ public:
     rv+=DataStream::tagTypeSize;
     return rv;
   }
-  uint32_t getAclId()const
+  int32_t getAclId()const
   {
     if(!aclIdFlag)
     {
-      throw protogen::framework::FieldIsNullException("aclId");
+      throw eyeline::protogen::framework::FieldIsNullException("aclId");
     }
     return aclId;
   }
-  void setAclId(uint32_t value)
+  void setAclId(int32_t argValue)
   {
-    aclId=value;
+    aclId=argValue;
     aclIdFlag=true;
+  }
+  int32_t& getAclIdRef()
+  {
+    aclIdFlag=true;
+    return aclId;
   }
   bool hasAclId()const
   {
@@ -100,14 +109,19 @@ public:
   {
     if(!addrPrefixFlag)
     {
-      throw protogen::framework::FieldIsNullException("addrPrefix");
+      throw eyeline::protogen::framework::FieldIsNullException("addrPrefix");
     }
     return addrPrefix;
   }
-  void setAddrPrefix(const std::string& value)
+  void setAddrPrefix(const std::string& argValue)
   {
-    addrPrefix=value;
+    addrPrefix=argValue;
     addrPrefixFlag=true;
+  }
+  std::string& getAddrPrefixRef()
+  {
+    addrPrefixFlag=true;
+    return addrPrefix;
   }
   bool hasAddrPrefix()const
   {
@@ -118,11 +132,11 @@ public:
   {
     if(!aclIdFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("aclId");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("aclId");
     }
     if(!addrPrefixFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("addrPrefix");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("addrPrefix");
     }
     //ds.writeByte(versionMajor);
     //ds.writeByte(versionMinor);
@@ -139,8 +153,8 @@ public:
   {
     Clear();
     bool endOfMessage=false;
-    //uint8_t rdVersionMajor=ds.readByte();
-    //uint8_t rdVersionMinor=ds.readByte();
+    //int8_t rdVersionMajor=ds.readByte();
+    //int8_t rdVersionMinor=ds.readByte();
     //if(rdVersionMajor!=versionMajor)
     //{
     //  throw protogen::framework::IncompatibleVersionException("AclLookup");
@@ -148,14 +162,14 @@ public:
     //seqNum=ds.readInt32();
     while(!endOfMessage)
     {
-      uint32_t tag=ds.readTag();
+      DataStream::TagType tag=ds.readTag();
       switch(tag)
       {
         case aclIdTag:
         {
           if(aclIdFlag)
           {
-            throw protogen::framework::DuplicateFieldException("aclId");
+            throw eyeline::protogen::framework::DuplicateFieldException("aclId");
           }
           aclId=ds.readInt32LV();
           aclIdFlag=true;
@@ -164,7 +178,7 @@ public:
         {
           if(addrPrefixFlag)
           {
-            throw protogen::framework::DuplicateFieldException("addrPrefix");
+            throw eyeline::protogen::framework::DuplicateFieldException("addrPrefix");
           }
           addrPrefix=ds.readStrLV();
           addrPrefixFlag=true;
@@ -182,35 +196,37 @@ public:
     }
     if(!aclIdFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("aclId");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("aclId");
     }
     if(!addrPrefixFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("addrPrefix");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("addrPrefix");
     }
 
   }
 
-  uint32_t getSeqNum()const
+  int32_t getSeqNum()const
   {
     return seqNum;
   }
 
-  void setSeqNum(uint32_t value)
+  void setSeqNum(int32_t argValue)
   {
-    seqNum=value;
+    seqNum=argValue;
   }
 
+ 
+
 protected:
-  //static const uint8_t versionMajor=1;
-  //static const uint8_t versionMinor=0;
+  //static const int8_t versionMajor=1;
+  //static const int8_t versionMinor=0;
 
-  static const uint32_t aclIdTag=1;
-  static const uint32_t addrPrefixTag=2;
+  static const int32_t aclIdTag=1;
+  static const int32_t addrPrefixTag=2;
 
-  uint32_t seqNum;
+  int32_t seqNum;
 
-  uint32_t aclId;
+  int32_t aclId;
   std::string addrPrefix;
 
   bool aclIdFlag;

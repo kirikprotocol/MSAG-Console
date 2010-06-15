@@ -17,7 +17,6 @@ namespace controller{
 namespace protocol{
 namespace messages{
 
-typedef std::vector<std::string> string_list;
 
 class SmeDisconnect{
 public:
@@ -29,6 +28,12 @@ public:
   {
     seqNum=0;
     sysIdsFlag=false;
+    sysIds.clear();
+  }
+ 
+  static int32_t getTag()
+  {
+    return 22;
   }
 
   std::string toString()const
@@ -46,7 +51,7 @@ public:
       rv+="sysIds=";
       rv+="[";
       bool first=true;
-      for(string_list::const_iterator it=sysIds.begin(),end=sysIds.end();it!=end;it++)
+      for(std::vector<std::string>::const_iterator it=sysIds.begin(),end=sysIds.end();it!=end;it++)
       {
         if(first)
         {
@@ -63,9 +68,9 @@ public:
   }
 
   template <class DataStream>
-  uint32_t length()const
+  int32_t length()const
   {
-    uint32_t rv=0;
+    int32_t rv=0;
     if(sysIdsFlag)
     {
       rv+=DataStream::tagTypeSize;
@@ -75,18 +80,23 @@ public:
     rv+=DataStream::tagTypeSize;
     return rv;
   }
-  const string_list& getSysIds()const
+  const std::vector<std::string>& getSysIds()const
   {
     if(!sysIdsFlag)
     {
-      throw protogen::framework::FieldIsNullException("sysIds");
+      throw eyeline::protogen::framework::FieldIsNullException("sysIds");
     }
     return sysIds;
   }
-  void setSysIds(const string_list& value)
+  void setSysIds(const std::vector<std::string>& argValue)
   {
-    sysIds=value;
+    sysIds=argValue;
     sysIdsFlag=true;
+  }
+  std::vector<std::string>& getSysIdsRef()
+  {
+    sysIdsFlag=true;
+    return sysIds;
   }
   bool hasSysIds()const
   {
@@ -97,13 +107,17 @@ public:
   {
     if(!sysIdsFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("sysIds");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("sysIds");
     }
     //ds.writeByte(versionMajor);
     //ds.writeByte(versionMinor);
     //ds.writeInt32(seqNum);
     ds.writeTag(sysIdsTag);
-    ds.writeStrLstLV(sysIds);
+    ds.writeLength(DataStream::fieldSize(sysIds));
+    for(std::vector<std::string>::const_iterator it=sysIds.begin(),end=sysIds.end();it!=end;it++)
+    {
+      ds.writeStr(*it);
+    }
     ds.writeTag(DataStream::endOfMessage_tag);
   }
 
@@ -112,8 +126,8 @@ public:
   {
     Clear();
     bool endOfMessage=false;
-    //uint8_t rdVersionMajor=ds.readByte();
-    //uint8_t rdVersionMinor=ds.readByte();
+    //int8_t rdVersionMajor=ds.readByte();
+    //int8_t rdVersionMinor=ds.readByte();
     //if(rdVersionMajor!=versionMajor)
     //{
     //  throw protogen::framework::IncompatibleVersionException("SmeDisconnect");
@@ -121,16 +135,21 @@ public:
     //seqNum=ds.readInt32();
     while(!endOfMessage)
     {
-      uint32_t tag=ds.readTag();
+      DataStream::TagType tag=ds.readTag();
       switch(tag)
       {
         case sysIdsTag:
         {
           if(sysIdsFlag)
           {
-            throw protogen::framework::DuplicateFieldException("sysIds");
+            throw eyeline::protogen::framework::DuplicateFieldException("sysIds");
           }
-          ds.readStrLstLV(sysIds);
+          typename DataStream::LengthType len=ds.readLength(),rd=0;
+          while(rd<len)
+          {
+            sysIds.push_back(ds.readStr());
+            rd+=DataStream::fieldSize(sysIds.back());
+          }
           sysIdsFlag=true;
         }break;
         case DataStream::endOfMessage_tag:
@@ -146,30 +165,32 @@ public:
     }
     if(!sysIdsFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("sysIds");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("sysIds");
     }
 
   }
 
-  uint32_t getSeqNum()const
+  int32_t getSeqNum()const
   {
     return seqNum;
   }
 
-  void setSeqNum(uint32_t value)
+  void setSeqNum(int32_t argValue)
   {
-    seqNum=value;
+    seqNum=argValue;
   }
 
+ 
+
 protected:
-  //static const uint8_t versionMajor=1;
-  //static const uint8_t versionMinor=0;
+  //static const int8_t versionMajor=1;
+  //static const int8_t versionMinor=0;
 
-  static const uint32_t sysIdsTag=1;
+  static const int32_t sysIdsTag=1;
 
-  uint32_t seqNum;
+  int32_t seqNum;
 
-  string_list sysIds;
+  std::vector<std::string> sysIds;
 
   bool sysIdsFlag;
 };

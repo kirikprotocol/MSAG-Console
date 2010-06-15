@@ -19,7 +19,6 @@ namespace controller{
 namespace protocol{
 namespace messages{
 
-typedef std::vector<std::string> string_list;
 
 class AclGetResp{
 public:
@@ -32,6 +31,11 @@ public:
     seqNum=0;
     respFlag=false;
     aclFlag=false;
+  }
+ 
+  static int32_t getTag()
+  {
+    return 1025;
   }
 
   std::string toString()const
@@ -66,9 +70,9 @@ public:
   }
 
   template <class DataStream>
-  uint32_t length()const
+  int32_t length()const
   {
-    uint32_t rv=0;
+    int32_t rv=0;
     if(respFlag)
     {
       rv+=DataStream::tagTypeSize;
@@ -88,14 +92,19 @@ public:
   {
     if(!respFlag)
     {
-      throw protogen::framework::FieldIsNullException("resp");
+      throw eyeline::protogen::framework::FieldIsNullException("resp");
     }
     return resp;
   }
-  void setResp(const Response& value)
+  void setResp(const Response& argValue)
   {
-    resp=value;
+    resp=argValue;
     respFlag=true;
+  }
+  Response& getRespRef()
+  {
+    respFlag=true;
+    return resp;
   }
   bool hasResp()const
   {
@@ -105,14 +114,19 @@ public:
   {
     if(!aclFlag)
     {
-      throw protogen::framework::FieldIsNullException("acl");
+      throw eyeline::protogen::framework::FieldIsNullException("acl");
     }
     return acl;
   }
-  void setAcl(const AclInfo& value)
+  void setAcl(const AclInfo& argValue)
   {
-    acl=value;
+    acl=argValue;
     aclFlag=true;
+  }
+  AclInfo& getAclRef()
+  {
+    aclFlag=true;
+    return acl;
   }
   bool hasAcl()const
   {
@@ -123,7 +137,7 @@ public:
   {
     if(!respFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("resp");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("resp");
     }
     //ds.writeByte(versionMajor);
     //ds.writeByte(versionMinor);
@@ -145,8 +159,8 @@ public:
   {
     Clear();
     bool endOfMessage=false;
-    //uint8_t rdVersionMajor=ds.readByte();
-    //uint8_t rdVersionMinor=ds.readByte();
+    //int8_t rdVersionMajor=ds.readByte();
+    //int8_t rdVersionMinor=ds.readByte();
     //if(rdVersionMajor!=versionMajor)
     //{
     //  throw protogen::framework::IncompatibleVersionException("AclGetResp");
@@ -154,14 +168,14 @@ public:
     //seqNum=ds.readInt32();
     while(!endOfMessage)
     {
-      uint32_t tag=ds.readTag();
+      DataStream::TagType tag=ds.readTag();
       switch(tag)
       {
         case respTag:
         {
           if(respFlag)
           {
-            throw protogen::framework::DuplicateFieldException("resp");
+            throw eyeline::protogen::framework::DuplicateFieldException("resp");
           }
 
           ds.readLength();resp.deserialize(ds);
@@ -171,7 +185,7 @@ public:
         {
           if(aclFlag)
           {
-            throw protogen::framework::DuplicateFieldException("acl");
+            throw eyeline::protogen::framework::DuplicateFieldException("acl");
           }
 
           ds.readLength();acl.deserialize(ds);
@@ -190,29 +204,31 @@ public:
     }
     if(!respFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("resp");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("resp");
     }
 
   }
 
-  uint32_t getSeqNum()const
+  int32_t getSeqNum()const
   {
     return seqNum;
   }
 
-  void setSeqNum(uint32_t value)
+  void setSeqNum(int32_t argValue)
   {
-    seqNum=value;
+    seqNum=argValue;
   }
 
+ 
+
 protected:
-  //static const uint8_t versionMajor=1;
-  //static const uint8_t versionMinor=0;
+  //static const int8_t versionMajor=1;
+  //static const int8_t versionMinor=0;
 
-  static const uint32_t respTag=1;
-  static const uint32_t aclTag=2;
+  static const int32_t respTag=1;
+  static const int32_t aclTag=2;
 
-  uint32_t seqNum;
+  int32_t seqNum;
 
   Response resp;
   AclInfo acl;

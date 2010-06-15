@@ -170,6 +170,7 @@ class AclManager : public AclAbstractMgr
 
   int preCreateSize;
 
+  bool allowFileModification;
 
   Mutex mtx;
 
@@ -212,6 +213,7 @@ class AclManager : public AclAbstractMgr
 public:
   AclManager():aclsFile(aclsFileSig,aclsFileVer)
   {
+    allowFileModification=false;
   }
 
   //struct AclEditor
@@ -229,13 +231,18 @@ public:
   virtual bool    isGranted(AclIdent aclid,const AclPhoneNumber& phone);
   // struct AclAbstractManager
 
-  virtual void LoadUp(smsc::util::config::Manager& cfgMgr);
+  virtual void LoadUp(const char* argAclStore,int argPreCreate);
+
+  void enableControllerMode()
+  {
+    allowFileModification=true;
+  }
 };
 
 
-void AclManager::LoadUp(smsc::util::config::Manager& cfgMgr)
+void AclManager::LoadUp(const char* argAclStore,int argPreCreate)
 {
-  storeDir=cfgMgr.getString("acl.storeDir");
+  storeDir=argAclStore;
   if(storeDir.length()>0 && storeDir[storeDir.length()-1]!='/')
   {
     storeDir+='/';
@@ -258,7 +265,7 @@ void AclManager::LoadUp(smsc::util::config::Manager& cfgMgr)
     idFile.WriteNetInt32(idSeq);
     idFile.Flush();
   }
-  preCreateSize=cfgMgr.getInt("acl.preCreateSize");
+  preCreateSize=argPreCreate;
 }
 
 void AclManager::enumerate(vector<AclNamedIdent>& result)
@@ -319,11 +326,14 @@ void AclManager::remove(AclIdent aclident)
   MutexGuard mg(mtx);
   AclInfoRecord* aclptr=acls.GetPtr(aclident);
   if(!aclptr)throw Exception(ACLMGRPREFIX"Has no requested records");
-  string fn=getStoreFile(aclptr->ident);
-  if(File::Exists(fn.c_str()))File::Unlink(fn.c_str());
-  fn=getIndexFile(aclptr->ident);
-  if(File::Exists(fn.c_str()))File::Unlink(fn.c_str());
-  aclsFile.Delete(aclptr->offset);
+  if(allowFileModification)
+  {
+    string fn=getStoreFile(aclptr->ident);
+    if(File::Exists(fn.c_str()))File::Unlink(fn.c_str());
+    fn=getIndexFile(aclptr->ident);
+    if(File::Exists(fn.c_str()))File::Unlink(fn.c_str());
+    aclsFile.Delete(aclptr->offset);
+  }
   acls.Delete(aclptr->ident);
   /*
   static const char* sql = "DELETE FROM SMS_ACLINFO WHERE ID = %d";
@@ -351,22 +361,28 @@ void AclManager::create(AclIdent aclident,const char* aclname,const char* acldes
   MutexGuard mg(mtx);
 
   AclInfoRecord aclr(MakeAclInfo(aclident,aclname,acldescr,act));
-  aclr.offset=aclsFile.Append(aclr);
+  if(allowFileModification)
+  {
+    aclr.offset=aclsFile.Append(aclr);
+  }
   acls.Insert(aclident,aclr);
 
-  if(!phones.empty())
+  if(allowFileModification)
   {
-    DiskHash<AclDiskRecord,Int64Record> dh;
-    FixedRecordFile<AclDiskRecord> frf(aclMembersSig,aclMembersVer);
-
-    OpenOrCreateDH(dh,aclident);
-    frf.Open(getStoreFile(aclident).c_str());
-
-    for(vector<AclPhoneNumber>::const_iterator it=phones.begin();it!=phones.end();it++)
+    if(!phones.empty())
     {
-      AclDiskRecord r(Address(it->c_str()));
-      r.offset=frf.Append(r);
-      dh.Insert(r,r.offset);
+      DiskHash<AclDiskRecord,Int64Record> dh;
+      FixedRecordFile<AclDiskRecord> frf(aclMembersSig,aclMembersVer);
+
+      OpenOrCreateDH(dh,aclident);
+      frf.Open(getStoreFile(aclident).c_str());
+
+      for(vector<AclPhoneNumber>::const_iterator it=phones.begin();it!=phones.end();it++)
+      {
+        AclDiskRecord r(Address(it->c_str()));
+        r.offset=frf.Append(r);
+        dh.Insert(r,r.offset);
+      }
     }
   }
 
@@ -484,6 +500,10 @@ void AclManager::removePhone(AclIdent aclident,const AclPhoneNumber& phone)
   MutexGuard mg(mtx);
   AclInfoRecord* recptr=acls.GetPtr(aclident);
   if(!recptr)throw Exception(ACLMGRPREFIX"Acl with id=%d doesn't exists",aclident);
+  if(!allowFileModification)
+  {
+    return;
+  }
 
   DiskHash<AclDiskRecord,Int64Record> dh;
   FixedRecordFile<AclDiskRecord> frf(aclMembersSig,aclMembersVer);
@@ -530,6 +550,10 @@ void AclManager::addPhone(AclIdent aclident,const AclPhoneNumber& phone)
 
   AclInfoRecord* recptr=acls.GetPtr(aclident);
   if(!recptr)throw Exception(ACLMGRPREFIX"Acl with id=%d doesn't exists",aclident);
+  if(!allowFileModification)
+  {
+    return;
+  }
 
   DiskHash<AclDiskRecord,Int64Record> dh;
   FixedRecordFile<AclDiskRecord> frf(aclMembersSig,aclMembersVer);
@@ -575,6 +599,10 @@ void AclManager::updateAclInfo(AclIdent aclident,const char* aclname,const char*
   recptr->name=aclname;
   recptr->description=acldesc;
   recptr->cache=act;
+  if(!allowFileModification)
+  {
+    return;
+  }
   aclsFile.Write(recptr->offset,*recptr);
   /*
   static const char* sql = "UPDATE SMS_ACLINFO SET NAME=:1,DESCRIPTION=:2,CACHE_TYPE=:3 where id=:4";

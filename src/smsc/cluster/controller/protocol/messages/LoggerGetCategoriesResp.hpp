@@ -19,7 +19,6 @@ namespace controller{
 namespace protocol{
 namespace messages{
 
-typedef std::vector<std::string> string_list;
 
 class LoggerGetCategoriesResp{
 public:
@@ -32,6 +31,12 @@ public:
     seqNum=0;
     respFlag=false;
     categoriesFlag=false;
+    categories.clear();
+  }
+ 
+  static int32_t getTag()
+  {
+    return 1023;
   }
 
   std::string toString()const
@@ -79,9 +84,9 @@ public:
   }
 
   template <class DataStream>
-  uint32_t length()const
+  int32_t length()const
   {
-    uint32_t rv=0;
+    int32_t rv=0;
     if(respFlag)
     {
       rv+=DataStream::tagTypeSize;
@@ -104,14 +109,19 @@ public:
   {
     if(!respFlag)
     {
-      throw protogen::framework::FieldIsNullException("resp");
+      throw eyeline::protogen::framework::FieldIsNullException("resp");
     }
     return resp;
   }
-  void setResp(const Response& value)
+  void setResp(const Response& argValue)
   {
-    resp=value;
+    resp=argValue;
     respFlag=true;
+  }
+  Response& getRespRef()
+  {
+    respFlag=true;
+    return resp;
   }
   bool hasResp()const
   {
@@ -121,14 +131,19 @@ public:
   {
     if(!categoriesFlag)
     {
-      throw protogen::framework::FieldIsNullException("categories");
+      throw eyeline::protogen::framework::FieldIsNullException("categories");
     }
     return categories;
   }
-  void setCategories(const std::vector<CategoryInfo>& value)
+  void setCategories(const std::vector<CategoryInfo>& argValue)
   {
-    categories=value;
+    categories=argValue;
     categoriesFlag=true;
+  }
+  std::vector<CategoryInfo>& getCategoriesRef()
+  {
+    categoriesFlag=true;
+    return categories;
   }
   bool hasCategories()const
   {
@@ -139,11 +154,11 @@ public:
   {
     if(!respFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("resp");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("resp");
     }
     if(!categoriesFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("categories");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("categories");
     }
     //ds.writeByte(versionMajor);
     //ds.writeByte(versionMinor);
@@ -170,8 +185,8 @@ public:
   {
     Clear();
     bool endOfMessage=false;
-    //uint8_t rdVersionMajor=ds.readByte();
-    //uint8_t rdVersionMinor=ds.readByte();
+    //int8_t rdVersionMajor=ds.readByte();
+    //int8_t rdVersionMinor=ds.readByte();
     //if(rdVersionMajor!=versionMajor)
     //{
     //  throw protogen::framework::IncompatibleVersionException("LoggerGetCategoriesResp");
@@ -179,14 +194,14 @@ public:
     //seqNum=ds.readInt32();
     while(!endOfMessage)
     {
-      uint32_t tag=ds.readTag();
+      DataStream::TagType tag=ds.readTag();
       switch(tag)
       {
         case respTag:
         {
           if(respFlag)
           {
-            throw protogen::framework::DuplicateFieldException("resp");
+            throw eyeline::protogen::framework::DuplicateFieldException("resp");
           }
 
           ds.readLength();resp.deserialize(ds);
@@ -196,7 +211,7 @@ public:
         {
           if(categoriesFlag)
           {
-            throw protogen::framework::DuplicateFieldException("categories");
+            throw eyeline::protogen::framework::DuplicateFieldException("categories");
           }
 
           typename DataStream::LengthType len=ds.readLength(),rd=0;
@@ -221,33 +236,35 @@ public:
     }
     if(!respFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("resp");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("resp");
     }
     if(!categoriesFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("categories");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("categories");
     }
 
   }
 
-  uint32_t getSeqNum()const
+  int32_t getSeqNum()const
   {
     return seqNum;
   }
 
-  void setSeqNum(uint32_t value)
+  void setSeqNum(int32_t argValue)
   {
-    seqNum=value;
+    seqNum=argValue;
   }
 
+ 
+
 protected:
-  //static const uint8_t versionMajor=1;
-  //static const uint8_t versionMinor=0;
+  //static const int8_t versionMajor=1;
+  //static const int8_t versionMinor=0;
 
-  static const uint32_t respTag=1;
-  static const uint32_t categoriesTag=2;
+  static const int32_t respTag=1;
+  static const int32_t categoriesTag=2;
 
-  uint32_t seqNum;
+  int32_t seqNum;
 
   Response resp;
   std::vector<CategoryInfo> categories;

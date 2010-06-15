@@ -206,7 +206,10 @@ protected:
       pkt.len=len;
       sync::MutexGuard mg(mon);
       queue.Push(pkt);
-      mon.notify();
+      if(queue.Count()==1)
+      {
+        mon.notify();
+      }
       debug2(log,"queue.Count()=%d",queue.Count());
     }
 

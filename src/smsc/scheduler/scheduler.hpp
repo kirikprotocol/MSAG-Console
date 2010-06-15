@@ -113,7 +113,7 @@ public:
     lastRejectReschedule=0;
     delayInit=false;
   }
-  ~Scheduler()
+  virtual ~Scheduler()
   {
     localFileStore.Stop();
     localFileStore.WaitFor();
@@ -141,20 +141,24 @@ public:
   int Execute();
   const char* taskName(){return "scheduler";}
 
-  void InitMsgId(smsc::util::config::Manager* cfgman)
+  void InitMsgId(smsc::util::config::Manager* cfgman,int nodeIdx)
   {
-    const char* idFileName=cfgman->getString("MessageStore.LocalStore.msgidfile");
+    char msgIdCfg[64];
+    sprintf(msgIdCfg,"MessageStore.LocalStore.msgidfile%d",nodeIdx);
+    const char* idFileName=cfgman->getString(msgIdCfg);
     if(File::Exists(idFileName))
     {
       idFile.RWOpen(idFileName);
       idSeq=idFile.ReadNetInt64();
       idSeq+=MessageIdSequenceExtent;
+      idSeq-=idSeq%16;
+      idSeq+=nodeIdx-1;
       idFile.Seek(0);
       idFile.WriteNetInt64(idSeq);
     }else
     {
       idFile.WOpen(idFileName);
-      idSeq=0;
+      idSeq=nodeIdx;
       idFile.WriteNetInt64(idSeq);
     }
     idFile.SetUnbuffered();
@@ -336,7 +340,7 @@ public:
 
     time_t oldntt=sms.getNextTime();
     bool sethead=false;
-    if(sms.attempts==0)
+    if(sms.attempts==0  && c->queueSize!=0)
     {
       ChainPush(c,SchedulerData(id,sms.getValidTime()));
       debug2(log,"Resched: push sms %lld to tail (%d), c=%p",id,c->headTime,c);

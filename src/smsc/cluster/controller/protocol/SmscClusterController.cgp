@@ -1,22 +1,22 @@
 source=ControllerSmscProtocol.def
 
-search.path=../../../../eyeline/clustercontroller/protocol/tmpl/
+search.path=/Users/skv/Documents/cpp/protogen/tmpl
 search.path=../../../../eyeline/clustercontroller/protocol/def/
 
-out.dir=messages
+out.message.dir=./messages
+out.enum.dir=./messages
+out.protocol.dir=./
 
-message.template=message-cpp.tmpl
-protocol.template=proto-hpp.tmpl
-protocol.template=proto-cpp.tmpl
+message.template=cpp-message-hpp.tmpl
+protocol.template=cpp-proto-hpp.tmpl
+protocol.template=cpp-proto-cpp.tmpl
+enum.template=cpp-enum-hpp.tmpl
+enum.template=cpp-enum-cpp.tmpl
 #protocol.template=handler-hpp.tmpl
 #protocol.template=handler-cpp.tmpl
-out.protocol.prefix=../
 out.protocol.suffix=Clnt
-out.protocol.prefix=../
 out.protocol.suffix=Clnt
-out.protocol.prefix=../
 out.protocol.suffix=HandlerClnt
-out.protocol.prefix=../
 out.protocol.suffix=HandlerClnt
 out.extension=hpp
 out.extension=cpp
@@ -32,6 +32,13 @@ data:namespacemsg:2=cluster
 data:namespacemsg:3=controller
 data:namespacemsg:4=protocol
 data:namespacemsg:5=messages
+
+data:namespaceenum:1=smsc
+data:namespaceenum:2=cluster
+data:namespaceenum:3=controller
+data:namespaceenum:4=protocol
+data:namespaceenum:5=messages
+
 
 data:namespaceprt:1=smsc
 data:namespaceprt:2=cluster

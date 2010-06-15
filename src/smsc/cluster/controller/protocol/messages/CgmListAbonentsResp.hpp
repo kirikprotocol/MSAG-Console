@@ -18,7 +18,6 @@ namespace controller{
 namespace protocol{
 namespace messages{
 
-typedef std::vector<std::string> string_list;
 
 class CgmListAbonentsResp{
 public:
@@ -31,6 +30,12 @@ public:
     seqNum=0;
     respFlag=false;
     resultFlag=false;
+    result.clear();
+  }
+ 
+  static int32_t getTag()
+  {
+    return 1040;
   }
 
   std::string toString()const
@@ -59,7 +64,7 @@ public:
       rv+="result=";
       rv+="[";
       bool first=true;
-      for(string_list::const_iterator it=result.begin(),end=result.end();it!=end;it++)
+      for(std::vector<std::string>::const_iterator it=result.begin(),end=result.end();it!=end;it++)
       {
         if(first)
         {
@@ -76,9 +81,9 @@ public:
   }
 
   template <class DataStream>
-  uint32_t length()const
+  int32_t length()const
   {
-    uint32_t rv=0;
+    int32_t rv=0;
     if(respFlag)
     {
       rv+=DataStream::tagTypeSize;
@@ -98,31 +103,41 @@ public:
   {
     if(!respFlag)
     {
-      throw protogen::framework::FieldIsNullException("resp");
+      throw eyeline::protogen::framework::FieldIsNullException("resp");
     }
     return resp;
   }
-  void setResp(const Response& value)
+  void setResp(const Response& argValue)
   {
-    resp=value;
+    resp=argValue;
     respFlag=true;
+  }
+  Response& getRespRef()
+  {
+    respFlag=true;
+    return resp;
   }
   bool hasResp()const
   {
     return respFlag;
   }
-  const string_list& getResult()const
+  const std::vector<std::string>& getResult()const
   {
     if(!resultFlag)
     {
-      throw protogen::framework::FieldIsNullException("result");
+      throw eyeline::protogen::framework::FieldIsNullException("result");
     }
     return result;
   }
-  void setResult(const string_list& value)
+  void setResult(const std::vector<std::string>& argValue)
   {
-    result=value;
+    result=argValue;
     resultFlag=true;
+  }
+  std::vector<std::string>& getResultRef()
+  {
+    resultFlag=true;
+    return result;
   }
   bool hasResult()const
   {
@@ -133,11 +148,11 @@ public:
   {
     if(!respFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("resp");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("resp");
     }
     if(!resultFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("result");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("result");
     }
     //ds.writeByte(versionMajor);
     //ds.writeByte(versionMinor);
@@ -146,7 +161,11 @@ public:
     ds.writeLength(resp.length<DataStream>());
     resp.serialize(ds);
     ds.writeTag(resultTag);
-    ds.writeStrLstLV(result);
+    ds.writeLength(DataStream::fieldSize(result));
+    for(std::vector<std::string>::const_iterator it=result.begin(),end=result.end();it!=end;it++)
+    {
+      ds.writeStr(*it);
+    }
     ds.writeTag(DataStream::endOfMessage_tag);
   }
 
@@ -155,8 +174,8 @@ public:
   {
     Clear();
     bool endOfMessage=false;
-    //uint8_t rdVersionMajor=ds.readByte();
-    //uint8_t rdVersionMinor=ds.readByte();
+    //int8_t rdVersionMajor=ds.readByte();
+    //int8_t rdVersionMinor=ds.readByte();
     //if(rdVersionMajor!=versionMajor)
     //{
     //  throw protogen::framework::IncompatibleVersionException("CgmListAbonentsResp");
@@ -164,14 +183,14 @@ public:
     //seqNum=ds.readInt32();
     while(!endOfMessage)
     {
-      uint32_t tag=ds.readTag();
+      DataStream::TagType tag=ds.readTag();
       switch(tag)
       {
         case respTag:
         {
           if(respFlag)
           {
-            throw protogen::framework::DuplicateFieldException("resp");
+            throw eyeline::protogen::framework::DuplicateFieldException("resp");
           }
 
           ds.readLength();resp.deserialize(ds);
@@ -181,9 +200,14 @@ public:
         {
           if(resultFlag)
           {
-            throw protogen::framework::DuplicateFieldException("result");
+            throw eyeline::protogen::framework::DuplicateFieldException("result");
           }
-          ds.readStrLstLV(result);
+          typename DataStream::LengthType len=ds.readLength(),rd=0;
+          while(rd<len)
+          {
+            result.push_back(ds.readStr());
+            rd+=DataStream::fieldSize(result.back());
+          }
           resultFlag=true;
         }break;
         case DataStream::endOfMessage_tag:
@@ -199,36 +223,38 @@ public:
     }
     if(!respFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("resp");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("resp");
     }
     if(!resultFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("result");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("result");
     }
 
   }
 
-  uint32_t getSeqNum()const
+  int32_t getSeqNum()const
   {
     return seqNum;
   }
 
-  void setSeqNum(uint32_t value)
+  void setSeqNum(int32_t argValue)
   {
-    seqNum=value;
+    seqNum=argValue;
   }
 
+ 
+
 protected:
-  //static const uint8_t versionMajor=1;
-  //static const uint8_t versionMinor=0;
+  //static const int8_t versionMajor=1;
+  //static const int8_t versionMinor=0;
 
-  static const uint32_t respTag=1;
-  static const uint32_t resultTag=2;
+  static const int32_t respTag=1;
+  static const int32_t resultTag=2;
 
-  uint32_t seqNum;
+  int32_t seqNum;
 
   Response resp;
-  string_list result;
+  std::vector<std::string> result;
 
   bool respFlag;
   bool resultFlag;

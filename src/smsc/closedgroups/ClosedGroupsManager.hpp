@@ -18,6 +18,10 @@ namespace buf=smsc::core::buffers;
 
 class ClosedGroupsManager:public ClosedGroupsInterface{
 public:
+  ClosedGroupsManager()
+  {
+    allowFileModification=false;
+  }
   static void Init()
   {
     instance=new ClosedGroupsManager();
@@ -26,6 +30,11 @@ public:
   {
     delete instance;
     instance=0;
+  }
+
+  void enableControllerMode()
+  {
+    allowFileModification=true;
   }
 
   virtual void Load(const char* filename);
@@ -173,6 +182,7 @@ protected:
   typedef std::map<int,Group*> GroupsMap;
   GroupsMap groups;
   mutable sync::Mutex mtx;
+  bool allowFileModification;
 
 };
 

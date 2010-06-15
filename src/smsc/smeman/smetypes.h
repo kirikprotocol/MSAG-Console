@@ -2,18 +2,20 @@
   $Id$
 */
 
-#if !defined __Cpp_Header__smeman_smetyes_h__
-#define __Cpp_Header__smeman_smetyes_h__
+#if !defined __SMSC_SMEMAN_SMETYPES_H__
+#define __SMSC_SMEMAN_SMETYPES_H__
 
 #include <string>
 #include <inttypes.h>
 #include <exception>
+#include "core/buffers/FixedLengthString.hpp"
+#include "sms/sms_const.h"
 
 namespace smsc {
 namespace smeman {
 
-typedef std::string SmeSystemId;
-typedef std::string SmePassword;
+typedef smsc::core::buffers::FixedLengthString<smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1> SmeSystemId;
+typedef smsc::core::buffers::FixedLengthString<smsc::sms::MAX_SMEPASSWD_TYPE_LENGTH+1> SmePassword;
 typedef int32_t SmeIndex;
 typedef int SmeNType;
 

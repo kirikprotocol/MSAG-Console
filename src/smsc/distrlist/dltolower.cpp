@@ -30,7 +30,7 @@ int main(int argc,char* argv[])
 {
   if(argc==1)
   {
-    printf("Usage: %s distr_list_store_dir\n");
+    printf("Usage: %s distr_list_store_dir\n",argv[0]);
     return 1;
   }
   if(setlocale(LC_CTYPE,"")==0)

@@ -18,7 +18,6 @@ namespace controller{
 namespace protocol{
 namespace messages{
 
-typedef std::vector<std::string> string_list;
 
 class UpdateProfile{
 public:
@@ -31,6 +30,11 @@ public:
     seqNum=0;
     addressFlag=false;
     profFlag=false;
+  }
+ 
+  static int32_t getTag()
+  {
+    return 12;
   }
 
   std::string toString()const
@@ -63,9 +67,9 @@ public:
   }
 
   template <class DataStream>
-  uint32_t length()const
+  int32_t length()const
   {
-    uint32_t rv=0;
+    int32_t rv=0;
     if(addressFlag)
     {
       rv+=DataStream::tagTypeSize;
@@ -85,14 +89,19 @@ public:
   {
     if(!addressFlag)
     {
-      throw protogen::framework::FieldIsNullException("address");
+      throw eyeline::protogen::framework::FieldIsNullException("address");
     }
     return address;
   }
-  void setAddress(const std::string& value)
+  void setAddress(const std::string& argValue)
   {
-    address=value;
+    address=argValue;
     addressFlag=true;
+  }
+  std::string& getAddressRef()
+  {
+    addressFlag=true;
+    return address;
   }
   bool hasAddress()const
   {
@@ -102,14 +111,19 @@ public:
   {
     if(!profFlag)
     {
-      throw protogen::framework::FieldIsNullException("prof");
+      throw eyeline::protogen::framework::FieldIsNullException("prof");
     }
     return prof;
   }
-  void setProf(const Profile& value)
+  void setProf(const Profile& argValue)
   {
-    prof=value;
+    prof=argValue;
     profFlag=true;
+  }
+  Profile& getProfRef()
+  {
+    profFlag=true;
+    return prof;
   }
   bool hasProf()const
   {
@@ -120,11 +134,11 @@ public:
   {
     if(!addressFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("address");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("address");
     }
     if(!profFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("prof");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("prof");
     }
     //ds.writeByte(versionMajor);
     //ds.writeByte(versionMinor);
@@ -142,8 +156,8 @@ public:
   {
     Clear();
     bool endOfMessage=false;
-    //uint8_t rdVersionMajor=ds.readByte();
-    //uint8_t rdVersionMinor=ds.readByte();
+    //int8_t rdVersionMajor=ds.readByte();
+    //int8_t rdVersionMinor=ds.readByte();
     //if(rdVersionMajor!=versionMajor)
     //{
     //  throw protogen::framework::IncompatibleVersionException("UpdateProfile");
@@ -151,14 +165,14 @@ public:
     //seqNum=ds.readInt32();
     while(!endOfMessage)
     {
-      uint32_t tag=ds.readTag();
+      DataStream::TagType tag=ds.readTag();
       switch(tag)
       {
         case addressTag:
         {
           if(addressFlag)
           {
-            throw protogen::framework::DuplicateFieldException("address");
+            throw eyeline::protogen::framework::DuplicateFieldException("address");
           }
           address=ds.readStrLV();
           addressFlag=true;
@@ -167,7 +181,7 @@ public:
         {
           if(profFlag)
           {
-            throw protogen::framework::DuplicateFieldException("prof");
+            throw eyeline::protogen::framework::DuplicateFieldException("prof");
           }
 
           ds.readLength();prof.deserialize(ds);
@@ -186,33 +200,35 @@ public:
     }
     if(!addressFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("address");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("address");
     }
     if(!profFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("prof");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("prof");
     }
 
   }
 
-  uint32_t getSeqNum()const
+  int32_t getSeqNum()const
   {
     return seqNum;
   }
 
-  void setSeqNum(uint32_t value)
+  void setSeqNum(int32_t argValue)
   {
-    seqNum=value;
+    seqNum=argValue;
   }
 
+ 
+
 protected:
-  //static const uint8_t versionMajor=1;
-  //static const uint8_t versionMinor=0;
+  //static const int8_t versionMajor=1;
+  //static const int8_t versionMinor=0;
 
-  static const uint32_t addressTag=1;
-  static const uint32_t profTag=2;
+  static const int32_t addressTag=1;
+  static const int32_t profTag=2;
 
-  uint32_t seqNum;
+  int32_t seqNum;
 
   std::string address;
   Profile prof;

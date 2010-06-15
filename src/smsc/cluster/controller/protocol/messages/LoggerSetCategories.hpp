@@ -18,7 +18,6 @@ namespace controller{
 namespace protocol{
 namespace messages{
 
-typedef std::vector<std::string> string_list;
 
 class LoggerSetCategories{
 public:
@@ -30,6 +29,12 @@ public:
   {
     seqNum=0;
     categoriesFlag=false;
+    categories.clear();
+  }
+ 
+  static int32_t getTag()
+  {
+    return 24;
   }
 
   std::string toString()const
@@ -66,9 +71,9 @@ public:
   }
 
   template <class DataStream>
-  uint32_t length()const
+  int32_t length()const
   {
-    uint32_t rv=0;
+    int32_t rv=0;
     if(categoriesFlag)
     {
       rv+=DataStream::tagTypeSize;
@@ -85,14 +90,19 @@ public:
   {
     if(!categoriesFlag)
     {
-      throw protogen::framework::FieldIsNullException("categories");
+      throw eyeline::protogen::framework::FieldIsNullException("categories");
     }
     return categories;
   }
-  void setCategories(const std::vector<CategoryInfo>& value)
+  void setCategories(const std::vector<CategoryInfo>& argValue)
   {
-    categories=value;
+    categories=argValue;
     categoriesFlag=true;
+  }
+  std::vector<CategoryInfo>& getCategoriesRef()
+  {
+    categoriesFlag=true;
+    return categories;
   }
   bool hasCategories()const
   {
@@ -103,7 +113,7 @@ public:
   {
     if(!categoriesFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("categories");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("categories");
     }
     //ds.writeByte(versionMajor);
     //ds.writeByte(versionMinor);
@@ -127,8 +137,8 @@ public:
   {
     Clear();
     bool endOfMessage=false;
-    //uint8_t rdVersionMajor=ds.readByte();
-    //uint8_t rdVersionMinor=ds.readByte();
+    //int8_t rdVersionMajor=ds.readByte();
+    //int8_t rdVersionMinor=ds.readByte();
     //if(rdVersionMajor!=versionMajor)
     //{
     //  throw protogen::framework::IncompatibleVersionException("LoggerSetCategories");
@@ -136,14 +146,14 @@ public:
     //seqNum=ds.readInt32();
     while(!endOfMessage)
     {
-      uint32_t tag=ds.readTag();
+      DataStream::TagType tag=ds.readTag();
       switch(tag)
       {
         case categoriesTag:
         {
           if(categoriesFlag)
           {
-            throw protogen::framework::DuplicateFieldException("categories");
+            throw eyeline::protogen::framework::DuplicateFieldException("categories");
           }
 
           typename DataStream::LengthType len=ds.readLength(),rd=0;
@@ -168,28 +178,30 @@ public:
     }
     if(!categoriesFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("categories");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("categories");
     }
 
   }
 
-  uint32_t getSeqNum()const
+  int32_t getSeqNum()const
   {
     return seqNum;
   }
 
-  void setSeqNum(uint32_t value)
+  void setSeqNum(int32_t argValue)
   {
-    seqNum=value;
+    seqNum=argValue;
   }
 
+ 
+
 protected:
-  //static const uint8_t versionMajor=1;
-  //static const uint8_t versionMinor=0;
+  //static const int8_t versionMajor=1;
+  //static const int8_t versionMinor=0;
 
-  static const uint32_t categoriesTag=1;
+  static const int32_t categoriesTag=1;
 
-  uint32_t seqNum;
+  int32_t seqNum;
 
   std::vector<CategoryInfo> categories;
 

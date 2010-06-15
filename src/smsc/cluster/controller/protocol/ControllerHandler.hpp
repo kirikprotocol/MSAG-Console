@@ -7,10 +7,6 @@
 #include "messages/ApplyFraudControl.hpp"
 #include "messages/ApplyMapLimits.hpp"
 #include "messages/ApplySnmp.hpp"
-#include "messages/TraceRoute.hpp"
-#include "messages/LoadRoutes.hpp"
-#include "messages/LookupProfile.hpp"
-#include "messages/LookupProfileEx.hpp"
 #include "messages/UpdateProfile.hpp"
 #include "messages/DeleteProfile.hpp"
 #include "messages/CancelSms.hpp"
@@ -31,6 +27,7 @@
 #include "messages/AclLookup.hpp"
 #include "messages/AclRemoveAddresses.hpp"
 #include "messages/AclAddAddresses.hpp"
+/*
 #include "messages/DlPrcList.hpp"
 #include "messages/DlPrcAdd.hpp"
 #include "messages/DlPrcDelete.hpp"
@@ -49,6 +46,7 @@
 #include "messages/DlAlter.hpp"
 #include "messages/DlCopy.hpp"
 #include "messages/DlRename.hpp"
+*/
 #include "messages/CgmAddGroup.hpp"
 #include "messages/CgmDeleteGroup.hpp"
 #include "messages/CgmAddAddr.hpp"
@@ -61,12 +59,11 @@
 #include "messages/AliasDel.hpp"
 #include "messages/GetServicesStatus.hpp"
 #include "messages/DisconnectService.hpp"
-#include "messages/MultipartMessageRequest.hpp"
-#include "messages/ReplaceIfPresentRequest.hpp"
-#include "messages/LockProfiler.hpp"
-#include "messages/UnlockProfiler.hpp"
-#include "messages/RegisterAsLoadBalancer.hpp"
-#include "messages/RegisterAsWebapp.hpp"
+#include "messages/LockConfig.hpp"
+#include "messages/LockConfigResp.hpp"
+#include "messages/UnlockConfig.hpp"
+//#include "messages/RegisterAsLoadBalancer.hpp"
+//#include "messages/RegisterAsWebapp.hpp"
 #include "messages/RegisterAsSmsc.hpp"
 #include "messages/ApplyRoutesResp.hpp"
 #include "messages/ApplyRescheduleResp.hpp"
@@ -75,10 +72,6 @@
 #include "messages/ApplyFraudControlResp.hpp"
 #include "messages/ApplyMapLimitsResp.hpp"
 #include "messages/ApplySnmpResp.hpp"
-#include "messages/TraceRouteResp.hpp"
-#include "messages/LoadRoutesResp.hpp"
-#include "messages/LookupProfileResp.hpp"
-#include "messages/LookupProfileExResp.hpp"
 #include "messages/UpdateProfileResp.hpp"
 #include "messages/DeleteProfileResp.hpp"
 #include "messages/CancelSmsResp.hpp"
@@ -99,6 +92,7 @@
 #include "messages/AclLookupResp.hpp"
 #include "messages/AclRemoveAddressesResp.hpp"
 #include "messages/AclAddAddressesResp.hpp"
+/*
 #include "messages/DlPrcListResp.hpp"
 #include "messages/DlPrcAddResp.hpp"
 #include "messages/DlPrcDeleteResp.hpp"
@@ -117,6 +111,7 @@
 #include "messages/DlAlterResp.hpp"
 #include "messages/DlCopyResp.hpp"
 #include "messages/DlRenameResp.hpp"
+*/
 #include "messages/CgmAddGroupResp.hpp"
 #include "messages/CgmDeleteGroupResp.hpp"
 #include "messages/CgmAddAddrResp.hpp"
@@ -129,11 +124,19 @@
 #include "messages/AliasDelResp.hpp"
 #include "messages/GetServicesStatusResp.hpp"
 #include "messages/DisconnectServiceResp.hpp"
-#include "messages/MultipartMessageRequestResp.hpp"
-#include "messages/ReplaceIfPresentRequestResp.hpp"
-#include "messages/LockProfilerResp.hpp"
-#include "messages/LockMscManagerResp.hpp"
 #include "logger/Logger.h"
+#include "messages/UpdateProfileAbntResp.hpp"
+#include "smsc/cluster/controller/protocol/messages/MultiResponse.hpp"
+/*
+#include "messages/DlMemAddAbntResp.hpp"
+#include "messages/DlMemDeleteAbntResp.hpp"
+#include "messages/DlSbmAddAbntResp.hpp"
+#include "messages/DlSbmDelAbntResp.hpp"
+#include "messages/DlAddAbntResp.hpp"
+#include "messages/DlDeleteAbntResp.hpp"
+#include "messages/DlCopyAbntResp.hpp"
+#include "messages/DlRenameAbntResp.hpp"
+*/
 
 namespace smsc {
 namespace cluster {
@@ -145,6 +148,9 @@ public:
   {
 
   }
+
+  void Init();
+
   void handle(const messages::ApplyRoutes& msg);
   void handle(const messages::ApplyReschedule& msg);
   void handle(const messages::ApplyLocaleResource& msg);
@@ -152,10 +158,10 @@ public:
   void handle(const messages::ApplyFraudControl& msg);
   void handle(const messages::ApplyMapLimits& msg);
   void handle(const messages::ApplySnmp& msg);
-  void handle(const messages::TraceRoute& msg);
+  /*void handle(const messages::TraceRoute& msg);
   void handle(const messages::LoadRoutes& msg);
   void handle(const messages::LookupProfile& msg);
-  void handle(const messages::LookupProfileEx& msg);
+  void handle(const messages::LookupProfileEx& msg);*/
   void handle(const messages::UpdateProfile& msg);
   void handle(const messages::DeleteProfile& msg);
   void handle(const messages::CancelSms& msg);
@@ -176,6 +182,7 @@ public:
   void handle(const messages::AclLookup& msg);
   void handle(const messages::AclRemoveAddresses& msg);
   void handle(const messages::AclAddAddresses& msg);
+  /*
   void handle(const messages::DlPrcList& msg);
   void handle(const messages::DlPrcAdd& msg);
   void handle(const messages::DlPrcDelete& msg);
@@ -194,6 +201,7 @@ public:
   void handle(const messages::DlAlter& msg);
   void handle(const messages::DlCopy& msg);
   void handle(const messages::DlRename& msg);
+  */
   void handle(const messages::CgmAddGroup& msg);
   void handle(const messages::CgmDeleteGroup& msg);
   void handle(const messages::CgmAddAddr& msg);
@@ -206,10 +214,21 @@ public:
   void handle(const messages::AliasDel& msg);
   void handle(const messages::GetServicesStatus& msg);
   void handle(const messages::DisconnectService& msg);
-  void handle(const messages::MultipartMessageRequestResp& msg);
-  void handle(const messages::ReplaceIfPresentRequestResp& msg);
-  void handle(const messages::LockProfilerResp& msg);
-  void handle(const messages::LockMscManagerResp& msg);
+  //void handle(const messages::MultipartMessageRequestResp& msg);
+  //void handle(const messages::ReplaceIfPresentRequestResp& msg);
+  void handle(const messages::LockConfigResp& msg);
+  void handle(const messages::UpdateProfileAbntResp& msg);
+/*
+  void handle(const messages::DlMemAddAbntResp& msg);
+  void handle(const messages::DlMemDeleteAbntResp& msg);
+  void handle(const messages::DlSbmAddAbntResp& msg);
+  void handle(const messages::DlSbmDelAbntResp& msg);
+  void handle(const messages::DlAddAbntResp& msg);
+  void handle(const messages::DlDeleteAbntResp& msg);
+  void handle(const messages::DlCopyAbntResp& msg);
+  void handle(const messages::DlRenameAbntResp& msg);
+  */
+
 protected:
   template <class MSG_T,class MSG_RESP_T>
   void prepareResp(MSG_T& msg,MSG_RESP_T& respMsg,uint32_t status)
@@ -219,8 +238,22 @@ protected:
     resp.setStatus(status);
     respMsg.setResp(resp);
   }
+  template <class MSG_T,class MSG_RESP_T>
+  void prepareMultiResp(MSG_T& msg,MSG_RESP_T& respMsg,uint32_t status)
+  {
+    respMsg.setSeqNum(msg.getSeqNum());
+    messages::MultiResponse resp;
+    std::vector<int32_t> st;
+    st.push_back(status);
+    resp.setStatus(st);
+    std::vector<int8_t> id;
+    id.push_back(nodeIdx);
+    resp.setIds(id);
+    respMsg.setResp(resp);
+  }
   smsc::logger::Logger* log;
   bool isTempRouterLoaded;
+  int nodeIdx;
 };
 
 

@@ -17,7 +17,6 @@ namespace controller{
 namespace protocol{
 namespace messages{
 
-typedef std::vector<std::string> string_list;
 
 class AliasAdd{
 public:
@@ -31,6 +30,11 @@ public:
     addrFlag=false;
     aliasFlag=false;
     hideFlag=false;
+  }
+ 
+  static int32_t getTag()
+  {
+    return 41;
   }
 
   std::string toString()const
@@ -70,9 +74,9 @@ public:
   }
 
   template <class DataStream>
-  uint32_t length()const
+  int32_t length()const
   {
-    uint32_t rv=0;
+    int32_t rv=0;
     if(addrFlag)
     {
       rv+=DataStream::tagTypeSize;
@@ -98,14 +102,19 @@ public:
   {
     if(!addrFlag)
     {
-      throw protogen::framework::FieldIsNullException("addr");
+      throw eyeline::protogen::framework::FieldIsNullException("addr");
     }
     return addr;
   }
-  void setAddr(const std::string& value)
+  void setAddr(const std::string& argValue)
   {
-    addr=value;
+    addr=argValue;
     addrFlag=true;
+  }
+  std::string& getAddrRef()
+  {
+    addrFlag=true;
+    return addr;
   }
   bool hasAddr()const
   {
@@ -115,14 +124,19 @@ public:
   {
     if(!aliasFlag)
     {
-      throw protogen::framework::FieldIsNullException("alias");
+      throw eyeline::protogen::framework::FieldIsNullException("alias");
     }
     return alias;
   }
-  void setAlias(const std::string& value)
+  void setAlias(const std::string& argValue)
   {
-    alias=value;
+    alias=argValue;
     aliasFlag=true;
+  }
+  std::string& getAliasRef()
+  {
+    aliasFlag=true;
+    return alias;
   }
   bool hasAlias()const
   {
@@ -132,14 +146,19 @@ public:
   {
     if(!hideFlag)
     {
-      throw protogen::framework::FieldIsNullException("hide");
+      throw eyeline::protogen::framework::FieldIsNullException("hide");
     }
     return hide;
   }
-  void setHide(bool value)
+  void setHide(bool argValue)
   {
-    hide=value;
+    hide=argValue;
     hideFlag=true;
+  }
+  bool& getHideRef()
+  {
+    hideFlag=true;
+    return hide;
   }
   bool hasHide()const
   {
@@ -150,15 +169,15 @@ public:
   {
     if(!addrFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("addr");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("addr");
     }
     if(!aliasFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("alias");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("alias");
     }
     if(!hideFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("hide");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("hide");
     }
     //ds.writeByte(versionMajor);
     //ds.writeByte(versionMinor);
@@ -177,8 +196,8 @@ public:
   {
     Clear();
     bool endOfMessage=false;
-    //uint8_t rdVersionMajor=ds.readByte();
-    //uint8_t rdVersionMinor=ds.readByte();
+    //int8_t rdVersionMajor=ds.readByte();
+    //int8_t rdVersionMinor=ds.readByte();
     //if(rdVersionMajor!=versionMajor)
     //{
     //  throw protogen::framework::IncompatibleVersionException("AliasAdd");
@@ -186,14 +205,14 @@ public:
     //seqNum=ds.readInt32();
     while(!endOfMessage)
     {
-      uint32_t tag=ds.readTag();
+      DataStream::TagType tag=ds.readTag();
       switch(tag)
       {
         case addrTag:
         {
           if(addrFlag)
           {
-            throw protogen::framework::DuplicateFieldException("addr");
+            throw eyeline::protogen::framework::DuplicateFieldException("addr");
           }
           addr=ds.readStrLV();
           addrFlag=true;
@@ -202,7 +221,7 @@ public:
         {
           if(aliasFlag)
           {
-            throw protogen::framework::DuplicateFieldException("alias");
+            throw eyeline::protogen::framework::DuplicateFieldException("alias");
           }
           alias=ds.readStrLV();
           aliasFlag=true;
@@ -211,7 +230,7 @@ public:
         {
           if(hideFlag)
           {
-            throw protogen::framework::DuplicateFieldException("hide");
+            throw eyeline::protogen::framework::DuplicateFieldException("hide");
           }
           hide=ds.readBoolLV();
           hideFlag=true;
@@ -229,38 +248,40 @@ public:
     }
     if(!addrFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("addr");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("addr");
     }
     if(!aliasFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("alias");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("alias");
     }
     if(!hideFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("hide");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("hide");
     }
 
   }
 
-  uint32_t getSeqNum()const
+  int32_t getSeqNum()const
   {
     return seqNum;
   }
 
-  void setSeqNum(uint32_t value)
+  void setSeqNum(int32_t argValue)
   {
-    seqNum=value;
+    seqNum=argValue;
   }
 
+ 
+
 protected:
-  //static const uint8_t versionMajor=1;
-  //static const uint8_t versionMinor=0;
+  //static const int8_t versionMajor=1;
+  //static const int8_t versionMinor=0;
 
-  static const uint32_t addrTag=1;
-  static const uint32_t aliasTag=2;
-  static const uint32_t hideTag=3;
+  static const int32_t addrTag=1;
+  static const int32_t aliasTag=2;
+  static const int32_t hideTag=3;
 
-  uint32_t seqNum;
+  int32_t seqNum;
 
   std::string addr;
   std::string alias;

@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include "eyeline/protogen/framework/Exceptions.hpp"
+#include "AclCacheType.hpp"
 
 
 #ident "@(#) AclInfo version 1.0"
@@ -17,7 +18,6 @@ namespace controller{
 namespace protocol{
 namespace messages{
 
-typedef std::vector<std::string> string_list;
 
 class AclInfo{
 public:
@@ -32,6 +32,7 @@ public:
     descriptionFlag=false;
     cacheTypeFlag=false;
   }
+ 
 
   std::string toString()const
   {
@@ -44,7 +45,7 @@ public:
         rv+=";";
       }
       rv+="id=";
-      sprintf(buf,"%u",(unsigned int)id);
+      sprintf(buf,"%d",id);
       rv+=buf;
     }
     if(nameFlag)
@@ -72,16 +73,15 @@ public:
         rv+=";";
       }
       rv+="cacheType=";
-      sprintf(buf,"%u",(unsigned int)cacheType);
-      rv+=buf;
+      rv+=AclCacheType::getNameByValue(cacheType);
     }
     return rv;
   }
 
   template <class DataStream>
-  uint32_t length()const
+  int32_t length()const
   {
-    uint32_t rv=0;
+    int32_t rv=0;
     if(idFlag)
     {
       rv+=DataStream::tagTypeSize;
@@ -109,18 +109,23 @@ public:
     rv+=DataStream::tagTypeSize;
     return rv;
   }
-  uint32_t getId()const
+  int32_t getId()const
   {
     if(!idFlag)
     {
-      throw protogen::framework::FieldIsNullException("id");
+      throw eyeline::protogen::framework::FieldIsNullException("id");
     }
     return id;
   }
-  void setId(uint32_t value)
+  void setId(int32_t argValue)
   {
-    id=value;
+    id=argValue;
     idFlag=true;
+  }
+  int32_t& getIdRef()
+  {
+    idFlag=true;
+    return id;
   }
   bool hasId()const
   {
@@ -130,14 +135,19 @@ public:
   {
     if(!nameFlag)
     {
-      throw protogen::framework::FieldIsNullException("name");
+      throw eyeline::protogen::framework::FieldIsNullException("name");
     }
     return name;
   }
-  void setName(const std::string& value)
+  void setName(const std::string& argValue)
   {
-    name=value;
+    name=argValue;
     nameFlag=true;
+  }
+  std::string& getNameRef()
+  {
+    nameFlag=true;
+    return name;
   }
   bool hasName()const
   {
@@ -147,31 +157,45 @@ public:
   {
     if(!descriptionFlag)
     {
-      throw protogen::framework::FieldIsNullException("description");
+      throw eyeline::protogen::framework::FieldIsNullException("description");
     }
     return description;
   }
-  void setDescription(const std::string& value)
+  void setDescription(const std::string& argValue)
   {
-    description=value;
+    description=argValue;
     descriptionFlag=true;
+  }
+  std::string& getDescriptionRef()
+  {
+    descriptionFlag=true;
+    return description;
   }
   bool hasDescription()const
   {
     return descriptionFlag;
   }
-  uint8_t getCacheType()const
+  const AclCacheType::type& getCacheType()const
   {
     if(!cacheTypeFlag)
     {
-      throw protogen::framework::FieldIsNullException("cacheType");
+      throw eyeline::protogen::framework::FieldIsNullException("cacheType");
     }
     return cacheType;
   }
-  void setCacheType(uint8_t value)
+  void setCacheType(const AclCacheType::type& argValue)
   {
-    cacheType=value;
+    if(!AclCacheType::isValidValue(argValue))
+    {
+      throw eyeline::protogen::framework::InvalidEnumValue("AclCacheType",argValue);
+    }
+    cacheType=argValue;
     cacheTypeFlag=true;
+  }
+  AclCacheType::type& getCacheTypeRef()
+  {
+    cacheTypeFlag=true;
+    return cacheType;
   }
   bool hasCacheType()const
   {
@@ -182,19 +206,19 @@ public:
   {
     if(!idFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("id");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("id");
     }
     if(!nameFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("name");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("name");
     }
     if(!descriptionFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("description");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("description");
     }
     if(!cacheTypeFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("cacheType");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("cacheType");
     }
     //ds.writeByte(versionMajor);
     //ds.writeByte(versionMinor);
@@ -207,6 +231,7 @@ public:
     ds.writeStrLV(description);
     ds.writeTag(cacheTypeTag);
     ds.writeByteLV(cacheType);
+ 
     ds.writeTag(DataStream::endOfMessage_tag);
   }
 
@@ -215,8 +240,8 @@ public:
   {
     Clear();
     bool endOfMessage=false;
-    //uint8_t rdVersionMajor=ds.readByte();
-    //uint8_t rdVersionMinor=ds.readByte();
+    //int8_t rdVersionMajor=ds.readByte();
+    //int8_t rdVersionMinor=ds.readByte();
     //if(rdVersionMajor!=versionMajor)
     //{
     //  throw protogen::framework::IncompatibleVersionException("AclInfo");
@@ -224,14 +249,14 @@ public:
     //seqNum=ds.readInt32();
     while(!endOfMessage)
     {
-      uint32_t tag=ds.readTag();
+      DataStream::TagType tag=ds.readTag();
       switch(tag)
       {
         case idTag:
         {
           if(idFlag)
           {
-            throw protogen::framework::DuplicateFieldException("id");
+            throw eyeline::protogen::framework::DuplicateFieldException("id");
           }
           id=ds.readInt32LV();
           idFlag=true;
@@ -240,7 +265,7 @@ public:
         {
           if(nameFlag)
           {
-            throw protogen::framework::DuplicateFieldException("name");
+            throw eyeline::protogen::framework::DuplicateFieldException("name");
           }
           name=ds.readStrLV();
           nameFlag=true;
@@ -249,7 +274,7 @@ public:
         {
           if(descriptionFlag)
           {
-            throw protogen::framework::DuplicateFieldException("description");
+            throw eyeline::protogen::framework::DuplicateFieldException("description");
           }
           description=ds.readStrLV();
           descriptionFlag=true;
@@ -258,7 +283,7 @@ public:
         {
           if(cacheTypeFlag)
           {
-            throw protogen::framework::DuplicateFieldException("cacheType");
+            throw eyeline::protogen::framework::DuplicateFieldException("cacheType");
           }
           cacheType=ds.readByteLV();
           cacheTypeFlag=true;
@@ -276,38 +301,40 @@ public:
     }
     if(!idFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("id");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("id");
     }
     if(!nameFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("name");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("name");
     }
     if(!descriptionFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("description");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("description");
     }
     if(!cacheTypeFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("cacheType");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("cacheType");
     }
 
   }
 
 
+ 
+
 protected:
-  //static const uint8_t versionMajor=1;
-  //static const uint8_t versionMinor=0;
+  //static const int8_t versionMajor=1;
+  //static const int8_t versionMinor=0;
 
-  static const uint32_t idTag=1;
-  static const uint32_t nameTag=2;
-  static const uint32_t descriptionTag=3;
-  static const uint32_t cacheTypeTag=4;
+  static const int32_t idTag=1;
+  static const int32_t nameTag=2;
+  static const int32_t descriptionTag=3;
+  static const int32_t cacheTypeTag=4;
 
 
-  uint32_t id;
+  int32_t id;
   std::string name;
   std::string description;
-  uint8_t cacheType;
+  AclCacheType::type cacheType;
 
   bool idFlag;
   bool nameFlag;

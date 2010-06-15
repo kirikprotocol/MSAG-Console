@@ -25,6 +25,8 @@ public:
 
   virtual void Load(const char* filename)=0;
 
+  virtual void enableControllerMode()=0;
+
   static ClosedGroupsInterface* getInstance()
   {
     return instance;

@@ -10,6 +10,7 @@
 #include "core/buffers/IntHash.hpp"
 #include "profiler-types.hpp"
 #include "profile-notifier-iface.hpp"
+#include <map>
 
 namespace smsc{
 namespace profiler{
@@ -29,7 +30,7 @@ class BlackList;
 
 class Profiler:public ProfilerInterface,public SmeProxy, public ThreadedTask{
 public:
-  Profiler(const Profile& pr,SmeRegistrar* smeman,const char* sysId);
+  Profiler(SmeRegistrar* smeman,const char* sysId);
   virtual ~Profiler();
 
   int Execute();
@@ -168,6 +169,11 @@ public:
     aliasman=am;
   }
 
+  void setControllerMode()
+  {
+    isControllerMode=true;
+  }
+
 protected:
   mutable EventMonitor mon;
   smsc::core::buffers::Array<SmscCommand> outQueue;
@@ -187,6 +193,17 @@ protected:
 
   IntHash<string> ussdCmdMap;
 
+  struct ProfileUpdateInfo{
+    int msg;
+    smsc::sms::Address addr;
+    Profile p;
+  };
+
+  bool isControllerMode;
+
+  typedef std::map<int,ProfileUpdateInfo> ProfileUpdateMap;
+  ProfileUpdateMap updateRequests;
+
   string systemId;
   SmeProxyPriority prio;
 
@@ -195,7 +212,7 @@ protected:
   void fileUpdate(const Address& addr,const Profile& profile);
   void fileInsert(const Address& addr,Profile& profile);
 
-  void internal_update(int flag,const Address& addr,int value,const char* svalue=NULL);
+  Profile internal_update(int flag,const Address& addr,int value,const char* svalue=NULL);
 
   void CreateOrOpenFileIfNeeded();
 

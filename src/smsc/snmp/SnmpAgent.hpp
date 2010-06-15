@@ -5,6 +5,7 @@
 #include <stdio.h>
 
 #include "core/threads/ThreadedTask.hpp"
+#include "logger/Logger.h"
 
 namespace smsc{
 class Smsc;

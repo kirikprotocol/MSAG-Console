@@ -17,7 +17,6 @@ namespace controller{
 namespace protocol{
 namespace messages{
 
-typedef std::vector<std::string> string_list;
 
 class Response{
 public:
@@ -29,6 +28,7 @@ public:
   {
     statusFlag=false;
   }
+ 
 
   std::string toString()const
   {
@@ -41,16 +41,16 @@ public:
         rv+=";";
       }
       rv+="status=";
-      sprintf(buf,"%u",(unsigned int)status);
+      sprintf(buf,"%d",status);
       rv+=buf;
     }
     return rv;
   }
 
   template <class DataStream>
-  uint32_t length()const
+  int32_t length()const
   {
-    uint32_t rv=0;
+    int32_t rv=0;
     if(statusFlag)
     {
       rv+=DataStream::tagTypeSize;
@@ -60,18 +60,23 @@ public:
     rv+=DataStream::tagTypeSize;
     return rv;
   }
-  uint32_t getStatus()const
+  int32_t getStatus()const
   {
     if(!statusFlag)
     {
-      throw protogen::framework::FieldIsNullException("status");
+      throw eyeline::protogen::framework::FieldIsNullException("status");
     }
     return status;
   }
-  void setStatus(uint32_t value)
+  void setStatus(int32_t argValue)
   {
-    status=value;
+    status=argValue;
     statusFlag=true;
+  }
+  int32_t& getStatusRef()
+  {
+    statusFlag=true;
+    return status;
   }
   bool hasStatus()const
   {
@@ -82,7 +87,7 @@ public:
   {
     if(!statusFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("status");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("status");
     }
     //ds.writeByte(versionMajor);
     //ds.writeByte(versionMinor);
@@ -97,8 +102,8 @@ public:
   {
     Clear();
     bool endOfMessage=false;
-    //uint8_t rdVersionMajor=ds.readByte();
-    //uint8_t rdVersionMinor=ds.readByte();
+    //int8_t rdVersionMajor=ds.readByte();
+    //int8_t rdVersionMinor=ds.readByte();
     //if(rdVersionMajor!=versionMajor)
     //{
     //  throw protogen::framework::IncompatibleVersionException("Response");
@@ -106,14 +111,14 @@ public:
     //seqNum=ds.readInt32();
     while(!endOfMessage)
     {
-      uint32_t tag=ds.readTag();
+      DataStream::TagType tag=ds.readTag();
       switch(tag)
       {
         case statusTag:
         {
           if(statusFlag)
           {
-            throw protogen::framework::DuplicateFieldException("status");
+            throw eyeline::protogen::framework::DuplicateFieldException("status");
           }
           status=ds.readInt32LV();
           statusFlag=true;
@@ -131,20 +136,22 @@ public:
     }
     if(!statusFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("status");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("status");
     }
 
   }
 
 
+ 
+
 protected:
-  //static const uint8_t versionMajor=1;
-  //static const uint8_t versionMinor=0;
+  //static const int8_t versionMajor=1;
+  //static const int8_t versionMinor=0;
 
-  static const uint32_t statusTag=1;
+  static const int32_t statusTag=1;
 
 
-  uint32_t status;
+  int32_t status;
 
   bool statusFlag;
 };
