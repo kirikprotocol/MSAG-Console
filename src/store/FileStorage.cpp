@@ -164,8 +164,9 @@ void FileStorage::rollErrorFile(const std::string& location, const std::string& 
         throw StorageException(exc.what());
     }
 }
-void FileStorage::rollFileExtension(const std::string& location, const char* fileName, bool bill)
+void FileStorage::rollFileExtension(const std::string& location, const char* fileName)
 {
+  bool bill=false;
     std::string fullOldFile = location; fullOldFile += '/'; fullOldFile += fileName; fullOldFile += '.';
     std::string fullNewFile = location; fullNewFile += '/'; fullNewFile += fileName; fullNewFile += '.';
 
@@ -245,11 +246,11 @@ void FileStorage::setPos(const File::offset_type* pos)
     }
 }
 
-void RollingStorage::init(Manager& config, bool bill)
+void RollingStorage::init(const char* argStorePath, int argRollInterval)
 {
-    storageLocation = config.getString(bill ? "MessageStore.billingDir":"MessageStore.archiveDir");
-    int ci = config.getInt(bill ? "MessageStore.billingInterval":"MessageStore.archiveInterval");
-    int minInterval = (bill ? SMSC_MIN_BILLING_INTERVAL:SMSC_MIN_ARCHIVE_INTERVAL);
+    storageLocation = argStorePath;
+    int ci = argRollInterval;
+    int minInterval = SMSC_MIN_ARCHIVE_INTERVAL;
     if (ci < minInterval) {
         throw ConfigException("Parameter '%sInterval' should be more than %u seconds",
                               (bill ? "billing":"archive"), minInterval);
@@ -272,7 +273,7 @@ void RollingStorage::init(Manager& config, bool bill)
         char* fileName = fileNameGuard.get();
         strncpy(fileName, fileNameStr, fileNameLen-extLen);
         fileName[fileNameLen-extLen] = '\0';
-        FileStorage::rollFileExtension(storageLocation, fileName, bill);
+        FileStorage::rollFileExtension(storageLocation, fileName);
     }
 }
 
@@ -315,7 +316,7 @@ bool RollingStorage::create(bool bill, bool roll/*=false*/)
     {
         if (storageFile.isOpened()) { // close old file & roll extension if needed
             storageFile.Close();
-            if (roll) FileStorage::rollFileExtension(storageLocation, storageFileName, bill);
+            if (roll) FileStorage::rollFileExtension(storageLocation, storageFileName);
         }
         storageFile.Swap(storageNewFile);
         strcpy(storageFileName, storageNewFileName);
@@ -327,19 +328,20 @@ bool RollingStorage::create(bool bill, bool roll/*=false*/)
     }
     return true;
 }
-
+/*
 void BillingStorage::roll()
 {
     MutexGuard guard(storageFileLock);
     if (storageFile.isOpened()) BillingStorage::create(true);
 }
-void BillingStorage::create(uint8_t roll/*=false*/)
+void BillingStorage::create(uint8_t roll)
 {
     if (RollingStorage::create(true, roll)) {
         FileStorage::write(SMSC_BILLING_HEADER_TEXT, strlen(SMSC_BILLING_HEADER_TEXT));
         FileStorage::flush();
     }
 }
+*/
 void ArchiveStorage::roll()
 {
     MutexGuard guard(storageFileLock);
@@ -355,6 +357,7 @@ void ArchiveStorage::create(uint8_t roll/*=false*/)
     }
 }
 
+/*
 void BillingStorage::createRecord(SMSId id, SMS& sms)
 {
     std::string out; out.reserve(512);
@@ -366,7 +369,7 @@ void BillingStorage::createRecord(SMSId id, SMS& sms)
         FileStorage::flush();
     }
 }
-
+*/
 /*
 MSG_ID                    -- msg id
 RECORD_TYPE               -- 0 SMS, 1 Diverted SMS

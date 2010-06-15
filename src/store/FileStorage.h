@@ -47,7 +47,7 @@ namespace smsc { namespace store
         static void truncateFile(const std::string& fullPath, off_t length);
         static void truncateFile(const std::string& location, const std::string& fileName, off_t length);
         static void rollErrorFile(const std::string& location, const std::string& fileName);
-        static void rollFileExtension(const std::string& location, const char* fileName, bool bill=true);
+        static void rollFileExtension(const std::string& location, const char* fileName);
 
         static void findEntries(const std::string& location, Array<std::string>& entries,
                                 bool files=false, const char* ext=0);
@@ -102,7 +102,7 @@ namespace smsc { namespace store
 
         virtual ~RollingStorage() {};
 
-        void init(Manager& config, bool bill);
+        void init(const char* argStorePath, int argRollInterval);
 
         inline uint32_t getStorageInterval() {
             return storageInterval;
@@ -111,7 +111,7 @@ namespace smsc { namespace store
             return storageLocation.c_str();
         };
     };
-
+/*
     class BillingStorage : public RollingStorage
     {
     protected:
@@ -126,12 +126,12 @@ namespace smsc { namespace store
         virtual ~BillingStorage() {};
 
         using RollingStorage::init;
-        void init(Manager& config)  { RollingStorage::init(config, true); };
+        void init(Manager& config)  { RollingStorage::init(config); };
         void roll();
 
         void createRecord(SMSId id, SMS& sms);
     };
-
+*/
     class ArchiveStorage : public RollingStorage
     {
     protected:
@@ -146,7 +146,7 @@ namespace smsc { namespace store
         virtual ~ArchiveStorage() {};
 
         using RollingStorage::init;
-        void init(Manager& config)  { RollingStorage::init(config, false); };
+        void init(const char* argStorePath,int argRollInterval)  { RollingStorage::init(argStorePath,argRollInterval); };
         void roll();
 
         void createRecord(SMSId id, SMS& sms);
