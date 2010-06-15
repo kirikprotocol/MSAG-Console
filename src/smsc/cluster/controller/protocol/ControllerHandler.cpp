@@ -368,18 +368,16 @@ void ControllerHandler::handle(const messages::UpdateProfile& msg)
   smsc::sms::Address address(msg.getAddress().c_str());
   smsc::profiler::Profile p;
   FillProfileFromMsg(p,msg.getProf());
-  int result;
   if(isMask(address))
   {
-    result=profiler->updatemask(address,p);
+    profiler->updatemask(address,p);
   }else
   {
-    result=profiler->update(address,p);
+    profiler->update(address,p);
   }
   messages::UpdateProfileResp resp;
-  resp.setResult(result);
 
-  prepareResp(msg,resp,0);
+  prepareMultiResp(msg,resp,0);
   NetworkDispatcher::getInstance().enqueueMessage(resp);
 }
 void ControllerHandler::handle(const messages::DeleteProfile& msg)
@@ -388,7 +386,7 @@ void ControllerHandler::handle(const messages::DeleteProfile& msg)
   smsc::sms::Address address(msg.getAddress().c_str());
   profiler->remove(address);
   messages::DeleteProfileResp resp;
-  prepareResp(msg,resp,0);
+  prepareMultiResp(msg,resp,0);
   NetworkDispatcher::getInstance().enqueueMessage(resp);
 }
 void ControllerHandler::handle(const messages::CancelSms& msg)
@@ -401,7 +399,7 @@ void ControllerHandler::handle(const messages::CancelSms& msg)
   {
     smsc_log_warn(log,"CancelSms: data sizes mismatch");
     messages::CancelSmsResp resp;
-    prepareResp(msg,resp,1);
+    prepareMultiResp(msg,resp,1);
     NetworkDispatcher::getInstance().enqueueMessage(resp);
     return;
   }
@@ -418,21 +416,21 @@ void ControllerHandler::handle(const messages::CancelSms& msg)
     }
   }
   messages::CancelSmsResp resp;
-  prepareResp(msg,resp,0);
+  prepareMultiResp(msg,resp,0);
   NetworkDispatcher::getInstance().enqueueMessage(resp);
 }
 void ControllerHandler::handle(const messages::MscAdd& msg)
 {
   smsc::mscman::MscManager::getInstance().add(msg.getMsc().c_str());
   messages::MscAddResp resp;
-  prepareResp(msg,resp,0);
+  prepareMultiResp(msg,resp,0);
   NetworkDispatcher::getInstance().enqueueMessage(resp);
 }
 void ControllerHandler::handle(const messages::MscRemove& msg)
 {
   smsc::mscman::MscManager::getInstance().remove(msg.getMsc().c_str());
   messages::MscRemoveResp resp;
-  prepareResp(msg,resp,0);
+  prepareMultiResp(msg,resp,0);
   NetworkDispatcher::getInstance().enqueueMessage(resp);
 }
 
@@ -693,7 +691,7 @@ void ControllerHandler::handle(const messages::AclRemove& msg)
     status=1;
     smsc_log_warn(log,"failed to remove acl:%s",e.what());
   }
-  prepareResp(msg,resp,status);
+  prepareMultiResp(msg,resp,status);
   NetworkDispatcher::getInstance().enqueueMessage(resp);
 }
 void ControllerHandler::handle(const messages::AclCreate& msg)
@@ -708,7 +706,7 @@ void ControllerHandler::handle(const messages::AclCreate& msg)
     status=1;
     smsc_log_warn(log,"failed to create acl:%s",e.what());
   }
-  prepareResp(msg,resp,status);
+  prepareMultiResp(msg,resp,status);
   NetworkDispatcher::getInstance().enqueueMessage(resp);
 }
 void ControllerHandler::handle(const messages::AclUpdate& msg)
@@ -724,7 +722,7 @@ void ControllerHandler::handle(const messages::AclUpdate& msg)
     status=1;
     smsc_log_warn(log,"failed to update acl:%s",e.what());
   }
-  prepareResp(msg,resp,status);
+  prepareMultiResp(msg,resp,status);
   NetworkDispatcher::getInstance().enqueueMessage(resp);
 }
 void ControllerHandler::handle(const messages::AclLookup& msg)
@@ -762,7 +760,7 @@ void ControllerHandler::handle(const messages::AclRemoveAddresses& msg)
     status=1;
     smsc_log_warn(log,"failed to remove addr from acl:%s",e.what());
   }
-  prepareResp(msg,resp,status);
+  prepareMultiResp(msg,resp,status);
   NetworkDispatcher::getInstance().enqueueMessage(resp);
 }
 void ControllerHandler::handle(const messages::AclAddAddresses& msg)
@@ -781,7 +779,7 @@ void ControllerHandler::handle(const messages::AclAddAddresses& msg)
     status=1;
     smsc_log_warn(log,"failed to add addr to acl:%s",e.what());
   }
-  prepareResp(msg,resp,status);
+  prepareMultiResp(msg,resp,status);
   NetworkDispatcher::getInstance().enqueueMessage(resp);
 }
 /*
@@ -1158,7 +1156,7 @@ void ControllerHandler::handle(const messages::CgmAddGroup& msg)
     status=1;
     smsc_log_warn(log,"cgm.AddGroup failed:%s",e.what());
   }
-  prepareResp(msg,resp,status);
+  prepareMultiResp(msg,resp,status);
   NetworkDispatcher::getInstance().enqueueMessage(resp);
 }
 void ControllerHandler::handle(const messages::CgmDeleteGroup& msg)
@@ -1173,7 +1171,7 @@ void ControllerHandler::handle(const messages::CgmDeleteGroup& msg)
     status=1;
     smsc_log_warn(log,"cgm.DeleteGroup failed:%s",e.what());
   }
-  prepareResp(msg,resp,status);
+  prepareMultiResp(msg,resp,status);
   NetworkDispatcher::getInstance().enqueueMessage(resp);
 }
 void ControllerHandler::handle(const messages::CgmAddAddr& msg)
@@ -1188,7 +1186,7 @@ void ControllerHandler::handle(const messages::CgmAddAddr& msg)
     status=1;
     smsc_log_warn(log,"cgm.AddAddr failed:%s",e.what());
   }
-  prepareResp(msg,resp,status);
+  prepareMultiResp(msg,resp,status);
   NetworkDispatcher::getInstance().enqueueMessage(resp);
 }
 void ControllerHandler::handle(const messages::CgmCheck& msg)
@@ -1218,7 +1216,7 @@ void ControllerHandler::handle(const messages::CgmDelAddr& msg)
     status=1;
     smsc_log_warn(log,"cgm.DelAddr failed:%s",e.what());
   }
-  prepareResp(msg,resp,status);
+  prepareMultiResp(msg,resp,status);
   NetworkDispatcher::getInstance().enqueueMessage(resp);
 }
 void ControllerHandler::handle(const messages::CgmAddAbonent& msg)
@@ -1233,7 +1231,7 @@ void ControllerHandler::handle(const messages::CgmAddAbonent& msg)
     status=1;
     smsc_log_warn(log,"cgm.AddAbonent failed:%s",e.what());
   }
-  prepareResp(msg,resp,status);
+  prepareMultiResp(msg,resp,status);
   NetworkDispatcher::getInstance().enqueueMessage(resp);
 }
 void ControllerHandler::handle(const messages::CgmDelAbonent& msg)
@@ -1248,7 +1246,7 @@ void ControllerHandler::handle(const messages::CgmDelAbonent& msg)
     status=1;
     smsc_log_warn(log,"cgm.DelAbonent failed:%s",e.what());
   }
-  prepareResp(msg,resp,status);
+  prepareMultiResp(msg,resp,status);
   NetworkDispatcher::getInstance().enqueueMessage(resp);
 }
 void ControllerHandler::handle(const messages::CgmListAbonents& msg)
@@ -1289,7 +1287,7 @@ void ControllerHandler::handle(const messages::AliasAdd& msg)
     status=1;
     smsc_log_warn(log,"alias.add failed:%s",e.what());
   }
-  prepareResp(msg,resp,status);
+  prepareMultiResp(msg,resp,status);
   NetworkDispatcher::getInstance().enqueueMessage(resp);
 }
 void ControllerHandler::handle(const messages::AliasDel& msg)
@@ -1304,7 +1302,7 @@ void ControllerHandler::handle(const messages::AliasDel& msg)
     status=1;
     smsc_log_warn(log,"alias.del failed:%s",e.what());
   }
-  prepareResp(msg,resp,status);
+  prepareMultiResp(msg,resp,status);
   NetworkDispatcher::getInstance().enqueueMessage(resp);
 }
 void ControllerHandler::handle(const messages::GetServicesStatus& msg)
