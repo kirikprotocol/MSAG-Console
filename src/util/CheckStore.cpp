@@ -24,6 +24,7 @@ const uint32_t storeVer=0x10001;
 
 int main(int argc,char* argv[])
 {
+  smsc::logger::Logger::Init();
   if(argc==1)
   {
     printf("Usage: %s infile [infiles ...]\n",argv[0]);
@@ -119,6 +120,10 @@ int main(int argc,char* argv[])
     {
       if((*it)->final)continue;
       SMS& sms=(*it)->sms;
+      if(!sms.Invalidate(__FILE__,__LINE__))
+      {
+        printf("Validation failed for msgId=%lld",(*it)->id);
+      }
       cnt++;
       if(sms.validTime<now)
       {
