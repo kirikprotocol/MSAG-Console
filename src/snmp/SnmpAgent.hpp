@@ -4,6 +4,8 @@
 
 #include <stdio.h>
 #include "core/threads/ThreadedTask.hpp"
+#include "logger/Logger.h"
+
 namespace smsc{namespace system{class Smsc;}}
 namespace smsc{
 namespace snmp{
