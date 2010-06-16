@@ -508,14 +508,14 @@ void Scheduler::Init(Smsc* psmsc,smsc::util::config::Manager* cfgman)
   smsc=psmsc;
   localFileStore.Init(cfgman,psmsc);
   //billingStorage.init(*cfgman);
-  archiveStorage.init(cfgman->getString("archiveDir"),cfgman->getInt("archiveInterval"));
+  archiveStorage.init(cfgman->getString("MessageStore.archiveDir"),cfgman->getInt("MessageStore.archiveInterval"));
   
 }
 
 
 void Scheduler::DelayInit(Smsc* psmsc,smsc::util::config::Manager* cfgman)
 {
-  archiveStorage.init(cfgman->getString("archiveDir"),cfgman->getInt("archiveInterval"));
+  archiveStorage.init(cfgman->getString("MessageStore.archiveDir"),cfgman->getInt("MessageStore.archiveInterval"));
   smsc=psmsc;
   delayInit=true;
 }
