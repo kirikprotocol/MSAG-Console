@@ -15,7 +15,7 @@
 #include <util/signal.hpp>
 #include <util/config/Config.h>
 #include <core/buffers/FastMTQueue.hpp>
-#include <logger/Logger.h>
+#include <util/debug.h>
 
 namespace smsc {
 namespace admin {
