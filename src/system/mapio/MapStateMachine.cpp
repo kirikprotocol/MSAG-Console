@@ -3715,11 +3715,110 @@ static String32 GetUSSDSubsystem(
   return rv;
 }
 
-static string GetUSSDRequestString(
+static char getNextUcs2Char(const char* ptr)
+{
+  short rv;
+  memcpy(&rv,ptr,2);
+  rv=htons(rv);
+  return (char)rv;
+}
+
+static String32 GetUSSDSubsystemUCS2(
   const char* text,
   unsigned length)
 {
-  if(*text=='#')return string(text,length);
+  const char* p = text;
+  const char* pEnd = text+length;
+  for ( ; p < pEnd; p+=2 )
+  {
+    char c=getNextUcs2Char(p);
+    if ( (c != '#') && (c != '*') )
+    {
+      break;
+    }
+  }
+  const char* sBegin = p;
+  for ( ; p < pEnd; p+=2 )
+  {
+    char c=getNextUcs2Char(p);
+    if ( (c == '#') || (c == '*') )
+    {
+      break;
+    }
+  }
+  const char* sEnd = p;
+  String32 rv;
+  p=sBegin;
+  unsigned i=0;
+  for(;p<=sEnd && i<31;p+=2,i++)
+  {
+    rv[i]=getNextUcs2Char(p);
+  }
+  rv[i]=0;
+  return rv;
+}
+
+static unsigned GetUSSDRequestStringUCS2(
+  const char* text,
+  unsigned length,
+  char* out)
+{
+  if(getNextUcs2Char(text)=='#')
+  {
+    memcpy(out,text,length);
+    return length;
+  }
+  const char* p = text;
+  const char* pEnd = text+length-2;
+  for ( ; p < pEnd; pEnd-=2 )
+  {
+    char c=getNextUcs2Char(pEnd);
+    if ( (c == '#') || (c == '*') )
+    {
+      break;
+    }
+  }
+  if( pEnd == p ) throw runtime_error("No trailing # or * found in USSD request string");
+  for ( ; p < pEnd; p+=2 )
+  {
+    char c=getNextUcs2Char(p);
+    if ( (c != '#') && (c != '*') )
+    {
+      break;
+    }
+  }
+  for ( ; p < pEnd; p+=2 )
+  {
+    char c=getNextUcs2Char(p);
+    if ( (c == '#') || (c == '*') )
+    {
+      break;
+    }
+  }
+  if( p == pEnd )
+  {
+    return 0;
+  }
+  else
+  {
+    p+=2;
+    length=(unsigned)(pEnd-p);
+    memcpy(out,p,length);
+    return length;
+  }
+}
+
+
+static unsigned GetUSSDRequestString(
+  const char* text,
+  unsigned length,
+  char* out)
+{
+  if(*text=='#')
+  {
+    memcpy(out,text,length);
+    return length;
+  }
   const char* p = text;
   const char* pEnd = text+length-1;
   for ( ; p < pEnd; --pEnd ) if ( (*pEnd == '#') || (*pEnd == '*') ) break;
@@ -3727,9 +3826,16 @@ static string GetUSSDRequestString(
   for ( ; p < pEnd; ++p ) if ( (*p != '#') && (*p != '*') ) break;
   const char* sBegin = p;
   for ( ; p < pEnd; ++p ) if ( (*p == '#') || (*p == '*') ) break;
-  if( p == pEnd ) return string();
-  else {
-    return string(p+1,pEnd);
+  if( p == pEnd )
+  {
+    return 0;
+  }
+  else
+  {
+    p++;
+    length=(unsigned)(pEnd-p);
+    memcpy(out,p,length);
+    return length;
   }
 }
 
@@ -3764,7 +3870,7 @@ USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
       __map_trace2__("MAP::%s has msisdn %d.%d", __func__,dialog->m_msAddr.addressLength, dialog->m_msAddr.typeOfAddress );
     }
 
-    string subsystem;
+    String32 subsystem;
     auto_ptr<SMS> _sms ( new SMS() );
     SMS& sms = *_sms.get();
     Address src_addr;
@@ -3783,22 +3889,32 @@ USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
     if( dataCoding == smsc::smpp::DataCoding::SMSC7BIT )
     {
       MicroString ms;
+      char outStr[256];
       unsigned chars = ussdString_s.ussdStrLen*8/7;
       Convert7BitToSMSC7Bit(ussdString_s.ussdStr,chars/*ussdString_s.ussdStrLen*/,&ms,0);
-      subsystem = GetUSSDSubsystem(ms.bytes,ms.len).c_str();
-      string ussdStr = GetUSSDRequestString(ms.bytes, ms.len);
+      subsystem = GetUSSDSubsystem(ms.bytes,ms.len);
+      unsigned outLen = GetUSSDRequestString(ms.bytes, ms.len,outStr);
       sms.setIntProperty(Tag::SMPP_DATA_CODING,dataCoding);
-      sms.setBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,ussdStr.c_str(),(unsigned)ussdStr.length());
-      sms.setIntProperty(Tag::SMPP_SM_LENGTH,(uint32_t)ussdStr.length());
-    } else {
+      sms.setBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,outStr,outLen);
+      sms.setIntProperty(Tag::SMPP_SM_LENGTH,(uint32_t)outLen);
+    } else if(dataCoding == smsc::smpp::DataCoding::UCS2)
+    {
+      char outStr[256];
+      subsystem = GetUSSDSubsystemUCS2((char*)ussdString_s.ussdStr,ussdString_s.ussdStrLen);
+      unsigned outLen = GetUSSDRequestStringUCS2((char*)ussdString_s.ussdStr,ussdString_s.ussdStrLen,outStr);
+      sms.setIntProperty(Tag::SMPP_DATA_CODING,dataCoding);
+      sms.setBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,outStr,outLen);
+      sms.setIntProperty(Tag::SMPP_SM_LENGTH,(uint32_t)outLen);
+    }else
+    {
       __map_warn2__("DCS 0x%02X received in Et96MapV2ProcessUnstructuredSSRequestInd", ussdDataCodingScheme );
       throw runtime_error("Datacoding other then GSM7bit is not supported in Et96MapV2ProcessUnstructuredSSRequestInd");
     }
     dialog->ussdMrRef = MakeMrRef();
     __map_trace2__("%s: dialogid 0x%x invokeid=%d request encoding 0x%x length %d subsystem %s mr=%x",__func__,dialogueId,invokeId,ussdDataCodingScheme,ussdString_s.ussdStrLen,subsystem.c_str(),dialog->ussdMrRef);
-    subsystem.insert(0, ".5.0.ussd:");
-    dialog->subsystem = subsystem;
-    Address dest_addr = Address(subsystem.c_str());
+    dialog->subsystem=".5.0.ussd:";
+    dialog->subsystem += subsystem.c_str();
+    Address dest_addr = Address(dialog->subsystem.c_str());
     sms.setIntProperty(Tag::SMPP_PROTOCOL_ID,0);
     sms.setMessageReference(0);
     sms.setDestinationAddress(dest_addr);
@@ -4295,17 +4411,18 @@ USHORT_T Et96MapV1ProcessUnstructuredSSDataInd(
     //sms.setIntProperty(Tag::SMSC_ORIGINAL_DC, smsc::smpp::DataCoding::LATIN1 );
     unsigned esm_class = 2; // Transaction mode
     sms.setIntProperty(Tag::SMPP_ESM_CLASS,esm_class);
-    string subsystem = GetUSSDSubsystem((const char*)ssUserData_s.ssUserDataStr,ssUserData_s.ssUserDataStrLen).c_str();
-    string ussdStr = GetUSSDRequestString((const char*)ssUserData_s.ssUserDataStr,ssUserData_s.ssUserDataStrLen);
+    String32 subsystem = GetUSSDSubsystem((const char*)ssUserData_s.ssUserDataStr,ssUserData_s.ssUserDataStrLen);
+    char outStr[256];
+    unsigned outLen = GetUSSDRequestString((const char*)ssUserData_s.ssUserDataStr,ssUserData_s.ssUserDataStrLen,outStr);
     sms.setIntProperty(Tag::SMPP_DATA_CODING,smsc::smpp::DataCoding::LATIN1);
-    sms.setBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,ussdStr.c_str(),(unsigned)ussdStr.length());
-    sms.setIntProperty(Tag::SMPP_SM_LENGTH,(uint32_t)ussdStr.length());
+    sms.setBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,outStr,outLen);
+    sms.setIntProperty(Tag::SMPP_SM_LENGTH,(uint32_t)outLen);
     dialog->ussdMrRef = MakeMrRef();
 
     __map_trace2__("%s: dialogid 0x%x invokeid=%d request length %d subsystem %s mr=%x",__func__,dialogueId,invokeId,ssUserData_s.ssUserDataStrLen,subsystem.c_str(),dialog->ussdMrRef);
-    subsystem.insert(0, ".5.0.ussd:");
-    dialog->subsystem = subsystem;
-    Address dest_addr = Address(subsystem.c_str());
+    dialog->subsystem=".5.0.ussd:";
+    dialog->subsystem += subsystem.c_str();
+    Address dest_addr = Address(dialog->subsystem.c_str());
     sms.setIntProperty(Tag::SMPP_PROTOCOL_ID,0);
     sms.setMessageReference(0);
     sms.setDestinationAddress(dest_addr);

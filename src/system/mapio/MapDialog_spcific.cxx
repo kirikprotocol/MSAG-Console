@@ -493,7 +493,7 @@ uint8_t convertCBSDatacoding2SMSC( UCHAR_T dcs, UCHAR_T *udhPresent, UCHAR_T *ms
   *udhPresent = 0;
   *msgClassMean = 0;
   *msgClass = 0;
-  int codingGroup = (dcs>>4) & 0xf0;
+  int codingGroup = (dcs>>4) & 0x0f;
   int codingScheme = dcs & 0x0f;
   if( codingGroup == 0 || codingGroup == 2 || codingGroup == 3 ) {
     return smsc::smpp::DataCoding::SMSC7BIT;
