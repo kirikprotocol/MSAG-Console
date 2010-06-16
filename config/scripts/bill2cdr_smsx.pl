@@ -319,12 +319,12 @@ sub process{
 
     my $extraOut;
 
-    if(exists($EXTRA_MAPPING{int($infields->{SERVICE_ID})}))
+    if(exists($EXTRA_MAPPING{int($infields->{SMSX_SRV})}))
     {
-      $extraOut=$EXTRA_MAPPING{int($infields->{SERVICE_ID})};
+      $extraOut=$EXTRA_MAPPING{int($infields->{SMSX_SRV})};
     }
 
-    if($infields->{CONTRACT}==PREPAID && $infields->{SERVICE_ID}!=4 && $infields->{SERVICE_ID}!=7 && $infields->{SERVICE_ID}!=8)
+    if($infields->{CONTRACT}==PREPAID && $infields->{SMSX_SRV}!=4 && $infields->{SMSX_SRV}!=7 && $infields->{SMSX_SRV}!=8)
     {
       $makeOutRec=0;
     }
