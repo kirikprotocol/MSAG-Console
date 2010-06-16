@@ -10,6 +10,7 @@
 #include "core/threads/Thread.hpp"
 #include "Interconnect.h"
 #include "SnmpTrap.hpp"
+#include "util/debug.h"
 
 namespace smsc{
 namespace admin{
