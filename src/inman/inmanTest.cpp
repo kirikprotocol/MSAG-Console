@@ -436,14 +436,17 @@ void cmd_org_msc(Console&, const std::vector<std::string> &args)
       return;
   }
 
-  const char * adrStr = args[1].c_str();
+  std::string adrStr = args[1];
+  for (unsigned i = 2; i < args.size(); ++i) {
+      adrStr += ' '; adrStr += args[i];
+  }
   TonNpiAddress tadr;
-  if (!tadr.fromText(adrStr)) {
-      fprintf(stdout, "ERR: invalid MSC address: %s!", adrStr);
+  if (!tadr.fromText(adrStr.c_str())) {
+      fprintf(stdout, "ERR: invalid MSC address: %s!", adrStr.c_str());
       return;
   }
 
-  _billFacade->setLocMSC(args[1]);
+  _billFacade->setLocMSC(adrStr);
   _billFacade->printDlgConfig();
 }
 
