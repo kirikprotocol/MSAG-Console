@@ -3025,19 +3025,23 @@ int main(int argc,char* argv[])
 
     try
     {
-      initRegions(cfgman.getString("admin.regionsconfig"),cfgman.getString("admin.routesconfig"));
-      cfg::regionsEnabled=true;
-    } catch(std::exception& e)
-    {
-      __warning2__("regions support disabled, exception: %s", e.what());
-    }
-
-    try
-    {
       cfg::helpDeskAddress=Address(cfgman.getString("admin.helpdeskAddress")).value;
     } catch(std::exception& e)
     {
       __warning__("helpdesk support disabled");
+    }
+
+
+    if(!cfg::helpDeskAddress.empty())
+    {
+      try
+      {
+        initRegions(cfgman.getString("admin.regionsconfig"),cfgman.getString("admin.routesconfig"));
+        cfg::regionsEnabled=true;
+      } catch(std::exception& e)
+      {
+        __warning2__("regions support disabled, exception: %s", e.what());
+      }
     }
 
     bool haveStats=false;
