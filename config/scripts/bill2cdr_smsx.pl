@@ -259,7 +259,7 @@ sub process{
     #changed by request (paid websms/webgroups support) 11.09.2008
     #changed by request (paid websms/webgroups support) 07.11.2008
     #if(($infields->{SRC_SME_ID} eq 'webgroup' || $infields->{SRC_SME_ID} eq 'websms') && $infields->{SRC_MSC} ne '')
-    if($infields->{SRC_MSC} eq 'GT')
+    if($infields->{SRC_MSC} eq 'GT SMSCX')
     {
 #      $infields->{DST_ADDR}=$infields->{DST_ADDR}.'IH';
       $ihsuffix='IH';
@@ -267,11 +267,11 @@ sub process{
 
     #changed by request 19.10.2007
     #changed for webgroups/websms 07.11.2008
-    if(($infields->{SRC_SME_ID} ne 'MAP_PROXY' && $infields->{SRC_MSC} eq '') || $infields->{SRC_MSC} eq 'GT')
+    if(($infields->{SRC_SME_ID} ne 'MAP_PROXY' && $infields->{SRC_MSC} eq '') || $infields->{SRC_MSC} eq 'GT SMSCX')
     {
       $infields->{SRC_MSC}=EXTRAMSC;
     }
-    if(($infields->{DST_SME_ID} ne 'MAP_PROXY' && $infields->{DST_MSC} eq '') || $infields->{DST_MSC} eq 'GT')
+    if(($infields->{DST_SME_ID} ne 'MAP_PROXY' && $infields->{DST_MSC} eq '') || $infields->{DST_MSC} eq 'GT SMSCX')
     {
       $infields->{DST_MSC}=EXTRAMSC;
     }
