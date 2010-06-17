@@ -256,6 +256,7 @@ sub process{
     %$outfields=%$infields;
 
     my $ihsuffix='';
+    my $createOut=0;
     #changed by request (paid websms/webgroups support) 11.09.2008
     #changed by request (paid websms/webgroups support) 07.11.2008
     #if(($infields->{SRC_SME_ID} eq 'webgroup' || $infields->{SRC_SME_ID} eq 'websms') && $infields->{SRC_MSC} ne '')
@@ -263,6 +264,7 @@ sub process{
     {
 #      $infields->{DST_ADDR}=$infields->{DST_ADDR}.'IH';
       $ihsuffix='IH';
+      $createOut=1;
     }
 
     #changed by request 19.10.2007
@@ -324,7 +326,8 @@ sub process{
       $extraOut=$EXTRA_MAPPING{int($infields->{SMSX_SRV})};
     }
 
-    if($infields->{CONTRACT}==PREPAID && $infields->{SMSX_SRV}!=4 && $infields->{SMSX_SRV}!=7 && $infields->{SMSX_SRV}!=8)
+    if($infields->{CONTRACT}==PREPAID && !$createOut && 
+       $infields->{SMSX_SRV}!=4 && $infields->{SMSX_SRV}!=7 && $infields->{SMSX_SRV}!=8)
     {
       $makeOutRec=0;
     }
