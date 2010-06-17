@@ -87,7 +87,7 @@ struct TonNpiAddress {
         memset(buff, 0, sizeof(buff));
         switch (text[0]) {
         case '.': {  //ton.npi.adr
-            scanned = sscanf(text, ".%d.%d.%20s", &itype, &iplan, addr_value);
+            scanned = sscanf(text, ".%d.%d.%20[0-9a-zA-Z *#.:]s", &itype, &iplan, addr_value);
             max_scan = 3;
         } break;
         case '+': {  //isdn international adr
