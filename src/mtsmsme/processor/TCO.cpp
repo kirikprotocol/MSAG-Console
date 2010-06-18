@@ -16,7 +16,7 @@ static int reqnum = 0;
 using smsc::logger::Logger;
 static Logger *logger = 0;
 
-TCO::TCO(int TrLimit):hlr(0),tsms(TrLimit)
+TCO::TCO(int TrLimit):hlr(0),tsms(TrLimit),sccpsender(0)
 {
   logger = Logger::getInstance("mt.sme.tco");
   TrId id; id.size=4; id.buf[0] = 0xBA; id.buf[1] = 0xBE;
