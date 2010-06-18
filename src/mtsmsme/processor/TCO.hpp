@@ -74,6 +74,7 @@ class TCO: public SccpUser
     XHash<TrId,TSM*,TrIdHash> tsms;
     Mutex tridpool_mutex;
     HLROAM* hlr;
+    SccpSender *sccpsender = 0;
 };
 
 }/*namespace processor*/}/*namespace mtsmsme*/}/*namespace smsc*/

@@ -15,7 +15,6 @@ using smsc::util::Exception;
 static int reqnum = 0;
 using smsc::logger::Logger;
 static Logger *logger = 0;
-static SccpSender *sccpsender = 0;
 
 TCO::TCO(int TrLimit):hlr(0),tsms(TrLimit)
 {
