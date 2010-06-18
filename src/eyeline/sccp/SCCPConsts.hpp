@@ -5,6 +5,8 @@
 #ident "@(#)$Id$"
 #define __ELC_SCCP_PARAM_CONST_DEFS_HPP
 
+#include <inttypes.h>
+
 namespace eyeline {
 namespace sccp {
 
