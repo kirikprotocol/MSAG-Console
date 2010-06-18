@@ -11,9 +11,49 @@ namespace eyeline {
 namespace asn1 {
 
 typedef uint32_t  TSLength; //type for overall encoding length
-typedef uint16_t  TSELength; //type for encoding element length
 
-struct TransferSyntax {
+//Octet buffer storing transferSyntax encoding
+class TSBuffer {
+private:
+  bool _isConst;
+  union {
+    uint8_t * toVolat;
+    const uint8_t * toConst;
+  } _ptr;
+
+public:
+  TSLength  _maxlen;  //encoding length in units(bytes or bits depending
+                      //on TransferSyntax alignment
+
+  explicit TSBuffer(uint8_t * use_buf = 0, TSLength enc_len = 0)
+    : _isConst(false), _maxlen(enc_len)
+  {
+    _ptr.toVolat = use_buf;
+  }
+  TSBuffer(const uint8_t * use_buf, TSLength enc_len)
+    : _isConst(true), _maxlen(enc_len)
+  {
+    _ptr.toConst = use_buf;
+  }
+  ~TSBuffer()
+  { }
+
+  void setPtr(uint8_t * use_ptr)
+  {
+    _isConst = false; _ptr.toVolat = use_ptr;
+  }
+  void setPtr(const uint8_t * use_ptr)
+  {
+    _isConst = true; _ptr.toConst = use_ptr;
+  }
+
+  uint8_t * getPtr(void) { return _isConst ? 0 : _ptr.toVolat; }
+
+  const uint8_t * getPtr(void) const { return _ptr.toConst; }
+};
+
+class TransferSyntax : public TSBuffer {
+public:
   enum Rule_e {
     undefinedER = 0
     //octet aligned encodings:
@@ -29,39 +69,27 @@ struct TransferSyntax {
     , ruleUPER  //rulePacked_unaligned
     , ruleCUPER //rulePacked_unaligned_canonical
   };
-};
 
-struct TSGroupBER { //octet aligned encodings
-  enum Rule_e {
-      ruleBER = TransferSyntax::ruleBER //ruleBasic
-    , ruleDER = TransferSyntax::ruleDER //ruleDistinguished
-    , ruleCER = TransferSyntax::ruleCER //ruleCanonical
-  };
-};
+  Rule_e  _rule;
 
-struct TSGroupPER { 
-  enum Rule_e {
-    //octet aligned encodings
-      rulePER   = TransferSyntax::rulePER   //rulePacked_aligned
-    , ruleCPER  = TransferSyntax::ruleCPER  //rulePacked_aligned_canonical
-    //bit aligned encodings:
-    , ruleUPER  = TransferSyntax::ruleUPER  //rulePacked_unaligned
-    , ruleCUPER = TransferSyntax::ruleCUPER //rulePacked_unaligned_canonical
-  };
-};
+  TransferSyntax() : TSBuffer(), _rule(undefinedER)
+  { }
+  TransferSyntax(const TSBuffer & use_buf, Rule_e use_rule)
+    : TSBuffer(use_buf), _rule(use_rule)
+  { }
+  ~TransferSyntax()
+  { }
 
-struct TSGroupXER { //octet aligned encodings
-  enum Rule_e {
-      ruleXER = TransferSyntax::ruleXER   //ruleXml
-    , ruleCXER = TransferSyntax::ruleCXER //ruleXml_canonical
-    , ruleEXER = TransferSyntax::ruleEXER //ruleXml_extended
-  };
+  static const char * nmRule(TransferSyntax::Rule_e rule_id); /*throw()*/
+
+  const char * nmRule(void) const { return nmRule(_rule); }
 };
 
 struct ENCResult {
   enum Status_e {
     encErrInternal = -3 //internal encoder error
     , encMoreMem = -2   //not enough memory for resulted encoding
+    , encUnsupported = -1 //unsupported encoder action
     , encOk = 0
     , encBadVal = 1     //invalid/illegal value is to encode
     , encBadArg = 2     //incorrect argument is passed to encoder
@@ -89,10 +117,12 @@ struct DECResult {
   enum Status_e {
     decErrInternal = -3 //internal decoder error
     , decMoreInput = -2 //insufficient input encoding to complete
-    , decBadEncoding = -1 //corrupted input encoding
+    , decBadEncoding = -1 //corrupted or unsupported input encoding
     , decOk = 0
-    , decBadVal = 1     //value that is decoded is invalid/illegal
-    , decBadArg = 2     //incorrect argument is passed to decoder
+    , decOkRelaxed = 1  //value is decoded but input encoding violates
+                        //TransferSyntax requirements (f.ex. canonical restrictions)
+    , decBadVal = 2     //value may be decoded but it's illegal/unsupported/too large
+    , decBadArg = 3     //incorrect argument is passed to decoder
   };
 
   Status_e  status; //decoding status
@@ -104,6 +134,14 @@ struct DECResult {
   { }
 
   bool isOk(void) const { return (status == decOk); }
+  bool isOkRelaxed(void) const
+  {
+    return (status == decOk) || (status == decOkRelaxed);
+  }
+  bool isOk(bool use_relaxed) const
+  {
+    return (status == decOk) || (use_relaxed && (status == decOkRelaxed)); 
+  }
 
   DECResult & operator+=(const DECResult & use_res)
   {
