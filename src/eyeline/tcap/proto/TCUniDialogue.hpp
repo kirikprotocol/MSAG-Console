@@ -1,110 +1,30 @@
 /* ************************************************************************** *
- * Classes implementing TCAP UNIDialogue PDUs.
+ * TCAP UNIDialogue PDUs definitions according to
+ * itu-t recommendation q 773 modules(2) unidialoguePDUs(3) version1(1).
  * ************************************************************************** */
 #ifndef __TC_DIALOGUE_UNI_DEFS_HPP
 #ident "@(#)$Id$"
 #define __TC_DIALOGUE_UNI_DEFS_HPP
 
-#include "eyeline/tcap/proto/TCUserInfo.hpp"
+#include "eyeline/asn1/EncodedOID.hpp"
+#include "eyeline/tcap/TDlgUserInfo.hpp"
+#include "eyeline/tcap/proto/ProtocolVersion.hpp"
 
 namespace eyeline {
 namespace tcap {
 namespace proto {
 
-extern EncodedOID _ac_tcap_uniDialogue_as;
+extern const asn1::EncodedOID _ac_tcap_uniDialogue_as;
 
+struct TCPduAUDT {
+  ProtocolVersion         _protoVer;
+  asn1::EncodedOID        _acId;
+  tcap::TDlgUserInfoList  _usrInfo;    //optional
 
-class TCAudtPDU : public ASTypeAC {
-protected:
-  unsigned          _protoVer;  //BIT STING
-  EncodedOID        _acId;      //mandatory!!!
-  TCUserInformation _usrInfo;   //optional
-
-public:
-  enum ProtoVersion_e { protoVersion1 = 0 };
-
-  TCAudtPDU() : ASTypeAC(ASTag::tagApplication, 0)
-    , _protoVer(protoVersion1)
+  explicit TCPduAUDT() : _protoVer(_dfltProtocolVersion)
   { }
-  ~TCAudtPDU()
+  ~TCPduAUDT()
   { }
-  //TODO:
-
-  void setAppCtx(const EncodedOID & use_acid) { _acId = use_acid; }
-  TCUserInformation & usrInfo(void) { return _usrInfo; }
-  // 
-  const EncodedOID * ACDefined(void) const
-  {
-    return _acId.length() ? &_acId : 0;
-  }
-
-  // ---------------------------------
-  // -- ASTypeAC interface methods
-  // ---------------------------------
-  using ASTypeAC::encode;
-  using ASTypeAC::decode;
-  using ASTypeAC::deferredDecode;
-  //REQ: if use_rule == valRule, presentation > valNone, otherwise presentation == valDecoded
-  ENCResult encode(OCTBuffer & use_buf, EncodingRule use_rule = TransferSyntax::ruleDER)
-    /*throw ASN1CodecError*/;
-
-  //REQ: presentation == valNone
-  //OUT: presentation (include all subcomponents) = valDecoded,
-  //NOTE: in case of decMoreInput, stores decoding context 
-  DECResult decode(const OCTBuffer & use_buf, EncodingRule use_rule = TransferSyntax::ruleDER)
-    /*throw ASN1CodecError*/;
-
-  //REQ: presentation == valNone
-  //OUT: presentation (include all subcomponents) = valMixed | valDecoded
-  //NOTE: in case of valMixed keeps references to BITBuffer !!!
-  //NOTE: in case of decMoreInput, stores decoding context 
-  DECResult deferredDecode(const OCTBuffer & use_buf, EncodingRule use_rule = TransferSyntax::ruleDER)
-    /*throw ASN1CodecError*/;
-};
-
-class TCUniDialogueAS : public AbstractSyntax { //uniDialogue-as
-protected:
-  TCAudtPDU _pdu;
-
-public:
-  enum PDUKind_e { pduAUDT = 0};
-
-  TCUniDialogueAS() : AbstractSyntax(_ac_tcap_uniDialogue_as)
-  {
-    asTags().addOption(*_pdu.Tagging(), true);
-  }
-
-  TCUserInformation * usrInfo(void)
-  {
-    return &_pdu.usrInfo();
-  }
-  const EncodedOID * ACDefined(void) const
-  {
-    return _pdu.ACDefined();
-  }
-
-  // ---------------------------------
-  // -- ASTypeAC interface methods
-  // ---------------------------------
-  using ASTypeAC::encode;
-  using ASTypeAC::decode;
-  using ASTypeAC::deferredDecode;
-  //REQ: if use_rule == valRule, presentation > valNone, otherwise presentation == valDecoded
-  ENCResult encode(OCTBuffer & use_buf, EncodingRule use_rule = TransferSyntax::ruleDER)
-    /*throw ASN1CodecError*/;
-
-  //REQ: presentation == valNone
-  //OUT: presentation (include all subcomponents) = valDecoded,
-  //NOTE: in case of decMoreInput, stores decoding context 
-  DECResult decode(const OCTBuffer & use_buf, EncodingRule use_rule = TransferSyntax::ruleDER)
-    /*throw ASN1CodecError*/;
-
-  //REQ: presentation == valNone
-  //OUT: presentation (include all subcomponents) = valMixed | valDecoded
-  //NOTE: in case of valMixed keeps references to BITBuffer !!!
-  //NOTE: in case of decMoreInput, stores decoding context 
-  DECResult deferredDecode(const OCTBuffer & use_buf, EncodingRule use_rule = TransferSyntax::ruleDER)
-    /*throw ASN1CodecError*/;
 };
 
 } //proto
