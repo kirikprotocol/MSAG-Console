@@ -6,6 +6,8 @@
 #ident "@(#)$Id$"
 #define __ROS_REJECT_PROBLEM_DEFS_HPP
 
+#include <inttypes.h>
+
 namespace eyeline {
 namespace ros {
 
@@ -32,6 +34,8 @@ public:
     , rje_unrecognizedError = 2, rje_unexpectedError = 3
     , rje_mistypedParameter = 4
   };
+
+  typedef uint8_t value_type;
 
 protected:
   ProblemKind_e rejKind;
@@ -64,15 +68,43 @@ public:
   {
     rejCode.rError = rje_code;
   }
+  RejectProblem(ProblemKind_e use_kind, value_type use_val)
+  {
+    setProblem(use_kind, use_val);
+  }
 
-  ProblemKind_e     problemKind(void) const { return rejKind; }
+  ProblemKind_e     getProblemKind(void) const { return rejKind; }
 
   GeneralProblem_e  getGeneralProblem(void) const { return rejCode.general; }
   InvokeProblem_e   getInvokeProblem(void) const { return rejCode.invoke; }
   RResultProblem_e  getRResultProblem(void) const { return rejCode.rResult; }
   RErrorProblem_e   getRErrorProblem(void) const { return rejCode.rError; }
+
+  void setGeneralProblem(GeneralProblem_e use_val)
+      { rejKind = rejGeneral; rejCode.general = use_val; }
+  void setInvokeProblem(InvokeProblem_e use_val)
+      { rejKind = rejInvoke; rejCode.invoke = use_val; }
+  void setRResultProblem(RResultProblem_e use_val)
+      { rejKind = rejResult; rejCode.rResult = use_val; }
+  void setRErrorProblem(RErrorProblem_e use_val)
+      { rejKind = rejError; rejCode.rError = use_val; }
+
+  void setProblem(ProblemKind_e use_kind, value_type use_val)
+  {
+    switch (rejKind = use_kind) {
+    case rejError: 
+      rejCode.rError = static_cast<RErrorProblem_e>(use_val); break;
+    case rejResult: 
+      rejCode.rResult = static_cast<RResultProblem_e>(use_val); break;
+    case rejInvoke: 
+      rejCode.invoke = static_cast<InvokeProblem_e>(use_val); break;
+    default: //case rejGeneral: 
+      rejCode.general = static_cast<GeneralProblem_e>(use_val); break;
+    }
+  }
 };
 
+typedef RejectProblem::value_type RejectProblem_t;
 
 } //ros
 } //eyeline
