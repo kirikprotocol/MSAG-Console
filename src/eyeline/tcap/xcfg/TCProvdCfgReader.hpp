@@ -1,5 +1,5 @@
 /* ************************************************************************** *
- * libSUA XML configurations parser.
+ * TC provider XML configurations parser.
  * ************************************************************************** */
 #ifndef __EYELINE_TCPROVD_CFG_PARSER_HPP
 #ident "@(#)$Id$"
