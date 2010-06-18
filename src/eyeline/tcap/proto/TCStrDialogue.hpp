@@ -1,295 +1,188 @@
 /* ************************************************************************** *
- * Classes implementing TCAP structured dialogue PDUs according to
+ * TCAP structured dialogue definitions according to
  * itu-t recommendation q 773 modules(2) dialoguePDUs(2) version1(1).
  * ************************************************************************** */
 #ifndef __TC_STR_DIALOGUE_DEFS_HPP
 #ident "@(#)$Id$"
 #define __TC_STR_DIALOGUE_DEFS_HPP
 
+#include "eyeline/asn1/EncodedOID.hpp"
+#include "eyeline/tcap/TDlgUserInfo.hpp"
 #include "eyeline/tcap/proto/TCAssociateDiagnostic.hpp"
-#include "eyeline/tcap/proto/TCUserInfo.hpp"
-#include "eyeline/util/MaxSizeof.hpp"
+#include "eyeline/tcap/proto/ProtocolVersion.hpp"
 
 namespace eyeline {
 namespace tcap {
 namespace proto {
 
-extern EncodedOID _ac_tcap_strDialogue_as;
+extern const asn1::EncodedOID _ac_tcap_strDialogue_as;
 
-//Base class for dialogue PDUs
-class TCDlgPduAC : public ASTypeAC {
+//Base class for Structured Dialogue PDUs
+class TCDlgPduAC {
+public:
+  enum PduKind_e { pduNone = -1, pduAARQ = 0, pduAARE = 1, pduABRT = 4 };
+
 protected:
-  TCUserInformation   _usrInfo;    //optional
+  PduKind_e _kind;
 
 public:
-  enum ProtoVersion_e { protoVersion1 = 0 };
-  enum PDUKind_e { pduNone = -1, pduAARQ = 0, pduAARE = 1, pduABRT = 4 };
+  tcap::TDlgUserInfoList  _usrInfo;    //optional
 
-  TCDlgPduAC(PDUKind_e use_pdu)
-    : ASTypeAC(ASTag::tagApplication, use_pdu)
+  TCDlgPduAC(PduKind_e use_pdu = pduNone)
+    : _kind(use_pdu)
+  { }
+  virtual ~TCDlgPduAC()
   { }
 
-  TCUserInformation& getUsrInfo(void) { return _usrInfo; }
-
-  // -- TCDlgPduAC interface methods:
-  virtual const EncodedOID* getAppCtx(void) const = 0;
+  PduKind_e getKind(void) const { return _kind; }
 };
 
-//Structured TC Dialogue request APDU (AARQ)
-class TCReqPDU : public TCDlgPduAC {
-protected:
-  unsigned    _protoVer;  //BIT STING
-  EncodedOID  _acId;      //mandatory!!!
-
+/* ********************************************** *
+ * Structured TC Dialogue request APDU (AARQ)
+ * ********************************************* */
+class TCPduAARQ : public TCDlgPduAC {
 public:
-  TCReqPDU() : TCDlgPduAC(TCDlgPduAC::pduAARQ)
-    , _protoVer(TCDlgPduAC::protoVersion1)
+  ProtocolVersion   _protoVer;
+  asn1::EncodedOID  _acId;
+
+  explicit TCPduAARQ()
+    : TCDlgPduAC(TCDlgPduAC::pduAARQ), _protoVer(_dfltProtocolVersion)
   { }
-  ~TCReqPDU()
+  TCPduAARQ(const asn1::EncodedOID & use_ctx)
+    : TCDlgPduAC(TCDlgPduAC::pduAARQ), _protoVer(_dfltProtocolVersion)
+    , _acId(use_ctx)
   { }
-
-  void setAppCtx(const EncodedOID & use_acid) { _acId = use_acid; }
-
-  // -- TCDlgPduAC interface methods
-  const EncodedOID * getAppCtx(void) const
-  {
-    return _acId.length() ? &_acId : 0;
-  } 
-
-  // ---------------------------------
-  // -- ASTypeAC interface methods
-  // ---------------------------------
-  using ASTypeAC::encode;
-  using ASTypeAC::decode;
-  using ASTypeAC::deferredDecode;
-  //REQ: if use_rule == valRule, presentation > valNone, otherwise presentation == valDecoded
-  ENCResult encode(OCTBuffer & use_buf, EncodingRule use_rule = TransferSyntax::ruleDER)
-    /*throw ASN1CodecError*/;
-
-  //REQ: presentation == valNone
-  //OUT: presentation (include all subcomponents) = valDecoded,
-  //NOTE: in case of decMoreInput, stores decoding context 
-  DECResult decode(const OCTBuffer & use_buf, EncodingRule use_rule = TransferSyntax::ruleDER)
-    /*throw ASN1CodecError*/;
-
-  //REQ: presentation == valNone
-  //OUT: presentation (include all subcomponents) = valMixed | valDecoded
-  //NOTE: in case of valMixed keeps references to BITBuffer !!!
-  //NOTE: in case of decMoreInput, stores decoding context 
-  DECResult deferredDecode(const OCTBuffer & use_buf, EncodingRule use_rule = TransferSyntax::ruleDER)
-    /*throw ASN1CodecError*/;
+  ~TCPduAARQ()
+  { }
 };
 
-//Structured TC Dialogue response APDU (AARE)
-class TCRespPDU : public TCDlgPduAC {
+/* ********************************************** *
+ * Structured TC Dialogue response APDU (AARE)
+ * ********************************************* */
+class TCPduAARE : public TCDlgPduAC {
 public:
-  enum AssociateResult_e {
-    dlgAccepted = 0, dlgRejectPermanent = 1
-  };
+  ProtocolVersion               _protoVer;
+  asn1::EncodedOID              _acId;
+  TDialogueAssociate::Result_t  _result;
+  AssociateSourceDiagnostic     _diagnostic;
 
-protected:
-  unsigned    _protoVer;  //BIT STING
-  EncodedOID  _acId;      //mandatory!!!
-
-  AssociateResult_e           _result;
-  AssociateSourceDiagnostic   _diagnostic;
-
-public:
-  TCRespPDU() : TCDlgPduAC(TCDlgPduAC::pduAARE)
-    , _protoVer(TCDlgPduAC::protoVersion1), _result(dlgAccepted)
+  explicit TCPduAARE()
+    : TCDlgPduAC(TCDlgPduAC::pduAARE)
+    , _protoVer(_dfltProtocolVersion), _result(TDialogueAssociate::dlg_accepted)
   { }
-  ~TCRespPDU()
+  TCPduAARE(const asn1::EncodedOID & use_ctx)
+    : TCDlgPduAC(TCDlgPduAC::pduAARE)
+    , _protoVer(_dfltProtocolVersion), _result(TDialogueAssociate::dlg_accepted)
+    , _acId(use_ctx)
+  { }
+  ~TCPduAARE()
   { }
 
   void acceptByUser(void)
   {
-    _result = dlgAccepted; _diagnostic.setUserDiagnostic();
+    _result = TDialogueAssociate::dlg_accepted;
+    _diagnostic.setUserDiagnostic();
   }
   void acceptByPrvd(void)
   {
-    _result = dlgAccepted; _diagnostic.setPrvdDiagnostic();
+    _result = TDialogueAssociate::dlg_accepted;
+    _diagnostic.setPrvdDiagnostic();
   }
-
   void rejectByUser(AssociateSourceDiagnostic::DiagnosticUser_e use_cause =
                         AssociateSourceDiagnostic::dsu_null)
   {
-    _result = dlgRejectPermanent; _diagnostic.setUserDiagnostic(use_cause);
+    _result = TDialogueAssociate::dlg_reject_permanent;
+    _diagnostic.setUserDiagnostic(use_cause);
   }
   void rejectByPrvd(AssociateSourceDiagnostic::DiagnosticProvider_e use_cause =
                         AssociateSourceDiagnostic::dsp_null)
   {
-    _result = dlgRejectPermanent; _diagnostic.setPrvdDiagnostic(use_cause);
+    _result = TDialogueAssociate::dlg_reject_permanent;
+    _diagnostic.setPrvdDiagnostic(use_cause);
   }
-
-  void setAppCtx(const EncodedOID & use_acid) { _acId = use_acid; }
-
-  AssociateResult_e result(void) const { return _result; }
-  const AssociateSourceDiagnostic & diagnostic(void) const { return _diagnostic; }
-
-  // -- TCDlgPduAC interface methods
-  const EncodedOID * getAppCtx(void) const
-  {
-      return _acId.length() ? &_acId : 0;
-  }
-
-  // ---------------------------------
-  // -- ASTypeAC interface methods
-  // ---------------------------------
-  using ASTypeAC::encode;
-  using ASTypeAC::decode;
-  using ASTypeAC::deferredDecode;
-
-  //REQ: if use_rule == valRule, presentation > valNone, otherwise presentation == valDecoded
-  ENCResult encode(OCTBuffer & use_buf, EncodingRule use_rule = TransferSyntax::ruleDER)
-    /*throw ASN1CodecError*/;
-
-  //REQ: presentation == valNone
-  //OUT: presentation (include all subcomponents) = valDecoded,
-  //NOTE: in case of decMoreInput, stores decoding context 
-  DECResult decode(const OCTBuffer & use_buf, EncodingRule use_rule = TransferSyntax::ruleDER)
-    /*throw ASN1CodecError*/;
-
-  //REQ: presentation == valNone
-  //OUT: presentation (include all subcomponents) = valMixed | valDecoded
-  //NOTE: in case of valMixed keeps references to BITBuffer !!!
-  //NOTE: in case of decMoreInput, stores decoding context 
-  DECResult deferredDecode(const OCTBuffer & use_buf, EncodingRule use_rule = TransferSyntax::ruleDER)
-    /*throw ASN1CodecError*/;
 };
 
-//Structured TC Dialogue abort APDU (ABRT)
-class TCAbrtPDU : public TCDlgPduAC {
+/* ********************************************** *
+ * Structured TC Dialogue abort APDU (ABRT)
+ * ********************************************* */
+class TCPduABRT : public TCDlgPduAC {
 public:
-  enum AbortSource_e {
-    dlg_srv_user = 0, dlg_srv_provider = 1 
-  };
+  TDialogueAssociate::AbrtSource_t  _abrtSrc;
 
-protected:
-  AbortSource_e  _abrtSrc;
-
-public:
-  TCAbrtPDU(AbortSource_e abrt_src = dlg_srv_provider)
+  explicit TCPduABRT(TDialogueAssociate::AbrtSource_e abrt_src
+                      = TDialogueAssociate::abrtServiceProvider)
     : TCDlgPduAC(TCDlgPduAC::pduABRT), _abrtSrc(abrt_src)
   { }
-  ~TCAbrtPDU()
+  ~TCPduABRT()
   { }
-
-  void setAbortSource(AbortSource_e abrt_src) { _abrtSrc = abrt_src; }
-
-  AbortSource_e  getAbortSource(void) const { return _abrtSrc; }
-  // -- TCDlgPduAC interface methods
-  const EncodedOID * getAppCtx(void) const { return 0; }
-
-  // ---------------------------------
-  // -- ASTypeAC interface methods
-  // ---------------------------------
-  using ASTypeAC::encode;
-  using ASTypeAC::decode;
-  using ASTypeAC::deferredDecode;
-  //REQ: if use_rule == valRule, presentation > valNone, otherwise presentation == valDecoded
-  ENCResult encode(OCTBuffer & use_buf, EncodingRule use_rule = TransferSyntax::ruleDER)
-    /*throw ASN1CodecError*/;
-
-  //REQ: presentation == valNone
-  //OUT: presentation (include all subcomponents) = valDecoded,
-  //NOTE: in case of decMoreInput, stores decoding context 
-  DECResult decode(const OCTBuffer & use_buf, EncodingRule use_rule = TransferSyntax::ruleDER)
-    /*throw ASN1CodecError*/;
-
-  //REQ: presentation == valNone
-  //OUT: presentation (include all subcomponents) = valMixed | valDecoded
-  //NOTE: in case of valMixed keeps references to BITBuffer !!!
-  //NOTE: in case of decMoreInput, stores decoding context 
-  DECResult deferredDecode(const OCTBuffer & use_buf, EncodingRule use_rule = TransferSyntax::ruleDER)
-    /*throw ASN1CodecError*/;
 };
 
-// TC Structured Dialogue ABSTRACT SYNTAX
-class TCStrDialogueAS : public AbstractSyntax {
+
+class TCStrDialoguePdu {
 private:
-  uint8_t pduMem[eyeline::util::MaxSizeOf3_T< TCReqPDU,
-                                              TCRespPDU, TCAbrtPDU >::VALUE];
-  TCDlgPduAC::PDUKind_e _pduKind;
   union {
-    TCDlgPduAC *    ac;     //APDU's base class
-    TCReqPDU *      req;    //[APPLICATION 0]
-    TCRespPDU *     resp;   //[APPLICATION 1]
-    TCAbrtPDU *     abrt;   //[APPLICATION 4]
-  } _pdu;
+    void * _aligner;
+    uint8_t _buf[eyeline::util::MaxSizeOf3_T<TCPduAARQ, TCPduAARE, TCPduABRT>::VALUE];
+  } _memPdu;
 
 protected:
-  void resetPdu(void)
+  union {
+    TCDlgPduAC * _any;
+    TCPduAARQ *  _aarq;
+    TCPduAARE *  _aare;
+    TCPduABRT *  _abrt;
+  } _pdu;
+
+  void cleanUp(void)
   {
-    if (_pdu.ac) {
-      _pdu.ac->~TCDlgPduAC();
-      _pdu.ac = 0;
+    if (_pdu._any) {
+      _pdu._any->~TCDlgPduAC();
+      _pdu._any = 0;
     }
   }
-
 public:
-  TCStrDialogueAS(TCDlgPduAC::PDUKind_e use_pdu = TCDlgPduAC::pduNone)
-      : AbstractSyntax(_ac_tcap_strDialogue_as)
+  TCStrDialoguePdu()
   {
-    asTags().addOption(ASTagging(ASTag::tagApplication, TCDlgPduAC::pduAARQ));
-    asTags().addOption(ASTagging(ASTag::tagApplication, TCDlgPduAC::pduAARE));
-    asTags().addOption(ASTagging(ASTag::tagApplication, TCDlgPduAC::pduABRT));
-    //
-    _pdu.ac = 0;
-    if ((_pduKind = use_pdu) != TCDlgPduAC::pduNone)
-        Reset(use_pdu);
+    _pdu._any = 0;
   }
-  ~TCStrDialogueAS()
+  ~TCStrDialoguePdu()
   {
-    resetPdu();
+    cleanUp();
   }
 
-  TCDlgPduAC * Reset(TCDlgPduAC::PDUKind_e use_pdu = TCDlgPduAC::pduNone)
+  TCDlgPduAC::PduKind_e getKind(void) const
   {
-    resetPdu();
-    switch ((_pduKind = use_pdu)) {
-    case TCDlgPduAC::pduAARQ: _pdu.req = new(pduMem)TCReqPDU(); break;
-    case TCDlgPduAC::pduAARE: _pdu.resp = new(pduMem)TCRespPDU(); break;
-    case TCDlgPduAC::pduABRT: _pdu.abrt = new(pduMem)TCAbrtPDU(); break;
-    default:; //pduNone
-    }
-    asTags().selectOption(ASTag(ASTag::tagApplication, use_pdu));
-    return _pdu.ac;
+    return _pdu._any ? _pdu._any->getKind() : TCDlgPduAC::pduNone;
   }
 
-  TCDlgPduAC::PDUKind_e PDUKind(void) const { return _pduKind; }
-  TCDlgPduAC * Get(void)  { return _pdu.ac; }
+  const TCDlgPduAC * get(void) const { return _pdu._any; }
 
-  TCReqPDU *  Req(void)   { return _pduKind == TCDlgPduAC::pduAARQ ? _pdu.req : 0; }
-  TCRespPDU * Resp(void)  { return _pduKind == TCDlgPduAC::pduAARE ? _pdu.resp : 0; }
-  TCAbrtPDU * Abrt(void)  { return _pduKind == TCDlgPduAC::pduABRT ? _pdu.abrt : 0; }
+  TCPduAARQ * getAARQ(void) { return _pdu._aarq; }
+  TCPduAARE * getAARE(void) { return _pdu._aare; }
+  TCPduABRT * getABRT(void) { return _pdu._abrt; }
 
-  TCUserInformation * usrInfo(void)
+  const TCPduAARQ * getAARQ(void) const { return _pdu._aarq; }
+  const TCPduAARE * getAARE(void) const { return _pdu._aare; }
+  const TCPduABRT * getABRT(void) const { return _pdu._abrt; }
+
+  TCPduAARQ & initAARQ(void)
   {
-      return _pdu.ac ? &(_pdu.ac->getUsrInfo()) : 0;
+    cleanUp();
+    _pdu._aarq = new (_memPdu._buf)TCPduAARQ();
+    return *_pdu._aarq;
   }
-
-  // ---------------------------------
-  // -- ASTypeAC interface methods
-  // ---------------------------------
-  using ASTypeAC::encode;
-  using ASTypeAC::decode;
-  using ASTypeAC::deferredDecode;
-  //REQ: if use_rule == valRule, presentation > valNone, otherwise presentation == valDecoded
-  ENCResult encode(OCTBuffer & use_buf, EncodingRule use_rule = TransferSyntax::ruleDER)
-    /*throw ASN1CodecError*/;
-
-  //REQ: presentation == valNone
-  //OUT: presentation (include all subcomponents) = valDecoded,
-  //NOTE: in case of decMoreInput, stores decoding context 
-  DECResult decode(const OCTBuffer & use_buf, EncodingRule use_rule = TransferSyntax::ruleDER)
-    /*throw ASN1CodecError*/;
-
-  //REQ: presentation == valNone
-  //OUT: presentation (include all subcomponents) = valMixed | valDecoded
-  //NOTE: in case of valMixed keeps references to BITBuffer !!!
-  //NOTE: in case of decMoreInput, stores decoding context 
-  DECResult deferredDecode(const OCTBuffer & use_buf, EncodingRule use_rule = TransferSyntax::ruleDER)
-    /*throw ASN1CodecError*/;
+  TCPduAARE & initAARE(void)
+  {
+    cleanUp();
+    _pdu._aare = new (_memPdu._buf)TCPduAARE();
+    return *_pdu._aare;
+  }
+  TCPduABRT & initABRT(void)
+  {
+    cleanUp();
+    _pdu._abrt = new (_memPdu._buf)TCPduABRT();
+    return *_pdu._abrt;
+  }
 };
 
 } //proto
