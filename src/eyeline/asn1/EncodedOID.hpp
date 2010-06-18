@@ -1,38 +1,35 @@
 /* ************************************************************************* *
  * Encoded ASN.1 Object Identifier.
  * ************************************************************************* */
-#ifndef __ABSTRACT_SYNTAX_OID_DEFS__
+#ifndef __ABSTRACT_SYNTAX_ENCODED_OID_DEFS
 #ident "@(#)$Id$"
-#define __ABSTRACT_SYNTAX_OID_DEFS__
+#define __ABSTRACT_SYNTAX_ENCODED_OID_DEFS
 
-#include <inttypes.h>
-#include <vector>
-#include <string>
+#include "eyeline/asn1/ObjectID.hpp"
+#include "core/buffers/FixedLengthString.hpp"
 
 namespace eyeline {
 namespace asn1 {
-//
+
 class EncodedOID {
+public:
+  static const uint16_t _dfltNickLength = _ObjectID_DFLT_SUBIDS_NUM*(sizeof(SubIdType)*3+1);
+  static const uint16_t _dfltValueLength = _ObjectID_DFLT_SUBIDS_NUM*sizeof(SubIdType)*3;
+
+  typedef eyeline::util::LWArray_T<uint8_t, uint16_t, _dfltValueLength> ValueType;
+  typedef smsc::core::buffers::FixedLengthString<_dfltNickLength> NickString;
+
 private:
-  uint16_t             _numIds;
-  std::vector<uint8_t> _octs;
-  std::string          _nick;
+  uint8_t     _numIds;
+  ValueType   _octs;
+  NickString  _nick;
 
 protected:
-  void countIds(void)
-  {
-    _numIds = 0;
-    for (uint16_t i = 0; i < length(); ++i) {
-      if (!(_octs[i] & 0x80))
-        ++_numIds;
-    }
-    if (_numIds)
-      ++_numIds;  //take in account packing of 1st and 2nd arcs ids
-    return;
-  }
+  //Parses encoded representaion and counts number of SubIds
+  void countIds(void);
 
   //Splits the 1st subidentifier to 1st and 2nd arcs ids
-  void splitIdsPair(const uint32_t & sub_id, uint32_t & id_1st, uint32_t & id_2nd) const
+  void splitIdsPair(const SubIdType & sub_id, SubIdType & id_1st, SubIdType & id_2nd) const
   {
     if (sub_id < 80) {
       id_1st = sub_id/40; //arc 0 or 1
@@ -44,30 +41,37 @@ protected:
   }
   //Decodes subidentifier starting from octet pointed by 'idx'.
   //Returns false in case of invalid encoding setting 'sub_id' to -1
-  bool getSubId(uint32_t & sub_id, uint16_t & idx/* >= 0 */) const
+  bool parseSubId(SubIdType & sub_id, uint16_t & idx/* >= 0 */) const;
+
+public:
+  EncodedOID() : _numIds(0)
   {
-    for (sub_id = 0; idx < length(); ++idx) {
-      uint8_t oct = _octs[idx];
-      uint32_t prev = sub_id;
-
-      sub_id = (sub_id << 7) + (oct & 0x7F);
-      if (prev > sub_id)
-        break; //uint32_t overloading
-
-      if (!(oct & 0x80)) {
-        ++idx;
-        return true;
-      }
-    }
-    sub_id = (uint32_t)(-1); //inconsistent encoding
-    return false;
+    _nick[0] = 0;
+  }
+  EncodedOID(uint16_t len_octs, const uint8_t * oid_octs,
+                              const char * use_nick = NULL)
+  {
+    init(len_octs, oid_octs, use_nick);
+  }
+  //length prefixed bytes array not grater than 255 bytes
+  EncodedOID(const uint8_t * eoid_octs, const char * use_nick = NULL)
+  {
+    init((uint16_t)eoid_octs[0], eoid_octs + 1, use_nick);
   }
 
-  void init(uint8_t len_octs, const uint8_t * oid_octs,
+  void reset(void)
+  {
+    _numIds = 0;
+    _octs.clear();
+    _nick.clear();
+  }
+  //
+  void init(uint16_t len_octs, const uint8_t * oid_octs,
                               const char * use_nick = NULL)
   {
     _octs.reserve(len_octs);
-    _octs.insert(_octs.end(), oid_octs, oid_octs + len_octs);
+    _octs.clear();
+    _octs.append(oid_octs, len_octs);
     countIds();
     if (use_nick)
       _nick = use_nick;
@@ -75,73 +79,31 @@ protected:
       _nick = asnValue();
   }
 
-public:
-  EncodedOID() : _numIds(0)
-  { }
-  EncodedOID(uint8_t len_octs, const uint8_t * oid_octs,
-                              const char * use_nick = NULL)
-  {
-    init(len_octs, oid_octs, use_nick);
-  }
-  //length prefixed bytes array
-  EncodedOID(const uint8_t * eoid_octs, const char * use_nick = NULL)
-  {
-    init(eoid_octs[0], eoid_octs + 1, use_nick);
-  }
+  bool empty(void) const { return _octs.size() == 0; }
+  uint8_t numSubIds(void) const { return _numIds; }
+  const char * nick(void) const { return _nick.c_str(); }
 
-  uint8_t   length(void) const { return (uint8_t)_octs.size(); }
-  uint16_t  numSubIds(void) const { return _numIds; }
-
-  const char *    nick(void) const { return _nick.c_str(); }
+  uint16_t length(void) const { return _octs.size(); }
   const uint8_t * octets(void) const { return &_octs[0]; }
 
-  //Returns OID subidentifier #'id_idx',
-  //-1 in case of 'id_idx' is out of range or encoding is invalid
+  //Returns OID subidentifier #'id_idx', or (SubIdType)(-1)
+  //in case of 'id_idx' is out of range or encoding is invalid
   //NOTE: 'id_idx' is counted starting from 0
-  uint32_t  subId(uint16_t id_idx) const
+  SubIdType subId(uint8_t id_idx) const;
+
+  //Creates string containing ASN.1 Value Notation of this EOID
+  NickString asnValue(void) const;
+
+  bool operator< (const EncodedOID & cmp_obj) const
   {
-    if (id_idx >= numSubIds())
-      return (uint32_t)(-1);
-
-    uint32_t subId = 0;
-    uint16_t i = 0;
-    if (!getSubId(subId, i))
-      return subId;
-
-    if (id_idx < 2) {
-      uint32_t id1st = 0;
-      uint32_t id2nd = 0;
-      splitIdsPair(subId, id1st, id2nd);
-      return (id_idx == 1) ? id1st : id2nd;
-    }
-
-    while (--id_idx && getSubId(subId, i));
-    return subId;
+    if (length() == cmp_obj.length())
+      return (memcmp(_octs.get(), cmp_obj.octets(), length()) < 0);
+    return length() < cmp_obj.length();
   }
-
-  std::string asnValue() const
+  bool operator== (const EncodedOID & cmp_obj) const
   {
-    if (!length())
-      return "";
-
-    std::string val;
-    char buf[3*sizeof(uint32_t)+2];
-    uint16_t i = 1, numIds = numSubIds();
-
-    sprintf(buf, "%u", subId(0)); val += buf;
-    do {
-      sprintf(buf, " %u", subId(i)); val += buf;
-    } while (i < numIds);
-    return val;
-  }
-
-  bool operator< (const EncodedOID & obj2) const
-  {
-    return _octs < obj2._octs;
-  }
-  bool operator== (const EncodedOID & obj2) const
-  {
-    return _octs == obj2._octs;
+    return (length() == cmp_obj.length())
+          && !memcmp(_octs.get(), cmp_obj.octets(), length());
   }
 
 };
@@ -149,5 +111,5 @@ public:
 } //asn1
 } //eyeline
 
-#endif /* __ABSTRACT_SYNTAX_OID_DEFS__ */
+#endif /* __ABSTRACT_SYNTAX_ENCODED_OID_DEFS */
 
