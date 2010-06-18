@@ -9,17 +9,36 @@ namespace eyeline {
 namespace asn1 {
 
 /* ************************************************************************* *
+ * class ASTag implementation
+ * ************************************************************************* */
+static const char * const _nmTagClass[4] = {"UNI", "APP", "CTX", "PRV" };
+
+const char * ASTag::nmClass(ASTag::TagClass_e  class_id)
+{
+  return _nmTagClass[(class_id >> 6) & 0x03];
+}
+
+ASTagString ASTag::toString(const ASTag & use_tag)
+{
+  ASTagString rval;
+  snprintf(rval.str, rval.capacity(), "[%s %u]",
+           ASTag::nmClass(use_tag._tagClass), use_tag._tagValue);
+  return rval;
+}
+
+/* ************************************************************************* *
  * class ASTagging implementation
  * ************************************************************************* */
-ASTagging::ASTagging(uint8_t num_tags, ASTag use_tag1, ... /* , const ASTag use_tagN*/)
-  : LWArray_T<ASTag, uint8_t, 4>(num_tags), _tagEnv(tagsEXPLICIT)
+ASTagging::ASTagging(Environment_e use_env,
+                     uint8_t num_tags, ASTag use_tag1, ... /* , const ASTag use_tagN*/)
+  : ASTagsArray(num_tags), _tagEnv(use_env)
 {
-  LWArray_T<ASTag, uint8_t, 4>::_buf[0] = use_tag1;
+  ASTagsArray::_buf[0] = use_tag1;
 
   va_list  useTags;
   va_start(useTags, use_tag1);
   for (uint8_t i = 1; i < num_tags; ++i)
-    LWArray_T<ASTag, uint8_t, 4>::_buf[i] = va_arg(useTags, ASTag);
+    ASTagsArray::_buf[i] = va_arg(useTags, ASTag);
   va_end(useTags);
 }
 
@@ -57,7 +76,40 @@ ASTag  _tagGeneralSTR(ASTag::tagUniversal, 27);
 ASTag  _tagCHARSTR(ASTag::tagUniversal, 29);
 ASTag  _tagBMPSTR(ASTag::tagUniversal, 30);
 
-
+ASTag  _tagANYTYPE(ASTag::tagUniversal, (ASTag::ValueType)(-1));
+/* ************************************************************************* *
+ * UNIVERSAL TYPES TAGGING
+ * ************************************************************************* */
+ASTagging  _tagsUNI0(_tagUNI0, ASTagging::tagsIMPLICIT);
+ASTagging  _tagsBOOL(_tagBOOL, ASTagging::tagsIMPLICIT);
+ASTagging  _tagsINTEGER(_tagINTEGER, ASTagging::tagsIMPLICIT);
+ASTagging  _tagsBITSTR(_tagBITSTR, ASTagging::tagsIMPLICIT);
+ASTagging  _tagsOCTSTR(_tagOCTSTR, ASTagging::tagsIMPLICIT);
+ASTagging  _tagsNULL(_tagNULL, ASTagging::tagsIMPLICIT);
+ASTagging  _tagsObjectID(_tagObjectID, ASTagging::tagsIMPLICIT);
+ASTagging  _tagsObjDescriptor(_tagObjDescriptor, ASTagging::tagsIMPLICIT);
+ASTagging  _tagsEXTERNAL(_tagEXTERNAL, ASTagging::tagsIMPLICIT);
+ASTagging  _tagsREAL(_tagREAL, ASTagging::tagsIMPLICIT);
+ASTagging  _tagsENUM(_tagENUM, ASTagging::tagsIMPLICIT);
+ASTagging  _tagsEmbeddedPDV(_tagEmbeddedPDV, ASTagging::tagsIMPLICIT);
+ASTagging  _tagsUTF8STR(_tagUTF8STR, ASTagging::tagsIMPLICIT);
+ASTagging  _tagsRelativeOID(_tagRelativeOID, ASTagging::tagsIMPLICIT);
+                                  
+ASTagging  _tagsSEQOF(_tagSEQOF, ASTagging::tagsIMPLICIT);
+ASTagging  _tagsSETOF(_tagSETOF, ASTagging::tagsIMPLICIT);
+ASTagging  _tagsNumericSTR(_tagNumericSTR, ASTagging::tagsIMPLICIT);
+ASTagging  _tagsPrintableSTR(_tagPrintableSTR, ASTagging::tagsIMPLICIT);
+ASTagging  _tagsTeletexSTR(_tagTeletexSTR, ASTagging::tagsIMPLICIT);
+ASTagging  _tagsVideotexSTR(_tagVideotexSTR, ASTagging::tagsIMPLICIT);
+ASTagging  _tagsIA5STR(_tagIA5STR, ASTagging::tagsIMPLICIT);
+ASTagging  _tagsUTCTime(_tagUTCTime, ASTagging::tagsIMPLICIT);
+ASTagging  _tagsGeneralizedTime(_tagGeneralizedTime, ASTagging::tagsIMPLICIT);
+ASTagging  _tagsGraphicSTR(_tagGraphicSTR, ASTagging::tagsIMPLICIT);
+ASTagging  _tagsVisibleSTR(_tagVisibleSTR, ASTagging::tagsIMPLICIT);
+ASTagging  _tagsGeneralSTR(_tagGeneralSTR, ASTagging::tagsIMPLICIT);
+                                  
+ASTagging  _tagsCHARSTR(_tagCHARSTR, ASTagging::tagsIMPLICIT);
+ASTagging  _tagsBMPSTR(_tagBMPSTR, ASTagging::tagsIMPLICIT);
 } //asn1
 } //eyeline
 

@@ -7,6 +7,7 @@
 
 #include <inttypes.h>
 #include "eyeline/util/LWArray.hpp"
+#include "core/buffers/FixedLengthString.hpp"
 
 namespace eyeline {
 namespace asn1 {
@@ -18,18 +19,38 @@ struct ASTag {
     tagContextSpecific = 0x80,
     tagPrivate = 0xB0
   };
+
   typedef uint16_t ValueType;
 
+  static const unsigned _maxStringLen = sizeof("[UNI ]") + sizeof(ValueType)*3 + 1;
+
+  typedef smsc::core::buffers::FixedLengthString<_maxStringLen> String_t;
+
+  // --------- //
   TagClass_e  _tagClass;
   ValueType   _tagValue;
 
   ASTag(TagClass_e tag_class = tagUniversal, ValueType tag_val = 0)
     : _tagClass(tag_class), _tagValue(tag_val)
   { }
+  ~ASTag()
+  { }
+
+  static const char * nmClass(TagClass_e class_id);
+  //
+  static String_t toString(const ASTag & use_tag);
+
+  String_t toString(void) const { return toString(*this); }
+
 
   bool operator== (const ASTag & cmp_tag) const
   {
     return (_tagClass == cmp_tag._tagClass) && (_tagValue == cmp_tag._tagValue);
+  }
+
+  bool operator!= (const ASTag & cmp_tag) const
+  {
+    return (_tagClass != cmp_tag._tagClass) || (_tagValue != cmp_tag._tagValue);
   }
 
   //Compares tags in accordance with ASN.1 canonical tags order as stated
@@ -48,6 +69,8 @@ struct ASTag {
     return (_tagClass < cmp_tag._tagClass);
   }
 };
+
+typedef ASTag::String_t ASTagString;
 
 /* ************************************************************************* *
  * UNIVERSAL CLASS TAG NUMBERS
@@ -84,68 +107,92 @@ extern ASTag  _tagGeneralSTR;       //27
 extern ASTag  _tagCHARSTR;          //29
 extern ASTag  _tagBMPSTR;           //30
 
+extern ASTag  _tagANYTYPE;           //(-1) - RESERVED TAG
 /* ************************************************************************* *
  * ASN type tagging environment
  * ************************************************************************* */
 
-using eyeline::util::LWArray_T;
 static const uint8_t _ASTaggingDFLT_SZ = 4;
+typedef eyeline::util::LWArray_T<ASTag, uint8_t, _ASTaggingDFLT_SZ> ASTagsArray;
 
 //ASN type complete tagging (vector of ASTags)
 //NOTE: Overall number of tags is limited to 255
-class ASTagging : public LWArray_T<ASTag, uint8_t, _ASTaggingDFLT_SZ> {
-protected:
-  using LWArray_T<ASTag, uint8_t, _ASTaggingDFLT_SZ>::append;
-  using LWArray_T<ASTag, uint8_t, _ASTaggingDFLT_SZ>::operator+=;
-
+class ASTagging : public ASTagsArray {
 public:
   enum Environment_e {
-    tagsEXPLICIT = 0,  //type is identified by full set of tags
-    tagsIMPLICIT       //type is identified only by outermost tag
+    tagsIMPLICIT = 0, //type is identified only by outermost tag
+    tagsEXPLICIT      //type is identified by full set of tags
   };
 
 protected:
   Environment_e _tagEnv;
 
-  ASTag & innerTag(void) { return at(size() - 1); }
+  using ASTagsArray::append;
+  using ASTagsArray::prepend;
+  using ASTagsArray::shiftLeft;
+  using ASTagsArray::shiftRight;
+  using ASTagsArray::operator=;
+  using ASTagsArray::operator+=;
+  using ASTagsArray::operator>>;
+  using ASTagsArray::operator<<;
 
 public:
-  //just a single tag, by default: [UNIVERSAL 0] primitive
-  ASTagging(ASTag::TagClass_e tag_class = ASTag::tagUniversal, ASTag::ValueType tag_val = 0,
-            Environment_e use_env = tagsEXPLICIT)
-    : LWArray_T<ASTag, uint8_t, 4>(1), _tagEnv(use_env)
+  typedef ASTagsArray::size_type size_type;
+  //
+  ASTagging() //NOTE: set tagsEXPLICIT in order to allow conjoin() operation
+    : ASTagsArray(), _tagEnv(tagsEXPLICIT) 
+  { }
+  //
+  ASTagging(ASTag::TagClass_e tag_class, ASTag::ValueType use_tag,
+            Environment_e use_env)
+    : ASTagsArray(1), _tagEnv(use_env)
   {
-    LWArray_T<ASTag, uint8_t, 4>::_buf[0] = ASTag(tag_class, tag_val);
+    ASTagsArray::_buf[0] = ASTag(tag_class, use_tag);
   }
   //
-  ASTagging(const ASTag & use_tag, Environment_e use_env = tagsEXPLICIT)
-    : LWArray_T<ASTag, uint8_t, 4>(1), _tagEnv(use_env)
+  ASTagging(const ASTag & use_tag, Environment_e use_env)
+    : ASTagsArray(1), _tagEnv(use_env)
   {
-    LWArray_T<ASTag, uint8_t, 4>::_buf[0] = use_tag;
+    ASTagsArray::_buf[0] = use_tag;
   }
-  //
+  //Copying constructor
   ASTagging(const ASTagging & use_tags)
-    : LWArray_T<ASTag, uint8_t, 4>(use_tags), _tagEnv(use_tags._tagEnv)
+    : ASTagsArray(use_tags), _tagEnv(use_tags._tagEnv)
   { }
 
-  //Conjoining constructor
+  //Conjoining constructors
+  ASTagging(const ASTag & use_tag, Environment_e use_env,
+            const ASTagging & inner_tags)
+    : ASTagsArray(1), _tagEnv(use_env)
+  {
+    ASTagsArray::_buf[0] = use_tag;
+    conjoin(inner_tags);
+  }
   ASTagging(const ASTagging & outer_tags, const ASTagging & inner_tags)
-    : LWArray_T<ASTag, uint8_t, 4>(outer_tags), _tagEnv(outer_tags._tagEnv)
+    : ASTagsArray(outer_tags), _tagEnv(outer_tags._tagEnv)
   {
     conjoin(inner_tags);
   }
 
-
-  ASTagging(uint8_t num_tags, ASTag use_tag1, ... /* , const ASTag use_tagN*/);
+  ASTagging(Environment_e use_env, uint8_t num_tags, ASTag use_tag1, ... /* , const ASTag use_tagN*/);
   //
   ~ASTagging()
   { }
 
+  void init(const ASTag & use_tag, Environment_e use_env)
+  {
+    clear();
+    append(use_tag);
+    _tagEnv = use_env;
+  }
+
   Environment_e getEnvironment(void) const { return _tagEnv; }
   void setEnvironment(Environment_e use_env) { _tagEnv = use_env; }
 
+  bool isImplicit(void) const { return (_tagEnv == tagsIMPLICIT); }
+
   const ASTag & outerTag(void) const { return at(0); }
-  const ASTag & innerTag(void) const { return at(size() - 1); }
+  const ASTag & innerTag(void) const { return atLast(); }
 
   //Compares taggings in accordance with ASN.1 canonical tags order.
   bool operator< (const ASTagging & cmp_tags) const
@@ -157,7 +204,9 @@ public:
         return true;
     }
     //all 'num2cmp' tags are equal, the shorter tagging is smaller one
-    return (size() < cmp_tags.size());
+    //if all tags are equal, compare environment
+    return (size() == cmp_tags.size()) ? (_tagEnv < cmp_tags._tagEnv)
+                                      : (size() < cmp_tags.size());
   }
 
   bool operator== (const ASTagging & cmp_tags) const
@@ -172,23 +221,77 @@ public:
     return true;
   }
 
-  //Applies this tagging to tagging of tagged type (X.690 cl. 8.14)
-  //Composes resulting tagging according to environment
-  void conjoin(const ASTag & add_tag)
+  //Applies this tagging to tagged type identified by given tag (X.690 cl. 8.14)
+  //Composes resulting tagging according to own tagging environment
+  //NOTE: throws if resulting number of tags exceeds possible limit
+  void conjoin(const ASTag & add_tag) //throw(std::exception)
   {
     if (_tagEnv == tagsEXPLICIT)
       *this += add_tag;
   }
-  //NOTE: add_tags shouldn't be empty !
-  void conjoin(const ASTagging & add_tags)
+  //Applies this tagging to tagged type identified by given tagging (X.690 cl. 8.14)
+  //Composes resulting tagging according to own tagging environment
+  //NOTE: throws either if resulting number of tags exceeds possible limit.
+  void conjoin(const ASTagging & add_tags) //throw(std::exception)
   {
-    if (_tagEnv == tagsEXPLICIT)
-      *this += add_tags[0];
-    //add tags, which are the part of referenced type content
-    for (uint8_t i = 1; i < add_tags.size(); ++i)
-      *this += add_tags[i];
+    if (!add_tags.empty()) {
+      if (_tagEnv == tagsEXPLICIT)
+        *this += add_tags[0];
+      //add rest of tags, which are considered as the part of referenced type content
+      for (uint8_t i = 1; i < add_tags.size(); ++i)
+        *this += add_tags[i];
+    }
+  }
+
+  //Applies given tag to tagged type identified by this tagging (X.690 cl. 8.14)
+  //according to given tagging environment.
+  //NOTE: throws if resulting number of tags exceeds possible limit
+  void applyTag(const ASTag & add_tag, Environment_e tag_env) //throw(std::exception)
+  {
+    if (tag_env == tagsEXPLICIT) {
+      prepend(add_tag);
+    } else {      //tagsIMPLICIT
+      clear();
+      at(0) = add_tag;
+    }
+    _tagEnv = tag_env;
   }
 };
+
+/* ************************************************************************* *
+ * UNIVERSAL TYPES TAGGING
+ * ************************************************************************* */
+extern ASTagging  _tagsUNI0;             //0, IMPLICIT
+/**/
+extern ASTagging  _tagsBOOL;             //1, IMPLICIT
+extern ASTagging  _tagsINTEGER;          //2, IMPLICIT
+extern ASTagging  _tagsBITSTR;           //3, IMPLICIT
+extern ASTagging  _tagsOCTSTR;           //4, IMPLICIT
+extern ASTagging  _tagsNULL;             //5, IMPLICIT
+extern ASTagging  _tagsObjectID;         //6, IMPLICIT
+extern ASTagging  _tagsObjDescriptor;    //7, IMPLICIT
+extern ASTagging  _tagsEXTERNAL;         //8, IMPLICIT
+extern ASTagging  _tagsREAL;             //9, IMPLICIT
+extern ASTagging  _tagsENUM;             //10, IMPLICIT
+extern ASTagging  _tagsEmbeddedPDV;      //11, IMPLICIT
+extern ASTagging  _tagsUTF8STR;          //12, IMPLICIT
+extern ASTagging  _tagsRelativeOID;      //13, IMPLICIT
+
+extern ASTagging  _tagsSEQOF;            //16, IMPLICIT
+extern ASTagging  _tagsSETOF;            //17, IMPLICIT
+extern ASTagging  _tagsNumericSTR;       //18, IMPLICIT
+extern ASTagging  _tagsPrintableSTR;     //19, IMPLICIT
+extern ASTagging  _tagsTeletexSTR;       //20, IMPLICIT
+extern ASTagging  _tagsVideotexSTR;      //21, IMPLICIT
+extern ASTagging  _tagsIA5STR;           //22, IMPLICIT
+extern ASTagging  _tagsUTCTime;          //23, IMPLICIT
+extern ASTagging  _tagsGeneralizedTime;  //24, IMPLICIT
+extern ASTagging  _tagsGraphicSTR;       //25, IMPLICIT
+extern ASTagging  _tagsVisibleSTR;       //26, IMPLICIT
+extern ASTagging  _tagsGeneralSTR;       //27, IMPLICIT
+
+extern ASTagging  _tagsCHARSTR;          //29, IMPLICIT
+extern ASTagging  _tagsBMPSTR;           //30, IMPLICIT
 
 
 } //asn1
