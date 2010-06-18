@@ -1,11 +1,10 @@
 /* ************************************************************************* *
- * BER Encoder methods: CHOICE type encoder.
+ * BER Encoder: CHOICE type encoder.
  * ************************************************************************* */
 #ifndef __ASN1_BER_ENCODER_CHOICE
 #ident "@(#)$Id$"
 #define __ASN1_BER_ENCODER_CHOICE
 
-#include "eyeline/asn1/ASNTags.hpp"
 #include "eyeline/asn1/BER/rtenc/TLVEncoder.hpp"
 
 namespace eyeline {
@@ -14,58 +13,66 @@ namespace ber {
 
 
 class EncoderOfChoice : public TypeEncoderAC {
+private:
+  TaggingOptions  _altTags; //taggings of CHOICE alternatives
+
+  using TypeEncoderAC::init;
+  //
+  void setAlternative(const ASTagging & use_tags, ValueEncoderIface * val_enc);
+
 protected:
-  FieldEncoder  _alt; //selected alternative
-
-  // -- ***************************************** --
-  // -- ValueEncoderAC abstract methods
-  // -- ***************************************** --
-
-  //Determines properties of addressed value encoding (LD form, constructedness)
-  //according to requested encoding rule of BER family. Additionally calculates
-  //length of value encoding if one of following conditions is fulfilled:
-  // 1) LD form == ldDefinite
-  // 2) (LD form == ldIndefinite) && ('calc_indef' == true)
-  //NOTE: 'calc_indef' must be set if this encoding is enclosed by
-  //another that uses definite LD form.
-  //NOTE: Throws in case of value that cann't be encoded.
-  const EncodingProperty & calculateVAL(bool calc_indef = false) /*throw(std::exception)*/;
-
-  //Encodes by requested encoding rule of BER family the type value ('V'-part of encoding)
-  //NOTE: Throws in case of value that cann't be encoded.
-  //NOTE: this method has defined result only after calculateVAL() called
-  ENCResult encodeVAL(uint8_t * use_enc, TSLength max_len) const /*throw(std::exception)*/
+  void addCanonicalAlternative(const ASTag & use_tag, ASTagging::Environment_e tag_env)
   {
-    return _alt.encodeCalculated(use_enc, max_len);
+    _altTags.addTagging(use_tag, tag_env);
   }
+  //
+  void addCanonicalAlternative(const ASTagging & use_tags)
+  {
+    _altTags.addTagging(use_tags);
+  }
+  //
+  void addCanonicalAlternative(const TaggingOptions & use_opts)
+  {
+    _altTags.addOptions(use_opts);
+  }
+
+  //
+  EncoderOfChoice(const EncoderOfChoice & use_obj)
+    : TypeEncoderAC(use_obj), _altTags(use_obj._altTags)
+  {
+    TypeTagging::setOptions(_altTags);
+  }
+  // constructor for tagged type referencing CHOICE
+  // NOTE: eff_tags must be a complete tagging of type!
+  EncoderOfChoice(const ASTagging & eff_tags,
+                  TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : TypeEncoderAC(eff_tags, _altTags, use_rule)
+  { }
 
 public:
   // constructor for untagged CHOICE
-  EncoderOfChoice(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : TypeEncoderAC(use_rule)
-  { }
-  // constructor for tagged CHOICE
-  EncoderOfChoice(const ASTagging & use_tags,
-                  TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : TypeEncoderAC(use_tags, use_rule)
-  { }
-
-  void setSelection(TypeEncoderAC & type_enc, const ASTagging * fld_tags = NULL)
+  EncoderOfChoice(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : TypeEncoderAC(_altTags, use_rule)
   {
-    _alt.init(type_enc, fld_tags);
-    _alt.setRule(getRule());
+    //NOTE.1: in case of untagged CHOICE, tagging of canonical alternative
+    //        MUST BE added by addCanonicalAlternative() to alternative's tagging
+    //        options in successor's constructor in order to support CER !!!
   }
+  // constructor for tagged CHOICE
+  EncoderOfChoice(const ASTag & use_tag, ASTagging::Environment_e tag_env,
+                  TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : TypeEncoderAC(use_tag, tag_env, _altTags, use_rule)
+  { }
+  //
+  virtual ~EncoderOfChoice()
+  { }
 
-  // -- **************************************** --
-  // -- ValueEncoderAC virtual methods
-  // -- **************************************** --
-  //Sets required kind of BER group encoding.
-  //Returns: true if value encoding should be (re)calculated
-  bool setRule(TSGroupBER::Rule_e use_rule);
-
-  //Returns tag identifying the content of value encoding (not value type itself).
-  //Defined only for so called 'hole types' such as untagged ANY, CHOICE, OpenType
-  const ASTag * getContentTag(void) const { return _alt.getTag(); }
+  //value of CHOICE is an untagged alternative
+  void setSelection(TypeEncoderAC & type_enc)/*throw(std::exception)*/;
+  //value of CHOICE is a tagged alternative
+  void setSelection(TypeEncoderAC & type_enc,
+                const ASTag & fld_tag, ASTagging::Environment_e fld_env)
+                /*throw(std::exception)*/;
 };
 
 } //ber

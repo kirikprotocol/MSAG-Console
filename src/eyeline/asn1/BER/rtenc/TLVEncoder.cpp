@@ -2,88 +2,29 @@
 static char const ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_OFF */
 
-#include "eyeline/util/IntConv.hpp"
+#include "eyeline/asn1/BER/rtenc/TagEncoder.hpp"
 #include "eyeline/asn1/BER/rtenc/TLVEncoder.hpp"
-#include "eyeline/asn1/BER/rtenc/EncodeIdents_impl.hpp"
 #include "eyeline/asn1/BER/rtenc/EncodeLDs_impl.hpp"
+
 
 namespace eyeline {
 namespace asn1 {
 namespace ber {
 
 /* ************************************************************************* *
- * Estimates length of BER encoding of ASN.1 Tag:
- * Returns  number of bytes of resulted encoding or zero.
+ * Class TLComposer implementation:
  * ************************************************************************* */
-uint8_t estimate_tag(const ASTag & use_tag)
-{
-  if (use_tag._tagValue <= 30)  //short tag form
-    return 1;
-  return estimate_identifier(use_tag._tagValue);
-}
-
-/* ************************************************************************* *
- * Encodes by BER the ASN.1 Tag according to X.690 clause 8.1.2.
- * Returns zero in case of insuffient buffer is provided.
- * NOTE: 'max_len' argument must be grater then zero
- * ************************************************************************* */
-static uint8_t encode_tag_internal(const ASTag & use_tag, bool is_constructed,
-                                   uint8_t * use_enc, uint8_t max_len)
-{
-  uint8_t rval = 0;
-  if (use_tag._tagValue <= 30) {
-    //short tag form, compose 1st byte
-    *use_enc = (uint8_t)use_tag._tagValue;
-  } else {
-    //long tag form (tag > 30)
-    if (!(rval = encode_identifier(use_tag._tagValue, use_enc + 1, max_len - 1)))
-      return 0;
-    //compose 1st byte
-    *use_enc = 0x1F;
-  }
-  //complete 1st byte: class & constructedness
-  *use_enc |= (uint8_t)use_tag._tagClass << 6;
-  if (is_constructed)
-    *use_enc |= 0x20;
-  ++rval;
-  return rval;
-}
-
-/* ************************************************************************* *
- * Encodes by BER the ASN.1 Tag according to X.690 clause 8.1.2.
- * ************************************************************************* */
-ENCResult encode_tag(const ASTag & use_tag, bool is_constructed, 
-                     uint8_t * use_enc, TSLength max_len)
-{
-  ENCResult rval(ENCResult::encOk);
-
-  if (!max_len || !use_enc) {
-    rval.status = ENCResult::encBadArg;
-  } else if (!(rval.nbytes = encode_tag_internal(use_tag, is_constructed, use_enc,
-                                                 DOWNCAST_UNSIGNED(max_len, uint8_t)))) {
-    rval.status = ENCResult::encMoreMem;
-  }
-  return rval;
-}
-
-/* ************************************************************************* *
- * Class TLVProperty implementation:
- * ************************************************************************* */
-
-void TLVProperty::calculate(const ASTag & use_tag)
+//Calculates number of 'Tag', 'Length' and 'EOC' octets
+void TLComposer::calculate(const ASTag & use_tag)
 {
   _szoTag = estimate_tag(use_tag);
   _szoLOC = isDefinite() ? estimate_ldeterminant(_valLen) : 1;
 }
 
-
-/* ************************************************************************* *
- * Class TLEncoder implementation:
- * ************************************************************************* */
-void TLEncoder::compose(const ASTag & use_tag)
+void TLComposer::compose(const ASTag & use_tag)
 {
   //here encode_tag_internal() cannt' fail, otherwise assertion!
-  _szoTag = encode_tag_internal(use_tag, _isConstructed, _octTag, (uint8_t)sizeof(_octTag));
+  _szoTag = compose_toc(use_tag, _isConstructed, _octTag, (uint8_t)sizeof(_octTag));
   if (isDefinite()) {
     //here encode_identifier() cannt' fail, otherwise assertion!
     _szoLOC = encode_ldeterminant(_valLen, _octLOC, (uint8_t)sizeof(_octLOC));
@@ -94,7 +35,7 @@ void TLEncoder::compose(const ASTag & use_tag)
 }
 
 //Encodes 'begin-of-content' octets of TLV encoding
-ENCResult TLEncoder::encodeBOC(uint8_t * use_enc, TSLength max_len) const
+ENCResult TLComposer::encodeBOC(uint8_t * use_enc, TSLength max_len) const
 {
   ENCResult rval(ENCResult::encOk);
   if (max_len < getBOCsize()) {
@@ -111,14 +52,16 @@ ENCResult TLEncoder::encodeBOC(uint8_t * use_enc, TSLength max_len) const
 }
 
 //Encodes 'end-of-content' octets of TLV encoding
-ENCResult TLEncoder::encodeEOC(uint8_t * use_enc, TSLength max_len) const
+ENCResult TLComposer::encodeEOC(uint8_t * use_enc, TSLength max_len) const
 {
   ENCResult rval(ENCResult::encOk);
-  if (max_len < getEOCsize()) {
-    rval.status = ENCResult::encMoreMem;
-  } else if (getEOCsize()) { //indefinite form of LD
-    use_enc[1] = use_enc[0] = 0;
-    rval.nbytes = 2;
+  if (getEOCsize()) { //indefinite form of LD
+    if (max_len < getEOCsize()) {
+      rval.status = ENCResult::encMoreMem;
+    } else {
+      use_enc[1] = use_enc[0] = 0;
+      rval.nbytes = 2;
+    }
   }
   return rval;
 }
@@ -127,35 +70,30 @@ ENCResult TLEncoder::encodeEOC(uint8_t * use_enc, TSLength max_len) const
 /* ************************************************************************* *
  * class TLVLayoutEncoder implementation
  * ************************************************************************* */
-void TLVLayoutEncoder::initFieldLayout(const TLVLayoutEncoder & type_enc,
-                                       const ASTagging * fld_tags/* = NULL*/)
-{
-  if (fld_tags)
-    _effTags = *fld_tags;
-  _effTags.conjoin(type_enc.getTagging());
-  _tlws.enlarge(_effTags.size());
-  _szoBOC = 0;
-  _valEnc = type_enc.getValueEncoder();
-}
 
 //Calculates TLV layout (tag & length octets + EOC for each tag) basing on
 //given 'V' part encoding properties.
-//Returns  EncodingProperty for outermost tag
-const TLVProperty & 
-  TLVLayoutEncoder::calculateLayout(const EncodingProperty & val_prop)
+//Returns  TLVProperty for outermost tag
+const TLVStruct & 
+  TLVLayoutEncoder::calculateLayout(bool calc_indef/* = false*/)
 {
-  if (!_effTags.size())
-    _tlws[0].reset();
-  else {
-    uint8_t tagIdx = _effTags.size();
-    TSLength valLen = val_prop._valLen;
-    bool constructedness = val_prop._isConstructed;
-  
+  //calculate value encoding properties first
+  _valEnc->calculateVAL(_vProp, _vRule, calc_indef);
+
+  if (!_effTags || _effTags->empty()) {
+    _tlws.reserve(1);
+    _tlws[0].init(_vProp._ldForm, _vProp._valLen, _vProp._isConstructed);
+  } else {
+    uint8_t tagIdx = _effTags->size();
+    TSLength valLen = _vProp._valLen;
+    bool constructedness = _vProp._isConstructed;
+
+    _tlws.reserve(_effTags->size()); //cann't fail here
     //traverse tags from inner to outer
     while (--tagIdx)
     { //NOTE: keep the same LD form for all LDs in tagging
-      _tlws[tagIdx].init(val_prop._ldForm, valLen, constructedness);
-      _tlws[tagIdx].calculate(_effTags[tagIdx]);
+      _tlws[tagIdx].init(_vProp._ldForm, valLen, constructedness);
+      _tlws[tagIdx].calculate((*_effTags)[tagIdx]);
       valLen = _tlws[tagIdx].getTLVsize();
       constructedness = true;
       _szoBOC += _tlws[tagIdx].getBOCsize();
@@ -169,9 +107,10 @@ const TLVProperty &
 ENCResult TLVLayoutEncoder::encodeBOC(uint8_t * use_enc, TSLength max_len) const
 {
   ENCResult rval(ENCResult::encOk);
-  //traverse tags from outer to inner
-  for (uint8_t i = 0; (i < _effTags.size()) && rval.isOk(); ++i) {
-    rval += _tlws[i].encodeBOC(use_enc + rval.nbytes, max_len - rval.nbytes);
+  if (_effTags) { //traverse tags from outer to inner
+    for (uint8_t i = 0; (i < _effTags->size()) && rval.isOk(); ++i) {
+      rval += _tlws[i].encodeBOC(use_enc + rval.nbytes, max_len - rval.nbytes);
+    }
   }
   return rval;
 }
@@ -181,9 +120,9 @@ ENCResult TLVLayoutEncoder::encodeBOC(uint8_t * use_enc, TSLength max_len) const
 ENCResult TLVLayoutEncoder::encodeEOC(uint8_t * use_enc, TSLength max_len) const
 {
   ENCResult rval(ENCResult::encOk);
-  if (_effTags.size() && _tlws[0].getEOCsize()) {
+  if (_effTags && !_effTags->empty() && _tlws[0].getEOCsize()) {
     //traverse tags from inner to outer
-    uint8_t i = _effTags.size();
+    uint8_t i = _effTags->size();
     while (--i && rval.isOk()) {
       rval += _tlws[i].encodeEOC(use_enc + rval.nbytes, max_len - rval.nbytes);
     }
@@ -191,13 +130,29 @@ ENCResult TLVLayoutEncoder::encodeEOC(uint8_t * use_enc, TSLength max_len) const
   return rval;
 }
 
+//Calculates TLV layout octets (length octets + EOC for each tag) basing
+//on encoding properties implied by addressed value.
+//Returns  TLVProperty for outermost tag.
+// 
+//NOTE: if 'calc_indef' is set, then full TLV encoding length is calculated even
+//if indefinite LD form is used. This may be required if this TLV is enclosed by
+//another that uses definite LD form.
+const TLVStruct & 
+  TLVLayoutEncoder::calculateTLV(bool calc_indef/* = false*/) /*throw(std::exception)*/
+{
+  if (!_valEnc)
+    throw smsc::util::Exception("ber::TLVLayoutEncoder: ValueEncoderIface isn't set");
+  return calculateLayout(calc_indef);
+}
+
+
 //Encodes by BER/DER/CER the previously calculated TLV layout (composes complete TLV encoding).
 //NOTE: Throws in case the layout wasn't calculated.
-ENCResult TLVLayoutEncoder::encodeCalculated(uint8_t * use_enc, TSLength max_len) const
+ENCResult TLVLayoutEncoder::encodeTLV(uint8_t * use_enc, TSLength max_len) const
   /*throw(std::exception)*/
 {
-  if (!_valEnc->isCalculated()) //caller doesn't care about TLV encoding length
-    throw smsc::util::Exception("TLVLayoutEncoder: layout isn't calculated");
+  if (!isCalculated())
+    throw smsc::util::Exception("ber::TLVLayoutEncoder: layout isn't calculated");
 
   ENCResult rval = encodeBOC(use_enc, max_len);
   if (rval.isOk()) {
@@ -208,16 +163,51 @@ ENCResult TLVLayoutEncoder::encodeCalculated(uint8_t * use_enc, TSLength max_len
   return rval;
 }
 
-//Encodes by BER/DER/CER the TLV layout (composes complete TLV encoding).
-//NOTE: Throws in case of value that cann't be encoded.
-//NOTE: Calculates layout if it wasn't calculated yet
-ENCResult TLVLayoutEncoder::encodeTLV(uint8_t * use_enc, TSLength max_len)
-  /*throw(std::exception)*/
+
+/* ************************************************************************* *
+ * class TypeEncoderAC implementation
+ * ************************************************************************* */
+const TLVStruct & TypeEncoderAC::prepareTLV(bool calc_indef) /*throw(std::exception)*/
 {
-  if (!_valEnc->isCalculated()) //caller doesn't care about TLV encoding length
-    calculateTLV();
-  return encodeCalculated(use_enc, max_len);
+  if (!_tlvEnc.getVALEncoder()) //assertion
+    throw smsc::util::Exception("ber::TypeEncoderAC: ValueEncoderIface isn't set");
+
+  _tlvEnc.setTagging(TypeTagging::refreshTagging());
+  return _tlvEnc.calculateTLV(calc_indef);
 }
+
+ENCResult TypeEncoderAC::calculate(void) /*throw(std::exception)*/
+{
+  ENCResult res(ENCResult::encOk, prepareTLV(true).getTLVsize());
+  if (!res.nbytes) //TLV encoding cann't be of zero octets
+    res.status = ENCResult::encBadVal;
+  return res;
+}
+
+ENCResult TypeEncoderAC::encode(uint8_t * use_enc, TSLength max_len) /*throw(std::exception)*/
+{
+  if (!_tlvEnc.isCalculated())  //single pass encoing: caller doesn't care
+    prepareTLV(false);          //about resulting TLV encoding length
+  return _tlvEnc.encodeTLV(use_enc, max_len);
+}
+
+//Compares two type encodings by their ordinal tags
+bool TypeEncoderAC::operator<(const TypeEncoderAC & cmp_tenc) const /*throw(std::exception)*/
+{
+  if (getTSRule() != cmp_tenc.getTSRule())
+    throw smsc::util::Exception("ber::TypeEncoderAC::operator<(): TransferSyntax rules are different");
+
+  const ASTag * ownTag = getOrdinalTag();
+  if (!ownTag)
+    throw smsc::util::Exception("ber::TypeEncoderAC::operator<(): own tag isn't defined");
+
+  const ASTag * cmpTag = cmp_tenc.getOrdinalTag();
+  if (!cmpTag)
+    throw smsc::util::Exception("ber::TypeEncoderAC::operator<(): tag is to compare isn't defined");
+
+  return *ownTag < *cmpTag;
+}
+
 
 } //ber
 } //asn1

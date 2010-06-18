@@ -19,21 +19,25 @@ namespace ber {
 //NOTE: encoding of RelativeOID type value has the same form for all BER
 //family rules: primitive encoding with definite LD form
 
-const EncodingProperty &
-  EncoderOfRelativeOID::calculateVAL(bool do_indef/* = false*/) /*throw(std::exception)*/
+void
+  EncoderOfRelativeOID::calculateVAL(TLVProperty & val_prop, TSGroupBER::Rule_e use_rule,
+                                     bool do_indef/* = false*/) /*throw(std::exception)*/
 {
-  if (!(_vProp._valLen = estimate_SubIds(_encVal.get(), _encVal.size())))
+  if (!_encVal)
+    throw smsc::util::Exception("ber::EncoderOfROID: value isn't set");
+
+  if (!(val_prop._valLen = estimate_SubIds(_encVal->get(), _encVal->size())))
     throw smsc::util::Exception("EncoderOfRelativeOID: illegal value");
-  _vProp._ldForm = LDeterminant::frmDefinite;
-  _vProp._isConstructed = false;
-  _isCalculated = true;
-  return _vProp;
+
+  val_prop._ldForm = LDeterminant::frmDefinite;
+  val_prop._isConstructed = false;
 }
 
 ENCResult
   EncoderOfRelativeOID::encodeVAL(uint8_t * use_enc, TSLength max_len) const
+    /*throw(std::exception)*/
 {
-  return encode_SubIds(_encVal.get(), _encVal.size(), use_enc, max_len);
+  return encode_SubIds(_encVal->get(), _encVal->size(), use_enc, max_len);
 }
 
 } //ber

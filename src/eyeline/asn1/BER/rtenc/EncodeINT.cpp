@@ -15,29 +15,49 @@ namespace ber {
 //NOTE: encoding of INTEGER type value has the same form for all BER
 //family rules: primitive encoding with definite LD form
 
-// -- ************************************* --
-// -- ValueEncoderAC interface methods
-// -- ************************************* --
+// -- -------------------------------------- --
+// -- ValueEncoderIface interface methods
+// -- -------------------------------------- --
 
-const EncodingProperty &
-  EncoderOfINTEGER::calculateVAL(bool do_indef/* = false*/) /*throw(std::exception)*/
+void EncoderOfINTEGER::calculateVAL(TLVProperty & val_prop, TSGroupBER::Rule_e use_rule,
+                                    bool do_indef/* = false*/) /*throw(std::exception)*/
 {
-  _vProp._valLen = estimate_INTEGER(_encVal);
-  _vProp._ldForm = LDeterminant::frmDefinite;
-  _vProp._isConstructed = false;
-  _isCalculated = true;
-  return _vProp;
+  switch (_vSzo) {
+  case szo32: {
+    val_prop._valLen = estimate_INTEGER(_encVal.u32);
+  } break;
+
+  case szo16: {
+    val_prop._valLen = estimate_INTEGER(_encVal.u16);
+  } break;
+
+  default: //szo8
+    val_prop._valLen = estimate_INTEGER(_encVal.u8);
+  }
+  val_prop._ldForm = LDeterminant::frmDefinite;
+  val_prop._isConstructed = false;
 }
 
 ENCResult 
   EncoderOfINTEGER::encodeVAL(uint8_t * use_enc, TSLength max_len) const
+    /*throw(std::exception)*/
 {
   ENCResult rval(ENCResult::encOk);
-  uint8_t nb = encode_INTEGER(_encVal, use_enc, max_len);
-  if (!nb)
+
+  switch (_vSzo) {
+  case szo32: {
+    rval.nbytes = encode_INTEGER(_encVal.u32, use_enc, max_len);
+  } break;
+
+  case szo16: {
+    rval.nbytes = encode_INTEGER(_encVal.u16, use_enc, max_len);
+  } break;
+
+  default: //szo8
+    rval.nbytes = encode_INTEGER(_encVal.u8, use_enc, max_len);
+  }
+  if (!rval.nbytes)
     rval.status = ENCResult::encMoreMem;
-  else
-    rval.nbytes += nb;
   return rval;
 }
 

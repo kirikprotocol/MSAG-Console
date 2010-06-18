@@ -11,28 +11,33 @@ namespace ber {
 /* ************************************************************************* *
  * Class EncoderOfChoice implementation:
  * ************************************************************************* */
-
-// -- ************************************* --
-// -- ValueEncoderAC interface methods
-// -- ************************************* --
-bool EncoderOfChoice::setRule(TSGroupBER::Rule_e use_rule)
+void EncoderOfChoice::setAlternative(const ASTagging & use_tags, ValueEncoderIface * val_enc)
 {
-  if (_alt.setRule(use_rule))
-    _isCalculated = false;
-  return !_isCalculated;
+  if (!val_enc)
+    throw smsc::util::Exception("ber::EncoderOfChoice::setSelection(): ValueEncoder isn't defined");
+
+  TypeEncoderAC::init(*val_enc);
+  _altTags.setTagging(use_tags);
+  refreshTagging(); //compose complete tagging of that CHOICE
 }
 
-const EncodingProperty &
-  EncoderOfChoice::calculateVAL(bool calc_indef/* = false*/) /*throw(std::exception)*/
+void EncoderOfChoice::setSelection(TypeEncoderAC & type_enc)
 {
-  _alt.setRule(getRule());
-  const TLVProperty & tlvVal = _alt.calculateTLV(calc_indef);
-  _vProp._isConstructed = false;
-  _vProp._valLen = tlvVal.getTLVsize();
-  _vProp._ldForm = tlvVal._ldForm;
-  _isCalculated = true;
-  return _vProp;
+  if (!type_enc.getTagging())
+    throw smsc::util::Exception("ber::EncoderOfChoice::setSelection(): tagging isn't defined");
+  setAlternative(*type_enc.getTagging(), type_enc.getVALEncoder());
 }
+
+void EncoderOfChoice::setSelection(TypeEncoderAC & type_enc,
+                                   const ASTag & fld_tag,
+                                   ASTagging::Environment_e fld_env)
+{
+  if (!type_enc.getTagging())
+    throw smsc::util::Exception("ber::EncoderOfChoice::setSelection(): tagging isn't defined");
+  setAlternative(ASTagging(fld_tag, fld_env, *type_enc.getTagging()),
+               type_enc.getVALEncoder());
+}
+
 
 } //ber
 } //asn1

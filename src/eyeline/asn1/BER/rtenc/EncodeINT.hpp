@@ -1,77 +1,98 @@
 /* ************************************************************************* *
- * BER Encoder methods: INTEGER type encoder.
+ * BER Encoder: INTEGER type encoder.
  * ************************************************************************* */
 #ifndef __ASN1_BER_ENCODER_INTEGER
 #ident "@(#)$Id$"
 #define __ASN1_BER_ENCODER_INTEGER
 
-#include "eyeline/asn1/ASNTags.hpp"
-#include "eyeline/asn1/INTEGER.hpp"
+#include <inttypes.h>
 #include "eyeline/asn1/BER/rtenc/TLVEncoder.hpp"
 
 namespace eyeline {
 namespace asn1 {
 namespace ber {
 
-using eyeline::asn1::INTEGER;
-using eyeline::asn1::UINTEGER;
-using eyeline::asn1::_tagINTEGER;
 /* ************************************************************************* *
  * Encodes by BER/DER/CER the INTEGER value according to X.690
  * clause 8.3 (with appropriate DER/CER restrctions).
  * NOTE: if ASTagging is not set the standard [UNIVERSAL 2] tag goes to
  * resulting TLV encoding.
  * ************************************************************************* */
-class EncoderOfINTEGER : public TypeEncoderAC {
+class EncoderOfINTEGER : public TypeValueEncoderAC {
 private:
-  UINTEGER _encVal;  //value is to encode, negative number is 
-                     //converted to 'two's complement' form
-protected:
-  // -- ************************************* --
-  // -- ValueEncoderAC interface methods
-  // -- ************************************* --
-  //Determines properties of addressed value encoding (LD form, constructedness)
-  //according to requested encoding rule of BER family. Additionally calculates
-  //length of value encoding if one of following conditions is fulfilled:
-  // 1) LD form == ldDefinite
-  // 2) (LD form == ldIndefinite) && ('calc_indef' == true)
-  //NOTE: 'calc_indef' must be set if this encoding is enclosed by
-  //another that uses definite LD form.
-  //NOTE: Throws in case of value that cann't be encoded.
-  const EncodingProperty & calculateVAL(bool calc_indef = false) /*throw(std::exception)*/;
-  //Encodes by requested encoding rule of BER family the type value ('V'-part of encoding)
-  //NOTE: Throws in case of value that cann't be encoded.
-  //NOTE: this method has defined result only after calculateVAL() called
-  ENCResult encodeVAL(uint8_t * use_enc, TSLength max_len) const /*throw(std::exception)*/;
+private:
+  enum IntSZO_e { szo8 = 1, szo16 = 2, szo32 = 4 };
 
-public:
-  static const ASTagging & uniTagging(void)
-  {
-    static ASTagging _uniTag(_tagINTEGER);
-    return _uniTag;
+  IntSZO_e _vSzo;
+  union {
+    uint8_t   u8;
+    uint16_t  u16;
+    uint32_t  u32;
+  } _encVal;          //value is to encode, negative number is 
+                      //converted to 'two's complement' form
+protected:
+  // -- -------------------------------------- --
+  // -- ValueEncoderIface interface methods
+  // -- -------------------------------------- --
+  virtual void calculateVAL(TLVProperty & val_prop, TSGroupBER::Rule_e use_rule,
+                            bool calc_indef = false) /*throw(std::exception)*/;
+  //
+  virtual ENCResult encodeVAL(uint8_t * use_enc,
+                               TSLength max_len) const /*throw(std::exception)*/;
+  //
+  virtual bool isPortable(TSGroupBER::Rule_e tgt_rule, TSGroupBER::Rule_e curr_rule) const /*throw()*/
+  { 
+    return true; //INTEGER has the same encoding for all BER rules.
   }
 
-  //Constructors for untagged type referencing INTEGER
-  EncoderOfINTEGER(const INTEGER & use_val,
-                   TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : TypeEncoderAC(uniTagging(), use_rule), _encVal(use_val)
-  { }
-  EncoderOfINTEGER(const UINTEGER & use_val,
-                   TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : TypeEncoderAC(uniTagging(), use_rule), _encVal(use_val)
-  { }
-  //Constructors for untagged type referencing INTEGER
-  EncoderOfINTEGER(const INTEGER & use_val, const ASTagging & use_tags,
-                   TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : TypeEncoderAC(use_tags, uniTagging(), use_rule), _encVal(use_val)
-  { }
-  EncoderOfINTEGER(const UINTEGER & use_val, const ASTagging & use_tags,
-                   TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : TypeEncoderAC(use_tags, uniTagging(), use_rule), _encVal(use_val)
-  { }
-
+public:
+  //Constructor for INTEGER type
+  EncoderOfINTEGER(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : TypeValueEncoderAC(asn1::_tagsINTEGER, use_rule), _vSzo(szo8)
+  {
+    _encVal.u8 = 0;
+  }
+  EncoderOfINTEGER(const uint32_t & use_val,
+                   TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : TypeValueEncoderAC(asn1::_tagsINTEGER, use_rule), _vSzo(szo32)
+  {
+    setValue(use_val);
+  }
+  //Constructor for tagged INTEGER type
+  EncoderOfINTEGER(const ASTag & use_tag, ASTagging::Environment_e tag_env,
+                   TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : TypeValueEncoderAC(use_tag, tag_env, asn1::_tagsINTEGER, use_rule), _vSzo(szo8)
+  {
+    _encVal.u8 = 0;
+  }
+  EncoderOfINTEGER(const uint32_t & use_val,
+                   const ASTag & use_tag, ASTagging::Environment_e tag_env,
+                   TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : TypeValueEncoderAC(use_tag, tag_env, asn1::_tagsINTEGER, use_rule), _vSzo(szo32)
+  {
+    setValue(use_val);
+  }
+  // constructor for encoder of tagged type referencing INTEGER
+  // NOTE: eff_tags must be a complete tagging of type! 
+  EncoderOfINTEGER(const ASTagging & eff_tags,
+                  TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : TypeValueEncoderAC(eff_tags, use_rule), _vSzo(szo8)
+  {
+    _encVal.u8 = 0; 
+  }
+  //
   ~EncoderOfINTEGER()
   { }
+
+  void setValue(const uint8_t & use_val) { _vSzo = szo8; _encVal.u8 = use_val; }
+  void setValue(const int8_t & use_val)  { setValue((const uint8_t&)use_val); }
+
+  void setValue(const uint16_t & use_val) { _vSzo = szo16; _encVal.u16 = use_val; }
+  void setValue(const int16_t & use_val) { setValue((const uint16_t&)use_val); }
+
+  void setValue(const uint32_t & use_val) { _vSzo = szo32; _encVal.u32 = use_val; }
+  void setValue(const int32_t & use_val)  { setValue((const uint32_t&)use_val); }
+
 };
 
 } //ber

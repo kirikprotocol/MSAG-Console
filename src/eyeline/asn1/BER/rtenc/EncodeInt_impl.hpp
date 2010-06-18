@@ -42,6 +42,17 @@ uint8_t estimate_INTEGER(const _TArg & use_val)
   return (msBit + 7) >> 3;
 }
 
+// -----------------------------------------------
+// Specialization for uint8_t
+// -----------------------------------------------
+template <>
+uint8_t estimate_INTEGER(const uint8_t & use_val)
+{
+  return 1;
+}
+
+
+
 /* ************************************************************************* *
  * Encodes by BER the integer value according to X.690 cl. 8.3
  * Returns  number of bytes of resulted encoding or zero in case of
@@ -63,6 +74,19 @@ uint8_t encode_INTEGER(const _TArg & use_val, uint8_t * use_enc, TSLength max_le
   }
   return rlen;
 }
+
+// -----------------------------------------------
+// Specialization for uint8_t
+// -----------------------------------------------
+template <>
+uint8_t encode_INTEGER(const uint8_t & use_val, uint8_t * use_enc, TSLength max_len)
+{
+  if (!max_len)
+    return 0;
+  *use_enc = use_val;
+  return 1;
+}
+
 
 } //ber
 } //asn1

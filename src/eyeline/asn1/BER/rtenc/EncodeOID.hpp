@@ -1,74 +1,79 @@
 /* ************************************************************************* *
- * BER Encoder methods: OBJECT-IDENTIFIER type encoder.
+ * BER Encoder: OBJECT-IDENTIFIER type encoder.
  * ************************************************************************* */
-#ifndef __ASN1_BER_ENCODER_ROID
+#ifndef __ASN1_BER_ENCODER_OID
 #ident "@(#)$Id$"
-#define __ASN1_BER_ENCODER_ROID
+#define __ASN1_BER_ENCODER_OID
 
-#include "eyeline/asn1/ASNTags.hpp"
 #include "eyeline/asn1/ObjectID.hpp"
 #include "eyeline/asn1/BER/rtenc/TLVEncoder.hpp"
 
 namespace eyeline {
 namespace asn1 {
 namespace ber {
-
-using eyeline::asn1::ObjectID;
-using eyeline::asn1::_tagObjectID;
 /* ************************************************************************* *
  * Encodes by BER/DER/CER the OBJECT-IDENTIFIER value according to X.690
  * clause 8.19 (with appropriate DER/CER restrctions).
  * NOTE: if ASTagging is not set the standard [UNIVERSAL 6] tag goes to
  * resulting TLV encoding.
  * ************************************************************************* */
-class EncoderOfObjectID : public TypeEncoderAC {
+class EncoderOfObjectID : public TypeValueEncoderAC {
 protected:
-  const ObjectID & _encVal;
+  const asn1::ObjectID * _encVal;
 
   uint16_t  calculateSubIds(void) const /*throw(std::exception)*/;
 
-  // -- ************************************* --
-  // -- ValueEncoderAC interface methods
-  // -- ************************************* --
-  //Determines properties of addressed value encoding (LD form, constructedness)
-  //according to requested encoding rule of BER family. Additionally calculates
-  //length of value encoding if one of following conditions is fulfilled:
-  // 1) LD form == ldDefinite
-  // 2) (LD form == ldIndefinite) && ('calc_indef' == true)
-  //NOTE: 'calc_indef' must be set if this encoding is enclosed by
-  //another that uses definite LD form.
-  //NOTE: Throws in case of value that cann't be encoded.
-  const EncodingProperty & calculateVAL(bool calc_indef = false) /*throw(std::exception)*/;
-  //Encodes by requested encoding rule of BER family the type value ('V'-part of encoding)
-  //NOTE: Throws in case of value that cann't be encoded.
-  //NOTE: this method has defined result only after calculateVAL() called
-  ENCResult encodeVAL(uint8_t * use_enc, TSLength max_len) const /*throw(std::exception)*/;
-
-public:
-  static const ASTagging & uniTagging(void)
-  {
-    static ASTagging _uniTag(_tagObjectID);
-    return _uniTag;
+  // -- -------------------------------------- --
+  // -- ValueEncoderIface interface methods
+  // -- -------------------------------------- --
+  virtual void calculateVAL(TLVProperty & val_prop, TSGroupBER::Rule_e use_rule,
+                            bool calc_indef = false) /*throw(std::exception)*/;
+  //
+  virtual ENCResult encodeVAL(uint8_t * use_enc,
+                               TSLength max_len) const /*throw(std::exception)*/;
+  //
+  virtual bool isPortable(TSGroupBER::Rule_e tgt_rule, TSGroupBER::Rule_e curr_rule) const /*throw()*/
+  { 
+    return true; //OBJECT-IDENTIFIER has the same encoding for all BER rules.
   }
 
-  //Constructor for untagged type referencing OBJECT IDENTIFIER
-  EncoderOfObjectID(const ObjectID & use_val,
-                    TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : TypeEncoderAC(uniTagging(), use_rule)
-    , _encVal(use_val)
+  // constructor for encoder of tagged type referencing OBJECT IDENTIFIER
+  // NOTE: eff_tags must be a complete tagging of type! 
+  EncoderOfObjectID(const ASTagging & eff_tags,
+                    TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : TypeValueEncoderAC(eff_tags, use_rule), _encVal(0)
   { }
-  //Constructor for tagged type referencing OBJECT IDENTIFIER
-  EncoderOfObjectID(const ObjectID & use_val, const ASTagging & use_tags,
-                    TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : TypeEncoderAC(use_tags, uniTagging(), use_rule), _encVal(use_val)
+
+public:
+  //Constructor for OBJECT IDENTIFIER type
+  EncoderOfObjectID(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : TypeValueEncoderAC(asn1::_tagsObjectID, use_rule)
+    , _encVal(0)
+  { }
+  EncoderOfObjectID(const asn1::ObjectID & use_val,
+                    TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : TypeValueEncoderAC(asn1::_tagsObjectID, use_rule)
+    , _encVal(&use_val)
+  { }
+  //Constructor for tagged OBJECT IDENTIFIER type
+  EncoderOfObjectID(const ASTag & use_tag, ASTagging::Environment_e tag_env,
+                    TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : TypeValueEncoderAC(use_tag, tag_env, asn1::_tagsObjectID, use_rule), _encVal(0)
+  { }
+  EncoderOfObjectID(const asn1::ObjectID & use_val,
+                    const ASTag & use_tag, ASTagging::Environment_e tag_env,
+                    TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : TypeValueEncoderAC(use_tag, tag_env, asn1::_tagsObjectID, use_rule), _encVal(&use_val)
   { }
   ~EncoderOfObjectID()
   { }
+
+  void setValue(const asn1::ObjectID & use_val) { _encVal = &use_val; }
 };
 
 } //ber
 } //asn1
 } //eyeline
 
-#endif /* __ASN1_BER_ENCODER_ROID */
+#endif /* __ASN1_BER_ENCODER_OID */
 

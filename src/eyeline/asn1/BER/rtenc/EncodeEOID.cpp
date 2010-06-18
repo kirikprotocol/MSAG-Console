@@ -12,30 +12,31 @@ namespace ber {
  * Class EncoderOfEOID implementation:
  * ************************************************************************* */
 
-// -- ************************************* --
-// -- ValueEncoderAC interface methods
-// -- ************************************* --
-//NOTE: encoding of ObjectID type value has the same form for all BER
-//family rules: primitive encoding with definite LD form
+// -- -------------------------------------- -- 
+// -- ValueEncoderIface interface methods       
+// -- -------------------------------------- -- 
 
-const EncodingProperty &
-  EncoderOfEOID::calculateVAL(bool do_indef/* = false*/) /*throw(std::exception)*/
+void EncoderOfEOID::calculateVAL(TLVProperty & val_prop, TSGroupBER::Rule_e use_rule,
+                                 bool do_indef/* = false*/) /*throw(std::exception)*/
 {
-  _vProp._valLen = _encVal.length();
-  _vProp._ldForm = LDeterminant::frmDefinite;
-  _vProp._isConstructed = false;
-  _isCalculated = true;
-  return _vProp;
+  if (!_encVal)
+    throw smsc::util::Exception("ber::EncoderOfEOID: value isn't set");
+  //NOTE: encoding of ObjectID type value has the same form for all BER
+  //family rules: primitive encoding with definite LD form
+  val_prop._valLen = _encVal->length();
+  val_prop._ldForm = LDeterminant::frmDefinite;
+  val_prop._isConstructed = false;
 }
 
 ENCResult
   EncoderOfEOID::encodeVAL(uint8_t * use_enc, TSLength max_len) const
+    /*throw(std::exception)*/
 {
   ENCResult rval(ENCResult::encOk);
-  if (max_len < _encVal.length()) {
+  if (max_len < _encVal->length()) {
     rval.status = ENCResult::encMoreMem;
   } else {
-    memcpy(use_enc, _encVal.octets(), rval.nbytes = _encVal.length());
+    memcpy(use_enc, _encVal->octets(), rval.nbytes = _encVal->length());
   }
   return rval;
 }

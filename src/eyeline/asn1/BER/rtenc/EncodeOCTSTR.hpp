@@ -1,102 +1,103 @@
 /* ************************************************************************* *
- * BER Encoder methods: OCTET STRING type encoder.
+ * BER Encoder: OCTET STRING type encoder.
  * ************************************************************************* */
 #ifndef __ASN1_BER_ENCODER_OCTSTR
 #ident "@(#)$Id$"
 #define __ASN1_BER_ENCODER_OCTSTR
 
-#include "eyeline/asn1/ASNTags.hpp"
 #include "eyeline/asn1/OCTSTR.hpp"
-#include "eyeline/asn1/BER/rtenc/TLVEncoder.hpp"
+#include "eyeline/asn1/BER/rtenc/EncodeRCSTR.hpp"
 
 namespace eyeline {
 namespace asn1 {
 namespace ber {
 
-using eyeline::asn1::OCTSTR;
-using eyeline::asn1::OCTSTR_ARRAYED;
-using eyeline::asn1::_tagOCTSTR;
 /* ************************************************************************* *
  * Encodes by BER/DER/CER the OCTET STRING value according to X.690
  * clause 8.7 (with appropriate DER/CER restrctions).
  * NOTE: if ASTagging is not set the standard [UNIVERSAL 4] tag goes to
  * resulting TLV encoding.
  * ************************************************************************* */
-class EncoderOfOCTSTR : public TypeEncoderAC {
+class EncoderOfOCTSTR : public EncoderOfRCSTR {
 protected:
-  const OCTSTR::size_type _encValSz;
-  const uint8_t *         _encVal;
+  class OCTSTRConverter : public RCSEncConverterIface {
+  protected:
+    TSLength        _encValSz;
+    const uint8_t * _encVal;
+    TSLength        _numConverted;
 
-  OCTSTR::size_type numFragments(void) const
-  {
-    return (_encValSz/1000 + (_encValSz%1000 ? 1 : 0));
-  }
+  public:
+    OCTSTRConverter(TSLength use_sz = 0, const uint8_t * use_octs = 0)
+      : _encValSz(use_sz), _encVal(use_octs), _numConverted(0)
+    { }
 
-  //Returns total length of fragmented encoding
-  //Throws if value is too large and cann't be encoded
-  TSLength calculateFragments(void) const /*throw(std::exception)*/;
+    void init(TSLength use_sz, const uint8_t * use_octs)
+    {
+      _encValSz = use_sz; _encVal = use_octs; _numConverted = 0;
+    }
 
-  // -- ************************************* --
-  // -- ValueEncoderAC interface methods
-  // -- ************************************* --
-  //Determines properties of addressed value encoding (LD form, constructedness)
-  //according to requested encoding rule of BER family. Additionally calculates
-  //length of value encoding if one of following conditions is fulfilled:
-  // 1) LD form == ldDefinite
-  // 2) (LD form == ldIndefinite) && ('calc_indef' == true)
-  //NOTE: 'calc_indef' must be set if this encoding is enclosed by
-  //another that uses definite LD form.
-  //NOTE: Throws in case of value that cann't be encoded.
-  const EncodingProperty & calculateVAL(bool calc_indef = false) /*throw(std::exception)*/;
-  //Encodes by requested encoding rule of BER family the type value ('V'-part of encoding)
-  //NOTE: Throws in case of value that cann't be encoded.
-  //NOTE: this method has defined result only after calculateVAL() called
-  ENCResult encodeVAL(uint8_t * use_enc, TSLength max_len) const /*throw(std::exception)*/;
+    //Returns length of resulted (converted) encoding of string
+    TSLength getPackedLength(void) { return _encValSz; }
+
+    //Incrementally converts next portion of string value writing requested
+    //number of bytes to provided buffer.
+    //Returns number of bytes written to buffer.
+    TSLength pack2Octs(uint8_t * use_buf, TSLength req_bytes);
+  };
+
+  OCTSTRConverter   _valConv;
+
+  // constructor for encoder of tagged type referencing OCTET STRING
+  // NOTE: eff_tags must be a complete tagging of type! 
+  EncoderOfOCTSTR(const ASTagging & eff_tags,
+                  TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : EncoderOfRCSTR(&_valConv, eff_tags, use_rule)
+    , _valConv(0, 0)
+  { }
 
 public:
-  static const ASTagging & uniTagging(void)
-  {
-    static ASTagging _uniTag(_tagOCTSTR);
-    return _uniTag;
-  }
-
-  //Constructors for untagged type referencing OCTET STRING
-  EncoderOfOCTSTR(const OCTSTR & use_val,
-                  TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : TypeEncoderAC(uniTagging(), use_rule)
-    , _encValSz(use_val.size()), _encVal(use_val.get())
+  //Constructors for OCTET STRING type
+  EncoderOfOCTSTR(TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : EncoderOfRCSTR(&_valConv, asn1::_tagsOCTSTR, use_rule)
+    , _valConv(0, 0)
   { }
-  EncoderOfOCTSTR(const OCTSTR_ARRAYED & use_val,
-                  TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : TypeEncoderAC(uniTagging(), use_rule)
-    , _encValSz(use_val.size()), _encVal(use_val.get())
-  { }
-  EncoderOfOCTSTR(const OCTSTR::size_type use_sz, const uint8_t * use_octs,
-                  TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : TypeEncoderAC(uniTagging(), use_rule)
-    , _encValSz(use_sz), _encVal(use_octs)
+  EncoderOfOCTSTR(TSLength use_sz, const uint8_t * use_octs,
+                  TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : EncoderOfRCSTR(&_valConv, asn1::_tagsOCTSTR, use_rule)
+    , _valConv(use_sz, use_octs)
   { }
 
-  //Constructors for tagged type referencing OCTET STRING
-  EncoderOfOCTSTR(const OCTSTR & use_val, const ASTagging & use_tags,
-                  TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : TypeEncoderAC(use_tags, uniTagging(), use_rule)
-    , _encValSz(use_val.size()), _encVal(use_val.get())
+  //Constructors for tagged OCTET STRING type
+  EncoderOfOCTSTR(const ASTag & use_tag, ASTagging::Environment_e tag_env,
+                  TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : EncoderOfRCSTR(&_valConv, use_tag, tag_env, asn1::_tagsOCTSTR, use_rule)
+    , _valConv(0, 0)
   { }
-  EncoderOfOCTSTR(const OCTSTR_ARRAYED & use_val, const ASTagging & use_tags,
-                  TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : TypeEncoderAC(use_tags, uniTagging(), use_rule)
-    , _encValSz(use_val.size()), _encVal(use_val.get())
+  EncoderOfOCTSTR(TSLength use_sz, const uint8_t * use_octs,
+                  const ASTag & use_tag, ASTagging::Environment_e tag_env,
+                  TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : EncoderOfRCSTR(&_valConv, use_tag, tag_env, asn1::_tagsOCTSTR, use_rule)
+    , _valConv(use_sz, use_octs)
   { }
-  EncoderOfOCTSTR(const OCTSTR::size_type use_sz, const uint8_t * use_octs,
-                  const ASTagging & use_tags,
-                  TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : TypeEncoderAC(use_tags, uniTagging(), use_rule)
-    , _encValSz(use_sz), _encVal(use_octs)
-  { }
-
+  //
   ~EncoderOfOCTSTR()
   { }
+
+
+  void setValue(const asn1::OCTArrayTiny & use_val) /*throw(std::exception)*/
+  {
+    _valConv.init((TSLength)use_val.size(), use_val.get());
+  }
+  //
+  void setValue(const asn1::OCTArray64K & use_val) /*throw(std::exception)*/
+  {
+    _valConv.init((TSLength)use_val.size(), use_val.get());
+  }
+  //
+  void setValue(TSLength use_sz, const uint8_t * use_octs) /*throw(std::exception)*/
+  {
+    _valConv.init(use_sz, use_octs);
+  }
 };
 
 } //ber

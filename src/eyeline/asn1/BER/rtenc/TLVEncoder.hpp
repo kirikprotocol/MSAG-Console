@@ -5,116 +5,96 @@
 #ident "@(#)$Id$"
 #define __ASN1_BER_TLV_ENCODER
 
-#include "eyeline/asn1/ASNTags.hpp"
-#include "eyeline/asn1/TransferSyntax.hpp"
+#include "eyeline/asn1/AbstractSyntax.hpp"
+#include "eyeline/asn1/BER/rtutl/TypeTagging.hpp"
+#include "eyeline/asn1/BER/rtutl/TLVProperties.hpp"
+#include "eyeline/asn1/BER/rtutl/TSyntaxBER.hpp"
 
 namespace eyeline {
 namespace asn1 {
 namespace ber {
 
-using eyeline::asn1::ASTag;
-using eyeline::asn1::ASTagging;
-using eyeline::asn1::TSLength;
+using eyeline::asn1::TransferSyntax;
+using eyeline::asn1::ASTypeEncoderAC;
 using eyeline::asn1::ENCResult;
 
 /* ************************************************************************* *
- * Estimates length of BER encoding of ASN.1 Tag.
- * Returns  number of bytes of resulted encoding.
+ * Abstract class that determines encoding properties of the ASN.1 type value 
+ * and composes the V-part of BER/DER/CER encoding according to appropriate
+ * clause from X.690.
  * ************************************************************************* */
-extern uint8_t estimate_tag(const ASTag & use_tag);
-/* ************************************************************************* *
- * Encodes by BER the ASN.1 Tag according to X.690 clause 8.1.2.
- * ************************************************************************* */
-extern ENCResult encode_tag(const ASTag & use_tag, bool is_constructed,
-                            uint8_t * use_enc, TSLength max_len);
-
-//Length determinant
-struct LDeterminant {
-  enum Form_e { frmIndefinite = 0, frmDefinite = 1 };
-
-  Form_e    _ldForm;  // 
-  TSLength  _valLen;  //length of addressed value encoding,
-                      //may be zero (undefined) in case of frmIndefinite
-
-  LDeterminant(Form_e use_form = frmIndefinite, TSLength use_vlen = 0)
-    : _ldForm(use_form), _valLen(use_vlen)
-  { }
-
-  bool  isDefinite(void) const { return (_ldForm == frmDefinite); }
-};
-
-
-//Properties of BER encoding of generic type value.
-struct EncodingProperty : public LDeterminant {
-  bool      _isConstructed; //encoding constructedness
-
-  //default constructor is for primitive encoding
-  EncodingProperty(Form_e use_form = frmIndefinite, TSLength use_vlen = 0, bool use_construct = false)
-    : LDeterminant(use_form, use_vlen), _isConstructed(use_construct)
-  { }
-
-  void init(Form_e use_form, TSLength use_vlen, bool use_construct)
-  {
-    _isConstructed = use_construct; _ldForm = use_form; _valLen = use_vlen; 
-  }
-};
-
-
-//TLV Encoding property
-class TLVProperty : public EncodingProperty {
+class ValueEncoderIface {
+protected:
+  ~ValueEncoderIface();
 public:
-  uint8_t _szoTag; //number of 'tag octets'
-  uint8_t _szoLOC; //number of 'length octets':
-                   // - 1 in case of indefinite form of length determinant,
-                   // - [1 .. N] in case of definite form
-                   //NOTE: number of 'end-of-content' octets are predefined:
-                   // - 2 in case of indefinite form of length determinant,
-                   // - 0 in case of definite form
+  //Determines properties of addressed value encoding (LD form, constructedness)
+  //according to requested encoding rule of BER family. Prepares data, necessary
+  //for following encodeVAL() call.
+  //NOTE.1: calculates length of value encoding if one of following conditions is
+  //        fulfilled:    (LD form == ldDefinite) || ('calc_indef' == true)
+  // 
+  //NOTE.2: Throws in case of value that cann't be encoded.
+  virtual void calculateVAL(TLVProperty & val_prop, TSGroupBER::Rule_e use_rule,
+                            bool calc_indef = false) /*throw(std::exception)*/ = 0;
 
-  TLVProperty()
-    : EncodingProperty(), _szoTag(0), _szoLOC(0)
-  { }
+  //Encodes the addressed value according to previously calculated TLVProperties.
+  //NOTE: Throws in case of value that cann't be encoded.
+  virtual ENCResult encodeVAL(uint8_t * use_enc, TSLength max_len) const /*throw(std::exception)*/ = 0;
 
-  //Calculates number of octets in T and L parts
-  void calculate(const ASTag & use_tag);
-
-  //Returns number of 'begin-of-content' octets
-  uint8_t getBOCsize(void) const { return _szoTag + _szoLOC; }
-  //Returns number of 'end-of-content' octets
-  uint8_t getEOCsize(void) const { return isDefinite() ? 0 : 2; }
-
-  //Returns total length of TLV encoding if it's known (either definite
-  //LD form or calculated _valLen) 
-  TSLength getTLVsize(void) const
+  //Returns true if encoding of curr_rule is considered as valid encoding for tgt_rule
+  virtual bool isPortable(TSGroupBER::Rule_e tgt_rule, TSGroupBER::Rule_e curr_rule) const /*throw()*/
   {
-    return (_valLen || isDefinite()) ? (_valLen + getBOCsize() + getEOCsize()) : 0;
+    return TSGroupBER::isPortable(tgt_rule, curr_rule);
   }
 };
 
 
-//Macro that determines maximum number of 'tag octets'
-#define MAX_IDENTIFIER_OCTS(ident_type) (1 + (sizeof(ident_type)<<3 + 6)/7)
-//Macro that determines maximum number of 'length octets'
-#define MAX_LDETERMINANT_OCTS(ldet_type) (1 + (sizeof(ldet_type)<<3 + 7)/8)
+template <class _TArg>
+class ValueEncoderOf_T : public ValueEncoderIface {
+  // -- ------------------------------------------------- --
+  // -- ValueEncoderIface interface methods 
+  // -- ------------------------------------------------- --
+  //virtual void calculateVAL(TLVProperty & val_prop, TSGroupBER::Rule_e use_rule,
+  //                          bool calc_indef = false) /*throw(std::exception)*/ = 0;
+  //virtual ENCResult encodeVAL(uint8_t * use_enc,
+  //                            TSLength max_len) const /*throw(std::exception)*/ = 0;
 
-//TL-part encoder
-class TLEncoder : public TLVProperty {
+public:
+  ValueEncoderOf_T()
+  { }
+  //
+  virtual ~ValueEncoderOf_T()
+  { }
+
+  virtual void setValue(const _TArg & use_val) /*throw()*/ = 0;
+};
+
+
+/* ************************************************************************* *
+ * Helper class that calculates and encodes the TLV encoding layout.
+ * ************************************************************************* */
+//'TL'-part composer
+class TLComposer : public TLVStruct {
 protected:
   uint8_t _octTag[MAX_IDENTIFIER_OCTS(ASTag::ValueType)]; //4 bytes as max for uint16_t
   uint8_t _octLOC[MAX_LDETERMINANT_OCTS(TSLength)];       //5 bytes as max for uint32_t
 
 public:
-  TLEncoder() : TLVProperty()
+  explicit TLComposer() : TLVStruct()
   {
     _octTag[0] = _octLOC[0] = 0;
   }
-
-  void reset(void)
+  explicit TLComposer(const TLVProperty & use_prop)
+    : TLVStruct(use_prop)
   {
-    init(LDeterminant::frmIndefinite, 0, false);
-    _szoTag = _szoLOC = _octTag[0] = _octLOC[0] = 0;
+    _octTag[0] = _octLOC[0] = 0;
   }
+  ~TLComposer()
+  { }
 
+  //Calculates number of 'Tag', 'Length' and 'EOC' octets
+  void calculate(const ASTag & use_tag);
+  //Composes 'Tag' and 'Length' octets;
   void compose(const ASTag & use_tag);
 
   //Encodes 'begin-of-content' octets of TLV encoding
@@ -123,85 +103,23 @@ public:
   ENCResult encodeEOC(uint8_t * use_enc, TSLength max_len) const;
 };
 
-
-/* ************************************************************************* *
- * Abstract class that determines encoding properties of the ASN.1 type value 
- * and composes the V-part of BER/DER/CER encoding according to appropriate
- * clause from X.690.
- * ************************************************************************* */
-class ValueEncoderAC {
-protected:
-  TSGroupBER::Rule_e  _rule;
-  bool                _isCalculated;
-  EncodingProperty    _vProp;
-
-public:
-  ValueEncoderAC(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : _isCalculated(false), _rule(use_rule)
-  { }
-  virtual ~ValueEncoderAC()
-  { }
-
-  TSGroupBER::Rule_e   getRule(void) const { return _rule; }
-
-  bool isCalculated(void) const { return _isCalculated; }
-  //NOTE: this method has defined result only after calculateVAL() called
-  const EncodingProperty & getVALProperties(void) const { return _vProp; }
-
-  // -- ************************************* --
-  // -- ValueEncoderAC virtual methods
-  // -- ************************************* --
-
-  //Returns tag identifying the content of value encoding (not value type itself).
-  //Defined only for so called 'hole types' such as untagged ANY, CHOICE, OpenType
-  virtual const ASTag * getContentTag(void) const { return NULL; }
-
-  //Sets required kind of BER group encoding.
-  //Returns: true if value encoding should be (re)calculated
-  virtual bool setRule(TSGroupBER::Rule_e use_rule)
-  {
-    if (use_rule != _rule) {
-      _rule = use_rule;
-      if (use_rule != TSGroupBER::ruleBER)
-        _isCalculated = false;
-    }
-    return !_isCalculated;
-  }
-
-  // -- ************************************* --
-  // -- ValueEncoderAC abstract methods
-  // -- ************************************* --
-  //Determines properties of addressed value encoding (LD form, constructedness)
-  //according to requested encoding rule of BER family. Additionally calculates
-  //length of value encoding if one of following conditions is fulfilled:
-  // 1) LD form == ldDefinite
-  // 2) (LD form == ldIndefinite) && ('calc_indef' == true)
-  //NOTE: 'calc_indef' must be set if this encoding is enclosed by
-  //another that uses definite LD form.
-  //NOTE: Throws in case of value that cann't be encoded.
-  virtual const EncodingProperty & calculateVAL(bool calc_indef = false) /*throw(std::exception)*/ = 0;
-  //Encodes by requested encoding rule of BER family the type value ('V'-part of encoding)
-  //NOTE: Throws in case of value that cann't be encoded.
-  //NOTE: this method has defined result only after calculateVAL() called
-  virtual ENCResult encodeVAL(uint8_t * use_enc, TSLength max_len) const /*throw(std::exception)*/ = 0;
-};
-
 class TLVLayoutEncoder {
 private:
+  typedef eyeline::util::LWArray_T<TLComposer, uint8_t, _ASTaggingDFLT_SZ> TLComposersArray;
+
   //data for encoding optimization if layout calculation was done prior to encoding
-  LWArray_T<TLEncoder, uint8_t, _ASTaggingDFLT_SZ> _tlws;
-  TSLength  _szoBOC;    //overall length of 'begin-of-content' octets of TLV
-                        //encoding, also serves as a 'calculation-performed' flag
+  TLComposersArray  _tlws;
+  TSLength          _szoBOC;  //overall length of 'begin-of-content' octets of TLV
+                              //encoding, also serves as a 'calculation-performed' flag
 protected:
-  ValueEncoderAC *  _valEnc;  //addressed value encoder, zero means layout isn't initialized
-  ASTagging         _effTags; //effective tags accroding to tagging environment
+  const ASTagging *   _effTags; //complete tagging of value type
+  ValueEncoderIface * _valEnc;  //addressed value encoder, zero means layout isn't initialized
+  TSGroupBER::Rule_e  _vRule;
+  TLVProperty         _vProp;   //TLV-properties of addressed value encoding
 
-  void initFieldLayout(const TLVLayoutEncoder & type_enc, const ASTagging * fld_tags = NULL);
-
-  //Calculates TLV layout (tag & length octets + EOC for each tag) basing on
-  //given 'V' part encoding properties.
-  //Returns  EncodingProperty for outermost tag
-  const TLVProperty & calculateLayout(const EncodingProperty & val_prop);
+  void resetLayout(void) { _tlws.clear(); _szoBOC = 0; }
+  //Calculates TLV layout (tag & length octets + content octets + EOCs for each tag)
+  const TLVStruct & calculateLayout(bool calc_indef = false);
 
   //Encodes 'TL'-part ('begin-of-content' octets)
   //NOTE: TLVLayout must be calculated.
@@ -211,130 +129,323 @@ protected:
   ENCResult encodeEOC(uint8_t * use_enc, TSLength max_len) const;
 
 public:
-  //Empty constructor: for later initialization by successor
-  TLVLayoutEncoder()
-    : _szoBOC(0), _valEnc(0)
+  //Empty constructor: for later initialization
+  TLVLayoutEncoder(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
+    : _szoBOC(0), _effTags(NULL), _valEnc(NULL), _vRule(use_rule)
   { }
-  //'Untagged type layout encoder' constructor
-  TLVLayoutEncoder(ValueEncoderAC & use_val_enc)
-    : _szoBOC(0), _valEnc(&use_val_enc)
-  { }
-  //'Tagged type encoder' constructor
-  TLVLayoutEncoder(const ASTagging & outer_tags,
-                   const ASTagging & inner_tags, ValueEncoderAC & use_val_enc)
-    : _szoBOC(0), _valEnc(&use_val_enc), _effTags(outer_tags)
-  {
-    _effTags.conjoin(inner_tags);
-    _tlws.enlarge(_effTags.size());
-  }
-
   //'Generic type layout encoder' constructor.
-  //NOTE: tagging MUST contain UNIVERSAL tag of base type
-  TLVLayoutEncoder(const ASTagging & use_tags, ValueEncoderAC & use_val_enc)
-    : _szoBOC(0), _valEnc(&use_val_enc), _effTags(use_tags)
+  //NOTE: eff_tags must be a complete tagging of type!
+  TLVLayoutEncoder(ValueEncoderIface & use_val_enc, const ASTagging * eff_tags,
+                   TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
+    : _szoBOC(0), _effTags(eff_tags), _valEnc(&use_val_enc), _vRule(use_rule)
   {
-    _tlws.enlarge(_effTags.size());
+    if (_effTags)
+      _tlws.enlarge(_effTags->size());
   }
-  //'Field layout encoder' constructor
-  //NOTE: field tagging is optional
-  TLVLayoutEncoder(const TLVLayoutEncoder & type_enc, const ASTagging * fld_tags = NULL)
+  //
+  ~TLVLayoutEncoder()
+  { }
+
+  //
+  bool isCalculated(void) const { return _szoBOC != 0; }
+  //
+  TSGroupBER::Rule_e  getVALRule(void) const { return _vRule; }
+  //
+  ValueEncoderIface * getVALEncoder(void) const { return _valEnc; }
+  //
+  const TLVProperty & getVALProperty(void) const { return _vProp; }
+
+  //
+  void setTagging(const ASTagging * use_tags)
   {
-    initFieldLayout(type_enc, fld_tags);
+    if ((_effTags = use_tags) != 0)
+      _tlws.enlarge(_effTags->size());
+    resetLayout();
+  }
+  //
+  void init(ValueEncoderIface & use_val_enc)
+  {
+    _valEnc = &use_val_enc; resetLayout();
+  }
+  //
+  void init(ValueEncoderIface & use_val_enc, const ASTagging * use_tags)
+  {
+    _valEnc = &use_val_enc;
+    setTagging(use_tags);
+  }
+  //
+  void init(ValueEncoderIface & use_val_enc, const ASTagging * use_tags,
+            TSGroupBER::Rule_e use_rule)
+  {
+    _valEnc = &use_val_enc;
+    _vRule = use_rule;
+    setTagging(use_tags);
   }
 
-  //returns effective tagging of field/type value
-  const ASTagging & getTagging(void) const { return _effTags; }
+  // -- ----------------------------------------------------- --
+  // NOTE: all following methods may be called only after
+  // ValueEncoderIface is set by constructor or init() call !!!
+  // -- ----------------------------------------------------- --
 
-  //Returns the outermost tag of TLV layout
-  //NOTE: may be NULL in case of incomplete value
-  const ASTag * getTag(void) const
+  //Sets required kind of BER group encoding.
+  //Returns: true if value encoding should be (re)calculated
+  bool setVALRule(TSGroupBER::Rule_e use_rule) /*throw()*/
   {
-    return _effTags.size() ? &_effTags.outerTag() : _valEnc->getContentTag();
+    if (isCalculated() && !_valEnc->isPortable(use_rule, _vRule))
+      resetLayout();
+    _vRule = use_rule;
+    return !isCalculated();
   }
-  //Returns addressed value encoder
-  ValueEncoderAC * getValueEncoder(void) const { return _valEnc; }
 
   //Calculates TLV layout octets (length octets + EOC for each tag) basing
   //on encoding properties implied by addressed value.
-  //Returns  EncodingProperty for outermost tag.
+  //Returns  TLVProperty for outermost tag.
   // 
   //NOTE: if 'calc_indef' is set, then full TLV encoding length is calculated even
   //if indefinite LD form is used. This may be required if this TLV is enclosed by
   //another that uses definite LD form.
-  const TLVProperty & calculateTLV(bool calc_indef = false) /*throw(std::exception)*/
-  {
-    return calculateLayout(_valEnc->calculateVAL(calc_indef));
-  }
+  const TLVStruct & calculateTLV(bool calc_indef = false) /*throw(std::exception)*/;
   //Encodes by BER/DER/CER the previously calculated TLV layout (composes complete TLV encoding).
   //NOTE: Throws in case the layout wasn't calculated.
-  ENCResult encodeCalculated(uint8_t * use_enc, TSLength max_len) const /*throw(std::exception)*/;
+  ENCResult encodeTLV(uint8_t * use_enc, TSLength max_len) const /*throw(std::exception)*/;
+};
+
+/* ************************************************************************* *
+ * Basic abstract class that encodes by BER/DER/CER (composes TLV encoding)
+ * the generic ASN.1 type.
+ * ************************************************************************* */
+class TypeEncoderAC : public ASTypeEncoderAC, public TypeTagging {
+protected:
+  TLVLayoutEncoder    _tlvEnc; //keeps reference to ValueEncoderIface
+
+  const TLVStruct & prepareTLV(bool calc_indef) /*throw(std::exception)*/;
+
+  TypeEncoderAC(const TypeEncoderAC & use_obj)
+    : ASTypeEncoderAC(use_obj._tsRule), TypeTagging(use_obj)
+    , _tlvEnc(TSGroupBER::getBERRule(use_obj._tsRule))
+  {
+    //NOTE: in case of CHOICE/Opentype the copying constructor of successsor
+    //      MUST properly set options of TypeTagging
+  }
+
+public:
+  //'Generic type encoder' constructor
+  //NOTE: eff_tags must be a complete tagging of type!
+  TypeEncoderAC(const ASTagging & eff_tags,
+               TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : ASTypeEncoderAC(use_rule), TypeTagging(eff_tags)
+    , _tlvEnc(TSGroupBER::getBERRule(use_rule))
+  { }
+  //'Untagged CHOICE/Opentype type encoder' constructor
+  TypeEncoderAC(const TaggingOptions & base_tags,
+               TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : ASTypeEncoderAC(use_rule), TypeTagging(&base_tags)
+    , _tlvEnc(TSGroupBER::getBERRule(use_rule))
+  { }
+  //'Tagged Type encoder' constructor
+  //NOTE: base_tags must be a complete tagging of base type!
+  TypeEncoderAC(const ASTag & use_tag, ASTagging::Environment_e tag_env,
+                const ASTagging & base_tags,
+               TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : ASTypeEncoderAC(use_rule), TypeTagging(use_tag, tag_env, base_tags)
+    , _tlvEnc(TSGroupBER::getBERRule(use_rule))
+  { }
+  //'Tagged Type referencing untagged CHOICE/Opentype encoder' constructor
+  TypeEncoderAC(const ASTag & use_tag, ASTagging::Environment_e tag_env,
+                const TaggingOptions & base_tags,
+               TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : ASTypeEncoderAC(use_rule), TypeTagging(use_tag, tag_env, base_tags)
+    , _tlvEnc(TSGroupBER::getBERRule(use_rule))
+  { }
+  //'Tagged Type referencing untagged CHOICE/Opentype encoder' constructor
+  TypeEncoderAC(const ASTagging & use_tags, const TaggingOptions & base_tags,
+               TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : ASTypeEncoderAC(use_rule), TypeTagging(use_tags, base_tags)
+    , _tlvEnc(TSGroupBER::getBERRule(use_rule))
+  { }
+  //
+  virtual ~TypeEncoderAC()
+  { }
+
+  void init(ValueEncoderIface & use_venc) { _tlvEnc.init(use_venc); }
+
+  ValueEncoderIface * getVALEncoder(void) const { return _tlvEnc.getVALEncoder(); }
+  //
+  TSGroupBER::Rule_e  getVALRule(void) const { return _tlvEnc.getVALRule(); }
+
+  //Returns type tag that is used while sorting elements of SET,
+  //depends on encoding rules being used.
+  const ASTag * getOrdinalTag(void) const
+  {
+    return (getTSRule() == TransferSyntax::ruleCER) ? getCanonicalTag() : getTag();
+  }
+
+  //Compares two type encodings by their ordinal tags
+  bool operator<(const TypeEncoderAC & cmp_tenc) const /*throw(std::exception)*/;
+
+  // -- ------------------------------------------------- --
+  // -- ASTypeEncoderAC virtual methods 
+  // -- ------------------------------------------------- --
+  //Sets required transferSyntax encoding rule
+  //Returns: true if value encoding should be (re)calculated
+  //Throws: in case of unsupported rule
+  bool setTSRule(TransferSyntax::Rule_e use_rule) /*throw(std::exception)*/
+  {
+    return ASTypeEncoderAC::setTSRule(use_rule) ? 
+      _tlvEnc.setVALRule(TSGroupBER::getBERRule(use_rule)) : false;
+  }
+
+  // -- ------------------------------------------------- --
+  // -- ASTypeEncoderAC abstract methods implementation
+  // -- ------------------------------------------------- --
+  bool isTSsupported(TransferSyntax::Rule_e use_rule) const /*throw()*/
+  { //TODO: CER isn't implemented yet
+    //if (use_rule == TransferSyntax::ruleCER)
+    //  return false; 
+    return TSGroupBER::isBERSyntax(use_rule);
+  }
+
+  //Calculates length of resulted encoding without its composition.
+  //NOTE: if calculation is impossible (f.ex. stream encoding) 
+  //      ENCResult::encUnsupported is returned.
+  ENCResult calculate(void) /*throw(std::exception)*/;
+
   //Encodes by BER/DER/CER the TLV layout (composes complete TLV encoding).
   //NOTE: Throws in case of value that cann't be encoded.
-  //NOTE: Calculates layout if it wasn't calculated yet
-  ENCResult encodeTLV(uint8_t * use_enc, TSLength max_len) /*throw(std::exception)*/;
+  //NOTE: Calculates TLV layout if it wasn't calculated yet
+  ENCResult encode(uint8_t * use_enc, TSLength max_len) /*throw(std::exception)*/;
 };
+
 
 /* ************************************************************************* *
  * Abstract class that encodes by BER/DER/CER (composes TLV encoding) the
- * ASN.1 type value according to appropriate clause of X.690.
+ * value of some ASN.1 type according to appropriate clause of X.690.
  * ************************************************************************* */
-class TypeEncoderAC : public TLVLayoutEncoder, public ValueEncoderAC {
+class TypeValueEncoderAC : public TypeEncoderAC, protected ValueEncoderIface {
+private:
+  using TypeEncoderAC::init;
+
 protected:
-  // -- ************************************************* --
-  // -- ValueEncoderAC abstract methods are to implement
-  // -- ************************************************* --
-  using ValueEncoderAC::calculateVAL;
-  using ValueEncoderAC::encodeVAL;
+  // -- -------------------------------------- --
+  // -- ValueEncoderIface interface methods
+  // -- -------------------------------------- --
+  //virtual void calculateVAL(TLVProperty & val_prop, TSGroupBER::Rule_e use_rule,
+  //                          bool calc_indef = false) /*throw(std::exception)*/ = 0;
+  //virtual ENCResult encodeVAL(uint8_t * use_enc,
+  //                            TSLength max_len) const /*throw(std::exception)*/ = 0;
+  //virtual bool isPortable(TSGroupBER::Rule_e tgt_rule, TSGroupBER::Rule_e curr_rule) const /*throw()*/; 
 
+  TypeValueEncoderAC(const TypeValueEncoderAC & use_obj)
+    : TypeEncoderAC(use_obj)
+  {
+    TypeEncoderAC::init(*(ValueEncoderIface*)this);
+    //NOTE: in case of CHOICE/Opentype the copying constructor of successsor
+    //      MUST properly set options of TypeTagging
+  }
 public:
-  //'Tagged type encoder' constructor
-  TypeEncoderAC(const ASTagging & outer_tags, const ASTagging & inner_tags,
-               TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : TLVLayoutEncoder(outer_tags, inner_tags, *this), ValueEncoderAC(use_rule)
-  { }
-  //'Untagged type encoder' constructor
-  TypeEncoderAC(TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : TLVLayoutEncoder((ValueEncoderAC&)*this), ValueEncoderAC(use_rule)
-  { }
-  //'Generic type encoder' constructor
-  //NOTE: tagging MUST contain UNIVERSAL tag of base type
-  TypeEncoderAC(const ASTagging & use_tags,
-               TSGroupBER::Rule_e use_rule = TSGroupBER::ruleDER)
-    : TLVLayoutEncoder(use_tags, *this), ValueEncoderAC(use_rule)
-  { }
-  virtual ~TypeEncoderAC()
-  { }
-};
-
-
-/* ************************************************************************* *
- * Encoder of field of constructed type.
- * ************************************************************************* */
-class FieldEncoder : public TLVLayoutEncoder {
-public:
-  //Empty constructor for later initialization
-  FieldEncoder() : TLVLayoutEncoder()
-  { }
-  //'Field encoder' constructor
-  //NOTE: field tagging is optional
-  FieldEncoder(TypeEncoderAC & type_enc, const ASTagging * fld_tags = NULL)
-    : TLVLayoutEncoder(type_enc, fld_tags)
-  { }
-  ~FieldEncoder()
-  { }
+  //'Generic type value encoder' constructor
+  //NOTE: eff_tags must be a complete tagging of type!
+  TypeValueEncoderAC(const ASTagging & eff_tags,
+                    TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : TypeEncoderAC(eff_tags, use_rule)
+  {
+    TypeEncoderAC::init(*(ValueEncoderIface*)this);
+  }
+  //'Generic tagged type value encoder' constructor
+  //NOTE: base_tags must be a complete tagging of base type!
+  TypeValueEncoderAC(const ASTag & use_tag, ASTagging::Environment_e tag_env,
+                     const ASTagging & base_tags,
+                    TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : TypeEncoderAC(use_tag, tag_env, base_tags, use_rule)
+  {
+    TypeEncoderAC::init(*(ValueEncoderIface*)this);
+  }
+  //'Untagged CHOICE/Opentype type value encoder' constructor
+  TypeValueEncoderAC(const TaggingOptions & base_tags,
+                    TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : TypeEncoderAC(base_tags, use_rule)
+  {
+    TypeEncoderAC::init(*(ValueEncoderIface*)this);
+  }
+  //'Tagged Type referencing untagged CHOICE/Opentype value encoder' constructor
+  TypeValueEncoderAC(const ASTag & use_tag, ASTagging::Environment_e tag_env,
+                     const TaggingOptions & base_tags,
+                    TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : TypeEncoderAC(use_tag, tag_env, base_tags, use_rule)
+  {
+    TypeEncoderAC::init(*(ValueEncoderIface*)this);
+  }
+  //'Tagged Type referencing untagged CHOICE/Opentype value encoder' constructor
+  TypeValueEncoderAC(const ASTagging & use_tags, const TaggingOptions & base_tags,
+                    TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : TypeEncoderAC(use_tags, base_tags, use_rule)
+  {
+    TypeEncoderAC::init(*(ValueEncoderIface*)this);
+  }
   //
-  void init(TypeEncoderAC & type_enc, const ASTagging * fld_tags = NULL)
-  {
-    initFieldLayout(type_enc, fld_tags);
-  }
-  // -- --------------------------------------------------------------------
-  // NOTE: following methods mat be called ONLY after proper initialization
-  // -- --------------------------------------------------------------------
-  bool setRule(TSGroupBER::Rule_e use_rule)
-  {
-    return getValueEncoder()->setRule(use_rule);
-  }
+  virtual ~TypeValueEncoderAC()
+  { }
 };
+
+
+template <
+    class _TArg
+  , class _ValueEncoderTArg /* : public ValueEncoderOf_T<_TArg>*/
+>
+class TypeValueEncoderOf_T : public TypeEncoderAC, public _ValueEncoderTArg {
+private:
+  using TypeEncoderAC::init;
+
+public:
+  //'Generic type value encoder' constructor
+  //NOTE: eff_tags must be a complete tagging of type!
+  TypeValueEncoderOf_T(const ASTagging & eff_tags,
+                       TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : TypeEncoderAC(eff_tags, use_rule)
+    , _ValueEncoderTArg()
+  {
+    TypeEncoderAC::init(*(ValueEncoderIface*)this);
+  }
+  //'Generic tagged type value encoder' constructor
+  //NOTE: base_tags must be a complete tagging of base type!
+  TypeValueEncoderOf_T(const ASTag & use_tag, ASTagging::Environment_e tag_env,
+                     const ASTagging & base_tags,
+                    TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : TypeEncoderAC(use_tag, tag_env, base_tags, use_rule)
+    , _ValueEncoderTArg()
+  {
+    TypeEncoderAC::init(*(ValueEncoderIface*)this);
+  }
+  //'Untagged CHOICE/Opentype type value encoder' constructor
+  TypeValueEncoderOf_T(const TaggingOptions & base_tags,
+                    TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : TypeEncoderAC(base_tags, use_rule)
+    , _ValueEncoderTArg()
+  {
+    TypeEncoderAC::init(*(ValueEncoderIface*)this);
+  }
+  //'Tagged Type referencing untagged CHOICE/Opentype value encoder' constructor
+  TypeValueEncoderOf_T(const ASTag & use_tag, ASTagging::Environment_e tag_env,
+                     const TaggingOptions & base_tags,
+                    TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : TypeEncoderAC(use_tag, tag_env, base_tags, use_rule)
+    , _ValueEncoderTArg()
+  {
+    TypeEncoderAC::init(*(ValueEncoderIface*)this);
+  }
+  //'Tagged Type referencing untagged CHOICE/Opentype value encoder' constructor
+  TypeValueEncoderOf_T(const ASTagging & use_tags, const TaggingOptions & base_tags,
+                    TransferSyntax::Rule_e use_rule = TransferSyntax::ruleDER)
+    : TypeEncoderAC(use_tags, base_tags, use_rule)
+    , _ValueEncoderTArg()
+  {
+    TypeEncoderAC::init(*(ValueEncoderIface*)this);
+  }
+  //
+  virtual ~TypeValueEncoderOf_T()
+  { }
+};
+
 
 } //ber
 } //asn1
