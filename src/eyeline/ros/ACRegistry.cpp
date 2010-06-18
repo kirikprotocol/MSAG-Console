@@ -20,10 +20,10 @@ AppContextRegistry & AppContextRegistry::get(void)
 }
 //Registers the Operation factory, takes ownership!!!
 //Returns false if there is a factory with same AC OID already registered.
-bool AppContextRegistry::regFactory(ROSFactoryProducer fif)
+bool AppContextRegistry::regFactory(ROSCompFactoryProducingFunc use_fif)
 {
     MutexGuard  grd(_sync);
-    std::auto_ptr<ROSComponentsFactory> fact(fif());
+    std::auto_ptr<ROSComponentsFactory> fact(use_fif());
     bool rval = insert(fact->acOID(), fact.get());
     if (rval)
         fact.release();
@@ -32,7 +32,7 @@ bool AppContextRegistry::regFactory(ROSFactoryProducer fif)
 //returns the operation factory for given AC, the factory should be
 //initialized by preceeding call to AppContextRegistry::Init()
 const ROSComponentsFactory * 
-    AppContextRegistry::getFactory(const EncodedOID & ac_oid) const
+    AppContextRegistry::getFactory(const asn1::EncodedOID & ac_oid) const
 {
     MutexGuard  grd(_sync);
     return (const ROSComponentsFactory*)find(ac_oid);

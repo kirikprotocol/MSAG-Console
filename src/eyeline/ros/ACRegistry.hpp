@@ -16,28 +16,28 @@ namespace ros {
 using smsc::core::synchronization::Mutex;
 
 class AppContextRegistry : 
-          eyeline::util::POBJRegistry_T<EncodedOID, ROSComponentsFactory> {
+          eyeline::util::POBJRegistry_T<asn1::EncodedOID, ROSComponentsFactory> {
 protected:
-    mutable Mutex   _sync;
+  mutable Mutex   _sync;
 
-    //forbid destruction and instantiation
-    void* operator new(size_t);
-    AppContextRegistry()
-    { }
-    ~AppContextRegistry()
-    { }
+  //forbid destruction and instantiation
+  void* operator new(size_t);
+  AppContextRegistry()
+  { }
+  ~AppContextRegistry()
+  { }
 
 public:
-    static AppContextRegistry & get(void);
-    // -----------------------------------------------------
-    // -- ApplicationContextRegistryITF interface methods
-    // -----------------------------------------------------
-    //Registers the Operation factory, takes ownership!!!
-    //Returns false if there is a factory with same AC OID already registered.
-    bool regFactory(ROSFactoryProducer fif);
-    //returns the operation factory for given AC, the factory should be
-    //initialized by preceeding call to ApplicationContextRegistry::Init()
-    const ROSComponentsFactory * getFactory(const EncodedOID & ac_oid) const;
+  static AppContextRegistry & get(void);
+  // -----------------------------------------------------
+  // -- ApplicationContextRegistry interface methods
+  // -----------------------------------------------------
+  //Registers the Operation factory, takes ownership!!!
+  //Returns false if there is a factory with same AC OID already registered.
+  bool regFactory(ROSCompFactoryProducingFunc use_fif);
+  //returns the operation factory for given AC, the factory should be
+  //initialized by preceeding call to ApplicationContextRegistry::Init()
+  const ROSComponentsFactory * getFactory(const asn1::EncodedOID & ac_oid) const;
 };
 
 
