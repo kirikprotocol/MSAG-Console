@@ -220,6 +220,7 @@ public abstract class Session extends Thread {
         sleep(1000);
         break;
       } else if (input.equalsIgnoreCase(COMMAND_PING)) {
+        startTimer();
         ctx.setMessage("");
         display(ctx);
         continue;
