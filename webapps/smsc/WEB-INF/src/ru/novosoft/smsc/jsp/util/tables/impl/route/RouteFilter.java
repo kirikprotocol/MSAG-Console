@@ -296,7 +296,6 @@ public class RouteFilter implements Filter {
     }
 
     protected int isSrcSmeAllowed(String srcSmeId) {
-      System.out.println("!!! " + srcSmeId + " " + srcSmes);
       if (srcSmes.isEmpty())
         return UNKNOWN;
 
