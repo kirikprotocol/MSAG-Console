@@ -3,6 +3,7 @@ package ru.novosoft.smsc.admin.smsexport;
 import oracle.jdbc.driver.OracleCallableStatement;
 import oracle.sql.ArrayDescriptor;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.admin.smsstat.ExportSettings;
 import ru.novosoft.smsc.admin.smsview.SmsRow;
 import ru.novosoft.smsc.admin.smsview.archive.Message;
@@ -11,11 +12,9 @@ import ru.novosoft.smsc.util.WebAppFolders;
 import ru.novosoft.smsc.util.config.Config;
 
 import java.io.*;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.*;
+import java.util.Date;
 
 public class SmsOperativeExport extends SmsExport {
     protected static final String DS_OPER_SECTION = "opersave_datasource";
@@ -132,7 +131,7 @@ public class SmsOperativeExport extends SmsExport {
         OracleCallableStatement callinsertStmt = null;
         boolean haveArc = false;
         try {
-            input = new FileInputStream(smsstorePath);
+            input = new BufferedInputStream(new FileInputStream(smsstorePath));
             System.out.println("start reading File in: " + new Date());
             tm = System.currentTimeMillis();
             String FileName = Message.readString(input, 9);
@@ -151,15 +150,19 @@ public class SmsOperativeExport extends SmsExport {
                     long msgId = Message.readInt64(bis);
                     Long lmsgId = new Long(msgId);
 
-                    if (resp.receive(bis, msgId, haveArc)) {
-                        j++;
-                        SqlSms sms = resp.getSqlSms();
-                        if (sms.getStatusInt() == SmsRow.MSG_STATE_ENROUTE) {
-                            msgsFull.put(lmsgId, sms);
-                        } else {
-                            msgsFull.remove(lmsgId); //delete sms which to be in time (успели) finalized (финализироваться)
-                        }
-                    }
+                    Message.readUInt32(bis); // Skip seq
+                    Message.readString(bis,1); // Skip final
+
+                    int status = Message.readUInt8(bis);
+
+                    j++;
+                    if (status == SmsRow.MSG_STATE_ENROUTE) {
+                      Sms sms = new Sms(msgId, status, bis);
+                      msgsFull.put(lmsgId, sms);
+                    } else
+                      msgsFull.remove(lmsgId);
+
+
                 } //while(true)
             } catch (EOFException e) {
             }
@@ -184,10 +187,15 @@ public class SmsOperativeExport extends SmsExport {
             int i = 0;
             System.out.println("Inserting " + msgsFull.size() + " records");
             for (Iterator it = msgsFull.values().iterator(); it.hasNext();) {
-                msgs[i] = (SqlSms) it.next();
+              try {
+                msgs[i] = ((Sms) it.next()).toSqlSms(haveArc);
+              } catch (IOException e) {
+                continue;
+              }
                 i++;
-                if (((++cnt) % ArraySize) == 0) {
-                    oracle.sql.ARRAY msgs1 = new oracle.sql.ARRAY(ad, conn, msgs);
+                cnt++;
+                if (i == ArraySize) {
+                oracle.sql.ARRAY msgs1 = new oracle.sql.ARRAY(ad, conn, msgs);
                     callinsertStmt.setInt(1, i);
                     callinsertStmt.setARRAY(2, msgs1);
                     callinsertStmt.execute();
@@ -236,4 +244,73 @@ public class SmsOperativeExport extends SmsExport {
             }
         }
     }
+
+  private static class Sms {
+    private final long msgId;
+    private final InputStream is;
+    private final int status;
+
+    private Sms(long msgId, int status, InputStream bytes) throws IOException {
+      this.msgId = msgId;
+      this.is = bytes;
+      this.status = status;
+    }
+
+    public SqlSms toSqlSms(boolean haveArc) throws IOException {
+      java.sql.Date submitTime = new java.sql.Date(Message.readUInt32(is)*1000);
+
+      long validTime = Message.readUInt32(is);
+      long lastTryTime = Message.readUInt32(is);
+      long nextTryTime = Message.readUInt32(is);
+      int attempts = (int)Message.readUInt32(is);
+
+      int lastResult = (int)Message.readUInt32(is);
+
+      int strLen = Message.readUInt8(is);
+      Mask origMask = new Mask((byte)Message.readUInt8(is), (byte)Message.readUInt8(is), Message.readString(is,strLen));
+
+      strLen = Message.readUInt8(is);
+      Mask destMask = new Mask((byte)Message.readUInt8(is), (byte)Message.readUInt8(is), Message.readString(is,strLen));
+
+      strLen = Message.readUInt8(is);
+      Mask dDestMask = new Mask((byte)Message.readUInt8(is), (byte)Message.readUInt8(is), Message.readString(is,strLen));
+
+      int mr = Message.readUInt16(is);
+      String sctype = Message.readString8(is);
+      short dreport = (short) Message.readUInt8(is);
+      short billr = (short) Message.readUInt8(is);
+      String odMsc = Message.readString8(is);
+      String odImsi = Message.readString8(is);
+      int odSme = (int) Message.readUInt32(is);
+      String ddMsc = Message.readString8(is);
+      String ddImsi = Message.readString8(is);
+      int ddSme = (int) Message.readUInt32(is);
+
+      String routeId = Message.readString8(is);
+
+      int serviceId = (int) Message.readUInt32(is);
+      int priority = (int) Message.readUInt32(is);
+
+      String srcSmeId = Message.readString8(is);
+      String dstSmeId = Message.readString8(is);
+
+
+      short concatMsgRef=(short)Message.readUInt16(is);
+
+      short concatSeqNum=(short)Message.readUInt8(is);
+
+      byte arc=-1;
+      if (haveArc)  {
+        arc=((byte)Message.readUInt8(is));
+      }
+      int bodyLen = (int) Message.readUInt32(is);
+
+      return new SqlSms("SMS",msgId,status,submitTime,new java.sql.Date(validTime*1000),attempts,
+                lastResult,new java.sql.Date(lastTryTime*1000),new java.sql.Date(nextTryTime*1000),origMask.getMask(),destMask.getMask(),
+                dDestMask.getMask(),mr,sctype,dreport,
+                billr,odMsc,odImsi,odSme,ddMsc,
+                ddImsi,ddSme,routeId,serviceId,priority,
+               srcSmeId,dstSmeId,concatMsgRef,concatSeqNum,arc,bodyLen);
+    }
+  }
 }
