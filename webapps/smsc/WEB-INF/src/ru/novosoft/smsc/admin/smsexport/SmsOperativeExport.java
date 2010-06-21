@@ -132,21 +132,23 @@ public class SmsOperativeExport extends SmsExport {
         boolean haveArc = false;
         try {
             input = new BufferedInputStream(new FileInputStream(smsstorePath));
-            System.out.println("start reading File in: " + new Date());
+            logger.info("start reading operative file in: " + new Date());
             tm = System.currentTimeMillis();
             String FileName = Message.readString(input, 9);
             int version = (int) Message.readUInt32(input);
             if (version > 0x010000) haveArc = true;
             try {
                 SmsFileImport resp = new SmsFileImport();
-                byte message[] = new byte[256 * 1024];
+
                 int j = 0;
                 while (true) {
                     int msgSize1 = (int) Message.readUInt32(input);
+                    byte message[] = new byte[msgSize1];
                     Functions.readBuffer(input, message, msgSize1);
                     int msgSize2 = (int) Message.readUInt32(input);
+
                     if (msgSize1 != msgSize2) throw new AdminException("Protocol error sz1=" + msgSize1 + " sz2=" + msgSize2);
-                    InputStream bis = new ByteArrayInputStream(message, 0, msgSize1);
+                    InputStream bis = new ByteArrayInputStream(message);
                     long msgId = Message.readInt64(bis);
                     Long lmsgId = new Long(msgId);
 
@@ -166,13 +168,13 @@ public class SmsOperativeExport extends SmsExport {
                 } //while(true)
             } catch (EOFException e) {
             }
-            System.out.println("end reading File in: " + new Date() + " spent: " + (System.currentTimeMillis() - tm) / 1000);
-            System.out.println("start clearing old data from Table in: " + new Date());
+            logger.info("end reading operative file in: " + new Date() + " spent: " + (System.currentTimeMillis() - tm) / 1000 + " sec.");
+            logger.info("start clearing old data from Table in: " + new Date());
             tm = System.currentTimeMillis();
             conn = getOracleConnection(export);
 
             clearTable(conn, tablesPrefix, null);
-            System.out.println("end clearing old data from Table in: " + new Date() + " spent: " + (System.currentTimeMillis() - tm) / 1000);
+            logger.info("end clearing old data from Table in: " + new Date() + " spent: " + (System.currentTimeMillis() - tm) / 1000);
             tm = System.currentTimeMillis();
             int cnt = 0;
             int ArraySize = 25000;
@@ -185,7 +187,7 @@ public class SmsOperativeExport extends SmsExport {
             map.put("sms", Class.forName("ru.novosoft.smsc.admin.smsexport.SqlSms"));
             oracle.sql.ArrayDescriptor ad = ArrayDescriptor.createDescriptor("ARRAYLIST", conn);
             int i = 0;
-            System.out.println("Inserting " + msgsFull.size() + " records");
+            logger.info("Inserting " + msgsFull.size() + " records");
             for (Iterator it = msgsFull.values().iterator(); it.hasNext();) {
               try {
                 msgs[i] = ((Sms) it.next()).toSqlSms(haveArc);
@@ -199,7 +201,7 @@ public class SmsOperativeExport extends SmsExport {
                     callinsertStmt.setInt(1, i);
                     callinsertStmt.setARRAY(2, msgs1);
                     callinsertStmt.execute();
-                    System.out.println("Commited: " + cnt);
+                    logger.info("Commited: " + cnt);
                     i = 0;
                 }
             }
@@ -208,7 +210,7 @@ public class SmsOperativeExport extends SmsExport {
                 callinsertStmt.setInt(1, i);
                 callinsertStmt.setARRAY(2, msgs1);
                 callinsertStmt.execute();
-                System.out.println("Commited: " + cnt);
+                logger.info("Commited: " + cnt);
             }
         } catch (SQLException e) {
             logger.error("SQL err", e);
@@ -233,7 +235,7 @@ public class SmsOperativeExport extends SmsExport {
                     logger.warn("can't close file");
                 }
             }
-            System.out.println("end export in: " + new Date() + " spent: " + (System.currentTimeMillis() - tm) / 1000);
+            logger.info("end export in: " + new Date() + " spent: " + (System.currentTimeMillis() - tm) / 1000);
             closeStatement(callinsertStmt);
             if (conn != null) {
                 try {
