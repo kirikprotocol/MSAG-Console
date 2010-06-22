@@ -174,6 +174,19 @@ public class ConsoleInteraction extends Thread {
         }
       }
     }
+    synchronized (this) {
+      notifyAll();
+    }
+  }
+
+  public void shutdown() {
+    synchronized (this) {
+      interrupt();
+      try {
+        wait();
+      } catch (InterruptedException e) {
+      }
+    }
   }
 
   void resendCommands() {
