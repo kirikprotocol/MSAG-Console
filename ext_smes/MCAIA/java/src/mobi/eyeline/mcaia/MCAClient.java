@@ -5,6 +5,7 @@ import mobi.eyeline.mcaia.protocol.Status;
 import mobi.eyeline.protogen.framework.*;
 import mobi.eyeline.smpp.api.pdu.DeliverSM;
 import mobi.eyeline.smpp.api.pdu.Message;
+import mobi.eyeline.smpp.api.pdu.SubmitSM;
 import mobi.eyeline.smpp.api.pdu.data.Address;
 import mobi.eyeline.smpp.api.pdu.data.InvalidAddressFormatException;
 import mobi.eyeline.smpp.api.processing.IncomingQueue;
@@ -13,6 +14,7 @@ import mobi.eyeline.smpp.api.util.WatchDog;
 import mobi.eyeline.smpp.appgw.APPGWRequestProcessor;
 import mobi.eyeline.smpp.appgw.scenario.ExecutingException;
 import mobi.eyeline.smpp.sme.*;
+import mobi.eyeline.smpp.sme.network.OutgoingObject;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -30,6 +32,7 @@ public class MCAClient extends ClientConnection implements ExtendedRequestProces
   private static Logger logger = Logger.getLogger(MCAClient.class);
   Address         serviceAddress;
   APPGWRequestProcessor appgw;
+  OutgoingQueue outgoingQueue;
   HashSet<Integer> requests = new HashSet<Integer>(100);
   ReqWatchdog watchdog;
 
@@ -74,14 +77,30 @@ public class MCAClient extends ClientConnection implements ExtendedRequestProces
     }
     if( contains ) {
       respond(req, status);
+      if( status == Status.Timedout ) {
+        try {
+          SubmitSM releaseReq = new SubmitSM();
+          releaseReq.setSourceAddress(serviceAddress);
+          releaseReq.setDestinationAddress(req.getCalled());
+          releaseReq.setUssdServiceOp(UssdServiceOp.USSRelReq);
+          outgoingQueue.addOutgoingObject(new OutgoingObject(releaseReq));
+        } catch (InvalidAddressFormatException e) {
+          logger.error("", e);
+        }
+      }
     }
   }
 
   public void statusChanged(Message message, mobi.eyeline.smpp.api.types.Status status, OutgoingQueue outgoingQueue) {
-    if( status != mobi.eyeline.smpp.api.types.Status.OK ) {
+    if( status == mobi.eyeline.smpp.api.types.Status.OK ) {
+      // in this case status will be set by executors
+    } else if( status == mobi.eyeline.smpp.api.types.Status.MAPPE_NO_RESPONSE_FROM_PEER) {
       // try to deliver thru VLR, just example
       BusyRequest req = (BusyRequest) message.getAppInfo("mcaReq");
       doRequest(req, true);
+    } else {
+      BusyRequest req = (BusyRequest) message.getAppInfo("mcaReq");
+      handleStatus(req, Status.Rejected); // todo - think about separate status
     }
   }
 
@@ -111,6 +130,7 @@ public class MCAClient extends ClientConnection implements ExtendedRequestProces
 
   public void setEnvironment(IncomingQueue incomingQueue, OutgoingQueue outgoingQueue) {
     appgw.setEnvironment(incomingQueue, outgoingQueue);
+    this.outgoingQueue = outgoingQueue;
   }
 
   @Override
@@ -154,13 +174,7 @@ public class MCAClient extends ClientConnection implements ExtendedRequestProces
 
     @Override
     protected void expire(BusyRequest busyRequest) {
-      boolean contains = false;
-      synchronized (requests) {
-        contains = requests.remove(busyRequest.getSeqNum());
-      }
-      if( contains ) {
-        respond(busyRequest, Status.Timedout);
-      }
+      handleStatus(busyRequest, Status.Timedout);
     }
   }
 }

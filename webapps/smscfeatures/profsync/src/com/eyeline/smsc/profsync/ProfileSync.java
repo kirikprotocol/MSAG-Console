@@ -84,7 +84,7 @@ public class ProfileSync {
         } catch (IOException e) {
           logger.error("Could not create processor", e);
         }
-      } catch (IOException e) {
+      } catch (Throwable e) {
         logger.error("Exception in accept", e);
         continue;
       }
@@ -115,7 +115,7 @@ public class ProfileSync {
         }
         proc.shutdown();
       }
-      console.shut();
+      console.shutdown();
       logger.info("shutdown notifies sent");
       try {
         semaphore.wait();

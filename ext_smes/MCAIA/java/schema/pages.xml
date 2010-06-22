@@ -58,7 +58,7 @@
 
   <page id="EXIT_PAGE" question="0" >
       <pagePostProcessor class="mobi.eyeline.mcaia.appgw.FinalProcessor">
-          <initParam name="status" value="OK"/> <!-- todo return not ok -->
+          <initParam name="status" value="Rejected"/> <!-- todo return not ok -->
       </pagePostProcessor>
       <segment>
           <data>Good bye</data>
