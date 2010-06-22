@@ -572,3 +572,7 @@ B3123: Jun 16, 2010
     SMSC	Optimized router and concat messages fix for DeliveryResp
     SMSC	ucs2 ussd strings support in indication functions
     emailsme	Regexp text transformation ability added
+
+B3124: Jun 22, 2010
+    Inman	WEB_GT handling is fixed
+    
