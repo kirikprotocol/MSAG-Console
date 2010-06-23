@@ -104,7 +104,8 @@ void AmericaTestFixture::updateLocation_arg_encoding()
   vector<unsigned char> etalon_buf(etalon, etalon + sizeof(etalon) / sizeof(unsigned char) );
   vector<unsigned char> bad_buf(bad, bad + sizeof(bad) / sizeof(unsigned char) );
   CPPUNIT_ASSERT(etalon_buf == ulmsg);
-  CPPUNIT_ASSERT_ASSERTION_FAIL( CPPUNIT_ASSERT( bad_buf == ulmsg ) );
+//  CPPUNIT_ASSERT_ASSERTION_FAIL( CPPUNIT_ASSERT( bad_buf == ulmsg ) );
+  CPPUNIT_ASSERT( bad_buf != ulmsg );
 }
 void AmericaTestFixture::reportSMDeliveryStatus_arg_decoding(void)
 {
@@ -344,17 +345,17 @@ void AmericaTestFixture::dialogue_limit_check()
   vector<unsigned char> result ;
   SccpSenderMock sender(logger, result);
   mtsms.setSccpSender((SccpSender*)&sender);
-  SendRoutingInfoForSMReq inv("79139859489", true, "79139869999");
   for (int i = 1; i <= 5; i++)
   {
     TSM* tsm = 0;
     tsm = mtsms.TC_BEGIN(shortMsgGatewayContext_v2);
-    CPPUNIT_ASSERT_ASSERTION_FAIL( CPPUNIT_ASSERT( tsm == 0 ) );
-//    SendRoutingInfoForSMReq* inv = new SendRoutingInfoForSMReq("79139859489", true, "79139869999");
-//    inv = new SendRoutingInfoForSMReq("79139859489", true, "79139869999");
-//    CPPUNIT_ASSERT_ASSERTION_FAIL( CPPUNIT_ASSERT( inv == 0 ) );
-//    tsm->TInvokeReq(1, 45, *inv);
-    tsm->TInvokeReq(1, 45, inv);
+    CPPUNIT_ASSERT( tsm != 0 );
+
+    SendRoutingInfoForSMReq* inv = 0;
+    inv = new SendRoutingInfoForSMReq("79139859489", true, "79139869999");
+    CPPUNIT_ASSERT( inv != 0 );
+
+    tsm->TInvokeReq(1, 45, *inv);
     tsm->TBeginReq((uint8_t) (sizeof(cd) / sizeof(uint8_t)), cd,
         (uint8_t) (sizeof(cl) / sizeof(uint8_t)), cl);
   }
@@ -402,7 +403,8 @@ void AmericaTestFixture::sendRoutingInfo_sending()
   mtsms.setSccpSender((SccpSender*)&sender);
   TSM* tsm = 0;
   tsm = mtsms.TC_BEGIN(locationInfoRetrievalContext_v3);
-  CPPUNIT_ASSERT_ASSERTION_FAIL( CPPUNIT_ASSERT( tsm == 0 ) );
+  //CPPUNIT_ASSERT_ASSERTION_FAIL( CPPUNIT_ASSERT( tsm == 0 ) );
+  CPPUNIT_ASSERT( tsm != 0 );
   if (tsm)
   {
     SendRoutingInfoReq req("79131273996","79139869981");
