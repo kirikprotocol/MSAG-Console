@@ -251,6 +251,10 @@ void SRI4SMTSM::TBeginReq(uint8_t  cdlen, uint8_t* cd, uint8_t  cllen, uint8_t* 
   vector<unsigned char> data;
   asn_enc_rval_t er;
   er = der_encode(&asn_DEF_TCMessage, &begin, print2vec, &data);
+  if(er.encoded == -1) {
+    smsc_log_error(logger,
+      "SRI4SMTSM::TBeginReq encode fail %s",er.failed_type->name);
+  }
 
   smsc_log_debug(logger,
                  "CALLED[%d]={%s}",raddrlen,dump(raddrlen,raddr).c_str());
