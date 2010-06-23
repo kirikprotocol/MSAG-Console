@@ -350,6 +350,7 @@ void AmericaTestFixture::dialogue_limit_check()
     tsm = mtsms.TC_BEGIN(shortMsgGatewayContext_v2);
     CPPUNIT_ASSERT_ASSERTION_FAIL( CPPUNIT_ASSERT( tsm == 0 ) );
     SendRoutingInfoForSMReq* inv = new SendRoutingInfoForSMReq("79139859489", true, "79139869999");
+    CPPUNIT_ASSERT_ASSERTION_FAIL( CPPUNIT_ASSERT( inv == 0 ) );
     tsm->TInvokeReq(1, 45, *inv);
     tsm->TBeginReq((uint8_t) (sizeof(cd) / sizeof(uint8_t)), cd,
         (uint8_t) (sizeof(cl) / sizeof(uint8_t)), cl);
