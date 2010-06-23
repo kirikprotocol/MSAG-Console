@@ -41,11 +41,11 @@ public:
     }
   }
 
-  typedef uint16_t TagType;
-  typedef uint16_t LengthType;
+  typedef int16_t TagType;
+  typedef int16_t LengthType;
   enum{tagTypeSize=sizeof(TagType)};
   enum{lengthTypeSize=sizeof(LengthType)};
-  enum{endOfMessage_tag=0xffff};
+  static const TagType endOfMessage_tag=(TagType)0xffff;
 
 protected:
   int8_t htonX(int8_t val)
@@ -93,6 +93,11 @@ public:
     int32_t netvalue=htonl(value);
     memcpy(buf+pos,&netvalue,4);
     pos+=4;
+  }
+  void writeInt64(int64_t value)
+  {
+    writeInt32((int32_t)(value>>32));
+    writeInt32((int32_t)(value&0xffffffffu));
   }
   void writeStr(const std::string& value)
   {
@@ -268,9 +273,9 @@ public:
     pos+=4;
     memcpy(&tmp2,buf+pos,4);
     pos+=4;
-    rv=tmp1;
+    rv=htonl(tmp1);
     rv<<=32;
-    rv|=tmp2;
+    rv|=htonl(tmp2);
     return rv;
   }
   bool readBool()
