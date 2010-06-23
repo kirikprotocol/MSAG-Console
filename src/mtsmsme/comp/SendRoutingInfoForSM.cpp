@@ -37,8 +37,9 @@ void SendRoutingInfoForSMReq::encode(vector<unsigned char>& buf)
   asn_enc_rval_t er;
   er = der_encode(&asn_DEF_RoutingInfoForSM_Arg, &arg, print2vec, &buf);
   if(er.encoded == -1) {
-    smsc_log_error(logger,
-      "SendRoutingInfoForSMReq::encode fail %s",er.failed_type->name);
+//to do take logger from somewhere
+//    smsc_log_error(logger,
+//      "SendRoutingInfoForSMReq::encode fail %s",er.failed_type->name);
   }
 }
 void SendRoutingInfoForSMReq::decode(const vector<unsigned char>& buf)
