@@ -46,7 +46,8 @@ protocol ControllerProtocol
 
 //smsc runtime
   LockConfig 
-  UnlockConfig 
+  UnlockConfig
+  GetConfigsState 
 
 //auth
   RegisterAsWebapp 
@@ -97,4 +98,5 @@ protocol ControllerProtocol
 
 //smsc runtime
   LockConfigResp inmsg
+  GetConfigsStateResp inmsg
 end

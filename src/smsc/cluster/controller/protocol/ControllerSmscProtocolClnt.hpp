@@ -5,6 +5,7 @@
 #include "ControllerHandler.hpp"
 #include "messages/LockConfig.hpp"
 #include "messages/UnlockConfig.hpp"
+#include "messages/GetSmscConfigsStateResp.hpp"
 #include "messages/RegisterAsSmsc.hpp"
 #include "messages/ApplyRoutesResp.hpp"
 #include "messages/ApplyRescheduleResp.hpp"
@@ -87,6 +88,7 @@ public:
     tag_DisconnectService=102,
     tag_LockConfig=201,
     tag_UnlockConfig=202,
+    tag_GetSmscConfigsStateResp=1205,
     tag_RegisterAsSmsc=303,
     tag_ApplyRoutesResp=1001,
     tag_ApplyRescheduleResp=1002,
@@ -123,7 +125,8 @@ public:
     tag_UpdateProfileAbnt=13,
     tag_GetServicesStatusResp=1101,
     tag_DisconnectServiceResp=1102,
-    tag_LockConfigResp=1201
+    tag_LockConfigResp=1201,
+    tag_GetSmscConfigsState=204
   };
  
   ControllerSmscProtocol():handler(0)

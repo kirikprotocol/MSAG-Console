@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include "eyeline/protogen/framework/Exceptions.hpp"
+#include "SmeBindMode.hpp"
 
 
 #ident "@(#) ServiceStatus version 1.0"
@@ -27,6 +28,7 @@ public:
   {
     serviceNameFlag=false;
     peerAddressFlag=false;
+    peerAddress.clear();
     bindModeFlag=false;
     boundSmscFlag=false;
     boundSmsc.clear();
@@ -52,7 +54,20 @@ public:
         rv+=";";
       }
       rv+="peerAddress=";
-      rv+=peerAddress;
+      rv+="[";
+      bool first=true;
+      for(std::vector<std::string>::const_iterator it=peerAddress.begin(),end=peerAddress.end();it!=end;it++)
+      {
+        if(first)
+        {
+          first=false;
+        }else
+        {
+          rv+=",";
+        }
+        rv+=*it;
+      }
+      rv+="]";
     }
     if(bindModeFlag)
     {
@@ -61,7 +76,7 @@ public:
         rv+=";";
       }
       rv+="bindMode=";
-      rv+=bindMode;
+      rv+=SmeBindMode::getNameByValue(bindMode);
     }
     if(boundSmscFlag)
     {
@@ -141,7 +156,7 @@ public:
   {
     return serviceNameFlag;
   }
-  const std::string& getPeerAddress()const
+  const std::vector<std::string>& getPeerAddress()const
   {
     if(!peerAddressFlag)
     {
@@ -149,12 +164,12 @@ public:
     }
     return peerAddress;
   }
-  void setPeerAddress(const std::string& argValue)
+  void setPeerAddress(const std::vector<std::string>& argValue)
   {
     peerAddress=argValue;
     peerAddressFlag=true;
   }
-  std::string& getPeerAddressRef()
+  std::vector<std::string>& getPeerAddressRef()
   {
     peerAddressFlag=true;
     return peerAddress;
@@ -163,7 +178,7 @@ public:
   {
     return peerAddressFlag;
   }
-  const std::string& getBindMode()const
+  const SmeBindMode::type& getBindMode()const
   {
     if(!bindModeFlag)
     {
@@ -171,12 +186,16 @@ public:
     }
     return bindMode;
   }
-  void setBindMode(const std::string& argValue)
+  void setBindMode(const SmeBindMode::type& argValue)
   {
+    if(!SmeBindMode::isValidValue(argValue))
+    {
+      throw eyeline::protogen::framework::InvalidEnumValue("SmeBindMode",argValue);
+    }
     bindMode=argValue;
     bindModeFlag=true;
   }
-  std::string& getBindModeRef()
+  SmeBindMode::type& getBindModeRef()
   {
     bindModeFlag=true;
     return bindMode;
@@ -232,9 +251,14 @@ public:
     ds.writeTag(serviceNameTag);
     ds.writeStrLV(serviceName);
     ds.writeTag(peerAddressTag);
-    ds.writeStrLV(peerAddress);
+    ds.writeLength(DataStream::fieldSize(peerAddress));
+    for(std::vector<std::string>::const_iterator it=peerAddress.begin(),end=peerAddress.end();it!=end;it++)
+    {
+      ds.writeStr(*it);
+    }
     ds.writeTag(bindModeTag);
-    ds.writeStrLV(bindMode);
+    ds.writeByteLV(bindMode);
+ 
     ds.writeTag(boundSmscTag);
     ds.writeLength(DataStream::fieldSize(boundSmsc));
     for(std::vector<bool>::const_iterator it=boundSmsc.begin(),end=boundSmsc.end();it!=end;it++)
@@ -276,7 +300,12 @@ public:
           {
             throw eyeline::protogen::framework::DuplicateFieldException("peerAddress");
           }
-          peerAddress=ds.readStrLV();
+          typename DataStream::LengthType len=ds.readLength(),rd=0;
+          while(rd<len)
+          {
+            peerAddress.push_back(ds.readStr());
+            rd+=DataStream::fieldSize(peerAddress.back());
+          }
           peerAddressFlag=true;
         }break;
         case bindModeTag:
@@ -285,7 +314,7 @@ public:
           {
             throw eyeline::protogen::framework::DuplicateFieldException("bindMode");
           }
-          bindMode=ds.readStrLV();
+          bindMode=ds.readByteLV();
           bindModeFlag=true;
         }break;
         case boundSmscTag:
@@ -346,8 +375,8 @@ protected:
 
 
   std::string serviceName;
-  std::string peerAddress;
-  std::string bindMode;
+  std::vector<std::string> peerAddress;
+  SmeBindMode::type bindMode;
   std::vector<bool> boundSmsc;
 
   bool serviceNameFlag;

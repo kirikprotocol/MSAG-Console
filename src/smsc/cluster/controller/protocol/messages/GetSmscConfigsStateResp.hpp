@@ -1,14 +1,15 @@
-#ifndef __GENERATED_MESSAGE_SMSC_CLUSTER_CONTROLLER_PROTOCOL_MESSAGES_SMEDISCONNECTRESP_HPP__
-#define __GENERATED_MESSAGE_SMSC_CLUSTER_CONTROLLER_PROTOCOL_MESSAGES_SMEDISCONNECTRESP_HPP__
+#ifndef __GENERATED_MESSAGE_SMSC_CLUSTER_CONTROLLER_PROTOCOL_MESSAGES_GETSMSCCONFIGSSTATERESP_HPP__
+#define __GENERATED_MESSAGE_SMSC_CLUSTER_CONTROLLER_PROTOCOL_MESSAGES_GETSMSCCONFIGSSTATERESP_HPP__
 
 #include <inttypes.h>
 #include <string>
 #include <vector>
 #include "eyeline/protogen/framework/Exceptions.hpp"
-#include "MultiResponse.hpp"
+#include "Response.hpp"
+#include "SmscConfigsState.hpp"
 
 
-#ident "@(#) SmeDisconnectResp version 1.0"
+#ident "@(#) GetSmscConfigsStateResp version 1.0"
 
 
 
@@ -19,9 +20,9 @@ namespace protocol{
 namespace messages{
 
 
-class SmeDisconnectResp{
+class GetSmscConfigsStateResp{
 public:
-  SmeDisconnectResp()
+  GetSmscConfigsStateResp()
   {
     Clear();
   }
@@ -29,11 +30,12 @@ public:
   {
     seqNum=0;
     respFlag=false;
+    stateFlag=false;
   }
  
   static int32_t getTag()
   {
-    return 1022;
+    return 1205;
   }
 
   std::string toString()const
@@ -53,6 +55,17 @@ public:
       rv+=resp.toString();
       rv+=')';
     }
+    if(stateFlag)
+    {
+      if(rv.length()>0)
+      {
+        rv+=";";
+      }
+      rv+="state=";
+      rv+='(';
+      rv+=state.toString();
+      rv+=')';
+    }
     return rv;
   }
 
@@ -66,10 +79,16 @@ public:
       rv+=DataStream::lengthTypeSize;
       rv+=resp.length<DataStream>();
     }
+    if(stateFlag)
+    {
+      rv+=DataStream::tagTypeSize;
+      rv+=DataStream::lengthTypeSize;
+      rv+=state.length<DataStream>();
+    }
     rv+=DataStream::tagTypeSize;
     return rv;
   }
-  const MultiResponse& getResp()const
+  const Response& getResp()const
   {
     if(!respFlag)
     {
@@ -77,12 +96,12 @@ public:
     }
     return resp;
   }
-  void setResp(const MultiResponse& argValue)
+  void setResp(const Response& argValue)
   {
     resp=argValue;
     respFlag=true;
   }
-  MultiResponse& getRespRef()
+  Response& getRespRef()
   {
     respFlag=true;
     return resp;
@@ -91,6 +110,28 @@ public:
   {
     return respFlag;
   }
+  const SmscConfigsState& getState()const
+  {
+    if(!stateFlag)
+    {
+      throw eyeline::protogen::framework::FieldIsNullException("state");
+    }
+    return state;
+  }
+  void setState(const SmscConfigsState& argValue)
+  {
+    state=argValue;
+    stateFlag=true;
+  }
+  SmscConfigsState& getStateRef()
+  {
+    stateFlag=true;
+    return state;
+  }
+  bool hasState()const
+  {
+    return stateFlag;
+  }
   template <class DataStream>
   void serialize(DataStream& ds)const
   {
@@ -98,12 +139,19 @@ public:
     {
       throw eyeline::protogen::framework::MandatoryFieldMissingException("resp");
     }
+    if(!stateFlag)
+    {
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("state");
+    }
     //ds.writeByte(versionMajor);
     //ds.writeByte(versionMinor);
     //ds.writeInt32(seqNum);
     ds.writeTag(respTag);
     ds.writeLength(resp.length<DataStream>());
     resp.serialize(ds);
+    ds.writeTag(stateTag);
+    ds.writeLength(state.length<DataStream>());
+    state.serialize(ds);
     ds.writeTag(DataStream::endOfMessage_tag);
   }
 
@@ -116,7 +164,7 @@ public:
     //int8_t rdVersionMinor=ds.readByte();
     //if(rdVersionMajor!=versionMajor)
     //{
-    //  throw protogen::framework::IncompatibleVersionException("SmeDisconnectResp");
+    //  throw protogen::framework::IncompatibleVersionException("GetSmscConfigsStateResp");
     //}
     //seqNum=ds.readInt32();
     while(!endOfMessage)
@@ -134,13 +182,23 @@ public:
           ds.readLength();resp.deserialize(ds);
           respFlag=true;
         }break;
+        case stateTag:
+        {
+          if(stateFlag)
+          {
+            throw eyeline::protogen::framework::DuplicateFieldException("state");
+          }
+
+          ds.readLength();state.deserialize(ds);
+          stateFlag=true;
+        }break;
         case DataStream::endOfMessage_tag:
           endOfMessage=true;
           break;
         default:
           //if(rdVersionMinor==versionMinor)
           //{
-          //  throw protogen::framework::UnexpectedTag("SmeDisconnectResp",tag);
+          //  throw protogen::framework::UnexpectedTag("GetSmscConfigsStateResp",tag);
           //}
           ds.skip(ds.readLength());
       }
@@ -148,6 +206,10 @@ public:
     if(!respFlag)
     {
       throw eyeline::protogen::framework::MandatoryFieldMissingException("resp");
+    }
+    if(!stateFlag)
+    {
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("state");
     }
 
   }
@@ -169,12 +231,15 @@ protected:
   //static const int8_t versionMinor=0;
 
   static const int32_t respTag=1;
+  static const int32_t stateTag=2;
 
   int32_t seqNum;
 
-  MultiResponse resp;
+  Response resp;
+  SmscConfigsState state;
 
   bool respFlag;
+  bool stateFlag;
 };
 
 }

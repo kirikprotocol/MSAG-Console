@@ -21,3 +21,4 @@ scheduler
 mscman
 statemachine
 interconnect
+configregistry

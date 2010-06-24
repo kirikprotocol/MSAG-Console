@@ -20,7 +20,6 @@ enum ConfigType{
   ctClosedGroups,//+
   ctAliases,//+
   ctMapLimits,//+
-  ctRegions,
   ctResources,//+
   ctReschedule,//+
   ctSnmp,

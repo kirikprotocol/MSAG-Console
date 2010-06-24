@@ -12,6 +12,7 @@
 #include "core/buffers/TmpBuf.hpp"
 
 #include "NetworkDispatcher.hpp"
+#include "smsc/configregistry/ConfigRegistry.hpp"
 
 namespace smsc{
 namespace cluster{
@@ -66,6 +67,17 @@ void NetworkDispatcher::Init(int argNodeIndex,const char* host,int port)
   instance->ctrlHandler.Init();
   instance->reader.Start();
   instance->writer.Start();
+  instance->enqueueReg();
+}
+
+void NetworkDispatcher::enqueueReg()
+{
+  proto::RegisterAsSmsc msg;
+  msg.setSeqNum(getNextSeq());
+  msg.setNodeIndex(nodeIndex);
+  msg.setMagic(eyeline::clustercontroller::protocol::pmSmsc);
+  smsc::configregistry::ConfigRegistry::getInstance()->get(msg.getConfigUpdateTimesRef());
+  enqueueMessage(msg);
 }
 
 void NetworkDispatcher::Connect()
@@ -97,12 +109,6 @@ void NetworkDispatcher::ReadLoop()
       {
         sleep(5);
         continue;
-      }else
-      {
-        proto::RegisterAsSmsc msg;
-        msg.setNodeIndex(nodeIndex);
-        msg.setMagic(eyeline::clustercontroller::protocol::pmSmsc);
-        enqueueMessage(msg);
       }
     }
     if(sck.ReadAll((char*)(&packetLen), 4) != 4)
@@ -137,6 +143,7 @@ inline void NetworkDispatcher::Disconnect()
 {
   sck.Close();
   connected=false;
+  enqueueReg();
 }
 
 void NetworkDispatcher::WriteLoop()

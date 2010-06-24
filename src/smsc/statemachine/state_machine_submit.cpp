@@ -1394,32 +1394,33 @@ StateType StateMachine::submitChargeResp(Tuple& t)
     ResponseGuard(SMS* s,SmeProxy* p,StateMachine *st,SMSId id):sms(s),prx(p),sm(st),msgId(id){}
     ~ResponseGuard()
     {
-      if(!sms)return;
-
-      if(sms->lastResult!=Status::OK)
+      if(sms)
       {
-        sm->onDeliveryFail(msgId,*sms);
-      }
-
-      bool sandf=(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0 ||
-                 (sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x3;
-
-      if(!sandf && sms->lastResult!=Status::OK)
-      {
-        SmscCommand resp = SmscCommand::makeSubmitSmResp
-            (
-                "0",
-                sms->dialogId,
-                sms->lastResult,
-                sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
-            );
-        resp->dstNodeIdx=dstNodeIndex;
-        resp->sourceId=smeSysId;
-        try{
-          prx->putCommand(resp);
-        }catch(...)
+        if(sms->lastResult!=Status::OK)
         {
-          warn1(sm->smsLog,"SUBMIT: failed to put response command");
+          sm->onDeliveryFail(msgId,*sms);
+        }
+
+        bool sandf=(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0 ||
+            (sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x3;
+
+        if(!sandf && sms->lastResult!=Status::OK)
+        {
+          SmscCommand resp = SmscCommand::makeSubmitSmResp
+              (
+                  "0",
+                  sms->dialogId,
+                  sms->lastResult,
+                  sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
+              );
+          resp->dstNodeIdx=dstNodeIndex;
+          resp->sourceId=smeSysId;
+          try{
+            prx->putCommand(resp);
+          }catch(...)
+          {
+            warn1(sm->smsLog,"SUBMIT: failed to put response command");
+          }
         }
       }
     }

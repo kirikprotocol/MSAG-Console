@@ -10,6 +10,7 @@
 #include "router/RouterConfig.hpp"
 #include "alias/AliasConfig.hpp"
 #include "eyeline/clustercontroller/acl/AclConfig.hpp"
+#include "eyeline/clustercontroller/configregistry/ConfigRegistry.hpp"
 
 int main()
 {
@@ -19,13 +20,18 @@ int main()
     smsc::util::config::Manager::init("config.xml");
     smsc::util::config::Manager& cfg=  smsc::util::config::Manager::getInstance();
     using namespace eyeline::clustercontroller;
+    configregistry::ConfigRegistry::Init(cfg.getString("configs.registryStoreFile"));
     profiler::ProfilerConfig::Init(cfg.getString("configs.profiler"));
+    configregistry::ConfigRegistry::getInstance()->update(ctProfiles);
     smsc::closedgroups::ClosedGroupsManager::Init();
     smsc::closedgroups::ClosedGroupsManager::getInstance()->Load(cfg.getString("configs.closedgroups"));
     smsc::closedgroups::ClosedGroupsManager::getInstance()->enableControllerMode();
+    configregistry::ConfigRegistry::getInstance()->update(ctClosedGroups);
     router::RouterConfig::Init(cfg.getString("configs.router"),cfg.getString("configs.smeman"));
     alias::AliasConfig::Init(cfg.getString("configs.aliasStore"));
-    acl::AclConfig::Init(cfg.getString("configs.aclStore"),cfg.getInt("configs.aclPreCreate"));
+    configregistry::ConfigRegistry::getInstance()->update(ctAliases);
+    acl::AclConfig::Init(cfg.getString("configs.aclStore"),10);
+    configregistry::ConfigRegistry::getInstance()->update(ctAcl);
     NetworkProtocol::Init();
     ConfigLockManager::Init();
     char buf[128];

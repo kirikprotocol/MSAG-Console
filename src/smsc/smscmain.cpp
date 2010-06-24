@@ -18,6 +18,7 @@
 
 #include "smsc/cluster/controller/NetworkDispatcher.hpp"
 #include "smsc/cluster/controller/ConfigLockGuard.hpp"
+#include "smsc/configregistry/ConfigRegistry.hpp"
 
 
 extern "C" void atExitHandler(void)
@@ -74,16 +75,20 @@ int main(int argc,char* argv[])
   smsc::clearThreadSignalMask();
 
   try{
-
-    smsc::cluster::controller::NetworkDispatcher::Init(nodeIdx,cchost.c_str(),ccport);
-
     smsc::logger::Logger *logger = smsc::logger::Logger::getInstance("smscmain");
     smsc_log_info(logger,"\n==========================\nStarting Smsc.\n==========================");
+
+    smsc::configregistry::ConfigRegistry::Init();
+    smsc::cluster::controller::NetworkDispatcher::Init(nodeIdx,cchost.c_str(),ccport);
+
+
 
     smsc::SmscConfigs cfgs;
     {
       smsc::cluster::controller::ConfigLockGuard clg(eyeline::clustercontroller::ctMainConfig);
       smsc::util::config::Manager::init(findConfigFile("config.xml"));
+
+      smsc::configregistry::ConfigRegistry::getInstance()->update(eyeline::clustercontroller::ctMainConfig);
     }
     cfgs.cfgman=&cfgs.cfgman->getInstance();
 
@@ -94,12 +99,14 @@ int main(int argc,char* argv[])
     {
       smsc::cluster::controller::ConfigLockGuard clg(eyeline::clustercontroller::ctResources);
       smsc::resourcemanager::ResourceManager::init(cfgs.cfgman->getString("core.locales"), cfgs.cfgman->getString("core.default_locale"));
+      smsc::configregistry::ConfigRegistry::getInstance()->update(eyeline::clustercontroller::ctResources);
     }
     smsc_log_info(logger,  "Locale resources loaded" );
     smsc::config::smeman::SmeManConfig smemancfg;
     {
       smsc::cluster::controller::ConfigLockGuard clg(eyeline::clustercontroller::ctSme);
       smemancfg.load(findConfigFile("sme.xml"));
+      smsc::configregistry::ConfigRegistry::getInstance()->update(eyeline::clustercontroller::ctSme);
     }
     cfgs.smemanconfig=&smemancfg;
     smsc_log_info(logger,  "SME configuration loaded" );
@@ -107,6 +114,7 @@ int main(int argc,char* argv[])
     {
       smsc::cluster::controller::ConfigLockGuard clg(eyeline::clustercontroller::ctRoutes);
       rc.load(findConfigFile("routes.xml"));
+      smsc::configregistry::ConfigRegistry::getInstance()->update(eyeline::clustercontroller::ctRoutes);
     }
     cfgs.routesconfig=&rc;
     smsc_log_info(logger,  "Route configuration loaded" );

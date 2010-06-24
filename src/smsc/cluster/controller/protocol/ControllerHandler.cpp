@@ -17,6 +17,7 @@
 
 #include "ControllerHandler.hpp"
 #include "smsc/smeman/smsccmd.h"
+#include "smsc/configregistry/ConfigRegistry.hpp"
 
 using smsc::config::route::RouteConfig;
 using smsc::smeman::SmeProxy;
@@ -42,6 +43,7 @@ void ControllerHandler::handle(const messages::ApplyRoutes& msg)
   smsc.getConfigs()->routesconfig->reload();
   smsc.getConfigs()->smemanconfig->reload();
   smsc.reloadRoutes();
+  smsc::configregistry::ConfigRegistry::getInstance()->update(eyeline::clustercontroller::ctRoutes);
   messages::ApplyRoutesResp resp;
   prepareMultiResp(msg,resp,0);
   NetworkDispatcher::getInstance().enqueueMessage(resp);
@@ -52,6 +54,7 @@ void ControllerHandler::handle(const messages::ApplyReschedule& msg)
   int status=0;
   try{
     smsc.reloadReschedule();
+    smsc::configregistry::ConfigRegistry::getInstance()->update(eyeline::clustercontroller::ctReschedule);
   }catch(std::exception& e)
   {
     smsc_log_info(log,"reload reschedule failed:%s",e.what());
@@ -66,6 +69,7 @@ void ControllerHandler::handle(const messages::ApplyLocaleResource& msg)
   Smsc& smsc=Smsc::getInstance();
   smsc::util::config::Manager& cfgman=*smsc.getConfigs()->cfgman;
   smsc::resourcemanager::ResourceManager::reload(cfgman.getString("core.locales"), cfgman.getString("core.default_locale"));
+  smsc::configregistry::ConfigRegistry::getInstance()->update(eyeline::clustercontroller::ctResources);
   messages::ApplyLocaleResourceResp resp;
   prepareMultiResp(msg,resp,0);
   NetworkDispatcher::getInstance().enqueueMessage(resp);
@@ -75,6 +79,7 @@ void ControllerHandler::handle(const messages::ApplyTimeZones& msg)
   int status=0;
   try{
     smsc::common::TimeZoneManager::getInstance().Reload();
+    smsc::configregistry::ConfigRegistry::getInstance()->update(eyeline::clustercontroller::ctTimeZones);
   }catch(std::exception& e)
   {
     smsc_log_info(log,"apply time zones failed:%s",e.what());
@@ -89,6 +94,7 @@ void ControllerHandler::handle(const messages::ApplyFraudControl& msg)
   int status=0;
   try{
     smsc::mapio::FraudControl::getInstance()->Reload();
+    smsc::configregistry::ConfigRegistry::getInstance()->update(eyeline::clustercontroller::ctFraud);
   }catch(std::exception& e)
   {
     smsc_log_info(log,"apply fraud control failed:%s",e.what());
@@ -103,6 +109,7 @@ void ControllerHandler::handle(const messages::ApplyMapLimits& msg)
   int status=0;
   try{
     smsc::mapio::MapLimits::getInstance().Reinit();
+    smsc::configregistry::ConfigRegistry::getInstance()->update(eyeline::clustercontroller::ctMapLimits);
   }catch(std::exception& e)
   {
     smsc_log_info(log,"apply map limits failed:%s",e.what());
@@ -119,6 +126,7 @@ void ControllerHandler::handle(const messages::ApplySnmp& msg)
 #ifdef SNMP
     smsc::snmp::SnmpCounter::getInstance().ReloadCfg();
 #endif
+    smsc::configregistry::ConfigRegistry::getInstance()->update(eyeline::clustercontroller::ctSnmp);
   }catch(std::exception& e)
   {
     smsc_log_info(log,"apply snmp failed:%s",e.what());
@@ -375,6 +383,7 @@ void ControllerHandler::handle(const messages::UpdateProfile& msg)
   {
     profiler->update(address,p);
   }
+  smsc::configregistry::ConfigRegistry::getInstance()->update(eyeline::clustercontroller::ctProfiles);
   messages::UpdateProfileResp resp;
 
   prepareMultiResp(msg,resp,0);
@@ -385,6 +394,7 @@ void ControllerHandler::handle(const messages::DeleteProfile& msg)
   smsc::profiler::ProfilerInterface* profiler=Smsc::getInstance().getProfiler();
   smsc::sms::Address address(msg.getAddress().c_str());
   profiler->remove(address);
+  smsc::configregistry::ConfigRegistry::getInstance()->update(eyeline::clustercontroller::ctProfiles);
   messages::DeleteProfileResp resp;
   prepareMultiResp(msg,resp,0);
   NetworkDispatcher::getInstance().enqueueMessage(resp);
@@ -422,6 +432,7 @@ void ControllerHandler::handle(const messages::CancelSms& msg)
 void ControllerHandler::handle(const messages::MscAdd& msg)
 {
   smsc::mscman::MscManager::getInstance().add(msg.getMsc().c_str());
+  smsc::configregistry::ConfigRegistry::getInstance()->update(eyeline::clustercontroller::ctMsc);
   messages::MscAddResp resp;
   prepareMultiResp(msg,resp,0);
   NetworkDispatcher::getInstance().enqueueMessage(resp);
@@ -429,6 +440,7 @@ void ControllerHandler::handle(const messages::MscAdd& msg)
 void ControllerHandler::handle(const messages::MscRemove& msg)
 {
   smsc::mscman::MscManager::getInstance().remove(msg.getMsc().c_str());
+  smsc::configregistry::ConfigRegistry::getInstance()->update(eyeline::clustercontroller::ctMsc);
   messages::MscRemoveResp resp;
   prepareMultiResp(msg,resp,0);
   NetworkDispatcher::getInstance().enqueueMessage(resp);
@@ -464,6 +476,7 @@ void ControllerHandler::handle(const messages::SmeAdd& msg)
   int status=0;
   try{
     Smsc::getInstance().getSmeAdmin()->addSme(si);
+    smsc::configregistry::ConfigRegistry::getInstance()->update(eyeline::clustercontroller::ctSme);
   }catch(std::exception& e)
   {
     status=1;
@@ -480,6 +493,7 @@ void ControllerHandler::handle(const messages::SmeUpdate& msg)
   int status=0;
   try{
     Smsc::getInstance().getSmeAdmin()->updateSmeInfo(si.systemId,si);
+    smsc::configregistry::ConfigRegistry::getInstance()->update(eyeline::clustercontroller::ctSme);
   }catch(std::exception& e)
   {
     status=1;
@@ -494,6 +508,7 @@ void ControllerHandler::handle(const messages::SmeRemove& msg)
   int status=0;
   try{
     Smsc::getInstance().getSmeAdmin()->deleteSme(msg.getSmeId().c_str());
+    smsc::configregistry::ConfigRegistry::getInstance()->update(eyeline::clustercontroller::ctSme);
   }catch(std::exception& e)
   {
     status=1;
@@ -505,7 +520,8 @@ void ControllerHandler::handle(const messages::SmeRemove& msg)
 }
 void ControllerHandler::handle(const messages::SmeStatus& msg)
 {
-  std::vector<messages::SmeStatusInfo> respList;
+  messages::SmeStatusResp resp;
+  std::vector<messages::SmeStatusInfo>& respList=resp.getStatusRef();
   for (std::auto_ptr<smsc::smeman::SmeIterator> i(Smsc::getInstance().getSmeAdmin()->iterator()); i.get() != NULL;)
   {
     messages::SmeStatusInfo ssi;
@@ -553,8 +569,6 @@ void ControllerHandler::handle(const messages::SmeStatus& msg)
       break;
     }
   }
-  messages::SmeStatusResp resp;
-  resp.setStatus(respList);
   prepareResp(msg,resp,0);
   NetworkDispatcher::getInstance().enqueueMessage(resp);
 }
@@ -584,7 +598,7 @@ void ControllerHandler::handle(const messages::SmeDisconnect& msg)
     smsc_log_warn(log,"disconnect sme failed:%s",e.what());
   }
   messages::SmeDisconnectResp resp;
-  prepareResp(msg,resp,status);
+  prepareMultiResp(msg,resp,status);
   NetworkDispatcher::getInstance().enqueueMessage(resp);
 }
 void ControllerHandler::handle(const messages::LoggerGetCategories& msg)
@@ -635,7 +649,7 @@ static void AclToMsg(const smsc::acls::AclInfo& acl,messages::AclInfo& msg)
   msg.setCacheType(acl.cache);
 }
 
-void ControllerHandler::handle(const messages::AclGet& msg)
+/*void ControllerHandler::handle(const messages::AclGet& msg)
 {
   smsc::acls::AclAbstractMgr* aclMgr=Smsc::getInstance().getAclMgr();
   messages::AclGetResp resp;
@@ -678,7 +692,7 @@ void ControllerHandler::handle(const messages::AclList& msg)
   }
   prepareResp(msg,resp,status);
   NetworkDispatcher::getInstance().enqueueMessage(resp);
-}
+}*/
 void ControllerHandler::handle(const messages::AclRemove& msg)
 {
   smsc::acls::AclAbstractMgr* aclMgr=Smsc::getInstance().getAclMgr();
@@ -686,6 +700,7 @@ void ControllerHandler::handle(const messages::AclRemove& msg)
   int status=0;
   try{
     aclMgr->remove(msg.getAclId());
+    smsc::configregistry::ConfigRegistry::getInstance()->update(eyeline::clustercontroller::ctAcl);
   }catch(std::exception& e)
   {
     status=1;
@@ -701,6 +716,7 @@ void ControllerHandler::handle(const messages::AclCreate& msg)
   int status=0;
   try{
     resp.setId(aclMgr->create2(msg.getName().c_str(),msg.getDescription().c_str(),msg.getAddresses(),(smsc::acls::AclCacheType)msg.getCacheType()));
+    smsc::configregistry::ConfigRegistry::getInstance()->update(eyeline::clustercontroller::ctAcl);
   }catch(std::exception& e)
   {
     status=1;
@@ -717,6 +733,7 @@ void ControllerHandler::handle(const messages::AclUpdate& msg)
   try{
     const messages::AclInfo& ai=msg.getAcl();
     aclMgr->updateAclInfo(ai.getId(),ai.getName().c_str(),ai.getDescription().c_str(),(smsc::acls::AclCacheType)ai.getCacheType());
+    smsc::configregistry::ConfigRegistry::getInstance()->update(eyeline::clustercontroller::ctAcl);
   }catch(std::exception& e)
   {
     status=1;
@@ -725,6 +742,7 @@ void ControllerHandler::handle(const messages::AclUpdate& msg)
   prepareMultiResp(msg,resp,status);
   NetworkDispatcher::getInstance().enqueueMessage(resp);
 }
+/*
 void ControllerHandler::handle(const messages::AclLookup& msg)
 {
   smsc::acls::AclAbstractMgr* aclMgr=Smsc::getInstance().getAclMgr();
@@ -743,7 +761,7 @@ void ControllerHandler::handle(const messages::AclLookup& msg)
   }
   prepareResp(msg,resp,status);
   NetworkDispatcher::getInstance().enqueueMessage(resp);
-}
+}*/
 void ControllerHandler::handle(const messages::AclRemoveAddresses& msg)
 {
   smsc::acls::AclAbstractMgr* aclMgr=Smsc::getInstance().getAclMgr();
@@ -755,6 +773,7 @@ void ControllerHandler::handle(const messages::AclRemoveAddresses& msg)
     {
       aclMgr->removePhone(msg.getAclId(),*it);
     }
+    smsc::configregistry::ConfigRegistry::getInstance()->update(eyeline::clustercontroller::ctAcl);
   }catch(std::exception& e)
   {
     status=1;
@@ -774,6 +793,7 @@ void ControllerHandler::handle(const messages::AclAddAddresses& msg)
     {
       aclMgr->addPhone(msg.getAclId(),*it);
     }
+    smsc::configregistry::ConfigRegistry::getInstance()->update(eyeline::clustercontroller::ctAcl);
   }catch(std::exception& e)
   {
     status=1;
@@ -1151,6 +1171,7 @@ void ControllerHandler::handle(const messages::CgmAddGroup& msg)
   messages::CgmAddGroupResp resp;
   try{
     cgm->AddGroup(msg.getId(),msg.getName().c_str());
+    smsc::configregistry::ConfigRegistry::getInstance()->update(eyeline::clustercontroller::ctClosedGroups);
   }catch(std::exception& e)
   {
     status=1;
@@ -1166,6 +1187,7 @@ void ControllerHandler::handle(const messages::CgmDeleteGroup& msg)
   messages::CgmDeleteGroupResp resp;
   try{
     cgm->DeleteGroup(msg.getId());
+    smsc::configregistry::ConfigRegistry::getInstance()->update(eyeline::clustercontroller::ctClosedGroups);
   }catch(std::exception& e)
   {
     status=1;
@@ -1181,6 +1203,7 @@ void ControllerHandler::handle(const messages::CgmAddAddr& msg)
   messages::CgmAddAddrResp resp;
   try{
     cgm->AddAddrToGroup(msg.getId(),msg.getAddr().c_str());
+    smsc::configregistry::ConfigRegistry::getInstance()->update(eyeline::clustercontroller::ctClosedGroups);
   }catch(std::exception& e)
   {
     status=1;
@@ -1189,6 +1212,7 @@ void ControllerHandler::handle(const messages::CgmAddAddr& msg)
   prepareMultiResp(msg,resp,status);
   NetworkDispatcher::getInstance().enqueueMessage(resp);
 }
+/*
 void ControllerHandler::handle(const messages::CgmCheck& msg)
 {
   smsc::closedgroups::ClosedGroupsInterface* cgm=smsc::closedgroups::ClosedGroupsInterface::getInstance();
@@ -1203,7 +1227,7 @@ void ControllerHandler::handle(const messages::CgmCheck& msg)
   }
   prepareResp(msg,resp,status);
   NetworkDispatcher::getInstance().enqueueMessage(resp);
-}
+}*/
 void ControllerHandler::handle(const messages::CgmDelAddr& msg)
 {
   smsc::closedgroups::ClosedGroupsInterface* cgm=smsc::closedgroups::ClosedGroupsInterface::getInstance();
@@ -1211,6 +1235,7 @@ void ControllerHandler::handle(const messages::CgmDelAddr& msg)
   messages::CgmDelAddrResp resp;
   try{
     cgm->RemoveAddrFromGroup(msg.getId(),msg.getAddr().c_str());
+    smsc::configregistry::ConfigRegistry::getInstance()->update(eyeline::clustercontroller::ctClosedGroups);
   }catch(std::exception& e)
   {
     status=1;
@@ -1226,6 +1251,7 @@ void ControllerHandler::handle(const messages::CgmAddAbonent& msg)
   messages::CgmAddAbonentResp resp;
   try{
     cgm->AddAbonent(msg.getId(),msg.getAddr().c_str());
+    smsc::configregistry::ConfigRegistry::getInstance()->update(eyeline::clustercontroller::ctClosedGroups);
   }catch(std::exception& e)
   {
     status=1;
@@ -1241,6 +1267,7 @@ void ControllerHandler::handle(const messages::CgmDelAbonent& msg)
   messages::CgmDelAbonentResp resp;
   try{
     cgm->RemoveAbonent(msg.getId(),msg.getAddr().c_str());
+    smsc::configregistry::ConfigRegistry::getInstance()->update(eyeline::clustercontroller::ctClosedGroups);
   }catch(std::exception& e)
   {
     status=1;
@@ -1248,7 +1275,7 @@ void ControllerHandler::handle(const messages::CgmDelAbonent& msg)
   }
   prepareMultiResp(msg,resp,status);
   NetworkDispatcher::getInstance().enqueueMessage(resp);
-}
+}/*
 void ControllerHandler::handle(const messages::CgmListAbonents& msg)
 {
   smsc::closedgroups::ClosedGroupsInterface* cgm=smsc::closedgroups::ClosedGroupsInterface::getInstance();
@@ -1270,7 +1297,7 @@ void ControllerHandler::handle(const messages::CgmListAbonents& msg)
   }
   prepareResp(msg,resp,status);
   NetworkDispatcher::getInstance().enqueueMessage(resp);
-}
+}*/
 void ControllerHandler::handle(const messages::AliasAdd& msg)
 {
   smsc::alias::AliasManager* aliaser=Smsc::getInstance().getAliaserInstance();
@@ -1282,6 +1309,7 @@ void ControllerHandler::handle(const messages::AliasAdd& msg)
     ai.alias=msg.getAlias().c_str();
     ai.hide=msg.getHide();
     aliaser->addAlias(ai);
+    smsc::configregistry::ConfigRegistry::getInstance()->update(eyeline::clustercontroller::ctAliases);
   }catch(std::exception& e)
   {
     status=1;
@@ -1297,6 +1325,7 @@ void ControllerHandler::handle(const messages::AliasDel& msg)
   messages::AliasDelResp resp;
   try{
     aliaser->deleteAlias(msg.getAlias().c_str());
+    smsc::configregistry::ConfigRegistry::getInstance()->update(eyeline::clustercontroller::ctAliases);
   }catch(std::exception& e)
   {
     status=1;
@@ -1334,15 +1363,22 @@ void ControllerHandler::handle(const messages::ReplaceIfPresentRequestResp& msg)
 void ControllerHandler::handle(const messages::LockConfigResp& msg)
 {
   NetworkDispatcher::getInstance().notifyOnMessageResp(msg.getSeqNum(),msg.getResp().getStatus());
-  //!!!TODO!!!
-  //  prepareResp(msg,resp,status);
-  //  NetworkDispatcher::getInstance().enqueueMessage(resp);
 }
 
 void ControllerHandler::handle(const messages::UpdateProfileAbntResp& msg)
 {
   smsc::smeman::SmscCommand cmd=smsc::smeman::SmscCommand::makeCommand(smsc::smeman::PROFILEUPDATERESP,msg.getSeqNum(),msg.getResp().getStatus(),0);
   Smsc::getInstance().getProfiler()->putCommand(cmd);
+}
+
+
+void ControllerHandler::handle(const messages::GetSmscConfigsState& msg)
+{
+  messages::GetSmscConfigsStateResp resp;
+  prepareResp(msg,resp,0);
+  resp.getStateRef().setNodeIdex(nodeIdx);
+  configregistry::ConfigRegistry::getInstance()->get(resp.getStateRef().getUpdateTimeRef());
+  NetworkDispatcher::getInstance().enqueueMessage(resp);
 }
 
 /*

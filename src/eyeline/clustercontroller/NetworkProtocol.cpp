@@ -363,24 +363,28 @@ void NetworkProtocol::processTimers()
         {
           continue;
         }
-        if(it->second->isMultiResp())
-        {
-          MultiRespInfoBase* mr=(MultiRespInfoBase*)it->second;
-          respMap.erase(it);
-          mr->respIds.push_back(key.nodeIdx);
-          mr->statuses.push_back(1);
-          if(mr->respIds.size()==mr->reqIds.size())
+        try{
+          if(it->second->isMultiResp())
           {
-            mr->send();
-            delete mr;
+            MultiRespInfoBase* mr=(MultiRespInfoBase*)it->second;
+            respMap.erase(it);
+            mr->respIds.push_back(key.nodeIdx);
+            mr->statuses.push_back(1);
+            if(mr->respIds.size()==mr->reqIds.size())
+            {
+              mr->send();
+              delete mr;
+            }
+          }else
+          {
+            NormalRespInfoBase* nr=(NormalRespInfoBase*)it->second;
+            respMap.erase(it);
+            nr->status=1;
+            nr->send();
           }
-        }else
+        }catch(std::exception& e)
         {
-          NormalRespInfoBase* nr=(NormalRespInfoBase*)it->second;
-          respMap.erase(it);
-          nr->status=1;
-          nr->send();
-
+          smsc_log_warn(log,"Exception during timers processing:%s",e.what());
         }
       }
     }

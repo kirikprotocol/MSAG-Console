@@ -12,6 +12,7 @@
 #include "logger/Logger.h"
 #include "protocol/ControllerProtocol.hpp"
 #include "util/TimeSource.h"
+#include "NetworkProtocol.hpp"
 
 namespace eyeline{
 namespace clustercontroller{
@@ -127,11 +128,11 @@ public:
   template <class CommandType,class RespType>
   size_t enqueueMultirespCommandEx(int srcConnId,CommandType& cmd,RespType& resp,ConfigType ct)
   {
+    MultiRespInfoEx<RespType>* respInfo=new MultiRespInfoEx<RespType>(resp);
     sync::MutexGuard mg(respMon);
     smsc_log_debug(log,"sending multiresp command from connId=%d",srcConnId);
     std::vector<int> ids;
     getConnIdsOfType(ctSmsc,ids);
-    MultiRespInfoEx<RespType>* respInfo=new MultiRespInfoEx<RespType>(resp);
     respInfo->connId=srcConnId;
     respInfo->seq=cmd.getSeqNum();
     time_t now=smsc::util::TimeSourceSetup::AbsSec::getSeconds();
@@ -154,6 +155,123 @@ public:
     return respInfo->reqIds.size();
   }
 
+  template <class RespType>
+  void createGatherReq(int srcConnId,int srcSeqNum,const RespType& respMsg)
+  {
+    GatherRespInfo<RespType>* respInfo=new GatherRespInfo<RespType>(respMsg);
+    time_t now=smsc::util::TimeSourceSetup::AbsSec::getSeconds();
+    sync::MutexGuard mg(respMon);
+    respInfo->connId=srcConnId;
+    respInfo->seq=srcSeqNum;
+    RespKey key(srcConnId,srcSeqNum);
+    respMap.insert(RespMap::value_type(key,respInfo));
+    respTimers.insert(RespTimerMap::value_type(now+respTimeout,key));
+  }
+
+  void addToGatherReq(int srcConnId,int srcSeqNum,int dstConnId,int dstSeqNum)
+  {
+    sync::MutexGuard mg(respMon);
+    RespKey key(srcConnId,srcSeqNum);
+    RespMap::iterator it=respMap.find(key);
+    if(it==respMap.end())
+    {
+      smsc_log_warn(log,"Gather resp not found for connId=%d, seqNum=%d",srcConnId,srcSeqNum);
+      return;
+    }
+    if(!it->second->isGatherResp())
+    {
+      smsc_log_warn(log,"Resp is not gather resp for connId=%d, seqNum=%d",srcConnId,srcSeqNum);
+      return;
+    }
+    GatherRespInfoBase* respInfo=(GatherRespInfoBase*)it->second;
+
+    respInfo->reqInfo.push_back(GatherRespInfoBase::GatherMsgInfo(dstConnId,dstSeqNum));
+    RespKey key2(dstConnId,dstSeqNum);
+    respMap.insert(RespMap::value_type(key2,respInfo));
+  }
+
+  void finishGatherReq(int srcConnId,int srcSeqNum)
+  {
+    sync::MutexGuard mg(respMon);
+    RespKey key(srcConnId,srcSeqNum);
+    RespMap::iterator it=respMap.find(key);
+    if(it==respMap.end())
+    {
+      smsc_log_warn(log,"Gather resp not found for connId=%d, seqNum=%d",srcConnId,srcSeqNum);
+      return;
+    }
+    if(!it->second->isGatherResp())
+    {
+      smsc_log_warn(log,"Resp is not gather resp for connId=%d, seqNum=%d",srcConnId,srcSeqNum);
+      return;
+    }
+    GatherRespInfoBase* respInfo=(GatherRespInfoBase*)it->second;
+    respInfo->allRequestsMade=true;
+    bool allDone=true;
+    for(size_t i=0;i<respInfo->reqInfo.size();i++)
+    {
+      if(!respInfo->reqInfo[i].completed)
+      {
+        allDone=false;
+        break;
+      }
+    }
+    if(allDone)
+    {
+      respInfo->send();
+      delete respInfo;
+      respMap.erase(it);
+    }
+  }
+
+  template <class UpdateOp>
+  void updateGatherResp(int dstConnId,int dstSeqNum,UpdateOp& op)
+  {
+    sync::MutexGuard mg(respMon);
+    RespKey key(dstConnId,dstSeqNum);
+    RespMap::iterator it=respMap.find(key);
+    if(it==respMap.end())
+    {
+      smsc_log_warn(log,"Gather resp not found for connId=%d, seqNum=%d",dstConnId,dstSeqNum);
+      return;
+    }
+    if(!it->second->isGatherResp())
+    {
+      smsc_log_warn(log,"Resp is not gather resp for connId=%d, seqNum=%d",dstConnId,dstSeqNum);
+      return;
+    }
+    GatherRespInfoBase::GatherMsgInfo info(dstConnId,dstSeqNum);
+    GatherRespInfo<typename UpdateOp::RespType>* respInfo=((GatherRespInfo<typename UpdateOp::RespType>*)it->second);
+    op(respInfo->respMsg);
+    for(size_t i=0;i<respInfo->reqInfo.size();i++)
+    {
+      if(respInfo->reqInfo[i]==info)
+      {
+        respInfo->reqInfo[i].completed=true;
+        break;
+      }
+    }
+    bool allDone=true;
+    for(size_t i=0;i<respInfo->reqInfo.size();i++)
+    {
+      if(!respInfo->reqInfo[i].completed)
+      {
+        allDone=false;
+        break;
+      }
+    }
+    if(allDone)
+    {
+      RespMap::iterator it2=respMap.find(RespKey(respInfo->connId,respInfo->seq));
+      if(it2!=respMap.end())
+      {
+        respMap.erase(it2);
+      }
+      respInfo->send();
+      delete respInfo;
+      respMap.erase(it);
+    }
+  }
 
   template <class MultiResp>
   void registerMultiResp(int connId,const MultiResp& msg)
@@ -181,6 +299,11 @@ public:
     mr->respIds.push_back(resp.getIds().front());
     if(mr->statuses.size()==mr->reqIds.size())
     {
+      RespMap::iterator it2=respMap.find(RespKey(mr->connId,mr->seq));
+      if(it2!=respMap.end())
+      {
+        respMap.erase(it2);
+      }
       it->second->send();
       delete it->second;
     }
@@ -283,6 +406,10 @@ protected:
     {
       return false;
     }
+    virtual bool isGatherResp()const
+    {
+      return false;
+    }
   };
   struct MultiRespInfoBase:RespInfoBase{
     std::vector<int8_t> reqIds;
@@ -342,8 +469,48 @@ protected:
       T msg;
       protocol::messages::Response resp;
       resp.setStatus(status);
+      msg.setResp(resp);
       msg.setSeqNum(seq);
       NetworkProtocol::getInstance()->enqueueCommand(connId,msg);
+    }
+  };
+
+  struct GatherRespInfoBase:RespInfoBase{
+    struct GatherMsgInfo{
+      int connId;
+      int seqNum;
+      bool completed;
+      GatherMsgInfo(int argConnId,int argSeqNum):connId(argConnId),seqNum(argSeqNum),completed(false)
+      {
+      }
+      bool operator==(const GatherMsgInfo& rhs)const
+      {
+        return connId==rhs.connId && seqNum==rhs.seqNum;
+      }
+    };
+    std::vector<GatherMsgInfo> reqInfo;
+    bool allRequestsMade;
+    GatherRespInfoBase():allRequestsMade(false)
+    {
+    }
+  };
+
+  template <class T>
+  struct GatherRespInfo:GatherRespInfoBase{
+    T respMsg;
+    GatherRespInfo(const T& argRespMsg):respMsg(argRespMsg)
+    {
+    }
+    bool isGatherResp()const
+    {
+      return true;
+    }
+    void send()
+    {
+      protocol::messages::Response resp;
+      resp.setStatus(0);
+      respMsg.setResp(resp);
+      NetworkProtocol::getInstance()->enqueueCommand(connId,respMsg);
     }
   };
 

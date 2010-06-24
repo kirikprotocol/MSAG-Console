@@ -42,6 +42,7 @@
 #include "smsc/cluster/controller/protocol/messages/UnlockConfig.hpp"
 #include "smsc/cluster/controller/ConfigLockGuard.hpp"
 #include "smsc/interconnect/ClusterInterconnect.hpp"
+#include "smsc/configregistry/ConfigRegistry.hpp"
 
 namespace smsc{
 
@@ -259,6 +260,7 @@ void Smsc::init(const SmscConfigs& cfg, int nodeIdx)
       snmpAgent->statusChange(SnmpAgent::INIT);
       smsc::cluster::controller::ConfigLockGuard clg(eyeline::clustercontroller::ctSnmp);
       SnmpCounter::Init(findConfigFile("snmp.xml"));
+      smsc::configregistry::ConfigRegistry::getInstance()->update(eyeline::clustercontroller::ctSnmp);
     }
 #endif
 
@@ -268,6 +270,7 @@ void Smsc::init(const SmscConfigs& cfg, int nodeIdx)
       std::string tzCfg=findConfigFile("timezones.xml");
       std::string rtCfg=findConfigFile("routes.xml");
       common::TimeZoneManager::Init(tzCfg.c_str(),rtCfg.c_str());
+      smsc::configregistry::ConfigRegistry::getInstance()->update(eyeline::clustercontroller::ctTimeZones);
     }
 
     {
@@ -357,6 +360,7 @@ void Smsc::init(const SmscConfigs& cfg, int nodeIdx)
       smsc::cluster::controller::ConfigLockGuard clg(eyeline::clustercontroller::ctAliases);
       aliaser=new smsc::alias::AliasManImpl(cfg.cfgman->getString("aliasman.storeFile"));
       aliaser->Load();
+      smsc::configregistry::ConfigRegistry::getInstance()->update(eyeline::clustercontroller::ctAliases);
     }
     smsc_log_info(log, "Aliases loaded" );
 
@@ -366,10 +370,12 @@ void Smsc::init(const SmscConfigs& cfg, int nodeIdx)
     {
       smsc::cluster::controller::ConfigLockGuard clg(eyeline::clustercontroller::ctFraud);
       mapio::FraudControl::Init(findConfigFile("fraud.xml"));
+      smsc::configregistry::ConfigRegistry::getInstance()->update(eyeline::clustercontroller::ctFraud);
     }
     {
       smsc::cluster::controller::ConfigLockGuard clg(eyeline::clustercontroller::ctMapLimits);
       mapio::MapLimits::Init(findConfigFile("maplimits.xml"));
+      smsc::configregistry::ConfigRegistry::getInstance()->update(eyeline::clustercontroller::ctMapLimits);
     }
 
 
@@ -442,6 +448,7 @@ void Smsc::init(const SmscConfigs& cfg, int nodeIdx)
     {
       smsc::cluster::controller::ConfigLockGuard clg(eyeline::clustercontroller::ctClosedGroups);
       smsc::closedgroups::ClosedGroupsManager::getInstance()->Load(findConfigFile("ClosedGroups.xml"));
+      smsc::configregistry::ConfigRegistry::getInstance()->update(eyeline::clustercontroller::ctClosedGroups);
     }
 
     {
@@ -479,6 +486,7 @@ void Smsc::init(const SmscConfigs& cfg, int nodeIdx)
     try{
       smsc::cluster::controller::ConfigLockGuard clg(eyeline::clustercontroller::ctReschedule);
       common::RescheduleCalculator::init(findConfigFile("schedule.xml"));
+      smsc::configregistry::ConfigRegistry::getInstance()->update(eyeline::clustercontroller::ctReschedule);
     }catch(std::exception& e)
     {
       smsc_log_warn(log, "Exception during reading 'schedule.xml':%s" ,e.what());
@@ -502,6 +510,7 @@ void Smsc::init(const SmscConfigs& cfg, int nodeIdx)
 
     aclmgr = AclAbstractMgr::Create2();
     aclmgr->LoadUp(cfg.cfgman->getString("acl.storeDir"),cfg.cfgman->getInt("acl.preCreateSize"));
+    smsc::configregistry::ConfigRegistry::getInstance()->update(eyeline::clustercontroller::ctAcl);
 
     /*distlstman=new DistrListManager(*cfg.cfgman);
 
@@ -520,6 +529,7 @@ void Smsc::init(const SmscConfigs& cfg, int nodeIdx)
       smsc::cluster::controller::ConfigLockGuard clg(eyeline::clustercontroller::ctMsc);
       smsc::mscman::MscManager::startup();
       smsc_log_info(log, "MSC manager started" );
+      smsc::configregistry::ConfigRegistry::getInstance()->update(eyeline::clustercontroller::ctMsc);
     }
 
     smsc_log_info(log, "Starting profiler" );
@@ -653,6 +663,7 @@ void Smsc::init(const SmscConfigs& cfg, int nodeIdx)
     {
       smsc::cluster::controller::ConfigLockGuard clg(eyeline::clustercontroller::ctProfiles);
       profiler->load(cfg.cfgman->getString("profiler.storeFile"));
+      smsc::configregistry::ConfigRegistry::getInstance()->update(eyeline::clustercontroller::ctProfiles);
     }
     smsc_log_info(log, "Profiler data loaded" );
 
@@ -1140,6 +1151,7 @@ void Smsc::shutdown()
 #endif
 
   smeman.unregisterSmeProxy(scheduler);
+  smeman.unregisterSmeProxy(smsc::interconnect::ClusterInterconnect::getInstance());
 
   tp2.shutdown();
 

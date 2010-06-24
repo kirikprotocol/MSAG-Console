@@ -6,6 +6,7 @@
 #include <vector>
 #include "eyeline/protogen/framework/Exceptions.hpp"
 #include "SmeBindMode.hpp"
+#include "SmeConnectType.hpp"
 
 
 #ident "@(#) SmeStatusInfo version 1.0"
@@ -31,6 +32,7 @@ public:
     bindModeFlag=false;
     peerInFlag=false;
     peerOutFlag=false;
+    connTypeFlag=false;
   }
  
 
@@ -82,6 +84,15 @@ public:
       rv+="peerOut=";
       rv+=peerOut;
     }
+    if(connTypeFlag)
+    {
+      if(rv.length()>0)
+      {
+        rv+=";";
+      }
+      rv+="connType=";
+      rv+=SmeConnectType::getNameByValue(connType);
+    }
     return rv;
   }
 
@@ -118,6 +129,12 @@ public:
       rv+=DataStream::tagTypeSize;
       rv+=DataStream::lengthTypeSize;
       rv+=DataStream::fieldSize(peerOut);
+    }
+    if(connTypeFlag)
+    {
+      rv+=DataStream::tagTypeSize;
+      rv+=DataStream::lengthTypeSize;
+      rv+=DataStream::fieldSize(connType);
     }
     rv+=DataStream::tagTypeSize;
     return rv;
@@ -236,6 +253,32 @@ public:
   {
     return peerOutFlag;
   }
+  const SmeConnectType::type& getConnType()const
+  {
+    if(!connTypeFlag)
+    {
+      throw eyeline::protogen::framework::FieldIsNullException("connType");
+    }
+    return connType;
+  }
+  void setConnType(const SmeConnectType::type& argValue)
+  {
+    if(!SmeConnectType::isValidValue(argValue))
+    {
+      throw eyeline::protogen::framework::InvalidEnumValue("SmeConnectType",argValue);
+    }
+    connType=argValue;
+    connTypeFlag=true;
+  }
+  SmeConnectType::type& getConnTypeRef()
+  {
+    connTypeFlag=true;
+    return connType;
+  }
+  bool hasConnType()const
+  {
+    return connTypeFlag;
+  }
   template <class DataStream>
   void serialize(DataStream& ds)const
   {
@@ -243,36 +286,38 @@ public:
     {
       throw eyeline::protogen::framework::MandatoryFieldMissingException("systemId");
     }
-    if(!statusFlag)
-    {
-      throw eyeline::protogen::framework::MandatoryFieldMissingException("status");
-    }
-    if(!bindModeFlag)
-    {
-      throw eyeline::protogen::framework::MandatoryFieldMissingException("bindMode");
-    }
-    if(!peerInFlag)
-    {
-      throw eyeline::protogen::framework::MandatoryFieldMissingException("peerIn");
-    }
-    if(!peerOutFlag)
-    {
-      throw eyeline::protogen::framework::MandatoryFieldMissingException("peerOut");
-    }
     //ds.writeByte(versionMajor);
     //ds.writeByte(versionMinor);
     //ds.writeInt32(seqNum);
     ds.writeTag(systemIdTag);
     ds.writeStrLV(systemId);
-    ds.writeTag(statusTag);
+    if(statusFlag)
+    {
+      ds.writeTag(statusTag);
     ds.writeStrLV(status);
-    ds.writeTag(bindModeTag);
+    }
+    if(bindModeFlag)
+    {
+      ds.writeTag(bindModeTag);
     ds.writeByteLV(bindMode);
  
-    ds.writeTag(peerInTag);
+    }
+    if(peerInFlag)
+    {
+      ds.writeTag(peerInTag);
     ds.writeStrLV(peerIn);
-    ds.writeTag(peerOutTag);
+    }
+    if(peerOutFlag)
+    {
+      ds.writeTag(peerOutTag);
     ds.writeStrLV(peerOut);
+    }
+    if(connTypeFlag)
+    {
+      ds.writeTag(connTypeTag);
+    ds.writeByteLV(connType);
+ 
+    }
     ds.writeTag(DataStream::endOfMessage_tag);
   }
 
@@ -338,6 +383,15 @@ public:
           peerOut=ds.readStrLV();
           peerOutFlag=true;
         }break;
+        case connTypeTag:
+        {
+          if(connTypeFlag)
+          {
+            throw eyeline::protogen::framework::DuplicateFieldException("connType");
+          }
+          connType=ds.readByteLV();
+          connTypeFlag=true;
+        }break;
         case DataStream::endOfMessage_tag:
           endOfMessage=true;
           break;
@@ -352,22 +406,6 @@ public:
     if(!systemIdFlag)
     {
       throw eyeline::protogen::framework::MandatoryFieldMissingException("systemId");
-    }
-    if(!statusFlag)
-    {
-      throw eyeline::protogen::framework::MandatoryFieldMissingException("status");
-    }
-    if(!bindModeFlag)
-    {
-      throw eyeline::protogen::framework::MandatoryFieldMissingException("bindMode");
-    }
-    if(!peerInFlag)
-    {
-      throw eyeline::protogen::framework::MandatoryFieldMissingException("peerIn");
-    }
-    if(!peerOutFlag)
-    {
-      throw eyeline::protogen::framework::MandatoryFieldMissingException("peerOut");
     }
 
   }
@@ -384,6 +422,7 @@ protected:
   static const int32_t bindModeTag=3;
   static const int32_t peerInTag=4;
   static const int32_t peerOutTag=5;
+  static const int32_t connTypeTag=6;
 
 
   std::string systemId;
@@ -391,12 +430,14 @@ protected:
   SmeBindMode::type bindMode;
   std::string peerIn;
   std::string peerOut;
+  SmeConnectType::type connType;
 
   bool systemIdFlag;
   bool statusFlag;
   bool bindModeFlag;
   bool peerInFlag;
   bool peerOutFlag;
+  bool connTypeFlag;
 };
 
 }

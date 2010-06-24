@@ -292,13 +292,19 @@ end
 message SmeStatus 21
 end
 
+enum byte SmeConnectType
+  loadBalancer 1
+  directConnect 2
+end
+
 message SmeStatusInfo
   property innerMessage=true
   string systemId 1
-  string status 2
-  SmeBindMode bindMode 3
-  string peerIn 4
-  string peerOut 5
+  string status 2 opt
+  SmeBindMode bindMode 3 opt
+  string peerIn 4 opt
+  string peerOut 5 opt
+  SmeConnectType connType 6 opt
 end
 
 message SmeStatusResp 1021
@@ -311,7 +317,7 @@ message SmeDisconnect 22
 end
 
 message SmeDisconnectResp 1022
-  Response resp 1
+  MultiResponse resp 1
 end
 
 message LoggerGetCategories 23
@@ -517,18 +523,12 @@ end
 message GetServicesStatus 101
 end
 
-enum byte ServiceConnectType
-  loadBalancer
-  direct
-end
-
 message ServiceStatus 
   property innerMessage=true
   string serviceName 1
   string peerAddress 2 array
   SmeBindMode bindMode 3
   bool boundSmsc 4 array
-  ServiceConnectType connType 5
 end
 
 message GetServicesStatusResp 1101
@@ -545,21 +545,20 @@ message DisconnectServiceResp 1102
 end
 
 enum byte ConfigType
-  MainConfig 1
-  Profiles 2
-  Msc 3
-  Routes 4
-  Sme 5
-  ClosedGroups 6
-  Aliases 7
-  MapLimits 8
-  Regions 9
-  Resources 10
-  Reschedule 11
-  Snmp 12
-  TimeZones 13
-  Fraud 14
-  Acl 15
+  MainConfig 0
+  Profiles 1
+  Msc 2
+  Routes 3
+  Sme 4
+  ClosedGroups 5
+  Aliases 6
+  MapLimits 7
+  Resources 8
+  Reschedule 9
+  Snmp 10
+  TimeZones 11
+  Fraud 12
+  Acl 13
 end
 
 message LockConfig 201
@@ -585,5 +584,29 @@ end
 
 message RegisterAsSmsc 303
   int32 magic 1
-  int32 nodeIndex 2
+  byte nodeIndex 2
+  int64 configUpdateTimes 3 array
+end
+
+message GetConfigsState 203
+end
+
+message GetSmscConfigsState 204
+end
+
+message SmscConfigsState
+  property innerMessage=true
+  byte nodeIdex 1
+  int64 updateTime 2 array
+end
+
+message GetSmscConfigsStateResp 1205
+  Response resp 1
+  SmscConfigsState state 2
+end 
+
+message GetConfigsStateResp 1203
+  Response resp 1
+  int64 ccConfigUpdateTime 2 array
+  SmscConfigsState smscConfigs 3 array opt
 end

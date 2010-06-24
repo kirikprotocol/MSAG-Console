@@ -35,6 +35,7 @@
 #include "messages/GetServicesStatus.hpp"
 #include "messages/DisconnectService.hpp"
 #include "messages/LockConfigResp.hpp"
+#include "messages/GetSmscConfigsState.hpp"
 
 namespace smsc {
 namespace cluster {
@@ -307,6 +308,13 @@ void ControllerSmscProtocol::decodeAndHandleMessage(eyeline::protogen::framework
     case tag_LockConfigResp:
     {
       messages::LockConfigResp msg;
+      msg.deserialize(ss);
+      msg.setSeqNum(seq);
+            handler->handle(msg);
+    }break;
+    case tag_GetSmscConfigsState:
+    {
+      messages::GetSmscConfigsState msg;
       msg.deserialize(ss);
       msg.setSeqNum(seq);
             handler->handle(msg);

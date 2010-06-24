@@ -19,12 +19,12 @@
 #include "messages/SmeDisconnect.hpp"
 #include "messages/LoggerGetCategories.hpp"
 #include "messages/LoggerSetCategories.hpp"
-#include "messages/AclGet.hpp"
-#include "messages/AclList.hpp"
+//#include "messages/AclGet.hpp"
+//#include "messages/AclList.hpp"
 #include "messages/AclRemove.hpp"
 #include "messages/AclCreate.hpp"
 #include "messages/AclUpdate.hpp"
-#include "messages/AclLookup.hpp"
+//#include "messages/AclLookup.hpp"
 #include "messages/AclRemoveAddresses.hpp"
 #include "messages/AclAddAddresses.hpp"
 /*
@@ -50,11 +50,11 @@
 #include "messages/CgmAddGroup.hpp"
 #include "messages/CgmDeleteGroup.hpp"
 #include "messages/CgmAddAddr.hpp"
-#include "messages/CgmCheck.hpp"
+//#include "messages/CgmCheck.hpp"
 #include "messages/CgmDelAddr.hpp"
 #include "messages/CgmAddAbonent.hpp"
 #include "messages/CgmDelAbonent.hpp"
-#include "messages/CgmListAbonents.hpp"
+//#include "messages/CgmListAbonents.hpp"
 #include "messages/AliasAdd.hpp"
 #include "messages/AliasDel.hpp"
 #include "messages/GetServicesStatus.hpp"
@@ -84,12 +84,12 @@
 #include "messages/SmeDisconnectResp.hpp"
 #include "messages/LoggerGetCategoriesResp.hpp"
 #include "messages/LoggerSetCategoriesResp.hpp"
-#include "messages/AclGetResp.hpp"
-#include "messages/AclListResp.hpp"
+//#include "messages/AclGetResp.hpp"
+//#include "messages/AclListResp.hpp"
 #include "messages/AclRemoveResp.hpp"
 #include "messages/AclCreateResp.hpp"
 #include "messages/AclUpdateResp.hpp"
-#include "messages/AclLookupResp.hpp"
+//#include "messages/AclLookupResp.hpp"
 #include "messages/AclRemoveAddressesResp.hpp"
 #include "messages/AclAddAddressesResp.hpp"
 /*
@@ -115,11 +115,11 @@
 #include "messages/CgmAddGroupResp.hpp"
 #include "messages/CgmDeleteGroupResp.hpp"
 #include "messages/CgmAddAddrResp.hpp"
-#include "messages/CgmCheckResp.hpp"
+//#include "messages/CgmCheckResp.hpp"
 #include "messages/CgmDelAddrResp.hpp"
 #include "messages/CgmAddAbonentResp.hpp"
 #include "messages/CgmDelAbonentResp.hpp"
-#include "messages/CgmListAbonentsResp.hpp"
+//#include "messages/CgmListAbonentsResp.hpp"
 #include "messages/AliasAddResp.hpp"
 #include "messages/AliasDelResp.hpp"
 #include "messages/GetServicesStatusResp.hpp"
@@ -127,6 +127,7 @@
 #include "logger/Logger.h"
 #include "messages/UpdateProfileAbntResp.hpp"
 #include "smsc/cluster/controller/protocol/messages/MultiResponse.hpp"
+#include "messages/GetSmscConfigsState.hpp"
 /*
 #include "messages/DlMemAddAbntResp.hpp"
 #include "messages/DlMemDeleteAbntResp.hpp"
@@ -174,12 +175,12 @@ public:
   void handle(const messages::SmeDisconnect& msg);
   void handle(const messages::LoggerGetCategories& msg);
   void handle(const messages::LoggerSetCategories& msg);
-  void handle(const messages::AclGet& msg);
-  void handle(const messages::AclList& msg);
+  //void handle(const messages::AclGet& msg);
+  //void handle(const messages::AclList& msg);
   void handle(const messages::AclRemove& msg);
   void handle(const messages::AclCreate& msg);
   void handle(const messages::AclUpdate& msg);
-  void handle(const messages::AclLookup& msg);
+  //void handle(const messages::AclLookup& msg);
   void handle(const messages::AclRemoveAddresses& msg);
   void handle(const messages::AclAddAddresses& msg);
   /*
@@ -205,11 +206,11 @@ public:
   void handle(const messages::CgmAddGroup& msg);
   void handle(const messages::CgmDeleteGroup& msg);
   void handle(const messages::CgmAddAddr& msg);
-  void handle(const messages::CgmCheck& msg);
+  //void handle(const messages::CgmCheck& msg);
   void handle(const messages::CgmDelAddr& msg);
   void handle(const messages::CgmAddAbonent& msg);
   void handle(const messages::CgmDelAbonent& msg);
-  void handle(const messages::CgmListAbonents& msg);
+  //void handle(const messages::CgmListAbonents& msg);
   void handle(const messages::AliasAdd& msg);
   void handle(const messages::AliasDel& msg);
   void handle(const messages::GetServicesStatus& msg);
@@ -218,6 +219,8 @@ public:
   //void handle(const messages::ReplaceIfPresentRequestResp& msg);
   void handle(const messages::LockConfigResp& msg);
   void handle(const messages::UpdateProfileAbntResp& msg);
+
+  void handle(const messages::GetSmscConfigsState& msg);
 /*
   void handle(const messages::DlMemAddAbntResp& msg);
   void handle(const messages::DlMemDeleteAbntResp& msg);

@@ -95,6 +95,8 @@ protected:
   buf::CyclicQueue<Buffer> outQueue;
   sync::EventMonitor outQueueMon;
 
+  void enqueueReg();
+
 public:
   NetworkDispatcher();
   ~NetworkDispatcher();
@@ -113,6 +115,7 @@ public:
     Buffer b;
     b.data=buf.detachBuffer();
     b.dataSize=buf.getDataWritten();
+    smsc_log_debug(log,"enqueue:%s",b.dump().c_str());
     sync::MutexGuard mg(outQueueMon);
     outQueue.Push(b);
     outQueueMon.notify();

@@ -86,6 +86,8 @@
 #include "messages/UpdateProfileAbnt.hpp"
 #include "messages/UpdateProfileAbntResp.hpp"
 #include "logger/Logger.h"
+#include "messages/GetConfigsState.hpp"
+#include "messages/GetSmscConfigsStateResp.hpp"
 
 namespace eyeline {
 namespace clustercontroller {
@@ -115,8 +117,8 @@ public:
   void handle(messages::SmeAdd& msg);
   void handle(messages::SmeUpdate& msg);
   void handle(messages::SmeRemove& msg);
-  void handle(const messages::SmeStatus& msg);
-  void handle(const messages::SmeDisconnect& msg);
+  void handle(messages::SmeStatus& msg);
+  void handle(messages::SmeDisconnect& msg);
   void handle(messages::LoggerGetCategories& msg);
   void handle(messages::LoggerSetCategories& msg);
   void handle(const messages::AclGet& msg);
@@ -140,6 +142,7 @@ public:
   void handle(const messages::GetServicesStatus& msg);
   void handle(const messages::DisconnectService& msg);
   void handle(const messages::LockConfig& msg);
+  void handle(const messages::GetConfigsState& msg);
   void handle(const messages::UnlockConfig& msg);
   void handle(const messages::RegisterAsLoadBalancer& msg);
   void handle(const messages::RegisterAsWebapp& msg);
@@ -180,7 +183,7 @@ public:
   void handle(const messages::DisconnectServiceResp& msg);
   //void handle(const messages::LockConfigResp& msg);
   void handle(const messages::UpdateProfileAbnt& msg);
-
+  void handle(const messages::GetSmscConfigsStateResp& msg);
 protected:
   int connId;
   smsc::logger::Logger* log;

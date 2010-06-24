@@ -37,6 +37,7 @@
 #include "messages/AliasAdd.hpp"
 #include "messages/AliasDel.hpp"
 #include "messages/UpdateProfileAbntResp.hpp"
+#include "messages/GetSmscConfigsState.hpp"
 #include "messages/ApplyRoutesResp.hpp"
 #include "messages/ApplyRescheduleResp.hpp"
 #include "messages/ApplyLocaleResourceResp.hpp"
@@ -80,6 +81,8 @@
 #include "messages/AliasDelResp.hpp"
 #include "messages/GetServicesStatusResp.hpp"
 #include "messages/DisconnectServiceResp.hpp"
+#include "messages/LockConfigResp.hpp"
+#include "messages/GetConfigsStateResp.hpp"
 
 namespace eyeline {
 namespace clustercontroller {
@@ -134,6 +137,8 @@ public:
     tag_DisconnectService=102,
     tag_LockConfig=201,
     tag_UnlockConfig=202,
+    tag_GetConfigsState=203,
+    tag_GetSmscConfigsState=204,
     tag_RegisterAsLoadBalancer=301,
     tag_RegisterAsWebapp=302,
     tag_RegisterAsSmsc=303,
@@ -180,7 +185,10 @@ public:
     tag_AliasDelResp=1042,
     tag_UpdateProfileAbnt=13,
     tag_GetServicesStatusResp=1101,
-    tag_DisconnectServiceResp=1102
+    tag_DisconnectServiceResp=1102,
+    tag_LockConfigResp=1201,
+    tag_GetConfigsStateResp=1203,
+    tag_GetSmscConfigsStateResp=1205
   };
  
   ControllerProtocol():handler(0)

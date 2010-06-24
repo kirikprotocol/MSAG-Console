@@ -1,27 +1,26 @@
-#ifndef __GENERATED_MESSAGE_SMSC_CLUSTER_CONTROLLER_PROTOCOL_MESSAGES_SMEDISCONNECTRESP_HPP__
-#define __GENERATED_MESSAGE_SMSC_CLUSTER_CONTROLLER_PROTOCOL_MESSAGES_SMEDISCONNECTRESP_HPP__
+#ifndef __GENERATED_MESSAGE_EYELINE_CLUSTERCONTROLLER_PROTOCOL_MESSAGES_LOCKCONFIGRESP_HPP__
+#define __GENERATED_MESSAGE_EYELINE_CLUSTERCONTROLLER_PROTOCOL_MESSAGES_LOCKCONFIGRESP_HPP__
 
 #include <inttypes.h>
 #include <string>
 #include <vector>
 #include "eyeline/protogen/framework/Exceptions.hpp"
-#include "MultiResponse.hpp"
+#include "Response.hpp"
 
 
-#ident "@(#) SmeDisconnectResp version 1.0"
+#ident "@(#) LockConfigResp version 1.0"
 
 
 
-namespace smsc{
-namespace cluster{
-namespace controller{
+namespace eyeline{
+namespace clustercontroller{
 namespace protocol{
 namespace messages{
 
 
-class SmeDisconnectResp{
+class LockConfigResp{
 public:
-  SmeDisconnectResp()
+  LockConfigResp()
   {
     Clear();
   }
@@ -33,7 +32,7 @@ public:
  
   static int32_t getTag()
   {
-    return 1022;
+    return 1201;
   }
 
   std::string toString()const
@@ -69,7 +68,7 @@ public:
     rv+=DataStream::tagTypeSize;
     return rv;
   }
-  const MultiResponse& getResp()const
+  const Response& getResp()const
   {
     if(!respFlag)
     {
@@ -77,12 +76,12 @@ public:
     }
     return resp;
   }
-  void setResp(const MultiResponse& argValue)
+  void setResp(const Response& argValue)
   {
     resp=argValue;
     respFlag=true;
   }
-  MultiResponse& getRespRef()
+  Response& getRespRef()
   {
     respFlag=true;
     return resp;
@@ -116,7 +115,7 @@ public:
     //int8_t rdVersionMinor=ds.readByte();
     //if(rdVersionMajor!=versionMajor)
     //{
-    //  throw protogen::framework::IncompatibleVersionException("SmeDisconnectResp");
+    //  throw protogen::framework::IncompatibleVersionException("LockConfigResp");
     //}
     //seqNum=ds.readInt32();
     while(!endOfMessage)
@@ -140,7 +139,7 @@ public:
         default:
           //if(rdVersionMinor==versionMinor)
           //{
-          //  throw protogen::framework::UnexpectedTag("SmeDisconnectResp",tag);
+          //  throw protogen::framework::UnexpectedTag("LockConfigResp",tag);
           //}
           ds.skip(ds.readLength());
       }
@@ -172,12 +171,11 @@ protected:
 
   int32_t seqNum;
 
-  MultiResponse resp;
+  Response resp;
 
   bool respFlag;
 };
 
-}
 }
 }
 }

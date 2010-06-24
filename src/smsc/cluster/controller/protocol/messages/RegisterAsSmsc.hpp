@@ -29,6 +29,8 @@ public:
     seqNum=0;
     magicFlag=false;
     nodeIndexFlag=false;
+    configUpdateTimesFlag=false;
+    configUpdateTimes.clear();
   }
  
   static int32_t getTag()
@@ -59,8 +61,31 @@ public:
         rv+=";";
       }
       rv+="nodeIndex=";
-      sprintf(buf,"%d",nodeIndex);
+      sprintf(buf,"%d",(int)nodeIndex);
       rv+=buf;
+    }
+    if(configUpdateTimesFlag)
+    {
+      if(rv.length()>0)
+      {
+        rv+=";";
+      }
+      rv+="configUpdateTimes=";
+      rv+="[";
+      bool first=true;
+      for(std::vector<int64_t>::const_iterator it=configUpdateTimes.begin(),end=configUpdateTimes.end();it!=end;it++)
+      {
+        if(first)
+        {
+          first=false;
+        }else
+        {
+          rv+=",";
+        }
+        sprintf(buf,"%lld",*it);
+        rv+=buf;
+      }
+      rv+="]";
     }
     return rv;
   }
@@ -80,6 +105,12 @@ public:
       rv+=DataStream::tagTypeSize;
       rv+=DataStream::lengthTypeSize;
       rv+=DataStream::fieldSize(nodeIndex);
+    }
+    if(configUpdateTimesFlag)
+    {
+      rv+=DataStream::tagTypeSize;
+      rv+=DataStream::lengthTypeSize;
+      rv+=DataStream::fieldSize(configUpdateTimes);
     }
     rv+=DataStream::tagTypeSize;
     return rv;
@@ -106,7 +137,7 @@ public:
   {
     return magicFlag;
   }
-  int32_t getNodeIndex()const
+  int8_t getNodeIndex()const
   {
     if(!nodeIndexFlag)
     {
@@ -114,12 +145,12 @@ public:
     }
     return nodeIndex;
   }
-  void setNodeIndex(int32_t argValue)
+  void setNodeIndex(int8_t argValue)
   {
     nodeIndex=argValue;
     nodeIndexFlag=true;
   }
-  int32_t& getNodeIndexRef()
+  int8_t& getNodeIndexRef()
   {
     nodeIndexFlag=true;
     return nodeIndex;
@@ -127,6 +158,28 @@ public:
   bool hasNodeIndex()const
   {
     return nodeIndexFlag;
+  }
+  const std::vector<int64_t>& getConfigUpdateTimes()const
+  {
+    if(!configUpdateTimesFlag)
+    {
+      throw eyeline::protogen::framework::FieldIsNullException("configUpdateTimes");
+    }
+    return configUpdateTimes;
+  }
+  void setConfigUpdateTimes(const std::vector<int64_t>& argValue)
+  {
+    configUpdateTimes=argValue;
+    configUpdateTimesFlag=true;
+  }
+  std::vector<int64_t>& getConfigUpdateTimesRef()
+  {
+    configUpdateTimesFlag=true;
+    return configUpdateTimes;
+  }
+  bool hasConfigUpdateTimes()const
+  {
+    return configUpdateTimesFlag;
   }
   template <class DataStream>
   void serialize(DataStream& ds)const
@@ -139,13 +192,23 @@ public:
     {
       throw eyeline::protogen::framework::MandatoryFieldMissingException("nodeIndex");
     }
+    if(!configUpdateTimesFlag)
+    {
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("configUpdateTimes");
+    }
     //ds.writeByte(versionMajor);
     //ds.writeByte(versionMinor);
     //ds.writeInt32(seqNum);
     ds.writeTag(magicTag);
     ds.writeInt32LV(magic);
     ds.writeTag(nodeIndexTag);
-    ds.writeInt32LV(nodeIndex);
+    ds.writeByteLV(nodeIndex);
+    ds.writeTag(configUpdateTimesTag);
+    ds.writeLength(DataStream::fieldSize(configUpdateTimes));
+    for(std::vector<int64_t>::const_iterator it=configUpdateTimes.begin(),end=configUpdateTimes.end();it!=end;it++)
+    {
+      ds.writeInt64(*it);
+    }
     ds.writeTag(DataStream::endOfMessage_tag);
   }
 
@@ -181,8 +244,22 @@ public:
           {
             throw eyeline::protogen::framework::DuplicateFieldException("nodeIndex");
           }
-          nodeIndex=ds.readInt32LV();
+          nodeIndex=ds.readByteLV();
           nodeIndexFlag=true;
+        }break;
+        case configUpdateTimesTag:
+        {
+          if(configUpdateTimesFlag)
+          {
+            throw eyeline::protogen::framework::DuplicateFieldException("configUpdateTimes");
+          }
+          typename DataStream::LengthType len=ds.readLength(),rd=0;
+          while(rd<len)
+          {
+            configUpdateTimes.push_back(ds.readInt64());
+            rd+=DataStream::fieldSize(configUpdateTimes.back());
+          }
+          configUpdateTimesFlag=true;
         }break;
         case DataStream::endOfMessage_tag:
           endOfMessage=true;
@@ -202,6 +279,10 @@ public:
     if(!nodeIndexFlag)
     {
       throw eyeline::protogen::framework::MandatoryFieldMissingException("nodeIndex");
+    }
+    if(!configUpdateTimesFlag)
+    {
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("configUpdateTimes");
     }
 
   }
@@ -224,14 +305,17 @@ protected:
 
   static const int32_t magicTag=1;
   static const int32_t nodeIndexTag=2;
+  static const int32_t configUpdateTimesTag=3;
 
   int32_t seqNum;
 
   int32_t magic;
-  int32_t nodeIndex;
+  int8_t nodeIndex;
+  std::vector<int64_t> configUpdateTimes;
 
   bool magicFlag;
   bool nodeIndexFlag;
+  bool configUpdateTimesFlag;
 };
 
 }

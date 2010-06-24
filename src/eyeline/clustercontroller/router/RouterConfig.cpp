@@ -32,6 +32,7 @@ void RouterConfig::Init(const char* routeConfigPath,const char* smeConfigPath)
   instance=new smsc::router::RouteManager();
   smeTable=new RouterConfig::SmeTableImpl();
   smeTable->Load(smeConfigPath);
+  instance->assign(smeTable);
   smsc::config::route::RouteConfig rc;
   rc.load(routeConfigPath);
   //instance->assign()

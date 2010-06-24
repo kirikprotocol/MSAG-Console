@@ -22,7 +22,6 @@ const char* configName[ctConfigsCount]={
     "Closed Groups",
     "Aliases",
     "Map Limits",
-    "Regions",
     "Resources",
     "Reschedule",
     "Snmp",

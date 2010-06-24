@@ -11,10 +11,12 @@
 #include "messages/DisconnectService.hpp"
 #include "messages/LockConfig.hpp"
 #include "messages/UnlockConfig.hpp"
+#include "messages/GetConfigsState.hpp"
 #include "messages/RegisterAsLoadBalancer.hpp"
 #include "messages/RegisterAsWebapp.hpp"
 #include "messages/RegisterAsSmsc.hpp"
 #include "messages/UpdateProfileAbnt.hpp"
+#include "messages/GetSmscConfigsStateResp.hpp"
 
 namespace eyeline {
 namespace clustercontroller {
@@ -353,6 +355,13 @@ void ControllerProtocol::decodeAndHandleMessage(eyeline::protogen::framework::Se
       msg.setSeqNum(seq);
             handler->handle(msg);
     }break;
+    case tag_GetConfigsState:
+    {
+      messages::GetConfigsState msg;
+      msg.deserialize(ss);
+      msg.setSeqNum(seq);
+            handler->handle(msg);
+    }break;
     case tag_RegisterAsLoadBalancer:
     {
       messages::RegisterAsLoadBalancer msg;
@@ -601,6 +610,13 @@ void ControllerProtocol::decodeAndHandleMessage(eyeline::protogen::framework::Se
     case tag_UpdateProfileAbnt:
     {
       messages::UpdateProfileAbnt msg;
+      msg.deserialize(ss);
+      msg.setSeqNum(seq);
+            handler->handle(msg);
+    }break;
+    case tag_GetSmscConfigsStateResp:
+    {
+      messages::GetSmscConfigsStateResp msg;
       msg.deserialize(ss);
       msg.setSeqNum(seq);
             handler->handle(msg);
