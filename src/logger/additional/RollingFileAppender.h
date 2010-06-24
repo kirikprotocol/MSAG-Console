@@ -27,6 +27,7 @@ private:
   std::auto_ptr<const char> filename;
   smsc::core::buffers::File file;
   long currentFilePos;
+  bool directIO;
 
   void rollover() throw();
 };

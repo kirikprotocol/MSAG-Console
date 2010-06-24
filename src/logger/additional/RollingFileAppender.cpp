@@ -48,6 +48,7 @@ RollingFileAppender::RollingFileAppender(const char * const _name, const Propert
   try{
     maxFileSize = 1*1024*1024;
     maxBackupIndex = 5;
+    directIO=false;
 
     if(properties.Exists("maxsize")) {
       const char * const tmp = properties["maxsize"];
@@ -67,6 +68,11 @@ RollingFileAppender::RollingFileAppender(const char * const _name, const Propert
       }
     }
 
+    if(properties.Exists("directIO"))
+    {
+      directIO=strcasecmp(properties["directIO"],"true")==0;
+    }
+
     if (properties.Exists("maxindex"))
       maxBackupIndex = atoi(properties["maxindex"]);
 
@@ -78,9 +84,12 @@ RollingFileAppender::RollingFileAppender(const char * const _name, const Propert
     if(File::Exists(filename.get()))
       file.Append(filename.get());
     else
-      file.RWCreate(filename.get());
+      file.WOpen(filename.get());
     currentFilePos=file.Pos();
-    file.EnableDirectIO();
+    if(directIO)
+    {
+      file.EnableDirectIO();
+    }
     //file = fopen(filename.get(), "a");
     //currentFilePos = ftell(file);
   }catch(std::exception& e)
@@ -112,13 +121,19 @@ void RollingFileAppender::rollover() throw()
       // Open a new file
       //file = fopen(filename.get(), "w");
       file.WOpen(filename.get());
-      file.EnableDirectIO();
+      if(directIO)
+      {
+        file.EnableDirectIO();
+      }
     } else {
       //fclose(file);
       //file = fopen(filename.get(), "w");
       file.Close();
       file.WOpen(filename.get());
-      file.EnableDirectIO();
+      if(directIO)
+      {
+        file.EnableDirectIO();
+      }
     }
   }catch(std::exception& e)
   {
