@@ -35,13 +35,13 @@ public class Proxy {
   public OutputStream out;
   public InputStream in;
 
-  protected Proxy(String host, int port) {
+  public Proxy(String host, int port) {
     this.host = host;
     this.port = port;
     status = StatusDisconnected;
   }
 
-  protected Proxy(String host, int port, int timeout) {
+  public Proxy(String host, int port, int timeout) {
     this.host = host;
     this.port = port;
     this.timeout = timeout;
