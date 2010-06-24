@@ -21,6 +21,25 @@
   <param name="schedlimit" value="0"/>
   <param name="accessMask" value="1"/>  
 </smerecord>
+<smerecord type="smpp" uid="NULLSME">
+  <param name="typeOfNumber" value="1"/>
+  <param name="numberingPlan" value="1"/>
+  <param name="interfaceVersion" value="34"/>
+  <param name="systemType" value="internal"/>
+  <param name="password" value=""/>
+  <param name="addrRange" value=""/>
+  <param name="smeN" value="-1"/>
+  <param name="wantAlias" value="no"/>
+  <param name="forceDC" value="false"/>
+  <param name="timeout" value="20"/>
+  <param name="receiptSchemeName" value="default"/>
+  <param name="priority" value="16384"/>
+  <param name="disabled" value="false"/>
+  <param name="mode" value="trx"/>
+  <param name="proclimit" value="0"/>
+  <param name="schedlimit" value="0"/>
+  <param name="accessMask" value="1"/>  
+</smerecord>
 <smerecord type="smpp" uid="abonentinfo">
   <param name="typeOfNumber" value="1"/>
   <param name="numberingPlan" value="1"/>
