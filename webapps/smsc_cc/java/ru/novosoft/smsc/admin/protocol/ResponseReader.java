@@ -7,7 +7,8 @@ import java.io.IOException;
 import java.io.InputStream;
 
 
-public class ResponseReader {
+class ResponseReader {
+
   private InputStream in;
   private Category logger = Category.getInstance(ResponseReader.class);
 
@@ -15,16 +16,14 @@ public class ResponseReader {
     in = inStream;
   }
 
-  public Response read()
-      throws IOException, AdminException {
+  public Response read() throws IOException, AdminException {
     int length = readLength();
     byte buffer[] = new byte[length];
     for (int readed = 0; readed < length;) {
       int readedNow = 0;
       try {
         readedNow = in.read(buffer, readed, length - readed);
-      }
-      catch (IOException e) {
+      } catch (IOException e) {
         logger.info("Couldn't read response", e);
         throw e;
       }

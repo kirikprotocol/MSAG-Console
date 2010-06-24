@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 
-public class CommandWriter {
+class CommandWriter {
 
   public CommandWriter(OutputStream outStream) {
     logger = Category.getInstance(getClass().getName());

@@ -20,10 +20,22 @@ import java.io.StringReader;
 
 public class Response {
 
+  private static final Category logger = Category.getInstance("smsc.admin.services.protocol.Response");
+
+  public static final byte StatusUnknown = 0;
+  public static final byte StatusError = 1;
+  public static final byte StatusOk = 2;
+  public static final Status statuses[] = {
+      new Status("Undefined", (byte) 0), new Status("Error", (byte) 1), new Status("Ok", (byte) 2)
+  };
+
+  private Document doc = null;
+  private byte status = 0;
+
+
   public Response(byte text[]) throws AdminException {
     doc = null;
     status = 0;
-    logger = Category.getInstance("smsc.admin.services.protocol.Response");
     try {
       DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
       factory.setIgnoringComments(true);
@@ -94,14 +106,6 @@ public class Response {
     return 0;
   }
 
-  public static final byte StatusUnknown = 0;
-  public static final byte StatusError = 1;
-  public static final byte StatusOk = 2;
-  public static final Status statuses[] = {
-      new Status("Undefined", (byte) 0), new Status("Error", (byte) 1), new Status("Ok", (byte) 2)
-  };
-  private Document doc = null;
-  private byte status = 0;
-  private Category logger = null;
+
 
 }

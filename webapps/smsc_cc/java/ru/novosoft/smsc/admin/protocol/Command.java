@@ -17,18 +17,18 @@ import javax.xml.parsers.FactoryConfigurationError;
 import javax.xml.parsers.ParserConfigurationException;
 
 
-public class Command
-{
+/**
+ * Абстрактная команда
+ */
+public class Command {
   protected Document document;
   protected Category logger = Category.getInstance(this.getClass().getName());
 
-  protected Command(Document doc)
-  {
+  protected Command(Document doc) {
     document = doc;
   }
 
-  protected Command(String commandName)
-  {
+  protected Command(String commandName) {
     try {
       DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
       document = builder.newDocument();
@@ -44,8 +44,7 @@ public class Command
     }
   }
 
-  public String getText()
-  {
+  public String getText() {
     //logger.debug("start getText");
     String encoding = Functions.getLocaleEncoding();
     if (encoding == null) encoding = "ISO-8859-1";
@@ -53,8 +52,7 @@ public class Command
     return "<?xml version=\"1.0\" encoding=\"" + encoding + "\"?>\n" + "<!DOCTYPE command SYSTEM \"file:///command.dtd\">\n\n" + getText(doc, "");
   }
 
-  protected String getText(Element doc, String prefix)
-  {
+  protected String getText(Element doc, String prefix) {
     //logger.debug("getText(" + doc + ", " + prefix + ")");
     String result = "";
     String newPrefix = prefix + "  ";

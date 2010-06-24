@@ -5,6 +5,9 @@ import ru.novosoft.smsc.admin.resource_group.ResourceGroupConstants;
 import java.io.File;
 import java.io.IOException;
 
+/**
+ * Это класс должен быть либо полностью, либо частично выкошен
+ */
 public class Constants {
     // Note: bitmasks 1,2,4,8,...
     public static final int INST_MODE_SMSC=1;

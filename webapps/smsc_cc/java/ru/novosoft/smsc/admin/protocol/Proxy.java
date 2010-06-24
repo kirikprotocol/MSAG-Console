@@ -1,16 +1,7 @@
-/*
- * Created by igork
- * Date: Mar 20, 2002
- * Time: 6:07:55 PM
- */
-package ru.novosoft.smsc.admin.utli;
+package ru.novosoft.smsc.admin.protocol;
 
 import org.apache.log4j.Category;
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.protocol.Command;
-import ru.novosoft.smsc.admin.protocol.CommandWriter;
-import ru.novosoft.smsc.admin.protocol.Response;
-import ru.novosoft.smsc.admin.protocol.ResponseReader;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,7 +10,11 @@ import java.net.Socket;
 import java.util.Date;
 
 
+/**
+ * Клиент для отправки команд
+ */
 public class Proxy {
+
   public static final byte StatusConnected = 1;
   public static final byte StatusDisconnected = 0;
   public static final byte StatusTimeEnabled = 1;
