@@ -49,22 +49,28 @@ endif
  ORACLE_INC = -I$(ORACLE_HOME)/rdbms/demo -I$(ORACLE_HOME)/rdbms/public -I$(ORACLE_HOME)/network/public
 endif
 
+ifndef SNMP_BASE
+ifeq ($(B64),YES)
+export SNMP_BASE=/usr/local/net-snmp64
+else
+export SNMP_BASE=/usr/local/net-snmp32
+endif
+endif
+
+export NETSNMP_LIB_DIR:=$(SNMP_BASE)/lib
 
 ifeq ($(SFW),YES)
 SSL_LIB_DIR:=/usr/sfw/lib
-NETSNMP_LIB_DIR:=/usr/sfw/lib
 ifeq ($(B64),YES)
 SSL_LIB_DIR:=/usr/sfw/lib/64
-NETSNMP_LIB_DIR:=/usr/sfw/lib/64
 endif
 else
 SSL_LIB_DIR:=/usr/lib
-NETSNMP_LIB_DIR:=/usr/lib
 ifeq ($(B64),YES)
 SSL_LIB_DIR:=/usr/lib/64
-NETSNMP_LIB_DIR:=/usr/lib/64
 endif
 endif
+
 
 
 ifeq ($(CXX),CC)
@@ -127,6 +133,10 @@ export SS7_LIBRARY_NAME
 COMMON_INCLUDES := -I$(SMSC_SRCDIR)
 ifeq ($(USEHOME),YES)
 COMMON_INCLUDES := $(COMMON_INCLUDES) -I$(HOME)/include
+endif
+
+ifeq ($(SNMP),YES)
+COMMON_INCLUDES := -I$(SNMP_BASE)/include $(COMMON_INCLUDES)
 endif
 
 ifeq ($(SFW),YES)
@@ -200,7 +210,7 @@ endif
 else
 SNMP_LIBS_CORE = `net-snmp-config --agent-libs`
 endif # CXX != CC
-SNMP_LIBS = -lsnmp -lsnmp-smestattable -lsnmp-smeerrtable $(SNMP_LIBS_CORE)
+SNMP_LIBS = $(SNMP_LIBS_CORE)
 CXXFLAGS := $(CXXFLAGS) -DSNMP
 export SNMP_LIBS_CORE
 export SNMP_LIBS
@@ -287,7 +297,12 @@ CXXFLAGS := $(CXXFLAGS) $(ORACLE_INC)
 CFLAGS := $(CFLAGS) $(ORACLE_INC)
 
 ifneq ("$(NOMAP)","YES")
-MAP_LIBRARIES := -L$(SS7_STACK_HOME)/lib -l$(SS7_LIBRARY_NAME) -lsystem-mapio
+MAP_LIBRARIES := -L$(SS7_STACK_HOME)/lib -l$(SS7_LIBRARY_NAME)
+ifeq ("$(CLUSTER)","YES")
+MAP_LIBRARIES += -lsmsc-mapio
+else
+MAP_LIBRARIES += -lsystem-mapio
+endif
 CXXFLAGS := $(CXXFLAGS) -DUSE_MAP
 endif
 
