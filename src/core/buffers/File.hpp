@@ -82,7 +82,7 @@ public:
     error=e.error;
     return *this;
   }
-  ~FileException()throw(){}
+  virtual ~FileException()throw(){}
   const char* what()const throw()
   {
     if(fileName.length())
@@ -1121,7 +1121,7 @@ public:
     std::string file;
     while(ptr)
     {
-      if(noDots && strcmp(ptr->d_name,".")==0 || strcmp(ptr->d_name,"..")==0)
+      if(noDots && (strcmp(ptr->d_name,".")==0 || strcmp(ptr->d_name,"..")==0))
       {
         if(readdir_r(dir,de,&ptr)!=0)
         {
