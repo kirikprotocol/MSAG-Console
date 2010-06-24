@@ -155,10 +155,7 @@
   </section>
 
   <section name="MscManager">
-    <param name="automaticRegistration" type="bool">true</param>
-    <param name="failureLimit" type="int">1000</param>
-    <param name="storeFile" type="string">@localstore.dir@/msc.bin</param>
-    <param name="singleAttemptTimeout" type="int">1800</param>
+    <param name="storeFile" type="string">@localstore.dir@/msc.txt</param>
   </section>
 
   <section name="distrList">
