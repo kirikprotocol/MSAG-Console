@@ -46,6 +46,7 @@
 #include "cluster/AgentListener.h"
 #include "util/crc32.h"
 #include "INManComm.hpp"
+#include "NullSme.hpp"
 
 namespace smsc{
 namespace system{
@@ -647,6 +648,8 @@ protected:
   AclAbstractMgr   *aclmgr;
   DistrListManager *distlstman;
   DistrListProcess *distlstsme;
+
+  NullSme nullSme;
 
   Mutex perfMutex;
   uint64_t submitOkCounter;

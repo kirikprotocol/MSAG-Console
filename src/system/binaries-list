@@ -1,4 +1,25 @@
-system/smsc smscmain -L$(SMSC_BUILDDIR)/bin -llogger -lstore -lrouter -lutil-config-route -lsystem  -lcluster-listeners -lcluster -lacls -lsystem -lrouter -lsystem-mapio -lprofiler -lsystem-smppio -lcore-threads -lpthread $(SOCKETLIB) -lcore-buffers -lcore-network -lsystem -lsystem-smppio -lutil-config $(XERCES_LIB) -lutil -lutil-xml -lsmeman -lutil-config-smeman -lrt -ladmin-util -lutil -lstore -lsms $(__OBJECTS) $(__LIBRARIES) $(MAP_LIBRARIES) $(XERCES_LIB) -ldl -ldb -lsystem -lsms    -ladmin-util -ladmin-protocol -lmscman -ladmin-service -ladmin-smsc_service  -ladmin-util -ladmin -ladmin-protocol -lutil-recoder-recode_dll -lsystem-abonentinfo -lutil-templates -lutil-regexp -lstat -llicense-check -lresourcemanager -ldistrlist -llogger -lsystem-common $(SSL_LIB) $(SNMP_LIBS) -lsystem-mapio -lnsl -linman-interaction-msgbill -linman-interaction -linman-common -lutil-mirrorfile -lclosedgroups -linman-storage -lsystem-snmp  -lpicl @liblogger.so
-#system/smsc smscmain -L$(SMSC_BUILDDIR)/bin -llogger -L$(ORACLE_LIB) -lutil-config-alias -lalias -lstore -lrouter -lutil-config-route -lsystem -lacls -lsystem -lrouter -lalias -lsystem-mapio -lprofiler -lsystem-smppio -lcore-threads -lpthread $(SOCKETLIB) -lcore-buffers -lcore-network -lsystem -lsystem-smppio -lutil-config $(XERCES_LIB) -lutil -lutil-xml -lsmeman -lutil-config-smeman -lutil-config-alias -lrt -ladmin-util -lutil -lstore -lsms $(__OBJECTS) $(__LIBRARIES) $(MAP_LIBRARIES) $(XERCES_LIB) -ldl -ldb -lsystem -lsms    -ladmin-util -ladmin-protocol -lmscman -ladmin-service -ladmin-smsc_service  -ladmin-util -ladmin -ladmin-protocol -lutil-recoder-recode_dll -lsystem-abonentinfo -lutil-templates -lutil-regexp -lstat -llicense-check -lresourcemanager -ldistrlist -llogger -lsystem-common $(SSL_LIB) $(SNMP_LIBS) -lnsl
-#system/load_routes load_routes -lrouter -lsmeman -lsms -lutil-config-route -lutil-config $(XERCES_LIB) -lutil -lutil-xml -lrt
-#system/ttt ttt -lsms -lalias -lutil-config -lutil-config-alias $(XERCES_LIB) -lutil-xml -lutil 
+switch SNMP
+YES:\
+system/smsc smscmain -L$(SMSC_BUILDDIR)/bin -llogger -lstore -lrouter -lutil-config-route \
+-lsystem  -lcluster-listeners -lcluster -lacls -lsystem -lrouter -lsystem-mapio -lprofiler \
+-lsystem-smppio -lcore-threads -lpthread $(SOCKETLIB) -lcore-buffers -lcore-network -lsystem \
+-lsystem-smppio -lutil-config $(XERCES_LIB) -lutil -lutil-xml -lsmeman -lutil-config-smeman \
+-lrt -ladmin-util -lutil -lstore -lsms $(__OBJECTS) $(__LIBRARIES) $(MAP_LIBRARIES) $(XERCES_LIB) \
+-ldl -ldb -lsystem -lsms    -ladmin-util -ladmin-protocol -lmscman -ladmin-service -ladmin-smsc_service \
+-ladmin-util -ladmin -ladmin-protocol -lutil-recoder-recode_dll -lsystem-abonentinfo -lutil-templates \
+-lutil-regexp -lstat -llicense-check -lresourcemanager -ldistrlist -llogger -lsystem-common $(SSL_LIB) \
+$(SNMP_LIBS) -lsystem-mapio -lnsl -lsnmp -lsnmp-smestattable -lsnmp-smeerrtable -lsystem-mapio \
+-linman-interaction-msgbill -linman-interaction -linman-common -lutil-mirrorfile -lclosedgroups \
+-linman-storage -lsystem-snmp -lpicl @liblogger.so
+default:\
+system/smsc smscmain -L$(SMSC_BUILDDIR)/bin -llogger -lstore -lrouter -lutil-config-route -lsystem \
+-lcluster-listeners -lcluster -lacls -lsystem -lrouter -lsystem-mapio -lprofiler -lsystem-smppio \
+-lcore-threads -lpthread $(SOCKETLIB) -lcore-buffers -lcore-network -lsystem -lsystem-smppio \
+-lutil-config $(XERCES_LIB) -lutil -lutil-xml -lsmeman -lutil-config-smeman -lrt -ladmin-util \
+-lutil -lstore -lsms $(__OBJECTS) $(__LIBRARIES) $(MAP_LIBRARIES) $(XERCES_LIB) -ldl -ldb \
+-lsystem -lsms    -ladmin-util -ladmin-protocol -lmscman -ladmin-service -ladmin-smsc_service \
+-ladmin-util -ladmin -ladmin-protocol -lutil-recoder-recode_dll -lsystem-abonentinfo \
+-lutil-templates -lutil-regexp -lstat -llicense-check -lresourcemanager -ldistrlist -llogger \
+-lsystem-common $(SSL_LIB) $(SNMP_LIBS) -lsystem-mapio -lnsl -linman-interaction-msgbill \
+-linman-interaction -linman-common -lutil-mirrorfile -lclosedgroups -linman-storage -lsystem-snmp -lpicl @liblogger.so
+end switch

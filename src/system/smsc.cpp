@@ -572,6 +572,13 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
   */
 
   smeman.registerInternallSmeProxy("scheduler",scheduler);
+  try{
+    smeman.registerInternallSmeProxy("NULLSME",&nullSme);
+  }catch(std::exception& e)
+  {
+    smsc_log_warn(log, "NULLSME not registered:%s",e.what());
+
+  }
 
   //tp.startTask(scheduler);
 
@@ -1559,6 +1566,12 @@ void Smsc::shutdown()
 #endif
 
   smeman.unregisterSmeProxy(scheduler);
+  try{
+    smeman.unregisterSmeProxy(&nullSme);
+  }catch(...)
+  {
+
+  }
 
   tp2.shutdown();
 
