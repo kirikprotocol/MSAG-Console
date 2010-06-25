@@ -10,3 +10,5 @@ mk
 smsc.v*
 makefile.inc
 makefile.flags
+ChangeLog
+cvs2cl.pl
