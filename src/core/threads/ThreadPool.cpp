@@ -168,10 +168,12 @@ void ThreadPool::preCreateThreads(int count)
 {
   trace2("COUNT:%d",count);
   int n=count-usedThreads.Count()-freeThreads.Count();
+  if (n < 0)
+    return;
   trace2("Attempting to create %d threads(%d/%d)",n,freeThreads.Count(),usedThreads.Count());
   {
     MutexGuard  grd(lock);
-    usedThreads.SetSize(count);
+    usedThreads.SetSize(count); //enlarge array of active threads
     for(int i=0; i<n ; ++i) {
       trace2("Creating thread:%d",i);
       usedThreads.Push(ThreadInfo(new PooledThread(this)));
