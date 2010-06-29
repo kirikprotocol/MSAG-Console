@@ -184,7 +184,8 @@ void ThreadPool::preCreateThreads(int count)
 
 void ThreadPool::startTask(ThreadedTask* task)
 {
-  Lock();
+  MutexGuard  grd(lock);
+
   PooledThread* t;
   if (freeThreads.Count() > 0) {
     __trace__("use free thread for new task");
@@ -205,7 +206,6 @@ void ThreadPool::startTask(ThreadedTask* task)
       usedThreads.Push(ThreadInfo(t));
     }
   }
-  Unlock();
 }
 
 void ThreadPool::startTask(ThreadedTask* task, bool delOnCompletion)

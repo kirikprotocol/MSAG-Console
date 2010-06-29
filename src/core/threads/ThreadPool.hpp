@@ -100,6 +100,9 @@ public:
     return usedThreads.Count();
   }
 
+protected:
+  EventMonitor & getSync(void) const { return lock; }
+
 private:
   mutable EventMonitor lock;
 
@@ -119,14 +122,6 @@ private:
   int defaultStackSize;
   int maxThreads;
 
-  void Lock()
-  {
-    lock.Lock();
-  }
-  void Unlock()
-  {
-    lock.Unlock();
-  }
   bool findUsed(PooledThread* thread, int & idx)
   {
     for (int i = 0; i < usedThreads.Count(); i++) {
