@@ -28,7 +28,7 @@ public class Functions {
    * @throws IOException          if I/O problems occured
    * @throws NullPointerException if source or destination is null
    */
-  public static void copyFileTo(File source, File destination) throws IOException {
+  public static long copyFileTo(File source, File destination) throws IOException {
     FileInputStream src = null;
     FileOutputStream dest = null;
     try {
@@ -38,7 +38,7 @@ public class Functions {
       FileChannel srcChannel = src.getChannel();
       FileChannel destChannel = dest.getChannel();
 
-      srcChannel.transferTo(0, srcChannel.size(), destChannel);
+      return srcChannel.transferTo(0, srcChannel.size(), destChannel);
     } finally {
       if (src != null) {
         try {
@@ -184,12 +184,32 @@ public class Functions {
    * @return string
    */
   public static String collectionToString(final Collection collection, final String delimeter) {
-    StringBuilder result = new StringBuilder();
+    StringBuilder result = new StringBuilder(10*collection.size());
     for (Iterator i = collection.iterator(); i.hasNext();) {
       result.append(i.next().toString());
       if (i.hasNext())
         result.append(delimeter);
     }
+    return result.toString();
+  }
+
+  /**
+   * Returns string contains all emenetns of array with specified delimeter
+   *
+   * @param array array
+   * @param delimeter delimeter
+   * @return string
+   */
+  public static String arrayToString(final Object[] array, final String delimeter) {
+    if(array.length == 0) {
+      return "";
+    }
+    StringBuilder result = new StringBuilder(10*array.length);
+    for (int i = 0; i < array.length-1; i++) {
+      result.append(array[i].toString()).append(delimeter);
+    }
+    result.append(array[array.length-1].toString());
+
     return result.toString();
   }
 

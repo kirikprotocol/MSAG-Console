@@ -15,8 +15,7 @@ class SaveableConfigTree {
   private Map<String, Object> params = new HashMap<String, Object>();
 
   public SaveableConfigTree(Config config) {
-    for (Iterator i = config.params.keySet().iterator(); i.hasNext();) {
-      String name = (String) i.next();
+    for (String name : config.params.keySet()) {
       this.putParameter(name, config.params.get(name));
     }
   }
@@ -50,8 +49,7 @@ class SaveableConfigTree {
   private void writeParams(PrintWriter out, String prefix, Map<String, Object> parameters) throws Config.WrongParamTypeException {
     List<String> paramNames = new ArrayList<String>(parameters.keySet());
     Collections.sort(paramNames);
-    for (Iterator i = paramNames.iterator(); i.hasNext();) {
-      String paramName = (String) i.next();
+    for (String paramName : paramNames) {
       Object paramValue = parameters.get(paramName);
       out.print((prefix + "<param name=\"" + StringEncoderDecoder.encode(paramName) + "\" type=\""));
       if (paramValue instanceof String) {

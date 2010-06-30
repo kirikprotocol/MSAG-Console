@@ -7,7 +7,7 @@ import java.util.*;
 
 
 public class LocaleMessages {
-  private static Map localeMessages = new HashMap();
+  private static Map<Locale, ResourceBundle> localeMessages = new HashMap<Locale, ResourceBundle>();
 
   public static Config configFile = null;
   public static String DEFAULT_PREFERRED_LANGUAGE = "en";
@@ -20,7 +20,7 @@ public class LocaleMessages {
   }
 
   public static Set getStrings(Locale locale, String prefix) {
-    Set result = new HashSet();
+    Set<String> result = new HashSet<String>();
     final int prefixLength = prefix.length();
     final ResourceBundle res = getResourceBundle(locale);
     if (res != null) {
@@ -57,9 +57,9 @@ public class LocaleMessages {
   }
 
   public static ResourceBundle getResourceBundle(Locale locale) {
-    ResourceBundle res = (ResourceBundle) localeMessages.get(locale);
-    if (res == null) res = (ResourceBundle) localeMessages.get(new Locale(locale.getLanguage(), locale.getCountry()));
-    if (res == null) res = (ResourceBundle) localeMessages.get(new Locale(locale.getLanguage()));
+    ResourceBundle res = localeMessages.get(locale);
+    if (res == null) res = localeMessages.get(new Locale(locale.getLanguage(), locale.getCountry()));
+    if (res == null) res = localeMessages.get(new Locale(locale.getLanguage()));
     if (res == null) {
       try {
         res = ResourceBundle.getBundle(SMSC_BUNDLE_NAME, locale);

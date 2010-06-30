@@ -16,6 +16,7 @@ import java.util.*;
 /**
  * Класс для работы с конфигурационными xml файлами
  */
+
 public class Config implements Cloneable {
 
   private File configFile = null;
@@ -73,7 +74,7 @@ public class Config implements Cloneable {
     if (value == null)
       throw new ParamNotFoundException("Parameter \"" + paramName + "\" not found");
     if (value instanceof Integer)
-      return ((Integer) value).intValue();
+      return (Integer)value;
     else
       throw new WrongParamTypeException("Parameter \"" + paramName + "\" is not integer");
   }
@@ -87,13 +88,12 @@ public class Config implements Cloneable {
     else
       throw new WrongParamTypeException("Parameter \"" + paramName + "\" is not string");
   }
-
   public synchronized boolean getBool(String paramName) throws ParamNotFoundException, WrongParamTypeException {
     Object value = params.get(paramName);
     if (value == null)
       throw new ParamNotFoundException("Parameter \"" + paramName + "\" not found");
     if (value instanceof Boolean)
-      return ((Boolean) value).booleanValue();
+      return ((Boolean) value);
     else
       throw new WrongParamTypeException("Parameter \"" + paramName + "\" is not boolean");
   }
@@ -125,9 +125,8 @@ public class Config implements Cloneable {
 
   public synchronized Collection<String> getSectionChildSectionNames(String sectionName) {
     int dotpos = sectionName.length();
-    Set result = new HashSet();
-    for (Iterator i = params.keySet().iterator(); i.hasNext();) {
-      String name = (String) i.next();
+    Set<String> result = new HashSet<String>();
+    for (String name : params.keySet()) {
       if (name.length() > (dotpos + 1) && name.startsWith(sectionName) && name.charAt(dotpos) == '.' && name.lastIndexOf('.') > dotpos) {
         result.add(name.substring(0, name.indexOf('.', dotpos + 1)));
       }
@@ -138,9 +137,8 @@ public class Config implements Cloneable {
 
   public synchronized Set getSectionChildShortSectionNames(String sectionName) {
     int dotpos = sectionName.length();
-    Set result = new HashSet();
-    for (Iterator i = params.keySet().iterator(); i.hasNext();) {
-      String name = (String) i.next();
+    Set<String> result = new HashSet<String>();
+    for (String name : params.keySet()) {
       if (name.length() > (dotpos + 1) && name.startsWith(sectionName) && name.charAt(dotpos) == '.' && name.lastIndexOf('.') > dotpos) {
         result.add(name.substring(dotpos + 1, name.indexOf('.', dotpos + 1)));
       }
@@ -151,9 +149,8 @@ public class Config implements Cloneable {
 
   public synchronized Collection<String> getSectionChildParamsNames(String sectionName) {
     int dotpos = sectionName.length();
-    Set result = new HashSet();
-    for (Iterator i = params.keySet().iterator(); i.hasNext();) {
-      String name = (String) i.next();
+    Set<String> result = new HashSet<String>();
+    for (String name : params.keySet()) {
       if (name.length() > (dotpos + 1) && name.startsWith(sectionName) && name.lastIndexOf('.') == dotpos) {
         result.add(name);
       }
@@ -162,15 +159,13 @@ public class Config implements Cloneable {
   }
 
   public synchronized void renameSection(String oldName, String newName) {
-    List oldNames = new LinkedList();
-    for (Iterator i = params.keySet().iterator(); i.hasNext();) {
-      String oldParamName = (String) i.next();
+    List<String> oldNames = new LinkedList<String>();
+    for (String oldParamName : params.keySet()) {
       if (oldParamName.startsWith(oldName)) {
         oldNames.add(oldParamName);
       }
     }
-    for (Iterator i = oldNames.iterator(); i.hasNext();) {
-      String oldParamName = (String) i.next();
+    for (String oldParamName : oldNames) {
       Object value = params.remove(oldParamName);
       params.put(newName + oldParamName.substring(oldName.length()), value);
     }
@@ -196,20 +191,12 @@ public class Config implements Cloneable {
     String fullName = prefix == null || prefix.equals("") ? elem.getAttribute("name") : prefix + "." + elem.getAttribute("name");
     String type = elem.getAttribute("type");
     String value = Utils.getNodeText(elem);
-    if (type.equalsIgnoreCase("int")) {
-      params.put(fullName, new Integer(value));
-    } else if (type.equalsIgnoreCase("bool")) {
-      params.put(fullName, new Boolean(value));
-    } else {
-      params.put(fullName, value);
-    }
+    params.put(fullName, value);
   }
 
   public synchronized void removeSection(final String sectionName) {
-    for (Iterator i = getSectionChildSectionNames(sectionName).iterator(); i.hasNext();)
-      removeSection((String) i.next());
-    for (Iterator i = getSectionChildParamsNames(sectionName).iterator(); i.hasNext();)
-      removeParam((String) i.next());
+    for (String o : getSectionChildSectionNames(sectionName)) removeSection(o);
+    for (String o : getSectionChildParamsNames(sectionName)) removeParam(o);
   }
 
 
@@ -231,7 +218,7 @@ public class Config implements Cloneable {
     save(configFile, encoding);
   }
 
-  
+
   private synchronized void save(final File configFileToSave, final String encoding) throws IOException, WrongParamTypeException {
     File configXmlNew = Functions.createNewFilenameForSave(configFileToSave);
 
@@ -272,9 +259,8 @@ public class Config implements Cloneable {
 
   public synchronized Collection getSectionChildShortParamsNames(String sectionName) {
     int dotpos = sectionName.length();
-    Set result = new HashSet();
-    for (Iterator i = params.keySet().iterator(); i.hasNext();) {
-      String name = (String) i.next();
+    Set<String> result = new HashSet<String>();
+    for (String name : params.keySet()) {
       if (name.length() > (dotpos + 1) && name.startsWith(sectionName) && name.lastIndexOf('.') == dotpos) {
         result.add(name.substring(dotpos + 1));
       }
@@ -283,8 +269,7 @@ public class Config implements Cloneable {
   }
 
   public synchronized boolean containsSection(String sectionName) {
-    for (Iterator i = params.keySet().iterator(); i.hasNext();) {
-      String paramName = (String) i.next();
+    for (String paramName : params.keySet()) {
       if (paramName.length() > sectionName.length() && paramName.charAt(sectionName.length()) == '.' && paramName.startsWith(sectionName))
         return true;
     }
@@ -297,8 +282,7 @@ public class Config implements Cloneable {
 
   public synchronized void copySectionFromConfig(final Config configToCopyFrom, final String sectionName) {
     final int sectionNameLength = sectionName.length();
-    for (Iterator i = configToCopyFrom.getParameterNames().iterator(); i.hasNext();) {
-      String paramName = (String) i.next();
+    for (String paramName : configToCopyFrom.getParameterNames()) {
       if (paramName.startsWith(sectionName) && paramName.charAt(sectionNameLength) == '.')
         params.put(paramName, configToCopyFrom.params.get(paramName));
     }
@@ -338,7 +322,7 @@ public class Config implements Cloneable {
     final Object o1 = this.params.get(fullParamName);
     if (o1 == null || o1 instanceof Boolean) {
       final Boolean b1 = (Boolean) o1;
-      final boolean v1 = b1 == null ? false : b1.booleanValue();
+      final boolean v1 = b1 != null && b1;
       return v1 == paramValue;
     } else
       return false;
@@ -348,7 +332,7 @@ public class Config implements Cloneable {
     final Object o1 = this.params.get(fullParamName);
     if (o1 == null || o1 instanceof Integer) {
       final Integer i1 = (Integer) o1;
-      final int v1 = i1 == null ? 0 : i1.intValue();
+      final int v1 = i1 == null ? 0 : i1;
       return v1 == paramValue;
     } else
       return false;
@@ -356,8 +340,7 @@ public class Config implements Cloneable {
 
   public synchronized void removeParamsFromSection(String sectionName) {
     final int dotpos = sectionName.length();
-    for (Iterator i = new ArrayList(params.keySet()).iterator(); i.hasNext();) {
-      String name = (String) i.next();
+    for (String name : new ArrayList<String>(params.keySet())) {
       if (name.length() > (dotpos + 1) && name.startsWith(sectionName) && name.lastIndexOf('.') == dotpos) {
         params.remove(name);
       }
@@ -366,8 +349,7 @@ public class Config implements Cloneable {
 
   public synchronized void copySectionParamsFromConfig(Config configToCopyFrom, String sectionName) {
     final int sectionNameLength = sectionName.length();
-    for (Iterator i = configToCopyFrom.getParameterNames().iterator(); i.hasNext();) {
-      String paramName = (String) i.next();
+    for (String paramName : configToCopyFrom.getParameterNames()) {
       if (paramName.length() > (sectionNameLength + 1) && paramName.startsWith(sectionName) && paramName.lastIndexOf('.') == sectionNameLength)
         params.put(paramName, configToCopyFrom.params.get(paramName));
     }
