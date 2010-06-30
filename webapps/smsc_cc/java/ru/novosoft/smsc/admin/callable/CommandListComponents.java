@@ -5,7 +5,6 @@
  */
 package ru.novosoft.smsc.admin.callable;
 
-import ru.novosoft.smsc.admin.service.ServiceCommand;
 
 
 class CommandListComponents extends ServiceCommand {

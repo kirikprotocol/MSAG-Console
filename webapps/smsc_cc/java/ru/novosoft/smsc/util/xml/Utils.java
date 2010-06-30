@@ -15,9 +15,10 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.FactoryConfigurationError;
 import javax.xml.parsers.ParserConfigurationException;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.Reader;
+import javax.xml.transform.*;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import java.io.*;
 
 
 public class Utils {
@@ -44,6 +45,15 @@ public class Utils {
   }
 
   public static Document parse(Reader input) throws FactoryConfigurationError, ParserConfigurationException, SAXException, IOException {
+    if (input == null)
+      throw new NullPointerException("input stream is null");
+    DocumentBuilderFactory factory = getDocumentBuilderFactory();
+    DocumentBuilder builder = factory.newDocumentBuilder();
+    builder.setEntityResolver(getDtdsEntityResolver());
+    InputSource source = new InputSource(input);
+    return builder.parse(source);
+  }
+  public static Document parse(InputStream input) throws FactoryConfigurationError, ParserConfigurationException, SAXException, IOException {
     if (input == null)
       throw new NullPointerException("input stream is null");
     DocumentBuilderFactory factory = getDocumentBuilderFactory();
@@ -96,6 +106,18 @@ public class Utils {
     out.println();
     out.println("<" + docType + ">");
     return out;
+  }
+
+  public static void storeConfig(OutputStream out, Document d, String encoding, String docType) throws TransformerException {
+    Source source = new DOMSource(d.getDocumentElement());
+    Result result = new StreamResult(out);
+    Transformer xformer = TransformerFactory.newInstance().newTransformer();
+    xformer.setOutputProperty(OutputKeys.INDENT, "yes");
+    xformer.setOutputProperty(OutputKeys.ENCODING, encoding);
+    if(docType != null) {
+      xformer.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, docType);
+    }
+    xformer.transform(source, result);
   }
 
   public static PrintWriter storeConfigFooter(PrintWriter out, String docType) {

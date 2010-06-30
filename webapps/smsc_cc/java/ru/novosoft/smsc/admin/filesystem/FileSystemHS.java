@@ -8,7 +8,7 @@ import java.io.*;
 /**
  * author: alkhal
  */
-class FileSystemHS extends FileSystem{
+class FileSystemHS extends FileSystem {
 
   private File baseDir;
 
@@ -29,18 +29,18 @@ class FileSystemHS extends FileSystem{
     assert file != null : "Some arguments are null";
     checkErrors();
     File[] mirrors = getMirrorsFiles(file);
-    try{
+    try {
       final FileOutputStream[] oss = new FileOutputStream[mirrorsDir.length];
-      int i=0;
-      for(File f : mirrors) {
+      int i = 0;
+      for (File f : mirrors) {
         oss[i] = new FileOutputStream(f);
         i++;
       }
       return new HSFileOutputStream(file, oss);
-    }catch (IOException e) {
+    } catch (IOException e) {
       errStr = e.getMessage();
       error = true;
-      logger.error(e,e);
+      logger.error(e, e);
       throw new AdminException(e.getMessage());
     }
   }
@@ -58,10 +58,10 @@ class FileSystemHS extends FileSystem{
     toFiles[mirrorsDir.length] = toFile;
 
 
-    for(int i=files.length-1; i>-1 ; i--) {
-      if(!files[i].renameTo(toFiles[i])) {
+    for (int i = files.length - 1; i > -1; i--) {
+      if (!files[i].renameTo(toFiles[i])) {
         error = true;
-        errStr = "Can't rename file '"+ files[i].getAbsolutePath()+"' to '"+toFiles[i].getAbsolutePath()+'\'';
+        errStr = "Can't rename file '" + files[i].getAbsolutePath() + "' to '" + toFiles[i].getAbsolutePath() + '\'';
         logger.error(errStr);
         throw new AdminException(errStr);
       }
@@ -81,12 +81,12 @@ class FileSystemHS extends FileSystem{
     toFiles[mirrorsDir.length] = toFile;
 
 
-    for(int i=files.length-1; i>-1 ; i--) {
-      try{
+    for (int i = files.length - 1; i > -1; i--) {
+      try {
         Functions.copyFileTo(files[i], toFiles[i]);
-      }catch (IOException e) {
+      } catch (IOException e) {
         error = true;
-        errStr = "Can't copy file '"+ files[i].getAbsolutePath()+"' to '"+toFiles[i].getAbsolutePath()+'\'';
+        errStr = "Can't copy file '" + files[i].getAbsolutePath() + "' to '" + toFiles[i].getAbsolutePath() + '\'';
         logger.error(e, e);
         throw new AdminException(errStr);
       }
@@ -103,10 +103,10 @@ class FileSystemHS extends FileSystem{
     getMirrorsFiles(file, files);
     files[mirrorsDir.length] = file;
 
-    for(int i=files.length-1; i>-1 ; i--) {
-      if(!files[i].delete()) {
+    for (int i = files.length - 1; i > -1; i--) {
+      if (!files[i].delete()) {
         error = true;
-        errStr = "Can't remove file '"+ files[i].getAbsolutePath()+'\'';
+        errStr = "Can't remove file '" + files[i].getAbsolutePath() + '\'';
         logger.error(errStr);
         throw new AdminException(errStr);
       }
@@ -122,10 +122,10 @@ class FileSystemHS extends FileSystem{
     getMirrorsFiles(file, files);
     files[mirrorsDir.length] = file;
 
-    for(int i=files.length-1; i>-1 ; i--) {
-      if(!files[i].mkdirs()) {
+    for (int i = files.length - 1; i > -1; i--) {
+      if (!files[i].mkdirs()) {
         error = true;
-        errStr = "Can't mkdirs for file '"+ files[i].getAbsolutePath()+'\'';
+        errStr = "Can't mkdirs for file '" + files[i].getAbsolutePath() + '\'';
         logger.error(errStr);
         throw new AdminException(errStr);
       }
@@ -140,23 +140,23 @@ class FileSystemHS extends FileSystem{
     return files;
   }
 
-  private void getMirrorsFiles(File baseFile, File[] result) throws AdminException{
+  private void getMirrorsFiles(File baseFile, File[] result) throws AdminException {
     assert baseFile != null : "Some arguments are null";
     String absolutePath = baseFile.getAbsolutePath();
-    if(!absolutePath.startsWith(baseDir.getAbsolutePath())) {
-      throw new AdminException("File '"+absolutePath+"' must be in subdirectories of '"+baseDir+'\'');
+    if (!absolutePath.startsWith(baseDir.getAbsolutePath())) {
+      throw new AdminException("File '" + absolutePath + "' must be in subdirectories of '" + baseDir + '\'');
     }
     String relativePath = absolutePath.substring(baseDir.getAbsolutePath().length());
-    if(relativePath.startsWith(File.separator)) {
+    if (relativePath.startsWith(File.separator)) {
       relativePath = relativePath.substring(File.separator.length());
     }
-    int i=0;
-    for(File md : mirrorsDir) {
+    int i = 0;
+    for (File md : mirrorsDir) {
       String path = md.getAbsolutePath();
-      if(!path.endsWith(File.separator)) {
+      if (!path.endsWith(File.separator)) {
         path = path + File.separator;
       }
-      result[i] = new File(path+relativePath);
+      result[i] = new File(path + relativePath);
       i++;
     }
   }
@@ -174,9 +174,9 @@ class FileSystemHS extends FileSystem{
 //    }
 //  }
 
-  private void checkErrors() throws AdminException{
-    if(error) {
-      throw new AdminException("There was a error at some time ago. Further work is impossible. ERROR: '"+errStr+'\'');
+  private void checkErrors() throws AdminException {
+    if (error) {
+      throw new AdminException("There was a error at some time ago. Further work is impossible. ERROR: '" + errStr + '\'');
     }
   }
 
@@ -191,12 +191,12 @@ class FileSystemHS extends FileSystem{
 
     @Override
     public void write(int b) throws IOException {
-      try{
+      try {
         super.write(b);
-        for(FileOutputStream fos : oss) {
+        for (FileOutputStream fos : oss) {
           fos.write(b);
         }
-      }catch (IOException e){
+      } catch (IOException e) {
         errStr = e.getMessage();
         error = true;
         throw e;
@@ -205,12 +205,12 @@ class FileSystemHS extends FileSystem{
 
     @Override
     public void close() throws IOException {
-      try{
+      try {
         super.close();
-        for(FileOutputStream fos : oss) {
+        for (FileOutputStream fos : oss) {
           fos.close();
         }
-      }catch (IOException e){
+      } catch (IOException e) {
         errStr = e.getMessage();
         error = true;
         throw e;
@@ -219,12 +219,12 @@ class FileSystemHS extends FileSystem{
 
     @Override
     public void flush() throws IOException {
-      try{
+      try {
         super.flush();
-        for(FileOutputStream fos : oss) {
+        for (FileOutputStream fos : oss) {
           fos.flush();
         }
-      }catch (IOException e){
+      } catch (IOException e) {
         errStr = e.getMessage();
         error = true;
         throw e;
@@ -233,12 +233,12 @@ class FileSystemHS extends FileSystem{
 
     @Override
     public void write(byte[] b) throws IOException {
-      try{
+      try {
         super.write(b);
-        for(FileOutputStream fos : oss) {
+        for (FileOutputStream fos : oss) {
           fos.write(b);
         }
-      }catch (IOException e){
+      } catch (IOException e) {
         errStr = e.getMessage();
         error = true;
         throw e;
@@ -247,12 +247,12 @@ class FileSystemHS extends FileSystem{
 
     @Override
     public void write(byte[] b, int off, int len) throws IOException {
-      try{
+      try {
         super.write(b, off, len);
-        for(FileOutputStream fos : oss) {
+        for (FileOutputStream fos : oss) {
           fos.write(b, off, len);
         }
-      }catch (IOException e){
+      } catch (IOException e) {
         errStr = e.getMessage();
         error = true;
         throw e;

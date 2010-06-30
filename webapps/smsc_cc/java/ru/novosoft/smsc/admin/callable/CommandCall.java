@@ -6,7 +6,6 @@
 package ru.novosoft.smsc.admin.callable;
 
 import org.w3c.dom.Element;
-import ru.novosoft.smsc.admin.service.ServiceCommand;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 
 import java.util.*;

@@ -11,14 +11,14 @@ import java.io.OutputStream;
 /**
  * author: alkhal
  */
-class FileSystemSingleHA extends FileSystem{
+class FileSystemSingleHA extends FileSystem {
 
   @Override
   public OutputStream getOutputStream(File file) throws AdminException {
     assert file != null : "Some arguments are null";
-    try{
+    try {
       return new FileOutputStream(file);
-    }catch (IOException e) {
+    } catch (IOException e) {
       logger.error(e, e);
       throw new AdminException(e.getMessage());
     }
@@ -27,8 +27,8 @@ class FileSystemSingleHA extends FileSystem{
   @Override
   public void rename(File file, File toFile) throws AdminException {
     assert file != null && toFile != null : "Some arguments are null";
-    if(!file.renameTo(toFile)) {
-      String err = "Can't rename file '"+file.getAbsolutePath()+"' to '"+toFile.getAbsolutePath()+'\'';
+    if (!file.renameTo(toFile)) {
+      String err = "Can't rename file '" + file.getAbsolutePath() + "' to '" + toFile.getAbsolutePath() + '\'';
       logger.error(err);
       throw new AdminException(err);
     }
@@ -37,10 +37,10 @@ class FileSystemSingleHA extends FileSystem{
   @Override
   public void copy(File file, File toFile) throws AdminException {
     assert file != null && toFile != null : "Some arguments are null";
-    try{
+    try {
       Functions.copyFileTo(file, toFile);
-    }catch (IOException e){
-      logger.error(e,e);
+    } catch (IOException e) {
+      logger.error(e, e);
       throw new AdminException(e.getMessage());
     }
   }
@@ -48,8 +48,8 @@ class FileSystemSingleHA extends FileSystem{
   @Override
   public void delete(File file) throws AdminException {
     assert file != null : "Some arguments are null";
-    if(!file.delete()) {
-      String err = "Can't remove file '"+file.getAbsolutePath()+'\'';
+    if (!file.delete()) {
+      String err = "Can't remove file '" + file.getAbsolutePath() + '\'';
       logger.error(err);
       throw new AdminException(err);
     }
@@ -59,8 +59,8 @@ class FileSystemSingleHA extends FileSystem{
   @Override
   public void mkdirs(File file) throws AdminException {
     assert file != null : "Some arguments are null";
-    if(!file.mkdirs()) {
-      String err = "Can't create dirs for '"+file.getAbsolutePath()+'\'';
+    if (!file.mkdirs()) {
+      String err = "Can't create dirs for '" + file.getAbsolutePath() + '\'';
       logger.error(err);
       throw new AdminException(err);
     }
