@@ -20,9 +20,9 @@ import java.util.*;
  */
 public class Daemon extends Proxy {
 
-  protected String daemonServicesFolder;
+  protected File daemonServicesFolder;
 
-  public Daemon(final String host, final int port, final String daemonServicesFolder) {
+  public Daemon(final String host, final int port, final File daemonServicesFolder) {
     super(host, port);
     this.daemonServicesFolder = daemonServicesFolder;
     try {
@@ -166,7 +166,5 @@ public class Daemon extends Proxy {
     }
   }
 
-  public String getDaemonServicesFolder() {
-    return daemonServicesFolder;
-  }
+
 }

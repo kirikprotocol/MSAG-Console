@@ -4,6 +4,7 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.service.daemon.ControlledService;
 import ru.novosoft.smsc.admin.service.daemon.Daemon;
 
+import java.io.File;
 import java.util.Collection;
 
 /**
@@ -13,7 +14,7 @@ class ServiceManagerSingle extends ServiceManager {
 
   private final Daemon daemon ;
 
-  public ServiceManagerSingle(String host, int port, String servicesFolder) {
+  public ServiceManagerSingle(String host, int port, File servicesFolder) {
     daemon = new Daemon(host, port, servicesFolder);
   }
 

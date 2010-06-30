@@ -4,6 +4,7 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.service.resource_group.ResourceGroup;
 import ru.novosoft.smsc.admin.service.resource_group.ResourceGroupManager;
 
+import java.io.File;
 import java.util.Collection;
 
 /**
@@ -13,7 +14,7 @@ class ServiceManagerHA extends ServiceManager {
 
   private final ResourceGroupManager resGroupManager;
 
-  public ServiceManagerHA(String resourceGroupsFile, String servicesDir) throws AdminException {
+  public ServiceManagerHA(File resourceGroupsFile, File servicesDir) throws AdminException {
     resGroupManager = new ResourceGroupManager(resourceGroupsFile, servicesDir);
   }
 

@@ -6,10 +6,7 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.protocol.Response;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Демон, управляющий сервисами в HS режиме
@@ -18,7 +15,7 @@ public class DaemonHS extends Daemon {
 
   private final List<String> hosts;
 
-  public DaemonHS(final String host, final int port, final String daemonServicesFolder, List<String> hosts) {
+  public DaemonHS(final String host, final int port, final File daemonServicesFolder, Collection<String> hosts) {
     super(host, port, daemonServicesFolder);
     this.hosts = new ArrayList<String>(hosts);
   }

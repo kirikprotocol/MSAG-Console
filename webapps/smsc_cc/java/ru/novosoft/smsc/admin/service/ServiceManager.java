@@ -1,22 +1,46 @@
 package ru.novosoft.smsc.admin.service;
 
+import ru.novosoft.smsc.admin.AdminContext;
 import ru.novosoft.smsc.admin.AdminException;
 
+import java.net.InetAddress;
 import java.util.Collection;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * API для запуска/остановки сервисов.
+ *
  * @author Artem Snopkov
  */
 public abstract class ServiceManager {
 
   private static ServiceManager instance;
+  private static final Lock initLock = new ReentrantLock();
 
-  public static synchronized ServiceManager getInstance() {
-
+  public static ServiceManager getInstance() throws AdminException {
     if (instance == null) {
-      // todo Инициализировать ServiceManagerHS, ServiceManagerHA или ServiceManagerSingle
-      // todo перед этим надо понять откуда брать параметры для инициализации этих классов
+      AdminContext admContext = AdminContext.getInstance();
+      try {
+        initLock.lock();
+        if (instance == null) {
+          switch (admContext.getInstallationType()) {
+            case SINGLE:
+              instance = new ServiceManagerSingle(admContext.getSingleDaemonHost(), admContext.getSingleDaemonPort(), admContext.getServicesDir());
+              break;
+            case HS:
+              instance = new ServiceManagerHS(admContext.getHSDaemonHost(), admContext.getHSDaemonPort(), admContext.getServicesDir(), admContext.getHSDaemonHosts());
+              break;
+            case HA:
+              instance = new ServiceManagerHA(admContext.getHAResourceGroupsFile(), admContext.getServicesDir());
+              break;
+            default:
+              return null;
+          }
+        }
+      } finally {
+        initLock.unlock();
+      }
     }
     return instance;
   }

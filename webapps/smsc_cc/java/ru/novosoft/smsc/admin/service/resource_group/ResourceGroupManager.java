@@ -19,9 +19,9 @@ public class ResourceGroupManager {
 
   private final ResourceGroupList resGroups = new ResourceGroupList();
   private final Properties resGroupsNames = new Properties();
-  private final String servicesDir;
+  private final File servicesDir;
 
-  public ResourceGroupManager(String resourceGroupsFile, String servicesDir) throws AdminException {
+  public ResourceGroupManager(File resourceGroupsFile, File servicesDir) throws AdminException {
 
     this.servicesDir = servicesDir;
 
