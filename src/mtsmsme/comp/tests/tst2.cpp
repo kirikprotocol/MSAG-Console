@@ -53,6 +53,18 @@ class SccpSenderMock: public SccpSender {
                        dump((uint16_t)buffer.size(),&buffer[0]).c_str());
       }
   };
+class SlowRequestSender: public RequestSender {
+  virtual bool send(Request* request)
+  {
+    //simulate 1043 to stop TSM and then set status
+    Request& req = *request;
+    req.setSendResult(1143);
+    sleep(5);
+    req.setSendResult(0);
+    //req.dstmsc;
+    return true;
+  }
+};
 void AmericaTestFixture::setUp()
 {
   Logger::Init();
@@ -477,4 +489,8 @@ void AmericaTestFixture::sendRoutingInfo_res_decoding()
   //smsc_log_debug(logger,"decoded MSRN=%s",conf.getMSRN());
   char expected_msrn[] = "79134099870";
   CPPUNIT_ASSERT( 0 == strcmp(expected_msrn,conf.getMSRN()));
+}
+void AmericaTestFixture::slow_smpp_sender(void)
+{
+  smsc_log_debug(logger, "======== AmericaTestFixture::slow_smpp_sender ========\n");
 }
