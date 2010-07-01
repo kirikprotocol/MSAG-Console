@@ -8,6 +8,7 @@ import java.util.*;
 
 /**
  * Вспомогательный класс, преобразующий конфиг в дерево.
+ * @author Aleksandr Khalitov
  */
 class SaveableConfigTree {
 

@@ -17,7 +17,7 @@ import java.util.concurrent.locks.ReentrantLock;
 @SuppressWarnings({"EmptyCatchBlock"})
 
 /**
- * API для простмотра статистики смс
+ * API РґР»СЏ РїСЂРѕСЃС‚РјРѕС‚СЂР° СЃС‚Р°С‚РёСЃС‚РёРєРё СЃРјСЃ
  * @author Aleksandr Khalitov
  */
 
@@ -31,15 +31,16 @@ public class ArchiveDemon {
 
   private static final Logger logger = Logger.getLogger(ArchiveDemon.class);
 
+  private static final String SERVICE_NAME = "ArchiveDaemon";
+
   private static final Lock initLock = new ReentrantLock();
 
-  private static final String SERVICE_NAME = "archive_daemon";
 
   /**
-   * Возвращает инстанс класса
+   * Р’РѕР·РІСЂР°С‰Р°РµС‚ РёРЅСЃС‚Р°РЅСЃ РєР»Р°СЃСЃР°
    *
-   * @return инстанс класса
-   * @throws AdminException ошибка при инициализации
+   * @return РёРЅСЃС‚Р°РЅСЃ РєР»Р°СЃСЃР°
+   * @throws AdminException РѕС€РёР±РєР° РїСЂРё РёРЅРёС†РёР°Р»РёР·Р°С†РёРё
    */
   public static ArchiveDemon getInstance() throws AdminException {
     if (instance == null) {
@@ -65,11 +66,11 @@ public class ArchiveDemon {
   }
 
   /**
-   * Возвращает статистику смс, удовлетворяющую запросу
+   * Р’РѕР·РІСЂР°С‰Р°РµС‚ СЃС‚Р°С‚РёСЃС‚РёРєСѓ СЃРјСЃ, СѓРґРѕРІР»РµС‚РІРѕСЂСЏСЋС‰СѓСЋ Р·Р°РїСЂРѕСЃСѓ
    *
-   * @param query запрос
-   * @return статистика смс
-   * @throws AdminException ошибка извлечения статистики
+   * @param query Р·Р°РїСЂРѕСЃ
+   * @return СЃС‚Р°С‚РёСЃС‚РёРєР° СЃРјСЃ
+   * @throws AdminException РѕС€РёР±РєР° РёР·РІР»РµС‡РµРЅРёСЏ СЃС‚Р°С‚РёСЃС‚РёРєРё
    */
   public SmsSet getSmsSet(SmsQuery query) throws AdminException {
     Socket socket = null;
@@ -137,11 +138,11 @@ public class ArchiveDemon {
   }
 
   /**
-   * Возвращает кол-во смс, удовлетворяющим запросу
+   * Р’РѕР·РІСЂР°С‰Р°РµС‚ РєРѕР»-РІРѕ СЃРјСЃ, СѓРґРѕРІР»РµС‚РІРѕСЂСЏСЋС‰РёРј Р·Р°РїСЂРѕСЃСѓ
    *
-   * @param query запрос
-   * @return кол-во смс
-   * @throws AdminException ошибка извлечения статистики
+   * @param query Р·Р°РїСЂРѕСЃ
+   * @return РєРѕР»-РІРѕ СЃРјСЃ
+   * @throws AdminException РѕС€РёР±РєР° РёР·РІР»РµС‡РµРЅРёСЏ СЃС‚Р°С‚РёСЃС‚РёРєРё
    */
   public int getSmsCount(SmsQuery query) throws AdminException {
     Socket socket = null;
@@ -211,9 +212,9 @@ public class ArchiveDemon {
   }
 
   /**
-   * Возвращает настройки ArchiveDemon
+   * Р’РѕР·РІСЂР°С‰Р°РµС‚ РЅР°СЃС‚СЂРѕР№РєРё ArchiveDemon
    *
-   * @return настройки ArchiveDemon
+   * @return РЅР°СЃС‚СЂРѕР№РєРё ArchiveDemon
    */
   public ArchiveConfig getContext() {
     return context;

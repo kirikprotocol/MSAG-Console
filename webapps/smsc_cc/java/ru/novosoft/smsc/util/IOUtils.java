@@ -6,11 +6,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
- * author: alkhal
- */
-
-/**
- * Утилиты ввода/вывода
+ * РЈС‚РёР»РёС‚С‹ РІРІРѕРґР°/РІС‹РІРѕРґР°
+ * @author Aleksandr Khalitov
  */
 
 public class IOUtils {

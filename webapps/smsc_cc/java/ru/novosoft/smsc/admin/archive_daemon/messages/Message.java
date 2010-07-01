@@ -11,7 +11,7 @@ import java.util.Date;
 import java.util.TimeZone;
 
 /**
- * Служебный класс для работы с ArchiveDemon
+ * РЎР»СѓР¶РµР±РЅС‹Р№ РєР»Р°СЃСЃ РґР»СЏ СЂР°Р±РѕС‚С‹ СЃ ArchiveDemon
  *
  * @author Aleksandr Khalitov
  */

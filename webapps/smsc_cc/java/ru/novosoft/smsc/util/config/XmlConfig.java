@@ -5,7 +5,7 @@ import javax.xml.transform.TransformerException;
 import java.io.*;
 
 /**
- * author: alkhal
+ * @author Aleksandr Khalitov
  *
  * Config based on xml file
  */
@@ -20,16 +20,6 @@ public class XmlConfig extends XmlConfigSection {
    * Creates new instance of xml config
    */
   public XmlConfig() {
-  }
-
-  /**
-   * Creates new instance of xml config and load it from file
-   * @param file Config file
-   * @throws ConfigException If can't load
-   */
-  public XmlConfig(File file) throws ConfigException{
-    this();
-    load(file);
   }
 
   /**

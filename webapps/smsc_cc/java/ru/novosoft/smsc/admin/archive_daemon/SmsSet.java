@@ -5,7 +5,7 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * Совокупность записей ArchiveDemon
+ * РЎРѕРІРѕРєСѓРїРЅРѕСЃС‚СЊ Р·Р°РїРёСЃРµР№ ArchiveDemon
  *
  * @author Aleksandr Khalitov
  */

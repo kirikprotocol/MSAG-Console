@@ -14,8 +14,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 /**
- * User: artem
- * Date: 17.05.2007
+ * @author Aleksandr Khalitov
  */
 
 class XmlConfigWriter {

@@ -2,7 +2,7 @@ package ru.novosoft.smsc.admin.archive_daemon.messages;
 
 
 /**
- * Служебный класс для работы с ArchiveDemon
+ * РЎР»СѓР¶РµР±РЅС‹Р№ РєР»Р°СЃСЃ РґР»СЏ СЂР°Р±РѕС‚С‹ СЃ ArchiveDemon
  *
  * @author Aleksandr Khalitov
  */

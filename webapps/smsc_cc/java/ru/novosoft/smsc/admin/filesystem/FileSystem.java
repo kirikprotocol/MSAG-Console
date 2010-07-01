@@ -1,12 +1,16 @@
 package ru.novosoft.smsc.admin.filesystem;
 
 import org.apache.log4j.Category;
+import ru.novosoft.smsc.admin.AdminContext;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.InstallationType;
 
 import java.io.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * API для чтения/записи файлов
+ * API РґР»СЏ С‡С‚РµРЅРёСЏ/Р·Р°РїРёСЃРё С„Р°Р№Р»РѕРІ
  *
  * @author Aleksandr Khalitov
  */
@@ -14,17 +18,35 @@ public abstract class FileSystem {
 
   protected static final Category logger = Category.getInstance(FileSystem.class);
 
+  private static FileSystem instance;
 
-  public static FileSystem getInstance() {
-    return null;                            //todo
+  private static final Lock initLock = new ReentrantLock();
+
+  public static FileSystem getInstance() throws AdminException{
+    if(instance == null) {
+      AdminContext context = AdminContext.getInstance();
+      InstallationType installationType = context.getInstallationType();
+      try{
+        initLock.lock();
+        if(instance == null) {
+          switch (installationType) {
+            case HS: instance = new FileSystemHS(context.getAppBaseDir(), context.getAppMirrorDirs()); break;
+            default: instance = new FileSystemSingleHA();
+          }
+        }
+      }finally {
+        initLock.unlock();
+      }
+    }
+    return instance;
   }
 
   /**
-   * По названию файла, возвращает входной поток
+   * РџРѕ РЅР°Р·РІР°РЅРёСЋ С„Р°Р№Р»Р°, РІРѕР·РІСЂР°С‰Р°РµС‚ РІС…РѕРґРЅРѕР№ РїРѕС‚РѕРє
    *
-   * @param file файл
-   * @return поток
-   * @throws AdminException ошибка ввода/вывода
+   * @param file С„Р°Р№Р»
+   * @return РїРѕС‚РѕРє
+   * @throws AdminException РѕС€РёР±РєР° РІРІРѕРґР°/РІС‹РІРѕРґР°
    */
   public InputStream getInputStream(File file) throws AdminException {
     try {
@@ -36,46 +58,55 @@ public abstract class FileSystem {
   }
 
   /**
-   * По названию файла, возвращает выходной поток
+   * РџРѕ РЅР°Р·РІР°РЅРёСЋ С„Р°Р№Р»Р°, РІРѕР·РІСЂР°С‰Р°РµС‚ РІС‹С…РѕРґРЅРѕР№ РїРѕС‚РѕРє
    *
-   * @param file файл
-   * @return поток
-   * @throws AdminException ошибка ввода/вывода
+   * @param file С„Р°Р№Р»
+   * @return РїРѕС‚РѕРє
+   * @throws AdminException РѕС€РёР±РєР° РІРІРѕРґР°/РІС‹РІРѕРґР°
    */
   public abstract OutputStream getOutputStream(File file) throws AdminException;
 
   /**
-   * Переименовывает один файл в другой
+   * РџРµСЂРµРёРјРµРЅРѕРІС‹РІР°РµС‚ РѕРґРёРЅ С„Р°Р№Р» РІ РґСЂСѓРіРѕР№
    *
-   * @param file   исходный файл
-   * @param toFile новый файл
-   * @throws AdminException ошибка при переименовании
+   * @param file   РёСЃС…РѕРґРЅС‹Р№ С„Р°Р№Р»
+   * @param toFile РЅРѕРІС‹Р№ С„Р°Р№Р»
+   * @throws AdminException РѕС€РёР±РєР° РїСЂРё РїРµСЂРµРёРјРµРЅРѕРІР°РЅРёРё
    */
   public abstract void rename(File file, File toFile) throws AdminException;
 
   /**
-   * Копирует содержимое одного файла в другой
+   * РљРѕРїРёСЂСѓРµС‚ СЃРѕРґРµСЂР¶РёРјРѕРµ РѕРґРЅРѕРіРѕ С„Р°Р№Р»Р° РІ РґСЂСѓРіРѕР№
    *
-   * @param file   исходный файл
-   * @param toFile приёмник
-   * @throws AdminException ошибка при копировании
+   * @param file   РёСЃС…РѕРґРЅС‹Р№ С„Р°Р№Р»
+   * @param toFile РїСЂРёС‘РјРЅРёРє
+   * @throws AdminException РѕС€РёР±РєР° РїСЂРё РєРѕРїРёСЂРѕРІР°РЅРёРё
    */
   public abstract void copy(File file, File toFile) throws AdminException;
 
   /**
-   * Удаляет файла
+   * РЈРґР°Р»СЏРµС‚ С„Р°Р№Р»
    *
-   * @param file файл
-   * @throws AdminException ошибка при удалении
+   * @param file С„Р°Р№Р»
+   * @throws AdminException РѕС€РёР±РєР° РїСЂРё СѓРґР°Р»РµРЅРёРё
    */
   public abstract void delete(File file) throws AdminException;
 
   /**
-   * Создаёт новую директорию
+   * РЎРѕР·РґР°С‘С‚ РЅРѕРІСѓСЋ РґРёСЂРµРєС‚РѕСЂРёСЋ
    *
-   * @param file директория
-   * @throws AdminException ошибка при создании
+   * @param file РґРёСЂРµРєС‚РѕСЂРёСЏ
+   * @throws AdminException РѕС€РёР±РєР° РїСЂРё СЃРѕР·РґР°РЅРёРё
    */
   public abstract void mkdirs(File file) throws AdminException;
+
+  /**
+   * РџСЂРѕРІРµСЂСЏРµС‚ СЃСѓС‰РµСЃС‚РІРѕРІР°РЅРёРµ С„Р°Р№Р»Р° РёР»Рё РґРёСЂРµРєС‚РѕСЂРёРё
+   *
+   * @param file С„Р°Р№Р» РёР»Рё РґРёСЂРµРєС‚РѕСЂРёСЏ
+   * @return true - СЃСѓС‰РµСЃС‚РІСѓРµС‚, false - РёРЅР°С‡Рµ
+   * @throws AdminException РѕС€РёР±РєР° РїСЂРё РїСЂРѕРІРµСЂРєРё
+   */
+  public abstract boolean exist(File file) throws AdminException;
 
 }

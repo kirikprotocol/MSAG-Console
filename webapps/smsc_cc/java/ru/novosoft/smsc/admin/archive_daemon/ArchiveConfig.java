@@ -13,7 +13,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
- * Класс для работы с конфигурацией ArchiveDemon
+ * РљР»Р°СЃСЃ РґР»СЏ СЂР°Р±РѕС‚С‹ СЃ РєРѕРЅС„РёРіСѓСЂР°С†РёРµР№ ArchiveDemon
  *
  * @author Aleksandr Khalitov
  */
@@ -30,9 +30,9 @@ public class ArchiveConfig {
   private short port;
 
   /**
-   * @param host   хост, на которм запущен ArchiveDemon
-   * @param config конфигурациооный файл
-   * @throws AdminException ошибка при чтении конфигурационного файла
+   * @param host   С…РѕСЃС‚, РЅР° РєРѕС‚РѕСЂРј Р·Р°РїСѓС‰РµРЅ ArchiveDemon
+   * @param config РєРѕРЅС„РёРіСѓСЂР°С†РёРѕРѕРЅС‹Р№ С„Р°Р№Р»
+   * @throws AdminException РѕС€РёР±РєР° РїСЂРё С‡С‚РµРЅРёРё РєРѕРЅС„РёРіСѓСЂР°С†РёРѕРЅРЅРѕРіРѕ С„Р°Р№Р»Р°
    */
   ArchiveConfig(String host, File config) throws AdminException {
     resetConfig(true);
@@ -41,10 +41,10 @@ public class ArchiveConfig {
   }
 
   /**
-   * Чтение конфига
+   * Р§С‚РµРЅРёРµ РєРѕРЅС„РёРіР°
    *
-   * @param load true -перечитать конфиг из файла, false - из памяти
-   * @throws AdminException ошибка при чтении файла или конфига
+   * @param load true -РїРµСЂРµС‡РёС‚Р°С‚СЊ РєРѕРЅС„РёРі РёР· С„Р°Р№Р»Р°, false - РёР· РїР°РјСЏС‚Рё
+   * @throws AdminException РѕС€РёР±РєР° РїСЂРё С‡С‚РµРЅРёРё С„Р°Р№Р»Р° РёР»Рё РєРѕРЅС„РёРіР°
    */
   public void resetConfig(boolean load) throws AdminException {
     try {
@@ -73,10 +73,10 @@ public class ArchiveConfig {
   }
 
   /**
-   * Сохранение конфига в файл
+   * РЎРѕС…СЂР°РЅРµРЅРёРµ РєРѕРЅС„РёРіР° РІ С„Р°Р№Р»
    *
-   * @param config конфиг для сохранения
-   * @throws AdminException ошибка при записи
+   * @param config РєРѕРЅС„РёРі РґР»СЏ СЃРѕС…СЂР°РЅРµРЅРёСЏ
+   * @throws AdminException РѕС€РёР±РєР° РїСЂРё Р·Р°РїРёСЃРё
    */
   public void saveConfig(XmlConfig config) throws AdminException {
     OutputStream os = null;
@@ -99,25 +99,25 @@ public class ArchiveConfig {
   }
 
   /**
-   * Возвращает весь конфиг ArchiveDemon
+   * Р’РѕР·РІСЂР°С‰Р°РµС‚ РІРµСЃСЊ РєРѕРЅС„РёРі ArchiveDemon
    *
-   * @return конфиг ArchiveDemon
+   * @return РєРѕРЅС„РёРі ArchiveDemon
    */
   public XmlConfig getConfig() {
     return config;
   }
 
   /**
-   * Возвращает хост ArchiveDemon
+   * Р’РѕР·РІСЂР°С‰Р°РµС‚ С…РѕСЃС‚ ArchiveDemon
    *
-   * @return хост
+   * @return С…РѕСЃС‚
    */
   public String getHost() {
     return host;
   }
 
   /**
-   * Возвращает хост ArchiveDemon
+   * Р’РѕР·РІСЂР°С‰Р°РµС‚ С…РѕСЃС‚ ArchiveDemon
    *
    * @return port
    */

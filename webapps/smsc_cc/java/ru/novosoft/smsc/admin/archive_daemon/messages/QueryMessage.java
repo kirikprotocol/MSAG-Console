@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Служебный класс для работы с ArchiveDemon
+ * РЎР»СѓР¶РµР±РЅС‹Р№ РєР»Р°СЃСЃ РґР»СЏ СЂР°Р±РѕС‚С‹ СЃ ArchiveDemon
  *
  * @author Aleksandr Khalitov
  */
@@ -84,26 +84,26 @@ public class QueryMessage extends Message {
 
     if (isMeaning(query.getAbonentAddress())) {
       try {
-        Address mask = new Address(query.getAbonentAddress().trim());
-        list.add(new Param(T_ABN_ADDRESS, mask.getNormalizedMask()));
+        Address address = new Address(query.getAbonentAddress().trim());
+        list.add(new Param(T_ABN_ADDRESS, address.getNormalizedAddress()));
       } catch (AdminException e) {
-        throw new IOException("Invalid abonent address mask: " + e.getMessage());
+        throw new IOException("Invalid abonent address: " + e.getMessage());
       }
     } else {
       if (isMeaning(query.getFromAddress())) {
         try {
-          Address mask = new Address(query.getFromAddress().trim());
-          list.add(new Param(T_SRC_ADDRESS, mask.getNormalizedMask()));
+          Address address = new Address(query.getFromAddress().trim());
+          list.add(new Param(T_SRC_ADDRESS, address.getNormalizedAddress()));
         } catch (AdminException e) {
-          throw new IOException("Invalid source address mask: " + e.getMessage());
+          throw new IOException("Invalid source address: " + e.getMessage());
         }
       }
       if (isMeaning(query.getToAddress())) {
         try {
-          Address mask = new Address(query.getToAddress().trim());
-          list.add(new Param(T_DST_ADDRESS, mask.getNormalizedMask()));
+          Address address = new Address(query.getToAddress().trim());
+          list.add(new Param(T_DST_ADDRESS, address.getNormalizedAddress()));
         } catch (AdminException e) {
-          throw new IOException("Invalid destination address mask: " + e.getMessage());
+          throw new IOException("Invalid destination address: " + e.getMessage());
         }
       }
     }

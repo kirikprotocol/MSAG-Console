@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @SuppressWarnings({"UnusedDeclaration"})
 /**
- * Строка-запись в статистике ArchiveDemon
+ * РЎС‚СЂРѕРєР°-Р·Р°РїРёСЃСЊ РІ СЃС‚Р°С‚РёСЃС‚РёРєРµ ArchiveDemon
  * @author Aleksandr Khalitov
  */
 public class SmsRow {

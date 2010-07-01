@@ -13,6 +13,9 @@ import org.xml.sax.SAXException;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 import ru.novosoft.smsc.util.xml.Utils;
 
+/**
+ * @author Aleksandr Khalitov
+ */
 class XmlConfigReader {
   
   static void loadConfig(InputStream is, XmlConfig config) throws ConfigException {

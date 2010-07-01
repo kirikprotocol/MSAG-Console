@@ -8,7 +8,7 @@ import ru.novosoft.smsc.util.Functions;
 import java.util.Date;
 
 /**
- * Запрос для извлечения записей ArchiveDemon
+ * Р—Р°РїСЂРѕСЃ РґР»СЏ РёР·РІР»РµС‡РµРЅРёСЏ Р·Р°РїРёСЃРµР№ ArchiveDemon
  *
  * @author Aleksandr Khalitov
  */

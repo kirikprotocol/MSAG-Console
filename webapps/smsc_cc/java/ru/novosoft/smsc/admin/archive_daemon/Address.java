@@ -12,7 +12,7 @@ import ru.novosoft.smsc.util.StringEncoderDecoder;
 import java.io.PrintWriter;
 
 /**
- * Адрес сообщений в статистики ArchiveDemon
+ * РђРґСЂРµСЃ СЃРѕРѕР±С‰РµРЅРёР№ РІ СЃС‚Р°С‚РёСЃС‚РёРєРё ArchiveDemon
  *
  * @author Aleksandr Khalitov
  */
@@ -20,14 +20,14 @@ import java.io.PrintWriter;
 public class Address {
   private byte tone = 0;
   private byte npi = 0;
-  private String mask = null;                //todo переменовать
+  private String mask = null;                //todo РїРµСЂРµРјРµРЅРѕРІР°С‚СЊ
 
   /**
-   * Создаёт адрес
+   * РЎРѕР·РґР°С‘С‚ Р°РґСЂРµСЃ
    *
    * @param tone tone
    * @param npi  npi
-   * @param mask маска
+   * @param mask РјР°СЃРєР°
    */
   public Address(byte tone, byte npi, String mask) {
     this.tone = tone;
@@ -36,10 +36,10 @@ public class Address {
   }
 
   /**
-   * Создаёт адрес из строки
+   * РЎРѕР·РґР°С‘С‚ Р°РґСЂРµСЃ РёР· СЃС‚СЂРѕРєРё
    *
-   * @param address - адрес в виде строки
-   * @throws AdminException неправильный формат строки
+   * @param address - Р°РґСЂРµСЃ РІ РІРёРґРµ СЃС‚СЂРѕРєРё
+   * @throws AdminException РЅРµРїСЂР°РІРёР»СЊРЅС‹Р№ С„РѕСЂРјР°С‚ СЃС‚СЂРѕРєРё
    */
   public Address(String address) throws AdminException {
     String tmpAddress = address.trim();
@@ -54,27 +54,27 @@ public class Address {
   }
 
   /**
-   * Возвращает маску
+   * Р’РѕР·РІСЂР°С‰Р°РµС‚ РјР°СЃРєСѓ
    *
-   * @return маска
+   * @return РјР°СЃРєР°
    */
   public String getMask() {
     return mask;
   }
 
   /**
-   * Возвращает адрес в виде строки (К примеру: +79139489906, .5.0.somethink)
+   * Р’РѕР·РІСЂР°С‰Р°РµС‚ Р°РґСЂРµСЃ РІ РІРёРґРµ СЃС‚СЂРѕРєРё (Рљ РїСЂРёРјРµСЂСѓ: +79139489906, .5.0.somethink)
    *
-   * @return адрес в виде строки
+   * @return Р°РґСЂРµСЃ РІ РІРёРґРµ СЃС‚СЂРѕРєРё
    */
   public String getSimpleAdress() {
     return MaskUtils.getMask(tone, npi, mask);
   }
 
   /**
-   * Возвращает нормализованный адрес в виде строки: 'tone'.'npi'.'mask'
+   * Р’РѕР·РІСЂР°С‰Р°РµС‚ РЅРѕСЂРјР°Р»РёР·РѕРІР°РЅРЅС‹Р№ Р°РґСЂРµСЃ РІ РІРёРґРµ СЃС‚СЂРѕРєРё: 'tone'.'npi'.'mask'
    *
-   * @return адрес в виде строки
+   * @return Р°РґСЂРµСЃ РІ РІРёРґРµ СЃС‚СЂРѕРєРё
    */
   public String getNormalizedAddress() {
     return MaskUtils.getNormalizedMask(tone, npi, mask);
@@ -89,10 +89,10 @@ public class Address {
   }
 
   /**
-   * Записывает адресс в поток
+   * Р—Р°РїРёСЃС‹РІР°РµС‚ Р°РґСЂРµСЃСЃ РІ РїРѕС‚РѕРє
    *
-   * @param out поток
-   * @return поток
+   * @param out РїРѕС‚РѕРє
+   * @return РїРѕС‚РѕРє
    */
   public PrintWriter store(PrintWriter out) {
     out.println("       <adress value=\"" + StringEncoderDecoder.encode(getNormalizedAddress()) + "\"/>");
@@ -100,7 +100,7 @@ public class Address {
   }
 
   /**
-   * Возвращает tone
+   * Р’РѕР·РІСЂР°С‰Р°РµС‚ tone
    *
    * @return tone
    */
@@ -109,7 +109,7 @@ public class Address {
   }
 
   /**
-   * Возвращает npi
+   * Р’РѕР·РІСЂР°С‰Р°РµС‚ npi
    *
    * @return npi
    */

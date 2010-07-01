@@ -3,7 +3,7 @@ package ru.novosoft.smsc.admin.archive_daemon;
 //todo javadoc
 
 /**
- * Дескриптор смс
+ * Р”РµСЃРєСЂРёРїС‚РѕСЂ СЃРјСЃ
  *
  * @author Aleksandr Khalitov
  */

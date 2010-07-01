@@ -4,7 +4,7 @@ import ru.novosoft.smsc.admin.archive_daemon.SmsQuery;
 
 
 /**
- * Служебный класс для работы с ArchiveDemon
+ * РЎР»СѓР¶РµР±РЅС‹Р№ РєР»Р°СЃСЃ РґР»СЏ СЂР°Р±РѕС‚С‹ СЃ ArchiveDemon
  *
  * @author Aleksandr Khalitov
  */

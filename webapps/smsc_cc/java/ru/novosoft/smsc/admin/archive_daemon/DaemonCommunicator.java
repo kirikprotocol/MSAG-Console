@@ -8,7 +8,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
- * Служебный класс для отправки сообщений ArchiveDemon
+ * РЎР»СѓР¶РµР±РЅС‹Р№ РєР»Р°СЃСЃ РґР»СЏ РѕС‚РїСЂР°РІРєРё СЃРѕРѕР±С‰РµРЅРёР№ ArchiveDemon
  *
  * @author Aleksandr Khalitov
  */

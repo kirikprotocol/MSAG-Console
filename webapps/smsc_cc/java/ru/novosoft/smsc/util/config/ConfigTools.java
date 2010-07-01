@@ -7,7 +7,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.StringTokenizer;
 
-
+/**
+ * @author Aleksandr Khalitov
+ */
 class ConfigTools {
 
   static long getLong(String str) throws ConfigException {

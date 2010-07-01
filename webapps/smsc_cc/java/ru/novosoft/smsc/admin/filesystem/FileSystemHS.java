@@ -6,7 +6,7 @@ import ru.novosoft.smsc.util.Functions;
 import java.io.*;
 
 /**
- * author: alkhal
+ * @author Aleksandr Khalitov
  */
 class FileSystemHS extends FileSystem {
 
@@ -104,7 +104,7 @@ class FileSystemHS extends FileSystem {
     files[mirrorsDir.length] = file;
 
     for (int i = files.length - 1; i > -1; i--) {
-      if (!files[i].delete()) {
+      if (!files[i].delete() && files[i].exists()) {
         error = true;
         errStr = "Can't remove file '" + files[i].getAbsolutePath() + '\'';
         logger.error(errStr);
@@ -123,15 +123,30 @@ class FileSystemHS extends FileSystem {
     files[mirrorsDir.length] = file;
 
     for (int i = files.length - 1; i > -1; i--) {
-      if (!files[i].mkdirs()) {
+      if (!files[i].mkdirs() && !files[i].exists()) {
         error = true;
         errStr = "Can't mkdirs for file '" + files[i].getAbsolutePath() + '\'';
         logger.error(errStr);
         throw new AdminException(errStr);
       }
     }
+  }
 
+  @Override
+  public boolean exist(File file) throws AdminException {
+    assert file != null : "Some arguments are null";
+    checkErrors();
 
+    File[] files = new File[mirrorsDir.length + 1];
+    getMirrorsFiles(file, files);
+    files[mirrorsDir.length] = file;
+
+    for (int i = files.length - 1; i > -1; i--) {
+      if (!files[i].exists()) {
+        return false;
+      }
+    }
+    return true;
   }
 
   private File[] getMirrorsFiles(File baseFile) throws AdminException {

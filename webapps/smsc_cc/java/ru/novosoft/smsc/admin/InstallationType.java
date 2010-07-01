@@ -5,5 +5,5 @@ package ru.novosoft.smsc.admin;
  * @author Artem Snopkov
  */
 public enum InstallationType {
-  SINGLE, HS, HA;
+  SINGLE, HS, HA
 }

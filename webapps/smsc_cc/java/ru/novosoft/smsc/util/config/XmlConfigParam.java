@@ -7,7 +7,7 @@ import java.util.*;
 
 
 /**
- * author: alkhal
+ * @author Aleksandr Khalitov
  *
  * Parameter of XmlConfig
  */

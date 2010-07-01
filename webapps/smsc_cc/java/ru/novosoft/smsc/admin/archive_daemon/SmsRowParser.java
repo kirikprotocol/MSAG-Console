@@ -9,7 +9,7 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 
 /**
- * Служебный класс для разбора записей ArchiveDemon
+ * РЎР»СѓР¶РµР±РЅС‹Р№ РєР»Р°СЃСЃ РґР»СЏ СЂР°Р·Р±РѕСЂР° Р·Р°РїРёСЃРµР№ ArchiveDemon
  *
  * @author Aleksandr Khalitov
  */

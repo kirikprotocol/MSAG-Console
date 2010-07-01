@@ -3,8 +3,7 @@ package ru.novosoft.smsc.util.config;
 import java.util.*;
 
 /**
- * User: artem
- * Date: 17.05.2007
+ * @author Aleksandr Khalitov
  * 
  * Section of XmlConfig
  */
@@ -109,6 +108,16 @@ public class XmlConfigSection {
     if (s == null)
       throw new ConfigException("Section " + name + " not found in " + this.name + " section.");
     return s;
+  }
+
+    /**
+   * Returns section with specified name, create it if it doesn't exist
+   * @param name section name
+   * @return section
+   * @throws ConfigException if section with specified name does not exists
+   */
+  public XmlConfigSection getOrCreateSection(String name) throws ConfigException{
+    return containsSection(name) ? getSection(name) : addSection(name);
   }
 
   /**

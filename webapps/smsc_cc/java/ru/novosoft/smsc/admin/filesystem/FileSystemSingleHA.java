@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 /**
- * author: alkhal
+ * author: @author Aleksandr Khalitov
  */
 class FileSystemSingleHA extends FileSystem {
 
@@ -48,7 +48,7 @@ class FileSystemSingleHA extends FileSystem {
   @Override
   public void delete(File file) throws AdminException {
     assert file != null : "Some arguments are null";
-    if (!file.delete()) {
+    if (!file.delete() && file.exists()) {
       String err = "Can't remove file '" + file.getAbsolutePath() + '\'';
       logger.error(err);
       throw new AdminException(err);
@@ -59,10 +59,16 @@ class FileSystemSingleHA extends FileSystem {
   @Override
   public void mkdirs(File file) throws AdminException {
     assert file != null : "Some arguments are null";
-    if (!file.mkdirs()) {
+    if (!file.mkdirs() && !file.exists()) {
       String err = "Can't create dirs for '" + file.getAbsolutePath() + '\'';
       logger.error(err);
       throw new AdminException(err);
     }
+  }
+
+  @Override
+  public boolean exist(File file) throws AdminException {
+    assert file != null : "Some arguments are null";
+    return file.exists();
   }
 }
