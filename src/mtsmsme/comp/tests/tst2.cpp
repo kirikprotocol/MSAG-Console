@@ -4,8 +4,9 @@ static char const ident[] = "$Id$";
 #include "mtsmsme/processor/util.hpp"
 #include "mtsmsme/processor/TSM.hpp"
 #include "mtsmsme/processor/ACRepo.hpp"
-#include "mtsmsme/comp/SendRoutingInfoForSM.hpp"
+#include "mtsmsme/processor/Processor.h"
 #include "mtsmsme/processor/TCO.hpp"
+#include "mtsmsme/comp/SendRoutingInfoForSM.hpp"
 #include "mtsmsme/comp/ReportSmDeliveryStatus.hpp"
 #include "mtsmsme/comp/UpdateLocation.hpp"
 #include "mtsmsme/comp/SendRoutingInfo.hpp"
@@ -15,6 +16,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(AmericaTestFixture);
 
 using smsc::mtsmsme::processor::SccpSender;
 using smsc::mtsmsme::processor::TsmComletionListener;
+using smsc::mtsmsme::processor::RequestSender;
 using std::vector;
 using smsc::logger::Logger;
 using smsc::mtsmsme::processor::util::dump;
