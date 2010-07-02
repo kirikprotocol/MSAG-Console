@@ -17,6 +17,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(AmericaTestFixture);
 using smsc::mtsmsme::processor::SccpSender;
 using smsc::mtsmsme::processor::TsmComletionListener;
 using smsc::mtsmsme::processor::RequestSender;
+using smsc::mtsmsme::processor::Request;
 using std::vector;
 using smsc::logger::Logger;
 using smsc::mtsmsme::processor::util::dump;
