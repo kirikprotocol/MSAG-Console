@@ -61,6 +61,11 @@ public class ArchiveDemon {
     return instance;
   }
 
+  /*
+  todo ArchiveDaemon во время работы может быть переключен с ноды на ноду. Поэтому информация о хосте должна
+  todo грузиться в рантайме. Предлагаю делать так: при инициализации запомнить хост и пытаться отправлять запросы
+  todo на этот хост. Если коннект с демоном установить не удалось, то хост запрашивается повторно из ServiceManager-а.
+   */
   private ArchiveDemon(String host, File config) throws AdminException {
     context = new ArchiveConfig(host, config);
   }

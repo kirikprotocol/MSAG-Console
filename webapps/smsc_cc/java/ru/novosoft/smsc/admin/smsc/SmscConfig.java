@@ -1,4 +1,4 @@
-package ru.novosoft.smsc.admin.smsc_config;
+package ru.novosoft.smsc.admin.smsc;
 
 import org.apache.log4j.Logger;
 import ru.novosoft.smsc.admin.AdminException;

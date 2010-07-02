@@ -133,7 +133,7 @@ class FileSystemHS extends FileSystem {
   }
 
   @Override
-  public boolean exist(File file) throws AdminException {
+  public boolean exists(File file) throws AdminException {
     assert file != null : "Some arguments are null";
     checkErrors();
 

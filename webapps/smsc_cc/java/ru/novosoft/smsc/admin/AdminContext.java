@@ -11,6 +11,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
+ * Класс, предоставляющий доступ к различным настройкам администрирования.
  * @author Artem Snopkov
  */
 public class AdminContext {

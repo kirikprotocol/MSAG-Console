@@ -107,6 +107,6 @@ public abstract class FileSystem {
    * @return true - существует, false - иначе
    * @throws AdminException ошибка при проверки
    */
-  public abstract boolean exist(File file) throws AdminException;
+  public abstract boolean exists(File file) throws AdminException;
 
 }

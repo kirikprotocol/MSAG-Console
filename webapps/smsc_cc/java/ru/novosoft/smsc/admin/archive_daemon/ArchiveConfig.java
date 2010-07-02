@@ -13,6 +13,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
+ * todo Так как конфигурацию ArchiveDaemon можно править с веб-морды, этот класс надо причесать.
+ * todo Надо сделать по аналогии с SmscConfig т.е. для всех параметров сделать геттеры и сеттеры.
+ * todo Список параметров, выносимых на морду можно посмотреть на тестовой установке:
+ * todo http://niagara:25011/smsc/smsc/smsview/daemon.jsp
+ * todo Формат конфигурационного файла можно найти в CVS в smsc/config/templates/archiver/daemon.xml
  * Класс для работы с конфигурацией ArchiveDemon
  *
  * @author Aleksandr Khalitov
@@ -73,6 +78,9 @@ public class ArchiveConfig {
   }
 
   /**
+   * todo Непонятный метод. Он сохраняет абстрактный XmlConfig (не обязательно относящийся к ArchiveDaemon)
+   * todo в конфигурационный файл ArchiveDaemon.
+   * todo Еще не делается бекап и сохранение происходит без tmp файла
    * Сохранение конфига в файл
    *
    * @param config конфиг для сохранения
@@ -85,7 +93,7 @@ public class ArchiveConfig {
       config.save(os);
     } catch (ConfigException e) {
       logger.error(e, e);
-      throw new AdminException("Couldn't store SMSC config: " + e.getMessage());
+      throw new AdminException("Couldn't store SMSC config: " + e.getMessage());     // todo неверный текст
     } finally {
       if (os != null) {
         try {

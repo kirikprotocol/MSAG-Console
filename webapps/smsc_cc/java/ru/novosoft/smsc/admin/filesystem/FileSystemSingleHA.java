@@ -15,7 +15,8 @@ class FileSystemSingleHA extends FileSystem {
 
   @Override
   public OutputStream getOutputStream(File file) throws AdminException {
-    assert file != null : "Some arguments are null";
+    assert file != null : "Some arguments are null";        // todo почему assert? Это же публичный метод. Тет правильнее IllegalArgument кидать или NullPointer
+                                                            // todo assert надо кидать в приватных методах.  
     try {
       return new FileOutputStream(file);
     } catch (IOException e) {
@@ -67,7 +68,7 @@ class FileSystemSingleHA extends FileSystem {
   }
 
   @Override
-  public boolean exist(File file) throws AdminException {
+  public boolean exists(File file) throws AdminException {
     assert file != null : "Some arguments are null";
     return file.exists();
   }
