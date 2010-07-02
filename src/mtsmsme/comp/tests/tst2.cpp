@@ -57,14 +57,16 @@ class SccpSenderMock: public SccpSender {
       }
   };
 class SlowRequestSender: public RequestSender {
+  public:
+    Request* req_ptr;
+  SlowRequestSender():req_ptr(0){}
+  //simulate 1043 to stop TSM and then set status
+  void sendTimeoute() { req_ptr->setSendResult(1143); }
+  void sendOK() { req_ptr->setSendResult(0); }
   virtual bool send(Request* request)
   {
-    //simulate 1043 to stop TSM and then set status
-    Request& req = *request;
-    req.setSendResult(1143);
-    sleep(5);
-    req.setSendResult(0);
-    //req.dstmsc;
+    //just store Request and let TSM to die
+    req_ptr = request;
     return true;
   }
 };
@@ -495,5 +497,50 @@ void AmericaTestFixture::sendRoutingInfo_res_decoding()
 }
 void AmericaTestFixture::slow_smpp_sender(void)
 {
+  // send MT_SMS  to TCO
+  // 2-simulate timeout on SmppRequestSender and free TSM
+  // 3-simulate late response on SmppRequestSender and free already freeed TSM
   smsc_log_debug(logger, "======== AmericaTestFixture::slow_smpp_sender ========\n");
+  using smsc::mtsmsme::processor::TCO;
+
+  uint8_t cd[] = { 2, 2, 2, 2, 2 };
+  uint8_t cl[] = { 2, 2, 2, 2, 2 };
+  uint8_t ud[] = {
+    0x62, 0x47, 0x48, 0x04, 0x0A, 0x80, 0x37, 0x5A,
+    0x6B, 0x1E, 0x28, 0x1C, 0x06, 0x07, 0x00, 0x11,
+    0x86, 0x05, 0x01, 0x01, 0x01, 0xA0, 0x11, 0x60,
+    0x0F, 0x80, 0x02, 0x07, 0x80, 0xA1, 0x09, 0x06,
+    0x07, 0x04, 0x00, 0x00, 0x01, 0x00, 0x14, 0x02,
+    0x6C, 0x1F, 0xA1, 0x1D, 0x02, 0x01, 0x01, 0x02,
+    0x01, 0x2F, 0x30, 0x15, 0x04, 0x07, 0x91, 0x97,
+    0x58, 0x81, 0x55, 0x01, 0xF0, 0x04, 0x07, 0x91,
+    0x81, 0x67, 0x83, 0x00, 0x51, 0xF4, 0x0A, 0x01,
+    0x02
+  };
+  char msc[] = "791398600223"; // MSC address
+  char vlr[] = "79139860004"; //VLR address
+  char hlr[] = "79139860004"; //HLR address
+
+  TCO mtsms(10);
+  mtsms.setAdresses(Address((uint8_t)strlen(msc), 1, 1, msc),
+                    Address((uint8_t)strlen(vlr), 1, 1, vlr),
+                    Address((uint8_t)strlen(hlr), 1, 1, hlr));
+  //SccpSender* sccpsender = new SccpSenderMImpl();
+  vector<unsigned char> res ;
+  SccpSenderMock sender(logger, res);
+  mtsms.setSccpSender((SccpSender*)&sender);
+  SlowRequestSender smppsender;
+  CPPUNIT_ASSERT( smppsender.req_ptr == 0 );
+
+  mtsms.NUNITDATA((uint8_t) (sizeof(cd)/sizeof(uint8_t)), cd,
+                  (uint8_t) (sizeof(cl)/sizeof(uint8_t)), cl,
+                  (uint8_t) (sizeof(ud)/sizeof(uint8_t)), ud);
+  CPPUNIT_ASSERT( smppsender.req_ptr != 0 );
+  using smsc::mtsmsme::processor::TSMSTAT;
+  TSMSTAT stat;
+  TSM::getCounters(stat);
+  CPPUNIT_ASSERT( stat.objcount == 1 );
+  smppsender.sendTimeoute();
+  TSM::getCounters(stat);
+  CPPUNIT_ASSERT( stat.objcount == 0 );
 }
