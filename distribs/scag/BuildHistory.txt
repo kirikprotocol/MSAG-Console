@@ -655,5 +655,5 @@ TO ALL: Insert log record for all significant changes & fixes here.
   msag: feature: new 'del' action, ability to delete properties & fields
 2010-06-10 15:00 bukind
   msag: feature: 'del-cookie' action
-
-
+2010-07-05 10:30 bukind
+  msag: bugfix: bug#3646 - msag trying to connect to alternative empty host/port smsc
