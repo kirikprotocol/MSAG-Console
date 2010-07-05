@@ -84,4 +84,14 @@ public class XmlConfigTest {
     }
   }
 
+  @Test(expected = XmlConfigException.class)
+  public void getUnknownSectionTest() throws XmlConfigException {
+    new XmlConfig().getSection("Unknown");
+  }
+
+  @Test(expected = XmlConfigException.class)
+  public void getUnknownParamTest() throws XmlConfigException {
+    new XmlConfig().getString("Unknown");
+  }
+
 }

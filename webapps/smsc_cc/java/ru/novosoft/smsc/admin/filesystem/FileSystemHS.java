@@ -176,19 +176,6 @@ class FileSystemHS extends FileSystem {
     }
   }
 
-//  public static void main(String[] args) throws Exception{
-//    FileSystemHS fs = new FileSystemHS(new File(""), new File("mirror"));
-//    PrintWriter pw = null;
-//    try{
-//      pw = new PrintWriter(new BufferedWriter(new OutputStreamWriter(fs.getOutputStream(new File("test.test")))));
-//      pw.println("It's working!!!!!");
-//    }finally {
-//      if(pw != null) {
-//        pw.close();
-//      }
-//    }
-//  }
-
   private void checkErrors() throws AdminException {
     if (error) {
       throw new AdminException("There was a error at some time ago. Further work is impossible. ERROR: '" + errStr + '\'');

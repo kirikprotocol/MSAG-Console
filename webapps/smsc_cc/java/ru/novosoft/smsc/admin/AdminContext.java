@@ -10,6 +10,9 @@ import ru.novosoft.smsc.admin.smsc.SmscConfig;
 import java.io.File;
 
 /**
+ * Основной класс для работы с конфигурацией СМСЦ. Доступ ко всем моделям должен осуществляться через
+ * экземпляр данного класса.
+ *
  * @author Artem Snopkov
  */
 public class AdminContext {
@@ -50,10 +53,11 @@ public class AdminContext {
 
     ServiceInfo archiveDaemonInfo = serviceManager.getService(ArchiveDemon.SERVICE_ID);
     archiveDaemonConfig = (archiveDaemonInfo == null) ? null : new ArchiveDaemonConfig(archiveDaemonInfo.getBaseDir(), fileSystem);
-    
   }
 
-
+  public FileSystem getFileSystem() {
+    return fileSystem;
+  }
 
   public SmscConfig getSmscConfig() {
     return smscConfig;

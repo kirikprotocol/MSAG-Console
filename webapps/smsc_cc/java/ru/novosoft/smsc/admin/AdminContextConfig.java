@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 /**
+ * Класс для работы с конфигурационным файлом webconfig.xml
  * @author Artem Snopkov
  */
 class AdminContextConfig {

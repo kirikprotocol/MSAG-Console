@@ -25,8 +25,6 @@ import java.util.Map;
 @SuppressWarnings({"EmptyCatchBlock"})
 public class ArchiveDaemonConfig {
 
-  private static final Logger logger = Logger.getLogger(ArchiveDaemonConfig.class);
-
   private final File configFile;
   private final File backupDir;
   private final FileSystem fileSystem;
