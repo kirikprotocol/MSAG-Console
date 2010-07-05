@@ -6,8 +6,6 @@ import ru.novosoft.smsc.util.config.XmlConfigSection;
 
 /**
  * Структура с настройками для конкретного инстанца СМСЦ
- * <p/>
- * Список настроек смотри в ТЗ.
  *
  * @author Artem Snopkov
  */
@@ -44,6 +42,9 @@ public class InstanceSettings implements Cloneable {
   private String cacheDir;
 
   private int instanceN;
+
+  public InstanceSettings() {    
+  }
 
   InstanceSettings(int instanceN, XmlConfig c) throws ConfigException {
     this.instanceN = instanceN;

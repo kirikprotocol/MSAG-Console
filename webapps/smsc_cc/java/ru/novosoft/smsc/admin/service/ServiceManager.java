@@ -1,12 +1,9 @@
 package ru.novosoft.smsc.admin.service;
 
-import ru.novosoft.smsc.admin.AdminContext;
 import ru.novosoft.smsc.admin.AdminException;
 
-import java.net.InetAddress;
+import java.io.File;
 import java.util.Collection;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * API для запуска/остановки сервисов.
@@ -15,34 +12,16 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public abstract class ServiceManager {
 
-  private static ServiceManager instance;
-  private static final Lock initLock = new ReentrantLock();
+  public static ServiceManager getServiceManagerForSingleInst(String daemonHost, int daemonPort, File servicesDir) {
+    return new ServiceManagerSingle(daemonHost, daemonPort, servicesDir);
+  }
 
-  public static ServiceManager getInstance() throws AdminException {
-    if (instance == null) {
-      AdminContext admContext = AdminContext.getInstance();
-      try {
-        initLock.lock();
-        if (instance == null) {
-          switch (admContext.getInstallationType()) {
-            case SINGLE:
-              instance = new ServiceManagerSingle(admContext.getSingleDaemonHost(), admContext.getSingleDaemonPort(), admContext.getServicesDir());
-              break;
-            case HS:
-              instance = new ServiceManagerHS(admContext.getHSDaemonHost(), admContext.getHSDaemonPort(), admContext.getServicesDir(), admContext.getHSDaemonHosts());
-              break;
-            case HA:
-              instance = new ServiceManagerHA(admContext.getHAResourceGroupsFile(), admContext.getServicesDir());
-              break;
-            default:
-              return null;
-          }
-        }
-      } finally {
-        initLock.unlock();
-      }
-    }
-    return instance;
+  public static ServiceManager getServiceManagerForHSInst(String daemonHost, int daemonPort, File servicesDir, Collection<String> daemonHosts) {
+    return new ServiceManagerHS(daemonHost, daemonPort, servicesDir, daemonHosts);
+  }
+
+  public static ServiceManager getServiceManagerForHAInst(File resourcesFile, File servicesDir) throws AdminException {
+    return new ServiceManagerHA(resourcesFile, servicesDir);
   }
 
   /**

@@ -1,13 +1,9 @@
 package ru.novosoft.smsc.admin.filesystem;
 
 import org.apache.log4j.Category;
-import ru.novosoft.smsc.admin.AdminContext;
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.InstallationType;
 
 import java.io.*;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * API для чтения/записи файлов
@@ -18,27 +14,17 @@ public abstract class FileSystem {
 
   protected static final Category logger = Category.getInstance(FileSystem.class);
 
-  private static FileSystem instance;
+  public static FileSystem getFSForSingleInst() throws AdminException{
+    return new FileSystemSingleHA();
+  }
 
-  private static final Lock initLock = new ReentrantLock();
+  public static FileSystem getFSForHAInst() {
+    return new FileSystemSingleHA();
+  }
 
-  public static FileSystem getInstance() throws AdminException{
-    if(instance == null) {
-      AdminContext context = AdminContext.getInstance();
-      InstallationType installationType = context.getInstallationType();
-      try{
-        initLock.lock();
-        if(instance == null) {
-          switch (installationType) {
-            case HS: instance = new FileSystemHS(context.getAppBaseDir(), context.getAppMirrorDirs()); break;
-            default: instance = new FileSystemSingleHA();
-          }
-        }
-      }finally {
-        initLock.unlock();
-      }
-    }
-    return instance;
+  public static FileSystem getFSForHSInst(File baseDir, File[] mirrors) {
+    return new FileSystemHS(baseDir, mirrors);
+
   }
 
   /**

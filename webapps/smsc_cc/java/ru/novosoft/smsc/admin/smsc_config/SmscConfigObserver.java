@@ -1,4 +1,4 @@
-package ru.novosoft.smsc.admin.smsc;
+package ru.novosoft.smsc.admin.smsc_config;
 
 import ru.novosoft.smsc.admin.AdminException;
 
@@ -7,7 +7,7 @@ import ru.novosoft.smsc.admin.AdminException;
  *
  * @author Aleksandr Khalitov
  */
-public interface SmscConfigListener {
+public interface SmscConfigObserver {
 
   /**
    * Вызывается перед изменением общих настроек смсц

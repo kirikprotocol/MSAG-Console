@@ -1,98 +1,218 @@
 package ru.novosoft.smsc.admin.smsc_config;
 
-import org.apache.log4j.Logger;
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.util.config.ConfigException;
-import ru.novosoft.smsc.util.config.XmlConfig;
+import ru.novosoft.smsc.admin.filesystem.FileSystem;
 
+import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 /**
- * Вспомогательный класс для работы (загрузки/сохранения) с config.xml СМС центра.
- * Те пареметры, которые не отображаются на веб-интерфейсе, должны проноситься без изменений между load и save !!!
  *
  * @author Artem Snopkov
  */
-class SmscConfig {
+@SuppressWarnings({"EmptyCatchBlock"})
+public class SmscConfig {
 
-  private static final Logger logger = Logger.getLogger(SmscConfig.class);
+  private File config;
 
-  private XmlConfig config = new XmlConfig();
+  private File backupDir;
 
-  private CommonSettings commonSettings;
+  private static final String SERVICE_NAME = "SMSC1";
 
-  private InstanceSettings[] instanceSettings;
+  private SmscConfigFile configFile;
 
-  void load(InputStream is) throws AdminException {
+  private boolean changed;
+
+  private List<SmscConfigObserver> observers = new ArrayList<SmscConfigObserver>();
+
+  private FileSystem fileSystem;
+
+  /**
+   * @param smscBaseDir директория с дистрибутивом СМСЦ
+   * @param fileSystem экземпляр FileSystem
+   * @throws AdminException ошибка при чтении конфига
+   */
+  public SmscConfig(File smscBaseDir, FileSystem fileSystem) throws AdminException {
+    this.config = new File(smscBaseDir, "conf" + File.separator + "config.xml");
+    this.backupDir = new File(smscBaseDir + File.separator + "backup");
+    this.configFile = new SmscConfigFile();
+    this.fileSystem = fileSystem;
+    reset();    
+  }
+
+  /**
+   * Возвращает настройки (копию), общие для всех СМСЦ.
+   *
+   * @return настройки, общие для всех СМСЦ.
+   * @throws AdminException ошибка извлечения настроек
+   */
+  public CommonSettings getCommonSettings() throws AdminException {
     try {
-      config.clear();
-      config.load(is);
-      commonSettings = new CommonSettings(config);
-      commonSettings.load(config);
+      return (CommonSettings) configFile.getCommonSettings().clone();
+    } catch (CloneNotSupportedException e) {
+      throw new AdminException(e.getMessage());
+    }
+  }
 
-      int instancesCount = config.getSection("cluster").getInt("nodesCount");
-      instanceSettings = new InstanceSettings[instancesCount];
-      for (int i = 0; i < instancesCount; i++) {
-        instanceSettings[i] = new InstanceSettings(i, config);
+  /**
+   * Устанавливает новые значения для общих настроек
+   *
+   * @param settings новые значения общих настроек
+   * @throws AdminException если новые настройки содержат ошибки
+   */
+  public void setCommonSettings(CommonSettings settings) throws AdminException {
+    for (SmscConfigObserver l : observers) {
+      l.setCommonSettings(settings);
+    }
+    try {
+      configFile.setCommonSettings((CommonSettings)settings.clone());
+    } catch (CloneNotSupportedException e) {
+      throw new AdminException(e.getMessage(), e);
+    }
+    changed = true;
+  }
+
+
+  /**
+   * Устанавливает новые значения для настроек инстанца СМСЦ
+   *
+   * @param instanceNumber   номер инстанца СМСЦ
+   * @param instanceSettings новые настройки
+   * @throws AdminException если новые настройки содержат ошибки
+   */
+  public void setInstanceSettings(int instanceNumber, InstanceSettings instanceSettings) throws AdminException {
+    for (SmscConfigObserver l : observers) {
+      l.setInstanceSettings(instanceSettings);
+    }
+    try {
+      configFile.setInstanceSettings((InstanceSettings)instanceSettings.clone());
+    } catch (CloneNotSupportedException e) {
+      throw new AdminException(e.getMessage(), e);
+    }
+    changed = true;
+  }
+
+  /**
+   * Возвращает количество инстанцев СМСЦ
+   *
+   * @return количество инстанцев СМСЦ
+   */
+  public int getSmscInstancesCount() {
+    return configFile.getSmscInstancesCount();
+  }
+
+
+  /**
+   * Возвращает настройки, специфические для указанного инстанца СМСЦ
+   *
+   * @param instanceNumber номер инстанца
+   * @return настройки, специфические для каждого инстанца СМСЦ
+   * @throws AdminException ошибка извлечения настроек
+   */
+  public InstanceSettings getInstanceSettings(int instanceNumber) throws AdminException {
+    try {
+      return (InstanceSettings) configFile.getInstanceSettings(instanceNumber).clone();
+    } catch (CloneNotSupportedException e) {
+      throw new AdminException(e.getMessage());
+    }
+  }
+
+  private final SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yy.HH.mm.ss");
+
+  /**
+   * Сохраняет и применяет изменения, сделанные в конфиге
+   *
+   * @throws AdminException ошибка при сохранении конфига
+   */
+  public synchronized void save() throws AdminException {
+    for (SmscConfigObserver l : observers) {
+      l.applySettings(configFile.getCommonSettings(), configFile.getAllInstanceSettings());
+    }
+    OutputStream os = null;
+    try {
+      os = fileSystem.getOutputStream(new File(backupDir, "configFile.xml." + sdf.format(new Date())));
+      this.configFile.backup(os);
+    } finally {
+      if (os != null) {
+        try {
+          os.close();
+        } catch (IOException e) {
+        }
       }
-    } catch (ConfigException e) {
-      logger.error(e, e);
-      throw new AdminException(e.getMessage());
     }
-  }
-
-  void save(OutputStream os) throws AdminException {
+    File tmp = new File(config.getAbsolutePath() + ".tmp");
+    os = null;
     try {
-      commonSettings.save(config);
-      for (InstanceSettings is : instanceSettings) {
-        is.save(config);
+      os = fileSystem.getOutputStream(tmp);
+      this.configFile.save(os);
+    } finally {
+      if (os != null) {
+        try {
+          os.close();
+        } catch (IOException e) {
+        }
       }
-      config.save(os);
-    } catch (ConfigException e) {
-      logger.error(e, e);
-      throw new AdminException(e.getMessage());
     }
+    fileSystem.rename(tmp, config);
+    changed = false;
   }
 
-  void backup(OutputStream os) throws AdminException {
+  /**
+   * Откатывает изменения, сделанные в конфиге
+   *
+   * @throws AdminException если откатить конфиг невозможно.
+   */
+  public synchronized void reset() throws AdminException {
+    SmscConfigFile oldConfigFile = new SmscConfigFile();
+    InputStream is = null;
     try {
-      config.save(os);
-    } catch (ConfigException e) {
-      logger.error(e, e);
-      throw new AdminException(e.getMessage());
+      is = fileSystem.getInputStream(this.config);
+      oldConfigFile.load(is);
+    } finally {
+      if (is != null) {
+        try {
+          is.close();
+        } catch (IOException e) {
+        }
+      }
     }
-  }
-
-  CommonSettings getCommonSettings() {
-    return commonSettings;
-  }
-
-  public void setCommonSettings(CommonSettings commonSettings) {
-    this.commonSettings = commonSettings;
-  }
-
-  int getSmscInstancesCount() {
-    return instanceSettings.length;
-  }
-
-  InstanceSettings getInstanceSettings(int instanceNumber) {
-    if (instanceNumber < 0 || instanceNumber > instanceSettings.length - 1) {
-      throw new IllegalArgumentException("Illegal instance number: " + instanceNumber + ". Must be in [0," + (instanceSettings.length - 1) + "]");
+    for (SmscConfigObserver l : observers) {
+      l.resetSettings(oldConfigFile.getCommonSettings(), oldConfigFile.getAllInstanceSettings());
     }
-    return instanceSettings[instanceNumber];
+    this.configFile = oldConfigFile;
+    changed = false;
   }
 
-  InstanceSettings[] getAllInstanceSettings() {
-    return instanceSettings;
+  /**
+   * Метод возвращает true, если конфиг менялся, false - иначе
+   *
+   * @return true - конфиг менялся, false - иначе
+   */
+  public boolean isChanged() {
+    return changed;
   }
 
-  public void setInstanceSettings(InstanceSettings instanceSettings) {
-    int instanceNumber = instanceSettings.getInstanceN();
-    if (instanceNumber < 0 || instanceNumber > this.instanceSettings.length - 1) {
-      throw new IllegalArgumentException("Illegal instance number: " + instanceNumber + ". Must be in [0," + (this.instanceSettings.length - 1) + "]");
-    }
+  /**
+   * Добавляет слушателя конфига
+   *
+   * @param l слушатель
+   */
+  public void addObserver(SmscConfigObserver l) {
+    observers.add(l);
+  }
 
-    this.instanceSettings[instanceNumber] = instanceSettings;
+  /**
+   * Удаляет слушателя конфига
+   *
+   * @param l слушатель
+   */
+  public void removeObserver(SmscConfigObserver l) {
+    observers.remove(l);
   }
 }

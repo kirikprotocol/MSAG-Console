@@ -154,7 +154,11 @@ public class CommonSettings implements Cloneable {
 
   private Map<String, String> directives = new HashMap<String, String>();
 
-  public CommonSettings(XmlConfig c) throws ConfigException {
+  public CommonSettings() {
+
+  }
+
+  CommonSettings(XmlConfig c) throws ConfigException {
     load(c);
   }
 

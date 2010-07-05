@@ -1,4 +1,4 @@
-package ru.novosoft.smsc.admin.smsc;
+package ru.novosoft.smsc.admin.smsc_config;
 
 import org.apache.log4j.Logger;
 import ru.novosoft.smsc.admin.AdminException;
@@ -14,9 +14,9 @@ import java.io.OutputStream;
  *
  * @author Artem Snopkov
  */
-class SmscConfig {
+class SmscConfigFile {
 
-  private static final Logger logger = Logger.getLogger(SmscConfig.class);
+  private static final Logger logger = Logger.getLogger(SmscConfigFile.class);
 
   private XmlConfig config = new XmlConfig();
 

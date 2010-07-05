@@ -3,16 +3,14 @@ package ru.novosoft.smsc.admin.archive_daemon;
 import org.apache.log4j.Logger;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.archive_daemon.messages.*;
+import ru.novosoft.smsc.admin.filesystem.FileSystem;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.admin.service.ServiceManager;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 @SuppressWarnings({"EmptyCatchBlock"})
 
@@ -25,49 +23,30 @@ public class ArchiveDemon {
 
   private final static int MAX_SMS_FETCH_SIZE = 5000;
 
-  private final ArchiveConfig context;
-
-  private static ArchiveDemon instance;
-
   private static final Logger logger = Logger.getLogger(ArchiveDemon.class);
 
-  private static final String SERVICE_NAME = "ArchiveDaemon";
+  public static final String SERVICE_ID = "ArchiveDaemon";
 
-  private static final Lock initLock = new ReentrantLock();
+  private final ServiceManager serviceManager;
+  private final FileSystem fileSystem;
 
-
-  /**
-   * Возвращает инстанс класса
-   *
-   * @return инстанс класса
-   * @throws AdminException ошибка при инициализации
-   */
-  public static ArchiveDemon getInstance() throws AdminException {
-    if (instance == null) {
-      try {
-        initLock.lock();
-        if (instance == null) {
-          ServiceInfo si = ServiceManager.getInstance().getService(SERVICE_NAME);
-          String host;
-          if (si == null || (host = si.getOnlineHost()) != null) {
-            throw new AdminException("Archive demon is offline");
-          }
-          instance = new ArchiveDemon(host, new File(si.getBaseDir(), "conf" + File.separatorChar + "daemon.xml"));
-        }
-      } finally {
-        initLock.unlock();
-      }
-    }
-    return instance;
+  public ArchiveDemon(ServiceManager serviceManager, FileSystem fileSystem) throws AdminException {
+    this.serviceManager = serviceManager;
+    this.fileSystem = fileSystem;
   }
 
-  /*
-  todo ArchiveDaemon во время работы может быть переключен с ноды на ноду. Поэтому информация о хосте должна
-  todo грузиться в рантайме. Предлагаю делать так: при инициализации запомнить хост и пытаться отправлять запросы
-  todo на этот хост. Если коннект с демоном установить не удалось, то хост запрашивается повторно из ServiceManager-а.
-   */
-  private ArchiveDemon(String host, File config) throws AdminException {
-    context = new ArchiveConfig(host, config);
+  private Socket connect() throws AdminException, IOException {
+    ServiceInfo info = serviceManager.getService(SERVICE_ID);
+    if (info == null)
+      throw new AdminException("Service '" + SERVICE_ID + "' not found.");
+    if (info.getOnlineHost() == null)
+      throw new AdminException("Service '" + SERVICE_ID + "' is offline.");
+
+    ArchiveDaemonConfig config = new ArchiveDaemonConfig(info.getBaseDir(), fileSystem);
+    String host = info.getOnlineHost();
+    int port = config.getViewPort();
+
+    return new Socket(host, port);
   }
 
   /**
@@ -91,7 +70,7 @@ public class ArchiveDemon {
 
     try {
 
-      socket = new Socket(/*"sunfire"*/context.getHost(), context.getPort());
+      socket = connect();
       input = socket.getInputStream();
       output = socket.getOutputStream();
 
@@ -158,7 +137,7 @@ public class ArchiveDemon {
     try {
       CountMessage request = new CountMessage(query);
 
-      socket = new Socket(/*"sunfire"*/context.getHost(), context.getPort());
+      socket = connect();
       input = socket.getInputStream();
       output = socket.getOutputStream();
 
@@ -214,14 +193,5 @@ public class ArchiveDemon {
       catch (IOException exc) {
       }
     }
-  }
-
-  /**
-   * Возвращает настройки ArchiveDemon
-   *
-   * @return настройки ArchiveDemon
-   */
-  public ArchiveConfig getContext() {
-    return context;
   }
 }
