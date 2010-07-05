@@ -1,6 +1,7 @@
 package ru.novosoft.smsc.admin.filesystem;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.util.FileUtils;
 import ru.novosoft.smsc.util.Functions;
 
 import java.io.File;
@@ -39,7 +40,7 @@ class FileSystemSingleHA extends FileSystem {
   public void copy(File file, File toFile) throws AdminException {
     assert file != null && toFile != null : "Some arguments are null";
     try {
-      Functions.copyFileTo(file, toFile);
+      FileUtils.copyFileTo(file, toFile);
     } catch (IOException e) {
       logger.error(e, e);
       throw new AdminException(e.getMessage());

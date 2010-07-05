@@ -8,7 +8,7 @@ import ru.novosoft.smsc.admin.protocol.Proxy;
 import ru.novosoft.smsc.admin.protocol.Response;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.admin.service.ServiceManager;
-import ru.novosoft.smsc.util.xml.Utils;
+import ru.novosoft.smsc.util.XmlUtils;
 
 import java.util.*;
 
@@ -98,13 +98,13 @@ public abstract class CallableService {
       final Type resultType = Type.getInstance(resultElem.getAttribute("type"));
       switch (resultType.getId()) {
         case Type.StringType:
-          return Utils.getNodeText(resultElem);
+          return XmlUtils.getNodeText(resultElem);
         case Type.IntType:
-          return Long.decode(Utils.getNodeText(resultElem));
+          return Long.decode(XmlUtils.getNodeText(resultElem));
         case Type.BooleanType:
-          return Boolean.valueOf(Utils.getNodeText(resultElem));
+          return Boolean.valueOf(XmlUtils.getNodeText(resultElem));
         case Type.StringListType:
-          return translateStringList(Utils.getNodeText(resultElem));
+          return translateStringList(XmlUtils.getNodeText(resultElem));
         default:
           throw new AdminException("Unknown result type");
       }

@@ -3,6 +3,7 @@ package ru.novosoft.smsc.admin.archive_daemon;
 
 import org.apache.log4j.Category;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.util.Address;
 import ru.novosoft.smsc.util.Functions;
 
 import java.util.Date;

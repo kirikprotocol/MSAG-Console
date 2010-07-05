@@ -1,7 +1,7 @@
 package ru.novosoft.smsc.admin.filesystem;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.util.Functions;
+import ru.novosoft.smsc.util.FileUtils;
 
 import java.io.*;
 
@@ -83,7 +83,7 @@ class FileSystemHS extends FileSystem {
 
     for (int i = files.length - 1; i > -1; i--) {
       try {
-        Functions.copyFileTo(files[i], toFiles[i]);
+        FileUtils.copyFileTo(files[i], toFiles[i]);
       } catch (IOException e) {
         error = true;
         errStr = "Can't copy file '" + files[i].getAbsolutePath() + "' to '" + toFiles[i].getAbsolutePath() + '\'';

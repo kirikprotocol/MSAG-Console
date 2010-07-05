@@ -40,18 +40,21 @@ public class IOUtils {
   }
 
   public static void writeString8(OutputStream os, String str) throws IOException {
-    writeUInt8(os, str.length());
-    os.write(str.getBytes());
+    byte[] bytes = str.getBytes();
+    writeUInt8(os, bytes.length);
+    os.write(bytes);
   }
 
   public static void writeString16(OutputStream os, String str) throws IOException {
-    writeUInt16(os, str.length());
-    os.write(str.getBytes());
+    byte[] bytes = str.getBytes();
+    writeUInt16(os, bytes.length);
+    os.write(bytes);
   }
 
   public static void writeString32(OutputStream os, String str) throws IOException {
-    writeUInt32(os, str.length());
-    os.write(str.getBytes());
+    byte[] bytes = str.getBytes();
+    writeUInt32(os, bytes.length);
+    os.write(bytes);
   }
 
   public static int readUInt8(InputStream is) throws IOException {

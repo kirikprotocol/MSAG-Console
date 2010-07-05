@@ -1,6 +1,7 @@
 package ru.novosoft.smsc.admin.archive_daemon;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.util.Address;
 
 import java.io.ByteArrayInputStream;
 import java.text.SimpleDateFormat;
@@ -87,7 +88,7 @@ public class SmsRow {
   }
 
   public void setOriginatingAddress(Address mask) {
-    originatingAddress = mask.getMask();
+    originatingAddress = mask.getAddress();
     originatingAddressMask = mask;
   }
 
@@ -105,7 +106,7 @@ public class SmsRow {
   }
 
   public void setDestinationAddress(Address mask) {
-    destinationAddress = mask.getMask();
+    destinationAddress = mask.getAddress();
     destinationAddressMask = mask;
   }
 
@@ -123,7 +124,7 @@ public class SmsRow {
   }
 
   public void setDealiasedDestinationAddress(Address mask) {
-    dealiasedDestinationAddress = mask.getMask();
+    dealiasedDestinationAddress = mask.getAddress();
     dealiasedDestinationAddressMask = mask;
   }
 

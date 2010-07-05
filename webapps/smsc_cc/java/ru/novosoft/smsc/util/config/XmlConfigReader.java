@@ -11,7 +11,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
-import ru.novosoft.smsc.util.xml.Utils;
+import ru.novosoft.smsc.util.XmlUtils;
 
 /**
  * @author Aleksandr Khalitov
@@ -20,7 +20,7 @@ class XmlConfigReader {
   
   static void loadConfig(InputStream is, XmlConfig config) throws ConfigException {
     try {
-      final Document doc = Utils.parse(is);
+      final Document doc = XmlUtils.parse(is);
       
       config.setEncoding(doc.getXmlEncoding());
       

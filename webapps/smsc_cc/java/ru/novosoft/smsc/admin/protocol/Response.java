@@ -7,7 +7,7 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.util.xml.DtdsEntityResolver;
-import ru.novosoft.smsc.util.xml.Utils;
+import ru.novosoft.smsc.util.XmlUtils;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -90,7 +90,7 @@ public class Response {
   }
 
   public String getDataAsString() {
-    return Utils.getNodeText(doc.getDocumentElement());
+    return XmlUtils.getNodeText(doc.getDocumentElement());
   }
 
   public byte getStatus() {

@@ -1,5 +1,7 @@
 package ru.novosoft.smsc.util.config;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -408,6 +410,35 @@ public class XmlConfigSection {
    */
   public List getStringList(String paramName, String delimiter) throws ConfigException {
     return _getParam(paramName).getStringList(delimiter);
+  }
+
+  /**
+   * Return param value as date
+   * @param paramName param name
+   * @param dateFormat date format
+   * @return param value as date
+   * @throws ConfigException if param does not exist
+   * @throws ParseException if param has invalid format
+   */
+  public Date getDate(String paramName, String dateFormat) throws ConfigException, ParseException {
+    SimpleDateFormat df = new SimpleDateFormat(dateFormat);
+    return df.parse(_getParam(paramName).getString());
+  }
+
+  /**
+   * Return param value as date or default value, if param does not exist
+   * @param paramName param name
+   * @param dateFormat date format
+   * @param defaultValue default value
+   * @return param value as date or default value, if param does not exist
+   * @throws ParseException
+   */
+  public Date getDate(String paramName, String dateFormat, Date defaultValue) throws ParseException {
+    final XmlConfigParam param = getParam(paramName);
+    if (param == null)
+      return defaultValue;
+    SimpleDateFormat df = new SimpleDateFormat(dateFormat);
+    return df.parse(param.getString());
   }
 
 

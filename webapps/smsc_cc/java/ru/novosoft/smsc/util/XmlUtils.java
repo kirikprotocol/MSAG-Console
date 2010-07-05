@@ -1,4 +1,4 @@
-package ru.novosoft.smsc.util.xml;
+package ru.novosoft.smsc.util;
 
 /*
  * Created by igork
@@ -9,7 +9,7 @@ package ru.novosoft.smsc.util.xml;
 import org.w3c.dom.*;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
-import ru.novosoft.smsc.util.Functions;
+import ru.novosoft.smsc.util.xml.DtdsEntityResolver;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -21,7 +21,10 @@ import javax.xml.transform.stream.StreamResult;
 import java.io.*;
 
 
-public class Utils {
+/**
+ * Утилиты для работы с XML
+ */
+public class XmlUtils {
 
   private static DocumentBuilderFactory documentBuilderFactory = null;
   private static DtdsEntityResolver dtdsEntityResolver = null;
@@ -53,6 +56,7 @@ public class Utils {
     InputSource source = new InputSource(input);
     return builder.parse(source);
   }
+
   public static Document parse(InputStream input) throws FactoryConfigurationError, ParserConfigurationException, SAXException, IOException {
     if (input == null)
       throw new NullPointerException("input stream is null");

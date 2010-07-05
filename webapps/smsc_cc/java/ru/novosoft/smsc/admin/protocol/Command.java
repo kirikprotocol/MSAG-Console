@@ -9,7 +9,7 @@ import org.apache.log4j.Category;
 import org.w3c.dom.*;
 import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
-import ru.novosoft.smsc.util.xml.Utils;
+import ru.novosoft.smsc.util.XmlUtils;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -57,7 +57,7 @@ public class Command {
     String result = "";
     String newPrefix = prefix + "  ";
     String name = doc.getNodeName();
-    String value = Utils.getNodeText(doc);
+    String value = XmlUtils.getNodeText(doc);
     //logger.debug("name = " + name);
 
     result += prefix + "<" + name;

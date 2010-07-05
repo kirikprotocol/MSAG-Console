@@ -3,7 +3,7 @@ package ru.novosoft.smsc.util.config;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
-import ru.novosoft.smsc.util.xml.Utils;
+import ru.novosoft.smsc.util.XmlUtils;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -52,7 +52,7 @@ class XmlConfigWriter {
 
   static void writeConfig(final XmlConfig config, final OutputStream os, String encoding, String docType) throws IOException, ParserConfigurationException, TransformerException {
     Document doc = createDocument(config);
-    Utils.storeConfig(os, doc, encoding, docType);
+    XmlUtils.storeConfig(os, doc, encoding, docType);
   }
 
   private static Document createDocument(final XmlConfig config) throws ParserConfigurationException {
@@ -79,6 +79,9 @@ class XmlConfigWriter {
       addParameter(doc, sElement, param);
     }
     parent.appendChild(sElement);
+    for (XmlConfigSection childSection : s.sections()) {
+      addSection(doc, sElement, childSection);
+    }
   }
 
   private static void addParameter(Document doc, Element section, XmlConfigParam p) {

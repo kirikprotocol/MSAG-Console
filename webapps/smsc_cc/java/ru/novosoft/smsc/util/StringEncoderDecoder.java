@@ -2,16 +2,6 @@ package ru.novosoft.smsc.util;
 
 public class StringEncoderDecoder {
 
-  protected static final char ESCAPE_CHAR = '/';
-
-  public static String encodeDot(String str) {
-    return str.replace('.', ESCAPE_CHAR);
-  }
-
-  public static String decodeDot(String str) {
-    return str.replace(ESCAPE_CHAR, '.');
-  }
-
   public static String encode(String str) {
     if (str == null) return "";
     StringBuilder result = new StringBuilder(str.length());

@@ -1,7 +1,7 @@
 package ru.novosoft.smsc.admin.archive_daemon.messages;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.archive_daemon.Address;
+import ru.novosoft.smsc.util.Address;
 import ru.novosoft.smsc.admin.archive_daemon.SmsQuery;
 import ru.novosoft.smsc.util.IOUtils;
 
