@@ -21,6 +21,7 @@ public abstract class CallableService {
 
   private static final Category logger = Category.getInstance(CallableService.class);
 
+  private final ServiceManager serviceManager;
   private final String serviceId;
   private final int port;
   private final int iotimeout;
@@ -28,7 +29,8 @@ public abstract class CallableService {
   private Map<String, Component> components;
   private Proxy proxy;
 
-  public CallableService(String serviceId, int port, int iotimeout) {
+  public CallableService(ServiceManager serviceManager, String serviceId, int port, int iotimeout) {
+    this.serviceManager = serviceManager;
     this.serviceId = serviceId;
     this.port = port;
     this.iotimeout = iotimeout;
@@ -36,7 +38,7 @@ public abstract class CallableService {
 
   private Proxy getProxy() throws AdminException {
     if (proxy == null) {
-      ServiceInfo info = ServiceManager.getInstance().getService(serviceId);
+      ServiceInfo info = serviceManager.getService(serviceId);
       if (info == null)
         throw new AdminException("Service '" + serviceId + "' does not exist");
       if (info.getOnlineHost() != null)

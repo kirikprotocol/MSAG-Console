@@ -1,4 +1,4 @@
-package ru.novosoft.smsc.admin.smsc_config;
+package ru.novosoft.smsc.admin.smsc;
 
 import ru.novosoft.smsc.util.config.ConfigException;
 import ru.novosoft.smsc.util.config.XmlConfig;

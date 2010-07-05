@@ -1,7 +1,5 @@
 package ru.novosoft.smsc.util.config;
 
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
 import java.io.*;
 
 /**

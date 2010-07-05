@@ -1,6 +1,6 @@
 package ru.novosoft.smsc.util;
 
-import ru.novosoft.smsc.util.config.Config;
+import ru.novosoft.smsc.util.config.XmlConfig;
 
 import java.io.IOException;
 import java.util.*;
@@ -9,14 +9,14 @@ import java.util.*;
 public class LocaleMessages {
   private static Map<Locale, ResourceBundle> localeMessages = new HashMap<Locale, ResourceBundle>();
 
-  public static Config configFile = null;
+  public static XmlConfig configFile = null;
   public static String DEFAULT_PREFERRED_LANGUAGE = "en";
   public static String SMSC_BUNDLE_NAME = "locales.messages";
 
-  public static void init(Config conf) throws Exception, IOException {
+  public static void init(XmlConfig conf) throws Exception, IOException {
     configFile = conf;
-    DEFAULT_PREFERRED_LANGUAGE = configFile.getString("conf.defaultLang");
-    SMSC_BUNDLE_NAME = configFile.getString("conf.bundleName");
+    DEFAULT_PREFERRED_LANGUAGE = configFile.getSection("conf").getString("defaultLang");
+    SMSC_BUNDLE_NAME = configFile.getSection("conf").getString("bundleName");
   }
 
   public static Set getStrings(Locale locale, String prefix) {

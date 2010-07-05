@@ -1,10 +1,14 @@
-package ru.novosoft.smsc.admin.smsc_config;
+package ru.novosoft.smsc.admin.smsc;
 
 import org.apache.log4j.Logger;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.filesystem.FileSystem;
+import ru.novosoft.smsc.admin.util.XmlConfigHelper;
 import ru.novosoft.smsc.util.config.ConfigException;
 import ru.novosoft.smsc.util.config.XmlConfig;
 
+import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
@@ -18,16 +22,40 @@ class SmscConfigFile {
 
   private static final Logger logger = Logger.getLogger(SmscConfigFile.class);
 
-  private XmlConfig config = new XmlConfig();
-
   private CommonSettings commonSettings;
 
   private InstanceSettings[] instanceSettings;
 
-  void load(InputStream is) throws AdminException {
+  private final File smscConfigFile;
+  private final File backupDir;
+  private final FileSystem fileSystem;
+
+  public SmscConfigFile(File smscBaseDir, FileSystem fileSystem) {
+    this.smscConfigFile = new File(smscBaseDir, "conf" + File.separator + "config.xml");
+    this.backupDir = new File(smscBaseDir, "conf" + File.separator + "backup");
+    this.fileSystem = fileSystem;
+  }
+    
+
+  private XmlConfig loadConfig() throws ConfigException, AdminException {
+    InputStream is = null;
     try {
-      config.clear();
-      config.load(is);
+      is = fileSystem.getInputStream(smscConfigFile);
+      return new XmlConfig(is);
+    } finally {
+      if (is != null) {
+        try {
+          is.close();
+        } catch (IOException e) {
+        }
+      }
+    }
+  }
+
+  void load() throws AdminException {
+    try {
+      XmlConfig config = loadConfig();
+
       commonSettings = new CommonSettings(config);
       commonSettings.load(config);
 
@@ -42,22 +70,14 @@ class SmscConfigFile {
     }
   }
 
-  void save(OutputStream os) throws AdminException {
+  void save() throws AdminException {
     try {
+      XmlConfig config = loadConfig();
       commonSettings.save(config);
       for (InstanceSettings is : instanceSettings) {
         is.save(config);
       }
-      config.save(os);
-    } catch (ConfigException e) {
-      logger.error(e, e);
-      throw new AdminException(e.getMessage());
-    }
-  }
-
-  void backup(OutputStream os) throws AdminException {
-    try {
-      config.save(os);
+      XmlConfigHelper.saveXmlConfig(config, smscConfigFile, backupDir, fileSystem);
     } catch (ConfigException e) {
       logger.error(e, e);
       throw new AdminException(e.getMessage());

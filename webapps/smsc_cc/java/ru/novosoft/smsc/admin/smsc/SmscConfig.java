@@ -1,15 +1,11 @@
-package ru.novosoft.smsc.admin.smsc_config;
+package ru.novosoft.smsc.admin.smsc;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -19,19 +15,14 @@ import java.util.List;
 @SuppressWarnings({"EmptyCatchBlock"})
 public class SmscConfig {
 
-  private File config;
-
-  private File backupDir;
-
-  private static final String SERVICE_NAME = "SMSC1";
-
   private SmscConfigFile configFile;
+
+  private final File smscBaseDir;
+  private final FileSystem fileSystem;
 
   private boolean changed;
 
   private List<SmscConfigObserver> observers = new ArrayList<SmscConfigObserver>();
-
-  private FileSystem fileSystem;
 
   /**
    * @param smscBaseDir директория с дистрибутивом СМСЦ
@@ -39,9 +30,8 @@ public class SmscConfig {
    * @throws AdminException ошибка при чтении конфига
    */
   public SmscConfig(File smscBaseDir, FileSystem fileSystem) throws AdminException {
-    this.config = new File(smscBaseDir, "conf" + File.separator + "config.xml");
-    this.backupDir = new File(smscBaseDir + File.separator + "backup");
-    this.configFile = new SmscConfigFile();
+    this.configFile = new SmscConfigFile(smscBaseDir, fileSystem);
+    this.smscBaseDir = smscBaseDir;
     this.fileSystem = fileSystem;
     reset();    
   }
@@ -134,32 +124,7 @@ public class SmscConfig {
     for (SmscConfigObserver l : observers) {
       l.applySettings(configFile.getCommonSettings(), configFile.getAllInstanceSettings());
     }
-    OutputStream os = null;
-    try {
-      os = fileSystem.getOutputStream(new File(backupDir, "configFile.xml." + sdf.format(new Date())));
-      this.configFile.backup(os);
-    } finally {
-      if (os != null) {
-        try {
-          os.close();
-        } catch (IOException e) {
-        }
-      }
-    }
-    File tmp = new File(config.getAbsolutePath() + ".tmp");
-    os = null;
-    try {
-      os = fileSystem.getOutputStream(tmp);
-      this.configFile.save(os);
-    } finally {
-      if (os != null) {
-        try {
-          os.close();
-        } catch (IOException e) {
-        }
-      }
-    }
-    fileSystem.rename(tmp, config);
+    configFile.save();
     changed = false;
   }
 
@@ -169,19 +134,9 @@ public class SmscConfig {
    * @throws AdminException если откатить конфиг невозможно.
    */
   public synchronized void reset() throws AdminException {
-    SmscConfigFile oldConfigFile = new SmscConfigFile();
-    InputStream is = null;
-    try {
-      is = fileSystem.getInputStream(this.config);
-      oldConfigFile.load(is);
-    } finally {
-      if (is != null) {
-        try {
-          is.close();
-        } catch (IOException e) {
-        }
-      }
-    }
+
+    SmscConfigFile oldConfigFile = new SmscConfigFile(smscBaseDir, fileSystem);
+    oldConfigFile.load();
     for (SmscConfigObserver l : observers) {
       l.resetSettings(oldConfigFile.getCommonSettings(), oldConfigFile.getAllInstanceSettings());
     }

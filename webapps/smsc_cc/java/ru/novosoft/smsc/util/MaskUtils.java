@@ -5,7 +5,6 @@ import ru.novosoft.smsc.admin.AdminException;
 import java.util.regex.Pattern;
 
 /**
- * Утилиты для работы с масками и адресами
  *
  * @author Aleksandr Khalitov
  */

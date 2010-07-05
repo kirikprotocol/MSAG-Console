@@ -5,7 +5,7 @@ import ru.novosoft.smsc.admin.archive_daemon.ArchiveDemon;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.admin.service.ServiceManager;
-import ru.novosoft.smsc.admin.smsc_config.SmscConfig;
+import ru.novosoft.smsc.admin.smsc.SmscConfig;
 
 import java.io.File;
 
