@@ -502,6 +502,8 @@ void AmericaTestFixture::slow_smpp_sender(void)
   // 3-simulate late response on SmppRequestSender and free already freeed TSM
   smsc_log_debug(logger, "======== AmericaTestFixture::slow_smpp_sender ========\n");
   using smsc::mtsmsme::processor::TCO;
+  using smsc::mtsmsme::processor::TSM;
+  using smsc::sms::Address;
 
   uint8_t cd[] = { 2, 2, 2, 2, 2 };
   uint8_t cl[] = { 2, 2, 2, 2, 2 };
