@@ -532,6 +532,7 @@ void AmericaTestFixture::slow_smpp_sender(void)
   SccpSenderMock sender(logger, res);
   mtsms.setSccpSender((SccpSender*)&sender);
   SlowRequestSender smppsender;
+  mtsms.setRequestSender((RequestSender*)&smppsender);
   CPPUNIT_ASSERT( smppsender.req_ptr == 0 );
 
   mtsms.NUNITDATA((uint8_t) (sizeof(cd)/sizeof(uint8_t)), cd,
