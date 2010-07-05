@@ -6,8 +6,8 @@
 #define __SS7HD_CFG_PARSER_HPP__
 
 #include "inman/inap/SS7HDCfgDefs.hpp"
-#include "inman/common/XCFView.hpp"
-#include "inman/common/CSVList.hpp"
+#include "util/config/XCFView.hpp"
+#include "util/csv/CSVListOf.hpp"
 
 namespace smsc  {
 namespace inman {
@@ -16,7 +16,7 @@ namespace inap {
 using smsc::util::config::Config;
 using smsc::util::config::XConfigView;
 using smsc::util::config::ConfigException;
-using smsc::util::CSVList;
+using smsc::util::csv::CSVListOfStr;
 
 class SS7HDCfgParser {
 private:
@@ -52,14 +52,14 @@ protected:
         if (!cstr || !cstr[0])
             throw ConfigException("SS7Unit instances list is missing");
 
-        CSVList nmIds;
-        if (!nmIds.init(cstr))
+        CSVListOfStr nmIds;
+        if (!nmIds.fromStr(cstr))
             throw ConfigException("SS7Unit instances list is invalid: %s", cstr);
 
         SS7Unit_CFG & unitCfg = st_cfg.ss7Units[unitId];
         unitCfg.unitId = unitId; //if it's just created
 
-        for (CSVList::const_iterator cit = nmIds.begin(); cit != nmIds.end(); ++cit) {
+        for (CSVListOfStr::const_iterator cit = nmIds.begin(); cit != nmIds.end(); ++cit) {
             int instId = atoi(cit->c_str());
             if (!instId || (instId > SS7HD_CFG::_MAX_UNIT_INSTANCE_ID))
                 throw ConfigException("SS7Unit instanceId is invalid: %s", cit->c_str());
@@ -68,7 +68,7 @@ protected:
             unitCfg.instIds.insert(SS7UnitInstsMap::value_type((uint8_t)instId,
                                                     SS7UnitInstance((uint8_t)instId)));
         }
-        smsc_log_info(logger, "  instancesList: %s", nmIds.print().c_str());
+        smsc_log_info(logger, "  instancesList: %s", nmIds.toString().c_str());
         return;
     }
 
@@ -102,17 +102,17 @@ protected:
         if (!cstr || !cstr[0])
             throw ConfigException("SS7 Unit(s) subsection list is missing");
 
-        CSVList nmUnits;
-        if (!nmUnits.init(cstr))
+        CSVListOfStr nmUnits;
+        if (!nmUnits.fromStr(cstr))
             throw ConfigException("SS7 Unit(s) subsection list is invalid: %s", cstr);
-        smsc_log_info(logger, "  SS7Units: %s", nmUnits.print().c_str());
+        smsc_log_info(logger, "  SS7Units: %s", nmUnits.toString().c_str());
 
 
         if (!root_sec.findSubSection("SS7Units"))
             throw ConfigException("\'SS7Units\' subsection is missing");
         std::auto_ptr<XConfigView> unitSec(root_sec.getSubConfig("SS7Units"));
 
-        for (CSVList::const_iterator cit = nmUnits.begin();
+        for (CSVListOfStr::const_iterator cit = nmUnits.begin();
                                 cit != nmUnits.end(); ++cit) {
             readUnits(*unitSec.get(), st_cfg, cit->c_str());
         }
@@ -143,19 +143,19 @@ public:
                                   " host addresses are missing");
 
         { //validate addresses format and recompose it without blanks
-          CSVList  hosts;
-          if (!hosts.init(cstr))
+          CSVListOfStr  hosts;
+          if (!hosts.fromStr(cstr))
             throw ConfigException("Remote CommonParts Manager"
                                   " host addresses are invalid: %s", cstr);
           unsigned i = 0;
-          for (CSVList::iterator it = hosts.begin(); it != hosts.end(); ++it, ++i) {
-            CSVList hp(':');
-            if (hp.init(it->c_str()) != 2)
+          for (CSVListOfStr::iterator it = hosts.begin(); it != hosts.end(); ++it, ++i) {
+            CSVListOfStr hp(':');
+            if (hp.fromStr(it->c_str()) != 2)
               throw ConfigException("Remote CommonParts Manager"
                                     " host address is invalid: %s", it->c_str());
             if (i)
               st_cfg.rcpMgrAdr += ',';
-            hp.print(st_cfg.rcpMgrAdr, false);
+            hp.toString(st_cfg.rcpMgrAdr, 0);
           }
         }
         smsc_log_info(logger, "  cpMgrHosts: \'%s\'", st_cfg.rcpMgrAdr.c_str());
