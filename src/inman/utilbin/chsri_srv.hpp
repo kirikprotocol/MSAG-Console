@@ -65,6 +65,8 @@ private:
     std::string     subcrAddr;
     IMSIString      subcrImsi;
     Logger *        logger;
+
+    void rlseSRIDialog(void);
 };
 
 

@@ -189,15 +189,21 @@ SRIInterrogator::SRIInterrogator(TCSessionMA* pSession, SRI_CSIListener * csi_li
         logger = Logger::getInstance("smsc.inman.inap.atih.Intrgtr");
 }
 
-SRIInterrogator::~SRIInterrogator()
+void SRIInterrogator::rlseSRIDialog(void)
 {
-    MutexGuard  grd(_sync);
     if (sriDlg) {
         while (!sriDlg->Unbind()) //MAPDlg refers this query
             _sync.wait();
         delete sriDlg;
+        sriDlg = NULL;
     }
     _active = false;
+}
+
+SRIInterrogator::~SRIInterrogator()
+{
+    MutexGuard  grd(_sync);
+    rlseSRIDialog();
 }
 
 bool SRIInterrogator::isActive(void)
@@ -219,14 +225,9 @@ bool SRIInterrogator::interrogate(const std::string &subcr_addr)
         smsc_log_debug(logger, "Intrgtr[%s]: requesting subscription ..", subcr_addr.c_str());
         sriDlg->reqRoutingInfo(subcr_addr.c_str());
         _active = true;
-    } catch (std::exception & exc) {
+    } catch (const std::exception & exc) {
         smsc_log_error(logger, "Intrgtr[%s]: %s", subcr_addr.c_str() , exc.what());
-        if (sriDlg) {
-            sriDlg->Unbind();
-            delete sriDlg;
-            sriDlg = NULL;
-        }
-        _active = false;
+        rlseSRIDialog();
     }
     return _active;
 }
@@ -264,11 +265,7 @@ void SRIInterrogator::onMapResult(CHSendRoutingInfoRes* arg)
 void SRIInterrogator::onEndMapDlg(RCHash ercode/* =0*/)
 {
     MutexGuard  grd(_sync);
-    if (sriDlg) {
-        while (!sriDlg->Unbind()) //MAPDlg refers this query
-            _sync.wait();
-        delete sriDlg;
-    }
+    rlseSRIDialog();
     if (!ercode) {
         if (!subcrImsi.empty())
             csiHdl->onCSIresult(subcrAddr, subcrImsi.c_str(),
@@ -278,7 +275,6 @@ void SRIInterrogator::onEndMapDlg(RCHash ercode/* =0*/)
                     _RCS_MAPService->mkhash(MAPServiceRC::noServiceResponse));
     } else
         csiHdl->onCSIabort(subcrAddr, ercode);
-    _active = false;
 }
 
 
