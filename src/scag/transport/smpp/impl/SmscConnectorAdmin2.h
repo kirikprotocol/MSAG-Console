@@ -35,8 +35,12 @@ struct SmscConnectInfo{
   }
   void reportFailure()
   {
-    lastIdx=(lastIdx+1)&1;
-    lastFailure=time(NULL);
+      for ( int i = 0; i < 2; ++i ) {
+          lastIdx=(lastIdx+1)&1;
+          lastFailure=time(NULL);
+          if ( hosts[lastIdx].empty() || ports[lastIdx] == 0 ) continue;
+          break;
+      }
   }
 };
 
