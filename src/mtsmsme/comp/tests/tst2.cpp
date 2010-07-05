@@ -538,7 +538,7 @@ void AmericaTestFixture::slow_smpp_sender(void)
   mtsms.NUNITDATA((uint8_t) (sizeof(cd)/sizeof(uint8_t)), cd,
                   (uint8_t) (sizeof(cl)/sizeof(uint8_t)), cl,
                   (uint8_t) (sizeof(ud)/sizeof(uint8_t)), ud);
-  //CPPUNIT_ASSERT( smppsender.req_ptr != 0 );
+  CPPUNIT_ASSERT( 0 != smppsender.req_ptr );
   //using smsc::mtsmsme::processor::TSMSTAT;
   //TSMSTAT stat;
   //TSM::getCounters(stat);
