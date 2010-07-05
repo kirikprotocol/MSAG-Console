@@ -2,7 +2,7 @@ package ru.novosoft.smsc.admin.util;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
-import ru.novosoft.smsc.util.config.ConfigException;
+import ru.novosoft.smsc.util.config.XmlConfigException;
 import ru.novosoft.smsc.util.config.XmlConfig;
 
 import java.io.File;
@@ -28,7 +28,7 @@ public class XmlConfigHelper {
     try {
       os = fileSystem.getOutputStream(tmp);
       config.save(os);
-    } catch (ConfigException e) {
+    } catch (XmlConfigException e) {
       throw new AdminException(e.getMessage(), e);
     } finally {
       if (os != null) {

@@ -4,13 +4,12 @@ import org.apache.log4j.Logger;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
 import ru.novosoft.smsc.admin.util.XmlConfigHelper;
-import ru.novosoft.smsc.util.config.ConfigException;
+import ru.novosoft.smsc.util.config.XmlConfigException;
 import ru.novosoft.smsc.util.config.XmlConfig;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 
 /**
  * Вспомогательный класс для работы (загрузки/сохранения) с config.xml СМС центра.
@@ -37,7 +36,7 @@ class SmscConfigFile {
   }
     
 
-  private XmlConfig loadConfig() throws ConfigException, AdminException {
+  private XmlConfig loadConfig() throws XmlConfigException, AdminException {
     InputStream is = null;
     try {
       is = fileSystem.getInputStream(smscConfigFile);
@@ -64,7 +63,7 @@ class SmscConfigFile {
       for (int i = 0; i < instancesCount; i++) {
         instanceSettings[i] = new InstanceSettings(i, config);
       }
-    } catch (ConfigException e) {
+    } catch (XmlConfigException e) {
       logger.error(e, e);
       throw new AdminException(e.getMessage());
     }
@@ -78,7 +77,7 @@ class SmscConfigFile {
         is.save(config);
       }
       XmlConfigHelper.saveXmlConfig(config, smscConfigFile, backupDir, fileSystem);
-    } catch (ConfigException e) {
+    } catch (XmlConfigException e) {
       logger.error(e, e);
       throw new AdminException(e.getMessage());
     }

@@ -4,7 +4,7 @@ import org.apache.log4j.Logger;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
 import ru.novosoft.smsc.admin.util.XmlConfigHelper;
-import ru.novosoft.smsc.util.config.ConfigException;
+import ru.novosoft.smsc.util.config.XmlConfigException;
 import ru.novosoft.smsc.util.config.XmlConfig;
 import ru.novosoft.smsc.util.config.XmlConfigParam;
 import ru.novosoft.smsc.util.config.XmlConfigSection;
@@ -12,7 +12,6 @@ import ru.novosoft.smsc.util.config.XmlConfigSection;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -65,7 +64,7 @@ public class ArchiveDaemonConfig {
     return changed;
   }
 
-  private XmlConfig loadConfig() throws ConfigException, AdminException {
+  private XmlConfig loadConfig() throws XmlConfigException, AdminException {
     InputStream is = null;
     try {
       is = fileSystem.getInputStream(configFile);
@@ -111,7 +110,7 @@ public class ArchiveDaemonConfig {
       for (XmlConfigParam chunkSizeParam : chunkSizesSection.params())
         indexatorSmeAddrChunkSizes.put(chunkSizeParam.getName(), chunkSizeParam.getInt());
 
-    } catch (ConfigException e) {
+    } catch (XmlConfigException e) {
       throw new AdminException(e.getMessage(), e);
     }
 
@@ -151,7 +150,7 @@ public class ArchiveDaemonConfig {
 
       XmlConfigHelper.saveXmlConfig(config, configFile, backupDir, fileSystem);
 
-    } catch (ConfigException e) {
+    } catch (XmlConfigException e) {
       throw new AdminException("Unable to save Archive Daemon config. Cause: " + e.getMessage(), e);
     }
 

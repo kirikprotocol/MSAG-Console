@@ -23,9 +23,9 @@ public class XmlConfig extends XmlConfigSection {
   /**
    * Creates new instance of xml config and load it from input stream
    * @param is input stream
-   * @throws ConfigException If can't load
+   * @throws XmlConfigException If can't load
    */
-  public XmlConfig(InputStream is) throws ConfigException{
+  public XmlConfig(InputStream is) throws XmlConfigException {
     this();
     load(is);
   }
@@ -33,9 +33,9 @@ public class XmlConfig extends XmlConfigSection {
   /**
    * Creates new instance of xml config and load it from other
    * @param c XmlConfig
-   * @throws ConfigException If can't load
+   * @throws XmlConfigException If can't load
    */
-  public XmlConfig(XmlConfig c) throws ConfigException{
+  public XmlConfig(XmlConfig c) throws XmlConfigException {
     try{
       XmlConfigSection s =  (XmlConfigSection)clone();
       sections = s.sections;
@@ -43,7 +43,7 @@ public class XmlConfig extends XmlConfigSection {
       name = s.name;
       encoding = c.encoding;
     }catch (CloneNotSupportedException e){
-      throw new ConfigException(e);
+      throw new XmlConfigException(e);
     }
 
   }
@@ -51,18 +51,18 @@ public class XmlConfig extends XmlConfigSection {
   /**
    * Load config from file
    * @param file file
-   * @throws ConfigException If can't load
+   * @throws XmlConfigException If can't load
    */
-  public void load(File file) throws ConfigException {
+  public void load(File file) throws XmlConfigException {
     if (file == null)
-      throw new ConfigException("Config file not specified");
+      throw new XmlConfigException("Config file not specified");
 
     InputStream is = null;
     try {
       is = new BufferedInputStream(new FileInputStream(file));
       load(is);
     } catch (IOException e) {
-      throw new ConfigException("Can't load config", e);
+      throw new XmlConfigException("Can't load config", e);
     } finally {
       try {
         if (is != null)
@@ -74,9 +74,9 @@ public class XmlConfig extends XmlConfigSection {
   /**
    * Load config from input stream
    * @param is input stream
-   * @throws ConfigException If can't load
+   * @throws XmlConfigException If can't load
    */
-  public void load(InputStream is) throws ConfigException {
+  public void load(InputStream is) throws XmlConfigException {
     clear();
     XmlConfigReader.loadConfig(is, this);
   }
@@ -84,13 +84,13 @@ public class XmlConfig extends XmlConfigSection {
   /**
    * Save config
    * @param os output stream
-   * @throws ConfigException if cant save
+   * @throws XmlConfigException if cant save
    */
-  public void save(OutputStream os) throws ConfigException {
+  public void save(OutputStream os) throws XmlConfigException {
     try{
       XmlConfigWriter.writeConfig(this, os, encoding == null ? "utf-8" : encoding ,"configuration.dtd");
     }catch (Exception e) {
-      throw new ConfigException(e);
+      throw new XmlConfigException(e);
     }
   }
 

@@ -80,38 +80,38 @@ public class XmlConfigParam implements Cloneable{
 
   /**
    * Returns parameter value as int
-   * @throws ConfigException if param value not int
+   * @throws XmlConfigException if param value not int
    * @return int value
    */
-  public int getInt() throws ConfigException {
+  public int getInt() throws XmlConfigException {
     return ConfigTools.getInt(name, value);
   }
 
   /**
    * Returns parameter value as long
-   * @throws ConfigException if param value not long
+   * @throws XmlConfigException if param value not long
    * @return long value
    */
-  public long getLong() throws ConfigException {
+  public long getLong() throws XmlConfigException {
     return ConfigTools.getLong(name, value);
   }
 
   /**
    * Returns parameter value as date with specified date format
    * @param dateFormat date format
-   * @throws ConfigException if can't parse param value
+   * @throws XmlConfigException if can't parse param value
    * @return date value
    */
-  public Date getDate(String dateFormat) throws ConfigException {
+  public Date getDate(String dateFormat) throws XmlConfigException {
     return ConfigTools.getDate(name, value, dateFormat);
   }
 
   /**
    * Returns parameter value as boolean
-   * @throws ConfigException if param value does not match boolean
+   * @throws XmlConfigException if param value does not match boolean
    * @return boolean value
    */
-  public boolean getBool() throws ConfigException {
+  public boolean getBool() throws XmlConfigException {
     return ConfigTools.getBool(name, value);
   }
 
@@ -119,9 +119,9 @@ public class XmlConfigParam implements Cloneable{
    * Returns parameter value as String list
    * @param delimiter delimiter
    * @return string list value
-   * @throws ConfigException
+   * @throws XmlConfigException
    */
-  public String[] getStringArray(String delimiter) throws ConfigException {
+  public String[] getStringArray(String delimiter) throws XmlConfigException {
     return ConfigTools.getStringArray(name, value, delimiter);
   }
 
@@ -130,27 +130,27 @@ public class XmlConfigParam implements Cloneable{
    * @param delimiter delimiter
    * @return string list value
    */
-  public List<String> getStringList(String delimiter) throws ConfigException {
+  public List<String> getStringList(String delimiter) throws XmlConfigException {
     return ConfigTools.getStringList(name, value, delimiter);
   }
 
   /**
    * Returns parameter value as long list
    * @param delimiter delimiter
-   * @throws ConfigException if param value does not match long[]
+   * @throws XmlConfigException if param value does not match long[]
    * @return long array
    */
-  public long[] getLongArray(String delimiter) throws ConfigException {
+  public long[] getLongArray(String delimiter) throws XmlConfigException {
     return ConfigTools.getLongArray(name, value, delimiter);
   }
 
   /**
    * Returns parameter value as int list
    * @param delimiter delimiter
-   * @throws ConfigException if param value does not match int[]
+   * @throws XmlConfigException if param value does not match int[]
    * @return int list
    */
-  public int[] getIntArray(String delimiter) throws ConfigException {
+  public int[] getIntArray(String delimiter) throws XmlConfigException {
     return ConfigTools.getIntArray(name, value, delimiter);
   }
 
@@ -220,7 +220,7 @@ public class XmlConfigParam implements Cloneable{
    * @param stringList new value
    * @param delimiter values delimiter
    */
-  public void setStringList(Collection stringList, String delimiter) throws ConfigException {
+  public void setStringList(Collection stringList, String delimiter) throws XmlConfigException {
     value = Functions.collectionToString(stringList, delimiter);
     type = Type.STRING;
   }

@@ -1,6 +1,6 @@
 package ru.novosoft.smsc.admin;
 
-import ru.novosoft.smsc.util.config.ConfigException;
+import ru.novosoft.smsc.util.config.XmlConfigException;
 import ru.novosoft.smsc.util.config.XmlConfig;
 import ru.novosoft.smsc.util.config.XmlConfigSection;
 
@@ -20,7 +20,7 @@ class AdminContextConfig {
 
     try {
       this.webconfig.load(file);
-    } catch (ConfigException e) {
+    } catch (XmlConfigException e) {
       throw new AdminException("Unable to load " + file.getAbsolutePath() + ".Cause: " + e.getMessage(), e);
     }
   }
@@ -36,7 +36,7 @@ class AdminContextConfig {
         return InstallationType.SINGLE;
       else
         throw new AdminException("Unknown installation type: " + installationTypeStr);
-    } catch (ConfigException e) {
+    } catch (XmlConfigException e) {
       throw new AdminException(e.getMessage(), e);
     }
   }
@@ -49,7 +49,7 @@ class AdminContextConfig {
     try {
       XmlConfigSection daemon = webconfig.getSection("daemon");
       return daemon.getString("host");
-    } catch (ConfigException e) {
+    } catch (XmlConfigException e) {
       throw new AdminException(e.getMessage(), e);
     }
   }
@@ -62,7 +62,7 @@ class AdminContextConfig {
     try {
       XmlConfigSection daemon = webconfig.getSection("daemon");
       return daemon.getInt("port");
-    } catch (ConfigException e) {
+    } catch (XmlConfigException e) {
       throw new AdminException(e.getMessage(), e);
     }
   }
@@ -76,7 +76,7 @@ class AdminContextConfig {
       XmlConfigSection installation = webconfig.getSection("installation");
       File mirrorPath = new File(installation.getString("mirrorpath"));
       return new File[]{mirrorPath};
-    } catch (ConfigException e) {
+    } catch (XmlConfigException e) {
       throw new AdminException(e.getMessage(), e);
     }
   }
@@ -89,7 +89,7 @@ class AdminContextConfig {
     try {
       XmlConfigSection daemon = webconfig.getSection("daemon");
       return daemon.getString("host");
-    } catch (ConfigException e) {
+    } catch (XmlConfigException e) {
       throw new AdminException(e.getMessage(), e);
     }
   }
@@ -101,7 +101,7 @@ class AdminContextConfig {
     try {
       XmlConfigSection daemon = webconfig.getSection("daemon");
       return daemon.getInt("port");
-    } catch (ConfigException e) {
+    } catch (XmlConfigException e) {
       throw new AdminException(e.getMessage(), e);
     }
   }
@@ -117,7 +117,7 @@ class AdminContextConfig {
         result.add(nodeSection.getName());
 
       return result;
-    } catch (ConfigException e) {
+    } catch (XmlConfigException e) {
       throw new AdminException(e.getMessage(), e);
     }
   }

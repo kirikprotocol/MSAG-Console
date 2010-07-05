@@ -23,14 +23,14 @@ public class XmlConfigTest {
     section.setDate("4", date, "yyyy-MM-dd");
   }
 
-  private void checkSection(XmlConfigSection sec) throws ConfigException, ParseException {
+  private void checkSection(XmlConfigSection sec) throws XmlConfigException, ParseException {
     assertEquals("1", sec.getString("1"));
     assertEquals(2, sec.getInt("2"));
     assertEquals(true, sec.getBool("3"));
     assertEquals(date, sec.getDate("4", "yyyy-MM-dd"));
   }
 
-  private File saveConfig(XmlConfig config) throws IOException, ConfigException {
+  private File saveConfig(XmlConfig config) throws IOException, XmlConfigException {
     File f;
     do {
       f = new File(System.currentTimeMillis() + ".xml");
@@ -46,7 +46,7 @@ public class XmlConfigTest {
         f.delete();
       throw e;
 
-    } catch (ConfigException e) {
+    } catch (XmlConfigException e) {
       if (f.exists())
         f.delete();
       throw e;
@@ -60,7 +60,7 @@ public class XmlConfigTest {
   }
 
   @Test
-  public void loadSaveTest() throws ConfigException, IOException, ParseException {
+  public void loadSaveTest() throws XmlConfigException, IOException, ParseException {
     XmlConfig config = new XmlConfig();
     fillSection(config);
 

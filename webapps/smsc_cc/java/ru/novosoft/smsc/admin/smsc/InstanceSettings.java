@@ -1,6 +1,6 @@
 package ru.novosoft.smsc.admin.smsc;
 
-import ru.novosoft.smsc.util.config.ConfigException;
+import ru.novosoft.smsc.util.config.XmlConfigException;
 import ru.novosoft.smsc.util.config.XmlConfig;
 import ru.novosoft.smsc.util.config.XmlConfigSection;
 
@@ -46,12 +46,12 @@ public class InstanceSettings implements Cloneable {
   public InstanceSettings() {    
   }
 
-  InstanceSettings(int instanceN, XmlConfig c) throws ConfigException {
+  InstanceSettings(int instanceN, XmlConfig c) throws XmlConfigException {
     this.instanceN = instanceN;
     load(c);
   }
 
-  protected void load(XmlConfig c) throws ConfigException {
+  protected void load(XmlConfig c) throws XmlConfigException {
     assert c != null : "Config is null";
 
     XmlConfigSection s = c.getSection("admin");
@@ -80,7 +80,7 @@ public class InstanceSettings implements Cloneable {
 
   }
 
-  protected void save(XmlConfig c) throws ConfigException {
+  protected void save(XmlConfig c) throws XmlConfigException {
     XmlConfigSection s = c.getOrCreateSection("admin");
     s.setString("host" + instanceN, adminHost);
     s.setInt("port" + instanceN, adminPort);

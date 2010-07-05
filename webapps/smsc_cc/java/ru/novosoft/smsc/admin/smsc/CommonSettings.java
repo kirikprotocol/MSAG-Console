@@ -1,6 +1,6 @@
 package ru.novosoft.smsc.admin.smsc;
 
-import ru.novosoft.smsc.util.config.ConfigException;
+import ru.novosoft.smsc.util.config.XmlConfigException;
 import ru.novosoft.smsc.util.config.XmlConfig;
 import ru.novosoft.smsc.util.config.XmlConfigParam;
 import ru.novosoft.smsc.util.config.XmlConfigSection;
@@ -158,11 +158,11 @@ public class CommonSettings implements Cloneable {
 
   }
 
-  CommonSettings(XmlConfig c) throws ConfigException {
+  CommonSettings(XmlConfig c) throws XmlConfigException {
     load(c);
   }
 
-  protected void save(XmlConfig c) throws ConfigException {
+  protected void save(XmlConfig c) throws XmlConfigException {
 
     // core
     XmlConfigSection s = c.getOrCreateSection("core");
@@ -308,7 +308,7 @@ public class CommonSettings implements Cloneable {
     }
   }
 
-  protected void load(XmlConfig c) throws ConfigException {
+  protected void load(XmlConfig c) throws XmlConfigException {
     // core
     XmlConfigSection s = c.getSection("core");
     state_machines_count = s.getInt("state_machines_count");

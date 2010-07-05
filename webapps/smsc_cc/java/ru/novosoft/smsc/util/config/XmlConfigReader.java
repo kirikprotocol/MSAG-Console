@@ -18,7 +18,7 @@ import ru.novosoft.smsc.util.XmlUtils;
  */
 class XmlConfigReader {
   
-  static void loadConfig(InputStream is, XmlConfig config) throws ConfigException {
+  static void loadConfig(InputStream is, XmlConfig config) throws XmlConfigException {
     try {
       final Document doc = XmlUtils.parse(is);
       
@@ -26,15 +26,15 @@ class XmlConfigReader {
       
       final NodeList configs = doc.getElementsByTagName("config");
       if (configs == null || configs.getLength() == 0)
-        throw new ConfigException("Invalid config file");
+        throw new XmlConfigException("Invalid config file");
       
       readXmlConfigSection(config.getEncoding(), (Element)configs.item(0), config);
     } catch (ParserConfigurationException ex) {
-      throw new ConfigException(ex);
+      throw new XmlConfigException(ex);
     } catch (SAXException e) {
-      throw new ConfigException(e);
+      throw new XmlConfigException(e);
     } catch (IOException e) {
-      throw new ConfigException(e);
+      throw new XmlConfigException(e);
     }
   }
   

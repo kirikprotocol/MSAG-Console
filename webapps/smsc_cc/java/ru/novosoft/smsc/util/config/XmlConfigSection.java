@@ -103,12 +103,12 @@ public class XmlConfigSection {
    * Returns section with specified name of null if such section does not exists
    * @param name section name
    * @return section or null
-   * @throws ConfigException if section with specified name does not exists
+   * @throws XmlConfigException if section with specified name does not exists
    */
-  public XmlConfigSection getSection(final String name) throws ConfigException {
+  public XmlConfigSection getSection(final String name) throws XmlConfigException {
     XmlConfigSection s = sections.get(name);
     if (s == null)
-      throw new ConfigException("Section " + name + " not found in " + this.name + " section.");
+      throw new XmlConfigException("Section " + name + " not found in " + this.name + " section.");
     return s;
   }
 
@@ -116,9 +116,9 @@ public class XmlConfigSection {
    * Returns section with specified name, create it if it doesn't exist
    * @param name section name
    * @return section
-   * @throws ConfigException if section with specified name does not exists
+   * @throws XmlConfigException if section with specified name does not exists
    */
-  public XmlConfigSection getOrCreateSection(String name) throws ConfigException{
+  public XmlConfigSection getOrCreateSection(String name) throws XmlConfigException {
     return containsSection(name) ? getSection(name) : addSection(name);
   }
 
@@ -274,10 +274,10 @@ public class XmlConfigSection {
     return new ArrayList<XmlConfigParam>(params.values());
   }
 
-  private XmlConfigParam _getParam(String paramName) throws ConfigException {
+  private XmlConfigParam _getParam(String paramName) throws XmlConfigException {
     final XmlConfigParam param = getParam(paramName);
     if (param == null)
-      throw new ConfigException("Param " + paramName + " not found in " + name + " section.");
+      throw new XmlConfigException("Param " + paramName + " not found in " + name + " section.");
     return param;
   }
 
@@ -285,9 +285,9 @@ public class XmlConfigSection {
    * Returns parameter value as string
    * @param paramName param name
    * @return string value of param
-   * @throws ConfigException if param not found
+   * @throws XmlConfigException if param not found
    */
-  public String getString(String paramName) throws ConfigException {
+  public String getString(String paramName) throws XmlConfigException {
     return _getParam(paramName).getString();
   }
 
@@ -306,9 +306,9 @@ public class XmlConfigSection {
    * Returns param value as int
    * @param paramName param name
    * @return param value
-   * @throws ConfigException if param not found or param value is not int
+   * @throws XmlConfigException if param not found or param value is not int
    */
-  public int getInt(String paramName) throws ConfigException {
+  public int getInt(String paramName) throws XmlConfigException {
     return _getParam(paramName).getInt();
   }
 
@@ -317,9 +317,9 @@ public class XmlConfigSection {
    * @param paramName param name
    * @param defaultValue default value
    * @return param or default value
-   * @throws ConfigException if param value is not int
+   * @throws XmlConfigException if param value is not int
    */
-  public int getInt(String paramName, int defaultValue) throws ConfigException {
+  public int getInt(String paramName, int defaultValue) throws XmlConfigException {
     final XmlConfigParam param = getParam(paramName);
     return (param==null) ? defaultValue : param.getInt();
   }
@@ -328,9 +328,9 @@ public class XmlConfigSection {
    * Returns param value as long
    * @param paramName param name
    * @return param value
-   * @throws ConfigException if param not found or param value is not long
+   * @throws XmlConfigException if param not found or param value is not long
    */
-  public long getLong(String paramName) throws ConfigException {
+  public long getLong(String paramName) throws XmlConfigException {
     return _getParam(paramName).getLong();
   }
 
@@ -339,9 +339,9 @@ public class XmlConfigSection {
    * @param paramName param name
    * @param defaultValue default value
    * @return param or default value
-   * @throws ConfigException if param value is not long
+   * @throws XmlConfigException if param value is not long
    */
-  public long getLong(String paramName, long defaultValue) throws ConfigException {
+  public long getLong(String paramName, long defaultValue) throws XmlConfigException {
     final XmlConfigParam param = getParam(paramName);
     return (param==null) ? defaultValue : param.getLong();
   }
@@ -350,9 +350,9 @@ public class XmlConfigSection {
    * Returns param value(true,false) as bool or default value if param does not exists
    * @param paramName param name
    * @return param or default value
-   * @throws ConfigException if param value is not bool
+   * @throws XmlConfigException if param value is not bool
    */
-  public boolean getBool(String paramName) throws ConfigException {
+  public boolean getBool(String paramName) throws XmlConfigException {
     return _getParam(paramName).getBool();
   }
 
@@ -361,9 +361,9 @@ public class XmlConfigSection {
    * @param paramName param name
    * @param defaultValue default value
    * @return param or default value
-   * @throws ConfigException if param value is not bool
+   * @throws XmlConfigException if param value is not bool
    */
-  public boolean getBool(String paramName, boolean defaultValue) throws ConfigException {
+  public boolean getBool(String paramName, boolean defaultValue) throws XmlConfigException {
     final XmlConfigParam param = getParam(paramName);
     return (param==null) ? defaultValue : param.getBool();
   }
@@ -373,9 +373,9 @@ public class XmlConfigSection {
    * @param paramName param name
    * @param delimiter values delimiter
    * @return int array
-   * @throws ConfigException if param does not exists or has incorrect format
+   * @throws XmlConfigException if param does not exists or has incorrect format
    */
-  public int[] getIntArray(String paramName, String delimiter) throws ConfigException {
+  public int[] getIntArray(String paramName, String delimiter) throws XmlConfigException {
     return _getParam(paramName).getIntArray(delimiter);
   }
 
@@ -384,9 +384,9 @@ public class XmlConfigSection {
    * @param paramName param name
    * @param delimiter values delimiter
    * @return long array
-   * @throws ConfigException if param does not exists or has incorrect format
+   * @throws XmlConfigException if param does not exists or has incorrect format
    */
-  public long[] getLongArray(String paramName, String delimiter) throws ConfigException {
+  public long[] getLongArray(String paramName, String delimiter) throws XmlConfigException {
     return _getParam(paramName).getLongArray(delimiter);
   }
 
@@ -395,9 +395,9 @@ public class XmlConfigSection {
    * @param paramName param name
    * @param delimiter values delimiter
    * @return string array
-   * @throws ConfigException if param does not exists or has incorrect format
+   * @throws XmlConfigException if param does not exists or has incorrect format
    */
-  public String[] getStringArray(String paramName, String delimiter) throws ConfigException {
+  public String[] getStringArray(String paramName, String delimiter) throws XmlConfigException {
     return _getParam(paramName).getStringArray(delimiter);
   }
 
@@ -406,9 +406,9 @@ public class XmlConfigSection {
    * @param paramName param name
    * @param delimiter values delimiter
    * @return string list
-   * @throws ConfigException if param does not exists or has incorrect format
+   * @throws XmlConfigException if param does not exists or has incorrect format
    */
-  public List getStringList(String paramName, String delimiter) throws ConfigException {
+  public List getStringList(String paramName, String delimiter) throws XmlConfigException {
     return _getParam(paramName).getStringList(delimiter);
   }
 
@@ -417,10 +417,10 @@ public class XmlConfigSection {
    * @param paramName param name
    * @param dateFormat date format
    * @return param value as date
-   * @throws ConfigException if param does not exist
+   * @throws XmlConfigException if param does not exist
    * @throws ParseException if param has invalid format
    */
-  public Date getDate(String paramName, String dateFormat) throws ConfigException, ParseException {
+  public Date getDate(String paramName, String dateFormat) throws XmlConfigException, ParseException {
     SimpleDateFormat df = new SimpleDateFormat(dateFormat);
     return df.parse(_getParam(paramName).getString());
   }
@@ -506,9 +506,9 @@ public class XmlConfigSection {
    * @param stringList strings collection
    * @param delimiter delimiter between strings in param value
    * @return this
-   * @throws ConfigException if can't transform collection into string
+   * @throws XmlConfigException if can't transform collection into string
    */
-  public XmlConfigSection setStringList(String name, Collection stringList, String delimiter) throws ConfigException {
+  public XmlConfigSection setStringList(String name, Collection stringList, String delimiter) throws XmlConfigException {
     getOrCreateParam(name).setStringList(stringList, delimiter);
     return this;
   }
