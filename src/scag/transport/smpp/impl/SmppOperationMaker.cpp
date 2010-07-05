@@ -317,11 +317,23 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st,
 
             if ( wantOpenUSSD ) {
 
-                if ( session_->getUSSDOperationId() != invalidOpId() ) {
+                if ( found_ussd != invalidOpId() ) {
+                    // ussd operation already exists
                     op = session_->setCurrentOperation(found_ussd);
-                    smsc_log_info( log_, "current USSD dialog op=%p opid=%u is replaced",
-                                   op, found_ussd );
-                    session_->closeCurrentOperation();
+                    if ( ! op ) {
+                        fail("USSD: opid is set but op is not found", st,
+                             smsc::system::Status::SYSERR );
+                        return;
+                    } else if ( op->getUSSDLastTime() + Session::ussdLiveTime() < currentTime_ ) {
+                        // the operation is too old
+                        smsc_log_info( log_, "current USSD dialog op=%p opid=%u is obsolete by %u seconds and be replaced",
+                                       op, found_ussd, unsigned(currentTime_ - op->getUSSDLastTime()) );
+                        session_->closeCurrentOperation();
+                    } else {
+                        fail("USSD: active dialog exists", st,
+                             smsc::system::Status::USSDBUSY );
+                        return;
+                    }
                 }
                 op = session_->createOperation( *cmd_.get(), optype_ );
                 found_ussd = session_->getUSSDOperationId();
@@ -373,6 +385,9 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st,
 
                 if ( cmdid == DELIVERY ) op->setFlag(OperationFlags::NEXTUSSDISSUBMIT);
                 else op->clearFlag(OperationFlags::NEXTUSSDISSUBMIT);
+
+                // update ussd activity time
+                op->setUSSDLastTime( currentTime_ );
 
                 if ( isUSSDClosed )
                     op->setStatus( OPERATION_COMPLETED );

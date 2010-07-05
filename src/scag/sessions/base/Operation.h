@@ -34,7 +34,9 @@ const uint32_t NEXTUSSDISSUBMIT              = 0x40; // if set next ussd should 
 class Operation
 {
 public:
-    Operation( Session* owner = 0, uint8_t type = transport::CO_NA );
+    Operation( Session* owner = 0,
+               uint8_t type = transport::CO_NA,
+               time_t ussdLastTime = 0 );
     ~Operation();
 
     uint8_t type() const { return type_; }
@@ -62,6 +64,9 @@ public:
     /// this field is only valid if optype is CO_USSD_DIALOG
     void setUSSDref( int32_t umr ) /* throw (exceptions::SCAGException) */;
     inline int32_t getUSSDref() const { return umr_; }
+
+    time_t getUSSDLastTime() const { return ussdLastTime_; }
+    void setUSSDLastTime( time_t ct ) { ussdLastTime_ = ct; }
 
     /// used for segmented messages
     int32_t getSARref() const;
@@ -103,6 +108,7 @@ private:
     uint32_t            flags_;
     int32_t             ctxid_;
     int32_t             umr_;     // used for USSD
+    time_t              ussdLastTime_; // not persistent
     std::string*        keywords_;
     Segmentation*       segmentation_; // owned
 };

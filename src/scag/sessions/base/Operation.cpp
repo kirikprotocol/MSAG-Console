@@ -25,7 +25,7 @@ struct Operation::Segmentation
 };
 
 
-Operation::Operation( Session* s, uint8_t tp ) :
+Operation::Operation( Session* s, uint8_t tp, time_t ussdLastTime ) :
 owner_(s),
 receivedParts_(0),
 receivedResps_(0),
@@ -34,12 +34,16 @@ type_(tp),
 flags_(0),
 ctxid_(0),
 umr_(-1),
+ussdLastTime_(ussdLastTime),
 keywords_(0),
 segmentation_(0)
 {
     if ( !log_ ) {
         MutexGuard mg(loggerMutex_);
         if ( !log_ ) log_ = smsc::logger::Logger::getInstance("sess.op");
+    }
+    if (!ussdLastTime_ && type_ == CO_USSD_DIALOG ) {
+        ussdLastTime_ = time(0);
     }
 }
 
@@ -201,7 +205,16 @@ Deserializer& Operation::deserialize( Deserializer& s ) /* throw ( DeserializerE
     s >> x; receivedParts_ = int(x);
     s >> x; receivedResps_ = int(x);
     s >> x; ctxid_ = int32_t(x);
-    if ( type_ == CO_USSD_DIALOG ) s >> x; umr_ = int32_t(x);
+    if ( type_ == CO_USSD_DIALOG ) {
+        s >> x; umr_ = int32_t(x);
+        // NOTE: this solution was proposed by S.Lugovoy, don't blame me (db).
+        // The main reason for this is that we don't want to change
+        // the persistent format of the operation on disk, so
+        // we won't make 'ussdLastTime' field persistent.
+        // Instead all USSD operations after they are passed through
+        // serialize/deserialize will become obsolete.
+        ussdLastTime_ = time_t(1); // very old time
+    }
     s >> y; status_ = ICCOperationStatus(y);
     s >> flags_;
     std::string kw;

@@ -526,7 +526,7 @@ Deserializer& Session::deserialize( Deserializer& s ) /* throw (DeserializerExce
             opid_type key;
             s >> key;
             if ( key != invalidOpId() ) {
-                Operation* op = new Operation( this, CO_NA );
+                Operation* op = new Operation( this, CO_NA, time_t(1) );
                 op->deserialize( s );
                 operations_.Insert( key, op );
             }
@@ -761,7 +761,8 @@ Operation* Session::setCurrentOperation( opid_type opid, bool updateExpire )
 
 Operation* Session::createOperation( SCAGCommand& cmd, int operationType )
 {
-    std::auto_ptr< Operation > auop( new Operation(this, operationType) );
+    const time_t now = time(0);
+    std::auto_ptr< Operation > auop( new Operation(this, operationType, now) );
     Operation* op = auop.get();
     opid_type opid;
     do {
@@ -784,10 +785,9 @@ Operation* Session::createOperation( SCAGCommand& cmd, int operationType )
     // changed_ = true;
 
     // increase session live time
-    time_t now = time(0);
     const unsigned liveTime = operationType == transport::CO_USSD_DIALOG ?
         ussdLiveTime() : defaultLiveTime();
-    time_t expire = now + liveTime;
+    const time_t expire = now + liveTime;
     if ( expire > expirationTime_ ) expirationTime_ = expire;
     smsc_log_debug( log_, "session=%p/%s createOp(cmd=%p) => op=%p opid=%u type=%d(%s), etime=%d",
                     this, sessionKey().toString().c_str(),
