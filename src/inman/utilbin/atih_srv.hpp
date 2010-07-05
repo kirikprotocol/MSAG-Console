@@ -50,10 +50,11 @@ protected:
     //dialog finalization/error handling:
     //if ercode != 0, no result has been got from MAP service,
     void onEndATSI(RCHash ercode = 0);
-//    inline void Awake(void) {  }
+    //
+    inline void Awake(void) { _sync.notify(); }
 
 private:
-    mutable Mutex   _sync;
+    mutable EventMonitor  _sync;
     volatile bool   _active;
     TCSessionMA *   tcSesssion;
     MapATSIDlg *    mapDlg;
@@ -61,6 +62,8 @@ private:
     ATCSIListener * csiHdl;
     std::string     subcrAddr;
     Logger *        logger;
+
+    void rlseMapDialog(void);
 };
 
 struct ServiceATIH_CFG {

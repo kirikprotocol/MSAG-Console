@@ -35,6 +35,8 @@ public:
     //if ercode != 0, no result has been got from MAP service,
     //NOTE: MAP dialog may be deleted only from this callback !!!
     virtual void onEndATSI(RCHash ercode = 0) = 0;
+
+    virtual void Awake(void) = 0;
 };
 
 typedef union {
@@ -58,7 +60,13 @@ public:
 
     void subsciptionInterrogation(const char * subcr_adr, bool imsi = false,
                                 uint16_t timeout = 0) throw(CustomException);
-    void endATSI(void);
+
+    //Attempts to unbind TC User.
+    //Returns true on succsess, false result means that this object has 
+    //established references to handler.
+    bool Unbind(void);
+    //May be called only after successfull Unbind() call
+    void endMapDlg(void);
 
 protected:
     friend class smsc::inman::inap::Dialog;
@@ -82,6 +90,8 @@ protected:
     void Awake(void) { _sync.notify(); }
 
 private:
+    typedef smsc::core::synchronization::MTRefWrapper_T<ATSIhandlerITF> MapUserRef;
+
     EventMonitor    _sync;
     TCDialogID      atsiId;
     //prefix for logging info
@@ -90,10 +100,11 @@ private:
     Dialog *        dialog;     //TCAP dialog
     TCSessionMA *   session;    //TCAP dialogs factory
     Logger *        logger;
-    ATSIhandlerITF * atsiHdl;
+    MapUserRef      atsiHdl;
     ATSIState       _atsiState;  //current state of mapATSI dialog
 
     void endTCap(void); //ends TC dialog, releases Dialog()
+    void unRefHdl(void);
 };
 
 } //atih

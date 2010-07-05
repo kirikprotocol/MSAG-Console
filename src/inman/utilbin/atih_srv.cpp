@@ -188,12 +188,21 @@ ATIInterrogator::ATIInterrogator(TCSessionMA* pSession, ATCSIListener * csi_list
         logger = Logger::getInstance("smsc.inman.inap.atsi");
 }
 
+void ATIInterrogator::rlseMapDialog(void)
+{
+    if (mapDlg) {
+        while (!mapDlg->Unbind()) //MAPDlg refers this query
+            _sync.wait();
+        delete mapDlg;
+        mapDlg = NULL;
+    }
+    _active = false;
+}
+
 ATIInterrogator::~ATIInterrogator()
 {
     MutexGuard  grd(_sync);
-    if (mapDlg)
-        delete mapDlg;
-    _active = false;
+    rlseMapDialog();
 }
 
 bool ATIInterrogator::isActive(void)
@@ -214,13 +223,9 @@ bool ATIInterrogator::interrogate(const std::string &subcr_addr, bool imsi/* = f
         mapDlg->subsciptionInterrogation(subcr_addr.c_str(), imsi);
         _active = true;
         subcrAddr = subcr_addr;
-    } catch (std::exception & exc) {
+    } catch (const std::exception & exc) {
         smsc_log_error(logger, "Intrgtr[%s]: %s", subcr_addr.c_str() , exc.what());
-        if (mapDlg) {
-            delete mapDlg;
-            mapDlg = NULL;
-        }
-        _active = false;
+        rlseMapDialog();
     }
     return _active;
 }
@@ -228,8 +233,11 @@ bool ATIInterrogator::interrogate(const std::string &subcr_addr, bool imsi/* = f
 void ATIInterrogator::cancel(void)
 {
     MutexGuard  grd(_sync);
-    if (mapDlg)
-        mapDlg->endATSI();
+    if (mapDlg) {
+        while (!mapDlg->Unbind()) //MAPDlg refers this query
+            _sync.wait();
+        mapDlg->endMapDlg();
+    }
     _active = false;
 }
 
@@ -248,10 +256,7 @@ void ATIInterrogator::onATSIResult(ATSIRes* arg)
 void ATIInterrogator::onEndATSI(RCHash ercode/* =0*/)
 {
     MutexGuard  grd(_sync);
-    if (mapDlg) {
-        delete mapDlg;
-        mapDlg = NULL;
-    }
+    rlseMapDialog();
     if (!ercode)
         csiHdl->onCSIresult(subcrAddr, &scfInfo);
     else
