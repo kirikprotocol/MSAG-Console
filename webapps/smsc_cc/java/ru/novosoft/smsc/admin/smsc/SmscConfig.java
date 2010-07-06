@@ -4,7 +4,6 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
 
 import java.io.File;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,12 +16,17 @@ public class SmscConfig {
 
   private SmscConfigFile configFile;
 
-  private final File smscBaseDir;
   private final FileSystem fileSystem;
 
   private boolean changed;
 
   private List<SmscConfigObserver> observers = new ArrayList<SmscConfigObserver>();
+
+  protected SmscConfig(File configFile, File backupDir, FileSystem fileSystem) throws AdminException {
+    this.configFile = new SmscConfigFile(configFile, backupDir, fileSystem);
+    this.fileSystem = fileSystem;
+    reset();
+  }
 
   /**
    * @param smscBaseDir директория с дистрибутивом СМСЦ
@@ -30,10 +34,7 @@ public class SmscConfig {
    * @throws AdminException ошибка при чтении конфига
    */
   public SmscConfig(File smscBaseDir, FileSystem fileSystem) throws AdminException {
-    this.configFile = new SmscConfigFile(smscBaseDir, fileSystem);
-    this.smscBaseDir = smscBaseDir;
-    this.fileSystem = fileSystem;
-    reset();    
+    this(new File(smscBaseDir, "conf" + File.separator + "config.xml"), new File(smscBaseDir, "conf" + File.separator + "backup"), fileSystem);
   }
 
   /**
@@ -81,7 +82,7 @@ public class SmscConfig {
       l.setInstanceSettings(instanceSettings);
     }
     try {
-      configFile.setInstanceSettings((InstanceSettings)instanceSettings.clone());
+      configFile.setInstanceSettings(instanceNumber, (InstanceSettings)instanceSettings.clone());
     } catch (CloneNotSupportedException e) {
       throw new AdminException(e.getMessage(), e);
     }
@@ -113,8 +114,6 @@ public class SmscConfig {
     }
   }
 
-  private final SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yy.HH.mm.ss");
-
   /**
    * Сохраняет и применяет изменения, сделанные в конфиге
    *
@@ -135,7 +134,7 @@ public class SmscConfig {
    */
   public synchronized void reset() throws AdminException {
 
-    SmscConfigFile oldConfigFile = new SmscConfigFile(smscBaseDir, fileSystem);
+    SmscConfigFile oldConfigFile = new SmscConfigFile(configFile.getSmscConfigFile(), configFile.getBackupDir(), fileSystem);
     oldConfigFile.load();
     for (SmscConfigObserver l : observers) {
       l.resetSettings(oldConfigFile.getCommonSettings(), oldConfigFile.getAllInstanceSettings());

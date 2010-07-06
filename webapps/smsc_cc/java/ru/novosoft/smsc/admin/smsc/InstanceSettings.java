@@ -41,17 +41,15 @@ public class InstanceSettings implements Cloneable {
 
   private String cacheDir;
 
-  private int instanceN;
 
   public InstanceSettings() {    
   }
 
   InstanceSettings(int instanceN, XmlConfig c) throws XmlConfigException {
-    this.instanceN = instanceN;
-    load(c);
+    load(instanceN, c);
   }
 
-  protected void load(XmlConfig c) throws XmlConfigException {
+  protected void load(int instanceN, XmlConfig c) throws XmlConfigException {
     assert c != null : "Config is null";
 
     XmlConfigSection s = c.getSection("admin");
@@ -80,7 +78,7 @@ public class InstanceSettings implements Cloneable {
 
   }
 
-  protected void save(XmlConfig c) throws XmlConfigException {
+  protected void save(int instanceN, XmlConfig c) throws XmlConfigException {
     XmlConfigSection s = c.getOrCreateSection("admin");
     s.setString("host" + instanceN, adminHost);
     s.setInt("port" + instanceN, adminPort);
@@ -232,11 +230,6 @@ public class InstanceSettings implements Cloneable {
     this.cacheDir = cacheDir;
   }
 
-  public int getInstanceN() {
-    return instanceN;
-  }
-
-
   public Object clone() throws CloneNotSupportedException {
     InstanceSettings s = (InstanceSettings) super.clone();
     s.adminHost = adminHost;
@@ -254,7 +247,6 @@ public class InstanceSettings implements Cloneable {
     s.agentHost = agentHost;
     s.agentPort = adminPort;
     s.cacheDir = cacheDir;
-    s.instanceN = instanceN;
     return s;
   }
 

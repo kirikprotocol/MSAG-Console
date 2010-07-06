@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE config SYSTEM "configuration.dtd">
+
+<config>
+
+  <section name="admin">
+    <param name="host0" type="string">0</param>
+    <param name="host1" type="string">1</param>
+    <param name="host2" type="string">2</param>
+    <param name="port0" type="int">0</param>
+    <param name="port1" type="int">1</param>
+    <param name="port2" type="int">2</param>
+  </section>
+
+  <section name="core">
+    <param name="srcSmeSeparateRouting" type="bool">false</param>
+    <param name="state_machines_count" type="int">5</param>
+    <param name="mainLoopsCount" type="int">1</param>
+    <param name="eventQueueLimit" type="int">1000</param>
+    <param name="reschedule_config" type="string">schedule.xml</param>
+    <param name="service_center_address" type="string">@smsc.sc.address@</param>
+    <param name="ussd_center_address" type="string">@smsc.ussd.address@</param>
+    <param name="ussd_ssn" type="int">213</param>
+    <param name="add_ussd_ssn" type="string">1212</param>
+    <param name="systemId" type="string">smscsme</param>
+    <param name="service_type" type="string">SMSC</param>
+    <param name="protocol_id" type="int">34</param>
+    <param name="locales" type="string">en_en, ru_ru</param>
+    <param name="default_locale" type="string">en_en</param>
+    <param name="mergeTimeout" type="int">600</param>
+    <param name="timezones_config" type="string">timezones.xml</param>
+    <param name="smartMultipartForward" type="bool">true</param>
+    <param name="schedulerSoftLimit" type="int">1800000</param>
+    <param name="schedulerHardLimit" type="int">2000000</param>
+    <param name="speedLogFlushPeriodMin" type="int">60</param>
+    <param name="noDivertSmes" type="string"></param>
+    <section name="performance">
+      <param name="host0" type="string">0</param>
+      <param name="host1" type="string">1</param>
+      <param name="host2" type="string">2</param>
+      <param name="port0" type="int">0</param>
+      <param name="port1" type="int">1</param>
+      <param name="port2" type="int">2</param>
+    </section>
+    <section name="smeperformance">
+      <param name="host0" type="string">0</param>
+      <param name="host1" type="string">1</param>
+      <param name="host2" type="string">2</param>
+      <param name="port0" type="int">0</param>
+      <param name="port1" type="int">1</param>
+      <param name="port2" type="int">2</param>
+    </section>
+  </section>
+  
+  <section name="dpf">
+    <param name="storeDir" type="string">store/dpf</param>
+    <param name="timeOut1179" type="int">600</param>
+    <param name="timeOut1044" type="int">900</param>
+    <param name="maxChanges" type="int">10000</param>
+    <param name="maxTime" type="int">1800</param>
+  </section>
+  
+
+  <section name="sms">
+    <param name="max_valid_time" type="int">1209600</param>
+  </section>
+  
+  <section name="map">
+    <param name="mapIOTasksCount" type="int">5</param>
+    <param name="busyMTDelay" type="int">20</param>
+    <param name="lockedByMODelay" type="int">20</param>
+    <param name="MOLockTimeout" type="int">45</param>
+    <param name="allowCallBarred" type="bool">false</param>
+    <param name="ussdV1Enabled" type="bool">false</param>
+    <param name="ussdV1UseOrigEntityNumber" type="bool">false</param>
+    <param name="localInstancies" type="string">1</param>                                                                         
+    <param name="remoteInstancies" type="string">1,2</param>                                                                      
+    <param name="cpMgmtAddress" type="string">localhost:6669</param>
+  </section>
+  
+  <section name="trafficControl">
+    <param name="maxSmsPerSecond" type="int">10</param>
+    <param name="shapeTimeFrame" type="int">1</param>
+    <param name="statTimeFrame" type="int">1</param>
+  </section>
+  
+  <section name="MessageStore">
+    <param name="archiveDir0" type="string">0</param>
+    <param name="archiveDir1" type="string">1</param>
+    <param name="archiveDir2" type="string">2</param>
+    <param name="archiveInterval" type="int">60</param>
+    <param name="statisticsDir0" type="string">0</param>
+    <param name="statisticsDir1" type="string">1</param>
+    <param name="statisticsDir2" type="string">2</param>
+
+    <section name="LocalStore">
+      <param name="filename0" type="string">0</param>
+      <param name="filename1" type="string">1</param>
+      <param name="filename2" type="string">2</param>
+      <param name="maxStoreSize" type="int">12345</param>
+      <!--param name="maxStoreSize" type="string">3Gb</param-->
+      <param name="minRollTime" type="int">5321</param>
+      <param name="msgidfile0" type="string">0</param>
+      <param name="msgidfile1" type="string">1</param>
+      <param name="msgidfile2" type="string">2</param>
+    </section>
+
+  </section>
+
+  <section name="smpp">
+    <param name="host0" type="string">0</param>
+    <param name="host1" type="string">1</param>
+    <param name="host2" type="string">2</param>
+    <param name="port0" type="int">0</param>
+    <param name="port1" type="int">1</param>
+    <param name="port2" type="int">2</param>
+    <param name="readTimeout" type="int">60</param>
+    <param name="inactivityTime" type="int">60</param>
+    <param name="inactivityTimeOut" type="int">600</param>
+    <param name="bindTimeout" type="int">10</param>
+    <param name="defaultConnectionsLimit" type="int">1000</param>
+    <param name="standardErrorCodes" type="bool">false</param>
+    <param name="useAbortiveClose" type="bool">true</param>
+  </section>
+  
+
+  <section name="profiler">
+
+    <section name="notify">
+      <param name="host0" type="string">0</param>
+      <param name="host1" type="string">1</param>
+      <param name="host2" type="string">2</param>
+      <param name="port0" type="int">0</param>
+      <param name="port1" type="int">1</param>
+      <param name="port2" type="int">2</param>
+      <param name="dir0" type="string">0</param>
+      <param name="dir1" type="string">1</param>
+      <param name="dir2" type="string">2</param>
+    </section>
+
+    <param name="systemId" type="string">profiler</param>
+    <param name="service_type" type="string">prflr</param>
+    <param name="protocol_id" type="int">34</param>
+    <param name="storeFile" type="string">@localstore.dir@/profiles.bin</param>
+    <param name="defaultDataCoding" type="string">DEFAULT</param>
+    <param name="defaultReport" type="string">NONE</param>
+    <param name="defaultHide" type="bool">true</param>
+    <param name="defaultHideModifiable" type="bool">false</param>
+    <param name="defaultDivertModifiable" type="bool">false</param>
+    <param name="defaultUssdIn7Bit" type="bool">false</param>
+    <param name="defaultUdhConcat" type="bool">true</param>
+    <param name="defaultAccessMaskIn" type="int">1</param>
+    <param name="defaultAccessMaskOut" type="int">1</param>
+
+    <param name="originatingAddress" type="string">0</param>
+    <section name="ussdOpsMapping">
+      <param name="REPORT NONE" type="int">0</param>
+      <param name="REPORT FULL" type="int">2</param>
+      <param name="REPORT FINAL" type="int">1</param>
+      <param name="LOCALE RU_RU" type="int">20</param>
+      <param name="LOCALE EN_EN" type="int">21</param>
+      <param name="DEFAULT" type="int">3</param>
+      <param name="UCS2" type="int">4</param>
+      <param name="HIDE" type="int">5</param>
+      <param name="UNHIDE" type="int">6</param>
+      <param name="USSD7BIT ON" type="int">7</param>
+      <param name="USSD7BIT OFF" type="int">8</param>
+      <param name="TRANSLIT ON" type="int">9</param>
+      <param name="TRANSLIT OFF" type="int">10</param>
+      <param name="DIVERT ON" type="int">30</param>
+      <param name="DIVERT OFF" type="int">31</param>
+      <param name="DIVERT TO" type="int">40</param>
+      <param name="CONCAT ON" type="int">50</param>
+      <param name="CONCAT OFF" type="int">51</param>
+      <param name="DIVERT ABSENT OFF" type="int">52</param>
+      <param name="DIVERT ABSENT ON" type="int">53</param>
+      <param name="DIVERT BARRED OFF" type="int">54</param>
+      <param name="DIVERT BARRED ON" type="int">55</param>
+      <param name="DIVERT BLOCKED OFF" type="int">56</param>
+      <param name="DIVERT BLOCKED ON" type="int">57</param>
+      <param name="DIVERT CAPACITY OFF" type="int">58</param>
+      <param name="DIVERT CAPACITY ON" type="int">59</param>
+      <param name="DIVERT STATUS" type="int">60</param>
+    </section>
+  </section>
+
+
+  <section name="abonentinfo">
+    <param name="mobile_access_address" type="string">mobile_access_address</param>
+    <param name="protocol_id" type="int">34</param>
+    <param name="service_type" type="string">abnfo</param>
+    <param name="smpp_access_address" type="string">smsc.abinfo.sme.address</param>
+    <param name="systemId" type="string">abonentinfo</param>
+  </section>
+
+  <section name="MscManager">
+    <param name="storeFile" type="string">@localstore.dir@/msc.txt</param>
+    <param name="failureLimit" type="int">12</param>
+    <param name="singleAttemptTimeout" type="int">12</param>
+    <param name="automaticRegistration" type="bool">false</param>
+  </section>
+
+  <section name="distrList">
+    <param name="storeDir" type="string">@localstore.dir@/dl</param>
+    <param name="originatingAddress" type="string"></param>
+    <!--param name="originatingAddressForSme" type="string"></param-->
+  </section>
+
+  <section name="acl">
+    <param name="preCreateSize" type="int">10000</param>
+    <param name="storeDir" type="string">localstore.dir/acl</param>
+  </section>
+
+  <section name="inman">
+    <param name="host" type="string">inman.host</param>
+    <param name="port" type="int">399</param>
+    <section name="chargingPolicy">
+      <param name="peer2peer" type="string">deliver</param>
+      <param name="other" type="string">deliver</param>
+    </section>
+  </section>
+
+  <section name="aliasman">
+    <param name="storeFile" type="string">@localstore.dir@/aliases.bin</param>
+  </section>
+  
+  <section name="cluster">
+    <param name="mode" type="string">single</param>
+    <param name="nodesCount" type="int">3</param>
+  </section>
+
+  <section name="snmp">
+    <param name="csvFileDir" type="string">@localstore.dir@/snmp</param>
+    <param name="csvFileRollInterval" type="int">60</param>
+    <param name="cacheTimeout" type="int">60</param>
+  </section>
+  
+  <section name="directives">
+    <param name="d" type="string">def</param>
+    <param name="t" type="string">template</param>
+  </section>
+</config>

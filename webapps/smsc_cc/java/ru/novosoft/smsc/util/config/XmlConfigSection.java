@@ -6,8 +6,8 @@ import java.util.*;
 
 /**
  * @author Aleksandr Khalitov
- * 
- * Section of XmlConfig
+ *         <p/>
+ *         Section of XmlConfig
  */
 
 public class XmlConfigSection {
@@ -26,6 +26,7 @@ public class XmlConfigSection {
 
   /**
    * Creates new instance of XmlConfig section with specified name
+   *
    * @param name section name
    */
   public XmlConfigSection(String name) {
@@ -34,6 +35,7 @@ public class XmlConfigSection {
 
   /**
    * Returns section name
+   *
    * @return section name
    */
   public String getName() {
@@ -42,6 +44,7 @@ public class XmlConfigSection {
 
   /**
    * Set new section name
+   *
    * @param name new section name
    */
   public void setName(String name) {
@@ -50,7 +53,8 @@ public class XmlConfigSection {
 
   /**
    * Returns section content (includes subsections) as Properties object
-   * @param prefix properties name prefix
+   *
+   * @param prefix            properties name prefix
    * @param sectionsDelimiter delimiter between subsections names
    * @return Section content as properties
    */
@@ -64,7 +68,7 @@ public class XmlConfigSection {
       Properties sprops = s.toProperties(prefix + s.getName() + sectionsDelimiter, sectionsDelimiter);
 
       for (Object pname : sprops.keySet())
-        props.setProperty((String)pname, sprops.getProperty((String)pname));
+        props.setProperty((String) pname, sprops.getProperty((String) pname));
     }
 
     return props;
@@ -72,6 +76,7 @@ public class XmlConfigSection {
 
   /**
    * Returns section content (includes subsections) as Properties object
+   *
    * @param sectionsDelimiter delimiter between subsections names
    * @return Section content as properties
    */
@@ -82,6 +87,7 @@ public class XmlConfigSection {
 
   /**
    * Add new section into this section
+   *
    * @param section new section
    */
   public void addSection(final XmlConfigSection section) {
@@ -90,6 +96,7 @@ public class XmlConfigSection {
 
   /**
    * Create new section with specified name inside this section
+   *
    * @param name new section name
    * @return new section
    */
@@ -101,6 +108,7 @@ public class XmlConfigSection {
 
   /**
    * Returns section with specified name of null if such section does not exists
+   *
    * @param name section name
    * @return section or null
    * @throws XmlConfigException if section with specified name does not exists
@@ -112,8 +120,9 @@ public class XmlConfigSection {
     return s;
   }
 
-    /**
+  /**
    * Returns section with specified name, create it if it doesn't exist
+   *
    * @param name section name
    * @return section
    * @throws XmlConfigException if section with specified name does not exists
@@ -124,6 +133,7 @@ public class XmlConfigSection {
 
   /**
    * Check section contains subsection with specified name
+   *
    * @param name subsection name
    * @return true, if current section contains subsection with specified name, otherwise returns false
    */
@@ -133,6 +143,7 @@ public class XmlConfigSection {
 
   /**
    * Removes section with specified name
+   *
    * @param name section name
    * @return removed section
    */
@@ -142,6 +153,7 @@ public class XmlConfigSection {
 
   /**
    * Remove section
+   *
    * @param section section to remove
    * @return result of operation
    */
@@ -173,6 +185,7 @@ public class XmlConfigSection {
 
   /**
    * Returns sections iterator
+   *
    * @return sections iterator
    */
   public Collection<XmlConfigSection> sections() {
@@ -181,6 +194,7 @@ public class XmlConfigSection {
 
   /**
    * Returns count of all sections
+   *
    * @return sectins count
    */
   public int getSectionsCount() {
@@ -189,6 +203,7 @@ public class XmlConfigSection {
 
   /**
    * Add parameter into section
+   *
    * @param param new parameter
    */
   public void addParam(final XmlConfigParam param) {
@@ -198,6 +213,7 @@ public class XmlConfigSection {
 
   /**
    * Create new parameter with specified name inside section
+   *
    * @param name parameter name
    * @return new parameter
    */
@@ -209,6 +225,7 @@ public class XmlConfigSection {
 
   /**
    * Returns parameter with specified name or null if parameter does not exist
+   *
    * @param name parameter name
    * @return parameter or null
    */
@@ -217,8 +234,9 @@ public class XmlConfigSection {
   }
 
   /**
-   * Returns parameter with specified name. If such parametrer does not exists, 
+   * Returns parameter with specified name. If such parametrer does not exists,
    * creates new one.
+   *
    * @param name parameter name
    * @return parameter
    */
@@ -233,6 +251,7 @@ public class XmlConfigSection {
 
   /**
    * Removes parameter with specified name
+   *
    * @param name parameter name
    * @return removed parameter
    */
@@ -242,6 +261,7 @@ public class XmlConfigSection {
 
   /**
    * Remove specified parameter from section
+   *
    * @param param parameter
    * @return result of operation
    */
@@ -251,6 +271,7 @@ public class XmlConfigSection {
 
   /**
    * Check section contains param with specified name
+   *
    * @param param param name
    * @return true, if section contains param with specified name, otherwise returns false
    */
@@ -260,6 +281,7 @@ public class XmlConfigSection {
 
   /**
    * Returns count of parameters
+   *
    * @return parameters count
    */
   public int getParamsCount() {
@@ -268,7 +290,8 @@ public class XmlConfigSection {
 
   /**
    * Returns parameters iterator
-   * @return parameters 
+   *
+   * @return parameters
    */
   public Collection<XmlConfigParam> params() {
     return new ArrayList<XmlConfigParam>(params.values());
@@ -283,6 +306,7 @@ public class XmlConfigSection {
 
   /**
    * Returns parameter value as string
+   *
    * @param paramName param name
    * @return string value of param
    * @throws XmlConfigException if param not found
@@ -293,17 +317,19 @@ public class XmlConfigSection {
 
   /**
    * Returns parameter value as string or default value, if parameter does not exists
-   * @param paramName param name
+   *
+   * @param paramName    param name
    * @param defaultValue default value
    * @return param value or default value
    */
   public String getString(String paramName, String defaultValue) {
     final XmlConfigParam param = getParam(paramName);
-    return (param==null) ? defaultValue : param.getString();
+    return (param == null) ? defaultValue : param.getString();
   }
 
   /**
    * Returns param value as int
+   *
    * @param paramName param name
    * @return param value
    * @throws XmlConfigException if param not found or param value is not int
@@ -314,18 +340,20 @@ public class XmlConfigSection {
 
   /**
    * Returns param value as int or default value if param does not exists
-   * @param paramName param name
+   *
+   * @param paramName    param name
    * @param defaultValue default value
    * @return param or default value
    * @throws XmlConfigException if param value is not int
    */
   public int getInt(String paramName, int defaultValue) throws XmlConfigException {
     final XmlConfigParam param = getParam(paramName);
-    return (param==null) ? defaultValue : param.getInt();
+    return (param == null) ? defaultValue : param.getInt();
   }
 
   /**
    * Returns param value as long
+   *
    * @param paramName param name
    * @return param value
    * @throws XmlConfigException if param not found or param value is not long
@@ -336,18 +364,20 @@ public class XmlConfigSection {
 
   /**
    * Returns param value as long or default value if param does not exists
-   * @param paramName param name
+   *
+   * @param paramName    param name
    * @param defaultValue default value
    * @return param or default value
    * @throws XmlConfigException if param value is not long
    */
   public long getLong(String paramName, long defaultValue) throws XmlConfigException {
     final XmlConfigParam param = getParam(paramName);
-    return (param==null) ? defaultValue : param.getLong();
+    return (param == null) ? defaultValue : param.getLong();
   }
 
   /**
    * Returns param value(true,false) as bool or default value if param does not exists
+   *
    * @param paramName param name
    * @return param or default value
    * @throws XmlConfigException if param value is not bool
@@ -358,18 +388,20 @@ public class XmlConfigSection {
 
   /**
    * Returns param value(true,false) as bool or default value if param does not exists
-   * @param paramName param name
+   *
+   * @param paramName    param name
    * @param defaultValue default value
    * @return param or default value
    * @throws XmlConfigException if param value is not bool
    */
   public boolean getBool(String paramName, boolean defaultValue) throws XmlConfigException {
     final XmlConfigParam param = getParam(paramName);
-    return (param==null) ? defaultValue : param.getBool();
+    return (param == null) ? defaultValue : param.getBool();
   }
 
   /**
    * Return param value as int array.
+   *
    * @param paramName param name
    * @param delimiter values delimiter
    * @return int array
@@ -381,6 +413,7 @@ public class XmlConfigSection {
 
   /**
    * Return param value as long array.
+   *
    * @param paramName param name
    * @param delimiter values delimiter
    * @return long array
@@ -392,6 +425,7 @@ public class XmlConfigSection {
 
   /**
    * Return param value as string array.
+   *
    * @param paramName param name
    * @param delimiter values delimiter
    * @return string array
@@ -403,6 +437,7 @@ public class XmlConfigSection {
 
   /**
    * Return param value as string list.
+   *
    * @param paramName param name
    * @param delimiter values delimiter
    * @return string list
@@ -414,11 +449,12 @@ public class XmlConfigSection {
 
   /**
    * Return param value as date
-   * @param paramName param name
+   *
+   * @param paramName  param name
    * @param dateFormat date format
    * @return param value as date
    * @throws XmlConfigException if param does not exist
-   * @throws ParseException if param has invalid format
+   * @throws ParseException     if param has invalid format
    */
   public Date getDate(String paramName, String dateFormat) throws XmlConfigException, ParseException {
     SimpleDateFormat df = new SimpleDateFormat(dateFormat);
@@ -427,8 +463,9 @@ public class XmlConfigSection {
 
   /**
    * Return param value as date or default value, if param does not exist
-   * @param paramName param name
-   * @param dateFormat date format
+   *
+   * @param paramName    param name
+   * @param dateFormat   date format
    * @param defaultValue default value
    * @return param value as date or default value, if param does not exist
    * @throws ParseException
@@ -446,7 +483,8 @@ public class XmlConfigSection {
 
   /**
    * Set string value to param. If param does not exists, create it
-   * @param name param name
+   *
+   * @param name   param name
    * @param string value
    * @return this
    */
@@ -457,7 +495,8 @@ public class XmlConfigSection {
 
   /**
    * Set int value to param. If param does not exists, create it
-   * @param name param name
+   *
+   * @param name  param name
    * @param value value
    * @return this
    */
@@ -468,7 +507,8 @@ public class XmlConfigSection {
 
   /**
    * Set long value to param. If param does not exists, create it
-   * @param name param name
+   *
+   * @param name  param name
    * @param value value
    * @return this
    */
@@ -479,8 +519,9 @@ public class XmlConfigSection {
 
   /**
    * Set date value to param. If param does not exists, create it
-   * @param name param name
-   * @param date value
+   *
+   * @param name       param name
+   * @param date       value
    * @param dateFormat format of date
    * @return this
    */
@@ -491,7 +532,8 @@ public class XmlConfigSection {
 
   /**
    * Set bool value to param. If param does not exists, create it
-   * @param name param name
+   *
+   * @param name  param name
    * @param value value
    * @return this
    */
@@ -502,9 +544,10 @@ public class XmlConfigSection {
 
   /**
    * Set string list value to param. If param does not exists, create it
-   * @param name param name
+   *
+   * @param name       param name
    * @param stringList strings collection
-   * @param delimiter delimiter between strings in param value
+   * @param delimiter  delimiter between strings in param value
    * @return this
    * @throws XmlConfigException if can't transform collection into string
    */
@@ -515,9 +558,10 @@ public class XmlConfigSection {
 
   /**
    * Set string array value to param. If param does not exists, create it
-   * @param name param name
+   *
+   * @param name       param name
    * @param stringList array of strings
-   * @param delimiter delimiter delimiter between strings in param value
+   * @param delimiter  delimiter delimiter between strings in param value
    * @return this
    */
   public XmlConfigSection setStringArray(String name, String[] stringList, String delimiter) {
@@ -527,8 +571,9 @@ public class XmlConfigSection {
 
   /**
    * Set long array value to param. If param does not exists, create it
-   * @param name param name
-   * @param values array of longs
+   *
+   * @param name      param name
+   * @param values    array of longs
    * @param delimiter delimiter delimiter between longs in param value
    * @return this
    */
@@ -539,8 +584,9 @@ public class XmlConfigSection {
 
   /**
    * Set int array value to param. If param does not exists, create it
-   * @param name param name
-   * @param values array of int's
+   *
+   * @param name      param name
+   * @param values    array of int's
    * @param delimiter delimiter delimiter between ints in param value
    * @return this
    */
@@ -549,14 +595,43 @@ public class XmlConfigSection {
     return this;
   }
 
-  public Object clone() throws CloneNotSupportedException {
-    XmlConfigSection section = (XmlConfigSection)super.clone();
-    section.name = name;
-    for(Map.Entry<String, XmlConfigSection> ss : sections.entrySet()) {
-      section.sections.put(ss.getKey(), (XmlConfigSection)ss.getValue().clone());
+  private boolean compareWith(XmlConfigSection s) {
+    for (XmlConfigParam p : params()) {
+      if (!s.containsParam(p.getName()))
+        return false;
+      if (!p.equals(s.getParam(p.getName())))
+        return false;
     }
-    for(Map.Entry<String, XmlConfigParam> pp : params.entrySet()) {
-      section.params.put(pp.getKey(), (XmlConfigParam)pp.getValue().clone());
+
+    for (XmlConfigSection ss : sections()) {
+      if (!s.containsSection(ss.getName()))
+        return false;
+      try {
+        if (!ss.equals(s.getSection(ss.getName())))
+          return false;
+      } catch (XmlConfigException e) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  public boolean equals(Object o) {
+    if (o instanceof XmlConfigSection) {
+      XmlConfigSection s = (XmlConfigSection) o;
+      return compareWith(s) && s.compareWith(this);
+    }
+    return false;
+  }
+
+  public Object clone() throws CloneNotSupportedException {
+    XmlConfigSection section = (XmlConfigSection) super.clone();
+    section.name = name;
+    for (Map.Entry<String, XmlConfigSection> ss : sections.entrySet()) {
+      section.sections.put(ss.getKey(), (XmlConfigSection) ss.getValue().clone());
+    }
+    for (Map.Entry<String, XmlConfigParam> pp : params.entrySet()) {
+      section.params.put(pp.getKey(), (XmlConfigParam) pp.getValue().clone());
     }
     return section;
   }

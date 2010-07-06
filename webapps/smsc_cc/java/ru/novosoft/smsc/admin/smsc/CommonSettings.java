@@ -234,14 +234,14 @@ public class CommonSettings implements Cloneable {
     s.setInt("REPORT NONE", profilerReportNone);
     s.setInt("REPORT FULL", profilerReportFull);
     s.setInt("REPORT FINAL", profilerReportFinal);
-    s.setInt("LOCALE RU_RU", profilerLocaleEN);
-    s.setInt("LOCALE EN_EN", profilerLocaleRU);
+    s.setInt("LOCALE EN_EN", profilerLocaleEN);
+    s.setInt("LOCALE RU_RU", profilerLocaleRU);
     s.setInt("DEFAULT", profilerDefault);
     s.setInt("UCS2", profilerUCS2);
     s.setInt("HIDE", profilerHide);
     s.setInt("UNHIDE", profilerUnhide);
     s.setInt("USSD7BIT ON", profilerUSSD7BitOn);
-    s.setInt("USSD7BIT OFF", profilerConcatOff);
+    s.setInt("USSD7BIT OFF", profilerUSSD7BitOff);
     s.setInt("DIVERT ON", profilerDivertOn);
     s.setInt("DIVERT OFF", profilerDivertOff);
     s.setInt("DIVERT ABSENT ON", profilerDivertAbsentOn);
@@ -354,7 +354,7 @@ public class CommonSettings implements Cloneable {
     msArchiveInterval = s.getInt("archiveInterval");
 
     //MessageStore.LocalStore
-    s = s.getSection("MessageStore").getSection("LocalStore");
+    s = c.getSection("MessageStore").getSection("LocalStore");
     lsMaxStoreSize = s.getInt("maxStoreSize");
     lsMinRollTime = s.getInt("minRollTime");
 
@@ -379,14 +379,14 @@ public class CommonSettings implements Cloneable {
     profilerReportNone = s.getInt("REPORT NONE");
     profilerReportFull = s.getInt("REPORT FULL");
     profilerReportFinal = s.getInt("REPORT FINAL");
-    profilerLocaleEN = s.getInt("LOCALE RU_RU");
-    profilerLocaleRU = s.getInt("LOCALE EN_EN");
+    profilerLocaleEN = s.getInt("LOCALE EN_EN");
+    profilerLocaleRU = s.getInt("LOCALE RU_RU");
     profilerDefault = s.getInt("DEFAULT");
     profilerUCS2 = s.getInt("UCS2");
     profilerHide = s.getInt("HIDE");
     profilerUnhide = s.getInt("UNHIDE");
     profilerUSSD7BitOn = s.getInt("USSD7BIT ON");
-    profilerConcatOff = s.getInt("USSD7BIT OFF");
+    profilerUSSD7BitOff = s.getInt("USSD7BIT OFF");
     profilerDivertOn = s.getInt("DIVERT ON");
     profilerDivertOff = s.getInt("DIVERT OFF");
     profilerDivertAbsentOn = s.getInt("DIVERT ABSENT ON");

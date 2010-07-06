@@ -55,6 +55,8 @@ public class XmlConfigHelper {
       }
     }
 
+    fileSystem.delete(toFile);
+
     fileSystem.rename(tmp, toFile);
   }
 }

@@ -29,12 +29,19 @@ class SmscConfigFile {
   private final File backupDir;
   private final FileSystem fileSystem;
 
-  public SmscConfigFile(File smscBaseDir, FileSystem fileSystem) {
-    this.smscConfigFile = new File(smscBaseDir, "conf" + File.separator + "config.xml");
-    this.backupDir = new File(smscBaseDir, "conf" + File.separator + "backup");
+  public SmscConfigFile(File configFile, File backupDir, FileSystem fileSystem) {
+    this.smscConfigFile = configFile;
+    this.backupDir = backupDir;
     this.fileSystem = fileSystem;
   }
-    
+
+  public File getSmscConfigFile() {
+    return smscConfigFile;
+  }
+
+  public File getBackupDir() {
+    return backupDir;
+  }
 
   private XmlConfig loadConfig() throws XmlConfigException, AdminException {
     InputStream is = null;
@@ -64,8 +71,7 @@ class SmscConfigFile {
         instanceSettings[i] = new InstanceSettings(i, config);
       }
     } catch (XmlConfigException e) {
-      logger.error(e, e);
-      throw new AdminException(e.getMessage());
+      throw new AdminException(e.getMessage(), e);
     }
   }
 
@@ -73,8 +79,8 @@ class SmscConfigFile {
     try {
       XmlConfig config = loadConfig();
       commonSettings.save(config);
-      for (InstanceSettings is : instanceSettings) {
-        is.save(config);
+      for (int i=0; i<instanceSettings.length; i++) {
+        instanceSettings[i].save(i, config);
       }
       XmlConfigHelper.saveXmlConfig(config, smscConfigFile, backupDir, fileSystem);
     } catch (XmlConfigException e) {
@@ -106,8 +112,7 @@ class SmscConfigFile {
     return instanceSettings;
   }
 
-  public void setInstanceSettings(InstanceSettings instanceSettings) {
-    int instanceNumber = instanceSettings.getInstanceN();
+  public void setInstanceSettings(int instanceNumber, InstanceSettings instanceSettings) {    
     if (instanceNumber < 0 || instanceNumber > this.instanceSettings.length - 1) {
       throw new IllegalArgumentException("Illegal instance number: " + instanceNumber + ". Must be in [0," + (this.instanceSettings.length - 1) + "]");
     }

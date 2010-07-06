@@ -267,6 +267,13 @@ public class XmlConfigParam implements Cloneable{
     this.attributes.setProperty(attrName, value);
   }
 
+  public boolean equals(Object o) {
+    if (o instanceof XmlConfigParam) {
+      XmlConfigParam p = (XmlConfigParam)o;
+      return p.type == type && p.name.equals(name) && p.value.equals(value);
+    }
+    return false;
+  }
 
   public Object clone() throws CloneNotSupportedException {
     XmlConfigParam p = (XmlConfigParam)super.clone();
