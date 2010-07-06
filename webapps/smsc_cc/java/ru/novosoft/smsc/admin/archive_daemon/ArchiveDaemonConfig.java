@@ -1,11 +1,10 @@
 package ru.novosoft.smsc.admin.archive_daemon;
 
-import org.apache.log4j.Logger;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
 import ru.novosoft.smsc.admin.util.XmlConfigHelper;
-import ru.novosoft.smsc.util.config.XmlConfigException;
 import ru.novosoft.smsc.util.config.XmlConfig;
+import ru.novosoft.smsc.util.config.XmlConfigException;
 import ru.novosoft.smsc.util.config.XmlConfigParam;
 import ru.novosoft.smsc.util.config.XmlConfigSection;
 
@@ -50,12 +49,15 @@ public class ArchiveDaemonConfig {
   private int indexatorMaxFlushSpeed;
   private Map<String, Integer> indexatorSmeAddrChunkSizes;
 
-
-  public ArchiveDaemonConfig(File baseDir, FileSystem fileSystem) throws AdminException {
-    this.configFile = new File(baseDir, "conf" + File.separator + "config.xml");
-    this.backupDir = new File(baseDir, "conf" + File.separator + "backup");
+  protected ArchiveDaemonConfig(File configFile, File backupDir, FileSystem fileSystem) throws AdminException {
+    this.configFile = configFile;
+    this.backupDir = backupDir;
     this.fileSystem = fileSystem;
     reset();
+  }
+
+  public ArchiveDaemonConfig(File baseDir, FileSystem fileSystem) throws AdminException {
+    this(new File(baseDir, "conf" + File.separator + "config.xml"), new File(baseDir, "conf" + File.separator + "backup"), fileSystem);
   }
 
   public boolean isChanged() {
@@ -79,7 +81,9 @@ public class ArchiveDaemonConfig {
 
   public void reset() throws AdminException {
     try {
-      XmlConfig config = loadConfig();
+      XmlConfig c = loadConfig();
+
+      XmlConfigSection config = c.getSection("ArchiveDaemon");
 
       interval = config.getInt("interval");
 
@@ -93,8 +97,8 @@ public class ArchiveDaemonConfig {
       transactionsMaxSmsCount = config.getSection("Transactions").getInt("maxSmsCount");
       transactionsMaxTimeInterval = config.getSection("Transactions").getInt("maxTimeInterval");
 
-      locationsBaseDestination = config.getSection("Locations").getString("baseDestinations");
-      locationsTextDestinations = config.getSection("Locations").getString("textDestinations");
+      locationsBaseDestination = config.getSection("Locations").getString("baseDestination");
+      locationsTextDestinations = config.getSection("Locations").getString("textDestination");
 
       locationsSources = new HashMap<String, String>();
       XmlConfigSection sourcesSection = config.getSection("Locations").getSection("sources");
@@ -104,7 +108,7 @@ public class ArchiveDaemonConfig {
       indexatorMaxFlushSpeed = config.getSection("Indexator").getInt("maxFlushSpeed");
 
       indexatorSmeAddrChunkSizes = new HashMap<String, Integer>();
-      XmlConfigSection chunkSizesSection = config.getSection("Indexator").getSection("smeAddrChunkSizes");
+      XmlConfigSection chunkSizesSection = config.getSection("Indexator").getSection("smeAddrChunkSize");
       for (XmlConfigParam chunkSizeParam : chunkSizesSection.params())
         indexatorSmeAddrChunkSizes.put(chunkSizeParam.getName(), chunkSizeParam.getInt());
 
@@ -117,8 +121,9 @@ public class ArchiveDaemonConfig {
 
   public void save() throws AdminException {
     try {
-      XmlConfig config = loadConfig();
+      XmlConfig c = loadConfig();
 
+      XmlConfigSection config = c.getSection("ArchiveDaemon");
       config.setInt("interval", interval);
 
       config.getSection("View").setString("host", viewHost);
@@ -131,9 +136,10 @@ public class ArchiveDaemonConfig {
       config.getSection("Transactions").setInt("maxSmsCount", transactionsMaxSmsCount);
       config.getSection("Transactions").setInt("maxTimeInterval", transactionsMaxTimeInterval);
 
-      config.getSection("Locations").setString("baseDestinations", locationsBaseDestination);
-      config.getSection("Locations").setString("textDestinations", locationsTextDestinations);
+      config.getSection("Locations").setString("baseDestination", locationsBaseDestination);
+      config.getSection("Locations").setString("textDestination", locationsTextDestinations);
 
+      config.getSection("Locations").addSection("sources");
       XmlConfigSection sourcesSection = config.getSection("Locations").getSection("sources");
       sourcesSection.clear();
       for (Map.Entry<String, String> location : locationsSources.entrySet())
@@ -141,12 +147,12 @@ public class ArchiveDaemonConfig {
 
       config.getSection("Indexator").setInt("maxFlushSpeed", indexatorMaxFlushSpeed);
 
-      XmlConfigSection chunkSizesSection = config.getSection("Indexator").getSection("smeAddrChunkSizes");
+      XmlConfigSection chunkSizesSection = config.getSection("Indexator").getSection("smeAddrChunkSize");
       chunkSizesSection.clear();
       for (Map.Entry<String, Integer> size : indexatorSmeAddrChunkSizes.entrySet())
         chunkSizesSection.setInt(size.getKey(), size.getValue());
 
-      XmlConfigHelper.saveXmlConfig(config, configFile, backupDir, fileSystem);
+      XmlConfigHelper.saveXmlConfig(c, configFile, backupDir, fileSystem);
 
     } catch (XmlConfigException e) {
       throw new AdminException("Unable to save Archive Daemon config. Cause: " + e.getMessage(), e);

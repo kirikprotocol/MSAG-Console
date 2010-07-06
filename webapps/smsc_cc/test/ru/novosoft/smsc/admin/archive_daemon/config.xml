@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE config SYSTEM "configuration.dtd">
+
+<config>
+  <section name="ArchiveDaemon">
+
+    <param name="interval" type="int">30</param>
+
+    <section name="View">
+      <param name="host" type="string">@listen.host@</param>
+      <param name="port" type="int">1212</param>
+      <param name="timeout" type="int">10</param>
+    </section>
+
+    <section name="Queries">
+      <param name="init" type="int">1</param>
+      <param name="max" type="int">5</param>
+    </section>
+
+    <section name="Transactions">
+      <param name="maxSmsCount" type="int">20000</param>
+      <param name="maxTimeInterval" type="int">60</param>
+    </section>
+
+    <section name="Locations">
+      <param name="baseDestination" type="string">@smsc.arc.dir@</param>
+      <param name="textDestination" type="string">@smsc.arctxt.dir@</param>
+      <section name="sources">
+        <param name="src1" type="string">@smsc.arcnew.dir@</param>
+      </section>
+    </section>
+
+    <section name="Indexator">
+      <param name="smsIdHashSize" type="int">1000000</param>
+      <param name="smeIdHashSize" type="int">64</param>
+      <param name="routeIdHashSize" type="int">256</param>
+      <param name="addrHashSize" type="int">1000000</param>
+      <param name="smeIdRootSize" type="int">32</param>
+      <param name="smeIdChunkSize" type="int">8192</param>
+      <param name="routeIdRootSize" type="int">64</param>
+      <param name="routeIdChunkSize" type="int">8192</param>
+      <param name="addrRootSize" type="int">32768</param>
+      <param name="defAddrChunkSize" type="int">32</param>
+      <param name="maxFlushSpeed" type="int">4096000</param>
+      <!--param name="textArcEncoding" type="string">utf-8</param-->
+
+      <section name="smeAddrChunkSize">
+        <param name="MAP_PROXY" type="int">8</param>
+      </section>
+    </section>
+
+  </section>
+</config>

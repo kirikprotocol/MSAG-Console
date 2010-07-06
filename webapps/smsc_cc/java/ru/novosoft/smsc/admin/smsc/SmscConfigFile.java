@@ -19,7 +19,6 @@ import java.io.InputStream;
  */
 class SmscConfigFile {
 
-  private static final Logger logger = Logger.getLogger(SmscConfigFile.class);
 
   private CommonSettings commonSettings;
 
@@ -84,8 +83,7 @@ class SmscConfigFile {
       }
       XmlConfigHelper.saveXmlConfig(config, smscConfigFile, backupDir, fileSystem);
     } catch (XmlConfigException e) {
-      logger.error(e, e);
-      throw new AdminException(e.getMessage());
+      throw new AdminException(e.getMessage(), e);
     }
   }
 
