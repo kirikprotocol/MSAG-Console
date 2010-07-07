@@ -1,7 +1,9 @@
 package ru.novosoft.smsc.admin;
 
+import ru.novosoft.smsc.admin.alias.AliasManager;
 import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemonConfig;
 import ru.novosoft.smsc.admin.archive_daemon.ArchiveDemon;
+import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.admin.service.ServiceManager;
@@ -25,6 +27,8 @@ public class AdminContext {
   private final FileSystem fileSystem;
   private final SmscConfig smscConfig;
   private final ArchiveDaemonConfig archiveDaemonConfig;
+  private final ClusterController clusterController;
+  private final AliasManager aliasManager;
 
   public AdminContext(File appBaseDir, File initFile) throws AdminException {
     this.cfg = new AdminContextConfig(initFile);
@@ -53,6 +57,10 @@ public class AdminContext {
 
     ServiceInfo archiveDaemonInfo = serviceManager.getService(ArchiveDemon.SERVICE_ID);
     archiveDaemonConfig = (archiveDaemonInfo == null) ? null : new ArchiveDaemonConfig(archiveDaemonInfo.getBaseDir(), fileSystem);
+
+    clusterController = new ClusterController(serviceManager, fileSystem);
+
+    aliasManager = new AliasManager(clusterController, fileSystem);
   }
 
   public FileSystem getFileSystem() {
@@ -65,5 +73,9 @@ public class AdminContext {
 
   public ArchiveDaemonConfig getArchiveDaemonConfig() {
     return archiveDaemonConfig;
+  }
+
+  public AliasManager getAliasManager() {
+    return aliasManager;
   }
 }

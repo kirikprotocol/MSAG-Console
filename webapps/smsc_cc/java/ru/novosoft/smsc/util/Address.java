@@ -47,9 +47,9 @@ public class Address {
    * @param npi     npi
    * @param address адрес
    */
-  public Address(byte tone, byte npi, String address) {
-    this.tone = tone;
-    this.npi = npi;
+  public Address(int tone, int npi, String address) {
+    this.tone = (byte)tone;
+    this.npi = (byte)npi;
     this.address = address;
   }
 
@@ -202,4 +202,8 @@ public class Address {
     return npi;
   }
 
+  @Override
+  public String toString() {
+    return getNormalizedAddress();
+  }
 }

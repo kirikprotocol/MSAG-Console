@@ -113,4 +113,12 @@ public class IOUtils {
       read += result;
     }
   }
+
+  public static void readFully(InputStream is, byte[] bytes) throws IOException {
+    int start = 0;
+    while (start < bytes.length) {
+      int len = is.read(bytes, start, bytes.length - start);
+      start = len;
+    }
+  }
 }
