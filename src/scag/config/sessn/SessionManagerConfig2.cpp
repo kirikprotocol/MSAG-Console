@@ -36,6 +36,9 @@ namespace config {
         try {
             getInt(cv, "ussdExpireInterval", ussdExpireInterval);
         } catch (...) {}
+        try {
+            getInt(cv, "ussdReplaceTimeout", ussdReplaceTimeout);
+        } catch (...) {}
 
         getBool(cv, "diskio", diskio);
 
@@ -143,6 +146,7 @@ void SessionManagerConfig::clear()
     initUploadInterval = 100;
     expireInterval = 10000;
     ussdExpireInterval = 60000;
+    ussdReplaceTimeout = 60000;
     diskio = true;
 }
 

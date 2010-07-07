@@ -76,8 +76,10 @@ public:
     /// return the default live time of the session
     static unsigned defaultLiveTime();
     static unsigned ussdLiveTime();
+    static unsigned ussdReplaceTimeout();
     static void setDefaultLiveTime( unsigned tmo );
     static void setUssdLiveTime( unsigned tmo );
+    static void setUssdReplaceTimeout( unsigned tmo );
 
     /// NOTE: the full field name (with prefix) is required
     static bool isReadOnlyProperty( const char* fullname );

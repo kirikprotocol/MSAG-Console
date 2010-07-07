@@ -209,11 +209,11 @@ private:
                                     smsc::core::network::Socket& channel ) /* throw(PvssException) */ ;
 
 
-    /**
+    /*
      * Internal method used to shutdown registered channels
      * and finalize unprocessed requests.
      */
-    void cleanup();
+    // void cleanup();
 
 private:
     typedef std::list< PvssSocket* >          ChannelList;

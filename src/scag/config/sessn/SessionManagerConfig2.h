@@ -30,6 +30,7 @@ public:
     unsigned                 initUploadInterval; // in ms
     unsigned                 expireInterval;     // in ms
     unsigned                 ussdExpireInterval; // in ms
+    unsigned                 ussdReplaceTimeout; // in ms
     bool                     diskio;
 
 private:

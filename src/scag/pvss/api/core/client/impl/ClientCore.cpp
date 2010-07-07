@@ -161,6 +161,7 @@ void ClientCore::closeChannel( smsc::core::network::Socket& socket )
 {
     Core::closeChannel(socket);
     PvssSocket* channel = PvssSocket::fromSocket(&socket);
+    smsc_log_info(logger,"closing channel %p",channel);
     connector_->unregisterChannel(*channel);
     bool found = false;
     {
@@ -405,6 +406,7 @@ int ClientCore::doExecute()
 void ClientCore::clearChannels()
 {
     // NOTE: connector must be stopped already!
+    smsc_log_info(logger,"clearing channels");
     assert(connector_->released());
     MutexGuard mg(channelMutex_);
     for ( ChannelList::iterator i = channels_.begin(); i != channels_.end(); ++i ) {
@@ -622,10 +624,12 @@ void ClientCore::handleResponseWithContext( std::auto_ptr< ClientContext >& cont
 }
 
 
+/*
 void ClientCore::cleanup()
 {
     clearChannels();
 }
+ */
 
 
 } // namespace client

@@ -38,6 +38,7 @@ inline void getlog() {
 /// session default live time (in seconds)
 unsigned sessionLiveTime = 60;
 unsigned sessionUssdLiveTime = 60;
+unsigned sessionUssdReplaceTimeout = 60;
 
 using namespace scag2::sessions;
 using namespace scag2::exceptions;
@@ -339,11 +340,24 @@ unsigned Session::ussdLiveTime()
     return sessionUssdLiveTime;
 }
 
+unsigned Session::ussdReplaceTimeout()
+{
+    return sessionUssdReplaceTimeout;
+}
+
 void Session::setUssdLiveTime( unsigned tmo )
 {
     sessionUssdLiveTime = tmo;
     ::getlog();
     smsc_log_info(log_,"setting default ussd session live time %u", tmo);
+}
+
+
+void Session::setUssdReplaceTimeout( unsigned tmo )
+{
+    sessionUssdReplaceTimeout = tmo;
+    ::getlog();
+    smsc_log_info(log_,"setting ussd replace timeout %u", tmo);
 }
 
 
