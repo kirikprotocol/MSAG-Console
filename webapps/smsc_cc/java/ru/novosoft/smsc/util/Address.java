@@ -5,8 +5,6 @@
  */
 package ru.novosoft.smsc.util;
 
-import ru.novosoft.smsc.admin.AdminException;
-
 import java.util.regex.Pattern;
 
 /**
@@ -59,19 +57,19 @@ public class Address {
    * @param address - адрес в виде строки
    * @throws AdminException неправильный формат строки
    */
-  public Address(String address) throws AdminException {
+  public Address(String address)  {
     address = address.trim();
     if (address == null)
       throw new NullPointerException("Address string is null");
 
     if (!validate(address))
-      throw new AdminException("Address \"" + address + "\" is not valid");
+      throw new IllegalArgumentException("Address \"" + address + "\" is not valid");
 
     if (address.startsWith(".")) {
       int dp = address.indexOf('.', 1);
       int dp2 = address.indexOf('.', dp + 1);
       if (dp < 0 || dp2 < 0)
-        throw new AdminException("Mask \"" + address + "\" is not valid");
+        throw new IllegalArgumentException("Mask \"" + address + "\" is not valid");
 
       try {
         String toneStr = address.substring(1, dp);
@@ -81,7 +79,7 @@ public class Address {
         this.address = address.substring(dp2 + 1);
 
       } catch (NumberFormatException e) {
-        throw new AdminException("Mask \"" + address + "\" is not valid, nested: " + e.getMessage());
+        throw new IllegalArgumentException("Mask \"" + address + "\" is not valid, nested: " + e.getMessage());
       }
 
     } else if (address.startsWith("+")) {

@@ -9,7 +9,7 @@ public final class NativeResourceGroupHA {
       System.loadLibrary("NativeResourceGroupHA");
     } catch (UnsatisfiedLinkError e) {
       e.printStackTrace();
-      throw new AdminException("JNI Library is not found");
+      throw new ResourceGroupException("jni_lib_not_found");
     }
   }
 

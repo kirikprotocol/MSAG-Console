@@ -113,7 +113,7 @@ public class ResourceGroupManager {
       try {
         String name = resGroupsNames.getProperty(rgId);
         if (name == null)
-          throw new AdminException("Couldn't map resource group ha-name:" + rgId);
+          throw new ResourceGroupException("unknown_resource_group", rgId);
         resGroups.add(new ResourceGroupHAImpl(rgId, name, new File(servicesDir, name)));
         if (logger.isDebugEnabled())
           logger.debug("Resource group \"" + name + "\" added");

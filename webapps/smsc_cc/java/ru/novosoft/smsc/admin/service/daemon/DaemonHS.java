@@ -25,7 +25,7 @@ public class DaemonHS extends Daemon {
     if (super.getStatus() == StatusConnected) {
       final Response r = runCommand(new CommandListServices());
       if (Response.StatusOk != r.getStatus())
-        throw new AdminException("Couldn't list services, nested:" + r.getDataAsString());
+        throw new DaemonException("error_returned", r.getDataAsString());
 
       Map<String, ControlledService> services = new HashMap<String, ControlledService>();
 
@@ -42,13 +42,13 @@ public class DaemonHS extends Daemon {
 
       return services;
     }
-    throw new AdminException("Unable to connect to demon");
+    throw new DaemonException("connection_error");
   }
 
   public void switchOver(final String serviceId) throws AdminException {
     final Response r = runCommand(new CommandSwitchOverService(serviceId));
     if (Response.StatusOk != r.getStatus())
-      throw new AdminException("Couldn't switch over callable \"" + serviceId + "\", nested:" + r.getDataAsString());
+      throw new DaemonException("error_returned", r.getDataAsString());
   }
 
   public List<String> getHosts() {

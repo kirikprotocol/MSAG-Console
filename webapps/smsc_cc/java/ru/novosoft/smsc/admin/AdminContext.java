@@ -51,7 +51,7 @@ public class AdminContext {
 
     ServiceInfo smscServiceInfo = serviceManager.getService("SMSC1");
     if (smscServiceInfo == null)
-      throw new AdminException("Service SMSC1 does not exist");
+      throw new AdminContextException("service_not_found", "SMSC1");
 
     smscConfig = new SmscConfig(smscServiceInfo.getBaseDir(), fileSystem);
 

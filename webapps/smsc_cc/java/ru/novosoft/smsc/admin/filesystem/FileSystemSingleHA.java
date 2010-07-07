@@ -21,8 +21,7 @@ class FileSystemSingleHA extends FileSystem {
     try {
       return new FileOutputStream(file);
     } catch (IOException e) {
-      logger.error(e, e);
-      throw new AdminException(e.getMessage());
+      throw new FileSystemException("io_error",e);
     }
   }
 
@@ -31,8 +30,7 @@ class FileSystemSingleHA extends FileSystem {
     assert file != null && toFile != null : "Some arguments are null";
     if (!file.renameTo(toFile)) {
       String err = "Can't rename file '" + file.getAbsolutePath() + "' to '" + toFile.getAbsolutePath() + '\'';
-      logger.error(err);
-      throw new AdminException(err);
+      throw new FileSystemException("io_error",err);
     }
   }
 
@@ -42,8 +40,7 @@ class FileSystemSingleHA extends FileSystem {
     try {
       FileUtils.copyFileTo(file, toFile);
     } catch (IOException e) {
-      logger.error(e, e);
-      throw new AdminException(e.getMessage());
+      throw new FileSystemException("io_error",e);
     }
   }
 
@@ -52,8 +49,7 @@ class FileSystemSingleHA extends FileSystem {
     assert file != null : "Some arguments are null";
     if (!file.delete() && file.exists()) {
       String err = "Can't remove file '" + file.getAbsolutePath() + '\'';
-      logger.error(err);
-      throw new AdminException(err);
+      throw new FileSystemException("io_error",err);
     }
 
   }
@@ -63,8 +59,7 @@ class FileSystemSingleHA extends FileSystem {
     assert file != null : "Some arguments are null";
     if (!file.mkdirs() && !file.exists()) {
       String err = "Can't create dirs for '" + file.getAbsolutePath() + '\'';
-      logger.error(err);
-      throw new AdminException(err);
+      throw new FileSystemException("io_error",err);
     }
   }
 

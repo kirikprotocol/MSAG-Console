@@ -41,7 +41,6 @@ public class Response {
       factory.setIgnoringComments(true);
       factory.setValidating(false);
       DocumentBuilder builder = factory.newDocumentBuilder();
-      logger.debug("setting entity resolver for response");
       builder.setEntityResolver(new DtdsEntityResolver());
       //!!!
       String a = new String(text);
@@ -53,23 +52,23 @@ public class Response {
     }
     catch (FactoryConfigurationError error) {
       logger.warn("Unrecognized error in constructor", error);
-      throw new AdminException(error.getMessage());
+      throw new ProtocolException("invalid_response", error);
     }
     catch (ParserConfigurationException e) {
       logger.warn("Unrecognized error in constructor", e);
-      throw new AdminException(e.getMessage());
+      throw new ProtocolException("invalid_response", e);
     }
     catch (SAXException e) {
       logger.warn("Unrecognized error in constructor", e);
-      throw new AdminException(e.getMessage());
+      throw new ProtocolException("invalid_response", e);
     }
     catch (IOException e) {
       logger.warn("Unrecognized error in constructor", e);
-      throw new AdminException(e.getMessage());
+      throw new ProtocolException("invalid_response", e);
     }
     catch (Throwable t) {
       logger.warn("Unrecognized error in constructor", t);
-      throw new AdminException(t.getMessage());
+      throw new ProtocolException("invalid_response", t);
     }
   }
 

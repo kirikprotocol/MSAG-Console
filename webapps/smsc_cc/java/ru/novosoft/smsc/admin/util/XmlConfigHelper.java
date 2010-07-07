@@ -29,7 +29,7 @@ public class XmlConfigHelper {
    * @param fileSystem экземпляр FileSystem
    * @throws AdminException если сохранить конфиг не удалось.
    */
-  public static void saveXmlConfig(XmlConfig config, File toFile, File backupDir, FileSystem fileSystem) throws AdminException {
+  public static void saveXmlConfig(XmlConfig config, File toFile, File backupDir, FileSystem fileSystem) throws AdminException, XmlConfigException {
 
     if (backupDir != null) {
       if (!fileSystem.exists(backupDir))
@@ -44,8 +44,6 @@ public class XmlConfigHelper {
     try {
       os = fileSystem.getOutputStream(tmp);
       config.save(os);
-    } catch (XmlConfigException e) {
-      throw new AdminException(e.getMessage(), e);
     } finally {
       if (os != null) {
         try {

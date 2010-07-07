@@ -22,7 +22,7 @@ class AdminContextConfig {
     try {
       this.webconfig.load(file);
     } catch (XmlConfigException e) {
-      throw new AdminException("Unable to load " + file.getAbsolutePath() + ".Cause: " + e.getMessage(), e);
+      throw new AdminContextException("Unable to load " + file.getAbsolutePath() + ".Cause: " + e.getMessage(), e);
     }
   }
 
@@ -36,81 +36,63 @@ class AdminContextConfig {
       else if (installationTypeStr.equalsIgnoreCase("single"))
         return InstallationType.SINGLE;
       else
-        throw new AdminException("Unknown installation type: " + installationTypeStr);
+        throw new AdminContextException("unknown_inst_type", installationTypeStr);
     } catch (XmlConfigException e) {
-      throw new AdminException(e.getMessage(), e);
+      throw new AdminContextException("invalid_config", e);
     }
   }
 
 
   public String getSingleDaemonHost() throws AdminException {
-    if (getInstallationType() != InstallationType.SINGLE)
-      throw new AdminException("Illegal installation type: " + getInstallationType());
-
     try {
       XmlConfigSection daemon = webconfig.getSection("daemon");
       return daemon.getString("host");
     } catch (XmlConfigException e) {
-      throw new AdminException(e.getMessage(), e);
+      throw new AdminContextException("invalid_config", e);
     }
   }
 
 
   public int getSingleDaemonPort() throws AdminException {
-    if (getInstallationType() != InstallationType.SINGLE)
-      throw new AdminException("Illegal installation type: " + getInstallationType());
-
     try {
       XmlConfigSection daemon = webconfig.getSection("daemon");
       return daemon.getInt("port");
     } catch (XmlConfigException e) {
-      throw new AdminException(e.getMessage(), e);
+      throw new AdminContextException("invalid_config", e);
     }
   }
 
 
   public File[] getAppMirrorDirs() throws AdminException {
-    if (getInstallationType() != InstallationType.HS)
-      throw new AdminException("Illegal installation type: " + getInstallationType());
-
     try {
       XmlConfigSection installation = webconfig.getSection("installation");
       File mirrorPath = new File(installation.getString("mirrorpath"));
       return new File[]{mirrorPath};
     } catch (XmlConfigException e) {
-      throw new AdminException(e.getMessage(), e);
+      throw new AdminContextException("invalid_config", e);
     }
   }
 
 
   public String getHSDaemonHost() throws AdminException {
-    if (getInstallationType() != InstallationType.HS)
-      throw new AdminException("Illegal installation type: " + getInstallationType());
-
     try {
       XmlConfigSection daemon = webconfig.getSection("daemon");
       return daemon.getString("host");
     } catch (XmlConfigException e) {
-      throw new AdminException(e.getMessage(), e);
+      throw new AdminContextException("invalid_config", e);
     }
   }
 
   public int getHSDaemonPort() throws AdminException {
-    if (getInstallationType() != InstallationType.HS)
-      throw new AdminException("Illegal installation type: " + getInstallationType());
-
     try {
       XmlConfigSection daemon = webconfig.getSection("daemon");
       return daemon.getInt("port");
     } catch (XmlConfigException e) {
-      throw new AdminException(e.getMessage(), e);
+      throw new AdminContextException("invalid_config", e);
     }
   }
 
   public Collection<String> getHSDaemonHosts() throws AdminException {
-    if (getInstallationType() != InstallationType.HS)
-      throw new AdminException("Illegal installation type: " + getInstallationType());
-
     try {
       XmlConfigSection nodes = webconfig.getSection("nodes");
       Collection<String> result = new ArrayList<String>();
@@ -119,7 +101,7 @@ class AdminContextConfig {
 
       return result;
     } catch (XmlConfigException e) {
-      throw new AdminException(e.getMessage(), e);
+      throw new AdminContextException("invalid_config", e);
     }
   }
 

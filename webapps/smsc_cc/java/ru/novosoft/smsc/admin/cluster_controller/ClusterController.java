@@ -30,7 +30,7 @@ public class ClusterController {
     ServiceInfo si = getInfo();
     File configFile = new File(si.getBaseDir(), "conf" + File.separator + "config.xml");
     if (!fileSystem.exists(configFile))
-      throw new AdminException("Config file for Cluster Controller does not exists: " + configFile.getAbsolutePath());
+      throw new ClusterControllerException("config_file_not_found", configFile.getAbsolutePath());
 
 
     //todo read port from config file
@@ -39,7 +39,7 @@ public class ClusterController {
   private ServiceInfo getInfo() throws AdminException {
     ServiceInfo si = serviceManager.getService(SERVICE_ID);
     if (si == null)
-      throw new AdminException("Service '" + SERVICE_ID + "' not found");
+      throw new ClusterControllerException("cluster_controller_offline");
     return si;
   }
 

@@ -38,9 +38,9 @@ public class ArchiveDemon {
   private Socket connect() throws AdminException, IOException {
     ServiceInfo info = serviceManager.getService(SERVICE_ID);
     if (info == null)
-      throw new AdminException("Service '" + SERVICE_ID + "' not found.");
+      throw new ArchiveDaemonException("archive_daemon_not_found");
     if (info.getOnlineHost() == null)
-      throw new AdminException("Service '" + SERVICE_ID + "' is offline.");
+      throw new ArchiveDaemonException("archive_daemon_offline");
 
     ArchiveDaemonConfig config = new ArchiveDaemonConfig(info.getBaseDir(), fileSystem);
     String host = info.getOnlineHost();
@@ -83,7 +83,7 @@ public class ArchiveDemon {
       boolean allSelected = false;
       do {
         responce = communicator.receive();
-        if (responce == null) throw new AdminException("Message from archive daemon is NULL");
+        if (responce == null) throw new ArchiveDaemonException("invalid_response");
 
         switch (responce.getType()) {
           case Message.SMSC_BYTE_EMPTY_TYPE:
@@ -103,18 +103,16 @@ public class ArchiveDemon {
             }
             break;
           case Message.SMSC_BYTE_ERROR_TYPE:
-            throw new AdminException("Archive daemon communication error: " +
-                ((ErrorMessage) responce).getError());
+            logger.error("ArchiveDaemon communication error: " + ((ErrorMessage) responce).getError());
+            throw new ArchiveDaemonException("error_returned");
           default:
-            throw new AdminException("Unsupported message received from archive daemon, type: " +
-                responce.getType());
+            logger.error("Unknown response type: " + responce.getType());
+            throw new ArchiveDaemonException("invalid_response");
         }
       } while (!allSelected);
 
-    }
-    catch (Exception exc) {
-      logger.error(exc, exc);
-      throw new AdminException(exc.getMessage());
+    } catch (IOException exc) {
+      throw new ArchiveDaemonException("communication_error", exc);
     } finally {
       close(input, output, socket);
     }
@@ -146,7 +144,7 @@ public class ArchiveDemon {
 
       Message responce = communicator.receive();
       if (responce == null)
-        throw new AdminException("Message from archive daemon is NULL");
+        throw new ArchiveDaemonException("invalid_response");
 
       switch (responce.getType()) {
         case Message.SMSC_BYTE_EMPTY_TYPE:
@@ -155,16 +153,14 @@ public class ArchiveDemon {
           smsCount = (int) ((TotalMessage) responce).getCount();
           break;
         case Message.SMSC_BYTE_ERROR_TYPE:
-          throw new AdminException("Archive daemon communication error: " +
-              ((ErrorMessage) responce).getError());
+          logger.error("ArchiveDaemon communication error: " + ((ErrorMessage) responce).getError());
+          throw new ArchiveDaemonException("error_returned");
         default:
-          throw new AdminException("Unsupported message received from archive daemon, type: " +
-              responce.getType());
+          logger.error("Unknown response type: " + responce.getType());
+          throw new ArchiveDaemonException("invalid_response");
       }
-    }
-    catch (Exception exc) {
-      logger.error(exc, exc);
-      throw new AdminException(exc.getMessage());
+    } catch (IOException exc) {
+      throw new ArchiveDaemonException("communication_error", exc);
     } finally {
       close(input, output, socket);
     }
@@ -175,23 +171,17 @@ public class ArchiveDemon {
     if (input != null) {
       try {
         input.close();
-      }
-      catch (IOException exc) {
-      }
+      } catch (IOException exc) {}
     }
     if (output != null) {
       try {
         output.close();
-      }
-      catch (IOException exc) {
-      }
+      } catch (IOException exc) {}
     }
     if (socket != null) {
       try {
         socket.close();
-      }
-      catch (IOException exc) {
-      }
+      } catch (IOException exc) {}
     }
   }
 }

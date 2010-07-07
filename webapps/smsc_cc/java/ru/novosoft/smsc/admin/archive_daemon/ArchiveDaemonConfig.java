@@ -113,7 +113,7 @@ public class ArchiveDaemonConfig {
         indexatorSmeAddrChunkSizes.put(chunkSizeParam.getName(), chunkSizeParam.getInt());
 
     } catch (XmlConfigException e) {
-      throw new AdminException(e.getMessage(), e);
+      throw new ArchiveDaemonException("invalid_config_format", e);
     }
 
     changed = false;
@@ -155,7 +155,7 @@ public class ArchiveDaemonConfig {
       XmlConfigHelper.saveXmlConfig(c, configFile, backupDir, fileSystem);
 
     } catch (XmlConfigException e) {
-      throw new AdminException("Unable to save Archive Daemon config. Cause: " + e.getMessage(), e);
+      throw new ArchiveDaemonException("save_config_error", e);
     }
 
     changed = false;

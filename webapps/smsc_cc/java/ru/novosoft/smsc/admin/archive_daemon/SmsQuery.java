@@ -83,7 +83,7 @@ public class SmsQuery {
       try {
         abonentAddressMask = new Address(address);
         isFilterAbonentAddress = true;
-      } catch (AdminException e) {
+      } catch (IllegalArgumentException e) {
         logger.warn("Invalid address specified: " + address);
         abonentAddressMask = null;
         isFilterAbonentAddress = false;
@@ -105,7 +105,7 @@ public class SmsQuery {
       try {
         fromAddressMask = new Address(address);
         isFilterFromAddress = true;
-      } catch (AdminException e) {
+      } catch (IllegalArgumentException e) {
         logger.warn("Invalid address specified: " + address);
         fromAddressMask = null;
         isFilterFromAddress = false;
@@ -126,7 +126,7 @@ public class SmsQuery {
       try {
         toAddressMask = new Address(address);
         isFilterToAddress = true;
-      } catch (AdminException e) {
+      } catch (IllegalArgumentException e) {
         logger.warn("Invalid address specified: " + address);
         toAddressMask = null;
         isFilterToAddress = false;
@@ -188,7 +188,7 @@ public class SmsQuery {
       }
       catch (NumberFormatException e) {
         smsId = "*";
-        throw new AdminException("Invalid numeric format for sms id");
+        throw new IllegalArgumentException("Invalid numeric format for sms id");
       }
   }
 

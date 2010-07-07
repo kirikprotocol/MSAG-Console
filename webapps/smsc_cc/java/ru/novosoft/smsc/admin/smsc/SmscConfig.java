@@ -41,13 +41,12 @@ public class SmscConfig {
    * Возвращает настройки (копию), общие для всех СМСЦ.
    *
    * @return настройки, общие для всех СМСЦ.
-   * @throws AdminException ошибка извлечения настроек
    */
-  public CommonSettings getCommonSettings() throws AdminException {
+  public CommonSettings getCommonSettings()  {
     try {
       return (CommonSettings) configFile.getCommonSettings().clone();
     } catch (CloneNotSupportedException e) {
-      throw new AdminException(e.getMessage());
+      return null;
     }
   }
 
@@ -64,7 +63,6 @@ public class SmscConfig {
     try {
       configFile.setCommonSettings((CommonSettings)settings.clone());
     } catch (CloneNotSupportedException e) {
-      throw new AdminException(e.getMessage(), e);
     }
     changed = true;
   }
@@ -84,7 +82,6 @@ public class SmscConfig {
     try {
       configFile.setInstanceSettings(instanceNumber, (InstanceSettings)instanceSettings.clone());
     } catch (CloneNotSupportedException e) {
-      throw new AdminException(e.getMessage(), e);
     }
     changed = true;
   }
@@ -104,13 +101,12 @@ public class SmscConfig {
    *
    * @param instanceNumber номер инстанца
    * @return настройки, специфические для каждого инстанца СМСЦ
-   * @throws AdminException ошибка извлечения настроек
    */
-  public InstanceSettings getInstanceSettings(int instanceNumber) throws AdminException {
+  public InstanceSettings getInstanceSettings(int instanceNumber) {
     try {
       return (InstanceSettings) configFile.getInstanceSettings(instanceNumber).clone();
     } catch (CloneNotSupportedException e) {
-      throw new AdminException(e.getMessage());
+      return null;
     }
   }
 

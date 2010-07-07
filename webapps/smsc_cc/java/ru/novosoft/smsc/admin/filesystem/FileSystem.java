@@ -12,8 +12,6 @@ import java.io.*;
  */
 public abstract class FileSystem {
 
-  protected static final Category logger = Category.getInstance(FileSystem.class);
-
   public static FileSystem getFSForSingleInst() throws AdminException{
     return new FileSystemSingleHA();
   }
@@ -38,8 +36,7 @@ public abstract class FileSystem {
     try {
       return new FileInputStream(file);
     } catch (IOException e) {
-      logger.error(e, e);
-      throw new AdminException(e.getMessage());
+      throw new FileSystemException("io_error", e);
     }
   }
 

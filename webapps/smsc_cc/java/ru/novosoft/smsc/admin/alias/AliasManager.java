@@ -56,7 +56,6 @@ public class AliasManager {
     } finally {
       rwlock.writeLock().unlock();
     }
-
   }
 
 
@@ -72,7 +71,7 @@ public class AliasManager {
       return new AliasSetImpl(cc.getAliasesFile());
     } catch (AdminException e) {
       rwlock.readLock().unlock();
-      throw new AdminException(e.getMessage(), e);
+      throw e;
     }
   }
 
@@ -87,7 +86,7 @@ public class AliasManager {
         IOUtils.readString(is, 8); // file name
         IOUtils.readUInt32(is); // version (int)
       } catch (IOException e) {
-        throw new AdminException("Broken aliases file", e);
+        throw new AliasManagerException("broken_aliases_file", e);
       }
     }
 

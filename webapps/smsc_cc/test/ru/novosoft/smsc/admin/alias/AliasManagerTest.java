@@ -10,6 +10,10 @@ import ru.novosoft.smsc.admin.filesystem.FileSystem;
 import ru.novosoft.smsc.util.Address;
 
 import java.io.*;
+import java.util.Locale;
+import java.util.Properties;
+import java.util.PropertyResourceBundle;
+import java.util.ResourceBundle;
 
 /**
  * @author Artem Snopkov
@@ -51,6 +55,13 @@ public class AliasManagerTest {
   public static void afterClass() {
     if (aliasesFile != null)
       aliasesFile.delete();
+  }
+
+  @Test
+  public void test() throws IOException {
+
+
+    System.out.println(new AliasManagerException("broken_aliases_file", null).getMessage(new Locale("en")));
   }
 
   @Test

@@ -83,11 +83,9 @@ public class Proxy {
     }
     catch (IOException e) {
       disconnect();
-      throw new AdminException(e.getMessage());
+      throw new ProtocolException("connection_error", e);
     }
-    catch (Exception e) {
-      throw new AdminException(e.getMessage());
-    }
+
   }
 
   public void disconnect() {
@@ -115,7 +113,7 @@ public class Proxy {
     if (status == StatusConnected) {
       final String err = "Already connected";
       logger.warn(err);
-      throw new AdminException(err);
+      return;
     }
 
     final String warning = "Couldn't connect to \"" + host + ':' + port + '"';
@@ -126,7 +124,7 @@ public class Proxy {
       statusTime = (interval > timeout) ? StatusTimeEnabled : StatusTimeDisabled;
       if (statusTime != StatusTimeEnabled) {
         logger.debug(warning + " timeout");
-        throw new AdminException(warning + " timeout");
+        throw new ProtocolException("timeout");
       }
       timeConnect = current;
     }
@@ -147,7 +145,7 @@ public class Proxy {
     } catch (IOException e) {
       final String err = warning + ", nested: " + e.getMessage();
       logger.warn(err);
-      throw new AdminException(err);
+      throw new ProtocolException("connection_error", e);
     }
 
   }

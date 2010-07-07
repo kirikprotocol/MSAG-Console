@@ -83,28 +83,20 @@ public class QueryMessage extends Message {
       list.add(new Param(T_TILL_DATE, convertStringToDate(query.getTillDate())));
 
     if (isMeaning(query.getAbonentAddress())) {
-      try {
-        Address address = new Address(query.getAbonentAddress().trim());
-        list.add(new Param(T_ABN_ADDRESS, address.getNormalizedAddress()));
-      } catch (AdminException e) {
-        throw new IOException("Invalid abonent address: " + e.getMessage());
-      }
+
+      Address address = new Address(query.getAbonentAddress().trim());
+      list.add(new Param(T_ABN_ADDRESS, address.getNormalizedAddress()));
+
     } else {
       if (isMeaning(query.getFromAddress())) {
-        try {
-          Address address = new Address(query.getFromAddress().trim());
-          list.add(new Param(T_SRC_ADDRESS, address.getNormalizedAddress()));
-        } catch (AdminException e) {
-          throw new IOException("Invalid source address: " + e.getMessage());
-        }
+
+        Address address = new Address(query.getFromAddress().trim());
+        list.add(new Param(T_SRC_ADDRESS, address.getNormalizedAddress()));
+
       }
       if (isMeaning(query.getToAddress())) {
-        try {
-          Address address = new Address(query.getToAddress().trim());
-          list.add(new Param(T_DST_ADDRESS, address.getNormalizedAddress()));
-        } catch (AdminException e) {
-          throw new IOException("Invalid destination address: " + e.getMessage());
-        }
+        Address address = new Address(query.getToAddress().trim());
+        list.add(new Param(T_DST_ADDRESS, address.getNormalizedAddress()));
       }
     }
 

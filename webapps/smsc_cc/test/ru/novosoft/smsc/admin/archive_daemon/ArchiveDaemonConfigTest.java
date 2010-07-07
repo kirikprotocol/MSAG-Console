@@ -12,8 +12,7 @@ import ru.novosoft.smsc.util.config.XmlConfigException;
 
 import java.io.*;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.*;
 
 /**
  * @author Artem Snopkov
@@ -97,6 +96,20 @@ public class ArchiveDaemonConfigTest {
 
     // Проверяем эквивалентность первоначальному конфигу.
     assertEquals(cfg, cfg1);
+  }
+
+  @Test
+  public void isChangedTest() throws AdminException {
+    ArchiveDaemonConfig config1 = new ArchiveDaemonConfig(configFile, backupDir, FileSystem.getFSForSingleInst());
+    assertFalse(config1.isChanged());
+    config1.setInterval(config1.getInterval());
+    assertTrue(config1.isChanged());
+    config1.save();
+    assertFalse(config1.isChanged());
+    config1.setInterval(config1.getInterval());
+    assertTrue(config1.isChanged());
+    config1.reset();
+    assertFalse(config1.isChanged());
   }
 
 }

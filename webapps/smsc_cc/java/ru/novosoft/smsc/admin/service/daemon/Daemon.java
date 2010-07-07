@@ -43,7 +43,7 @@ public class Daemon extends Proxy {
     if (super.getStatus() == StatusConnected) {
       final Response r = runCommand(new CommandListServices());
       if (Response.StatusOk != r.getStatus())
-        throw new AdminException("Couldn't list services, nested:" + r.getDataAsString());
+        throw new DaemonException("error_returned", r.getDataAsString());
 
       Map<String, ControlledService> services = new HashMap<String, ControlledService>();
 
@@ -63,7 +63,7 @@ public class Daemon extends Proxy {
 
       return services;
     }
-    throw new AdminException("Unable to connect to demon");
+    throw new DaemonException("connection_error");
   }
 
   /**
@@ -74,7 +74,7 @@ public class Daemon extends Proxy {
   public void startService(final String serviceId) throws AdminException {
     final Response r = runCommand(new CommandStartService(serviceId));
     if (Response.StatusOk != r.getStatus())
-      throw new AdminException("Couldn't start services \"" + serviceId + "\", nested:" + r.getDataAsString());
+      throw new DaemonException("error_returned", r.getDataAsString());
   }
 
   /**
@@ -88,7 +88,7 @@ public class Daemon extends Proxy {
   public void addService(String id, String args, String status, boolean autostart) throws AdminException {
     final Response r = runCommand(new CommandAddService(id, args, status, autostart));
     if (Response.StatusOk != r.getStatus())
-      throw new AdminException("Couldn't add services \"" + id + '/' + id + "\" [" + args + "], nested:" + r.getDataAsString());
+      throw new DaemonException("error_returned", r.getDataAsString());
   }
 
   /**
@@ -99,7 +99,7 @@ public class Daemon extends Proxy {
   public void removeService(final String serviceId) throws AdminException {
     final Response r = runCommand(new CommandRemoveService(serviceId));
     if (Response.StatusOk != r.getStatus())
-      throw new AdminException("Couldn't remove services \"" + serviceId + "\", nested:" + r.getDataAsString());
+      throw new DaemonException("error_returned", r.getDataAsString());
   }
 
   /**
@@ -110,14 +110,14 @@ public class Daemon extends Proxy {
   public void shutdownService(final String serviceId) throws AdminException {
     final Response r = runCommand(new CommandShutdownService(serviceId));
     if (Response.StatusOk != r.getStatus()) {
-      throw new AdminException("Couldn't shutdown services \"" + serviceId + "\", nested:" + r.getDataAsString());
+      throw new DaemonException("error_returned", r.getDataAsString());
     }
   }
 
   public void killService(final String serviceId) throws AdminException {
     final Response r = runCommand(new CommandKillService(serviceId));
     if (Response.StatusOk != r.getStatus()) {
-      throw new AdminException("Couldn't kill services \"" + serviceId + "\", nested:" + r.getDataAsString());
+      throw new DaemonException("error_returned", r.getDataAsString());
     }
   }
 

@@ -40,8 +40,7 @@ class FileSystemHS extends FileSystem {
     } catch (IOException e) {
       errStr = e.getMessage();
       error = true;
-      logger.error(e, e);
-      throw new AdminException(e.getMessage());
+      throw new FileSystemException("io_error", e);
     }
   }
 
@@ -62,8 +61,7 @@ class FileSystemHS extends FileSystem {
       if (!files[i].renameTo(toFiles[i])) {
         error = true;
         errStr = "Can't rename file '" + files[i].getAbsolutePath() + "' to '" + toFiles[i].getAbsolutePath() + '\'';
-        logger.error(errStr);
-        throw new AdminException(errStr);
+        throw new FileSystemException("io_error", errStr);
       }
     }
   }
@@ -87,8 +85,7 @@ class FileSystemHS extends FileSystem {
       } catch (IOException e) {
         error = true;
         errStr = "Can't copy file '" + files[i].getAbsolutePath() + "' to '" + toFiles[i].getAbsolutePath() + '\'';
-        logger.error(e, e);
-        throw new AdminException(errStr);
+        throw new FileSystemException("io_error", errStr);
       }
     }
 
@@ -107,8 +104,7 @@ class FileSystemHS extends FileSystem {
       if (!files[i].delete() && files[i].exists()) {
         error = true;
         errStr = "Can't remove file '" + files[i].getAbsolutePath() + '\'';
-        logger.error(errStr);
-        throw new AdminException(errStr);
+        throw new FileSystemException("io_error", errStr);
       }
     }
   }
@@ -126,8 +122,7 @@ class FileSystemHS extends FileSystem {
       if (!files[i].mkdirs() && !files[i].exists()) {
         error = true;
         errStr = "Can't mkdirs for file '" + files[i].getAbsolutePath() + '\'';
-        logger.error(errStr);
-        throw new AdminException(errStr);
+        throw new FileSystemException("io_error", errStr);
       }
     }
   }
@@ -159,7 +154,7 @@ class FileSystemHS extends FileSystem {
     assert baseFile != null : "Some arguments are null";
     String absolutePath = baseFile.getAbsolutePath();
     if (!absolutePath.startsWith(baseDir.getAbsolutePath())) {
-      throw new AdminException("File '" + absolutePath + "' must be in subdirectories of '" + baseDir + '\'');
+      throw new FileSystemException("mirror_error", "File '" + absolutePath + "' must be in subdirectories of '" + baseDir + '\'');
     }
     String relativePath = absolutePath.substring(baseDir.getAbsolutePath().length());
     if (relativePath.startsWith(File.separator)) {
@@ -178,7 +173,7 @@ class FileSystemHS extends FileSystem {
 
   private void checkErrors() throws AdminException {
     if (error) {
-      throw new AdminException("There was a error at some time ago. Further work is impossible. ERROR: '" + errStr + '\'');
+      throw new FileSystemException("mirror_error", errStr);
     }
   }
 

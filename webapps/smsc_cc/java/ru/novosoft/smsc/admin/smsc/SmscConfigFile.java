@@ -1,11 +1,10 @@
 package ru.novosoft.smsc.admin.smsc;
 
-import org.apache.log4j.Logger;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
 import ru.novosoft.smsc.admin.util.XmlConfigHelper;
-import ru.novosoft.smsc.util.config.XmlConfigException;
 import ru.novosoft.smsc.util.config.XmlConfig;
+import ru.novosoft.smsc.util.config.XmlConfigException;
 
 import java.io.File;
 import java.io.IOException;
@@ -70,7 +69,7 @@ class SmscConfigFile {
         instanceSettings[i] = new InstanceSettings(i, config);
       }
     } catch (XmlConfigException e) {
-      throw new AdminException(e.getMessage(), e);
+      throw new SmscException("invalid_config_file_format", e);
     }
   }
 
@@ -83,7 +82,7 @@ class SmscConfigFile {
       }
       XmlConfigHelper.saveXmlConfig(config, smscConfigFile, backupDir, fileSystem);
     } catch (XmlConfigException e) {
-      throw new AdminException(e.getMessage(), e);
+      throw new SmscException("save_error", e);
     }
   }
 

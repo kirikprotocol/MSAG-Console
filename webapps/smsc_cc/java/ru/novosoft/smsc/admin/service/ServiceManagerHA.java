@@ -35,7 +35,7 @@ class ServiceManagerHA extends ServiceManager {
   public void startService(String service) throws AdminException {
     ResourceGroup group = resGroupManager.get(service);
     if (group == null)
-      throw new AdminException("CallableService '" + service + "' does not exist");
+      throw new ServiceManagerException("service_not_found", service);
 
     group.offline();
   }
@@ -44,7 +44,7 @@ class ServiceManagerHA extends ServiceManager {
   public void stopService(String service) throws AdminException {
     ResourceGroup group = resGroupManager.get(service);
     if (group == null)
-      throw new AdminException("CallableService '" + service + "' does not exist");
+      throw new ServiceManagerException("service_not_found", service);
 
     group.offline();
   }
@@ -53,7 +53,7 @@ class ServiceManagerHA extends ServiceManager {
   public void swichService(String service, String toHost) throws AdminException {
     ResourceGroup group = resGroupManager.get(service);
     if (group == null)
-      throw new AdminException("CallableService '" + service + "' does not exist");
+      throw new ServiceManagerException("service_not_found", service);
 
     for (String node : group.listNodes()) {
       if (node.equals(toHost)) {
@@ -61,6 +61,6 @@ class ServiceManagerHA extends ServiceManager {
         return;
       }
     }
-    throw new AdminException("Unable to start callable '" + service + "' at " + toHost);
+    throw new ServiceManagerException("cant_start_service", service);
   }
 }

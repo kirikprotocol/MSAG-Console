@@ -40,9 +40,10 @@ public abstract class CallableService {
     if (proxy == null) {
       ServiceInfo info = serviceManager.getService(serviceId);
       if (info == null)
-        throw new AdminException("Service '" + serviceId + "' does not exist");
-      if (info.getOnlineHost() != null)
-        proxy = new Proxy(info.getOnlineHost(), port, iotimeout);
+        throw new CallableServiceException("service_not_found", serviceId);
+      if (info.getOnlineHost() == null)
+        throw new CallableServiceException("service_offline", serviceId);
+      proxy = new Proxy(info.getOnlineHost(), port, iotimeout);
     }
     return proxy;
   }
@@ -51,7 +52,7 @@ public abstract class CallableService {
     if (components == null) {
       final Response r = proxy.runCommand(new CommandListComponents(serviceId));
       if (Response.StatusOk != r.getStatus())
-        throw new AdminException("Error occured: " + r.getDataAsString());
+        throw new CallableServiceException("error_returned", r.getDataAsString());
       final NodeList list = r.getData().getDocumentElement().getElementsByTagName("component");
       components = new HashMap<String, Component>();
       for (int i = 0; i < list.getLength(); i++) {
@@ -77,23 +78,20 @@ public abstract class CallableService {
   public Object call(final String componentId, final String methodId, final Type returnType, final Map<String, Object> arguments) throws AdminException {
 
     Proxy proxy = getProxy();
-    if (proxy == null)
-      throw new AdminException("Service '" + serviceId + "' is offline.");
-
 
     Map<String, Component> components = getComponents(proxy);
 
     final Component component = components.get(componentId);
     if (null == component)
-      throw new AdminException("CallableService \"" + serviceId + "\" is not connected");
+      throw new CallableServiceException("service_offline", serviceId);
     final Method method = (Method) component.getMethods().get(methodId);
     if (null == method)
-      throw new AdminException("Version of callable \"" + serviceId + "\" and SMSC Administration Application is not compatible");
+      throw new CallableServiceException("incompartible_service_version", serviceId);
 
     if (method.equals(component.getMethods().get(method.getName()))) {
       final Response r = proxy.runCommand(new CommandCall(serviceId, component.getName(), method.getName(), returnType, arguments));
       if (Response.StatusOk != r.getStatus())
-        throw new AdminException("Error occured: " + r.getDataAsString());
+        throw new CallableServiceException("error_returned", r.getDataAsString());
       final Element resultElem = (Element) r.getData().getElementsByTagName("variant").item(0);
       final Type resultType = Type.getInstance(resultElem.getAttribute("type"));
       switch (resultType.getId()) {
@@ -106,7 +104,7 @@ public abstract class CallableService {
         case Type.StringListType:
           return translateStringList(XmlUtils.getNodeText(resultElem));
         default:
-          throw new AdminException("Unknown result type");
+          throw new CallableServiceException("invalid_response", serviceId);
       }
     } else {
       logger.error("Incorrect method \"" + (null == method ? "<null>" : method.getName()) + "\" signature");
@@ -125,7 +123,7 @@ public abstract class CallableService {
       } catch (Throwable e) {
       }
 
-      throw new AdminException("Incorrect method \"" + (null == method ? "<null>" : method.getName()) + "\" signature");
+      throw new CallableServiceException("incompartible_service_version", serviceId);
     }
   }
 
