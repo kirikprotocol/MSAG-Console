@@ -14,6 +14,61 @@
      NOTE: is overriden by value from cp.cnf  -->
   </section>
 
+  <section name="SS7_HD"> <!-- SS7 HD stack interaction parameters -->
+    <param name="cpMgrHosts" type="string">
+      @CPMgr.host@ : @CPMgr.port@ , @CPMgr2.host@ : @CPMgr2.port@
+    </param>  <!-- CSV list of Remote CommonParts Managers addresses
+    (in form 'host:port') -->
+    <param name="cpMgrInstId" type="int">0</param> <!-- optional: Remote
+    CommonParts Manager instanceId, [0..255], default: 0 -->
+    <param name="mpUserId" type="int">03</param>               <!--
+    CP userId of message port owner [1..20] -->
+    <param name="maxMsgNum" type="int">800</param> <!-- optional:
+    max input SS7 messages buffer size, [1..65535], default: 512 -->
+
+    <param name="dfltLayout" type="string">TCAPApplicationHD</param>
+    <!-- name of 'Layouts' subsection that describes required stack configuration.
+    NOTE: may be overriden by commandline arg -->
+
+    <section name="Layouts">
+      <section name="TCAPApplication1"> <!-- simple application that
+      uses single TCAP BE (1st instance) -->
+        <param name="instanceId" type="int">1</param>
+        <!-- optional: local application instanceId, [1..255], default: 1 -->
+        <param name="ss7Units" type="string">TCAP_BE_1</param>
+        <!-- CSV list of names of SS7 Unit(s) configuration sections  -->
+      </section>
+
+      <section name="TCAPApplicationHD"> <!-- simple application that
+      uses HD TCAP BE (distibuted by two instances) -->
+        <param name="instanceId" type="int">3</param>
+        <!-- optional: local application instanceId, [1..255], default: 1 -->
+        <param name="ss7Units" type="string">TCAP_BE_HD2</param>
+        <!-- CSV list of names of SS7 Unit(s) configuration sections  -->
+      </section>
+    </section> <!-- SS7_HD.Layouts -->
+
+    <section name="SS7Units"> <!-- configuration of known SS7 Units  -->
+      <section name="TCAP_BE_1"> <!-- single instance TCAP unit  -->
+        <param name="unitId" type="string">TCAP_ID</param>
+        <!-- id of interacted communication unit, see portss7.h -->
+        <param name="instancesList" type="string">1</param>
+        <!-- optional: CSV list of instanceIds of interacted communication
+        unit, [1..255], default: "1" --> 
+      </section>
+      <section name="TCAP_BE_HD2"> <!-- HD variant of TCAP unit
+      distributed by two instances -->
+        <param name="unitId" type="string">TCAP_ID</param>
+        <!-- id of interacted communication unit, see portss7.h -->
+        <param name="instancesList" type="string">1, 2</param>
+        <!-- optional: CSV list of instanceIds of interacted communication
+        unit, [1..255], default: "1" -->
+      </section>
+    </section> <!-- SS7_HD.SS7Units -->
+
+  </section> <!-- SS7_HD -->
+
+
   <section name="TCAPUser"> <!-- Common TCUser configuration -->
     <param name="ownSsn" type="int">146</param>
     <param name="ownAddress" type="string">@inman.ssfAddress@</param>  <!-- ISDN address -->
