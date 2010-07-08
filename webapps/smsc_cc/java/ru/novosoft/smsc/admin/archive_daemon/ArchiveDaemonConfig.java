@@ -15,7 +15,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- *
  * Класс для работы с конфигурационным файлом ArchiveDemon
  *
  * @author Aleksandr Khalitov
@@ -49,6 +48,12 @@ public class ArchiveDaemonConfig {
   private int indexatorMaxFlushSpeed;
   private Map<String, Integer> indexatorSmeAddrChunkSizes;
 
+  protected ArchiveDaemonConfig() {
+    this.configFile = null;
+    this.backupDir = null;
+    this.fileSystem = null;
+  }
+
   protected ArchiveDaemonConfig(File configFile, File backupDir, FileSystem fileSystem) throws AdminException {
     this.configFile = configFile;
     this.backupDir = backupDir;
@@ -79,39 +84,40 @@ public class ArchiveDaemonConfig {
     }
   }
 
+  protected void reset(XmlConfig c) throws XmlConfigException {
+    XmlConfigSection config = c.getSection("ArchiveDaemon");
+
+    interval = config.getInt("interval");
+
+    viewHost = config.getSection("View").getString("host");
+    viewPort = config.getSection("View").getInt("port");
+    viewTimeout = config.getSection("View").getInt("timeout");
+
+    queriesMax = config.getSection("Queries").getInt("max");
+    queriesInit = config.getSection("Queries").getInt("init");
+
+    transactionsMaxSmsCount = config.getSection("Transactions").getInt("maxSmsCount");
+    transactionsMaxTimeInterval = config.getSection("Transactions").getInt("maxTimeInterval");
+
+    locationsBaseDestination = config.getSection("Locations").getString("baseDestination");
+    locationsTextDestinations = config.getSection("Locations").getString("textDestination");
+
+    locationsSources = new HashMap<String, String>();
+    XmlConfigSection sourcesSection = config.getSection("Locations").getSection("sources");
+    for (XmlConfigParam sourceParam : sourcesSection.params())
+      locationsSources.put(sourceParam.getName(), sourceParam.getString());
+
+    indexatorMaxFlushSpeed = config.getSection("Indexator").getInt("maxFlushSpeed");
+
+    indexatorSmeAddrChunkSizes = new HashMap<String, Integer>();
+    XmlConfigSection chunkSizesSection = config.getSection("Indexator").getSection("smeAddrChunkSize");
+    for (XmlConfigParam chunkSizeParam : chunkSizesSection.params())
+      indexatorSmeAddrChunkSizes.put(chunkSizeParam.getName(), chunkSizeParam.getInt());
+  }
+
   public void reset() throws AdminException {
     try {
-      XmlConfig c = loadConfig();
-
-      XmlConfigSection config = c.getSection("ArchiveDaemon");
-
-      interval = config.getInt("interval");
-
-      viewHost = config.getSection("View").getString("host");
-      viewPort = config.getSection("View").getInt("port");
-      viewTimeout = config.getSection("View").getInt("timeout");
-
-      queriesMax = config.getSection("Queries").getInt("max");
-      queriesInit = config.getSection("Queries").getInt("init");
-
-      transactionsMaxSmsCount = config.getSection("Transactions").getInt("maxSmsCount");
-      transactionsMaxTimeInterval = config.getSection("Transactions").getInt("maxTimeInterval");
-
-      locationsBaseDestination = config.getSection("Locations").getString("baseDestination");
-      locationsTextDestinations = config.getSection("Locations").getString("textDestination");
-
-      locationsSources = new HashMap<String, String>();
-      XmlConfigSection sourcesSection = config.getSection("Locations").getSection("sources");
-      for (XmlConfigParam sourceParam : sourcesSection.params())
-        locationsSources.put(sourceParam.getName(), sourceParam.getString());
-
-      indexatorMaxFlushSpeed = config.getSection("Indexator").getInt("maxFlushSpeed");
-
-      indexatorSmeAddrChunkSizes = new HashMap<String, Integer>();
-      XmlConfigSection chunkSizesSection = config.getSection("Indexator").getSection("smeAddrChunkSize");
-      for (XmlConfigParam chunkSizeParam : chunkSizesSection.params())
-        indexatorSmeAddrChunkSizes.put(chunkSizeParam.getName(), chunkSizeParam.getInt());
-
+      reset(loadConfig());
     } catch (XmlConfigException e) {
       throw new ArchiveDaemonException("invalid_config_format", e);
     }
@@ -119,38 +125,42 @@ public class ArchiveDaemonConfig {
     changed = false;
   }
 
+  protected void save(XmlConfig c) throws XmlConfigException {
+    XmlConfigSection config = c.getSection("ArchiveDaemon");
+    config.setInt("interval", interval);
+
+    config.getSection("View").setString("host", viewHost);
+    config.getSection("View").setInt("port", viewPort);
+    config.getSection("View").setInt("timeout", viewTimeout);
+
+    config.getSection("Queries").setInt("max", queriesMax);
+    config.getSection("Queries").setInt("init", queriesInit);
+
+    config.getSection("Transactions").setInt("maxSmsCount", transactionsMaxSmsCount);
+    config.getSection("Transactions").setInt("maxTimeInterval", transactionsMaxTimeInterval);
+
+    config.getSection("Locations").setString("baseDestination", locationsBaseDestination);
+    config.getSection("Locations").setString("textDestination", locationsTextDestinations);
+
+    config.getSection("Locations").addSection("sources");
+    XmlConfigSection sourcesSection = config.getSection("Locations").getSection("sources");
+    sourcesSection.clear();
+    for (Map.Entry<String, String> location : locationsSources.entrySet())
+      sourcesSection.setString(location.getKey(), location.getValue());
+
+    config.getSection("Indexator").setInt("maxFlushSpeed", indexatorMaxFlushSpeed);
+
+    XmlConfigSection chunkSizesSection = config.getSection("Indexator").getSection("smeAddrChunkSize");
+    chunkSizesSection.clear();
+    for (Map.Entry<String, Integer> size : indexatorSmeAddrChunkSizes.entrySet())
+      chunkSizesSection.setInt(size.getKey(), size.getValue());
+  }
+
   public void save() throws AdminException {
     try {
       XmlConfig c = loadConfig();
 
-      XmlConfigSection config = c.getSection("ArchiveDaemon");
-      config.setInt("interval", interval);
-
-      config.getSection("View").setString("host", viewHost);
-      config.getSection("View").setInt("port", viewPort);
-      config.getSection("View").setInt("timeout", viewTimeout);
-
-      config.getSection("Queries").setInt("max", queriesMax);
-      config.getSection("Queries").setInt("init", queriesInit);
-
-      config.getSection("Transactions").setInt("maxSmsCount", transactionsMaxSmsCount);
-      config.getSection("Transactions").setInt("maxTimeInterval", transactionsMaxTimeInterval);
-
-      config.getSection("Locations").setString("baseDestination", locationsBaseDestination);
-      config.getSection("Locations").setString("textDestination", locationsTextDestinations);
-
-      config.getSection("Locations").addSection("sources");
-      XmlConfigSection sourcesSection = config.getSection("Locations").getSection("sources");
-      sourcesSection.clear();
-      for (Map.Entry<String, String> location : locationsSources.entrySet())
-        sourcesSection.setString(location.getKey(), location.getValue());
-
-      config.getSection("Indexator").setInt("maxFlushSpeed", indexatorMaxFlushSpeed);
-
-      XmlConfigSection chunkSizesSection = config.getSection("Indexator").getSection("smeAddrChunkSize");
-      chunkSizesSection.clear();
-      for (Map.Entry<String, Integer> size : indexatorSmeAddrChunkSizes.entrySet())
-        chunkSizesSection.setInt(size.getKey(), size.getValue());
+      save(c);
 
       XmlConfigHelper.saveXmlConfig(c, configFile, backupDir, fileSystem);
 

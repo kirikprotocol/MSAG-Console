@@ -58,13 +58,6 @@ public class AliasManagerTest {
   }
 
   @Test
-  public void test() throws IOException {
-
-
-    System.out.println(new AliasManagerException("broken_aliases_file", null).getMessage(new Locale("en")));
-  }
-
-  @Test
   public void testGetAliases() throws Exception {
     ClusterController cc = new ClusterController() {
       public File getAliasesFile() {

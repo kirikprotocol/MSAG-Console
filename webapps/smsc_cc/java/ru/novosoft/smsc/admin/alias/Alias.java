@@ -12,6 +12,12 @@ public class Alias {
 	private final Address alias;
 	private final Boolean hide;
 
+  public Alias(String address, String alias, boolean hide) {
+    this.address = new Address(address);
+    this.alias = new Address(alias);
+    this.hide = hide;
+  }
+
   public Alias(Address address, Address alias, boolean hide) {
     this.address = address;
     this.alias = alias;
@@ -28,6 +34,14 @@ public class Alias {
 
   public boolean isHide() {
     return hide;
+  }
+
+  public boolean equals(Object o) {
+    if (o instanceof Alias) {
+      Alias a = (Alias)o;
+      return a.alias.equals(alias);
+    }
+    return false;
   }
 
   @Override

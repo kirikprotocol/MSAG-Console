@@ -22,6 +22,10 @@ public class AliasManager {
   private final ClusterController cc;
   private final FileSystem fileSystem;
 
+  protected AliasManager() {
+    this(null, null);
+  }
+
   public AliasManager(ClusterController clusterController, FileSystem fileSystem) {
     this.cc = clusterController;
     this.fileSystem = fileSystem;

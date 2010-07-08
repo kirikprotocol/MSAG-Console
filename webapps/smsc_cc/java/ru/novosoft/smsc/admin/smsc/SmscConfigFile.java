@@ -56,30 +56,40 @@ class SmscConfigFile {
     }
   }
 
+  protected void load(XmlConfig config) throws XmlConfigException {
+    commonSettings = new CommonSettings(config);
+    commonSettings.load(config);
+
+    int instancesCount = config.getSection("cluster").getInt("nodesCount");
+    instanceSettings = new InstanceSettings[instancesCount];
+    for (int i = 0; i < instancesCount; i++) {
+      instanceSettings[i] = new InstanceSettings(i, config);
+    }
+  }
+
   void load() throws AdminException {
     try {
       XmlConfig config = loadConfig();
 
-      commonSettings = new CommonSettings(config);
-      commonSettings.load(config);
-
-      int instancesCount = config.getSection("cluster").getInt("nodesCount");
-      instanceSettings = new InstanceSettings[instancesCount];
-      for (int i = 0; i < instancesCount; i++) {
-        instanceSettings[i] = new InstanceSettings(i, config);
-      }
+      load(config);
     } catch (XmlConfigException e) {
       throw new SmscException("invalid_config_file_format", e);
+    }
+  }
+
+  protected void save(XmlConfig config) throws XmlConfigException {
+    commonSettings.save(config);
+    for (int i = 0; i < instanceSettings.length; i++) {
+      instanceSettings[i].save(i, config);
     }
   }
 
   void save() throws AdminException {
     try {
       XmlConfig config = loadConfig();
-      commonSettings.save(config);
-      for (int i=0; i<instanceSettings.length; i++) {
-        instanceSettings[i].save(i, config);
-      }
+
+      save(config);
+
       XmlConfigHelper.saveXmlConfig(config, smscConfigFile, backupDir, fileSystem);
     } catch (XmlConfigException e) {
       throw new SmscException("save_error", e);
@@ -109,7 +119,7 @@ class SmscConfigFile {
     return instanceSettings;
   }
 
-  public void setInstanceSettings(int instanceNumber, InstanceSettings instanceSettings) {    
+  public void setInstanceSettings(int instanceNumber, InstanceSettings instanceSettings) {
     if (instanceNumber < 0 || instanceNumber > this.instanceSettings.length - 1) {
       throw new IllegalArgumentException("Illegal instance number: " + instanceNumber + ". Must be in [0," + (this.instanceSettings.length - 1) + "]");
     }

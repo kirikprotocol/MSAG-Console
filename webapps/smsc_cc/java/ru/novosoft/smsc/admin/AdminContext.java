@@ -19,23 +19,28 @@ import java.io.File;
  */
 public class AdminContext {
 
-  private final AdminContextConfig cfg;
-  private final File appBaseDir;
-  private final File servicesDir;
+  protected File appBaseDir;
+  protected File servicesDir;
 
-  private final ServiceManager serviceManager;
-  private final FileSystem fileSystem;
-  private final SmscConfig smscConfig;
-  private final ArchiveDaemonConfig archiveDaemonConfig;
-  private final ClusterController clusterController;
-  private final AliasManager aliasManager;
+  protected ServiceManager serviceManager;
+  protected FileSystem fileSystem;
+  protected SmscConfig smscConfig;
+  protected ArchiveDaemonConfig archiveDaemonConfig;
+  protected ClusterController clusterController;
+  protected AliasManager aliasManager;
+  protected InstallationType instType;
+
+  protected AdminContext() {
+
+  }
 
   public AdminContext(File appBaseDir, File initFile) throws AdminException {
-    this.cfg = new AdminContextConfig(initFile);
+    AdminContextConfig cfg = new AdminContextConfig(initFile);
     this.appBaseDir = appBaseDir;
     this.servicesDir = new File(appBaseDir, "services");
+    this.instType = cfg.getInstallationType();
 
-    switch (cfg.getInstallationType()) {
+    switch (this.instType) {
       case SINGLE:
         serviceManager = ServiceManager.getServiceManagerForSingleInst(cfg.getSingleDaemonHost(), cfg.getSingleDaemonPort(), servicesDir);
         fileSystem = FileSystem.getFSForSingleInst();
@@ -61,6 +66,8 @@ public class AdminContext {
     clusterController = new ClusterController(serviceManager, fileSystem);
 
     aliasManager = new AliasManager(clusterController, fileSystem);
+
+
   }
 
   public FileSystem getFileSystem() {
@@ -77,5 +84,15 @@ public class AdminContext {
 
   public AliasManager getAliasManager() {
     return aliasManager;
+  }
+
+  public InstallationType getInstallationType() {
+    return instType;
+  }
+
+  /**
+   * Деинициализирует контекст.
+   */
+  public void shutdown() {
   }
 }

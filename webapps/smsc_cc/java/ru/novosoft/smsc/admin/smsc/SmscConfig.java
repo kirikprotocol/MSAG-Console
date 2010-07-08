@@ -23,7 +23,7 @@ public class SmscConfig {
   private List<SmscConfigObserver> observers = new ArrayList<SmscConfigObserver>();
 
   protected SmscConfig(File configFile, File backupDir, FileSystem fileSystem) throws AdminException {
-    this.configFile = new SmscConfigFile(configFile, backupDir, fileSystem);
+    this.configFile = createConfigFile(configFile, backupDir, fileSystem);
     this.fileSystem = fileSystem;
     reset();
   }
@@ -123,6 +123,10 @@ public class SmscConfig {
     changed = false;
   }
 
+  protected SmscConfigFile createConfigFile(File smscConfigFile, File backupDir, FileSystem fileSystem) {
+    return new SmscConfigFile(smscConfigFile, backupDir, fileSystem);
+  }
+
   /**
    * Откатывает изменения, сделанные в конфиге
    *
@@ -130,7 +134,7 @@ public class SmscConfig {
    */
   public synchronized void reset() throws AdminException {
 
-    SmscConfigFile oldConfigFile = new SmscConfigFile(configFile.getSmscConfigFile(), configFile.getBackupDir(), fileSystem);
+    SmscConfigFile oldConfigFile = createConfigFile(configFile.getSmscConfigFile(), configFile.getBackupDir(), fileSystem);
     oldConfigFile.load();
     for (SmscConfigObserver l : observers) {
       l.resetSettings(oldConfigFile.getCommonSettings(), oldConfigFile.getAllInstanceSettings());
