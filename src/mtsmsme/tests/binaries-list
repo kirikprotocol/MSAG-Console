@@ -1,1 +1,11 @@
-mtsmsme/tests/testrunner testrunner -L/usr/local/cppunit/lib -lcppunit -L$(SMSC_BUILDDIR)/bin -llogger -zallextract -lmtsmsme-tests -lmtsmsme-comp-tests -lsms -lmtsmsme-processor -lmtsmsme-comp -lmtsmsme-codec-mapmsdatatypes -lmtsmsme-processor-asn1rt -lmtsmsme-codec-mapextensiondatatypes -lmtsmsme-codec-mapcommondatatypes -lmtsmsme-codec-mapbscode -lmtsmsme-codec-maptscode -lmtsmsme-codec-tcap -lmtsmsme-codec-ros -lmtsmsme-codec-mapchdatatypes -lmtsmsme-codec-mapsscode -lmtsmsme-codec-mapssdatatypes -lmtsmsme-codec-mapsmdatatypes -lmtsmsme-codec-mapsmdatatypesv1 -lmtsmsme-codec-maperdatatypes
+mtsmsme/tests/testrunner testrunner \
+    -zallextract \
+    -lmtsmsme-tests -lmtsmsme-comp-tests \
+    -lmtsmsme-processor \
+    -lmtsmsme-comp -lmtsmsme-codec-mapsmdatatypes -lmtsmsme-codec-mapsmdatatypesv1 \
+    -lmtsmsme-codec-mapchdatatypes -lmtsmsme-codec-mapmsdatatypes -lmtsmsme-codec-maperdatatypes \
+    -lmtsmsme-codec-mapcommondatatypes -lmtsmsme-codec-mapssdatatypes -lmtsmsme-codec-maptscode \
+    -lmtsmsme-codec-mapbscode -lmtsmsme-codec-mapsscode -lmtsmsme-codec-mapextensiondatatypes \
+    -lmtsmsme-codec-tcap -lmtsmsme-codec-ros -lmtsmsme-processor-asn1rt \
+    -L$(SMSC_BUILDDIR)/bin -llogger -lsms \
+    -L/usr/local/cppunit/lib -lcppunit
