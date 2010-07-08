@@ -22,19 +22,10 @@ public class SmscConfig {
 
   private List<SmscConfigObserver> observers = new ArrayList<SmscConfigObserver>();
 
-  protected SmscConfig(File configFile, File backupDir, FileSystem fileSystem) throws AdminException {
+  public SmscConfig(File configFile, File backupDir, FileSystem fileSystem) throws AdminException {
     this.configFile = createConfigFile(configFile, backupDir, fileSystem);
     this.fileSystem = fileSystem;
     reset();
-  }
-
-  /**
-   * @param smscBaseDir директория с дистрибутивом СМСЦ
-   * @param fileSystem экземпляр FileSystem
-   * @throws AdminException ошибка при чтении конфига
-   */
-  public SmscConfig(File smscBaseDir, FileSystem fileSystem) throws AdminException {
-    this(new File(smscBaseDir, "conf" + File.separator + "config.xml"), new File(smscBaseDir, "conf" + File.separator + "backup"), fileSystem);
   }
 
   /**

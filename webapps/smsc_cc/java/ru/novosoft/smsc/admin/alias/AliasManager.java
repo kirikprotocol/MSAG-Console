@@ -21,12 +21,14 @@ public class AliasManager {
   private final ReadWriteLock rwlock = new ReentrantReadWriteLock();
   private final ClusterController cc;
   private final FileSystem fileSystem;
+  private final File aliasesFile;
 
   protected AliasManager() {
-    this(null, null);
+    this(null, null, null);
   }
 
-  public AliasManager(ClusterController clusterController, FileSystem fileSystem) {
+  public AliasManager(File aliasesFile, ClusterController clusterController, FileSystem fileSystem) {
+    this.aliasesFile = aliasesFile;
     this.cc = clusterController;
     this.fileSystem = fileSystem;
   }
@@ -72,7 +74,7 @@ public class AliasManager {
     // todo may be lock aliases.bin file???
     try {
       rwlock.readLock().lock();
-      return new AliasSetImpl(cc.getAliasesFile());
+      return new AliasSetImpl(aliasesFile);
     } catch (AdminException e) {
       rwlock.readLock().unlock();
       throw e;

@@ -263,6 +263,16 @@ public class XmlConfigParam implements Cloneable{
     type = Type.STRING;
   }
 
+  /**
+   * Set int list value to parameter
+   * @param values new value
+   * @param delimiter values delimiter
+   */
+  public void setIntList(Collection<Integer> values, String delimiter) {    
+    this.value = Functions.collectionToString(values, delimiter);
+    type = Type.STRING;
+  }
+
   public void setAttribute(String attrName, String value) {
     this.attributes.setProperty(attrName, value);
   }

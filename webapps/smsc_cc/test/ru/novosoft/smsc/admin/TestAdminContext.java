@@ -1,10 +1,8 @@
 package ru.novosoft.smsc.admin;
 
-import ru.novosoft.smsc.admin.alias.AliasManager;
 import ru.novosoft.smsc.admin.alias.TestAliasManager;
-import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemonConfig;
 import ru.novosoft.smsc.admin.archive_daemon.TestArchiveDaemonConfig;
-import ru.novosoft.smsc.admin.smsc.SmscConfig;
+import ru.novosoft.smsc.admin.reschedule.TestRescheduleManager;
 import ru.novosoft.smsc.admin.smsc.TestSmscConfig;
 
 import java.io.File;
@@ -23,23 +21,10 @@ public class TestAdminContext extends AdminContext {
     smscConfig = new TestSmscConfig();
     archiveDaemonConfig = new TestArchiveDaemonConfig();
     aliasManager = new TestAliasManager();
+    rescheduleManager = new TestRescheduleManager();
   }
 
-  public SmscConfig getSmscConfig() {
-    return smscConfig;
-  }
 
-  public ArchiveDaemonConfig getArchiveDaemonConfig() {
-    return archiveDaemonConfig;
-  }
-
-  public AliasManager getAliasManager() {
-    return aliasManager;
-  }
-
-  public InstallationType getInstallationType() {
-    return instType;
-  }
 
 
 }

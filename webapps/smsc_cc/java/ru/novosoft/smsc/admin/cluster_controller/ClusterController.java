@@ -69,8 +69,4 @@ public class ClusterController {
    * @return путь к файлу с алиасами
    * @throws AdminException если произошла ошибка взаимодействия с СС
    */
-  public File getAliasesFile() throws AdminException {
-    ServiceInfo si = getInfo();
-    return new File(si.getBaseDir(), "conf" + File.separator + "aliases.bin");
-  }
 }

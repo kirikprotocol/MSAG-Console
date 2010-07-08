@@ -65,7 +65,7 @@ public class AliasManagerTest {
       }
     };
 
-    AliasManager manager = new AliasManager(cc, FileSystem.getFSForSingleInst());
+    AliasManager manager = new AliasManager(aliasesFile, cc, FileSystem.getFSForSingleInst());
 
     AliasSet set = null;
     try {

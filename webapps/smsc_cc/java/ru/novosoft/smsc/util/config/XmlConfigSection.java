@@ -595,6 +595,19 @@ public class XmlConfigSection {
     return this;
   }
 
+  /**
+   * Set int list value to param. If param does not exists, create it
+   *
+   * @param name      param name
+   * @param values    list of int's
+   * @param delimiter delimiter delimiter between ints in param value
+   * @return this
+   */
+  public XmlConfigSection setIntList(String name, Collection<Integer> values, String delimiter) {
+    getOrCreateParam(name).setIntList(values, delimiter);
+    return this;
+  }
+
   private boolean compareWith(XmlConfigSection s) {
     for (XmlConfigParam p : params()) {
       if (!s.containsParam(p.getName()))

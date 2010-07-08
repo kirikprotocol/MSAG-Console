@@ -5,6 +5,7 @@ import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemonConfig;
 import ru.novosoft.smsc.admin.archive_daemon.ArchiveDemon;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
+import ru.novosoft.smsc.admin.reschedule.RescheduleManager;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.admin.service.ServiceManager;
 import ru.novosoft.smsc.admin.smsc.SmscConfig;
@@ -28,6 +29,7 @@ public class AdminContext {
   protected ArchiveDaemonConfig archiveDaemonConfig;
   protected ClusterController clusterController;
   protected AliasManager aliasManager;
+  protected RescheduleManager rescheduleManager;
   protected InstallationType instType;
 
   protected AdminContext() {
@@ -58,14 +60,20 @@ public class AdminContext {
     if (smscServiceInfo == null)
       throw new AdminContextException("service_not_found", "SMSC1");
 
-    smscConfig = new SmscConfig(smscServiceInfo.getBaseDir(), fileSystem);
+    File smscConfigDir = new File(smscServiceInfo.getBaseDir(), "conf");
+    if (!smscConfigDir.exists())
+      throw new AdminContextException("dir_not_exists", smscConfigDir.getAbsolutePath());
+
+    File smscConfigBackupDir = new File(smscConfigDir, "backup");
+
+    smscConfig = new SmscConfig(new File(smscConfigDir, "config.xml"), smscConfigBackupDir, fileSystem);
 
     ServiceInfo archiveDaemonInfo = serviceManager.getService(ArchiveDemon.SERVICE_ID);
     archiveDaemonConfig = (archiveDaemonInfo == null) ? null : new ArchiveDaemonConfig(archiveDaemonInfo.getBaseDir(), fileSystem);
 
     clusterController = new ClusterController(serviceManager, fileSystem);
 
-    aliasManager = new AliasManager(clusterController, fileSystem);
+    aliasManager = new AliasManager(new File(smscConfigDir, "alias.bin"), clusterController, fileSystem);
 
 
   }
@@ -84,6 +92,10 @@ public class AdminContext {
 
   public AliasManager getAliasManager() {
     return aliasManager;
+  }
+
+  public RescheduleManager getRescheduleManager() {
+    return rescheduleManager;
   }
 
   public InstallationType getInstallationType() {
