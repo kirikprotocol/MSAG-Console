@@ -1,6 +1,10 @@
 History in reverse order
 ----------------------------------------------------
 
+2010-07-09 17:40 bukind
+  feature: tasks are (optionally) placed into subdirs of storeLocation,
+  the patch is returned back.
+
 ----------------------------------------------------
 infosme-build-20100709-1 16:30 bukind (v1,v2)
 
