@@ -1,18 +1,16 @@
 package ru.novosoft.smsc.admin.filesystem;
 
-import junit.framework.AssertionFailedError;
-import org.junit.Test;
-import org.junit.Before;
 import org.junit.After;
-
-import static org.junit.Assert.*;
-
+import org.junit.Before;
+import org.junit.Test;
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.util.FileUtils;
+import testutils.TestUtils;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+
+import static org.junit.Assert.*;
 
 /**
  * @author Artem Snopkov
@@ -24,21 +22,16 @@ public class FileSystemHSTest {
 
   @Before
   public void before() {
-    do {
-      base = new File(System.currentTimeMillis() + "");
-      mirror = new File(base.getAbsolutePath() + ".mirror");
-    } while (base.exists() || mirror.exists());
-
-    if (!base.mkdirs() || !mirror.mkdirs())
-      throw new AssertionFailedError("Unable to create base or mirror dirs");
+    base = TestUtils.createRandomDir(".base");
+    mirror = TestUtils.createRandomDir(".mirror");
 
     fs = new FileSystemHS(base, mirror);
   }
 
   @After
   public void after() {
-    FileUtils.recursiveDeleteFolder(base);
-    FileUtils.recursiveDeleteFolder(mirror);
+    TestUtils.recursiveDeleteFolder(base);
+    TestUtils.recursiveDeleteFolder(mirror);
   }
 
   private void createRandomFile(File file) throws AdminException, IOException {

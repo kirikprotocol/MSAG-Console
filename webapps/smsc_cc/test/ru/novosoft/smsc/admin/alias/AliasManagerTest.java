@@ -1,19 +1,17 @@
 package ru.novosoft.smsc.admin.alias;
 
-import junit.framework.AssertionFailedError;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
 import ru.novosoft.smsc.util.Address;
+import testutils.TestUtils;
 
-import java.io.*;
-import java.util.Locale;
-import java.util.Properties;
-import java.util.PropertyResourceBundle;
-import java.util.ResourceBundle;
+import java.io.File;
+import java.io.IOException;
+
+import static org.junit.Assert.*;
 
 /**
  * @author Artem Snopkov
@@ -24,31 +22,7 @@ public class AliasManagerTest {
 
   @BeforeClass
   public static void beforeClass() throws IOException {
-
-    do {
-      aliasesFile = new File(System.currentTimeMillis() + ".bin");
-    } while (aliasesFile.exists());
-
-    InputStream is = null;
-    OutputStream os = null;
-    try {
-      is = new BufferedInputStream(AliasManagerTest.class.getResourceAsStream("aliases.bin"));
-      os = new BufferedOutputStream(new FileOutputStream(aliasesFile));
-
-      int b;
-      while ((b = is.read()) >= 0)
-        os.write(b);
-    } catch (EOFException e) {
-    } catch (Exception e) {
-      e.printStackTrace();
-      throw new AssertionFailedError(e.getMessage());
-    } finally {
-      if (is != null)
-        is.close();
-      if (os != null)
-        os.close();
-    }
-
+    aliasesFile = TestUtils.exportResourceToRandomFile(AliasManagerTest.class.getResourceAsStream("aliases.bin"), ".aliases");        
   }
 
   @AfterClass

@@ -1,54 +1,33 @@
 package ru.novosoft.smsc.admin.reschedule;
 
-import junit.framework.AssertionFailedError;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
-import ru.novosoft.smsc.util.FileUtils;
 import ru.novosoft.smsc.util.config.XmlConfig;
 import ru.novosoft.smsc.util.config.XmlConfigException;
+import testutils.TestUtils;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
+
+import static org.junit.Assert.*;
 
 /**
  * @author Artem Snopkov
  */
 public class RescheduleManagerTest {
 
-   private static File configFile, backupDir;
+  private static File configFile, backupDir;
 
   @BeforeClass
   public static void beforeClass() throws IOException, AdminException {
-
-    do {
-      configFile = new File(System.currentTimeMillis() + ".xml");
-      backupDir = new File(System.currentTimeMillis() + ".backup");
-    } while (configFile.exists());
-
-    InputStream is = null;
-    OutputStream os = null;
-    try {
-      is = new BufferedInputStream(RescheduleManagerTest.class.getResourceAsStream("schedule.xml"));
-      os = new BufferedOutputStream(new FileOutputStream(configFile));
-
-      int b;
-      while ((b = is.read()) >= 0)
-        os.write(b);
-    } catch (IOException e) {
-      throw new AssertionFailedError(e.getMessage());
-    } finally {
-      if (is != null)
-        is.close();
-      if (os != null)
-        os.close();
-    }
+    configFile = TestUtils.exportResourceToRandomFile(RescheduleManagerTest.class.getResourceAsStream("schedule.xml"), ".reschedule");
+    backupDir = TestUtils.createRandomDir(".reschedule.backup");
   }
 
   @AfterClass
@@ -56,7 +35,7 @@ public class RescheduleManagerTest {
     if (configFile != null)
       configFile.delete();
     if (backupDir != null)
-      FileUtils.recursiveDeleteFolder(backupDir);
+      TestUtils.recursiveDeleteFolder(backupDir);
   }
 
   @Test
@@ -73,12 +52,12 @@ public class RescheduleManagerTest {
     Iterator<Reschedule> iter = reschedules.iterator();
 
     assertEquals(new Reschedule("30s,11m,15m", 8), iter.next());
-    assertEquals(new Reschedule("30s,1m,5m,15m,30m,1h,6h,12h,1d", 1028,255,20,1027,88,100,69), iter.next());
+    assertEquals(new Reschedule("30s,1m,5m,15m,30m,1h,6h,12h,1d", 1028, 255, 20, 1027, 88, 100, 69), iter.next());
   }
 
   @Test
   public void saveTest() throws AdminException, XmlConfigException {
-     // Загружаем первоначальный конфиг
+    // Загружаем первоначальный конфиг
     XmlConfig cfg = new XmlConfig();
     cfg.load(configFile);
 

@@ -1,18 +1,17 @@
 package ru.novosoft.smsc.admin.filesystem;
 
-import org.junit.Test;
-import junit.framework.AssertionFailedError;
-import org.junit.Test;
-import org.junit.Before;
 import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.util.FileUtils;
+import testutils.TestUtils;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Artem Snopkov
@@ -24,22 +23,13 @@ public class FileSystemSingleHATest {
 
   @Before
   public void before() {
-    File f;
-    do {
-      f = new File(System.currentTimeMillis() + "");
-    } while (f.exists());
-
-    if (!f.mkdirs())
-      throw new AssertionFailedError("Unable to init FS");
-
-    baseDir = f;
-
+    baseDir = TestUtils.createRandomDir("");
     fs = new FileSystemSingleHA();
   }
 
   @After
   public void after() {
-    FileUtils.recursiveDeleteFolder(baseDir);
+    TestUtils.recursiveDeleteFolder(baseDir);
   }
 
   private void createRandomFile(File file) throws AdminException, IOException {

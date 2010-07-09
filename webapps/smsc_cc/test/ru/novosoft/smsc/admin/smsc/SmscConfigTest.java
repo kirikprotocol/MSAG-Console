@@ -1,16 +1,16 @@
 package ru.novosoft.smsc.admin.smsc;
 
-import junit.framework.AssertionFailedError;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
-import ru.novosoft.smsc.util.FileUtils;
 import ru.novosoft.smsc.util.config.XmlConfig;
 import ru.novosoft.smsc.util.config.XmlConfigException;
+import testutils.TestUtils;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 
 import static org.junit.Assert.*;
 
@@ -23,30 +23,8 @@ public class SmscConfigTest {
 
   @BeforeClass
   public static void beforeClass() throws IOException, AdminException {
-
-    do {
-      configFile = new File(System.currentTimeMillis() + ".xml");
-      backupDir = new File(System.currentTimeMillis() + ".backup");
-    } while (configFile.exists());
-
-    InputStream is = null;
-    OutputStream os = null;
-    try {
-      is = new BufferedInputStream(SmscConfigTest.class.getResourceAsStream("config.xml"));
-      os = new BufferedOutputStream(new FileOutputStream(configFile));
-
-      int b;
-      while ((b = is.read()) >= 0)
-        os.write(b);
-    } catch (IOException e) {
-      throw new AssertionFailedError(e.getMessage());
-    } finally {
-      if (is != null)
-        is.close();
-      if (os != null)
-        os.close();
-    }
-
+    configFile = TestUtils.exportResourceToRandomFile(SmscConfigTest.class.getResourceAsStream("config.xml"), ".smsc");
+    backupDir = TestUtils.createRandomDir(".smscbackup");
   }
 
   @AfterClass
@@ -54,7 +32,7 @@ public class SmscConfigTest {
     if (configFile != null)
       configFile.delete();
     if (backupDir != null)
-      FileUtils.recursiveDeleteFolder(backupDir);
+      TestUtils.recursiveDeleteFolder(backupDir);
   }
 
   @Test
