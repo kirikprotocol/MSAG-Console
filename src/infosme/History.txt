@@ -1,6 +1,11 @@
 History in reverse order
 ----------------------------------------------------
 
+2010-07-09 15:40 bukind
+  feature: tasks are (optionally) placed into subdirs of storeLocation
+  the decision is made according to presence of parameter
+  'entriesPerDirectory' in the main config.
+
 ----------------------------------------------------
 infosme-build-20100709 14:30 bukind (v1,v2)
 
