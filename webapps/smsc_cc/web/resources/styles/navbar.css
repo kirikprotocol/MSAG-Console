@@ -1,0 +1,64 @@
+/**************************************** navbar **********************************/
+table.navbar
+{
+	background-color: #F8F6EE;
+	border-top: 1px solid #161E49;
+}
+
+table.navbar td
+{
+/*	border-right: 1px solid #161E49;*/
+	white-space: nowrap;
+	text-align: center;
+	padding-left: 3px;
+	padding-right: 3px;
+}
+
+
+table.navbar td.first,
+table.navbar td.first a,
+table.navbar td.prev,
+table.navbar td.prev a,
+table.navbar td.page,
+table.navbar td.current,
+table.navbar td.next,
+table.navbar td.next a,
+table.navbar td.last,
+table.navbar td.last a,
+table.navbar td.pageSize,
+table.navbar td.pageSize a
+{
+	width: 12px;
+}
+
+table.navbar td.page,
+table.navbar td.current
+{
+	cursor: pointer;
+}
+table.navbar td.current
+{
+	background-color: #3A5867;
+	color: #F2E275;
+}
+
+table.navbar td.total
+{
+	color: #1A8999;
+	text-align: right;
+}
+
+table.navbar td.filter
+{
+	width: 60px;
+	padding-left: 0px;
+	padding-right: 0px;
+}
+
+table.navbar td.first a,
+table.navbar td.prev a,
+table.navbar td.next a,
+table.navbar td.last a
+{
+	text-decoration: none;
+}

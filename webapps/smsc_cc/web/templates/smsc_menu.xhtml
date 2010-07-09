@@ -1,0 +1,40 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets">
+
+<ui:composition>
+
+  <script type="text/javascript" language="javascript" src="/js/menu/jsdomenu.js"></script>
+  <script type="text/javascript" language="javascript" src="/js/menu/jsdomenubar.js"></script>
+
+  <SCRIPT type="text/javascript">
+    function createjsDOMenu() {
+    menuBar = new jsDOMenuBar();
+    <ui:repeat value="#{topMenu.menuBarItems}" var="barItem">
+      menu_0=new jsDOMenu("<tr:outputText escape="false"  value="#{barItem.width}"/>");
+      <ui:repeat value="#{barItem.items}" var="menuItem">
+        menu_0.addMenuItem(new menuItem("<tr:outputText escape="false" value="#{menuItem.name}"/>", "", "<tr:outputText value="#{menuItem.url}"/>"));
+      </ui:repeat>
+      menuBar.addMenuBarItem(new menuBarItem("<tr:outputText escape="false"  value="#{barItem.name}"/>", menu_0));
+    </ui:repeat>
+    }
+  </SCRIPT>
+
+    <h:form>
+      <table width="100%" id="MAIN_MENU_TABLE" border="0" cellspacing="0" cellpadding="0" class="main_menu"><tr>
+        <td background="/images/smsc_14.jpg" style="white-space:nowrap;">
+          &#160;  
+        </td>
+        <td background="/images/smsc_14.jpg" width="100%">&#160;</td>
+        <td background="/images/smsc_14.jpg" style="white-space:nowrap">
+          <a ID="MENU0_LOGOUT" href="logout.jsp">Завершить сеанс "a"</a>
+        </td>
+
+        <td background="/images/smsc_14.jpg" width="52"></td></tr>
+      </table>
+    </h:form>
+</ui:composition>
+</html>
