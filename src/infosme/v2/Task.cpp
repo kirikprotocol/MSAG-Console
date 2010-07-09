@@ -566,7 +566,14 @@ bool Task::prefetchMessage( time_t now, int regionId )
 
     smsc_log_debug(logger,"task %u/'%s' taking from store for region=%d",info.uid,info.name.c_str(),regionId);
     assert(!prefetched_);
-    while ( store.getNextMessage(prefetch_) ) {
+    while ( true ) {
+
+        if ( info.messagesCacheSize > 0 &&
+             messagesInCache_ > info.messagesCacheSize ) {
+            break;
+        }
+
+        if ( !store.getNextMessage(prefetch_) ) break;
 
         prefetched_ = true;
 

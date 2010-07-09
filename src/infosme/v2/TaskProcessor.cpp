@@ -58,7 +58,6 @@ mappingRollTime(0),
 mappingMaxChanges(0),
 dsStatConnection(0),
 statistics(0), protocolId(0),
-entriesPerDir_(0),
 unrespondedMessagesMax(1),
 maxMessageChunkSize_(0)
 // unrespondedMessagesSleep(10)
@@ -72,30 +71,13 @@ void TaskProcessor::init( ConfigView* config )
     smsc_log_info(log_, "init ...");
     MutexGuard mg(startLock);
 
-    storeLocation = ConfString(config->getString("storeLocation")).str();
-    if ( storeLocation.empty() ) {
-        storeLocation = "./";
-    } else {
-        if ( storeLocation.back() != '/' ) {
-            storeLocation+='/';
-        }
-    }
-
-    // a new parameter 'entriesPerDirectory' defining the location of tasks:
-    // 1. if it is present and is not 0, then task number N is located in the subdir
-    //    store/chunkXXXXX/N/, where XXXXX = N / entriesPerDirectory;
-    // 2. otherwise the task is located in the subdir
-    //    store/N/
-    try {
-        int entriesPerDir = config->getInt("entriesPerDirectory");
-        if ( entriesPerDir > 0 ) {
-            entriesPerDir_ = unsigned(entriesPerDir);
-            smsc_log_info(log_,"NOTE: maximum entries per directory in storage is %u",
-                          entriesPerDir_);
-        }
-        else entriesPerDir_ = 0;
-    } catch {
-        entriesPerDir_ = 0;
+    storeLocation=ConfString(config->getString("storeLocation")).str();
+    if(storeLocation.length())
+    {
+      if(*storeLocation.rbegin()!='/')
+      {
+        storeLocation+='/';
+      }
     }
 
     address = ConfString(config->getString("Address")).str();
@@ -181,58 +163,28 @@ void TaskProcessor::init( ConfigView* config )
     smsc_log_info(log_, "Loading tasks ...");
     std::auto_ptr< ConfigView > taskConfig;
     std::auto_ptr< std::set< std::string> > taskNames;
-    if ( entriesPerDir_ == 0 ) {
-        // old-style reading names from the main config
-        try {
-            taskConfig.reset(config->getSubConfig("Tasks"));
-            taskNames.reset( taskConfig->getShortSectionNames() );
-        } catch ( ConfigException& ) {
-            smsc_log_warn(log_,"problem reading section 'Tasks'");
-        }
+    try {
+        taskConfig.reset(config->getSubConfig("Tasks"));
+        taskNames.reset( taskConfig->getShortSectionNames() );
+    } catch ( ConfigException& ) {
+        smsc_log_warn(log_,"problem reading section 'Tasks'");
     }
     if ( !taskNames.get() ) { taskNames.reset(new std::set<std::string>()); }
 
     // adding tasks that are in storelocation
-    std::vector< std::string > topEntries;
-    if ( entriesPerDir_ == 0 ) {
-        topEntries.push_back("");
-    } else {
-        smsc::core::buffers::File::ReadDir( storeLocation.c_str(),
-                                            topEntries );
-        std::vector< std::string > actualEntries;
-        actualEntries.reserve( topEntries.size() );
-        for ( std::vector< std::string >::const_iterator i = topEntries.begin();
-              i != topEntries.end();
-              ++i ) {
-            unsigned round;
-            if ( sscanf(i->c_str(),"chunk%10u",&round) > 0 ) {
-                actualEntries.push_back(*i);
-            }
-        }
-        actualEntries.swap(topEntries);
-    }
-
-    for ( std::vector< std::string >::const_iterator k = topEntries.begin();
-          k != topEntries.end();
-          ++k ) {
-
-        std::string actualLocation = storeLocation + *k;
-
-        std::vector< std::string > entries;
-        entries.reserve(200);
-        smsc::core::buffers::File::ReadDir( actualLocation.c_str(),
-                                            entries );
-        for ( std::vector< std::string >::const_iterator i = entries.begin();
-              i != entries.end();
-              ++i ) {
-            if ( atoi(i->c_str()) != 0 ) {
-                if ( taskNames->insert(*i).second ) {
-                    smsc_log_debug(log_,"adding task name '%s' to the list",i->c_str());
-                }
+    std::vector< std::string > entries;
+    entries.reserve(200);
+    smsc::core::buffers::File::ReadDir( storeLocation.c_str(),
+                                        entries );
+    for ( std::vector< std::string >::const_iterator i = entries.begin();
+          i != entries.end();
+          ++i ) {
+        if ( atoi(i->c_str()) != 0 ) {
+            if ( taskNames->insert(*i).second ) {
+                smsc_log_debug(log_,"adding task name '%s' to the list",i->c_str());
             }
         }
     }
-        
     // finally read all tasks
     for ( std::set< std::string >::const_iterator i = taskNames->begin();
           i != taskNames->end(); ++i ) {
@@ -595,19 +547,11 @@ void TaskProcessor::initTask( uint32_t id, ConfigView* taskConfig )
     char taskId[30];
     sprintf(taskId,"%u",id);
 
-    char prefix[30];
-    if ( entriesPerDir_ ) {
-        const unsigned round = (id / entriesPerDir_) * entriesPerDir_;
-        sprintf(prefix,"chunk%010u/",round);
-    } else {
-        prefix[0] = '\0';
-    }
-
     MutexGuard mg(tasksLock);
 
     std::auto_ptr< Config > separateConfig;
     std::auto_ptr< ConfigView > separateView;
-    const std::string location = storeLocation + prefix + taskId;
+    const std::string location = storeLocation + taskId;
     if ( smsc::core::buffers::File::Exists(location.c_str()) ) {
         const std::string fname = location + "/config.xml";
         if ( smsc::core::buffers::File::Exists(fname.c_str()) ) {
@@ -619,9 +563,6 @@ void TaskProcessor::initTask( uint32_t id, ConfigView* taskConfig )
     }
     if ( ! separateView.get() ) {
         // not loaded, using default config
-        if ( entriesPerDir_ ) {
-            throw ConfigException("config is not found in %s",location.c_str());
-        }
         if ( !taskConfig ) {
             // not passed in, reading from Manager
             try {

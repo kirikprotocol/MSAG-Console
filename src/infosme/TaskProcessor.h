@@ -184,7 +184,6 @@ private:
     StatisticsManager*  statistics;
 
     int     protocolId;
-    unsigned entriesPerDir_;
     std::string svcType;
     std::string address;
 
