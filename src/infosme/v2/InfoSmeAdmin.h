@@ -53,6 +53,8 @@ struct TaskProcessorAdapter
         
     // virtual bool hasTask(uint32_t taskId) = 0;
     virtual TaskGuard getTask(uint32_t taskId, bool remove = false) = 0;
+
+    /// awake processor and check task activity
     virtual void awakeSignal() = 0;
     
     virtual ~TaskProcessorAdapter() {}

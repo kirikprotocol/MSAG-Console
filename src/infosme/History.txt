@@ -4,6 +4,9 @@ History in reverse order
 ----------------------------------------------------
 infosme-build-20100709-1 14:30 bukind (v2)
 
+2010-07-09 16:40 bukind
+  feature: task processor is awaken up when receipt is received
+
 2010-07-09 16:15 bukind
   previous patch is rolled back!
   bugfix: limit on the size of in-memory cache is now used

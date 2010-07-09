@@ -733,6 +733,7 @@ void SmscConnector::processResponse( const ResponseData& rd, bool internal )
     }
 
     TaskMsgId tmIds;
+    bool needNotify = false;
     {
         TaskMsgId* tmIdsPtr = 0;
         MutexGuard snGuard(taskIdsBySeqNumMonitor);
@@ -746,8 +747,17 @@ void SmscConnector::processResponse( const ResponseData& rd, bool internal )
             return;
         }
         tmIds = *tmIdsPtr;
+        if ( taskIdsBySeqNum.Count() > processor_.getUnrespondedMessagesMax() ) {
+            needNotify = true;
+        }
         taskIdsBySeqNum.Delete(rd.seqNum);
         taskIdsBySeqNumMonitor.notifyAll();
+    }
+
+    // new receipt received, awake
+    if (needNotify) {
+        // this hack is necessary for transaction mode
+        processor_.awakeSignal();
     }
 
     try
