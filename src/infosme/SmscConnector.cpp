@@ -657,9 +657,10 @@ bool SmscConnector::send( Task* task, Message& message,
       
         if (info.useUssdPush) {
             try {
-                sms.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,smsc::smpp::UssdServiceOpValue::USSN_REQUEST);
+                sms.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,
+                                   smsc::sms::USSD_USSN_REQ_LAST);
             } catch (...) {
-                smsc_log_error(log_,"ussdpush: cannot set USSN_REQ");
+                smsc_log_error(log_,"ussdpush: cannot set USSN_REQ_LAST");
                 break;
             }
         }

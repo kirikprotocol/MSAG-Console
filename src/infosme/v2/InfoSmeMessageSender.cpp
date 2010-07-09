@@ -362,6 +362,14 @@ void InfoSmeMessageSender::createRegionSender( const region::Region* region )
 }
 
 
+void InfoSmeMessageSender::scoredObjToString( std::string& s, ScoredObjType& c )
+{
+    char buf[20];
+    sprintf(buf,"reg=%u",c.getId());
+    s.append(buf);
+}
+
+
 unsigned InfoSmeMessageSender::scoredObjIsReady( unsigned deltaTime, ScoredObjType& c )
 {
     const unsigned ret = c.isReady( deltaTime );

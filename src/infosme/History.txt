@@ -2,6 +2,12 @@ History in reverse order
 ----------------------------------------------------
 
 ----------------------------------------------------
+infosme-build-20100709 14:30 bukind (v1,v2)
+
+2010-07-09 14:25 bukind
+  bugfix/feature: ussdpush now uses USSN_REQ_LAST instead of USSN_REQ
+
+----------------------------------------------------
 infosme-build-20100602 12:30 bukind (v1,v2)
 
 2010-06-02 12:30 bukind
