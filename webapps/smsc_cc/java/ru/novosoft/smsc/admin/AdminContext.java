@@ -5,6 +5,7 @@ import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemonConfig;
 import ru.novosoft.smsc.admin.archive_daemon.ArchiveDemon;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
+import ru.novosoft.smsc.admin.fraud.FraudManager;
 import ru.novosoft.smsc.admin.reschedule.RescheduleManager;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.admin.service.ServiceManager;
@@ -30,6 +31,7 @@ public class AdminContext {
   protected ClusterController clusterController;
   protected AliasManager aliasManager;
   protected RescheduleManager rescheduleManager;
+  protected FraudManager fraudManager;
   protected InstallationType instType;
 
   protected AdminContext() {
@@ -75,7 +77,9 @@ public class AdminContext {
 
     aliasManager = new AliasManager(new File(smscConfigDir, "alias.bin"), clusterController, fileSystem);
 
+    rescheduleManager = new RescheduleManager(new File(smscConfigDir, "schedule.xml"), smscConfigBackupDir, clusterController, fileSystem);
 
+    fraudManager = new FraudManager(new File(smscConfigDir, "fraud.xml"), smscConfigBackupDir, clusterController, fileSystem);
   }
 
   public FileSystem getFileSystem() {
@@ -96,6 +100,10 @@ public class AdminContext {
 
   public RescheduleManager getRescheduleManager() {
     return rescheduleManager;
+  }
+
+  public FraudManager getFraudManager() {
+    return fraudManager;
   }
 
   public InstallationType getInstallationType() {

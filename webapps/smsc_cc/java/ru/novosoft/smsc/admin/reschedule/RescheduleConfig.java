@@ -2,7 +2,7 @@ package ru.novosoft.smsc.admin.reschedule;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
-import ru.novosoft.smsc.admin.util.XmlConfigHelper;
+import ru.novosoft.smsc.admin.util.ConfigHelper;
 import ru.novosoft.smsc.util.config.XmlConfig;
 import ru.novosoft.smsc.util.config.XmlConfigException;
 import ru.novosoft.smsc.util.config.XmlConfigParam;
@@ -120,7 +120,7 @@ class RescheduleConfig {
 
       save(config);
 
-      XmlConfigHelper.saveXmlConfig(config, rescheduleFile, backupDir, fileSystem);
+      ConfigHelper.saveXmlConfig(config, rescheduleFile, backupDir, fileSystem);
 
     } catch (XmlConfigException e) {
       throw new RescheduleException("config_file_save_error", e);

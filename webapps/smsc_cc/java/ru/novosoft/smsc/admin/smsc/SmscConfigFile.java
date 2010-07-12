@@ -2,7 +2,7 @@ package ru.novosoft.smsc.admin.smsc;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
-import ru.novosoft.smsc.admin.util.XmlConfigHelper;
+import ru.novosoft.smsc.admin.util.ConfigHelper;
 import ru.novosoft.smsc.util.config.XmlConfig;
 import ru.novosoft.smsc.util.config.XmlConfigException;
 
@@ -90,7 +90,7 @@ class SmscConfigFile {
 
       save(config);
 
-      XmlConfigHelper.saveXmlConfig(config, smscConfigFile, backupDir, fileSystem);
+      ConfigHelper.saveXmlConfig(config, smscConfigFile, backupDir, fileSystem);
     } catch (XmlConfigException e) {
       throw new SmscException("save_error", e);
     }

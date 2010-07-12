@@ -2,6 +2,7 @@ package ru.novosoft.smsc.admin;
 
 import ru.novosoft.smsc.admin.alias.TestAliasManager;
 import ru.novosoft.smsc.admin.archive_daemon.TestArchiveDaemonConfig;
+import ru.novosoft.smsc.admin.fraud.TestFraudManager;
 import ru.novosoft.smsc.admin.reschedule.TestRescheduleManager;
 import ru.novosoft.smsc.admin.smsc.TestSmscConfig;
 
@@ -22,6 +23,7 @@ public class TestAdminContext extends AdminContext {
     archiveDaemonConfig = new TestArchiveDaemonConfig();
     aliasManager = new TestAliasManager();
     rescheduleManager = new TestRescheduleManager();
+    fraudManager = new TestFraudManager();
   }
 
 

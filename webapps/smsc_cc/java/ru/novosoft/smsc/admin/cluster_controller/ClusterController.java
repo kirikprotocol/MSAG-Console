@@ -64,9 +64,18 @@ public class ClusterController {
   }
 
   /**
-   * Возвращает путь к файлу с алиасами
-   *
-   * @return путь к файлу с алиасами
-   * @throws AdminException если произошла ошибка взаимодействия с СС
+   * Отправляет команду на применение изменений в конфигурации политик передоставки
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
+  public void applyReschedule() throws AdminException {    
+  }
+
+  /**
+   * Отправляет команду на применение изменений в конфигурации fraud
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void applyFraud() throws AdminException {
+  }
+
+
 }

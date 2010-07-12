@@ -67,6 +67,7 @@ public class RescheduleManager {
 
   public void apply() throws AdminException {
     this.config.save();
+    cc.applyReschedule();
     changed = false;
   }
 

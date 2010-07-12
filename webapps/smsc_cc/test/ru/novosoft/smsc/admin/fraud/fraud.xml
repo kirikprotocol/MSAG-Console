@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<!DOCTYPE fraud SYSTEM "fraud.dtd">
+
+<fraud>
+  <policy>
+    <tail value="1"/>
+    <enableCheck value="true"/>
+    <enableReject value="false"/>
+  </policy>
+  <whitelist>
+    <msc value="12232321"/>
+    <msc value="9139495113"/>
+  </whitelist>
+</fraud>

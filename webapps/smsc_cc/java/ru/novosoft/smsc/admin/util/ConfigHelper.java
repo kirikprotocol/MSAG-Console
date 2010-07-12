@@ -15,7 +15,7 @@ import java.util.Date;
  * Класс, содержащие вспомогательные методы для роботы с XmlConfig
  * @author Artem Snopkov
  */
-public class XmlConfigHelper {
+public class ConfigHelper {
 
   private static final SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yy.HH.mm.ss");
 
@@ -32,11 +32,7 @@ public class XmlConfigHelper {
   public static void saveXmlConfig(XmlConfig config, File toFile, File backupDir, FileSystem fileSystem) throws AdminException, XmlConfigException {
 
     if (backupDir != null) {
-      if (!fileSystem.exists(backupDir))
-        fileSystem.mkdirs(backupDir);
-      File backupFile = new File(backupDir, "configFile.xml." + sdf.format(new Date()));
-      if (fileSystem.exists(toFile))
-        fileSystem.copy(toFile, backupFile);
+      createBackup(toFile, backupDir, fileSystem);
     }
 
     File tmp = new File(toFile.getAbsolutePath() + ".tmp");
@@ -56,5 +52,13 @@ public class XmlConfigHelper {
     fileSystem.delete(toFile);
 
     fileSystem.rename(tmp, toFile);
+  }
+
+  public static void createBackup(File file, File backupDir, FileSystem fileSystem) throws AdminException {
+    if (!fileSystem.exists(backupDir))
+        fileSystem.mkdirs(backupDir);
+      File backupFile = new File(backupDir, "configFile.xml." + sdf.format(new Date()));
+      if (fileSystem.exists(file))
+        fileSystem.copy(file, backupFile);
   }
 }

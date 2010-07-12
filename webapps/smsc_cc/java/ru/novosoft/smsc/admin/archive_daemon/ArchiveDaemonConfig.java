@@ -2,7 +2,7 @@ package ru.novosoft.smsc.admin.archive_daemon;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
-import ru.novosoft.smsc.admin.util.XmlConfigHelper;
+import ru.novosoft.smsc.admin.util.ConfigHelper;
 import ru.novosoft.smsc.util.config.XmlConfig;
 import ru.novosoft.smsc.util.config.XmlConfigException;
 import ru.novosoft.smsc.util.config.XmlConfigParam;
@@ -162,7 +162,7 @@ public class ArchiveDaemonConfig {
 
       save(c);
 
-      XmlConfigHelper.saveXmlConfig(c, configFile, backupDir, fileSystem);
+      ConfigHelper.saveXmlConfig(c, configFile, backupDir, fileSystem);
 
     } catch (XmlConfigException e) {
       throw new ArchiveDaemonException("save_config_error", e);
