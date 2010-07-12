@@ -3966,9 +3966,20 @@ USHORT_T Et96MapV2UnstructuredSSRequestConf(
     sms.setStrProperty(Tag::SMSC_SCCP_DA,dialog->destAddress.c_str());
 
     UCHAR_T udhPresent, msgClassMean, msgClass;
-    if( ussdDataCodingScheme_p && ussdString_sp ) {
+    if( ussdDataCodingScheme_p && ussdString_sp && ussdString_sp->ussdStrLen)
+    {
       //sms.setIntProperty(Tag::SMSC_ORIGINAL_DC, *ussdDataCodingScheme_p );
       unsigned dataCoding = (unsigned)convertCBSDatacoding2SMSC(*ussdDataCodingScheme_p, &udhPresent, &msgClassMean, &msgClass);
+#ifdef USSDUCS2FIX
+      if(dataCoding==smsc::smpp::DataCoding::UCS2)
+      {
+        uint8_t firstOctet=ussdString_sp->ussdStr[0];
+        if((firstOctet&0xf0)!=0)
+        {
+          dataCoding=smsc::smpp::DataCoding::SMSC7BIT;
+        }
+      }
+#endif
       if( dataCoding == smsc::smpp::DataCoding::SMSC7BIT )
       {
         MicroString ms;
@@ -3977,7 +3988,8 @@ USHORT_T Et96MapV2UnstructuredSSRequestConf(
         sms.setBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,ms.bytes,ms.len);
         sms.setIntProperty(Tag::SMPP_SM_LENGTH,ms.len);
         sms.setIntProperty(Tag::SMPP_DATA_CODING,dataCoding);
-      } else {
+      } else
+      {
         sms.setBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,(const char*)(ussdString_sp->ussdStr),ussdString_sp->ussdStrLen);
         sms.setIntProperty(Tag::SMPP_SM_LENGTH,ussdString_sp->ussdStrLen);
         sms.setIntProperty(Tag::SMPP_DATA_CODING,dataCoding);
