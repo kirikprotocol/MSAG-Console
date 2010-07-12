@@ -575,4 +575,4 @@ B3123: Jun 16, 2010
 
 B3124: Jun 22, 2010
     Inman	WEB_GT handling is fixed
-    
+    SMSC	remove directio in scheduler and configurable directio in logger
