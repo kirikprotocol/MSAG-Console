@@ -6,6 +6,7 @@ SMSC_DIR=/home/serge/smsc
 ; x64:   XTARGET="-DEIN_HD=101 -DEIN_SS7_LINKAGE_static -m64 -KPIC -xmodel=medium"
 ; TE stack includes and libs path: SS7_STACK_HOME=/opt/ss7repo/binver/dcs1001025v101  
 ; TE stack linking scheme: EIN_SS7_LINKAGE=static
+; To enable 7bit ussd text with UCS2 coding scheme use USSDUCS2FIX=YES in make_args
 B64=NO
 SMSX=YES
 MAKE_ARGS=CXX=CC DEBUG=YES TRACE=YES DISABLE_SMPP_CHECKS=YES SMSX=YES
