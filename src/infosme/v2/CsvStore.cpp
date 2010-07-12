@@ -71,6 +71,7 @@ void CsvStore::Init()
       continue;
     }
     dir->dirPath=location+*it;
+    smsc_log_debug(log,"Adding directory %s", dir->dirPath.c_str());
     dirs.insert(DirMap::value_type(dir->date,dir));
     StrVector files;
     File::ReadDir(dir->dirPath.c_str(),files,File::rdfFilesOnly|File::rdfNoDots);
@@ -102,6 +103,8 @@ void CsvStore::Init()
   {
     curFile=curDir->second->files.begin();
   }
+  smsc_log_debug(log,"storage init, dirs=%p, curDir=%p, dirs.end()=%p",
+                 &dirs, curDir.operator->(),dirs.end().operator->());
 }
 
 
@@ -436,6 +439,7 @@ uint64_t CsvStore::createMessage(time_t date,const Message& message,uint8_t stat
     dir=new Directory;
     dir->date=xdate;
     dir->dirPath=dirPath;
+    smsc_log_debug(log,"Adding directory %s",dir->dirPath.c_str());
     DirMap::iterator dit=dirs.insert(DirMap::value_type(xdate,dir)).first;
   }else
   {
@@ -453,17 +457,22 @@ uint64_t CsvStore::createMessage(time_t date,const Message& message,uint8_t stat
   if(fit==dir->files.end())
   {
       // closing all unnecessary files, i.e. those that are in future and opened
-      const time_t now = time(0);
-      struct tm tnow;
-      localtime_r(&now,&tnow);
-      const uint32_t dnow = tm2xdate(tnow);
-      const int hnow = dec2hex(tnow.tm_hour);
-      for ( DirMap::iterator di = dirs.begin(); di != dirs.end(); ++di ) {
-          if ( di->first < dnow ) continue;
+      smsc_log_debug(log,"checking if any file is in future, dirs=%p, curDir=%p, dirs.end=%p",
+                     &dirs, curDir.operator->(), dirs.end().operator->());
+      for ( DirMap::iterator di = curDir; di != dirs.end(); ++di ) {
           Directory* dd = di->second;
-          for ( FileMap::iterator fi = dd->files.begin(); fi != dd->files.end(); ++fi ) {
-              if ( (di->first > dnow || fi->first > hnow) && fi->second->isOpened() ) {
-                  // file is in future
+          FileMap::iterator fi;
+          if ( di == curDir ) {
+              smsc_log_debug(log,"di is curdir, %x",di->first);
+              if ( curFile == dd->files.end() ) continue;
+              fi = ++curFile;
+          } else {
+              smsc_log_debug(log,"di is not a curdir, %x",di->first);
+              fi = dd->files.begin();
+          }
+          for ( ; fi != dd->files.end(); ++fi ) {
+              smsc_log_debug(log,"checking file %s",fi->second->fullPath().c_str());
+              if ( fi->second->isOpened() ) {
                   smsc_log_info(log,"closing %s as it is in future",fi->second->fullPath().c_str());
                   fi->second->Close(false);
               }
@@ -486,6 +495,7 @@ uint64_t CsvStore::createMessage(time_t date,const Message& message,uint8_t stat
   {
     curDir=dirs.find(xdate);//always succeed, see above
     curFile=fit;
+    smsc_log_debug(log,"changing curdir/curfile to be: %x/%x",curDir->first,curFile->first);
   }
 
   removeCanClose(*fptr);
