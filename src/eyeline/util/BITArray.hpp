@@ -31,7 +31,7 @@ template <
 >
 class BITArrayExtension_T {
 protected:
-  const _SizeTypeArg _orgBits;  //number of max bits in original array
+  _SizeTypeArg  _orgBits;  //number of max bits in original array
   _SizeTypeArg  _heapBufSz;     //size of heap buffer allocated
   _SizeTypeArg  _numBits;       //number of initialized/assigned bits
   uint8_t *     _buf;           //pointer to data buffer (either heap or stack)
@@ -169,38 +169,53 @@ protected:
     }
   }
 
+  //NOTE: it's a responsibility of a successor copying constructor
+  //to properly copy referenced (original) buffer if necessary
+  BITArrayExtension_T(const BITArrayExtension_T & use_arr) //throw()
+    : _orgBits(use_arr._orgBits), _buf(0), _heapBufSz(0), _numBits(0)
+  {
+    if (use_arr._heapBufSz) {
+      append(use_arr);        //NOTE: here append() cann't fail
+    } else {                  //just a reference to original buffer
+      _buf = use_arr._buf;
+      _numBits = use_arr._numBits;
+    }
+  }
+
 public:
   typedef _SizeTypeArg  size_type;
 
   _SizeTypeArg _MAX_SIZE(void) const { return (_SizeTypeArg)(-1); }
 
-  explicit BITArrayExtension_T(_SizeTypeArg org_max_bits, uint8_t * org_buf,
-                           _SizeTypeArg org_num_bits = 0,
-                           _SizeTypeArg num_to_reserve = 0) //throw()
+  explicit BITArrayExtension_T() //throw()
+    : _orgBits(0), _buf(0), _heapBufSz(0), _numBits(0)
+  { }
+  //Constructor for array, that extends given buffer
+  BITArrayExtension_T(_SizeTypeArg org_max_bits, uint8_t * org_buf,
+                      _SizeTypeArg org_num_bits = 0) //throw()
     : _orgBits(org_max_bits), _buf(org_buf), _heapBufSz(0), _numBits(org_num_bits)
-  {
-    enlarge(num_to_reserve);
-  }
-  //
-  BITArrayExtension_T(const BITArrayExtension_T & use_arr) //throw()
-    : _orgBits(use_arr._orgBits), _buf(0), _heapBufSz(0), _numBits(0)
-  {
-    if (use_arr._heapBufSz) {
-      _buf = 0;
-      append(use_arr); //NOTE: here append() cann't fail
-    } else { //just a reference to original buffer
-      _buf = use_arr._buf;
-      _numBits = use_arr._numBits;
-    }
-  }
+  { }
   //
   ~BITArrayExtension_T()
   {
-    if (_heapBufSz)
-      delete [] _buf;
+    assign(0, 0, 0);
   }
 
   bool empty(void) const { return _numBits == 0; }
+
+  //Assigns buffer to extend
+  void assign(_SizeTypeArg org_max_bits, uint8_t * org_buf,
+              _SizeTypeArg org_num_bits = 0) //throw()
+  {
+    if (_heapBufSz) {
+      clear();
+      delete [] _buf;
+      _heapBufSz = 0;
+    }
+    _orgBits = org_max_bits; _buf = org_buf;
+    _numBits = org_num_bits;
+  }
+
 
   //Returns address of allocated array (single memory block)
   const uint8_t * getOcts(void) const { return _numBits ? _buf : 0; }
@@ -436,18 +451,20 @@ public:
   typedef typename BITArrayExtension_T<_SizeTypeArg>::size_type size_type;
 
   explicit BITArray_T(_SizeTypeArg num_bits_to_reserve = 0) //throw()
-    : BITArrayExtension_T<_SizeTypeArg>(_max_STACK_BITS, _stack.buf, 0, num_bits_to_reserve)
+    : BITArrayExtension_T<_SizeTypeArg>(_max_STACK_BITS, _stack.buf, 0)
   {
     _stack.alignedPtr = 0;
+    if (num_bits_to_reserve)
+      reserve(num_bits_to_reserve);
   }
   explicit BITArray_T(const uint8_t * use_bits, _SizeTypeArg num_bits) //throw()
-    : BITArrayExtension_T<_SizeTypeArg>(_max_STACK_BITS, _stack.buf, 0, 0)
+    : BITArrayExtension_T<_SizeTypeArg>(_max_STACK_BITS, _stack.buf, 0)
   {
     _stack.alignedPtr = 0;
     append(use_bits, num_bits); //NOTE: here append() cann't fail
   }
   BITArray_T(const BITArray_T & use_arr) //throw()
-    : BITArrayExtension_T<_SizeTypeArg>(_max_STACK_BITS, _stack.buf, 0, 0)
+    : BITArrayExtension_T<_SizeTypeArg>(_max_STACK_BITS, _stack.buf, 0)
   {
     _stack.alignedPtr = 0;
     append(use_arr); //NOTE: here append() cann't fail

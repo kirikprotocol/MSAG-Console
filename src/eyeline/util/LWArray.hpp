@@ -29,7 +29,7 @@ template <
 >
 class LWArrayExtension_T {
 protected:
-  const _SizeTypeArg _orgSz;    //number of max elements in original array
+  _SizeTypeArg  _orgSz;         //number of max elements in original array
   _TArg *       _buf;           //pointer to data elements buffer (either extension heap or original buf)
   _SizeTypeArg  _heapBufSz;     //size of heap buffer allocated
   _SizeTypeArg  _numElem;       //number of initilized/assigned elements
@@ -101,9 +101,8 @@ protected:
     : _orgSz(use_arr._orgSz), _buf(0), _heapBufSz(0), _numElem(0)
   {
     if (use_arr._heapBufSz) {
-      _buf = 0;
-      append(use_arr); //NOTE: here append() cann't fail
-    } else { //just a reference to original buffer
+      append(use_arr);        //NOTE: here append() cann't fail
+    } else {                  //just a reference to original buffer
       _buf = use_arr._buf;
       _numElem = use_arr._numElem;
     }
@@ -114,22 +113,35 @@ public:
 
   _SizeTypeArg _MAX_SIZE(void) const { return (_SizeTypeArg)(-1); }
 
+  explicit LWArrayExtension_T() //throw()
+    : _orgSz(0), _buf(0), _heapBufSz(0), _numElem(0)
+  { }
+
   //Constructor for array, that extends given buffer
-  explicit LWArrayExtension_T(_SizeTypeArg org_max_sz, _TArg * org_buf,
-                              _SizeTypeArg org_num_elem = 0,
-                              _SizeTypeArg num_to_reserve = 0) //throw()
+  LWArrayExtension_T(_SizeTypeArg org_max_sz, _TArg * org_buf,
+                     _SizeTypeArg org_num_elem = 0) //throw()
     : _orgSz(org_max_sz), _buf(org_buf), _heapBufSz(0), _numElem(org_num_elem)
-  {
-    reserve(num_to_reserve);
-  }
+  { }
   //
   ~LWArrayExtension_T()
   {
-    if (_heapBufSz)
-      delete [] (uint8_t*)_buf;
+    assign(0, 0, 0);
   }
 
   bool empty(void) const { return _numElem == 0; }
+
+  //Assigns buffer to extend
+  void assign(_SizeTypeArg org_max_sz, _TArg * org_buf,
+            _SizeTypeArg org_num_elem = 0) //throw()
+  {
+    if (_heapBufSz) {
+      clear();
+      delete [] (uint8_t*)_buf;
+      _heapBufSz = 0;
+    }
+    _orgSz = org_max_sz; _buf = org_buf;
+    _numElem = org_num_elem;
+  }
 
   //Returns number of initilized/assigned array elements
   _SizeTypeArg size(void) const { return _numElem; }
@@ -424,8 +436,8 @@ template <
 class LWArray_T : public LWArrayExtension_T<_TArg, _SizeTypeArg> {
 protected:
   union {
-    uint64_t  buf[_max_STACK_SZ * MultiplierOfSize_T<sizeof(_TArg), uint64_t>::VALUE];
-    void *    alignedPtr;
+    uint8_t  _buf[_max_STACK_SZ * sizeof(_TArg)];
+    void *   _alignedPtr;
   } _stack;
 
 public:
@@ -433,20 +445,23 @@ public:
   typedef typename LWArrayExtension_T<_TArg, _SizeTypeArg>::size_type size_type;
 
   explicit LWArray_T(_SizeTypeArg num_to_reserve = 0) //throw()
-    : LWArrayExtension_T<_TArg, _SizeTypeArg>(_max_STACK_SZ, (_TArg *)_stack.buf, 0, num_to_reserve)
+    : LWArrayExtension_T<_TArg, _SizeTypeArg>(_max_STACK_SZ, (_TArg *)_stack._buf, 0)
   {
-    _stack.alignedPtr = 0;
+    _stack._alignedPtr = 0;
+    if (num_to_reserve)
+      reserve(num_to_reserve);
   }
-  explicit LWArray_T(const _TArg * use_arr, _SizeTypeArg num_elem) //throw()
-    : LWArrayExtension_T<_TArg, _SizeTypeArg>(_max_STACK_SZ, (_TArg *)_stack.buf, 0, 0)
+  LWArray_T(const _TArg * use_arr, _SizeTypeArg num_elem) //throw()
+    : LWArrayExtension_T<_TArg, _SizeTypeArg>(_max_STACK_SZ, (_TArg *)_stack._buf, 0)
   {
-    _stack.alignedPtr = 0;
+    _stack._alignedPtr = 0;
     append(use_arr, num_elem); //NOTE: here append() cann't fail
   }
   //
   LWArray_T(const LWArray_T & use_arr) //throw()
-    : LWArrayExtension_T<_TArg, _SizeTypeArg>(_max_STACK_SZ, (_TArg *)_stack.buf, 0, 0)
+    : LWArrayExtension_T<_TArg, _SizeTypeArg>(_max_STACK_SZ, (_TArg *)_stack._buf, 0)
   {
+    _stack._alignedPtr = 0;
     append(use_arr); //NOTE: here append() cann't fail
   }
   ~LWArray_T()
