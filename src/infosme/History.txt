@@ -1,6 +1,14 @@
 History in reverse order
 ----------------------------------------------------
 
+----------------------------------------------------
+infosme-build-20100712 13:20 bukind (v1,v2)
+
+2010-07-12 13:10 bukind
+  bugfix: v2 (typo) wrong mutex locked in reloadSmscAndRegion led to dead-lock
+  feature: when a new file is created at createMessage there is a check to
+  close all future files -- it should save a lot of space on big deliveries.
+
 2010-07-09 17:40 bukind
   feature: tasks are (optionally) placed into subdirs of storeLocation,
   the patch is returned back.

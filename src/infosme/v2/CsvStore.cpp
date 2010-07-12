@@ -387,7 +387,7 @@ void CsvStore::setMsgState(uint64_t msgId, uint8_t state, Message* msg)
   //file can be closed
   if(file.readAll && file.openMessages==0)
   {
-    printf("can close\n");
+    // printf("can close\n");
     canClose(file);
   }
 }
@@ -452,6 +452,23 @@ uint64_t CsvStore::createMessage(time_t date,const Message& message,uint8_t stat
   CsvFile* fptr;
   if(fit==dir->files.end())
   {
+      // closing all unnecessary files, i.e. those that are in future and opened
+      const time_t now = time(0);
+      struct tm tnow;
+      localtime_r(&now,&tnow);
+      const uint32_t dnow = tm2xdate(tnow);
+      const int hnow = dec2hex(tnow.tm_hour);
+      for ( DirMap::iterator di = dirs.begin(); di != dirs.end(); ++di ) {
+          if ( di->first < dnow ) continue;
+          Directory* dd = di->second;
+          for ( FileMap::iterator fi = dd->files.begin(); fi != dd->files.end(); ++fi ) {
+              if ( (di->first > dnow || fi->first > hnow) && fi->second->isOpened() ) {
+                  // file is in future
+                  smsc_log_info(log,"closing %s as it is in future",fi->second->fullPath().c_str());
+                  fi->second->Close(false);
+              }
+          }
+      }
     fptr=new CsvFile(log,xdate,hour,dir);
     fptr->Open(true);
     fit=dir->files.insert(FileMap::value_type(hour,fptr)).first;

@@ -76,7 +76,7 @@ void TaskProcessor::init( ConfigView* config )
     if ( storeLocation.empty() ) {
         storeLocation = "./";
     } else {
-        if ( storeLocation.back() != '/' ) {
+        if ( *storeLocation.rbegin() != '/' ) {
             storeLocation+='/';
         }
     }
@@ -93,8 +93,10 @@ void TaskProcessor::init( ConfigView* config )
             smsc_log_info(log_,"NOTE: maximum entries per directory in storage is %u",
                           entriesPerDir_);
         }
-        else entriesPerDir_ = 0;
-    } catch {
+        else {
+            entriesPerDir_ = 0;
+        }
+    } catch (...) {
         entriesPerDir_ = 0;
     }
 
@@ -581,7 +583,7 @@ void TaskProcessor::saveFinalState( time_t now,
 void TaskProcessor::reloadSmscAndRegions()
 {
     smsc_log_info(log_,"reloadSmscAndRegions invoked");
-    MutexGuard msGuard(tasksLock);
+    MutexGuard msGuard(startLock);
     if ( !messageSender ) return;
     Manager::reinit();
     ConfigView config(Manager::getInstance(),"InfoSme");

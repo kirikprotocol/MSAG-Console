@@ -599,7 +599,7 @@ int SmscConnector::send( Task& task, Message& msg )
             const int chunkLen = processor_.getMaxMessageChunkSize();
             if (chunkLen > 0 && outLen > chunkLen ) {
                 // SMS will be splitted into nchunks chunks (estimation)
-                nchunks = (outLen-1) / chunkLen + 1;
+                nchunks = unsigned(outLen-1) / chunkLen + 1;
             }
 
             if (info.useDataSm) {

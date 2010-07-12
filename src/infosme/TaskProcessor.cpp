@@ -134,7 +134,7 @@ maxMessageChunkSize_(0)
     if ( storeLocation.empty() ) {
         storeLocation = "./";
     } else {
-        if ( storeLocation.back() != '/' ) {
+        if ( *storeLocation.rbegin() != '/' ) {
             storeLocation+='/';
         }
     }
@@ -152,7 +152,7 @@ maxMessageChunkSize_(0)
                           entriesPerDir_);
         }
         else entriesPerDir_ = 0;
-    } catch {
+    } catch (...) {
         entriesPerDir_ = 0;
     }
 
