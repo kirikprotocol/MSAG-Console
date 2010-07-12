@@ -2263,12 +2263,21 @@ StateType StateMachine::submitChargeResp(Tuple& t)
 
         bool sandf=(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0 ||
             (sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x3;
+        bool isDg=(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x1;
 
-        if(!sandf && sms->lastResult!=Status::OK)
+        if((!sandf && sms->lastResult!=Status::OK) || isDg)
         {
+          char msgIdBuf[64];
+          if(sms->lastResult!=Status::OK)
+          {
+            sprintf(msgIdBuf,"0");
+          }else
+          {
+            sprintf(msgIdBuf,"%lld",msgId);
+          }
           SmscCommand resp = SmscCommand::makeSubmitSmResp
               (
-                  "0",
+                  msgIdBuf,
                   sms->dialogId,
                   sms->lastResult,
                   sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
