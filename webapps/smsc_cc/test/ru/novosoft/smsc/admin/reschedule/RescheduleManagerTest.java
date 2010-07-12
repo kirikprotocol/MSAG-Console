@@ -12,10 +12,12 @@ import testutils.TestUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 
 import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Artem Snopkov
@@ -42,6 +44,8 @@ public class RescheduleManagerTest {
   public void loadTest() throws AdminException {
     RescheduleManager manager = new RescheduleManager(configFile, backupDir, null, FileSystem.getFSForSingleInst());
 
+    assertFalse(manager.isChanged());
+
     assertEquals(20, manager.getScheduleLimit());
     assertEquals("30s,1m,5m,15m,30m,1h,6h,12h,1d:*", manager.getDefaultReschedule());
 
@@ -62,9 +66,13 @@ public class RescheduleManagerTest {
     cfg.load(configFile);
 
     // Создаем инстанц SmscConfig
-    RescheduleManager config1 = new RescheduleManager(configFile, backupDir, new ClusterControllerImpl(), FileSystem.getFSForSingleInst());
+    ClusterControllerImpl clusterController = new ClusterControllerImpl();
+    RescheduleManager config1 = new RescheduleManager(configFile, backupDir, clusterController, FileSystem.getFSForSingleInst());
     // Сохраняем SmscConfig
     config1.apply();
+
+    assertFalse(config1.isChanged());
+    assertTrue(clusterController.applyRescheduleCalled);
 
     // Проверяем, что в директории backup появились файлы
     assertFalse(backupDir.delete()); // Не можем удалить директорию т.к. там появились файлы
@@ -78,32 +86,38 @@ public class RescheduleManagerTest {
   }
 
   @Test
-  public void isChangedTest() throws AdminException {
+  public void resetTest() throws AdminException {
     RescheduleManager config = new RescheduleManager(configFile, backupDir, new ClusterControllerImpl(), FileSystem.getFSForSingleInst());
 
     assertFalse(config.isChanged());
 
     config.setScheduleLimit(100);
+    config.setDefaultReschedule("10m,30s");
+    config.setReschedules(new ArrayList<Reschedule>());
 
     assertTrue(config.isChanged());
 
     config.reset();
 
-    assertFalse(config.isChanged());
+    assertEquals(20, config.getScheduleLimit());
+    assertEquals("30s,1m,5m,15m,30m,1h,6h,12h,1d:*", config.getDefaultReschedule());
 
-    config.setScheduleLimit(100);
+    Collection<Reschedule> reschedules = config.getReschedules();
+    assertNotNull(reschedules);
+    assertEquals(2, reschedules.size());
 
-    assertTrue(config.isChanged());
+    Iterator<Reschedule> iter = reschedules.iterator();
 
-    config.apply();
-
-    assertFalse(config.isChanged());
+    assertEquals(new Reschedule("30s,11m,15m", 8), iter.next());
+    assertEquals(new Reschedule("30s,1m,5m,15m,30m,1h,6h,12h,1d", 1028, 255, 20, 1027, 88, 100, 69), iter.next());
   }
 
   private class ClusterControllerImpl extends ClusterController {
 
-    public File getRescheduleConfig() {
-      return configFile;
+    private boolean applyRescheduleCalled;
+
+    public void applyReschedule() {
+      applyRescheduleCalled = true;
     }
 
   }

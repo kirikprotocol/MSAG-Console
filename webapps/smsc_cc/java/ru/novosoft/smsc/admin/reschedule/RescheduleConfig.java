@@ -76,7 +76,7 @@ class RescheduleConfig {
     }
   }
 
-  protected void load(XmlConfig config) throws XmlConfigException {
+  protected void load(XmlConfig config) throws XmlConfigException, AdminException {
     XmlConfigSection core = config.getSection("core");
 
     rescheduleLimit = core.getInt("reschedule_limit");

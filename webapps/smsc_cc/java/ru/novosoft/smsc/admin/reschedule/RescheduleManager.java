@@ -7,6 +7,7 @@ import ru.novosoft.smsc.admin.filesystem.FileSystem;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * @author Artem Snopkov
