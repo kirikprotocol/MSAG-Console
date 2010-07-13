@@ -77,11 +77,9 @@ extern bool convertMSISDNStringToAddress(const char* string, Address& address)
 
 class FilterManager
 {
-public:
-    FilterManager(ConfigView* config) throw(ConfigException)
-    {
-    }
-    bool isAllowed() {return true;}
+  public:
+    FilterManager(){}
+    bool isSenderAllowed(Address& sender) {return true;}
 };
 
 class AliasManager
@@ -213,14 +211,18 @@ private:
 
     SmppSession*        session;
     AliasManager&       aliaser;
+    FilterManager&      filter;
     RequestController&  controller;
     Mutex               sendLock;
 
 public:
 
     MTSMSmeRequestSender(SmppSession* _session, AliasManager& _aliaser,
-                         RequestController& _controller) : RequestSender(),
-        session(_session), aliaser(_aliaser), controller(_controller) {};
+                         FilterManager& _filter,
+                         RequestController& _controller) :
+                           RequestSender(), session(_session),
+                           aliaser(_aliaser), filter(_filter),
+                           controller(_controller) {};
 
     virtual ~MTSMSmeRequestSender() {
         MutexGuard guard(sendLock);
@@ -246,6 +248,14 @@ public:
         }
 
         const SMS* sms = &(request->sms);
+        Address oa;
+        if (!filter.isSenderAllowed(sms->originatingAddress))
+        {
+          const char* oaStr = sms->originatingAddress.toString().c_str();
+          smsc_log_error(logger, "Invalid source address '%s'", oaStr ? oaStr:"-");
+          request->setSendResult(UNDEFSUBSCRIBER);
+          return false;
+        }
         Address da;
         if (!aliaser.getAliasForAddress(sms->destinationAddress, da)) {
             const char* daStr = sms->destinationAddress.toString().c_str();
@@ -580,9 +590,10 @@ int main(void)
         ConfigView smscConfig(manager, "MTSMSme.SMSC");
         MTSMSmeConfig cfg(&smscConfig);
 
-        ConfigView filterConfig(manager, "MTSMSme.Filters");
         ConfigView aliasConfig(manager, "MTSMSme.Aliases");
         AliasManager aliaser(&aliasConfig);
+
+        FilterManager filter;
 
         RequestProcessorConfig rp_cfg(logger);
         rp_cfg.read(manager);
@@ -603,7 +614,7 @@ int main(void)
             RequestController       controller;
             MTSMSmePduListener      listener(controller);
             SmppSession             session(cfg, &listener);
-            MTSMSmeRequestSender    sender(&session, aliaser, controller);
+            MTSMSmeRequestSender    sender(&session, aliaser, filter, controller);
 
             smsc_log_info(logger, "Connecting to SMSC ... ");
             try
