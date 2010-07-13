@@ -31,14 +31,22 @@ public class TaskManager {
   private final Map tasks = new HashMap(100);
   private boolean modified = false;
   private String storeLocation;
-    private boolean ussdPushFeature; // not set from frontend (yet)
+  private boolean ussdPushFeature; // not set from frontend (yet)
+  private Integer entriesPerDirectory;
 
   public TaskManager(String configDir, Config config) throws AdminException {
 
+    try {
+      this.ussdPushFeature = config.getBool("InfoSme.ussdPushFeature");
+    } catch (Exception e) {
+      this.ussdPushFeature = false;
+    }
+
+    if (config.containsParameter("InfoSme.entriesPerDirectory"))
       try {
-          this.ussdPushFeature = config.getBool("InfoSme.ussdPushFeature");
-      } catch ( Exception e ) {
-          this.ussdPushFeature = false;
+        entriesPerDirectory = new Integer(config.getInt("InfoSme.entriesPerDirectory"));
+      } catch (Exception e) {
+        throw new AdminException(e.getMessage(), e);
       }
 
     try {
@@ -93,7 +101,7 @@ public class TaskManager {
   }
 
   private int getId() throws AdminException {
-    synchronized(idlock) {
+    synchronized (idlock) {
       try {
         id++;
         idFile.seek(idFile.length());
@@ -106,20 +114,36 @@ public class TaskManager {
   }
 
   private List loadTasks(Config config) throws IOException, ParserConfigurationException, SAXException,
-          Config.WrongParamTypeException, Config.ParamNotFoundException {
+      Config.WrongParamTypeException, Config.ParamNotFoundException {
     logger.info("Store location: '" + storeLocation + "'");
     String[] storeDirs = new File(storeLocation).list();
-    Set tasksNames =  config.getSectionChildShortSectionNames(TASKS_PREFIX);
+    Set tasksNames = config.getSectionChildShortSectionNames(TASKS_PREFIX);
 
     for (Iterator i = tasksNames.iterator(); i.hasNext();) {
       logger.info("Task from common " + i.next());
     }
 
-    for (int i = 0; i < storeDirs.length; ++i) {
-      String configLocation = storeLocation + File.separatorChar + storeDirs[i];
-      if (new File(configLocation).isDirectory() && Task.existsConfigFile(configLocation)) {
-        tasksNames.add(storeDirs[i]);
-        logger.info("Add from store dir "+ storeDirs[i]);
+    if (entriesPerDirectory == null) {
+      for (int i = 0; i < storeDirs.length; ++i) {
+        String configLocation = storeLocation + File.separatorChar + storeDirs[i];
+        if (new File(configLocation).isDirectory() && Task.existsConfigFile(configLocation)) {
+          tasksNames.add(storeDirs[i]);
+          logger.info("Add from store dir " + storeDirs[i]);
+        }
+      }
+    } else {
+      for (int i = 0; i < storeDirs.length; ++i) {
+        File volumeFile = new File(storeLocation + File.separatorChar + storeDirs[i]);
+        File[] taskDirs = volumeFile.listFiles();
+        if (taskDirs != null) {
+          for (int j = 0; j < taskDirs.length; j++) {
+            String configLocation = storeLocation + File.separator + volumeFile.getName() + File.separator + taskDirs[j].getName();
+            if (new File(configLocation).isDirectory() && Task.existsConfigFile(configLocation)) {
+              tasksNames.add(taskDirs[j].getName());
+              logger.info("Add from store dir " + storeDirs[i]);
+            }
+          }
+        }
       }
     }
 
@@ -129,25 +153,25 @@ public class TaskManager {
 
     List result = new ArrayList(100);
     for (Iterator i = tasksNames.iterator(); i.hasNext();) {
-      result.add(new Task(config, (String)i.next(), storeLocation));
+      result.add(new Task(config, (String) i.next(), storeLocation, entriesPerDirectory));
     }
     return result;
   }
 
   public synchronized Task createTask() throws AdminException {
-      Task t = new Task(storeLocation);
-      if ( ussdPushFeature ) {
-          t.setUseUssdPush(0);
-      }
-      return t;
+    Task t = new Task(storeLocation, entriesPerDirectory);
+    if (ussdPushFeature) {
+      t.setUseUssdPush(0);
+    }
+    return t;
   }
 
-    public boolean hasUssdPushFeature() {
-        return ussdPushFeature;
-    }
+  public boolean hasUssdPushFeature() {
+    return ussdPushFeature;
+  }
 
   public synchronized void addTask(Task t) throws AdminException {
-    if(t.getId() == null) {
+    if (t.getId() == null) {
       t.setId(String.valueOf(getId()));
     }
     tasks.put(t.getId(), t);
@@ -173,9 +197,9 @@ public class TaskManager {
   public synchronized boolean removeTask(String id, Config cfg) throws AdminException {
     try {
       //boolean removed = tasks.remove(id) != null;
-      Task task = (Task)tasks.remove(id);
+      Task task = (Task) tasks.remove(id);
       if (task != null) {
-         task.remove(cfg);
+        task.remove(cfg);
         //cfg.removeSection(TASKS_PREFIX + '.' + id);
         return true;
       } else {
@@ -188,23 +212,23 @@ public class TaskManager {
   }
 
   public synchronized Task getTask(String id) {
-    return (Task)tasks.get(id);
+    return (Task) tasks.get(id);
   }
 
-    public synchronized Task getTaskByName( String name ) throws AdminException {
-        for (Iterator iter = tasks.values().iterator(); iter.hasNext(); ) {
-            Task task = (Task)iter.next();
-            if ( task.getName().equals(name) ) {
-                return task;
-            }
-        }
-        throw new AdminException("task " + name + " not found");
+  public synchronized Task getTaskByName(String name) throws AdminException {
+    for (Iterator iter = tasks.values().iterator(); iter.hasNext();) {
+      Task task = (Task) iter.next();
+      if (task.getName().equals(name)) {
+        return task;
+      }
     }
+    throw new AdminException("task " + name + " not found");
+  }
 
   public synchronized List getTasks(String owner) {
     List result = new ArrayList(tasks.size());
     for (Iterator iter = tasks.values().iterator(); iter.hasNext();) {
-      Task t = (Task)iter.next();
+      Task t = (Task) iter.next();
       if (owner == null || owner.equals(t.getOwner()))
         result.add(t);
     }
@@ -218,7 +242,7 @@ public class TaskManager {
 
   public synchronized boolean containsTaskWithName(String name) {
     for (Iterator iter = tasks.values().iterator(); iter.hasNext();) {
-      if (((Task)iter.next()).getName().equals(name))
+      if (((Task) iter.next()).getName().equals(name))
         return true;
     }
     return false;
@@ -226,7 +250,7 @@ public class TaskManager {
 
   public synchronized boolean containsTaskWithName(String name, String owner) {
     for (Iterator iter = tasks.values().iterator(); iter.hasNext();) {
-      Task t = (Task)iter.next();
+      Task t = (Task) iter.next();
       if (t.getName().equals(name) && t.getOwner().equals(owner))
         return true;
     }
@@ -239,13 +263,13 @@ public class TaskManager {
 
     // Lookup new tasks
     for (Iterator iter = tasks.keySet().iterator(); iter.hasNext();) {
-      String id = (String)iter.next();
+      String id = (String) iter.next();
 
       boolean contains = false;
       Task t = null;
       for (Iterator iter1 = oldTasks.iterator(); iter1.hasNext();) {
         //Task t = (Task)iter1.next();
-        t = (Task)iter1.next();
+        t = (Task) iter1.next();
         if (t.getId().equals(id)) {
           contains = true;
           break;
@@ -261,7 +285,7 @@ public class TaskManager {
 
     // Lookup deleted tasks
     for (Iterator iter = oldTasks.iterator(); iter.hasNext();) {
-      Task t = (Task)iter.next();
+      Task t = (Task) iter.next();
       if (!containsTaskWithId(t.getId())) {
         changes.deleted(t.getId());
         changedTasks.deleted(t);
@@ -270,7 +294,7 @@ public class TaskManager {
 
     // Lookup modified tasks
     for (Iterator iter = tasks.values().iterator(); iter.hasNext();) {
-      Task t = (Task)iter.next();
+      Task t = (Task) iter.next();
       if (t.isModified() && !changes.isAdded(t.getId()) && !changes.isDeleted(t.getId())) {
         changes.modified(t.getId());
         changedTasks.modified(t);
@@ -291,7 +315,7 @@ public class TaskManager {
 
       //deleted tasks
       for (Iterator iter = changedTasks.getDeleted().iterator(); iter.hasNext();) {
-        Task t = (Task)iter.next();
+        Task t = (Task) iter.next();
         if (owner == null || (t.getOwner() != null && t.getOwner().equals(owner))) {
           t.remove(cfg);
         }
@@ -300,7 +324,7 @@ public class TaskManager {
 
       //changed tasks
       for (Iterator iter = changedTasks.getModified().iterator(); iter.hasNext();) {
-        Task t = (Task)iter.next();
+        Task t = (Task) iter.next();
         if (owner == null || (t.getOwner() != null && t.getOwner().equals(owner))) {
           t.change(cfg);
         }
@@ -309,28 +333,28 @@ public class TaskManager {
 
       //added tasks
       for (Iterator iter = changedTasks.getAdded().iterator(); iter.hasNext();) {
-        Task t = (Task)iter.next();
+        Task t = (Task) iter.next();
         if (owner == null || t.getOwner().equals(owner))
           t.storeToConfig();
         changes.modified(t.getId());
       }
 
-     /*
-      // Remove all tasks by owner
+      /*
+     // Remove all tasks by owner
 
-      for (Iterator iter = oldTasks.iterator(); iter.hasNext();) {
-        Task t = (Task)iter.next();
-        if (owner == null || (t.getOwner() != null && t.getOwner().equals(owner)))
-          cfg.removeSection(TASKS_PREFIX + '.' + t.getId());
-      }
+     for (Iterator iter = oldTasks.iterator(); iter.hasNext();) {
+       Task t = (Task)iter.next();
+       if (owner == null || (t.getOwner() != null && t.getOwner().equals(owner)))
+         cfg.removeSection(TASKS_PREFIX + '.' + t.getId());
+     }
 
-      // Add new tasks
-      for (Iterator iter = tasks.values().iterator(); iter.hasNext();) {
-        Task t = (Task)iter.next();
-        if (owner == null || t.getOwner().equals(owner))
-          t.storeToConfig(cfg);
-      }
-       */
+     // Add new tasks
+     for (Iterator iter = tasks.values().iterator(); iter.hasNext();) {
+       Task t = (Task)iter.next();
+       if (owner == null || t.getOwner().equals(owner))
+         t.storeToConfig(cfg);
+     }
+      */
       return changes;
     } catch (Exception e) {
       e.printStackTrace();
@@ -341,25 +365,25 @@ public class TaskManager {
   public void setModified(boolean modified, String owner) {
     this.modified = modified;
     for (Iterator iter = tasks.values().iterator(); iter.hasNext();) {
-        Task t = (Task)iter.next();
-        if (owner == null || t.getOwner().equals(owner))
-          t.setModified(false);
-      }
+      Task t = (Task) iter.next();
+      if (owner == null || t.getOwner().equals(owner))
+        t.setModified(false);
+    }
   }
 
   public synchronized void resetTasks(String owner, Config cfg) throws AdminException {
     try {
       // Remove tasks by owner
       for (Iterator iter = tasks.entrySet().iterator(); iter.hasNext();) {
-        Map.Entry e = (Map.Entry)iter.next();
-        Task t = (Task)e.getValue();
+        Map.Entry e = (Map.Entry) iter.next();
+        Task t = (Task) e.getValue();
         if (owner == null || t.getOwner().equals(owner))
           iter.remove();
       }
       // Load old tasks
       List oldTasks = loadTasks(cfg);
       for (Iterator iter = oldTasks.iterator(); iter.hasNext();) {
-        Task t = (Task)iter.next();
+        Task t = (Task) iter.next();
         if (owner == null || owner.equals(t.getOwner()))
           addTask(t);
       }
@@ -374,7 +398,7 @@ public class TaskManager {
     if (modified)
       return true;
     for (Iterator iter = tasks.values().iterator(); iter.hasNext();) {
-      Task t = (Task)iter.next();
+      Task t = (Task) iter.next();
       if ((owner == null || owner.equals(t.getOwner())) && t.isModified())
         return true;
     }

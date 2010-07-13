@@ -96,7 +96,7 @@ public class InfoSmeContext implements SMEAppContext
     if( msgStoreDir.length() > 0 && msgStoreDir.charAt(0) != '/' )
       msgStoreDir = serviceFolder + '/' + msgStoreDir;
 
-    this.exportStatManager = new InfoSmeExportStatManager(new MessageDataSource(msgStoreDir));
+    this.exportStatManager = new InfoSmeExportStatManager(new MessageDataSource(infoSmeConfig));
     this.exportStatManager.start();
 
     if(infoSmeConfig.isSiebelTMStarted()) {

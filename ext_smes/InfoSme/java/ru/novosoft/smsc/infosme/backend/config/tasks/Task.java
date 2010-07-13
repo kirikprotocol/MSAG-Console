@@ -91,20 +91,22 @@ public class Task extends Observable
   private boolean secretFlash;
   private String secretMessage="";
 
-  private String storeLocation;
+  private final String storeLocation;
+  private final Integer volumeSize;
 
-  Task(String storeLocation) {
+  Task(String storeLocation, Integer volumeSize) {
     activeWeekDaysSet = new HashSet(WEEK_DAYS.length);
     Functions.addValuesToCollection(this.activeWeekDaysSet, DEFAULT_ACTIVE_WEEK_DAYS, ",", true);
     if (delivery)
       provider = Task.INFOSME_EXT_PROVIDER;
     this.modified = true;
     this.storeLocation = storeLocation;
+    this.volumeSize = volumeSize;
   }
 
-  Task(Config config, String id, String storeLocation) throws Config.WrongParamTypeException, Config.ParamNotFoundException,
+  Task(Config config, String id, String storeLocation, Integer volumeSize) throws Config.WrongParamTypeException, Config.ParamNotFoundException,
       IOException, ParserConfigurationException, SAXException {
-    this(storeLocation);
+    this(storeLocation, volumeSize);
     setId(id);
     File configFile = new File(location, CONFIG_FILE_NAME);
     if (configFile.exists()) {
@@ -118,7 +120,16 @@ public class Task extends Observable
 
   void setId(String id) {
     this.id = id;
-    location = storeLocation + File.separatorChar + id;
+
+    if (volumeSize == null)
+      location = storeLocation + File.separatorChar + id;
+    else {
+      String volumeNumberStr = String.valueOf(Long.parseLong(id) / volumeSize.intValue() * volumeSize.intValue());
+      String chunkTemplate = "chunk0000000000";
+      volumeNumberStr = chunkTemplate.substring(0, chunkTemplate.length() - volumeNumberStr.length()) + volumeNumberStr;
+      location = storeLocation + File.separator + volumeNumberStr + File.separator + id;
+    }
+
   }
 
   private void loadConfig(Config config, String prefix) throws Config.ParamNotFoundException, Config.WrongParamTypeException {
@@ -250,7 +261,7 @@ public class Task extends Observable
     String prefix = "";
     File configDir = new File(location);
     if (!configDir.exists()) {
-      configDir.mkdir();
+      configDir.mkdirs();
     }
     File configFile = this.createConfigFile();
     Config config = new Config(configFile);
@@ -311,6 +322,9 @@ public class Task extends Observable
     if(id == null) {
       throw new IllegalArgumentException("Id is not set");
     }
+    File locationFile = new File(location);
+    if (!locationFile.exists())
+      locationFile.mkdirs();
     File configFile = new File(location, CONFIG_FILE_NAME);
     if (configFile.exists()) {
       this.storeToConfig();
@@ -829,8 +843,12 @@ public class Task extends Observable
     return modified;
   }
 
+  public String getLocation() {
+    return location;
+  }
+
   public Task cloneTask() {
-    Task t = new Task(this.storeLocation);
+    Task t = new Task(this.storeLocation, this.volumeSize);
     if(this.id != null) {
       t.setId(this.id);
     }

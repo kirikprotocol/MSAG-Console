@@ -69,7 +69,7 @@ public class TaskWeeklyTableHelper extends PagedStaticTableHelper {
     String statStoreDir = ctx.getInfoSmeConfig().getStatStoreLocation();
     if (statStoreDir.length() > 0 && statStoreDir.charAt(0) != '/')
       statStoreDir = serviceFolder + '/' + statStoreDir;
-    final MessageDataSource mds = new MessageDataSource(msgStoreDir);
+    final MessageDataSource mds = new MessageDataSource(ctx.getInfoSmeConfig());
     sds = new StatisticsDataSource(statStoreDir);
 
     // Fill task activities, calculate min and max dates

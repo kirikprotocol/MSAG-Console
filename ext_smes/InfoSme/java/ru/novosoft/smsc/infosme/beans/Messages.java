@@ -70,7 +70,7 @@ public class Messages extends InfoSmeBean
       String msgStoreDir = getInfoSmeConfig().getStoreLocation();
       if( msgStoreDir.length() > 0 && msgStoreDir.charAt(0) != '/' )
         msgStoreDir = serviceFolder + '/' + msgStoreDir;
-      ds = new MessageDataSource(msgStoreDir);
+      ds = new MessageDataSource(this.getInfoSmeConfig());
       if(pageSize==0) {
         pageSize = getInfoSmeContext().getMessagesPageSize();
       }

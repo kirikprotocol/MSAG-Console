@@ -3,6 +3,8 @@ package ru.novosoft.smsc.infosme.backend.tables.messages;
 import org.apache.log4j.Category;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.infosme.backend.Message;
+import ru.novosoft.smsc.infosme.backend.config.InfoSmeConfig;
+import ru.novosoft.smsc.infosme.backend.config.tasks.TaskManager;
 import ru.novosoft.smsc.jsp.util.tables.Query;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataSource;
@@ -26,7 +28,7 @@ public class MessageDataSource extends AbstractDataSource {
   private static String DIR_DATE_FORMAT = "yyMMdd";
   private static String FILE_DATE_FORMAT = "HH";
 
-  protected final String storeDir;
+  protected final InfoSmeConfig infoSmeConfig;
 
   public static final String STATE = "state";
   public static final String DATE = "date";
@@ -37,9 +39,9 @@ public class MessageDataSource extends AbstractDataSource {
   public static final String ID = "id";
   public static final String TASK_ID = "taskId";
 
-  public MessageDataSource(String storeDir) {
+  public MessageDataSource(InfoSmeConfig infoSmeConfig) {
     super(new String[]{STATE, DATE, MSISDN, REGION, USERDATA, MESSAGE});
-    this.storeDir = storeDir;
+    this.infoSmeConfig = infoSmeConfig;
   }
 
   public void visit(MessageVisitor visitor, MessageFilter filter) {
@@ -290,7 +292,8 @@ public class MessageDataSource extends AbstractDataSource {
   }
 
   public SortedSet getTaskActivityDates(String taskId) throws ParseException {
-    File dir = new File(storeDir, taskId);
+
+    File dir = new File(infoSmeConfig.getTask(taskId).getLocation());
     TreeSet result = new TreeSet();
     if (dir.exists()) {
       final SimpleDateFormat dirNameFormat = new SimpleDateFormat(DIR_DATE_FORMAT);
@@ -318,7 +321,7 @@ public class MessageDataSource extends AbstractDataSource {
 
   public boolean isAllMessagesProcessed(String taskId) throws ParseException {
     final SimpleDateFormat dirNameFormat = new SimpleDateFormat(DIR_DATE_FORMAT);
-    File dir = new File(storeDir + File.separator + taskId);
+    File dir = new File(infoSmeConfig.getTask(taskId).getLocation());
 
     // Fetch directories
     File[] dirArr = getDirectories(dir, null, null, dirNameFormat);
@@ -366,7 +369,9 @@ public class MessageDataSource extends AbstractDataSource {
 
     List files = new LinkedList();
 
-    File dir = new File(storeDir + File.separator + taskId);
+
+
+    File dir = new File(infoSmeConfig.getTask(taskId).getLocation());
     if(dir.exists()) {
 
       final SimpleDateFormat dirNameFormat = new SimpleDateFormat(DIR_DATE_FORMAT);
