@@ -10,6 +10,7 @@ static char const ident[] = "$Id$";
 #include <util/config/ConfigView.h>
 #include <util/recoder/recode_dll.h>
 #include <util/smstext.h>
+#include "util/regexp/RegExp.hpp"
 
 #include <system/smscsignalhandlers.h>
 #include <sme/SmppBase.hpp>
