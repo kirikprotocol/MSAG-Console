@@ -77,9 +77,79 @@ extern bool convertMSISDNStringToAddress(const char* string, Address& address)
 
 class FilterManager
 {
+  private:
+    Logger* logger;
+    bool filteringMode;
+    smsc::util::regexp::RegExp allowSenderMaskRx;
+    smsc::util::regexp::RegExp denySenderMaskRx;
   public:
-    FilterManager(){}
-    bool isSenderAllowed(const Address& sender) {return true;}
+    bool setCalledMask(const char* rx) {
+      smsc::util::regexp::RegExp::InitLocale();
+      return calledMaskRx.Compile(rx)!=0;
+    }
+    FilterManager(Logger* _logger):logger(_logger),filteringMode(false){}
+    void init(Manager& manager)
+    {
+      char* sectionName = "MTSMSme.Filters";
+      if (!manager.findSection(sectionName))
+      {
+        smsc_log_warn(logger,"\'%s\' section is missed, sender filtering is turned OFF",sectionName);
+        return;
+      }
+
+      ConfigView filterConfig(manager, sectionName);
+
+      char* allowSenderStr = 0;
+      try {
+        allowSenderStr = filterConfig.getString("allowSender");
+      } catch (ConfigException& exc) {
+        smsc_log_warn(logger,"\'allowSender\' is unknown or missing");
+        return;
+      }
+
+      char* denySenderStr = 0;
+      try {
+        denySenderStr = filterConfig.getString("denySender");
+      } catch (ConfigException& exc) {
+        smsc_log_warn(logger,"\'denySender\' is unknown or missing");
+        return;
+      }
+      smsc::util::regexp::RegExp::InitLocale();
+      if (allowSenderMaskRx.Compile(allowSenderStr)==0)
+      {
+         smsc_log_warn(logger,"Failed to compile \'allowSender\' mask '%s'.",
+             allowSenderStr ? allowSenderStr:"");
+         return;
+      }
+      if (denySenderMaskRx.Compile(denySenderStr)==0)
+      {
+         smsc_log_warn(logger,"Failed to compile \'denySenderStr\' mask '%s'.",
+             denySenderStr ? denySenderStr:"");
+         return;
+      }
+      filteringMode = true;
+    }
+    bool isSenderAllowed(const Address& _sender)
+    {
+      if (filteringMode)
+      {
+        char sender[32] = {0};
+        _sender.toString(sender,sizeof(sender));
+
+        using smsc::util::regexp::SMatch;
+
+        std::vector<SMatch> ma(allowSenderMaskRx.GetBracketsCount());
+        int na=static_cast<int>(ma.size());
+        if(!allowSenderMaskRx.Match(sender,&ma[0],na))
+          return false;
+
+        std::vector<SMatch> md(denySenderMaskRx.GetBracketsCount());
+        int nd=static_cast<int>(md.size());
+        if(denySenderMaskRx.Match(sender,&md[0],nd))
+          return false;
+      }
+      return true;
+    }
 };
 
 class AliasManager
@@ -593,7 +663,8 @@ int main(void)
         ConfigView aliasConfig(manager, "MTSMSme.Aliases");
         AliasManager aliaser(&aliasConfig);
 
-        FilterManager filter;
+        FilterManager filter(logger);
+        filter.init(manager);
 
         RequestProcessorConfig rp_cfg(logger);
         rp_cfg.read(manager);
