@@ -79,7 +79,7 @@ class FilterManager
 {
   public:
     FilterManager(){}
-    bool isSenderAllowed(Address& sender) {return true;}
+    bool isSenderAllowed(const Address& sender) {return true;}
 };
 
 class AliasManager
