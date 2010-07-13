@@ -75,6 +75,15 @@ extern bool convertMSISDNStringToAddress(const char* string, Address& address)
     return true;
 }
 
+class FilterManager
+{
+public:
+    FilterManager(ConfigView* config) throw(ConfigException)
+    {
+    }
+    bool isAllowed() {return true;}
+};
+
 class AliasManager
 {
 private:
@@ -571,6 +580,7 @@ int main(void)
         ConfigView smscConfig(manager, "MTSMSme.SMSC");
         MTSMSmeConfig cfg(&smscConfig);
 
+        ConfigView filterConfig(manager, "MTSMSme.Filters");
         ConfigView aliasConfig(manager, "MTSMSme.Aliases");
         AliasManager aliaser(&aliasConfig);
 
