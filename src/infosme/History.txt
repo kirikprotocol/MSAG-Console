@@ -1,6 +1,9 @@
 History in reverse order
 ----------------------------------------------------
 
+2010-07-13 12:30 bukind
+  feature: ussdServiceOp is configurable now
+
 ----------------------------------------------------
 infosme-build-20100712 13:20 bukind (v1,v2)
 

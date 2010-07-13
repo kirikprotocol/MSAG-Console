@@ -29,7 +29,7 @@ int main()
     printf("sizeof(FixedLengthString)=%u\n",unsigned(sizeof(smsc::core::buffers::FixedLengthString<16>)));
     printf("sizeof(CsvStore::Rec)=%u\n",unsigned(sizeof(rec)));
     printf("sizeof(Message)=%u\n",unsigned(sizeof(rec.msg)));
-    printf("Please add 5 + %u + len(userData)+1 + len(message)+1\n",rec.msg.abonent.size()+1);
+    printf("Please add 5 + %u + len(userData)+1 + len(message)+1\n",unsigned(rec.msg.abonent.size()+1));
     printf("\n");
     printf("sizeof(TestMsg)=%u\n",unsigned(sizeof(TestMsg)));
     printf("sizeof(TestRec)=%u\n",unsigned(sizeof(TestRec)));

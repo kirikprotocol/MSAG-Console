@@ -358,8 +358,16 @@ void Task::init(ConfigView* config, uint32_t taskId)
     bInGeneration = false;
   } catch (...) {}
   try { info.useDataSm = config->getBool("useDataSm"); } catch (...) { info.useDataSm = false; } 
-  try { info.useUssdPush = config->getBool("useUssdPush"); }
-  catch (...) { info.useUssdPush = false; }
+    info.useUssdPush = 0;
+    try {
+        info.useUssdPush = config->getInt("ussdServiceOp");
+    } catch (...) {
+        try {
+            if ( config->getBool("useUssdPush") ) {
+                info.useUssdPush = smsc::sms::USSD_USSN_REQ_LAST;
+            }
+        } catch (...) {}
+    }
     if ( info.useUssdPush ) {
         // overriding things
         info.transactionMode = true;

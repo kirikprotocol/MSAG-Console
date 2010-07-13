@@ -587,10 +587,9 @@ int SmscConnector::send( Task& task, Message& msg )
 
             if (info.useUssdPush) {
                 try {
-                    sms.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,
-                                       smsc::sms::USSD_USSN_REQ_LAST);
+                    sms.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,info.useUssdPush);
                 } catch (...) {
-                    smsc_log_error(log_,"ussdpush: cannot set USSN_REQ_LAST");
+                    smsc_log_error(log_,"ussdpush: cannot set ussd op %u",info.useUssdPush);
                     msguard.failed(smsc::system::Status::SYSERR);
                     return 0;
                 }

@@ -63,8 +63,8 @@ namespace infosme{
       bool    retryOnFail, replaceIfPresent, trackIntegrity, transactionMode, keepHistory, saveFinalState;
       bool    bGenerationSuccess;
       bool    flash;
-      bool    useDataSm;
-      bool    useUssdPush;
+      bool     useDataSm;
+      unsigned useUssdPush;       // 0 if not used, otherwise ussdop
 
       time_t  endDate;            // full date/time
       //time_t  retryTime;          // only HH:mm:ss in seconds

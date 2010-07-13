@@ -63,7 +63,7 @@ endDate(-1), validityPeriod(-1), validityDate(-1),
 activePeriodStart(-1), activePeriodEnd(-1), activeWeekDays(0),
 dsTimeout(0), dsUncommitedInProcess(1), dsUncommitedInGeneration(1),
 messagesCacheSize(100), messagesCacheSleep(0), useDataSm(false),
-useUssdPush(false)
+useUssdPush(0)
 {}
 
 
@@ -197,8 +197,16 @@ void TaskInfo::init( ConfigView* config )
         try { bGenerationSuccess = config->getBool("messagesHaveLoaded"); }
         catch (...) { bGenerationSuccess = false; }
 
-        try { useUssdPush = config->getBool("useUssdPush"); }
-        catch (...) { useUssdPush = false; }
+        useUssdPush = 0;
+        try {
+            useUssdPush = config->getInt("ussdServiceOp");
+        } catch (...) {
+            try {
+                if ( config->getBool("useUssdPush") ) {
+                    useUssdPush = smsc::sms::USSD_USSN_REQ_LAST;
+                }
+            } catch (...) {}
+        }
         if ( useUssdPush ) {
             // overriding things
             transactionMode = true;

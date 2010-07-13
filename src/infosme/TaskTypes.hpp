@@ -56,8 +56,8 @@ namespace infosme{
 
       bool    retryOnFail, replaceIfPresent, trackIntegrity, transactionMode, keepHistory, saveFinalState;
       bool    flash;
-      bool    useDataSm;
-      bool    useUssdPush;
+      bool     useDataSm;
+      unsigned useUssdPush;       // 0 if not used, otherwise the id of ussdop
 
       time_t  endDate;            // full date/time
       //time_t  retryTime;          // only HH:mm:ss in seconds
@@ -85,7 +85,7 @@ namespace infosme{
             trackIntegrity(false), transactionMode(false), keepHistory(false),
             saveFinalState(false),
             flash(false),
-            useDataSm(false), useUssdPush(false),
+            useDataSm(false), useUssdPush(0),
             endDate(-1), validityPeriod(-1), validityDate(-1),
             activePeriodStart(-1), activePeriodEnd(-1), activeWeekDays(0),
             dsTimeout(0), dsUncommitedInProcess(1), dsUncommitedInGeneration(1),
