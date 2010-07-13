@@ -114,7 +114,7 @@ void MTFTSM::doUnidentifiedSubscriber(int result,int iid)
 {
 
   //EmptyComp err;
-  vector<unsigned char>& null;
+  vector<unsigned char> null;
   EndMsg end(logger);
   end.setTrId(rtrid);
   end.setDialog(appcntx);
