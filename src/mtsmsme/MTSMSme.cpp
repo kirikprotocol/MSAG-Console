@@ -84,10 +84,6 @@ class FilterManager
     smsc::util::regexp::RegExp allowSenderMaskRx;
     smsc::util::regexp::RegExp denySenderMaskRx;
   public:
-    bool setCalledMask(const char* rx) {
-      smsc::util::regexp::RegExp::InitLocale();
-      return calledMaskRx.Compile(rx)!=0;
-    }
     FilterManager(Logger* _logger):logger(_logger),filteringMode(false){}
     void init(Manager& manager)
     {
