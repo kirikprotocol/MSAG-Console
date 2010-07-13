@@ -27,10 +27,10 @@ fi
 # --- arguments are processed
 for d in `ls -1 "$1" | egrep '[^/][0-9][0-9]*$'` ; do
    test -d "$1/$d" || continue
-   base=`expr $d / $2`
+   base=`expr $d / $2 \* $2`
    bdir=`printf "chunk%010u" $base`
    if [ ! -d "$1/$bdir" ] ; then
-      echo mkdir "$1/$bdir"
+      mkdir "$1/$bdir"
    fi
-   echo mv "$1/$d" "$1/$bdir/"
+   mv "$1/$d" "$1/$bdir/"
 done
