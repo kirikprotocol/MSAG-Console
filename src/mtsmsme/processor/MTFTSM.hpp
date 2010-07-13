@@ -3,7 +3,6 @@
 #define __SMSC_MTSMSME_PROCESSOR_MTFTSM_HPP_
 
 #include "mtsmsme/processor/TSM.hpp"
-//#include "mtsmsme/processor/Message.hpp"
 #include "mtsmsme/processor/MTRequest.hpp"
 
 namespace smsc{namespace mtsmsme{namespace processor{
@@ -30,6 +29,7 @@ class MTFTSM: public TSM
 
   private:
     MTR req;
+    void doUnidentifiedSubscriber(int result,int iid);
 };
 
 }/*namespace processor*/}/*namespace mtsmsme*/}/*namespace smsc*/

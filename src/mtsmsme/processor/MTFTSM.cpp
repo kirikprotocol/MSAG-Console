@@ -1,10 +1,10 @@
 static char const ident[] = "$Id$";
 #include "mtsmsme/processor/util.hpp"
-#include "MTFTSM.hpp"
-#include "TCO.hpp"
-//#include "mtsmsme/processor/Message.hpp"
-#include "MtForward.hpp"
-#include "MTRequest.hpp"
+#include "mtsmsme/processor/MTFTSM.hpp"
+#include "mtsmsme/processor/TCO.hpp"
+#include "mtsmsme/processor/MtForward.hpp"
+#include "mtsmsme/processor/MTRequest.hpp"
+#include "mtsmsme/comp/Component.hpp"
 #include "logger/Logger.h"
 #include "sms/sms.h"
 #include <stdexcept>
@@ -12,6 +12,7 @@ static char const ident[] = "$Id$";
 namespace smsc{namespace mtsmsme{namespace processor{
 
 using namespace smsc::mtsmsme::processor::util;
+using smsc::mtsmsme::comp::EmptyComp;
 using namespace std;
 
 extern void makeSmsToRequest(MtForward* mtf,MTR* req);
@@ -45,8 +46,16 @@ static void DumpSentSms(SMS& sms,Logger* logger)
 void MTFTSM::sendResponse(int result,int iid)
 {
   //simulate MAP_NO_RESPONSE_FROM_PEER=1143
-  if ( result == 1143) tco->TSMStopped(ltrid);
-
+  if ( result == 1143)
+  {
+    tco->TSMStopped(ltrid);
+  }
+  //UNDEFSUBSCRIBER=1157
+  if ( result == 1157 )
+  {
+    doUnidentifiedSubscriber(result,iid);
+    return;
+  }
   if (st==ACTIVE)
   {
     if (req.mms)
@@ -101,7 +110,20 @@ void MTFTSM::sendResponse(int result,int iid)
     tco->TSMStopped(ltrid);
   }
 }
-
+void MTFTSM::doUnidentifiedSubscriber(int result,int iid)
+{
+  EmptyComp err;
+  EndMsg end(logger);
+  end.setTrId(rtrid);
+  end.setDialog(appcntx);
+  end.setError(iid,5 /* unidentifiedSubscriber */,err);
+  vector<unsigned char> rsp;
+  end.encode(rsp);
+  tco->SCCPsend(raddrlen,raddr,laddrlen,laddr,(uint16_t)rsp.size(),&rsp[0]);
+  smsc_log_debug(logger,"tsm otid=%s receive RESULT, END(UnidentifiedSubscriber) sent",ltrid.toString().c_str());
+  DumpSentSms(req.sms,logger);
+  tco->TSMStopped(ltrid);
+}
 void MTFTSM::BEGIN(Message& msg)
 {
   // ����� TCO->TSM, TCO ������� �� SCCP

@@ -538,6 +538,11 @@ void EndMsg::setError(int iid, uint8_t errcode, vector<unsigned char>& argument)
   comp.choice.returnError.errcode.present = Error_PR_local;
   comp.choice.returnError.errcode.choice.local = errcode;
   comp.choice.returnError.parameter = 0;
+  // TODO make this code sense
+  //if ( argument.size() != 0 )
+  //    comp.choice.returnResultLast.result = &res;
+  //  else
+  //    comp.choice.returnResultLast.result = 0;
   fillComponentList();
 }
 void EndMsg::fillComponentList()
