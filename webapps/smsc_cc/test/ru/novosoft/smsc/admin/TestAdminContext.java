@@ -6,6 +6,7 @@ import ru.novosoft.smsc.admin.fraud.TestFraudManager;
 import ru.novosoft.smsc.admin.map_limit.TestMapLimitManager;
 import ru.novosoft.smsc.admin.reschedule.TestRescheduleManager;
 import ru.novosoft.smsc.admin.smsc.TestSmscManager;
+import ru.novosoft.smsc.admin.snmp.TestSnmpManager;
 
 import java.io.File;
 
@@ -26,6 +27,7 @@ public class TestAdminContext extends AdminContext {
     rescheduleManager = new TestRescheduleManager();
     fraudManager = new TestFraudManager();
     mapLimitManager = new TestMapLimitManager();
+    snmpManager = new TestSnmpManager();
   }
 
 

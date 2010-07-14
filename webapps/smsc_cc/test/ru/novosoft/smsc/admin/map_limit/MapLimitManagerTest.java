@@ -23,7 +23,7 @@ public class MapLimitManagerTest {
   @Before
   public void before() throws IOException {
     configFile = TestUtils.exportResourceToRandomFile(MapLimitManagerTest.class.getResourceAsStream("maplimits.xml"), ".maplimits");
-    backupDir = TestUtils.createRandomDir(".fraudbackup");
+    backupDir = TestUtils.createRandomDir(".maplimitsbackup");
   }
 
   @After

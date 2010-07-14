@@ -10,6 +10,7 @@ public class TestClusterController extends ClusterController {
   public boolean applyRescheduleCalled;
   public boolean applyFraudCalled;
   public boolean applyMapLimitsCalled;
+  public boolean applySnmpCalled;
 
   public void applyReschedule() throws AdminException {
     applyRescheduleCalled = true;
@@ -23,5 +24,9 @@ public class TestClusterController extends ClusterController {
 
   public void applyMapLimits() throws AdminException {
     applyMapLimitsCalled = true;
+  }
+
+  public void applySnmp() {
+    applySnmpCalled = true;
   }
 }

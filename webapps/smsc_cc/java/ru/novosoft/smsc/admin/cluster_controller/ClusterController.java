@@ -82,6 +82,12 @@ public class ClusterController {
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
   public void applyMapLimits() throws AdminException {
+    /**
+   * Отправляет команду на применение изменений в конфиге SNMP
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  }
 
+  public void applySnmp() throws AdminException {    
   }
 }

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="WINDOWS-1251"?>
+<!DOCTYPE config SYSTEM "snmp.dtd">
+
+<config>
+  <counterInterval value="300"/>
+  <default enabled="false">
+    <counter name="other">10,20,30,40</counter>
+    <counter name="0x014">10,20,30,40</counter>
+    <counter name="0x00d">10,20,30,40</counter>
+    <counter name="failed">10,20,30,40</counter>
+    <counter name="accepted">50,40,30,20</counter>
+    <counter name="rejected">10,20,30,40</counter>
+    <counter name="delivered">50,40,30,20</counter>
+    <counter name="SDP">10,20,30,40</counter>
+    <counter name="retried">10,20,30,40</counter>
+    <counter name="0x058">10,20,30,40</counter>
+    <counter name="temperror">10,20,30,40</counter>
+    <severity event="unregister" value="warning"/>
+    <severity event="register" value="normal"/>
+  </default>
+  <object id="GLOBAL" enabled="false">
+    <counter name="accepted">0,0,0,0</counter>
+  </object>
+  <object id="MY" enabled="true">
+    <counter name="other">0,0,0,0</counter>
+    <counter name="0x014">0,0,0,0</counter>
+    <counter name="0x00d">0,0,0,0</counter>
+    <counter name="accepted">12,32,43,4</counter>
+    <counter name="failed">1,2,3,4</counter>
+    <counter name="rejected">0,0,0,0</counter>
+    <counter name="delivered">0,0,0,0</counter>
+    <counter name="SDP">0,0,0,0</counter>
+    <counter name="0x058">0,0,0,0</counter>
+    <counter name="retried">0,0,0,0</counter>
+    <counter name="temperror">0,0,0,0</counter>
+
+    <severity event="registerFailed" value="off"/>
+    <severity event="unregisterFailed" value="off"/>
+    <severity event="unregister" value="off"/>
+    <severity event="register" value="normal"/>
+  </object>
+</config>

@@ -11,6 +11,7 @@ import ru.novosoft.smsc.admin.reschedule.RescheduleManager;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.admin.service.ServiceManager;
 import ru.novosoft.smsc.admin.smsc.SmscManager;
+import ru.novosoft.smsc.admin.snmp.SnmpManager;
 
 import java.io.File;
 
@@ -33,6 +34,7 @@ public class AdminContext {
   protected RescheduleManager rescheduleManager;
   protected FraudManager fraudManager;
   protected MapLimitManager mapLimitManager;
+  protected SnmpManager snmpManager;
   protected InstallationType instType;
 
   protected AdminContext() {
@@ -85,6 +87,8 @@ public class AdminContext {
     fraudManager = new FraudManager(new File(smscConfigDir, "fraud.xml"), smscConfigBackupDir, clusterController, fileSystem);
 
     mapLimitManager = new MapLimitManager(new File(smscConfigDir, "maplimits.xml"), smscConfigBackupDir, clusterController, fileSystem);
+
+    snmpManager = new SnmpManager(new File(smscConfigDir, "snmp.xml"), smscConfigBackupDir, clusterController, fileSystem);
   }
 
   public FileSystem getFileSystem() {
@@ -113,6 +117,10 @@ public class AdminContext {
 
   public MapLimitManager getMapLimitManager() {
     return mapLimitManager;
+  }
+
+  public SnmpManager getSnmpManager() {
+    return snmpManager;
   }
 
   public InstallationType getInstallationType() {
