@@ -83,14 +83,12 @@ class FilterManager
     bool filteringMode;
     smsc::util::regexp::RegExp allowSenderMaskRx;
     smsc::util::regexp::RegExp denySenderMaskRx;
-  public:
-    FilterManager(Logger* _logger):logger(_logger),filteringMode(false){}
-    void init(Manager& manager)
+    void validate(Manager& manager)
     {
       char* sectionName = "MTSMSme.Filters";
       if (!manager.findSection(sectionName))
       {
-        smsc_log_warn(logger,"\'%s\' section is missed, sender filtering is turned OFF",sectionName);
+        smsc_log_warn(logger,"\'%s\' section is missed",sectionName);
         return;
       }
 
@@ -120,12 +118,20 @@ class FilterManager
       }
       if (denySenderMaskRx.Compile(denySenderStr)==0)
       {
-         smsc_log_warn(logger,"Failed to compile \'denySenderStr\' mask '%s'.",
+         smsc_log_warn(logger,"Failed to compile \'denySender\' mask '%s'.",
              denySenderStr ? denySenderStr:"");
          return;
       }
       filteringMode = true;
     }
+  public:
+    void init(Manager& manager)
+    {
+      validate(manager);
+      if (!filteringMode)
+        smsc_log_warn(logger,"sender filtering is turned OFF",sectionName);
+    }
+    FilterManager(Logger* _logger):logger(_logger),filteringMode(false){}
     bool isSenderAllowed(const Address& _sender)
     {
       if (filteringMode)
