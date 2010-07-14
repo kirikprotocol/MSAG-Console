@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<!DOCTYPE config SYSTEM "configuration.dtd">
+
+<config>
+
+  <section name="clevels">
+
+    <section name="level1">
+      <param name="dialogsLimit" type="int">4000</param>
+      <param name="failLowerLimit" type="int">800</param>
+      <param name="failUpperLimit" type="int">1000</param>
+      <param name="okToLower" type="int">100</param>
+    </section>
+
+    <section name="level2">
+      <param name="dialogsLimit" type="int">3000</param>
+      <param name="failLowerLimit" type="int">1800</param>
+      <param name="failUpperLimit" type="int">2000</param>
+      <param name="okToLower" type="int">100</param>
+    </section>
+
+    <section name="level3">
+      <param name="dialogsLimit" type="int">2000</param>
+      <param name="failLowerLimit" type="int">2800</param>
+      <param name="failUpperLimit" type="int">3000</param>
+      <param name="okToLower" type="int">100</param>
+    </section>
+
+    <section name="level4">
+      <param name="dialogsLimit" type="int">1500</param>
+      <param name="failLowerLimit" type="int">3800</param>
+      <param name="failUpperLimit" type="int">4000</param>
+      <param name="okToLower" type="int">100</param>
+    </section>
+
+    <section name="level5">
+      <param name="dialogsLimit" type="int">1000</param>
+      <param name="failLowerLimit" type="int">4800</param>
+      <param name="failUpperLimit" type="int">5000</param>
+      <param name="okToLower" type="int">100</param>
+    </section>
+
+    <section name="level6">
+      <param name="dialogsLimit" type="int">800</param>
+      <param name="failLowerLimit" type="int">5800</param>
+      <param name="failUpperLimit" type="int">6000</param>
+      <param name="okToLower" type="int">100</param>
+    </section>
+
+    <section name="level7">
+      <param name="dialogsLimit" type="int">600</param>
+      <param name="failLowerLimit" type="int">6800</param>
+      <param name="failUpperLimit" type="int">7000</param>
+      <param name="okToLower" type="int">100</param>
+    </section>
+
+    <section name="level8">
+      <param name="dialogsLimit" type="int">400</param>
+      <param name="failLowerLimit" type="int">7800</param>
+      <param name="failUpperLimit" type="int">8000</param>
+      <param name="okToLower" type="int">80</param>
+    </section>
+  </section>
+
+  <section name="dlglimit">
+    <param name="in" type="int">10000</param>
+    <param name="insri" type="int">10000</param>
+    <param name="niussd" type="int">500</param>
+    <param name="outsri" type="int">1000</param>
+    <param name="ussd" type="int">1000</param>
+  </section>
+
+  <section name="ussd">
+    <param name="no_sri_codes" type="string">12,15,18</param>
+  </section>
+</config>

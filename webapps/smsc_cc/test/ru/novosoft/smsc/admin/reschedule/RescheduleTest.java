@@ -16,7 +16,7 @@ public class RescheduleTest {
     // Корректное значение
     try {
       new Reschedule("10s,15m:3,16h:2,123d:*", 12);
-    } catch (AdminException e) {
+    } catch (IllegalArgumentException e) {
       assertFalse(true);
     }
 
@@ -24,21 +24,21 @@ public class RescheduleTest {
     try {
       new Reschedule("10f,15m:3,25h:6,67d:*", 12);
       assertFalse(true);
-    } catch (AdminException e) {}
+    } catch (IllegalArgumentException e) {}
 
     try {
       new Reschedule("10d:*,15m:3,25h:6,67d:*", 12);
       assertFalse(true);
-    } catch (AdminException e) {}
+    } catch (IllegalArgumentException e) {}
 
     try {
       new Reschedule("10f,15m:3,25h:6,", 12);
       assertFalse(true);
-    } catch (AdminException e) {}
+    } catch (IllegalArgumentException e) {}
 
     try {
       new Reschedule("10f,15m:3,25h:6,67d:*", 12);
       assertFalse(true);
-    } catch (AdminException e) {}
+    } catch (IllegalArgumentException e) {}
   }
 }

@@ -77,5 +77,11 @@ public class ClusterController {
   public void applyFraud() throws AdminException {
   }
 
+  /**
+   * Отправляет команду на применение изменений в Map Limits
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void applyMapLimits() throws AdminException {
 
+  }
 }

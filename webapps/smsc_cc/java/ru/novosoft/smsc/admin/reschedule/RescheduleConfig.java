@@ -1,16 +1,14 @@
 package ru.novosoft.smsc.admin.reschedule;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.filesystem.FileSystem;
-import ru.novosoft.smsc.admin.util.ConfigHelper;
+import ru.novosoft.smsc.admin.config.ManagedConfigFile;
 import ru.novosoft.smsc.util.config.XmlConfig;
 import ru.novosoft.smsc.util.config.XmlConfigException;
 import ru.novosoft.smsc.util.config.XmlConfigParam;
 import ru.novosoft.smsc.util.config.XmlConfigSection;
 
-import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -18,21 +16,11 @@ import java.util.List;
 /**
  * @author Artem Snopkov
  */
-class RescheduleConfig {
-
-  private final File rescheduleFile;
-  private final File backupDir;
-  private final FileSystem fileSystem;
+class RescheduleConfig implements ManagedConfigFile {
 
   private String defaultReschedule;
   private int rescheduleLimit;
   private Collection<Reschedule> reschedules;
-
-  RescheduleConfig(File rescheduleFile, File backupDir, FileSystem fileSystem) {
-    this.rescheduleFile = rescheduleFile;
-    this.backupDir = backupDir;
-    this.fileSystem = fileSystem;
-  }
 
   public void setRescheduleLimit(int rescheduleLimit) {
     this.rescheduleLimit = rescheduleLimit;
@@ -59,22 +47,7 @@ class RescheduleConfig {
     for (Reschedule rr : reschedules)
       r.add(new Reschedule(rr));
     this.reschedules = r;
-  }
-
-  private XmlConfig loadConfig() throws XmlConfigException, AdminException {
-    InputStream is = null;
-    try {
-      is = fileSystem.getInputStream(rescheduleFile);
-      return new XmlConfig(is);
-    } finally {
-      if (is != null) {
-        try {
-          is.close();
-        } catch (IOException e) {
-        }
-      }
-    }
-  }
+  }  
 
   protected void load(XmlConfig config) throws XmlConfigException, AdminException {
     XmlConfigSection core = config.getSection("core");
@@ -91,12 +64,10 @@ class RescheduleConfig {
     }
   }
 
-  void load() throws AdminException{
-    try {
-      load(loadConfig());
-    } catch (XmlConfigException e) {
-      throw new RescheduleException("invalid_config_file_format", e);
-    }
+  public void load(InputStream is) throws Exception {
+    XmlConfig config = new XmlConfig();
+    config.load(is);
+    load(config);
   }
 
   protected void save(XmlConfig config) throws XmlConfigException {
@@ -114,17 +85,11 @@ class RescheduleConfig {
     }
   }
 
-  void save() throws AdminException {
-    try {
-      XmlConfig config = loadConfig();
-
-      save(config);
-
-      ConfigHelper.saveXmlConfig(config, rescheduleFile, backupDir, fileSystem);
-
-    } catch (XmlConfigException e) {
-      throw new RescheduleException("config_file_save_error", e);
-    }
+  public void save(InputStream is, OutputStream os) throws Exception {
+    XmlConfig config = new XmlConfig();
+    config.load(is);
+    save(config);
+    config.save(os);
   }
 
 }

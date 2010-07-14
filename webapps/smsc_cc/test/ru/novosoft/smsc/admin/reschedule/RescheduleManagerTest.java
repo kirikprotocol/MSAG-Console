@@ -4,7 +4,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
+import ru.novosoft.smsc.admin.cluster_controller.TestClusterController;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
 import ru.novosoft.smsc.util.config.XmlConfig;
 import ru.novosoft.smsc.util.config.XmlConfigException;
@@ -66,8 +66,9 @@ public class RescheduleManagerTest {
     cfg.load(configFile);
 
     // Создаем инстанц SmscConfig
-    ClusterControllerImpl clusterController = new ClusterControllerImpl();
+    TestClusterController clusterController = new TestClusterController();
     RescheduleManager config1 = new RescheduleManager(configFile, backupDir, clusterController, FileSystem.getFSForSingleInst());
+    config1.setScheduleLimit(20);
     // Сохраняем SmscConfig
     config1.apply();
 
@@ -87,7 +88,7 @@ public class RescheduleManagerTest {
 
   @Test
   public void resetTest() throws AdminException {
-    RescheduleManager config = new RescheduleManager(configFile, backupDir, new ClusterControllerImpl(), FileSystem.getFSForSingleInst());
+    RescheduleManager config = new RescheduleManager(configFile, backupDir, new TestClusterController(), FileSystem.getFSForSingleInst());
 
     assertFalse(config.isChanged());
 
@@ -112,13 +113,33 @@ public class RescheduleManagerTest {
     assertEquals(new Reschedule("30s,1m,5m,15m,30m,1h,6h,12h,1d", 1028, 255, 20, 1027, 88, 100, 69), iter.next());
   }
 
-  private class ClusterControllerImpl extends ClusterController {
+  @Test
+  public void resetFailedTest() throws AdminException {
+    RescheduleManager config = new RescheduleManager(configFile, backupDir, new TestClusterController(), FileSystem.getFSForSingleInst());
 
-    private boolean applyRescheduleCalled;
+    assertFalse(config.isChanged());
 
-    public void applyReschedule() {
-      applyRescheduleCalled = true;
+    config.setScheduleLimit(100);
+    config.setDefaultReschedule("10m,30s");
+    config.setReschedules(new ArrayList<Reschedule>());
+
+    assertTrue(config.isChanged());
+
+    configFile.delete();
+
+    try {
+      config.reset();
+      assertTrue(false);
+    } catch (AdminException ignored) {
     }
 
+    assertTrue(config.isChanged());
+
+    assertEquals(100, config.getScheduleLimit());
+    assertEquals("10m,30s", config.getDefaultReschedule());
+
+    Collection<Reschedule> reschedules = config.getReschedules();
+    assertNotNull(reschedules);
+    assertEquals(0, reschedules.size());
   }
 }

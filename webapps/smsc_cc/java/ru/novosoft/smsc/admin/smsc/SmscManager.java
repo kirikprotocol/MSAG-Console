@@ -1,6 +1,7 @@
 package ru.novosoft.smsc.admin.smsc;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.config.ConfigFileManager;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
 
 import java.io.File;
@@ -12,20 +13,19 @@ import java.util.List;
  * @author Artem Snopkov
  */
 @SuppressWarnings({"EmptyCatchBlock"})
-public class SmscConfig {
+public class SmscManager extends ConfigFileManager<SmscConfigFile> {
 
-  private SmscConfigFile configFile;
-
-  private final FileSystem fileSystem;
-
-  private boolean changed;
 
   private List<SmscConfigObserver> observers = new ArrayList<SmscConfigObserver>();
 
-  public SmscConfig(File configFile, File backupDir, FileSystem fileSystem) throws AdminException {
-    this.configFile = createConfigFile(configFile, backupDir, fileSystem);
-    this.fileSystem = fileSystem;
+  public SmscManager(File configFile, File backupDir, FileSystem fileSystem) throws AdminException {
+    super(configFile, backupDir, fileSystem);
     reset();
+  }
+
+  @Override
+  protected SmscConfigFile newConfigFile() {
+    return new SmscConfigFile();
   }
 
   /**
@@ -35,7 +35,7 @@ public class SmscConfig {
    */
   public CommonSettings getCommonSettings()  {
     try {
-      return (CommonSettings) configFile.getCommonSettings().clone();
+      return (CommonSettings) config.getCommonSettings().clone();
     } catch (CloneNotSupportedException e) {
       return null;
     }
@@ -52,7 +52,7 @@ public class SmscConfig {
       l.setCommonSettings(settings);
     }
     try {
-      configFile.setCommonSettings((CommonSettings)settings.clone());
+      config.setCommonSettings((CommonSettings)settings.clone());
     } catch (CloneNotSupportedException e) {
     }
     changed = true;
@@ -71,7 +71,7 @@ public class SmscConfig {
       l.setInstanceSettings(instanceSettings);
     }
     try {
-      configFile.setInstanceSettings(instanceNumber, (InstanceSettings)instanceSettings.clone());
+      config.setInstanceSettings(instanceNumber, (InstanceSettings)instanceSettings.clone());
     } catch (CloneNotSupportedException e) {
     }
     changed = true;
@@ -83,7 +83,7 @@ public class SmscConfig {
    * @return количество инстанцев СМСЦ
    */
   public int getSmscInstancesCount() {
-    return configFile.getSmscInstancesCount();
+    return config.getSmscInstancesCount();
   }
 
 
@@ -95,52 +95,23 @@ public class SmscConfig {
    */
   public InstanceSettings getInstanceSettings(int instanceNumber) {
     try {
-      return (InstanceSettings) configFile.getInstanceSettings(instanceNumber).clone();
+      return (InstanceSettings) config.getInstanceSettings(instanceNumber).clone();
     } catch (CloneNotSupportedException e) {
       return null;
     }
   }
 
-  /**
-   * Сохраняет и применяет изменения, сделанные в конфиге
-   *
-   * @throws AdminException ошибка при сохранении конфига
-   */
-  public synchronized void save() throws AdminException {
-    for (SmscConfigObserver l : observers) {
-      l.applySettings(configFile.getCommonSettings(), configFile.getAllInstanceSettings());
-    }
-    configFile.save();
-    changed = false;
+
+  @Override
+  protected void beforeApply() throws AdminException {
+    for (SmscConfigObserver o : observers)
+      o.applySettings(config.getCommonSettings(), config.getAllInstanceSettings());
   }
 
-  protected SmscConfigFile createConfigFile(File smscConfigFile, File backupDir, FileSystem fileSystem) {
-    return new SmscConfigFile(smscConfigFile, backupDir, fileSystem);
-  }
-
-  /**
-   * Откатывает изменения, сделанные в конфиге
-   *
-   * @throws AdminException если откатить конфиг невозможно.
-   */
-  public synchronized void reset() throws AdminException {
-
-    SmscConfigFile oldConfigFile = createConfigFile(configFile.getSmscConfigFile(), configFile.getBackupDir(), fileSystem);
-    oldConfigFile.load();
-    for (SmscConfigObserver l : observers) {
-      l.resetSettings(oldConfigFile.getCommonSettings(), oldConfigFile.getAllInstanceSettings());
-    }
-    this.configFile = oldConfigFile;
-    changed = false;
-  }
-
-  /**
-   * Метод возвращает true, если конфиг менялся, false - иначе
-   *
-   * @return true - конфиг менялся, false - иначе
-   */
-  public boolean isChanged() {
-    return changed;
+  @Override
+  protected void beforeReset() throws AdminException {
+    for (SmscConfigObserver o : observers)
+      o.resetSettings(config.getCommonSettings(), config.getAllInstanceSettings());
   }
 
   /**

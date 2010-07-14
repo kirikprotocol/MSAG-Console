@@ -1,14 +1,11 @@
 package ru.novosoft.smsc.admin.smsc;
 
-import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.filesystem.FileSystem;
-import ru.novosoft.smsc.admin.util.ConfigHelper;
+import ru.novosoft.smsc.admin.config.ManagedConfigFile;
 import ru.novosoft.smsc.util.config.XmlConfig;
 import ru.novosoft.smsc.util.config.XmlConfigException;
 
-import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
  * Вспомогательный класс для работы (загрузки/сохранения) с config.xml СМС центра.
@@ -16,45 +13,12 @@ import java.io.InputStream;
  *
  * @author Artem Snopkov
  */
-class SmscConfigFile {
+class SmscConfigFile implements ManagedConfigFile {
 
 
   private CommonSettings commonSettings;
 
   private InstanceSettings[] instanceSettings;
-
-  private final File smscConfigFile;
-  private final File backupDir;
-  private final FileSystem fileSystem;
-
-  public SmscConfigFile(File configFile, File backupDir, FileSystem fileSystem) {
-    this.smscConfigFile = configFile;
-    this.backupDir = backupDir;
-    this.fileSystem = fileSystem;
-  }
-
-  public File getSmscConfigFile() {
-    return smscConfigFile;
-  }
-
-  public File getBackupDir() {
-    return backupDir;
-  }
-
-  private XmlConfig loadConfig() throws XmlConfigException, AdminException {
-    InputStream is = null;
-    try {
-      is = fileSystem.getInputStream(smscConfigFile);
-      return new XmlConfig(is);
-    } finally {
-      if (is != null) {
-        try {
-          is.close();
-        } catch (IOException e) {
-        }
-      }
-    }
-  }
 
   protected void load(XmlConfig config) throws XmlConfigException {
     commonSettings = new CommonSettings(config);
@@ -67,14 +31,9 @@ class SmscConfigFile {
     }
   }
 
-  void load() throws AdminException {
-    try {
-      XmlConfig config = loadConfig();
-
-      load(config);
-    } catch (XmlConfigException e) {
-      throw new SmscException("invalid_config_file_format", e);
-    }
+  public void load(InputStream is) throws Exception {
+    XmlConfig config = new XmlConfig(is);
+    load(config);
   }
 
   protected void save(XmlConfig config) throws XmlConfigException {
@@ -84,16 +43,10 @@ class SmscConfigFile {
     }
   }
 
-  void save() throws AdminException {
-    try {
-      XmlConfig config = loadConfig();
-
-      save(config);
-
-      ConfigHelper.saveXmlConfig(config, smscConfigFile, backupDir, fileSystem);
-    } catch (XmlConfigException e) {
-      throw new SmscException("save_error", e);
-    }
+  public void save(InputStream is, OutputStream os) throws Exception {
+    XmlConfig config = new XmlConfig(is);
+    save(config);
+    config.save(os);
   }
 
   CommonSettings getCommonSettings() {

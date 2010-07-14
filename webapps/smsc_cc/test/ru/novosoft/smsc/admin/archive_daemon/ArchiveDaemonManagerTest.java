@@ -17,13 +17,13 @@ import static org.junit.Assert.*;
 /**
  * @author Artem Snopkov
  */
-public class ArchiveDaemonConfigTest {
+public class ArchiveDaemonManagerTest {
 
   private static File configFile, backupDir;
 
   @BeforeClass
   public static void beforeClass() throws IOException, AdminException {
-    configFile = TestUtils.exportResourceToRandomFile(ArchiveDaemonConfigTest.class.getResourceAsStream("config.xml"), ".archivedaemon");
+    configFile = TestUtils.exportResourceToRandomFile(ArchiveDaemonManagerTest.class.getResourceAsStream("config.xml"), ".archivedaemon");
     backupDir = TestUtils.createRandomDir(".archivedaemonbackup");
   }
 
@@ -35,10 +35,7 @@ public class ArchiveDaemonConfigTest {
       TestUtils.recursiveDeleteFolder(backupDir);
   }
 
-  @Test
-  public void loadTest() throws AdminException {
-    ArchiveDaemonConfig c = new ArchiveDaemonConfig(configFile, backupDir, FileSystem.getFSForSingleInst());
-
+  private void validateConfig(ArchiveDaemonManager c) {
     assertEquals(4096000,c.getIndexatorMaxFlushSpeed());
     assertEquals(Integer.valueOf(8), c.getIndexatorSmeAddrChunkSizes().get("MAP_PROXY"));
     assertEquals(30,c.getInterval());
@@ -55,15 +52,39 @@ public class ArchiveDaemonConfigTest {
   }
 
   @Test
-  public void saveTest() throws XmlConfigException, AdminException {
+  public void loadTest() throws AdminException {
+    ArchiveDaemonManager c = new ArchiveDaemonManager(configFile, backupDir, FileSystem.getFSForSingleInst());
+    validateConfig(c);
+  }
+
+  @Test
+  public void resetTest() throws AdminException {
+    ArchiveDaemonManager c = new ArchiveDaemonManager(configFile, backupDir, FileSystem.getFSForSingleInst());
+    assertFalse(c.isChanged());
+
+    c.setInterval(21);
+    c.setQueriesMax(1);
+
+    assertTrue(c.isChanged());
+
+    c.reset();
+
+    assertFalse(c.isChanged());
+
+    validateConfig(c);    
+  }
+
+  @Test
+  public void applyTest() throws XmlConfigException, AdminException {
     // Загружаем первоначальный конфиг
     XmlConfig cfg = new XmlConfig();
     cfg.load(configFile);
 
     // Создаем инстанц SmscConfig
-    ArchiveDaemonConfig config1 = new ArchiveDaemonConfig(configFile, backupDir, FileSystem.getFSForSingleInst());
+    ArchiveDaemonManager config1 = new ArchiveDaemonManager(configFile, backupDir, FileSystem.getFSForSingleInst());
+    config1.setInterval(30);
     // Сохраняем SmscConfig
-    config1.save();
+    config1.apply();
 
     // Проверяем, что в директории backup появились файлы
     assertFalse(backupDir.delete()); // Не можем удалить директорию т.к. там появились файлы
@@ -74,20 +95,6 @@ public class ArchiveDaemonConfigTest {
 
     // Проверяем эквивалентность первоначальному конфигу.
     assertEquals(cfg, cfg1);
-  }
-
-  @Test
-  public void isChangedTest() throws AdminException {
-    ArchiveDaemonConfig config1 = new ArchiveDaemonConfig(configFile, backupDir, FileSystem.getFSForSingleInst());
-    assertFalse(config1.isChanged());
-    config1.setInterval(config1.getInterval());
-    assertTrue(config1.isChanged());
-    config1.save();
-    assertFalse(config1.isChanged());
-    config1.setInterval(config1.getInterval());
-    assertTrue(config1.isChanged());
-    config1.reset();
-    assertFalse(config1.isChanged());
   }
 
 }

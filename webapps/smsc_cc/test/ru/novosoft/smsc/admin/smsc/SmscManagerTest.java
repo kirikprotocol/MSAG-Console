@@ -17,13 +17,13 @@ import static org.junit.Assert.*;
 /**
  * @author Artem Snopkov
  */
-public class SmscConfigTest {
+public class SmscManagerTest {
 
   private static File configFile, backupDir;
 
   @BeforeClass
   public static void beforeClass() throws IOException, AdminException {
-    configFile = TestUtils.exportResourceToRandomFile(SmscConfigTest.class.getResourceAsStream("config.xml"), ".smsc");
+    configFile = TestUtils.exportResourceToRandomFile(SmscManagerTest.class.getResourceAsStream("config.xml"), ".smsc");
     backupDir = TestUtils.createRandomDir(".smscbackup");
   }
 
@@ -37,9 +37,9 @@ public class SmscConfigTest {
 
   @Test
   public void loadTest() throws AdminException {
-    SmscConfig config = new SmscConfig(configFile, backupDir, FileSystem.getFSForSingleInst());
+    SmscManager manager = new SmscManager(configFile, backupDir, FileSystem.getFSForSingleInst());
 
-    CommonSettings cs = config.getCommonSettings();
+    CommonSettings cs = manager.getCommonSettings();
     assertNotNull(cs);
 
     assertEquals("mobile_access_address", cs.getAbInfoMobileAccessAddress());
@@ -126,10 +126,10 @@ public class SmscConfigTest {
     assertEquals("@smsc.ussd.address@",cs.getUssd_center_address());
     assertEquals(213,cs.getUssd_ssn());
 
-    assertEquals(3, config.getSmscInstancesCount());
+    assertEquals(3, manager.getSmscInstancesCount());
 
     for (int i=0; i<3; i++) {
-      InstanceSettings s = config.getInstanceSettings(i);
+      InstanceSettings s = manager.getInstanceSettings(i);
 
       assertEquals(i + "", s.getAdminHost());
       assertEquals(i, s.getAdminPort());
@@ -155,9 +155,12 @@ public class SmscConfigTest {
     cfg.load(configFile);
 
     // Создаем инстанц SmscConfig
-    SmscConfig config1 = new SmscConfig(configFile, backupDir, FileSystem.getFSForSingleInst());
+    SmscManager config1 = new SmscManager(configFile, backupDir, FileSystem.getFSForSingleInst());
+    CommonSettings s = config1.getCommonSettings();
+    s.setAbInfoProtocolId(34);
+    config1.setCommonSettings(s);
     // Сохраняем SmscConfig
-    config1.save();
+    config1.apply();
 
     // Проверяем, что в директории backup появились файлы
     assertFalse(backupDir.delete()); // Не можем удалить директорию т.к. там появились файлы

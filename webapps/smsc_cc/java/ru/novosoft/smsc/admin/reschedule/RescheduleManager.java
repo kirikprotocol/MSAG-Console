@@ -2,37 +2,23 @@ package ru.novosoft.smsc.admin.reschedule;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
+import ru.novosoft.smsc.admin.config.ConfigFileManager;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
 
 import java.io.File;
 import java.util.Collection;
-import java.util.List;
-import java.util.regex.Pattern;
 
 /**
  * @author Artem Snopkov
  */
-public class RescheduleManager {
+public class RescheduleManager extends ConfigFileManager<RescheduleConfig> {
 
-  private RescheduleConfig config;
   private final ClusterController cc;
-  private final File configFile;
-  private final File backupDir;
-  private final FileSystem fileSystem;
-  private boolean changed;
-
 
   public RescheduleManager(File configFile, File backupDir, ClusterController cc, FileSystem fs) throws AdminException {
-    this.configFile = configFile;
-    this.backupDir = backupDir;
-    this.fileSystem = fs;
+    super(configFile, backupDir, fs);
     this.cc = cc;
-    this.config = createConfig();
     reset();
-  }
-
-  protected RescheduleConfig createConfig() {
-    return new RescheduleConfig(configFile, backupDir, fileSystem);
   }
 
   public void setScheduleLimit(int limit) {
@@ -66,18 +52,13 @@ public class RescheduleManager {
     return changed;
   }
 
-  public void apply() throws AdminException {
-    this.config.save();
-    cc.applyReschedule();
-    changed = false;
+  @Override
+  protected RescheduleConfig newConfigFile() {
+    return new RescheduleConfig();
   }
 
-  public void reset() throws AdminException {
-
-    RescheduleConfig oldConfig = createConfig();
-    oldConfig.load();
-
-    this.config = oldConfig;
-    changed = false;
+  @Override
+  protected void afterApply() throws AdminException {
+    cc.applyReschedule();
   }
 }

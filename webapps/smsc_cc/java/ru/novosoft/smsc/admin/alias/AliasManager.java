@@ -2,6 +2,7 @@ package ru.novosoft.smsc.admin.alias;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
+import ru.novosoft.smsc.admin.config.RuntimeConfiguration;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
 import ru.novosoft.smsc.util.Address;
 import ru.novosoft.smsc.util.IOUtils;
@@ -14,7 +15,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * Класс для доступа к списку алиасов
  * @author Artem Snopkov
  */
-public class AliasManager {
+public class AliasManager implements RuntimeConfiguration {
 
   private static final int MSG_SIZE = 48; //1+(1+1+21)+(1+1+21)+1
 

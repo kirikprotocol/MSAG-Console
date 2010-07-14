@@ -1,8 +1,7 @@
 package ru.novosoft.smsc.admin.reschedule;
 
-import ru.novosoft.smsc.admin.AdminException;
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.regex.Pattern;
 
 /**
@@ -17,12 +16,12 @@ public class Reschedule {
   private final Collection<Integer> statuses;
   private final String intervals;
 
-  public Reschedule(String intervals, int... statuses) throws AdminException {
+  public Reschedule(String intervals, int... statuses)  {
     if (intervals == null)
       throw new IllegalArgumentException("Intervals are null");
 
     if (!intervalsPattern.matcher(intervals).matches())
-      throw new RescheduleException("illegal_internal_value", intervals);
+      throw new IllegalArgumentException("intervals");
 
     this.intervals = intervals;
 
@@ -33,12 +32,12 @@ public class Reschedule {
     }
   }
 
-  public Reschedule(String intervals, Collection<Integer> statuses) throws AdminException {
+  public Reschedule(String intervals, Collection<Integer> statuses) {
     if (intervals == null)
       throw new IllegalArgumentException("Intervals are null");
 
     if (!intervalsPattern.matcher(intervals).matches())
-      throw new RescheduleException("illegal_internal_value", intervals);
+      throw new IllegalArgumentException("intervals");
 
     this.intervals = intervals;
     this.statuses = new ArrayList<Integer>();

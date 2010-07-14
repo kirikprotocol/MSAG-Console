@@ -106,7 +106,35 @@ public class FraudManagerTest {
   }
 
   @Test
-  public void illegalMscAddressTest() throws AdminException {
+  public void resetFailedTest() throws AdminException {
+    FraudManager fm = new FraudManager(configFile, backupDir, new ClusterControllerImpl(), FileSystem.getFSForSingleInst());
+    assertFalse(fm.isChanged());
+
+    fm.setTail(5);
+    fm.setEnableCheck(false);
+    fm.setEnableReject(true);
+    fm.setWhiteList(new ArrayList<String>());
+
+    assertTrue(fm.isChanged());
+
+    configFile.delete();
+
+    try {
+      fm.reset();
+      assertFalse(true);
+    } catch (AdminException e) {
+    }
+
+    assertTrue(fm.isChanged());
+
+    assertEquals(5, fm.getTail());
+    assertFalse(fm.isEnableCheck());
+    assertTrue(fm.isEnableReject());
+    assertEquals(0, fm.getWhiteList().size());
+  }
+
+  @Test
+  public void setWhiteListTest() throws AdminException {
     FraudManager fm = new FraudManager(configFile, backupDir, new ClusterControllerImpl(), FileSystem.getFSForSingleInst());
     Collection<String> whiteList = new ArrayList<String>();
 
@@ -115,7 +143,7 @@ public class FraudManagerTest {
       whiteList.clear();
       whiteList.add("791239239");
       fm.setWhiteList(whiteList);
-    } catch (AdminException e) {
+    } catch (IllegalArgumentException e) {
       assertFalse(true);
     }
 
@@ -125,7 +153,7 @@ public class FraudManagerTest {
       whiteList.add("");
       fm.setWhiteList(whiteList);
       assertFalse(true);
-    } catch (AdminException e) {
+    } catch (IllegalArgumentException e) {
     }
 
     // Слишком длинный адрес
@@ -134,7 +162,7 @@ public class FraudManagerTest {
       whiteList.add("1234567890123456");
       fm.setWhiteList(whiteList);
       assertFalse(true);
-    } catch (AdminException e) {
+    } catch (IllegalArgumentException e) {
     }
 
     // Адрес, содержащий буквы
@@ -143,7 +171,7 @@ public class FraudManagerTest {
       whiteList.add("fdfs");
       fm.setWhiteList(whiteList);
       assertFalse(true);
-    } catch (AdminException e) {
+    } catch (IllegalArgumentException e) {
     }
   }
 

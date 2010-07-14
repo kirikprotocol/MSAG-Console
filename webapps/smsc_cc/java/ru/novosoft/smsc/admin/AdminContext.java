@@ -1,15 +1,16 @@
 package ru.novosoft.smsc.admin;
 
 import ru.novosoft.smsc.admin.alias.AliasManager;
-import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemonConfig;
+import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemonManager;
 import ru.novosoft.smsc.admin.archive_daemon.ArchiveDemon;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
 import ru.novosoft.smsc.admin.fraud.FraudManager;
+import ru.novosoft.smsc.admin.map_limit.MapLimitManager;
 import ru.novosoft.smsc.admin.reschedule.RescheduleManager;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.admin.service.ServiceManager;
-import ru.novosoft.smsc.admin.smsc.SmscConfig;
+import ru.novosoft.smsc.admin.smsc.SmscManager;
 
 import java.io.File;
 
@@ -26,12 +27,13 @@ public class AdminContext {
 
   protected ServiceManager serviceManager;
   protected FileSystem fileSystem;
-  protected SmscConfig smscConfig;
-  protected ArchiveDaemonConfig archiveDaemonConfig;
+  protected SmscManager smscManager;
+  protected ArchiveDaemonManager archiveDaemonManager;
   protected ClusterController clusterController;
   protected AliasManager aliasManager;
   protected RescheduleManager rescheduleManager;
   protected FraudManager fraudManager;
+  protected MapLimitManager mapLimitManager;
   protected InstallationType instType;
 
   protected AdminContext() {
@@ -68,10 +70,12 @@ public class AdminContext {
 
     File smscConfigBackupDir = new File(smscConfigDir, "backup");
 
-    smscConfig = new SmscConfig(new File(smscConfigDir, "config.xml"), smscConfigBackupDir, fileSystem);
+    smscManager = new SmscManager(new File(smscConfigDir, "config.xml"), smscConfigBackupDir, fileSystem);
 
     ServiceInfo archiveDaemonInfo = serviceManager.getService(ArchiveDemon.SERVICE_ID);
-    archiveDaemonConfig = (archiveDaemonInfo == null) ? null : new ArchiveDaemonConfig(archiveDaemonInfo.getBaseDir(), fileSystem);
+    File archiveDaemonConf = new File(archiveDaemonInfo.getBaseDir(), "conf");
+    File archiveDaemonBackup = new File(archiveDaemonConf, "backup");
+    archiveDaemonManager = (archiveDaemonInfo == null) ? null : new ArchiveDaemonManager(new File(archiveDaemonConf, "config.xml"), archiveDaemonBackup, fileSystem);
 
     clusterController = new ClusterController(serviceManager, fileSystem);
 
@@ -80,18 +84,20 @@ public class AdminContext {
     rescheduleManager = new RescheduleManager(new File(smscConfigDir, "schedule.xml"), smscConfigBackupDir, clusterController, fileSystem);
 
     fraudManager = new FraudManager(new File(smscConfigDir, "fraud.xml"), smscConfigBackupDir, clusterController, fileSystem);
+
+    mapLimitManager = new MapLimitManager(new File(smscConfigDir, "maplimits.xml"), smscConfigBackupDir, clusterController, fileSystem);
   }
 
   public FileSystem getFileSystem() {
     return fileSystem;
   }
 
-  public SmscConfig getSmscConfig() {
-    return smscConfig;
+  public SmscManager getSmscManager() {
+    return smscManager;
   }
 
-  public ArchiveDaemonConfig getArchiveDaemonConfig() {
-    return archiveDaemonConfig;
+  public ArchiveDaemonManager getArchiveDaemonManager() {
+    return archiveDaemonManager;
   }
 
   public AliasManager getAliasManager() {
@@ -104,6 +110,10 @@ public class AdminContext {
 
   public FraudManager getFraudManager() {
     return fraudManager;
+  }
+
+  public MapLimitManager getMapLimitManager() {
+    return mapLimitManager;
   }
 
   public InstallationType getInstallationType() {

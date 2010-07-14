@@ -1,18 +1,19 @@
-package ru.novosoft.smsc.admin.reschedule;
+package ru.novosoft.smsc.admin.archive_daemon;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.config.TestConfigFileManagerHelper;
 
 /**
+ * Тестовая реализация ArchiveDaemonConfig
  * @author Artem Snopkov
  */
-public class TestRescheduleManager extends RescheduleManager {
+public class TestArchiveDaemonManager extends ArchiveDaemonManager {
 
   private final TestConfigFileManagerHelper helper;
 
-  public TestRescheduleManager() throws AdminException {
-    super(null, null, null, null);
-    helper = new TestConfigFileManagerHelper(TestRescheduleManager.class.getResourceAsStream("schedule.xml"));
+  public TestArchiveDaemonManager() throws AdminException {
+    super(null, null, null);
+    helper = new TestConfigFileManagerHelper(TestArchiveDaemonManager.class.getResourceAsStream("config.xml"));
   }
 
   @Override

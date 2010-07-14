@@ -1,10 +1,11 @@
 package ru.novosoft.smsc.admin;
 
 import ru.novosoft.smsc.admin.alias.TestAliasManager;
-import ru.novosoft.smsc.admin.archive_daemon.TestArchiveDaemonConfig;
+import ru.novosoft.smsc.admin.archive_daemon.TestArchiveDaemonManager;
 import ru.novosoft.smsc.admin.fraud.TestFraudManager;
+import ru.novosoft.smsc.admin.map_limit.TestMapLimitManager;
 import ru.novosoft.smsc.admin.reschedule.TestRescheduleManager;
-import ru.novosoft.smsc.admin.smsc.TestSmscConfig;
+import ru.novosoft.smsc.admin.smsc.TestSmscManager;
 
 import java.io.File;
 
@@ -19,11 +20,12 @@ public class TestAdminContext extends AdminContext {
     this.servicesDir = new File(appBaseDir, "services");
     this.instType = cfg.getInstallationType();
 
-    smscConfig = new TestSmscConfig();
-    archiveDaemonConfig = new TestArchiveDaemonConfig();
+    smscManager = new TestSmscManager();
+    archiveDaemonManager = new TestArchiveDaemonManager();
     aliasManager = new TestAliasManager();
     rescheduleManager = new TestRescheduleManager();
     fraudManager = new TestFraudManager();
+    mapLimitManager = new TestMapLimitManager();
   }
 
 
