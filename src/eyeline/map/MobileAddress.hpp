@@ -1,167 +1,86 @@
 /* ************************************************************************** *
- * Base classes for various mobile addresses.
+ * Base class for various mobile addresses.
  * ************************************************************************** */
 #ifndef __EYELINE_MAP_MOBILE_ADDRESS_HPP
 #ident "@(#)$Id$"
 #define __EYELINE_MAP_MOBILE_ADDRESS_HPP
 
 #include <inttypes.h>
-#include <list>
 
-#include "eyeline/util/TBCDString.hpp"
+#include "core/buffers/FixedLengthString.hpp"
 
 namespace eyeline {
 namespace map {
 
-using eyeline::util::TBCDString;
+struct TonNpiIndicator {
+  uint8_t _reserved : 1; //bit(s) : 7    (always = 1)
+  uint8_t _ToN      : 3; //bit(s) : 654
+  uint8_t _NPi      : 4; //bit(s) : 3210
 
-// ------------------------------------------------
-// -- Mobile Address string representations parsers
-// ------------------------------------------------
-//NOTE: buffer provided to store address signals MUST be at least
-//      MobileAddressAC::_maxStrValueLength bytes long!
-// 
-//Parses ".ToN.NPi.TBCDSignals" address representation (generic)
-static bool parseTonNpiTBCD(const char * adr_str, unsigned & itype,
-                              unsigned & iplan, char * signals);
-
-//Parses "TBCDSignals" address representation (national or unknowm telephony)
-static bool parseUnknownTele(const char * adr_str, unsigned & itype,
-                              unsigned & iplan, char * signals);
-
-//Parses "+TBCDSignals" address representation (international telephony)
-static bool parseInterTele(const char * adr_str, unsigned & itype,
-                              unsigned & iplan, char * signals);
-
-
-class MobileAddressAC {
-public:
-  //Maximun number of octets in encoded/packed form
-  //TonNpiIndicator octet + up to 19 octets of encoded/packed signals
-  static const unsigned _maxAdrOctsLength = 20;
-  //Maximum number of address signals
-  static const unsigned _maxAdrValueLength = 38; // 2*(20-1)
-  //Maximum number of characters in default string representation
-  static const unsigned _maxStrValueLength = 44; // 38 + sizeof(".7.15.")
-
-  struct TonNpiIndicator {
-    uint8_t reserved : 1; //bit(s) : 7    (always = 1)
-    uint8_t ToN      : 3; //bit(s) : 654
-    uint8_t NPi      : 4; //bit(s) : 3210
-
-    void reset(void) { reserved = 1; NPi = ToN = 0; }
-  };
-
-protected:
-  //Function that parses one of possible string representation
-  //of Mobile Address. 
-  //Returns true on success
-  typedef bool (*pfStrValParser)(const char * adr_str, unsigned & itype,
-                               unsigned & iplan, char * signals);
-
-  typedef std::list<pfStrValParser> ParsersList;
-  typedef union _TON_NPI_Indicator_u {
-    uint8_t         octet;
-    TonNpiIndicator st;
-  } TonNpiIndicator_u;
-
-  TonNpiIndicator_u _ind;
-  std::string       _signals;
-  ParsersList       _parsers;
-
-public:
-  MobileAddressAC()
-  {
-    _ind.st.reset();
-    _parsers.push_back(parseTonNpiTBCD);
-  }
-  virtual ~MobileAddressAC()
+  TonNpiIndicator() : _reserved(1), _NPi(0), _ToN(0)
   { }
 
-  const TonNpiIndicator & Indicator(void) const { return _ind.st; }
-  uint8_t tonValue(void) const { return _ind.st.ToN; }
-  uint8_t npiValue(void) const { return _ind.st.NPi; }
-  //
-  bool empty(void) const { return _signals.empty(); }
-  //
-  unsigned length(void) const { return (unsigned)_signals.length(); }
-  //
-  const char * getSignals(void) const { return _signals.c_str(); }
-  //
-  void clear(void) { _ind.st.reset(); _signals.clear(); }
-  //
-  void setToN(uint8_t use_ton) { _ind.st.ToN = (use_ton & 0x07); }
-  //
-  void setNPi(uint8_t use_npi) { _ind.st.NPi = (use_npi & 0x0F); }
-  //
-  void setSignals(const char * use_signals) { _signals = use_signals; }
+  void clear(void) { _reserved = 1; _NPi = _ToN = 0; }
 
-  //Returns maximum allowed address value length (number of signals)
-  unsigned maxAdrValueLen(void) const { return (maxAdrOctsLen() - 1)<<1; }
-  //Returns maximum allowed number of characters in address string representation
-  unsigned maxStrValueLen(void) const
+  uint8_t pack2Oct(void) const
   {
-    return maxAdrValueLen() + (unsigned)sizeof(".7.15.");
+    return _NPi | (_ToN << 4) | (uint8_t)(0x80);
   }
 
-  //Prints address TonNpi prefix as ".ToN.NPi."
-  unsigned printTonNpi(char * buf) const
+  void unpackOct(uint8_t use_oct)
   {
-    return snprintf(buf, maxStrValueLen() - 1, ".%u.%u.",
-            (unsigned)tonValue(), (unsigned)npiValue());
-  }
-  //Converts address to one of possible string representation,
-  //by default to ".ToN.NPi.Signals".
-  //Returns number of characters printed.
-  //NOTE: buffer must be at least maxStrValueLen() bytes long
-  unsigned toString(char * buf, bool print_ton_npi = true) const;
-  //Converts address to one of possible string representation,
-  //by default to ".ToN.NPi.Signals".
-  std::string toString(bool print_ton_npi = true) const
-  {
-    char buf[_maxStrValueLength];
-    toString(buf, print_ton_npi);
-    return buf;
-  }
-  //Converts address from one of possible string representation
-  //NOTE: supports at least ".ToN.NPi.Signals" form
-  bool fromString(const char * adr_str);
-
-
-  // --------------------------------------
-  // -- MobileAddressAC interface methods
-  // --------------------------------------
-  //Returns maximum encoded octets length,
-  //must be [1 .. MobileAddressAC::_maxOctsLength]
-  virtual unsigned maxAdrOctsLen(void) const = 0;
-  //Encodes/Packs address to octet buffer
-  //NOTE: buffer must be able to store maxOctsLen() bytes!!!
-  virtual unsigned pack2Octs(uint8_t * use_buf) const = 0;
-  //Decodes/Unpacks address from octet buffer
-  virtual unsigned unpackOcts(const uint8_t * use_buf, unsigned buf_len) = 0;
-
-  //Prints address TonNpi prefix, by default as ".ToN.NPi."
-  virtual unsigned printPrefix(char * buf, bool print_ton_npi = true) const
-  {
-    return print_ton_npi ? printTonNpi(buf) : 0;
+    _reserved = use_oct >> 7;
+    _NPi = use_oct & 0x0F;
+    _ToN = (use_oct >> 4) & 0x07;
   }
 };
 
+//Maximum number of address signals
+#define MAX_ADDRESS_SIGNALS(max_octs) ((max_octs - 1)*2)
+//Maximum number of characters in textual representation of AddressString
+#define MAX_ADDRESS_TXT_LEN(max_octs) ((unsigned)(sizeof(".7.15.") + (max_octs - 1)*2))
 
 //MAP-CommonDataTypes.AddressString ::=
 //                   OCTET STRING (SIZE (1..maxAddressLength))
-// This type is used to represent a number for addressing purposes.
+// This type is used to represent a number for addressing purposes
+// (MobileAddress, ISDNAddress, FTNAddress).
+// 
 // It is composed of
 // a) one octet for nature of address, and numbering plan indicator.
-// b) digits of an address encoded as TBCD-String.
-// 
-// maxAddressLength  INTEGER ::= 20
-class MobileAddress : public MobileAddressAC {
-public:
-  //Maximun number of octets in encoded/packed form
-  //TonNpiIndicator octet + up to 19 octets of encoded/packed signals
-  static const unsigned _mapAdrOctsLength = 20;
+// b) digits of an address encoded as TBCD-String (number of digits
+//    depends on address kind).
+//
+static const uint8_t _maxAddressStringOcts = 20;
+//
+static const unsigned _maxAddressValueStringLength = MAX_ADDRESS_TXT_LEN(_maxAddressStringOcts);
+//Maximum possible number of characters in textual representation
+typedef smsc::core::buffers::FixedLengthString<_maxAddressValueStringLength + 1>
+  AddressValueString_t;
 
+class MAPAddressStringAC {
+protected:
+  const uint8_t   _maxOcts;
+  TonNpiIndicator _ind;
+  char *          _signals;
+
+  //Converts address from one of possible string representation
+  //NOTE: supports at least ".ToN.NPi.Signals" form
+  bool parseString(const char * adr_str);
+  //Prints address TonNpi prefix, by default as ".ToN.NPi."
+  //In case of International ISDN numbering, prefix is printed as "+"
+  //as recommended in E.164 clause 12
+  unsigned printPrefix(char * buf, bool print_ton_npi = true) const;
+
+  //
+  MAPAddressStringAC(uint8_t max_octs, char * signals_store)
+    : _maxOcts(max_octs), _signals(signals_store)
+  { }
+  //NOTE: copying constructor of successor must properly set _signals
+  MAPAddressStringAC(const MAPAddressStringAC & use_obj)
+    : _maxOcts(use_obj._maxOcts), _ind(use_obj._ind), _signals(0)
+  { }
+
+public:
   enum TypeOfNumber_e { // 3 bits values
     tonUnknown = 0x0, tonInternational = 0x1, tonNationalSign = 0x2,
     tonNetworkSpec = 0x3, tonSubscriber = 0x4, tonReserved5 = 0x5,
@@ -177,83 +96,99 @@ public:
     npiReservedExt = 0x0F
   };
 
-
-  MobileAddress()
-  {
-    _parsers.push_back(parseInterTele);
-    _parsers.push_back(parseUnknownTele);
-  }
-
-  TypeOfNumber_e ToN(void) const
-  {
-    return static_cast<TypeOfNumber_e>(tonValue());
-  }
-
-  NumberingPlan_e NPi(void) const
-  {
-    return static_cast<NumberingPlan_e>(npiValue());
-  }
-
-  //Returns true if address TonNpi is .International.ISDN
-  bool interISDN(void) const
-  {
-    return ((ToN() == tonInternational) && (NPi() == npiISDNTele_e164));
-  }
-  // --------------------------------------
-  // // MobileAddressAC interface methods
-  // --------------------------------------
-  //Returns maximum encoded octets length,
-  //must be [1 .. MobileAddressAC::_maxOctsLength]
-  unsigned maxAdrOctsLen(void) const { return _mapAdrOctsLength; }
-  //Encodes/Packs address to octet buffer
-  //NOTE: specified buffer must be able to store maxOctsLen() bytes!!!
-  unsigned pack2Octs(uint8_t * use_buf) const
-  {
-    return TBCDString::pack2Octs(use_buf, _signals.c_str(), (unsigned)_signals.length());
-  }
-  //Decodes/Unpacks address from octet buffer
-  unsigned unpackOcts(const uint8_t * use_buf, unsigned buf_len)
-  {
-    return TBCDString::unpackOcts(use_buf, buf_len, _signals);
-  }
-
-  //Prints address TonNpi prefix, by default as ".ToN.NPi."
-  //In case of International ISDN numbering, prefix is printed as "+"
-  //as recommended in E.164 clause 12
-  unsigned printPrefix(char * buf, bool print_ton_npi = true) const
-  {
-    unsigned n = 0;
-    if (interISDN() && !print_ton_npi)
-      buf[n++] = '+';
-    else
-      n = MobileAddressAC::printTonNpi(buf);
-    return n;
-  }
-
-};
-
-//MAP-CommonDataTypes.ISDN-AddressString ::=
-//                    AddressString (SIZE (1..maxISDN-AddressLength))
-// This type is used to represent ISDN numbers.
-// 
-// maxISDN-AddressLength  INTEGER ::= 9
-class ISDNAddress : public MobileAddress {
-public:
-  //Maximun number of octets in encoded/packed form
-  //TonNpiIndicator octet + up to 8 octets of encoded/packed signals
-  static const unsigned _isdnAdrOctsLength = 9;
-
-  ISDNAddress() : MobileAddress()
+  virtual ~MAPAddressStringAC()
   { }
 
-  // --------------------------------------
-  // // MobileAddressAC interface methods
-  // --------------------------------------
-  //Returns maximum encoded octets length,
-  //must be <= MobileAddressAC::_maxOctsLength
-  unsigned maxOctsLen(void) const { return _isdnAdrOctsLength; }
+  //Maximun number of octets in encoded/packed form
+  unsigned maxOctets(void) const { return _maxOcts; }
+  //Maximum number of address signals
+  unsigned maxSignals(void) const { return (_maxOcts - 1)*2; }
+  //Maximum number of characters in textual representation
+  unsigned maxValueStrLength(void) const { return MAX_ADDRESS_TXT_LEN(_maxOcts); }
+
+  //Encodes/Packs address to octet buffer
+  //NOTE: buffer must be able to store maxOctets() bytes!!!
+  unsigned pack2Octs(uint8_t * use_buf) const;
+  //Decodes/Unpacks address from octet buffer
+  unsigned unpackOcts(const uint8_t * use_buf, unsigned buf_len);
+
+
+  bool isInterISDN(void) const
+  {
+    return (_ind._ToN == tonInternational) && (_ind._NPi == npiISDNTele_e164);
+  }
+  //
+  uint8_t getToNValue(void) const { return _ind._ToN; }
+  //
+  uint8_t getNPiValue(void) const { return _ind._NPi; }
+  //
+  bool empty(void) const { return _signals[0] == 0; }
+  //
+  unsigned length(void) const { return (unsigned)strlen(_signals); }
+  //
+  const char * getSignals(void) const { return _signals; }
+
+  //
+  void clear(void) { _ind.clear(); _signals[0] = 0; }
+  //
+  void setToN(uint8_t use_ton) { _ind._ToN = (use_ton & 0x07); }
+  //
+  void setNPi(uint8_t use_npi) { _ind._NPi = (use_npi & 0x0F); }
+  //
+  void setSignals(const char * use_signals)
+  {
+    strncpy(_signals, use_signals, maxSignals());
+  }
+
+  //Converts address to one of possible string representation,
+  //by default to ".ToN.NPi.Signals".
+  //Returns number of characters printed.
+  //NOTE: buffer must be at least maxValueStrLength() bytes long
+  unsigned toString(char * buf, unsigned buf_sz, bool print_ton_npi = true) const;
+
+  //Converts address to one of possible string representation,
+  //by default to ".ToN.NPi.Signals".
+  AddressValueString_t toString(bool print_ton_npi = true) const
+  {
+    AddressValueString_t  str;
+    toString(str.str, _maxAddressValueStringLength + 1, print_ton_npi);
+    return str;
+  }
+
+  // -------------------------------------
+  // -- MAPAddressStringAC interface method
+  // -------------------------------------
+  //Converts address from one of possible string representation
+  //NOTE: supports at least ".ToN.NPi.Signals" form
+  virtual bool fromString(const char * adr_str) = 0;
 };
 
+class MobileAddress : public MAPAddressStringAC {
+private:
+  char  _store[MAX_ADDRESS_SIGNALS(_maxAddressStringOcts) + 1];
+
+public:
+  explicit MobileAddress()
+    : MAPAddressStringAC(_maxAddressStringOcts, _store)
+  { }
+  MobileAddress(const MobileAddress & use_obj)
+    : MAPAddressStringAC(use_obj)
+  {
+    _signals = _store;
+  }
+  ~MobileAddress()
+  { }
+
+  // -------------------------------------
+  // -- MAPAddressStringAC interface method
+  // -------------------------------------
+  //Converts address from one of possible string representation
+  //NOTE: supports at least ".ToN.NPi.Signals" form
+  virtual bool fromString(const char * adr_str)
+  {
+    return MAPAddressStringAC::parseString(adr_str);
+  }
+};
 
 } //map
 } //eyeline

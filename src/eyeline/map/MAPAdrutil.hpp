@@ -7,6 +7,7 @@
 
 #include "eyeline/sccp/SCCPAddress.hpp"
 #include "eyeline/map/MobileAddress.hpp"
+#include "eyeline/map/ISDNAddress.hpp"
 
 namespace eyeline {
 namespace map {

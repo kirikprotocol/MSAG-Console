@@ -2,8 +2,6 @@
 static char const ident[] = "@(#)$Id$";
 #endif /* MOD_IDENT_OFF */
 
-#include <string.h>
-
 #include "eyeline/map/MAPAdrutil.hpp"
 
 namespace eyeline {
@@ -11,45 +9,48 @@ namespace map {
 
 using eyeline::sccp::GlobalTitle;
 
-bool convertSCCPAdr2Mobile(const SCCPAddress & sccp_adr, MobileAddress & map_adr)
+static bool convertSCCPAdr2Mobile(const GlobalTitle::GTIndicator & use_gti,
+                                  const char * use_signals,
+                                  MAPAddressStringAC & map_adr)
 {
   //verify possibility of ToN <-> NoA conversion
-  GlobalTitle::NatureOfAddress_e sccpNoA = sccp_adr.getGT().Indicator().getNoA();
-  if ((sccpNoA >= GlobalTitle::noaRsrvNationalMin)
-       && (sccpNoA >= GlobalTitle::noaRsrvNationalMax))
-    sccpNoA = GlobalTitle::noaNationalReserv;
+  GlobalTitle::NatureOfAddress_e sccpNoA = use_gti.getNoA();
 
   switch (sccpNoA) {
   case GlobalTitle::noaUnknown:
-    map_adr.setToN(MobileAddress::tonUnknown); break;
+    map_adr.setToN(MAPAddressStringAC::tonUnknown); break;
 
   case GlobalTitle::noaSubscriber:
-    map_adr.setToN(MobileAddress::tonSubscriber); break;
+    map_adr.setToN(MAPAddressStringAC::tonSubscriber); break;
 
   case GlobalTitle::noaNationalReserv:
   case GlobalTitle::noaNationalSign:
-    map_adr.setToN(MobileAddress::tonNationalSign); break;
+  case GlobalTitle::noaRsrvNationalRange:
+    map_adr.setToN(MAPAddressStringAC::tonNationalSign); break;
 
   case GlobalTitle::noaInternational:
-    map_adr.setToN(MobileAddress::tonInternational); break;
+    map_adr.setToN(MAPAddressStringAC::tonInternational); break;
 
   default:
     return false;
   }
 
-  map_adr.setSignals(sccp_adr.getGT().Signals().c_str());
+  map_adr.setSignals(use_signals);
   //MobileAddress uses the same numeric values of NPi as SCCPAddress does.
-  map_adr.setNPi((uint8_t)sccp_adr.getGT().Indicator().getNPi());
+  map_adr.setNPi((uint8_t)use_gti.getNPi());
   return true;
+}
+
+bool convertSCCPAdr2Mobile(const SCCPAddress & sccp_adr, MobileAddress & map_adr)
+{
+  return convertSCCPAdr2Mobile(sccp_adr.getGT().getGTIndicator(), sccp_adr.getGT().getSignals(), map_adr);
 }
 
 bool convertSCCPAdr2ISDN(const SCCPAddress & sccp_adr, ISDNAddress & isdn_adr)
 {
-  GlobalTitle::NumberingPlan_e sccpNPi = sccp_adr.getGT().Indicator().getNPi();
-  if (sccpNPi != GlobalTitle::npiISDNTele_e164)
-    return false;
-
-  return convertSCCPAdr2Mobile(sccp_adr, isdn_adr);
+  const GlobalTitle::GTIndicator & adrGti = sccp_adr.getGT().getGTIndicator();
+  return (adrGti.getNPi() != GlobalTitle::npiISDNTele_e164) ? false :
+            convertSCCPAdr2Mobile(adrGti, sccp_adr.getGT().getSignals(), isdn_adr);
 }
 
 
