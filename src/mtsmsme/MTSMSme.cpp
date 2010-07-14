@@ -85,7 +85,7 @@ class FilterManager
     smsc::util::regexp::RegExp denySenderMaskRx;
     void validate(Manager& manager)
     {
-      char* sectionName = "MTSMSme.Filters";
+      char sectionName[] = "MTSMSme.Filters";
       if (!manager.findSection(sectionName))
       {
         smsc_log_warn(logger,"\'%s\' section is missed",sectionName);
@@ -129,7 +129,7 @@ class FilterManager
     {
       validate(manager);
       if (!filteringMode)
-        smsc_log_warn(logger,"sender filtering is turned OFF",sectionName);
+        smsc_log_warn(logger,"sender filtering is turned OFF");
     }
     FilterManager(Logger* _logger):logger(_logger),filteringMode(false){}
     bool isSenderAllowed(const Address& _sender)
