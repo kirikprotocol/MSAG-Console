@@ -75,7 +75,11 @@ protected:
   {
     reserveElement(_elmArray->size()).init(val_enc, fld_tags, getVALRule());
   }
-
+  void clearElement(uint16_t fld_idx)
+  {
+    if (fld_idx < _elmArray->size())
+      _elmArray->at(fld_idx).clear();
+  }
   ElementsArray * getElementsStorage(void) const { return _elmArray; }
 
   // -- -------------------------------------------------- --

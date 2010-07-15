@@ -54,6 +54,8 @@ public:
   {
     setField(getElementsStorage()->size(), type_enc);
   }
+  //
+  void clearField(uint16_t fld_idx) { clearElement(fld_idx); }
 };
 
 //Template for Encoder of structured type with known number of fields/elements,
@@ -96,6 +98,7 @@ template <
   uint16_t _NumFieldsTArg       /* overall number of fields/elements */
 , uint16_t _NumTaggedFieldsTArg /* number of tagged fields/elements */
 >
+//TODO: modify FieldTagsStore so it is properly reused if clearField() was called
 class EncoderOfStructureMixed_T : public EncoderOfStructure_T<_NumFieldsTArg> {
 private:
   typedef LWArray_T<ASTagging, uint16_t, _NumTaggedFieldsTArg>  FieldTagsStore;

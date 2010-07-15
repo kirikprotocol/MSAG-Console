@@ -182,6 +182,10 @@ public:
     setTagging(use_tags);
   }
 
+  void clear(void)
+  {
+    _valEnc = NULL; setTagging(NULL);
+  }
   // -- ----------------------------------------------------- --
   // NOTE: all following methods may be called only after
   // ValueEncoderIface is set by constructor or init() call !!!
