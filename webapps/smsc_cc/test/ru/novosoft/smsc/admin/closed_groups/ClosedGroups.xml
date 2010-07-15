@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<!DOCTYPE records SYSTEM "ClosedGroups.dtd">
+
+<records>
+   <lastId value="2"/>
+   <group id="2" name="2" desc="234">       
+   </group>
+   <group id="1" name="qq" desc="qqqq">
+       <mask value=".1.1.79495445566"/>
+       <mask value=".1.1.79139495113"/>
+   </group>
+</records>

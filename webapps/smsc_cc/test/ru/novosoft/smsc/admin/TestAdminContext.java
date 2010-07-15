@@ -2,6 +2,7 @@ package ru.novosoft.smsc.admin;
 
 import ru.novosoft.smsc.admin.alias.TestAliasManager;
 import ru.novosoft.smsc.admin.archive_daemon.TestArchiveDaemonManager;
+import ru.novosoft.smsc.admin.closed_groups.TestClosedGroupManager;
 import ru.novosoft.smsc.admin.fraud.TestFraudManager;
 import ru.novosoft.smsc.admin.map_limit.TestMapLimitManager;
 import ru.novosoft.smsc.admin.reschedule.TestRescheduleManager;
@@ -28,6 +29,7 @@ public class TestAdminContext extends AdminContext {
     fraudManager = new TestFraudManager();
     mapLimitManager = new TestMapLimitManager();
     snmpManager = new TestSnmpManager();
+    closedGroupManager = new TestClosedGroupManager();
   }
 
 

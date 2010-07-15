@@ -7,22 +7,17 @@ public abstract class AdminException extends Exception {
 
   protected final String bundleName;
   protected final String key;
-  protected final String causeMessage;
+  protected String causeMessage;
 
   protected AdminException(String key, Throwable cause) {
     super(cause);
     this.bundleName = getClass().getName();
     this.key = key;
-    if (cause != null)
-      this.causeMessage = cause.getMessage();
-    else
-      this.causeMessage = null;
   }
 
   protected AdminException(String key) {
     this.bundleName = getClass().getName();
     this.key = key;
-    this.causeMessage = null;
   }
 
   protected AdminException(String key, String causeMessage) {
@@ -35,6 +30,14 @@ public abstract class AdminException extends Exception {
     String result = ResourceBundle.getBundle(bundleName, locale).getString(key);
     if (causeMessage != null)
       result += ". " + causeMessage;
+    else if (getCause() != null) {
+      Throwable ct = getCause();
+      if (ct instanceof AdminException) {
+        result += ". " + ((AdminException)ct).getMessage(locale);
+      } else {
+        result += ". " + ct.getMessage();
+      }
+    }
     return  result;
   }
 

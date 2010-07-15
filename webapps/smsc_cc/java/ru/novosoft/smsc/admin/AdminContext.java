@@ -3,6 +3,7 @@ package ru.novosoft.smsc.admin;
 import ru.novosoft.smsc.admin.alias.AliasManager;
 import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemonManager;
 import ru.novosoft.smsc.admin.archive_daemon.ArchiveDemon;
+import ru.novosoft.smsc.admin.closed_groups.ClosedGroupManager;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
 import ru.novosoft.smsc.admin.fraud.FraudManager;
@@ -35,6 +36,7 @@ public class AdminContext {
   protected FraudManager fraudManager;
   protected MapLimitManager mapLimitManager;
   protected SnmpManager snmpManager;
+  protected ClosedGroupManager closedGroupManager;
   protected InstallationType instType;
 
   protected AdminContext() {
@@ -78,7 +80,9 @@ public class AdminContext {
     File archiveDaemonBackup = new File(archiveDaemonConf, "backup");
     archiveDaemonManager = (archiveDaemonInfo == null) ? null : new ArchiveDaemonManager(new File(archiveDaemonConf, "config.xml"), archiveDaemonBackup, fileSystem);
 
-    clusterController = new ClusterController(serviceManager, fileSystem);
+    ServiceInfo clusterControllerInfo = serviceManager.getService(ClusterController.SERVICE_ID);
+    File clusterControllerConf = new File(clusterControllerInfo.getBaseDir(), "conf");
+    clusterController = new ClusterController(serviceManager, new File(clusterControllerConf, "config.xml"), fileSystem);
 
     aliasManager = new AliasManager(new File(smscConfigDir, "alias.bin"), clusterController, fileSystem);
 
@@ -89,6 +93,8 @@ public class AdminContext {
     mapLimitManager = new MapLimitManager(new File(smscConfigDir, "maplimits.xml"), smscConfigBackupDir, clusterController, fileSystem);
 
     snmpManager = new SnmpManager(new File(smscConfigDir, "snmp.xml"), smscConfigBackupDir, clusterController, fileSystem);
+
+    closedGroupManager = new ClosedGroupManager(new File(smscConfigDir, "snmp.xml"), smscConfigBackupDir, clusterController, fileSystem);
   }
 
   public FileSystem getFileSystem() {
@@ -121,6 +127,10 @@ public class AdminContext {
 
   public SnmpManager getSnmpManager() {
     return snmpManager;
+  }
+
+  public ClosedGroupManager getClosedGroupManager() {
+    return closedGroupManager;
   }
 
   public InstallationType getInstallationType() {

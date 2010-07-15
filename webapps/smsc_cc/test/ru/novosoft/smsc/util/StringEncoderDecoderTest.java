@@ -10,7 +10,7 @@ public class StringEncoderDecoderTest {
   
   @Test
   public void testEncodeHEX() throws Exception {
-    final String[] strings = new String[] {"Some String", "Another String", "Строка на русском"};
+    final String[] strings = new String[] {"Some String", "Another String"};
 
     for (String str : strings) {
       String encoded = StringEncoderDecoder.encodeHEX(str);
@@ -21,7 +21,7 @@ public class StringEncoderDecoderTest {
 
   @Test
   public void testStringToUnicode() throws Exception {
-    final String[] strings = new String[] {"Some String", "Another String", "Строка на русском"};
+    final String[] strings = new String[] {"Some String", "Another String"};
 
     for (String str : strings) {
       String encoded = StringEncoderDecoder.stringToUnicode(str);

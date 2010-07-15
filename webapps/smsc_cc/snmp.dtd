@@ -1,0 +1,13 @@
+<!ELEMENT config (counterInterval,default,object*) >
+<!ELEMENT counterInterval EMPTY>
+<!ATTLIST counterInterval value CDATA #REQUIRED>
+<!ELEMENT default ((counter|severity)*)>
+<!ATTLIST default enabled (true|false) #REQUIRED>
+<!ELEMENT severity EMPTY>
+<!ATTLIST severity event (register|registerFailed|unregister|unregisterFailed) #REQUIRED
+                   value (off|normal|warning|minor|major|critical) #REQUIRED>
+<!ELEMENT counter (#PCDATA)>
+<!ATTLIST counter name CDATA #REQUIRED>
+<!ELEMENT object ((counter|severity)*)>
+<!ATTLIST object id CDATA #REQUIRED enabled (true|false) #REQUIRED>
+                   

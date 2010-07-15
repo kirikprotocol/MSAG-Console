@@ -1,0 +1,16 @@
+<!ELEMENT records (lastId, group*)>
+
+<!ELEMENT lastId EMPTY>
+<!ATTLIST lastId value CDATA #REQUIRED>
+
+<!ELEMENT group (address | mask)*>
+<!ATTLIST group
+    desc CDATA #REQUIRED 
+    name CDATA #REQUIRED 
+    id CDATA #REQUIRED>
+
+<!ELEMENT address EMPTY>
+<!ATTLIST address value CDATA #REQUIRED>
+
+<!ELEMENT mask EMPTY>
+<!ATTLIST mask value CDATA #REQUIRED>

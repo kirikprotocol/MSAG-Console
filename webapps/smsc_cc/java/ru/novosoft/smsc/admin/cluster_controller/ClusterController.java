@@ -4,8 +4,10 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.admin.service.ServiceManager;
+import ru.novosoft.smsc.util.Address;
 
 import java.io.File;
+import java.util.Collection;
 
 /**
  * Класс для отправки комманд в ClusterController.
@@ -14,7 +16,7 @@ import java.io.File;
  */
 public class ClusterController {
 
-  private static final String SERVICE_ID = "ClusterController";
+  public static final String SERVICE_ID = "ClusterController";
 
 
   private ServiceManager serviceManager;
@@ -24,11 +26,10 @@ public class ClusterController {
     
   }
 
-  public ClusterController(ServiceManager serviceManager, FileSystem fileSystem) throws AdminException {
+  public ClusterController(ServiceManager serviceManager, File configFile, FileSystem fileSystem) throws AdminException {
     this.serviceManager = serviceManager;
 
     ServiceInfo si = getInfo();
-    File configFile = new File(si.getBaseDir(), "conf" + File.separator + "config.xml");
     if (!fileSystem.exists(configFile))
       throw new ClusterControllerException("config_file_not_found", configFile.getAbsolutePath());
 
@@ -41,6 +42,10 @@ public class ClusterController {
     if (si == null)
       throw new ClusterControllerException("cluster_controller_offline");
     return si;
+  }
+
+  public boolean isOnline() throws AdminException {
+    return getInfo().getOnlineHost() != null;
   }
 
   /**
@@ -61,6 +66,42 @@ public class ClusterController {
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
   public void delAlias(String alias) throws AdminException {
+  }
+
+  /**
+   * Отправляет команду на добавление закрытой группы
+   * @param groupId идентификатор группы
+   * @param groupName название группы
+   * @param masks список масок
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void addClosedGroup(long groupId, String groupName, Collection<Address> masks) throws AdminException {
+  }
+
+  /**
+   * Отправляет команду на удаление закрытой группы
+   * @param groupId идентификатор группы
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void removeClosedGroup(long groupId) throws AdminException {
+  }
+
+  /**
+   * Отправляет команду на добавление масок в закрытую группу
+   * @param groupId идентификатор группы
+   * @param masks список масок
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void addMasksToClosedGroup(long groupId, Collection<Address> masks) throws AdminException {
+  }
+
+  /**
+   * Отправляет команду на удаление масок из закрытой группы
+   * @param groupId идентификатор группы
+   * @param masks список масок
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void removeMasksFromClosedGroup(long groupId, Collection<Address> masks) throws AdminException {
   }
 
   /**
