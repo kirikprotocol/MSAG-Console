@@ -55,7 +55,6 @@ public class Address {
    * Создаёт адрес из строки
    *
    * @param address - адрес в виде строки
-   * @throws AdminException неправильный формат строки
    */
   public Address(String address)  {
     address = address.trim();

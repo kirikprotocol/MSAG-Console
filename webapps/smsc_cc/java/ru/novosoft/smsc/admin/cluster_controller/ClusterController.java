@@ -105,6 +105,31 @@ public class ClusterController {
   }
 
   /**
+   * Возвращает список MSC адресов, зарегистрированных в СС
+   * @return список MSC адресов, зарегистрированных в СС
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public Collection<Address> getMscs() throws AdminException{
+    return null;
+  }
+
+  /**
+   * Регистрирует новый MSC адрес в СС
+   * @param mscAddress новый MSC адрес
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void registerMsc(Address mscAddress) throws AdminException{
+  }
+
+  /**
+   * Удаляет MSC адрес из реестра СС
+   * @param mscAddress MSC адрес, который надо удалить из реестра
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void unregisterMsc(Address mscAddress) throws AdminException{
+  }
+
+  /**
    * Отправляет команду на применение изменений в конфигурации политик передоставки
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */

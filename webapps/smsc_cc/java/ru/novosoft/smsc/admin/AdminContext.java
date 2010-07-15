@@ -8,6 +8,7 @@ import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
 import ru.novosoft.smsc.admin.fraud.FraudManager;
 import ru.novosoft.smsc.admin.map_limit.MapLimitManager;
+import ru.novosoft.smsc.admin.msc.MscManager;
 import ru.novosoft.smsc.admin.reschedule.RescheduleManager;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.admin.service.ServiceManager;
@@ -37,6 +38,7 @@ public class AdminContext {
   protected MapLimitManager mapLimitManager;
   protected SnmpManager snmpManager;
   protected ClosedGroupManager closedGroupManager;
+  protected MscManager mscManager;
   protected InstallationType instType;
 
   protected AdminContext() {
@@ -95,6 +97,8 @@ public class AdminContext {
     snmpManager = new SnmpManager(new File(smscConfigDir, "snmp.xml"), smscConfigBackupDir, clusterController, fileSystem);
 
     closedGroupManager = new ClosedGroupManager(new File(smscConfigDir, "snmp.xml"), smscConfigBackupDir, clusterController, fileSystem);
+
+    mscManager = new MscManager(clusterController);
   }
 
   public FileSystem getFileSystem() {
@@ -131,6 +135,10 @@ public class AdminContext {
 
   public ClosedGroupManager getClosedGroupManager() {
     return closedGroupManager;
+  }
+
+  public MscManager getMscManager() {
+    return mscManager;
   }
 
   public InstallationType getInstallationType() {
