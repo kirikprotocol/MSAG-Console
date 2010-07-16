@@ -135,7 +135,7 @@ protected:
   {
     _cdcType = cdcEncoder;
     _pCdc.enc = new (_memCdc.buf)EncoderOf_TArg(use_rule);
-    _pCdc.enc->setValue(use_val);
+    _pCdc.enc->setValue(*this);
     return _pCdc.enc;
   }
   //
@@ -143,7 +143,7 @@ protected:
   {
     _cdcType = cdcDecoder;
     _pCdc.dec = new (_memCdc.buf)DecoderOf_TArg(use_rule);
-    _pCdc.dec->setValue(use_val);
+    _pCdc.dec->setValue(*this);
     return _pCdc.dec;
   }
   //
@@ -163,7 +163,7 @@ protected:
   {
     if (_cdcType != cdcDecoder) {
       if (_cdcType == cdcEncoder)
-        _pCdc.dec->~EncoderOf_TArg();
+        _pCdc.enc->~EncoderOf_TArg();
       return initOptDecoder(use_rule);
     }
     if (_pCdc.dec->getTSRule() != use_rule)
@@ -184,7 +184,7 @@ protected:
 public:
   ASTypeValue_T() : ASTypeValueAC()
   {
-    _pVal.enc = _memCdc.aligner = 0;
+    _memCdc.aligner = _pCdc.enc =  NULL;
   }
   ~ASTypeValue_T()
   {
