@@ -5,18 +5,16 @@
 #ident "@(#)$Id$"
 #define __ASN1_BER_DECODER_UNKNOWN_EXTENSION
 
-#include <list>
+#include "eyeline/asn1/BER/rtutl/UnknownExtensions.hpp"
 #include "eyeline/asn1/BER/rtdec/DecodeASType.hpp"
 
 namespace eyeline {
 namespace asn1 {
 namespace ber {
 
-typedef std::list<TransferSyntax> UnkExtensionList;
-
 class DecoderOfUExtension : public TypeValueDecoderAC {
 protected:
-  UnkExtensionList * _valDec;
+  UnknownExtensions * _valDec;
 
   DECResult decodeVAL(const TLVProperty * val_prop,
                       const uint8_t * use_enc, TSLength max_len,
@@ -31,7 +29,7 @@ public:
   ~DecoderOfUExtension()
   { }
 
-  void setValue(UnkExtensionList & use_val) { _valDec = &use_val; }
+  void setValue(UnknownExtensions & use_val) { _valDec = &use_val; }
 };
 
 } //ber
