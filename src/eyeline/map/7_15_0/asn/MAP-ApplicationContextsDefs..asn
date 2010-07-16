@@ -1,0 +1,601 @@
+/* ************************************************************************** *
+ * @(#)$Id$
+ * ************************************************************************** */
+/* The following ASN.1 module provides the informal defintion of 
+ * MAP application-contexts defined in clause 17.3.
+ * ************************************************************************** */
+/* Author: R.V. Gerasimov                                                                             *
+ * -- 3GPP TS 29.002 V7.15.0 (2010-06)                                                        *
+ * ************************************************************************** */
+MAP-ApplicationContextsDefinition
+DEFINITIONS ::=
+BEGIN
+
+IMPORTS
+    OPERATION-PACKAGE,
+    locationUpdatingPackage-v3,
+    dataRestorationPackage-v3,
+    subscriberDataMngtPackage-v3,
+    tracingPackage-v3,
+    locationCancellationPackage-v3,
+    roamingNumberEnquiryPackage-v3,
+    interrogationPackage-v3,
+    callControlTransferPackage-v4,
+    resetPackage-v2,
+    handoverControlPackage-v3,
+    imsi-RetrievalPackage-v2,
+    equipmentMngtPackage-v3,
+    equipmentMngtPackage-v2,
+    infoRetrievalPackage-v3,
+    infoRetrievalPackage-v2,
+    interVlrInfoRetrievalPackage-v3,
+    interVlrInfoRetrievalPackage-v2,
+    subscriberDataMngtStandAlonePackage-v3,
+    tracingStandAlonePackage-v3,
+    functionalSsPackage-v2,
+    functionalSsPackage-v1,
+    unstructuredSsPackage-v2,
+    unstructuredSsPackage-v1,
+    bindingPackage-v1,
+    shortMsgGatewayPackage-v3,
+    mo-ShortMsgRelayPackage-v3,
+    alertingPackage-v2,
+    mwdMngtPackage-v3,
+    mt-ShortMsgRelayPackage-v3,
+    purgingPackage-v3,
+    subscriberInformationEnquiryPackage-v3,
+    anyTimeInformationEnquiryPackage-v3,
+    groupCallControlPackage-v3,
+    groupCallInfoRetrievalPackage-v3,
+    gprsLocationUpdatingPackage-v3,
+    subscriberDataMngtPackage-v3,
+    tracingPackage-v3,
+    gprsInterrogationPackage-v4,
+    failureReportingPackage-v3,
+    gprsNotifyingPackage-v3,
+    ss-InvocationNotificationPackage-v3,
+    setReportingStatePackage-v3,
+    statusReportPackage-v3,
+    remoteUserFreePackage-v3,
+    setReportingStatePackage-v3,
+    statusReportPackage-v3,
+    callCompletionPackage-v3,
+    locationSvcGatewayPackage-v3,
+    locationSvcEnquiryPackage-v3,
+    locationSvcReportingPackage-v3,
+    ist-AlertingPackage-v3,
+    mm-EventReportingPackage-v3,
+    anyTimeInformationHandlingPackage-v3,
+    subscriberDataModificationNotificationPackage-v3,
+    resourceManagementPackage-v3,
+    mt-ShortMsgRelay-VGCS-Package-v3
+FROM MAP-OperationPackages
+
+    gsm-NetworkId,
+    ac-Id
+FROM MobileDomainDefinitions {
+   itu-t (0) identified-organization (4) etsi (0) mobileDomain (0)
+   mobileDomainDefinitions (0) version1 (1)}
+;
+
+-- application-context-names
+
+map-ac  OBJECT IDENTIFIER ::= { gsm-NetworkId ac-Id }
+
+
+-- 17.3.2       Application context definitions
+APPLICATION-CONTEXT ::= CLASS {
+        &Symmetric           OPERATION-PACKAGE OPTIONAL,
+        &InitiatorConsumerOf OPERATION-PACKAGE OPTIONAL,
+        &ResponderConsumerOf OPERATION-PACKAGE OPTIONAL,
+        &code                OBJECT IDENTIFIER } 
+WITH SYNTAX {
+        [ OPERATIONS OF         &Symmetric ]
+        [ INITIATOR CONSUMER OF &InitiatorConsumerOf
+          RESPONDER CONSUMER OF &ResponderConsumerOf ]
+        ID &code
+}
+
+-- 17.3.2.1     Void
+-- 17.3.2.2     Location Updating
+-- This application context is used between HLR and VLR for location updating procedures.
+networkLocUpContext-v3 APPLICATION-CONTEXT ::= {
+        -- Responder is HLR if Initiator is VLR
+        INITIATOR CONSUMER OF {
+                locationUpdatingPackage-v3 |
+                dataRestorationPackage-v3}
+        RESPONDER CONSUMER OF {
+                subscriberDataMngtPackage-v3 |
+                tracingPackage-v3}
+        ID      {map-ac networkLocUp(1) version3(3)}
+}
+-- The following application-context-name is assigned to the v2-equivalent application-context:
+-- ID   {map-ac networkLocUp(1) version2(2)}
+
+-- The following application-context-name is assigned to the v1-equivalent application-context:
+-- ID   {map-ac networkLocUp(1) version1(1)}
+
+-- 17.3.2.3     Location Cancellation
+-- This application context is used between HLR and VLR or between HLR and SGSN for location cancellation procedures. For the HLR - SGSN interface only version 3 of this application context is applicable.
+locationCancellationContext-v3 APPLICATION-CONTEXT ::= {
+        -- Responder is VLR or SGSN if Initiator is HLR
+        INITIATOR CONSUMER OF { locationCancellationPackage-v3 }
+        ID       {map-ac locationCancel(2) version3(3)}
+}
+-- The following application-context-name is assigned to the v2-equivalent application-context:
+-- ID   map-ac locationCancel(2) version2(2)
+
+-- The following application-context-name is assigned to the v1-equivalent application-context:
+-- ID   map-ac locationCancel(2) version1(1)
+
+-- 17.3.2.4     Roaming number enquiry
+-- This application context is used between HLR and VLR for roaming number enquiry procedures.
+roamingNumberEnquiryContext-v3 APPLICATION-CONTEXT ::= {
+        -- Responder is VLR if Initiator is HLR
+        INITIATOR CONSUMER OF { roamingNumberEnquiryPackage-v3 }
+        ID      {map-ac roamingNbEnquiry(3) version3(3)}
+}
+-- The following application-context-name is assigned to the v2-equivalent application-context:
+-- ID   {map-ac roamingNbEnquiry(3) version2(2)}
+
+-- The following application-context-name is assigned to the v1-equivalent application-context:
+-- ID   {map-ac roamingNbEnquiry(3) version1(1)}
+
+-- 17.3.2.5     Void
+
+-- 17.3.2.6     Location Information Retrieval
+-- This application-context is used between GMSC and HLR or between GMSC and NPLR or between gsmSCF and HLR when retrieving location information. For the GMSC - NPLR interface version 1, version 2 and version 3 of this application context are applicable.
+locationInfoRetrievalContext-v3 APPLICATION-CONTEXT ::= {
+        -- Responder is HLR or NPLR if Initiator is GMSC
+        -- Responder is HLR if Initiator is gsmSCF
+        INITIATOR CONSUMER OF { interrogationPackage-v3 }
+        ID      {map-ac locInfoRetrieval(5) version3(3)}
+}
+-- The following application-context-name is assigned to the v2-equivalent application-context:
+-- ID   {map-ac locInfoRetrieval(5) version2(2)}
+-- The following application-context-name is assigned to the v1-equivalent application-context:
+-- ID   {map-ac locInfoRetrieval(5) version1(1)}
+
+-- 17.3.2.7     Call control transfer
+-- This application context is used for the call control transfer procedure between the VMSC and the GMSC.
+callControlTransferContext-v4 APPLICATION-CONTEXT ::= {
+        -- Responder is GMSC if Initiator is VMSC
+        INITIATOR CONSUMER OF { callControlTransferPackage-v4 }
+        ID      {map-ac callControlTransfer(6) version4(4)}
+}
+-- The following application-context-name is assigned to the v3-equivalent application-context:
+-- ID   {map-ac callControlTransfer(6) version3(3)}
+
+-- 17.3.2.8     Void
+-- 17.3.2.9     Void
+-- 17.3.2.10    Void
+
+-- 17.3.2.11    Location registers restart
+-- This application context is used between HLR and VLR or between HLR and SGSN for location register restart procedures. For the HLR - SGSN interface version 1 and version 2 of this application context are applicable.
+resetContext-v2 APPLICATION-CONTEXT ::= {
+        -- Responder is VLR or SGSN if Initiator is HLR
+        INITIATOR CONSUMER OF { resetPackage-v2 }
+        ID      {map-ac reset(10) version2(2)}
+}
+-- The following application-context-name is assigned to the v1-equivalent application-context:
+-- ID   {map-ac reset(10) version1(1)}
+
+-- 17.3.2.12    Handover control
+-- This application context is used for handover procedures between MSCs.
+handoverControlContext-v3 APPLICATION-CONTEXT ::= {
+        -- Responder is MSCB if Initiator is MSCA
+        INITIATOR CONSUMER OF { handoverControlPackage-v3 }
+        ID      {map-ac handoverControl(11) version3(3)}
+}
+-- The following application-context-name is assigned to the v2-equivalent application-context:
+-- ID   {map-ac handoverControl(11) version2(2)}
+-- The following application-context-name is assigned to the v1-equivalent application-context:
+-- ID   {map-ac handoverControl(11) version1(1)}
+
+-- 17.3.2.13    IMSI Retrieval
+-- This application context is used for IMSI retrieval between HLR and VLR.
+imsiRetrievalContext-v2 APPLICATION-CONTEXT ::= {
+        -- Responder is HLR if Initiator is VLR
+        INITIATOR CONSUMER OF { imsi-RetrievalPackage-v2 }
+        ID      {map-ac imsiRetrieval(26) version2(2)}
+}
+-- This application-context is v2 only.
+
+-- 17.3.2.14    Equipment Management
+-- This application context is used for equipment checking between MSC and EIR or between SGSN and EIR. For the SGSN - EIR interface version 1 and version 2 and version 3 of this application context are applicable: 
+equipmentMngtContext-v3 APPLICATION-CONTEXT ::= {
+        -- Responder is EIR if Initiator is MSC
+        -- Responder is EIR if Initiator is SGSN
+        INITIATOR CONSUMER OF { equipmentMngtPackage-v3 }
+        ID      {map-ac equipmentMngt(13) version3(3)}
+}
+-- The following application-context-name is assigned to the v2-equivalent application-context:
+equipmentMngtContext-v2 APPLICATION-CONTEXT ::= {
+        -- Responder is EIR if Initiator is MSC
+        -- Responder is EIR if Initiator is SGSN
+        INITIATOR CONSUMER OF { equipmentMngtPackage-v2 }
+        ID      {map-ac equipmentMngt(13) version2(2)}
+}
+-- The following application-context-name is assigned to the v1-equivalent application-context:
+-- ID   {map-ac equipmentMngt(13) version1(1)}
+
+-- 17.3.2.15    Information retrieval
+-- This application context is used for authentication information retrieval between HLR and VLR or between HLR and SGSN. For the HLR - SGSN interface version 1 and version 2 and version 3 of this application context are applicable.
+infoRetrievalContext-v3 APPLICATION-CONTEXT ::= {
+        -- Responder is HLR if Initiator is VLR
+        -- Responder is HLR if Initiator is SGSN
+        INITIATOR CONSUMER OF { infoRetrievalPackage-v3 }
+        ID      {map-ac infoRetrieval(14) version3(3)}
+}
+-- The following application-context-name is assigned to the v2-equivalent application-context:
+infoRetrievalContext-v2 APPLICATION-CONTEXT ::= {
+        -- Responder is HLR if Initiator is VLR
+        -- Responder is HLR if Initiator is SGSN
+        INITIATOR CONSUMER OF { infoRetrievalPackage-v2 }
+        ID      {map-ac infoRetrieval(14) version2(2)}
+}
+-- The following application-context-name is assigned to the v1-equivalent application-context:
+-- ID   {map-ac infoRetrieval(14) version1(1)}
+
+-- 17.3.2.16    Inter-VLR information retrieval
+-- This application context is used for information retrieval between VLRs. 
+interVlrInfoRetrievalContext-v3 APPLICATION-CONTEXT ::= {
+        -- Responder is VLR if Initiator is VLR
+        INITIATOR CONSUMER OF { interVlrInfoRetrievalPackage-v3 }
+        ID      {map-ac interVlrInfoRetrieval(15) version3(3)}
+}
+-- The v2-equivalent application-context is:
+interVlrInfoRetrievalContext-v2 APPLICATION-CONTEXT ::= {
+        -- Responder is VLR if Initiator is VLR
+        INITIATOR CONSUMER OF { interVlrInfoRetrievalPackage-v2 }
+        ID      {map-ac interVlrInfoRetrieval(15) version2(2)}
+}
+-- The v1-equivalent application-context is:
+-- ID   {map-ac infoRetrieval(14) version1(1)}
+
+-- 17.3.2.17    Stand Alone Subscriber Data Management
+-- This application context is used for stand alone subscriber data management between HLR and VLR or between HLR and SGSN. For the HLR - SGSN interface only version 3 of this application context is applicable:
+subscriberDataMngtContext-v3 APPLICATION-CONTEXT ::= {
+        -- Responder is VLR or SGSN if Initiator is HLR
+        INITIATOR CONSUMER OF { subscriberDataMngtStandAlonePackage-v3 }
+        ID      {map-ac subscriberDataMngt(16) version3(3)}
+}
+-- The following application-context-name is assigned to the v2-equivalent application-context:
+-- ID   {map-ac subscriberDataMngt(16) version2(2)}
+-- The following application-context-name is assigned to the v1-equivalent application-context:
+-- ID   {map-ac subscriberDataMngt(16) version1(1)}
+
+-- 17.3.2.18    Tracing
+-- This application context is used between HLR and VLR or between HLR and SGSN for stand alone tracing control procedures. For the HLR - SGSN interface version 1, version 2 and version 3 of this application context are applicable.
+tracingContext-v3 APPLICATION-CONTEXT ::= {
+        -- Responder is VLR or SGSN if Initiator is HLR
+        INITIATOR CONSUMER OF { tracingStandAlonePackage-v3 }
+        ID      {map-ac tracing(17) version3(3)}
+}
+-- The following application-context-name is assigned to the v2-equivalent application-context:
+-- ID   {map-ac tracing(17) version2(2)}
+-- The following application-context-name is assigned to the v1-equivalent application-context:
+-- ID   {map-ac tracing(17) version1(1)}
+
+-- 17.3.2.19    Network functional SS handling
+-- This application context is used for functional-like SS handling procedures between VLR and HLR.
+networkFunctionalSsContext-v2 APPLICATION-CONTEXT ::= {
+        -- Responder is HLR, Initiator is VLR
+        INITIATOR CONSUMER OF { functionalSsPackage-v2 }
+        ID      {map-ac networkFunctionalSs(18) version2(2)}
+}
+-- The v1-equivalent application-context is defined as follows:
+networkFunctionalSsContext-v1 APPLICATION-CONTEXT ::= {
+        -- Responder is HLR, Initiator is VLR
+        INITIATOR CONSUMER OF {
+                functionalSsPackage-v1 |
+                unstructuredSsPackage-v1 |
+                bindingPackage-v1}
+        ID      {map-ac networkFunctionalSs(18) version1(1)}
+}
+
+-- 17.3.2.20    Network unstructured SS handling
+-- This application context is used for handling stimuli-like procedures between HLR and VLR, between the HLR and gsmSCF, and between HLR and HLR.
+networkUnstructuredSsContext-v2 APPLICATION-CONTEXT ::= {
+        -- Responder is HLR, Initiator is VLR
+        -- Responder is VLR, Initiator is HLR
+        -- Responder is gsmSCF, Initiator is HLR
+        -- Responder is HLR, Initiator is gsmSCF
+        -- Responder is HLR, Initiator is HLR
+        OPERATIONS OF { unstructuredSsPackage-v2 }
+        ID      {map-ac networkUnstructuredSs(19) version2(2)}
+}
+-- The following application-context-name is assigned to the v1-equivalent application-context:
+-- ID   {map-ac networkFunctionalSs(18) version1(1)}
+
+-- 17.3.2.21    Short Message Gateway
+-- This application context is used for short message gateway procedures.
+shortMsgGatewayContext-v3 APPLICATION-CONTEXT ::= {
+        -- Responder is HLR if Initiator is GMSC
+        INITIATOR CONSUMER OF { shortMsgGatewayPackage-v3 }
+        ID      {map-ac shortMsgGateway(20) version3(3)}
+}
+-- The following application-context-name is assigned to the v2-equivalent application-context:
+-- ID   {map-ac shortMsgGateway(20) version2(2)}
+-- The following application-context-name is assigned to the v1-equivalent application-context:
+-- ID   {map-ac shortMsgGateway(20) version1(1)}
+
+
+-- 17.3.2.22    Mobile originating Short Message Relay
+-- This application context is used between MSC and IWMSC or between SGSN and IWMSC for mobile originating short message relay procedures. For the SGSN - IWMSC interface version 1, version 2 and version 3 of this application context are applicable.
+shortMsgMO-RelayContext-v3 APPLICATION-CONTEXT ::= {
+        -- Responder is IWMSC if Initiator is MSC
+        -- Responder is IWMSC if Initiator is SGSN
+        INITIATOR CONSUMER OF { mo-ShortMsgRelayPackage-v3 }
+        ID      {map-ac shortMsgMO-Relay(21) version3(3)}
+}
+-- The following application-context-name is assigned to the v2-equivalent application-context:
+-- ID   {map-ac shortMsgMO-Relay(21) version2(2)}
+-- The following application-context-name is assigned to the v1-equivalent application-context:
+-- ID   {map-ac shortMsg-Relay(21) version1(1)}
+
+-- 17.3.2.23    Void
+-- 17.3.2.24    Short message alert
+-- This application context is used for short message alerting procedures.
+shortMsgAlertContext-v2 APPLICATION-CONTEXT ::= {
+        -- Responder is IWMSC if Initiator is HLR
+        INITIATOR CONSUMER OF { alertingPackage-v2 }
+        ID      {map-ac shortMsgAlert(23) version2(2)}
+}
+-- The following application-context-name is symbolically assigned to the v1-equivalent application-context:
+-- ID   {map-ac shortMsgAlert(23) version1(1)}
+
+-- 17.3.2.25    Short message waiting data management
+-- This application context is used between VLR and HLR or between SGSN and HLR for short message waiting data management procedures. For the SGSN - HLR interface only version 3 of this application context is applicable.
+mwdMngtContext-v3 APPLICATION-CONTEXT ::= {
+        -- Responder is HLR if Initiator is SGSN
+        -- Responder is HLR if Initiator is VLR
+        INITIATOR CONSUMER OF { mwdMngtPackage-v3 }
+        ID      {map-ac mwdMngt(24) version3(3)}
+}
+-- The following application-context-name is assigned to the v2-equivalent application-context:
+-- ID   {map-ac mwdMngt(24) version2(2)}
+-- The following application-context-name is assigned to the v1-equivalent application-context:
+-- ID   {map-ac mwdMngt(24) version1(1)}
+
+-- 17.3.2.26    Mobile terminating Short Message Relay
+-- This application context is used between GMSC and MSC or between GMSC and SGSN for mobile terminating short message relay procedures. For the GMSC - SGSN interface version 2 and version 3 of this application context and the equivalent version 1 application context are applicable.
+shortMsgMT-RelayContext-v3 APPLICATION-CONTEXT ::= {
+        -- Responder is MSC or SGSN if Initiator is GMSC
+        INITIATOR CONSUMER OF { mt-ShortMsgRelayPackage-v3 }
+        ID      {map-ac shortMsgMT-Relay(25) version3(3)}
+}
+-- The following application-context-name is assigned to the v2-equivalent application-context:
+-- ID   {map-ac shortMsgMT-Relay(25) version2(2)}
+-- The following application-context-name is assigned to the v1-equivalent application-context:
+-- ID   {map-ac shortMsg-Relay(21) version1(1)}
+
+-- 17.3.2.27    MS purging
+-- This application context is used between HLR and VLR or between HLR and SGSN for MS purging procedures. For the SGSN - HLR interface only version 3 of this application context is applicable.
+msPurgingContext-v3 APPLICATION-CONTEXT ::= {
+        -- Responder is HLR if Initiator is VLR
+        -- Responder is HLR if Initiator is SGSN
+        INITIATOR CONSUMER OF { purgingPackage-v3 }
+        ID      {map-ac msPurging(27) version3(3)}
+}
+-- The following application-context-name is assigned to the v2-equivalent application-context:
+-- ID   {map-ac msPurging(27) version2(2)}
+
+-- 17.3.2.28    Subscriber information enquiry
+-- This application context is used between HLR and VLR or between HLR and SGSN for subscriber information enquiry procedures.
+subscriberInfoEnquiryContext-v3 APPLICATION-CONTEXT ::= {
+        -- Responder is VLR or SGSN if Initiator is HLR
+        INITIATOR CONSUMER OF { subscriberInformationEnquiryPackage-v3 }
+        ID      {map-ac subscriberInfoEnquiry(28) version3(3)}
+}
+-- This application-context is v3 only.
+
+-- 17.3.2.29    Any time information enquiry
+-- This application context is used between gsmSCF and HLR or between gsmSCF and GMLC or between gsmSCF and NPLR for any time information enquiry procedures.
+anyTimeInfoEnquiryContext-v3 APPLICATION-CONTEXT ::= {
+        -- Responder is HLR or GMLC or NPLR if Initiator is gsmSCF
+        INITIATOR CONSUMER OF { anyTimeInformationEnquiryPackage-v3 }
+        ID      {map-ac anyTimeInfoEnquiry(29) version3(3)}
+}
+-- This application-context is v3 only.
+
+-- 17.3.2.30    Group Call Control
+-- This application context is used between anchor MSC and relay MSC for group call and broadcast call procedures.
+groupCallControlContext-v3 APPLICATION-CONTEXT ::= {
+        -- Responder is relay MSC if Initiator is anchor MSC
+        INITIATOR CONSUMER OF { groupCallControlPackage-v3 }
+        ID      {map-ac groupCallControl(31) version3(3)}
+}
+-- This application-context is v3 only.
+
+-- 17.3.2.30A   Group Call Info Retrieval
+-- This application context is used between group call serving MSC and visited MSC for group call and broadcast call procedures.
+groupCallInfoRetControlContext-v3 APPLICATION-CONTEXT ::= {
+        -- Responder is group call serving MSC if Initiator is visited MSC
+        -- Responder is visited MSC if Initiator is group call serving MSC
+        INITIATOR CONSUMER OF { groupCallInfoRetrievalPackage-v3 }
+        ID      {map-ac groupCallInfoRetrieval(45) version3(3)}
+}
+-- This application-context is v3 only.
+
+-- 17.3.2.31    Void
+
+-- 17.3.2.32    Gprs Location Updating
+-- This application context is used between HLR and SGSN for gprs location updating procedures.
+gprsLocationUpdateContext-v3 APPLICATION-CONTEXT ::= {
+        -- Responder is HLR if Initiator is SGSN
+        INITIATOR CONSUMER OF {
+                gprsLocationUpdatingPackage-v3}
+        RESPONDER CONSUMER OF {
+                subscriberDataMngtPackage-v3 |
+                tracingPackage-v3}
+        ID      {map-ac gprsLocationUpdate(32) version3(3)}
+}
+-- This application-context is v3 only.
+
+-- 17.3.2.33    Gprs Location Information Retreival
+-- This application context is used between HLR and GGSN when retrieving gprs location information.
+gprsLocationInfoRetrievalContext-v4 APPLICATION-CONTEXT ::= {
+        -- Responder is HLR if Initiator is GGSN
+        INITIATOR CONSUMER OF { gprsInterrogationPackage-v4 }
+        ID      {map-ac gprsLocationInfoRetrieval(33) version4(4)}
+}
+-- The following application-context-name is assigned to the v3-equivalent application-context:
+-- ID   {map-ac gprsLocationInfoRetrieval(33) version3(3)}
+
+
+-- 17.3.2.34    Failure Reporting
+-- This application context is used between HLR and GGSN to inform that network requested PDP-context activation has failed.
+failureReportContext-v3 APPLICATION-CONTEXT ::= {
+        -- Responder is HLR if Initiator is GGSN
+        INITIATOR CONSUMER OF { failureReportingPackage-v3 }
+        ID      {map-ac failureReport(34) version3(3)}
+}
+-- This application-context is v3 only.
+
+-- 17.3.2.35    GPRS Notifying
+-- This application context is used between HLR and GGSN for notifying that GPRS subscriber is present again.
+gprsNotifyContext-v3 APPLICATION-CONTEXT ::= {
+        -- Responder is GGSN if Initiator is HLR
+        INITIATOR CONSUMER OF { gprsNotifyingPackage-v3 }
+        ID      {map-ac gprsNotify(35) version3(3)}
+}
+-- This application-context is v3 only.
+
+-- 17.3.2.36    Supplementary Service invocation notification
+-- This application context is used between the MSC and the gsmSCF and between the HLR and the gsmSCF for Supplementary Service invocation notification procedures.
+ss-InvocationNotificationContext-v3 APPLICATION-CONTEXT ::= {
+        -- Responder is gsmSCF, Initiator is MSC
+        -- Responder is gsmSCF, Initiator is HLR
+        INITIATOR CONSUMER OF { ss-InvocationNotificationPackage-v3 }
+        ID      {map-ac ss-InvocationNotification(36) version3(3)}
+}
+-- This application-context is v3 only.
+
+-- 17.3.2.37    Reporting
+-- This application context is used between HLR and VLR for reporting procedures.
+reportingContext-v3 APPLICATION-CONTEXT ::= {
+        -- Responder is VLR if Initiator is HLR
+        -- Responder is HLR if Initiator is VLR
+        INITIATOR CONSUMER OF {
+                setReportingStatePackage-v3 |
+                statusReportPackage-v3 |
+                remoteUserFreePackage-v3}
+        RESPONDER CONSUMER OF {
+                setReportingStatePackage-v3 |
+                statusReportPackage-v3}
+        ID      {map-ac reporting(7) version3(3)}
+}
+-- This application-context is v3 only.
+
+-- 17.3.2.38    Call Completion
+-- This application context is used between VLR and the HLR for subscriber control of call completion services.
+callCompletionContext-v3 APPLICATION-CONTEXT ::= {
+        -- Responder is HLR if Initiator is VLR
+        INITIATOR CONSUMER OF { callCompletionPackage-v3 }
+        ID      {map-ac callCompletion(8) version3(3)}
+}
+-- This application-context is v3 only.
+
+-- 17.3.2.39    Location Service Gateway
+-- This application context is used for location service gateway procedures.
+locationSvcGatewayContext-v3 APPLICATION-CONTEXT ::= {
+        -- Responder is HLR if Initiator is GMLC
+        INITIATOR CONSUMER OF { locationSvcGatewayPackage-v3 }
+        ID      {map-ac locationSvcGateway(37) version3(3)}
+}
+
+-- 17.3.2.40    Location Service Enquiry
+-- This application context is used for location service enquiry procedures.
+locationSvcEnquiryContext-v3 APPLICATION-CONTEXT ::= {
+        -- Responder is MSC or SGSN if Initiator is GMLC
+        -- Responder is GMLC if Initiator is MSC
+        -- Responder is GMLC if Initiator is SGSN
+        INITIATOR CONSUMER OF {
+                locationSvcEnquiryPackage-v3 |
+                locationSvcReportingPackage-v3}
+        ID      {map-ac locationSvcEnquiry(38) version3 (3)}
+}
+
+-- 17.3.2.41    Void
+-- 17.3.2.42    Void
+-- 17.3.2.43    Void
+
+-- 17.3.2.44    IST Alerting
+-- This application context is used between MSC (Visited MSC or Gateway MSC)
+-- and HLR for alerting services within IST procedures.
+istAlertingContext-v3 APPLICATION-CONTEXT ::= {
+        -- Responder is HLR if Initiator is VMSC
+        -- Responder is HLR if Initiator is GMSC
+        INITIATOR CONSUMER OF { ist-AlertingPackage-v3 }
+        ID      {map-ac alerting(4) version3(3)}
+}
+-- This application-context is v3 only.
+
+-- 17.3.2.45    Service Termination
+-- This application context is used between HLR and MSC (Visited MSC or Gateway MSC) for service termination services within IST procedures.
+serviceTerminationContext-v3 APPLICATION-CONTEXT ::= {
+        -- Responder is VMSC or GMSC if Initiator is HLR
+        INITIATOR CONSUMER OF { serviceTerminationPackage-v3 }
+        ID      {map-ac serviceTermination(9) version3(3)}
+}
+-- This application-context is v3 only.
+
+-- 17.3.2.46    Mobility Management event notification
+-- This application context is used between VLR and gsmSCF for Mobility Management event notification procedures.
+mm-EventReportingContext-v3 APPLICATION-CONTEXT ::= {
+        -- Responder is gsmSCF, Initiator is VLR
+        INITIATOR CONSUMER OF { mm-EventReportingPackage-v3 }
+        ID      {map-ac mm-EventReporting(42) version3(3)}
+}
+-- This application-context is v3 only.
+
+-- 17.3.2.47    Any time information handling
+-- This application context is used between gsmSCF and HLR for any time information handling procedures.
+anyTimeInfohandlingContext-v3 APPLICATION-CONTEXT ::= {
+        -- Responder is HLR if Initiator is gsmSCF
+        INITIATOR CONSUMER OF { anyTimeInformationHandlingPackage-v3 }
+        ID      {map-ac anyTimeInfoHandling(43) version3(3)}
+}
+-- This application-context is v3 only.
+
+-- 17.3.2.48    Subscriber Data modification notification
+-- This application context is used between HLR and gsmSCF for Subscriber Data modification notification procedures.
+subscriberDataModificationNotificationContext-v3 APPLICATION-CONTEXT ::= {
+        -- Responder is gsmSCF, Initiator is HLR
+        INITIATOR CONSUMER OF {
+                subscriberDataModificationNotificationPackage-v3} 
+        ID      {map-ac subscriberDataModificationNotification(22) version3(3)}
+}
+-- This application-context is v3 only.
+
+-- 17.3.2.49    Authentication Failure Report
+-- This application context is used between VLR and HLR or SGSN and HLR for reporting of authentication failures.
+authenticationFailureReportContext-v3 APPLICATION-CONTEXT ::= {
+        -- Responder is HLR if Initiator is VLR
+        -- Responder is HLR if Initiator is SGSN
+        INITIATOR CONSUMER OF { authenticationFailureReportPackage-v3 }
+        ID      {map-ac authenticationFailureReport(39) version3(3)}
+}
+-- This application-context is v3 only.
+
+-- 17.3.2.50    Resource Management
+-- This application context is used between GMSC and VMSC for resource management purpose.
+resourceManagementContext-v3 APPLICATION-CONTEXT ::= {
+        -- Responder is VMSC if Initiator is GMSC
+        INITIATOR CONSUMER OF { resourceManagementPackage-v3 }
+        ID      {map-ac resourceManagement(44) version3(3)}
+}
+-- This application-context is v3 only.
+
+-- 17.3.2.51    Mobile terminating Short Message Relay VGCS
+-- This application context is used between SMS-GMSC and MSC for mobile terminating short message relay procedures for VGCS. 
+shortMsgMT-Relay-VGCS-Context-v3 APPLICATION-CONTEXT ::= {
+        -- Responder is MSC if Initiator is SMS-GMSC
+        INITIATOR CONSUMER OF { mt-ShortMsgRelay-VGCS-Package-v3 }
+        ID      {map-ac shortMsgMT-Relay-VGCS(41) version3(3)}
+}
+-- This application-context is v3 only.
+
+END
+

@@ -1,0 +1,750 @@
+/* ************************************************************************** *
+ * @(#)$Id$
+ * ************************************************************************** */
+/* 17.2.2       Packages specifications
+ * (module describes the operation-packages which are used
+ * to build the MAP application-contexts defined in clause 17.3).
+ * ************************************************************************** *
+ * Author: R.V. Gerasimov                                                                             *
+ * -- 3GPP TS 29.002 V7.15.0 (2010-06)                                                        *
+ * ************************************************************************** */
+MAP-OperationPackages
+DEFINITIONS ::=
+BEGIN
+
+IMPORTS
+    OPERATION
+FROM Remote-Operations-Information-Objects {joint-iso-itu-t(0)
+     remote-operations(4) informationObjects(5) version1(0)}
+
+    updateLocation,
+    cancelLocation,
+    purgeMS,
+    sendIdentification,
+    updateGprsLocation,
+    prepareHandover,
+    sendEndSignal,
+    processAccessSignalling,
+    forwardAccessSignalling,
+    prepareSubsequentHandover,
+    sendAuthenticationInfo,
+    authenticationFailureReport,
+    checkIMEI,
+    insertSubscriberData,
+    deleteSubscriberData,
+    reset,
+    forwardCheckSS-Indication,
+    restoreData,
+    provideSubscriberInfo,
+    anyTimeInterrogation,
+    anyTimeSubscriptionInterrogation,
+    anyTimeModification,
+    sendRoutingInfoForGprs,
+    failureReport,
+    noteMsPresentForGprs,
+    noteMM-Event,
+    noteSubscriberDataModified
+FROM MAP-MobileServiceOperations {
+   itu-t(0) identified-organization (4) etsi (0) mobileDomain (0)
+   gsm-Network (1) modules (3) map-MobileServiceOperations (5)
+   version10 (10)}
+
+    activateTraceMode,
+    deactivateTraceMode,
+    sendIMSI
+FROM MAP-OperationAndMaintenanceOperations {
+   itu-t(0) identified-organization (4) etsi (0) mobileDomain (0)
+   gsm-Network (1) modules (3) map-OperationAndMaintenanceOperations (6)
+   version10 (10)}
+
+    sendRoutingInfo,
+    provideRoamingNumber,
+    resumeCallHandling,
+    setReportingState,
+    statusReport,
+    remoteUserFree,
+    ist-Alert,
+    ist-Command,
+    releaseResources
+FROM MAP-CallHandlingOperations {
+   itu-t(0) identified-organization (4) etsi (0) mobileDomain (0)
+   gsm-Network (1) modules (3) map-CallHandlingOperations (7)
+   version10 (10)}
+
+    registerSS,
+    eraseSS,
+    activateSS,
+    deactivateSS,
+    interrogateSS,
+    processUnstructuredSS-Request,
+    unstructuredSS-Request,
+    unstructuredSS-Notify,
+    registerPassword,
+    getPassword,
+    ss-InvocationNotification,
+    registerCC-Entry,
+    eraseCC-Entry
+FROM MAP-SupplementaryServiceOperations {
+   itu-t(0) identified-organization (4) etsi (0) mobileDomain (0)
+   gsm-Network (1) modules (3) map-SupplementaryServiceOperations (8)
+   version10 (10)}
+
+    sendRoutingInfoForSM,
+    mo-ForwardSM,
+    mt-ForwardSM,
+    reportSM-DeliveryStatus,
+    alertServiceCentre,
+    informServiceCentre,
+    readyForSM,
+    mt-ForwardSM-VGCS
+FROM MAP-ShortMessageServiceOperations {
+   itu-t(0) identified-organization (4) etsi (0) mobileDomain (0)
+   gsm-Network (1) modules (3) map-ShortMessageServiceOperations (9)
+   version10 (10)}
+
+    prepareGroupCall,
+    processGroupCallSignalling,
+    forwardGroupCallSignalling,
+    sendGroupCallEndSignal,
+    sendGroupCallInfo
+FROM MAP-Group-Call-Operations {
+   itu-t(0) identified-organization (4) etsi (0) mobileDomain (0)
+   gsm-Network (1) modules (3) map-Group-Call-Operations (22)
+   version10 (10)}
+
+    provideSubscriberLocation,
+    sendRoutingInfoForLCS,
+    subscriberLocationReport
+FROM MAP-LocationServiceOperations {
+   itu-t(0) identified-organization (4) etsi (0) mobileDomain (0)
+   gsm-Network (1) modules (3) map-LocationServiceOperations (24)
+   version10 (10)}
+;
+
+OPERATION-PACKAGE ::= CLASS {
+        &Both     OPERATION             OPTIONAL,
+        &Consumer OPERATION             OPTIONAL,
+        &Supplier OPERATION             OPTIONAL,
+        &id       OBJECT IDENTIFIER     UNIQUE OPTIONAL } 
+WITH SYNTAX {
+        [ OPERATIONS       &Both ]
+        [ CONSUMER INVOKES &Supplier ]
+        [ SUPPLIER INVOKES &Consumer ]
+        [ ID               &id ]
+}
+
+-- 17.2.2.1     Location updating
+-- This operation package includes the operations required for location management
+-- procedures between HLR and VLR.
+locationUpdatingPackage-v3  OPERATION-PACKAGE ::= {
+        -- Supplier is HLR if Consumer is VLR
+        CONSUMER INVOKES { updateLocation }
+        SUPPLIER INVOKES { forwardCheckSs-Indication }
+}
+-- The v1-equivalent and v2-equivalent packages can be determined according to the
+-- rules described in clause 17.2.1.
+
+-- 17.2.2.2     Location cancellation
+-- This operation package includes the operations required for location cancellation
+-- and MS purging procedures between HLR and VLR and between HLR and SGSN.
+locationCancellationPackage-v3  OPERATION-PACKAGE ::= {
+        -- Supplier is VLR or SGSN if Consumer is HLR
+        CONSUMER INVOKES { cancelLocation }
+}
+-- The v1-equivalent and v2-equivalent packages can be determined according to
+-- the rules described in clause 17.2.1.
+
+-- 17.2.2.3     Roaming number enquiry
+-- This operation package includes the operations required for roaming number
+-- enquiry procedures between HLR and VLR.
+roamingNumberEnquiryPackage-v3  OPERATION-PACKAGE ::= {
+        -- Supplier is VLR if Consumer is HLR
+        CONSUMER INVOKES { provideRoamingNumber }
+}
+-- The v1-equivalent and v2-equivalent packages can be determined according to
+-- the rules described in clause 17.2.1.
+
+-- 17.2.2.4     Information retrieval
+-- This operation package includes the operation required for the authentication
+-- information retrieval procedure between HLR and VLR and between HLR and SGSN.
+infoRetrievalPackage-v3  OPERATION-PACKAGE ::= {
+        -- Supplier is HLR if Consumer is VLR
+        -- Supplier is HLR if Consumer is SGSN
+        CONSUMER INVOKES { sendAuthenticationInfo }
+}
+-- The v2-equivalent package is defined as follows:
+infoRetrievalPackage-v2  OPERATION-PACKAGE ::= {
+        -- Supplier is HLR if Consumer is VLR
+        -- Supplier is HLR if Consumer is SGSN
+        CONSUMER INVOKES { sendAuthenticationInfo }
+}
+-- The v1-equivalent package is defined as follows:
+infoRetrievalPackage-v1  OPERATION-PACKAGE ::= {
+        -- Supplier is HLR or VLR if Consumer is VLR
+        -- Supplier is HLR if Consumer is SGSN
+        CONSUMER INVOKES { sendParameters }
+}
+
+
+-- 17.2.2.5     Inter-VLR information retrieval
+-- This operation package includes the operations required for inter VLR
+-- information retrieval procedures.
+interVlrInfoRetrievalPackage-v3  OPERATION-PACKAGE ::= {
+        -- Supplier is VLR if Consumer is VLR
+        CONSUMER INVOKES { sendIdentification }
+}
+-- The v2-equivalent package is defined as follows:
+interVlrInfoRetrievalPackage-v2  OPERATION-PACKAGE ::= {
+        -- Supplier is VLR if Consumer is VLR
+        CONSUMER INVOKES { sendIdentification }
+}
+-- The v1-equivalent package is : infoRetrievalPackage-v1.
+
+
+-- 17.2.2.6     IMSI retrieval
+-- This operation package includes the operation required for the IMSI retrieval
+-- procedure between HLR and VLR.
+imsiRetrievalPackage-v2  OPERATION-PACKAGE ::= {
+        -- Supplier is HLR if Consumer is VLR
+        CONSUMER INVOKES { sendIMSI }
+}
+-- This package is v2 only.
+
+
+-- 17.2.2.7     Call control transfer
+-- This operation package includes the operation required for the call control
+-- transfer procedure between VMSC and GMSC.
+callControlTransferPackage-v4  OPERATION-PACKAGE ::= {
+        -- Supplier is GMSC if Consumer is VMSC
+        CONSUMER INVOKES { resumeCallHandling }
+}
+-- The v3-equivalent package can be determined according to the rules described
+-- in clause 17.2.1.
+
+-- 17.2.2.8     Void
+-- 17.2.2.9     Void
+
+-- 17.2.2.10    Interrogation
+-- This operation package includes the operations required for interrogation
+-- procedures between MSC and HLR or NPLR or between HLR and gsmSCF.
+interrogationPackage-v3  OPERATION-PACKAGE ::= {
+        -- Supplier is HLR or NPLR if Consumer is MSC
+        -- Supplier is HLR if Consumer is gsmSCF
+        CONSUMER INVOKES { sendRoutingInfo }
+}
+-- The v1-equivalent and v2-equivalent packages can be determined according to
+-- the rules described in clause 17.2.1.
+
+-- 17.2.2.11    Void
+
+-- 17.2.2.12    Handover Control
+-- This operation package includes the operations required for handover
+-- procedures between MSCs.
+handoverControlPackage-v3  OPERATION-PACKAGE ::= {
+        -- Supplier is MSCB if Consumer is MSCA
+        CONSUMER INVOKES {
+                prepareHandover |
+                forwardAccessSignalling}
+        SUPPLIER INVOKES {
+                sendEndSignal |
+                processAccessSignalling |
+                prepareSubsequentHandover}
+}
+-- The v2-equivalent package can be determined according to the rules described
+-- in clause 17.2.1.
+-- The v1-equivalent package is defined as follows.
+handoverControlPackage-v1  OPERATION-PACKAGE ::= {
+        -- Supplier is MSCB if Consumer is MSCA
+        CONSUMER INVOKES {
+                performHandover |
+                forwardAccessSignalling |
+                traceSubscriberActivity}
+        SUPPLIER INVOKES {
+                sendEndSignal |
+                noteInternalHandover |
+                processAccessSignalling |
+                performSubsequentHandover}
+}
+
+-- 17.2.2.13    Subscriber Data management stand alone
+-- This operation package includes the operations required for stand alone
+-- subscriber data management procedures between HLR and VLR or between
+-- HLR and SGSN.
+subscriberDataMngtStandAlonePackage-v3  OPERATION-PACKAGE ::= {
+        -- Supplier is VLR or SGSN if Consumer is HLR
+        CONSUMER INVOKES {
+                insertSubscriberData |
+                deleteSubscriberData}
+}
+-- The v1-equivalent and v2-equivalent packages can be determined according to
+-- the rules described in clause 17.2.1.
+
+-- 17.2.2.14    Equipment management
+-- This operation package includes the operations required for equipment management
+-- procedures between EIR and MSC or between EIR and SGSN.
+equipmentMngtPackage-v3  OPERATION-PACKAGE ::= {
+        -- Supplier is EIR if Consumer is MSC
+        -- Supplier is EIR if Consumer is SGSN
+        CONSUMER INVOKES { checkIMEI }
+}
+-- The v1-equivalent and v2-equivalent packages can be determined according to
+-- the rules described in clause 17.2.1.
+
+
+-- 17.2.2.15    Subscriber data management
+-- This operation package includes the operations required for subscriber data
+-- management procedures between HLR and VLR or between HLR and SGSN.
+subscriberDataMngtPackage-v3  OPERATION-PACKAGE ::= {
+        -- Supplier is VLR or SGSN if Consumer is HLR
+        CONSUMER INVOKES { insertSubscriberData }
+}
+-- The v1-equivalent and v2-equivalent packages can be determined according to
+-- the rules described in clause 17.2.1.
+
+
+-- 17.2.2.16    Location register restart
+-- This operation package includes the operations required for location register
+-- restart procedures between HLR and VLR or between HLR and SGSN.
+resetPackage-v2  OPERATION-PACKAGE ::= {
+        -- Supplier is VLR or SGSN if Consumer is HLR
+        CONSUMER INVOKES { reset }
+}
+-- The v1-equivalent package can be determined according to the rules described
+-- in clause 17.2.1.
+
+
+-- 17.2.2.17    Tracing stand-alone
+-- This operation package includes the operations required for stand alone
+-- tracing procedures between HLR and VLR or between HLR and SGSN.
+tracingStandAlonePackage-v3  OPERATION-PACKAGE ::= {
+        -- Supplier is VLR or SGSN if Consumer is HLR
+        CONSUMER INVOKES {
+                activateTraceMode |
+                deactivateTraceMode}
+}
+-- The v1-equivalent and v2-equivalent packages can be determined according to
+-- the rules described in clause 17.2.1.
+
+
+-- 17.2.2.18    Functional SS handling
+-- This operation package includes the operations required for functional
+-- supplementary services procedures between VLR and HLR.
+functionalSsPackage-v2  OPERATION-PACKAGE ::= {
+        -- Supplier is HLR if Consumer is VLR
+        CONSUMER INVOKES {
+                registerSS |
+                eraseSS |
+                activateSS |
+                deactivateSS |
+                registerPassword |
+                interrogateSS}
+        SUPPLIER INVOKES {
+                getPassword}
+}
+-- The v1-equivalent package can be determined according to the rules described
+-- in clause 17.2.1.
+
+
+-- 17.2.2.19    Tracing
+-- This operation package includes the operations required for tracing procedures
+-- between HLR and VLR or between HLR and SGSN.
+tracingPackage-v3  OPERATION-PACKAGE ::= {
+        -- Supplier is VLR or SGSN if Consumer is HLR
+        CONSUMER INVOKES { activateTraceMode }
+}
+-- The v1-equivalent and v2-equivalent packages can be determined according to
+-- the rules described in clause 17.2.1.
+
+
+-- 17.2.2.20    Binding
+-- This operation package includes the operation required to initialise a
+-- supplementary service procedure between VLR and HLR or between gsmSCF and HLR.
+bindingPackage-v1  OPERATION-PACKAGE ::= {
+        -- Supplier is HLR if Consumer is VLR
+        -- Supplier is gsmSCF if Consumer is HLR
+        CONSUMER INVOKES { beginSubscriberActivity }
+}
+-- This package is v1 only.
+
+
+-- 17.2.2.21    Unstructured SS handling
+-- This operation package includes the operations required for unstructured
+-- supplementary services procedures between VLR and HLR, between the
+-- HLR and the gsmSCF, and between HLR and HLR.
+unstructuredSsPackage-v2  OPERATION-PACKAGE ::= {
+        -- Supplier is HLR if Consumer is VLR
+        -- Supplier is gsmSCF or HLR if Consumer is HLR
+        CONSUMER INVOKES {
+                processUnstructuredSS-Request}
+        SUPPLIER INVOKES {
+                unstructuredSS-Request |
+                unstructuredSS-Notify}
+}
+-- The v1-equivalent package is defined as follows:
+unstructuredSsPackage-v1  OPERATION-PACKAGE ::= {
+        -- Supplier is HLR if Consumer is VLR
+        -- Supplier is gsmSCF if Consumer is HLR
+        CONSUMER INVOKES { processUnstructuredSS-Data }
+}
+
+-- 17.2.2.22    MO Short message relay services
+-- This operation package includes the operations required for short message
+-- relay service procedures between IWMSC and VMSC or between GMSC and MSC
+-- or between SGSN and IWMSC.
+mo-ShortMsgRelayPackage-v3  OPERATION-PACKAGE ::= {
+        -- Supplier is IWMSC if Consumer is MSC
+        -- Supplier is IWMSC if Consumer is SGSN
+        CONSUMER INVOKES { mo-forwardSM }
+}
+-- The v2-equivalent package is defined as follows:
+shortMsgRelayPackage-v2  OPERATION-PACKAGE ::= {
+        -- Supplier is IWMSC if Consumer is MSC
+        -- Supplier is MSC or SGSN if Consumer is GMSC
+        -- Supplier is IWMSC if Consumer is SGSN
+        CONSUMER INVOKES { forwardSM }
+}
+-- The v1-equivalent package can be determined according to the rules described
+-- in clause 17.2.1.
+
+
+-- 17.2.2.23    Short message gateway services
+-- This operation package includes the operations required for short message
+-- service gateway procedures between MSC and HLR.
+shortMsgGatewayPackage-v3  OPERATION-PACKAGE ::= {
+        -- Supplier is HLR if Consumer is GMSC
+        CONSUMER INVOKES {
+                sendRoutingInfoForSM |
+                reportSM-DeliveryStatus}
+        SUPPLIER INVOKES {
+                informServiceCentre}
+}
+-- The v2-equivalent package can be determined according to the rules described
+-- in clause 17.2.1.
+-- The v1-equivalent package is defined as follows:
+shortMsgGatewayPackage-v1  OPERATION-PACKAGE ::= {
+        -- Supplier is HLR if Consumer is GMSC
+        CONSUMER INVOKES {
+                sendRoutingInfoForSM |
+                reportSMDeliveryStatus}
+}
+
+
+-- 17.2.2.24    MT Short message relay services
+-- This operation package includes the operations required for short message
+-- relay service procedures between GMSC and MSC or between GMSC and SGSN.
+mt-ShortMsgRelayPackage-v3  OPERATION-PACKAGE ::= {
+        -- Supplier is MSC or SGSN if Consumer is GMSC
+        CONSUMER INVOKES { mt-forwardSM }
+}
+-- The v2-equivalent package is: shortMsgRelayPackage-v2
+
+
+-- 17.2.2.25    Void
+
+-- 17.2.2.26    Message waiting data management
+-- This operation package includes the operations required for short message
+-- waiting data procedures between HLR and VLR, between HLR and SGSN.
+mwdMngtPackage-v3  OPERATION-PACKAGE ::= {
+        -- Supplier is HLR if Consumer is SGSN
+        -- Supplier is HLR if Consumer is VLR
+        CONSUMER INVOKES { readyForSM }
+}
+-- The v2-equivalent package can be determined according to the rules described
+-- in clause 17.2.1.
+-- The v1-equivalent package is defined as follows:
+mwdMngtPackage-v1  OPERATION-PACKAGE ::= {
+        -- Supplier is HLR if Consumer is VLR
+        CONSUMER INVOKES { noteSubscriberPresent }
+}
+
+-- 17.2.2.27    Alerting
+-- This operation package includes the operations required for alerting between HLR and IWMSC.
+alertingPackage-v2  OPERATION-PACKAGE ::= {
+        -- Supplier is IWMSC if Consumer is HLR
+        CONSUMER INVOKES { alertServiceCentre }
+}
+-- The v1-equivalent package is defined as follows.
+alertingPackage-v1  OPERATION-PACKAGE ::= {
+        -- Supplier is IWMSC if Consumer is HLR
+        CONSUMER INVOKES { alertServiceCentreWithoutResult }
+}
+
+-- 17.2.2.28    Data restoration
+-- This operation package includes the operations required for VLR data
+-- restoration between HLR and VLR.
+dataRestorationPackage-v3  OPERATION-PACKAGE ::= {
+        -- Supplier is HLR if Consumer is VLR
+        CONSUMER INVOKES { restoreData }
+}
+-- The v2-equivalent package can be determined according to the rules described
+-- in clause 17.2.1.
+-- The v1-equivalent package is: infoRetrievalPackage-v1
+
+
+-- 17.2.2.29    Purging
+-- This operation package includes the operations required for purging between
+-- HLR and VLR or between HLR and SGSN.
+purgingPackage-v3  OPERATION-PACKAGE ::= {
+        -- Supplier is HLR if Consumer is VLR
+        -- Supplier is HLR if Consumer is SGSN
+        CONSUMER INVOKES { purgeMS }
+}
+-- The v2-equivalent package can be determined according to the rules described
+-- in clause 17.2.1.
+
+
+-- 17.2.2.30    Subscriber information enquiry
+-- This operation package includes the operations required for subscriber
+-- information enquiry procedures between HLR and VLR or between HLR and SGSN.
+subscriberInformationEnquiryPackage-v3  OPERATION-PACKAGE ::= {
+        -- Supplier is VLR or SGSN if Consumer is HLR
+        CONSUMER INVOKES { provideSubscriberInfo} 
+}
+-- This package is v3 only.
+
+
+-- 17.2.2.31    Any time information enquiry
+-- This operation package includes the operations required for any time
+-- information enquiry procedures between gsmSCF and HLR or between
+-- gsmSCF and GMLC or between gsmSCF and NPLR.
+anyTimeInformationEnquiryPackage-v3  OPERATION-PACKAGE ::= {
+        -- Supplier is HLR or GMLC or NPLR if Consumer is gsmSCF
+        CONSUMER INVOKES { anyTimeInterrogation }
+}
+-- This package is v3 only.
+
+
+-- 17.2.2.32    Group Call Control
+-- This operation package includes the operations required for group call and
+-- broadcast call procedures between MSCs.
+groupCallControlPackage-v3  OPERATION-PACKAGE ::= {
+        -- Supplier is relay MSC if Consumer is anchor MSC
+        CONSUMER INVOKES {
+                prepareGroupCall |
+                forwardGroupCallSignalling}
+        SUPPLIER INVOKES {
+                sendGroupCallEndSignal |
+                processGroupCallSignalling}
+}
+-- This package is v3 only.
+
+
+-- 17.2.2.32A   Group Call Info Retrieval
+-- This operation package includes the operations required for group call and
+-- broadcast call info retrieval between MSCs.
+groupCallInfoRetrievalPackage-v3  OPERATION-PACKAGE ::= {
+        -- Supplier is group call serving MSC if Consumer is visited MSC
+        -- Supplier is visited MSC if Consumer is group call serving MSC
+        CONSUMER INVOKES { sendGroupCallInfo }
+}
+-- This package is v3 only.
+
+-- 17.2.2.33    Void
+-- 17.2.2.34    Void
+
+-- 17.2.2.35    Gprs location updating
+-- This operation package includes the operations required for the gprs
+-- location management procedures between HLR and SGSN.
+gprsLocationUpdatingPackage-v3  OPERATION-PACKAGE ::= {
+        -- Supplier is HLR if Consumer is SGSN
+        CONSUMER INVOKES { updateGprsLocation }
+}
+-- This package is v3 only.
+
+-- 17.2.2.36    Gprs Interrogation
+-- This operation package includes the operations required for interrogation
+-- procedures between HLR and GGSN. 
+gprsInterrogationPackage-v4  OPERATION-PACKAGE ::= {
+        -- Supplier is HLR if Consumer is GGSN
+        CONSUMER INVOKES {
+                sendRoutingInfoForGprs}
+}
+-- The v3-equivalent package is defined as follows.
+gprsInterrogationPackage-v3  OPERATION-PACKAGE ::= {
+        -- Supplier is HLR if Consumer is GGSN
+        CONSUMER INVOKES { sendRoutingInfoForGprs }
+}
+
+-- 17.2.2.37    Failure reporting
+-- This operation package includes the operations required for failure reporting
+-- between HLR and GGSN.
+failureReportingPackage-v3  OPERATION-PACKAGE ::= {
+        -- Supplier is HLR if Consumer is GGSN
+        CONSUMER INVOKES { failureReport }
+}
+-- This package is v3 only.
+
+
+-- 17.2.2.38    GPRS notifying
+-- This operation package includes the operations required for notifying that GPRS
+-- subscriber is present between HLR and GGSN.
+gprsNotifyingPackage-v3  OPERATION-PACKAGE ::= {
+        -- Supplier is GGSN if Consumer is HLR
+        CONSUMER INVOKES { noteMsPresentForGprs }
+}
+-- This package is v3 only.
+
+
+-- 17.2.2.39    Supplementary Service invocation notification
+-- This operation package includes the operations required for Supplementary
+-- Service invocation notification procedures between the MSC and the gsmSCF
+-- and between the HLR and the gsmSCF.
+ss-InvocationNotificationPackage-v3  OPERATION-PACKAGE ::= {
+        -- Supplier is gsmSCF if Consumer is MSC
+        -- Supplier is gsmSCF if Consumer is HLR
+        CONSUMER INVOKES { ss-InvocationNotification }
+}
+-- This package is v3 only.
+
+
+-- 17.2.2.40    Set Reporting State
+-- This operation package includes the operation required for procedures
+-- between HLR and VLR to set the reporting state.
+setReportingStatePackage-v3  OPERATION-PACKAGE ::= {
+        -- Supplier is VLR if Consumer is HLR
+        CONSUMER INVOKES { setReportingState }
+}
+-- This package is v3 only.
+
+
+-- 17.2.2.41    Status Report
+-- This operation package includes the operation required for procedures
+-- between VLR and HLR to report call results and events.
+statusReportPackage-v3  OPERATION-PACKAGE ::= {
+        -- Supplier is HLR if Consumer is VLR
+        CONSUMER INVOKES { statusReport }
+}
+-- This package is v3 only.
+
+
+-- 17.2.2.42    Remote User Free
+-- This operation package includes the operation required by the HLR to indicate
+-- to the VLR that the remote user is free.
+remoteUserFreePackage-v3  OPERATION-PACKAGE ::= {
+        -- Supplier is VLR if Consumer is HLR
+        CONSUMER INVOKES { remoteUserFree }
+}
+-- This package is v3 only.
+
+
+-- 17.2.2.43    Call Completion
+-- This operation package includes the operations required for procedures between
+-- VLR and HLR for subscriber control of call completion services.
+callCompletionPackage-v3  OPERATION-PACKAGE ::= {
+        -- Supplier is HLR if Consumer is VLR
+        CONSUMER INVOKES {
+                registerCC-Entry |
+                eraseCC-Entry}
+}
+-- This package is v3 only.
+
+-- 17.2.2.44    Location service gateway services
+-- This operation package includes the operations required for location service
+-- gateway procedures between GMLC and HLR.
+locationSvcGatewayPackage-v3  OPERATION-PACKAGE ::= {
+        -- Supplier is HLR if Consumer is GMLC
+        CONSUMER INVOKES { sendRoutingInfoForLCS }
+}
+-- This package is v3 only.
+
+-- 17.2.2.45    Location service enquiry
+-- This operation package includes the operations required for the location
+-- service enquiry procedures between GMLC and MSC and between GMLC and SGSN.
+locationSvcEnquiryPackage-v3  OPERATION-PACKAGE ::= {
+        -- Supplier is MSC or SGSN if Consumer is GMLC
+        CONSUMER INVOKES { provideSubscriberLocation }
+}
+-- This package is v3 only.
+
+-- 17.2.2.45A   Location service reporting
+-- This operation package includes the operations required for the location
+-- service enquiry procedures between MSC and GMLC and between SGSN and GMLC.
+locationSvcReportingPackage-v3  OPERATION-PACKAGE ::= {
+        -- Supplier is GMLC if Consumer is MSC
+        -- Supplier is GMLC if Consumer is SGSN
+        CONSUMER INVOKES { subscriberLocationReport }
+}
+
+-- 17.2.2.46    Void
+-- 17.2.2.47    Void
+-- 17.2.2.48    Void
+
+-- 17.2.2.49    IST Alerting
+-- This operation package includes the operation required for alerting
+-- procedures between the MSC (Visited MSC or Gateway MSC) and HLR.
+ist-AlertingPackage-v3  OPERATION-PACKAGE ::= {
+        -- Supplier is HLR if Consumer is VMSC
+        -- Supplier is HLR if Consumer is GMSC
+        CONSUMER INVOKES { istAlert }
+}
+-- This package is v3 only.
+
+-- 17.2.2.50    Service Termination
+-- This operation package includes the operation required for immediate service
+-- termination procedures between the HLR and the Visited MSC or between the
+-- HLR and the Gateway MSC.
+serviceTerminationPackage-v3  OPERATION-PACKAGE ::= {
+        -- Supplier is VMSC or GMSC if Consumer is HLR
+        CONSUMER INVOKES { istCommand }
+}
+-- This package is v3 only. 
+
+-- 17.2.2.51    Mobility Management event notification
+-- This operation package includes the operations required for Mobility Management
+-- event notification procedures between VLR and gsmSCF.
+mm-EventReportingPackage-v3  OPERATION-PACKAGE ::= {
+        -- Supplier is gsmSCF if Consumer is VLR
+        CONSUMER INVOKES { noteMM-Event }
+}
+-- This package is v3 only.
+
+-- 17.2.2.52    Any time information handling
+-- This operation package includes the operations required for any time
+-- information handling procedures between gsmSCF and HLR.
+anyTimeInformationHandlingPackage-v3  OPERATION-PACKAGE ::= {
+        -- Supplier is HLR if Consumer is gsmSCF
+        CONSUMER INVOKES {
+                anyTimeSubscriptionInterrogation |
+                anyTimeModification}
+}
+-- This package is v3 only.
+
+-- 17.2.2.53    Subscriber Data modification notification
+-- This operation package includes the operations required for Subscriber Data
+-- modification notification procedures between HLR and gsmSCF.
+subscriberDataModificationNotificationPackage-v3  OPERATION-PACKAGE ::= {
+        -- Supplier is gsmSCF if Consumer is HLR
+        CONSUMER INVOKES { noteSubscriberDataModified }
+}
+-- This package is v3 only.
+
+-- 17.2.2.54    Authentication Failure Report
+-- This operation package includes the operation required for procedures between
+-- VLR and HLR or the SGSN and the HLR for reporting of authentication failures.
+authenticationFailureReportPackage-v3  OPERATION-PACKAGE ::= {
+        -- Supplier is HLR if Consumer is VLR
+        -- Supplier is HLR if Consumer is SGSN
+        CONSUMER INVOKES { authenticationFailureReport }
+}
+-- This package is v3 only.
+
+-- 17.2.2.55    Resource Management
+-- This operation package includes the operation required for procedures between
+-- GMSC and VMSC for resource management purpose.
+resourceManagementPackage-v3  OPERATION-PACKAGE ::= {
+        -- Supplier is VMSC if Consumer is GMSC
+        CONSUMER INVOKES { releaseResources }
+}
+-- This package is v3 only.
+
+-- 17.2.2.56    MT Short message relay VGCS services
+-- This operation package includes the operations required for short message
+-- relay service procedures between SMS GMSC and MSC.
+mt-ShortMsgRelay-VGCS-Package-v3  OPERATION-PACKAGE ::= {
+        -- Supplier is MSC if Consumer is GMSC
+        CONSUMER INVOKES { mt-forwardSM-VGCS }
+}
+-- This package is v3 only.
+
+END
+
