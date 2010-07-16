@@ -236,7 +236,7 @@ public class ClosedGroupManagerTest {
 
     assertTrue(cgm.isBroken());
 
-    fs.error = false; // Выключает кидание exception
+    fs.error = false;
 
     try {
       cgm.addGroup("adsfasdf", "sdfasdf");
@@ -270,9 +270,7 @@ public class ClosedGroupManagerTest {
   }
 
 
-  /**
-   * Cluster Controller, который возвращает одни ошибки
-   */
+  
   private static class ErrorClusterController extends ClusterController {
     public boolean isOnline() {
       return true;
