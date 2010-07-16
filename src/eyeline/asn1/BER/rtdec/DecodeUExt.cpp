@@ -16,9 +16,9 @@ DECResult DecoderOfUExtension::decodeVAL(const TLVProperty * val_prop,
                     bool relaxed_rule/* = false*/)
   /*throw(BERDecoderException)*/
 {
-  _valDec->push_back(TransferSyntax());
+  _valDec->_tsList.push_back(TransferSyntax());
   DecoderOfASType extDec(TSGroupBER::getTSRule(use_rule));
-  extDec.setValue(_valDec->back());
+  extDec.setValue(_valDec->_tsList.back());
   return extDec.decode(use_enc, max_len);
 }
 

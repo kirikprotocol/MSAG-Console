@@ -5,7 +5,7 @@
 #ident "@(#)$Id$"
 #define __ASN1_BER_DECODER_UNKNOWN_EXTENSION
 
-#include "eyeline/asn1/BER/rtutl/UnknownExtensions.hpp"
+#include "eyeline/asn1/UnknownExtensions.hpp"
 #include "eyeline/asn1/BER/rtdec/DecodeASType.hpp"
 
 namespace eyeline {
@@ -14,7 +14,7 @@ namespace ber {
 
 class DecoderOfUExtension : public TypeValueDecoderAC {
 protected:
-  UnknownExtensions * _valDec;
+  asn1::UnknownExtensions * _valDec;
 
   DECResult decodeVAL(const TLVProperty * val_prop,
                       const uint8_t * use_enc, TSLength max_len,
@@ -29,7 +29,7 @@ public:
   ~DecoderOfUExtension()
   { }
 
-  void setValue(UnknownExtensions & use_val) { _valDec = &use_val; }
+  void setValue(asn1::UnknownExtensions & use_val) { _valDec = &use_val; }
 };
 
 } //ber
