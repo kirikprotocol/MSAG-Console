@@ -1,0 +1,10 @@
+# ---------------------------------------------------------------------
+# "@(#)$Id$"
+# ---------------------------------------------------------------------
+# MAP ApplicationContexts processes/FSMs
+# ---------------------------------------------------------------------
+
+#ATIH_v3		# -- Any Time Information Handling v3
+#LIR_V3		# -- Location Information Retrieval v3
+nUSS_v2		# -- Network Unstructured Supplementary Service v2
+

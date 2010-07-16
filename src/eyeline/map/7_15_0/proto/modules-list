@@ -1,0 +1,18 @@
+# ---------------------------------------------------------------------
+# "@(#)$Id$"
+# ---------------------------------------------------------------------
+# MAP protocol data types and codecs
+# ---------------------------------------------------------------------
+
+#dlgAS  # -- MAP Dialogue(AbstractSyntax) PDUs
+common  # -- Common types
+#CH     # -- Call Handling types
+ERR     # -- Errors Types
+#EXT    # -- Extensions types
+#GR     # -- Group Call types
+#LCS    # -- Location Services types
+#MS     # -- Mobile Services types
+#OM     # -- Operations and Management types
+#SM     # -- Short Message services types
+SS      # -- Supplementary services types
+
