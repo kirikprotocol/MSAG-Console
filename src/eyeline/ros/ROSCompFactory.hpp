@@ -5,11 +5,7 @@
 #ident "@(#)$Id$"
 #define __ROS_COMPONENTS_FACTORY_HPP
 
-#include <stdarg.h>
 #include <vector>
-
-#include "logger/Logger.h"
-using smsc::logger::Logger;
 
 #include "util/Factory.hpp"
 #include "eyeline/asn1/AbstractValue.hpp"
@@ -19,8 +15,8 @@ namespace eyeline {
 namespace ros {
 
 //Remote Operation Factory
-typedef smsc::util::FactoryXArg_T<unsigned, asn1::ASTypeValueAC, Logger *> ROSFactory;
-typedef ROSFactory::ProducerITF ROSCompProducer;
+typedef smsc::util::FactoryT<unsigned, asn1::ASTypeValueAC> ROSFactory;
+typedef ROSFactory::Producer ROSCompProducer;
 
 
 //Remote Operations Components factory(ARGUMENT, RESULT, ERRORS)
@@ -64,31 +60,19 @@ public:
     return _plant[rosErr].registerProduct(errcode, alloc);
   }
   //binds error codes to OPERATION
-  void bindErrors(unsigned opcode, unsigned errNum, ...)
-  {
-    std::auto_ptr<OperationErrors> verr(new OperationErrors(errNum));
-    va_list  errs;
-    va_start(errs, errNum);
-    for (unsigned i = 0; i < errNum; ++i) {
-      unsigned curErr = va_arg(errs, unsigned);
-      verr->insert(verr->begin(), curErr);
-    }
-    va_end(errs);
-    _errMap.insert(ROSErrors::value_type(opcode, verr.get()));
-    verr.release();
-  }
+  void bindErrors(unsigned opcode, unsigned errNum, /*errCode_1*/ ... /*errCode_N*/);
 
-  asn1::ASTypeValueAC * createArg(unsigned opcode, Logger * use_log = NULL) const
+  asn1::ASTypeValueAC * createArg(unsigned opcode) const
   {
-    return _plant[rosArg].create(opcode, use_log); 
+    return _plant[rosArg].create(opcode); 
   }
-  asn1::ASTypeValueAC * createRes(unsigned opcode, Logger * use_log = NULL) const
+  asn1::ASTypeValueAC * createRes(unsigned opcode) const
   {
-    return _plant[rosRes].create(opcode, use_log);
+    return _plant[rosRes].create(opcode);
   }
-  asn1::ASTypeValueAC * createErr(unsigned errcode, Logger * use_log = NULL) const
+  asn1::ASTypeValueAC * createErr(unsigned errcode) const
   {
-    return _plant[rosErr].create(errcode, use_log);
+    return _plant[rosErr].create(errcode);
   }
 
 
@@ -104,18 +88,7 @@ public:
     return (it == _errMap.end()) ? 0 : (unsigned)(it->second->size());
   }
   //returns TRUE if ERROR identified by errcode is defined for OPERATION
-  bool hasError(unsigned opcode, unsigned errcode) const
-  {
-    ROSErrors::const_iterator it = _errMap.find(opcode);
-    if (it != _errMap.end()) {
-      const OperationErrors * verr = it->second;
-      for (unsigned i = 0; i < verr->size(); ++i) {
-        if ((*verr)[i] == errcode)
-          return true;
-      }
-    }
-    return false;
-  }
+  bool hasError(unsigned opcode, unsigned errcode) const;
 };
 
 //Function that creates ROSComponentsFactory
