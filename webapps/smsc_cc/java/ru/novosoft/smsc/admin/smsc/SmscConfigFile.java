@@ -1,5 +1,6 @@
 package ru.novosoft.smsc.admin.smsc;
 
+import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.config.ManagedConfigFile;
 import ru.novosoft.smsc.util.config.XmlConfig;
 import ru.novosoft.smsc.util.config.XmlConfigException;
@@ -20,7 +21,7 @@ class SmscConfigFile implements ManagedConfigFile {
 
   private InstanceSettings[] instanceSettings;
 
-  protected void load(XmlConfig config) throws XmlConfigException {
+  protected void load(XmlConfig config) throws XmlConfigException, AdminException {
     commonSettings = new CommonSettings(config);
     commonSettings.load(config);
 

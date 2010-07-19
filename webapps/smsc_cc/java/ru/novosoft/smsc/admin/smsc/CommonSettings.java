@@ -1,7 +1,9 @@
 package ru.novosoft.smsc.admin.smsc;
 
-import ru.novosoft.smsc.util.config.XmlConfigException;
+import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.util.ValidationHelper;
 import ru.novosoft.smsc.util.config.XmlConfig;
+import ru.novosoft.smsc.util.config.XmlConfigException;
 import ru.novosoft.smsc.util.config.XmlConfigParam;
 import ru.novosoft.smsc.util.config.XmlConfigSection;
 
@@ -154,11 +156,13 @@ public class CommonSettings implements Cloneable {
 
   private Map<String, String> directives = new HashMap<String, String>();
 
+  private ValidationHelper vh = new ValidationHelper(CommonSettings.class.getCanonicalName());
+
   public CommonSettings() {
 
   }
 
-  CommonSettings(XmlConfig c) throws XmlConfigException {
+  CommonSettings(XmlConfig c) throws XmlConfigException, AdminException {
     load(c);
   }
 
@@ -308,7 +312,7 @@ public class CommonSettings implements Cloneable {
     }
   }
 
-  protected void load(XmlConfig c) throws XmlConfigException {
+  protected void load(XmlConfig c) throws XmlConfigException, AdminException {
     // core
     XmlConfigSection s = c.getSection("core");
     state_machines_count = s.getInt("state_machines_count");
@@ -446,12 +450,13 @@ public class CommonSettings implements Cloneable {
     snmpCacheTimeout = s.getInt("cacheTimeout");
 
     //directives
-    clearDirectives();
     if (c.containsSection("directives")) {
+      Map<String, String> directives = new HashMap<String, String>();
       s = c.getSection("directives");
       for (XmlConfigParam p : s.params()) {
-        addDirective(p.getName(), p.getString());
+        directives.put(p.getName(), p.getString());
       }
+      setDirectives(directives);
     }
   }
 
@@ -459,7 +464,8 @@ public class CommonSettings implements Cloneable {
     return state_machines_count;
   }
 
-  public void setState_machines_count(int state_machines_count) {
+  public void setState_machines_count(int state_machines_count) throws AdminException {
+    vh.checkPositive("state_machines_count", state_machines_count);
     this.state_machines_count = state_machines_count;
   }
 
@@ -467,7 +473,8 @@ public class CommonSettings implements Cloneable {
     return mainLoopsCount;
   }
 
-  public void setMainLoopsCount(int mainLoopsCount) {
+  public void setMainLoopsCount(int mainLoopsCount) throws AdminException {
+    vh.checkPositive("mainLoopsCount", mainLoopsCount);
     this.mainLoopsCount = mainLoopsCount;
   }
 
@@ -475,7 +482,8 @@ public class CommonSettings implements Cloneable {
     return eventQueueLimit;
   }
 
-  public void setEventQueueLimit(int eventQueueLimit) {
+  public void setEventQueueLimit(int eventQueueLimit) throws AdminException {
+    vh.checkPositive("eventQueueLimit", mainLoopsCount);
     this.eventQueueLimit = eventQueueLimit;
   }
 
@@ -483,7 +491,8 @@ public class CommonSettings implements Cloneable {
     return service_center_address;
   }
 
-  public void setService_center_address(String service_center_address) {
+  public void setService_center_address(String service_center_address) throws AdminException {
+    vh.checkNotEmpty("service_center_address", service_center_address);
     this.service_center_address = service_center_address;
   }
 
@@ -491,7 +500,8 @@ public class CommonSettings implements Cloneable {
     return ussd_center_address;
   }
 
-  public void setUssd_center_address(String ussd_center_address) {
+  public void setUssd_center_address(String ussd_center_address) throws AdminException {
+    vh.checkNotEmpty("ussd_center_address", ussd_center_address);
     this.ussd_center_address = ussd_center_address;
   }
 
@@ -499,7 +509,8 @@ public class CommonSettings implements Cloneable {
     return ussd_ssn;
   }
 
-  public void setUssd_ssn(int ussd_ssn) {
+  public void setUssd_ssn(int ussd_ssn) throws AdminException {
+    vh.checkPositive("ussd_ssn", ussd_ssn);
     this.ussd_ssn = ussd_ssn;
   }
 
@@ -507,7 +518,8 @@ public class CommonSettings implements Cloneable {
     return add_ussd_ssn;
   }
 
-  public void setAdd_ussd_ssn(String[] add_ussd_ssn) {
+  public void setAdd_ussd_ssn(String[] add_ussd_ssn) throws AdminException {
+    vh.checkNotEmpty("add_ussd_ssn", add_ussd_ssn);
     this.add_ussd_ssn = add_ussd_ssn;
   }
 
@@ -515,7 +527,8 @@ public class CommonSettings implements Cloneable {
     return systemId;
   }
 
-  public void setSystemId(String systemId) {
+  public void setSystemId(String systemId) throws AdminException {
+    vh.checkNotEmpty("systemId", systemId);
     this.systemId = systemId;
   }
 
@@ -523,7 +536,8 @@ public class CommonSettings implements Cloneable {
     return service_type;
   }
 
-  public void setService_type(String service_type) {
+  public void setService_type(String service_type) throws AdminException {
+    vh.checkNotEmpty("service_type", service_type);
     this.service_type = service_type;
   }
 
@@ -531,7 +545,8 @@ public class CommonSettings implements Cloneable {
     return protocol_id;
   }
 
-  public void setProtocol_id(int protocol_id) {
+  public void setProtocol_id(int protocol_id) throws AdminException {
+    vh.checkPositive("protocol_id", protocol_id);
     this.protocol_id = protocol_id;
   }
 
@@ -539,7 +554,8 @@ public class CommonSettings implements Cloneable {
     return locales;
   }
 
-  public void setLocales(String[] locales) {
+  public void setLocales(String[] locales) throws AdminException {
+    vh.checkNotEmpty("locales", locales);
     this.locales = locales;
   }
 
@@ -547,7 +563,8 @@ public class CommonSettings implements Cloneable {
     return default_locale;
   }
 
-  public void setDefault_locale(String default_locale) {
+  public void setDefault_locale(String default_locale) throws AdminException {
+    vh.checkNotEmpty("default_locale", default_locale);
     this.default_locale = default_locale;
   }
 
@@ -555,7 +572,8 @@ public class CommonSettings implements Cloneable {
     return mergeTimeout;
   }
 
-  public void setMergeTimeout(int mergeTimeout) {
+  public void setMergeTimeout(int mergeTimeout) throws AdminException {
+    vh.checkPositive("mergeTimeout", mergeTimeout);
     this.mergeTimeout = mergeTimeout;
   }
 
@@ -563,7 +581,8 @@ public class CommonSettings implements Cloneable {
     return timezones_config;
   }
 
-  public void setTimezones_config(String timezones_config) {
+  public void setTimezones_config(String timezones_config) throws AdminException {
+    vh.checkNotEmpty("timezones_config", timezones_config);
     this.timezones_config = timezones_config;
   }
 
@@ -571,7 +590,7 @@ public class CommonSettings implements Cloneable {
     return smartMultipartForward;
   }
 
-  public void setSmartMultipartForward(boolean smartMultipartForward) {
+  public void setSmartMultipartForward(boolean smartMultipartForward) throws AdminException {
     this.smartMultipartForward = smartMultipartForward;
   }
 
@@ -579,7 +598,7 @@ public class CommonSettings implements Cloneable {
     return srcSmeSeparateRouting;
   }
 
-  public void setSrcSmeSeparateRouting(boolean srcSmeSeparateRouting) {
+  public void setSrcSmeSeparateRouting(boolean srcSmeSeparateRouting) throws AdminException {
     this.srcSmeSeparateRouting = srcSmeSeparateRouting;
   }
 
@@ -587,7 +606,8 @@ public class CommonSettings implements Cloneable {
     return schedulerSoftLimit;
   }
 
-  public void setSchedulerSoftLimit(int schedulerSoftLimit) {
+  public void setSchedulerSoftLimit(int schedulerSoftLimit) throws AdminException {
+    vh.checkPositive("schedulerSoftLimit", schedulerSoftLimit);
     this.schedulerSoftLimit = schedulerSoftLimit;
   }
 
@@ -595,7 +615,8 @@ public class CommonSettings implements Cloneable {
     return schedulerHardLimit;
   }
 
-  public void setSchedulerHardLimit(int schedulerHardLimit) {
+  public void setSchedulerHardLimit(int schedulerHardLimit) throws AdminException {
+    vh.checkPositive("schedulerHardLimit", schedulerHardLimit);
     this.schedulerHardLimit = schedulerHardLimit;
   }
 
@@ -603,7 +624,8 @@ public class CommonSettings implements Cloneable {
     return smsMaxValidTime;
   }
 
-  public void setSmsMaxValidTime(int smsMaxValidTime) {
+  public void setSmsMaxValidTime(int smsMaxValidTime) throws AdminException {
+    vh.checkPositive("smsMaxValidTime", smsMaxValidTime);
     this.smsMaxValidTime = smsMaxValidTime;
   }
 
@@ -611,7 +633,8 @@ public class CommonSettings implements Cloneable {
     return mapBusyMTDelay;
   }
 
-  public void setMapBusyMTDelay(int mapBusyMTDelay) {
+  public void setMapBusyMTDelay(int mapBusyMTDelay) throws AdminException {
+    vh.checkPositive("mapBusyMTDelay", mapBusyMTDelay);
     this.mapBusyMTDelay = mapBusyMTDelay;
   }
 
@@ -619,7 +642,8 @@ public class CommonSettings implements Cloneable {
     return mapLockedByMODelay;
   }
 
-  public void setMapLockedByMODelay(int mapLockedByMODelay) {
+  public void setMapLockedByMODelay(int mapLockedByMODelay) throws AdminException {
+    vh.checkPositive("mapLockedByMODelay", mapLockedByMODelay);
     this.mapLockedByMODelay = mapLockedByMODelay;
   }
 
@@ -627,7 +651,8 @@ public class CommonSettings implements Cloneable {
     return mapMOLockTimeout;
   }
 
-  public void setMapMOLockTimeout(int mapMOLockTimeout) {
+  public void setMapMOLockTimeout(int mapMOLockTimeout) throws AdminException {
+    vh.checkPositive("mapMOLockTimeout", mapMOLockTimeout);
     this.mapMOLockTimeout = mapMOLockTimeout;
   }
 
@@ -635,7 +660,7 @@ public class CommonSettings implements Cloneable {
     return mapAllowCallBarred;
   }
 
-  public void setMapAllowCallBarred(boolean mapAllowCallBarred) {
+  public void setMapAllowCallBarred(boolean mapAllowCallBarred) throws AdminException {
     this.mapAllowCallBarred = mapAllowCallBarred;
   }
 
@@ -643,7 +668,7 @@ public class CommonSettings implements Cloneable {
     return mapUssdV1Enabled;
   }
 
-  public void setMapUssdV1Enabled(boolean mapUssdV1Enabled) {
+  public void setMapUssdV1Enabled(boolean mapUssdV1Enabled) throws AdminException {
     this.mapUssdV1Enabled = mapUssdV1Enabled;
   }
 
@@ -651,7 +676,7 @@ public class CommonSettings implements Cloneable {
     return mapUssdV1UseOrigEntityNumber;
   }
 
-  public void setMapUssdV1UseOrigEntityNumber(boolean mapUssdV1UseOrigEntityNumber) {
+  public void setMapUssdV1UseOrigEntityNumber(boolean mapUssdV1UseOrigEntityNumber) throws AdminException {
     this.mapUssdV1UseOrigEntityNumber = mapUssdV1UseOrigEntityNumber;
   }
 
@@ -659,7 +684,8 @@ public class CommonSettings implements Cloneable {
     return mapIOTasksCount;
   }
 
-  public void setMapIOTasksCount(int mapIOTasksCount) {
+  public void setMapIOTasksCount(int mapIOTasksCount) throws AdminException {
+    vh.checkPositive("mapIOTasksCount", mapIOTasksCount);
     this.mapIOTasksCount = mapIOTasksCount;
   }
 
@@ -667,7 +693,8 @@ public class CommonSettings implements Cloneable {
     return trafficShapeTimeFrame;
   }
 
-  public void setTrafficShapeTimeFrame(int trafficShapeTimeFrame) {
+  public void setTrafficShapeTimeFrame(int trafficShapeTimeFrame) throws AdminException {
+    vh.checkPositive("trafficShapeTimeFrame", trafficShapeTimeFrame);
     this.trafficShapeTimeFrame = trafficShapeTimeFrame;
   }
 
@@ -675,7 +702,8 @@ public class CommonSettings implements Cloneable {
     return trafficStatTimeFrame;
   }
 
-  public void setTrafficStatTimeFrame(int trafficStatTimeFrame) {
+  public void setTrafficStatTimeFrame(int trafficStatTimeFrame) throws AdminException {
+    vh.checkPositive("trafficStatTimeFrame", trafficStatTimeFrame);
     this.trafficStatTimeFrame = trafficStatTimeFrame;
   }
 
@@ -683,7 +711,8 @@ public class CommonSettings implements Cloneable {
     return msArchiveInterval;
   }
 
-  public void setMsArchiveInterval(int msArchiveInterval) {
+  public void setMsArchiveInterval(int msArchiveInterval) throws AdminException {
+    vh.checkPositive("msArchiveInterval", msArchiveInterval);
     this.msArchiveInterval = msArchiveInterval;
   }
 
@@ -691,7 +720,8 @@ public class CommonSettings implements Cloneable {
     return lsMaxStoreSize;
   }
 
-  public void setLsMaxStoreSize(int lsMaxStoreSize) {
+  public void setLsMaxStoreSize(int lsMaxStoreSize) throws AdminException {
+    vh.checkPositive("lsMaxStoreSize", lsMaxStoreSize);
     this.lsMaxStoreSize = lsMaxStoreSize;
   }
 
@@ -699,7 +729,8 @@ public class CommonSettings implements Cloneable {
     return lsMinRollTime;
   }
 
-  public void setLsMinRollTime(int lsMinRollTime) {
+  public void setLsMinRollTime(int lsMinRollTime) throws AdminException {
+    vh.checkPositive("lsMinRollTime", lsMinRollTime);
     this.lsMinRollTime = lsMinRollTime;
   }
 
@@ -707,7 +738,8 @@ public class CommonSettings implements Cloneable {
     return smppReadTimeout;
   }
 
-  public void setSmppReadTimeout(int smppReadTimeout) {
+  public void setSmppReadTimeout(int smppReadTimeout) throws AdminException {
+    vh.checkPositive("smppReadTimeout", smppReadTimeout);
     this.smppReadTimeout = smppReadTimeout;
   }
 
@@ -715,7 +747,8 @@ public class CommonSettings implements Cloneable {
     return smppInactivityTime;
   }
 
-  public void setSmppInactivityTime(int smppInactivityTime) {
+  public void setSmppInactivityTime(int smppInactivityTime) throws AdminException {
+    vh.checkPositive("smppInactivityTime", smppInactivityTime);
     this.smppInactivityTime = smppInactivityTime;
   }
 
@@ -723,7 +756,8 @@ public class CommonSettings implements Cloneable {
     return smppInactivityTimeOut;
   }
 
-  public void setSmppInactivityTimeOut(int smppInactivityTimeOut) {
+  public void setSmppInactivityTimeOut(int smppInactivityTimeOut) throws AdminException {
+    vh.checkPositive("smppInactivityTimeOut", smppInactivityTimeOut);
     this.smppInactivityTimeOut = smppInactivityTimeOut;
   }
 
@@ -731,7 +765,8 @@ public class CommonSettings implements Cloneable {
     return smppBindTimeout;
   }
 
-  public void setSmppBindTimeout(int smppBindTimeout) {
+  public void setSmppBindTimeout(int smppBindTimeout) throws AdminException {
+    vh.checkPositive("smppBindTimeout", smppBindTimeout);
     this.smppBindTimeout = smppBindTimeout;
   }
 
@@ -739,7 +774,8 @@ public class CommonSettings implements Cloneable {
     return smppDefaultConnectionsLimit;
   }
 
-  public void setSmppDefaultConnectionsLimit(int smppDefaultConnectionsLimit) {
+  public void setSmppDefaultConnectionsLimit(int smppDefaultConnectionsLimit) throws AdminException {
+    vh.checkPositive("smppDefaultConnectionsLimit", smppDefaultConnectionsLimit);
     this.smppDefaultConnectionsLimit = smppDefaultConnectionsLimit;
   }
 
@@ -747,7 +783,8 @@ public class CommonSettings implements Cloneable {
     return profilerSystemId;
   }
 
-  public void setProfilerSystemId(String profilerSystemId) {
+  public void setProfilerSystemId(String profilerSystemId) throws AdminException {
+    vh.checkNotEmpty("profilerSystemId", profilerSystemId);
     this.profilerSystemId = profilerSystemId;
   }
 
@@ -755,7 +792,8 @@ public class CommonSettings implements Cloneable {
     return profilerServiceType;
   }
 
-  public void setProfilerServiceType(String profilerServiceType) {
+  public void setProfilerServiceType(String profilerServiceType) throws AdminException {
+    vh.checkNotEmpty("profilerServiceType", profilerServiceType);
     this.profilerServiceType = profilerServiceType;
   }
 
@@ -763,7 +801,8 @@ public class CommonSettings implements Cloneable {
     return profilerProtocolId;
   }
 
-  public void setProfilerProtocolId(int profilerProtocolId) {
+  public void setProfilerProtocolId(int profilerProtocolId) throws AdminException {
+    vh.checkPositive("profilerProtocolId", profilerProtocolId);
     this.profilerProtocolId = profilerProtocolId;
   }
 
@@ -771,7 +810,8 @@ public class CommonSettings implements Cloneable {
     return profilerStoreFile;
   }
 
-  public void setProfilerStoreFile(String profilerStoreFile) {
+  public void setProfilerStoreFile(String profilerStoreFile)throws AdminException  {
+    vh.checkNotEmpty("profilerStoreFile", profilerStoreFile);
     this.profilerStoreFile = profilerStoreFile;
   }
 
@@ -779,7 +819,8 @@ public class CommonSettings implements Cloneable {
     return profilerReportNone;
   }
 
-  public void setProfilerReportNone(int profilerReportNone) {
+  public void setProfilerReportNone(int profilerReportNone) throws AdminException {
+    vh.checkPositive("profilerReportNone", profilerReportNone);
     this.profilerReportNone = profilerReportNone;
   }
 
@@ -787,7 +828,8 @@ public class CommonSettings implements Cloneable {
     return profilerReportFull;
   }
 
-  public void setProfilerReportFull(int profilerReportFull) {
+  public void setProfilerReportFull(int profilerReportFull) throws AdminException {
+    vh.checkPositive("profilerReportFull", profilerReportFull);
     this.profilerReportFull = profilerReportFull;
   }
 
@@ -795,7 +837,8 @@ public class CommonSettings implements Cloneable {
     return profilerReportFinal;
   }
 
-  public void setProfilerReportFinal(int profilerReportFinal) {
+  public void setProfilerReportFinal(int profilerReportFinal) throws AdminException {
+    vh.checkPositive("profilerReportFinal", profilerReportFinal);
     this.profilerReportFinal = profilerReportFinal;
   }
 
@@ -803,7 +846,8 @@ public class CommonSettings implements Cloneable {
     return profilerLocaleRU;
   }
 
-  public void setProfilerLocaleRU(int profilerLocaleRU) {
+  public void setProfilerLocaleRU(int profilerLocaleRU) throws AdminException {
+    vh.checkPositive("profilerLocaleRU", profilerLocaleRU);
     this.profilerLocaleRU = profilerLocaleRU;
   }
 
@@ -811,7 +855,8 @@ public class CommonSettings implements Cloneable {
     return profilerLocaleEN;
   }
 
-  public void setProfilerLocaleEN(int profilerLocaleEN) {
+  public void setProfilerLocaleEN(int profilerLocaleEN) throws AdminException {
+    vh.checkPositive("profilerLocaleEN", profilerLocaleEN);
     this.profilerLocaleEN = profilerLocaleEN;
   }
 
@@ -819,7 +864,8 @@ public class CommonSettings implements Cloneable {
     return profilerDefault;
   }
 
-  public void setProfilerDefault(int profilerDefault) {
+  public void setProfilerDefault(int profilerDefault) throws AdminException {
+    vh.checkPositive("profilerDefault", profilerDefault);
     this.profilerDefault = profilerDefault;
   }
 
@@ -827,7 +873,8 @@ public class CommonSettings implements Cloneable {
     return profilerUCS2;
   }
 
-  public void setProfilerUCS2(int profilerUCS2) {
+  public void setProfilerUCS2(int profilerUCS2)throws AdminException  {
+    vh.checkPositive("profilerUCS2", profilerUCS2);
     this.profilerUCS2 = profilerUCS2;
   }
 
@@ -835,7 +882,8 @@ public class CommonSettings implements Cloneable {
     return profilerHide;
   }
 
-  public void setProfilerHide(int profilerHide) {
+  public void setProfilerHide(int profilerHide) throws AdminException {
+    vh.checkPositive("profilerHide", profilerHide);
     this.profilerHide = profilerHide;
   }
 
@@ -843,7 +891,8 @@ public class CommonSettings implements Cloneable {
     return profilerUnhide;
   }
 
-  public void setProfilerUnhide(int profilerUnhide) {
+  public void setProfilerUnhide(int profilerUnhide) throws AdminException {
+    vh.checkPositive("profilerUnhide", profilerUnhide);
     this.profilerUnhide = profilerUnhide;
   }
 
@@ -851,7 +900,8 @@ public class CommonSettings implements Cloneable {
     return profilerUSSD7BitOn;
   }
 
-  public void setProfilerUSSD7BitOn(int profilerUSSD7BitOn) {
+  public void setProfilerUSSD7BitOn(int profilerUSSD7BitOn) throws AdminException {
+    vh.checkPositive("profilerUSSD7BitOn", profilerUSSD7BitOn);
     this.profilerUSSD7BitOn = profilerUSSD7BitOn;
   }
 
@@ -859,7 +909,8 @@ public class CommonSettings implements Cloneable {
     return profilerUSSD7BitOff;
   }
 
-  public void setProfilerUSSD7BitOff(int profilerUSSD7BitOff) {
+  public void setProfilerUSSD7BitOff(int profilerUSSD7BitOff) throws AdminException {
+    vh.checkPositive("profilerUSSD7BitOff", profilerUSSD7BitOff);
     this.profilerUSSD7BitOff = profilerUSSD7BitOff;
   }
 
@@ -867,7 +918,8 @@ public class CommonSettings implements Cloneable {
     return profilerDivertOn;
   }
 
-  public void setProfilerDivertOn(int profilerDivertOn) {
+  public void setProfilerDivertOn(int profilerDivertOn) throws AdminException {
+    vh.checkPositive("profilerDivertOn", profilerDivertOn);
     this.profilerDivertOn = profilerDivertOn;
   }
 
@@ -875,7 +927,8 @@ public class CommonSettings implements Cloneable {
     return profilerDivertOff;
   }
 
-  public void setProfilerDivertOff(int profilerDivertOff) {
+  public void setProfilerDivertOff(int profilerDivertOff) throws AdminException {
+    vh.checkPositive("profilerDivertOff", profilerDivertOff);
     this.profilerDivertOff = profilerDivertOff;
   }
 
@@ -883,7 +936,8 @@ public class CommonSettings implements Cloneable {
     return profilerDivertAbsentOn;
   }
 
-  public void setProfilerDivertAbsentOn(int profilerDivertAbsentOn) {
+  public void setProfilerDivertAbsentOn(int profilerDivertAbsentOn) throws AdminException {
+    vh.checkPositive("profilerDivertAbsentOn", profilerDivertAbsentOn);
     this.profilerDivertAbsentOn = profilerDivertAbsentOn;
   }
 
@@ -891,7 +945,8 @@ public class CommonSettings implements Cloneable {
     return profilerDivertAbsentOff;
   }
 
-  public void setProfilerDivertAbsentOff(int profilerDivertAbsentOff) {
+  public void setProfilerDivertAbsentOff(int profilerDivertAbsentOff) throws AdminException {
+    vh.checkPositive("profilerDivertAbsentOff", profilerDivertAbsentOff);
     this.profilerDivertAbsentOff = profilerDivertAbsentOff;
   }
 
@@ -899,7 +954,8 @@ public class CommonSettings implements Cloneable {
     return profilerDivertBlockedOn;
   }
 
-  public void setProfilerDivertBlockedOn(int profilerDivertBlockedOn) {
+  public void setProfilerDivertBlockedOn(int profilerDivertBlockedOn) throws AdminException {
+    vh.checkPositive("profilerDivertBlockedOn", profilerDivertBlockedOn);
     this.profilerDivertBlockedOn = profilerDivertBlockedOn;
   }
 
@@ -907,7 +963,8 @@ public class CommonSettings implements Cloneable {
     return profilerDivertBlockedOff;
   }
 
-  public void setProfilerDivertBlockedOff(int profilerDivertBlockedOff) {
+  public void setProfilerDivertBlockedOff(int profilerDivertBlockedOff) throws AdminException {
+    vh.checkPositive("profilerDivertBlockedOff", profilerDivertBlockedOff);
     this.profilerDivertBlockedOff = profilerDivertBlockedOff;
   }
 
@@ -915,7 +972,8 @@ public class CommonSettings implements Cloneable {
     return profilerDivertBarredOn;
   }
 
-  public void setProfilerDivertBarredOn(int profilerDivertBarredOn) {
+  public void setProfilerDivertBarredOn(int profilerDivertBarredOn) throws AdminException {
+    vh.checkPositive("profilerDivertBarredOn", profilerDivertBarredOn);
     this.profilerDivertBarredOn = profilerDivertBarredOn;
   }
 
@@ -923,7 +981,8 @@ public class CommonSettings implements Cloneable {
     return profilerDivertBarredOff;
   }
 
-  public void setProfilerDivertBarredOff(int profilerDivertBarredOff) {
+  public void setProfilerDivertBarredOff(int profilerDivertBarredOff) throws AdminException {
+    vh.checkPositive("profilerDivertBarredOff", profilerDivertBarredOff);
     this.profilerDivertBarredOff = profilerDivertBarredOff;
   }
 
@@ -931,7 +990,8 @@ public class CommonSettings implements Cloneable {
     return profilerDivertCapacityOn;
   }
 
-  public void setProfilerDivertCapacityOn(int profilerDivertCapacityOn) {
+  public void setProfilerDivertCapacityOn(int profilerDivertCapacityOn) throws AdminException {
+    vh.checkPositive("profilerDivertCapacityOn", profilerDivertCapacityOn);
     this.profilerDivertCapacityOn = profilerDivertCapacityOn;
   }
 
@@ -939,7 +999,8 @@ public class CommonSettings implements Cloneable {
     return profilerDivertCapacityOff;
   }
 
-  public void setProfilerDivertCapacityOff(int profilerDivertCapacityOff) {
+  public void setProfilerDivertCapacityOff(int profilerDivertCapacityOff) throws AdminException {
+    vh.checkPositive("profilerDivertCapacityOff", profilerDivertCapacityOff);
     this.profilerDivertCapacityOff = profilerDivertCapacityOff;
   }
 
@@ -947,7 +1008,8 @@ public class CommonSettings implements Cloneable {
     return profilerDivertStatus;
   }
 
-  public void setProfilerDivertStatus(int profilerDivertStatus) {
+  public void setProfilerDivertStatus(int profilerDivertStatus) throws AdminException {
+    vh.checkPositive("profilerDivertStatus", profilerDivertStatus);
     this.profilerDivertStatus = profilerDivertStatus;
   }
 
@@ -955,7 +1017,8 @@ public class CommonSettings implements Cloneable {
     return profilerDivertTo;
   }
 
-  public void setProfilerDivertTo(int profilerDivertTo) {
+  public void setProfilerDivertTo(int profilerDivertTo) throws AdminException {
+    vh.checkPositive("profilerDivertTo",profilerDivertTo);
     this.profilerDivertTo = profilerDivertTo;
   }
 
@@ -963,7 +1026,8 @@ public class CommonSettings implements Cloneable {
     return profilerConcatOn;
   }
 
-  public void setProfilerConcatOn(int profilerConcatOn) {
+  public void setProfilerConcatOn(int profilerConcatOn) throws AdminException {
+    vh.checkPositive("profilerConcatOn", profilerConcatOn);
     this.profilerConcatOn = profilerConcatOn;
   }
 
@@ -971,7 +1035,8 @@ public class CommonSettings implements Cloneable {
     return profilerConcatOff;
   }
 
-  public void setProfilerConcatOff(int profilerConcatOff) {
+  public void setProfilerConcatOff(int profilerConcatOff) throws AdminException {
+    vh.checkPositive("profilerConcatOff", profilerConcatOff);
     this.profilerConcatOff = profilerConcatOff;
   }
 
@@ -979,7 +1044,8 @@ public class CommonSettings implements Cloneable {
     return profilerTranslitOn;
   }
 
-  public void setProfilerTranslitOn(int profilerTranslitOn) {
+  public void setProfilerTranslitOn(int profilerTranslitOn) throws AdminException {
+    vh.checkPositive("profilerTranslitOn", profilerTranslitOn);
     this.profilerTranslitOn = profilerTranslitOn;
   }
 
@@ -987,7 +1053,8 @@ public class CommonSettings implements Cloneable {
     return profilerTranslitOff;
   }
 
-  public void setProfilerTranslitOff(int profilerTranslitOff) {
+  public void setProfilerTranslitOff(int profilerTranslitOff) throws AdminException {
+    vh.checkPositive("profilerTranslitOff", profilerTranslitOff);
     this.profilerTranslitOff = profilerTranslitOff;
   }
 
@@ -995,7 +1062,8 @@ public class CommonSettings implements Cloneable {
     return abInfoSystemId;
   }
 
-  public void setAbInfoSystemId(String abInfoSystemId) {
+  public void setAbInfoSystemId(String abInfoSystemId) throws AdminException {
+    vh.checkNotEmpty("abInfoSystemId", abInfoSystemId);
     this.abInfoSystemId = abInfoSystemId;
   }
 
@@ -1003,7 +1071,8 @@ public class CommonSettings implements Cloneable {
     return abInfoServiceType;
   }
 
-  public void setAbInfoServiceType(String abInfoServiceType) {
+  public void setAbInfoServiceType(String abInfoServiceType) throws AdminException {
+    vh.checkNotEmpty("abInfoServiceType", abInfoServiceType);
     this.abInfoServiceType = abInfoServiceType;
   }
 
@@ -1011,7 +1080,8 @@ public class CommonSettings implements Cloneable {
     return abInfoProtocolId;
   }
 
-  public void setAbInfoProtocolId(int abInfoProtocolId) {
+  public void setAbInfoProtocolId(int abInfoProtocolId) throws AdminException {
+    vh.checkPositive("abInfoProtocolId", abInfoProtocolId);
     this.abInfoProtocolId = abInfoProtocolId;
   }
 
@@ -1019,7 +1089,8 @@ public class CommonSettings implements Cloneable {
     return abInfoMobileAccessAddress;
   }
 
-  public void setAbInfoMobileAccessAddress(String abInfoMobileAccessAddress) {
+  public void setAbInfoMobileAccessAddress(String abInfoMobileAccessAddress) throws AdminException {
+    vh.checkNotEmpty("abInfoMobileAccessAddress", abInfoMobileAccessAddress);
     this.abInfoMobileAccessAddress = abInfoMobileAccessAddress;
   }
 
@@ -1027,7 +1098,8 @@ public class CommonSettings implements Cloneable {
     return abInfoSmppAccessAddress;
   }
 
-  public void setAbInfoSmppAccessAddress(String abInfoSmppAccessAddress) {
+  public void setAbInfoSmppAccessAddress(String abInfoSmppAccessAddress) throws AdminException {
+    vh.checkNotEmpty("abInfoSmppAccessAddress", abInfoSmppAccessAddress);
     this.abInfoSmppAccessAddress = abInfoSmppAccessAddress;
   }
 
@@ -1035,7 +1107,7 @@ public class CommonSettings implements Cloneable {
     return mscAutomaticRegistration;
   }
 
-  public void setMscAutomaticRegistration(boolean mscAutomaticRegistration) {
+  public void setMscAutomaticRegistration(boolean mscAutomaticRegistration) throws AdminException {
     this.mscAutomaticRegistration = mscAutomaticRegistration;
   }
 
@@ -1043,7 +1115,8 @@ public class CommonSettings implements Cloneable {
     return mscFailureLimit;
   }
 
-  public void setMscFailureLimit(int mscFailureLimit) {
+  public void setMscFailureLimit(int mscFailureLimit) throws AdminException {
+    vh.checkPositive("mscFailureLimit", mscFailureLimit);
     this.mscFailureLimit = mscFailureLimit;
   }
 
@@ -1051,7 +1124,8 @@ public class CommonSettings implements Cloneable {
     return mscStoreFile;
   }
 
-  public void setMscStoreFile(String mscStoreFile) {
+  public void setMscStoreFile(String mscStoreFile) throws AdminException {
+    vh.checkNotEmpty("mscStoreFile", mscStoreFile);
     this.mscStoreFile = mscStoreFile;
   }
 
@@ -1059,7 +1133,8 @@ public class CommonSettings implements Cloneable {
     return mscSingleAttemptTimeout;
   }
 
-  public void setMscSingleAttemptTimeout(int mscSingleAttemptTimeout) {
+  public void setMscSingleAttemptTimeout(int mscSingleAttemptTimeout) throws AdminException {
+    vh.checkPositive("mscSingleAttemptTimeout", mscSingleAttemptTimeout);
     this.mscSingleAttemptTimeout = mscSingleAttemptTimeout;
   }
 
@@ -1067,7 +1142,8 @@ public class CommonSettings implements Cloneable {
     return aclStoreDir;
   }
 
-  public void setAclStoreDir(String aclStoreDir) {
+  public void setAclStoreDir(String aclStoreDir) throws AdminException {
+    vh.checkNotEmpty("aclStoreDir", aclStoreDir);
     this.aclStoreDir = aclStoreDir;
   }
 
@@ -1075,7 +1151,8 @@ public class CommonSettings implements Cloneable {
     return aclPreCreateSize;
   }
 
-  public void setAclPreCreateSize(int aclPreCreateSize) {
+  public void setAclPreCreateSize(int aclPreCreateSize) throws AdminException {
+    vh.checkPositive("aclPreCreateSize", aclPreCreateSize);
     this.aclPreCreateSize = aclPreCreateSize;
   }
 
@@ -1083,7 +1160,8 @@ public class CommonSettings implements Cloneable {
     return inmanHost;
   }
 
-  public void setInmanHost(String inmanHost) {
+  public void setInmanHost(String inmanHost) throws AdminException {
+    vh.checkNotEmpty("inmanHost", inmanHost);
     this.inmanHost = inmanHost;
   }
 
@@ -1091,7 +1169,8 @@ public class CommonSettings implements Cloneable {
     return inmanPort;
   }
 
-  public void setInmanPort(int inmanPort) {
+  public void setInmanPort(int inmanPort) throws AdminException {
+    vh.checkPositive("inmanPort", inmanPort);
     this.inmanPort = inmanPort;
   }
 
@@ -1099,7 +1178,8 @@ public class CommonSettings implements Cloneable {
     return inmanChargingPeer2peer;
   }
 
-  public void setInmanChargingPeer2peer(String inmanChargingPeer2peer) {
+  public void setInmanChargingPeer2peer(String inmanChargingPeer2peer) throws AdminException {
+    vh.checkNotEmpty("inmanChargingPeer2peer", inmanChargingPeer2peer);
     this.inmanChargingPeer2peer = inmanChargingPeer2peer;
   }
 
@@ -1107,7 +1187,8 @@ public class CommonSettings implements Cloneable {
     return inmanChargingOther;
   }
 
-  public void setInmanChargingOther(String inmanChargingOther) {
+  public void setInmanChargingOther(String inmanChargingOther) throws AdminException {
+    vh.checkNotEmpty("inmanChargingOther", inmanChargingOther);
     this.inmanChargingOther = inmanChargingOther;
   }
 
@@ -1115,7 +1196,8 @@ public class CommonSettings implements Cloneable {
     return aliasStoreFile;
   }
 
-  public void setAliasStoreFile(String aliasStoreFile) {
+  public void setAliasStoreFile(String aliasStoreFile) throws AdminException {
+    vh.checkNotEmpty("aliasStoreFile", aliasStoreFile);
     this.aliasStoreFile = aliasStoreFile;
   }
 
@@ -1123,7 +1205,8 @@ public class CommonSettings implements Cloneable {
     return snmpCsvFileDir;
   }
 
-  public void setSnmpCsvFileDir(String snmpCsvFileDir) {
+  public void setSnmpCsvFileDir(String snmpCsvFileDir) throws AdminException {
+    vh.checkNotEmpty("snmpCsvFileDir", snmpCsvFileDir);
     this.snmpCsvFileDir = snmpCsvFileDir;
   }
 
@@ -1131,7 +1214,8 @@ public class CommonSettings implements Cloneable {
     return snmpCsvFileRollInterval;
   }
 
-  public void setSnmpCsvFileRollInterval(int snmpCsvFileRollInterval) {
+  public void setSnmpCsvFileRollInterval(int snmpCsvFileRollInterval) throws AdminException {
+    vh.checkPositive("snmpCsvFileRollInterval", snmpCsvFileRollInterval);
     this.snmpCsvFileRollInterval = snmpCsvFileRollInterval;
   }
 
@@ -1139,7 +1223,8 @@ public class CommonSettings implements Cloneable {
     return snmpCacheTimeout;
   }
 
-  public void setSnmpCacheTimeout(int snmpCacheTimeout) {
+  public void setSnmpCacheTimeout(int snmpCacheTimeout) throws AdminException {
+    vh.checkPositive("snmpCacheTimeout", snmpCacheTimeout);
     this.snmpCacheTimeout = snmpCacheTimeout;
   }
 
@@ -1147,20 +1232,12 @@ public class CommonSettings implements Cloneable {
     return new HashMap<String, String>(directives);
   }
 
-  public void addDirective(String name, String value) {
-    directives.put(name, value);
-  }
-
-  public void addDirectives(Map<String, String> ds) {
-    directives.putAll(ds);
-  }
-
-  public String removeDirective(String name) {
-    return directives.remove(name);
-  }
-
-  public void clearDirectives() {
-    directives.clear();
+  public void setDirectives(Map<String, String> ds) throws AdminException {
+    for (Map.Entry<String, String> directive : ds.entrySet()) {
+      if (directive.getValue() == null || directive.getValue().trim().length()==0)
+        throw new SmscException("invalid_directive", directive.getKey());
+    }
+    directives = new HashMap<String, String>(ds);
   }
 
   public Object clone() throws CloneNotSupportedException {

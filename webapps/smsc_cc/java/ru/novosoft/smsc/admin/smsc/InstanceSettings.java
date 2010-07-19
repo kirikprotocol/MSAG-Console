@@ -1,5 +1,7 @@
 package ru.novosoft.smsc.admin.smsc;
 
+import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.util.ValidationHelper;
 import ru.novosoft.smsc.util.config.XmlConfigException;
 import ru.novosoft.smsc.util.config.XmlConfig;
 import ru.novosoft.smsc.util.config.XmlConfigSection;
@@ -41,6 +43,7 @@ public class InstanceSettings implements Cloneable {
 
   private String cacheDir;
 
+  private final ValidationHelper vh = new ValidationHelper(InstanceSettings.class.getCanonicalName());
 
   public InstanceSettings() {    
   }
@@ -114,7 +117,8 @@ public class InstanceSettings implements Cloneable {
     return adminHost;
   }
 
-  public void setAdminHost(String adminHost) {
+  public void setAdminHost(String adminHost) throws AdminException {
+    vh.checkNotEmpty("adminHost", adminHost);
     this.adminHost = adminHost;
   }
 
@@ -122,7 +126,8 @@ public class InstanceSettings implements Cloneable {
     return adminPort;
   }
 
-  public void setAdminPort(int adminPort) {
+  public void setAdminPort(int adminPort) throws AdminException {
+    vh.checkPort("adminPort", adminPort);
     this.adminPort = adminPort;
   }
 
@@ -130,7 +135,8 @@ public class InstanceSettings implements Cloneable {
     return corePerfHost;
   }
 
-  public void setCorePerfHost(String corePerfHost) {
+  public void setCorePerfHost(String corePerfHost) throws AdminException {
+    vh.checkNotEmpty("corePerfHost", corePerfHost);
     this.corePerfHost = corePerfHost;
   }
 
@@ -138,7 +144,8 @@ public class InstanceSettings implements Cloneable {
     return corePerfPort;
   }
 
-  public void setCorePerfPort(int corePerfPort) {
+  public void setCorePerfPort(int corePerfPort) throws AdminException {
+    vh.checkPort("corePerfPort", corePerfPort);
     this.corePerfPort = corePerfPort;
   }
 
@@ -146,7 +153,8 @@ public class InstanceSettings implements Cloneable {
     return smePerfHost;
   }
 
-  public void setSmePerfHost(String smePerfHost) {
+  public void setSmePerfHost(String smePerfHost) throws AdminException {
+    vh.checkNotEmpty("smePerfHost", smePerfHost);
     this.smePerfHost = smePerfHost;
   }
 
@@ -154,7 +162,8 @@ public class InstanceSettings implements Cloneable {
     return smePerfPort;
   }
 
-  public void setSmePerfPort(int smePerfPort) {
+  public void setSmePerfPort(int smePerfPort) throws AdminException {
+    vh.checkPort("smePerfPort", smePerfPort);
     this.smePerfPort = smePerfPort;
   }
 
@@ -162,7 +171,8 @@ public class InstanceSettings implements Cloneable {
     return messageStoreStatsDir;
   }
 
-  public void setMessageStoreStatsDir(String messageStoreStatsDir) {
+  public void setMessageStoreStatsDir(String messageStoreStatsDir) throws AdminException {
+    vh.checkNotEmpty("messageStoreStatsDir", messageStoreStatsDir);
     this.messageStoreStatsDir = messageStoreStatsDir;
   }
 
@@ -170,7 +180,8 @@ public class InstanceSettings implements Cloneable {
     return messageStoreArchDir;
   }
 
-  public void setMessageStoreArchDir(String messageStoreArchDir) {
+  public void setMessageStoreArchDir(String messageStoreArchDir) throws AdminException {
+    vh.checkNotEmpty("messageStoreArchDir", messageStoreArchDir);
     this.messageStoreArchDir = messageStoreArchDir;
   }
 
@@ -178,7 +189,8 @@ public class InstanceSettings implements Cloneable {
     return localStoreFilename;
   }
 
-  public void setLocalStoreFilename(String localStoreFilename) {
+  public void setLocalStoreFilename(String localStoreFilename) throws AdminException {
+    vh.checkNotEmpty("localStoreFilename", localStoreFilename);
     this.localStoreFilename = localStoreFilename;
   }
 
@@ -186,7 +198,8 @@ public class InstanceSettings implements Cloneable {
     return localStoreMessIdFile;
   }
 
-  public void setLocalStoreMessIdFile(String localStoreMessIdFile) {
+  public void setLocalStoreMessIdFile(String localStoreMessIdFile) throws AdminException {
+    vh.checkNotEmpty("localStoreMessIdFile", localStoreMessIdFile);
     this.localStoreMessIdFile = localStoreMessIdFile;
   }
 
@@ -194,7 +207,8 @@ public class InstanceSettings implements Cloneable {
     return smppHost;
   }
 
-  public void setSmppHost(String smppHost) {
+  public void setSmppHost(String smppHost) throws AdminException {
+    vh.checkNotEmpty("smppHost", smppHost);
     this.smppHost = smppHost;
   }
 
@@ -202,7 +216,8 @@ public class InstanceSettings implements Cloneable {
     return smppPort;
   }
 
-  public void setSmppPort(int smppPort) {
+  public void setSmppPort(int smppPort) throws AdminException {
+    vh.checkPort("smppPort", smppPort);
     this.smppPort = smppPort;
   }
 
@@ -210,7 +225,8 @@ public class InstanceSettings implements Cloneable {
     return agentHost;
   }
 
-  public void setAgentHost(String agentHost) {
+  public void setAgentHost(String agentHost) throws AdminException {
+    vh.checkNotEmpty("agentHost", agentHost);
     this.agentHost = agentHost;
   }
 
@@ -218,7 +234,8 @@ public class InstanceSettings implements Cloneable {
     return agentPort;
   }
 
-  public void setAgentPort(int agentPort) {
+  public void setAgentPort(int agentPort) throws AdminException {
+    vh.checkPort("agentPort", agentPort);
     this.agentPort = agentPort;
   }
 
@@ -226,7 +243,8 @@ public class InstanceSettings implements Cloneable {
     return cacheDir;
   }
 
-  public void setCacheDir(String cacheDir) {
+  public void setCacheDir(String cacheDir) throws AdminException {
+    vh.checkNotEmpty("cacheDir", cacheDir);
     this.cacheDir = cacheDir;
   }
 
