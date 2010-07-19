@@ -1,0 +1,210 @@
+.jsdomenuarrow {
+  background-color: #DFD4AE;
+  background-repeat: no-repeat; /* Do not alter this line! */
+  height: 7px;
+  position: absolute; /* Do not alter this line! */
+  right: 3px;
+  width: 4px;
+}
+
+.jsdomenuarrowover {
+  background-color: #DFD4AE;
+  background-repeat: no-repeat; /* Do not alter this line! */
+  height: 7px;
+  position: absolute; /* Do not alter this line! */
+  right: 3px;
+  width: 4px;
+}
+
+.jsdomenubardiv {
+  z-index: 10;
+  background-position: left;
+  background-repeat: no-repeat;
+  border: 0px;
+  cursor: default;
+  padding-bottom: 3px;
+  padding-left: 100px;
+  padding-right: 0px;
+  padding-top: 52px;
+  position: absolute; /* Do not alter this line! */
+  visibility: visible;
+}
+
+.jsdomenubardragdiv {
+  cursor: move;
+  display: inline;
+  font-family: Arial, Tahoma, Helvetica, sans, sans-serif;
+  font-size: 12px;
+  padding-bottom: 2px;
+  padding-left: 0px;
+  padding-right: 0px;
+  padding-top: 2px;
+  position: relative; /* Do not alter this line! */
+  visibility: hidden;
+  width: 0px;
+}
+
+.jsdomenubaritem {
+  z-index: 10; /*background-color: #EFEDDE;*/
+  border: none;
+  color: #F2E275;
+  display: inline;
+  font-family: Arial, Tahoma, Helvetica, sans, sans-serif;
+  font-size: 14px;
+  padding-bottom: 0px;
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-top: 0px;
+  position: relative; /* Do not alter this line! */
+}
+
+.jsdomenubaritemclick {
+  z-index: 10; /*background-color: #EFEDDE;*/
+  border: none;
+  color: yellow;
+  display: inline;
+  font-family: Arial, Tahoma, Helvetica, sans, sans-serif;
+  font-size: 14px;
+  padding-bottom: 0px;
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-top: 0px;
+  position: relative; /* Do not alter this line! */
+  cursor: pointer;
+}
+
+.jsdomenubaritemover {
+  background-color: #C1D2EE;
+  border: 1px solid #8A867A;
+  color: white; /*display: inline;*/
+  font-family: Arial, Tahoma, Helvetica, sans, sans-serif;
+  font-size: 12px;
+  padding-bottom: 2px;
+  padding-left: 9px;
+  padding-right: 9px;
+  padding-top: 2px;
+  position: relative; /* Do not alter this line! */
+  cursor: pointer;
+}
+
+/*Drop-down box style:*/
+.jsdomenudiv {
+  background-color: #3A5867; /*background-image: url(office_xp_menu_left.png);*/
+  background-repeat: repeat-y;
+  border: 1px solid #111155;
+  cursor: default;
+  padding-bottom: 1px;
+  padding-top: 1px;
+  position: absolute; /* Do not alter this line! */
+  visibility: hidden;
+  z-index: 10;
+}
+
+.jsdomenuitem {
+/*background: blue;*/
+  border: none;
+  color: #F2E275;
+
+  font-family: Arial, Tahoma, Helvetica, sans, sans-serif;
+  font-size: 12px;
+
+  padding-bottom: 1px;
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-top: 1px;
+  position: relative; /* Do not alter this line! */
+
+  white-space: nowrap;
+}
+
+.jsdomenuitemover {
+/*background-color: blue;*/
+  border: none;
+  color: yellow;
+
+  font-family: Arial, Tahoma, Helvetica, sans, sans-serif;
+  font-size: 12px;
+
+  padding-bottom: 1px;
+  margin-left: 0px;
+  margin-right: 0px;
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-top: 1px;
+  position: relative; /* Do not alter this line! */
+  cursor: pointer;
+
+  white-space: nowrap;
+}
+
+.jsdomenusep {
+  padding-left: 28px;
+}
+
+.jsdomenusep hr {
+}
+
+/************************ main menu *************************/
+table.main_menu_background {
+  position: absolute;
+  z-index: 1;
+  visibility: visible;
+  top: 45;
+  left: 0px;
+  height: 30px;
+}
+
+table.main_menu {
+  color: #F2E275;
+  height: 30px;
+  z-index: 2;
+  position: relative;
+}
+
+table.main_menu td {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+table.main_menu a,
+table.main_menu a:visited,
+table.main_menu a:hover {
+  text-decoration: none;
+  color: #F2E275;
+  cursor: pointer;
+}
+
+table.main_menu table.submenu,
+table.main_menu iframe.hiddenLayer {
+  position: absolute;
+  top: 25px;
+  left: 0px;
+}
+
+table.main_menu table.submenu {
+  border: 1px #4E6E82 solid;
+  background-color: #3A5867;
+  visibility: hidden;
+  z-index: 4;
+}
+
+table.main_menu table.submenu td {
+  padding: 2px 7px 2px 7px;
+}
+
+table.main_menu table.submenu td.submenu_sel {
+  background-color: #4E6E82;
+}
+
+table.main_menu table.submenu td.submenu_sel a {
+  color: black;
+}
+
+table.main_menu table.submenu td a:hover {
+  color: white;
+}
+
+table.main_menu iframe.hiddenLayerl {
+  z-index: 3;
+  visibility: hidden;
+}

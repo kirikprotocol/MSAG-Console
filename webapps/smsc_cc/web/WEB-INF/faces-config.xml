@@ -24,12 +24,31 @@
   </managed-bean>
 
   <managed-bean>
+    <managed-bean-name>logout</managed-bean-name>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.LogoutController</managed-bean-class>
+    <managed-bean-scope>session</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
     <managed-bean-name>topMenu</managed-bean-name>
     <managed-bean-class>ru.novosoft.smsc.web.TopMenu</managed-bean-class>
-    <managed-bean-scope>application</managed-bean-scope>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
+    <managed-bean-name>smscConfig</managed-bean-name>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.SmscConfigController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
 
 
+  <navigation-rule>
+    <navigation-case>
+      <from-outcome>INDEX</from-outcome>
+      <to-view-id>/smsc/index.faces</to-view-id>
+      <redirect/>
+    </navigation-case>
+  </navigation-rule>
 
 
 </faces-config>

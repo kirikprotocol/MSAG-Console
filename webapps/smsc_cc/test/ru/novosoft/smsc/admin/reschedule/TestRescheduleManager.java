@@ -8,20 +8,24 @@ import ru.novosoft.smsc.admin.config.TestConfigFileManagerHelper;
  */
 public class TestRescheduleManager extends RescheduleManager {
 
-  private final TestConfigFileManagerHelper helper;
+  private TestConfigFileManagerHelper helper;
 
   public TestRescheduleManager() throws AdminException {
     super(null, null, null, null);
-    helper = new TestConfigFileManagerHelper(TestRescheduleManager.class.getResourceAsStream("schedule.xml"));
   }
 
-  @Override
-  public void apply() throws AdminException {
-    helper.apply(this);
-  }
-
-  @Override
   public void reset() throws AdminException {
-    helper.reset(this);
+    getHelper().reset(this);
+  }
+
+  public void apply() throws AdminException {
+    getHelper().apply(this);
+  }
+
+  private TestConfigFileManagerHelper getHelper() throws AdminException {
+    if (helper == null) {
+      helper = new TestConfigFileManagerHelper(TestRescheduleManager.class.getResourceAsStream("schedule.xml"));
+    }
+    return helper;
   }
 }

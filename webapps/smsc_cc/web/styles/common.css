@@ -1,0 +1,130 @@
+/******************************************************************************/
+/* COMMON TAGS                                                                */
+/******************************************************************************/
+body {
+  font-family: Verdana, Arial, Helvetica, sans-serif;
+  font-size: x-small;
+  margin: 0px 0px 0px 0px;
+  background-color: #F3F0E3;
+  color: #161E49;
+  display: block;
+}
+
+body * {
+  font-family: Verdana, Arial, Helvetica, sans-serif;
+  font-size: x-small;
+}
+
+table {
+  border: 0px;
+  width: 100%;
+}
+
+img {
+  border: none;
+}
+
+img.button {
+/*behavior : url(/scripts/click_submit.htc);*/
+  cursor: pointer; /*cursor: hand;*/
+  /*	position: relative;
+   top: 3px;*/
+}
+
+input, textarea, select {
+  border: 1px solid #C8BE9E;
+  color: #161E49;
+  font-size: 100%;
+}
+
+input {
+/*behavior : url(/scripts/input.htc);*/
+  z-index: 10;
+}
+
+textarea {
+  height: 80px;
+  width: 100%;
+}
+
+form {
+  display: inline;
+}
+
+th {
+  text-align: left;
+  font-weight: normal;
+  white-space: nowrap;
+}
+
+hr {
+  color: #C8BE9E;
+  height: 1px;
+}
+
+input.txt {
+  width: 265px;
+}
+
+input.txtW {
+  width: 100%;
+}
+
+input.radio, input.check {
+  width: 1.2em;
+  height: 1.2em;
+  padding: 0px;
+  margin: 0px;
+}
+
+input.radio {
+  border: none;
+}
+
+.clickable {
+  cursor: pointer; /*cursor: hand;*/
+}
+
+select.selectW {
+  width: 100%;
+}
+
+/*************************************************************************/
+div.page_subtitle,
+div.secSmsc {
+  background-position: left;
+  background-repeat: no-repeat;
+  color: #308380;
+  padding-left: 19px;
+  margin-left: 0px;
+  margin-bottom: 4px;
+  background-image: url(/images/smsc_ico.gif);
+  font-size: small;
+  font-weight: bold;
+}
+
+/*************************************************************************/
+table.smsc_status,
+table.smsc_status td,
+table.smsc_status th {
+  background-color: #161E49;
+  color: #7CF7F3;
+  height: 30px;
+  text-align: right; /*	padding-right:10px; */
+  font-weight: bold;
+  background-repeat: no-repeat;
+}
+
+table.smsc_status th {
+  padding-left: 26px;
+  color: #F2E275;
+  text-align: left;
+  font: bold 18px Verdana, Geneva, Arial, Helvetica, sans-serif;
+  white-space: nowrap;
+}
+
+/*************************************************************************/
+div.query_result {
+  color: #161E49;
+  font-weight: bold;
+}

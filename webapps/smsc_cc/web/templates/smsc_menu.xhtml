@@ -7,34 +7,39 @@
 
 <ui:composition>
 
-  <script type="text/javascript" language="javascript" src="/js/menu/jsdomenu.js"></script>
-  <script type="text/javascript" language="javascript" src="/js/menu/jsdomenubar.js"></script>
+  <script type="text/javascript" language="javascript" src="/smsc/js/menu/jsdomenu.js"></script>
+  <script type="text/javascript" language="javascript" src="/smsc/js/menu/jsdomenubar.js"></script>
 
   <SCRIPT type="text/javascript">
     function createjsDOMenu() {
     menuBar = new jsDOMenuBar();
     <ui:repeat value="#{topMenu.menuBarItems}" var="barItem">
-      menu_0=new jsDOMenu("<tr:outputText escape="false"  value="#{barItem.width}"/>");
+      menu_0=new jsDOMenu("<tr:outputText escape="false" value="#{barItem.width}"/>");
       <ui:repeat value="#{barItem.items}" var="menuItem">
-        menu_0.addMenuItem(new menuItem("<tr:outputText escape="false" value="#{menuItem.name}"/>", "", "<tr:outputText value="#{menuItem.url}"/>"));
+        menu_0.addMenuItem(new menuItem("<tr:outputText escape="false" value="#{menuItem.name}"/>", "", "<tr:outputText
+          value="#{menuItem.url}"/>"));
       </ui:repeat>
-      menuBar.addMenuBarItem(new menuBarItem("<tr:outputText escape="false"  value="#{barItem.name}"/>", menu_0));
+      menuBar.addMenuBarItem(new menuBarItem("<tr:outputText escape="false" value="#{barItem.name}"/>", menu_0));
     </ui:repeat>
     }
   </SCRIPT>
 
-    <h:form>
-      <table width="100%" id="MAIN_MENU_TABLE" border="0" cellspacing="0" cellpadding="0" class="main_menu"><tr>
-        <td background="/images/smsc_14.jpg" style="white-space:nowrap;">
-          &#160;  
+  <h:form>
+    <table width="100%" id="MAIN_MENU_TABLE" border="0" cellspacing="0" cellpadding="0" class="main_menu">
+      <tr>
+        <td background="/smsc/images/smsc_14.jpg" style="white-space:nowrap;">
+          &#160;
         </td>
-        <td background="/images/smsc_14.jpg" width="100%">&#160;</td>
-        <td background="/images/smsc_14.jpg" style="white-space:nowrap">
-          <a ID="MENU0_LOGOUT" href="logout.jsp">Завершить сеанс "a"</a>
+        <td background="/smsc/images/smsc_14.jpg" width="100%">&#160;</td>
+        <td background="/smsc/images/smsc_14.jpg" style="white-space:nowrap">
+          <h:commandLink id="MENU0_LOGOUT" style="text-decoration: none;color: #F2E275;cursor: pointer;"
+                         rendered="#{logout.userName != null}" value="Завершить сеанс &quot;#{logout.userName}&quot;"
+                         action="#{logout.logout}"/>
         </td>
 
-        <td background="/images/smsc_14.jpg" width="52"></td></tr>
-      </table>
-    </h:form>
+        <td background="/smsc/images/smsc_14.jpg" width="52"></td>
+      </tr>
+    </table>
+  </h:form>
 </ui:composition>
 </html>

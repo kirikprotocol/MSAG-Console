@@ -1,0 +1,25 @@
+<!ELEMENT users (user)+>
+
+<!ELEMENT user (role|pref)*>
+<!ATTLIST user
+        login     CDATA #REQUIRED
+        password  CDATA #REQUIRED
+        firstName CDATA #IMPLIED
+        lastName  CDATA #IMPLIED
+        dept      CDATA #IMPLIED
+        workPhone CDATA #IMPLIED
+        homePhone CDATA #IMPLIED
+        cellPhone CDATA #IMPLIED
+        email     CDATA #IMPLIED
+>
+
+<!ELEMENT role EMPTY>
+<!ATTLIST role
+        name CDATA #REQUIRED
+>
+
+<!ELEMENT pref EMPTY>
+<!ATTLIST pref
+        name  CDATA #REQUIRED
+        value CDATA #REQUIRED
+>

@@ -18,12 +18,12 @@ public class TestConfigFileManagerHelper {
     ByteArrayOutputStream os = new ByteArrayOutputStream();
     try {
       int b;
-      while ((b = is.read()) > 0)
+      while ((b = is.read()) != -1)
         os.write(b);
 
       currentConfig = os.toByteArray();
     } catch (IOException e) {
-      throw new ConfigException("load_error");
+      throw new ConfigException("load_error", e);
     } finally {
       if (is != null)
         try {
@@ -35,11 +35,12 @@ public class TestConfigFileManagerHelper {
 
   public void reset(ConfigFileManager manager) throws AdminException {
     try {
+      manager.config = manager.newConfigFile();
       manager.config.load(new ByteArrayInputStream(currentConfig));
     } catch (Exception e) {
-      throw new ConfigException("load_error");
+      throw new ConfigException("load_error", e);
     }
-    manager.changed=false;
+    manager.changed = false;
   }
 
   public void apply(ConfigFileManager manager) throws AdminException {

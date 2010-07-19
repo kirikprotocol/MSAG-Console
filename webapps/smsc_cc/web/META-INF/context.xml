@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<Context path="/" reloadable="true">
+  <Realm className="org.apache.catalina.realm.JAASRealm"
+         appName="securitytest"
+         userClassNames="ru.novosoft.smsc.web.auth.User"
+         roleClassNames="ru.novosoft.smsc.web.auth.Role" debug="99"/>
+</Context>
+

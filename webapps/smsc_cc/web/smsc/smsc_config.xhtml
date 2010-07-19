@@ -1,0 +1,73 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets">
+
+<ui:composition template="../templates/main.xhtml">
+
+  <ui:define name="sme_title">
+    <table cellpadding="0" cellspacing="0" height="30px" class="smsc_status">
+      <tr>
+        <th background="/smsc/images/smsc_17.jpg" style="white-space:nowrap">SMS Center Administration Console</th>
+        <td><h:outputText value="&#160;"/></td>
+        <td width="12px" background="/smsc/images/smsc_19.jpg" style="padding-right:0px;"></td>
+      </tr>
+    </table>
+  </ui:define>
+
+  <ui:define name="content">
+    <tr:form id="inst_form" partialTriggers="change">
+      <tr:inputHidden value="#{smscConfig.initialized}"/>
+      <tr:inputHidden value="#{smscConfig.instancesCount}"/>
+
+      <h:panelGrid columns="2">
+
+        <h:panelGroup>
+          <tr:inputText value="#{smscConfig.commonConfig.state_machines_count}"/>
+        </h:panelGroup>
+
+        <h:panelGroup>
+
+          <tr:selectOneChoice autoSubmit="true" value="#{smscConfig.currentInstance}" id="change">
+            <f:selectItems value="#{smscConfig.instancesIndexes}"/>
+          </tr:selectOneChoice>
+
+          <ui:repeat value="#{smscConfig.instanceConfigs}" var="var">
+
+            <tr:panelFormLayout
+                inlineStyle="#{(smscConfig.currentInstance == var.instanceNumber) ? '' : 'display:none'}">
+
+              <tr:panelLabelAndMessage label="Admin host" for="adminHost">
+                <f:facet name="help">
+                  <tr:outputText value="input a string"/>
+                </f:facet>
+                <tr:inputText simple="true" value="#{var.adminHost}" id="adminHost"/>
+              </tr:panelLabelAndMessage>
+
+              <tr:panelLabelAndMessage label="Admin port" for="adminPort">
+                <f:facet name="help">
+                  <tr:outputText value="input a number"/>
+                </f:facet>
+                <tr:inputText simple="true" value="#{var.adminPort}" id="adminPort" autoSubmit="true"/>
+              </tr:panelLabelAndMessage>
+
+            </tr:panelFormLayout>
+
+          </ui:repeat>
+
+        </h:panelGroup>
+
+      </h:panelGrid>
+      <tr:commandButton text="saveAll" action="#{smscConfig.saveAll}"/>
+
+    </tr:form>
+
+
+  </ui:define>
+
+</ui:composition>
+
+
+</html>

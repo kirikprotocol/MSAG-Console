@@ -1,21 +1,21 @@
-<?xml version = '1.0' encoding = 'ISO-8859-1'?>
+<?xml version = '1.0' encoding = 'utf-8'?>
 
 <web-app xmlns="http://java.sun.com/xml/ns/j2ee"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd"
          version="2.4">
 
-	<!-- FaceletViewHandler configuration -->
-	<context-param>
-	  <param-name>org.apache.myfaces.trinidad.ALTERNATE_VIEW_HANDLER</param-name>
-	  <param-value>com.sun.facelets.FaceletViewHandler</param-value>
-	</context-param>
+  <!-- FaceletViewHandler configuration -->
+  <context-param>
+    <param-name>org.apache.myfaces.trinidad.ALTERNATE_VIEW_HANDLER</param-name>
+    <param-value>com.sun.facelets.FaceletViewHandler</param-value>
+  </context-param>
 
-	<!-- Use documents saved as *.xhtml for Facelets -->
-	<context-param>
-	  <param-name>javax.faces.DEFAULT_SUFFIX</param-name>
-	  <param-value>.xhtml</param-value>
-	</context-param>
+  <!-- Use documents saved as *.xhtml for Facelets -->
+  <context-param>
+    <param-name>javax.faces.DEFAULT_SUFFIX</param-name>
+    <param-value>.xhtml</param-value>
+  </context-param>
 
   <context-param>
     <param-name>facelets.VIEW_MAPPINGS</param-name>
@@ -94,7 +94,7 @@
   <!-- Faces Servlet Mappings -->
   <servlet-mapping>
     <servlet-name>faces</servlet-name>
-    <url-pattern>/faces/*</url-pattern>
+    <url-pattern>*.faces</url-pattern>
   </servlet-mapping>
 
   <servlet-mapping>
@@ -103,13 +103,77 @@
   </servlet-mapping>
 
   <filter-mapping>
-       <filter-name>extensionsFilter</filter-name>
-       <url-pattern>/faces/myFacesExtensionResource/*</url-pattern>
+    <filter-name>extensionsFilter</filter-name>
+    <url-pattern>/faces/myFacesExtensionResource/*</url-pattern>
   </filter-mapping>
 
   <welcome-file-list>
-    <welcome-file>faces/index.xhtml</welcome-file>
+    <welcome-file>smsc/smsc_config.faces</welcome-file>
   </welcome-file-list>
+
+  <listener>
+    <listener-class>ru.novosoft.smsc.web.TestInitListener</listener-class>
+  </listener>
+
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name>index</web-resource-name>
+      <url-pattern>/smsc/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>smsc_service</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name>hosts</web-resource-name>
+      <url-pattern>/smsc/hosts/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>smsc_hosts</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name>subjects</web-resource-name>
+      <url-pattern>/smsc/subjects/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>smsc_subjects</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+  <login-config>
+    <auth-method>FORM</auth-method>
+    <form-login-config>
+      <form-login-page>/smsc/login.faces</form-login-page>
+      <form-error-page>/smsc/login.faces?loginError=true</form-error-page>
+    </form-login-config>
+  </login-config>
+
+  <security-role>
+    <role-name>smsc_service</role-name>
+  </security-role>
+
+  <security-role>
+    <role-name>smsc_subjects</role-name>
+  </security-role>
+
+  <security-role>
+    <role-name>smsc_hosts</role-name>
+  </security-role>
 
 
 </web-app>

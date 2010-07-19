@@ -5,22 +5,29 @@ import ru.novosoft.smsc.admin.config.TestConfigFileManagerHelper;
 
 /**
  * Тестовая реализация FraudManager
+ *
  * @author Artem Snopkov
  */
 public class TestFraudManager extends FraudManager {
 
-  private final TestConfigFileManagerHelper helper;
+  private TestConfigFileManagerHelper helper;
 
   public TestFraudManager() throws AdminException {
     super(null, null, null, null);
-    helper = new TestConfigFileManagerHelper(TestFraudManager.class.getResourceAsStream("fraud.xml"));
   }
 
   public void reset() throws AdminException {
-    helper.reset(this);
+    getHelper().reset(this);
   }
 
   public void apply() throws AdminException {
-    helper.apply(this);
+    getHelper().apply(this);
+  }
+
+  private TestConfigFileManagerHelper getHelper() throws AdminException {
+    if (helper == null) {
+      helper = new TestConfigFileManagerHelper(TestFraudManager.class.getResourceAsStream("fraud.xml"));
+    }
+    return helper;
   }
 }
