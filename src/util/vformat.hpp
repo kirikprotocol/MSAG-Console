@@ -2,7 +2,9 @@
  * Helpers: Formatted output to std::string.
  * ************************************************************************** */
 #ifndef __SMSC_FORMAT_UTIL_HPP__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_FORMAT_UTIL_HPP__
 
 #include <stdarg.h>

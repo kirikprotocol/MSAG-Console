@@ -1,6 +1,9 @@
-#pragma ident "$Id$"
 #ifndef SMSC_UTIL_CONFIG_CONFIG
 #define SMSC_UTIL_CONFIG_CONFIG
+
+#ifndef __GNUC__
+#pragma ident "$Id$"
+#endif
 
 #include <inttypes.h>
 #include <iostream>

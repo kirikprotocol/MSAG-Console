@@ -1,9 +1,12 @@
-#ident "$Id$"
 /* ************************************************************************** *
  * Helpers: Customizable HEX Dunmping and Debugger-like tracing.
  * ************************************************************************** */
 #ifndef __SMSC_UTIL_BINDUMP_HPP__
 #define __SMSC_UTIL_BINDUMP_HPP__
+
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 
 #include <memory>
 #include "util/vformat.hpp"

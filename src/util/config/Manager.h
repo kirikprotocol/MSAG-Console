@@ -1,6 +1,9 @@
-#ident "$Id$"
 #ifndef CONFIGURATIONMANAGER_H_INCLUDED_C3A81BD4
 #define CONFIGURATIONMANAGER_H_INCLUDED_C3A81BD4
+
+#ifndef __GNUC__
+#ident "$Id$"
+#endif
 
 #include <iostream>
 

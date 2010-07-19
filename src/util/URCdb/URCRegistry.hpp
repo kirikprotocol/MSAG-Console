@@ -4,7 +4,9 @@
  * hash and vice versa. 
  * ************************************************************************* */
 #ifndef _SMSC_RETCODES_REGISTRY_HPP
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define _SMSC_RETCODES_REGISTRY_HPP
 
 #include <inttypes.h>
