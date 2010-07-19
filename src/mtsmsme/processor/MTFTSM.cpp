@@ -122,7 +122,7 @@ void MTFTSM::doUnidentifiedSubscriber(int result,int iid)
   vector<unsigned char> rsp;
   end.encode(rsp);
   tco->SCCPsend(raddrlen,raddr,laddrlen,laddr,(uint16_t)rsp.size(),&rsp[0]);
-  smsc_log_debug(logger,"tsm otid=%s receive RESULT, END(UnidentifiedSubscriber) sent",ltrid.toString().c_str());
+  smsc_log_debug(logger,"tsm otid=%s receive RESULT, END(illegalSubscriber) sent",ltrid.toString().c_str());
   DumpSentSms(req.sms,logger);
   tco->TSMStopped(ltrid);
 }
