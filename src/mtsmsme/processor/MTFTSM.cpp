@@ -118,7 +118,7 @@ void MTFTSM::doUnidentifiedSubscriber(int result,int iid)
   EndMsg end(logger);
   end.setTrId(rtrid);
   end.setDialog(appcntx);
-  end.setError(iid,5 /* unidentifiedSubscriber */,null);
+  end.setError(iid,9 /* illegalSubscriber */,null);
   vector<unsigned char> rsp;
   end.encode(rsp);
   tco->SCCPsend(raddrlen,raddr,laddrlen,laddr,(uint16_t)rsp.size(),&rsp[0]);
