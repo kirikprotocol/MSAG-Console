@@ -2,7 +2,9 @@
  * Synchronization primitive(s): Mutex
  * ************************************************************************** */
 #ifndef __SMSC_CORE_SYNCHRONIZATION_MUTEXGUARD_HPP__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_CORE_SYNCHRONIZATION_MUTEXGUARD_HPP__
 
 namespace smsc {

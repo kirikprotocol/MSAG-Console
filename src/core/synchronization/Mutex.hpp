@@ -2,7 +2,9 @@
  * Synchronization primitive(s): Mutex
  * ************************************************************************** */
 #ifndef __CORE_SYNCHRONIZATION_MUTEX_HPP__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __CORE_SYNCHRONIZATION_MUTEX_HPP__
 
 #include <pthread.h>

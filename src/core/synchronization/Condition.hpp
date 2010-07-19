@@ -2,7 +2,9 @@
  * Synchronization primitive(s): Stateless Event (Condition)
  * ************************************************************************** */
 #ifndef __CORE_SYNCHRONIZATION_CONDITION_HPP__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __CORE_SYNCHRONIZATION_CONDITION_HPP__
 
 #include "core/synchronization/TimeSlice.hpp"

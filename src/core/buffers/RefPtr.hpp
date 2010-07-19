@@ -1,5 +1,7 @@
 #ifndef __REFPTR_HPP__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __REFPTR_HPP__
 
 namespace smsc{

@@ -1,5 +1,7 @@
 #ifndef __SMSC_CORE_BUFFERS_FIXEDLENGTHSTRING_HPP__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __SMSC_CORE_BUFFERS_FIXEDLENGTHSTRING_HPP__
 
 #include <string.h>

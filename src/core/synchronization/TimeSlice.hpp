@@ -2,7 +2,9 @@
  * Helper class(es) for dealing with time periods measured in different units.
  * ************************************************************************** */
 #ifndef __CORE_SYNCHRONIZATION_TIMEOUT_HPP__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __CORE_SYNCHRONIZATION_TIMEOUT_HPP__
 
 #ifdef __GNUC__

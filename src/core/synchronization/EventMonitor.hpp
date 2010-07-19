@@ -2,7 +2,9 @@
  * Synchronization primitive(s): Stateless event monitor
  * ************************************************************************** */
 #ifndef __CORE_SYNCHRONIZATION_EVENTMONITOR_HPP__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __CORE_SYNCHRONIZATION_EVENTMONITOR_HPP__
 
 #define EXPLICIT_PTHREAD_API  //support old code in store/ConnectionManager, system/mapio

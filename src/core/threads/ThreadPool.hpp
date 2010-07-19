@@ -1,5 +1,7 @@
 #ifndef __CORE_THREADS_THREADPOOL_HPP__
+#ifndef __GNUC__
 #ident "$Id$"
+#endif
 #define __CORE_THREADS_THREADPOOL_HPP__
 
 #include "core/threads/Thread.hpp"

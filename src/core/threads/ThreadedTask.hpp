@@ -1,5 +1,7 @@
 #ifndef __CORE_THREADS_THREADEDTASK_HPP__
+#ifndef __GNUC__
 #ident "$Id$"
+#endif
 #define __CORE_THREADS_THREADEDTASK_HPP__
 
 namespace smsc{

@@ -2,7 +2,9 @@
  * Synchronization primitive(s): Statefulll Event
  * ************************************************************************** */
 #ifndef __CORE_SYNCHRONIZATION_EVENT_HPP__
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 #define __CORE_SYNCHRONIZATION_EVENT_HPP__
 
 #include "core/synchronization/Condition.hpp"
