@@ -3,7 +3,8 @@ static char const ident[] = "$Id$";
 #endif /* MOD_IDENT_OFF */
 
 #include <cstdio>
-#include <string.h>
+#include <cstring>
+// #include <string.h>
 #include "util/BinDump.hpp"
 
 namespace smsc {
@@ -98,7 +99,7 @@ inline unsigned typeChar(const char & sym, StreamAppenderITF * &usr_print)
     if (c < ' ' || c > 0x7e)
         c = UNPRINTABLE_CHAR;
     char tmpbuf[10];
-    int n = std::snprintf(tmpbuf, sizeof(tmpbuf)-1, "%c", c);
+    int n = snprintf(tmpbuf, sizeof(tmpbuf)-1, "%c", c);
     tmpbuf[(n >= 0) ? n : 0] = 0; 
     return usr_print->append(tmpbuf);
 }
@@ -130,7 +131,7 @@ unsigned DumpDbg(unsigned long length, const unsigned char * buf, StreamAppender
                 printed += typeChar(buf[i], usr_print);
             
             if (byteId < length) { //start new line
-                int n = std::snprintf(tmpbuf, sizeof(tmpbuf)-1, "\n# %08x:  ",
+                int n = snprintf(tmpbuf, sizeof(tmpbuf)-1, "\n# %08x:  ",
                          offset += OCTETS_PER_LINE);
                 tmpbuf[(n >= 0) ? n : 0] = 0;
                 printed += usr_print->append(tmpbuf);
@@ -142,7 +143,7 @@ unsigned DumpDbg(unsigned long length, const unsigned char * buf, StreamAppender
     if (octet != OCTETS_PER_LINE) { //pad last line with spaces
         char    tmpbuf[PAD_SPACES(OCTETS_PER_LINE) + 6];
         int     i = PAD_SPACES(octet);
-        memset(tmpbuf, ' ', i); tmpbuf[i] = 0;
+        std::memset(tmpbuf, ' ', i); tmpbuf[i] = 0;
         printed += usr_print->append(tmpbuf);
 
         i = byteId - OCTETS_PER_LINE + octet;
