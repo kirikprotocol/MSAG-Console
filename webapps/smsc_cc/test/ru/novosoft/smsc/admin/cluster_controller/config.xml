@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="WINDOWS-1251"?>
+<!DOCTYPE config SYSTEM "configuration.dtd">
+<config>
+  <section name="listener">
+    <param name="host" type="string">silverstone</param>
+    <param name="port" type="int">9998</param>
+    <param name="handlersCount" type="int">1</param>
+  </section>
+  <section name="configs">
+    <param name="closedgroups" type="string">/home/skv/install/services/SMSC1/conf/ClosedGroups.xml</param>
+    <param name="profiler" type="string">/home/skv/install/services/SMSC1/store/profiler.bin</param>
+    <param name="alias" type="string">/home/skv/install/services/SMSC1/store/aliases.bin</param>
+    <param name="registryStoreFile" type="string">data/registry.bin</param>
+    <param name="router" type="string">/home/skv/install/services/SMSC1/conf/routes.xml</param>
+    <param name="smeman" type="string">/home/skv/install/services/SMSC1/conf/sme.xml</param>
+    <param name="aliasStore" type="string">/home/skv/install/services/SMSC1/store/aliases.bin</param>
+    <param name="aclStore" type="string">/home/skv/install/services/SMSC1/store/acl</param>
+  </section>
+</config>
