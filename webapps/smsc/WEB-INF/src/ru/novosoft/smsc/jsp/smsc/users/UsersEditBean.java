@@ -438,7 +438,17 @@ public abstract class UsersEditBean extends SmscBean {
   private static Object infoSmeContext;
 
   protected String validateInfosmePrefs(UserPreferences preferences) throws Exception{
-    return (String)loadInfoSme().getClass().getMethod("validateInfosmePrefs", new Class[]{UserPreferences.class}).invoke(infoSmeContext, new Object[]{preferences});
+    try {
+      return (String)loadInfoSme().getClass().getMethod("validateInfosmePrefs", new Class[]{UserPreferences.class}).invoke(infoSmeContext, new Object[]{preferences});
+    } catch (ClassNotFoundException e) {
+      return null;
+    } catch (NoSuchMethodException e) {
+      return null;
+    } catch (IllegalAccessException e) {
+      return null;
+    } catch (InvocationTargetException e) {
+      return null;
+    }
   }
 
   private Object loadInfoSme() throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
