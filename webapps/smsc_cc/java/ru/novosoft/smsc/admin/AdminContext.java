@@ -5,6 +5,7 @@ import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemonManager;
 import ru.novosoft.smsc.admin.archive_daemon.ArchiveDemon;
 import ru.novosoft.smsc.admin.closed_groups.ClosedGroupManager;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
+import ru.novosoft.smsc.admin.cluster_controller.ClusterControllerManager;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
 import ru.novosoft.smsc.admin.fraud.FraudManager;
 import ru.novosoft.smsc.admin.map_limit.MapLimitManager;
@@ -40,6 +41,7 @@ public class AdminContext {
   protected ClosedGroupManager closedGroupManager;
   protected MscManager mscManager;
   protected InstallationType instType;
+  protected ClusterControllerManager clusterControllerManager;
 
   protected AdminContext() {
 
@@ -84,7 +86,10 @@ public class AdminContext {
 
     ServiceInfo clusterControllerInfo = serviceManager.getService(ClusterController.SERVICE_ID);
     File clusterControllerConf = new File(clusterControllerInfo.getBaseDir(), "conf");
-    clusterController = new ClusterController(serviceManager, new File(clusterControllerConf, "config.xml"), fileSystem);
+
+    clusterControllerManager = new ClusterControllerManager(new File(clusterControllerConf, "config.xml"), new File(clusterControllerConf, "backup"), fileSystem);
+
+    clusterController = new ClusterController(clusterControllerManager, serviceManager);
 
     aliasManager = new AliasManager(new File(smscConfigDir, "alias.bin"), clusterController, fileSystem);
 
@@ -98,7 +103,7 @@ public class AdminContext {
 
     closedGroupManager = new ClosedGroupManager(new File(smscConfigDir, "snmp.xml"), smscConfigBackupDir, clusterController, fileSystem);
 
-    mscManager = new MscManager(clusterController);
+    mscManager = new MscManager(new File(smscManager.getCommonSettings().getMscStoreFile()), clusterController, fileSystem);
   }
 
   public FileSystem getFileSystem() {
@@ -149,5 +154,6 @@ public class AdminContext {
    * Деинициализирует контекст.
    */
   public void shutdown() {
+    clusterController.shutdown();
   }
 }

@@ -42,7 +42,7 @@ public class ArchiveDemon {
       throw new ArchiveDaemonException("archive_daemon_offline");
 
     String host = info.getOnlineHost();
-    int port = manager.getViewPort();
+    int port = manager.getLastAppliedConfig().getViewPort();
 
     return new Socket(host, port);
   }

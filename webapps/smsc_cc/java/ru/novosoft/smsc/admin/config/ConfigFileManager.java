@@ -15,11 +15,12 @@ import java.io.OutputStream;
  */
 public abstract class ConfigFileManager<T extends ManagedConfigFile> implements AppliableConfiguration {
 
-  private final File configFile;
-  private final File backupDir;
-  private final FileSystem fileSystem;
+  protected final File configFile;
+  protected final File backupDir;
+  protected final FileSystem fileSystem;
 
   protected T config;
+  protected T lastAppliedConfig;
   protected boolean changed;
 
   protected ConfigFileManager(File configFile, File backupDir, FileSystem fileSystem) {
@@ -37,6 +38,10 @@ public abstract class ConfigFileManager<T extends ManagedConfigFile> implements 
   }
 
   protected void beforeReset() throws AdminException {    
+  }
+
+  protected T getLastAppliedConfig() {
+    return lastAppliedConfig;
   }
 
   public void apply() throws AdminException {
@@ -78,9 +83,10 @@ public abstract class ConfigFileManager<T extends ManagedConfigFile> implements 
 
     afterApply();
     this.changed = false;
+    lastAppliedConfig = loadConfig();
   }
 
-  public void reset() throws AdminException {
+  private T loadConfig() throws AdminException {
     T cfg = newConfigFile();
 
     InputStream is = null;
@@ -99,7 +105,12 @@ public abstract class ConfigFileManager<T extends ManagedConfigFile> implements 
         }
     }
 
-    this.config = cfg;
+    return cfg;
+  }
+
+  public void reset() throws AdminException {
+    this.config = loadConfig();
+    this.lastAppliedConfig = loadConfig();
     this.changed = false;
   }
 

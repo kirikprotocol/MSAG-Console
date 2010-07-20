@@ -1,0 +1,612 @@
+include Types.def
+
+message Response
+  property innerMessage=true
+  int32 status 1
+end
+
+message MultiResponse
+  property innerMessage=true
+  int32 status 1 array
+  byte ids 2 array
+end
+
+message ApplyRoutes 1
+end
+
+message ApplyRoutesResp 1001
+  MultiResponse resp 1
+end
+
+message ApplyReschedule 2
+end
+
+message ApplyRescheduleResp 1002
+  MultiResponse resp 1
+end
+
+message ApplyLocaleResource 3
+end
+
+
+message ApplyLocaleResourceResp 1003
+  MultiResponse resp 1
+end
+
+message ApplyTimeZones 4
+end
+
+message ApplyTimeZonesResp 1004
+  MultiResponse resp 1
+end
+
+message ApplyFraudControl 5
+end
+
+message ApplyFraudControlResp 1005
+  MultiResponse resp 1
+end
+
+message ApplyMapLimits 6
+end
+
+
+message ApplyMapLimitsResp 1006
+  MultiResponse resp 1
+end
+
+message ApplySnmp 7
+end
+
+
+message ApplySnmpResp 1007
+  MultiResponse resp 1
+end
+
+message TraceRoute 8
+  string dst 1
+  string src 2
+  string srcSysId 3
+end
+
+enum byte RouteFindInfo
+  NotFound 0
+  FoundEnabled 1
+  FoundDisabled 2
+end
+
+enum byte BillingMode
+  BillOff 0
+  BillOn 1
+  BillMt 2
+  BillFr 3
+  BillOnSubmit 4
+  BillCdr 5
+end
+
+message TraceRouteResp 1008
+  Response resp 1
+  string aliasInfo 2
+  RouteFindInfo foundInfo 3
+  string routeId 4 opt
+  string srcAddr 5 opt
+  string dstAddr 6 opt
+  string smeId 7 opt
+  string srcSmeId 8 opt
+  int32 priority 9 opt
+  int32 serviceId 10 opt
+  byte deliveryMode 11 opt
+  string forwardTo 12 opt
+  BillingMode billing 13 opt
+  bool archiving 14 opt
+  bool enabled 15 opt
+  bool suppressDlvRep 16 opt
+  string trace 17 array opt
+end
+
+message LoadTestRoutes 9
+end
+
+message LoadTestRoutesResp 1009
+  Response resp 1
+  string trace 2 array opt
+end
+
+enum byte ReportOptions
+  ReportNone 0
+  ReportFull 1
+  ReportFinal 2
+end
+
+enum byte ProfileCharset
+  Default 0
+  Latin1  1
+  Ucs2    8
+  Ucs2AndLatin1 9
+  UssdIn7BitFlag 0x80
+end
+
+enum byte HideOptions
+  HideDisabled 0
+  HideEnabled 1
+  HideSubstitute 2
+end
+
+message Profile
+  property innerMessage=true
+  string divert 1
+  string locale 2
+  ProfileCharset codepage 3
+  ReportOptions reportOptions 4
+  HideOptions hide 5
+  bool hideModifiable 6
+  bool divertActive 7
+  bool divertActiveAbsent 8
+  bool divertActiveBlocked 9
+  bool divertActiveBarred 10
+  bool divertActiveCapacity 11
+  bool divertModifiable 12
+  bool udhConcat 13
+  bool translit 14
+  int32 closedGroupId 15
+  int32 accessMaskIn 16
+  int32 accessMaskOut 17
+  int32 subscription 18 opt
+  byte sponsored 19 opt
+  string nick 20 opt
+end
+
+message LookupProfile 10
+  string address 1
+end
+
+message LookupProfileResp 1010
+  Response resp 1
+  Profile prof 2
+end
+
+
+message LookupProfileEx 11
+  string address 1
+end
+
+enum byte ProfileMatchType
+  Default 0
+  Mask 1
+  Exact 2
+end
+
+message LookupProfileExResp 1011
+  Response resp 1
+  ProfileMatchType matchType 2
+  Profile prof 3
+end
+
+message UpdateProfile 12
+  string address 1
+  Profile prof 2
+end
+
+message UpdateProfileResp 1012
+  MultiResponse resp 1
+end
+
+message UpdateProfileAbnt 13
+  string address 1
+  Profile prof 2
+end
+
+
+message UpdateProfileAbntResp 1013
+  Response resp 1
+end
+
+message DeleteProfile 14
+  string address 1
+end
+
+message DeleteProfileResp 1014
+  MultiResponse resp 1
+end
+
+message CancelSms 15
+  string ids 1 array
+  string srcs 2 array
+  string dsts 3 array
+end
+
+message CancelSmsResp 1015
+  MultiResponse resp 1
+end
+
+message MscAdd 16
+  string msc 1
+end
+
+message MscAddResp 1016
+  MultiResponse resp 1
+end
+
+message MscRemove 17
+  string msc 1
+end
+
+message MscRemoveResp 1017
+  MultiResponse resp 1
+end
+
+enum byte SmeBindMode
+  modeTx 0
+  modeRx 1
+  modeTrx 2
+  modeUnknown 3
+end
+
+message SmeParams
+  property innerMessage=true
+  string id 1
+  int32 priority 2
+  int32 typeOfNumber 3
+  int32 numberingPlan 4
+  int32 interfaceVersion 5
+  string systemType 6
+  string password 7
+  string addrRange 8
+  int32 smeN 9
+  bool wantAlias 10
+  //bool forceDC 11
+  int32 timeout 12
+  string receiptScheme 13
+  bool disabled 14
+  string mode 15
+  int32 procLimit 16
+  int32 schedLimit 17
+  int32 accessMask 18
+  int32 flags 19
+end
+
+message SmeAdd 18
+  SmeParams params 1
+end
+
+message SmeAddResp 1018
+  MultiResponse resp 1
+end
+
+message SmeUpdate 19
+  SmeParams params 1
+end
+
+message SmeUpdateResp 1019
+  MultiResponse resp 1
+end
+
+message SmeRemove 20
+  string smeId 1
+end
+
+message SmeRemoveResp 1020
+  MultiResponse resp 1
+end
+
+message SmeStatus 21
+end
+
+enum byte SmeConnectType
+  loadBalancer 1
+  directConnect 2
+end
+
+message SmeStatusInfo
+  property innerMessage=true
+  string systemId 1
+  string status 2 opt
+  SmeBindMode bindMode 3 opt
+  string peerIn 4 opt
+  string peerOut 5 opt
+  SmeConnectType connType 6 opt
+end
+
+message SmeStatusResp 1021
+  Response resp 1
+  SmeStatusInfo status 2 array
+end
+
+message SmeDisconnect 22
+  string sysIds 1 array
+end
+
+message SmeDisconnectResp 1022
+  MultiResponse resp 1
+end
+
+message LoggerGetCategories 23
+end
+
+message CategoryInfo
+  property innerMessage=true
+  string name 1
+  string level 2
+end
+
+message LoggerGetCategoriesResp 1023
+  Response resp 1
+  CategoryInfo categories 2 array opt
+end
+
+message LoggerSetCategories 24
+  CategoryInfo categories 1 array
+end
+
+message LoggerSetCategoriesResp 1024
+  Response resp 1
+end
+
+message AclGet 25
+  int32 aclId 1
+end
+
+enum byte AclCacheType
+  cacheNone 0x31
+  cacheDb   0x32
+  cacheFull 0x33
+end
+
+message AclInfo
+  property innerMessage=true
+  int32 id 1
+  string name 2
+  string description 3
+  AclCacheType cacheType 4
+end
+
+message AclGetResp 1025
+  Response resp 1
+  AclInfo acl 2 opt
+end
+
+message AclList 26
+end
+
+message AclListResp 1026
+  Response resp 1
+  AclInfo aclList 2 array opt
+end
+
+message AclRemove 27
+  int32 aclId 1
+end
+
+message AclRemoveResp 1027
+  MultiResponse resp 1
+end
+
+message AclCreate 28
+  string name 1
+  string description 2
+  AclCacheType cacheType 3
+  string addresses 4 array
+end
+
+message AclCreateResp 1028
+  MultiResponse resp 1
+  int32 id 2 opt
+end
+
+message AclUpdate 29
+  AclInfo acl 1
+end
+
+message AclUpdateResp 1029
+  MultiResponse resp 1
+end
+
+message AclLookup 30
+  int32 aclId 1
+  string addrPrefix 2
+end
+
+message AclLookupResp 1030
+  Response resp 1
+  string result 2 array
+end
+
+message AclRemoveAddresses 31
+  int32 aclId 1
+  string addrs 2 array
+end
+
+message AclRemoveAddressesResp 1031
+  MultiResponse resp 1
+end
+
+message AclAddAddresses 32
+  int32 aclId 1
+  string addrs 2 array
+end
+
+message AclAddAddressesResp 1032
+  MultiResponse resp 1
+end
+
+
+message CgmAddGroup 33
+  int32 id 1
+  string name 2
+end
+
+message CgmAddGroupResp 1033
+  MultiResponse resp 1
+end
+
+message CgmDeleteGroup 34
+  int32 id 1
+end
+
+message CgmDeleteGroupResp 1034
+  MultiResponse resp 1
+end
+
+message CgmAddAddr 35
+  int32 id 1
+  string addr 2
+end
+
+message CgmAddAddrResp 1035
+  MultiResponse resp 1
+end
+
+message CgmCheck 36
+  int32 id 1
+  string addr 2
+end
+
+message CgmCheckResp 1036
+  Response resp 1
+  bool result 2
+end
+
+message CgmDelAddr 37
+  int32 id 1
+  string addr 2
+end
+
+message CgmDelAddrResp 1037
+  MultiResponse resp 1
+end
+
+message CgmAddAbonent 38
+  int32 id 1
+  string addr 2
+end
+
+message CgmAddAbonentResp 1038
+  MultiResponse resp 1
+end
+
+message CgmDelAbonent 39
+  int32 id 1
+  string addr 2
+end
+
+message CgmDelAbonentResp 1039
+  MultiResponse resp 1
+end
+
+message CgmListAbonents 40
+  int32 id 1
+end
+
+message CgmListAbonentsResp 1040
+  Response resp 1
+  string result 2 array
+end
+
+message AliasAdd 41
+  string addr 1
+  string alias 2
+  bool hide 3
+end
+
+message AliasAddResp 1041
+  MultiResponse resp 1
+end
+
+message AliasDel 42
+  string alias 1
+end
+
+message AliasDelResp 1042
+  MultiResponse resp 1
+end
+
+message GetServicesStatus 101
+end
+
+message ServiceStatus 
+  property innerMessage=true
+  string serviceName 1
+  string peerAddress 2 array
+  SmeBindMode bindMode 3
+  bool boundSmsc 4 array
+end
+
+message GetServicesStatusResp 1101
+  Response resp 1
+  ServiceStatus status 2 array
+end
+
+message DisconnectService 102
+  string serviceId 1
+end
+
+message DisconnectServiceResp 1102
+  Response resp 1
+end
+
+enum byte ConfigType
+  MainConfig 0
+  Profiles 1
+  Msc 2
+  Routes 3
+  Sme 4
+  ClosedGroups 5
+  Aliases 6
+  MapLimits 7
+  Resources 8
+  Reschedule 9
+  Snmp 10
+  TimeZones 11
+  Fraud 12
+  Acl 13
+end
+
+message LockConfig 201
+  ConfigType configType 1
+  bool writeLock 2
+end
+
+message LockConfigResp 1201
+  Response resp 1
+end
+
+message UnlockConfig 202
+  ConfigType configType 1
+end
+
+message RegisterAsLoadBalancer 301
+  int32 magic 1
+end
+
+message RegisterAsWebapp 302
+  int32 magic 1
+end
+
+message RegisterAsSmsc 303
+  int32 magic 1
+  byte nodeIndex 2
+  int64 configUpdateTimes 3 array
+end
+
+message GetConfigsState 203
+end
+
+message GetSmscConfigsState 204
+end
+
+message SmscConfigsState
+  property innerMessage=true
+  byte nodeIdex 1
+  int64 updateTime 2 array
+end
+
+message GetSmscConfigsStateResp 1205
+  Response resp 1
+  SmscConfigsState state 2
+end 
+
+message GetConfigsStateResp 1203
+  Response resp 1
+  int64 ccConfigUpdateTime 2 array
+  SmscConfigsState smscConfigs 3 array opt
+end

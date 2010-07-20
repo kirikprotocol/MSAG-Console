@@ -13,11 +13,13 @@ import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 import ru.novosoft.smsc.util.XmlUtils;
 
-import java.io.*;
+import java.io.File;
+import java.io.InputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author Artem Snopkov
@@ -36,7 +38,7 @@ public class ClosedGroupManager implements RuntimeConfiguration {
   protected Collection<ClosedGroup> groups;
 
   private boolean configBroken;
-  private AtomicLong lastGroupId;
+  private AtomicInteger lastGroupId;
 
   public ClosedGroupManager(File configFile, File backupDir, ClusterController cc, FileSystem fs) throws AdminException {
     this.configFile = configFile;
@@ -64,7 +66,7 @@ public class ClosedGroupManager implements RuntimeConfiguration {
     return lastGroupId.longValue();
   }
 
-  protected long getNextId() {
+  protected int getNextId() {
     return lastGroupId.incrementAndGet();
   }
 
@@ -74,11 +76,11 @@ public class ClosedGroupManager implements RuntimeConfiguration {
 
     checkBroken();
 
-    long groupId = getNextId();
+    int groupId = getNextId();
     ClosedGroup newGroup = new ClosedGroup(groupId, name, description, new ArrayList<Address>(), cc, this);
 
     if (cc.isOnline())
-      cc.addClosedGroup(groupId, name, Collections.<Address>emptyList());
+      cc.addClosedGroup(groupId, name);
 
     groups.add(newGroup);
     try {
@@ -91,7 +93,7 @@ public class ClosedGroupManager implements RuntimeConfiguration {
     return newGroup;
   }
 
-  public boolean removeGroup(long groupId) throws AdminException {
+  public boolean removeGroup(int groupId) throws AdminException {
     checkBroken();
 
     ClosedGroup group2remove = null;
@@ -120,7 +122,7 @@ public class ClosedGroupManager implements RuntimeConfiguration {
   }
 
   private ClosedGroup parseClosedGroup(Element closedGroupElem) {
-    long id = Long.parseLong(closedGroupElem.getAttribute("id"));
+    int id = Integer.parseInt(closedGroupElem.getAttribute("id"));
     String name;
     String elemName = closedGroupElem.getAttribute("name");
     if (elemName.length() > 64)
@@ -151,7 +153,7 @@ public class ClosedGroupManager implements RuntimeConfiguration {
       Document closedGroupDoc = XmlUtils.parse(is);
       NodeList a = closedGroupDoc.getElementsByTagName(PARAM_NAME_last_used_id);
       if (a.getLength() > 0)
-        lastGroupId = new AtomicLong(Long.parseLong(((Element) a.item(0)).getAttribute("value")));
+        lastGroupId = new AtomicInteger(Integer.parseInt(((Element) a.item(0)).getAttribute("value")));
 
       NodeList closedGroupsList = closedGroupDoc.getDocumentElement().getElementsByTagName(ClosedGroupManager.SECTION_NAME_group);
       for (int i = 0; i < closedGroupsList.getLength(); i++) {

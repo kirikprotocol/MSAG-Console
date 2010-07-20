@@ -13,7 +13,7 @@ import java.util.Collections;
  */
 public class ClosedGroup {
 
-  protected long id;
+  protected int id;
   protected String name;
   protected String description;
   protected Collection<Address> masks;
@@ -21,7 +21,7 @@ public class ClosedGroup {
   protected ClosedGroupManager cgm;
 
 
-  ClosedGroup(long id, String name, String description, Collection<Address> masks, ClusterController cc, ClosedGroupManager cgm) {
+  ClosedGroup(int id, String name, String description, Collection<Address> masks, ClusterController cc, ClosedGroupManager cgm) {
     this.id= id;
     this.name = name;
     this.description = description;
@@ -57,42 +57,20 @@ public class ClosedGroup {
     return new ArrayList<Address>(masks);
   }
 
-  private void _removeMasks(Collection<Address> masks) throws AdminException {
-    cgm.checkBroken();
-    if (cc.isOnline())
-      cc.removeMasksFromClosedGroup(id, masks);
-    this.masks.removeAll(masks);
-    cgm.save();
-
-  }
-
   public void removeMask(Address mask) throws AdminException {
-    ArrayList<Address> masks = new ArrayList<Address>(1);
-    masks.add(mask);
-    _removeMasks(masks);
-  }
-
-  public void removeMasks(Collection<Address> masks) throws AdminException {
-    _removeMasks(new ArrayList<Address>(masks));
-  }
-
-  private void _addMasks(Collection<Address> masks) throws AdminException {
     cgm.checkBroken();
-
     if (cc.isOnline())
-      cc.addMasksToClosedGroup(id, masks);
-    this.masks.addAll(masks);
+      cc.removeMaskFromClosedGroup(id, mask);
+    this.masks.remove(mask);
     cgm.save();
   }
 
   public void addMask(Address mask) throws AdminException {
-    ArrayList<Address> masks2add = new ArrayList<Address>(1);
-    masks2add.add(mask);
-    _addMasks(masks2add);
-  }
-
-  public void addMasks(Collection<Address> masks) throws AdminException {
-    _addMasks(new ArrayList<Address>(masks));
+    cgm.checkBroken();
+    if (cc.isOnline())
+      cc.addMaskToClosedGroup(id, mask);
+    this.masks.add(mask);
+    cgm.save();
   }
 
   public boolean equals(Object o) {

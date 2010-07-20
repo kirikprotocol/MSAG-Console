@@ -72,6 +72,11 @@ public class IOUtils {
         ((long) readUInt8(is) << 8) | ((long) readUInt8(is));
   }
 
+   public static int readInt32(InputStream is) throws IOException {
+    return (readUInt8(is) << 24) | ( readUInt8(is) << 16) |
+        ( readUInt8(is) << 8) | ( readUInt8(is));
+  }
+
   public static int readUInt32Int(InputStream is) throws IOException {
     return (readUInt8(is) << 24) | (readUInt8(is) << 16) |
         (readUInt8(is) << 8) | (readUInt8(is));

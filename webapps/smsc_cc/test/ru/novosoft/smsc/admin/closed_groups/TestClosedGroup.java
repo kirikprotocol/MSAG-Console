@@ -12,7 +12,7 @@ import java.util.Collection;
  */
 public class TestClosedGroup extends ClosedGroup {
 
-  TestClosedGroup(long id, String name, String description, Collection<Address> masks, ClosedGroupManager cgm) {
+  TestClosedGroup(int id, String name, String description, Collection<Address> masks, ClosedGroupManager cgm) {
     super(id, name, description, masks, null, cgm);
   }
 
@@ -24,15 +24,8 @@ public class TestClosedGroup extends ClosedGroup {
    this.masks.remove(mask);
   }
 
-  public void removeMasks(Collection<Address> masks) throws AdminException {
-    this.masks.removeAll(masks);
-  }
-
   public void addMask(Address mask) throws AdminException {
     this.masks.add(mask);
   }
 
-  public void addMasks(Collection<Address> masks) throws AdminException {
-    this.masks.addAll(masks);
-  }
 }

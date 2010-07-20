@@ -17,6 +17,10 @@ public class ArchiveDaemonManager extends ConfigFileManager<ArchiveDaemonConfig>
     reset();
   }
 
+  protected ArchiveDaemonConfig getLastAppliedConfig() {
+    return super.getLastAppliedConfig();
+  }
+
   @Override
   protected ArchiveDaemonConfig newConfigFile() {
     return new ArchiveDaemonConfig();

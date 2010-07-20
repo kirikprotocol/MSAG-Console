@@ -40,8 +40,9 @@ public class AliasManager implements RuntimeConfiguration {
    *
    * @param alias алиас
    * @throws AdminException если произошла ошибка
+   * @throws InterruptedException
    */
-  public void addAlias(Alias alias) throws AdminException {
+  public void addAlias(Alias alias) throws AdminException, InterruptedException {
     try {
       rwlock.writeLock().lock();
       cc.addAlias(alias.getAddress().getNormalizedAddress(), alias.getAlias().getNormalizedAddress(), alias.isHide());
@@ -72,9 +73,9 @@ public class AliasManager implements RuntimeConfiguration {
    * @throws AdminException если произошла ошибка
    */
   public AliasSet getAliases() throws AdminException {
-    // todo may be lock aliases.bin file???
     try {
       rwlock.readLock().lock();
+      cc.lockAliases(false);
       return new AliasSetImpl(aliasesFile);
     } catch (AdminException e) {
       rwlock.readLock().unlock();
@@ -127,12 +128,13 @@ public class AliasManager implements RuntimeConfiguration {
       }
     }
 
-    public void close() {
+    public void close() throws AdminException {
       try {
         is.close();
       } catch (IOException ignored) {
       }
       rwlock.readLock().unlock();
+      cc.unlockAliases();
     }
   }
 

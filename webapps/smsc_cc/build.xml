@@ -1,0 +1,14 @@
+<project name="smscadm">
+
+  <taskdef name="protogen" classname="mobi.eyeline.protogen.ant.Protogen" classpath="lib/protogen.jar"/>
+
+  <target name="gen_cc_protocol">
+    <protogen language="java" msgPackage="ru.novosoft.smsc.admin.cluster_controller.protocol" defFile="java/ru/novosoft/smsc/admin/cluster_controller/ControllerWebappProtocol.def" outDir="java" tempDir="java/ru/novosoft/smsc/admin/cluster_controller/tmp">
+      <cgp name="search.path" value="java/ru/novosoft/smsc/admin/cluster_controller/"/>
+    </protogen>
+  </target>
+
+  <target name="prebuild" depends="gen_cc_protocol">
+  </target>
+
+</project>

@@ -1,13 +1,10 @@
 package ru.novosoft.smsc.admin.cluster_controller;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.filesystem.FileSystem;
+import ru.novosoft.smsc.admin.cluster_controller.protocol.*;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.admin.service.ServiceManager;
 import ru.novosoft.smsc.util.Address;
-
-import java.io.File;
-import java.util.Collection;
 
 /**
  * Класс для отправки комманд в ClusterController.
@@ -19,22 +16,17 @@ public class ClusterController {
   public static final String SERVICE_ID = "ClusterController";
 
 
+  private ClusterControllerClient cc;
   private ServiceManager serviceManager;
-  private int port;
 
   protected ClusterController() {
-    
+
   }
 
-  public ClusterController(ServiceManager serviceManager, File configFile, FileSystem fileSystem) throws AdminException {
+  public ClusterController(ClusterControllerManager manager, ServiceManager serviceManager) throws AdminException {
     this.serviceManager = serviceManager;
 
-    ServiceInfo si = getInfo();
-    if (!fileSystem.exists(configFile))
-      throw new ClusterControllerException("config_file_not_found", configFile.getAbsolutePath());
-
-
-    //todo read port from config file
+    this.cc = new ClusterControllerClient(manager, serviceManager);
   }
 
   private ServiceInfo getInfo() throws AdminException {
@@ -48,6 +40,38 @@ public class ClusterController {
     return getInfo().getOnlineHost() != null;
   }
 
+  public void shutdown() {
+    cc.shutdown();
+  }
+
+  // ALIASES ===========================================================================================================
+
+  /**
+   * Блокирует конфигурацию алиасов для чтения/записи
+   *
+   * @param write блокировать файл для записи
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void lockAliases(boolean write) throws AdminException {
+    LockConfig req = new LockConfig();
+    req.setConfigType(ConfigType.Aliases);
+    req.setWriteLock(write);
+    LockConfigResp resp = cc.send(req);
+    if (resp.getResp().getStatus() != 0)
+      throw new ClusterControllerException("interaction_error", resp.getResp().getStatus() + "");
+  }
+
+  /**
+   * Разблокирует конфигурацию алиасов
+   *
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void unlockAliases() throws AdminException {
+    UnlockConfig req = new UnlockConfig();
+    req.setConfigType(ConfigType.Aliases);
+    cc.send(req);
+  }
+
   /**
    * Отправляет команду на добавления алиаса
    *
@@ -57,6 +81,16 @@ public class ClusterController {
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
   public void addAlias(String address, String alias, boolean aliasHide) throws AdminException {
+    AliasAdd req = new AliasAdd();
+    req.setAddr(address);
+    req.setAlias(alias);
+    req.setHide(aliasHide);
+    MultiResponse resp = cc.send(req).getResp();
+    int[] statuses = resp.getStatus();
+    for (int status : statuses) {
+      if (status != 0)
+        throw new ClusterControllerException("interaction_error", statuses, resp.getIds());
+    }
   }
 
   /**
@@ -66,94 +100,345 @@ public class ClusterController {
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
   public void delAlias(String alias) throws AdminException {
+    AliasDel req = new AliasDel();
+    req.setAlias(alias);
+    MultiResponse resp = cc.send(req).getResp();
+    int[] statuses = resp.getStatus();
+    for (int status : statuses) {
+      if (status != 0)
+        throw new ClusterControllerException("interaction_error", statuses, resp.getIds());
+    }
+  }
+
+  // CLOSED GROUPS =====================================================================================================
+
+  /**
+   * Блокирует конфигурацию закрытых групп для чтения/записи
+   *
+   * @param write блокировать файл для записи
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void lockClosedGroups(boolean write) throws AdminException {
+    LockConfig req = new LockConfig();
+    req.setConfigType(ConfigType.ClosedGroups);
+    req.setWriteLock(write);
+    LockConfigResp resp = cc.send(req);
+    if (resp.getResp().getStatus() != 0)
+      throw new ClusterControllerException("interaction_error", resp.getResp().getStatus() + "");
+  }
+
+  /**
+   * Разблокирует конфигурацию закрытых групп
+   *
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void unlockClosedGroups() throws AdminException {
+    UnlockConfig req = new UnlockConfig();
+    req.setConfigType(ConfigType.ClosedGroups);
+    cc.send(req);
   }
 
   /**
    * Отправляет команду на добавление закрытой группы
-   * @param groupId идентификатор группы
+   *
+   * @param groupId   идентификатор группы
    * @param groupName название группы
-   * @param masks список масок
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
-  public void addClosedGroup(long groupId, String groupName, Collection<Address> masks) throws AdminException {
+  public void addClosedGroup(int groupId, String groupName) throws AdminException {
+    CgmAddGroup req = new CgmAddGroup();
+    req.setId(groupId);
+    req.setName(groupName);
+    MultiResponse resp = cc.send(req).getResp();
+    int[] statuses = resp.getStatus();
+    for (int status : statuses) {
+      if (status != 0)
+        throw new ClusterControllerException("interaction_error", statuses, resp.getIds());
+    }
   }
 
   /**
    * Отправляет команду на удаление закрытой группы
+   *
    * @param groupId идентификатор группы
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
-  public void removeClosedGroup(long groupId) throws AdminException {
+  public void removeClosedGroup(int groupId) throws AdminException {
+    CgmDeleteGroup req = new CgmDeleteGroup();
+    req.setId(groupId);
+    MultiResponse resp = cc.send(req).getResp();
+    int[] statuses = resp.getStatus();
+    for (int status : statuses) {
+      if (status != 0)
+        throw new ClusterControllerException("interaction_error", statuses, resp.getIds());
+    }
   }
 
   /**
-   * Отправляет команду на добавление масок в закрытую группу
+   * Отправляет команду на добавление маски в закрытую группу
+   *
    * @param groupId идентификатор группы
-   * @param masks список масок
+   * @param mask    маска для добавления
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
-  public void addMasksToClosedGroup(long groupId, Collection<Address> masks) throws AdminException {
+  public void addMaskToClosedGroup(int groupId, Address mask) throws AdminException {
+    CgmAddAddr req = new CgmAddAddr();
+    req.setId(groupId);
+    req.setAddr(mask.getNormalizedAddress());
+    MultiResponse resp = cc.send(req).getResp();
+    int[] statuses = resp.getStatus();
+    for (int status : statuses) {
+      if (status != 0)
+        throw new ClusterControllerException("interaction_error", statuses, resp.getIds());
+    }
   }
 
   /**
-   * Отправляет команду на удаление масок из закрытой группы
+   * Отправляет команду на удаление маски из закрытой группы
+   *
    * @param groupId идентификатор группы
-   * @param masks список масок
+   * @param mask    маска для удаления
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
-  public void removeMasksFromClosedGroup(long groupId, Collection<Address> masks) throws AdminException {
+  public void removeMaskFromClosedGroup(int groupId, Address mask) throws AdminException {
+    CgmDelAddr req = new CgmDelAddr();
+    req.setId(groupId);
+    req.setAddr(mask.getNormalizedAddress());
+    MultiResponse resp = cc.send(req).getResp();
+    int[] statuses = resp.getStatus();
+    for (int status : statuses) {
+      if (status != 0)
+        throw new ClusterControllerException("interaction_error", statuses, resp.getIds());
+    }
+  }
+
+  // MSC ===============================================================================================================
+
+  /**
+   * Блокирует конфигурацию MSC для чтения/записи
+   *
+   * @param write блокировать файл для записи
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void lockMsc(boolean write) throws AdminException {
+    LockConfig req = new LockConfig();
+    req.setConfigType(ConfigType.Msc);
+    req.setWriteLock(write);
+    LockConfigResp resp = cc.send(req);
+    if (resp.getResp().getStatus() != 0)
+      throw new ClusterControllerException("interaction_error", resp.getResp().getStatus() + "");
   }
 
   /**
-   * Возвращает список MSC адресов, зарегистрированных в СС
-   * @return список MSC адресов, зарегистрированных в СС
+   * Разблокирует конфигурацию Msc
+   *
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
-  public Collection<Address> getMscs() throws AdminException{
-    return null;
+  public void unlockMsc() throws AdminException {
+    UnlockConfig req = new UnlockConfig();
+    req.setConfigType(ConfigType.Msc);
+    cc.send(req);
   }
 
   /**
    * Регистрирует новый MSC адрес в СС
+   *
    * @param mscAddress новый MSC адрес
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
-  public void registerMsc(Address mscAddress) throws AdminException{
+  public void registerMsc(Address mscAddress) throws AdminException {
+    MscAdd req = new MscAdd();
+    req.setMsc(mscAddress.getNormalizedAddress());
+    MultiResponse resp = cc.send(req).getResp();
+    int[] statuses = resp.getStatus();
+    for (int status : statuses) {
+      if (status != 0)
+        throw new ClusterControllerException("interaction_error", statuses, resp.getIds());
+    }
   }
 
   /**
    * Удаляет MSC адрес из реестра СС
+   *
    * @param mscAddress MSC адрес, который надо удалить из реестра
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
-  public void unregisterMsc(Address mscAddress) throws AdminException{
+  public void unregisterMsc(Address mscAddress) throws AdminException {
+    MscRemove req = new MscRemove();
+    req.setMsc(mscAddress.getNormalizedAddress());
+    MultiResponse resp = cc.send(req).getResp();
+    int[] statuses = resp.getStatus();
+    for (int status : statuses) {
+      if (status != 0)
+        throw new ClusterControllerException("interaction_error", statuses, resp.getIds());
+    }
+  }
+
+  // RESCHEDULE ========================================================================================================
+
+  /**
+   * Блокирует конфигурацию политик передоставки для чтения/записи
+   *
+   * @param write блокировать файл для записи
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void lockReschedule(boolean write) throws AdminException {
+    LockConfig req = new LockConfig();
+    req.setConfigType(ConfigType.Reschedule);
+    req.setWriteLock(write);
+    LockConfigResp resp = cc.send(req);
+    if (resp.getResp().getStatus() != 0)
+      throw new ClusterControllerException("interaction_error", resp.getResp().getStatus() + "");
+  }
+
+  /**
+   * Разблокирует конфигурацию политик передоставки
+   *
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void unlockReschedule() throws AdminException {
+    UnlockConfig req = new UnlockConfig();
+    req.setConfigType(ConfigType.Reschedule);
+    cc.send(req);
   }
 
   /**
    * Отправляет команду на применение изменений в конфигурации политик передоставки
+   *
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
-  public void applyReschedule() throws AdminException {    
+  public void applyReschedule() throws AdminException {
+    MultiResponse resp = cc.send(new ApplyReschedule()).getResp();
+    int[] statuses = resp.getStatus();
+    for (int status : statuses) {
+      if (status != 0)
+        throw new ClusterControllerException("interaction_error", statuses, resp.getIds());
+    }
+  }
+
+  // FRAUD =============================================================================================================
+
+  /**
+   * Блокирует конфигурацию fraud для чтения/записи
+   *
+   * @param write блокировать файл для записи
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void lockFraud(boolean write) throws AdminException {
+    LockConfig req = new LockConfig();
+    req.setConfigType(ConfigType.Fraud);
+    req.setWriteLock(write);
+    LockConfigResp resp = cc.send(req);
+    if (resp.getResp().getStatus() != 0)
+      throw new ClusterControllerException("interaction_error", resp.getResp().getStatus() + "");
+  }
+
+  /**
+   * Разблокирует конфигурацию fraud
+   *
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void unlockFraud() throws AdminException {
+    UnlockConfig req = new UnlockConfig();
+    req.setConfigType(ConfigType.Fraud);
+    cc.send(req);
   }
 
   /**
    * Отправляет команду на применение изменений в конфигурации fraud
+   *
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
   public void applyFraud() throws AdminException {
+    MultiResponse resp = cc.send(new ApplyFraudControl()).getResp();
+    int[] statuses = resp.getStatus();
+    for (int status : statuses) {
+      if (status != 0)
+        throw new ClusterControllerException("interaction_error", statuses, resp.getIds());
+    }
+  }
+
+  // MAP LIMITS ========================================================================================================
+
+  /**
+   * Блокирует конфигурацию Map Limits для чтения/записи
+   *
+   * @param write блокировать файл для записи
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void lockMapLimits(boolean write) throws AdminException {
+    LockConfig req = new LockConfig();
+    req.setConfigType(ConfigType.MapLimits);
+    req.setWriteLock(write);
+    LockConfigResp resp = cc.send(req);
+    if (resp.getResp().getStatus() != 0)
+      throw new ClusterControllerException("interaction_error", resp.getResp().getStatus() + "");
+  }
+
+  /**
+   * Разблокирует конфигурацию Map Limits
+   *
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void unlockMapLimits() throws AdminException {
+    UnlockConfig req = new UnlockConfig();
+    req.setConfigType(ConfigType.MapLimits);
+    cc.send(req);
   }
 
   /**
    * Отправляет команду на применение изменений в Map Limits
+   *
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
   public void applyMapLimits() throws AdminException {
-    /**
-   * Отправляет команду на применение изменений в конфиге SNMP
-   * @throws AdminException если произошла ошибка при взаимодействии с СС
-   */
+    MultiResponse resp = cc.send(new ApplyMapLimits()).getResp();
+    int[] statuses = resp.getStatus();
+    for (int status : statuses) {
+      if (status != 0)
+        throw new ClusterControllerException("interaction_error", statuses, resp.getIds());
+    }
   }
 
-  public void applySnmp() throws AdminException {    
+  // SNMP ==============================================================================================================
+
+  /**
+   * Блокирует конфигурацию SNMP для чтения/записи
+   *
+   * @param write блокировать файл для записи
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void lockSnmp(boolean write) throws AdminException {
+    LockConfig req = new LockConfig();
+    req.setConfigType(ConfigType.Snmp);
+    req.setWriteLock(write);
+    LockConfigResp resp = cc.send(req);
+    if (resp.getResp().getStatus() != 0)
+      throw new ClusterControllerException("interaction_error", resp.getResp().getStatus() + "");
+  }
+
+  /**
+   * Разблокирует конфигурацию SNMP
+   *
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void unlockSnmp() throws AdminException {
+    UnlockConfig req = new UnlockConfig();
+    req.setConfigType(ConfigType.Snmp);
+    cc.send(req);
+  }
+
+  /**
+   * Отправляет команду на применение изменений в конфиге SNMP
+   *
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void applySnmp() throws AdminException {
+    MultiResponse resp = cc.send(new ApplySnmp()).getResp();
+    int[] statuses = resp.getStatus();
+    for (int status : statuses) {
+      if (status != 0)
+        throw new ClusterControllerException("interaction_error", statuses, resp.getIds());
+    }
   }
 }

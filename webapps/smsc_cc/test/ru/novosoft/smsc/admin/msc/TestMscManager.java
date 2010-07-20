@@ -15,7 +15,7 @@ public class TestMscManager extends MscManager {
   private final Collection<Address> mscs;
 
   public TestMscManager() {
-    super(null);
+    super(null, null, null);
     mscs = new ArrayList<Address>();
     Collections.addAll(mscs,
         new Address("123443"),

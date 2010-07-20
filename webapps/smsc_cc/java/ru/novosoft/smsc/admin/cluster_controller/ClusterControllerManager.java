@@ -11,9 +11,13 @@ import java.io.File;
  */
 public class ClusterControllerManager extends ConfigFileManager<ClusterControllerConfig> {
 
-  protected ClusterControllerManager(File configFile, File backupDir, FileSystem fileSystem) throws AdminException {
+  public ClusterControllerManager(File configFile, File backupDir, FileSystem fileSystem) throws AdminException {
     super(configFile, backupDir, fileSystem);
     reset();
+  }
+
+  protected ClusterControllerConfig getLastAppliedConfig() {
+    return super.getLastAppliedConfig();
   }
 
   @Override

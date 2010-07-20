@@ -1,5 +1,7 @@
 package ru.novosoft.smsc.admin.alias;
 
+import ru.novosoft.smsc.admin.AdminException;
+
 /**
  * Класс, предназначенный для итерирования по алиасам. После окончания использования должен быть вызван метод close()
  * @author Artem Snopkov
@@ -21,6 +23,6 @@ public interface AliasSet {
   /**
    * Метод close() должен быть вызван после окончания работы с AliasSet
    */
-  public void close();
+  public void close() throws AdminException, InterruptedException;
 
 }
