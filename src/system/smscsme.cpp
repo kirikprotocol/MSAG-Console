@@ -6,7 +6,7 @@
 namespace smsc{
 namespace system{
 
-using smsc::smeman;
+using namespace smsc::smeman;
 
 int SmscSme::Execute()
 {

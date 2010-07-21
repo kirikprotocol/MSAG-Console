@@ -10,8 +10,7 @@ namespace abonentinfo{
 
 using smsc::util::getSmsText;
 using smsc::util::fillSms;
-using smsc::smeman;
-
+using namespace smsc::smeman;
 using namespace smsc::resourcemanager;
 
 class FakeGetAdapter:public GetAdapter{
