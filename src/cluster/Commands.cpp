@@ -1298,13 +1298,13 @@ bool SmeAddCommand::deserialize(void *buffer, uint32_t len)
   si.systemType =           (char*)(   (uint8_t*)buffer + 36 + sz   );      sz += si.systemType.length() + 1;
   if (36 + sz >= len) return false;
   //printf("systemType: '%s', len: %d, sz: %d\n", si.systemType.c_str(), si.systemType.length(), sz);
-  si.password =             (char*)(   (uint8_t*)buffer + 36 + sz   );      sz += si.password.length() + 1;
+  si.password =       (const char*)(   (uint8_t*)buffer + 36 + sz   );      sz += si.password.length() + 1;
   if (36 + sz >= len) return false;
   //printf("password: '%s', len: %d, sz: %d\n", si.password.c_str(), si.password.length(), sz);
   si.hostname =             (char*)(   (uint8_t*)buffer + 36 + sz   );      sz += si.hostname.length() + 1;
   if (36 + sz >= len) return false;
   //printf("hostname: '%s', len: %d, sz: %d\n", si.hostname.c_str(), si.hostname.length(), sz);
-  si.systemId =             (char*)(   (uint8_t*)buffer + 36 + sz   );      sz += si.systemId.length() + 1;
+  si.systemId =       (const char*)(   (uint8_t*)buffer + 36 + sz   );      sz += si.systemId.length() + 1;
   if (36 + sz >= len) return false;
   //printf("systemId: '%s', len: %d, sz: %d\n", si.systemId.c_str(), si.systemId.length(), sz);
   si.receiptSchemeName =    (char*)(   (uint8_t*)buffer + 36 + sz   );
@@ -1699,7 +1699,7 @@ bool AclCreateCommand::deserialize(void *buffer, uint32_t len)
 
     offset = tmp;
 
-    phones.swap( std::vector<std::string>() );
+    std::vector<std::string>().swap(phones);
 
     while(sz < len){
         std::string phone = (char*)buffer + sz;

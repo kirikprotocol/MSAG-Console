@@ -12,22 +12,22 @@ void CgmCommandListener::handle(const Command& command)
   {
     case CGM_ADDGRP_CMD:
     {
-      CgmAddGrpCommand& addcmd=dynamic_cast<CgmAddGrpCommand&>(command);
+      const CgmAddGrpCommand& addcmd=dynamic_cast<const CgmAddGrpCommand&>(command);
       cgm->AddGroup(addcmd.id,addcmd.name.c_str());
     }break;
     case CGM_DELGRP_CMD:
     {
-      CgmDelGrpCommand& delcmd=dynamic_cast<CgmDelGrpCommand&>(command);
+      const CgmDelGrpCommand& delcmd=dynamic_cast<const CgmDelGrpCommand&>(command);
       cgm->DeleteGroup(delcmd.id);
     }break;
     case CGM_ADDADDR_CMD:
     {
-      CgmAddAddrCommand& addcmd=dynamic_cast<CgmAddAddrCommand&>(command);
+      const CgmAddAddrCommand& addcmd=dynamic_cast<const CgmAddAddrCommand&>(command);
       cgm->AddAddrToGroup(addcmd.id,addcmd.addr.c_str());
     }break;
     case CGM_DELADDR_CMD:
     {
-      CgmDelAddrCommand& delcmd=dynamic_cast<CgmDelAddrCommand&>(command);
+      const CgmDelAddrCommand& delcmd=dynamic_cast<const CgmDelAddrCommand&>(command);
       cgm->RemoveAddrFromGroup(delcmd.id,delcmd.addr.c_str());
     }break;
     default:

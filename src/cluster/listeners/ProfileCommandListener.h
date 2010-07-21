@@ -20,7 +20,7 @@ protected:
 	void profileDelete(const Command& command);
 
 public:
-    ProfileCommandListener::ProfileCommandListener(smsc::profiler::Profiler * profiler_);
+    ProfileCommandListener(smsc::profiler::Profiler * profiler_);
 	virtual void handle(const Command& command);
 
 };

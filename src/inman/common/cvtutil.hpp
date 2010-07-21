@@ -6,6 +6,7 @@
 #include <time.h>
 #include <string>
 #include <stdexcept>
+#include "util/int.h"
 
 namespace smsc {
 namespace cvtutil {
