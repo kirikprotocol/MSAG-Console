@@ -4,6 +4,7 @@
 
 #include "ArchiveProcessor.h"
 #include "FileStorage.h"
+#include "util/timeslotcounter.hpp"
 
 namespace smsc { namespace store
 {

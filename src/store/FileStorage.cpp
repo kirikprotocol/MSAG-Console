@@ -20,13 +20,14 @@
 template <bool cnd> struct StaticCheck {};
 template <>  struct StaticCheck<true>  {};
 template <>  struct StaticCheck<false> { private: StaticCheck(); };
-static StaticCheck< sizeof(fpos_t)==8 > staticCheck;
+/// NOTE: fpos_t may contain extra fields
+static StaticCheck< sizeof(off_t)==8 > staticCheck;
 
 namespace smsc { namespace store
 {
 
 using namespace smsc::util::csv;
-using smsc::smpp::DataCoding;
+using namespace smsc::smpp::DataCoding;
 
 const unsigned SMSC_MIN_BILLING_INTERVAL = 10;
 const unsigned SMSC_MIN_ARCHIVE_INTERVAL = 5;
@@ -248,6 +249,7 @@ void FileStorage::setPos(const File::offset_type* pos)
 
 void RollingStorage::init(const char* argStorePath, int argRollInterval)
 {
+    const bool bill = true;
     storageLocation = argStorePath;
     int ci = argRollInterval;
     int minInterval = SMSC_MIN_ARCHIVE_INTERVAL;
@@ -957,7 +959,11 @@ static void decodeMessage(uint8_t* msg, int msgLen, int encoding, std::string& m
           size_t inBufSize=msgLen;
           size_t outBufSize=msgLen*4+1;
           char* outBuf=text;
+#if defined(sun) || defined(__sun__)
           size_t rv=iconv(cd,(const char**)&msg,&inBufSize,&outBuf,&outBufSize);
+#else
+          size_t rv=iconv(cd,(char**)&msg,&inBufSize,&outBuf,&outBufSize);
+#endif
           textLen=(int)(outBuf-text);
         }
         //iconv ->env{LC_

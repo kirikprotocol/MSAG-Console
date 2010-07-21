@@ -48,6 +48,8 @@ namespace smsc { namespace store
         DirEntry(std::string _dir="", uint64_t _code=0) : dir(_dir), code(_code) {};
     };
 
+    class ArchiveProcessor;
+
     class Query : public ThreadedTask
     {
     friend class ArchiveProcessor;
