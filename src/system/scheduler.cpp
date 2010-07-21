@@ -487,7 +487,7 @@ int LocalFileStore::Execute()
       mon.Lock();
       //delete snapPtr;
       //snapPtr=0;
-      snap.swap(IdSeqPairList());
+      IdSeqPairList().swap(snap);
       rolling=false;
       if(ok)
       {

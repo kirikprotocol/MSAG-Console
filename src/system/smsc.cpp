@@ -40,8 +40,12 @@
 #include "closedgroups/ClosedGroupsManager.hpp"
 #include "system/common/TimeZoneMan.hpp"
 #include "alias/AliasManImpl.hpp"
+
+#ifdef USE_MAP
 #include "mapio/FraudControl.hpp"
 #include "mapio/MapLimits.hpp"
+#endif
+
 #include "license/check/license.hpp"
 
 #ifdef SMSEXTRA
@@ -403,8 +407,8 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
         si.interfaceVersion=rec->recdata.smppSme.interfaceVersion;
         si.rangeOfAddress=rec->recdata.smppSme.addrRange;
         si.systemType=rec->recdata.smppSme.systemType;
-        si.password=rec->recdata.smppSme.password;
-        si.systemId=rec->smeUid;
+        si.password=(const char*)rec->recdata.smppSme.password;
+        si.systemId=(const char*)rec->smeUid;
         si.SME_N=rec->recdata.smppSme.smeN;
         si.timeout = rec->recdata.smppSme.timeout;
         si.wantAlias = rec->recdata.smppSme.wantAlias;
@@ -479,11 +483,13 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
   reloadRoutes();
   smsc_log_info(log, "Routes loaded" );
 
+#ifdef USE_MAP
   if(!ishs)
   {
     mapio::FraudControl::Init(findConfigFile("fraud.xml"));
     mapio::MapLimits::Init(findConfigFile("maplimits.xml"));
   }
+#endif
 
   /*auto_ptr<RouteManager> router(new RouteManager());
 
@@ -777,7 +783,7 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
     str=dc;
     while((*str=toupper(*str)))str++;
     smsc::profiler::Profile defProfile;
-    defProfile.locale=cfg.cfgman->getString("core.default_locale");
+    defProfile.locale=(const char*)cfg.cfgman->getString("core.default_locale");
 
     defProfile.hide=cfg.cfgman->getBool("profiler.defaultHide");
     defProfile.hideModifiable=cfg.cfgman->getBool("profiler.defaultHideModifiable");
@@ -1380,8 +1386,10 @@ void Smsc::run()
     distlstman->init();
     smsc::mscman::MscManager::startup(smsc::util::config::Manager::getInstance());
 
+#ifdef USE_MAP
     mapio::FraudControl::Init(findConfigFile("fraud.xml"));
     mapio::MapLimits::Init(findConfigFile("maplimits.xml"));
+#endif
 
     aliaser->Load();
     smsc_log_info(log, "Aliases loaded" );
@@ -1581,9 +1589,8 @@ void Smsc::shutdown()
     MapIoTask *mapio=(MapIoTask*)mapioptr;
     delete mapio;
   }
-#endif
-
   mapio::MapLimits::Shutdown();
+#endif
 
 
   smsc::closedgroups::ClosedGroupsManager::Shutdown();
