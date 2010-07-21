@@ -71,8 +71,10 @@ protected:
   void reloadConfigsAndRestart() throw (AdminException);
   void reReadConfigs() throw (AdminException);
   void applyTimeZones()throw(AdminException);
+#ifdef USE_MAP
   void applyFraudControl()throw(AdminException);
   void applyMapLimits()throw(AdminException);
+#endif
 
 #ifdef SNMP
   void applySnmp();
