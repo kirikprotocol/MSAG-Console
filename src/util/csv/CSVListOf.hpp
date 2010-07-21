@@ -47,7 +47,7 @@ public:
 
   size_type fromStr(const char * str) /*throw(std::exception)*/
   {
-    clear();
+    this->clear();
     return (size_type)CSVParserAC::split(str);
   }
 
@@ -60,7 +60,7 @@ public:
   //Appends string representing CSVList to given string
   size_type toString(std::string & out_str, char ins_space = ' ') const  /*throw()*/
   {
-    if (empty())
+    if (this->empty())
       return 0;
 
     char  dlmStr[3];
