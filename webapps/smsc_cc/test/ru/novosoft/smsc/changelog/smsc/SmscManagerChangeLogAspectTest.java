@@ -1,9 +1,6 @@
 package ru.novosoft.smsc.changelog.smsc;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.TestAdminContext;
 import ru.novosoft.smsc.admin.smsc.CommonSettings;
@@ -11,11 +8,9 @@ import ru.novosoft.smsc.admin.smsc.InstanceSettings;
 import ru.novosoft.smsc.admin.smsc.SmscManager;
 import ru.novosoft.smsc.changelog.BulkChangeLogListener;
 import ru.novosoft.smsc.changelog.ChangeLog;
-import ru.novosoft.smsc.changelog.ChangeLogListener;
-import testutils.TestUtils;
 
-import java.io.File;
-import java.io.IOException;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Artem Snopkov

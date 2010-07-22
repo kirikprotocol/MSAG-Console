@@ -3,14 +3,19 @@ package ru.novosoft.smsc.admin.archive_daemon;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.config.ConfigFileManager;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
+import ru.novosoft.smsc.admin.util.ValidationException;
+import ru.novosoft.smsc.admin.util.ValidationHelper;
 
 import java.io.File;
 import java.util.Map;
 
 /**
+ * класс, управляющий настройками Archive Daemon-а
  * @author Artem Snopkov
  */
 public class ArchiveDaemonManager extends ConfigFileManager<ArchiveDaemonConfig> {
+
+  private final static ValidationHelper vh = new ValidationHelper(ArchiveDaemonManager.class.getCanonicalName());
 
   public ArchiveDaemonManager(File configFile, File backupDir, FileSystem fileSystem) throws AdminException {
     super(configFile, backupDir, fileSystem);
@@ -30,7 +35,8 @@ public class ArchiveDaemonManager extends ConfigFileManager<ArchiveDaemonConfig>
     return config.getInterval();
   }
 
-  public void setInterval(int interval) {
+  public void setInterval(int interval) throws AdminException {
+    vh.checkPositive("interval", interval);
     config.setInterval(interval);
     changed = true;
   }
@@ -39,7 +45,8 @@ public class ArchiveDaemonManager extends ConfigFileManager<ArchiveDaemonConfig>
     return config.getViewHost();
   }
 
-  public void setViewHost(String viewHost) {
+  public void setViewHost(String viewHost) throws AdminException {
+    vh.checkNotEmpty("viewHost", viewHost);
     config.setViewHost(viewHost);
     changed = true;
   }
@@ -48,7 +55,8 @@ public class ArchiveDaemonManager extends ConfigFileManager<ArchiveDaemonConfig>
     return config.getViewPort();
   }
 
-  public void setViewPort(int viewPort) {
+  public void setViewPort(int viewPort) throws AdminException {
+    vh.checkPort("viewPort", viewPort);
     config.setViewPort(viewPort);
     changed = true;
   }
@@ -57,7 +65,8 @@ public class ArchiveDaemonManager extends ConfigFileManager<ArchiveDaemonConfig>
     return config.getViewTimeout();
   }
 
-  public void setViewTimeout(int viewTimeout) {
+  public void setViewTimeout(int viewTimeout) throws AdminException {
+    vh.checkPositive("viewTimeout", viewTimeout);
     config.setViewTimeout(viewTimeout);
     changed = true;
   }
@@ -66,7 +75,8 @@ public class ArchiveDaemonManager extends ConfigFileManager<ArchiveDaemonConfig>
     return config.getQueriesMax();
   }
 
-  public void setQueriesMax(int queriesMax) {
+  public void setQueriesMax(int queriesMax) throws AdminException {
+    vh.checkPositive("queriesMax", queriesMax);
     config.setQueriesMax(queriesMax);
     changed = true;
   }
@@ -75,7 +85,8 @@ public class ArchiveDaemonManager extends ConfigFileManager<ArchiveDaemonConfig>
     return config.getQueriesInit();
   }
 
-  public void setQueriesInit(int queriesInit) {
+  public void setQueriesInit(int queriesInit) throws AdminException {
+    vh.checkGreaterOrEqualsTo("queriesInit", queriesInit, 0);
     config.setQueriesInit(queriesInit);
     changed = true;
   }
@@ -84,7 +95,8 @@ public class ArchiveDaemonManager extends ConfigFileManager<ArchiveDaemonConfig>
     return config.getTransactionsMaxSmsCount();
   }
 
-  public void setTransactionsMaxSmsCount(int transactionsMaxSmsCount) {
+  public void setTransactionsMaxSmsCount(int transactionsMaxSmsCount) throws AdminException {
+    vh.checkPositive("transactionsMaxSmsCount", transactionsMaxSmsCount);
     config.setTransactionsMaxSmsCount(transactionsMaxSmsCount);
     changed = true;
   }
@@ -93,7 +105,8 @@ public class ArchiveDaemonManager extends ConfigFileManager<ArchiveDaemonConfig>
     return config.getTransactionsMaxTimeInterval();
   }
 
-  public void setTransactionsMaxTimeInterval(int transactionsMaxTimeInterval) {
+  public void setTransactionsMaxTimeInterval(int transactionsMaxTimeInterval) throws AdminException {
+    vh.checkPositive("transactionsMaxTimeInterval", transactionsMaxTimeInterval);
     config.setTransactionsMaxTimeInterval(transactionsMaxTimeInterval);
     changed = true;
   }
@@ -102,7 +115,8 @@ public class ArchiveDaemonManager extends ConfigFileManager<ArchiveDaemonConfig>
     return config.getLocationsBaseDestination();
   }
 
-  public void setLocationsBaseDestination(String locationsBaseDestination) {
+  public void setLocationsBaseDestination(String locationsBaseDestination) throws AdminException {
+    vh.checkNotEmpty("locationsBaseDestination", locationsBaseDestination);
     config.setLocationsBaseDestination(locationsBaseDestination);
     changed = true;
   }
@@ -111,7 +125,8 @@ public class ArchiveDaemonManager extends ConfigFileManager<ArchiveDaemonConfig>
     return config.getLocationsTextDestinations();
   }
 
-  public void setLocationsTextDestinations(String locationsTextDestinations) {
+  public void setLocationsTextDestinations(String locationsTextDestinations) throws AdminException {
+    vh.checkNotEmpty("locationsTextDestinations", locationsTextDestinations);
     config.setLocationsTextDestinations(locationsTextDestinations);
     changed = true;
   }
@@ -120,7 +135,8 @@ public class ArchiveDaemonManager extends ConfigFileManager<ArchiveDaemonConfig>
     return config.getLocationsSources();
   }
 
-  public void setLocationsSources(Map<String, String> locationsSources) {
+  public void setLocationsSources(Map<String, String> locationsSources) throws AdminException {
+    vh.checkNoNulls("locationsSources", locationsSources);
     config.setLocationsSources(locationsSources);
     changed = true;
   }
@@ -129,7 +145,8 @@ public class ArchiveDaemonManager extends ConfigFileManager<ArchiveDaemonConfig>
     return config.getIndexatorMaxFlushSpeed();
   }
 
-  public void setIndexatorMaxFlushSpeed(int indexatorMaxFlushSpeed) {
+  public void setIndexatorMaxFlushSpeed(int indexatorMaxFlushSpeed) throws AdminException {
+    vh.checkPositive("indexatorMaxFlushSpeed", indexatorMaxFlushSpeed);
     config.setIndexatorMaxFlushSpeed(indexatorMaxFlushSpeed);
     changed = true;
   }
@@ -138,7 +155,8 @@ public class ArchiveDaemonManager extends ConfigFileManager<ArchiveDaemonConfig>
     return config.getIndexatorSmeAddrChunkSizes();
   }
 
-  public void setIndexatorSmeAddrChunkSizes(Map<String, Integer> indexatorSmeAddrChunkSizes) {
+  public void setIndexatorSmeAddrChunkSizes(Map<String, Integer> indexatorSmeAddrChunkSizes) throws AdminException {
+    vh.checkNoNulls("indexatorSmeAddrChunkSizes", indexatorSmeAddrChunkSizes);
     config.setIndexatorSmeAddrChunkSizes(indexatorSmeAddrChunkSizes);
     changed = true;
   }

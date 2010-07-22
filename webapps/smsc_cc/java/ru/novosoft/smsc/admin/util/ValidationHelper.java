@@ -2,6 +2,9 @@ package ru.novosoft.smsc.admin.util;
 
 import ru.novosoft.smsc.admin.AdminException;
 
+import java.util.Iterator;
+import java.util.Map;
+
 /**
  * @author Artem Snopkov
  */
@@ -53,12 +56,12 @@ public class ValidationHelper {
       throw new ValidationException(paramNameBundle, argName);
   }
 
-  public void checkNotEmpty(String argName, String value) throws ValidationException {
+  public void checkNotEmpty(String argName, String value) throws AdminException {
     if (value == null || value.trim().length() == 0)
       throw new ValidationException(paramNameBundle, argName);
   }
 
-  public void checkNotEmpty(String argName, String[] value) throws ValidationException {
+  public void checkNotEmpty(String argName, String[] value) throws AdminException {
     if (value == null)
       throw new ValidationException(paramNameBundle, argName);
 
@@ -66,10 +69,17 @@ public class ValidationHelper {
       if (val == null || val.trim().length() == 0)
         throw new ValidationException(paramNameBundle, argName);
     }
-
   }
 
-  public void checkPort(String argName, int value) throws ValidationException {
+  public void checkNoNulls(String argName, Map value) throws AdminException {
+    for (Iterator iter = value.entrySet().iterator(); iter.hasNext();) {
+      Map.Entry e = (Map.Entry)iter.next();
+      if (e.getKey() == null || e.getValue() == null)
+        throw new ValidationException(paramNameBundle, argName);
+    }
+  }
+
+  public void checkPort(String argName, int value) throws AdminException {
     if (value < 0 || value > 65535)
       throw new ValidationException(paramNameBundle, argName);
   }
