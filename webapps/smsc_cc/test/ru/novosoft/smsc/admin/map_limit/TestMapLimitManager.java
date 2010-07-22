@@ -1,6 +1,7 @@
 package ru.novosoft.smsc.admin.map_limit;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
 import ru.novosoft.smsc.admin.config.TestConfigFileManagerHelper;
 
 import java.io.File;
@@ -12,8 +13,8 @@ public class TestMapLimitManager extends MapLimitManager {
 
   private TestConfigFileManagerHelper helper;
 
-  public TestMapLimitManager() throws AdminException {
-    super(null, null, null, null);
+  public TestMapLimitManager(ClusterController cc) throws AdminException {
+    super(null, null, cc, null);
   }
 
   public void reset() throws AdminException {

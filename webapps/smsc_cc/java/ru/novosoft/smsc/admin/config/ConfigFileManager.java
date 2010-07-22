@@ -1,5 +1,6 @@
 package ru.novosoft.smsc.admin.config;
 
+import org.apache.log4j.Logger;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
 import ru.novosoft.smsc.admin.util.ConfigHelper;
@@ -11,9 +12,12 @@ import java.io.OutputStream;
 
 /**
  * Каркас для написания менеджеров, управляющих одним конфигурационным файлом.
+ *
  * @author Artem Snopkov
  */
 public abstract class ConfigFileManager<T extends ManagedConfigFile> implements AppliableConfiguration {
+
+  private final Logger logger = Logger.getLogger(getClass());
 
   protected final File configFile;
   protected final File backupDir;
@@ -31,13 +35,19 @@ public abstract class ConfigFileManager<T extends ManagedConfigFile> implements 
 
   protected abstract T newConfigFile();
 
+  protected void lockConfig(boolean read) throws AdminException {
+  }
+
+  protected void unlockConfig() throws Exception {
+  }
+
   protected void afterApply() throws AdminException {
   }
 
   protected void beforeApply() throws AdminException {
   }
 
-  protected void beforeReset() throws AdminException {    
+  protected void beforeReset() throws AdminException {
   }
 
   protected T getLastAppliedConfig() {
@@ -50,36 +60,51 @@ public abstract class ConfigFileManager<T extends ManagedConfigFile> implements 
 
     beforeApply();
 
-    ConfigHelper.createBackup(configFile, backupDir, fileSystem);
-
-    InputStream is = null;
-    OutputStream os = null;
-    File tmpConfigFile = new File(configFile.getAbsolutePath() + ".tmp");
+    Throwable unlockConfigError = null;
     try {
-      is = fileSystem.getInputStream(configFile);
-      os = fileSystem.getOutputStream(tmpConfigFile);
+      lockConfig(true);
 
-      config.save(is, os);
-    } catch (AdminException e) {
-      throw e;
-    } catch (Exception e) {
-      throw new ConfigException("save_error", e);
+      ConfigHelper.createBackup(configFile, backupDir, fileSystem);
+
+      InputStream is = null;
+      OutputStream os = null;
+      File tmpConfigFile = new File(configFile.getAbsolutePath() + ".tmp");
+      try {
+        is = fileSystem.getInputStream(configFile);
+        os = fileSystem.getOutputStream(tmpConfigFile);
+
+        config.save(is, os);
+      } catch (AdminException e) {
+        throw e;
+      } catch (Exception e) {
+        throw new ConfigException("save_error", e);
+      } finally {
+        if (is != null)
+          try {
+            is.close();
+          } catch (IOException ignored) {
+          }
+
+        if (os != null)
+          try {
+            os.close();
+          } catch (IOException ignored) {
+          }
+      }
+
+      fileSystem.delete(configFile);
+      fileSystem.rename(tmpConfigFile, configFile);
+
     } finally {
-      if (is != null)
-        try {
-          is.close();
-        } catch (IOException ignored) {
-        }
-
-      if (os != null)
-        try {
-          os.close();
-        } catch (IOException ignored) {
-        }
+      try {
+        unlockConfig();
+      } catch (Exception e) {
+        unlockConfigError = e;
+      }
     }
 
-    fileSystem.delete(configFile);
-    fileSystem.rename(tmpConfigFile, configFile);
+    if (unlockConfigError != null)
+      throw new ConfigException("save_error", unlockConfigError);
 
     afterApply();
     this.changed = false;
@@ -89,8 +114,10 @@ public abstract class ConfigFileManager<T extends ManagedConfigFile> implements 
   private T loadConfig() throws AdminException {
     T cfg = newConfigFile();
 
+    Throwable unlockConfigError = null;
     InputStream is = null;
     try {
+      lockConfig(false);
       is = fileSystem.getInputStream(configFile);
       cfg.load(is);
     } catch (AdminException e) {
@@ -103,7 +130,16 @@ public abstract class ConfigFileManager<T extends ManagedConfigFile> implements 
           is.close();
         } catch (IOException ignored) {
         }
+
+      try {
+        unlockConfig();
+      } catch (Exception e) {
+        unlockConfigError = e;
+      }
     }
+
+    if (unlockConfigError != null)
+      throw new ConfigException("load_error", unlockConfigError);
 
     return cfg;
   }

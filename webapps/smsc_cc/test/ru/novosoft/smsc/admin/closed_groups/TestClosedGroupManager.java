@@ -1,6 +1,8 @@
 package ru.novosoft.smsc.admin.closed_groups;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
+import ru.novosoft.smsc.admin.cluster_controller.TestClusterController;
 import ru.novosoft.smsc.util.Address;
 
 import java.util.ArrayList;
@@ -9,8 +11,8 @@ import java.util.ArrayList;
  * @author Artem Snopkov
  */
 public class TestClosedGroupManager extends ClosedGroupManager {
-  public TestClosedGroupManager() throws AdminException {
-    super(null, null, null, null);
+  public TestClosedGroupManager(ClusterController cc) throws AdminException {
+    super(null, null, cc, null);
   }
 
   protected void load() throws AdminException {

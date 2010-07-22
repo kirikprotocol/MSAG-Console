@@ -1,6 +1,8 @@
 package ru.novosoft.smsc.admin.reschedule;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
+import ru.novosoft.smsc.admin.cluster_controller.TestClusterController;
 import ru.novosoft.smsc.admin.config.TestConfigFileManagerHelper;
 
 /**
@@ -10,8 +12,8 @@ public class TestRescheduleManager extends RescheduleManager {
 
   private TestConfigFileManagerHelper helper;
 
-  public TestRescheduleManager() throws AdminException {
-    super(null, null, null, null);
+  public TestRescheduleManager(ClusterController cc) throws AdminException {
+    super(null, null, cc, null);
   }
 
   public void reset() throws AdminException {

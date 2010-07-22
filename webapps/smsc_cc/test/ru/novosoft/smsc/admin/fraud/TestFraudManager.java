@@ -1,6 +1,7 @@
 package ru.novosoft.smsc.admin.fraud;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
 import ru.novosoft.smsc.admin.config.TestConfigFileManagerHelper;
 
 /**
@@ -12,8 +13,8 @@ public class TestFraudManager extends FraudManager {
 
   private TestConfigFileManagerHelper helper;
 
-  public TestFraudManager() throws AdminException {
-    super(null, null, null, null);
+  public TestFraudManager(ClusterController cc) throws AdminException {
+    super(null, null, cc, null);
   }
 
   public void reset() throws AdminException {

@@ -4,6 +4,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
+import ru.novosoft.smsc.admin.cluster_controller.TestClusterController;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
 import ru.novosoft.smsc.util.Address;
 import testutils.TestUtils;
@@ -33,11 +34,7 @@ public class AliasManagerTest {
 
   @Test
   public void testGetAliases() throws Exception {
-    ClusterController cc = new ClusterController() {
-      public File getAliasesFile() {
-        return aliasesFile;
-      }
-    };
+    ClusterController cc = new TestClusterController();
 
     AliasManager manager = new AliasManager(aliasesFile, cc, FileSystem.getFSForSingleInst());
 

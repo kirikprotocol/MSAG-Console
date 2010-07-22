@@ -271,24 +271,24 @@ public class ClosedGroupManagerTest {
 
 
   
-  private static class ErrorClusterController extends ClusterController {
+  private static class ErrorClusterController extends TestClusterController {
     public boolean isOnline() {
       return true;
     }
 
-    public void addClosedGroup(long groupId, String groupName, Collection<Address> masks) throws AdminException {
+    public void addClosedGroup(int groupId, String groupName) throws AdminException {
       throw new ClosedGroupException("config_broken");
     }
 
-    public void removeClosedGroup(long groupId) throws AdminException {
+    public void removeClosedGroup(int groupId) throws AdminException {
       throw new ClosedGroupException("config_broken");
     }
 
-    public void addMasksToClosedGroup(long groupId, Collection<Address> masks) throws AdminException {
+    public void addMaskToClosedGroup(int groupId, Address masks) throws AdminException {
       throw new ClosedGroupException("config_broken");
     }
 
-    public void removeMasksFromClosedGroup(long groupId, Collection<Address> masks) throws AdminException {
+    public void removeMaskFromClosedGroup(int groupId, Address masks) throws AdminException {
       throw new ClosedGroupException("config_broken");
     }
   }

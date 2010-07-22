@@ -41,15 +41,48 @@ public class TestClusterController extends ClusterController {
   public void delAlias(String alias) throws AdminException {
   }
 
-  public void addClosedGroup(long groupId, String groupName, Collection<Address> masks) throws AdminException {
+  public void addClosedGroup(int groupId, String groupName) throws AdminException {
   }
 
-  public void removeClosedGroup(long groupId) throws AdminException {
+  public void removeClosedGroup(int groupId) throws AdminException {
   }
 
-  public void addMasksToClosedGroup(long groupId, Collection<Address> masks) throws AdminException {
+  public void addMaskToClosedGroup(int groupId, Address masks) throws AdminException {
   }
 
-  public void removeMasksFromClosedGroup(long groupId, Collection<Address> masks) throws AdminException {
+  public void removeMaskFromClosedGroup(int groupId, Address masks) throws AdminException {
   }
+
+  public void lockAliases(boolean write) throws AdminException {}
+
+  public void unlockAliases() throws AdminException {}
+
+  public void lockClosedGroups(boolean write) throws AdminException {}
+
+  public void unlockClosedGroups() throws AdminException {}
+
+  public void lockMsc(boolean write) throws AdminException {}
+
+  public void unlockMsc() throws AdminException {}
+
+  public void registerMsc(Address mscAddress) throws AdminException {}
+
+  public void unregisterMsc(Address mscAddress) throws AdminException {}
+
+  public void lockReschedule(boolean write) throws AdminException {}
+
+  public void unlockReschedule() throws AdminException {}
+
+  public void lockFraud(boolean write) throws AdminException {}
+
+  public void unlockFraud() throws AdminException {}
+
+  public void lockMapLimits(boolean write) throws AdminException {}
+
+  public void unlockMapLimits() throws AdminException {}
+
+  public void lockSnmp(boolean write) throws AdminException {}
+
+  public void unlockSnmp() throws AdminException {}
+
 }

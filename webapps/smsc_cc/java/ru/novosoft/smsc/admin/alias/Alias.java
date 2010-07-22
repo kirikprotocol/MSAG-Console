@@ -1,5 +1,6 @@
 package ru.novosoft.smsc.admin.alias;
 
+import ru.novosoft.smsc.admin.util.ValidationException;
 import ru.novosoft.smsc.util.Address;
 
 /**
@@ -12,7 +13,7 @@ public class Alias {
 	private final Address alias;
 	private final Boolean hide;
 
-  public Alias(String address, String alias, boolean hide) {
+  Alias(String address, String alias, boolean hide) {
     this.address = new Address(address);
     this.alias = new Address(alias);
     this.hide = hide;

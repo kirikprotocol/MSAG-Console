@@ -1,6 +1,7 @@
 package ru.novosoft.smsc.admin.msc;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
 import ru.novosoft.smsc.util.Address;
 
 import java.util.ArrayList;
@@ -14,8 +15,8 @@ public class TestMscManager extends MscManager {
 
   private final Collection<Address> mscs;
 
-  public TestMscManager() {
-    super(null, null, null);
+  public TestMscManager(ClusterController cc) {
+    super(null, cc, null);
     mscs = new ArrayList<Address>();
     Collections.addAll(mscs,
         new Address("123443"),

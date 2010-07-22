@@ -1,6 +1,7 @@
 package ru.novosoft.smsc.admin.snmp;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
 import ru.novosoft.smsc.admin.config.TestConfigFileManagerHelper;
 
 import java.io.File;
@@ -12,8 +13,8 @@ public class TestSnmpManager extends SnmpManager {
 
   private TestConfigFileManagerHelper helper;
 
-  public TestSnmpManager() throws AdminException {
-    super(null, null, null, null);
+  public TestSnmpManager(ClusterController cc) throws AdminException {
+    super(null, null, cc, null);
   }
 
   public void reset() throws AdminException {

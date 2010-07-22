@@ -263,7 +263,7 @@ public class InstanceSettings implements Cloneable {
     s.smppHost = smppHost;
     s.smppPort = smppPort;
     s.agentHost = agentHost;
-    s.agentPort = adminPort;
+    s.agentPort = agentPort;
     s.cacheDir = cacheDir;
     return s;
   }

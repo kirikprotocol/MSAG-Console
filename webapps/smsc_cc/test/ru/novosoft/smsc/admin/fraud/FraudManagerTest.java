@@ -4,6 +4,7 @@ import org.junit.*;
 
 import static org.junit.Assert.*;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.cluster_controller.TestClusterController;
 import testutils.TestUtils;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
@@ -37,7 +38,7 @@ public class FraudManagerTest {
 
   @Test
   public void loadTest() throws AdminException {
-    FraudManager fm = new FraudManager(configFile, backupDir, new ClusterControllerImpl(), FileSystem.getFSForSingleInst());
+    FraudManager fm = new FraudManager(configFile, backupDir, new TestClusterController(), FileSystem.getFSForSingleInst());
     assertFalse(fm.isChanged());
 
     assertEquals(1, fm.getTail());
@@ -50,7 +51,7 @@ public class FraudManagerTest {
 
   @Test
   public void saveTest() throws AdminException {
-    ClusterControllerImpl clusterController = new ClusterControllerImpl();
+    TestClusterController clusterController = new TestClusterController();
     FraudManager fm1 = new FraudManager(configFile, backupDir, clusterController, FileSystem.getFSForSingleInst());
 
     fm1.setTail(5);
@@ -83,7 +84,7 @@ public class FraudManagerTest {
 
   @Test
   public void resetTest() throws AdminException {
-    FraudManager fm = new FraudManager(configFile, backupDir, new ClusterControllerImpl(), FileSystem.getFSForSingleInst());
+    FraudManager fm = new FraudManager(configFile, backupDir, new TestClusterController(), FileSystem.getFSForSingleInst());
     assertFalse(fm.isChanged());
 
     fm.setTail(5);
@@ -107,7 +108,7 @@ public class FraudManagerTest {
 
   @Test
   public void resetFailedTest() throws AdminException {
-    FraudManager fm = new FraudManager(configFile, backupDir, new ClusterControllerImpl(), FileSystem.getFSForSingleInst());
+    FraudManager fm = new FraudManager(configFile, backupDir, new TestClusterController(), FileSystem.getFSForSingleInst());
     assertFalse(fm.isChanged());
 
     fm.setTail(5);
@@ -135,7 +136,7 @@ public class FraudManagerTest {
 
   @Test
   public void setWhiteListTest() throws AdminException {
-    FraudManager fm = new FraudManager(configFile, backupDir, new ClusterControllerImpl(), FileSystem.getFSForSingleInst());
+    FraudManager fm = new FraudManager(configFile, backupDir, new TestClusterController(), FileSystem.getFSForSingleInst());
     Collection<String> whiteList = new ArrayList<String>();
 
     // Корректный адрес
@@ -175,12 +176,6 @@ public class FraudManagerTest {
     }
   }
 
-  private class ClusterControllerImpl extends ClusterController {
-    private boolean applyFraudCalled;
 
-    public void applyFraud() {
-      applyFraudCalled = true;
-    }
-  }
 
 }

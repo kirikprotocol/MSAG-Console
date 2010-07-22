@@ -10,6 +10,7 @@ import java.util.Collection;
 
 /**
  * Класс для работы с конфигурацией Fraud
+ *
  * @author Artem Snopkov
  */
 public class FraudManager extends ConfigFileManager<FraudConfigFile> {
@@ -28,7 +29,7 @@ public class FraudManager extends ConfigFileManager<FraudConfigFile> {
 
   public void setTail(int tail) {
     config.setTail(tail);
-    changed=true;
+    changed = true;
   }
 
   public boolean isEnableCheck() {
@@ -37,7 +38,7 @@ public class FraudManager extends ConfigFileManager<FraudConfigFile> {
 
   public void setEnableCheck(boolean enableCheck) {
     config.setEnableCheck(enableCheck);
-    changed=true;
+    changed = true;
   }
 
   public boolean isEnableReject() {
@@ -46,21 +47,31 @@ public class FraudManager extends ConfigFileManager<FraudConfigFile> {
 
   public void setEnableReject(boolean enableReject) {
     config.setEnableReject(enableReject);
-    changed=true;
+    changed = true;
   }
 
   public Collection<String> getWhiteList() {
     return config.getWhiteList();
   }
-  
+
   public void setWhiteList(Collection<String> whiteList) {
     config.setWhiteList(whiteList);
-    changed=true;
+    changed = true;
   }
 
   @Override
   protected FraudConfigFile newConfigFile() {
     return new FraudConfigFile();
+  }
+
+  @Override
+  protected void lockConfig(boolean read) throws AdminException {
+    cc.lockFraud(true);
+  }
+
+  @Override
+  protected void unlockConfig() throws Exception {
+    cc.unlockFraud();
   }
 
   @Override

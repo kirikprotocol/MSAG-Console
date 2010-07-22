@@ -1385,4 +1385,145 @@ public class CommonSettings implements Cloneable {
 
     return cs;
   }
+  
+  void copyFrom(CommonSettings s) {
+    this.state_machines_count = s.state_machines_count;
+    this.mainLoopsCount = s.mainLoopsCount;
+    this.eventQueueLimit = s.eventQueueLimit;
+    this.service_center_address = s.service_center_address;
+    this.ussd_center_address = s.ussd_center_address;
+    this.ussd_ssn = s.ussd_ssn;
+    this.add_ussd_ssn = new String[s.add_ussd_ssn.length];
+    System.arraycopy(s.add_ussd_ssn, 0, this.add_ussd_ssn, 0, s.add_ussd_ssn.length);
+    this.systemId = s.systemId;
+    this.service_type = s.service_type;
+    this.protocol_id = s.protocol_id;
+    this.locales = new String[s.locales.length];
+    System.arraycopy(s.locales, 0, this.locales, 0, s.locales.length);
+    this.default_locale = s.default_locale;
+    this.mergeTimeout = s.mergeTimeout;
+    this.timezones_config = s.timezones_config;
+    this.smartMultipartForward = s.smartMultipartForward;
+    this.srcSmeSeparateRouting = s.srcSmeSeparateRouting;
+    this.schedulerSoftLimit = s.schedulerSoftLimit;
+    this.schedulerHardLimit = s.schedulerHardLimit;
+
+    // sms
+
+    this.smsMaxValidTime = s.smsMaxValidTime;
+
+    // map
+
+    this.mapBusyMTDelay = s.mapBusyMTDelay;
+    this.mapLockedByMODelay = s.mapLockedByMODelay;
+    this.mapMOLockTimeout = s.mapMOLockTimeout;
+    this.mapAllowCallBarred = s.mapAllowCallBarred;
+    this.mapUssdV1Enabled = s.mapUssdV1Enabled;
+    this.mapUssdV1UseOrigEntityNumber = s.mapUssdV1UseOrigEntityNumber;
+    this.mapIOTasksCount = s.mapIOTasksCount;
+
+    // trafficControl
+
+    this.trafficShapeTimeFrame = s.trafficShapeTimeFrame;
+    this.trafficStatTimeFrame = s.trafficStatTimeFrame;
+
+    // MessageStore
+
+    this.msArchiveInterval = s.msArchiveInterval;
+
+    // MessageStore.LocalStore
+
+    this.lsMaxStoreSize = s.lsMaxStoreSize;
+    this.lsMinRollTime = s.lsMinRollTime;
+
+    // smpp
+
+    this.smppReadTimeout = s.smppReadTimeout;
+    this.smppInactivityTime = s.smppInactivityTime;
+    this.smppInactivityTimeOut = s.smppInactivityTimeOut;
+    this.smppBindTimeout = s.smppBindTimeout;
+    this.smppDefaultConnectionsLimit = s.smppDefaultConnectionsLimit;
+
+    // profiler
+
+    this.profilerSystemId = s.profilerSystemId;
+    this.profilerServiceType = s.profilerServiceType;
+    this.profilerProtocolId = s.profilerProtocolId;
+    this.profilerStoreFile = s.profilerStoreFile;
+
+    //profiler.ussdOpsMapping
+
+    this.profilerReportNone = s.profilerReportNone;
+    this.profilerReportFull = s.profilerReportFull;
+    this.profilerReportFinal = s.profilerReportFinal;
+    this.profilerLocaleRU = s.profilerLocaleRU;
+    this.profilerLocaleEN = s.profilerLocaleEN;
+    this.profilerDefault = s.profilerDefault;
+    this.profilerUCS2 = s.profilerUCS2;
+    this.profilerHide = s.profilerHide;
+    this.profilerUnhide = s.profilerUnhide;
+    this.profilerUSSD7BitOn = s.profilerUSSD7BitOn;
+    this.profilerUSSD7BitOff = s.profilerUSSD7BitOff;
+    this.profilerDivertOn = s.profilerDivertOn;
+    this.profilerDivertOff = s.profilerDivertOff;
+    this.profilerDivertAbsentOn = s.profilerDivertAbsentOn;
+    this.profilerDivertAbsentOff = s.profilerDivertAbsentOff;
+    this.profilerDivertBlockedOn = s.profilerDivertBlockedOn;
+    this.profilerDivertBlockedOff = s.profilerDivertBlockedOff;
+    this.profilerDivertBarredOn = s.profilerDivertBarredOn;
+    this.profilerDivertBarredOff = s.profilerDivertBarredOff;
+    this.profilerDivertCapacityOn = s.profilerDivertCapacityOn;
+    this.profilerDivertCapacityOff = s.profilerDivertCapacityOff;
+    this.profilerDivertStatus = s.profilerDivertStatus;
+    this.profilerDivertTo = s.profilerDivertTo;
+    this.profilerDivertTo = s.profilerDivertTo;
+    this.profilerConcatOff = s.profilerConcatOff;
+    this.profilerTranslitOn = s.profilerTranslitOn;
+    this.profilerTranslitOff = s.profilerTranslitOff;
+
+    // abonentinfo
+
+    this.abInfoSystemId = s.abInfoSystemId;
+    this.abInfoServiceType = s.abInfoServiceType;
+    this.abInfoProtocolId = s.abInfoProtocolId;
+    this.abInfoMobileAccessAddress = s.abInfoMobileAccessAddress;
+    this.abInfoSmppAccessAddress = s.abInfoSmppAccessAddress;
+
+    // MscManager
+
+    this.mscAutomaticRegistration = s.mscAutomaticRegistration;
+    this.mscFailureLimit = s.mscFailureLimit;
+    this.mscStoreFile = s.mscStoreFile;
+    this.mscSingleAttemptTimeout = s.mscSingleAttemptTimeout;
+
+    // acl
+
+    this.aclStoreDir = s.aclStoreDir;
+    this.aclPreCreateSize = s.aclPreCreateSize;
+
+    // inman
+
+    this.inmanHost = s.inmanHost;
+    this.inmanPort = s.inmanPort;
+
+    // inman.chargingPolicy
+
+    this.inmanChargingPeer2peer = s.inmanChargingPeer2peer;
+    this.inmanChargingOther = s.inmanChargingOther;
+
+    // aliasman
+
+    this.aliasStoreFile = s.aliasStoreFile;
+
+    // snmp
+
+    this.snmpCsvFileDir = s.snmpCsvFileDir;
+    this.snmpCsvFileRollInterval = s.snmpCsvFileRollInterval;
+    this.snmpCacheTimeout = s.snmpCacheTimeout;
+
+    // directives
+
+    this.directives.clear();
+    this.directives.putAll(s.directives);    
+  }
 }

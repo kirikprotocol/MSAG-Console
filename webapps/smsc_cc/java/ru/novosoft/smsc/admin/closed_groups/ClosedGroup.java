@@ -20,7 +20,6 @@ public class ClosedGroup {
   private ClusterController cc;
   protected ClosedGroupManager cgm;
 
-
   ClosedGroup(int id, String name, String description, Collection<Address> masks, ClusterController cc, ClosedGroupManager cgm) {
     this.id= id;
     this.name = name;

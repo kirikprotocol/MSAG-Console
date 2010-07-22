@@ -149,7 +149,7 @@ public class ClosedGroupManager implements RuntimeConfiguration {
   protected void load(InputStream is) throws AdminException {
     Collection<ClosedGroup> newGroups = new ArrayList<ClosedGroup>();
     try {
-
+      cc.lockClosedGroups(false);
       Document closedGroupDoc = XmlUtils.parse(is);
       NodeList a = closedGroupDoc.getElementsByTagName(PARAM_NAME_last_used_id);
       if (a.getLength() > 0)
@@ -164,6 +164,8 @@ public class ClosedGroupManager implements RuntimeConfiguration {
     } catch (Exception e) {
       configBroken = true;
       throw new ClosedGroupException("config_broken", e);
+    } finally {
+      cc.unlockClosedGroups();
     }
 
     groups = newGroups;
@@ -179,7 +181,10 @@ public class ClosedGroupManager implements RuntimeConfiguration {
     File tmpConfigFile = new File(configFile.getAbsolutePath() + ".tmp");
 
     PrintWriter out = null;
+    Throwable configBrokenCause = null;
     try {
+      cc.lockClosedGroups(true);
+
       out = new PrintWriter(new OutputStreamWriter(fs.getOutputStream(tmpConfigFile), Functions.getLocaleEncoding()));
       XmlUtils.storeConfigHeader(out, ROOT_ELEMENT, "ClosedGroups.dtd", Functions.getLocaleEncoding());
       out.println("   <" + PARAM_NAME_last_used_id + " value=\"" + lastGroupId.longValue() + "\"/>");
@@ -203,10 +208,21 @@ public class ClosedGroupManager implements RuntimeConfiguration {
       XmlUtils.storeConfigFooter(out, ROOT_ELEMENT);
     } catch (Exception e) {
       configBroken = true;
-      throw new ClosedGroupException("config_broken", e);
+      configBrokenCause = e;
     } finally {
       if (out != null)
         out.close();
+      try {
+        cc.unlockClosedGroups();
+      } catch (AdminException e) {
+        configBroken = true;
+        configBrokenCause = e;
+      }
+    }
+
+    if (configBroken) {
+      fs.delete(tmpConfigFile);
+      throw new ClosedGroupException("config_broken", configBrokenCause);
     }
 
     try {
