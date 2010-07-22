@@ -1,8 +1,10 @@
 
 #include "DataProvider.h"
 
-namespace smsc { namespace infosme 
-{
+using smsc::db::DataSource;
+
+namespace smsc {
+namespace infosme {
 
 DataProvider::~DataProvider()
 {
@@ -75,4 +77,17 @@ void DataProvider::init(ConfigView* config)
 #endif
 }
 
-}}
+
+
+DataSource* DataProvider::getDataSource(const char* dsid)
+{
+#ifndef INFOSME_NO_DATAPROVIDER
+    MutexGuard guard(dssLock);
+    return ((dss.Exists(dsid)) ? dss.Get(dsid):0);
+#else
+    return 0;
+#endif
+}
+
+}
+}

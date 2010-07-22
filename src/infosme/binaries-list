@@ -11,7 +11,6 @@ infosme/InfoSme   	  InfoSme	 \
  -ladmin-util -ladmin-protocol -ladmin-service -ladmin-util \
  -ladmin-protocol -ladmin-daemon -ladmin \
  $(SOCKETLIB) -lcore-network \
- -ldb \
  -lutil-regexp \
  -lutil-templates -lutil-config -lutil-config-route -lutil-config-region -lutil-xml \
  -lutil \
@@ -24,5 +23,8 @@ infosme/InfoSme   	  InfoSme	 \
  $(SSL_LIB) \
  -lrt -ldl -L$(SMSC_BUILDDIR)/bin \
  -llogger -lnsl -lutil-mirrorfile \
- -L$(SMSC_BUILDDIR)/bin/db/exceptions/ -ldb_exc @db/exceptions/libdb_exc.so \
+switch INFOSMEDB
+NO: \
+default: -ldb -L$(SMSC_BUILDDIR)/bin/db/exceptions/ -ldb_exc @db/exceptions/libdb_exc.so \
+endswitch
  @liblogger.so

@@ -20,12 +20,15 @@
 #include <core/synchronization/Mutex.hpp>
 #include <core/synchronization/Event.hpp>
 
+#ifndef INFOSME_NO_DATAPROVIDER
 #include <db/DataSource.h>
+#endif
 
-namespace smsc { namespace infosme 
-{
+namespace smsc {
+namespace db { class DataSource; }
+namespace infosme {
+
     using namespace smsc::core::buffers;
-    using namespace smsc::db;
     
     using smsc::core::synchronization::Mutex;
     
@@ -41,8 +44,8 @@ namespace smsc { namespace infosme
 
         smsc::logger::Logger *logger;
 
-        Hash<DataSource *>   dss;
-        Mutex                dssLock;
+        Hash<smsc::db::DataSource*> dss;
+        Mutex                     dssLock;
     
     public:
 
@@ -58,17 +61,9 @@ namespace smsc { namespace infosme
          */
         void init(ConfigView* config);
         
-        DataSource* createDataSource(ConfigView* config);
+        smsc::db::DataSource* createDataSource(ConfigView* config);
 
-        DataSource* getDataSource(const char* dsid)
-        {
-#ifndef INFOSME_NO_DATAPROVIDER
-            MutexGuard guard(dssLock);
-            return ((dss.Exists(dsid)) ? dss.Get(dsid):0);
-#else
-            return 0;
-#endif
-        }
+        smsc::db::DataSource* getDataSource(const char* dsid);
     };
 
 }}

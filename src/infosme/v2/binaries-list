@@ -22,6 +22,10 @@ infosme/infosme2   	  InfoSme \
  -llicense-check \
  $(__LIBRARIES) \
  $(SSL_LIB) \
+switch INFOSMEDB
+NO: \
+default: -ldb -L$(SMSC_BUILDDIR)/bin/db/exceptions/ -ldb_exc @db/exceptions/libdb_exc.so \
+endswitch
  -lpthread -lrt -ldl
 
 infosme/splitTaskSection splitTaskSection \
