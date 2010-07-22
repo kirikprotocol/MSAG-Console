@@ -1,5 +1,6 @@
 package ru.novosoft.smsc.changelog;
 
+import ru.novosoft.smsc.admin.alias.AliasManager;
 import ru.novosoft.smsc.admin.smsc.SmscManager;
 
 /**
@@ -17,6 +18,19 @@ public class ChangeLogLocator {
   public static ChangeLog getInstance(SmscManager manager) {
     for (ChangeLog cl : ChangeLog.instances) {
       if (cl.getAdminContext().getSmscManager() == manager)
+        return cl;
+    }
+    return null;
+  }
+
+  /**
+   * Возвращает ChangeLog по экземпляру AliasManager
+   * @param manager экземпляру AliasManager
+   * @return ChangeLog в который записываются все изменения в данном AliasManager
+   */
+  public static ChangeLog getInstance(AliasManager manager) {
+    for (ChangeLog cl : ChangeLog.instances) {
+      if (cl.getAdminContext().getAliasManager() == manager)
         return cl;
     }
     return null;

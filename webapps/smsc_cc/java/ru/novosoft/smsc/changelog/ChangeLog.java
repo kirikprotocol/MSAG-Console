@@ -103,6 +103,6 @@ public class ChangeLog {
    * Перечисление всех возможных источников, из которых приходят ивенты
    */
   public enum Source {
-    SMSC
+    SMSC, ALIAS
   }
 }

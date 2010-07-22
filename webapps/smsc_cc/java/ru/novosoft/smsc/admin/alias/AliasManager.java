@@ -42,7 +42,7 @@ public class AliasManager implements RuntimeConfiguration {
    * @throws AdminException если произошла ошибка
    * @throws InterruptedException
    */
-  public void addAlias(Alias alias) throws AdminException, InterruptedException {
+  public void addAlias(Alias alias) throws AdminException {
     try {
       rwlock.writeLock().lock();
       cc.addAlias(alias.getAddress().getNormalizedAddress(), alias.getAlias().getNormalizedAddress(), alias.isHide());

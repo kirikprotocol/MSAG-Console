@@ -26,7 +26,7 @@ public class ChangeLogTest {
     assertTrue(l.objectRemoved);
   }
 
-  private static class ChangeLogListenerImpl implements ChangeLogListener {
+  private static class ChangeLogListenerImpl extends BulkChangeLogListener {
 
     private boolean propertyChanged;
     private boolean objectAdded;

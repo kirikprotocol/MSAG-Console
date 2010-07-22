@@ -24,14 +24,11 @@ public class TestAliasManager extends AliasManager {
   }
 
   public void addAlias(Alias alias) throws AdminException {
-    if (aliases.contains(alias))
-      throw new AliasManagerException("alias_already_exists", alias.toString());
     aliases.add(alias);
   }
 
   public void deleteAlias(Alias alias) throws AdminException {
-    if (!aliases.remove(alias))
-      throw new AliasManagerException("alias_does_not_exists", alias.toString());
+    aliases.remove(alias);      
   }
 
   public AliasSet getAliases() throws AdminException {

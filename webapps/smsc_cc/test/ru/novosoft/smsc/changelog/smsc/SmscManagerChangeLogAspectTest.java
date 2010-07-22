@@ -9,6 +9,7 @@ import ru.novosoft.smsc.admin.TestAdminContext;
 import ru.novosoft.smsc.admin.smsc.CommonSettings;
 import ru.novosoft.smsc.admin.smsc.InstanceSettings;
 import ru.novosoft.smsc.admin.smsc.SmscManager;
+import ru.novosoft.smsc.changelog.BulkChangeLogListener;
 import ru.novosoft.smsc.changelog.ChangeLog;
 import ru.novosoft.smsc.changelog.ChangeLogListener;
 import testutils.TestUtils;
@@ -68,7 +69,7 @@ public class SmscManagerChangeLogAspectTest {
     assertEquals(oldAdminPort+1, l.newValue);
   }
 
-  private static class ChangeLogListenerImpl implements ChangeLogListener {
+  private static class ChangeLogListenerImpl extends BulkChangeLogListener {
 
     int calls;
     ChangeLog.Source source;
@@ -84,12 +85,6 @@ public class SmscManagerChangeLogAspectTest {
       this.propertyName = propertyName;
       this.oldValue = oldValue;
       this.newValue = newValue;
-    }
-
-    public void objectAdded(ChangeLog.Source source, Object object) {
-    }
-
-    public void objectRemoved(ChangeLog.Source source, Object object) {
     }
   }
 }
