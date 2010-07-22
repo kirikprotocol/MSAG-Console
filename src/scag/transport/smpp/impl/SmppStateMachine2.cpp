@@ -308,14 +308,14 @@ int StateMachine::Execute()
 }
 
 
-void StateMachine::registerEvent( int event, SmppEntity* src, SmppEntity* dst,
+void StateMachine::registerEvent( int event, 
+                                  SmppEntity* src, 
+                                  SmppEntity* dst,
                                   const char* rid, int errCode )
 {
     char* src_id;
     char* dst_id = NULL;
     bool srcType, dstType = false;
-
-    smsc_log_debug(log_, "SmppStateMachine Event:%d", event);
 
     if (!src) {
         // cannot proceed
@@ -330,6 +330,10 @@ void StateMachine::registerEvent( int event, SmppEntity* src, SmppEntity* dst,
         dst_id = (char*)dst->info.systemId.c_str();
         dstType = dst->info.type == etSmsc;
     }
+
+    smsc_log_debug(log_, "registerEvent: %d, src='%s', dst='%s', rid='%s', err=%d",
+                   event, src_id, dst_id ? dst_id : "NULL",
+                   rid ? rid : "NULL", errCode );
 
     Statistics::Instance().registerEvent
         ( SmppStatEvent(src_id, srcType, dst_id, dstType, rid, event, errCode) );

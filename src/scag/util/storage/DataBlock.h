@@ -10,6 +10,7 @@
 #define _SCAG_UTIL_STORAGE_DATABLOCK_H
 
 #include "string.h"
+#include <cstdio>
 
 namespace scag {
 namespace util {
@@ -220,9 +221,9 @@ private:
 	
 	void print(const char* str)
 	{
-		printf("%s pos = %d ", str, pos);
-		printf("buff_len = %d ", buff_len);
-		printf("block_len = %d\n", block_len);
+            std::printf("%s pos = %d ", str, pos);
+            std::printf("buff_len = %d ", buff_len);
+            std::printf("block_len = %d\n", block_len);
 	}
 };
 

@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include "util/int.h"
 
 namespace scag2 {
 namespace transport {

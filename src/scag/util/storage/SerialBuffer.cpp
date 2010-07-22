@@ -1,5 +1,6 @@
 /* $Id$ */
 
+#include <cstdio>
 #include "SerialBuffer.h"
 #include "core/synchronization/Mutex.hpp"
 #include "scag/util/io/HexDump.h"
@@ -19,7 +20,7 @@ const std::string& digitstring()
             ds.reserve(256*digitlen+1);
             char buf[10];
             for ( unsigned i = 0; i < 256; ++i ) {
-                sprintf( buf, "%02x(%c)", i, (i>32 && i<128 ? i : '*' ));
+                std::sprintf( buf, "%02x(%c)", i, (i>32 && i<128 ? i : '*' ));
                 ds.append(buf);
             }
             done = true;

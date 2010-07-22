@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <stack>
 #include <string>
+#include "util/int.h"
 
 namespace scag2 {
 namespace lcm {
