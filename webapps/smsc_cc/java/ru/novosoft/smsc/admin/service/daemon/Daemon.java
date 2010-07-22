@@ -159,11 +159,9 @@ public class Daemon extends Proxy {
 
   public void removeAllServices() throws AdminException {
     Map<String, ControlledService> services = refreshServices();
-    final Set serviceIds = new HashSet<String>(services.keySet());
-    for (Iterator i = serviceIds.iterator(); i.hasNext();) {
-      final String serviceId = (String) i.next();
-      removeService(serviceId);
-    }
+    final Set<String> serviceIds = new HashSet<String>(services.keySet());
+    for (String serviceId : serviceIds)
+      removeService(serviceId);    
   }
 
 

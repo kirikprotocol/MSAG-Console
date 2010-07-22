@@ -73,9 +73,9 @@ public class Response {
   }
 
   protected String getStatusString() {
-    for (int i = 0; i < statuses.length; i++)
-      if (statuses[i].status == status)
-        return statuses[i].name;
+    for (Status statuse : statuses)
+      if (statuse.status == status)
+        return statuse.name;
 
     return "unknown";
   }
@@ -97,9 +97,9 @@ public class Response {
   }
 
   private byte parseStatus(String status) {
-    for (int i = 0; i < statuses.length; i++)
-      if (statuses[i].name.equalsIgnoreCase(status))
-        return statuses[i].status;
+    for (Status statuse : statuses)
+      if (statuse.name.equalsIgnoreCase(status))
+        return statuse.status;
 
     logger.warn("Unknown status \"" + status + "\" in response");
     return 0;

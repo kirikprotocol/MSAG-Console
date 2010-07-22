@@ -11,8 +11,7 @@ class ResourceGroupList {
   
   private Map<String, ResourceGroup> resourceGroups = new HashMap<String, ResourceGroup>();
 
-  public void add(ResourceGroup d)
-      throws AdminException {
+  public void add(ResourceGroup d) {
     if (!resourceGroups.containsKey(d.getName()))
       resourceGroups.put(d.getName(), d);
   }

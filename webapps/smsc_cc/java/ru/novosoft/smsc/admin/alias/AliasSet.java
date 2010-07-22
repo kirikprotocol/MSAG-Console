@@ -22,7 +22,8 @@ public interface AliasSet {
 
   /**
    * Метод close() должен быть вызван после окончания работы с AliasSet
+   * @throws ru.novosoft.smsc.admin.AdminException если произошла ошибка
    */
-  public void close() throws AdminException, InterruptedException;
+  public void close() throws AdminException;
 
 }

@@ -2,6 +2,7 @@ package ru.novosoft.smsc.admin.service;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -24,8 +25,7 @@ public class ServiceInfo {
   public ServiceInfo(String serviceId, String[] hosts, String onlineHost, File baseDir) {
     this.serviceId = serviceId;
     this.hosts = new ArrayList<String>(hosts.length);
-    for (String host : hosts)
-      this.hosts.add(host);
+    this.hosts.addAll(Arrays.asList(hosts));
     this.onlineHost = onlineHost;
     this.baseDir = baseDir;
   }

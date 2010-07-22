@@ -26,7 +26,7 @@ class FraudConfigFile implements ManagedConfigFile {
   private boolean enableReject;
   private Collection<String> whiteList = new ArrayList<String>();
 
-   public int getTail() {
+  public int getTail() {
     return tail;
   }
 
@@ -58,6 +58,7 @@ class FraudConfigFile implements ManagedConfigFile {
 
   /**
    * Устанавливает список msc адресов.
+   *
    * @param whiteList новый список msc адресов.
    */
   public void setWhiteList(Collection<String> whiteList) {
@@ -83,8 +84,7 @@ class FraudConfigFile implements ManagedConfigFile {
       out.println("  </policy>");
 
       out.println("  <whitelist>");
-      for (Iterator iter = whiteList.iterator(); iter.hasNext();)
-        out.println("    <msc value=\"" + iter.next() + "\"/>");
+      for (Object aWhiteList : whiteList) out.println("    <msc value=\"" + aWhiteList + "\"/>");
       out.println("  </whitelist>");
 
       XmlUtils.storeConfigFooter(out, "fraud");
@@ -130,14 +130,14 @@ class FraudConfigFile implements ManagedConfigFile {
       if (checks != null && checks.getLength() > 0) {
         String checkStr = ((Element) checks.item(0)).getAttribute("value");
         if (checkStr != null && checkStr.trim().length() > 0)
-          this.enableCheck = Boolean.valueOf(checkStr).booleanValue();
+          this.enableCheck = Boolean.valueOf(checkStr);
       }
 
       NodeList rejects = policy.getElementsByTagName("enableReject");
       if (rejects != null && rejects.getLength() > 0) {
         String rejectStr = ((Element) rejects.item(0)).getAttribute("value");
         if (rejectStr != null && rejectStr.trim().length() > 0)
-          this.enableReject = Boolean.valueOf(rejectStr).booleanValue();
+          this.enableReject = Boolean.valueOf(rejectStr);
       }
     }
 

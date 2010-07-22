@@ -49,7 +49,7 @@ class RescheduleConfig implements ManagedConfigFile {
     this.reschedules = r;
   }  
 
-  protected void load(XmlConfig config) throws XmlConfigException, AdminException {
+  protected void load(XmlConfig config) throws XmlConfigException {
     XmlConfigSection core = config.getSection("core");
 
     rescheduleLimit = core.getInt("reschedule_limit");

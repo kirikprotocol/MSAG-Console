@@ -19,8 +19,8 @@ class CommandCall extends ServiceCommand {
     callElem.setAttribute("method", StringEncoderDecoder.encode(methodName));
     callElem.setAttribute("returnType", returnType.getName());
 
-    for (Iterator i = args.keySet().iterator(); i.hasNext();) {
-      String paramName = (String) i.next();
+    for (Object o : args.keySet()) {
+      String paramName = (String) o;
       Object param = args.get(paramName);
       Element paramElem = document.createElement("param");
       callElem.appendChild(paramElem);

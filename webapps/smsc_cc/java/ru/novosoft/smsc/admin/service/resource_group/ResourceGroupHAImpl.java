@@ -36,9 +36,9 @@ class ResourceGroupHAImpl extends ResourceGroupImpl {
 
   public String getOnlineStatus() {
     String[] rgNodes = listNodes();
-    for (int i = 0; i < rgNodes.length; i++) {
-      if (NativeResourceGroupHA.ResourceGroup_onlineStatus(swigCPtr, rgNodes[i]))
-        return rgNodes[i];
+    for (String rgNode : rgNodes) {
+      if (NativeResourceGroupHA.ResourceGroup_onlineStatus(swigCPtr, rgNode))
+        return rgNode;
     }
     return null;
   }
