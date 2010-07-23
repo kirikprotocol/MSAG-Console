@@ -15,10 +15,10 @@ import ru.novosoft.smsc.changelog.ChangeLogLocator;
 @Aspect
 public class AliasManagerChangeLogAspect {
 
-  @Pointcut ("call (public void addAlias(ru.novosoft.smsc.admin.alias.Alias))")
+  @Pointcut ("call (public void ru.novosoft.smsc.admin.alias.AliasManager.addAlias(ru.novosoft.smsc.admin.alias.Alias))")
   public void addAlias() {}
 
-  @Pointcut ("call (public void deleteAlias(ru.novosoft.smsc.admin.alias.Alias))")
+  @Pointcut ("call (public void ru.novosoft.smsc.admin.alias.AliasManager.deleteAlias(ru.novosoft.smsc.admin.alias.Alias))")
   public void deleteAlias() {}
 
   @AfterReturning("target(am) && args(alias) && addAlias()")

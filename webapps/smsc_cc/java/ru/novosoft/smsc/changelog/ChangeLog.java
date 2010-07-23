@@ -140,6 +140,10 @@ public class ChangeLog {
     /**
      * Конфигурация MSC адресов
      */
-    MSC
+    MSC,
+    /**
+     * Политики передоставки
+     */
+    RESCHEDULE
   }
 }

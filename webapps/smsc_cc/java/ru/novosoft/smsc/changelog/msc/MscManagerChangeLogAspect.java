@@ -14,11 +14,11 @@ import ru.novosoft.smsc.util.Address;
 @Aspect
 public class MscManagerChangeLogAspect {
 
-  @Pointcut("call (void addMsc(ru.novosoft.smsc.util.Address))")
+  @Pointcut("call (void ru.novosoft.smsc.admin.msc.MscManager.addMsc(ru.novosoft.smsc.util.Address))")
   public void addMsc() {
   }
 
-  @Pointcut("call (void removeMsc(ru.novosoft.smsc.util.Address))")
+  @Pointcut("call (void ru.novosoft.smsc.admin.msc.MscManager.removeMsc(ru.novosoft.smsc.util.Address))")
   public void removeMsc() {
   }
 

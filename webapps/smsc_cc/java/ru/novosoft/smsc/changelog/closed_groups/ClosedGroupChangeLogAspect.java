@@ -18,12 +18,12 @@ import java.util.Collection;
 @Aspect
 public class ClosedGroupChangeLogAspect {
 
-  @Pointcut("call (void setDescription(String))")
+  @Pointcut("call (void ru.novosoft.smsc.admin.closed_groups.ClosedGroup.setDescription(String))")
   public void setDescription() {
   }
 
-  @Pointcut("call (void addMask(ru.novosoft.smsc.util.Address)) ||" +
-            "call (void removeMask(ru.novosoft.smsc.util.Address))")
+  @Pointcut("call (void ru.novosoft.smsc.admin.closed_groups.ClosedGroup.addMask(ru.novosoft.smsc.util.Address)) ||" +
+            "call (void ru.novosoft.smsc.admin.closed_groups.ClosedGroup.removeMask(ru.novosoft.smsc.util.Address))")
   public void addRemoveMask() {
   }
 

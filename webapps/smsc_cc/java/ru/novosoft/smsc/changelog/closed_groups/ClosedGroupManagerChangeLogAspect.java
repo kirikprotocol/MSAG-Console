@@ -19,11 +19,11 @@ import java.util.Collection;
 @Aspect
 public class ClosedGroupManagerChangeLogAspect {
 
-  @Pointcut("call (ru.novosoft.smsc.admin.closed_groups.ClosedGroup addGroup(String, String))")
+  @Pointcut("call (ru.novosoft.smsc.admin.closed_groups.ClosedGroup ru.novosoft.smsc.admin.closed_groups.ClosedGroupManager.addGroup(String, String))")
   public void addGroup() {
   }
 
-  @Pointcut("call (boolean removeGroup(int))")
+  @Pointcut("call (boolean ru.novosoft.smsc.admin.closed_groups.ClosedGroupManager.removeGroup(int))")
   public void removeGroup() {
   }
 

@@ -5,6 +5,7 @@ import ru.novosoft.smsc.admin.AdminException;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * @author Artem Snopkov
@@ -100,6 +101,11 @@ public class ValidationHelper {
 
   public void checkPort(String argName, int value) throws AdminException {
     if (value < 0 || value > 65535)
+      throw new ValidationException(paramNameBundle, argName);
+  }
+
+  public void checkMaches(String argName, String value, Pattern pattern) throws AdminException {
+    if (!pattern.matcher(value).matches())
       throw new ValidationException(paramNameBundle, argName);
   }
 

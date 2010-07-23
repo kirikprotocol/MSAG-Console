@@ -6,6 +6,7 @@ import ru.novosoft.smsc.admin.closed_groups.ClosedGroupManager;
 import ru.novosoft.smsc.admin.fraud.FraudManager;
 import ru.novosoft.smsc.admin.map_limit.MapLimitManager;
 import ru.novosoft.smsc.admin.msc.MscManager;
+import ru.novosoft.smsc.admin.reschedule.RescheduleManager;
 import ru.novosoft.smsc.admin.smsc.SmscManager;
 
 /**
@@ -101,6 +102,19 @@ public class ChangeLogLocator {
   public static ChangeLog getInstance(MscManager manager) {
     for (ChangeLog cl : ChangeLog.instances) {
       if (cl.getAdminContext().getMscManager() == manager)
+        return cl;
+    }
+    return null;
+  }
+
+  /**
+   * Возвращает ChangeLog по экземпляру RescheduleManager
+   * @param manager экземпляр RescheduleManager
+   * @return ChangeLog в который записываются все изменения в данном RescheduleManager
+   */
+  public static ChangeLog getInstance(RescheduleManager manager) {
+    for (ChangeLog cl : ChangeLog.instances) {
+      if (cl.getAdminContext().getRescheduleManager() == manager)
         return cl;
     }
     return null;

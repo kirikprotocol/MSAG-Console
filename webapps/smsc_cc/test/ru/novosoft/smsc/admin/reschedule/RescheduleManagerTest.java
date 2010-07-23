@@ -42,7 +42,7 @@ public class RescheduleManagerTest {
 
   @Test
   public void loadTest() throws AdminException {
-    RescheduleManager manager = new RescheduleManager(configFile, backupDir, null, FileSystem.getFSForSingleInst());
+    RescheduleManager manager = new RescheduleManager(configFile, backupDir, new TestClusterController(), FileSystem.getFSForSingleInst());
 
     assertFalse(manager.isChanged());
 

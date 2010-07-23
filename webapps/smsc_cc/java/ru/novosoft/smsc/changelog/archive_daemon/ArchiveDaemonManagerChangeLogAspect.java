@@ -25,14 +25,14 @@ public class ArchiveDaemonManagerChangeLogAspect extends JavaBeanChangeLogAspect
     super(ArchiveDaemonManager.class, ChangeLog.Subject.ARCHIVE_DAEMON);
   }
 
-  @Pointcut("call (public void set*(*))")
+  @Pointcut("call (public void ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemonManager.set*(*))")
   public void setter() {}
 
-  @Pointcut("call (void apply())")
+  @Pointcut("call (void ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemonManager.apply())")
   public void apply() {
   }
 
-  @Pointcut("call (void reset())")
+  @Pointcut("call (void ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemonManager.reset())")
   public void reset() {
   }
 

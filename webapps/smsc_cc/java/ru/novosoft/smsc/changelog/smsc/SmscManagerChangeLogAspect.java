@@ -29,19 +29,19 @@ public class SmscManagerChangeLogAspect {
   private static List<Method> commonSettingsGetters = null;
   private static List<Method> instanceSettingsGetters = null;
 
-  @Pointcut("call (void setCommonSettings(ru.novosoft.smsc.admin.smsc.CommonSettings))")
+  @Pointcut("call (void ru.novosoft.smsc.admin.smsc.SmscManager.setCommonSettings(ru.novosoft.smsc.admin.smsc.CommonSettings))")
   public void setCommonSettings() {
   }
 
-  @Pointcut("call (void setInstanceSettings(int, ru.novosoft.smsc.admin.smsc.InstanceSettings))")
+  @Pointcut("call (void ru.novosoft.smsc.admin.smsc.SmscManager.setInstanceSettings(int, ru.novosoft.smsc.admin.smsc.InstanceSettings))")
   public void setInstanceSettings() {
   }
 
-  @Pointcut("call (void apply())")
+  @Pointcut("call (void ru.novosoft.smsc.admin.smsc.SmscManager.apply())")
   public void apply() {
   }
 
-  @Pointcut("call (void reset())")
+  @Pointcut("call (void ru.novosoft.smsc.admin.smsc.SmscManager.reset())")
   public void reset() {
   }
 

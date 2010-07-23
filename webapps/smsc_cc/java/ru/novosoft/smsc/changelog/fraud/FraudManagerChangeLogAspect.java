@@ -19,19 +19,20 @@ import java.lang.reflect.Method;
  */
 @Aspect
 public class FraudManagerChangeLogAspect extends JavaBeanChangeLogAspectHelper {
+  
   public FraudManagerChangeLogAspect() {
     super(FraudManager.class, ChangeLog.Subject.FRAUD);
   }
 
-  @Pointcut("call (public void set*(*))")
+  @Pointcut("call (public void ru.novosoft.smsc.admin.fraud.FraudManager.set*(*))")
   public void setter() {
   }
 
-  @Pointcut("call (void apply())")
+  @Pointcut("call (void ru.novosoft.smsc.admin.fraud.FraudManager.apply())")
   public void apply() {
   }
 
-  @Pointcut("call (void reset())")
+  @Pointcut("call (void ru.novosoft.smsc.admin.fraud.FraudManager.reset())")
   public void reset() {
   }
 
