@@ -2,6 +2,7 @@ package ru.novosoft.smsc.admin.util;
 
 import ru.novosoft.smsc.admin.AdminException;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -83,6 +84,12 @@ public class ValidationHelper {
       if (e.getKey() == null || e.getValue() == null)
         throw new ValidationException(paramNameBundle, argName);
     }
+  }
+
+  public void checkNoNulls(String argName, Collection value) throws AdminException {
+    for (Object o : value)
+      if (o == null)
+        throw new ValidationException(paramNameBundle, argName);
   }
 
   public void checkPort(String argName, int value) throws AdminException {

@@ -3,6 +3,7 @@ package ru.novosoft.smsc.changelog;
 import ru.novosoft.smsc.admin.alias.AliasManager;
 import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemonManager;
 import ru.novosoft.smsc.admin.closed_groups.ClosedGroupManager;
+import ru.novosoft.smsc.admin.fraud.FraudManager;
 import ru.novosoft.smsc.admin.smsc.SmscManager;
 
 /**
@@ -59,6 +60,19 @@ public class ChangeLogLocator {
   public static ChangeLog getInstance(ClosedGroupManager manager) {
     for (ChangeLog cl : ChangeLog.instances) {
       if (cl.getAdminContext().getClosedGroupManager() == manager)
+        return cl;
+    }
+    return null;
+  }
+
+  /**
+   * Возвращает ChangeLog по экземпляру FraudManager
+   * @param manager экземпляр FraudManager
+   * @return ChangeLog в который записываются все изменения в данном FraudManager
+   */
+  public static ChangeLog getInstance(FraudManager manager) {
+    for (ChangeLog cl : ChangeLog.instances) {
+      if (cl.getAdminContext().getFraudManager() == manager)
         return cl;
     }
     return null;

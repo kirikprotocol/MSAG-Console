@@ -128,6 +128,10 @@ public class ChangeLog {
     /**
      * Закрытая группа
      */
-    CLOSED_GROUP
+    CLOSED_GROUP,
+    /**
+     * Конфигурация Fraud
+     */
+    FRAUD
   }
 }

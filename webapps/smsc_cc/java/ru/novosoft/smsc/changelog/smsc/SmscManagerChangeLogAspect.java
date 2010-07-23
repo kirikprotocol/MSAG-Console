@@ -10,6 +10,7 @@ import ru.novosoft.smsc.admin.smsc.InstanceSettings;
 import ru.novosoft.smsc.admin.smsc.SmscManager;
 import ru.novosoft.smsc.changelog.ChangeLog;
 import ru.novosoft.smsc.changelog.ChangeLogLocator;
+import ru.novosoft.smsc.changelog.util.ChangeLogAspectHelper;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -42,15 +43,6 @@ public class SmscManagerChangeLogAspect {
 
   @Pointcut("call (void reset())")
   public void reset() {
-  }
-
-  private List<Method> getGetters(Class clazz) {
-    List<Method> getters = new ArrayList<Method>();
-    for (Method m : clazz.getMethods()) {
-      if (m.getName().startsWith("get"))
-        getters.add(m);
-    }
-    return getters;
   }
 
   private List<Object> callGetters(List<Method> getters, Object instance) {
@@ -99,7 +91,7 @@ public class SmscManagerChangeLogAspect {
   public void logSetCommonSettings(SmscManager s, ProceedingJoinPoint pjp) throws Throwable {
     // Get list of getters
     if (commonSettingsGetters == null)
-      commonSettingsGetters = getGetters(CommonSettings.class);
+      commonSettingsGetters = ChangeLogAspectHelper.getGetters(CommonSettings.class);
 
     CommonSettings oldSettings = s.getCommonSettings();
     List<Object> oldValues = callGetters(commonSettingsGetters, oldSettings);
@@ -118,7 +110,7 @@ public class SmscManagerChangeLogAspect {
   public void logSetInstanceSettings(SmscManager s, ProceedingJoinPoint pjp) throws Throwable {
     // Get list of getters
     if (instanceSettingsGetters == null)
-      instanceSettingsGetters = getGetters(InstanceSettings.class);
+      instanceSettingsGetters = ChangeLogAspectHelper.getGetters(InstanceSettings.class);
 
     int instanceNumber = (Integer) pjp.getArgs()[0];
 
