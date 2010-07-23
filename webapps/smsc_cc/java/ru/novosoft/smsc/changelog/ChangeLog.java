@@ -136,6 +136,10 @@ public class ChangeLog {
     /**
      * Конфигурация MAP Limit
      */
-    MAP_LIMIT
+    MAP_LIMIT,
+    /**
+     * Конфигурация MSC адресов
+     */
+    MSC
   }
 }

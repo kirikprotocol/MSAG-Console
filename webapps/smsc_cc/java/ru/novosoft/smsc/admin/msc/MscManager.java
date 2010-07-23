@@ -29,6 +29,7 @@ public class MscManager implements RuntimeConfiguration {
   public Collection<Address> mscs() throws AdminException {
     BufferedReader is = null;
     try {
+      cc.lockMsc(false);
       is = new BufferedReader(new InputStreamReader(fs.getInputStream(aliasesFile)));
 
       Collection<Address> result = new ArrayList<Address>();
@@ -46,6 +47,7 @@ public class MscManager implements RuntimeConfiguration {
           is.close();
         } catch (IOException ignored) {
         }
+      cc.unlockMsc();
     }
   }
 
