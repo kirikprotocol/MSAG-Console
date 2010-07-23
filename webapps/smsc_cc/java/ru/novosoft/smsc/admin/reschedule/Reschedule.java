@@ -16,7 +16,7 @@ public class Reschedule {
 
   private static final String LAST = "(\\d\\d{0,2}(m|h|s|d)(|:\\d{1,4}|:\\*))";
   private static final String MEDIUM = "(\\d\\d{0,2}(m|h|s|d)(|:\\d{1,4}))";
-  static final Pattern intervalsPattern=Pattern.compile("(" + LAST + "|" +  MEDIUM + "(," + MEDIUM + ")*" + "(," + LAST + ")?" + ")");
+  public static final Pattern intervalsPattern=Pattern.compile("(" + LAST + "|" +  MEDIUM + "(," + MEDIUM + ")*" + "(," + LAST + ")?" + ")");
 
   private final Collection<Integer> statuses;
   private final String intervals;
