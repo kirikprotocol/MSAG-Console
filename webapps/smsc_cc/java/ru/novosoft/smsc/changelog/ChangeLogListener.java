@@ -6,9 +6,13 @@ package ru.novosoft.smsc.changelog;
  */
 public interface ChangeLogListener {
 
-  public void propertyChanged(ChangeLog.Source source, String object, Class objectClass,  String propertyName, Object oldValue, Object newValue) ;
+  void propertyChanged(ChangeLog.Subject subject, String subjectDesc, Class subjectClass,  String propertyName, Object oldValue, Object newValue) ;
 
-  public void objectAdded(ChangeLog.Source source, Object object) ;
+  void objectAdded(ChangeLog.Subject subject, Object object) ;
 
-  public void objectRemoved(ChangeLog.Source source, Object object) ;
+  void objectRemoved(ChangeLog.Subject subject, Object object) ;
+
+  void applyCalled(ChangeLog.Subject sublect);
+
+  void resetCalled(ChangeLog.Subject sublect);
 }

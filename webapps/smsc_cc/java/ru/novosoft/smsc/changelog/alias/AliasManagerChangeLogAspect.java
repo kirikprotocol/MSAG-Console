@@ -25,14 +25,14 @@ public class AliasManagerChangeLogAspect {
   public void logAddAlias(AliasManager am, Alias alias) {
     ChangeLog changeLog = ChangeLogLocator.getInstance(am);
     if (changeLog != null)
-      changeLog.objectAdded(ChangeLog.Source.ALIAS, alias);
+      changeLog.objectAdded(ChangeLog.Subject.ALIAS, alias);
   }
 
   @AfterReturning("target(am) && args(alias) && deleteAlias()")
   public void logDeleteAlias(AliasManager am, Alias alias) {
     ChangeLog changeLog = ChangeLogLocator.getInstance(am);
     if (changeLog != null)
-      changeLog.objectRemoved(ChangeLog.Source.ALIAS, alias);
+      changeLog.objectRemoved(ChangeLog.Subject.ALIAS, alias);
   }
 
 }

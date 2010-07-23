@@ -67,42 +67,63 @@ public class ChangeLog {
 
   /**
    * Оповещает листенеров о том, что произошло изменение свойства
-   * @param source источник сообщения
-   * @param object название объекта, в котором произошли изменения
-   * @param objectClass класс объекта
+   * @param subject субъект, в котором произошли изменения
+   * @param subjectDesc дополнительная информация о субъекте
+   * @param subjectClass класс субъекта
    * @param propertyName название свойства
    * @param oldValue старое значение
    * @param newValue новое значение
    */
-  public void propertyChanged(Source source, String object, Class objectClass, String propertyName, Object oldValue, Object newValue) {
+  public void propertyChanged(Subject subject, String subjectDesc, Class subjectClass, String propertyName, Object oldValue, Object newValue) {
     for (ChangeLogListener l : listeners)
-      l.propertyChanged(source, object, objectClass, propertyName, oldValue, newValue);
+      l.propertyChanged(subject, subjectDesc, subjectClass, propertyName, oldValue, newValue);
   }
 
   /**
    * Оповещает листенеров о том, что добавился объект (например, маршрут, алиас и т.п.)
-   * @param source источник сообщения
-   * @param object название нового объекта
+   * @param subject субъект, добавленный в конфигурацию
+   * @param object экземпляр субъекта
    */
-  public void objectAdded(Source source, Object object) {
+  public void objectAdded(Subject subject, Object object) {
     for (ChangeLogListener l : listeners)
-      l.objectAdded(source, object);
+      l.objectAdded(subject, object);
   }
 
   /**
    * Оповещает листенеров об удалении объекта (например, маршрута, алиаса и т.п.)
-   * @param source источник сообщения
-   * @param object инстанц объекта
+   * @param subject субъект, удаленный из конфигурации
+   * @param object экземпляр субъекта
    */
-  public void objectRemoved(Source source, Object object) {
+  public void objectRemoved(Subject subject, Object object) {
     for (ChangeLogListener l : listeners)
-      l.objectRemoved(source, object);
+      l.objectRemoved(subject, object);
+  }
+
+  public void applyCalled(Subject subject) {
+    for (ChangeLogListener l : listeners)
+      l.applyCalled(subject);
+  }
+
+  public void resetCalled(Subject subject) {
+    for (ChangeLogListener l : listeners)
+      l.resetCalled(subject);
   }
 
   /**
    * Перечисление всех возможных источников, из которых приходят ивенты
    */
-  public enum Source {
-    SMSC, ALIAS, ARCHIVE_DAEMON
+  public enum Subject {
+    /**
+     * Настройки СМСЦ
+     */
+    SMSC,
+    /**
+     * Алиасы
+     */
+    ALIAS,
+    /**
+     * Настройки Archive Daemon
+     */
+    ARCHIVE_DAEMON
   }
 }

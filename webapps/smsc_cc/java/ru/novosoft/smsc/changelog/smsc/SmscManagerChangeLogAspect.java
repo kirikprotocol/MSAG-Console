@@ -1,6 +1,7 @@
 package ru.novosoft.smsc.changelog.smsc;
 
 import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
@@ -33,6 +34,14 @@ public class SmscManagerChangeLogAspect {
 
   @Pointcut("call (void setInstanceSettings(int, ru.novosoft.smsc.admin.smsc.InstanceSettings))")
   public void setInstanceSettings() {
+  }
+
+  @Pointcut("call (void apply())")
+  public void apply() {
+  }
+
+  @Pointcut("call (void reset())")
+  public void reset() {
   }
 
   private List<Method> getGetters(Class clazz) {
@@ -81,13 +90,13 @@ public class SmscManagerChangeLogAspect {
         else
           propertyName = Character.toLowerCase(firstChar) + "";
 //        System.out.println(propertyName + " " + oldValue + " -> " + newValue);
-        changeLog.propertyChanged(ChangeLog.Source.SMSC, object, objectClass, propertyName, oldValue, newValue);
+        changeLog.propertyChanged(ChangeLog.Subject.SMSC, object, objectClass, propertyName, oldValue, newValue);
       }
     }
   }
 
   @Around("target(s) && setCommonSettings()")
-  public void aroundSetCommonSettings(SmscManager s, ProceedingJoinPoint pjp) throws Throwable {
+  public void logSetCommonSettings(SmscManager s, ProceedingJoinPoint pjp) throws Throwable {
     // Get list of getters
     if (commonSettingsGetters == null)
       commonSettingsGetters = getGetters(CommonSettings.class);
@@ -106,7 +115,7 @@ public class SmscManagerChangeLogAspect {
   }
 
   @Around("target(s) && setInstanceSettings()")
-  public void aroundSetInstanceSettings(SmscManager s, ProceedingJoinPoint pjp) throws Throwable {
+  public void logSetInstanceSettings(SmscManager s, ProceedingJoinPoint pjp) throws Throwable {
     // Get list of getters
     if (instanceSettingsGetters == null)
       instanceSettingsGetters = getGetters(InstanceSettings.class);
@@ -124,6 +133,20 @@ public class SmscManagerChangeLogAspect {
     ChangeLog cl = ChangeLogLocator.getInstance(s);
     if (cl != null)
       logChanges(cl, "Instance " + instanceNumber + " settings", InstanceSettings.class, oldValues, newValues, instanceSettingsGetters);
+  }
+
+  @AfterReturning("target(m) && apply()")
+  public void logApply(SmscManager m) {
+    ChangeLog changeLog = ChangeLogLocator.getInstance(m);
+    if (changeLog != null)
+      changeLog.applyCalled(ChangeLog.Subject.SMSC);
+  }
+
+  @AfterReturning("target(m) && reset()")
+  public void logReset(SmscManager m) {
+    ChangeLog changeLog = ChangeLogLocator.getInstance(m);
+    if (changeLog != null)
+      changeLog.resetCalled(ChangeLog.Subject.SMSC);
   }
 
 }

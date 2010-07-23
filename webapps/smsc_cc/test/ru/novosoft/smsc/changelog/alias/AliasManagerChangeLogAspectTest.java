@@ -8,8 +8,6 @@ import ru.novosoft.smsc.admin.AdminContext;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.TestAdminContext;
 import ru.novosoft.smsc.admin.alias.Alias;
-import ru.novosoft.smsc.admin.alias.AliasManager;
-import ru.novosoft.smsc.admin.alias.TestAliasManager;
 import ru.novosoft.smsc.changelog.BulkChangeLogListener;
 import ru.novosoft.smsc.changelog.ChangeLog;
 import ru.novosoft.smsc.util.Address;
@@ -38,7 +36,7 @@ public class AliasManagerChangeLogAspectTest {
     Alias a = new Alias(new Address("79139494484"), new Address("679876"), false);
     ctx.getAliasManager().addAlias(a);
 
-    assertEquals(ChangeLog.Source.ALIAS, l.source);
+    assertEquals(ChangeLog.Subject.ALIAS, l.subject);
     assertNotNull(l.added);
     assertEquals(a, l.added);
   }
@@ -48,23 +46,23 @@ public class AliasManagerChangeLogAspectTest {
     Alias a = new Alias(new Address("79139494484"), new Address("679876"), false);
     ctx.getAliasManager().deleteAlias(a);
 
-    assertEquals(ChangeLog.Source.ALIAS, l.source);
+    assertEquals(ChangeLog.Subject.ALIAS, l.subject);
     assertNotNull(l.removed);
     assertEquals(a, l.removed);
   }
 
   private static class ChangeLogListenerImpl extends BulkChangeLogListener {
-    ChangeLog.Source source;
+    ChangeLog.Subject subject;
     Object added;
     Object removed;
 
-    public void objectAdded(ChangeLog.Source source, Object object) {
-      this.source = source;
+    public void objectAdded(ChangeLog.Subject subject, Object object) {
+      this.subject = subject;
       this.added = object;
     }
 
-    public void objectRemoved(ChangeLog.Source source, Object object) {
-      this.source = source;
+    public void objectRemoved(ChangeLog.Subject subject, Object object) {
+      this.subject = subject;
       this.removed = object;
     }
   }

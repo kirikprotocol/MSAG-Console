@@ -3,7 +3,6 @@ package ru.novosoft.smsc.changelog;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.TestAdminContext;
 
 /**
  * @author Artem Snopkov
@@ -16,13 +15,13 @@ public class ChangeLogTest {
     ChangeLogListenerImpl l = new ChangeLogListenerImpl();
     cl.addListener(l);
 
-    cl.propertyChanged(ChangeLog.Source.SMSC, null, null, null, null, null);
+    cl.propertyChanged(ChangeLog.Subject.SMSC, null, null, null, null, null);
     assertTrue(l.propertyChanged);
 
-    cl.objectAdded(ChangeLog.Source.SMSC, null);
+    cl.objectAdded(ChangeLog.Subject.SMSC, null);
     assertTrue(l.objectAdded);
 
-    cl.objectRemoved(ChangeLog.Source.SMSC, null);
+    cl.objectRemoved(ChangeLog.Subject.SMSC, null);
     assertTrue(l.objectRemoved);
   }
 
@@ -33,15 +32,15 @@ public class ChangeLogTest {
     private boolean objectRemoved;
 
 
-    public void propertyChanged(ChangeLog.Source source, String object, Class objectClass, String propertyName, Object oldValue, Object newValue) {
+    public void propertyChanged(ChangeLog.Subject subject, String object, Class objectClass, String propertyName, Object oldValue, Object newValue) {
       propertyChanged = true;
     }
 
-    public void objectAdded(ChangeLog.Source source, Object object) {
+    public void objectAdded(ChangeLog.Subject subject, Object object) {
       objectAdded = true;
     }
 
-    public void objectRemoved(ChangeLog.Source source, Object object) {
+    public void objectRemoved(ChangeLog.Subject subject, Object object) {
       objectRemoved = true;
     }
   }
