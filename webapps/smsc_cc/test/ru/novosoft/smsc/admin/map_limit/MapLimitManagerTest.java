@@ -34,7 +34,7 @@ public class MapLimitManagerTest {
       TestUtils.recursiveDeleteFolder(backupDir);
   }
 
-  private void validateConfig(MapLimitManager manager) {
+  private void validateConfig(MapLimitManager manager) throws AdminException {
     assertEquals(10000, manager.getDlgLimitIn());
     assertEquals(10000, manager.getDlgLimitInSri());
     assertEquals(500, manager.getDlgLimitInUssd());
@@ -161,7 +161,7 @@ public class MapLimitManagerTest {
       CongestionLevel levels[] = new CongestionLevel[MapLimitManager.MAX_CONGESTON_LEVELS];
       manager.setCongestionLevels(levels);
       assertFalse(true);
-    } catch (IllegalArgumentException e) {
+    } catch (AdminException e) {
     }
 
     try {

@@ -132,6 +132,10 @@ public class ChangeLog {
     /**
      * Конфигурация Fraud
      */
-    FRAUD
+    FRAUD,
+    /**
+     * Конфигурация MAP Limit
+     */
+    MAP_LIMIT
   }
 }

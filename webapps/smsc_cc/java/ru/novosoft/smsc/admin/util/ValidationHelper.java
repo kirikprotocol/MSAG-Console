@@ -22,6 +22,12 @@ public class ValidationHelper {
       throw new ValidationException(paramNameBundle, argName);
   }
 
+  public void checkPositive(String argName, int[] value) throws AdminException {
+    for (int val : value)
+      if (val <= 0)
+        throw new ValidationException(paramNameBundle, argName);
+  }
+
   public void checkNegative(String argName, int value) throws AdminException {
     if (value >= 0)
       throw new ValidationException(paramNameBundle, argName);
