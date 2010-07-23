@@ -12,36 +12,22 @@ public class ChangeLogTest {
   @Test
   public void listenerTest() throws AdminException {
     ChangeLog cl = new ChangeLog(null);
-    ChangeLogListenerImpl l = new ChangeLogListenerImpl();
+    TestChangeLogListener l = new TestChangeLogListener();
     cl.addListener(l);
 
     cl.propertyChanged(ChangeLog.Subject.SMSC, null, null, null, null, null);
-    assertTrue(l.propertyChanged);
+    assertTrue(l.changed_calls == 1);
 
     cl.objectAdded(ChangeLog.Subject.SMSC, null);
-    assertTrue(l.objectAdded);
+    assertTrue(l.added_calls == 1);
 
     cl.objectRemoved(ChangeLog.Subject.SMSC, null);
-    assertTrue(l.objectRemoved);
-  }
+    assertTrue(l.removed_calls == 1);
 
-  private static class ChangeLogListenerImpl extends BulkChangeLogListener {
+    cl.resetCalled(null);
+    assertTrue(l.removed_calls == 1);
 
-    private boolean propertyChanged;
-    private boolean objectAdded;
-    private boolean objectRemoved;
-
-
-    public void propertyChanged(ChangeLog.Subject subject, String object, Class objectClass, String propertyName, Object oldValue, Object newValue) {
-      propertyChanged = true;
-    }
-
-    public void objectAdded(ChangeLog.Subject subject, Object object) {
-      objectAdded = true;
-    }
-
-    public void objectRemoved(ChangeLog.Subject subject, Object object) {
-      objectRemoved = true;
-    }
+    cl.applyCalled(null);
+    assertTrue(l.apply_calls == 1);
   }
 }

@@ -72,6 +72,10 @@ public class ClosedGroup {
     cgm.save();
   }
 
+  public ClosedGroupManager getClosedGroupManager() {
+    return cgm;
+  }
+
   public boolean equals(Object o) {
     return o instanceof ClosedGroup && ((ClosedGroup) o).id == id;
   }

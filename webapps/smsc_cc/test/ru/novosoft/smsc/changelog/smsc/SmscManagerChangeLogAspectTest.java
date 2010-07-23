@@ -8,9 +8,8 @@ import ru.novosoft.smsc.admin.TestAdminContext;
 import ru.novosoft.smsc.admin.smsc.CommonSettings;
 import ru.novosoft.smsc.admin.smsc.InstanceSettings;
 import ru.novosoft.smsc.admin.smsc.SmscManager;
-import ru.novosoft.smsc.changelog.BulkChangeLogListener;
+import ru.novosoft.smsc.changelog.TestChangeLogListener;
 import ru.novosoft.smsc.changelog.ChangeLog;
-import ru.novosoft.smsc.changelog.ChangeLogListener;
 
 import static org.junit.Assert.*;
 
@@ -20,7 +19,7 @@ import static org.junit.Assert.*;
 public class SmscManagerChangeLogAspectTest {
 
   SmscManager manager;
-  ChangeLogListenerImpl l;
+  TestChangeLogListener l;
 
   @Before
   public void before() throws AdminException {
@@ -28,7 +27,7 @@ public class SmscManagerChangeLogAspectTest {
     ChangeLog cl = ChangeLog.getInstance(ctx);
     assertNotNull(cl);
 
-    l = new ChangeLogListenerImpl();
+    l = new TestChangeLogListener();
     cl.addListener(l);
 
     manager = ctx.getSmscManager();
@@ -41,12 +40,12 @@ public class SmscManagerChangeLogAspectTest {
     cs.setAbInfoProtocolId(oldAbInfoProtocolId + 1);
     manager.setCommonSettings(cs);
 
-    assertEquals(1, l.calls);
-    assertEquals(ChangeLog.Subject.SMSC, l.subject);
-    assertEquals("Common settings", l.object);
-    assertEquals("abInfoProtocolId", l.propertyName);
-    assertEquals(oldAbInfoProtocolId, l.oldValue);
-    assertEquals(oldAbInfoProtocolId + 1, l.newValue);
+    assertEquals(1, l.changed_calls);
+    assertEquals(ChangeLog.Subject.SMSC, l.changed_subject);
+    assertEquals("Common settings", l.changed_subjectDesc);
+    assertEquals("abInfoProtocolId", l.changed_propertyName);
+    assertEquals(oldAbInfoProtocolId, l.changed_oldValue);
+    assertEquals(oldAbInfoProtocolId + 1, l.changed_newValue);
   }
 
   @Test
@@ -57,63 +56,27 @@ public class SmscManagerChangeLogAspectTest {
     cs.setAdminPort(oldAdminPort + 1);
     manager.setInstanceSettings(0, cs);
 
-    assertEquals(1, l.calls);
-    assertEquals(ChangeLog.Subject.SMSC, l.subject);
-    assertEquals("Instance 0 settings", l.object);
-    assertEquals("adminPort", l.propertyName);
-    assertEquals(oldAdminPort, l.oldValue);
-    assertEquals(oldAdminPort + 1, l.newValue);
+    assertEquals(1, l.changed_calls);
+    assertEquals(ChangeLog.Subject.SMSC, l.changed_subject);
+    assertEquals("Instance 0 settings", l.changed_subjectDesc);
+    assertEquals("adminPort", l.changed_propertyName);
+    assertEquals(oldAdminPort, l.changed_oldValue);
+    assertEquals(oldAdminPort + 1, l.changed_newValue);
   }
 
   @Test
   public void logResetTest() throws AdminException {
     manager.reset();
 
-    assertEquals(1, l.calls);
-    assertEquals(ChangeLog.Subject.SMSC, l.subject);
-    assertTrue(l.resetCalled);
+    assertEquals(1, l.reset_calls);
+    assertEquals(ChangeLog.Subject.SMSC, l.reset_subject);
   }
 
   @Test
   public void logApplyTest() throws AdminException {
     manager.apply();
 
-    assertEquals(1, l.calls);
-    assertEquals(ChangeLog.Subject.SMSC, l.subject);
-    assertTrue(l.applyCalled);
-  }
-
-  private static class ChangeLogListenerImpl extends BulkChangeLogListener {
-
-    int calls;
-    ChangeLog.Subject subject;
-    String object;
-    String propertyName;
-    Object oldValue;
-    Object newValue;
-
-    boolean applyCalled;
-    boolean resetCalled;
-
-    public void propertyChanged(ChangeLog.Subject subject, String object, Class objectClass, String propertyName, Object oldValue, Object newValue) {
-      calls++;
-      this.subject = subject;
-      this.object = object;
-      this.propertyName = propertyName;
-      this.oldValue = oldValue;
-      this.newValue = newValue;
-    }
-
-    public void applyCalled(ChangeLog.Subject subject) {
-      calls++;
-      this.subject = subject;
-      applyCalled = true;
-    }
-
-    public void resetCalled(ChangeLog.Subject subject) {
-      calls++;
-      this.subject = subject;
-      resetCalled = true;
-    }
-  }
+    assertEquals(1, l.apply_calls);
+    assertEquals(ChangeLog.Subject.SMSC, l.apply_subject);
+  }  
 }

@@ -124,6 +124,10 @@ public class ChangeLog {
     /**
      * Настройки Archive Daemon
      */
-    ARCHIVE_DAEMON
+    ARCHIVE_DAEMON,
+    /**
+     * Закрытая группа
+     */
+    CLOSED_GROUP
   }
 }

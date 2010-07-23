@@ -61,6 +61,12 @@ public class ValidationHelper {
       throw new ValidationException(paramNameBundle, argName);
   }
 
+  public void checkLen(String argName, String value, int minLen, int maxLen) throws AdminException {
+    checkNotEmpty(argName, value);
+    if (value.length() < minLen || value.length() > maxLen)
+      throw new ValidationException(paramNameBundle, argName);
+  }
+
   public void checkNotEmpty(String argName, String[] value) throws AdminException {
     if (value == null)
       throw new ValidationException(paramNameBundle, argName);

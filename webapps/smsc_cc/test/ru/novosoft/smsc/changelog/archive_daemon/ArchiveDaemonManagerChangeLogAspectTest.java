@@ -8,8 +8,7 @@ import ru.novosoft.smsc.admin.AdminContext;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.TestAdminContext;
 import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemonManager;
-import ru.novosoft.smsc.admin.smsc.SmscManager;
-import ru.novosoft.smsc.changelog.BulkChangeLogListener;
+import ru.novosoft.smsc.changelog.TestChangeLogListener;
 import ru.novosoft.smsc.changelog.ChangeLog;
 
 /**
@@ -18,7 +17,7 @@ import ru.novosoft.smsc.changelog.ChangeLog;
 public class ArchiveDaemonManagerChangeLogAspectTest {
 
   ArchiveDaemonManager manager;
-  ChangeLogListenerImpl l;
+  TestChangeLogListener l;
 
   @Before
   public void before() throws AdminException {
@@ -26,7 +25,7 @@ public class ArchiveDaemonManagerChangeLogAspectTest {
     ChangeLog cl = ChangeLog.getInstance(ctx);
     assertNotNull(cl);
 
-    l = new ChangeLogListenerImpl();
+    l = new TestChangeLogListener();
     cl.addListener(l);
 
     manager = ctx.getArchiveDaemonManager();
@@ -37,63 +36,28 @@ public class ArchiveDaemonManagerChangeLogAspectTest {
     int oldValue = manager.getIndexatorMaxFlushSpeed();
     manager.setIndexatorMaxFlushSpeed(oldValue + 1);
 
-    assertEquals(1, l.calls);
-    assertEquals(ChangeLog.Subject.ARCHIVE_DAEMON, l.subject);
-    assertEquals("Config", l.object);
-    assertEquals("indexatorMaxFlushSpeed", l.propertyName);
-    assertEquals(oldValue, l.oldValue);
-    assertEquals(oldValue+1, l.newValue);
+    assertEquals(1, l.changed_calls);
+    assertEquals(ChangeLog.Subject.ARCHIVE_DAEMON, l.changed_subject);
+    assertEquals("Config", l.changed_subjectDesc);
+    assertEquals("indexatorMaxFlushSpeed", l.changed_propertyName);
+    assertEquals(oldValue, l.changed_oldValue);
+    assertEquals(oldValue+1, l.changed_newValue);
   }
 
   @Test
   public void logResetTest() throws AdminException {
     manager.reset();
 
-    assertEquals(1, l.calls);
-    assertEquals(ChangeLog.Subject.ARCHIVE_DAEMON, l.subject);
-    assertTrue(l.resetCalled);
+    assertEquals(1, l.reset_calls);
+    assertEquals(ChangeLog.Subject.ARCHIVE_DAEMON, l.reset_subject);
   }
 
   @Test
   public void logApplyTest() throws AdminException {
     manager.apply();
 
-    assertEquals(1, l.calls);
-    assertEquals(ChangeLog.Subject.ARCHIVE_DAEMON, l.subject);
-    assertTrue(l.applyCalled);
+    assertEquals(1, l.apply_calls);
+    assertEquals(ChangeLog.Subject.ARCHIVE_DAEMON, l.apply_subject);
   }
 
-  private static class ChangeLogListenerImpl extends BulkChangeLogListener {
-
-    int calls;
-    ChangeLog.Subject subject;
-    String object;
-    String propertyName;
-    Object oldValue;
-    Object newValue;
-
-    boolean applyCalled;
-    boolean resetCalled;
-
-    public void propertyChanged(ChangeLog.Subject subject, String object, Class objectClass, String propertyName, Object oldValue, Object newValue) {
-      calls++;
-      this.subject = subject;
-      this.object = object;
-      this.propertyName = propertyName;
-      this.oldValue = oldValue;
-      this.newValue = newValue;
-    }
-
-    public void applyCalled(ChangeLog.Subject subject) {
-      calls++;
-      this.subject = subject;
-      applyCalled = true;
-    }
-
-    public void resetCalled(ChangeLog.Subject subject) {
-      calls++;
-      this.subject = subject;
-      resetCalled = true;
-    }
-  }
 }

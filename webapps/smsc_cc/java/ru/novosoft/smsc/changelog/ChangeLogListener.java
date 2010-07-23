@@ -12,7 +12,7 @@ public interface ChangeLogListener {
 
   void objectRemoved(ChangeLog.Subject subject, Object object) ;
 
-  void applyCalled(ChangeLog.Subject sublect);
+  void applyCalled(ChangeLog.Subject subject);
 
-  void resetCalled(ChangeLog.Subject sublect);
+  void resetCalled(ChangeLog.Subject subject);
 }

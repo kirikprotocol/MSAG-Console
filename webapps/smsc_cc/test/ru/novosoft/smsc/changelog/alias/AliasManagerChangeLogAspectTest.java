@@ -8,8 +8,8 @@ import ru.novosoft.smsc.admin.AdminContext;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.TestAdminContext;
 import ru.novosoft.smsc.admin.alias.Alias;
-import ru.novosoft.smsc.changelog.BulkChangeLogListener;
 import ru.novosoft.smsc.changelog.ChangeLog;
+import ru.novosoft.smsc.changelog.TestChangeLogListener;
 import ru.novosoft.smsc.util.Address;
 
 /**
@@ -18,7 +18,7 @@ import ru.novosoft.smsc.util.Address;
 public class AliasManagerChangeLogAspectTest {
 
   AdminContext ctx;
-  ChangeLogListenerImpl l;
+  TestChangeLogListener l;
 
   @Before
   public void before() throws AdminException {
@@ -27,7 +27,7 @@ public class AliasManagerChangeLogAspectTest {
     ChangeLog changeLog = ChangeLog.getInstance(ctx);
     assertNotNull(changeLog);
 
-    l = new ChangeLogListenerImpl();
+    l = new TestChangeLogListener();
     changeLog.addListener(l);
   }
 
@@ -36,9 +36,10 @@ public class AliasManagerChangeLogAspectTest {
     Alias a = new Alias(new Address("79139494484"), new Address("679876"), false);
     ctx.getAliasManager().addAlias(a);
 
-    assertEquals(ChangeLog.Subject.ALIAS, l.subject);
-    assertNotNull(l.added);
-    assertEquals(a, l.added);
+    assertEquals(1, l.added_calls);
+    assertEquals(ChangeLog.Subject.ALIAS, l.added_subject);
+    assertNotNull(l.added_object);
+    assertEquals(a, l.added_object);
   }
 
   @Test
@@ -46,24 +47,9 @@ public class AliasManagerChangeLogAspectTest {
     Alias a = new Alias(new Address("79139494484"), new Address("679876"), false);
     ctx.getAliasManager().deleteAlias(a);
 
-    assertEquals(ChangeLog.Subject.ALIAS, l.subject);
-    assertNotNull(l.removed);
-    assertEquals(a, l.removed);
-  }
-
-  private static class ChangeLogListenerImpl extends BulkChangeLogListener {
-    ChangeLog.Subject subject;
-    Object added;
-    Object removed;
-
-    public void objectAdded(ChangeLog.Subject subject, Object object) {
-      this.subject = subject;
-      this.added = object;
-    }
-
-    public void objectRemoved(ChangeLog.Subject subject, Object object) {
-      this.subject = subject;
-      this.removed = object;
-    }
+    assertEquals(1, l.removed_calls);
+    assertEquals(ChangeLog.Subject.ALIAS, l.removed_subject);
+    assertNotNull(l.removed_object);
+    assertEquals(a, l.removed_object);
   }
 }

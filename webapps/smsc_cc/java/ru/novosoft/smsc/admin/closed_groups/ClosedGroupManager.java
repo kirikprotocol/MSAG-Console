@@ -8,6 +8,7 @@ import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
 import ru.novosoft.smsc.admin.config.RuntimeConfiguration;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
 import ru.novosoft.smsc.admin.util.ConfigHelper;
+import ru.novosoft.smsc.admin.util.ValidationHelper;
 import ru.novosoft.smsc.util.Address;
 import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
@@ -30,6 +31,8 @@ public class ClosedGroupManager implements RuntimeConfiguration {
   protected final static String SECTION_NAME_group = "group";
   protected final static String ROOT_ELEMENT = "records";
   private final static int CLOSED_GROUP_NAME_MAXLENGTH = 64;
+
+  private final ValidationHelper vh = new ValidationHelper(ClosedGroup.class.getCanonicalName());
 
   private final File configFile;
   private final File backupDir;
@@ -71,8 +74,7 @@ public class ClosedGroupManager implements RuntimeConfiguration {
   }
 
   public ClosedGroup addGroup(String name, String description) throws AdminException {
-    if (name == null || name.length() > CLOSED_GROUP_NAME_MAXLENGTH)
-      throw new IllegalArgumentException("name");
+    vh.checkLen("name", name, 1, CLOSED_GROUP_NAME_MAXLENGTH);
 
     checkBroken();
 

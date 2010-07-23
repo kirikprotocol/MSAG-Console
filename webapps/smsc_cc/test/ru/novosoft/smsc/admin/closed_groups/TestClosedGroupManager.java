@@ -11,12 +11,16 @@ import java.util.ArrayList;
  * @author Artem Snopkov
  */
 public class TestClosedGroupManager extends ClosedGroupManager {
+
   public TestClosedGroupManager(ClusterController cc) throws AdminException {
     super(null, null, cc, null);
   }
 
   protected void load() throws AdminException {
     load(TestClosedGroupManager.class.getResourceAsStream("ClosedGroups.xml"));
+  }
+  
+  protected void save() {
   }
 
   public ClosedGroup addGroup(String name, String description) throws AdminException {
