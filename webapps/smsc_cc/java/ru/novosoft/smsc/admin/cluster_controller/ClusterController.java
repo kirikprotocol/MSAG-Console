@@ -6,6 +6,9 @@ import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.admin.service.ServiceManager;
 import ru.novosoft.smsc.util.Address;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Класс для отправки комманд в ClusterController.
  *
@@ -18,6 +21,8 @@ public class ClusterController {
 
   private ClusterControllerClient cc;
   private ServiceManager serviceManager;
+  private long lastConfigsStatusCheckTime;
+  private GetConfigsStateResp lastGetConfigsStateResp;
 
   protected ClusterController() {
 
@@ -42,6 +47,24 @@ public class ClusterController {
 
   public void shutdown() {
     cc.shutdown();
+  }
+
+  private synchronized ConfigState getConfigStatus(ConfigType configType) throws AdminException {
+    long now = System.currentTimeMillis();
+
+    if (now - lastConfigsStatusCheckTime > 1000 || lastGetConfigsStateResp == null) {
+      GetConfigsState req = new GetConfigsState();
+      lastGetConfigsStateResp = cc.send(req);
+    }
+
+    long ccUpdateTime = lastGetConfigsStateResp.getCcConfigUpdateTime()[configType.getValue()];
+
+    SmscConfigsState[] states = lastGetConfigsStateResp.getSmscConfigs();
+    Map<Integer, Long> instancesUpdateTimes = new HashMap<Integer, Long>();
+    for (SmscConfigsState state : states)
+      instancesUpdateTimes.put((int)state.getNodeIdex(), state.getUpdateTime()[configType.getValue()]);
+
+    return new ConfigState(ccUpdateTime, instancesUpdateTimes);
   }
 
   // ALIASES ===========================================================================================================
@@ -108,6 +131,10 @@ public class ClusterController {
       if (status != 0)
         throw new ClusterControllerException("interaction_error", statuses, resp.getIds());
     }
+  }
+
+  public ConfigState getAliasesConfigState() throws AdminException {
+    return getConfigStatus(ConfigType.Aliases);
   }
 
   // CLOSED GROUPS =====================================================================================================

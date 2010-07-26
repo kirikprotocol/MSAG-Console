@@ -2,12 +2,17 @@ package ru.novosoft.smsc.admin.alias;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
+import ru.novosoft.smsc.admin.cluster_controller.ConfigState;
 import ru.novosoft.smsc.admin.config.RuntimeConfiguration;
+import ru.novosoft.smsc.admin.config.SmscConfiguration;
+import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
 import ru.novosoft.smsc.util.Address;
 import ru.novosoft.smsc.util.IOUtils;
 
 import java.io.*;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -15,7 +20,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * Класс для доступа к списку алиасов
  * @author Artem Snopkov
  */
-public class AliasManager implements RuntimeConfiguration {
+public class AliasManager implements RuntimeConfiguration, SmscConfiguration {
 
   private static final int MSG_SIZE = 48; //1+(1+1+21)+(1+1+21)+1
 
@@ -40,7 +45,6 @@ public class AliasManager implements RuntimeConfiguration {
    *
    * @param alias алиас
    * @throws AdminException если произошла ошибка
-   * @throws InterruptedException
    */
   public void addAlias(Alias alias) throws AdminException {
     try {
@@ -136,6 +140,21 @@ public class AliasManager implements RuntimeConfiguration {
       rwlock.readLock().unlock();
       cc.unlockAliases();
     }
+  }
+
+
+  public Map<Integer, SmscConfigurationStatus> getStatusForSmscs() throws AdminException {
+    ConfigState configState = cc.getAliasesConfigState();
+
+    Map<Integer, SmscConfigurationStatus> result = new HashMap<Integer, SmscConfigurationStatus>();
+
+    long ccLastUpdateTime = configState.getCcLastUpdateTime();
+    for (Map.Entry<Integer, Long> e : configState.getInstancesUpdateTimes().entrySet()) {
+      SmscConfigurationStatus s = (e.getValue() >= ccLastUpdateTime) ? SmscConfigurationStatus.UP_TO_DATE : SmscConfigurationStatus.OUT_OF_DATE;
+      result.put(e.getKey(), s);
+    }
+
+    return result;
   }
 
 }

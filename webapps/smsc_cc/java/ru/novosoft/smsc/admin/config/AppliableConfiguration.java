@@ -28,8 +28,8 @@ public interface AppliableConfiguration {
   void reset() throws AdminException;
 
   /**
-   * Возвращает true, если в конфигурации произошли изменения
-   * @return true, если в конфигурации произошли изменения
+   * Возвращает true, если в конфигурации имеются не примененные изменения
+   * @return true, если в конфигурации имеются не примененные изменения
    */
   boolean isChanged();
 }

@@ -1,9 +1,12 @@
 package ru.novosoft.smsc.admin.cluster_controller;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.cluster_controller.protocol.ConfigType;
 import ru.novosoft.smsc.util.Address;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Artem Snopkov
@@ -14,6 +17,24 @@ public class TestClusterController extends ClusterController {
   public boolean applyFraudCalled;
   public boolean applyMapLimitsCalled;
   public boolean applySnmpCalled;
+
+  private int smscInstancesNumber;
+
+  public TestClusterController(int smscInstancesNumber) {
+    this.smscInstancesNumber = smscInstancesNumber;
+  }
+
+  public TestClusterController() {
+    this(2);
+  }
+
+  public ConfigState getAliasesConfigState() throws AdminException {
+    long now = System.currentTimeMillis();
+    Map<Integer, Long> map = new HashMap<Integer, Long>();
+    map.put(0, now -1);
+    map.put(1, now);
+    return new ConfigState(now, map);
+  }
 
   public void applyReschedule() throws AdminException {
     applyRescheduleCalled = true;

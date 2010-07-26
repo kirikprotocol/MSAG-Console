@@ -18,17 +18,13 @@ import java.io.File;
  */
 public class TestAdminContext extends AdminContext {
 
-  public TestAdminContext() throws AdminException {
-    this(new File("."), new File("test", "webconfig.xml"));
-  }
-
-  public TestAdminContext(File appBaseDir, File initFile) throws AdminException {
+  public TestAdminContext(File appBaseDir, File initFile, int smscInstancesNumber) throws AdminException {
     AdminContextConfig cfg = new AdminContextConfig(initFile);
     this.appBaseDir = appBaseDir;
     this.servicesDir = new File(appBaseDir, "services");
     this.instType = cfg.getInstallationType();
 
-    TestClusterController cc = new TestClusterController();
+    TestClusterController cc = new TestClusterController(smscInstancesNumber);
     smscManager = new TestSmscManager();
     archiveDaemonManager = new TestArchiveDaemonManager();
     aliasManager = new TestAliasManager();
@@ -40,7 +36,14 @@ public class TestAdminContext extends AdminContext {
     mscManager = new TestMscManager(cc);
   }
 
+  public TestAdminContext() throws AdminException {
+    this(new File("."), new File("test", "webconfig.xml"), 2);
+  }
 
+  public TestAdminContext(File appBaseDir, File initFile) throws AdminException {
+    this(appBaseDir, initFile, 2);
+
+  }
 
 
 }

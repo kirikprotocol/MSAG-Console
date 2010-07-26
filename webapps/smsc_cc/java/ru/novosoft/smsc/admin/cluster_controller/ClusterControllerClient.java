@@ -284,6 +284,10 @@ final class ClusterControllerClient {
     return sendPdu(req, new ApplySnmpResp());
   }
 
+  public GetConfigsStateResp send(GetConfigsState req) throws AdminException {
+    return sendPdu(req, new GetConfigsStateResp());
+  }
+
   private class ResponseListener {
     private final CountDownLatch respLatch = new CountDownLatch(1);
 
