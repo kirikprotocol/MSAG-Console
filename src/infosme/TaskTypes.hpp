@@ -30,6 +30,12 @@ namespace infosme{
       DELETED     = MESSAGE_DELETED_STATE
   } MessageState;
 
+  typedef enum {
+      DLVMODE_SMS = 0,
+      DLVMODE_USSDPUSH,
+      DLVMODE_USSDPUSHVLR
+  } DeliveryModeType;
+
   struct Message
   {
       uint64_t    id;
@@ -57,7 +63,7 @@ namespace infosme{
       bool    retryOnFail, replaceIfPresent, trackIntegrity, transactionMode, keepHistory, saveFinalState;
       bool    flash;
       bool     useDataSm;
-      unsigned useUssdPush;       // 0 if not used, otherwise the id of ussdop
+      uint8_t  deliveryMode;
 
       time_t  endDate;            // full date/time
       //time_t  retryTime;          // only HH:mm:ss in seconds
@@ -85,7 +91,7 @@ namespace infosme{
             trackIntegrity(false), transactionMode(false), keepHistory(false),
             saveFinalState(false),
             flash(false),
-            useDataSm(false), useUssdPush(0),
+            useDataSm(false), deliveryMode(DLVMODE_SMS),
             endDate(-1), validityPeriod(-1), validityDate(-1),
             activePeriodStart(-1), activePeriodEnd(-1), activeWeekDays(0),
             dsTimeout(0), dsUncommitedInProcess(1), dsUncommitedInGeneration(1),

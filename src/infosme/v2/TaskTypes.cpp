@@ -62,8 +62,9 @@ flash(false),
 endDate(-1), validityPeriod(-1), validityDate(-1),
 activePeriodStart(-1), activePeriodEnd(-1), activeWeekDays(0),
 dsTimeout(0), dsUncommitedInProcess(1), dsUncommitedInGeneration(1),
-messagesCacheSize(100), messagesCacheSleep(0), useDataSm(false),
-useUssdPush(0)
+messagesCacheSize(100), useDataSm(false),
+deliveryMode(DLVMODE_SMS),
+messagesCacheSleep(0)
 {}
 
 
@@ -87,7 +88,7 @@ void TaskInfo::init( ConfigView* config )
     
         enabled = config->getBool("enabled");
         priority = config->getInt("priority");
-        if ( priority <= 0 || priority > MAX_PRIORITY_VALUE ) {
+        if ( priority <= 0 || priority > int(MAX_PRIORITY_VALUE) ) {
             throw ConfigException("priority should be positive and less than %u.",
                                   MAX_PRIORITY_VALUE);
         }
@@ -197,20 +198,28 @@ void TaskInfo::init( ConfigView* config )
         try { bGenerationSuccess = config->getBool("messagesHaveLoaded"); }
         catch (...) { bGenerationSuccess = false; }
 
-        useUssdPush = 0;
+        deliveryMode = DLVMODE_SMS;
         try {
-            useUssdPush = config->getInt("ussdServiceOp");
+            ConfString cs(config->getString("deliveryMode"));
+            if ( cs.str() == "SMS" ) {
+                deliveryMode = DLVMODE_SMS;
+            } else if ( cs.str() == "USSD_PUSH" ) {
+                deliveryMode = DLVMODE_USSDPUSH;
+            } else if ( cs.str() == "USSD_PUSH_VLR" ) {
+                deliveryMode = DLVMODE_USSDPUSHVLR;
+            } else {
+                smsc_log_warn(log_,"Unknown delivery mode for task %u: %s", uid, cs.c_str());
+            }
         } catch (...) {
             try {
                 if ( config->getBool("useUssdPush") ) {
-                    useUssdPush = smsc::sms::USSD_USSN_REQ_LAST;
+                    deliveryMode = DLVMODE_USSDPUSH;
                 }
             } catch (...) {}
         }
-        if ( useUssdPush ) {
+        if ( deliveryMode != DLVMODE_SMS ) {
             // overriding things
             transactionMode = true;
-            // flash = false;
             useDataSm = false;
         }
 

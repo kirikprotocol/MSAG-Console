@@ -4,7 +4,9 @@
 #include <sys/time.h>
 #include <signal.h>
 
+#ifndef __GNUC__
 #ident "@(#)$Id$"
+#endif
 
 #include <core/threads/ThreadPool.hpp>
 #include <core/buffers/Array.hpp>

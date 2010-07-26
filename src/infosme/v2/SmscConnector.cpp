@@ -201,6 +201,19 @@ smsc::sme::SmeConfig SmscConnector::readSmeConfig( ConfigView& config )
         const std::string ar = ::cgetString(config,"rangeOfAddress","InfoSme range of address was not defined");
         rv.setAddressRange(ar);
     } catch (smsc::util::config::ConfigException&) {}
+
+    // ussd push
+    try {
+        rv.ussdPushOp = config.getInt("ussdPushTag");
+    } catch (smsc::util::config::ConfigException) {
+        rv.ussdPushOp = smsc::sms::USSD_USSN_REQ;
+    }
+    try {
+        rv.ussdPushVlrOp = config.getInt("ussdPushVlrTag");
+    } catch (smsc::util::config::ConfigException) {
+        rv.ussdPushVlrOp = smsc::sms::USSD_USSN_REQ_LAST;
+    }
+
     return rv;
 }
 
@@ -212,6 +225,8 @@ smscId_(smscId),
 log_(Logger::getInstance("smsc.infosme.connector")),
 processor_(processor),
 timeout_(10),
+ussdPushOp_(smsc::sms::USSD_USSN_REQ),
+ussdPushVlrOp_(smsc::sms::USSD_USSN_REQ_LAST),
 stopped_(false),
 connected_(false),
 listener_(*this, log_),
@@ -298,6 +313,8 @@ void SmscConnector::updateConfig( const smsc::sme::SmeConfig& config )
     {
         MutexGuard mg(destroyMonitor_);
         timeout_ = config.timeOut;
+        ussdPushOp_ = config.ussdPushOp;
+        ussdPushVlrOp_ = config.ussdPushVlrOp;
         if (session_.get()) session_->close();
         std::auto_ptr<SmppSession> newsess(new SmppSession(config,&listener_));
         listener_.setSyncTransmitter(newsess->getSyncTransmitter());
@@ -564,7 +581,8 @@ int SmscConnector::send( Task& task, Message& msg )
                 if (outLen <= MAX_ALLOWED_MESSAGE_LENGTH && !info.useDataSm) {
                     sms.setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE, out, (unsigned)outLen);
                     sms.setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH, (unsigned)outLen);
-                } else if ( info.useUssdPush ) {
+                } else if ( info.deliveryMode != DLVMODE_SMS ) {
+                    // ussdpush or ussdpushvlr
                     if (outLen > MAX_ALLOWED_MESSAGE_LENGTH ) {
                         smsc_log_warn(log_,"ussdpush: max allowed msg length reached: %u",unsigned(outLen));
                         outLen = MAX_ALLOWED_MESSAGE_LENGTH;
@@ -585,11 +603,21 @@ int SmscConnector::send( Task& task, Message& msg )
             }
             if (msgBuf) delete msgBuf;
 
-            if (info.useUssdPush) {
+            if (info.deliveryMode != DLVMODE_SMS) {
+                // ussdpush
+                const int ussdop = ( info.deliveryMode == DLVMODE_USSDPUSH ?
+                                     ussdPushOp_ : ussdPushVlrOp_ );
+                if ( ussdop == -1 ) {
+                    smsc_log_warn(log_, "smsc '%s': ussd not supported. msg %llx, task %u/'%s'",
+                                  smscId_.c_str(), msg.id, task.getId(), task.getName().c_str() );
+                    msguard.failed(smsc::system::Status::SYSERR);
+                    return 0;
+                }
+
                 try {
-                    sms.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,info.useUssdPush);
+                    sms.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,ussdop);
                 } catch (...) {
-                    smsc_log_error(log_,"ussdpush: cannot set ussd op %u",info.useUssdPush);
+                    smsc_log_error(log_,"ussdpush: cannot set ussd op %u",ussdop);
                     msguard.failed(smsc::system::Status::SYSERR);
                     return 0;
                 }

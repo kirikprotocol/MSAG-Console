@@ -131,6 +131,8 @@ private:
     Logger* log_;
     TaskProcessor& processor_;
     int timeout_;
+    int ussdPushOp_;
+    int ussdPushVlrOp_;
 
     // monitor which guards state change
     EventMonitor stateMonitor_;

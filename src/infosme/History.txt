@@ -1,6 +1,9 @@
 History in reverse order
 ----------------------------------------------------
 
+2010-07-26 13:20 bukind
+  feature: deliveryMode for tasks, ussdOps per smscconnector (v1,v2)
+
 2010-07-13 12:30 bukind
   feature: ussdServiceOp is configurable now
 

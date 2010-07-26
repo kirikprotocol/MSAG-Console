@@ -32,6 +32,12 @@ namespace infosme{
       DELETED     = MESSAGE_DELETED_STATE
   } MessageState;
 
+  typedef enum {
+      DLVMODE_SMS = 0,
+      DLVMODE_USSDPUSH,
+      DLVMODE_USSDPUSHVLR
+  } DeliveryModeType;
+
   struct Message
   {
       static int stringToRegionId( const std::string& regionId ); // throw ConfigException
@@ -64,7 +70,8 @@ namespace infosme{
       bool    bGenerationSuccess;
       bool    flash;
       bool     useDataSm;
-      unsigned useUssdPush;       // 0 if not used, otherwise ussdop
+      // unsigned useUssdPush;       // 0 if not used, otherwise ussdop
+      uint8_t deliveryMode;
 
       time_t  endDate;            // full date/time
       //time_t  retryTime;          // only HH:mm:ss in seconds

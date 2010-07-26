@@ -358,17 +358,27 @@ void Task::init(ConfigView* config, uint32_t taskId)
     bInGeneration = false;
   } catch (...) {}
   try { info.useDataSm = config->getBool("useDataSm"); } catch (...) { info.useDataSm = false; } 
-    info.useUssdPush = 0;
+
+    info.deliveryMode = DLVMODE_SMS;
     try {
-        info.useUssdPush = config->getInt("ussdServiceOp");
+        ConfString cs(config->getString("deliveryMode"));
+        if ( cs.str() == "SMS" ) {
+            info.deliveryMode = DLVMODE_SMS;
+        } else if ( cs.str() == "USSD_PUSH" ) {
+            info.deliveryMode = DLVMODE_USSDPUSH;
+        } else if ( cs.str() == "USSD_PUSH_VLR" ) {
+            info.deliveryMode = DLVMODE_USSDPUSHVLR;
+        } else {
+            smsc_log_warn(logger,"Unknown delivery mode for task %u: %s", info.uid, cs.c_str());
+        }
     } catch (...) {
         try {
             if ( config->getBool("useUssdPush") ) {
-                info.useUssdPush = smsc::sms::USSD_USSN_REQ_LAST;
+                info.deliveryMode = DLVMODE_USSDPUSH;
             }
         } catch (...) {}
     }
-    if ( info.useUssdPush ) {
+    if ( info.deliveryMode != DLVMODE_SMS ) {
         // overriding things
         info.transactionMode = true;
         // info.flash = false;

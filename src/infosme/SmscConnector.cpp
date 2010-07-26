@@ -265,6 +265,8 @@ smscId_(smscId),
 log_(Logger::getInstance("smsc.infosme.connector")),
 processor_(processor),
 timeout_(cfg.timeOut),
+ussdPushOp_(cfg.ussdPushOp),
+ussdPushVlrOp_(cfg.ussdPushVlrOp),
 stopped_(false),
 connected_(false),
 listener_(*this, log_),
@@ -627,7 +629,8 @@ bool SmscConnector::send( Task* task, Message& message,
             if (outLen <= MAX_ALLOWED_MESSAGE_LENGTH && !info.useDataSm) {
                 sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE, out, (unsigned)outLen);
                 sms.setIntProperty(Tag::SMPP_SM_LENGTH, (unsigned)outLen);
-            } else if ( info.useUssdPush ) {
+            } else if ( info.deliveryMode != DLVMODE_SMS ) {
+                // ussdpush or ussdpushvlr
                 if (outLen > MAX_ALLOWED_MESSAGE_LENGTH) {
                     smsc_log_warn(log_,"ussdpush: max allowed msg length reached: %u",unsigned(outLen));
                     outLen = MAX_ALLOWED_MESSAGE_LENGTH;
@@ -655,12 +658,22 @@ bool SmscConnector::send( Task* task, Message& message,
 
         if (msgBuf) delete msgBuf;
       
-        if (info.useUssdPush) {
+        if (info.deliveryMode != DLVMODE_SMS) {
+            // ussdpush
+            const int ussdop = ( info.deliveryMode == DLVMODE_USSDPUSH ?
+                                 ussdPushOp_ : ussdPushVlrOp_ );
+            if ( ussdop == -1 ) {
+                smsc_log_warn(log_, "smsc '%s': ussd not supported. msg %llx, task %u/'%s'",
+                              smscId_.c_str(), message.id, info.uid, info.name.c_str() );
+                msguard.failed(smsc::system::Status::SYSERR);
+                break;
+            }
+
             try {
-                sms.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,
-                                   info.useUssdPush);
+                sms.setIntProperty(Tag::SMPP_USSD_SERVICE_OP, ussdop);
             } catch (...) {
-                smsc_log_error(log_,"ussdpush: cannot set ussd op %d", info.useUssdPush);
+                smsc_log_error(log_,"ussdpush: cannot set ussd op %d", ussdop);
+                msguard.failed(smsc::system::Status::SYSERR);
                 break;
             }
         }
