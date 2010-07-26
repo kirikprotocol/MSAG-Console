@@ -55,6 +55,11 @@ public class RescheduleManager extends ConfigFileManager<RescheduleConfig> imple
 
   public void setReschedules(Collection<Reschedule> reschedules) throws AdminException {
     vh.checkNoNulls("reschedules", reschedules);
+    for (Reschedule r1 : reschedules)
+      for (Reschedule r2 : reschedules) {
+        if (r1 != r2)
+          vh.checkNotIntersect("reschedule_statuses", r1.getStatuses(), r2.getStatuses());
+      }
     config.setReschedules(reschedules);
     changed = true;
   }

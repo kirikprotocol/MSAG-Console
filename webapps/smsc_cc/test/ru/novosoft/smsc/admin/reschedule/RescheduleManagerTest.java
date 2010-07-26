@@ -1,8 +1,6 @@
 package ru.novosoft.smsc.admin.reschedule;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.cluster_controller.ConfigState;
 import ru.novosoft.smsc.admin.cluster_controller.TestClusterController;
@@ -27,14 +25,14 @@ public class RescheduleManagerTest {
 
   private static File configFile, backupDir;
 
-  @BeforeClass
-  public static void beforeClass() throws IOException, AdminException {
+  @Before
+  public void beforeClass() throws IOException, AdminException {
     configFile = TestUtils.exportResourceToRandomFile(RescheduleManagerTest.class.getResourceAsStream("schedule.xml"), ".reschedule");
     backupDir = TestUtils.createRandomDir(".reschedule.backup");
   }
 
-  @AfterClass
-  public static void afterClass() {
+  @After
+  public void afterClass() {
     if (configFile != null)
       configFile.delete();
     if (backupDir != null)
@@ -142,6 +140,32 @@ public class RescheduleManagerTest {
     Collection<Reschedule> reschedules = config.getReschedules();
     assertNotNull(reschedules);
     assertEquals(0, reschedules.size());
+  }
+
+  @Test(expected=AdminException.class)
+  public void setIntersectsReschedulesTest() throws AdminException {
+    Reschedule r1 = new Reschedule("1h", 12,20,30);
+    Reschedule r2 = new Reschedule("1h", 10,20,50);
+
+    Collection<Reschedule> res = new ArrayList<Reschedule>();
+    Collections.addAll(res, r1, r2);
+
+    RescheduleManager config = new RescheduleManager(configFile, backupDir, new TestClusterController(), FileSystem.getFSForSingleInst());
+
+    config.setReschedules(res);
+  }
+
+  @Test
+  public void setNotIntersectsReschedulesTest() throws AdminException {
+    Reschedule r1 = new Reschedule("1h", 12,20,30);
+    Reschedule r2 = new Reschedule("1h", 10,22,50);
+
+    Collection<Reschedule> res = new ArrayList<Reschedule>();
+    Collections.addAll(res, r1, r2);
+
+    RescheduleManager config = new RescheduleManager(configFile, backupDir, new TestClusterController(), FileSystem.getFSForSingleInst());
+
+    config.setReschedules(res);
   }
 
   @Test

@@ -109,4 +109,12 @@ public class ValidationHelper {
       throw new ValidationException(paramNameBundle, argName);
   }
 
+  public void checkNotIntersect(String argName, Collection value, Collection withValue) throws AdminException {
+    for (Object o : value) {
+      for (Object b : withValue)
+        if (o.equals(b))
+          throw new ValidationException(paramNameBundle, argName);
+    }
+  }
+
 }
