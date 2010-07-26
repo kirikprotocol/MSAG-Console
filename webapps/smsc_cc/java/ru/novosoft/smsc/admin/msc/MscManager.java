@@ -2,7 +2,10 @@ package ru.novosoft.smsc.admin.msc;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
+import ru.novosoft.smsc.admin.cluster_controller.ConfigState;
 import ru.novosoft.smsc.admin.config.RuntimeConfiguration;
+import ru.novosoft.smsc.admin.config.SmscConfiguration;
+import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
 import ru.novosoft.smsc.admin.smsc.SmscManager;
 import ru.novosoft.smsc.util.Address;
@@ -10,11 +13,13 @@ import ru.novosoft.smsc.util.Address;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Artem Snopkov
  */
-public class MscManager implements RuntimeConfiguration {
+public class MscManager implements RuntimeConfiguration, SmscConfiguration {
 
   private final ClusterController cc;
   private final File aliasesFile;
@@ -63,5 +68,19 @@ public class MscManager implements RuntimeConfiguration {
       throw new IllegalArgumentException("mscAddress");
     cc.unregisterMsc(new Address(msc));
 
+  }
+
+  public Map<Integer, SmscConfigurationStatus> getStatusForSmscs() throws AdminException {
+    ConfigState configState = cc.getMscConfigState();
+
+    Map<Integer, SmscConfigurationStatus> result = new HashMap<Integer, SmscConfigurationStatus>();
+
+    long ccLastUpdateTime = configState.getCcLastUpdateTime();
+    for (Map.Entry<Integer, Long> e : configState.getInstancesUpdateTimes().entrySet()) {
+      SmscConfigurationStatus s = (e.getValue() >= ccLastUpdateTime) ? SmscConfigurationStatus.UP_TO_DATE : SmscConfigurationStatus.OUT_OF_DATE;
+      result.put(e.getKey(), s);
+    }
+
+    return result;
   }
 }

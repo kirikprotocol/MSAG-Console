@@ -353,6 +353,15 @@ public class ClusterController {
     }
   }
 
+  /**
+   * Возвращает статус конфига Msc
+   * @return статус конфига Msc
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public ConfigState getMscConfigState() throws AdminException {
+    return getConfigState(ConfigType.Msc);
+  }
+
   // RESCHEDULE ========================================================================================================
 
   /**
