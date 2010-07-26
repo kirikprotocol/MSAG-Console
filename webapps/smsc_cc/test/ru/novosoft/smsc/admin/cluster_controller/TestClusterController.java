@@ -31,7 +31,15 @@ public class TestClusterController extends ClusterController {
   public ConfigState getAliasesConfigState() throws AdminException {
     long now = System.currentTimeMillis();
     Map<Integer, Long> map = new HashMap<Integer, Long>();
-    map.put(0, now -1);
+    map.put(0, now);
+    map.put(1, now);
+    return new ConfigState(now, map);
+  }
+
+  public ConfigState getMainConfigState() throws AdminException {
+    long now = System.currentTimeMillis();
+    Map<Integer, Long> map = new HashMap<Integer, Long>();
+    map.put(0, now);
     map.put(1, now);
     return new ConfigState(now, map);
   }
@@ -105,5 +113,9 @@ public class TestClusterController extends ClusterController {
   public void lockSnmp(boolean write) throws AdminException {}
 
   public void unlockSnmp() throws AdminException {}
+
+  public void lockMainConfig(boolean write) throws AdminException {}
+
+  public void unlockMainConfig() throws AdminException {}
 
 }

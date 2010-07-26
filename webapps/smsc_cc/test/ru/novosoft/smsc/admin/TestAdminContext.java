@@ -25,7 +25,7 @@ public class TestAdminContext extends AdminContext {
     this.instType = cfg.getInstallationType();
 
     TestClusterController cc = new TestClusterController(smscInstancesNumber);
-    smscManager = new TestSmscManager();
+    smscManager = new TestSmscManager(cc);
     archiveDaemonManager = new TestArchiveDaemonManager();
     aliasManager = new TestAliasManager();
     rescheduleManager = new TestRescheduleManager(cc);

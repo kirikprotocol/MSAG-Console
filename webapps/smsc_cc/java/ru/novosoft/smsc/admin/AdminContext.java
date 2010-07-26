@@ -67,6 +67,13 @@ public class AdminContext {
         fileSystem = FileSystem.getFSForHAInst();
     }
 
+    ServiceInfo clusterControllerInfo = serviceManager.getService(ClusterController.SERVICE_ID);
+    File clusterControllerConf = new File(clusterControllerInfo.getBaseDir(), "conf");
+
+    clusterControllerManager = new ClusterControllerManager(new File(clusterControllerConf, "config.xml"), new File(clusterControllerConf, "backup"), fileSystem);
+
+    clusterController = new ClusterController(clusterControllerManager, serviceManager);
+
     ServiceInfo smscServiceInfo = serviceManager.getService("SMSC1");
     if (smscServiceInfo == null)
       throw new AdminContextException("service_not_found", "SMSC1");
@@ -77,19 +84,12 @@ public class AdminContext {
 
     File smscConfigBackupDir = new File(smscConfigDir, "backup");
 
-    smscManager = new SmscManager(new File(smscConfigDir, "config.xml"), smscConfigBackupDir, fileSystem);
+    smscManager = new SmscManager(new File(smscConfigDir, "config.xml"), smscConfigBackupDir, clusterController, fileSystem);
 
     ServiceInfo archiveDaemonInfo = serviceManager.getService(ArchiveDemon.SERVICE_ID);
     File archiveDaemonConf = new File(archiveDaemonInfo.getBaseDir(), "conf");
     File archiveDaemonBackup = new File(archiveDaemonConf, "backup");
     archiveDaemonManager = (archiveDaemonInfo == null) ? null : new ArchiveDaemonManager(new File(archiveDaemonConf, "config.xml"), archiveDaemonBackup, fileSystem);
-
-    ServiceInfo clusterControllerInfo = serviceManager.getService(ClusterController.SERVICE_ID);
-    File clusterControllerConf = new File(clusterControllerInfo.getBaseDir(), "conf");
-
-    clusterControllerManager = new ClusterControllerManager(new File(clusterControllerConf, "config.xml"), new File(clusterControllerConf, "backup"), fileSystem);
-
-    clusterController = new ClusterController(clusterControllerManager, serviceManager);
 
     aliasManager = new AliasManager(new File(smscConfigDir, "alias.bin"), clusterController, fileSystem);
 

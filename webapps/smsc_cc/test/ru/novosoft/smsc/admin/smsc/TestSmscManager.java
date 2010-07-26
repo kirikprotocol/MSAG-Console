@@ -1,6 +1,7 @@
 package ru.novosoft.smsc.admin.smsc;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
 import ru.novosoft.smsc.admin.config.TestConfigFileManagerHelper;
 
 import java.io.File;
@@ -14,8 +15,8 @@ public class TestSmscManager extends SmscManager {
 
   private TestConfigFileManagerHelper helper;
 
-  public TestSmscManager() throws AdminException {
-    super(null, null, null);
+  public TestSmscManager(ClusterController cc) throws AdminException {
+    super(null, null, cc, null);
   }
 
   public void reset() throws AdminException {

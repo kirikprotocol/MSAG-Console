@@ -49,7 +49,7 @@ public class ClusterController {
     cc.shutdown();
   }
 
-  private synchronized ConfigState getConfigStatus(ConfigType configType) throws AdminException {
+  private synchronized ConfigState getConfigState(ConfigType configType) throws AdminException {
     long now = System.currentTimeMillis();
 
     if (now - lastConfigsStatusCheckTime > 1000 || lastGetConfigsStateResp == null) {
@@ -65,6 +65,43 @@ public class ClusterController {
       instancesUpdateTimes.put((int)state.getNodeIdex(), state.getUpdateTime()[configType.getValue()]);
 
     return new ConfigState(ccUpdateTime, instancesUpdateTimes);
+  }
+
+  // GLOBAL ============================================================================================================
+
+  /**
+   * Блокирует главный конфиг СМСЦ для чтения/записи
+   *
+   * @param write блокировать файл для записи
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void lockMainConfig(boolean write) throws AdminException {
+    LockConfig req = new LockConfig();
+    req.setConfigType(ConfigType.MainConfig);
+    req.setWriteLock(write);
+    LockConfigResp resp = cc.send(req);
+    if (resp.getResp().getStatus() != 0)
+      throw new ClusterControllerException("interaction_error", resp.getResp().getStatus() + "");
+  }
+
+  /**
+   * Разблокирует главный конфиг СМСЦ
+   *
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void unlockMainConfig() throws AdminException {
+    UnlockConfig req = new UnlockConfig();
+    req.setConfigType(ConfigType.MainConfig);
+    cc.send(req);
+  }
+
+  /**
+   * Возвращает статус главного конфига
+   * @return статус главного конфига
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public ConfigState getMainConfigState() throws AdminException {
+    return getConfigState(ConfigType.MainConfig);
   }
 
   // ALIASES ===========================================================================================================
@@ -133,8 +170,13 @@ public class ClusterController {
     }
   }
 
+  /**
+   * Возвращает статус конфига алиасов
+   * @return статус конфига алиасов
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
   public ConfigState getAliasesConfigState() throws AdminException {
-    return getConfigStatus(ConfigType.Aliases);
+    return getConfigState(ConfigType.Aliases);
   }
 
   // CLOSED GROUPS =====================================================================================================
