@@ -28,11 +28,11 @@
                 <col width="1%"/>
                 <col width="99%"/>
                 <tr class="row0">
-                  <th>Login:</th>
+                  <th>#{msg['login.label']}</th>
                   <td><input class="txt" name="j_username" onKeyPress="return submitFormOnEnter(event)"/></td>
                 </tr>
                 <tr class="row0">
-                  <th>Password:</th>
+                  <th>#{msg['pass.label']}</th>
                   <td><input class="txt" type="password" name="j_password"
                              onKeyPress="return submitFormOnEnter(event)"/></td>
                 </tr>
@@ -51,7 +51,7 @@
         <table class="page_menu" cellpadding="0px" cellspacing="0px">
           <tr>
             <td width="37px">&#160;</td>
-            <td width="1px"><a id="jsubmit" title="Login" onClick="opForm.submit()">Login</a></td>
+            <td width="1px"><a id="jsubmit" onClick="opForm.submit()">#{msg['login.button']}</a></td>
             <td>&#160;</td>
             <td width="37px">&#160;</td>
           </tr>

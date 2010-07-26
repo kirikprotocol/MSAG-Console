@@ -94,7 +94,7 @@ public class SmscManagerTest {
     assertEquals(34,cs.getProfilerProtocolId());
     assertEquals(1,cs.getProfilerReportFinal());
     assertEquals(2,cs.getProfilerReportFull());
-    assertEquals(0,cs.getProfilerReportNone());
+    assertEquals(1,cs.getProfilerReportNone());
     assertEquals("prflr",cs.getProfilerServiceType());
     assertEquals("@localstore.dir@/profiles.bin",cs.getProfilerStoreFile());
     assertEquals("profiler",cs.getProfilerSystemId());

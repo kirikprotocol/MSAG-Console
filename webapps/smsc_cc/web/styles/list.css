@@ -41,11 +41,11 @@ table.list th a:hover {
 }
 
 table.list th a.up {
-  background-image: url(/images/sort_up.gif);
+  background-image: url(../images/sort_up.gif);
 }
 
 table.list th a.down {
-  background-image: url(/images/sort_down.gif);
+  background-image: url(../images/sort_down.gif);
 }
 
 table.list tr.row00 td,

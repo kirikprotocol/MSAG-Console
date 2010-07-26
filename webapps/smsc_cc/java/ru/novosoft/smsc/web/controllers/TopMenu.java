@@ -1,11 +1,15 @@
-package ru.novosoft.smsc.web;
+package ru.novosoft.smsc.web.controllers;
 
 import ru.novosoft.smsc.util.xml.WebXml;
+import ru.novosoft.smsc.web.WebContext;
 
 import javax.faces.context.FacesContext;
 import java.io.Serializable;
 import java.security.Principal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.LinkedList;
 
 /**
  * author: alkhal
@@ -14,21 +18,22 @@ public class TopMenu {
 
   private Collection<MenuBarItem> menuBarItems = new ArrayList<MenuBarItem>(4) {
     {
-      add(new MenuBarItem("SMSC", 133).
-          add(new MenuItem("Статус", "/smsc/smsc/smsc_service/status.faces")).
-          add(new MenuItem("Пользователи", "/smsc/smsc/users/index.faces")).
-          add(new MenuItem("Журнал", "/smsc/smsc/journal/index.faces")).
-          add(new MenuItem("Регионы", "/smsc/smsc/regions/regions.faces"))
+      add(new MenuBarItem("smsc.smsc", 133).
+          add(new MenuItem("smsc.smsc.config", "/smsc/smsc/smsc_config.faces")).
+          add(new MenuItem("smsc.smsc.status", "/smsc/smsc/smsc_service/status.faces")).
+          add(new MenuItem("smsc.smsc.users", "/smsc/smsc/users/index.faces")).
+          add(new MenuItem("smsc.smsc.journal", "/smsc/smsc/journal/index.faces")).
+          add(new MenuItem("smsc.smsc.regions", "/smsc/smsc/regions/regions.faces"))
       );
-      add(new MenuBarItem("Маршрутизация", 154).
-          add(new MenuItem("Субъекты", "/smsc/smsc/subjects/index.faces"))
+      add(new MenuBarItem("smsc.routes", 154).
+          add(new MenuItem("smsc.routes.subjects", "/smsc/smsc/subjects/index.faces"))
       );
-      add(new MenuBarItem("Сервисы", 63).
-          add(new MenuItem("Хосты", "/smsc/smsc/hosts/index.faces")).
-          add(new MenuItem("Сервисы", "/smsc/smsc/services/index.faces"))
+      add(new MenuBarItem("smsc.services", 63).
+          add(new MenuItem("smsc.services.hosts", "/smsc/smsc/hosts/index.faces")).
+          add(new MenuItem("smsc.services.services", "/smsc/smsc/services/index.faces"))
       );
-      add(new MenuBarItem("Помощь", 196).
-          add(new MenuItem("Руководство администратора", "/smsc/smsc/admin_guide.faces"))
+      add(new MenuBarItem("smsc.help", 196).
+          add(new MenuItem("smsc.help.manual", "/smsc/smsc/admin_guide.faces"))
       );
     }
   };

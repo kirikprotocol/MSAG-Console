@@ -26,8 +26,6 @@ public class SmscLoginModule implements LoginModule {
   public boolean abort() throws LoginException {
     return true;
   }
-  //-Djava.security.auth.login.config=/home/alkhal/projects/smsc/webapps/smsc_cc/jaas.config
-
   public boolean commit() throws LoginException {
     SmscPrincipal p = WebContext.getInstance().getAuthenticator().authenticate(name, password);
     if (p == null) {

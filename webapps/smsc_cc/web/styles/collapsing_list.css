@@ -6,11 +6,11 @@ div.collapsing_list_empty {
 }
 
 div.collapsing_list_opened {
-  background-image: url(/images/list_opened.gif);
+  background-image: url(../images/list_opened.gif);
   cursor: pointer;
 }
 
 div.collapsing_list_closed {
-  background-image: url(/images/list_closed.gif);
+  background-image: url(../images/list_closed.gif);
   cursor: pointer;
 }

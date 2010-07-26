@@ -11,16 +11,40 @@
     <default-render-kit-id>
       org.apache.myfaces.trinidad.core
     </default-render-kit-id>
+    
     <locale-config>
       <default-locale>ru</default-locale>
       <supported-locale>en</supported-locale>
     </locale-config>
+
+    <resource-bundle>
+      <base-name>ru.novosoft.smsc.admin.smsc.CommonSettings</base-name>
+      <var>commonSettings</var>
+    </resource-bundle>
+
+    <resource-bundle>
+      <base-name>ru.novosoft.smsc.admin.smsc.InstanceSettings</base-name>
+      <var>instanceSettings</var>
+    </resource-bundle>
+
+    <resource-bundle>
+      <base-name>ru.novosoft.smsc.web.resources.Smsc</base-name>
+      <var>msg</var>
+    </resource-bundle>
+
   </application>
+
 
   <managed-bean>
     <managed-bean-name>dynamicTable</managed-bean-name>
     <managed-bean-class>ru.novosoft.smsc.web.DynamicModel</managed-bean-class>
     <managed-bean-scope>session</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
+    <managed-bean-name>idGen</managed-bean-name>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.IdGenerator</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
 
   <managed-bean>
@@ -31,7 +55,7 @@
 
   <managed-bean>
     <managed-bean-name>topMenu</managed-bean-name>
-    <managed-bean-class>ru.novosoft.smsc.web.TopMenu</managed-bean-class>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.TopMenu</managed-bean-class>
     <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
 
@@ -42,10 +66,21 @@
   </managed-bean>
 
 
+
+
   <navigation-rule>
     <navigation-case>
       <from-outcome>INDEX</from-outcome>
-      <to-view-id>/smsc/index.faces</to-view-id>
+      <to-view-id>/smsc/index.jsp</to-view-id>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>SMSC_CONFIG</from-outcome>
+      <to-view-id>/smsc/smsc_config.faces</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>LOGOUT</from-outcome>
+      <to-view-id>/smsc/index.jsp</to-view-id>
       <redirect/>
     </navigation-case>
   </navigation-rule>

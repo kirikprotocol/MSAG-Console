@@ -1,8 +1,8 @@
 package ru.novosoft.smsc.web.beans;
 
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * author: alkhal
@@ -17,11 +17,11 @@ public class CommonConfig implements Serializable {
   private String service_center_address;
   private String ussd_center_address;
   private int ussd_ssn;
-  private String[] add_ussd_ssn;
+  private List<Locale> locales = new LinkedList<Locale>();
+  private List<AddUssdSsn> add_ussd_ssn = new LinkedList<AddUssdSsn>();
   private String systemId;
   private String service_type;
   private int protocol_id;
-  private String[] locales;
   private String default_locale;
   private int mergeTimeout;
   private String timezones_config;
@@ -145,7 +145,7 @@ public class CommonConfig implements Serializable {
 
   // directives
 
-  private Map<String, String> directives = new HashMap<String, String>();
+  private List<Directive> directives = new LinkedList<Directive>();
 
   public int getState_machines_count() {
     return state_machines_count;
@@ -195,12 +195,52 @@ public class CommonConfig implements Serializable {
     this.ussd_ssn = ussd_ssn;
   }
 
-  public String[] getAdd_ussd_ssn() {
+  public List<AddUssdSsn> getAdd_ussd_ssn() {
     return add_ussd_ssn;
   }
 
-  public void setAdd_ussd_ssn(String[] add_ussd_ssn) {
+  public void setAdd_ussd_ssn(List<AddUssdSsn> add_ussd_ssn) {
     this.add_ussd_ssn = add_ussd_ssn;
+  }
+
+  public void addAdd_ussd_ssn(AddUssdSsn s) {
+    this.add_ussd_ssn.add(s);
+  }
+
+  public void removeAdd_ussd_ssn(int i) {
+    add_ussd_ssn.remove(i);
+  }
+
+  public List<Locale> getLocales() {
+    return locales;
+  }
+
+  public void setLocales(List<Locale> locales) {
+    this.locales = locales;
+  }
+
+  public void addLocale(Locale s) {
+    this.locales.add(s);
+  }
+
+  public void removeLocale(int i) {
+    locales.remove(i);
+  }
+
+  public List<Directive> getDirectives() {
+    return directives;
+  }
+
+  public void setDirectives(List<Directive> directives) {
+    this.directives = directives;
+  }
+
+  public void addDirective(Directive s) {
+    this.directives.add(s);
+  }
+
+  public void removeDirective(int i) {
+    directives.remove(i);
   }
 
   public String getSystemId() {
@@ -225,14 +265,6 @@ public class CommonConfig implements Serializable {
 
   public void setProtocol_id(int protocol_id) {
     this.protocol_id = protocol_id;
-  }
-
-  public String[] getLocales() {
-    return locales;
-  }
-
-  public void setLocales(String[] locales) {
-    this.locales = locales;
   }
 
   public String getDefault_locale() {
@@ -835,11 +867,71 @@ public class CommonConfig implements Serializable {
     this.snmpCacheTimeout = snmpCacheTimeout;
   }
 
-  public Map<String, String> getDirectives() {
-    return directives;
+
+  public static class AddUssdSsn implements Serializable{
+    public String addUssdSsn;
+
+    public AddUssdSsn() {
+    }
+
+    public AddUssdSsn(String addUssdSsn) {
+      this.addUssdSsn = addUssdSsn;
+    }
+
+    public String getAddUssdSsn() {
+      return addUssdSsn;
+    }
+
+    public void setAddUssdSsn(String addUssdSsn) {
+      this.addUssdSsn = addUssdSsn;
+    }
+
   }
 
-  public void setDirectives(Map<String, String> directives) {
-    this.directives = directives;
+  public static class Locale implements Serializable {
+    private String locale;
+
+    public Locale() {
+    }
+
+    public Locale(String locale) {
+      this.locale = locale;
+    }
+
+    public String getLocale() {
+      return locale;
+    }
+
+    public void setLocale(String locale) {
+      this.locale = locale;
+    }
+  }
+  public static class Directive implements Serializable {
+    private String key;
+    private String value;
+
+    public Directive() {
+    }
+
+    public Directive(String key, String value) {
+      this.key = key;
+      this.value = value;
+    }
+
+    public String getKey() {
+      return key;
+    }
+
+    public void setKey(String key) {
+      this.key = key;
+    }
+
+    public String getValue() {
+      return value;
+    }
+
+    public void setValue(String value) {
+      this.value = value;
+    }
   }
 }

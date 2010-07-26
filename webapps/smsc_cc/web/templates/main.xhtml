@@ -11,7 +11,6 @@
   <link rel="STYLESHEET" type="text/css" href="/smsc/styles/list.css"/>
   <link rel="STYLESHEET" type="text/css" href="/smsc/styles/properties_list.css"/>
   <link rel="STYLESHEET" type="text/css" href="/smsc/styles/main_menu.css"/>
-  <link rel="STYLESHEET" type="text/css" href="/smsc/styles/collapsing_tree.css"/>
   <link rel="STYLESHEET" type="text/css" href="/smsc/styles/collapsing_list.css"/>
   <link rel="STYLESHEET" type="text/css" href="/smsc/styles/navbar.css"/>
   <link rel="STYLESHEET" type="text/css" href="/smsc/styles/messages.css"/>
@@ -20,7 +19,9 @@
   <link rel="STYLESHEET" type="text/css" href="/smsc/styles/sme_menu.css"/>
   <link rel="STYLESHEET" type="text/css" href="/smsc/styles/header.css"/>
 
-  <script type="text/javascript" language="javascript" src="/smsc/js/collapsing_tree.js"></script>
+
+  <link rel="STYLESHEET" type="text/css" href="/smsc/styles/collapsing_group.css"/>
+  <script type="text/javascript" language="javascript" src="/smsc/js/collapsing_group.js"></script>
 
   <script type="text/javascript">
 
@@ -72,8 +73,21 @@
           <table cellspacing="0" cellpadding="0">
             <tr>
               <td width="12px" background="/smsc/images/smsc_24.jpg"></td>
+              <td align="right">
+                  <tr:statusIndicator>
+                    <f:facet name="busy">
+                      <tr:outputText value="#{msg['wait.title']}"/>
+                    </f:facet>
+                    <f:facet name="ready">
+                      <tr:outputText value="&#160;"/>
+                    </f:facet>
+                  </tr:statusIndicator>
+              </td>
+              <td height="1px" width="12px" background="/smsc/images/smsc_26.jpg"></td>
+            </tr>
+            <tr>
+              <td width="12px" background="/smsc/images/smsc_24.jpg"></td>
               <td>
-
                 <ui:insert name="content"/>
 
               </td>
@@ -90,7 +104,7 @@
           <table cellspacing="0" cellpadding="0" height="100%">
             <tr>
               <td height="1px" width="12px" background="/smsc/images/smsc_24.jpg"></td>
-              <td height="1px"><img src="../" height="0px" width="1px" alt=""/></td>
+              <td height="1px" bgcolor="#F3F0E3"></td>
               <td height="1px" width="12px" background="/smsc/images/smsc_26.jpg"></td>
             </tr>
           </table>

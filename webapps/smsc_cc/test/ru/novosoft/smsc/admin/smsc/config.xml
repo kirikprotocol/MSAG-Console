@@ -7,7 +7,7 @@
     <param name="host0" type="string">0</param>
     <param name="host1" type="string">1</param>
     <param name="host2" type="string">2</param>
-    <param name="port0" type="int">0</param>
+    <param name="port0" type="int">1</param>
     <param name="port1" type="int">1</param>
     <param name="port2" type="int">2</param>
   </section>
@@ -21,7 +21,7 @@
     <param name="service_center_address" type="string">@smsc.sc.address@</param>
     <param name="ussd_center_address" type="string">@smsc.ussd.address@</param>
     <param name="ussd_ssn" type="int">213</param>
-    <param name="add_ussd_ssn" type="string">1212</param>
+    <param name="add_ussd_ssn" type="string">1212,1213,1214</param>
     <param name="systemId" type="string">smscsme</param>
     <param name="service_type" type="string">SMSC</param>
     <param name="protocol_id" type="int">34</param>
@@ -35,18 +35,18 @@
     <param name="speedLogFlushPeriodMin" type="int">60</param>
     <param name="noDivertSmes" type="string"></param>
     <section name="performance">
-      <param name="host0" type="string">0</param>
+      <param name="host0" type="string">1</param>
       <param name="host1" type="string">1</param>
       <param name="host2" type="string">2</param>
-      <param name="port0" type="int">0</param>
+      <param name="port0" type="int">1</param>
       <param name="port1" type="int">1</param>
       <param name="port2" type="int">2</param>
     </section>
     <section name="smeperformance">
-      <param name="host0" type="string">0</param>
+      <param name="host0" type="string">1</param>
       <param name="host1" type="string">1</param>
       <param name="host2" type="string">2</param>
-      <param name="port0" type="int">0</param>
+      <param name="port0" type="int">1</param>
       <param name="port1" type="int">1</param>
       <param name="port2" type="int">2</param>
     </section>
@@ -111,7 +111,7 @@
     <param name="host0" type="string">0</param>
     <param name="host1" type="string">1</param>
     <param name="host2" type="string">2</param>
-    <param name="port0" type="int">0</param>
+    <param name="port0" type="int">1</param>
     <param name="port1" type="int">1</param>
     <param name="port2" type="int">2</param>
     <param name="readTimeout" type="int">60</param>
@@ -130,7 +130,7 @@
       <param name="host0" type="string">0</param>
       <param name="host1" type="string">1</param>
       <param name="host2" type="string">2</param>
-      <param name="port0" type="int">0</param>
+      <param name="port0" type="int">1</param>
       <param name="port1" type="int">1</param>
       <param name="port2" type="int">2</param>
       <param name="dir0" type="string">0</param>
@@ -154,7 +154,7 @@
 
     <param name="originatingAddress" type="string">0</param>
     <section name="ussdOpsMapping">
-      <param name="REPORT NONE" type="int">0</param>
+      <param name="REPORT NONE" type="int">1</param>
       <param name="REPORT FULL" type="int">2</param>
       <param name="REPORT FINAL" type="int">1</param>
       <param name="LOCALE RU_RU" type="int">20</param>

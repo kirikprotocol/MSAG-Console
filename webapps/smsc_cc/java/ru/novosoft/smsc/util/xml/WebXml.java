@@ -273,32 +273,37 @@ public class WebXml {
       if (exactMatches.remove(strPattern) == null && pathPatterns.remove(strPattern) == null) {
         extensionsPatterns.remove(strPattern);
       }
-    }
-
+    }          
 
     private Collection<String> getRoles(String url) {
+      List<String> roles = null;
       for (UrlPattern pattern : exactMatches.values()) {
         if (pattern.matches(url)) {
-          return new ArrayList<String>(pattern.roles);
+          roles = new ArrayList<String>(pattern.roles);
+          break;
         }
       }
-      UrlPattern pattern = null;
-      for (UrlPattern p : pathPatterns.values()) {
-        if (p.matches(url)) {
-          if (pattern == null || p.strPattern.length() > pattern.strPattern.length()) {
-            pattern = p;
+      if(roles == null) {
+        UrlPattern pattern = null;
+        for (UrlPattern p : pathPatterns.values()) {
+          if (p.matches(url)) {
+            if (pattern == null || p.strPattern.length() > pattern.strPattern.length()) {
+              pattern = p;
+            }
+          }
+        }
+        if (pattern != null) {
+          roles = new ArrayList<String>(pattern.roles);
+        }else {
+          for (UrlPattern p : extensionsPatterns.values()) {
+            if (p.matches(url)) {
+              roles = new ArrayList<String>(p.roles);
+              break;
+            }
           }
         }
       }
-      if (pattern != null) {
-        return new ArrayList<String>(pattern.roles);
-      }
-      for (UrlPattern p : extensionsPatterns.values()) {
-        if (p.matches(url)) {
-          return new ArrayList<String>(p.roles);
-        }
-      }
-      return null;
+      return roles == null || (roles.size() == 1 && roles.get(0).equals("*")) ? null : roles;
     }
 
   }

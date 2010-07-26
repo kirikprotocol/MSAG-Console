@@ -16,10 +16,10 @@
     <ui:repeat value="#{topMenu.menuBarItems}" var="barItem">
       menu_0=new jsDOMenu("<tr:outputText escape="false" value="#{barItem.width}"/>");
       <ui:repeat value="#{barItem.items}" var="menuItem">
-        menu_0.addMenuItem(new menuItem("<tr:outputText escape="false" value="#{menuItem.name}"/>", "", "<tr:outputText
+        menu_0.addMenuItem(new menuItem("<tr:outputText escape="false" value="#{msg[menuItem.name]}"/>", "", "<tr:outputText
           value="#{menuItem.url}"/>"));
       </ui:repeat>
-      menuBar.addMenuBarItem(new menuBarItem("<tr:outputText escape="false" value="#{barItem.name}"/>", menu_0));
+      menuBar.addMenuBarItem(new menuBarItem("<tr:outputText escape="false" value="#{msg[barItem.name]}"/>", menu_0));
     </ui:repeat>
     }
   </SCRIPT>
@@ -32,8 +32,8 @@
         </td>
         <td background="/smsc/images/smsc_14.jpg" width="100%">&#160;</td>
         <td background="/smsc/images/smsc_14.jpg" style="white-space:nowrap">
-          <h:commandLink id="MENU0_LOGOUT" style="text-decoration: none;color: #F2E275;cursor: pointer;"
-                         rendered="#{logout.userName != null}" value="Завершить сеанс &quot;#{logout.userName}&quot;"
+          <h:commandLink id="MENU0_LOGOUT" style="text-decoration: none;color: #F2E275;cursor: pointer;font-family: Verdana, Arial, Helvetica, sans-serif;font-size: x-small;"
+                         rendered="#{logout.userName != null}" value="#{msg['smsc.logout']} &quot;#{logout.userName}&quot;"
                          action="#{logout.logout}"/>
         </td>
 

@@ -3,7 +3,8 @@
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:t="http://myfaces.apache.org/tomahawk"
       xmlns:tr="http://myfaces.apache.org/trinidad"
-      xmlns:ui="http://java.sun.com/jsf/facelets">
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:mo="http://eyeline.mobi">
 
 <ui:composition template="../templates/main.xhtml">
 
@@ -11,7 +12,7 @@
 
     <table cellpadding="0" cellspacing="0" height="30px" class="smsc_status">
       <tr>
-        <th background="/smsc/images/smsc_17.jpg" style="white-space:nowrap">SMS Center Administration Console</th>
+        <th background="/smsc/images/smsc_17.jpg" style="white-space:nowrap">#{msg['smsc.title']}</th>
         <td><h:outputText value="&#160;"/></td>
         <td width="12px" background="/smsc/images/smsc_19.jpg" style="padding-right:0px;"></td>
       </tr>
@@ -20,100 +21,7 @@
   </ui:define>
 
   <ui:define name="content">
-    <tr:form id="frm" partialTriggers="but">
-      <t:dataTable cellspacing="0px" value="#{dynamicTable}" id="tomahawk_table" var="row" sortable="true"
-                   sortedColumnVar="sorted_column"
-                   styleClass="list" rows="#{dynamicTable.blockSize}" rowIndexVar="rI"
-                   rowStyleClass="row${requestScope['rI']%2}"
-          >
-        <t:column width="10%">
-          <f:facet name="header">
-            <h:graphicImage url="/images/ico16_checked_sa.gif"/>
-          </f:facet>
-          <t:selectBooleanCheckbox/>
-        </t:column>
-        <t:column sortable="true">
-          <f:facet name="header">
-            <t:commandSortHeader columnName="name" arrow="true">
-              <t:outputText value="Name"/>
-            </t:commandSortHeader>
-          </f:facet>
-          <t:outputText value="#{row.name}"/>
-        </t:column>
-        <t:column sortable="true">
-          <f:facet name="header">
-            <t:commandSortHeader columnName="status" arrow="true">
-              <t:outputText value="Status"/>
-            </t:commandSortHeader>
-          </f:facet>
-          <t:outputText value="#{row.status}"/>
-        </t:column>
-        <t:column sortable="true">
-          <f:facet name="header">
-            <t:commandSortHeader columnName="date" arrow="true">
-              <t:outputText value="Date"/>
-            </t:commandSortHeader>
-          </f:facet>
-          <t:outputText value="#{row.date}"/>
-        </t:column>
-        <t:column sortable="true">
-          <f:facet name="header">
-            <t:commandSortHeader columnName="message" arrow="true">
-              <t:outputText value="Message"/>
-            </t:commandSortHeader>
-          </f:facet>
-          <t:outputText value="#{row.message}"/>
-        </t:column>
-      </t:dataTable>
-
-      <h:panelGrid columns="2" styleClass="navbar" columnClasses=",total">
-        <t:dataScroller style="width:1%" for="tomahawk_table" id="dataScroller" paginator="true"
-                        paginatorActiveColumnStyle="background-color: #3A5867; color: #F2E275;" paginatorMaxPages="10">
-          <f:facet name="first">
-            <h:graphicImage url="/images/nav_first.gif"/>
-          </f:facet>
-          <f:facet name="last">
-            <h:graphicImage url="/images/nav_last.gif"/>
-          </f:facet>
-          <f:facet name="next">
-            <h:graphicImage url="/images/nav_next.gif"/>
-          </f:facet>
-          <f:facet name="previous">
-            <h:graphicImage url="/images/nav_prev.gif"/>
-          </f:facet>
-        </t:dataScroller>
-        <h:outputText value="Total elements: #{dynamicTable.rowCount}"/>
-      </h:panelGrid>
-
-      <tr:showDetail disclosedText="BlockSize" undisclosedText="BlockSize">
-        <tr:inputText value="#{dynamicTable.blockSize}"/>
-      </tr:showDetail>
-
-      <tr:commandButton text="Submit" id="but" partialSubmit="true"/>
-    </tr:form>
-
-
-    <div class="collapsing_tree_closed" id="sectionHeader_sectionId"
-         onclick="collasping_tree_showhide_section('sectionId')">
-      sectionName
-    </div>
-    <table cellspacing="0" cellpadding="0" id="sectionValue_sectionId" style="display:none">
-      <col width='56px'/>
-      <tr>
-        <th/>
-        <td>
-          <table class="properties_list" cellspacing="0">
-            <col width="150px"/>
-            <tr class="row">
-              <th style="white-space:nowrap">label</th>
-              <td style="white-space:nowrap"><h:inputText/></td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-    </table>
-
-
+    
   </ui:define>
 
 </ui:composition>

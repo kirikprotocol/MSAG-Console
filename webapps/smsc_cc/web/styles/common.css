@@ -98,7 +98,7 @@ div.secSmsc {
   padding-left: 19px;
   margin-left: 0px;
   margin-bottom: 4px;
-  background-image: url(/images/smsc_ico.gif);
+  background-image: url(../images/smsc_ico.gif);
   font-size: small;
   font-weight: bold;
 }
@@ -127,4 +127,13 @@ table.smsc_status th {
 div.query_result {
   color: #161E49;
   font-weight: bold;
+}
+
+.columnTop {
+ vertical-align:top;
+}
+
+.columnTopLeftAlign {
+ vertical-align:top;
+ text-align:left;
 }

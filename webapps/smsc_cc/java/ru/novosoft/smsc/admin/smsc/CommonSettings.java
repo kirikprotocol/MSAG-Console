@@ -1170,7 +1170,7 @@ public class CommonSettings implements Cloneable {
   }
 
   public void setInmanPort(int inmanPort) throws AdminException {
-    vh.checkPositive("inmanPort", inmanPort);
+    vh.checkPort("inmanPort", inmanPort);
     this.inmanPort = inmanPort;
   }
 
