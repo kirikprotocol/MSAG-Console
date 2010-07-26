@@ -4,17 +4,18 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.cluster_controller.ConfigState;
 import ru.novosoft.smsc.admin.cluster_controller.TestClusterController;
+import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
+import ru.novosoft.smsc.admin.smsc.SmscManager;
 import ru.novosoft.smsc.util.config.XmlConfig;
 import ru.novosoft.smsc.util.config.XmlConfigException;
 import testutils.TestUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
+import java.util.*;
 
 import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
@@ -141,5 +142,27 @@ public class RescheduleManagerTest {
     Collection<Reschedule> reschedules = config.getReschedules();
     assertNotNull(reschedules);
     assertEquals(0, reschedules.size());
+  }
+
+  @Test
+  public void testGetStatusForSmscs() throws AdminException {
+   RescheduleManager manager = new RescheduleManager(configFile, backupDir, new ClusterControllerImpl(), FileSystem.getFSForSingleInst());
+
+    Map<Integer, SmscConfigurationStatus> states = manager.getStatusForSmscs();
+
+    assertNotNull(states);
+    assertEquals(2, states.size());
+    assertEquals(SmscConfigurationStatus.OUT_OF_DATE, states.get(0));
+    assertEquals(SmscConfigurationStatus.UP_TO_DATE, states.get(1));
+  }
+
+  public class ClusterControllerImpl extends TestClusterController {
+    public ConfigState getMainConfigState() throws AdminException {
+      long now = configFile.lastModified();
+      Map<Integer, Long> map = new HashMap<Integer, Long>();
+      map.put(0, now - 1);
+      map.put(1, now);
+      return new ConfigState(now, map);
+    }
   }
 }

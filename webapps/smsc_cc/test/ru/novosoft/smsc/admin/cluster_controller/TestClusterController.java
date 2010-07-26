@@ -44,6 +44,14 @@ public class TestClusterController extends ClusterController {
     return new ConfigState(now, map);
   }
 
+  public ConfigState getRescheduleConfigState() throws AdminException {
+    long now = System.currentTimeMillis();
+    Map<Integer, Long> map = new HashMap<Integer, Long>();
+    map.put(0, now);
+    map.put(1, now);
+    return new ConfigState(now, map);
+  }
+
   public void applyReschedule() throws AdminException {
     applyRescheduleCalled = true;
   }

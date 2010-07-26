@@ -55,6 +55,7 @@ public class ClusterController {
     if (now - lastConfigsStatusCheckTime > 1000 || lastGetConfigsStateResp == null) {
       GetConfigsState req = new GetConfigsState();
       lastGetConfigsStateResp = cc.send(req);
+      lastConfigsStatusCheckTime = now;
     }
 
     long ccUpdateTime = lastGetConfigsStateResp.getCcConfigUpdateTime()[configType.getValue()];
@@ -383,6 +384,15 @@ public class ClusterController {
       if (status != 0)
         throw new ClusterControllerException("interaction_error", statuses, resp.getIds());
     }
+  }
+
+  /**
+   * Возвращает статус конфига политик передоставки
+   * @return статус конфига политик передоставки
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public ConfigState getRescheduleConfigState() throws AdminException {
+    return getConfigState(ConfigType.Reschedule);
   }
 
   // FRAUD =============================================================================================================
