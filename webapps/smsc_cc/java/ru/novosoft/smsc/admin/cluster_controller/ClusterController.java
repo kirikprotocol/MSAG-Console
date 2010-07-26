@@ -282,6 +282,15 @@ public class ClusterController {
     }
   }
 
+  /**
+   * Возвращает статус конфигу закрытых групп
+   * @return статус конфигу закрытых групп
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public ConfigState getClosedGroupConfigState() throws AdminException {
+    return getConfigState(ConfigType.ClosedGroups);
+  }
+
   // MSC ===============================================================================================================
 
   /**

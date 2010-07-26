@@ -3,8 +3,11 @@ package ru.novosoft.smsc.admin.closed_groups;
 
 import org.junit.*;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.alias.AliasManager;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
+import ru.novosoft.smsc.admin.cluster_controller.ConfigState;
 import ru.novosoft.smsc.admin.cluster_controller.TestClusterController;
+import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
 import ru.novosoft.smsc.admin.filesystem.TestFileSystem;
 import ru.novosoft.smsc.util.Address;
@@ -13,11 +16,10 @@ import testutils.TestUtils;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Artem Snopkov
@@ -269,6 +271,27 @@ public class ClosedGroupManagerTest {
     }
   }
 
+  @Test
+  public void testGetStatusForSmscs() throws AdminException {
+    ClosedGroupManager cgm = new ClosedGroupManager(configFile, backupDir, new ClusterControllerImpl(), FileSystem.getFSForSingleInst());
+
+    Map<Integer, SmscConfigurationStatus> states = cgm.getStatusForSmscs();
+
+    assertNotNull(states);
+    assertEquals(2, states.size());
+    assertEquals(SmscConfigurationStatus.OUT_OF_DATE, states.get(0));
+    assertEquals(SmscConfigurationStatus.UP_TO_DATE, states.get(1));
+  }
+
+  public class ClusterControllerImpl extends TestClusterController {
+    public ConfigState getClosedGroupConfigState() throws AdminException {
+      long now = System.currentTimeMillis();
+      Map<Integer, Long> map = new HashMap<Integer, Long>();
+      map.put(0, now - 1);
+      map.put(1, now);
+      return new ConfigState(now, map);
+    }
+  }
 
   
   private static class ErrorClusterController extends TestClusterController {
@@ -305,4 +328,5 @@ public class ClosedGroupManagerTest {
         return FileSystem.getFSForSingleInst().getOutputStream(file);
     }
   }
+
 }

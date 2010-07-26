@@ -5,7 +5,10 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
+import ru.novosoft.smsc.admin.cluster_controller.ConfigState;
 import ru.novosoft.smsc.admin.config.RuntimeConfiguration;
+import ru.novosoft.smsc.admin.config.SmscConfiguration;
+import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
 import ru.novosoft.smsc.admin.util.ConfigHelper;
 import ru.novosoft.smsc.admin.util.ValidationHelper;
@@ -20,12 +23,14 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author Artem Snopkov
  */
-public class ClosedGroupManager implements RuntimeConfiguration {
+public class ClosedGroupManager implements RuntimeConfiguration, SmscConfiguration {
 
   protected final static String PARAM_NAME_last_used_id = "lastId";
   protected final static String SECTION_NAME_group = "group";
@@ -237,4 +242,17 @@ public class ClosedGroupManager implements RuntimeConfiguration {
   }
 
 
+  public Map<Integer, SmscConfigurationStatus> getStatusForSmscs() throws AdminException {
+    ConfigState configState = cc.getClosedGroupConfigState();
+
+    Map<Integer, SmscConfigurationStatus> result = new HashMap<Integer, SmscConfigurationStatus>();
+
+    long ccLastUpdateTime = configState.getCcLastUpdateTime();
+    for (Map.Entry<Integer, Long> e : configState.getInstancesUpdateTimes().entrySet()) {
+      SmscConfigurationStatus s = (e.getValue() >= ccLastUpdateTime) ? SmscConfigurationStatus.UP_TO_DATE : SmscConfigurationStatus.OUT_OF_DATE;
+      result.put(e.getKey(), s);
+    }
+
+    return result;
+  }
 }
