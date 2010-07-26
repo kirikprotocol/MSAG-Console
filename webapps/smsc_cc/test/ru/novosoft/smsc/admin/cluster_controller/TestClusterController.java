@@ -1,6 +1,7 @@
 package ru.novosoft.smsc.admin.cluster_controller;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.cluster_controller.protocol.ConfigType;
 import ru.novosoft.smsc.util.Address;
 
 import java.util.HashMap;
@@ -26,39 +27,7 @@ public class TestClusterController extends ClusterController {
     this(2);
   }
 
-  public ConfigState getAliasesConfigState() throws AdminException {
-    long now = System.currentTimeMillis();
-    Map<Integer, Long> map = new HashMap<Integer, Long>();
-    map.put(0, now);
-    map.put(1, now);
-    return new ConfigState(now, map);
-  }
-
-  public ConfigState getMainConfigState() throws AdminException {
-    long now = System.currentTimeMillis();
-    Map<Integer, Long> map = new HashMap<Integer, Long>();
-    map.put(0, now);
-    map.put(1, now);
-    return new ConfigState(now, map);
-  }
-
-  public ConfigState getRescheduleConfigState() throws AdminException {
-    long now = System.currentTimeMillis();
-    Map<Integer, Long> map = new HashMap<Integer, Long>();
-    map.put(0, now);
-    map.put(1, now);
-    return new ConfigState(now, map);
-  }
-
-  public ConfigState getClosedGroupConfigState() throws AdminException {
-    long now = System.currentTimeMillis();
-    Map<Integer, Long> map = new HashMap<Integer, Long>();
-    map.put(0, now);
-    map.put(1, now);
-    return new ConfigState(now, map);
-  }
-
-  public ConfigState getFraudConfigState() throws AdminException {
+  protected synchronized ConfigState getConfigState(ConfigType configType) throws AdminException {
     long now = System.currentTimeMillis();
     Map<Integer, Long> map = new HashMap<Integer, Long>();
     map.put(0, now);

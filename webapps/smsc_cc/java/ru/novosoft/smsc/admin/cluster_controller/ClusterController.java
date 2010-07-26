@@ -49,7 +49,7 @@ public class ClusterController {
     cc.shutdown();
   }
 
-  private synchronized ConfigState getConfigState(ConfigType configType) throws AdminException {
+  protected synchronized ConfigState getConfigState(ConfigType configType) throws AdminException {
     long now = System.currentTimeMillis();
 
     if (now - lastConfigsStatusCheckTime > 1000 || lastGetConfigsStateResp == null) {
@@ -495,6 +495,15 @@ public class ClusterController {
       if (status != 0)
         throw new ClusterControllerException("interaction_error", statuses, resp.getIds());
     }
+  }
+
+  /**
+   * Возвращает статус конфига Map Limits
+   * @return статус конфига Map Limits
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public ConfigState getMapLimitConfigState() throws AdminException {
+    return getConfigState(ConfigType.MapLimits);
   }
 
   // SNMP ==============================================================================================================

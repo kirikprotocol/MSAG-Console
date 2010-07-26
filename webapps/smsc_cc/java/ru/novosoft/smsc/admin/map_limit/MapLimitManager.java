@@ -2,17 +2,22 @@ package ru.novosoft.smsc.admin.map_limit;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
+import ru.novosoft.smsc.admin.cluster_controller.ConfigState;
 import ru.novosoft.smsc.admin.config.ConfigFileManager;
+import ru.novosoft.smsc.admin.config.SmscConfiguration;
+import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
 import ru.novosoft.smsc.admin.util.ValidationHelper;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Artem Snopkov
  */
-public class MapLimitManager extends ConfigFileManager<MapLimitConfig> {
+public class MapLimitManager extends ConfigFileManager<MapLimitConfig> implements SmscConfiguration {
 
   static final int MAX_CONGESTON_LEVELS = MapLimitConfig.MAX_CONGESTION_LEVELS;
   private static final ValidationHelper vh = new ValidationHelper(MapLimitManager.class.getCanonicalName());
@@ -135,5 +140,16 @@ public class MapLimitManager extends ConfigFileManager<MapLimitConfig> {
   @Override
   protected void afterApply() throws AdminException {
     cc.applyMapLimits();
+  }
+
+  public Map<Integer, SmscConfigurationStatus> getStatusForSmscs() throws AdminException {
+    ConfigState state = cc.getMapLimitConfigState();
+    long lastUpdate = configFile.lastModified();
+    Map<Integer, SmscConfigurationStatus> result = new HashMap<Integer, SmscConfigurationStatus>();
+    for (Map.Entry<Integer, Long> e : state.getInstancesUpdateTimes().entrySet()) {
+      SmscConfigurationStatus s = e.getValue() >= lastUpdate ? SmscConfigurationStatus.UP_TO_DATE : SmscConfigurationStatus.OUT_OF_DATE;
+      result.put(e.getKey(), s);
+    }
+    return result;
   }
 }
