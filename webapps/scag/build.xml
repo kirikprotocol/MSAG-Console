@@ -53,7 +53,7 @@
   </target>
 
   <target name="compile" depends="init" description="compile the sources">
-    <javac srcdir="${java_src}" destdir="${java_out}" source="1.4" target="1.4" 
+    <javac srcdir="${java_src}" destdir="${java_out}" source="1.5" target="1.5" 
            classpath="${sibinco_lib}:${tomcat_auth_lib}:${log4j_jar}:${servlet_jar}:${tomcat_server_libs}:${jstl_jar}:${jsp_jar}" debug="yes"/>
     <native2ascii encoding="Cp1251" src="${java_src}/locales" dest="${java_out}/locales"/>
     <native2ascii encoding="Cp1251" src="${perfmon_src}/applet" dest="${perfmon_out}/applet"/>
