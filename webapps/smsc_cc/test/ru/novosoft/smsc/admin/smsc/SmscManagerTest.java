@@ -132,19 +132,19 @@ public class SmscManagerTest {
       InstanceSettings s = manager.getInstanceSettings(i);
 
       assertEquals(i + "", s.getAdminHost());
-      assertEquals(i, s.getAdminPort());
+      assertEquals(i+1, s.getAdminPort());
       assertEquals(i + "", s.getAgentHost());
-      assertEquals(i, s.getAgentPort());
+      assertEquals(i+1, s.getAgentPort());
       assertEquals(i + "", s.getCacheDir());
       assertEquals(i + "", s.getCorePerfHost());
-      assertEquals(i, s.getCorePerfPort());
+      assertEquals(i+1, s.getCorePerfPort());
       assertEquals(i+ "", s.getLocalStoreFilename());
       assertEquals(i + "", s.getLocalStoreMessIdFile());
       assertEquals(i + "", s.getMessageStoreArchDir());
       assertEquals(i + "", s.getSmePerfHost());
-      assertEquals(i, s.getSmePerfPort());
+      assertEquals(i+1, s.getSmePerfPort());
       assertEquals(i+ "", s.getSmppHost());
-      assertEquals(i, s.getSmppPort());
+      assertEquals(i+1, s.getSmppPort());
     }
   }
 

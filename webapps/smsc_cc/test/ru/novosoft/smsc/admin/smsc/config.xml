@@ -8,8 +8,8 @@
     <param name="host1" type="string">1</param>
     <param name="host2" type="string">2</param>
     <param name="port0" type="int">1</param>
-    <param name="port1" type="int">1</param>
-    <param name="port2" type="int">2</param>
+    <param name="port1" type="int">2</param>
+    <param name="port2" type="int">3</param>
   </section>
 
   <section name="core">
@@ -35,20 +35,20 @@
     <param name="speedLogFlushPeriodMin" type="int">60</param>
     <param name="noDivertSmes" type="string"></param>
     <section name="performance">
-      <param name="host0" type="string">1</param>
+      <param name="host0" type="string">0</param>
       <param name="host1" type="string">1</param>
       <param name="host2" type="string">2</param>
       <param name="port0" type="int">1</param>
-      <param name="port1" type="int">1</param>
-      <param name="port2" type="int">2</param>
+      <param name="port1" type="int">2</param>
+      <param name="port2" type="int">3</param>
     </section>
     <section name="smeperformance">
-      <param name="host0" type="string">1</param>
+      <param name="host0" type="string">0</param>
       <param name="host1" type="string">1</param>
       <param name="host2" type="string">2</param>
       <param name="port0" type="int">1</param>
-      <param name="port1" type="int">1</param>
-      <param name="port2" type="int">2</param>
+      <param name="port1" type="int">2</param>
+      <param name="port2" type="int">3</param>
     </section>
   </section>
   
@@ -112,8 +112,8 @@
     <param name="host1" type="string">1</param>
     <param name="host2" type="string">2</param>
     <param name="port0" type="int">1</param>
-    <param name="port1" type="int">1</param>
-    <param name="port2" type="int">2</param>
+    <param name="port1" type="int">2</param>
+    <param name="port2" type="int">3</param>
     <param name="readTimeout" type="int">60</param>
     <param name="inactivityTime" type="int">60</param>
     <param name="inactivityTimeOut" type="int">600</param>
@@ -131,8 +131,8 @@
       <param name="host1" type="string">1</param>
       <param name="host2" type="string">2</param>
       <param name="port0" type="int">1</param>
-      <param name="port1" type="int">1</param>
-      <param name="port2" type="int">2</param>
+      <param name="port1" type="int">2</param>
+      <param name="port2" type="int">3</param>
       <param name="dir0" type="string">0</param>
       <param name="dir1" type="string">1</param>
       <param name="dir2" type="string">2</param>
