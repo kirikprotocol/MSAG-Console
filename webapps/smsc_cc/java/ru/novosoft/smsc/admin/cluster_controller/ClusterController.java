@@ -556,4 +556,13 @@ public class ClusterController {
         throw new ClusterControllerException("interaction_error", statuses, resp.getIds());
     }
   }
+
+  /**
+   * Возвращает статус конфигурации SNMP
+   * @return статус конфигурации SNMP
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public ConfigState getSnmpConfigState() throws AdminException {
+    return getConfigState(ConfigType.Snmp);
+  }
 }

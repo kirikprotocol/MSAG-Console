@@ -5,15 +5,20 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.cluster_controller.ConfigState;
 import ru.novosoft.smsc.admin.cluster_controller.TestClusterController;
+import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
+import ru.novosoft.smsc.admin.smsc.SmscManager;
 import testutils.TestUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Artem Snopkov
@@ -142,5 +147,27 @@ public class SnmpManagerTest {
 
     assertTrue(m.isChanged());
     assertEquals(new SnmpCounter(40,40,40,40), m.getDefaultSnmpObject().getCounterRejected());
+  }
+
+  @Test
+  public void testGetStatusForSmscs() throws AdminException {
+    SnmpManager m = new SnmpManager(configFile, backupDir, new ClusterControllerImpl(), FileSystem.getFSForSingleInst());
+
+    Map<Integer, SmscConfigurationStatus> states = m.getStatusForSmscs();
+
+    assertNotNull(states);
+    assertEquals(2, states.size());
+    assertEquals(SmscConfigurationStatus.OUT_OF_DATE, states.get(0));
+    assertEquals(SmscConfigurationStatus.UP_TO_DATE, states.get(1));
+  }
+
+  public class ClusterControllerImpl extends TestClusterController {
+    public ConfigState getSnmpConfigState() throws AdminException {
+      long now = configFile.lastModified();
+      Map<Integer, Long> map = new HashMap<Integer, Long>();
+      map.put(0, now - 1);
+      map.put(1, now);
+      return new ConfigState(now, map);
+    }
   }
 }

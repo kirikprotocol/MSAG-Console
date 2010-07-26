@@ -2,7 +2,10 @@ package ru.novosoft.smsc.admin.snmp;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
+import ru.novosoft.smsc.admin.cluster_controller.ConfigState;
 import ru.novosoft.smsc.admin.config.ConfigFileManager;
+import ru.novosoft.smsc.admin.config.SmscConfiguration;
+import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
 import ru.novosoft.smsc.admin.util.ValidationHelper;
 
@@ -14,7 +17,7 @@ import java.util.Map;
  * Менеджер, управляющий конфигурацией Snmp
  * @author Artem Snopkov
  */
-public class SnmpManager extends ConfigFileManager<SnmpConfigFile> {
+public class SnmpManager extends ConfigFileManager<SnmpConfigFile> implements SmscConfiguration {
 
   private static final ValidationHelper vh = new ValidationHelper(SnmpManager.class.getCanonicalName());
 
@@ -110,5 +113,16 @@ public class SnmpManager extends ConfigFileManager<SnmpConfigFile> {
   @Override
   protected void afterApply() throws AdminException {
     cc.applySnmp();
+  }
+
+  public Map<Integer, SmscConfigurationStatus> getStatusForSmscs() throws AdminException {
+    ConfigState state = cc.getSnmpConfigState();
+    long lastUpdate = configFile.lastModified();
+    Map<Integer, SmscConfigurationStatus> result = new HashMap<Integer, SmscConfigurationStatus>();
+    for (Map.Entry<Integer, Long> e : state.getInstancesUpdateTimes().entrySet()) {
+      SmscConfigurationStatus s = e.getValue() >= lastUpdate ? SmscConfigurationStatus.UP_TO_DATE : SmscConfigurationStatus.OUT_OF_DATE;
+      result.put(e.getKey(), s);
+    }
+    return result;
   }
 }
