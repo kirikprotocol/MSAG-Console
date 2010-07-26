@@ -1,10 +1,8 @@
 package ru.novosoft.smsc.admin.cluster_controller;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.cluster_controller.protocol.ConfigType;
 import ru.novosoft.smsc.util.Address;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -53,6 +51,14 @@ public class TestClusterController extends ClusterController {
   }
 
   public ConfigState getClosedGroupConfigState() throws AdminException {
+    long now = System.currentTimeMillis();
+    Map<Integer, Long> map = new HashMap<Integer, Long>();
+    map.put(0, now);
+    map.put(1, now);
+    return new ConfigState(now, map);
+  }
+
+  public ConfigState getFraudConfigState() throws AdminException {
     long now = System.currentTimeMillis();
     Map<Integer, Long> map = new HashMap<Integer, Long>();
     map.put(0, now);

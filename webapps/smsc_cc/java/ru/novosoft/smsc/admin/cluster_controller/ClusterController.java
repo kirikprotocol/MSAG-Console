@@ -446,6 +446,15 @@ public class ClusterController {
     }
   }
 
+  /**
+   * Возвращает статус конфига Fraud
+   * @return статус конфига Fraud
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public ConfigState getFraudConfigState() throws AdminException {
+    return getConfigState(ConfigType.Fraud);
+  }
+
   // MAP LIMITS ========================================================================================================
 
   /**
