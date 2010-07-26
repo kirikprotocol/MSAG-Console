@@ -70,8 +70,8 @@ public class FraudManager extends ConfigFileManager<FraudConfigFile> {
   }
 
   @Override
-  protected void lockConfig(boolean read) throws AdminException {
-    cc.lockFraud(read);
+  protected void lockConfig(boolean write) throws AdminException {
+    cc.lockFraud(write);
   }
 
   @Override

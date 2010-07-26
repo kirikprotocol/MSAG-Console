@@ -35,7 +35,7 @@ public abstract class ConfigFileManager<T extends ManagedConfigFile> implements 
 
   protected abstract T newConfigFile();
 
-  protected void lockConfig(boolean read) throws AdminException {
+  protected void lockConfig(boolean write) throws AdminException {
   }
 
   protected void unlockConfig() throws Exception {

@@ -36,7 +36,7 @@ public class SnmpManagerTest {
       TestUtils.recursiveDeleteFolder(backupDir);
   }
 
-  private void validate(SnmpManager m) {
+  private void validate(SnmpManager m) throws AdminException {
     assertEquals(300, m.getCounterInterval());
 
     SnmpObject def = m.getDefaultSnmpObject();

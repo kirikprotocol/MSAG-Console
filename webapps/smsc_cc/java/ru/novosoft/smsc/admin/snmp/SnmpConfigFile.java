@@ -3,6 +3,7 @@ package ru.novosoft.smsc.admin.snmp;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.config.ManagedConfigFile;
 import ru.novosoft.smsc.util.XmlUtils;
 
@@ -144,7 +145,7 @@ class SnmpConfigFile implements ManagedConfigFile {
     }
   }
 
-  private static SnmpCounter parseCounter(String counterValue) {
+  private static SnmpCounter parseCounter(String counterValue) throws AdminException {
     StringTokenizer st = new StringTokenizer(counterValue, ",");
     int warning = Integer.parseInt(st.nextToken());
     int minor = Integer.parseInt(st.nextToken());
@@ -169,7 +170,7 @@ class SnmpConfigFile implements ManagedConfigFile {
     return null;
   }
 
-  private static void parseSnmpObject(SnmpObject o, Element elem) {
+  private static void parseSnmpObject(SnmpObject o, Element elem) throws AdminException {
 
     NodeList defaultCounterNodes = elem.getElementsByTagName("counter");
 

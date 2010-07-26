@@ -64,8 +64,8 @@ public class RescheduleManager extends ConfigFileManager<RescheduleConfig> {
   }
 
   @Override
-  protected void lockConfig(boolean read) throws AdminException {
-    cc.lockReschedule(read);
+  protected void lockConfig(boolean write) throws AdminException {
+    cc.lockReschedule(write);
   }
 
   @Override

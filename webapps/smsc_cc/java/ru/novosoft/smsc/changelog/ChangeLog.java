@@ -144,6 +144,10 @@ public class ChangeLog {
     /**
      * Политики передоставки
      */
-    RESCHEDULE
+    RESCHEDULE,
+    /**
+     * Настройки SNMP
+     */
+    SNMP
   }
 }

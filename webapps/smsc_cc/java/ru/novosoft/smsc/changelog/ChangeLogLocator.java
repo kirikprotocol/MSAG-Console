@@ -8,6 +8,7 @@ import ru.novosoft.smsc.admin.map_limit.MapLimitManager;
 import ru.novosoft.smsc.admin.msc.MscManager;
 import ru.novosoft.smsc.admin.reschedule.RescheduleManager;
 import ru.novosoft.smsc.admin.smsc.SmscManager;
+import ru.novosoft.smsc.admin.snmp.SnmpManager;
 
 /**
  * Вспомогательный класс, позволяющий найти ChangeLog по какой-либо части AdminContext, к которому привязан
@@ -115,6 +116,19 @@ public class ChangeLogLocator {
   public static ChangeLog getInstance(RescheduleManager manager) {
     for (ChangeLog cl : ChangeLog.instances) {
       if (cl.getAdminContext().getRescheduleManager() == manager)
+        return cl;
+    }
+    return null;
+  }
+
+  /**
+   * Возвращает ChangeLog по экземпляру SnmpManager
+   * @param manager экземпляр SnmpManager
+   * @return ChangeLog в который записываются все изменения в данном SnmpManager
+   */
+  public static ChangeLog getInstance(SnmpManager manager) {
+    for (ChangeLog cl : ChangeLog.instances) {
+      if (cl.getAdminContext().getSnmpManager() == manager)
         return cl;
     }
     return null;

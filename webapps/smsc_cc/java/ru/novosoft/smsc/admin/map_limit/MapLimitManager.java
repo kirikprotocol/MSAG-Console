@@ -122,8 +122,8 @@ public class MapLimitManager extends ConfigFileManager<MapLimitConfig> {
   }
 
   @Override
-  protected void lockConfig(boolean read) throws AdminException {
-    cc.lockMapLimits(read);
+  protected void lockConfig(boolean write) throws AdminException {
+    cc.lockMapLimits(write);
   }
 
   @Override
