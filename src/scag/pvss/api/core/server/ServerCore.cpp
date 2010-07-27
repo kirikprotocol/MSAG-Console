@@ -19,10 +19,11 @@ using namespace scag2::pvss;
 
 struct ErrorResponseVisitor : public ResponseVisitor
 {
-    virtual bool visitErrResponse( ErrorResponse& resp ) { return true; }
+    virtual bool visitErrResponse( ErrorResponse& resp ) { status = false; return true; }
     virtual bool visitPingResponse( PingResponse& resp ) { return false; }
     virtual bool visitAuthResponse( AuthResponse& resp ) { return false; }
-    virtual bool visitProfileResponse( ProfileResponse& resp ) { return false; }
+    virtual bool visitProfileResponse( ProfileResponse& resp ) { status = true; return true; }
+    bool status;
 };
 
 struct PRVisitor : public RequestVisitor
@@ -439,16 +440,17 @@ void ServerCore::receiveContext( std::auto_ptr< ServerContext > ctx )
             preq = 0;
         }
 
-        bool needTiming = false;
-        unsigned totalRequests;
-        {
+        if (preq) {
+            bool needTiming = false;
+            unsigned totalRequests;
+
             // a new request has come
-            MutexGuard mg(statMutex_);
-            static util::msectime_type timingCounter = 0;
-            totalRequests = ++total_.requests;
-            ++last_.requests;
-            util::msectime_type currentTime = checkStatistics();
-            if ( preq ) {
+            {
+                MutexGuard mg(statMutex_);
+                static util::msectime_type timingCounter = 0;
+                totalRequests = ++total_.requests;
+                ++last_.requests;
+                util::msectime_type currentTime = checkStatistics();
                 static unsigned successiveTimings = 0;
                 if ( successiveTimings ) {
                     --successiveTimings;
@@ -456,24 +458,25 @@ void ServerCore::receiveContext( std::auto_ptr< ServerContext > ctx )
                 } else if (currentTime - timingCounter > util::msectime_type(getConfig().getTimingInterval())) {
                     // more than 5 seconds
                     /*
-                    // NOTE: simple randomization
-                    static unsigned counter = 0;
-                    ++counter;
-                    if ( (counter % 7) == 0 ) break;
-                    counter += unsigned(reinterpret_cast<uint64_t>(static_cast<const void*>(req)));
-                    needTiming = true;
+                     // NOTE: simple randomization
+                     static unsigned counter = 0;
+                     ++counter;
+                     if ( (counter % 7) == 0 ) break;
+                     counter += unsigned(reinterpret_cast<uint64_t>(static_cast<const void*>(req)));
+                     needTiming = true;
                      */
                     timingCounter = currentTime;
                     successiveTimings = getConfig().getTimingSeriesSize() - 1;
                     needTiming = true;
                 }
             }
-        }
-        if ( needTiming ) {
-            preq->startTiming();
-            char buf[30];
-            std::sprintf(buf,"#%u",totalRequests % 100);
-            preq->timingComment(buf);
+
+            if ( needTiming ) {
+                preq->startTiming();
+                char buf[30];
+                std::sprintf(buf,"#%u",totalRequests % 100);
+                preq->timingComment(buf);
+            }
         }
 
         smsc_log_debug(log_,"packet received %p: %s", req, req->toString().c_str());
@@ -556,16 +559,17 @@ void ServerCore::sendResponse( std::auto_ptr<ServerContext>& context ) /* throw 
 
     {
         ErrorResponseVisitor erv;
-        const bool isError = const_cast<Response*>(response)->visit(erv);
-        MutexGuard mg(statMutex_);
-        if ( isError ) {
-            ++total_.errors;
-            ++last_.errors;
-        } else {
-            ++total_.responses;
-            ++last_.responses;
+        if ( const_cast<Response*>(response)->visit(erv) ) {
+            MutexGuard mg(statMutex_);
+            if ( ! erv.status ) {
+                ++total_.errors;
+                ++last_.errors;
+            } else {
+                ++total_.responses;
+                ++last_.responses;
+            }
+            checkStatistics();
         }
-        checkStatistics();
     }
 
     try {
@@ -612,7 +616,7 @@ void ServerCore::reportContext( std::auto_ptr<ServerContext> ctx )
         } else {
             smsc_log_debug(log_,"Response '%s' sent",response->toString().c_str());
             ErrorResponseVisitor erv;
-            if ( response->visit(erv) ) return;
+            if ( response->visit(erv) && !erv.status ) return;
         }
     } else {
         // failure
@@ -630,7 +634,7 @@ void ServerCore::reportContext( std::auto_ptr<ServerContext> ctx )
             smsc_log_debug(log_,"Response '%s' was not sent, state: %s",response->toString().c_str(),
                            ctx->getState() == ServerContext::FAILED ? "FAILED" : "EXPIRED" );
             ErrorResponseVisitor erv;
-            if ( response->visit(erv) ) return;
+            if ( response->visit(erv) && !erv.status ) return;
         }
     }
 
