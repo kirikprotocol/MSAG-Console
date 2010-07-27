@@ -1,6 +1,9 @@
 History in reverse order
 ----------------------------------------------------
 
+----------------------------------------------------
+infosme-build-20100727 14:40 bukind (v1,v2)
+
 2010-07-27 14:30 bukind
   core reorg: inheriting from SmeConfig instead of extending it,
   feature: by default ussdPush is disabled.
