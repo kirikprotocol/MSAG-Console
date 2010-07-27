@@ -18,6 +18,10 @@ public class ValidationHelper {
     this.paramNameBundle = paramNameBundle;
   }
 
+  public ValidationHelper(Class clazz) {
+    this(clazz.getCanonicalName());
+  }
+
   public void checkPositive(String argName, int value) throws AdminException {
     if (value <= 0)
       throw new ValidationException(paramNameBundle, argName);

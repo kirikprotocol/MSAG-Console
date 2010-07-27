@@ -40,7 +40,7 @@ public class TestConfigFileManagerHelper {
     } catch (Exception e) {
       throw new ConfigException("load_error", e);
     }
-    manager.changed = false;
+    manager.setNotChanged(true);
   }
 
   public void apply(ConfigFileManager manager) throws AdminException {
@@ -51,7 +51,7 @@ public class TestConfigFileManagerHelper {
       throw new ConfigException("save_error", e);
     }
     currentConfig = os.toByteArray();
-    manager.changed = false;
+    manager.setNotChanged(false);
   }
 
 }

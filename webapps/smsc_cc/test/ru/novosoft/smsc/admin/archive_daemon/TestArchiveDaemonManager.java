@@ -14,20 +14,14 @@ public class TestArchiveDaemonManager extends ArchiveDaemonManager {
 
   public TestArchiveDaemonManager() throws AdminException {
     super(null, null, null);
+    helper = new TestConfigFileManagerHelper(ArchiveDaemonManager.class.getResourceAsStream("config.xml"));
   }
 
   public void reset() throws AdminException {
-    getHelper().reset(this);
+    helper.reset(this);
   }
 
   public void apply() throws AdminException {
-    getHelper().apply(this);
-  }
-
-  private TestConfigFileManagerHelper getHelper() throws AdminException {
-    if (helper == null) {
-      helper = new TestConfigFileManagerHelper(ArchiveDaemonManager.class.getResourceAsStream("config.xml"));
-    }
-    return helper;
-  }
+    helper.apply(this);
+  }  
 }

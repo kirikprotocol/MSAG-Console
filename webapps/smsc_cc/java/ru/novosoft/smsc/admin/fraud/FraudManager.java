@@ -21,14 +21,13 @@ import java.util.Map;
  */
 public class FraudManager extends ConfigFileManager<FraudConfigFile> implements SmscConfiguration {
 
-  private static final ValidationHelper vh = new ValidationHelper(FraudManager.class.getCanonicalName());
+  private static final ValidationHelper vh = new ValidationHelper(FraudManager.class);
 
   private ClusterController cc;
 
-  public FraudManager(File configFile, File backupDir, ClusterController cc, FileSystem fs) throws AdminException {
+  public FraudManager(File configFile, File backupDir, ClusterController cc, FileSystem fs) {
     super(configFile, backupDir, fs);
     this.cc = cc;
-    reset();
   }
 
   public int getTail() {
@@ -38,7 +37,7 @@ public class FraudManager extends ConfigFileManager<FraudConfigFile> implements 
   public void setTail(int tail) throws AdminException {
     vh.checkPositive("tail", tail);
     config.setTail(tail);
-    changed = true;
+    setChanged();
   }
 
   public boolean isEnableCheck() {
@@ -47,7 +46,7 @@ public class FraudManager extends ConfigFileManager<FraudConfigFile> implements 
 
   public void setEnableCheck(boolean enableCheck) {
     config.setEnableCheck(enableCheck);
-    changed = true;
+    setChanged();
   }
 
   public boolean isEnableReject() {
@@ -56,7 +55,7 @@ public class FraudManager extends ConfigFileManager<FraudConfigFile> implements 
 
   public void setEnableReject(boolean enableReject) {
     config.setEnableReject(enableReject);
-    changed = true;
+    setChanged();
   }
 
   public Collection<String> getWhiteList() {
@@ -66,7 +65,7 @@ public class FraudManager extends ConfigFileManager<FraudConfigFile> implements 
   public void setWhiteList(Collection<String> whiteList) throws AdminException {
     vh.checkNoNulls("whiteList", whiteList);
     config.setWhiteList(whiteList);
-    changed = true;
+    setChanged();
   }
 
   @Override

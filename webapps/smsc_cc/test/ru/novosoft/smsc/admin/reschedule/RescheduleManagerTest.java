@@ -2,6 +2,7 @@ package ru.novosoft.smsc.admin.reschedule;
 
 import org.junit.*;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
 import ru.novosoft.smsc.admin.cluster_controller.ConfigState;
 import ru.novosoft.smsc.admin.cluster_controller.TestClusterController;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
@@ -23,7 +24,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class RescheduleManagerTest {
 
-  private static File configFile, backupDir;
+  private File configFile, backupDir;
 
   @Before
   public void beforeClass() throws IOException, AdminException {
@@ -39,9 +40,15 @@ public class RescheduleManagerTest {
       TestUtils.recursiveDeleteFolder(backupDir);
   }
 
+  public RescheduleManager getManager(ClusterController cc) throws AdminException {
+    RescheduleManager m = new RescheduleManager(configFile, backupDir, cc, FileSystem.getFSForSingleInst());
+    m.reset();
+    return m;
+  }
+
   @Test
   public void loadTest() throws AdminException {
-    RescheduleManager manager = new RescheduleManager(configFile, backupDir, new TestClusterController(), FileSystem.getFSForSingleInst());
+    RescheduleManager manager = getManager(new TestClusterController());
 
     assertFalse(manager.isChanged());
 
@@ -66,7 +73,7 @@ public class RescheduleManagerTest {
 
     // Создаем инстанц SmscConfig
     TestClusterController clusterController = new TestClusterController();
-    RescheduleManager config1 = new RescheduleManager(configFile, backupDir, clusterController, FileSystem.getFSForSingleInst());
+    RescheduleManager config1 = getManager(clusterController);
     config1.setScheduleLimit(20);
     // Сохраняем SmscConfig
     config1.apply();
@@ -87,7 +94,7 @@ public class RescheduleManagerTest {
 
   @Test
   public void resetTest() throws AdminException {
-    RescheduleManager config = new RescheduleManager(configFile, backupDir, new TestClusterController(), FileSystem.getFSForSingleInst());
+    RescheduleManager config = getManager(new TestClusterController());
 
     assertFalse(config.isChanged());
 
@@ -114,7 +121,7 @@ public class RescheduleManagerTest {
 
   @Test
   public void resetFailedTest() throws AdminException {
-    RescheduleManager config = new RescheduleManager(configFile, backupDir, new TestClusterController(), FileSystem.getFSForSingleInst());
+    RescheduleManager config = getManager(new TestClusterController());
 
     assertFalse(config.isChanged());
 
@@ -150,7 +157,7 @@ public class RescheduleManagerTest {
     Collection<Reschedule> res = new ArrayList<Reschedule>();
     Collections.addAll(res, r1, r2);
 
-    RescheduleManager config = new RescheduleManager(configFile, backupDir, new TestClusterController(), FileSystem.getFSForSingleInst());
+   RescheduleManager config = getManager(new TestClusterController());
 
     config.setReschedules(res);
   }
@@ -163,14 +170,33 @@ public class RescheduleManagerTest {
     Collection<Reschedule> res = new ArrayList<Reschedule>();
     Collections.addAll(res, r1, r2);
 
-    RescheduleManager config = new RescheduleManager(configFile, backupDir, new TestClusterController(), FileSystem.getFSForSingleInst());
+    RescheduleManager config = getManager(new TestClusterController());
 
     config.setReschedules(res);
   }
 
   @Test
+  public void getLastChangedTest() throws AdminException, InterruptedException {
+    RescheduleManager m = getManager(new TestClusterController());
+    assertEquals(-1, m.getLastChangeTime());
+
+    long now = System.currentTimeMillis();
+
+    m.setDefaultReschedule("1h,2m");
+    assertTrue(m.getLastChangeTime() >= now);
+
+    Thread.sleep(10);
+
+    now = System.currentTimeMillis();
+
+    assertFalse(m.getLastChangeTime() >= now);
+    m.reset();
+    assertTrue(m.getLastChangeTime() >= now);
+  }
+
+  @Test
   public void testGetStatusForSmscs() throws AdminException {
-   RescheduleManager manager = new RescheduleManager(configFile, backupDir, new ClusterControllerImpl(), FileSystem.getFSForSingleInst());
+   RescheduleManager manager = getManager(new ClusterControllerImpl());
 
     Map<Integer, SmscConfigurationStatus> states = manager.getStatusForSmscs();
 

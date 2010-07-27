@@ -4,10 +4,12 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
 import ru.novosoft.smsc.admin.cluster_controller.ConfigState;
 import ru.novosoft.smsc.admin.cluster_controller.TestClusterController;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
+import ru.novosoft.smsc.admin.fraud.FraudManager;
 import ru.novosoft.smsc.admin.smsc.SmscManager;
 import testutils.TestUtils;
 
@@ -40,6 +42,12 @@ public class MapLimitManagerTest {
       TestUtils.recursiveDeleteFolder(backupDir);
   }
 
+  private MapLimitManager getManager(ClusterController cc) throws AdminException {
+    MapLimitManager m = new MapLimitManager(configFile, backupDir, cc, FileSystem.getFSForSingleInst());
+    m.reset();
+    return m;
+  }
+
   private void validateConfig(MapLimitManager manager) throws AdminException {
     assertEquals(10000, manager.getDlgLimitIn());
     assertEquals(10000, manager.getDlgLimitInSri());
@@ -67,7 +75,7 @@ public class MapLimitManagerTest {
 
   @Test
   public void loadTest() throws AdminException {
-    MapLimitManager manager = new MapLimitManager(configFile, backupDir, new TestClusterController(), FileSystem.getFSForSingleInst());
+    MapLimitManager manager = getManager(new TestClusterController());
 
     assertFalse(manager.isChanged());
 
@@ -76,7 +84,7 @@ public class MapLimitManagerTest {
 
   @Test
   public void resetTest() throws AdminException {
-    MapLimitManager manager = new MapLimitManager(configFile, backupDir, new TestClusterController(), FileSystem.getFSForSingleInst());
+    MapLimitManager manager = getManager(new TestClusterController());
 
     assertFalse(manager.isChanged());
 
@@ -94,7 +102,7 @@ public class MapLimitManagerTest {
 
   @Test
   public void resetFailedTest() throws AdminException {
-    MapLimitManager manager = new MapLimitManager(configFile, backupDir, new TestClusterController(), FileSystem.getFSForSingleInst());
+    MapLimitManager manager = getManager(new TestClusterController());
 
     assertFalse(manager.isChanged());
 
@@ -120,7 +128,7 @@ public class MapLimitManagerTest {
   public void applyTest() throws AdminException {
 
     TestClusterController controller = new TestClusterController();
-    MapLimitManager manager = new MapLimitManager(configFile, backupDir, controller, FileSystem.getFSForSingleInst());
+    MapLimitManager manager = getManager(controller);
 
     assertFalse(manager.isChanged());
 
@@ -134,7 +142,7 @@ public class MapLimitManagerTest {
     assertFalse(manager.isChanged());
     assertTrue(controller.applyMapLimitsCalled);
 
-    MapLimitManager manager1 = new MapLimitManager(configFile, backupDir, controller, FileSystem.getFSForSingleInst());
+    MapLimitManager manager1 = getManager(controller);
 
     assertEquals(1231, manager1.getDlgLimitIn());
     assertEquals(321, manager1.getDlgLimitInSri());
@@ -162,7 +170,7 @@ public class MapLimitManagerTest {
 
   @Test
   public void setCongestionLevelsTest() throws AdminException {
-    MapLimitManager manager = new MapLimitManager(configFile, backupDir, new TestClusterController(), FileSystem.getFSForSingleInst());
+    MapLimitManager manager = getManager(new TestClusterController());
     try {
       CongestionLevel levels[] = new CongestionLevel[MapLimitManager.MAX_CONGESTON_LEVELS];
       manager.setCongestionLevels(levels);
@@ -195,10 +203,28 @@ public class MapLimitManagerTest {
     }
   }
 
+  @Test
+  public void getLastChangedTest() throws AdminException, InterruptedException {
+    MapLimitManager m = getManager(new TestClusterController());
+    assertEquals(-1, m.getLastChangeTime());
+
+    long now = System.currentTimeMillis();
+
+    m.setDlgLimitIn(100);
+    assertTrue(m.getLastChangeTime() >= now);
+
+    Thread.sleep(10);
+
+    now = System.currentTimeMillis();
+
+    assertFalse(m.getLastChangeTime() >= now);
+    m.reset();
+    assertTrue(m.getLastChangeTime() >= now);
+  }
 
   @Test
   public void testGetStatusForSmscs() throws AdminException {
-    MapLimitManager manager = new MapLimitManager(configFile, backupDir, new ClusterControllerImpl(), FileSystem.getFSForSingleInst());
+    MapLimitManager manager = getManager(new ClusterControllerImpl());
 
     Map<Integer, SmscConfigurationStatus> states = manager.getStatusForSmscs();
 

@@ -43,7 +43,7 @@ public class InstanceSettings implements Cloneable {
 
   private String cacheDir;
 
-  private final ValidationHelper vh = new ValidationHelper(InstanceSettings.class.getCanonicalName());
+  private final ValidationHelper vh = new ValidationHelper(InstanceSettings.class);
 
   public InstanceSettings() {    
   }

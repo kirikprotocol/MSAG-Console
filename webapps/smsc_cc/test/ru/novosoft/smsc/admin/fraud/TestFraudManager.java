@@ -2,7 +2,11 @@ package ru.novosoft.smsc.admin.fraud;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
+import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.config.TestConfigFileManagerHelper;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Тестовая реализация FraudManager
@@ -15,20 +19,21 @@ public class TestFraudManager extends FraudManager {
 
   public TestFraudManager(ClusterController cc) throws AdminException {
     super(null, null, cc, null);
+    helper = new TestConfigFileManagerHelper(TestFraudManager.class.getResourceAsStream("fraud.xml"));
   }
 
   public void reset() throws AdminException {
-    getHelper().reset(this);
+    helper.reset(this);
   }
 
   public void apply() throws AdminException {
-    getHelper().apply(this);
+    helper.apply(this);
   }
 
-  private TestConfigFileManagerHelper getHelper() throws AdminException {
-    if (helper == null) {
-      helper = new TestConfigFileManagerHelper(TestFraudManager.class.getResourceAsStream("fraud.xml"));
-    }
-    return helper;
+  public Map<Integer, SmscConfigurationStatus> getStatusForSmscs() throws AdminException {
+    Map<Integer, SmscConfigurationStatus> res = new HashMap<Integer, SmscConfigurationStatus>();
+    res.put(0, SmscConfigurationStatus.UP_TO_DATE);
+    res.put(1, SmscConfigurationStatus.UP_TO_DATE);
+    return res;
   }
 }

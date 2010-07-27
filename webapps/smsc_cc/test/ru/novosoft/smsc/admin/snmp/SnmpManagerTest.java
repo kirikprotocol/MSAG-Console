@@ -5,6 +5,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
 import ru.novosoft.smsc.admin.cluster_controller.ConfigState;
 import ru.novosoft.smsc.admin.cluster_controller.TestClusterController;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
@@ -39,6 +40,12 @@ public class SnmpManagerTest {
       configFile.delete();
     if (backupDir != null)
       TestUtils.recursiveDeleteFolder(backupDir);
+  }
+
+  private SnmpManager getManager(ClusterController cc) throws AdminException {
+    SnmpManager m = new SnmpManager(configFile, backupDir, cc, FileSystem.getFSForSingleInst());
+    m.reset();
+    return m;
   }
 
   private void validate(SnmpManager m) throws AdminException {
@@ -90,7 +97,7 @@ public class SnmpManagerTest {
 
   @Test
   public void loadTest() throws AdminException {
-    SnmpManager m = new SnmpManager(configFile, backupDir, new TestClusterController(), FileSystem.getFSForSingleInst());
+    SnmpManager m = getManager(new TestClusterController());
 
     validate(m);
   }
@@ -98,7 +105,7 @@ public class SnmpManagerTest {
   @Test
   public void applyTest() throws AdminException {
     TestClusterController controller = new TestClusterController();
-    SnmpManager m = new SnmpManager(configFile, backupDir, controller, FileSystem.getFSForSingleInst());
+    SnmpManager m = getManager(controller);
     assertFalse(m.isChanged());
 
     SnmpObject def = m.getDefaultSnmpObject();
@@ -116,7 +123,7 @@ public class SnmpManagerTest {
 
   @Test
   public void resetTest() throws AdminException {
-    SnmpManager m = new SnmpManager(configFile, backupDir, new TestClusterController(), FileSystem.getFSForSingleInst());
+    SnmpManager m = getManager(new TestClusterController());
 
     SnmpObject def = m.getDefaultSnmpObject();
     def.setCounterRejected(40, 40, 40, 40);
@@ -131,7 +138,7 @@ public class SnmpManagerTest {
 
   @Test
   public void resetFailedTest() throws AdminException {
-    SnmpManager m = new SnmpManager(configFile, backupDir, new TestClusterController(), FileSystem.getFSForSingleInst());
+    SnmpManager m = getManager(new TestClusterController());
 
     SnmpObject def = m.getDefaultSnmpObject();
     def.setCounterRejected(40, 40, 40, 40);
@@ -150,8 +157,27 @@ public class SnmpManagerTest {
   }
 
   @Test
+  public void getLastChangedTest() throws AdminException, InterruptedException {
+    SnmpManager m = getManager(new TestClusterController());
+    assertEquals(-1, m.getLastChangeTime());
+
+    long now = System.currentTimeMillis();
+
+    m.setCounterInterval(200);
+    assertTrue(m.getLastChangeTime() >= now);
+
+    Thread.sleep(10);
+
+    now = System.currentTimeMillis();
+
+    assertFalse(m.getLastChangeTime() >= now);
+    m.reset();
+    assertTrue(m.getLastChangeTime() >= now);
+  }
+
+  @Test
   public void testGetStatusForSmscs() throws AdminException {
-    SnmpManager m = new SnmpManager(configFile, backupDir, new ClusterControllerImpl(), FileSystem.getFSForSingleInst());
+    SnmpManager m = getManager(new ClusterControllerImpl());
 
     Map<Integer, SmscConfigurationStatus> states = m.getStatusForSmscs();
 

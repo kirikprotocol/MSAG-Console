@@ -1,8 +1,6 @@
 package ru.novosoft.smsc.admin.archive_daemon;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
 import ru.novosoft.smsc.util.config.XmlConfig;
@@ -19,16 +17,19 @@ import static org.junit.Assert.*;
  */
 public class ArchiveDaemonManagerTest {
 
-  private static File configFile, backupDir;
+  private File configFile, backupDir;
+  private ArchiveDaemonManager c;
 
-  @BeforeClass
-  public static void beforeClass() throws IOException, AdminException {
+  @Before
+  public void beforeClass() throws IOException, AdminException {
     configFile = TestUtils.exportResourceToRandomFile(ArchiveDaemonManagerTest.class.getResourceAsStream("config.xml"), ".archivedaemon");
     backupDir = TestUtils.createRandomDir(".archivedaemonbackup");
+    c = new ArchiveDaemonManager(configFile, backupDir, FileSystem.getFSForSingleInst());
+    c.reset();
   }
 
-  @AfterClass
-  public static void afterClass() {
+  @After
+  public void afterClass() {
     if (configFile != null)
       configFile.delete();
     if (backupDir != null)
@@ -53,13 +54,11 @@ public class ArchiveDaemonManagerTest {
 
   @Test
   public void loadTest() throws AdminException {
-    ArchiveDaemonManager c = new ArchiveDaemonManager(configFile, backupDir, FileSystem.getFSForSingleInst());
     validateConfig(c);
   }
 
   @Test
   public void resetTest() throws AdminException {
-    ArchiveDaemonManager c = new ArchiveDaemonManager(configFile, backupDir, FileSystem.getFSForSingleInst());
     assertFalse(c.isChanged());
 
     c.setInterval(21);
@@ -81,10 +80,9 @@ public class ArchiveDaemonManagerTest {
     cfg.load(configFile);
 
     // Создаем инстанц SmscConfig
-    ArchiveDaemonManager config1 = new ArchiveDaemonManager(configFile, backupDir, FileSystem.getFSForSingleInst());
-    config1.setInterval(30);
+    c.setInterval(30);
     // Сохраняем SmscConfig
-    config1.apply();
+    c.apply();
 
     // Проверяем, что в директории backup появились файлы
     assertFalse(backupDir.delete()); // Не можем удалить директорию т.к. там появились файлы

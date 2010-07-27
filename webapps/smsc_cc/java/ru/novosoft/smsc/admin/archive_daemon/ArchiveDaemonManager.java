@@ -15,11 +15,10 @@ import java.util.Map;
  */
 public class ArchiveDaemonManager extends ConfigFileManager<ArchiveDaemonConfig> {
 
-  private final static ValidationHelper vh = new ValidationHelper(ArchiveDaemonManager.class.getCanonicalName());
+  private final static ValidationHelper vh = new ValidationHelper(ArchiveDaemonManager.class);
 
-  public ArchiveDaemonManager(File configFile, File backupDir, FileSystem fileSystem) throws AdminException {
+  public ArchiveDaemonManager(File configFile, File backupDir, FileSystem fileSystem) {
     super(configFile, backupDir, fileSystem);
-    reset();
   }
 
   protected ArchiveDaemonConfig getLastAppliedConfig() {
@@ -38,7 +37,7 @@ public class ArchiveDaemonManager extends ConfigFileManager<ArchiveDaemonConfig>
   public void setInterval(int interval) throws AdminException {
     vh.checkPositive("interval", interval);
     config.setInterval(interval);
-    changed = true;
+    setChanged();
   }
 
   public String getViewHost() {
@@ -48,7 +47,7 @@ public class ArchiveDaemonManager extends ConfigFileManager<ArchiveDaemonConfig>
   public void setViewHost(String viewHost) throws AdminException {
     vh.checkNotEmpty("viewHost", viewHost);
     config.setViewHost(viewHost);
-    changed = true;
+    setChanged();
   }
 
   public int getViewPort() {
@@ -58,7 +57,7 @@ public class ArchiveDaemonManager extends ConfigFileManager<ArchiveDaemonConfig>
   public void setViewPort(int viewPort) throws AdminException {
     vh.checkPort("viewPort", viewPort);
     config.setViewPort(viewPort);
-    changed = true;
+    setChanged();
   }
 
   public int getViewTimeout() {
@@ -68,7 +67,7 @@ public class ArchiveDaemonManager extends ConfigFileManager<ArchiveDaemonConfig>
   public void setViewTimeout(int viewTimeout) throws AdminException {
     vh.checkPositive("viewTimeout", viewTimeout);
     config.setViewTimeout(viewTimeout);
-    changed = true;
+    setChanged();
   }
 
   public int getQueriesMax() {
@@ -78,7 +77,7 @@ public class ArchiveDaemonManager extends ConfigFileManager<ArchiveDaemonConfig>
   public void setQueriesMax(int queriesMax) throws AdminException {
     vh.checkPositive("queriesMax", queriesMax);
     config.setQueriesMax(queriesMax);
-    changed = true;
+    setChanged();
   }
 
   public int getQueriesInit() {
@@ -88,7 +87,7 @@ public class ArchiveDaemonManager extends ConfigFileManager<ArchiveDaemonConfig>
   public void setQueriesInit(int queriesInit) throws AdminException {
     vh.checkGreaterOrEqualsTo("queriesInit", queriesInit, 0);
     config.setQueriesInit(queriesInit);
-    changed = true;
+    setChanged();
   }
 
   public int getTransactionsMaxSmsCount() {
@@ -98,7 +97,7 @@ public class ArchiveDaemonManager extends ConfigFileManager<ArchiveDaemonConfig>
   public void setTransactionsMaxSmsCount(int transactionsMaxSmsCount) throws AdminException {
     vh.checkPositive("transactionsMaxSmsCount", transactionsMaxSmsCount);
     config.setTransactionsMaxSmsCount(transactionsMaxSmsCount);
-    changed = true;
+    setChanged();
   }
 
   public int getTransactionsMaxTimeInterval() {
@@ -108,7 +107,7 @@ public class ArchiveDaemonManager extends ConfigFileManager<ArchiveDaemonConfig>
   public void setTransactionsMaxTimeInterval(int transactionsMaxTimeInterval) throws AdminException {
     vh.checkPositive("transactionsMaxTimeInterval", transactionsMaxTimeInterval);
     config.setTransactionsMaxTimeInterval(transactionsMaxTimeInterval);
-    changed = true;
+    setChanged();
   }
 
   public String getLocationsBaseDestination() {
@@ -118,7 +117,7 @@ public class ArchiveDaemonManager extends ConfigFileManager<ArchiveDaemonConfig>
   public void setLocationsBaseDestination(String locationsBaseDestination) throws AdminException {
     vh.checkNotEmpty("locationsBaseDestination", locationsBaseDestination);
     config.setLocationsBaseDestination(locationsBaseDestination);
-    changed = true;
+    setChanged();
   }
 
   public String getLocationsTextDestinations() {
@@ -128,7 +127,7 @@ public class ArchiveDaemonManager extends ConfigFileManager<ArchiveDaemonConfig>
   public void setLocationsTextDestinations(String locationsTextDestinations) throws AdminException {
     vh.checkNotEmpty("locationsTextDestinations", locationsTextDestinations);
     config.setLocationsTextDestinations(locationsTextDestinations);
-    changed = true;
+    setChanged();
   }
 
   public Map<String, String> getLocationsSources() {
@@ -138,7 +137,7 @@ public class ArchiveDaemonManager extends ConfigFileManager<ArchiveDaemonConfig>
   public void setLocationsSources(Map<String, String> locationsSources) throws AdminException {
     vh.checkNoNulls("locationsSources", locationsSources);
     config.setLocationsSources(locationsSources);
-    changed = true;
+    setChanged();
   }
 
   public int getIndexatorMaxFlushSpeed() {
@@ -148,7 +147,7 @@ public class ArchiveDaemonManager extends ConfigFileManager<ArchiveDaemonConfig>
   public void setIndexatorMaxFlushSpeed(int indexatorMaxFlushSpeed) throws AdminException {
     vh.checkPositive("indexatorMaxFlushSpeed", indexatorMaxFlushSpeed);
     config.setIndexatorMaxFlushSpeed(indexatorMaxFlushSpeed);
-    changed = true;
+    setChanged();
   }
 
   public Map<String, Integer> getIndexatorSmeAddrChunkSizes() {
@@ -158,6 +157,6 @@ public class ArchiveDaemonManager extends ConfigFileManager<ArchiveDaemonConfig>
   public void setIndexatorSmeAddrChunkSizes(Map<String, Integer> indexatorSmeAddrChunkSizes) throws AdminException {
     vh.checkNoNulls("indexatorSmeAddrChunkSizes", indexatorSmeAddrChunkSizes);
     config.setIndexatorSmeAddrChunkSizes(indexatorSmeAddrChunkSizes);
-    changed = true;
+    setChanged();
   }
 }

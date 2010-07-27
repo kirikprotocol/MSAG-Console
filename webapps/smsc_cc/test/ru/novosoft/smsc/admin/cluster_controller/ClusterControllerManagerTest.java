@@ -18,7 +18,7 @@ import java.io.IOException;
  */
 public class ClusterControllerManagerTest {
 
-  private static File configFile, backupDir;
+  private File configFile, backupDir;
 
   @Before
   public void beforeClass() throws IOException, AdminException {
@@ -34,9 +34,15 @@ public class ClusterControllerManagerTest {
       TestUtils.recursiveDeleteFolder(backupDir);
   }
 
+  private ClusterControllerManager getManager() throws AdminException {
+    ClusterControllerManager m = new ClusterControllerManager(configFile, backupDir, FileSystem.getFSForSingleInst());
+    m.reset();
+    return m;
+  }
+
   @Test
   public void loadTest() throws AdminException {
-    ClusterControllerManager m = new ClusterControllerManager(configFile, backupDir, FileSystem.getFSForSingleInst());
+    ClusterControllerManager m = getManager();
 
     assertEquals(9998, m.getListenerPort());
   }
@@ -46,7 +52,7 @@ public class ClusterControllerManagerTest {
     XmlConfig c = new XmlConfig();
     c.load(configFile);
 
-    ClusterControllerManager m = new ClusterControllerManager(configFile, backupDir, FileSystem.getFSForSingleInst());
+    ClusterControllerManager m = getManager();
     m.setListenerPort(9998);
 
     assertTrue(m.isChanged());
@@ -63,7 +69,7 @@ public class ClusterControllerManagerTest {
 
   @Test
   public void resetTest() throws AdminException {
-    ClusterControllerManager m = new ClusterControllerManager(configFile, backupDir, FileSystem.getFSForSingleInst());
+    ClusterControllerManager m = getManager();
     m.setListenerPort(9999);
 
     assertTrue(m.isChanged());

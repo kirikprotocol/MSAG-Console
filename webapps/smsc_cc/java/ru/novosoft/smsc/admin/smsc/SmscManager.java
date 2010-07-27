@@ -24,10 +24,9 @@ public class SmscManager extends ConfigFileManager<SmscConfigFile> implements Sm
   private List<SmscConfigObserver> observers = new ArrayList<SmscConfigObserver>();
   private final ClusterController cc;
 
-  public SmscManager(File configFile, File backupDir, ClusterController cc, FileSystem fileSystem) throws AdminException {
+  public SmscManager(File configFile, File backupDir, ClusterController cc, FileSystem fileSystem) {
     super(configFile, backupDir, fileSystem);
     this.cc = cc;
-    reset();
   }
 
   @Override
@@ -62,7 +61,7 @@ public class SmscManager extends ConfigFileManager<SmscConfigFile> implements Sm
       config.setCommonSettings((CommonSettings) settings.clone());
     } catch (CloneNotSupportedException e) {
     }
-    changed = true;
+    setChanged();
   }
 
 
@@ -81,7 +80,7 @@ public class SmscManager extends ConfigFileManager<SmscConfigFile> implements Sm
       config.setInstanceSettings(instanceNumber, (InstanceSettings) instanceSettings.clone());
     } catch (CloneNotSupportedException e) {
     }
-    changed = true;
+    setChanged();
   }
 
   /**

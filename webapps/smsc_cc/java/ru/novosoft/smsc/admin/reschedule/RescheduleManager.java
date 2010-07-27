@@ -19,20 +19,19 @@ import java.util.Map;
  */
 public class RescheduleManager extends ConfigFileManager<RescheduleConfig> implements SmscConfiguration {
 
-  private static final ValidationHelper vh = new ValidationHelper(RescheduleManager.class.getCanonicalName());
+  private static final ValidationHelper vh = new ValidationHelper(RescheduleManager.class);
 
   private final ClusterController cc;
 
-  public RescheduleManager(File configFile, File backupDir, ClusterController cc, FileSystem fs) throws AdminException {
+  public RescheduleManager(File configFile, File backupDir, ClusterController cc, FileSystem fs) {
     super(configFile, backupDir, fs);
     this.cc = cc;
-    reset();
   }
 
   public void setScheduleLimit(int scheduleLimit) throws AdminException {
     vh.checkPositive("scheduleLimit", scheduleLimit);
     config.setRescheduleLimit(scheduleLimit);
-    changed = true;
+    setChanged();
   }
 
   public int getScheduleLimit() {
@@ -46,7 +45,7 @@ public class RescheduleManager extends ConfigFileManager<RescheduleConfig> imple
   public void setDefaultReschedule(String intervals) throws AdminException {
     vh.checkMaches("defaultReschedule", intervals, Reschedule.intervalsPattern);
     config.setDefaultReschedule(intervals);
-    changed = true;
+    setChanged();
   }
 
   public Collection<Reschedule> getReschedules() {
@@ -61,11 +60,7 @@ public class RescheduleManager extends ConfigFileManager<RescheduleConfig> imple
           vh.checkNotIntersect("reschedule_statuses", r1.getStatuses(), r2.getStatuses());
       }
     config.setReschedules(reschedules);
-    changed = true;
-  }
-
-  public boolean isChanged() {
-    return changed;
+    setChanged();
   }
 
   @Override

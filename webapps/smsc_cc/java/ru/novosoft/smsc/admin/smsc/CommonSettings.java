@@ -156,7 +156,7 @@ public class CommonSettings implements Cloneable {
 
   private Map<String, String> directives = new HashMap<String, String>();
 
-  private ValidationHelper vh = new ValidationHelper(CommonSettings.class.getCanonicalName());
+  private ValidationHelper vh = new ValidationHelper(CommonSettings.class);
 
   public CommonSettings() {
 

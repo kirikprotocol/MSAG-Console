@@ -19,14 +19,13 @@ import java.util.Map;
  */
 public class SnmpManager extends ConfigFileManager<SnmpConfigFile> implements SmscConfiguration {
 
-  private static final ValidationHelper vh = new ValidationHelper(SnmpManager.class.getCanonicalName());
+  private static final ValidationHelper vh = new ValidationHelper(SnmpManager.class);
 
   private final ClusterController cc;
 
-  public SnmpManager(File configFile, File backupDir, ClusterController cc, FileSystem fileSystem) throws AdminException {
+  public SnmpManager(File configFile, File backupDir, ClusterController cc, FileSystem fileSystem) {
     super(configFile, backupDir, fileSystem);
     this.cc = cc;
-    reset();
   }
 
   /**
@@ -46,7 +45,7 @@ public class SnmpManager extends ConfigFileManager<SnmpConfigFile> implements Sm
   public void setCounterInterval(int counterInterval) throws AdminException {
     vh.checkPositive("counterInterval", counterInterval);
     config.setCounterInterval(counterInterval);
-    changed = true;
+    setChanged();
   }
 
   /**
@@ -65,7 +64,7 @@ public class SnmpManager extends ConfigFileManager<SnmpConfigFile> implements Sm
    */
   public void setDefaultSnmpObject(SnmpObject defaultSnmpObject) throws AdminException {
     config.setDefaultSnmpObject(new SnmpObject(defaultSnmpObject));
-    changed = true;
+    setChanged();
   }
 
   /**
@@ -92,7 +91,7 @@ public class SnmpManager extends ConfigFileManager<SnmpConfigFile> implements Sm
     for (Map.Entry<String, SnmpObject> e : snmpObjects.entrySet())
       res.put(e.getKey(), new SnmpObject(e.getValue()));
     config.setSnmpObjects(res);
-    changed = true;
+    setChanged();
   }
 
   @Override

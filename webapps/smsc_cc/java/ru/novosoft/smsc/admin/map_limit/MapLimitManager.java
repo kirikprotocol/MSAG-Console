@@ -20,14 +20,13 @@ import java.util.Map;
 public class MapLimitManager extends ConfigFileManager<MapLimitConfig> implements SmscConfiguration {
 
   static final int MAX_CONGESTON_LEVELS = MapLimitConfig.MAX_CONGESTION_LEVELS;
-  private static final ValidationHelper vh = new ValidationHelper(MapLimitManager.class.getCanonicalName());
+  private static final ValidationHelper vh = new ValidationHelper(MapLimitManager.class);
 
   private final ClusterController cc;
 
-  public MapLimitManager(File configFile, File backupDir, ClusterController cc, FileSystem fs) throws AdminException {
+  public MapLimitManager(File configFile, File backupDir, ClusterController cc, FileSystem fs) {
     super(configFile, backupDir, fs);
     this.cc = cc;
-    reset();
   }
 
   /**
@@ -58,7 +57,7 @@ public class MapLimitManager extends ConfigFileManager<MapLimitConfig> implement
   public void setCongestionLevels(CongestionLevel[] levels) throws AdminException {
     vh.checkNoNulls("congestionLevels", Arrays.asList(levels));
     config.setClevels(levels);
-    changed = true;
+    setChanged();
   }
 
   public int getDlgLimitIn() {
@@ -68,7 +67,7 @@ public class MapLimitManager extends ConfigFileManager<MapLimitConfig> implement
   public void setDlgLimitIn(int dlgLimitIn) throws AdminException {
     vh.checkPositive("dlgLimitIn", dlgLimitIn);
     config.setDlgLimitIn(dlgLimitIn);
-    changed = true;
+    setChanged();
   }
 
   public int getDlgLimitInSri() {
@@ -78,7 +77,7 @@ public class MapLimitManager extends ConfigFileManager<MapLimitConfig> implement
   public void setDlgLimitInSri(int dlgLimitInSri) throws AdminException {
     vh.checkPositive("dlgLimitInSri", dlgLimitInSri);
     config.setDlgLimitInSri(dlgLimitInSri);
-    changed = true;
+    setChanged();
   }
 
   public int getDlgLimitInUssd() {
@@ -88,7 +87,7 @@ public class MapLimitManager extends ConfigFileManager<MapLimitConfig> implement
   public void setDlgLimitInUssd(int dlgLimitInUssd) throws AdminException {
     vh.checkPositive("dlgLimitInUssd", dlgLimitInUssd);
     config.setDlgLimitInUssd(dlgLimitInUssd);
-    changed = true;
+    setChanged();
   } 
 
   public int getDlgLimitOutSri() {
@@ -98,7 +97,7 @@ public class MapLimitManager extends ConfigFileManager<MapLimitConfig> implement
   public void setDlgLimitOutSri(int dlgLimitOutSri) throws AdminException {
     vh.checkPositive("dlgLimitOutSri", dlgLimitOutSri);
     config.setDlgLimitOutSri(dlgLimitOutSri);
-    changed = true;
+    setChanged();
   }
 
   public int getDlgLimitUssd() {
@@ -108,7 +107,7 @@ public class MapLimitManager extends ConfigFileManager<MapLimitConfig> implement
   public void setDlgLimitUssd(int dlgLimitUssd) throws AdminException {
     vh.checkPositive("dlgLimitUssd", dlgLimitUssd);
     config.setDlgLimitUssd(dlgLimitUssd);
-    changed = true;
+    setChanged();
   }
 
   public int[] getUssdNoSriCodes() {
@@ -118,7 +117,7 @@ public class MapLimitManager extends ConfigFileManager<MapLimitConfig> implement
   public void setUssdNoSriCodes(int[] ussdNoSriCodes) throws AdminException {
     vh.checkPositive("ussdNoSriCodes", ussdNoSriCodes);
     config.setUssdNoSriCodes(ussdNoSriCodes);
-    changed = true;
+    setChanged();
   }
 
   @Override

@@ -11,9 +11,8 @@ import java.io.File;
  */
 public class ClusterControllerManager extends ConfigFileManager<ClusterControllerConfig> {
 
-  public ClusterControllerManager(File configFile, File backupDir, FileSystem fileSystem) throws AdminException {
+  public ClusterControllerManager(File configFile, File backupDir, FileSystem fileSystem) {
     super(configFile, backupDir, fileSystem);
-    reset();
   }
 
   protected ClusterControllerConfig getLastAppliedConfig() {
@@ -31,6 +30,6 @@ public class ClusterControllerManager extends ConfigFileManager<ClusterControlle
 
   public void setListenerPort(int port) {
     config.setListenerPort(port);
-    changed = true;
+    setChanged();
   }
 }

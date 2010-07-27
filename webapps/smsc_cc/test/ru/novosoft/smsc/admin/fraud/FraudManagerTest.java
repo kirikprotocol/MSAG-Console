@@ -26,7 +26,7 @@ public class FraudManagerTest {
   private File configFile, backupDir;
 
   @Before
-  public void before() throws IOException {
+  public void before() throws IOException, AdminException {
     configFile = TestUtils.exportResourceToRandomFile(FraudManagerTest.class.getResourceAsStream("fraud.xml"), ".fraud");
     backupDir = TestUtils.createRandomDir(".fraudbackup");
   }
@@ -39,9 +39,15 @@ public class FraudManagerTest {
       TestUtils.recursiveDeleteFolder(backupDir);
   }
 
+  private FraudManager getManager(ClusterController cc) throws AdminException {
+    FraudManager fm = new FraudManager(configFile, backupDir, cc, FileSystem.getFSForSingleInst());
+    fm.reset();
+    return fm;
+  }
+
   @Test
   public void loadTest() throws AdminException {
-    FraudManager fm = new FraudManager(configFile, backupDir, new TestClusterController(), FileSystem.getFSForSingleInst());
+    FraudManager fm = getManager(new TestClusterController());
     assertFalse(fm.isChanged());
 
     assertEquals(1, fm.getTail());
@@ -55,7 +61,7 @@ public class FraudManagerTest {
   @Test
   public void saveTest() throws AdminException {
     TestClusterController clusterController = new TestClusterController();
-    FraudManager fm1 = new FraudManager(configFile, backupDir, clusterController, FileSystem.getFSForSingleInst());
+    FraudManager fm1 = getManager(clusterController);
 
     fm1.setTail(5);
     fm1.setEnableCheck(false);
@@ -72,7 +78,7 @@ public class FraudManagerTest {
 
     assertTrue(clusterController.applyFraudCalled);
 
-    FraudManager fm = new FraudManager(configFile, backupDir, clusterController, FileSystem.getFSForSingleInst());
+    FraudManager fm = getManager(clusterController);
 
     assertEquals(5, fm.getTail());
     assertFalse(fm.isEnableCheck());
@@ -87,7 +93,7 @@ public class FraudManagerTest {
 
   @Test
   public void resetTest() throws AdminException {
-    FraudManager fm = new FraudManager(configFile, backupDir, new TestClusterController(), FileSystem.getFSForSingleInst());
+    FraudManager fm = getManager(new TestClusterController());
     assertFalse(fm.isChanged());
 
     fm.setTail(5);
@@ -111,7 +117,7 @@ public class FraudManagerTest {
 
   @Test
   public void resetFailedTest() throws AdminException {
-    FraudManager fm = new FraudManager(configFile, backupDir, new TestClusterController(), FileSystem.getFSForSingleInst());
+    FraudManager fm = getManager(new TestClusterController());
     assertFalse(fm.isChanged());
 
     fm.setTail(5);
@@ -139,7 +145,8 @@ public class FraudManagerTest {
 
   @Test
   public void setWhiteListTest() throws AdminException {
-    FraudManager fm = new FraudManager(configFile, backupDir, new TestClusterController(), FileSystem.getFSForSingleInst());
+    FraudManager fm = getManager(new TestClusterController());
+
     Collection<String> whiteList = new ArrayList<String>();
 
     // Корректный адрес
@@ -180,8 +187,27 @@ public class FraudManagerTest {
   }
 
   @Test
+  public void getLastChangedTest() throws AdminException, InterruptedException {
+    FraudManager fm = getManager(new TestClusterController());
+    assertEquals(-1, fm.getLastChangeTime());
+
+    long now = System.currentTimeMillis();
+    
+    fm.setTail(10);
+    assertTrue(fm.getLastChangeTime() >= now);
+
+    Thread.sleep(10);
+
+    now = System.currentTimeMillis();
+
+    assertFalse(fm.getLastChangeTime() >= now);
+    fm.reset();
+    assertTrue(fm.getLastChangeTime() >= now);
+  }
+
+  @Test
   public void testGetStatusForSmscs() throws AdminException {
-    FraudManager fm = new FraudManager(configFile, backupDir, new ClusterControllerImpl(), FileSystem.getFSForSingleInst());
+    FraudManager fm = getManager(new ClusterControllerImpl());
 
     Map<Integer, SmscConfigurationStatus> states = fm.getStatusForSmscs();
 

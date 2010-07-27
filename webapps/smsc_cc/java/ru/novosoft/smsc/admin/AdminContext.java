@@ -71,6 +71,7 @@ public class AdminContext {
     File clusterControllerConf = new File(clusterControllerInfo.getBaseDir(), "conf");
 
     clusterControllerManager = new ClusterControllerManager(new File(clusterControllerConf, "config.xml"), new File(clusterControllerConf, "backup"), fileSystem);
+    clusterControllerManager.reset();
 
     clusterController = new ClusterController(clusterControllerManager, serviceManager);
 
@@ -85,21 +86,27 @@ public class AdminContext {
     File smscConfigBackupDir = new File(smscConfigDir, "backup");
 
     smscManager = new SmscManager(new File(smscConfigDir, "config.xml"), smscConfigBackupDir, clusterController, fileSystem);
+    smscManager.reset();
 
     ServiceInfo archiveDaemonInfo = serviceManager.getService(ArchiveDemon.SERVICE_ID);
     File archiveDaemonConf = new File(archiveDaemonInfo.getBaseDir(), "conf");
     File archiveDaemonBackup = new File(archiveDaemonConf, "backup");
     archiveDaemonManager = (archiveDaemonInfo == null) ? null : new ArchiveDaemonManager(new File(archiveDaemonConf, "config.xml"), archiveDaemonBackup, fileSystem);
+    archiveDaemonManager.reset();
 
     aliasManager = new AliasManager(new File(smscConfigDir, "alias.bin"), clusterController, fileSystem);
 
     rescheduleManager = new RescheduleManager(new File(smscConfigDir, "schedule.xml"), smscConfigBackupDir, clusterController, fileSystem);
+    rescheduleManager.reset();
 
     fraudManager = new FraudManager(new File(smscConfigDir, "fraud.xml"), smscConfigBackupDir, clusterController, fileSystem);
+    fraudManager.reset();
 
     mapLimitManager = new MapLimitManager(new File(smscConfigDir, "maplimits.xml"), smscConfigBackupDir, clusterController, fileSystem);
+    mapLimitManager.reset();
 
     snmpManager = new SnmpManager(new File(smscConfigDir, "snmp.xml"), smscConfigBackupDir, clusterController, fileSystem);
+    snmpManager.reset();
 
     closedGroupManager = new ClosedGroupManager(new File(smscConfigDir, "snmp.xml"), smscConfigBackupDir, clusterController, fileSystem);
 

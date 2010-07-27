@@ -1,8 +1,6 @@
 package ru.novosoft.smsc.admin.smsc;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.alias.AliasManager;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
@@ -27,25 +25,31 @@ import static org.junit.Assert.assertEquals;
  */
 public class SmscManagerTest {
 
-  private static File configFile, backupDir;
+  private File configFile, backupDir;
 
-  @BeforeClass
-  public static void beforeClass() throws IOException, AdminException {
+  @Before
+  public void beforeClass() throws IOException, AdminException {
     configFile = TestUtils.exportResourceToRandomFile(SmscManagerTest.class.getResourceAsStream("config.xml"), ".smsc");
     backupDir = TestUtils.createRandomDir(".smscbackup");
   }
 
-  @AfterClass
-  public static void afterClass() {
+  @After
+  public void afterClass() {
     if (configFile != null)
       configFile.delete();
     if (backupDir != null)
       TestUtils.recursiveDeleteFolder(backupDir);
   }
 
+  private SmscManager getManager(ClusterController cc) throws AdminException {
+    SmscManager manager = new SmscManager(configFile, backupDir, cc, FileSystem.getFSForSingleInst());
+    manager.reset();
+    return manager;
+  }
+
   @Test
   public void loadTest() throws AdminException {
-    SmscManager manager = new SmscManager(configFile, backupDir, new TestClusterController(), FileSystem.getFSForSingleInst());
+    SmscManager manager = getManager(new TestClusterController());
 
     CommonSettings cs = manager.getCommonSettings();
     assertNotNull(cs);
@@ -163,7 +167,7 @@ public class SmscManagerTest {
     cfg.load(configFile);
 
     // Создаем инстанц SmscConfig
-    SmscManager config1 = new SmscManager(configFile, backupDir, new TestClusterController(), FileSystem.getFSForSingleInst());
+    SmscManager config1 = getManager(new TestClusterController());
     CommonSettings s = config1.getCommonSettings();
     s.setAbInfoProtocolId(34);
     config1.setCommonSettings(s);
@@ -182,8 +186,27 @@ public class SmscManagerTest {
   }
 
   @Test
+  public void getLastChangedTest() throws AdminException, InterruptedException {
+    SmscManager m = getManager(new TestClusterController());
+    assertEquals(-1, m.getLastChangeTime());
+
+    long now = System.currentTimeMillis();
+
+    m.setCommonSettings(m.getCommonSettings());
+    assertTrue(m.getLastChangeTime() >= now);
+
+    Thread.sleep(10);
+
+    now = System.currentTimeMillis();
+
+    assertFalse(m.getLastChangeTime() >= now);
+    m.reset();
+    assertTrue(m.getLastChangeTime() >= now);
+  }
+
+  @Test
   public void testGetStatusForSmscs() throws AdminException {
-    SmscManager manager = new SmscManager(configFile, backupDir, new ClusterControllerImpl(), FileSystem.getFSForSingleInst());
+    SmscManager manager = getManager(new ClusterControllerImpl());
 
     Map<Integer, SmscConfigurationStatus> states = manager.getStatusForSmscs();
 

@@ -1,6 +1,5 @@
 package ru.novosoft.smsc.admin.config;
 
-import org.apache.log4j.Logger;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
 import ru.novosoft.smsc.admin.util.ConfigHelper;
@@ -17,15 +16,14 @@ import java.io.OutputStream;
  */
 public abstract class ConfigFileManager<T extends ManagedConfigFile> implements AppliableConfiguration {
 
-  private final Logger logger = Logger.getLogger(getClass());
-
   protected final File configFile;
   protected final File backupDir;
   protected final FileSystem fileSystem;
 
   protected T config;
   protected T lastAppliedConfig;
-  protected boolean changed;
+  private boolean changed;
+  private long lastChangeTime = -1;
 
   protected ConfigFileManager(File configFile, File backupDir, FileSystem fileSystem) {
     this.configFile = configFile;
@@ -34,6 +32,20 @@ public abstract class ConfigFileManager<T extends ManagedConfigFile> implements 
   }
 
   protected abstract T newConfigFile();
+
+  protected void setChanged() {
+    lastChangeTime = System.currentTimeMillis();
+    changed = true;
+  }
+
+  /**
+   * @deprecated Метод должен использоваться только в тестовых целях
+   */
+  protected void setNotChanged(boolean updateLastChangeTime) {
+    if (changed && updateLastChangeTime)
+      lastChangeTime = System.currentTimeMillis();
+    changed = false;
+  }
 
   protected void lockConfig(boolean write) throws AdminException {
   }
@@ -147,10 +159,16 @@ public abstract class ConfigFileManager<T extends ManagedConfigFile> implements 
   public void reset() throws AdminException {
     this.config = loadConfig();
     this.lastAppliedConfig = loadConfig();
+    if (changed)
+      this.lastChangeTime = System.currentTimeMillis();
     this.changed = false;
   }
 
   public boolean isChanged() {
     return changed;
+  }
+
+  public long getLastChangeTime() {
+    return lastChangeTime;
   }
 }
