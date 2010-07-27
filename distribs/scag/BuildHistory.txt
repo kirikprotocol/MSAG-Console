@@ -648,7 +648,8 @@ TO ALL: Insert log record for all significant changes & fixes here.
 2010-05-11 14:55 bukind
   msag: bugfix: all USSD_*_REQ_* should be able to open dialog
 
---- current fixes ---
+=================================================================================================================
+2010-07-27 13:35 bukind msag-build-20100727
 2010-06-07 15:00 bukind
   msag: feature: smpp resp timeout is configured from config smpp.core.respTimeout
 2010-06-08 16:00 bukind
@@ -661,3 +662,10 @@ TO ALL: Insert log record for all significant changes & fixes here.
   msag: bugfix: bug#3646 - msag trying to connect to alternative empty host/port smsc
 2010-07-05 16:00 bukind
   msag: feature: ussd dialog is not replaced until ussdReplaceTimeout is passed
+
+=================================================================================================================
+2010-07-27 13:35 bukind pvss-build-20100727
+2010-07-27 13:30 bukind
+  pvss: bugfix: only profile packets are going to statistics (pings ain't)
+
+--- current fixes ---
