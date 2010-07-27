@@ -87,7 +87,13 @@ private:
 
 
 public:
-    static SmeConfig readSmeConfig( ConfigView& config ); // throw ConfigException
+    struct SmscConfig {
+        smsc::sme::SmeConfig smeConfig;
+        int  ussdPushOp;
+        int  ussdPushVlrOp;
+    };
+
+    static SmscConfig readSmeConfig( ConfigView& config ); // throw ConfigException
 
     SmscConnector(TaskProcessor& processor,
                   const string& smscId,
@@ -97,7 +103,7 @@ public:
     void start();
     void stop();
     void reconnect();
-    void updateConfig( const smsc::sme::SmeConfig& config );
+    void updateConfig( const SmscConfig& config );
     bool isStopped() const;
     int getSeqNum();
     uint32_t sendSms(const string& org, const string& dst, const string& txt, bool flash);

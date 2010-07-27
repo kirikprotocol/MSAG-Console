@@ -166,14 +166,15 @@ private:
 
 // ===================================================================
 
-smsc::sme::SmeConfig SmscConnector::readSmeConfig( ConfigView& config )
+SmscConnector::SmscConfig SmscConnector::readSmeConfig( ConfigView& config )
 {
     {
         smsc::logger::Logger* tmplog = smsc::logger::Logger::getInstance("is2.conn");
         smsc_log_debug(tmplog,"reading sme config");
     }
 
-    smsc::sme::SmeConfig rv;
+    SmscConfig rvconf;
+    smsc::sme::SmeConfig& rv = rvconf.smeConfig;
     // Mandatory fields
     rv.host = ::cgetString(config,"host", "SMSC host wasn't defined !");
     rv.sid = ::cgetString(config,"sid", "InfoSme id wasn't defined !");
@@ -204,17 +205,16 @@ smsc::sme::SmeConfig SmscConnector::readSmeConfig( ConfigView& config )
 
     // ussd push
     try {
-        rv.ussdPushOp = config.getInt("ussdPushTag");
+        rvconf.ussdPushOp = config.getInt("ussdPushTag");
     } catch (smsc::util::config::ConfigException) {
-        rv.ussdPushOp = smsc::sms::USSD_USSN_REQ;
+        rvconf.ussdPushOp = -1;
     }
     try {
-        rv.ussdPushVlrOp = config.getInt("ussdPushVlrTag");
+        rvconf.ussdPushVlrOp = config.getInt("ussdPushVlrTag");
     } catch (smsc::util::config::ConfigException) {
-        rv.ussdPushVlrOp = smsc::sms::USSD_USSN_REQ_LAST;
+        rvconf.ussdPushVlrOp = -1;
     }
-
-    return rv;
+    return rvconf;
 }
 
 
@@ -225,8 +225,8 @@ smscId_(smscId),
 log_(Logger::getInstance("smsc.infosme.connector")),
 processor_(processor),
 timeout_(10),
-ussdPushOp_(smsc::sms::USSD_USSN_REQ),
-ussdPushVlrOp_(smsc::sms::USSD_USSN_REQ_LAST),
+ussdPushOp_(-1),
+ussdPushVlrOp_(-1),
 stopped_(false),
 connected_(false),
 listener_(*this, log_),
@@ -307,16 +307,16 @@ void SmscConnector::reconnect() {
     stateMonitor_.notify();
 }
 
-void SmscConnector::updateConfig( const smsc::sme::SmeConfig& config )
+void SmscConnector::updateConfig( const SmscConfig& config )
 {
     smsc_log_warn(log_, "updateConfig on '%s'... ", smscId_.c_str());
     {
         MutexGuard mg(destroyMonitor_);
-        timeout_ = config.timeOut;
+        timeout_ = config.smeConfig.timeOut;
         ussdPushOp_ = config.ussdPushOp;
         ussdPushVlrOp_ = config.ussdPushVlrOp;
         if (session_.get()) session_->close();
-        std::auto_ptr<SmppSession> newsess(new SmppSession(config,&listener_));
+        std::auto_ptr<SmppSession> newsess(new SmppSession(config.smeConfig,&listener_));
         listener_.setSyncTransmitter(newsess->getSyncTransmitter());
         listener_.setAsyncTransmitter(newsess->getAsyncTransmitter());
         // std::auto_ptr<SmppSession> oldsess(session_.release());

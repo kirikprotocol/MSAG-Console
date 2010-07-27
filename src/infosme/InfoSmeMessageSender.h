@@ -8,11 +8,11 @@
 #include "logger/Logger.h"
 #include "core/buffers/Hash.hpp"
 #include "TaskProcessor.h"
+#include "SmscConnector.h"
 
 namespace smsc {
 namespace infosme {
 
-class SmscConnector;
 class TaskProcessor;
 
 class InfoSmeMessageSender : public MessageSender
@@ -42,7 +42,7 @@ public:
 private:
 
     virtual SmscConnector* getSmscConnector(const std::string& regionId);
-    SmscConnector* addConnector( const smsc::sme::SmeConfig& cfg,
+    SmscConnector* addConnector( const SmscConnector::SmscConfig& cfg,
                                  const std::string& smscid,
                                  bool               perftest = false );
     void addRegionMapping( const std::string& regionId, const std::string& smscId );

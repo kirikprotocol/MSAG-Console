@@ -1,6 +1,10 @@
 History in reverse order
 ----------------------------------------------------
 
+2010-07-27 14:30 bukind
+  core reorg: inheriting from SmeConfig instead of extending it,
+  feature: by default ussdPush is disabled.
+
 2010-07-26 13:20 bukind
   feature: deliveryMode for tasks, ussdOps per smscconnector (v1,v2)
 

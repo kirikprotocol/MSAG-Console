@@ -495,8 +495,6 @@ struct SmeConfig{
     idleTimeout=60;
     disconnectTimeout=300;
     interfaceVersion = 0x34;
-      ussdPushOp = sms::USSD_USSN_REQ;
-      ussdPushVlrOp = sms::USSD_USSN_REQ_LAST;
   }
 
     void setSystemType( const std::string& st ) {
@@ -556,8 +554,6 @@ struct SmeConfig{
 
   int idleTimeout;
   int disconnectTimeout;
-    int ussdPushOp;
-    int ussdPushVlrOp;
 };
 
 namespace BindType{

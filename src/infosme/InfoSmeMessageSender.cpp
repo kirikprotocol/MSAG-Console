@@ -151,7 +151,7 @@ void InfoSmeMessageSender::reloadSmscAndRegions( Manager& manager )
             perftest = manager.getBool("InfoSme.performanceTest");
         } catch (...) {
         }
-        smsc::sme::SmeConfig cfg = SmscConnector::readSmeConfig(cview);
+        SmscConnector::SmscConfig cfg = SmscConnector::readSmeConfig(cview);
         SmscConnector* conn = addConnector(cfg,*i,perftest);
         if ( *i == defId ) {
             defaultConnector_ = conn;
@@ -255,7 +255,7 @@ void InfoSmeMessageSender::processWaitingEvents( time_t tm )
 }
 
 
-SmscConnector* InfoSmeMessageSender::addConnector( const smsc::sme::SmeConfig& cfg,
+SmscConnector* InfoSmeMessageSender::addConnector( const SmscConnector::SmscConfig& cfg,
                                                    const std::string& smscid,
                                                    bool  performanceTest )
 {

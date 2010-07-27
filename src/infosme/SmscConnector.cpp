@@ -223,9 +223,11 @@ bool SmscConnector::RegionTrafficControl::speedLimitReached( Task* task, const M
 
 // ===================================================================
 
-smsc::sme::SmeConfig SmscConnector::readSmeConfig( ConfigView& config )
+SmscConnector::SmscConfig SmscConnector::readSmeConfig( ConfigView& config )
 {
-    smsc::sme::SmeConfig rv;
+    SmscConfig rvconf;
+    smsc::sme::SmeConfig& rv = rvconf.smeConfig;
+
     // Mandatory fields
     rv.host = ::cgetString(config,"host", "SMSC host wasn't defined !");
     rv.sid = ::cgetString(config,"sid", "InfoSme id wasn't defined !");
@@ -253,24 +255,37 @@ smsc::sme::SmeConfig SmscConnector::readSmeConfig( ConfigView& config )
         const std::string ar = ::cgetString(config,"rangeOfAddress","InfoSme range of address was not defined");
         rv.setAddressRange(ar);
     } catch (smsc::util::config::ConfigException&) {}
-    return rv;
+
+    // FIXME: add reading ussdPushTag
+    // ussd push
+    try {
+        rvconf.ussdPushOp = config.getInt("ussdPushTag");
+    } catch (smsc::util::config::ConfigException) {
+        rvconf.ussdPushOp = -1;
+    }
+    try {
+        rvconf.ussdPushVlrOp = config.getInt("ussdPushVlrTag");
+    } catch (smsc::util::config::ConfigException) {
+        rvconf.ussdPushVlrOp = -1;
+    }
+    return rvconf;
 }
 
 
 SmscConnector::SmscConnector( TaskProcessor& processor,
-                              const smsc::sme::SmeConfig& cfg,
+                              const SmscConfig& cfg,
                               const string& smscId,
                               bool doPerformanceTests ) :
 smscId_(smscId),
 log_(Logger::getInstance("smsc.infosme.connector")),
 processor_(processor),
-timeout_(cfg.timeOut),
+timeout_(cfg.smeConfig.timeOut),
 ussdPushOp_(cfg.ussdPushOp),
 ussdPushVlrOp_(cfg.ussdPushVlrOp),
 stopped_(false),
 connected_(false),
 listener_(*this, log_),
-session_(new SmppSession(cfg, &listener_)),
+session_(new SmppSession(cfg.smeConfig, &listener_)),
 usage_(0),
 jstore_(0),
 trafficControl_(0)
@@ -328,13 +343,13 @@ void SmscConnector::reconnect() {
     stateMonitor_.notify();
 }
 
-void SmscConnector::updateConfig( const smsc::sme::SmeConfig& config )
+void SmscConnector::updateConfig( const SmscConfig& smscConfig )
 {
     smsc_log_warn(log_, "updateConfig on '%s'... ", smscId_.c_str());
     {
         MutexGuard mg(destroyMonitor_);
         session_->close();
-        std::auto_ptr<SmppSession> newsess(new SmppSession(config,&listener_));
+        std::auto_ptr<SmppSession> newsess(new SmppSession(smscConfig.smeConfig,&listener_));
         listener_.setSyncTransmitter(newsess->getSyncTransmitter());
         listener_.setAsyncTransmitter(newsess->getAsyncTransmitter());
         std::auto_ptr<SmppSession> oldsess(session_.release());

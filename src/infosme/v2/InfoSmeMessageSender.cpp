@@ -211,7 +211,7 @@ void InfoSmeMessageSender::init( TaskProcessor& processor,
     for ( CStrSet::iterator i = connNames->begin();
           i != connNames->end(); ++i ) {
         std::auto_ptr< ConfigView > sect(ccv->getSubConfig(i->c_str()));
-        smsc::sme::SmeConfig cfg( SmscConnector::readSmeConfig(*sect.get()) );
+        SmscConnector::SmscConfig cfg( SmscConnector::readSmeConfig(*sect.get()) );
         // adding a connector
         SmscConnector** ptr = connectors_.GetPtr(i->c_str());
         SmscConnector* p = 0;
