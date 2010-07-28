@@ -1,4 +1,7 @@
+#ifndef __GNUC__
 #pragma ident "$Id$"
+#endif
+
 #ifndef SMSC_UTIL_CONFIG_CONFIG_VIEW
 #define SMSC_UTIL_CONFIG_CONFIG_VIEW
 
