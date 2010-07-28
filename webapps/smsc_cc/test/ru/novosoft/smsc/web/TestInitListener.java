@@ -23,6 +23,9 @@ public class TestInitListener implements ServletContextListener {
 
   private static final Logger logger = Logger.getLogger(TestInitListener.class);
 
+  //jvm parameters
+  //-Dsmsc.config.users=/home/alkhal/projects/smsc/webapps/smsc_cc/test/users.xml -Dsmsc.config.webconfig=/home/alkhal/projects/smsc/webapps/smsc_cc/test/webconfig.xml
+  
   public void contextInitialized(ServletContextEvent servletContextEvent) {
     try {
       System.out.println(servletContextEvent.getServletContext().getRealPath("WEB-INF/jaas.config"));

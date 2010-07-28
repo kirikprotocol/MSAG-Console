@@ -1,0 +1,130 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:mo="http://eyeline.mobi">
+
+<ui:composition template="../../templates/main.xhtml">
+
+  <ui:define name="sme_title">
+
+    <table cellpadding="0" cellspacing="0" height="30px" class="smsc_status">
+      <tr>
+        <th background="/smsc/images/smsc_17.jpg" style="white-space:nowrap">#{msg['smsc.reschedule']}</th>
+        <td><h:outputText value="&#160;"/></td>
+        <td width="12px" background="/smsc/images/smsc_19.jpg" style="padding-right:0px;"></td>
+      </tr>
+    </table>
+
+  </ui:define>
+
+  <ui:define name="content">
+
+    <tr:form id="reschedule_list">
+
+      <mo:buttons>
+        <table>
+          <tr>
+            <td align="left">
+              <tr:commandLink text="#{msg['done.button']}" id="done1" partialSubmit="true"  actionListener="#{rescheduleEdit.done}"
+                              inlineStyle="font-family: Verdana, Arial, Helvetica, sans-serif;font-size: x-small;"
+                  />
+              <h:outputText value="&#160;&#160;|&#160;&#160;"/>
+              <tr:commandLink text="#{msg['cancel.button']}" id="cancel1" action="RESCHEDULE" immediate="true"
+                              inlineStyle="font-family: Verdana, Arial, Helvetica, sans-serif;font-size: x-small;"
+                  />
+            </td>
+          </tr>
+        </table>
+      </mo:buttons>
+
+      <tr:inputHidden id="edit_initialized" value="#{rescheduleEdit.edit_initialized}"/>
+      <tr:inputHidden value="#{rescheduleEdit.oldReschedule}"/>
+
+      <tr:panelGroupLayout partialTriggers="done1 done2 iter:delete addStatus">
+        <t:saveState value="#{rescheduleEdit.oldReschedule}"/>
+        <t:saveState value="#{rescheduleEdit.availableStatuses}"/>
+        <t:saveState value="#{rescheduleEdit.statuses}"/>
+      </tr:panelGroupLayout>
+
+      <tr:messages partialTriggers="done1 done2 iter:delete addStatus" id="smsc_errors"/>
+
+      <h:panelGrid style="padding:10px" columns="1">
+
+        <h:panelGrid style="align:left; width:35%" columns="1" columnClasses="column0Width">
+          <tr:panelLabelAndMessage label="#{msg['smsc.reschedule.edit.intervals']}">
+            <tr:inputText value="#{rescheduleEdit.newReschedule}" required="true">
+              <tr:validateRegExp pattern="#{rescheduleEdit.reschedulePattern}"/>
+            </tr:inputText>
+          </tr:panelLabelAndMessage>
+        </h:panelGrid>
+
+        <tr:panelGroupLayout partialTriggers="done1 done2 iter:delete addStatus">
+
+
+          <table style="align:left; width:30%; padding:20px">
+            <tr>
+              <th colspan="2">
+                <t:div styleClass="page_subtitle">
+                  <tr:outputText value="#{msg['smsc.reschedule.statuses.subtitle']}" inlineStyle="#{rescheduleEdit.available ? '' : 'display:none'}"/>
+                </t:div>
+              </th>
+            </tr>
+            <tr:iterator id="iter" value="#{rescheduleEdit.statuses}" var="status">
+              <tr>
+                <td>
+                  <tr:outputText value="#{status.status}" inlineStyle="margin-left:9px" converter="smpp_status_converter"/>
+                </td>
+                <td class="column50Width">
+                  <tr:commandLink  partialSubmit="true" actionListener="#{rescheduleEdit.removeStatus}" id="delete">
+                    <f:param name="removeStatus" value="#{status.status}"/>
+                    <tr:image source="/images/but_del.gif"/>
+                  </tr:commandLink>
+                </td>
+              </tr>
+            </tr:iterator>
+
+            <tr>
+              <td>
+                <tr:selectOneChoice value="#{rescheduleEdit.newStatus}"
+                                    inlineStyle="#{rescheduleEdit.available ? '' : 'display:none'}">
+                  <f:selectItems value="#{rescheduleEdit.availableStatusesItems}"/>
+                </tr:selectOneChoice>
+              </td>
+              <td class="columnTopLeftAlign">
+                <tr:commandLink id="addStatus" partialSubmit="true" actionListener="#{rescheduleEdit.addStatus}" inlineStyle="#{rescheduleEdit.available ? '' : 'display:none'}">
+                  <tr:image source="/images/but_add.gif"/>
+                </tr:commandLink>
+              </td>
+            </tr>
+          </table>
+
+        </tr:panelGroupLayout>
+
+      </h:panelGrid>
+
+      <mo:buttons>
+        <table>
+          <tr>
+            <td align="left">
+              <tr:commandLink text="#{msg['done.button']}" id="done2" partialSubmit="true"  actionListener="#{rescheduleEdit.done}"
+                              inlineStyle="font-family: Verdana, Arial, Helvetica, sans-serif;font-size: x-small;"
+                  />
+              <h:outputText value="&#160;&#160;|&#160;&#160;"/>
+              <tr:commandLink text="#{msg['cancel.button']}" id="cancel2" action="RESCHEDULE" immediate="true"
+                              inlineStyle="font-family: Verdana, Arial, Helvetica, sans-serif;font-size: x-small;"
+                  />
+            </td>
+          </tr>
+        </table>
+      </mo:buttons>
+
+    </tr:form>
+  </ui:define>
+
+</ui:composition>
+
+
+</html>

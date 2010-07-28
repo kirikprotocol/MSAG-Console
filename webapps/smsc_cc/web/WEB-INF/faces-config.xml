@@ -34,6 +34,22 @@
 
   </application>
 
+  <converter>
+    <converter-id>smpp_status_converter</converter-id>
+    <converter-class>ru.novosoft.smsc.web.controllers.SmppStatusConverter</converter-class>
+  </converter>
+
+  <managed-bean>
+    <managed-bean-name>reschedule</managed-bean-name>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.RescheduleController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
+    <managed-bean-name>rescheduleEdit</managed-bean-name>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.RescheduleEditController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
 
   <managed-bean>
     <managed-bean-name>dynamicTable</managed-bean-name>
@@ -43,7 +59,7 @@
 
   <managed-bean>
     <managed-bean-name>idGen</managed-bean-name>
-    <managed-bean-class>ru.novosoft.smsc.web.controllers.IdGenerator</managed-bean-class>
+    <managed-bean-class>ru.novosoft.smsc.web.util.IdGenerator</managed-bean-class>
     <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
 
@@ -65,13 +81,20 @@
     <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
 
+  <managed-bean>
+    <managed-bean-name>tableTest</managed-bean-name>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.TestTableController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
 
 
 
   <navigation-rule>
     <navigation-case>
       <from-outcome>INDEX</from-outcome>
-      <to-view-id>/smsc/index.jsp</to-view-id>
+      <to-view-id>/smsc/index.faces</to-view-id>
+      <redirect/>
     </navigation-case>
     <navigation-case>
       <from-outcome>SMSC_CONFIG</from-outcome>
@@ -79,9 +102,13 @@
       <redirect/>
     </navigation-case>
     <navigation-case>
-      <from-outcome>LOGOUT</from-outcome>
-      <to-view-id>/smsc/index.jsp</to-view-id>
+      <from-outcome>RESCHEDULE</from-outcome>
+      <to-view-id>/smsc/reschedule/index.faces</to-view-id>
       <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>RESCHEDULE_EDIT</from-outcome>
+      <to-view-id>/smsc/reschedule/edit.faces</to-view-id>
     </navigation-case>
   </navigation-rule>
 

@@ -38,13 +38,9 @@
     }
   </script>
 
-  <style type='text/css'>
-    html, body {
-      height: 100%;
-    }
-  </style>
 
   <tr:document onload="initjsDOMenu()">
+
     <table height="100%" cellspacing="0" cellpadding="0" class="main_table">
       <tr>
 
@@ -66,49 +62,49 @@
           <!-- main menu -->
           <ui:include src="smsc_menu.xhtml"/>
 
-          <div>
-            <ui:insert name="sme_title"/>
-          </div>
+          <ui:insert name="sme_title"/>
 
           <table cellspacing="0" cellpadding="0">
-            <tr>
-              <td width="12px" background="/smsc/images/smsc_24.jpg"></td>
-              <td align="right">
-                  <tr:statusIndicator>
-                    <f:facet name="busy">
-                      <tr:outputText value="#{msg['wait.title']}"/>
-                    </f:facet>
-                    <f:facet name="ready">
-                      <tr:outputText value="&#160;"/>
-                    </f:facet>
-                  </tr:statusIndicator>
-              </td>
-              <td height="1px" width="12px" background="/smsc/images/smsc_26.jpg"></td>
-            </tr>
+
             <tr>
               <td width="12px" background="/smsc/images/smsc_24.jpg"></td>
               <td>
+                <tr:statusIndicator>
+                  <f:facet name="busy">
+                    <tr:outputText value="#{msg['wait.title']}"/>
+                  </f:facet>
+                  <f:facet name="ready">
+                    <tr:outputText value="&#160;"/>
+                  </f:facet>
+                </tr:statusIndicator>
                 <ui:insert name="content"/>
 
               </td>
               <td height="1px" width="12px" background="/smsc/images/smsc_26.jpg"></td>
             </tr>
+
           </table>
+
         </td>
 
         <td width="30" background="/smsc/images/smsc_07.jpg" rowspan="3"></td>
+
       </tr>
+
       <tr height="100%">
+
         <td style="position:relative;">
 
           <table cellspacing="0" cellpadding="0" height="100%">
             <tr>
               <td height="1px" width="12px" background="/smsc/images/smsc_24.jpg"></td>
-              <td height="1px" bgcolor="#F3F0E3"></td>
+              <td height="1px" bgcolor="#F3F0E3"><img height="0px" width="1px"/></td>
               <td height="1px" width="12px" background="/smsc/images/smsc_26.jpg"></td>
             </tr>
           </table>
+
         </td>
+
       </tr>
       <tr>
         <td>

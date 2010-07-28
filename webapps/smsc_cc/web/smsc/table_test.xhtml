@@ -1,0 +1,128 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:mo="http://eyeline.mobi">
+
+<ui:composition template="../templates/main.xhtml">
+
+  <ui:define name="sme_title">
+
+    <table cellpadding="0" cellspacing="0" height="30px" class="smsc_status">
+      <tr>
+        <th background="/smsc/images/smsc_17.jpg" style="white-space:nowrap">Table Test</th>
+        <td><h:outputText value="&#160;"/></td>
+        <td width="12px" background="/smsc/images/smsc_19.jpg" style="padding-right:0px;"></td>
+      </tr>
+    </table>
+
+  </ui:define>
+
+  <ui:define name="content">
+
+    <tr:form>
+
+      <tr:panelFormLayout>
+
+        <tr:panelLabelAndMessage label="Name prefix: ">
+          <tr:inputText value="#{tableTest.namePrefix}"/>
+        </tr:panelLabelAndMessage>
+
+
+        <tr:panelLabelAndMessage label="Page size: ">
+          <tr:inputText value="#{tableTest.pageSize}">
+            <tr:validateLongRange minimum="1"/>
+          </tr:inputText>
+        </tr:panelLabelAndMessage>
+
+      </tr:panelFormLayout>
+
+
+      <mo:buttons>
+        <tr:commandLink text="Query" action="#{tableTest.query}"
+                        inlineStyle="font-family: Verdana, Arial, Helvetica, sans-serif;font-size: x-small;"/>
+      </mo:buttons>
+
+      <h:panelGrid style="padding:20px">
+
+        <tr:panelGroupLayout partialTriggers="itemsDataTable:sort_name itemsDataTable:sort_value"  inlineStyle="#{tableTest.rendered ? '' : 'display:none'}" >
+
+              <h:inputHidden value="#{tableTest._sortColumn}"/>
+              <h:inputHidden value="#{tableTest._asc}"/>
+              <h:inputHidden value="#{tableTest.rendered}"/>
+
+              <t:dataTable id="itemsDataTable" var="v" value="#{tableTest.model}" renderedIfEmpty="false"
+                           rows="#{tableTest.pageSize}" preserveDataModel="true" styleClass="list"
+                           rowIndexVar="rI" rowStyleClass="row${requestScope['rI']%2}">
+                <t:column>
+                  <f:facet name="header">
+                    <h:panelGroup>
+                      <tr:commandLink partialSubmit="true" id="sort_name" action="#{tableTest.sort}" text="Name"
+                                      inlineStyle="font-family: Verdana, Arial, Helvetica, sans-serif;font-size: x-small;">
+                        <f:param name="#{tableTest.selectColumn}" value="name"/>
+                      </tr:commandLink>
+                      <h:graphicImage
+                          rendered="#{!tableTest._asc and tableTest._sortColumn == 'name'}"
+                          url="/images/sort_up.gif"/>
+                      <h:graphicImage
+                          rendered="#{tableTest._asc and tableTest._sortColumn == 'name'}"
+                          url="/images/sort_down.gif"/>
+                    </h:panelGroup>
+                  </f:facet>
+                  <h:outputText value="#{v.name}"/>
+                </t:column>
+                <t:column>
+                  <f:facet name="header">
+                    <h:panelGroup>
+                      <tr:commandLink partialSubmit="true"  id="sort_value" action="#{tableTest.sort}" text="Value"
+                                      inlineStyle="font-family: Verdana, Arial, Helvetica, sans-serif;font-size: x-small;">
+                        <f:param name="#{tableTest.selectColumn}" value="value"/>
+                      </tr:commandLink>
+                      <h:graphicImage
+                          rendered="#{!tableTest._asc and tableTest._sortColumn == 'value'}"
+                          url="/images/sort_up.gif"/>
+                      <h:graphicImage
+                          rendered="#{tableTest._asc and tableTest._sortColumn == 'value'}"
+                          url="/images/sort_down.gif"/>
+                    </h:panelGroup>
+                  </f:facet>
+                  <h:outputText value="#{v.value}"/>
+                </t:column>
+
+              </t:dataTable>
+
+              <h:panelGrid columns="2" styleClass="navbar" columnClasses="column0WidthLeftign,total" style="#{tableTest.rendered ? '' : 'display:none'}">
+                <t:dataScroller renderFacetsIfSinglePage="false" style="width:1%"  for="itemsDataTable" paginator="true" paginatorMaxPages="10"
+                                paginatorActiveColumnStyle="background-color: #3A5867; color: #F2E275;">
+                  <f:facet name="first">
+                    <h:graphicImage url="/images/nav_first.gif"/>
+                  </f:facet>
+                  <f:facet name="last">
+                    <h:graphicImage url="/images/nav_last.gif"/>
+                  </f:facet>
+                  <f:facet name="next">
+                    <h:graphicImage url="/images/nav_next.gif"/>
+                  </f:facet>
+                  <f:facet name="previous">
+                    <h:graphicImage url="/images/nav_prev.gif"/>
+                  </f:facet>
+                </t:dataScroller>
+
+                <h:outputText id="countItems" value="Total: #{tableTest.countItems}"/>
+
+              </h:panelGrid>
+
+        </tr:panelGroupLayout>
+
+      </h:panelGrid>
+
+    </tr:form>
+
+  </ui:define>
+
+</ui:composition>
+
+
+</html>

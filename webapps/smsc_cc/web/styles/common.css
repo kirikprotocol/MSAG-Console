@@ -137,3 +137,22 @@ div.query_result {
  vertical-align:top;
  text-align:left;
 }
+
+.column50Width {
+  width:50px;
+}
+
+.column0WidthRight {
+  width:0px;
+  text-align:right;
+}
+.column0Width {
+  width:0px;
+}
+.column0WidthLeft {
+  width:0px;
+  text-align:left;
+}
+.column20Width {
+  width:20px;
+}

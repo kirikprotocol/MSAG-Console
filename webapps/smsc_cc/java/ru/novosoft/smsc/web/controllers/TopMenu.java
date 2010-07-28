@@ -20,6 +20,7 @@ public class TopMenu {
     {
       add(new MenuBarItem("smsc.smsc", 133).
           add(new MenuItem("smsc.smsc.config", "/smsc/smsc/smsc_config.faces")).
+          add(new MenuItem("smsc.smsc.reschedule", "/smsc/smsc/reschedule/index.faces")).
           add(new MenuItem("smsc.smsc.status", "/smsc/smsc/smsc_service/status.faces")).
           add(new MenuItem("smsc.smsc.users", "/smsc/smsc/users/index.faces")).
           add(new MenuItem("smsc.smsc.journal", "/smsc/smsc/journal/index.faces")).

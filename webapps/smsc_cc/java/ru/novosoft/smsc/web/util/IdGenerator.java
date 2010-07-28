@@ -1,4 +1,4 @@
-package ru.novosoft.smsc.web.controllers;
+package ru.novosoft.smsc.web.util;
 
 import java.util.concurrent.atomic.AtomicInteger;
 

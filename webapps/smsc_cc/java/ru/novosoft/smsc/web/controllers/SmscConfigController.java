@@ -3,6 +3,7 @@ package ru.novosoft.smsc.web.controllers;
 import org.apache.log4j.Logger;
 import ru.novosoft.smsc.admin.AdminContext;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.smsc.CommonSettings;
 import ru.novosoft.smsc.admin.smsc.InstanceSettings;
 import ru.novosoft.smsc.web.WebContext;
@@ -13,6 +14,7 @@ import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import java.io.Serializable;
+import java.text.MessageFormat;
 import java.util.*;
 
 /**
@@ -39,12 +41,32 @@ public class SmscConfigController implements Serializable {
   private CommonConfig.Directive newDirective = new CommonConfig.Directive();
 
   public SmscConfigController() {
-    Map<String, String> reguestMap = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap();
+    FacesContext fc = FacesContext.getCurrentInstance();
+    Map<String, String> reguestMap = fc.getExternalContext().getRequestParameterMap();
     adminContext = WebContext.getInstance().getAdminContext();
     if(!reguestMap.containsKey("initialized")) {
       instancesCount = adminContext.getSmscManager().getSmscInstancesCount();
       initCommonConfig();
       initInstances();
+    }
+    try{
+      List<Integer> outOfDate = new LinkedList<Integer>();
+      for(Map.Entry<Integer, SmscConfigurationStatus> e : adminContext.getSmscManager().getStatusForSmscs().entrySet()) {
+        if(e.getValue() == SmscConfigurationStatus.OUT_OF_DATE) {
+          outOfDate.add(e.getKey());
+        }
+      }
+      if(!outOfDate.isEmpty()) {
+        String message = MessageFormat.format(
+            ResourceBundle.getBundle("ru.novosoft.smsc.web.resources.Smsc", fc.getExternalContext().getRequestLocale()).getString("smsc.config.instance.out_of_date"),
+            outOfDate.toString());
+        FacesMessage facesMessage = new FacesMessage(FacesMessage.SEVERITY_WARN, message, "");
+        fc.addMessage("smsc_errors", facesMessage);
+      }
+    }catch (AdminException e) {
+      logger.error(e,e);
+      FacesMessage facesMessage = new FacesMessage(FacesMessage.SEVERITY_ERROR, e.getMessage(fc.getExternalContext().getRequestLocale()), "");
+      fc.addMessage("smsc_errors", facesMessage);
     }
   }
 
@@ -357,13 +379,13 @@ public class SmscConfigController implements Serializable {
       }
 
       fc.getApplication().getNavigationHandler().handleNavigation(fc, null, "INDEX");
-      
+
     } catch (AdminException e) {
       logger.warn(e,e);
       e.printStackTrace();
       FacesMessage facesMessage = new FacesMessage(FacesMessage.SEVERITY_ERROR, e.getMessage(locale), "");
       fc.addMessage("smsc_errors", facesMessage);
-    } 
+    }
 
   }
 
