@@ -156,7 +156,7 @@ public class EditTaskPage extends DeliveriesPage {
     pageData.secretText = task.getSecretMessage();
     pageData.transactionMode = task.isTransactionMode();
     pageData.useDataSm = task.isUseDataSm();
-    pageData.useUssdPush = task.getUseUssdPush();
+    pageData.deliveryMode = task.getDeliveryMode();
     pageData.owner = pageData.getAppContext().getUserManager().getUser(task.getOwner());
   }
 
@@ -250,7 +250,7 @@ public class EditTaskPage extends DeliveriesPage {
     task.setSecretMessage(pageData.secretText);
     task.setTransactionMode(pageData.transactionMode);
     task.setUseDataSm(pageData.useDataSm);
-    task.setUseUssdPush(pageData.useUssdPush);
+    task.setDeliveryMode(pageData.deliveryMode);
     task.setOwner(pageData.owner.getName());
   }
 

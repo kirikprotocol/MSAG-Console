@@ -57,7 +57,7 @@ public class UsersEdit extends UsersEditBean {
           infosmeSvcType = user.getPrefs().getInfosmeSvcType();
           infosmeActivePeriodStart = tf.format(user.getPrefs().getInfosmePeriodStart());
           infosmeActivePeriodEnd = tf.format(user.getPrefs().getInfosmePeriodEnd());
-          infoSmeUssdPush = user.getPrefs().isInfosmeUssdPush() != null && user.getPrefs().isInfosmeUssdPush().booleanValue();
+          deliveryMode = user.getPrefs().getDeliveryMode();
           infosmeSourceAddress = user.getPrefs().getInfosmeSourceAddress();
           Collection set = user.getPrefs().getInfosmeWeekDaysSet();
           infosmeActiveWeekDays = new String[set.size()];
@@ -130,8 +130,8 @@ public class UsersEdit extends UsersEditBean {
       prefs.setInfosmeUncommitProcess(infosmeUncommitedInProcess);
       prefs.setInfosmeWeekDaysSet(Arrays.asList(infosmeActiveWeekDays));
       prefs.setInfosmeSourceAddress(infosmeSourceAddress);
-      if(isUssdPushFeature()) {
-        prefs.setInfosmeUssdPush(Boolean.valueOf(infoSmeUssdPush));
+      if(isUssdPushFeature() && deliveryMode != null) {
+        prefs.setDeliveryMode(deliveryMode.intValue());
       }
       try {
         String errors = validateInfosmePrefs(prefs);

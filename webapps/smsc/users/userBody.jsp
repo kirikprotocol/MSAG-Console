@@ -137,6 +137,8 @@
               paramSelect(out, "users.prefs.timezone", "timezone", bean.getTimezones(), bean.getTimezone(), null, null, null);
               finishParams(out);
             }
+
+            if (bean.isInfoSmeEmbeded()) {
               startSection(out, "prefs.infosme.regions", "users.prefs.infosme.regions", false);
               startParams(out);
               for (Iterator iter = bean.getRegions().iterator(); iter.hasNext();) {
@@ -250,15 +252,20 @@
                     </tr>
                     <%if(bean.isUssdPushFeature()){ %>
                       <tr class=row<%=rowN++&1%>>
-                        <th><%=getLocString("infosme.label.use_ussd_push")%></th>
+                        <th><%=getLocString("infosme.label.delivery_mode")%></th>
                         <td>
-                          <input class=check type=checkbox id=infoSmeUssdPush name=infoSmeUssdPush <%=bean.isInfoSmeUssdPush() ? "checked" : ""%>>
+                          <select id="deliveryMode" name="deliveryMode">
+                            <option value="<%=0%>" <%=bean.getDeliveryMode() == 0 ? "selected" : ""%>> <%= getLocString("infosme.label.delivery_mode_sms")%></option>
+                            <option value="<%=1%>" <%=bean.getDeliveryMode() == 1 ? "selected" : ""%>><%= getLocString("infosme.label.delivery_mode_ussd_push")%></option>
+                            <option value="<%=2%>" <%=bean.getDeliveryMode() == 2 ? "selected" : ""%>><%= getLocString("infosme.label.delivery_mode_ussd_push_vlr")%></option>
+                          </select>
                         </td>
                       </tr>
                     <%} %>
                     </table>
 
                     <%finishSection(out);
+                    }
 
           finishSection(out);
         %>

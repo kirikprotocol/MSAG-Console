@@ -3,6 +3,7 @@ package ru.novosoft.smsc.infosme.beans.deliveries;
 import ru.novosoft.smsc.infosme.backend.InfoSmeContext;
 import ru.novosoft.smsc.infosme.backend.config.InfoSmeConfig;
 import ru.novosoft.smsc.infosme.backend.MultiTask;
+import ru.novosoft.smsc.infosme.backend.config.tasks.Task;
 import ru.novosoft.smsc.infosme.backend.tables.retrypolicies.RetryPolicyDataSource;
 import ru.novosoft.smsc.infosme.backend.tables.retrypolicies.RetryPolicyQuery;
 import ru.novosoft.smsc.infosme.backend.tables.retrypolicies.RetryPolicyDataItem;
@@ -48,7 +49,7 @@ public class DeliveriesPageData {
   public boolean transliterate;
   public boolean transactionMode;
   public boolean useDataSm;
-  public int useUssdPush = -1;
+  public int deliveryMode = Task.DELIVERY_MODE_SMS;
   public boolean retryOnFail;
   public String endDate;
   public String startDate;
@@ -105,11 +106,7 @@ public class DeliveriesPageData {
     transliterate = false;
     transactionMode = false;
     useDataSm = false;
-    if ( infoSmeContext.getInfoSmeConfig().hasUssdPushFeature() ) {
-        useUssdPush = 0;
-    } else {
-        useUssdPush = -1;
-    }
+    deliveryMode = Task.DELIVERY_MODE_SMS;
     retryOnFail = false;
     endDate = null;
     startDate = null;

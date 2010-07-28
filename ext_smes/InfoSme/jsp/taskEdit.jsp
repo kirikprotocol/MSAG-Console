@@ -122,12 +122,22 @@
 </tr>
 <%if ( bean.isUssdPushAllowed() ) {%>
 <tr class=row<%=rowN++&1%>>
-  <th><label for=useUssdPush><%= getLocString("infosme.label.use_ussd_push")%></label></th>
-  <td><%if (bean.isSmeRunning()) {
-    %><input class=check type=checkbox id=useUssdPush name=useUssdPush <%=bean.isUseUssdPush() ? "checked" : ""%>><%
-  } else {
-    %><%=bean.isUseUssdPush() ? "enabled" : "disabled"%><%
-  }%>
+  <th><label for=deliveryMode><%= getLocString("infosme.label.delivery_mode")%></label></th>
+  <td><%if (bean.isSmeRunning()) { %>
+    <select id="deliveryMode" name="deliveryMode">
+      <option value="<%=Task.DELIVERY_MODE_SMS%>" <%=bean.getDeliveryMode() == Task.DELIVERY_MODE_SMS ? "selected" : ""%>> <%= getLocString("infosme.label.delivery_mode_sms")%></option>
+      <option value="<%=Task.DELIVERY_MODE_USSD_PUSH%>" <%=bean.getDeliveryMode() == Task.DELIVERY_MODE_USSD_PUSH ? "selected" : ""%>><%= getLocString("infosme.label.delivery_mode_ussd_push")%></option>
+      <option value="<%=Task.DELIVERY_MODE_USSD_PUSH_VLR%>" <%=bean.getDeliveryMode() == Task.DELIVERY_MODE_USSD_PUSH_VLR ? "selected" : ""%>><%= getLocString("infosme.label.delivery_mode_ussd_push_vlr")%></option>
+    </select>    
+  <%} else { %>
+    <% if (bean.getDeliveryMode() == Task.DELIVERY_MODE_SMS) {%>
+      <%= getLocString("infosme.label.delivery_mode_sms")%>
+    <% } else if (bean.getDeliveryMode() == Task.DELIVERY_MODE_USSD_PUSH) {%>
+      <%= getLocString("infosme.label.delivery_mode_ussd_push")%>
+    <% } else {%>
+      <%= getLocString("infosme.label.delivery_mode_ussd_push_vlr")%>
+    <% } %>
+  <%}%>
   </td>
 </tr>
 <% } %>

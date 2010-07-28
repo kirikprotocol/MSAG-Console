@@ -3,6 +3,7 @@ package ru.novosoft.smsc.infosme.beans.deliveries;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.region.Region;
 import ru.novosoft.smsc.admin.profiler.SupportExtProfile;
+import ru.novosoft.smsc.infosme.backend.config.tasks.Task;
 import ru.novosoft.smsc.infosme.backend.deliveries.DeliveriesGenerationThread;
 import ru.novosoft.smsc.infosme.beans.InfoSmeBean;
 
@@ -47,8 +48,7 @@ public class Deliveries extends InfoSmeBean {
     pageData.owner = pageData.getAppContext().getUserManager().getUser(request.getRemoteUser());
     
     setTransactionMode(request.getParameter("transactionMode") != null );
-    setUseDataSm(request.getParameter("useDataSm") != null) ;
-    setUseUssdPush(request.getParameter("useUssdPush") != null);
+    setUseDataSm(request.getParameter("useDataSm") != null) ;    
 
     try {
       if (mbNext != null) {
@@ -395,20 +395,21 @@ public class Deliveries extends InfoSmeBean {
   }
 
     public boolean isUssdPushAllowed() {
-        return pageData.useUssdPush >= 0;
+        return getInfoSmeConfig().hasUssdPushFeature();
     }
 
-    public boolean isUseUssdPush() {
-        return pageData.useUssdPush > 0;
-    }
+  public int getDeliveryMode() {
+    return pageData.deliveryMode;
+  }
 
-    public void setUseUssdPush( boolean useUssdPush ) {
-        if (logger.isInfoEnabled()) logger.info("setting useUssdPush=" + useUssdPush);
-        pageData.useUssdPush = (useUssdPush ? 1 : 0);
-        if ( useUssdPush ) {
-            pageData.useDataSm = false;
-            pageData.transactionMode = true;
-            pageData.flash = false;
-        }
+  public void setDeliveryMode(int mode) {
+    pageData.deliveryMode = mode;
+    if(mode != Task.DELIVERY_MODE_SMS) {
+      pageData.useDataSm = false;
+      pageData.transactionMode = true;
+      pageData.flash = false;
     }
+  }
+
+
 }

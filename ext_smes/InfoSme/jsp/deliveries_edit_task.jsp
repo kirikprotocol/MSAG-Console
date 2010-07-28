@@ -1,3 +1,4 @@
+<%@ page import="ru.novosoft.smsc.infosme.backend.config.tasks.Task" %>
 <% int rowN = 0;%>
 <div class=content>
   <div class=page_subtitle><%= getLocString("infosme.subtitle.stage3")%></div><br/>
@@ -112,8 +113,14 @@
     </tr>
 <% if ( deliveries_bean.isUssdPushAllowed() ) { %>
     <tr class=row<%=rowN++&1%>>
-      <th><label for="useUssdPush"><%= getLocString("infosme.label.use_ussd_push")%></label></th>
-      <td><input class=check type=checkbox id=useUssdPush name=useUssdPush <%=deliveries_bean.isUseUssdPush() ? "checked" : ""%>></td>
+      <th><label for="deliveryMode"><%= getLocString("infosme.label.delivery_mode")%></label></th>
+      <td>
+        <select id="deliveryMode" name="deliveryMode">
+          <option value="<%=Task.DELIVERY_MODE_SMS%>" <%=bean.getDeliveryMode() == Task.DELIVERY_MODE_SMS ? "selected" : ""%>> <%= getLocString("infosme.label.delivery_mode_sms")%></option>
+          <option value="<%=Task.DELIVERY_MODE_USSD_PUSH%>" <%=bean.getDeliveryMode() == Task.DELIVERY_MODE_USSD_PUSH ? "selected" : ""%>><%= getLocString("infosme.label.delivery_mode_ussd_push")%></option>
+          <option value="<%=Task.DELIVERY_MODE_USSD_PUSH_VLR%>" <%=bean.getDeliveryMode() == Task.DELIVERY_MODE_USSD_PUSH_VLR ? "selected" : ""%>><%= getLocString("infosme.label.delivery_mode_ussd_push_vlr")%></option>
+        </select> 
+      </td>
     </tr>
 <% } %>
 <% if (!deliveries_bean.isFileContainsText()) { %>

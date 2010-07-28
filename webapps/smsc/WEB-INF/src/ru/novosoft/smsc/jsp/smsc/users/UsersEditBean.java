@@ -262,7 +262,7 @@ public abstract class UsersEditBean extends SmscBean {
   protected String infosmeActivePeriodStart = "10:00:00";
   protected String infosmeActivePeriodEnd = "20:00:00";
   protected String infosmeSourceAddress = "";
-  protected boolean infoSmeUssdPush = false;
+  protected Integer deliveryMode;
   protected String[] infosmeActiveWeekDays = new String[]{"Mon","Tue","Wed","Thu","Fri"};
 
   protected int infosmeMessagesCacheSize = 2000;
@@ -335,12 +335,12 @@ public abstract class UsersEditBean extends SmscBean {
     this.infosmeSourceAddress = infosmeSourceAddress;
   }
 
-  public boolean isInfoSmeUssdPush() {
-    return infoSmeUssdPush;
+  public int getDeliveryMode() {
+    return deliveryMode == null ? 0 : deliveryMode.intValue();
   }
 
-  public void setInfoSmeUssdPush(boolean infoSmeUssdPush) {
-    this.infoSmeUssdPush = infoSmeUssdPush;
+  public void setDeliveryMode(int deliveryMode) {
+    this.deliveryMode = new Integer(deliveryMode);
   }
 
   public String getInfosmeMessagesCacheSize() {
@@ -437,11 +437,17 @@ public abstract class UsersEditBean extends SmscBean {
 
   private static Object infoSmeContext;
 
+  public boolean isInfoSmeEmbeded() {
+    return loadInfoSme() != null;
+  }
+
   protected String validateInfosmePrefs(UserPreferences preferences) throws Exception{
     try {
-      return (String)loadInfoSme().getClass().getMethod("validateInfosmePrefs", new Class[]{UserPreferences.class}).invoke(infoSmeContext, new Object[]{preferences});
-    } catch (ClassNotFoundException e) {
-      return null;
+      Object ctx = loadInfoSme();
+      if (ctx != null)
+        return (String)ctx.getClass().getMethod("validateInfosmePrefs", new Class[]{UserPreferences.class}).invoke(infoSmeContext, new Object[]{preferences});
+      else
+        return null;
     } catch (NoSuchMethodException e) {
       return null;
     } catch (IllegalAccessException e) {
@@ -451,22 +457,33 @@ public abstract class UsersEditBean extends SmscBean {
     }
   }
 
-  private Object loadInfoSme() throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+  private Object loadInfoSme()  {
     if(infoSmeContext == null) {
-      infoSmeContext = Class.forName("ru.novosoft.smsc.infosme.backend.InfoSmeContext").
-          getMethod("getInstance", new Class[]{SMSCAppContext.class, String.class}).
-          invoke(null, new Object[]{appContext, "InfoSme"});
+      try {
+        infoSmeContext = Class.forName("ru.novosoft.smsc.infosme.backend.InfoSmeContext").
+            getMethod("getInstance", new Class[]{SMSCAppContext.class, String.class}).
+            invoke(null, new Object[]{appContext, "InfoSme"});
+      } catch (IllegalAccessException e) {
+        return null;
+      } catch (InvocationTargetException e) {
+        return null;
+      } catch (NoSuchMethodException e) {
+        return null;
+      } catch (ClassNotFoundException e) {
+        return null;
+      }
     }
     return infoSmeContext;
   }
 
   public boolean isUssdPushFeature() {
     try{
+      Object ctx = loadInfoSme();
+      if (ctx == null)
+        return false;
       Boolean result = (Boolean)loadInfoSme().getClass().getMethod("getUssdFeature", new Class[]{}).invoke(infoSmeContext, new Object[]{});
       return result != null && result.booleanValue();
-    }catch(Throwable e) {
-      logger.error(e,e);
-      e.printStackTrace();
+    } catch(Exception e) {
       return false;
     }
   }

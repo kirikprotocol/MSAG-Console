@@ -67,7 +67,6 @@ public class TaskEdit extends InfoSmeBean {
   private int messagesCacheSleep = 0;
   private boolean transactionMode = false;
   private boolean useDataSm = false;
-  private int useUssdPush = 0;
   private int uncommitedInGeneration = 0;
   private int uncommitedInProcess = 0;
   private boolean trackIntegrity = false;
@@ -78,6 +77,7 @@ public class TaskEdit extends InfoSmeBean {
   private boolean secretFlash;
   private String secretMessage;
   private String owner;
+  private int deliveryMode = Task.DELIVERY_MODE_SMS;
 
   protected int init(List errors) {
     int result = super.init(errors);
@@ -156,7 +156,7 @@ public class TaskEdit extends InfoSmeBean {
     messagesCacheSleep = task.getMessagesCacheSleep();
     transactionMode = task.isTransactionMode();
     useDataSm = task.isUseDataSm();
-    useUssdPush = task.getUseUssdPush();
+    deliveryMode = task.getDeliveryMode();
     uncommitedInGeneration = task.getUncommitedInGeneration();
     uncommitedInProcess = task.getUncommitedInProcess();
     trackIntegrity = task.isTrackIntegrity();
@@ -215,7 +215,7 @@ public class TaskEdit extends InfoSmeBean {
 
     }
     // NOTE: ussd push is set the last to override other settings
-    task.setUseUssdPush(useUssdPush);
+    task.setDeliveryMode(deliveryMode);
   }
 
   protected int done(User user) throws AdminException {
@@ -568,13 +568,12 @@ public class TaskEdit extends InfoSmeBean {
     return getInfoSmeConfig().getUssdPushFeature() != null && getInfoSmeConfig().getUssdPushFeature().booleanValue();
   }
 
-  public boolean isUseUssdPush() {
-    return useUssdPush > 0;
+  public int getDeliveryMode() {
+    return deliveryMode;
   }
 
-  public void setUseUssdPush(boolean useUssdPush) {
-    if (logger.isInfoEnabled()) logger.info("setting useUssdPush=" + useUssdPush);
-    this.useUssdPush = useUssdPush ? 1 : 0;
+  public void setDeliveryMode(int deliveryMode) {
+    this.deliveryMode = deliveryMode;
   }
 
   public int getUncommitedInGenerationInt() {

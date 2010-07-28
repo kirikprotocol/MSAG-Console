@@ -32,6 +32,10 @@ public class Task extends Observable
   public static final String INFOSME_EXT_PROVIDER = "EXTERNAL";
   public static final String CONFIG_FILE_NAME = "config.xml";
 
+  public static final int DELIVERY_MODE_SMS = 0;
+  public static final int DELIVERY_MODE_USSD_PUSH = 1;
+  public static final int DELIVERY_MODE_USSD_PUSH_VLR = 2;
+
   private boolean modified;
 
   // General
@@ -45,7 +49,7 @@ public class Task extends Observable
   private boolean replaceMessage = false;
   private String svcType = "";
   private boolean useDataSm = false;
-  private int useUssdPush = -1; // -1 -- notactive, 0 -- false, 1 -- true
+  private Integer deliveryMode = new Integer(DELIVERY_MODE_SMS);
 
   // Retry on fail
   private boolean retryOnFail = false;
@@ -188,13 +192,24 @@ public class Task extends Observable
       secretMessage = "";
     }
 
-    try {
-      boolean tmp = config.getBool(prefix + "useUssdPush" );
-      useUssdPush = tmp ? 1 : 0;
-    } catch ( Exception e ) {
-      useUssdPush = -1;
+    Boolean useUssdPush = null;
+    if (config.containsParameter(prefix + "useUssdPush"))
+      useUssdPush = Boolean.valueOf(config.getBool(prefix + "useUssdPush"));
+
+    if (config.containsParameter(prefix + "deliveryMode")) {
+      String deliveryModeStr = config.getString("deliveryMode");
+      if (deliveryModeStr.equalsIgnoreCase("sms"))
+        deliveryMode = new Integer(DELIVERY_MODE_SMS);
+      else if (deliveryModeStr.equalsIgnoreCase("ussd_push"))
+        deliveryMode = new Integer(DELIVERY_MODE_USSD_PUSH);
+      else
+        deliveryMode = new Integer(DELIVERY_MODE_USSD_PUSH_VLR);
     }
-    if ( useUssdPush > 0 ) {
+
+    if (useUssdPush != null)
+      deliveryMode = useUssdPush == Boolean.FALSE ? new Integer(DELIVERY_MODE_SMS) : new Integer(DELIVERY_MODE_USSD_PUSH);
+
+    if ((deliveryMode != null && deliveryMode.intValue() != DELIVERY_MODE_SMS)) {
       // true
       useDataSm = false;
       transactionMode = true;
@@ -278,7 +293,15 @@ public class Task extends Observable
     config.setString(prefix + "startDate", startDate == null ? "" : df.format(startDate));
     config.setString(prefix + "endDate", endDate == null ? "" : df.format(endDate));
     config.setString(prefix + "retryPolicy", retryPolicy);
-    config.setString(prefix + "validityPeriod", validityPeriod == null ? "" : validityPeriod+":00:00");
+
+    String validityPeriodStr = "";
+    if (validityPeriod != null) {
+      validityPeriodStr = validityPeriod + ":00:00";
+      if (validityPeriod.intValue() < 10)
+        validityPeriodStr = "0" + validityPeriodStr;
+    }
+
+    config.setString(prefix + "validityPeriod", validityPeriodStr);
     config.setString(prefix + "validityDate", validityDate == null ? "" : df.format(validityDate));
     config.setString(prefix + "activePeriodStart", activePeriodStart == null ? "" : tf.format(activePeriodStart));
     config.setString(prefix + "activePeriodEnd", activePeriodEnd == null ? "" : tf.format(activePeriodEnd));
@@ -294,8 +317,15 @@ public class Task extends Observable
     config.setBool(prefix + "keepHistory", keepHistory);
     config.setBool(prefix + "saveFinalState", saveFinalState );
     config.setBool(prefix + "useDataSm", useDataSm );
-    if (logger.isInfoEnabled()) logger.info("writing useUssdPush=" + useUssdPush );
-    if (useUssdPush >= 0) config.setBool(prefix + "useUssdPush", (useUssdPush > 0) ? true : false );
+
+    String deliveryModeStr;
+    switch (deliveryMode.intValue()) {
+      case DELIVERY_MODE_SMS: deliveryModeStr = "SMS"; break;
+      case DELIVERY_MODE_USSD_PUSH: deliveryModeStr = "USSD_PUSH"; break;
+      default: deliveryModeStr = "USSD_PUSH_VLR";
+    }
+    config.setString(prefix + "deliveryMode", deliveryModeStr);
+
     config.setBool(prefix + "flash", flash);
     config.setString(prefix + "activeWeekDays", Functions.collectionToString(activeWeekDaysSet, ","));
     config.setBool(prefix + "messagesHaveLoaded", messagesHaveLoaded);
@@ -363,7 +393,6 @@ public class Task extends Observable
     if (uncommitedInGeneration != task.uncommitedInGeneration) return false;
     if (uncommitedInProcess != task.uncommitedInProcess) return false;
     if (useDataSm != task.useDataSm) return false;
-    if (useUssdPush != task.useUssdPush) return false;
     if (activePeriodEnd != null ? !activePeriodEnd.equals(task.activePeriodEnd) : task.activePeriodEnd != null)
       return false;
     if (activePeriodStart != null ? !activePeriodStart.equals(task.activePeriodStart) : task.activePeriodStart != null)
@@ -388,6 +417,7 @@ public class Task extends Observable
     if (text != null ? !text.equals(task.text) : task.text != null) return false;
     if (validityDate != null ? !validityDate.equals(task.validityDate) : task.validityDate != null) return false;
     if (validityPeriod != null ? !validityPeriod.equals(task.validityPeriod) : task.validityPeriod != null) return false;
+    if ((deliveryMode == null) != (task.deliveryMode == null) || (deliveryMode != null && task.deliveryMode != null && !deliveryMode.equals(deliveryMode))) return false;
 
     return true;
   }
@@ -425,7 +455,6 @@ public class Task extends Observable
     sb.append(", keepHistory=").append(keepHistory);
     sb.append(", saveFinalState=").append(saveFinalState);
     sb.append(", useDataSm=").append(useDataSm);
-    if ( useUssdPush >= 0 ) sb.append(", useUssdPush=").append(useUssdPush>0?true:false);
     sb.append(", flash=").append(flash);
     sb.append(", uncommitedInGeneration=").append(uncommitedInGeneration);
     sb.append(", uncommitedInProcess=").append(uncommitedInProcess);
@@ -437,6 +466,7 @@ public class Task extends Observable
     sb.append(", secret=").append(secret);
     sb.append(", secretFlash=").append(secretFlash);
     sb.append(", secretMessage='").append(secretMessage).append('\'');
+    sb.append(", deliveryMode='").append(deliveryMode).append('\'');
     sb.append('}');
     return sb.toString();
   }
@@ -691,26 +721,23 @@ public class Task extends Observable
   }
 
   public void setUseDataSm(boolean useDataSm) {
-    if ( useUssdPush <= 0 ) {
+    if ( deliveryMode != null && deliveryMode.intValue() == DELIVERY_MODE_SMS ) {
       this.useDataSm = useDataSm;
       modified = true;
     }
   }
 
-  /// <0 -- not active
-  /// >0 -- true
-  public int getUseUssdPush() {
-    return useUssdPush;
+  public int getDeliveryMode() {
+    return deliveryMode.intValue();
   }
 
-  public void setUseUssdPush(int useUssdPush) {
-    if (logger.isInfoEnabled()) logger.info("setting useUssdPush=" + useUssdPush );
-    if ( useUssdPush > 0 ) {
-      this.useDataSm = false;
-      this.flash = false;
-      this.transactionMode = true;
-    }
-    this.useUssdPush = useUssdPush;
+  public void setDeliveryMode(int deliveryMode) {
+    if (deliveryMode < 0 || deliveryMode > DELIVERY_MODE_USSD_PUSH_VLR)
+      throw new IllegalArgumentException();
+    this.deliveryMode = new Integer(deliveryMode);
+    this.useDataSm = false;
+    this.flash = false;
+    this.transactionMode = true;
     modified = true;
   }
 
@@ -759,7 +786,7 @@ public class Task extends Observable
   }
 
   public void setFlash(boolean flash) {
-    if ( useUssdPush <= 0 ) {
+    if ( deliveryMode.intValue() == DELIVERY_MODE_SMS) {
       this.flash = flash;
       modified = true;
     }
@@ -865,7 +892,7 @@ public class Task extends Observable
     t.replaceMessage = this.replaceMessage;
     t.svcType = this.svcType;
     t.useDataSm = this.useDataSm;
-    t.useUssdPush = this.useUssdPush;
+    t.deliveryMode = this.deliveryMode;
 
     // Retry on fail
     t.retryOnFail = this.retryOnFail;

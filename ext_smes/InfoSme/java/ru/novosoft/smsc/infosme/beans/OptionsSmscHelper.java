@@ -28,18 +28,22 @@ public class OptionsSmscHelper extends DynamicTableHelper{
   private Column systemTypeColumn;
   private Column rangeOfAddressColumn;
   private Column interfaceVersionColumn;
+  private Column ussdPushTagColumn;
+  private Column ussdPushVlrTagColumn;
 
   public OptionsSmscHelper(String name, String uid, int width,  boolean allowEditPropsAfterAdd) {
     super(name, uid);
-    nameColumn = new TextColumn(this, "infosme.label.smsc.name", uid + "_name", width / 9, Validation.NON_EMPTY, allowEditPropsAfterAdd);
-    sidColumn = new TextColumn(this, "infosme.label.smsc.sid", uid + "_sid", width / 9, Validation.NON_EMPTY, allowEditPropsAfterAdd);
-    passColumn = new TextColumn(this, "infosme.label.smsc.pass", uid + "_pass", width / 9, null, allowEditPropsAfterAdd);
-    hostColumn = new TextColumn(this, "infosme.label.smsc.host", uid + "_host", width / 9, Validation.NON_EMPTY, allowEditPropsAfterAdd);
-    portColumn = new TextColumn(this, "infosme.label.smsc.port", uid + "_port", width / 9, Validation.PORT, allowEditPropsAfterAdd);
-    timeoutColumn = new TextColumn(this, "infosme.label.smsc.timeout", uid + "_timeout", width / 9, Validation.POSITIVE, allowEditPropsAfterAdd);
-    systemTypeColumn = new TextColumn(this, "infosme.label.smsc.systemType", uid + "_systemType", width / 9, 12, null, allowEditPropsAfterAdd);
-    rangeOfAddressColumn = new TextColumn(this, "infosme.label.smsc.rangeOfAddress", uid + "_rangeOfAddress", width / 9, 40, null, allowEditPropsAfterAdd);
-    interfaceVersionColumn = new TextColumn(this, "infosme.label.smsc.interfaceVersion", uid + "_interfaceVersionColumn", width / 9, null, allowEditPropsAfterAdd);
+    nameColumn = new TextColumn(this, "infosme.label.smsc.name", uid + "_name", width / 11, Validation.NON_EMPTY, allowEditPropsAfterAdd);
+    sidColumn = new TextColumn(this, "infosme.label.smsc.sid", uid + "_sid", width / 11, Validation.NON_EMPTY, allowEditPropsAfterAdd);
+    passColumn = new TextColumn(this, "infosme.label.smsc.pass", uid + "_pass", width / 11, null, allowEditPropsAfterAdd);
+    hostColumn = new TextColumn(this, "infosme.label.smsc.host", uid + "_host", width / 11, Validation.NON_EMPTY, allowEditPropsAfterAdd);
+    portColumn = new TextColumn(this, "infosme.label.smsc.port", uid + "_port", width / 11, Validation.PORT, allowEditPropsAfterAdd);
+    timeoutColumn = new TextColumn(this, "infosme.label.smsc.timeout", uid + "_timeout", width / 11, Validation.POSITIVE, allowEditPropsAfterAdd);
+    systemTypeColumn = new TextColumn(this, "infosme.label.smsc.systemType", uid + "_systemType", width / 11, 12, null, allowEditPropsAfterAdd);
+    rangeOfAddressColumn = new TextColumn(this, "infosme.label.smsc.rangeOfAddress", uid + "_rangeOfAddress", width / 11, 40, null, allowEditPropsAfterAdd);
+    interfaceVersionColumn = new TextColumn(this, "infosme.label.smsc.interfaceVersion", uid + "_interfaceVersionColumn", width / 11, null, allowEditPropsAfterAdd);
+    ussdPushTagColumn = new TextColumn(this, "infosme.label.smsc.ussd_push_tag", uid + "_ussd_push_tag", width /11, null, allowEditPropsAfterAdd);
+    ussdPushVlrTagColumn = new TextColumn(this, "infosme.label.smsc.ussd_push_vlr_tag", uid + "_ussd_push_vlr_tag", width /11, null, allowEditPropsAfterAdd);
     Column delColumn = new RowControlButtonColumn(this, "", "delColumn");
     addColumn(nameColumn);
     addColumn(sidColumn);
@@ -50,6 +54,8 @@ public class OptionsSmscHelper extends DynamicTableHelper{
     addColumn(systemTypeColumn);
     addColumn(rangeOfAddressColumn);
     addColumn(interfaceVersionColumn);
+    addColumn(ussdPushTagColumn);
+    addColumn(ussdPushVlrTagColumn);
     addColumn(delColumn);
   }
 
@@ -79,6 +85,9 @@ public class OptionsSmscHelper extends DynamicTableHelper{
       else
         intefaceVersion = -1;
 
+      String ussdPushTagStr = (String)(row.getValue(ussdPushTagColumn));      
+      String ussdPushVlrTagStr = (String)(row.getValue(ussdPushVlrTagColumn));
+
       try{
         InfoSmeConfig.SmscConnector conn = new InfoSmeConfig.SmscConnector();
         conn.setHost(host.trim());
@@ -90,6 +99,16 @@ public class OptionsSmscHelper extends DynamicTableHelper{
         conn.setInterfaceVersion(intefaceVersion);
         conn.setSystemType(systemType);
         conn.setRangeOfAddress(rangeOfAddress);
+        if (ussdPushTagStr == null || ussdPushTagStr.trim().length() == 0)
+          conn.setUssdPushTag(null);
+        else
+          conn.setUssdPushTag(Integer.valueOf(ussdPushTagStr));
+
+        if (ussdPushVlrTagStr == null || ussdPushVlrTagStr.trim().length() == 0)
+          conn.setUssdPushVlrTag(null);
+        else
+          conn.setUssdPushVlrTag(Integer.valueOf(ussdPushVlrTagStr));
+
         result.add(conn);
       }catch (NumberFormatException e) {
         throw new IncorrectValueException(e);
@@ -113,6 +132,8 @@ public class OptionsSmscHelper extends DynamicTableHelper{
         row.addValue(systemTypeColumn, conn.getSystemType() == null ? "" : conn.getSystemType());
         row.addValue(rangeOfAddressColumn, conn.getRangeOfAddress() == null ? "" : conn.getRangeOfAddress());
         row.addValue(interfaceVersionColumn, conn.getInterfaceVersion() >=0 ? convertInterfaceVersion(conn.getInterfaceVersion()) : "");
+        row.addValue(ussdPushTagColumn, conn.getUssdPushTag() == null ? "" : conn.getUssdPushTag() + "");
+        row.addValue(ussdPushVlrTagColumn, conn.getUssdPushVlrTag() == null ? "" : conn.getUssdPushVlrTag() + "");
       }
     }
   }

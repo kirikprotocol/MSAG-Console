@@ -160,9 +160,6 @@ public class TaskManager {
 
   public synchronized Task createTask() throws AdminException {
     Task t = new Task(storeLocation, entriesPerDirectory);
-    if (ussdPushFeature) {
-      t.setUseUssdPush(0);
-    }
     return t;
   }
 

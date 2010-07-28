@@ -74,10 +74,8 @@ public class UsersAdd extends UsersEditBean {
       prefs.setInfosmeUncommitGeneration(infosmeUncommitedInGeneration);
       prefs.setInfosmeUncommitProcess(infosmeUncommitedInProcess);
       prefs.setInfosmeWeekDaysSet(Arrays.asList(infosmeActiveWeekDays));
-      if(isUssdPushFeature()) {
-        prefs.setInfosmeUssdPush(Boolean.valueOf(infoSmeUssdPush));
-      }else {
-        prefs.setInfosmeUssdPush(null);
+      if(isUssdPushFeature() && deliveryMode != null) {
+        prefs.setDeliveryMode(deliveryMode.intValue());
       }
       prefs.setInfosmeSourceAddress(infosmeSourceAddress);
       if (timezone != null)

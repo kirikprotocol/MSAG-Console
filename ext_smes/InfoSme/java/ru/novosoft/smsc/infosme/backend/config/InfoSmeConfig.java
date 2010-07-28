@@ -317,11 +317,9 @@ public class InfoSmeConfig {
     }
     Boolean ussdPushFeature = ctx.getInfoSmeConfig().getUssdPushFeature();
     if(ussdPushFeature != null) {
-      task.setUseUssdPush(
-          owner.getPrefs().isInfosmeUssdPush() != null && owner.getPrefs().isInfosmeUssdPush().booleanValue() ? 1 : 0
-      );
-    }else {
-      task.setUseUssdPush(-1);
+      Integer userDeliveryMode = owner.getPrefs().getDeliveryMode();
+      if (userDeliveryMode != null)
+        task.setDeliveryMode(userDeliveryMode.intValue());
     }
 
     task.setEnabled(true);
@@ -666,6 +664,10 @@ public class InfoSmeConfig {
             smsc.setInterfaceVersion(cfg.getInt("InfoSme.SMSCConnectors."+smscName+".interfaceVersion"));
           else
             smsc.setInterfaceVersion(-1);
+          if (cfg.containsParameter("InfoSme.SMSCConnectors."+smscName+".ussdPushTag"))
+            smsc.setUssdPushTag(new Integer(cfg.getInt("InfoSme.SMSCConnectors."+smscName+".ussdPushTag")));
+          if (cfg.containsParameter("InfoSme.SMSCConnectors."+smscName+".ussdPushVlrTag"))
+            smsc.setUssdPushVlrTag(new Integer(cfg.getInt("InfoSme.SMSCConnectors."+smscName+".ussdPushVlrTag")));
           newSmscs.put(smscName, smsc);
         }
 
@@ -778,6 +780,14 @@ public class InfoSmeConfig {
           cfg.setInt("InfoSme.SMSCConnectors."+smsc.getName()+".interfaceVersion",smsc.getInterfaceVersion());
         else
           cfg.removeParam("InfoSme.SMSCConnectors."+smsc.getName()+".interfaceVersion");
+        if (smsc.getUssdPushTag() != null)
+          cfg.setInt("InfoSme.SMSCConnectors."+smsc.getName()+".ussdPushTag",smsc.getUssdPushTag().intValue());
+        else
+          cfg.removeParam("InfoSme.SMSCConnectors."+smsc.getName()+".ussdPushTag");
+        if (smsc.getUssdPushVlrTag() != null)
+          cfg.setInt("InfoSme.SMSCConnectors."+smsc.getName()+".ussdPushVlrTag",smsc.getUssdPushVlrTag().intValue());
+        else
+          cfg.removeParam("InfoSme.SMSCConnectors."+smsc.getName()+".ussdPushVlrTag");
       }
 
       cfg.setInt("InfoSme.tasksSwitchTimeout", tasksSwitchTimeout);
@@ -1008,10 +1018,11 @@ public class InfoSmeConfig {
     private int timeout;
     private String password;
 
-
     private String systemType;
     private String rangeOfAddress;
     private int interfaceVersion;
+    private Integer ussdPushTag;
+    private Integer ussdPushVlrTag;
 
     public String getName() {
       return name;
@@ -1083,6 +1094,22 @@ public class InfoSmeConfig {
 
     public void setInterfaceVersion(int interfaceVersion) {
       this.interfaceVersion = interfaceVersion;
+    }
+
+    public Integer getUssdPushTag() {
+      return ussdPushTag;
+    }
+
+    public void setUssdPushTag(Integer ussdPushTag) {
+      this.ussdPushTag = ussdPushTag;
+    }
+
+    public Integer getUssdPushVlrTag() {
+      return ussdPushVlrTag;
+    }
+
+    public void setUssdPushVlrTag(Integer ussdPushVlrTag) {
+      this.ussdPushVlrTag = ussdPushVlrTag;
     }
   }
 
