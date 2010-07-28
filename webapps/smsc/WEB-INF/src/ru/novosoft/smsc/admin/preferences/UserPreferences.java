@@ -561,7 +561,7 @@ public class UserPreferences {
           } else if(name.equals("infosme.ussdPush")) {
             Boolean infosmeUssdPush = Boolean.valueOf(value);
             if (infosmeUssdPush.booleanValue() && deliveryMode == null)
-              deliveryMode = new Integer(0);
+              deliveryMode = new Integer(1);
           } else if(name.equals("infosme.deliveryMode")) {
             deliveryMode = new Integer(value);
           }

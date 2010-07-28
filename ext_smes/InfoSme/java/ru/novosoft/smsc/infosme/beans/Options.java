@@ -1,5 +1,6 @@
 package ru.novosoft.smsc.infosme.beans;
 
+import ru.novosoft.smsc.jsp.SMSCJspException;
 import ru.novosoft.smsc.jsp.util.helper.dynamictable.DynamicTableHelper;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.infosme.backend.config.InfoSmeConfig;
@@ -81,6 +82,8 @@ public class Options extends InfoSmeBean
 
   private String mbDone = null;
   private String mbCancel = null;
+
+  private List settersErrors = new ArrayList();
 
   protected int init(List errors)
   {
@@ -198,6 +201,11 @@ public class Options extends InfoSmeBean
 
   private int save()
   {
+    if (!settersErrors.isEmpty()) {
+      errors.addAll(settersErrors);
+      settersErrors.clear();
+      return RESULT_ERROR;
+    }
     try{
       InfoSmeConfig.validateSiebelOptions(
           siebelActivePeriodEnd.trim().length() == 0 ? null : tf.parse(siebelActivePeriodEnd),
@@ -311,7 +319,7 @@ public class Options extends InfoSmeBean
     try {
       this.protocolId = Integer.decode(protocolId).intValue();
     } catch (NumberFormatException e) {
-      logger.error("Invalid InfoSme.ProtocolId parameter value: \"" + protocolId + '"', e);
+      settersErrors.add(new SMSCJspException("Invalid Protocol Id: " + protocolId, SMSCJspException.ERROR_CLASS_ERROR));
       this.protocolId = 0;
     }
   }
@@ -349,7 +357,7 @@ public class Options extends InfoSmeBean
     try {
       this.tasksSwitchTimeout = Integer.decode(tasksSwitchTimeout).intValue();
     } catch (NumberFormatException e) {
-      logger.error("Invalid int InfoSme.Tasks.switchTimeout parameter value: \"" + tasksSwitchTimeout + '"', e);
+      settersErrors.add(new SMSCJspException("Invalid Tasks switch timeout: " + tasksSwitchTimeout, SMSCJspException.ERROR_CLASS_ERROR));
       this.tasksSwitchTimeout = 0;
     }
   }
@@ -381,7 +389,7 @@ public class Options extends InfoSmeBean
     try {
       this.maxMessagesPerSecond = Integer.decode(maxMessagesPerSecond).intValue();
     } catch (NumberFormatException e) {
-      logger.debug("Invalid int InfoSme.maxMessagesPerSecond parameter value: " + maxMessagesPerSecond + '"', e);
+      settersErrors.add(new SMSCJspException("InvalidMax messages per second: " + maxMessagesPerSecond, SMSCJspException.ERROR_CLASS_ERROR));
     }
   }
 
@@ -398,7 +406,7 @@ public class Options extends InfoSmeBean
     try {
       this.unrespondedMessagesMax = Integer.decode(unrespondedMessagesMax).intValue();
     } catch (NumberFormatException e) {
-      logger.debug("Invalid int InfoSme.unrespondedMessagesMax parameter value: " + unrespondedMessagesMax + '"', e);
+      settersErrors.add(new SMSCJspException("Invalid Unresponded Messages Max: " + unrespondedMessagesMax, SMSCJspException.ERROR_CLASS_ERROR));
     }
   }
 
@@ -415,7 +423,7 @@ public class Options extends InfoSmeBean
     try {
       this.unrespondedMessagesSleep = Integer.decode(unrespondedMessagesSleep).intValue();
     } catch (NumberFormatException e) {
-      logger.debug("Invalid int InfoSme.unrespondedMessagesSleep parameter value: " + unrespondedMessagesSleep + '"', e);
+      settersErrors.add(new SMSCJspException("Invalid Unresponded Messages Sleep: " + unrespondedMessagesSleep, SMSCJspException.ERROR_CLASS_ERROR));
     }
   }
 
@@ -466,7 +474,7 @@ public class Options extends InfoSmeBean
     try {
       this.tasksThreadPoolMax = Integer.decode(tasksThreadPoolMax).intValue();
     } catch (NumberFormatException e) {
-      logger.debug("Invalid int InfoSme.TasksThreadPool.max parameter value: " + tasksThreadPoolMax + '"', e);
+      settersErrors.add(new SMSCJspException("Invalid Tasks thread pool max: " + tasksThreadPoolInit, SMSCJspException.ERROR_CLASS_ERROR));
     }
   }
 
@@ -477,7 +485,7 @@ public class Options extends InfoSmeBean
     try {
       this.tasksThreadPoolInit = Integer.decode(tasksThreadPoolInit).intValue();
     } catch (NumberFormatException e) {
-      logger.debug("Invalid int InfoSme.TasksThreadPool.init parameter value: " + tasksThreadPoolInit + '"', e);
+      settersErrors.add(new SMSCJspException("Invalid Tasks thread pool init: " + tasksThreadPoolInit, SMSCJspException.ERROR_CLASS_ERROR));
     }
   }
 
@@ -488,7 +496,7 @@ public class Options extends InfoSmeBean
     try {
       this.eventsThreadPoolMax = Integer.decode(eventsThreadPoolMax).intValue();
     } catch (NumberFormatException e) {
-      logger.debug("Invalid int InfoSme.EventsThreadPool.max parameter value: " + eventsThreadPoolMax + '"', e);
+      settersErrors.add(new SMSCJspException("Invalid Events thread pool max: " + eventsThreadPoolMax, SMSCJspException.ERROR_CLASS_ERROR));
     }
   }
 
@@ -499,7 +507,7 @@ public class Options extends InfoSmeBean
     try {
       this.eventsThreadPoolInit = Integer.decode(eventsThreadPoolInit).intValue();
     } catch (NumberFormatException e) {
-      logger.debug("Invalid int InfoSme.EventsThreadPool.init parameter value: " + eventsThreadPoolInit + '"', e);
+      settersErrors.add(new SMSCJspException("Invalid Events thread pool init: " + eventsThreadPoolInit, SMSCJspException.ERROR_CLASS_ERROR));
     }
   }
 
@@ -523,7 +531,7 @@ public class Options extends InfoSmeBean
     try {
       this.adminPort = Integer.decode(adminPort).intValue();
     } catch (NumberFormatException e) {
-      logger.debug("Invalid int InfoSme.Admin.port parameter value: \"" + adminPort + '"', e);
+      settersErrors.add(new SMSCJspException("Invalid Admin Port: " + adminPort, SMSCJspException.ERROR_CLASS_ERROR));
     }
   }
 
@@ -654,7 +662,7 @@ public class Options extends InfoSmeBean
       try{
         this.siebelMessagesCacheSize = Integer.parseInt(siebelMessagesCacheSize);
       }catch(NumberFormatException e) {
-        logger.error(e,e);
+        settersErrors.add(new SMSCJspException("Invalid siebel messages cache size: " + siebelMessagesCacheSize, SMSCJspException.ERROR_CLASS_ERROR));
       }
     }
   }
@@ -668,7 +676,7 @@ public class Options extends InfoSmeBean
       try{
         this.siebelMessagesCacheSleep = Integer.parseInt(siebelMessagesCacheSleep);
       }catch(NumberFormatException e) {
-        logger.error(e,e);
+        settersErrors.add(new SMSCJspException("Invalid siebel messages cache sleep: " + siebelMessagesCacheSleep, SMSCJspException.ERROR_CLASS_ERROR));
       }
     }
   }
@@ -682,7 +690,7 @@ public class Options extends InfoSmeBean
       try{
         this.siebelUncommitedInGeneration = Integer.parseInt(siebelUncommitedInGeneration);
       }catch(NumberFormatException e) {
-        logger.error(e,e);
+        settersErrors.add(new SMSCJspException("Invalid siebel uncommited in generation: " + siebelUncommitedInGeneration, SMSCJspException.ERROR_CLASS_ERROR));
       }
     }
   }
@@ -696,7 +704,7 @@ public class Options extends InfoSmeBean
       try{
         this.siebelUncommitedInProcess = Integer.parseInt(siebelUncommitedInProcess);
       }catch(NumberFormatException e) {
-        logger.error(e,e);
+        settersErrors.add(new SMSCJspException("Invalid siebel uncommited in process: " + siebelUncommitedInProcess, SMSCJspException.ERROR_CLASS_ERROR));
       }
     }
   }
@@ -758,7 +766,7 @@ public class Options extends InfoSmeBean
       try{
         this.siebelTMPeriod = Integer.parseInt(siebelTMPeriod.trim());
       }catch(NumberFormatException e) {
-        logger.error(e,e);
+        settersErrors.add(new SMSCJspException("Invalid siebelTM period: " + siebelTMPeriod, SMSCJspException.ERROR_CLASS_ERROR));
       }
     }
   }
