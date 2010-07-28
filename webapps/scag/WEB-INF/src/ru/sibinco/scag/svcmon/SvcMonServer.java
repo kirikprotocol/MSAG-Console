@@ -108,7 +108,7 @@ public class SvcMonServer extends Thread {
                 Socket sock = null;
                 try {
                     sock = serverSocket.accept();
-                    System.out.println("SvcMon: Client " + sock.getInetAddress().getHostAddress() + " connected");
+                    //System.out.println("SvcMon: Client " + sock.getInetAddress().getHostAddress() + " connected");
                     try {
                         logger.debug("SvcMon: Client " + sock.getInetAddress().getHostAddress() + " connected");
                         SvcMonServerRunner sr = new SvcMonServerRunner(sock, this);

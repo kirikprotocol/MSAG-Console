@@ -98,15 +98,15 @@ public class QueryResultSetImpl implements QueryResultSet
 
   private int getBlockEnd(int blockStart, String columnName)
   {
-    System.out.println("QueryResultSetImpl.getBlockEnd(\"" + columnName + "\")");
+    //System.out.println("QueryResultSetImpl.getBlockEnd(\"" + columnName + "\")");
     DataItem startItem = (DataItem) results.get(blockStart);
     Object startValue = startItem.getValue(columnName);
     for (int i = blockStart + 1; i < results.size(); i++) {
-      System.out.println("i = " + i);
+      //System.out.println("i = " + i);
       DataItem dataItem = (DataItem) results.get(i);
-      System.out.println("dataItem = " + dataItem);
+      //System.out.println("dataItem = " + dataItem);
       if (dataItem != null)
-        System.out.println("dataItem.getValue(columnName) = " + dataItem.getValue(columnName));
+        //System.out.println("dataItem.getValue(columnName) = " + dataItem.getValue(columnName));
       if (!dataItem.getValue(columnName).equals(startValue))  //todo: may be NullPointerExeption
         return i;
     }

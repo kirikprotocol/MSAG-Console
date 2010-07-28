@@ -416,6 +416,7 @@ public class Scag extends Proxy {
                               final Manager manager, final String configFilename)
                               throws SibincoException {
         logger.debug( "Scag.invokeCommand().start commandName='" +commandName + "'" );
+        System.out.println("Scag.invokeCommand().start commandName='" +commandName + "'");
         try{
         //2.save current config to temporary file(smpp.xml->smpp.xml.old)
 

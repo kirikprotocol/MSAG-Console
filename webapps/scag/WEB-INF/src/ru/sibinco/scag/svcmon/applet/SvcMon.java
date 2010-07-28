@@ -128,9 +128,9 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
 
     public void init() {
 
-        System.out.println("Initing..." );
+        //System.out.println("Initing..." );
         localText = new RemoteResourceBundle(getCodeBase(),getParameter("resource_servlet_uri"));
-        System.out.println("SvcMon:getCodeBase()=" + getCodeBase() + ".");
+        //System.out.println("SvcMon:getCodeBase()=" + getCodeBase() + ".");
         locale=localText.getLocale();
 
         maxSpeed = Integer.valueOf(getParameter("max.speed")).intValue();
@@ -138,7 +138,7 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
         graphGrid = Integer.valueOf(getParameter("graph.grid")).intValue();
         graphHiGrid = Integer.valueOf(getParameter("graph.higrid")).intValue();
         graphHead = Integer.valueOf(getParameter("graph.head")).intValue();
-        System.out.println("INIT:\nmaxSpeed=" + maxSpeed + "\ngraph.grid=" + graphGrid + "\ngraph.hiGrid=" + graphHiGrid + "\ngraph.head=" + graphHead +"\n" );
+        //System.out.println("INIT:\nmaxSpeed=" + maxSpeed + "\ngraph.grid=" + graphGrid + "\ngraph.hiGrid=" + graphHiGrid + "\ngraph.head=" + graphHead +"\n" );
 
         setFont(new Font("Dialog", Font.BOLD, 14));
         setLayout(new GridBagLayout());
@@ -172,7 +172,7 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
 
         public void actionPerformed(ActionEvent e) {
             JCheckBox checkBox = (JCheckBox)e.getSource();
-            System.out.println("CHECKBOOX '" + checkBox.getText() + "' is " + checkBox.isSelected() );
+            //System.out.println("CHECKBOOX '" + checkBox.getText() + "' is " + checkBox.isSelected() );
 
         }
     }
@@ -182,13 +182,13 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
     protected int getSpeed(){
         int result=10;
         for(int i =0; i<svcSnap.smppCount; i++){
-            System.out.println("speed=" + svcSnap.smppSnaps[i].smppSpeed[2]);
+            //System.out.println("speed=" + svcSnap.smppSnaps[i].smppSpeed[2]);
             if( result < svcSnap.smppSnaps[i].smppSpeed[2] ){
                 result = svcSnap.smppSnaps[i].smppSpeed[2];
-                System.out.println("set result to " + result);
+                //System.out.println("set result to " + result);
             }
         }
-        System.out.println("getMaxSpeed()=" + result );
+        //System.out.println("getMaxSpeed()=" + result );
         return result;
     }
 
@@ -203,14 +203,14 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
             snapSmppHistory = new SnapSmppHistory();
             snapHttpHistory = new SnapHttpHistory();
 //            maxSpeed = ( maxSpeed<getSpeed() )? getSpeed(): maxSpeed;
-            System.out.println("gotFirstSnap:smppCount=" + snap.smppCount + "\tsmppViewList='" + smppViewList + "'" + "\nmaxSpeed=" + maxSpeed);
+            //System.out.println("gotFirstSnap:smppCount=" + snap.smppCount + "\tsmppViewList='" + smppViewList + "'" + "\nmaxSpeed=" + maxSpeed);
             smppTopGraph = new SmppTopGraph(snap, maxSpeed, graphScale, graphGrid,
                     graphHiGrid, graphHead, localText, snapSmppHistory, smppViewList, smppViewGraph );
 
-            System.out.println("gotFirstSnap:httpCount=" + snap.httpCount + "\thttpViewList='" + httpViewList + "'");
+            //System.out.println("gotFirstSnap:httpCount=" + snap.httpCount + "\thttpViewList='" + httpViewList + "'");
             httpTopGraph = new HttpTopGraph(snap, maxSpeed, graphScale, graphGrid,
                     graphHiGrid, graphHead, localText, snapHttpHistory, httpViewList, httpViewGraph);
-        System.out.println("SvcMon:gotFirstSnap:create TbbedPane");
+        //System.out.println("SvcMon:gotFirstSnap:create TbbedPane");
         JTabbedPane jTabbedPane = new JTabbedPane();
         smppPanel = new SmppPanel(this);
         jTabbedPane.addTab( "SMPP", smppPanel );
@@ -236,17 +236,17 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
         Socket sock = null;
         DataInputStream is = null;
         isStopping = false;
-        System.out.println("SvcMon.run() host='" + getParameter("host") + "' port='" +  Integer.valueOf(getParameter("port")).intValue() + "'");
+        //System.out.println("SvcMon.run() host='" + getParameter("host") + "' port='" +  Integer.valueOf(getParameter("port")).intValue() + "'");
         try {
             SvcSnap snap = new SvcSnap(); // moved
             int counter = TIMEOUT_MILLISEC/1000;
             while (!isStopping) {
                 try {
-                    System.out.println("SvcMon.run() new Socket()");
+                    //System.out.println("SvcMon.run() new Socket()");
                     sock = new Socket(getParameter("host"), Integer.valueOf(getParameter("port")).intValue());
-                    System.out.println("SvcMon.run() getInputStream");
+                    //System.out.println("SvcMon.run() getInputStream");
                     InputStream is1 = sock.getInputStream();
-                    System.out.println("SvcMon.run() is1.available() from sock='" + is1.available() + "'");
+                    //System.out.println("SvcMon.run() is1.available() from sock='" + is1.available() + "'");
                     is = new DataInputStream(is1);
 //                    SvcSnap snap = new SvcSnap(); moved above
                     snap.read(is);
@@ -256,12 +256,12 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
                     while (!isStopping) {
 //                        System.out.println("SvcMon:run():while:while");
                         if( pause.getState() ){
-                            System.out.println("SvcMon:run():while:while:if1:pause");
+                            //System.out.println("SvcMon:run():while:while:if1:pause");
 
                             this.smppPanel.viewButtonPanel.pauseGraphButton.setText( (counter--) + " " + BUTTON_CONTINUE_GRAPH );
                             Thread.sleep( 1000 );
                             if( (Calendar.getInstance().getTimeInMillis() - smppPauseTime.getTimeInMillis()) > TIMEOUT_MILLISEC ){
-                                System.out.println("SvcMon:run():while:while:if2:pause end");
+                                //System.out.println("SvcMon:run():while:while:if2:pause end");
                                 pause.setState( false );
                             }
                         } else {
@@ -285,7 +285,7 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
                     } catch (InterruptedException e1) {
                     }
                     ex.printStackTrace(System.out);
-                    System.out.println("I/O error: " + ex.getMessage() + ". Reconnecting...");
+                    //System.out.println("I/O error: " + ex.getMessage() + ". Reconnecting...");
                 }
             }
         } catch (Exception e) {
@@ -304,7 +304,7 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
                 }
             ;
         }
-        System.out.println("Connection thread stopped");
+        //System.out.println("Connection thread stopped");
     }
 
     Image offscreen;
@@ -367,18 +367,18 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
     }
 
     public void start() {
-        System.out.println("Starting...");
+        //System.out.println("Starting...");
         Thread thr = new Thread(this);
         thr.start();
     }
 
     public void stop() {
-        System.out.println("Stoping...");
+        //System.out.println("Stoping...");
         isStopping = true;
     }
 
     public void destroy() {
-        System.out.println("Destroying...");
+        //System.out.println("Destroying...");
         isStopping = true;
     }
 }
@@ -537,10 +537,10 @@ class ViewButtonPanel extends JPanel implements Observer{
                 public void actionPerformed(ActionEvent event){
                     if( type.equals(SvcMon.TYPE_SMPP) ){
                         mon.smppShiftV = mon.smppShiftV<2000? mon.smppShiftV + SHIFT_STEP: 2000;
-                        System.out.println("SvcMon SMPP shiftUpListener shiftV='" + mon.smppShiftV + "' prev='" + (mon.smppShiftV - SHIFT_STEP) + "'" );
+                        //System.out.println("SvcMon SMPP shiftUpListener shiftV='" + mon.smppShiftV + "' prev='" + (mon.smppShiftV - SHIFT_STEP) + "'" );
                     }else if( type.equals(SvcMon.TYPE_HTTP) ){
                         mon.httpShiftV = mon.httpShiftV<2000? mon.httpShiftV + SHIFT_STEP: 2000;
-                        System.out.println("SvcMon HTTP zoomYInListener shiftV=' " + mon.httpShiftV + " prev " + (mon.httpShiftV - SHIFT_STEP) );
+                        //System.out.println("SvcMon HTTP zoomYInListener shiftV=' " + mon.httpShiftV + " prev " + (mon.httpShiftV - SHIFT_STEP) );
                     }
 //                        smppTopGraph.maxSpeed = 200;
                     mon.smppTopGraph.invalidate();
@@ -553,10 +553,10 @@ class ViewButtonPanel extends JPanel implements Observer{
                 public void actionPerformed(ActionEvent event){
                     if( type.equals(SvcMon.TYPE_SMPP) ){
                         mon.smppShiftV = mon.smppShiftV>=SHIFT_STEP? mon.smppShiftV - SHIFT_STEP: 0;
-                        System.out.println("SMPP shiftDownListener. smppShiftV='" + mon.smppShiftV + "' prev='" + (mon.smppShiftV + SHIFT_STEP) + "'" );
+                        //System.out.println("SMPP shiftDownListener. smppShiftV='" + mon.smppShiftV + "' prev='" + (mon.smppShiftV + SHIFT_STEP) + "'" );
                     }else if( type.equals(SvcMon.TYPE_HTTP) ){
                         mon.httpShiftV = mon.httpShiftV>=SHIFT_STEP? mon.httpShiftV - SHIFT_STEP: 0;
-                        System.out.println("HTTP shiftDownListener. httpShiftV='" + mon.httpShiftV + "' prev='" + (mon.httpShiftV + SHIFT_STEP) + "'" );
+                        //System.out.println("HTTP shiftDownListener. httpShiftV='" + mon.httpShiftV + "' prev='" + (mon.httpShiftV + SHIFT_STEP) + "'" );
                     }
 //                        smppTopGraph.maxSpeed = 200;
                     mon.smppTopGraph.invalidate();
@@ -578,7 +578,7 @@ class ViewButtonPanel extends JPanel implements Observer{
                                     mon.pause.setState( true );
                                     mon.smppPauseTime = Calendar.getInstance();
                                 }
-                                System.out.println("smpppPauseGraph has set to '" + mon.smppPauseGraph + "'");
+                                //System.out.println("smpppPauseGraph has set to '" + mon.smppPauseGraph + "'");
                             }
                         }else if( type.equals(SvcMon.TYPE_HTTP) ){
                             if( mon.httpViewGraph ){
@@ -588,7 +588,7 @@ class ViewButtonPanel extends JPanel implements Observer{
                                     mon.pause.setState( true );
                                     mon.smppPauseTime = Calendar.getInstance();
                                 }
-                                System.out.println("httpPauseGraph has set to '" + mon.httpPauseGraph + "'");
+                                //System.out.println("httpPauseGraph has set to '" + mon.httpPauseGraph + "'");
                             }
                         }
                     }
@@ -648,10 +648,10 @@ class ViewButtonPanel extends JPanel implements Observer{
                 public void actionPerformed(ActionEvent event){
                     if( type.equals(SvcMon.TYPE_SMPP) ){
                         mon.smppYScale = mon.smppYScale<1? mon.smppYScale*2: mon.smppYScale + SCALE_STEP_Y;
-                        System.out.println("SMPP zoomYInListener. new is " + mon.smppYScale + " Before " + (mon.smppYScale - SCALE_STEP_Y) );
+                        //System.out.println("SMPP zoomYInListener. new is " + mon.smppYScale + " Before " + (mon.smppYScale - SCALE_STEP_Y) );
                     }else if( type.equals(SvcMon.TYPE_HTTP) ){
                         mon.httpYScale = mon.httpYScale<1? mon.httpYScale*2: mon.httpYScale + SCALE_STEP_Y;
-                        System.out.println("HTTP zoomYInListener new is " + mon.httpYScale + " Before " + (mon.httpYScale - SCALE_STEP_Y) );
+                        //System.out.println("HTTP zoomYInListener new is " + mon.httpYScale + " Before " + (mon.httpYScale - SCALE_STEP_Y) );
                     }
 //                        smppTopGraph.maxSpeed = 200;
                     mon.smppTopGraph.invalidate();
@@ -663,10 +663,10 @@ class ViewButtonPanel extends JPanel implements Observer{
             ActionListener(){
                 public void actionPerformed(ActionEvent event){
                     if( type.equals(SvcMon.TYPE_SMPP) ){
-                        System.out.println("SMPP zoomYOutListener");
+                        //System.out.println("SMPP zoomYOutListener");
                         mon.smppYScale = mon.smppYScale>1?mon.smppYScale - SCALE_STEP_Y: mon.smppYScale>0.125? mon.smppYScale/2: mon.smppYScale;
                     }else if( type.equals(SvcMon.TYPE_HTTP) ){
-                        System.out.println("HTTP zoomYOutListener");
+                        //System.out.println("HTTP zoomYOutListener");
                         mon.httpYScale = mon.httpYScale>1?mon.httpYScale - SCALE_STEP_Y: mon.httpYScale>0.125? mon.httpYScale/2: mon.httpYScale;
                     }
                     mon.smppTopGraph.invalidate();
@@ -679,10 +679,10 @@ class ViewButtonPanel extends JPanel implements Observer{
                 public void actionPerformed(ActionEvent event){
                     if( type.equals(SvcMon.TYPE_SMPP) ){
                         mon.smppXScale += SCALE_STEP_X;
-                        System.out.println("SMPP zoomXInListener new is " + mon.smppYScale + " Before " + (mon.smppXScale-SCALE_STEP_X) );
+                        //System.out.println("SMPP zoomXInListener new is " + mon.smppYScale + " Before " + (mon.smppXScale-SCALE_STEP_X) );
                     }else if( type.equals(SvcMon.TYPE_HTTP) ){
                         mon.httpXScale += SCALE_STEP_X;
-                        System.out.println("HTTP zoomXInListener new is " + mon.httpXScale + " Before " + (mon.httpXScale-SCALE_STEP_X) );
+                        //System.out.println("HTTP zoomXInListener new is " + mon.httpXScale + " Before " + (mon.httpXScale-SCALE_STEP_X) );
                     }
                     mon.smppTopGraph.invalidate();
                 }
@@ -720,7 +720,7 @@ class ViewButtonPanel extends JPanel implements Observer{
     public void update( Observable o, Object arg) {
 
         Pause pause = (Pause)o;
-        System.out.println("ViewButtonPanel:update():'" + pause.getState() + "'");
+        //System.out.println("ViewButtonPanel:update():'" + pause.getState() + "'");
         if( pause.getState() ){
             pauseGraphButton.setText( SvcMon.BUTTON_CONTINUE_GRAPH );
         }else{
@@ -741,7 +741,7 @@ class ViewPropertyFrame extends JFrame{
 //            System.out.println("CB height=" + height );
         final int strHeight = 30;
         int totalStrHeight = ( type.equals(SvcMon.TYPE_SMPP)? mon.svcSnap.smppCount: mon.svcSnap.httpCount ) * strHeight;
-        System.out.println("strsHeight=" + totalStrHeight);
+        //System.out.println("strsHeight=" + totalStrHeight);
         final int buttonsHeight = 100;
         int frameHeight = totalStrHeight + buttonsHeight;
         int frameWidth = 300;
@@ -839,13 +839,13 @@ class SelectAllListener implements ActionListener{
     public void actionPerformed(ActionEvent e) {
         if(e.getSource() instanceof JButton ){
             JButton button = (JButton)e.getSource();
-            System.out.println( "SvcMon:SelectAllListener:BUTTON: " + button.getText() );
+            //System.out.println( "SvcMon:SelectAllListener:BUTTON: " + button.getText() );
                 for(int i = 0; i<panel.getComponentCount(); i++){
                     Component comp = panel.getComponent(i);
                     if( comp instanceof JCheckBox ){
                         JCheckBox box = (JCheckBox)comp;
                         box.setSelected( true );
-                        System.out.println( "SvcMon:SelectAllListener " +i + " CHECKBOX: " + box.getText() );
+                        //System.out.println( "SvcMon:SelectAllListener " +i + " CHECKBOX: " + box.getText() );
                     }
                 }
         }
@@ -862,13 +862,13 @@ class DeSelectAllListener implements ActionListener{
     public void actionPerformed(ActionEvent e) {
         if(e.getSource() instanceof JButton ){
             JButton button = (JButton)e.getSource();
-            System.out.println( "BUTTON: " + button.getText() );
+            //System.out.println( "BUTTON: " + button.getText() );
                 for(int i = 0; i<panel.getComponentCount(); i++){
                     Component comp = panel.getComponent(i);
                     if( comp instanceof JCheckBox ){
                         JCheckBox box = (JCheckBox)comp;
                         box.setSelected( false );
-                        System.out.println(i + " CHECKBOX: " + box.getText() );
+                        //System.out.println(i + " CHECKBOX: " + box.getText() );
                     }
                 }
         }
@@ -947,7 +947,7 @@ class OkListener implements ActionListener{
     public void actionPerformed(ActionEvent e) {
         if(e.getSource() instanceof JButton ){
             JButton button = (JButton)e.getSource();
-            System.out.println( "BUTTON: " + button.getText() );
+            //System.out.println( "BUTTON: " + button.getText() );
             if( button.getText().equals(SvcMon.BUTTON_APPLY) ){
                 HashSet temp = new HashSet();
                 for( int i = 0; i<panel.getComponentCount(); i++ ){
@@ -955,7 +955,7 @@ class OkListener implements ActionListener{
                     if( comp instanceof JCheckBox ){
                         JCheckBox checkBox = (JCheckBox)comp;
                         String checkName = checkBox.getText();
-                        System.out.println( "JCheckBox " + checkName );
+                        //System.out.println( "JCheckBox " + checkName );
                         if( checkBox.isSelected()){
                             temp.add( checkName );
                         }
@@ -963,10 +963,10 @@ class OkListener implements ActionListener{
                 }
                 if(type.equals(SvcMon.TYPE_SMPP)){
                     mon.smppViewList = temp;
-                    System.out.println("After OK smppViewList='" + mon.smppViewList + "'");
+                    //System.out.println("After OK smppViewList='" + mon.smppViewList + "'");
                 }else if(type.equals(SvcMon.TYPE_HTTP)){
                     mon.httpViewList = temp;
-                    System.out.println("After OK httpViewList='" + mon.httpViewList + "'");
+                    //System.out.println("After OK httpViewList='" + mon.httpViewList + "'");
                 }
             }
         }

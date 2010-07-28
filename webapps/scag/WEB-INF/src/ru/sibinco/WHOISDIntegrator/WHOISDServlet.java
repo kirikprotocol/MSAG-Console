@@ -320,21 +320,21 @@ public class WHOISDServlet extends HttpServlet
      }
 
      if (WHOISDTermsTransformer.DEBUG) {
-     System.out.println("!!!!!!!!!!!!!!! startindex="+startindex);
-     System.out.println("+++++++++++++++++++++++++++++++");
+     //System.out.println("!!!!!!!!!!!!!!! startindex="+startindex);
+     //System.out.println("+++++++++++++++++++++++++++++++");
      for (Iterator iter=termAsList.iterator();iter.hasNext();){
-        System.out.println(iter.next());
+        //System.out.println(iter.next());
      }
-     System.out.println("+++++++++++++++++++++++++++++++");
+     //System.out.println("+++++++++++++++++++++++++++++++");
 
-     System.out.println("-------------------------------");
+     //System.out.println("-------------------------------");
      for (Iterator iter=ruleBodyWithoutHeader.iterator();iter.hasNext();){
-        System.out.println(iter.next());
+        //System.out.println(iter.next());
      }
-     System.out.println("-------------------------------");
-     System.out.println("offset: " + offset);
+     //System.out.println("-------------------------------");
+     //System.out.println("offset: " + offset);
 
-     System.out.println("e.getLineNumber() - ruleWHOISD.getOffset() - ruleHeaderLength: " + (linenumber - ruleWHOISD.getWhoisdPartOffset() - ruleHeaderLength));
+     //System.out.println("e.getLineNumber() - ruleWHOISD.getOffset() - ruleHeaderLength: " + (linenumber - ruleWHOISD.getWhoisdPartOffset() - ruleHeaderLength));
      }
 
      Object linenumberinterm = null;

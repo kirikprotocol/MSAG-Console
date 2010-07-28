@@ -25,34 +25,34 @@ public class RemoteResourceBundle {
     properties = new HashMap();
     try {
         resource_url = new URL(codebase,resource_uri);
-        System.out.println( "RRB:codebase='" + codebase.getPath() + "' resource_uri=" + resource_uri );
-        System.out.println( "RRB:resource_url=" + resource_url.getPath() + " full:'" + resource_url );
+        //System.out.println( "RRB:codebase='" + codebase.getPath() + "' resource_uri=" + resource_uri );
+        //System.out.println( "RRB:resource_url=" + resource_url.getPath() + " full:'" + resource_url );
     } catch(Exception e) {
       e.printStackTrace();
     }
   }
 
   public String getString(String key) {
-    System.out.println( "RRB.getString() KEY='" + key + "'" );
+    //System.out.println( "RRB.getString() KEY='" + key + "'" );
     final String codePage = "cp1251";
     String message = "undefined";
     message = (String)properties.get(key);
-    System.out.println( "RRB.getString() MSG='" + message + "'" );
+    //System.out.println( "RRB.getString() MSG='" + message + "'" );
     if (message!=null) return message;
     BufferedReader br = null;
       InputStream s = null;
     try {
-        System.out.println("RRB.getString() STRING for url:'" + resource_url.toString() + " key=" + key + "' " );
+        //System.out.println("RRB.getString() STRING for url:'" + resource_url.toString() + " key=" + key + "' " );
 //        logger.debug("***RRB.getString() STRING for url:'" + resource_url.toString() + " key=" + key + "'");
         URL url = new URL(resource_url.toString() + "key="+key);
-        System.out.println("RRB.getString() URL: host=" + url.getHost() + " protocol=" + url.getProtocol() + " path=" + url.getHost() + " port=" + url.getPort());
-        System.out.println("RRB.getString() 1 " + System.currentTimeMillis() );
+        //System.out.println("RRB.getString() URL: host=" + url.getHost() + " protocol=" + url.getProtocol() + " path=" + url.getHost() + " port=" + url.getPort());
+        //System.out.println("RRB.getString() 1 " + System.currentTimeMillis() );
         s = url.openStream();
         byte[] mess = new byte[s.available()];
         s.read( mess );
         message = new String(mess, codePage);
-        System.out.println("RRB.getString() 2 " + System.currentTimeMillis() );
-        System.out.println("RRB.getString message='" + message + "'\n--------------");
+        //System.out.println("RRB.getString() 2 " + System.currentTimeMillis() );
+        //System.out.println("RRB.getString message='" + message + "'\n--------------");
         properties.put(key,message);
     } catch(Exception e) {
       e.printStackTrace();

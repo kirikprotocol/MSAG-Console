@@ -208,7 +208,7 @@ public class OperatingSystem
 		{        */
 		// String osName = jEditApplet.osname;
      String osName = System.getProperty("os.name");
-		 System.out.println("osName= "+osName);
+		 //System.out.println("osName= "+osName);
     if(osName.indexOf("Windows 9") != -1
 				|| osName.indexOf("Windows M") != -1)
 			{

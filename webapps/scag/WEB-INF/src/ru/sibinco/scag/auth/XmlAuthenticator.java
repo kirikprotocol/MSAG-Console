@@ -82,7 +82,7 @@ public class XmlAuthenticator implements Authenticator
   public synchronized Principal authenticate(String login, String password)
   {
     if (users == null) {
-      System.out.println("XmlAuthenticator.authenticate(\"" + login + "\", \"" + password + "\") FAILED - AUTHENTICATOR NOT INITIALIZED");
+      //System.out.println("XmlAuthenticator.authenticate(\"" + login + "\", \"" + password + "\") FAILED - AUTHENTICATOR NOT INITIALIZED");
       return null;
     }
 

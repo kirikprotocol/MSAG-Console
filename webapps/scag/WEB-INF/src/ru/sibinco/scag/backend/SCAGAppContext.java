@@ -84,7 +84,7 @@ public class SCAGAppContext {
     private SCAGAppContext(final String config_filename) throws Throwable, ParserConfigurationException, SAXException, Config.WrongParamTypeException,
             Config.ParamNotFoundException, SibincoException {
         try {
-            System.out.println("  **  config file:" + new File(config_filename).getAbsolutePath());
+            //System.out.println("  **  config file:" + new File(config_filename).getAbsolutePath());
             System.out.flush();
             config = new Config(new File(config_filename));
             String gwConfigFolder = config.getString("gw location.gw_config_folder");
@@ -99,7 +99,7 @@ public class SCAGAppContext {
             connectionPool = null;
 
             String instType = config.getString("installation.type");
-            System.out.println("  ***  instType='" + instType + "'" );
+            //System.out.println("  ***  instType='" + instType + "'" );
             if( instType.equals(HSDaemon.typeCluster) ) { isCluster = true; }
 
             hsDaemon = new HSDaemon(config.getString("installation.type"), config.getString("installation.mirrorpath"));

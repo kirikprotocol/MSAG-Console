@@ -8,11 +8,15 @@ package ru.sibinco.scag.backend.stat.counters;
  * Date: 15.02.2010
  * Time: 12:06:46
  */
-public class ConfigParam
+public class ConfigParam implements java.io.Serializable, Cloneable
 {
     private String name;
     private String type;
     private String value;
+
+    public ConfigParam(){
+        
+    }
 
     public ConfigParam(String name, String type, String value) {
         this.name = name; this.type = type; this.value = value;
@@ -36,4 +40,13 @@ public class ConfigParam
     public void setValue(String value) {
         this.value = value;
     }
+
+    public String toString() {
+        return "ConfigParam{" +
+                "type='" + getType() + '\'' +
+                ", name='" + getName() + '\'' +
+                "value=" + value +
+                '}';
+    }   
+
 }

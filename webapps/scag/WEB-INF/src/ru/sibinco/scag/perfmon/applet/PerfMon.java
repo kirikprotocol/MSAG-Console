@@ -114,7 +114,7 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
     String test;
 
     public void init() {
-        System.out.println("new PerfMon.init() Initing...");
+        //System.out.println("new PerfMon.init() Initing...");
         localeText = new RemoteResourceBundle(getCodeBase(),getParameter("resource_servlet_uri"));
         locale=localeText.getLocale();
         dateFormat = new SimpleDateFormat(localeText.getString("sctime"),locale);
@@ -167,7 +167,7 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
         } catch (Exception ex) {
         }
 
-        System.out.println( "PerfMon.init() test='" + test + "'" );
+        //System.out.println( "PerfMon.init() test='" + test + "'" );
 
         setFont(new Font("dialog", Font.BOLD, 12));
         setLayout(new GridBagLayout());
@@ -182,7 +182,7 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
     }
 
     protected void gotFirstSnap(PerfSnap snap) {
-        System.out.println("gotFirstSnap() start");
+        //System.out.println("gotFirstSnap() start");
         remove(connectingLabel);
 
         GridBagConstraints gbc = new GridBagConstraints();
@@ -495,7 +495,7 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
             while (!isStopping) {
                 try {
                     sock = new Socket(getParameter("host"), Integer.valueOf(getParameter("port")).intValue());
-                    System.out.println( "PerfMon:run():host=" + getParameter("host") + " port=" + Integer.valueOf(getParameter("port")).intValue() );
+                    //System.out.println( "PerfMon:run():host=" + getParameter("host") + " port=" + Integer.valueOf(getParameter("port")).intValue() );
                     is = new DataInputStream( sock.getInputStream() );
                     PerfSnap snap = new PerfSnap();
                     snap.read(is);
@@ -538,7 +538,7 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
                     } catch (InterruptedException e1) {
                     }
                     ex.printStackTrace(System.out);
-                    System.out.println("I/O error: " + ex.getMessage() + ". Reconnecting...");
+                    //System.out.println("I/O error: " + ex.getMessage() + ". Reconnecting...");
                 }
             }
         } catch (Exception e) {
@@ -557,7 +557,7 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
                 }
             ;
         }
-        System.out.println("Connection thread stopped");
+        //System.out.println("Connection thread stopped");
     }
 
     Image offscreen;
@@ -594,7 +594,7 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
 
     public void mouseClicked(MouseEvent e) {
         if ((e.getModifiers() & InputEvent.BUTTON3_MASK) != 0) {
-            System.out.println("Modifiers: " + e.getModifiers());
+            //System.out.println("Modifiers: " + e.getModifiers());
             popupMenu.show(this, e.getX() + e.getComponent().getBounds().x, e.getY() + e.getComponent().getBounds().y);
         }
     }
@@ -653,35 +653,35 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
                 popupMenu.add(menuTransaction);
             }
         } else if (e.getSource() == menuIncrScale) {
-            System.out.println("menuIncrScale");
+            //System.out.println("menuIncrScale");
             scale += 10;
             perfbar.invalidate();
             perfGraph.invalidate();
         } else if (e.getSource() == menuIncrBlock) {
-            System.out.println("menuIncrBlock");
+            //System.out.println("menuIncrBlock");
             block++;
             perfbar.invalidate();
             perfGraph.invalidate();
         } else if (e.getSource() == menuIncrPix) {
-            System.out.println("menuIncrPix");
+            //System.out.println("menuIncrPix");
             pixPerSecond++;
             perfbar.invalidate();
             perfGraph.invalidate();
         } else if (e.getSource() == menuDecrScale) {
-            System.out.println("menuDecrScale");
+            //System.out.println("menuDecrScale");
             if (scale >= 20) scale -= 10;
             perfbar.invalidate();
             perfGraph.invalidate();
         } else if (e.getSource() == menuDecrBlock) {
-            System.out.println("menuDecrBlock");
+            //System.out.println("menuDecrBlock");
             if (block > 4) {
-                System.out.println("menuDecrBlock: block>4");
+                //System.out.println("menuDecrBlock: block>4");
                 block--;
             }
             perfbar.invalidate();
             perfGraph.invalidate();
         } else if (e.getSource() == menuDecrPix) {
-            System.out.println("menuDecrPix");
+            //System.out.println("menuDecrPix");
             if (pixPerSecond > 2) pixPerSecond--;
             perfbar.invalidate();
             perfGraph.invalidate();
@@ -723,18 +723,18 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
     }
 
     public void start() {
-        System.out.println("Starting...");
+        //System.out.println("Starting...");
         Thread thr = new Thread(this);
         thr.start();
     }
 
     public void stop() {
-        System.out.println("Stoping...");
+        //System.out.println("Stoping...");
         isStopping = true;
     }
 
     public void destroy() {
-        System.out.println("Destroying...");
+        //System.out.println("Destroying...");
         isStopping = true;
     }
 }

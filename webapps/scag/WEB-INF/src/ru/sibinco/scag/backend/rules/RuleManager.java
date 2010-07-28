@@ -189,12 +189,12 @@ public class RuleManager
   }
 
   public void unlockRule(String ruleId, String transport) {
-    System.out.println("!!!!!RM.unlockRule() id = " + ruleId + " transport = " + transport);
+    //System.out.println("!!!!!RM.unlockRule() id = " + ruleId + " transport = " + transport);
     setRuleState(ruleId, transport, checkRuleFileExists(ruleId, transport), false);
   }
 
   public void unlockRule(String complexRuleId) {
-    System.out.println("!!!!!RM.unlockRule() rule complexString='" + complexRuleId + "'" );
+    //System.out.println("!!!!!RM.unlockRule() rule complexString='" + complexRuleId + "'" );
     String[] id_transport = Rule.getIdAndTransport(complexRuleId);
     unlockRule(id_transport[0], id_transport[1]);
   }
@@ -988,7 +988,7 @@ public class RuleManager
     void ruleWriter( BufferedReader r, PrintWriter out, int type ) throws IOException {
         switch( type ){
             case CHAR_WRITER:
-               System.out.println("CHAR WRITER");
+               //System.out.println("CHAR WRITER");
                logger.info( "CHAR WRITER" );
                int ch;
                Reader reader = r;
@@ -999,7 +999,7 @@ public class RuleManager
                }
                break;
             case STRING_WRITER:
-                System.out.println("STRING WRITER");
+                //System.out.println("STRING WRITER");
                 String s;
                 StringBuffer sb = new StringBuffer();
                 sb.delete(0,sb.length());

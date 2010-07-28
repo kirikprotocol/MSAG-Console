@@ -196,7 +196,7 @@ public class HttpTopGraph extends Canvas implements MouseListener, MouseMotionLi
     }
 
     public void setSnap(ScSnap snap, HashSet viewList, int scale, int maxSpeed, float xScale, double yScale, boolean viewGraph) {
-        System.out.println( "HttpTopGraph:setSnap() '" + snap + "'\nviewList='" + viewList + "'\t\nscale=" + scale + "\t\nmaxSpeed='" + maxSpeed + "'");
+        //System.out.println( "HttpTopGraph:setSnap() '" + snap + "'\nviewList='" + viewList + "'\t\nscale=" + scale + "\t\nmaxSpeed='" + maxSpeed + "'");
         snapHttpHistory.addSnap(snap);
         this.snap = new ScSnap(snap);
         this.httpViewList = viewList;
@@ -298,7 +298,7 @@ public class HttpTopGraph extends Canvas implements MouseListener, MouseMotionLi
         //y = pad + fh + 3;
         y = pad + fh + 1;
         x = httpListStart;
-        System.out.println("Sc:HttpTopGraph:snap.httpCount=" + snap.httpCount);
+        //System.out.println("Sc:HttpTopGraph:snap.httpCount=" + snap.httpCount);
         for (int i = 0; i < snap.httpCount; i++) {
             if ((i % 2) == 0) {
                 g.setColor(colorHiBackground);
@@ -709,7 +709,7 @@ public class HttpTopGraph extends Canvas implements MouseListener, MouseMotionLi
         g.drawLine(0, top - 1, 0, size.height);
         g.drawLine(separatorWidth + 1, top - 1, separatorWidth + 1, size.height);
         g.setFont(getFont());
-        System.out.println("Sc:HttpTopGraph:drawGraph():end");
+        //System.out.println("Sc:HttpTopGraph:drawGraph():end");
     }
 
     void drawGraph_(Graphics g, Dimension size) {
@@ -866,7 +866,7 @@ public class HttpTopGraph extends Canvas implements MouseListener, MouseMotionLi
     }
 
     public void mouseClicked(MouseEvent e) {
-        System.out.println("Mouse clicked: " + e.getX() + "/" + e.getY());
+        //System.out.println("Mouse clicked: " + e.getX() + "/" + e.getY());
         Dimension size = getSize();
         int y = e.getY();
         int x = e.getX();

@@ -18,14 +18,20 @@
             <sm-pm:space/>
         </sm-pm:menu>
     </jsp:attribute>
-
-    <jsp:body>
+    
+    <jsp:body>        
         <sm-ep:properties title="statistics.counters.edit.properties">
             <sm-ep:txt title="statistics.counters.edit.txt.id"     name="id" validation="nonEmpty" readonly="${!bean.add}"/>
             <sm-ep:list title="statistics.counters.edit.list.type" name="type" readonly="${!bean.add}" emptyOption="true"
                         values="${fn:join(bean.typeTitles, ',')}" valueTitles="${fn:join(bean.typeTitles, ',')}"/>
             <sm-ep:list title="statistics.counters.edit.list.ca"   name="CATableId" emptyOption="true"
                         values="${fn:join(bean.caIds, ',')}" valueTitles="${fn:join(bean.caIds, ',')}"/>
+            <c:set var="values" value=""/>
+            <c:forEach items="${bean.parameters}" var="parameter">
+                <c:set var="values" value="${values}${parameter.name},${parameter.value};"/>
+            </c:forEach>
+            <sm-ep:parameters title="tag.parameters" values="values"
+                             first_field_name="tag.parameter.name" second_field_name="tag.parameter.value"/>
         </sm-ep:properties>
     </jsp:body>
 </sm:page>

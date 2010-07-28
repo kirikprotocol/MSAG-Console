@@ -302,7 +302,7 @@ public class HttpRoutingManager extends Manager{
         if (tempConfFile.exists()) {
             final long lastModified = tempConfFile.lastModified();
             if (lastModified != 0) {
-                System.out.println("lastModified = " + lastModified);
+                //System.out.println("lastModified = " + lastModified);
                 return new Date(lastModified);
             } else
                 System.out.println("tempConfFile.lastModified() == 0");

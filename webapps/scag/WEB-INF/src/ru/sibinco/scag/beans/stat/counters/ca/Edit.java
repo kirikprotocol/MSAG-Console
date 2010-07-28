@@ -1,5 +1,7 @@
 package ru.sibinco.scag.beans.stat.counters.ca;
 
+import ru.sibinco.lib.backend.users.User;
+import ru.sibinco.scag.Constants;
 import ru.sibinco.scag.beans.EditBean;
 import ru.sibinco.scag.beans.SCAGJspException;
 import ru.sibinco.scag.beans.DoneException;
@@ -7,6 +9,7 @@ import ru.sibinco.scag.backend.stat.counters.CATable;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.security.Principal;
 import java.util.Map;
 import java.util.HashMap;
 
@@ -20,6 +23,7 @@ import java.util.HashMap;
  */
 public class Edit  extends EditBean
 {
+    private Principal userPrincipal = null;
     private CATable ca_table = new CATable();
 
     protected Map requestParams = new HashMap();
@@ -47,9 +51,18 @@ public class Edit  extends EditBean
 
     public void process(final HttpServletRequest request, final HttpServletResponse response) throws SCAGJspException
     {
+        logger.debug("|---------------------------------------------------------------------------") ;
+        logger.debug("Counters.process(), save="+getMbSave()+" add="+isAdd()+", id="+getId()); // TODO: remove it
+        
         requestParams = request.getParameterMap();
         super.process(request, response);
 
+        userPrincipal = request.getUserPrincipal();
+        if (userPrincipal == null)
+            throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to obtain user principal(s)");
+        User user = (User) appContext.getUserManager().getUsers().get(userPrincipal.getName());
+        if (user == null)
+            throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to locate user '" + userPrincipal.getName() + "'");
         // if (isAdd())
     }
 

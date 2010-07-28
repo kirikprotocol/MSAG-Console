@@ -31,7 +31,7 @@
       break;
   }
     }else{
-        System.out.println("SCAG STATUS UNK");
+        //System.out.println("SCAG STATUS UNK");
         out.print("<img src='content/images/ic_unknown.gif' width=10 height=10 title='"+label+"'> "+label);
     }
 %>

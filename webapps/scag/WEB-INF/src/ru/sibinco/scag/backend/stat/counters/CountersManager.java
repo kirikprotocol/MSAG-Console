@@ -10,12 +10,21 @@ import org.w3c.dom.NamedNodeMap;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.Map;
 
+import ru.sibinco.lib.StatusDisconnectedException;
+import ru.sibinco.scag.Constants;
+import ru.sibinco.scag.backend.Manager;
+import ru.sibinco.scag.backend.SCAGAppContext;
 import ru.sibinco.scag.backend.installation.HSDaemon;
 import ru.sibinco.lib.backend.util.xml.Utils;
 import ru.sibinco.lib.backend.util.Functions;
 import ru.sibinco.lib.backend.util.StringEncoderDecoder;
 import ru.sibinco.lib.SibincoException;
+import ru.sibinco.scag.backend.status.StatMessage;
+import ru.sibinco.scag.backend.status.StatusManager;
+import ru.sibinco.scag.beans.SCAGJspException;
 
 import javax.xml.parsers.ParserConfigurationException;
 
@@ -27,7 +36,7 @@ import javax.xml.parsers.ParserConfigurationException;
  * Date: 04.02.2010
  * Time: 10:33:20
  */
-public class CountersManager
+public class CountersManager extends Manager
 {
     private Logger logger = Logger.getLogger(this.getClass());
 
@@ -79,31 +88,59 @@ public class CountersManager
         hsDaemon.store(configFile);
     }
 
-    public void addCounter(Counter counter) {
-        counters.put(counter.getId(), counter);
-        // TODO: apply config, command call to MSAG, restore if failed
+    public void createUpdateCounter(String user, boolean isAdd,  Counter counter,  SCAGAppContext appContext, Counter oldCounter)
+            throws SCAGJspException {
+        String messageText = "";
+        try{
+            if (isAdd){
+                 appContext.getScag().invokeCommand("replaceCounterTemplate", counter, appContext, this, configFile.toString());
+            } else{
+                 appContext.getScag().invokeCommand("replaceCounterTemplate", counter, appContext, this, configFile.toString());
+            }
+        } catch (SibincoException e) {
+            if (!(e instanceof StatusDisconnectedException)) {
+                counters.remove(counter.getId());
+                if (!isAdd) counters.put(oldCounter.getId(),oldCounter);
+                    logger.error("Couldn't apply Counter " + counter.getId() + " ", e);
+                try {
+                    store();
+                } catch (SibincoException e1) {
+                    logger.error("Couldn't restore Counter " + counter.getId() + " ", e1);
+                }
+                throw new SCAGJspException(Constants.errors.sme.COULDNT_APPLY, counter.getId(), e);
+            }
+        }
+        finally {
+            oldCounter = null;
+        }
+        StatusManager.getInstance().addStatMessages(new StatMessage(user, "Center", messageText +counter.getId()));
     }
+    
     public void addCATable(CATable ca_table) {
         ca_tables.put(ca_table.getId(), ca_table);
         // TODO: apply config, command call to MSAG, restore if failed
     }
 
-    protected void store() throws IOException
-    {
-        File configNew = Functions.createNewFilenameForSave(configFile);
+    public void store() throws SibincoException{
+        try{
+            File configNew = Functions.createNewFilenameForSave(configFile);
 
-        PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(configNew), Functions.getLocaleEncoding()));
-        Functions.storeConfigHeader(out, "counters", "counters.dtd", Functions.getLocaleEncoding());
-        out.println("\t<templates>");
-        for (Counter counter : counters.values()) out.print(getXMLText(counter));
-        out.println("\t</templates>");
-        out.println("\t<ca_tables>\n");
-        for (CATable ca_table: ca_tables.values()) out.print(getXMLText(ca_table));
-        out.println("\t</ca_tables>\n");
-        Functions.storeConfigFooter(out, "counters");
-        out.flush(); out.close();
+            PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(configNew), Functions.getLocaleEncoding()));
+            Functions.storeConfigHeader(out, "counters", "counters.dtd", Functions.getLocaleEncoding());
+            out.println("\t<templates>");
+            for (Counter counter : counters.values()) out.print(getXMLText(counter));
+            out.println("\t</templates>");
+            out.println("\t<ca_tables>\n");
+            for (CATable ca_table: ca_tables.values()) out.print(getXMLText(ca_table));
+            out.println("\t</ca_tables>\n");
+            Functions.storeConfigFooter(out, "counters");
+            out.flush(); out.close();
 
-        Functions.renameNewSavedFileToOriginal(configNew, configFile);
+            Functions.renameNewSavedFileToOriginal(configNew, configFile);
+        } catch (IOException e) {
+            logger.error("Couldn't save config", e);
+            throw new SibincoException("Couldn't save config", e);
+        }
     }
 
     private void parseParam(ConfigParamOwner owner, Node node)
@@ -131,10 +168,10 @@ public class CountersManager
             "\t\t\t<ca id=\"" + StringEncoderDecoder.encode(counter.getCATableId()) + "\"/>\n";
 
         final Collection<ConfigParam> params = counter.getParams();
-        for (ConfigParam param : params) { // dump additional params
-            text += "\t\t\t<param name=\"" + StringEncoderDecoder.encode(param.getName() + '"' +
+        for (ConfigParam param : params) { // dump additional params            
+            text += "\t\t\t<param name=\"" + StringEncoderDecoder.encode(param.getName()) + '"' +
                     " type=\"" + StringEncoderDecoder.encode(param.getType()) + "\">" +
-                    StringEncoderDecoder.encode(param.getValue()) + "</param>\n");
+                    StringEncoderDecoder.encode(param.getValue()) + "</param>\n";
         }
 
         text += "\t\t</template>\n";
@@ -232,5 +269,21 @@ public class CountersManager
 
     public synchronized HashMap<String, CATable> getCATables() {
         return ca_tables;
+    }
+
+    public boolean isUniqueCounterName(String id){
+        logger.debug("Check counter's name \""+id+"\" unicity.");
+        boolean unic = true;
+        Map cMap = getCounters();
+        Iterator iterator = cMap.keySet().iterator();
+        Counter counter;
+        while( iterator. hasNext() ){
+            counter = (Counter) cMap.get( iterator.next() );
+            logger.debug("Compare with name: "+counter.getId());
+            if ( counter.getId().compareTo(id) == 0){
+                unic = false; break;
+            }
+        }
+        return unic;
     }
 }

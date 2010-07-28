@@ -35,7 +35,7 @@ public class ScreenSplitter extends Container {
             Dimension errMinSz = errTopLabel.getMinimumSize();
             split = errMinSz.height + 10 * shiftStep;
         }
-        System.out.println("Invalidate: " + sz.width + "/" + sz.height + " spl=" + split);
+        //System.out.println("Invalidate: " + sz.width + "/" + sz.height + " spl=" + split);
         smeTopLabel.setSize(sz.width, sz.height - split);
         smeTopLabel.setLocation(0, 0);
         smeTopLabel.invalidate();
@@ -49,7 +49,7 @@ public class ScreenSplitter extends Container {
         Dimension msz = smeTopLabel.getMinimumSize();
         if (sz.height - split < msz.height + 6 * shiftStep) return;
         split += shiftStep;
-        System.out.println("Split = " + split);
+        //System.out.println("Split = " + split);
         invalidate();
         validate();
         repaint();
@@ -59,7 +59,7 @@ public class ScreenSplitter extends Container {
         Dimension msz = errTopLabel.getMinimumSize();
         if (split < msz.height + 6 * shiftStep) return;
         split -= shiftStep;
-        System.out.println("Split = " + split);
+        //System.out.println("Split = " + split);
         invalidate();
         validate();
         repaint();

@@ -217,7 +217,7 @@ public class ScagRoutingManager extends Manager {
             }
             for (Iterator it = routes.values().iterator(); it.hasNext();) {
                 final Route route = (Route) it.next();
-                System.out.println("ScagRoutingManager.asveToFile().route ID=" + route.getId());
+                //System.out.println("ScagRoutingManager.asveToFile().route ID=" + route.getId());
                 route.store(out);
             }
             Functions.storeConfigFooter(out, "routes");
@@ -244,7 +244,7 @@ public class ScagRoutingManager extends Manager {
         if (tempConfFile.exists()) {
             final long lastModified = tempConfFile.lastModified();
             if (lastModified != 0) {
-                System.out.println("lastModified = " + lastModified);
+                //System.out.println("lastModified = " + lastModified);
                 return new Date(lastModified);
             } else
                 System.out.println("tempConfFile.lastModified() == 0");

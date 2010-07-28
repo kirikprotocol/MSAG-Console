@@ -229,7 +229,7 @@ public class StatusManager {
             out.close();
             raf.close();
         } catch (FileNotFoundException e) {
-            logger.error("The file not foun: " + e.getMessage());
+            logger.error("The file not found: " + e.getMessage());
         } catch (IOException e) {
             logger.error("IOException: " + e.getMessage());
         } finally {

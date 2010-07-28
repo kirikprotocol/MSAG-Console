@@ -56,7 +56,7 @@
                 result += "><img src='content/images/ic_unknown3.bmp' width='10' height='10' title='"+label+"'></span>";
             }
         } else {
-            System.out.println("SERRVICE STATUS UNK");
+            //System.out.println("SERRVICE STATUS UNK");
             result += " class=C000>unknown</span>";
         }
         if (i.hasNext()) {

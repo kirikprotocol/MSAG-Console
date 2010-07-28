@@ -5,9 +5,10 @@ import ru.sibinco.scag.beans.SCAGJspException;
 import ru.sibinco.scag.Constants;
 
 import java.util.Collection;
+import java.util.HashMap;
 
 public class Index extends TabledBeanImpl
-{
+{    
 
     protected Collection getDataSource() {
         return appContext.getCountersManager().getCounters().values();
@@ -32,4 +33,5 @@ public class Index extends TabledBeanImpl
             }
         }
     }
+
 }

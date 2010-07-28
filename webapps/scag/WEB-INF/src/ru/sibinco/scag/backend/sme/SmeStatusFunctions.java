@@ -51,7 +51,7 @@ public class SmeStatusFunctions {
         Date date = new Date();
         long time = date.getTime();
         SimpleDateFormat format = new SimpleDateFormat();
-        System.out.println("getting sme status in " + format.format(date));
+        //System.out.println("getting sme status in " + format.format(date));
         String elem_id = "CONNECTION_STATUSERVICE_" + StringEncoderDecoder.encode(smeId);
         return "<span id=\"" + elem_id + "\" datasrc=#tdcConnStatuses DATAFORMATAS=html datafld=\"" + StringEncoderDecoder.encode(smeId) + "\" " + showSmeStatus(status);
     }

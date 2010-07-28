@@ -94,7 +94,7 @@ class Pause extends Observable{
 
     public void init() {
 
-        System.out.println("Initing...");
+        //System.out.println("Initing...");
         localText = new RemoteResourceBundle(getCodeBase(),getParameter("resource_servlet_uri"));
         locale=localText.getLocale();
         maxSpeed = Integer.valueOf(getParameter("max.speed")).intValue();
@@ -215,7 +215,7 @@ class Pause extends Observable{
 
         public void update( Observable o, Object arg ){
             Pause pause = (Pause)o;
-            System.out.println( "ViewButtonPanel:update():'" + pause.getState() + "'" );
+            //System.out.println( "ViewButtonPanel:update():'" + pause.getState() + "'" );
             if( pause.getState() ){
                 pauseGraphButton.setText( BUTTON_CONTINUE_GRAPH );
             }else{
@@ -291,7 +291,7 @@ class Pause extends Observable{
                                     pause.setState( true );
                                     smppPauseTime = Calendar.getInstance();
                                 }
-                                System.out.println("smpppPauseGraph has set to '" + smppPauseGraph + "'");
+                                //System.out.println("smpppPauseGraph has set to '" + smppPauseGraph + "'");
                             }
                         }else if( type.equals(TYPE_HTTP) ){
                             if( httpViewGraph ){
@@ -301,7 +301,7 @@ class Pause extends Observable{
                                     pause.setState( true );
                                     smppPauseTime = Calendar.getInstance();
                                 }
-                                System.out.println("httpPauseGraph has set to '" + httpPauseGraph + "'");
+                                //System.out.println("httpPauseGraph has set to '" + httpPauseGraph + "'");
                             }
                         }
                     }
@@ -351,10 +351,10 @@ class Pause extends Observable{
                     public void actionPerformed(ActionEvent event){
                         if( type.equals(TYPE_SMPP) ){
                             smppYScale = smppYScale<1? smppYScale*2: smppYScale + SCALE_STEP_Y;
-                            System.out.println("SMPP zoomYInListener. new is " + smppYScale + " Before " + (smppYScale - SCALE_STEP_Y) );
+                            //System.out.println("SMPP zoomYInListener. new is " + smppYScale + " Before " + (smppYScale - SCALE_STEP_Y) );
                         }else if( type.equals(TYPE_HTTP) ){
                             httpYScale = httpYScale<1? httpYScale*2: httpYScale + SCALE_STEP_Y;
-                            System.out.println("HTTP zoomYInListener new is " + httpYScale + " Before " + (httpYScale - SCALE_STEP_Y) );
+                            //System.out.println("HTTP zoomYInListener new is " + httpYScale + " Before " + (httpYScale - SCALE_STEP_Y) );
                         }
 //                        smppTopGraph.maxSpeed = 200;
                         smppTopGraph.invalidate();
@@ -366,10 +366,10 @@ class Pause extends Observable{
                 ActionListener(){
                     public void actionPerformed(ActionEvent event){
                         if( type.equals(TYPE_SMPP) ){
-                            System.out.println("SMPP zoomYOutListener");
+                            //System.out.println("SMPP zoomYOutListener");
                             smppYScale = smppYScale>1?smppYScale - SCALE_STEP_Y: smppYScale>0.125? smppYScale/2: smppYScale;
                         }else if( type.equals(TYPE_HTTP) ){
-                            System.out.println("HTTP zoomYOutListener");
+                            //System.out.println("HTTP zoomYOutListener");
                             httpYScale = httpYScale>1?httpYScale - SCALE_STEP_Y: httpYScale>0.125? httpYScale/2: httpYScale;
                         }
                         smppTopGraph.invalidate();
@@ -382,10 +382,10 @@ class Pause extends Observable{
                     public void actionPerformed(ActionEvent event){
                         if( type.equals(TYPE_SMPP) ){
                             smppXScale += SCALE_STEP_X;
-                            System.out.println("SMPP zoomXInListener new is " + smppYScale + " Before " + (smppXScale-SCALE_STEP_X) );
+                            //System.out.println("SMPP zoomXInListener new is " + smppYScale + " Before " + (smppXScale-SCALE_STEP_X) );
                         }else if( type.equals(TYPE_HTTP) ){
                             httpXScale += SCALE_STEP_X;
-                            System.out.println("HTTP zoomXInListener new is " + httpXScale + " Before " + (httpXScale-SCALE_STEP_X) );
+                            //System.out.println("HTTP zoomXInListener new is " + httpXScale + " Before " + (httpXScale-SCALE_STEP_X) );
                         }
                         smppTopGraph.invalidate();
                     }
@@ -417,7 +417,7 @@ class Pause extends Observable{
 //            System.out.println("CB height=" + height );
             final int strHeight = 30;
             int totalStrHeight = (type.equals(TYPE_SMPP)?centerSnap.smppCount:centerSnap.httpCount) * strHeight;
-            System.out.println("strsHeight=" + totalStrHeight);
+            //System.out.println("strsHeight=" + totalStrHeight);
             final int buttonsHeight = 100;
             int frameHeight = totalStrHeight + buttonsHeight;
             int frameWidth = 300;
@@ -493,7 +493,7 @@ class Pause extends Observable{
         public void actionPerformed(ActionEvent e) {
             if(e.getSource() instanceof JButton ){
                 JButton button = (JButton)e.getSource();
-                System.out.println( "BUTTON: " + button.getText() );
+                //System.out.println( "BUTTON: " + button.getText() );
                     for(int i = 0; i<panel.getComponentCount(); i++){
                         Component comp = panel.getComponent(i);
                         if( comp instanceof JCheckBox ){
@@ -503,7 +503,7 @@ class Pause extends Observable{
                             } else if( button.getText().equals(BUTTON_DESELECT_ALL) ){
                                 box.setSelected( false );
                             }
-                            System.out.println(i + " CHECKBOX: " + box.getText() );
+                            //System.out.println(i + " CHECKBOX: " + box.getText() );
                         }
                     }
             }
@@ -577,7 +577,7 @@ class Pause extends Observable{
             if(e.getSource() instanceof JButton ){
 //                SmppSnap[] smppSnaps = svcSnap.smppSnaps;
                 JButton button = (JButton)e.getSource();
-                System.out.println( "BUTTON: " + button.getText() );
+                //System.out.println( "BUTTON: " + button.getText() );
                 if( button.getText().equals(BUTTON_APPLY) ){
                     HashSet temp = new HashSet();
                     for( int i = 0; i<panel.getComponentCount(); i++ ){
@@ -585,7 +585,7 @@ class Pause extends Observable{
                         if( comp instanceof JCheckBox ){
                             JCheckBox checkBox = (JCheckBox)comp;
                             String checkName = checkBox.getText();
-                            System.out.println( "JCheckBox " + checkName );
+                            //System.out.println( "JCheckBox " + checkName );
                             if( checkBox.isSelected()){
                                 temp.add( checkName );
                             }
@@ -593,10 +593,10 @@ class Pause extends Observable{
                     }
                     if(type.equals(TYPE_SMPP)){
                         smppViewList = temp;
-                        System.out.println("After OK smppViewList='" + smppViewList + "'");
+                        //System.out.println("After OK smppViewList='" + smppViewList + "'");
                     }else if(type.equals(TYPE_HTTP)){
                         httpViewList = temp;
-                        System.out.println("After OK httpViewList='" + httpViewList + "'");
+                        //System.out.println("After OK httpViewList='" + httpViewList + "'");
                     }
                 }
             }
@@ -615,7 +615,7 @@ class Pause extends Observable{
 //        smppTopGraph = new SmppTopGraph(snap, maxSpeed, graphScale, graphGrid,
 //                graphHiGrid, graphHead, localText, snapSmppHistory, smppViewList);
 
-        System.out.println("gotFirstSnap:smppCount=" + snap.smppCount + "\tsmppViewList='" + smppViewList + "'" + "\nmaxSpeed=" + maxSpeed);
+        //System.out.println("gotFirstSnap:smppCount=" + snap.smppCount + "\tsmppViewList='" + smppViewList + "'" + "\nmaxSpeed=" + maxSpeed);
         smppTopGraph = new SmppTopGraph(snap, maxSpeed, graphScale, graphGrid,
                 graphHiGrid, graphHead, localText, snapSmppHistory, smppViewList );
 
@@ -649,13 +649,13 @@ class Pause extends Observable{
         Socket sock = null;
         DataInputStream is = null;
         isStopping = false;
-        System.out.println("SccMon:run():host='" + getParameter("host") + "' port='" +  Integer.valueOf(getParameter("port")).intValue() + "'");
+        //System.out.println("SccMon:run():host='" + getParameter("host") + "' port='" +  Integer.valueOf(getParameter("port")).intValue() + "'");
         try {
             while (!isStopping) {
                 try {
-                    System.out.println("ScMon:run():sock");
+                    //System.out.println("ScMon:run():sock");
                     sock = new Socket(getParameter("host"), Integer.valueOf(getParameter("port")).intValue());
-                    System.out.println("ScMon:run():getInputStream");
+                    //System.out.println("ScMon:run():getInputStream");
                     is = new DataInputStream(sock.getInputStream());
                     ScSnap snap = new ScSnap();
                     centerSnap = snap;
@@ -663,19 +663,19 @@ class Pause extends Observable{
 
                     gotFirstSnap(snap);
                     while (!isStopping) {
-                        System.out.println("ScMon:run():wihile2");
+                        //System.out.println("ScMon:run():wihile2");
                         if( pause.getState() ){
-                            System.out.println("SvcMon:run():while:while:if1:pause");
+                            //System.out.println("SvcMon:run():while:while:if1:pause");
                             Thread.sleep( 500 );
                             if( (Calendar.getInstance().getTimeInMillis() - smppPauseTime.getTimeInMillis()) > TIMEOUT_MILLISEC ){
-                                System.out.println("SvcMon:run():while:while:if2:pause end");
+                                //System.out.println("SvcMon:run():while:while:if2:pause end");
                                 pause.setState( false );
 //                                pause.notifyObservers();
                             }
                         }
 
                         else {
-                            System.out.println("SvcMon:run():while:while:if2");
+                            //System.out.println("SvcMon:run():while:while:if2");
                             snap.read(is);
                             smppTopGraph.setSnap(snap, smppViewList, graphScale, maxSpeed, smppXScale, smppYScale, smppViewGraph);
 //                        }
@@ -697,7 +697,7 @@ class Pause extends Observable{
                     } catch (InterruptedException e1) {
                     }
                     ex.printStackTrace(System.out);
-                    System.out.println("I/O error: " + ex.getMessage() + ". Reconnecting...");
+                    //System.out.println("I/O error: " + ex.getMessage() + ". Reconnecting...");
                 }
             }
         } catch (Exception e) {
@@ -716,7 +716,7 @@ class Pause extends Observable{
                 }
             ;
         }
-        System.out.println("Connection thread stopped");
+        //System.out.println("Connection thread stopped");
     }
 
     Image offscreen;
@@ -779,18 +779,18 @@ class Pause extends Observable{
     }
 
     public void start() {
-        System.out.println("Starting...");
+        //System.out.println("Starting...");
         Thread thr = new Thread(this);
         thr.start();
     }
 
     public void stop() {
-        System.out.println("Stoping...");
+        //System.out.println("Stoping...");
         isStopping = true;
     }
 
     public void destroy() {
-        System.out.println("Destroying...");
+        //System.out.println("Destroying...");
         isStopping = true;
     }
 }

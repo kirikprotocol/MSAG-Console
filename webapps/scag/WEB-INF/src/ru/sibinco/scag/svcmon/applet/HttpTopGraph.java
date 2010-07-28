@@ -227,7 +227,7 @@ public class HttpTopGraph extends Canvas implements MouseListener, MouseMotionLi
     }
 
     public void setSnap(SvcSnap snap, HashSet viewList, int scale, int maxSpeed, float xScale, double yScale, boolean viewGraph) {
-        System.out.println( "HttpTopGraph:setSnap() '" + snap + "'\nviewList='" + viewList + "'\t\nscale=" + scale + "\t\nmaxSpeed='" + maxSpeed + "'");
+        //System.out.println( "HttpTopGraph:setSnap() '" + snap + "'\nviewList='" + viewList + "'\t\nscale=" + scale + "\t\nmaxSpeed='" + maxSpeed + "'");
         snapHttpHistory.addSnap(snap);
         this.snap = new SvcSnap(snap);
         this.httpViewList = viewList;
@@ -243,7 +243,7 @@ public class HttpTopGraph extends Canvas implements MouseListener, MouseMotionLi
     }
 
     public void setSnap(SvcSnap snap, HashSet viewList, int scale, int maxSpeed, float xScale, double yScale, boolean viewGraph, int shiftV) {
-        System.out.println( "HttpTopGraph:setSnap() '" + snap + "'\nviewList='" + viewList + "'\t\nscale=" + scale + "\t\nmaxSpeed='" + maxSpeed + "'");
+        //System.out.println( "HttpTopGraph:setSnap() '" + snap + "'\nviewList='" + viewList + "'\t\nscale=" + scale + "\t\nmaxSpeed='" + maxSpeed + "'");
         snapHttpHistory.addSnap(snap);
         this.snap = new SvcSnap(snap);
         this.httpViewList = viewList;
@@ -682,7 +682,7 @@ public class HttpTopGraph extends Canvas implements MouseListener, MouseMotionLi
         g.drawLine(0, top - 1, 0, size.height);
         g.drawLine(separatorWidth + 1, top - 1, separatorWidth + 1, size.height);
         g.setFont(getFont());
-        System.out.println("drawGraph():end");
+        //System.out.println("drawGraph():end");
     }
 
     protected void drawGraphLine_(Graphics g, int x, int y, int snapVal, int prevSnapVal, int underGraphVal, int underGraphPrevVal, Color color) {
@@ -718,7 +718,7 @@ public class HttpTopGraph extends Canvas implements MouseListener, MouseMotionLi
     }
 
     public void mouseClicked(MouseEvent e) {
-        System.out.println("Mouse clicked: " + e.getX() + "/" + e.getY());
+        //System.out.println("Mouse clicked: " + e.getX() + "/" + e.getY());
         Dimension size = getSize();
         int y = e.getY();
         int x = e.getX();

@@ -31,14 +31,14 @@ public class ResourceManager
         {
           if (name.length() == RESOURCE_FILENAME_LENGTH && name.startsWith(RESOURCE_PREFIX) && name.endsWith(RESOURCE_SUFFIX)) {
             logger.debug("Accepted resource file: \"" + name + "\" in \"" + dir.getAbsolutePath() + "\"");
-            System.out.println("Accepted resource file: \"" + name + "\" in \"" + dir.getAbsolutePath() + "\"");
+            //System.out.println("Accepted resource file: \"" + name + "\" in \"" + dir.getAbsolutePath() + "\"");
             return true;
           } else
             return false;
         }
       });
       if (resourceFiles != null && resourceFiles.length > 0) {
-        System.out.println("RESOURCE_PREFIX.length() = " + RESOURCE_PREFIX.length());
+        //System.out.println("RESOURCE_PREFIX.length() = " + RESOURCE_PREFIX.length());
         for (int i = 0; i < resourceFiles.length; i++) {
           File resourceFile = resourceFiles[i];
           final int res_pref_len = RESOURCE_PREFIX.length();

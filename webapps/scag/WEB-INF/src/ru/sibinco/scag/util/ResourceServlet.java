@@ -21,7 +21,7 @@ public class ResourceServlet extends HttpServlet{
       if (line!=null) {
         resp.setCharacterEncoding("Cp1251");
             String value = LocaleMessages.getInstance().getMessage(req.getSession(),line);
-            System.out.println( " VALUE=" + value );
+            //System.out.println( " VALUE=" + value );
         resp.getWriter().write( value );
       }
       else {

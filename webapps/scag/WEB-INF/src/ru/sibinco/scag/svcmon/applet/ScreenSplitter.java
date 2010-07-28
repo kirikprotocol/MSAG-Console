@@ -42,7 +42,7 @@ public class ScreenSplitter extends Container {
         if (split == 0) {
             //ToDo
         }
-        System.out.println("Invalidate: " + sz.width + "/" + sz.height + " spl=" + split);
+        //System.out.println("Invalidate: " + sz.width + "/" + sz.height + " spl=" + split);
         smppTopLabel.setSize(sz.width, sz.height - split);
         smppTopLabel.setLocation(0, 0);
         smppTopLabel.invalidate();
@@ -54,7 +54,7 @@ public class ScreenSplitter extends Container {
         Dimension msz = smppTopLabel.getMinimumSize();
         if (sz.height - split < msz.height + 6 * shiftStep) return;
         split += shiftStep;
-        System.out.println("Split = " + split);
+        //System.out.println("Split = " + split);
         invalidate();
         validate();
         repaint();
@@ -62,7 +62,7 @@ public class ScreenSplitter extends Container {
 
     public void shiftDown() {
         // ToDo
-        System.out.println("Split = " + split);
+        //System.out.println("Split = " + split);
         invalidate();
         validate();
         repaint();

@@ -15,9 +15,21 @@ public class Counter extends ConfigParamOwner
     private String CATableId = null;
 
     public Counter() {
+
     }
+
+    public Counter(String id){
+        this.id = id;
+    }
+
     public Counter(String id, CounterType type) {
         this.id = id; this.type = type;
+    }
+
+    public Counter(String id, String type, String CATableId){
+        this.id = id;
+        this.type = CounterType.valueOf(type);
+        this.CATableId = CATableId;
     }
 
     public String getId() {

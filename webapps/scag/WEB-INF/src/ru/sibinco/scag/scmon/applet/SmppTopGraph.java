@@ -219,7 +219,7 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
     }
 
     public void setSnap(ScSnap snap, HashSet viewList, int scale, int maxSpeed, float xScale, double yScale, boolean viewGraph) {
-        System.out.println( "Sc:SmppTopGraph:setSnap() '" + snap + "'\nviewList='" + viewList + "'\t\nscale=" + scale + "\t\nmaxSpeed='" + maxSpeed + "'");
+        //System.out.println( "Sc:SmppTopGraph:setSnap() '" + snap + "'\nviewList='" + viewList + "'\t\nscale=" + scale + "\t\nmaxSpeed='" + maxSpeed + "'");
         snapSmppHistory.addSnap(snap);
         this.snap = new ScSnap(snap);
         this.smppViewList = viewList;
@@ -394,7 +394,7 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
         y = pad + fh + 1;
         x = smppListStart;
         int ii = 0;
-        System.out.println("Sc:SmppTopGraph:smppViewList=" + smppViewList);
+        //System.out.println("Sc:SmppTopGraph:smppViewList=" + smppViewList);
         for (int i = 0; i < snap.smppCount; i++) {
             if(  smppViewList == null || smppViewList.contains( ((SmppSnap)snap.smppSnaps[i]).smppId ) ){
                 if ((ii % 2) == 0) {
@@ -788,7 +788,7 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
         g.drawLine(0, top - 1, 0, size.height);
         g.drawLine(separatorWidth + 1, top - 1, separatorWidth + 1, size.height);
         g.setFont(getFont());
-        System.out.println("drawGraph():end");
+        //System.out.println("drawGraph():end");
     }
 
     void drawGraph1(Graphics g, Dimension size) {
@@ -797,9 +797,9 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
         FontMetrics fm = getFontMetrics(graphFont);
         int fh = fm.getHeight();
         int height = split - separatorWidth - pad;
-        System.out.println( "size.height=" + size.height + " size.width=" + size.getWidth() );
+        //System.out.println( "size.height=" + size.height + " size.width=" + size.getWidth() );
         int top = size.height - height;
-        System.out.println("top="+ top + " | heigth=" + height);
+        //System.out.println("top="+ top + " | heigth=" + height);
         int y = size.height - pad - fh - pad;
         int barwidth = (graphTextWidth - 3 * barSeparator - 5 * pad) / 2;
         g.setFont(graphFont);
@@ -852,7 +852,7 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
 //        int graphStart = barx+barwidth;
 //  Y
         g.setColor(graphColor);
-        System.out.println("drawGraph():fm.getHeight()='" + fm.getHeight() + "'\t top='" + top + "'");
+        //System.out.println("drawGraph():fm.getHeight()='" + fm.getHeight() + "'\t top='" + top + "'");
         for (int i = 0; y - (i * graphScale) >= top; i += graphHead) {
 //        for (int i = 0; (i * graphScale) <maxSpeed; i += graphHead) {
             String s = String.valueOf( new Float(i/yScale).intValue() );
@@ -1004,7 +1004,7 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
 //            if (pos - sw < graphStart) break;
 
             if( posLeft < endBar && (posRight>right) ){
-                System.out.println("-----\nVery big start='" + start + "'\n-----");
+                //System.out.println("-----\nVery big start='" + start + "'\n-----");
                 break;
             } else {
                 if( posLeft > endBar ) {
@@ -1020,7 +1020,7 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
         g.drawLine(0, top - 1, 0, size.height);
         g.drawLine(separatorWidth + 1, top - 1, separatorWidth + 1, size.height);
         g.setFont(getFont());
-        System.out.println("drawGraph():end");
+        //System.out.println("drawGraph():end");
     }
 
     void drawGraph_(Graphics g, Dimension size) {
@@ -1178,7 +1178,7 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
     }
 
     public void mouseClicked(MouseEvent e) {
-        System.out.println("Mouse clicked: " + e.getX() + "/" + e.getY());
+        //System.out.println("Mouse clicked: " + e.getX() + "/" + e.getY());
         Dimension size = getSize();
         int y = e.getY();
         int x = e.getX();
@@ -1210,9 +1210,9 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
             if (x > smppListStart && x < smppListStart + smeNameWidth) {
                 // click on sme name
                 int idx = (y - headerHeight) / rowHeight;
-                System.out.println("idx =" + idx);
-                System.out.println("snap.smppCount =" + snap.smppCount);
-                System.out.println("snap.smppSnaps.length =" + snap.smppSnaps.length);
+                //System.out.println("idx =" + idx);
+                //System.out.println("snap.smppCount =" + snap.smppCount);
+                //System.out.println("snap.smppSnaps.length =" + snap.smppSnaps.length);
                 if (idx < snap.smppCount) {
                     snapSmppHistory.setCurrentSmpp(snap.smppSnaps[idx].smppId);
 //                    if (split == -1) split = maxSpeed * graphScale + rowHeight + separatorWidth + 2 * pad;
@@ -1280,7 +1280,7 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
         Dimension sz = getSize();
         if (sz.height - split < headerHeight + rowHeight * 6) return;
         split += shiftStep;
-        System.out.println("Split = " + split);
+        //System.out.println("Split = " + split);
         invalidate();
         repaint();
     }
@@ -1289,7 +1289,7 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
         if (split <= 0) return;
         split -= shiftStep;
         if (split < 0) split = 0;
-        System.out.println("Split = " + split);
+        //System.out.println("Split = " + split);
         invalidate();
         repaint();
     }

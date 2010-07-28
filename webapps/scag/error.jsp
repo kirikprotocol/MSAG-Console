@@ -18,7 +18,7 @@
     pageContext.setAttribute("cause", exception.getCause());
 
   if (exception != null) {
-    System.out.println("SCA GW error page catch an exception:");
+    //System.out.println("SCA GW error page catch an exception:");
     final PrintWriter printWriter = new PrintWriter(System.out);
     exception.printStackTrace(printWriter);
     printWriter.flush();

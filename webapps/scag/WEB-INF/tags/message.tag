@@ -54,7 +54,7 @@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%><%@
     pageContext.setAttribute("cause", exception.getCause());
 
   if (exception != null) {
-    System.out.println("SMPP GW error page catch an exception:");
+    //System.out.println("SMPP GW error page catch an exception:");
     final PrintWriter printWriter = new PrintWriter(System.out);
     exception.printStackTrace(printWriter);
     printWriter.flush();

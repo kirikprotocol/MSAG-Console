@@ -215,6 +215,8 @@ public class Constants {
             public static final Constants UNSUPPORTED_HEADER = new Constants("error.stat.unsupported_header");//unsupported header of file (support only SCAG.STAT file )
             public static final Constants APPLY_COUNTERS = new Constants("error.stat.apply.counters");
             public static final Constants APPLY_CA_TABLES = new Constants("error.stat.apply.ca_tables");
+            public static final Constants CAN_NOT_SAVE_COUNTER_NOT_UNIQUE_NAME = new Constants("error.stat.can_not_save_operator_not_unique_name");
+            public static final Constants COUNTER_NOT_FOUND = new Constants("error.stat.counter_not_found");
         }
 
     }
