@@ -103,7 +103,7 @@ public class UserPreferences {
   private boolean infosmeReplaceMessage = false;
   private String infosmeSvcType = "";
   private String infosmeSourceAddress = null;
-  private Boolean infosmeUssdPush;
+  private Integer deliveryMode;
   private Date infosmePeriodStart = null;
   private Date infosmePeriodEnd = null;
   private Integer infosmeValidityPeriod = null;
@@ -559,7 +559,11 @@ public class UserPreferences {
           } else if(name.equals("infosme.sourceAddress")) {
             infosmeSourceAddress = value;
           } else if(name.equals("infosme.ussdPush")) {
-            infosmeUssdPush = Boolean.valueOf(value);
+            Boolean infosmeUssdPush = Boolean.valueOf(value);
+            if (infosmeUssdPush.booleanValue() && deliveryMode == null)
+              deliveryMode = new Integer(0);
+          } else if(name.equals("infosme.deliveryMode")) {
+            deliveryMode = new Integer(value);
           }
         }
       }
@@ -597,8 +601,8 @@ public class UserPreferences {
     result += "\t\t<pref name=\"infosme.replaceMessage\" value=\"" + infosmeReplaceMessage + "\"/>\n";
     result += "\t\t<pref name=\"infosme.svcType\" value=\"" + infosmeSvcType + "\"/>\n";
     result += "\t\t<pref name=\"infosme.sourceAddress\" value=\"" + infosmeSourceAddress + "\"/>\n";
-    if(infosmeUssdPush != null) {
-      result += "\t\t<pref name=\"infosme.ussdPush\" value=\"" + infosmeUssdPush + "\"/>\n";
+    if(deliveryMode != null) {
+      result += "\t\t<pref name=\"infosme.deliveryMode\" value=\"" + deliveryMode + "\"/>\n";
     }
     result += "\t\t<pref name=\"infosme.trackIntegrity\" value=\"" + infosmeTrackIntegrity + "\"/>\n";
     result += "\t\t<pref name=\"infosme.transactionMode\" value=\"" + infosmeTrMode + "\"/>\n";
@@ -742,12 +746,12 @@ public class UserPreferences {
     this.infosmeSourceAddress = infosmeSourceAddress;
   }
 
-  public Boolean isInfosmeUssdPush() {
-    return infosmeUssdPush;
+  public Integer getDeliveryMode() {
+    return deliveryMode;
   }
 
-  public void setInfosmeUssdPush(Boolean infosmeUssdPush) {
-    this.infosmeUssdPush = infosmeUssdPush;
+  public void setDeliveryMode(int deliveryMode) {
+    this.deliveryMode = new Integer(deliveryMode);
   }
 
   public int getInfosmeUncommitProcess() {
