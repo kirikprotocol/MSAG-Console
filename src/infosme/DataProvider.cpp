@@ -25,7 +25,7 @@ DataSource* DataProvider::createDataSource(ConfigView* config)
     {
         std::auto_ptr<char> dsIdentity(config->getString("type"));
         const char* dsIdentityStr = dsIdentity.get();
-        ds = DataSourceFactory::getDataSource(dsIdentityStr);
+        ds = smsc::db::DataSourceFactory::getDataSource(dsIdentityStr);
         if (ds) ds->init(config);
         else throw ConfigException("DataSource for '%s' identity "
                                    "wasn't registered !", dsIdentityStr);
