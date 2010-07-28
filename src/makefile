@@ -311,7 +311,7 @@ endif
 CXXFLAGS := $(CXXFLAGS) -DUSE_MAP
 endif
 
-ifneq ("$(INFOSMEDB)","NO")
+ifeq ("$(INFOSMEDB)","NO")
 CXXFLAGS := $(CXXFLAGS) -DINFOSME_NO_DATAPROVIDER=YES
 endif
 
