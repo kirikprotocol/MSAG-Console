@@ -25,6 +25,9 @@ infosme/InfoSme   	  InfoSme	 \
  -llogger -lnsl -lutil-mirrorfile \
 switch INFOSMEDB
 NO: \
-default: -ldb -L$(SMSC_BUILDDIR)/bin/db/exceptions/ -ldb_exc @db/exceptions/libdb_exc.so \
+default: -ldb -L$(SMSC_BUILDDIR)/bin/db/exceptions/ -ldb_exc \
+ @db/exceptions/libdb_exc.so \
+ @db/fileStorage/libdb_fileStorage.so \
+ @db/oci/libdb_oci.so \
 endswitch
  @liblogger.so
