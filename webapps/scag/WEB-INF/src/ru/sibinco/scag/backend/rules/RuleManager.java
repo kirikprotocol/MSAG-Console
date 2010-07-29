@@ -20,6 +20,7 @@ import ru.sibinco.scag.beans.rules.RuleState;
 import javax.xml.parsers.FactoryConfigurationError;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
+import java.nio.channels.FileChannel;
 import java.util.*;
 import java.text.DateFormat;
 
@@ -101,14 +102,19 @@ public class RuleManager
       String filename = RULENAME_START + serviceId.toString() + XML_EXT;
       final File folder = new File(rulesFolder, transport);
       File newFile= new File(folder,filename);
+      logger.debug("folder:  "+folder);
+      logger.debug("filename: "+filename);
       return newFile;
   }
 
   public File composeRuleBackFile(String transport, String serviceId, String backSuffix ) {
+      logger.debug( "Rulemanager.composeRuleFile() start" );
       if( backSuffix == null ) backSuffix = "";
       String filename=RULENAME_START + serviceId.toString() + XML_EXT + backSuffix;
       final File folder = new File(rulesFolder, transport);
       File newFile= new File(folder,filename);
+      logger.debug("folder:  "+folder);
+      logger.debug("filename: "+filename);
       return newFile;
   }
 
@@ -180,9 +186,13 @@ public class RuleManager
 
 
   private void setRuleState(String ruleId, String transport, boolean exists, boolean locked) {
+    logger.debug("Try to set rule state.");
+    logger.debug("ruleId: "+ruleId+" transport: "+ transport+" exists: "+exists+" locked: "+locked);
     synchronized (lockObject) {
       String complexRuleId = Rule.composeComplexId(ruleId,transport);
-      RuleState ruleState = (RuleState)ruleStates.get(complexRuleId);
+      logger.debug("complexRuleId: "+complexRuleId);
+      RuleState ruleState = (RuleState) ruleStates.get(complexRuleId);
+      logger.debug("ruleState: "+ (ruleState == null ? "null" : ruleState.toString()) );
       ruleState.setExists(exists);
       ruleState.setLocked(locked);
     }
@@ -835,11 +845,15 @@ public class RuleManager
         if( checkSavePermission(transport) ) {
             logger.debug("RuleManager.saveRule() Saving rule to disc! file : " + ruleFile);
             ruleFile = composeRuleFile(transport,ruleId);
+            logger.debug("ruleFile: "+ruleFile);
+
 
             tempFile = composeRuleBackFile( transport, ruleId, ".tmp" );
+           
+            logger.debug("tempFile: "+tempFile);
             out = new PrintWriter( new OutputStreamWriter( new FileOutputStream(tempFile), "UTF-8" ) ); //alter out = new PrintWriter( new FileWriter(newFile) );
 //            ruleWriter( reader, out, STRING_WRITER );
-            ruleWriter( reader, out, CHAR_WRITER );
+            ruleWriter( reader, out, STRING_WRITER );
 
 //            backFile = new File( tempFile.getAbsolutePath().substring(0, tempFile.getAbsolutePath().lastIndexOf("/")),
 //                                 tempFile.getName()+Functions.suffixDateFormat.format(new Date()) );
@@ -850,7 +864,20 @@ public class RuleManager
 //            logger.debug("RuleManager.saveRule() Move rule to backup: " + ruleFile);
 //            Functions.MoveFileToBackupDir( ruleFile, "");
 
+            /*File debugFile = new File(rulesFolder,"debug.xml");
+            if (debugFile.exists()){
+                logger.debug("Debug file exist");
+                FileChannel ic = new FileInputStream(tempFile).getChannel();
+                FileChannel oc = new FileOutputStream(debugFile).getChannel();
+                ic.transferTo(0, ic.size(), oc);
+                ic.close();
+                oc.close();
+            } {
+                logger.debug("Debug file doesn't exist.");
+            }      */
+
             logger.debug("RuleManager.saveRule() Move temp rule to rule: " + tempFile);
+
             if( tempFile.renameTo( ruleFile ) ){
                 return;
             }
