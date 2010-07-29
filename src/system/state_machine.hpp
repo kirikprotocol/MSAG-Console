@@ -148,6 +148,8 @@ protected:
 
   void finalizeSms(SMSId id,SMS& sms);
 
+  void fullReport(SMSId msgid,SMS& sms);
+
   StateType DivertProcessing(Tuple& t,SMS& sms);
 
   void onSubmitOk(SMSId id,SMS& sms);

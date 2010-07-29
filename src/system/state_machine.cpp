@@ -1506,23 +1506,6 @@ StateType StateMachine::submit(Tuple& t)
       return ERROR_STATE;
     };
   }
-  ////
-  //
-  //  Merging
-  //
-
-  if(sms->hasIntProperty(Tag::SMSC_MERGE_CONCAT))
-  {
-    if(!processMerge(c))
-    {
-      return c.rvstate;
-    }
-  }
-
-  //
-  //  End of merging
-  //
-  ////
 
   sms->setRouteId(c.rr.info.routeId.c_str());
   if(c.rr.info.suppressDeliveryReports)sms->setIntProperty(Tag::SMSC_SUPPRESS_REPORTS,1);
@@ -1593,6 +1576,29 @@ StateType StateMachine::submit(Tuple& t)
     // set charge on delivery to avoid charging of sms that could be undelivered
     sms->setIntProperty(Tag::SMSC_CHARGINGPOLICY,Smsc::chargeOnDelivery);
   }
+
+  ////
+  //
+  //  Merging
+  //
+
+  if(sms->hasIntProperty(Tag::SMSC_MERGE_CONCAT))
+  {
+    if(!processMerge(c))
+    {
+      if(sms->getIntProperty(Tag::SMSC_CHARGINGPOLICY)!=Smsc::chargeOnSubmit)
+      {
+        return c.rvstate;
+      }
+      c.generateDeliver=false;
+      c.createSms=scsDoNotCreate;
+    }
+  }
+
+  //
+  //  End of merging
+  //
+  ////
 
 
   if(aclCheck && c.rr.info.aclId!=-1 && !smsc->getAclMgr()->isGranted(c.rr.info.aclId,aclAddr.c_str()))
@@ -2863,9 +2869,24 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     smsc_log_warn(smsLog, "FWD: No route Id=%lld;oa=%s;da=%s",t.msgId,from,to);
     sms.setLastResult(Status::NOROUTE);
     sendNotifyReport(sms,t.msgId,"destination unavailable");
-    Descriptor d;
-    changeSmsStateToEnroute(sms,t.msgId,d,Status::NOROUTE,rescheduleSms(sms));
-    onDeliveryFail(t.msgId,sms);
+    time_t ntt=rescheduleSms(sms);
+    if(ntt==sms.getValidTime())
+    {
+      try{
+        store->changeSmsStateToExpired(t.msgId);
+      }catch(...)
+      {
+        smsc_log_warn(smsLog,"FORWARD: Failed to change state of USSD request to undeliverable. Id=%lld",t.msgId);
+      }
+      smsc->getScheduler()->InvalidSms(t.msgId);
+      sms.setLastResult(Status::EXPIRED);
+      onUndeliverable(t.msgId,sms);
+    }else
+    {
+      Descriptor d;
+      changeSmsStateToEnroute(sms,t.msgId,d,Status::NOROUTE,ntt);
+      onDeliveryFail(t.msgId,sms);
+    }
     smsc->ReportDelivery(inDlgId,sms,false,Smsc::chargeOnDelivery);
     return ERROR_STATE;
   }
@@ -3515,18 +3536,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
           smsc->getScheduler()->InvalidSms(t.msgId);
         }
 
-#ifdef SMSEXTRA
-        if((sms.billingRecord!=BILLING_NONE && sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY)==Smsc::chargeOnSubmit) || sms.billingRecord==BILLING_FINALREP)
-        {
-          smsc->FullReportDelivery(t.msgId,sms);
-        }
-#else
-        if(sms.billingRecord==BILLING_FINALREP || sms.billingRecord==BILLING_ONSUBMIT || sms.billingRecord==BILLING_CDR)
-        {
-          smsc->FullReportDelivery(t.msgId,sms);
-        }
-#endif
-
+        fullReport(t.msgId,sms);
         if(dgortr)
         {
           sms.state=UNDELIVERABLE;
@@ -3649,6 +3659,10 @@ StateType StateMachine::deliveryResp(Tuple& t)
     info2(smsLog, "DLVRSP: sms has concatinfo, csn=%d/%d;Id=%lld",sms.getConcatSeqNum(),ci->num,t.msgId);
     if(sms.getConcatSeqNum()<ci->num-1)
     {
+      if(sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY)==Smsc::chargeOnSubmit)
+      {
+        fullReport(t.msgId,sms);
+      }
       {
         sms.setConcatSeqNum(sms.getConcatSeqNum()+1);
         if(!dgortr)
@@ -3956,10 +3970,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
         }
       }
     }
-    if(sms.billingRecord==BILLING_FINALREP  || sms.billingRecord==BILLING_ONSUBMIT || sms.billingRecord==BILLING_CDR)
-    {
-      smsc->FullReportDelivery(t.msgId,sms);
-    }
+    fullReport(t.msgId,sms);
     try{
       store->createFinalizedSms(t.msgId,sms);
     }catch(...)
@@ -3989,17 +4000,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
   }
   debug2(smsLog, "DLVRSP: DELIVERED, Id=%lld",t.msgId);
 
-#ifdef SMSEXTRA
-  if((sms.billingRecord && sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY)==Smsc::chargeOnSubmit) || sms.billingRecord==BILLING_FINALREP)
-  {
-    smsc->FullReportDelivery(t.msgId,sms);
-  }
-#else
-  if(sms.billingRecord==BILLING_FINALREP  || sms.billingRecord==BILLING_ONSUBMIT || sms.billingRecord==BILLING_CDR)
-  {
-    smsc->FullReportDelivery(t.msgId,sms);
-  }
-#endif
+  fullReport(t.msgId,sms);
 
 
 
@@ -4128,6 +4129,39 @@ StateType StateMachine::deliveryResp(Tuple& t)
   //return skipFinalizing?DELIVERING_STATE:DELIVERED_STATE;
   return DELIVERED_STATE;
 }
+
+void StateMachine::fullReport(SMSId msgId,SMS& sms)
+{
+  if(sms.billingRecord==BILLING_FINALREP)
+  {
+    smsc->FullReportDelivery(msgId,sms);
+  }else if(sms.billingRequired() && sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY)==Smsc::chargeOnSubmit)
+  {
+    int reportsToSend=1;
+    if(sms.hasBinProperty(Tag::SMSC_CONCATINFO))
+    {
+      ConcatInfo* ci=(ConcatInfo*)sms.getBinProperty(Tag::SMSC_CONCATINFO,0);
+      if(sms.getConcatSeqNum()>=sms.getIntProperty(Tag::SMSC_ORIGINALPARTSNUM))
+      {
+        reportsToSend=0;
+      }else
+      if(sms.getConcatSeqNum()==ci->num-1)
+      {
+        if(sms.getIntProperty(Tag::SMSC_ORIGINALPARTSNUM)>ci->num)
+        {
+          reportsToSend=sms.getIntProperty(Tag::SMSC_ORIGINALPARTSNUM)-ci->num+1;
+        }
+      }
+      smsc_log_debug(smsLog,"sending fullreport for msgId=%lld, concatSeq=%d, ci->num=%d, orgparts=%d, repstosend=%d",
+          msgId,sms.getConcatSeqNum(),(int)ci->num,sms.getIntProperty(Tag::SMSC_ORIGINALPARTSNUM),reportsToSend);
+    }
+    for(int i=0;i<reportsToSend;i++)
+    {
+      smsc->FullReportDelivery(msgId,sms);
+    }
+  }
+}
+
 
 StateType StateMachine::alert(Tuple& t)
 {
