@@ -131,7 +131,7 @@ public class Config implements Cloneable
   }
 
   /**
-   * Ищет имена секций (только секций)
+   * РС‰РµС‚ РёРјРµРЅР° СЃРµРєС†РёР№ (С‚РѕР»СЊРєРѕ СЃРµРєС†РёР№)
    *
    * @return section names that is immediate descedants of given section. Full names.
    */
@@ -149,7 +149,7 @@ public class Config implements Cloneable
   }
 
   /**
-   * Ищет имена секций (только секций)
+   * РС‰РµС‚ РёРјРµРЅР° СЃРµРєС†РёР№ (С‚РѕР»СЊРєРѕ СЃРµРєС†РёР№)
    *
    * @return section names that is immediate descedants of given section. Full names.
    */
@@ -167,7 +167,7 @@ public class Config implements Cloneable
   }
 
   /**
-   * Ищет имена секций (только секций)
+   * РС‰РµС‚ РёРјРµРЅР° СЃРµРєС†РёР№ (С‚РѕР»СЊРєРѕ СЃРµРєС†РёР№)
    *
    * @return section names that is immediate descedants of given section.
    */
@@ -240,13 +240,13 @@ public class Config implements Cloneable
   }
 
   /**
-   * Записывает конфиг в тот файл, из которого прочитал в конструкторе. Если конфиг был построен через Config(Reader configReader) - то есть файл конфига
-   * неизвестен - будет брошен NullPointerException <br> В файл конфига будет записана та кодировка, под которой запущен сервлет контейнер.
+   * Р—Р°РїРёСЃС‹РІР°РµС‚ РєРѕРЅС„РёРі РІ С‚РѕС‚ С„Р°Р№Р», РёР· РєРѕС‚РѕСЂРѕРіРѕ РїСЂРѕС‡РёС‚Р°Р» РІ РєРѕРЅСЃС‚СЂСѓРєС‚РѕСЂРµ. Р•СЃР»Рё РєРѕРЅС„РёРі Р±С‹Р» РїРѕСЃС‚СЂРѕРµРЅ С‡РµСЂРµР· Config(Reader configReader) - С‚Рѕ РµСЃС‚СЊ С„Р°Р№Р» РєРѕРЅС„РёРіР°
+   * РЅРµРёР·РІРµСЃС‚РµРЅ - Р±СѓРґРµС‚ Р±СЂРѕС€РµРЅ NullPointerException <br> Р’ С„Р°Р№Р» РєРѕРЅС„РёРіР° Р±СѓРґРµС‚ Р·Р°РїРёСЃР°РЅР° С‚Р° РєРѕРґРёСЂРѕРІРєР°, РїРѕРґ РєРѕС‚РѕСЂРѕР№ Р·Р°РїСѓС‰РµРЅ СЃРµСЂРІР»РµС‚ РєРѕРЅС‚РµР№РЅРµСЂ.
    *
    * @throws IOException
    * @throws WrongParamTypeException
-   * @throws NullPointerException    если неизвестен файл конфига. Если вы создаёте конфиг с помощью Config(Reader configReader), то будьте добры для записи
-   *                                 использовать метод save(File configFileToSave, String encoding)
+   * @throws NullPointerException    РµСЃР»Рё РЅРµРёР·РІРµСЃС‚РµРЅ С„Р°Р№Р» РєРѕРЅС„РёРіР°. Р•СЃР»Рё РІС‹ СЃРѕР·РґР°С‘С‚Рµ РєРѕРЅС„РёРі СЃ РїРѕРјРѕС‰СЊСЋ Config(Reader configReader), С‚Рѕ Р±СѓРґСЊС‚Рµ РґРѕР±СЂС‹ РґР»СЏ Р·Р°РїРёСЃРё
+   *                                 РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ РјРµС‚РѕРґ save(File configFileToSave, String encoding)
    * @see #save(File configFileToSave)
    */
   public synchronized void save() throws IOException, WrongParamTypeException, NullPointerException
@@ -255,7 +255,7 @@ public class Config implements Cloneable
   }
 
   /**
-   * Записывает конфиг в указанный файл.<br> В файл конфига будет записана та кодировка, под которой запущен сервлет контейнер.
+   * Р—Р°РїРёСЃС‹РІР°РµС‚ РєРѕРЅС„РёРі РІ СѓРєР°Р·Р°РЅРЅС‹Р№ С„Р°Р№Р».<br> Р’ С„Р°Р№Р» РєРѕРЅС„РёРіР° Р±СѓРґРµС‚ Р·Р°РїРёСЃР°РЅР° С‚Р° РєРѕРґРёСЂРѕРІРєР°, РїРѕРґ РєРѕС‚РѕСЂРѕР№ Р·Р°РїСѓС‰РµРЅ СЃРµСЂРІР»РµС‚ РєРѕРЅС‚РµР№РЅРµСЂ.
    *
    * @throws IOException
    * @throws WrongParamTypeException
@@ -268,14 +268,14 @@ public class Config implements Cloneable
   }
 
   /**
-   * Записывает конфиг в тот файл, из которого прочитал в конструкторе. Если конфиг был построен через Config(Reader configReader) - то есть файл конфига
-   * неизвестен - будет брошен NullPointerException
+   * Р—Р°РїРёСЃС‹РІР°РµС‚ РєРѕРЅС„РёРі РІ С‚РѕС‚ С„Р°Р№Р», РёР· РєРѕС‚РѕСЂРѕРіРѕ РїСЂРѕС‡РёС‚Р°Р» РІ РєРѕРЅСЃС‚СЂСѓРєС‚РѕСЂРµ. Р•СЃР»Рё РєРѕРЅС„РёРі Р±С‹Р» РїРѕСЃС‚СЂРѕРµРЅ С‡РµСЂРµР· Config(Reader configReader) - С‚Рѕ РµСЃС‚СЊ С„Р°Р№Р» РєРѕРЅС„РёРіР°
+   * РЅРµРёР·РІРµСЃС‚РµРЅ - Р±СѓРґРµС‚ Р±СЂРѕС€РµРЅ NullPointerException
    *
-   * @param encoding - кодировка, которая будет указана в файле конфига.
+   * @param encoding - РєРѕРґРёСЂРѕРІРєР°, РєРѕС‚РѕСЂР°СЏ Р±СѓРґРµС‚ СѓРєР°Р·Р°РЅР° РІ С„Р°Р№Р»Рµ РєРѕРЅС„РёРіР°.
    * @throws IOException
    * @throws WrongParamTypeException
-   * @throws NullPointerException    если неизвестен файл конфига. Если вы создаёте конфиг с помощью Config(Reader configReader), то будьте добры для записи
-   *                                 использовать метод save(File configFileToSave, String encoding)
+   * @throws NullPointerException    РµСЃР»Рё РЅРµРёР·РІРµСЃС‚РµРЅ С„Р°Р№Р» РєРѕРЅС„РёРіР°. Р•СЃР»Рё РІС‹ СЃРѕР·РґР°С‘С‚Рµ РєРѕРЅС„РёРі СЃ РїРѕРјРѕС‰СЊСЋ Config(Reader configReader), С‚Рѕ Р±СѓРґСЊС‚Рµ РґРѕР±СЂС‹ РґР»СЏ Р·Р°РїРёСЃРё
+   *                                 РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ РјРµС‚РѕРґ save(File configFileToSave, String encoding)
    * @see #save(File configFileToSave, String encoding)
    */
   private synchronized void save(final String encoding) throws IOException, WrongParamTypeException, NullPointerException
@@ -286,9 +286,9 @@ public class Config implements Cloneable
   }
 
   /**
-   * Записывает конфиг в указанный файл.
+   * Р—Р°РїРёСЃС‹РІР°РµС‚ РєРѕРЅС„РёРі РІ СѓРєР°Р·Р°РЅРЅС‹Р№ С„Р°Р№Р».
    *
-   * @param encoding         - кодировка, которая будет указана в файле конфига.
+   * @param encoding         - РєРѕРґРёСЂРѕРІРєР°, РєРѕС‚РѕСЂР°СЏ Р±СѓРґРµС‚ СѓРєР°Р·Р°РЅР° РІ С„Р°Р№Р»Рµ РєРѕРЅС„РёРіР°.
    * @param configFileToSave
    * @param encoding
    * @throws IOException

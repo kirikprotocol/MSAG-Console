@@ -38,10 +38,10 @@ public class Service extends Proxy
   }
 
   /**
-   * ¬˚Á˚‚‡ÂÚ ÏÂÚÓ‰ Ì‡ ÍÓÏÔÓÌÂÌÚÂ ÒÂ‚ËÒ‡.
+   * –í—ã–∑—ã–≤–∞–µ—Ç –º–µ—Ç–æ–¥ –Ω–∞ –∫–æ–º–ø–æ–Ω–µ–Ω—Ç–µ —Å–µ—Ä–≤–∏—Å–∞.
    *
-   * @param arguments Map ÔÓËÏÂÌÓ‚‡ÌÌ˚ı ‡„ÛÏÂÌÚÓ‚ (String -> Object). ¿„ÛÏÂÌÚ˚ ÏÓ„ÛÚ ·˚Ú¸ String Integer ËÎË Boolean ÍÎ‡ÒÒ‡.
-   * @return «Ì‡˜ÂÌËÂ, ÍÓÚÓÓÂ ‚ÂÌÛÎ ‚˚Á‚‡ÌÌ˚È ÏÂÚÓ‰ (String, Integer ËÎË Boolean)
+   * @param arguments Map –ø–æ–∏–º–µ–Ω–æ–≤–∞–Ω–Ω—ã—Ö –∞—Ä–≥—É–º–µ–Ω—Ç–æ–≤ (String -> Object). –ê—Ä–≥—É–º–µ–Ω—Ç—ã –º–æ–≥—É—Ç –±—ã—Ç—å String Integer –∏–ª–∏ Boolean –∫–ª–∞—Å—Å–∞.
+   * @return –ó–Ω–∞—á–µ–Ω–∏–µ, –∫–æ—Ç–æ—Ä–æ–µ –≤–µ—Ä–Ω—É–ª –≤—ã–∑–≤–∞–Ω–Ω—ã–π –º–µ—Ç–æ–¥ (String, Integer –∏–ª–∏ Boolean)
    */
   public Object call(final String componentId, final String methodId, final Type returnType, final Map arguments) throws SibincoException
   {

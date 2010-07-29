@@ -108,7 +108,7 @@ public class Mask
     // 	.[0..6].[0|1|3|4|6|8|9|10|14|18].[x]
     // 	+[x]	==> .1.1.[x]
     // 	[x]	==> .0.1.[x]
-    // где x - numeric string длиной от 1 до 21
+    // РіРґРµ x - numeric string РґР»РёРЅРѕР№ РѕС‚ 1 РґРѕ 21
 
     return maskStr != null && maskStr.trim().length() > 0
            && ((maskStr.matches(pattern1) && maskStr.matches(pattern2))
