@@ -576,3 +576,9 @@ B3123: Jun 16, 2010
 B3124: Jun 22, 2010
     Inman	WEB_GT handling is fixed
     SMSC	remove directio in scheduler and configurable directio in logger
+
+B3125: Jul 29, 2010
+    SMSC	sms partitioning by bytes instead of words boundaries
+    SMSC	turn off ussd session check if proclimit==0
+    SMSC	charge on submit + multipart fix
+    MTSms	sender address filtering, unidentified subscriber
