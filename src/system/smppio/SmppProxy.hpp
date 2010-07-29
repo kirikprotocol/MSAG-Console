@@ -348,7 +348,7 @@ public:
           shapeCounterIn.Inc(1);
         }
 
-        if(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
+        if(processLimit!=0 && sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
         {
           MutexGuard mg(mutex);
           UssdSessionKey key(sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE),sms.getDestinationAddress());
