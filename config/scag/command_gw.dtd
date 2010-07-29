@@ -11,7 +11,8 @@
     addRule|updateRule|removeRule|
     reloadOperators|reloadServices|reloadTariffMatrix|
     applyHttpRoutes|loadHttpTraceRoutes|traceHttpRoute|
-    getLogCategories|setLogCategories|storeLogCategories) #REQUIRED>
+    getLogCategories|setLogCategories|storeLogCategories|
+    replaceCounterTemplate|replaceCounterActions) #REQUIRED>
     <!ATTLIST command returnType (string|int|bool|stringlist) #IMPLIED>
     
 <!ELEMENT service (#PCDATA)>
