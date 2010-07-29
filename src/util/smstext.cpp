@@ -481,7 +481,7 @@ int partitionSms(SMS* sms)
       if((i-lastpos)>=maxlen)
       {
         __trace2__("PARTITIONSMS: part=%d, i=%d, lastpos=%d, lastword=%d",parts,i,lastpos,lastword);
-        if(c<=32)
+        if(c<=32 || sms->getIntProperty(Tag::SMSC_UDH_CONCAT))
         {
           offsets[parts++]=i*2;
           lastpos=i;
@@ -522,9 +522,9 @@ int partitionSms(SMS* sms)
       if(l>=maxlen)
       {
         __trace2__("PARTITIONSMS: part=%d, l=%d, wl=%d",parts,l,wl);
-        if(wl<maxlen)
+        if(wl<maxlen || sms->getIntProperty(Tag::SMSC_UDH_CONCAT))
         {
-          if(i<len-1 && l<=maxlen && (c==32 || c==10 || c==13))
+          if(i<len-1 && l<=maxlen && (c==32 || c==10 || c==13 || sms->getIntProperty(Tag::SMSC_UDH_CONCAT)))
           {
             offsets[parts++]=i;
             lastword=i;
