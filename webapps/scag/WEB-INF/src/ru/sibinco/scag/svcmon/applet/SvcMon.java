@@ -367,7 +367,7 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
     }
 
     public void start() {
-        //System.out.println("Starting...");
+        //System.out.println("SvcMon starting...");
         Thread thr = new Thread(this);
         thr.start();
     }

@@ -91,7 +91,9 @@ public class CountersManager extends Manager
     public void createUpdateCounter(String user, boolean isAdd,  Counter counter,  SCAGAppContext appContext, Counter oldCounter)
             throws SCAGJspException {
         String messageText = "";
-        try{
+        try{            
+            logger.debug("Create or update counter method.");
+            logger.debug("Counter id=\""+counter.getId()+"\" idAdd="+isAdd);
             if (isAdd){
                  appContext.getScag().invokeCommand("replaceCounterTemplate", counter, appContext, this, configFile.toString());
             } else{
@@ -107,7 +109,7 @@ public class CountersManager extends Manager
                 } catch (SibincoException e1) {
                     logger.error("Couldn't restore Counter " + counter.getId() + " ", e1);
                 }
-                throw new SCAGJspException(Constants.errors.sme.COULDNT_APPLY, counter.getId(), e);
+                throw new SCAGJspException(Constants.errors.stat.COULDNT_APPLY_TEMPLATE, counter.getId(), e);
             }
         }
         finally {

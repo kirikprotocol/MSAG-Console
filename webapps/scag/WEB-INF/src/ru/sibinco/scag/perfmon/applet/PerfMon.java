@@ -114,7 +114,7 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
     String test;
 
     public void init() {
-        //System.out.println("new PerfMon.init() Initing...");
+        System.out.println("new PerfMon.init() Initing...");
         localeText = new RemoteResourceBundle(getCodeBase(),getParameter("resource_servlet_uri"));
         locale=localeText.getLocale();
         dateFormat = new SimpleDateFormat(localeText.getString("sctime"),locale);
@@ -167,7 +167,7 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
         } catch (Exception ex) {
         }
 
-        //System.out.println( "PerfMon.init() test='" + test + "'" );
+        System.out.println( "PerfMon.init() test='" + test + "'" );
 
         setFont(new Font("dialog", Font.BOLD, 12));
         setLayout(new GridBagLayout());
@@ -723,7 +723,7 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
     }
 
     public void start() {
-        //System.out.println("Starting...");
+        //System.out.println("Performance monitor starting...");
         Thread thr = new Thread(this);
         thr.start();
     }

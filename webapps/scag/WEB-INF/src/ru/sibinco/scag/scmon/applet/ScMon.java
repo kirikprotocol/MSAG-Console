@@ -779,7 +779,7 @@ class Pause extends Observable{
     }
 
     public void start() {
-        //System.out.println("Starting...");
+        //System.out.println("ScMom starting...");
         Thread thr = new Thread(this);
         thr.start();
     }

@@ -21,10 +21,12 @@ import ru.sibinco.scag.backend.protocol.commands.routes.ApplyHttpRoutes;
 import ru.sibinco.scag.backend.protocol.commands.routes.ApplySmppRoutes;
 import ru.sibinco.scag.backend.protocol.commands.rules.RemoveRule;
 import ru.sibinco.scag.backend.protocol.commands.services.ReloadServices;
+import ru.sibinco.scag.backend.protocol.commands.stat.ReplaceCounterTemplate;
 import ru.sibinco.scag.backend.protocol.commands.tariffmatrix.ReloadTariffMatrix;
 import ru.sibinco.scag.backend.protocol.response.Response;
 import ru.sibinco.scag.backend.routing.ScagRoutingManager;
 import ru.sibinco.scag.backend.routing.http.HttpRoutingManager;
+import ru.sibinco.scag.backend.stat.counters.Counter;
 
 import java.io.File;
 import java.io.IOException;
@@ -129,6 +131,15 @@ public class Scag extends Proxy {
         }
     }
 
+    // counters
+
+    protected void replaceCounterTemplate(final Counter counter) throws SibincoException {
+        //logger.debug("Invoke method replaceCounterTemplate.");
+        final Response response = super.runCommand(new ReplaceCounterTemplate(counter));
+        if (Response.STATUS_OK != response.getStatus())
+            throw new SibincoException("Couldn't replace counter template, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
+    }
+    
     //centers
     protected void addCenter(final Center center) throws SibincoException {
         final Response response = super.runCommand(new AddCenter(center));
