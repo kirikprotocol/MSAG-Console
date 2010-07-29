@@ -2916,8 +2916,11 @@ USHORT_T Et96MapCloseInd(
       DropMapDialog(dialog.get());
       break;
     case MAPST_WaitUSSDNotifyClose:
-      dialog->state = MAPST_WaitSubmitUSSDNotifyCloseConf;
+      dialog->state = MAPST_CLOSED;
       SendSubmitCommand(dialog.get());
+      CloseMapDialog(dialog->dialogid_map,dialog->ssn,dialog->instanceId);
+      eraseUssdLock(dialog.get(), __func__);
+      DropMapDialog(dialog.get());
       break;
     case MAPST_WaitUSSDReqDelim:
       dialog->state = MAPST_WaitSubmitUSSDRequestCloseConf;
