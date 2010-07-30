@@ -59,6 +59,13 @@
             <sm-ep:txt title="statistics.counters.ca.edit.txt.id"   name="id" validation="nonEmpty" readonly="${!bean.add}"/>
             <sm-ep:txt title="statistics.counters.ca.edit.txt.min"  name="limitsMin" maxlength="5" validation="unsignedOrEmpty"/>
             <sm-ep:txt title="statistics.counters.ca.edit.txt.max"  name="limitsMax" maxlength="5" validation="unsignedOrEmpty"/>
+
+            <c:forEach items="${bean.parameters}" var="parameter">
+                <c:set var="values" value="${values}${parameter.name},${parameter.value};"/>
+            </c:forEach>
+            <c:set var="values" value="${fn:substring(values, 0, fn:length(values)-1)}"/>
+            <sm-ep:parameters title="tag.parameters" values="${values}"
+                             first_field_name="tag.parameter.name" second_field_name="tag.parameter.value"/>
         </sm-ep:properties>
 
         <fmt:message>statistics.counters.ca.label.limits</fmt:message><br/>
@@ -80,10 +87,10 @@
                         <col width="50%" align="right">
                         <col width="25%" align="left">
                         <c:forEach items="${bean.limits}" var="i">
-                            <c:set var="eprocent" value="${fn:escapeXml(i.procent)}"/>
+                            <c:set var="epercent" value="${fn:escapeXml(i.percent)}"/>
                             <c:set var="elevel" value="${fn:escapeXml(i.level)}"/>
-                            <tr class="row${rowN%2}" id="limitRow_${eprocent}">
-                                <td><input name="limitProcents" class="txt" value="${eprocent}" readonly="true"></td>
+                            <tr class="row${rowN%2}" id="limitRow_${epercent}">
+                                <td><input name="limitProcents" class="txt" value="${epercent}" readonly="true"></td>
                                 <td><input name="limitLevels" class="txt" value="${elevel}" readonly="true"></td>
                                 <td><img src="content/images/but_del.gif"
                                          onClick="removeRow('limits_table', 'limitRow_${rowN}')"

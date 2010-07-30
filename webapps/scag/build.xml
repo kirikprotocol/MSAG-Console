@@ -113,8 +113,7 @@
      </copy>
     <copy todir="${exploded}" preservelastmodified="yes">
        <fileset dir="." includes="**/*.jsp **/*.js **/*.html **/*.htm **/*.gif **/*.bmp **/*.jpg **/*.jspf **/*.tld **/*.tag **/*.xml **/*.css **/*.htc **/*.xsd **/*.png"/>
-    </copy>
-     
+    </copy>     
 			   
     <copy todir="${exploded}/WEB-INF/lib" preservelastmodified="yes">
       <fileset dir="${basedir}/WEB-INF/lib"  includes="*.jar"/>

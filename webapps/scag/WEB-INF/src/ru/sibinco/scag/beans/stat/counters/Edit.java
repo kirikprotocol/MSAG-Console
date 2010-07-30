@@ -115,12 +115,12 @@ public class Edit extends EditBean
         caIds = cas.toArray(new String[cas.size()]);
 
         logger.debug("Loading counter, id=" + loadId);
-        counter = appContext.getCountersManager().getCounters().get(loadId);
-        configParams = getConfigParams(counter.getParams());
-
+        counter = appContext.getCountersManager().getCounters().get(loadId);        
         if (counter == null) {
             throw new SCAGJspException(Constants.errors.stat.COUNTER_NOT_FOUND, loadId);
         }
+
+        configParams = getConfigParams(counter.getParams());
     }
 
     protected void save() throws SCAGJspException {        

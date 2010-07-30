@@ -8,7 +8,7 @@
 <%@attribute name="second_field_name" required="true"%>
 <%@attribute name="values" required="true" %>
 <sm-ep:property title="${title}">       
-    <c:set var="values" value="${fn:split(values, ';')}"/>
+    <c:set var="va" value="${fn:split(values, ';')}"/>
     <script src="content/scripts/counters.js" type="text/javascript"></script>
     <table id="temp_param_tbl" class="properties_list" cellpadding="0" cellspacing="0">
         <thead>
@@ -22,18 +22,21 @@
             </tr>
         </thead>
         <c:set var="rowN" value="0"/>
-        <c:forEach items="${bean.parameters}" var="parameter">
-            <tr class="row${rowN%2}" id="param_${parameter.name}_${rowN}">
+        <c:forEach items="${va}" var="vp">
+            <c:set var="sI" value="${fn:indexOf(vp, ',')}"/>
+            <c:set var="pName" value="${fn:substring(vp, 0, sI)}"/>
+            <c:set var="pValue" value="${fn:substring(vp, sI+1, fn:length(vp))}"/>
+            <tr class="row${rowN%2}" id="param_${pName}_${rowN}">
                 <td>
-                    <input id="par_name_${parameter.name}_${rowN}" name="parameter.${rowN}.name" type="text" size="45" style="color:black;" value="${parameter.name}" readonly="true"/>
+                    <input id="par_name_${pName}_${rowN}" name="parameter.${rowN}.name" type="text" size="45" style="color:black;" value="${pName}" readonly="true"/>
                 </td>
                 <td>
-                    <input id="par_value_${parameter.name}_${rowN}" name="parameter.${rowN}.value" type="text" size="45" style="color:black;" value="${parameter.value}" readonly="true"/>                    
+                    <input id="par_value_${pName}_${rowN}" name="parameter.${rowN}.value" type="text" size="45" style="color:black;" value="${pValue}" readonly="true"/>
                 </td>
                 <td>
                     <img src="content/images/but_del.gif" alt="Add new parameter"
                          style="cursor:pointer;"
-                         onClick="removeRow('temp_param_tbl', 'param_${parameter.name}_${rowN}');"/>
+                         onClick="removeRow('temp_param_tbl', 'param_${pName}_${rowN}');"/>
                 </td>                
             </tr>
             <c:set var="rowN" value="${rowN+1}"/>

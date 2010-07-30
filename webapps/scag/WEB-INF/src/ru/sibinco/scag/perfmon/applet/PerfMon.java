@@ -723,18 +723,18 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
     }
 
     public void start() {
-        //System.out.println("Performance monitor starting...");
+        System.out.println("Performance monitor starting...");
         Thread thr = new Thread(this);
         thr.start();
     }
 
     public void stop() {
-        //System.out.println("Stoping...");
+        System.out.println("Stoping...");
         isStopping = true;
     }
 
     public void destroy() {
-        //System.out.println("Destroying...");
+        System.out.println("Destroying...");
         isStopping = true;
     }
 }

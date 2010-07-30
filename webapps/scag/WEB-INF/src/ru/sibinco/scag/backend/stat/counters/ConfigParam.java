@@ -45,7 +45,7 @@ public class ConfigParam implements java.io.Serializable, Cloneable
         return "ConfigParam{" +
                 "type='" + getType() + '\'' +
                 ", name='" + getName() + '\'' +
-                "value=" + value +
+                ", value=" + value +
                 '}';
     }   
 

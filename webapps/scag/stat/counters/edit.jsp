@@ -30,7 +30,8 @@
             <c:forEach items="${bean.parameters}" var="parameter">
                 <c:set var="values" value="${values}${parameter.name},${parameter.value};"/>
             </c:forEach>
-            <sm-ep:parameters title="tag.parameters" values="values"
+            <c:set var="values" value="${fn:substring(values, 0, fn:length(values)-1)}"/>            
+            <sm-ep:parameters title="tag.parameters" values="${values}"
                              first_field_name="tag.parameter.name" second_field_name="tag.parameter.value"/>
         </sm-ep:properties>
     </jsp:body>

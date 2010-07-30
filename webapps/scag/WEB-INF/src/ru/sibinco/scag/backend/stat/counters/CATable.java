@@ -2,6 +2,7 @@ package ru.sibinco.scag.backend.stat.counters;
 
 import java.util.LinkedList;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * Copyright (c) EyeLine Communications
@@ -18,48 +19,7 @@ public class CATable extends ConfigParamOwner
 
     private int limitsMin = 0;
     private int limitsMax = 0;
-
-    public class Limit
-    {
-        private int percent = 0;
-        private LevelType level;
-
-        public Limit(int percent, LevelType level) {
-            setPercent(percent); setLevel(level);
-        }
-        public Limit(int percent, String level) {
-            setPercent(percent); setLevel(level);
-        }
-        public Limit(String percent, String level) {
-            setPercent(percent); setLevel(level);
-        }
-
-        public LevelType getLevel() {
-            return level;
-        }
-        public String getLevelStr() {
-            return level.toString();
-        }
-        public void setLevel(LevelType level) {
-            this.level = level;
-        }
-        public void setLevel(String level) {
-            this.level = LevelType.valueOf(level);
-        }
-
-        public int getPercent() {
-            return percent;
-        }
-        public String getPercentStr() {
-            return Integer.toString(percent);
-        }
-        public void setPercent(int percent) {
-            this.percent = percent;
-        }
-        public void setPercent(String percent) {
-            this.percent = Integer.valueOf(percent);
-        }
-    }
+    
     private final LinkedList<Limit> limits = new LinkedList<Limit>();
 
     public CATable() {
@@ -105,10 +65,11 @@ public class CATable extends ConfigParamOwner
         this.limitsMax = limitsMax;
     }
 
-    public Iterator<Limit> getLimits() {
-        return limits.iterator();
-    }
+    public List<Limit> getLimits() {
+        return this.limits;
+    }    
+
     public void addLimit(String percent, String severity) {
-        limits.add(new CATable.Limit(percent, severity));
+        limits.add(new Limit(percent, severity));
     }
 }
