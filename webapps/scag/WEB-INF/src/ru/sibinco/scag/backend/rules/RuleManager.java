@@ -853,7 +853,7 @@ public class RuleManager
             logger.debug("tempFile: "+tempFile);
             out = new PrintWriter( new OutputStreamWriter( new FileOutputStream(tempFile), "UTF-8" ) ); //alter out = new PrintWriter( new FileWriter(newFile) );
 //            ruleWriter( reader, out, STRING_WRITER );
-            ruleWriter( reader, out, STRING_WRITER );
+            ruleWriter( reader, out, CHAR_WRITER );
 
 //            backFile = new File( tempFile.getAbsolutePath().substring(0, tempFile.getAbsolutePath().lastIndexOf("/")),
 //                                 tempFile.getName()+Functions.suffixDateFormat.format(new Date()) );
@@ -1020,16 +1020,17 @@ public class RuleManager
                int ch;
                Reader reader = r;
                System.getProperties();
-               while( (ch = reader.read()) != -1 ){
-                   if(ch=='\n')
+               while( (ch = reader.read()) != -1 ){                   
                    out.print( (char)ch );
                }
                break;
             case STRING_WRITER:
                 //System.out.println("STRING WRITER");
                 String s;
+
                 StringBuffer sb = new StringBuffer();
                 sb.delete(0,sb.length());
+
                 System.getProperties();
                 while( (s=r.readLine() ) != null ) {
                     int tabIndex = 0;
