@@ -47,7 +47,11 @@ const char * const getLocalEncoding()
 {
   if (encName == 0)
   {
-    const char * const lc_all = getenv("LC_ALL");
+    const char* lc_all = getenv("LC_ALL");
+    if (!lc_all) {
+        lc_all = getenv("LC_CTYPE");
+        if (!lc_all) { lc_all = getenv("LANG"); }
+    }
     if (lc_all)
       encName = strrchr(lc_all, '.');
     encName = encName ? cStringCopy(encName+1) : "WINDOWS-1251";

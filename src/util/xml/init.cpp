@@ -42,6 +42,8 @@ void initXerces()
     addEncoding("ISO-8859-5");
     addEncoding("WINDOWS-1251");
     addEncoding("KOI8-R");
+    addEncoding("UTF8");
+    addEncoding("UTF-8");
     addEncoding(getLocalEncoding());
     isXercesInitialized = true;
   }
