@@ -18,14 +18,13 @@ import static org.junit.Assert.*;
 public class ArchiveDaemonManagerTest {
 
   private File configFile, backupDir;
-  private ArchiveDaemonManager c;
+  private ArchiveDaemonManager manager;
 
   @Before
   public void beforeClass() throws IOException, AdminException {
     configFile = TestUtils.exportResourceToRandomFile(ArchiveDaemonManagerTest.class.getResourceAsStream("config.xml"), ".archivedaemon");
     backupDir = TestUtils.createRandomDir(".archivedaemonbackup");
-    c = new ArchiveDaemonManager(configFile, backupDir, FileSystem.getFSForSingleInst());
-    c.reset();
+    manager = new ArchiveDaemonManager(configFile, backupDir, FileSystem.getFSForSingleInst(), null);
   }
 
   @After
@@ -36,7 +35,8 @@ public class ArchiveDaemonManagerTest {
       TestUtils.recursiveDeleteFolder(backupDir);
   }
 
-  private void validateConfig(ArchiveDaemonManager c) {
+  private void validateConfig(ArchiveDaemonManager m) {
+    ArchiveDaemonSettings c = m.getSettings();
     assertEquals(4096000,c.getIndexatorMaxFlushSpeed());
     assertEquals(Integer.valueOf(8), c.getIndexatorSmeAddrChunkSizes().get("MAP_PROXY"));
     assertEquals(30,c.getInterval());
@@ -54,35 +54,20 @@ public class ArchiveDaemonManagerTest {
 
   @Test
   public void loadTest() throws AdminException {
-    validateConfig(c);
+    validateConfig(manager);
   }
 
   @Test
-  public void resetTest() throws AdminException {
-    assertFalse(c.isChanged());
-
-    c.setInterval(21);
-    c.setQueriesMax(1);
-
-    assertTrue(c.isChanged());
-
-    c.reset();
-
-    assertFalse(c.isChanged());
-
-    validateConfig(c);    
-  }
-
-  @Test
-  public void applyTest() throws XmlConfigException, AdminException {
+  public void updateTest() throws XmlConfigException, AdminException {
     // Загружаем первоначальный конфиг
     XmlConfig cfg = new XmlConfig();
     cfg.load(configFile);
 
-    // Создаем инстанц SmscConfig
-    c.setInterval(30);
-    // Сохраняем SmscConfig
-    c.apply();
+    ArchiveDaemonSettings s = manager.getSettings();
+
+    s.setInterval(30);
+
+    manager.updateSettings(s);
 
     // Проверяем, что в директории backup появились файлы
     assertFalse(backupDir.delete()); // Не можем удалить директорию т.к. там появились файлы

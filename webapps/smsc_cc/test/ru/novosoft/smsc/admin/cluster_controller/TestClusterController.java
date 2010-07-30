@@ -1,112 +1,264 @@
 package ru.novosoft.smsc.admin.cluster_controller;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.alias.TestAliasManager;
 import ru.novosoft.smsc.admin.cluster_controller.protocol.ConfigType;
+import ru.novosoft.smsc.admin.msc.TestMscManager;
 import ru.novosoft.smsc.util.Address;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * @author Artem Snopkov
  */
 public class TestClusterController extends ClusterController {
 
-  public boolean applyRescheduleCalled;
-  public boolean applyFraudCalled;
-  public boolean applyMapLimitsCalled;
-  public boolean applySnmpCalled;
+  private final int smscInstancesNumber;
+  private final File aliasesFile;
+  private final File mscsFile;
 
-  private int smscInstancesNumber;
+  private final Lock rescheduleLock = new ReentrantLock();
+  private long rescheduleLastUpdateTime = System.currentTimeMillis();
 
-  public TestClusterController(int smscInstancesNumber) {
+  private final Lock fraudLock = new ReentrantLock();
+  private long fraudLastUpdateTime = System.currentTimeMillis();
+
+  private final Lock mapLimitLock = new ReentrantLock();
+  private long mapLimitLastUpdateTime = System.currentTimeMillis();
+
+  private final Lock snmpLock = new ReentrantLock();
+  private long snmpLastUpdateTime = System.currentTimeMillis();
+
+  private final Lock aliasLock = new ReentrantLock();
+  private long aliasLastUpdateTime = System.currentTimeMillis();
+
+  private final Lock closedGroupLock = new ReentrantLock();
+  private long closedGroupLastUpdateTime;
+
+  private final Lock mscLock = new ReentrantLock();
+  private long mscLastUpdateTime = System.currentTimeMillis();
+
+  private final Lock mainConfigLock = new ReentrantLock();
+
+  public TestClusterController(File aliasesFile, File mscsFile, int smscInstancesNumber) {
     this.smscInstancesNumber = smscInstancesNumber;
-  }
-
-  public TestClusterController() {
-    this(2);
+    this.aliasesFile = aliasesFile;
+    this.mscsFile = mscsFile;
   }
 
   protected synchronized ConfigState getConfigState(ConfigType configType) throws AdminException {
-    long now = System.currentTimeMillis();
+    long time;
+    switch (configType) {
+      case Reschedule:
+        time = rescheduleLastUpdateTime;
+        break;
+      case Fraud:
+        time = fraudLastUpdateTime;
+        break;
+      case MapLimits:
+        time = mapLimitLastUpdateTime;
+        break;
+      case Snmp:
+        time = snmpLastUpdateTime;
+        break;
+      case Aliases:
+        time = aliasLastUpdateTime;
+        break;
+      case ClosedGroups:
+        time = closedGroupLastUpdateTime;
+        break;
+      case Msc:
+        time = mscLastUpdateTime;
+        break;
+      default:
+        time = System.currentTimeMillis();
+    }
+
     Map<Integer, Long> map = new HashMap<Integer, Long>();
-    map.put(0, now);
-    map.put(1, now);
-    return new ConfigState(now, map);
+    for (int i = 0; i < smscInstancesNumber; i++)
+      map.put(i, time);
+    return new ConfigState(time, map);
+  }
+
+  private void lock(Lock lock, String lockName, boolean write) {
+    if (write) {
+      System.out.println("Try to lock " + lockName + " for write...");
+      lock.lock();
+      System.out.println(lockName + " locked for write.");
+    } else {
+      System.out.println("Try to lock " + lockName + " for read...");
+      lock.lock();
+      System.out.println(lockName + " locked for read.");
+    }
+  }
+
+  private void unlock(Lock lock, String lockName) {
+    System.out.println("Unlock " + lockName);
+    lock.unlock();
+  }
+
+  // RESCHEDULE ========================================================================================================
+
+  public void lockReschedule(boolean write) throws AdminException {
+    lock(rescheduleLock, "reschedule", write);
+  }
+
+  public void unlockReschedule() throws AdminException {
+    unlock(rescheduleLock, "reschedule");
   }
 
   public void applyReschedule() throws AdminException {
-    applyRescheduleCalled = true;
+    rescheduleLastUpdateTime = System.currentTimeMillis();
+  }
+
+  public long getRescheduleLastUpdateTime() {
+    return rescheduleLastUpdateTime;
+  }
+
+  // FRAUD =============================================================================================================
+
+  public void lockFraud(boolean write) throws AdminException {
+    lock(fraudLock, "fraud", write);
+  }
+
+  public void unlockFraud() throws AdminException {
+    unlock(fraudLock, "fraud");
   }
 
   public void applyFraud() throws AdminException {
-    applyFraudCalled = true;
+    fraudLastUpdateTime = System.currentTimeMillis();
+  }
+
+  public long getFraudLastUpdateTime() {
+    return fraudLastUpdateTime;
+  }
+
+  // MAP LIMIT =========================================================================================================
+
+  public void lockMapLimits(boolean write) throws AdminException {
+    lock(mapLimitLock, "mapLimit", write);
+  }
+
+  public void unlockMapLimits() throws AdminException {
+    unlock(mapLimitLock, "mapLimit");
   }
 
   public void applyMapLimits() throws AdminException {
-    applyMapLimitsCalled = true;
+    mapLimitLastUpdateTime = System.currentTimeMillis();
+  }
+
+  public long getMapLimitLastUpdateTime() {
+    return mapLimitLastUpdateTime;
+  }
+
+  // SNMP ==============================================================================================================
+
+  public void lockSnmp(boolean write) throws AdminException {
+    lock(snmpLock, "snmp", write);
+  }
+
+  public void unlockSnmp() throws AdminException {
+    unlock(snmpLock, "snmp");
   }
 
   public void applySnmp() {
-    applySnmpCalled = true;
+    snmpLastUpdateTime = System.currentTimeMillis();
   }
 
-  public boolean isOnline() {
-    return true;
+  public long getSnmpLastUpdateTime() {
+    return snmpLastUpdateTime;
   }
 
-  public void addAlias(String address, String alias, boolean aliasHide) throws AdminException {
+  // ALIASES ===========================================================================================================
+
+  public void lockAliases(boolean write) throws AdminException {
+    lock(aliasLock, "alias", write);
   }
 
-  public void delAlias(String alias) throws AdminException {
+  public void unlockAliases() throws AdminException {
+    unlock(aliasLock, "alias");
+  }
+
+  public void addAlias(Address address, Address alias, boolean aliasHide) throws AdminException {
+    TestAliasManager.helpAddAlias(aliasesFile, address, alias, aliasHide);
+    aliasLastUpdateTime = System.currentTimeMillis();
+  }
+
+  public void delAlias(Address alias) throws AdminException {
+    TestAliasManager.helpRemoveAlias(aliasesFile, alias);
+    aliasLastUpdateTime = System.currentTimeMillis();
+  }
+
+  public long getAliasLastUpdateTime() {
+    return aliasLastUpdateTime;
+  }
+
+  // CLOSED GROUP ======================================================================================================
+
+  public void lockClosedGroups(boolean write) throws AdminException {
+    lock(closedGroupLock, "closed group", write);
+  }
+
+  public void unlockClosedGroups() throws AdminException {
+    unlock(closedGroupLock, "closed group");
   }
 
   public void addClosedGroup(int groupId, String groupName) throws AdminException {
+    closedGroupLastUpdateTime = System.currentTimeMillis();
   }
 
   public void removeClosedGroup(int groupId) throws AdminException {
+    closedGroupLastUpdateTime = System.currentTimeMillis();
   }
 
   public void addMaskToClosedGroup(int groupId, Address masks) throws AdminException {
+    closedGroupLastUpdateTime = System.currentTimeMillis();
   }
 
   public void removeMaskFromClosedGroup(int groupId, Address masks) throws AdminException {
+    closedGroupLastUpdateTime = System.currentTimeMillis();
   }
 
-  public void lockAliases(boolean write) throws AdminException {}
+  public long getClosedGroupLastUpdateTime() {
+    return closedGroupLastUpdateTime;
+  }
 
-  public void unlockAliases() throws AdminException {}
+  // MSC ===============================================================================================================
 
-  public void lockClosedGroups(boolean write) throws AdminException {}
+  public void lockMsc(boolean write) throws AdminException {
+    lock(mscLock, "msc", write);
+  }
 
-  public void unlockClosedGroups() throws AdminException {}
+  public void unlockMsc() throws AdminException {
+    unlock(mscLock, "msc");
+  }
 
-  public void lockMsc(boolean write) throws AdminException {}
+  public void registerMsc(Address mscAddress) throws AdminException {
+    TestMscManager.helpAddMsc(mscsFile, mscAddress);
+    mscLastUpdateTime = System.currentTimeMillis();
+  }
 
-  public void unlockMsc() throws AdminException {}
+  public void unregisterMsc(Address mscAddress) throws AdminException {
+    TestMscManager.helpRemoveMsc(mscsFile, mscAddress);
+    mscLastUpdateTime = System.currentTimeMillis();
+  }
 
-  public void registerMsc(Address mscAddress) throws AdminException {}
+  public long getMscLastUpdateTime() {
+    return mscLastUpdateTime;
+  }
 
-  public void unregisterMsc(Address mscAddress) throws AdminException {}
+  // MAIN CONFIG =======================================================================================================
 
-  public void lockReschedule(boolean write) throws AdminException {}
+  public void lockMainConfig(boolean write) throws AdminException {
+    lock(mainConfigLock, "main config", write);
+  }
 
-  public void unlockReschedule() throws AdminException {}
-
-  public void lockFraud(boolean write) throws AdminException {}
-
-  public void unlockFraud() throws AdminException {}
-
-  public void lockMapLimits(boolean write) throws AdminException {}
-
-  public void unlockMapLimits() throws AdminException {}
-
-  public void lockSnmp(boolean write) throws AdminException {}
-
-  public void unlockSnmp() throws AdminException {}
-
-  public void lockMainConfig(boolean write) throws AdminException {}
-
-  public void unlockMainConfig() throws AdminException {}
+  public void unlockMainConfig() throws AdminException {
+    unlock(mainConfigLock, "main config");
+  }
 
 }

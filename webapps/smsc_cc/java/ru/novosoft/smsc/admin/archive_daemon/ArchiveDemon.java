@@ -3,8 +3,6 @@ package ru.novosoft.smsc.admin.archive_daemon;
 import org.apache.log4j.Logger;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.archive_daemon.messages.*;
-import ru.novosoft.smsc.admin.service.ServiceInfo;
-import ru.novosoft.smsc.admin.service.ServiceManager;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,25 +22,17 @@ public class ArchiveDemon {
 
   private static final Logger logger = Logger.getLogger(ArchiveDemon.class);
 
-  public static final String SERVICE_ID = "ArchiveDaemon";
-
-  private final ServiceManager serviceManager;
   private final ArchiveDaemonManager manager;
 
-  public ArchiveDemon(ArchiveDaemonManager manager, ServiceManager serviceManager) throws AdminException {
+  public ArchiveDemon(ArchiveDaemonManager manager) throws AdminException {
     this.manager = manager;
-    this.serviceManager = serviceManager;
   }
 
   private Socket connect() throws AdminException, IOException {
-    ServiceInfo info = serviceManager.getService(SERVICE_ID);
-    if (info == null)
-      throw new ArchiveDaemonException("archive_daemon_not_found");
-    if (info.getOnlineHost() == null)
+    String host = manager.getDaemonOnlineHost();
+    if (host == null)
       throw new ArchiveDaemonException("archive_daemon_offline");
-
-    String host = info.getOnlineHost();
-    int port = manager.getLastAppliedConfig().getViewPort();
+    int port = manager.getSettings().getViewPort();
 
     return new Socket(host, port);
   }

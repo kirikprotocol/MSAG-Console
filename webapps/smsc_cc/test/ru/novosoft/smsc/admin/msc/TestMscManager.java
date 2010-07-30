@@ -1,46 +1,73 @@
 package ru.novosoft.smsc.admin.msc;
 
-import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
+import ru.novosoft.smsc.admin.filesystem.FileSystem;
 import ru.novosoft.smsc.util.Address;
 
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 
 /**
  * @author Artem Snopkov
  */
 public class TestMscManager extends MscManager {
 
-  private final Collection<Address> mscs;
-
-  public TestMscManager(ClusterController cc) {
-    super(null, cc, null);
-    mscs = new ArrayList<Address>();
-    Collections.addAll(mscs,
-        new Address("123443"),
-        new Address("23443"),
-        new Address("3443"),
-        new Address("443")
-    );
+  public TestMscManager(File aliasesFile, ClusterController cc, FileSystem fs) {
+    super(aliasesFile, cc, fs);
   }
 
-  public Collection<Address> mscs() throws AdminException {
-    return new ArrayList<Address>(mscs);
+  private static Collection<Address> readMscs(File file) {
+    Collection<Address> res = new ArrayList<Address>();
+    BufferedReader r = null;
+    try {
+      r = new BufferedReader(new FileReader(file));
+      String line;
+      while ((line = r.readLine()) != null) {
+        if (line.trim().length() > 0)
+          res.add(new Address(line));
+      }
+
+    } catch (IOException e) {
+    } finally {
+      if (r != null)
+        try {
+          r.close();
+        } catch (IOException e) {
+        }
+    }
+    return res;
   }
 
-  public void addMsc(Address msc) throws AdminException {
-    if (msc == null)
-      throw new IllegalArgumentException("mscAddress");
+  private static void saveMscs(File toFile, Collection<Address> mscs) {
+    BufferedWriter w = null;
+    try {
+      w = new BufferedWriter(new FileWriter(toFile));
 
-    mscs.add(msc);
+      for (Address a : mscs) {
+        w.write(a.getNormalizedAddress());
+        w.newLine();
+      }
+    } catch (IOException e) {
+    } finally {
+      if (w != null)
+        try {
+          w.close();
+        } catch (IOException e) {
+        }
+    }
   }
 
-  public void removeMsc(Address msc) throws AdminException {
-    if (msc == null)
-      throw new IllegalArgumentException("mscAddress");
+  public static void helpAddMsc(File file, Address msc) {
+    Collection<Address> mscs = readMscs(file);
     mscs.remove(msc);
+    mscs.add(msc);
+    saveMscs(file, mscs);
   }
-  
+
+  public static void helpRemoveMsc(File file, Address msc) {
+    Collection<Address> mscs = readMscs(file);
+    mscs.remove(msc);
+    saveMscs(file, mscs);
+  }
 }

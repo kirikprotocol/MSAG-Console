@@ -2,7 +2,6 @@ package ru.novosoft.smsc.admin;
 
 import ru.novosoft.smsc.admin.alias.AliasManager;
 import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemonManager;
-import ru.novosoft.smsc.admin.archive_daemon.ArchiveDemon;
 import ru.novosoft.smsc.admin.closed_groups.ClosedGroupManager;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterControllerManager;
@@ -14,6 +13,7 @@ import ru.novosoft.smsc.admin.reschedule.RescheduleManager;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.admin.service.ServiceManager;
 import ru.novosoft.smsc.admin.smsc.SmscManager;
+import ru.novosoft.smsc.admin.smsc.SmscSettings;
 import ru.novosoft.smsc.admin.snmp.SnmpManager;
 
 import java.io.File;
@@ -67,50 +67,32 @@ public class AdminContext {
         fileSystem = FileSystem.getFSForHAInst();
     }
 
-    ServiceInfo clusterControllerInfo = serviceManager.getService(ClusterController.SERVICE_ID);
-    File clusterControllerConf = new File(clusterControllerInfo.getBaseDir(), "conf");
+    clusterControllerManager = new ClusterControllerManager(serviceManager, fileSystem);    
+    clusterController = new ClusterController(clusterControllerManager);
 
-    clusterControllerManager = new ClusterControllerManager(new File(clusterControllerConf, "config.xml"), new File(clusterControllerConf, "backup"), fileSystem);
-    clusterControllerManager.reset();
+    smscManager = new SmscManager(serviceManager, clusterController, fileSystem);
 
-    clusterController = new ClusterController(clusterControllerManager, serviceManager);
+    File smscConfigDir = smscManager.getConfigDir();
+    File smscConfigBackupDir = smscManager.getConfigBackupDir();
 
-    ServiceInfo smscServiceInfo = serviceManager.getService("SMSC1");
-    if (smscServiceInfo == null)
-      throw new AdminContextException("service_not_found", "SMSC1");
-
-    File smscConfigDir = new File(smscServiceInfo.getBaseDir(), "conf");
-    if (!smscConfigDir.exists())
-      throw new AdminContextException("dir_not_exists", smscConfigDir.getAbsolutePath());
-
-    File smscConfigBackupDir = new File(smscConfigDir, "backup");
-
-    smscManager = new SmscManager(new File(smscConfigDir, "config.xml"), smscConfigBackupDir, clusterController, fileSystem);
-    smscManager.reset();
-
-    ServiceInfo archiveDaemonInfo = serviceManager.getService(ArchiveDemon.SERVICE_ID);
-    File archiveDaemonConf = new File(archiveDaemonInfo.getBaseDir(), "conf");
-    File archiveDaemonBackup = new File(archiveDaemonConf, "backup");
-    archiveDaemonManager = (archiveDaemonInfo == null) ? null : new ArchiveDaemonManager(new File(archiveDaemonConf, "config.xml"), archiveDaemonBackup, fileSystem);
-    archiveDaemonManager.reset();
+    if (ArchiveDaemonManager.isDaemonDeployed(serviceManager))
+      archiveDaemonManager = new ArchiveDaemonManager(serviceManager, fileSystem);
 
     aliasManager = new AliasManager(new File(smscConfigDir, "alias.bin"), clusterController, fileSystem);
 
     rescheduleManager = new RescheduleManager(new File(smscConfigDir, "schedule.xml"), smscConfigBackupDir, clusterController, fileSystem);
-    rescheduleManager.reset();
 
-    fraudManager = new FraudManager(new File(smscConfigDir, "fraud.xml"), smscConfigBackupDir, clusterController, fileSystem);
-    fraudManager.reset();
+    fraudManager = new FraudManager(new File(smscConfigDir, "fraud.xml"), smscConfigBackupDir, clusterController, fileSystem);    
 
     mapLimitManager = new MapLimitManager(new File(smscConfigDir, "maplimits.xml"), smscConfigBackupDir, clusterController, fileSystem);
-    mapLimitManager.reset();
 
     snmpManager = new SnmpManager(new File(smscConfigDir, "snmp.xml"), smscConfigBackupDir, clusterController, fileSystem);
-    snmpManager.reset();
 
     closedGroupManager = new ClosedGroupManager(new File(smscConfigDir, "snmp.xml"), smscConfigBackupDir, clusterController, fileSystem);
 
-    mscManager = new MscManager(new File(smscManager.getCommonSettings().getMscStoreFile()), clusterController, fileSystem);
+    SmscSettings s = smscManager.getSettings();
+
+    mscManager = new MscManager(new File(s.getCommonSettings().getMscStoreFile()), clusterController, fileSystem);
   }
 
   public FileSystem getFileSystem() {

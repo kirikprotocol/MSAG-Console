@@ -16,20 +16,32 @@ import java.io.OutputStream;
  */
 class SmscConfigFile implements ManagedConfigFile {
 
+  private SmscSettings settings;
 
-  private CommonSettings commonSettings;
+  public SmscSettings getSettings() {
+    return settings;
+  }
 
-  private InstanceSettings[] instanceSettings;
+  public void setSettings(SmscSettings settings) {
+    this.settings = settings;
+  }
 
   protected void load(XmlConfig config) throws XmlConfigException, AdminException {
-    commonSettings = new CommonSettings(config);
+    SmscSettings s = new SmscSettings();
+
+    CommonSettings commonSettings = new CommonSettings(config);
     commonSettings.load(config);
 
+    s.setCommonSettings(commonSettings);
+
     int instancesCount = config.getSection("cluster").getInt("nodesCount");
-    instanceSettings = new InstanceSettings[instancesCount];
+    InstanceSettings[] instanceSettings = new InstanceSettings[instancesCount];
     for (int i = 0; i < instancesCount; i++) {
       instanceSettings[i] = new InstanceSettings(i, config);
     }
+    s.setInstancesSettings(instanceSettings);
+
+    settings = s;
   }
 
   public void load(InputStream is) throws Exception {
@@ -38,9 +50,9 @@ class SmscConfigFile implements ManagedConfigFile {
   }
 
   protected void save(XmlConfig config) throws XmlConfigException {
-    commonSettings.save(config);
-    for (int i = 0; i < instanceSettings.length; i++) {
-      instanceSettings[i].save(i, config);
+    settings.getCommonSettings().save(config);
+    for (int i = 0; i < settings.getSmscInstancesCount(); i++) {
+      settings.getInstanceSettings(i).save(i, config);
     }
   }
 
@@ -50,34 +62,5 @@ class SmscConfigFile implements ManagedConfigFile {
     config.save(os);
   }
 
-  CommonSettings getCommonSettings() {
-    return commonSettings;
-  }
 
-  public void setCommonSettings(CommonSettings commonSettings) {
-    this.commonSettings = commonSettings;
-  }
-
-  int getSmscInstancesCount() {
-    return instanceSettings.length;
-  }
-
-  InstanceSettings getInstanceSettings(int instanceNumber) {
-    if (instanceNumber < 0 || instanceNumber > instanceSettings.length - 1) {
-      throw new IllegalArgumentException("Illegal instance number: " + instanceNumber + ". Must be in [0," + (instanceSettings.length - 1) + "]");
-    }
-    return instanceSettings[instanceNumber];
-  }
-
-  InstanceSettings[] getAllInstanceSettings() {
-    return instanceSettings;
-  }
-
-  public void setInstanceSettings(int instanceNumber, InstanceSettings instanceSettings) {
-    if (instanceNumber < 0 || instanceNumber > this.instanceSettings.length - 1) {
-      throw new IllegalArgumentException("Illegal instance number: " + instanceNumber + ". Must be in [0," + (this.instanceSettings.length - 1) + "]");
-    }
-
-    this.instanceSettings[instanceNumber] = instanceSettings;
-  }
 }

@@ -6,6 +6,7 @@ import ru.novosoft.smsc.admin.alias.AliasManager;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
 import ru.novosoft.smsc.admin.cluster_controller.ConfigState;
 import ru.novosoft.smsc.admin.cluster_controller.TestClusterController;
+import ru.novosoft.smsc.admin.cluster_controller.TestClusterControllerStub;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
 import ru.novosoft.smsc.util.config.XmlConfig;
@@ -42,16 +43,15 @@ public class SmscManagerTest {
   }
 
   private SmscManager getManager(ClusterController cc) throws AdminException {
-    SmscManager manager = new SmscManager(configFile, backupDir, cc, FileSystem.getFSForSingleInst());
-    manager.reset();
+    SmscManager manager = new SmscManager(configFile, backupDir, FileSystem.getFSForSingleInst(), cc, null);
     return manager;
   }
 
   @Test
-  public void loadTest() throws AdminException {
-    SmscManager manager = getManager(new TestClusterController());
+  public void getSettingsTest() throws AdminException {
+    SmscManager manager = getManager(new TestClusterControllerStub());
 
-    CommonSettings cs = manager.getCommonSettings();
+    CommonSettings cs = manager.getSettings().getCommonSettings();
     assertNotNull(cs);
 
     assertEquals("mobile_access_address", cs.getAbInfoMobileAccessAddress());
@@ -141,7 +141,7 @@ public class SmscManagerTest {
     assertEquals(3, manager.getSmscInstancesCount());
 
     for (int i=0; i<3; i++) {
-      InstanceSettings s = manager.getInstanceSettings(i);
+      InstanceSettings s = manager.getSettings().getInstanceSettings(i);
 
       assertEquals(i + "", s.getAdminHost());
       assertEquals(i+1, s.getAdminPort());
@@ -161,18 +161,19 @@ public class SmscManagerTest {
   }
 
   @Test
-  public void saveTest() throws AdminException, XmlConfigException {
+  public void updateSettingsTest() throws AdminException, XmlConfigException {
     // Загружаем первоначальный конфиг
     XmlConfig cfg = new XmlConfig();
     cfg.load(configFile);
 
     // Создаем инстанц SmscConfig
-    SmscManager config1 = getManager(new TestClusterController());
-    CommonSettings s = config1.getCommonSettings();
+    SmscManager config1 = getManager(new TestClusterControllerStub());
+    SmscSettings smscSettings = config1.getSettings();
+    CommonSettings s = smscSettings.getCommonSettings();
     s.setAbInfoProtocolId(34);
-    config1.setCommonSettings(s);
+    smscSettings.setCommonSettings(s);
     // Сохраняем SmscConfig
-    config1.apply();
+    config1.updateSettings(smscSettings);
 
     // Проверяем, что в директории backup появились файлы
     assertFalse(backupDir.delete()); // Не можем удалить директорию т.к. там появились файлы
@@ -185,24 +186,6 @@ public class SmscManagerTest {
     assertEquals(cfg, cfg1);
   }
 
-  @Test
-  public void getLastChangedTest() throws AdminException, InterruptedException {
-    SmscManager m = getManager(new TestClusterController());
-    assertEquals(-1, m.getLastChangeTime());
-
-    long now = System.currentTimeMillis();
-
-    m.setCommonSettings(m.getCommonSettings());
-    assertTrue(m.getLastChangeTime() >= now);
-
-    Thread.sleep(10);
-
-    now = System.currentTimeMillis();
-
-    assertFalse(m.getLastChangeTime() >= now);
-    m.reset();
-    assertTrue(m.getLastChangeTime() >= now);
-  }
 
   @Test
   public void testGetStatusForSmscs() throws AdminException {
@@ -216,7 +199,7 @@ public class SmscManagerTest {
     assertEquals(SmscConfigurationStatus.UP_TO_DATE, states.get(1));
   }
 
-  public class ClusterControllerImpl extends TestClusterController {
+  public class ClusterControllerImpl extends TestClusterControllerStub {
     public ConfigState getMainConfigState() throws AdminException {
       long now = configFile.lastModified();
       Map<Integer, Long> map = new HashMap<Integer, Long>();

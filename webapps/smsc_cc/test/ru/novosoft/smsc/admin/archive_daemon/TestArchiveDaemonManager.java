@@ -2,6 +2,8 @@ package ru.novosoft.smsc.admin.archive_daemon;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.config.TestConfigFileManagerHelper;
+import ru.novosoft.smsc.admin.filesystem.FileSystem;
+import ru.novosoft.smsc.admin.service.ServiceManager;
 
 /**
  * Тестовая реализация ArchiveDaemonConfig
@@ -10,18 +12,7 @@ import ru.novosoft.smsc.admin.config.TestConfigFileManagerHelper;
  */
 public class TestArchiveDaemonManager extends ArchiveDaemonManager {
 
-  private TestConfigFileManagerHelper helper;
-
-  public TestArchiveDaemonManager() throws AdminException {
-    super(null, null, null);
-    helper = new TestConfigFileManagerHelper(ArchiveDaemonManager.class.getResourceAsStream("config.xml"));
+  public TestArchiveDaemonManager(ServiceManager serviceManager, FileSystem fs) throws AdminException {
+    super(serviceManager, fs);
   }
-
-  public void reset() throws AdminException {
-    helper.reset(this);
-  }
-
-  public void apply() throws AdminException {
-    helper.apply(this);
-  }  
 }

@@ -6,14 +6,17 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.smsc.CommonSettings;
 import ru.novosoft.smsc.admin.smsc.InstanceSettings;
+import ru.novosoft.smsc.admin.smsc.SmscSettings;
 import ru.novosoft.smsc.web.WebContext;
 import ru.novosoft.smsc.web.beans.CommonConfig;
 import ru.novosoft.smsc.web.beans.InstanceConfig;
+import ru.novosoft.smsc.web.config.AppliableConfiguration;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import java.io.Serializable;
+import java.security.Principal;
 import java.text.MessageFormat;
 import java.util.*;
 
@@ -24,7 +27,7 @@ public class SmscConfigController implements Serializable {
 
   private static final Logger logger = Logger.getLogger(SmscConfigController.class);
 
-  private AdminContext adminContext;
+  private AppliableConfiguration conf;
 
   private int instancesCount = 0;
 
@@ -43,15 +46,16 @@ public class SmscConfigController implements Serializable {
   public SmscConfigController() {
     FacesContext fc = FacesContext.getCurrentInstance();
     Map<String, String> reguestMap = fc.getExternalContext().getRequestParameterMap();
-    adminContext = WebContext.getInstance().getAdminContext();
+    conf = WebContext.getInstance().getAppliableConfiguration();
+    SmscSettings smscSettings = conf.getSmscSettings();
     if(!reguestMap.containsKey("initialized")) {
-      instancesCount = adminContext.getSmscManager().getSmscInstancesCount();
+      instancesCount = smscSettings.getSmscInstancesCount();
       initCommonConfig();
       initInstances();
     }
     try{
       List<Integer> outOfDate = new LinkedList<Integer>();
-      for(Map.Entry<Integer, SmscConfigurationStatus> e : adminContext.getSmscManager().getStatusForSmscs().entrySet()) {
+      for(Map.Entry<Integer, SmscConfigurationStatus> e : conf.getSmscSettingsStatus().entrySet()) {
         if(e.getValue() == SmscConfigurationStatus.OUT_OF_DATE) {
           outOfDate.add(e.getKey());
         }
@@ -71,7 +75,7 @@ public class SmscConfigController implements Serializable {
   }
 
   private void initCommonConfig() {
-    CommonSettings cs = adminContext.getSmscManager().getCommonSettings();
+    CommonSettings cs = conf.getSmscSettings().getCommonSettings();
     //core
     commonConfig.setState_machines_count(cs.getState_machines_count());
     commonConfig.setMainLoopsCount(cs.getMainLoopsCount());
@@ -219,7 +223,7 @@ public class SmscConfigController implements Serializable {
 
   private void initInstances() {
     for (int i = 0; i < instancesCount; i++) {
-      InstanceSettings is = adminContext.getSmscManager().getInstanceSettings(i);
+      InstanceSettings is = conf.getSmscSettings().getInstanceSettings(i);
       InstanceConfig instnceConfig = new InstanceConfig();
       instanceConfigs.add(instnceConfig);
       instnceConfig.setInstanceNumber(i);
@@ -373,10 +377,16 @@ public class SmscConfigController implements Serializable {
         iss[i] = convert(instanceConfigs.get(i), i);
       }
 
-      adminContext.getSmscManager().setCommonSettings(cs);
+      SmscSettings smscSettings = conf.getSmscSettings();
+
+      smscSettings.setCommonSettings(cs);
       for(int i=0;i<instancesCount;i++) {
-        adminContext.getSmscManager().setInstanceSettings(i, iss[i]);
+        smscSettings.setInstanceSettings(i, iss[i]);
       }
+
+      Principal p = FacesContext.getCurrentInstance().getExternalContext().getUserPrincipal();
+
+      conf.setSmscSettings(smscSettings, p.getName());
 
       fc.getApplication().getNavigationHandler().handleNavigation(fc, null, "INDEX");
 
@@ -390,7 +400,7 @@ public class SmscConfigController implements Serializable {
   }
 
   private InstanceSettings convert(InstanceConfig instanceConfig, int instanceNumb) throws AdminException {
-    InstanceSettings instanceSettings = adminContext.getSmscManager().getInstanceSettings(instanceNumb);
+    InstanceSettings instanceSettings = conf.getSmscSettings().getInstanceSettings(instanceNumb);
 
     //core
     instanceSettings.setAdminHost(instanceConfig.getAdminHost());
@@ -424,7 +434,7 @@ public class SmscConfigController implements Serializable {
   }
 
   private CommonSettings convert(CommonConfig cc) throws AdminException {
-    CommonSettings commonSettings = adminContext.getSmscManager().getCommonSettings();
+    CommonSettings commonSettings = conf.getSmscSettings().getCommonSettings();
 //core
     commonSettings.setState_machines_count(cc.getState_machines_count());
     commonSettings.setMainLoopsCount(cc.getMainLoopsCount());

@@ -35,49 +35,32 @@ public class ClusterControllerManagerTest {
   }
 
   private ClusterControllerManager getManager() throws AdminException {
-    ClusterControllerManager m = new ClusterControllerManager(configFile, backupDir, FileSystem.getFSForSingleInst());
-    m.reset();
+    ClusterControllerManager m = new ClusterControllerManager(configFile, backupDir, FileSystem.getFSForSingleInst(), null);
     return m;
   }
 
   @Test
   public void loadTest() throws AdminException {
-    ClusterControllerManager m = getManager();
+    ClusterControllerSettings m = getManager().getSettings();
 
     assertEquals(9998, m.getListenerPort());
   }
 
   @Test
-  public void saveTest() throws XmlConfigException, AdminException {
+  public void updateTest() throws XmlConfigException, AdminException {
     XmlConfig c = new XmlConfig();
     c.load(configFile);
 
     ClusterControllerManager m = getManager();
-    m.setListenerPort(9998);
 
-    assertTrue(m.isChanged());
+    ClusterControllerSettings s = m.getSettings();
+    s.setListenerPort(9998);
 
-    m.apply();
-
-    assertFalse(m.isChanged());
+    m.updateSettings(s);
 
     XmlConfig c1 = new XmlConfig();
     c1.load(configFile);
 
     assertEquals(c, c1);
-  }
-
-  @Test
-  public void resetTest() throws AdminException {
-    ClusterControllerManager m = getManager();
-    m.setListenerPort(9999);
-
-    assertTrue(m.isChanged());
-
-    m.reset();
-
-    assertFalse(m.isChanged());
-
-    assertEquals(9998, m.getListenerPort());
-  }
+  }  
 }

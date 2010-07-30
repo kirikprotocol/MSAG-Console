@@ -7,6 +7,7 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
 import ru.novosoft.smsc.admin.cluster_controller.ConfigState;
 import ru.novosoft.smsc.admin.cluster_controller.TestClusterController;
+import ru.novosoft.smsc.admin.cluster_controller.TestClusterControllerStub;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
 import ru.novosoft.smsc.util.Address;
@@ -39,8 +40,7 @@ public class AliasManagerTest {
 
   @Test
   public void testGetAliases() throws Exception {
-    ClusterController cc = new TestClusterController();
-
+    ClusterController cc = new TestClusterControllerStub();
     AliasManager manager = new AliasManager(aliasesFile, cc, FileSystem.getFSForSingleInst());
 
     AliasSet set = null;
@@ -77,6 +77,30 @@ public class AliasManagerTest {
   }
 
   @Test
+  public void testAddAlias() throws AdminException {
+    TestClusterControllerStub cc = new TestClusterControllerStub();
+    AliasManager manager = new AliasManager(aliasesFile, cc, FileSystem.getFSForSingleInst());
+
+    long time = cc.getAliasLastUpdateTime();
+
+    manager.addAlias(new Alias("+79139495113", "1223", false));
+
+    assertTrue(cc.getAliasLastUpdateTime() > time);
+  }
+
+  @Test
+  public void testRemoveAlias() throws AdminException {
+    TestClusterControllerStub cc = new TestClusterControllerStub();
+    AliasManager manager = new AliasManager(aliasesFile, cc, FileSystem.getFSForSingleInst());
+
+    long time = cc.getAliasLastUpdateTime();
+
+    manager.deleteAlias(new Address("123"));
+
+    assertTrue(cc.getAliasLastUpdateTime() >= time);
+  }
+
+  @Test
   public void testGetStatusForSmscs() throws AdminException {
     ClusterController cc = new ClusterControllerImpl();
     AliasManager manager = new AliasManager(aliasesFile, cc, FileSystem.getFSForSingleInst());
@@ -89,7 +113,7 @@ public class AliasManagerTest {
     assertEquals(SmscConfigurationStatus.UP_TO_DATE, states.get(1));
   }
 
-  public class ClusterControllerImpl extends TestClusterController {
+  public class ClusterControllerImpl extends ClusterController {
     public ConfigState getAliasesConfigState() throws AdminException {
       long now = System.currentTimeMillis();
       Map<Integer, Long> map = new HashMap<Integer, Long>();

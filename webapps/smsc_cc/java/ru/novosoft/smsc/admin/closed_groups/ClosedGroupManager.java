@@ -6,7 +6,6 @@ import org.w3c.dom.NodeList;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
 import ru.novosoft.smsc.admin.cluster_controller.ConfigState;
-import ru.novosoft.smsc.admin.config.RuntimeConfiguration;
 import ru.novosoft.smsc.admin.config.SmscConfiguration;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
@@ -30,7 +29,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * @author Artem Snopkov
  */
-public class ClosedGroupManager implements RuntimeConfiguration, SmscConfiguration {
+public class ClosedGroupManager implements SmscConfiguration {
 
   protected final static String PARAM_NAME_last_used_id = "lastId";
   protected final static String SECTION_NAME_group = "group";

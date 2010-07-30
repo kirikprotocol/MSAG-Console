@@ -11,6 +11,7 @@ import ru.novosoft.smsc.admin.alias.AliasManager;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
 import ru.novosoft.smsc.admin.cluster_controller.ConfigState;
 import ru.novosoft.smsc.admin.cluster_controller.TestClusterController;
+import ru.novosoft.smsc.admin.cluster_controller.TestClusterControllerStub;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
 import ru.novosoft.smsc.util.Address;
@@ -40,19 +41,19 @@ public class MscManagerTest {
 
   @Test(expected = IllegalArgumentException.class)
   public void addNullMscTest() throws AdminException {
-    MscManager m = new MscManager(configFile, new TestClusterController(), FileSystem.getFSForSingleInst());
+    MscManager m = new MscManager(configFile, new TestClusterControllerStub(), FileSystem.getFSForSingleInst());
     m.addMsc(null);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void removeNullMscTest() throws AdminException {
-    MscManager m = new MscManager(configFile, new TestClusterController(), FileSystem.getFSForSingleInst());
+    MscManager m = new MscManager(configFile, new TestClusterControllerStub(), FileSystem.getFSForSingleInst());
     m.removeMsc(null);
   }
 
   @Test
   public void getMscsTest() throws AdminException {
-    MscManager m = new MscManager(configFile, new TestClusterController(), FileSystem.getFSForSingleInst());
+    MscManager m = new MscManager(configFile, new TestClusterControllerStub(), FileSystem.getFSForSingleInst());
     List<Address> mscs = new ArrayList<Address>(m.mscs());
     assertNotNull(mscs);
     assertEquals(3, mscs.size());
@@ -73,7 +74,7 @@ public class MscManagerTest {
     assertEquals(SmscConfigurationStatus.UP_TO_DATE, states.get(1));
   }
 
-  public class ClusterControllerImpl extends TestClusterController {
+  public class ClusterControllerImpl extends TestClusterControllerStub {
     public ConfigState getMscConfigState() throws AdminException {
       long now = System.currentTimeMillis();
       Map<Integer, Long> map = new HashMap<Integer, Long>();

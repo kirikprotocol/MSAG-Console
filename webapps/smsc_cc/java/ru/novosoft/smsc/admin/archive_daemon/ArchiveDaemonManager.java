@@ -3,160 +3,98 @@ package ru.novosoft.smsc.admin.archive_daemon;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.config.ConfigFileManager;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
-import ru.novosoft.smsc.admin.util.ValidationException;
-import ru.novosoft.smsc.admin.util.ValidationHelper;
+import ru.novosoft.smsc.admin.service.ServiceInfo;
+import ru.novosoft.smsc.admin.service.ServiceManager;
 
 import java.io.File;
-import java.util.Map;
+import java.util.List;
 
 /**
  * класс, управляющий настройками Archive Daemon-а
+ *
  * @author Artem Snopkov
  */
-public class ArchiveDaemonManager extends ConfigFileManager<ArchiveDaemonConfig> {
+public class ArchiveDaemonManager {
 
-  private final static ValidationHelper vh = new ValidationHelper(ArchiveDaemonManager.class);
+  public static final String SERVICE_ID = "ArchiveDaemon";
 
-  public ArchiveDaemonManager(File configFile, File backupDir, FileSystem fileSystem) {
-    super(configFile, backupDir, fileSystem);
+  private final ConfigFileManager<ArchiveDaemonConfig> cfgFileManager;
+  private final ServiceManager serviceManager;
+
+  public ArchiveDaemonManager(ServiceManager serviceManager, FileSystem fs) throws AdminException {
+    this.serviceManager = serviceManager;
+    ServiceInfo info = getInfo();
+    File archiveDaemonConf = new File(info.getBaseDir(), "conf");
+    File archiveDaemonBackup = new File(archiveDaemonConf, "backup");
+    this.cfgFileManager = createManager(new File(archiveDaemonConf, "config.xml"), archiveDaemonBackup, fs);
+    this.cfgFileManager.reset();
   }
 
-  protected ArchiveDaemonConfig getLastAppliedConfig() {
-    return super.getLastAppliedConfig();
+  ArchiveDaemonManager(File configFile, File backupDir, FileSystem fs, ServiceManager serviceManager) throws AdminException {
+    this.serviceManager = serviceManager;
+    this.cfgFileManager = createManager(configFile, backupDir, fs);
+    this.cfgFileManager.reset();
   }
 
-  @Override
-  protected ArchiveDaemonConfig newConfigFile() {
-    return new ArchiveDaemonConfig();
+  private ConfigFileManager<ArchiveDaemonConfig> createManager(File configFile, File backupDir, FileSystem fs) {
+    return new ConfigFileManager<ArchiveDaemonConfig>(configFile, backupDir, fs) {
+      @Override
+      protected ArchiveDaemonConfig newConfigFile() {
+        return new ArchiveDaemonConfig();
+      }
+    };
   }
 
-  public int getInterval() {
-    return config.getInterval();
+  public static boolean isDaemonDeployed(ServiceManager serviceManager) throws AdminException {
+    return serviceManager.getService(SERVICE_ID) != null;
   }
 
-  public void setInterval(int interval) throws AdminException {
-    vh.checkPositive("interval", interval);
-    config.setInterval(interval);
-    setChanged();
+  /**
+   * Возвращает текущие настройки ArchiveDaemon-а
+   *
+   * @return текущие настройки ArchiveDaemon-а
+   */
+  public ArchiveDaemonSettings getSettings() {
+    ArchiveDaemonConfig config = cfgFileManager.getConfig();
+    return new ArchiveDaemonSettings(config.getSettings());
   }
 
-  public String getViewHost() {
-    return config.getViewHost();
+  /**
+   * Обновляет настройки ArchiveDaemon-а.
+   *
+   * @param settings новый настройки ArchiveDaemon-а
+   * @throws AdminException
+   */
+  public void updateSettings(ArchiveDaemonSettings settings) throws AdminException {
+    ArchiveDaemonConfig config = cfgFileManager.getConfig();
+    config.setSettings(new ArchiveDaemonSettings(settings));
+    cfgFileManager.apply();
   }
 
-  public void setViewHost(String viewHost) throws AdminException {
-    vh.checkNotEmpty("viewHost", viewHost);
-    config.setViewHost(viewHost);
-    setChanged();
+  private ServiceInfo getInfo() throws AdminException {
+    ServiceInfo info = serviceManager.getService(SERVICE_ID);
+    if (info == null)
+      throw new ArchiveDaemonException("archive_daemon_not_found");
+    return info;
   }
 
-  public int getViewPort() {
-    return config.getViewPort();
+  public String getDaemonOnlineHost() throws AdminException {
+    return getInfo().getOnlineHost();
   }
 
-  public void setViewPort(int viewPort) throws AdminException {
-    vh.checkPort("viewPort", viewPort);
-    config.setViewPort(viewPort);
-    setChanged();
+  public void switchDaemon(String toHost) throws AdminException {
+    serviceManager.swichService(SERVICE_ID, toHost);
   }
 
-  public int getViewTimeout() {
-    return config.getViewTimeout();
+  public void startDaemon() throws AdminException {
+    serviceManager.startService(SERVICE_ID);
   }
 
-  public void setViewTimeout(int viewTimeout) throws AdminException {
-    vh.checkPositive("viewTimeout", viewTimeout);
-    config.setViewTimeout(viewTimeout);
-    setChanged();
+  public void stopDaemon() throws AdminException {
+    serviceManager.stopService(SERVICE_ID);
   }
 
-  public int getQueriesMax() {
-    return config.getQueriesMax();
-  }
-
-  public void setQueriesMax(int queriesMax) throws AdminException {
-    vh.checkPositive("queriesMax", queriesMax);
-    config.setQueriesMax(queriesMax);
-    setChanged();
-  }
-
-  public int getQueriesInit() {
-    return config.getQueriesInit();
-  }
-
-  public void setQueriesInit(int queriesInit) throws AdminException {
-    vh.checkGreaterOrEqualsTo("queriesInit", queriesInit, 0);
-    config.setQueriesInit(queriesInit);
-    setChanged();
-  }
-
-  public int getTransactionsMaxSmsCount() {
-    return config.getTransactionsMaxSmsCount();
-  }
-
-  public void setTransactionsMaxSmsCount(int transactionsMaxSmsCount) throws AdminException {
-    vh.checkPositive("transactionsMaxSmsCount", transactionsMaxSmsCount);
-    config.setTransactionsMaxSmsCount(transactionsMaxSmsCount);
-    setChanged();
-  }
-
-  public int getTransactionsMaxTimeInterval() {
-    return config.getTransactionsMaxTimeInterval();
-  }
-
-  public void setTransactionsMaxTimeInterval(int transactionsMaxTimeInterval) throws AdminException {
-    vh.checkPositive("transactionsMaxTimeInterval", transactionsMaxTimeInterval);
-    config.setTransactionsMaxTimeInterval(transactionsMaxTimeInterval);
-    setChanged();
-  }
-
-  public String getLocationsBaseDestination() {
-    return config.getLocationsBaseDestination();
-  }
-
-  public void setLocationsBaseDestination(String locationsBaseDestination) throws AdminException {
-    vh.checkNotEmpty("locationsBaseDestination", locationsBaseDestination);
-    config.setLocationsBaseDestination(locationsBaseDestination);
-    setChanged();
-  }
-
-  public String getLocationsTextDestinations() {
-    return config.getLocationsTextDestinations();
-  }
-
-  public void setLocationsTextDestinations(String locationsTextDestinations) throws AdminException {
-    vh.checkNotEmpty("locationsTextDestinations", locationsTextDestinations);
-    config.setLocationsTextDestinations(locationsTextDestinations);
-    setChanged();
-  }
-
-  public Map<String, String> getLocationsSources() {
-    return config.getLocationsSources();
-  }
-
-  public void setLocationsSources(Map<String, String> locationsSources) throws AdminException {
-    vh.checkNoNulls("locationsSources", locationsSources);
-    config.setLocationsSources(locationsSources);
-    setChanged();
-  }
-
-  public int getIndexatorMaxFlushSpeed() {
-    return config.getIndexatorMaxFlushSpeed();
-  }
-
-  public void setIndexatorMaxFlushSpeed(int indexatorMaxFlushSpeed) throws AdminException {
-    vh.checkPositive("indexatorMaxFlushSpeed", indexatorMaxFlushSpeed);
-    config.setIndexatorMaxFlushSpeed(indexatorMaxFlushSpeed);
-    setChanged();
-  }
-
-  public Map<String, Integer> getIndexatorSmeAddrChunkSizes() {
-    return config.getIndexatorSmeAddrChunkSizes();
-  }
-
-  public void setIndexatorSmeAddrChunkSizes(Map<String, Integer> indexatorSmeAddrChunkSizes) throws AdminException {
-    vh.checkNoNulls("indexatorSmeAddrChunkSizes", indexatorSmeAddrChunkSizes);
-    config.setIndexatorSmeAddrChunkSizes(indexatorSmeAddrChunkSizes);
-    setChanged();
+  public List<String> getDaemonHosts() throws AdminException {
+    return getInfo().getHosts();
   }
 }

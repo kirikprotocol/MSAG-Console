@@ -7,85 +7,55 @@ import ru.novosoft.smsc.admin.config.ConfigFileManager;
 import ru.novosoft.smsc.admin.config.SmscConfiguration;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
-import ru.novosoft.smsc.admin.util.ValidationHelper;
 
 import java.io.File;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * @author Artem Snopkov
  */
-public class RescheduleManager extends ConfigFileManager<RescheduleConfig> implements SmscConfiguration {
-
-  private static final ValidationHelper vh = new ValidationHelper(RescheduleManager.class);
+public class RescheduleManager implements SmscConfiguration {
 
   private final ClusterController cc;
+  private final ConfigFileManager<RescheduleConfig> cfgFileManager;
 
-  public RescheduleManager(File configFile, File backupDir, ClusterController cc, FileSystem fs) {
-    super(configFile, backupDir, fs);
+  public RescheduleManager(File configFile, File backupDir, ClusterController cc, FileSystem fs) throws AdminException {
     this.cc = cc;
-  }
-
-  public void setScheduleLimit(int scheduleLimit) throws AdminException {
-    vh.checkPositive("scheduleLimit", scheduleLimit);
-    config.setRescheduleLimit(scheduleLimit);
-    setChanged();
-  }
-
-  public int getScheduleLimit() {
-    return config.getRescheduleLimit();
-  }
-
-  public String getDefaultReschedule() {
-    return config.getDefaultReschedule();
-  }
-
-  public void setDefaultReschedule(String intervals) throws AdminException {
-    vh.checkMaches("defaultReschedule", intervals, Reschedule.intervalsPattern);
-    config.setDefaultReschedule(intervals);
-    setChanged();
-  }
-
-  public Collection<Reschedule> getReschedules() {
-    return config.getReschedules();
-  }
-
-  public void setReschedules(Collection<Reschedule> reschedules) throws AdminException {
-    vh.checkNoNulls("reschedules", reschedules);
-    for (Reschedule r1 : reschedules)
-      for (Reschedule r2 : reschedules) {
-        if (r1 != r2)
-          vh.checkNotIntersect("reschedule_statuses", r1.getStatuses(), r2.getStatuses());
+    this.cfgFileManager = new ConfigFileManager<RescheduleConfig>(configFile, backupDir, fs) {
+      @Override
+      protected RescheduleConfig newConfigFile() {
+        return new RescheduleConfig();
       }
-    config.setReschedules(reschedules);
-    setChanged();
+    };
+    try {
+      cc.lockReschedule(false);
+      this.cfgFileManager.reset();
+    } finally {
+      cc.unlockReschedule();
+    }
   }
 
-  @Override
-  protected RescheduleConfig newConfigFile() {
-    return new RescheduleConfig();
+  public RescheduleSettings getSettings() {
+    return new RescheduleSettings(cfgFileManager.getConfig().getSettings());
   }
 
-  @Override
-  protected void lockConfig(boolean write) throws AdminException {
-    cc.lockReschedule(write);
-  }
+  public void updateSettings(RescheduleSettings settings) throws AdminException {
+    cfgFileManager.getConfig().setSettings(new RescheduleSettings(settings));
 
-  @Override
-  protected void unlockConfig() throws Exception {
-    cc.unlockReschedule();
-  }
+    try {
+      cc.lockReschedule(true);
+      cfgFileManager.apply();
+    } finally {
+      cc.unlockReschedule();
+    }
 
-  @Override
-  protected void afterApply() throws AdminException {
     cc.applyReschedule();
   }
 
   public Map<Integer, SmscConfigurationStatus> getStatusForSmscs() throws AdminException {
     ConfigState state = cc.getMainConfigState();
-    long lastUpdate = configFile.lastModified();
+    long lastUpdate = cfgFileManager.getConfigFile().lastModified();
     Map<Integer, SmscConfigurationStatus> result = new HashMap<Integer, SmscConfigurationStatus>();
     for (Map.Entry<Integer, Long> e : state.getInstancesUpdateTimes().entrySet()) {
       SmscConfigurationStatus s = e.getValue() >= lastUpdate ? SmscConfigurationStatus.UP_TO_DATE : SmscConfigurationStatus.OUT_OF_DATE;
@@ -94,5 +64,5 @@ public class RescheduleManager extends ConfigFileManager<RescheduleConfig> imple
     return result;
   }
 
-  
+
 }

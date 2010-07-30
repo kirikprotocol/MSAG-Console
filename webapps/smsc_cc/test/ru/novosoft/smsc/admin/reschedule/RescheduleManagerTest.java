@@ -1,23 +1,26 @@
 package ru.novosoft.smsc.admin.reschedule;
 
-import org.junit.*;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
 import ru.novosoft.smsc.admin.cluster_controller.ConfigState;
-import ru.novosoft.smsc.admin.cluster_controller.TestClusterController;
+import ru.novosoft.smsc.admin.cluster_controller.TestClusterControllerStub;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
-import ru.novosoft.smsc.admin.smsc.SmscManager;
 import ru.novosoft.smsc.util.config.XmlConfig;
 import ru.novosoft.smsc.util.config.XmlConfigException;
 import testutils.TestUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 import static org.junit.Assert.*;
-import static org.junit.Assert.assertEquals;
 
 /**
  * @author Artem Snopkov
@@ -42,20 +45,19 @@ public class RescheduleManagerTest {
 
   public RescheduleManager getManager(ClusterController cc) throws AdminException {
     RescheduleManager m = new RescheduleManager(configFile, backupDir, cc, FileSystem.getFSForSingleInst());
-    m.reset();
     return m;
   }
 
   @Test
-  public void loadTest() throws AdminException {
-    RescheduleManager manager = getManager(new TestClusterController());
+  public void getSettingsTest() throws AdminException {
+    RescheduleManager manager = getManager(new TestClusterControllerStub());
 
-    assertFalse(manager.isChanged());
+    RescheduleSettings s = manager.getSettings();
 
-    assertEquals(20, manager.getScheduleLimit());
-    assertEquals("30s,1m,5m,15m,30m,1h,6h,12h,1d:*", manager.getDefaultReschedule());
+    assertEquals(20, s.getRescheduleLimit());
+    assertEquals("30s,1m,5m,15m,30m,1h,6h,12h,1d:*", s.getDefaultReschedule());
 
-    Collection<Reschedule> reschedules = manager.getReschedules();
+    Collection<Reschedule> reschedules = s.getReschedules();
     assertNotNull(reschedules);
     assertEquals(2, reschedules.size());
 
@@ -66,20 +68,17 @@ public class RescheduleManagerTest {
   }
 
   @Test
-  public void saveTest() throws AdminException, XmlConfigException {
+  public void updateSettingsTest() throws AdminException, XmlConfigException {
     // Загружаем первоначальный конфиг
     XmlConfig cfg = new XmlConfig();
     cfg.load(configFile);
 
-    // Создаем инстанц SmscConfig
-    TestClusterController clusterController = new TestClusterController();
+    TestClusterControllerStub clusterController = new TestClusterControllerStub();
     RescheduleManager config1 = getManager(clusterController);
-    config1.setScheduleLimit(20);
-    // Сохраняем SmscConfig
-    config1.apply();
+    RescheduleSettings s = config1.getSettings();
+    s.setRescheduleLimit(20);
 
-    assertFalse(config1.isChanged());
-    assertTrue(clusterController.applyRescheduleCalled);
+    config1.updateSettings(s);
 
     // Проверяем, что в директории backup появились файлы
     assertFalse(backupDir.delete()); // Не можем удалить директорию т.к. там появились файлы
@@ -93,110 +92,8 @@ public class RescheduleManagerTest {
   }
 
   @Test
-  public void resetTest() throws AdminException {
-    RescheduleManager config = getManager(new TestClusterController());
-
-    assertFalse(config.isChanged());
-
-    config.setScheduleLimit(100);
-    config.setDefaultReschedule("10m,30s");
-    config.setReschedules(new ArrayList<Reschedule>());
-
-    assertTrue(config.isChanged());
-
-    config.reset();
-
-    assertEquals(20, config.getScheduleLimit());
-    assertEquals("30s,1m,5m,15m,30m,1h,6h,12h,1d:*", config.getDefaultReschedule());
-
-    Collection<Reschedule> reschedules = config.getReschedules();
-    assertNotNull(reschedules);
-    assertEquals(2, reschedules.size());
-
-    Iterator<Reschedule> iter = reschedules.iterator();
-
-    assertEquals(new Reschedule("30s,11m,15m", 8), iter.next());
-    assertEquals(new Reschedule("30s,1m,5m,15m,30m,1h,6h,12h,1d", 1028, 255, 20, 1027, 88, 100, 69), iter.next());
-  }
-
-  @Test
-  public void resetFailedTest() throws AdminException {
-    RescheduleManager config = getManager(new TestClusterController());
-
-    assertFalse(config.isChanged());
-
-    config.setScheduleLimit(100);
-    config.setDefaultReschedule("10m,30s");
-    config.setReschedules(new ArrayList<Reschedule>());
-
-    assertTrue(config.isChanged());
-
-    configFile.delete();
-
-    try {
-      config.reset();
-      assertTrue(false);
-    } catch (AdminException ignored) {
-    }
-
-    assertTrue(config.isChanged());
-
-    assertEquals(100, config.getScheduleLimit());
-    assertEquals("10m,30s", config.getDefaultReschedule());
-
-    Collection<Reschedule> reschedules = config.getReschedules();
-    assertNotNull(reschedules);
-    assertEquals(0, reschedules.size());
-  }
-
-  @Test(expected=AdminException.class)
-  public void setIntersectsReschedulesTest() throws AdminException {
-    Reschedule r1 = new Reschedule("1h", 12,20,30);
-    Reschedule r2 = new Reschedule("1h", 10,20,50);
-
-    Collection<Reschedule> res = new ArrayList<Reschedule>();
-    Collections.addAll(res, r1, r2);
-
-   RescheduleManager config = getManager(new TestClusterController());
-
-    config.setReschedules(res);
-  }
-
-  @Test
-  public void setNotIntersectsReschedulesTest() throws AdminException {
-    Reschedule r1 = new Reschedule("1h", 12,20,30);
-    Reschedule r2 = new Reschedule("1h", 10,22,50);
-
-    Collection<Reschedule> res = new ArrayList<Reschedule>();
-    Collections.addAll(res, r1, r2);
-
-    RescheduleManager config = getManager(new TestClusterController());
-
-    config.setReschedules(res);
-  }
-
-  @Test
-  public void getLastChangedTest() throws AdminException, InterruptedException {
-    RescheduleManager m = getManager(new TestClusterController());
-    assertEquals(-1, m.getLastChangeTime());
-
-    long now = System.currentTimeMillis();
-
-    m.setDefaultReschedule("1h,2m");
-    assertTrue(m.getLastChangeTime() >= now);
-
-    Thread.sleep(10);
-
-    now = System.currentTimeMillis();
-
-    assertFalse(m.getLastChangeTime() >= now);
-    m.reset();
-    assertTrue(m.getLastChangeTime() >= now);
-  }
-
-  @Test
   public void testGetStatusForSmscs() throws AdminException {
-   RescheduleManager manager = getManager(new ClusterControllerImpl());
+    RescheduleManager manager = getManager(new ClusterControllerImpl());
 
     Map<Integer, SmscConfigurationStatus> states = manager.getStatusForSmscs();
 
@@ -206,7 +103,7 @@ public class RescheduleManagerTest {
     assertEquals(SmscConfigurationStatus.UP_TO_DATE, states.get(1));
   }
 
-  public class ClusterControllerImpl extends TestClusterController {
+  public class ClusterControllerImpl extends TestClusterControllerStub {
     public ConfigState getMainConfigState() throws AdminException {
       long now = configFile.lastModified();
       Map<Integer, Long> map = new HashMap<Integer, Long>();

@@ -121,4 +121,9 @@ public class ValidationHelper {
     }
   }
 
+  public void checkSize(String argName, Object[] value, int size) throws AdminException {
+    if (value.length != size)
+      throw new ValidationException(paramNameBundle, argName);
+  }
+
 }

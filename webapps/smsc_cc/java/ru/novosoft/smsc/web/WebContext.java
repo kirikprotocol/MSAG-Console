@@ -4,6 +4,7 @@ import ru.novosoft.smsc.admin.AdminContext;
 import ru.novosoft.smsc.util.xml.WebXml;
 import ru.novosoft.smsc.web.auth.Authenticator;
 import ru.novosoft.smsc.web.auth.XmlAuthenticator;
+import ru.novosoft.smsc.web.config.AppliableConfiguration;
 
 import java.io.File;
 import java.util.concurrent.CountDownLatch;
@@ -20,6 +21,8 @@ public class WebContext {
   private Authenticator authenticator;
 
   private AdminContext adminContext;
+
+  private AppliableConfiguration appliableConfiguration;
 
   private static final CountDownLatch initLatch = new CountDownLatch(1);
 
@@ -43,6 +46,7 @@ public class WebContext {
     this.authenticator = authenticator;
     this.webXml = webXml;
     this.adminContext = adminContext;
+    this.appliableConfiguration = new AppliableConfiguration(adminContext);
   }
 
   public WebXml getWebXml() {
@@ -55,5 +59,9 @@ public class WebContext {
 
   public AdminContext getAdminContext() {
     return adminContext;
+  }
+
+  public AppliableConfiguration getAppliableConfiguration() {
+    return appliableConfiguration;
   }
 }

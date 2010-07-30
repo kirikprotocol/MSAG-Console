@@ -3,11 +3,9 @@ package ru.novosoft.smsc.admin.msc;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
 import ru.novosoft.smsc.admin.cluster_controller.ConfigState;
-import ru.novosoft.smsc.admin.config.RuntimeConfiguration;
 import ru.novosoft.smsc.admin.config.SmscConfiguration;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
-import ru.novosoft.smsc.admin.smsc.SmscManager;
 import ru.novosoft.smsc.util.Address;
 
 import java.io.*;
@@ -19,7 +17,7 @@ import java.util.Map;
 /**
  * @author Artem Snopkov
  */
-public class MscManager implements RuntimeConfiguration, SmscConfiguration {
+public class MscManager implements SmscConfiguration {
 
   private final ClusterController cc;
   private final File aliasesFile;

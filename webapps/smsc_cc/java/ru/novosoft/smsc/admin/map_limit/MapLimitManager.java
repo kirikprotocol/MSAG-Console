@@ -10,140 +10,57 @@ import ru.novosoft.smsc.admin.filesystem.FileSystem;
 import ru.novosoft.smsc.admin.util.ValidationHelper;
 
 import java.io.File;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * @author Artem Snopkov
  */
-public class MapLimitManager extends ConfigFileManager<MapLimitConfig> implements SmscConfiguration {
+public class MapLimitManager implements SmscConfiguration {
 
   static final int MAX_CONGESTON_LEVELS = MapLimitConfig.MAX_CONGESTION_LEVELS;
   private static final ValidationHelper vh = new ValidationHelper(MapLimitManager.class);
 
   private final ClusterController cc;
+  private final ConfigFileManager<MapLimitConfig> cfgFileManager;
 
-  public MapLimitManager(File configFile, File backupDir, ClusterController cc, FileSystem fs) {
-    super(configFile, backupDir, fs);
+  public MapLimitManager(File configFile, File backupDir, ClusterController cc, FileSystem fs) throws AdminException {
     this.cc = cc;
+    this.cfgFileManager = new ConfigFileManager<MapLimitConfig>(configFile, backupDir, fs) {
+      @Override
+      protected MapLimitConfig newConfigFile() {
+        return new MapLimitConfig();
+      }
+    };
+
+    try {
+      cc.lockMapLimits(false);
+      cfgFileManager.reset();
+    } finally {
+      cc.unlockMapLimits();
+    }
   }
 
-  /**
-   * Возвращает количество уровней перегрузки.
-   *
-   * @return количество уровней перегрузки
-   */
-  public int getContestionLevenCount() {
-    return MAX_CONGESTON_LEVELS;
+  public MapLimitSettings getSettings() {
+    return new MapLimitSettings(cfgFileManager.getConfig().getSettings());
   }
 
-  /**
-   * Возвращает настройки для уровней перегрузки. Размер массива
-   * равен значению, возвращаемому методом getCongestionLevel().
-   *
-   * @return настройки для уровней перегрузки.
-   */
-  public CongestionLevel[] getCongestionLevels() {
-    return config.getClevels();
-  }
+  public void updateSettings(MapLimitSettings settings) throws AdminException {
+    cfgFileManager.getConfig().setSettings(new MapLimitSettings(settings));
 
-  /**
-   * Устанавливает новые настройки для уровней перегрузки.
-   *
-   * @param levels новые настройки для уровней перегрузки. Размер массива должен быть равен getCongessionLevelsCount().
-   * @throws AdminException если настройки некорректны
-   */
-  public void setCongestionLevels(CongestionLevel[] levels) throws AdminException {
-    vh.checkNoNulls("congestionLevels", Arrays.asList(levels));
-    config.setClevels(levels);
-    setChanged();
-  }
+    try {
+      cc.lockMapLimits(true);
+      cfgFileManager.apply();
+    } finally {
+      cc.unlockMapLimits();
+    }
 
-  public int getDlgLimitIn() {
-    return config.getDlgLimitIn();
-  }
-
-  public void setDlgLimitIn(int dlgLimitIn) throws AdminException {
-    vh.checkPositive("dlgLimitIn", dlgLimitIn);
-    config.setDlgLimitIn(dlgLimitIn);
-    setChanged();
-  }
-
-  public int getDlgLimitInSri() {
-    return config.getDlgLimitInSri();
-  }
-
-  public void setDlgLimitInSri(int dlgLimitInSri) throws AdminException {
-    vh.checkPositive("dlgLimitInSri", dlgLimitInSri);
-    config.setDlgLimitInSri(dlgLimitInSri);
-    setChanged();
-  }
-
-  public int getDlgLimitInUssd() {
-    return config.getDlgLimitInUssd();
-  }
-
-  public void setDlgLimitInUssd(int dlgLimitInUssd) throws AdminException {
-    vh.checkPositive("dlgLimitInUssd", dlgLimitInUssd);
-    config.setDlgLimitInUssd(dlgLimitInUssd);
-    setChanged();
-  } 
-
-  public int getDlgLimitOutSri() {
-    return config.getDlgLimitOutSri();
-  }
-
-  public void setDlgLimitOutSri(int dlgLimitOutSri) throws AdminException {
-    vh.checkPositive("dlgLimitOutSri", dlgLimitOutSri);
-    config.setDlgLimitOutSri(dlgLimitOutSri);
-    setChanged();
-  }
-
-  public int getDlgLimitUssd() {
-    return config.getDlgLimitUssd();
-  }
-
-  public void setDlgLimitUssd(int dlgLimitUssd) throws AdminException {
-    vh.checkPositive("dlgLimitUssd", dlgLimitUssd);
-    config.setDlgLimitUssd(dlgLimitUssd);
-    setChanged();
-  }
-
-  public int[] getUssdNoSriCodes() {
-    return config.getUssdNoSriCodes();
-  }
-
-  public void setUssdNoSriCodes(int[] ussdNoSriCodes) throws AdminException {
-    vh.checkPositive("ussdNoSriCodes", ussdNoSriCodes);
-    config.setUssdNoSriCodes(ussdNoSriCodes);
-    setChanged();
-  }
-
-  @Override
-  protected MapLimitConfig newConfigFile() {
-    return new MapLimitConfig();
-  }
-
-  @Override
-  protected void lockConfig(boolean write) throws AdminException {
-    cc.lockMapLimits(write);
-  }
-
-  @Override
-  protected void unlockConfig() throws Exception {
-    cc.unlockMapLimits();
-  }
-
-
-  @Override
-  protected void afterApply() throws AdminException {
     cc.applyMapLimits();
   }
 
   public Map<Integer, SmscConfigurationStatus> getStatusForSmscs() throws AdminException {
     ConfigState state = cc.getMapLimitConfigState();
-    long lastUpdate = configFile.lastModified();
+    long lastUpdate = cfgFileManager.getConfigFile().lastModified();
     Map<Integer, SmscConfigurationStatus> result = new HashMap<Integer, SmscConfigurationStatus>();
     for (Map.Entry<Integer, Long> e : state.getInstancesUpdateTimes().entrySet()) {
       SmscConfigurationStatus s = e.getValue() >= lastUpdate ? SmscConfigurationStatus.UP_TO_DATE : SmscConfigurationStatus.OUT_OF_DATE;

@@ -2,10 +2,9 @@ package ru.novosoft.smsc.admin.cluster_controller;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.cluster_controller.protocol.*;
-import ru.novosoft.smsc.admin.service.ServiceInfo;
-import ru.novosoft.smsc.admin.service.ServiceManager;
 import ru.novosoft.smsc.util.Address;
 
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,33 +15,25 @@ import java.util.Map;
  */
 public class ClusterController {
 
-  public static final String SERVICE_ID = "ClusterController";
+
 
 
   private ClusterControllerClient cc;
-  private ServiceManager serviceManager;
+  private ClusterControllerManager manager;
   private long lastConfigsStatusCheckTime;
-  private GetConfigsStateResp lastGetConfigsStateResp;
+  private EnumMap<ConfigType, ConfigState> configsStates;
 
   protected ClusterController() {
 
   }
 
-  public ClusterController(ClusterControllerManager manager, ServiceManager serviceManager) throws AdminException {
-    this.serviceManager = serviceManager;
-
-    this.cc = new ClusterControllerClient(manager, serviceManager);
-  }
-
-  private ServiceInfo getInfo() throws AdminException {
-    ServiceInfo si = serviceManager.getService(SERVICE_ID);
-    if (si == null)
-      throw new ClusterControllerException("cluster_controller_offline");
-    return si;
+  public ClusterController(ClusterControllerManager manager) throws AdminException {
+    this.manager = manager;
+    this.cc = new ClusterControllerClient(manager);
   }
 
   public boolean isOnline() throws AdminException {
-    return getInfo().getOnlineHost() != null;
+    return manager.getControllerOnlineHost() != null;
   }
 
   public void shutdown() {
@@ -52,20 +43,31 @@ public class ClusterController {
   protected synchronized ConfigState getConfigState(ConfigType configType) throws AdminException {
     long now = System.currentTimeMillis();
 
-    if (now - lastConfigsStatusCheckTime > 1000 || lastGetConfigsStateResp == null) {
+    if (now - lastConfigsStatusCheckTime > 1000 || configsStates == null) {
       GetConfigsState req = new GetConfigsState();
-      lastGetConfigsStateResp = cc.send(req);
+      GetConfigsStateResp resp = cc.send(req);
+
+      if (configsStates == null)
+        configsStates = new EnumMap<ConfigType, ConfigState>(ConfigType.class);
+      else
+        configsStates.clear();
+
+      for (ConfigType type : ConfigType.values()) {
+        long ccUpdateTime = resp.getCcConfigUpdateTime()[type.getValue()];
+
+        SmscConfigsState[] states = resp.getSmscConfigs();
+        Map<Integer, Long> instancesUpdateTimes = new HashMap<Integer, Long>();
+        for (SmscConfigsState state : states)
+          instancesUpdateTimes.put((int)state.getNodeIdex(), state.getUpdateTime()[type.getValue()]);
+
+        ConfigState state = new ConfigState(ccUpdateTime, instancesUpdateTimes);
+
+        configsStates.put(type, state);
+      }
       lastConfigsStatusCheckTime = now;
     }
 
-    long ccUpdateTime = lastGetConfigsStateResp.getCcConfigUpdateTime()[configType.getValue()];
-
-    SmscConfigsState[] states = lastGetConfigsStateResp.getSmscConfigs();
-    Map<Integer, Long> instancesUpdateTimes = new HashMap<Integer, Long>();
-    for (SmscConfigsState state : states)
-      instancesUpdateTimes.put((int)state.getNodeIdex(), state.getUpdateTime()[configType.getValue()]);
-
-    return new ConfigState(ccUpdateTime, instancesUpdateTimes);
+    return configsStates.get(configType);
   }
 
   // GLOBAL ============================================================================================================
@@ -141,10 +143,11 @@ public class ClusterController {
    * @param aliasHide признак скрытности алиаса
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
-  public void addAlias(String address, String alias, boolean aliasHide) throws AdminException {
+  public void addAlias(Address address, Address alias, boolean aliasHide) throws AdminException {
+    lastConfigsStatusCheckTime = 0;
     AliasAdd req = new AliasAdd();
-    req.setAddr(address);
-    req.setAlias(alias);
+    req.setAddr(address.getNormalizedAddress());
+    req.setAlias(alias.getNormalizedAddress());
     req.setHide(aliasHide);
     MultiResponse resp = cc.send(req).getResp();
     int[] statuses = resp.getStatus();
@@ -160,9 +163,10 @@ public class ClusterController {
    * @param alias алиас
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
-  public void delAlias(String alias) throws AdminException {
+  public void delAlias(Address alias) throws AdminException {
+    lastConfigsStatusCheckTime = 0;
     AliasDel req = new AliasDel();
-    req.setAlias(alias);
+    req.setAlias(alias.getNormalizedAddress());
     MultiResponse resp = cc.send(req).getResp();
     int[] statuses = resp.getStatus();
     for (int status : statuses) {
@@ -216,6 +220,7 @@ public class ClusterController {
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
   public void addClosedGroup(int groupId, String groupName) throws AdminException {
+    lastConfigsStatusCheckTime = 0;
     CgmAddGroup req = new CgmAddGroup();
     req.setId(groupId);
     req.setName(groupName);
@@ -234,6 +239,7 @@ public class ClusterController {
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
   public void removeClosedGroup(int groupId) throws AdminException {
+    lastConfigsStatusCheckTime = 0;
     CgmDeleteGroup req = new CgmDeleteGroup();
     req.setId(groupId);
     MultiResponse resp = cc.send(req).getResp();
@@ -252,6 +258,7 @@ public class ClusterController {
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
   public void addMaskToClosedGroup(int groupId, Address mask) throws AdminException {
+    lastConfigsStatusCheckTime = 0;
     CgmAddAddr req = new CgmAddAddr();
     req.setId(groupId);
     req.setAddr(mask.getNormalizedAddress());
@@ -271,6 +278,7 @@ public class ClusterController {
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
   public void removeMaskFromClosedGroup(int groupId, Address mask) throws AdminException {
+    lastConfigsStatusCheckTime = 0;
     CgmDelAddr req = new CgmDelAddr();
     req.setId(groupId);
     req.setAddr(mask.getNormalizedAddress());
@@ -326,6 +334,7 @@ public class ClusterController {
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
   public void registerMsc(Address mscAddress) throws AdminException {
+    lastConfigsStatusCheckTime = 0;
     MscAdd req = new MscAdd();
     req.setMsc(mscAddress.getNormalizedAddress());
     MultiResponse resp = cc.send(req).getResp();
@@ -343,6 +352,7 @@ public class ClusterController {
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
   public void unregisterMsc(Address mscAddress) throws AdminException {
+    lastConfigsStatusCheckTime = 0;
     MscRemove req = new MscRemove();
     req.setMsc(mscAddress.getNormalizedAddress());
     MultiResponse resp = cc.send(req).getResp();
@@ -396,6 +406,7 @@ public class ClusterController {
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
   public void applyReschedule() throws AdminException {
+    lastConfigsStatusCheckTime = 0;
     MultiResponse resp = cc.send(new ApplyReschedule()).getResp();
     int[] statuses = resp.getStatus();
     for (int status : statuses) {
@@ -447,6 +458,7 @@ public class ClusterController {
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
   public void applyFraud() throws AdminException {
+    lastConfigsStatusCheckTime = 0;
     MultiResponse resp = cc.send(new ApplyFraudControl()).getResp();
     int[] statuses = resp.getStatus();
     for (int status : statuses) {
@@ -498,6 +510,7 @@ public class ClusterController {
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
   public void applyMapLimits() throws AdminException {
+    lastConfigsStatusCheckTime = 0;
     MultiResponse resp = cc.send(new ApplyMapLimits()).getResp();
     int[] statuses = resp.getStatus();
     for (int status : statuses) {
@@ -549,6 +562,7 @@ public class ClusterController {
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
   public void applySnmp() throws AdminException {
+    lastConfigsStatusCheckTime = 0;
     MultiResponse resp = cc.send(new ApplySnmp()).getResp();
     int[] statuses = resp.getStatus();
     for (int status : statuses) {

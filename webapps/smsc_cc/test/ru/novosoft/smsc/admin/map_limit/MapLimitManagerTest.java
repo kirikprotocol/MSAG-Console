@@ -6,11 +6,9 @@ import org.junit.Test;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
 import ru.novosoft.smsc.admin.cluster_controller.ConfigState;
-import ru.novosoft.smsc.admin.cluster_controller.TestClusterController;
+import ru.novosoft.smsc.admin.cluster_controller.TestClusterControllerStub;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
-import ru.novosoft.smsc.admin.fraud.FraudManager;
-import ru.novosoft.smsc.admin.smsc.SmscManager;
 import testutils.TestUtils;
 
 import java.io.File;
@@ -19,7 +17,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.Assert.*;
-import static org.junit.Assert.assertEquals;
 
 /**
  * @author Artem Snopkov
@@ -44,23 +41,22 @@ public class MapLimitManagerTest {
 
   private MapLimitManager getManager(ClusterController cc) throws AdminException {
     MapLimitManager m = new MapLimitManager(configFile, backupDir, cc, FileSystem.getFSForSingleInst());
-    m.reset();
     return m;
   }
 
-  private void validateConfig(MapLimitManager manager) throws AdminException {
-    assertEquals(10000, manager.getDlgLimitIn());
-    assertEquals(10000, manager.getDlgLimitInSri());
-    assertEquals(500, manager.getDlgLimitInUssd());
-    assertEquals(1000, manager.getDlgLimitOutSri());
-    assertEquals(1000, manager.getDlgLimitUssd());
+  private void validateConfig(MapLimitSettings settings) throws AdminException {
+    assertEquals(10000, settings.getDlgLimitIn());
+    assertEquals(10000, settings.getDlgLimitInSri());
+    assertEquals(500, settings.getDlgLimitInUssd());
+    assertEquals(1000, settings.getDlgLimitOutSri());
+    assertEquals(1000, settings.getDlgLimitUssd());
 
-    int[] noSriCodes = manager.getUssdNoSriCodes();
+    int[] noSriCodes = settings.getUssdNoSriCodes();
     assertNotNull(noSriCodes);
     assertEquals(3, noSriCodes.length);
     assertArrayEquals(new int[]{12, 15, 18}, noSriCodes);
 
-    CongestionLevel clevels[] = manager.getCongestionLevels();
+    CongestionLevel clevels[] = settings.getCongestionLevels();
     assertNotNull(clevels);
     assertEquals(MapLimitManager.MAX_CONGESTON_LEVELS, clevels.length);
     assertEquals(new CongestionLevel(4000, 800, 1000, 100), clevels[0]);
@@ -74,88 +70,39 @@ public class MapLimitManagerTest {
   }
 
   @Test
-  public void loadTest() throws AdminException {
-    MapLimitManager manager = getManager(new TestClusterController());
-
-    assertFalse(manager.isChanged());
-
-    validateConfig(manager);
+  public void getSettingsTest() throws AdminException {
+    MapLimitManager manager = getManager(new TestClusterControllerStub());
+    validateConfig(manager.getSettings());
   }
 
   @Test
-  public void resetTest() throws AdminException {
-    MapLimitManager manager = getManager(new TestClusterController());
+  public void updateSettingsTest() throws AdminException {
 
-    assertFalse(manager.isChanged());
-
-    manager.setDlgLimitIn(1231);
-    manager.setDlgLimitInSri(321);
-
-    assertTrue(manager.isChanged());
-
-    manager.reset();
-
-    assertFalse(manager.isChanged());
-
-    validateConfig(manager);
-  }
-
-  @Test
-  public void resetFailedTest() throws AdminException {
-    MapLimitManager manager = getManager(new TestClusterController());
-
-    assertFalse(manager.isChanged());
-
-    manager.setDlgLimitIn(1231);
-    manager.setDlgLimitInSri(321);
-
-    assertTrue(manager.isChanged());
-
-    configFile.delete();
-
-    try {
-      manager.reset();
-      assertFalse(true);
-    } catch (AdminException e) {}
-
-    assertTrue(manager.isChanged());
-
-    assertEquals(1231, manager.getDlgLimitIn());
-    assertEquals(321, manager.getDlgLimitInSri());
-  }
-
-  @Test
-  public void applyTest() throws AdminException {
-
-    TestClusterController controller = new TestClusterController();
+    TestClusterControllerStub controller = new TestClusterControllerStub();
     MapLimitManager manager = getManager(controller);
+    MapLimitSettings s = manager.getSettings();
 
-    assertFalse(manager.isChanged());
+    s.setDlgLimitIn(1231);
+    s.setDlgLimitInSri(321);
 
-    manager.setDlgLimitIn(1231);
-    manager.setDlgLimitInSri(321);
-
-    assertTrue(manager.isChanged());
-
-    manager.apply();
-
-    assertFalse(manager.isChanged());
-    assertTrue(controller.applyMapLimitsCalled);
+    manager.updateSettings(s);
 
     MapLimitManager manager1 = getManager(controller);
 
-    assertEquals(1231, manager1.getDlgLimitIn());
-    assertEquals(321, manager1.getDlgLimitInSri());
-    assertEquals(500, manager1.getDlgLimitInUssd());
-    assertEquals(1000, manager1.getDlgLimitOutSri());
-    assertEquals(1000, manager1.getDlgLimitUssd());
+    MapLimitSettings s1 = manager1.getSettings();
 
-    int[] noSriCodes = manager1.getUssdNoSriCodes();
+    assertEquals(1231, s1.getDlgLimitIn());
+    assertEquals(321, s1.getDlgLimitInSri());
+    assertEquals(500, s1.getDlgLimitInUssd());
+    assertEquals(1000, s1.getDlgLimitOutSri());
+    assertEquals(1000, s1.getDlgLimitUssd());
+
+    int[] noSriCodes = s1.getUssdNoSriCodes();
     assertNotNull(noSriCodes);
     assertEquals(3, noSriCodes.length);
     assertArrayEquals(new int[]{12, 15, 18}, noSriCodes);
 
-    CongestionLevel clevels[] = manager1.getCongestionLevels();
+    CongestionLevel clevels[] = s1.getCongestionLevels();
     assertNotNull(clevels);
     assertEquals(MapLimitManager.MAX_CONGESTON_LEVELS, clevels.length);
     assertEquals(new CongestionLevel(4000, 800, 1000, 100), clevels[0]);
@@ -166,60 +113,6 @@ public class MapLimitManagerTest {
     assertEquals(new CongestionLevel(800, 5800, 6000, 100), clevels[5]);
     assertEquals(new CongestionLevel(600, 6800, 7000, 100), clevels[6]);
     assertEquals(new CongestionLevel(400, 7800, 8000, 80), clevels[7]);
-  }
-
-  @Test
-  public void setCongestionLevelsTest() throws AdminException {
-    MapLimitManager manager = getManager(new TestClusterController());
-    try {
-      CongestionLevel levels[] = new CongestionLevel[MapLimitManager.MAX_CONGESTON_LEVELS];
-      manager.setCongestionLevels(levels);
-      assertFalse(true);
-    } catch (AdminException e) {
-    }
-
-    try {
-      CongestionLevel levels[] = new CongestionLevel[]{new CongestionLevel(1, 2, 3, 4)};
-      manager.setCongestionLevels(levels);
-      assertFalse(true);
-    } catch (IllegalArgumentException e) {
-    }
-
-    try {
-      CongestionLevel levels[] = new CongestionLevel[]{
-          new CongestionLevel(1, 2, 3, 4),
-          new CongestionLevel(1, 2, 3, 4),
-          new CongestionLevel(1, 2, 3, 4),
-          new CongestionLevel(1, 2, 3, 4),
-          new CongestionLevel(1, 2, 3, 4),
-          new CongestionLevel(1, 2, 3, 4),
-          new CongestionLevel(1, 2, 3, 4),
-          new CongestionLevel(1, 2, 3, 4)
-      };
-      manager.setCongestionLevels(levels);
-
-    } catch (IllegalArgumentException e) {
-      assertFalse(true);
-    }
-  }
-
-  @Test
-  public void getLastChangedTest() throws AdminException, InterruptedException {
-    MapLimitManager m = getManager(new TestClusterController());
-    assertEquals(-1, m.getLastChangeTime());
-
-    long now = System.currentTimeMillis();
-
-    m.setDlgLimitIn(100);
-    assertTrue(m.getLastChangeTime() >= now);
-
-    Thread.sleep(10);
-
-    now = System.currentTimeMillis();
-
-    assertFalse(m.getLastChangeTime() >= now);
-    m.reset();
-    assertTrue(m.getLastChangeTime() >= now);
   }
 
   @Test
@@ -234,7 +127,7 @@ public class MapLimitManagerTest {
     assertEquals(SmscConfigurationStatus.UP_TO_DATE, states.get(1));
   }
 
-  public class ClusterControllerImpl extends TestClusterController {
+  public class ClusterControllerImpl extends TestClusterControllerStub {
     public ConfigState getMapLimitConfigState() throws AdminException {
       long now = configFile.lastModified();
       Map<Integer, Long> map = new HashMap<Integer, Long>();

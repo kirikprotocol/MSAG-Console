@@ -3,7 +3,6 @@ package ru.novosoft.smsc.admin.alias;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
 import ru.novosoft.smsc.admin.cluster_controller.ConfigState;
-import ru.novosoft.smsc.admin.config.RuntimeConfiguration;
 import ru.novosoft.smsc.admin.config.SmscConfiguration;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
@@ -18,9 +17,10 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Класс для доступа к списку алиасов
+ *
  * @author Artem Snopkov
  */
-public class AliasManager implements RuntimeConfiguration, SmscConfiguration {
+public class AliasManager implements SmscConfiguration {
 
   private static final int MSG_SIZE = 48; //1+(1+1+21)+(1+1+21)+1
 
@@ -29,16 +29,22 @@ public class AliasManager implements RuntimeConfiguration, SmscConfiguration {
   private final FileSystem fileSystem;
   private final File aliasesFile;
 
-  protected AliasManager() {
-    this(null, null, null);
-  }
-
   public AliasManager(File aliasesFile, ClusterController clusterController, FileSystem fileSystem) {
     this.aliasesFile = aliasesFile;
     this.cc = clusterController;
     this.fileSystem = fileSystem;
   }
 
+  /**
+   * Проверяет актуальность конфигурации во всех инстанцах СМСЦ
+   *
+   * @return true, если все инстанцы СМСЦ используют актуальную конфигурацию
+   * @throws AdminException если произошла ошибка
+   */
+  public boolean isConsistent() throws AdminException {
+    Map<Integer, SmscConfigurationStatus> statuses = getStatusForSmscs();
+    return !statuses.containsValue(SmscConfigurationStatus.OUT_OF_DATE);
+  }
 
   /**
    * Добавляет/обновляет алиас.
@@ -49,7 +55,9 @@ public class AliasManager implements RuntimeConfiguration, SmscConfiguration {
   public void addAlias(Alias alias) throws AdminException {
     try {
       rwlock.writeLock().lock();
-      cc.addAlias(alias.getAddress().getNormalizedAddress(), alias.getAlias().getNormalizedAddress(), alias.isHide());
+      if (!isConsistent())
+        throw new AliasManagerException("config_is_not_consistent");
+      cc.addAlias(alias.getAddress(), alias.getAlias(), alias.isHide());
     } finally {
       rwlock.writeLock().unlock();
     }
@@ -61,10 +69,12 @@ public class AliasManager implements RuntimeConfiguration, SmscConfiguration {
    * @param alias алиас
    * @throws AdminException если произошла ошибка
    */
-  public void deleteAlias(Alias alias) throws AdminException {
+  public void deleteAlias(Address alias) throws AdminException {
     try {
       rwlock.writeLock().lock();
-      cc.delAlias(alias.getAlias().getNormalizedAddress());
+      if (!isConsistent())
+        throw new AliasManagerException("config_is_not_consistent");
+      cc.delAlias(alias);
     } finally {
       rwlock.writeLock().unlock();
     }
@@ -73,6 +83,7 @@ public class AliasManager implements RuntimeConfiguration, SmscConfiguration {
 
   /**
    * Возвращает экземпляр AliasSet, с помощью которого можно итерироваться по алиасам.
+   *
    * @return экземпляр AliasSet, с помощью которого можно итерироваться по алиасам.
    * @throws AdminException если произошла ошибка
    */

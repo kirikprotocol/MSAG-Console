@@ -24,39 +24,14 @@ class SnmpConfigFile implements ManagedConfigFile {
   private static final String COUNTER_INTERVAL = "counterInterval";
   private static final String OBJECT_SECTION = "object";
 
-  private int counterInterval;
+  private SnmpSettings settings;
 
-  private SnmpObject defaultSnmpObject;
-  private Map<String, SnmpObject> snmpObjects = new HashMap<String, SnmpObject>();
-
-  public int getCounterInterval() {
-    return counterInterval;
+  public SnmpSettings getSettings() {
+    return settings;
   }
 
-  public void setCounterInterval(int counterInterval) {
-    if (counterInterval < 0)
-      throw new IllegalArgumentException("counterInterval");
-    this.counterInterval = counterInterval;
-  }
-
-  public SnmpObject getDefaultSnmpObject() {
-    return defaultSnmpObject;
-  }
-
-  public void setDefaultSnmpObject(SnmpObject defaultSnmpObject) {
-    if (defaultSnmpObject == null)
-      throw new NullPointerException();
-    this.defaultSnmpObject = defaultSnmpObject;
-  }
-
-  public Map<String, SnmpObject> getSnmpObjects() {
-    return snmpObjects;
-  }
-
-  public void setSnmpObjects(Map<String, SnmpObject> snmpObjects) {
-    if (snmpObjects == null)
-      throw new NullPointerException();
-    this.snmpObjects = snmpObjects;
+  public void setSettings(SnmpSettings settings) {
+    this.settings = settings;
   }
 
   private static void writeSnmpCounter(String name, SnmpCounter counter, PrintWriter out) {
@@ -78,12 +53,24 @@ class SnmpConfigFile implements ManagedConfigFile {
     out.print(name);
     out.print("\" value=\"");
     switch (severity) {
-      case OFF: out.print("off");break;
-      case NORMAL: out.print("normal");break;
-      case WARNING: out.print("warning");break;
-      case MAJOR: out.print("major");break;
-      case MINOR: out.print("minor");break;
-      case CRITICAL: out.print("critical");break;
+      case OFF:
+        out.print("off");
+        break;
+      case NORMAL:
+        out.print("normal");
+        break;
+      case WARNING:
+        out.print("warning");
+        break;
+      case MAJOR:
+        out.print("major");
+        break;
+      case MINOR:
+        out.print("minor");
+        break;
+      case CRITICAL:
+        out.print("critical");
+        break;
     }
     out.print("\"/>");
   }
@@ -112,13 +99,13 @@ class SnmpConfigFile implements ManagedConfigFile {
     if (o.getCounterTempError() != null)
       writeSnmpCounter("temperror", o.getCounterTempError(), out);
 
-    if(o.getSeverityRegister() != null)
+    if (o.getSeverityRegister() != null)
       writeSeverity("register", o.getSeverityRegister(), out);
-    if(o.getSeverityUnregister() != null)
+    if (o.getSeverityUnregister() != null)
       writeSeverity("unregister", o.getSeverityUnregister(), out);
-    if(o.getSeverityRegisterFailed() != null)
+    if (o.getSeverityRegisterFailed() != null)
       writeSeverity("registerFailed", o.getSeverityRegisterFailed(), out);
-    if(o.getSeverityUnregisterFailed() != null)
+    if (o.getSeverityUnregisterFailed() != null)
       writeSeverity("unregisterFailed", o.getSeverityUnregisterFailed(), out);
   }
 
@@ -127,11 +114,11 @@ class SnmpConfigFile implements ManagedConfigFile {
     try {
       out = new PrintWriter(new OutputStreamWriter(newFile));
       XmlUtils.storeConfigHeader(out, "config", "snmp.dtd", "WINDOWS-1251"/*Functions.getLocaleEncoding()*/);
-      out.println("   <counterInterval value=\"" + String.valueOf(counterInterval) + "\"/>");
-      out.println("   <default enabled=\"" + (defaultSnmpObject.isEnabled()) + "\">");
-      writeSnmpObject(defaultSnmpObject, out);
+      out.println("   <counterInterval value=\"" + String.valueOf(settings.getCounterInterval()) + "\"/>");
+      out.println("   <default enabled=\"" + (settings.getDefaultSnmpObject().isEnabled()) + "\">");
+      writeSnmpObject(settings.getDefaultSnmpObject(), out);
       out.println("   </default>");
-      for (Map.Entry<String, SnmpObject> e : snmpObjects.entrySet()) {
+      for (Map.Entry<String, SnmpObject> e : settings.getSnmpObjects().entrySet()) {
         String name = e.getKey();
         SnmpObject obj = e.getValue();
         out.println("   <object id=\"" + name + "\" enabled=\"" + Boolean.toString(obj.isEnabled()) + "\">");
@@ -231,19 +218,19 @@ class SnmpConfigFile implements ManagedConfigFile {
 
   public void load(InputStream is) throws Exception {
 
-    snmpObjects.clear();
+    SnmpSettings s = new SnmpSettings();
 
     Document doc = XmlUtils.parse(is);
 
     // Load counter interval
-    if (counterInterval == 0) {
-      final NodeList counterInt = doc.getElementsByTagName(COUNTER_INTERVAL);
-      if (counterInt.getLength() > 0)
-        counterInterval = Integer.parseInt(((Element) counterInt.item(0)).getAttribute("value"));
-    }
+
+    final NodeList counterInt = doc.getElementsByTagName(COUNTER_INTERVAL);
+    if (counterInt.getLength() > 0)
+      s.setCounterInterval(Integer.parseInt(((Element) counterInt.item(0)).getAttribute("value")));
+
 
     // Load default
-    defaultSnmpObject = new SnmpObject();
+    SnmpObject defaultSnmpObject = new SnmpObject();
     NodeList a = doc.getElementsByTagName(DEFAULT_SECTION);
     if (a.getLength() > 0) {
       Element defaultNode = ((Element) a.item(0));
@@ -254,6 +241,9 @@ class SnmpConfigFile implements ManagedConfigFile {
       parseSnmpObject(defaultSnmpObject, defaultNode);
     }
 
+    s.setDefaultSnmpObject(defaultSnmpObject);
+
+    Map<String, SnmpObject> snmpObjects = new HashMap<String, SnmpObject>();
     // Load objects
     a = doc.getElementsByTagName(OBJECT_SECTION);
     for (int i = 0; i < a.getLength(); i++) {
@@ -267,5 +257,9 @@ class SnmpConfigFile implements ManagedConfigFile {
 
       snmpObjects.put(objectId, obj);
     }
+
+    s.setSnmpObjects(snmpObjects);
+
+    settings = s;
   }
 }

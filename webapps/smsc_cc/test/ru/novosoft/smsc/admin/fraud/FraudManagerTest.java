@@ -8,8 +8,10 @@ import static org.junit.Assert.assertEquals;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.cluster_controller.ConfigState;
 import ru.novosoft.smsc.admin.cluster_controller.TestClusterController;
+import ru.novosoft.smsc.admin.cluster_controller.TestClusterControllerStub;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.smsc.SmscManager;
+import ru.novosoft.smsc.util.Address;
 import testutils.TestUtils;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
@@ -41,168 +43,48 @@ public class FraudManagerTest {
 
   private FraudManager getManager(ClusterController cc) throws AdminException {
     FraudManager fm = new FraudManager(configFile, backupDir, cc, FileSystem.getFSForSingleInst());
-    fm.reset();
     return fm;
   }
 
   @Test
   public void loadTest() throws AdminException {
-    FraudManager fm = getManager(new TestClusterController());
-    assertFalse(fm.isChanged());
+    FraudSettings fm = getManager(new TestClusterControllerStub()).getSettings();
 
     assertEquals(1, fm.getTail());
     assertTrue(fm.isEnableCheck());
     assertFalse(fm.isEnableReject());
     assertEquals(2, fm.getWhiteList().size());
-    assertTrue(fm.getWhiteList().contains("12232321"));
-    assertTrue(fm.getWhiteList().contains("9139495113"));
+    assertTrue(fm.getWhiteList().contains(new Address("12232321")));
+    assertTrue(fm.getWhiteList().contains(new Address("9139495113")));
   }
 
   @Test
-  public void saveTest() throws AdminException {
-    TestClusterController clusterController = new TestClusterController();
+  public void updateTest() throws AdminException {
+    TestClusterControllerStub clusterController = new TestClusterControllerStub();
     FraudManager fm1 = getManager(clusterController);
+    FraudSettings settings1 = fm1.getSettings();
 
-    fm1.setTail(5);
-    fm1.setEnableCheck(false);
-    fm1.setEnableReject(true);
-    Collection<String> whiteList = new ArrayList<String>();
-    Collections.addAll(whiteList, "23123", "4324", "5564");
-    fm1.setWhiteList(whiteList);
+    settings1.setTail(5);
+    settings1.setEnableCheck(false);
+    settings1.setEnableReject(true);
+    Collection<Address> whiteList = new ArrayList<Address>();
+    Collections.addAll(whiteList, new Address("23123"), new Address("4324"), new Address("5564"));
+    settings1.setWhiteList(whiteList);
 
-    assertTrue(fm1.isChanged());
-
-    fm1.apply();
-
-    assertFalse(fm1.isChanged());
-
-    assertTrue(clusterController.applyFraudCalled);
+    fm1.updateSettings(settings1);
 
     FraudManager fm = getManager(clusterController);
+    FraudSettings settings = fm.getSettings();
 
-    assertEquals(5, fm.getTail());
-    assertFalse(fm.isEnableCheck());
-    assertTrue(fm.isEnableReject());
-    assertEquals(3, fm.getWhiteList().size());
-    assertTrue(fm.getWhiteList().contains("23123"));
-    assertTrue(fm.getWhiteList().contains("4324"));
-    assertTrue(fm.getWhiteList().contains("5564"));
+    assertEquals(5, settings.getTail());
+    assertFalse(settings.isEnableCheck());
+    assertTrue(settings.isEnableReject());
+    assertEquals(3, settings.getWhiteList().size());
+    assertTrue(settings.getWhiteList().contains(new Address("23123")));
+    assertTrue(settings.getWhiteList().contains(new Address("4324")));
+    assertTrue(settings.getWhiteList().contains(new Address("5564")));
 
     assertFalse(backupDir.delete());
-  }
-
-  @Test
-  public void resetTest() throws AdminException {
-    FraudManager fm = getManager(new TestClusterController());
-    assertFalse(fm.isChanged());
-
-    fm.setTail(5);
-    fm.setEnableCheck(false);
-    fm.setEnableReject(true);
-    fm.setWhiteList(new ArrayList<String>());
-
-    assertTrue(fm.isChanged());
-
-    fm.reset();
-
-    assertFalse(fm.isChanged());
-
-    assertEquals(1, fm.getTail());
-    assertTrue(fm.isEnableCheck());
-    assertFalse(fm.isEnableReject());
-    assertEquals(2, fm.getWhiteList().size());
-    assertTrue(fm.getWhiteList().contains("12232321"));
-    assertTrue(fm.getWhiteList().contains("9139495113"));
-  }
-
-  @Test
-  public void resetFailedTest() throws AdminException {
-    FraudManager fm = getManager(new TestClusterController());
-    assertFalse(fm.isChanged());
-
-    fm.setTail(5);
-    fm.setEnableCheck(false);
-    fm.setEnableReject(true);
-    fm.setWhiteList(new ArrayList<String>());
-
-    assertTrue(fm.isChanged());
-
-    configFile.delete();
-
-    try {
-      fm.reset();
-      assertFalse(true);
-    } catch (AdminException e) {
-    }
-
-    assertTrue(fm.isChanged());
-
-    assertEquals(5, fm.getTail());
-    assertFalse(fm.isEnableCheck());
-    assertTrue(fm.isEnableReject());
-    assertEquals(0, fm.getWhiteList().size());
-  }
-
-  @Test
-  public void setWhiteListTest() throws AdminException {
-    FraudManager fm = getManager(new TestClusterController());
-
-    Collection<String> whiteList = new ArrayList<String>();
-
-    // Корректный адрес
-    try {
-      whiteList.clear();
-      whiteList.add("791239239");
-      fm.setWhiteList(whiteList);
-    } catch (IllegalArgumentException e) {
-      assertFalse(true);
-    }
-
-    // Слишком короткий адрес
-    try {
-      whiteList.clear();
-      whiteList.add("");
-      fm.setWhiteList(whiteList);
-      assertFalse(true);
-    } catch (IllegalArgumentException e) {
-    }
-
-    // Слишком длинный адрес
-    try {
-      whiteList.clear();
-      whiteList.add("1234567890123456");
-      fm.setWhiteList(whiteList);
-      assertFalse(true);
-    } catch (IllegalArgumentException e) {
-    }
-
-    // Адрес, содержащий буквы
-    try {
-      whiteList.clear();
-      whiteList.add("fdfs");
-      fm.setWhiteList(whiteList);
-      assertFalse(true);
-    } catch (IllegalArgumentException e) {
-    }
-  }
-
-  @Test
-  public void getLastChangedTest() throws AdminException, InterruptedException {
-    FraudManager fm = getManager(new TestClusterController());
-    assertEquals(-1, fm.getLastChangeTime());
-
-    long now = System.currentTimeMillis();
-    
-    fm.setTail(10);
-    assertTrue(fm.getLastChangeTime() >= now);
-
-    Thread.sleep(10);
-
-    now = System.currentTimeMillis();
-
-    assertFalse(fm.getLastChangeTime() >= now);
-    fm.reset();
-    assertTrue(fm.getLastChangeTime() >= now);
   }
 
   @Test
@@ -217,7 +99,7 @@ public class FraudManagerTest {
     assertEquals(SmscConfigurationStatus.UP_TO_DATE, states.get(1));
   }
 
-  public class ClusterControllerImpl extends TestClusterController {
+  public class ClusterControllerImpl extends TestClusterControllerStub {
     public ConfigState getFraudConfigState() throws AdminException {
       long now = configFile.lastModified();
       Map<Integer, Long> map = new HashMap<Integer, Long>();

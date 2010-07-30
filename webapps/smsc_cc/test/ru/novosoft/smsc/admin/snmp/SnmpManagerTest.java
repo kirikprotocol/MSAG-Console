@@ -7,10 +7,9 @@ import org.junit.Test;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
 import ru.novosoft.smsc.admin.cluster_controller.ConfigState;
-import ru.novosoft.smsc.admin.cluster_controller.TestClusterController;
+import ru.novosoft.smsc.admin.cluster_controller.TestClusterControllerStub;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
-import ru.novosoft.smsc.admin.smsc.SmscManager;
 import testutils.TestUtils;
 
 import java.io.File;
@@ -19,7 +18,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.Assert.*;
-import static org.junit.Assert.assertEquals;
 
 /**
  * @author Artem Snopkov
@@ -44,11 +42,10 @@ public class SnmpManagerTest {
 
   private SnmpManager getManager(ClusterController cc) throws AdminException {
     SnmpManager m = new SnmpManager(configFile, backupDir, cc, FileSystem.getFSForSingleInst());
-    m.reset();
     return m;
   }
 
-  private void validate(SnmpManager m) throws AdminException {
+  private void validate(SnmpSettings m) throws AdminException {
     assertEquals(300, m.getCounterInterval());
 
     SnmpObject def = m.getDefaultSnmpObject();
@@ -96,83 +93,27 @@ public class SnmpManagerTest {
   }
 
   @Test
-  public void loadTest() throws AdminException {
-    SnmpManager m = getManager(new TestClusterController());
+  public void getSettingsTest() throws AdminException {
+    SnmpManager m = getManager(new TestClusterControllerStub());
 
-    validate(m);
+    validate(m.getSettings());
   }
 
   @Test
-  public void applyTest() throws AdminException {
-    TestClusterController controller = new TestClusterController();
+  public void updateSettingsTest() throws AdminException {
+    TestClusterControllerStub controller = new TestClusterControllerStub();
     SnmpManager m = getManager(controller);
-    assertFalse(m.isChanged());
+    SnmpSettings s = m.getSettings();
 
-    SnmpObject def = m.getDefaultSnmpObject();
+    SnmpObject def = s.getDefaultSnmpObject();
     def.setCounterRejected(10, 20, 30, 40);
-    m.setDefaultSnmpObject(def);
+    s.setDefaultSnmpObject(def);
 
-    assertTrue(m.isChanged());
+    m.updateSettings(s);
 
-    m.apply();
+    SnmpManager m1 = getManager(controller);
 
-    assertTrue(controller.applySnmpCalled);
-    assertFalse(m.isChanged());
-    validate(m);
-  }
-
-  @Test
-  public void resetTest() throws AdminException {
-    SnmpManager m = getManager(new TestClusterController());
-
-    SnmpObject def = m.getDefaultSnmpObject();
-    def.setCounterRejected(40, 40, 40, 40);
-    m.setDefaultSnmpObject(def);
-
-    m.reset();
-
-    assertFalse(m.isChanged());
-
-    validate(m);
-  }
-
-  @Test
-  public void resetFailedTest() throws AdminException {
-    SnmpManager m = getManager(new TestClusterController());
-
-    SnmpObject def = m.getDefaultSnmpObject();
-    def.setCounterRejected(40, 40, 40, 40);
-    m.setDefaultSnmpObject(def);
-
-    configFile.delete();
-
-    try {
-      m.reset();
-      assertFalse(true);
-    } catch (AdminException e) {
-    }
-
-    assertTrue(m.isChanged());
-    assertEquals(new SnmpCounter(40,40,40,40), m.getDefaultSnmpObject().getCounterRejected());
-  }
-
-  @Test
-  public void getLastChangedTest() throws AdminException, InterruptedException {
-    SnmpManager m = getManager(new TestClusterController());
-    assertEquals(-1, m.getLastChangeTime());
-
-    long now = System.currentTimeMillis();
-
-    m.setCounterInterval(200);
-    assertTrue(m.getLastChangeTime() >= now);
-
-    Thread.sleep(10);
-
-    now = System.currentTimeMillis();
-
-    assertFalse(m.getLastChangeTime() >= now);
-    m.reset();
-    assertTrue(m.getLastChangeTime() >= now);
+    validate(m1.getSettings());
   }
 
   @Test
@@ -187,7 +128,7 @@ public class SnmpManagerTest {
     assertEquals(SmscConfigurationStatus.UP_TO_DATE, states.get(1));
   }
 
-  public class ClusterControllerImpl extends TestClusterController {
+  public class ClusterControllerImpl extends TestClusterControllerStub {
     public ConfigState getSnmpConfigState() throws AdminException {
       long now = configFile.lastModified();
       Map<Integer, Long> map = new HashMap<Integer, Long>();

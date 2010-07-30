@@ -1,17 +1,19 @@
 package ru.novosoft.smsc.web.controllers;
 
 import org.apache.log4j.Logger;
-import ru.novosoft.smsc.admin.AdminContext;
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.reschedule.RescheduleManager;
+import ru.novosoft.smsc.admin.reschedule.RescheduleSettings;
 import ru.novosoft.smsc.web.WebContext;
 import ru.novosoft.smsc.web.beans.Reschedule;
+import ru.novosoft.smsc.web.config.AppliableConfiguration;
+import ru.novosoft.smsc.web.config.UpdateInfo;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import javax.servlet.http.HttpSession;
 import java.io.Serializable;
+import java.security.Principal;
 import java.util.*;
 
 /**
@@ -23,7 +25,7 @@ public class RescheduleController implements Serializable{
 
   private Reschedule defaultReschedule;
 
-  private AdminContext adminContext;
+  private AppliableConfiguration conf;
 
   private static final Logger logger = Logger.getLogger(RescheduleController.class);
 
@@ -33,7 +35,7 @@ public class RescheduleController implements Serializable{
 
   public RescheduleController() {
     session = (HttpSession)FacesContext.getCurrentInstance().getExternalContext().getSession(false);
-    adminContext = WebContext.getInstance().getAdminContext();
+    conf = WebContext.getInstance().getAppliableConfiguration();
     if(FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get("index_initialized") == null) {
       initReschedules();
       index_initialized = true;
@@ -42,8 +44,9 @@ public class RescheduleController implements Serializable{
 
   private void initReschedules() {
     if(session.getAttribute("reschedule.default") == null || session.getAttribute("reschedule.reschedules") == null) {
-      session.setAttribute("reschedule.last.update", adminContext.getRescheduleManager().getLastChangeTime());
-      Collection<ru.novosoft.smsc.admin.reschedule.Reschedule> rs = adminContext.getRescheduleManager().getReschedules();
+      session.setAttribute("reschedule.last.update", conf.getRescheduleSettingsUpdateInfo());
+      RescheduleSettings rescheduleSettings =conf.getRescheduleSettings();
+      Collection<ru.novosoft.smsc.admin.reschedule.Reschedule> rs = rescheduleSettings.getReschedules();
       reschedules = new ArrayList<Reschedule>(rs.size());
       for(ru.novosoft.smsc.admin.reschedule.Reschedule r : rs) {
         Reschedule reschedule = new Reschedule();
@@ -53,7 +56,7 @@ public class RescheduleController implements Serializable{
         }
         reschedules.add(reschedule);
       }
-      defaultReschedule = new Reschedule(adminContext.getRescheduleManager().getDefaultReschedule());
+      defaultReschedule = new Reschedule(rescheduleSettings.getDefaultReschedule());
     }else {
       reschedules = (List<Reschedule>)session.getAttribute("reschedule.reschedules");
       defaultReschedule = (Reschedule)session.getAttribute("reschedule.default");
@@ -73,10 +76,9 @@ public class RescheduleController implements Serializable{
 
   public void submit(ActionEvent ev) {
     FacesContext fc = FacesContext.getCurrentInstance();
-    RescheduleManager rm = adminContext.getRescheduleManager();
 
-    Long lastChange = (Long)session.getAttribute("reschedule.last.update");
-    if(lastChange != rm.getLastChangeTime()) {
+    UpdateInfo lastChange = (UpdateInfo)session.getAttribute("reschedule.last.update");
+    if(lastChange != conf.getRescheduleSettingsUpdateInfo()) {
       FacesMessage facesMessage = new FacesMessage(FacesMessage.SEVERITY_ERROR,
           ResourceBundle.getBundle("ru.novosoft.smsc.web.resources.Smsc",
               fc.getExternalContext().getRequestLocale()).getString("smsc.config.not.actual"), "");
@@ -85,14 +87,19 @@ public class RescheduleController implements Serializable{
     }
 
     try{
+      RescheduleSettings settings = conf.getRescheduleSettings();
 
       Collection<ru.novosoft.smsc.admin.reschedule.Reschedule> newReschedules =
           new ArrayList<ru.novosoft.smsc.admin.reschedule.Reschedule>(reschedules.size());
       for(Reschedule r : reschedules) {
         newReschedules.add(convert(r));
       }
-      rm.setReschedules(newReschedules);
-      rm.setDefaultReschedule(defaultReschedule.getIntervals());
+      settings.setReschedules(newReschedules);
+      settings.setDefaultReschedule(defaultReschedule.getIntervals());
+
+      Principal p = FacesContext.getCurrentInstance().getExternalContext().getUserPrincipal();
+
+      conf.setRescheduleSettings(settings, p.getName());
 
       session.removeAttribute("reschedule.reschedules");
       session.removeAttribute("reschedule.default");

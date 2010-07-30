@@ -9,26 +9,28 @@ import java.io.OutputStream;
 /**
  * @author Artem Snopkov
  */
-public class ClusterControllerConfig implements ManagedConfigFile {
+class ClusterControllerConfig implements ManagedConfigFile {
 
-  private int listenerPort;
+  private ClusterControllerSettings settings;
 
   public void save(InputStream oldFile, OutputStream newFile) throws Exception {
     XmlConfig config = new XmlConfig(oldFile);
-    config.getSection("listener").setInt("port", listenerPort);
+    config.getSection("listener").setInt("port", settings.getListenerPort());
     config.save(newFile);
   }
 
   public void load(InputStream is) throws Exception {
+    ClusterControllerSettings s = new ClusterControllerSettings();
     XmlConfig config = new XmlConfig(is);
-    listenerPort = config.getSection("listener").getInt("port");
+    s.setListenerPort(config.getSection("listener").getInt("port"));
+    settings = s;
   }
 
-  public int getListenerPort() {
-    return listenerPort;
+  public ClusterControllerSettings getSettings() {
+    return settings;
   }
 
-  public void setListenerPort(int listenerPort) {
-    this.listenerPort = listenerPort;
+  public void setSettings(ClusterControllerSettings settings) {
+    this.settings = settings;
   }
 }

@@ -45,11 +45,29 @@ public class InstanceSettings implements Cloneable {
 
   private final ValidationHelper vh = new ValidationHelper(InstanceSettings.class);
 
-  public InstanceSettings() {    
+  InstanceSettings() {
   }
 
   InstanceSettings(int instanceN, XmlConfig c) throws XmlConfigException {
     load(instanceN, c);
+  }
+
+  InstanceSettings(InstanceSettings s) {
+    adminHost = s.adminHost;
+    adminPort = s.adminPort;
+    corePerfHost = s.corePerfHost;
+    corePerfPort = s.corePerfPort;
+    smePerfHost = s.smePerfHost;
+    smePerfPort = s.smePerfPort;
+    messageStoreStatsDir = s.messageStoreStatsDir;
+    messageStoreArchDir = s.messageStoreArchDir;
+    localStoreFilename = s.localStoreFilename;
+    localStoreMessIdFile = s.localStoreMessIdFile;
+    smppHost = s.smppHost;
+    smppPort = s.smppPort;
+    agentHost = s.agentHost;
+    agentPort = s.agentPort;
+    cacheDir = s.cacheDir;
   }
 
   protected void load(int instanceN, XmlConfig c) throws XmlConfigException {

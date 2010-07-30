@@ -6,8 +6,6 @@ import mobi.eyeline.protogen.framework.PDU;
 import org.apache.log4j.Logger;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.cluster_controller.protocol.*;
-import ru.novosoft.smsc.admin.service.ServiceInfo;
-import ru.novosoft.smsc.admin.service.ServiceManager;
 import ru.novosoft.smsc.util.IOUtils;
 
 import java.io.IOException;
@@ -28,7 +26,6 @@ final class ClusterControllerClient {
 
   private static final int RESPONSE_TIMEOUT = 5000;
 
-  private final ServiceManager serviceManager;
   private final ClusterControllerManager manager;
   private final Map<Integer, ResponseListener> listeners = new HashMap<Integer, ResponseListener>();
   private final ReceiverTask receiverThread;
@@ -36,8 +33,7 @@ final class ClusterControllerClient {
   private String onlineHost;
   private Socket socket;
 
-  ClusterControllerClient(ClusterControllerManager manager, ServiceManager serviceManager) {
-    this.serviceManager = serviceManager;
+  ClusterControllerClient(ClusterControllerManager manager) {
     this.manager = manager;
     this.receiverThread = new ReceiverTask();
     receiverThread.start();
@@ -51,16 +47,13 @@ final class ClusterControllerClient {
         log.debug("Connecting to Cluster Controller...");
 
       if (onlineHost == null) { // Определяем хост, на котором запущен СС
-        ServiceInfo info = serviceManager.getService(ClusterController.SERVICE_ID);
-        if (info == null)
-          throw new ClusterControllerException("cluster_controller_offline");
-        String host = info.getOnlineHost();
+        String host = manager.getControllerOnlineHost();
         if (host == null)
           throw new ClusterControllerException("cluster_controller_offline");
         onlineHost = host;
       }
 
-      int port = manager.getLastAppliedConfig().getListenerPort();
+      int port = manager.getSettings().getListenerPort();
 
       if (log.isDebugEnabled())
         log.debug("Cluster controller address is " + onlineHost + ':' + port);

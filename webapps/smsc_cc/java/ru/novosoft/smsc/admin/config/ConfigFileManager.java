@@ -14,7 +14,7 @@ import java.io.OutputStream;
  *
  * @author Artem Snopkov
  */
-public abstract class ConfigFileManager<T extends ManagedConfigFile> implements AppliableConfiguration {
+public abstract class ConfigFileManager<T extends ManagedConfigFile> {
 
   protected final File configFile;
   protected final File backupDir;
@@ -33,7 +33,7 @@ public abstract class ConfigFileManager<T extends ManagedConfigFile> implements 
 
   protected abstract T newConfigFile();
 
-  protected void setChanged() {
+  public void setChanged() {
     lastChangeTime = System.currentTimeMillis();
     changed = true;
   }
@@ -62,12 +62,20 @@ public abstract class ConfigFileManager<T extends ManagedConfigFile> implements 
   protected void beforeReset() throws AdminException {
   }
 
-  protected T getLastAppliedConfig() {
+  public T getLastAppliedConfig() {
     return lastAppliedConfig;
   }
 
+  public T getConfig() {
+    return config;
+  }
+
+  public File getConfigFile() {
+    return configFile;
+  }
+
   public void apply() throws AdminException {
-    if (config == null || !isChanged())
+    if (config == null)
       return;
 
     beforeApply();

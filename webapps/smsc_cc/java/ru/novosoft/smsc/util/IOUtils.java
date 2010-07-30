@@ -51,6 +51,12 @@ public class IOUtils {
     os.write(bytes);
   }
 
+  public static void writeString(OutputStream os, String str, int len) throws IOException {
+    byte[] bytes = new byte[len];
+    System.arraycopy(str.getBytes(), 0, bytes, 0, len);
+    os.write(bytes);
+  }
+
   public static void writeString32(OutputStream os, String str) throws IOException {
     byte[] bytes = str.getBytes();
     writeUInt32(os, bytes.length);
