@@ -248,7 +248,6 @@ message SmeParams
   int32 priority 2
   int32 typeOfNumber 3
   int32 numberingPlan 4
-  int32 interfaceVersion 5
   string systemType 6
   string password 7
   string addrRange 8
@@ -262,7 +261,7 @@ message SmeParams
   int32 procLimit 16
   int32 schedLimit 17
   int32 accessMask 18
-  int32 flags 19
+  string flags 19
 end
 
 message SmeAdd 18
@@ -310,6 +309,7 @@ message SmeConnectStatus
   SmeBindMode bindMode 2
   string peerIn 3
   string peerOut 4
+  byte nodeIdx 5
 end
 
 message SmeStatusInfo
@@ -532,7 +532,7 @@ message ServiceStatus
   string serviceName 1
   string peerAddress 2 array
   SmeBindMode bindMode 3
-  bool boundSmsc 4 array
+  byte boundSmsc 4 array
 end
 
 message GetServicesStatusResp 1101
