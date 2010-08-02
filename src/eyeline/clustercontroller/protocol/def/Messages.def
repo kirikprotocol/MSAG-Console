@@ -297,14 +297,25 @@ enum byte SmeConnectType
   directConnect 2
 end
 
+enum byte SmeStatusType
+  disconnected 1
+  bound 2
+  internal 3
+  unknown 4
+end
+
+message SmeConnectStatus
+  SmeStatusType status 1
+  SmeBindMode bindMode 2
+  string peerIn 3
+  string peerOut 4
+end
+
 message SmeStatusInfo
   property innerMessage=true
   string systemId 1
-  string status 2 opt
-  SmeBindMode bindMode 3 opt
-  string peerIn 4 opt
-  string peerOut 5 opt
-  SmeConnectType connType 6 opt
+  SmeConnectType connType 2 opt
+  SmeConnectStatus status 3 array
 end
 
 message SmeStatusResp 1021
@@ -346,18 +357,11 @@ message AclGet 25
   int32 aclId 1
 end
 
-enum byte AclCacheType
-  cacheNone 0x31
-  cacheDb   0x32
-  cacheFull 0x33
-end
-
 message AclInfo
   property innerMessage=true
   int32 id 1
   string name 2
   string description 3
-  AclCacheType cacheType 4
 end
 
 message AclGetResp 1025
@@ -382,15 +386,14 @@ message AclRemoveResp 1027
 end
 
 message AclCreate 28
+  int32 id 5 opt
   string name 1
   string description 2
-  AclCacheType cacheType 3
   string addresses 4 array
 end
 
 message AclCreateResp 1028
   MultiResponse resp 1
-  int32 id 2 opt
 end
 
 message AclUpdate 29
