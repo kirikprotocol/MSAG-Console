@@ -305,6 +305,7 @@ enum byte SmeStatusType
 end
 
 message SmeConnectStatus
+  property innerMessage=true
   SmeStatusType status 1
   SmeBindMode bindMode 2
   string peerIn 3
