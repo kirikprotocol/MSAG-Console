@@ -413,7 +413,7 @@ Config::ConfigTree* Config::ConfigTree::createSection(const char * const _name)
   return t->sections[n];
 }
 
-void Config::saveToFile( const char* filename ) const
+void Config::saveToFile( const char* filename, const char* encoding ) const
 {
     /*
     FileStreamBuf buf;
@@ -430,7 +430,7 @@ void Config::saveToFile( const char* filename ) const
     if ( !out ) {
         throw smsc::core::buffers::FileException(FileException::errOpenFailed,filename);
     }
-    writeHeader(out);
+    writeHeader(out, encoding);
     save(out);
     writeFooter(out);
     out.close();
@@ -672,9 +672,9 @@ CStrSet * Config::getChildStrParamNames(const char * const sectionName) const
 }
 
 
-void Config::writeHeader(std::ostream &out) const
+void Config::writeHeader(std::ostream &out, const char* encoding) const
 {
-  out << "<?xml version=\"1.0\" encoding=\"windows-1251\"?>" << std::endl;
+  out << "<?xml version=\"1.0\" encoding=\"" << encoding << "\"?>" << std::endl;
   out << "<!DOCTYPE config SYSTEM \"configuration.dtd\">" << std::endl;
   out << "<config>" << std::endl;
 }

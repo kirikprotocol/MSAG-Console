@@ -132,7 +132,10 @@ public:
     }
 
     /// saving the whole config to file
-    void saveToFile( const char* filename ) const;
+    /// NOTE: it is your responsibility to make sure that string values
+    /// corresponds to the encoding specified.
+    /// E.g. look at getLocalEncoding() in xml/utilFunctions.cpp.
+    void saveToFile( const char* filename, const char* encoding = "windows-1251" ) const;
 
     char * getTextRepresentation() const
     {
@@ -237,7 +240,7 @@ public:
     void processParamNode(const DOMElement &element, const char * const name, const char * const type) throw (DOMException);
 
 private:
-    void writeHeader( std::ostream& out ) const;
+    void writeHeader( std::ostream& out, const char* encoding ) const;
     void save(std::ostream &out) const
     {
         std::auto_ptr<ConfigTree> tree(createTree());
