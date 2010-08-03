@@ -51,7 +51,7 @@ class SideKick implements EBComponent
   {
    public void actionPerformed(ActionEvent evt)
    {
-        parse(false, 0);
+        parse(true, 0);
    }
   });
 
@@ -68,6 +68,7 @@ class SideKick implements EBComponent
   */
  void parse(final boolean showParsingMessage, int num)
  {
+   long begin = System.currentTimeMillis();
    if(keystrokeTimer.isRunning())
    keystrokeTimer.stop();
 
@@ -111,6 +112,10 @@ class SideKick implements EBComponent
    parser,buffer,errorSource,data, SideKickPlugin.getSideKickNumber(this.view)),false);
   SideKickPlugin.addWorkRequest(new ParseAWTRequest(
    parser,buffer,errorSource,data, SideKickPlugin.getSideKickNumber(this.view)),true);
+
+   long end = System.currentTimeMillis();
+   long interval = end-begin;
+   System.out.println("SideKick:parse() time:"+interval + " ms.");  
  } //}}}
 
  //{{{ dispose() method
@@ -301,6 +306,7 @@ class SideKick implements EBComponent
  //{{{ parseWithDelay() method
  private void parseWithDelay()
  {
+  System.out.println("SideKick.parseWithDelay()");
   if(parser != null)
   {
    parser.stop();
@@ -310,6 +316,7 @@ class SideKick implements EBComponent
  
    keystrokeTimer.setInitialDelay(delay);
    keystrokeTimer.setRepeats(false);
+   System.out.println("Start keystrokeTimer()");
    keystrokeTimer.start();
   }
  } //}}}
@@ -445,7 +452,7 @@ class SideKick implements EBComponent
   {
    data[0] = parser.parse(buffer,errorSource);
     //System.out.println("ParseRequest # " + number);
-    System.out.println("SideKick.parse path= "+buffer.getPath()+" finished errors added line 426");
+    //System.out.println("SideKick.parse path= "+buffer.getPath()+" finished errors added line 426");
   }
  } //}}}
 

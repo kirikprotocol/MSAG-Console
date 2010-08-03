@@ -345,7 +345,7 @@ public class XMLDTDScannerImpl
      * @param standalone True if the document was specified as standalone.
      *                   This value is important for verifying certain
      *                   well-formedness constraints.
-     * @param hasExternalDTD True if the document has an external DTD.
+     * @param hasExternalSubset True if the document has an external DTD.
      *                       This allows the scanner to properly notify
      *                       the handler of the end of the DTD in the
      *                       absence of an external subset.
@@ -697,8 +697,6 @@ public class XMLDTDScannerImpl
     /** 
      * Dispatch an XML "event".
      *
-     * @param complete True if this method is intended to scan
-     *                 and dispatch as much as possible.                 
      *
      * @return True if a TextDecl was scanned.
      *
@@ -1198,21 +1196,21 @@ public class XMLDTDScannerImpl
 
             // call handler
             if (fDTDHandler != null) {
-                String[] enum = null;
+                String[] en = null;
                 if (fEnumerationCount != 0) {
-                    enum = new String[fEnumerationCount];
-                    System.arraycopy(fEnumeration, 0, enum,
+                    en = new String[fEnumerationCount];
+                    System.arraycopy(fEnumeration, 0, en,
                                      0, fEnumerationCount);
                 }
                 // Determine whether the default value to be passed should be null. 
                 // REVISIT: should probably check whether fLiteral.ch is null instead. LM.
                 if (defaultType!=null && (defaultType.equals("#REQUIRED") || 
                                           defaultType.equals("#IMPLIED"))) {
-                    fDTDHandler.attributeDecl(elName, name, type, enum,
+                    fDTDHandler.attributeDecl(elName, name, type, en,
                                               defaultType, null, null, null);
                 }
                 else {
-                    fDTDHandler.attributeDecl(elName, name, type, enum,
+                    fDTDHandler.attributeDecl(elName, name, type, en,
                                               defaultType, fLiteral, fLiteral2, null);
                 }
             }
@@ -1357,7 +1355,7 @@ public class XMLDTDScannerImpl
      * [60] DefaultDecl ::= '#REQUIRED' | '#IMPLIED' | (('#FIXED' S)? AttValue)
      * </pre>
      *
-     * @param name The name of the attribute being scanned.
+     * @param elName The name of the attribute being scanned.
      * @param defaultVal The string to fill in with the default value.
      */
     protected final String scanAttDefaultDecl(String elName, String atName,

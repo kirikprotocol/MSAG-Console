@@ -360,7 +360,7 @@ public class DefaultErrorSource extends ErrorSource implements EBComponent
  public void addError(int errorType, String path,
   int lineIndex, int start, int end, String error)
  {
-    System.out.println("DefaultErrorSource.AddError line 301 line = " + lineIndex);
+    //System.out.println("DefaultErrorSource.AddError line 301 line = " + lineIndex);
     addError(errorType, path, lineIndex,  start,  end,  error,  ERORR_WARNING_LOCAL);
  } //}}}
 

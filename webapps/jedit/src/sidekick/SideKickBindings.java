@@ -49,9 +49,9 @@ class SideKickBindings extends KeyAdapter
   char ch = evt.getKeyChar();
   if(ch == '\b')
    return;
-    System.out.println("sidekick.SideKickBinding keyTyped before parse line 48 key= "+evt.getKeyChar());
+    //System.out.println("sidekick.SideKickBinding keyTyped before parse line 48 key= "+evt.getKeyChar());
   View view = GUIUtilities.getView((Component)evt.getSource());
-   System.out.println("sidekick.SideKickBinding keyTyped before parse line 48 view= "+view+ " buffer= "+view.getBuffer());
+   //System.out.println("sidekick.SideKickBinding keyTyped before parse line 48 view= "+view+ " buffer= "+view.getBuffer());
   SideKickPlugin.parse(view,false);
   /*
   SideKickParser parser = SideKickPlugin.getParserForView(view);

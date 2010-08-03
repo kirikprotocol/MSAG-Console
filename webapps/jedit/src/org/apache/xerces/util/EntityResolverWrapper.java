@@ -146,7 +146,7 @@ public class EntityResolverWrapper
         if (fEntityResolver != null && resourceIdentifier != null) {
             try {
                 InputSource inputSource = fEntityResolver.resolveEntity(pubId, sysId);
-                System.out.println("EntityResolverWrapper resolveEntity after resolveEntity sysId= "+sysId+" pubId= "+pubId);
+                //System.out.println("EntityResolverWrapper resolveEntity after resolveEntity sysId= "+sysId+" pubId= "+pubId);
                 if (inputSource != null) {
                     String publicId = inputSource.getPublicId();
                     String systemId = inputSource.getSystemId();

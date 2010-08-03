@@ -59,7 +59,7 @@ class MouseHandler extends MouseInputAdapter
  
  //{{{ mousePressed() method
  public void mousePressed(MouseEvent evt)
- {
+ {  
   showCursor();
 
   control = (OperatingSystem.isMacOS() && evt.isMetaDown())

@@ -98,7 +98,7 @@ public class jEdit extends Applet
     this.main(args);
   }
   public void init() {
-    System.out.println("Initing...");
+    System.out.println("Init rule manager.");
     //super.init();
     setFont(new Font("dialog", Font.BOLD, 12));
     setLayout(new GridBagLayout());
@@ -130,14 +130,14 @@ public class jEdit extends Applet
     System.out.println("ping_timeout= " + ping_timeout);
     initSystemProperties();
     VFSManager.init();
-    if (!getBooleanProperty("debug"))  {
+    /*if (!getBooleanProperty("debug"))  {
       System.setOut(new PrintStream(new OutputStream(){
         public void write(int b) throws IOException {
             //doing nothing!!!;
         }
       }));
       System.setErr(System.out);
-    }
+    }       */
     //this.main(args);
     isNotReload=true;
   }
@@ -146,7 +146,7 @@ public class jEdit extends Applet
 
   public void start()
   {
-    System.out.println("Starting...");
+    System.out.println("Starting rule editor...");
     super.start();
     String[] args = new String[5];
     args[0]=getParameter("file");
@@ -207,6 +207,8 @@ public class jEdit extends Applet
   }
 
   private String validate(String userFile, boolean newRule) {
+    System.out.println("Begin validation");
+    long begin = System.currentTimeMillis();
     boolean isLocked = false;
     boolean isExist = false;
     Object ruleState = getObject(userFile, getRuleStateAndLock);
@@ -237,6 +239,9 @@ public class jEdit extends Applet
     } catch (Exception e) {
       e.printStackTrace();
     }
+    long end = System.currentTimeMillis();
+    long interval = (end - begin)/1000;
+    System.out.println("Validation time: "+interval);
     return null;
   }
 
@@ -1938,7 +1943,7 @@ public class jEdit extends Applet
             & VFS.CASE_INSENSITIVE_CAP) != 0) {
       path = path.toLowerCase();
     }
-    System.out.println("jEdit.getBuffer newPath= "+path);
+    //System.out.println("jEdit.getBuffer newPath= "+path);
     synchronized (bufferListLock) {
       return (Buffer) bufferHash.get(path);
     }
@@ -2989,7 +2994,7 @@ public class jEdit extends Applet
    * Load system properties.
    */
   private static void initSystemProperties()
-  {
+  {    
     propMgr = new PropertyManager();
     systemProperties.put("file.encoding", StringGet("file",FileEncoding));    //"Cp1251"
     systemProperties.put("line.separator",StringGet("file",LineSeparator));  //"\n"
@@ -3521,13 +3526,13 @@ public class jEdit extends Applet
    */
   public static List HttpGet(Map args, final int command)
   {
-    System.out.println("HttpGet:");
+    //System.out.println("HttpGet:");
     URL url = null;
     HttpURLConnection urlcon = null;
     BufferedReader in = null;
     ObjectInputStream input = null;
     String content = "?username=" + jEdit.username + "&password=" + jEdit.password + "&command=" + command;
-    System.out.println("content: "+content);
+    //System.out.println("content: "+content);
     StringBuffer buf = new StringBuffer(content);
     for (Iterator it = args.keySet().iterator(); it.hasNext();) {
       String s = (String) it.next();

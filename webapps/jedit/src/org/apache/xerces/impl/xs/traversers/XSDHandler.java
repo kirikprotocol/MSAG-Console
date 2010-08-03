@@ -1043,7 +1043,7 @@ public class XSDHandler {
                                    Element elmNode) {
 
         if (DEBUG_NODE_POOL) {
-            System.out.println("TRAVERSE_GL: "+declToTraverse.toString());
+            //System.out.println("TRAVERSE_GL: "+declToTraverse.toString());
         }
         // from the schema spec, all built-in types are present in all schemas,
         // so if the requested component is a type, and could be found in the
@@ -1372,7 +1372,7 @@ public class XSDHandler {
                 // parsed before. If so, return the document corresponding to
                 // that system id.
                 String schemaId = XMLEntityManager.expandSystemId(schemaSource.getSystemId(), schemaSource.getBaseSystemId(), false);
-                System.out.println("XSDHandler getSchema after expandSystemId schemaSource.getSystemId()= "+schemaSource.getSystemId()+" schemaSource.getBaseSystemId()= "+schemaSource.getBaseSystemId()+" schemaId= "+schemaId); 
+                //System.out.println("XSDHandler getSchema after expandSystemId schemaSource.getSystemId()= "+schemaSource.getSystemId()+" schemaSource.getBaseSystemId()= "+schemaSource.getBaseSystemId()+" schemaId= "+schemaId);
               XSDKey key = new XSDKey(schemaId, referType, schemaNamespace);
                 if ((schemaDoc = (Document)fTraversed.get(key)) != null) {
                     fLastSchemaWasDuplicate = true;
@@ -1911,7 +1911,7 @@ public class XSDHandler {
                                                  Element decl) {
 
         if (DEBUG_NODE_POOL) {
-            System.out.println("DOCUMENT NS:"+ currSchema.fTargetNamespace+" hashcode:"+ ((Object)currSchema.fSchemaDoc).hashCode());
+            //System.out.println("DOCUMENT NS:"+ currSchema.fTargetNamespace+" hashcode:"+ ((Object)currSchema.fSchemaDoc).hashCode());
         }
         Document declDoc = DOMUtil.getDocument(decl);
         Object temp = fDoc2XSDocumentMap.get(declDoc);

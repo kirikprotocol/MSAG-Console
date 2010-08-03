@@ -1326,8 +1326,7 @@ public class XSSimpleTypeDecl implements XSSimpleType {
 
     /**
      * validate an actual value against this DV
-     *
-     * @param value         the actual value that needs to be validated
+     *     
      * @param context       the validation context
      * @param validatedInfo used to provide the actual value and member types
      */
@@ -1825,7 +1824,7 @@ public class XSSimpleTypeDecl implements XSSimpleType {
 
     private void setOrdered(){
 
-        // When {variety} is atomic, {value} is inherited from {value} of {base type definition}. For all ·primitive· types {value} is as specified in the table in Fundamental Facets (C.1).
+        // When {variety} is atomic, {value} is inherited from {value} of {base type definition}. For all primitive types {value} is as specified in the table in Fundamental Facets (C.1).
         if(fVariety == VARIETY_ATOMIC){
             this.fOrdered = fBase.fOrdered;
         }
