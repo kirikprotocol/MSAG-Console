@@ -16,31 +16,23 @@ public class ClusterControllerManager  {
 
   public static final String SERVICE_ID = "ClusterController";
 
-  private final ConfigFileManager<ClusterControllerConfig> cfgFileManager;
+  private final ConfigFileManager<ClusterControllerSettings> cfgFileManager;
   private final ServiceManager serviceManager;
+  private ClusterControllerSettings currentSettings;
 
   public ClusterControllerManager(ServiceManager serviceManager, FileSystem fileSystem) throws AdminException {
     this.serviceManager = serviceManager;
     ServiceInfo info = getInfo();
     File conf = new File(info.getBaseDir(), "conf");
 
-    this.cfgFileManager = createManager(new File(conf, "config.xml"), new File(conf, "backup"), fileSystem);
-    this.cfgFileManager.reset();
+    this.cfgFileManager = new ConfigFileManager<ClusterControllerSettings>(new File(conf, "config.xml"), new File(conf, "backup"), fileSystem, new ClusterControllerConfig());
+    this.currentSettings = this.cfgFileManager.load();
   }
 
   ClusterControllerManager(File configFile, File backupDir, FileSystem fs, ServiceManager serviceManager) throws AdminException {
     this.serviceManager = serviceManager;
-    this.cfgFileManager = createManager(configFile, backupDir, fs);
-    this.cfgFileManager.reset();
-  }
-
-  private ConfigFileManager<ClusterControllerConfig> createManager(File configFile, File backupDir, FileSystem fs) {
-    return new ConfigFileManager<ClusterControllerConfig>(configFile, backupDir, fs) {
-      @Override
-      protected ClusterControllerConfig newConfigFile() {
-        return new ClusterControllerConfig();
-      }
-    };
+    this.cfgFileManager = new ConfigFileManager<ClusterControllerSettings>(configFile, backupDir, fs, new ClusterControllerConfig());
+    this.currentSettings = this.cfgFileManager.load();
   }
 
   private ServiceInfo getInfo() throws AdminException {
@@ -51,11 +43,12 @@ public class ClusterControllerManager  {
   }
 
   public ClusterControllerSettings getSettings() {
-    return new ClusterControllerSettings(cfgFileManager.getConfig().getSettings());
+    return new ClusterControllerSettings(currentSettings);
   }
 
-  public void updateSettings(ClusterControllerSettings newSettings) {
-    cfgFileManager.getConfig().setSettings(new ClusterControllerSettings(newSettings));
+  public void updateSettings(ClusterControllerSettings newSettings) throws AdminException {
+    cfgFileManager.save(newSettings);
+    this.currentSettings = new ClusterControllerSettings(newSettings);
   }
 
   public void startClusterController() throws AdminException {

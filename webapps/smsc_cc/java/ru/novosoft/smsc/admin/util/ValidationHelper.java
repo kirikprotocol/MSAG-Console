@@ -126,4 +126,9 @@ public class ValidationHelper {
       throw new ValidationException(paramNameBundle, argName);
   }
 
+  public void checkNotNull(String argName, Object value) throws AdminException {
+    if (value == null)
+      throw new ValidationException(paramNameBundle, argName);
+  }
+
 }

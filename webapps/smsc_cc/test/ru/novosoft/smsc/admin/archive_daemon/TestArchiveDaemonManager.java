@@ -1,7 +1,6 @@
 package ru.novosoft.smsc.admin.archive_daemon;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.config.TestConfigFileManagerHelper;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
 import ru.novosoft.smsc.admin.service.ServiceManager;
 

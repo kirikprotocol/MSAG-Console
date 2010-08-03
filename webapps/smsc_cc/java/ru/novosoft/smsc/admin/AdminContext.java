@@ -12,6 +12,7 @@ import ru.novosoft.smsc.admin.msc.MscManager;
 import ru.novosoft.smsc.admin.reschedule.RescheduleManager;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.admin.service.ServiceManager;
+import ru.novosoft.smsc.admin.sme.SmeManager;
 import ru.novosoft.smsc.admin.smsc.SmscManager;
 import ru.novosoft.smsc.admin.smsc.SmscSettings;
 import ru.novosoft.smsc.admin.snmp.SnmpManager;
@@ -42,6 +43,7 @@ public class AdminContext {
   protected MscManager mscManager;
   protected InstallationType instType;
   protected ClusterControllerManager clusterControllerManager;
+  protected SmeManager smeManager;
 
   protected AdminContext() {
 
@@ -93,6 +95,8 @@ public class AdminContext {
     SmscSettings s = smscManager.getSettings();
 
     mscManager = new MscManager(new File(s.getCommonSettings().getMscStoreFile()), clusterController, fileSystem);
+
+    smeManager = new SmeManager(new File(smscConfigDir, "sme.xml"), smscConfigBackupDir, clusterController, serviceManager, fileSystem);
   }
 
   public FileSystem getFileSystem() {
@@ -133,6 +137,10 @@ public class AdminContext {
 
   public MscManager getMscManager() {
     return mscManager;
+  }
+
+  public SmeManager getSmeManager() {
+    return smeManager;
   }
 
   public InstallationType getInstallationType() {

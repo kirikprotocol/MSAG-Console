@@ -168,7 +168,8 @@ final class ClusterControllerClient {
     receiverThread.interrupt();
     try {
       receiverThread.join();
-    } catch (InterruptedException e) {}
+    } catch (InterruptedException e) {
+    }
 
     log.warn("ClusterControllerClient shutdowned.");
   }
@@ -281,6 +282,26 @@ final class ClusterControllerClient {
     return sendPdu(req, new GetConfigsStateResp());
   }
 
+  public SmeAddResp send(SmeAdd req) throws AdminException {
+    return sendPdu(req, new SmeAddResp());
+  }
+
+  public SmeRemoveResp send(SmeRemove req) throws AdminException {
+    return sendPdu(req, new SmeRemoveResp());
+  }
+
+  public SmeDisconnectResp send(SmeDisconnect req) throws AdminException {
+    return sendPdu(req, new SmeDisconnectResp());
+  }
+
+  public SmeStatusResp send(SmeStatus req) throws AdminException {
+    return sendPdu(req, new SmeStatusResp());
+  }
+
+  public SmeUpdateResp send(SmeUpdate req) throws AdminException {
+    return sendPdu(req, new SmeUpdateResp());
+  }
+
   private class ResponseListener {
     private final CountDownLatch respLatch = new CountDownLatch(1);
 
@@ -360,7 +381,8 @@ final class ClusterControllerClient {
         if (!isInterrupted()) {
           try {
             Thread.sleep(1000);
-          } catch (InterruptedException ignored) {}
+          } catch (InterruptedException ignored) {
+          }
         }
       }
     }

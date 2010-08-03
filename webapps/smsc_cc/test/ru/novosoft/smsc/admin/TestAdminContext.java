@@ -2,18 +2,17 @@ package ru.novosoft.smsc.admin;
 
 import ru.novosoft.smsc.admin.alias.AliasManagerTest;
 import ru.novosoft.smsc.admin.alias.TestAliasManager;
+import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemonConfigTest;
 import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemonManager;
-import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemonManagerTest;
 import ru.novosoft.smsc.admin.archive_daemon.TestArchiveDaemonManager;
 import ru.novosoft.smsc.admin.closed_groups.ClosedGroupManagerTest;
 import ru.novosoft.smsc.admin.closed_groups.TestClosedGroupManager;
-import ru.novosoft.smsc.admin.cluster_controller.ClusterControllerManagerTest;
+import ru.novosoft.smsc.admin.cluster_controller.ClusterControllerConfigTest;
 import ru.novosoft.smsc.admin.cluster_controller.TestClusterController;
 import ru.novosoft.smsc.admin.cluster_controller.TestClusterControllerManager;
 import ru.novosoft.smsc.admin.filesystem.TestFileSystem;
 import ru.novosoft.smsc.admin.fraud.FraudManagerTest;
 import ru.novosoft.smsc.admin.fraud.TestFraudManager;
-import ru.novosoft.smsc.admin.map_limit.MapLimitManager;
 import ru.novosoft.smsc.admin.map_limit.MapLimitManagerTest;
 import ru.novosoft.smsc.admin.map_limit.TestMapLimitManager;
 import ru.novosoft.smsc.admin.msc.MscManagerTest;
@@ -21,6 +20,8 @@ import ru.novosoft.smsc.admin.msc.TestMscManager;
 import ru.novosoft.smsc.admin.reschedule.RescheduleManagerTest;
 import ru.novosoft.smsc.admin.reschedule.TestRescheduleManager;
 import ru.novosoft.smsc.admin.service.TestServiceManagerSingle;
+import ru.novosoft.smsc.admin.sme.SmeConfigFileTest;
+import ru.novosoft.smsc.admin.sme.TestSmeManager;
 import ru.novosoft.smsc.admin.smsc.SmscManagerTest;
 import ru.novosoft.smsc.admin.smsc.SmscSettings;
 import ru.novosoft.smsc.admin.smsc.TestSmscManager;
@@ -39,11 +40,11 @@ public class TestAdminContext extends AdminContext {
   private void prepareServices(File servicesDir) throws IOException {
     File ccDir = new File(servicesDir, "ClusterController/conf");
     ccDir.mkdirs();
-    TestUtils.exportResource(ClusterControllerManagerTest.class.getResourceAsStream("config.xml"), new File(ccDir, "config.xml"));
+    TestUtils.exportResource(ClusterControllerConfigTest.class.getResourceAsStream("config.xml"), new File(ccDir, "config.xml"));
 
     File adDir = new File(servicesDir, "ArchiveDaemon/conf");
     adDir.mkdirs();
-    TestUtils.exportResource(ArchiveDaemonManagerTest.class.getResourceAsStream("config.xml"), new File(adDir, "config.xml"));
+    TestUtils.exportResource(ArchiveDaemonConfigTest.class.getResourceAsStream("config.xml"), new File(adDir, "config.xml"));
 
     File smscDir = new File(servicesDir, "SMSC0/conf");
     smscDir.mkdirs();
@@ -55,6 +56,7 @@ public class TestAdminContext extends AdminContext {
     TestUtils.exportResource(MscManagerTest.class.getResourceAsStream("msc.bin"), new File(smscDir, "msc.bin"));
     TestUtils.exportResource(RescheduleManagerTest.class.getResourceAsStream("schedule.xml"), new File(smscDir, "schedule.xml"));
     TestUtils.exportResource(SnmpManagerTest.class.getResourceAsStream("snmp.xml"), new File(smscDir, "snmp.xml"));
+    TestUtils.exportResource(SmeConfigFileTest.class.getResourceAsStream("sme.xml"), new File(smscDir, "sme.xml"));
   }
 
   public TestAdminContext(File appBaseDir, File initFile, int smscInstancesNumber) throws AdminException {
@@ -104,6 +106,8 @@ public class TestAdminContext extends AdminContext {
     SmscSettings s = smscManager.getSettings();
 
     mscManager = new TestMscManager(new File(s.getCommonSettings().getMscStoreFile()), clusterController, fileSystem);
+
+    smeManager = new TestSmeManager(new File(smscConfigDir, "sme.xml"), smscConfigBackupDir, clusterController, serviceManager, fileSystem);
   }
 
   public TestAdminContext() throws AdminException {

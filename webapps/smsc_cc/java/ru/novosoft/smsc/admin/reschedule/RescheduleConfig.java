@@ -10,25 +10,14 @@ import ru.novosoft.smsc.util.config.XmlConfigSection;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 /**
  * @author Artem Snopkov
  */
-class RescheduleConfig implements ManagedConfigFile {
+class RescheduleConfig implements ManagedConfigFile<RescheduleSettings> {
 
-  private RescheduleSettings settings;
-
-  public RescheduleSettings getSettings() {
-    return settings;
-  }
-
-  public void setSettings(RescheduleSettings settings) {
-    this.settings = settings;
-  }
-
-  protected void load(XmlConfig config) throws XmlConfigException, AdminException {
+  protected RescheduleSettings load(XmlConfig config) throws XmlConfigException, AdminException {
     RescheduleSettings s = new RescheduleSettings();
     XmlConfigSection core = config.getSection("core");
 
@@ -43,16 +32,16 @@ class RescheduleConfig implements ManagedConfigFile {
 
     s.setReschedules(reschedules);
 
-    settings = s;
+    return s;
   }
 
-  public void load(InputStream is) throws Exception {
+  public RescheduleSettings load(InputStream is) throws Exception {
     XmlConfig config = new XmlConfig();
     config.load(is);
-    load(config);
+    return load(config);
   }
 
-  protected void save(XmlConfig config) throws XmlConfigException {
+  protected void save(XmlConfig config, RescheduleSettings settings) throws XmlConfigException {
     XmlConfigSection core = config.getSection("core");
 
     core.setInt("reschedule_limit", settings.getRescheduleLimit());
@@ -66,10 +55,10 @@ class RescheduleConfig implements ManagedConfigFile {
       rescheduleTableSec.setIntList(r.getIntervals(), r.getStatuses(), ",");
   }
 
-  public void save(InputStream is, OutputStream os) throws Exception {
+  public void save(InputStream is, OutputStream os, RescheduleSettings s) throws Exception {
     XmlConfig config = new XmlConfig();
     config.load(is);
-    save(config);
+    save(config, s);
     config.save(os);
   }
 

@@ -579,4 +579,129 @@ public class ClusterController {
   public ConfigState getSnmpConfigState() throws AdminException {
     return getConfigState(ConfigType.Snmp);
   }
+
+  // SME ===============================================================================================================
+
+  /**
+   * Блокирует конфигурацию SME для чтения/записи
+   *
+   * @param write блокировать файл для записи
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void lockSmeConfig(boolean write) throws AdminException {
+    LockConfig req = new LockConfig();
+    req.setConfigType(ConfigType.Sme);
+    req.setWriteLock(write);
+    LockConfigResp resp = cc.send(req);
+    if (resp.getResp().getStatus() != 0)
+      throw new ClusterControllerException("interaction_error", resp.getResp().getStatus() + "");
+  }
+
+  /**
+   * Разблокирует конфигурацию SME
+   *
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void unlockSmeConfig() throws AdminException {
+    UnlockConfig req = new UnlockConfig();
+    req.setConfigType(ConfigType.Sme);
+    cc.send(req);
+  }
+
+  /**
+   * Возвращает статус конфигурации SME
+   * @return статус конфигурации SME
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public ConfigState getSmeConfigState() throws AdminException {
+    return getConfigState(ConfigType.Sme);
+  }
+
+  /**
+   * Отправляет команду на добавление SME
+   * @param sme информация об SME
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void addSme(CCSme sme) throws AdminException {
+    SmeAdd req = new SmeAdd();
+    req.setParams(sme.toSmeParams());
+    MultiResponse resp = cc.send(req).getResp();
+    int[] statuses = resp.getStatus();
+    for (int status : statuses) {
+      if (status != 0)
+        throw new ClusterControllerException("interaction_error", statuses, resp.getIds());
+    }
+  }
+
+  /**
+   * Отправляет команду на обновление настроек SME
+   * @param sme новый настройки SME
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void updateSme(CCSme sme) throws AdminException {
+    SmeUpdate req = new SmeUpdate();
+    req.setParams(sme.toSmeParams());
+    MultiResponse resp = cc.send(req).getResp();
+    int[] statuses = resp.getStatus();
+    for (int status : statuses) {
+      if (status != 0)
+        throw new ClusterControllerException("interaction_error", statuses, resp.getIds());
+    }
+  }
+
+  /**
+   * Отправляет команду на удаление SME
+   * @param smeId идентификатор SME
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void removeSme(String smeId) throws AdminException {
+    SmeRemove req = new SmeRemove();
+    req.setSmeId(smeId);
+    MultiResponse resp = cc.send(req).getResp();
+    int[] statuses = resp.getStatus();
+    for (int status : statuses) {
+      if (status != 0)
+        throw new ClusterControllerException("interaction_error", statuses, resp.getIds());
+    }
+  }
+
+  /**
+   * Отправляет команду на отключение одной или нескольких SME от центра
+   * @param smeIds идентификаторы SME-х. которых надо отключить
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void disconnectSmes(String[] smeIds) throws AdminException {
+    SmeDisconnect req = new SmeDisconnect();
+    req.setSysIds(smeIds);
+    MultiResponse resp = cc.send(req).getResp();
+    int[] statuses = resp.getStatus();
+    for (int status : statuses) {
+      if (status != 0)
+        throw new ClusterControllerException("interaction_error", statuses, resp.getIds());
+    }
+  }
+
+
+  public CCSmeSmscStatuses[] getSmesStatus() throws AdminException {
+    SmeStatus req = new SmeStatus();
+    SmeStatusResp resp = cc.send(req);
+    if (resp.getResp().getStatus() != 0)
+      throw new ClusterControllerException("interaction_error", resp.getResp().getStatus() + "");
+
+    CCSmeSmscStatuses res[] = new CCSmeSmscStatuses[resp.getStatus().length];
+    SmeStatusInfo[] statusInfo = resp.getStatus();
+    for (int i=0; i<statusInfo.length; i++) {
+      SmeStatusInfo smeStatusInfo = statusInfo[i];
+      CCSmeSmscStatuses stateInfo = new CCSmeSmscStatuses(smeStatusInfo.getSystemId(), smeStatusInfo.getConnType().getValue());
+      for (SmeConnectStatus smeConnectStatus : smeStatusInfo.getStatus()) {
+        stateInfo.addConnectStatus(smeConnectStatus.getNodeIdx(),
+            smeConnectStatus.getStatus().getValue(),
+            smeConnectStatus.getBindMode().getValue(),
+            smeConnectStatus.getPeerIn(),
+            smeConnectStatus.getPeerOut());
+      }
+      res[i] = stateInfo;
+    }
+    return res;
+  }
 }

@@ -2,13 +2,9 @@ package ru.novosoft.smsc.admin.snmp;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
-import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
-import ru.novosoft.smsc.admin.config.TestConfigFileManagerHelper;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * @author Artem Snopkov

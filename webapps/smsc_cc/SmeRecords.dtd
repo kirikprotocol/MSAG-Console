@@ -1,0 +1,11 @@
+<!ELEMENT records (smerecord*)>
+
+<!ELEMENT smerecord (param+)>
+<!ATTLIST smerecord 
+    type (smpp|ss7) #REQUIRED 
+    uid CDATA #REQUIRED>
+
+<!ELEMENT param (#PCDATA)>
+<!ATTLIST param 
+name (typeOfNumber|numberingPlan|interfaceVersion|systemType|password|addrRange|smeN|wantAlias|forceDC|timeout|priority|receiptSchemeName|disabled|mode|proclimit|schedlimit|providerId|accessMask|submitSpeedLimit|flags) #REQUIRED
+    value CDATA #REQUIRED>

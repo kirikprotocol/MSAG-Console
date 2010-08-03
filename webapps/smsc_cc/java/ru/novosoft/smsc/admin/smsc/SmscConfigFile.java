@@ -14,19 +14,9 @@ import java.io.OutputStream;
  *
  * @author Artem Snopkov
  */
-class SmscConfigFile implements ManagedConfigFile {
+class SmscConfigFile implements ManagedConfigFile<SmscSettings> {
 
-  private SmscSettings settings;
-
-  public SmscSettings getSettings() {
-    return settings;
-  }
-
-  public void setSettings(SmscSettings settings) {
-    this.settings = settings;
-  }
-
-  protected void load(XmlConfig config) throws XmlConfigException, AdminException {
+  protected SmscSettings load(XmlConfig config) throws XmlConfigException, AdminException {
     SmscSettings s = new SmscSettings();
 
     CommonSettings commonSettings = new CommonSettings(config);
@@ -41,24 +31,24 @@ class SmscConfigFile implements ManagedConfigFile {
     }
     s.setInstancesSettings(instanceSettings);
 
-    settings = s;
+    return s;
   }
 
-  public void load(InputStream is) throws Exception {
+  public SmscSettings load(InputStream is) throws Exception {
     XmlConfig config = new XmlConfig(is);
-    load(config);
+    return load(config);
   }
 
-  protected void save(XmlConfig config) throws XmlConfigException {
+  protected void save(XmlConfig config, SmscSettings settings) throws XmlConfigException {
     settings.getCommonSettings().save(config);
     for (int i = 0; i < settings.getSmscInstancesCount(); i++) {
       settings.getInstanceSettings(i).save(i, config);
     }
   }
 
-  public void save(InputStream is, OutputStream os) throws Exception {
+  public void save(InputStream is, OutputStream os, SmscSettings settings) throws Exception {
     XmlConfig config = new XmlConfig(is);
-    save(config);
+    save(config, settings);
     config.save(os);
   }
 

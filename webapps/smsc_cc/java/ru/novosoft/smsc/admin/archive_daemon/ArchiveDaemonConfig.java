@@ -19,11 +19,9 @@ import java.util.Map;
  */
 
 @SuppressWarnings({"EmptyCatchBlock"})
-class ArchiveDaemonConfig implements ManagedConfigFile {
+class ArchiveDaemonConfig implements ManagedConfigFile<ArchiveDaemonSettings> {
 
-  private ArchiveDaemonSettings settings;
-
-  protected void reset(XmlConfig c) throws XmlConfigException, AdminException {
+  protected ArchiveDaemonSettings reset(XmlConfig c) throws XmlConfigException, AdminException {
     ArchiveDaemonSettings s = new ArchiveDaemonSettings();
     XmlConfigSection config = c.getSection("ArchiveDaemon");
 
@@ -59,15 +57,15 @@ class ArchiveDaemonConfig implements ManagedConfigFile {
 
     s.setIndexatorSmeAddrChunkSizes(indexatorSmeAddrChunkSizes);
 
-    this.settings = s;
+    return s;
   }
 
-  public void load(InputStream is) throws Exception {
+  public ArchiveDaemonSettings load(InputStream is) throws Exception {
     XmlConfig config = new XmlConfig(is);
-    reset(config);
+    return reset(config);
   }
 
-  protected void save(XmlConfig c) throws XmlConfigException {
+  protected void save(XmlConfig c, ArchiveDaemonSettings settings) throws XmlConfigException {
     XmlConfigSection config = c.getSection("ArchiveDaemon");
     config.setInt("interval", settings.getInterval());
 
@@ -98,17 +96,9 @@ class ArchiveDaemonConfig implements ManagedConfigFile {
       chunkSizesSection.setInt(size.getKey(), size.getValue());
   }
 
-  public void save(InputStream is, OutputStream os) throws Exception {
+  public void save(InputStream is, OutputStream os, ArchiveDaemonSettings s) throws Exception {
     XmlConfig c = new XmlConfig(is);
-    save(c);
+    save(c, s);
     c.save(os);
-  }
-
-  public ArchiveDaemonSettings getSettings() {
-    return settings;
-  }
-
-  public void setSettings(ArchiveDaemonSettings settings) {
-    this.settings = settings;
   }
 }

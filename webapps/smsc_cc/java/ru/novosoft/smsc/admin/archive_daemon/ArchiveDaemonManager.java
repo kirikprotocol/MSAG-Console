@@ -18,31 +18,23 @@ public class ArchiveDaemonManager {
 
   public static final String SERVICE_ID = "ArchiveDaemon";
 
-  private final ConfigFileManager<ArchiveDaemonConfig> cfgFileManager;
+  private final ConfigFileManager<ArchiveDaemonSettings> cfgFileManager;
   private final ServiceManager serviceManager;
+  private ArchiveDaemonSettings currentSettings;
 
   public ArchiveDaemonManager(ServiceManager serviceManager, FileSystem fs) throws AdminException {
     this.serviceManager = serviceManager;
     ServiceInfo info = getInfo();
     File archiveDaemonConf = new File(info.getBaseDir(), "conf");
     File archiveDaemonBackup = new File(archiveDaemonConf, "backup");
-    this.cfgFileManager = createManager(new File(archiveDaemonConf, "config.xml"), archiveDaemonBackup, fs);
-    this.cfgFileManager.reset();
+    this.cfgFileManager = new ConfigFileManager<ArchiveDaemonSettings>(new File(archiveDaemonConf, "config.xml"), archiveDaemonBackup, fs, new ArchiveDaemonConfig());
+    this.currentSettings = cfgFileManager.load();
   }
 
   ArchiveDaemonManager(File configFile, File backupDir, FileSystem fs, ServiceManager serviceManager) throws AdminException {
     this.serviceManager = serviceManager;
-    this.cfgFileManager = createManager(configFile, backupDir, fs);
-    this.cfgFileManager.reset();
-  }
-
-  private ConfigFileManager<ArchiveDaemonConfig> createManager(File configFile, File backupDir, FileSystem fs) {
-    return new ConfigFileManager<ArchiveDaemonConfig>(configFile, backupDir, fs) {
-      @Override
-      protected ArchiveDaemonConfig newConfigFile() {
-        return new ArchiveDaemonConfig();
-      }
-    };
+    this.cfgFileManager = new ConfigFileManager<ArchiveDaemonSettings>(configFile, backupDir, fs, new ArchiveDaemonConfig());
+    this.currentSettings = cfgFileManager.load();
   }
 
   public static boolean isDaemonDeployed(ServiceManager serviceManager) throws AdminException {
@@ -55,8 +47,7 @@ public class ArchiveDaemonManager {
    * @return текущие настройки ArchiveDaemon-а
    */
   public ArchiveDaemonSettings getSettings() {
-    ArchiveDaemonConfig config = cfgFileManager.getConfig();
-    return new ArchiveDaemonSettings(config.getSettings());
+    return new ArchiveDaemonSettings(currentSettings);
   }
 
   /**
@@ -66,9 +57,8 @@ public class ArchiveDaemonManager {
    * @throws AdminException
    */
   public void updateSettings(ArchiveDaemonSettings settings) throws AdminException {
-    ArchiveDaemonConfig config = cfgFileManager.getConfig();
-    config.setSettings(new ArchiveDaemonSettings(settings));
-    cfgFileManager.apply();
+    cfgFileManager.save(settings);
+    this.currentSettings = new ArchiveDaemonSettings(settings);
   }
 
   private ServiceInfo getInfo() throws AdminException {

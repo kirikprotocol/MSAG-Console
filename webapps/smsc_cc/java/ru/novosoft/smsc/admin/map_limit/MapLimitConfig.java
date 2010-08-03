@@ -10,21 +10,11 @@ import java.io.OutputStream;
 /**
  * @author Artem Snopkov
  */
-class MapLimitConfig implements ManagedConfigFile {
+class MapLimitConfig implements ManagedConfigFile<MapLimitSettings> {
 
   static final int MAX_CONGESTION_LEVELS = 8;
 
-  private MapLimitSettings settings;
-
-  public MapLimitSettings getSettings() {
-    return settings;
-  }
-
-  public void setSettings(MapLimitSettings settings) {
-    this.settings = settings;
-  }
-
-  public void load(InputStream is) throws Exception {
+  public MapLimitSettings load(InputStream is) throws Exception {
 
     MapLimitSettings s = new MapLimitSettings();
 
@@ -50,17 +40,17 @@ class MapLimitConfig implements ManagedConfigFile {
     s.setDlgLimitUssd(config.getSection("dlglimit").getInt("ussd"));
     s.setUssdNoSriCodes(config.getSection("ussd").getIntArray("no_sri_codes", ","));
 
-    settings = s;
+    return s;
   }
 
-  public void save(InputStream is, OutputStream os) throws Exception {
+  public void save(InputStream is, OutputStream os, MapLimitSettings settings) throws Exception {
     XmlConfig config = new XmlConfig();
     config.load(is);
 
     XmlConfigSection clevels = config.getSection("clevels");
 
     for (int i = 1; i <= MAX_CONGESTION_LEVELS; i++) {
-      CongestionLevel cl = this.settings.getCongestionLevels()[i-1];
+      CongestionLevel cl = settings.getCongestionLevels()[i-1];
       XmlConfigSection clevel=clevels.getSection("level"+i);
       clevel.setInt("dialogsLimit", cl.getDialogsLimit());
       clevel.setInt("failLowerLimit", cl.getFailLowerLimit());

@@ -15,14 +15,14 @@ public class ServiceInfo {
   private final String onlineHost;
   private final File baseDir;
 
-  public ServiceInfo(String serviceId, List<String> hosts, String onlineHost, File baseDir) {
+  ServiceInfo(String serviceId, List<String> hosts, String onlineHost, File baseDir) {
     this.serviceId = serviceId;
     this.hosts = hosts;
     this.onlineHost = onlineHost;
     this.baseDir = baseDir;
   }
 
-  public ServiceInfo(String serviceId, String[] hosts, String onlineHost, File baseDir) {
+  ServiceInfo(String serviceId, String[] hosts, String onlineHost, File baseDir) {
     this.serviceId = serviceId;
     this.hosts = new ArrayList<String>(hosts.length);
     this.hosts.addAll(Arrays.asList(hosts));

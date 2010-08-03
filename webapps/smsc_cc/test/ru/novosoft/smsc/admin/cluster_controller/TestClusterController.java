@@ -2,7 +2,7 @@ package ru.novosoft.smsc.admin.cluster_controller;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.alias.TestAliasManager;
-import ru.novosoft.smsc.admin.cluster_controller.protocol.ConfigType;
+import ru.novosoft.smsc.admin.cluster_controller.protocol.*;
 import ru.novosoft.smsc.admin.msc.TestMscManager;
 import ru.novosoft.smsc.util.Address;
 
@@ -42,6 +42,9 @@ public class TestClusterController extends ClusterController {
   private final Lock mscLock = new ReentrantLock();
   private long mscLastUpdateTime = System.currentTimeMillis();
 
+  private final Lock smeLock = new ReentrantLock();
+  private long smeLastUpdateTime = System.currentTimeMillis();
+
   private final Lock mainConfigLock = new ReentrantLock();
 
   public TestClusterController(File aliasesFile, File mscsFile, int smscInstancesNumber) {
@@ -74,6 +77,8 @@ public class TestClusterController extends ClusterController {
       case Msc:
         time = mscLastUpdateTime;
         break;
+      case Sme:
+        time = smeLastUpdateTime;
       default:
         time = System.currentTimeMillis();
     }
@@ -259,6 +264,62 @@ public class TestClusterController extends ClusterController {
 
   public void unlockMainConfig() throws AdminException {
     unlock(mainConfigLock, "main config");
+  }
+
+  // SME ===============================================================================================================
+
+  public void lockSmeConfig(boolean write) throws AdminException {
+    lock(smeLock, "sme", write);
+  }
+
+  /**
+   * Разблокирует конфигурацию SME
+   *
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void unlockSmeConfig() throws AdminException {
+    unlock(smeLock, "sme");
+  }
+
+
+  /**
+   * Отправляет команду на добавление SME
+   * @param sme информация об SME
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void addSme(CCSme sme) throws AdminException {
+    smeLastUpdateTime = System.currentTimeMillis();
+  }
+
+  /**
+   * Отправляет команду на обновление настроек SME
+   * @param sme новый настройки SME
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void updateSme(CCSme sme) throws AdminException {
+    smeLastUpdateTime = System.currentTimeMillis();
+  }
+
+  /**
+   * Отправляет команду на удаление SME
+   * @param smeId идентификатор SME
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void removeSme(String smeId) throws AdminException {
+    smeLastUpdateTime = System.currentTimeMillis();
+  }
+
+  /**
+   * Отправляет команду на отключение одной или нескольких SME от центра
+   * @param smeIds идентификаторы SME-х. которых надо отключить
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void disconnectSmes(String[] smeIds) throws AdminException {
+  }
+
+
+  public CCSmeSmscStatuses[] getSmesStatus() throws AdminException {
+    return new CCSmeSmscStatuses[0];
   }
 
 }

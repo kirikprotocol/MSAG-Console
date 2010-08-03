@@ -14,26 +14,13 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Pattern;
 
 /**
  * @author Artem Snopkov
  */
-class FraudConfigFile implements ManagedConfigFile {
+class FraudConfigFile implements ManagedConfigFile<FraudSettings> {
 
-  private static final Pattern mscAddressPattern = Pattern.compile("\\d{1,15}");
-
-  private FraudSettings settings;
-
-  public FraudSettings getSettings() {
-    return settings;
-  }
-
-  public void setSettings(FraudSettings settings) {
-    this.settings = settings;
-  }
-
-  public void save(InputStream oldFile, OutputStream os) throws Exception {
+  public void save(InputStream oldFile, OutputStream os, FraudSettings settings) throws Exception {
     PrintWriter out = null;
     try {
       out = new PrintWriter(new OutputStreamWriter(os, Functions.getLocaleEncoding()));
@@ -58,7 +45,7 @@ class FraudConfigFile implements ManagedConfigFile {
     }
   }
 
-  public void load(InputStream is) throws Exception {
+  public FraudSettings load(InputStream is) throws Exception {
     Document fraudDoc = XmlUtils.parse(is);
 
     NodeList whiteLists = fraudDoc.getDocumentElement().getElementsByTagName("whitelist");
@@ -106,9 +93,8 @@ class FraudConfigFile implements ManagedConfigFile {
         if (rejectStr != null && rejectStr.trim().length() > 0)
           s.setEnableReject(Boolean.valueOf(rejectStr));
       }
-
-      settings = s;
     }
 
+    return s;
   }
 }

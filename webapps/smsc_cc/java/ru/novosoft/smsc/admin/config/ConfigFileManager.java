@@ -14,132 +14,67 @@ import java.io.OutputStream;
  *
  * @author Artem Snopkov
  */
-public abstract class ConfigFileManager<T extends ManagedConfigFile> {
+public class ConfigFileManager<C> {
 
   protected final File configFile;
   protected final File backupDir;
   protected final FileSystem fileSystem;
+  protected final ManagedConfigFile<C> config;
 
-  protected T config;
-  protected T lastAppliedConfig;
-  private boolean changed;
-  private long lastChangeTime = -1;
-
-  protected ConfigFileManager(File configFile, File backupDir, FileSystem fileSystem) {
+  public ConfigFileManager(File configFile, File backupDir, FileSystem fileSystem, ManagedConfigFile<C> cfgFileImpl) {
     this.configFile = configFile;
     this.backupDir = backupDir;
     this.fileSystem = fileSystem;
-  }
-
-  protected abstract T newConfigFile();
-
-  public void setChanged() {
-    lastChangeTime = System.currentTimeMillis();
-    changed = true;
-  }
-
-  /**
-   * @deprecated Метод должен использоваться только в тестовых целях
-   */
-  protected void setNotChanged(boolean updateLastChangeTime) {
-    if (changed && updateLastChangeTime)
-      lastChangeTime = System.currentTimeMillis();
-    changed = false;
-  }
-
-  protected void lockConfig(boolean write) throws AdminException {
-  }
-
-  protected void unlockConfig() throws Exception {
-  }
-
-  protected void afterApply() throws AdminException {
-  }
-
-  protected void beforeApply() throws AdminException {
-  }
-
-  protected void beforeReset() throws AdminException {
-  }
-
-  public T getLastAppliedConfig() {
-    return lastAppliedConfig;
-  }
-
-  public T getConfig() {
-    return config;
+    this.config = cfgFileImpl;
   }
 
   public File getConfigFile() {
     return configFile;
   }
 
-  public void apply() throws AdminException {
-    if (config == null)
-      return;
-
-    beforeApply();
-
-    Throwable unlockConfigError = null;
-    try {
-      lockConfig(true);
-
-      ConfigHelper.createBackup(configFile, backupDir, fileSystem);
-
-      InputStream is = null;
-      OutputStream os = null;
-      File tmpConfigFile = new File(configFile.getAbsolutePath() + ".tmp");
-      try {
-        is = fileSystem.getInputStream(configFile);
-        os = fileSystem.getOutputStream(tmpConfigFile);
-
-        config.save(is, os);
-      } catch (AdminException e) {
-        throw e;
-      } catch (Exception e) {
-        throw new ConfigException("save_error", e);
-      } finally {
-        if (is != null)
-          try {
-            is.close();
-          } catch (IOException ignored) {
-          }
-
-        if (os != null)
-          try {
-            os.close();
-          } catch (IOException ignored) {
-          }
-      }
-
-      fileSystem.delete(configFile);
-      fileSystem.rename(tmpConfigFile, configFile);
-
-    } finally {
-      try {
-        unlockConfig();
-      } catch (Exception e) {
-        unlockConfigError = e;
-      }
-    }
-
-    if (unlockConfigError != null)
-      throw new ConfigException("save_error", unlockConfigError);
-
-    afterApply();
-    this.changed = false;
-    lastAppliedConfig = loadConfig();
+  public long getLastModified() {
+    return configFile.lastModified();
   }
 
-  private T loadConfig() throws AdminException {
-    T cfg = newConfigFile();
+  public void save(C conf) throws AdminException {
 
-    Throwable unlockConfigError = null;
+    ConfigHelper.createBackup(configFile, backupDir, fileSystem);
+
+    InputStream is = null;
+    OutputStream os = null;
+    File tmpConfigFile = new File(configFile.getAbsolutePath() + ".tmp");
+    try {
+      is = fileSystem.getInputStream(configFile);
+      os = fileSystem.getOutputStream(tmpConfigFile);
+
+      config.save(is, os, conf);
+    } catch (AdminException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new ConfigException("save_error", e);
+    } finally {
+      if (is != null)
+        try {
+          is.close();
+        } catch (IOException ignored) {
+        }
+
+      if (os != null)
+        try {
+          os.close();
+        } catch (IOException ignored) {
+        }
+    }
+
+    fileSystem.delete(configFile);
+    fileSystem.rename(tmpConfigFile, configFile);
+  }
+
+  public C load() throws AdminException {
     InputStream is = null;
     try {
-      lockConfig(false);
       is = fileSystem.getInputStream(configFile);
-      cfg.load(is);
+      return config.load(is);
     } catch (AdminException e) {
       throw e;
     } catch (Exception e) {
@@ -150,33 +85,6 @@ public abstract class ConfigFileManager<T extends ManagedConfigFile> {
           is.close();
         } catch (IOException ignored) {
         }
-
-      try {
-        unlockConfig();
-      } catch (Exception e) {
-        unlockConfigError = e;
-      }
     }
-
-    if (unlockConfigError != null)
-      throw new ConfigException("load_error", unlockConfigError);
-
-    return cfg;
-  }
-
-  public void reset() throws AdminException {
-    this.config = loadConfig();
-    this.lastAppliedConfig = loadConfig();
-    if (changed)
-      this.lastChangeTime = System.currentTimeMillis();
-    this.changed = false;
-  }
-
-  public boolean isChanged() {
-    return changed;
-  }
-
-  public long getLastChangeTime() {
-    return lastChangeTime;
   }
 }

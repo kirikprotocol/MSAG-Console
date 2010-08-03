@@ -18,21 +18,11 @@ import java.util.StringTokenizer;
 /**
  * @author Artem Snopkov
  */
-class SnmpConfigFile implements ManagedConfigFile {
+class SnmpConfigFile implements ManagedConfigFile<SnmpSettings> {
 
   private static final String DEFAULT_SECTION = "default";
   private static final String COUNTER_INTERVAL = "counterInterval";
   private static final String OBJECT_SECTION = "object";
-
-  private SnmpSettings settings;
-
-  public SnmpSettings getSettings() {
-    return settings;
-  }
-
-  public void setSettings(SnmpSettings settings) {
-    this.settings = settings;
-  }
 
   private static void writeSnmpCounter(String name, SnmpCounter counter, PrintWriter out) {
     out.print("<counter name=\"");
@@ -109,7 +99,7 @@ class SnmpConfigFile implements ManagedConfigFile {
       writeSeverity("unregisterFailed", o.getSeverityUnregisterFailed(), out);
   }
 
-  public void save(InputStream oldFile, OutputStream newFile) throws Exception {
+  public void save(InputStream oldFile, OutputStream newFile, SnmpSettings settings) throws Exception {
     PrintWriter out = null;
     try {
       out = new PrintWriter(new OutputStreamWriter(newFile));
@@ -216,7 +206,7 @@ class SnmpConfigFile implements ManagedConfigFile {
     }
   }
 
-  public void load(InputStream is) throws Exception {
+  public SnmpSettings load(InputStream is) throws Exception {
 
     SnmpSettings s = new SnmpSettings();
 
@@ -260,6 +250,6 @@ class SnmpConfigFile implements ManagedConfigFile {
 
     s.setSnmpObjects(snmpObjects);
 
-    settings = s;
+    return s;
   }
 }

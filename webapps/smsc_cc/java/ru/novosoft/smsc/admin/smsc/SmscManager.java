@@ -24,8 +24,9 @@ public class SmscManager implements SmscConfiguration {
   private static final String SERVICE_ID="SMSC";
 
   private final ClusterController cc;
-  private final ConfigFileManager<SmscConfigFile> cfgFileManager;
+  private final ConfigFileManager<SmscSettings> cfgFileManager;
   private final ServiceManager serviceManager;
+  private SmscSettings currentSettings;
 
   public SmscManager(ServiceManager serviceManager, ClusterController cc, FileSystem fileSystem) throws AdminException {
     this.cc = cc;
@@ -35,30 +36,28 @@ public class SmscManager implements SmscConfiguration {
     File configDir = new File(info.getBaseDir(), "conf");
 
     this.cfgFileManager = createManager(new File(configDir, "config.xml"), new File(configDir, "backup"), fileSystem);
+    try {
+      cc.lockMainConfig(false);
+      currentSettings = cfgFileManager.load();
+    } finally {
+      cc.unlockMainConfig();
+    }
   }
 
   SmscManager(File configFile, File backupDir, FileSystem fs, ClusterController cc, ServiceManager serviceManager) throws AdminException {
     this.cc = cc;
     this.serviceManager = serviceManager;
     this.cfgFileManager = createManager(configFile, backupDir, fs);
-  }
-
-  private ConfigFileManager<SmscConfigFile> createManager(File configFile, File backupDir, FileSystem fs) throws AdminException {
-    ConfigFileManager<SmscConfigFile> cfgFileManager = new ConfigFileManager<SmscConfigFile>(configFile, backupDir, fs) {
-      @Override
-      protected SmscConfigFile newConfigFile() {
-        return new SmscConfigFile();
-      }
-    };
-
     try {
       cc.lockMainConfig(false);
-      cfgFileManager.reset();
+      currentSettings = cfgFileManager.load();
     } finally {
       cc.unlockMainConfig();
     }
+  }
 
-    return cfgFileManager;
+  private ConfigFileManager<SmscSettings> createManager(File configFile, File backupDir, FileSystem fs) throws AdminException {
+    return new ConfigFileManager<SmscSettings>(configFile, backupDir, fs, new SmscConfigFile());
   }
 
   private ServiceInfo getInfo(int instanceNumber) throws AdminException {
@@ -69,18 +68,18 @@ public class SmscManager implements SmscConfiguration {
   }
 
   public SmscSettings getSettings() {
-    return new SmscSettings(cfgFileManager.getConfig().getSettings());
+    return new SmscSettings(currentSettings);
   }
 
   public void updateSettings(SmscSettings s) throws AdminException {
-    cfgFileManager.getConfig().setSettings(new SmscSettings(s));
-
     try {
       cc.lockMainConfig(true);
-      cfgFileManager.apply();
+      cfgFileManager.save(s);
     } finally {
       cc.unlockMainConfig();
     }
+
+    currentSettings = new SmscSettings(s);
   }
 
   public File getConfigDir() {
@@ -92,7 +91,7 @@ public class SmscManager implements SmscConfiguration {
   }
 
   public int getSmscInstancesCount() {
-    return cfgFileManager.getConfig().getSettings().getSmscInstancesCount();
+    return currentSettings.getSmscInstancesCount();
   }
 
   public void startSmsc(int instanceNumber) throws AdminException {
@@ -117,7 +116,7 @@ public class SmscManager implements SmscConfiguration {
 
   public Map<Integer, SmscConfigurationStatus> getStatusForSmscs() throws AdminException {
     ConfigState state = cc.getMainConfigState();
-    long lastUpdate = cfgFileManager.getConfigFile().lastModified();
+    long lastUpdate = cfgFileManager.getLastModified();
     Map<Integer, SmscConfigurationStatus> result = new HashMap<Integer, SmscConfigurationStatus>();
     for (Map.Entry<Integer, Long> e : state.getInstancesUpdateTimes().entrySet()) {
       SmscConfigurationStatus s = e.getValue() >= lastUpdate ? SmscConfigurationStatus.UP_TO_DATE : SmscConfigurationStatus.OUT_OF_DATE;

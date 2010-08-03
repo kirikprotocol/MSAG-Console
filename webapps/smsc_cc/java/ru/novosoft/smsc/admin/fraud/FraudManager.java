@@ -20,45 +20,40 @@ import java.util.Map;
 public class FraudManager implements SmscConfiguration {
 
   private ClusterController cc;
-  private ConfigFileManager<FraudConfigFile> cfgFileManager; 
+  private ConfigFileManager<FraudSettings> cfgFileManager;
+  private FraudSettings currentSettings;
 
   public FraudManager(File configFile, File backupDir, ClusterController cc, FileSystem fs) throws AdminException {
     this.cc = cc;
-    this.cfgFileManager = new ConfigFileManager<FraudConfigFile>(configFile, backupDir, fs) {
-      @Override
-      protected FraudConfigFile newConfigFile() {
-        return new FraudConfigFile();
-      }
-    };
+    this.cfgFileManager = new ConfigFileManager<FraudSettings>(configFile, backupDir, fs, new FraudConfigFile());
 
     try {
       cc.lockFraud(false);
-      this.cfgFileManager.reset();
+      currentSettings = this.cfgFileManager.load();
     } finally {
       cc.unlockFraud();
     }
   }
 
   public FraudSettings getSettings() {
-    return new FraudSettings(cfgFileManager.getConfig().getSettings());
+    return new FraudSettings(currentSettings);
   }
 
   public void updateSettings(FraudSettings newSettings) throws AdminException {
-    cfgFileManager.getConfig().setSettings(new FraudSettings(newSettings));
-
     try {
       cc.lockFraud(true);
-      cfgFileManager.apply();
+      cfgFileManager.save(newSettings);
     } finally {
       cc.unlockFraud();
     }
+    currentSettings = new FraudSettings(newSettings);
 
     cc.applyFraud();
   }
 
   public Map<Integer, SmscConfigurationStatus> getStatusForSmscs() throws AdminException {
     ConfigState state = cc.getFraudConfigState();
-    long lastUpdate = cfgFileManager.getConfigFile().lastModified();
+    long lastUpdate = cfgFileManager.getLastModified();
     Map<Integer, SmscConfigurationStatus> result = new HashMap<Integer, SmscConfigurationStatus>();
     for (Map.Entry<Integer, Long> e : state.getInstancesUpdateTimes().entrySet()) {
       SmscConfigurationStatus s = e.getValue() >= lastUpdate ? SmscConfigurationStatus.UP_TO_DATE : SmscConfigurationStatus.OUT_OF_DATE;

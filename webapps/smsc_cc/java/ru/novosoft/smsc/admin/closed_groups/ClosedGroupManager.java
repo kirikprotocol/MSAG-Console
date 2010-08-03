@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
+ * todo сделать более умную проверку на isBroken. Если configBroken == true, то проверить статус во всех центрах (вдруг уже починили)
  * @author Artem Snopkov
  */
 public class ClosedGroupManager implements SmscConfiguration {

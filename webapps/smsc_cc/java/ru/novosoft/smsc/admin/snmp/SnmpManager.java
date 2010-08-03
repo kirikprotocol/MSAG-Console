@@ -20,18 +20,15 @@ import java.util.Map;
 public class SnmpManager implements SmscConfiguration {
 
   private final ClusterController cc;
-  private final ConfigFileManager<SnmpConfigFile> cfgFileManager;
+  private final ConfigFileManager<SnmpSettings> cfgFileManager;
+  private SnmpSettings currentSettings;
 
   public SnmpManager(File configFile, File backupDir, ClusterController cc, FileSystem fileSystem) throws AdminException {
-    this.cfgFileManager = new ConfigFileManager<SnmpConfigFile>(configFile, backupDir, fileSystem) {
-      @Override
-      protected SnmpConfigFile newConfigFile() {
-        return new SnmpConfigFile();
-      }
-    };
+    this.cfgFileManager = new ConfigFileManager<SnmpSettings>(configFile, backupDir, fileSystem, new SnmpConfigFile());
+
     try {
       cc.lockSnmp(false);
-      this.cfgFileManager.reset();
+      currentSettings = this.cfgFileManager.load();
     } finally {
       cc.unlockSnmp();
     }
@@ -40,25 +37,25 @@ public class SnmpManager implements SmscConfiguration {
   }
 
   public SnmpSettings getSettings() {
-    return new SnmpSettings(cfgFileManager.getConfig().getSettings());
+    return new SnmpSettings(currentSettings);
   }
 
   public void updateSettings(SnmpSettings settings) throws AdminException {
-    cfgFileManager.getConfig().setSettings(new SnmpSettings(settings));
-
     try {
       cc.lockSnmp(true);
-      cfgFileManager.apply();
+      cfgFileManager.save(settings);
     } finally {
       cc.unlockSnmp();
     }
+
+    currentSettings = new SnmpSettings(settings);
 
     cc.applySnmp();
   }
 
   public Map<Integer, SmscConfigurationStatus> getStatusForSmscs() throws AdminException {
     ConfigState state = cc.getSnmpConfigState();
-    long lastUpdate = cfgFileManager.getConfigFile().lastModified();
+    long lastUpdate = cfgFileManager.getLastModified();
     Map<Integer, SmscConfigurationStatus> result = new HashMap<Integer, SmscConfigurationStatus>();
     for (Map.Entry<Integer, Long> e : state.getInstancesUpdateTimes().entrySet()) {
       SmscConfigurationStatus s = e.getValue() >= lastUpdate ? SmscConfigurationStatus.UP_TO_DATE : SmscConfigurationStatus.OUT_OF_DATE;

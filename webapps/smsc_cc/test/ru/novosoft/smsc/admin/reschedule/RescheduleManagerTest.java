@@ -49,49 +49,6 @@ public class RescheduleManagerTest {
   }
 
   @Test
-  public void getSettingsTest() throws AdminException {
-    RescheduleManager manager = getManager(new TestClusterControllerStub());
-
-    RescheduleSettings s = manager.getSettings();
-
-    assertEquals(20, s.getRescheduleLimit());
-    assertEquals("30s,1m,5m,15m,30m,1h,6h,12h,1d:*", s.getDefaultReschedule());
-
-    Collection<Reschedule> reschedules = s.getReschedules();
-    assertNotNull(reschedules);
-    assertEquals(2, reschedules.size());
-
-    Iterator<Reschedule> iter = reschedules.iterator();
-
-    assertEquals(new Reschedule("30s,11m,15m", 8), iter.next());
-    assertEquals(new Reschedule("30s,1m,5m,15m,30m,1h,6h,12h,1d", 1028, 255, 20, 1027, 88, 100, 69), iter.next());
-  }
-
-  @Test
-  public void updateSettingsTest() throws AdminException, XmlConfigException {
-    // Загружаем первоначальный конфиг
-    XmlConfig cfg = new XmlConfig();
-    cfg.load(configFile);
-
-    TestClusterControllerStub clusterController = new TestClusterControllerStub();
-    RescheduleManager config1 = getManager(clusterController);
-    RescheduleSettings s = config1.getSettings();
-    s.setRescheduleLimit(20);
-
-    config1.updateSettings(s);
-
-    // Проверяем, что в директории backup появились файлы
-    assertFalse(backupDir.delete()); // Не можем удалить директорию т.к. там появились файлы
-
-    // Снова загружаем конфиг
-    XmlConfig cfg1 = new XmlConfig();
-    cfg1.load(configFile);
-
-    // Проверяем эквивалентность первоначальному конфигу.
-    assertEquals(cfg, cfg1);
-  }
-
-  @Test
   public void testGetStatusForSmscs() throws AdminException {
     RescheduleManager manager = getManager(new ClusterControllerImpl());
 
