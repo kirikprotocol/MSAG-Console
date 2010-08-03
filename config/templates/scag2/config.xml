@@ -19,8 +19,8 @@
         <param name="BillingReconnectTimeOut" type="int">@bill.reconnect_time_out@</param> <!-- sec. -->
         <section name="ewallet">
             <param name="enabled" type="bool">false</param>
-            <param name="host" type="string"></param>
-            <param type="int" name="port">0</param>
+            <param name="host" type="string">@ewallet.server_host@</param>
+            <param type="int" name="port">@ewallet.server.port@</param>
         </section>
     </section>
 

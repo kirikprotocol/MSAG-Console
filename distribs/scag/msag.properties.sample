@@ -37,6 +37,9 @@ bill.server_port=23989
 bill.time_out=1
 bill.reconnect_time_out=60
 
+ewallet.server_host=127.0.0.1
+ewallet.server_port=0
+
 status.show_interval=86400000
 language.default=ru
 scag.session.location=/opt/home/msag_test/msag_distr/storage/sessions

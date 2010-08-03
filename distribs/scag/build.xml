@@ -916,7 +916,7 @@ If you have it somewhere, you may specify it on command line via -DPROTOGEN=full
         <chmod file="${DISTR_DIR}/services/msag/bin/service" perm="755"/>
         <copy todir="${DISTR_DIR}/services/msag/conf"
               flatten="yes">
-            <fileset dir="${TEMPL_DIR}/scag2" includes="controller.xml config.xml smpp.xml smpp_routes.xml http_routes.xml operators.xml tariffs.xml services.xml"/>
+            <fileset dir="${TEMPL_DIR}/scag2" includes="controller.xml config.xml smpp.xml smpp_routes.xml http_routes.xml operators.xml tariffs.xml services.xml counters.xml"/>
             <filterset filtersfile="${TEMPLATE_PROPS}"/>
         </copy>
         <!-- mkdir dir="${scag2.session.location}" description="create sessions dir #1"/ -->
