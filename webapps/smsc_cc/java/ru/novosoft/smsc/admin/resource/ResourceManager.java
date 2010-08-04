@@ -11,7 +11,6 @@ import ru.novosoft.smsc.admin.filesystem.FileSystem;
 import java.io.File;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -30,7 +29,6 @@ public class ResourceManager implements SmscConfiguration {
     this.backupDir = backupDir;
     this.cc = cc;
     this.fs = fs;
-
   }
 
   private synchronized void reset() throws AdminException {

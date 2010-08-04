@@ -1,9 +1,14 @@
 package ru.novosoft.smsc.admin.resource;
 
+import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.util.ValidationHelper;
+
 /**
  * @author Artem Snopkov
  */
 public class ResourceSettings {
+
+  private static final ValidationHelper vh = new ValidationHelper(ResourceSettings.class);
 
   private String decimalDelimiter;
   private String listDelimiter;
@@ -19,11 +24,25 @@ public class ResourceSettings {
     return decimalDelimiter;
   }
 
+  public void setDecimalDelimiter(String decimalDelimiter) throws AdminException {
+    vh.checkNotEmpty("decimalDelimiter", decimalDelimiter);
+    this.decimalDelimiter = decimalDelimiter;
+  }
+
   public String getListDelimiter() {
     return listDelimiter;
   }
 
+  public void setListDelimiter(String listDelimiter) throws AdminException {
+    vh.checkNotEmpty("listDelimiter", listDelimiter);
+    this.listDelimiter = listDelimiter;
+  }
+
   public Resources getResources() {
     return resources;
+  }
+
+  public void setResources(Resources resources) {
+    this.resources = resources;
   }
 }

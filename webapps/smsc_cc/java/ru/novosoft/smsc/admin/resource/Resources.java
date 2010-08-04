@@ -15,8 +15,10 @@ public class Resources {
   }
 
   Resources(Resources copy) {
-    setStrings(copy.strings);
-    setChilds(copy.childs);
+    this.strings = new HashMap<String, String>(copy.strings);
+    this.childs = new HashMap<String, Resources>();
+    for (Map.Entry<String, Resources> e : copy.childs.entrySet())
+      this.childs.put(e.getKey(), new Resources(e.getValue()));
   }
 
   public Map<String, String> getStrings() {
