@@ -256,7 +256,6 @@ public class CommonSettings implements Cloneable {
     this.profilerDivertCapacityOff = s.profilerDivertCapacityOff;
     this.profilerDivertStatus = s.profilerDivertStatus;
     this.profilerDivertTo = s.profilerDivertTo;
-    this.profilerDivertTo = s.profilerDivertTo;
     this.profilerConcatOff = s.profilerConcatOff;
     this.profilerTranslitOn = s.profilerTranslitOn;
     this.profilerTranslitOff = s.profilerTranslitOff;

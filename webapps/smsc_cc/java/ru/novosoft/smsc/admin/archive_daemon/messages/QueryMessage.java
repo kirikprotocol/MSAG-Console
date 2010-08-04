@@ -41,7 +41,7 @@ public class QueryMessage extends Message {
     this.query = query;
   }
 
-  private class Param {
+  private static class Param {
     private byte type;
     private long longValue;
     private String strValue;

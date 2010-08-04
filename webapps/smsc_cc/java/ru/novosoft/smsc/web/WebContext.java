@@ -1,6 +1,7 @@
 package ru.novosoft.smsc.web;
 
 import ru.novosoft.smsc.admin.AdminContext;
+import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.util.xml.WebXml;
 import ru.novosoft.smsc.web.auth.Authenticator;
 import ru.novosoft.smsc.web.auth.XmlAuthenticator;
@@ -46,7 +47,11 @@ public class WebContext {
     this.authenticator = authenticator;
     this.webXml = webXml;
     this.adminContext = adminContext;
-    this.appliableConfiguration = new AppliableConfiguration(adminContext);
+    try {
+      this.appliableConfiguration = new AppliableConfiguration(adminContext);
+    } catch (AdminException e) {
+      throw new InitException(e);
+    }
   }
 
   public WebXml getWebXml() {

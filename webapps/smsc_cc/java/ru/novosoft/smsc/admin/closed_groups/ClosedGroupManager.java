@@ -53,7 +53,7 @@ public class ClosedGroupManager implements SmscConfiguration {
     this.backupDir = backupDir;
     this.cc = cc;
     this.fs = fs;
-    load();
+    load(); // todo make lazy load
   }
 
   public boolean isBroken() {
@@ -156,7 +156,8 @@ public class ClosedGroupManager implements SmscConfiguration {
   protected void load(InputStream is) throws AdminException {
     Collection<ClosedGroup> newGroups = new ArrayList<ClosedGroup>();
     try {
-      cc.lockClosedGroups(false);
+      if (cc.isOnline())
+        cc.lockClosedGroups(false);
       Document closedGroupDoc = XmlUtils.parse(is);
       NodeList a = closedGroupDoc.getElementsByTagName(PARAM_NAME_last_used_id);
       if (a.getLength() > 0)
@@ -172,7 +173,8 @@ public class ClosedGroupManager implements SmscConfiguration {
       configBroken = true;
       throw new ClosedGroupException("config_broken", e);
     } finally {
-      cc.unlockClosedGroups();
+      if (cc.isOnline())
+        cc.unlockClosedGroups();
     }
 
     groups = newGroups;
@@ -190,7 +192,8 @@ public class ClosedGroupManager implements SmscConfiguration {
     PrintWriter out = null;
     Throwable configBrokenCause = null;
     try {
-      cc.lockClosedGroups(true);
+      if (cc.isOnline())
+        cc.lockClosedGroups(true);
 
       out = new PrintWriter(new OutputStreamWriter(fs.getOutputStream(tmpConfigFile), Functions.getLocaleEncoding()));
       XmlUtils.storeConfigHeader(out, ROOT_ELEMENT, "ClosedGroups.dtd", Functions.getLocaleEncoding());
@@ -220,7 +223,8 @@ public class ClosedGroupManager implements SmscConfiguration {
       if (out != null)
         out.close();
       try {
-        cc.unlockClosedGroups();
+        if (cc.isOnline())
+          cc.unlockClosedGroups();
       } catch (AdminException e) {
         configBroken = true;
         configBrokenCause = e;

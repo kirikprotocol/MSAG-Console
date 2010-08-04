@@ -21,34 +21,35 @@ public class FraudManager implements SmscConfiguration {
 
   private ClusterController cc;
   private ConfigFileManager<FraudSettings> cfgFileManager;
-  private FraudSettings currentSettings;
 
   public FraudManager(File configFile, File backupDir, ClusterController cc, FileSystem fs) throws AdminException {
     this.cc = cc;
     this.cfgFileManager = new ConfigFileManager<FraudSettings>(configFile, backupDir, fs, new FraudConfigFile());
-
-    try {
-      cc.lockFraud(false);
-      currentSettings = this.cfgFileManager.load();
-    } finally {
-      cc.unlockFraud();
-    }
   }
 
-  public FraudSettings getSettings() {
-    return new FraudSettings(currentSettings);
+  public FraudSettings getSettings() throws AdminException {
+    try {
+      if (cc.isOnline())
+        cc.lockFraud(false);
+      return this.cfgFileManager.load();
+    } finally {
+      if (cc.isOnline())
+        cc.unlockFraud();
+    }
   }
 
   public void updateSettings(FraudSettings newSettings) throws AdminException {
     try {
-      cc.lockFraud(true);
+      if (cc.isOnline())
+        cc.lockFraud(true);
       cfgFileManager.save(newSettings);
     } finally {
-      cc.unlockFraud();
+      if (cc.isOnline())
+        cc.unlockFraud();
     }
-    currentSettings = new FraudSettings(newSettings);
 
-    cc.applyFraud();
+    if (cc.isOnline())
+      cc.applyFraud();
   }
 
   public Map<Integer, SmscConfigurationStatus> getStatusForSmscs() throws AdminException {

@@ -107,20 +107,18 @@ public abstract class CallableService {
           throw new CallableServiceException("invalid_response", serviceId);
       }
     } else {
-      logger.error("Incorrect method \"" + (null == method ? "<null>" : method.getName()) + "\" signature");
+      logger.error("Incorrect method \"" + method.getName() + "\" signature");
 
       // for debug purposes
       try {
-        if (null != component)
           logger.debug("Component: " + component.getName());
-        if (null != method)
           logger.debug("Called method:" + "\n  name: " + method.getName() + "\n  type: " + method.getType().getName() + "\n  params: " + method.getParams());
-        if (null != component && null != component.getMethods().get(method.getName())) {
+        if ( null != component.getMethods().get(method.getName())) {
           final Method foundMethod = (Method) component.getMethods().get(method.getName());
           logger.debug("Found method:" + "\n  name: " + foundMethod.getName() + "\n  type: " + foundMethod.getType().getName() + "\n  params: "
               + foundMethod.getParams());
         }
-      } catch (Throwable e) {
+      } catch (Exception e) {
       }
 
       throw new CallableServiceException("incompartible_service_version", serviceId);

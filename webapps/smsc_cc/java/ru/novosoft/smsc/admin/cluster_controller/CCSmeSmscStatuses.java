@@ -35,7 +35,7 @@ public class CCSmeSmscStatuses {
     return Collections.unmodifiableList(connectStatuses);
   }
 
-  public class ConnectStatus {
+  public static class ConnectStatus {
     int nodeIndex;
     int status;
     int bindMode;

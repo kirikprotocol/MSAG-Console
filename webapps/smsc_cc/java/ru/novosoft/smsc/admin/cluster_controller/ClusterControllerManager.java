@@ -18,7 +18,6 @@ public class ClusterControllerManager  {
 
   private final ConfigFileManager<ClusterControllerSettings> cfgFileManager;
   private final ServiceManager serviceManager;
-  private ClusterControllerSettings currentSettings;
 
   public ClusterControllerManager(ServiceManager serviceManager, FileSystem fileSystem) throws AdminException {
     this.serviceManager = serviceManager;
@@ -26,13 +25,6 @@ public class ClusterControllerManager  {
     File conf = new File(info.getBaseDir(), "conf");
 
     this.cfgFileManager = new ConfigFileManager<ClusterControllerSettings>(new File(conf, "config.xml"), new File(conf, "backup"), fileSystem, new ClusterControllerConfig());
-    this.currentSettings = this.cfgFileManager.load();
-  }
-
-  ClusterControllerManager(File configFile, File backupDir, FileSystem fs, ServiceManager serviceManager) throws AdminException {
-    this.serviceManager = serviceManager;
-    this.cfgFileManager = new ConfigFileManager<ClusterControllerSettings>(configFile, backupDir, fs, new ClusterControllerConfig());
-    this.currentSettings = this.cfgFileManager.load();
   }
 
   private ServiceInfo getInfo() throws AdminException {
@@ -42,13 +34,12 @@ public class ClusterControllerManager  {
     return si;
   }
 
-  public ClusterControllerSettings getSettings() {
-    return new ClusterControllerSettings(currentSettings);
+  public ClusterControllerSettings getSettings() throws AdminException {
+    return cfgFileManager.load();
   }
 
   public void updateSettings(ClusterControllerSettings newSettings) throws AdminException {
     cfgFileManager.save(newSettings);
-    this.currentSettings = new ClusterControllerSettings(newSettings);
   }
 
   public void startClusterController() throws AdminException {

@@ -32,6 +32,7 @@ final class ClusterControllerClient {
 
   private String onlineHost;
   private Socket socket;
+  private boolean connected;
 
   ClusterControllerClient(ClusterControllerManager manager) {
     this.manager = manager;
@@ -63,8 +64,10 @@ final class ClusterControllerClient {
           socket = new Socket(onlineHost, port);
         } catch (IOException e) {
           onlineHost = null;
-          if (i == 1)
+          if (i == 1) {
+            connected = false;
             throw new ClusterControllerException("cluster_controller_offline", e);
+          }
 
           log.error("Connection to Cluster controlled failed. One more try...");
           continue;
@@ -74,6 +77,8 @@ final class ClusterControllerClient {
           log.debug("Connected to Cluster Controller on " + onlineHost + ':' + port + '.');
       }
     }
+
+    connected = true;
     return socket;
   }
 
@@ -84,6 +89,7 @@ final class ClusterControllerClient {
       } catch (IOException e) {
       }
       socket = null;
+      connected = false;
 
       if (log.isDebugEnabled())
         log.debug("Disconnected from Cluster Controller.");
@@ -172,6 +178,10 @@ final class ClusterControllerClient {
     }
 
     log.warn("ClusterControllerClient shutdowned.");
+  }
+
+  public boolean isConnected() {
+    return connected;
   }
 
   public AclAddAddressesResp send(AclAddAddresses req) throws AdminException {
@@ -302,7 +312,7 @@ final class ClusterControllerClient {
     return sendPdu(req, new SmeUpdateResp());
   }
 
-  private class ResponseListener {
+  private static class ResponseListener {
     private final CountDownLatch respLatch = new CountDownLatch(1);
 
     private PDU response;
@@ -368,6 +378,7 @@ final class ClusterControllerClient {
             }
           }
         } catch (Exception e) {
+          disconnect();
           log.error(e, e);
         }
 

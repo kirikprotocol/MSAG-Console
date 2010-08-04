@@ -32,7 +32,8 @@ public class MscManager implements SmscConfiguration {
   public Collection<Address> mscs() throws AdminException {
     BufferedReader is = null;
     try {
-      cc.lockMsc(false);
+      if (cc.isOnline())
+        cc.lockMsc(false);
       is = new BufferedReader(new InputStreamReader(fs.getInputStream(aliasesFile)));
 
       Collection<Address> result = new ArrayList<Address>();
@@ -50,7 +51,8 @@ public class MscManager implements SmscConfiguration {
           is.close();
         } catch (IOException ignored) {
         }
-      cc.unlockMsc();
+      if (cc.isOnline())
+        cc.unlockMsc();
     }
   }
 
@@ -65,7 +67,6 @@ public class MscManager implements SmscConfiguration {
     if (msc == null)
       throw new IllegalArgumentException("mscAddress");
     cc.unregisterMsc(new Address(msc));
-
   }
 
   public Map<Integer, SmscConfigurationStatus> getStatusForSmscs() throws AdminException {

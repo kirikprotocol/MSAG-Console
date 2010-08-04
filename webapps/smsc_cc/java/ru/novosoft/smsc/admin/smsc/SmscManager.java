@@ -26,7 +26,6 @@ public class SmscManager implements SmscConfiguration {
   private final ClusterController cc;
   private final ConfigFileManager<SmscSettings> cfgFileManager;
   private final ServiceManager serviceManager;
-  private SmscSettings currentSettings;
 
   public SmscManager(ServiceManager serviceManager, ClusterController cc, FileSystem fileSystem) throws AdminException {
     this.cc = cc;
@@ -36,24 +35,13 @@ public class SmscManager implements SmscConfiguration {
     File configDir = new File(info.getBaseDir(), "conf");
 
     this.cfgFileManager = createManager(new File(configDir, "config.xml"), new File(configDir, "backup"), fileSystem);
-    try {
-      cc.lockMainConfig(false);
-      currentSettings = cfgFileManager.load();
-    } finally {
-      cc.unlockMainConfig();
-    }
+
   }
 
   SmscManager(File configFile, File backupDir, FileSystem fs, ClusterController cc, ServiceManager serviceManager) throws AdminException {
     this.cc = cc;
     this.serviceManager = serviceManager;
     this.cfgFileManager = createManager(configFile, backupDir, fs);
-    try {
-      cc.lockMainConfig(false);
-      currentSettings = cfgFileManager.load();
-    } finally {
-      cc.unlockMainConfig();
-    }
   }
 
   private ConfigFileManager<SmscSettings> createManager(File configFile, File backupDir, FileSystem fs) throws AdminException {
@@ -67,19 +55,26 @@ public class SmscManager implements SmscConfiguration {
     return si;
   }
 
-  public SmscSettings getSettings() {
-    return new SmscSettings(currentSettings);
+  public SmscSettings getSettings() throws AdminException {
+    try {
+      if (cc.isOnline())
+        cc.lockMainConfig(false);
+      return cfgFileManager.load();
+    } finally {
+      if (cc.isOnline())
+        cc.unlockMainConfig();
+    }
   }
 
   public void updateSettings(SmscSettings s) throws AdminException {
     try {
-      cc.lockMainConfig(true);
+      if (cc.isOnline())
+        cc.lockMainConfig(true);
       cfgFileManager.save(s);
     } finally {
-      cc.unlockMainConfig();
+      if (cc.isOnline())
+        cc.unlockMainConfig();
     }
-
-    currentSettings = new SmscSettings(s);
   }
 
   public File getConfigDir() {
@@ -88,10 +83,6 @@ public class SmscManager implements SmscConfiguration {
 
   public File getConfigBackupDir() {
     return new File(getConfigDir(), "backup");
-  }
-
-  public int getSmscInstancesCount() {
-    return currentSettings.getSmscInstancesCount();
   }
 
   public void startSmsc(int instanceNumber) throws AdminException {

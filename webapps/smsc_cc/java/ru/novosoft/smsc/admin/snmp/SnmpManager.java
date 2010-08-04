@@ -21,36 +21,35 @@ public class SnmpManager implements SmscConfiguration {
 
   private final ClusterController cc;
   private final ConfigFileManager<SnmpSettings> cfgFileManager;
-  private SnmpSettings currentSettings;
 
   public SnmpManager(File configFile, File backupDir, ClusterController cc, FileSystem fileSystem) throws AdminException {
     this.cfgFileManager = new ConfigFileManager<SnmpSettings>(configFile, backupDir, fileSystem, new SnmpConfigFile());
-
-    try {
-      cc.lockSnmp(false);
-      currentSettings = this.cfgFileManager.load();
-    } finally {
-      cc.unlockSnmp();
-    }
-
     this.cc = cc;
   }
 
-  public SnmpSettings getSettings() {
-    return new SnmpSettings(currentSettings);
+  public SnmpSettings getSettings() throws AdminException {
+    try {
+      if (cc.isOnline())
+        cc.lockSnmp(false);
+      return this.cfgFileManager.load();
+    } finally {
+      if (cc.isOnline())
+        cc.unlockSnmp();
+    }
   }
 
   public void updateSettings(SnmpSettings settings) throws AdminException {
     try {
-      cc.lockSnmp(true);
+      if (cc.isOnline())
+        cc.lockSnmp(true);
       cfgFileManager.save(settings);
     } finally {
-      cc.unlockSnmp();
+      if (cc.isOnline())
+        cc.unlockSnmp();
     }
 
-    currentSettings = new SnmpSettings(settings);
-
-    cc.applySnmp();
+    if (cc.isOnline())
+      cc.applySnmp();
   }
 
   public Map<Integer, SmscConfigurationStatus> getStatusForSmscs() throws AdminException {

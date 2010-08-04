@@ -21,35 +21,37 @@ public class MapLimitManager implements SmscConfiguration {
 
   private final ClusterController cc;
   private final ConfigFileManager<MapLimitSettings> cfgFileManager;
-  private MapLimitSettings currentSettings;
 
   public MapLimitManager(File configFile, File backupDir, ClusterController cc, FileSystem fs) throws AdminException {
     this.cc = cc;
     this.cfgFileManager = new ConfigFileManager<MapLimitSettings>(configFile, backupDir, fs, new MapLimitConfig());
 
-    try {
-      cc.lockMapLimits(false);
-      currentSettings = cfgFileManager.load();
-    } finally {
-      cc.unlockMapLimits();
-    }
+
   }
 
-  public MapLimitSettings getSettings() {
-    return new MapLimitSettings(currentSettings);
+  public MapLimitSettings getSettings() throws AdminException {
+    try {
+      if (cc.isOnline())
+        cc.lockMapLimits(false);
+      return cfgFileManager.load();
+    } finally {
+      if (cc.isOnline())
+        cc.unlockMapLimits();
+    }
   }
 
   public void updateSettings(MapLimitSettings settings) throws AdminException {
     try {
-      cc.lockMapLimits(true);
+      if (cc.isOnline())
+        cc.lockMapLimits(true);
       cfgFileManager.save(settings);
     } finally {
-      cc.unlockMapLimits();
+      if (cc.isOnline())
+        cc.unlockMapLimits();
     }
 
-    currentSettings = new MapLimitSettings(settings);
-
-    cc.applyMapLimits();
+    if (cc.isOnline())
+      cc.applyMapLimits();
   }
 
   public Map<Integer, SmscConfigurationStatus> getStatusForSmscs() throws AdminException {

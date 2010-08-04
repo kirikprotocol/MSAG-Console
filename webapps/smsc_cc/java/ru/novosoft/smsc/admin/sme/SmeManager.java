@@ -39,10 +39,12 @@ public class SmeManager implements SmscConfiguration {
     smeFileManager = new ConfigFileManager<Map<String, Sme>>(configFile, backupDir, fs, new SmeConfigFile());
 
     try {
-      cc.lockSmeConfig(false);
+      if (cc.isOnline())
+        cc.lockSmeConfig(false);
       smes = smeFileManager.load();
     } finally {
-      cc.unlockSmeConfig();
+      if (cc.isOnline())
+        cc.unlockSmeConfig();
     }
   }
 
@@ -60,10 +62,12 @@ public class SmeManager implements SmscConfiguration {
 
   private void save() throws AdminException {
     try {
-      cc.lockSmeConfig(true);
+      if (cc.isOnline())
+        cc.lockSmeConfig(true);
       smeFileManager.save(smes);
     } finally {
-      cc.unlockSmeConfig();
+      if (cc.isOnline())
+        cc.unlockSmeConfig();
     }
   }
 
@@ -91,9 +95,15 @@ public class SmeManager implements SmscConfiguration {
     ccSme.setFlagSmppPlus(sme.isSmppPlus());
 
     switch (sme.getBindMode()) {
-      case TX : ccSme.setMode(CCSme.BIND_MODE_TX); break;
-      case RX: ccSme.setMode(CCSme.BIND_MODE_RX); break;
-      case TRX: ccSme.setMode(CCSme.BIND_MODE_TRX); break;
+      case TX:
+        ccSme.setMode(CCSme.BIND_MODE_TX);
+        break;
+      case RX:
+        ccSme.setMode(CCSme.BIND_MODE_RX);
+        break;
+      case TRX:
+        ccSme.setMode(CCSme.BIND_MODE_TRX);
+        break;
     }
 
     return ccSme;
@@ -118,10 +128,12 @@ public class SmeManager implements SmscConfiguration {
 
       CCSme params = sme2CCSme(smeId, newSme);
 
-      if (exist)
-        cc.updateSme(params);
-      else
-        cc.addSme(params);
+      if (cc.isOnline()) {
+        if (exist)
+          cc.updateSme(params);
+        else
+          cc.addSme(params);
+      }
 
     } catch (AdminException e) {
       broken = true;

@@ -19,7 +19,6 @@ public class ClusterController {
 
 
   private ClusterControllerClient cc;
-  private ClusterControllerManager manager;
   private long lastConfigsStatusCheckTime;
   private EnumMap<ConfigType, ConfigState> configsStates;
 
@@ -28,16 +27,30 @@ public class ClusterController {
   }
 
   public ClusterController(ClusterControllerManager manager) throws AdminException {
-    this.manager = manager;
     this.cc = new ClusterControllerClient(manager);
   }
 
   public boolean isOnline() throws AdminException {
-    return manager.getControllerOnlineHost() != null;
+    return cc.isConnected();
   }
 
   public void shutdown() {
     cc.shutdown();
+  }
+
+  protected synchronized void lockConfig(ConfigType configType, boolean write) throws AdminException {
+    LockConfig req = new LockConfig();
+    req.setConfigType(configType);
+    req.setWriteLock(write);
+    LockConfigResp resp = cc.send(req);
+    if (resp.getResp().getStatus() != 0)
+      throw new ClusterControllerException("interaction_error", resp.getResp().getStatus() + "");
+  }
+
+  protected synchronized void unlockConfig(ConfigType configType) throws AdminException {
+    UnlockConfig req = new UnlockConfig();
+    req.setConfigType(configType);
+    cc.send(req);
   }
 
   protected synchronized ConfigState getConfigState(ConfigType configType) throws AdminException {
@@ -79,12 +92,7 @@ public class ClusterController {
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
   public void lockMainConfig(boolean write) throws AdminException {
-    LockConfig req = new LockConfig();
-    req.setConfigType(ConfigType.MainConfig);
-    req.setWriteLock(write);
-    LockConfigResp resp = cc.send(req);
-    if (resp.getResp().getStatus() != 0)
-      throw new ClusterControllerException("interaction_error", resp.getResp().getStatus() + "");
+    lockConfig(ConfigType.MainConfig, write);
   }
 
   /**
@@ -93,9 +101,7 @@ public class ClusterController {
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
   public void unlockMainConfig() throws AdminException {
-    UnlockConfig req = new UnlockConfig();
-    req.setConfigType(ConfigType.MainConfig);
-    cc.send(req);
+    unlockConfig(ConfigType.MainConfig);
   }
 
   /**
@@ -116,12 +122,7 @@ public class ClusterController {
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
   public void lockAliases(boolean write) throws AdminException {
-    LockConfig req = new LockConfig();
-    req.setConfigType(ConfigType.Aliases);
-    req.setWriteLock(write);
-    LockConfigResp resp = cc.send(req);
-    if (resp.getResp().getStatus() != 0)
-      throw new ClusterControllerException("interaction_error", resp.getResp().getStatus() + "");
+    lockConfig(ConfigType.Aliases, write);
   }
 
   /**
@@ -130,9 +131,7 @@ public class ClusterController {
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
   public void unlockAliases() throws AdminException {
-    UnlockConfig req = new UnlockConfig();
-    req.setConfigType(ConfigType.Aliases);
-    cc.send(req);
+    unlockConfig(ConfigType.Aliases);
   }
 
   /**
@@ -193,12 +192,7 @@ public class ClusterController {
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
   public void lockClosedGroups(boolean write) throws AdminException {
-    LockConfig req = new LockConfig();
-    req.setConfigType(ConfigType.ClosedGroups);
-    req.setWriteLock(write);
-    LockConfigResp resp = cc.send(req);
-    if (resp.getResp().getStatus() != 0)
-      throw new ClusterControllerException("interaction_error", resp.getResp().getStatus() + "");
+    lockConfig(ConfigType.ClosedGroups, write);
   }
 
   /**
@@ -207,9 +201,7 @@ public class ClusterController {
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
   public void unlockClosedGroups() throws AdminException {
-    UnlockConfig req = new UnlockConfig();
-    req.setConfigType(ConfigType.ClosedGroups);
-    cc.send(req);
+   unlockConfig(ConfigType.ClosedGroups);
   }
 
   /**
@@ -308,12 +300,7 @@ public class ClusterController {
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
   public void lockMsc(boolean write) throws AdminException {
-    LockConfig req = new LockConfig();
-    req.setConfigType(ConfigType.Msc);
-    req.setWriteLock(write);
-    LockConfigResp resp = cc.send(req);
-    if (resp.getResp().getStatus() != 0)
-      throw new ClusterControllerException("interaction_error", resp.getResp().getStatus() + "");
+    lockConfig(ConfigType.Msc, write);
   }
 
   /**
@@ -322,9 +309,7 @@ public class ClusterController {
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
   public void unlockMsc() throws AdminException {
-    UnlockConfig req = new UnlockConfig();
-    req.setConfigType(ConfigType.Msc);
-    cc.send(req);
+    unlockConfig(ConfigType.Msc);
   }
 
   /**
@@ -381,12 +366,7 @@ public class ClusterController {
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
   public void lockReschedule(boolean write) throws AdminException {
-    LockConfig req = new LockConfig();
-    req.setConfigType(ConfigType.Reschedule);
-    req.setWriteLock(write);
-    LockConfigResp resp = cc.send(req);
-    if (resp.getResp().getStatus() != 0)
-      throw new ClusterControllerException("interaction_error", resp.getResp().getStatus() + "");
+    lockConfig(ConfigType.Reschedule, write);
   }
 
   /**
@@ -395,9 +375,7 @@ public class ClusterController {
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
   public void unlockReschedule() throws AdminException {
-    UnlockConfig req = new UnlockConfig();
-    req.setConfigType(ConfigType.Reschedule);
-    cc.send(req);
+    unlockConfig(ConfigType.Reschedule);
   }
 
   /**
@@ -433,12 +411,7 @@ public class ClusterController {
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
   public void lockFraud(boolean write) throws AdminException {
-    LockConfig req = new LockConfig();
-    req.setConfigType(ConfigType.Fraud);
-    req.setWriteLock(write);
-    LockConfigResp resp = cc.send(req);
-    if (resp.getResp().getStatus() != 0)
-      throw new ClusterControllerException("interaction_error", resp.getResp().getStatus() + "");
+    lockConfig(ConfigType.Fraud, write);
   }
 
   /**
@@ -447,9 +420,7 @@ public class ClusterController {
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
   public void unlockFraud() throws AdminException {
-    UnlockConfig req = new UnlockConfig();
-    req.setConfigType(ConfigType.Fraud);
-    cc.send(req);
+    unlockConfig(ConfigType.Fraud);
   }
 
   /**
@@ -485,12 +456,7 @@ public class ClusterController {
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
   public void lockMapLimits(boolean write) throws AdminException {
-    LockConfig req = new LockConfig();
-    req.setConfigType(ConfigType.MapLimits);
-    req.setWriteLock(write);
-    LockConfigResp resp = cc.send(req);
-    if (resp.getResp().getStatus() != 0)
-      throw new ClusterControllerException("interaction_error", resp.getResp().getStatus() + "");
+    lockConfig(ConfigType.MapLimits, write);
   }
 
   /**
@@ -499,9 +465,7 @@ public class ClusterController {
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
   public void unlockMapLimits() throws AdminException {
-    UnlockConfig req = new UnlockConfig();
-    req.setConfigType(ConfigType.MapLimits);
-    cc.send(req);
+    unlockConfig(ConfigType.MapLimits);
   }
 
   /**
@@ -537,12 +501,7 @@ public class ClusterController {
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
   public void lockSnmp(boolean write) throws AdminException {
-    LockConfig req = new LockConfig();
-    req.setConfigType(ConfigType.Snmp);
-    req.setWriteLock(write);
-    LockConfigResp resp = cc.send(req);
-    if (resp.getResp().getStatus() != 0)
-      throw new ClusterControllerException("interaction_error", resp.getResp().getStatus() + "");
+    lockConfig(ConfigType.Snmp, write);
   }
 
   /**
@@ -551,9 +510,7 @@ public class ClusterController {
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
   public void unlockSnmp() throws AdminException {
-    UnlockConfig req = new UnlockConfig();
-    req.setConfigType(ConfigType.Snmp);
-    cc.send(req);
+    unlockConfig(ConfigType.Snmp);
   }
 
   /**
@@ -589,12 +546,7 @@ public class ClusterController {
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
   public void lockSmeConfig(boolean write) throws AdminException {
-    LockConfig req = new LockConfig();
-    req.setConfigType(ConfigType.Sme);
-    req.setWriteLock(write);
-    LockConfigResp resp = cc.send(req);
-    if (resp.getResp().getStatus() != 0)
-      throw new ClusterControllerException("interaction_error", resp.getResp().getStatus() + "");
+    lockConfig(ConfigType.Sme, write);
   }
 
   /**
@@ -603,9 +555,7 @@ public class ClusterController {
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
   public void unlockSmeConfig() throws AdminException {
-    UnlockConfig req = new UnlockConfig();
-    req.setConfigType(ConfigType.Sme);
-    cc.send(req);
+    unlockConfig(ConfigType.Sme);
   }
 
   /**
@@ -623,6 +573,7 @@ public class ClusterController {
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
   public void addSme(CCSme sme) throws AdminException {
+    lastConfigsStatusCheckTime = 0;
     SmeAdd req = new SmeAdd();
     req.setParams(sme.toSmeParams());
     MultiResponse resp = cc.send(req).getResp();
@@ -639,6 +590,7 @@ public class ClusterController {
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
   public void updateSme(CCSme sme) throws AdminException {
+    lastConfigsStatusCheckTime = 0;
     SmeUpdate req = new SmeUpdate();
     req.setParams(sme.toSmeParams());
     MultiResponse resp = cc.send(req).getResp();
@@ -655,6 +607,7 @@ public class ClusterController {
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
   public void removeSme(String smeId) throws AdminException {
+    lastConfigsStatusCheckTime = 0;
     SmeRemove req = new SmeRemove();
     req.setSmeId(smeId);
     MultiResponse resp = cc.send(req).getResp();
@@ -671,6 +624,7 @@ public class ClusterController {
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
   public void disconnectSmes(String[] smeIds) throws AdminException {
+    lastConfigsStatusCheckTime = 0;
     SmeDisconnect req = new SmeDisconnect();
     req.setSysIds(smeIds);
     MultiResponse resp = cc.send(req).getResp();
@@ -683,6 +637,7 @@ public class ClusterController {
 
 
   public CCSmeSmscStatuses[] getSmesStatus() throws AdminException {
+    lastConfigsStatusCheckTime = 0;
     SmeStatus req = new SmeStatus();
     SmeStatusResp resp = cc.send(req);
     if (resp.getResp().getStatus() != 0)
@@ -703,5 +658,35 @@ public class ClusterController {
       res[i] = stateInfo;
     }
     return res;
+  }
+
+  // RESOURCES =========================================================================================================
+
+  /**
+   * Блокирует конфигурацию ресурсов для чтения/записи
+   *
+   * @param write блокировать файл для записи
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void lockResources(boolean write) throws AdminException {
+    lockConfig(ConfigType.Resources, write);
+  }
+
+  /**
+   * Разблокирует конфигурацию ресурсов
+   *
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void unlockResources() throws AdminException {
+    unlockConfig(ConfigType.Resources);
+  }
+
+  /**
+   * Возвращает статус конфигурации ресурсов
+   * @return статус конфигурации ресурсов
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public ConfigState getResourcesState() throws AdminException {
+    return getConfigState(ConfigType.Resources);
   }
 }

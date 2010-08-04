@@ -61,7 +61,7 @@ public class RescheduleManagerTest {
   }
 
   public class ClusterControllerImpl extends TestClusterControllerStub {
-    public ConfigState getMainConfigState() throws AdminException {
+    public ConfigState getRescheduleConfigState() throws AdminException {
       long now = configFile.lastModified();
       Map<Integer, Long> map = new HashMap<Integer, Long>();
       map.put(0, now - 1);

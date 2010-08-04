@@ -22,7 +22,7 @@ public class AppliableConfiguration {
   private RescheduleSettings rescheduleSettings;
   private UpdateInfo rescheduleSettingsUpdateInfo;  
 
-  public AppliableConfiguration(AdminContext adminContext) {
+  public AppliableConfiguration(AdminContext adminContext) throws AdminException {
     this.adminContext = adminContext;
     this.smscSettings = adminContext.getSmscManager().getSettings();
     this.smscSettingsUpdateInfo = new UpdateInfo(System.currentTimeMillis(), null, false);
@@ -51,7 +51,7 @@ public class AppliableConfiguration {
     smscSettingsUpdateInfo = new UpdateInfo(System.currentTimeMillis(), String, false);
   }
 
-  public void resetSmscSettings(String String) {
+  public void resetSmscSettings(String String) throws AdminException {
     this.smscSettings = adminContext.getSmscManager().getSettings();
     smscSettingsUpdateInfo = new UpdateInfo(System.currentTimeMillis(), String, false);
   }
@@ -76,7 +76,7 @@ public class AppliableConfiguration {
     rescheduleSettingsUpdateInfo = new UpdateInfo(System.currentTimeMillis(), String, false);
   }
 
-  public void resetRescheduleSettings(String String) {
+  public void resetRescheduleSettings(String String) throws AdminException {
     this.rescheduleSettings = adminContext.getRescheduleManager().getSettings();
     rescheduleSettingsUpdateInfo = new UpdateInfo(System.currentTimeMillis(), String, false);
   }
