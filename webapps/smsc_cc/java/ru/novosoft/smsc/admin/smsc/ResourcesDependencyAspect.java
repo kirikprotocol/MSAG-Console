@@ -25,7 +25,8 @@ public class ResourcesDependencyAspect {
   @Before("target(smscManager) && args(smscSettings) && updateSmscSettings()")
   public void beforeUpdateSettings(SmscManager smscManager, SmscSettings smscSettings) throws AdminException {
     AdminContext ctx = AdminContextLocator.getContext(smscManager);
-
+    if (ctx == null)
+      return;
     ResourceManager resourceManager = ctx.getResourceManager();
 
     CommonSettings cs = smscSettings.getCommonSettings();
@@ -38,6 +39,8 @@ public class ResourcesDependencyAspect {
   @Before("target(resourceManager) && args(locale) && removeResource()")
   public void beforeRemoveResource(ResourceManager resourceManager, String locale) throws AdminException {
     AdminContext ctx = AdminContextLocator.getContext(resourceManager);
+    if (ctx == null)
+      return;
 
     SmscManager smscManager = ctx.getSmscManager();
     CommonSettings smscSettings = smscManager.getSettings().getCommonSettings();

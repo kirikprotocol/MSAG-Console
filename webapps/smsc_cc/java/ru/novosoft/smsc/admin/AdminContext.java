@@ -162,5 +162,6 @@ public class AdminContext {
    */
   public void shutdown() {
     clusterController.shutdown();
+    AdminContextLocator.unregisterContext(this);
   }
 }

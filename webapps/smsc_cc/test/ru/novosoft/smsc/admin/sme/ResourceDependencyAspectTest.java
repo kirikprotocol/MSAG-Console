@@ -1,13 +1,15 @@
-package ru.novosoft.smsc.admin.smsc;
+package ru.novosoft.smsc.admin.sme;
 
 import org.junit.AfterClass;
-import static org.junit.Assert.*;
 import org.junit.BeforeClass;
+import static org.junit.Assert.*;
 import org.junit.Test;
 import ru.novosoft.smsc.admin.AdminContext;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.TestAdminContext;
 import ru.novosoft.smsc.admin.resource.ResourceManager;
+import ru.novosoft.smsc.admin.resource.ResourceSettings;
+import ru.novosoft.smsc.admin.resource.Resources;
 import testutils.TestUtils;
 
 import java.io.File;
@@ -16,7 +18,7 @@ import java.util.Locale;
 /**
  * @author Artem Snopkov
  */
-public class ResourcesDependencyAspectTest {
+public class ResourceDependencyAspectTest {
 
   private static File baseDir;
   private static AdminContext ctx;
@@ -40,35 +42,30 @@ public class ResourcesDependencyAspectTest {
   }
 
   @Test
-  public void testBeforeUpdateSettings() throws Exception {
-    SmscManager m = ctx.getSmscManager();
+  public void testBeforeAddSme() throws Exception {
 
-    SmscSettings s = m.getSettings();
-    CommonSettings cs = s.getCommonSettings();
-    cs.setLocales(new String[]{"ru_ru", "en_en", "de_de"});
+    SmeManager m = ctx.getSmeManager();
 
-    s.setCommonSettings(cs);
-    
+    Sme sme = m.getSme("DSTRLST");
+    sme.setReceiptSchemeName("empty");
+
     try {
-      m.updateSettings(s);
-      assertTrue(false);
+      m.addSme("DSTRLST", sme);
+      assertFalse(true);
     } catch (AdminException e) {
       System.out.println(e.getMessage(new Locale("en")));
     }
-
-    cs.setLocales(new String[]{"ru_ru", "en_en"});
-
-    s.setCommonSettings(cs);
-    m.updateSettings(s);
   }
 
   @Test
   public void testBeforeRemoveResource() throws Exception {
+
     ResourceManager m = ctx.getResourceManager();
+    ResourceSettings s = new ResourceSettings(".", ",", new Resources());
 
     try {
-      m.removeResourceSettings("en_en");
-      assertTrue(false);
+      m.addResourceSettings("en_en", s);
+      assertFalse(true);
     } catch (AdminException e) {
       System.out.println(e.getMessage(new Locale("en")));
     }
