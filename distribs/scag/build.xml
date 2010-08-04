@@ -215,11 +215,11 @@ If you have it somewhere, you may specify it on command line via -DPROTOGEN=full
         <property name="SETUP_MAKE_JEDIT" value="true"/>
     </target>
 
-    <!-- target name="jedit"
+    <!--target name="jedit"
             description="Target specification: web iface rule editor">
         <fail if="SETUP_DONE" message="You should specify 'jedit' before any actions"/>
         <property name="SETUP_MAKE_JEDIT" value="true"/>
-    </target -->
+    </target-->
     
     <target name="-checksetup" unless="SETUP_MAKE_DONE">
         <condition property="SETUP_MAKE_DONE">
@@ -513,8 +513,8 @@ If you have it somewhere, you may specify it on command line via -DPROTOGEN=full
                  includeJavaRuntime="no"
                  debug="yes" 
                  encoding="UTF8"
-                 source="1.4"
-                 target="1.4"
+                 source="1.5"
+                 target="1.5"                 
                  classpath="${WEBBUILD_DIR}/jedit">
             <include name="bsh/**/*.java"/>
             <include name="com/microstar/xml/*.java"/>
