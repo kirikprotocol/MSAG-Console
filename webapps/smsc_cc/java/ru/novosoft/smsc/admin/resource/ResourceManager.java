@@ -73,6 +73,17 @@ public class ResourceManager implements SmscConfiguration {
   }
 
   /**
+   * Проверяет. есть ли ресурсы для указанной локали
+   * @param locale локаль
+   * @return true, если в менеджере есть ресурсы для локали
+   * @throws AdminException если произошла ошибка
+   */
+  public boolean containsLocale(String locale) throws AdminException {
+    reset();
+    return resourceFilesManagers.containsKey(locale);
+  }
+
+  /**
    * Добавляет или обновляет настройки ресурсов для локали
    *
    * @param locale    локаль

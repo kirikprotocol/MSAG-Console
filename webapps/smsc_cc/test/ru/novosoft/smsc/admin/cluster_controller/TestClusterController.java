@@ -96,6 +96,10 @@ public class TestClusterController extends ClusterController {
     return new ConfigState(time, map);
   }
 
+  public boolean isOnline() {
+    return true;
+  }
+
   private void lock(Lock lock, String lockName, boolean write) {
     if (write) {
       System.out.println("Try to lock " + lockName + " for write...");

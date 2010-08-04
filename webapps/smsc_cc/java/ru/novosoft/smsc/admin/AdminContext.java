@@ -48,7 +48,7 @@ public class AdminContext {
   protected ResourceManager resourceManager;
 
   protected AdminContext() {
-
+    AdminContextLocator.registerContext(this);
   }
 
   public AdminContext(File appBaseDir, File initFile) throws AdminException {
@@ -101,6 +101,8 @@ public class AdminContext {
     smeManager = new SmeManager(new File(smscConfigDir, "sme.xml"), smscConfigBackupDir, clusterController, serviceManager, fileSystem);
 
     resourceManager = new ResourceManager(smscConfigDir, smscConfigBackupDir, clusterController, fileSystem);
+
+    AdminContextLocator.registerContext(this);
   }
 
   public FileSystem getFileSystem() {
