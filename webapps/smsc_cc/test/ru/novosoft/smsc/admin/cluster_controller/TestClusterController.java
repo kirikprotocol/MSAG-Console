@@ -45,6 +45,9 @@ public class TestClusterController extends ClusterController {
   private final Lock smeLock = new ReentrantLock();
   private long smeLastUpdateTime = System.currentTimeMillis();
 
+  private final Lock resourceLock = new ReentrantLock();
+  private long resourceLastUpdateTime = System.currentTimeMillis();
+
   private final Lock mainConfigLock = new ReentrantLock();
 
   public TestClusterController(File aliasesFile, File mscsFile, int smscInstancesNumber) {
@@ -79,6 +82,10 @@ public class TestClusterController extends ClusterController {
         break;
       case Sme:
         time = smeLastUpdateTime;
+        break;
+      case Resources:
+        time = resourceLastUpdateTime;
+        break;
       default:
         time = System.currentTimeMillis();
     }
@@ -320,6 +327,20 @@ public class TestClusterController extends ClusterController {
 
   public CCSmeSmscStatuses[] getSmesStatus() throws AdminException {
     return new CCSmeSmscStatuses[0];
+  }
+
+  // RESOURCES =========================================================================================================
+
+  public void lockResources(boolean write) throws AdminException {
+    lock(resourceLock, "resource", write);
+  }
+
+  public void unlockResources() throws AdminException {
+    unlock(resourceLock, "resource");
+  }
+
+  public void applyResources() throws AdminException {
+    resourceLastUpdateTime = System.currentTimeMillis();
   }
 
 }

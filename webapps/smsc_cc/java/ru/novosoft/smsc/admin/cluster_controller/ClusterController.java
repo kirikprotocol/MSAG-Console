@@ -682,6 +682,21 @@ public class ClusterController {
   }
 
   /**
+   * Отправляет запрос на обновление конфигурации ресурсов
+   *
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void applyResources() throws AdminException {
+    ApplyLocaleResource req = new ApplyLocaleResource();
+    MultiResponse resp = cc.send(req).getResp();
+    int[] statuses = resp.getStatus();
+    for (int status : statuses) {
+      if (status != 0)
+        throw new ClusterControllerException("interaction_error", statuses, resp.getIds());
+    }
+  }
+
+  /**
    * Возвращает статус конфигурации ресурсов
    * @return статус конфигурации ресурсов
    * @throws AdminException если произошла ошибка при взаимодействии с СС

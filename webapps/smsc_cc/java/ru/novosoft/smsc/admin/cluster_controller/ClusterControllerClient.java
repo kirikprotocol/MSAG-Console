@@ -312,6 +312,10 @@ final class ClusterControllerClient {
     return sendPdu(req, new SmeUpdateResp());
   }
 
+  public ApplyLocaleResourceResp send(ApplyLocaleResource req) throws AdminException {
+    return sendPdu(req, new ApplyLocaleResourceResp());
+  }
+
   private static class ResponseListener {
     private final CountDownLatch respLatch = new CountDownLatch(1);
 

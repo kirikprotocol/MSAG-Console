@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<!DOCTYPE locale_resources SYSTEM "locale_resources.dtd">
+
+<locale_resources>
+<settings>
+    <section name="delimiter">
+	<param name="decimal">.</param>
+	<param name="list">,</param>
+    </section>
+</settings>
+<resources>
+    <section name="profiler">
+	<param name="msgError">Неизвестная команда</param>
+        <param name="msgDivertOn">Переадресация включена</param>
+        <param name="msgDivertOff">Переадресация выключена</param>
+        <param name="msgDivertChanged">Адрес для переадресации изменен</param>
+        <param name="msgInvalidParam">Неправильное значение параметра</param>
+        <param name="msgDefault">Now you are a default language user</param>
+        <param name="msgError">Неправильная команда</param>
+        <param name="msgLocaleChanged">Ваши региональные настройки изменены</param>
+        <param name="msgLocaleUnknown">Неизвестные язык/регион</param>
+        <param name="msgReportFull">Теперь вы будете получать полный отчет о достаке</param>
+        <param name="msgReportNone">Теперь вы будете получать полный отчет о достаке только по спец. запросу</param>
+        <param name="msgUCS2">Now you will be able to receive ucs2-encoded messages</param>
+    </section>
+    <section name="abonentinfo">
+        <param name="mobileFormat">Абонент $$string import=abonent$$  $$string import=status$$. коммутатор $$string import=msc$$</param>
+        <param name="smeFormat">$$string import=abonent$$:$$int32 import=status$$,$$int32 import=encoding$$,$$string import=msc$$</param>
+    </section>
+    <section name="receipt">
+    	<section name="default">
+         <param name="deletedFormat">Сообщение для $$string import=dest$$, посланное $$date import=date$$ не было доставлено, по причине: удалено администратором</param>
+         <param name="deliveredFormat">Сообщение для $$string import=dest$$ доставлено $$date import=date$$</param>
+         <param name="failedFormat">Сообщение для $$string import=dest$$, посланное $$date import=date$$ не было доставлено, по причине: $$string import=reason$$</param>
+         <param name="notifyFormat">Сообщение для $$string import=dest$$, посланное $$date import=date$$ не было доставлено сразу, по причине: $$string import=reason$$. Попытки будут повторены вплоть до истечения срока действия сообщения.</param>
+    	</section>
+    </section>
+   <section name="reason">
+      <param name="0">нет ошибки</param>
+      <param name="1025">маршрута нет или запрещен</param>
+      <param name="1026">истек срок жизни</param>
+      <param name="1027">произошел таймаут</param>
+      <param name="1028">приложение не присоединено</param>
+      <param name="1029">комутатор заблокирован</param>
+      <param name="1153">неизвестный номер</param>
+      <param name="1157">неопределенный номер</param>
+      <param name="1161">неправильный номер</param>
+      <param name="1165">номер заблокирован</param>
+      <param name="1179">абонент недоступен</param>
+      <param name="1183">абонент не может принять сообщение.</param>
+    </section>
+</resources>
+</locale_resources>

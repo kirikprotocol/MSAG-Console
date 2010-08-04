@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<!DOCTYPE locale_resources SYSTEM "locale_resources.dtd">
+
+<locale_resources>
+<settings>
+   <section name="delimiter">
+      <param name="decimal">.</param>
+      <param name="list">,</param>
+   </section>
+   <param name="11">22</param>
+</settings>
+<resources>
+   <section name="abonentinfo">
+      <param name="mobileFormat">Abonent $$string import=abonent$$ is $$string import=status$$. msc $$string import=msc$$</param>
+      <param name="smeFormat">$$string import=abonent$$:$$int32 import=status$$,$$int32 import=encoding$$,$$string import=msc$$</param>
+   </section>
+   <section name="dl">
+      <section name="reason">
+         <param name="access_denied">access denied</param>
+         <param name="database_error">storage error</param>
+         <param name="illegal_submitter">illegal submitter</param>
+         <param name="invalid_list_name">invalid list name</param>
+         <param name="invalid_or_empty_address">invalid or empty address</param>
+         <param name="list_already_exists">list already exists</param>
+         <param name="list_count_exceeded">list count exceeded</param>
+         <param name="list_not_found">list not found</param>
+         <param name="member_already_exists">member already exists</param>
+         <param name="member_doesnt_exists">member doesn't exists</param>
+         <param name="members_count_limit_exceeded">members count limit exceeded</param>
+         <param name="not_allowed_to_list_members">not allowed to list members</param>
+         <param name="not_registered_list_owner">not registered list owner</param>
+         <param name="prefix_unexpected">prefix unexpected</param>
+         <param name="principal_not_exists">principal doesn't exists</param>
+         <param name="principal_not_found">principal not found</param>
+         <param name="submitter_already_exists">submitter already exists</param>
+         <param name="submitter_not_found">submitter not found</param>
+         <param name="system_error">system error</param>
+         <param name="unknown">unknown error</param>
+      </section>
+   </section>
+   <section name="profiler">
+      <section name="divstatus">
+         <param name="absent">absent</param>
+         <param name="barred">barred</param>
+         <param name="blocked">blocked</param>
+         <param name="capacity">capacity</param>
+         <param name="msg">Divert status - enabled: $$string import=enabled$$, disabled: $$string import=disabled$$, to: $$string import=to$$</param>
+         <param name="none">none</param>
+         <param name="short">Divert status sent by sms</param>
+         <param name="unconditional">unconditional</param>
+      </section>
+      <param name="msg7BitUssdOff">Now ussd sessions will be in the same encoding as sms</param>
+      <param name="msg7BitUssdOn">Now ussd sessions will be in default encoding only</param>
+      <param name="msgConcatOff">Multipart messages concatenation disabled.</param>
+      <param name="msgConcatOn">Multipart messages concatenation enabled.</param>
+      <param name="msgDefault">Now you are a default language user</param>
+      <param name="msgDivertAbsOff">Conditional divert for absent turned off</param>
+      <param name="msgDivertAbsOn">Conditional divert for absent turned on</param>
+      <param name="msgDivertBarOff">Conditional divert for bared turned off</param>
+      <param name="msgDivertBarOn">Conditional divert for bared turned on</param>
+      <param name="msgDivertBlkOff">Conditional divert for blocked turned off</param>
+      <param name="msgDivertBlkOn">Conditional divert for blocked turned on</param>
+      <param name="msgDivertCapOff">Conditional divert for capacity turned off</param>
+      <param name="msgDivertCapOn">Conditional divert for capacity turned on</param>
+      <param name="msgDivertChanged">Divert address changed</param>
+      <param name="msgDivertOff">Divert deactivated</param>
+      <param name="msgDivertOn">Divert activated</param>
+      <param name="msgError">Unrecognized profile management command</param>
+      <param name="msgHide">Hidden</param>
+      <param name="msgInvalidParam">Invalid parameter value</param>
+      <param name="msgLatin1">Now you will be able to receive latin1-encoded messages</param>
+      <param name="msgLocaleChanged">Your locale settings changed</param>
+      <param name="msgLocaleUnknown">Unknown locale</param>
+      <param name="msgModificationDenied">This command is prohibited for your profile</param>
+      <param name="msgReportFinal">Now you will receive final delivery reports</param>
+      <param name="msgReportFull">Now you will receive auxiliary delivery reports</param>
+      <param name="msgReportNone">Now you will receive only requested delivery reports</param>
+      <param name="msgTranslitOff">Messages from you will not be transliterated unless required</param>
+      <param name="msgTranslitOn">Messages from you will be transliterated if required</param>
+      <param name="msgUCS2">Now you will be able to receive ucs2-encoded messages</param>
+      <param name="msgUCS2AndLat">Now you will be able to receive latin1 and ucs2  encoded messages</param>
+      <param name="msgUnhide">Not Hidden</param>
+   </section>
+   <section name="reason">
+      <param name="0">No Error</param>
+      <param name="1">Message Length is invalid</param>
+      <param name="10">Invalid Source Address</param>
+      <param name="100">ESME Receiver Temporary App Error Code</param>
+      <param name="101">ESME Receiver Permanent App Error Code</param>
+      <param name="102">ESME Receiver Reject Message Error Code</param>
+      <param name="1025">No route defined for given source and destination addresses</param>
+      <param name="1026">Message expired</param>
+      <param name="1027">Delivery attempt timed out</param>
+      <param name="1028">Sme is not connected</param>
+      <param name="1029">Msc is blocked</param>
+      <param name="103">query_sm request failed</param>
+      <param name="11">Invalid Dest Addr</param>
+      <param name="1153">Unknown subscriber</param>
+      <param name="1157">Unidentified subscriber</param>
+      <param name="1161">Illegal subscriber</param>
+      <param name="1164">Illegal Equipment</param>
+      <param name="1165">Call Barred</param>
+      <param name="1173">Facility Not Supported</param>
+      <param name="1179">Absent Subscriber</param>
+      <param name="1183">Subscriber Busy for MT SMS.</param>
+      <param name="1184">SM Delivery Failure</param>
+      <param name="1186">System Failure</param>
+      <param name="1187">Data Missing</param>
+      <param name="1188">Unexpected Data value</param>
+      <param name="12">Message ID is invalid</param>
+      <param name="13">Bind Failed</param>
+      <param name="14">Invalid Password</param>
+      <param name="15">Invalid System ID</param>
+      <param name="17">Cancel SM Failed</param>
+      <param name="19">Replace SM Failed</param>
+      <param name="192">Error in the optional part of the PDU Body</param>
+      <param name="193">Optional Parameter not allowed</param>
+      <param name="194">Invalid Parameter Length</param>
+      <param name="195">Expected Optional Parameter missing</param>
+      <param name="196">Invalid Optional Parameter Value</param>
+      <param name="2">Command Length is invalid</param>
+      <param name="20">Message Queue Full</param>
+      <param name="21">Invalid Service Type</param>
+      <param name="254">Delivery Failure (used for data_sm_resp)</param>
+      <param name="255">Unknown Error</param>
+      <param name="260">Invalid Data Coding Scheme Specified DCS is invalid or MC does not support it.</param>
+      <param name="3">Invalid Command ID</param>
+      <param name="4">Incorrect BIND Status for given command</param>
+      <param name="5">ESME Already in Bound State</param>
+      <param name="51">Invalid number of destinations</param>
+      <param name="52">Invalid Distribution List name</param>
+      <param name="6">Invalid Priority Flag</param>
+      <param name="64">Destination flag is invalid (submit_multi)</param>
+      <param name="66">Invalid 'submit with replace' request (i.e.      submit_sm with replace_if_present_flag set)</param>
+      <param name="67">Invalid esm_class field data</param>
+      <param name="68">Cannot Submit to Distribution List</param>
+      <param name="69">submit_sm or submit_multi failed</param>
+      <param name="7">Invalid Registered Delivery Flag</param>
+      <param name="72">Invalid Source address TON</param>
+      <param name="73">Invalid Source address NPI</param>
+      <param name="8">System Error</param>
+      <param name="80">Invalid Destination address TON</param>
+      <param name="81">Invalid Destination address NPI</param>
+      <param name="83">Invalid system_type field</param>
+      <param name="84">Invalid replace_if_present flag</param>
+      <param name="85">Invalid number of messages</param>
+      <param name="88">Throttling error (ESME has exceeded allowed message limits)</param>
+      <param name="97">Invalid Scheduled Delivery Time</param>
+      <param name="98">Invalid message validity period (Expiry time)</param>
+      <param name="99">Predefined Message Invalid or Not Found</param>
+   </section>
+   <section name="receipt">
+      <section name="default">
+         <param name="deletedFormat">Message for $$string import=dest$$ sent at $$date import=date$$ wasn't delivered, reason: admin deleted message</param>
+         <param name="deliveredFormat">Message for $$string import=dest$$ delivered at $$date import=date$$</param>
+         <param name="failedFormat">Message for $$string import=dest$$ sent at $$date import=date$$ wasn't delivered, reason: $$string import=reason$$</param>
+         <param name="notifyFormat">Message for $$string import=dest$$ sent at $$date import=date$$ wasn't immediately delivered, reason: $$string import=reason$$</param>
+      </section>
+   </section>
+   <section name="templates">
+      <section name="dl">
+         <param name="adderr">Add list error:reason=$$string import=reason$$, arg=$$string import=arg1$$</param>
+         <param name="addok">Add $$string import=arg1$$ ok</param>
+         <param name="delerr">Delete $$string import=arg1$$ error: $$string import=reason$$</param>
+         <param name="delok">Delete $$string import=arg1$$ ok</param>
+         <param name="invalidcmdparam">Invalid dl command: $$string import=reason$$</param>
+         <param name="listempty">There are no lists</param>
+         <param name="listerr">Failed to get lists:$$string import=reason$$</param>
+         <param name="madderr">Member add to $$string import=arg1$$ error:$$string import=reason$$</param>
+         <param name="maddok">Member $$string import=arg2$$ added to list $$string import=arg1$$</param>
+         <param name="mdelerr">Failed to delete member $$string import=arg2$$ from list $$string import=arg1$$:$$string import=reason$$</param>
+         <param name="mdelok">Member $$string import=arg2$$ deleted from list $$string import=arg1$$</param>
+         <param name="mlistempty">There are no members in this list</param>
+         <param name="mlisterr">List of members error:$$string import=reason$$</param>
+         <param name="sadderr">Submitter add to $$string import=arg1$$ error:$$string import=reason$$</param>
+         <param name="saddok">Submitter $$string import=arg2$$ added to list $$string import=arg1$$</param>
+         <param name="sdelerr">Failed to delete submitter $$string import=arg2$$ from list $$string import=arg1$$:$$string import=reason$$</param>
+         <param name="sdelok">Submitter $$string import=arg2$$ deleted from list $$string import=arg1$$</param>
+         <param name="senderr">Failed to send message to list:$$string import=reason$$</param>
+         <param name="sendok">Message sent to $$string import=arg2$$ out of $$string import=arg3$$ members of list $$string import=arg1$$</param>
+         <param name="slisterr">Failed to get lists of submitters:$$string import=reason$$</param>
+      </section>
+      <param name="hello">Hello $$string import=who$$</param>
+   </section>
+   <param name="ussd_error">Error code $$int32 import=code$$. $$string import=msg$$</param>
+   <param name="ussd_invalid_cmd">Invalid ussd command</param>
+   <param name="ussd_route_err">Ussd routing error</param>
+</resources>
+</locale_resources>

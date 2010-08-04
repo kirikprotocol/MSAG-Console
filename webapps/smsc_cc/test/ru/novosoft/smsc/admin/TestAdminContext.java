@@ -19,6 +19,8 @@ import ru.novosoft.smsc.admin.msc.MscManagerTest;
 import ru.novosoft.smsc.admin.msc.TestMscManager;
 import ru.novosoft.smsc.admin.reschedule.RescheduleManagerTest;
 import ru.novosoft.smsc.admin.reschedule.TestRescheduleManager;
+import ru.novosoft.smsc.admin.resource.ResourceFileTest;
+import ru.novosoft.smsc.admin.resource.TestResourceManager;
 import ru.novosoft.smsc.admin.service.TestServiceManagerSingle;
 import ru.novosoft.smsc.admin.sme.SmeConfigFileTest;
 import ru.novosoft.smsc.admin.sme.TestSmeManager;
@@ -57,6 +59,8 @@ public class TestAdminContext extends AdminContext {
     TestUtils.exportResource(RescheduleManagerTest.class.getResourceAsStream("schedule.xml"), new File(smscDir, "schedule.xml"));
     TestUtils.exportResource(SnmpManagerTest.class.getResourceAsStream("snmp.xml"), new File(smscDir, "snmp.xml"));
     TestUtils.exportResource(SmeConfigFileTest.class.getResourceAsStream("sme.xml"), new File(smscDir, "sme.xml"));
+    TestUtils.exportResource(ResourceFileTest.class.getResourceAsStream("resources_en_en.xml"), new File(smscDir, "resources_en_en.xml"));
+    TestUtils.exportResource(ResourceFileTest.class.getResourceAsStream("resources_ru_ru.xml"), new File(smscDir, "resources_ru_ru.xml"));
   }
 
   public TestAdminContext(File appBaseDir, File initFile, int smscInstancesNumber) throws AdminException {
@@ -82,7 +86,7 @@ public class TestAdminContext extends AdminContext {
     fileSystem = new TestFileSystem();
 
     clusterControllerManager = new TestClusterControllerManager(serviceManager, fileSystem);
-    
+
     smscManager = new TestSmscManager(serviceManager, clusterController, fileSystem);
 
     File smscConfigDir = smscManager.getConfigDir();
@@ -108,6 +112,8 @@ public class TestAdminContext extends AdminContext {
     mscManager = new TestMscManager(new File(s.getCommonSettings().getMscStoreFile()), clusterController, fileSystem);
 
     smeManager = new TestSmeManager(new File(smscConfigDir, "sme.xml"), smscConfigBackupDir, clusterController, serviceManager, fileSystem);
+
+    resourceManager = new TestResourceManager(smscConfigDir, smscConfigBackupDir, clusterController, fileSystem);
   }
 
   public TestAdminContext() throws AdminException {

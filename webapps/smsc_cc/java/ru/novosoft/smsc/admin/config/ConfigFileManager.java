@@ -44,7 +44,8 @@ public class ConfigFileManager<C> {
     OutputStream os = null;
     File tmpConfigFile = new File(configFile.getAbsolutePath() + ".tmp");
     try {
-      is = fileSystem.getInputStream(configFile);
+      if (configFile.exists())
+        is = fileSystem.getInputStream(configFile);
       os = fileSystem.getOutputStream(tmpConfigFile);
 
       config.save(is, os, conf);

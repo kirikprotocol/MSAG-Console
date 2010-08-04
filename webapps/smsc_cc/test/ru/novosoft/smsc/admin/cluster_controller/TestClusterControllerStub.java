@@ -37,6 +37,12 @@ public class TestClusterControllerStub extends ClusterController {
 
   private final Lock mainConfigLock = new ReentrantLock();
 
+  private final Lock smeLock = new ReentrantLock();
+  private long lastSmeUpdateTime = System.currentTimeMillis();
+
+  private final Lock resourceLock = new ReentrantLock();
+  private long lastResourceUpdateTime = System.currentTimeMillis();
+
   private int smscInstancesNumber = 2;
 
   public TestClusterControllerStub() {
@@ -65,6 +71,12 @@ public class TestClusterControllerStub extends ClusterController {
         break;
       case Msc:
         time = mscLastUpdateTime;
+        break;
+      case Resources:
+        time = lastResourceUpdateTime;
+        break;
+      case Sme:
+        time = lastSmeUpdateTime;
         break;
       default:
         time = System.currentTimeMillis();
@@ -251,5 +263,49 @@ public class TestClusterControllerStub extends ClusterController {
 
   public void unlockMainConfig() throws AdminException {
     unlock(mainConfigLock, "main config");
+  }
+
+  // SME ===============================================================================================================
+
+
+  public void lockSmeConfig(boolean write) throws AdminException {
+    lock(smeLock, "sme", write);
+  }
+
+  public void unlockSmeConfig() throws AdminException {
+    unlock(smeLock, "sme");
+  }
+
+  public void addSme(CCSme sme) throws AdminException {
+    lastSmeUpdateTime = System.currentTimeMillis();
+  }
+
+  public void updateSme(CCSme sme) throws AdminException {
+    lastSmeUpdateTime = System.currentTimeMillis();
+  }
+
+  public void removeSme(String smeId) throws AdminException {
+    lastSmeUpdateTime = System.currentTimeMillis();
+  }
+
+  public void disconnectSmes(String[] smeIds) throws AdminException {
+  }
+
+  public CCSmeSmscStatuses[] getSmesStatus() throws AdminException {
+    return new CCSmeSmscStatuses[0];
+  }
+
+  // RESOURCES =========================================================================================================
+
+  public void lockResources(boolean write) throws AdminException {
+    lock(resourceLock, "resource", write);
+  }
+
+  public void unlockResources() throws AdminException {
+    unlock(resourceLock, "resource");
+  }
+
+  public void applyResources() throws AdminException {
+    lastResourceUpdateTime = System.currentTimeMillis();
   }
 }
