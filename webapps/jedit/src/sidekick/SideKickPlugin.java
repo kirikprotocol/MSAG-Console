@@ -184,6 +184,13 @@ public class SideKickPlugin extends EBPlugin
   sidekick.parse(showParsingMessage, 10);
  } //}}}
 
+ public static void parseWithDelay(View view)
+ {
+  SideKick sidekick = (SideKick)sidekicks.get(view);
+  sidekick.setParser(31);
+  sidekick.parseWithDelay();
+ }
+
  //{{{ getErrorSource() method
  /**
   * Returns the error source used by the given view.

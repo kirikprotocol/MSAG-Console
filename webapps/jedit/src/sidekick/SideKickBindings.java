@@ -28,6 +28,7 @@ import java.awt.Component;
 import org.gjt.sp.jedit.gui.KeyEventWorkaround;
 import org.gjt.sp.jedit.GUIUtilities;
 import org.gjt.sp.jedit.View;
+import org.gjt.sp.jedit.jEdit;
 
 
 import xml.XmlActions;
@@ -41,18 +42,23 @@ class SideKickBindings extends KeyAdapter
  public void keyTyped(KeyEvent evt)
  {
     //(SideKickPlugin.getParserForBuffer(GUIUtilities.getView((Component)evt.getSource()).getBuffer())).setParsingComplete(false);
-    System.out.println("sidekick.SideKickBinding keyTyped before parse line 40");
+    //System.out.println("sidekick.SideKickBinding keyTyped before parse line 40");
   evt = KeyEventWorkaround.processKeyEvent(evt);
   if(evt == null)
    return;
 
   char ch = evt.getKeyChar();
-  if(ch == '\b')
-   return;
+  if(ch == '\b') return;
     //System.out.println("sidekick.SideKickBinding keyTyped before parse line 48 key= "+evt.getKeyChar());
   View view = GUIUtilities.getView((Component)evt.getSource());
    //System.out.println("sidekick.SideKickBinding keyTyped before parse line 48 view= "+view+ " buffer= "+view.getBuffer());
-  SideKickPlugin.parse(view,false);
+    if (jEdit.getBooleanProperty("buffer.sidekick.keystroke-parse")){
+        SideKickPlugin.parse(view,false);
+    } else{
+        if (jEdit.getBooleanProperty("buffer.sidekick.auto-parse")){
+            SideKickPlugin.parseWithDelay(view);
+        }
+    }
   /*
   SideKickParser parser = SideKickPlugin.getParserForView(view);
    System.out.println("parser= "+parser);

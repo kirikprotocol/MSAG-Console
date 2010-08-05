@@ -315,12 +315,12 @@ public abstract class InputHandler
   /* Buffer buffer = view.getBuffer();
   if(!buffer.insideCompoundEdit())
    buffer.beginCompoundEdit(); */
-   System.out.println("InputHandler.userInput line 318");
+   //System.out.println("InputHandler.userInput line 318");
   if(repeatCount == 1) {
-   System.out.println("InputHandler.userInput line 320");
+   //System.out.println("InputHandler.userInput line 320");
    textArea.userInput(ch); }
   else
-  { System.out.println("InputHandler.userInput line 323");
+  { //System.out.println("InputHandler.userInput line 323");
    // stop people doing dumb stuff like C+ENTER 100 C+n
    if(repeatCount > REPEAT_COUNT_THRESHOLD)
    {
@@ -338,7 +338,7 @@ public abstract class InputHandler
      return;
     }
    }
-   System.out.println("InputHandler.userInput line 341");
+   //System.out.println("InputHandler.userInput line 341");
    Buffer buffer = view.getBuffer();
    try
    {

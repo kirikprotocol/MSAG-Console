@@ -39,22 +39,25 @@ options.sidekick.code=new sidekick.SideKickOptionPane();
 options.sidekick.tree-follows-caret=Tree selection follows caret position
 options.sidekick.buffer-change-parse=Parse on buffer switch and save
 options.sidekick.keystroke-parse=Parse on keystroke
-options.sidekick.auto-parse-delay=After last keystroke, wait (seconds):
+options.sidekick.auto-parse=Parse after last keystroke, wait (seconds):
 options.sidekick.complete-instant.toggle=Immediately complete if possible
 options.sidekick.complete-delay.toggle=Show completion popups where possible
 options.sidekick.complete-delay=After popup trigger keystroke, wait (seconds):
 
 # Global parse on buffer change switch
-buffer.sidekick.buffer-change-parse=true
+buffer.sidekick.buffer-change-parse=false
 
 # Global parse on keystroke switch
-buffer.sidekick.keystroke-parse=true
+buffer.sidekick.keystroke-parse=false
+
+# Global auto parse
+buffer.sidekick.auto-parse=true
 
 # Delay after typing ends before auto parse, in milliseconds
-sidekick.auto-parse-delay=500
+sidekick.auto-parse-delay=6000
 
 # Should the tree selection follow the caret position
-sidekick-tree.follows-caret=true
+sidekick-tree.follows-caret=false
 
 # Enable completion
 sidekick.complete-delay.toggle=true

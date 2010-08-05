@@ -119,7 +119,7 @@ public class BufferAutosaveRequest extends BufferIORequest
    public void _createOutputStream(Object session, String path,
   Component comp,Buffer buffer) throws IOException
  {
-
+    System.out.println("BufferAutosaveRequest._createOutputStream()");
     URL url=null;
     HttpURLConnection c=null;
     BufferedReader in=null;  int command=jEdit.getWrite();

@@ -614,7 +614,7 @@ public class View extends JFrame implements EBComponent
       && from != VIEW)
      {
       Log.log(Log.DEBUG,this,"Translated: "+ keyStroke);
-     } System.out.println("View.processKeyEvent line 615");
+     } //System.out.println("View.processKeyEvent line 615");
          if (jEdit.getBooleanProperty("xml.disableRootElement")) {
              if(XmlActions.checkRootTag(this)) return;
             }
@@ -654,7 +654,7 @@ public class View extends JFrame implements EBComponent
    break;
   case KeyEvent.KEY_PRESSED:
    if(keyEventInterceptor != null) {
-     System.out.println("View.processKeyEvent line 652 keyEventInterceptor= "+keyEventInterceptor);
+     //System.out.println("View.processKeyEvent line 652 keyEventInterceptor= "+keyEventInterceptor);
     keyEventInterceptor.keyPressed(evt); }
    else if(KeyEventWorkaround.isBindable(evt.getKeyCode()))
    {
@@ -688,7 +688,7 @@ public class View extends JFrame implements EBComponent
              if(XmlActions.checkRootTag(this)) return;
             }
        }
-     System.out.println("View.processKeyEvent line 679");
+     //System.out.println("View.processKeyEvent line 679");
       if(inputHandler.handleKey(keyStroke))
       evt.consume();
     }

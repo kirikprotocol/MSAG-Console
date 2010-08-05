@@ -835,7 +835,8 @@ public class jEdit extends Applet
    */
   public static final void setProperty(String name, String value)
   {
-    propMgr.setProperty(name, value);
+      //System.out.println("jEdit:setProperty() name=\""+name+"\" value=\""+value+"\".");
+      propMgr.setProperty(name, value);
   } //}}}
 
   //{{{ setTemporaryProperty() method
@@ -874,7 +875,8 @@ public class jEdit extends Applet
    */
   public static final void setIntegerProperty(String name, int value)
   {
-    setProperty(name, String.valueOf(value));
+     //System.out.println("JEdit:setIntegerProperty() name=\""+name+"\" value=\""+value+"\".");
+     setProperty(name, String.valueOf(value));
   } //}}}
 
   //{{{ setDoubleProperty() method
@@ -935,7 +937,8 @@ public class jEdit extends Applet
    */
   public static void propertiesChanged()
   {
-    initKeyBindings();
+      System.out.println("jEdit:propertiesChanged()");
+      initKeyBindings();
 
    if (!jEdit.getBooleanProperty("bufferWorkWithId"))  Autosave.setInterval(getIntegerProperty("autosave", 30));
 
@@ -2419,7 +2422,8 @@ public class jEdit extends Applet
    */
   public static void saveSettings()
   {
-    if (settingsDirectory == null)
+      System.out.println("jEdit:saveSettings()");
+      if (settingsDirectory == null)
       return;
 
     Abbrevs.save();
@@ -2431,9 +2435,13 @@ public class jEdit extends Applet
     KillRing.getInstance().save();
 
     File file1 = new File(MiscUtilities.constructPath(settingsDirectory, "#properties#save#"));
+    System.out.println("jEdit:saveSettings() file1:"+file1);
     File file2 = new File(MiscUtilities.constructPath(settingsDirectory, "properties"));
+    System.out.println("jEdit:saveSettings() file2:"+file2);
     if (file2.exists() && file2.lastModified() != propsModTime) {
       Log.log(Log.WARNING, jEdit.class, file2 + " changed"
+              + " on disk; will not save user properties");
+      System.out.println("jEdit:saveSettings() " +file2 + " changed"
               + " on disk; will not save user properties");
     }
     else {
@@ -2449,6 +2457,7 @@ public class jEdit extends Applet
       }
 
       propsModTime = file2.lastModified();
+      System.out.println("jEdit:saveSettings() properties was saved."); 
     }
   } //}}}
 
@@ -3540,7 +3549,7 @@ public class jEdit extends Applet
       buf.append(s);
       buf.append("=");
       buf.append((String) args.get(s));
-      System.out.println("Parameters: "+s+" = " + (String) args.get(s));
+      //System.out.println("Parameters: "+s+" = " + (String) args.get(s));
     }
     content = buf.toString();
     String inputLine = "";

@@ -68,7 +68,7 @@ class SideKick implements EBComponent
   */
  void parse(final boolean showParsingMessage, int num)
  {
-   long begin = System.currentTimeMillis();
+   //long begin = System.currentTimeMillis();
    if(keystrokeTimer.isRunning())
    keystrokeTimer.stop();
 
@@ -86,7 +86,7 @@ class SideKick implements EBComponent
   if(parser == null)
   {
    Log.log(Log.DEBUG,this,"No parser");
-    System.out.println("SideKick.parse parser==null !!! before setErrorSource(null);");
+    //System.out.println("SideKick.parse parser==null !!! before setErrorSource(null);");
    setErrorSource(null, 1);
    showNotParsedMessage();
    SideKickPlugin.finishParsingBuffer(buffer);
@@ -113,9 +113,9 @@ class SideKick implements EBComponent
   SideKickPlugin.addWorkRequest(new ParseAWTRequest(
    parser,buffer,errorSource,data, SideKickPlugin.getSideKickNumber(this.view)),true);
 
-   long end = System.currentTimeMillis();
+   /*long end = System.currentTimeMillis();
    long interval = end-begin;
-   System.out.println("SideKick:parse() time:"+interval + " ms.");  
+   System.out.println("SideKick:parse() time:"+interval + " ms.");*/
  } //}}}
 
  //{{{ dispose() method
@@ -208,9 +208,9 @@ class SideKick implements EBComponent
  //{{{ setErrorSource() method
  private void setErrorSource(DefaultErrorSource errorSource, int loc)
  {
-  System.out.println();
-  System.out.println("setErrorSource of SideKick "+SideKickPlugin.getSideKickNumber(this.view)+" is invoked");
-  System.out.println("from place number "+loc);
+  //System.out.println();
+  //System.out.println("setErrorSource of SideKick "+SideKickPlugin.getSideKickNumber(this.view)+" is invoked");
+  //System.out.println("from place number "+loc);
   /*if (this.errorSource != null)
   {
    ErrorSource.unregisterErrorSource(this.view);
@@ -304,7 +304,7 @@ class SideKick implements EBComponent
  } //}}}
 
  //{{{ parseWithDelay() method
- private void parseWithDelay()
+ void parseWithDelay()
  {
   System.out.println("SideKick.parseWithDelay()");
   if(parser != null)
@@ -518,32 +518,32 @@ class SideKick implements EBComponent
  class BufferChangeHandler extends BufferChangeAdapter
  {
   //{{{ parseOnKeyStroke() method
-  private void parseOnKeyStroke(Buffer buffer)
-  {
-   if(buffer != SideKick.this.buffer)
-   {
-    Log.log(Log.ERROR,this,"We have " + SideKick.this.buffer
-     + " but got event for " + buffer);
-    return;
-   }
-  // System.out.println("parse OnKeyStroke are implemented !!!");
-   if(buffer.isLoaded() && buffer.getBooleanProperty("sidekick.keystroke-parse"))
-    parseWithDelay();
+    private void parseOnKeyStroke(Buffer buffer){
+        //System.out.println("BufferChangeAdapter.parseOnKeyStroke()");
+        if (jEdit.getBooleanProperty("buffer.sidekick.buffer-change-parse")){
+            if(buffer != SideKick.this.buffer){
+                Log.log(Log.ERROR,this,"We have " + SideKick.this.buffer + " but got event for " + buffer);
+                return;
+            }
+            // System.out.println("parse OnKeyStroke are implemented !!!");
+            if(buffer.isLoaded() && buffer.getBooleanProperty("sidekick.keystroke-parse")){
+                //parseWithDelay();
+                parse(true, 0);
+            }
+        }
   } //}}}
 
-  //{{{ contentInserted() method
-  public void contentInserted(Buffer buffer, int startLine, int offset,
-   int numLines, int length)
-  {
-   parseOnKeyStroke(buffer);
-  } //}}}
+    //{{{ contentInserted() method
+    public void contentInserted(Buffer buffer, int startLine, int offset, int numLines, int length){
+        //System.out.println("BufferChangeAdapter.contentInserted()");
+        parseOnKeyStroke(buffer);
+    } //}}}
 
-  //{{{ contentRemoved() method
-  public void contentRemoved(Buffer buffer, int startLine, int offset,
-   int numLines, int length)
-  {
-   parseOnKeyStroke(buffer);
-  } //}}}
+    //{{{ contentRemoved() method
+    public void contentRemoved(Buffer buffer, int startLine, int offset, int numLines, int length){
+        //System.out.println("BufferChangeAdapter.contentRemoved()");
+        parseOnKeyStroke(buffer);
+    } //}}}
  } //}}}
 
  //}}}

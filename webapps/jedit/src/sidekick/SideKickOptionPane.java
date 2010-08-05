@@ -63,24 +63,26 @@ public class SideKickOptionPane extends AbstractOptionPane
   }
   catch(NumberFormatException nf)
   {
-   autoParseDelayValue = 1500;
+   autoParseDelayValue = 6000;
   }
 
-  addComponent(new JLabel(jEdit.getProperty("options.sidekick.auto-parse-delay")));
-  addComponent(autoParseDelay = new JSlider(200,3000,autoParseDelayValue),
+  addComponent(autoParse = new JCheckBox(jEdit.getProperty("options.sidekick.auto-parse")));
+  autoParse.setSelected(jEdit.getBooleanProperty("buffer.sidekick.auto-parse"));
+  autoParse.addActionListener(new ActionHandler());
+  addComponent(autoParseDelay = new JSlider(800,12000,autoParseDelayValue),
    GridBagConstraints.BOTH);
   Hashtable labelTable = new Hashtable();
-  for(int i = 500; i <= 3000; i += 500)
+  for(int i = 2000; i <= 12000; i += 2000)
   {
    labelTable.put(new Integer(i),new JLabel(
     String.valueOf((double)i / 1000.0)));
   }
   autoParseDelay.setLabelTable(labelTable);
   autoParseDelay.setPaintLabels(true);
-  autoParseDelay.setMajorTickSpacing(500);
+  autoParseDelay.setMajorTickSpacing(2000);
   autoParseDelay.setPaintTicks(true);
 
-  autoParseDelay.setEnabled(keystrokeParse.isSelected());
+  autoParseDelay.setEnabled(autoParse.isSelected());
 
   addComponent(completeInstantToggle = new JCheckBox(jEdit.getProperty(
    "options.sidekick.complete-instant.toggle")));
@@ -115,8 +117,10 @@ public class SideKickOptionPane extends AbstractOptionPane
  //{{{ _save() method
  protected void _save()
  {
+  System.out.println("SideKickOptionPane:_save() ");
   jEdit.setBooleanProperty("buffer.sidekick.buffer-change-parse",bufferChangeParse.isSelected());
   jEdit.setBooleanProperty("buffer.sidekick.keystroke-parse",keystrokeParse.isSelected());
+  jEdit.setBooleanProperty("buffer.sidekick.auto-parse",autoParse.isSelected());
   jEdit.setProperty("sidekick.auto-parse-delay",String.valueOf(autoParseDelay.getValue()));
   jEdit.setBooleanProperty("sidekick-tree.follows-caret",treeFollowsCaret.isSelected());
   jEdit.setBooleanProperty("sidekick.complete-instant.toggle",completeInstantToggle.isSelected());
@@ -127,6 +131,7 @@ public class SideKickOptionPane extends AbstractOptionPane
  //{{{ Private members
  private JCheckBox bufferChangeParse;
  private JCheckBox keystrokeParse;
+ private JCheckBox autoParse;
  private JSlider autoParseDelay;
  private JCheckBox treeFollowsCaret;
  private JCheckBox completeInstantToggle;
@@ -137,19 +142,15 @@ public class SideKickOptionPane extends AbstractOptionPane
  //{{{ ActionHandler class
  class ActionHandler implements ActionListener
  {
-  public void actionPerformed(ActionEvent evt)
-  {
-   Object source = evt.getSource();
-   if(source == keystrokeParse)
-   {
-    autoParseDelay.setEnabled(keystrokeParse.isSelected());
-    if(keystrokeParse.isSelected())
-     bufferChangeParse.setSelected(true);
-   }
-   else if(source == completeDelayToggle)
-   {
-    completeDelay.setEnabled(completeDelayToggle.isSelected());
-   }
-  }
+    public void actionPerformed(ActionEvent evt){
+        Object source = evt.getSource();
+        if(source == keystrokeParse){                        
+            if(keystrokeParse.isSelected()) bufferChangeParse.setSelected(true);
+        } else if(source == completeDelayToggle){
+            completeDelay.setEnabled(completeDelayToggle.isSelected());
+        } else if (source == autoParse){
+            autoParseDelay.setEnabled(autoParse.isSelected());
+        }
+    }
  } //}}}
 }
