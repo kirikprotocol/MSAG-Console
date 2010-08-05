@@ -51,7 +51,7 @@ buffer.sidekick.buffer-change-parse=false
 buffer.sidekick.keystroke-parse=false
 
 # Global auto parse
-buffer.sidekick.auto-parse=true
+buffer.sidekick.auto-parse=false
 
 # Delay after typing ends before auto parse, in milliseconds
 sidekick.auto-parse-delay=6000
@@ -71,9 +71,12 @@ sidekick-tree.title=Structure Browser
 sidekick-tree.parse=Parse
 sidekick-tree.parsing=Parsing
 sidekick-tree.not-parsed=Not parsed
+sidekick-tree.dock-position=left
 
 # Status bar
 sidekick.parsing-complete={0} parsing complete, {1} error(s)
 
 # Popup
 sidekick-complete.none=No completions
+
+

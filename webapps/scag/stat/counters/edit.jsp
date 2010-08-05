@@ -29,8 +29,10 @@
             <c:set var="values" value=""/>
             <c:forEach items="${bean.parameters}" var="parameter">
                 <c:set var="values" value="${values}${parameter.name},${parameter.value};"/>
-            </c:forEach>
-            <c:set var="values" value="${fn:substring(values, 0, fn:length(values)-1)}"/>            
+            </c:forEach>        
+            <c:if test="${fn:length(values)>0}">
+                <c:set var="values" value="${fn:substring(values, 0, fn:length(values)-1)}"/>
+            </c:if>
             <sm-ep:parameters title="tag.parameters" values="${values}"
                              first_field_name="tag.parameter.name" second_field_name="tag.parameter.value"/>
         </sm-ep:properties>

@@ -48,23 +48,6 @@ public class Edit extends EditBean
     }
     public void setCATableId(String CATableId) {
         counter.setCATableId(CATableId);
-    }   
-
-    private String getParameterType(String value){
-        //logger.debug("Parameter type: " + value);
-        String type;
-        if (value.compareTo("true") == 0 || value.compareTo("false") == 0){           
-            type = "bool";
-        } else{
-            try{
-                Integer.parseInt(value);
-                type = "int";
-            } catch (NumberFormatException e){
-                type = "string";
-            }
-        }
-        //logger.debug("Type: "+type);
-        return type;
     }
 
     public void process(final HttpServletRequest request, final HttpServletResponse response) throws SCAGJspException
@@ -84,13 +67,15 @@ public class Edit extends EditBean
                     //logger.debug("Parameter name: "+ name);
                     value = request.getParameter("parameter." + key.substring(10,key.length()-5)+".value");
                     //logger.debug("Parameter value:"+ value);
-                    type = getParameterType(value);
+                    type = ConfigParam.getParameterType(value);
                     //logger.debug(name+"-->"+value);
                     counter.setParam(new ConfigParam(name, type, value));
                 }
             }
-            configParams = getConfigParams(counter.getParams());
+            configParams = ConfigParam.getConfigParams(counter.getParams());
         }
+
+        
 
         super.process(request, response);
         userPrincipal = request.getUserPrincipal();
@@ -106,9 +91,7 @@ public class Edit extends EditBean
         }
     }
 
-    private ConfigParam[] getConfigParams(Collection<ConfigParam> configParams){
-        return (ConfigParam[]) configParams.toArray(new ConfigParam[configParams.size()]); 
-    }
+
 
     protected void load(String loadId) throws SCAGJspException {
         final Set<String> cas = appContext.getCountersManager().getCATables().keySet();
@@ -120,7 +103,7 @@ public class Edit extends EditBean
             throw new SCAGJspException(Constants.errors.stat.COUNTER_NOT_FOUND, loadId);
         }
 
-        configParams = getConfigParams(counter.getParams());
+        configParams = ConfigParam.getConfigParams(counter.getParams());
     }
 
     protected void save() throws SCAGJspException {        

@@ -3535,13 +3535,13 @@ public class jEdit extends Applet
    */
   public static List HttpGet(Map args, final int command)
   {
-    //System.out.println("HttpGet:");
+    //System.out.println("jEdit.HttpGet()");
     URL url = null;
     HttpURLConnection urlcon = null;
     BufferedReader in = null;
     ObjectInputStream input = null;
     String content = "?username=" + jEdit.username + "&password=" + jEdit.password + "&command=" + command;
-    //System.out.println("content: "+content);
+    System.out.println("content: "+content);
     StringBuffer buf = new StringBuffer(content);
     for (Iterator it = args.keySet().iterator(); it.hasNext();) {
       String s = (String) it.next();

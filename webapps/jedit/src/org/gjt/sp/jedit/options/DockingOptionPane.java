@@ -131,9 +131,16 @@ class WindowTableModel extends AbstractTableModel
 
   String[] dockables = DockableWindowManager
    .getRegisteredDockableWindows();
+  String dockable="";
   for(int i = 0; i < dockables.length; i++)
   {
-   windows.addElement(new Entry(dockables[i]));
+      System.out.println("Registered dockable windows: "+dockables[i]);
+      dockable = dockables[i];
+      // TODO Comment comparing with log-viewer. Log-viewer only for debugging.
+      if (/*dockable.compareTo("xml-insert") == 0  ||*/
+              dockable.compareTo("sidekick-tree") == 0
+          /*|| dockable.compareTo("log-viewer") == 0*/)
+      windows.addElement(new Entry(dockables[i]));
   }
 
   sort();

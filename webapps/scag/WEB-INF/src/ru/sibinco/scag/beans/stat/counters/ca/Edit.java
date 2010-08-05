@@ -58,6 +58,26 @@ public class Edit  extends EditBean
         logger.debug("|---------------------------------------------------------------------------") ;
         logger.debug("Counters.process(), save="+getMbSave()+" add="+isAdd()+", id="+getId()); // TODO: remove it
         
+        // Read counter's parameters.
+        if (getMbSave() != null){
+            Enumeration e = request.getParameterNames();
+            String key, name, value, type;
+            while (e.hasMoreElements()) {
+                key = (String) e.nextElement();
+                //logger.debug("Paremeter key: "+key);
+                if (key.startsWith("parameter")&&(key.endsWith("name"))) {
+                    name = request.getParameter(key);
+                    //logger.debug("Parameter name: "+ name);
+                    value = request.getParameter("parameter." + key.substring(10,key.length()-5)+".value");
+                    //logger.debug("Parameter value:"+ value);
+                    type = ConfigParam.getParameterType(value);
+                    //logger.debug(name+"-->"+value);
+                    ca_table.setParam(new ConfigParam(name, type, value));
+                }
+            }
+            configParams = ConfigParam.getConfigParams(ca_table.getParams());
+        }
+
         requestParams = request.getParameterMap();
         super.process(request, response);
 
@@ -67,6 +87,7 @@ public class Edit  extends EditBean
         User user = (User) appContext.getUserManager().getUsers().get(userPrincipal.getName());
         if (user == null)
             throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to locate user '" + userPrincipal.getName() + "'");
+
         // if (isAdd())
     }
 
@@ -78,12 +99,8 @@ public class Edit  extends EditBean
             throw new SCAGJspException(Constants.errors.stat.CATABLE_NOT_FOUND, loadId);
         } else{
             limits = getLimitsAsArray(ca_table.getLimits());
-            configParams = getConfigParams(ca_table.getParams());
+            configParams = ConfigParam.getConfigParams(ca_table.getParams());
         }
-    }
-
-    private ConfigParam[] getConfigParams(Collection<ConfigParam> configParams){
-        return (ConfigParam[]) configParams.toArray(new ConfigParam[configParams.size()]);
     }
 
     public Limit[] getLimitsAsArray(List<Limit> limits){
@@ -119,7 +136,7 @@ public class Edit  extends EditBean
         this.limits[index] = value;
     }
 
-    public Limit fggetLimit(int index){
+    public Limit getLimit(int index){
         return this.limits[index];
     }
 

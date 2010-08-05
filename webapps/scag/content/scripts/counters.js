@@ -25,7 +25,6 @@ function addParameter(nameElem, valueElem){
     var pNameElement = document.getElementById("pName");
     var pValueElement = document.getElementById("pValue");
 
-
     pNameElement.style.color = "black";
     pValueElement.style.color = "black";
 
@@ -106,13 +105,15 @@ function unicName(pName){
     for(var i=0; i<l; i++){
         parameter = parameters[i];
         //console.info("Parameter: " + parameter.name);
-        if (parameter.name.indexOf("parameter.") == 0){
-            //console.info("Parameter: " + parameter.value);
-            if (parameter.value == pName) {
-                //console.info("This parameters name already is used.");
-                return false;
-            } {
-                //console.info(parameter.value + " != " + pName);
+        if (parameter.name.indexOf("parameter.") === 0){
+            if (parameter.name.indexOf(".name") > 0){
+                //console.info("Parameter: " + parameter.value);
+                if (parameter.value == pName) {
+                    //console.info("This parameters name already is used.");
+                    return false;
+                } /*else {
+                    console.info(parameter.value + " != " + pName);
+                }   */
             }
         }
     }

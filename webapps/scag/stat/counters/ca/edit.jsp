@@ -63,12 +63,14 @@
             <c:forEach items="${bean.parameters}" var="parameter">
                 <c:set var="values" value="${values}${parameter.name},${parameter.value};"/>
             </c:forEach>
-            <c:set var="values" value="${fn:substring(values, 0, fn:length(values)-1)}"/>
+            <c:if test="${fn:length(values)>0}">
+                <c:set var="values" value="${fn:substring(values, 0, fn:length(values)-1)}"/>
+            </c:if>
             <sm-ep:parameters title="tag.parameters" values="${values}"
                              first_field_name="tag.parameter.name" second_field_name="tag.parameter.value"/>
-        </sm-ep:properties>
 
-        <fmt:message>statistics.counters.ca.label.limits</fmt:message><br/>
+            <sm-ep:property title="statistics.counters.ca.label.limits">
+        
         <table cellspacing="0" cellpadding="0">
             <col width="25%" align="left">
             <col width="50%" align="right">
@@ -119,6 +121,8 @@
                 </td>
             </tr>
         </table>
+            </sm-ep:property>
+        </sm-ep:properties>
 
     </jsp:body>
 </sm:page>

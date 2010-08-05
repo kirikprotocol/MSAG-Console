@@ -71,8 +71,8 @@ public class Limit implements java.io.Serializable, Cloneable
                     "percent=\"" + getPercent() + "\"" +
                     ", level=\"" + getLevel() + "\"" +
                     ", op=\"" + getOp() + "\"" +
-                    ", value=" + getValue() +
-                    '}';
+                    ", value=\"" + getValue() +
+                    "\"}";
         }
 
     }

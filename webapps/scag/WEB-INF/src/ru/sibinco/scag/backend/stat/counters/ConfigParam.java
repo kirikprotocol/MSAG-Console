@@ -1,5 +1,7 @@
 package ru.sibinco.scag.backend.stat.counters;
 
+import java.util.Collection;
+
 /**
  * Copyright (c) EyeLine Communications
  * All rights reserved.
@@ -10,6 +12,10 @@ package ru.sibinco.scag.backend.stat.counters;
  */
 public class ConfigParam implements java.io.Serializable, Cloneable
 {
+    public static final String TYPE_STRING = "string";
+    public static final String TYPE_INTEGER = "int";
+    public static final String TYPE_BOOLEAN = "bool";
+
     private String name;
     private String type;
     private String value;
@@ -43,10 +49,30 @@ public class ConfigParam implements java.io.Serializable, Cloneable
 
     public String toString() {
         return "ConfigParam{" +
-                "type='" + getType() + '\'' +
-                ", name='" + getName() + '\'' +
-                ", value=" + value +
-                '}';
+                "type=\"" + getType() + "\"" +
+                ", name=\"" + getName() + "\"" +
+                ", value=\"" + value +
+                "\"}";
     }   
 
+    public static String getParameterType(String value){
+        //logger.debug("Parameter type: " + value);
+        String type;
+        if (value.compareTo("true") == 0 || value.compareTo("false") == 0){
+            type = TYPE_BOOLEAN;
+        } else{
+            try{
+                Integer.parseInt(value);
+                type = TYPE_INTEGER;
+            } catch (NumberFormatException e){
+                type = TYPE_STRING;
+            }
+        }
+        //logger.debug("Type: "+type);
+        return type;
+    }
+
+    public static ConfigParam[] getConfigParams(Collection<ConfigParam> configParams){
+        return (ConfigParam[]) configParams.toArray(new ConfigParam[configParams.size()]);
+    }
 }

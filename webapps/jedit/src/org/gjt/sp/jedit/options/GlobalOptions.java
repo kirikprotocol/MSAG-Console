@@ -69,7 +69,7 @@ public class GlobalOptions extends OptionsDialog
   jEditGroup.addOptionPane("abbrevs");
   jEditGroup.addOptionPane("appearance");
   jEditGroup.addOptionPane("context");
-  //jEditGroup.addOptionPane("docking");
+  jEditGroup.addOptionPane("docking");
   jEditGroup.addOptionPane("editing");
   jEditGroup.addOptionPane("general");
   jEditGroup.addOptionPane("gutter");
