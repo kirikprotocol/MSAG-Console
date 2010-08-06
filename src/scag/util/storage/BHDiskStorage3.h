@@ -142,7 +142,7 @@ public:
 private:
     storage_type*            store_; // owned
     smsc::logger::Logger*    log_;
-    const DummyKeyLogger     dummyKeyLogger_;
+    DummyKeyLogger           dummyKeyLogger_;
     const KeyLogger*         keylogger_;
 };
 

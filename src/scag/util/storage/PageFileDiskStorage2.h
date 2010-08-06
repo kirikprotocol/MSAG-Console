@@ -81,7 +81,7 @@ public:
 private:
     storage_type*         store_;
     smsc::logger::Logger* log_;
-    const DummyKeyLogger  dummyKeyLogger_;
+    DummyKeyLogger        dummyKeyLogger_;
     const KeyLogger*      keylogger_;
     const index_type      invalidIndex_;
 };
