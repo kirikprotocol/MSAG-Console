@@ -2698,6 +2698,7 @@ public class jEdit extends Applet
     final String fileName = (String) mode.getProperty("file");
 
     Log.log(Log.NOTICE, jEdit.class, "Loading edit mode " + fileName);
+    System.out.println("jEdit.loadMode() Loading edit mode " + fileName);  
 
     final XmlParser parser = new XmlParser();
     XModeHandler xmh = new XModeHandler(mode.getName())
@@ -3541,7 +3542,7 @@ public class jEdit extends Applet
     BufferedReader in = null;
     ObjectInputStream input = null;
     String content = "?username=" + jEdit.username + "&password=" + jEdit.password + "&command=" + command;
-    System.out.println("content: "+content);
+    //System.out.println("content: "+content);
     StringBuffer buf = new StringBuffer(content);
     for (Iterator it = args.keySet().iterator(); it.hasNext();) {
       String s = (String) it.next();

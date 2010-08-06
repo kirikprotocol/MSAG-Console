@@ -187,6 +187,7 @@ public class EnhancedMenuItem extends JMenuItem
 
   public void mouseEntered(MouseEvent evt)
   {
+   System.out.println("EnhancedMenuItem.MouseHandler.mouseEntered()");
    String msg = jEdit.getProperty(action + ".mouse-over");
    if(msg != null)
    {

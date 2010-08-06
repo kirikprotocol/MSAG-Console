@@ -26,14 +26,14 @@
                         values="${fn:join(bean.typeTitles, ',')}" valueTitles="${fn:join(bean.typeTitles, ',')}"/>
             <sm-ep:list title="statistics.counters.edit.list.ca"   name="CATableId" emptyOption="true"
                         values="${fn:join(bean.caIds, ',')}" valueTitles="${fn:join(bean.caIds, ',')}"/>
-            <c:set var="values" value=""/>
+            <c:set var="pValues" value=""/>
             <c:forEach items="${bean.parameters}" var="parameter">
-                <c:set var="values" value="${values}${parameter.name},${parameter.value};"/>
+                <c:set var="pValues" value="${pValues}${parameter.name},${parameter.value};"/>
             </c:forEach>        
-            <c:if test="${fn:length(values)>0}">
-                <c:set var="values" value="${fn:substring(values, 0, fn:length(values)-1)}"/>
+            <c:if test="${fn:length(pValues)>0}">
+                <c:set var="pValues" value="${fn:substring(pValues, 0, fn:length(pValues)-1)}"/>
             </c:if>
-            <sm-ep:parameters title="tag.parameters" values="${values}"
+            <sm-ep:parameters title="tag.parameters" values="${pValues}"
                              first_field_name="tag.parameter.name" second_field_name="tag.parameter.value"/>
         </sm-ep:properties>
     </jsp:body>

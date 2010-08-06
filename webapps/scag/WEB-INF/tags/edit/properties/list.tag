@@ -15,7 +15,7 @@
 <%@ attribute name="label" required="false" %>
 
 <sm-ep:property title="${title}" rowId="${rowId}">
-    <c:set var="values" value="${fn:split(values, ',')}"/>
+    <c:set var="pValues" value="${fn:split(values, ',')}"/>
     <c:choose>
         <c:when test="${title == 'statistics.list.services' || title == 'statistics.list.service_providers'}">
             <c:set var="valueTitles" value="${fn:split(valueTitles, '~')}"/>

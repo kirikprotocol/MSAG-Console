@@ -1,3 +1,4 @@
+<%@ page import="ru.sibinco.scag.backend.stat.counters.LevelType" %>
 <%@include file="/WEB-INF/inc/header.jspf"%>
 <%@taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn"%>
 <sm:page>
@@ -20,109 +21,34 @@
     </jsp:attribute>
 
     <jsp:body>
-        <script type="text/javascript">
-
-            var global_counter = 0;
-
-            function removeRow(tblName, rowId) {
-                var tbl = getElementByIdUni(tblName);
-                var rowElem = tbl.rows[rowId];
-                tbl.deleteRow(rowElem.rowIndex);
-            }
-
-            function addRow(procentName, levelName) {
-                var procentElem = getElementByIdUni(procentName);
-                var levelElem = getElementByIdUni(levelName);
-                if (!validateField(procentElem) || !validateField(levelElem)) return false;
-                else {
-                    var tbl = getElementByIdUni("limits_table");
-                    var newRow = tbl.insertRow(tbl.rows.length);
-                    newRow.className = "row" + ((tbl.rows.length + 1) & 1);
-                    newRow.id = "limitRow_" + (global_counter++);
-                    var newCell = document.createElement("td");
-                    newCell.innerHTML = '<input name="limitProcents" class="txt" value="' + procentElem.value + '" readonly="true">';
-                    newRow.appendChild(newCell);
-                    newCell = document.createElement("td");
-                    newCell.innerHTML = '<input name="limitLevels" class="txt" value="' + levelElem.value + '" readonly="true">';
-                    newRow.appendChild(newCell);
-                    newCell = document.createElement("td");
-                    newCell.innerHTML = '<img src="content/images/but_del.gif" onClick="removeRow(\'limits_table\', \'' + newRow.id + '\')" style="cursor:pointer;" alt="Delete limit">';
-                    newRow.appendChild(newCell);
-                    procentElem.value = ""; levelElem.value = "";
-                    procentElem.focus();
-                    return true;
-                }
-            }
-        </script>
-
         <sm-ep:properties title="statistics.counters.ca.edit.properties">
             <sm-ep:txt title="statistics.counters.ca.edit.txt.id"   name="id" validation="nonEmpty" readonly="${!bean.add}"/>
             <sm-ep:txt title="statistics.counters.ca.edit.txt.min"  name="limitsMin" maxlength="5" validation="unsignedOrEmpty"/>
             <sm-ep:txt title="statistics.counters.ca.edit.txt.max"  name="limitsMax" maxlength="5" validation="unsignedOrEmpty"/>
 
+            <!-- Get properties.-->
+            <c:set var="pValues" value=""/>
             <c:forEach items="${bean.parameters}" var="parameter">
-                <c:set var="values" value="${values}${parameter.name},${parameter.value};"/>
+                <c:set var="pValues" value="${values}${parameter.name},${parameter.value};"/>
             </c:forEach>
-            <c:if test="${fn:length(values)>0}">
-                <c:set var="values" value="${fn:substring(values, 0, fn:length(values)-1)}"/>
+            <c:if test="${fn:length(pValues)>0}">
+                <c:set var="pValues" value="${fn:substring(pValues, 0, fn:length(pValues)-1)}"/>
             </c:if>
-            <sm-ep:parameters title="tag.parameters" values="${values}"
+            <sm-ep:parameters title="tag.parameters" values="${pValues}"
                              first_field_name="tag.parameter.name" second_field_name="tag.parameter.value"/>
 
-            <sm-ep:property title="statistics.counters.ca.label.limits">
-        
-        <table cellspacing="0" cellpadding="0">
-            <col width="25%" align="left">
-            <col width="50%" align="right">
-            <col width="25%" align="left">
-            <tr>
-                <td><fmt:message>statistics.counters.ca.label.condition</fmt:message></td>
-                <td><fmt:message>statistics.counters.ca.label.action</fmt:message></td>
-                <td>&nbsp;</td>
-            </tr>
-            <tr>
-                <td valign="top" colspan="3">
-
-                    <c:set var="rowN" value="0"/>
-                    <table id="limits_table" class="properties_list" cellspacing="0" cellpadding="0">
-                        <col width="25%" align="left">
-                        <col width="50%" align="right">
-                        <col width="25%" align="left">
-                        <c:forEach items="${bean.limits}" var="i">
-                            <c:set var="epercent" value="${fn:escapeXml(i.percent)}"/>
-                            <c:set var="elevel" value="${fn:escapeXml(i.level)}"/>
-                            <tr class="row${rowN%2}" id="limitRow_${epercent}">
-                                <td><input name="limitProcents" class="txt" value="${epercent}" readonly="true"></td>
-                                <td><input name="limitLevels" class="txt" value="${elevel}" readonly="true"></td>
-                                <td><img src="content/images/but_del.gif"
-                                         onClick="removeRow('limits_table', 'limitRow_${rowN}')"
-                                         style="cursor:pointer;" alt="Delete limit"></td>
-                            </tr>
-                            <c:set var="rowN" value="${rowN+1}"/>
-                        </c:forEach>
-                    </table>
-
-                    <hr width="100%" align="left">
-
-                    <table cellspacing="0" cellpadding="0">
-                        <col width="25%" align="left">
-                        <col width="50%" align="right">
-                        <col width="25%" align="left">
-                        <tr>
-                            <td><input id="newLimitProcent" class="txt" name="limitProcents" validation="unsigned"
-                                       onkeyup="resetValidation(this)"></td>
-                            <!-- TODO: levels from bean by list -->
-                            <td><input id="newLimitLevel" class="txt" name="limitLevels"></td>
-                            <td><img src="content/images/but_add.gif" onclick="addRow('newLimitProcent', 'newLimitLevel')"
-                                     style="cursor:pointer;" alt="Add limit"></td>
-                        </tr>
-                    </table>
-
-                </td>
-            </tr>
-        </table>
-            </sm-ep:property>
+            <!-- Get limits -->
+            <c:set var="lValues" value=""/>
+            <c:forEach items="${bean.limits}" var="l">
+                <c:set var="lValues" value="${lValues}${l.percent},${l.level};"/>
+            </c:forEach>
+            <c:if test="${fn:length(lValues)>0}">
+                <c:set var="lValues" value="${fn:substring(lValues, 0, fn:length(lValues)-1)}"/>
+            </c:if>
+            <sm-ep:limits title="statistics.counters.ca.label.limits" values="${lValues}"
+                              first_field_name="statistics.counters.ca.label.condition"
+                              second_field_name="statistics.counters.ca.label.action"
+                              levels="<%=LevelType.getEvalableTypes()%>"/>
         </sm-ep:properties>
-
     </jsp:body>
 </sm:page>

@@ -78,6 +78,22 @@ public class Edit  extends EditBean
             configParams = ConfigParam.getConfigParams(ca_table.getParams());
         }
 
+        // Read counter's parameters.
+        if (getMbSave() != null){
+            Enumeration e = request.getParameterNames();
+            String key, percent, level, type;
+            while (e.hasMoreElements()) {
+                key = (String) e.nextElement();
+                if (key.startsWith("limit")&&(key.endsWith("percent"))) {
+                    percent = request.getParameter(key);
+                    level = request.getParameter("limit." + key.substring(10,key.length()-5)+".level");
+                    type = ConfigParam.getParameterType(level);
+                    ca_table.addLimit(percent,level);
+                }
+            }
+            limits = getLimitsAsArray(ca_table.getLimits());
+        }
+
         requestParams = request.getParameterMap();
         super.process(request, response);
 
@@ -159,4 +175,5 @@ public class Edit  extends EditBean
     public ConfigParam getParameter(int index){
         return this.configParams[index];
     }
+    
 }

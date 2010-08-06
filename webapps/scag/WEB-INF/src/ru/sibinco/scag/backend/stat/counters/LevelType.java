@@ -34,4 +34,8 @@ public enum LevelType
         return name;
     }
 
+    public static String getEvalableTypes(){
+        return "NORMAL,WARNING,MINOR,MAJOR,CRITICAL";
+    }
+
 }
