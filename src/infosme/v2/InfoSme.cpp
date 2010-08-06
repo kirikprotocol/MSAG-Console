@@ -334,35 +334,6 @@ int main(int argc, char** argv)
 #endif
 
         TaskProcessor processor;
-        {
-            ConfigView tpConfig(manager, "InfoSme");
-            /*
-            maxMessagesPerSecond++;
-
-            try { maxMessagesPerSecond = tpConfig.getInt("maxMessagesPerSecond"); } catch (...) {};
-            if (maxMessagesPerSecond <= 0) {
-                maxMessagesPerSecond = 50;
-                smsc_log_warn(logger, "Parameter 'maxMessagesPerSecond' value is invalid. Using default %d",
-                              maxMessagesPerSecond);
-            }
-            if (maxMessagesPerSecond > 100) {
-                smsc_log_warn(logger, "Parameter 'maxMessagesPerSecond' value '%d' is too big. "
-                              "The preffered max value is 100", maxMessagesPerSecond);
-            }
-             */
-
-            {
-                smsc::util::config::ConfString fnStr(tpConfig.getString("storeLocation"));
-                std::string fn = fnStr.str();
-                if(fn.length() && *fn.rbegin()!='/')
-                {
-                    fn+='/';
-                }
-                fn+="taskslock.bin";
-                TaskLock::Init(fn.c_str());
-            }
-            processor.init(&tpConfig);
-        }
 
         sigfillset(&blocked_signals);
         sigdelset(&blocked_signals, SIGKILL);
@@ -383,6 +354,21 @@ int main(int argc, char** argv)
         ComponentManager::registerComponent(&admin);
         // processor.Start();
         adminListener->Start();
+
+        {
+            ConfigView tpConfig(manager, "InfoSme");
+            {
+                smsc::util::config::ConfString fnStr(tpConfig.getString("storeLocation"));
+                std::string fn = fnStr.str();
+                if(fn.length() && *fn.rbegin()!='/')
+                {
+                    fn+='/';
+                }
+                fn+="taskslock.bin";
+                TaskLock::Init(fn.c_str());
+            }
+            processor.init(&tpConfig);
+        }
 
         bool haveSysError=false;
 

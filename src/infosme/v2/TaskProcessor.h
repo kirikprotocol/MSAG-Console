@@ -168,7 +168,7 @@ private:
     TaskHash           tasks;
 
     // Event       awake, exited;
-    bool        bStarted, bNeedExit, notified_;
+    bool        bStarted, bNeedExit, notified_, isInited_;
     EventMonitor startLock;
     int         switchTimeout;
 
@@ -212,8 +212,10 @@ private:
 public:
 
     TaskProcessor();
-    void init( ConfigView* config );
     virtual ~TaskProcessor();
+
+    void init( ConfigView* config );
+    bool isInited() const { return isInited_; }
 
     int getProtocolId() const { return protocolId; };
     const char* getSvcType() const { return svcType.empty() ? "InfoSme" : svcType.c_str(); };

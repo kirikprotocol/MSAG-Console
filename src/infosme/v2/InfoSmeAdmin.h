@@ -70,6 +70,8 @@ protected:
 
 struct InfoSmeAdmin : public TaskProcessorAdapter
 {
+    virtual bool isInited() const = 0;
+
         virtual void startTaskProcessor() = 0;
         virtual void stopTaskProcessor() = 0;
         virtual bool isTaskProcessorRunning() = 0;

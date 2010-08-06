@@ -41,7 +41,7 @@ RetryPolicies TaskProcessor::retryPlcs;
 
 /* ---------------------------- TaskProcessor ---------------------------- */
 
-TaskProcessor::TaskProcessor(ConfigView* config) :
+TaskProcessor::TaskProcessor() :
 TaskProcessorAdapter(), InfoSmeAdmin(), Thread(),
 log_(Logger::getInstance("smsc.infosme.TaskProcessor")), 
 #ifdef INTHASH_USAGE_CHECKING
@@ -49,6 +49,7 @@ tasks(SMSCFILELINE),
 #endif
 bStarted(false),
 bNeedExit(false),
+isInited_(false),
 messageSender(0), 
 responseWaitTime(0),
 receiptWaitTime(0),
@@ -60,6 +61,10 @@ entriesPerDir_(0),
 unrespondedMessagesMax(1),
 maxMessageChunkSize_(0)
 // unrespondedMessagesSleep(10)
+{}
+
+
+void TaskProcessor::init( ConfigView* config )
 {
     smsc_log_info(log_, "Loading ...");
 
@@ -247,7 +252,11 @@ maxMessageChunkSize_(0)
     statistics = new StatisticsManager(ConfString(config->getString("statStoreLocation")).c_str(),this);
     if (statistics) statistics->Start();
     scheduler.Start();
+    isInited_ = true;
 }
+
+
+
 TaskProcessor::~TaskProcessor()
 {
     // jstore.Stop();

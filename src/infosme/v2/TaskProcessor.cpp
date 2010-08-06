@@ -51,6 +51,8 @@ tasks(SMSCFILELINE),
 #endif
 bStarted(false),
 bNeedExit(false),
+notified_(false),
+isInited_(false),
 messageSender(new InfoSmeMessageSender(dispatcher_)),
 responseWaitTime(0),
 receiptWaitTime(0),
@@ -255,6 +257,7 @@ void TaskProcessor::init( ConfigView* config )
     smsc_log_info(log_, "Task schedules loaded.");
     
     scheduler.Start();
+    isInited_ = true;
     smsc_log_info(log_, "init finished");
 }
 

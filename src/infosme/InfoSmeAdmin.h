@@ -28,6 +28,7 @@ namespace smsc { namespace infosme
 
     struct InfoSmeAdmin
     {
+        virtual bool isInited() const = 0;
         virtual void startTaskProcessor() = 0;
         virtual void stopTaskProcessor() = 0;
         virtual bool isTaskProcessorRunning() = 0;

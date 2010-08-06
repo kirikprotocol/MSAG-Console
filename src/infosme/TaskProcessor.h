@@ -166,7 +166,7 @@ private:
     Mutex            tasksLock;
 
     Event       awake, exited;
-    bool        bStarted, bNeedExit;
+    bool        bStarted, bNeedExit, isInited_;
     Mutex       startLock;
     int         switchTimeout;
 
@@ -210,8 +210,10 @@ private:
 
 public:
 
-    TaskProcessor(ConfigView* config);
+    TaskProcessor();
     virtual ~TaskProcessor();
+    void init(ConfigView* config);
+    virtual bool isInited() const { return isInited_; }
 
     int getProtocolId() const { return protocolId; };
     const char* getSvcType() const { return svcType.empty() ? "InfoSme" : svcType.c_str(); };

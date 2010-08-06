@@ -337,21 +337,6 @@ int main(int argc, char** argv)
 
         ConfigView tpConfig(manager, "InfoSme");
 
-        // maxMessagesPerSecond++;
-
-        /*
-        try { maxMessagesPerSecond = tpConfig.getInt("maxMessagesPerSecond"); } catch (...) {};
-        if (maxMessagesPerSecond <= 0) {
-            maxMessagesPerSecond = 50;
-            smsc_log_warn(logger, "Parameter 'maxMessagesPerSecond' value is invalid. Using default %d",
-                          maxMessagesPerSecond);
-        }
-        if (maxMessagesPerSecond > 100) {
-            smsc_log_warn(logger, "Parameter 'maxMessagesPerSecond' value '%d' is too big. "
-                          "The preffered max value is 100", maxMessagesPerSecond);
-        }
-         */
-
         {
           smsc::util::config::ConfString fnStr(tpConfig.getString("storeLocation"));
           std::string fn = fnStr.str();
@@ -363,10 +348,7 @@ int main(int argc, char** argv)
           TaskLock::Init(fn.c_str());
         }
 
-        TaskProcessor processor(&tpConfig);
-
-        InfoSmeMessageSender messageSender( processor );
-        messageSender.reloadSmscAndRegions( manager );
+        TaskProcessor processor;
 
         sigfillset(&blocked_signals);
         sigdelset(&blocked_signals, SIGKILL);
@@ -388,6 +370,9 @@ int main(int argc, char** argv)
 
         bool haveSysError=false;
 
+        processor.init(&tpConfig);
+        InfoSmeMessageSender messageSender( processor );
+        messageSender.reloadSmscAndRegions( manager );
         messageSender.start();
 
         while (!isNeedStop() && !haveSysError)

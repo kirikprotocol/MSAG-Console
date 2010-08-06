@@ -220,6 +220,10 @@ Variant InfoSmeComponent::call(const Method& method, const Arguments& args)
     {
         //smsc_log_debug(logger, "call \"%s\"", method.getName());
         
+        if ( ! admin.isInited() ) {
+            throw AdminException("TaskProcessor is not inited yet, please wait");
+        }
+
         switch (method.getId())
         {
         case startTaskProcessorMethod:
