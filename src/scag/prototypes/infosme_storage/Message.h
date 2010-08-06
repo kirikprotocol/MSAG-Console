@@ -3,6 +3,7 @@
 
 #include <list>
 #include <cassert>
+#include "util/int.h"
 #include "core/buffers/FixedLengthString.hpp"
 
 namespace scag2 {
