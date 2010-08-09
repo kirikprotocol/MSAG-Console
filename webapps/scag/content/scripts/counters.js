@@ -35,13 +35,13 @@ function addRow(nameElem, valueElem, element, ffs, sfs){
     if (validateFirstField(element, nameElem)){
         if (trimStr(valueElem.value).length > 0) {
             if (unicName(paramName, element, ffs)) {
-                console.info("Parameter counter: "+param_counter);
+                //console.info("Parameter counter: "+param_counter);
                 var inner__counter = param_counter++;
                 var tbl = getElementByIdUni(element+".tbl");
                 var newRow = tbl.insertRow(tbl.rows.length);
                 newRow.className = "row" + ((tbl.rows.length + 1) & 1);
                     newRow.id = element + "."+ffs+"." + inner__counter;
-                    console.info("rowId="+element + "."+ffs+"." + inner__counter);
+                    //console.info("rowId="+element + "."+ffs+"." + inner__counter);
                     var newCell = document.createElement("td");
                     var sel_name = element+"."+sfs+"." + paramName + "." + inner__counter;
                     newCell.innerHTML = "<input id=\"" + sel_name + "\""
@@ -72,11 +72,11 @@ function addRow(nameElem, valueElem, element, ffs, sfs){
                     nameElem.focus();
                     return true;
             } else {
-                console.info("Not unic name.");
+                //console.info("Not unic name.");
                 validationError(nameElem, "Not unic name.");
             }
         } else {
-            console.info("Field is empty.");
+            //console.info("Field is empty.");
             validationError(valueElem, "Field is empty.");
         }
     }
@@ -121,10 +121,10 @@ function unicName(pName, type, ffs){
 }
 
 function validateFirstField(type, element){
-    console.info("validateFirstField() type="+type+" value="+element.value);
+    //console.info("validateFirstField() type="+type+" value="+element.value);
     if (type == "parameter"){
         var IsFound = /^[a-zA-Z0-9]+$/.test(element.value);
-        console.info("isFound="+IsFound);
+        //console.info("isFound="+IsFound);
         if (!IsFound) {
             validationError(element, "Validation error.");
             return false;
@@ -132,7 +132,7 @@ function validateFirstField(type, element){
     }
     if (type == "limit"){
         var IsFound = /^-?\d+$/.test(element.value);
-        console.info("isFound="+IsFound);
+        //console.info("isFound="+IsFound);
         if (!IsFound) {
             validationError(element, "Validation error.");
             return false;
