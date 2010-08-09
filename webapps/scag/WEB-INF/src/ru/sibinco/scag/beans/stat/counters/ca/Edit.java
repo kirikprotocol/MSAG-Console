@@ -3,6 +3,7 @@ package ru.sibinco.scag.beans.stat.counters.ca;
 import ru.sibinco.lib.backend.users.User;
 import ru.sibinco.scag.Constants;
 import ru.sibinco.scag.backend.stat.counters.ConfigParam;
+import ru.sibinco.scag.backend.stat.counters.CountersManager;
 import ru.sibinco.scag.backend.stat.counters.Limit;
 import ru.sibinco.scag.beans.EditBean;
 import ru.sibinco.scag.beans.SCAGJspException;
@@ -64,14 +65,14 @@ public class Edit  extends EditBean
             String key, name, value, type;
             while (e.hasMoreElements()) {
                 key = (String) e.nextElement();
-                //logger.debug("Paremeter key: "+key);
+                logger.debug("Paremeter key: "+key);
                 if (key.startsWith("parameter")&&(key.endsWith("name"))) {
                     name = request.getParameter(key);
                     //logger.debug("Parameter name: "+ name);
                     value = request.getParameter("parameter." + key.substring(10,key.length()-5)+".value");
                     //logger.debug("Parameter value:"+ value);
                     type = ConfigParam.getParameterType(value);
-                    //logger.debug(name+"-->"+value);
+                    logger.debug(name+"-->"+value);
                     ca_table.setParam(new ConfigParam(name, type, value));
                 }
             }
@@ -81,13 +82,15 @@ public class Edit  extends EditBean
         // Read counter's parameters.
         if (getMbSave() != null){
             Enumeration e = request.getParameterNames();
-            String key, percent, level, type;
+            String key, percent, level;
             while (e.hasMoreElements()) {
                 key = (String) e.nextElement();
+                //logger.debug("Paremeter key: "+key);
                 if (key.startsWith("limit")&&(key.endsWith("percent"))) {
                     percent = request.getParameter(key);
-                    level = request.getParameter("limit." + key.substring(10,key.length()-5)+".level");
-                    type = ConfigParam.getParameterType(level);
+                    //logger.debug("Limit percent: "+ percent);
+                    level = request.getParameter("limit." + key.substring(6,key.length()-8)+".level");
+                    //logger.debug("Parameter level:"+ level);
                     ca_table.addLimit(percent,level);
                 }
             }
@@ -103,13 +106,12 @@ public class Edit  extends EditBean
         User user = (User) appContext.getUserManager().getUsers().get(userPrincipal.getName());
         if (user == null)
             throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to locate user '" + userPrincipal.getName() + "'");
-
-        // if (isAdd())
+        
     }
 
     protected void load(String loadId) throws SCAGJspException {
         logger.debug("Loading ca_table, id=" + loadId);
-        ca_table = appContext.getCountersManager().getCATables().get(loadId);
+        ca_table = appContext.getCountersManager().getCATables().get(loadId);        
 
         if (ca_table == null) {
             throw new SCAGJspException(Constants.errors.stat.CATABLE_NOT_FOUND, loadId);
@@ -131,8 +133,25 @@ public class Edit  extends EditBean
 
     protected void save() throws SCAGJspException {
         logger.debug("Adding new ca_table, id=" + getId());
-        appContext.getCountersManager().addCATable(ca_table);
-        // TODO: handle exceptions (if can't add)
+        CountersManager countersManager = appContext.getCountersManager();
+        CATable oldCATable = null;
+        String id = getId();
+        HashMap<String, CATable> caTableHashMap = countersManager.getCATables();
+
+        if (isAdd()){
+            if (!countersManager.isUniqueCATableName(id)){
+                logger.error( "counters.ca.Edit:save() ca_table - name not unique" );
+                throw new SCAGJspException( Constants.errors.stat.CAN_NOT_SAVE_CATABLE_NOT_UNIQUE_NAME, id );
+            }
+        } else {
+            logger.debug("Update ca table, id=" + getId());
+            oldCATable = caTableHashMap.get(id);
+        }
+
+        caTableHashMap.remove(getEditId());
+        caTableHashMap.put(id, ca_table);
+        countersManager.createUpdateCATable(getLoginedPrincipal().getName(), isAdd(), ca_table, appContext, oldCATable);
+      
         throw new DoneException();
     }
 
@@ -159,16 +178,15 @@ public class Edit  extends EditBean
 ///////////////////////////////////////////////////////////////////////////////
 // Methods for working with tables parameters.
     public ConfigParam[] getParameters(){
+        logger.debug("configParams.length="+configParams.length);
         return this.configParams;
     }
 
-    public void setParameters(ConfigParam values[]){
-        logger.debug("setParameters: ");
+    public void setParameters(ConfigParam values[]){       
         this.configParams = values;
     }
 
-    public void setParameter(int index, ConfigParam value){
-        logger.debug("setParameter: "+ value);
+    public void setParameter(int index, ConfigParam value){        
         this.configParams[index] = value;
     }
 

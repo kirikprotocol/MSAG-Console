@@ -112,6 +112,7 @@ public class Edit extends EditBean
         Counter oldCounter = null;
         //Counter counter;
         HashMap<String, Counter> counters = countersManager.getCounters();
+
         if (isAdd()){
             if (!countersManager.isUniqueCounterName(id)){
                 logger.error( "counters.Edit:save():counter - name not unique" );
@@ -121,16 +122,11 @@ public class Edit extends EditBean
             logger.debug("Update counter, id=" + getId());
             oldCounter = counters.get(id);
         }
-        //counter = new  Counter(id, getType(), getCATableId());
-
-        //ConfigParam[] cp = getParameters();
-        //for(int i=0; i<cp.length; i++) counter.setParam( cp[i]);
 
         counters.remove(getEditId());
         counters.put(id, counter);
         countersManager.createUpdateCounter(getLoginedPrincipal().getName(), isAdd(), counter, appContext, oldCounter);
-
-        // TODO: handle exceptions (if can't add)
+        
         throw new DoneException();
     }
 
@@ -155,12 +151,10 @@ public class Edit extends EditBean
     }
 
     public void setParameters(ConfigParam values[]){
-        logger.debug("setParameters: ");
         this.configParams = values;
     }
 
-    public void setParameter(int index, ConfigParam value){
-        logger.debug("setParameter: "+ value);
+    public void setParameter(int index, ConfigParam value){       
         this.configParams[index] = value;
     }
 

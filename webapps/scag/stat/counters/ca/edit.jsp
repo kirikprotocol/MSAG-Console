@@ -25,18 +25,7 @@
             <sm-ep:txt title="statistics.counters.ca.edit.txt.id"   name="id" validation="nonEmpty" readonly="${!bean.add}"/>
             <sm-ep:txt title="statistics.counters.ca.edit.txt.min"  name="limitsMin" maxlength="5" validation="unsignedOrEmpty"/>
             <sm-ep:txt title="statistics.counters.ca.edit.txt.max"  name="limitsMax" maxlength="5" validation="unsignedOrEmpty"/>
-
-            <!-- Get properties.-->
-            <c:set var="pValues" value=""/>
-            <c:forEach items="${bean.parameters}" var="parameter">
-                <c:set var="pValues" value="${values}${parameter.name},${parameter.value};"/>
-            </c:forEach>
-            <c:if test="${fn:length(pValues)>0}">
-                <c:set var="pValues" value="${fn:substring(pValues, 0, fn:length(pValues)-1)}"/>
-            </c:if>
-            <sm-ep:parameters title="tag.parameters" values="${pValues}"
-                             first_field_name="tag.parameter.name" second_field_name="tag.parameter.value"/>
-
+           
             <!-- Get limits -->
             <c:set var="lValues" value=""/>
             <c:forEach items="${bean.limits}" var="l">
@@ -49,6 +38,17 @@
                               first_field_name="statistics.counters.ca.label.condition"
                               second_field_name="statistics.counters.ca.label.action"
                               levels="<%=LevelType.getEvalableTypes()%>"/>
+
+            <!-- Get properties.-->
+            <c:set var="pValues" value=""/>
+            <c:forEach items="${bean.parameters}" var="parameter">
+                <c:set var="pValues" value="${pValues}${parameter.name},${parameter.value};"/>
+            </c:forEach>
+            <c:if test="${fn:length(pValues)>0}">
+                <c:set var="pValues" value="${fn:substring(pValues, 0, fn:length(pValues)-1)}"/>
+            </c:if>
+            <sm-ep:parameters title="tag.parameters" values="${pValues}"
+                             first_field_name="tag.parameter.name" second_field_name="tag.parameter.value"/>
         </sm-ep:properties>
     </jsp:body>
 </sm:page>

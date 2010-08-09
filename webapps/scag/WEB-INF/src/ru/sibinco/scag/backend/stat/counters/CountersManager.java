@@ -8,10 +8,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NamedNodeMap;
 
 import java.io.*;
-import java.util.HashMap;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 import ru.sibinco.lib.StatusDisconnectedException;
 import ru.sibinco.scag.Constants;
@@ -94,11 +91,7 @@ public class CountersManager extends Manager
         try{            
             logger.debug("Create or update counter method.");
             logger.debug("Counter id=\""+counter.getId()+"\" idAdd="+isAdd);
-            if (isAdd){
-                 appContext.getScag().invokeCommand("replaceCounterTemplate", counter, appContext, this, configFile.toString());
-            } else{
-                 appContext.getScag().invokeCommand("replaceCounterTemplate", counter, appContext, this, configFile.toString());
-            }
+            appContext.getScag().invokeCommand("replaceCounterTemplate", counter, appContext, this, configFile.toString());            
         } catch (SibincoException e) {
             if (!(e instanceof StatusDisconnectedException)) {
                 counters.remove(counter.getId());
@@ -111,16 +104,36 @@ public class CountersManager extends Manager
                 }
                 throw new SCAGJspException(Constants.errors.stat.COULDNT_APPLY_TEMPLATE, counter.getId(), e);
             }
-        }
-        finally {
+        } finally {
             oldCounter = null;
         }
         StatusManager.getInstance().addStatMessages(new StatMessage(user, "Center", messageText +counter.getId()));
     }
     
-    public void addCATable(CATable ca_table) {
-        ca_tables.put(ca_table.getId(), ca_table);
-        // TODO: apply config, command call to MSAG, restore if failed
+    public void createUpdateCATable(String user, boolean isAdd,  CATable ca_table,  SCAGAppContext appContext, CATable oldCATable)
+            throws SCAGJspException {
+        String messageText = "";
+        try{
+            logger.debug("Create or update ca_table method.");
+            logger.debug("CATable id=\""+ca_table.getId()+"\" idAdd="+isAdd);
+            appContext.getScag().invokeCommand("replaceCounterActions", ca_table, appContext, this, configFile.toString());
+        } catch (SibincoException e) {
+            if (!(e instanceof StatusDisconnectedException)) {
+                ca_tables.remove(ca_table.getId());
+
+                if (!isAdd) ca_tables.put(oldCATable.getId(),oldCATable);
+                    logger.error("Couldn't apply ca table " + ca_table.getId() + " ", e);
+                try {
+                    store();
+                } catch (SibincoException e1) {
+                    logger.error("Couldn't restore ca table " + ca_table.getId() + " ", e1);
+                }
+                throw new SCAGJspException(Constants.errors.stat.COULDNT_APPLY_CATABLE, ca_table.getId(), e);
+            }
+        } finally {
+            oldCATable = null;
+        }
+        StatusManager.getInstance().addStatMessages(new StatMessage(user, "Center", messageText +ca_table.getId()));
     }
 
     public void store() throws SibincoException{
@@ -148,7 +161,8 @@ public class CountersManager extends Manager
     private void parseParam(ConfigParamOwner owner, Node node)
     {
         NamedNodeMap nodeAttributes = node.getAttributes();
-        final String paramName = nodeAttributes.getNamedItem("name").getNodeValue();
+        final String paramName = nodeAttributes.getNamedItem("name").getNodeValue();       
+        logger.debug("Parse parameter name="+paramName);
         final String paramType = nodeAttributes.getNamedItem("type").getNodeValue();
         String paramValue = "";
         NodeList paramValueList = node.getChildNodes();
@@ -171,7 +185,7 @@ public class CountersManager extends Manager
 
         final Collection<ConfigParam> params = counter.getParams();
         for (ConfigParam param : params) { // dump additional params            
-            text += "\t\t\t<param name=\"" + StringEncoderDecoder.encode(param.getName()) + '"' +
+            text += "\t\t\t<param name=\"" + StringEncoderDecoder.encode(param.getName()) + "\"" +
                     " type=\"" + StringEncoderDecoder.encode(param.getType()) + "\">" +
                     StringEncoderDecoder.encode(param.getValue()) + "</param>\n";
         }
@@ -205,23 +219,45 @@ public class CountersManager extends Manager
     }
 
     private String getXMLText(CATable ca_table)
-    {
+    {        
+        // Add 'ca_table' tag.
         String text =
-            "\t\t<ca_table id=\"" + StringEncoderDecoder.encode(ca_table.getId()) + '"' +
-            " system=\"" + StringEncoderDecoder.encode(ca_table.getSystem()) + "\">\n" +
-            "\t\t\t<limits min=\"" + StringEncoderDecoder.encode(ca_table.getLimitsMinStr()) + '"' +
+            "\t\t<ca_table id=\"" + StringEncoderDecoder.encode(ca_table.getId()) + "\"" +
+            " system=\"" + StringEncoderDecoder.encode(ca_table.getSystem()) + "\">\n";
+
+        // Check is table contains limits.
+        List<Limit> limits = ca_table.getLimits();
+        if (limits.size()>0){
+            //Start "limits" tag.
+            text += "\t\t\t<limits min=\"" + StringEncoderDecoder.encode(ca_table.getLimitsMinStr()) + '"' +
             " max=\"" + StringEncoderDecoder.encode(ca_table.getLimitsMaxStr())+ "\">\n";
 
-        // TODO: dump limits content
-        text += "\t\t\t</limits>\n";
-
-        final Collection<ConfigParam> params = ca_table.getParams();
-        for (ConfigParam param : params) { // dump additional params
-            text += "\t\t\t<param name=\"" + StringEncoderDecoder.encode(param.getName() + '"' +
-                    " type=\"" + StringEncoderDecoder.encode(param.getType()) + "\">" +
-                    StringEncoderDecoder.encode(param.getValue()) + "</param>\n");
+            //Add "limit" tags.
+            for(Limit limit: limits){
+                text += "\t\t\t\t<limit percent=\""+limit.getPercent() + "\"" +
+                        " severity=\""+ StringEncoderDecoder.encode(limit.getLevel().getName())+"\"";
+                if (limit.getOp() != null)
+                        text += " op=\"" + StringEncoderDecoder.encode(limit.getOp())+"\"";
+                if (limit.getValue() != null){
+                    text+=">"+StringEncoderDecoder.encode(limit.getValue())+"</limit>\n";
+                } else{
+                    text+="/>\n";
+                }
+            }
+            // Close 'limits' tag.
+            text += "\t\t\t</limits>\n";
+        } else {
+            // There aren't limits, so iterate parameters.
+            final Collection<ConfigParam> params = ca_table.getParams();
+            for (ConfigParam param : params){
+                logger.debug("Parameters name='"+param.getName()+"' value='"+param.getValue()+"'.");               
+                text += "\t\t\t<param name=\"" + StringEncoderDecoder.encode(param.getName()) + "\"" +
+                        " type=\"" + StringEncoderDecoder.encode(param.getType()) + "\">" +
+                        StringEncoderDecoder.encode(param.getValue()) + "</param>\n";
+            }
         }
-        text += "\t\t</ca_table>\n";
+        // Close 'ca_table' tag.
+        text += "\t\t</ca_table>\n";            
         return text;
     }
     private CATable parseXMLCATable(Node node)
@@ -257,8 +293,7 @@ public class CountersManager extends Manager
                     logger.debug("Percent=" + limitPercent + ", severity=" + limitSeverity);
                     ca_table.addLimit(limitPercent, limitSeverity); 
                 }
-            }
-            else if (nodeName.equals("param")) {
+            } else if (nodeName.equals("param")) {
                 parseParam(ca_table, childNode);
             }
         }
@@ -283,6 +318,22 @@ public class CountersManager extends Manager
             counter = (Counter) cMap.get( iterator.next() );
             logger.debug("Compare with name: "+counter.getId());
             if ( counter.getId().compareTo(id) == 0){
+                unic = false; break;
+            }
+        }
+        return unic;
+    }
+
+    public boolean isUniqueCATableName(String id){
+        logger.debug("Check ca table's name \""+id+"\" unicity.");
+        boolean unic = true;
+        Map cMap = getCATables();
+        Iterator iterator = cMap.keySet().iterator();
+        CATable ca_table;
+        while(iterator.hasNext()){
+            ca_table = (CATable) cMap.get(iterator.next());
+            logger.debug("Compare with name: "+ca_table.getId());
+            if (ca_table.getId().compareTo(id) == 0){
                 unic = false; break;
             }
         }

@@ -73,6 +73,6 @@ public class ConfigParam implements java.io.Serializable, Cloneable
     }
 
     public static ConfigParam[] getConfigParams(Collection<ConfigParam> configParams){
-        return (ConfigParam[]) configParams.toArray(new ConfigParam[configParams.size()]);
+        return configParams.toArray(new ConfigParam[configParams.size()]);
     }
 }

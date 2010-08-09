@@ -216,9 +216,12 @@ public class Constants {
             public static final Constants APPLY_COUNTERS = new Constants("error.stat.apply.counters");
             public static final Constants APPLY_CA_TABLES = new Constants("error.stat.apply.ca_tables");
             public static final Constants CAN_NOT_SAVE_COUNTER_NOT_UNIQUE_NAME = new Constants("error.stat.can_not_save_operator_not_unique_name");
+            public static final Constants CAN_NOT_SAVE_CATABLE_NOT_UNIQUE_NAME = new Constants("error.stat.can_not_save_ca_table_not_unique_name");
             public static final Constants COUNTER_NOT_FOUND = new Constants("error.stat.counter_not_found");
             public static final Constants CATABLE_NOT_FOUND = new Constants("error.stat.catable_not_found");
             public static final Constants COULDNT_APPLY_TEMPLATE = new Constants("error.stat.template.couldnt_apply");
+            public static final Constants COULDNT_APPLY_CATABLE = new Constants("error.stat.catable.couldnt_apply");
+
         }
 
     }

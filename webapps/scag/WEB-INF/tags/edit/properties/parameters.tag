@@ -24,8 +24,22 @@
         </tr>        
         <c:set var="rowN" value="0"/>
         <tr class="row${rowN%2}" >
-            <td><input id="pName" type="text" size="45" style="color:black;" value="" /></td>
-            <td><input id="pValue" type="text" size="45" style="color:black;" value="" /></td>
+            <td>
+                <input id="pName"
+                       type="text"
+                       size="45"
+                       style="color:black;"
+                       value=""
+                       onkeyup="resetValidation(this)"/>
+            </td>
+            <td>
+                <input id="pValue"
+                       type="text"
+                       size="45"
+                       style="color:black;"
+                       value=""
+                       onkeyup="resetValidation(this)"/>
+            </td>
             <td width="100%"><img src="content/images/but_add.gif" alt="Add new parameter"
                 style="cursor:pointer;"
                 onclick="addRow('pName','pValue','parameter','name','value')"/></td>

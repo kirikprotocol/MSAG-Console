@@ -44,8 +44,10 @@ function addRow(nameElem, valueElem, element, ffs, sfs){
                     //console.info("rowId="+element + "."+ffs+"." + inner__counter);
                     var newCell = document.createElement("td");
                     var sel_name = element+"."+sfs+"." + paramName + "." + inner__counter;
+                    var input_name = element+"."+inner__counter+"."+ffs;
+                    //console.info("first input name="+input_name);
                     newCell.innerHTML = "<input id=\"" + sel_name + "\""
-                                                + " name=\""+element+"."+inner__counter+"."+ffs+"\""
+                                                + " name=\""+input_name+"\""
                                                 + " type=\"text\""
                                                 + " size=\"45\""
                                                 + " readonly=\"true\""
@@ -54,11 +56,15 @@ function addRow(nameElem, valueElem, element, ffs, sfs){
                     newCell = document.createElement("td");
                     newCell.colSpan = 1;
                     var sel_value = element+"."+sfs+"."+ paramName + "." + inner__counter;
+                    input_name = element+"."+inner__counter+"."+sfs;
+                    //console.info("second input name="+input_name);
                     newCell.innerHTML = "<input id=\"" + sel_value + "\""
-                                                + " name=\""+element+"."+inner__counter+"."+sfs+"\""
+                                                + " name=\""+input_name+"\""
                                                 + " type=\"text\" "
-                                                + "size=\"45\""
-                                                + "style=\"color:black;\" value=\"" + paramValue + "\" readonly=\"true\"/>";
+                                                + " size=\"45\""
+                                                + " style=\"color:black;\""
+                                                + " value=\"" + paramValue + "\""
+                                                + " readonly=\"true\"/>";
                     newRow.appendChild(newCell);
                     newCell = document.createElement("td");
                     newCell.width = "100%";
@@ -97,18 +103,18 @@ function unicName(pName, type, ffs){
     //console.info("Check parameters name unicity.");
     //console.info("pName: "+pName);
 
-    var parameters = document.getElementsByTagName("input");
+    var inputs = document.getElementsByTagName("input");
     
-    var l = parameters.length;
+    var l = inputs.length;
     //console.info("Parameters number: " + l);
-    var parameter;
+    var input;
     for(var i=0; i<l; i++){
-        parameter = parameters[i];
+        input = inputs[i];
         //console.info("Parameter: " + parameter.name);
-        if (parameter.name.indexOf(type+".") === 0){
-            if (parameter.name.indexOf("."+ffs) > 0){
+        if (input.name.indexOf(type+".") === 0){
+            if (input.name.indexOf("."+ffs) > 0){
                 //console.info("Parameter: " + parameter.value);
-                if (parameter.value == pName) {
+                if (input.value == pName) {
                     //console.info("This parameters name already is used.");
                     return false;
                 } /*else {
@@ -123,20 +129,40 @@ function unicName(pName, type, ffs){
 function validateFirstField(type, element){
     //console.info("validateFirstField() type="+type+" value="+element.value);
     if (type == "parameter"){
-        var IsFound = /^[a-zA-Z0-9]+$/.test(element.value);
+        var IsFound = /^[a-zA-Z0-9\.]+$/.test(element.value);
         //console.info("isFound="+IsFound);
         if (!IsFound) {
-            validationError(element, "Validation error.");
+            validationError(element, "Validation error! You can use only alphanumerical character and point to separate them.");
             return false;
         }
     }
     if (type == "limit"){
-        var IsFound = /^-?\d+$/.test(element.value);
-        //console.info("isFound="+IsFound);
-        if (!IsFound) {
-            validationError(element, "Validation error.");
+        validateInteger(element);
+
+        var limitsMin = document.getElementsByName("limitsMin")[0];
+        //console.info("limitsMin="+limitsMin.value);
+        validateInteger(limitsMin);
+
+        var limitsMax = document.getElementsByName("limitsMax")[0];
+        //console.info("limitsMax="+limitsMax.value);
+        validateInteger(limitsMax);
+
+        //console.info("value="+element.value);
+        if (element.value < limitsMin.value || element.value > limitsMax.value){
+            validationError(element, "Value is limited by min and max values.");
             return false;
         }
+
+
+    }
+    return true;
+}
+
+function validateInteger(element){
+    var IsFound = /^-?\d+$/.test(element.value);
+    if (!IsFound) {
+        validationError(element, "Validation error! Value must be decimal without sign.");
+        return false;
     }
     return true;
 }

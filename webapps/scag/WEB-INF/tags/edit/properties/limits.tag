@@ -27,8 +27,7 @@
         <tr class="row${(rowN+1)%2}">
             <td><input id="lPercent"
                        class="txt"
-                       name="limitPercent"
-                       validation="unsigned"
+                       name="limitPercent"                       
                        onkeyup="resetValidation(this)">
             </td>
             <c:set var="lla" value="${fn:split(levels, ',')}"/>

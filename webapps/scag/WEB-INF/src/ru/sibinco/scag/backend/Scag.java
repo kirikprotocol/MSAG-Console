@@ -21,11 +21,13 @@ import ru.sibinco.scag.backend.protocol.commands.routes.ApplyHttpRoutes;
 import ru.sibinco.scag.backend.protocol.commands.routes.ApplySmppRoutes;
 import ru.sibinco.scag.backend.protocol.commands.rules.RemoveRule;
 import ru.sibinco.scag.backend.protocol.commands.services.ReloadServices;
+import ru.sibinco.scag.backend.protocol.commands.stat.ReplaceCounterActions;
 import ru.sibinco.scag.backend.protocol.commands.stat.ReplaceCounterTemplate;
 import ru.sibinco.scag.backend.protocol.commands.tariffmatrix.ReloadTariffMatrix;
 import ru.sibinco.scag.backend.protocol.response.Response;
 import ru.sibinco.scag.backend.routing.ScagRoutingManager;
 import ru.sibinco.scag.backend.routing.http.HttpRoutingManager;
+import ru.sibinco.scag.backend.stat.counters.CATable;
 import ru.sibinco.scag.backend.stat.counters.Counter;
 
 import java.io.File;
@@ -138,6 +140,13 @@ public class Scag extends Proxy {
         final Response response = super.runCommand(new ReplaceCounterTemplate(counter));
         if (Response.STATUS_OK != response.getStatus())
             throw new SibincoException("Couldn't replace counter template, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
+    }
+
+    protected void replaceCounterActions(final CATable ca_table) throws SibincoException {
+        //logger.debug("Invoke method replaceCounterActions.");
+        final Response response = super.runCommand(new ReplaceCounterActions(ca_table));
+        if (Response.STATUS_OK != response.getStatus())
+            throw new SibincoException("Couldn't replace ca table, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
     }
     
     //centers
@@ -437,7 +446,7 @@ public class Scag extends Proxy {
        //3.save config
         logger.debug( "Scag:invokeCommand:store file , manager '" + manager.getClass().getName() + "'" );
         manager.store();
-//moved from end
+        //moved from end
         logger.debug("Scag.invokeCommand().store file hsDaemon");
         appContext.getHSDaemon().store(configFile);
 
