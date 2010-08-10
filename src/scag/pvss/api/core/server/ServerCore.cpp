@@ -1,5 +1,6 @@
 #include <ctime>
 #include <cstring>
+#include <cstdio>
 
 #include "ServerCore.h"
 #include "ContextQueue.h"
