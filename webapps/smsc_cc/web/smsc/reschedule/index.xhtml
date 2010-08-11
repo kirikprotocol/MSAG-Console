@@ -4,21 +4,15 @@
       xmlns:t="http://myfaces.apache.org/tomahawk"
       xmlns:tr="http://myfaces.apache.org/trinidad"
       xmlns:ui="http://java.sun.com/jsf/facelets"
-      xmlns:mo="http://eyeline.mobi">
+      xmlns:mo="http://eyeline.mobi"
+      xmlns:eye="http://taglib.eyeline.mobi">
 
-<ui:composition template="../../templates/main.xhtml">
+<ui:composition template="/templates/main.xhtml">
 
   <ui:define name="sme_title">
-
-    <table cellpadding="0" cellspacing="0" height="30px" class="smsc_status">
-      <tr>
-        <th background="/smsc/images/smsc_17.jpg" style="white-space:nowrap">#{msg['smsc.reschedule']}</th>
-        <td><h:outputText value="&#160;"/></td>
-        <td width="12px" background="/smsc/images/smsc_19.jpg" style="padding-right:0px;"></td>
-      </tr>
-    </table>
-
+    <eye:pageTitle title="#{msg['smsc.reschedule']}"/>
   </ui:define>
+
 
   <ui:define name="content">
 
@@ -34,22 +28,25 @@
         <t:saveState value="#{reschedule.reschedules}"/>
       </tr:panelGroupLayout>
 
-      <mo:buttons>
+      <eye:buttons>
         <table>
           <tr>
             <td align="left">
-              <tr:commandLink text="#{msg['add.button']}" id="add1" action="RESCHEDULE_EDIT" actionListener="#{reschedule.edit}"
+              <tr:commandLink text="#{msg['add.button']}" id="add1" action="RESCHEDULE_EDIT"
+                              actionListener="#{reschedule.edit}"
                               inlineStyle="font-family: Verdana, Arial, Helvetica, sans-serif;font-size: x-small;"
                   />
               <h:outputText value="&#160;&#160;|&#160;&#160;"/>
-              <tr:commandLink text="#{msg['delete.button']}" id="delete1" partialSubmit="true"  actionListener="#{reschedule.removeSelected}"
+              <tr:commandLink text="#{msg['delete.button']}" id="delete1" partialSubmit="true"
+                              actionListener="#{reschedule.removeSelected}"
                               inlineStyle="font-family: Verdana, Arial, Helvetica, sans-serif;font-size: x-small;"
                               onclick="if (!confirm('#{msg['smsc.delete.records']}')) return false"
 
                   />
             </td>
             <td align="right">
-              <tr:commandLink text="#{msg['submit.button']}" id="submit1" actionListener="#{reschedule.submit}" partialSubmit="true"
+              <tr:commandLink text="#{msg['submit.button']}" id="submit1" actionListener="#{reschedule.submit}"
+                              partialSubmit="true"
                               inlineStyle="font-family: Verdana, Arial, Helvetica, sans-serif;font-size: x-small;"
                   />
               <h:outputText value="&#160;&#160;|&#160;&#160;"/>
@@ -59,8 +56,7 @@
             </td>
           </tr>
         </table>
-      </mo:buttons>
-
+      </eye:buttons>
 
 
       <h:panelGrid style="padding:10px" columns="1">
@@ -75,7 +71,8 @@
           <h:panelGrid columns="1">
             <h:panelGrid columns="2" columnClasses="column20Width, columnTopLeftAlign" bgcolor="#F2EEDA">
               <h:outputText/>
-              <tr:commandLink text="#{reschedule.defaultReschedule.intervals}" action="RESCHEDULE_EDIT" actionListener="#{reschedule.edit}">
+              <tr:commandLink text="#{reschedule.defaultReschedule.intervals}" action="RESCHEDULE_EDIT"
+                              actionListener="#{reschedule.edit}">
                 <f:param name="reschedule" value="#{reschedule.defaultReschedule.intervals}"/>
               </tr:commandLink>
             </h:panelGrid>
@@ -85,7 +82,7 @@
             </h:panelGrid>
           </h:panelGrid>
 
-          <tr:iterator value="#{reschedule.reschedules}" var="r" >
+          <tr:iterator value="#{reschedule.reschedules}" var="r">
 
             <h:panelGrid columns="2" columnClasses="column20Width, columnTopLeftAlign" bgcolor="#F2EEDA">
               <h:selectBooleanCheckbox value="#{r.checked}"/>
@@ -94,7 +91,8 @@
               </tr:commandLink>
             </h:panelGrid>
 
-            <h:dataTable value="#{r.statuses}" var="status" columnClasses="column50Width, columnTopLeftAlign" bgcolor="#F8F6EE">
+            <h:dataTable value="#{r.statuses}" var="status" columnClasses="column50Width, columnTopLeftAlign"
+                         bgcolor="#F8F6EE">
               <h:column>
                 <tr:outputText/>
               </h:column>
@@ -109,22 +107,24 @@
 
       </h:panelGrid>
 
-      <mo:buttons>
+      <eye:buttons>
         <table>
           <tr>
             <td align="left">
-              <tr:commandLink text="#{msg['add.button']}" id="add2" action="RESCHEDULE_EDIT" actionListener="#{reschedule.edit}"
+              <tr:commandLink text="#{msg['add.button']}" id="add2" action="RESCHEDULE_EDIT"
+                              actionListener="#{reschedule.edit}"
                               inlineStyle="font-family: Verdana, Arial, Helvetica, sans-serif;font-size: x-small;"
                   />
               <h:outputText value="&#160;&#160;|&#160;&#160;"/>
-              <tr:commandLink text="#{msg['delete.button']}" id="delete2" partialSubmit="true"  actionListener="#{reschedule.removeSelected}"
+              <tr:commandLink text="#{msg['delete.button']}" id="delete2" partialSubmit="true"
+                              actionListener="#{reschedule.removeSelected}"
                               inlineStyle="font-family: Verdana, Arial, Helvetica, sans-serif;font-size: x-small;"
                               onclick="if (!confirm('#{msg['smsc.delete.records']}')) return false"
 
                   />
             </td>
             <td align="right">
-              <tr:commandLink text="#{msg['submit.button']}" actionListener="#{reschedule.submit}"  id="submit2"
+              <tr:commandLink text="#{msg['submit.button']}" actionListener="#{reschedule.submit}" id="submit2"
                               inlineStyle="font-family: Verdana, Arial, Helvetica, sans-serif;font-size: x-small;"
                   />
               <h:outputText value="&#160;&#160;|&#160;&#160;"/>
@@ -134,7 +134,7 @@
             </td>
           </tr>
         </table>
-      </mo:buttons>
+      </eye:buttons>
 
 
     </tr:form>

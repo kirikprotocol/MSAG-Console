@@ -1,0 +1,11 @@
+<?xml encoding="windows-1251"?>
+
+<!ELEMENT locale_resources (settings*, resources*)>
+
+<!ELEMENT settings (section*, param*)>
+<!ELEMENT resources (section*, param*)>
+<!ELEMENT section (section*, param*)>
+<!ELEMENT param (#PCDATA)>
+
+<!ATTLIST section  name CDATA #REQUIRED>
+<!ATTLIST param    name CDATA #REQUIRED>

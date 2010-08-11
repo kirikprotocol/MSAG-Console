@@ -32,9 +32,11 @@
     <param-value>false</param-value>
   </context-param>
 
+
+
   <context-param>
     <param-name>facelets.LIBRARIES</param-name>
-    <param-value>/WEB-INF/facelets/tags/smsc.taglib.xml</param-value>
+    <param-value>/WEB-INF/facelets/tags/smsc.taglib.xml;/WEB-INF/facelets/tags/eyeline.taglib.xml</param-value>
 </context-param>
 
   <context-param>
@@ -87,10 +89,10 @@
     <servlet-name>faces</servlet-name>
   </filter-mapping>
 
-  <filter-mapping>
-    <filter-name>extensionsFilter</filter-name>
-    <servlet-name>faces</servlet-name>
-  </filter-mapping>
+  <!--<filter-mapping>-->
+    <!--<filter-name>extensionsFilter</filter-name>-->
+    <!--<servlet-name>faces</servlet-name>-->
+  <!--</filter-mapping>-->
 
   <!-- Faces Servlet -->
   <servlet>
@@ -115,10 +117,10 @@
     <url-pattern>/adf/*</url-pattern>
   </servlet-mapping>
 
-  <filter-mapping>
-    <filter-name>extensionsFilter</filter-name>
-    <url-pattern>/faces/myFacesExtensionResource/*</url-pattern>
-  </filter-mapping>
+  <!--<filter-mapping>-->
+    <!--<filter-name>extensionsFilter</filter-name>-->
+    <!--<url-pattern>/faces/myFacesExtensionResource/*</url-pattern>-->
+  <!--</filter-mapping>-->
 
   <listener>
     <listener-class>ru.novosoft.smsc.web.TestInitListener</listener-class>

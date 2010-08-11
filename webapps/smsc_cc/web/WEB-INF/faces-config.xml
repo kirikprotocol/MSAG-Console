@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE faces-config PUBLIC
     "-//Sun Microsystems, Inc.//DTD JavaServer Faces Config 1.2//EN"
-    "http://java.sun.com/dtd/web-facesconfig_1_1.dtd" >
+    "http://java.sun.com/dtd/web-facesconfig_1_1.dtd" >    
 <faces-config xmlns="http://java.sun.com/xml/ns/javaee"
               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
               xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-facesconfig_2_0.xsd"
@@ -38,6 +38,22 @@
     <converter-id>smpp_status_converter</converter-id>
     <converter-class>ru.novosoft.smsc.web.controllers.SmppStatusConverter</converter-class>
   </converter>
+
+  <render-kit>
+    <renderer>
+      <component-family>Eyeline</component-family>
+      <renderer-type>collapsingGroup</renderer-type>
+      <renderer-class>ru.novosoft.smsc.web.components.collapsing_group.CollapsingGroupRenderer</renderer-class>
+    </renderer>
+
+    <renderer>
+      <component-family>Eyeline</component-family>
+      <renderer-type>dynamicTable</renderer-type>
+      <renderer-class>ru.novosoft.smsc.web.components.dynamic_table.DynamicTableRenderer</renderer-class>
+    </renderer>
+  </render-kit>
+
+
 
   <managed-bean>
     <managed-bean-name>reschedule</managed-bean-name>
@@ -87,6 +103,12 @@
     <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
 
+  <managed-bean>
+    <managed-bean-name>index1</managed-bean-name>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.Index1Controller</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
 
 
 
@@ -94,6 +116,11 @@
     <navigation-case>
       <from-outcome>INDEX</from-outcome>
       <to-view-id>/smsc/index.faces</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>INDEX1</from-outcome>
+      <to-view-id>/smsc/index1.faces</to-view-id>
       <redirect/>
     </navigation-case>
     <navigation-case>

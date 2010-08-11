@@ -1,0 +1,95 @@
+<taglib>
+  <tlib-version>1.0</tlib-version>
+  <jsp-version>1.2</jsp-version>
+  <short-name>eye</short-name>
+  <uri>http://taglib.eyeline.mobi</uri>
+  <description>
+  </description>
+
+
+  <tag>
+    <name>collapsingGroup</name>
+    <body-content>JSP</body-content>
+
+    <attribute>
+      <name>label</name>
+      <type>java.lang.String</type>
+      <required>true</required>
+    </attribute>
+
+    <attribute>
+      <name>opened</name>
+      <type>boolean</type>
+    </attribute>
+  </tag>
+
+  <tag>
+    <name>dynamicTable</name>
+    <attribute>
+      <name>value</name>
+      <type>ru.novosoft.smsc.web.components.dynamic_table.TableModel</type>
+      <required>true</required>
+    </attribute>
+  </tag>
+
+  <tag>
+    <name>dtTextColumn</name>
+    <attribute>
+      <name>name</name>
+      <type>java.lang.String</type>
+      <required>true</required>
+    </attribute>
+    <attribute>
+      <name>allowEditAfterAdd</name>
+      <type>boolean</type>
+    </attribute>
+    <attribute>
+      <name>width</name>
+      <type>int</type>
+    </attribute>
+    <attribute>
+      <name>maxLength</name>
+      <type>int</type>
+    </attribute>
+  </tag>
+
+  <tag>
+    <name>dtSelectColumn</name>
+    <attribute>
+      <name>name</name>
+      <type>java.lang.String</type>
+      <required>true</required>
+    </attribute>
+    <attribute>
+      <name>allowEditAfterAdd</name>
+      <type>boolean</type>
+    </attribute>
+    <attribute>
+      <name>width</name>
+      <type>int</type>
+    </attribute>
+    <attribute>
+      <name>values</name>
+      <type>java.util.List</type>
+      <required>true</required>
+    </attribute>
+    <attribute>
+      <name>uniqueValues</name>
+      <type>boolean</type>
+    </attribute>
+  </tag>
+
+  <tag>
+    <name>pageTitle</name>
+    <attribute>
+      <name>title</name>
+      <type>java.lang.String</type>
+      <required>true</required>
+    </attribute>
+  </tag>
+
+  <tag>
+    <name>buttons</name>
+  </tag>
+
+</taglib>
