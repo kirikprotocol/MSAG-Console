@@ -12,7 +12,7 @@
 
 <!ELEMENT ca_tables (ca_table)*>
 
-<!ELEMENT ca_table (limits|param*)>
+<!ELEMENT ca_table (limits,param*)>
     <!ATTLIST ca_table id CDATA #REQUIRED>
     <!ATTLIST ca_table system (true|false) "false">
 
