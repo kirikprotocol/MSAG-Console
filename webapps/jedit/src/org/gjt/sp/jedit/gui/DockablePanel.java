@@ -80,6 +80,14 @@ class DockablePanel extends JPanel
    return new Dimension(0,0);
   else
   {
+   // TODO Set width.
+   /*if(position.equals(DockableWindowManager.LEFT)){
+      if(dimension <= 0){
+          //int width = super.getPreferredSize().width;
+          panel.setDimension(100);
+      }
+      return new Dimension(dimension + PanelWindowContainer.SPLITTER_WIDTH, 0);
+   } */
    if(position.equals(DockableWindowManager.TOP)
     || position.equals(DockableWindowManager.BOTTOM))
    {

@@ -82,16 +82,22 @@ public class Edit  extends EditBean
         // Read counter's parameters.
         if (getMbSave() != null){
             Enumeration e = request.getParameterNames();
-            String key, percent, level;
+            String key, value, percent, level, op = "GE";
             while (e.hasMoreElements()) {
                 key = (String) e.nextElement();
-                //logger.debug("Paremeter key: "+key);
+                logger.debug("Paremeter key: "+key);
                 if (key.startsWith("limit")&&(key.endsWith("percent"))) {
-                    percent = request.getParameter(key);
-                    //logger.debug("Limit percent: "+ percent);
+                    value = request.getParameter(key);
+                    if (value.startsWith(">")) {
+                        op = "GE";
+                    } else if (value.startsWith("<")){
+                        op = "LE";
+                    }
+                    percent = value.substring(1, value.length());
                     level = request.getParameter("limit." + key.substring(6,key.length()-8)+".level");
-                    //logger.debug("Parameter level:"+ level);
-                    ca_table.addLimit(percent,level);
+                    logger.debug("value="+value+" percent:"+ percent+" op:"+op+" level:"+level);
+                    Limit limit = new Limit(percent, level, op);
+                    ca_table.addLimit(limit);
                 }
             }
             limits = getLimitsAsArray(ca_table.getLimits());

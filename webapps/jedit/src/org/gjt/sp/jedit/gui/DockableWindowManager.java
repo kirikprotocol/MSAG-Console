@@ -249,6 +249,7 @@ public class DockableWindowManager extends JPanel implements EBComponent
   */
  public void showDockableWindow(String name)
  {
+  System.out.println("showDockableWindow");
   Entry entry = (Entry)windows.get(name);
   if(entry == null)
   {
@@ -274,8 +275,8 @@ public class DockableWindowManager extends JPanel implements EBComponent
 
    entry.container.show(entry);
   }
-  else
-   /* an error occurred */;
+
+   /* an error occurred */
  } //}}}
 
  //{{{ addDockableWindow() method
@@ -329,7 +330,7 @@ public class DockableWindowManager extends JPanel implements EBComponent
   * @param name The dockable window name
   */
  public void toggleDockableWindow(String name)
- {
+ { 
   if(isDockableWindowVisible(name))
    removeDockableWindow(name);
   else

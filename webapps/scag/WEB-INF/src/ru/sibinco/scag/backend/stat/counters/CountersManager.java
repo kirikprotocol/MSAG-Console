@@ -225,13 +225,14 @@ public class CountersManager extends Manager
             "\t\t<ca_table id=\"" + StringEncoderDecoder.encode(ca_table.getId()) + "\"" +
             " system=\"" + StringEncoderDecoder.encode(ca_table.getSystem()) + "\">\n";
 
-        // Check is table contains limits.
-        List<Limit> limits = ca_table.getLimits();
-        if (limits.size()>0){
-            //Start "limits" tag.
-            text += "\t\t\t<limits min=\"" + StringEncoderDecoder.encode(ca_table.getLimitsMinStr()) + '"' +
-            " max=\"" + StringEncoderDecoder.encode(ca_table.getLimitsMaxStr())+ "\">\n";
 
+        //Start "limits" tag.
+        text += "\t\t\t<limits min=\"" + StringEncoderDecoder.encode(ca_table.getLimitsMinStr()) + '"' +
+                " max=\"" + StringEncoderDecoder.encode(ca_table.getLimitsMaxStr())+ "\">\n";
+
+        // Check is table contains limits.
+        List<Limit> limits = ca_table.getLimits();        
+        if (limits.size()>0){
             //Add "limit" tags.
             for(Limit limit: limits){
                 text += "\t\t\t\t<limit percent=\""+limit.getPercent() + "\"" +
@@ -244,18 +245,19 @@ public class CountersManager extends Manager
                     text+="/>\n";
                 }
             }
-            // Close 'limits' tag.
-            text += "\t\t\t</limits>\n";
-        } else {
-            // There aren't limits, so iterate parameters.
-            final Collection<ConfigParam> params = ca_table.getParams();
-            for (ConfigParam param : params){
-                logger.debug("Parameters name='"+param.getName()+"' value='"+param.getValue()+"'.");               
-                text += "\t\t\t<param name=\"" + StringEncoderDecoder.encode(param.getName()) + "\"" +
-                        " type=\"" + StringEncoderDecoder.encode(param.getType()) + "\">" +
-                        StringEncoderDecoder.encode(param.getValue()) + "</param>\n";
-            }
         }
+
+        // Close 'limits' tag.
+        text += "\t\t\t</limits>\n";
+
+        final Collection<ConfigParam> params = ca_table.getParams();
+        for (ConfigParam param : params){
+            logger.debug("Parameters name='"+param.getName()+"' value='"+param.getValue()+"'.");
+            text += "\t\t\t<param name=\"" + StringEncoderDecoder.encode(param.getName()) + "\""
+                    + " type=\"" + StringEncoderDecoder.encode(param.getType()) + "\">"
+                    + StringEncoderDecoder.encode(param.getValue()) + "</param>\n";
+        }
+
         // Close 'ca_table' tag.
         text += "\t\t</ca_table>\n";            
         return text;
@@ -291,7 +293,13 @@ public class CountersManager extends Manager
                     final String limitPercent = limitAttributes.getNamedItem("percent").getNodeValue();
                     final String limitSeverity = limitAttributes.getNamedItem("severity").getNodeValue();
                     logger.debug("Percent=" + limitPercent + ", severity=" + limitSeverity);
-                    ca_table.addLimit(limitPercent, limitSeverity); 
+                    Limit limit = new Limit(limitPercent, limitSeverity);
+                    if (limitAttributes.getNamedItem("op") != null){
+                        final String limitOp = limitAttributes.getNamedItem("op").getNodeValue();
+                        limit.setOp(limitOp);
+                        logger.debug("Op="+limitOp);
+                    }
+                    ca_table.addLimit(limit);
                 }
             } else if (nodeName.equals("param")) {
                 parseParam(ca_table, childNode);

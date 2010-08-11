@@ -24,6 +24,10 @@ public class Limit implements java.io.Serializable, Cloneable
             setPercent(percent); setLevel(level);
         }
 
+        public Limit(String percent, String level, String op){
+            setPercent(percent);setLevel(level);setOp(op);
+        }
+
         public LevelType getLevel() {
             return level;
         }

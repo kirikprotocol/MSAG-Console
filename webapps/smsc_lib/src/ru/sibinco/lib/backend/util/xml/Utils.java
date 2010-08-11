@@ -46,7 +46,7 @@ public class Utils
     if (input == null)
       throw new NullPointerException("input stream is null");
     DocumentBuilderFactory factory = getDocumentBuilderFactory();
-    DocumentBuilder builder = factory.newDocumentBuilder();
+    DocumentBuilder builder = factory.newDocumentBuilder();    
     builder.setEntityResolver(getDtdsEntityResolver());
     InputSource source = new InputSource(input);
     return builder.parse(source);

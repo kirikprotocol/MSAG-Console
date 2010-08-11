@@ -7,8 +7,7 @@
 <%@attribute name="first_field_name" required="true"%>
 <%@attribute name="second_field_name" required="true"%>
 <%@attribute name="values" required="true" %>
-<sm-ep:property title="${title}">
-    <script src="content/scripts/counters.js" type="text/javascript"></script>
+<sm-ep:property title="${title}">    
     <table id="parameter.tbl" class="properties_list" cellpadding="3" cellspacing="1">
         <tr>
             <td align="left">

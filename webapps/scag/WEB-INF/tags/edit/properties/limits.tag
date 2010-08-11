@@ -9,7 +9,6 @@
 <%@attribute name="values" required="true" %>
 <%@attribute name="levels" required="true" %>
 <sm-ep:property title="${title}">
-    <script src="content/scripts/counters.js" type="text/javascript"></script>
     <table id="limit.tbl" class="properties_list" cellspacing="3" cellpadding="1">
         <c:set var="rowN" value="0"/>
         <tr class="row${rowN%2}">
@@ -46,21 +45,31 @@
         <c:if test="${fn:length(values)>0}">
         <c:set var="la" value="${fn:split(values, ';')}"/>
         <c:forEach items="${la}" var="vl"> <!--  vl -  limits values   -->
+            <c:set var="lOp" value="${fn:substring(vl, fn:length(vl)-2, fn:length(vl))}"/>
+            <c:choose>
+                <c:when test="${lOp == 'GE'}">
+                    <c:set var="lOp" value=">"/>
+                </c:when>
+                <c:when test="${lOp == 'LE'}">
+                    <c:set var="lOp" value="<"/>
+                </c:when>
+            </c:choose>            
+            <c:set var="vl" value="${fn:substring(vl, 0, fn:length(vl) - 3)}"/>
             <c:set var="sI" value="${fn:indexOf(vl, ',')}"/><!--sI - separator index-->
             <c:set var="lPercent" value="${fn:substring(vl, 0, sI)}"/>
             <c:set var="lLevel" value="${fn:substring(vl, sI+1, fn:length(vl))}"/>
             <tr class="row${rowN%2}" id="limit_${lPercent}_${rowN}">
                 <td>
-                    <input id="limit_percent_${lPercent}_${rowN}"
+                    <input id="limit_percent_${lOp}${lPercent}_${rowN}"
                            name="limit.${rowN}.percent"
                            type="text"
                            size="45"
                            style="color:black;"
-                           value="${lPercent}"
+                           value="${lOp}${lPercent}"
                            readonly="true"/>
                 </td>
                 <td>
-                    <input id="limit_level_${lPercent}_${rowN}"
+                    <input id="limit_level_${lOp}${lPercent}_${rowN}"
                            name="limit.${rowN}.level"
                            type="text"
                            size="45"
@@ -77,6 +86,10 @@
             <c:set var="rowN" value="${rowN+1}"/>
             </c:forEach>
         </c:if>
+        <script type="text/javascript">
+                limit_counter = ${rowN};
+        </script>
     </table>
+
 </sm-ep:property>
         

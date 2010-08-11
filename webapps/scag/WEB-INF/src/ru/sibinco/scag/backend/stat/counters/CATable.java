@@ -72,4 +72,8 @@ public class CATable extends ConfigParamOwner
     public void addLimit(String percent, String severity) {
         limits.add(new Limit(percent, severity));
     }
+
+    public void addLimit(Limit limit){
+        limits.add(limit);
+    }
 }

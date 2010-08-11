@@ -26,6 +26,10 @@
                         values="${fn:join(bean.typeTitles, ',')}" valueTitles="${fn:join(bean.typeTitles, ',')}"/>
             <sm-ep:list title="statistics.counters.edit.list.ca"   name="CATableId" emptyOption="true"
                         values="${fn:join(bean.caIds, ',')}" valueTitles="${fn:join(bean.caIds, ',')}"/>
+
+
+            <script src="content/scripts/counters.js" type="text/javascript"></script>
+            <!-- Get parameters.-->
             <c:set var="pValues" value=""/>
             <c:forEach items="${bean.parameters}" var="parameter">
                 <c:set var="pValues" value="${pValues}${parameter.name},${parameter.value};"/>

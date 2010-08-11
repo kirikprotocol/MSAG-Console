@@ -1,4 +1,5 @@
 var param_counter = 0;
+var limit_counter = 0;
 
 function removeRow(tbl, rowId) {
     var tbl = getElementByIdUni(tbl);
@@ -13,14 +14,14 @@ function removeRow(tbl, rowId) {
  *  sfs - second field suffix
  *  tId - table identifier
   *  */
-function addRow(nameElem, valueElem, element, ffs, sfs){
+function addRow(id1, id2, type, ffs, sfs){
     //console.info("nameElem="+nameElem);
     //console.info("valueElem="+valueElem);
     //console.info("element="+element);
     //console.info("ffs="+ffs);
     //console.info("sfs="+sfs);
-    var nameElem = getElementByIdUni( nameElem );
-    var valueElem = getElementByIdUni( valueElem );
+    var nameElem = getElementByIdUni( id1 );
+    var valueElem = getElementByIdUni( id2 );
 
     nameElem.style.color = "black";
     valueElem.style.color = "black";
@@ -28,64 +29,78 @@ function addRow(nameElem, valueElem, element, ffs, sfs){
     nameElem.style.borderColor = "black";
     valueElem.style.borderColor = "black";
 
-    var paramValue = valueElem.value;
+    var paramValue = valueElem.value.trim();
     //console.info(sfs+"="+paramValue);
-    var paramName = nameElem.value;
-    //console.info(ffs+"="+paramName);
-    if (validateFirstField(element, nameElem)){
-        if (trimStr(valueElem.value).length > 0) {
-            if (unicName(paramName, element, ffs)) {
-                //console.info("Parameter counter: "+param_counter);
-                var inner__counter = param_counter++;
-                var tbl = getElementByIdUni(element+".tbl");
-                var newRow = tbl.insertRow(tbl.rows.length);
-                newRow.className = "row" + ((tbl.rows.length + 1) & 1);
-                    newRow.id = element + "."+ffs+"." + inner__counter;
-                    //console.info("rowId="+element + "."+ffs+"." + inner__counter);
-                    var newCell = document.createElement("td");
-                    var sel_name = element+"."+sfs+"." + paramName + "." + inner__counter;
-                    var input_name = element+"."+inner__counter+"."+ffs;
-                    //console.info("first input name="+input_name);
-                    newCell.innerHTML = "<input id=\"" + sel_name + "\""
-                                                + " name=\""+input_name+"\""
-                                                + " type=\"text\""
-                                                + " size=\"45\""
-                                                + " readonly=\"true\""
-                                                + " value=\""+paramName+"\"/>";
-                    newRow.appendChild(newCell);
-                    newCell = document.createElement("td");
-                    newCell.colSpan = 1;
-                    var sel_value = element+"."+sfs+"."+ paramName + "." + inner__counter;
-                    input_name = element+"."+inner__counter+"."+sfs;
-                    //console.info("second input name="+input_name);
-                    newCell.innerHTML = "<input id=\"" + sel_value + "\""
-                                                + " name=\""+input_name+"\""
-                                                + " type=\"text\" "
-                                                + " size=\"45\""
-                                                + " style=\"color:black;\""
-                                                + " value=\"" + paramValue + "\""
-                                                + " readonly=\"true\"/>";
-                    newRow.appendChild(newCell);
-                    newCell = document.createElement("td");
-                    newCell.width = "100%";
-                    newCell.innerHTML = "<img src=\"content/images/but_del.gif\" alt=\"Remove "
-                            + paramName + " parameter\"  "
-                            + "onClick=\"removeRow(\'"+element+".tbl\', " + "\'" + newRow.id + '\');\" style=\"cursor:pointer;\"/>';
-                    newRow.appendChild(newCell);
+    var paramName = nameElem.value.trim();
 
-                    nameElem.value = "";
-                    valueElem.value = "";
-                    nameElem.focus();
-                    return true;
-            } else {
-                //console.info("Not unic name.");
-                validationError(nameElem, "Not unic name.");
-            }
-        } else {
-            //console.info("Field is empty.");
-            validationError(valueElem, "Field is empty.");
+    if (type == "limit"){
+        if (paramName.indexOf(">") == -1 && paramName.indexOf("<") == -1){
+            paramName = ">" + paramName;
+            //console.info("paramName="+paramName);
         }
     }
+    //console.info(ffs+"="+paramName);
+    if (validateFirstField(type, nameElem)){
+        if (trimStr(valueElem.value).length > 0) {
+            if (unicName(paramName, type, ffs)) {
+                //console.info("Parameter counter: "+param_counter);
+                var inner__counter = 0;
+                //console.info("limit_counter="+limit_counter + " param_counter="+param_counter);
+                if (type == "limit"){
+                    inner__counter = limit_counter++;
+                } else if (type == "parameter"){
+                    inner__counter = param_counter++;
+                }
+                var tbl = getElementByIdUni(type+".tbl");
+                var newRow = tbl.insertRow(tbl.rows.length);
+                newRow.className = "row" + ((tbl.rows.length + 1) & 1);
+                newRow.id = type + "."+ffs+"." + inner__counter;
+                //console.info("rowId="+type + "."+ffs+"." + inner__counter);
+                        var newCell = document.createElement("td");
+                        var sel_name = type+"."+sfs+"." + paramName + "." + inner__counter;
+                        var input_name = type+"."+inner__counter+"."+ffs;
+                        //console.info("first input name="+input_name);
+                        newCell.innerHTML = "<input id=\"" + sel_name + "\""
+                                                    + " name=\""+input_name+"\""
+                                                    + " type=\"text\""
+                                                    + " size=\"45\""
+                                                    + " readonly=\"true\""
+                                                    + " value=\""+paramName+"\"/>";
+                        newRow.appendChild(newCell);
+                        newCell = document.createElement("td");
+                        newCell.colSpan = 1;
+                        var sel_value = type+"."+sfs+"."+ paramName + "." + inner__counter;
+                        input_name = type+"."+inner__counter+"."+sfs;
+                        //console.info("second input name="+input_name);
+                        newCell.innerHTML = "<input id=\"" + sel_value + "\""
+                                                    + " name=\""+input_name+"\""
+                                                    + " type=\"text\" "
+                                                    + " size=\"45\""
+                                                    + " style=\"color:black;\""
+                                                    + " value=\"" + paramValue + "\""
+                                                    + " readonly=\"true\"/>";
+                        newRow.appendChild(newCell);
+                        newCell = document.createElement("td");
+                        newCell.width = "100%";
+                        newCell.innerHTML = "<img src=\"content/images/but_del.gif\" alt=\"Remove "
+                                + paramName + " parameter\"  "
+                                + "onClick=\"removeRow(\'"+type+".tbl\', " + "\'" + newRow.id + '\');\" style=\"cursor:pointer;\"/>';
+                        newRow.appendChild(newCell);
+
+                        nameElem.value = "";
+                        valueElem.value = "";
+                        nameElem.focus();
+                        return true;
+                } else {
+                    //console.info("Not unic name.");
+                    validationError(nameElem, "Not unic name.");
+                }
+            } else {
+                //console.info("Field is empty.");
+                validationError(valueElem, "Field is empty.");
+            }
+        }
+
     return false;
 }
 
@@ -129,7 +144,7 @@ function unicName(pName, type, ffs){
 function validateFirstField(type, element){
     //console.info("validateFirstField() type="+type+" value="+element.value);
     if (type == "parameter"){
-        var IsFound = /^[a-zA-Z0-9\.]+$/.test(element.value);
+        var IsFound = /^[a-zA-Z]+[a-zA-z0-9\._]*$/.test(element.value);
         //console.info("isFound="+IsFound);
         if (!IsFound) {
             validationError(element, "Validation error! You can use only alphanumerical character and point to separate them.");
@@ -137,33 +152,63 @@ function validateFirstField(type, element){
         }
     }
     if (type == "limit"){
-        validateInteger(element);
+        if (validateLimit(element)){
 
-        var limitsMin = document.getElementsByName("limitsMin")[0];
-        //console.info("limitsMin="+limitsMin.value);
-        validateInteger(limitsMin);
+            var limitsMin = document.getElementsByName("limitsMin")[0];
+            //console.info("limitsMin="+limitsMin.value);
+            if (validateInteger(limitsMin)){
 
-        var limitsMax = document.getElementsByName("limitsMax")[0];
-        //console.info("limitsMax="+limitsMax.value);
-        validateInteger(limitsMax);
+                var limitsMax = document.getElementsByName("limitsMax")[0];
+                //console.info("limitsMax="+limitsMax.value);
+                if (validateInteger(limitsMax)){
 
-        //console.info("value="+element.value);
-        if (element.value < limitsMin.value || element.value > limitsMax.value){
-            validationError(element, "Value is limited by min and max values.");
+                    var value = element.value.trim();
+                    //console.info("value="+value);
+                    var limit;
+                    if (value.indexOf(">") === 0 || value.indexOf("<") === 0){
+                        //console.info("find characters more ore less");
+                        limit = parseInt(value.substring(1, value.length));
+                    } else{
+                        limit = parseInt(value);
+                    }
+                    //console.info("limit="+limit);
+                    //console.info("1:"+limit < parseInt(limitsMin.value));
+                    //console.info("2:"+parseInt(limitsMax.value) < limit);
+                    //console.info("1||2:"+limit < parseInt(limitsMin.value) || parseInt(limitsMax.value) < limit);
+                    if (limit < 0 || 100 < limit){
+                        validationError(element, "Value is limited by '0' and '100' values.");
+                        return false;
+                    }
+                } else{
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        } else {
             return false;
         }
-
-
     }
+    //console.info("return true");
     return true;
 }
 
-function validateInteger(element){
-    var IsFound = /^-?\d+$/.test(element.value);
+function validateLimit(element){
+    var IsFound = /^(>|<)?\d+$/.test(element.value);
     if (!IsFound) {
         validationError(element, "Validation error! Value must be decimal without sign.");
         return false;
     }
     return true;
 }
+
+function validateInteger(element){
+    var IsFound = /^\d+$/.test(element.value);
+    if (!IsFound) {
+        validationError(element, "Validation error! Value must be decimal without sign.");
+        return false;
+    }
+    return true;
+}
+
 

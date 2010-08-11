@@ -257,7 +257,7 @@ public class PanelWindowContainer implements DockableWindowContainer
    current = null;
    nullButton.setSelected(true);
    // removing last component, so remove border
-   dockablePanel.setBorder(null);
+   dockablePanel.setBorder(null);  
 
    wm.getView().getTextArea().requestFocus();
   }
