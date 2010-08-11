@@ -91,7 +91,7 @@ sub generate{
 
     if(-f $dirname.'/.makefile')
     {
-      print $mkf "include $dirname/.makefile\n\n";
+      print $mkf "-include $dirname/.makefile\n\n";
     }
     
     my @files;
