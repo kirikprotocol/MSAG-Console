@@ -88,7 +88,11 @@ sub generate{
     $modlib=~s!/!-!g;
     my $moddir=$modlib;
     $modlib.='.a';
-    
+
+    if(-f $dirname.'/.makefile')
+    {
+      print $mkf "include $dirname/.makefile\n\n";
+    }
     
     my @files;
     my %binsrc;
