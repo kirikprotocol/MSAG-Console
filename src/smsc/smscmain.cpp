@@ -12,9 +12,9 @@
 #include "config/route/RouteConfig.h"
 #include "resourcemanager/ResourceManager.hpp"
 
-#include "smscsignalhandlers.h"
-#include "version.inc"
-#include "smsc.hpp"
+#include "smsc/smscsignalhandlers.h"
+#include "smsc/version.h"
+#include "smsc/smsc.hpp"
 
 #include "smsc/cluster/controller/NetworkDispatcher.hpp"
 #include "smsc/cluster/controller/ConfigLockGuard.hpp"
