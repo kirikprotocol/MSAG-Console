@@ -1034,6 +1034,7 @@ public static EnhancedButton loadTextButton(ActionContext context,
   */
  public static void loadGeometry(Window win, String name)
  {
+  System.out.println("GUIUtilities.loadGeometry()");
   int x, y, width, height;
 
   Dimension size = win.getSize();
@@ -1043,7 +1044,9 @@ public static EnhancedButton loadTextButton(ActionContext context,
   x = gcbounds.x;
   y = gcbounds.y;
 
+
   width = jEdit.getIntegerProperty(name + ".width",size.width);
+
   height = jEdit.getIntegerProperty(name + ".height",size.height);
 
   Component parent = win.getParent();
@@ -1081,6 +1084,7 @@ public static EnhancedButton loadTextButton(ActionContext context,
   else
   {
    win.setBounds(desired);
+   System.out.println("Desired bounds:"+desired);   
    if(win instanceof Frame)
     ((Frame)win).setExtendedState(extState);
   }

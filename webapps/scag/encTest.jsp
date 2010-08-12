@@ -19,9 +19,8 @@
        <input type="text" name="mydata">
        <input type="submit" value="Submit" />
        <input type="reset" value="Reset" />
-     </form>
-   <h1>Привет!</h1>
-     <fmt:requestEncoding value="utf-8" />
+     </form>  
+     <fmt:requestEncoding value="utf-8" />   
    <h1><fmt:message>common.title</fmt:message></h1>
    </body>
 </html>

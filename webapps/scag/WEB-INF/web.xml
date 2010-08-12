@@ -18,7 +18,7 @@
       javax.servlet.jsp.jstl.fmt.locale
     </param-name>
     <param-value>
-      ru
+      en
     </param-value>
   </context-param>
 

@@ -434,6 +434,7 @@ public class DockableWindowFactory
   //{{{ createDockableWindow() method
   JComponent createDockableWindow(View view, String position)
   {
+   System.out.println("DockableWindowFactory.createDockableWindow()");
    load();
 
    if(!loaded)

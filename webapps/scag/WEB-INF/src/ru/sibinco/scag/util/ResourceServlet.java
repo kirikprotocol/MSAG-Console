@@ -19,7 +19,7 @@ public class ResourceServlet extends HttpServlet{
       System.out.print( "ResourceServlet KEY=" + req.getParameter("key") );
       String line = req.getParameter("key");
       if (line!=null) {
-        resp.setCharacterEncoding("Cp1251");
+        resp.setCharacterEncoding("UTF-8");
             String value = LocaleMessages.getInstance().getMessage(req.getSession(),line);
             //System.out.println( " VALUE=" + value );
         resp.getWriter().write( value );

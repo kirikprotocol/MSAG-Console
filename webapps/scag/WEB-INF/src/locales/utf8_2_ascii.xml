@@ -1,0 +1,16 @@
+<project default="utf8_2_ascii"  basedir="." name="Convert properties files from UTF-8 to ASCII">
+  <property file="../../../../build.properties"/>
+  <property name="java_src" location="${basedir}"/>
+  <property name="java_out" location="${WEBBUILD_DIR}/msag/WEB-INF/classes"/>
+  <target name="utf8_2_ascii">
+     <delete>
+       <fileset dir="${java_out}/locales">
+         <include name="*"/>
+       </fileset>
+     </delete>
+     <native2ascii encoding="UTF-8"
+                   src="${java_src}"
+                   dest="${java_out}/locales"
+                   excludes="utf8_2_ascii.xml"/>              
+  </target>
+</project>

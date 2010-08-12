@@ -249,7 +249,7 @@ public class DockableWindowManager extends JPanel implements EBComponent
   */
  public void showDockableWindow(String name)
  {
-  System.out.println("showDockableWindow");
+  System.out.println("DockableWindowManager.showDockableWindow()");
   Entry entry = (Entry)windows.get(name);
   if(entry == null)
   {
