@@ -2,9 +2,8 @@
 #ident "@(#)$Id$"
 #define __SMSC_INMAN_VERSION__
 
-/* -- NOTE: these defines must be set by release builder -- */
-#define INMAN_BUILD_NUM   3124
-#define INMAN_BUILD_DATE  "Jun 17 2010"
+/* -- automatically generated BUILD number and date -- */
+#include "inman/inmBuildId.hpp"
 /* -- -------------------------------------------------- -- */
 
 /* -- NOTE: these defines are set by developers -- */

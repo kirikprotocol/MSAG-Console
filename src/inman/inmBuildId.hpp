@@ -1,0 +1,2 @@
+#define INMAN_BUILD_NUM   B3125
+#define INMAN_BUILD_DATE  "Aug 12 2010"
