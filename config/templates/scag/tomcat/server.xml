@@ -1,6 +1,6 @@
 <Server port="@catalina.control.port@" shutdown="SHUTDOWN">
   <Service name="Catalina">
-    <Connector port="@catalina.connector.port@" />
+    <Connector port="@catalina.connector.port@" URLEncoding="UTF-8"/>
 
     <Engine name="Catalina" defaultHost="localhost">
       <Logger className="org.apache.catalina.logger.FileLogger" />
