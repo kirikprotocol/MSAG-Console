@@ -8,6 +8,7 @@
 #ifndef __SMSC_CONFIGREGISTRY_CONFIGREGISTRY_HPP__
 #define __SMSC_CONFIGREGISTRY_CONFIGREGISTRY_HPP__
 
+#include <time.h>
 #include "eyeline/clustercontroller/ConfigLocks.hpp"
 #include <vector>
 
