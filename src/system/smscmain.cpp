@@ -16,7 +16,7 @@
 #include <core/threads/Thread.hpp>
 #include <locale.h>
 
-#include "system/version.inc"
+#include "system/version.h"
 
 #include "util/mirrorfile/mirrorfile.h"
 
