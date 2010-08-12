@@ -34,7 +34,7 @@ public class RemoteResourceBundle {
 
   public String getString(String key) {
     //System.out.println( "RRB.getString() KEY='" + key + "'" );
-    final String codePage = "cp1251";
+    final String codePage = "UTF-8";
     String message = "undefined";
     message = (String)properties.get(key);
     //System.out.println( "RRB.getString() MSG='" + message + "'" );

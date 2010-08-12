@@ -1,5 +1,5 @@
-<%@ page  pageEncoding="windows-1251"
-          contentType="text/html; charset=windows-1251"
+<%@ page  pageEncoding="UTF-8"
+          contentType="text/html; charset=utf-8"
           import="ru.sibinco.scag.backend.endpoints.svc.SvcStatus,ru.sibinco.scag.util.LocaleMessages" %><%@
         page import="java.util.Iterator" %><%@
         page import="java.util.List"

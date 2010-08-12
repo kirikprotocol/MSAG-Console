@@ -86,7 +86,7 @@ public class myServlet extends HttpServlet
     }
 
    // System.out.println("myServlet Get file= "+file+" command= "+command);
-    res.setContentType("text/html; charset=windows-1251");
+    res.setContentType("text/html; charset=utf-8");
     if(file!=null) {
        switch (command)
     {
@@ -137,7 +137,7 @@ public class myServlet extends HttpServlet
      file = id_transport[0];
      transport = id_transport[1];
     }
-    res.setContentType("text/html; charset=windows-1251");
+    res.setContentType("text/html; charset=utf-8");
     if (command==Write) Write(req,file,res);
     if (command==UpdateRule) updateRule(req,file,transport,res);
     if (command==AddRule) AddRule(req,file,transport,res);
@@ -489,7 +489,7 @@ public class myServlet extends HttpServlet
       private void doRequest(HttpServletRequest req,
                          HttpServletResponse res)
 
-  { try{ res.setContentType("text/html; charset=windows-1251");
+  { try{ res.setContentType("text/html; charset=utf-8");
     PrintWriter out = res.getWriter();
     out.println("<html><body>");
     out.println("<h1>Hello, world !</h1>");

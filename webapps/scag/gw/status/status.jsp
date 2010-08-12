@@ -1,5 +1,5 @@
-<%@ page  pageEncoding="windows-1251"
-          contentType="text/html; charset=windows-1251"
+<%@ page  pageEncoding="UTF-8"
+          contentType="text/html; charset=utf-8"
           import="ru.sibinco.lib.backend.service.ServiceInfo,
                   ru.sibinco.scag.util.LocaleMessages"
  %><jsp:useBean id="bean" class="ru.sibinco.scag.beans.gw.status.Status"

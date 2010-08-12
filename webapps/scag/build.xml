@@ -43,7 +43,7 @@
   <property name="servlet_jar" location="${CATALINA_HOME}/common/lib/servlet-api.jar"/>
   <property name="jsp_jar" location="${CATALINA_HOME}/common/lib/jsp-api.jar"/>
   <property name="tomcat_server_libs"
-            location="${CATALINA_HOME}/server/lib/catalina.jar:${CATALINA_HOME}/bin/jmx.jar"/>
+            location="${CATALINA_HOME}/server/lib/catalina.jar:${CATALINA_HOME}/bin/jmx.jar"/>  
   <property name="jstl_jar" location="WEB-INF/lib/jstl.jar"/>
   <target name="init">
     <tstamp/>
@@ -55,7 +55,7 @@
   <target name="compile" depends="init" description="compile the sources">
     <javac srcdir="${java_src}" destdir="${java_out}" source="1.5" target="1.5" 
            classpath="${sibinco_lib}:${tomcat_auth_lib}:${log4j_jar}:${servlet_jar}:${tomcat_server_libs}:${jstl_jar}:${jsp_jar}" debug="yes"/>
-    <native2ascii encoding="Cp1251" src="${java_src}/locales" dest="${java_out}/locales"/>
+    <!--native2ascii encoding="Cp1251" src="${java_src}/locales" dest="${java_out}/locales"/-->
     <native2ascii encoding="Cp1251" src="${perfmon_src}/applet" dest="${perfmon_out}/applet"/>
     <native2ascii encoding="Cp1251" src="${svcmon_src}/applet" dest="${svcmon_out}/applet"/>
     <native2ascii encoding="Cp1251" src="${scmon_src}/applet" dest="${scmon_out}/applet"/>
@@ -63,7 +63,10 @@
 
   <target name="build" depends="clean,compile" description="generate the distribution">
     <jar jarfile="${java_lib}/scag.jar">
-      <fileset dir="${java_out}" excludes="${perfmon_path}/applet/**" />
+      <fileset dir="${java_out}" excludes="${perfmon_path}/applet/**">       
+        <exclude name="${java_out}/locales/**"/>
+      </fileset>
+
       <fileset dir="${java_out}" excludes="${svcmon_path}/applet/**" />
     </jar>
     <unjar src="${sibinco_lib}" dest="${exploded}/unjar_tmp"/>
@@ -120,12 +123,18 @@
       <fileset file="${tomcat_auth_lib}"/>
       <fileset file="${sibinco_lib}"/>
     </copy>
+
+    <mkdir dir="${exploded}/WEB-INF/classes/locales"/>
+    <copy todir="${exploded}/WEB-INF/classes/locales" preservelastmodified="yes">
+        <fileset dir="${basedir}/WEB-INF/src/locales"  includes="*.properties"/>
+    </copy>
   </target>
 
   <target name="install" depends="build" description="installs the webapp">
     <copy todir="${CATALINA_BASE}/webapps/msag" preservelastmodified="yes">
       <fileset dir="${exploded}"/>
     </copy>
+
   </target>
 
   <target name="update" depends="build" description="update existing installation">

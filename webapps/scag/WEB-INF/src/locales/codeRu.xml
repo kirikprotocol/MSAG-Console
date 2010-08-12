@@ -1,6 +1,6 @@
 <project default="codeRu"  basedir=".">
   <property name="java_src" location="${basedir}"/>
-  <property name="java_out" location="C:/scag1/webapps/scag/WEB-INF/classes"/>
+  <property name="java_out" location="/home/stepanov/work/msag_wa/webapps/msag/WEB-INF/classes"/>
   <target name="codeRu">
      <delete>
        <fileset dir="${java_out}/locales">
