@@ -2296,10 +2296,20 @@ public:
       }
       int sz;
       clnt->setTimeOut(10);
-      smsc_log_debug(log,"Got connection");
+      char peer[64]={0,};
+      clnt->GetPeer(peer);
+      smsc_log_debug(log,"Got connection from %s",peer);
       if(clnt->ReadAll((char*)&sz,4)==-1)continue;
       sz=ntohl(sz);
       smsc_log_debug(log,"Message size:%d",sz);
+      if(sz>65536)
+      {
+        smsc_log_warn(log,"Ignoring message with size:%d",sz);
+        clnt->Abort();
+        delete clnt;
+        clnt=0;
+        continue;
+      }
       buf.setSize(sz+1);
       if(clnt->ReadAll(buf.buffer,sz)==-1)continue;
       smsc_log_debug(log,"Processing message");
