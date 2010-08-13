@@ -49,7 +49,8 @@ public class SideKickParsedData
   */
  public static SideKickParsedData getParsedData(View view)
  {
-  return (SideKickParsedData)view.getRootPane().getClientProperty(
+   System.out.println("SideKickParsedData.getParsedData()");
+     return (SideKickParsedData)view.getRootPane().getClientProperty(
    SideKickPlugin.PARSED_DATA_PROPERTY);
  } //}}}
 

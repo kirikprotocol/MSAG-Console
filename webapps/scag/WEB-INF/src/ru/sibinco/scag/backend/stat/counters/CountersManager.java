@@ -66,6 +66,7 @@ public class CountersManager extends Manager
 
     private void load() throws IOException, ParserConfigurationException, SAXException
     {
+        logger.debug("try to load file: " + configFile);
         Document document = Utils.parse(new FileReader(configFile));
         NodeList counterNodes = document.getElementsByTagName("template");
         for (int i = 0; i < counterNodes.getLength(); i++) {

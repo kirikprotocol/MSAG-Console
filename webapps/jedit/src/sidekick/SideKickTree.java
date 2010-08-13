@@ -142,6 +142,7 @@ DefaultFocusComponent
  {
   System.out.println(" try to update tree");
   data = SideKickParsedData.getParsedData(view);
+  System.out.println("data:"+data);   
   if(SideKickPlugin.getParserForBuffer(view.getBuffer()) == null
    || data == null)
   {
@@ -155,6 +156,7 @@ DefaultFocusComponent
   else
   {
    System.out.println("update tree");
+   System.out.println("tree: "+data.tree);   
    tree.setModel(data.tree);
    if(treeFollowsCaret)
     expandTreeAt(view.getTextArea().getCaretPosition());

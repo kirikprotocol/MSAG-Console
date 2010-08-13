@@ -70,50 +70,39 @@ class DockablePanel extends JPanel
   return new Dimension(0,0);
  } //}}}
 
- //{{{ getPreferredSize() method
- public Dimension getPreferredSize()
- {
-  final String position = panel.getPosition();
-  final int dimension = panel.getDimension();
+    public Dimension getPreferredSize(){
+        final String position = panel.getPosition();
+        final int dimension = panel.getDimension();
 
-  if(panel.getCurrent() == null)
-   return new Dimension(0,0);
-  else
-  {
-   // TODO Set width.
-   /*if(position.equals(DockableWindowManager.LEFT)){
-      System.out.println("DockablePanel.getPreferedSize()");
-      if(dimension <= 0){
-          //int width = super.getPreferredSize().width;
-          panel.setDimension(100);
-      }
-      return new Dimension(dimension + PanelWindowContainer.SPLITTER_WIDTH, 0);
-   }   */
-   if(position.equals(DockableWindowManager.TOP)
-    || position.equals(DockableWindowManager.BOTTOM))
-   {
-    if(dimension <= 0)
-    {
-     int height = super.getPreferredSize().height;
-     panel.setDimension(height);
+        if(panel.getCurrent() == null){
+            System.out.println("DockablePanel.getPrefferedSize() current=null");
+            return new Dimension(0,0);
+        } else {
+            // TODO Set width.
+            /*if(position.equals(DockableWindowManager.LEFT)){
+                System.out.println("DockablePanel.getPreferedSize() position=left");
+                if(dimension <= 0){
+                    //int width = super.getPreferredSize().width;
+                    panel.setDimension(100);
+                }
+                return new Dimension(dimension + PanelWindowContainer.SPLITTER_WIDTH, 0);
+            }     */
+
+            if(position.equals(DockableWindowManager.TOP) || position.equals(DockableWindowManager.BOTTOM)) {
+                if(dimension <= 0){
+                    int height = super.getPreferredSize().height;
+                    panel.setDimension(height);
+                }
+                return new Dimension(0,dimension + PanelWindowContainer.SPLITTER_WIDTH);
+            }else{
+                if(dimension <= 0){
+                    int width = super.getPreferredSize().width;
+                    panel.setDimension(width);
+                }
+                return new Dimension(dimension +PanelWindowContainer.SPLITTER_WIDTH,0);
+            }
+        }
     }
-    return new Dimension(0,
-     dimension + PanelWindowContainer
-     .SPLITTER_WIDTH);
-   }
-   else
-   {
-    if(dimension <= 0)
-    {
-     int width = super.getPreferredSize().width;
-     panel.setDimension(width);
-    }
-    return new Dimension(dimension +
-     PanelWindowContainer.SPLITTER_WIDTH,
-     0);
-   }
-  }
- } //}}}
 
  //{{{ setBounds() method
  public void setBounds(int x, int y, int width, int height)

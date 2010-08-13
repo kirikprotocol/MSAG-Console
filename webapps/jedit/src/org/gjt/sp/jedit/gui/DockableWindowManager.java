@@ -706,6 +706,7 @@ public class DockableWindowManager extends JPanel implements EBComponent
  //{{{ setResizePos() method
  void setResizePos(int resizePos, PanelWindowContainer resizing)
  {
+  System.out.println("DockableWindowManager.setResizePos() resizePos="+resizePos);
   this.resizePos = resizePos;
 
   if(resizePos < 0)

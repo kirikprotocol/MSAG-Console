@@ -235,12 +235,12 @@ public class PanelWindowContainer implements DockableWindowContainer
    mostRecent = entry.factory.name;
    this.current = entry;
 
-   if(entry.win.getParent() != dockablePanel)
+   if(entry.win.getParent() != dockablePanel)   
     dockablePanel.add(entry.factory.name,entry.win);
 
    dockablePanel.showDockable(entry.factory.name);
 
-  // if (!entry.factory.name.equals("error-list")) entry.btn.setSelected(true);
+   //if (!entry.factory.name.equals("error-list")) entry.btn.setSelected(true);
 
    if(entry.win instanceof DefaultFocusComponent)
    {
@@ -293,7 +293,8 @@ public class PanelWindowContainer implements DockableWindowContainer
   */
  public int getDimension()
  {
-  return dimension;
+     System.out.println("PanelWindowContainer.getDimention() dimention="+dimension);
+     return dimension;
  } //}}}
 
  //{{{ getPosition() method
@@ -340,8 +341,9 @@ public class PanelWindowContainer implements DockableWindowContainer
  //{{{ setDimension() method
  void setDimension(int dimension)
  {
-  if(dimension > 0)
+ if(dimension > 0)
    this.dimension = dimension - SPLITTER_WIDTH;
+     System.out.println("PanelWindowContainer.setDimention() dimention="+dimension);
  } //}}}
 
  //{{{ sortDockables() method
@@ -363,7 +365,8 @@ public class PanelWindowContainer implements DockableWindowContainer
   */
  int getWrappedDimension(int dimension)
  {
-  return ((ButtonLayout)buttonPanel.getLayout())
+    //System.out.println("PanelWindowContainer.getWrappedDimension() "+((ButtonLayout)buttonPanel.getLayout()).getWrappedDimension(buttonPanel,dimension));     
+    return ((ButtonLayout)buttonPanel.getLayout())
    .getWrappedDimension(buttonPanel,dimension);
  } //}}}
 

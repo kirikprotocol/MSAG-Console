@@ -55,16 +55,22 @@
   <target name="compile" depends="init" description="compile the sources">
     <javac srcdir="${java_src}" destdir="${java_out}" source="1.5" target="1.5" 
            classpath="${sibinco_lib}:${tomcat_auth_lib}:${log4j_jar}:${servlet_jar}:${tomcat_server_libs}:${jstl_jar}:${jsp_jar}" debug="yes"/>    
-    <native2ascii encoding="UTF-8" src="${java_src}/locales" dest="${java_out}/locales"/>
+    <native2ascii encoding="UTF-8" src="${java_src}/locales" dest="${java_out}/locales" excludes="*.xml"/>
+    <mkdir dir="${java_out}/dtds"/>
+    <copydir src="${java_src}/dtds" dest="${java_out}/dtds"/>
   </target>
 
   <target name="build" depends="clean,compile" description="generate the distribution">
     <jar jarfile="${java_lib}/scag.jar">
-      <fileset dir="${java_out}" excludes="${perfmon_path}/applet/**">       
-        <exclude name="${java_out}/locales/**"/>
+      <fileset dir="${java_out}">               
+        <exclude name="${perfmon_path}/applet/**"/>
+        <exclude name="${svcmon_path}/applet/**"/>
+        <exclude name="${scmon_path}/applet/**"/>
+        <exclude name="**/locales/**"/>          
       </fileset>
 
-      <fileset dir="${java_out}" excludes="${svcmon_path}/applet/**" />
+      <!--fileset dir="${java_out}" excludes="${svcmon_path}/applet/**"/-->
+
     </jar>
     <unjar src="${sibinco_lib}" dest="${exploded}/unjar_tmp"/>
     <mkdir dir="${exploded}/stat/monitor"/>
