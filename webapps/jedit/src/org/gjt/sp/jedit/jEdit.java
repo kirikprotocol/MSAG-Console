@@ -130,14 +130,14 @@ public class jEdit extends Applet
     System.out.println("ping_timeout= " + ping_timeout);
     initSystemProperties();
     VFSManager.init();
-    /*if (!getBooleanProperty("debug"))  {
+    if (!getBooleanProperty("debug"))  {
       System.setOut(new PrintStream(new OutputStream(){
         public void write(int b) throws IOException {
             //doing nothing!!!;
         }
       }));
       System.setErr(System.out);
-    }       */
+    }       
     //this.main(args);
     isNotReload=true;
   }
@@ -3006,7 +3006,7 @@ public class jEdit extends Applet
   private static void initSystemProperties()
   {    
     propMgr = new PropertyManager();
-    systemProperties.put("file.encoding", StringGet("file",FileEncoding));    //"Cp1251"
+    systemProperties.put("file.encoding", StringGet("file",FileEncoding));   
     systemProperties.put("line.separator",StringGet("file",LineSeparator));  //"\n"
     try {
       propMgr.loadSystemProps(jEdit.class.getResourceAsStream("/org/gjt/sp/jedit/jedit.props"));
