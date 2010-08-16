@@ -57,6 +57,11 @@ public:
     fileSize=storeFile.Size();
   }
 
+  void Close()
+  {
+    storeFile.Close();
+  }
+
   File::offset_type Read(RecordType& rec)
   {
     if(filePos==fileSize || filePos+RecordType::Size()>fileSize)return 0;
