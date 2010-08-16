@@ -2299,7 +2299,11 @@ public:
       char peer[64]={0,};
       clnt->GetPeer(peer);
       smsc_log_debug(log,"Got connection from %s",peer);
-      if(clnt->ReadAll((char*)&sz,4)==-1)continue;
+      if(clnt->ReadAll((char*)&sz,4)==-1)
+      {
+        smsc_log_info(log,"Failed to read message size");
+        continue;
+      }
       sz=ntohl(sz);
       smsc_log_debug(log,"Message size:%d",sz);
       if(sz>65536)
