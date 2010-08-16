@@ -53,14 +53,14 @@ Response * CommandDeleteSmsc::CreateResponse(Scag * ScagApp)
         char msg[1024];
         sprintf(msg, "Failed to delete smsc. Details: %s", e.what());
         smsc_log_error(logger, msg);
-        return new Response(Response::Error, msg);
+        return new Response(Response::Error, msg, responseEncoding);
     } catch (...) {
         smsc_log_warn(logger, "Failed to delete smsc. Unknown exception");
         throw AdminException("Failed to delete smsc. Unknown exception");
     }
 
     smsc_log_info(logger, "CommandDeleteSmsc is processed ok");
-    return new Response(Response::Ok, "CommandDeleteSmsc is processed ok");
+    return new Response(Response::Ok, "CommandDeleteSmsc is processed ok", responseEncoding);
 }
 
 //================================================================
@@ -86,14 +86,14 @@ Response * CommandAddSmsc::CreateResponse(Scag * ScagApp)
         char msg[1024];
         sprintf(msg, "Failed to add smsc. Details: %s", e.what());
         smsc_log_error(logger, msg);
-        return new Response(Response::Error, msg);
+        return new Response(Response::Error, msg, responseEncoding);
     } catch (...) {
         smsc_log_warn(logger, "Failed to add smsc. Unknown exception");
         throw AdminException("Failed to add smsc. Unknown exception");
     }
 
     smsc_log_info(logger, "CommandAddSmsc is processed ok");
-    return new Response(Response::Ok, "none");
+    return new Response(Response::Ok, "none", responseEncoding);
 }
 
 //================================================================
@@ -120,14 +120,14 @@ Response * CommandUpdateSmsc::CreateResponse(Scag * ScagApp)
         char msg[1024];
         sprintf(msg, "Failed to update smsc. Details: %s", e.what());
         smsc_log_error(logger, msg);
-        return new Response(Response::Error, msg);
+        return new Response(Response::Error, msg, responseEncoding);
     } catch (...) {
         smsc_log_warn(logger, "Failed to update smsc. Unknown exception");
         throw AdminException("Failed to update smsc. Unknown exception");
     }
 
     smsc_log_info(logger, "CommandUpdateSmsc is processed");
-    return new Response(Response::Ok, "none");
+    return new Response(Response::Ok, "none", responseEncoding);
 }
 
 

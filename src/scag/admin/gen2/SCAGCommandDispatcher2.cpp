@@ -52,14 +52,13 @@ Response * SCAGCommandDispatcher::handle(const Command * const command) throw (A
         //DoActions(adminCommand->GetActions());
         return result;
     } catch (AdminException &e) {
-        return new Response(Response::Error, e.what());
-    } catch(std::exception& e)
-    {
-      return new Response(Response::Error, e.what());
+        return new Response(Response::Error, e.what(), AdminCommand::responseEncoding);
+    } catch(std::exception& e) {
+        return new Response(Response::Error, e.what(), AdminCommand::responseEncoding);
     } catch (const char * const e) {
-        return new Response(Response::Error, e);
+        return new Response(Response::Error, e, AdminCommand::responseEncoding);
     } catch (...) {
-        return new Response(Response::Error, "Unknown exception");
+        return new Response(Response::Error, "Unknown exception", AdminCommand::responseEncoding);
     }
 }
 

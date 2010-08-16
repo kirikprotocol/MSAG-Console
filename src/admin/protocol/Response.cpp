@@ -12,11 +12,13 @@ namespace protocol {
 using namespace smsc::admin::service;
 using smsc::util::encode;
 
-static const char * const RESPONSE_HEADER =
-"<?xml version=\"1.0\" encoding=\"windows-1251\"?>\n\
+static const char * const RESPONSE_HEADER1 =
+"<?xml version=\"1.0\" encoding=\"";
+static const char* const RESPONSE_HEADER2 = "\"?>\n\
 <!DOCTYPE response SYSTEM \"file://response.dtd\">\n\
 <response status=\"";
-static const size_t RESPONSE_HEADER_LENGTH = strlen(RESPONSE_HEADER);
+static const size_t RESPONSE_HEADER1_LENGTH = strlen(RESPONSE_HEADER1);
+static const size_t RESPONSE_HEADER2_LENGTH = strlen(RESPONSE_HEADER2);
 static const char * const RESPONSE_MIDDLE = "\">\n";
 static const size_t RESPONSE_MIDDLE_LENGTH = strlen(RESPONSE_MIDDLE);
 static const char * const RESPONSE_FOOTER = "</response>";
@@ -28,13 +30,13 @@ Response::names[Response::response_names_quantity] = {
   {"Error", Response::Error}
 };
 
-Response::Response(Status status, const char * const data)
+Response::Response(Status status, const char * const data, const char* encoding)
 {
   st = status;
-  init(data);
+  init(data,encoding);
 }
 
-Response::Response(Status status, Variant v)
+Response::Response(Status status, Variant v, const char* encoding)
   throw (AdminException)
 {
 	st = status;
@@ -84,29 +86,35 @@ Response::Response(Status status, Variant v)
 	std::auto_ptr<char> data(new char[VARIANT_TEMPLET_LENGTH+strlen(type)+strlen(encodedValue.get())+1]);
 	snprintf(data.get(), VARIANT_TEMPLET_LENGTH+strlen(type)+strlen(encodedValue.get())+1, "%s%s%s%s%s", VARIANT_HEADER, type, VARIANT_MIDDLE,
 					                           encodedValue.get(), VARIANT_FOOTER);
-	init(data.get());
+	init(data.get(),encoding);
 }
 
 
-void Response::init(const char * const data)
+void Response::init(const char * const data, const char* encoding)
 {
   const char * const status_name = getStatusName(st);
   if (data != 0)
   {
-    text = new char[RESPONSE_HEADER_LENGTH
+    text = new char[RESPONSE_HEADER1_LENGTH
+                    + strlen(encoding)
+                    + RESPONSE_HEADER2_LENGTH
                     + strlen(status_name)
                     + RESPONSE_MIDDLE_LENGTH
                     + strlen(data)
                     + RESPONSE_FOOTER_LENGTH
                     + 1];
   } else {
-    text = new char[RESPONSE_HEADER_LENGTH
+    text = new char[RESPONSE_HEADER1_LENGTH
+                    + strlen(encoding)
+                    + RESPONSE_HEADER2_LENGTH
                     + strlen(status_name)
                     + RESPONSE_MIDDLE_LENGTH
                     + RESPONSE_FOOTER_LENGTH
                     + 1];
   }
-  strcpy(text, RESPONSE_HEADER);
+  strcpy(text, RESPONSE_HEADER1);
+  strcat(text, encoding);
+  strcat(text, RESPONSE_HEADER2);
   strcat(text, status_name);
   strcat(text, RESPONSE_MIDDLE);
   if (data != 0)

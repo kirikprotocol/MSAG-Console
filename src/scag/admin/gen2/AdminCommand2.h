@@ -46,6 +46,9 @@ using namespace scag;
 class AdminCommand : public Command
 {
 public:
+    static const char* responseEncoding;
+
+public:
   AdminCommand(Command::Id id, const xercesc::DOMDocument * const doc) :
       Command(id), logger(smsc::logger::Logger::getInstance("admin.command"))
   {
@@ -58,7 +61,7 @@ public:
   virtual Response * CreateResponse( Scag * ScagApp )
   {
       smsc_log_info(logger, "AdminCommand::CreateResponse has processed");
-      return new Response(Response::Ok, "none");
+      return new Response(Response::Ok, "none", responseEncoding);
   }
 
 /*  virtual Actions::CommandActions GetActions()

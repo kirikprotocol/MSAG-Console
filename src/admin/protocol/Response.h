@@ -16,14 +16,16 @@ public:
 		Ok, Error
 	};
 
-	Response(Status status, const char * const data);
-	Response(Status status, Variant v) throw (AdminException);
+	Response(Status status, const char * const data,
+                const char* encoding = "windows-1251" );
+	Response(Status status, Variant v,
+                const char* encoding = "windows-1251" ) throw (AdminException);
 	~Response();
 	const char * const getText() {return text;};
 	const char * const getStatusName(Status status);
 
 protected:
-	void init(const char * const data);
+	void init(const char * const data, const char* encoding);
 
 	struct _Response
 	{

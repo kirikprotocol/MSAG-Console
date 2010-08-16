@@ -38,19 +38,19 @@
         char msg[1024];                                         \
         snprintf(msg, sizeof(msg), msg_ " Details: %s", e.what());            \
         smsc_log_error(logger, msg);                            \
-        return new Response(Response::Error, msg);
+        return new Response(Response::Error, msg, responseEncoding);
 #define CATCH_CFGEXC(msg_)                                      \
       }catch(smsc::util::config::ConfigException& e){                               \
         char msg[1024];                                         \
         snprintf(msg, sizeof(msg), msg_ " Details: %s", e.what());            \
         smsc_log_error(logger, msg);                            \
-        return new Response(Response::Error, msg);
+        return new Response(Response::Error, msg, responseEncoding);
 #define CATCH_STDEXC(msg_)                                      \
       }catch(std::exception& e){                                \
         char msg[1024];                                         \
         snprintf(msg, sizeof(msg), msg_ " Details: %s", e.what());            \
         smsc_log_error(logger, msg);                            \
-        return new Response(Response::Error, msg);
+        return new Response(Response::Error, msg, responseEncoding);
 
 namespace scag2 {
 namespace admin {
@@ -104,14 +104,14 @@ Response * CommandAddSme::CreateResponse(Scag * ScagApp)
         char msg[1024];
         snprintf(msg, sizeof(msg), "Failed to add new SME. Details: %s", e.what());
         smsc_log_error(logger, msg);
-        return new Response(Response::Error, msg);
+        return new Response(Response::Error, msg, responseEncoding);
     } catch (...) {
         smsc_log_warn(logger, "Failed to add new SME. Unknown exception");
         throw AdminException("Failed to add new SME. Unknown exception");
     }
 
     smsc_log_info(logger, "CommandAddSme is processed ok");
-    return new Response(Response::Ok, "CommandAddSme is processed ok");
+    return new Response(Response::Ok, "CommandAddSme is processed ok", responseEncoding);
 }
 
 //================================================================
@@ -154,14 +154,14 @@ Response * CommandDeleteSme::CreateResponse(Scag * ScagApp)
         char msg[1024];
         snprintf(msg, sizeof(msg), "Failed to %s SME. Details: %s", n, e.what());
         smsc_log_error(logger, msg);
-        return new Response(Response::Error, msg);
+        return new Response(Response::Error, msg, responseEncoding);
     } catch (...) {
         smsc_log_warn(logger, "Failed to %s SME. Unknown exception", n);
         throw AdminException("Failed to %s SME. Unknown exception", n);
     }
 
     smsc_log_info(logger, "Command%sSme is processed ok", n);
-    return new Response(Response::Ok, "none");
+    return new Response(Response::Ok, "none", responseEncoding);
 }
 
 //================================================================
@@ -175,7 +175,7 @@ Response * CommandStatusSme::CreateResponse(Scag * ScagApp)
   //((SmeManager*)(SmscApp->getSmeAdmin()))->statusSme(result);
 
     smsc_log_info(logger, "CommandStatusSme processed ok");
-    return new Response(Response::Ok, result);
+    return new Response(Response::Ok, result, responseEncoding);
 }
 
 //================================================================
@@ -201,14 +201,14 @@ Response * CommandUpdateSmeInfo::CreateResponse(Scag * ScagApp)
         char msg[1024];
         snprintf(msg, sizeof(msg), "Failed to update SME. Details: %s", e.what());
         smsc_log_error(logger, msg);
-        return new Response(Response::Error, msg);
+        return new Response(Response::Error, msg, responseEncoding);
     } catch (...) {
         smsc_log_warn(logger, "Failed to update SME. Unknown exception");
         throw AdminException("Failed to update SME. Unknown exception");
     }
 
     smsc_log_info(logger, "CommandUpdateSmeInfo processed ok.");
-    return new Response(Response::Ok, "CommandUpdateSmeInfo processed ok.");
+    return new Response(Response::Ok, "CommandUpdateSmeInfo processed ok.", responseEncoding);
 }
 
 
@@ -262,7 +262,7 @@ Response * CommandLoadSmppTraceRoutes::CreateResponse(Scag * ScagApp)
   }
 
   smsc_log_info(logger, "CommandLoadSmppTraceRoutes is processed ok");
-  return new Response(Response::Ok, result);
+  return new Response(Response::Ok, result, responseEncoding);
 }
 
 
@@ -406,7 +406,7 @@ Response * CommandTraceSmppRoute::CreateResponse(Scag * ScagApp)
       }
 
       smsc_log_info(logger, "CommandTraceSmppRoute is processed ok");
-      return new Response(Response::Ok, result);
+      return new Response(Response::Ok, result, responseEncoding);
 
 /*  CATCH_ADMINEXC("Failed to trace route")
   CATCH_CFGEXC("Failed to trace route")
@@ -427,7 +427,7 @@ Response * CommandApplyConfig::CreateResponse(Scag * SmscApp)
     cfg.reloadAllConfigs();
 
     smsc_log_info(logger, "CommandApplyConfig is processed ok");
-    return new Response(Response::Ok, "none");
+    return new Response(Response::Ok, "none", responseEncoding);
 }
 
 
@@ -453,14 +453,14 @@ Response * CommandApplySmppRoutes::CreateResponse(Scag * ScagApp)
         char msg[1024];
         snprintf(msg, sizeof(msg), "Failed to reload routes. Details: %s", e.what());
         smsc_log_error(logger, msg);
-        return new Response(Response::Error, msg);
+        return new Response(Response::Error, msg, responseEncoding);
     } catch (...) {
         smsc_log_warn(logger, "Failed to reload routes. Unknown exception");
         throw AdminException("Failed to reload routes. Unknown exception");
     }
 
     smsc_log_info(logger, "CommandApplySmppRoutes is processed ok");
-    return new Response(Response::Ok, "none");
+    return new Response(Response::Ok, "none", responseEncoding);
 }
 
 //================ ApplySmppTraceRoutes command ================================
@@ -476,14 +476,14 @@ Response * CommandApplyHttpRoutes::CreateResponse(Scag * SmscApp)
         char msg[1024];
         snprintf(msg, sizeof(msg), "Failed to apply HttpRoutes. Details: %s", e.what());
         smsc_log_error(logger, msg);
-        return new Response(Response::Error, msg);
+        return new Response(Response::Error, msg, responseEncoding);
     } catch (...) {
         smsc_log_warn(logger, "Failed to apply HttpRoutes. Unknown exception");
         throw AdminException("Failed to apply HttpRoutes. Unknown exception");
     }
 
     smsc_log_info(logger, "CommandApplyHttpRoutes processed ok.");
-    return new Response(Response::Ok, "none");
+    return new Response(Response::Ok, "none", responseEncoding);
 }
 
 
@@ -501,14 +501,14 @@ Response * CommandReloadOperators::CreateResponse(Scag * ScagApp)
         char msg[1024];
         snprintf(msg, sizeof(msg), "Failed to reload operators. Details: %s", e.what());
         smsc_log_error(logger, msg);
-        return new Response(Response::Error, msg);
+        return new Response(Response::Error, msg, responseEncoding);
     } catch (...) {
         smsc_log_warn(logger, "Failed to reload operators. Unknown exception");
         throw AdminException("Failed to reload operators. Unknown exception");
     }
 
     smsc_log_info(logger, "CommandReloadOperators processed ok.");
-    return new Response(Response::Ok, "CommandReloadOperators processed ok.");
+    return new Response(Response::Ok, "CommandReloadOperators processed ok.", responseEncoding);
 }
 
 Response * CommandReloadServices::CreateResponse(Scag * ScagApp)
@@ -524,14 +524,14 @@ Response * CommandReloadServices::CreateResponse(Scag * ScagApp)
         char msg[1024];
         snprintf(msg, sizeof(msg), "Failed to reload services. Details: %s", e.what());
         smsc_log_error(logger, msg);
-        return new Response(Response::Error, msg);
+        return new Response(Response::Error, msg, responseEncoding);
     } catch (...) {
         smsc_log_warn(logger, "Failed to reload services. Unknown exception");
         throw AdminException("Failed to reload services. Unknown exception");
     }
 
     smsc_log_info(logger, "CommandReloadServices processed ok.");
-    return new Response(Response::Ok, "CommandReloadServices processed ok.");
+    return new Response(Response::Ok, "CommandReloadServices processed ok.", responseEncoding);
 }
 
 Response * CommandReloadTariffMatrix::CreateResponse(Scag * ScagApp)
@@ -547,14 +547,14 @@ Response * CommandReloadTariffMatrix::CreateResponse(Scag * ScagApp)
         char msg[1024];
         snprintf(msg, sizeof(msg), "Failed to reload TariffMatrix. Details: %s", e.what());
         smsc_log_error(logger, msg);
-        return new Response(Response::Error, msg);
+        return new Response(Response::Error, msg, responseEncoding);
     } catch (...) {
         smsc_log_warn(logger, "Failed to reload TariffMatrix. Unknown exception");
         throw AdminException("Failed to reload TariffMatrix. Unknown exception");
     }
 
     smsc_log_info(logger, "CommandReloadTariffMatrix processed ok.");
-    return new Response(Response::Ok, "CommandReloadTariffMatrix processed ok.");
+    return new Response(Response::Ok, "CommandReloadTariffMatrix processed ok.", responseEncoding);
 }
 
 Response * CommandLoadHttpTraceRoutes::CreateResponse(Scag * ScagApp)
@@ -569,7 +569,7 @@ Response * CommandLoadHttpTraceRoutes::CreateResponse(Scag * ScagApp)
         snprintf(msg, sizeof(msg), "Failed to reload HttpTraceRoutes. Details: %s", e.what());
         smsc_log_error(logger, msg);
         result.appendValueToStringList(msg);
-        return new Response(Response::Error, result);
+        return new Response(Response::Error, result, responseEncoding);
     } catch (...) {
         smsc_log_warn(logger, "Failed to reload HttpTraceRoutes. Unknown exception");
         throw AdminException("Failed to reload HttpTraceRoutes. Unknown exception");
@@ -577,7 +577,7 @@ Response * CommandLoadHttpTraceRoutes::CreateResponse(Scag * ScagApp)
 
     smsc_log_info(logger, "CommandLoadHttpTraceRoutes processed ok.");
     result.appendValueToStringList("Trace routes successfully loaded.");
-    return new Response(Response::Ok, result);
+    return new Response(Response::Ok, result, responseEncoding);
 }
 
 /*
@@ -657,14 +657,14 @@ Response * CommandTraceHttpRoute::CreateResponse(Scag * ScagApp)
         char msg[1024];
         snprintf(msg, sizeof(msg), "Trace Http route failed. Details: %s", e.what());
         smsc_log_error(logger, msg);
-        return new Response(Response::Error, msg);
+        return new Response(Response::Error, msg, responseEncoding);
     } catch (...) {
         smsc_log_warn(logger, "Failed to trace HttpRoute. Unknown exception");
         throw AdminException("Failed to trace HttpRoute. Unknown exception");
     }
 
     smsc_log_info(logger, "CommandTraceHttpRoute processed ok.");
-    return new Response(Response::Ok, result);
+    return new Response(Response::Ok, result, responseEncoding);
 }
 
 
@@ -680,14 +680,14 @@ Response * CommandStoreLogConfig::CreateResponse(Scag * ScagApp)
         char msg[1024];
         snprintf(msg, sizeof(msg), "CommandStoreLogConfig failed. Details: %s", e.what());
         smsc_log_error(logger, msg);
-        return new Response(Response::Error, msg);
+        return new Response(Response::Error, msg, responseEncoding);
     } catch (...) {
         smsc_log_warn(logger, "CommandStoreLogConfig Failed. Unknown exception");
         throw AdminException("CommandStoreLogConfig Failed. Unknown exception");
     }
 
     smsc_log_info(logger, "CommandStoreLogConfig processed ok.");
-    return new Response(Response::Ok, Variant(true));
+    return new Response(Response::Ok, Variant(true), responseEncoding);
 }
 
 Response * CommandGetLogCategories::CreateResponse(Scag * ScagApp)
@@ -712,14 +712,14 @@ Response * CommandGetLogCategories::CreateResponse(Scag * ScagApp)
         char msg[1024];
         snprintf(msg, sizeof(msg), "CommandGetLogCategories failed. Details: %s", e.what());
         smsc_log_error(logger, msg);
-        return new Response(Response::Error, msg);
+        return new Response(Response::Error, msg, responseEncoding);
     } catch (...) {
         smsc_log_warn(logger, "CommandGetLogCategories Failed. Unknown exception");
         throw AdminException("CommandGetLogCategories Failed. Unknown exception");
     }
 
     smsc_log_info(logger, "CommandGetLogCategories processed ok.");
-    return new Response(Response::Ok, result);
+    return new Response(Response::Ok, result, responseEncoding);
 }
 
 void CommandSetLogCategories::init()
@@ -767,7 +767,7 @@ Response * CommandSetLogCategories::CreateResponse(Scag * ScagApp)
     else
     {
         smsc_log_info(logger, "CommandSetLogCategories processed failed. Bad format");
-        return new Response(Response::Error, Variant(false));
+        return new Response(Response::Error, Variant(false), responseEncoding);
     }
 
     Logger::setLogLevels(levels);
@@ -776,14 +776,14 @@ Response * CommandSetLogCategories::CreateResponse(Scag * ScagApp)
         char msg[1024];
         snprintf(msg, sizeof(msg), "CommandSetLogCategories failed. Details: %s", e.what());
         smsc_log_error(logger, msg);
-        return new Response(Response::Error, msg);
+        return new Response(Response::Error, msg, responseEncoding);
     } catch (...) {
         smsc_log_warn(logger, "CommandSetLogCategories Failed. Unknown exception");
         throw AdminException("CommandSetLogCategories Failed. Unknown exception");
     }
 
     smsc_log_info(logger, "CommandSetLogCategories processed ok.");
-    return new Response(Response::Ok, Variant(true));
+    return new Response(Response::Ok, Variant(true), responseEncoding);
 }
 
 
@@ -804,7 +804,7 @@ Response * CommandListSmppEntity::CreateResponse(Scag * ScagApp)
     fillResultSet(result, *(entList.get()));
 
     smsc_log_info(logger, "%s is processed ok", getCommandName());
-    return new Response(Response::Ok, result);
+    return new Response(Response::Ok, result, responseEncoding);
 }
 
 void CommandMetaEntity::init()
@@ -829,7 +829,7 @@ Response * CommandAddMetaEntity::CreateResponse(Scag *ScagApp)
   }
 
   smppMan->addMetaEntity(mei);
-  return new Response(Response::Ok,"Meta entity added");
+  return new Response(Response::Ok,"Meta entity added", responseEncoding);
 }
 
 Response * CommandUpdateMetaEntity::CreateResponse(Scag *ScagApp)
@@ -845,7 +845,7 @@ Response * CommandUpdateMetaEntity::CreateResponse(Scag *ScagApp)
     throw Exception("Failed to load metaentity from config:'%s'",systemId.c_str());
   }
   smppMan->updateMetaEntity(mei);
-  return new Response(Response::Ok,"Meta entity updated");
+  return new Response(Response::Ok,"Meta entity updated", responseEncoding);
 }
 
 
@@ -865,7 +865,7 @@ Response * CommandDeleteMetaEntity::CreateResponse(Scag *ScagApp)
     throw Exception("SmppManager not defined");
   }
   smppMan->deleteMetaEntity(systemId.c_str());
-  return new Response(Response::Ok,"Meta entity deleted");
+  return new Response(Response::Ok,"Meta entity deleted", responseEncoding);
 }
 
 
@@ -886,7 +886,7 @@ Response * CommandAddMetaEndpoint::CreateResponse(Scag *ScagApp)
     throw Exception("SmppManager not defined");
   }
   smppMan->addMetaEndPoint(metaId.c_str(),sysId.c_str());
-  return new Response(Response::Ok,"MetaEndpoint added");
+  return new Response(Response::Ok,"MetaEndpoint added", responseEncoding);
 }
 
 Response * CommandRemoveMetaEndpoint::CreateResponse(Scag *ScagApp)
@@ -897,7 +897,7 @@ Response * CommandRemoveMetaEndpoint::CreateResponse(Scag *ScagApp)
     throw Exception("SmppManager not defined");
   }
   smppMan->removeMetaEndPoint(metaId.c_str(),sysId.c_str());
-  return new Response(Response::Ok,"MetaEndpoint removed");
+  return new Response(Response::Ok,"MetaEndpoint removed", responseEncoding);
 }
 
 
@@ -928,7 +928,7 @@ Response* CommandReplaceCounter::CreateResponse( Scag* )
     } else {
         throw Exception("unknown counter replace command id %d",getId());
     }
-    return new Response(Response::Ok,what);
+    return new Response(Response::Ok,what, responseEncoding);
 }
 
 }

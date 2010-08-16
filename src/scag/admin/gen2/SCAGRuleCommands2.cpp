@@ -88,18 +88,18 @@ Response * CommandRuleBase::CreateResponse(Scag * SmscApp)
         char buff[32];
         sprintf(buff,"%d",e.getLineNumber());			
         res.appendValueToStringList(buff);			
-        return new Response(Response::Ok, res);
+        return new Response(Response::Ok, res, responseEncoding);
     } catch(std::exception& e) {                                     
         char msg[1024];                                         
         snprintf(msg, sizeof(msg), "Failed to %s rule. Details: %s", m_ProcessName.c_str(), e.what());
         smsc_log_error(logger, msg);                            
-        return new Response(Response::Error, msg);
+        return new Response(Response::Error, msg, responseEncoding);
     } catch (...) {
         smsc_log_warn(logger, "Failed to %s rule. Unknown exception", m_ProcessName.c_str());
         throw AdminException("Failed to %s rule. Unknown exception", m_ProcessName.c_str());
     }
     Variant okRes("");
-    return new Response(Response::Ok, okRes);
+    return new Response(Response::Ok, okRes, responseEncoding);
 }
 
 
