@@ -49,8 +49,8 @@ public class ResponseReader {
         printResponse( buffer );
 
         InputSource source = new InputSource(new ByteArrayInputStream(buffer));
-        logger.debug( "ResponseReader.read() source with new InputStreamReader( BAIS, \"Cp1251\" )" );
-        source = new InputSource( new InputStreamReader( new ByteArrayInputStream(buffer), "Cp1251") ); //added
+        logger.debug( "ResponseReader.read() source with new InputStreamReader( BAIS, \"UTF-8\" )" );
+        source = new InputSource( new InputStreamReader( new ByteArrayInputStream(buffer), "UTF-8") ); //added
 
         try {
             return new Response( builder.parse(source) );
@@ -63,7 +63,7 @@ public class ResponseReader {
     private void printResponse(byte[] buffer) {
         BufferedReader br = null;
         try{
-            br = new BufferedReader( new InputStreamReader( new ByteArrayInputStream(buffer), "Cp1251") );
+            br = new BufferedReader( new InputStreamReader( new ByteArrayInputStream(buffer), "UTF-8") );
             logger.debug( "ResponseReader.printResponse() start\n--------" );
             String s;
             s=br.readLine();

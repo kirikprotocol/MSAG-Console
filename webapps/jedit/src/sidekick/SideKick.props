@@ -51,7 +51,7 @@ buffer.sidekick.buffer-change-parse=false
 buffer.sidekick.keystroke-parse=false
 
 # Global auto parse
-buffer.sidekick.auto-parse=false
+buffer.sidekick.auto-parse=true
 
 # Delay after typing ends before auto parse, in milliseconds
 sidekick.auto-parse-delay=6000
