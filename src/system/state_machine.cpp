@@ -5596,6 +5596,7 @@ void StateMachine::onForwardOk(SMSId id,SMS& sms)
 void StateMachine::onDeliveryOk(SMSId id,SMS& sms)
 {
   bool msuOnly=false;
+  bool ignoreEvent=false;
   if(sms.hasBinProperty(Tag::SMSC_CONCATINFO))
   {
     ConcatInfo* ci=(ConcatInfo*)sms.getBinProperty(Tag::SMSC_CONCATINFO,0);
@@ -5603,8 +5604,18 @@ void StateMachine::onDeliveryOk(SMSId id,SMS& sms)
     {
       msuOnly=true;
     }
+    if(sms.getIntProperty(Tag::SMSC_ORIGINALPARTSNUM)==1 &&
+      strcmp(sms.getSourceSmeId(),"MAP_PROXY")!=0 &&
+      strcmp(sms.getDestinationSmeId(),"MAP_PROXY")==0 &&
+      msuOnly)
+    {
+      ignoreEvent=true;
+    }
   }
-  smsc->registerStatisticalEvent(StatEvents::etDeliveredOk,&sms,msuOnly);
+  if(!ignoreEvent)
+  {
+    smsc->registerStatisticalEvent(StatEvents::etDeliveredOk,&sms,msuOnly);
+  }
 #ifdef SNMP
   SnmpCounter::getInstance().incCounter(SnmpCounter::cntDelivered,sms.getDestinationSmeId());
 #endif
