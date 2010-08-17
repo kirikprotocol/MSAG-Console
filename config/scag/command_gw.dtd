@@ -1,4 +1,4 @@
-<?xml encoding="ISO-8859-1"?>
+<?xml encoding="UTF-8"?>
 
 <!ELEMENT command (param*)>
     <!ATTLIST command name (applyConfig|
