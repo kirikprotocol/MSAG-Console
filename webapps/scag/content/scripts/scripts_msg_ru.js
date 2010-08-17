@@ -21,3 +21,6 @@ var causeValueErrorMsg_pre = "Invalid release cause: value '"; // causeValueErro
 var causeValueErrorMsg_post = "' is undefined";
 
 var unknownValidationTypeErrorMsg = "тип ошибки неизвестен";
+var nameAlreadyUsed="Это имя уже используется";
+var alphanumerical="Вы можете использовать только символы алфавита, цифры и точки, чтобы разделять их.";
+var percentErrorMsg="Значение должно лежать в интервале от 0 до 100.";

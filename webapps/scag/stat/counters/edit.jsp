@@ -28,7 +28,7 @@
                         values="${fn:join(bean.caIds, ',')}" valueTitles="${fn:join(bean.caIds, ',')}"/>
 
 
-            <script src="content/scripts/counters.js" type="text/javascript"></script>
+            <!--script src="content/scripts/counters.js" type="text/javascript" charset="utf-8"></script-->
             <!-- Get parameters.-->
             <c:set var="pValues" value=""/>
             <c:forEach items="${bean.parameters}" var="parameter">

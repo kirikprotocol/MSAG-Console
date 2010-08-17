@@ -27,7 +27,7 @@
             <sm-ep:txt title="statistics.counters.ca.edit.txt.max"  name="limitsMax" maxlength="5" validation="unsignedOrEmpty"/>
            
 
-            <script src="content/scripts/counters.js" type="text/javascript"></script>
+            <!--script src="content/scripts/counters.js" type="text/javascript" charset="utf-8"></script-->
             <!-- Get limits -->
             <c:set var="lValues" value=""/>
             <c:forEach items="${bean.limits}" var="l">

@@ -21,3 +21,6 @@ var causeValueErrorMsg_pre = "Invalid release cause: value '"; // causeValueErro
 var causeValueErrorMsg_post = "' is undefined";
 
 var unknownValidationTypeErrorMsg = "unknown validation type";
+var nameAlreadyUsed="This name is already used";
+var alphanumerical="You can use only alphanumerical character and point to separate them.";
+var percentErrorMsg="Value is limited by '0' and '100' values.";

@@ -1,8 +1,8 @@
 var param_counter = 0;
 var limit_counter = 0;
 
-function removeRow(tbl, rowId) {
-    var tbl = getElementByIdUni(tbl);
+function removeRow(tblId, rowId) {
+    var tbl = getElementByIdUni(tblId);
     for(var i=0; i<tbl.rows.length; i++){
         if(tbl.rows[i].id==rowId){
             tbl.deleteRow(i);
@@ -93,11 +93,11 @@ function addRow(id1, id2, type, ffs, sfs){
                         return true;
                 } else {
                     //console.info("Not unic name.");
-                    validationError(nameElem, "Not unic name.");
+                    validationError(nameElem, '<fmt:message>scripts.nameAlreadyUsed</fmt:message>');
                 }
             } else {
                 //console.info("Field is empty.");
-                validationError(valueElem, "Field is empty.");
+                validationError(valueElem, '<fmt:message>scripts.nonEmptyErrorMsg</fmt:message>');
             }
         }
 
@@ -147,7 +147,7 @@ function validateFirstField(type, element){
         var IsFound = /^[a-zA-Z]+[a-zA-z0-9\._]*$/.test(element.value);
         //console.info("isFound="+IsFound);
         if (!IsFound) {
-            validationError(element, "Validation error! You can use only alphanumerical character and point to separate them.");
+            validationError(element, '<fmt:message>scripts.alphanumerical</fmt:message>');
             return false;
         }
     }
@@ -176,7 +176,7 @@ function validateFirstField(type, element){
                     //console.info("2:"+parseInt(limitsMax.value) < limit);
                     //console.info("1||2:"+limit < parseInt(limitsMin.value) || parseInt(limitsMax.value) < limit);
                     if (limit < 0 || 100 < limit){
-                        validationError(element, "Value is limited by '0' and '100' values.");
+                        validationError(element, '<fmt:message>scripts.percentErrorMsg</fmt:message>');
                         return false;
                     }
                 } else{
@@ -196,7 +196,7 @@ function validateFirstField(type, element){
 function validateLimit(element){
     var IsFound = /^(>|<)?\d+$/.test(element.value);
     if (!IsFound) {
-        validationError(element, "Validation error! Value must be decimal without sign.");
+        validationError(element, '<fmt:message>scripts.valueSignErrorMsg</fmt:message>');
         return false;
     }
     return true;
@@ -205,7 +205,7 @@ function validateLimit(element){
 function validateInteger(element){
     var IsFound = /^\d+$/.test(element.value);
     if (!IsFound) {
-        validationError(element, "Validation error! Value must be decimal without sign.");
+        validationError(element, '<fmt:message>scripts.valueSignErrorMsg</fmt:message>');
         return false;
     }
     return true;

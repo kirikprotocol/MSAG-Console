@@ -43,7 +43,7 @@ public class ConfigManager extends Manager {
   public void store() throws SibincoException{
       logger.debug( "ConfigManager.store()");
     try {
-     gwConfig.saveWithoutBackup(System.getProperty("file.encoding").equals("Cp1251") ? "ISO-8859-1" : System.getProperty("file.encoding"));
+     gwConfig.saveWithoutBackup(System.getProperty("file.encoding"));
     } catch (Config.WrongParamTypeException e) {
         logger.debug("Couldn't save config", e);
         throw new SCAGJspException(Constants.errors.status.COULDNT_SAVE_CONFIG, e);
