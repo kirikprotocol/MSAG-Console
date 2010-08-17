@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE config SYSTEM "file://configuration.dtd">
 
 <config>
@@ -45,7 +45,7 @@
         <param name="flushTimeLimit" type="int">120</param> <!-- a time limit on session inactivity (sec) -->
         <param name="initUploadCount" type="int">10</param> <!-- a number of sessions in one initial upload -->
         <param name="initUploadInterval" type="int">1000</param> <!-- an interval between initial uploads (ms) -->
-        <param name="diskio" type="bool">true</param> <!-- is disk i/o for sessions enabled -->
+        <param name="diskio" type="bool">true</param> <!-- is disk i/o for sessions enabled -->        
     </section>
 
     <section name="StatisticsManager">
