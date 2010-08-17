@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
+<?xml version="1.0" encoding="UTF-8"?>
 
 <!DOCTYPE http_routes SYSTEM "http_routes.dtd">
 
@@ -14,7 +14,8 @@
                 <address_place type="url" name="a" priority="5"/>
                 <address_place type="param" name="abonent" priority="6"/>
 
-                <usr_place type="url" name="u" priority="1"/>                <usr_place type="cookie" name="WHOISD-USR" priority="2"/>
+                <usr_place type="url" name="u" priority="1"/>
+                <usr_place type="cookie" name="WHOISD-USR" priority="2"/>
                 <usr_place type="header" name="WHOISD-USR" priority="3"/>
                 <usr_place type="param" name="usr" priority="4"/>
 
