@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!ELEMENT records (smerecord|smscrecord|metasmerecord|metasmscrecord|param_conf)*>
+
+<!ELEMENT smerecord (param+)>
+<!ELEMENT smscrecord (param+)>
+<!ELEMENT metasmscrecord (param+)>
+<!ELEMENT metasmerecord (param+)>
+
+<!ELEMENT param (#PCDATA)>
+<!ATTLIST param 
+name (systemId|password|timeout|mode|enabled|transit|saa|host|port|althost|altport|uid|
+      bindSystemId|bindPassword|providerId|addressRange|systemType|snmpTracking|
+      inQueueLimit|outQueueLimit|maxSmsPerSec|policy|metaGroup|persistence) #REQUIRED
+value CDATA #REQUIRED>
+
+
+<!ELEMENT param_conf (#PCDATA)>
+<!ATTLIST param_conf name CDATA #REQUIRED type (string|int|bool) #IMPLIED>
+

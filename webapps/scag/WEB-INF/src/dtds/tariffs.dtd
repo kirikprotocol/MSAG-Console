@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!ELEMENT tariff_matrix (categories|media_types|billing_info)*>
+<!ELEMENT categories (category)*>
+<!ELEMENT category (name)>
+<!ATTLIST category
+    id CDATA #REQUIRED>
+
+<!ELEMENT name (#PCDATA)>
+
+<!ELEMENT media_types (media_type)*>
+<!ELEMENT media_type (name)>
+<!ATTLIST media_type
+    id CDATA #REQUIRED>
+
+<!ELEMENT billing_info (operator)*>
+<!ELEMENT operator (billing)*>
+<!ATTLIST operator
+    id CDATA #REQUIRED>
+
+<!ELEMENT billing (category_id|media_type_id|service_number|price|currency)*>
+<!ATTLIST billing type (inman|stat|none|ewallet) #IMPLIED>
+
+<!ELEMENT category_id (#PCDATA)>
+<!ELEMENT media_type_id (#PCDATA)>
+<!ELEMENT service_number (#PCDATA)>
+<!ELEMENT price (#PCDATA)>
+<!ELEMENT currency (#PCDATA)>

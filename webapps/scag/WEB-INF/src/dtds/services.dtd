@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!ELEMENT service_providers (param|provider)*>
+<!ELEMENT param (#PCDATA)>
+<!ATTLIST param
+    name CDATA #REQUIRED
+    type (string | int | bool) #IMPLIED>
+<!ELEMENT provider (name|description|services)*>
+<!ATTLIST provider
+    id CDATA #REQUIRED>
+<!ELEMENT services (service)*>
+<!ELEMENT service (name|description)*>
+<!ATTLIST service
+    id CDATA #REQUIRED>
+<!ELEMENT description (#PCDATA)>
+<!ELEMENT name (#PCDATA)>

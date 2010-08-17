@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!ELEMENT routes (subject_def*, route*)>
+<!ELEMENT route (notes*, source+, destination+)>
+<!ATTLIST route
+	id CDATA #REQUIRED
+	enabled  (true | false) "true"
+        transit  (true | false) "false"
+        saa      (true | false) "true"
+	slicing  (NONE | SAR | UDH8 | UDH16) "NONE"
+        slicedRespPolicy (ALL | ANY) "ALL"
+	srcSmeId CDATA #IMPLIED
+	serviceId CDATA "-1"
+>
+<!ELEMENT notes (#PCDATA)>
+<!ELEMENT source (subject | mask)>
+<!ELEMENT destination (subject | mask)>
+<!ATTLIST destination
+	sme CDATA #REQUIRED
+>
+<!ELEMENT subject EMPTY>
+<!ATTLIST subject
+	id CDATA #REQUIRED
+>
+<!ELEMENT subject_def (notes*, mask+)>
+<!ATTLIST subject_def
+	id CDATA #REQUIRED
+	defSme CDATA #REQUIRED
+>
+<!ELEMENT mask EMPTY>
+<!ATTLIST mask
+	value CDATA #REQUIRED
+>

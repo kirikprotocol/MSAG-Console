@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!ELEMENT http_routes (param*, options*, subject_def*, site_subject_def*, route*)>
+
+<!ELEMENT param (#PCDATA)>
+<!ATTLIST param name CDATA #REQUIRED type (string|int|bool) #IMPLIED>
+
+<!ELEMENT route (abonents+, sites+)>
+<!ATTLIST route
+    id CDATA #REQUIRED
+    serviceId CDATA #REQUIRED
+    enabled (true|false) #IMPLIED
+    default (true|false) #IMPLIED
+    name CDATA #REQUIRED
+    transit (true|false) #IMPLIED
+    saa (true|false) "true"
+>
+
+<!ELEMENT options (abonents, sites)>
+
+<!ELEMENT abonents (address|subject|placement|address_prefix)*>
+
+<!ELEMENT sites (site|site_subject|placement)*>
+
+<!ELEMENT placement (address_place|route_id_place|service_id_place)*>
+
+<!ELEMENT address_prefix EMPTY>
+<!ATTLIST address_prefix
+    ton CDATA #REQUIRED
+    npi CDATA #REQUIRED
+>
+
+<!ELEMENT address_place EMPTY>
+<!ATTLIST address_place
+    type (url|param|header|cookie) #REQUIRED
+    name CDATA #REQUIRED
+    priority CDATA #IMPLIED
+>
+
+<!ELEMENT route_id_place EMPTY>
+<!ATTLIST route_id_place
+    type (url|param|header|cookie) #REQUIRED
+    name CDATA #REQUIRED
+    priority CDATA #IMPLIED
+>
+
+<!ELEMENT service_id_place EMPTY>
+<!ATTLIST service_id_place
+    type (url|param|header|cookie) #REQUIRED
+    name CDATA #REQUIRED
+    priority CDATA #IMPLIED
+>
+
+<!ELEMENT address EMPTY>
+<!ATTLIST address
+    value CDATA #REQUIRED
+>
+
+<!ELEMENT path EMPTY>
+<!ATTLIST path
+    value CDATA #REQUIRED
+>
+
+<!ELEMENT site (path+)>
+<!ATTLIST site
+    host CDATA #REQUIRED
+    port CDATA #REQUIRED
+    default (true|false) #IMPLIED
+>
+
+<!ELEMENT subject EMPTY>
+<!ATTLIST subject
+    id CDATA #REQUIRED
+>
+
+<!ELEMENT site_subject EMPTY>
+<!ATTLIST site_subject
+    id CDATA #REQUIRED
+    default (true|false) #IMPLIED
+>
+
+<!ELEMENT subject_def (address+)>
+<!ATTLIST subject_def
+    id CDATA #REQUIRED
+>
+
+<!ELEMENT site_subject_def (site+)>
+<!ATTLIST site_subject_def
+    id CDATA #REQUIRED
+>
