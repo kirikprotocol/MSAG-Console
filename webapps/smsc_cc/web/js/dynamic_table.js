@@ -10,7 +10,10 @@ function TextColumn(columnId, allowEditAfterAdd) {
     var input = document.createElement("input");
     input.name = id;
     input.id = id;
+    input.setAttribute("id", id);
+    input.setAttribute("value", value);
     input.value = value;
+    input.type="text";
     input.setAttribute("class", "txtW");
     return input;
   };

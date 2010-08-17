@@ -43,6 +43,45 @@
 
   <tag>
     <tag-name>buttons</tag-name>
-    <source>buttons.xhtml</source>
+    <component>
+      <component-type>buttons</component-type>
+      <renderer-type>buttons</renderer-type>
+      <handler-class>ru.novosoft.smsc.web.components.buttons.ButtonsHandler</handler-class>
+    </component>
   </tag>
+
+  <tag>
+    <tag-name>button</tag-name>
+    <handler-class>ru.novosoft.smsc.web.components.buttons.ButtonHandler</handler-class>
+  </tag>
+
+  <tag>
+    <tag-name>space</tag-name>
+    <handler-class>ru.novosoft.smsc.web.components.buttons.SpaceHandler</handler-class>
+  </tag>
+
+  <tag>
+    <tag-name>pagedTable</tag-name>
+    <component>
+      <component-type>pagedTable</component-type>
+      <renderer-type>pagedTable</renderer-type>
+      <handler-class>ru.novosoft.smsc.web.components.paged_table.PagedTableHandler</handler-class>
+    </component>
+  </tag>
+
+  <tag>
+    <tag-name>ptTextColumn</tag-name>
+    <handler-class>ru.novosoft.smsc.web.components.paged_table.TextColumnTagHandler</handler-class>
+  </tag>
+
+  <tag>
+    <tag-name>ptImageColumn</tag-name>
+    <handler-class>ru.novosoft.smsc.web.components.paged_table.ImageColumnTagHandler</handler-class>
+  </tag>
+
+  <tag>
+    <tag-name>ptFilter</tag-name>
+    <handler-class>ru.novosoft.smsc.web.components.paged_table.FilterTagHandler</handler-class>
+  </tag>
+
 </facelet-taglib>

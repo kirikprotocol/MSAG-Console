@@ -8,7 +8,7 @@
       xmlns:jstl="http://java.sun.com/jsp/jstl/core">
 
 
-<ui:composition template="../templates/main.xhtml">
+<ui:composition template="/templates/main.xhtml">
 
   <ui:define name="sme_title">
     <eye:pageTitle title="#{msg['smsc.title']}"/>
@@ -17,8 +17,7 @@
   <ui:define name="content">
 
     <tr:form id="index1">
-
-
+       
       <eye:collapsingGroup label="#{index1.label}" opened="#{index1.opened}">
         <eye:dynamicTable value="#{index1.model}">
           <eye:dtTextColumn name="column1" width="20" maxLength="20" allowEditAfterAdd="false"/>
@@ -29,11 +28,52 @@
         </eye:dynamicTable>
       </eye:collapsingGroup>
 
-      <h:commandButton title="SUBMIT" type="submit"/>
+      <eye:pagedTable value="#{index1.staticModel}" pageSize="10">
+
+        <eye:ptFilter>
+          <table width="100%">
+
+              <tbody><tr>
+                  <td align="left" width="10%">
+                      Name:
+                  </td>
+                  <td align="left" width="40%">
+                      <h:inputText/>
+                  </td>
+                  <td align="left" width="10%">
+                      Subj:
+                  </td>
+                  <td align="left" width="40%">
+                      <h:inputText/>
+                  </td>
+              </tr>
+
+          </tbody></table>
+          
+
+        </eye:ptFilter>
+
+        <eye:ptTextColumn name="column1" title="#{msg['snmp.label']}" actionListener="#{index1.edit}" sortable="true"/>
+        <eye:ptTextColumn name="column2" title="#{msg['aliasman.label']}" textColor="GREEN"/>
+
+        <eye:ptImageColumn name="column3" title="#{msg['aliasman.label']}" actionListener="#{index1.edit}"
+                           valueMapping="1:/images/ic_online.gif;0:/images/ic_offline.gif" sortable="true"/>
+
+      </eye:pagedTable>
+
+      <eye:buttons>
+        <eye:button title="myButton" actionListener="#{index1.myButton}"/>
+        <eye:button title="myButton1" actionListener="#{index1.myButton}"/>
+        <eye:space/>
+        <eye:button title="myButton2" actionListener="#{index1.myButton}"/>
+        <eye:button title="myButton3" actionListener="#{index1.myButton}"/>
+      </eye:buttons>
 
     </tr:form>
 
   </ui:define>
+
+
 
 </ui:composition>
 

@@ -92,4 +92,96 @@
     <name>buttons</name>
   </tag>
 
+  <tag>
+    <name>space</name>
+  </tag>
+
+  <tag>
+    <name>button</name>
+    <attribute>
+      <name>title</name>
+      <type>java.lang.String</type>
+      <required>true</required>
+    </attribute>
+    <attribute>
+      <name>actionListener</name>
+      <type>java.lang.String</type>
+      <required>true</required>
+    </attribute>
+  </tag>
+
+  <tag>
+    <name>pagedTable</name>
+    <attribute>
+      <name>value</name>
+      <type>ru.novosoft.smsc.web.components.paged_table.PagedTableModel</type>
+      <required>true</required>
+    </attribute>
+    <attribute>
+      <name>autoUpdate</name>
+      <type>int</type>
+    </attribute>
+    <attribute>
+      <name>pageSize</name>
+      <type>int</type>
+    </attribute>
+  </tag>
+
+  <tag>
+    <name>ptFilter</name>
+  </tag>
+
+  <tag>
+    <name>ptTextColumn</name>
+    <attribute>
+      <name>name</name>
+      <type>java.lang.String</type>
+      <required>true</required>
+    </attribute>
+    <attribute>
+      <name>title</name>
+      <type>java.lang.String</type>
+      <required>true</required>
+    </attribute>
+    <attribute>
+      <name>actionListener</name>
+      <type>java.lang.String</type>
+    </attribute>
+    <attribute>
+      <name>sortable</name>
+      <type>boolean</type>
+    </attribute>
+    <attribute>
+      <name>textColor</name>
+      <type>java.lang.String</type>
+    </attribute>
+  </tag>
+
+  <tag>
+    <name>ptImageColumn</name>
+    <attribute>
+      <name>name</name>
+      <type>java.lang.String</type>
+      <required>true</required>
+    </attribute>
+    <attribute>
+      <name>title</name>
+      <type>java.lang.String</type>
+      <required>true</required>
+    </attribute>
+    <attribute>
+      <name>actionListener</name>
+      <type>java.lang.String</type>
+    </attribute>
+    <attribute>
+      <name>sortable</name>
+      <type>boolean</type>
+    </attribute>
+    <attribute>
+      <name>valueMapping</name>
+      <type>java.lang.String</type>
+      <required>true</required>
+    </attribute>
+  </tag>
+
 </taglib>

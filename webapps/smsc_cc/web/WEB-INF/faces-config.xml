@@ -51,6 +51,18 @@
       <renderer-type>dynamicTable</renderer-type>
       <renderer-class>ru.novosoft.smsc.web.components.dynamic_table.DynamicTableRenderer</renderer-class>
     </renderer>
+
+    <renderer>
+      <component-family>Eyeline</component-family>
+      <renderer-type>buttons</renderer-type>
+      <renderer-class>ru.novosoft.smsc.web.components.buttons.ButtonsRenderer</renderer-class>
+    </renderer>
+
+    <renderer>
+      <component-family>Eyeline</component-family>
+      <renderer-type>pagedTable</renderer-type>
+      <renderer-class>ru.novosoft.smsc.web.components.paged_table.PagedTableRenderer</renderer-class>
+    </renderer>
   </render-kit>
 
 

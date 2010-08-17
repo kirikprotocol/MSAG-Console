@@ -2,7 +2,7 @@ function collasping_group_showhide_section(sectionId)
 {
     var headerElem = document.getElementById("sectionHeader_" + sectionId);
     var valueElem = document.getElementById("sectionValue_" + sectionId);
-    var openedElement = document.getElementById("sectionOpened_" + sectionId);  
+    var openedElement = document.getElementById("sectionOpened_" + sectionId);      
     if (valueElem.style.display != "none")
     {
         headerElem.className = "collapsing_group_closed";
