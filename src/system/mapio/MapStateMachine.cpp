@@ -3417,7 +3417,7 @@ USHORT_T Et96MapDelimiterInd(
         checkMapReq( Et96MapOpenResp(dialog->ssn INSTDLGARG(dialog),dialogueId,ET96MAP_RESULT_OK,&reason,0,0,0), __func__);
         __map_trace2__("subsystem=%s",dialog->subsystem.c_str());
         if(smsc::system::mapio::MapLimits::getInstance().isNoSRIUssd(dialog->subsystem) ||
-           ((dialog->s_imsi.empty() || dialog->s_msc.empty()) && smsc::system::mapio::MapLimits::getInstance().isCondSRIUssd(dialog->subsystem))
+            ((!dialog->s_imsi.empty() && !dialog->s_msc.empty()) && smsc::mapio::MapLimits::getInstance().isCondSRIUssd(dialog->subsystem))
           )
         {
           dialog->noSri=true;
