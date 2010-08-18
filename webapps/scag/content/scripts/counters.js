@@ -144,7 +144,7 @@ function unicName(pName, type, ffs){
 function validateFirstField(type, element){
     //console.info("validateFirstField() type="+type+" value="+element.value);
     if (type == "parameter"){
-        var IsFound = /^[a-zA-Z]+[a-zA-z0-9\._]*$/.test(element.value);
+        var IsFound = /^[a-zA-Zа-яА-Я]+[a-zA-zа-яА-Я0-9\._]*$/.test(element.value);
         //console.info("isFound="+IsFound);
         if (!IsFound) {
             validationError(element, '<fmt:message>scripts.alphanumerical</fmt:message>');
