@@ -14,23 +14,31 @@ import java.io.Writer;
 public class AjaxFacesContext extends FacesContextWrapper {
 
   private final String ajaxComponentId;
+  private boolean skipContent=true;
 
   public AjaxFacesContext(FacesContext facesContext, String ajaxComponentId) {
     super(facesContext);
     this.ajaxComponentId = ajaxComponentId;
   }
 
-  public ResponseWriter getResponseWriter() {
-    return new BulkResponseWriter(super.getResponseWriter());
-  }
-
-  public String getAjaxComponentId() {
-    return ajaxComponentId;
+  public void setSkipContent(boolean skipContent) {
+    this.skipContent = skipContent;
   }
 
   public ResponseWriter getAjaxResponseWriter() {
     return super.getResponseWriter();
   }
+
+  public ResponseWriter getResponseWriter() {
+    if (skipContent)
+      return new BulkResponseWriter(super.getResponseWriter());
+    else
+      return super.getResponseWriter();
+  }
+
+  public String getAjaxComponentId() {
+    return ajaxComponentId;
+  }    
 
   private static class BulkResponseWriter extends ResponseWriter {
 

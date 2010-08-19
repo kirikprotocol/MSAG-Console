@@ -14,7 +14,6 @@ import java.io.IOException;
 public class  CollapsingGroupRenderer extends Renderer {
 
   public void decode(FacesContext context, UIComponent component) {
-    System.out.println("COLLAPSING GROUP DECODE");
     CollapsingGroup cg = (CollapsingGroup)component;
 
     String opened = context.getExternalContext().getRequestParameterMap().get("sectionOpened_" + cg.getId());

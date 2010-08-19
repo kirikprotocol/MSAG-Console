@@ -56,16 +56,27 @@
       <component-family>Eyeline</component-family>
       <renderer-type>buttons</renderer-type>
       <renderer-class>ru.novosoft.smsc.web.components.buttons.ButtonsRenderer</renderer-class>
+    </renderer>    
+
+    <renderer>
+      <component-family>Eyeline</component-family>
+      <renderer-type>dataTable</renderer-type>
+      <renderer-class>ru.novosoft.smsc.web.components.data_table.DataTableRenderer</renderer-class>
     </renderer>
 
     <renderer>
       <component-family>Eyeline</component-family>
-      <renderer-type>pagedTable</renderer-type>
-      <renderer-class>ru.novosoft.smsc.web.components.paged_table.PagedTableRenderer</renderer-class>
+      <renderer-type>dataTableColumn</renderer-type>
+      <renderer-class>ru.novosoft.smsc.web.components.data_table.DataTableColumnRenderer</renderer-class>
     </renderer>
   </render-kit>
 
 
+  <managed-bean>
+    <managed-bean-name>smscStatus</managed-bean-name>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.SmscStatusController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
 
   <managed-bean>
     <managed-bean-name>reschedule</managed-bean-name>

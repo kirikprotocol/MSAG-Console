@@ -58,30 +58,24 @@
   <tag>
     <tag-name>space</tag-name>
     <handler-class>ru.novosoft.smsc.web.components.buttons.SpaceHandler</handler-class>
-  </tag>
+  </tag>  
 
   <tag>
-    <tag-name>pagedTable</tag-name>
-    <component>
-      <component-type>pagedTable</component-type>
-      <renderer-type>pagedTable</renderer-type>
-      <handler-class>ru.novosoft.smsc.web.components.paged_table.PagedTableHandler</handler-class>
+    <tag-name>dataTable</tag-name>
+     <component>
+      <component-type>dataTable</component-type>
+      <renderer-type>dataTable</renderer-type>
+      <handler-class>ru.novosoft.smsc.web.components.data_table.DataTableHandler</handler-class>
     </component>
   </tag>
 
   <tag>
-    <tag-name>ptTextColumn</tag-name>
-    <handler-class>ru.novosoft.smsc.web.components.paged_table.TextColumnTagHandler</handler-class>
-  </tag>
-
-  <tag>
-    <tag-name>ptImageColumn</tag-name>
-    <handler-class>ru.novosoft.smsc.web.components.paged_table.ImageColumnTagHandler</handler-class>
-  </tag>
-
-  <tag>
-    <tag-name>ptFilter</tag-name>
-    <handler-class>ru.novosoft.smsc.web.components.paged_table.FilterTagHandler</handler-class>
+    <tag-name>column</tag-name>
+     <component>
+      <component-type>column</component-type>
+      <renderer-type>dataTableColumn</renderer-type>
+      <handler-class>ru.novosoft.smsc.web.components.data_table.DataTableColumnHandler</handler-class>
+    </component>
   </tag>
 
 </facelet-taglib>

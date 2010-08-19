@@ -10,11 +10,11 @@ function EXmlHttpRequest(url, parameters, onResponse) {
     }
   };
 
-  this.send = function(body) {
+  this.send = function() {
     if (window.XMLHttpRequest) { // Mozilla, Safari,...
       http_request = new XMLHttpRequest();
       if (http_request.overrideMimeType) {
-        http_request.overrideMimeType('application/x-www-form-urlencode');
+        http_request.overrideMimeType('text/xml');
       }
     } else if (window.ActiveXObject) { // IE
       try {
@@ -30,21 +30,26 @@ function EXmlHttpRequest(url, parameters, onResponse) {
       return false;
 
     http_request.onreadystatechange = alertContents;
-    http_request.open('GET', url + parameters, true);
-    http_request.send(null);
+    //    http_request.open('GET', url + parameters, true);
+    http_request.open('POST', url, true);
+    http_request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+    http_request.setRequestHeader("Content-length", parameters.length);
+    http_request.setRequestHeader("Connection", "close");
+    http_request.send(parameters);
   }
 }
 
 function constructArgs(rootElement) {
   var args = "";
-  for (var i=0; i <rootElement.children.length; i++) {
+  for (var i = 0; i < rootElement.children.length; i++) {
     var c = rootElement.children[i];
     if (c.getAttribute("id") != null && c.getAttribute("value") != null) {
       if (args.length > 0)
         args += '&';
       args += c.getAttribute("id") + '=' + c.getAttribute("value");
 
-    } if (c.getAttribute("id") != null && c.checked) {
+    }
+    if (c.getAttribute("id") != null && c.checked) {
       if (args.length > 0)
         args += '&';
       args += c.getAttribute("id") + '=true';
@@ -53,7 +58,7 @@ function constructArgs(rootElement) {
       if (v.length > 0) {
         if (args.length > 0)
           args += '&';
-        args +=  v;
+        args += v;
       }
     }
   }

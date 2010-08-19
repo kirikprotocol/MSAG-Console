@@ -4,10 +4,9 @@ import ru.novosoft.smsc.admin.AdminContext;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.util.xml.WebXml;
 import ru.novosoft.smsc.web.auth.Authenticator;
-import ru.novosoft.smsc.web.auth.XmlAuthenticator;
 import ru.novosoft.smsc.web.config.AppliableConfiguration;
+import ru.novosoft.smsc.web.config.SmscStatusManager;
 
-import java.io.File;
 import java.util.concurrent.CountDownLatch;
 
 /**
@@ -24,6 +23,8 @@ public class WebContext {
   private AdminContext adminContext;
 
   private AppliableConfiguration appliableConfiguration;
+
+  private SmscStatusManager smscStatusManager;
 
   private static final CountDownLatch initLatch = new CountDownLatch(1);
 
@@ -52,6 +53,8 @@ public class WebContext {
     } catch (AdminException e) {
       throw new InitException(e);
     }
+
+    smscStatusManager = new SmscStatusManager(adminContext);
   }
 
   public WebXml getWebXml() {
@@ -60,6 +63,10 @@ public class WebContext {
 
   public Authenticator getAuthenticator() {
     return authenticator;
+  }
+
+  public SmscStatusManager getSmscStatusManager() {
+    return smscStatusManager;
   }
 
   public AdminContext getAdminContext() {

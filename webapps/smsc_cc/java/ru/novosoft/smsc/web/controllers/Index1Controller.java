@@ -1,11 +1,10 @@
 package ru.novosoft.smsc.web.controllers;
 
+import ru.novosoft.smsc.web.components.data_table.DataTableModel;
+import ru.novosoft.smsc.web.components.data_table.DataTableRow;
+import ru.novosoft.smsc.web.components.data_table.DataTableSortOrder;
 import ru.novosoft.smsc.web.components.dynamic_table.TableModel;
 import ru.novosoft.smsc.web.components.dynamic_table.TableRow;
-import ru.novosoft.smsc.web.components.paged_table.PagedTableModel;
-import ru.novosoft.smsc.web.components.paged_table.PagedTableRow;
-import ru.novosoft.smsc.web.components.paged_table.PagedTableSortOrder;
-import ru.novosoft.smsc.web.components.paged_table.SelectElementEvent;
 
 import javax.faces.event.ActionEvent;
 import java.io.Serializable;
@@ -46,11 +45,8 @@ public class Index1Controller implements Serializable {
     return "GREEN";
   }
 
-  public PagedTableModel getStaticModel() {
+  public DataTableModel getStaticModel() {
     return new MyPagedTableModel();
-  }
-
-  public void setStaticModel(PagedTableModel m) {
   }
 
   public List<String> getColumn3Values() {
@@ -69,13 +65,20 @@ public class Index1Controller implements Serializable {
     return true;
   }
 
+  public void setFilter(String filter) {
+    System.out.println("SET FILTER " + filter);
+  }
+
+  public String getFilter() {
+    return "";
+  }
+
   public void myButton(ActionEvent e) {
     System.out.println("MY BUTTON CALLED");
   }
 
   public void edit(ActionEvent e) {
-    SelectElementEvent ev = (SelectElementEvent)e;
-    System.out.println("EDIT CALLED " + ev.getColumnName() + " " + ev.getRowNumber());
+    System.out.println("EDIT CALLED");
   }
 
   public String getLabel() {
@@ -86,7 +89,7 @@ public class Index1Controller implements Serializable {
     return counter++;
   }
 
-  private class MyPagedTableModel implements PagedTableModel {
+  private class MyPagedTableModel extends DataTableModel {
 
     private final List<String> strings = new ArrayList<String>();
 
@@ -95,7 +98,7 @@ public class Index1Controller implements Serializable {
         strings.add(String.valueOf(i));
     }
 
-    public List<PagedTableRow> getRows(int startPos, int count, final PagedTableSortOrder sortOrder) {
+    public List<DataTableRow> getRows(int startPos, int count, final DataTableSortOrder sortOrder) {
       if (sortOrder != null) {
         Collections.sort(strings, new Comparator<String>() {
           public int compare(String o1, String o2) {
@@ -106,7 +109,7 @@ public class Index1Controller implements Serializable {
           }
         });
       }
-      List<PagedTableRow> rows = new ArrayList<PagedTableRow>();
+      List<DataTableRow> rows = new ArrayList<DataTableRow>();
       for (int i = startPos; i < startPos + count && i < strings.size(); i++) {
         Map<String, Object> val = new HashMap<String, Object>();
         val.put("column1", strings.get(i));
@@ -129,7 +132,7 @@ public class Index1Controller implements Serializable {
       return strings.size();
     }
 
-    private class Row implements PagedTableRow {
+    private class Row implements DataTableRow {
 
       private final Map<String, Object> values;
 
@@ -139,6 +142,10 @@ public class Index1Controller implements Serializable {
 
       public Object getData(String columnId) {
         return values.get(columnId);
+      }
+
+      public Object getInnerData() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
       }
     }
   }

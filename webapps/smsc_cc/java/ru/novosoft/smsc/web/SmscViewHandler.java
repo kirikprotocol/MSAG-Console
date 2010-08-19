@@ -46,9 +46,9 @@ public class SmscViewHandler extends FaceletViewHandler {
 
     String p = context.getExternalContext().getRequestParameterMap().get("eyelineComponentUpdate");
     if (p != null) {
-      buildView(context, viewToRender);
-      final UIComponent c = lookupComponent(viewToRender, p);
-      deepDecode(context, c);
+//      buildView(context, viewToRender);
+//      final UIComponent c = lookupComponent(viewToRender, p);
+//      deepDecode(context, c);
       super.renderView(new AjaxFacesContext(context, p), viewToRender);
     } else {
       super.renderView(context, viewToRender);

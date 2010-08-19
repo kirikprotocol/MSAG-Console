@@ -117,11 +117,11 @@ public class TestAdminContext extends AdminContext {
   }
 
   public TestAdminContext() throws AdminException {
-    this(new File("."), new File("test", "webconfig.xml"), 2);
+    this(new File("."), new File("test", "webconfig.xml"), 3);
   }
 
   public TestAdminContext(File appBaseDir, File initFile) throws AdminException {
-    this(appBaseDir, initFile, 2);
+    this(appBaseDir, initFile, 3);
   }
 
 

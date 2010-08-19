@@ -6,7 +6,7 @@
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:eye="http://taglib.eyeline.mobi">
 
-<ui:composition template="/templates/main.xhtml" >
+<ui:composition template="/templates/main.xhtml">
 
   <ui:define name="sme_title">
     <eye:pageTitle title="#{msg['smsc.title']}"/>
@@ -14,7 +14,22 @@
 
   <ui:define name="content">
 
+    <h:form>
+      <eye:pagedTable value="#{smscStatus.smsCenters}" pageSize="100" var="qwerty">
+        <eye:ptImageColumn name="connected" title="" valueMapping="1:/images/ic_internal.gif;0:/images/ic_disconnct.gif"
+                           width="5%"/>
+        <eye:ptTextColumn name="instanceNumber" title="#{msg['status.page.instance.number']}" width="25%"/>
+        <eye:ptTextColumn name="onlineHost" title="#{msg['status.page.online.host']}" textColor="GREEN" width="25%"/>
+        <eye:ptTextColumn name="status" title="#{msg['status.page.status']}" width="20%"/>
+        <eye:ptTextColumn name="action" title="#{qwerty.hello}" actionListener="#{smscStatus.changeStatus}"/>
+      </eye:pagedTable>
 
+      <eye:buttons>
+        <eye:button title="#{msg['status.page.start.all']}" actionListener="#{smscStatus.startAll}"/>
+        <eye:button title="#{msg['status.page.stop.all']}" actionListener="#{smscStatus.stopAll}"/>
+        <eye:space/>
+      </eye:buttons>
+    </h:form>
   </ui:define>
 
 </ui:composition>

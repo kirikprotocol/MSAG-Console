@@ -1,14 +1,14 @@
-package ru.novosoft.smsc.web.components.paged_table;
+package ru.novosoft.smsc.web.components.data_table;
 
 /**
  * @author Artem Snopkov
  */
-public class PagedTableSortOrder {
+public class DataTableSortOrder {
 
   private final String columnId;
   private final boolean asc;
 
-  public PagedTableSortOrder(String columnId, boolean asc) {
+  public DataTableSortOrder(String columnId, boolean asc) {
     this.columnId = columnId;
     this.asc = asc;
   }

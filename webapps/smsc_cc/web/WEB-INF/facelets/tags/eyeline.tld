@@ -111,10 +111,10 @@
   </tag>
 
   <tag>
-    <name>pagedTable</name>
+    <name>dataTable</name>
     <attribute>
       <name>value</name>
-      <type>ru.novosoft.smsc.web.components.paged_table.PagedTableModel</type>
+      <type>ru.novosoft.smsc.web.components.data_table.DataTableModel</type>
       <required>true</required>
     </attribute>
     <attribute>
@@ -125,14 +125,15 @@
       <name>pageSize</name>
       <type>int</type>
     </attribute>
+    <attribute>
+      <name>rowSelection</name>
+      <type>boolean</type>
+    </attribute>
+
   </tag>
 
   <tag>
-    <name>ptFilter</name>
-  </tag>
-
-  <tag>
-    <name>ptTextColumn</name>
+    <name>column</name>
     <attribute>
       <name>name</name>
       <type>java.lang.String</type>
@@ -144,44 +145,26 @@
       <required>true</required>
     </attribute>
     <attribute>
-      <name>actionListener</name>
-      <type>java.lang.String</type>
-    </attribute>
-    <attribute>
       <name>sortable</name>
       <type>boolean</type>
     </attribute>
     <attribute>
-      <name>textColor</name>
+      <name>width</name>
+      <type>java.lang.String</type>
+    </attribute>
+    <attribute>
+      <name>align</name>
+      <type>java.lang.String</type>
+    </attribute>
+    <attribute>
+      <name>var</name>
+      <type>java.lang.String</type>
+    </attribute>
+    <attribute>
+      <name>rowIndexVar</name>
       <type>java.lang.String</type>
     </attribute>
   </tag>
 
-  <tag>
-    <name>ptImageColumn</name>
-    <attribute>
-      <name>name</name>
-      <type>java.lang.String</type>
-      <required>true</required>
-    </attribute>
-    <attribute>
-      <name>title</name>
-      <type>java.lang.String</type>
-      <required>true</required>
-    </attribute>
-    <attribute>
-      <name>actionListener</name>
-      <type>java.lang.String</type>
-    </attribute>
-    <attribute>
-      <name>sortable</name>
-      <type>boolean</type>
-    </attribute>
-    <attribute>
-      <name>valueMapping</name>
-      <type>java.lang.String</type>
-      <required>true</required>
-    </attribute>
-  </tag>
 
 </taglib>

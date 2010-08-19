@@ -17,8 +17,6 @@ public class DynamicTableRenderer extends Renderer {
 
   public void decode(FacesContext context, UIComponent component) {
 
-    System.out.println("DYNAMIC TABLE DECODE");
-
     DynamicTable c = (DynamicTable) component;
 
     TableModel newModel = new TableModel();
