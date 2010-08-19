@@ -14,4 +14,4 @@ sme/txrx txrx -lcore-network -lutil -lsms -lutil $(SOCKETLIB) -lcore-threads -lp
 -sme/datasmtest datasmtest -lcore-network -lutil -lsms -lutil $(SOCKETLIB) -lcore-threads -lpthread -lrt -lutil-recoder-recode_dll
 -sme/sme sme
 sme/uberflooder uberflooder -lcore-threads $(__LIBRARIES) -llogger
-sme/realloadsim realloadsim -lcore-threads -lsms -lcore-network -lutil $(__LIBRARIES) -llogger -lsocket -lrt -lnsl -lpthread -lreadline -ltermcap 
+sme/realloadsim realloadsim -lcore-threads -lsms -lcore-network -lutil $(__LIBRARIES) -llogger $(SOCKETLIB) -lrt -lnsl -lpthread -lreadline -ltermcap
