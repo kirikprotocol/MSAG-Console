@@ -15,7 +15,6 @@ public class DataTableColumn extends UIComponentBase {
   private boolean sortable;
   private String var;
   private String rowNumVar;
-  private DataTableRow row;
   private int rowNum;
   private ConstantExpression varExpression;
   private ConstantExpression rowNumExpression;
@@ -68,14 +67,6 @@ public class DataTableColumn extends UIComponentBase {
     this.var = var;
   }
 
-  public DataTableRow getRow() {
-    return row;
-  }
-
-  public void setRow(DataTableRow row) {
-    this.row = row;
-  }
-
   public int getRowNum() {
     return rowNum;
   }
@@ -123,7 +114,6 @@ public class DataTableColumn extends UIComponentBase {
     values[5] = rowNumVar;
     values[6] = sortable;
     values[7] = var;
-    values[8] = row;
     values[9] = rowNum;
     values[10] = varExpression;
     values[11] = rowNumExpression;
@@ -140,7 +130,6 @@ public class DataTableColumn extends UIComponentBase {
     rowNumVar = (String)values[5];
     sortable = (Boolean) values[6];
     var = (String) values[7];
-    row = (DataTableRow) values[8];
     rowNum = (Integer) values[9];
     varExpression = (ConstantExpression)values[10];
     rowNumExpression = (ConstantExpression)values[11];

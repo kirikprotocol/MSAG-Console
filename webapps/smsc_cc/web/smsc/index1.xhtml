@@ -33,9 +33,12 @@
       </div>
 
       <t:div id="asdf">
-        <eye:dataTable value="#{index1.staticModel}" rowSelection="true">
+        <eye:dataTable value="#{index1.staticModel}" selectedRows="#{index1.selectedRows}">
           <eye:column name="column1" title="column1" var="vvv" width="50%" sortable="true">
             <h:outputText value="#{vvv}"/>
+            <eye:innerData var="qwe">
+              <h:outputText value="#{qwe}"/>                              
+            </eye:innerData>
           </eye:column>
           <eye:column name="column2" title="column2" rowIndexVar="rowNum" width="50%" sortable="false" align="center">
             <h:graphicImage value="/images/ic_online.gif" alt="" rendered="#{rowNum % 2 == 0}"/>

@@ -15,26 +15,50 @@ public class DataTableColumnRenderer extends Renderer {
 
   public void encodeBegin(FacesContext context, UIComponent component) throws IOException {
 
+    DataTableColumn c = (DataTableColumn) component;
+    if (c.getRowNum() == -1) // Skip header
+      return;
+
     Writer w = context.getResponseWriter();
 
     Integer rowNum = currentRowNumber.get();
     if (rowNum == null)
       rowNum = -1;
 
-    DataTableColumn c = (DataTableColumn) component;
-    DataTable t = (DataTable)c.getParent();
+    DataTable t = (DataTable) c.getParent();
+    DataTableRow row = t.getRows().get(c.getRowNum());
+
     if (c.getRowNum() != rowNum) {
-      if (rowNum != -1)
+      if (rowNum != -1 && c.getRowNum() > 0) {
         w.append("\n</tr>");
-      w.append("<tr class=\"row" + (c.getRowNum() & 1) + "\">");
+
+        DataTableRow prevRow = t.getRows().get(c.getRowNum() - 1);
+
+        if (prevRow.getInnerText() != null) {
+          w.append("\n<tr class=\"row" + ((c.getRowNum() - 1) & 1) + "\" id=\"innerData" + t.getId() + prevRow.getId() + "\" style=\"display:none\">");
+          w.append("\n  <td align=\"left\" colspan=\"" + (t.getColumns().size() + 2) + "\">" + prevRow.getInnerText() + "</td>");
+          w.append("\n</tr>");
+        }
+      }
+      w.append("\n<tr class=\"row" + (c.getRowNum() & 1) + "\">");
       if (t.isRowSelection())
-        w.append("\n  <td><input class=\"check\" type=\"checkbox\" name=\"" + t.getId() + "_rowCheck" + c.getRowNum() + "\" id=\"" + t.getId() + "_rowCheck" + c.getRowNum() + "\"" + "/></td>");
+        w.append("\n  <td><input class=\"check\" type=\"checkbox\" name=\"" + t.getId() + "_row" + row.getId() + "\" id=\"" + t.getId() + "_rowCheck" + c.getRowNum() + "\"" + "/></td>");
+      if (t.hasInnerData()) {
+        if (row.getInnerText() != null)
+          w.append("\n  <td class=\"clickable\" onclick=\"pagedTable" + t.getId() + ".showRowInnerData('" + t.getId() + row.getId() + "')\"><div id=\"innerDataHeader" + t.getId() + row.getId() + "\" class=\"inner_data_closed\">&nbsp;</div></td>");
+        else
+          w.append("\n  <td>&nbsp</td>");
+      }
       currentRowNumber.set(c.getRowNum());
     }
-    w.append("<td align=\"" + c.getAlign() + "\">");
+    w.append("\n  <td align=\"" + c.getAlign() + "\">");
   }
 
   public void encodeEnd(FacesContext context, UIComponent component) throws IOException {
+    DataTableColumn c = (DataTableColumn) component;
+    if (c.getRowNum() == -1) // Skip header
+      return;
+
     Writer w = context.getResponseWriter();
     w.append("</td>");
   }

@@ -126,10 +126,24 @@ function DataTable(tableId, updateUsingSubmit) {
    * Инвертирует выделение всех строк текущей страницы
    */
   this.selectAll = function () {
-    for (var i = 0; i < previousPageSizeElement.value; i++) {
+    var startPos = previousPageSizeElement.value * pageElement.value;
+    var endPos = startPos + previousPageSizeElement.value;
+    for (var i = startPos; i < endPos; i++) {
       var c = document.getElementById(tableId + '_rowCheck' + i);
       if (c == null) break;
       c.checked = !c.checked;
+    }
+  };
+
+  this.showRowInnerData = function(rowId) {
+    var element = document.getElementById("innerData" + rowId);
+    var headerElement = document.getElementById("innerDataHeader" + rowId);
+    if (element.style.display == "none") {
+      element.style.display="";
+      headerElement.className = 'inner_data_opened';
+    } else {
+      element.style.display="none";
+      headerElement.className = 'inner_data_closed';
     }
   };
 

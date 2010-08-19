@@ -71,3 +71,13 @@ table.list tr.row11 th {
   background-color: #F8F6EE;
   border-bottom: 1px solid #E6E3D8;
 }
+
+div.inner_data_opened {
+  width: 15px;
+  background-image: url(../images/list_opened.gif);
+}
+
+div.inner_data_closed {
+  width: 15px;
+  background-image: url(../images/list_closed.gif);
+}

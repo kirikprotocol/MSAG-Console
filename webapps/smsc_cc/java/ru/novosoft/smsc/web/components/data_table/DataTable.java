@@ -1,5 +1,6 @@
 package ru.novosoft.smsc.web.components.data_table;
 
+import javax.faces.component.UIComponent;
 import javax.faces.component.UIComponentBase;
 import javax.faces.context.FacesContext;
 import java.util.ArrayList;
@@ -17,13 +18,30 @@ public class DataTable extends UIComponentBase {
   private Integer autoUpdate;
   private boolean rowSelection;
   private boolean updateUsingSubmit;
-  private List<Integer> selectedRows = new ArrayList<Integer>();
+  private List<String> selectedRows = new ArrayList<String>();
 
   private int currentRowNum;
-  private DataTableRow currentRow;
+  private List<DataTableRow> rows;
 
   public String getFamily() {
     return "Eyeline";
+  }
+
+  public List<DataTableColumn> getColumns() {
+    List<DataTableColumn> result = new ArrayList<DataTableColumn>();
+    Integer rowNum = null;
+    for (UIComponent c : getChildren()) {
+      if (c instanceof DataTableColumn) {
+        DataTableColumn col = (DataTableColumn) c;
+        if (rowNum == null)
+          rowNum = col.getRowNum();
+        if (rowNum == col.getRowNum())
+          result.add((DataTableColumn) c);
+        else
+          break;
+      }
+    }
+    return result;
   }
 
   public String getRendererType() {
@@ -88,11 +106,11 @@ public class DataTable extends UIComponentBase {
     selectedRows.clear();
   }
 
-  public void addSelectedRow(int rowNum) {
-    selectedRows.add(rowNum);
+  public void addSelectedRow(String rowId) {
+    selectedRows.add(rowId);
   }
 
-  public List<Integer> getSelectedRows() {
+  public List<String> getSelectedRows() {
     return selectedRows;
   }
 
@@ -104,12 +122,19 @@ public class DataTable extends UIComponentBase {
     this.currentRowNum = currentRowNum;
   }
 
-  public DataTableRow getCurrentRow() {
-    return currentRow;
+  public List<DataTableRow> getRows() {
+    return rows;
   }
 
-  public void setCurrentRow(DataTableRow currentRow) {
-    this.currentRow = currentRow;
+  public void setRows(List<DataTableRow> rows) {
+    this.rows = rows;
+  }
+
+  public boolean hasInnerData() {
+    for (DataTableRow row : rows)
+      if (row.getInnerText() != null)
+        return true;
+    return false;
   }
 
   public boolean isUpdateUsingSubmit() {
@@ -127,7 +152,6 @@ public class DataTable extends UIComponentBase {
     values[3] = autoUpdate;
     values[4] = currentPage;
     values[5] = pageSize;
-    values[6] = selectedRows;
     values[9] = sortOrder;
     values[10] = rowSelection;
     return (values);
@@ -136,11 +160,10 @@ public class DataTable extends UIComponentBase {
   public void restoreState(FacesContext context, Object state) {
     Object[] values = (Object[]) state;
     super.restoreState(context, values[0]);
-    updateUsingSubmit = (Boolean)values[1];
+    updateUsingSubmit = (Boolean) values[1];
     autoUpdate = (Integer) values[3];
     currentPage = (Integer) values[4];
     pageSize = (Integer) values[5];
-    selectedRows = (List<Integer>) values[6];
     sortOrder = (String) values[9];
     rowSelection = (Boolean) values[10];
   }

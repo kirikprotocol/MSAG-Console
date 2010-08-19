@@ -55,16 +55,20 @@ public class DataTableColumnHandler extends ComponentHandler {
     DataTableColumn column = (DataTableColumn) c;
 
     DataTable t = (DataTable)ctx.getVariableMapper().resolveVariable("dataTable").getValue(ctx);
-    column.setRow(t.getCurrentRow());
     column.setRowNum(t.getCurrentRowNum());
+
+    if (t.getCurrentRowNum() < 0)
+      return;
+    
+    DataTableRow row = t.getRows().get(t.getCurrentRowNum());
 
     ConstantExpression varExpression = column.getVarExpression();
     if (varExpression == null) {
-      varExpression = new ConstantExpression(t.getCurrentRow().getData(column.getName()));
+      varExpression = new ConstantExpression(row.getData(column.getName()));
       column.setVarExpression(varExpression);
       ctx.getVariableMapper().setVariable(column.getVar(), varExpression);
     } else
-      varExpression.setValue(ctx, t.getCurrentRow().getData(column.getName()));
+      varExpression.setValue(ctx, row.getData(column.getName()));
 
     ConstantExpression rowNumExpression = column.getRowNumExpression();
     if (rowNumExpression == null) {

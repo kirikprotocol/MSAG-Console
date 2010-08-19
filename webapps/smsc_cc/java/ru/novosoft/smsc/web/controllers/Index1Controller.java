@@ -20,14 +20,6 @@ public class Index1Controller implements Serializable {
 
   public Index1Controller() {
     model = new TableModel();
-//    for (int i=0; i<10; i++) {
-//      TableRow row = new TableRow();
-//      row.setValue("column1", "value1-" + i);
-//      row.setValue("column2", "value2-" + i);
-//      row.setValue("column3", "value" + (i%3 + 1));
-//      row.setValue("column4", "value" + (i%3 + 4));
-//      model.addRow(row);
-//    }
   }
 
   public TableModel getModel() {
@@ -35,18 +27,20 @@ public class Index1Controller implements Serializable {
   }
 
   public void setModel(TableModel model) {
-    System.out.println("SET MODEL CALLED");
     for (TableRow row : model.getRows())
       System.out.println(row.getValue("column1") + " | " + row.getValue("column2"));
     this.model = model;
   }
 
-  public String getColor() {
-    return "GREEN";
-  }
 
   public DataTableModel getStaticModel() {
     return new MyPagedTableModel();
+  }
+
+  public void setSelectedRows(List rows) {
+    System.out.println("SET SELECTED ROWS:");
+    for (Object o : rows)
+      System.out.println("  " + o);
   }
 
   public List<String> getColumn3Values() {
@@ -89,7 +83,7 @@ public class Index1Controller implements Serializable {
     return counter++;
   }
 
-  private class MyPagedTableModel extends DataTableModel {
+  private class MyPagedTableModel implements DataTableModel {
 
     private final List<String> strings = new ArrayList<String>();
 
@@ -118,15 +112,7 @@ public class Index1Controller implements Serializable {
         rows.add(new Row(val));
       }
       return rows;
-    }
-
-    public void setSelectedRows(int[] rows) {
-      if (rows != null) {
-        System.out.println("SELECTED ROWS: ");
-        for (int i = 0; i < rows.length; i++)
-          System.out.println(rows[i]);
-      }
-    }
+    }    
 
     public int getRowsCount() {
       return strings.size();
@@ -140,12 +126,18 @@ public class Index1Controller implements Serializable {
         this.values = values;
       }
 
-      public Object getData(String columnId) {
-        return values.get(columnId);
+      public String getId() {
+        return (String)values.get("column1");
       }
 
-      public Object getInnerData() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+      public Object getData(String columnName) {
+        return values.get(columnName);
+      }
+
+      public Object getInnerText() {
+        if (Integer.parseInt((String)values.get("column1")) %2 == 1)
+          return "Inner text" + (String)values.get("column1");
+        return null;
       }
     }
   }

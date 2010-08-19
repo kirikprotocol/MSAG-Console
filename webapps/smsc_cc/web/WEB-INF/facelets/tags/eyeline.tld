@@ -126,10 +126,9 @@
       <type>int</type>
     </attribute>
     <attribute>
-      <name>rowSelection</name>
-      <type>boolean</type>
+      <name>selectedRows</name>
+      <type>java.util.List</type>
     </attribute>
-
   </tag>
 
   <tag>

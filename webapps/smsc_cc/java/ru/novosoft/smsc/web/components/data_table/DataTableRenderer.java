@@ -27,12 +27,12 @@ public class DataTableRenderer extends Renderer {
       column = null;
     t.setSortOrder(column);
 
-    String rowCheckPrefix = t.getId() + "_rowCheck";
+    String rowCheckPrefix = t.getId() + "_row";
     t.clearSelectedRows();
     for (Map.Entry<String, String> e : reqParams.entrySet()) {
       if (e.getKey().startsWith(rowCheckPrefix)) {
-        int rowNum = Integer.parseInt(e.getKey().substring(rowCheckPrefix.length()));
-        t.addSelectedRow(rowNum + t.getCurrentPage() * t.getPageSize());
+        String rowId = e.getKey().substring(rowCheckPrefix.length());
+        t.addSelectedRow(rowId);
       }
     }
 
@@ -100,13 +100,16 @@ public class DataTableRenderer extends Renderer {
     w.append("\n<table class=\"list\" cellspacing=\"1\">");
     if (t.isRowSelection())
       w.append("\n<col width=\"1%\"/>");
+    if (t.hasInnerData())
+      w.append("\n<col width=\"1%\"/>");
     for (DataTableColumn column : columns)
       w.append("\n<col width=\"" + column.getWidth() + "\" align=\"" + column.getAlign() + "\"/>");
 
     w.append("\n<thead>");
     if (t.isRowSelection())
       w.append("\n<th class=\"ico\"><img src=\"" + ctxPath + "/images/ico16_checked_sa.gif\" class=\"ico16\" onclick=\"javascript:pagedTable" + t.getId() + ".selectAll()\"></th>");
-
+    if (t.hasInnerData())
+      w.append("\n<th>&nbsp;</th>");
     for (DataTableColumn column : columns) {
       String classStr = "";
       String sortOrder = column.getName();
@@ -134,7 +137,16 @@ public class DataTableRenderer extends Renderer {
 
     Writer w = context.getResponseWriter();
 
-    w.append("\n</tr>");
+    if (t.getRows().size() > 0) {
+      w.append("\n</tr>");
+      int lastRowNum = t.getRows().size() - 1;
+      DataTableRow lastRow = t.getRows().get(lastRowNum);
+      if (lastRow.getInnerText() != null) {
+        w.append("\n<tr class=\"row" + ((lastRowNum) & 1) + "\" id=\"innerData" + t.getId() + lastRow.getId() + "\" style=\"display:none\">");
+        w.append("\n  <td align=\"left\" colspan=\"" + (t.getColumns().size() + 2) + "\">" + lastRow.getInnerText() + "</td>");
+        w.append("\n</tr>");
+      }
+    }
     w.append("\n</tbody>");
     w.append("\n</table>");
 

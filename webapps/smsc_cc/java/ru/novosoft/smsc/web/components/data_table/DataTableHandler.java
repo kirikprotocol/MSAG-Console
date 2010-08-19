@@ -6,6 +6,7 @@ import com.sun.facelets.tag.jsf.ComponentConfig;
 import com.sun.facelets.tag.jsf.ComponentHandler;
 
 import javax.faces.component.UIComponent;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -16,7 +17,7 @@ public class DataTableHandler extends ComponentHandler {
   private final TagAttribute value;
   private final TagAttribute autoUpdate;
   private final TagAttribute pageSize;
-  private final TagAttribute rowSelection;
+  private final TagAttribute selectedRows;
   private final TagAttribute updateUsingSubmit;
 
   public DataTableHandler(ComponentConfig config) {
@@ -25,7 +26,7 @@ public class DataTableHandler extends ComponentHandler {
     value = getRequiredAttribute("value");
     autoUpdate = getAttribute("autoUpdate");
     pageSize = getAttribute("pageSize");
-    rowSelection = getAttribute("rowSelection");
+    selectedRows = getAttribute("selectedRows");
     updateUsingSubmit = getAttribute("filter");
   }
 
@@ -35,8 +36,8 @@ public class DataTableHandler extends ComponentHandler {
       t.setAutoUpdate(autoUpdate.getInt(ctx));
     if (pageSize != null)
       t.setPageSize(pageSize.getInt(ctx));
-    if (rowSelection != null)
-      t.setRowSelection(rowSelection.getBoolean(ctx));
+    if (selectedRows != null)
+      t.setRowSelection(true);
     if (updateUsingSubmit != null)
       t.setUpdateUsingSubmit(updateUsingSubmit.getBoolean(ctx));
 
@@ -49,35 +50,33 @@ public class DataTableHandler extends ComponentHandler {
 
     DataTableModel m = (DataTableModel) value.getValueExpression(ctx, DataTableModel.class).getValue(ctx);
     t.setModel(m);
-    
-    if (t.getSelectedRows().size() > 0) {
-      int[] rows = new int[t.getSelectedRows().size()];
-      for (int i = 0; i < rows.length; i++)
-        rows[i] = t.getSelectedRows().get(i);
-      m.setSelectedRows(rows);
-    }
+
+    if (t.getSelectedRows().size() > 0 && selectedRows != null)
+      selectedRows.getValueExpression(ctx, List.class).setValue(ctx, new ArrayList<String>(t.getSelectedRows()));
 
     DataTableSortOrder s = null;
     if (t.getSortOrder() != null) {
       boolean asc = t.getSortOrder().charAt(0) == '-';
-      if (asc)
-        s = new DataTableSortOrder(t.getSortOrder().substring(1), true);
-      else
-        s = new DataTableSortOrder(t.getSortOrder().substring(0), false);
+      s = (asc) ? new DataTableSortOrder(t.getSortOrder().substring(1), true) : new DataTableSortOrder(t.getSortOrder().substring(0), false);
     }
 
-    ctx.getVariableMapper().setVariable("dataTable", new ConstantExpression(t));
 
     int startPos = t.getCurrentPage() * t.getPageSize();
     List<DataTableRow> rows = m.getRows(startPos, t.getPageSize(), s);
-    int i = 0;
-    for (DataTableRow row : rows) {
-      t.setCurrentRow(row);
-      t.setCurrentRowNum(i + startPos);
+    t.setRows(rows);
+    ctx.getVariableMapper().setVariable("dataTable", new ConstantExpression(t));
 
+    // Header
+    t.setCurrentRowNum(-1);
+    nextHandler.apply(ctx, c);
+
+    // Body
+    for (int i=0; i<rows.size(); i++) {
+      t.setCurrentRowNum(i);
       nextHandler.apply(ctx, c);
-      i++;
     }
+
+    ctx.getVariableMapper().setVariable("dataTable", null);
   }
 
 }
