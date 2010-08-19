@@ -138,7 +138,7 @@ bool LongCallManagerImpl::call(LongCallContextBase* context)
                         // transit
                         bill::BillingManager::Instance().RollbackTransit(*bp,static_cast<LongCallContext*>(context));
                     } else {
-                        bill::BillingManager::Instance().Rollback(bp->billId(), (LongCallContext*)context);
+                        bill::BillingManager::Instance().Rollback(bp->billId(), bp->isTimeout(), (LongCallContext*)context);
                     }
                 } else if ( context->callCommandId == BILL_CHECK ) {
                     bill::BillCallParams* bcp = static_cast<bill::BillCallParams*>(context->getParams());

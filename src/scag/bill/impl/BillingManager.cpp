@@ -623,7 +623,7 @@ void BillingManagerImpl::Commit(billid_type billId, lcm::LongCallContext* lcmCtx
 }
 
 
-void BillingManagerImpl::Rollback(billid_type billId, lcm::LongCallContext* lcmCtx)
+void BillingManagerImpl::Rollback(billid_type billId, bool timeout, lcm::LongCallContext* lcmCtx)
 {
     smsc_log_debug(logger, "Rolling back billId=%lld...", billId);
 
@@ -639,8 +639,8 @@ void BillingManagerImpl::Rollback(billid_type billId, lcm::LongCallContext* lcmC
     }
     #endif
 */
-    ProcessResult( "rollback", 
-                   TRANSACTION_CALL_ROLLBACK, p.get());
+    ProcessResult( timeout ? "rollback(timeout)" : "rollback",
+                   timeout ? TRANSACTION_TIME_OUT : TRANSACTION_CALL_ROLLBACK, p.get());
 }
 
 

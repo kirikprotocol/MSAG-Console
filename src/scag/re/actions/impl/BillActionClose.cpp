@@ -64,7 +64,7 @@ bool BillActionClose::RunBeforePostpone(ActionContext& context)
             LongCallContext& lcmCtx = context.getSession().getLongCallContext();
             lcmCtx.callCommandId = actionCommit_ ? BILL_COMMIT : BILL_ROLLBACK;
             bill::EwalletCloseCallParams* bp = 
-                new bill::EwalletCloseCallParams(trans->billId(),&lcmCtx);
+                new bill::EwalletCloseCallParams(trans->billId(),true,&lcmCtx);
             lcmCtx.setParams(bp);
             return true;
         } else {
@@ -72,7 +72,7 @@ bool BillActionClose::RunBeforePostpone(ActionContext& context)
                 if (actionCommit_)
                     trans->commit();
                 else
-                    trans->rollback();
+                    trans->rollback(false);
             } catch (SCAGException& e)
             {        
                 smsc_log_error(logger,"Action '%s' error. Delails: %s", opname(), e.what());

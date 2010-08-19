@@ -79,7 +79,7 @@ protected: // static
     static sync::Mutex expMtx_;
     static bool expProc_;
     static ResponseRegistry reg_;
-    static std::vector<int> allowedUnknownOptionals;
+//    static std::vector<int> allowedUnknownOptionals;
 
 protected:
     SmppCommandQueue*     queue_;

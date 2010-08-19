@@ -187,7 +187,8 @@ public:
     virtual billid_type Open( BillOpenCallParams& openCallParams,
                                lcm::LongCallContext* lcmCtx = NULL);
     virtual void Commit( billid_type billId, lcm::LongCallContext* lcmCtx = NULL);
-    virtual void Rollback( billid_type billId, lcm::LongCallContext* lcmCtx = NULL );
+    virtual void Rollback( billid_type billId, bool timeout, 
+                           lcm::LongCallContext* lcmCtx = NULL );
     virtual void CommitTransit( BillCloseCallParams& closeCallParams,
                                 lcm::LongCallContext* lcmCtx = NULL );
     virtual void RollbackTransit( BillCloseCallParams& closeCallParams,

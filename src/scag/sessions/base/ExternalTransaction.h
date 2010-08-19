@@ -20,7 +20,7 @@ public:
         if ( active_ ) __trace__( "external transaction is still active!" );
     }
     // virtual std::string transactionId() const = 0;
-    virtual void rollback() = 0;
+    virtual void rollback( bool timeout ) = 0;
 
     virtual void commit() = 0;
 

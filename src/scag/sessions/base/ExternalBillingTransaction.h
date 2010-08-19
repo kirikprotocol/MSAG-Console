@@ -26,8 +26,8 @@ public:
         bill::BillingManager::Instance().Commit( billid_ );
         active_ = false;
     }
-    virtual void rollback() {
-        bill::BillingManager::Instance().Rollback( billid_ );
+    virtual void rollback( bool timeout ) {
+        bill::BillingManager::Instance().Rollback( billid_, timeout );
         active_ = false;
     }
 

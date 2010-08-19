@@ -408,7 +408,9 @@ Session::~Session()
         delete serviceScopes_;
         delete contextScopes_;
         delete operationScopes_;
-        if (!quiet_) smsc_log_debug( logc_, "session=%p/%s -1", this, sessionKey().toString().c_str() );
+        if (!quiet_) {
+            smsc_log_debug( logc_, "session=%p/%s -1", this, sessionKey().toString().c_str() );
+        }
     } catch ( std::exception& e ) {
         smsc_log_error( log_, "Exception in session=%p/%s dtor: %s", this, sessionKey().toString().c_str(), e.what() );
     } catch (...) {
@@ -626,7 +628,7 @@ void Session::clear()
               i.Next(key,value); ) {
             if ( !value ) continue;
             try {
-                value->rollback();
+                value->rollback(true);
             } catch ( std::exception& e ) {
                 smsc_log_debug(log_, "exception while rolling back: %s", e.what() );
             } catch (...) {
@@ -705,7 +707,7 @@ bool Session::addTransaction( const char* id, std::auto_ptr<ExternalTransaction>
         }
         return true;
     } while ( false );
-    tr->rollback();
+    tr->rollback(false);
     return false;
 }
 
