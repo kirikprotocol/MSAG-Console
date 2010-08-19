@@ -79,7 +79,7 @@
         <param name="inactivityTimeOut" type="int">30</param>
         <param name="readTimeout" type="int">60</param>
         <param name="maxSmsPerSecond" type="int">1000</param>
-        <param name="transitOptionalTags" type="string"></param>
+        <!-- OBSOLETE param name="transitOptionalTags" type="string"></param -->
         <section name="core">
             <param name="respTimeout" type="int">70</param> <!-- number of seconds to wait for resp -->
             <param name="eventQueueLimit" type="int">1000</param>
