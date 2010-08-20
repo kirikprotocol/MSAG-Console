@@ -668,7 +668,10 @@ TO ALL: Insert log record for all significant changes & fixes here.
 2010-07-27 13:30 bukind
   pvss: bugfix: only profile packets are going to statistics (pings ain't)
 
---- current fixes ---
+=================================================================================================================
+2010-08-20 12:00 bukind msag-build-20100820
 2010-08-19 14:30 bukind
   msag: rollback has flag timeout to distinguish b/w rollback and rollback_timeout
   msag: transitOptionalTags param is obsolete
+
+--- current fixes ---

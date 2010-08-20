@@ -39,16 +39,16 @@ bill.reconnect_time_out=60
 
 status.show_interval=86400000
 language.default=ru
-scag.session.location=/opt/home/msag_user/msag_distr/storage/sessions
-scag2.session.location=/opt/home/msag_user/msag_distr/storage/sessions
+scag.session.location=/home/msag/distribs/upload.v2/msag/distr/storage/sessions
+scag2.session.location=/home/msag/distribs/upload.v2/msag/distr/storage/sessions
 session.expireInterval=60000
 
-logger.properties_file=/opt/home/msag_user/msag_distr/services/scag/logger.properties
+logger.properties_file=/home/msag/distribs/upload.v2/msag/distr/services/scag/logger.properties
 
-scag.rules.path=/opt/home/msag_user/msag_distr/services/scag/conf/rules
-scag2.rules.path=/opt/home/msag_user/msag_distr/services/scag2/conf/rules
-stat.dir=/opt/home/msag_user/msag_distr/storage/statistics
-stat.traffic_dir=/opt/home/msag_user/msag_distr/storage/statistics/traffic
+scag.rules.path=/home/msag/distribs/upload.v2/msag/distr/services/scag/conf/rules
+scag2.rules.path=/home/msag/distribs/upload.v2/msag/distr/services/scag2/conf/rules
+stat.dir=/home/msag/distribs/upload.v2/msag/distr/storage/statistics
+stat.traffic_dir=/home/msag/distribs/upload.v2/msag/distr/storage/statistics/traffic
 
 stat.perf_host=0.0.0.0
 stat.perf_port=23981
@@ -64,7 +64,7 @@ stat.sacc_host=127.0.0.1
 stat.sacc_connect_timeout=60
 stat.sacc_queue_length=1000
 
-stat.saa_dir=/opt/home/msag_user/msag_distr/storage/statistics/saa
+stat.saa_dir=/home/msag/distribs/upload.v2/msag/distr/storage/statistics/saa
 stat.rolling_interval=10
 
 pers_client.io_timeout=100
@@ -80,7 +80,7 @@ pers.connect_host=127.0.0.1
 pers.connections=100
 pers.io_timeout=300
 pers.ping_timeout=300
-pers.storage_dir=/opt/home/msag_user/msag_distr/storage/pers
+pers.storage_dir=/home/msag/distribs/upload.v2/msag/distr/storage/pers
 pers.hierarchical_mode=true
 pers.central_host=127.0.0.1
 pers.central_port=23890
@@ -93,9 +93,9 @@ pers.service.autostart=false
 cpers.listen_host=0.0.0.0
 cpers.port=23890
 cpers.connections=100
-cpers.storage_dir=/opt/home/msag_user/msag_distr/storage/cpers
+cpers.storage_dir=/home/msag/distribs/upload.v2/msag/distr/storage/cpers
 cpers.transact_timeout=200
-cpers.regions_config_name=/opt/home/msag_user/msag_distr/services/cpers/conf/region.xml
+cpers.regions_config_name=/home/msag/distribs/upload.v2/msag/distr/services/cpers/conf/region.xml
 cpers.service.args=Central Personalization
 cpers.service.autostart=false
 
@@ -105,10 +105,10 @@ pvss.storages=100
 pvss.nodes=1
 pvss.node=0
 pvss.storage_queue_size=20
-pvss.storage_dir=/opt/home/msag_user/msag_distr/storage/pvss
-pvss.location1_path=/opt/home/msag_user/msag_distr/storage/pvss/1
+pvss.storage_dir=/home/msag/distribs/upload.v2/msag/distr/storage/pvss
+pvss.location1_path=/home/msag/distribs/upload.v2/msag/distr/storage/pvss/1
 pvss.abonent_storage_name=abonent
-pvss.infrastruct_storage_dir=/opt/home/msag_user/msag_distr/storage/pvss/infrastruct
+pvss.infrastruct_storage_dir=/home/msag/distribs/upload.v2/msag/distr/storage/pvss/infrastruct
 pvss.service.args=PVSS
 pvss.service.autostart=true
 
@@ -147,5 +147,6 @@ rule_editor.ping_timeout=10000
 
 LC_ALL=ru_RU.WINDOWS-1251
 NLS_LANG=RUSSIAN_CIS.CL8MSWIN1251
-JAVA_HOME=/usr/jdk/j2sdk1.4.2_08
+# JAVA_HOME=/usr/jdk/j2sdk1.4.2_08
+JAVA_HOME=/usr/jdk/jdk1.5.0_17
 JAVA_OPTS=-Dscag_site -Xms64m -Xmx256m -Dfile.encoding=windows-1251 -Duser.timezone=Asia/Novosibirsk
