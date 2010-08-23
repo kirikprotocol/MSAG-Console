@@ -244,13 +244,13 @@ public class EditTaskPage extends DeliveriesPage {
       e.printStackTrace();
       throw new AdminException("Invalid field format", e);
     }
+    task.setDeliveryMode(pageData.deliveryMode);
     task.setRetryPolicy(pageData.retryPolicy);
     task.setSecret(pageData.secret);
     task.setSecretFlash(pageData.secretFlash);
     task.setSecretMessage(pageData.secretText);
     task.setTransactionMode(pageData.transactionMode);
-    task.setUseDataSm(pageData.useDataSm);
-    task.setDeliveryMode(pageData.deliveryMode);
+    task.setUseDataSm(pageData.useDataSm);    
     task.setOwner(pageData.owner.getName());
   }
 
