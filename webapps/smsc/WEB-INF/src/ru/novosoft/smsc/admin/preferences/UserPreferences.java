@@ -102,6 +102,8 @@ public class UserPreferences {
   private int infosmePriority;
   private boolean infosmeReplaceMessage = false;
   private String infosmeSvcType = "";
+  private boolean infosmeArchive = false;
+  private int infosmeArchiveTimeout = 720;
   private String infosmeSourceAddress = null;
   private Integer deliveryMode;
   private Date infosmePeriodStart = null;
@@ -544,6 +546,10 @@ public class UserPreferences {
             infosmeReplaceMessage = Boolean.valueOf(value).booleanValue();
           } else if(name.equals("infosme.svcType")) {
             infosmeSvcType = value;
+          } else if(name.equals("infosme.archive")) {
+            infosmeArchive = Boolean.valueOf(value).booleanValue();
+          } else if(name.equals("infosme.archiveTimeout")) {
+            infosmeArchiveTimeout = Integer.parseInt(value);
           } else if(name.equals("infosme.trackIntegrity")) {
             infosmeTrackIntegrity = Boolean.valueOf(value).booleanValue();
           } else if(name.equals("infosme.transactionMode")) {
@@ -600,6 +606,8 @@ public class UserPreferences {
     result += "\t\t<pref name=\"infosme.messagesCacheSleep\" value=\"" + infosmeCacheSleep + "\"/>\n";
     result += "\t\t<pref name=\"infosme.replaceMessage\" value=\"" + infosmeReplaceMessage + "\"/>\n";
     result += "\t\t<pref name=\"infosme.svcType\" value=\"" + infosmeSvcType + "\"/>\n";
+    result += "\t\t<pref name=\"infosme.archive\" value=\"" + infosmeArchive + "\"/>\n";
+    result += "\t\t<pref name=\"infosme.archiveTimeout\" value=\"" + infosmeArchiveTimeout + "\"/>\n";
     result += "\t\t<pref name=\"infosme.sourceAddress\" value=\"" + infosmeSourceAddress + "\"/>\n";
     if(deliveryMode != null) {
       result += "\t\t<pref name=\"infosme.deliveryMode\" value=\"" + deliveryMode + "\"/>\n";
@@ -672,6 +680,22 @@ public class UserPreferences {
 
   public void setInfosmeSvcType(String infosmeSvcType) {
     this.infosmeSvcType = infosmeSvcType;
+  }
+
+  public boolean isInfosmeArchive() {
+    return infosmeArchive;
+  }
+
+  public void setInfosmeArchive(boolean infosmeArchive) {
+    this.infosmeArchive = infosmeArchive;
+  }
+
+  public int getInfosmeArchiveTimeout() {
+    return infosmeArchiveTimeout;
+  }
+
+  public void setInfosmeArchiveTimeout(int infosmeArchiveTimeout) {
+    this.infosmeArchiveTimeout = infosmeArchiveTimeout;
   }
 
   public Date getInfosmePeriodStart() {

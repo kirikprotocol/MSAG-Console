@@ -12,10 +12,12 @@ import java.util.Date;
 public class TaskFilter implements Filter {
 
   private String name;
+  private String id;
   private Date startDate;
   private Date endDate;
   private Boolean active;
   private String owner;
+  private Date archiveDate;
 
 
   public TaskFilter(boolean active) {
@@ -27,31 +29,40 @@ public class TaskFilter implements Filter {
 
   public void clear() {
     name = null;
-    startDate = endDate = null;
+    id = null;
+    startDate = endDate =  archiveDate = null;
     active = null;
     owner = null;
   }
 
   public boolean isEmpty() {
-    return name == null && startDate == null && endDate == null;
+    return name == null && startDate == null && endDate == null && archiveDate == null && id == null;
   }
 
   public boolean isItemAllowed(DataItem item) {
     TaskDataItem i = (TaskDataItem) item;
-    if (name != null && !i.getName().startsWith(name))
+    if(id != null && !i.getId().equals(id)) {
       return false;
-    if (startDate != null && i.getEndDate() != null && i.getEndDate().before(startDate))
+    }
+    if (name != null && !i.getName().startsWith(name)) {
       return false;
-    if (endDate != null && i.getStartDate() != null && i.getStartDate().after(endDate))
-      return false;
+    }
+    if (startDate != null && i.getEndDate() != null && i.getEndDate().before(startDate)) {
+        return false;
+    }
+    if (endDate != null && i.getStartDate() != null && i.getStartDate().after(endDate)) {
+        return false;
+    }
     if (active != null) {
       Date now = new Date();
       boolean isEventActive = i.isEnabled() && i.getStartDate().before(now) && (i.getEndDate() == null || i.getEndDate().after(now));
-      if (isEventActive != active.booleanValue())
+      if (isEventActive != active.booleanValue()) {
+          return false;
+      }
+    }
+    if (owner != null && i.getOwner() != null && !i.getOwner().equals(owner)) {
         return false;
     }
-    if (owner != null && i.getOwner() != null && !i.getOwner().equals(owner))
-      return false;
 
     return true;
   }
@@ -72,12 +83,28 @@ public class TaskFilter implements Filter {
     this.name = name;
   }
 
+  public String getId() {
+    return id;
+  }
+
+  public void setId(String id) {
+    this.id = id;
+  }
+
   public Date getStartDate() {
     return startDate;
   }
 
   public void setStartDate(Date startDate) {
     this.startDate = startDate;
+  }
+
+  public Date getArchiveDate() {
+    return archiveDate;
+  }
+
+  public void setArchiveDate(Date archiveDate) {
+    this.archiveDate = archiveDate;
   }
 
   public Boolean getActive() {

@@ -1,5 +1,6 @@
 package ru.novosoft.smsc.infosme.backend.config.tasks;
 
+import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataSource;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 import ru.novosoft.smsc.util.Functions;
@@ -13,6 +14,7 @@ import java.io.*;
 
 import org.xml.sax.SAXException;
 import org.apache.log4j.Category;
+import ru.novosoft.smsc.util.hsModeSupport.FileOutputStreamMirror;
 
 /**
  * Created by IntelliJ IDEA.
@@ -108,7 +110,7 @@ public class Task extends Observable
     this.volumeSize = volumeSize;
   }
 
-  Task(Config config, String id, String storeLocation, Integer volumeSize) throws Config.WrongParamTypeException, Config.ParamNotFoundException,
+  public Task(Config config, String id, String storeLocation, Integer volumeSize) throws Config.WrongParamTypeException, Config.ParamNotFoundException,
       IOException, ParserConfigurationException, SAXException {
     this(storeLocation, volumeSize);
     setId(id);
@@ -117,6 +119,9 @@ public class Task extends Observable
       loadConfig(new Config(configFile), "");
       logger.info("Task " + id + " loaded from separate config");
     } else {
+      if(config == null) {
+        throw new IllegalArgumentException("Config is null");
+      }
       loadConfig(config, TaskDataSource.TASKS_PREFIX + '.' + StringEncoderDecoder.encodeDot(id) + '.');
       logger.info("Task " + id + " loaded from common config");
     }
@@ -346,6 +351,105 @@ public class Task extends Observable
     } else {
       config.removeSection(TaskDataSource.TASKS_PREFIX  + '.' + id);
     }
+  }
+
+
+  private static final String archiveDirPattern = "yyyy"+File.separatorChar+"MM"+File.separatorChar+"dd"+File.separatorChar;
+
+  public void archivate(Config config, String archiveDir) throws IOException{
+    if(id == null) {
+      throw new IllegalArgumentException("Id is not set");
+    }
+    File configFile = new File(location, CONFIG_FILE_NAME);
+    if (!configFile.exists()) {
+      config.removeSection(TaskDataSource.TASKS_PREFIX  + '.' + id);
+    }
+
+    File taskDir = new File(location);
+    File toDir  = new File(new File(archiveDir),
+        new StringBuffer().append(
+            new SimpleDateFormat(archiveDirPattern).format(startDate)
+        ).append(
+            id
+        ).toString());
+    if(!toDir.exists() && !toDir.mkdirs()) {
+      String error = new StringBuffer().append("Can't create directory to archivate task: ").append(toDir.getAbsolutePath()).toString();
+      logger.error(error);
+      throw new IOException(error);
+    }
+    copyDirs(taskDir, toDir);
+    removeDir(taskDir);
+    if(logger.isDebugEnabled()) {
+      logger.debug(new StringBuffer(100).append("Task is replaced to archive: ").
+          append(id).append(" (").append(name).append(')').toString());
+    }
+
+  }
+
+  private static void copyDirs(File source, File destination) throws IOException {
+    File[] children = source.listFiles();
+    for(int i=0; i<children.length; i++) {
+      File f = children[i];
+      if(f.isFile()) {
+        System.out.println("Copy file "+f.getAbsolutePath()+" to "+new File(destination, f.getName()));
+        copyFile(f, new File(destination, f.getName()));
+      }
+      if(f.isDirectory()) {
+        File newDir = new File(destination, f.getName());
+        if(!newDir.exists() && !newDir.mkdirs()) {
+          String error = new StringBuffer().append("Can't create directory: ").
+              append(newDir.getAbsolutePath()).toString();
+          logger.error(error);
+          throw new IOException(error);
+        }
+        copyDirs(f, newDir);
+      }
+    }
+  }
+
+  private static void removeDir(File dir) throws IOException{
+    File[] children = dir.listFiles();
+    for(int i=0; i<children.length; i++) {
+      File f = children[i];
+      if(f.isFile()) {
+        if(!f.delete()) {
+          logger.error("Can't remove: "+f.getAbsolutePath());
+          throw new IOException("Can't remove: "+f.getAbsolutePath());
+        }
+      }else {
+        removeDir(f);
+      }
+    }
+    if(!dir.delete()) {
+      logger.error("Can't remove: "+dir.getAbsolutePath());
+      throw new IOException("Can't remove: "+dir.getAbsolutePath());
+    }
+  }
+
+  private static void copyFile(File source, File destination) throws IOException{
+    BufferedInputStream is = null;
+    BufferedOutputStream os = null;
+    try{
+      is = new BufferedInputStream(new FileInputStream(source));
+      os = new BufferedOutputStream(new FileOutputStreamMirror(destination));
+      byte[] buf = new byte[1024];
+      int len;
+      while ((len = is.read(buf)) > 0){
+        os.write(buf, 0, len);
+      }
+    }finally {
+      if(is != null) {
+        try{
+        is.close();
+        }catch (IOException e){}
+      }
+      if(os != null) {
+        try{
+        os.close();
+        }catch (IOException e){}
+      }
+    }
+
   }
 
   public void change(Config config) throws IOException, SAXException, ParserConfigurationException, WrongParamTypeException {

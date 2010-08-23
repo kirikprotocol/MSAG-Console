@@ -42,6 +42,7 @@ public class StatisticsDataSource extends AbstractDataSource {
 
       for (Iterator iter = files.iterator(); iter.hasNext();) {
         File f = (File)iter.next();
+        System.out.println("Handle file: "+f);
 
         Date fileDate = fileDateFormat.parse(f.getParentFile().getName() + '/' + f.getName());
 

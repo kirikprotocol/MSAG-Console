@@ -12,6 +12,7 @@ public class Changes {
   private final List added = new ArrayList();
   private final List modified = new ArrayList();
   private final List deleted = new ArrayList();
+  private final List archivated = new ArrayList();
 
   public void added(Object o) {
     added.add(o);
@@ -33,8 +34,16 @@ public class Changes {
     deleted.add(o);
   }
 
+  public void archivated(Object o) {
+    archivated.add(o);
+  }
+
   public boolean isDeleted(Object o) {
     return deleted.contains(o);
+  }
+
+  public boolean isArchivated(Object o) {
+    return archivated.contains(o);
   }
 
   public List getAdded() {
@@ -43,6 +52,10 @@ public class Changes {
 
   public List getDeleted() {
     return deleted;
+  }
+
+  public List getArchivated() {
+    return archivated;
   }
 
   public List getModified() {

@@ -185,6 +185,8 @@ public class InfoSmeConfig {
           j.append(user, "", SubjectTypes.TYPE_infosme, (String)iter.next(), Actions.ACTION_DEL, "Type", "Task");
         for (Iterator iter = tasksChanges.getModified().iterator(); iter.hasNext();)
           j.append(user, "", SubjectTypes.TYPE_infosme, (String)iter.next(), Actions.ACTION_MODIFY, "Type", "Task");
+        for (Iterator iter = tasksChanges.getArchivated().iterator(); iter.hasNext();)
+          j.append(user, "", SubjectTypes.TYPE_infosme, (String)iter.next(), Actions.ACTION_ARCHIVATE, "Type", "Task");
       }
 
       if (schedules) {
@@ -431,8 +433,54 @@ public class InfoSmeConfig {
     }
   }
 
+  public synchronized void setArchiveDaemonStarted(boolean started) throws AdminException{
+    try {
+      Config cfg = ctx.loadCurrentConfig();
+      cfg.setBool("InfoSme.archiveDaemon.started", started);
+      cfg.save();
+    } catch (Throwable e) {
+      e.printStackTrace();
+      throw new AdminException(e.getMessage());
+    }
+  }
+
+  public boolean isArchiveDaemonStarted() throws AdminException{
+    try {
+      Config cfg = ctx.loadCurrentConfig();
+      return cfg.containsParameter("InfoSme.archiveDaemon.started") && cfg.getBool("InfoSme.archiveDaemon.started");
+    } catch (Throwable e) {
+      e.printStackTrace();
+      throw new AdminException(e.getMessage());
+    }
+  }
+
+  public synchronized void setArchiveDir(String dir) throws AdminException{
+    try {
+      Config cfg = ctx.loadCurrentConfig();
+      cfg.setString("InfoSme.archiveDaemon.dir", dir);
+      cfg.save();
+    } catch (Throwable e) {
+      e.printStackTrace();
+      throw new AdminException(e.getMessage());
+    }
+  }
+
+  public String getArchiveDir() throws AdminException{
+    try {
+      Config cfg = ctx.loadCurrentConfig();
+      return cfg.containsParameter("InfoSme.archiveDaemon.dir") ? cfg.getString("InfoSme.archiveDaemon.dir") : null;
+    } catch (Throwable e) {
+      e.printStackTrace();
+      throw new AdminException(e.getMessage());
+    }
+  }
+
   public void removeTask(String id) {
     taskManager.removeTask(id);
+  }
+
+  public void archivateTask(String id) {
+    taskManager.archivateTask(id);
   }
 
   public void removeAndApplyTask(String user, String id) throws AdminException {
@@ -441,6 +489,19 @@ public class InfoSmeConfig {
       if (taskManager.removeTask(id, cfg)) {
         cfg.save();
         ctx.getAppContext().getJournal().append(user, "", SubjectTypes.TYPE_infosme, id, Actions.ACTION_DEL, "Type", "Task");
+      }
+    } catch (Throwable e) {
+      e.printStackTrace();
+      throw new AdminException(e.getMessage());
+    }
+  }
+
+  public void archivateAndApplyTask(String user, String id) throws AdminException {
+    try {
+      Config cfg = ctx.loadCurrentConfig();
+      if (taskManager.archivateTask(id, cfg)) {
+        cfg.save();
+        ctx.getAppContext().getJournal().append(user, "", SubjectTypes.TYPE_infosme, id, Actions.ACTION_ARCHIVATE, "Type", "Task");
       }
     } catch (Throwable e) {
       e.printStackTrace();

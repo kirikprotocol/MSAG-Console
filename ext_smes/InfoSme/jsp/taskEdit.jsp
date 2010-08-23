@@ -14,11 +14,12 @@
 			response.sendRedirect("tasks.jsp");
 			return;
     case TaskEdit.RESULT_MESSAGES:
-      response.sendRedirect("messages.jsp?taskId=" + bean.getId() + "&initialized=true");
+      response.sendRedirect("messages.jsp?taskId=" + bean.getId() + "&initialized=true"+(bean.getArchiveDate() != null ? "&archiveDate="+bean.getArchiveDate() : ""));
       return;
     case TaskEdit.RESULT_STATISTICS:
       response.sendRedirect("stat.jsp?taskId=" + bean.getId() +"&fromDate="+URLEncoder.encode(bean.getStartDate() == null ? "" : bean.getStartDate())
-          + "&tillDate="+URLEncoder.encode(bean.getEndDate() == null ? "" : bean.getEndDate()) + "&initialized=true");
+          + "&tillDate="+URLEncoder.encode(bean.getEndDate() == null ? "" : bean.getEndDate()) + "&initialized=true"
+      +(bean.getArchiveDate() != null ? "&archiveDate="+bean.getArchiveDate() : ""));
       return;
 		default:{%><%@ include file="inc/menu_switch.jsp"%><%}
 	}
@@ -35,6 +36,7 @@
 <input type=hidden name=delivery value=<%=bean.isDelivery()%>>
 <input type=hidden name=oldTask value="<%=bean.getOldTask()%>">
 <input type=hidden name=oldTaskName value="<%=bean.getOldTaskName()%>">
+<input type=hidden name=archiveDate value="<%=bean.getArchiveDate()%>">
 <table class=properties_list>
 <col width="10%">
 <tr class=row<%=rowN++&1%>>
@@ -44,7 +46,9 @@
 <% if (admin) { %>
 <tr class=row<%=rowN++&1%>>
   <th><%= getLocString("infosme.label.owner")%></th>
-  <td><select id="owner" name="owner">
+  <td>
+  <%if (!bean.isReadOnly()) {%>
+  <select id="owner" name="owner">
     <% Collection users = bean.getUsers();
        if (!users.contains(bean.getOwner())) {%>
     <option value="<%=bean.getOwner()%>" SELECTED><%=bean.getOwner()%> (unavailable)</option>
@@ -53,12 +57,15 @@
       String user = (String)iter.next();%>
     <option value="<%=user%>" <%=bean.getOwner() != null && bean.getOwner().equals(user) ? "SELECTED" : ""%>><%=user%></option>
     <% } %>
-  </select>    
+  </select>
+  <%}else {%>
+    <%=StringEncoderDecoder.encode(bean.getOwner())%>
+  <%}%>
 </tr>
 <% } %>
 <tr class=row<%=rowN++&1%>>
   <th><%= getLocString("infosme.label.task_name")%></th>
-  <td><%if (bean.isSmeRunning()) {
+  <td><%if (!bean.isReadOnly()) {
     %><input class=txt id=name name=name value="<%=StringEncoderDecoder.encode(bean.getName())%>" validation="nonEmpty"><%
   } else {
     %><%=StringEncoderDecoder.encode(bean.getName())%><%
@@ -67,7 +74,7 @@
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th><%= getLocString("infosme.label.originating_address")%></th>
-  <td><%if (bean.isSmeRunning()) {
+  <td><%if (!bean.isReadOnly()) {
     %><input class=txt id=address name=address value="<%=StringEncoderDecoder.encode(bean.getAddress())%>"><%
   } else {
     %><%=StringEncoderDecoder.encode(bean.getAddress())%><%
@@ -80,7 +87,7 @@
   <td><%
     if (bean.isDelivery()) {
       %><input type=hidden name=provider value=<%= Task.INFOSME_EXT_PROVIDER%>><%= Task.INFOSME_EXT_PROVIDER%><%
-    } else if (bean.isSmeRunning()) {
+    } else if (!bean.isReadOnly()) {
       %><select name=provider><%
       for (Iterator i = bean.getAllProviders().iterator(); i.hasNext();) {
         String providerName = (String) i.next();
@@ -95,7 +102,7 @@
 <% } %>
 <tr class=row<%=rowN++&1%>>
   <th><label for=enabled><%= getLocString("infosme.label.on")%></label></th>
-  <td><%if (bean.isSmeRunning()) {
+  <td><%if (!bean.isReadOnly()) {
     %><input class=check type=checkbox id=enabled name=enabled <%=bean.isEnabled() ? "checked" : ""%>><%
   } else {
     %><%=bean.isEnabled()%><%
@@ -104,7 +111,7 @@
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th><label for=transactionMode><%= getLocString("infosme.label.transaction_mode")%></label></th>
-  <td><%if (bean.isSmeRunning()) {
+  <td><%if (!bean.isReadOnly()) {
     %><input class=check type=checkbox id=transactionMode name=transactionMode <%=bean.isTransactionMode() ? "checked" : ""%>><%
   } else {
     %><%=bean.isTransactionMode() ? "enabled" : "disabled"%><%
@@ -113,7 +120,7 @@
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th><label for=useDataSm><%= getLocString("infosme.label.use_data_sm")%></label></th>
-  <td><%if (bean.isSmeRunning()) {
+  <td><%if (!bean.isReadOnly()) {
     %><input class=check type=checkbox id=useDataSm name=useDataSm <%=bean.isUseDataSm() ? "checked" : ""%>><%
   } else {
     %><%=bean.isUseDataSm() ? "enabled" : "disabled"%><%
@@ -123,7 +130,7 @@
 <%if ( bean.isUssdPushAllowed() ) {%>
 <tr class=row<%=rowN++&1%>>
   <th><label for=deliveryMode><%= getLocString("infosme.label.delivery_mode")%></label></th>
-  <td><%if (bean.isSmeRunning()) { %>
+  <td><%if (!bean.isReadOnly()) { %>
     <select id="deliveryMode" name="deliveryMode">
       <option value="<%=Task.DELIVERY_MODE_SMS%>" <%=bean.getDeliveryMode() == Task.DELIVERY_MODE_SMS ? "selected" : ""%>> <%= getLocString("infosme.label.delivery_mode_sms")%></option>
       <option value="<%=Task.DELIVERY_MODE_USSD_PUSH%>" <%=bean.getDeliveryMode() == Task.DELIVERY_MODE_USSD_PUSH ? "selected" : ""%>><%= getLocString("infosme.label.delivery_mode_ussd_push")%></option>
@@ -143,7 +150,7 @@
 <% } %>
 <tr class=row<%=rowN++&1%>>
   <th><%= getLocString("infosme.label.priority")%></th>
-  <td><%if (bean.isSmeRunning()) {
+  <td><%if (!bean.isReadOnly()) {
     %><input class=txt name=priority value="<%=StringEncoderDecoder.encode(bean.getPriority())%>" validation="int_range" range_min="1" range_max="100" onkeyup="resetValidation(this)"><%
   } else {
     %><%=StringEncoderDecoder.encode(bean.getPriority())%><%
@@ -153,7 +160,7 @@
 
 <tr class=row<%=rowN++&1%>>
   <th><%= getLocString("infosme.label.active_period")%></th>
-  <td><%if (bean.isSmeRunning()) {
+  <td><%if (!bean.isReadOnly()) {
     %><input class=timeField id=activePeriodStart name=activePeriodStart value="<%=StringEncoderDecoder.encode(bean.getActivePeriodStart())%>" maxlength=20 style="z-index:22;"><button class=timeButton type=button onclick="return showTime(activePeriodStart, false, true);">...</button>
     &nbsp;<%= getLocString("infosme.label.active_period_to")%>&nbsp;
     <input class=timeField id=activePeriodEnd name=activePeriodEnd value="<%=StringEncoderDecoder.encode(bean.getActivePeriodEnd())%>" maxlength=20 style="z-index:22;"><button class=timeButton type=button onclick="return showTime(activePeriodEnd, false, true);">...</button><%
@@ -169,7 +176,7 @@
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th><%= getLocString("infosme.label.active_weekdays")%></th>
-  <td><%if (bean.isSmeRunning()) {
+  <td><%if (!bean.isReadOnly()) {
     %><table>
     <col width="1%"><col width="32%">
     <col width="1%"><col width="32%">
@@ -196,7 +203,7 @@
 <% if (admin) { %>
 <tr class=row<%=rowN++&1%>>
   <th><%= getLocString("infosme.label.vperiod_date")%></th>
-  <td><%if (bean.isSmeRunning()) {
+  <td><%if (!bean.isReadOnly()) {
     %><input class=txt id=validityPeriod name=validityPeriod value="<%=StringEncoderDecoder.encode(bean.getValidityPeriod())%>" maxlength=20 style="z-index:22;">
     &nbsp;<%= getLocString("infosme.label.vperiod_date_or")%>&nbsp;
     <input class=calendarField id=validityDate name=validityDate value="<%=StringEncoderDecoder.encode(bean.getValidityDate())%>" maxlength=20 style="z-index:22;"><button class=calendarButton type=button onclick="return showCalendar(validityDate, false, true);">...</button><%
@@ -222,7 +229,7 @@
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th><%= getLocString("infosme.label.end_date")%></th>
-  <td nowrap><%if (bean.isSmeRunning()) {
+  <td nowrap><%if (!bean.isReadOnly()) {
     %><input class=calendarField id=endDate name=endDate value="<%=StringEncoderDecoder.encode(bean.getEndDate())%>" maxlength=20 style="z-index:22;"><button class=calendarButton type=button onclick="return showCalendar(endDate, false, true);">...</button><%
   } else {
     %><%=StringEncoderDecoder.encode(bean.getEndDate())%><%
@@ -232,7 +239,7 @@
 <%if (!bean.isDelivery()) {%>
 <tr class=row<%=rowN++&1%>>
   <th><%= getLocString("infosme.label.query")%></th>
-  <td><%if (bean.isSmeRunning()) {
+  <td><%if (!bean.isReadOnly()) {
     %><textarea name=query><%=StringEncoderDecoder.encode(bean.getQuery())%></textarea><%
   } else {
     %><%=StringEncoderDecoder.encode(bean.getQuery())%><%
@@ -241,14 +248,14 @@
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th><%= getLocString("infosme.label.template")%></th>
-  <td><%if (bean.isSmeRunning()) {
+  <td><%if (!bean.isReadOnly()) {
     %><textarea name=template><%=StringEncoderDecoder.encode(bean.getTemplate())%></textarea><%
   } else {
     %><%=StringEncoderDecoder.encode(bean.getTemplate())%><%
   }%>
   </td>
 </tr>
-<%if (bean.isSmeRunning()) {%>
+<%if (!bean.isReadOnly()) {%>
 <tr class=row<%=rowN++&1%>>
   <th><%= getLocString("infosme.label.transliterate_text")%></th>
   <td><input class=check type=checkbox id=transliterate name=transliterate <%=bean.isTransliterate() ? "checked" : ""%>></td>
@@ -257,7 +264,7 @@
 <% if (admin) { %>
 <tr class=row<%=rowN++&1%>>
   <th><label for=retryOnFail><%= getLocString("infosme.label.retry_policy")%></label></th>
-  <td><%if (bean.isSmeRunning()) {%>
+  <td><%if (!bean.isReadOnly()) {%>
     <input class=check type=checkbox id=retryOnFail name=retryOnFail <%=bean.isRetryOnFail() ? "checked" : ""%>>
     <select id="retryPolicy" name="retryPolicy">
           <%for (Iterator iter = bean.getRetryPolicies().iterator(); iter.hasNext();) {
@@ -278,7 +285,7 @@
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th><label for=replaceMessage><%= getLocString("infosme.label.replace_messages")%></label></th>
-  <td><%if (bean.isSmeRunning()) {%>
+  <td><%if (!bean.isReadOnly()) {%>
     <input class=check type=checkbox id=replaceMessage name=replaceMessage <%=bean.isReplaceMessage() ? "checked" : ""%> onClick="document.getElementById('svcType').disabled = !this.checked;">
     <input class=txt id=svcType name=svcType value="<%=StringEncoderDecoder.encode(bean.getSvcType())%>" maxlength=5 validation="id" onkeyup="resetValidation(this)">
     <script>document.getElementById('svcType').disabled = !document.getElementById('replaceMessage').checked;</script><%
@@ -294,7 +301,7 @@
 <%if (!bean.isDelivery()) {%>
 <tr class=row<%=rowN++&1%>>
   <th><label for=trackIntegrity><%= getLocString("infosme.label.integrity")%></label></th>
-  <td><%if (bean.isSmeRunning()) {
+  <td><%if (!bean.isReadOnly()) {
     %><input class=check type=checkbox id=trackIntegrity name=trackIntegrity <%=bean.isTrackIntegrity() ? "checked" : ""%>><%
   } else {
     %><%=bean.isTrackIntegrity() ? "enabled" : "disabled"%><%
@@ -304,7 +311,7 @@
 <%}%>
 <tr class=row<%=rowN++&1%>>
   <th><label for=keepHistory><%= getLocString("infosme.label.keep_history")%></label></th>
-  <td><%if (bean.isSmeRunning()) {
+  <td><%if (!bean.isReadOnly()) {
     %><input class=check type=checkbox id=keepHistory name=keepHistory <%=bean.isKeepHistory() ? "checked" : ""%>><%
   } else {
     %><%=bean.isKeepHistory() ? "enabled" : "disabled"%><%
@@ -313,7 +320,7 @@
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>System data source timeout</th>
-  <td><%if (bean.isSmeRunning()) {
+  <td><%if (!bean.isReadOnly()) {
     %><input class=txt name=dsOwnTimeout value="<%=StringEncoderDecoder.encode(bean.getDsTimeout())%>">secs<%
   } else {
     %><%=StringEncoderDecoder.encode(bean.getDsTimeout())%> secs<%
@@ -322,7 +329,7 @@
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Messages cache size </th>
-  <td><%if (bean.isSmeRunning()) {
+  <td><%if (!bean.isReadOnly()) {
     %><input class=txt name=messagesCacheSize value="<%=StringEncoderDecoder.encode(bean.getMessagesCacheSize())%>"><%
   } else {
     %><%=StringEncoderDecoder.encode(bean.getMessagesCacheSize())%><%
@@ -331,7 +338,7 @@
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Messages cache sleep</th>
-  <td><%if (bean.isSmeRunning()) {
+  <td><%if (!bean.isReadOnly()) {
     %><input class=txt name=messagesCacheSleep value="<%=StringEncoderDecoder.encode(bean.getMessagesCacheSleep())%>">secs<%
   } else {
     %><%=StringEncoderDecoder.encode(bean.getMessagesCacheSleep())%> secs<%
@@ -341,7 +348,7 @@
 <%if (!bean.isDelivery()) {%>
 <tr class=row<%=rowN++&1%>>
   <th>Uncommited in generation</th>
-  <td><%if (bean.isSmeRunning()) {
+  <td><%if (!bean.isReadOnly()) {
     %><input class=txt name=uncommitedInGeneration value="<%=StringEncoderDecoder.encode(bean.getUncommitedInGeneration())%>"><%
   } else {
     %><%=StringEncoderDecoder.encode(bean.getUncommitedInGeneration())%><%
@@ -351,7 +358,7 @@
 <%}%>
 <tr class=row<%=rowN++&1%>>
   <th>Uncommited in process</th>
-  <td><%if (bean.isSmeRunning()) {
+  <td><%if (!bean.isReadOnly()) {
     %><input class=txt name=uncommitedInProcess value="<%=StringEncoderDecoder.encode(bean.getUncommitedInProcess())%>"><%
   } else {
     %><%=StringEncoderDecoder.encode(bean.getUncommitedInProcess())%><%
@@ -361,7 +368,7 @@
 <% } %>
 <tr class=row<%=rowN++&1%>>
   <th><%= getLocString("infosme.label.flash")%></th>
-  <td><%if (bean.isSmeRunning()) {
+  <td><%if (!bean.isReadOnly()) {
     %><input class=check type=checkbox id=flash name=flash <%=bean.isFlash() ? "checked" : ""%>><%
   } else {
     %><%=bean.isFlash() ? "enabled" : "disabled"%><%
@@ -382,7 +389,7 @@
 </table>
 </div><%
 page_menu_begin(out);
-if (bean.isSmeRunning()) {
+if (!bean.isReadOnly()) {
   page_menu_button(session, out, "mbDone",   "common.buttons.done",  "infosme.hint.done_editing");
 }
 page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "infosme.hint.cancel_changes", "clickCancel()");

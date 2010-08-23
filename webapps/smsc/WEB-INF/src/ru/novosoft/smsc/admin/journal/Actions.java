@@ -14,6 +14,7 @@ public abstract class Actions {
     public static final byte ACTION_SAVE = 10;
     public static final byte ACTION_DISABLE = 11;
     public static final byte ACTION_ENABLE = 12;
+    public static final byte ACTION_ARCHIVATE = 13;
 
     public static final String actionToString(byte action) {
         switch (action) {

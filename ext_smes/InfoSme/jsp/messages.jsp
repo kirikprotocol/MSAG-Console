@@ -39,9 +39,8 @@
 <%@ include file="inc/header.jsp"%>
 
 <div class=content>
-<%--<input type=hidden name=initialized id=initialized value=<%=bean.isInitialized()%>>--%>
-<%Collection allTasks = bean.getAllTasks(request);
-  if (allTasks.size() > 0) {%>
+
+<input type=hidden name=archiveDate value="<%=bean.getArchiveDate()%>">
 <table class=properties_list>
 <col width="10%">
 <col width="40%">
@@ -89,12 +88,6 @@ page_menu_button(session, out, "mbQuery",  "common.buttons.query",  "infosme.hin
 page_menu_button(session, out, "mbClear",  "common.buttons.clear",  "common.buttons.clearFilter");
 page_menu_space(out);
 page_menu_end(out);
-}
-else {
-%>
-<div style="color:blue"><%=getLocString("infosme.warn.no_task_for_msg")%></div>
-<%
-}
 if (bean.isInitialized()) {
 %>
 <div class=content>
@@ -104,12 +97,16 @@ if (bean.isInitialized()) {
 </div>
 <%
 page_menu_begin(out);
-page_menu_button(session, out, "mbDelete",    "infosme.button.delete_msg", "infosme.hint.delete_msg");
-page_menu_button(session, out, "mbResend",    "infosme.button.resend_msg", "infosme.hint.resend_msg");
-page_menu_space(out);
-page_menu_button(session, out, "mbUpdateAll", "infosme.button.update_all", "infosme.hint.update_all");
-page_menu_button(session, out, "mbDeleteAll", "infosme.button.delete_all", "infosme.hint.delete_all");
-page_menu_button(session, out, "mbResendAll", "infosme.button.resend_all", "infosme.hint.resend_all");
+if(bean.getArchiveDate() == null || bean.getArchiveDate().length() == 0) {
+  page_menu_button(session, out, "mbDelete",    "infosme.button.delete_msg", "infosme.hint.delete_msg");
+  page_menu_button(session, out, "mbResend",    "infosme.button.resend_msg", "infosme.hint.resend_msg");
+  page_menu_space(out);
+  page_menu_button(session, out, "mbUpdateAll", "infosme.button.update_all", "infosme.hint.update_all");
+  page_menu_button(session, out, "mbDeleteAll", "infosme.button.delete_all", "infosme.hint.delete_all");
+  page_menu_button(session, out, "mbResendAll", "infosme.button.resend_all", "infosme.hint.resend_all");
+}else {
+  page_menu_space(out);
+}
 page_menu_button(session, out, "mbExportAll", "infosme.button.export_all", "infosme.hint.export_all");
 page_menu_button(session, out, "mbExportAllNoTexts", "infosme.button.export_all_no_texts", "infosme.hint.export_all");
 page_menu_end(out);

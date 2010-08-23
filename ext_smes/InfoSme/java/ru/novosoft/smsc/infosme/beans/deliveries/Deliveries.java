@@ -82,6 +82,11 @@ public class Deliveries extends InfoSmeBean {
     return pageData.getTask().getRegionIds();
   }
 
+  public int getActualSize(int regionId) {
+    Task t = pageData.getTask().getTask(regionId);
+    return t == null ? 0 :t.getActualRecordsSize();
+  }    
+
   public String getRegionName(int id) {
     try {
       if (id == -1)

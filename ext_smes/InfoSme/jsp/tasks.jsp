@@ -15,10 +15,14 @@
 
   int rowN = 0;
 	int beanResult = bean.process(request);
-	switch(beanResult)                                                                                    
+	switch(beanResult)
 	{
     case Tasks.RESULT_EDIT:
-      response.sendRedirect("taskEdit.jsp?id=" + URLEncoder.encode(bean.getEdit(), "UTF-8"));
+      String to = "taskEdit.jsp?id=" + URLEncoder.encode(bean.getEdit(), "UTF-8");
+      if(bean.getState() == Tasks.ARCHIVE) {
+        to+="&archiveDate="+bean.getViewArchiveStartDate();
+      }
+      response.sendRedirect(to);
       return;
     case Tasks.RESULT_ADD:
       response.sendRedirect("taskEdit.jsp?create=true");
@@ -62,12 +66,19 @@
     <td style="text-align:left"><%=getLocString("infosme.label.view")%>:</td>
     <td>
       <% int view = bean.getView(); %>
-      <select name="view">
-        <option value="<%=Tasks.VIEW_LIST%>" <%=view == Tasks.VIEW_LIST ? "SELECTED": ""%>><%=getLocString("infosme.label.task.view.list")%></option>
-        <option value="<%=Tasks.VIEW_WEEKLY%>" <%=view == Tasks.VIEW_WEEKLY ? "SELECTED": ""%>><%=getLocString("infosme.label.task.view.weekly")%></option>
+      <select name="view" id="view" <%=bean.getState() == Tasks.ARCHIVE ? "disabled" : ""%>>
+        <option value="<%=Tasks.VIEW_LIST%>" <%=view == Tasks.VIEW_LIST || bean.getState() == Tasks.ARCHIVE ? "SELECTED": ""%>><%=getLocString("infosme.label.task.view.list")%></option>
+        <option value="<%=Tasks.VIEW_WEEKLY%>" <%=view == Tasks.VIEW_WEEKLY && bean.getState() != Tasks.ARCHIVE ? "SELECTED": ""%>><%=getLocString("infosme.label.task.view.weekly")%></option>
       </select>
     </td>
-    <td colspan="2">&nbsp;</td>
+    <td style="text-align:left"><%=getLocString("infosme.label.state")%>:</td>
+    <td>
+      <% int state = bean.getState(); %>
+      <select name="state" onchange="document.getElementById('view').disabled = (this.value == '<%=Tasks.ARCHIVE%>');document.getElementById('view').value='<%=Tasks.VIEW_LIST%>'">
+        <option value="<%=Tasks.ACTIVE%>" <%=state == Tasks.ACTIVE ? "SELECTED": ""%>><%=getLocString("infosme.label.task.state.active")%></option>
+        <option value="<%=Tasks.ARCHIVE%>" <%=state == Tasks.ARCHIVE ? "SELECTED": ""%>><%=getLocString("infosme.label.task.state.archivated")%></option>
+      </select>
+    </td>
   </tr>
 </table>
 </div>
@@ -78,31 +89,73 @@ page_menu_button(session, out, "mbClear",  "common.buttons.clear",  "Clear Filte
 page_menu_space(out);
 page_menu_end(out);
 %>
+
+
 <div class="content">
-<%{final PagedStaticTableHelper tableHelper = bean.getTableHelper();
-  tableHelper.fillTable(); %>
+
+<%   if(bean.getState() != Tasks.ACTIVE && request.getParameter("processing_cancel") == null &&
+    (bean.getArchiveState() == Tasks.ARCHIVE_LOADING_FINISHED || bean.getArchiveState() == Tasks.ARCHIVE_LOADING_PROCESSING)) {   %>
+  <script type="text/javascript">
+    var statusDataSource = new StringTableDataSource({url: '/smsc/smsc/esme_InfoSme/tasks_progress.jsp?processing=', async: false});
+  </script>
+
+  Progress: <span id="tdcProgress" style='color:blue;'><%=bean.getProgress()%>%</span> (<a id="cancelButton" style="display:<%=bean.getProgress() == 100 ? "none" : ""%>" href="<%=request.getRequestURL()%>?processing_cancel="><%=getLocString("common.buttons.cancel")%></a><a id="nextButton" href="<%=request.getRequestURL()%>?viewResults=" style="display:<%=bean.getProgress() != 100 ? "none" : ""%>"><%=getLocString("common.buttons.next")%></a>)
+
+  <script language="javascript" type="text/javascript">
+    statusDataSource.hasObservers();
+    statusDataSource.addObserver(new ElementObserver({elementId: 'tdcProgress', field: 'progress'}));
+
+    function refreshProgressStatus() {
+      statusDataSource.update();
+      var text = document.getElementById("tdcProgress").innerText;
+      if (text.substring(2) == "100%") {
+        document.getElementById("nextButton").style.display="";
+        document.getElementById("cancelButton").style.display="none";
+      }
+      else {
+        document.getElementById("nextButton").style.display="none";
+        document.getElementById("cancelButton").style.display="";
+      }
+      window.setTimeout(refreshProgressStatus, 2000);
+    }
+
+    window.setTimeout(refreshProgressStatus, 2000);
+  </script>
+
+
+<% }else if(request.getParameter("processing_cancel") == null) {
+    final PagedStaticTableHelper tableHelper = bean.getTableHelper();
+%>
 <%@ include file="/WEB-INF/inc/paged_static_table.jsp"%>
 <%}%>
-</div><%
-page_menu_begin(out);
-if (bean.isSmeRunning()) {
-  if (admin)
-    page_menu_button(session, out, "mbAdd",    "common.buttons.add",    "infosme.hint.add_task");
-  if (view == Tasks.VIEW_LIST) {
-    page_menu_confirm_button(session, out, "mbDelete", "common.buttons.delete", "infosme.hint.del_tasks", getLocString("infosme.confirm.del_tasks"));
-    page_menu_confirm_button(session, out, "mbEnable",  "common.buttons.enable",  "infosme.hint.enable", getLocString("infosme.confirm.enable.tasks"));
-    page_menu_confirm_button(session, out, "mbDisable", "common.buttons.disable", "infosme.hint.disable", getLocString("infosme.confirm.disable.tasks"));
-  }
-}
+</div>
 
-page_menu_space(out);
-if (!admin) {
-  page_menu_button(session, out, "mbApply",  "common.buttons.apply", "infosme.hint.apply_changes");
-  page_menu_button(session, out, "mbReset",  "common.buttons.reset", "infosme.hint.reset_changes");
-}
-page_menu_confirm_button(session, out, "mbEnableAll",  "common.buttons.enable.all",  "infosme.hint.enable.all", getLocString("infosme.confirm.enable.tasks"));
-page_menu_confirm_button(session, out, "mbDisableAll", "common.buttons.disable.all", "infosme.hint.disable.all", getLocString("infosme.confirm.disable.tasks"));
-page_menu_end(out);
+
+
+
+<%
+  if(bean.getState() != Tasks.ARCHIVE) {
+    page_menu_begin(out);
+    if (bean.isSmeRunning()) {
+      if (admin)
+        page_menu_button(session, out, "mbAdd",    "common.buttons.add",    "infosme.hint.add_task");
+      if (view == Tasks.VIEW_LIST) {
+        page_menu_confirm_button(session, out, "mbDelete", "common.buttons.delete", "infosme.hint.del_tasks", getLocString("infosme.confirm.del_tasks"));
+        page_menu_confirm_button(session, out, "mbEnable",  "common.buttons.enable",  "infosme.hint.enable", getLocString("infosme.confirm.enable.tasks"));
+        page_menu_confirm_button(session, out, "mbDisable", "common.buttons.disable", "infosme.hint.disable", getLocString("infosme.confirm.disable.tasks"));
+        page_menu_confirm_button(session, out, "mbArchivate", "common.buttons.archivate", "infosme.hint.archivate", getLocString("infosme.confirm.archivate.tasks"));
+      }
+    }
+
+    page_menu_space(out);
+    if (!admin) {
+      page_menu_button(session, out, "mbApply",  "common.buttons.apply", "infosme.hint.apply_changes");
+      page_menu_button(session, out, "mbReset",  "common.buttons.reset", "infosme.hint.reset_changes");
+    }
+    page_menu_confirm_button(session, out, "mbEnableAll",  "common.buttons.enable.all",  "infosme.hint.enable.all", getLocString("infosme.confirm.enable.tasks"));
+    page_menu_confirm_button(session, out, "mbDisableAll", "common.buttons.disable.all", "infosme.hint.disable.all", getLocString("infosme.confirm.disable.tasks"));
+    page_menu_end(out);
+    }
 %>
 <script type="text/javascript">
 <%--<%if (bean.isSmeRunning()) {%>checkCheckboxesForMbDeleteButton();<%}%>--%>

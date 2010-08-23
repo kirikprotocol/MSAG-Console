@@ -265,6 +265,23 @@
                     </table>
 
                     <%finishSection(out);
+
+                    startSection(out, "infosmeArchive", "infosme.label.tasks_archive", false);  %>
+
+                    <table class=properties_list cellspacing=0>
+                      <col width="1%">
+                      <col width="99%">
+                      <tr class=row<%=rowN++&1%>>
+                        <th><%=getLocString("infosme.label.forced_archiving")%></th>
+                        <td>
+                          <input class=check type=checkbox id=infosmeArchive name=infosmeArchive <%=bean.isInfosmeArchive() ? "checked" : ""%> onClick="document.getElementById('infosmeArchiveTimeout').disabled = !this.checked;">
+                          <input class=txt id=infosmeArchiveTimeout name=infosmeArchiveTimeout value="<%=bean.getInfosmeArchiveTimeout()%>" maxlength="5" validation="positive" onkeyup="resetValidation(this)">
+                          <script>document.getElementById('infosmeArchiveTimeout').disabled = !document.getElementById('infosmeArchive').checked;</script>
+                        </td>
+                      </tr>
+                    </table>
+
+                    <%finishSection(out);
                     }
 
           finishSection(out);

@@ -7,6 +7,7 @@ import ru.novosoft.smsc.infosme.backend.HourCountersSet;
 import ru.novosoft.smsc.infosme.backend.Statistics;
 import ru.novosoft.smsc.infosme.backend.config.tasks.Task;
 import ru.novosoft.smsc.infosme.backend.tables.stat.*;
+import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskArchiveDataSource;
 import ru.novosoft.smsc.jsp.util.helper.statictable.TableHelperException;
 
 import javax.servlet.http.HttpServletRequest;
@@ -46,6 +47,8 @@ public class TasksStatistics extends InfoSmeBean
 
     private boolean initialized = false;
 
+    private String archiveDate;
+
     protected int init(List errors) {
         int result = super.init(errors);
         if (result != RESULT_OK)
@@ -59,6 +62,9 @@ public class TasksStatistics extends InfoSmeBean
         ds = new StatisticsDataSource(statsStoreDir);
       } catch (Exception e) {
         return error("Can't init dataa source", e);
+      }
+      if(query.getTaskId() != null && archiveDate != null && archiveDate.length() != 0) {
+        query.setActive(false);
       }
 
         return RESULT_OK;
@@ -196,8 +202,21 @@ public class TasksStatistics extends InfoSmeBean
             String taskId = query.getTaskId();
             if ((taskId == null || taskId.length() <= 0)) out.print("All");
             else {
-                String taskName = getInfoSmeConfig().getTask(taskId).getName();
-                out.print((taskName == null || taskName.length() <= 0) ? "???":taskName);
+              Task t;
+              if(archiveDate != null && archiveDate.length() !=0) {
+                try{
+                  TaskArchiveDataSource tds = new TaskArchiveDataSource(getInfoSme(), getInfoSmeConfig().getArchiveDir());
+                  t = tds.get(new SimpleDateFormat("ddMMyyyy").parse(archiveDate), getTaskId());
+                }catch (Exception e){
+                  logger.error(e,e);
+                  e.printStackTrace();
+                  return;
+                }
+              }else {
+                t = getInfoSmeConfig().getTask(taskId);
+              }
+              String taskName = t.getName();
+              out.print((taskName == null || taskName.length() <= 0) ? "???":taskName);
             }
 
             out.print(COL_SEP); out.print(COL_SEP); out.println(COL_SEP);
@@ -332,9 +351,19 @@ public class TasksStatistics extends InfoSmeBean
 
     public String getTaskName() {
       Task t;
-        return query.getTaskId() == null || query.getTaskId().length() <= 0 || query.getTaskId().equals(ALL_TASKS_MARKER)
-            ? null :
-            (t = getInfoSmeConfig().getTask(query.getTaskId())) == null ? null : t.getName();
+      if(archiveDate != null && archiveDate.length() != 0) {
+        try{
+          TaskArchiveDataSource tds = new TaskArchiveDataSource(getInfoSme(), getInfoSmeConfig().getArchiveDir());
+          t = tds.get(new SimpleDateFormat("ddMMyyyy").parse(archiveDate), getTaskId());
+          return t.getName();
+        }catch (Exception e){
+          logger.error(e,e);
+          return null;
+        }
+      }
+      return query.getTaskId() == null || query.getTaskId().length() <= 0 || query.getTaskId().equals(ALL_TASKS_MARKER)
+          ? null :
+          (t = getInfoSmeConfig().getTask(query.getTaskId())) == null ? null : t.getName();
     }
 
     public int getView() {
@@ -354,6 +383,14 @@ public class TasksStatistics extends InfoSmeBean
 
   public TaskStatTableHelper getTasksStatsTable() {
     return tasksStatsTable;
+  }
+
+  public String getArchiveDate() {
+    return archiveDate != null ? archiveDate : "";
+  }
+
+  public void setArchiveDate(String archiveDate) {
+    this.archiveDate = archiveDate;
   }
 
   private class StatisticsVisitor implements StatVisitor {

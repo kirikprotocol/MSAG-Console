@@ -40,7 +40,7 @@ public class InfoSmeExportStatManager implements Runnable{
               1 - if export is started
   */
 
-  public int addExportTask(String taskId, String fileName, Date startDate) throws IOException{
+  public int addExportTask(String taskId, String fileName, Date startDate) throws Exception{
     if(!started) {
       return -1;
     }
@@ -48,10 +48,10 @@ public class InfoSmeExportStatManager implements Runnable{
       throw new IllegalArgumentException();
     }
     try{
-      if(!ds.isAllMessagesProcessed(taskId)) {
+      if(!ds.isAllMessagesProcessed(taskId, null)) {
         return 0;
       }
-    }catch(ParseException e) {
+    }catch(Exception e) {
       return -1;
     }
     ExportStat e = new ExportStat(taskId, fileName, startDate);

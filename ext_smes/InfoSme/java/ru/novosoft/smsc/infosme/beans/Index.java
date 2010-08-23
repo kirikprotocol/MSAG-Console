@@ -20,7 +20,7 @@ import java.util.List;
 public class Index extends IndexProperties
 {
   public Index() {
-    super(new TaskFilter(true));
+    super(new TaskFilter(true));    
     setTableHelperMode(TasksTableHelper.MODE_ADMIN_ACTIVE, false);
   }
 
@@ -84,6 +84,9 @@ public class Index extends IndexProperties
           getInfoSme().addTask((String)iter.next());
         // Notify InfoSme about deleted tasks
         for (Iterator iter = changes.getTasksChanges().getDeleted().iterator(); iter.hasNext();)
+          getInfoSme().removeTask((String)iter.next());
+        // Notify InfoSme about archivated tasks
+        for (Iterator iter = changes.getTasksChanges().getArchivated().iterator(); iter.hasNext();)
           getInfoSme().removeTask((String)iter.next());
         // Notify InfoSme about changed tasks
         for (Iterator iter = changes.getTasksChanges().getModified().iterator(); iter.hasNext();)
@@ -157,6 +160,22 @@ public class Index extends IndexProperties
           result = error("infosme.error.start_siebel", e);
         }
       }
+      if (isToStart("siebel")) {
+        try {
+          getInfoSmeContext().startSiebelTaskManager();
+        } catch (AdminException e) {
+          logger.error(e, e);
+          result = error("infosme.error.start_siebel", e);
+        }
+      }
+      if (isToStart("archiveDaemon")) {
+        try {
+          getInfoSmeContext().startArchiveDaemon();
+        } catch (AdminException e) {
+          logger.error(e, e);
+          result = error("infosme.error.start_archive", e);
+        }
+      }
     }
     return result;
   }
@@ -195,6 +214,14 @@ public class Index extends IndexProperties
         } catch (AdminException e) {
           logger.error("Could not stop siebel tm", e);
           result = error("infosme.error.stop_siebel", e);
+        }
+      }
+      if (isToStart("archiveDaemon")) {
+        try {
+          getInfoSmeContext().stopTaskArchiveDaemon();
+        } catch (AdminException e) {
+          logger.error(e, e);
+          result = error("infosme.error.stop_archive", e);
         }
       }
     }

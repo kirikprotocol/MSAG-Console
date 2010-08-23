@@ -273,6 +273,9 @@ public abstract class UsersEditBean extends SmscBean {
   protected boolean infosmeTrackIntegrity = false;
   protected boolean infosmeKeepHistory = false;
 
+  protected boolean infosmeArchive = false;
+  protected int infosmeArchiveTimeout = 720;
+
   public boolean isInfosmeTransactionMode() {
     return infosmeTransactionMode;
   }
@@ -325,6 +328,22 @@ public abstract class UsersEditBean extends SmscBean {
 
   public void setInfosmeSvcType(String svcType) {
     this.infosmeSvcType = svcType;
+  }
+
+  public boolean isInfosmeArchive() {
+    return infosmeArchive;
+  }
+
+  public void setInfosmeArchive(boolean infosmeArchive) {
+    this.infosmeArchive = infosmeArchive;
+  }
+
+  public int getInfosmeArchiveTimeout() {
+    return infosmeArchiveTimeout;
+  }
+
+  public void setInfosmeArchiveTimeout(int infosmeArchiveTimeout) {
+    this.infosmeArchiveTimeout = infosmeArchiveTimeout;
   }
 
   public String getInfosmeSourceAddress() {

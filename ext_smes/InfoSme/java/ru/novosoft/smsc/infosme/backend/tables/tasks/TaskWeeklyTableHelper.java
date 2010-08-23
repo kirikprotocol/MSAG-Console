@@ -63,13 +63,11 @@ public class TaskWeeklyTableHelper extends PagedStaticTableHelper {
 
     TaskDataSource tds = new TaskDataSource(ctx.getInfoSme(), ctx.getInfoSmeConfig());
     String serviceFolder = ctx.getAppContext().getHostsManager().getServiceInfo("InfoSme").getServiceFolder().getAbsolutePath();
-    String msgStoreDir = ctx.getInfoSmeConfig().getStoreLocation();
-    if (msgStoreDir.length() > 0 && msgStoreDir.charAt(0) != '/')
-      msgStoreDir = serviceFolder + '/' + msgStoreDir;
+
     String statStoreDir = ctx.getInfoSmeConfig().getStatStoreLocation();
     if (statStoreDir.length() > 0 && statStoreDir.charAt(0) != '/')
       statStoreDir = serviceFolder + '/' + statStoreDir;
-    final MessageDataSource mds = new MessageDataSource(ctx.getInfoSmeConfig());
+    final MessageDataSource mds = new MessageDataSource(ctx);
     sds = new StatisticsDataSource(statStoreDir);
 
     // Fill task activities, calculate min and max dates
@@ -77,7 +75,7 @@ public class TaskWeeklyTableHelper extends PagedStaticTableHelper {
       tds.visit(new TaskVisitor() {
         public boolean visit(TaskDataItem t) {
           try {
-            SortedSet dates = mds.getTaskActivityDates(t.getId());
+            SortedSet dates = mds.getTaskActivityDates(t.getId(), null);
             if (!dates.isEmpty()) {
               Date first = (Date)dates.first();
               Date last = (Date)dates.last();
@@ -87,7 +85,7 @@ public class TaskWeeklyTableHelper extends PagedStaticTableHelper {
                 minAndMax[1] = last;
               taskActivities.put(t.getId(), dates);
             }
-          } catch (ParseException e) {
+          } catch (AdminException e) {
             e.printStackTrace();
             return false;
           }
@@ -98,20 +96,27 @@ public class TaskWeeklyTableHelper extends PagedStaticTableHelper {
       throw new AdminException(e.getMessage(), e);
     }
 
-    Date thisWeekStart = getWeekStart(new Date());
-    minWeekStart = getWeekStart(minAndMax[0]);
-    Date maxWeekStart = getWeekStart(minAndMax[1]);
+    if(minAndMax[0] != null) {
+      Date thisWeekStart = getWeekStart(new Date());
+      minWeekStart = getWeekStart(minAndMax[0]);
+      Date maxWeekStart = getWeekStart(minAndMax[1]);
 
-    long d1 = (thisWeekStart.getTime() - minWeekStart.getTime()) / WEEK_LEN_IN_MILLIS + 1;
-    if (d1 < 0)
-      d1 = 0;
-    long d2 = (maxWeekStart.getTime() - thisWeekStart.getTime()) / WEEK_LEN_IN_MILLIS + 1;
-    if (d2 < 0)
-      d2 = 0;
-    total = (int)(d2 + d1);
+      long d1 = (thisWeekStart.getTime() - minWeekStart.getTime()) / WEEK_LEN_IN_MILLIS + 1;
+      if (d1 < 0)
+        d1 = 0;
+      long d2 = (maxWeekStart.getTime() - thisWeekStart.getTime()) / WEEK_LEN_IN_MILLIS + 1;
+      if (d2 < 0)
+        d2 = 0;
+      total = (int)(d2 + d1);
 
-    setStartPosition((int)d1);
-    setPageSize(1);
+      setStartPosition((int)d1);
+      setPageSize(1);
+    }else {
+      minWeekStart = getWeekStart(new Date());
+      total = 0;
+      setStartPosition(0);
+      setPageSize(1);
+    }
     setMaxRows(total);
   }
 

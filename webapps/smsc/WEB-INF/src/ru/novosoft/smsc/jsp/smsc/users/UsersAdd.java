@@ -69,6 +69,8 @@ public class UsersAdd extends UsersEditBean {
       prefs.setInfosmePriority(infosmePriority);
       prefs.setInfosmeReplaceMessage(infosmeReplaceMessage);
       prefs.setInfosmeSvcType(infosmeSvcType);
+      prefs.setInfosmeArchive(infosmeArchive);
+      prefs.setInfosmeArchiveTimeout(infosmeArchiveTimeout);
       prefs.setInfosmeTrackIntegrity(infosmeTrackIntegrity);
       prefs.setInfosmeTrMode(infosmeTransactionMode);
       prefs.setInfosmeUncommitGeneration(infosmeUncommitedInGeneration);

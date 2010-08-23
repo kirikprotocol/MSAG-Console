@@ -16,7 +16,8 @@
     int rowN = 0;
 	int beanResult = bean.process(request);
   if (beanResult == TasksStatistics.RESULT_EXPORT) {
-    response.sendRedirect(CPATH+"/esme_InfoSme/csv_download.jsp?taskId=" + StringEncoderDecoder.encode(bean.getTaskId()) + "&fromDate=" + StringEncoderDecoder.encode(bean.getFromDate()) + "&tillDate=" + StringEncoderDecoder.encode(bean.getTillDate()) + "&view=" + bean.getView());
+    response.sendRedirect(CPATH+"/esme_InfoSme/csv_download.jsp?taskId=" + StringEncoderDecoder.encode(bean.getTaskId()) + "&fromDate=" + StringEncoderDecoder.encode(bean.getFromDate()) + "&tillDate=" + StringEncoderDecoder.encode(bean.getTillDate()) + "&view=" + bean.getView()
+      +(bean.getArchiveDate() != null ? "&archiveDate="+bean.getArchiveDate() : ""));
     return;
   }
 %>
@@ -28,6 +29,7 @@
 <div class=page_subtitle><%= getLocString("infosme.subtitle.stat_params")%></div>
 <input type=hidden name=initialized value="<%=bean.isInitialized()%>">
 <input type=hidden name=taskId value="<%=bean.getTaskId()%>">
+<input type=hidden name=archiveDate value="<%=bean.getArchiveDate()%>">
 <table class=properties_list>
 <col width="5%">
 <col width="45%">

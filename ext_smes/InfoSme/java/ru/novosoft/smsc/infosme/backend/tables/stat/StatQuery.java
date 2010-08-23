@@ -18,6 +18,9 @@ import java.util.HashMap;
 
 public class StatQuery implements Filter
 {
+
+  private boolean active = true;
+
   private String taskId = null;
 
   HashMap tasksCache = new HashMap();
@@ -82,25 +85,37 @@ public class StatQuery implements Filter
     return false;
   }
 
+  public boolean isActive() {
+    return active;
+  }
+
+  public void setActive(boolean active) {
+    this.active = active;
+  }
+
   public boolean isItemAllowed(DataItem item) {
     String tId = (String)item.getValue("taskId");
     if (taskId != null && !taskId.equals(tId))
       return false;
 
-    if (!config.containsTaskWithId(tId))
+    if (active && !config.containsTaskWithId(tId))
       return false;
 
-    if (owner != null) {
+
+    if (owner != null && (taskId == null || active)) {      
       String o = (String)tasksCache.get(tId);
       if (o == null) {
         Task t = config.getTask(tId);
+        if(t == null) {
+          return false;
+        }
         o = t.getOwner();
         tasksCache.put(tId, o);
       }
       if (!owner.equals(o))
         return false;
     }
-    
+
     return true;
   }
 }

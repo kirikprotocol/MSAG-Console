@@ -7,6 +7,7 @@ import ru.novosoft.smsc.infosme.backend.config.tasks.Task;
 import ru.novosoft.smsc.infosme.backend.tables.retrypolicies.RetryPolicyDataItem;
 import ru.novosoft.smsc.infosme.backend.tables.retrypolicies.RetryPolicyDataSource;
 import ru.novosoft.smsc.infosme.backend.tables.retrypolicies.RetryPolicyQuery;
+import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskArchiveDataSource;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.user.UserDataItem;
 import ru.novosoft.smsc.jsp.util.tables.impl.user.UserQuery;
@@ -14,6 +15,7 @@ import ru.novosoft.smsc.util.SortedList;
 import ru.novosoft.smsc.util.Transliterator;
 
 import javax.servlet.http.HttpServletRequest;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -79,6 +81,8 @@ public class TaskEdit extends InfoSmeBean {
   private String owner;
   private int deliveryMode = Task.DELIVERY_MODE_SMS;
 
+  private String archiveDate;
+
   protected int init(List errors) {
     int result = super.init(errors);
     if (result != RESULT_OK)
@@ -95,6 +99,8 @@ public class TaskEdit extends InfoSmeBean {
     }
   }
 
+  private final static String ARCHIVE_DATE = "ddMMyyyy";
+
   public int process(HttpServletRequest request) {
     int result = super.process(request);
     if (result != RESULT_OK) return result;
@@ -102,12 +108,17 @@ public class TaskEdit extends InfoSmeBean {
     User user = getUser(request);
     if (!initialized) {
       try {
-        Task task = getTask(getUser(request));
-        oldTaskName = task.getName();
-        oldTask = task.getId();
-        taskToPage(task, user);
+        if(archiveDate == null || archiveDate.length() == 0) {
+          Task task = getTask(getUser(request));
+          oldTaskName = task.getName();
+          oldTask = task.getId();
+          taskToPage(task, user);
+        }else {
+          TaskArchiveDataSource tds = new TaskArchiveDataSource(getInfoSme(), getInfoSmeConfig().getArchiveDir());
+          taskToPage(tds.get(new SimpleDateFormat(ARCHIVE_DATE).parse(archiveDate), getId()), user);
+        }
       } catch (Exception e) {
-        logger.error(e);
+        logger.error(e,e);
         return error("infosme.error.config_param", e.getMessage());
       }
     }
@@ -115,6 +126,9 @@ public class TaskEdit extends InfoSmeBean {
     if (oldTaskName == null) oldTaskName = "";
 
     if (mbDone != null) try {
+      if(isReadOnly()) {
+        return RESULT_DONE;
+      }
       result = done(user);
     } catch (AdminException e) {
       return error(e.getMessage(), e);
@@ -255,6 +269,19 @@ public class TaskEdit extends InfoSmeBean {
       names.add(((Provider) iter.next()).getName());
     return new SortedList(names);
   }
+
+  public String getArchiveDate() {
+    return archiveDate == null ? "" : archiveDate;
+  }
+
+  public void setArchiveDate(String archiveDate) {
+    this.archiveDate = archiveDate;
+  }
+
+  public boolean isReadOnly() {
+    return !((archiveDate == null || archiveDate.length() == 0) && isSmeRunning());
+  }
+
 
   public boolean isInitialized() {
     return initialized;

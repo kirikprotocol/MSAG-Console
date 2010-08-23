@@ -2,8 +2,14 @@ package ru.novosoft.smsc.infosme.beans;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.infosme.backend.InfoSme;
+import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataSource;
 import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskFilter;
+import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskWeeklyTableHelper;
+import ru.novosoft.smsc.infosme.backend.tables.tasks.TasksTableHelper;
+import ru.novosoft.smsc.jsp.util.helper.dynamictable.DynamicTableHelper;
+import ru.novosoft.smsc.jsp.util.helper.statictable.PagedStaticTableHelper;
 import ru.novosoft.smsc.jsp.util.tables.Filter;
+import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataSource;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
@@ -14,13 +20,14 @@ import java.util.*;
  * Date: 02.10.2003
  * Time: 17:16:54
  */
-public abstract class IndexProperties extends TasksListBean
+public abstract class IndexProperties extends InfoSmeBean
 {
   private InfoSme infoSme;
   private boolean infosmeStarted;
   private boolean taskProcessorRuning = false;
   private boolean taskSchedulerRuning = false;
   private boolean siebelOnline = false;
+  private boolean taskArchiveOnline = false;
   private String mbApply = null;
   private String mbReset = null;
   private String mbStart = null;
@@ -34,13 +41,34 @@ public abstract class IndexProperties extends TasksListBean
   private Set applySet = new HashSet();
   private String[] toStart = new String[0];
   private Set toStartSet = new HashSet();
+  protected TaskFilter tasksFilter;
+
+  private int mode;
+  private boolean selectable;
+  private List checked;
+
+  private int view = VIEW_LIST;
+  public static final int VIEW_LIST = 0;
+  public static final int VIEW_WEEKLY = 1;
 
   protected IndexProperties(TaskFilter tasksFilter) {
-    super(tasksFilter);
+    this.tasksFilter = tasksFilter;
   }
 
-  protected IndexProperties() {
-    super();
+  protected void setTableHelperMode(int mode, boolean selectable) {
+    this.mode = mode;
+    this.selectable = selectable;
+  }
+
+  protected PagedStaticTableHelper tableHelper;
+
+  protected int init(List errors)
+  {
+    int result = super.init(errors);
+    if (result != RESULT_OK)
+      return result;
+
+    return result;
   }
 
   public int process(HttpServletRequest request)
@@ -48,6 +76,32 @@ public abstract class IndexProperties extends TasksListBean
     int result = super.process(request);
     if (result != RESULT_OK)
       return result;
+
+    final boolean admin = isUserAdmin(request);
+    final String userName = request.getRemoteUser();
+
+    if (!admin)
+      tasksFilter.setOwner(userName);
+
+    try{
+      if (view == VIEW_LIST) {
+        tableHelper = new TasksTableHelper("tasksTableHelper", mode, tasksFilter, selectable, new TaskDataSource(getInfoSme(), getInfoSmeConfig()));
+        tableHelper.setPageSize(getInfoSmeContext().getTasksPageSize());
+        ((TasksTableHelper)tableHelper).setUser(getUser(request));
+      } else {
+        tableHelper = new TaskWeeklyTableHelper("tasksWeeklyTableHelper", getInfoSmeContext(), tasksFilter);
+      }
+    }catch (AdminException e){
+      return error(e.getMessage(), e);
+    }
+
+    try {
+      tableHelper.processRequest(request);
+      checked = view == VIEW_LIST ? ((TasksTableHelper)tableHelper).getSelectedTasksList(request) : null;
+    } catch (Exception e) {
+      logger.error(e,e);
+      return error(e.getMessage());
+    }
 
     infoSme = getInfoSmeContext().getInfoSme();
 
@@ -65,6 +119,7 @@ public abstract class IndexProperties extends TasksListBean
         taskProcessorRuning = infoSme.isTaskProcessorRuning();
         taskSchedulerRuning = infoSme.isTaskSchedulerRuning();
         siebelOnline = getInfoSmeContext().isSiebelOnline();
+        taskArchiveOnline = getInfoSmeContext().isTaskArchiveDaemonOnline();
       } else {
         //message("Info SME is not running");
       }
@@ -94,6 +149,15 @@ public abstract class IndexProperties extends TasksListBean
       return stopTask();
 
     return result;
+  }
+
+
+  public int getView() {
+    return view;
+  }
+
+  public void setView(int view) {
+    this.view = view;
   }
 
   protected abstract int apply(HttpServletRequest req);
@@ -174,6 +238,10 @@ public abstract class IndexProperties extends TasksListBean
 
   public boolean isSiebelOnline() {
     return siebelOnline;
+  }
+
+  public boolean isTaskArchiveOnline() {
+    return taskArchiveOnline;
   }
 
   public boolean isTaskSchedulerRuning()
@@ -264,5 +332,13 @@ public abstract class IndexProperties extends TasksListBean
   public void setMbStopTask(String mbStopTask)
   {
     this.mbStopTask = mbStopTask;
+  }
+
+  protected List getChecked() {
+    return checked;
+  }
+
+  public PagedStaticTableHelper getTableHelper() {
+    return tableHelper;
   }
 }

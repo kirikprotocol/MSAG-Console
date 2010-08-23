@@ -29,10 +29,12 @@ public class TaskManager {
   private RandomAccessFile idFile;
 
   private final Map tasks = new HashMap(100);
+  private final Set toArchive = new HashSet(10);
   private boolean modified = false;
   private String storeLocation;
   private boolean ussdPushFeature; // not set from frontend (yet)
   private Integer entriesPerDirectory;
+  private String archiveDir;
 
   public TaskManager(String configDir, Config config) throws AdminException {
 
@@ -57,7 +59,7 @@ public class TaskManager {
           File f1 = new File(parentDir, "taskid.bin");
           if (f1.exists())
             f = f1;
-          }
+        }
       }
 
       idFile = new RandomAccessFile(f, "rw");
@@ -80,6 +82,7 @@ public class TaskManager {
       }
 
       this.storeLocation = config.getString("InfoSme.storeLocation");
+      this.archiveDir = config.getString("InfoSme.archiveDaemon.dir");
       resetTasks(null, config);
       //this.storeLocation = storeLocation;
 
@@ -191,6 +194,12 @@ public class TaskManager {
     modified = true;
   }
 
+  public synchronized void archivateTask(String id) {
+    tasks.remove(id);
+    toArchive.add(id);
+    modified = true;
+  }
+
   public synchronized boolean removeTask(String id, Config cfg) throws AdminException {
     try {
       //boolean removed = tasks.remove(id) != null;
@@ -198,6 +207,21 @@ public class TaskManager {
       if (task != null) {
         task.remove(cfg);
         //cfg.removeSection(TASKS_PREFIX + '.' + id);
+        return true;
+      } else {
+        return false;
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw new AdminException(e.getMessage());
+    }
+  }
+
+  public synchronized boolean archivateTask(String id, Config cfg) throws AdminException {
+    try {
+      Task task = (Task) tasks.remove(id);
+      if (task != null) {
+        task.archivate(cfg, archiveDir);
         return true;
       } else {
         return false;
@@ -284,15 +308,20 @@ public class TaskManager {
     for (Iterator iter = oldTasks.iterator(); iter.hasNext();) {
       Task t = (Task) iter.next();
       if (!containsTaskWithId(t.getId())) {
-        changes.deleted(t.getId());
-        changedTasks.deleted(t);
+        if(!toArchive.contains(t.getId())) {
+          changes.deleted(t.getId());
+          changedTasks.deleted(t);
+        }else {
+          changes.archivated(t.getId());
+          changedTasks.archivated(t);
+        }
       }
     }
 
     // Lookup modified tasks
     for (Iterator iter = tasks.values().iterator(); iter.hasNext();) {
       Task t = (Task) iter.next();
-      if (t.isModified() && !changes.isAdded(t.getId()) && !changes.isDeleted(t.getId())) {
+      if (t.isModified() && !changes.isAdded(t.getId()) && !changes.isDeleted(t.getId()) && !changes.isArchivated(t.getId())) {
         changes.modified(t.getId());
         changedTasks.modified(t);
       }
@@ -318,6 +347,16 @@ public class TaskManager {
         }
         changes.deleted(t.getId());
       }
+
+      //archivated tasks
+      for (Iterator iter = changedTasks.getArchivated().iterator(); iter.hasNext();) {
+        Task t = (Task) iter.next();
+        if (owner == null || (t.getOwner() != null && t.getOwner().equals(owner))) {
+          t.archivate(cfg, archiveDir);
+        }
+        changes.archivated(t.getId());
+      }
+      toArchive.clear();
 
       //changed tasks
       for (Iterator iter = changedTasks.getModified().iterator(); iter.hasNext();) {
@@ -370,6 +409,7 @@ public class TaskManager {
 
   public synchronized void resetTasks(String owner, Config cfg) throws AdminException {
     try {
+      toArchive.clear();
       // Remove tasks by owner
       for (Iterator iter = tasks.entrySet().iterator(); iter.hasNext();) {
         Map.Entry e = (Map.Entry) iter.next();

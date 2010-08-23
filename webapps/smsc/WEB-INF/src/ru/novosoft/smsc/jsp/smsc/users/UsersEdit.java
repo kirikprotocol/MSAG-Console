@@ -14,7 +14,6 @@ import ru.novosoft.smsc.jsp.SMSCErrors;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
-import java.text.ParseException;
 
 public class UsersEdit extends UsersEditBean {
   protected int init(List errors) {
@@ -55,6 +54,8 @@ public class UsersEdit extends UsersEditBean {
           infosmeValidityPeriod = String.valueOf(user.getPrefs().getInfosmeValidityPeriod());
           infosmeReplaceMessage = user.getPrefs().isInfosmeReplaceMessage();
           infosmeSvcType = user.getPrefs().getInfosmeSvcType();
+          infosmeArchive = user.getPrefs().isInfosmeArchive();
+          infosmeArchiveTimeout = user.getPrefs().getInfosmeArchiveTimeout();
           infosmeActivePeriodStart = tf.format(user.getPrefs().getInfosmePeriodStart());
           infosmeActivePeriodEnd = tf.format(user.getPrefs().getInfosmePeriodEnd());
           deliveryMode = user.getPrefs().getDeliveryMode();
@@ -124,6 +125,8 @@ public class UsersEdit extends UsersEditBean {
       prefs.setInfosmePriority(infosmePriority);
       prefs.setInfosmeReplaceMessage(infosmeReplaceMessage);
       prefs.setInfosmeSvcType(infosmeSvcType);
+      prefs.setInfosmeArchive(infosmeArchive);
+      prefs.setInfosmeArchiveTimeout(infosmeArchiveTimeout);
       prefs.setInfosmeTrackIntegrity(infosmeTrackIntegrity);
       prefs.setInfosmeTrMode(infosmeTransactionMode);
       prefs.setInfosmeUncommitGeneration(infosmeUncommitedInGeneration);

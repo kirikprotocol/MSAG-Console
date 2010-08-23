@@ -139,6 +139,7 @@ public class InfoSmeBean extends PageBean
           return false;
         }
         public boolean isItemAllowed(DataItem item) {
+          System.out.println("User: "+userName+" Owner: "+item.getValue("owner"));
           return item.getValue("owner") != null && item.getValue("owner").equals(userName);
         }
       };

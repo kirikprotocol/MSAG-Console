@@ -3,8 +3,10 @@ package ru.novosoft.smsc.infosme.backend.tables.messages;
 import org.apache.log4j.Category;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.infosme.backend.Message;
-import ru.novosoft.smsc.infosme.backend.config.InfoSmeConfig;
+import ru.novosoft.smsc.infosme.backend.InfoSmeContext;
+import ru.novosoft.smsc.infosme.backend.config.tasks.Task;
 import ru.novosoft.smsc.infosme.backend.config.tasks.TaskManager;
+import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskArchiveDataSource;
 import ru.novosoft.smsc.jsp.util.tables.Query;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataSource;
@@ -28,7 +30,8 @@ public class MessageDataSource extends AbstractDataSource {
   private static String DIR_DATE_FORMAT = "yyMMdd";
   private static String FILE_DATE_FORMAT = "HH";
 
-  protected final InfoSmeConfig infoSmeConfig;
+  protected final InfoSmeContext infoSmeContext;
+  protected TaskArchiveDataSource taskArchiveDataSource;
 
   public static final String STATE = "state";
   public static final String DATE = "date";
@@ -39,9 +42,21 @@ public class MessageDataSource extends AbstractDataSource {
   public static final String ID = "id";
   public static final String TASK_ID = "taskId";
 
-  public MessageDataSource(InfoSmeConfig infoSmeConfig) {
+  public MessageDataSource(InfoSmeContext infoSmeContext) {
     super(new String[]{STATE, DATE, MSISDN, REGION, USERDATA, MESSAGE});
-    this.infoSmeConfig = infoSmeConfig;
+    this.infoSmeContext = infoSmeContext;
+  }
+
+  public String getTaskLocation(String taskId, Date archiveDate) throws AdminException {
+    if(archiveDate != null) {
+      if(taskArchiveDataSource == null) {
+        taskArchiveDataSource = new TaskArchiveDataSource(infoSmeContext.getInfoSme(), infoSmeContext.getInfoSmeConfig().getArchiveDir());
+      }
+      Task t = taskArchiveDataSource.get(archiveDate, taskId);
+      return t == null ? null : t.getLocation();
+    }else {
+      return infoSmeContext.getInfoSmeConfig().getTask(taskId).getLocation();
+    }
   }
 
   public void visit(MessageVisitor visitor, MessageFilter filter) {
@@ -61,7 +76,7 @@ public class MessageDataSource extends AbstractDataSource {
 
     ArrayList threads = new ArrayList(threadsNumber);
     try {
-      List files = getFiles(filter.getTaskId(), filter.getFromDate(), filter.getTillDate());
+      List files = getFiles(filter.getTaskId(), filter.getFromDate(), filter.getTillDate(), filter.getArchiveDate());
       if (files.isEmpty())
         return;
 
@@ -209,8 +224,8 @@ public class MessageDataSource extends AbstractDataSource {
 
     List files;
     try {
-      files = getFiles(taskId, null, new Date());
-    } catch (ParseException e) {
+      files = getFiles(taskId, null, new Date(), null);
+    } catch (Exception e) {
       e.printStackTrace();
       return -1;
     }
@@ -291,9 +306,9 @@ public class MessageDataSource extends AbstractDataSource {
     return false;
   }
 
-  public SortedSet getTaskActivityDates(String taskId) throws ParseException {
+  public SortedSet getTaskActivityDates(String taskId, Date taskArchiveDate) throws AdminException {
 
-    File dir = new File(infoSmeConfig.getTask(taskId).getLocation());
+    File dir = new File(getTaskLocation(taskId, taskArchiveDate));
     TreeSet result = new TreeSet();
     if (dir.exists()) {
       final SimpleDateFormat dirNameFormat = new SimpleDateFormat(DIR_DATE_FORMAT);
@@ -319,11 +334,12 @@ public class MessageDataSource extends AbstractDataSource {
     return result;
   }
 
-  public boolean isAllMessagesProcessed(String taskId) throws ParseException {
+  public boolean isAllMessagesProcessed(String taskId, Date taskArchiveDate) throws AdminException {
     final SimpleDateFormat dirNameFormat = new SimpleDateFormat(DIR_DATE_FORMAT);
-    File dir = new File(infoSmeConfig.getTask(taskId).getLocation());
+    File dir = new File(getTaskLocation(taskId, taskArchiveDate));
 
     // Fetch directories
+    try{
     File[] dirArr = getDirectories(dir, null, null, dirNameFormat);
     if(dirArr == null) {
       return false;
@@ -345,6 +361,10 @@ public class MessageDataSource extends AbstractDataSource {
         }
       }
     }
+    }catch (ParseException e){
+      log.error(e,e);
+      throw new AdminException(e.getMessage(), e);
+    }
     return true;
   }
 
@@ -365,13 +385,13 @@ public class MessageDataSource extends AbstractDataSource {
     });
   }
 
-  private List getFiles(String taskId, Date from, Date till) throws ParseException {
+  private List getFiles(String taskId, Date from, Date till, Date archiveDate) throws ParseException, AdminException {
 
     List files = new LinkedList();
 
 
 
-    File dir = new File(infoSmeConfig.getTask(taskId).getLocation());
+    File dir = new File(getTaskLocation(taskId, archiveDate));
     if(dir.exists()) {
 
       final SimpleDateFormat dirNameFormat = new SimpleDateFormat(DIR_DATE_FORMAT);

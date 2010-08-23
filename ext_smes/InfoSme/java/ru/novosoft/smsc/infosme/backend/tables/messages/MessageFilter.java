@@ -17,6 +17,7 @@ public class MessageFilter implements Filter
 {
   private Date fromDate = new Date();
   private Date tillDate = new Date();
+  private Date archiveDate;
   private String taskId = null;
   private String address = null;
   private Message.State status = Message.State.UNDEFINED;
@@ -41,6 +42,14 @@ public class MessageFilter implements Filter
 
   public void setFromDateEnabled(boolean fromDateEnabled) {
     this.fromDateEnabled = fromDateEnabled;
+  }
+
+  public Date getArchiveDate() {
+    return archiveDate;
+  }
+
+  public void setArchiveDate(Date archiveDate) {
+    this.archiveDate = archiveDate;
   }
 
   public boolean isTillDateEnabled() {

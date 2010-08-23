@@ -2,7 +2,9 @@ package ru.novosoft.smsc.infosme.beans;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.infosme.backend.Message;
+import ru.novosoft.smsc.infosme.backend.config.tasks.Task;
 import ru.novosoft.smsc.infosme.backend.tables.messages.*;
+import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskArchiveDataSource;
 import ru.novosoft.smsc.jsp.util.helper.statictable.PagedStaticTableHelper;
 import ru.novosoft.smsc.jsp.util.helper.statictable.TableHelperException;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
@@ -66,11 +68,7 @@ public class Messages extends InfoSmeBean
     if (result != RESULT_OK) return result;
 
     try {
-      String serviceFolder = appContext.getHostsManager().getServiceInfo("InfoSme").getServiceFolder().getAbsolutePath();
-      String msgStoreDir = getInfoSmeConfig().getStoreLocation();
-      if( msgStoreDir.length() > 0 && msgStoreDir.charAt(0) != '/' )
-        msgStoreDir = serviceFolder + '/' + msgStoreDir;
-      ds = new MessageDataSource(this.getInfoSmeConfig());
+      ds = new MessageDataSource(this.getInfoSmeContext());
       if(pageSize==0) {
         pageSize = getInfoSmeContext().getMessagesPageSize();
       }
@@ -103,9 +101,9 @@ public class Messages extends InfoSmeBean
     tableHelper.setPageSize(pageSize);
     tableHelper.setMaxRows(maxTotalSize);
 
-    Collection allTasks = getAllTasks(request);
-    if (allTasks == null || allTasks.size() <= 0)
-      return warning("infosme.warn.no_task_for_msg");
+//    Collection allTasks = getAllTasks(request);
+//    if (allTasks == null || allTasks.size() <= 0)
+//      return warning("infosme.warn.no_task_for_msg");
 
     try { // Order is important here!
       tableHelper.processRequest(request);
@@ -325,7 +323,20 @@ public class Messages extends InfoSmeBean
     return message("Messages resending");
   }
 
+  private SimpleDateFormat archiveDf = new SimpleDateFormat("ddMMyyyy");
 
+  public String getArchiveDate() {
+    return msgFilter.getArchiveDate() == null ? "" : archiveDf.format(msgFilter.getArchiveDate()) ;
+  }
+
+  public void setArchiveDate(String archiveDate) {
+    try{
+      msgFilter.setArchiveDate(archiveDate == null || archiveDate.length() == 0 ? null : archiveDf.parse(archiveDate));
+    }catch (ParseException e){
+      e.printStackTrace();
+      logger.error(e,e);
+    }
+  }
 
   public boolean isInitialized() {
     return initialized;
@@ -435,7 +446,20 @@ public class Messages extends InfoSmeBean
     msgFilter.setTaskId(taskId);
   }
   public String getTaskName() {
-    return getInfoSmeConfig().getTask(msgFilter.getTaskId()).getName();
+    if(msgFilter.getArchiveDate() == null) {
+      return getInfoSmeConfig().getTask(msgFilter.getTaskId()).getName();
+    }else {
+      try{
+        TaskArchiveDataSource taskArchiveDataSource =
+            new TaskArchiveDataSource(getInfoSme(), getInfoSmeConfig().getArchiveDir());
+        Task t = taskArchiveDataSource.get(msgFilter.getArchiveDate(), msgFilter.getTaskId());
+        return  t== null ? null : t.getName();
+      }catch (Exception e) {
+        logger.error(e,e);
+        e.printStackTrace();
+        return null;
+      }
+    }
   }
 
   public String getAddress() {

@@ -67,6 +67,8 @@ public class InfoSmeContext implements SMEAppContext
 
   private InfoSmeLicense license;
 
+  private TaskArchiveDaemon taskArchiveDaemon;
+
   private InfoSmeContext(SMSCAppContext appContext, String smeId)
       throws AdminException, ParserConfigurationException, SAXException, IOException,
       Config.WrongParamTypeException, Config.ParamNotFoundException
@@ -96,17 +98,26 @@ public class InfoSmeContext implements SMEAppContext
     if( msgStoreDir.length() > 0 && msgStoreDir.charAt(0) != '/' )
       msgStoreDir = serviceFolder + '/' + msgStoreDir;
 
-    this.exportStatManager = new InfoSmeExportStatManager(new MessageDataSource(infoSmeConfig));
+    this.exportStatManager = new InfoSmeExportStatManager(new MessageDataSource(this));
     this.exportStatManager.start();
 
     if(infoSmeConfig.isSiebelTMStarted()) {
       startSiebelTaskManager();
       System.out.println("Siebel: Siebel is started");
     }
+
+    if(infoSmeConfig.isArchiveDaemonStarted()) {
+      startArchiveDaemon();
+      System.out.println("ArchiveDaemon is started");
+    }
   }
 
   public boolean isSiebelOnline() {
     return siebelTaskManager != null && siebelTaskManager.isOnline();
+  }
+
+  public boolean isTaskArchiveDaemonOnline() {
+    return taskArchiveDaemon != null && taskArchiveDaemon.isOnline();
   }
 
   public void startSiebelTaskManager() throws AdminException{
@@ -134,6 +145,19 @@ public class InfoSmeContext implements SMEAppContext
     }
   }
 
+
+  public synchronized void startArchiveDaemon() throws AdminException{
+    try{
+      if(taskArchiveDaemon == null) {
+        taskArchiveDaemon = new TaskArchiveDaemon(this, appContext);
+      }
+      taskArchiveDaemon.start();
+      infoSmeConfig.setArchiveDaemonStarted(true);
+    }catch(Throwable e) {
+      throw new AdminException("Can't init TaskArchiveDaemon", e);
+    }
+  }
+
   public void stopSiebelTaskManager() throws AdminException{
     if(siebelTaskManager != null) {
       siebelTaskManager.shutdown();
@@ -147,6 +171,13 @@ public class InfoSmeContext implements SMEAppContext
     }
   }
 
+  public void stopTaskArchiveDaemon() throws AdminException{
+    if(taskArchiveDaemon != null) {
+      taskArchiveDaemon.shutdown();
+      infoSmeConfig.setArchiveDaemonStarted(false);
+    }
+  }
+
   public void shutdown()
   {
     if(siebelTaskManager != null) {
@@ -157,6 +188,9 @@ public class InfoSmeContext implements SMEAppContext
     }
     if(siebelDataProvider != null) {
       siebelDataProvider.shutdown();
+    }
+    if(taskArchiveDaemon != null) {
+      taskArchiveDaemon.shutdown();
     }
     if(taskManager != null) {
       taskManager.shutdown();

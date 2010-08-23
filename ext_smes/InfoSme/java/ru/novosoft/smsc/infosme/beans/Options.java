@@ -21,6 +21,10 @@ import java.text.SimpleDateFormat;
 public class Options extends InfoSmeBean
 {
 
+  //archiveDaemon
+
+  private String taskArchiveDir;
+
   //Siebel
 
   private String siebelJDBCDriver="";
@@ -123,6 +127,8 @@ public class Options extends InfoSmeBean
         storeLocation = getConfig().getStoreLocation();
         archiveLocation = getConfig().getArchiveLocation();
         statStoreLocation = getConfig().getStatStoreLocation();
+
+        taskArchiveDir = getConfig().getArchiveDir();
 
         siebelJDBCDriver = getConfig().getSiebelJDBCDriver();
         siebelJDBCSource = getConfig().getSiebelJDBCSource();
@@ -263,6 +269,7 @@ public class Options extends InfoSmeBean
       getConfig().setArchiveLocation(archiveLocation);
       getConfig().setStatStoreLocation(statStoreLocation);
 
+      getConfig().setArchiveDir(taskArchiveDir);
 
       getConfig().setSiebelJDBCDriver(siebelJDBCDriver);
       getConfig().setSiebelJDBCSource(siebelJDBCSource);
@@ -618,6 +625,14 @@ public class Options extends InfoSmeBean
       logger.error(e,e);
       return new LinkedList();
     }
+  }
+
+  public String getTaskArchiveDir() {
+    return taskArchiveDir;
+  }
+
+  public void setTaskArchiveDir(String taskArchiveDir) {
+    this.taskArchiveDir = taskArchiveDir;
   }
 
   public String getSiebelRetryPolicy() {

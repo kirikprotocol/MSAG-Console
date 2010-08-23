@@ -1,6 +1,22 @@
 <%@ page import="ru.novosoft.smsc.infosme.backend.config.tasks.Task" %>
 <% int rowN = 0;%>
 <div class=content>
+
+  <% 
+    Collection regions = deliveries_bean.getRegionIds();
+    if(!regions.isEmpty()) {%>
+  <div class=page_subtitle><%=getLocString("infosme.label.abonentsNumber")%></div>
+  <table class=properties_list border="0">
+    <col width="10%">
+    <%for(Iterator regionIter=regions.iterator(); regionIter.hasNext();) {
+      Integer region = (Integer)regionIter.next();
+      int actualSize = deliveries_bean.getActualSize(region.intValue());%>
+    <tr class=row<%=rowN++&1%>><td><%=deliveries_bean.getRegionName(region.intValue())%></td><td><%=actualSize%></td></tr>
+    <%}%>
+  </table>
+  <br/>
+  <%}%>
+
   <div class=page_subtitle><%= getLocString("infosme.subtitle.stage3")%></div><br/>
   <input type=hidden id="oldActiveTaskRegionId" name="oldActiveTaskRegionId" value="<%=deliveries_bean.getActiveTaskRegionId()%>"/>
 
@@ -31,10 +47,6 @@
           %>
         </select>
       </td>
-    </tr>
-    <tr class=row<%=rowN++&1%>>
-      <th><%= getLocString("infosme.label.abonentsNumber")%></th>
-      <td><%=StringEncoderDecoder.encode(deliveries_bean.getRecordsNumber())%></td>
     </tr>
     <% } %>
     <tr class=row<%=rowN++&1%>>

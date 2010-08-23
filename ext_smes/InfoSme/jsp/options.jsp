@@ -37,15 +37,15 @@
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Max messages per second</th>
-  <td><input class=txt name=maxMessagesPerSecond value="<%=StringEncoderDecoder.encode(bean.getMaxMessagesPerSecond())%>"></td>
+  <td><input class=txt name=maxMessagesPerSecond value="<%=StringEncoderDecoder.encode(bean.getMaxMessagesPerSecond())%>" validation="positive"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Unresponded messages max</th>
-  <td><input class=txt name=unrespondedMessagesMax value="<%=StringEncoderDecoder.encode(bean.getUnrespondedMessagesMax())%>"></td>
+  <td><input class=txt name=unrespondedMessagesMax value="<%=StringEncoderDecoder.encode(bean.getUnrespondedMessagesMax())%>" validation="positive"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Unresponded messages sleep</th>
-  <td><input class=txt name=unrespondedMessagesSleep value="<%=StringEncoderDecoder.encode(bean.getUnrespondedMessagesSleep())%>"></td>
+  <td><input class=txt name=unrespondedMessagesSleep value="<%=StringEncoderDecoder.encode(bean.getUnrespondedMessagesSleep())%>" validation="positive"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Response wait time</th>
@@ -61,23 +61,23 @@
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Tasks switch timeout</th>
-  <td><input class=txt name=tasksSwitchTimeout value="<%=StringEncoderDecoder.encode(bean.getTasksSwitchTimeout())%>"></td>
+  <td><input class=txt name=tasksSwitchTimeout value="<%=StringEncoderDecoder.encode(bean.getTasksSwitchTimeout())%>" validation="positive"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Tasks thread pool max</th>
-  <td><input class=txt name=tasksThreadPoolMax value="<%=StringEncoderDecoder.encode(bean.getTasksThreadPoolMax())%>"></td>
+  <td><input class=txt name=tasksThreadPoolMax value="<%=StringEncoderDecoder.encode(bean.getTasksThreadPoolMax())%>" validation="positive"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Tasks thread pool init</th>
-  <td><input class=txt name=tasksThreadPoolInit value="<%=StringEncoderDecoder.encode(bean.getTasksThreadPoolInit())%>"></td>
+  <td><input class=txt name=tasksThreadPoolInit value="<%=StringEncoderDecoder.encode(bean.getTasksThreadPoolInit())%>" validation="positive"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Events thread pool max</th>
-  <td><input class=txt name=eventsThreadPoolMax value="<%=StringEncoderDecoder.encode(bean.getEventsThreadPoolMax())%>"></td>
+  <td><input class=txt name=eventsThreadPoolMax value="<%=StringEncoderDecoder.encode(bean.getEventsThreadPoolMax())%>" validation="positive"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Events thread pool init</th>
-  <td><input class=txt name=eventsThreadPoolInit value="<%=StringEncoderDecoder.encode(bean.getEventsThreadPoolInit())%>"></td>
+  <td><input class=txt name=eventsThreadPoolInit value="<%=StringEncoderDecoder.encode(bean.getEventsThreadPoolInit())%>" validation="positive"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Admin host</th>
@@ -85,7 +85,7 @@
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Admin port</th>
-  <td><input class=txt name=adminPort value="<%=StringEncoderDecoder.encode(bean.getAdminPort())%>"></td>
+  <td><input class=txt name=adminPort value="<%=StringEncoderDecoder.encode(bean.getAdminPort())%>" validation="positive"></td>
 </tr>
 
 <tr class=row<%=rowN++&1%>>
@@ -101,6 +101,11 @@
 <tr class=row<%=rowN++&1%>>
   <th>Statistics store location</th>
   <td><input class=txt name=statStoreLocation value="<%=StringEncoderDecoder.encode(bean.getStatStoreLocation())%>"></td>
+</tr>
+
+<tr class=row<%=rowN++&1%>>
+  <th>Tasks archive location</th>
+    <td><input class=txt name=taskArchiveDir value="<%=StringEncoderDecoder.encode(bean.getTaskArchiveDir())%>" validation="nonEmpty"></td>
 </tr>
 
 <tr class=row<%=rowN++&1%>>

@@ -12,8 +12,10 @@ import ru.novosoft.smsc.jsp.util.helper.statictable.cell.ImageCell;
 import ru.novosoft.smsc.jsp.util.helper.statictable.cell.StringCell;
 import ru.novosoft.smsc.jsp.util.helper.statictable.column.TextColumn;
 import ru.novosoft.smsc.jsp.util.helper.statictable.column.ImageColumn;
+import ru.novosoft.smsc.jsp.util.tables.EmptyResultSet;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataSource;
+import ru.novosoft.smsc.jsp.util.tables.impl.QueryResultSetImpl;
 
 import javax.servlet.http.HttpServletRequest;
 import java.text.SimpleDateFormat;
@@ -25,26 +27,25 @@ import java.util.List;
  * User: artem
  * Date: 22.01.2009
  */
-public class TasksTableHelper extends PagedStaticTableHelper {
+public class TasksArchiveTableHelper extends PagedStaticTableHelper {
 
   public static final int MODE_ADMIN = 0;
   public static final int MODE_ADMIN_ACTIVE = 1;
   public static final int MODE_MARKET = 2;
 
-  private final ImageColumn checkColumn = new ImageColumn("checkColumn", "/images/ico16_checked_sa.gif", "", false, 1);
-  private final TextColumn enabledColumn = new TextColumn("enabled", "infosme.label.on", true, 1);
-  private final TextColumn nameColumn = new TextColumn("name", "infosme.label.task", true, 20);
-  private final TextColumn providerColumn = new TextColumn("provider", "infosme.label.provider", true);
+  private final TextColumn enabledColumn = new TextColumn("enabled", "infosme.label.on", false, 1);
+  private final TextColumn nameColumn = new TextColumn("name", "infosme.label.task", false, 20);
+  private final TextColumn providerColumn = new TextColumn("provider", "infosme.label.provider", false);
   private final TextColumn generatingColumn = new TextColumn("generating", "infosme.label.generating", false);
   private final TextColumn processingColumn = new TextColumn("processing", "infosme.label.processing", false);
   private final TextColumn priorityColumn = new TextColumn("priority", "infosme.label.priority", true);
-  private final TextColumn retryOnFailColumn = new TextColumn("retryOnFail", "infosme.label.retryOnFail", true);
-  private final TextColumn replaceMessageColumn = new TextColumn("replaceMessage", "infosme.label.replace", true, 1);
-  private final TextColumn trackIntegrityColumn = new TextColumn("trackIntegrity", "infosme.label.integrity", true, 1);
-  private final TextColumn startDateColumn = new TextColumn("startDate", "infosme.label.start", true);
-  private final TextColumn endDateColumn = new TextColumn("endDate", "infosme.label.end", true);
-  private final TextColumn ownerColumn = new TextColumn("owner", "infosme.label.owner", true);
-  private final TextColumn idColumn = new TextColumn("id", "infosme.label.id", true, 2);
+  private final TextColumn retryOnFailColumn = new TextColumn("retryOnFail", "infosme.label.retryOnFail", false);
+  private final TextColumn replaceMessageColumn = new TextColumn("replaceMessage", "infosme.label.replace", false, 1);
+  private final TextColumn trackIntegrityColumn = new TextColumn("trackIntegrity", "infosme.label.integrity", false, 1);
+  private final TextColumn startDateColumn = new TextColumn("startDate", "infosme.label.start", false);
+  private final TextColumn endDateColumn = new TextColumn("endDate", "infosme.label.end", false);
+  private final TextColumn ownerColumn = new TextColumn("owner", "infosme.label.owner", false);
+  private final TextColumn idColumn = new TextColumn("id", "infosme.label.id", false, 2);
 
   private final AbstractDataSource tds;
   private TaskFilter filter;
@@ -54,14 +55,15 @@ public class TasksTableHelper extends PagedStaticTableHelper {
 
   private TaskQuery.Progress progress;
 
-  public TasksTableHelper(String uid, int mode, TaskFilter filter, boolean selectable,
+  private QueryResultSet cache = new EmptyResultSet();
+
+  public TasksArchiveTableHelper(String uid, int mode, TaskFilter filter, boolean selectable,
                           AbstractDataSource tds) throws AdminException {
     super(uid, false);
     this.tds = tds;
     this.filter = filter;
     this.selectable = selectable;
 
-    addColumn(checkColumn);
     addColumn(enabledColumn);
     addColumn(idColumn);
     addColumn(nameColumn);
@@ -84,8 +86,6 @@ public class TasksTableHelper extends PagedStaticTableHelper {
       addColumn(processingColumn);
       addColumn(priorityColumn);
       addColumn(retryOnFailColumn);
-//      addColumn(replaceMessageColumn);
-//      addColumn(trackIntegrityColumn);
     }
   }
 
@@ -101,26 +101,19 @@ public class TasksTableHelper extends PagedStaticTableHelper {
     this.filter = filter;
   }
 
-  private void buildSortOrder() {
-    SortOrderElement[] sortOrderElements = getSortOrder();
-    if((sortOrderElements!=null)&&(sortOrderElements.length>0)) {
-      SortOrderElement element = sortOrderElements[0];
-      if(element!=null) {
-        sortOrder=element.getColumnId();
-        if(sortOrder!=null) {
-          if(element.getOrderType()!= OrderType.ASC) {
-            sortOrder= '-' +sortOrder;
-          }
-          return;
-        }
-      }
+  private boolean readCache = false;
+
+  public void refillTable() throws TableHelperException {
+    try{
+      readCache = true;
+      super.fillTable();
+    }finally {
+      readCache = false;
     }
-    sortOrder="name";
   }
 
   protected void fillTable(int start, int size) throws TableHelperException {
-    buildSortOrder();
-
+    System.out.println("fill: start="+start+" size="+size);
     // Convert from user to local time
     if (filter != null) {
       if (filter.getStartDate() != null)
@@ -130,13 +123,19 @@ public class TasksTableHelper extends PagedStaticTableHelper {
         filter.setEndDate(user.getLocalTime(filter.getEndDate()));
     }
     QueryResultSet rs;
-    try{
-      TaskQuery taskQuery = new TaskQuery(filter, size, sortOrder, start);
-      taskQuery.setProgress(progress);
-      rs = tds.query(taskQuery);
-    }catch (AdminException e) {
-      throw new TableHelperException(e);
+    if(readCache) {
+      rs = cache;
+    }else {
+      try{
+        TaskQuery taskQuery = new TaskQuery(filter, 1000, "", 0);
+        taskQuery.setProgress(progress);
+        cache = rs = tds.query(taskQuery);
+      }catch (AdminException e) {
+        throw new TableHelperException(e);
+      } 
     }
+    System.out.println("rs.size="+rs.size());
+    System.out.println("rs.totalSize="+rs.getTotalSize());
     // Convert back from local to user time
     if (filter != null) {
       if (filter.getStartDate() != null)
@@ -147,14 +146,15 @@ public class TasksTableHelper extends PagedStaticTableHelper {
     }
 
     SimpleDateFormat df = new SimpleDateFormat("dd.MM.yy HH:mm");
+
+    SimpleDateFormat nameIdDf = new SimpleDateFormat("ddMMyyyy");
     clear();
-    for (int i=0; i < size && i < rs.size(); i++) {
+    for (int i=start; i < start + size && i < rs.size(); i++) {
       TaskDataItem t = (TaskDataItem)rs.get(i);
       final Row row = createNewRow();
-      row.addCell(checkColumn, new CheckBoxCell("chb" + t.getId(), false));
       row.addCell(enabledColumn, new ImageCell(t.getId(), t.isEnabled() ? "/images/ic_checked.gif" : null, false));
       row.addCell(idColumn, new StringCell(t.getId(), t.getId(), false));
-      row.addCell(nameColumn, new StringCell(t.getId(), t.getName(), selectable));
+      row.addCell(nameColumn, new StringCell(t.getId()+'_'+nameIdDf.format(t.getStartDate()), t.getName(), selectable));
       String startDate = t.getStartDate() == null ? "" : df.format(user.getUserTime(t.getStartDate()));
       row.addCell(startDateColumn, new StringCell(t.getId(), startDate, false));
       String endDate = t.getEndDate() == null ? "" : df.format(user.getUserTime(t.getEndDate()));
@@ -176,15 +176,6 @@ public class TasksTableHelper extends PagedStaticTableHelper {
     return getTotalSize();
   }
 
-  public List getSelectedTasksList(HttpServletRequest request) {
-    final ArrayList result = new ArrayList();
-    for (Iterator iter = request.getParameterMap().keySet().iterator(); iter.hasNext(); ) {
-      final String paramName = (String)iter.next();
-      if (paramName.startsWith("chb"))
-        result.add(paramName.substring(3));
-    }
-    return result;
-  }
 
   public void setProgress(TaskQuery.Progress progress) {
     this.progress = progress;
