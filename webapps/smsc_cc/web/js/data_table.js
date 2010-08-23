@@ -10,6 +10,9 @@ function DataTable(tableId, updateUsingSubmit) {
   var pageSizeElement = document.getElementById(tableId + '_pageSize');
   var previousPageSizeElement = document.getElementById(tableId + '_previousPageSize');
   var bodyElement = document.getElementById(tableId);
+  var checked = false;
+
+  var autoUpdateTimeout = 5000;
 
   /**
    * Ищет форму, которая содержит элемент с указанным идентификатором
@@ -75,6 +78,7 @@ function DataTable(tableId, updateUsingSubmit) {
    * Обновляет содержимое таблицы
    */
   this.updateTable = function() {
+    checked = false;
     if (updateUsingSubmit)
       return closestForm.submit();
 
@@ -126,25 +130,55 @@ function DataTable(tableId, updateUsingSubmit) {
    * Инвертирует выделение всех строк текущей страницы
    */
   this.selectAll = function () {
-    var startPos = previousPageSizeElement.value * pageElement.value;
-    var endPos = startPos + previousPageSizeElement.value;
-    for (var i = startPos; i < endPos; i++) {
-      var c = document.getElementById(tableId + '_rowCheck' + i);
-      if (c == null) break;
-      c.checked = !c.checked;
+    checked = !checked;
+    var endPos = previousPageSizeElement.value;
+    var inputs = document.getElementsByTagName("input");
+    var prefix = tableId + '_rowCheck';
+    for (var i = 0; i < inputs.length; i++) {
+      var c = inputs[i];
+      if (c.id != null && c.id.indexOf(prefix) == 0)
+        c.checked = checked;
     }
   };
 
-  this.showRowInnerData = function(rowId) {
-    var element = document.getElementById("innerData" + rowId);
+  var _expandRow = function(rowId, expand) {
     var headerElement = document.getElementById("innerDataHeader" + rowId);
-    if (element.style.display == "none") {
-      element.style.display="";
-      headerElement.className = 'inner_data_opened';
-    } else {
-      element.style.display="none";
-      headerElement.className = 'inner_data_closed';
+    if (headerElement == null)
+      return;
+
+    headerElement.className = (expand) ? 'inner_data_opened' : 'inner_data_closed';
+
+    var elements = document.getElementsByName('innerData' + rowId);
+    for (var j = 0; j < elements.length; j++) {
+      var element = elements[j];
+      element.style.display = expand ? "" : "none";
     }
+  };
+
+  this.expandRow = function(rowId) {
+    var headerElement = document.getElementById("innerDataHeader" + rowId);
+    if (headerElement == null)
+      return;
+
+    _expandRow(rowId, headerElement.className == 'inner_data_closed');
+  };
+
+  this.expandAll = function() {
+    var expandElement = document.getElementById(tableId + "_expand");
+    var tableElement = document.getElementById(tableId + "_table");
+    if (expandElement == null || tableElement == null)
+      return;
+
+    var expand = expandElement.className == 'inner_data_closed';
+    var rows = tableElement.rows;
+
+    for (var i = 0; i < rows.length; i++) {
+      var row = rows[i];
+      if (row.id != null)
+        _expandRow(row.id, expand);
+    }
+
+    expandElement.className = expand ? 'inner_data_opened' : 'inner_data_closed';
   };
 
   /**
@@ -152,9 +186,9 @@ function DataTable(tableId, updateUsingSubmit) {
    * @param timeout интервал обновления в миллисекундах
    */
   this.autoUpdateTable = function(timeout) {
+    if (updateUsingSubmit)
+      return;
     this.updateTable();
     window.setTimeout(this.autoUpdateTable, timeout);
-  }
-
-
+  };
 }

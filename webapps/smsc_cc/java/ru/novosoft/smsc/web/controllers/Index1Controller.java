@@ -1,10 +1,11 @@
 package ru.novosoft.smsc.web.controllers;
 
-import ru.novosoft.smsc.web.components.data_table.DataTableModel;
-import ru.novosoft.smsc.web.components.data_table.DataTableRow;
-import ru.novosoft.smsc.web.components.data_table.DataTableSortOrder;
-import ru.novosoft.smsc.web.components.dynamic_table.TableModel;
-import ru.novosoft.smsc.web.components.dynamic_table.TableRow;
+import ru.novosoft.smsc.web.components.data_table.model.DataTableModel;
+import ru.novosoft.smsc.web.components.data_table.model.DataTableRow;
+import ru.novosoft.smsc.web.components.data_table.model.DataTableRowBase;
+import ru.novosoft.smsc.web.components.data_table.model.DataTableSortOrder;
+import ru.novosoft.smsc.web.components.dynamic_table.model.DynamicTableModel;
+import ru.novosoft.smsc.web.components.dynamic_table.model.DynamicTableRow;
 
 import javax.faces.event.ActionEvent;
 import java.io.Serializable;
@@ -15,19 +16,19 @@ import java.util.*;
  */
 public class Index1Controller implements Serializable {
 
-  transient private TableModel model;
+  transient private DynamicTableModel model;
   static int counter;
 
   public Index1Controller() {
-    model = new TableModel();
+    model = new DynamicTableModel();
   }
 
-  public TableModel getModel() {
+  public DynamicTableModel getModel() {
     return model;
   }
 
-  public void setModel(TableModel model) {
-    for (TableRow row : model.getRows())
+  public void setModel(DynamicTableModel model) {
+    for (DynamicTableRow row : model.getRows())
       System.out.println(row.getValue("column1") + " | " + row.getValue("column2"));
     this.model = model;
   }
@@ -104,41 +105,47 @@ public class Index1Controller implements Serializable {
         });
       }
       List<DataTableRow> rows = new ArrayList<DataTableRow>();
+
       for (int i = startPos; i < startPos + count && i < strings.size(); i++) {
-        Map<String, Object> val = new HashMap<String, Object>();
-        val.put("column1", strings.get(i));
-        val.put("column2", strings.get(i) + "2");
-        val.put("column3", i%2);
-        rows.add(new Row(val));
+        RowData d = new RowData(strings.get(i), strings.get(i) + "2");
+
+        DataTableRowBase rb = new DataTableRowBase(strings.get(i), d, i % 3 == 2 ? ("INNER DATA " + strings.get(i)) : null);
+
+        if (i % 3 == 1) {
+          rb.addInnerRow(d);
+          rb.addInnerRow(d);
+          rb.addInnerRow(d);
+          rb.addInnerRow(d);
+          rb.addInnerRow(d);
+
+        }
+
+        rows.add(rb);
       }
       return rows;
-    }    
+    }
 
     public int getRowsCount() {
       return strings.size();
     }
 
-    private class Row implements DataTableRow {
+    public class RowData {
+      private final String column1;
+      private final String column2;
 
-      private final Map<String, Object> values;
-
-      private Row(Map<String, Object> values) {
-        this.values = values;
+      public RowData(String column1, String column2) {
+        this.column1 = column1;
+        this.column2 = column2;
       }
 
-      public String getId() {
-        return (String)values.get("column1");
+      public String getColumn1() {
+        return column1;
       }
 
-      public Object getData(String columnName) {
-        return values.get(columnName);
-      }
-
-      public Object getInnerText() {
-        if (Integer.parseInt((String)values.get("column1")) %2 == 1)
-          return "Inner text" + (String)values.get("column1");
-        return null;
+      public String getColumn2() {
+        return column2;
       }
     }
+
   }
 }

@@ -18,6 +18,10 @@ table.list tr.row1 {
   background-color: #F8F6EE;
 }
 
+table.list tr.inner {
+  background-color: WHITE;
+}
+
 table.list tr.row0 td,
 table.list tr.row0 th {
   border-bottom: 1px solid #E4E0CE;
@@ -25,6 +29,11 @@ table.list tr.row0 th {
 
 table.list tr.row1 td,
 table.list tr.row1 th {
+  border-bottom: 1px solid #E6E3D8;
+}
+
+table.list tr.inner td,
+table.list tr.inner th {
   border-bottom: 1px solid #E6E3D8;
 }
 

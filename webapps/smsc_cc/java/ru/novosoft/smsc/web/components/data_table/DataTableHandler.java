@@ -4,6 +4,10 @@ import com.sun.facelets.FaceletContext;
 import com.sun.facelets.tag.TagAttribute;
 import com.sun.facelets.tag.jsf.ComponentConfig;
 import com.sun.facelets.tag.jsf.ComponentHandler;
+import ru.novosoft.smsc.web.components.data_table.model.DataTableModel;
+import ru.novosoft.smsc.web.components.data_table.model.DataTableRow;
+import ru.novosoft.smsc.web.components.data_table.model.DataTableRowBase;
+import ru.novosoft.smsc.web.components.data_table.model.DataTableSortOrder;
 
 import javax.faces.component.UIComponent;
 import java.util.ArrayList;
@@ -27,7 +31,7 @@ public class DataTableHandler extends ComponentHandler {
     autoUpdate = getAttribute("autoUpdate");
     pageSize = getAttribute("pageSize");
     selectedRows = getAttribute("selectedRows");
-    updateUsingSubmit = getAttribute("filter");
+    updateUsingSubmit = getAttribute("updateUsingSubmit");
   }
 
   protected UIComponent createComponent(FaceletContext ctx) {
@@ -63,17 +67,32 @@ public class DataTableHandler extends ComponentHandler {
 
     int startPos = t.getCurrentPage() * t.getPageSize();
     List<DataTableRow> rows = m.getRows(startPos, t.getPageSize(), s);
-    t.setRows(rows);
     ctx.getVariableMapper().setVariable("dataTable", new ConstantExpression(t));
 
     // Header
-    t.setCurrentRowNum(-1);
     nextHandler.apply(ctx, c);
 
     // Body
-    for (int i=0; i<rows.size(); i++) {
-      t.setCurrentRowNum(i);
+    for (DataTableRow row : rows) {
+      ctx.getVariableMapper().setVariable("___currentRow", new ConstantExpression(row));
+
       nextHandler.apply(ctx, c);
+
+      List<Object> innerRowsData = row.getInnerRows();
+
+      if (innerRowsData != null && !innerRowsData.isEmpty()) {
+
+        List<DataTableRow> innerRows = new ArrayList<DataTableRow>(innerRowsData.size());
+        for (Object o : innerRowsData)
+          innerRows.add(new DataTableRowBase(row.getId(), o, null));
+
+        ctx.getVariableMapper().setVariable("___innerRow", new ConstantExpression("inner"));
+        for (DataTableRow innerRow : innerRows) {
+          ctx.getVariableMapper().setVariable("___currentRow", new ConstantExpression(innerRow));
+          nextHandler.apply(ctx, c);
+        }
+        ctx.getVariableMapper().setVariable("___innerRow", null);
+      }
     }
 
     ctx.getVariableMapper().setVariable("dataTable", null);

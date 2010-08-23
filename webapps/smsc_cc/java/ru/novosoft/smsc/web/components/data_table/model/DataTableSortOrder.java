@@ -1,7 +1,7 @@
-package ru.novosoft.smsc.web.components.data_table;
+package ru.novosoft.smsc.web.components.data_table.model;
 
 /**
- * Класс, описывающий порядок сортировки с DataTable
+ * Класс, описывающий порядок сортировки в DataTable
  * @author Artem Snopkov
  */
 public class DataTableSortOrder {
@@ -9,7 +9,7 @@ public class DataTableSortOrder {
   private final String columnId;
   private final boolean asc;
 
-  DataTableSortOrder(String columnId, boolean asc) {
+  public DataTableSortOrder(String columnId, boolean asc) {
     this.columnId = columnId;
     this.asc = asc;
   }

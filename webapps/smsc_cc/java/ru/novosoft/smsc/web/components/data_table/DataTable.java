@@ -1,6 +1,8 @@
 package ru.novosoft.smsc.web.components.data_table;
 
-import javax.faces.component.UIComponent;
+import ru.novosoft.smsc.web.components.EyelineComponent;
+import ru.novosoft.smsc.web.components.data_table.model.DataTableModel;
+
 import javax.faces.component.UIComponentBase;
 import javax.faces.context.FacesContext;
 import java.util.ArrayList;
@@ -9,7 +11,7 @@ import java.util.List;
 /**
  * @author Artem Snopkov
  */
-public class DataTable extends UIComponentBase {
+public class DataTable extends EyelineComponent {
 
   private DataTableModel model;
   private String sortOrder;
@@ -19,34 +21,6 @@ public class DataTable extends UIComponentBase {
   private boolean rowSelection;
   private boolean updateUsingSubmit;
   private List<String> selectedRows = new ArrayList<String>();
-
-  private int currentRowNum;
-  private List<DataTableRow> rows;
-
-  public String getFamily() {
-    return "Eyeline";
-  }
-
-  public List<DataTableColumn> getColumns() {
-    List<DataTableColumn> result = new ArrayList<DataTableColumn>();
-    Integer rowNum = null;
-    for (UIComponent c : getChildren()) {
-      if (c instanceof DataTableColumn) {
-        DataTableColumn col = (DataTableColumn) c;
-        if (rowNum == null)
-          rowNum = col.getRowNum();
-        if (rowNum == col.getRowNum())
-          result.add((DataTableColumn) c);
-        else
-          break;
-      }
-    }
-    return result;
-  }
-
-  public String getRendererType() {
-    return "dataTable";
-  }
 
   public DataTableModel getModel() {
     return model;
@@ -114,36 +88,13 @@ public class DataTable extends UIComponentBase {
     return selectedRows;
   }
 
-  public int getCurrentRowNum() {
-    return currentRowNum;
-  }
-
-  public void setCurrentRowNum(int currentRowNum) {
-    this.currentRowNum = currentRowNum;
-  }
-
-  public List<DataTableRow> getRows() {
-    return rows;
-  }
-
-  public void setRows(List<DataTableRow> rows) {
-    this.rows = rows;
-  }
-
-  public boolean hasInnerData() {
-    for (DataTableRow row : rows)
-      if (row.getInnerText() != null)
-        return true;
-    return false;
-  }
-
   public boolean isUpdateUsingSubmit() {
     return updateUsingSubmit;
   }
 
   public void setUpdateUsingSubmit(boolean updateUsingSubmit) {
     this.updateUsingSubmit = updateUsingSubmit;
-  }
+  }  
 
   public Object saveState(FacesContext context) {
     Object[] values = new Object[11];

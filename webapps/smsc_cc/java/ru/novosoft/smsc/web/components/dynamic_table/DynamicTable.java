@@ -1,6 +1,8 @@
 package ru.novosoft.smsc.web.components.dynamic_table;
 
-import javax.faces.component.UICommand;
+import ru.novosoft.smsc.web.components.EyelineComponent;
+import ru.novosoft.smsc.web.components.dynamic_table.model.DynamicTableModel;
+
 import javax.faces.context.FacesContext;
 import java.util.ArrayList;
 import java.util.List;
@@ -8,21 +10,17 @@ import java.util.List;
 /**
  * @author Artem Snopkov
  */
-public class DynamicTable extends UICommand {
+public class DynamicTable extends EyelineComponent {
 
-  private TableModel model;
+  private DynamicTableModel model;
   private List<Column> columns = new ArrayList<Column>();
-  private int width;
+  private int width; 
 
-  public String getFamily() {
-    return "Eyeline";
-  }
-
-  public TableModel getModel() {
+  public DynamicTableModel getModel() {
     return model;
   }
 
-  public void setModel(TableModel value) {
+  public void setModel(DynamicTableModel value) {
     this.model = value;
   }
 
@@ -52,6 +50,6 @@ public class DynamicTable extends UICommand {
   public void restoreState(FacesContext context, Object state) {
     Object[] values = (Object[]) state;
     super.restoreState(context, values[0]);
-    model = (TableModel) values[1];
+    model = (DynamicTableModel) values[1];
   }
 }

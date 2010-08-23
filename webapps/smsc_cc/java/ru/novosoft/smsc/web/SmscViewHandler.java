@@ -3,8 +3,6 @@ package ru.novosoft.smsc.web;
 import com.sun.facelets.FaceletViewHandler;
 import org.apache.log4j.Logger;
 import ru.novosoft.smsc.web.components.AjaxFacesContext;
-import ru.novosoft.smsc.web.components.paged_table.PagedTable;
-import ru.novosoft.smsc.web.components.paged_table.PagedTableRenderer;
 
 import javax.faces.component.UIComponent;
 import javax.faces.component.UIViewRoot;

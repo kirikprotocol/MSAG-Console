@@ -1,6 +1,8 @@
 package ru.novosoft.smsc.web.components.data_table;
 
 import ru.novosoft.smsc.web.components.AjaxFacesContext;
+import ru.novosoft.smsc.web.components.data_table.model.DataTableModel;
+import ru.novosoft.smsc.web.components.data_table.model.DataTableRow;
 
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
@@ -19,7 +21,7 @@ public class DataTableRenderer extends Renderer {
 
   private boolean ajax = false;
 
-  public static void doDecode(javax.faces.context.FacesContext context, javax.faces.component.UIComponent component) {
+  public void decode(javax.faces.context.FacesContext context, javax.faces.component.UIComponent component) {
     DataTable t = (DataTable) component;
     Map<String, String> reqParams = context.getExternalContext().getRequestParameterMap();
     String column = reqParams.get(t.getId() + "_column");
@@ -44,25 +46,33 @@ public class DataTableRenderer extends Renderer {
     String previousPageSize = reqParams.get(t.getId() + "_previousPageSize");
     if (pageSize != null && pageSize.trim().length() > 0 && previousPageSize != null && previousPageSize.trim().length() > 0)
       t.updatePageSize(Integer.parseInt(previousPageSize), Integer.parseInt(pageSize));
-
   }
 
-  public void decode(javax.faces.context.FacesContext context, javax.faces.component.UIComponent component) {
-    doDecode(context, component);
-  }
-
-  private List<DataTableColumn> getColumns(DataTable t) {
-    List<DataTableColumn> result = new ArrayList<DataTableColumn>();
-    Integer rowNum = null;
+  private boolean hasInnerData(DataTable t) {
     for (UIComponent c : t.getChildren()) {
-      if (c instanceof DataTableColumn) {
-        DataTableColumn col = (DataTableColumn) c;
-        if (rowNum == null)
-          rowNum = col.getRowNum();
-        if (rowNum == col.getRowNum())
-          result.add((DataTableColumn) c);
-        else
-          break;
+      if (c instanceof Row) {
+        DataTableRow tableRow = ((Row) c).getRow();
+        if (tableRow != null && (tableRow.getInnerData() != null || tableRow.getInnerRows() != null))
+          return true;
+      }
+    }
+    return false;
+  }
+
+  private static Row getFirstRow(DataTable t) {
+    for (UIComponent c : t.getChildren()) {
+      if (c instanceof Row)
+        return (Row)c;
+    }
+    return null;
+  }
+
+  private static List<Column> getColumns(DataTable t) {
+    List<Column> result = new ArrayList<Column>();
+    for (UIComponent c : getFirstRow(t).getChildren()) {
+      if (c instanceof Column) {
+        Column col = (Column) c;
+        result.add(col);
       }
     }
     return result;
@@ -81,7 +91,6 @@ public class DataTableRenderer extends Renderer {
 
     Writer w = context.getResponseWriter();
 
-
     String sOrder = t.getSortOrder();
     if (sOrder == null)
       sOrder = "";
@@ -91,26 +100,27 @@ public class DataTableRenderer extends Renderer {
     w.append("\n<input type=\"hidden\" id=\"" + t.getId() + "_pageSize" + "\" name=\"" + t.getId() + "_pageSize\" value=\"" + t.getPageSize() + "\"/>");
     w.append("\n<input type=\"hidden\" id=\"" + t.getId() + "_previousPageSize" + "\" name=\"" + t.getId() + "_previousPageSize\" value=\"" + t.getPageSize() + "\"/>");
 
-
     String ctxPath = context.getExternalContext().getRequestContextPath();
 
-    List<DataTableColumn> columns = getColumns(t);
+    List<Column> columns = getColumns(t);
+    boolean hasInnerData = hasInnerData(t);
 
     w.append("\n<div id=\"" + t.getId() + "\">");
-    w.append("\n<table class=\"list\" cellspacing=\"1\">");
+    w.append("\n<table class=\"list\" id=\"" + t.getId() + "_table\" cellspacing=\"1\">");
     if (t.isRowSelection())
       w.append("\n<col width=\"1%\"/>");
-    if (t.hasInnerData())
+    if (hasInnerData)
       w.append("\n<col width=\"1%\"/>");
-    for (DataTableColumn column : columns)
+    for (Column column : columns)
       w.append("\n<col width=\"" + column.getWidth() + "\" align=\"" + column.getAlign() + "\"/>");
 
     w.append("\n<thead>");
     if (t.isRowSelection())
-      w.append("\n<th class=\"ico\"><img src=\"" + ctxPath + "/images/ico16_checked_sa.gif\" class=\"ico16\" onclick=\"javascript:pagedTable" + t.getId() + ".selectAll()\"></th>");
-    if (t.hasInnerData())
-      w.append("\n<th>&nbsp;</th>");
-    for (DataTableColumn column : columns) {
+      w.append("\n<th class=\"ico\"><img id=\"" + t.getId() + "\"_check\" src=\"" + ctxPath + "/images/ico16_checked_sa.gif\" class=\"ico16\" onclick=\"javascript:pagedTable" + t.getId() + ".selectAll()\"></th>");
+    if (hasInnerData)
+      w.append("\n<th class=\"clickable\" onclick=\"javascript:pagedTable" + t.getId() + ".expandAll()\"><div id=\"" + t.getId() + "_expand\" class=\"inner_data_closed\">&nbsp;</div></th>");
+
+    for (Column column : columns) {
       String classStr = "";
       String sortOrder = column.getName();
       if (t.getSortOrder() != null && t.getSortOrder().endsWith(column.getName())) {
@@ -137,16 +147,6 @@ public class DataTableRenderer extends Renderer {
 
     Writer w = context.getResponseWriter();
 
-    if (t.getRows().size() > 0) {
-      w.append("\n</tr>");
-      int lastRowNum = t.getRows().size() - 1;
-      DataTableRow lastRow = t.getRows().get(lastRowNum);
-      if (lastRow.getInnerText() != null) {
-        w.append("\n<tr class=\"row" + ((lastRowNum) & 1) + "\" id=\"innerData" + t.getId() + lastRow.getId() + "\" style=\"display:none\">");
-        w.append("\n  <td align=\"left\" colspan=\"" + (t.getColumns().size() + 2) + "\">" + lastRow.getInnerText() + "</td>");
-        w.append("\n</tr>");
-      }
-    }
     w.append("\n</tbody>");
     w.append("\n</table>");
 

@@ -1,4 +1,4 @@
-package ru.novosoft.smsc.web.components.data_table;
+package ru.novosoft.smsc.web.components.data_table.model;
 
 import java.util.List;
 

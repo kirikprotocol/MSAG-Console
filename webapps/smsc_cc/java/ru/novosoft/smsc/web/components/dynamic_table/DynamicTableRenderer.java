@@ -1,5 +1,8 @@
 package ru.novosoft.smsc.web.components.dynamic_table;
 
+import ru.novosoft.smsc.web.components.dynamic_table.model.DynamicTableModel;
+import ru.novosoft.smsc.web.components.dynamic_table.model.DynamicTableRow;
+
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import javax.faces.context.ResponseWriter;
@@ -19,7 +22,7 @@ public class DynamicTableRenderer extends Renderer {
 
     DynamicTable c = (DynamicTable) component;
 
-    TableModel newModel = new TableModel();
+    DynamicTableModel newModel = new DynamicTableModel();
     String paramPrefix = c.getId() + '_';
     String newCellPrefix = c.getId() + "_newcell";
     String totalCellPrefix = c.getId() + "_total";
@@ -33,22 +36,22 @@ public class DynamicTableRenderer extends Renderer {
       }
     }
 
-    TreeMap<Integer, TableRow> rows = new TreeMap<Integer, TableRow>();
+    TreeMap<Integer, DynamicTableRow> rows = new TreeMap<Integer, DynamicTableRow>();
 
     for (String p : dtParams) {
       int i = p.indexOf('_');
       Integer rowNum = Integer.parseInt(p.substring(0, i));
       String columnName = p.substring(i + 1);
 
-      TableRow row = rows.get(rowNum);
+      DynamicTableRow row = rows.get(rowNum);
       if (row == null) {
-        row = new TableRow();
+        row = new DynamicTableRow();
         rows.put(rowNum, row);
       }
       row.setValue(columnName, parametersMap.get(paramPrefix + p));
     }
 
-    for (TableRow row : rows.values())
+    for (DynamicTableRow row : rows.values())
       newModel.addRow(row);
 
     c.setModel(newModel);
@@ -93,8 +96,8 @@ public class DynamicTableRenderer extends Renderer {
 
     w.append("var dtable=new DynamicTable('" + context.getExternalContext().getRequestContextPath() + "','" + component.getId() + "'," + columnsArray.toString() + ");\n");
 
-    TableModel m = table.getModel();
-    for (TableRow row : m.getRows()) {
+    DynamicTableModel m = table.getModel();
+    for (DynamicTableRow row : m.getRows()) {
       StringBuilder valuesArray = new StringBuilder();
       valuesArray.append("new Array(");
       for (int j = 0; j < table.getColumns().size(); j++) {

@@ -1,7 +1,5 @@
 package ru.novosoft.smsc.web.components.collapsing_group;
 
-import ru.novosoft.smsc.web.components.AjaxFacesContext;
-
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import javax.faces.context.ResponseWriter;
@@ -18,16 +16,6 @@ public class  CollapsingGroupRenderer extends Renderer {
 
     String opened = context.getExternalContext().getRequestParameterMap().get("sectionOpened_" + cg.getId());
     cg.setOpened((opened != null && opened.equals("true")));
-
-//    if ((context instanceof AjaxFacesContext)) {
-//      AjaxFacesContext ctx = (AjaxFacesContext) context;
-//      if (ctx.getAjaxComponentId().equals(component.getId())) {
-//        for (UIComponent c : component.getChildren()) {
-//          System.out.println("DECODE: " + c);
-//          c.decode(context);
-//        }
-//      }
-//    }
   }
 
   public void encodeBegin(FacesContext context, UIComponent component) throws IOException {

@@ -15,18 +15,46 @@
   <ui:define name="content">
 
     <h:form>
-      <eye:pagedTable value="#{smscStatus.smsCenters}" pageSize="100" var="qwerty">
-        <eye:ptImageColumn name="connected" title="" valueMapping="1:/images/ic_internal.gif;0:/images/ic_disconnct.gif"
-                           width="5%"/>
-        <eye:ptTextColumn name="instanceNumber" title="#{msg['status.page.instance.number']}" width="25%"/>
-        <eye:ptTextColumn name="onlineHost" title="#{msg['status.page.online.host']}" textColor="GREEN" width="25%"/>
-        <eye:ptTextColumn name="status" title="#{msg['status.page.status']}" width="20%"/>
-        <eye:ptTextColumn name="action" title="#{qwerty.hello}" actionListener="#{smscStatus.changeStatus}"/>
-      </eye:pagedTable>
+      <eye:dataTable value="#{smscStatus.smsCenters}" pageSize="100" data="onlineHost">
+
+        <eye:column name="connected" title="" sortable="false" width="5%" >
+          <h:graphicImage value="/images/ic_internal.gif" rendered="#{onlineHost != null}"/>
+          <h:graphicImage value="/images/ic_disconnct.gif" rendered="#{onlineHost == null}"/>
+        </eye:column>
+
+        <eye:column name="instanceNumber" title="#{msg['status.page.instance.number']}" width="25%">
+          <h:outputText value="#{rowId}"/>
+        </eye:column>
+
+        <eye:column name="onlineHost" title="#{msg['status.page.online.host']}" width="25%" >
+          <h:outputText value="#{onlineHost}" style="color:GREEN"/>
+        </eye:column>
+
+        <eye:column name="status" title="#{msg['status.page.status']}" width="25%">
+          <h:outputText value="OK" style="color:GREEN"/>
+        </eye:column>
+
+        <eye:column name="connected" title="#{msg['status.page.action']}" var="connected">
+
+          <h:commandLink value="#{msg['status.page.start']}" action="#{smscStatus.start}"
+                         rendered="#{onlineHost == null}">
+            <f:param name="instanceNumber" value="#{rowId}"/>
+          </h:commandLink>
+
+          <h:commandLink value="#{msg['status.page.stop']}" action="#{smscStatus.stop}"
+                         rendered="#{onlineHost != null}">
+            <f:param name="instanceNumber" value="#{rowId}"/>
+          </h:commandLink>
+
+        </eye:column>
+
+      </eye:dataTable>
 
       <eye:buttons>
-        <eye:button title="#{msg['status.page.start.all']}" actionListener="#{smscStatus.startAll}"/>
-        <eye:button title="#{msg['status.page.stop.all']}" actionListener="#{smscStatus.stopAll}"/>
+        <eye:button><h:commandLink value="#{msg['status.page.start.all']}"
+                                   actionListener="#{smscStatus.startAll}"/></eye:button>
+        <eye:button><h:commandLink value="#{msg['status.page.stop.all']}"
+                                   actionListener="#{smscStatus.stopAll}"/></eye:button>
         <eye:space/>
       </eye:buttons>
     </h:form>

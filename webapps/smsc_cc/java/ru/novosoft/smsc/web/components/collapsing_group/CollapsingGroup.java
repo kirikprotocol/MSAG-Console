@@ -1,22 +1,16 @@
 package ru.novosoft.smsc.web.components.collapsing_group;
 
-import ru.novosoft.smsc.web.util.IdGenerator;
+import ru.novosoft.smsc.web.components.EyelineComponent;
 
-import javax.faces.component.UICommand;
-import javax.faces.component.UIOutput;
 import javax.faces.context.FacesContext;
 
 /**
  * @author Artem Snopkov
  */
-public class CollapsingGroup extends UICommand {
+public class CollapsingGroup extends EyelineComponent {
 
   private String label;
   private boolean opened;
-
-  public String getFamily() {
-    return "Eyeline";
-  }
 
   public String getLabel() {
     return label;

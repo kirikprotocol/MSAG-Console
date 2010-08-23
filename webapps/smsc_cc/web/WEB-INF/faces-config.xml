@@ -39,7 +39,7 @@
     <converter-class>ru.novosoft.smsc.web.controllers.SmppStatusConverter</converter-class>
   </converter>
 
-  <render-kit>
+  <render-kit>    
     <renderer>
       <component-family>Eyeline</component-family>
       <renderer-type>collapsingGroup</renderer-type>
@@ -54,8 +54,8 @@
 
     <renderer>
       <component-family>Eyeline</component-family>
-      <renderer-type>buttons</renderer-type>
-      <renderer-class>ru.novosoft.smsc.web.components.buttons.ButtonsRenderer</renderer-class>
+      <renderer-type>buttonsPanel</renderer-type>
+      <renderer-class>ru.novosoft.smsc.web.components.buttons_panel.ButtonsPanelRenderer</renderer-class>
     </renderer>    
 
     <renderer>
@@ -67,7 +67,13 @@
     <renderer>
       <component-family>Eyeline</component-family>
       <renderer-type>dataTableColumn</renderer-type>
-      <renderer-class>ru.novosoft.smsc.web.components.data_table.DataTableColumnRenderer</renderer-class>
+      <renderer-class>ru.novosoft.smsc.web.components.data_table.ColumnRenderer</renderer-class>
+    </renderer>
+
+    <renderer>
+      <component-family>Eyeline</component-family>
+      <renderer-type>dataTableRow</renderer-type>
+      <renderer-class>ru.novosoft.smsc.web.components.data_table.RowRenderer</renderer-class>
     </renderer>
   </render-kit>
 

@@ -44,22 +44,30 @@
   <tag>
     <tag-name>buttons</tag-name>
     <component>
-      <component-type>buttons</component-type>
-      <renderer-type>buttons</renderer-type>
-      <handler-class>ru.novosoft.smsc.web.components.buttons.ButtonsHandler</handler-class>
+      <component-type>buttonsPanel</component-type>
+      <renderer-type>buttonsPanel</renderer-type>
+      <handler-class>ru.novosoft.smsc.web.components.buttons_panel.ButtonsPanelHandler</handler-class>
     </component>
   </tag>
 
   <tag>
     <tag-name>button</tag-name>
-    <handler-class>ru.novosoft.smsc.web.components.buttons.ButtonHandler</handler-class>
+    <component>
+      <component-type>button</component-type>
+      <renderer-type>buttonsPanel</renderer-type>
+      <handler-class>ru.novosoft.smsc.web.components.buttons_panel.ButtonHandler</handler-class>
+    </component>
   </tag>
 
   <tag>
     <tag-name>space</tag-name>
-    <handler-class>ru.novosoft.smsc.web.components.buttons.SpaceHandler</handler-class>
-  </tag>  
-
+    <component>
+      <component-type>space</component-type>
+      <renderer-type>buttonsPanel</renderer-type>
+      <handler-class>ru.novosoft.smsc.web.components.buttons_panel.SpaceHandler</handler-class>
+    </component>
+  </tag>
+  
   <tag>
     <tag-name>dataTable</tag-name>
      <component>
@@ -74,7 +82,16 @@
      <component>
       <component-type>column</component-type>
       <renderer-type>dataTableColumn</renderer-type>
-      <handler-class>ru.novosoft.smsc.web.components.data_table.DataTableColumnHandler</handler-class>
+      <handler-class>ru.novosoft.smsc.web.components.data_table.ColumnHandler</handler-class>
+    </component>
+  </tag>
+
+  <tag>
+    <tag-name>row</tag-name>
+     <component>
+      <component-type>row</component-type>
+      <renderer-type>dataTableRow</renderer-type>
+      <handler-class>ru.novosoft.smsc.web.components.data_table.RowHandler</handler-class>
     </component>
   </tag>
 
