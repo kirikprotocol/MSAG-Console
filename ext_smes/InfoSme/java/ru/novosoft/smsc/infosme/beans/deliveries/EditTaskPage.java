@@ -167,13 +167,13 @@ public class EditTaskPage extends DeliveriesPage {
       Region r = pageData.getAppContext().getRegionsManager().getRegionById(task.getRegionId());
       if (r != null) {
         try{
-          task.setEndDate(pageData.endDate.trim().length() == 0 ? null : r.getLocalTime(df.parse(pageData.endDate)));
+          task.setEndDate(pageData.endDate.trim().length() == 0 ? null : df.parse(pageData.endDate));
         }catch(Exception e) {
           pageData.endDate = "";
           throw e;
         }
         try{
-          task.setStartDate(pageData.startDate.trim().length() == 0 ? null : r.getLocalTime(df.parse(pageData.startDate)));
+          task.setStartDate(pageData.startDate.trim().length() == 0 ? null : df.parse(pageData.startDate));
         }catch(Exception e) {
           pageData.startDate = "";
           throw e;
@@ -185,7 +185,7 @@ public class EditTaskPage extends DeliveriesPage {
           throw e;
         }
         try{
-          task.setValidityDate(pageData.validityDate.trim().length() == 0 ? null : r.getLocalTime(df.parse(pageData.validityDate)));
+          task.setValidityDate(pageData.validityDate.trim().length() == 0 ? null : df.parse(pageData.validityDate));
         }catch(Exception e) {
           pageData.validityDate = "";
           throw e;
