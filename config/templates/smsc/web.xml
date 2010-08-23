@@ -456,6 +456,7 @@
       <url-pattern>/smsc/esme_InfoSme/deliveries_gen_task.jsp</url-pattern>
       <url-pattern>/smsc/esme_InfoSme/deliveries_process_file.jsp</url-pattern>
       <url-pattern>/smsc/esme_InfoSme/deliveries_process_progress.jsp</url-pattern>
+      <url-pattern>/smsc/esme_InfoSme/tasks_progress.jsp</url-pattern>
       <url-pattern>/smsc/esme_InfoSme/tasks.jsp</url-pattern>
       <url-pattern>/smsc/esme_InfoSme/messages.jsp</url-pattern>
       <url-pattern>/smsc/esme_InfoSme/csv_download.jsp</url-pattern>
