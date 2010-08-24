@@ -41,7 +41,7 @@ public class DataTableHandler extends ComponentHandler {
     if (pageSize != null)
       t.setPageSize(pageSize.getInt(ctx));
     if (selectedRows != null)
-      t.setRowSelection(true);
+      t.setSelectedRowsExpression(selectedRows.getValueExpression(ctx, List.class));
     if (updateUsingSubmit != null)
       t.setUpdateUsingSubmit(updateUsingSubmit.getBoolean(ctx));
 
@@ -54,9 +54,6 @@ public class DataTableHandler extends ComponentHandler {
 
     DataTableModel m = (DataTableModel) value.getValueExpression(ctx, DataTableModel.class).getValue(ctx);
     t.setModel(m);
-
-    if (t.getSelectedRows().size() > 0 && selectedRows != null)
-      selectedRows.getValueExpression(ctx, List.class).setValue(ctx, new ArrayList<String>(t.getSelectedRows()));
 
     DataTableSortOrder s = null;
     if (t.getSortOrder() != null) {

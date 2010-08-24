@@ -48,28 +48,11 @@ public class DataTableRenderer extends Renderer {
       t.updatePageSize(Integer.parseInt(previousPageSize), Integer.parseInt(pageSize));
   }
 
-  private boolean hasInnerData(DataTable t) {
-    for (UIComponent c : t.getChildren()) {
-      if (c instanceof Row) {
-        DataTableRow tableRow = ((Row) c).getRow();
-        if (tableRow != null && (tableRow.getInnerData() != null || tableRow.getInnerRows() != null))
-          return true;
-      }
-    }
-    return false;
-  }
 
-  private static Row getFirstRow(DataTable t) {
-    for (UIComponent c : t.getChildren()) {
-      if (c instanceof Row)
-        return (Row)c;
-    }
-    return null;
-  }
 
   private static List<Column> getColumns(DataTable t) {
     List<Column> result = new ArrayList<Column>();
-    for (UIComponent c : getFirstRow(t).getChildren()) {
+    for (UIComponent c : t.getFirstRow().getChildren()) {
       if (c instanceof Column) {
         Column col = (Column) c;
         result.add(col);
@@ -87,6 +70,8 @@ public class DataTableRenderer extends Renderer {
         ajax = true;
         ctx.setSkipContent(false);
       }
+    } else {
+      ajax = false;
     }
 
     Writer w = context.getResponseWriter();
@@ -95,17 +80,21 @@ public class DataTableRenderer extends Renderer {
     if (sOrder == null)
       sOrder = "";
 
-    w.append("\n<input type=\"hidden\" id=\"" + t.getId() + "_column" + "\" name=\"" + t.getId() + "_column\" value=\"" + sOrder + "\"/>");
-    w.append("\n<input type=\"hidden\" id=\"" + t.getId() + "_page" + "\" name=\"" + t.getId() + "_page\" value=\"" + t.getCurrentPage() + "\"/>");
-    w.append("\n<input type=\"hidden\" id=\"" + t.getId() + "_pageSize" + "\" name=\"" + t.getId() + "_pageSize\" value=\"" + t.getPageSize() + "\"/>");
-    w.append("\n<input type=\"hidden\" id=\"" + t.getId() + "_previousPageSize" + "\" name=\"" + t.getId() + "_previousPageSize\" value=\"" + t.getPageSize() + "\"/>");
-
+    if (!ajax) {
+      w.append("\n<input type=\"hidden\" id=\"" + t.getClientId(context) + "\" name=\"" + t.getClientId(context) + "\" value=\"some value\">");
+      w.append("\n<input type=\"hidden\" id=\"" + t.getId() + "_column" + "\" name=\"" + t.getId() + "_column\" value=\"" + sOrder + "\">");
+      w.append("\n<input type=\"hidden\" id=\"" + t.getId() + "_page" + "\" name=\"" + t.getId() + "_page\" value=\"" + t.getCurrentPage() + "\">");
+      w.append("\n<input type=\"hidden\" id=\"" + t.getId() + "_pageSize" + "\" name=\"" + t.getId() + "_pageSize\" value=\"" + t.getPageSize() + "\">");
+      w.append("\n<input type=\"hidden\" id=\"" + t.getId() + "_previousPageSize" + "\" name=\"" + t.getId() + "_previousPageSize\" value=\"" + t.getPageSize() + "\">");
+    }
     String ctxPath = context.getExternalContext().getRequestContextPath();
 
     List<Column> columns = getColumns(t);
-    boolean hasInnerData = hasInnerData(t);
+    boolean hasInnerData = t.hasInnerData();
 
-    w.append("\n<div id=\"" + t.getId() + "\">");
+
+    if (!ajax)
+      w.append("\n<div id=\"" + t.getId() + "\">");
     w.append("\n<table class=\"list\" id=\"" + t.getId() + "_table\" cellspacing=\"1\">");
     if (t.isRowSelection())
       w.append("\n<col width=\"1%\"/>");
@@ -116,9 +105,9 @@ public class DataTableRenderer extends Renderer {
 
     w.append("\n<thead>");
     if (t.isRowSelection())
-      w.append("\n<th class=\"ico\"><img id=\"" + t.getId() + "\"_check\" src=\"" + ctxPath + "/images/ico16_checked_sa.gif\" class=\"ico16\" onclick=\"javascript:pagedTable" + t.getId() + ".selectAll()\"></th>");
+      w.append("\n<th class=\"ico\"><img id=\"" + t.getId() + "_check\" src=\"" + ctxPath + "/images/ico16_checked_sa.gif\" class=\"ico16\" onclick=\"javascript:pagedTable" + t.getId() + ".selectAll()\"/></th>");
     if (hasInnerData)
-      w.append("\n<th class=\"clickable\" onclick=\"javascript:pagedTable" + t.getId() + ".expandAll()\"><div id=\"" + t.getId() + "_expand\" class=\"inner_data_closed\">&nbsp;</div></th>");
+      w.append("\n<th class=\"clickable\" onclick=\"javascript:pagedTable" + t.getId() + ".expandAll()\"><div id=\"" + t.getId() + "_expand\" class=\"inner_data_closed\"><label>&nbsp;</label></div></th>");
 
     for (Column column : columns) {
       String classStr = "";
@@ -150,11 +139,6 @@ public class DataTableRenderer extends Renderer {
     w.append("\n</tbody>");
     w.append("\n</table>");
 
-    w.append("\n<script language=\"javascript\" type=\"text/javascript\">");
-    w.append("\npagedTable" + t.getId() + "=new DataTable('" + t.getId() + "'," + t.isUpdateUsingSubmit() + ");");
-    if (t.getAutoUpdate() != null)
-      w.append("\npagedTable" + t.getId() + ".autoUpdateTable(" + t.getAutoUpdate() * 1000 + ");");
-    w.append("\n</script>");
 
     DataTableModel m = t.getModel();
     String ctxPath = context.getExternalContext().getRequestContextPath();
@@ -192,7 +176,20 @@ public class DataTableRenderer extends Renderer {
     w.append("</td>");
     w.append("</tr>");
     w.append("</table>");
-    w.append("\n</div>");
+
+    if (!ajax) {
+      w.append("\n</div>");
+      w.append("\n<script language=\"javascript\" type=\"text/javascript\">");
+      w.append("\npagedTable" + t.getId() + "=new DataTable('" + t.getId() + "'," + t.isUpdateUsingSubmit() + ");");
+      if (t.getAutoUpdate() != null && !t.isUpdateUsingSubmit()) {
+        w.append("\nfunction autoUpdate" + t.getId() + "(){");
+        w.append("\n  pagedTable" + t.getId() + ".updateTable();");
+        w.append("\n  window.setTimeout(autoUpdate" + t.getId() + "," + t.getAutoUpdate() * 1000 + ");");
+        w.append("\n};");
+        w.append("\nautoUpdate" + t.getId() + "();");
+      }
+      w.append("\n</script>");
+    }
 
     if (ajax && (context instanceof AjaxFacesContext))
       ((AjaxFacesContext) context).setSkipContent(true);

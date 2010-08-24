@@ -28,38 +28,38 @@
         </eye:dynamicTable>
       </eye:collapsingGroup>
 
+      <h:inputHidden value="#{index1.filter}"/>
 
-      <t:div id="asdf">
-        <eye:dataTable value="#{index1.staticModel}" selectedRows="#{index1.selectedRows}" updateUsingSubmit="false" autoUpdate="3">
-          <eye:row rowId="rowId" data="data" innerData="innerData" opened="#{rowId == '1'}">
-            
-            <eye:column name="column1" title="column1" width="50%" sortable="true">
-              <h:outputText value="#{data.column1}"/>
-              <f:facet name="inner">
-                <h:outputText value="#{data.column1}" style="color:GREEN"/>
-              </f:facet>
-            </eye:column>
 
-            <eye:column name="column2" title="column2" width="50%" sortable="false" align="center">
-              <h:graphicImage value="/images/ic_offline.gif" alt="" rendered="true"/>
-              <f:facet name="inner">
-                <h:outputText value="#{data.column2}"/>
-              </f:facet>
-            </eye:column>
+      <eye:dataTable value="#{index1.staticModel}" selectedRows="#{index1.selectedRows}" updateUsingSubmit="true">
+        <eye:row rowId="rowId" data="data" innerData="innerData" opened="#{rowId == '1'}">
 
-            <f:facet name="innerData">
-              <h:panelGroup>
-                <h:outputText value="Hello world "/><h:commandLink value="#{innerData}"
-                                                                   actionListener="#{index1.edit}"/>
-              </h:panelGroup>
+          <eye:column name="column1" title="column1" width="50%" sortable="true">
+            <h:outputText value="#{data.column1}"/>
+            <f:facet name="inner">
+              <h:outputText value="#{data.column1}" style="color:GREEN"/>
             </f:facet>
-          </eye:row>
+          </eye:column>
 
-        </eye:dataTable>
-      </t:div>
+          <eye:column name="column2" title="column2" width="50%" sortable="false" align="center">
+            <h:graphicImage value="/images/ic_offline.gif" alt="" rendered="true"></h:graphicImage>
+            <f:facet name="inner">
+              <h:outputText value="#{data.column2}"/>
+            </f:facet>
+          </eye:column>
+
+          <f:facet name="innerData">
+            <h:panelGroup>
+              <h:outputText value="Hello world "/><h:commandLink value="#{innerData}"
+                                                                 actionListener="#{index1.edit}"/>
+            </h:panelGroup>
+          </f:facet>
+        </eye:row>
+
+      </eye:dataTable>
 
       <eye:buttons>
-        <eye:button><h:commandLink value="myButton" actionListener="#{index1.myButton}"/></eye:button>
+        <eye:button><h:commandLink value="myButton" actionListener="#{index1.myButton}" /></eye:button>
         <eye:button><h:commandLink value="myButton1" actionListener="#{index1.myButton}"/></eye:button>
 
         <eye:space/>

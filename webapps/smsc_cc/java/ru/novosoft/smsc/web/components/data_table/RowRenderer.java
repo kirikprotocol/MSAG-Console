@@ -17,6 +17,10 @@ public class RowRenderer extends Renderer {
   public void encodeBegin(FacesContext context, UIComponent component) throws IOException {
     Row r = (Row) component;
     DataTable t = (DataTable) r.getParent();
+
+    if (t.getFirstRow() == r)
+      rowNumber = 0;
+    
     Writer w = context.getResponseWriter();
 
     if (r.getRow() == null)
@@ -27,7 +31,7 @@ public class RowRenderer extends Renderer {
 
     if (r.isInner()) {
 
-      w.append("\n<tr class=\"inner\" name=\"innerData" + t.getId() + rowId + "\" style=\"display:" + (r.isOpened() ? "" : "none") + "\">");
+      w.append("\n<tr class=\"inner\" name=\"innerData" + t.getId() + rowId + "\"" + (r.isOpened() ? "" : " style=\"display:none\"") + ">");
       if (t.isRowSelection())
         w.append("\n<td>&nbsp;</td>");
       w.append("\n<td>&nbsp;</td>");
@@ -40,8 +44,8 @@ public class RowRenderer extends Renderer {
 
       if (innerData != null || r.getRow().getInnerRows() != null)
         w.append("\n  <td class=\"clickable\" onclick=\"pagedTable" + t.getId() + ".expandRow('" + t.getId() + rowId + "')\"><div id=\"innerDataHeader" + t.getId() + rowId + "\" class=\"" + (r.isOpened() ? "inner_data_opened" : "inner_data_closed") + "\">&nbsp;</div></td>");
-      else
-        w.append("\n  <td>&nbsp</td>");
+      else if (t.hasInnerData())
+        w.append("\n  <td>&nbsp;</td>");
 
       rowNumber++;
     }
@@ -72,7 +76,7 @@ public class RowRenderer extends Renderer {
     if (r.getRow().getInnerData() != null) {
       UIComponent innerDataFacet = r.getFacet("innerData");
       if (innerDataFacet != null) {
-        w.append("\n<tr class=\"inner\" name=\"innerData" + t.getId() + r.getRow().getId() + "\" style=\"display:" + (r.isOpened() ? "" : "none") + "\">");
+        w.append("\n<tr class=\"inner\" name=\"innerData" + t.getId() + r.getRow().getId() + "\"" + (r.isOpened() ? "" : " style=\"display:none\"") + ">");
         w.append("\n  <td align=\"left\" colspan=\"" + (r.getColumnsCount() + 2) + "\">");
 
         innerDataFacet.encodeBegin(context);
@@ -81,7 +85,5 @@ public class RowRenderer extends Renderer {
         w.append("\n</tr>");
       }
     }
-
-    super.encodeEnd(context, component);
   }
 }

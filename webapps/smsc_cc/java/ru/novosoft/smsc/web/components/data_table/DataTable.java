@@ -2,8 +2,10 @@ package ru.novosoft.smsc.web.components.data_table;
 
 import ru.novosoft.smsc.web.components.EyelineComponent;
 import ru.novosoft.smsc.web.components.data_table.model.DataTableModel;
+import ru.novosoft.smsc.web.components.data_table.model.DataTableRow;
 
-import javax.faces.component.UIComponentBase;
+import javax.el.ValueExpression;
+import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,9 +20,10 @@ public class DataTable extends EyelineComponent {
   private int currentPage;
   private int pageSize = 20;
   private Integer autoUpdate;
-  private boolean rowSelection;
   private boolean updateUsingSubmit;
+
   private List<String> selectedRows = new ArrayList<String>();
+  private ValueExpression selectedRowsExpression;
 
   public DataTableModel getModel() {
     return model;
@@ -68,12 +71,8 @@ public class DataTable extends EyelineComponent {
     currentPage = startIndex / pageSize;
   }
 
-  public void setRowSelection(boolean rowSelection) {
-    this.rowSelection = rowSelection;
-  }
-
   public boolean isRowSelection() {
-    return rowSelection;
+    return selectedRowsExpression != null;
   }
 
   public void clearSelectedRows() {
@@ -94,17 +93,46 @@ public class DataTable extends EyelineComponent {
 
   public void setUpdateUsingSubmit(boolean updateUsingSubmit) {
     this.updateUsingSubmit = updateUsingSubmit;
-  }  
+  }
+
+  Row getFirstRow() {
+    for (UIComponent c : getChildren()) {
+      if (c instanceof Row)
+        return (Row) c;
+    }
+    return null;
+  }
+
+  boolean hasInnerData() {
+    for (UIComponent c : getChildren()) {
+      if (c instanceof Row) {
+        DataTableRow tableRow = ((Row) c).getRow();
+        if (tableRow != null && (tableRow.getInnerData() != null || tableRow.getInnerRows() != null))
+          return true;
+      }
+    }
+    return false;
+  }
+
+  public void setSelectedRowsExpression(ValueExpression selectedRowsExpression) {
+    this.selectedRowsExpression = selectedRowsExpression;
+  }
+
+  public void processUpdates(javax.faces.context.FacesContext context) {
+    if (selectedRowsExpression != null && selectedRows != null && !selectedRows.isEmpty())
+      selectedRowsExpression.setValue(context.getELContext(), new ArrayList<String>(selectedRows));
+    super.processUpdates(context);
+  }
 
   public Object saveState(FacesContext context) {
     Object[] values = new Object[11];
     values[0] = super.saveState(context);
     values[1] = updateUsingSubmit;
+    values[2] = selectedRowsExpression;
     values[3] = autoUpdate;
     values[4] = currentPage;
     values[5] = pageSize;
     values[9] = sortOrder;
-    values[10] = rowSelection;
     return (values);
   }
 
@@ -112,11 +140,11 @@ public class DataTable extends EyelineComponent {
     Object[] values = (Object[]) state;
     super.restoreState(context, values[0]);
     updateUsingSubmit = (Boolean) values[1];
+    selectedRowsExpression = (ValueExpression)values[2];
     autoUpdate = (Integer) values[3];
     currentPage = (Integer) values[4];
     pageSize = (Integer) values[5];
     sortOrder = (String) values[9];
-    rowSelection = (Boolean) values[10];
   }
 
 }

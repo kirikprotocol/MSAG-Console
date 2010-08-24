@@ -89,7 +89,7 @@ public class Index1Controller implements Serializable {
     private final List<String> strings = new ArrayList<String>();
 
     public MyPagedTableModel() {
-      for (int i = 0; i < 30; i++)
+      for (int i = 0; i < 100; i++)
         strings.add(String.valueOf(i));
     }
 

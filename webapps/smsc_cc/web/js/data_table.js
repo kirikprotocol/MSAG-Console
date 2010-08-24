@@ -12,8 +12,6 @@ function DataTable(tableId, updateUsingSubmit) {
   var bodyElement = document.getElementById(tableId);
   var checked = false;
 
-  var autoUpdateTimeout = 5000;
-
   /**
    * Ищет форму, которая содержит элемент с указанным идентификатором
    * @param elementId идентификатор элемента
@@ -148,10 +146,12 @@ function DataTable(tableId, updateUsingSubmit) {
 
     headerElement.className = (expand) ? 'inner_data_opened' : 'inner_data_closed';
 
-    var elements = document.getElementsByName('innerData' + rowId);
+    var elements = document.getElementsByTagName('tr');
     for (var j = 0; j < elements.length; j++) {
       var element = elements[j];
-      element.style.display = expand ? "" : "none";
+      var name = element.getAttribute('name');
+      if (name != null && name == ('innerData' + rowId))
+        element.style.display = expand ? "" : "none";
     }
   };
 
