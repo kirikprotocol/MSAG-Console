@@ -14,37 +14,45 @@ import java.util.ResourceBundle;
  */
 public abstract class SmscController implements Serializable {
 
-  public void addMessage(FacesMessage.Severity severity, String message) {
+  protected void addMessage(FacesMessage.Severity severity, String message) {
+    addMessage(severity, message, "");
+  }
+
+  protected void addMessage(FacesMessage.Severity severity, String message, String detail) {
     FacesContext fc = FacesContext.getCurrentInstance();
-    FacesMessage facesMessage = new FacesMessage(severity, message, "");
+    FacesMessage facesMessage = new FacesMessage(severity, message, detail);
     fc.addMessage("smsc_errors", facesMessage);
   }
 
-  public void addLocalizedMessage(FacesMessage.Severity severity, String bundleKey) {
+  protected void addLocalizedMessage(FacesMessage.Severity severity, String bundleKey) {
+    addLocalizedMessage(severity, bundleKey, "");
+  }
+
+  protected void addLocalizedMessage(FacesMessage.Severity severity, String bundleKey, String detail) {
     FacesContext fc = FacesContext.getCurrentInstance();
     FacesMessage facesMessage = new FacesMessage(severity,
         ResourceBundle.getBundle("ru.novosoft.smsc.web.resources.Smsc",
-            fc.getExternalContext().getRequestLocale()).getString(bundleKey), "");
+            fc.getExternalContext().getRequestLocale()).getString(bundleKey), detail);
     fc.addMessage("smsc_errors", facesMessage);
-  }
+  }    
 
-  public String getRequestParameter(String name) {
+  protected String getRequestParameter(String name) {
     return FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get(name);
   }
 
-  public Map<String,String> getRequestParameters() {
+  protected Map<String,String> getRequestParameters() {
     return FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap();
   }
 
-  public HttpSession getSession(boolean createIfNeeded) {
+  protected HttpSession getSession(boolean createIfNeeded) {
     return (HttpSession)FacesContext.getCurrentInstance().getExternalContext().getSession(createIfNeeded);
   }
 
-  public Locale getLocale() {
+  protected Locale getLocale() {
     return FacesContext.getCurrentInstance().getExternalContext().getRequestLocale();
   }
 
-  public Principal getUserPrincipal() {
+  protected Principal getUserPrincipal() {
     return FacesContext.getCurrentInstance().getExternalContext().getUserPrincipal();
   }
 

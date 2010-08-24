@@ -91,8 +91,12 @@ public class TestClusterController extends ClusterController {
     }
 
     Map<Integer, Long> map = new HashMap<Integer, Long>();
-    for (int i = 0; i < smscInstancesNumber; i++)
+    for (int i = 0; i < smscInstancesNumber; i++) {
+      if (i+1 == smscInstancesNumber && configType == ConfigType.Reschedule)
+        time = 0;
+
       map.put(i, time);
+    }
     return new ConfigState(time, map);
   }
 

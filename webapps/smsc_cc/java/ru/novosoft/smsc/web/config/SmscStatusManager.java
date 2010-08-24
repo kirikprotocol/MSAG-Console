@@ -4,6 +4,8 @@ import ru.novosoft.smsc.admin.AdminContext;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 
+import java.util.List;
+
 /**
  * @author Artem Snopkov
  */
@@ -23,6 +25,10 @@ public class SmscStatusManager {
     return adminContext.getSmscManager().getSmscOnlineHost(instanceNumber);
   }
 
+   public List<String> getSmscHosts(int instanceNumber) throws AdminException {
+    return adminContext.getSmscManager().getSmscHosts(instanceNumber);
+  }
+
   public SmscConfigurationStatus getMainConfigState(int instanceNumber) throws AdminException {
     return adminContext.getSmscManager().getStatusForSmscs().get(instanceNumber);
   }
@@ -38,6 +44,10 @@ public class SmscStatusManager {
 
   public void startSmsc(int instanceNumber) throws AdminException {
     adminContext.getSmscManager().startSmsc(instanceNumber);
+  }
+
+  public void switchSmsc(int instanceNumber, String toHost) throws AdminException {
+    adminContext.getSmscManager().switchSmsc(instanceNumber, toHost);
   }
 
 }

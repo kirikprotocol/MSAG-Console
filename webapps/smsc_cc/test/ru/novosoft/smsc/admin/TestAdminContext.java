@@ -21,6 +21,7 @@ import ru.novosoft.smsc.admin.reschedule.RescheduleManagerTest;
 import ru.novosoft.smsc.admin.reschedule.TestRescheduleManager;
 import ru.novosoft.smsc.admin.resource.ResourceFileTest;
 import ru.novosoft.smsc.admin.resource.TestResourceManager;
+import ru.novosoft.smsc.admin.service.TestServiceManagerHA;
 import ru.novosoft.smsc.admin.service.TestServiceManagerSingle;
 import ru.novosoft.smsc.admin.sme.SmeConfigFileTest;
 import ru.novosoft.smsc.admin.sme.TestSmeManager;
@@ -80,7 +81,11 @@ public class TestAdminContext extends AdminContext {
 
     File smscDir = new File(servicesDir, "SMSC0/conf");
 
-    serviceManager = new TestServiceManagerSingle(servicesDir, smscInstancesNumber);
+    if (instType == InstallationType.SINGLE)
+      serviceManager = new TestServiceManagerSingle(servicesDir, smscInstancesNumber);
+    else
+      serviceManager = new TestServiceManagerHA(servicesDir, smscInstancesNumber, new String[] {"host0", "host1", "host2"});
+    
     clusterController = new TestClusterController(new File(smscDir, "aliases.bin"), new File(smscDir, "msc.bin"), smscInstancesNumber);
 
     fileSystem = new TestFileSystem();

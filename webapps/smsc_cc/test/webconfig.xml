@@ -2,7 +2,7 @@
 
   <section name="installation">
     <!-- Possible values: single, hs, ha -->
-    <param name="type" type="string">single</param>
+    <param name="type" type="string">ha</param>
     <!-- For HS installation only -->
     <param name="mirrorpath" type="string">mirror</param>
   </section>

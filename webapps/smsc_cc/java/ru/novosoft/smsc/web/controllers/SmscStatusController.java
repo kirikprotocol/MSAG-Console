@@ -11,31 +11,57 @@ import ru.novosoft.smsc.web.components.data_table.model.DataTableSortOrder;
 import ru.novosoft.smsc.web.config.SmscStatusManager;
 
 import javax.faces.application.FacesMessage;
-import javax.faces.context.FacesContext;
+import javax.faces.component.html.HtmlSelectOneMenu;
 import javax.faces.event.ActionEvent;
-import java.util.*;
+import javax.faces.event.ValueChangeEvent;
+import javax.faces.model.SelectItem;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Artem Snopkov
  */
-public class SmscStatusController {
+public class SmscStatusController extends SmscController {
 
   private static final Logger logger = Logger.getLogger(SmscStatusController.class);
 
-  private final FacesContext fc = FacesContext.getCurrentInstance();
-  private final ResourceBundle rb = ResourceBundle.getBundle("ru.novosoft.smsc.web.resources.Smsc",
-      fc.getExternalContext().getRequestLocale());
-
   private final SmscStatusManager smscStatusManager;
+  private String switchToHost;
 
   public SmscStatusController() {
     smscStatusManager = WebContext.getInstance().getSmscStatusManager();
   }
 
+  public String getHostValue() {
+    return null;
+  }
 
+  public void setHostValue(String value) {
+    
+  }
+
+
+  public void switchToHost(ValueChangeEvent e) {
+    if (e.getSource() instanceof HtmlSelectOneMenu) {
+      HtmlSelectOneMenu src = (HtmlSelectOneMenu)e.getSource();
+      String selectInstanceNum = (String)src.getAttributes().get("instanceNumber");
+      if (selectInstanceNum != null  && selectInstanceNum.equals(getRequestParameter("instanceNumber")))
+        this.switchToHost = (String)e.getNewValue();
+    }
+  }
+
+  public void switchOver() {
+    String instanceNumber = getRequestParameter("instanceNumber");
+    if (instanceNumber != null && switchToHost != null)
+      try {
+        smscStatusManager.switchSmsc(Integer.parseInt(instanceNumber), switchToHost);
+      } catch (AdminException e) {
+        logError(e);
+      }
+  }
 
   public void start() {
-    String instanceNumber = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get("instanceNumber");
+    String instanceNumber = getRequestParameter("instanceNumber");
     if (instanceNumber != null)
       try {
         smscStatusManager.startSmsc(Integer.parseInt(instanceNumber));
@@ -45,7 +71,7 @@ public class SmscStatusController {
   }
 
   public void stop() {
-    String instanceNumber = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get("instanceNumber");
+    String instanceNumber = getRequestParameter("instanceNumber");
     if (instanceNumber != null)
       try {
         smscStatusManager.stopSmsc(Integer.parseInt(instanceNumber));
@@ -78,9 +104,7 @@ public class SmscStatusController {
   }
 
   private void logError(AdminException e) {
-    FacesMessage facesMessage = new FacesMessage(FacesMessage.SEVERITY_ERROR, rb.getString("status.page.load.error"), e.getMessage(fc.getExternalContext().getRequestLocale()));
-    fc.addMessage("smsc_errors", facesMessage);
-    logger.error(e, e);
+    addLocalizedMessage(FacesMessage.SEVERITY_ERROR, "status.page.load.error", e.getMessage(getLocale()));
   }
 
   public DataTableModel getSmsCenters() {
@@ -88,20 +112,20 @@ public class SmscStatusController {
 
       public List<DataTableRow> getRows(int startPos, int count, DataTableSortOrder sortOrder) {
         List<DataTableRow> result = new ArrayList<DataTableRow>(count);
+
         try {
-          for (int i=startPos; i < Math.min(startPos + count, smscStatusManager.getSmscInstancesNumber()); i++) {
+          for (int i = startPos; i < Math.min(startPos + count, smscStatusManager.getSmscInstancesNumber()); i++) {
 
-            SmscStatus status = new SmscStatus(smscStatusManager.getSmscOnlineHost(i));
-            status.addStatus(new SmscCfgState("main", smscStatusManager.getMainConfigState(i)));
-            status.addStatus(new SmscCfgState("reschedule", smscStatusManager.getRescheduleState(i)));
+            String onlineHost = smscStatusManager.getSmscOnlineHost(i);
 
-            DataTableRowBase row = new DataTableRowBase(String.valueOf(i), status, null);
-            if (status.isHasErrors()) {
-              for (SmscCfgState state : status.getCfgStatuses());
-                
+            SmscStatus status = new SmscStatus(onlineHost, smscStatusManager.getSmscHosts(i));
+            if (onlineHost != null) {
+              status.setMainConfigUpToDate(smscStatusManager.getMainConfigState(i) == SmscConfigurationStatus.UP_TO_DATE);
+              status.setRescheduleConfigUpToDate(smscStatusManager.getRescheduleState(i) == SmscConfigurationStatus.UP_TO_DATE);
             }
 
-//            result.add();
+            DataTableRowBase row = new DataTableRowBase(String.valueOf(i), status, (status.isHasErrors() ? new Object() : null));
+            result.add(row);
           }
         } catch (AdminException e) {
           logError(e);
@@ -122,58 +146,52 @@ public class SmscStatusController {
 
   public class SmscStatus {
 
-    private String onlineHost;
-    private List<SmscCfgState> cfgStates = new ArrayList<SmscCfgState>();
+    private final String onlineHost;
+    private final List<String> hosts;
+    private boolean mainConfigUpToDate;
+    private boolean rescheduleConfigUpToDate;
 
-    public SmscStatus(String onlineHost) {
+    public SmscStatus(String onlineHost, List<String> hosts) {
       this.onlineHost = onlineHost;
-
+      this.hosts = hosts;
     }
 
     public String getOnlineHost() {
       return onlineHost;
     }
 
-    public void addStatus(SmscCfgState cfgState) {
-      cfgStates.add(cfgState);
+    public List<SelectItem> getHosts() {
+      List<SelectItem> items = new ArrayList<SelectItem>(hosts.size());
+      for (String host : hosts) {
+        if (onlineHost == null || !host.equals(onlineHost))
+          items.add(new SelectItem(host, host));
+      }
+      return items;
     }
 
-    public List<SmscCfgState> getCfgStatuses() {
-      return cfgStates;
+    public boolean isSwitchAllowed() {
+      return hosts != null && hosts.size() > 1;
+    }
+
+    public boolean isMainConfigUpToDate() {
+      return mainConfigUpToDate;
+    }
+
+    public void setMainConfigUpToDate(boolean mainConfigUpToDate) {
+      this.mainConfigUpToDate = mainConfigUpToDate;
+    }
+
+    public boolean isRescheduleConfigUpToDate() {
+      return rescheduleConfigUpToDate;
+    }
+
+    public void setRescheduleConfigUpToDate(boolean rescheduleConfigUpToDate) {
+      this.rescheduleConfigUpToDate = rescheduleConfigUpToDate;
     }
 
     public boolean isHasErrors() {
-      for (SmscCfgState s : cfgStates)
-        if (s.getState() == SmscConfigurationStatus.OUT_OF_DATE)
-          return true;
-      return false;
-    }
-  }
-
-
-  public class SmscCfgState {
-    private String configName;
-    private SmscConfigurationStatus state;
-
-    public SmscCfgState(String configName, SmscConfigurationStatus state) {
-      this.configName = configName;
-      this.state = state;
-    }
-
-    public String getConfigName() {
-      return configName;
-    }
-
-    public void setConfigName(String configName) {
-      this.configName = configName;
-    }
-
-    public SmscConfigurationStatus getState() {
-      return state;
-    }
-
-    public void setState(SmscConfigurationStatus state) {
-      this.state = state;
+      return onlineHost != null &&
+          (!rescheduleConfigUpToDate || !mainConfigUpToDate);
     }
   }
 

@@ -15,38 +15,79 @@
   <ui:define name="content">
 
     <h:form>
-      <eye:dataTable value="#{smscStatus.smsCenters}" pageSize="100" data="onlineHost">
+      <eye:dataTable value="#{smscStatus.smsCenters}" pageSize="100">
 
-        <eye:column name="connected" title="" sortable="false" width="5%" >
-          <h:graphicImage value="/images/ic_internal.gif" rendered="#{onlineHost != null}"/>
-          <h:graphicImage value="/images/ic_disconnct.gif" rendered="#{onlineHost == null}"/>
-        </eye:column>
+        <eye:row rowId="rowId" data="data">
 
-        <eye:column name="instanceNumber" title="#{msg['status.page.instance.number']}" width="25%">
-          <h:outputText value="#{rowId}"/>
-        </eye:column>
+          <eye:column name="connected" title="" sortable="false" width="2%">
+            <h:graphicImage value="/images/ic_internal.gif" rendered="#{data.onlineHost != null}"/>
+            <h:graphicImage value="/images/ic_disconnct.gif" rendered="#{data.onlineHost == null}"/>
+          </eye:column>
 
-        <eye:column name="onlineHost" title="#{msg['status.page.online.host']}" width="25%" >
-          <h:outputText value="#{onlineHost}" style="color:GREEN"/>
-        </eye:column>
+          <eye:column name="instanceNumber" title="#{msg['status.page.instance.number']}" width="25%">
+            <h:outputText value="#{rowId}"/>
+          </eye:column>
 
-        <eye:column name="status" title="#{msg['status.page.status']}" width="25%">
-          <h:outputText value="OK" style="color:GREEN"/>
-        </eye:column>
+          <eye:column name="onlineHost" title="#{msg['status.page.online.host']}" width="25%">
+            <h:outputText value="#{data.onlineHost}" style="color:GREEN"/>
+          </eye:column>
 
-        <eye:column name="connected" title="#{msg['status.page.action']}" var="connected">
+          <eye:column name="status" title="#{msg['status.page.status']}" width="25%">
+            <h:panelGroup rendered="#{data.onlineHost != null}">
+              <h:outputText value="#{msg['status.page.status.ok']}" style="color:GREEN" rendered="#{!(data.hasErrors)}"/>
+              <h:outputText value="#{msg['status.page.status.error']}" style="color:RED" rendered="#{data.hasErrors}"/>
+            </h:panelGroup>
+            <h:panelGroup rendered="#{data.onlineHost == null}">
+              <h:outputText value="-"/>
+            </h:panelGroup>
+          </eye:column>
 
-          <h:commandLink value="#{msg['status.page.start']}" action="#{smscStatus.start}"
-                         rendered="#{onlineHost == null}">
-            <f:param name="instanceNumber" value="#{rowId}"/>
-          </h:commandLink>
+          <eye:column name="action" title="#{msg['status.page.action']}">
+            <h:panelGroup rendered="#{!data.switchAllowed}">
+              <h:commandLink value="#{msg['status.page.start']}" action="#{smscStatus.start}" rendered="#{data.onlineHost == null}">
+                <f:param name="instanceNumber" value="#{rowId}"/>
+              </h:commandLink>
+              <h:commandLink value="#{msg['status.page.stop']}" action="#{smscStatus.stop}" rendered="#{data.onlineHost != null}">
+                <f:param name="instanceNumber" value="#{rowId}"/>
+              </h:commandLink>
+            </h:panelGroup>
 
-          <h:commandLink value="#{msg['status.page.stop']}" action="#{smscStatus.stop}"
-                         rendered="#{onlineHost != null}">
-            <f:param name="instanceNumber" value="#{rowId}"/>
-          </h:commandLink>
+            <h:panelGroup rendered="#{data.switchAllowed}">
+              <h:commandLink value="#{msg['status.page.stop']}" action="#{smscStatus.stop}" rendered="#{data.onlineHost != null}">
+                <f:param name="instanceNumber" value="#{rowId}"/>
+              </h:commandLink>
+              <h:outputText value=" or " rendered="#{data.onlineHost != null}"/>
+              <h:commandLink value="#{msg['status.page.switch']}" action="#{smscStatus.switchOver}" rendered="#{data.onlineHost != null}">
+                <f:param name="instanceNumber" value="#{rowId}"/>
+              </h:commandLink>
 
-        </eye:column>
+              <h:commandLink value="#{msg['status.page.start_at']}" action="#{smscStatus.switchOver}" rendered="#{data.onlineHost == null}">
+                <f:param name="instanceNumber" value="#{rowId}"/>
+              </h:commandLink>
+              <h:outputText value="  "/>
+
+              <h:selectOneMenu valueChangeListener="#{smscStatus.switchToHost}" value="#{smscStatus.hostValue}">
+                <f:attribute name="instanceNumber" value="#{rowId}"/>
+                <f:selectItems value="#{data.hosts}"/>
+              </h:selectOneMenu>
+            </h:panelGroup>
+
+          </eye:column>
+
+          <f:facet name="innerData">
+
+            <h:panelGrid columns="2" width="30%" columnClasses="column50Width,columnTopLeftAlign">
+              <h:outputText value="#{msg['status.page.main.config']}:"/>
+              <h:outputText value="#{msg['status.page.status.up_to_date']}" style="color:GREEN" rendered="#{data.mainConfigUpToDate}"/>
+              <h:outputText value="#{msg['status.page.status.out_of_date']}" style="color:RED" rendered="#{!data.mainConfigUpToDate}"/>
+
+              <h:outputText value="#{msg['status.page.reschedule.config']}:"/>
+              <h:outputText value="#{msg['status.page.status.up_to_date']}" style="color:GREEN" rendered="#{data.rescheduleConfigUpToDate}"/>
+              <h:outputText value="#{msg['status.page.status.out_of_date']}" style="color:RED" rendered="#{!data.rescheduleConfigUpToDate}"/>
+            </h:panelGrid>
+
+          </f:facet>
+        </eye:row>
 
       </eye:dataTable>
 
