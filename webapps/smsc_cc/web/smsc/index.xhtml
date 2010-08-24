@@ -56,7 +56,7 @@
               <h:commandLink value="#{msg['status.page.stop']}" action="#{smscStatus.stop}" rendered="#{data.onlineHost != null}">
                 <f:param name="instanceNumber" value="#{rowId}"/>
               </h:commandLink>
-              <h:outputText value=" or " rendered="#{data.onlineHost != null}"/>
+              <h:outputText value=" #{msg['status.page.or']} " rendered="#{data.onlineHost != null}"/>
               <h:commandLink value="#{msg['status.page.switch']}" action="#{smscStatus.switchOver}" rendered="#{data.onlineHost != null}">
                 <f:param name="instanceNumber" value="#{rowId}"/>
               </h:commandLink>
@@ -76,7 +76,7 @@
 
           <f:facet name="innerData">
 
-            <h:panelGrid columns="2" width="30%" columnClasses="column50Width,columnTopLeftAlign">
+            <h:panelGrid columns="2" columnClasses="column50Width,columnTopLeftAlign">
               <h:outputText value="#{msg['status.page.main.config']}:"/>
               <h:outputText value="#{msg['status.page.status.up_to_date']}" style="color:GREEN" rendered="#{data.mainConfigUpToDate}"/>
               <h:outputText value="#{msg['status.page.status.out_of_date']}" style="color:RED" rendered="#{!data.mainConfigUpToDate}"/>
@@ -92,10 +92,8 @@
       </eye:dataTable>
 
       <eye:buttons>
-        <eye:button><h:commandLink value="#{msg['status.page.start.all']}"
-                                   actionListener="#{smscStatus.startAll}"/></eye:button>
-        <eye:button><h:commandLink value="#{msg['status.page.stop.all']}"
-                                   actionListener="#{smscStatus.stopAll}"/></eye:button>
+        <eye:button><h:commandLink value="#{msg['status.page.start.all']}" actionListener="#{smscStatus.startAll}"/></eye:button>
+        <eye:button><h:commandLink value="#{msg['status.page.stop.all']}"  actionListener="#{smscStatus.stopAll}"/></eye:button>
         <eye:space/>
       </eye:buttons>
     </h:form>
