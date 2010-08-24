@@ -27,12 +27,12 @@
   </tag>
 
   <tag>
-    <tag-name>dtTextColumn</tag-name>
+    <tag-name>textColumn</tag-name>
     <handler-class>ru.novosoft.smsc.web.components.dynamic_table.TextColumnTagHandler</handler-class>
   </tag>
 
   <tag>
-    <tag-name>dtSelectColumn</tag-name>
+    <tag-name>selectColumn</tag-name>
     <handler-class>ru.novosoft.smsc.web.components.dynamic_table.SelectColumnTagHandler</handler-class>
   </tag>
 

@@ -21,6 +21,7 @@ public class DynamicTableHandler extends ComponentHandler {
 
   protected javax.faces.component.UIComponent createComponent(com.sun.facelets.FaceletContext ctx) {
     DynamicTable result = new DynamicTable();
+    result.setValueExpression(value.getValueExpression(ctx, DynamicTableModel.class));
     result.setModel((DynamicTableModel) value.getObject(ctx, DynamicTableModel.class));
     if (width != null)
       result.setWidth(value.getInt(ctx));
@@ -29,7 +30,6 @@ public class DynamicTableHandler extends ComponentHandler {
 
   protected void applyNextHandler(com.sun.facelets.FaceletContext ctx, javax.faces.component.UIComponent c) throws java.io.IOException, javax.faces.FacesException, javax.el.ELException {
     DynamicTable dt = (DynamicTable)c;
-    value.getValueExpression(ctx, DynamicTableModel.class).setValue(ctx, dt.getModel());
     dt.setModel((DynamicTableModel) value.getObject(ctx, DynamicTableModel.class));
     nextHandler.apply(ctx, c);
   }

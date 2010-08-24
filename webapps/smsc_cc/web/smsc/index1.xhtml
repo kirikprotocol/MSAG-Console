@@ -20,11 +20,11 @@
 
       <eye:collapsingGroup label="#{index1.label}" opened="#{index1.opened}">
         <eye:dynamicTable value="#{index1.model}">
-          <eye:dtTextColumn name="column1" width="20" maxLength="20" allowEditAfterAdd="false"/>
-          <eye:dtTextColumn name="column2" width="20" maxLength="20"/>
-          <eye:dtSelectColumn name="column3" width="20" values="#{index1.column3Values}" allowEditAfterAdd="false"
+          <eye:textColumn name="column1" width="20" maxLength="20" allowEditAfterAdd="false"/>
+          <eye:textColumn name="column2" width="20" maxLength="20"/>
+          <eye:selectColumn name="column3" width="20" values="#{index1.column3Values}" allowEditAfterAdd="false"
                               uniqueValues="true"/>
-          <eye:dtSelectColumn name="column4" width="20" values="#{index1.column4Values}" allowEditAfterAdd="false"/>
+          <eye:selectColumn name="column4" width="20" values="#{index1.column4Values}" allowEditAfterAdd="false"/>
         </eye:dynamicTable>
       </eye:collapsingGroup>
 
@@ -42,7 +42,7 @@
           </eye:column>
 
           <eye:column name="column2" title="column2" width="50%" sortable="false" align="center">
-            <h:graphicImage value="/images/ic_offline.gif" alt="" rendered="true"></h:graphicImage>
+            <h:graphicImage value="/images/ic_offline.gif" alt="" rendered="true"/>
             <f:facet name="inner">
               <h:outputText value="#{data.column2}"/>
             </f:facet>

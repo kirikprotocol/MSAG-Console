@@ -3,6 +3,7 @@ package ru.novosoft.smsc.web.components.dynamic_table;
 import ru.novosoft.smsc.web.components.EyelineComponent;
 import ru.novosoft.smsc.web.components.dynamic_table.model.DynamicTableModel;
 
+import javax.el.ValueExpression;
 import javax.faces.context.FacesContext;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,7 +15,8 @@ public class DynamicTable extends EyelineComponent {
 
   private DynamicTableModel model;
   private List<Column> columns = new ArrayList<Column>();
-  private int width; 
+  private int width;
+  private ValueExpression valueExpression;
 
   public DynamicTableModel getModel() {
     return model;
@@ -40,10 +42,21 @@ public class DynamicTable extends EyelineComponent {
     this.width = width;
   }
 
+  public void processUpdates(javax.faces.context.FacesContext context) {
+    if (valueExpression != null)
+      valueExpression.setValue(context.getELContext(), model);
+    super.processUpdates(context);
+  }
+
+  public void setValueExpression(ValueExpression valueExpression) {
+    this.valueExpression = valueExpression;
+  }
+
   public Object saveState(FacesContext context) {
     Object[] values = new Object[5];
     values[0] = super.saveState(context);
     values[1] = model;
+    values[2] = valueExpression;
     return (values);
   }
 
@@ -51,5 +64,6 @@ public class DynamicTable extends EyelineComponent {
     Object[] values = (Object[]) state;
     super.restoreState(context, values[0]);
     model = (DynamicTableModel) values[1];
+    valueExpression = (ValueExpression)values[2];
   }
 }
