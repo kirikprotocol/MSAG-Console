@@ -16,125 +16,86 @@
 
   <ui:define name="content">
 
-
     <tr:form id="reschedule_list">
-
-      <tr:messages partialTriggers="delete1 delete2" id="smsc_errors"/>
 
       <tr:inputHidden value="#{reschedule.index_initialized}" id="index_initialized"/>
 
-      <tr:panelGroupLayout partialTriggers="delete1 delete2 :submit1 :submit2">
-        <t:saveState value="#{reschedule.defaultReschedule}"/>
-        <t:saveState value="#{reschedule.reschedules}"/>
-      </tr:panelGroupLayout>
+      <t:saveState value="#{reschedule.defaultReschedule}"/>
+      <t:saveState value="#{reschedule.reschedules}"/>
+
 
       <eye:buttons>
-        <table>
-          <tr>
-            <td align="left">
-              <tr:commandLink text="#{msg['add.button']}" id="add1" action="RESCHEDULE_EDIT"
-                              actionListener="#{reschedule.edit}"
-                              inlineStyle="font-family: Verdana, Arial, Helvetica, sans-serif;font-size: x-small;"
-                  />
-              <h:outputText value="&#160;&#160;|&#160;&#160;"/>
-              <tr:commandLink text="#{msg['delete.button']}" id="delete1" partialSubmit="true"
-                              actionListener="#{reschedule.removeSelected}"
-                              inlineStyle="font-family: Verdana, Arial, Helvetica, sans-serif;font-size: x-small;"
-                              onclick="if (!confirm('#{msg['smsc.delete.records']}')) return false"
-
-                  />
-            </td>
-            <td align="right">
-              <tr:commandLink text="#{msg['submit.button']}" id="submit1" actionListener="#{reschedule.submit}"
-                              partialSubmit="true"
-                              inlineStyle="font-family: Verdana, Arial, Helvetica, sans-serif;font-size: x-small;"
-                  />
-              <h:outputText value="&#160;&#160;|&#160;&#160;"/>
-              <tr:commandLink text="#{msg['reset.button']}" action="RESCHEDULE" actionListener="#{reschedule.reset}"
-                              inlineStyle="font-family: Verdana, Arial, Helvetica, sans-serif;font-size: x-small;"
-                  />
-            </td>
-          </tr>
-        </table>
+        <eye:button>
+          <tr:commandLink text="#{msg['add.button']}" id="add1" action="RESCHEDULE_EDIT"
+                          actionListener="#{reschedule.edit}"/>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['delete.button']}" id="delete1" actionListener="#{reschedule.removeSelected}"
+                          onclick="if (!confirm('#{msg['smsc.delete.records']}')) return false">
+            <f:param name="delete" value=""/>
+          </tr:commandLink>
+        </eye:button>
+        <eye:space/>
+        <eye:button>
+          <h:commandLink value="#{msg['submit.button']}" id="submit1" action="#{reschedule.submit}"/>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['reset.button']}" action="RESCHEDULE" actionListener="#{reschedule.reset}"/>
+        </eye:button>
       </eye:buttons>
 
+      <t:div id="asdf">
 
-      <h:panelGrid style="padding:10px" columns="1">
+        <eye:dataTable value="#{reschedule.rescheduleModel}" selectedRows="#{reschedule.selectedRows}">
 
+          <eye:row rowId="rowId" data="r" innerData="innerData" opened="true">
 
-        <t:div styleClass="page_subtitle">
-          <h:outputText value="#{msg['smsc.reschedule.subtitle']}"/>
-        </t:div>
-
-        <tr:panelGroupLayout partialTriggers="delete1 delete2 :submit1 :submit2">
-
-          <h:panelGrid columns="1">
-            <h:panelGrid columns="2" columnClasses="column20Width, columnTopLeftAlign" bgcolor="#F2EEDA">
-              <h:outputText/>
-              <tr:commandLink text="#{reschedule.defaultReschedule.intervals}" action="RESCHEDULE_EDIT"
-                              actionListener="#{reschedule.edit}">
-                <f:param name="reschedule" value="#{reschedule.defaultReschedule.intervals}"/>
-              </tr:commandLink>
-            </h:panelGrid>
-            <h:panelGrid columns="2" columnClasses="column50Width, columnTopLeftAlign" bgcolor="#F8F6EE">
-              <h:outputText/>
-              <tr:outputText value="#{msg['smsc.reschedule.default']}"/>
-            </h:panelGrid>
-          </h:panelGrid>
-
-          <tr:iterator value="#{reschedule.reschedules}" var="r">
-
-            <h:panelGrid columns="2" columnClasses="column20Width, columnTopLeftAlign" bgcolor="#F2EEDA">
-              <h:selectBooleanCheckbox value="#{r.checked}"/>
-              <tr:commandLink text="#{r.intervals}" action="RESCHEDULE_EDIT" actionListener="#{reschedule.edit}">
+            <eye:column name="reschedules" title="" width="50%">
+              <h:commandLink value="#{r.intervals}" action="RESCHEDULE_EDIT" actionListener="#{reschedule.edit}">
                 <f:param name="reschedule" value="#{r.intervals}"/>
-              </tr:commandLink>
-            </h:panelGrid>
+              </h:commandLink>
+            </eye:column>
 
-            <h:dataTable value="#{r.statuses}" var="status" columnClasses="column50Width, columnTopLeftAlign"
-                         bgcolor="#F8F6EE">
-              <h:column>
-                <tr:outputText/>
-              </h:column>
-              <h:column>
-                <tr:outputText value="#{status.status}" converter="smpp_status_converter"/>
-              </h:column>
-            </h:dataTable>
+            <f:facet name="innerData">
+              <h:panelGroup >
+                <h:dataTable value="#{r.statuses}" var="status" columnClasses="column50Width, columnTopLeftAlign">
+                  <h:column>
+                    <tr:outputText/>
+                  </h:column>
+                  <h:column>
+                    <tr:outputText value="#{status.status}" converter="smpp_status_converter"/>
+                  </h:column>
+                </h:dataTable>
+              </h:panelGroup>
+            </f:facet>
 
-          </tr:iterator>
+          </eye:row>
 
-        </tr:panelGroupLayout>
+        </eye:dataTable>
 
-      </h:panelGrid>
+      </t:div>
+
 
       <eye:buttons>
-        <table>
-          <tr>
-            <td align="left">
-              <tr:commandLink text="#{msg['add.button']}" id="add2" action="RESCHEDULE_EDIT"
-                              actionListener="#{reschedule.edit}"
-                              inlineStyle="font-family: Verdana, Arial, Helvetica, sans-serif;font-size: x-small;"
-                  />
-              <h:outputText value="&#160;&#160;|&#160;&#160;"/>
-              <tr:commandLink text="#{msg['delete.button']}" id="delete2" partialSubmit="true"
-                              actionListener="#{reschedule.removeSelected}"
-                              inlineStyle="font-family: Verdana, Arial, Helvetica, sans-serif;font-size: x-small;"
-                              onclick="if (!confirm('#{msg['smsc.delete.records']}')) return false"
-
-                  />
-            </td>
-            <td align="right">
-              <tr:commandLink text="#{msg['submit.button']}" actionListener="#{reschedule.submit}" id="submit2"
-                              inlineStyle="font-family: Verdana, Arial, Helvetica, sans-serif;font-size: x-small;"
-                  />
-              <h:outputText value="&#160;&#160;|&#160;&#160;"/>
-              <tr:commandLink text="#{msg['reset.button']}" action="RESCHEDULE" actionListener="#{reschedule.reset}"
-                              inlineStyle="font-family: Verdana, Arial, Helvetica, sans-serif;font-size: x-small;"
-                  />
-            </td>
-          </tr>
-        </table>
+        <eye:button>
+          <tr:commandLink text="#{msg['add.button']}" id="add2" action="RESCHEDULE_EDIT"
+                          actionListener="#{reschedule.edit}"/>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['delete.button']}" id="delete2" actionListener="#{reschedule.removeSelected}"
+                          onclick="if (!confirm('#{msg['smsc.delete.records']}')) return false">
+            <f:param name="delete" value=""/>
+          </tr:commandLink>
+        </eye:button>
+        <eye:space/>
+        <eye:button>
+          <h:commandLink value="#{msg['submit.button']}" id="submit2" action="#{reschedule.submit}"/>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['reset.button']}" action="RESCHEDULE" actionListener="#{reschedule.reset}"/>
+        </eye:button>
       </eye:buttons>
+
 
 
     </tr:form>

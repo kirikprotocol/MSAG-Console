@@ -33,12 +33,12 @@ public class RescheduleEditController implements Serializable{
 
   private Reschedule defaultReschedule;
 
-  private Collection<Reschedule> reschedules;
+  private Map<String, Reschedule> reschedules;
 
   public RescheduleEditController() {
     HttpSession session = (HttpSession) FacesContext.getCurrentInstance().getExternalContext().getSession(false);
     defaultReschedule = (Reschedule) session.getAttribute("reschedule.default");
-    reschedules = (Collection<Reschedule>) session.getAttribute("reschedule.reschedules");
+    reschedules = (Map<String, Reschedule>) session.getAttribute("reschedule.reschedules");
     if(reschedules == null || defaultReschedule == null) {
       throw new IllegalStateException("Session's parameters aren't initialized correctly");
     }
@@ -59,7 +59,7 @@ public class RescheduleEditController implements Serializable{
             1025, 1026, 1027, 1028, 1029, 1030, 1031, 1032, 1134, 1136, 1137, 1138, 1139, 1140, 1141, 1142, 1143,
             1144, 1145, 1146, 1147, 1148, 1149, 1150, 1151, 1153, 1154, 1155, 1157, 1158, 1160, 1161, 1163, 1164,
             1165, 1173, 1179, 1183, 1184, 1185, 1186, 1187, 1188));
-        for(Reschedule r : reschedules) {
+        for(Reschedule r : reschedules.values()) {
           if((oldReschedule != null && oldReschedule.length() != 0) && r.getIntervals().equals(oldReschedule)) {
             statuses = new ArrayList<Reschedule.Status>(r.getStatuses());
           }
@@ -146,7 +146,7 @@ public class RescheduleEditController implements Serializable{
 
     FacesContext fc = FacesContext.getCurrentInstance();
 
-    for(Reschedule r : reschedules) {
+    for(Reschedule r : reschedules.values()) {
       if(r.getIntervals().equals(newReschedule) && (oldReschedule == null || oldReschedule.length() == 0 || !oldReschedule.equals(newReschedule))) {
         FacesMessage facesMessage = new FacesMessage(FacesMessage.SEVERITY_WARN,
             ResourceBundle.getBundle("ru.novosoft.smsc.web.resources.Smsc", fc.getExternalContext().getRequestLocale()).getString("smsc.reschedule.duplicate"),
@@ -169,17 +169,10 @@ public class RescheduleEditController implements Serializable{
         }
 
         if(oldReschedule != null && oldReschedule.length() != 0) {
-          Iterator<Reschedule> i = reschedules.iterator();
-          while(i.hasNext()) {
-            Reschedule r = i.next();
-            if(r.getIntervals().equals(oldReschedule)) {
-              i.remove();
-              break;
-            }
-          }
+          reschedules.remove(oldReschedule);
         }
 
-        reschedules.add(new Reschedule(newReschedule, statuses));
+        reschedules.put(newReschedule, new Reschedule(newReschedule, statuses));
 //        rm.setReschedules(newRss);
       }
 

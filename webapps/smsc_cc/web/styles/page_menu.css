@@ -167,12 +167,17 @@ table.page_menu td {
 
 table.page_menu a,
 table.page_menu a:hover,
-table.page_menu a:visited {
+table.page_menu a:visited
+ {
   border: 0px;
   cursor: pointer;
   color: #161E49;
   text-decoration: none; /*behavior : url(/scripts/click_submit.htc);*/
   white-space: nowrap;
+}
+
+table.page_menu a.xi{
+font-family: Verdana, Arial, Helvetica, sans-serif;font-size: x-small;
 }
 
 table.page_menu_background {

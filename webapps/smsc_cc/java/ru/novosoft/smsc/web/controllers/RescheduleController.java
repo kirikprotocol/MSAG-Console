@@ -5,23 +5,26 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.reschedule.RescheduleSettings;
 import ru.novosoft.smsc.web.WebContext;
 import ru.novosoft.smsc.web.beans.Reschedule;
+import ru.novosoft.smsc.web.components.data_table.model.DataTableModel;
+import ru.novosoft.smsc.web.components.data_table.model.DataTableRow;
+import ru.novosoft.smsc.web.components.data_table.model.DataTableRowBase;
+import ru.novosoft.smsc.web.components.data_table.model.DataTableSortOrder;
 import ru.novosoft.smsc.web.config.AppliableConfiguration;
 import ru.novosoft.smsc.web.config.UpdateInfo;
 
 import javax.faces.application.FacesMessage;
-import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import javax.servlet.http.HttpSession;
-import java.io.Serializable;
 import java.security.Principal;
 import java.util.*;
 
 /**
  * author: alkhal
  */
-public class RescheduleController implements Serializable{
+@SuppressWarnings({"unchecked"})
+public class RescheduleController extends SmscController {
 
-  private List<Reschedule> reschedules;
+  private Map<String, Reschedule> reschedules;
 
   private Reschedule defaultReschedule;
 
@@ -33,13 +36,40 @@ public class RescheduleController implements Serializable{
 
   private HttpSession session;
 
+  private DataTableModel rescheduleModel;
+
   public RescheduleController() {
-    session = (HttpSession)FacesContext.getCurrentInstance().getExternalContext().getSession(false);
-    conf = WebContext.getInstance().getAppliableConfiguration();
-    if(FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get("index_initialized") == null) {
+    session = getSession(false);
+    conf = WebContext.getInstance().getAppliableConfiguration();      
+    if(getRequestParameter("index_initialized") == null) {
       initReschedules();
       index_initialized = true;
     }
+    rescheduleModel = new DataTableModel() {
+
+      public List<DataTableRow> getRows(int startPos, int count, DataTableSortOrder sortOrder) {
+        List<DataTableRow> result = new ArrayList<DataTableRow>(count);
+        if(count <= 0) {
+          return result;
+        }
+        if(--startPos < 0) {
+          result.add(new DataTableRowBase(defaultReschedule.getIntervals(), defaultReschedule, null));
+          count--;
+        }
+        for(Iterator<Reschedule> i = reschedules.values().iterator();i.hasNext() && count>0;) {
+          Reschedule r = i.next();
+          if(--startPos < 0) {
+            result.add(new DataTableRowBase(r.getIntervals(), r, ""));
+            count--;
+          }
+        }
+        return result;
+      }
+
+      public int getRowsCount() {
+        return reschedules.size() + 1;
+      }
+    };
   }
 
   private void initReschedules() {
@@ -47,43 +77,46 @@ public class RescheduleController implements Serializable{
       session.setAttribute("reschedule.last.update", conf.getRescheduleSettingsUpdateInfo());
       RescheduleSettings rescheduleSettings =conf.getRescheduleSettings();
       Collection<ru.novosoft.smsc.admin.reschedule.Reschedule> rs = rescheduleSettings.getReschedules();
-      reschedules = new ArrayList<Reschedule>(rs.size());
+      reschedules = new LinkedHashMap<String, Reschedule>(rs.size());
       for(ru.novosoft.smsc.admin.reschedule.Reschedule r : rs) {
         Reschedule reschedule = new Reschedule();
         reschedule.setIntervals(r.getIntervals());
         for(Integer s : r.getStatuses()) {
           reschedule.addStatus(new Reschedule.Status(s));
         }
-        reschedules.add(reschedule);
+        reschedules.put(reschedule.getIntervals(), reschedule);
       }
       defaultReschedule = new Reschedule(rescheduleSettings.getDefaultReschedule());
     }else {
-      reschedules = (List<Reschedule>)session.getAttribute("reschedule.reschedules");
+      reschedules = (Map<String,Reschedule>)session.getAttribute("reschedule.reschedules");
       defaultReschedule = (Reschedule)session.getAttribute("reschedule.default");
     }
   }
 
-  public void removeSelected(ActionEvent ev) {
-    Iterator<Reschedule> i = reschedules.iterator();
-    while(i.hasNext()) {
-      Reschedule r = i.next();
-      if(r.isChecked()) {
-        i.remove();
+
+  private List selectedRows;
+
+  public void setSelectedRows(List rows) {
+    selectedRows = rows;
+    System.out.println("Selected: "+rows);
+
+  }
+
+  public void removeSelected(ActionEvent e) {
+    if(selectedRows != null && !selectedRows.isEmpty()) {
+      for(String s : (List<String>)selectedRows) {
+        reschedules.remove(s);
       }
     }
     session.setAttribute("reschedule.reschedules", reschedules);
   }
 
-  public void submit(ActionEvent ev) {
-    FacesContext fc = FacesContext.getCurrentInstance();
+  public String submit() {
 
     UpdateInfo lastChange = (UpdateInfo)session.getAttribute("reschedule.last.update");
     if(lastChange != conf.getRescheduleSettingsUpdateInfo()) {
-      FacesMessage facesMessage = new FacesMessage(FacesMessage.SEVERITY_ERROR,
-          ResourceBundle.getBundle("ru.novosoft.smsc.web.resources.Smsc",
-              fc.getExternalContext().getRequestLocale()).getString("smsc.config.not.actual"), "");
-      fc.addMessage("smsc_errors", facesMessage);
-      return;
+      addLocalizedMessage(FacesMessage.SEVERITY_ERROR, "smsc.config.not.actual");
+      return null;
     }
 
     try{
@@ -91,27 +124,26 @@ public class RescheduleController implements Serializable{
 
       Collection<ru.novosoft.smsc.admin.reschedule.Reschedule> newReschedules =
           new ArrayList<ru.novosoft.smsc.admin.reschedule.Reschedule>(reschedules.size());
-      for(Reschedule r : reschedules) {
+      for(Reschedule r : reschedules.values()) {
         newReschedules.add(convert(r));
       }
       settings.setReschedules(newReschedules);
       settings.setDefaultReschedule(defaultReschedule.getIntervals());
 
-      Principal p = FacesContext.getCurrentInstance().getExternalContext().getUserPrincipal();
+      Principal p = getUserPrincipal();
 
       conf.setRescheduleSettings(settings, p.getName());
 
       session.removeAttribute("reschedule.reschedules");
       session.removeAttribute("reschedule.default");
       session.removeAttribute("reschedule.last.update");
-      fc.getApplication().getNavigationHandler().handleNavigation(fc, null, "INDEX");
+      return "INDEX";
 
     } catch (AdminException e) {
       logger.warn(e,e);
+      addMessage(FacesMessage.SEVERITY_ERROR, e.getMessage(getLocale()));
 
-      FacesMessage facesMessage = new FacesMessage(FacesMessage.SEVERITY_ERROR,
-          e.getMessage(fc.getExternalContext().getRequestLocale()), "");
-      fc.addMessage("smsc_errors", facesMessage);
+      return null;
     }
   }
 
@@ -124,7 +156,8 @@ public class RescheduleController implements Serializable{
 
   public void edit(ActionEvent ev) {
     session.setAttribute("reschedule.reschedules", reschedules);
-    session.setAttribute("reschedule.default", defaultReschedule);    }
+    session.setAttribute("reschedule.default", defaultReschedule);
+  }
 
 
   public ru.novosoft.smsc.admin.reschedule.Reschedule convert(Reschedule reschedule) throws AdminException{
@@ -136,8 +169,16 @@ public class RescheduleController implements Serializable{
   }
 
 
-  public List<Reschedule> getReschedules() {
-    return reschedules;
+  public DataTableModel getRescheduleModel() {
+    return rescheduleModel;
+  }
+
+  public boolean isIndex_initialized() {
+    return index_initialized;
+  }
+
+  public void setIndex_initialized(boolean index_initialized) {
+    this.index_initialized = index_initialized;
   }
 
   public Reschedule getDefaultReschedule() {
@@ -148,15 +189,11 @@ public class RescheduleController implements Serializable{
     this.defaultReschedule = defaultReschedule;
   }
 
-  public void setReschedules(List<Reschedule> reschedules) {
+  public Map<String, Reschedule> getReschedules() {
+    return reschedules;
+  }
+
+  public void setReschedules(Map<String, Reschedule> reschedules) {
     this.reschedules = reschedules;
-  }
-
-  public boolean isIndex_initialized() {
-    return index_initialized;
-  }
-
-  public void setIndex_initialized(boolean index_initialized) {
-    this.index_initialized = index_initialized;
   }
 }

@@ -37,21 +37,12 @@
         </table>
 
       </div>
-      <div class="page_menu">
-        <table class="page_menu_background" cellspacing="0px" cellpadding="0px">
-          <tr>
-            <td background="#{facesContext.externalContext.requestContextPath}/images/smsc_21.jpg">&#160;</td>
-          </tr>
-        </table>
-        <table class="page_menu" cellpadding="0px" cellspacing="0px">
-          <tr>
-            <td width="37px">&#160;</td>
-            <td width="1px"><a id="jsubmit" onClick="opForm.submit()">#{msg['login.button']}</a></td>
-            <td>&#160;</td>
-            <td width="37px">&#160;</td>
-          </tr>
-        </table>
-      </div>
+      <eye:buttons>
+        <eye:button>
+          <h:commandLink id="jsubmit" onclick="opForm.submit()" value="#{msg['login.button']}"/>
+        </eye:button>
+        <eye:space/>
+      </eye:buttons>
     </form>
 
 
