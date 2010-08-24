@@ -2,7 +2,6 @@ package ru.novosoft.smsc.web.components.data_table;
 
 import ru.novosoft.smsc.web.components.AjaxFacesContext;
 import ru.novosoft.smsc.web.components.data_table.model.DataTableModel;
-import ru.novosoft.smsc.web.components.data_table.model.DataTableRow;
 
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
@@ -81,7 +80,6 @@ public class DataTableRenderer extends Renderer {
       sOrder = "";
 
     if (!ajax) {
-      w.append("\n<input type=\"hidden\" id=\"" + t.getClientId(context) + "\" name=\"" + t.getClientId(context) + "\" value=\"some value\">");
       w.append("\n<input type=\"hidden\" id=\"" + t.getId() + "_column" + "\" name=\"" + t.getId() + "_column\" value=\"" + sOrder + "\">");
       w.append("\n<input type=\"hidden\" id=\"" + t.getId() + "_page" + "\" name=\"" + t.getId() + "_page\" value=\"" + t.getCurrentPage() + "\">");
       w.append("\n<input type=\"hidden\" id=\"" + t.getId() + "_pageSize" + "\" name=\"" + t.getId() + "_pageSize\" value=\"" + t.getPageSize() + "\">");
@@ -105,9 +103,9 @@ public class DataTableRenderer extends Renderer {
 
     w.append("\n<thead>");
     if (t.isRowSelection())
-      w.append("\n<th class=\"ico\"><img id=\"" + t.getId() + "_check\" src=\"" + ctxPath + "/images/ico16_checked_sa.gif\" class=\"ico16\" onclick=\"javascript:pagedTable" + t.getId() + ".selectAll()\"/></th>");
+      w.append("\n<th class=\"ico\"><img id=\"" + t.getId() + "_check\" src=\"" + ctxPath + "/images/ico16_checked_sa.gif\" class=\"ico16\" onclick=\"pagedTable" + t.getId() + ".selectAll()\"/></th>");
     if (hasInnerData)
-      w.append("\n<th class=\"clickable\" onclick=\"javascript:pagedTable" + t.getId() + ".expandAll()\"><div id=\"" + t.getId() + "_expand\" class=\"inner_data_closed\"><label>&nbsp;</label></div></th>");
+      w.append("\n<th class=\"clickable\" onclick=\"pagedTable" + t.getId() + ".expandAll()\"><div id=\"" + t.getId() + "_expand\" class=\"inner_data_closed\">&nbsp;</div></th>");
 
     for (Column column : columns) {
       String classStr = "";
@@ -122,7 +120,7 @@ public class DataTableRenderer extends Renderer {
         }
       }
       if (column.isSortable())
-        w.append("\n<th><a href=\"javascript:pagedTable" + t.getId() + ".setSortOrder('" + sortOrder + "')\" " + classStr + ">" + column.getTitle() + "</a></th>");
+        w.append("\n<th><a href=\"#\" onclick=\"pagedTable" + t.getId() + ".setSortOrder('" + sortOrder + "')\" " + classStr + ">" + column.getTitle() + "</a></th>");
       else
         w.append("\n<th>" + (column.getTitle().length() > 0 ? column.getTitle() : "&nbsp;") + "</th>");
     }
@@ -146,27 +144,27 @@ public class DataTableRenderer extends Renderer {
     w.append("<table class=\"navbar\" cellspacing=\"1\" cellpadding=\"0\">");
     if (m.getRowsCount() > t.getPageSize()) {
       w.append("<tr>");
-      w.append("<td class=\"first\"><a href=\"javascript:pagedTable" + t.getId() + ".setPage(0)\"><img src=\"" + ctxPath + "/images/nav_first.gif\" width=\"12\" height=\"11\"></a></td>");
+      w.append("<td class=\"first\"><a href=\"#\" onclick=\"pagedTable" + t.getId() + ".setPage(0)\"><img src=\"" + ctxPath + "/images/nav_first.gif\" width=\"12\" height=\"11\"></a></td>");
       if (t.getCurrentPage() > 0)
-        w.append("<td class=\"prev\"><a href=\"javascript:pagedTable" + t.getId() + ".setPage(" + (t.getCurrentPage() - 1) + ")\"><img src=\"" + ctxPath + "/images/nav_prev.gif\" width=\"12\" height=\"11\"></a></td>");
+        w.append("<td class=\"prev\"><a href=\"#\" onclick=\"pagedTable" + t.getId() + ".setPage(" + (t.getCurrentPage() - 1) + ")\"><img src=\"" + ctxPath + "/images/nav_prev.gif\" width=\"12\" height=\"11\"></a></td>");
 
       int numberOfPages = m.getRowsCount() / t.getPageSize();
       if (t.getPageSize() * numberOfPages == m.getRowsCount())
         numberOfPages--;
 
       for (int i = 0; i <= numberOfPages; i++)
-        w.append("<td class=\"" + (i == t.getCurrentPage() ? "current" : "page") + "\"><a href=\"javascript:pagedTable" + t.getId() + ".setPage(" + i + ")\">" + (i + 1) + "</a></td>");
+        w.append("<td class=\"" + (i == t.getCurrentPage() ? "current" : "page") + "\"><a href=\"#\" onclick=\"pagedTable" + t.getId() + ".setPage(" + i + ")\">" + (i + 1) + "</a></td>");
 
       if (t.getCurrentPage() < numberOfPages)
-        w.append("<td class=\"next\"><a href=\"javascript:pagedTable" + t.getId() + ".setPage(" + (t.getCurrentPage() + 1) + ")\"><img src=\"" + ctxPath + "/images/nav_next.gif\" width=\"12\" height=\"11\"></a></td>");
+        w.append("<td class=\"next\"><a href=\"#\" onclick=\"pagedTable" + t.getId() + ".setPage(" + (t.getCurrentPage() + 1) + ")\"><img src=\"" + ctxPath + "/images/nav_next.gif\" width=\"12\" height=\"11\"></a></td>");
 
-      w.append("<td class=\"last\"><a href=\"javascript:pagedTable" + t.getId() + ".setPage(" + numberOfPages + ")\"><img src=\"" + ctxPath + "/images/nav_last.gif\" width=\"12\" height=\"11\"></a></td>");
+      w.append("<td class=\"last\"><a href=\"#\" onclick=\"pagedTable" + t.getId() + ".setPage(" + numberOfPages + ")\"><img src=\"" + ctxPath + "/images/nav_last.gif\" width=\"12\" height=\"11\"></a></td>");
     }
 
     ResourceBundle b = ResourceBundle.getBundle(DataTable.class.getCanonicalName(), context.getExternalContext().getRequestLocale());
 
     w.append("<td class=\"total\">" + b.getString("total") + ": " + m.getRowsCount() + "&nbsp;" + b.getString("page") + ": ");
-    w.append("<select id=\"" + t.getId() + "_pageSizeSelect\" name=\"" + t.getId() + "_pageSizeSelect\" onchange=\"javascript:pagedTable" + t.getId() + ".setPageSize(this.options[this.selectedIndex].value)\">");
+    w.append("<select id=\"" + t.getId() + "_pageSizeSelect\" name=\"" + t.getId() + "_pageSizeSelect\" onchange=\"pagedTable" + t.getId() + ".setPageSize(this.options[this.selectedIndex].value)\">");
     w.append("<option value=\"10\" " + (t.getPageSize() == 10 ? "selected" : "") + ">10</option>");
     w.append("<option value=\"20\" " + (t.getPageSize() == 20 ? "selected" : "") + ">20</option>");
     w.append("<option value=\"30\" " + (t.getPageSize() == 30 ? "selected" : "") + ">30</option>");
@@ -180,7 +178,13 @@ public class DataTableRenderer extends Renderer {
     if (!ajax) {
       w.append("\n</div>");
       w.append("\n<script language=\"javascript\" type=\"text/javascript\">");
-      w.append("\npagedTable" + t.getId() + "=new DataTable('" + t.getId() + "'," + t.isUpdateUsingSubmit() + ");");
+
+      if (t.isUpdateUsingSubmit() == null)
+        w.append("\nvar updateUsingSubmit" + t.getId() + "= navigator.appName == 'Microsoft Internet Explorer';");
+      else
+        w.append("\nvar updateUsingSubmit" + t.getId() + "= " + t.isUpdateUsingSubmit() + ";");
+
+      w.append("\npagedTable" + t.getId() + "=new DataTable('" + t.getId() + "',updateUsingSubmit" + t.getId() + ");");
       if (t.getAutoUpdate() != null && !t.isUpdateUsingSubmit()) {
         w.append("\nfunction autoUpdate" + t.getId() + "(){");
         w.append("\n  pagedTable" + t.getId() + ".updateTable();");

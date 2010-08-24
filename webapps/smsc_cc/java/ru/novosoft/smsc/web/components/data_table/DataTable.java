@@ -20,7 +20,7 @@ public class DataTable extends EyelineComponent {
   private int currentPage;
   private int pageSize = 20;
   private Integer autoUpdate;
-  private boolean updateUsingSubmit;
+  private Boolean updateUsingSubmit;
 
   private List<String> selectedRows = new ArrayList<String>();
   private ValueExpression selectedRowsExpression;
@@ -87,7 +87,7 @@ public class DataTable extends EyelineComponent {
     return selectedRows;
   }
 
-  public boolean isUpdateUsingSubmit() {
+  public Boolean isUpdateUsingSubmit() {
     return updateUsingSubmit;
   }
 

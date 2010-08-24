@@ -31,8 +31,8 @@
       <h:inputHidden value="#{index1.filter}"/>
 
 
-      <eye:dataTable value="#{index1.staticModel}" selectedRows="#{index1.selectedRows}" updateUsingSubmit="true">
-        <eye:row rowId="rowId" data="data" innerData="innerData" opened="#{rowId == '1'}">
+      <eye:dataTable value="#{index1.staticModel}" selectedRows="#{index1.selectedRows}" >
+        <eye:row rowId="rowId" data="data" innerData="innerData" >
 
           <eye:column name="column1" title="column1" width="50%" sortable="true">
             <h:outputText value="#{data.column1}"/>
@@ -42,7 +42,7 @@
           </eye:column>
 
           <eye:column name="column2" title="column2" width="50%" sortable="false" align="center">
-            <h:graphicImage value="/images/ic_offline.gif" alt="" rendered="true"/>
+            <h:graphicImage value="/images/ic_offline.gif" alt=""/>
             <f:facet name="inner">
               <h:outputText value="#{data.column2}"/>
             </f:facet>

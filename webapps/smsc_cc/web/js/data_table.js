@@ -179,16 +179,5 @@ function DataTable(tableId, updateUsingSubmit) {
     }
 
     expandElement.className = expand ? 'inner_data_opened' : 'inner_data_closed';
-  };
-
-  /**
-   * Автоматически обновляет содержимое таблицы с заданным интервалом
-   * @param timeout интервал обновления в миллисекундах
-   */
-  this.autoUpdateTable = function(timeout) {
-    if (updateUsingSubmit)
-      return;
-    this.updateTable();
-    window.setTimeout(this.autoUpdateTable, timeout);
-  };
+  };  
 }
