@@ -103,4 +103,8 @@ public class ChangeLog {
     logChanges("Reschedule", "Reschedule settings", RescheduleSettings.class, oldValues, newValues, getters, user);
   }
 
+  public void logSmscStatusChange(int smscInstanceNumber, String newHost, User user) {
+    
+  }
+
 }

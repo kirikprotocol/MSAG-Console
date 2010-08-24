@@ -62,12 +62,6 @@
     </attribute>
 
     <attribute>
-      <name>width</name>
-      <description>Ширина поля</description>
-      <type>int</type>
-    </attribute>
-
-    <attribute>
       <name>maxLength</name>
       <description>Максимальное количество символов</description>
       <type>int</type>
@@ -76,26 +70,27 @@
 
   <tag>
     <name>selectColumn</name>
+    <description>Колонка в dynamicTable, содержащая поля с select</description>
     <attribute>
       <name>name</name>
+      <description>Название колонки. Служит ключем при чтении/записи данных в DynamicTableRow</description>
       <type>java.lang.String</type>
       <required>true</required>
     </attribute>
     <attribute>
       <name>allowEditAfterAdd</name>
+      <description>Флаг, разрешающий или запрещающий редактирование поля, после добавления его в таблицу</description>
       <type>boolean</type>
     </attribute>
     <attribute>
-      <name>width</name>
-      <type>int</type>
-    </attribute>
-    <attribute>
       <name>values</name>
+      <description>Список значений, которые можно выбрать в select</description>
       <type>java.util.List</type>
       <required>true</required>
     </attribute>
     <attribute>
       <name>uniqueValues</name>
+      <description>Флаг, разрешающий или запрещающий установку одинаковых значений в столбец таблицы.</description>
       <type>boolean</type>
     </attribute>
   </tag>
@@ -111,87 +106,106 @@
 
   <tag>
     <name>buttons</name>
+    <description>Строка с кнопками</description>
   </tag>
 
   <tag>
     <name>space</name>
+    <description>Разделитель типа "горизонтальная пружина" в buttons</description>
   </tag>
 
   <tag>
     <name>button</name>
+    <description>Кнопка в buttons</description>
   </tag>
 
   <tag>
     <name>dataTable</name>
+    <description>Многостраничная таблица</description>
     <attribute>
       <name>value</name>
+      <description>Атрибут, описывающий откуда брать модель для таблицы</description>
       <type>ru.novosoft.smsc.web.components.data_table.model.DataTableModel</type>
       <required>true</required>
     </attribute>
     <attribute>
       <name>autoUpdate</name>
+      <description>Период обновления таблицы в секундах. При наличии этого атрибута содержимое таблицы автоматически обновляется.</description>
       <type>int</type>
     </attribute>
     <attribute>
       <name>pageSize</name>
+      <description>Количество строк на одной странице по-умолчанию</description>
       <type>int</type>
     </attribute>
     <attribute>
       <name>selectedRows</name>
+      <description>Тег, описывающий куда передать список идентификаторов выделенных строк таблицы</description>
       <type>java.util.List</type>
     </attribute>
     <attribute>
-      <name>rowVar</name>
-      <type>java.lang.String</type>
-    </attribute>
-    <attribute>
       <name>updateUsingSubmit</name>
-      <type>java.lang.Boolean</type>
+      <description>
+        Флаг, описывающий способ обновления собержимого таблицы. Если флаг равен true, то содержимое таблицы (при сортировке, перемещении по страницам)
+        будет обновляться петем сабмита формы. В противном случае таблица будет обновляться через Ajax.
+      </description>
+      <type>boolean</type>
     </attribute>
   </tag>
 
   <tag>
     <name>column</name>
+    <description>Колонка в dataTable</description>
     <attribute>
       <name>name</name>
+      <description>Название колонки. Используется при получении данных из модели</description>
       <type>java.lang.String</type>
       <required>true</required>
     </attribute>
     <attribute>
       <name>title</name>
+      <description>Заголовок колонки</description>
       <type>java.lang.String</type>
       <required>true</required>
     </attribute>
     <attribute>
       <name>sortable</name>
+      <description>Флаг, разрешающий или запрещающий сортировку по данной колонке</description>
       <type>boolean</type>
     </attribute>
     <attribute>
       <name>width</name>
+      <description>Ширина колонки в процентах или пикселях</description>
       <type>java.lang.String</type>
     </attribute>
     <attribute>
       <name>align</name>
+      <description>Выравнивание содержимого колонки</description>
       <type>java.lang.String</type>
     </attribute>
   </tag>
 
   <tag>
     <name>row</name>
+    <description>Строка в dataTable.</description>
     <attribute>
       <name>rowId</name>
+      <description>Название переменной на странице, в которую будет записываться идентификатор текущей строки</description>
       <type>java.lang.String</type>
     </attribute>
     <attribute>
       <name>data</name>
+      <description>Название переменной на странице, в которую будут записываться данные текущей строки</description>
       <type>java.lang.String</type>
     </attribute>
     <attribute>
       <name>innerData</name>
+      <description>Название переменной на странице, в которую будут записываться внутренние данные строки</description>
       <type>java.lang.String</type>
     </attribute>
     <attribute>
       <name>opened</name>
+      <description>Флаг, разрешающий или запрещающий раскрытие содержимого строки</description>
       <type>boolean</type>
     </attribute>
   </tag>
