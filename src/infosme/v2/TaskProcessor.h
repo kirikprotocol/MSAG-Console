@@ -218,7 +218,7 @@ public:
     bool isInited() const { return isInited_; }
 
     int getProtocolId() const { return protocolId; };
-    const char* getSvcType() const { return svcType.empty() ? "" : svcType.c_str(); };
+    const char* getSvcType() const { return svcType.c_str(); };
     const char* getAddress() const { return address.c_str(); };
 
     int getResponseWaitTime() const { return responseWaitTime; }
