@@ -3,9 +3,9 @@ package ru.novosoft.smsc.web.controllers;
 import org.apache.log4j.Logger;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
+import ru.novosoft.smsc.admin.reschedule.Reschedule;
 import ru.novosoft.smsc.admin.reschedule.RescheduleSettings;
 import ru.novosoft.smsc.web.WebContext;
-import ru.novosoft.smsc.web.beans.Reschedule;
 import ru.novosoft.smsc.web.components.data_table.model.DataTableModel;
 import ru.novosoft.smsc.web.components.data_table.model.DataTableRow;
 import ru.novosoft.smsc.web.components.data_table.model.DataTableRowBase;
@@ -100,12 +100,7 @@ public class RescheduleController extends SmscController {
       Collection<ru.novosoft.smsc.admin.reschedule.Reschedule> rs = rescheduleSettings.getReschedules();
       reschedules = new LinkedHashMap<String, Reschedule>(rs.size());
       for(ru.novosoft.smsc.admin.reschedule.Reschedule r : rs) {
-        Reschedule reschedule = new Reschedule();
-        reschedule.setIntervals(r.getIntervals());
-        for(Integer s : r.getStatuses()) {
-          reschedule.addStatus(new Reschedule.Status(s));
-        }
-        reschedules.put(reschedule.getIntervals(), reschedule);
+        reschedules.put(r.getIntervals(), r);
       }
       defaultReschedule = new Reschedule(rescheduleSettings.getDefaultReschedule());
     }else {
@@ -146,7 +141,7 @@ public class RescheduleController extends SmscController {
       Collection<ru.novosoft.smsc.admin.reschedule.Reschedule> newReschedules =
           new ArrayList<ru.novosoft.smsc.admin.reschedule.Reschedule>(reschedules.size());
       for(Reschedule r : reschedules.values()) {
-        newReschedules.add(convert(r));
+        newReschedules.add(r);
       }
       settings.setReschedules(newReschedules);
       settings.setDefaultReschedule(defaultReschedule.getIntervals());
@@ -179,16 +174,6 @@ public class RescheduleController extends SmscController {
     session.setAttribute("reschedule.reschedules", reschedules);
     session.setAttribute("reschedule.default", defaultReschedule);
   }
-
-
-  public ru.novosoft.smsc.admin.reschedule.Reschedule convert(Reschedule reschedule) throws AdminException{
-    Collection<Integer> statuses = new ArrayList<Integer>(reschedule.getStatuses().size());
-    for(Reschedule.Status c : reschedule.getStatuses()) {
-      statuses.add(c.getStatus());
-    }
-    return new ru.novosoft.smsc.admin.reschedule.Reschedule(reschedule.getIntervals(), statuses);
-  }
-
 
   public DataTableModel getRescheduleModel() {
     return rescheduleModel;

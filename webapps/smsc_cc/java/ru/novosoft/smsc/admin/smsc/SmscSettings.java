@@ -3,7 +3,7 @@ package ru.novosoft.smsc.admin.smsc;
 /**
  * @author Artem Snopkov
  */
-public class SmscSettings {
+public class SmscSettings{
 
   private CommonSettings commonSettings;
 

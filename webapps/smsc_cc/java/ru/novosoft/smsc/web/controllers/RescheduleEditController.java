@@ -1,7 +1,8 @@
 package ru.novosoft.smsc.web.controllers;
 
 import org.apache.log4j.Logger;
-import ru.novosoft.smsc.web.beans.Reschedule;
+import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.reschedule.Reschedule;
 import ru.novosoft.smsc.web.components.dynamic_table.model.DynamicTableModel;
 import ru.novosoft.smsc.web.components.dynamic_table.model.DynamicTableRow;
 
@@ -60,14 +61,14 @@ public class RescheduleEditController extends SmscController{
           1165, 1173, 1179, 1183, 1184, 1185, 1186, 1187, 1188));
       for(Reschedule r : reschedules.values()) {
         if((oldReschedule != null && oldReschedule.length() != 0) && r.getIntervals().equals(oldReschedule)) {
-          for(Reschedule.Status st : r.getStatuses()) {
+          for(Integer st : r.getStatuses()) {
             DynamicTableRow row = new DynamicTableRow();
-            row.setValue("code", statusConverter.getAsString(FacesContext.getCurrentInstance(), st.getStatus()));
+            row.setValue("code", statusConverter.getAsString(FacesContext.getCurrentInstance(), st));
             dynamicModel.addRow(row);
           }
         }else {
-          for(Reschedule.Status s : r.getStatuses()) {
-            availableStatuses.remove(s.getStatus());
+          for(Integer s : r.getStatuses()) {
+            availableStatuses.remove(s);
           }
         }
       }
@@ -143,16 +144,23 @@ public class RescheduleEditController extends SmscController{
         return null;
       }
 
-      List<Reschedule.Status> statuses = new ArrayList<Reschedule.Status>(dynamicModel.getRowCount());
+      List<Integer> statuses = new ArrayList<Integer>(dynamicModel.getRowCount());
       for(DynamicTableRow row : dynamicModel.getRows()) {
-        statuses.add(new Reschedule.Status(statusConverter.getAsInteger((String)row.getValue("code"))));
+        statuses.add(statusConverter.getAsInteger((String)row.getValue("code")));
       }
 
-      if(oldReschedule != null && oldReschedule.length() != 0) {
-        reschedules.remove(oldReschedule);
+      try{
+        Reschedule toAdd = new Reschedule(newReschedule, statuses);
+        if(oldReschedule != null && oldReschedule.length() != 0) {
+          reschedules.remove(oldReschedule);
+        }
+        reschedules.put(newReschedule, toAdd);
+      }catch (AdminException e) {
+        logger.error(e,e);
+        addLocalizedMessage(FacesMessage.SEVERITY_WARN, e.getMessage(getLocale()));
+        return null;
       }
 
-      reschedules.put(newReschedule, new Reschedule(newReschedule, statuses));
     }
 
     return "RESCHEDULE";

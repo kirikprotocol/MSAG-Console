@@ -34,7 +34,7 @@
 
         <h:panelGrid style="align:left; width:35%" columns="1" columnClasses="column0Width">
           <tr:panelLabelAndMessage label="#{msg['smsc.reschedule.edit.intervals']}">
-            <tr:inputText value="#{rescheduleEdit.newReschedule}" required="true">
+            <tr:inputText value="#{rescheduleEdit.newReschedule}" required="true" simple="true">
               <tr:validateRegExp pattern="#{rescheduleEdit.reschedulePattern}"
                                  messageDetailNoMatch="#{msg['smsc.reschedule.edit.invalid.intervals']}"/>
             </tr:inputText>

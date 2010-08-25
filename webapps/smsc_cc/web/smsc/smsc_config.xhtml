@@ -48,48 +48,48 @@
   <tr:panelFormLayout id="core_props">
 
     <tr:panelLabelAndMessage label="#{commonSettings.state_machines_count}">
-      <tr:inputText value="#{smscConfig.commonConfig.state_machines_count}" required="true">
+      <tr:inputText value="#{smscConfig.commonConfig.state_machines_count}" required="true" simple="true">
         <tr:validateLongRange minimum="1"/>
       </tr:inputText>
     </tr:panelLabelAndMessage>
 
     <tr:panelLabelAndMessage label="#{commonSettings.mainLoopsCount}">
-      <tr:inputText value="#{smscConfig.commonConfig.mainLoopsCount}" required="true">
+      <tr:inputText value="#{smscConfig.commonConfig.mainLoopsCount}" required="true" simple="true">
         <tr:validateLongRange minimum="1"/>
       </tr:inputText>
     </tr:panelLabelAndMessage>
 
     <tr:panelLabelAndMessage label="#{commonSettings.eventQueueLimit}">
-      <tr:inputText value="#{smscConfig.commonConfig.eventQueueLimit}" required="true">
+      <tr:inputText value="#{smscConfig.commonConfig.eventQueueLimit}" required="true" simple="true">
         <tr:validateLongRange minimum="1"/>
       </tr:inputText>
     </tr:panelLabelAndMessage>
 
     <tr:panelLabelAndMessage label="#{commonSettings.service_center_address}">
-      <tr:inputText value="#{smscConfig.commonConfig.service_center_address}" required="true"/>
+      <tr:inputText value="#{smscConfig.commonConfig.service_center_address}" required="true" simple="true"/>
     </tr:panelLabelAndMessage>
 
     <tr:panelLabelAndMessage label="#{commonSettings.ussd_center_address}">
-      <tr:inputText value="#{smscConfig.commonConfig.ussd_center_address}" required="true"/>
+      <tr:inputText value="#{smscConfig.commonConfig.ussd_center_address}" required="true" simple="true"/>
     </tr:panelLabelAndMessage>
 
     <tr:panelLabelAndMessage label="#{commonSettings.ussd_ssn}">
-      <tr:inputText value="#{smscConfig.commonConfig.ussd_ssn}" required="true">
+      <tr:inputText value="#{smscConfig.commonConfig.ussd_ssn}" required="true" simple="true">
         <tr:validateLongRange minimum="1"/>
       </tr:inputText>
     </tr:panelLabelAndMessage>
 
 
     <tr:panelLabelAndMessage label="#{commonSettings.service_type}">
-      <tr:inputText value="#{smscConfig.commonConfig.service_type}" required="true"/>
+      <tr:inputText value="#{smscConfig.commonConfig.service_type}" required="true" simple="true"/>
     </tr:panelLabelAndMessage>
 
     <tr:panelLabelAndMessage label="#{commonSettings.systemId}">
-      <tr:inputText value="#{smscConfig.commonConfig.systemId}" required="true"/>
+      <tr:inputText value="#{smscConfig.commonConfig.systemId}" required="true" simple="true"/>
     </tr:panelLabelAndMessage>
 
     <tr:panelLabelAndMessage label="#{commonSettings.protocol_id}">
-      <tr:inputText value="#{smscConfig.commonConfig.protocol_id}" required="true">
+      <tr:inputText value="#{smscConfig.commonConfig.protocol_id}" required="true" simple="true">
         <tr:validateLongRange minimum="1"/>
       </tr:inputText>
     </tr:panelLabelAndMessage>
@@ -112,18 +112,18 @@
 
   <tr:panelFormLayout>
     <tr:panelLabelAndMessage label="#{commonSettings.default_locale}">
-      <tr:inputText value="#{smscConfig.commonConfig.default_locale}" required="true"/>
+      <tr:inputText value="#{smscConfig.commonConfig.default_locale}" required="true" simple="true"/>
     </tr:panelLabelAndMessage>
 
     <tr:panelLabelAndMessage label="#{commonSettings.mergeTimeout}">
-      <tr:inputText value="#{smscConfig.commonConfig.mergeTimeout}" required="true">
+      <tr:inputText value="#{smscConfig.commonConfig.mergeTimeout}" required="true" simple="true">
         <tr:validateLongRange minimum="1"/>
       </tr:inputText>
     </tr:panelLabelAndMessage>
 
 
     <tr:panelLabelAndMessage label="#{commonSettings.timezones_config}">
-      <tr:inputText value="#{smscConfig.commonConfig.timezones_config}" required="true"/>
+      <tr:inputText value="#{smscConfig.commonConfig.timezones_config}" required="true" simple="true"/>
     </tr:panelLabelAndMessage>
 
     <tr:panelLabelAndMessage label="#{commonSettings.smartMultipartForward}" inlineStyle="text-align:left">
@@ -137,12 +137,12 @@
     </tr:panelLabelAndMessage>
 
     <tr:panelLabelAndMessage label="#{commonSettings.schedulerSoftLimit}">
-      <tr:inputText value="#{smscConfig.commonConfig.schedulerSoftLimit}" required="true">
+      <tr:inputText value="#{smscConfig.commonConfig.schedulerSoftLimit}" required="true" simple="true">
         <tr:validateLongRange minimum="1"/>
       </tr:inputText>
     </tr:panelLabelAndMessage>
     <tr:panelLabelAndMessage label="#{commonSettings.schedulerHardLimit}">
-      <tr:inputText value="#{smscConfig.commonConfig.schedulerHardLimit}" required="true">
+      <tr:inputText value="#{smscConfig.commonConfig.schedulerHardLimit}" required="true" simple="true">
         <tr:validateLongRange minimum="1"/>
       </tr:inputText>
     </tr:panelLabelAndMessage>
@@ -153,7 +153,7 @@
 <eye:collapsingGroup label="#{msg['sms.label']}">
   <tr:panelFormLayout id="sms_props">
     <tr:panelLabelAndMessage label="#{commonSettings.smsMaxValidTime}">
-      <tr:inputText value="#{smscConfig.commonConfig.smsMaxValidTime}" required="true">
+      <tr:inputText value="#{smscConfig.commonConfig.smsMaxValidTime}" required="true" simple="true">
         <tr:validateLongRange minimum="1"/>
       </tr:inputText>
     </tr:panelLabelAndMessage>
@@ -165,19 +165,19 @@
   <tr:panelFormLayout id="map_props">
 
     <tr:panelLabelAndMessage label="#{commonSettings.mapBusyMTDelay}">
-      <tr:inputText value="#{smscConfig.commonConfig.mapBusyMTDelay}" required="true">
+      <tr:inputText value="#{smscConfig.commonConfig.mapBusyMTDelay}" required="true" simple="true">
         <tr:validateLongRange minimum="1"/>
       </tr:inputText>
     </tr:panelLabelAndMessage>
 
     <tr:panelLabelAndMessage label="#{commonSettings.mapLockedByMODelay}">
-      <tr:inputText value="#{smscConfig.commonConfig.mapLockedByMODelay}" required="true">
+      <tr:inputText value="#{smscConfig.commonConfig.mapLockedByMODelay}" required="true" simple="true">
         <tr:validateLongRange minimum="1"/>
       </tr:inputText>
     </tr:panelLabelAndMessage>
 
     <tr:panelLabelAndMessage label="#{commonSettings.mapMOLockTimeout}">
-      <tr:inputText value="#{smscConfig.commonConfig.mapMOLockTimeout}" required="true">
+      <tr:inputText value="#{smscConfig.commonConfig.mapMOLockTimeout}" required="true" simple="true">
         <tr:validateLongRange minimum="1"/>
       </tr:inputText>
     </tr:panelLabelAndMessage>
@@ -196,7 +196,7 @@
     </tr:panelLabelAndMessage>
 
     <tr:panelLabelAndMessage label="#{commonSettings.mapIOTasksCount}">
-      <tr:inputText value="#{smscConfig.commonConfig.mapIOTasksCount}" required="true">
+      <tr:inputText value="#{smscConfig.commonConfig.mapIOTasksCount}" required="true" simple="true">
         <tr:validateLongRange minimum="1"/>
       </tr:inputText>
     </tr:panelLabelAndMessage>
@@ -207,13 +207,13 @@
   <tr:panelFormLayout id="tc_props">
 
     <tr:panelLabelAndMessage label="#{commonSettings.trafficShapeTimeFrame}">
-      <tr:inputText value="#{smscConfig.commonConfig.trafficShapeTimeFrame}" required="true">
+      <tr:inputText value="#{smscConfig.commonConfig.trafficShapeTimeFrame}" required="true" simple="true">
         <tr:validateLongRange minimum="1"/>
       </tr:inputText>
     </tr:panelLabelAndMessage>
 
     <tr:panelLabelAndMessage label="#{commonSettings.trafficStatTimeFrame}">
-      <tr:inputText value="#{smscConfig.commonConfig.trafficStatTimeFrame}" required="true">
+      <tr:inputText value="#{smscConfig.commonConfig.trafficStatTimeFrame}" required="true" simple="true">
         <tr:validateLongRange minimum="1"/>
       </tr:inputText>
     </tr:panelLabelAndMessage>
@@ -224,7 +224,7 @@
 <eye:collapsingGroup label="#{msg['messagestore.label']}">
   <tr:panelFormLayout id="ms_props">
     <tr:panelLabelAndMessage label="#{commonSettings.msArchiveInterval}">
-      <tr:inputText value="#{smscConfig.commonConfig.msArchiveInterval}" required="true">
+      <tr:inputText value="#{smscConfig.commonConfig.msArchiveInterval}" required="true" simple="true">
         <tr:validateLongRange minimum="1"/>
       </tr:inputText>
     </tr:panelLabelAndMessage>
@@ -232,12 +232,12 @@
   <eye:collapsingGroup label="#{msg['messagestore.localstore.label']}">
     <tr:panelFormLayout>
       <tr:panelLabelAndMessage label="#{commonSettings.lsMaxStoreSize}">
-        <tr:inputText value="#{smscConfig.commonConfig.lsMaxStoreSize}" required="true">
+        <tr:inputText value="#{smscConfig.commonConfig.lsMaxStoreSize}" required="true" simple="true">
           <tr:validateLongRange minimum="1"/>
         </tr:inputText>
       </tr:panelLabelAndMessage>
       <tr:panelLabelAndMessage label="#{commonSettings.lsMinRollTime}">
-        <tr:inputText value="#{smscConfig.commonConfig.lsMinRollTime}" required="true">
+        <tr:inputText value="#{smscConfig.commonConfig.lsMinRollTime}" required="true" simple="true">
           <tr:validateLongRange minimum="1"/>
         </tr:inputText>
       </tr:panelLabelAndMessage>
@@ -250,31 +250,31 @@
   <tr:panelFormLayout id="smpp_props">
 
     <tr:panelLabelAndMessage label="#{commonSettings.smppReadTimeout}">
-      <tr:inputText value="#{smscConfig.commonConfig.smppReadTimeout}" required="true">
+      <tr:inputText value="#{smscConfig.commonConfig.smppReadTimeout}" required="true" simple="true">
         <tr:validateLongRange minimum="1"/>
       </tr:inputText>
     </tr:panelLabelAndMessage>
 
     <tr:panelLabelAndMessage label="#{commonSettings.smppInactivityTime}">
-      <tr:inputText value="#{smscConfig.commonConfig.smppInactivityTime}" required="true">
+      <tr:inputText value="#{smscConfig.commonConfig.smppInactivityTime}" required="true" simple="true">
         <tr:validateLongRange minimum="1"/>
       </tr:inputText>
     </tr:panelLabelAndMessage>
 
     <tr:panelLabelAndMessage label="#{commonSettings.smppInactivityTimeOut}">
-      <tr:inputText value="#{smscConfig.commonConfig.smppInactivityTimeOut}" required="true">
+      <tr:inputText value="#{smscConfig.commonConfig.smppInactivityTimeOut}" required="true" simple="true">
         <tr:validateLongRange minimum="1"/>
       </tr:inputText>
     </tr:panelLabelAndMessage>
 
     <tr:panelLabelAndMessage label="#{commonSettings.smppBindTimeout}">
-      <tr:inputText value="#{smscConfig.commonConfig.smppBindTimeout}" required="true">
+      <tr:inputText value="#{smscConfig.commonConfig.smppBindTimeout}" required="true" simple="true">
         <tr:validateLongRange minimum="1"/>
       </tr:inputText>
     </tr:panelLabelAndMessage>
 
     <tr:panelLabelAndMessage label="#{commonSettings.smppDefaultConnectionsLimit}">
-      <tr:inputText value="#{smscConfig.commonConfig.smppDefaultConnectionsLimit}" required="true">
+      <tr:inputText value="#{smscConfig.commonConfig.smppDefaultConnectionsLimit}" required="true" simple="true">
         <tr:validateLongRange minimum="1"/>
       </tr:inputText>
     </tr:panelLabelAndMessage>
@@ -288,19 +288,19 @@
   <tr:panelFormLayout id="profiler_props">
 
     <tr:panelLabelAndMessage label="#{commonSettings.profilerSystemId}">
-      <tr:inputText value="#{smscConfig.commonConfig.profilerSystemId}" required="true"/>
+      <tr:inputText value="#{smscConfig.commonConfig.profilerSystemId}" required="true" simple="true"/>
     </tr:panelLabelAndMessage>
 
     <tr:panelLabelAndMessage label="#{commonSettings.profilerServiceType}">
-      <tr:inputText value="#{smscConfig.commonConfig.profilerServiceType}" required="true"/>
+      <tr:inputText value="#{smscConfig.commonConfig.profilerServiceType}" required="true" simple="true"/>
     </tr:panelLabelAndMessage>
 
     <tr:panelLabelAndMessage label="#{commonSettings.profilerStoreFile}">
-      <tr:inputText value="#{smscConfig.commonConfig.profilerStoreFile}" required="true"/>
+      <tr:inputText value="#{smscConfig.commonConfig.profilerStoreFile}" required="true" simple="true"/>
     </tr:panelLabelAndMessage>
 
     <tr:panelLabelAndMessage label="#{commonSettings.profilerProtocolId}">
-      <tr:inputText value="#{smscConfig.commonConfig.profilerProtocolId}" required="true">
+      <tr:inputText value="#{smscConfig.commonConfig.profilerProtocolId}" required="true" simple="true">
         <tr:validateLongRange minimum="1"/>
       </tr:inputText>
     </tr:panelLabelAndMessage>
@@ -312,162 +312,162 @@
     <tr:panelFormLayout>
 
       <tr:panelLabelAndMessage label="#{commonSettings.profilerReportNone}">
-        <tr:inputText value="#{smscConfig.commonConfig.profilerReportNone}" required="true">
+        <tr:inputText value="#{smscConfig.commonConfig.profilerReportNone}" required="true" simple="true">
           <tr:validateLongRange minimum="1"/>
         </tr:inputText>
       </tr:panelLabelAndMessage>
 
       <tr:panelLabelAndMessage label="#{commonSettings.profilerReportFull}">
-        <tr:inputText value="#{smscConfig.commonConfig.profilerReportFull}" required="true">
+        <tr:inputText value="#{smscConfig.commonConfig.profilerReportFull}" required="true" simple="true">
           <tr:validateLongRange minimum="1"/>
         </tr:inputText>
       </tr:panelLabelAndMessage>
 
       <tr:panelLabelAndMessage label="#{commonSettings.profilerReportFinal}">
-        <tr:inputText value="#{smscConfig.commonConfig.profilerReportFinal}" required="true">
+        <tr:inputText value="#{smscConfig.commonConfig.profilerReportFinal}" required="true" simple="true">
           <tr:validateLongRange minimum="1"/>
         </tr:inputText>
       </tr:panelLabelAndMessage>
 
       <tr:panelLabelAndMessage label="#{commonSettings.profilerLocaleRU}">
-        <tr:inputText value="#{smscConfig.commonConfig.profilerLocaleRU}" required="true">
+        <tr:inputText value="#{smscConfig.commonConfig.profilerLocaleRU}" required="true" simple="true">
           <tr:validateLongRange minimum="1"/>
         </tr:inputText>
       </tr:panelLabelAndMessage>
 
       <tr:panelLabelAndMessage label="#{commonSettings.profilerLocaleEN}">
-        <tr:inputText value="#{smscConfig.commonConfig.profilerLocaleEN}" required="true">
+        <tr:inputText value="#{smscConfig.commonConfig.profilerLocaleEN}" required="true" simple="true">
           <tr:validateLongRange minimum="1"/>
         </tr:inputText>
       </tr:panelLabelAndMessage>
 
       <tr:panelLabelAndMessage label="#{commonSettings.profilerDefault}">
-        <tr:inputText value="#{smscConfig.commonConfig.profilerDefault}" required="true">
+        <tr:inputText value="#{smscConfig.commonConfig.profilerDefault}" required="true" simple="true">
           <tr:validateLongRange minimum="1"/>
         </tr:inputText>
       </tr:panelLabelAndMessage>
 
       <tr:panelLabelAndMessage label="#{commonSettings.profilerUCS2}">
-        <tr:inputText value="#{smscConfig.commonConfig.profilerUCS2}" required="true">
+        <tr:inputText value="#{smscConfig.commonConfig.profilerUCS2}" required="true" simple="true">
           <tr:validateLongRange minimum="1"/>
         </tr:inputText>
       </tr:panelLabelAndMessage>
 
       <tr:panelLabelAndMessage label="#{commonSettings.profilerHide}">
-        <tr:inputText value="#{smscConfig.commonConfig.profilerHide}" required="true">
+        <tr:inputText value="#{smscConfig.commonConfig.profilerHide}" required="true" simple="true">
           <tr:validateLongRange minimum="1"/>
         </tr:inputText>
       </tr:panelLabelAndMessage>
 
       <tr:panelLabelAndMessage label="#{commonSettings.profilerUnhide}">
-        <tr:inputText value="#{smscConfig.commonConfig.profilerUnhide}" required="true">
+        <tr:inputText value="#{smscConfig.commonConfig.profilerUnhide}" required="true" simple="true">
           <tr:validateLongRange minimum="1"/>
         </tr:inputText>
       </tr:panelLabelAndMessage>
 
       <tr:panelLabelAndMessage label="#{commonSettings.profilerUSSD7BitOn}">
-        <tr:inputText value="#{smscConfig.commonConfig.profilerUSSD7BitOn}" required="true">
+        <tr:inputText value="#{smscConfig.commonConfig.profilerUSSD7BitOn}" required="true" simple="true">
           <tr:validateLongRange minimum="1"/>
         </tr:inputText>
       </tr:panelLabelAndMessage>
 
       <tr:panelLabelAndMessage label="#{commonSettings.profilerUSSD7BitOff}">
-        <tr:inputText value="#{smscConfig.commonConfig.profilerUSSD7BitOff}" required="true">
+        <tr:inputText value="#{smscConfig.commonConfig.profilerUSSD7BitOff}" required="true" simple="true">
           <tr:validateLongRange minimum="1"/>
         </tr:inputText>
       </tr:panelLabelAndMessage>
 
       <tr:panelLabelAndMessage label="#{commonSettings.profilerDivertOn}">
-        <tr:inputText value="#{smscConfig.commonConfig.profilerDivertOn}" required="true">
+        <tr:inputText value="#{smscConfig.commonConfig.profilerDivertOn}" required="true" simple="true">
           <tr:validateLongRange minimum="1"/>
         </tr:inputText>
       </tr:panelLabelAndMessage>
 
       <tr:panelLabelAndMessage label="#{commonSettings.profilerDivertOff}">
-        <tr:inputText value="#{smscConfig.commonConfig.profilerDivertOff}" required="true">
+        <tr:inputText value="#{smscConfig.commonConfig.profilerDivertOff}" required="true" simple="true">
           <tr:validateLongRange minimum="1"/>
         </tr:inputText>
       </tr:panelLabelAndMessage>
 
       <tr:panelLabelAndMessage label="#{commonSettings.profilerDivertAbsentOn}">
-        <tr:inputText value="#{smscConfig.commonConfig.profilerDivertAbsentOn}" required="true">
+        <tr:inputText value="#{smscConfig.commonConfig.profilerDivertAbsentOn}" required="true" simple="true">
           <tr:validateLongRange minimum="1"/>
         </tr:inputText>
       </tr:panelLabelAndMessage>
       <tr:panelLabelAndMessage label="#{commonSettings.profilerDivertAbsentOff}">
-        <tr:inputText value="#{smscConfig.commonConfig.profilerDivertAbsentOff}" required="true">
+        <tr:inputText value="#{smscConfig.commonConfig.profilerDivertAbsentOff}" required="true" simple="true">
           <tr:validateLongRange minimum="1"/>
         </tr:inputText>
       </tr:panelLabelAndMessage>
 
       <tr:panelLabelAndMessage label="#{commonSettings.profilerDivertBlockedOn}">
-        <tr:inputText value="#{smscConfig.commonConfig.profilerDivertBlockedOn}" required="true">
+        <tr:inputText value="#{smscConfig.commonConfig.profilerDivertBlockedOn}" required="true" simple="true">
           <tr:validateLongRange minimum="1"/>
         </tr:inputText>
       </tr:panelLabelAndMessage>
 
       <tr:panelLabelAndMessage label="#{commonSettings.profilerDivertBlockedOff}">
-        <tr:inputText value="#{smscConfig.commonConfig.profilerDivertBlockedOff}" required="true">
+        <tr:inputText value="#{smscConfig.commonConfig.profilerDivertBlockedOff}" required="true" simple="true">
           <tr:validateLongRange minimum="1"/>
         </tr:inputText>
       </tr:panelLabelAndMessage>
 
       <tr:panelLabelAndMessage label="#{commonSettings.profilerDivertBarredOn}">
-        <tr:inputText value="#{smscConfig.commonConfig.profilerDivertBarredOn}" required="true">
+        <tr:inputText value="#{smscConfig.commonConfig.profilerDivertBarredOn}" required="true" simple="true">
           <tr:validateLongRange minimum="1"/>
         </tr:inputText>
       </tr:panelLabelAndMessage>
 
       <tr:panelLabelAndMessage label="#{commonSettings.profilerDivertBarredOff}">
-        <tr:inputText value="#{smscConfig.commonConfig.profilerDivertBarredOff}" required="true">
+        <tr:inputText value="#{smscConfig.commonConfig.profilerDivertBarredOff}" required="true" simple="true">
           <tr:validateLongRange minimum="1"/>
         </tr:inputText>
       </tr:panelLabelAndMessage>
 
       <tr:panelLabelAndMessage label="#{commonSettings.profilerDivertCapacityOn}">
-        <tr:inputText value="#{smscConfig.commonConfig.profilerDivertCapacityOn}" required="true">
+        <tr:inputText value="#{smscConfig.commonConfig.profilerDivertCapacityOn}" required="true" simple="true">
           <tr:validateLongRange minimum="1"/>
         </tr:inputText>
       </tr:panelLabelAndMessage>
 
       <tr:panelLabelAndMessage label="#{commonSettings.profilerDivertCapacityOff}">
-        <tr:inputText value="#{smscConfig.commonConfig.profilerDivertCapacityOff}" required="true">
+        <tr:inputText value="#{smscConfig.commonConfig.profilerDivertCapacityOff}" required="true" simple="true">
           <tr:validateLongRange minimum="1"/>
         </tr:inputText>
       </tr:panelLabelAndMessage>
 
       <tr:panelLabelAndMessage label="#{commonSettings.profilerDivertStatus}">
-        <tr:inputText value="#{smscConfig.commonConfig.profilerDivertStatus}" required="true">
+        <tr:inputText value="#{smscConfig.commonConfig.profilerDivertStatus}" required="true" simple="true">
           <tr:validateLongRange minimum="1"/>
         </tr:inputText>
       </tr:panelLabelAndMessage>
 
       <tr:panelLabelAndMessage label="#{commonSettings.profilerDivertTo}">
-        <tr:inputText value="#{smscConfig.commonConfig.profilerDivertTo}" required="true">
+        <tr:inputText value="#{smscConfig.commonConfig.profilerDivertTo}" required="true" simple="true">
           <tr:validateLongRange minimum="1"/>
         </tr:inputText>
       </tr:panelLabelAndMessage>
 
       <tr:panelLabelAndMessage label="#{commonSettings.profilerConcatOn}">
-        <tr:inputText value="#{smscConfig.commonConfig.profilerConcatOn}" required="true">
+        <tr:inputText value="#{smscConfig.commonConfig.profilerConcatOn}" required="true" simple="true">
           <tr:validateLongRange minimum="1"/>
         </tr:inputText>
       </tr:panelLabelAndMessage>
 
       <tr:panelLabelAndMessage label="#{commonSettings.profilerConcatOff}">
-        <tr:inputText value="#{smscConfig.commonConfig.profilerConcatOff}" required="true">
+        <tr:inputText value="#{smscConfig.commonConfig.profilerConcatOff}" required="true" simple="true">
           <tr:validateLongRange minimum="1"/>
         </tr:inputText>
       </tr:panelLabelAndMessage>
 
       <tr:panelLabelAndMessage label="#{commonSettings.profilerTranslitOn}">
-        <tr:inputText value="#{smscConfig.commonConfig.profilerTranslitOn}" required="true">
+        <tr:inputText value="#{smscConfig.commonConfig.profilerTranslitOn}" required="true" simple="true">
           <tr:validateLongRange minimum="1"/>
         </tr:inputText>
       </tr:panelLabelAndMessage>
 
       <tr:panelLabelAndMessage label="#{commonSettings.profilerTranslitOff}">
-        <tr:inputText value="#{smscConfig.commonConfig.profilerTranslitOff}" required="true">
+        <tr:inputText value="#{smscConfig.commonConfig.profilerTranslitOff}" required="true" simple="true">
           <tr:validateLongRange minimum="1"/>
         </tr:inputText>
       </tr:panelLabelAndMessage>
@@ -482,27 +482,27 @@
   <tr:panelFormLayout id="ab_props">
 
     <tr:panelLabelAndMessage label="#{commonSettings.abInfoSystemId}">
-      <tr:inputText value="#{smscConfig.commonConfig.abInfoSystemId}" required="true"/>
+      <tr:inputText value="#{smscConfig.commonConfig.abInfoSystemId}" required="true" simple="true"/>
     </tr:panelLabelAndMessage>
 
     <tr:panelLabelAndMessage label="#{commonSettings.abInfoServiceType}">
-      <tr:inputText value="#{smscConfig.commonConfig.abInfoServiceType}" required="true"/>
+      <tr:inputText value="#{smscConfig.commonConfig.abInfoServiceType}" required="true" simple="true"/>
     </tr:panelLabelAndMessage>
 
     <tr:panelLabelAndMessage label="#{commonSettings.abInfoMobileAccessAddress}">
-      <tr:inputText value="#{smscConfig.commonConfig.abInfoMobileAccessAddress}" required="true"/>
+      <tr:inputText value="#{smscConfig.commonConfig.abInfoMobileAccessAddress}" required="true" simple="true"/>
     </tr:panelLabelAndMessage>
 
 
     <tr:panelLabelAndMessage label="#{commonSettings.abInfoProtocolId}">
-      <tr:inputText value="#{smscConfig.commonConfig.abInfoProtocolId}" required="true">
+      <tr:inputText value="#{smscConfig.commonConfig.abInfoProtocolId}" required="true" simple="true">
         <tr:validateLongRange minimum="1"/>
       </tr:inputText>
     </tr:panelLabelAndMessage>
 
 
     <tr:panelLabelAndMessage label="#{commonSettings.abInfoSmppAccessAddress}">
-      <tr:inputText value="#{smscConfig.commonConfig.abInfoSmppAccessAddress}" required="true"/>
+      <tr:inputText value="#{smscConfig.commonConfig.abInfoSmppAccessAddress}" required="true" simple="true"/>
     </tr:panelLabelAndMessage>
 
   </tr:panelFormLayout>
@@ -517,18 +517,18 @@
     </tr:panelLabelAndMessage>
 
     <tr:panelLabelAndMessage label="#{commonSettings.mscFailureLimit}">
-      <tr:inputText value="#{smscConfig.commonConfig.mscFailureLimit}" required="true">
+      <tr:inputText value="#{smscConfig.commonConfig.mscFailureLimit}" required="true" simple="true">
         <tr:validateLongRange minimum="1"/>
       </tr:inputText>
     </tr:panelLabelAndMessage>
 
 
     <tr:panelLabelAndMessage label="#{commonSettings.mscStoreFile}">
-      <tr:inputText value="#{smscConfig.commonConfig.mscStoreFile}" required="true"/>
+      <tr:inputText value="#{smscConfig.commonConfig.mscStoreFile}" required="true" simple="true"/>
     </tr:panelLabelAndMessage>
 
     <tr:panelLabelAndMessage label="#{commonSettings.mscSingleAttemptTimeout}">
-      <tr:inputText value="#{smscConfig.commonConfig.mscSingleAttemptTimeout}" required="true">
+      <tr:inputText value="#{smscConfig.commonConfig.mscSingleAttemptTimeout}" required="true" simple="true">
         <tr:validateLongRange minimum="1"/>
       </tr:inputText>
     </tr:panelLabelAndMessage>
@@ -540,12 +540,12 @@
   <tr:panelFormLayout id="acl_props">
 
     <tr:panelLabelAndMessage label="#{commonSettings.aclStoreDir}">
-      <tr:inputText value="#{smscConfig.commonConfig.aclStoreDir}" required="true"/>
+      <tr:inputText value="#{smscConfig.commonConfig.aclStoreDir}" required="true" simple="true"/>
     </tr:panelLabelAndMessage>
 
 
     <tr:panelLabelAndMessage label="#{commonSettings.aclPreCreateSize}">
-      <tr:inputText value="#{smscConfig.commonConfig.aclPreCreateSize}" required="true">
+      <tr:inputText value="#{smscConfig.commonConfig.aclPreCreateSize}" required="true" simple="true">
         <tr:validateLongRange minimum="1"/>
       </tr:inputText>
     </tr:panelLabelAndMessage>
@@ -558,12 +558,12 @@
   <tr:panelFormLayout id="inman_props">
 
     <tr:panelLabelAndMessage label="#{commonSettings.inmanHost}">
-      <tr:inputText value="#{smscConfig.commonConfig.inmanHost}" required="true"/>
+      <tr:inputText value="#{smscConfig.commonConfig.inmanHost}" required="true" simple="true"/>
     </tr:panelLabelAndMessage>
 
 
     <tr:panelLabelAndMessage label="#{commonSettings.inmanPort}">
-      <tr:inputText value="#{smscConfig.commonConfig.inmanPort}" required="true">
+      <tr:inputText value="#{smscConfig.commonConfig.inmanPort}" required="true" simple="true">
         <tr:validateLongRange minimum="1" maximum="65534"/>
       </tr:inputText>
     </tr:panelLabelAndMessage>
@@ -573,10 +573,10 @@
   <eye:collapsingGroup label="#{msg['inman.chargingPolicy.label']}">
     <tr:panelFormLayout>
       <tr:panelLabelAndMessage label="#{commonSettings.inmanChargingPeer2peer}">
-        <tr:inputText value="#{smscConfig.commonConfig.inmanChargingPeer2peer}" required="true"/>
+        <tr:inputText value="#{smscConfig.commonConfig.inmanChargingPeer2peer}" required="true" simple="true"/>
       </tr:panelLabelAndMessage>
       <tr:panelLabelAndMessage label="#{commonSettings.inmanChargingOther}">
-        <tr:inputText value="#{smscConfig.commonConfig.inmanChargingOther}" required="true"/>
+        <tr:inputText value="#{smscConfig.commonConfig.inmanChargingOther}" required="true" simple="true"/>
       </tr:panelLabelAndMessage>
     </tr:panelFormLayout>
   </eye:collapsingGroup>
@@ -586,7 +586,7 @@
 <eye:collapsingGroup label="#{msg['aliasman.label']}">
   <tr:panelFormLayout id="alias_props">
     <tr:panelLabelAndMessage label="#{commonSettings.aliasStoreFile}">
-      <tr:inputText value="#{smscConfig.commonConfig.aliasStoreFile}" required="true"/>
+      <tr:inputText value="#{smscConfig.commonConfig.aliasStoreFile}" required="true" simple="true"/>
     </tr:panelLabelAndMessage>
   </tr:panelFormLayout>
 </eye:collapsingGroup>
@@ -595,17 +595,17 @@
   <tr:panelFormLayout id="snmp_props">
 
     <tr:panelLabelAndMessage label="#{commonSettings.snmpCsvFileDir}">
-      <tr:inputText value="#{smscConfig.commonConfig.snmpCsvFileDir}" required="true"/>
+      <tr:inputText value="#{smscConfig.commonConfig.snmpCsvFileDir}" required="true" simple="true"/>
     </tr:panelLabelAndMessage>
 
 
     <tr:panelLabelAndMessage label="#{commonSettings.snmpCsvFileRollInterval}">
-      <tr:inputText value="#{smscConfig.commonConfig.snmpCsvFileRollInterval}" required="true">
+      <tr:inputText value="#{smscConfig.commonConfig.snmpCsvFileRollInterval}" required="true" simple="true">
         <tr:validateLongRange minimum="1"/>
       </tr:inputText>
     </tr:panelLabelAndMessage>
     <tr:panelLabelAndMessage label="#{commonSettings.snmpCacheTimeout}">
-      <tr:inputText value="#{smscConfig.commonConfig.snmpCacheTimeout}" required="true">
+      <tr:inputText value="#{smscConfig.commonConfig.snmpCacheTimeout}" required="true" simple="true">
         <tr:validateLongRange minimum="1"/>
       </tr:inputText>
     </tr:panelLabelAndMessage>
@@ -628,18 +628,18 @@
     <tr:outputText value="#{msg['instances.settings.title']}"/>
   </t:div>
 
-  <c:forEach items="#{smscConfig.instanceConfigs}" var="var">
-      <eye:collapsingGroup label="#{msg['instance.number.label']}: #{var.instanceNumber}">
+  <tr:iterator value="#{smscConfig.instanceConfigs}" var="var" varStatus="varStatus">
+      <eye:collapsingGroup label="#{msg['instance.number.label']}: #{var.adminHost}">
 
         <eye:collapsingGroup label="#{msg['core.label']}">
-          <tr:panelFormLayout id="inst_core_props_#{var.instanceNumber}">
+          <tr:panelFormLayout>
 
             <tr:panelLabelAndMessage label="#{instanceSettings.adminHost}">
-              <tr:inputText value="#{var.adminHost}" required="true"/>
+              <tr:inputText value="#{var.adminHost}" simple="true"/>
             </tr:panelLabelAndMessage>
 
             <tr:panelLabelAndMessage label="#{instanceSettings.adminPort}">
-              <tr:inputText value="#{var.adminPort}" required="true">
+              <tr:inputText value="#{var.adminPort}" required="true" simple="true">
                 <tr:validateLongRange minimum="1" maximum="65534"/>
               </tr:inputText>
             </tr:panelLabelAndMessage>
@@ -650,11 +650,11 @@
             <tr:panelFormLayout>
 
               <tr:panelLabelAndMessage label="#{instanceSettings.corePerfHost}">
-                <tr:inputText value="#{var.corePerfHost}" required="true"/>
+                <tr:inputText value="#{var.corePerfHost}" required="true" simple="true"/>
               </tr:panelLabelAndMessage>
 
               <tr:panelLabelAndMessage label="#{instanceSettings.corePerfPort}">
-                <tr:inputText value="#{var.corePerfPort}" required="true">
+                <tr:inputText value="#{var.corePerfPort}" required="true" simple="true">
                   <tr:validateLongRange minimum="1" maximum="65534"/>
                 </tr:inputText>
               </tr:panelLabelAndMessage>
@@ -667,13 +667,13 @@
 
         <eye:collapsingGroup label="#{msg['smeperformance.label']}">
 
-          <tr:panelFormLayout id="inst_smeperf_props_#{var.instanceNumber}">
+          <tr:panelFormLayout>
             <tr:panelLabelAndMessage label="#{instanceSettings.smePerfHost}">
-              <tr:inputText value="#{var.smePerfHost}" required="true"/>
+              <tr:inputText value="#{var.smePerfHost}" required="true" simple="true"/>
             </tr:panelLabelAndMessage>
 
             <tr:panelLabelAndMessage label="#{instanceSettings.smePerfPort}">
-              <tr:inputText value="#{var.smePerfPort}" required="true">
+              <tr:inputText value="#{var.smePerfPort}" required="true" simple="true">
                 <tr:validateLongRange minimum="1" maximum="65534"/>
               </tr:inputText>
             </tr:panelLabelAndMessage>
@@ -683,13 +683,13 @@
 
         <eye:collapsingGroup label="#{msg['messagestore.label']}">
 
-          <tr:panelFormLayout id="inst_ms_props_#{var.instanceNumber}">
+          <tr:panelFormLayout>
             <tr:panelLabelAndMessage label="#{instanceSettings.messageStoreArchDir}">
-              <tr:inputText value="#{var.messageStoreArchDir}" required="true"/>
+              <tr:inputText value="#{var.messageStoreArchDir}" required="true" simple="true"/>
             </tr:panelLabelAndMessage>
 
             <tr:panelLabelAndMessage label="#{instanceSettings.messageStoreStatsDir}">
-              <tr:inputText value="#{var.messageStoreStatsDir}" required="true"/>
+              <tr:inputText value="#{var.messageStoreStatsDir}" required="true" simple="true"/>
             </tr:panelLabelAndMessage>
 
           </tr:panelFormLayout>
@@ -698,11 +698,11 @@
 
             <tr:panelFormLayout>
               <tr:panelLabelAndMessage label="#{instanceSettings.localStoreFilename}">
-                <tr:inputText value="#{var.localStoreFilename}" required="true"/>
+                <tr:inputText value="#{var.localStoreFilename}" required="true" simple="true"/>
               </tr:panelLabelAndMessage>
 
               <tr:panelLabelAndMessage label="#{instanceSettings.localStoreMessIdFile}">
-                <tr:inputText value="#{var.localStoreMessIdFile}" required="true"/>
+                <tr:inputText value="#{var.localStoreMessIdFile}" required="true" simple="true"/>
               </tr:panelLabelAndMessage>
 
             </tr:panelFormLayout>
@@ -711,14 +711,14 @@
         </eye:collapsingGroup>
 
         <eye:collapsingGroup label="#{msg['smpp.label']}">
-          <tr:panelFormLayout id="inst_smpp_props_#{var.instanceNumber}">
+          <tr:panelFormLayout>
 
             <tr:panelLabelAndMessage label="#{instanceSettings.smppHost}">
-              <tr:inputText value="#{var.smppHost}" required="true"/>
+              <tr:inputText value="#{var.smppHost}" required="true" simple="true"/>
             </tr:panelLabelAndMessage>
 
             <tr:panelLabelAndMessage label="#{instanceSettings.smppPort}">
-              <tr:inputText value="#{var.smppPort}" required="true">
+              <tr:inputText value="#{var.smppPort}" required="true" simple="true">
                 <tr:validateLongRange minimum="1" maximum="65534"/>
               </tr:inputText>
             </tr:panelLabelAndMessage>
@@ -727,26 +727,26 @@
         </eye:collapsingGroup>
 
         <eye:collapsingGroup label="#{msg['profiler.label']}">
-          <tr:panelFormLayout id="inst_profiler_props_#{var.instanceNumber}">
+          <tr:panelFormLayout>
 
             <tr:panelLabelAndMessage label="#{instanceSettings.agentHost}">
-              <tr:inputText value="#{var.agentHost}" required="true"/>
+              <tr:inputText value="#{var.agentHost}" required="true" simple="true"/>
             </tr:panelLabelAndMessage>
 
             <tr:panelLabelAndMessage label="#{instanceSettings.agentPort}">
-              <tr:inputText value="#{var.agentPort}" required="true">
+              <tr:inputText value="#{var.agentPort}" required="true" simple="true">
                 <tr:validateLongRange minimum="1" maximum="65534"/>
               </tr:inputText>
             </tr:panelLabelAndMessage>
 
             <tr:panelLabelAndMessage label="#{instanceSettings.cacheDir}">
-              <tr:inputText value="#{var.cacheDir}" required="true"/>
+              <tr:inputText value="#{var.cacheDir}" required="true" simple="true"/>
             </tr:panelLabelAndMessage>
           </tr:panelFormLayout>
 
         </eye:collapsingGroup>
       </eye:collapsingGroup>
-    </c:forEach>
+    </tr:iterator>
 </td>
 </tr>
 </table>

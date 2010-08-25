@@ -3,14 +3,16 @@ package ru.novosoft.smsc.admin.reschedule;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.util.ValidationHelper;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.regex.Pattern;
 
 /**
  * @author Artem Snopkov
  */
-public class Reschedule {
+public class Reschedule implements Serializable{
 
   private static final ValidationHelper vh = new ValidationHelper(Reschedule.class.getCanonicalName());
 
@@ -18,8 +20,11 @@ public class Reschedule {
   private static final String MEDIUM = "(\\d\\d{0,2}(m|h|s|d)(|:\\d{1,4}))";
   public static final Pattern intervalsPattern=Pattern.compile("(" + LAST + "|" +  MEDIUM + "(," + MEDIUM + ")*" + "(," + LAST + ")?" + ")");
 
-  private final Collection<Integer> statuses;
-  private final String intervals;
+  private Collection<Integer> statuses = new LinkedList<Integer>();
+  private String intervals;
+
+  public Reschedule() {
+  }
 
   public Reschedule(String intervals, int... statuses)  {
     if (intervals == null)
@@ -53,7 +58,15 @@ public class Reschedule {
   }
 
   public Collection<Integer> getStatuses() {
-    return new ArrayList<Integer>(statuses);
+    return statuses;
+  }
+
+  public void setStatuses(Collection<Integer> statuses) {
+    this.statuses = statuses;
+  }
+
+  public void setIntervals(String intervals) {
+    this.intervals = intervals;
   }
 
   public String getIntervals() {

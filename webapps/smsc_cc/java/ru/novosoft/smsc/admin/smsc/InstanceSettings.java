@@ -2,16 +2,18 @@ package ru.novosoft.smsc.admin.smsc;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.util.ValidationHelper;
-import ru.novosoft.smsc.util.config.XmlConfigException;
 import ru.novosoft.smsc.util.config.XmlConfig;
+import ru.novosoft.smsc.util.config.XmlConfigException;
 import ru.novosoft.smsc.util.config.XmlConfigSection;
+
+import java.io.Serializable;
 
 /**
  * Структура с настройками для конкретного инстанца СМСЦ
  *
  * @author Artem Snopkov
  */
-public class InstanceSettings implements Cloneable {
+public class InstanceSettings implements Cloneable, Serializable {
 
   private String adminHost;
 
@@ -43,9 +45,9 @@ public class InstanceSettings implements Cloneable {
 
   private String cacheDir;
 
-  private final ValidationHelper vh = new ValidationHelper(InstanceSettings.class);
+  transient private final ValidationHelper vh = new ValidationHelper(InstanceSettings.class);
 
-  InstanceSettings() {
+  public InstanceSettings() {
   }
 
   InstanceSettings(int instanceN, XmlConfig c) throws XmlConfigException {
