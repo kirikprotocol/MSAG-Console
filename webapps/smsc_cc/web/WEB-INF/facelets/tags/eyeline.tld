@@ -210,5 +210,15 @@
     </attribute>
   </tag>
 
+  <tag>
+    <name>validatePort</name>
+    <description>Проверка принадлежности введенного значения диапозону портов</description>
+  </tag>
+
+  <tag>
+    <name>validatePositive</name>
+    <description>Проверка принадлежности введенного значения интервалу положительных чисел</description>
+  </tag>
+
 
 </taglib>

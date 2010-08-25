@@ -9,6 +9,16 @@
   <namespace>http://taglib.eyeline.mobi</namespace>
 
   <tag>
+    <tag-name>validatePort</tag-name>
+    <source>validatePort.xhtml</source>
+  </tag>
+
+  <tag>
+    <tag-name>validatePositive</tag-name>
+    <source>validatePositive.xhtml</source>
+  </tag>
+
+  <tag>
     <tag-name>collapsingGroup</tag-name>
     <component>
       <component-type>collapsingGroup</component-type>

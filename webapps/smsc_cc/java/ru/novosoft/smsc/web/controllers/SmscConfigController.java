@@ -41,6 +41,10 @@ public class SmscConfigController extends SmscController{
 
   private long lastUpdate;
 
+  public boolean method() {
+    return false;
+  }
+
 
   public SmscConfigController() {
     Map<String, String> reguestMap = getRequestParameters();
