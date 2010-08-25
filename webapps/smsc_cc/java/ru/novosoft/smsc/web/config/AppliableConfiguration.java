@@ -40,19 +40,19 @@ public class AppliableConfiguration {
     return smscSettings.cloneSettings();
   }
 
-  public void setSmscSettings(SmscSettings smscSettings, String String) {
+  public void setSmscSettings(SmscSettings smscSettings, String user) {
     this.smscSettings = smscSettings.cloneSettings();
-    smscSettingsUpdateInfo = new UpdateInfo(System.currentTimeMillis(), String, true);
+    smscSettingsUpdateInfo = new UpdateInfo(System.currentTimeMillis(), user, true);
   }
 
-  public void applySmscSettings(String String) throws AdminException {
+  public void applySmscSettings(String user) throws AdminException {
     adminContext.getSmscManager().updateSettings(smscSettings);
-    smscSettingsUpdateInfo = new UpdateInfo(System.currentTimeMillis(), String, false);
+    smscSettingsUpdateInfo = new UpdateInfo(System.currentTimeMillis(), user, false);
   }
 
-  public void resetSmscSettings(String String) throws AdminException {
+  public void resetSmscSettings(String user) throws AdminException {
     this.smscSettings = adminContext.getSmscManager().getSettings();
-    smscSettingsUpdateInfo = new UpdateInfo(System.currentTimeMillis(), String, false);
+    smscSettingsUpdateInfo = new UpdateInfo(System.currentTimeMillis(), user, false);
   }
 
   public UpdateInfo getSmscSettigsUpdateInfo() {
@@ -65,19 +65,19 @@ public class AppliableConfiguration {
     return rescheduleSettings.cloneSettings();
   }
 
-  public void setRescheduleSettings(RescheduleSettings rescheduleSettings, String String) {
+  public void setRescheduleSettings(RescheduleSettings rescheduleSettings, String user) {
     this.rescheduleSettings = rescheduleSettings.cloneSettings();
-    rescheduleSettingsUpdateInfo = new UpdateInfo(System.currentTimeMillis(), String, true);
+    rescheduleSettingsUpdateInfo = new UpdateInfo(System.currentTimeMillis(), user, true);
   }
 
-  public void applyRescheduleSettings(String String) throws AdminException {
+  public void applyRescheduleSettings(String user) throws AdminException {
     adminContext.getRescheduleManager().updateSettings(rescheduleSettings);
-    rescheduleSettingsUpdateInfo = new UpdateInfo(System.currentTimeMillis(), String, false);
+    rescheduleSettingsUpdateInfo = new UpdateInfo(System.currentTimeMillis(), user, false);
   }
 
-  public void resetRescheduleSettings(String String) throws AdminException {
+  public void resetRescheduleSettings(String user) throws AdminException {
     this.rescheduleSettings = adminContext.getRescheduleManager().getSettings();
-    rescheduleSettingsUpdateInfo = new UpdateInfo(System.currentTimeMillis(), String, false);
+    rescheduleSettingsUpdateInfo = new UpdateInfo(System.currentTimeMillis(), user, false);
   }
 
   public Map<Integer, SmscConfigurationStatus> getRescheduleSettingsStatus() throws AdminException {
