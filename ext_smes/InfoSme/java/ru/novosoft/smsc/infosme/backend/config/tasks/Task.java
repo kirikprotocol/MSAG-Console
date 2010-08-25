@@ -839,9 +839,12 @@ public class Task extends Observable
     if (deliveryMode < 0 || deliveryMode > DELIVERY_MODE_USSD_PUSH_VLR)
       throw new IllegalArgumentException();
     this.deliveryMode = new Integer(deliveryMode);
-    this.useDataSm = false;
-    this.flash = false;
-    this.transactionMode = true;
+
+    if (deliveryMode != DELIVERY_MODE_SMS) {
+      this.useDataSm = false;
+      this.transactionMode = true;
+      this.flash = false;
+    }        
     modified = true;
   }
 

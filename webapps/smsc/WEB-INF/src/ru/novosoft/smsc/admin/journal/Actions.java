@@ -42,6 +42,8 @@ public abstract class Actions {
                 return "disable";
             case ACTION_ENABLE:
                 return "enable";
+            case ACTION_ARCHIVATE:
+                return "archivate";
             default:
                 return "unknown";
         }
@@ -72,6 +74,8 @@ public abstract class Actions {
             return ACTION_DISABLE;
         if ("enable".equals(action))
             return ACTION_ENABLE;
+        if ("archivate".equals(action))
+            return ACTION_ARCHIVATE;
         return ACTION_UNKNOWN;
     }
 }

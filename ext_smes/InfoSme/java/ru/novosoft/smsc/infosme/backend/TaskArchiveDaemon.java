@@ -20,6 +20,7 @@ public class TaskArchiveDaemon implements Runnable{
   private final SMSCAppContext smscAppContext;
 
   private boolean shutdown = true;
+  private Thread currentThread;
 
   private static final long TIMEOUT =  60000;
 
@@ -31,6 +32,7 @@ public class TaskArchiveDaemon implements Runnable{
 
   public synchronized void shutdown() {
     shutdown = true;
+    currentThread.interrupt();
   }
 
   public boolean isOnline() {
@@ -39,10 +41,8 @@ public class TaskArchiveDaemon implements Runnable{
 
   public synchronized void start() {
     if(shutdown) {
-      new Thread(this, "TaskArchiveDaemon").start();
-      if (logger.isDebugEnabled()) {
-        logger.debug("TaskArchiveDaemon started");
-      }
+      currentThread = new Thread(this, "TaskArchiveDaemon");
+      currentThread.start();
     }
   }
 
@@ -50,32 +50,50 @@ public class TaskArchiveDaemon implements Runnable{
 
     try {
       shutdown = false;
+      if (logger.isDebugEnabled()) {
+        logger.debug("TaskArchiveDaemon started.");
+      }
       while (!shutdown) {
         try {
           Iterator taskIterator = infoSmeContext.getInfoSmeConfig().getTasks(null).iterator();
-          while(taskIterator.hasNext()) {
+          while(taskIterator.hasNext() && !shutdown) {
             Task t = (Task)taskIterator.next();
             User owner = smscAppContext.getUserManager().getUser(t.getOwner());
             UserPreferences prefs = owner.getPrefs();
             if(prefs.isInfosmeArchive() &&
                 (t.getStartDate().getTime() + (60*60*1000*prefs.getInfosmeArchiveTimeout()) <  System.currentTimeMillis())) {
-              logger.debug("Task will be replaced in archive: "+t.getId()+" ("+t.getName()+')');
+
+              if (logger.isDebugEnabled())
+                logger.debug("Moving task to archive: "+t.getId()+" ("+t.getName()+")...");
+
               infoSmeContext.getInfoSmeConfig().archivateAndApplyTask(t.getOwner(), t.getId());
               infoSmeContext.getInfoSme().removeTask(t.getId());
+
+              if (logger.isDebugEnabled())
+                logger.debug("Task was successfully moved to archive: " + t.getId() + '(' + t.getName() + ").");
+            }
+
+            if (!shutdown) {
+              try {
+                Thread.sleep(1000);
+              }catch (InterruptedException ignored) {}
             }
           }
 
         } catch (Throwable e) {
           logger.error(e, e);
         }
-        try {
-          Thread.sleep(TIMEOUT);
-        } catch (InterruptedException ignored) {
+
+        if (!shutdown) {
+          try {
+            Thread.sleep(TIMEOUT);
+          } catch (InterruptedException ignored) {
+          }
         }
       }
 
       if (logger.isDebugEnabled()) {
-        logger.debug("Siebel: task manager stopped");
+        logger.debug("TaskArchiveDaemon stopped.");
       }
 
     } catch (Throwable e) {

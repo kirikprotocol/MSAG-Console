@@ -49,12 +49,6 @@ public class TaskArchiveDataSource extends AbstractDataSource{
 
 
   public void visit(Visitor visitor, Filter filter, TaskQuery.Progress progress) throws AdminException {
-    Set generatingTasks = new HashSet();
-    Set processingTasks = new HashSet();
-    if (infoSme.getInfo().isOnline()) {
-      generatingTasks.addAll(infoSme.getGeneratingTasks());
-      processingTasks.addAll(infoSme.getProcessingTasks());
-    }
 
     try{
       Collection taskDirs = getTaskDirectories(new File(archiveDir), (TaskFilter)filter);
@@ -69,7 +63,7 @@ public class TaskArchiveDataSource extends AbstractDataSource{
 
           Task t = new Task(null, taskDir.getName(), taskDir.getParentFile().getAbsolutePath(), null);
           TaskDataItem item = new TaskDataItem(t.getId(), t.getName(), t.getProvider(), t.isEnabled(), t.getPriority(), t.getRetryPolicy(), t.isReplaceMessage(),
-              t.getSvcType(), generatingTasks.contains(t.getId()), processingTasks.contains(t.getId()), t.isTrackIntegrity(), t.getStartDate(), t.getEndDate(), t.getOwner(), t.isDelivery());
+              t.getSvcType(), false, false, t.isTrackIntegrity(), t.getStartDate(), t.getEndDate(), t.getOwner(), t.isDelivery());
           if (filter.isItemAllowed(item) && !visitor.visit(item, t)) {
             if(progress != null) {
               progress.setProgress(100);

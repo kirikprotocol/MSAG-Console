@@ -244,7 +244,7 @@ public class EditTaskPage extends DeliveriesPage {
       e.printStackTrace();
       throw new AdminException("Invalid field format", e);
     }
-    task.setDeliveryMode(pageData.deliveryMode);
+
     task.setRetryPolicy(pageData.retryPolicy);
     task.setSecret(pageData.secret);
     task.setSecretFlash(pageData.secretFlash);
@@ -252,6 +252,7 @@ public class EditTaskPage extends DeliveriesPage {
     task.setTransactionMode(pageData.transactionMode);
     task.setUseDataSm(pageData.useDataSm);    
     task.setOwner(pageData.owner.getName());
+    task.setDeliveryMode(pageData.deliveryMode);
   }
 
 }

@@ -113,7 +113,7 @@ public class TasksArchiveTableHelper extends PagedStaticTableHelper {
   }
 
   protected void fillTable(int start, int size) throws TableHelperException {
-    System.out.println("fill: start="+start+" size="+size);
+
     // Convert from user to local time
     if (filter != null) {
       if (filter.getStartDate() != null)
@@ -134,8 +134,7 @@ public class TasksArchiveTableHelper extends PagedStaticTableHelper {
         throw new TableHelperException(e);
       } 
     }
-    System.out.println("rs.size="+rs.size());
-    System.out.println("rs.totalSize="+rs.getTotalSize());
+    
     // Convert back from local to user time
     if (filter != null) {
       if (filter.getStartDate() != null)
