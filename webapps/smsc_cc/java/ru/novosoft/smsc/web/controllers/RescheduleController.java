@@ -7,8 +7,6 @@ import ru.novosoft.smsc.admin.reschedule.Reschedule;
 import ru.novosoft.smsc.admin.reschedule.RescheduleSettings;
 import ru.novosoft.smsc.web.WebContext;
 import ru.novosoft.smsc.web.components.data_table.model.DataTableModel;
-import ru.novosoft.smsc.web.components.data_table.model.DataTableRow;
-import ru.novosoft.smsc.web.components.data_table.model.DataTableRowBase;
 import ru.novosoft.smsc.web.components.data_table.model.DataTableSortOrder;
 import ru.novosoft.smsc.web.config.AppliableConfiguration;
 import ru.novosoft.smsc.web.config.UpdateInfo;
@@ -73,10 +71,6 @@ public class RescheduleController extends SmscController {
         if(count <= 0) {
           return result;
         }
-        if(--startPos < 0) {
-          result.add(defaultReschedule);
-          count--;
-        }
         for(Iterator<Reschedule> i = reschedules.values().iterator();i.hasNext() && count>0;) {
           Reschedule r = i.next();
           if(--startPos < 0) {
@@ -88,7 +82,7 @@ public class RescheduleController extends SmscController {
       }
 
       public int getRowsCount() {
-        return reschedules.size() + 1;
+        return reschedules.size();
       }
     };
   }
@@ -107,6 +101,10 @@ public class RescheduleController extends SmscController {
       reschedules = (Map<String,Reschedule>)session.getAttribute("reschedule.reschedules");
       defaultReschedule = (Reschedule)session.getAttribute("reschedule.default");
     }
+  }
+
+  public String getReschedulePattern() {
+    return ru.novosoft.smsc.admin.reschedule.Reschedule.intervalsPattern.pattern();
   }
 
 
@@ -132,6 +130,10 @@ public class RescheduleController extends SmscController {
     UpdateInfo lastChange = (UpdateInfo)session.getAttribute("reschedule.last.update");
     if(lastChange != conf.getRescheduleSettingsUpdateInfo()) {
       addLocalizedMessage(FacesMessage.SEVERITY_ERROR, "smsc.config.not.actual");
+      return null;
+    }
+
+    if(!checkDefault()) {
       return null;
     }
 
@@ -163,6 +165,17 @@ public class RescheduleController extends SmscController {
     }
   }
 
+  private boolean checkDefault() {
+    for(Reschedule r : reschedules.values()) {
+      if(r.getIntervals().equals(defaultReschedule.getIntervals())) {
+        addLocalizedMessage(FacesMessage.SEVERITY_WARN, "smsc.reschedule.duplicate");
+        return false;
+      }
+    }
+    return true;
+  }
+
+
   public void reset(ActionEvent ev) {
     session.removeAttribute("reschedule.reschedules");
     session.removeAttribute("reschedule.default");
@@ -170,9 +183,13 @@ public class RescheduleController extends SmscController {
     initReschedules();
   }
 
-  public void edit(ActionEvent ev) {
+  public String edit() {
+    if(!checkDefault()) {
+      return null;
+    }
     session.setAttribute("reschedule.reschedules", reschedules);
     session.setAttribute("reschedule.default", defaultReschedule);
+    return "RESCHEDULE_EDIT";
   }
 
   public DataTableModel getRescheduleModel() {

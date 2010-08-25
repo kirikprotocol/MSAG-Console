@@ -4,7 +4,6 @@
       xmlns:t="http://myfaces.apache.org/tomahawk"
       xmlns:tr="http://myfaces.apache.org/trinidad"
       xmlns:ui="http://java.sun.com/jsf/facelets"
-      xmlns:mo="http://eyeline.mobi"
       xmlns:eye="http://taglib.eyeline.mobi">
 
 <ui:composition template="/templates/main.xhtml">
@@ -43,6 +42,15 @@
         </eye:button>
       </eye:buttons>
 
+      <tr:panelFormLayout inlineStyle="padding:20px">
+        <tr:panelLabelAndMessage label="#{msg['smsc.reschedule.default']}">
+          <tr:inputText value="#{reschedule.defaultReschedule.intervals}" required="true" simple="true">
+            <tr:validateRegExp pattern="#{reschedule.reschedulePattern}"
+                               messageDetailNoMatch="#{msg['smsc.reschedule.edit.invalid.intervals']}"/>
+          </tr:inputText>
+        </tr:panelLabelAndMessage>
+      </tr:panelFormLayout>
+
       <t:div id="asdf">
 
         <eye:dataTable value="#{reschedule.rescheduleModel}" selectedRows="#{reschedule.selectedRows}" var="r">
@@ -50,7 +58,7 @@
           <eye:row rowId="#{r.intervals}" innerData="#{!empty r.statuses}" opened="true">
 
             <eye:column name="reschedules" title="" width="50%">
-              <h:commandLink value="#{r.intervals}" action="RESCHEDULE_EDIT" actionListener="#{reschedule.edit}">
+              <h:commandLink value="#{r.intervals}" action="#{reschedule.edit}">
                 <f:param name="reschedule" value="#{r.intervals}"/>
               </h:commandLink>
             </eye:column>
