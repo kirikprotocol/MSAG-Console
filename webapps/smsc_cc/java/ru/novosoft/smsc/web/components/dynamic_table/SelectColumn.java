@@ -1,7 +1,5 @@
 package ru.novosoft.smsc.web.components.dynamic_table;
 
-import ru.novosoft.smsc.web.components.Validation;
-
 import java.util.List;
 
 /**
@@ -27,11 +25,7 @@ class SelectColumn extends Column {
 
   public boolean isAllowEditAfterAdd() {
     return allowEditAfterAdd;
-  }
-
-  public Validation getValidation() {
-    return null;
-  }
+  } 
 
   public boolean isUniqueValues() {
     return uniqueValues;

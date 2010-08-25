@@ -1,6 +1,5 @@
 package ru.novosoft.smsc.web.components.dynamic_table;
 
-import ru.novosoft.smsc.web.components.Validation;
 
 /**
  * @author Artem Snopkov
@@ -24,10 +23,6 @@ class TextColumn extends Column {
 
   public void setMaxLength(int maxLength) {
     this.maxLength = maxLength;
-  }
-
-  public Validation getValidation() {
-    return null;
   }
 
   public String getSize() {
