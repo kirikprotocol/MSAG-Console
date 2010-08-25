@@ -44,8 +44,8 @@ public class SmscStatusController extends SmscController {
   public void switchToHost(ValueChangeEvent e) {
     if (e.getSource() instanceof HtmlSelectOneMenu) {
       HtmlSelectOneMenu src = (HtmlSelectOneMenu)e.getSource();
-      String selectInstanceNum = (String)src.getAttributes().get("instanceNumber");
-      if (selectInstanceNum != null  && selectInstanceNum.equals(getRequestParameter("instanceNumber")))
+      Integer selectInstanceNum = (Integer)src.getAttributes().get("instanceNumber");
+      if (selectInstanceNum != null  && String.valueOf(selectInstanceNum).equals(getRequestParameter("instanceNumber")))
         this.switchToHost = (String)e.getNewValue();
     }
   }
@@ -110,22 +110,21 @@ public class SmscStatusController extends SmscController {
   public DataTableModel getSmsCenters() {
     return new DataTableModel() {
 
-      public List<DataTableRow> getRows(int startPos, int count, DataTableSortOrder sortOrder) {
-        List<DataTableRow> result = new ArrayList<DataTableRow>(count);
+      public List getRows(int startPos, int count, DataTableSortOrder sortOrder) {
+        List<SmscStatus> result = new ArrayList<SmscStatus>();
 
         try {
           for (int i = startPos; i < Math.min(startPos + count, smscStatusManager.getSmscInstancesNumber()); i++) {
 
             String onlineHost = smscStatusManager.getSmscOnlineHost(i);
 
-            SmscStatus status = new SmscStatus(onlineHost, smscStatusManager.getSmscHosts(i));
+            SmscStatus status = new SmscStatus(i, onlineHost, smscStatusManager.getSmscHosts(i));
             if (onlineHost != null) {
               status.setMainConfigUpToDate(smscStatusManager.getMainConfigState(i) == SmscConfigurationStatus.UP_TO_DATE);
               status.setRescheduleConfigUpToDate(smscStatusManager.getRescheduleState(i) == SmscConfigurationStatus.UP_TO_DATE);
             }
 
-            DataTableRowBase row = new DataTableRowBase(String.valueOf(i), status, (status.isHasErrors() ? new Object() : null));
-            result.add(row);
+            result.add(status);
           }
         } catch (AdminException e) {
           logError(e);
@@ -146,14 +145,20 @@ public class SmscStatusController extends SmscController {
 
   public class SmscStatus {
 
+    private final int instanceNumber;
     private final String onlineHost;
     private final List<String> hosts;
     private boolean mainConfigUpToDate;
     private boolean rescheduleConfigUpToDate;
 
-    public SmscStatus(String onlineHost, List<String> hosts) {
+    public SmscStatus(int instanceNumber, String onlineHost, List<String> hosts) {
+      this.instanceNumber = instanceNumber;
       this.onlineHost = onlineHost;
       this.hosts = hosts;
+    }
+
+    public int getInstanceNumber() {
+      return instanceNumber;
     }
 
     public String getOnlineHost() {

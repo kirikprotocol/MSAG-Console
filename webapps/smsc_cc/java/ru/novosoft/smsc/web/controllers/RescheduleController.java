@@ -68,19 +68,19 @@ public class RescheduleController extends SmscController {
     
     rescheduleModel = new DataTableModel() {
 
-      public List<DataTableRow> getRows(int startPos, int count, DataTableSortOrder sortOrder) {
-        List<DataTableRow> result = new ArrayList<DataTableRow>(count);
+      public List getRows(int startPos, int count, DataTableSortOrder sortOrder) {
+        List<Reschedule> result = new ArrayList<Reschedule>(count);
         if(count <= 0) {
           return result;
         }
         if(--startPos < 0) {
-          result.add(new DataTableRowBase(defaultReschedule.getIntervals(), defaultReschedule, null));
+          result.add(defaultReschedule);
           count--;
         }
         for(Iterator<Reschedule> i = reschedules.values().iterator();i.hasNext() && count>0;) {
           Reschedule r = i.next();
           if(--startPos < 0) {
-            result.add(new DataTableRowBase(r.getIntervals(), r, ""));
+            result.add(r);
             count--;
           }
         }

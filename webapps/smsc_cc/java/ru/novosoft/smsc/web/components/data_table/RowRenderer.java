@@ -23,11 +23,10 @@ public class RowRenderer extends Renderer {
     
     Writer w = context.getResponseWriter();
 
-    if (r.getRow() == null)
+    if (r.isHeader())
       return;
 
-    String rowId = r.getRow().getId();
-    Object innerData = r.getRow().getInnerData();
+    String rowId = r.getRowId();
 
     if (r.isInner()) {
 
@@ -42,7 +41,7 @@ public class RowRenderer extends Renderer {
       if (t.isRowSelection())
         w.append("\n  <td><input class=\"check\" type=\"checkbox\" name=\"" + t.getId() + "_row" + rowId + "\" id=\"" + t.getId() + "_rowCheck" + rowNumber + "\"" + "/></td>");
 
-      if (innerData != null || r.getRow().getInnerRows() != null)
+      if (r.hasInnerData() || r.hasInnerRows())
         w.append("\n  <td class=\"clickable\" onclick=\"pagedTable" + t.getId() + ".expandRow('" + t.getId() + rowId + "')\"><div id=\"innerDataHeader" + t.getId() + rowId + "\" class=\"" + (r.isOpened() ? "inner_data_opened" : "inner_data_closed") + "\">&nbsp;</div></td>");
       else if (t.hasInnerData())
         w.append("\n  <td>&nbsp;</td>");
@@ -53,7 +52,7 @@ public class RowRenderer extends Renderer {
 
   public void encodeChildren(javax.faces.context.FacesContext context, javax.faces.component.UIComponent component) throws java.io.IOException {
     Row r = (Row) component;
-    if (r.getRow() != null)
+    if (!r.isHeader())
       super.encodeChildren(context, component);
   }
 
@@ -65,7 +64,7 @@ public class RowRenderer extends Renderer {
   public void encodeEnd(FacesContext context, UIComponent component) throws IOException {
     Row r = (Row) component;
 
-    if (r.getRow() == null)
+    if (r.isHeader())
       return;
 
     DataTable t = (DataTable) r.getParent();
@@ -73,10 +72,10 @@ public class RowRenderer extends Renderer {
 
     w.append("\n</tr>");
 
-    if (r.getRow().getInnerData() != null) {
+    if (r.hasInnerData()) {
       UIComponent innerDataFacet = r.getFacet("innerData");
       if (innerDataFacet != null) {
-        w.append("\n<tr class=\"inner\" name=\"innerData" + t.getId() + r.getRow().getId() + "\"" + (r.isOpened() ? "" : " style=\"display:none\"") + ">");
+        w.append("\n<tr class=\"inner\" name=\"innerData" + t.getId() + r.getRowId() + "\"" + (r.isOpened() ? "" : " style=\"display:none\"") + ">");
         w.append("\n  <td align=\"left\" colspan=\"" + (r.getColumnsCount() + 2) + "\">");
 
         innerDataFacet.encodeBegin(context);

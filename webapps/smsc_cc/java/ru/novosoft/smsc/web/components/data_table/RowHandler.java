@@ -4,12 +4,12 @@ import com.sun.facelets.FaceletContext;
 import com.sun.facelets.tag.TagAttribute;
 import com.sun.facelets.tag.jsf.ComponentConfig;
 import com.sun.facelets.tag.jsf.ComponentHandler;
-import ru.novosoft.smsc.web.components.data_table.model.DataTableRow;
 
 import javax.el.ELException;
 import javax.faces.FacesException;
 import javax.faces.component.UIComponent;
 import java.io.IOException;
+import java.util.List;
 
 /**
  * @author Artem Snopkov
@@ -19,6 +19,7 @@ public class RowHandler extends ComponentHandler {
   private final TagAttribute rowId;
   private final TagAttribute data;
   private final TagAttribute innerData;
+  private final TagAttribute innerRows;
   private final TagAttribute opened;
 
   public RowHandler(ComponentConfig config) {
@@ -27,6 +28,7 @@ public class RowHandler extends ComponentHandler {
     rowId = getAttribute("rowId");
     data = getAttribute("data");
     innerData = getAttribute("innerData");
+    innerRows = getAttribute("innerRows");
     opened = getAttribute("opened");
   }
 
@@ -38,26 +40,64 @@ public class RowHandler extends ComponentHandler {
   @Override
   protected void applyNextHandler(FaceletContext ctx, UIComponent c) throws IOException, FacesException, ELException {
 
-    if (ctx.getVariableMapper().resolveVariable("___currentRow") != null) {
-      Row r = (Row) c;
-      DataTableRow currentRow = (DataTableRow) ctx.getVariableMapper().resolveVariable("___currentRow").getValue(ctx);
+    Row r = (Row) c;
 
-      r.setRow(currentRow);
+    if (ctx.getVariableMapper().resolveVariable("___currentRow") == null) {
+      r.setHeader(true);
+
+    } else {
+
       r.setInner(ctx.getVariableMapper().resolveVariable("___innerRow") != null);
-      r.setRowId(ctx, currentRow.getId());
-      r.setData(ctx, currentRow.getData());
-      r.setInnerData(ctx, currentRow.getInnerData());
+      String var = (String)ctx.getVariableMapper().resolveVariable("___var").getValue(ctx);
 
-      if (rowId != null)
-        ctx.getVariableMapper().setVariable(rowId.getValue(), r.getRowIdExpr());
-      if (data != null)
-        ctx.getVariableMapper().setVariable(data.getValue(), r.getDataExpr());
-      if (innerData != null)
-        ctx.getVariableMapper().setVariable(innerData.getValue(), r.getInnerDataExpr());
-      if (opened != null)
-        r.setOpened(opened.getBoolean(ctx));
+      Object currentRow = ctx.getVariableMapper().resolveVariable("___currentRow").getValue(ctx);
+      r.setVar(ctx, currentRow);
+
+      ctx.getVariableMapper().setVariable(var, r.getVarExpr());
+      if (!r.isInner()) {
+        if (rowId != null)
+          r.setRowId(rowId.getValue(ctx));
+        if (innerData != null)
+          r.setHasInnerData(innerData.getBoolean(ctx));
+        if (opened != null)
+          r.setOpened(opened.getBoolean(ctx));
+        if (innerRows != null) {
+          List innerRowsList = (List) innerRows.getObject(ctx);
+          if (innerRowsList != null && !innerRowsList.isEmpty()) {
+            r.setHasInnerRows(true);
+            ctx.getVariableMapper().setVariable("___innerRows", new ConstantExpression(innerRowsList));
+            ctx.getVariableMapper().setVariable("___innerRowsId", new ConstantExpression(r.getRowId()));
+          } else {
+            ctx.getVariableMapper().setVariable("___innerRows", null);
+            ctx.getVariableMapper().setVariable("___innerRowsId", null);
+          }
+        }
+      } else {
+        r.setRowId((String) ctx.getVariableMapper().resolveVariable("___innerRowsId").getValue(ctx));
+      }
     }
-    
+
+
+//    if (ctx.getVariableMapper().resolveVariable("___currentRow") != null) {
+//
+//      DataTableRow currentRow = (DataTableRow) ctx.getVariableMapper().resolveVariable("___currentRow").getValue(ctx);
+//
+//      r.setRow(currentRow);
+//      r.setInner(ctx.getVariableMapper().resolveVariable("___innerRow") != null);
+//      r.setRowId(ctx, currentRow.getId());
+//      r.setData(ctx, currentRow.getData());
+//      r.setInnerData(ctx, currentRow.getInnerData());
+//
+//      if (rowId != null)
+//        ctx.getVariableMapper().setVariable(rowId.getValue(), r.getRowIdExpr());
+//      if (data != null)
+//        ctx.getVariableMapper().setVariable(data.getValue(), r.getDataExpr());
+//      if (innerData != null)
+//        ctx.getVariableMapper().setVariable(innerData.getValue(), r.getInnerDataExpr());
+//      if (opened != null)
+//        r.setOpened(opened.getBoolean(ctx));
+//    }
+
     nextHandler.apply(ctx, c);
   }
 }

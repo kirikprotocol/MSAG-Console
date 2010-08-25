@@ -9,6 +9,7 @@ import ru.novosoft.smsc.web.components.data_table.model.DataTableRow;
 import ru.novosoft.smsc.web.components.data_table.model.DataTableRowBase;
 import ru.novosoft.smsc.web.components.data_table.model.DataTableSortOrder;
 
+import javax.el.ValueExpression;
 import javax.faces.component.UIComponent;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,6 +24,7 @@ public class DataTableHandler extends ComponentHandler {
   private final TagAttribute pageSize;
   private final TagAttribute selectedRows;
   private final TagAttribute updateUsingSubmit;
+  private final TagAttribute var;
 
   public DataTableHandler(ComponentConfig config) {
     super(config);
@@ -32,6 +34,7 @@ public class DataTableHandler extends ComponentHandler {
     pageSize = getAttribute("pageSize");
     selectedRows = getAttribute("selectedRows");
     updateUsingSubmit = getAttribute("updateUsingSubmit");
+    var = getAttribute("var");
   }
 
   protected UIComponent createComponent(FaceletContext ctx) {
@@ -63,36 +66,36 @@ public class DataTableHandler extends ComponentHandler {
 
 
     int startPos = t.getCurrentPage() * t.getPageSize();
-    List<DataTableRow> rows = m.getRows(startPos, t.getPageSize(), s);
-    ctx.getVariableMapper().setVariable("dataTable", new ConstantExpression(t));
+    List rows = m.getRows(startPos, t.getPageSize(), s);
 
     // Header
     nextHandler.apply(ctx, c);
 
     // Body
-    for (DataTableRow row : rows) {
+    ctx.getVariableMapper().setVariable("___var", new ConstantExpression(var.getValue()));
+    for (Object row : rows) {
       ctx.getVariableMapper().setVariable("___currentRow", new ConstantExpression(row));
 
       nextHandler.apply(ctx, c);
 
-      List<Object> innerRowsData = row.getInnerRows();
+      ValueExpression innerRowsExpr = ctx.getVariableMapper().resolveVariable("___innerRows");
+      if (innerRowsExpr != null) {
+        List innerRowsData = (List) innerRowsExpr.getValue(ctx);
 
-      if (innerRowsData != null && !innerRowsData.isEmpty()) {
+        if (innerRowsData != null && !innerRowsData.isEmpty()) {
 
-        List<DataTableRow> innerRows = new ArrayList<DataTableRow>(innerRowsData.size());
-        for (Object o : innerRowsData)
-          innerRows.add(new DataTableRowBase(row.getId(), o, null));
-
-        ctx.getVariableMapper().setVariable("___innerRow", new ConstantExpression("inner"));
-        for (DataTableRow innerRow : innerRows) {
-          ctx.getVariableMapper().setVariable("___currentRow", new ConstantExpression(innerRow));
-          nextHandler.apply(ctx, c);
+          ctx.getVariableMapper().setVariable("___innerRow", new ConstantExpression("inner"));
+          for (Object innerRow : innerRowsData) {
+            ctx.getVariableMapper().setVariable("___currentRow", new ConstantExpression(innerRow));
+            nextHandler.apply(ctx, c);
+          }
+          ctx.getVariableMapper().setVariable("___innerRow", null);
         }
-        ctx.getVariableMapper().setVariable("___innerRow", null);
       }
+
+
     }
 
-    ctx.getVariableMapper().setVariable("dataTable", null);
   }
 
 }

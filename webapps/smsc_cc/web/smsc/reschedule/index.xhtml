@@ -45,9 +45,9 @@
 
       <t:div id="asdf">
 
-        <eye:dataTable value="#{reschedule.rescheduleModel}" selectedRows="#{reschedule.selectedRows}">
+        <eye:dataTable value="#{reschedule.rescheduleModel}" selectedRows="#{reschedule.selectedRows}" var="r">
 
-          <eye:row rowId="rowId" data="r" innerData="innerData" opened="true">
+          <eye:row rowId="#{r.intervals}" innerData="#{!empty r.statuses}" opened="true">
 
             <eye:column name="reschedules" title="" width="50%">
               <h:commandLink value="#{r.intervals}" action="RESCHEDULE_EDIT" actionListener="#{reschedule.edit}">

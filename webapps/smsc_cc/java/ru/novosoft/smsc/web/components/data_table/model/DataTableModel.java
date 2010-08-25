@@ -9,13 +9,13 @@ import java.util.List;
 public interface DataTableModel {
 
   /**
-   * Возвращает список экземпляров DataTableRow согласно указанным критериям
+   * Возвращает список объектов согласно указанным критериям
    * @param startPos начальная позиция
    * @param count количество элементов
    * @param sortOrder порядок сортировки
    * @return список экземпляров DataTableRow согласно указанным критериям
    */
-  List<DataTableRow> getRows(int startPos, int count, DataTableSortOrder sortOrder);
+  List getRows(int startPos, int count, DataTableSortOrder sortOrder);
 
   /**
    * Возвращает общее число элементов в таблице

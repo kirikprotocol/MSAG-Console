@@ -151,6 +151,11 @@
       </description>
       <type>boolean</type>
     </attribute>
+    <attribute>
+      <name>var</name>
+      <description>Название переменной на странице, в которую будет записываться текущая строка или внутренняя строка</description>
+      <type>java.lang.String</type>
+    </attribute>
   </tag>
 
   <tag>
@@ -190,23 +195,23 @@
     <description>Строка в dataTable.</description>
     <attribute>
       <name>rowId</name>
-      <description>Название переменной на странице, в которую будет записываться идентификатор текущей строки</description>
-      <type>java.lang.String</type>
-    </attribute>
-    <attribute>
-      <name>data</name>
-      <description>Название переменной на странице, в которую будут записываться данные текущей строки</description>
-      <type>java.lang.String</type>
-    </attribute>
-    <attribute>
-      <name>innerData</name>
-      <description>Название переменной на странице, в которую будут записываться внутренние данные строки</description>
+      <description>Идентификатор текущей строки.</description>
       <type>java.lang.String</type>
     </attribute>
     <attribute>
       <name>opened</name>
       <description>Флаг, разрешающий или запрещающий раскрытие содержимого строки</description>
       <type>boolean</type>
+    </attribute>
+    <attribute>
+      <name>innerData</name>
+      <description>Флаг, сообщающий есть ли внутри строки значение или нет</description>
+      <type>boolean</type>
+    </attribute>
+    <attribute>
+      <name>innerRows</name>
+      <description>Атрибут, описывающий как можно получить внутренние строки для данной строки</description>
+      <type>java.util.List</type>
     </attribute>
   </tag>
 

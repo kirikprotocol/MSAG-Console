@@ -20,37 +20,38 @@
 
       <eye:collapsingGroup label="#{index1.label}" opened="#{index1.opened}">
         <eye:dynamicTable value="#{index1.model}">
-          <eye:textColumn name="column1" width="20" maxLength="20" allowEditAfterAdd="false"/>
-          <eye:textColumn name="column2" width="20" maxLength="20"/>
-          <eye:selectColumn name="column3" width="20" values="#{index1.column3Values}" allowEditAfterAdd="false"
+          <eye:textColumn name="column1" maxLength="20" allowEditAfterAdd="false"/>
+          <eye:textColumn name="column2" maxLength="20"/>
+          <eye:selectColumn name="column3" values="#{index1.column3Values}" allowEditAfterAdd="false"
                               uniqueValues="true"/>
-          <eye:selectColumn name="column4" width="20" values="#{index1.column4Values}" allowEditAfterAdd="false"/>
+          <eye:selectColumn name="column4" values="#{index1.column4Values}" allowEditAfterAdd="false"/>
         </eye:dynamicTable>
       </eye:collapsingGroup>
 
       <h:inputHidden value="#{index1.filter}"/>
 
 
-      <eye:dataTable value="#{index1.staticModel}" selectedRows="#{index1.selectedRows}" >
-        <eye:row rowId="rowId" data="data" innerData="innerData" >
+      <eye:dataTable value="#{index1.staticModel}" selectedRows="#{index1.selectedRows}" var="row" >
+
+        <eye:row rowId="#{row.id}" innerData="#{row.innerData != null}" innerRows="#{row.innerRows}">
 
           <eye:column name="column1" title="column1" width="50%" sortable="true">
-            <h:outputText value="#{data.column1}"/>
+            <h:outputText value="#{row.data.column1}"/>
             <f:facet name="inner">
-              <h:outputText value="#{data.column1}" style="color:GREEN"/>
+              <h:outputText value="#{row.column1}" style="color:GREEN"/>
             </f:facet>
           </eye:column>
 
           <eye:column name="column2" title="column2" width="50%" sortable="false" align="center">
             <h:graphicImage value="/images/ic_offline.gif" alt=""/>
             <f:facet name="inner">
-              <h:outputText value="#{data.column2}"/>
+              <h:outputText value="#{row.column2}"/>
             </f:facet>
           </eye:column>
 
           <f:facet name="innerData">
             <h:panelGroup>
-              <h:outputText value="Hello world "/><h:commandLink value="#{innerData}"
+              <h:outputText value="Hello world "/><h:commandLink value="#{row.innerData}"
                                                                  actionListener="#{index1.edit}"/>
             </h:panelGroup>
           </f:facet>

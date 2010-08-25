@@ -8,7 +8,9 @@ import javax.el.ValueExpression;
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Artem Snopkov
@@ -21,6 +23,7 @@ public class DataTable extends EyelineComponent {
   private int pageSize = 20;
   private Integer autoUpdate;
   private Boolean updateUsingSubmit;
+  private Map<Integer, ValueExpression> rows = new HashMap<Integer, ValueExpression>();
 
   private List<String> selectedRows = new ArrayList<String>();
   private ValueExpression selectedRowsExpression;
@@ -106,12 +109,21 @@ public class DataTable extends EyelineComponent {
   boolean hasInnerData() {
     for (UIComponent c : getChildren()) {
       if (c instanceof Row) {
-        DataTableRow tableRow = ((Row) c).getRow();
-        if (tableRow != null && (tableRow.getInnerData() != null || tableRow.getInnerRows() != null))
+        Row r = (Row)c;
+        if (r.hasInnerData() || r.hasInnerRows())
           return true;
       }
     }
     return false;
+  }
+
+  public ValueExpression getRowValueExpr(int rowNumber) {
+    ValueExpression e = rows.get(rowNumber);
+    if (e == null) {
+      e = new ConstantExpression(null);
+      rows.put(rowNumber, e);
+    }
+    return e;
   }
 
   public void setSelectedRowsExpression(ValueExpression selectedRowsExpression) {

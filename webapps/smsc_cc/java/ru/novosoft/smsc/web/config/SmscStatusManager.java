@@ -7,6 +7,7 @@ import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import java.util.List;
 
 /**
+ * Класс, предоставляющий информацию о состоянии всех инстанцев СМСЦ
  * @author Artem Snopkov
  */
 public class SmscStatusManager {
