@@ -4,7 +4,8 @@
       xmlns:t="http://myfaces.apache.org/tomahawk"
       xmlns:tr="http://myfaces.apache.org/trinidad"
       xmlns:ui="http://java.sun.com/jsf/facelets"
-      xmlns:eye="http://taglib.eyeline.mobi">
+      xmlns:eye="http://taglib.eyeline.mobi"
+      xmlns:c="http://java.sun.com/jstl/core">
 
 <ui:composition template="/templates/main.xhtml">
 
@@ -627,9 +628,7 @@
     <tr:outputText value="#{msg['instances.settings.title']}"/>
   </t:div>
 
-
-  <h:dataTable value="#{smscConfig.instanceConfigs}" var="var" border="0">
-    <h:column>
+  <c:forEach items="#{smscConfig.instanceConfigs}" var="var">
       <eye:collapsingGroup label="#{msg['instance.number.label']}: #{var.instanceNumber}">
 
         <eye:collapsingGroup label="#{msg['core.label']}">
@@ -747,8 +746,7 @@
 
         </eye:collapsingGroup>
       </eye:collapsingGroup>
-    </h:column>
-  </h:dataTable>
+    </c:forEach>
 </td>
 </tr>
 </table>
