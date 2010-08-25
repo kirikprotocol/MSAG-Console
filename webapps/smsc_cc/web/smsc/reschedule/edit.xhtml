@@ -10,112 +10,54 @@
 
   <ui:define name="sme_title">
     <eye:pageTitle title="#{msg['smsc.reschedule']}"/>
-  </ui:define>  
+  </ui:define>
 
   <ui:define name="content">
 
-    <tr:form id="reschedule_list">
+    <tr:form>
 
       <eye:buttons>
-        <table>
-          <tr>
-            <td align="left">
-              <tr:commandLink text="#{msg['done.button']}" id="done1" partialSubmit="true"
-                              actionListener="#{rescheduleEdit.done}"
-                              inlineStyle="font-family: Verdana, Arial, Helvetica, sans-serif;font-size: x-small;"
-                  />
-              <h:outputText value="&#160;&#160;|&#160;&#160;"/>
-              <tr:commandLink text="#{msg['cancel.button']}" id="cancel1" action="RESCHEDULE" immediate="true"
-                              inlineStyle="font-family: Verdana, Arial, Helvetica, sans-serif;font-size: x-small;"
-                  />
-            </td>
-          </tr>
-        </table>
+        <eye:button>
+          <tr:commandLink text="#{msg['done.button']}" id="done1" action="#{rescheduleEdit.done}"/>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['cancel.button']}" id="cancel1" action="RESCHEDULE" immediate="true"/>
+        </eye:button>
+        <eye:space/>
       </eye:buttons>
 
       <tr:inputHidden id="edit_initialized" value="#{rescheduleEdit.edit_initialized}"/>
+
       <tr:inputHidden value="#{rescheduleEdit.oldReschedule}"/>
-
-      <tr:panelGroupLayout partialTriggers="done1 done2 iter:delete addStatus">
-        <t:saveState value="#{rescheduleEdit.oldReschedule}"/>
-        <t:saveState value="#{rescheduleEdit.availableStatuses}"/>
-        <t:saveState value="#{rescheduleEdit.statuses}"/>
-      </tr:panelGroupLayout>
-
-      <tr:messages partialTriggers="done1 done2 iter:delete addStatus" id="smsc_errors"/>
 
       <h:panelGrid style="padding:10px" columns="1">
 
         <h:panelGrid style="align:left; width:35%" columns="1" columnClasses="column0Width">
           <tr:panelLabelAndMessage label="#{msg['smsc.reschedule.edit.intervals']}">
             <tr:inputText value="#{rescheduleEdit.newReschedule}" required="true">
-              <tr:validateRegExp pattern="#{rescheduleEdit.reschedulePattern}"/>
+              <tr:validateRegExp pattern="#{rescheduleEdit.reschedulePattern}"
+                                 messageDetailNoMatch="#{msg['smsc.reschedule.edit.invalid.intervals']}"/>
             </tr:inputText>
           </tr:panelLabelAndMessage>
         </h:panelGrid>
 
-        <tr:panelGroupLayout partialTriggers="done1 done2 iter:delete addStatus">
-
-
-          <table style="align:left; width:30%; padding:20px">
-            <tr>
-              <th colspan="2">
-                <t:div styleClass="page_subtitle">
-                  <tr:outputText value="#{msg['smsc.reschedule.statuses.subtitle']}"
-                                 inlineStyle="#{rescheduleEdit.available ? '' : 'display:none'}"/>
-                </t:div>
-              </th>
-            </tr>
-            <tr:iterator id="iter" value="#{rescheduleEdit.statuses}" var="status">
-              <tr>
-                <td>
-                  <tr:outputText value="#{status.status}" inlineStyle="margin-left:9px"
-                                 converter="smpp_status_converter"/>
-                </td>
-                <td class="column50Width">
-                  <tr:commandLink partialSubmit="true" actionListener="#{rescheduleEdit.removeStatus}" id="delete">
-                    <f:param name="removeStatus" value="#{status.status}"/>
-                    <tr:image source="/images/but_del.gif"/>
-                  </tr:commandLink>
-                </td>
-              </tr>
-            </tr:iterator>
-
-            <tr>
-              <td>
-                <tr:selectOneChoice value="#{rescheduleEdit.newStatus}"
-                                    inlineStyle="#{rescheduleEdit.available ? '' : 'display:none'}">
-                  <f:selectItems value="#{rescheduleEdit.availableStatusesItems}"/>
-                </tr:selectOneChoice>
-              </td>
-              <td class="columnTopLeftAlign">
-                <tr:commandLink id="addStatus" partialSubmit="true" actionListener="#{rescheduleEdit.addStatus}"
-                                inlineStyle="#{rescheduleEdit.available ? '' : 'display:none'}">
-                  <tr:image source="/images/but_add.gif"/>
-                </tr:commandLink>
-              </td>
-            </tr>
-          </table>
-
-        </tr:panelGroupLayout>
+        <h:panelGrid style="align:left; width:35%"  rendered="#{rescheduleEdit.available}">
+          <eye:dynamicTable value="#{rescheduleEdit.dynamicModel}">
+            <eye:selectColumn name="code" values="#{rescheduleEdit.availableStatuses}"
+                              uniqueValues="true" allowEditAfterAdd="false"/>
+          </eye:dynamicTable>
+        </h:panelGrid>
 
       </h:panelGrid>
 
       <eye:buttons>
-        <table>
-          <tr>
-            <td align="left">
-              <tr:commandLink text="#{msg['done.button']}" id="done2" partialSubmit="true"
-                              actionListener="#{rescheduleEdit.done}"
-                              inlineStyle="font-family: Verdana, Arial, Helvetica, sans-serif;font-size: x-small;"
-                  />
-              <h:outputText value="&#160;&#160;|&#160;&#160;"/>
-              <tr:commandLink text="#{msg['cancel.button']}" id="cancel2" action="RESCHEDULE" immediate="true"
-                              inlineStyle="font-family: Verdana, Arial, Helvetica, sans-serif;font-size: x-small;"
-                  />
-            </td>
-          </tr>
-        </table>
+        <eye:button>
+          <tr:commandLink text="#{msg['done.button']}" id="done2" action="#{rescheduleEdit.done}"/>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['cancel.button']}" id="cancel2" action="RESCHEDULE" immediate="true"/>
+        </eye:button>
+        <eye:space/>
       </eye:buttons>
 
     </tr:form>

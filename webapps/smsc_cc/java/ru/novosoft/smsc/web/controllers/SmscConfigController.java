@@ -1,7 +1,6 @@
 package ru.novosoft.smsc.web.controllers;
 
 import org.apache.log4j.Logger;
-import ru.novosoft.smsc.admin.AdminContext;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.smsc.CommonSettings;
@@ -10,12 +9,11 @@ import ru.novosoft.smsc.admin.smsc.SmscSettings;
 import ru.novosoft.smsc.web.WebContext;
 import ru.novosoft.smsc.web.beans.CommonConfig;
 import ru.novosoft.smsc.web.beans.InstanceConfig;
+import ru.novosoft.smsc.web.components.dynamic_table.model.DynamicTableModel;
+import ru.novosoft.smsc.web.components.dynamic_table.model.DynamicTableRow;
 import ru.novosoft.smsc.web.config.AppliableConfiguration;
 
 import javax.faces.application.FacesMessage;
-import javax.faces.context.FacesContext;
-import javax.faces.event.ActionEvent;
-import java.io.Serializable;
 import java.security.Principal;
 import java.text.MessageFormat;
 import java.util.*;
@@ -23,7 +21,7 @@ import java.util.*;
 /**
  * author: alkhal
  */
-public class SmscConfigController implements Serializable {
+public class SmscConfigController extends SmscController{
 
   private static final Logger logger = Logger.getLogger(SmscConfigController.class);
 
@@ -37,19 +35,22 @@ public class SmscConfigController implements Serializable {
 
   private boolean initialized = false;
 
-  private CommonConfig.AddUssdSsn newAddUssdSsn = new CommonConfig.AddUssdSsn();
+  private DynamicTableModel addSsnModel = new DynamicTableModel();
 
-  private CommonConfig.Locale newLocale = new CommonConfig.Locale();
+  private DynamicTableModel localesModel = new DynamicTableModel();
 
-  private CommonConfig.Directive newDirective = new CommonConfig.Directive();
+  private DynamicTableModel directivesModel = new DynamicTableModel();
+
+  private long lastUpdate;
+
 
   public SmscConfigController() {
-    FacesContext fc = FacesContext.getCurrentInstance();
-    Map<String, String> reguestMap = fc.getExternalContext().getRequestParameterMap();
+    Map<String, String> reguestMap = getRequestParameters();
     conf = WebContext.getInstance().getAppliableConfiguration();
     SmscSettings smscSettings = conf.getSmscSettings();
     if(!reguestMap.containsKey("initialized")) {
-      instancesCount = smscSettings.getSmscInstancesCount();
+      lastUpdate = conf.getSmscSettigsUpdateInfo().getLastUpdateTime();
+      instancesCount = smscSettings.getSmscInstancesCount();        
       initCommonConfig();
       initInstances();
     }
@@ -62,15 +63,13 @@ public class SmscConfigController implements Serializable {
       }
       if(!outOfDate.isEmpty()) {
         String message = MessageFormat.format(
-            ResourceBundle.getBundle("ru.novosoft.smsc.web.resources.Smsc", fc.getExternalContext().getRequestLocale()).getString("smsc.config.instance.out_of_date"),
+            ResourceBundle.getBundle("ru.novosoft.smsc.web.resources.Smsc", getLocale()).getString("smsc.config.instance.out_of_date"),
             outOfDate.toString());
-        FacesMessage facesMessage = new FacesMessage(FacesMessage.SEVERITY_WARN, message, "");
-        fc.addMessage("smsc_errors", facesMessage);
+        addMessage(FacesMessage.SEVERITY_WARN, message);
       }
     }catch (AdminException e) {
       logger.error(e,e);
-      FacesMessage facesMessage = new FacesMessage(FacesMessage.SEVERITY_ERROR, e.getMessage(fc.getExternalContext().getRequestLocale()), "");
-      fc.addMessage("smsc_errors", facesMessage);
+      addMessage(FacesMessage.SEVERITY_ERROR, e.getMessage(getLocale()));
     }
   }
 
@@ -83,14 +82,18 @@ public class SmscConfigController implements Serializable {
     commonConfig.setService_center_address(cs.getService_center_address());
     commonConfig.setUssd_center_address(cs.getUssd_center_address());
     commonConfig.setUssd_ssn(cs.getUssd_ssn());
-    for(String s : cs.getAdd_ussd_ssn()) {
-      commonConfig.addAdd_ussd_ssn(new CommonConfig.AddUssdSsn(s));
+    for(String ssn : cs.getAdd_ussd_ssn()) {
+      DynamicTableRow row = new DynamicTableRow();
+      row.setValue("ssn", ssn);
+      addSsnModel.addRow(row);
     }
     commonConfig.setSystemId(cs.getSystemId());
     commonConfig.setService_type(cs.getService_type());
     commonConfig.setProtocol_id(cs.getProtocol_id());
-    for(String s : cs.getLocales()) {
-      commonConfig.addLocale(new CommonConfig.Locale(s));
+    for(String l : cs.getLocales()) {
+      DynamicTableRow row = new DynamicTableRow();
+      row.setValue("locale", l);
+      localesModel.addRow(row);
     }
     commonConfig.setDefault_locale(cs.getDefault_locale());
     commonConfig.setMergeTimeout(cs.getMergeTimeout());
@@ -216,7 +219,10 @@ public class SmscConfigController implements Serializable {
     // directives
 
     for(Map.Entry<String, String> e : cs.getDirectives().entrySet()) {
-      commonConfig.addDirective(new CommonConfig.Directive(e.getKey(), e.getValue()));
+      DynamicTableRow row = new DynamicTableRow();
+      row.setValue("key", e.getKey());
+      row.setValue("value", e.getValue());
+      directivesModel.addRow(row);
     }
 
   }
@@ -259,37 +265,28 @@ public class SmscConfigController implements Serializable {
     }
   }
 
-  public void addAdd_ussd_ssn(ActionEvent e) {
-    commonConfig.addAdd_ussd_ssn(newAddUssdSsn);
-    newAddUssdSsn = new CommonConfig.AddUssdSsn();
+  public DynamicTableModel getAddSsnModel() {
+    return addSsnModel;
   }
 
-  public void removeAdd_ussd_ssn(ActionEvent e) {
-    String toRemove = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get("removeAddUssdSsn");
-    int i = Integer.parseInt(toRemove);
-    commonConfig.removeAdd_ussd_ssn(i);
+  public void setAddSsnModel(DynamicTableModel addSsnModel) {
+    this.addSsnModel = addSsnModel;
   }
 
-  public void addLocale(ActionEvent e) {
-    commonConfig.addLocale(newLocale);
-    newLocale = new CommonConfig.Locale();
+  public DynamicTableModel getLocalesModel() {
+    return localesModel;
   }
 
-  public void removeLocale(ActionEvent e) {
-    String toRemove = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get("removeLocale");
-    int i = Integer.parseInt(toRemove);
-    commonConfig.removeLocale(i);
+  public void setLocalesModel(DynamicTableModel localesModel) {
+    this.localesModel = localesModel;
   }
 
-  public void addDirective(ActionEvent e) {
-    commonConfig.addDirective(newDirective);
-    newDirective = new CommonConfig.Directive();
+  public DynamicTableModel getDirectivesModel() {
+    return directivesModel;
   }
 
-  public void removeDirective(ActionEvent e) {
-    String toRemove = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get("removeDirective");
-    int i = Integer.parseInt(toRemove);
-    commonConfig.removeDirective(i);
+  public void setDirectivesModel(DynamicTableModel directivesModel) {
+    this.directivesModel = directivesModel;
   }
 
   public int getInstancesCount() {
@@ -314,8 +311,6 @@ public class SmscConfigController implements Serializable {
     this.instanceConfigs = instanceConfigs;
   }
 
-
-
   public boolean isInitialized() {
     return initialized;
   }
@@ -328,48 +323,44 @@ public class SmscConfigController implements Serializable {
     this.instancesCount = instancesCount;
   }
 
-  public CommonConfig.AddUssdSsn getNewAddUssdSsn() {
-    return newAddUssdSsn;
+  public long getLastUpdate() {
+    return lastUpdate;
   }
 
-  public void setNewAddUssdSsn(CommonConfig.AddUssdSsn newAddUssdSsn) {
-    this.newAddUssdSsn = newAddUssdSsn;
+  public void setLastUpdate(long lastUpdate) {
+    this.lastUpdate = lastUpdate;
   }
 
-  public CommonConfig.Locale getNewLocale() {
-    return newLocale;
-  }
+  public String save() {
 
-  public void setNewLocale(CommonConfig.Locale newLocale) {
-    this.newLocale = newLocale;
-  }
-
-  public CommonConfig.Directive getNewDirective() {
-    return newDirective;
-  }
-
-  public void setNewDirective(CommonConfig.Directive newDirective) {
-    this.newDirective = newDirective;
-  }
-
-  public void save(ActionEvent ev) {
-    if((newDirective.getKey() != null && newDirective.getKey().length()>0)
-        || (newDirective.getValue() != null && newDirective.getValue().length()>0)) {
-      commonConfig.addDirective(newDirective);
-      newDirective = new CommonConfig.Directive();
-    }
-    if(newLocale.getLocale() != null && newLocale.getLocale().length()>0) {
-      commonConfig.addLocale(newLocale);
-      newLocale = new CommonConfig.Locale();
-    }
-    if(newAddUssdSsn.getAddUssdSsn() != null && newAddUssdSsn.getAddUssdSsn().length()>0) {
-      commonConfig.addAdd_ussd_ssn(newAddUssdSsn);
-      newAddUssdSsn = new CommonConfig.AddUssdSsn();
+    if(lastUpdate != conf.getSmscSettigsUpdateInfo().getLastUpdateTime()) {
+      addLocalizedMessage(FacesMessage.SEVERITY_ERROR, "smsc.config.not.actual");
+      return null;
     }
 
-    FacesContext fc = FacesContext.getCurrentInstance();
+    for(DynamicTableRow row : addSsnModel.getRows()) {
+      String value = (String)row.getValue("ssn");
+      if(value == null || value.length() == 0) {
+        addLocalizedMessage(FacesMessage.SEVERITY_ERROR, "add_ssn.empty");
+        return null;
+      }
+    }
+    for(DynamicTableRow row : localesModel.getRows()) {
+      String value = (String)row.getValue("locale");
+      if(value == null || value.length() == 0) {
+        addLocalizedMessage(FacesMessage.SEVERITY_ERROR, "locale.empty");
+        return null;
+      }
+    }
+    for(DynamicTableRow row : directivesModel.getRows()) {
+      String value = (String)row.getValue("key");
+      if(value == null || value.length() == 0) {
+        addLocalizedMessage(FacesMessage.SEVERITY_ERROR, "directives.empty");   
+        return null;        
+      }
+    }
 
-    Locale locale = fc.getExternalContext().getRequestLocale();
+    Locale locale = getLocale();
     try{
       CommonSettings cs = convert(commonConfig);
       InstanceSettings[] iss = new InstanceSettings[instancesCount];
@@ -384,17 +375,16 @@ public class SmscConfigController implements Serializable {
         smscSettings.setInstanceSettings(i, iss[i]);
       }
 
-      Principal p = FacesContext.getCurrentInstance().getExternalContext().getUserPrincipal();
+      Principal p = getUserPrincipal();
 
       conf.setSmscSettings(smscSettings, p.getName());
 
-      fc.getApplication().getNavigationHandler().handleNavigation(fc, null, "INDEX");
+      return "INDEX";
 
     } catch (AdminException e) {
       logger.warn(e,e);
-      e.printStackTrace();
-      FacesMessage facesMessage = new FacesMessage(FacesMessage.SEVERITY_ERROR, e.getMessage(locale), "");
-      fc.addMessage("smsc_errors", facesMessage);
+      addMessage(FacesMessage.SEVERITY_ERROR, e.getMessage(locale));
+      return null;
     }
 
   }
@@ -442,11 +432,11 @@ public class SmscConfigController implements Serializable {
     commonSettings.setService_center_address(cc.getService_center_address());
     commonSettings.setUssd_center_address(cc.getUssd_center_address());
     commonSettings.setUssd_ssn(cc.getUssd_ssn());
-    String[] aus = new String[cc.getAdd_ussd_ssn().size()];
+    String[] aus = new String[addSsnModel.getRowCount()];
 
     int i=0;
-    for(CommonConfig.AddUssdSsn s : cc.getAdd_ussd_ssn()) {
-      aus[i] = s.addUssdSsn;
+    for(DynamicTableRow s : addSsnModel.getRows()) {
+      aus[i] = (String)s.getValue("ssn");
       i++;
     }
     commonSettings.setAdd_ussd_ssn(aus);
@@ -455,10 +445,10 @@ public class SmscConfigController implements Serializable {
     commonSettings.setService_type(cc.getService_type());
     commonSettings.setProtocol_id(cc.getProtocol_id());
 
-    String[] ls = new String[cc.getLocales().size()];
+    String[] ls = new String[localesModel.getRowCount()];
     i=0;
-    for(CommonConfig.Locale s : cc.getLocales()) {
-      ls[i] = s.getLocale();
+    for(DynamicTableRow s : localesModel.getRows()) {
+      ls[i] = (String)s.getValue("locale");
       i++;
     }
     commonSettings.setLocales(ls);
@@ -586,9 +576,9 @@ public class SmscConfigController implements Serializable {
 
     // directives
 
-    Map<String,String> d = new HashMap<String, String>();
-    for(CommonConfig.Directive e : cc.getDirectives()) {
-      d.put(e.getKey(), e.getValue());
+    Map<String,String> d = new HashMap<String, String>(directivesModel.getRowCount());
+    for(DynamicTableRow e : directivesModel.getRows()) {
+      d.put((String)e.getValue("key"), (String)e.getValue("value"));
     }
     commonSettings.setDirectives(d);
 

@@ -13,7 +13,6 @@
     <eye:pageTitle title="#{msg['smsc.reschedule']}"/>
   </ui:define>
 
-
   <ui:define name="content">
 
     <tr:form id="reschedule_list">
@@ -57,7 +56,7 @@
             </eye:column>
 
             <f:facet name="innerData">
-              <h:panelGroup >
+              <h:panelGroup >          
                 <h:dataTable value="#{r.statuses}" var="status" columnClasses="column50Width, columnTopLeftAlign">
                   <h:column>
                     <tr:outputText/>

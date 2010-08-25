@@ -2,6 +2,7 @@ package ru.novosoft.smsc.web.controllers;
 
 import org.apache.log4j.Logger;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.reschedule.RescheduleSettings;
 import ru.novosoft.smsc.web.WebContext;
 import ru.novosoft.smsc.web.beans.Reschedule;
@@ -16,6 +17,7 @@ import javax.faces.application.FacesMessage;
 import javax.faces.event.ActionEvent;
 import javax.servlet.http.HttpSession;
 import java.security.Principal;
+import java.text.MessageFormat;
 import java.util.*;
 
 /**
@@ -45,6 +47,25 @@ public class RescheduleController extends SmscController {
       initReschedules();
       index_initialized = true;
     }
+
+    try{
+      List<Integer> outOfDate = new LinkedList<Integer>();
+      for(Map.Entry<Integer, SmscConfigurationStatus> e : conf.getRescheduleSettingsStatus().entrySet()) {
+        if(e.getValue() == SmscConfigurationStatus.OUT_OF_DATE) {
+          outOfDate.add(e.getKey());
+        }
+      }
+      if(!outOfDate.isEmpty()) {
+        String message = MessageFormat.format(
+            ResourceBundle.getBundle("ru.novosoft.smsc.web.resources.Smsc", getLocale()).getString("smsc.config.instance.out_of_date"),
+            outOfDate.toString());
+        addMessage(FacesMessage.SEVERITY_WARN, message);
+      }
+    }catch (AdminException e) {
+      logger.error(e,e);
+      e.printStackTrace();
+    }
+    
     rescheduleModel = new DataTableModel() {
 
       public List<DataTableRow> getRows(int startPos, int count, DataTableSortOrder sortOrder) {

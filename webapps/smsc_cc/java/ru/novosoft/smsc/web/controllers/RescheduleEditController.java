@@ -2,20 +2,19 @@ package ru.novosoft.smsc.web.controllers;
 
 import org.apache.log4j.Logger;
 import ru.novosoft.smsc.web.beans.Reschedule;
+import ru.novosoft.smsc.web.components.dynamic_table.model.DynamicTableModel;
+import ru.novosoft.smsc.web.components.dynamic_table.model.DynamicTableRow;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
-import javax.faces.event.ActionEvent;
-import javax.faces.model.SelectItem;
 import javax.servlet.http.HttpSession;
-import java.io.Serializable;
 import java.util.*;
 
 /**
  * alkhal: alkhal
  */
 @SuppressWarnings({"unchecked"})
-public class RescheduleEditController implements Serializable{
+public class RescheduleEditController extends SmscController{
 
   private static final Logger logger = Logger.getLogger(RescheduleEditController.class);
 
@@ -26,64 +25,67 @@ public class RescheduleEditController implements Serializable{
   private String newReschedule;
 
   private Set<Integer> availableStatuses;
-
-  private List<Reschedule.Status> statuses = new LinkedList<Reschedule.Status>();
-
-  private Integer newStatus;
-
   private Reschedule defaultReschedule;
 
   private Map<String, Reschedule> reschedules;
 
+  private DynamicTableModel dynamicModel;
+
+  private SmppStatusConverter statusConverter = new SmppStatusConverter();
+
   public RescheduleEditController() {
-    HttpSession session = (HttpSession) FacesContext.getCurrentInstance().getExternalContext().getSession(false);
+    HttpSession session = getSession(false);
     defaultReschedule = (Reschedule) session.getAttribute("reschedule.default");
     reschedules = (Map<String, Reschedule>) session.getAttribute("reschedule.reschedules");
     if(reschedules == null || defaultReschedule == null) {
       throw new IllegalStateException("Session's parameters aren't initialized correctly");
     }
 
-    Map<String, String> request = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap();
-    if(request.get("edit_initialized") == null) {
-
-      oldReschedule = request.get("reschedule");
-
+    if(getRequestParameter("edit_initialized") == null) {
+      oldReschedule = getRequestParameter("reschedule");
       newReschedule = oldReschedule;
+      edit_initialized = true;
+    }
 
-      if((oldReschedule != null && oldReschedule.length() != 0) && oldReschedule.equals(defaultReschedule.getIntervals())) {
-        availableStatuses = new TreeSet<Integer>();
-      }else {
-        availableStatuses = new TreeSet<Integer>(Arrays.asList(
-            0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14, 15, 17, 19, 20, 21, 51, 52, 64, 66, 67, 68, 69, 72, 73,
-            80, 81, 83, 84, 85, 88, 97, 98, 99, 100, 101, 102, 103, 192, 193, 194, 195, 196, 254, 255, 260,
-            1025, 1026, 1027, 1028, 1029, 1030, 1031, 1032, 1134, 1136, 1137, 1138, 1139, 1140, 1141, 1142, 1143,
-            1144, 1145, 1146, 1147, 1148, 1149, 1150, 1151, 1153, 1154, 1155, 1157, 1158, 1160, 1161, 1163, 1164,
-            1165, 1173, 1179, 1183, 1184, 1185, 1186, 1187, 1188));
-        for(Reschedule r : reschedules.values()) {
-          if((oldReschedule != null && oldReschedule.length() != 0) && r.getIntervals().equals(oldReschedule)) {
-            statuses = new ArrayList<Reschedule.Status>(r.getStatuses());
+    dynamicModel = new DynamicTableModel();
+
+    if((oldReschedule != null && oldReschedule.length() != 0) && oldReschedule.equals(defaultReschedule.getIntervals())) {
+      availableStatuses = new TreeSet<Integer>();
+    }else {
+      availableStatuses = new TreeSet<Integer>(Arrays.asList(
+          0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14, 15, 17, 19, 20, 21, 51, 52, 64, 66, 67, 68, 69, 72, 73,
+          80, 81, 83, 84, 85, 88, 97, 98, 99, 100, 101, 102, 103, 192, 193, 194, 195, 196, 254, 255, 260,
+          1025, 1026, 1027, 1028, 1029, 1030, 1031, 1032, 1134, 1136, 1137, 1138, 1139, 1140, 1141, 1142, 1143,
+          1144, 1145, 1146, 1147, 1148, 1149, 1150, 1151, 1153, 1154, 1155, 1157, 1158, 1160, 1161, 1163, 1164,
+          1165, 1173, 1179, 1183, 1184, 1185, 1186, 1187, 1188));
+      for(Reschedule r : reschedules.values()) {
+        if((oldReschedule != null && oldReschedule.length() != 0) && r.getIntervals().equals(oldReschedule)) {
+          for(Reschedule.Status st : r.getStatuses()) {
+            DynamicTableRow row = new DynamicTableRow();
+            row.setValue("code", statusConverter.getAsString(FacesContext.getCurrentInstance(), st.getStatus()));
+            dynamicModel.addRow(row);
           }
+        }else {
           for(Reschedule.Status s : r.getStatuses()) {
             availableStatuses.remove(s.getStatus());
           }
         }
       }
-      edit_initialized = true;
     }
   }
 
+  public DynamicTableModel getDynamicModel() {
+    return dynamicModel;
+  }
+
+  public void setDynamicModel(DynamicTableModel dynamicModel) {
+    this.dynamicModel = dynamicModel;
+  }
 
   public boolean isAvailable() {
     return !availableStatuses.isEmpty();
   }
 
-  public Integer getNewStatus() {
-    return newStatus;
-  }
-
-  public void setNewStatus(Integer newStatus) {
-    this.newStatus = newStatus;
-  }
 
   public boolean isEdit_initialized() {
     return edit_initialized;
@@ -113,84 +115,47 @@ public class RescheduleEditController implements Serializable{
     return ru.novosoft.smsc.admin.reschedule.Reschedule.intervalsPattern.pattern();
   }
 
-  public Set<Integer> getAvailableStatuses() {
-    return availableStatuses;
-  }
 
-  public List<SelectItem> getAvailableStatusesItems() {
-    SmppStatusConverter statusConverter = new SmppStatusConverter();
-    List<SelectItem> res = new ArrayList<SelectItem>(availableStatuses.size());
+  public List<String> getAvailableStatuses() {
+    List<String> res = new ArrayList<String>(availableStatuses.size());
     for(Integer s : availableStatuses) {
-      res.add(new SelectItem(s, statusConverter.getAsString(FacesContext.getCurrentInstance(), null, s)));
+      res.add(statusConverter.getAsString(FacesContext.getCurrentInstance(), null, s));
     }
     return res;
   }
 
-  public void setAvailableStatuses(Set<Integer> availableStatuses) {
-    this.availableStatuses = availableStatuses;
-  }
-
-  public List<Reschedule.Status> getStatuses() {
-    return statuses;
-  }
-
-  public void setStatuses(List<Reschedule.Status> statuses) {
-    this.statuses = statuses;
-  }
-
-
-  public void done(ActionEvent ev) {
-    if(newStatus != null) {
-      addStatus(null);
-    }
-
-    FacesContext fc = FacesContext.getCurrentInstance();
+  public String done() {
 
     for(Reschedule r : reschedules.values()) {
       if(r.getIntervals().equals(newReschedule) && (oldReschedule == null || oldReschedule.length() == 0 || !oldReschedule.equals(newReschedule))) {
-        FacesMessage facesMessage = new FacesMessage(FacesMessage.SEVERITY_WARN,
-            ResourceBundle.getBundle("ru.novosoft.smsc.web.resources.Smsc", fc.getExternalContext().getRequestLocale()).getString("smsc.reschedule.duplicate"),
-            null);
-        fc.addMessage("smsc_errors", facesMessage);
-        return;
+        addLocalizedMessage(FacesMessage.SEVERITY_WARN, "smsc.reschedule.duplicate");
+        return null;
       }
     }
-      if((oldReschedule != null && oldReschedule.length() != 0) && oldReschedule.equals(defaultReschedule.getIntervals())) {
+    if((oldReschedule != null && oldReschedule.length() != 0) && oldReschedule.equals(defaultReschedule.getIntervals())) {
 
-        defaultReschedule.setIntervals(newReschedule);
+      defaultReschedule.setIntervals(newReschedule);
 
-      }else {
-        if(statuses.isEmpty()) {
-          FacesMessage facesMessage = new FacesMessage(FacesMessage.SEVERITY_WARN,
-              ResourceBundle.getBundle("ru.novosoft.smsc.web.resources.Smsc", fc.getExternalContext().getRequestLocale()).getString("smsc.reschedule.statuses.empty"),
-              null);
-          fc.addMessage("smsc_errors", facesMessage);
-          return;
-        }
+    }else {
 
-        if(oldReschedule != null && oldReschedule.length() != 0) {
-          reschedules.remove(oldReschedule);
-        }
-
-        reschedules.put(newReschedule, new Reschedule(newReschedule, statuses));
-//        rm.setReschedules(newRss);
+      if(dynamicModel.getRowCount() == 0) {
+        addLocalizedMessage(FacesMessage.SEVERITY_WARN, "smsc.reschedule.statuses.empty");
+        return null;
       }
 
-      fc.getApplication().getNavigationHandler().handleNavigation(fc, null, "RESCHEDULE");
+      List<Reschedule.Status> statuses = new ArrayList<Reschedule.Status>(dynamicModel.getRowCount());
+      for(DynamicTableRow row : dynamicModel.getRows()) {
+        statuses.add(new Reschedule.Status(statusConverter.getAsInteger((String)row.getValue("code"))));
+      }
+
+      if(oldReschedule != null && oldReschedule.length() != 0) {
+        reschedules.remove(oldReschedule);
+      }
+
+      reschedules.put(newReschedule, new Reschedule(newReschedule, statuses));
+    }
+
+    return "RESCHEDULE";
   }
 
-  public void addStatus(ActionEvent e) {
-    if(newStatus != null) {
-      availableStatuses.remove(newStatus);
-      statuses.add(new Reschedule.Status(newStatus));
-      newStatus = null;
-    }
-  }
-  public void removeStatus(ActionEvent e) {
-    String toRemoveS = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get("removeStatus");
-    Integer toRemove = Integer.parseInt(toRemoveS);
-    availableStatuses.add(toRemove);
-    statuses.remove(new Reschedule.Status(toRemove));
-    newStatus = null;
-  }
 }

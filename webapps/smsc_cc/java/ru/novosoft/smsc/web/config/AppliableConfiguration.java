@@ -5,7 +5,6 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.reschedule.RescheduleSettings;
 import ru.novosoft.smsc.admin.smsc.SmscSettings;
-import ru.novosoft.smsc.web.auth.User;
 
 import java.util.Map;
 
@@ -79,6 +78,10 @@ public class AppliableConfiguration {
   public void resetRescheduleSettings(String String) throws AdminException {
     this.rescheduleSettings = adminContext.getRescheduleManager().getSettings();
     rescheduleSettingsUpdateInfo = new UpdateInfo(System.currentTimeMillis(), String, false);
+  }
+
+  public Map<Integer, SmscConfigurationStatus> getRescheduleSettingsStatus() throws AdminException {
+    return adminContext.getRescheduleManager().getStatusForSmscs();
   }
 
   public UpdateInfo getRescheduleSettingsUpdateInfo() {

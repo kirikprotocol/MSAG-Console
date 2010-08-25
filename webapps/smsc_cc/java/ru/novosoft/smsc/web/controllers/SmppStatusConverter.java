@@ -16,6 +16,10 @@ public class SmppStatusConverter implements Converter {
   }
 
   public String getAsString(FacesContext facesContext, UIComponent uiComponent, Object o) throws ConverterException {
+    return getAsString(facesContext, o);
+  }
+
+  public String getAsString(FacesContext facesContext, Object o) throws ConverterException {
     if(o == null || o.toString().equals("") ){
       return null;
     }
@@ -23,6 +27,18 @@ public class SmppStatusConverter implements Converter {
     ResourceBundle bundle = ResourceBundle.getBundle("ru.novosoft.smsc.web.resources.Smsc",
         FacesContext.getCurrentInstance().getExternalContext().getRequestLocale());
     return "("+code+") "+bundle.getString("smsc.errcode."+code);
+  }
+
+  public Integer getAsInteger(String o) throws ConverterException {
+    if(o == null || o.equals("") ){
+      return null;
+    }
+    try{
+      return Integer.parseInt(o.substring(1, o.indexOf(")")));
+    }catch (Exception e) {
+      e.printStackTrace();
+      return null;
+    }
   }
 
 
