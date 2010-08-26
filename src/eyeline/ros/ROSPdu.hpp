@@ -80,6 +80,10 @@ public:
   virtual ~ROSPduPrimitiveAC()
   { }
 
+  static const char * nmKind(Kind_e ros_kind);
+
+  const char * nmKind(void) const { return nmKind(_kind); }
+
   PduHeader & getHeader(void) { return (PduHeader &)*this; }
   const PduHeader & getHeader(void) const { return (const PduHeader &)*this; }
   
