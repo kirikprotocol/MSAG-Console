@@ -57,6 +57,8 @@ public class RowHandler extends ComponentHandler {
       if (!r.isInner()) {
         if (rowId != null)
           r.setRowId(rowId.getValue(ctx));
+        else
+          r.setRowId(getId(ctx));
         if (innerData != null)
           r.setHasInnerData(innerData.getBoolean(ctx));
         if (opened != null)
@@ -76,27 +78,6 @@ public class RowHandler extends ComponentHandler {
         r.setRowId((String) ctx.getVariableMapper().resolveVariable("___innerRowsId").getValue(ctx));
       }
     }
-
-
-//    if (ctx.getVariableMapper().resolveVariable("___currentRow") != null) {
-//
-//      DataTableRow currentRow = (DataTableRow) ctx.getVariableMapper().resolveVariable("___currentRow").getValue(ctx);
-//
-//      r.setRow(currentRow);
-//      r.setInner(ctx.getVariableMapper().resolveVariable("___innerRow") != null);
-//      r.setRowId(ctx, currentRow.getId());
-//      r.setData(ctx, currentRow.getData());
-//      r.setInnerData(ctx, currentRow.getInnerData());
-//
-//      if (rowId != null)
-//        ctx.getVariableMapper().setVariable(rowId.getValue(), r.getRowIdExpr());
-//      if (data != null)
-//        ctx.getVariableMapper().setVariable(data.getValue(), r.getDataExpr());
-//      if (innerData != null)
-//        ctx.getVariableMapper().setVariable(innerData.getValue(), r.getInnerDataExpr());
-//      if (opened != null)
-//        r.setOpened(opened.getBoolean(ctx));
-//    }
 
     nextHandler.apply(ctx, c);
   }
