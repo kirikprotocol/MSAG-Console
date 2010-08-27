@@ -6,6 +6,7 @@ import ru.novosoft.smsc.admin.smsc.CommonSettings;
 import ru.novosoft.smsc.admin.smsc.InstanceSettings;
 import ru.novosoft.smsc.admin.smsc.SmscSettings;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
@@ -15,8 +16,8 @@ import java.util.*;
  */
 public class LocalChangeLog implements ChangeLog {
 
-  public static final String SMSC="subject.smsc";
-  public static final String RESCHEDULE="subject.reschedule";
+  public static final String SMSC = "subject.smsc";
+  public static final String RESCHEDULE = "subject.reschedule";
 
   private final List<ChangeLogRecord> records = new ArrayList<ChangeLogRecord>();
 
@@ -30,13 +31,14 @@ public class LocalChangeLog implements ChangeLog {
 
   /**
    * Возвращает последнюю запись для указанного subject, с датой после afterTime или null, если такой нет.
-   * @param subject сабжект
+   *
+   * @param subject   сабжект
    * @param afterTime время, начиная с которого надо искать запись
    * @return последнюю запись для указанного subject, с датой после afterTime или null, если такой нет.
    */
   public synchronized ChangeLogRecord getLastRecord(String subject, long afterTime) {
-    for (int i=records.size()-1; i>=0; i--) {
-      ChangeLogRecord r =records.get(i);
+    for (int i = records.size() - 1; i >= 0; i--) {
+      ChangeLogRecord r = records.get(i);
       if (r.getSubjectKey().equals(subject)) {
         if (r.getTime() > afterTime)
           return r;
@@ -58,6 +60,7 @@ public class LocalChangeLog implements ChangeLog {
 
   /**
    * Удаляет из лога все записи с указанным сабжектом
+   *
    * @param subject сабжект, записи которого надо удалить
    */
   public synchronized void removeRecords(String subject) {
@@ -101,6 +104,69 @@ public class LocalChangeLog implements ChangeLog {
     return r;
   }
 
+  private static String collectionToString(Collection<String> values) {
+    StringBuilder sb = new StringBuilder("[");
+    int i = 0;
+    for (String v : values) {
+      if (i == 1) {
+        sb.append(", ");
+      } else
+        i = 1;
+
+      sb.append(v);
+    }
+    sb.append(']');
+
+    return sb.toString();
+  }
+
+  private static String valueToString(Object value) {
+    if (value == null)
+      return "";
+
+    if (value instanceof Collection) {
+      ArrayList<String> res = new ArrayList<String>();
+      for (Object v : (Collection) value)
+        res.add(valueToString(v));
+      return collectionToString(res);
+
+    } else if (value instanceof Map) {
+      ArrayList<String> res = new ArrayList<String>();
+      for (Object v : (((Map) value).entrySet())) {
+        Map.Entry e = (Map.Entry) v;
+        res.add(valueToString(e.getKey()) + " : " + valueToString(e.getValue()));
+      }
+      return collectionToString(res);
+
+    } else if (value instanceof Object[]) {
+      ArrayList<String> res = new ArrayList<String>();
+      for (Object v : (Object[]) value)
+        res.add(valueToString(v));
+      return collectionToString(res);
+      
+    } else if (value instanceof int[]) {
+      ArrayList<String> res = new ArrayList<String>();
+      for (int v : (int[]) value)
+        res.add(String.valueOf(v));
+      return collectionToString(res);
+
+    } else if (value instanceof long[]) {
+      ArrayList<String> res = new ArrayList<String>();
+      for (long v : (long[]) value)
+        res.add(String.valueOf(v));
+      return collectionToString(res);
+
+    } else if (value instanceof boolean[]) {
+      ArrayList<String> res = new ArrayList<String>();
+      for (boolean v : (boolean[]) value)
+        res.add(String.valueOf(v));
+      return collectionToString(res);
+
+    }
+
+    return value.toString();
+  }
+
   private void logChanges(String subject, List<Object> oldValues, List<Object> newValues, List<Method> getters, String user) {
     for (int i = 0; i < getters.size(); i++) {
       Object oldValue = oldValues.get(i);
@@ -125,7 +191,7 @@ public class LocalChangeLog implements ChangeLog {
         else
           propertyName = Character.toLowerCase(firstChar) + "";
 
-        addRecord(ChangeLogRecord.Type.CHANGE, subject, user).setDescription("property_changed", propertyName, oldValue == null ? "null" : oldValue.toString(), newValue == null ? null : newValue.toString());
+        addRecord(ChangeLogRecord.Type.CHANGE, subject, user).setDescription("property_changed", propertyName, valueToString(oldValue), valueToString(newValue));
       }
     }
   }
@@ -156,6 +222,7 @@ public class LocalChangeLog implements ChangeLog {
   /**
    * По коллекции политик расписаний строит Map, ключем в котором является SMPP status, значением - политика
    * передоставки для этого статуса.
+   *
    * @param reschedules список политик передоставки
    * @return Map, ключем в котором является SMPP status, значением - политика передоставки для этого статуса.
    */
