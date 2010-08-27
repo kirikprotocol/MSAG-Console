@@ -62,7 +62,7 @@ public class SmscConfigController extends SmscController{
 
       SmscStatusManager smscStatusManager = WebContext.getInstance().getSmscStatusManager();
       for (int i=0; i<smscStatusManager.getSmscInstancesNumber(); i++) {
-        if (smscStatusManager.getRescheduleState(i) == SmscConfigurationStatus.OUT_OF_DATE)
+        if (smscStatusManager.getMainConfigState(i) == SmscConfigurationStatus.OUT_OF_DATE)
           outOfDate.add(i);
       }
             
