@@ -17,7 +17,7 @@
     <h:form>
       <eye:dataTable value="#{smscStatus.smsCenters}" pageSize="100" var="data">
 
-        <eye:row rowId="#{data.instanceNumber}" innerData="#{data.hasErrors}">
+        <eye:row innerData="#{data.hasErrors}">
 
           <eye:column name="connected" title="" sortable="false" width="2%">
             <h:graphicImage value="/images/ic_internal.gif" rendered="#{data.onlineHost != null}"/>
