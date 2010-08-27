@@ -105,6 +105,17 @@
   </tag>
 
   <tag>
+    <name>pageSubtitle</name>
+    <description>Подзаголовок на странице</description>
+    <attribute>
+      <name>value</name>
+      <description>Текст подзаголовка</description>
+      <type>java.lang.String</type>
+      <required>true</required>
+    </attribute>
+  </tag>
+
+  <tag>
     <name>buttons</name>
     <description>Строка с кнопками</description>
   </tag>

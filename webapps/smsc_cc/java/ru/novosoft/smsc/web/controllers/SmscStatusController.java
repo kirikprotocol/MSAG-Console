@@ -1,14 +1,13 @@
 package ru.novosoft.smsc.web.controllers;
 
-import org.apache.log4j.Logger;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.web.WebContext;
 import ru.novosoft.smsc.web.components.data_table.model.DataTableModel;
-import ru.novosoft.smsc.web.components.data_table.model.DataTableRow;
-import ru.novosoft.smsc.web.components.data_table.model.DataTableRowBase;
 import ru.novosoft.smsc.web.components.data_table.model.DataTableSortOrder;
+import ru.novosoft.smsc.web.config.AppliableConfiguration;
 import ru.novosoft.smsc.web.config.SmscStatusManager;
+import ru.novosoft.smsc.web.config.changelog.ChangeLogRecord;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.component.html.HtmlSelectOneMenu;
@@ -23,30 +22,52 @@ import java.util.List;
  */
 public class SmscStatusController extends SmscController {
 
-  private static final Logger logger = Logger.getLogger(SmscStatusController.class);
-
   private final SmscStatusManager smscStatusManager;
+  private final AppliableConfiguration appliableConfiguration;
+
   private String switchToHost;
 
   public SmscStatusController() {
     smscStatusManager = WebContext.getInstance().getSmscStatusManager();
+    appliableConfiguration = WebContext.getInstance().getAppliableConfiguration();
   }
 
-  public String getHostValue() {
-    return null;
+  public void reset() {
+    String configName = getRequestParameter("configName");
+    if (configName == null)
+      return;
+    try {
+      if (configName.equals("smsc"))
+        appliableConfiguration.resetSmscSettings(getUserPrincipal().getName());
+      else if (configName.equals("reschedule"))
+        appliableConfiguration.resetRescheduleSettings(getUserPrincipal().getName());
+
+    } catch (AdminException e) {
+      logError(e);
+    }
   }
 
-  public void setHostValue(String value) {
-    
+  public void applyAll() {
+
   }
 
+  public void resetAll() {
+
+  }
+
+  public DataTableModel getConfigChanges() {
+    List<ConfigChanges> result = new ArrayList<ConfigChanges>();
+    result.add(new ConfigChanges("smsc", appliableConfiguration.getSmscSettingsChanges()));
+    result.add(new ConfigChanges("reschedule", appliableConfiguration.getRescheduleSettingsChanges()));
+    return new ListTableModel(result);
+  }
 
   public void switchToHost(ValueChangeEvent e) {
     if (e.getSource() instanceof HtmlSelectOneMenu) {
-      HtmlSelectOneMenu src = (HtmlSelectOneMenu)e.getSource();
-      Integer selectInstanceNum = (Integer)src.getAttributes().get("instanceNumber");
-      if (selectInstanceNum != null  && String.valueOf(selectInstanceNum).equals(getRequestParameter("instanceNumber")))
-        this.switchToHost = (String)e.getNewValue();
+      HtmlSelectOneMenu src = (HtmlSelectOneMenu) e.getSource();
+      Integer selectInstanceNum = (Integer) src.getAttributes().get("instanceNumber");
+      if (selectInstanceNum != null && String.valueOf(selectInstanceNum).equals(getRequestParameter("instanceNumber")))
+        this.switchToHost = (String) e.getNewValue();
     }
   }
 
@@ -89,7 +110,6 @@ public class SmscStatusController extends SmscController {
     } catch (AdminException ex) {
       logError(ex);
     }
-    System.out.println("1");
   }
 
   public void stopAll(ActionEvent e) {
@@ -108,42 +128,59 @@ public class SmscStatusController extends SmscController {
   }
 
   public DataTableModel getSmsCenters() {
-    return new DataTableModel() {
 
-      public List getRows(int startPos, int count, DataTableSortOrder sortOrder) {
-        List<SmscStatus> result = new ArrayList<SmscStatus>();
+    List<SmscStatus> result = new ArrayList<SmscStatus>();
 
-        try {
-          for (int i = startPos; i < Math.min(startPos + count, smscStatusManager.getSmscInstancesNumber()); i++) {
+    try {
+      for (int i = 0; i < smscStatusManager.getSmscInstancesNumber(); i++) {
 
-            String onlineHost = smscStatusManager.getSmscOnlineHost(i);
+        String onlineHost = smscStatusManager.getSmscOnlineHost(i);
 
-            SmscStatus status = new SmscStatus(i, onlineHost, smscStatusManager.getSmscHosts(i));
-            if (onlineHost != null) {
-              status.setMainConfigUpToDate(smscStatusManager.getMainConfigState(i) == SmscConfigurationStatus.UP_TO_DATE);
-              status.setRescheduleConfigUpToDate(smscStatusManager.getRescheduleState(i) == SmscConfigurationStatus.UP_TO_DATE);
-            }
-
-            result.add(status);
-          }
-        } catch (AdminException e) {
-          logError(e);
+        SmscStatus status = new SmscStatus(i, onlineHost, smscStatusManager.getSmscHosts(i));
+        if (onlineHost != null) {
+          status.setMainConfigUpToDate(smscStatusManager.getMainConfigState(i) == SmscConfigurationStatus.UP_TO_DATE);
+          status.setRescheduleConfigUpToDate(smscStatusManager.getRescheduleState(i) == SmscConfigurationStatus.UP_TO_DATE);
         }
-        return result;
-      }
 
-      public int getRowsCount() {
-        try {
-          return smscStatusManager.getSmscInstancesNumber();
-        } catch (AdminException e) {
-          logError(e);
-          return 0;
-        }
+        result.add(status);
       }
-    };
+    } catch (AdminException e) {
+      logError(e);
+    }
+
+    return new ListTableModel(result);
   }
 
-  public class SmscStatus {
+  /**
+   *
+   */
+  public static class ConfigChanges {
+
+    private final String configName;
+    private final List<ChangeLogRecord> changes;
+
+    public ConfigChanges(String configName, List<ChangeLogRecord> changes) {
+      this.configName = configName;
+      this.changes = changes;
+    }
+
+    public List<ChangeLogRecord> getChanges() {
+      return changes;
+    }
+
+    public String getConfigName() {
+      return configName;
+    }
+
+    public boolean isChanged() {
+      return !changes.isEmpty();
+    }
+  }
+
+  /**
+   *
+   */
+  public static class SmscStatus {
 
     private final int instanceNumber;
     private final String onlineHost;
@@ -197,6 +234,26 @@ public class SmscStatusController extends SmscController {
     public boolean isHasErrors() {
       return onlineHost != null &&
           (!rescheduleConfigUpToDate || !mainConfigUpToDate);
+    }
+  }
+
+  /**
+   *
+   */
+  public class ListTableModel implements DataTableModel {
+
+    private final List values;
+
+    public ListTableModel(List values) {
+      this.values = values;
+    }
+
+    public List getRows(int startPos, int count, DataTableSortOrder sortOrder) {
+      return values;
+    }
+
+    public int getRowsCount() {
+      return values.size();
     }
   }
 

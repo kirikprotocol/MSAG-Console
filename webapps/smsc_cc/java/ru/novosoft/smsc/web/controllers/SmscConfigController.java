@@ -10,6 +10,7 @@ import ru.novosoft.smsc.web.WebContext;
 import ru.novosoft.smsc.web.components.dynamic_table.model.DynamicTableModel;
 import ru.novosoft.smsc.web.components.dynamic_table.model.DynamicTableRow;
 import ru.novosoft.smsc.web.config.AppliableConfiguration;
+import ru.novosoft.smsc.web.config.SmscStatusManager;
 
 import javax.faces.application.FacesMessage;
 import java.security.Principal;
@@ -51,18 +52,20 @@ public class SmscConfigController extends SmscController{
     conf = WebContext.getInstance().getAppliableConfiguration();
     SmscSettings smscSettings = conf.getSmscSettings();
     if(!reguestMap.containsKey("initialized")) {
-      lastUpdate = conf.getSmscSettigsUpdateInfo().getLastUpdateTime();
+      lastUpdate = conf.getSmscSettingsUpdateInfo().getLastUpdateTime();
       instancesCount = smscSettings.getSmscInstancesCount();        
       initCommonConfig();
       initInstances();
     }
     try{
       List<Integer> outOfDate = new LinkedList<Integer>();
-      for(Map.Entry<Integer, SmscConfigurationStatus> e : conf.getSmscSettingsStatus().entrySet()) {
-        if(e.getValue() == SmscConfigurationStatus.OUT_OF_DATE) {
-          outOfDate.add(e.getKey());
-        }
+
+      SmscStatusManager smscStatusManager = WebContext.getInstance().getSmscStatusManager();
+      for (int i=0; i<smscStatusManager.getSmscInstancesNumber(); i++) {
+        if (smscStatusManager.getRescheduleState(i) == SmscConfigurationStatus.OUT_OF_DATE)
+          outOfDate.add(i);
       }
+            
       if(!outOfDate.isEmpty()) {
         String message = MessageFormat.format(
             ResourceBundle.getBundle("ru.novosoft.smsc.web.resources.Smsc", getLocale()).getString("smsc.config.instance.out_of_date"),
@@ -175,7 +178,7 @@ public class SmscConfigController extends SmscController{
 
   public String save() {
 
-    if(lastUpdate != conf.getSmscSettigsUpdateInfo().getLastUpdateTime()) {
+    if(lastUpdate != conf.getSmscSettingsUpdateInfo().getLastUpdateTime()) {
       addLocalizedMessage(FacesMessage.SEVERITY_ERROR, "smsc.config.not.actual");
       return null;
     }

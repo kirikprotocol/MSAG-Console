@@ -5,7 +5,10 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.reschedule.RescheduleSettings;
 import ru.novosoft.smsc.admin.smsc.SmscSettings;
+import ru.novosoft.smsc.web.config.changelog.ChangeLogRecord;
+import ru.novosoft.smsc.web.config.changelog.LocalChangeLog;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -19,44 +22,54 @@ public class AppliableConfiguration {
   private UpdateInfo smscSettingsUpdateInfo;
 
   private RescheduleSettings rescheduleSettings;
-  private UpdateInfo rescheduleSettingsUpdateInfo;  
+  private UpdateInfo rescheduleSettingsUpdateInfo;
+
+  private LocalChangeLog changeLog;
 
   public AppliableConfiguration(AdminContext adminContext) throws AdminException {
     this.adminContext = adminContext;
+    this.changeLog = new LocalChangeLog();
+
     this.smscSettings = adminContext.getSmscManager().getSettings();
     this.smscSettingsUpdateInfo = new UpdateInfo(System.currentTimeMillis(), null, false);
-    
+
     this.rescheduleSettings = adminContext.getRescheduleManager().getSettings();
     this.rescheduleSettingsUpdateInfo = new UpdateInfo(System.currentTimeMillis(), null, false);
   }
 
+  public boolean hasNotAppliedChanges() {
+    return !changeLog.isEmpty();
+  }
+
   // SMSC ==============================================================================================================
 
-  public Map<Integer, SmscConfigurationStatus> getSmscSettingsStatus() throws AdminException {
-    return adminContext.getSmscManager().getStatusForSmscs();
-  }
-  
   public SmscSettings getSmscSettings() {
     return smscSettings.cloneSettings();
   }
 
   public void setSmscSettings(SmscSettings smscSettings, String user) {
+    changeLog.logChanges(this.smscSettings, smscSettings, user);
     this.smscSettings = smscSettings.cloneSettings();
     smscSettingsUpdateInfo = new UpdateInfo(System.currentTimeMillis(), user, true);
   }
 
   public void applySmscSettings(String user) throws AdminException {
     adminContext.getSmscManager().updateSettings(smscSettings);
-    smscSettingsUpdateInfo = new UpdateInfo(System.currentTimeMillis(), user, false);
+    // todo скопировать все записи для сабжекта SMSC в журнал
+    changeLog.removeRecords(LocalChangeLog.SMSC);
   }
 
   public void resetSmscSettings(String user) throws AdminException {
     this.smscSettings = adminContext.getSmscManager().getSettings();
-    smscSettingsUpdateInfo = new UpdateInfo(System.currentTimeMillis(), user, false);
+    changeLog.removeRecords(LocalChangeLog.SMSC);
   }
 
-  public UpdateInfo getSmscSettigsUpdateInfo() {
+  public UpdateInfo getSmscSettingsUpdateInfo() {
     return smscSettingsUpdateInfo;
+  }
+
+  public List<ChangeLogRecord> getSmscSettingsChanges() {
+    return changeLog.getRecords(LocalChangeLog.SMSC);
   }
 
   // RESCHEDULE ========================================================================================================
@@ -66,25 +79,27 @@ public class AppliableConfiguration {
   }
 
   public void setRescheduleSettings(RescheduleSettings rescheduleSettings, String user) {
+    changeLog.logChanges(this.rescheduleSettings, rescheduleSettings, user);
     this.rescheduleSettings = rescheduleSettings.cloneSettings();
     rescheduleSettingsUpdateInfo = new UpdateInfo(System.currentTimeMillis(), user, true);
   }
 
   public void applyRescheduleSettings(String user) throws AdminException {
     adminContext.getRescheduleManager().updateSettings(rescheduleSettings);
-    rescheduleSettingsUpdateInfo = new UpdateInfo(System.currentTimeMillis(), user, false);
+    // todo скопировать все записи для сабжекта RESCHEDULE в журнал
+    changeLog.removeRecords(LocalChangeLog.RESCHEDULE);
   }
 
   public void resetRescheduleSettings(String user) throws AdminException {
     this.rescheduleSettings = adminContext.getRescheduleManager().getSettings();
-    rescheduleSettingsUpdateInfo = new UpdateInfo(System.currentTimeMillis(), user, false);
-  }
-
-  public Map<Integer, SmscConfigurationStatus> getRescheduleSettingsStatus() throws AdminException {
-    return adminContext.getRescheduleManager().getStatusForSmscs();
+    changeLog.removeRecords(LocalChangeLog.RESCHEDULE);
   }
 
   public UpdateInfo getRescheduleSettingsUpdateInfo() {
     return rescheduleSettingsUpdateInfo;
+  }
+
+  public List<ChangeLogRecord> getRescheduleSettingsChanges() {
+    return changeLog.getRecords(LocalChangeLog.RESCHEDULE);
   }
 }

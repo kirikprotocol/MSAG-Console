@@ -9,6 +9,7 @@ import ru.novosoft.smsc.web.WebContext;
 import ru.novosoft.smsc.web.components.data_table.model.DataTableModel;
 import ru.novosoft.smsc.web.components.data_table.model.DataTableSortOrder;
 import ru.novosoft.smsc.web.config.AppliableConfiguration;
+import ru.novosoft.smsc.web.config.SmscStatusManager;
 import ru.novosoft.smsc.web.config.UpdateInfo;
 
 import javax.faces.application.FacesMessage;
@@ -46,12 +47,12 @@ public class RescheduleController extends SmscController {
       index_initialized = true;
     }
 
+    SmscStatusManager smscStatusManager = WebContext.getInstance().getSmscStatusManager();
     try{
       List<Integer> outOfDate = new LinkedList<Integer>();
-      for(Map.Entry<Integer, SmscConfigurationStatus> e : conf.getRescheduleSettingsStatus().entrySet()) {
-        if(e.getValue() == SmscConfigurationStatus.OUT_OF_DATE) {
-          outOfDate.add(e.getKey());
-        }
+      for (int i=0; i<smscStatusManager.getSmscInstancesNumber(); i++) {
+        if (smscStatusManager.getRescheduleState(i) == SmscConfigurationStatus.OUT_OF_DATE)
+          outOfDate.add(i);
       }
       if(!outOfDate.isEmpty()) {
         String message = MessageFormat.format(

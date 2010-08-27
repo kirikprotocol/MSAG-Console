@@ -52,6 +52,11 @@
   </tag>
 
   <tag>
+    <tag-name>pageSubtitle</tag-name>
+    <source>page_subtitle.xhtml</source>
+  </tag>
+
+  <tag>
     <tag-name>buttons</tag-name>
     <component>
       <component-type>buttonsPanel</component-type>

@@ -14,4 +14,8 @@ public class TestRescheduleManager extends RescheduleManager {
   public TestRescheduleManager(File configFile, File backupDir, ClusterController cc, FileSystem fs) throws AdminException {
     super(configFile, backupDir, cc, fs);
   }
+
+  public static RescheduleSettings createRescheduleSettings() {
+    return new RescheduleSettings();
+  }
 }

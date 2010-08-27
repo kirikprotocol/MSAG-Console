@@ -15,6 +15,48 @@
   <ui:define name="content">
 
     <h:form>
+
+      <eye:pageSubtitle value="#{msg['status.page.config_changes']}"/>
+
+      <eye:dataTable value="#{smscStatus.configChanges}" var="ch" pageSize="100">
+        <eye:row innerData="#{ch.changed}">
+          <eye:column name="configuration" title="#{msg['status.page.configuration']}" width="70%">
+            <h:outputText value="#{ch.configName}"/>
+          </eye:column>
+
+          <eye:column name="reset" title="#{msg['status.page.action']}" width="30%">
+            <h:commandLink value="#{msg['status.page.reset']}" action="#{smscStatus.reset}" rendered="#{ch.changed}">
+              <f:param name="configName" value="#{ch.configName}"/>
+            </h:commandLink>
+            <h:outputText value="#{msg['status.page.no.changes']}" rendered="#{!ch.changed}"/>
+          </eye:column>
+
+          <f:facet name="innerData">
+            <h:panelGroup>
+              <h:dataTable cellpadding="2" cellspacing="2" value="#{ch.changes}" var="change" columnClasses="column50Width, column50Width, column50Width, columnTopLeftAlign">
+                <h:column><h:outputText value="#{change.user}"/></h:column>
+                <h:column><h:outputText value="#{change.type}"/></h:column>
+                <h:column><h:outputText value="#{change.subject}"/></h:column>
+                <h:column><h:outputText value="#{change.description}"/></h:column>
+              </h:dataTable>
+            </h:panelGroup>
+          </f:facet>
+
+        </eye:row>
+      </eye:dataTable>
+
+      <eye:buttons>
+        <eye:button><h:commandLink value="#{msg['status.page.apply_all']}" action="#{smscStatus.applyAll}"/></eye:button>
+        <eye:button><h:commandLink value="#{msg['status.page.reset_all']}" action="#{smscStatus.resetAll}"/></eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+      <table width="100%">
+        <tr><td height="10px" width="12px"></td></tr>        
+      </table>
+
+      <eye:pageSubtitle value="#{msg['status.page.smscs']}"/>
+
       <eye:dataTable value="#{smscStatus.smsCenters}" pageSize="100" var="data">
 
         <eye:row innerData="#{data.hasErrors}">
@@ -66,7 +108,7 @@
               </h:commandLink>
               <h:outputText value="  "/>
 
-              <h:selectOneMenu valueChangeListener="#{smscStatus.switchToHost}" value="#{smscStatus.hostValue}">
+              <h:selectOneMenu valueChangeListener="#{smscStatus.switchToHost}" value="">
                 <f:attribute name="instanceNumber" value="#{data.instanceNumber}"/>
                 <f:selectItems value="#{data.hosts}"/>
               </h:selectOneMenu>
@@ -93,7 +135,7 @@
 
       <eye:buttons>
         <eye:button><h:commandLink value="#{msg['status.page.start.all']}" actionListener="#{smscStatus.startAll}"/></eye:button>
-        <eye:button><h:commandLink value="#{msg['status.page.stop.all']}"  actionListener="#{smscStatus.stopAll}"/></eye:button>
+        <eye:button><h:commandLink value="#{msg['status.page.stop.all']}" actionListener="#{smscStatus.stopAll}"/></eye:button>
         <eye:space/>
       </eye:buttons>
     </h:form>
