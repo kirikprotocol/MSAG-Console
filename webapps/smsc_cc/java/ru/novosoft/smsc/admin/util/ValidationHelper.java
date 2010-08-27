@@ -63,6 +63,11 @@ public class ValidationHelper {
       throw new ValidationException(paramNameBundle, argName);
   }
 
+  public <T> void checkNotEquals(String argName, Comparable<T> value1, T value2) throws AdminException {
+    if (value1.compareTo(value2) == 0)
+      throw new ValidationException(paramNameBundle, argName);
+  }
+
   public <T> void checkBetween(String argName, Comparable<T> value, T min, T max) throws AdminException {
     if (value.compareTo(min) < 0 || value.compareTo(max) > 0)
       throw new ValidationException(paramNameBundle, argName);

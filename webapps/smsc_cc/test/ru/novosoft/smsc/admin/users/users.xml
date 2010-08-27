@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<!DOCTYPE users SYSTEM "users.dtd">
+
+<users>
+  <user login="a" password="1" firstName="a" lastName="a" dept="a" workPhone="a" homePhone="a" cellPhone="a"
+        email="a@a.ru">
+    <role name="acls"/>
+    <role name="aliases"/>
+    <role name="apply"/>
+    <role name="categories"/>
+    <role name="closed_groups"/>
+    <role name="dbsme-admin"/>
+    <role name="dl"/>
+    <role name="emailsme"/>
+    <role name="fraud"/>
+    <role name="hosts"/>
+    <role name="infosme-admin"/>
+    <role name="infosme-market"/>
+    <role name="journal"/>
+    <role name="locale_resources"/>
+    <role name="mcisme-admin"/>
+    <role name="mscman"/>
+    <role name="mtsmsme-admin"/>
+    <role name="perfmon"/>
+    <role name="profiles"/>
+    <role name="providers"/>
+    <role name="regions"/>
+    <role name="routes"/>
+    <role name="service_operator"/>
+    <role name="services"/>
+    <role name="smsView"/>
+    <role name="smsView_archive"/>
+    <role name="smsView_operative"/>
+    <role name="smsView_smstext"/>
+    <role name="smsc_service"/>
+    <role name="smsquiz-admin"/>
+    <role name="smsstat"/>
+    <role name="snmp"/>
+    <role name="subjects"/>
+    <role name="timezones"/>
+    <role name="topmon"/>
+    <role name="users"/>
+
+    <pref name="locale" value="en"/>
+    <pref name="topmon.graph.head" value="20"/>
+    <pref name="topmon.graph.scale" value="3"/>
+    <pref name="topmon.max.speed" value="50"/>
+    <pref name="topmon.graph.higrid" value="10"/>
+    <pref name="topmon.graph.grid" value="2"/>
+    <pref name="perfmon.vMinuteGrid" value="6"/>
+    <pref name="perfmon.vLightGrid" value="4"/>
+    <pref name="perfmon.block" value="8"/>
+    <pref name="perfmon.pixPerSecond" value="4"/>
+    <pref name="perfmon.scale" value="80"/>
+    <pref name="infosme.region.1" value="true"/>
+    <pref name="timezone" value="Asia/Novosibirsk"/>
+    <pref name="infosme.activePeriodEnd" value="21:00:00"/>
+    <pref name="infosme.activePeriodStart" value="09:00:00"/>
+    <pref name="infosme.activeWeekDays" value="Mon,Tue,Fri,Thu,Wed"/>
+    <pref name="infosme.keepHistory" value="true"/>
+    <pref name="infosme.messagesCacheSize" value="2000"/>
+    <pref name="infosme.messagesCacheSleep" value="10"/>
+    <pref name="infosme.replaceMessage" value="false"/>
+    <pref name="infosme.svcType" value=""/>
+    <pref name="infosme.archive" value="true"/>
+    <pref name="infosme.archiveTimeout" value="1"/>
+    <pref name="infosme.sourceAddress" value="1234"/>
+    <pref name="infosme.deliveryMode" value="1"/>
+    <pref name="infosme.trackIntegrity" value="false"/>
+    <pref name="infosme.transactionMode" value="false"/>
+    <pref name="infosme.uncommitedInGeneration" value="100"/>
+    <pref name="infosme.uncommitedInProcess" value="100"/>
+    <pref name="infosme.validityPeriod" value="3:00:00"/>
+    <pref name="infosme.priority" value="10"/>
+  </user>
+
+  <user login="b" password="1" firstName="a" lastName="a" dept="a" workPhone="a" homePhone="a" cellPhone="a"
+        email="a@a.ru">
+    <role name="smsc_service"/>
+    <role name="smsc_hosts"/>
+    <pref name="locale" value="ru"/>
+    <pref name="topmon.graph.head" value="20"/>
+    <pref name="topmon.graph.scale" value="3"/>
+    <pref name="topmon.max.speed" value="50"/>
+    <pref name="topmon.graph.higrid" value="10"/>
+    <pref name="topmon.graph.grid" value="2"/>
+    <pref name="perfmon.vMinuteGrid" value="6"/>
+    <pref name="perfmon.vLightGrid" value="4"/>
+    <pref name="perfmon.block" value="8"/>
+    <pref name="perfmon.pixPerSecond" value="4"/>
+    <pref name="perfmon.scale" value="80"/>
+    <pref name="infosme.region.1" value="true"/>
+    <pref name="timezone" value="Asia/Novosibirsk"/>
+    <pref name="infosme.activePeriodEnd" value="21:00:00"/>
+    <pref name="infosme.activePeriodStart" value="09:00:00"/>
+    <pref name="infosme.activeWeekDays" value="Mon,Tue,Fri,Thu,Wed"/>
+    <pref name="infosme.keepHistory" value="true"/>
+    <pref name="infosme.messagesCacheSize" value="2000"/>
+    <pref name="infosme.messagesCacheSleep" value="10"/>
+    <pref name="infosme.replaceMessage" value="false"/>
+    <pref name="infosme.svcType" value=""/>
+    <pref name="infosme.archive" value="true"/>
+    <pref name="infosme.archiveTimeout" value="1"/>
+    <pref name="infosme.sourceAddress" value="1234"/>
+    <pref name="infosme.deliveryMode" value="1"/>
+    <pref name="infosme.trackIntegrity" value="false"/>
+    <pref name="infosme.transactionMode" value="false"/>
+    <pref name="infosme.uncommitedInGeneration" value="100"/>
+    <pref name="infosme.uncommitedInProcess" value="100"/>
+    <pref name="infosme.validityPeriod" value="3:00:00"/>
+    <pref name="infosme.priority" value="10"/>
+  </user>
+
+  <user login="c" password="1" firstName="a" lastName="a" dept="a" workPhone="a" homePhone="a" cellPhone="a"
+        email="a@a.ru">
+    <role name="smsc_service"/>
+    <role name="smsc_subjects"/>
+    <pref name="locale" value="en"/>
+    <pref name="topmon.graph.head" value="20"/>
+    <pref name="topmon.graph.scale" value="3"/>
+    <pref name="topmon.max.speed" value="50"/>
+    <pref name="topmon.graph.higrid" value="10"/>
+    <pref name="topmon.graph.grid" value="2"/>
+    <pref name="perfmon.vMinuteGrid" value="6"/>
+    <pref name="perfmon.vLightGrid" value="4"/>
+    <pref name="perfmon.block" value="8"/>
+    <pref name="perfmon.pixPerSecond" value="4"/>
+    <pref name="perfmon.scale" value="80"/>
+    <pref name="infosme.region.1" value="true"/>
+    <pref name="timezone" value="Asia/Novosibirsk"/>
+    <pref name="infosme.activePeriodEnd" value="21:00:00"/>
+    <pref name="infosme.activePeriodStart" value="09:00:00"/>
+    <pref name="infosme.activeWeekDays" value="Mon,Tue,Fri,Thu,Wed"/>
+    <pref name="infosme.keepHistory" value="true"/>
+    <pref name="infosme.messagesCacheSize" value="2000"/>
+    <pref name="infosme.messagesCacheSleep" value="10"/>
+    <pref name="infosme.replaceMessage" value="false"/>
+    <pref name="infosme.svcType" value=""/>
+    <pref name="infosme.archive" value="true"/>
+    <pref name="infosme.archiveTimeout" value="1"/>
+    <pref name="infosme.sourceAddress" value="1234"/>
+    <pref name="infosme.deliveryMode" value="1"/>
+    <pref name="infosme.trackIntegrity" value="false"/>
+    <pref name="infosme.transactionMode" value="false"/>
+    <pref name="infosme.uncommitedInGeneration" value="100"/>
+    <pref name="infosme.uncommitedInProcess" value="100"/>
+    <pref name="infosme.validityPeriod" value="3:00:00"/>
+    <pref name="infosme.priority" value="10"/>
+  </user>
+
+  <user login="d" password="1" firstName="a" lastName="a" dept="a" workPhone="a" homePhone="a" cellPhone="a"
+        email="a@a.ru">
+    <role name="smsc_service"/>
+    <role name="smsc_subjects"/>
+    <role name="smsc_hosts"/>
+    <pref name="locale" value="en"/>
+    <pref name="topmon.graph.head" value="20"/>
+    <pref name="topmon.graph.scale" value="3"/>
+    <pref name="topmon.max.speed" value="50"/>
+    <pref name="topmon.graph.higrid" value="10"/>
+    <pref name="topmon.graph.grid" value="2"/>
+    <pref name="perfmon.vMinuteGrid" value="6"/>
+    <pref name="perfmon.vLightGrid" value="4"/>
+    <pref name="perfmon.block" value="8"/>
+    <pref name="perfmon.pixPerSecond" value="4"/>
+    <pref name="perfmon.scale" value="80"/>
+    <pref name="infosme.region.1" value="true"/>
+    <pref name="timezone" value="Asia/Novosibirsk"/>
+    <pref name="infosme.activePeriodEnd" value="21:00:00"/>
+    <pref name="infosme.activePeriodStart" value="09:00:00"/>
+    <pref name="infosme.activeWeekDays" value="Mon,Tue,Fri,Thu,Wed"/>
+    <pref name="infosme.keepHistory" value="true"/>
+    <pref name="infosme.messagesCacheSize" value="2000"/>
+    <pref name="infosme.messagesCacheSleep" value="10"/>
+    <pref name="infosme.replaceMessage" value="false"/>
+    <pref name="infosme.svcType" value=""/>
+    <pref name="infosme.archive" value="true"/>
+    <pref name="infosme.archiveTimeout" value="1"/>
+    <pref name="infosme.sourceAddress" value="1234"/>
+    <pref name="infosme.deliveryMode" value="1"/>
+    <pref name="infosme.trackIntegrity" value="false"/>
+    <pref name="infosme.transactionMode" value="false"/>
+    <pref name="infosme.uncommitedInGeneration" value="100"/>
+    <pref name="infosme.uncommitedInProcess" value="100"/>
+    <pref name="infosme.validityPeriod" value="3:00:00"/>
+    <pref name="infosme.priority" value="10"/>
+  </user>
+</users>

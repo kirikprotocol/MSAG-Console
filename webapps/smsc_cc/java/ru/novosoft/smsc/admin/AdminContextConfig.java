@@ -1,7 +1,7 @@
 package ru.novosoft.smsc.admin;
 
-import ru.novosoft.smsc.util.config.XmlConfigException;
 import ru.novosoft.smsc.util.config.XmlConfig;
+import ru.novosoft.smsc.util.config.XmlConfigException;
 import ru.novosoft.smsc.util.config.XmlConfigSection;
 
 import java.io.File;
@@ -103,6 +103,15 @@ class AdminContextConfig {
     } catch (XmlConfigException e) {
       throw new AdminContextException("invalid_config", e);
     }
+  }
+
+  public String getUsersFile() throws AdminException {
+    try {
+      XmlConfigSection system = webconfig.getSection("system");
+      return system.getString("users file");
+    } catch (XmlConfigException e) {
+      throw new AdminContextException("invalid_config", e);
+    }    
   }
 
 

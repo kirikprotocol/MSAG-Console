@@ -30,6 +30,8 @@ import ru.novosoft.smsc.admin.smsc.SmscSettings;
 import ru.novosoft.smsc.admin.smsc.TestSmscManager;
 import ru.novosoft.smsc.admin.snmp.SnmpManagerTest;
 import ru.novosoft.smsc.admin.snmp.TestSnmpManager;
+import ru.novosoft.smsc.admin.users.TestUsersManager;
+import ru.novosoft.smsc.admin.users.UsersManagerTest;
 import testutils.TestUtils;
 
 import java.io.File;
@@ -58,6 +60,7 @@ public class TestAdminContext extends AdminContext {
     TestUtils.exportResource(MapLimitManagerTest.class.getResourceAsStream("maplimits.xml"), new File(smscDir, "maplimits.xml"));
     TestUtils.exportResource(MscManagerTest.class.getResourceAsStream("msc.bin"), new File(smscDir, "msc.bin"));
     TestUtils.exportResource(RescheduleManagerTest.class.getResourceAsStream("schedule.xml"), new File(smscDir, "schedule.xml"));
+    TestUtils.exportResource(UsersManagerTest.class.getResourceAsStream("users.xml"), new File(smscDir, "users.xml"));
     TestUtils.exportResource(SnmpManagerTest.class.getResourceAsStream("snmp.xml"), new File(smscDir, "snmp.xml"));
     TestUtils.exportResource(SmeConfigFileTest.class.getResourceAsStream("sme.xml"), new File(smscDir, "sme.xml"));
     TestUtils.exportResource(ResourceFileTest.class.getResourceAsStream("resources_en_en.xml"), new File(smscDir, "resources_en_en.xml"));
@@ -103,6 +106,8 @@ public class TestAdminContext extends AdminContext {
     aliasManager = new TestAliasManager(new File(smscConfigDir, "alias.bin"), clusterController, fileSystem);
 
     rescheduleManager = new TestRescheduleManager(new File(smscConfigDir, "schedule.xml"), smscConfigBackupDir, clusterController, fileSystem);
+
+    usersManager = new TestUsersManager(new File(smscConfigDir, "users.xml"), smscConfigBackupDir, fileSystem);
 
     fraudManager = new TestFraudManager(new File(smscConfigDir, "fraud.xml"), smscConfigBackupDir, clusterController, fileSystem);
 

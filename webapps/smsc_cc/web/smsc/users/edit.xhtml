@@ -1,0 +1,196 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:eye="http://taglib.eyeline.mobi">
+
+<ui:composition template="/templates/main.xhtml">
+
+  <ui:define name="sme_title">
+    <eye:pageTitle title="#{msg['smsc.user.edit']}"/>
+  </ui:define>
+
+  <ui:define name="content">
+
+    <tr:form id="userForm">
+
+      <eye:buttons>
+        <eye:button>
+          <tr:commandLink text="#{msg['done.button']}" id="done1" action="#{userEdit.done}"/>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['cancel.button']}" id="cancel1" action="USERS" immediate="true"/>
+        </eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+      <t:saveState value="#{userEdit.user}"/>
+
+      <tr:inputHidden id="edit_initialized" value="#{userEdit.edit_initialized}"/>
+
+      <tr:inputHidden value="#{userEdit.oldLogin}"/>
+
+      <tr:panelFormLayout inlineStyle="padding:20px">
+
+        <tr:panelLabelAndMessage label="#{userBundle.login}">
+          <tr:inputText value="#{userEdit.user.login}" required="true" simple="true"/>
+        </tr:panelLabelAndMessage>
+
+        <tr:panelLabelAndMessage label="#{userBundle.password}">
+          <tr:inputText secret="true" id="password" value="#{userEdit.user.password}" required="true" simple="true"/>
+        </tr:panelLabelAndMessage>
+
+        <tr:panelLabelAndMessage label="#{msg['smsc.user.edit.confirm']}">
+          <tr:inputText secret="true" value="#{userEdit.confirm}" required="true" simple="true"/>
+        </tr:panelLabelAndMessage>
+
+        <eye:collapsingGroup label="#{userBundle.roles}">
+          <h:dataTable value="#{userEdit.roles}" var="r">
+            <h:column>
+              <h:outputText value="#{r.name}" converter="roles_converter"/>
+            </h:column>
+            <h:column>
+              <h:selectBooleanCheckbox value="#{r.checked}"/>
+            </h:column>
+          </h:dataTable>
+        </eye:collapsingGroup>
+
+        <eye:collapsingGroup label="#{userBundle.prefs}">
+          <h:panelGroup>
+
+            <h:panelGrid columns="2">
+              <tr:outputLabel value="#{userPrefsBundle.locale}"/>
+              <tr:selectOneChoice value="#{userEdit.lang}">
+                <f:selectItem itemValue="ru" itemLabel="ru"/>
+                <f:selectItem itemValue="en" itemLabel="en"/>
+              </tr:selectOneChoice>
+            </h:panelGrid>
+
+            <eye:collapsingGroup label="#{msg['smsc.user.edit.topmon']}">
+              <h:panelGrid columns="2">
+                <tr:outputLabel value="#{userPrefsBundle.topMonGraphGrid}"/>
+                <tr:inputText value="#{userEdit.user.prefs.topMonGraphGrid}" required="true" simple="true">
+                  <eye:validatePositive/>
+                </tr:inputText>
+
+                <tr:outputLabel value="#{userPrefsBundle.topMonGraphHead}"/>
+                <tr:inputText value="#{userEdit.user.prefs.topMonGraphHead}" required="true" simple="true">
+                  <eye:validatePositive/>
+                </tr:inputText>
+
+
+
+                <tr:outputLabel value="#{userPrefsBundle.topMonGraphHigrid}"/>
+                <tr:inputText value="#{userEdit.user.prefs.topMonGraphHigrid}" required="true" simple="true">
+                  <eye:validatePositive/>
+                </tr:inputText>
+
+
+                <tr:outputLabel value="#{userPrefsBundle.topMonGraphScale}"/>
+                <tr:inputText value="#{userEdit.user.prefs.topMonGraphScale}" required="true" simple="true">
+                  <eye:validatePositive/>
+                </tr:inputText>
+
+
+                <tr:outputLabel value="#{userPrefsBundle.topMonMaxSpeed}"/>
+                <tr:inputText value="#{userEdit.user.prefs.topMonMaxSpeed}" required="true" simple="true">
+                  <eye:validatePositive/>
+                </tr:inputText>
+
+              </h:panelGrid>
+
+            </eye:collapsingGroup>
+            <eye:collapsingGroup label="#{msg['smsc.user.edit.perfmon']}">
+
+              <h:panelGrid columns="2">
+                <tr:outputLabel value="#{userPrefsBundle.perfMonBlock}"/>
+                <tr:inputText value="#{userEdit.user.prefs.perfMonBlock}" required="true" simple="true">
+                  <eye:validatePositive/>
+                </tr:inputText>
+
+
+                <tr:outputLabel value="#{userPrefsBundle.perfMonPixPerSecond}"/>
+                <tr:inputText value="#{userEdit.user.prefs.perfMonPixPerSecond}" required="true" simple="true">
+                  <eye:validatePositive/>
+                </tr:inputText>
+
+
+                <tr:outputLabel value="#{userPrefsBundle.perfMonScale}"/>
+                <tr:inputText value="#{userEdit.user.prefs.perfMonScale}" required="true" simple="true">
+                  <eye:validatePositive/>
+                </tr:inputText>
+
+
+                <tr:outputLabel value="#{userPrefsBundle.perfMonVLightGrid}"/>
+                <tr:inputText value="#{userEdit.user.prefs.perfMonVLightGrid}" required="true" simple="true">
+                  <eye:validatePositive/>
+                </tr:inputText>
+
+
+                <tr:outputLabel value="#{userPrefsBundle.perfMonVMinuteGrid}"/>
+                <tr:inputText value="#{userEdit.user.prefs.perfMonVMinuteGrid}" required="true" simple="true">
+                  <eye:validatePositive/>
+                </tr:inputText>
+
+              </h:panelGrid>
+            </eye:collapsingGroup>
+
+          </h:panelGroup>
+        </eye:collapsingGroup>
+
+        <tr:panelLabelAndMessage label="#{userBundle.firstName}">
+          <tr:inputText value="#{userEdit.user.firstName}" required="true" simple="true"/>
+        </tr:panelLabelAndMessage>
+
+        <tr:panelLabelAndMessage label="#{userBundle.lastName}">
+          <tr:inputText value="#{userEdit.user.lastName}" required="true" simple="true"/>
+        </tr:panelLabelAndMessage>
+
+
+        <tr:panelLabelAndMessage label="#{userBundle.dept}">
+          <tr:inputText value="#{userEdit.user.dept}" required="true" simple="true"/>
+        </tr:panelLabelAndMessage>
+
+
+        <tr:panelLabelAndMessage label="#{userBundle.workPhone}">
+          <tr:inputText value="#{userEdit.user.workPhone}" required="true" simple="true"/>
+        </tr:panelLabelAndMessage>
+
+
+        <tr:panelLabelAndMessage label="#{userBundle.homePhone}">
+          <tr:inputText value="#{userEdit.user.homePhone}" required="true" simple="true"/>
+        </tr:panelLabelAndMessage>
+
+
+        <tr:panelLabelAndMessage label="#{userBundle.cellPhone}">
+          <tr:inputText value="#{userEdit.user.cellPhone}" required="true" simple="true"/>
+        </tr:panelLabelAndMessage>
+
+
+        <tr:panelLabelAndMessage label="#{userBundle.email}">
+          <tr:inputText value="#{userEdit.user.email}" required="true" simple="true"/>
+        </tr:panelLabelAndMessage>
+
+
+      </tr:panelFormLayout>
+
+
+      <eye:buttons>
+        <eye:button>
+          <tr:commandLink text="#{msg['done.button']}" id="done2" action="#{userEdit.done}"/>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['cancel.button']}" id="cancel2" action="USERS" immediate="true"/>
+        </eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+    </tr:form>
+  </ui:define>
+
+</ui:composition>
+
+
+</html>

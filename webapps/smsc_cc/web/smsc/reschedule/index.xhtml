@@ -9,7 +9,7 @@
 <ui:composition template="/templates/main.xhtml">
 
   <ui:define name="sme_title">
-    <eye:pageTitle title="#{msg['smsc.reschedule']}"/>
+    <eye:pageTitle title="#{msg['smsc.reschedule.edit']}"/>
   </ui:define>
 
   <ui:define name="content">
@@ -24,8 +24,7 @@
 
       <eye:buttons>
         <eye:button>
-          <tr:commandLink text="#{msg['add.button']}" id="add1" action="RESCHEDULE_EDIT"
-                          actionListener="#{reschedule.edit}"/>
+          <tr:commandLink text="#{msg['add.button']}" id="add1" action="#{reschedule.edit}"/>
         </eye:button>
         <eye:button>
           <tr:commandLink text="#{msg['delete.button']}" id="delete1" actionListener="#{reschedule.removeSelected}"
@@ -38,7 +37,7 @@
           <h:commandLink value="#{msg['submit.button']}" id="submit1" action="#{reschedule.submit}"/>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['reset.button']}" action="RESCHEDULE" actionListener="#{reschedule.reset}"/>
+          <tr:commandLink text="#{msg['reset.button']}" action="#{reschedule.reset}" immediate="true"/>
         </eye:button>
       </eye:buttons>
 
@@ -82,11 +81,9 @@
 
       </t:div>
 
-
       <eye:buttons>
         <eye:button>
-          <tr:commandLink text="#{msg['add.button']}" id="add2" action="RESCHEDULE_EDIT"
-                          actionListener="#{reschedule.edit}"/>
+          <tr:commandLink text="#{msg['add.button']}" id="add2" action="#{reschedule.edit}"/>
         </eye:button>
         <eye:button>
           <tr:commandLink text="#{msg['delete.button']}" id="delete2" actionListener="#{reschedule.removeSelected}"
@@ -99,11 +96,9 @@
           <h:commandLink value="#{msg['submit.button']}" id="submit2" action="#{reschedule.submit}"/>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['reset.button']}" action="RESCHEDULE" actionListener="#{reschedule.reset}"/>
+          <tr:commandLink text="#{msg['reset.button']}" action="#{reschedule.reset}" immediate="true"/>
         </eye:button>
       </eye:buttons>
-
-
 
     </tr:form>
 

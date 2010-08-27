@@ -17,4 +17,8 @@
     <section name="sunfire"/>
   </section>
 
+  <section name="system">
+    <param name="users file" type="string">test/ru/novosoft/smsc/admin/users/users.xml</param>
+  </section>
+
 </config>

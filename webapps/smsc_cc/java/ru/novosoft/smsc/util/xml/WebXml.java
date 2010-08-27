@@ -2,15 +2,12 @@ package ru.novosoft.smsc.util.xml;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 import ru.novosoft.smsc.util.XmlUtils;
 
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.*;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.TransformerConfigurationException;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
@@ -29,17 +26,19 @@ public class WebXml {
 
   private final File file;
   private final Document document;
-  private final Transformer transformer;
-  private static final String ESME_ROLE_NAME_PREFIX = "role_esme_";
+//  private final Transformer transformer;
+//  private static final String ESME_ROLE_NAME_PREFIX = "role_esme_";
 
   private UrlPatterns urlPatterns;
 
   private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
+  private Set<String> roles = new TreeSet<String>();
+
   public WebXml(File webXmlFile) throws TransformerConfigurationException, ParserConfigurationException, SAXException, IOException {
     file = webXmlFile;
     document = XmlUtils.parse(file.getAbsolutePath());
-    transformer = TransformerFactory.newInstance().newTransformer();
+//    transformer = TransformerFactory.newInstance().newTransformer();
     initSecurityConstrains();
   }
 
@@ -57,6 +56,7 @@ public class WebXml {
         for (int k = 0; k < rs.getLength(); k++) {
           Element role = (Element) rs.item(k);
           roles.add(role.getTextContent());
+          this.roles.add(role.getTextContent());
         }
       }
       NodeList resColls = sc.getElementsByTagName("web-resource-collection");
@@ -72,6 +72,10 @@ public class WebXml {
     urlPatterns = new UrlPatterns(rolesByUrl);
   }
 
+  public Set<String> getRoles() {
+    return roles;
+  }
+
   public Collection<String> getRoles(String url) {
     try {
       lock.readLock().lock();
@@ -81,94 +85,94 @@ public class WebXml {
     }
   }
 
-  public void save() throws IOException, TransformerException {
-    transformer.setOutputProperty(OutputKeys.DOCTYPE_PUBLIC, document.getDoctype().getPublicId());
-    transformer.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, document.getDoctype().getSystemId());
-    transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-    transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-    transformer.setOutputProperty(OutputKeys.METHOD, "xml");
-    transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
+//  public void save() throws IOException, TransformerException {
+//    transformer.setOutputProperty(OutputKeys.DOCTYPE_PUBLIC, document.getDoctype().getPublicId());
+//    transformer.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, document.getDoctype().getSystemId());
+//    transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+//    transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+//    transformer.setOutputProperty(OutputKeys.METHOD, "xml");
+//    transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
+//
+//    transformer.transform(new DOMSource(document), new StreamResult(file));
+//  }
 
-    transformer.transform(new DOMSource(document), new StreamResult(file));
-  }
+//  public synchronized String addSecurityConstraint(String serviceId) {
+//    final String roleName = createRoleName(serviceId);
+//
+//    Element securityConstraintElement = createSecurityConstraint(serviceId, roleName);
+//    Element securityRoleElement = createRole(roleName);
+//    XmlUtils.appendFirstByTagName(document.getDocumentElement(), securityConstraintElement);
+//    XmlUtils.appendFirstByTagName(document.getDocumentElement(), securityRoleElement);
+//
+//    return roleName;
+//  }
 
-  public synchronized String addSecurityConstraint(String serviceId) {
-    final String roleName = createRoleName(serviceId);
-
-    Element securityConstraintElement = createSecurityConstraint(serviceId, roleName);
-    Element securityRoleElement = createRole(roleName);
-    XmlUtils.appendFirstByTagName(document.getDocumentElement(), securityConstraintElement);
-    XmlUtils.appendFirstByTagName(document.getDocumentElement(), securityRoleElement);
-
-    return roleName;
-  }
-
-  public synchronized String removeSecurityConstraint(String serviceId) {
-    final String roleName = createRoleName(serviceId);
-    Element securityConstraintElement = findSecurityConstraint(serviceId);
-    Element securityRoleElement = findSecurityRole(roleName);
-    if (securityConstraintElement != null) {
-      securityConstraintElement.getParentNode().removeChild(securityConstraintElement);
-      String urlP = createUrlPattern(serviceId);
-      try {
-        lock.writeLock().lock();
-        urlPatterns.removePattern(urlP);
-      } finally {
-        lock.writeLock().unlock();
-      }
-    }
-    if (securityRoleElement != null)
-      securityRoleElement.getParentNode().removeChild(securityRoleElement);
-    return roleName;
-  }
-
-  public synchronized Collection<String> getEsmeRoleNames() {
-    Collection<String> result = new TreeSet<String>();
-    NodeList roleNameElements = document.getElementsByTagName("role-name");
-    for (int i = 0; i < roleNameElements.getLength(); i++) {
-      final Node roleNameNode = roleNameElements.item(i);
-      final Node parentNode = roleNameNode.getParentNode();
-      if (parentNode.getNodeType() == Node.ELEMENT_NODE) {
-        Element parentElement = (Element) parentNode;
-        if (parentElement.getTagName().equals("security-role")) {
-          final String roleName = XmlUtils.getNodeText(roleNameNode).trim();
-          if (roleName.startsWith(ESME_ROLE_NAME_PREFIX)) {
-            result.add(roleName);
-          }
-        }
-      }
-    }
-    return result;
-  }
+//  public synchronized String removeSecurityConstraint(String serviceId) {
+//    final String roleName = createRoleName(serviceId);
+//    Element securityConstraintElement = findSecurityConstraint(serviceId);
+//    Element securityRoleElement = findSecurityRole(roleName);
+//    if (securityConstraintElement != null) {
+//      securityConstraintElement.getParentNode().removeChild(securityConstraintElement);
+//      String urlP = createUrlPattern(serviceId);
+//      try {
+//        lock.writeLock().lock();
+//        urlPatterns.removePattern(urlP);
+//      } finally {
+//        lock.writeLock().unlock();
+//      }
+//    }
+//    if (securityRoleElement != null)
+//      securityRoleElement.getParentNode().removeChild(securityRoleElement);
+//    return roleName;
+//  }
+//
+//  public synchronized Collection<String> getEsmeRoleNames() {
+//    Collection<String> result = new TreeSet<String>();
+//    NodeList roleNameElements = document.getElementsByTagName("role-name");
+//    for (int i = 0; i < roleNameElements.getLength(); i++) {
+//      final Node roleNameNode = roleNameElements.item(i);
+//      final Node parentNode = roleNameNode.getParentNode();
+//      if (parentNode.getNodeType() == Node.ELEMENT_NODE) {
+//        Element parentElement = (Element) parentNode;
+//        if (parentElement.getTagName().equals("security-role")) {
+//          final String roleName = XmlUtils.getNodeText(roleNameNode).trim();
+//          if (roleName.startsWith(ESME_ROLE_NAME_PREFIX)) {
+//            result.add(roleName);
+//          }
+//        }
+//      }
+//    }
+//    return result;
+//  }
 
   ///////////////////// helpers //////////////////
 
-  private Element findSecurityConstraint(String serviceId) {
-    final String urlPattern = createUrlPattern(serviceId);
-    NodeList urlPatternElements = document.getElementsByTagName("url-pattern");
-    for (int i = 0; i < urlPatternElements.getLength(); i++) {
-      final Node urlPatternNode = urlPatternElements.item(i);
-      String findedUrlPattern = XmlUtils.getNodeText(urlPatternNode).trim();
-      if (findedUrlPattern.equals(urlPattern))
-        return (Element) urlPatternNode.getParentNode().getParentNode();
-    }
-    return null;
-  }
-
-  private Element findSecurityRole(String roleName) {
-    NodeList roleNameElements = document.getElementsByTagName("role-name");
-    for (int i = 0; i < roleNameElements.getLength(); i++) {
-      final Node roleNameNode = roleNameElements.item(i);
-      final Node parentNode = roleNameNode.getParentNode();
-      if (parentNode.getNodeType() == Node.ELEMENT_NODE) {
-        Element parentElement = (Element) parentNode;
-        if (parentElement.getTagName().equals("security-role") && XmlUtils.getNodeText(roleNameNode).trim().equals(roleName)) {
-          return parentElement;
-        }
-      }
-    }
-    return null;
-  }
+//  private Element findSecurityConstraint(String serviceId) {
+//    final String urlPattern = createUrlPattern(serviceId);
+//    NodeList urlPatternElements = document.getElementsByTagName("url-pattern");
+//    for (int i = 0; i < urlPatternElements.getLength(); i++) {
+//      final Node urlPatternNode = urlPatternElements.item(i);
+//      String findedUrlPattern = XmlUtils.getNodeText(urlPatternNode).trim();
+//      if (findedUrlPattern.equals(urlPattern))
+//        return (Element) urlPatternNode.getParentNode().getParentNode();
+//    }
+//    return null;
+//  }
+//
+//  private Element findSecurityRole(String roleName) {
+//    NodeList roleNameElements = document.getElementsByTagName("role-name");
+//    for (int i = 0; i < roleNameElements.getLength(); i++) {
+//      final Node roleNameNode = roleNameElements.item(i);
+//      final Node parentNode = roleNameNode.getParentNode();
+//      if (parentNode.getNodeType() == Node.ELEMENT_NODE) {
+//        Element parentElement = (Element) parentNode;
+//        if (parentElement.getTagName().equals("security-role") && XmlUtils.getNodeText(roleNameNode).trim().equals(roleName)) {
+//          return parentElement;
+//        }
+//      }
+//    }
+//    return null;
+//  }
 
 
   private Element createRole(String roleName) {
@@ -178,48 +182,48 @@ public class WebXml {
     return securityRoleElement;
   }
 
-  private Element createSecurityConstraint(String serviceId, final String roleName) {
-    Element securityConstraintElement = document.createElement("security-constraint");
+//  private Element createSecurityConstraint(String serviceId, final String roleName) {
+//    Element securityConstraintElement = document.createElement("security-constraint");
+//
+//    Element displayName = XmlUtils.createChildElement(document, securityConstraintElement, "display-name");
+//    XmlUtils.createTextChild(document, displayName, "Security constraint for ESME \"" + serviceId + '"');
+//
+//    Element webResourceCollectionElement = XmlUtils.createChildElement(document, securityConstraintElement, "web-resource-collection");
+//    Element webResourceNameElement = XmlUtils.createChildElement(document, webResourceCollectionElement, "web-resource-name");
+//    Element urlPatternElement = XmlUtils.createChildElement(document, webResourceCollectionElement, "url-pattern");
+//    XmlUtils.createTextChild(document, webResourceNameElement, "Web resource for ESME \"" + serviceId + '"');
+//    String urlPattern = createUrlPattern(serviceId);
+//    XmlUtils.createTextChild(document, urlPatternElement, urlPattern);
+//
+//    Element authConstraintElement = XmlUtils.createChildElement(document, securityConstraintElement, "auth-constraint");
+//    Element roleNameElement = XmlUtils.createChildElement(document, authConstraintElement, "role-name");
+//    XmlUtils.createTextChild(document, roleNameElement, roleName);
+//
+//    Element userDataConstraintElement = XmlUtils.createChildElement(document, securityConstraintElement, "user-data-constraint");
+//    Element transportGuaranteeElement = XmlUtils.createChildElement(document, userDataConstraintElement, "transport-guarantee");
+//    XmlUtils.createTextChild(document, transportGuaranteeElement, "NONE");
+//    try {
+//      lock.writeLock().lock();
+//      urlPatterns.addPattern(urlPattern, new ArrayList<String>(1) {{
+//        add(roleName);
+//      }});
+//    } finally {
+//      lock.writeLock().unlock();
+//    }
+//    return securityConstraintElement;
+//  }
 
-    Element displayName = XmlUtils.createChildElement(document, securityConstraintElement, "display-name");
-    XmlUtils.createTextChild(document, displayName, "Security constraint for ESME \"" + serviceId + '"');
+//  public static String createRoleName(String serviceId) {
+//    return ESME_ROLE_NAME_PREFIX + serviceId;
+//  }
 
-    Element webResourceCollectionElement = XmlUtils.createChildElement(document, securityConstraintElement, "web-resource-collection");
-    Element webResourceNameElement = XmlUtils.createChildElement(document, webResourceCollectionElement, "web-resource-name");
-    Element urlPatternElement = XmlUtils.createChildElement(document, webResourceCollectionElement, "url-pattern");
-    XmlUtils.createTextChild(document, webResourceNameElement, "Web resource for ESME \"" + serviceId + '"');
-    String urlPattern = createUrlPattern(serviceId);
-    XmlUtils.createTextChild(document, urlPatternElement, urlPattern);
+//  public static String getServiceIdFromRole(String roleName) {
+//    return roleName != null && roleName.length() > ESME_ROLE_NAME_PREFIX.length() ? roleName.substring(ESME_ROLE_NAME_PREFIX.length()) : null;
+//  }
 
-    Element authConstraintElement = XmlUtils.createChildElement(document, securityConstraintElement, "auth-constraint");
-    Element roleNameElement = XmlUtils.createChildElement(document, authConstraintElement, "role-name");
-    XmlUtils.createTextChild(document, roleNameElement, roleName);
-
-    Element userDataConstraintElement = XmlUtils.createChildElement(document, securityConstraintElement, "user-data-constraint");
-    Element transportGuaranteeElement = XmlUtils.createChildElement(document, userDataConstraintElement, "transport-guarantee");
-    XmlUtils.createTextChild(document, transportGuaranteeElement, "NONE");
-    try {
-      lock.writeLock().lock();
-      urlPatterns.addPattern(urlPattern, new ArrayList<String>(1) {{
-        add(roleName);
-      }});
-    } finally {
-      lock.writeLock().unlock();
-    }
-    return securityConstraintElement;
-  }
-
-  public static String createRoleName(String serviceId) {
-    return ESME_ROLE_NAME_PREFIX + serviceId;
-  }
-
-  public static String getServiceIdFromRole(String roleName) {
-    return roleName != null && roleName.length() > ESME_ROLE_NAME_PREFIX.length() ? roleName.substring(ESME_ROLE_NAME_PREFIX.length()) : null;
-  }
-
-  public static String createUrlPattern(String serviceId) {
-    return "/smsc/esme_" + serviceId + "/*";
-  }
+//  public static String createUrlPattern(String serviceId) {
+//    return "/smsc/esme_" + serviceId + "/*";
+//  }
 
   private static class UrlPattern {
 
@@ -269,11 +273,11 @@ public class WebXml {
       }
     }
 
-    private void removePattern(String strPattern) {
-      if (exactMatches.remove(strPattern) == null && pathPatterns.remove(strPattern) == null) {
-        extensionsPatterns.remove(strPattern);
-      }
-    }          
+//    private void removePattern(String strPattern) {
+//      if (exactMatches.remove(strPattern) == null && pathPatterns.remove(strPattern) == null) {
+//        extensionsPatterns.remove(strPattern);
+//      }
+//    }
 
     private Collection<String> getRoles(String url) {
       List<String> roles = null;

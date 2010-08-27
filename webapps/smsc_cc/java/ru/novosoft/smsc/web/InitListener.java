@@ -1,9 +1,10 @@
 package ru.novosoft.smsc.web;
 
 import org.apache.log4j.Logger;
+import ru.novosoft.smsc.admin.AdminContext;
 import ru.novosoft.smsc.util.xml.WebXml;
 import ru.novosoft.smsc.web.auth.Authenticator;
-import ru.novosoft.smsc.web.auth.XmlAuthenticator;
+import ru.novosoft.smsc.web.auth.AuthenticatorImpl;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
@@ -22,14 +23,13 @@ public class InitListener implements ServletContextListener {
       System.setProperty("java.security.auth.login.config",
           servletContextEvent.getServletContext().getRealPath("WEB-INF/jaas.config"));
 
-      String webConfig = System.getProperty("smsc.config.web-config");
-      String usersXml = System.getProperty("smsc.config.users");
-
-
-      Authenticator authenticator = new XmlAuthenticator(new File(usersXml));
       WebXml webXml = new WebXml(new File(servletContextEvent.getServletContext().getRealPath("WEB-INF/web.xml")));
 
-      WebContext.init(authenticator, webXml, null);
+      AdminContext adminContext = new AdminContext(new File(servletContextEvent.getServletContext().getRealPath("./")), new File(System.getProperty("smsc.config.webconfig")));
+
+      Authenticator authenticator = new AuthenticatorImpl(adminContext.getUsersManager());
+
+      WebContext.init(authenticator, webXml, adminContext);
 
     } catch (Exception e) {
       logger.error(e, e);

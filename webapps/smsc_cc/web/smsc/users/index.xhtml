@@ -1,0 +1,98 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:eye="http://taglib.eyeline.mobi">
+
+<ui:composition template="/templates/main.xhtml">
+
+  <ui:define name="sme_title">
+    <eye:pageTitle title="#{msg['smsc.users']}"/>
+  </ui:define>
+
+  <ui:define name="content">
+
+    <tr:form id="reschedule_list">
+
+      <tr:inputHidden value="#{users.index_initialized}" id="index_initialized"/>
+      
+      <t:saveState value="#{users.users}"/>
+
+      <eye:buttons>
+        <eye:button>
+          <tr:commandLink text="#{msg['add.button']}" id="add1" action="#{users.edit}"/>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['delete.button']}" id="delete1" actionListener="#{users.removeSelected}"
+                          onclick="if (!confirm('#{msg['smsc.delete.records']}')) return false"/>
+        </eye:button>
+        <eye:space/>
+        <eye:button>
+          <h:commandLink value="#{msg['submit.button']}" id="submit1" action="#{users.submit}"/>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['reset.button']}" action="RESCHEDULE" actionListener="#{users.reset}"/>
+        </eye:button>
+      </eye:buttons>
+
+
+      <t:div id="asdf">
+
+        <eye:dataTable value="#{users.usersModel}" selectedRows="#{users.selectedRows}" var="u">
+
+          <eye:row rowId="#{u.login}" opened="true">
+
+            <eye:column name="login" title="#{msg['smsc.users.login']}" width="20%">
+              <h:commandLink value="#{u.login}" action="#{users.edit}">
+                <f:param name="login" value="#{u.login}"/>
+              </h:commandLink>
+            </eye:column>
+
+            <eye:column name="firstName" title="#{msg['smsc.users.firstname']}" width="20%">
+              <h:outputText value="#{u.firstName}"/>
+            </eye:column>
+
+            <eye:column name="lastName" title="#{msg['smsc.users.lastname']}" width="20%">
+              <h:outputText value="#{u.lastName}"/>
+            </eye:column>
+            
+            <eye:column name="dept" title="#{msg['smsc.users.dept']}" width="20%">
+              <h:outputText value="#{u.dept}"/>
+            </eye:column>
+
+          </eye:row>
+
+        </eye:dataTable>
+
+      </t:div>
+
+
+      <eye:buttons>
+        <eye:button>
+          <tr:commandLink text="#{msg['add.button']}" id="add2" action="#{users.edit}"/>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['delete.button']}" id="delete2" actionListener="#{users.removeSelected}"
+                          onclick="if (!confirm('#{msg['smsc.delete.records']}')) return false"/>
+        </eye:button>
+        <eye:space/>
+        <eye:button>
+          <h:commandLink value="#{msg['submit.button']}" id="submit2" action="#{users.submit}"/>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['reset.button']}" action="RESCHEDULE" actionListener="#{users.reset}"/>
+        </eye:button>
+      </eye:buttons>
+
+
+
+    </tr:form>
+
+  </ui:define>
+
+</ui:composition>
+
+
+</html>

@@ -28,6 +28,16 @@
     </resource-bundle>
 
     <resource-bundle>
+      <base-name>ru.novosoft.smsc.admin.users.User</base-name>
+      <var>userBundle</var>
+    </resource-bundle>
+
+    <resource-bundle>
+      <base-name>ru.novosoft.smsc.admin.users.UserPreferences</base-name>
+      <var>userPrefsBundle</var>
+    </resource-bundle>
+
+    <resource-bundle>
       <base-name>ru.novosoft.smsc.web.resources.Smsc</base-name>
       <var>msg</var>
     </resource-bundle>
@@ -37,6 +47,11 @@
   <converter>
     <converter-id>smpp_status_converter</converter-id>
     <converter-class>ru.novosoft.smsc.web.controllers.SmppStatusConverter</converter-class>
+  </converter>
+
+  <converter>
+    <converter-id>roles_converter</converter-id>
+    <converter-class>ru.novosoft.smsc.web.controllers.RolesConverter</converter-class>
   </converter>
 
   <render-kit>    
@@ -81,6 +96,20 @@
   <managed-bean>
     <managed-bean-name>smscStatus</managed-bean-name>
     <managed-bean-class>ru.novosoft.smsc.web.controllers.SmscStatusController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+
+  <managed-bean>
+    <managed-bean-name>users</managed-bean-name>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.UsersController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+
+  <managed-bean>
+    <managed-bean-name>userEdit</managed-bean-name>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.UserEditController</managed-bean-class>
     <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
 
@@ -165,6 +194,15 @@
     <navigation-case>
       <from-outcome>RESCHEDULE_EDIT</from-outcome>
       <to-view-id>/smsc/reschedule/edit.faces</to-view-id>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>USERS</from-outcome>
+      <to-view-id>/smsc/users/index.faces</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>USER_EDIT</from-outcome>
+      <to-view-id>/smsc/users/edit.faces</to-view-id>
     </navigation-case>
   </navigation-rule>
 

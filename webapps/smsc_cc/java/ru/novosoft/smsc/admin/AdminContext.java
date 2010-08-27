@@ -11,12 +11,12 @@ import ru.novosoft.smsc.admin.map_limit.MapLimitManager;
 import ru.novosoft.smsc.admin.msc.MscManager;
 import ru.novosoft.smsc.admin.reschedule.RescheduleManager;
 import ru.novosoft.smsc.admin.resource.ResourceManager;
-import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.admin.service.ServiceManager;
 import ru.novosoft.smsc.admin.sme.SmeManager;
 import ru.novosoft.smsc.admin.smsc.SmscManager;
 import ru.novosoft.smsc.admin.smsc.SmscSettings;
 import ru.novosoft.smsc.admin.snmp.SnmpManager;
+import ru.novosoft.smsc.admin.users.UsersManager;
 
 import java.io.File;
 
@@ -37,6 +37,7 @@ public class AdminContext {
   protected ClusterController clusterController;
   protected AliasManager aliasManager;
   protected RescheduleManager rescheduleManager;
+  protected UsersManager usersManager;
   protected FraudManager fraudManager;
   protected MapLimitManager mapLimitManager;
   protected SnmpManager snmpManager;
@@ -86,6 +87,10 @@ public class AdminContext {
 
     rescheduleManager = new RescheduleManager(new File(smscConfigDir, "schedule.xml"), smscConfigBackupDir, clusterController, fileSystem);
 
+    File usersFile = new File(cfg.getUsersFile());
+
+    usersManager = new UsersManager(usersFile, new File(usersFile.getParentFile(), "backup"), fileSystem);
+
     fraudManager = new FraudManager(new File(smscConfigDir, "fraud.xml"), smscConfigBackupDir, clusterController, fileSystem);    
 
     mapLimitManager = new MapLimitManager(new File(smscConfigDir, "maplimits.xml"), smscConfigBackupDir, clusterController, fileSystem);
@@ -123,6 +128,10 @@ public class AdminContext {
 
   public RescheduleManager getRescheduleManager() {
     return rescheduleManager;
+  }
+
+  public UsersManager getUsersManager() {
+    return usersManager;
   }
 
   public FraudManager getFraudManager() {

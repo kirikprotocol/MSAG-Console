@@ -40,6 +40,7 @@ public class RescheduleController extends SmscController {
   private DataTableModel rescheduleModel;
 
   public RescheduleController() {
+    System.out.println("RescheduleController RescheduleController RescheduleController");
     session = getSession(false);
     conf = WebContext.getInstance().getAppliableConfiguration();      
     if(getRequestParameter("index_initialized") == null) {
@@ -177,11 +178,11 @@ public class RescheduleController extends SmscController {
   }
 
 
-  public void reset(ActionEvent ev) {
+  public String reset() {
     session.removeAttribute("reschedule.reschedules");
     session.removeAttribute("reschedule.default");
     session.removeAttribute("reschedule.last.update");
-    initReschedules();
+    return "RESCHEDULE";
   }
 
   public String edit() {

@@ -2,14 +2,13 @@ package ru.novosoft.smsc.web.config;
 
 import ru.novosoft.smsc.admin.AdminContext;
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.reschedule.RescheduleSettings;
 import ru.novosoft.smsc.admin.smsc.SmscSettings;
+import ru.novosoft.smsc.admin.users.UsersSettings;
 import ru.novosoft.smsc.web.config.changelog.ChangeLogRecord;
 import ru.novosoft.smsc.web.config.changelog.LocalChangeLog;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author Artem Snopkov
@@ -26,6 +25,10 @@ public class AppliableConfiguration {
 
   private LocalChangeLog changeLog;
 
+  private UsersSettings usersSettings;
+
+  private UpdateInfo usersSettingsUpdateInfo;
+
   public AppliableConfiguration(AdminContext adminContext) throws AdminException {
     this.adminContext = adminContext;
     this.changeLog = new LocalChangeLog();
@@ -35,6 +38,9 @@ public class AppliableConfiguration {
 
     this.rescheduleSettings = adminContext.getRescheduleManager().getSettings();
     this.rescheduleSettingsUpdateInfo = new UpdateInfo(System.currentTimeMillis(), null, false);
+
+    this.usersSettings = adminContext.getUsersManager().getUsersSettings();
+    this.usersSettingsUpdateInfo = new UpdateInfo(System.currentTimeMillis(), null, false);
   }
 
   public boolean hasNotAppliedChanges() {
@@ -51,11 +57,26 @@ public class AppliableConfiguration {
     resetRescheduleSettings(user);
   }
 
-  // SMSC ==============================================================================================================
+  // SMSC==============================================================================================================
 
   public SmscSettings getSmscSettings() {
     return smscSettings.cloneSettings();
   }
+
+  public UsersSettings getUsersSettings() {
+    return usersSettings.cloneSettings();
+  }
+
+  public void setUsersSettings(UsersSettings settings, String user) {
+    this.usersSettings = settings.cloneSettings();
+    usersSettingsUpdateInfo = new UpdateInfo(System.currentTimeMillis(), user, true);
+  }
+
+  public void applyUsersSettings(String user)throws AdminException{ 
+    adminContext.getUsersManager().updateSettings(usersSettings);
+    usersSettingsUpdateInfo = new UpdateInfo(System.currentTimeMillis(), user, false);
+  }
+
 
   public void setSmscSettings(SmscSettings smscSettings, String user) {
     changeLog.logChanges(this.smscSettings, smscSettings, user);
@@ -84,7 +105,7 @@ public class AppliableConfiguration {
     return changeLog.getRecords(LocalChangeLog.SMSC);
   }
 
-  // RESCHEDULE ========================================================================================================
+  // RESCHEDULE========================================================================================================
 
   public RescheduleSettings getRescheduleSettings() {
     return rescheduleSettings.cloneSettings();
@@ -115,5 +136,9 @@ public class AppliableConfiguration {
 
   public List<ChangeLogRecord> getRescheduleSettingsChanges() {
     return changeLog.getRecords(LocalChangeLog.RESCHEDULE);
+  }
+
+  public UpdateInfo getUsersSettingsUpdateInfo() {
+    return usersSettingsUpdateInfo;
   }
 }
