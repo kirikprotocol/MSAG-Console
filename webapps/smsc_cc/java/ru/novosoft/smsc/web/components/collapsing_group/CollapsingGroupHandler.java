@@ -1,8 +1,14 @@
 package ru.novosoft.smsc.web.components.collapsing_group;
 
+import com.sun.facelets.FaceletContext;
 import com.sun.facelets.tag.TagAttribute;
 import com.sun.facelets.tag.jsf.ComponentConfig;
 import com.sun.facelets.tag.jsf.ComponentHandler;
+
+import javax.el.ELException;
+import javax.faces.FacesException;
+import javax.faces.component.UIComponent;
+import java.io.IOException;
 
 /**
  * @author Artem Snopkov
@@ -26,5 +32,15 @@ public class CollapsingGroupHandler extends ComponentHandler {
       result.setOpened(opened.getBoolean(ctx));
     return result;
   }
-  
+
+  @Override
+  protected void applyNextHandler(FaceletContext ctx, UIComponent c) throws IOException, FacesException, ELException {
+    CollapsingGroup g = (CollapsingGroup)c;
+
+    g.setLabel(label.getValue(ctx));
+    if (opened != null)
+      g.setOpened(opened.getBoolean(ctx));
+
+    nextHandler.apply(ctx, c);
+  }
 }

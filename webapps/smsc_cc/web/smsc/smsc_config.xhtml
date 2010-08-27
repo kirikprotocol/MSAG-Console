@@ -628,8 +628,9 @@
     <tr:outputText value="#{msg['instances.settings.title']}"/>
   </t:div>
 
-  <tr:iterator value="#{smscConfig.instanceConfigs}" var="var" varStatus="varStatus">
-      <eye:collapsingGroup label="#{msg['instance.number.label']}: #{var.adminHost}">
+  <c:forEach var="var" items="#{smscConfig.instanceConfigs}"  >
+
+    <eye:collapsingGroup  label="#{msg['instance.number.label']}: #{var.adminHost}">
 
         <eye:collapsingGroup label="#{msg['core.label']}">
           <tr:panelFormLayout>
@@ -746,7 +747,9 @@
 
         </eye:collapsingGroup>
       </eye:collapsingGroup>
-    </tr:iterator>
+
+      
+    </c:forEach>
 </td>
 </tr>
 </table>
