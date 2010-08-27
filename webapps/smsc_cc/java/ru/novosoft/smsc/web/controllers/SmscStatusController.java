@@ -47,12 +47,24 @@ public class SmscStatusController extends SmscController {
     }
   }
 
-  public void applyAll() {
+  public void goToUser() {
+    
+  }
 
+  public void applyAll() {
+    try {
+      appliableConfiguration.applyAll(getUserPrincipal().getName());
+    } catch (AdminException e) {
+      logError(e);
+    }
   }
 
   public void resetAll() {
-
+    try {
+      appliableConfiguration.resetAll(getUserPrincipal().getName());
+    } catch (AdminException e) {
+      logError(e);
+    }
   }
 
   public DataTableModel getConfigChanges() {
@@ -124,7 +136,7 @@ public class SmscStatusController extends SmscController {
   }
 
   private void logError(AdminException e) {
-    addLocalizedMessage(FacesMessage.SEVERITY_ERROR, "status.page.load.error", e.getMessage(getLocale()));
+    addMessage(FacesMessage.SEVERITY_ERROR, e.getMessage(getLocale()));
   }
 
   public DataTableModel getSmsCenters() {

@@ -33,11 +33,23 @@
 
           <f:facet name="innerData">
             <h:panelGroup>
-              <h:dataTable cellpadding="2" cellspacing="2" value="#{ch.changes}" var="change" columnClasses="column50Width, column50Width, column50Width, columnTopLeftAlign">
-                <h:column><h:outputText value="#{change.user}"/></h:column>
-                <h:column><h:outputText value="#{change.type}"/></h:column>
-                <h:column><h:outputText value="#{change.subject}"/></h:column>
-                <h:column><h:outputText value="#{change.description}"/></h:column>
+              <h:dataTable cellpadding="2" cellspacing="2" value="#{ch.changes}" var="change" columnClasses="column50Width, columnTopLeftAlign">
+                <h:column>
+                  <h:commandLink value="#{change.user}" style="color:GREEN" rendered="#{change.type=='ADD'}" action="#{smscStatus.goToUser}">
+                    <f:param name="user" value="#{change.user}"/>
+                  </h:commandLink>
+                  <h:commandLink value="#{change.user}" style="color:RED" rendered="#{change.type=='REMOVE'}" action="#{smscStatus.goToUser}">
+                    <f:param name="user" value="#{change.user}"/>
+                  </h:commandLink>
+                  <h:commandLink value="#{change.user}" style="color:BLUE" rendered="#{change.type=='CHANGE'}" action="#{smscStatus.goToUser}">
+                    <f:param name="user" value="#{change.user}"/>
+                  </h:commandLink>
+                </h:column>
+                <h:column>
+                  <h:outputText value="#{change.description}" style="color:GREEN" rendered="#{change.type=='ADD'}"/>
+                  <h:outputText value="#{change.description}" style="color:RED" rendered="#{change.type=='REMOVE'}"/>
+                  <h:outputText value="#{change.description}" style="color:BLUE" rendered="#{change.type=='CHANGE'}"/>
+                </h:column>
               </h:dataTable>
             </h:panelGroup>
           </f:facet>

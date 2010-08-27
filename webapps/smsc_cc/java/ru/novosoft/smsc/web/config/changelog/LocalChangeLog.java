@@ -71,6 +71,14 @@ public class LocalChangeLog implements ChangeLog {
     }
   }
 
+  public synchronized boolean hasRecords(String subject) {
+    for (ChangeLogRecord r : records) {
+      if (r.getSubjectKey().equals(subject))
+        return true;
+    }
+    return false;
+  }
+
   private static List<Method> getGetters(Class clazz) {
     List<Method> getters = new ArrayList<Method>();
     for (Method m : clazz.getMethods()) {

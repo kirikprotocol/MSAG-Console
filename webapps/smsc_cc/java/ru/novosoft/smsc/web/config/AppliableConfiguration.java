@@ -41,6 +41,16 @@ public class AppliableConfiguration {
     return !changeLog.isEmpty();
   }
 
+  public void applyAll(String user) throws AdminException {
+    applySmscSettings(user);
+    applyRescheduleSettings(user);
+  }
+
+  public void resetAll(String user) throws AdminException {
+    resetSmscSettings(user);
+    resetRescheduleSettings(user);
+  }
+
   // SMSC ==============================================================================================================
 
   public SmscSettings getSmscSettings() {
@@ -54,9 +64,11 @@ public class AppliableConfiguration {
   }
 
   public void applySmscSettings(String user) throws AdminException {
-    adminContext.getSmscManager().updateSettings(smscSettings);
-    // todo скопировать все записи для сабжекта SMSC в журнал
-    changeLog.removeRecords(LocalChangeLog.SMSC);
+    if (changeLog.hasRecords(LocalChangeLog.SMSC)) {
+      adminContext.getSmscManager().updateSettings(smscSettings);
+      // todo скопировать все записи для сабжекта SMSC в журнал
+      changeLog.removeRecords(LocalChangeLog.SMSC);
+    }
   }
 
   public void resetSmscSettings(String user) throws AdminException {
@@ -85,9 +97,11 @@ public class AppliableConfiguration {
   }
 
   public void applyRescheduleSettings(String user) throws AdminException {
-    adminContext.getRescheduleManager().updateSettings(rescheduleSettings);
-    // todo скопировать все записи для сабжекта RESCHEDULE в журнал
-    changeLog.removeRecords(LocalChangeLog.RESCHEDULE);
+    if (changeLog.hasRecords(LocalChangeLog.RESCHEDULE)) {
+      adminContext.getRescheduleManager().updateSettings(rescheduleSettings);
+      // todo скопировать все записи для сабжекта RESCHEDULE в журнал
+      changeLog.removeRecords(LocalChangeLog.RESCHEDULE);
+    }
   }
 
   public void resetRescheduleSettings(String user) throws AdminException {
