@@ -159,4 +159,45 @@ public class UserPreferences implements Serializable{
     vh.checkPositive("perfMonScale", perfMonScale);
     this.perfMonScale = perfMonScale;
   }
+
+  @Override
+  public String toString() {
+    final StringBuilder sb = new StringBuilder();
+    sb.append("UserPreferences");
+    sb.append("{locale=").append(locale);
+    sb.append(", topMonGraphHead=").append(topMonGraphHead);
+    sb.append(", topMonGraphScale=").append(topMonGraphScale);
+    sb.append(", topMonMaxSpeed=").append(topMonMaxSpeed);
+    sb.append(", topMonGraphHigrid=").append(topMonGraphHigrid);
+    sb.append(", topMonGraphGrid=").append(topMonGraphGrid);
+    sb.append(", perfMonVMinuteGrid=").append(perfMonVMinuteGrid);
+    sb.append(", perfMonVLightGrid=").append(perfMonVLightGrid);
+    sb.append(", perfMonBlock=").append(perfMonBlock);
+    sb.append(", perfMonPixPerSecond=").append(perfMonPixPerSecond);
+    sb.append(", perfMonScale=").append(perfMonScale);
+    sb.append('}');
+    return sb.toString();
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
+    UserPreferences that = (UserPreferences) o;
+
+    if (perfMonBlock != that.perfMonBlock) return false;
+    if (perfMonPixPerSecond != that.perfMonPixPerSecond) return false;
+    if (perfMonScale != that.perfMonScale) return false;
+    if (perfMonVLightGrid != that.perfMonVLightGrid) return false;
+    if (perfMonVMinuteGrid != that.perfMonVMinuteGrid) return false;
+    if (topMonGraphGrid != that.topMonGraphGrid) return false;
+    if (topMonGraphHead != that.topMonGraphHead) return false;
+    if (topMonGraphHigrid != that.topMonGraphHigrid) return false;
+    if (topMonGraphScale != that.topMonGraphScale) return false;
+    if (topMonMaxSpeed != that.topMonMaxSpeed) return false;
+    if (locale != null ? !locale.equals(that.locale) : that.locale != null) return false;
+
+    return true;
+  }
 }

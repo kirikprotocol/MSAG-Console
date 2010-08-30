@@ -45,7 +45,7 @@
         <tr:panelLabelAndMessage label="#{msg['smsc.reschedule.default']}">
           <tr:inputText value="#{reschedule.defaultReschedule.intervals}" required="true" simple="true">
             <tr:validateRegExp pattern="#{reschedule.reschedulePattern}"
-                               messageDetailNoMatch="#{msg['smsc.reschedule.edit.invalid.intervals']}"/>
+                               messageDetailNoMatch="#{msg['smsc.field.incorrect']}"/>
           </tr:inputText>
         </tr:panelLabelAndMessage>
       </tr:panelFormLayout>

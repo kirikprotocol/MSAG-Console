@@ -31,6 +31,10 @@ public class UsersSettings {
     return users.values();
   }
 
+  public Map<String, User> getUsersMap() {
+    return users;
+  }
+
   public void setUsers(Collection<User> users) throws AdminException {
     vh.checkNoNulls("users", users);
     Map<String, User> r = new LinkedHashMap<String, User>(users.size());

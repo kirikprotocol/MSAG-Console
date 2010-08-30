@@ -31,7 +31,7 @@ public class UsersController extends SmscController{
 
   private HttpSession session;
 
-  private DataTableModel usersModel;
+  private String prefix;
 
   public UsersController() {
     session = getSession(false);
@@ -40,32 +40,11 @@ public class UsersController extends SmscController{
       initUsers();
       index_initialized = true;
     }
-
-    usersModel = new DataTableModel() {
-
-      public List getRows(int startPos, int count, DataTableSortOrder sortOrder) {
-        List<User> result = new ArrayList<User>(count);
-        if(count <= 0) {
-          return result;
-        }
-        for(Iterator<User> i = users.values().iterator();i.hasNext() && count>0;) {
-          User r = i.next();
-          if(--startPos < 0) {
-            result.add(r);
-            count--;
-          }
-        }
-        return result;
-      }
-
-      public int getRowsCount() {
-        return users.size();
-      }
-    };
   }
 
   private void initUsers() {
     if( session.getAttribute("users.users") == null) {
+      System.out.println("Init users");
       session.setAttribute("users.last.update", conf.getUsersSettingsUpdateInfo());
       UsersSettings usersSettings = conf.getUsersSettings();
       users = new LinkedHashMap<String, User>();
@@ -135,7 +114,54 @@ public class UsersController extends SmscController{
   }
 
   public DataTableModel getUsersModel() {
-    return usersModel;
+    return new DataTableModel() {
+      public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) {
+        List<User> result = new ArrayList<User>(count);
+        if(count <= 0) {
+          return result;
+        }
+        for(Iterator<User> i = users.values().iterator();i.hasNext() && count>0;) {
+          User r = i.next();
+          if(prefix != null && (prefix = prefix.trim()).length()>0 && !r.getLogin().startsWith(prefix)) {
+            continue;
+          }
+          if(--startPos < 0) {
+            result.add(r);
+            count--;
+          }
+        }
+        Collections.sort(result, new Comparator<User>() {
+          public int compare(User o1, User o2) {
+            if(sortOrder != null) {
+              if("firstName".equals(sortOrder.getColumnId())) {
+                return (sortOrder.isAsc() ? -1 : 1)*o1.getFirstName().compareTo(o2.getFirstName());
+              }else if("lastName".equals(sortOrder.getColumnId())) {
+                return (sortOrder.isAsc() ? -1 : 1)*o1.getLastName().compareTo(o2.getLastName());
+              }else if("dept".equals(sortOrder.getColumnId())) {
+                return (sortOrder.isAsc() ? -1 : 1)*o1.getDept().compareTo(o2.getDept());
+              }else if("login".equals(sortOrder.getColumnId())) {
+                return (sortOrder.isAsc() ? -1 : 1)*o1.getLogin().compareTo(o2.getLogin());
+              }
+            }
+            return o1.getLogin().compareTo(o2.getLogin());
+          }
+        });
+        return result;
+      }
+
+      public int getRowsCount() {
+        if(prefix == null || (prefix = prefix.trim()).length() == 0) {
+          return users.size();
+        }
+        int result = 0;
+        for(User r : users.values()) {
+          if(r.getLogin().startsWith(prefix)) {
+            result++;
+          }
+        }
+        return result;
+      }
+    };
   }
 
   public boolean isIndex_initialized() {
@@ -153,5 +179,13 @@ public class UsersController extends SmscController{
 
   public void setUsers(Map<String, User> users) {
     this.users = users;
+  }
+
+  public String getPrefix() {
+    return prefix;
+  }
+
+  public void setPrefix(String prefix) {
+    this.prefix = prefix;
   }
 }

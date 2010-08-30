@@ -5,8 +5,9 @@ import ru.novosoft.smsc.admin.reschedule.RescheduleSettings;
 import ru.novosoft.smsc.admin.smsc.CommonSettings;
 import ru.novosoft.smsc.admin.smsc.InstanceSettings;
 import ru.novosoft.smsc.admin.smsc.SmscSettings;
+import ru.novosoft.smsc.admin.users.User;
+import ru.novosoft.smsc.admin.users.UsersSettings;
 
-import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
@@ -18,6 +19,7 @@ public class LocalChangeLog implements ChangeLog {
 
   public static final String SMSC = "subject.smsc";
   public static final String RESCHEDULE = "subject.reschedule";
+  public static final String USERS = "subject.user";
 
   private final List<ChangeLogRecord> records = new ArrayList<ChangeLogRecord>();
 
@@ -151,7 +153,7 @@ public class LocalChangeLog implements ChangeLog {
       for (Object v : (Object[]) value)
         res.add(valueToString(v));
       return collectionToString(res);
-      
+
     } else if (value instanceof int[]) {
       ArrayList<String> res = new ArrayList<String>();
       for (int v : (int[]) value)
@@ -175,7 +177,7 @@ public class LocalChangeLog implements ChangeLog {
     return value.toString();
   }
 
-  private void logChanges(String subject, List<Object> oldValues, List<Object> newValues, List<Method> getters, String user) {
+  private void logChanges(String subject, List<Object> oldValues, List<Object> newValues, List<Method> getters, String user, String bundleMessage, String... addParameters) {
     for (int i = 0; i < getters.size(); i++) {
       Object oldValue = oldValues.get(i);
       Object newValue = newValues.get(i);
@@ -183,7 +185,7 @@ public class LocalChangeLog implements ChangeLog {
       boolean changed = oldValue == null && newValue != null;
       changed = changed || (oldValue != null && newValue == null);
 
-      if (!changed && oldValue != null && newValue != null) {
+      if (!changed && oldValue != null) {
         if (oldValue instanceof Object[]) {
           changed = !Arrays.equals((Object[]) oldValue, (Object[]) newValue);
         } else
@@ -199,9 +201,20 @@ public class LocalChangeLog implements ChangeLog {
         else
           propertyName = Character.toLowerCase(firstChar) + "";
 
-        addRecord(ChangeLogRecord.Type.CHANGE, subject, user).setDescription("property_changed", propertyName, valueToString(oldValue), valueToString(newValue));
+        String[] args = new String[addParameters.length + 3];
+        args[0] = propertyName;
+        args[1] = valueToString(oldValue);
+        args[2] = valueToString(newValue);
+        System.arraycopy(addParameters, 0, args, 3, addParameters.length);
+
+        addRecord(ChangeLogRecord.Type.CHANGE, subject, user).setDescription(bundleMessage, args);
       }
     }
+
+  }
+
+  private void logChanges(String subject, List<Object> oldValues, List<Object> newValues, List<Method> getters, String user) {
+    logChanges(subject, oldValues, newValues, getters, user, "property_changed");
   }
 
   public void logChanges(SmscSettings oldSettings, SmscSettings newSettings, String user) {
@@ -265,6 +278,29 @@ public class LocalChangeLog implements ChangeLog {
 
     if (!oldSettings.getDefaultReschedule().equals(newSettings.getDefaultReschedule()))
       addRecord(ChangeLogRecord.Type.CHANGE, RESCHEDULE, user).setDescription("property_changed", "defaultReschedule", oldSettings.getDefaultReschedule(), newSettings.getDefaultReschedule());
+  }
+
+  public void logChanges(UsersSettings oldSettings, UsersSettings newSettings, String user) {
+    Map<String, User> oldUsers = oldSettings.getUsersMap();
+    Map<String, User> newUsers = newSettings.getUsersMap();
+    for(Map.Entry<String,User> e : oldUsers.entrySet()) {
+      User oldUser = e.getValue();
+      User newUser = newUsers.get(e.getKey());
+      if(newUser == null) {
+        addRecord(ChangeLogRecord.Type.REMOVE, USERS, user).setDescription("user_removed", oldUser.getLogin());
+      }else {
+        List<Method> getters = getGetters(User.class);
+        List<Object> oldValues = callGetters(getters, oldUser);
+        List<Object> newValues = callGetters(getters, newUser);
+        logChanges(USERS, oldValues, newValues, getters, user, "user_property_changed", newUser.getLogin());
+      }
+    }
+    for(Map.Entry<String,User> e : newUsers.entrySet()) {
+      if(!oldUsers.containsKey(e.getKey())) {
+        addRecord(ChangeLogRecord.Type.ADD, USERS, user).setDescription("user_added",e.getValue().getLogin());
+      }
+    }
+
   }
 
 }

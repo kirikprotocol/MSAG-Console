@@ -40,7 +40,7 @@ public class UserEditController extends SmscController{
       oldLogin = getRequestParameter("login");
       user = oldLogin != null ? users.get(oldLogin) : new User();
 
-      lang = user.getPrefs().getLocale() == null ? null : user.getPrefs().getLocale().getLanguage();
+      lang = user.getPrefs().getLocale() == null ? "en" : user.getPrefs().getLocale().getLanguage();
       confirm = user.getPassword();
       
       Set<String> allRoles = WebContext.getInstance().getWebXml().getRoles();
@@ -71,6 +71,7 @@ public class UserEditController extends SmscController{
   public String done() {
 
     if(!user.getPassword().equals(confirm)) {
+      System.out.println("Confirm: "+confirm);
       addLocalizedMessage(FacesMessage.SEVERITY_WARN, "smsc.user.edit.not.confirm");
       return null;      
     }

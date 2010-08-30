@@ -14,6 +14,16 @@
   </tag>
 
   <tag>
+    <tag-name>validateEmail</tag-name>
+    <source>validateEmail.xhtml</source>
+  </tag>
+
+  <tag>
+    <tag-name>validatePhone</tag-name>
+    <source>validatePhone.xhtml</source>
+  </tag>
+
+  <tag>
     <tag-name>validatePositive</tag-name>
     <source>validatePositive.xhtml</source>
   </tag>

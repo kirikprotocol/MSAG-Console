@@ -41,6 +41,8 @@ public class SmscStatusController extends SmscController {
         appliableConfiguration.resetSmscSettings(getUserPrincipal().getName());
       else if (configName.equals("reschedule"))
         appliableConfiguration.resetRescheduleSettings(getUserPrincipal().getName());
+      else if (configName.equals("users"))
+        appliableConfiguration.resetUsersSettings(getUserPrincipal().getName());
 
     } catch (AdminException e) {
       logError(e);
@@ -71,6 +73,7 @@ public class SmscStatusController extends SmscController {
     List<ConfigChanges> result = new ArrayList<ConfigChanges>();
     result.add(new ConfigChanges("smsc", appliableConfiguration.getSmscSettingsChanges()));
     result.add(new ConfigChanges("reschedule", appliableConfiguration.getRescheduleSettingsChanges()));
+    result.add(new ConfigChanges("users", appliableConfiguration.getUsersSettingsChanges()));
     return new ListTableModel(result);
   }
 

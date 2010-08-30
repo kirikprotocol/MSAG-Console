@@ -27,6 +27,8 @@
       </eye:buttons>
 
       <t:saveState value="#{userEdit.user}"/>
+      <t:saveState value="#{userEdit.confirm}"/>
+      <t:saveState value="#{userEdit.roles}"/>
 
       <tr:inputHidden id="edit_initialized" value="#{userEdit.edit_initialized}"/>
 
@@ -43,7 +45,7 @@
         </tr:panelLabelAndMessage>
 
         <tr:panelLabelAndMessage label="#{msg['smsc.user.edit.confirm']}">
-          <tr:inputText secret="true" value="#{userEdit.confirm}" required="true" simple="true"/>
+          <tr:inputText secret="true" id="confirm" value="#{userEdit.confirm}" required="true" simple="true"/>
         </tr:panelLabelAndMessage>
 
         <eye:collapsingGroup label="#{userBundle.roles}">
@@ -61,8 +63,8 @@
           <h:panelGroup>
 
             <h:panelGrid columns="2">
-              <tr:outputLabel value="#{userPrefsBundle.locale}"/>
-              <tr:selectOneChoice value="#{userEdit.lang}">
+              <tr:outputLabel for="lang" value="#{userPrefsBundle.locale}"/>
+              <tr:selectOneChoice id="lang" value="#{userEdit.lang}" required="true">
                 <f:selectItem itemValue="ru" itemLabel="ru"/>
                 <f:selectItem itemValue="en" itemLabel="en"/>
               </tr:selectOneChoice>
@@ -70,32 +72,32 @@
 
             <eye:collapsingGroup label="#{msg['smsc.user.edit.topmon']}">
               <h:panelGrid columns="2">
-                <tr:outputLabel value="#{userPrefsBundle.topMonGraphGrid}"/>
-                <tr:inputText value="#{userEdit.user.prefs.topMonGraphGrid}" required="true" simple="true">
+                <tr:outputLabel for="topMonGraphGrid" value="#{userPrefsBundle.topMonGraphGrid}"/>
+                <tr:inputText id="topMonGraphGrid" value="#{userEdit.user.prefs.topMonGraphGrid}" required="true">
                   <eye:validatePositive/>
                 </tr:inputText>
 
-                <tr:outputLabel value="#{userPrefsBundle.topMonGraphHead}"/>
-                <tr:inputText value="#{userEdit.user.prefs.topMonGraphHead}" required="true" simple="true">
-                  <eye:validatePositive/>
-                </tr:inputText>
-
-
-
-                <tr:outputLabel value="#{userPrefsBundle.topMonGraphHigrid}"/>
-                <tr:inputText value="#{userEdit.user.prefs.topMonGraphHigrid}" required="true" simple="true">
+                <tr:outputLabel for="topMonGraphHead" value="#{userPrefsBundle.topMonGraphHead}"/>
+                <tr:inputText id="topMonGraphHead" value="#{userEdit.user.prefs.topMonGraphHead}" required="true">
                   <eye:validatePositive/>
                 </tr:inputText>
 
 
-                <tr:outputLabel value="#{userPrefsBundle.topMonGraphScale}"/>
-                <tr:inputText value="#{userEdit.user.prefs.topMonGraphScale}" required="true" simple="true">
+
+                <tr:outputLabel for="topMonGraphHigrid" value="#{userPrefsBundle.topMonGraphHigrid}"/>
+                <tr:inputText id="topMonGraphHigrid" value="#{userEdit.user.prefs.topMonGraphHigrid}" required="true">
                   <eye:validatePositive/>
                 </tr:inputText>
 
 
-                <tr:outputLabel value="#{userPrefsBundle.topMonMaxSpeed}"/>
-                <tr:inputText value="#{userEdit.user.prefs.topMonMaxSpeed}" required="true" simple="true">
+                <tr:outputLabel for="topMonGraphScale" value="#{userPrefsBundle.topMonGraphScale}"/>
+                <tr:inputText id="topMonGraphScale" value="#{userEdit.user.prefs.topMonGraphScale}" required="true">
+                  <eye:validatePositive/>
+                </tr:inputText>
+
+
+                <tr:outputLabel for="topMonMaxSpeed" value="#{userPrefsBundle.topMonMaxSpeed}"/>
+                <tr:inputText id="topMonMaxSpeed" value="#{userEdit.user.prefs.topMonMaxSpeed}" required="true">
                   <eye:validatePositive/>
                 </tr:inputText>
 
@@ -105,32 +107,32 @@
             <eye:collapsingGroup label="#{msg['smsc.user.edit.perfmon']}">
 
               <h:panelGrid columns="2">
-                <tr:outputLabel value="#{userPrefsBundle.perfMonBlock}"/>
-                <tr:inputText value="#{userEdit.user.prefs.perfMonBlock}" required="true" simple="true">
+                <tr:outputLabel for="perfMonBlock" value="#{userPrefsBundle.perfMonBlock}"/>
+                <tr:inputText id="perfMonBlock" value="#{userEdit.user.prefs.perfMonBlock}" required="true">
                   <eye:validatePositive/>
                 </tr:inputText>
 
 
-                <tr:outputLabel value="#{userPrefsBundle.perfMonPixPerSecond}"/>
-                <tr:inputText value="#{userEdit.user.prefs.perfMonPixPerSecond}" required="true" simple="true">
+                <tr:outputLabel for="perfMonPixPerSecond" value="#{userPrefsBundle.perfMonPixPerSecond}"/>
+                <tr:inputText id="perfMonPixPerSecond" value="#{userEdit.user.prefs.perfMonPixPerSecond}" required="true">
                   <eye:validatePositive/>
                 </tr:inputText>
 
 
-                <tr:outputLabel value="#{userPrefsBundle.perfMonScale}"/>
-                <tr:inputText value="#{userEdit.user.prefs.perfMonScale}" required="true" simple="true">
+                <tr:outputLabel for="perfMonScale" value="#{userPrefsBundle.perfMonScale}"/>
+                <tr:inputText id="perfMonScale" value="#{userEdit.user.prefs.perfMonScale}" required="true">
                   <eye:validatePositive/>
                 </tr:inputText>
 
 
-                <tr:outputLabel value="#{userPrefsBundle.perfMonVLightGrid}"/>
-                <tr:inputText value="#{userEdit.user.prefs.perfMonVLightGrid}" required="true" simple="true">
+                <tr:outputLabel for="perfMonVLightGrid" value="#{userPrefsBundle.perfMonVLightGrid}"/>
+                <tr:inputText id="perfMonVLightGrid" value="#{userEdit.user.prefs.perfMonVLightGrid}" required="true">
                   <eye:validatePositive/>
                 </tr:inputText>
 
 
-                <tr:outputLabel value="#{userPrefsBundle.perfMonVMinuteGrid}"/>
-                <tr:inputText value="#{userEdit.user.prefs.perfMonVMinuteGrid}" required="true" simple="true">
+                <tr:outputLabel for="perfMonVMinuteGrid" value="#{userPrefsBundle.perfMonVMinuteGrid}"/>
+                <tr:inputText id="perfMonVMinuteGrid" value="#{userEdit.user.prefs.perfMonVMinuteGrid}" required="true">
                   <eye:validatePositive/>
                 </tr:inputText>
 
@@ -155,22 +157,30 @@
 
 
         <tr:panelLabelAndMessage label="#{userBundle.workPhone}">
-          <tr:inputText value="#{userEdit.user.workPhone}" required="true" simple="true"/>
+          <tr:inputText value="#{userEdit.user.workPhone}" required="true" simple="true">
+            <eye:validatePhone/>
+          </tr:inputText>
         </tr:panelLabelAndMessage>
 
 
         <tr:panelLabelAndMessage label="#{userBundle.homePhone}">
-          <tr:inputText value="#{userEdit.user.homePhone}" required="true" simple="true"/>
+          <tr:inputText value="#{userEdit.user.homePhone}" required="true" simple="true">
+            <eye:validatePhone/>
+          </tr:inputText>
         </tr:panelLabelAndMessage>
 
 
         <tr:panelLabelAndMessage label="#{userBundle.cellPhone}">
-          <tr:inputText value="#{userEdit.user.cellPhone}" required="true" simple="true"/>
+          <tr:inputText value="#{userEdit.user.cellPhone}" required="true" simple="true">
+            <eye:validatePhone/>
+          </tr:inputText>   
         </tr:panelLabelAndMessage>
 
 
         <tr:panelLabelAndMessage label="#{userBundle.email}">
-          <tr:inputText value="#{userEdit.user.email}" required="true" simple="true"/>
+          <tr:inputText value="#{userEdit.user.email}" required="true" simple="true">
+            <eye:validateEmail/>
+          </tr:inputText>
         </tr:panelLabelAndMessage>
 
 

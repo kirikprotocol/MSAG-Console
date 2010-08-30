@@ -236,5 +236,15 @@
     <description>Проверка принадлежности введенного значения интервалу положительных чисел</description>
   </tag>
 
+  <tag>
+    <name>validateEmail</name>
+    <description>Проверка корректности адреса электронной почты</description>
+  </tag>
+
+  <tag>
+    <name>validatePhone</name>
+    <description>Проверка корректности номера телефона</description>
+  </tag>
+
 
 </taglib>

@@ -17,7 +17,7 @@
     <tr:form id="reschedule_list">
 
       <tr:inputHidden value="#{users.index_initialized}" id="index_initialized"/>
-      
+
       <t:saveState value="#{users.users}"/>
 
       <eye:buttons>
@@ -33,32 +33,47 @@
           <h:commandLink value="#{msg['submit.button']}" id="submit1" action="#{users.submit}"/>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['reset.button']}" action="RESCHEDULE" actionListener="#{users.reset}"/>
+          <tr:commandLink text="#{msg['reset.button']}" action="USERS" actionListener="#{users.reset}"/>
         </eye:button>
       </eye:buttons>
 
 
-      <t:div id="asdf">
+      <tr:panelFormLayout inlineStyle="padding:10px">
+
+        <tr:panelLabelAndMessage label="#{msg['smsc.users.login']}">
+          <tr:inputText value="#{users.prefix}"/>
+        </tr:panelLabelAndMessage>
+
+      </tr:panelFormLayout>
+
+      <eye:buttons>
+        <eye:button>
+          <tr:commandLink text="#{msg['query.button']}"/>
+        </eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+      <t:div id="asdf" style="padding:10px">
 
         <eye:dataTable value="#{users.usersModel}" selectedRows="#{users.selectedRows}" var="u">
 
           <eye:row rowId="#{u.login}" opened="true">
 
-            <eye:column name="login" title="#{msg['smsc.users.login']}" width="20%">
+            <eye:column name="login" title="#{msg['smsc.users.login']}" width="20%" sortable="true">
               <h:commandLink value="#{u.login}" action="#{users.edit}">
                 <f:param name="login" value="#{u.login}"/>
               </h:commandLink>
             </eye:column>
 
-            <eye:column name="firstName" title="#{msg['smsc.users.firstname']}" width="20%">
+            <eye:column name="firstName" title="#{msg['smsc.users.firstname']}" width="20%" sortable="true">
               <h:outputText value="#{u.firstName}"/>
             </eye:column>
 
-            <eye:column name="lastName" title="#{msg['smsc.users.lastname']}" width="20%">
+            <eye:column name="lastName" title="#{msg['smsc.users.lastname']}" width="20%" sortable="true">
               <h:outputText value="#{u.lastName}"/>
             </eye:column>
-            
-            <eye:column name="dept" title="#{msg['smsc.users.dept']}" width="20%">
+
+            <eye:column name="dept" title="#{msg['smsc.users.dept']}" width="20%" sortable="true">
               <h:outputText value="#{u.dept}"/>
             </eye:column>
 
@@ -82,7 +97,7 @@
           <h:commandLink value="#{msg['submit.button']}" id="submit2" action="#{users.submit}"/>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['reset.button']}" action="RESCHEDULE" actionListener="#{users.reset}"/>
+          <tr:commandLink text="#{msg['reset.button']}" action="USERS" actionListener="#{users.reset}"/>
         </eye:button>
       </eye:buttons>
 

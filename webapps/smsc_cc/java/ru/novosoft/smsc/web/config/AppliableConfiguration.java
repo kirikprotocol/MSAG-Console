@@ -50,11 +50,13 @@ public class AppliableConfiguration {
   public void applyAll(String user) throws AdminException {
     applySmscSettings(user);
     applyRescheduleSettings(user);
+    applyUsersSettings(user);
   }
 
   public void resetAll(String user) throws AdminException {
     resetSmscSettings(user);
     resetRescheduleSettings(user);
+    resetUsersSettings(user);
   }
 
   // SMSC==============================================================================================================
@@ -68,13 +70,26 @@ public class AppliableConfiguration {
   }
 
   public void setUsersSettings(UsersSettings settings, String user) {
+    changeLog.logChanges(this.usersSettings, settings, user);
     this.usersSettings = settings.cloneSettings();
     usersSettingsUpdateInfo = new UpdateInfo(System.currentTimeMillis(), user, true);
   }
 
-  public void applyUsersSettings(String user)throws AdminException{ 
-    adminContext.getUsersManager().updateSettings(usersSettings);
-    usersSettingsUpdateInfo = new UpdateInfo(System.currentTimeMillis(), user, false);
+  public void applyUsersSettings(String user) throws AdminException{
+    if (changeLog.hasRecords(LocalChangeLog.USERS)) {
+      adminContext.getUsersManager().updateSettings(usersSettings);
+      // todo скопировать все записи для сабжекта SMSC в журнал
+      changeLog.removeRecords(LocalChangeLog.USERS);
+    }
+  }
+
+  public void resetUsersSettings(String user) throws AdminException {
+    this.usersSettings = adminContext.getUsersManager().getUsersSettings();
+    changeLog.removeRecords(LocalChangeLog.USERS);
+  }
+
+  public List<ChangeLogRecord> getUsersSettingsChanges() {
+    return changeLog.getRecords(LocalChangeLog.USERS);
   }
 
 
