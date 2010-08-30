@@ -15,7 +15,7 @@ import java.util.*;
  * alkhal: alkhal
  */
 @SuppressWarnings({"unchecked"})
-public class RescheduleEditController extends SmscController{
+public class RescheduleEditController extends RescheduleController{
 
   private static final Logger logger = Logger.getLogger(RescheduleEditController.class);
 
@@ -36,8 +36,8 @@ public class RescheduleEditController extends SmscController{
 
   public RescheduleEditController() {
     HttpSession session = getSession(false);
-    defaultReschedule = (Reschedule) session.getAttribute("reschedule.default");
-    reschedules = (Map<String, Reschedule>) session.getAttribute("reschedule.reschedules");
+    defaultReschedule = getDefRescheduleFromSession(session);
+    reschedules = getReschedulesFromSession(session);
     if(reschedules == null || defaultReschedule == null) {
       throw new IllegalStateException("Session's parameters aren't initialized correctly");
     }

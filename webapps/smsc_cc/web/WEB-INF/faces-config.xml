@@ -102,7 +102,7 @@
 
   <managed-bean>
     <managed-bean-name>users</managed-bean-name>
-    <managed-bean-class>ru.novosoft.smsc.web.controllers.UsersController</managed-bean-class>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.UsersListController</managed-bean-class>
     <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
 
@@ -115,7 +115,7 @@
 
   <managed-bean>
     <managed-bean-name>reschedule</managed-bean-name>
-    <managed-bean-class>ru.novosoft.smsc.web.controllers.RescheduleController</managed-bean-class>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.RescheduleListController</managed-bean-class>
     <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
 

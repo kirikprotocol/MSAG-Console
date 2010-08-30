@@ -5,7 +5,6 @@ import ru.novosoft.smsc.admin.users.User;
 import ru.novosoft.smsc.web.WebContext;
 
 import javax.faces.application.FacesMessage;
-import javax.servlet.http.HttpSession;
 import java.io.Serializable;
 import java.util.*;
 
@@ -13,7 +12,7 @@ import java.util.*;
  * author: alkhal
  */
 @SuppressWarnings({"unchecked"})
-public class UserEditController extends SmscController{
+public class UserEditController extends UsersController{
 
   private boolean edit_initialized;
 
@@ -30,11 +29,8 @@ public class UserEditController extends SmscController{
   private String confirm;
 
   public UserEditController() {
-    HttpSession session = getSession(false);
-    users = (Map<String, User>) session.getAttribute("users.users");
-    if(users == null) {
-      throw new IllegalStateException("Session's parameters aren't initialized correctly");
-    }
+
+    users = getUsersFromSession(true);
 
     if(getRequestParameter("edit_initialized") == null) {
       oldLogin = getRequestParameter("login");

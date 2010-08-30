@@ -48,7 +48,6 @@ public class SmscConfigController extends SmscController{
 
 
   public SmscConfigController() {
-    System.out.println("SmscConfigController SmscConfigController SmscConfigController");
     Map<String, String> reguestMap = getRequestParameters();
     conf = WebContext.getInstance().getAppliableConfiguration();
     SmscSettings smscSettings = conf.getSmscSettings();

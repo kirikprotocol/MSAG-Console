@@ -82,11 +82,16 @@ public class LocalChangeLog implements ChangeLog {
   }
 
   private static List<Method> getGetters(Class clazz) {
+    return getGetters(clazz);
+  }
+
+  private static List<Method> getGetters(Class clazz, Set<String> except) {
     List<Method> getters = new ArrayList<Method>();
     for (Method m : clazz.getMethods()) {
       String methodName = m.getName();
-      if (methodName.startsWith("get") || methodName.startsWith("is"))
+      if ((methodName.startsWith("get") || methodName.startsWith("is")) && (except == null ||  !except.contains(methodName)) ){
         getters.add(m);
+      }
     }
     return getters;
   }
@@ -289,10 +294,13 @@ public class LocalChangeLog implements ChangeLog {
       if(newUser == null) {
         addRecord(ChangeLogRecord.Type.REMOVE, USERS, user).setDescription("user_removed", oldUser.getLogin());
       }else {
-        List<Method> getters = getGetters(User.class);
+        List<Method> getters = getGetters(User.class, new HashSet<String>(1){{add("getPassword");}});
         List<Object> oldValues = callGetters(getters, oldUser);
         List<Object> newValues = callGetters(getters, newUser);
         logChanges(USERS, oldValues, newValues, getters, user, "user_property_changed", newUser.getLogin());
+        if(!oldUser.getPassword().equals(newUser.getPassword())) {
+          addRecord(ChangeLogRecord.Type.CHANGE, USERS, user).setDescription("user_property_changed", new String[]{"password","******","******", newUser.getLogin()});         
+        }
       }
     }
     for(Map.Entry<String,User> e : newUsers.entrySet()) {

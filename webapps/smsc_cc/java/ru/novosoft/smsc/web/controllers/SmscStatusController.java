@@ -2,6 +2,7 @@ package ru.novosoft.smsc.web.controllers;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
+import ru.novosoft.smsc.admin.users.User;
 import ru.novosoft.smsc.web.WebContext;
 import ru.novosoft.smsc.web.components.data_table.model.DataTableModel;
 import ru.novosoft.smsc.web.components.data_table.model.DataTableSortOrder;
@@ -47,10 +48,6 @@ public class SmscStatusController extends SmscController {
     } catch (AdminException e) {
       logError(e);
     }
-  }
-
-  public void goToUser() {
-    
   }
 
   public void applyAll() {
@@ -172,14 +169,17 @@ public class SmscStatusController extends SmscController {
   public static class ConfigChanges {
 
     private final String configName;
-    private final List<ChangeLogRecord> changes;
+    private final List<ChangeRecord> changes;
 
     public ConfigChanges(String configName, List<ChangeLogRecord> changes) {
       this.configName = configName;
-      this.changes = changes;
+      this.changes = new ArrayList<ChangeRecord>(changes.size());
+      for(ChangeLogRecord clr : changes) {
+        this.changes.add(new ChangeRecord(clr));
+      }
     }
 
-    public List<ChangeLogRecord> getChanges() {
+    public List<ChangeRecord> getChanges() {
       return changes;
     }
 
@@ -189,6 +189,58 @@ public class SmscStatusController extends SmscController {
 
     public boolean isChanged() {
       return !changes.isEmpty();
+    }
+  }
+
+  public static class ChangeRecord {
+
+    private ChangeLogRecord record;
+
+    private String userName;
+
+    private String userLastName;
+    private String userDept;
+
+    public ChangeRecord(ChangeLogRecord record) {
+      this.record = record;
+      User u = WebContext.getInstance().getAppliableConfiguration().getUsersSettings().getUser(record.getUser());
+      if(u != null) {
+        userName = u.getFirstName();
+        userLastName = u.getLastName();
+        userDept = u.getDept();
+      }
+    }
+
+    public long getTime() {
+      return record.getTime();
+    }
+
+    public String getSubject() {
+      return record.getSubject();
+    }
+
+    public String getUser() {
+      return record.getUser();
+    }
+
+    public String getDescription() {
+      return record.getDescription();
+    }
+
+    public ChangeLogRecord.Type getType() {
+      return record.getType();
+    }
+
+    public String getUserName() {
+      return userName;
+    }
+
+    public String getUserLastName() {
+      return userLastName;
+    }
+
+    public String getUserDept() {
+      return userDept;
     }
   }
 

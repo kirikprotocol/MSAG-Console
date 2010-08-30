@@ -40,6 +40,19 @@ public class WebXml {
     document = XmlUtils.parse(file.getAbsolutePath());
 //    transformer = TransformerFactory.newInstance().newTransformer();
     initSecurityConstrains();
+    initRoles();
+  }
+
+  private void initRoles() {
+    NodeList srs = document.getElementsByTagName("security-role");
+    for (int i = 0; i < srs.getLength(); i++) {
+      Element sc = (Element) srs.item(i);
+      NodeList rs = sc.getElementsByTagName("role-name");
+      for (int j = 0; j < rs.getLength(); j++) {
+        Element r = (Element) rs.item(j);
+        roles.add(r.getTextContent());
+      }
+    }
   }
 
   private void initSecurityConstrains() {
@@ -56,7 +69,6 @@ public class WebXml {
         for (int k = 0; k < rs.getLength(); k++) {
           Element role = (Element) rs.item(k);
           roles.add(role.getTextContent());
-          this.roles.add(role.getTextContent());
         }
       }
       NodeList resColls = sc.getElementsByTagName("web-resource-collection");

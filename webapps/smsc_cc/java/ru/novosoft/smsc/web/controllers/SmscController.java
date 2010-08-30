@@ -52,4 +52,8 @@ public abstract class SmscController implements Serializable {
     return FacesContext.getCurrentInstance().getExternalContext().getUserPrincipal();
   }
 
+  public boolean isAccessToUsers() {
+    return FacesContext.getCurrentInstance().getExternalContext().isUserInRole("users");
+  }
+
 }

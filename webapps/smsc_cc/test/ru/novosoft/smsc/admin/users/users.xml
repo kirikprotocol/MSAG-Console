@@ -2,7 +2,7 @@
 <!DOCTYPE users SYSTEM "users.dtd">
 
 <users>
-  <user login="a" password="1" firstName="a" lastName="a" dept="a" workPhone="a" homePhone="a" cellPhone="a"
+  <user login="a" password="1" firstName="a" lastName="a" dept="a" workPhone="+133412" homePhone="131313" cellPhone="+414224"
         email="a@a.ru">
     <role name="acls"/>
     <role name="aliases"/>
@@ -33,7 +33,6 @@
     <role name="smsView_operative"/>
     <role name="smsView_smstext"/>
     <role name="smsc_service"/>
-    <role name="smsquiz-admin"/>
     <role name="smsstat"/>
     <role name="snmp"/>
     <role name="subjects"/>
@@ -74,10 +73,9 @@
     <pref name="infosme.priority" value="10"/>
   </user>
 
-  <user login="b" password="1" firstName="a" lastName="a" dept="a" workPhone="a" homePhone="a" cellPhone="a"
-        email="a@a.ru">
+  <user login="b" password="1" firstName="a" lastName="a" dept="a" workPhone="+2424" homePhone="+73423523" cellPhone="532532"
+        email="b@b.ru">
     <role name="smsc_service"/>
-    <role name="smsc_hosts"/>
     <pref name="locale" value="ru"/>
     <pref name="topmon.graph.head" value="20"/>
     <pref name="topmon.graph.scale" value="3"/>
@@ -111,10 +109,9 @@
     <pref name="infosme.priority" value="10"/>
   </user>
 
-  <user login="c" password="1" firstName="a" lastName="a" dept="a" workPhone="a" homePhone="a" cellPhone="a"
-        email="a@a.ru">
+  <user login="c" password="1" firstName="a" lastName="a" dept="a" workPhone="+42421" homePhone="44231" cellPhone="42412"
+        email="c@a.ru">
     <role name="smsc_service"/>
-    <role name="smsc_subjects"/>
     <pref name="locale" value="en"/>
     <pref name="topmon.graph.head" value="20"/>
     <pref name="topmon.graph.scale" value="3"/>
@@ -148,11 +145,9 @@
     <pref name="infosme.priority" value="10"/>
   </user>
 
-  <user login="d" password="1" firstName="a" lastName="a" dept="a" workPhone="a" homePhone="a" cellPhone="a"
-        email="a@a.ru">
+  <user login="d" password="1" firstName="a" lastName="a" dept="a" workPhone="+3124" homePhone="+66234" cellPhone="+422"
+        email="d@a.ru">
     <role name="smsc_service"/>
-    <role name="smsc_subjects"/>
-    <role name="smsc_hosts"/>
     <pref name="locale" value="en"/>
     <pref name="topmon.graph.head" value="20"/>
     <pref name="topmon.graph.scale" value="3"/>
