@@ -153,23 +153,24 @@ int main(int argc, char** argv)
     int8_t invoke_id = 0;
     while(true)
     {
-      char* s;
-      /* SMSC = 79139860004, MSISDN=79139870001 */
-      char ms1[] = "79139870001";
-      char ms2[] = "79139872021";
-      //if (++count % 2) s = "79139870001"; else s = "79139872021";
-      if (++count % 2) s = ms1; else s = ms2;
-      string ms(s); // mobile station MSISDN
-      string sca("79139860004"); // service center address
-      uint8_t cl[20]; uint8_t cllen; uint8_t cd[20]; uint8_t cdlen;
-      cllen = packSCCPAddress(cl, 1 /* E.164 */, sca.c_str() /* SMSC E.164 */, 8 /* SMSC SSN */);
-      cdlen = packSCCPAddress(cd, 1 /* E.164 */, ms.c_str() /* MS   E.164 */, 6 /* MS   SSN */);
       TSM* tsm = 0;
       tsm = mtsms->TC_BEGIN(shortMsgGatewayContext_v2);
       if (tsm)
       {
-        SendRoutingInfoForSMReq* inv = new SendRoutingInfoForSMReq(ms, true, sca);
-        tsm->TInvokeReq(invoke_id++, 45, *inv);
+        char* s;
+        /* SMSC = 79139860004, MSISDN=79139870001 */
+        char ms1[] = "79139870001";
+        char ms2[] = "79139872021";
+        //if (++count % 2) s = "79139870001"; else s = "79139872021";
+        if (++count % 2) s = ms1; else s = ms2;
+        string ms(s); // mobile station MSISDN
+        string sca("79139860004"); // service center address
+        uint8_t cl[20]; uint8_t cllen; uint8_t cd[20]; uint8_t cdlen;
+        cllen = packSCCPAddress(cl, 1 /* E.164 */, sca.c_str() /* SMSC E.164 */, 8 /* SMSC SSN */);
+        cdlen = packSCCPAddress(cd, 1 /* E.164 */, ms.c_str() /* MS   E.164 */, 6 /* MS   SSN */);
+
+        SendRoutingInfoForSMReq inv(ms, true, sca);
+        tsm->TInvokeReq(invoke_id++, 45, inv);
         tsm->TBeginReq(cdlen, cd, cllen, cl);
       }
       sleep(10);
