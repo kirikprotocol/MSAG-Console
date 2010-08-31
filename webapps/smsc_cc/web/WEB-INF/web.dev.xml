@@ -1,0 +1,726 @@
+<?xml version = '1.0' encoding = 'utf-8'?>
+
+<web-app xmlns="http://java.sun.com/xml/ns/j2ee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd"
+         version="2.4">
+
+  <!-- FaceletViewHandler configuration -->
+  <context-param>
+    <param-name>org.apache.myfaces.trinidad.ALTERNATE_VIEW_HANDLER</param-name>
+    <param-value>ru.novosoft.smsc.web.SmscViewHandler</param-value>
+  </context-param>
+
+  <!-- Use documents saved as *.xhtml for Facelets -->
+  <context-param>
+    <param-name>javax.faces.DEFAULT_SUFFIX</param-name>
+    <param-value>.xhtml</param-value>
+  </context-param>
+
+  <context-param>
+    <param-name>facelets.VIEW_MAPPINGS</param-name>
+    <param-value>*.xhtml</param-value>
+  </context-param>
+
+  <context-param>
+    <param-name>facelets.BUILD_BEFORE_RESTORE</param-name>
+    <param-value>false</param-value>
+  </context-param>
+
+  <context-param>
+    <param-name>facelets.RECREATE_VALUE_EXPRESSION_ON_BUILD_BEFORE_RESTORE</param-name>
+    <param-value>false</param-value>
+  </context-param>
+
+
+
+  <context-param>
+    <param-name>facelets.LIBRARIES</param-name>
+    <param-value>/WEB-INF/facelets/tags/eyeline.taglib.xml</param-value>
+</context-param>
+
+  <context-param>
+    <param-name>org.apache.myfaces.trinidad.CACHE_VIEW_ROOT</param-name>
+    <param-value>false</param-value>
+  </context-param>
+
+
+  <!-- Use client-side state saving.  In Trinidad, it is an
+       optimized, token-based mechanism that is almost always a
+       better choice than the standard JSF server-side state saving. -->
+  <context-param>
+    <param-name>javax.faces.STATE_SAVING_METHOD</param-name>
+    <param-value>client</param-value>
+    <!--<param-value>server</param-value>-->
+  </context-param>
+
+  <context-param>
+    <param-name>org.apache.myfaces.trinidad.USE_APPLICATION_VIEW_CACHE</param-name>
+    <param-value>false</param-value>
+  </context-param>
+
+  <!-- If this parameter is enabled, Trinidad will automatically
+       check the modification date of your JSPs, and discard saved
+       state when they change;  this makes development easier,
+       but adds overhead that should be avoided when your application
+       is deployed -->
+  <context-param>
+    <param-name>org.apache.myfaces.trinidad.CHECK_FILE_MODIFICATION</param-name>
+    <param-value>true</param-value>
+  </context-param>
+
+  <context-param>
+    <param-name>org.apache.myfaces.trinidad.CHANGE_PERSISTENCE</param-name>
+    <param-value>request</param-value>
+  </context-param>
+
+  <filter>
+    <filter-name>trinidad</filter-name>
+    <filter-class>org.apache.myfaces.trinidad.webapp.TrinidadFilter</filter-class>
+  </filter>
+
+  <filter>
+    <filter-name>extensionsFilter</filter-name>
+    <filter-class>org.apache.myfaces.webapp.filter.ExtensionsFilter</filter-class>
+  </filter>
+
+  <filter-mapping>
+    <filter-name>trinidad</filter-name>
+    <servlet-name>faces</servlet-name>
+  </filter-mapping>
+
+  <!--<filter-mapping>-->
+    <!--<filter-name>extensionsFilter</filter-name>-->
+    <!--<servlet-name>faces</servlet-name>-->
+  <!--</filter-mapping>-->
+
+  <!-- Faces Servlet -->
+  <servlet>
+    <servlet-name>faces</servlet-name>
+    <servlet-class>javax.faces.webapp.FacesServlet</servlet-class>
+  </servlet>
+
+  <!-- resource loader servlet -->
+  <servlet>
+    <servlet-name>resources</servlet-name>
+    <servlet-class>org.apache.myfaces.trinidad.webapp.ResourceServlet</servlet-class>
+  </servlet>
+
+  <!-- Faces Servlet Mappings -->
+  <servlet-mapping>
+    <servlet-name>faces</servlet-name>
+    <url-pattern>*.faces</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>resources</servlet-name>
+    <url-pattern>/adf/*</url-pattern>
+  </servlet-mapping>
+
+  <!--<filter-mapping>-->
+    <!--<filter-name>extensionsFilter</filter-name>-->
+    <!--<url-pattern>/faces/myFacesExtensionResource/*</url-pattern>-->
+  <!--</filter-mapping>-->
+
+  <listener>
+    <listener-class>ru.novosoft.smsc.web.TestInitListener</listener-class>
+  </listener>
+
+
+  <login-config>
+    <auth-method>FORM</auth-method>
+    <form-login-config>
+      <form-login-page>/smsc/login.faces</form-login-page>
+      <form-error-page>/smsc/login.faces?loginError=true</form-error-page>
+    </form-login-config>
+  </login-config>
+
+ <!-- security constraints -->
+
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/smsc_service/index.faces</url-pattern>
+      <url-pattern>/smsc/smsc_service/logging.faces</url-pattern>
+      <url-pattern>/smsc/smsc_service/switch.faces</url-pattern>
+      <url-pattern>/smsc/smsc_service/maplimits.faces</url-pattern>
+      <url-pattern>/smsc/reschedule/*</url-pattern>
+      <url-pattern>/smsc/directives/*</url-pattern>
+      <url-pattern>/smsc/index.faces</url-pattern>   <!-- temp, todo  -->
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>smsc_service</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/smsc_service/status.faces</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>apply</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/timezones/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>timezones</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/regions/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>regions</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/smscenters/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>smscenters</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/regions/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>regions</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/snmp/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>snmp</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/esme_emailsme/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>emailsme</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/closed_groups/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>closed_groups</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/fraud/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>fraud</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/journal/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>journal</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/locale_resources/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>locale_resources</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/dl/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>dl</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/perfmon/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>perfmon</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/smsview/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>smsView</role-name>
+      <role-name>smsView_archive</role-name>
+      <role-name>smsView_operative</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/smsstat/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>smsstat</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/mscman/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>mscman</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/users/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>users</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name>Access Control Lists</web-resource-name>
+      <url-pattern>/smsc/acl/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>acls</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/routes/*</url-pattern>
+      <url-pattern>/smsc/tracer/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>routes</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/subjects/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>subjects</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/providers/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>providers</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/categories/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>categories</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/aliases/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>aliases</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/profiles/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>profiles</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/hosts/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>hosts</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/services/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>services</role-name>
+      <role-name>service_operator</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/services/index.faces</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>service_operator</role-name>
+      <role-name>services</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/topmon/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>topmon</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+  <!-- InfoSme config (market: list of allowed pages) -->
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/esme_InfoSme/index.faces</url-pattern>
+      <url-pattern>/smsc/esme_InfoSme/stat.faces</url-pattern>
+      <url-pattern>/smsc/esme_InfoSme/deliveries_new.faces</url-pattern>
+      <url-pattern>/smsc/esme_InfoSme/taskEdit.faces</url-pattern>
+      <url-pattern>/smsc/esme_InfoSme/deliveries_edit_task.faces</url-pattern>
+      <url-pattern>/smsc/esme_InfoSme/deliveries_file.faces</url-pattern>
+      <url-pattern>/smsc/esme_InfoSme/deliveries_finish_task.faces</url-pattern>
+      <url-pattern>/smsc/esme_InfoSme/deliveries_gen_progress.faces</url-pattern>
+      <url-pattern>/smsc/esme_InfoSme/deliveries_gen_task.faces</url-pattern>
+      <url-pattern>/smsc/esme_InfoSme/deliveries_process_file.faces</url-pattern>
+      <url-pattern>/smsc/esme_InfoSme/deliveries_process_progress.faces</url-pattern>
+      <url-pattern>/smsc/esme_InfoSme/tasks_progress.faces</url-pattern>
+      <url-pattern>/smsc/esme_InfoSme/tasks.faces</url-pattern>
+      <url-pattern>/smsc/esme_InfoSme/messages.faces</url-pattern>
+      <url-pattern>/smsc/esme_InfoSme/csv_download.faces</url-pattern>
+      <url-pattern>/smsc/esme_InfoSme/taskProgress.faces</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>infosme-admin</role-name>
+      <role-name>infosme-market</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+  <!-- InfoSme config (admin: all pages) -->
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/esme_InfoSme/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>infosme-admin</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+  <!-- DbSme config (admin: all pages) -->
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/esme_dbSme/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>dbsme-admin</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+  <!-- MCISme & MCIProf config (admin: all pages) -->
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/esme_MCISme/*</url-pattern>
+      <url-pattern>/smsc/esme_MCIProf/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>mcisme-admin</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+  <!-- MTSMSme config (admin: all pages) -->
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/esme_MTSMSme/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>mtsmsme-admin</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+  <security-role>
+    <role-name>apply</role-name>
+  </security-role>
+  <security-role>
+    <role-name>smsc_service</role-name>
+  </security-role>
+  <security-role>
+    <role-name>journal</role-name>
+  </security-role>
+  <security-role>
+    <role-name>closed_groups</role-name>
+  </security-role>
+  <security-role>
+    <role-name>locale_resources</role-name>
+  </security-role>
+  <security-role>
+    <role-name>dl</role-name>
+  </security-role>
+  <security-role>
+    <role-name>perfmon</role-name>
+  </security-role>
+  <security-role>
+    <role-name>topmon</role-name>
+  </security-role>
+  <security-role>
+    <role-name>smsView</role-name>
+  </security-role>
+  <security-role>
+    <role-name>smsView_archive</role-name>
+  </security-role>
+  <security-role>
+    <role-name>smsView_operative</role-name>
+  </security-role>
+  <security-role>
+    <role-name>smsView_smstext</role-name>
+  </security-role>
+  <security-role>
+    <role-name>smsstat</role-name>
+  </security-role>
+  <security-role>
+    <role-name>mscman</role-name>
+  </security-role>
+  <security-role>
+    <role-name>users</role-name>
+  </security-role>
+  <security-role>
+    <role-name>routes</role-name>
+  </security-role>
+  <security-role>
+    <role-name>subjects</role-name>
+  </security-role>
+  <security-role>
+    <role-name>aliases</role-name>
+  </security-role>
+  <security-role>
+    <role-name>profiles</role-name>
+  </security-role>
+  <security-role>
+    <role-name>hosts</role-name>
+  </security-role>
+  <security-role>
+    <role-name>services</role-name>
+  </security-role>
+  <security-role>
+    <role-name>providers</role-name>
+  </security-role>
+  <security-role>
+    <role-name>categories</role-name>
+  </security-role>
+  <security-role>
+    <role-name>infosme-admin</role-name>
+  </security-role>
+  <security-role>
+    <role-name>infosme-market</role-name>
+  </security-role>
+  <security-role>
+    <role-name>dbsme-admin</role-name>
+  </security-role>
+  <security-role>
+    <role-name>mcisme-admin</role-name>
+  </security-role>
+  <security-role>
+    <role-name>mtsmsme-admin</role-name>
+  </security-role>
+  <security-role>
+    <role-name>emailsme</role-name>
+  </security-role>
+  <security-role>
+    <role-name>timezones</role-name>
+  </security-role>
+  <security-role>
+    <role-name>smscenters</role-name>
+  </security-role>
+  <security-role>
+    <role-name>snmp</role-name>
+  </security-role>
+  <security-role>
+    <role-name>regions</role-name>
+  </security-role>
+  <security-role>
+    <role-name>fraud</role-name>
+  </security-role>
+  <security-role>
+    <description>Access Control List manager</description>
+    <role-name>acls</role-name>
+  </security-role>
+  <security-role>
+    <description>Can start/stop/disconnect service, service parameters editing prohibited</description>
+    <role-name>service_operator</role-name>
+  </security-role>
+</web-app>

@@ -1,15 +1,125 @@
-<project name="smscadm">
+<project name="smscadm" default="distr">
+
+  <property file="build.properties"/>
+  <property name="smsc.source.classes" value="${smsc.build.dir}/classes"/>
+  <property name="smsc.source.classes.preweaved" value="${smsc.build.dir}/classes_preweaved"/>
+
+  <property name="smsc.test.classes" value="${smsc.build.dir}/test_classes"/>
+  <property name="smsc.test.classes.preweaved" value="${smsc.build.dir}/test_classes_preweaved"/>
+
+  <property name="smsc.exploded.dir" value="${smsc.build.dir}/exploded"/>
 
   <taskdef name="protogen" classname="mobi.eyeline.protogen.ant.Protogen" classpath="lib/protogen.jar"/>
+  <taskdef resource="org/aspectj/tools/ant/taskdefs/aspectjTaskdefs.properties" classpath="lib/aspectjtools.jar"/>
+
+  <path id="lib">
+    <fileset dir="lib" includes="*.jar"/>
+  </path>
 
   <target name="gen_cc_protocol">
-    <protogen language="java" msgPackage="ru.novosoft.smsc.admin.cluster_controller.protocol" defFile="java/ru/novosoft/smsc/admin/cluster_controller/ControllerWebappProtocol.def" outDir="java" tempDir="java/ru/novosoft/smsc/admin/cluster_controller/tmp">
+    <protogen language="java" msgPackage="ru.novosoft.smsc.admin.cluster_controller.protocol" defFile="java/ru/novosoft/smsc/admin/cluster_controller/ControllerWebappProtocol.def" outDir="java"
+              tempDir="java/ru/novosoft/smsc/admin/cluster_controller/tmp">
       <cgp name="search.path" value="java/ru/novosoft/smsc/admin/cluster_controller/"/>
     </protogen>
   </target>
 
   <target name="prebuild" depends="gen_cc_protocol"/>
 
-  
+  <target name="compile.sources">
+    <delete dir="${smsc.source.classes.preweaved}" failonerror="false"/>
+    <mkdir dir="${smsc.source.classes.preweaved}"/>
+    <javac srcdir="java" destdir="${smsc.source.classes.preweaved}" classpathref="lib" debug="true" source="1.5"/>
+  </target>
+
+  <target name="weave.sources" depends="compile.sources">
+    <delete dir="${smsc.source.classes}" failonerror="false"/>
+    <mkdir dir="${smsc.source.classes}"/>
+    <iajc classpathref="lib" destdir="${smsc.source.classes}">
+      <inpath location="${smsc.source.classes.preweaved}"/>
+    </iajc>
+    <native2ascii src="java" dest="${smsc.source.classes}" ext=".properties" includes="**/*.properties"/>
+  </target>
+
+  <target name="compile.tests" depends="compile.sources">
+    <delete dir="${smsc.test.classes.preweaved}" failonerror="false"/>
+    <mkdir dir="${smsc.test.classes.preweaved}"/>
+    <copy todir="${smsc.test.classes.preweaved}">
+      <fileset dir="${smsc.source.classes.preweaved}"/>
+    </copy>
+    <javac srcdir="test" destdir="${smsc.test.classes.preweaved}" classpathref="lib" debug="true" source="1.5"/>
+  </target>
+
+  <target name="weave.tests" depends="compile.tests">
+    <delete dir="${smsc.test.classes}" failonerror="false"/>
+    <mkdir dir="${smsc.test.classes}"/>
+    <iajc classpathref="lib" destdir="${smsc.test.classes}">
+      <inpath location="${smsc.test.classes.preweaved}"/>
+    </iajc>
+    <copy todir="${smsc.test.classes}">
+      <fileset dir="test" includes="**/*.properties,**/*.bin,**/*.xml"/>
+    </copy>
+    <native2ascii src="java" dest="${smsc.test.classes}" ext=".properties" includes="**/*.properties"/>
+  </target>
+
+  <target name="test" depends="compile.tests, weave.tests">
+    <delete dir="${smsc.tests.dir}" failonerror="false"/>
+    <mkdir dir="${smsc.tests.dir}"/>
+
+    <junit showoutput="true" printsummary="yes">
+      <classpath path="${smsc.test.classes}"/>
+      <classpath refid="lib"/>
+      <formatter type="xml" usefile="true"/>
+      <batchtest todir="${smsc.tests.dir}">
+        <fileset dir="${smsc.test.classes}" includes="**/*Test.class"/>
+      </batchtest>
+    </junit>
+  </target>
+
+  <target name="exploded">
+    <delete dir="${smsc.exploded.dir}" failonerror="false"/>
+    <mkdir dir="${smsc.exploded.dir}"/>
+    <copy todir="${smsc.exploded.dir}">
+      <fileset dir="web" includes="**/*"/>
+    </copy>
+
+    <mkdir dir="${smsc.exploded.dir}/WEB-INF/lib"/>
+    <copy todir="${smsc.exploded.dir}/WEB-INF/lib" >
+      <fileset dir="lib" excludes="aspectj*.jar, javaee*.jar"/>
+    </copy>
+    <mkdir dir="${smsc.exploded.dir}/WEB-INF/classes/dtds"/>
+    <copy todir="${smsc.exploded.dir}/WEB-INF/classes/dtds">
+      <fileset dir="." includes="*.dtd"/>
+    </copy>
+  </target>
+
+  <target name="distr.dev" depends="weave.tests, exploded">
+    <jar destfile="${smsc.exploded.dir}/WEB-INF/lib/smsc.jar" basedir="${smsc.test.classes}"/>
+
+    <delete file="${smsc.exploded.dir}/WEB-INF/web.xml"/>
+    <move file="${smsc.exploded.dir}/WEB-INF/web.dev.xml" tofile="${smsc.exploded.dir}/WEB-INF/web.xml"/>
+
+    <delete dir="${smsc.distr.dir}" failonerror="false"/>
+    <mkdir dir="${smsc.distr.dir}"/>
+    <war destfile="${smsc.distr.dir}/smsc_dev.war" basedir="${smsc.exploded.dir}">
+      <manifest>
+        <attribute name="Implementation-Version" value="${smsc.implementation.version}"/>
+      </manifest>
+    </war>
+  </target>
+
+  <target name="distr" depends="weave.sources, exploded">
+    <jar destfile="${smsc.exploded.dir}/WEB-INF/lib/smsc.jar" basedir="${smsc.source.classes}"/>
+
+    <delete file="${smsc.exploded.dir}/WEB-INF/web.dev.xml"/>
+
+    <delete dir="${smsc.distr.dir}" failonerror="false"/>
+    <mkdir dir="${smsc.distr.dir}"/>
+    <war destfile="${smsc.distr.dir}/smsc.war" basedir="${smsc.exploded.dir}">
+      <manifest>
+        <attribute name="Implementation-Version" value="${smsc.implementation.version}"/>
+      </manifest>
+    </war>
+  </target>
+
 
 </project>

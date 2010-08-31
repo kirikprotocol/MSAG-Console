@@ -18,15 +18,15 @@ import java.util.Map;
 @Aspect
 public class ResourceDependencyAspect {
 
-  @Pointcut("call (void SmeManager.addSme(String, Sme))")
-  public void addSme() {
+  @Pointcut("call (void *.addSme(String,Sme)) && args(*,sme) && target(manager)")
+  public void addSme(SmeManager manager, Sme sme) {
   }
 
-  @Pointcut("call (void ru.novosoft.smsc.admin.resource.ResourceManager.addResourceSettings(*,*))")
-  public void addResourceSettings() {
+  @Pointcut("call (void *.addResourceSettings(String,*)) && args(*,settings) && target(manager)")
+  public void addResourceSettings(ResourceManager manager, ResourceSettings settings) {
   }
 
-  @Pointcut("call (boolean ru.novosoft.smsc.admin.resource.ResourceManager.removeResourceSettings(*))")
+  @Pointcut("call (boolean ru.novosoft.smsc.admin.resource.ResourceManager.removeResourceSettings(String))")
   public void removeResource() {}
 
   private boolean checkReceiptScheme(Resources receiptScheme) throws SmeException {
@@ -43,7 +43,7 @@ public class ResourceDependencyAspect {
     return true;
   }
 
-  @Before("target(smeManager) && args(*, sme) && addSme()")
+  @Before("addSme(smeManager,sme)")
   public void beforeAddSme(SmeManager smeManager, Sme sme) throws AdminException {
     AdminContext ctx = AdminContextLocator.getContext(smeManager);
     if (ctx == null)
@@ -63,14 +63,14 @@ public class ResourceDependencyAspect {
     }
   }
 
-  @Before("target(resourceManager) && args(*, resourceSettings) && addResourceSettings()")
-  public void beforeRemoveResource(ResourceManager resourceManager, ResourceSettings resourceSettings) throws AdminException {
+  @Before("addResourceSettings(manager, settings)")
+  public void beforeAddResource(ResourceManager manager, ResourceSettings settings) throws AdminException {
 
-    AdminContext ctx = AdminContextLocator.getContext(resourceManager);
+    AdminContext ctx = AdminContextLocator.getContext(manager);
     if (ctx == null)
       return;
 
-    Resources receipt = resourceSettings.getResources().getChild("receipt");
+    Resources receipt = settings.getResources().getChild("receipt");
 
     SmeManager smeManager = ctx.getSmeManager();
     for (Map.Entry<String, Sme> e : smeManager.smes().entrySet()) {
@@ -86,9 +86,9 @@ public class ResourceDependencyAspect {
 
   }
 
-  @Before("target(resourceManager) && args(locale) && removeResource()")
-  public void beforeRemoveResource(ResourceManager resourceManager, String locale) throws AdminException {
-    System.out.println("!!!->");
-  }
+//  @Before("target(resourceManager) && args(locale) && removeResource()")
+//  public void beforeRemoveResource(ResourceManager resourceManager, String locale) throws AdminException {
+//    System.out.println("!!!->");
+//  }
 
 }

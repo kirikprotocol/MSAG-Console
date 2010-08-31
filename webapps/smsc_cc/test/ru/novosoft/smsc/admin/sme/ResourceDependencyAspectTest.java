@@ -58,7 +58,7 @@ public class ResourceDependencyAspectTest {
   }
 
   @Test
-  public void testBeforeRemoveResource() throws Exception {
+  public void testBeforeAddResource() throws Exception {
 
     ResourceManager m = ctx.getResourceManager();
     ResourceSettings s = new ResourceSettings(".", ",", new Resources());

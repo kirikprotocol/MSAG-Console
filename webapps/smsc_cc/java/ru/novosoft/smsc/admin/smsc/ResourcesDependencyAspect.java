@@ -19,8 +19,8 @@ public class ResourcesDependencyAspect {
   @Pointcut("call (void SmscManager.updateSettings(SmscSettings))")
   public void updateSmscSettings() {}
 
-  @Pointcut("call (boolean ru.novosoft.smsc.admin.resource.ResourceManager.removeResourceSettings(*))")
-  public void removeResource() {}
+  @Pointcut("call (boolean *.removeResourceSettings(*)) && target(resourceManager) && args(locale)")
+  public void removeResource(ResourceManager resourceManager, String locale) {}
 
   @Before("target(smscManager) && args(smscSettings) && updateSmscSettings()")
   public void beforeUpdateSettings(SmscManager smscManager, SmscSettings smscSettings) throws AdminException {
@@ -36,7 +36,7 @@ public class ResourcesDependencyAspect {
     }
   }
 
-  @Before("target(resourceManager) && args(locale) && removeResource()")
+  @Before("removeResource(resourceManager, locale)")
   public void beforeRemoveResource(ResourceManager resourceManager, String locale) throws AdminException {
     AdminContext ctx = AdminContextLocator.getContext(resourceManager);
     if (ctx == null)

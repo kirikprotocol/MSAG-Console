@@ -15,6 +15,7 @@ import javax.faces.component.html.HtmlSelectOneMenu;
 import javax.faces.event.ActionEvent;
 import javax.faces.event.ValueChangeEvent;
 import javax.faces.model.SelectItem;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -166,7 +167,7 @@ public class SmscStatusController extends SmscController {
   /**
    *
    */
-  public static class ConfigChanges {
+  public static class ConfigChanges implements Serializable {
 
     private final String configName;
     private final List<ChangeRecord> changes;
@@ -192,7 +193,7 @@ public class SmscStatusController extends SmscController {
     }
   }
 
-  public static class ChangeRecord {
+  public static class ChangeRecord implements Serializable {
 
     private ChangeLogRecord record;
 
@@ -247,7 +248,7 @@ public class SmscStatusController extends SmscController {
   /**
    *
    */
-  public static class SmscStatus {
+  public static class SmscStatus implements Serializable {
 
     private final int instanceNumber;
     private final String onlineHost;
