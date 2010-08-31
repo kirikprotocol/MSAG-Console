@@ -43,7 +43,7 @@ class GopotaListener: public SuaProcessor, public Thread {
     {
       int result;
       result = Run();
-      smsc_log_error(logger,"SccpListener exit with code: %d", result);
+      smsc_log_error(logger,"SuaListener exit with code: %d", result);
       return result;
     }
   };
@@ -89,7 +89,7 @@ int main(int argc, char** argv)
       }
       sleep(10);
     }
-listener->Stop();
+    listener->Stop();
   } catch (std::exception& ex)
   {
     smsc_log_error(logger, "libSuaTest::: catched unexpected exception [%s]", ex.what());
