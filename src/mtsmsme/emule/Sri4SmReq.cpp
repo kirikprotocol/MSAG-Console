@@ -2,6 +2,7 @@
 #include "core/threads/Thread.hpp"
 #include "mtsmsme/processor/TCO.hpp"
 #include "mtsmsme/processor/TSM.hpp"
+#include "mtsmsme/sua/SuaProcessor.hpp"
 #include "mtsmsme/comp/SendRoutingInfoForSM.hpp"
 #include "sms/sms.h"
 
@@ -12,6 +13,7 @@ extern std::string hexdmp(const uchar_t* buf, uint32_t bufSz);
 #define ENC_SCHEME 0x01
 #define NATURE_OF_ADDR 0x04
 
+using smsc::mtsmsme::processor::SuaProcessor;
 using smsc::core::threads::Thread;
 using smsc::mtsmsme::processor::SccpSender;
 using smsc::mtsmsme::processor::TCO;
@@ -20,12 +22,10 @@ using smsc::sms::Address;
 using smsc::mtsmsme::processor::SubscriberRegistrator;
 using smsc::mtsmsme::processor::shortMsgGatewayContext_v2;
 using smsc::logger::Logger;
-using smsc::mtsmsme::processor::SccpSender;
 using smsc::mtsmsme::comp::SendRoutingInfoForSMReq;
 using smsc::mtsmsme::processor::util::packSCCPAddress;
 using smsc::mtsmsme::processor::util::dump;
 using std::string;
-using namespace eyeline::ss7na;
 
 
 static Logger *logger = 0;
