@@ -53,16 +53,14 @@ int main(int argc, char** argv)
   logger = smsc::logger::Logger::getInstance("sri4smreq");
   try
   {
-    TCO* mtsms = new TCO(10);
-    SuaListener* listener = new SuaListener(sccpApi,*mtsms);
-
+    smsc_log_info(logger, "Send Routing Info For SM generator");
+    TCO mtsms(10);
     EmptySubscriberRegistrator fakeHLR(&mtsms);
-    mtsms.setRequestSender(&fakeSender);
     GopotaListener listener(&mtsms, &fakeHLR);
 
-    listener.configure(43, 191, Address((uint8_t)strlen(msca), 1, 1, msca),
-            Address((uint8_t)strlen(vlra), 1, 1, vlra),
-            Address((uint8_t)strlen(hlra), 1, 1, hlra));
+    listener->configure(43,191,Address(".1.1.791398699812"),
+                               Address(".1.1.791398699813"),
+                               Address(".1.1.791398699813"));
     listener->Start();
     sleep(10);
     int count = 0;
@@ -70,7 +68,7 @@ int main(int argc, char** argv)
     while(true)
     {
       TSM* tsm = 0;
-      tsm = mtsms->TC_BEGIN(shortMsgGatewayContext_v2);
+      tsm = mtsms.TC_BEGIN(shortMsgGatewayContext_v2);
       if (tsm)
       {
         char* s;
