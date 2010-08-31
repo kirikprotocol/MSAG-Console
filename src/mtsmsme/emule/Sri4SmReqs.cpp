@@ -61,6 +61,9 @@ int main(int argc, char** argv)
     {
       /* SMSC = 79139860004, MSISDN=79139859489 */
       if (++count % 2) pri = true; else pri = false;
+      char ms1[] = "79139870001";
+      char ms2[] = "79139872021";
+      if (++count % 2) s = ms1; else s = ms2;
       string ms("79139859489"); // mobile station MSISDN
       string sca("791398699812"); // service center address
       uint8_t cl[20]; uint8_t cllen; uint8_t cd[20]; uint8_t cdlen;
@@ -70,8 +73,8 @@ int main(int argc, char** argv)
       tsm = mtsms.TC_BEGIN(shortMsgGatewayContext_v2);
       if (tsm)
       {
-        SendRoutingInfoForSMReq* inv = new SendRoutingInfoForSMReq(ms, pri, sca);
-        tsm->TInvokeReq(invoke_id++, 45, *inv);
+        SendRoutingInfoForSMReq inv(ms, pri, sca);
+        tsm->TInvokeReq(invoke_id++, 45, inv);
         tsm->TBeginReq(cdlen, cd, cllen, cl);
       }
       sleep(10);
