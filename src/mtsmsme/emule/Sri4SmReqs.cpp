@@ -1,19 +1,10 @@
+#include <string>
 #include "mtsmsme/sccp/SccpProcessor.hpp"
 #include "core/threads/Thread.hpp"
-#include "mtsmsme/processor/SccpSender.hpp"
 #include "mtsmsme/processor/TCO.hpp"
 #include "mtsmsme/processor/TSM.hpp"
 #include "mtsmsme/comp/SendRoutingInfoForSM.hpp"
-#include "mtsmsme/processor/util.hpp"
 #include "sms/sms.h"
-#include <string>
-
-extern std::string hexdmp(const uchar_t* buf, uint32_t bufSz);
-
-#define TRANS_TYPE 0
-#define NUM_PLAN 0x10
-#define ENC_SCHEME 0x01
-#define NATURE_OF_ADDR 0x04
 
 using smsc::mtsmsme::processor::SccpProcessor;
 using smsc::mtsmsme::processor::SubscriberRegistrator;
@@ -22,7 +13,6 @@ using smsc::mtsmsme::processor::TCO;
 using smsc::mtsmsme::processor::TSM;
 using smsc::mtsmsme::processor::shortMsgGatewayContext_v2;
 using smsc::logger::Logger;
-using smsc::mtsmsme::processor::SccpSender;
 using smsc::mtsmsme::comp::SendRoutingInfoForSMReq;
 using smsc::mtsmsme::processor::util::packSCCPAddress;
 using smsc::mtsmsme::processor::util::dump;
@@ -35,7 +25,7 @@ class EmptySubscriberRegistrator: public SubscriberRegistrator {
     EmptySubscriberRegistrator(TCO* _tco) : SubscriberRegistrator(_tco) {}
     virtual void registerSubscriber(Address& imsi, Address& msisdn, Address& mgt, int period) {}
     virtual int  update(Address& imsi, Address& msisdn, Address& mgt) {return 1;}
-    virtual bool lookup(Address& msisdn, Address& imsi, Address& msc) { return false;}
+    virtual bool lookup(Address& msisdn, Address& imsi, Address& msc) {return false;}
 };
 class GopotaListener: public SccpProcessor, public Thread {
   public:
@@ -53,11 +43,9 @@ int main(int argc, char** argv)
 {
   smsc::logger::Logger::Init();
   logger = smsc::logger::Logger::getInstance("sri4smreq");
-
   try
   {
     smsc_log_info(logger, "Send Routing Info For SM generator");
-    using smsc::core::threads::Thread;
     TCO mtsms(10);
     EmptySubscriberRegistrator fakeHLR(&mtsms);
     GopotaListener listener(&mtsms,&fakeHLR);
@@ -86,12 +74,12 @@ int main(int argc, char** argv)
         tsm->TInvokeReq(invoke_id++, 45, *inv);
         tsm->TBeginReq(cdlen, cd, cllen, cl);
       }
-      sleep(60);
+      sleep(10);
     }
     listener.Stop();
   } catch (std::exception& ex)
   {
-    smsc_log_error(logger, " catched unexpected exception [%s]", ex.what());
+    smsc_log_error(logger, "catched unexpected exception [%s]", ex.what());
   }
   return 0;
 }

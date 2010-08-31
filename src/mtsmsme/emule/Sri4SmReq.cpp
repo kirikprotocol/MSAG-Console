@@ -1,30 +1,22 @@
 #include <string>
+#include "mtsmsme/sua/SuaProcessor.hpp"
 #include "core/threads/Thread.hpp"
 #include "mtsmsme/processor/TCO.hpp"
 #include "mtsmsme/processor/TSM.hpp"
-#include "mtsmsme/sua/SuaProcessor.hpp"
 #include "mtsmsme/comp/SendRoutingInfoForSM.hpp"
 #include "sms/sms.h"
 
-extern std::string hexdmp(const uchar_t* buf, uint32_t bufSz);
-
-#define TRANS_TYPE 0
-#define NUM_PLAN 0x10
-#define ENC_SCHEME 0x01
-#define NATURE_OF_ADDR 0x04
-
 using smsc::mtsmsme::processor::SuaProcessor;
+using smsc::mtsmsme::processor::SubscriberRegistrator;
 using smsc::core::threads::Thread;
-using smsc::mtsmsme::processor::SccpSender;
 using smsc::mtsmsme::processor::TCO;
 using smsc::mtsmsme::processor::TSM;
-using smsc::sms::Address;
-using smsc::mtsmsme::processor::SubscriberRegistrator;
 using smsc::mtsmsme::processor::shortMsgGatewayContext_v2;
 using smsc::logger::Logger;
 using smsc::mtsmsme::comp::SendRoutingInfoForSMReq;
 using smsc::mtsmsme::processor::util::packSCCPAddress;
 using smsc::mtsmsme::processor::util::dump;
+using smsc::sms::Address;
 using std::string;
 
 
@@ -46,7 +38,8 @@ class GopotaListener: public SuaProcessor, public Thread {
       smsc_log_error(logger,"SuaListener exit with code: %d", result);
       return result;
     }
-  };
+};
+
 int main(int argc, char** argv)
 {
   smsc::logger::Logger::Init();
@@ -56,15 +49,15 @@ int main(int argc, char** argv)
     smsc_log_info(logger, "Send Routing Info For SM generator");
     TCO mtsms(10);
     EmptySubscriberRegistrator fakeHLR(&mtsms);
-    GopotaListener listener(&mtsms, &fakeHLR);
-
+    GopotaListener listener(&mtsms,&fakeHLR);
     listener.configure(43,191,Address(".1.1.791398699812"),
                                Address(".1.1.791398699813"),
                                Address(".1.1.791398699813"));
     listener.Start();
-    sleep(10);
-    int count = 0;
     int8_t invoke_id = 0;
+    int count = 0;
+    bool pri;
+    sleep(10);
     while(true)
     {
       TSM* tsm = 0;
@@ -92,7 +85,7 @@ int main(int argc, char** argv)
     listener.Stop();
   } catch (std::exception& ex)
   {
-    smsc_log_error(logger, "libSuaTest::: catched unexpected exception [%s]", ex.what());
+    smsc_log_error(logger, "catched unexpected exception [%s]", ex.what());
   }
   return 0;
 }
