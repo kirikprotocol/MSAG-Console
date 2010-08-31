@@ -110,27 +110,6 @@ class SuaListener : public Thread {
     }
     void Stop() { going = false; }
 };
-class SuaSender : public SccpSender {
-  private:
-    libsccp::SccpApi& api;
-  public:
-    SuaSender(libsccp::SccpApi& suaApi) : api(suaApi) {}
-    void send(uint8_t cdlen, uint8_t *cd,
-              uint8_t cllen, uint8_t *cl,
-              uint16_t ulen, uint8_t *udp)
-    {
-      libsccp::MessageProperties msgProperties;
-      msgProperties.setReturnOnError(true);
-      msgProperties.setHopCount(2);
-      libsccp::SccpApi& suaApi = libsccp::SccpApiFactory::getSccpApiIface();
-      libsccp::SccpApi::ErrorCode_e res =
-          suaApi.unitdata_req(udp, ulen,
-                                    cd, cdlen,
-                                    cl, cllen,
-                                    msgProperties, 0);
-      smsc_log_info(logger, "unitdata_req  with code %d",res);
-    }
-};
 int main(int argc, char** argv)
 {
   smsc::logger::Logger::Init();
@@ -169,8 +148,6 @@ int main(int argc, char** argv)
     TCO* mtsms = new TCO(10);
     SuaListener* listener = new SuaListener(sccpApi,*mtsms);
     listener->Start();
-    SccpSender* sccpsender = new SuaSender(sccpApi);
-    mtsms->setSccpSender(sccpsender);
     int count = 0;
     int8_t invoke_id = 0;
     while(true)
