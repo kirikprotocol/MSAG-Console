@@ -76,7 +76,7 @@
   <user login="b" password="1" firstName="a" lastName="a" dept="a" workPhone="+2424" homePhone="+73423523" cellPhone="532532"
         email="b@b.ru">
     <role name="smsc_service"/>
-    <pref name="locale" value="ru"/>
+    <pref name="locale" value="en"/>
     <pref name="topmon.graph.head" value="20"/>
     <pref name="topmon.graph.scale" value="3"/>
     <pref name="topmon.max.speed" value="50"/>

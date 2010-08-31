@@ -25,7 +25,7 @@ public class SmppStatusConverter implements Converter {
     }
     Integer code = Integer.parseInt(o.toString());
     ResourceBundle bundle = ResourceBundle.getBundle("ru.novosoft.smsc.web.resources.Smsc",
-        FacesContext.getCurrentInstance().getExternalContext().getRequestLocale());
+        FacesContext.getCurrentInstance().getViewRoot().getLocale());
     return "("+code+") "+bundle.getString("smsc.errcode."+code);
   }
 

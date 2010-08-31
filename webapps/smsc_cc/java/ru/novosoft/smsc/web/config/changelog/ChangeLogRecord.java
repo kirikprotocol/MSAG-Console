@@ -74,7 +74,7 @@ public class ChangeLogRecord {
     Locale l = Locale.ENGLISH;
     FacesContext fc = FacesContext.getCurrentInstance();
     if (fc != null)
-      l = FacesContext.getCurrentInstance().getExternalContext().getRequestLocale();
+      l = FacesContext.getCurrentInstance().getViewRoot().getLocale();
     return l;
   }
 

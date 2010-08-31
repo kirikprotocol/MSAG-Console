@@ -52,16 +52,18 @@ public class TopMenu {
     Iterator<MenuBarItem> mbiIter = menuBarItems.iterator();
     while (mbiIter.hasNext()) {
       MenuBarItem mbi = mbiIter.next();
+      System.out.println("Bar item: "+mbi.name);
       Iterator<MenuItem> iter = mbi.items.iterator();
       while (iter.hasNext()) {
-        String url = iter.next().getRelativeUrl();
+        String url = iter.next().getUrl();
         Collection<String> roles = webXml.getRoles(url);
-        if (roles == null) {
+        System.out.println("Needed roles: "+roles+" for "+url);
+        if (roles == null) {      // url is accessable for all
           continue;
         }
         if (roles.isEmpty()) {    // url is not accessable for all users
           iter.remove();
-          break;
+          continue;
         }
         boolean access = false;
         for (String role : roles) {
@@ -72,7 +74,6 @@ public class TopMenu {
         }
         if (!access) {   // user isn't in roles group
           iter.remove();
-          break;
         }
       }
       if (mbi.items.isEmpty()) {  //remove itemBar if it's empty
@@ -133,10 +134,6 @@ public class TopMenu {
 
     public String getUrl() {
       return url;
-    }
-
-    private String getRelativeUrl() {
-      return url.substring(5);
     }
   }
 

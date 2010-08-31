@@ -39,8 +39,8 @@ public class WebXml {
     file = webXmlFile;
     document = XmlUtils.parse(file.getAbsolutePath());
 //    transformer = TransformerFactory.newInstance().newTransformer();
-    initSecurityConstrains();
     initRoles();
+    initSecurityConstrains();
   }
 
   private void initRoles() {
@@ -68,6 +68,10 @@ public class WebXml {
         NodeList rs = ac.getElementsByTagName("role-name");
         for (int k = 0; k < rs.getLength(); k++) {
           Element role = (Element) rs.item(k);
+          if(role.getTextContent().equals("*")) {
+            roles.addAll(this.roles);
+            break;
+          }
           roles.add(role.getTextContent());
         }
       }
@@ -319,7 +323,7 @@ public class WebXml {
           }
         }
       }
-      return roles == null || (roles.size() == 1 && roles.get(0).equals("*")) ? null : roles;
+      return roles == null ? null : roles;
     }
 
   }

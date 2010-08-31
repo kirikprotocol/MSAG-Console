@@ -45,7 +45,7 @@ public abstract class SmscController implements Serializable {
   }
 
   protected Locale getLocale() {
-    return FacesContext.getCurrentInstance().getExternalContext().getRequestLocale();
+    return FacesContext.getCurrentInstance().getViewRoot().getLocale();
   }
 
   protected Principal getUserPrincipal() {

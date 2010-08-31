@@ -5,6 +5,32 @@
          xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd"
          version="2.4">
 
+  <servlet>
+    <servlet-name>Redirect Servlet</servlet-name>
+    <servlet-class>ru.novosoft.smsc.web.RedirectServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>Redirect Servlet</servlet-name>
+    <url-pattern>/redirect</url-pattern>
+  </servlet-mapping>
+  
+
+  <error-page>
+    <error-code>403</error-code>
+    <location>/redirect?url=/smsc/error403.faces</location>
+  </error-page>
+
+  <error-page>
+    <error-code>404</error-code>
+    <location>/redirect?url=/smsc/error404.faces</location>
+  </error-page>
+
+  <error-page>
+    <error-code>500</error-code>
+    <location>/redirect?url=/smsc/error500.faces</location>
+  </error-page>
+
+
   <!-- FaceletViewHandler configuration -->
   <context-param>
     <param-name>org.apache.myfaces.trinidad.ALTERNATE_VIEW_HANDLER</param-name>
