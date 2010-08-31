@@ -35,6 +35,13 @@ using namespace eyeline::ss7na;
 
 
 static Logger *logger = 0;
+class EmptySubscriberRegistrator: public SubscriberRegistrator {
+  public:
+    EmptySubscriberRegistrator(TCO* _tco) : SubscriberRegistrator(_tco) {}
+    virtual void registerSubscriber(Address& imsi, Address& msisdn, Address& mgt, int period) {}
+    virtual int  update(Address& imsi, Address& msisdn, Address& mgt) {return 1;}
+    virtual bool lookup(Address& msisdn, Address& imsi, Address& msc) {return false;}
+};
 class SuaListener : public Thread {
   private:
     libsccp::SccpApi& api;
