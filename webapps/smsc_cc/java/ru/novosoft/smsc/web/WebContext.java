@@ -6,6 +6,7 @@ import ru.novosoft.smsc.util.xml.WebXml;
 import ru.novosoft.smsc.web.auth.Authenticator;
 import ru.novosoft.smsc.web.config.AppliableConfiguration;
 import ru.novosoft.smsc.web.config.SmscStatusManager;
+import ru.novosoft.smsc.web.journal.Journal;
 
 import java.util.concurrent.CountDownLatch;
 
@@ -25,6 +26,8 @@ public class WebContext {
   private AppliableConfiguration appliableConfiguration;
 
   private SmscStatusManager smscStatusManager;
+
+  private Journal journal;
 
   private static final CountDownLatch initLatch = new CountDownLatch(1);
 
@@ -48,8 +51,9 @@ public class WebContext {
     this.authenticator = authenticator;
     this.webXml = webXml;
     this.adminContext = adminContext;
+    this.journal = new Journal();
     try {
-      this.appliableConfiguration = new AppliableConfiguration(adminContext);
+      this.appliableConfiguration = new AppliableConfiguration(adminContext, journal);
     } catch (AdminException e) {
       throw new InitException(e);
     }

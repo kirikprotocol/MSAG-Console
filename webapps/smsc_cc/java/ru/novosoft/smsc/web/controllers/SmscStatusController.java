@@ -2,13 +2,11 @@ package ru.novosoft.smsc.web.controllers;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
-import ru.novosoft.smsc.admin.users.User;
 import ru.novosoft.smsc.web.WebContext;
 import ru.novosoft.smsc.web.components.data_table.model.DataTableModel;
 import ru.novosoft.smsc.web.components.data_table.model.DataTableSortOrder;
 import ru.novosoft.smsc.web.config.AppliableConfiguration;
 import ru.novosoft.smsc.web.config.SmscStatusManager;
-import ru.novosoft.smsc.web.config.changelog.ChangeLogRecord;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.component.html.HtmlSelectOneMenu;
@@ -32,47 +30,6 @@ public class SmscStatusController extends SmscController {
   public SmscStatusController() {
     smscStatusManager = WebContext.getInstance().getSmscStatusManager();
     appliableConfiguration = WebContext.getInstance().getAppliableConfiguration();
-  }
-
-  public void reset() {
-    String configName = getRequestParameter("configName");
-    if (configName == null)
-      return;
-    try {
-      if (configName.equals("smsc"))
-        appliableConfiguration.resetSmscSettings(getUserPrincipal().getName());
-      else if (configName.equals("reschedule"))
-        appliableConfiguration.resetRescheduleSettings(getUserPrincipal().getName());
-      else if (configName.equals("users"))
-        appliableConfiguration.resetUsersSettings(getUserPrincipal().getName());
-
-    } catch (AdminException e) {
-      logError(e);
-    }
-  }
-
-  public void applyAll() {
-    try {
-      appliableConfiguration.applyAll(getUserPrincipal().getName());
-    } catch (AdminException e) {
-      logError(e);
-    }
-  }
-
-  public void resetAll() {
-    try {
-      appliableConfiguration.resetAll(getUserPrincipal().getName());
-    } catch (AdminException e) {
-      logError(e);
-    }
-  }
-
-  public DataTableModel getConfigChanges() {
-    List<ConfigChanges> result = new ArrayList<ConfigChanges>();
-    result.add(new ConfigChanges("smsc", appliableConfiguration.getSmscSettingsChanges()));
-    result.add(new ConfigChanges("reschedule", appliableConfiguration.getRescheduleSettingsChanges()));
-    result.add(new ConfigChanges("users", appliableConfiguration.getUsersSettingsChanges()));
-    return new ListTableModel(result);
   }
 
   public void switchToHost(ValueChangeEvent e) {
@@ -162,87 +119,6 @@ public class SmscStatusController extends SmscController {
     }
 
     return new ListTableModel(result);
-  }
-
-  /**
-   *
-   */
-  public static class ConfigChanges implements Serializable {
-
-    private final String configName;
-    private final List<ChangeRecord> changes;
-
-    public ConfigChanges(String configName, List<ChangeLogRecord> changes) {
-      this.configName = configName;
-      this.changes = new ArrayList<ChangeRecord>(changes.size());
-      for(ChangeLogRecord clr : changes) {
-        this.changes.add(new ChangeRecord(clr));
-      }
-    }
-
-    public List<ChangeRecord> getChanges() {
-      return changes;
-    }
-
-    public String getConfigName() {
-      return configName;
-    }
-
-    public boolean isChanged() {
-      return !changes.isEmpty();
-    }
-  }
-
-  public static class ChangeRecord implements Serializable {
-
-    private ChangeLogRecord record;
-
-    private String userName;
-
-    private String userLastName;
-    private String userDept;
-
-    public ChangeRecord(ChangeLogRecord record) {
-      this.record = record;
-      User u = WebContext.getInstance().getAppliableConfiguration().getUsersSettings().getUser(record.getUser());
-      if(u != null) {
-        userName = u.getFirstName();
-        userLastName = u.getLastName();
-        userDept = u.getDept();
-      }
-    }
-
-    public long getTime() {
-      return record.getTime();
-    }
-
-    public String getSubject() {
-      return record.getSubject();
-    }
-
-    public String getUser() {
-      return record.getUser();
-    }
-
-    public String getDescription() {
-      return record.getDescription();
-    }
-
-    public ChangeLogRecord.Type getType() {
-      return record.getType();
-    }
-
-    public String getUserName() {
-      return userName;
-    }
-
-    public String getUserLastName() {
-      return userLastName;
-    }
-
-    public String getUserDept() {
-      return userDept;
-    }
   }
 
   /**

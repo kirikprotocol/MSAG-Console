@@ -20,7 +20,7 @@ import java.util.*;
 /**
  * author: alkhal
  */
-public class SmscConfigController extends SmscController{
+public class SmscConfigController extends SmscController {
 
   private static final Logger logger = Logger.getLogger(SmscConfigController.class);
 
@@ -28,7 +28,7 @@ public class SmscConfigController extends SmscController{
 
   private int instancesCount = 0;
 
-  private CommonSettings commonConfig= new CommonSettings();
+  private CommonSettings commonConfig = new CommonSettings();
 
   private List<InstanceSettings> instanceConfigs = new LinkedList<InstanceSettings>();
 
@@ -50,44 +50,50 @@ public class SmscConfigController extends SmscController{
   public SmscConfigController() {
     Map<String, String> reguestMap = getRequestParameters();
     conf = WebContext.getInstance().getAppliableConfiguration();
-    SmscSettings smscSettings = conf.getSmscSettings();
-    if(!reguestMap.containsKey("initialized")) {
-      lastUpdate = conf.getSmscSettingsUpdateInfo().getLastUpdateTime();
-      instancesCount = smscSettings.getSmscInstancesCount();        
-      initCommonConfig();
-      initInstances();
-    }
-    try{
+
+    try {
+      SmscSettings smscSettings = conf.getSmscSettings();
+      if (!reguestMap.containsKey("initialized")) {
+        lastUpdate = conf.getSmscSettingsUpdateInfo().getLastUpdateTime();
+        instancesCount = smscSettings.getSmscInstancesCount();
+        initCommonConfig();
+        initInstances();
+      }
       List<Integer> outOfDate = new LinkedList<Integer>();
 
       SmscStatusManager smscStatusManager = WebContext.getInstance().getSmscStatusManager();
-      for (int i=0; i<smscStatusManager.getSmscInstancesNumber(); i++) {
+      for (int i = 0; i < smscStatusManager.getSmscInstancesNumber(); i++) {
         if (smscStatusManager.getMainConfigState(i) == SmscConfigurationStatus.OUT_OF_DATE)
           outOfDate.add(i);
       }
-            
-      if(!outOfDate.isEmpty()) {
+
+      if (!outOfDate.isEmpty()) {
         String message = MessageFormat.format(
             ResourceBundle.getBundle("ru.novosoft.smsc.web.resources.Smsc", getLocale()).getString("smsc.config.instance.out_of_date"),
             outOfDate.toString());
         addMessage(FacesMessage.SEVERITY_WARN, message);
       }
-    }catch (AdminException e) {
-      logger.error(e,e);
+    } catch (AdminException e) {
+      logger.error(e, e);
       addMessage(FacesMessage.SEVERITY_ERROR, e.getMessage(getLocale()));
     }
   }
 
   private void initCommonConfig() {
-    commonConfig = conf.getSmscSettings().getCommonSettings();
+    try {
+      commonConfig = conf.getSmscSettings().getCommonSettings();
+    } catch (AdminException e) {
+      logger.error(e,e);
+      addMessage(FacesMessage.SEVERITY_ERROR, e.getMessage(getLocale()));
+    }
 
     //core
-    for(String ssn : commonConfig.getAdd_ussd_ssn()) {
+    for (String ssn : commonConfig.getAdd_ussd_ssn()) {
       DynamicTableRow row = new DynamicTableRow();
       row.setValue("ssn", ssn);
       addSsnModel.addRow(row);
     }
-    for(String l : commonConfig.getLocales()) {
+    for (String l : commonConfig.getLocales()) {
       DynamicTableRow row = new DynamicTableRow();
       row.setValue("locale", l);
       localesModel.addRow(row);
@@ -95,7 +101,7 @@ public class SmscConfigController extends SmscController{
 
     // directives
 
-    for(Map.Entry<String, String> e : commonConfig.getDirectives().entrySet()) {
+    for (Map.Entry<String, String> e : commonConfig.getDirectives().entrySet()) {
       DynamicTableRow row = new DynamicTableRow();
       row.setValue("key", e.getKey());
       row.setValue("value", e.getValue());
@@ -106,7 +112,12 @@ public class SmscConfigController extends SmscController{
 
   private void initInstances() {
     for (int i = 0; i < instancesCount; i++) {
-      instanceConfigs.add(conf.getSmscSettings().getInstanceSettings(i));
+      try {
+        instanceConfigs.add(conf.getSmscSettings().getInstanceSettings(i));
+      } catch (AdminException e) {
+        logger.error(e,e);
+        addMessage(FacesMessage.SEVERITY_ERROR, e.getMessage(getLocale()));
+      }
     }
   }
 
@@ -178,45 +189,45 @@ public class SmscConfigController extends SmscController{
 
   public String save() {
 
-    if(lastUpdate != conf.getSmscSettingsUpdateInfo().getLastUpdateTime()) {
+    if (lastUpdate != conf.getSmscSettingsUpdateInfo().getLastUpdateTime()) {
       addLocalizedMessage(FacesMessage.SEVERITY_ERROR, "smsc.config.not.actual");
       return null;
     }
 
-    for(DynamicTableRow row : addSsnModel.getRows()) {
-      String value = (String)row.getValue("ssn");
-      if(value == null || value.length() == 0) {
+    for (DynamicTableRow row : addSsnModel.getRows()) {
+      String value = (String) row.getValue("ssn");
+      if (value == null || value.length() == 0) {
         addLocalizedMessage(FacesMessage.SEVERITY_ERROR, "add_ssn.empty");
         return null;
       }
     }
-    for(DynamicTableRow row : localesModel.getRows()) {
-      String value = (String)row.getValue("locale");
-      if(value == null || value.length() == 0) {
+    for (DynamicTableRow row : localesModel.getRows()) {
+      String value = (String) row.getValue("locale");
+      if (value == null || value.length() == 0) {
         addLocalizedMessage(FacesMessage.SEVERITY_ERROR, "locale.empty");
         return null;
       }
     }
-    for(DynamicTableRow row : directivesModel.getRows()) {
-      String value = (String)row.getValue("key");
-      if(value == null || value.length() == 0) {
-        addLocalizedMessage(FacesMessage.SEVERITY_ERROR, "directives.empty");   
-        return null;        
+    for (DynamicTableRow row : directivesModel.getRows()) {
+      String value = (String) row.getValue("key");
+      if (value == null || value.length() == 0) {
+        addLocalizedMessage(FacesMessage.SEVERITY_ERROR, "directives.empty");
+        return null;
       }
     }
 
     Locale locale = getLocale();
-    try{
+    try {
       CommonSettings cs = fill(commonConfig);
       InstanceSettings[] iss = new InstanceSettings[instancesCount];
-      for(int i=0;i<instancesCount;i++) {
+      for (int i = 0; i < instancesCount; i++) {
         iss[i] = instanceConfigs.get(i);
       }
 
       SmscSettings smscSettings = conf.getSmscSettings();
 
       smscSettings.setCommonSettings(cs);
-      for(int i=0;i<instancesCount;i++) {
+      for (int i = 0; i < instancesCount; i++) {
         smscSettings.setInstanceSettings(i, iss[i]);
       }
 
@@ -227,7 +238,7 @@ public class SmscConfigController extends SmscController{
       return "INDEX";
 
     } catch (AdminException e) {
-      logger.warn(e,e);
+      logger.warn(e, e);
       addMessage(FacesMessage.SEVERITY_ERROR, e.getMessage(locale));
       return null;
     }
@@ -238,26 +249,26 @@ public class SmscConfigController extends SmscController{
   private CommonSettings fill(CommonSettings commonSettings) throws AdminException {
     String[] aus = new String[addSsnModel.getRowCount()];
 
-    int i=0;
-    for(DynamicTableRow s : addSsnModel.getRows()) {
-      aus[i] = (String)s.getValue("ssn");
+    int i = 0;
+    for (DynamicTableRow s : addSsnModel.getRows()) {
+      aus[i] = (String) s.getValue("ssn");
       i++;
     }
     commonSettings.setAdd_ussd_ssn(aus);
 
     String[] ls = new String[localesModel.getRowCount()];
-    i=0;
-    for(DynamicTableRow s : localesModel.getRows()) {
-      ls[i] = (String)s.getValue("locale");
+    i = 0;
+    for (DynamicTableRow s : localesModel.getRows()) {
+      ls[i] = (String) s.getValue("locale");
       i++;
     }
     commonSettings.setLocales(ls);
 
     // directives
 
-    Map<String,String> d = new HashMap<String, String>(directivesModel.getRowCount());
-    for(DynamicTableRow e : directivesModel.getRows()) {
-      d.put((String)e.getValue("key"), (String)e.getValue("value"));
+    Map<String, String> d = new HashMap<String, String>(directivesModel.getRowCount());
+    for (DynamicTableRow e : directivesModel.getRows()) {
+      d.put((String) e.getValue("key"), (String) e.getValue("value"));
     }
     commonSettings.setDirectives(d);
 

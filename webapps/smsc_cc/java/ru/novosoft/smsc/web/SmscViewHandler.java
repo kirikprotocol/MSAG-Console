@@ -2,6 +2,7 @@ package ru.novosoft.smsc.web;
 
 import com.sun.facelets.FaceletViewHandler;
 import org.apache.log4j.Logger;
+import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.users.User;
 import ru.novosoft.smsc.web.components.AjaxFacesContext;
 
@@ -55,7 +56,12 @@ public class SmscViewHandler extends FaceletViewHandler {
   public Locale calculateLocale(FacesContext context) {
     Principal p = context.getExternalContext().getUserPrincipal();
     if(p != null) {
-      User u = WebContext.getInstance().getAppliableConfiguration().getUsersSettings().getUser(p.getName());
+      User u = null;
+      try {
+        u = WebContext.getInstance().getAppliableConfiguration().getUsersSettings().getUser(p.getName());
+      } catch (AdminException e) {
+        logger.error(e,e);
+      }
       if(u != null) {
         return u.getPrefs().getLocale();
       }

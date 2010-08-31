@@ -2,11 +2,11 @@ package ru.novosoft.smsc.web.config;
 
 import ru.novosoft.smsc.admin.AdminContext;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.map_limit.MapLimitSettings;
 import ru.novosoft.smsc.admin.reschedule.RescheduleSettings;
 import ru.novosoft.smsc.admin.smsc.SmscSettings;
 import ru.novosoft.smsc.admin.users.UsersSettings;
-import ru.novosoft.smsc.web.config.changelog.ChangeLogRecord;
-import ru.novosoft.smsc.web.config.changelog.LocalChangeLog;
+import ru.novosoft.smsc.web.journal.Journal;
 
 import java.util.List;
 
@@ -16,144 +16,87 @@ import java.util.List;
 public class AppliableConfiguration {
 
   private final AdminContext adminContext;
+  private final Journal journal;
 
-  private SmscSettings smscSettings;
   private UpdateInfo smscSettingsUpdateInfo;
-
-  private RescheduleSettings rescheduleSettings;
   private UpdateInfo rescheduleSettingsUpdateInfo;
-
-  private LocalChangeLog changeLog;
-
-  private UsersSettings usersSettings;
-
   private UpdateInfo usersSettingsUpdateInfo;
+  private UpdateInfo mapLimitSettingsUpdateInfo;
 
-  public AppliableConfiguration(AdminContext adminContext) throws AdminException {
+  public AppliableConfiguration(AdminContext adminContext, Journal journal) throws AdminException {
     this.adminContext = adminContext;
-    this.changeLog = new LocalChangeLog();
+    this.journal = journal;
 
-    this.smscSettings = adminContext.getSmscManager().getSettings();
     this.smscSettingsUpdateInfo = new UpdateInfo(System.currentTimeMillis(), null, false);
 
-    this.rescheduleSettings = adminContext.getRescheduleManager().getSettings();
     this.rescheduleSettingsUpdateInfo = new UpdateInfo(System.currentTimeMillis(), null, false);
 
-    this.usersSettings = adminContext.getUsersManager().getUsersSettings();
     this.usersSettingsUpdateInfo = new UpdateInfo(System.currentTimeMillis(), null, false);
+
+    this.mapLimitSettingsUpdateInfo = new UpdateInfo(System.currentTimeMillis(), null, false);
   }
 
-  public boolean hasNotAppliedChanges() {
-    return !changeLog.isEmpty();
+  // SMSC ==============================================================================================================
+
+  public SmscSettings getSmscSettings() throws AdminException {
+    return adminContext.getSmscManager().getSettings();
   }
 
-  public void applyAll(String user) throws AdminException {
-    applySmscSettings(user);
-    applyRescheduleSettings(user);
-    applyUsersSettings(user);
-  }
-
-  public void resetAll(String user) throws AdminException {
-    resetSmscSettings(user);
-    resetRescheduleSettings(user);
-    resetUsersSettings(user);
-  }
-
-  // SMSC==============================================================================================================
-
-  public SmscSettings getSmscSettings() {
-    return smscSettings.cloneSettings();
-  }
-
-  public UsersSettings getUsersSettings() {
-    return usersSettings.cloneSettings();
-  }
-
-  public void setUsersSettings(UsersSettings settings, String user) {
-    changeLog.logChanges(this.usersSettings, settings, user);
-    this.usersSettings = settings.cloneSettings();
-    usersSettingsUpdateInfo = new UpdateInfo(System.currentTimeMillis(), user, true);
-  }
-
-  public void applyUsersSettings(String user) throws AdminException{
-    if (changeLog.hasRecords(LocalChangeLog.USERS)) {
-      adminContext.getUsersManager().updateSettings(usersSettings);
-      // todo скопировать все записи для сабжекта SMSC в журнал
-      changeLog.removeRecords(LocalChangeLog.USERS);
-    }
-  }
-
-  public void resetUsersSettings(String user) throws AdminException {
-    this.usersSettings = adminContext.getUsersManager().getUsersSettings();
-    changeLog.removeRecords(LocalChangeLog.USERS);
-  }
-
-  public List<ChangeLogRecord> getUsersSettingsChanges() {
-    return changeLog.getRecords(LocalChangeLog.USERS);
-  }
-
-
-  public void setSmscSettings(SmscSettings smscSettings, String user) {
-    changeLog.logChanges(this.smscSettings, smscSettings, user);
-    this.smscSettings = smscSettings.cloneSettings();
+  public void setSmscSettings(SmscSettings smscSettings, String user) throws AdminException {
+    SmscSettings oldSettings = adminContext.getSmscManager().getSettings();
+    adminContext.getSmscManager().updateSettings(smscSettings);
+    journal.logChanges(oldSettings, smscSettings, user);
     smscSettingsUpdateInfo = new UpdateInfo(System.currentTimeMillis(), user, true);
-  }
-
-  public void applySmscSettings(String user) throws AdminException {
-    if (changeLog.hasRecords(LocalChangeLog.SMSC)) {
-      adminContext.getSmscManager().updateSettings(smscSettings);
-      // todo скопировать все записи для сабжекта SMSC в журнал
-      changeLog.removeRecords(LocalChangeLog.SMSC);
-    }
-  }
-
-  public void resetSmscSettings(String user) throws AdminException {
-    this.smscSettings = adminContext.getSmscManager().getSettings();
-    changeLog.removeRecords(LocalChangeLog.SMSC);
   }
 
   public UpdateInfo getSmscSettingsUpdateInfo() {
     return smscSettingsUpdateInfo;
   }
 
-  public List<ChangeLogRecord> getSmscSettingsChanges() {
-    return changeLog.getRecords(LocalChangeLog.SMSC);
+  // RESCHEDULE ========================================================================================================
+
+  public RescheduleSettings getRescheduleSettings() throws AdminException {
+    return adminContext.getRescheduleManager().getSettings();
   }
 
-  // RESCHEDULE========================================================================================================
-
-  public RescheduleSettings getRescheduleSettings() {
-    return rescheduleSettings.cloneSettings();
-  }
-
-  public void setRescheduleSettings(RescheduleSettings rescheduleSettings, String user) {
-    changeLog.logChanges(this.rescheduleSettings, rescheduleSettings, user);
-    this.rescheduleSettings = rescheduleSettings.cloneSettings();
+  public void setRescheduleSettings(RescheduleSettings rescheduleSettings, String user) throws AdminException {
+    RescheduleSettings oldSettings = adminContext.getRescheduleManager().getSettings();
+    adminContext.getRescheduleManager().updateSettings(rescheduleSettings);
+    journal.logChanges(oldSettings, rescheduleSettings, user);
     rescheduleSettingsUpdateInfo = new UpdateInfo(System.currentTimeMillis(), user, true);
-  }
-
-  public void applyRescheduleSettings(String user) throws AdminException {
-    if (changeLog.hasRecords(LocalChangeLog.RESCHEDULE)) {
-      adminContext.getRescheduleManager().updateSettings(rescheduleSettings);
-      // todo скопировать все записи для сабжекта RESCHEDULE в журнал
-      changeLog.removeRecords(LocalChangeLog.RESCHEDULE);
-    }
-  }
-
-  public void resetRescheduleSettings(String user) throws AdminException {
-    this.rescheduleSettings = adminContext.getRescheduleManager().getSettings();
-    changeLog.removeRecords(LocalChangeLog.RESCHEDULE);
   }
 
   public UpdateInfo getRescheduleSettingsUpdateInfo() {
     return rescheduleSettingsUpdateInfo;
   }
 
-  public List<ChangeLogRecord> getRescheduleSettingsChanges() {
-    return changeLog.getRecords(LocalChangeLog.RESCHEDULE);
+  // USERS ========================================================================================================
+
+  public UsersSettings getUsersSettings() throws AdminException {
+    return adminContext.getUsersManager().getUsersSettings();
+  }
+
+  public void setUsersSettings(UsersSettings settings, String user) throws AdminException {
+    UsersSettings oldSettings = adminContext.getUsersManager().getUsersSettings();
+    adminContext.getUsersManager().updateSettings(settings);
+    journal.logChanges(oldSettings, settings, user);
+    usersSettingsUpdateInfo = new UpdateInfo(System.currentTimeMillis(), user, true);
   }
 
   public UpdateInfo getUsersSettingsUpdateInfo() {
     return usersSettingsUpdateInfo;
+  }
+
+  // MAP LIMITS ========================================================================================================
+
+  public MapLimitSettings getMapLimitSettings() throws AdminException {
+    return adminContext.getMapLimitManager().getSettings();
+  }
+
+  public void setMapLimitSettings(MapLimitSettings settings, String user) throws AdminException {
+    MapLimitSettings oldSettings = adminContext.getMapLimitManager().getSettings();
+    adminContext.getMapLimitManager().updateSettings(settings);
+    journal.logChanges(oldSettings, settings, user);
+    mapLimitSettingsUpdateInfo = new UpdateInfo(System.currentTimeMillis(), user, true);
   }
 }

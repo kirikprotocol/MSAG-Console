@@ -1,48 +1,47 @@
-package ru.novosoft.smsc.web.config.changelog;
-
-import org.junit.Test;
+package ru.novosoft.smsc.web.journal;
 
 import static org.junit.Assert.*;
 
+import org.junit.Test;
 import ru.novosoft.smsc.admin.reschedule.Reschedule;
 import ru.novosoft.smsc.admin.reschedule.RescheduleSettings;
 import ru.novosoft.smsc.admin.reschedule.TestRescheduleManager;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Artem Snopkov
  */
-public class LocalChangeLogTest {
-
+public class RescheduleSettingsDiffHelperTest  {
+  
   @Test
-  public void testLogSmscChanges() throws Exception {
-    // todo
-  }
-
-  @Test
-  public void testLogRescheduleChanges1() throws Exception {
+  public void testLogChanges1() throws Exception {
     RescheduleSettings oldS = TestRescheduleManager.createRescheduleSettings();
     RescheduleSettings newS = TestRescheduleManager.createRescheduleSettings();
 
     oldS.setDefaultReschedule("1h");
     newS.setDefaultReschedule("2h");
 
-    LocalChangeLog cl = new LocalChangeLog();
-    cl.logChanges(oldS, newS, "testUser");
+    Journal j = new Journal();
+    RescheduleSettingsDiffHelper h = new RescheduleSettingsDiffHelper("reschedule");
+    h.logChanges(j, oldS, newS, "testUser");
 
-    List<ChangeLogRecord> records = cl.getRecords();
+    List<JournalRecord> records = j.getRecords();
     assertEquals(1, records.size());
 
-    ChangeLogRecord r = records.get(0);
+    JournalRecord r = records.get(0);
     assertEquals("testUser", r.getUser());
-    assertEquals(LocalChangeLog.RESCHEDULE, r.getSubjectKey());
+    assertEquals("reschedule", r.getSubjectKey());
     assertEquals("property_changed", r.getDescriptionKey());
     assertArrayEquals(new String[]{"defaultReschedule", "1h", "2h"}, r.getDescriptionArgs());
   }
-
+  
   @Test
-  public void testLogRescheduleChanges2() throws Exception {
+  public void testLogChanges2() throws Exception {
     RescheduleSettings oldS = TestRescheduleManager.createRescheduleSettings();
     RescheduleSettings newS = TestRescheduleManager.createRescheduleSettings();
 
@@ -68,15 +67,16 @@ public class LocalChangeLogTest {
       newS.setReschedules(r);
     }
 
-    LocalChangeLog cl = new LocalChangeLog();
-    cl.logChanges(oldS, newS, "testUser");
+    Journal journal = new Journal();
+    RescheduleSettingsDiffHelper h = new RescheduleSettingsDiffHelper("reschedule");
+    h.logChanges(journal, oldS, newS, "testUser");
 
-    List<ChangeLogRecord> records = cl.getRecords();
+    List<JournalRecord> records = journal.getRecords();
     assertEquals(3, records.size());
 
-    for (ChangeLogRecord r : records) {
+    for (JournalRecord r : records) {
       assertEquals("testUser", r.getUser());
-      assertEquals(LocalChangeLog.RESCHEDULE, r.getSubjectKey());
+      assertEquals("reschedule", r.getSubjectKey());
       switch (r.getType()) {
         case ADD:
           assertEquals("reschedule_added", r.getDescriptionKey());

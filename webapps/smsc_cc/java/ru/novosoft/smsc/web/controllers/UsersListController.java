@@ -46,7 +46,12 @@ public class UsersListController extends UsersController{
     users = getUsersFromSession(s, false);
     if(users == null) {
       setLastUpdate(s, conf.getUsersSettingsUpdateInfo().getLastUpdateTime());
-      users = conf.getUsersSettings().getUsersMap();
+      try {
+        users = conf.getUsersSettings().getUsersMap();
+      } catch (AdminException e) {
+        logger.error(e,e);
+        addMessage(FacesMessage.SEVERITY_ERROR, e.getMessage(getLocale()));
+      }
     }
   }
 

@@ -1,8 +1,11 @@
 package ru.novosoft.smsc.web.controllers;
 
+import org.apache.log4j.Logger;
+import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.users.User;
 import ru.novosoft.smsc.web.WebContext;
 
+import javax.faces.application.FacesMessage;
 import javax.servlet.http.HttpSession;
 import java.util.Map;
 
@@ -11,6 +14,7 @@ import java.util.Map;
  */
 public class UsersController extends SmscController{
 
+  private static final Logger logger = Logger.getLogger(UsersController.class);
 
   protected Map<String, User> getUsersFromSession(boolean putIfNeeded) {
     return getUsersFromSession(getSession(false), putIfNeeded);
@@ -20,8 +24,14 @@ public class UsersController extends SmscController{
     Map<String, User> users = (Map<String, User>)s.getAttribute("users.users");
     if(users == null && putIfNeeded) {
       setLastUpdate(s, WebContext.getInstance().getAppliableConfiguration().getUsersSettingsUpdateInfo().getLastUpdateTime());
-      users = WebContext.getInstance().getAppliableConfiguration().getUsersSettings().getUsersMap();
-      s.setAttribute("users.users", users);
+      try {
+        users = WebContext.getInstance().getAppliableConfiguration().getUsersSettings().getUsersMap();
+        s.setAttribute("users.users", users);
+      } catch (AdminException e) {
+        logger.error(e,e);
+        addMessage(FacesMessage.SEVERITY_ERROR, e.getMessage(getLocale()));
+      }
+
      }
     return users;
   }
