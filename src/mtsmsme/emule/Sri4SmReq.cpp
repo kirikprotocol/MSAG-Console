@@ -1,3 +1,5 @@
+#include <string>
+#include "core/threads/Thread.hpp"
 #include "eyeline/ss7na/libsccp/SccpApiFactory.hpp"
 #include "eyeline/ss7na/libsccp/MessageInfo.hpp"
 #include "eyeline/ss7na/libsccp/MessageProperties.hpp"
@@ -5,13 +7,12 @@
 #include "eyeline/ss7na/libsccp/messages/N_NOTICE_IND_Message.hpp"
 #include "util/config/XCFManager.hpp"
 #include "eyeline/ss7na/libsccp/xcfg/LibSccpCfgReader.hpp"
-#include "core/threads/Thread.hpp"
 #include "mtsmsme/processor/SccpSender.hpp"
+#include "mtsmsme/processor/HLRImpl.hpp"
 #include "mtsmsme/processor/TCO.hpp"
 #include "mtsmsme/processor/TSM.hpp"
 #include "mtsmsme/comp/SendRoutingInfoForSM.hpp"
 #include "mtsmsme/processor/util.hpp"
-#include <string>
 
 extern std::string hexdmp(const uchar_t* buf, uint32_t bufSz);
 
