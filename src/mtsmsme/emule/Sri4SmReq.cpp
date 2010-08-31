@@ -24,6 +24,8 @@ using smsc::core::threads::Thread;
 using smsc::mtsmsme::processor::SccpSender;
 using smsc::mtsmsme::processor::TCO;
 using smsc::mtsmsme::processor::TSM;
+using smsc::sms::Address;
+using smsc::mtsmsme::processor::SubscriberRegistrator;
 using smsc::mtsmsme::processor::shortMsgGatewayContext_v2;
 using smsc::logger::Logger;
 using smsc::mtsmsme::processor::SccpSender;
