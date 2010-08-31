@@ -59,6 +59,7 @@ int main(int argc, char** argv)
     sleep(10);
     while(true)
     {
+      char* s;
       /* SMSC = 79139860004, MSISDN=79139859489 */
       if (++count % 2) pri = true; else pri = false;
       char ms1[] = "79139870001";
