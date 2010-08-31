@@ -45,110 +45,35 @@ class EmptySubscriberRegistrator: public SubscriberRegistrator {
     virtual int  update(Address& imsi, Address& msisdn, Address& mgt) {return 1;}
     virtual bool lookup(Address& msisdn, Address& imsi, Address& msc) {return false;}
 };
-class SuaListener : public Thread {
-  private:
-    libsccp::SccpApi& api;
-    TCO& tco;
-    bool going;
+class GopotaListener: public SuaProcessor, public Thread {
   public:
-    SuaListener(libsccp::SccpApi& suaApi, TCO& _tco) :
-      Thread(), api(suaApi), going(true), tco(_tco) {}
+    GopotaListener(TCO* _tco, SubscriberRegistrator* _reg) : SuaProcessor(_tco,_reg) {}
     virtual int Execute()
     {
       int result;
-      libsccp::MessageInfo message;
-      while (going)
-      {
-        result = api.msgRecv(&message,1000);
-        if (result == libsccp::SccpApi::SOCKET_TIMEOUT)
-          continue;
-        if (result != libsccp::SccpApi::OK)
-        {
-          smsc_log_error(logger,"MsgRecv failed: %d", result);
-          going = 0;
-          break;
-        }
-        smsc_log_debug(logger,
-                         "got new message type=%d data[%d]={%s} from connection=%d",
-                         message.messageType,message.msgData.getPos(),
-                         dump(message.msgData.getPos(),message.msgData.get()).c_str(),
-                         message.connectNum);
-        {
-          switch ((int)message.messageType)
-          {
-            case libsccp::SccpMessageId::N_UNITDATA_IND_MSGCODE :
-            {
-              //decode with libsua
-              libsccp::N_UNITDATA_IND_Message ind;
-              ind.deserialize(message.msgData.get(), message.msgData.getPos());
-              tco.NUNITDATA(ind.getCalledAddress().dataLen,
-                            (uint8_t*)ind.getCalledAddress().data,
-                            ind.getCallingAddress().dataLen,
-                            (uint8_t*)ind.getCallingAddress().data,
-                            ind.getUserData().dataLen,
-                            (uint8_t*)ind.getUserData().data);
-              break;
-              //decode byself
-              uint8_t* ptr = message.msgData.get();
-              uint8_t fieldMask = *ptr++;
-              if (fieldMask & 0x01) ptr += sizeof(uint32_t); //skip sequenct control
-              uint8_t cdlen = *ptr++; uint8_t* cd = ptr; ptr +=cdlen;
-              uint8_t cllen = *ptr++; uint8_t* cl = ptr; ptr +=cllen;
-              uint16_t _ulen;
-              memcpy(reinterpret_cast<uint8_t*>(&_ulen), ptr, sizeof(_ulen));
-              uint16_t ulen = ntohs(_ulen); ptr += sizeof(_ulen);
-              uint8_t* udp = ptr;
-              //UNITDATA_IND
-              tco.NUNITDATA(cdlen,cd,cllen,cl,ulen,udp);
-              break;
-            }
-          }
-        }
-        message.msgData.setPos(0);
-      }
-      smsc_log_info(logger, "listener finished");
-      return 0;
+      result = Run();
+      smsc_log_error(logger,"SccpListener exit with code: %d", result);
+      return result;
     }
-    void Stop() { going = false; }
-};
+  };
 int main(int argc, char** argv)
 {
   smsc::logger::Logger::Init();
   logger = smsc::logger::Logger::getInstance("sri4smreq");
   try
   {
-    using smsc::util::config::XCFManager;
-    using smsc::util::config::Config;
-
-    libsccp::SccpConfig sccpCfgParms;
-    libsccp::LibSccpCfgReader cfgReader("sua");
-    {
-      std::auto_ptr<Config> xConfig(XCFManager::getInstance().getConfig("sua.xml")); //throws
-      cfgReader.readConfig(*xConfig.get(), sccpCfgParms); //throws
-    }
-
-    libsccp::SccpApiFactory::init();
-    libsccp::SccpApi& sccpApi = libsccp::SccpApiFactory::getSccpApiIface();
-
-    if (sccpApi.init(sccpCfgParms) != libsccp::SccpApi::OK) { //throws
-      smsc_log_error(logger, "main::: SccpApi initialization failed. Terminated.");
-      return 1;
-    }
-
-
-    uint8_t ssnList[] = { 191 };
-
-    for(int i=0; i < sccpApi.getConnectsCount(); ++i)
-    {
-      sccpApi.connect(i);
-      smsc_log_info(logger, "connect(connectNum=%d)", i);
-      int res;
-      if ( ( res = sccpApi.bind(i,ssnList,static_cast<uint8_t>(sizeof(ssnList)))) != 0 )
-        smsc_log_info(logger, "call bind(connectNum=%d) with code %d", i, res);
-    }
     TCO* mtsms = new TCO(10);
     SuaListener* listener = new SuaListener(sccpApi,*mtsms);
+
+    EmptySubscriberRegistrator fakeHLR(&mtsms);
+    mtsms.setRequestSender(&fakeSender);
+    GopotaListener listener(&mtsms, &fakeHLR);
+
+    listener.configure(43, 191, Address((uint8_t)strlen(msca), 1, 1, msca),
+            Address((uint8_t)strlen(vlra), 1, 1, vlra),
+            Address((uint8_t)strlen(hlra), 1, 1, hlra));
     listener->Start();
+    sleep(10);
     int count = 0;
     int8_t invoke_id = 0;
     while(true)
@@ -174,14 +99,6 @@ int main(int argc, char** argv)
         tsm->TBeginReq(cdlen, cd, cllen, cl);
       }
       sleep(10);
-    }
-    for(int i=0; i < sccpApi.getConnectsCount(); ++i)
-    {
-      smsc_log_info(logger, "libSuaTest::: call unbind(connectNum=%d)", i);
-      sccpApi.unbind(i);
-
-      smsc_log_info(logger, "libSuaTest::: call disconnect(connectNum=%d)", i);
-      sccpApi.disconnect(i);
     }
 listener->Stop();
   } catch (std::exception& ex)
