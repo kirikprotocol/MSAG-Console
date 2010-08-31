@@ -58,10 +58,10 @@ int main(int argc, char** argv)
     EmptySubscriberRegistrator fakeHLR(&mtsms);
     GopotaListener listener(&mtsms, &fakeHLR);
 
-    listener->configure(43,191,Address(".1.1.791398699812"),
+    listener.configure(43,191,Address(".1.1.791398699812"),
                                Address(".1.1.791398699813"),
                                Address(".1.1.791398699813"));
-    listener->Start();
+    listener.Start();
     sleep(10);
     int count = 0;
     int8_t invoke_id = 0;
@@ -89,7 +89,7 @@ int main(int argc, char** argv)
       }
       sleep(10);
     }
-    listener->Stop();
+    listener.Stop();
   } catch (std::exception& ex)
   {
     smsc_log_error(logger, "libSuaTest::: catched unexpected exception [%s]", ex.what());

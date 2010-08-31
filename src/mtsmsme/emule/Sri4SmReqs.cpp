@@ -60,11 +60,11 @@ int main(int argc, char** argv)
     using smsc::core::threads::Thread;
     TCO mtsms(10);
     EmptySubscriberRegistrator fakeHLR(&mtsms);
-    GopotaListener* listener = new GopotaListener(&mtsms,&fakeHLR);
-    listener->configure(43,191,Address(".1.1.791398699812"),
+    GopotaListener listener(&mtsms,&fakeHLR);
+    listener.configure(43,191,Address(".1.1.791398699812"),
                                Address(".1.1.791398699813"),
                                Address(".1.1.791398699813"));
-    listener->Start();
+    listener.Start();
     int8_t invoke_id = 0;
     int count = 0;
     bool pri;
@@ -88,7 +88,7 @@ int main(int argc, char** argv)
       }
       sleep(60);
     }
-    listener->Stop();
+    listener.Stop();
   } catch (std::exception& ex)
   {
     smsc_log_error(logger, " catched unexpected exception [%s]", ex.what());
