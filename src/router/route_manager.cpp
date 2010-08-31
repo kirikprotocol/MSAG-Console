@@ -828,6 +828,7 @@ __synchronized__
   rr.info = *rec->info;
   rr.found=true;
   rr.destSmeIdx = rec->proxyIdx;
+  rr.rp=rec->rp;
   if (!rec->info->enabling)
   {
     if(trace_enabled_)
