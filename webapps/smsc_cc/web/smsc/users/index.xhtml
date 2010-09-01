@@ -38,51 +38,45 @@
       </eye:buttons>
 
 
-      <tr:panelFormLayout inlineStyle="padding:10px">
+      <p/>
+      <eye:dataTableFilter bean="#{users}" clearAction="clearFilter">
 
-        <tr:panelLabelAndMessage label="#{msg['smsc.users.login']}">
-          <tr:inputText value="#{users.prefix}"/>
-        </tr:panelLabelAndMessage>
+        <h:panelGrid columns="2" columnClasses="column50Width, columnTopLeftAlign">
+          <tr:panelLabelAndMessage label="#{msg['smsc.users.login']}">
+            <tr:inputText value="#{users.filterByLogin}"/>
+          </tr:panelLabelAndMessage>
+          <h:outputText value=""/>
+        </h:panelGrid>
 
-      </tr:panelFormLayout>
+      </eye:dataTableFilter>
 
-      <eye:buttons>
-        <eye:button>
-          <tr:commandLink text="#{msg['query.button']}"/>
-        </eye:button>
-        <eye:space/>
-      </eye:buttons>
+      <eye:dataTable value="#{users.usersModel}" selectedRows="#{users.selectedRows}" var="u">
 
-      <t:div id="asdf" style="padding:10px">
+        <eye:row rowId="#{u.login}" opened="true">
 
-        <eye:dataTable value="#{users.usersModel}" selectedRows="#{users.selectedRows}" var="u">
+          <eye:column name="login" title="#{msg['smsc.users.login']}" width="20%" sortable="true" defaultSortOrder="asc">
+            <h:commandLink value="#{u.login}" action="#{users.edit}">
+              <f:param name="login" value="#{u.login}"/>
+            </h:commandLink>
+          </eye:column>
 
-          <eye:row rowId="#{u.login}" opened="true">
+          <eye:column name="firstName" title="#{msg['smsc.users.firstname']}" width="20%" sortable="true">
+            <h:outputText value="#{u.firstName}"/>
+          </eye:column>
 
-            <eye:column name="login" title="#{msg['smsc.users.login']}" width="20%" sortable="true">
-              <h:commandLink value="#{u.login}" action="#{users.edit}">
-                <f:param name="login" value="#{u.login}"/>
-              </h:commandLink>
-            </eye:column>
+          <eye:column name="lastName" title="#{msg['smsc.users.lastname']}" width="20%" sortable="true">
+            <h:outputText value="#{u.lastName}"/>
+          </eye:column>
 
-            <eye:column name="firstName" title="#{msg['smsc.users.firstname']}" width="20%" sortable="true">
-              <h:outputText value="#{u.firstName}"/>
-            </eye:column>
+          <eye:column name="dept" title="#{msg['smsc.users.dept']}" width="20%" sortable="true">
+            <h:outputText value="#{u.dept}"/>
+          </eye:column>
 
-            <eye:column name="lastName" title="#{msg['smsc.users.lastname']}" width="20%" sortable="true">
-              <h:outputText value="#{u.lastName}"/>
-            </eye:column>
+        </eye:row>
 
-            <eye:column name="dept" title="#{msg['smsc.users.dept']}" width="20%" sortable="true">
-              <h:outputText value="#{u.dept}"/>
-            </eye:column>
+      </eye:dataTable>
 
-          </eye:row>
-
-        </eye:dataTable>
-
-      </t:div>
-
+      <p/>
 
       <eye:buttons>
         <eye:button>

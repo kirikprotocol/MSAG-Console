@@ -28,17 +28,18 @@ public class UsersListController extends UsersController{
 
   private boolean index_initialized;
 
-  private HttpSession session;
-
-  private String prefix;
+  private String filterByLogin;
 
   public UsersListController() {
-    session = getSession(false);
     conf = WebContext.getInstance().getAppliableConfiguration();
     if(getRequestParameter("index_initialized") == null) {
       initUsers();
       index_initialized = true;
     }
+  }
+
+  public void clearFilter() {
+    filterByLogin = null;
   }
 
   private void initUsers() {
@@ -120,7 +121,7 @@ public class UsersListController extends UsersController{
         }
         for(Iterator<User> i = users.values().iterator();i.hasNext() && count>0;) {
           User r = i.next();
-          if(prefix != null && (prefix = prefix.trim()).length()>0 && !r.getLogin().startsWith(prefix)) {
+          if(filterByLogin != null && (filterByLogin = filterByLogin.trim()).length()>0 && !r.getLogin().startsWith(filterByLogin)) {
             continue;
           }
           if(--startPos < 0) {
@@ -131,14 +132,15 @@ public class UsersListController extends UsersController{
         Collections.sort(result, new Comparator<User>() {
           public int compare(User o1, User o2) {
             if(sortOrder != null) {
+              int mul = sortOrder.isAsc() ? 1 : -1;
               if("firstName".equals(sortOrder.getColumnId())) {
-                return (sortOrder.isAsc() ? -1 : 1)*o1.getFirstName().compareTo(o2.getFirstName());
+                return (mul)*o1.getFirstName().compareTo(o2.getFirstName());
               }else if("lastName".equals(sortOrder.getColumnId())) {
-                return (sortOrder.isAsc() ? -1 : 1)*o1.getLastName().compareTo(o2.getLastName());
+                return (mul)*o1.getLastName().compareTo(o2.getLastName());
               }else if("dept".equals(sortOrder.getColumnId())) {
-                return (sortOrder.isAsc() ? -1 : 1)*o1.getDept().compareTo(o2.getDept());
+                return (mul)*o1.getDept().compareTo(o2.getDept());
               }else if("login".equals(sortOrder.getColumnId())) {
-                return (sortOrder.isAsc() ? -1 : 1)*o1.getLogin().compareTo(o2.getLogin());
+                return (mul)*o1.getLogin().compareTo(o2.getLogin());
               }
             }
             return o1.getLogin().compareTo(o2.getLogin());
@@ -148,12 +150,12 @@ public class UsersListController extends UsersController{
       }
 
       public int getRowsCount() {
-        if(prefix == null || (prefix = prefix.trim()).length() == 0) {
+        if(filterByLogin == null || (filterByLogin = filterByLogin.trim()).length() == 0) {
           return users.size();
         }
         int result = 0;
         for(User r : users.values()) {
-          if(r.getLogin().startsWith(prefix)) {
+          if(r.getLogin().startsWith(filterByLogin)) {
             result++;
           }
         }
@@ -178,11 +180,11 @@ public class UsersListController extends UsersController{
     this.users = users;
   }
 
-  public String getPrefix() {
-    return prefix;
+  public String getFilterByLogin() {
+    return filterByLogin;
   }
 
-  public void setPrefix(String prefix) {
-    this.prefix = prefix;
+  public void setFilterByLogin(String filterByLogin) {
+    this.filterByLogin = filterByLogin;
   }
 }

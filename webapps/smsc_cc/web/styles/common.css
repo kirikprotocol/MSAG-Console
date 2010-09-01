@@ -142,6 +142,10 @@ div.query_result {
   width:50px;
 }
 
+.column400Width {
+  width:400px;
+}
+
 .column0WidthRight {
   width:0px;
   text-align:right;

@@ -5,9 +5,7 @@ import ru.novosoft.smsc.admin.reschedule.RescheduleSettings;
 import ru.novosoft.smsc.admin.smsc.SmscSettings;
 import ru.novosoft.smsc.admin.users.UsersSettings;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 /**
  * Журнал, представляет собой коллекцию объектов класса JournalRecord.
@@ -27,6 +25,20 @@ public class Journal {
   private final UserSettingsDiffHelper users = new UserSettingsDiffHelper(USERS);
   private final MapLimitSettingsDiffHelper mapLimit = new MapLimitSettingsDiffHelper(MAP_LIMIT);
 
+  /**
+   * Возвращает список всех возможных сабжектов в указанной локали
+   * @param locale локаль
+   * @return список всех возможных сабжектов в указанной локали
+   */
+  public List<String> getSubjects(Locale locale) {
+    List<String> l = new ArrayList<String>();
+    ResourceBundle rb = ResourceBundle.getBundle(JournalRecord.class.getCanonicalName(), locale);
+    l.add(rb.getString(SMSC));
+    l.add(rb.getString(RESCHEDULE));
+    l.add(rb.getString(USERS));
+    l.add(rb.getString(MAP_LIMIT));
+    return l;
+  }
 
   /**
    * Возвращает все записи из журнала
@@ -42,6 +54,14 @@ public class Journal {
    */
   public boolean isEmpty() {
     return records.isEmpty();
+  }
+
+  /**
+   * Возвращает количество записей в журнала
+   * @return количество записей в журнала
+   */
+  public int size() {
+    return records.size();
   }
 
   /**

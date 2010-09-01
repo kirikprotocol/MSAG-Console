@@ -1,5 +1,9 @@
 package ru.novosoft.smsc.web.journal;
 
+import ru.novosoft.smsc.web.util.WebUtils;
+
+import javax.faces.context.FacesContext;
+import java.util.Date;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
@@ -21,8 +25,8 @@ public class JournalRecord {
   }
 
   /**
-   * Возвращает время, в которое произошло изменение
-   * @return время, в которое произошло изменение
+   * Возвращает время в миллисекундах, в которое произошло изменение
+   * @return время в миллисекундах, в которое произошло изменение
    */
   public long getTime() {
     return time;
