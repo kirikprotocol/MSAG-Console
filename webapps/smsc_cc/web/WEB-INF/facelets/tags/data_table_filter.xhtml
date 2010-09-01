@@ -1,0 +1,35 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:tr="http://myfaces.apache.org/trinidad">
+
+<ui:composition>
+  
+  <table class="page_menu" width="100%">
+    <tr>
+      <td align="left" width="10%">
+        <h:outputText value="#{msg['filter.by']}"/>
+      </td>
+      <td align="left" width="80%">
+        &nbsp;
+      </td>
+      <td width="10%" align="right">
+        <tr:commandLink text="#{msg['apply.button']}" action="#{bean[applyAction]}" rendered="#{bean != null and applyAction != null}"/>
+        <h:commandLink id="data_table_filter" value="#{msg['apply.button']}" onclick="new DataTableFilter('data_table_filter').clickApply()" rendered="#{bean == null or applyAction == null}"/>
+        <h:outputText value=" | " rendered="#{bean != null and clearAction != null}"/>
+        <tr:commandLink text="#{msg['clear.button']}" action="#{bean[clearAction]}" rendered="#{bean != null and clearAction != null}"/>
+      </td>
+    </tr>
+  </table>
+  <hr/>
+  <ui:insert/>
+  <p/>
+
+</ui:composition>
+
+</html>
