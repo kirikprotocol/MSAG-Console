@@ -8,9 +8,7 @@
 
 <ui:composition template="/templates/main.xhtml">
 
-  <ui:define name="sme_title">
-    <eye:pageTitle title="#{msg['journal.page.title']}"/>
-  </ui:define>
+  <ui:param name="pageTitle" value="#{msg['journal.page.title']}"/>
 
   <ui:define name="content">
     <h:form>
@@ -21,9 +19,7 @@
             <h:outputText value="#{msg['journal.page.user']}"/>
             <h:inputText value="#{journal.filterByUser}"/>
             <h:outputText value="#{msg['journal.page.from_date']}"/>
-            <t:inputDate value="#{journal.filterByStartDate}" popupCalendar="true" type="full" requiredMessage="asdfasdf asd sd fsd ">
-
-              </t:inputDate>
+            <t:inputDate value="#{journal.filterByStartDate}" popupCalendar="true" type="full"/>
           </h:panelGrid>
           <h:panelGrid columns="2" columnClasses="column50Width, column400Width">
             <h:outputText value="#{msg['journal.page.subject']}"/>

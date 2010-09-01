@@ -9,9 +9,7 @@
 
 <ui:composition template="/templates/main.xhtml">
 
-<ui:define name="sme_title">
-  <eye:pageTitle title="#{msg['smsc.config.title']}"/>
-</ui:define>
+<ui:param name="pageTitle" value="#{msg['smsc.config.title']}"/>
 
 
 <ui:define name="content">

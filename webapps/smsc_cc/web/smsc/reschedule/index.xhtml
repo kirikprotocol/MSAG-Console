@@ -8,9 +8,7 @@
 
 <ui:composition template="/templates/main.xhtml">
 
-  <ui:define name="sme_title">
-    <eye:pageTitle title="#{msg['smsc.reschedule.edit']}"/>
-  </ui:define>
+  <ui:param name="pageTitle" value="#{msg['smsc.reschedule']}"/>
 
   <ui:define name="content">
 
@@ -50,36 +48,36 @@
         </tr:panelLabelAndMessage>
       </tr:panelFormLayout>
 
-      <t:div id="asdf">
 
-        <eye:dataTable value="#{reschedule.rescheduleModel}" selectedRows="#{reschedule.selectedRows}" var="r">
 
-          <eye:row rowId="#{r.intervals}" innerData="#{!empty r.statuses}" opened="true">
+      <eye:dataTable value="#{reschedule.rescheduleModel}" selectedRows="#{reschedule.selectedRows}" var="r">
 
-            <eye:column name="reschedules" title="" width="50%">
-              <h:commandLink value="#{r.intervals}" action="#{reschedule.edit}">
-                <f:param name="reschedule" value="#{r.intervals}"/>
-              </h:commandLink>
-            </eye:column>
+        <eye:row rowId="#{r.intervals}" innerData="#{!empty r.statuses}" opened="true">
 
-            <f:facet name="innerData">
-              <h:panelGroup >          
-                <h:dataTable value="#{r.statuses}" var="status" columnClasses="column50Width, columnTopLeftAlign">
-                  <h:column>
-                    <tr:outputText/>
-                  </h:column>
-                  <h:column>
-                    <tr:outputText value="#{status}" converter="smpp_status_converter"/>
-                  </h:column>
-                </h:dataTable>
-              </h:panelGroup>
-            </f:facet>
+          <eye:column name="reschedules" title="" width="50%">
+            <h:commandLink value="#{r.intervals}" action="#{reschedule.edit}">
+              <f:param name="reschedule" value="#{r.intervals}"/>
+            </h:commandLink>
+          </eye:column>
 
-          </eye:row>
+          <f:facet name="innerData">
+            <h:panelGroup >
+              <h:dataTable value="#{r.statuses}" var="status" columnClasses="column50Width, columnTopLeftAlign">
+                <h:column>
+                  <tr:outputText/>
+                </h:column>
+                <h:column>
+                  <tr:outputText value="#{status}" converter="smpp_status_converter"/>
+                </h:column>
+              </h:dataTable>
+            </h:panelGroup>
+          </f:facet>
 
-        </eye:dataTable>
+        </eye:row>
 
-      </t:div>
+      </eye:dataTable>
+
+
 
       <eye:buttons>
         <eye:button>

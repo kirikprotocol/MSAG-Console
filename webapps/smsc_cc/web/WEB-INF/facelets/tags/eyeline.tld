@@ -96,15 +96,6 @@
   </tag>
 
   <tag>
-    <name>pageTitle</name>
-    <attribute>
-      <name>title</name>
-      <type>java.lang.String</type>
-      <required>true</required>
-    </attribute>
-  </tag>
-
-  <tag>
     <name>pageSubtitle</name>
     <description>Подзаголовок на странице</description>
     <attribute>

@@ -8,14 +8,11 @@
 
 <ui:composition template="/templates/main.xhtml">
 
-  <ui:define name="sme_title">
-    <eye:pageTitle title="#{msg['smsc.title']}"/>
-  </ui:define>
+  <ui:param name="pageTitle" value="#{msg['smsc.title']}"/>    
 
   <ui:define name="content">
 
     <h:form>
-
       <eye:pageSubtitle value="#{msg['status.page.smscs']}"/>
 
       <eye:dataTable value="#{smscStatus.smsCenters}" pageSize="100" var="data">

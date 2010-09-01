@@ -8,18 +8,8 @@
 
 <ui:composition template="../templates/main.xhtml">
 
-  <ui:define name="sme_title">
-
-    <table cellpadding="0" cellspacing="0" height="30px" class="smsc_status">
-      <tr>
-        <th background="/smsc/images/smsc_17.jpg" style="white-space:nowrap">Table Test</th>
-        <td><h:outputText value="&#160;"/></td>
-        <td width="12px" background="/smsc/images/smsc_19.jpg" style="padding-right:0px;"></td>
-      </tr>
-    </table>
-
-  </ui:define>
-
+  <ui:param name="pageTitle" value="#{msg['smsc.title']}"/>
+    
   <ui:define name="content">
 
     <tr:form>

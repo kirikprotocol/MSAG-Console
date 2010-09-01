@@ -8,9 +8,7 @@
 
 <ui:composition template="/templates/main.xhtml">
 
-  <ui:define name="sme_title">
-    <eye:pageTitle title="#{msg['smsc.title']}"/>
-  </ui:define>
+  <ui:param name="pageTitle" value="#{msg['smsc.title']}"/>
 
   <ui:define name="content">
     <form name="opForm" id="opForm" action="j_security_check" method="post" enctype="application/x-www-form-urlencoded">
