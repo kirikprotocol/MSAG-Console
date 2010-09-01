@@ -199,6 +199,11 @@
       <description>Выравнивание содержимого колонки</description>
       <type>java.lang.String</type>
     </attribute>
+    <attribute>
+      <name>defaultSortOrder</name>
+      <description>Сортировка по-умолчанию. Возможные значения: asc, desc. Атрибут может быть установлен только для одной колонки в таблице.</description>
+      <type>java.lang.String</type>
+    </attribute>
   </tag>
 
   <tag>
@@ -223,6 +228,28 @@
       <name>innerRows</name>
       <description>Атрибут, описывающий как можно получить внутренние строки для данной строки</description>
       <type>java.util.List</type>
+    </attribute>
+  </tag>
+
+  <tag>
+    <name>dataTableFilter</name>
+    <description>
+      Секция с фильтрами для dataTable. Может содержать одну кнопку "Применить" или две кнопки: "Применить" и "Очистить".
+      Если заданы атрибуты bean и applyAction, то по нажатию на кнопку "Применить" вызывается указанный метод у бина.
+      В противном случае при нажатии кнопки "Применить" сабмитается форма, в которой находится dataTableFilter.
+      Если заданы атрибуьы bean и clearAction, то отображается кнопка "Очистить" при нажатии на которую вызывается соответствующий метод бина.
+    </description>
+    <attribute>
+      <name>bean</name>
+      <description>Бин, экшены которого будут вызываться</description>
+    </attribute>
+    <attribute>
+      <name>applyAction</name>
+      <description>Название метода бина, который надо вызвать при нажатии кнопки "Применить"</description>
+    </attribute>
+    <attribute>
+      <name>clearAction</name>
+      <description>Название метода бина, который надо вызвать при нажатии кнопки "Очистить"</description>
     </attribute>
   </tag>
 

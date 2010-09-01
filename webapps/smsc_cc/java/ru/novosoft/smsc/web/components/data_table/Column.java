@@ -15,6 +15,7 @@ public class Column extends EyelineComponent {
   private String width = "100%";
   private String align = "left";
   private boolean sortable;
+  private String defaultSortOrder;
 
   public void setName(String name) {
     this.name = name;
@@ -54,16 +55,25 @@ public class Column extends EyelineComponent {
 
   public void setSortable(boolean sortable) {
     this.sortable = sortable;
-  }  
+  }
+
+  public String getDefaultSortOrder() {
+    return defaultSortOrder;
+  }
+
+  public void setDefaultSortOrder(String defaultSortOrder) {
+    this.defaultSortOrder = defaultSortOrder;
+  }
 
   public Object saveState(FacesContext context) {
-    Object[] values = new Object[6];
+    Object[] values = new Object[7];
     values[0] = super.saveState(context);
     values[1] = name;
     values[2] = title;
     values[3] = width;
     values[4] = align;
     values[5] = sortable;
+    values[6] = defaultSortOrder;
     return (values);
   }
 
@@ -75,5 +85,6 @@ public class Column extends EyelineComponent {
     width = (String) values[3];
     align = (String) values[4];
     sortable = (Boolean) values[5];
+    defaultSortOrder = (String)values[6];
   }
 }

@@ -17,6 +17,7 @@ public class ColumnHandler extends ComponentHandler {
   private final TagAttribute width;
   private final TagAttribute align;
   private final TagAttribute sortable;
+  private final TagAttribute defaultSortOrder;
 
   public ColumnHandler(ComponentConfig config) {
     super(config);
@@ -26,6 +27,7 @@ public class ColumnHandler extends ComponentHandler {
     width = getAttribute("width");
     sortable = getAttribute("sortable");
     align = getAttribute("align");
+    defaultSortOrder = getAttribute("defaultSortOrder");
   }
 
   @Override
@@ -39,8 +41,12 @@ public class ColumnHandler extends ComponentHandler {
       c.setSortable(sortable.getBoolean(ctx));
     if (align != null)
       c.setAlign(align.getValue(ctx));
+    if (defaultSortOrder != null)
+      c.setDefaultSortOrder(defaultSortOrder.getValue());
 
     return c;
   }
+
+  
   
 }

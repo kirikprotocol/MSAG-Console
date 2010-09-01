@@ -80,4 +80,8 @@ public class WebContext {
   public AppliableConfiguration getAppliableConfiguration() {
     return appliableConfiguration;
   }
+
+  public Journal getJournal() {
+    return journal;
+  }
 }

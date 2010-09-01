@@ -58,18 +58,31 @@ public class DataTableHandler extends ComponentHandler {
     DataTableModel m = (DataTableModel) value.getValueExpression(ctx, DataTableModel.class).getValue(ctx);
     t.setModel(m);
 
+    // Header
+    nextHandler.apply(ctx, c);
+
+    if (t.getSortOrder() == null) {
+      for (UIComponent col : t.getFirstRow().getChildren()) {
+        if (col instanceof Column) {
+          Column column = (Column)col;
+          if (column.getDefaultSortOrder() != null) {
+            if (column.getDefaultSortOrder().equalsIgnoreCase("asc"))
+              t.setSortOrder("-" + column.getName());
+            else if (column.getDefaultSortOrder().equalsIgnoreCase("desc"))
+              t.setSortOrder(column.getName());
+          }
+        }
+      }
+    }
+
     DataTableSortOrder s = null;
     if (t.getSortOrder() != null) {
       boolean asc = t.getSortOrder().charAt(0) == '-';
       s = (asc) ? new DataTableSortOrder(t.getSortOrder().substring(1), true) : new DataTableSortOrder(t.getSortOrder().substring(0), false);
     }
 
-
     int startPos = t.getCurrentPage() * t.getPageSize();
     List rows = m.getRows(startPos, t.getPageSize(), s);
-
-    // Header
-    nextHandler.apply(ctx, c);
 
     // Body
     ctx.getVariableMapper().setVariable("___var", new ConstantExpression(var.getValue()));

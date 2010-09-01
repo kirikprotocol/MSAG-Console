@@ -67,6 +67,11 @@
   </tag>
 
   <tag>
+    <tag-name>dataTableFilter</tag-name>
+    <source>data_table_filter.xhtml</source>
+  </tag>
+
+  <tag>
     <tag-name>buttons</tag-name>
     <component>
       <component-type>buttonsPanel</component-type>
