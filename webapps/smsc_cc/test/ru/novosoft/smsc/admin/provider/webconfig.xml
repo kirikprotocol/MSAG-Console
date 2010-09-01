@@ -1,0 +1,31 @@
+<config>
+
+  <section name="installation">
+    <!-- Possible values: single, hs, ha -->
+    <param name="type" type="string">ha</param>
+    <!-- For HS installation only -->
+    <param name="mirrorpath" type="string">mirror</param>
+  </section>
+
+  <!-- For HS and Single installation types -->
+  <section name="daemon">
+    <param name="host" type="string">localhost</param>
+    <param name="port" type="int">10000</param>
+  </section>
+
+  <section name="nodes">
+    <section name="sunfire"/>
+  </section>
+
+  <section name="providers">
+    <param name="1" type="string">hello</param>
+    <param name="2" type="string">mark</param>
+    <param name="3" type="string">burger</param>
+    <param name="last used provider id" type="int">3</param>
+  </section>
+
+  <section name="system">
+    <param name="users file" type="string">test/ru/novosoft/smsc/admin/users/users.xml</param>
+  </section>
+
+</config>

@@ -9,6 +9,7 @@ import ru.novosoft.smsc.admin.filesystem.FileSystem;
 import ru.novosoft.smsc.admin.fraud.FraudManager;
 import ru.novosoft.smsc.admin.map_limit.MapLimitManager;
 import ru.novosoft.smsc.admin.msc.MscManager;
+import ru.novosoft.smsc.admin.provider.ProviderManager;
 import ru.novosoft.smsc.admin.reschedule.RescheduleManager;
 import ru.novosoft.smsc.admin.resource.ResourceManager;
 import ru.novosoft.smsc.admin.service.ServiceManager;
@@ -47,6 +48,7 @@ public class AdminContext {
   protected ClusterControllerManager clusterControllerManager;
   protected SmeManager smeManager;
   protected ResourceManager resourceManager;
+  protected ProviderManager providerManager;
 
   protected AdminContext() {
     AdminContextLocator.registerContext(this);
@@ -107,6 +109,8 @@ public class AdminContext {
 
     resourceManager = new ResourceManager(smscConfigDir, smscConfigBackupDir, clusterController, fileSystem);
 
+    providerManager = new ProviderManager(initFile, smscConfigBackupDir, fileSystem);
+
     AdminContextLocator.registerContext(this);
   }
 
@@ -160,6 +164,10 @@ public class AdminContext {
 
   public ResourceManager getResourceManager() {
     return resourceManager;
+  }
+
+  public ProviderManager getProviderManager() {
+    return providerManager;
   }
 
   public InstallationType getInstallationType() {

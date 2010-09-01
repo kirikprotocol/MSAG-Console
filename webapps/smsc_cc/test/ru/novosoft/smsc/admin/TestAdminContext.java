@@ -17,6 +17,7 @@ import ru.novosoft.smsc.admin.map_limit.MapLimitManagerTest;
 import ru.novosoft.smsc.admin.map_limit.TestMapLimitManager;
 import ru.novosoft.smsc.admin.msc.MscManagerTest;
 import ru.novosoft.smsc.admin.msc.TestMscManager;
+import ru.novosoft.smsc.admin.provider.TestProviderManager;
 import ru.novosoft.smsc.admin.reschedule.RescheduleManagerTest;
 import ru.novosoft.smsc.admin.reschedule.TestRescheduleManager;
 import ru.novosoft.smsc.admin.resource.ResourceFileTest;
@@ -124,6 +125,8 @@ public class TestAdminContext extends AdminContext {
     smeManager = new TestSmeManager(new File(smscConfigDir, "sme.xml"), smscConfigBackupDir, clusterController, serviceManager, fileSystem);
 
     resourceManager = new TestResourceManager(smscConfigDir, smscConfigBackupDir, clusterController, fileSystem);
+
+    providerManager = new TestProviderManager(initFile, smscConfigBackupDir, fileSystem);
   }
 
   public TestAdminContext() throws AdminException {
