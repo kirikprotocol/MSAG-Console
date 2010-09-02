@@ -20,6 +20,7 @@ public class UsersController extends SmscController{
     return getUsersFromSession(getSession(false), putIfNeeded);
   }
 
+  @SuppressWarnings({"unchecked"})
   protected Map<String, User> getUsersFromSession(HttpSession s, boolean putIfNeeded) {
     Map<String, User> users = (Map<String, User>)s.getAttribute("users.users");
     if(users == null && putIfNeeded) {
@@ -67,6 +68,19 @@ public class UsersController extends SmscController{
   protected void cleanSession(HttpSession s) {
     s.removeAttribute("users.users");
     s.removeAttribute("users.last.update");
+  }
+
+  public void setChanged(boolean changed) {
+    HttpSession s = getSession(false);
+    if(changed) {
+      s.setAttribute("users.changed", true);
+    }else {
+      s.removeAttribute("users.changed");
+    }
+  }
+
+  public boolean isChanged() {
+    return getSession(false).getAttribute("users.changed") != null;
   }
 
 }

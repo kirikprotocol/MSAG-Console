@@ -28,9 +28,9 @@ public abstract class SmscController implements Serializable {
 
   protected void addLocalizedMessage(FacesMessage.Severity severity, String bundleKey) {
     FacesContext fc = FacesContext.getCurrentInstance();
+
     FacesMessage facesMessage = new FacesMessage(severity,
-        ResourceBundle.getBundle("ru.novosoft.smsc.web.resources.Smsc",
-            fc.getExternalContext().getRequestLocale()).getString(bundleKey), "");
+        ResourceBundle.getBundle("ru.novosoft.smsc.web.resources.Smsc",  getLocale()).getString(bundleKey), "");
     fc.addMessage("smsc_errors", facesMessage);
   }   
 

@@ -70,4 +70,17 @@ public class RescheduleController extends SmscController {
     s.removeAttribute("reschedule.default");
   }
 
+  public void setChanged(boolean changed) {
+    HttpSession s = getSession(false);
+    if(changed) {
+      s.setAttribute("reschedule.changed", true);
+    }else {
+      s.removeAttribute("reschedule.changed");
+    }
+  }
+
+  public boolean isChanged() {
+    return getSession(false).getAttribute("reschedule.changed") != null;
+  }
+
 }

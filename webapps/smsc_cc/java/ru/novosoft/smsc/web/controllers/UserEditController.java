@@ -77,6 +77,7 @@ public class UserEditController extends UsersController{
       return null;
     }
 
+
     Set<String> newRoles = new TreeSet<String>();
     for(Role r : roles) {
       if(r.checked) {
@@ -97,6 +98,7 @@ public class UserEditController extends UsersController{
     }
     users.put(user.getLogin(), user);
 
+    setChanged(true);
     return "USERS";
   }
 

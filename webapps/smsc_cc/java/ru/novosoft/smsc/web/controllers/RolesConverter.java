@@ -1,5 +1,7 @@
 package ru.novosoft.smsc.web.controllers;
 
+import ru.novosoft.smsc.web.util.WebUtils;
+
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import javax.faces.convert.Converter;
@@ -25,7 +27,7 @@ public class RolesConverter implements Converter {
     }
     String role = o.toString();
     ResourceBundle bundle = ResourceBundle.getBundle("ru.novosoft.smsc.web.resources.Smsc",
-        FacesContext.getCurrentInstance().getViewRoot().getLocale());
+        WebUtils.getLocale());
     String result = bundle.getString("users.roles."+role);
     return result == null ? role : result;
   }

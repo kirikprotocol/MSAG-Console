@@ -151,6 +151,7 @@ public class RescheduleEditController extends RescheduleController{
         reschedules.remove(oldReschedule);
       }
       reschedules.put(newReschedule, toAdd);
+      setChanged(true);
     }catch (AdminException e) {
       logger.error(e,e);
       addLocalizedMessage(FacesMessage.SEVERITY_WARN, e.getMessage(getLocale()));

@@ -11,13 +11,13 @@ import ru.novosoft.smsc.web.config.AppliableConfiguration;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.event.ActionEvent;
-import javax.servlet.http.HttpSession;
 import java.security.Principal;
 import java.util.*;
 
 /**
  * author: alkhal
  */
+@SuppressWarnings({"unchecked", "UnusedDeclaration"})
 public class UsersListController extends UsersController{
 
   private Map<String, User> users;
@@ -43,10 +43,11 @@ public class UsersListController extends UsersController{
   }
 
   private void initUsers() {
-    HttpSession s = getSession(false);
-    users = getUsersFromSession(s, false);
-    if(users == null) {
-      setLastUpdate(s, conf.getUsersSettingsUpdateInfo().getLastUpdateTime());
+    if(isChanged()) {
+      users = getUsersFromSession(false);
+      viewChanges();
+    }else {
+      setLastUpdate(conf.getUsersSettingsUpdateInfo().getLastUpdateTime());
       try {
         users = conf.getUsersSettings().getUsersMap();
       } catch (AdminException e) {
@@ -68,8 +69,10 @@ public class UsersListController extends UsersController{
       for(String s : (List<String>)selectedRows) {
         users.remove(s);
       }
+      setChanged(true);
+      viewChanges();
+      putUsersToSession(users);
     }
-    putUsersToSession(users);
   }
 
   public String submit() {
@@ -91,6 +94,7 @@ public class UsersListController extends UsersController{
       conf.setUsersSettings(settings, p.getName());
 
       cleanSession();
+      setChanged(false);
 
       return "INDEX";
 
@@ -104,6 +108,7 @@ public class UsersListController extends UsersController{
 
   public void reset(ActionEvent ev) {
     cleanSession();
+    setChanged(false);
     initUsers();
   }
 
@@ -186,5 +191,9 @@ public class UsersListController extends UsersController{
 
   public void setFilterByLogin(String filterByLogin) {
     this.filterByLogin = filterByLogin;
+  }
+
+  public void viewChanges() {
+    addLocalizedMessage(FacesMessage.SEVERITY_INFO, "smsc.users.submit.hint");
   }
 }

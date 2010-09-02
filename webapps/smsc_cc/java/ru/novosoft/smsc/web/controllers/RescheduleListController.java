@@ -53,6 +53,7 @@ public class RescheduleListController extends RescheduleController {
         String message = MessageFormat.format(
             ResourceBundle.getBundle("ru.novosoft.smsc.web.resources.Smsc", getLocale()).getString("smsc.config.instance.out_of_date"),
             outOfDate.toString());
+        System.out.println("Out of date:");
         addMessage(FacesMessage.SEVERITY_WARN, message);
       }
     } catch (AdminException e) {
@@ -85,8 +86,11 @@ public class RescheduleListController extends RescheduleController {
 
   private void initReschedules() {
     HttpSession session = getSession(false);
-    reschedules = getReschedulesFromSession(session);
-    if (reschedules == null) {
+    if(isChanged()) {
+      reschedules = getReschedulesFromSession(session);
+      defaultReschedule = getDefRescheduleFromSession(session);
+      viewChanges();
+    }else{
       setLastUpdate(conf.getRescheduleSettingsUpdateInfo().getLastUpdateTime());
       try {
         RescheduleSettings rescheduleSettings = conf.getRescheduleSettings();
@@ -100,8 +104,6 @@ public class RescheduleListController extends RescheduleController {
         logger.error(e, e);
         addMessage(FacesMessage.SEVERITY_ERROR, e.getMessage(getLocale()));
       }
-    } else {
-      defaultReschedule = (Reschedule) session.getAttribute("reschedule.default");
     }
   }
 
@@ -118,11 +120,14 @@ public class RescheduleListController extends RescheduleController {
 
   }
 
+  @SuppressWarnings({"unchecked"})
   public void removeSelected(ActionEvent e) {
     if (selectedRows != null && !selectedRows.isEmpty()) {
       for (String s : (List<String>) selectedRows) {
         reschedules.remove(s);
       }
+      setChanged(true);
+      viewChanges();
     }
     putReschedulesToSession(reschedules);
     putDefRescheduleToSession(defaultReschedule);
@@ -156,6 +161,7 @@ public class RescheduleListController extends RescheduleController {
       conf.setRescheduleSettings(settings, p.getName());
 
       cleanSession(s);
+      setChanged(false);
 
       return "INDEX";
     } catch (AdminException e) {
@@ -179,6 +185,7 @@ public class RescheduleListController extends RescheduleController {
 
   public String reset() {
     cleanSession();
+    setChanged(false);
     return "RESCHEDULE";
   }
 
@@ -217,5 +224,10 @@ public class RescheduleListController extends RescheduleController {
 
   public void setReschedules(Map<String, Reschedule> reschedules) {
     this.reschedules = reschedules;
+  }
+
+  public void viewChanges() {
+    System.out.println("Changes:");
+    addLocalizedMessage(FacesMessage.SEVERITY_INFO, "smsc.reschedule.submit.hint");
   }
 }

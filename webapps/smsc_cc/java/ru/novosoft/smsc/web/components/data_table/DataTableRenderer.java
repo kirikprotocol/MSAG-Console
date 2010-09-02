@@ -2,6 +2,7 @@ package ru.novosoft.smsc.web.components.data_table;
 
 import ru.novosoft.smsc.web.components.AjaxFacesContext;
 import ru.novosoft.smsc.web.components.data_table.model.DataTableModel;
+import ru.novosoft.smsc.web.util.WebUtils;
 
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
@@ -161,7 +162,7 @@ public class DataTableRenderer extends Renderer {
       w.append("<td class=\"last\"><a href=\"#\" onclick=\"pagedTable" + t.getId() + ".setPage(" + numberOfPages + ")\"><img src=\"" + ctxPath + "/images/nav_last.gif\" width=\"12\" height=\"11\"></a></td>");
     }
 
-    ResourceBundle b = ResourceBundle.getBundle(DataTable.class.getCanonicalName(), context.getViewRoot().getLocale());
+    ResourceBundle b = ResourceBundle.getBundle(DataTable.class.getCanonicalName(), WebUtils.getLocale());
 
     w.append("<td class=\"total\">" + b.getString("total") + ": " + m.getRowsCount() + "&nbsp;" + b.getString("page") + ": ");
     w.append("<select id=\"" + t.getId() + "_pageSizeSelect\" name=\"" + t.getId() + "_pageSizeSelect\" onchange=\"pagedTable" + t.getId() + ".setPageSize(this.options[this.selectedIndex].value)\">");

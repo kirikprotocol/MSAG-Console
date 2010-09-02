@@ -28,10 +28,12 @@
         </eye:button>
         <eye:space/>
         <eye:button>
-          <h:commandLink value="#{msg['submit.button']}" id="submit1" action="#{users.submit}"/>
+          <h:commandLink value="#{msg['submit.button']}" id="submit1" action="#{users.submit}"
+              onclick="if (!confirm('#{msg['smsc.submit.confirm']}')) return false"/>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['reset.button']}" action="USERS" actionListener="#{users.reset}"/>
+          <tr:commandLink text="#{msg['reset.button']}" action="USERS" actionListener="#{users.reset}"
+              onclick="if (!confirm('#{msg['smsc.reset.confirm']}')) return false"/>
         </eye:button>
       </eye:buttons>
 
@@ -86,10 +88,12 @@
         </eye:button>
         <eye:space/>
         <eye:button>
-          <h:commandLink value="#{msg['submit.button']}" id="submit2" action="#{users.submit}"/>
+          <h:commandLink value="#{msg['submit.button']}" id="submit2" action="#{users.submit}"
+              onclick="if (!confirm('#{msg['smsc.submit.confirm']}')) return false"/>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['reset.button']}" action="USERS" actionListener="#{users.reset}"/>
+          <tr:commandLink text="#{msg['reset.button']}" action="USERS" actionListener="#{users.reset}"
+              onclick="if (!confirm('#{msg['smsc.reset.confirm']}')) return false"/>
         </eye:button>
       </eye:buttons>
 
