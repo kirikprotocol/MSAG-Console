@@ -67,33 +67,6 @@ SmeManConfig::status SmeManConfig::putRecord(SmeRecord *record)
   return success;
 }
 
-void fillFlag(uint32_t& flags,const std::string& val)
-{
-  using namespace smsc::smeman;
-  if(val=="carryOrgDescriptor")
-  {
-    flags|=sfCarryOrgDescriptor;
-  }else if(val=="carryOrgUserInfo")
-  {
-    flags|=sfCarryOrgAbonentInfo;
-  }else if(val=="carrySccpInfo")
-  {
-    flags|=sfCarrySccpInfo;
-  }else if(val=="fillExtraDescriptor")
-  {
-    flags|=sfFillExtraDescriptor;
-  }else if(val=="forceSmeReceipt")
-  {
-    flags|=sfForceReceiptToSme;
-  }else if(val=="forceGsmDataCoding")
-  {
-    flags|=sfForceGsmDatacoding;
-  }else if(val=="smppPlus")
-  {
-    flags|=sfSmppPlus;
-  }
-}
-
 SmeManConfig::status SmeManConfig::load(const char * const filename)
 {
   try
@@ -184,14 +157,7 @@ SmeManConfig::status SmeManConfig::load(const char * const filename)
             } else
             if(strcmp(name.c_str(),"flags")==0)
             {
-              std::string v=value.c_str();
-              std::string::size_type oldPos=0,commaPos=0;
-              while((commaPos=v.find(',',oldPos))!=std::string::npos)
-              {
-                fillFlag(record->recdata.smppSme.flags,v.substr(oldPos,commaPos-oldPos));
-                oldPos=commaPos+1;
-              }
-              fillFlag(record->recdata.smppSme.flags,v.substr(oldPos));
+              record->recdata.smppSme.flags=smsc::smeman::parseSmeFlags(value.c_str());
             }else
             {
               smsc_log_warn(logger, "unknown param name \"%s\"", name.c_str());
