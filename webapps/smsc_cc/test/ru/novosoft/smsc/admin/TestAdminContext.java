@@ -43,7 +43,7 @@ import java.io.IOException;
  */
 public class TestAdminContext extends AdminContext {
 
-  private void prepareServices(File servicesDir) throws IOException {
+  private void prepareServices(File servicesDir, AdminContextConfig cfg) throws IOException, AdminException {
     File ccDir = new File(servicesDir, "ClusterController/conf");
     ccDir.mkdirs();
     TestUtils.exportResource(ClusterControllerConfigTest.class.getResourceAsStream("config.xml"), new File(ccDir, "config.xml"), false);
@@ -61,7 +61,8 @@ public class TestAdminContext extends AdminContext {
     TestUtils.exportResource(MapLimitManagerTest.class.getResourceAsStream("maplimits.xml"), new File(smscDir, "maplimits.xml"), false);
     TestUtils.exportResource(MscManagerTest.class.getResourceAsStream("msc.bin"), new File(smscDir, "msc.bin"), false);
     TestUtils.exportResource(RescheduleManagerTest.class.getResourceAsStream("schedule.xml"), new File(smscDir, "schedule.xml"), false);
-    TestUtils.exportResource(UsersManagerTest.class.getResourceAsStream("users.xml"), new File(smscDir, "users.xml"), false);
+    File usersFile = new File(cfg.getUsersFile());
+    TestUtils.exportResource(UsersManagerTest.class.getResourceAsStream("users.xml"), usersFile, false);
     TestUtils.exportResource(SnmpManagerTest.class.getResourceAsStream("snmp.xml"), new File(smscDir, "snmp.xml"), false);
     TestUtils.exportResource(SmeConfigFileTest.class.getResourceAsStream("sme.xml"), new File(smscDir, "sme.xml"), false);
     TestUtils.exportResource(ResourceFileTest.class.getResourceAsStream("resources_en_en.xml"), new File(smscDir, "resources_en_en.xml"), false);
@@ -78,7 +79,7 @@ public class TestAdminContext extends AdminContext {
       servicesDir.mkdirs();
 
     try {
-      prepareServices(servicesDir);
+      prepareServices(servicesDir, cfg);
     } catch (IOException e) {
       throw new AdminContextException("Can't create services dir!");
     }
@@ -108,7 +109,9 @@ public class TestAdminContext extends AdminContext {
 
     rescheduleManager = new TestRescheduleManager(new File(smscConfigDir, "schedule.xml"), smscConfigBackupDir, clusterController, fileSystem);
 
-    usersManager = new TestUsersManager(new File(smscConfigDir, "users.xml"), smscConfigBackupDir, fileSystem);
+    File usersFile = new File(cfg.getUsersFile());
+
+    usersManager = new TestUsersManager(usersFile, new File(usersFile.getParentFile(), "backup"), fileSystem);
 
     fraudManager = new TestFraudManager(new File(smscConfigDir, "fraud.xml"), smscConfigBackupDir, clusterController, fileSystem);
 

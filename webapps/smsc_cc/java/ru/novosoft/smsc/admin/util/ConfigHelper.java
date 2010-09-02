@@ -57,7 +57,7 @@ public class ConfigHelper {
   public static void createBackup(File file, File backupDir, FileSystem fileSystem) throws AdminException {
     if (!fileSystem.exists(backupDir))
         fileSystem.mkdirs(backupDir);
-      File backupFile = new File(backupDir, "configFile.xml." + sdf.format(new Date()));
+      File backupFile = new File(backupDir, file.getName() + "." + sdf.format(new Date()));
       if (fileSystem.exists(file))
         fileSystem.copy(file, backupFile);
   }
