@@ -19,13 +19,21 @@ public class InitListener implements ServletContextListener {
 
   public void contextInitialized(ServletContextEvent servletContextEvent) {
     try {
-      System.out.println(servletContextEvent.getServletContext().getRealPath("WEB-INF/jaas.config"));
       System.setProperty("java.security.auth.login.config",
           servletContextEvent.getServletContext().getRealPath("WEB-INF/jaas.config"));
 
       WebXml webXml = new WebXml(new File(servletContextEvent.getServletContext().getRealPath("WEB-INF/web.xml")));
 
-      AdminContext adminContext = new AdminContext(new File(servletContextEvent.getServletContext().getRealPath("./")), new File(System.getProperty("smsc.config.webconfig")));
+      AdminContext adminContext;
+
+      if(Mode.testMode) {
+        adminContext = (AdminContext)Class.forName("ru.novosoft.smsc.admin.TestAdminContext").
+            getConstructor(File.class, File.class).newInstance(new File(servletContextEvent.getServletContext().getRealPath("./")),
+          new File(System.getProperty("smsc.config.webconfig")));
+      }else {
+        adminContext = new AdminContext(new File(servletContextEvent.getServletContext().getRealPath("./")),
+          new File(System.getProperty("smsc.config.webconfig")));
+      }
 
       Authenticator authenticator = new AuthenticatorImpl(adminContext.getUsersManager());
 

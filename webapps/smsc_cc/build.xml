@@ -23,7 +23,16 @@
     </protogen>
   </target>
 
-  <target name="prebuild" depends="gen_cc_protocol"/>
+  <target name="mode">
+    <echo file="java/ru/novosoft/smsc/web/Mode.java">
+package ru.novosoft.smsc.web;${line.separator}${line.separator}
+public class Mode {${line.separator}
+  public final static boolean testMode = ${smsc.testMode};${line.separator}
+}
+    </echo>
+  </target>
+   
+  <target name="prebuild" depends="gen_cc_protocol, mode"/>
 
   <target name="compile.sources">
     <delete dir="${smsc.source.classes.preweaved}" failonerror="false"/>
@@ -92,26 +101,22 @@
     </copy>
   </target>
 
-  <target name="distr.dev" depends="weave.tests, exploded">
+  <condition property="is.dev">
+    <equals arg1="${smsc.devMode}" arg2="true"/>
+  </condition>
+
+  <target name="predistr.dev" if="is.dev">
+    <echo>DEVELOPERS MODE</echo>
     <jar destfile="${smsc.exploded.dir}/WEB-INF/lib/smsc.jar" basedir="${smsc.test.classes}"/>
-
-    <delete file="${smsc.exploded.dir}/WEB-INF/web.xml"/>
-    <move file="${smsc.exploded.dir}/WEB-INF/web.dev.xml" tofile="${smsc.exploded.dir}/WEB-INF/web.xml"/>
-
-    <delete dir="${smsc.distr.dir}" failonerror="false"/>
-    <mkdir dir="${smsc.distr.dir}"/>
-    <war destfile="${smsc.distr.dir}/smsc_dev.war" basedir="${smsc.exploded.dir}">
-      <manifest>
-        <attribute name="Implementation-Version" value="${smsc.implementation.version}"/>
-      </manifest>
-    </war>
   </target>
 
-  <target name="distr" depends="weave.sources, exploded">
+
+  <target name="predistr.prod" unless="is.dev">
+    <echo>PRODUCTION</echo>         
     <jar destfile="${smsc.exploded.dir}/WEB-INF/lib/smsc.jar" basedir="${smsc.source.classes}"/>
+  </target>
 
-    <delete file="${smsc.exploded.dir}/WEB-INF/web.dev.xml"/>
-
+  <target name="distr" depends="weave.sources, exploded, predistr.dev,predistr.prod">
     <delete dir="${smsc.distr.dir}" failonerror="false"/>
     <mkdir dir="${smsc.distr.dir}"/>
     <war destfile="${smsc.distr.dir}/smsc.war" basedir="${smsc.exploded.dir}">

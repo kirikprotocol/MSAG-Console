@@ -149,7 +149,7 @@
   </filter-mapping>
 
   <listener>
-    <listener-class>ru.novosoft.smsc.web.TestInitListener</listener-class>
+    <listener-class>ru.novosoft.smsc.web.InitListener</listener-class>
   </listener>
 
 
