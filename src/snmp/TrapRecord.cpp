@@ -1,9 +1,10 @@
-static char const ident[] = "$Id$";
 
 #include "util/csv/CSVFileEncoder.h"
 #include "TrapRecord.hpp"
 #include <stdio.h>
 using smsc::util::csv::CSVFileEncoder;
+
+static char const ident[] = "$Id$";
 
 namespace smsc  {
 namespace snmp {

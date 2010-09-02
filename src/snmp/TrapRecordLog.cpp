@@ -1,6 +1,7 @@
-static char const ident[] = "$Id$";
 
 #include "TrapRecordLog.hpp"
+
+static char const ident[] = "$Id$";
 
 namespace smsc {
 namespace snmp {
