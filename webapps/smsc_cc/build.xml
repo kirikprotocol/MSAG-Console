@@ -27,7 +27,7 @@
     <echo file="java/ru/novosoft/smsc/web/Mode.java">
 package ru.novosoft.smsc.web;${line.separator}${line.separator}
 public class Mode {${line.separator}
-  public final static boolean testMode = ${smsc.testMode};${line.separator}
+  public final static boolean testMode = ${smsc.devMode};${line.separator}
 }
     </echo>
   </target>
