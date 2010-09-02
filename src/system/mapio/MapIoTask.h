@@ -267,6 +267,8 @@ struct MapDialog{
   bool noSri:1;
   bool noRespFromPeer:1;
   bool lastUssdMessage:1;
+  bool callbarred:1;
+  bool teleservicenotprov:1;
   char clevel;
   MapState state;
   int dlgType;
@@ -329,6 +331,8 @@ struct MapDialog{
     memoryExceeded=false;
     hlrWasNotified=false;
     isQueryAbonentStatus=false;
+    callbarred=false;
+    teleservicenotprov=false;
     dropChain=false;
     id_opened=false;
     ussdProcessing=false;
