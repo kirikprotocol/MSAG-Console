@@ -21,13 +21,6 @@
     <param name="users file" type="string">test/ru/novosoft/smsc/admin/users/users.xml</param>
   </section>
 
-  <section name="providers">
-    <param name="1" type="string">hello</param>
-    <param name="2" type="string">mark</param>
-    <param name="3" type="string">burger</param>
-    <param name="last used provider id" type="int">3</param>
-  </section>
-
   <section name="categories">
     <param name="1" type="string">hello</param>
     <param name="2" type="string">mark</param>
