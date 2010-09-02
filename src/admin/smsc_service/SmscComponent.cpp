@@ -26,13 +26,6 @@
 
 namespace smsc {
 
-namespace util{
-namespace config{
-namespace smeman{
-void fillFlag(uint32_t& flags,const std::string& val);
-}
-}
-}
 
 namespace admin {
 namespace smsc_service {
@@ -1656,14 +1649,7 @@ void fillSmeInfo(SmeInfo & smeInfo, const Arguments & args)
   smeInfo.flags=0;
   if(args.Exists("flags"))
   {
-    std::string v=args.Get("flags").getStringValue();
-    std::string::size_type oldPos=0,commaPos=0;
-    while((commaPos=v.find(',',oldPos))!=std::string::npos)
-    {
-      smsc::util::config::smeman::fillFlag(smeInfo.flags,v.substr(oldPos,commaPos-oldPos));
-      oldPos=commaPos+1;
-    }
-    smsc::util::config::smeman::fillFlag(smeInfo.flags,v.substr(oldPos));
+    smeInfo.flags=smsc::smeman::parseSmeFlags(args.Get("flags").getStringValue());
   }
   if(args.Exists("accessMask"))
   {
