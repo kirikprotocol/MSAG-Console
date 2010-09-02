@@ -198,6 +198,8 @@ protected:
 
   bool processMerge(SbmContext& c);
 
+  void prepareSmsDc(SMS& sms,bool defaultDcLatin1);
+
 #ifdef SMSEXTRA
   bool ExtraProcessing(SbmContext& c);
 #endif

@@ -1666,9 +1666,16 @@ StateType StateMachine::submit(Tuple& t)
 
   smsc_log_debug(smsLog,"dst sme '%s', flags=%x",dstSmeInfo.systemId.c_str(),dstSmeInfo.flags);
 
-#ifdef SMSEXTRA
-
   SmeInfo srcSmeInfo=smsc->getSmeInfo(c.src_proxy->getSystemId());
+
+  if(srcSmeInfo.hasFlag(smsc::smeman::sfDefaultDcLatin1) &&
+     sms->getIntProperty(Tag::SMPP_DATA_CODING)==smsc::smpp::DataCoding::SMSC7BIT)
+  {
+    sms->setIntProperty(Tag::SMPP_DATA_CODING,smsc::smpp::DataCoding::LATIN1);
+  }
+
+
+#ifdef SMSEXTRA
 
   if(srcSmeInfo.SME_N==EXTRA_GROUPS)
   {
@@ -2450,42 +2457,7 @@ StateType StateMachine::submitChargeResp(Tuple& t)
       //
       if(!sms->hasBinProperty(Tag::SMSC_CONCATINFO) && sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)!=0x3 && !transit)
       {
-        using namespace smsc::profiler::ProfileCharsetOptions;
-        if(
-           (
-             (sms->getIntProperty(Tag::SMSC_DSTCODEPAGE)==Default ||
-              sms->getIntProperty(Tag::SMSC_DSTCODEPAGE)==Latin1
-             )
-             && sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)==DataCoding::UCS2
-           ) ||
-           (
-             (sms->getIntProperty(Tag::SMSC_DSTCODEPAGE)&Latin1)!=Latin1 &&
-             sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)==DataCoding::LATIN1
-           )
-          )
-        {
-          try{
-            transLiterateSms(sms,sms->getIntProperty(Tag::SMSC_DSTCODEPAGE));
-            if(sms->hasIntProperty(Tag::SMSC_ORIGINAL_DC))
-            {
-              int dc=sms->getIntProperty(Tag::SMSC_ORIGINAL_DC);
-              int olddc=dc;
-              if((dc&0xc0)==0 || (dc&0xf0)==0xf0) //groups 00xx and 1111
-              {
-                dc&=0xf3; //11110011 - clear 2-3 bits (set alphabet to default).
-
-              }else if((dc&0xf0)==0xe0)
-              {
-                dc=0xd0 | (dc&0x0f);
-              }
-              sms->setIntProperty(Tag::SMSC_ORIGINAL_DC,dc);
-              smsc_log_debug(smsLog,"SUBMIT: transliterate olddc(%x)->dc(%x)",olddc,dc);
-            }
-          }catch(exception& e)
-          {
-            smsc_log_warn(smsLog,"SUBMIT:Failed to transliterate: %s",e.what());
-          }
-        }
+        prepareSmsDc(*sms,dstSmeInfo.hasFlag(sfDefaultDcLatin1));
       }
     }
 
@@ -2609,6 +2581,78 @@ StateType StateMachine::submitChargeResp(Tuple& t)
   );
   return DELIVERING_STATE;
 }
+
+void StateMachine::prepareSmsDc(SMS& sms,bool defaultDcLatin1)
+{
+  using namespace smsc::profiler::ProfileCharsetOptions;
+  if(
+     (
+       (sms.getIntProperty(Tag::SMSC_DSTCODEPAGE)==Default ||
+        sms.getIntProperty(Tag::SMSC_DSTCODEPAGE)==Latin1
+       )
+       && sms.getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)==DataCoding::UCS2
+     ) ||
+     (
+       (sms.getIntProperty(Tag::SMSC_DSTCODEPAGE)&Latin1)!=Latin1 &&
+       sms.getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)==DataCoding::LATIN1
+     )
+    )
+  {
+    try{
+      transLiterateSms(&sms,sms.getIntProperty(Tag::SMSC_DSTCODEPAGE));
+      if(sms.hasIntProperty(Tag::SMSC_ORIGINAL_DC))
+      {
+        int dc=sms.getIntProperty(Tag::SMSC_ORIGINAL_DC);
+        int olddc=dc;
+        if((dc&0xc0)==0 || (dc&0xf0)==0xf0) //groups 00xx and 1111
+        {
+          dc&=0xf3; //11110011 - clear 2-3 bits (set alphabet to default).
+
+        }else if((dc&0xf0)==0xe0)
+        {
+          dc=0xd0 | (dc&0x0f);
+        }
+        sms.setIntProperty(Tag::SMSC_ORIGINAL_DC,dc);
+        smsc_log_debug(smsLog,"SUBMIT: transliterate olddc(%x)->dc(%x)",olddc,dc);
+      }
+    }catch(exception& e)
+    {
+      smsc_log_warn(smsLog,"SUBMIT:Failed to transliterate: %s",e.what());
+    }
+  }
+  if(defaultDcLatin1 && sms.getIntProperty(Tag::SMPP_DATA_CODING)==DataCoding::SMSC7BIT)
+  {
+    const char* body;
+    unsigned len;
+    bool payload=false;
+    if(sms.hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
+    {
+      body=sms.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
+      payload=true;
+    }else
+    {
+      body=sms.getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
+    }
+    TmpBuf<char,2048> buf(len+1);
+    unsigned msgstart=0;
+    if(sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x40)
+    {
+      msgstart=1+*((unsigned char*)body);
+      memcpy(buf.get(),body,msgstart);
+    }
+    unsigned newlen=ConvertSMSC7BitToLatin1(body+msgstart,len-msgstart,buf.get()+msgstart)+msgstart;
+    if(payload)
+    {
+      sms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,buf.get(),newlen);
+    }else
+    {
+      sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,buf.get(),newlen);
+      sms.setIntProperty(Tag::SMPP_SM_LENGTH,newlen);
+    }
+  }
+
+}
+
 
 StateType StateMachine::forward(Tuple& t)
 {
@@ -3015,42 +3059,7 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     {
       if(sms.getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)!=0x3 && !rr.info.transit)
       {
-        using namespace smsc::profiler::ProfileCharsetOptions;
-        if(
-           (
-             (sms.getIntProperty(Tag::SMSC_DSTCODEPAGE)==Default ||
-              sms.getIntProperty(Tag::SMSC_DSTCODEPAGE)==Latin1
-             )
-             && sms.getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)==DataCoding::UCS2
-           ) ||
-           (
-             (sms.getIntProperty(Tag::SMSC_DSTCODEPAGE)&Latin1)!=Latin1 &&
-             sms.getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)==DataCoding::LATIN1
-           )
-          )
-        {
-          try{
-            transLiterateSms(&sms,sms.getIntProperty(Tag::SMSC_DSTCODEPAGE));
-            if(sms.hasIntProperty(Tag::SMSC_ORIGINAL_DC))
-            {
-              int dc=sms.getIntProperty(Tag::SMSC_ORIGINAL_DC);
-              int olddc=dc;
-              if((dc&0xc0)==0 || (dc&0xf0)==0xf0) //groups 00xx and 1111
-              {
-                dc&=0xf3; //11110011 - clear 2-3 bits (set alphabet to default).
-
-              }else if((dc&0xf0)==0xe0)
-              {
-                dc=0xd0 | (dc&0x0f);
-              }
-              sms.setIntProperty(Tag::SMSC_ORIGINAL_DC,dc);
-              smsc_log_debug(smsLog,"FORWARD: transliterate olddc(%x)->dc(%x)",olddc,dc);
-            }
-          }catch(exception& e)
-          {
-            smsc_log_warn(smsLog,"SUBMIT:Failed to transliterate: %s",e.what());
-          }
-        }
+        prepareSmsDc(sms,dstSmeInfo.hasFlag(sfDefaultDcLatin1));
       }
     }else
     {
