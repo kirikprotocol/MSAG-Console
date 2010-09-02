@@ -1195,6 +1195,18 @@ Variant SmscComponent::traceRoute(const Arguments &args)
             std::auto_ptr<char> encForwardTo(getEncodedString(rr.info.forwardTo.c_str()));
             std::auto_ptr<char> encSrcSmeSystemId(getEncodedString(rr.info.srcSmeSystemId.c_str()));
 
+            const char* bill;
+
+            switch(rr.info.billing)
+            {
+              case smsc::sms::BILLING_NORMAL:bill="normal";break;
+              case smsc::sms::BILLING_ONSUBMIT:bill="onsubmit";break;
+              case smsc::sms::BILLING_CDR:bill="cdr";break;
+              case smsc::sms::BILLING_FINALREP:bill="final report";break;
+              case smsc::sms::BILLING_MT:bill="mt";break;
+              default:bill="none";break;
+            }
+
             sprintf(routeText, "route id:%s;source address:%s;destination address:%s;"
                                "sme system id:%s;source sme system id:%s;"
                                "priority:%u;service id:%d;delivery mode:%u;forward to:%s;"
@@ -1202,7 +1214,7 @@ Variant SmscComponent::traceRoute(const Arguments &args)
                     encRouteId.get(), encSrcAddressText.get(), encDstAddressText.get(),
                     encSmeSystemId.get(), encSrcSmeSystemId.get(),
                     rr.info.priority, rr.info.serviceId, rr.info.deliveryMode, encForwardTo.get(),
-                    (rr.info.billing) ? "yes":"no" , (rr.info.archived) ? "yes":"no",
+                    bill , (rr.info.archived) ? "yes":"no",
                     (rr.info.enabling) ? "yes":"no", (rr.info.suppressDeliveryReports) ? "yes":"no");
 
             result.appendValueToStringList(routeText);
