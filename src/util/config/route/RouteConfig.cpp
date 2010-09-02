@@ -254,7 +254,7 @@ throw (SubjectNotFoundException)
                                    strcmp("true", forceDelivery) == 0,
                                    strcmp("true", allowBlocked) == 0,
                                    providerId,
-                                   (const char * const)billingRuleId,
+//                                   (const char * const)billingRuleId,
                                    categoryId,
                                    strcmp("true",transit)==0,
                                    backupSme.c_str()
@@ -414,9 +414,9 @@ RouteConfig::status RouteConfig::store(const char * const filename) const
     {
       Route *r = *i;
       out << "  <route id=\""  << encode(r->getId())
-      << "\" billing=\""       << (r->isBilling() ? "true" : "false")
+      << "\" billing=\""       << (r->getBilling() ? "true" : "false")
       << "\" archiving=\""     << (r->isArchiving() ? "true" : "false")
-      << "\" enabling=\""      << (r->isEnabling() ? "true" : "false")
+      << "\" enabling=\""      << (r->isEnabled() ? "true" : "false")
       << "\" priority=\""      << r->getPriority()
       << "\" serviceId=\""     << r->getServiceId()
       << "\" deliveryMode=\""  << deliveryModeToStr(r->getDeliveryMode())
@@ -425,7 +425,7 @@ RouteConfig::status RouteConfig::store(const char * const filename) const
       << "\" forceDelivery=\"" << (r->isForceDelivery() ? "true" : "false")
       << "\" replyPath=\""     << replyPathToStr(r->getReplyPath())
       << "\" allowBlocked=\""  << (r->isAllowBlocked() ? "true" : "false")
-      << "\" billingId=\""     << encode(r->getBillingRuleId().c_str())
+//      << "\" billingId=\""     << encode(r->getBillingRuleId().c_str())
       << "\">" << std::endl;
 
       Source src;

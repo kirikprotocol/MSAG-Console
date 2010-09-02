@@ -48,10 +48,10 @@ void loadRoutes(RouteManager* rm,const RouteConfig& rc,bool traceit)
           rinfo->smeSystemId = dest.getSmeIdString();//dest.smeId;
           rinfo->srcSmeSystemId = route->getSrcSmeSystemId();
           //              __trace2__("sme sysid: %s",rinfo.smeSystemId.c_str());
-          rinfo->billing = route->isBilling();
+          rinfo->billing = route->getBilling();
           //rinfo.paid =
           rinfo->archived=route->isArchiving();
-          rinfo->enabling = route->isEnabling();
+          rinfo->enabling = route->isEnabled();
           rinfo->routeId=route->getId();
           rinfo->serviceId=route->getServiceId();
           rinfo->priority=route->getPriority();
@@ -64,7 +64,7 @@ void loadRoutes(RouteManager* rm,const RouteConfig& rc,bool traceit)
           rinfo->aclId=route->getAclId();
           rinfo->allowBlocked=route->isAllowBlocked();
           rinfo->providerId=(int32_t)route->getProviderId();
-          rinfo->billingId=route->getBillingRuleId();
+//          rinfo->billingId=route->getBillingRuleId();
           rinfo->categoryId=(int32_t)route->getCategoryId();
           rinfo->transit=route->isTransit();
           rinfo->backupSme=route->getBackupSme();
