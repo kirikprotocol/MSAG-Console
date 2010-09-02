@@ -398,4 +398,8 @@ public class TestClusterController extends ClusterController {
     aclLastUpdateTime = System.currentTimeMillis();
     aclHelper.removeAddresses(aclId, addresses);
   }
+
+  public CCAclInfo getAcl(int aclId) throws AdminException {
+    return aclHelper.getAcl(aclId);
+  }
 }

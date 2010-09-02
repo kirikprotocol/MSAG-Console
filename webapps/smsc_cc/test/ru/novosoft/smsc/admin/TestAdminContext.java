@@ -1,5 +1,6 @@
 package ru.novosoft.smsc.admin;
 
+import ru.novosoft.smsc.admin.acl.TestAclManager;
 import ru.novosoft.smsc.admin.alias.AliasManagerTest;
 import ru.novosoft.smsc.admin.alias.TestAliasManager;
 import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemonConfigTest;
@@ -130,6 +131,8 @@ public class TestAdminContext extends AdminContext {
     resourceManager = new TestResourceManager(smscConfigDir, smscConfigBackupDir, clusterController, fileSystem);
 
     providerManager = new TestProviderManager(initFile, smscConfigBackupDir, fileSystem);
+
+    aclManager = new TestAclManager(clusterController);
   }
 
   public TestAdminContext() throws AdminException {

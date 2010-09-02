@@ -342,4 +342,8 @@ public class TestClusterControllerStub extends ClusterController {
   public void removeAddressesFromAcl(int aclId, List<Address> addresses) throws AdminException {
     aclLastUpdateTime = System.currentTimeMillis();
   }
+
+  public CCAclInfo getAcl(int aclId) throws AdminException {
+    return null;
+  }
 }

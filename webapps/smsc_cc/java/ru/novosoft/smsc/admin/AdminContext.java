@@ -1,5 +1,6 @@
 package ru.novosoft.smsc.admin;
 
+import ru.novosoft.smsc.admin.acl.AclManager;
 import ru.novosoft.smsc.admin.alias.AliasManager;
 import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemonManager;
 import ru.novosoft.smsc.admin.closed_groups.ClosedGroupManager;
@@ -49,6 +50,7 @@ public class AdminContext {
   protected SmeManager smeManager;
   protected ResourceManager resourceManager;
   protected ProviderManager providerManager;
+  protected AclManager aclManager;
 
   protected AdminContext() {
     AdminContextLocator.registerContext(this);
@@ -111,6 +113,8 @@ public class AdminContext {
 
     providerManager = new ProviderManager(initFile, smscConfigBackupDir, fileSystem);
 
+    aclManager = new AclManager(clusterController);
+
     AdminContextLocator.registerContext(this);
   }
 
@@ -168,6 +172,10 @@ public class AdminContext {
 
   public ProviderManager getProviderManager() {
     return providerManager;
+  }
+
+  public AclManager getAclManager() {
+    return aclManager;
   }
 
   public InstallationType getInstallationType() {

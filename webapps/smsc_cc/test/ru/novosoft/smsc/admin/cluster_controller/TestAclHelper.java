@@ -70,4 +70,11 @@ class TestAclHelper {
       throw new ClusterControllerException("interaction_error");
     return acl.getAddresses();
   }
+
+  public CCAclInfo getAcl(int aclId) throws ClusterControllerException {
+    CCAcl acl = acls.get(aclId);
+    if (acl == null)
+      throw new ClusterControllerException("interaction_error");
+    return acl.getInfo();
+  }
 }

@@ -633,7 +633,7 @@ public class ClusterController {
   // ACCESS CONTROL LIST ===============================================================================================
 
   /**
-   * Возвращает информацию об ACL
+   * Возвращает информацию обо всех ACL
    * @return список CCAclList, каждый из которых содержит данные об одном ACL
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
@@ -652,6 +652,23 @@ public class ClusterController {
       result.add(info);
     }
     return result;
+  }
+
+  /**
+   * Возвращает информацию об ACL по его идентификатору
+   * @param aclId идентификатор ACL
+   * @return информацию об ACL
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public CCAclInfo getAcl(int aclId) throws AdminException {
+    AclGet req = new AclGet();
+    req.setAclId(aclId);
+
+    AclGetResp resp = cc.send(req);
+    checkResponse(resp.getResp());
+
+    AclInfo acl = resp.getAcl();
+    return new CCAclInfo(acl.getId(), acl.getName(), acl.getDescription());
   }
 
   /**
