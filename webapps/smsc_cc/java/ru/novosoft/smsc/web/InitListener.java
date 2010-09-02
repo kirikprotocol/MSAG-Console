@@ -26,13 +26,14 @@ public class InitListener implements ServletContextListener {
 
       AdminContext adminContext;
 
+      File webconfig = new File(System.getProperty("smsc.config.webconfig"));
+      File appBaseDir = new File(System.getProperty("smsc.base.dir"));
+
       if(Mode.testMode) {
         adminContext = (AdminContext)Class.forName("ru.novosoft.smsc.admin.TestAdminContext").
-            getConstructor(File.class, File.class).newInstance(new File(servletContextEvent.getServletContext().getRealPath("./")),
-          new File(System.getProperty("smsc.config.webconfig")));
+            getConstructor(File.class, File.class).newInstance(appBaseDir, webconfig);
       }else {
-        adminContext = new AdminContext(new File(servletContextEvent.getServletContext().getRealPath("./")),
-          new File(System.getProperty("smsc.config.webconfig")));
+        adminContext = new AdminContext(appBaseDir, webconfig);
       }
 
       Authenticator authenticator = new AuthenticatorImpl(adminContext.getUsersManager());

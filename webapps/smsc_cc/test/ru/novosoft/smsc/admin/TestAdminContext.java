@@ -46,26 +46,26 @@ public class TestAdminContext extends AdminContext {
   private void prepareServices(File servicesDir) throws IOException {
     File ccDir = new File(servicesDir, "ClusterController/conf");
     ccDir.mkdirs();
-    TestUtils.exportResource(ClusterControllerConfigTest.class.getResourceAsStream("config.xml"), new File(ccDir, "config.xml"));
+    TestUtils.exportResource(ClusterControllerConfigTest.class.getResourceAsStream("config.xml"), new File(ccDir, "config.xml"), false);
 
     File adDir = new File(servicesDir, "ArchiveDaemon/conf");
     adDir.mkdirs();
-    TestUtils.exportResource(ArchiveDaemonConfigTest.class.getResourceAsStream("config.xml"), new File(adDir, "config.xml"));
+    TestUtils.exportResource(ArchiveDaemonConfigTest.class.getResourceAsStream("config.xml"), new File(adDir, "config.xml"), false);
 
     File smscDir = new File(servicesDir, "SMSC0/conf");
     smscDir.mkdirs();
-    TestUtils.exportResource(SmscManagerTest.class.getResourceAsStream("config.xml"), new File(smscDir, "config.xml"));
-    TestUtils.exportResource(AliasManagerTest.class.getResourceAsStream("aliases.bin"), new File(smscDir, "aliases.bin"));
-    TestUtils.exportResource(ClosedGroupManagerTest.class.getResourceAsStream("ClosedGroups.xml"), new File(smscDir, "ClosedGroup.xml"));
-    TestUtils.exportResource(FraudManagerTest.class.getResourceAsStream("fraud.xml"), new File(smscDir, "fraud.xml"));
-    TestUtils.exportResource(MapLimitManagerTest.class.getResourceAsStream("maplimits.xml"), new File(smscDir, "maplimits.xml"));
-    TestUtils.exportResource(MscManagerTest.class.getResourceAsStream("msc.bin"), new File(smscDir, "msc.bin"));
-    TestUtils.exportResource(RescheduleManagerTest.class.getResourceAsStream("schedule.xml"), new File(smscDir, "schedule.xml"));
-    TestUtils.exportResource(UsersManagerTest.class.getResourceAsStream("users.xml"), new File(smscDir, "users.xml"));
-    TestUtils.exportResource(SnmpManagerTest.class.getResourceAsStream("snmp.xml"), new File(smscDir, "snmp.xml"));
-    TestUtils.exportResource(SmeConfigFileTest.class.getResourceAsStream("sme.xml"), new File(smscDir, "sme.xml"));
-    TestUtils.exportResource(ResourceFileTest.class.getResourceAsStream("resources_en_en.xml"), new File(smscDir, "resources_en_en.xml"));
-    TestUtils.exportResource(ResourceFileTest.class.getResourceAsStream("resources_ru_ru.xml"), new File(smscDir, "resources_ru_ru.xml"));
+    TestUtils.exportResource(SmscManagerTest.class.getResourceAsStream("config.xml"), new File(smscDir, "config.xml"), false);
+    TestUtils.exportResource(AliasManagerTest.class.getResourceAsStream("aliases.bin"), new File(smscDir, "aliases.bin"), false);
+    TestUtils.exportResource(ClosedGroupManagerTest.class.getResourceAsStream("ClosedGroups.xml"), new File(smscDir, "ClosedGroup.xml"), false);
+    TestUtils.exportResource(FraudManagerTest.class.getResourceAsStream("fraud.xml"), new File(smscDir, "fraud.xml"), false);
+    TestUtils.exportResource(MapLimitManagerTest.class.getResourceAsStream("maplimits.xml"), new File(smscDir, "maplimits.xml"), false);
+    TestUtils.exportResource(MscManagerTest.class.getResourceAsStream("msc.bin"), new File(smscDir, "msc.bin"), false);
+    TestUtils.exportResource(RescheduleManagerTest.class.getResourceAsStream("schedule.xml"), new File(smscDir, "schedule.xml"), false);
+    TestUtils.exportResource(UsersManagerTest.class.getResourceAsStream("users.xml"), new File(smscDir, "users.xml"), false);
+    TestUtils.exportResource(SnmpManagerTest.class.getResourceAsStream("snmp.xml"), new File(smscDir, "snmp.xml"), false);
+    TestUtils.exportResource(SmeConfigFileTest.class.getResourceAsStream("sme.xml"), new File(smscDir, "sme.xml"), false);
+    TestUtils.exportResource(ResourceFileTest.class.getResourceAsStream("resources_en_en.xml"), new File(smscDir, "resources_en_en.xml"), false);
+    TestUtils.exportResource(ResourceFileTest.class.getResourceAsStream("resources_ru_ru.xml"), new File(smscDir, "resources_ru_ru.xml"), false);
   }
 
   public TestAdminContext(File appBaseDir, File initFile, int smscInstancesNumber) throws AdminException {

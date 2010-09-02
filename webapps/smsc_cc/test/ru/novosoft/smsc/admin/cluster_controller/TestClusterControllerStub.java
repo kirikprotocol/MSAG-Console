@@ -4,7 +4,9 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.cluster_controller.protocol.ConfigType;
 import ru.novosoft.smsc.util.Address;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -42,6 +44,8 @@ public class TestClusterControllerStub extends ClusterController {
 
   private final Lock resourceLock = new ReentrantLock();
   private long lastResourceUpdateTime = System.currentTimeMillis();
+
+  private long aclLastUpdateTime = System.currentTimeMillis();
 
   private int smscInstancesNumber = 2;
 
@@ -307,5 +311,35 @@ public class TestClusterControllerStub extends ClusterController {
 
   public void applyResources() throws AdminException {
     lastResourceUpdateTime = System.currentTimeMillis();
+  }
+
+  // ACCESS CONTROL LIST ===============================================================================================
+
+  public List<CCAclInfo> getAcls() throws AdminException {
+    return new ArrayList<CCAclInfo>();
+  }
+
+  public List<Address> getAclAddresses(int aclId) throws AdminException {
+    return new ArrayList<Address>();
+  }
+
+  public void createAlc(int aclId, String name, String description, List<Address> addresses) throws AdminException {
+    aclLastUpdateTime = System.currentTimeMillis();
+  }
+
+  public void updateAcl(CCAclInfo acl) throws AdminException {
+    aclLastUpdateTime = System.currentTimeMillis();
+  }
+
+  public void removeAcl(int aclId) throws AdminException {
+    aclLastUpdateTime = System.currentTimeMillis();
+  }
+
+  public void addAddressesToAcl(int aclId, List<Address> addresses) throws AdminException {
+    aclLastUpdateTime = System.currentTimeMillis();
+  }
+
+  public void removeAddressesFromAcl(int aclId, List<Address> addresses) throws AdminException {
+    aclLastUpdateTime = System.currentTimeMillis();
   }
 }

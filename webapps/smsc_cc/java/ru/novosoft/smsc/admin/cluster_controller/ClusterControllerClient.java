@@ -184,6 +184,8 @@ final class ClusterControllerClient {
     return connected;
   }
 
+  // Access Controll List
+
   public AclAddAddressesResp send(AclAddAddresses req) throws AdminException {
     return sendPdu(req, new AclAddAddressesResp());
   }
@@ -216,6 +218,8 @@ final class ClusterControllerClient {
     return sendPdu(req, new AclUpdateResp());
   }
 
+  // Alias
+
   public AliasAddResp send(AliasAdd req) throws AdminException {
     return sendPdu(req, new AliasAddResp());
   }
@@ -224,6 +228,8 @@ final class ClusterControllerClient {
     return sendPdu(req, new AliasDelResp());
   }
 
+  // Config
+
   public LockConfigResp send(LockConfig req) throws AdminException {
     return sendPdu(req, new LockConfigResp());
   }
@@ -231,6 +237,12 @@ final class ClusterControllerClient {
   public void send(UnlockConfig req) throws AdminException {
     sendPdu(req, null);
   }
+
+  public GetConfigsStateResp send(GetConfigsState req) throws AdminException {
+    return sendPdu(req, new GetConfigsStateResp());
+  }
+
+  // Closed Groups
 
   public CgmAddAbonentResp send(CgmAddAbonent req) throws AdminException {
     return sendPdu(req, new CgmAddAbonentResp());
@@ -264,6 +276,8 @@ final class ClusterControllerClient {
     return sendPdu(req, new CgmListAbonentsResp());
   }
 
+  // Msc
+
   public MscAddResp send(MscAdd req) throws AdminException {
     return sendPdu(req, new MscAddResp());
   }
@@ -272,25 +286,31 @@ final class ClusterControllerClient {
     return sendPdu(req, new MscRemoveResp());
   }
 
+  // Reschedule
+
   public ApplyRescheduleResp send(ApplyReschedule req) throws AdminException {
     return sendPdu(req, new ApplyRescheduleResp());
   }
+
+  // Fraud
 
   public ApplyFraudControlResp send(ApplyFraudControl req) throws AdminException {
     return sendPdu(req, new ApplyFraudControlResp());
   }
 
+  // Map Limits
+
   public ApplyMapLimitsResp send(ApplyMapLimits req) throws AdminException {
     return sendPdu(req, new ApplyMapLimitsResp());
   }
+
+  // Snmp
 
   public ApplySnmpResp send(ApplySnmp req) throws AdminException {
     return sendPdu(req, new ApplySnmpResp());
   }
 
-  public GetConfigsStateResp send(GetConfigsState req) throws AdminException {
-    return sendPdu(req, new GetConfigsStateResp());
-  }
+  // Sme
 
   public SmeAddResp send(SmeAdd req) throws AdminException {
     return sendPdu(req, new SmeAddResp());
@@ -311,6 +331,8 @@ final class ClusterControllerClient {
   public SmeUpdateResp send(SmeUpdate req) throws AdminException {
     return sendPdu(req, new SmeUpdateResp());
   }
+
+  // Locale
 
   public ApplyLocaleResourceResp send(ApplyLocaleResource req) throws AdminException {
     return sendPdu(req, new ApplyLocaleResourceResp());

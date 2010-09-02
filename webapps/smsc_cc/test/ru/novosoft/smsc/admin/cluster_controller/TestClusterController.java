@@ -7,7 +7,9 @@ import ru.novosoft.smsc.admin.msc.TestMscManager;
 import ru.novosoft.smsc.util.Address;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -16,6 +18,8 @@ import java.util.concurrent.locks.ReentrantLock;
  * @author Artem Snopkov
  */
 public class TestClusterController extends ClusterController {
+
+  private final TestAclHelper aclHelper = new TestAclHelper();
 
   private final int smscInstancesNumber;
   private final File aliasesFile;
@@ -49,6 +53,8 @@ public class TestClusterController extends ClusterController {
   private long resourceLastUpdateTime = System.currentTimeMillis();
 
   private final Lock mainConfigLock = new ReentrantLock();
+
+  private long aclLastUpdateTime = System.currentTimeMillis();
 
   public TestClusterController(File aliasesFile, File mscsFile, int smscInstancesNumber) {
     this.smscInstancesNumber = smscInstancesNumber;
@@ -85,6 +91,9 @@ public class TestClusterController extends ClusterController {
         break;
       case Resources:
         time = resourceLastUpdateTime;
+        break;
+      case Acl:
+        time = aclLastUpdateTime;
         break;
       default:
         time = System.currentTimeMillis();
@@ -355,4 +364,38 @@ public class TestClusterController extends ClusterController {
     resourceLastUpdateTime = System.currentTimeMillis();
   }
 
+  // ACCESS CONTROL LIST ===============================================================================================
+
+  public List<CCAclInfo> getAcls() throws AdminException {
+    return aclHelper.getAcls();
+  }
+
+  public List<Address> getAclAddresses(int aclId) throws AdminException {
+    return aclHelper.getAclAddresses(aclId);
+  }
+
+  public void createAlc(int aclId, String name, String description, List<Address> addresses) throws AdminException {
+    aclLastUpdateTime = System.currentTimeMillis();
+    aclHelper.createAcl(aclId, name, description, addresses);
+  }
+
+  public void updateAcl(CCAclInfo acl) throws AdminException {
+    aclLastUpdateTime = System.currentTimeMillis();
+    aclHelper.updateAcl(acl);
+  }
+
+  public void removeAcl(int aclId) throws AdminException {
+    aclLastUpdateTime = System.currentTimeMillis();
+    aclHelper.removeAcl(aclId);
+  }
+
+  public void addAddressesToAcl(int aclId, List<Address> addresses) throws AdminException {
+    aclLastUpdateTime = System.currentTimeMillis();
+    aclHelper.addAddresses(aclId, addresses);
+  }
+
+  public void removeAddressesFromAcl(int aclId, List<Address> addresses) throws AdminException {
+    aclLastUpdateTime = System.currentTimeMillis();
+    aclHelper.removeAddresses(aclId, addresses);
+  }
 }

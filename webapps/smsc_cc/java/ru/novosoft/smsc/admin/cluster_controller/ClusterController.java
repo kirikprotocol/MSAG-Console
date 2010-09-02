@@ -4,9 +4,7 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.cluster_controller.protocol.*;
 import ru.novosoft.smsc.util.Address;
 
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Класс для отправки комманд в ClusterController.
@@ -38,13 +36,24 @@ public class ClusterController {
     cc.shutdown();
   }
 
+  protected void checkResponse(MultiResponse resp) throws ClusterControllerException {
+    int[] statuses = resp.getStatus();
+    for (int status : statuses) {
+      if (status != 0)
+        throw new ClusterControllerException("interaction_error", statuses, resp.getIds());
+    }
+  }
+
+  protected void checkResponse(Response resp) throws ClusterControllerException {
+    if (resp.getStatus() != 0)
+      throw new ClusterControllerException("interaction_error", resp.getStatus() + "");
+  }
+
   protected synchronized void lockConfig(ConfigType configType, boolean write) throws AdminException {
     LockConfig req = new LockConfig();
     req.setConfigType(configType);
     req.setWriteLock(write);
-    LockConfigResp resp = cc.send(req);
-    if (resp.getResp().getStatus() != 0)
-      throw new ClusterControllerException("interaction_error", resp.getResp().getStatus() + "");
+    checkResponse(cc.send(req).getResp());
   }
 
   protected synchronized void unlockConfig(ConfigType configType) throws AdminException {
@@ -59,6 +68,8 @@ public class ClusterController {
     if (now - lastConfigsStatusCheckTime > 1000 || configsStates == null) {
       GetConfigsState req = new GetConfigsState();
       GetConfigsStateResp resp = cc.send(req);
+
+      checkResponse(resp.getResp());
 
       if (configsStates == null)
         configsStates = new EnumMap<ConfigType, ConfigState>(ConfigType.class);
@@ -148,12 +159,7 @@ public class ClusterController {
     req.setAddr(address.getNormalizedAddress());
     req.setAlias(alias.getNormalizedAddress());
     req.setHide(aliasHide);
-    MultiResponse resp = cc.send(req).getResp();
-    int[] statuses = resp.getStatus();
-    for (int status : statuses) {
-      if (status != 0)
-        throw new ClusterControllerException("interaction_error", statuses, resp.getIds());
-    }
+    checkResponse(cc.send(req).getResp());
   }
 
   /**
@@ -166,12 +172,7 @@ public class ClusterController {
     lastConfigsStatusCheckTime = 0;
     AliasDel req = new AliasDel();
     req.setAlias(alias.getNormalizedAddress());
-    MultiResponse resp = cc.send(req).getResp();
-    int[] statuses = resp.getStatus();
-    for (int status : statuses) {
-      if (status != 0)
-        throw new ClusterControllerException("interaction_error", statuses, resp.getIds());
-    }
+    checkResponse(cc.send(req).getResp());
   }
 
   /**
@@ -201,7 +202,7 @@ public class ClusterController {
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
   public void unlockClosedGroups() throws AdminException {
-   unlockConfig(ConfigType.ClosedGroups);
+    unlockConfig(ConfigType.ClosedGroups);
   }
 
   /**
@@ -216,12 +217,7 @@ public class ClusterController {
     CgmAddGroup req = new CgmAddGroup();
     req.setId(groupId);
     req.setName(groupName);
-    MultiResponse resp = cc.send(req).getResp();
-    int[] statuses = resp.getStatus();
-    for (int status : statuses) {
-      if (status != 0)
-        throw new ClusterControllerException("interaction_error", statuses, resp.getIds());
-    }
+    checkResponse(cc.send(req).getResp());
   }
 
   /**
@@ -234,12 +230,7 @@ public class ClusterController {
     lastConfigsStatusCheckTime = 0;
     CgmDeleteGroup req = new CgmDeleteGroup();
     req.setId(groupId);
-    MultiResponse resp = cc.send(req).getResp();
-    int[] statuses = resp.getStatus();
-    for (int status : statuses) {
-      if (status != 0)
-        throw new ClusterControllerException("interaction_error", statuses, resp.getIds());
-    }
+    checkResponse(cc.send(req).getResp());
   }
 
   /**
@@ -254,12 +245,7 @@ public class ClusterController {
     CgmAddAddr req = new CgmAddAddr();
     req.setId(groupId);
     req.setAddr(mask.getNormalizedAddress());
-    MultiResponse resp = cc.send(req).getResp();
-    int[] statuses = resp.getStatus();
-    for (int status : statuses) {
-      if (status != 0)
-        throw new ClusterControllerException("interaction_error", statuses, resp.getIds());
-    }
+    checkResponse(cc.send(req).getResp());
   }
 
   /**
@@ -274,12 +260,7 @@ public class ClusterController {
     CgmDelAddr req = new CgmDelAddr();
     req.setId(groupId);
     req.setAddr(mask.getNormalizedAddress());
-    MultiResponse resp = cc.send(req).getResp();
-    int[] statuses = resp.getStatus();
-    for (int status : statuses) {
-      if (status != 0)
-        throw new ClusterControllerException("interaction_error", statuses, resp.getIds());
-    }
+    checkResponse(cc.send(req).getResp());
   }
 
   /**
@@ -322,12 +303,7 @@ public class ClusterController {
     lastConfigsStatusCheckTime = 0;
     MscAdd req = new MscAdd();
     req.setMsc(mscAddress.getNormalizedAddress());
-    MultiResponse resp = cc.send(req).getResp();
-    int[] statuses = resp.getStatus();
-    for (int status : statuses) {
-      if (status != 0)
-        throw new ClusterControllerException("interaction_error", statuses, resp.getIds());
-    }
+    checkResponse(cc.send(req).getResp());
   }
 
   /**
@@ -340,12 +316,7 @@ public class ClusterController {
     lastConfigsStatusCheckTime = 0;
     MscRemove req = new MscRemove();
     req.setMsc(mscAddress.getNormalizedAddress());
-    MultiResponse resp = cc.send(req).getResp();
-    int[] statuses = resp.getStatus();
-    for (int status : statuses) {
-      if (status != 0)
-        throw new ClusterControllerException("interaction_error", statuses, resp.getIds());
-    }
+    checkResponse(cc.send(req).getResp());
   }
 
   /**
@@ -385,12 +356,7 @@ public class ClusterController {
    */
   public void applyReschedule() throws AdminException {
     lastConfigsStatusCheckTime = 0;
-    MultiResponse resp = cc.send(new ApplyReschedule()).getResp();
-    int[] statuses = resp.getStatus();
-    for (int status : statuses) {
-      if (status != 0)
-        throw new ClusterControllerException("interaction_error", statuses, resp.getIds());
-    }
+    checkResponse(cc.send(new ApplyReschedule()).getResp());
   }
 
   /**
@@ -430,12 +396,7 @@ public class ClusterController {
    */
   public void applyFraud() throws AdminException {
     lastConfigsStatusCheckTime = 0;
-    MultiResponse resp = cc.send(new ApplyFraudControl()).getResp();
-    int[] statuses = resp.getStatus();
-    for (int status : statuses) {
-      if (status != 0)
-        throw new ClusterControllerException("interaction_error", statuses, resp.getIds());
-    }
+    checkResponse(cc.send(new ApplyFraudControl()).getResp());
   }
 
   /**
@@ -475,12 +436,7 @@ public class ClusterController {
    */
   public void applyMapLimits() throws AdminException {
     lastConfigsStatusCheckTime = 0;
-    MultiResponse resp = cc.send(new ApplyMapLimits()).getResp();
-    int[] statuses = resp.getStatus();
-    for (int status : statuses) {
-      if (status != 0)
-        throw new ClusterControllerException("interaction_error", statuses, resp.getIds());
-    }
+    checkResponse(cc.send(new ApplyMapLimits()).getResp());
   }
 
   /**
@@ -520,12 +476,7 @@ public class ClusterController {
    */
   public void applySnmp() throws AdminException {
     lastConfigsStatusCheckTime = 0;
-    MultiResponse resp = cc.send(new ApplySnmp()).getResp();
-    int[] statuses = resp.getStatus();
-    for (int status : statuses) {
-      if (status != 0)
-        throw new ClusterControllerException("interaction_error", statuses, resp.getIds());
-    }
+    checkResponse(cc.send(new ApplySnmp()).getResp());
   }
 
   /**
@@ -576,12 +527,7 @@ public class ClusterController {
     lastConfigsStatusCheckTime = 0;
     SmeAdd req = new SmeAdd();
     req.setParams(sme.toSmeParams());
-    MultiResponse resp = cc.send(req).getResp();
-    int[] statuses = resp.getStatus();
-    for (int status : statuses) {
-      if (status != 0)
-        throw new ClusterControllerException("interaction_error", statuses, resp.getIds());
-    }
+    checkResponse(cc.send(req).getResp());
   }
 
   /**
@@ -593,12 +539,7 @@ public class ClusterController {
     lastConfigsStatusCheckTime = 0;
     SmeUpdate req = new SmeUpdate();
     req.setParams(sme.toSmeParams());
-    MultiResponse resp = cc.send(req).getResp();
-    int[] statuses = resp.getStatus();
-    for (int status : statuses) {
-      if (status != 0)
-        throw new ClusterControllerException("interaction_error", statuses, resp.getIds());
-    }
+    checkResponse(cc.send(req).getResp());
   }
 
   /**
@@ -610,12 +551,7 @@ public class ClusterController {
     lastConfigsStatusCheckTime = 0;
     SmeRemove req = new SmeRemove();
     req.setSmeId(smeId);
-    MultiResponse resp = cc.send(req).getResp();
-    int[] statuses = resp.getStatus();
-    for (int status : statuses) {
-      if (status != 0)
-        throw new ClusterControllerException("interaction_error", statuses, resp.getIds());
-    }
+    checkResponse(cc.send(req).getResp());
   }
 
   /**
@@ -627,12 +563,7 @@ public class ClusterController {
     lastConfigsStatusCheckTime = 0;
     SmeDisconnect req = new SmeDisconnect();
     req.setSysIds(smeIds);
-    MultiResponse resp = cc.send(req).getResp();
-    int[] statuses = resp.getStatus();
-    for (int status : statuses) {
-      if (status != 0)
-        throw new ClusterControllerException("interaction_error", statuses, resp.getIds());
-    }
+    checkResponse(cc.send(req).getResp());
   }
 
 
@@ -640,8 +571,7 @@ public class ClusterController {
     lastConfigsStatusCheckTime = 0;
     SmeStatus req = new SmeStatus();
     SmeStatusResp resp = cc.send(req);
-    if (resp.getResp().getStatus() != 0)
-      throw new ClusterControllerException("interaction_error", resp.getResp().getStatus() + "");
+    checkResponse(resp.getResp());
 
     CCSmeSmscStatuses res[] = new CCSmeSmscStatuses[resp.getStatus().length];
     SmeStatusInfo[] statusInfo = resp.getStatus();
@@ -687,13 +617,8 @@ public class ClusterController {
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
   public void applyResources() throws AdminException {
-    ApplyLocaleResource req = new ApplyLocaleResource();
-    MultiResponse resp = cc.send(req).getResp();
-    int[] statuses = resp.getStatus();
-    for (int status : statuses) {
-      if (status != 0)
-        throw new ClusterControllerException("interaction_error", statuses, resp.getIds());
-    }
+    lastConfigsStatusCheckTime=0;
+    checkResponse(cc.send(new ApplyLocaleResource()).getResp());
   }
 
   /**
@@ -703,5 +628,139 @@ public class ClusterController {
    */
   public ConfigState getResourcesState() throws AdminException {
     return getConfigState(ConfigType.Resources);
+  }
+
+  // ACCESS CONTROL LIST ===============================================================================================
+
+  /**
+   * Возвращает информацию об ACL
+   * @return список CCAclList, каждый из которых содержит данные об одном ACL
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public List<CCAclInfo> getAcls() throws AdminException {
+    AclList req = new AclList();
+    AclListResp resp = cc.send(req);
+
+    checkResponse(resp.getResp());
+
+    List<CCAclInfo> result = new ArrayList<CCAclInfo>(resp.getAclList().length);
+    for (AclInfo l : resp.getAclList()) {
+      CCAclInfo info = new CCAclInfo();
+      info.setId(l.getId());
+      info.setName(l.getName());
+      info.setDescription(l.getDescription());
+      result.add(info);
+    }
+    return result;
+  }
+
+  /**
+   * Возвращает список адресов, содержащихся в конкретном ALC по его идентификатору
+   * @param aclId идентификатор ACL
+   * @return список адресов, содержащихся в ALC
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public List<Address> getAclAddresses(int aclId) throws AdminException {
+    AclLookup req = new AclLookup();
+    req.setAclId(aclId);
+    req.setAddrPrefix("");
+
+    AclLookupResp resp = cc.send(req);
+
+    checkResponse(resp.getResp());
+
+    List<Address> result = new ArrayList<Address>(resp.getResult().length);
+    for (String a : resp.getResult())
+      result.add(new Address(a));
+    return result;
+  }
+
+  /**
+   * Отправляет команду на создание нового ACL
+   * @param aclId идентификатор
+   * @param name имя
+   * @param description описание
+   * @param addresses список адресов
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void createAlc(int aclId, String name, String description, List<Address> addresses) throws AdminException {
+    String[] addr = new String[addresses.size()];
+    for (int i=0; i<addresses.size(); i++)
+      addr[i] = addresses.get(i).getSimpleAddress();
+
+    AclCreate req = new AclCreate();
+    req.setId(aclId);
+    req.setName(name);
+    req.setDescription(description);
+    req.setAddresses(addr);
+
+    checkResponse(cc.send(req).getResp());
+  }
+
+  /**
+   * Обновляет информацию об ACL
+   * @param acl новые данные об ACL
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void updateAcl(CCAclInfo acl) throws AdminException {
+    AclUpdate req = new AclUpdate();
+    req.setAcl(new AclInfo(acl.getId(), acl.getName(), acl.getDescription()));
+    checkResponse(cc.send(req).getResp());
+  }
+
+  /**
+   * Удаляет ACL
+   * @param aclId идентификатор ACL
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void removeAcl(int aclId) throws AdminException {
+    AclRemove req = new AclRemove();
+    req.setAclId(aclId);
+    checkResponse(cc.send(req).getResp());
+  }
+
+  /**
+   * Добавляет адреса в ACL
+   * @param aclId идентификатор ACL
+   * @param addresses список адресов
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void addAddressesToAcl(int aclId, List<Address> addresses) throws AdminException {
+    String[] addr = new String[addresses.size()];
+    for (int i=0; i<addresses.size(); i++)
+      addr[i] = addresses.get(i).getSimpleAddress();
+
+    AclAddAddresses req = new AclAddAddresses();
+    req.setAclId(aclId);
+    req.setAddrs(addr);
+
+    checkResponse(cc.send(req).getResp());
+  }
+
+  /**
+   * Удаляет адреса из ACL
+   * @param aclId идентификатор ACL
+   * @param addresses список адресов, которые надо удалить
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void removeAddressesFromAcl(int aclId, List<Address> addresses) throws AdminException {
+    String[] addr = new String[addresses.size()];
+    for (int i=0; i<addresses.size(); i++)
+      addr[i] = addresses.get(i).getSimpleAddress();
+
+    AclRemoveAddresses req = new AclRemoveAddresses();
+    req.setAclId(aclId);
+    req.setAddrs(addr);
+
+    checkResponse(cc.send(req).getResp());
+  }
+
+  /**
+   * Возвращает статус конфигурации ACL
+   * @return статус конфигурации ACL
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public ConfigState getAclState() throws AdminException {
+    return getConfigState(ConfigType.Acl);
   }
 }

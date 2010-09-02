@@ -45,6 +45,12 @@ public class TestUtils {
     }
   }
 
+  public static void exportResource(InputStream is, File toFile, boolean override) throws IOException {
+    if (!override && toFile.exists())
+      return;
+    exportResource(is, toFile);
+  }
+
   public static File exportResourceToRandomFile(InputStream is, String fileExt) throws IOException {
     File file = createRandomFile(fileExt);
     exportResource(is, file);
