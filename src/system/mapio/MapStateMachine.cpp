@@ -646,7 +646,17 @@ static unsigned RemapDialog(MapDialog* dialog,unsigned ssn,ReAssignDialogType dl
 static void SendAbonentStatusToSmsc(MapDialog* dialog,int status/*=AbonentStatus::UNKNOWN*/)
 {
   __map_trace2__("Send abonent status(%d) to SMSC dlg 0x%x",status,dialog->dialogid_map);
-  SmscCommand cmd = SmscCommand::makeQueryAbonentStatusResp(dialog->QueryAbonentCommand->get_abonentStatus(),status,dialog->s_msc,dialog->s_imsi);
+  //dialog->
+  int code=dialog->routeErr;
+  if(code==0 && dialog->callbarred)
+  {
+    code=Status::CALLBARRED;
+  }
+  if(code==0 && dialog->teleservicenotprov)
+  {
+    code=Status::TELSVCNOTPROVIS;
+  }
+  SmscCommand cmd = SmscCommand::makeQueryAbonentStatusResp(dialog->QueryAbonentCommand->get_abonentStatus(),status,code,dialog->s_msc,dialog->s_imsi);
   MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(cmd);
 }
 
@@ -2460,7 +2470,7 @@ USHORT_T Et96MapGetACVersionConf(ET96MAP_LOCAL_SSN_T localSsn,UCHAR_T version,ET
     x_map.erase(s_key);
   }MAP_CATCH(dialogid_map,dialogid_smsc,dialog_ssn);
   return ET96MAP_E_OK;
-}
+ }
 
 #endif
 
@@ -2715,11 +2725,21 @@ static USHORT_T  Et96MapVxSendRInfoForSmConf_Impl(
             // normal situation no error
             // smsc will accept message from abonent
             __map_trace2__("%s: call barred but allowed", __func__);
+            if(errorSendRoutingInfoForSm_sp->errorCode == 13)
+            {
+              dialog->callbarred=true;
+            }
+            if(errorSendRoutingInfoForSm_sp->errorCode == 11)
+            {
+              dialog->teleservicenotprov=true;
+            }
             dialog->s_imsi = "";
             dialog->s_msc = "";
             dialog->routeErr = 0;
             dialog->state = MAPST_ImsiWaitCloseInd;
           } else {
+            dialog->callbarred=false;
+            dialog->teleservicenotprov=false;
             dialog->s_imsi = "";
             dialog->s_msc = "";
             dialog->state = MAPST_ImsiWaitCloseInd;
