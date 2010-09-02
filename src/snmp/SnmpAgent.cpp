@@ -1,4 +1,3 @@
-static char const ident[] = "$Id$";
 #include <net-snmp/net-snmp-config.h>
 #include <signal.h>
 #include <net-snmp/net-snmp-includes.h>
@@ -19,6 +18,8 @@ static char const ident[] = "$Id$";
 
 #include "snmp/smestattable/SmeStatTableSubAgent.hpp"
 #include "snmp/smeerrtable/smeErrTable_subagent.hpp"
+
+static char const ident[] = "$Id$";
 
   extern "C" {
     void init_smsc(void);
