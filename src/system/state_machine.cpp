@@ -1052,13 +1052,13 @@ StateType StateMachine::submit(Tuple& t)
   {
     unsigned len;
     const unsigned char* msg;
-    if(sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
+    if(sms->hasBinProperty(Tag::SMSC_RAW_PAYLOAD))
     {
-      msg=(const unsigned char*)sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
+      msg=(const unsigned char*)sms->getBinProperty(Tag::SMSC_RAW_PAYLOAD,&len);
     }
     else
     {
-      msg=(const unsigned char*)sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
+      msg=(const unsigned char*)sms->getBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,&len);
     }
     if(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x40)
     {
