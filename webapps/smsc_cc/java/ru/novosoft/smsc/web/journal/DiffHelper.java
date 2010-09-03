@@ -125,8 +125,25 @@ class DiffHelper {
       if (!changed && oldValue != null) {
         if (oldValue instanceof Object[]) {
           changed = !Arrays.equals((Object[]) oldValue, (Object[]) newValue);
-        } else
+        } else if (oldValue instanceof int[]) {
+          changed = !Arrays.equals((int[]) oldValue, (int[]) newValue);
+        } else if (oldValue instanceof long[]) {
+          changed = !Arrays.equals((long[]) oldValue, (long[]) newValue);
+        } else if (oldValue instanceof double[]) {
+          changed = !Arrays.equals((double[]) oldValue, (double[]) newValue);
+        } else if (oldValue instanceof float[]) {
+          changed = !Arrays.equals((float[]) oldValue, (float[]) newValue);
+        } else if (oldValue instanceof byte[]) {
+          changed = !Arrays.equals((byte[]) oldValue, (byte[]) newValue);
+        } else if (oldValue instanceof short[]) {
+          changed = !Arrays.equals((short[]) oldValue, (short[]) newValue);
+        } else if (oldValue instanceof char[]) {
+          changed = !Arrays.equals((char[]) oldValue, (char[]) newValue);
+        } else if (oldValue instanceof boolean[]) {
+          changed = !Arrays.equals((boolean[]) oldValue, (boolean[]) newValue);
+        } else {
           changed = !oldValue.equals(newValue);
+        }
       }
 
       if (changed) {
@@ -148,6 +165,12 @@ class DiffHelper {
       }
     }
 
+  }
+
+  public static void main(String[] ags) {
+    final int[] a1 = new int[]{1,2,3};
+    final int[] a2 = new int[]{1,2,3};
+    new DiffHelper("").logChanges(null, new ArrayList<Object>(){{add(a1);}}, new ArrayList<Object>(){{add(a2);}}, new ArrayList<Method>(){{add(DiffHelper.class.getMethods()[0]);}}, "");
   }
 
   protected void logChanges(Journal j, List<Object> oldValues, List<Object> newValues, List<Method> getters, String user) {
