@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!ELEMENT routes (subject_def*, route*)>
+<!ELEMENT route (notes*, source+, destination+)>
+<!ATTLIST route
+	id CDATA #REQUIRED
+	billing (true | false | mt | fr) #REQUIRED
+	archiving (true | false) #REQUIRED
+	enabling (true | false) "true"
+	priority CDATA #REQUIRED
+	serviceId CDATA #REQUIRED
+	suppressDeliveryReports (true|false) "false"
+	active (true|false) "true"
+	srcSmeId CDATA #IMPLIED
+	deliveryMode CDATA #REQUIRED
+	forwardTo CDATA #IMPLIED
+	hide CDATA #IMPLIED
+	forceReplayPath CDATA #IMPLIED
+trafficRules CDATA #IMPLIED
+providerId CDATA "-1" 
+	replayPath (pass|force|suppress) "pass"
+	forceDelivery (true|false) "false"
+	aclId CDATA "-1"
+  allowBlocked (true|false) "false"
+  billingId CDATA ""
+  categoryId CDATA "-1"
+  transit (true|false) "false"
+>
+<!ELEMENT notes (#PCDATA)>
+<!ELEMENT source (subject | mask)>
+<!ELEMENT destination (subject | mask)>
+<!ATTLIST destination
+	sme CDATA #REQUIRED
+>
+<!ELEMENT subject EMPTY>
+<!ATTLIST subject
+	id CDATA #REQUIRED
+>
+<!ELEMENT subject_def (notes*, (mask|subject)+)>
+<!ATTLIST subject_def
+	id CDATA #REQUIRED
+	defSme CDATA #REQUIRED
+>
+<!ELEMENT mask EMPTY>
+<!ATTLIST mask
+	value CDATA #REQUIRED
+>
