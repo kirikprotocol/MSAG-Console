@@ -62,6 +62,7 @@ public class ServiceEditSme extends SmeBean {
             forceGsmDataCoding = sme.isForceGsmDataCoding();
             forceSmeReceipt = sme.isForceSmeReceipt();
             smppPlus = sme.isSmppPlus();
+            defaultDcLatin1 = sme.isDefaultDcLatin1();
         }
 
         return RESULT_OK;
