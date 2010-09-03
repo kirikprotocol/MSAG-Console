@@ -50,6 +50,7 @@ public class SME {
     private boolean forceSmeReceipt;
     private boolean forceGsmDataCoding;
     private boolean smppPlus;
+    private boolean defaultDcLatin1;
 
 
     private static final Category logger = Category.getInstance(SME.class);
@@ -150,6 +151,8 @@ public class SME {
                         forceGsmDataCoding = true;
                       else if (flag.equals("smppPlus"))
                         smppPlus = true;
+                      else if (flag.equals("defaultDcLatin1"))
+                        defaultDcLatin1 = true;
                       else
                         logger.error("Unknown SME flag: " + flag + ". It will be skipped.");
                     }
@@ -207,6 +210,8 @@ public class SME {
           addFlag(flags, "forceGsmDataCoding");
       if (smppPlus)
           addFlag(flags, "smppPlus");
+      if (defaultDcLatin1)
+          addFlag(flags, "defaultDcLatin1");
       return flags.toString();
     }
 
@@ -314,6 +319,10 @@ public class SME {
     return smppPlus;
   }
 
+  public boolean isDefaultDcLatin1() {
+    return defaultDcLatin1;
+  }
+
   public String getReceiptSchemeName() {
         return receiptSchemeName;
     }
@@ -377,6 +386,7 @@ public class SME {
         forceSmeReceipt = newSme.isForceSmeReceipt();
         forceGsmDataCoding = newSme.isForceGsmDataCoding();
         smppPlus = newSme.isSmppPlus();
+        defaultDcLatin1 = newSme.isDefaultDcLatin1();
     }
 
     public int getProclimit() {
@@ -485,6 +495,10 @@ public class SME {
 
   public void setSmppPlus(boolean smppPlus) {
     this.smppPlus = smppPlus;
+  }
+
+  public void setDefaultDcLatin1(boolean defaultDcLatin1) {
+    this.defaultDcLatin1 = defaultDcLatin1;
   }
 
   public void setInterfaceVersion(int interfaceVersion) {

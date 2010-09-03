@@ -965,6 +965,7 @@ sme_add_opt[SmeGenCommand cmd]
 	  (OPT_FILL_EXTRA_DESCRIPTOR   { cmd.setFillExtraDescriptor  (true); })?
 	  (OPT_FORCE_SME_RECEIPT   { cmd.setForceSmeReceipt  (true); })?
 	  (OPT_SMPP_PLUS   { cmd.setSmppPlus  (true); })?
+	  (OPT_DEFAULT_LATIN1   { cmd.setDefaultDcLatin1  (true); })?
 	  (OPT_DISABLED   { cmd.setDisabled (true); })?
 	;
 exception
@@ -992,6 +993,8 @@ sme_alt_opt[SmeGenCommand cmd]
 			  |OPT_OFF { cmd.setForceSmeReceipt  (false); }))?
 	  (OPT_SMPP_PLUS   (OPT_ON  { cmd.setSmppPlus   (true); }
 			  |OPT_OFF { cmd.setSmppPlus  (false); }))?
+	  (OPT_DEFAULT_LATIN1   (OPT_ON  { cmd.setDefaultDcLatin1   (true); }
+			  |OPT_OFF { cmd.setDefaultDcLatin1  (false); }))?
 	  (ACT_DISCONNECT { cmd.setDisconnect(); })?
 	;
 exception

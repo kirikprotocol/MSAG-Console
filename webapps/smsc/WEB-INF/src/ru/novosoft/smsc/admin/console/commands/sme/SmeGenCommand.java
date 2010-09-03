@@ -45,6 +45,7 @@ public abstract class SmeGenCommand extends CommandClass
     protected boolean forceSmeReceipt;
     protected boolean forceGsmDataCoding;
     protected boolean smppPlus;
+    protected boolean defaultDcLatin1;
 
     protected boolean isMode = false;
     protected boolean isType = false;
@@ -69,6 +70,7 @@ public abstract class SmeGenCommand extends CommandClass
     protected boolean isForceSmeReceipt;
     protected boolean isForceGsmDataCoding;
     protected boolean isSmppPlus;
+    protected boolean isDefaultDcLatin1;
 
     public void setSmeId(String smeId) {
         this.smeId = smeId;
@@ -165,5 +167,10 @@ public abstract class SmeGenCommand extends CommandClass
   public void setSmppPlus(boolean smppPlus) {
     this.smppPlus = smppPlus;
     isSmppPlus = true;
+  }
+
+  public void setDefaultDcLatin1(boolean defaultDcLatin1) {
+    this.defaultDcLatin1 = defaultDcLatin1;
+    isDefaultDcLatin1 = true;
   }
 }

@@ -45,6 +45,7 @@ public class SmeAddCommand extends SmeGenCommand
             sme.setCarrySccpInfo(carrySccpInfo);
             sme.setFillExtraDescriptor(fillExtraDescriptor);
             sme.setSmppPlus(smppPlus);
+            sme.setDefaultDcLatin1(defaultDcLatin1);
             manager.add(sme);
 //            manager.add(smeId, priority, type, TON, NPI, interfaceVersion, systemType, password,
 //                        addressRange, smeN, wantAlias, forceDC, timeout, receiptScheme,

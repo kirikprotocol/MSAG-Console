@@ -142,30 +142,31 @@ OPT_CARRY_SCCP_INFO="carrysccp"=142
 OPT_FILL_EXTRA_DESCRIPTOR="fillextra"=143
 OPT_FORCE_SME_RECEIPT="forcereceipt"=144
 OPT_SMPP_PLUS="smppplus"=145
-VAL_FORCE="force"=146
-VAL_SUPPRESS="suppress"=147
-VAL_PASS="pass"=148
-VAL_FULL="full"=149
-VAL_FINAL="final"=150
-VAL_NONE="none"=151
-VAL_DEF="default"=152
-VAL_UCS2="ucs2"=153
-VAL_LATIN1="latin1"=154
-VAL_UCS2LATIN1="ucs2-latin1"=155
-VAL_STORE="store"=156
-VAL_FORWARD="forward"=157
-VAL_DATAGRAM="datagram"=158
-VAL_TX="TX"=159
-VAL_RX="RX"=160
-VAL_TRX="TRX"=161
-VAL_SMPP="SMPP"=162
-VAL_SS7="SS7"=163
-WS=164
-STR("more input")=165
-QSTR("quoted string")=166
-ESTR("empty string")=167
-STR_WS=168
-STR_CHR=169
-COMMA("comma character ','")=170
-ESC=171
-DIGIT=172
+OPT_DEFAULT_LATIN1="defaultDcLatin1"=146
+VAL_FORCE="force"=147
+VAL_SUPPRESS="suppress"=148
+VAL_PASS="pass"=149
+VAL_FULL="full"=150
+VAL_FINAL="final"=151
+VAL_NONE="none"=152
+VAL_DEF="default"=153
+VAL_UCS2="ucs2"=154
+VAL_LATIN1="latin1"=155
+VAL_UCS2LATIN1="ucs2-latin1"=156
+VAL_STORE="store"=157
+VAL_FORWARD="forward"=158
+VAL_DATAGRAM="datagram"=159
+VAL_TX="TX"=160
+VAL_RX="RX"=161
+VAL_TRX="TRX"=162
+VAL_SMPP="SMPP"=163
+VAL_SS7="SS7"=164
+WS=165
+STR("more input")=166
+QSTR("quoted string")=167
+ESTR("empty string")=168
+STR_WS=169
+STR_CHR=170
+COMMA("comma character ','")=171
+ESC=172
+DIGIT=173

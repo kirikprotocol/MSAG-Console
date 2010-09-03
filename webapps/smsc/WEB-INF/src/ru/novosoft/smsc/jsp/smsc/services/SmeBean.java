@@ -34,6 +34,7 @@ public class SmeBean extends PageBean {
     protected boolean forceSmeReceipt;
     protected boolean forceGsmDataCoding;
     protected boolean smppPlus;
+    protected boolean defaultDcLatin1;
 
 
     protected int convertInterfaceVersion(String version) {
@@ -67,6 +68,7 @@ public class SmeBean extends PageBean {
         forceSmeReceipt = false;
         forceGsmDataCoding = false;
         smppPlus = false;
+        defaultDcLatin1 = false;
     }
 
     protected SME getSME() {
@@ -94,6 +96,7 @@ public class SmeBean extends PageBean {
       sme.setForceSmeReceipt(forceSmeReceipt);
       sme.setForceGsmDataCoding(forceGsmDataCoding);
       sme.setSmppPlus(smppPlus);
+      sme.setDefaultDcLatin1(defaultDcLatin1);
       return sme;
     }
 
@@ -350,5 +353,13 @@ public class SmeBean extends PageBean {
 
   public void setSmppPlus(boolean smppPlus) {
     this.smppPlus = smppPlus;
+  }
+
+  public boolean isDefaultDcLatin1() {
+    return defaultDcLatin1;
+  }
+
+  public void setDefaultDcLatin1(boolean defaultDcLatin1) {
+    this.defaultDcLatin1 = defaultDcLatin1;
   }
 }

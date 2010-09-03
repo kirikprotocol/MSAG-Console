@@ -160,6 +160,7 @@ tokens {
   OPT_FILL_EXTRA_DESCRIPTOR = "fillextra";
   OPT_FORCE_SME_RECEIPT = "forcereceipt";
   OPT_SMPP_PLUS = "smppplus";
+  OPT_DEFAULT_LATIN1 = "defaultDcLatin1";
 
   VAL_FORCE     = "force";
   VAL_SUPPRESS  = "suppress";

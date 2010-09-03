@@ -70,6 +70,7 @@ public class SmeAlterCommand extends SmeGenCommand
                 newSme.setForceSmeReceipt(isForceSmeReceipt ? forceSmeReceipt : sme.isForceSmeReceipt());
                 newSme.setForceGsmDataCoding(isForceGsmDataCoding ? forceGsmDataCoding : sme.isForceGsmDataCoding());
                 newSme.setSmppPlus(isSmppPlus ? smppPlus : sme.isSmppPlus());
+                newSme.setDefaultDcLatin1(isDefaultDcLatin1 ? defaultDcLatin1 : sme.isDefaultDcLatin1());
 
 //                SME newSme = new SME(smeId, isPriority ? priority:sme.getPriority(), isType ? type:sme.getType(),
 //                        isTON ? TON:sme.getTypeOfNumber(), isNPI ? NPI:sme.getNumberingPlan(),

@@ -3399,7 +3399,7 @@ public CommandParser(ParserSharedInputState state) {
 		
 		{
 		match(OPT_TASK);
-		cmd.setFile(getnameid("task file")); cmd.setSplitByRegions(getnameid("split")); 
+		cmd.setFile(getnameid("task file")); cmd.setSplitByRegions(getnameid("split"));
 		}
 		return cmd;
 	}
@@ -5367,6 +5367,7 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_FILL_EXTRA_DESCRIPTOR:
 		case OPT_FORCE_SME_RECEIPT:
 		case OPT_SMPP_PLUS:
+		case OPT_DEFAULT_LATIN1:
 		{
 			break;
 		}
@@ -5427,6 +5428,7 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_FILL_EXTRA_DESCRIPTOR:
 		case OPT_FORCE_SME_RECEIPT:
 		case OPT_SMPP_PLUS:
+		case OPT_DEFAULT_LATIN1:
 		{
 			break;
 		}
@@ -5467,6 +5469,7 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_FILL_EXTRA_DESCRIPTOR:
 		case OPT_FORCE_SME_RECEIPT:
 		case OPT_SMPP_PLUS:
+		case OPT_DEFAULT_LATIN1:
 		{
 			break;
 		}
@@ -5515,6 +5518,7 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_FILL_EXTRA_DESCRIPTOR:
 		case OPT_FORCE_SME_RECEIPT:
 		case OPT_SMPP_PLUS:
+		case OPT_DEFAULT_LATIN1:
 		{
 			break;
 		}
@@ -5553,6 +5557,7 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_FILL_EXTRA_DESCRIPTOR:
 		case OPT_FORCE_SME_RECEIPT:
 		case OPT_SMPP_PLUS:
+		case OPT_DEFAULT_LATIN1:
 		{
 			break;
 		}
@@ -5590,6 +5595,7 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_FILL_EXTRA_DESCRIPTOR:
 		case OPT_FORCE_SME_RECEIPT:
 		case OPT_SMPP_PLUS:
+		case OPT_DEFAULT_LATIN1:
 		{
 			break;
 		}
@@ -5626,6 +5632,7 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_FILL_EXTRA_DESCRIPTOR:
 		case OPT_FORCE_SME_RECEIPT:
 		case OPT_SMPP_PLUS:
+		case OPT_DEFAULT_LATIN1:
 		{
 			break;
 		}
@@ -5661,6 +5668,7 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_FILL_EXTRA_DESCRIPTOR:
 		case OPT_FORCE_SME_RECEIPT:
 		case OPT_SMPP_PLUS:
+		case OPT_DEFAULT_LATIN1:
 		{
 			break;
 		}
@@ -5695,6 +5703,7 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_FILL_EXTRA_DESCRIPTOR:
 		case OPT_FORCE_SME_RECEIPT:
 		case OPT_SMPP_PLUS:
+		case OPT_DEFAULT_LATIN1:
 		{
 			break;
 		}
@@ -5728,6 +5737,7 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_FILL_EXTRA_DESCRIPTOR:
 		case OPT_FORCE_SME_RECEIPT:
 		case OPT_SMPP_PLUS:
+		case OPT_DEFAULT_LATIN1:
 		{
 			break;
 		}
@@ -5760,6 +5770,7 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_FILL_EXTRA_DESCRIPTOR:
 		case OPT_FORCE_SME_RECEIPT:
 		case OPT_SMPP_PLUS:
+		case OPT_DEFAULT_LATIN1:
 		{
 			break;
 		}
@@ -5791,6 +5802,7 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_FILL_EXTRA_DESCRIPTOR:
 		case OPT_FORCE_SME_RECEIPT:
 		case OPT_SMPP_PLUS:
+		case OPT_DEFAULT_LATIN1:
 		{
 			break;
 		}
@@ -5821,6 +5833,7 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_FILL_EXTRA_DESCRIPTOR:
 		case OPT_FORCE_SME_RECEIPT:
 		case OPT_SMPP_PLUS:
+		case OPT_DEFAULT_LATIN1:
 		{
 			break;
 		}
@@ -5874,6 +5887,7 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_FILL_EXTRA_DESCRIPTOR:
 		case OPT_FORCE_SME_RECEIPT:
 		case OPT_SMPP_PLUS:
+		case OPT_DEFAULT_LATIN1:
 		{
 			break;
 		}
@@ -5911,6 +5925,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_FILL_EXTRA_DESCRIPTOR:
 			case OPT_FORCE_SME_RECEIPT:
 			case OPT_SMPP_PLUS:
+			case OPT_DEFAULT_LATIN1:
 			{
 				break;
 			}
@@ -5936,6 +5951,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_FILL_EXTRA_DESCRIPTOR:
 			case OPT_FORCE_SME_RECEIPT:
 			case OPT_SMPP_PLUS:
+			case OPT_DEFAULT_LATIN1:
 			{
 				break;
 			}
@@ -5960,6 +5976,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_FILL_EXTRA_DESCRIPTOR:
 			case OPT_FORCE_SME_RECEIPT:
 			case OPT_SMPP_PLUS:
+			case OPT_DEFAULT_LATIN1:
 			{
 				break;
 			}
@@ -5983,6 +6000,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_FILL_EXTRA_DESCRIPTOR:
 			case OPT_FORCE_SME_RECEIPT:
 			case OPT_SMPP_PLUS:
+			case OPT_DEFAULT_LATIN1:
 			{
 				break;
 			}
@@ -6005,6 +6023,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_FILL_EXTRA_DESCRIPTOR:
 			case OPT_FORCE_SME_RECEIPT:
 			case OPT_SMPP_PLUS:
+			case OPT_DEFAULT_LATIN1:
 			{
 				break;
 			}
@@ -6026,6 +6045,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_DISABLED:
 			case OPT_FORCE_SME_RECEIPT:
 			case OPT_SMPP_PLUS:
+			case OPT_DEFAULT_LATIN1:
 			{
 				break;
 			}
@@ -6046,6 +6066,7 @@ public CommandParser(ParserSharedInputState state) {
 			case EOF:
 			case OPT_DISABLED:
 			case OPT_SMPP_PLUS:
+			case OPT_DEFAULT_LATIN1:
 			{
 				break;
 			}
@@ -6061,6 +6082,26 @@ public CommandParser(ParserSharedInputState state) {
 			{
 				match(OPT_SMPP_PLUS);
 				cmd.setSmppPlus  (true);
+				break;
+			}
+			case EOF:
+			case OPT_DISABLED:
+			case OPT_DEFAULT_LATIN1:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_DEFAULT_LATIN1:
+			{
+				match(OPT_DEFAULT_LATIN1);
+				cmd.setDefaultDcLatin1  (true);
 				break;
 			}
 			case EOF:
@@ -6146,6 +6187,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_FILL_EXTRA_DESCRIPTOR:
 			case OPT_FORCE_SME_RECEIPT:
 			case OPT_SMPP_PLUS:
+			case OPT_DEFAULT_LATIN1:
 			{
 				break;
 			}
@@ -6191,6 +6233,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_FILL_EXTRA_DESCRIPTOR:
 			case OPT_FORCE_SME_RECEIPT:
 			case OPT_SMPP_PLUS:
+			case OPT_DEFAULT_LATIN1:
 			{
 				break;
 			}
@@ -6235,6 +6278,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_FILL_EXTRA_DESCRIPTOR:
 			case OPT_FORCE_SME_RECEIPT:
 			case OPT_SMPP_PLUS:
+			case OPT_DEFAULT_LATIN1:
 			{
 				break;
 			}
@@ -6278,6 +6322,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_FILL_EXTRA_DESCRIPTOR:
 			case OPT_FORCE_SME_RECEIPT:
 			case OPT_SMPP_PLUS:
+			case OPT_DEFAULT_LATIN1:
 			{
 				break;
 			}
@@ -6320,6 +6365,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_FILL_EXTRA_DESCRIPTOR:
 			case OPT_FORCE_SME_RECEIPT:
 			case OPT_SMPP_PLUS:
+			case OPT_DEFAULT_LATIN1:
 			{
 				break;
 			}
@@ -6361,6 +6407,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_FILL_EXTRA_DESCRIPTOR:
 			case OPT_FORCE_SME_RECEIPT:
 			case OPT_SMPP_PLUS:
+			case OPT_DEFAULT_LATIN1:
 			{
 				break;
 			}
@@ -6401,6 +6448,7 @@ public CommandParser(ParserSharedInputState state) {
 			case ACT_DISCONNECT:
 			case OPT_FORCE_SME_RECEIPT:
 			case OPT_SMPP_PLUS:
+			case OPT_DEFAULT_LATIN1:
 			{
 				break;
 			}
@@ -6440,6 +6488,7 @@ public CommandParser(ParserSharedInputState state) {
 			case EOF:
 			case ACT_DISCONNECT:
 			case OPT_SMPP_PLUS:
+			case OPT_DEFAULT_LATIN1:
 			{
 				break;
 			}
@@ -6466,6 +6515,45 @@ public CommandParser(ParserSharedInputState state) {
 				{
 					match(OPT_OFF);
 					cmd.setSmppPlus  (false);
+					break;
+				}
+				default:
+				{
+					throw new NoViableAltException(LT(1), getFilename());
+				}
+				}
+				}
+				break;
+			}
+			case EOF:
+			case ACT_DISCONNECT:
+			case OPT_DEFAULT_LATIN1:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_DEFAULT_LATIN1:
+			{
+				match(OPT_DEFAULT_LATIN1);
+				{
+				switch ( LA(1)) {
+				case OPT_ON:
+				{
+					match(OPT_ON);
+					cmd.setDefaultDcLatin1   (true);
+					break;
+				}
+				case OPT_OFF:
+				{
+					match(OPT_OFF);
+					cmd.setDefaultDcLatin1  (false);
 					break;
 				}
 				default:
@@ -6593,27 +6681,27 @@ public CommandParser(ParserSharedInputState state) {
 			}
 			}
 			{
-			_loop325:
+			_loop328:
 			do {
 				if ((LA(1)==ACT_ADD)) {
 					match(ACT_ADD);
 					cmd.addMask(getnameid("closed group mask to add"));
 				}
 				else {
-					break _loop325;
+					break _loop328;
 				}
 				
 			} while (true);
 			}
 			{
-			_loop327:
+			_loop330:
 			do {
 				if ((LA(1)==ACT_DELETE)) {
 					match(ACT_DELETE);
 					cmd.delMask(getnameid("closed group mask to delete"));
 				}
 				else {
-					break _loop327;
+					break _loop330;
 				}
 				
 			} while (true);
@@ -6888,6 +6976,7 @@ public CommandParser(ParserSharedInputState state) {
 		"\"fillextra\"",
 		"\"forcereceipt\"",
 		"\"smppplus\"",
+		"\"defaultDcLatin1\"",
 		"\"force\"",
 		"\"suppress\"",
 		"\"pass\"",

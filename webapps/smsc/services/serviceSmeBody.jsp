@@ -89,6 +89,11 @@
     </td>
 </tr>
 <tr class=row<%=(rowN++) & 1%>>
+    <th><label for="defaultDcLatin1_check_id"><%=getLocString("services.defaultDcLatin1")%></label></th>
+    <td><input class=check type="checkbox" name="defaultDcLatin1" id="defaultDcLatin1_check_id" <%=bean.isDefaultDcLatin1() ? "checked" : ""%>>
+    </td>
+</tr>
+<tr class=row<%=(rowN++) & 1%>>
     <th><%=getLocString("services.timeout")%></th>
     <td><input class=txt type="text" name="timeout" value="<%=bean.getTimeout()%>"></td>
 </tr>
@@ -129,7 +134,7 @@
 </tr>
 <tr class=row<%=(rowN++) & 1%>>
     <th><%=getLocString("services.accessMask")%></th>
-<%//todo штука для редактирования масок%>
+<%//todo пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ%>
     <td><input class=txt type="text" name="accessMask" value="<%=bean.getAccessMask()%>"></td>
 </tr>
 <%if (SupportExtProfile.enabled) { %>
