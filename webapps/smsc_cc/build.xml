@@ -93,7 +93,7 @@ public class Mode {${line.separator}
 
     <mkdir dir="${smsc.exploded.dir}/WEB-INF/lib"/>
     <copy todir="${smsc.exploded.dir}/WEB-INF/lib" >
-      <fileset dir="lib" excludes="aspectj*.jar, javaee*.jar"/>
+      <fileset dir="lib" excludes="javaee*.jar"/>
     </copy>
     <mkdir dir="${smsc.exploded.dir}/WEB-INF/classes/dtds"/>
     <copy todir="${smsc.exploded.dir}/WEB-INF/classes/dtds">
