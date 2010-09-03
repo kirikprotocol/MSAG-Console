@@ -818,22 +818,18 @@ public class ClusterController {
   }
 
   /**
-   * Отправляет запрос на загрузку тестовой конфигурации маршрутов
-   * @throws AdminException если произошла ошибка при взаимодействии с СС
-   */
-  public void loadTestRoutes() throws AdminException {
-    checkResponse(cc.send(new LoadTestRoutes()).getResp());
-  }
-
-  /**
    * Отправляет запрос на трассировку маршрута
+   * @param fileName название файла (только имя, файл должен находиться в той же директории, что и routes.xml)
+   * с тестовой конфигурацией маршрутов
    * @param source адрес отправителя
    * @param destination адрес получателя
    * @param sourceSmeId Sme Id отправителя
+   * @return Экземпляр CCTraceRouteResult
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
-  public void traceRoute(Address source, Address destination, String sourceSmeId) throws AdminException {
+  public CCRouteTrace traceRoute(String fileName, Address source, Address destination, String sourceSmeId) throws AdminException {
     TraceRoute req = new TraceRoute();
+    req.setFileName(fileName);
     req.setSrc(source.getSimpleAddress());
     req.setDst(destination.getSimpleAddress());
     req.setSrcSysId(sourceSmeId);
@@ -842,6 +838,6 @@ public class ClusterController {
 
     checkResponse(resp.getResp());
 
-    // todo
+    return new CCRouteTrace(resp.getFound() ? resp.getRouteId() : null, resp.getTrace());
   }
 }

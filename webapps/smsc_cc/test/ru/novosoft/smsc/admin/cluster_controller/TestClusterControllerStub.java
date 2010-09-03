@@ -45,6 +45,9 @@ public class TestClusterControllerStub extends ClusterController {
   private final Lock resourceLock = new ReentrantLock();
   private long lastResourceUpdateTime = System.currentTimeMillis();
 
+  private final Lock routesLock = new ReentrantLock();
+  private long lastRoutesUpdateTime = System.currentTimeMillis();
+
   private long aclLastUpdateTime = System.currentTimeMillis();
 
   private int smscInstancesNumber = 2;
@@ -81,6 +84,12 @@ public class TestClusterControllerStub extends ClusterController {
         break;
       case Sme:
         time = lastSmeUpdateTime;
+        break;
+      case Acl:
+        time = aclLastUpdateTime;
+        break;
+      case Routes:
+        time = lastRoutesUpdateTime;
         break;
       default:
         time = System.currentTimeMillis();
@@ -345,5 +354,23 @@ public class TestClusterControllerStub extends ClusterController {
 
   public CCAclInfo getAcl(int aclId) throws AdminException {
     return null;
+  }
+
+  // ROUTES ============================================================================================================
+
+  public void applyRoutes() throws AdminException {
+    lastRoutesUpdateTime = System.currentTimeMillis();
+  }
+
+  public void unlockRoutes() throws AdminException {
+    unlock(routesLock, "routes");
+  }
+
+  public void lockRoutes(boolean write) throws AdminException {
+    lock(routesLock, "routes", write);
+  }
+
+  public CCRouteTrace traceRoute(String fileName, Address source, Address destination, String sourceSmeId) throws AdminException {
+    return new CCRouteTrace(null, new String[0]);
   }
 }

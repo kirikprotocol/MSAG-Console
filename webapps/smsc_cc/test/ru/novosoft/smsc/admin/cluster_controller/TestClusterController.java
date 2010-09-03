@@ -7,7 +7,6 @@ import ru.novosoft.smsc.admin.msc.TestMscManager;
 import ru.novosoft.smsc.util.Address;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,6 +53,10 @@ public class TestClusterController extends ClusterController {
 
   private final Lock mainConfigLock = new ReentrantLock();
 
+  private final Lock routesLock = new ReentrantLock();
+  private long lastRoutesUpdateTime = System.currentTimeMillis();
+
+
   private long aclLastUpdateTime = System.currentTimeMillis();
 
   public TestClusterController(File aliasesFile, File mscsFile, int smscInstancesNumber) {
@@ -94,6 +97,9 @@ public class TestClusterController extends ClusterController {
         break;
       case Acl:
         time = aclLastUpdateTime;
+        break;
+      case Routes:
+        time = lastRoutesUpdateTime;
         break;
       default:
         time = System.currentTimeMillis();
@@ -401,5 +407,26 @@ public class TestClusterController extends ClusterController {
 
   public CCAclInfo getAcl(int aclId) throws AdminException {
     return aclHelper.getAcl(aclId);
+  }
+
+  // ROUTES
+
+
+  // ROUTES ============================================================================================================
+
+  public void applyRoutes() throws AdminException {
+    lastRoutesUpdateTime = System.currentTimeMillis();
+  }
+
+  public void unlockRoutes() throws AdminException {
+    unlock(routesLock, "routes");
+  }
+
+  public void lockRoutes(boolean write) throws AdminException {
+    lock(routesLock, "routes", write);
+  }
+
+  public CCRouteTrace traceRoute(String fileName, Address source, Address destination, String sourceSmeId) throws AdminException {
+    return new CCRouteTrace(null, new String[0]);
   }
 }

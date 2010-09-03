@@ -16,6 +16,7 @@ public class Subject implements Serializable {
   private static final transient ValidationHelper vh = new ValidationHelper(Subject.class);
 
   private String name;
+  private String notes = "";
   private String defaultSmeId;
   private List<Address> masks;
   private List<String> children;
@@ -60,5 +61,13 @@ public class Subject implements Serializable {
   public void setChildren(List<String> children) throws AdminException {
     vh.checkNoNulls("children", children);
     this.children = children;
+  }
+
+  public String getNotes() {
+    return notes;
+  }
+
+  public void setNotes(String notes) {
+    this.notes = notes;
   }
 }

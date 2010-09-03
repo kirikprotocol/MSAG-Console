@@ -348,10 +348,6 @@ final class ClusterControllerClient {
     return sendPdu(req, new TraceRouteResp());
   }
 
-  public LoadTestRoutesResp send(LoadTestRoutes req) throws AdminException {
-    return sendPdu(req, new LoadTestRoutesResp());
-  }
-
   private static class ResponseListener {
     private final CountDownLatch respLatch = new CountDownLatch(1);
 

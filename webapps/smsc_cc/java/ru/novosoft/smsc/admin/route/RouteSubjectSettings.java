@@ -2,6 +2,7 @@ package ru.novosoft.smsc.admin.route;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.util.ValidationHelper;
+import ru.novosoft.smsc.util.Address;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -18,17 +19,28 @@ public class RouteSubjectSettings implements Serializable {
 
   private List<Subject> subjects = new ArrayList<Subject>();
   private List<Route> routes = new ArrayList<Route>();
+  private final transient RouteSubjectManager manager;
 
-  RouteSubjectSettings() {
+  RouteSubjectSettings(RouteSubjectManager manager) {
+    this.manager = manager;
   }
 
   RouteSubjectSettings(RouteSubjectSettings copy) {
+    this.manager = copy.manager;
     this.subjects.addAll(copy.subjects);
     this.routes.addAll(copy.routes);
   }
 
-  public RouteTracer createTracer() throws AdminException {
-    return null;
+  /**
+   * Производит трассировку маршрута т.е. проверку наличия маршрута для указанных отправителя и получателя
+   * @param source адрес отправителя
+   * @param destination адрес получателя
+   * @param sourceSmeId smeId отправителя
+   * @return объект RouteTrace с результатами проверки
+   * @throws AdminException если произошла ошибка
+   */
+  public RouteTrace traceRoute(Address source, Address destination, String sourceSmeId) throws AdminException {
+    return manager.traceRoute(this, source, destination, sourceSmeId);    
   }
 
   /**

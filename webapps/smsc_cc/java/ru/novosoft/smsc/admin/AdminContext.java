@@ -13,6 +13,7 @@ import ru.novosoft.smsc.admin.msc.MscManager;
 import ru.novosoft.smsc.admin.provider.ProviderManager;
 import ru.novosoft.smsc.admin.reschedule.RescheduleManager;
 import ru.novosoft.smsc.admin.resource.ResourceManager;
+import ru.novosoft.smsc.admin.route.RouteSubjectManager;
 import ru.novosoft.smsc.admin.service.ServiceManager;
 import ru.novosoft.smsc.admin.sme.SmeManager;
 import ru.novosoft.smsc.admin.smsc.SmscManager;
@@ -51,6 +52,7 @@ public class AdminContext {
   protected ResourceManager resourceManager;
   protected ProviderManager providerManager;
   protected AclManager aclManager;
+  protected RouteSubjectManager routeSubjectManager;
 
   protected AdminContext() {
     AdminContextLocator.registerContext(this);
@@ -115,6 +117,8 @@ public class AdminContext {
 
     aclManager = new AclManager(clusterController);
 
+    routeSubjectManager = new RouteSubjectManager(new File(smscConfigDir, "routes.xml"), smscConfigBackupDir, fileSystem, clusterController);
+
     AdminContextLocator.registerContext(this);
   }
 
@@ -176,6 +180,10 @@ public class AdminContext {
 
   public AclManager getAclManager() {
     return aclManager;
+  }
+
+  public RouteSubjectManager getRouteSubjectManager() {
+    return routeSubjectManager;
   }
 
   public InstallationType getInstallationType() {

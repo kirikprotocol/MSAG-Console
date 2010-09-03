@@ -23,6 +23,8 @@ import ru.novosoft.smsc.admin.reschedule.RescheduleManagerTest;
 import ru.novosoft.smsc.admin.reschedule.TestRescheduleManager;
 import ru.novosoft.smsc.admin.resource.ResourceFileTest;
 import ru.novosoft.smsc.admin.resource.TestResourceManager;
+import ru.novosoft.smsc.admin.route.RoutesConfigTest;
+import ru.novosoft.smsc.admin.route.TestRouteSubjectManager;
 import ru.novosoft.smsc.admin.service.TestServiceManagerHA;
 import ru.novosoft.smsc.admin.service.TestServiceManagerSingle;
 import ru.novosoft.smsc.admin.sme.SmeConfigFileTest;
@@ -68,6 +70,7 @@ public class TestAdminContext extends AdminContext {
     TestUtils.exportResource(SmeConfigFileTest.class.getResourceAsStream("sme.xml"), new File(smscDir, "sme.xml"), false);
     TestUtils.exportResource(ResourceFileTest.class.getResourceAsStream("resources_en_en.xml"), new File(smscDir, "resources_en_en.xml"), false);
     TestUtils.exportResource(ResourceFileTest.class.getResourceAsStream("resources_ru_ru.xml"), new File(smscDir, "resources_ru_ru.xml"), false);
+    TestUtils.exportResource(RoutesConfigTest.class.getResourceAsStream("routes.xml"), new File(smscDir, "routes.xml"), false);
   }
 
   public TestAdminContext(File appBaseDir, File initFile, int smscInstancesNumber) throws AdminException {
@@ -133,6 +136,8 @@ public class TestAdminContext extends AdminContext {
     providerManager = new TestProviderManager(initFile, smscConfigBackupDir, fileSystem);
 
     aclManager = new TestAclManager(clusterController);
+
+    routeSubjectManager = new TestRouteSubjectManager(new File(smscConfigDir, "routes.xml"), smscConfigBackupDir, fileSystem, clusterController);
   }
 
   public TestAdminContext() throws AdminException {

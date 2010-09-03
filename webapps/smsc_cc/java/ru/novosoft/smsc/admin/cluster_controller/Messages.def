@@ -67,49 +67,14 @@ message TraceRoute 8
   string dst 1
   string src 2
   string srcSysId 3
-end
-
-enum byte RouteFindInfo
-  NotFound 0
-  FoundEnabled 1
-  FoundDisabled 2
-end
-
-enum byte BillingMode
-  BillOff 0
-  BillOn 1
-  BillMt 2
-  BillFr 3
-  BillOnSubmit 4
-  BillCdr 5
+  string fileName 4
 end
 
 message TraceRouteResp 1008
   Response resp 1
-  string aliasInfo 2
-  RouteFindInfo foundInfo 3
-  string routeId 4 opt
-  string srcAddr 5 opt
-  string dstAddr 6 opt
-  string smeId 7 opt
-  string srcSmeId 8 opt
-  int32 priority 9 opt
-  int32 serviceId 10 opt
-  byte deliveryMode 11 opt
-  string forwardTo 12 opt
-  BillingMode billing 13 opt
-  bool archiving 14 opt
-  bool enabled 15 opt
-  bool suppressDlvRep 16 opt
-  string trace 17 array opt
-end
-
-message LoadTestRoutes 9
-end
-
-message LoadTestRoutesResp 1009
-  Response resp 1
-  string trace 2 array opt
+  bool found 2
+  string routeId 3 opt
+  string trace 4 array opt
 end
 
 enum byte ReportOptions

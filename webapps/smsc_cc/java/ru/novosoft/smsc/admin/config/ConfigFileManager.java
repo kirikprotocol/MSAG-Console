@@ -36,6 +36,10 @@ public class ConfigFileManager<C> {
     return configFile.lastModified();
   }
 
+  public FileSystem getFileSystem() {
+    return fileSystem;
+  }
+
   public void save(C conf) throws AdminException {
 
     ConfigHelper.createBackup(configFile, backupDir, fileSystem);

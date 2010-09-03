@@ -4,7 +4,6 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.util.ValidationHelper;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -36,7 +35,7 @@ public class Route implements Serializable {
   private boolean archiving = true;
   private boolean transit = false;
   private boolean suppressDeliveryReports;
-  private String deliveryMode;
+  private DeliveryMode deliveryMode;
   private String forwardTo ;
   private boolean hide;
   private ReplayPath replayPath = ReplayPath.PASS;
@@ -70,7 +69,7 @@ public class Route implements Serializable {
   }
 
   public void setPriority(int priority) throws AdminException {
-    vh.checkPositive("priority", priority);
+    vh.checkGreaterOrEqualsTo("priority", priority, 0);
     this.priority = priority;
   }
 
@@ -190,11 +189,11 @@ public class Route implements Serializable {
     this.suppressDeliveryReports = suppressDeliveryReports;
   }
 
-  public String getDeliveryMode() {
+  public DeliveryMode getDeliveryMode() {
     return deliveryMode;
   }
 
-  public void setDeliveryMode(String deliveryMode) {
+  public void setDeliveryMode(DeliveryMode deliveryMode) {
     this.deliveryMode = deliveryMode;
   }
 

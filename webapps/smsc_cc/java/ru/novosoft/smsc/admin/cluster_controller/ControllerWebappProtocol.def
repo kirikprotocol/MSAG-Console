@@ -1,4 +1,4 @@
-include Messages.def
+include messages.def
 
 protocol ControllerProtocol
   //web->cc->smsc
@@ -10,7 +10,6 @@ protocol ControllerProtocol
   ApplyMapLimits 
   ApplySnmp 
   TraceRoute 
-  LoadTestRoutes 
   LookupProfile 
   LookupProfileEx 
   UpdateProfile 
@@ -61,7 +60,6 @@ protocol ControllerProtocol
   ApplyMapLimitsResp inmsg
   ApplySnmpResp inmsg
   TraceRouteResp inmsg
-  LoadTestRoutesResp inmsg
   LookupProfileResp inmsg
   LookupProfileExResp inmsg
   UpdateProfileResp inmsg
