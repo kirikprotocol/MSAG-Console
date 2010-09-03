@@ -20,7 +20,7 @@
       <mask value=".1.1.???????????"/>
     </destination>
   </route>
-  <route id="infosme &lt; smscsme" billing="false" transit="false" archiving="false" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="false" active="true" srcSmeId="smscsme" deliveryMode="default" hide="false" replayPath="pass" forceDelivery="false" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
+  <route id="infosme &lt; smscsme" billing="false" transit="false" archiving="false" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="false" active="true" srcSmeId="smscsme" deliveryMode="default" hide="false" replayPath="pass" forceDelivery="false" aclId="1" allowBlocked="false" providerId="-1" categoryId="-1">
     <notes></notes>
     <source>
       <subject id="smscsme"/>

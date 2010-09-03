@@ -3,6 +3,7 @@ package ru.novosoft.smsc.admin;
 import ru.novosoft.smsc.admin.acl.AclManager;
 import ru.novosoft.smsc.admin.alias.AliasManager;
 import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemonManager;
+import ru.novosoft.smsc.admin.category.CategoryManager;
 import ru.novosoft.smsc.admin.closed_groups.ClosedGroupManager;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterControllerManager;
@@ -51,6 +52,7 @@ public class AdminContext {
   protected SmeManager smeManager;
   protected ResourceManager resourceManager;
   protected ProviderManager providerManager;
+  protected CategoryManager categoryManager;
   protected AclManager aclManager;
   protected RouteSubjectManager routeSubjectManager;
 
@@ -115,6 +117,8 @@ public class AdminContext {
 
     providerManager = new ProviderManager(initFile, smscConfigBackupDir, fileSystem);
 
+    categoryManager = new CategoryManager(initFile, smscConfigBackupDir, fileSystem);
+
     aclManager = new AclManager(clusterController);
 
     routeSubjectManager = new RouteSubjectManager(new File(smscConfigDir, "routes.xml"), smscConfigBackupDir, fileSystem, clusterController);
@@ -176,6 +180,10 @@ public class AdminContext {
 
   public ProviderManager getProviderManager() {
     return providerManager;
+  }
+
+  public CategoryManager getCategoryManager() {
+    return categoryManager;
   }
 
   public AclManager getAclManager() {

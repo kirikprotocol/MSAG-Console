@@ -25,9 +25,9 @@ public class Route implements Serializable {
   private BillingMode billing = null;
 
   private int serviceId = 0;
-  private long aclId;
-  private long providerId;
-  private long categoryId;
+  private Integer aclId;
+  private Long providerId;
+  private Long categoryId;
   private String backupSmeId;
 
   private boolean enabling = true;
@@ -117,27 +117,27 @@ public class Route implements Serializable {
     this.serviceId = serviceId;
   }
 
-  public long getAclId() {
+  public Integer getAclId() {
     return aclId;
   }
 
-  public void setAclId(long aclId) {
+  public void setAclId(Integer aclId) {
     this.aclId = aclId;
   }
 
-  public long getProviderId() {
+  public Long getProviderId() {
     return providerId;
   }
 
-  public void setProviderId(long providerId) {
+  public void setProviderId(Long providerId) {
     this.providerId = providerId;
   }
 
-  public long getCategoryId() {
+  public Long getCategoryId() {
     return categoryId;
   }
 
-  public void setCategoryId(long categoryId) {
+  public void setCategoryId(Long categoryId) {
     this.categoryId = categoryId;
   }
 

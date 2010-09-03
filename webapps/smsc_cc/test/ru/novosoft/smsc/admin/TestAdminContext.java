@@ -6,6 +6,7 @@ import ru.novosoft.smsc.admin.alias.TestAliasManager;
 import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemonConfigTest;
 import ru.novosoft.smsc.admin.archive_daemon.ArchiveDaemonManager;
 import ru.novosoft.smsc.admin.archive_daemon.TestArchiveDaemonManager;
+import ru.novosoft.smsc.admin.category.TestCategoryManager;
 import ru.novosoft.smsc.admin.closed_groups.ClosedGroupManagerTest;
 import ru.novosoft.smsc.admin.closed_groups.TestClosedGroupManager;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterControllerConfigTest;
@@ -134,6 +135,8 @@ public class TestAdminContext extends AdminContext {
     resourceManager = new TestResourceManager(smscConfigDir, smscConfigBackupDir, clusterController, fileSystem);
 
     providerManager = new TestProviderManager(initFile, smscConfigBackupDir, fileSystem);
+
+    categoryManager = new TestCategoryManager(initFile, smscConfigBackupDir, fileSystem);
 
     aclManager = new TestAclManager(clusterController);
 

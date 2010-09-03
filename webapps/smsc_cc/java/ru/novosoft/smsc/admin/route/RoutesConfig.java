@@ -81,10 +81,11 @@ class RoutesConfig implements ManagedConfigFile<RouteSubjectSettings> {
           + "\" replayPath=\"" + getReplayPathValue(r.getReplayPath())
           + "\" forceDelivery=\"" + r.isForceDelivery()
           + ("MAP_PROXY".equals(r.getSrcSmeId()) ? "\" forwardTo=\"" + StringEncoderDecoder.encode(r.getForwardTo()) : "")
-          + "\" aclId=\"" + r.getAclId()
+          + "\" aclId=\"" + (r.getAclId() == null ? -1 : r.getAclId())
           + "\" allowBlocked=\"" + r.isAllowBlocked()
-          + "\" providerId=\"" + r.getProviderId()
-          + "\" categoryId=\"" + r.getCategoryId() + "\"");
+          + "\" providerId=\"" + (r.getProviderId() == null ? "-1" : r.getProviderId())
+          + "\" categoryId=\"" + (r.getCategoryId() == null ? "-1" : r.getCategoryId())
+          + "\"");
       if (r.getBackupSmeId() != null && r.getBackupSmeId().trim().length() > 0)
         out.print(" backupSme=\"" + r.getBackupSmeId() + "\"");
       out.println(">");
@@ -118,6 +119,8 @@ class RoutesConfig implements ManagedConfigFile<RouteSubjectSettings> {
   }
 
   private static String getDeliveryMode(DeliveryMode mode) {
+    if (mode == null)
+      return "default";
     switch (mode) {
       case DEFAULT:
         return "default";
@@ -265,12 +268,12 @@ class RoutesConfig implements ManagedConfigFile<RouteSubjectSettings> {
 
     r.setForceDelivery(Boolean.valueOf(routeElem.getAttribute("forceDelivery")));
     final String aclIdStr = routeElem.getAttribute("aclId");
-    r.setAclId(aclIdStr != null && aclIdStr.trim().length() > 0 ? Long.decode(aclIdStr) : -1);
+    r.setAclId(aclIdStr != null && aclIdStr.trim().length() > 0 && !aclIdStr.equals("-1")? Integer.decode(aclIdStr) : null);
     r.setAllowBlocked(Boolean.valueOf(routeElem.getAttribute("allowBlocked")));
     final String providerIdStr = routeElem.getAttribute("providerId");
-    r.setProviderId(providerIdStr != null && providerIdStr.trim().length() > 0 ? Long.decode(providerIdStr) : -1);
+    r.setProviderId(providerIdStr != null && providerIdStr.trim().length() > 0 && !providerIdStr.equals("-1") ? Long.decode(providerIdStr) : null);
     final String categoryIdStr = routeElem.getAttribute("categoryId");
-    r.setCategoryId(categoryIdStr != null && categoryIdStr.trim().length() > 0 ? Long.decode(categoryIdStr) : -1);
+    r.setCategoryId(categoryIdStr != null && categoryIdStr.trim().length() > 0 && !categoryIdStr.equals("-1") ? Long.decode(categoryIdStr) : null);
     r.setBackupSmeId(routeElem.getAttribute("backupSme"));
 
     r.setSources(parseSources(routeElem));

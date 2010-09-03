@@ -1,6 +1,8 @@
 package ru.novosoft.smsc.admin;
 
+import ru.novosoft.smsc.admin.acl.AclManager;
 import ru.novosoft.smsc.admin.resource.ResourceManager;
+import ru.novosoft.smsc.admin.route.RouteSubjectManager;
 import ru.novosoft.smsc.admin.sme.SmeManager;
 import ru.novosoft.smsc.admin.smsc.SmscManager;
 
@@ -41,6 +43,22 @@ public class AdminContextLocator {
   public static AdminContext getContext(SmeManager m) {
     for (AdminContext c : contexts) {
       if (c.getSmeManager() == m)
+        return c;
+    }
+    return null;
+  }
+
+  public static AdminContext getContext(RouteSubjectManager m) {
+    for (AdminContext c : contexts) {
+      if (c.getRouteSubjectManager() == m)
+        return c;
+    }
+    return null;
+  }
+
+  public static AdminContext getContext(AclManager m) {
+    for (AdminContext c : contexts) {
+      if (c.getAclManager() == m)
         return c;
     }
     return null;
