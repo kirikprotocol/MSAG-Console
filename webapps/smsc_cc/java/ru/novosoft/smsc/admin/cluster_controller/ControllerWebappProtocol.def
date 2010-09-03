@@ -1,4 +1,4 @@
-include messages.def
+include Messages.def
 
 protocol ControllerProtocol
   //web->cc->smsc
