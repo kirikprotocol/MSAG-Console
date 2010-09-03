@@ -338,6 +338,20 @@ final class ClusterControllerClient {
     return sendPdu(req, new ApplyLocaleResourceResp());
   }
 
+  // Routes
+
+  public ApplyRoutesResp send(ApplyRoutes req) throws AdminException {
+    return sendPdu(req, new ApplyRoutesResp());
+  }
+
+  public TraceRouteResp send(TraceRoute req) throws AdminException {
+    return sendPdu(req, new TraceRouteResp());
+  }
+
+  public LoadTestRoutesResp send(LoadTestRoutes req) throws AdminException {
+    return sendPdu(req, new LoadTestRoutesResp());
+  }
+
   private static class ResponseListener {
     private final CountDownLatch respLatch = new CountDownLatch(1);
 

@@ -780,4 +780,68 @@ public class ClusterController {
   public ConfigState getAclState() throws AdminException {
     return getConfigState(ConfigType.Acl);
   }
+
+  // ROUTES ==================================================================================================
+
+  /**
+   * Блокирует конфигурацию маршрутов для чтения/записи
+   * @param write блокировать бля записи
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void lockRoutes(boolean write) throws AdminException {
+    lockConfig(ConfigType.Routes, write);
+  }
+
+  /**
+   * Разблокирует конфигураию маршрутов
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void unlockRoutes() throws AdminException {
+    unlockConfig(ConfigType.Routes);
+  }
+
+  /**
+   * Применяет конфигурацию маршрутов
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void applyRoutes() throws AdminException {
+    checkResponse(cc.send(new ApplyRoutes()).getResp());
+  }
+
+  /**
+   * Возвращает статус конфигурации маршрутов
+   * @return статус конфигурации маршрутов
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public ConfigState getRoutesState() throws AdminException {
+    return getConfigState(ConfigType.Routes);
+  }
+
+  /**
+   * Отправляет запрос на загрузку тестовой конфигурации маршрутов
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void loadTestRoutes() throws AdminException {
+    checkResponse(cc.send(new LoadTestRoutes()).getResp());
+  }
+
+  /**
+   * Отправляет запрос на трассировку маршрута
+   * @param source адрес отправителя
+   * @param destination адрес получателя
+   * @param sourceSmeId Sme Id отправителя
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void traceRoute(Address source, Address destination, String sourceSmeId) throws AdminException {
+    TraceRoute req = new TraceRoute();
+    req.setSrc(source.getSimpleAddress());
+    req.setDst(destination.getSimpleAddress());
+    req.setSrcSysId(sourceSmeId);
+
+    TraceRouteResp resp = cc.send(req);
+
+    checkResponse(resp.getResp());
+
+    // todo
+  }
 }
