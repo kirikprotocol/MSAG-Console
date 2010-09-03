@@ -1,9 +1,5 @@
 package ru.novosoft.smsc.web.journal;
 
-import ru.novosoft.smsc.web.util.WebUtils;
-
-import javax.faces.context.FacesContext;
-import java.util.Date;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
