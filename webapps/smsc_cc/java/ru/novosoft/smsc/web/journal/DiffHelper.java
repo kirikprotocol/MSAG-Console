@@ -15,15 +15,23 @@ class DiffHelper {
     this.subject = subject;
   }
 
-  protected static List<Method> getGetters(Class clazz) {
-    return getGetters(clazz, null);
-  }
-
-  protected static List<Method> getGetters(Class clazz, Set<String> except) {
+  protected static List<Method> getGetters(Class clazz, String ... except) {
     List<Method> getters = new ArrayList<Method>();
     for (Method m : clazz.getMethods()) {
       String methodName = m.getName();
-      if ((methodName.startsWith("get") || methodName.startsWith("is")) && (except == null || !except.contains(methodName))) {
+      if (methodName.startsWith("get") || methodName.startsWith("is")) {
+        if(except != null) {
+          boolean accept = true;
+          for(String s : except) {
+            if(s.equals(methodName)) {
+              accept = false;
+              break;
+            }
+          }
+          if(!accept) {
+            continue;
+          }
+        }
         getters.add(m);
       }
     }

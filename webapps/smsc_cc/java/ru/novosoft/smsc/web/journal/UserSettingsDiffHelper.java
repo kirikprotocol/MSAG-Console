@@ -4,7 +4,6 @@ import ru.novosoft.smsc.admin.users.User;
 import ru.novosoft.smsc.admin.users.UsersSettings;
 
 import java.lang.reflect.Method;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -26,9 +25,7 @@ class UserSettingsDiffHelper extends DiffHelper {
       if (newUser == null) {
         j.addRecord(JournalRecord.Type.REMOVE, subject, user).setDescription("user_removed", oldUser.getLogin());
       } else {
-        List<Method> getters = getGetters(User.class, new HashSet<String>(1) {{
-          add("getPassword");
-        }});
+        List<Method> getters = getGetters(User.class, "getPassword");
         List<Object> oldValues = callGetters(getters, oldUser);
         List<Object> newValues = callGetters(getters, newUser);
         logChanges(j, oldValues, newValues, getters, user, "user_property_changed", newUser.getLogin());

@@ -50,12 +50,6 @@
               </tr:inputText>
             </tr:panelLabelAndMessage>
 
-            <tr:panelLabelAndMessage label="#{mapLimitBundle.dlgLimitInSri}">
-              <tr:inputText value="#{mapLimits.mlSettings.dlgLimitInSri}" required="true" simple="true">
-                <eye:validatePositive/>
-              </tr:inputText>
-            </tr:panelLabelAndMessage>
-
             <tr:panelLabelAndMessage label="#{mapLimitBundle.dlgLimitInUssd}">
               <tr:inputText value="#{mapLimits.mlSettings.dlgLimitInUssd}" required="true" simple="true">
                 <eye:validatePositive/>
@@ -64,6 +58,12 @@
 
             <tr:panelLabelAndMessage label="#{mapLimitBundle.dlgLimitOutSri}">
               <tr:inputText value="#{mapLimits.mlSettings.dlgLimitOutSri}" required="true" simple="true">
+                <eye:validatePositive/>
+              </tr:inputText>
+            </tr:panelLabelAndMessage>
+
+            <tr:panelLabelAndMessage label="#{mapLimitBundle.dlgLimitUssd}">
+              <tr:inputText value="#{mapLimits.mlSettings.dlgLimitUssd}" required="true" simple="true">
                 <eye:validatePositive/>
               </tr:inputText>
             </tr:panelLabelAndMessage>
@@ -81,10 +81,10 @@
 
         <eye:collapsingGroup label="#{mapLimitBundle.congestionLevels}" opened="true">
           <h:panelGroup>
-            <c:set var="i" value="-1"/>
+            <c:set var="i" value="0"/>
             <c:forEach var="var" items="#{mapLimits.mlSettings.congestionLevels}">
               <c:set var="i" value="#{i+1}"/>
-              <eye:collapsingGroup label="#{msg['smsc.maplimits.level']} #{i}">
+              <eye:collapsingGroup label="#{msg['smsc.maplimits.level']} #{i}" opened="true">
                 <tr:panelFormLayout>
 
                   <tr:panelLabelAndMessage label="#{mapLimitCongLvlBundle.dialogsLimit}">
