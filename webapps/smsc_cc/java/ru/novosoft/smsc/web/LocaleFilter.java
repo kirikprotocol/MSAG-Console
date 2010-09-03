@@ -38,8 +38,6 @@ public class LocaleFilter implements Filter {
     l = u != null && u.getPrefs() != null && u.getPrefs().getLocale() != null ? u.getPrefs().getLocale() :
         request.getLocale() != null ? request.getLocale() : Locale.ENGLISH;
 
-    System.out.println("FILTER LOCALE "+l.getLanguage());
-
     request.setAttribute(LOCALE_PARAMETER, l);
 
     filterChain.doFilter(servletRequest, servletResponse);
