@@ -167,12 +167,6 @@ class DiffHelper {
 
   }
 
-  public static void main(String[] ags) {
-    final int[] a1 = new int[]{1,2,3};
-    final int[] a2 = new int[]{1,2,3};
-    new DiffHelper("").logChanges(null, new ArrayList<Object>(){{add(a1);}}, new ArrayList<Object>(){{add(a2);}}, new ArrayList<Method>(){{add(DiffHelper.class.getMethods()[0]);}}, "");
-  }
-
   protected void logChanges(Journal j, List<Object> oldValues, List<Object> newValues, List<Method> getters, String user) {
     logChanges(j, oldValues, newValues, getters, user, "property_changed");
   }
