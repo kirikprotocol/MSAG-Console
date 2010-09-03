@@ -1,0 +1,143 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:eye="http://taglib.eyeline.mobi"
+      xmlns:c="http://java.sun.com/jstl/core">
+
+<ui:composition template="/templates/main.xhtml">
+
+  <ui:param name="pageTitle" value="#{msg['smsc.smsc.map_limit']}"/>
+
+  <ui:define name="content">
+
+    <tr:form id="smsc_config">
+
+
+      <eye:buttons>
+        <eye:button>
+          <tr:commandLink text="#{msg['submit.button']}" id="saveAll1" action="#{mapLimits.save}"/>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['reset.button']}" immediate="true" action="MAP_LIMIT"/>
+        </eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+      <tr:panelGroupLayout id="tomahawk_save">
+        <t:saveState value="#{mapLimits.mlSettings}"/>
+      </tr:panelGroupLayout>
+
+      <tr:inputHidden id="initialized" value="#{mapLimits.initialized}"/>
+      <tr:inputHidden id="lastUpdate" value="#{mapLimits.lastUpdate}"/>
+
+      <h:panelGroup style="padding:20px;">
+
+        <eye:collapsingGroup label="#{msg['smsc.maplimits.dialogsLimits']}" opened="true">
+          <tr:panelFormLayout>
+
+            <tr:panelLabelAndMessage label="#{mapLimitBundle.dlgLimitIn}">
+              <tr:inputText value="#{mapLimits.mlSettings.dlgLimitIn}" required="true" simple="true">
+                <eye:validatePositive/>
+              </tr:inputText>
+            </tr:panelLabelAndMessage>
+
+            <tr:panelLabelAndMessage label="#{mapLimitBundle.dlgLimitInSri}">
+              <tr:inputText value="#{mapLimits.mlSettings.dlgLimitInSri}" required="true" simple="true">
+                <eye:validatePositive/>
+              </tr:inputText>
+            </tr:panelLabelAndMessage>
+
+            <tr:panelLabelAndMessage label="#{mapLimitBundle.dlgLimitInSri}">
+              <tr:inputText value="#{mapLimits.mlSettings.dlgLimitInSri}" required="true" simple="true">
+                <eye:validatePositive/>
+              </tr:inputText>
+            </tr:panelLabelAndMessage>
+
+            <tr:panelLabelAndMessage label="#{mapLimitBundle.dlgLimitInUssd}">
+              <tr:inputText value="#{mapLimits.mlSettings.dlgLimitInUssd}" required="true" simple="true">
+                <eye:validatePositive/>
+              </tr:inputText>
+            </tr:panelLabelAndMessage>
+
+            <tr:panelLabelAndMessage label="#{mapLimitBundle.dlgLimitOutSri}">
+              <tr:inputText value="#{mapLimits.mlSettings.dlgLimitOutSri}" required="true" simple="true">
+                <eye:validatePositive/>
+              </tr:inputText>
+            </tr:panelLabelAndMessage>
+
+          </tr:panelFormLayout>
+        </eye:collapsingGroup>
+
+        <eye:collapsingGroup label="#{mapLimitBundle.ussdNoSriCodes}" opened="true">
+          <h:panelGrid columns="1" style="width:20%">
+            <eye:dynamicTable value="#{mapLimits.codes}">
+              <eye:textColumn name="code" allowEditAfterAdd="true"/>
+            </eye:dynamicTable>
+          </h:panelGrid>
+        </eye:collapsingGroup>
+
+        <eye:collapsingGroup label="#{mapLimitBundle.congestionLevels}" opened="true">
+          <h:panelGroup>
+            <c:set var="i" value="-1"/>
+            <c:forEach var="var" items="#{mapLimits.mlSettings.congestionLevels}">
+              <c:set var="i" value="#{i+1}"/>
+              <eye:collapsingGroup label="#{msg['smsc.maplimits.level']} #{i}">
+                <tr:panelFormLayout>
+
+                  <tr:panelLabelAndMessage label="#{mapLimitCongLvlBundle.dialogsLimit}">
+                    <tr:inputText value="#{var.dialogsLimit}" required="true" simple="true">
+                      <eye:validatePositive/>
+                    </tr:inputText>
+                  </tr:panelLabelAndMessage>
+
+                  <tr:panelLabelAndMessage label="#{mapLimitCongLvlBundle.failLowerLimit}">
+                    <tr:inputText value="#{var.failLowerLimit}" required="true" simple="true">
+                      <eye:validatePositive/>
+                    </tr:inputText>
+                  </tr:panelLabelAndMessage>
+
+                  <tr:panelLabelAndMessage label="#{mapLimitCongLvlBundle.failUpperLimit}">
+                    <tr:inputText value="#{var.failUpperLimit}" required="true" simple="true">
+                      <eye:validatePositive/>
+                    </tr:inputText>
+                  </tr:panelLabelAndMessage>
+
+                  <tr:panelLabelAndMessage label="#{mapLimitCongLvlBundle.okToLower}">
+                    <tr:inputText value="#{var.okToLower}" required="true" simple="true">
+                      <eye:validatePositive/>
+                    </tr:inputText>
+                  </tr:panelLabelAndMessage>
+
+                </tr:panelFormLayout>
+              </eye:collapsingGroup>
+            </c:forEach>
+          </h:panelGroup>
+        </eye:collapsingGroup>
+
+      </h:panelGroup>
+
+
+
+      <eye:buttons>
+        <eye:button>
+          <tr:commandLink text="#{msg['submit.button']}" id="saveAll2" action="#{mapLimits.save}"/>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['reset.button']}" immediate="true" action="MAP_LIMIT"/>
+        </eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+
+    </tr:form>
+
+
+  </ui:define>
+
+</ui:composition>
+
+
+</html>

@@ -96,16 +96,16 @@
 
   <h:panelGrid columns="2" style="padding-top:5px; padding-bottom:5px; width:70%" columnClasses="columnTopLeftAlign, columnTopLeftAlign">
 
-      <tr:outputLabel for="add_ussd_ssn" value="#{commonSettings.add_ussd_ssn}"/>
-      <eye:dynamicTable value="#{smscConfig.addSsnModel}">
-        <eye:textColumn name="ssn" allowEditAfterAdd="true"/>
-      </eye:dynamicTable>
+    <tr:outputLabel for="add_ussd_ssn" value="#{commonSettings.add_ussd_ssn}"/>
+    <eye:dynamicTable value="#{smscConfig.addSsnModel}">
+      <eye:textColumn name="ssn" allowEditAfterAdd="true"/>
+    </eye:dynamicTable>
 
-      <tr:outputLabel for="locales" value="#{commonSettings.locales}"/>
-      <eye:dynamicTable value="#{smscConfig.localesModel}">
-        <eye:textColumn name="locale" allowEditAfterAdd="true"/>
-      </eye:dynamicTable>    
-    
+    <tr:outputLabel for="locales" value="#{commonSettings.locales}"/>
+    <eye:dynamicTable value="#{smscConfig.localesModel}">
+      <eye:textColumn name="locale" allowEditAfterAdd="true"/>
+    </eye:dynamicTable>
+
   </h:panelGrid>
 
   <tr:panelFormLayout>
@@ -626,53 +626,35 @@
     <tr:outputText value="#{msg['instances.settings.title']}"/>
   </t:div>
 
-  <c:forEach var="var" items="#{smscConfig.instanceConfigs}"  >
+  <c:set var="i" value="-1"/>
+  <c:forEach var="var" items="#{smscConfig.instanceConfigs}">
+    <c:set var="i" value="#{i+1}"/>
+    <eye:collapsingGroup  label="#{msg['instance.number.label']}: #{i}">
 
-    <eye:collapsingGroup  label="#{msg['instance.number.label']}: #{var.adminHost}">
+      <eye:collapsingGroup label="#{msg['core.label']}">
+        <tr:panelFormLayout>
 
-        <eye:collapsingGroup label="#{msg['core.label']}">
+          <tr:panelLabelAndMessage label="#{instanceSettings.adminHost}">
+            <tr:inputText value="#{var.adminHost}" simple="true" required="true"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{instanceSettings.adminPort}">
+            <tr:inputText value="#{var.adminPort}" required="true" simple="true">
+              <eye:validatePort/>
+            </tr:inputText>
+          </tr:panelLabelAndMessage>
+
+        </tr:panelFormLayout>
+
+        <eye:collapsingGroup label="#{msg['core.performance.label']}">
           <tr:panelFormLayout>
 
-            <tr:panelLabelAndMessage label="#{instanceSettings.adminHost}">
-              <tr:inputText value="#{var.adminHost}" simple="true" required="true"/>
+            <tr:panelLabelAndMessage label="#{instanceSettings.corePerfHost}">
+              <tr:inputText value="#{var.corePerfHost}" required="true" simple="true"/>
             </tr:panelLabelAndMessage>
 
-            <tr:panelLabelAndMessage label="#{instanceSettings.adminPort}">
-              <tr:inputText value="#{var.adminPort}" required="true" simple="true">
-                <eye:validatePort/>
-              </tr:inputText>
-            </tr:panelLabelAndMessage>
-
-          </tr:panelFormLayout>
-
-          <eye:collapsingGroup label="#{msg['core.performance.label']}">
-            <tr:panelFormLayout>
-
-              <tr:panelLabelAndMessage label="#{instanceSettings.corePerfHost}">
-                <tr:inputText value="#{var.corePerfHost}" required="true" simple="true"/>
-              </tr:panelLabelAndMessage>
-
-              <tr:panelLabelAndMessage label="#{instanceSettings.corePerfPort}">
-                <tr:inputText value="#{var.corePerfPort}" required="true" simple="true">
-                  <eye:validatePort/>
-                </tr:inputText>
-              </tr:panelLabelAndMessage>
-
-            </tr:panelFormLayout>
-          </eye:collapsingGroup>
-
-        </eye:collapsingGroup>
-
-
-        <eye:collapsingGroup label="#{msg['smeperformance.label']}">
-
-          <tr:panelFormLayout>
-            <tr:panelLabelAndMessage label="#{instanceSettings.smePerfHost}">
-              <tr:inputText value="#{var.smePerfHost}" required="true" simple="true"/>
-            </tr:panelLabelAndMessage>
-
-            <tr:panelLabelAndMessage label="#{instanceSettings.smePerfPort}">
-              <tr:inputText value="#{var.smePerfPort}" required="true" simple="true">
+            <tr:panelLabelAndMessage label="#{instanceSettings.corePerfPort}">
+              <tr:inputText value="#{var.corePerfPort}" required="true" simple="true">
                 <eye:validatePort/>
               </tr:inputText>
             </tr:panelLabelAndMessage>
@@ -680,74 +662,93 @@
           </tr:panelFormLayout>
         </eye:collapsingGroup>
 
-        <eye:collapsingGroup label="#{msg['messagestore.label']}">
+      </eye:collapsingGroup>
+
+
+      <eye:collapsingGroup label="#{msg['smeperformance.label']}">
+
+        <tr:panelFormLayout>
+          <tr:panelLabelAndMessage label="#{instanceSettings.smePerfHost}">
+            <tr:inputText value="#{var.smePerfHost}" required="true" simple="true"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{instanceSettings.smePerfPort}">
+            <tr:inputText value="#{var.smePerfPort}" required="true" simple="true">
+              <eye:validatePort/>
+            </tr:inputText>
+          </tr:panelLabelAndMessage>
+
+        </tr:panelFormLayout>
+      </eye:collapsingGroup>
+
+      <eye:collapsingGroup label="#{msg['messagestore.label']}">
+
+        <tr:panelFormLayout>
+          <tr:panelLabelAndMessage label="#{instanceSettings.messageStoreArchDir}">
+            <tr:inputText value="#{var.messageStoreArchDir}" required="true" simple="true"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{instanceSettings.messageStoreStatsDir}">
+            <tr:inputText value="#{var.messageStoreStatsDir}" required="true" simple="true"/>
+          </tr:panelLabelAndMessage>
+
+        </tr:panelFormLayout>
+
+        <eye:collapsingGroup label="#{msg['messagestore.localstore.label']}">
 
           <tr:panelFormLayout>
-            <tr:panelLabelAndMessage label="#{instanceSettings.messageStoreArchDir}">
-              <tr:inputText value="#{var.messageStoreArchDir}" required="true" simple="true"/>
+            <tr:panelLabelAndMessage label="#{instanceSettings.localStoreFilename}">
+              <tr:inputText value="#{var.localStoreFilename}" required="true" simple="true"/>
             </tr:panelLabelAndMessage>
 
-            <tr:panelLabelAndMessage label="#{instanceSettings.messageStoreStatsDir}">
-              <tr:inputText value="#{var.messageStoreStatsDir}" required="true" simple="true"/>
+            <tr:panelLabelAndMessage label="#{instanceSettings.localStoreMessIdFile}">
+              <tr:inputText value="#{var.localStoreMessIdFile}" required="true" simple="true"/>
             </tr:panelLabelAndMessage>
 
-          </tr:panelFormLayout>
-
-          <eye:collapsingGroup label="#{msg['messagestore.localstore.label']}">
-
-            <tr:panelFormLayout>
-              <tr:panelLabelAndMessage label="#{instanceSettings.localStoreFilename}">
-                <tr:inputText value="#{var.localStoreFilename}" required="true" simple="true"/>
-              </tr:panelLabelAndMessage>
-
-              <tr:panelLabelAndMessage label="#{instanceSettings.localStoreMessIdFile}">
-                <tr:inputText value="#{var.localStoreMessIdFile}" required="true" simple="true"/>
-              </tr:panelLabelAndMessage>
-
-            </tr:panelFormLayout>
-
-          </eye:collapsingGroup>
-        </eye:collapsingGroup>
-
-        <eye:collapsingGroup label="#{msg['smpp.label']}">
-          <tr:panelFormLayout>
-
-            <tr:panelLabelAndMessage label="#{instanceSettings.smppHost}">
-              <tr:inputText value="#{var.smppHost}" required="true" simple="true"/>
-            </tr:panelLabelAndMessage>
-
-            <tr:panelLabelAndMessage label="#{instanceSettings.smppPort}">
-              <tr:inputText value="#{var.smppPort}" required="true" simple="true">
-                <eye:validatePort/>
-              </tr:inputText>
-            </tr:panelLabelAndMessage>
-          </tr:panelFormLayout>
-
-        </eye:collapsingGroup>
-
-        <eye:collapsingGroup label="#{msg['profiler.label']}">
-          <tr:panelFormLayout>
-
-            <tr:panelLabelAndMessage label="#{instanceSettings.agentHost}">
-              <tr:inputText value="#{var.agentHost}" required="true" simple="true"/>
-            </tr:panelLabelAndMessage>
-
-            <tr:panelLabelAndMessage label="#{instanceSettings.agentPort}">
-              <tr:inputText value="#{var.agentPort}" required="true" simple="true">
-                <eye:validatePort/>
-              </tr:inputText>
-            </tr:panelLabelAndMessage>
-
-            <tr:panelLabelAndMessage label="#{instanceSettings.cacheDir}">
-              <tr:inputText value="#{var.cacheDir}" required="true" simple="true"/>
-            </tr:panelLabelAndMessage>
           </tr:panelFormLayout>
 
         </eye:collapsingGroup>
       </eye:collapsingGroup>
 
-      
-    </c:forEach>
+      <eye:collapsingGroup label="#{msg['smpp.label']}">
+        <tr:panelFormLayout>
+
+          <tr:panelLabelAndMessage label="#{instanceSettings.smppHost}">
+            <tr:inputText value="#{var.smppHost}" required="true" simple="true"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{instanceSettings.smppPort}">
+            <tr:inputText value="#{var.smppPort}" required="true" simple="true">
+              <eye:validatePort/>
+            </tr:inputText>
+          </tr:panelLabelAndMessage>
+        </tr:panelFormLayout>
+
+      </eye:collapsingGroup>
+
+      <eye:collapsingGroup label="#{msg['profiler.label']}">
+        <tr:panelFormLayout>
+
+          <tr:panelLabelAndMessage label="#{instanceSettings.agentHost}">
+            <tr:inputText value="#{var.agentHost}" required="true" simple="true"/>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{instanceSettings.agentPort}">
+            <tr:inputText value="#{var.agentPort}" required="true" simple="true">
+              <eye:validatePort/>
+            </tr:inputText>
+          </tr:panelLabelAndMessage>
+
+          <tr:panelLabelAndMessage label="#{instanceSettings.cacheDir}">
+            <tr:inputText value="#{var.cacheDir}" required="true" simple="true"/>
+          </tr:panelLabelAndMessage>
+        </tr:panelFormLayout>
+
+      </eye:collapsingGroup>
+    </eye:collapsingGroup>
+
+
+  </c:forEach>
 </td>
 </tr>
 </table>

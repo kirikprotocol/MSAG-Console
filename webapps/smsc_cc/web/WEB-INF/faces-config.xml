@@ -38,6 +38,16 @@
     </resource-bundle>
 
     <resource-bundle>
+      <base-name>ru.novosoft.smsc.admin.map_limit.MapLimitSettings</base-name>
+      <var>mapLimitBundle</var>
+    </resource-bundle>
+
+    <resource-bundle>
+      <base-name>ru.novosoft.smsc.admin.map_limit.CongestionLevel</base-name>
+      <var>mapLimitCongLvlBundle</var>
+    </resource-bundle>
+
+    <resource-bundle>
       <base-name>ru.novosoft.smsc.web.resources.Smsc</base-name>
       <var>msg</var>
     </resource-bundle>
@@ -92,6 +102,12 @@
     </renderer>
   </render-kit>
 
+
+  <managed-bean>
+    <managed-bean-name>mapLimits</managed-bean-name>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.map_limit.MapLimitController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
 
   <managed-bean>
     <managed-bean-name>smscStatus</managed-bean-name>
@@ -177,7 +193,7 @@
     </navigation-case>
     <navigation-case>
       <from-outcome>SMSC_CONFIG</from-outcome>
-      <to-view-id>/smsc/smsc_config.faces</to-view-id>
+      <to-view-id>/smsc/smsc_service/smsc_config.faces</to-view-id>
       <redirect/>
     </navigation-case>
     <navigation-case>
@@ -188,6 +204,11 @@
     <navigation-case>
       <from-outcome>RESCHEDULE_EDIT</from-outcome>
       <to-view-id>/smsc/reschedule/edit.faces</to-view-id>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>MAP_LIMIT</from-outcome>
+      <to-view-id>/smsc/smsc_service/maplimits.faces</to-view-id>
+      <redirect/>
     </navigation-case>
     <navigation-case>
       <from-outcome>USERS</from-outcome>

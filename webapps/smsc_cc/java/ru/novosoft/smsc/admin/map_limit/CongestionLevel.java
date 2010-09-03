@@ -28,6 +28,10 @@ public class CongestionLevel implements Serializable {
   }
 
   public CongestionLevel(int dialogsLimit, int failLowerLimit, int failUpperLimit, int okToLower) throws AdminException {
+    vh.checkPositive("dialogsLimit", dialogsLimit);
+    vh.checkPositive("failLowerLimit", failLowerLimit);
+    vh.checkPositive("failUpperLimit", failUpperLimit);
+    vh.checkPositive("okToLower", okToLower);
     this.dialogsLimit = dialogsLimit;
     this.failLowerLimit = failLowerLimit;
     this.failUpperLimit = failUpperLimit;

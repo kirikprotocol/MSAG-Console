@@ -8,8 +8,6 @@ import ru.novosoft.smsc.admin.smsc.SmscSettings;
 import ru.novosoft.smsc.admin.users.UsersSettings;
 import ru.novosoft.smsc.web.journal.Journal;
 
-import java.util.List;
-
 /**
  * @author Artem Snopkov
  */
@@ -98,5 +96,9 @@ public class AppliableConfiguration {
     adminContext.getMapLimitManager().updateSettings(settings);
     journal.logChanges(oldSettings, settings, user);
     mapLimitSettingsUpdateInfo = new UpdateInfo(System.currentTimeMillis(), user, true);
+  }
+
+  public UpdateInfo getMapLimitSettingsUpdateInfo() {
+    return mapLimitSettingsUpdateInfo;
   }
 }
