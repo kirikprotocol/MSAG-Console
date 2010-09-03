@@ -31,7 +31,7 @@ class MapLimitSettingsDiffHelper extends DiffHelper {
       CongestionLevel newLevel = newLevels[i];
       List<Object> oldValues = callGetters(getters, oldLevel);
       List<Object> newValues = callGetters(getters, newLevel);
-      logChanges(j, oldValues, newValues, getters, user, "map_limis_cong_level_changed", Integer.toBinaryString(i));
+      logChanges(j, oldValues, newValues, getters, user, "map_limis_cong_level_changed", Integer.toString(i));
     }
   }
 }
