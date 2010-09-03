@@ -3,12 +3,13 @@ package ru.novosoft.smsc.admin.map_limit;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.util.ValidationHelper;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
 /**
  * @author Artem Snopkov
  */
-public class MapLimitSettings {
+public class MapLimitSettings implements Serializable {
 
   public static final int MAX_CONGESTION_LEVELS = 8;
 
@@ -36,7 +37,9 @@ public class MapLimitSettings {
     System.arraycopy(c.ussdNoSriCodes, 0, this.ussdNoSriCodes, 0, c.ussdNoSriCodes.length);
 
     this.clevels = new CongestionLevel[MAX_CONGESTION_LEVELS];
-    System.arraycopy(c.clevels, 0, this.clevels, 0, MAX_CONGESTION_LEVELS);
+    for(int i=0;i<MAX_CONGESTION_LEVELS;i++) {
+      this.clevels[i] = new CongestionLevel(c.clevels[i]);
+    }
   }
 
   public int getDlgLimitIn() {

@@ -38,6 +38,10 @@ public class SmscStatusManager {
     return adminContext.getRescheduleManager().getStatusForSmscs().get(instanceNumber);
   }
 
+  public SmscConfigurationStatus getMapLimitState(int instanceNumber) throws AdminException {
+    return adminContext.getMapLimitManager().getStatusForSmscs().get(instanceNumber);
+  }
+
 
   public void stopSmsc(int instanceNumber) throws AdminException {
     adminContext.getSmscManager().stopSmsc(instanceNumber);

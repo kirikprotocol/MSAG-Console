@@ -1,11 +1,12 @@
-package ru.novosoft.smsc.web.controllers;
+package ru.novosoft.smsc.web.controllers.reschedule;
 
-import ru.novosoft.smsc.web.util.WebUtils;
+import ru.novosoft.smsc.web.LocaleFilter;
 
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import javax.faces.convert.Converter;
 import javax.faces.convert.ConverterException;
+import java.util.Locale;
 import java.util.ResourceBundle;
 
 /**
@@ -27,7 +28,7 @@ public class SmppStatusConverter implements Converter {
     }
     Integer code = Integer.parseInt(o.toString());
     ResourceBundle bundle = ResourceBundle.getBundle("ru.novosoft.smsc.web.resources.Smsc",
-        WebUtils.getLocale());
+        (Locale)facesContext.getExternalContext().getRequestMap().get(LocaleFilter.LOCALE_PARAMETER));
     return "("+code+") "+bundle.getString("smsc.errcode."+code);
   }
 

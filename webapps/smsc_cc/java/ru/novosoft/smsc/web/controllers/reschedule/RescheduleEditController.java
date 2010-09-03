@@ -1,4 +1,4 @@
-package ru.novosoft.smsc.web.controllers;
+package ru.novosoft.smsc.web.controllers.reschedule;
 
 import org.apache.log4j.Logger;
 import ru.novosoft.smsc.admin.AdminException;

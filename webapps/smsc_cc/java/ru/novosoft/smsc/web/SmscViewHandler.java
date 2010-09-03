@@ -3,7 +3,6 @@ package ru.novosoft.smsc.web;
 import com.sun.facelets.FaceletViewHandler;
 import org.apache.log4j.Logger;
 import ru.novosoft.smsc.web.components.AjaxFacesContext;
-import ru.novosoft.smsc.web.util.WebUtils;
 
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
@@ -52,6 +51,11 @@ public class SmscViewHandler extends FaceletViewHandler {
 
   @Override
   public Locale calculateLocale(FacesContext context) {
-    return WebUtils.getLocale(context);
+    Locale l = (Locale)context.getExternalContext().getRequestMap().get(LocaleFilter.LOCALE_PARAMETER);
+    if(l != null) {
+      return l;
+    }else {
+      return super.calculateLocale(context);
+    }
   }
 }

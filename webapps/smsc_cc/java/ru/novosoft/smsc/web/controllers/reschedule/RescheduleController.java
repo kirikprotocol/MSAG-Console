@@ -1,6 +1,7 @@
-package ru.novosoft.smsc.web.controllers;
+package ru.novosoft.smsc.web.controllers.reschedule;
 
 import ru.novosoft.smsc.admin.reschedule.Reschedule;
+import ru.novosoft.smsc.web.controllers.SmscController;
 
 import javax.servlet.http.HttpSession;
 import java.util.Map;

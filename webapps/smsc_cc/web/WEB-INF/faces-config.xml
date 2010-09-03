@@ -46,12 +46,12 @@
 
   <converter>
     <converter-id>smpp_status_converter</converter-id>
-    <converter-class>ru.novosoft.smsc.web.controllers.SmppStatusConverter</converter-class>
+    <converter-class>ru.novosoft.smsc.web.controllers.reschedule.SmppStatusConverter</converter-class>
   </converter>
 
   <converter>
     <converter-id>roles_converter</converter-id>
-    <converter-class>ru.novosoft.smsc.web.controllers.RolesConverter</converter-class>
+    <converter-class>ru.novosoft.smsc.web.controllers.users.RolesConverter</converter-class>
   </converter>
 
   <render-kit>    
@@ -102,26 +102,26 @@
 
   <managed-bean>
     <managed-bean-name>users</managed-bean-name>
-    <managed-bean-class>ru.novosoft.smsc.web.controllers.UsersListController</managed-bean-class>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.users.UsersListController</managed-bean-class>
     <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
 
 
   <managed-bean>
     <managed-bean-name>userEdit</managed-bean-name>
-    <managed-bean-class>ru.novosoft.smsc.web.controllers.UserEditController</managed-bean-class>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.users.UserEditController</managed-bean-class>
     <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
 
   <managed-bean>
     <managed-bean-name>reschedule</managed-bean-name>
-    <managed-bean-class>ru.novosoft.smsc.web.controllers.RescheduleListController</managed-bean-class>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.reschedule.RescheduleListController</managed-bean-class>
     <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
 
   <managed-bean>
     <managed-bean-name>rescheduleEdit</managed-bean-name>
-    <managed-bean-class>ru.novosoft.smsc.web.controllers.RescheduleEditController</managed-bean-class>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.reschedule.RescheduleEditController</managed-bean-class>
     <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
 
@@ -129,12 +129,6 @@
     <managed-bean-name>dynamicTable</managed-bean-name>
     <managed-bean-class>ru.novosoft.smsc.web.DynamicModel</managed-bean-class>
     <managed-bean-scope>session</managed-bean-scope>
-  </managed-bean>
-
-  <managed-bean>
-    <managed-bean-name>idGen</managed-bean-name>
-    <managed-bean-class>ru.novosoft.smsc.web.util.IdGenerator</managed-bean-class>
-    <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
 
   <managed-bean>
@@ -151,13 +145,7 @@
 
   <managed-bean>
     <managed-bean-name>smscConfig</managed-bean-name>
-    <managed-bean-class>ru.novosoft.smsc.web.controllers.SmscConfigController</managed-bean-class>
-    <managed-bean-scope>request</managed-bean-scope>
-  </managed-bean>
-
-  <managed-bean>
-    <managed-bean-name>tableTest</managed-bean-name>
-    <managed-bean-class>ru.novosoft.smsc.web.controllers.TestTableController</managed-bean-class>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.smsc_config.SmscConfigController</managed-bean-class>
     <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
 

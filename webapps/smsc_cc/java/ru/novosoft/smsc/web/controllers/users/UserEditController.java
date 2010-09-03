@@ -1,4 +1,4 @@
-package ru.novosoft.smsc.web.controllers;
+package ru.novosoft.smsc.web.controllers.users;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.users.User;

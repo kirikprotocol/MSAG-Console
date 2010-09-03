@@ -1,9 +1,10 @@
-package ru.novosoft.smsc.web.controllers;
+package ru.novosoft.smsc.web.controllers.users;
 
 import org.apache.log4j.Logger;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.users.User;
 import ru.novosoft.smsc.web.WebContext;
+import ru.novosoft.smsc.web.controllers.SmscController;
 
 import javax.faces.application.FacesMessage;
 import javax.servlet.http.HttpSession;
@@ -12,7 +13,7 @@ import java.util.Map;
 /**
  * author: alkhal
  */
-public class UsersController extends SmscController{
+public class UsersController extends SmscController {
 
   private static final Logger logger = Logger.getLogger(UsersController.class);
 

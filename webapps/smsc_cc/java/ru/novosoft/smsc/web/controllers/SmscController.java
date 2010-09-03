@@ -1,6 +1,6 @@
 package ru.novosoft.smsc.web.controllers;
 
-import ru.novosoft.smsc.web.util.WebUtils;
+import ru.novosoft.smsc.web.LocaleFilter;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
@@ -47,7 +47,7 @@ public abstract class SmscController implements Serializable {
   }
 
   protected Locale getLocale() {
-    return WebUtils.getLocale();
+    return (Locale)FacesContext.getCurrentInstance().getExternalContext().getRequestMap().get(LocaleFilter.LOCALE_PARAMETER);
   }
 
   protected Principal getUserPrincipal() {

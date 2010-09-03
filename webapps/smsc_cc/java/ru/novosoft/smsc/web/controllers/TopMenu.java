@@ -52,12 +52,12 @@ public class TopMenu {
     Iterator<MenuBarItem> mbiIter = menuBarItems.iterator();
     while (mbiIter.hasNext()) {
       MenuBarItem mbi = mbiIter.next();
-      System.out.println("Bar item: "+mbi.name);
+//      System.out.println("Bar item: "+mbi.name);
       Iterator<MenuItem> iter = mbi.items.iterator();
       while (iter.hasNext()) {
         String url = iter.next().getUrl();
         Collection<String> roles = webXml.getRoles(url);
-        System.out.println("Needed roles: "+roles+" for "+url);
+//        System.out.println("Needed roles: "+roles+" for "+url);
         if (roles == null) {      // url is accessable for all
           continue;
         }

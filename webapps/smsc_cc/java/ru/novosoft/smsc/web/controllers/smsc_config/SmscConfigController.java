@@ -1,4 +1,4 @@
-package ru.novosoft.smsc.web.controllers;
+package ru.novosoft.smsc.web.controllers.smsc_config;
 
 import org.apache.log4j.Logger;
 import ru.novosoft.smsc.admin.AdminException;
@@ -11,6 +11,7 @@ import ru.novosoft.smsc.web.components.dynamic_table.model.DynamicTableModel;
 import ru.novosoft.smsc.web.components.dynamic_table.model.DynamicTableRow;
 import ru.novosoft.smsc.web.config.AppliableConfiguration;
 import ru.novosoft.smsc.web.config.SmscStatusManager;
+import ru.novosoft.smsc.web.controllers.SmscController;
 
 import javax.faces.application.FacesMessage;
 import java.security.Principal;
@@ -41,11 +42,6 @@ public class SmscConfigController extends SmscController {
   private DynamicTableModel directivesModel = new DynamicTableModel();
 
   private long lastUpdate;
-
-  public boolean method() {
-    return false;
-  }
-
 
   public SmscConfigController() {
     Map<String, String> reguestMap = getRequestParameters();
