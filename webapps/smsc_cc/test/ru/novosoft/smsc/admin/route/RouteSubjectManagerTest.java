@@ -76,7 +76,7 @@ public class RouteSubjectManagerTest {
     }
 
     public ConfigState getRoutesState() throws AdminException {
-      long now = System.currentTimeMillis();
+      long now = configFile.lastModified();
       Map<Integer, Long> map = new HashMap<Integer, Long>();
       map.put(0, now - 100);
       map.put(1, now);

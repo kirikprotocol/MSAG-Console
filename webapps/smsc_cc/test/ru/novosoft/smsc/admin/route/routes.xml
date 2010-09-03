@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<!DOCTYPE routes SYSTEM "routes.dtd">
+
+<routes>
+  <subject_def id="infosme" defSme="infosme">
+    <notes></notes>
+       <mask value=".0.1.1234"/>
+       <mask value=".0.1.10000"/>
+  </subject_def>
+  <subject_def id="smscsme" defSme="smscsme">
+    <notes></notes>
+       <mask value=".1.1.79998880001"/>
+  </subject_def>
+  <route id="websms &gt; abonents" billing="false" transit="false" archiving="false" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="false" active="true" srcSmeId="websms" deliveryMode="default" hide="false" replayPath="pass" forceDelivery="false" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
+    <notes></notes>
+    <source>
+      <mask value=".5.0.sms.mts.ru"/>
+    </source>
+    <destination sme="SILENT">
+      <mask value=".1.1.???????????"/>
+    </destination>
+  </route>
+  <route id="infosme &lt; smscsme" billing="false" transit="false" archiving="false" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="false" active="true" srcSmeId="smscsme" deliveryMode="default" hide="false" replayPath="pass" forceDelivery="false" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
+    <notes></notes>
+    <source>
+      <subject id="smscsme"/>
+    </source>
+    <destination sme="infosme">
+      <subject id="infosme"/>
+    </destination>
+  </route>
+  <route id="infosme &gt; silent" billing="false" transit="false" archiving="false" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="false" active="true" srcSmeId="infosme" deliveryMode="default" hide="false" replayPath="pass" forceDelivery="false" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
+    <notes></notes>
+    <source>
+      <subject id="infosme"/>
+    </source>
+    <destination sme="SILENT">
+      <mask value=".1.1.???????????"/>
+    </destination>
+  </route>
+  <route id="smsx &lt; abonents" billing="false" transit="false" archiving="false" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="false" active="true" srcSmeId="SILENT" deliveryMode="default" hide="false" replayPath="pass" forceDelivery="false" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
+    <notes></notes>
+    <source>
+      <mask value=".1.1.???????????"/>
+    </source>
+    <destination sme="smsx">
+      <mask value=".1.1.69139495113"/>
+    </destination>
+  </route>
+  <route id="smsx &gt; abonents" billing="false" transit="false" archiving="false" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="false" active="true" srcSmeId="smsx" deliveryMode="default" hide="false" replayPath="pass" forceDelivery="false" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
+    <notes></notes>
+    <source>
+      <mask value=".1.1.69139495113"/>
+    </source>
+    <destination sme="SILENT">
+      <mask value=".1.1.???????????"/>
+    </destination>
+  </route>
+  <route id="websms &lt; smscsme" billing="false" transit="false" archiving="false" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="false" active="true" srcSmeId="smscsme" deliveryMode="default" hide="false" replayPath="pass" forceDelivery="false" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
+    <notes></notes>
+    <source>
+      <mask value=".1.1.???????????"/>
+    </source>
+    <destination sme="websms">
+      <mask value=".5.0.sms.mts.ru"/>
+    </destination>
+  </route>
+  <route id="smsx &lt; smscsme" billing="false" transit="false" archiving="false" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="false" active="true" srcSmeId="smscsme" deliveryMode="default" hide="false" replayPath="pass" forceDelivery="false" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
+    <notes></notes>
+    <source>
+      <mask value=".1.1.???????????"/>
+    </source>
+    <destination sme="smsx">
+      <mask value=".1.1.???????????"/>
+    </destination>
+  </route>
+  <route id="msag &gt; silent" billing="false" transit="false" archiving="false" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="false" active="true" srcSmeId="msag" deliveryMode="default" hide="false" replayPath="pass" forceDelivery="false" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
+    <notes></notes>
+    <source>
+      <mask value=".0.1.564304"/>
+    </source>
+    <source>
+      <mask value=".0.1.564301"/>
+    </source>
+    <source>
+      <mask value=".0.1.560???"/>
+    </source>
+    <source>
+      <mask value=".0.1.564303"/>
+    </source>
+    <source>
+      <mask value=".0.1.564305"/>
+    </source>
+    <source>
+      <mask value=".0.1.564302"/>
+    </source>
+    <destination sme="SILENT">
+      <mask value=".1.1.?????????????"/>
+    </destination>
+    <destination sme="SILENT">
+      <mask value=".0.1.21?????????"/>
+    </destination>
+    <destination sme="SILENT">
+      <mask value=".1.1.???????????"/>
+    </destination>
+    <destination sme="SILENT">
+      <mask value=".0.1.???????????"/>
+    </destination>
+    <destination sme="SILENT">
+      <mask value=".1.1.??????????????"/>
+    </destination>
+    <destination sme="SILENT">
+      <mask value=".1.1.????????????"/>
+    </destination>
+  </route>
+</routes>
