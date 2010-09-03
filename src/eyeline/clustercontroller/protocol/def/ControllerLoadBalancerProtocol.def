@@ -1,11 +1,11 @@
 include Messages.def
 
 protocol ClusterLoadBalancerProtocol
-  GetServicesStatus 101
-  DisconnectService 102
+  GetServicesStatus inmsg
+  DisconnectService inmsg
 
-  RegisterAsLoadBalancer 301
+  RegisterAsLoadBalancer outmsg
 
-  GetServicesStatusResp 1101
-  DisconnectServiceResp 1102
+  GetServicesStatusResp outmsg
+  DisconnectServiceResp outmsg
 end

@@ -10,7 +10,6 @@ protocol ControllerProtocol
   ApplyMapLimits inoutmsg
   ApplySnmp inoutmsg
   TraceRoute inmsg
-  LoadTestRoutes inmsg
   LookupProfile inmsg
   LookupProfileEx inmsg
   UpdateProfile inoutmsg
@@ -70,7 +69,6 @@ protocol ControllerProtocol
   ApplyMapLimitsResp inoutmsg
   ApplySnmpResp inoutmsg
   TraceRouteResp
-  LoadTestRoutesResp
   LookupProfileResp
   LookupProfileExResp
   UpdateProfileResp inoutmsg
