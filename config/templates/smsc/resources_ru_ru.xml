@@ -25,7 +25,7 @@
     </section>
     <section name="abonentinfo">
         <param name="mobileFormat">Абонент $$string import=abonent$$  $$string import=status$$. коммутатор $$string import=msc$$</param>
-        <param name="smeFormat">$$string import=abonent$$:$$int32 import=status$$,$$int32 import=encoding$$,$$string import=msc$$</param>
+        <param name="smeFormat">$$string import=abonent$$:$$int32 import=status$$,$$int32 import=encoding$$,$$string import=msc$$,$$string import=code$$</param>
     </section>
     <section name="receipt">
     	<section name="default">
