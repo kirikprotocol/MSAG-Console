@@ -11,6 +11,9 @@
 #
 # VARIABLES:  SMSC_SRCDIR, SMSC_BUILD_TAG_FORMAT
 #
+
+#echo SRCDIR: $SMSC_SRCDIR >&2
+#echo ARGS: $1 $2 $3 >&2
 if [ -z "$1" ]
 then
   echo "$0: Product prefix isn't specified"
@@ -35,7 +38,7 @@ then
 fi
 
 VERSION_FILE=`echo $SMSC_SRCDIR $2 | awk '{ pos=index($2,$1); if (pos == 1) { pos += length($1); fn = substr($2, pos); pos = index(fn, "/"); if (pos == 1) print substr(fn, 2); else print fn; }}'`
-#echo $VERSION_FILE
+echo $VERSION_FILE >&2
 
 if [ -z "$VERSION_FILE" ]
 then
@@ -44,7 +47,7 @@ then
 fi
 
 BUILD_DATE=`date '+%b %e %Y'`
-BUILD_NUM=`cvs status -v $VERSION_FILE | egrep $SMSC_BUILD_TAG_FORMAT | awk 'BEGIN{nv=0;} { if (!nv) {print $1; nv++;}}'`
+BUILD_NUM=`cvs status -v $VERSION_FILE | egrep $SMSC_BUILD_TAG_FORMAT | awk 'BEGIN{nv=0;} { if (!nv) {for (i = 1; i < NF; ++i) print $i; nv++;}}' | egrep $SMSC_BUILD_TAG_FORMAT`
 if [ -z "$BUILD_NUM" ]
 then
   echo "$0: $VERSION_FILE doesn't have valid buildId CVS tag assigned"
