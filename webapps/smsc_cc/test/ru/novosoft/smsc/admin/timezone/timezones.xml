@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<!DOCTYPE config SYSTEM "configuration.dtd">
+
+<config>
+  <param name="default_timezone" type="string">180,Europe/Moscow</param>
+
+  <section name="masks">
+    <param name="+7913949????" type="string">360,Asia/Novosibirsk</param>
+  </section>
+
+  <section name="subjects">
+    <param name="forTimezones" type="string">180,Europe/Moscow</param>
+  </section>
+</config>

@@ -840,4 +840,40 @@ public class ClusterController {
 
     return new CCRouteTrace(resp.getFound() ? resp.getRouteId() : null, resp.getTrace());
   }
+
+  // TIMEZONES ===============================================================================================
+
+  /**
+   * Блокирует конфигурацию таймзон для чтения/записи
+   * @param write блокировать бля записи
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void lockTimezones(boolean write) throws AdminException {
+    lockConfig(ConfigType.TimeZones, write);
+  }
+
+  /**
+   * Разблокирует конфигурацию таймзон
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void unlockTimezones() throws AdminException {
+    unlockConfig(ConfigType.TimeZones);
+  }
+
+  /**
+   * Применяет конфигурацию таймзон
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void applyTimezones() throws AdminException {
+    checkResponse(cc.send(new ApplyTimeZones()).getResp());
+  }
+
+  /**
+   * Возвращает статус конфигурации таймзон
+   * @return статус конфигурации таймзон
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public ConfigState getTimezonesState() throws AdminException {
+    return getConfigState(ConfigType.TimeZones);
+  }
 }

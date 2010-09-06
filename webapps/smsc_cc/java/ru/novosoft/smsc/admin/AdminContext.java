@@ -20,6 +20,7 @@ import ru.novosoft.smsc.admin.sme.SmeManager;
 import ru.novosoft.smsc.admin.smsc.SmscManager;
 import ru.novosoft.smsc.admin.smsc.SmscSettings;
 import ru.novosoft.smsc.admin.snmp.SnmpManager;
+import ru.novosoft.smsc.admin.timezone.TimezoneManager;
 import ru.novosoft.smsc.admin.users.UsersManager;
 
 import java.io.File;
@@ -55,6 +56,7 @@ public class AdminContext {
   protected CategoryManager categoryManager;
   protected AclManager aclManager;
   protected RouteSubjectManager routeSubjectManager;
+  protected TimezoneManager timezoneManager;
 
   protected AdminContext() {
     AdminContextLocator.registerContext(this);
@@ -122,6 +124,8 @@ public class AdminContext {
     aclManager = new AclManager(clusterController);
 
     routeSubjectManager = new RouteSubjectManager(new File(smscConfigDir, "routes.xml"), smscConfigBackupDir, fileSystem, clusterController);
+
+    timezoneManager = new TimezoneManager(new File(smscConfigDir, "timezones.xml"), smscConfigBackupDir, fileSystem, clusterController);
 
     AdminContextLocator.registerContext(this);
   }
@@ -192,6 +196,10 @@ public class AdminContext {
 
   public RouteSubjectManager getRouteSubjectManager() {
     return routeSubjectManager;
+  }
+
+  public TimezoneManager getTimezoneManager() {
+    return timezoneManager;
   }
 
   public InstallationType getInstallationType() {

@@ -348,6 +348,12 @@ final class ClusterControllerClient {
     return sendPdu(req, new TraceRouteResp());
   }
 
+  // Timezones
+
+  public ApplyTimeZonesResp send(ApplyTimeZones req) throws AdminException {
+    return sendPdu(req, new ApplyTimeZonesResp());
+  }
+
   private static class ResponseListener {
     private final CountDownLatch respLatch = new CountDownLatch(1);
 

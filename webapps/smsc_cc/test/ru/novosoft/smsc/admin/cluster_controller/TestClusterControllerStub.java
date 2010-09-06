@@ -50,6 +50,9 @@ public class TestClusterControllerStub extends ClusterController {
 
   private long aclLastUpdateTime = System.currentTimeMillis();
 
+  private final Lock timezonesLock = new ReentrantLock();
+  private long lastTimezonesUpdateTime = System.currentTimeMillis();
+
   private int smscInstancesNumber = 2;
 
   public TestClusterControllerStub() {
@@ -90,6 +93,9 @@ public class TestClusterControllerStub extends ClusterController {
         break;
       case Routes:
         time = lastRoutesUpdateTime;
+        break;
+      case TimeZones:
+        time = lastTimezonesUpdateTime;
         break;
       default:
         time = System.currentTimeMillis();
@@ -372,5 +378,22 @@ public class TestClusterControllerStub extends ClusterController {
 
   public CCRouteTrace traceRoute(String fileName, Address source, Address destination, String sourceSmeId) throws AdminException {
     return new CCRouteTrace(null, new String[0]);
+  }
+
+  // TIMEZONES =========================================================================================================
+
+  @Override
+  public void lockTimezones(boolean write) throws AdminException {
+    lock(timezonesLock, "timezones", write);
+  }
+
+  @Override
+  public void unlockTimezones() throws AdminException {
+    unlock(timezonesLock, "timezones");
+  }
+
+  @Override
+  public void applyTimezones() throws AdminException {
+    lastTimezonesUpdateTime = System.currentTimeMillis();
   }
 }

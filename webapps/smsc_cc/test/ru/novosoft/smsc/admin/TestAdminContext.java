@@ -35,6 +35,8 @@ import ru.novosoft.smsc.admin.smsc.SmscSettings;
 import ru.novosoft.smsc.admin.smsc.TestSmscManager;
 import ru.novosoft.smsc.admin.snmp.SnmpManagerTest;
 import ru.novosoft.smsc.admin.snmp.TestSnmpManager;
+import ru.novosoft.smsc.admin.timezone.TestTimezoneManager;
+import ru.novosoft.smsc.admin.timezone.TimezonesConfigTest;
 import ru.novosoft.smsc.admin.users.TestUsersManager;
 import ru.novosoft.smsc.admin.users.UsersManagerTest;
 import testutils.TestUtils;
@@ -72,6 +74,7 @@ public class TestAdminContext extends AdminContext {
     TestUtils.exportResource(ResourceFileTest.class.getResourceAsStream("resources_en_en.xml"), new File(smscDir, "resources_en_en.xml"), false);
     TestUtils.exportResource(ResourceFileTest.class.getResourceAsStream("resources_ru_ru.xml"), new File(smscDir, "resources_ru_ru.xml"), false);
     TestUtils.exportResource(RoutesConfigTest.class.getResourceAsStream("routes.xml"), new File(smscDir, "routes.xml"), false);
+    TestUtils.exportResource(TimezonesConfigTest.class.getResourceAsStream("timezones.xml"), new File(smscDir, "timezones.xml"), false);
   }
 
   public TestAdminContext(File appBaseDir, File initFile, int smscInstancesNumber) throws AdminException {
@@ -141,6 +144,8 @@ public class TestAdminContext extends AdminContext {
     aclManager = new TestAclManager(clusterController);
 
     routeSubjectManager = new TestRouteSubjectManager(new File(smscConfigDir, "routes.xml"), smscConfigBackupDir, fileSystem, clusterController);
+
+    timezoneManager = new TestTimezoneManager(new File(smscConfigDir, "timezones.xml"), smscConfigBackupDir, fileSystem, clusterController);
   }
 
   public TestAdminContext() throws AdminException {

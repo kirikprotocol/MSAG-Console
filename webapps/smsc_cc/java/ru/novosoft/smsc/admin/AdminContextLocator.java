@@ -5,6 +5,7 @@ import ru.novosoft.smsc.admin.resource.ResourceManager;
 import ru.novosoft.smsc.admin.route.RouteSubjectManager;
 import ru.novosoft.smsc.admin.sme.SmeManager;
 import ru.novosoft.smsc.admin.smsc.SmscManager;
+import ru.novosoft.smsc.admin.timezone.TimezoneManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -59,6 +60,14 @@ public class AdminContextLocator {
   public static AdminContext getContext(AclManager m) {
     for (AdminContext c : contexts) {
       if (c.getAclManager() == m)
+        return c;
+    }
+    return null;
+  }
+
+  public static AdminContext getContext(TimezoneManager m) {
+    for (AdminContext c : contexts) {
+      if (c.getTimezoneManager() == m)
         return c;
     }
     return null;
