@@ -358,6 +358,12 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st,
                           smsc::system::Status::SYSERR );
                     return;
                 }
+                // reset keywords for the next operation
+                if ( op->getKeywords() ) {
+                    smsc_log_debug(log_,"resetting keywords for op=%p, opid=%u, umr=%d",
+                                   op, found_ussd, umr );
+                    op->setKeywords("");
+                }
                 cmd_->setOperationId( found_ussd );
 
                 if ( umr != op->getUSSDref() ) {
