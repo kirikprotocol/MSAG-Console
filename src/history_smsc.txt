@@ -582,3 +582,12 @@ B3125: Jul 29, 2010
     SMSC	turn off ussd session check if proclimit==0
     SMSC	charge on submit + multipart fix
     MTSms	sender address filtering, unidentified subscriber
+
+B3126: Sep 06, 2010
+    SMSC	Option to code Default as Latin1 per sme added
+    SMSC	odd unicode string length fix
+    SMSC	Add errorcode from HLR to AbonentInfo output, add $$string import=code$$ to resources to enable
+    SMSC	Conditional SRI fix for condition
+    SMSC	Statistics calculation tweak for multipart service->map sms
+    SMSC	ussnotify->ussnotifyconf->closeind fix for unexpected close in seq
+    Emailsme	limit size of incoming emails, print ip of incoming connection
