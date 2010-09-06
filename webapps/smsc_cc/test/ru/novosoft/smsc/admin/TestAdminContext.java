@@ -20,6 +20,8 @@ import ru.novosoft.smsc.admin.map_limit.TestMapLimitManager;
 import ru.novosoft.smsc.admin.msc.MscManagerTest;
 import ru.novosoft.smsc.admin.msc.TestMscManager;
 import ru.novosoft.smsc.admin.provider.TestProviderManager;
+import ru.novosoft.smsc.admin.region.RegionsConfigTest;
+import ru.novosoft.smsc.admin.region.TestRegionManager;
 import ru.novosoft.smsc.admin.reschedule.RescheduleManagerTest;
 import ru.novosoft.smsc.admin.reschedule.TestRescheduleManager;
 import ru.novosoft.smsc.admin.resource.ResourceFileTest;
@@ -75,6 +77,7 @@ public class TestAdminContext extends AdminContext {
     TestUtils.exportResource(ResourceFileTest.class.getResourceAsStream("resources_ru_ru.xml"), new File(smscDir, "resources_ru_ru.xml"), false);
     TestUtils.exportResource(RoutesConfigTest.class.getResourceAsStream("routes.xml"), new File(smscDir, "routes.xml"), false);
     TestUtils.exportResource(TimezonesConfigTest.class.getResourceAsStream("timezones.xml"), new File(smscDir, "timezones.xml"), false);
+    TestUtils.exportResource(RegionsConfigTest.class.getResourceAsStream("regions.xml"), new File(smscDir, "regions.xml"), false);
   }
 
   public TestAdminContext(File appBaseDir, File initFile, int smscInstancesNumber) throws AdminException {
@@ -146,6 +149,8 @@ public class TestAdminContext extends AdminContext {
     routeSubjectManager = new TestRouteSubjectManager(new File(smscConfigDir, "routes.xml"), smscConfigBackupDir, fileSystem, clusterController);
 
     timezoneManager = new TestTimezoneManager(new File(smscConfigDir, "timezones.xml"), smscConfigBackupDir, fileSystem, clusterController);
+
+    regionManager = new TestRegionManager(new File(smscConfigDir, "regions.xml"), smscConfigBackupDir, fileSystem);
   }
 
   public TestAdminContext() throws AdminException {

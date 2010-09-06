@@ -15,6 +15,10 @@
     <notes></notes>
        <mask value=".1.1.79998880002"/>
   </subject_def>
+  <subject_def id="forRegions" defSme="smscsme">
+    <notes></notes>
+       <mask value=".1.1.79998880003"/>
+  </subject_def>
   <route id="websms &gt; abonents" billing="false" transit="false" archiving="false" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="false" active="true" srcSmeId="websms" deliveryMode="default" hide="false" replayPath="pass" forceDelivery="false" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
     <notes></notes>
     <source>

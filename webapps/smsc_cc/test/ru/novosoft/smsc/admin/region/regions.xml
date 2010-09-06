@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<!DOCTYPE regions SYSTEM "regions.dtd">
+
+<regions>
+  <region id="1" name="test" bandwidth="12" email="ee@eyeline.mobi"  timezone="AST" >
+    <subjects>
+      <subject id="forRegions"/>
+    </subjects>
+  </region>
+  <region_default bandwidth="123"/>
+</regions>
