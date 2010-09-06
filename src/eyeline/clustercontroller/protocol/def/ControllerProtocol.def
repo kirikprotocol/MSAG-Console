@@ -11,7 +11,6 @@ protocol ControllerProtocol
   ApplySnmp inoutmsg
   TraceRoute inmsg
   LookupProfile inmsg
-  LookupProfileEx inmsg
   UpdateProfile inoutmsg
   DeleteProfile inoutmsg
   CancelSms inoutmsg
@@ -70,7 +69,6 @@ protocol ControllerProtocol
   ApplySnmpResp inoutmsg
   TraceRouteResp
   LookupProfileResp
-  LookupProfileExResp
   UpdateProfileResp inoutmsg
   DeleteProfileResp inoutmsg
   CancelSmsResp inoutmsg
