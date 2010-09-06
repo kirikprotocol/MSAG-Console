@@ -15,7 +15,7 @@ import java.util.TimeZone;
 /**
  * @author Artem Snopkov
  */
-public class TimezonesConfig implements ManagedConfigFile<TimezoneSettings> {
+class TimezonesConfig implements ManagedConfigFile<TimezoneSettings> {
   
   public void save(InputStream oldFile, OutputStream newFile, TimezoneSettings conf) throws Exception {
     XmlConfig config = new XmlConfig(oldFile);
