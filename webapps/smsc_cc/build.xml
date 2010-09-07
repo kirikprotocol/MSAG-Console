@@ -30,6 +30,12 @@ public class Mode {${line.separator}
   public final static boolean testMode = ${smsc.devMode};${line.separator}
 }
     </echo>
+    <echo file="java/ru/novosoft/smsc/admin/AdminMode.java">
+package ru.novosoft.smsc.admin;${line.separator}${line.separator}
+public class AdminMode {${line.separator}
+  public final static boolean smsx = ${smsc.smsx};${line.separator}
+}
+    </echo>
   </target>
    
   <target name="prebuild" depends="gen_cc_protocol, mode"/>

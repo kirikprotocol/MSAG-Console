@@ -75,6 +75,7 @@ message TraceRouteResp 1008
   bool found 2
   string routeId 3 opt
   string trace 4 array opt
+  string aliasInfo 5 opt 
 end
 
 enum byte ReportOptions
@@ -101,7 +102,7 @@ message Profile
   property innerMessage=true
   string divert 1
   string locale 2
-  ProfileCharset codepage 3
+  byte codepage 3
   ReportOptions reportOptions 4
   HideOptions hide 5
   bool hideModifiable 6
@@ -121,17 +122,8 @@ message Profile
   string nick 20 opt
 end
 
-message LookupProfile 10
-  string address 1
-end
 
-message LookupProfileResp 1010
-  Response resp 1
-  Profile prof 2
-end
-
-
-message LookupProfileEx 11
+message LookupProfile 11
   string address 1
 end
 
@@ -141,7 +133,7 @@ enum byte ProfileMatchType
   Exact 2
 end
 
-message LookupProfileExResp 1011
+message LookupProfileResp 1011
   Response resp 1
   ProfileMatchType matchType 2
   Profile prof 3

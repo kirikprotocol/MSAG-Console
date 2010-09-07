@@ -114,6 +114,9 @@ public class ClosedGroupManager implements SmscConfiguration {
     if (group2remove == null)
       return false;
 
+    //todo Проверить, что группа не используется ни в одном профиле при помощи вызова команды CgmListAbonents. Она возвращает список абонентов, которые могут
+    //todo отправлять сообщения в данную группу
+
     if (cc.isOnline())
       cc.removeClosedGroup(groupId);
 

@@ -876,4 +876,71 @@ public class ClusterController {
   public ConfigState getTimezonesState() throws AdminException {
     return getConfigState(ConfigType.TimeZones);
   }
+
+  // PROFILES ================================================================================================
+
+  /**
+   * Блокирует конфигурацию профилей для чтения/записи
+   * @param write блокировать бля записи
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void lockProfiles(boolean write) throws AdminException {
+    lockConfig(ConfigType.Profiles, write);
+  }
+
+  /**
+   * Разблокирует конфигурацию профилей
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void unlockProfiles() throws AdminException {
+    unlockConfig(ConfigType.Profiles);
+  }
+
+  /**
+   * Ищет профиль по адресу абонента
+   * @param address адрес абонента
+   * @return экземпляр CCLookupProfileResult
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public CCLookupProfileResult lookupProfile(Address address) throws AdminException {
+    LookupProfile req = new LookupProfile();
+    req.setAddress(address.getSimpleAddress());
+    LookupProfileResp resp = cc.send(req);
+    checkResponse(resp.getResp());
+
+    return new CCLookupProfileResult(resp.getProf(), resp.getMatchType());
+  }
+
+  /**
+   * Обновляет данные профиля
+   * @param address адрес или маска
+   * @param profile новые данные профиля
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void updateProfile(Address address, CCProfile profile) throws AdminException {
+    UpdateProfile req = new UpdateProfile();
+    req.setAddress(address.getSimpleAddress());
+    req.setProf(profile.toProfile());
+    checkResponse(cc.send(req).getResp());
+  }
+
+  /**
+   * Удаляет профиль по адресу или маске
+   * @param address адрес или маска
+   * @throws AdminException  если произошла ошибка при взаимодействии с СС
+   */
+  public void deleteProfile(Address address) throws AdminException {
+    DeleteProfile req = new DeleteProfile();
+    req.setAddress(address.getSimpleAddress());
+    checkResponse(cc.send(req).getResp());
+  }
+
+  /**
+   * Возвращает статус конфигурации профилей
+   * @return статус конфигурации профилей
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public ConfigState getProfilesState() throws AdminException {
+    return getConfigState(ConfigType.Profiles);
+  }
 }

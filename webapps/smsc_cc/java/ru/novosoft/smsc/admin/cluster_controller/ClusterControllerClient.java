@@ -354,6 +354,20 @@ final class ClusterControllerClient {
     return sendPdu(req, new ApplyTimeZonesResp());
   }
 
+  // Profiles
+
+  public LookupProfileResp send(LookupProfile req) throws AdminException {
+    return sendPdu(req, new LookupProfileResp());
+  }
+
+  public UpdateProfileResp send(UpdateProfile req) throws AdminException {
+    return sendPdu(req, new UpdateProfileResp());
+  }
+
+  public DeleteProfileResp send(DeleteProfile req) throws AdminException {
+    return sendPdu(req, new DeleteProfileResp());
+  }
+
   private static class ResponseListener {
     private final CountDownLatch respLatch = new CountDownLatch(1);
 

@@ -3,6 +3,7 @@ package ru.novosoft.smsc.admin.cluster_controller;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.alias.TestAliasManager;
 import ru.novosoft.smsc.admin.cluster_controller.protocol.*;
+import ru.novosoft.smsc.admin.filesystem.FileSystem;
 import ru.novosoft.smsc.admin.msc.TestMscManager;
 import ru.novosoft.smsc.util.Address;
 
@@ -19,6 +20,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class TestClusterController extends ClusterController {
 
   private final TestAclHelper aclHelper = new TestAclHelper();
+  private final TestProfilesHelper profilesHelper;
 
   private final int smscInstancesNumber;
   private final File aliasesFile;
@@ -59,13 +61,17 @@ public class TestClusterController extends ClusterController {
   private final Lock timezonesLock = new ReentrantLock();
   private long lastTimezonesUpdateTime = System.currentTimeMillis();
 
+  private final Lock profilesLock = new ReentrantLock();
+  private long lastProfilesUpdateTime = System.currentTimeMillis();
+
 
   private long aclLastUpdateTime = System.currentTimeMillis();
 
-  public TestClusterController(File aliasesFile, File mscsFile, int smscInstancesNumber) {
+  public TestClusterController(File aliasesFile, File mscsFile, File profilesFile, boolean smsx, int version,  FileSystem fs, int smscInstancesNumber) throws AdminException {
     this.smscInstancesNumber = smscInstancesNumber;
     this.aliasesFile = aliasesFile;
     this.mscsFile = mscsFile;
+    this.profilesHelper = new TestProfilesHelper(profilesFile, fs, smsx, version);
   }
 
   protected synchronized ConfigState getConfigState(ConfigType configType) throws AdminException {
@@ -106,6 +112,9 @@ public class TestClusterController extends ClusterController {
         break;
       case TimeZones:
         time = lastTimezonesUpdateTime;
+        break;
+      case Profiles:
+        time = lastProfilesUpdateTime;
         break;
       default:
         time = System.currentTimeMillis();
@@ -448,5 +457,29 @@ public class TestClusterController extends ClusterController {
   @Override
   public void applyTimezones() throws AdminException {
     lastTimezonesUpdateTime = System.currentTimeMillis();
+  }
+
+  // PROFILES ================================================================================================
+
+  public void lockProfiles(boolean write) throws AdminException {
+    lock(profilesLock, "profiles", write);
+  }
+
+  public void unlockProfiles() throws AdminException {
+    unlock(profilesLock, "profiles");
+  }
+
+  public CCLookupProfileResult lookupProfile(Address address) throws AdminException {
+    return profilesHelper.lookupProfile(address);
+  }
+
+  public void updateProfile(Address address, CCProfile profile) throws AdminException {
+    profilesHelper.updateProfile(address, profile);
+    lastProfilesUpdateTime = System.currentTimeMillis();
+  }
+  
+  public void deleteProfile(Address address) throws AdminException {
+    profilesHelper.deleteProfile(address);
+    lastProfilesUpdateTime = System.currentTimeMillis();
   }
 }

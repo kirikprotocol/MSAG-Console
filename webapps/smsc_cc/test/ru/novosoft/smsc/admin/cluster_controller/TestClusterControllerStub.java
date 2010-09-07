@@ -53,6 +53,9 @@ public class TestClusterControllerStub extends ClusterController {
   private final Lock timezonesLock = new ReentrantLock();
   private long lastTimezonesUpdateTime = System.currentTimeMillis();
 
+  private final Lock profilesLock = new ReentrantLock();
+  private long lastProfilesUpdateTime = System.currentTimeMillis();
+
   private int smscInstancesNumber = 2;
 
   public TestClusterControllerStub() {
@@ -96,6 +99,9 @@ public class TestClusterControllerStub extends ClusterController {
         break;
       case TimeZones:
         time = lastTimezonesUpdateTime;
+        break;
+      case Profiles:
+        time = lastProfilesUpdateTime;
         break;
       default:
         time = System.currentTimeMillis();
@@ -395,5 +401,27 @@ public class TestClusterControllerStub extends ClusterController {
   @Override
   public void applyTimezones() throws AdminException {
     lastTimezonesUpdateTime = System.currentTimeMillis();
+  }
+
+  // PROFILES ================================================================================================
+
+  public void lockProfiles(boolean write) throws AdminException {
+    lock(profilesLock, "profiles", write);
+  }
+
+  public void unlockProfiles() throws AdminException {
+    unlock(profilesLock, "profiles");
+  }
+
+  public CCLookupProfileResult lookupProfile(Address address) throws AdminException {
+    return null;
+  }
+
+  public void updateProfile(Address address, CCProfile profile) throws AdminException {
+    lastProfilesUpdateTime = System.currentTimeMillis();
+  }
+
+  public void deleteProfile(Address address) throws AdminException {
+    lastProfilesUpdateTime = System.currentTimeMillis();
   }
 }

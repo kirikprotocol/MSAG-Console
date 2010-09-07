@@ -12,6 +12,7 @@ import ru.novosoft.smsc.admin.closed_groups.TestClosedGroupManager;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterControllerConfigTest;
 import ru.novosoft.smsc.admin.cluster_controller.TestClusterController;
 import ru.novosoft.smsc.admin.cluster_controller.TestClusterControllerManager;
+import ru.novosoft.smsc.admin.cluster_controller.TestProfilesHelper;
 import ru.novosoft.smsc.admin.filesystem.TestFileSystem;
 import ru.novosoft.smsc.admin.fraud.FraudManagerTest;
 import ru.novosoft.smsc.admin.fraud.TestFraudManager;
@@ -19,6 +20,7 @@ import ru.novosoft.smsc.admin.map_limit.MapLimitManagerTest;
 import ru.novosoft.smsc.admin.map_limit.TestMapLimitManager;
 import ru.novosoft.smsc.admin.msc.MscManagerTest;
 import ru.novosoft.smsc.admin.msc.TestMscManager;
+import ru.novosoft.smsc.admin.profile.TestProfileManager;
 import ru.novosoft.smsc.admin.provider.TestProviderManager;
 import ru.novosoft.smsc.admin.region.RegionsConfigTest;
 import ru.novosoft.smsc.admin.region.TestRegionManager;
@@ -51,6 +53,8 @@ import java.io.IOException;
  */
 public class TestAdminContext extends AdminContext {
 
+  private static final int PROFILES_VERSION=0x00010100;
+
   private void prepareServices(File servicesDir, AdminContextConfig cfg) throws IOException, AdminException {
     File ccDir = new File(servicesDir, "ClusterController/conf");
     ccDir.mkdirs();
@@ -78,6 +82,7 @@ public class TestAdminContext extends AdminContext {
     TestUtils.exportResource(RoutesConfigTest.class.getResourceAsStream("routes.xml"), new File(smscDir, "routes.xml"), false);
     TestUtils.exportResource(TimezonesConfigTest.class.getResourceAsStream("timezones.xml"), new File(smscDir, "timezones.xml"), false);
     TestUtils.exportResource(RegionsConfigTest.class.getResourceAsStream("regions.xml"), new File(smscDir, "regions.xml"), false);
+    TestUtils.exportResource(TestProfileManager.emptyProfilesFileAsStream(AdminMode.smsx, PROFILES_VERSION), new File(smscDir, "profiles.bin"), false);
   }
 
   public TestAdminContext(File appBaseDir, File initFile, int smscInstancesNumber) throws AdminException {
@@ -101,10 +106,14 @@ public class TestAdminContext extends AdminContext {
       serviceManager = new TestServiceManagerSingle(servicesDir, smscInstancesNumber);
     else
       serviceManager = new TestServiceManagerHA(servicesDir, smscInstancesNumber, new String[] {"host0", "host1", "host2"});
-    
-    clusterController = new TestClusterController(new File(smscDir, "aliases.bin"), new File(smscDir, "msc.bin"), smscInstancesNumber);
 
     fileSystem = new TestFileSystem();
+
+    clusterController = new TestClusterController(
+        new File(smscDir, "aliases.bin"),
+        new File(smscDir, "msc.bin"),
+        new File(smscDir, "aliases.bin"), AdminMode.smsx, PROFILES_VERSION,
+        fileSystem, smscInstancesNumber);
 
     clusterControllerManager = new TestClusterControllerManager(serviceManager, fileSystem);
 
@@ -151,6 +160,8 @@ public class TestAdminContext extends AdminContext {
     timezoneManager = new TestTimezoneManager(new File(smscConfigDir, "timezones.xml"), smscConfigBackupDir, fileSystem, clusterController);
 
     regionManager = new TestRegionManager(new File(smscConfigDir, "regions.xml"), smscConfigBackupDir, fileSystem);
+
+    profileManager = new TestProfileManager(AdminMode.smsx, new File(smscConfigDir, "profiles.bin"), fileSystem, clusterController);
   }
 
   public TestAdminContext() throws AdminException {
