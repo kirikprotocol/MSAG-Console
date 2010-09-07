@@ -75,6 +75,7 @@ message TraceRouteResp 1008
   bool found 2
   string routeId 3 opt
   string trace 4 array opt
+  string aliasInfo 5 opt 
 end
 
 enum byte ReportOptions
@@ -101,7 +102,7 @@ message Profile
   property innerMessage=true
   string divert 1
   string locale 2
-  ProfileCharset codepage 3
+  byte codepage 3
   ReportOptions reportOptions 4
   HideOptions hide 5
   bool hideModifiable 6
