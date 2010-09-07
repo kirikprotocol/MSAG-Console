@@ -258,6 +258,10 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st,
             return;
         }
         cmd_->setOperationId( opid );
+        // reset keywords in resp
+        if ( op->getKeywords() ) {
+            op->setKeywords("");
+        }
         smsc_log_debug( log_, "resp cmd=%p takes orig op=%p opid=%d type=%d(%s)",
                         cmd_.get(), op, opid, op->type(), commandOpName(op->type()) );
         break;
@@ -268,7 +272,7 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st,
         return;
     } // switch on cmdid
     
-    int32_t umr = -1;
+    int32_t umr = Operation::invalidUSSDref();
 
     if ( ! op ) {
         if ( sarmr_ != 0 ) {
@@ -337,9 +341,9 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st,
                 }
                 op = session_->createOperation( *cmd_.get(), optype_ );
                 found_ussd = session_->getUSSDOperationId();
-                if ( umr == -1 ) {
+                if ( umr == Operation::invalidUSSDref() ) {
                     op->setFlag( OperationFlags::SERVICE_INITIATED_USSD_DIALOG );
-                    umr = 0; // ask to set umr in delivery
+                    umr = Operation::notsetUSSDref(); // ask to set umr in delivery
                 }
                 op->setUSSDref( umr );
                 if ( cmdid == DELIVERY ) op->setFlag(OperationFlags::NEXTUSSDISSUBMIT);
@@ -368,7 +372,7 @@ void SmppOperationMaker::setupOperation( re::RuleStatus& st,
 
                 if ( umr != op->getUSSDref() ) {
                     // umr mismatch
-                    if ( op->getUSSDref() == 0 && 
+                    if ( op->getUSSDref() == Operation::notsetUSSDref() &&
                          cmdid == DELIVERY &&
                          op->flagSet( OperationFlags::SERVICE_INITIATED_USSD_DIALOG ) ) {
                         // it was initiated by service

@@ -185,14 +185,6 @@ public:
         return operations_.Count();
     }
 
-    // this field is not in ussd operation because operation is created later (in RE)
-    // int32_t getUSSDref() const {
-    // return umr_;
-    // }
-    // NOTE: this method works only if getUSSDref() == 0.
-    // void setUSSDref( int32_t ref ) throw (exceptions::SCAGException);
-
-
     /// FIXME: should it be here?
     lcm::LongCallContext& getLongCallContext() {
         return lcmCtx_;

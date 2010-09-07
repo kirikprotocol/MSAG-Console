@@ -34,6 +34,9 @@ const uint32_t NEXTUSSDISSUBMIT              = 0x40; // if set next ussd should 
 class Operation
 {
 public:
+    inline static int32_t invalidUSSDref() { return -1; }
+    inline static int32_t notsetUSSDref() { return -2; }
+
     Operation( Session* owner = 0,
                uint8_t type = transport::CO_NA,
                time_t ussdLastTime = 0 );
@@ -60,7 +63,7 @@ public:
     void setContextScope( int ctx ) { ctxid_ = ctx; }
     int getContextScope() const { return ctxid_; }
 
-    /// ussd reference number (-1 -- invalid, 0 -- pending).
+    /// ussd reference number (-1 -- invalid, -2 -- pending).
     /// this field is only valid if optype is CO_USSD_DIALOG
     void setUSSDref( int32_t umr ) /* throw (exceptions::SCAGException) */;
     inline int32_t getUSSDref() const { return umr_; }
