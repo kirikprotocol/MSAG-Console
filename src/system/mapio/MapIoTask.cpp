@@ -461,6 +461,10 @@ int MapIoTask::ReconnectThread::Execute()
       }
     }
     __map_warn2__("Reconnect: MAP_connectedInstCount=%d",MAP_connectedInstCount);
+    if(MAP_connectedInstCount!=MapDialogContainer::remInstCount)
+    {
+      sleep(3);
+    }
   }
   return 0;
 }
