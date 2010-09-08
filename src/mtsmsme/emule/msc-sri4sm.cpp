@@ -197,7 +197,7 @@ int main(int argc, char** argv)
       }
       else
       {
-      struct timespec delay = { 0, 500000000}; // nonoseconds
+      struct timespec delay = { 0, 500*1000*1000}; // nonoseconds
       nanosleep(&delay, 0);
       }
     }
