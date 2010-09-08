@@ -70,6 +70,13 @@ public class ClosedGroupManager implements SmscConfiguration {
     return new ArrayList<ClosedGroup>(groups);
   }
 
+  public boolean containsGroup(int groupId) throws AdminException {
+    for (ClosedGroup g : groups)
+      if (g.getId() == groupId)
+        return true;
+    return false;
+  }
+
   long getLastGroupId() {
     return lastGroupId.longValue();
   }

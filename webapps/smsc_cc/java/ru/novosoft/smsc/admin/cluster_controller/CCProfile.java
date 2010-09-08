@@ -7,293 +7,241 @@ import ru.novosoft.smsc.admin.cluster_controller.protocol.Profile;
  */
 public class CCProfile {
 
-  private String divert;
-  private String locale;
-  private boolean latin1;
-  private boolean ucs2;
-  private boolean ussdIn7Bit;
-  private ReportOptions reportOptions;
-  private HideOptions hide;
-  private boolean hideModifiable;
-  private boolean divertActive;
-  private boolean divertActiveAbsent;
-  private boolean divertActiveBlocked;
-  private boolean divertActiveBarred;
-  private boolean divertActiveCapacity;
-  private boolean divertModifiable;
-  private boolean udhConcat;
-  private boolean translit;
-  private Integer closedGroupId;
-  private int accessMaskIn;
-  private int accessMaskOut;
-  private Integer subscription;
-  private Byte sponsored;
-  private String nick;
+  private final Profile profile ;
 
   public CCProfile() {
-
+    this.profile = new Profile();
+    profile.setAccessMaskIn(0);
+    profile.setAccessMaskOut(0);
+    profile.setDivertActive(false);
+    profile.setDivertActiveAbsent(false);
+    profile.setDivertActiveBarred(false);
+    profile.setDivertActiveCapacity(false);
+    profile.setDivertModifiable(false);
+    profile.setDivert("");
+    profile.setDivertActiveBlocked(false);
+    profile.setCodepage((byte)0);
+    profile.setHide(ru.novosoft.smsc.admin.cluster_controller.protocol.HideOptions.HideDisabled);
+    profile.setHideModifiable(false);
+    profile.setLocale("");
+    profile.setReportOptions(ru.novosoft.smsc.admin.cluster_controller.protocol.ReportOptions.ReportNone);
+    profile.setUdhConcat(false);
+    profile.setTranslit(false);
+    
   }
 
   CCProfile(Profile p) {
-    divert = p.getDivert();
-    locale = p.getLocale();
-    latin1 = (p.getCodepage() & 1) == 1;
-    ucs2 = (p.getCodepage() & 8) == 8;
-    ussdIn7Bit = (p.getCodepage() & 128) == 128;
-    switch (p.getReportOptions()) {
-      case ReportFinal: reportOptions=ReportOptions.ReportFinal; break;
-      case ReportFull: reportOptions=ReportOptions.ReportFull; break;
-      default:
-        reportOptions = ReportOptions.ReportNone;
-    }
-    switch (p.getHide()) {
-      case HideDisabled: hide = HideOptions.HideDisabled; break;
-      case HideEnabled: hide = HideOptions.HideEnabled; break;
-      default:
-        hide = HideOptions.HideSubstitute;
-    }
-    hideModifiable = p.getHideModifiable();
-    divertActive = p.getDivertActive();
-    divertActiveAbsent = p.getDivertActiveAbsent();
-    divertActiveBarred = p.getDivertActiveBarred();
-    divertActiveBlocked = p.getDivertActiveBlocked();
-    divertActiveCapacity = p.getDivertActiveCapacity();
-    divertModifiable = p.getDivertModifiable();
-    udhConcat = p.getUdhConcat();
-    translit = p.getTranslit();
-    if (p.getClosedGroupId() > 0)
-      closedGroupId = p.getClosedGroupId();
-    accessMaskIn = p.getAccessMaskIn();
-    accessMaskOut = p.getAccessMaskOut();
-    if (p.hasSubscription())
-      subscription = p.getSubscription();
-    if (p.hasSponsored())
-      sponsored = p.getSponsored();
-    if (p.hasNick())
-      nick = p.getNick();
+    this.profile = p;
   }
 
   Profile toProfile() {
-    Profile p = new Profile();
-    p.setDivert(divert);
-    p.setLocale(locale);
-    int codepage = 0;
-    if (latin1)
-      codepage = codepage & 1;
-    if (ucs2)
-      codepage = codepage & 8;
-    if (ussdIn7Bit)
-      codepage = codepage & 128;
-    p.setCodepage((byte)codepage);
-    switch (reportOptions) {
-      case ReportFinal: p.setReportOptions(ru.novosoft.smsc.admin.cluster_controller.protocol.ReportOptions.ReportFinal); break;
-      case ReportFull: p.setReportOptions(ru.novosoft.smsc.admin.cluster_controller.protocol.ReportOptions.ReportFull); break;
-      default:
-        p.setReportOptions(ru.novosoft.smsc.admin.cluster_controller.protocol.ReportOptions.ReportNone);
-    }
-    switch (hide) {
-      case HideDisabled: p.setHide(ru.novosoft.smsc.admin.cluster_controller.protocol.HideOptions.HideDisabled); break;
-      case HideEnabled: p.setHide(ru.novosoft.smsc.admin.cluster_controller.protocol.HideOptions.HideEnabled); break;
-      default:
-        p.setHide(ru.novosoft.smsc.admin.cluster_controller.protocol.HideOptions.HideEnabled);
-    }
-    p.setHideModifiable(hideModifiable);
-    p.setDivertActive(divertActive);
-    p.setDivertActiveAbsent(divertActiveAbsent);
-    p.setDivertActiveBarred(divertActiveBarred);
-    p.setDivertActiveBlocked(divertActiveBlocked);
-    p.setDivertActiveCapacity(divertActiveCapacity);
-    p.setDivertModifiable(divertModifiable);
-    p.setUdhConcat(udhConcat);
-    p.setTranslit(translit);
-    p.setClosedGroupId(closedGroupId == null ? 0 : closedGroupId);
-    p.setAccessMaskIn(accessMaskIn);
-    p.setAccessMaskOut(accessMaskOut);
-    if (subscription != null)
-      p.setSubscription(subscription);
-    if (sponsored != null)
-      p.setSponsored(sponsored);
-    if (nick != null)
-      p.setNick(nick);
-    return p;
-
-
+    return profile;
   }
 
   public String getDivert() {
-    return divert;
+    return profile.getDivert();
   }
 
   public void setDivert(String divert) {
-    this.divert = divert;
+    profile.setDivert(divert);
   }
 
   public String getLocale() {
-    return locale;
+    return profile.getLocale();
   }
 
   public void setLocale(String locale) {
-    this.locale = locale;
+    profile.setLocale(locale);
   }
 
   public boolean isLatin1() {
-    return latin1;
+    return (profile.getCodepage() & 1) == 1;
   }
 
   public void setLatin1(boolean latin1) {
-    this.latin1 = latin1;
+    profile.setCodepage((byte)(profile.getCodepage() | 1));
   }
 
   public boolean isUcs2() {
-    return ucs2;
+    return (profile.getCodepage() & 8) == 8;
   }
 
   public void setUcs2(boolean ucs2) {
-    this.ucs2 = ucs2;
+    profile.setCodepage((byte)(profile.getCodepage() | 8));
   }
 
   public boolean isUssdIn7Bit() {
-    return ussdIn7Bit;
+    return (profile.getCodepage() & 128) == 128;
   }
 
   public void setUssdIn7Bit(boolean ussdIn7Bit) {
-    this.ussdIn7Bit = ussdIn7Bit;
+    profile.setCodepage((byte)(profile.getCodepage() | 128));
   }
 
   public ReportOptions getReportOptions() {
-    return reportOptions;
+    switch (profile.getReportOptions()) {
+      case ReportFinal: return ReportOptions.ReportFinal;
+      case ReportFull: return ReportOptions.ReportFull;
+      default:
+        return ReportOptions.ReportNone;
+    }
   }
 
   public void setReportOptions(ReportOptions reportOptions) {
-    this.reportOptions = reportOptions;
+    switch (reportOptions) {
+      case ReportFinal: profile.setReportOptions(ru.novosoft.smsc.admin.cluster_controller.protocol.ReportOptions.ReportFinal); break;
+      case ReportFull: profile.setReportOptions(ru.novosoft.smsc.admin.cluster_controller.protocol.ReportOptions.ReportFull); break;
+      default:
+        profile.setReportOptions(ru.novosoft.smsc.admin.cluster_controller.protocol.ReportOptions.ReportNone);
+    }
   }
 
   public HideOptions getHide() {
-    return hide;
+     switch (profile.getHide()) {
+      case HideDisabled: return HideOptions.HideDisabled;
+      case HideEnabled: return HideOptions.HideEnabled;
+      default:
+        return HideOptions.HideSubstitute;
+    }
   }
 
   public void setHide(HideOptions hide) {
-    this.hide = hide;
+    switch (hide) {
+      case HideDisabled: profile.setHide(ru.novosoft.smsc.admin.cluster_controller.protocol.HideOptions.HideDisabled); break;
+      case HideEnabled: profile.setHide(ru.novosoft.smsc.admin.cluster_controller.protocol.HideOptions.HideEnabled); break;
+      default:
+        profile.setHide(ru.novosoft.smsc.admin.cluster_controller.protocol.HideOptions.HideEnabled);
+    }
   }
 
   public boolean isHideModifiable() {
-    return hideModifiable;
+    return profile.getHideModifiable();
   }
 
   public void setHideModifiable(boolean hideModifiable) {
-    this.hideModifiable = hideModifiable;
+    profile.setHideModifiable(hideModifiable);
   }
 
   public boolean isDivertActive() {
-    return divertActive;
+    return profile.getDivertActive();
   }
 
   public void setDivertActive(boolean divertActive) {
-    this.divertActive = divertActive;
+    profile.setDivertActive(divertActive);
   }
 
   public boolean isDivertActiveAbsent() {
-    return divertActiveAbsent;
+    return profile.getDivertActiveAbsent();
   }
 
   public void setDivertActiveAbsent(boolean divertActiveAbsent) {
-    this.divertActiveAbsent = divertActiveAbsent;
+    profile.setDivertActiveAbsent(divertActiveAbsent);
   }
 
   public boolean isDivertActiveBlocked() {
-    return divertActiveBlocked;
+    return profile.getDivertActiveBlocked();
   }
 
   public void setDivertActiveBlocked(boolean divertActiveBlocked) {
-    this.divertActiveBlocked = divertActiveBlocked;
+    profile.setDivertActiveBlocked(divertActiveBlocked);
   }
 
   public boolean isDivertActiveBarred() {
-    return divertActiveBarred;
+    return profile.getDivertActiveBarred();
   }
 
   public void setDivertActiveBarred(boolean divertActiveBarred) {
-    this.divertActiveBarred = divertActiveBarred;
+    profile.setDivertActiveBarred(divertActiveBarred);
   }
 
   public boolean isDivertActiveCapacity() {
-    return divertActiveCapacity;
+    return profile.getDivertActiveCapacity();
   }
 
   public void setDivertActiveCapacity(boolean divertActiveCapacity) {
-    this.divertActiveCapacity = divertActiveCapacity;
+    profile.setDivertActiveCapacity(divertActiveCapacity);
   }
 
   public boolean isDivertModifiable() {
-    return divertModifiable;
+    return profile.getDivertModifiable();
   }
 
   public void setDivertModifiable(boolean divertModifiable) {
-    this.divertModifiable = divertModifiable;
+    profile.setDivertModifiable(divertModifiable);
   }
 
   public boolean isUdhConcat() {
-    return udhConcat;
+    return profile.getUdhConcat();
   }
 
   public void setUdhConcat(boolean udhConcat) {
-    this.udhConcat = udhConcat;
+    profile.setUdhConcat(udhConcat);
   }
 
   public boolean isTranslit() {
-    return translit;
+    return profile.getTranslit();
   }
 
   public void setTranslit(boolean translit) {
-    this.translit = translit;
+    profile.setTranslit(translit);
   }
 
   public Integer getClosedGroupId() {
-    return closedGroupId;
+    return profile.getClosedGroupId() == 0 ? null : profile.getClosedGroupId();
   }
 
   public void setClosedGroupId(Integer closedGroupId) {
-    this.closedGroupId = closedGroupId;
+    profile.setClosedGroupId(closedGroupId == null ? 0 : closedGroupId);
   }
 
   public int getAccessMaskIn() {
-    return accessMaskIn;
+    return profile.getAccessMaskIn();
   }
 
   public void setAccessMaskIn(int accessMaskIn) {
-    this.accessMaskIn = accessMaskIn;
+    profile.setAccessMaskIn(accessMaskIn);
   }
 
   public int getAccessMaskOut() {
-    return accessMaskOut;
+    return profile.getAccessMaskOut();
   }
 
   public void setAccessMaskOut(int accessMaskOut) {
-    this.accessMaskOut = accessMaskOut;
+    profile.setAccessMaskOut(accessMaskOut);
   }
 
-  public int getSubscription() {
-    return subscription;
+  public Integer getSubscription() {
+    if (profile.hasSubscription())
+      return profile.getSubscription();
+    else
+      return null;
   }
 
   public void setSubscription(Integer subscription) {
-    this.subscription = subscription;
+    if (subscription != null)
+      profile.setSubscription(subscription);
   }
 
-  public byte getSponsored() {
-    return sponsored;
+  public Byte getSponsored() {
+    if (profile.hasSponsored())
+      return profile.getSponsored();
+    else
+      return null;
   }
 
-  public void setSponsored(Byte sponsored) {
-    this.sponsored = sponsored;
+  public void setSponsored(byte sponsored) {
+    profile.setSponsored(sponsored);
   }
 
   public String getNick() {
-    return nick;
+    if (profile.hasNick())
+      return profile.getNick();
+    else
+      return null;
   }
 
   public void setNick(String nick) {
-    this.nick = nick;
+    profile.setNick(nick);
   }
 
   public enum HideOptions {

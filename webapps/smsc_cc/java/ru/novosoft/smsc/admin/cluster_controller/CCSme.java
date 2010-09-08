@@ -22,224 +22,207 @@ public class CCSme {
   public static final int SME_STATUS_INTERNAL=2;
   public static final int SME_STATUS_UNKNOWN=4;
 
-  private String id;
-  private int priority;
-  private String systemType;
-  private String password;
-  private String addrRange;
-  private int smeN;
-  private boolean wantAlias;
-  private int timeout;
-  private String receiptScheme;
-  private boolean disabled;
-  private int mode;
-  private int procLimit;
-  private int schedLimit;
-  private int accessMask;
-  boolean flagCarryOrgDescriptor;
-  boolean flagCarryOrgAbonentInfo;
-  boolean flagCarrySccpInfo;
-  boolean flagFillExtraDescriptor;
-  boolean flagForceReceiptToSme;
-  boolean flagForceGsmDatacoding;
-  boolean flagSmppPlus;
+
+  private final SmeParams sme; 
+
+  public CCSme() {
+    this.sme = new SmeParams();
+    sme.setFlagCarryOrgDescriptor(false);
+    sme.setFlagCarrySccpInfo(false);
+    sme.setFlagSmppPlus(false);
+    sme.setFlagCarryOrgAbonentInfo(false);
+    sme.setFlagFillExtraDescriptor(false);
+    sme.setFlagForceGsmDatacoding(false);
+    sme.setFlagForceReceiptToSme(false);
+    sme.setAccessMask(0);
+    sme.setAddrRange("");
+    sme.setDisabled(false);
+    sme.setId(null);
+    sme.setMode(SmeBindMode.modeTrx);
+    sme.setPassword(null);
+    sme.setPriority(0);
+    sme.setProcLimit(0);
+    sme.setReceiptScheme(null);
+    sme.setSchedLimit(0);
+    sme.setSmeN(0);
+    sme.setSystemType(null);
+    sme.setTimeout(0);
+    sme.setWantAlias(false);
+  }
 
   public String getId() {
-    return id;
+    return sme.getId();
   }
 
   public void setId(String id) {
-    this.id = id;
+    sme.setId(id);
   }
 
   public int getPriority() {
-    return priority;
+    return sme.getPriority();
   }
 
   public void setPriority(int priority) {
-    this.priority = priority;
+    sme.setPriority(priority);
   }
 
   public String getSystemType() {
-    return systemType;
+    return sme.getSystemType();
   }
 
   public void setSystemType(String systemType) {
-    this.systemType = systemType;
+    sme.setSystemType(systemType);
   }
 
   public String getPassword() {
-    return password;
+    return sme.getPassword();
   }
 
   public void setPassword(String password) {
-    this.password = password;
+    sme.setPassword(password);
   }
 
   public String getAddrRange() {
-    return addrRange;
+    return sme.getAddrRange();
   }
 
   public void setAddrRange(String addrRange) {
-    this.addrRange = addrRange;
+    sme.setAddrRange(addrRange);
   }
 
   public int getSmeN() {
-    return smeN;
+    return sme.getSmeN();
   }
 
   public void setSmeN(int smeN) {
-    this.smeN = smeN;
+    sme.setSmeN(smeN);
   }
 
   public boolean isWantAlias() {
-    return wantAlias;
+    return sme.getWantAlias();
   }
 
   public void setWantAlias(boolean wantAlias) {
-    this.wantAlias = wantAlias;
+    sme.setWantAlias(wantAlias);
   }
 
   public int getTimeout() {
-    return timeout;
+    return sme.getTimeout();
   }
 
   public void setTimeout(int timeout) {
-    this.timeout = timeout;
+    sme.setTimeout(timeout);
   }
 
   public String getReceiptScheme() {
-    return receiptScheme;
+    return sme.getReceiptScheme();
   }
 
   public void setReceiptScheme(String receiptScheme) {
-    this.receiptScheme = receiptScheme;
+    sme.setReceiptScheme(receiptScheme);
   }
 
   public boolean isDisabled() {
-    return disabled;
+    return sme.getDisabled();
   }
 
   public void setDisabled(boolean disabled) {
-    this.disabled = disabled;
+    sme.setDisabled(disabled);
   }
 
   public int getMode() {
-    return mode;
+    return sme.getMode().getValue();
   }
 
   public void setMode(int mode) {
-    this.mode = mode;
+    try {
+      sme.setMode(SmeBindMode.valueOf((byte)mode));
+    } catch (InvalidEnumValueException e) {
+      sme.setMode(SmeBindMode.modeTrx);
+    }
   }
 
   public int getProcLimit() {
-    return procLimit;
+    return sme.getProcLimit();
   }
 
   public void setProcLimit(int procLimit) {
-    this.procLimit = procLimit;
+    sme.setProcLimit(procLimit);
   }
 
   public int getSchedLimit() {
-    return schedLimit;
+    return sme.getSchedLimit();
   }
 
   public void setSchedLimit(int schedLimit) {
-    this.schedLimit = schedLimit;
+    sme.setSchedLimit(schedLimit);
   }
 
   public int getAccessMask() {
-    return accessMask;
+    return sme.getAccessMask();
   }
 
   public void setAccessMask(int accessMask) {
-    this.accessMask = accessMask;
+    sme.setAccessMask(accessMask);
   }
 
   public boolean isFlagCarryOrgDescriptor() {
-    return flagCarryOrgDescriptor;
+    return sme.getFlagCarryOrgDescriptor();
   }
 
   public void setFlagCarryOrgDescriptor(boolean flagCarryOrgDescriptor) {
-    this.flagCarryOrgDescriptor = flagCarryOrgDescriptor;
+    sme.setFlagCarryOrgDescriptor(flagCarryOrgDescriptor);
   }
 
   public boolean isFlagCarryOrgAbonentInfo() {
-    return flagCarryOrgAbonentInfo;
+    return sme.getFlagCarryOrgAbonentInfo();
   }
 
   public void setFlagCarryOrgAbonentInfo(boolean flagCarryOrgAbonentInfo) {
-    this.flagCarryOrgAbonentInfo = flagCarryOrgAbonentInfo;
+    sme.setFlagCarryOrgAbonentInfo(flagCarryOrgAbonentInfo);
   }
 
   public boolean isFlagCarrySccpInfo() {
-    return flagCarrySccpInfo;
+    return sme.getFlagCarrySccpInfo();
   }
 
   public void setFlagCarrySccpInfo(boolean flagCarrySccpInfo) {
-    this.flagCarrySccpInfo = flagCarrySccpInfo;
+    sme.setFlagCarrySccpInfo(flagCarrySccpInfo);
   }
 
   public boolean isFlagFillExtraDescriptor() {
-    return flagFillExtraDescriptor;
+    return sme.getFlagFillExtraDescriptor();
   }
 
   public void setFlagFillExtraDescriptor(boolean flagFillExtraDescriptor) {
-    this.flagFillExtraDescriptor = flagFillExtraDescriptor;
+    sme.setFlagFillExtraDescriptor(flagFillExtraDescriptor);
   }
 
   public boolean isFlagForceReceiptToSme() {
-    return flagForceReceiptToSme;
+    return sme.getFlagForceReceiptToSme();
   }
 
   public void setFlagForceReceiptToSme(boolean flagForceReceiptToSme) {
-    this.flagForceReceiptToSme = flagForceReceiptToSme;
+    sme.setFlagForceReceiptToSme(flagForceReceiptToSme);
   }
 
   public boolean isFlagForceGsmDatacoding() {
-    return flagForceGsmDatacoding;
+    return sme.getFlagForceGsmDatacoding();
   }
 
   public void setFlagForceGsmDatacoding(boolean flagForceGsmDatacoding) {
-    this.flagForceGsmDatacoding = flagForceGsmDatacoding;
+    sme.setFlagForceGsmDatacoding(flagForceGsmDatacoding);
   }
 
   public boolean isFlagSmppPlus() {
-    return flagSmppPlus;
+    return sme.getFlagSmppPlus();
   }
 
   public void setFlagSmppPlus(boolean flagSmppPlus) {
-    this.flagSmppPlus = flagSmppPlus;
+    sme.setFlagSmppPlus(flagSmppPlus);
   }
 
   SmeParams toSmeParams() {
-    SmeParams p = new SmeParams();
-    p.setAccessMask(accessMask);
-    p.setAddrRange(addrRange);
-    p.setDisabled(disabled);
-    p.setId(id);
-    try {
-      p.setMode(SmeBindMode.valueOf((byte)mode));
-    } catch (InvalidEnumValueException e) {
-      p.setMode(SmeBindMode.modeTrx);
-    }
-
-    p.setPassword(password);
-    p.setPriority(priority);
-    p.setProcLimit(procLimit);
-    p.setReceiptScheme(receiptScheme);
-    p.setSchedLimit(schedLimit);
-    p.setSmeN(smeN);
-    p.setSystemType(systemType);
-    p.setTimeout(timeout);
-    p.setWantAlias(wantAlias);
-    p.setFlagCarryOrgAbonentInfo(flagCarryOrgAbonentInfo);
-    p.setFlagCarryOrgDescriptor(flagCarryOrgDescriptor);
-    p.setFlagCarrySccpInfo(flagCarrySccpInfo);
-    p.setFlagFillExtraDescriptor(flagFillExtraDescriptor);
-    p.setFlagForceGsmDatacoding(flagForceGsmDatacoding);
-    p.setFlagForceReceiptToSme(flagForceReceiptToSme);
-    p.setFlagSmppPlus(flagSmppPlus);
-    return p;
+    return sme;
   }
 }
