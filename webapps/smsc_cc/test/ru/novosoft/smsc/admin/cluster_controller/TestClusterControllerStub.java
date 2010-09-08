@@ -4,10 +4,7 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.cluster_controller.protocol.ConfigType;
 import ru.novosoft.smsc.util.Address;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -16,49 +13,54 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class TestClusterControllerStub extends ClusterController {
 
-  private final Lock rescheduleLock = new ReentrantLock();
-  private long rescheduleLastUpdateTime = System.currentTimeMillis();
+  protected final Lock rescheduleLock = new ReentrantLock();
+  protected long rescheduleLastUpdateTime = System.currentTimeMillis();
 
-  private final Lock fraudLock = new ReentrantLock();
-  private long fraudLastUpdateTime = System.currentTimeMillis();
+  protected final Lock fraudLock = new ReentrantLock();
+  protected long fraudLastUpdateTime = System.currentTimeMillis();
 
-  private final Lock mapLimitLock = new ReentrantLock();
-  private long mapLimitLastUpdateTime = System.currentTimeMillis();
+  protected final Lock mapLimitLock = new ReentrantLock();
+  protected long mapLimitLastUpdateTime = System.currentTimeMillis();
 
-  private final Lock snmpLock = new ReentrantLock();
-  private long snmpLastUpdateTime = System.currentTimeMillis();
+  protected final Lock snmpLock = new ReentrantLock();
+  protected long snmpLastUpdateTime = System.currentTimeMillis();
 
-  private final Lock aliasLock = new ReentrantLock();
-  private long aliasLastUpdateTime = System.currentTimeMillis();
+  protected final Lock aliasLock = new ReentrantLock();
+  protected long aliasLastUpdateTime = System.currentTimeMillis();
 
-  private final Lock closedGroupLock = new ReentrantLock();
-  private long closedGroupLastUpdateTime;
+  protected final Lock closedGroupLock = new ReentrantLock();
+  protected long closedGroupLastUpdateTime;
 
-  private final Lock mscLock = new ReentrantLock();
-  private long mscLastUpdateTime = System.currentTimeMillis();
+  protected final Lock mscLock = new ReentrantLock();
+  protected long mscLastUpdateTime = System.currentTimeMillis();
 
-  private final Lock mainConfigLock = new ReentrantLock();
+  protected final Lock mainConfigLock = new ReentrantLock();
 
-  private final Lock smeLock = new ReentrantLock();
-  private long lastSmeUpdateTime = System.currentTimeMillis();
+  protected final Lock smeLock = new ReentrantLock();
+  protected long lastSmeUpdateTime = System.currentTimeMillis();
 
-  private final Lock resourceLock = new ReentrantLock();
-  private long lastResourceUpdateTime = System.currentTimeMillis();
+  protected final Lock resourceLock = new ReentrantLock();
+  protected long lastResourceUpdateTime = System.currentTimeMillis();
 
-  private final Lock routesLock = new ReentrantLock();
-  private long lastRoutesUpdateTime = System.currentTimeMillis();
+  protected final Lock routesLock = new ReentrantLock();
+  protected long lastRoutesUpdateTime = System.currentTimeMillis();
 
-  private long aclLastUpdateTime = System.currentTimeMillis();
+  protected long aclLastUpdateTime = System.currentTimeMillis();
 
-  private final Lock timezonesLock = new ReentrantLock();
-  private long lastTimezonesUpdateTime = System.currentTimeMillis();
+  protected final Lock timezonesLock = new ReentrantLock();
+  protected long lastTimezonesUpdateTime = System.currentTimeMillis();
 
-  private final Lock profilesLock = new ReentrantLock();
-  private long lastProfilesUpdateTime = System.currentTimeMillis();
+  protected final Lock profilesLock = new ReentrantLock();
+  protected long lastProfilesUpdateTime = System.currentTimeMillis();
 
-  private int smscInstancesNumber = 2;
+  protected int smscInstancesNumber;
 
   public TestClusterControllerStub() {
+    this(2);
+  }
+
+  protected  TestClusterControllerStub(int instancesNumber) {
+    this.smscInstancesNumber = instancesNumber;
   }
 
   protected synchronized ConfigState getConfigState(ConfigType configType) throws AdminException {
@@ -423,5 +425,17 @@ public class TestClusterControllerStub extends ClusterController {
 
   public void deleteProfile(Address address) throws AdminException {
     lastProfilesUpdateTime = System.currentTimeMillis();
+  }
+
+  // LOGGERS ================================================================================================
+
+
+  @Override
+  public Collection<CCLoggingInfo> getLoggers() throws AdminException {
+    return null;
+  }
+
+  @Override
+  public void setLoggers(Collection<CCLoggingInfo> loggers) throws AdminException {    
   }
 }

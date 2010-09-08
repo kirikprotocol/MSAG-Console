@@ -368,6 +368,16 @@ final class ClusterControllerClient {
     return sendPdu(req, new DeleteProfileResp());
   }
 
+  // Loggers
+
+  public LoggerGetCategoriesResp send(LoggerGetCategories req) throws AdminException {
+    return sendPdu(req, new LoggerGetCategoriesResp());
+  }
+
+  public LoggerSetCategoriesResp send(LoggerSetCategories req) throws AdminException {
+    return sendPdu(req, new LoggerSetCategoriesResp());
+  }
+
   private static class ResponseListener {
     private final CountDownLatch respLatch = new CountDownLatch(1);
 

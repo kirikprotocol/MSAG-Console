@@ -943,4 +943,40 @@ public class ClusterController {
   public ConfigState getProfilesState() throws AdminException {
     return getConfigState(ConfigType.Profiles);
   }
+
+  // LOGGING =================================================================================================
+
+  /**
+   * Возвращает настройки логирования в виде списка логгеров
+   * @return список доступных логгеров
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public Collection<CCLoggingInfo> getLoggers() throws AdminException {
+    LoggerGetCategoriesResp resp = cc.send(new LoggerGetCategories());
+
+    checkResponse(resp.getResp());
+
+    Collection<CCLoggingInfo> result = new ArrayList<CCLoggingInfo>(resp.getCategories().length);
+    for (CategoryInfo i: resp.getCategories())
+      result.add(new CCLoggingInfo(i));
+    return result;
+  }
+
+  /**
+   * Обновляет настройки логирования
+   * @param loggers новые настройки логирования
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
+   */
+  public void setLoggers(Collection<CCLoggingInfo> loggers) throws AdminException {
+    CategoryInfo[] infos = new CategoryInfo[loggers.size()];
+    int i=0;
+    for (CCLoggingInfo logger : loggers)
+      infos[i++] = logger.toCategoryInfo();
+
+    LoggerSetCategories req = new LoggerSetCategories();
+    req.setCategories(infos);
+
+    checkResponse(cc.send(req).getResp());
+  }
+ 
 }
