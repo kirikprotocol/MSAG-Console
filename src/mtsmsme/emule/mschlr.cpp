@@ -1,5 +1,5 @@
 static char const ident[] = "$Id$";
-#include "mtsmsme/sccp/SccpProcessor.hpp"
+#include "mtsmsme/processor/Processor.h"
 #include "core/threads/Thread.hpp"
 #include "mtsmsme/processor/SccpSender.hpp"
 #include "mtsmsme/processor/TCO.hpp"
@@ -17,7 +17,8 @@ extern std::string hexdmp(const uchar_t* buf, uint32_t bufSz);
 #define ENC_SCHEME 0x01
 #define NATURE_OF_ADDR 0x04
 
-using smsc::mtsmsme::processor::SccpProcessor;
+using smsc::mtsmsme::processor::RequestProcessor;
+using smsc::mtsmsme::processor::RequestProcessorFactory;
 using smsc::mtsmsme::processor::RequestSender;
 using smsc::mtsmsme::processor::Request;
 using smsc::mtsmsme::processor::SubscriberRegistrator;
@@ -75,15 +76,35 @@ class EmptySubscriberRegistrator: public SubscriberRegistrator {
       return false;
     }
 };
-class GopotaListener: public SccpProcessor, public Thread {
+class GopotaListener: public Thread {
+  private:
+    RequestProcessor* requestProcessor;
   public:
-    GopotaListener(TCO* _tco, SubscriberRegistrator* _reg) : SccpProcessor(_tco,_reg) {}
+    GopotaListener(TCO* _tco, SubscriberRegistrator* _reg)
+    {
+      RequestProcessorFactory* factory = 0;
+      factory = RequestProcessorFactory::getInstance();
+      if (!factory)
+        throw Exception("RequestProcessorFactory is undefined");
+
+      requestProcessor = factory->createRequestProcessor(_tco, _reg);
+      if (!requestProcessor)
+        throw Exception("RequestProcessor is undefined");
+    }
     virtual int Execute()
     {
       int result;
-      result = Run();
-      smsc_log_error(logger,"SccpListener exit with code: %d", result);
+      result = requestProcessor->Run();
+      smsc_log_error(logger,"SuaListener exit with code: %d", result);
       return result;
+    }
+    void Stop()
+    {
+      requestProcessor->Stop();
+    }
+    void configure(int user_id, int ssn, Address& msc, Address& vlr, Address& hlr)
+    {
+      requestProcessor->configure(user_id,ssn,msc,vlr,hlr);
     }
 };
 class DialogueStat: public Thread {
