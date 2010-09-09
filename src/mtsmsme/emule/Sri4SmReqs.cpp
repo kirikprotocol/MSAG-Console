@@ -1,12 +1,14 @@
 #include <string>
-#include "mtsmsme/sccp/SccpProcessor.hpp"
+#include "mtsmsme/processor/Processor.h"
+#include "mtsmsme/processor/HLRImpl.hpp"
 #include "core/threads/Thread.hpp"
 #include "mtsmsme/processor/TCO.hpp"
 #include "mtsmsme/processor/TSM.hpp"
 #include "mtsmsme/comp/SendRoutingInfoForSM.hpp"
 #include "sms/sms.h"
 
-using smsc::mtsmsme::processor::SccpProcessor;
+using smsc::mtsmsme::processor::RequestProcessor;
+using smsc::mtsmsme::processor::RequestProcessorFactory;
 using smsc::mtsmsme::processor::SubscriberRegistrator;
 using smsc::core::threads::Thread;
 using smsc::mtsmsme::processor::TCO;
@@ -27,18 +29,37 @@ class EmptySubscriberRegistrator: public SubscriberRegistrator {
     virtual int  update(Address& imsi, Address& msisdn, Address& mgt) {return 1;}
     virtual bool lookup(Address& msisdn, Address& imsi, Address& msc) {return false;}
 };
-class GopotaListener: public SccpProcessor, public Thread {
+class GopotaListener: public Thread {
+  private:
+    RequestProcessor* requestProcessor;
   public:
-    GopotaListener(TCO* _tco, SubscriberRegistrator* _reg) : SccpProcessor(_tco, _reg){}
+    GopotaListener(TCO* _tco, SubscriberRegistrator* _reg)
+    {
+      RequestProcessorFactory* factory = 0;
+      factory = RequestProcessorFactory::getInstance();
+      if (!factory)
+        throw Exception("RequestProcessorFactory is undefined");
+
+      requestProcessor = factory->createRequestProcessor(_tco, _reg);
+      if (!requestProcessor)
+        throw Exception("RequestProcessor is undefined");
+    }
     virtual int Execute()
     {
       int result;
-      result = Run();
-      smsc_log_error(logger,"SccpListener exit with code: %d", result);
+      result = requestProcessor->Run();
+      smsc_log_error(logger,"SuaListener exit with code: %d", result);
       return result;
     }
+    void Stop()
+    {
+      requestProcessor->Stop();
+    }
+    void configure(int user_id, int ssn, Address& msc, Address& vlr, Address& hlr)
+    {
+      requestProcessor->configure(user_id,ssn,msc,vlr,hlr);
+    }
 };
-
 int main(int argc, char** argv)
 {
   smsc::logger::Logger::Init();
@@ -60,13 +81,16 @@ int main(int argc, char** argv)
     while(true)
     {
       char* s;
-      /* SMSC = 79139860004, MSISDN=79139859489 */
+      /* SMSC = 79139860004, MSISDN=79139870001 */
+      /* SMSC = 791398699812, MSISDN=79139859489 */
       if (++count % 2) pri = true; else pri = false;
       char ms1[] = "79139870001";
       char ms2[] = "79139872021";
       if (++count % 2) s = ms1; else s = ms2;
-      string ms("79139859489"); // mobile station MSISDN
-      string sca("791398699812"); // service center address
+      string ms(s); // mobile station MSISDN
+      //string ms("79139859489"); // mobile station MSISDN
+      string sca("79139860004"); // service center address
+      //string sca("791398699812"); // service center address
       uint8_t cl[20]; uint8_t cllen; uint8_t cd[20]; uint8_t cdlen;
       cllen = packSCCPAddress(cl, 1 /* E.164 */, sca.c_str() /* SMSC E.164 */, 8 /* SMSC SSN */);
       cdlen = packSCCPAddress(cd, 1 /* E.164 */, ms.c_str() /* MS   E.164 */, 6 /* MS   SSN */);

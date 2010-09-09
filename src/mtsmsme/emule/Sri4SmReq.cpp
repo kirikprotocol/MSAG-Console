@@ -1,13 +1,12 @@
 #include <string>
 #include "mtsmsme/processor/Processor.h"
-#include "mtsmsme/sua/SuaProcessor.hpp"
+#include "mtsmsme/processor/HLRImpl.hpp"
 #include "core/threads/Thread.hpp"
 #include "mtsmsme/processor/TCO.hpp"
 #include "mtsmsme/processor/TSM.hpp"
 #include "mtsmsme/comp/SendRoutingInfoForSM.hpp"
 #include "sms/sms.h"
 
-using smsc::mtsmsme::processor::SuaProcessor;
 using smsc::mtsmsme::processor::RequestProcessor;
 using smsc::mtsmsme::processor::RequestProcessorFactory;
 using smsc::mtsmsme::processor::SubscriberRegistrator;
@@ -21,7 +20,6 @@ using smsc::mtsmsme::processor::util::packSCCPAddress;
 using smsc::mtsmsme::processor::util::dump;
 using smsc::sms::Address;
 using std::string;
-
 
 static Logger *logger = 0;
 class EmptySubscriberRegistrator: public SubscriberRegistrator {
@@ -84,12 +82,15 @@ int main(int argc, char** argv)
     {
       char* s;
       /* SMSC = 79139860004, MSISDN=79139870001 */
+      /* SMSC = 791398699812, MSISDN=79139859489 */
       if (++count % 2) pri = true; else pri = false;
       char ms1[] = "79139870001";
       char ms2[] = "79139872021";
       if (++count % 2) s = ms1; else s = ms2;
       string ms(s); // mobile station MSISDN
+      //string ms("79139859489"); // mobile station MSISDN
       string sca("79139860004"); // service center address
+      //string sca("791398699812"); // service center address
       uint8_t cl[20]; uint8_t cllen; uint8_t cd[20]; uint8_t cdlen;
       cllen = packSCCPAddress(cl, 1 /* E.164 */, sca.c_str() /* SMSC E.164 */, 8 /* SMSC SSN */);
       cdlen = packSCCPAddress(cd, 1 /* E.164 */, ms.c_str() /* MS   E.164 */, 6 /* MS   SSN */);
