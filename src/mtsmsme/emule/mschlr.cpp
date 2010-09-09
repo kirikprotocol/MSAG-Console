@@ -1,5 +1,5 @@
 static char const ident[] = "$Id$";
-#include "mtsmsme/sua/SuaProcessor.hpp"
+#include "mtsmsme/sccp/SccpProcessor.hpp"
 #include "core/threads/Thread.hpp"
 #include "mtsmsme/processor/SccpSender.hpp"
 #include "mtsmsme/processor/TCO.hpp"
@@ -17,7 +17,7 @@ extern std::string hexdmp(const uchar_t* buf, uint32_t bufSz);
 #define ENC_SCHEME 0x01
 #define NATURE_OF_ADDR 0x04
 
-using smsc::mtsmsme::processor::SuaProcessor;
+using smsc::mtsmsme::processor::SccpProcessor;
 using smsc::mtsmsme::processor::RequestSender;
 using smsc::mtsmsme::processor::Request;
 using smsc::mtsmsme::processor::SubscriberRegistrator;
@@ -75,9 +75,9 @@ class EmptySubscriberRegistrator: public SubscriberRegistrator {
       return false;
     }
 };
-class GopotaListener: public SuaProcessor, public Thread {
+class GopotaListener: public SccpProcessor, public Thread {
   public:
-    GopotaListener(TCO* _tco, SubscriberRegistrator* _reg) : SuaProcessor(_tco,_reg) {}
+    GopotaListener(TCO* _tco, SubscriberRegistrator* _reg) : SccpProcessor(_tco,_reg) {}
     virtual int Execute()
     {
       int result;
