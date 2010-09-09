@@ -1,4 +1,5 @@
 #include <string>
+#include "mtsmsme/processor/Processor.h"
 #include "mtsmsme/sua/SuaProcessor.hpp"
 #include "core/threads/Thread.hpp"
 #include "mtsmsme/processor/TCO.hpp"
@@ -7,6 +8,8 @@
 #include "sms/sms.h"
 
 using smsc::mtsmsme::processor::SuaProcessor;
+using smsc::mtsmsme::processor::RequestProcessor;
+using smsc::mtsmsme::processor::RequestProcessorFactory;
 using smsc::mtsmsme::processor::SubscriberRegistrator;
 using smsc::core::threads::Thread;
 using smsc::mtsmsme::processor::TCO;
@@ -28,18 +31,37 @@ class EmptySubscriberRegistrator: public SubscriberRegistrator {
     virtual int  update(Address& imsi, Address& msisdn, Address& mgt) {return 1;}
     virtual bool lookup(Address& msisdn, Address& imsi, Address& msc) {return false;}
 };
-class GopotaListener: public SuaProcessor, public Thread {
+class GopotaListener: public Thread {
+  private:
+    RequestProcessor* requestProcessor;
   public:
-    GopotaListener(TCO* _tco, SubscriberRegistrator* _reg) : SuaProcessor(_tco,_reg) {}
+    GopotaListener(TCO* _tco, SubscriberRegistrator* _reg)
+    {
+      RequestProcessorFactory* factory = 0;
+      factory = RequestProcessorFactory::getInstance();
+      if (!factory)
+        throw Exception("RequestProcessorFactory is undefined");
+
+      requestProcessor = factory->createRequestProcessor(_tco, _reg);
+      if (!requestProcessor)
+        throw Exception("RequestProcessor is undefined");
+    }
     virtual int Execute()
     {
       int result;
-      result = Run();
+      result = requestProcessor->Run();
       smsc_log_error(logger,"SuaListener exit with code: %d", result);
       return result;
     }
+    void Stop()
+    {
+      requestProcessor->Stop();
+    }
+    void configure(int user_id, int ssn, Address& msc, Address& vlr, Address& hlr)
+    {
+      requestProcessor->configure(user_id,ssn,msc,vlr,hlr);
+    }
 };
-
 int main(int argc, char** argv)
 {
   smsc::logger::Logger::Init();

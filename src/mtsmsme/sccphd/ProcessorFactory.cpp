@@ -11,6 +11,7 @@ Mutex flock;
 class RequestProcessorFactoryImpl: public RequestProcessorFactory {
   public:
     virtual RequestProcessor* createRequestProcessor();
+    virtual RequestProcessor* createRequestProcessor(TCO* _tco, SubscriberRegistrator* _reg);
 };
 RequestProcessorFactory* RequestProcessorFactory::getInstance()
 {
@@ -26,6 +27,10 @@ RequestProcessorFactory* RequestProcessorFactory::getInstance()
 RequestProcessor* RequestProcessorFactoryImpl::createRequestProcessor()
 {
   return  new SccpHDProcessor();
+}
+RequestProcessor* RequestProcessorFactoryImpl::createRequestProcessor(TCO* _tco, SubscriberRegistrator* _reg)
+{
+  return new SccpHDProcessor(_tco, _reg);
 }
 } /* namespace processor */
 } /* namespace mtsmsme   */

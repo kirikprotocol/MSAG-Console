@@ -75,6 +75,8 @@ namespace smsc { namespace mtsmsme { namespace processor
        virtual bool lookup(Address& msisdn, Address& imsi,Address& msc) = 0;
    };
    class RequestProcessor;
+   class TCO;
+   class SubscriberRegistrator;
    /*
     * Interface for Request Processor Factory
     */
@@ -83,6 +85,7 @@ namespace smsc { namespace mtsmsme { namespace processor
       public:
         static RequestProcessorFactory* getInstance();
         virtual RequestProcessor* createRequestProcessor() = 0;
+        virtual RequestProcessor* createRequestProcessor(TCO* _tco, SubscriberRegistrator* _reg) = 0;
       protected:
         RequestProcessorFactory() {};
     };
