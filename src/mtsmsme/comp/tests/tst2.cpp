@@ -375,11 +375,12 @@ void AmericaTestFixture::dialogue_limit_check()
 
   uint8_t cl[] = { 2, 2, 2, 2, 2 };
   uint8_t cd[] = { 3, 3, 3, 3, 3 };
-  TCO mtsms(5);
+  uint8_t limit = 3;
+  TCO mtsms(limit);
   vector<unsigned char> result ;
   SccpSenderMock sender(logger, result);
   mtsms.setSccpSender((SccpSender*)&sender);
-  for (int i = 1; i <= 5; i++)
+  for (int i = 1; i <= limit; i++)
   {
     TSM* tsm = 0;
     tsm = mtsms.TC_BEGIN(shortMsgGatewayContext_v2);
