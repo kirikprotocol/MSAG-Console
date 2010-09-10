@@ -6,34 +6,26 @@ import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.smsc.CommonSettings;
 import ru.novosoft.smsc.admin.smsc.InstanceSettings;
 import ru.novosoft.smsc.admin.smsc.SmscSettings;
-import ru.novosoft.smsc.web.WebContext;
 import ru.novosoft.smsc.web.components.dynamic_table.model.DynamicTableModel;
 import ru.novosoft.smsc.web.components.dynamic_table.model.DynamicTableRow;
-import ru.novosoft.smsc.web.config.AppliableConfiguration;
 import ru.novosoft.smsc.web.config.SmscStatusManager;
-import ru.novosoft.smsc.web.controllers.SmscController;
+import ru.novosoft.smsc.web.controllers.SettingsController;
 
 import javax.faces.application.FacesMessage;
-import java.security.Principal;
-import java.text.MessageFormat;
 import java.util.*;
 
 /**
  * author: alkhal
  */
-public class SmscConfigController extends SmscController {
+public class SmscConfigController extends SettingsController<SmscSettings> {
 
   private static final Logger logger = Logger.getLogger(SmscConfigController.class);
-
-  private AppliableConfiguration conf;
 
   private int instancesCount = 0;
 
   private CommonSettings commonConfig = new CommonSettings();
 
-  private List<InstanceSettings> instanceConfigs = new LinkedList<InstanceSettings>();
-
-  private boolean initialized = false;
+  private List<InstanceSettings> instanceConfigs;
 
   private DynamicTableModel addSsnModel = new DynamicTableModel();
 
@@ -41,62 +33,37 @@ public class SmscConfigController extends SmscController {
 
   private DynamicTableModel directivesModel = new DynamicTableModel();
 
-  private long lastUpdate;
-
   public SmscConfigController() {
-    Map<String, String> reguestMap = getRequestParameters();
-    conf = WebContext.getInstance().getAppliableConfiguration();
+    super(ConfigType.Main);
 
-    try {
-      SmscSettings smscSettings = conf.getSmscSettings();
-      if (!reguestMap.containsKey("initialized")) {
-        lastUpdate = conf.getSmscSettingsUpdateInfo().getLastUpdateTime();
-        instancesCount = smscSettings.getSmscInstancesCount();
-        initCommonConfig();
-        initInstances();
-      }
-      List<Integer> outOfDate = new LinkedList<Integer>();
+    checkOutOfDate();
 
-      SmscStatusManager smscStatusManager = WebContext.getInstance().getSmscStatusManager();
-      for (int i = 0; i < smscStatusManager.getSmscInstancesNumber(); i++) {
-        if (smscStatusManager.getMainConfigState(i) == SmscConfigurationStatus.OUT_OF_DATE)
-          outOfDate.add(i);
-      }
+    if (isSettingsChanged())
+      addLocalizedMessage(FacesMessage.SEVERITY_WARN, "smsc.configuration.locally.changed");    
 
-      if (!outOfDate.isEmpty()) {
-        String message = MessageFormat.format(
-            ResourceBundle.getBundle("ru.novosoft.smsc.web.resources.Smsc", getLocale()).getString("smsc.config.instance.out_of_date"),
-            outOfDate.toString());
-        addMessage(FacesMessage.SEVERITY_WARN, message);
-      }
-    } catch (AdminException e) {
-      logger.error(e, e);
-      addMessage(FacesMessage.SEVERITY_ERROR, e.getMessage(getLocale()));
-    }
+    init();
   }
 
-  private void initCommonConfig() {
-    try {
-      commonConfig = conf.getSmscSettings().getCommonSettings();
-    } catch (AdminException e) {
-      logger.error(e,e);
-      addMessage(FacesMessage.SEVERITY_ERROR, e.getMessage(getLocale()));
-    }
+  private void init() {
+    SmscSettings s = getSettings();
 
-    //core
+    commonConfig = s.getCommonSettings();
+
+    addSsnModel = new DynamicTableModel();
     for (String ssn : commonConfig.getAdd_ussd_ssn()) {
       DynamicTableRow row = new DynamicTableRow();
       row.setValue("ssn", ssn);
       addSsnModel.addRow(row);
     }
+
+    localesModel = new DynamicTableModel();
     for (String l : commonConfig.getLocales()) {
       DynamicTableRow row = new DynamicTableRow();
       row.setValue("locale", l);
       localesModel.addRow(row);
     }
 
-    // directives
-
+    directivesModel = new DynamicTableModel();
     for (Map.Entry<String, String> e : commonConfig.getDirectives().entrySet()) {
       DynamicTableRow row = new DynamicTableRow();
       row.setValue("key", e.getKey());
@@ -104,17 +71,10 @@ public class SmscConfigController extends SmscController {
       directivesModel.addRow(row);
     }
 
-  }
-
-  private void initInstances() {
-    for (int i = 0; i < instancesCount; i++) {
-      try {
-        instanceConfigs.add(conf.getSmscSettings().getInstanceSettings(i));
-      } catch (AdminException e) {
-        logger.error(e,e);
-        addMessage(FacesMessage.SEVERITY_ERROR, e.getMessage(getLocale()));
-      }
-    }
+    instancesCount = s.getSmscInstancesCount();
+    instanceConfigs = new ArrayList<InstanceSettings>(instancesCount);
+    for (int i = 0; i < instancesCount; i++)
+      instanceConfigs.add(s.getInstanceSettings(i));
   }
 
   public DynamicTableModel getAddSsnModel() {
@@ -163,32 +123,21 @@ public class SmscConfigController extends SmscController {
     this.instanceConfigs = instanceConfigs;
   }
 
-  public boolean isInitialized() {
-    return initialized;
-  }
-
-  public void setInitialized(boolean initialized) {
-    this.initialized = initialized;
-  }
-
   public void setInstancesCount(int instancesCount) {
     this.instancesCount = instancesCount;
   }
 
-  public long getLastUpdate() {
-    return lastUpdate;
-  }
-
-  public void setLastUpdate(long lastUpdate) {
-    this.lastUpdate = lastUpdate;
+  public String reset() {
+    try {
+      resetSettings();
+      init();
+    } catch (AdminException e) {
+      addError(e);
+    }
+    return null;
   }
 
   public String save() {
-
-    if (lastUpdate != conf.getSmscSettingsUpdateInfo().getLastUpdateTime()) {
-      addLocalizedMessage(FacesMessage.SEVERITY_ERROR, "smsc.config.not.actual");
-      return null;
-    }
 
     for (DynamicTableRow row : addSsnModel.getRows()) {
       String value = (String) row.getValue("ssn");
@@ -212,7 +161,6 @@ public class SmscConfigController extends SmscController {
       }
     }
 
-    Locale locale = getLocale();
     try {
       CommonSettings cs = fill(commonConfig);
       InstanceSettings[] iss = new InstanceSettings[instancesCount];
@@ -220,25 +168,27 @@ public class SmscConfigController extends SmscController {
         iss[i] = instanceConfigs.get(i);
       }
 
-      SmscSettings smscSettings = conf.getSmscSettings();
+      SmscSettings smscSettings = getSettings();
 
       smscSettings.setCommonSettings(cs);
       for (int i = 0; i < instancesCount; i++) {
         smscSettings.setInstanceSettings(i, iss[i]);
       }
 
-      Principal p = getUserPrincipal();
-
-      conf.setSmscSettings(smscSettings, p.getName());
+      setSettings(smscSettings);
+      Revision rev = submitSettings();
+      if (rev != null) {
+        addLocalizedMessage(FacesMessage.SEVERITY_ERROR, "smsc.config.not.actual", rev.getUser());
+        return null;
+      }
 
       return "INDEX";
 
     } catch (AdminException e) {
       logger.warn(e, e);
-      addMessage(FacesMessage.SEVERITY_ERROR, e.getMessage(locale));
+      addError(e);
       return null;
     }
-
   }
 
 
@@ -269,5 +219,36 @@ public class SmscConfigController extends SmscController {
     commonSettings.setDirectives(d);
 
     return commonSettings;
+  }
+
+  private void checkOutOfDate() {
+    try {
+      List<Integer> result = new ArrayList<Integer>();
+      SmscStatusManager ssm = getSmscStatusManager();
+      for (int i = 0; i < ssm.getSmscInstancesNumber(); i++) {
+        if (ssm.getMainConfigState(i) == SmscConfigurationStatus.OUT_OF_DATE)
+          result.add(i);
+      }
+      if (!result.isEmpty())
+        addLocalizedMessage(FacesMessage.SEVERITY_WARN, "smsc.config.instance.out_of_date", result.toString());
+    } catch (AdminException e) {
+      logger.error(e, e);
+      addError(e);
+    }
+  }
+
+  @Override
+  protected SmscSettings loadSettings() throws AdminException {
+    return getConfiguration().getSmscSettings();
+  }
+
+  @Override
+  protected void saveSettings(SmscSettings settings) throws AdminException {
+    getConfiguration().updateSmscSettings(settings, getUserPrincipal().getName());
+  }
+
+  @Override
+  protected SmscSettings cloneSettings(SmscSettings settings) {
+    return settings.cloneSettings();
   }
 }

@@ -141,6 +141,17 @@ public class Journal {
     return r;
   }
 
+  public void logChangesForObjects(Object oldObj, Object newObj, String user) {
+    if (oldObj instanceof SmscSettings)
+      logChanges((SmscSettings)oldObj, (SmscSettings)newObj, user);
+    else if (oldObj instanceof RescheduleSettings)
+      logChanges((RescheduleSettings)oldObj, (RescheduleSettings)newObj, user);
+    else if (oldObj instanceof UsersSettings)
+      logChanges((UsersSettings)oldObj, (UsersSettings)newObj, user);
+    else if (oldObj instanceof MapLimitSettings)
+      logChanges((MapLimitSettings)oldObj, (MapLimitSettings)newObj, user);
+  }
+
   /**
    * Ищет различия между настройками СМСЦ и записывает их в журнал
    * @param oldSettings старые настройки СМСЦ

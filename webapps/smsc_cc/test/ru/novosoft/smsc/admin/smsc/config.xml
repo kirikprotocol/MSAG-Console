@@ -25,7 +25,7 @@
     <param name="systemId" type="string">smscsme</param>
     <param name="service_type" type="string">SMSC</param>
     <param name="protocol_id" type="int">34</param>
-    <param name="locales" type="string">en_en, ru_ru</param>
+    <param name="locales" type="string">en_en</param>
     <param name="default_locale" type="string">en_en</param>
     <param name="mergeTimeout" type="int">600</param>
     <param name="timezones_config" type="string">timezones.xml</param>

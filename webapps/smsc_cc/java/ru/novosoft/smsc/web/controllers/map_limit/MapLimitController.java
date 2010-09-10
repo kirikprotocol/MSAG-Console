@@ -7,44 +7,34 @@ import ru.novosoft.smsc.admin.map_limit.MapLimitSettings;
 import ru.novosoft.smsc.web.WebContext;
 import ru.novosoft.smsc.web.components.dynamic_table.model.DynamicTableModel;
 import ru.novosoft.smsc.web.components.dynamic_table.model.DynamicTableRow;
-import ru.novosoft.smsc.web.config.AppliableConfiguration;
 import ru.novosoft.smsc.web.config.SmscStatusManager;
-import ru.novosoft.smsc.web.controllers.SmscController;
+import ru.novosoft.smsc.web.controllers.SettingsController;
 
 import javax.faces.application.FacesMessage;
-import java.text.MessageFormat;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.ResourceBundle;
 
 /**
  * author: alkhal
  */
-public class MapLimitController extends SmscController{
+public class MapLimitController extends SettingsController<MapLimitSettings> {
 
   private static final Logger logger = Logger.getLogger(MapLimitController.class);
 
-  private AppliableConfiguration conf;
-
-  private boolean initialized = false;
-
   private DynamicTableModel codes = new DynamicTableModel();
-
-  private long lastUpdate;
-
   private MapLimitSettings mlSettings;
 
   public MapLimitController() {
 
-    Map<String, String> reguestMap = getRequestParameters();
-    conf = WebContext.getInstance().getAppliableConfiguration();
+    super(ConfigType.MapLimit);
+
+    if (isSettingsChanged())
+      addLocalizedMessage(FacesMessage.SEVERITY_WARN, "smsc.configuration.locally.changed");
 
     try {
-      if (!reguestMap.containsKey("initialized")) {
-        lastUpdate = conf.getMapLimitSettingsUpdateInfo().getLastUpdateTime();
-        init();
-      }
+
+      mlSettings = getSettings();
+
       List<Integer> outOfDate = new LinkedList<Integer>();
 
       SmscStatusManager smscStatusManager = WebContext.getInstance().getSmscStatusManager();
@@ -52,12 +42,13 @@ public class MapLimitController extends SmscController{
         if (smscStatusManager.getMapLimitState(i) == SmscConfigurationStatus.OUT_OF_DATE)
           outOfDate.add(i);
       }
+      if (!outOfDate.isEmpty())
+        addLocalizedMessage(FacesMessage.SEVERITY_WARN, "smsc.config.instance.out_of_date", outOfDate.toString());
 
-      if (!outOfDate.isEmpty()) {
-        String message = MessageFormat.format(
-            ResourceBundle.getBundle("ru.novosoft.smsc.web.resources.Smsc", getLocale()).getString("smsc.config.instance.out_of_date"),
-            outOfDate.toString());
-        addMessage(FacesMessage.SEVERITY_WARN, message);
+      for (int c : mlSettings.getUssdNoSriCodes()) {
+        DynamicTableRow row = new DynamicTableRow();
+        row.setValue("code", c);
+        codes.addRow(row);
       }
     } catch (AdminException e) {
       logger.error(e, e);
@@ -66,53 +57,52 @@ public class MapLimitController extends SmscController{
 
   }
 
-  private void init() {
-    try{
-      mlSettings = conf.getMapLimitSettings();
-      for(int c : mlSettings.getUssdNoSriCodes()) {
-        DynamicTableRow row = new DynamicTableRow();
-        row.setValue("code", c);
-        codes.addRow(row);
-      }
-    }catch (AdminException e){
-      logger.error(e,e);
+  public String reset() {
+    try {
+      resetSettings();
+    } catch (AdminException e) {
+      addError(e);
     }
+    return "MAP_LIMIT";
   }
 
   public String save() {
-    if (lastUpdate != conf.getMapLimitSettingsUpdateInfo().getLastUpdateTime()) {
-      addLocalizedMessage(FacesMessage.SEVERITY_ERROR, "smsc.config.not.actual");
-      return null;
-    }
 
     int noSriCodes[] = new int[codes.getRowCount()];
-    int i=0;
+    int i = 0;
     for (DynamicTableRow row : codes.getRows()) {
       String value = (String) row.getValue("code");
       if (value == null || value.length() == 0) {
         addLocalizedMessage(FacesMessage.SEVERITY_WARN, "smsc.maplimits.ussdnosricodes.empty");
         return null;
       }
-      try{
-        int n =  Integer.parseInt(value);
-        if(n<=0) {
+      try {
+        int n = Integer.parseInt(value);
+        if (n <= 0) {
           addLocalizedMessage(FacesMessage.SEVERITY_WARN, "smsc.maplimits.ussdnosricodes.convert");
           return null;
         }
         noSriCodes[i] = n;
         i++;
-      }catch (Exception e){
+      } catch (Exception e) {
         addLocalizedMessage(FacesMessage.SEVERITY_WARN, "smsc.maplimits.ussdnosricodes.convert");
         return null;
       }
     }
 
-    try{
+    try {
       mlSettings.setUssdNoSriCodes(noSriCodes);
-      conf.setMapLimitSettings(mlSettings, getUserPrincipal().getName());
-    }catch (AdminException e){
-      logger.error(e,e);
-      addMessage(FacesMessage.SEVERITY_ERROR, e.getMessage(getLocale()));
+      setSettings(mlSettings);
+
+      Revision rev = submitSettings();
+      if (rev != null) {
+        addLocalizedMessage(FacesMessage.SEVERITY_ERROR, "smsc.config.not.actual", rev.getUser());
+        return null;
+      }
+
+    } catch (AdminException e) {
+      logger.error(e, e);
+      addError(e);
     }
 
     return "INDEX";
@@ -126,14 +116,6 @@ public class MapLimitController extends SmscController{
     this.codes = codes;
   }
 
-  public long getLastUpdate() {
-    return lastUpdate;
-  }
-
-  public void setLastUpdate(long lastUpdate) {
-    this.lastUpdate = lastUpdate;
-  }
-
   public MapLimitSettings getMlSettings() {
     return mlSettings;
   }
@@ -142,11 +124,18 @@ public class MapLimitController extends SmscController{
     this.mlSettings = mlSettings;
   }
 
-  public boolean isInitialized() {
-    return initialized;
+  @Override
+  protected MapLimitSettings loadSettings() throws AdminException {
+    return getConfiguration().getMapLimitSettings();
   }
 
-  public void setInitialized(boolean initialized) {
-    this.initialized = initialized;
+  @Override
+  protected void saveSettings(MapLimitSettings settings) throws AdminException {
+    getConfiguration().updateMapLimitSettings(settings, getUserPrincipal().getName());
+  }
+
+  @Override
+  protected MapLimitSettings cloneSettings(MapLimitSettings settings) {
+    return settings.cloneSettings();
   }
 }

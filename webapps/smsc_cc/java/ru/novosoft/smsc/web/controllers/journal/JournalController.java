@@ -30,7 +30,7 @@ public class JournalController extends SmscController {
 
   public JournalController() throws AdminException {
     this.journal = WebContext.getInstance().getJournal();
-    this.users = WebContext.getInstance().getAppliableConfiguration().getUsersSettings();
+    this.users = WebContext.getInstance().getConfiguration().getUsersSettings();
     clearFilter();
   }  
 

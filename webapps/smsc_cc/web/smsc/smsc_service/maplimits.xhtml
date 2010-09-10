@@ -21,17 +21,12 @@
           <tr:commandLink text="#{msg['submit.button']}" id="saveAll1" action="#{mapLimits.save}"/>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['reset.button']}" immediate="true" action="MAP_LIMIT"/>
+          <tr:commandLink text="#{msg['reset.button']}" action="#{mapLimits.reset}"/>
         </eye:button>
         <eye:space/>
       </eye:buttons>
 
-      <tr:panelGroupLayout id="tomahawk_save">
-        <t:saveState value="#{mapLimits.mlSettings}"/>
-      </tr:panelGroupLayout>
-
-      <tr:inputHidden id="initialized" value="#{mapLimits.initialized}"/>
-      <tr:inputHidden id="lastUpdate" value="#{mapLimits.lastUpdate}"/>
+      <tr:inputHidden id="revision" value="#{mapLimits.revision}"/>
 
       <h:panelGrid columns="1" style="padding:20px;">
 
@@ -126,7 +121,7 @@
           <tr:commandLink text="#{msg['submit.button']}" id="saveAll2" action="#{mapLimits.save}"/>
         </eye:button>
         <eye:button>
-          <tr:commandLink text="#{msg['reset.button']}" immediate="true" action="MAP_LIMIT"/>
+          <tr:commandLink text="#{msg['reset.button']}" action="#{mapLimits.reset}"/>
         </eye:button>
         <eye:space/>
       </eye:buttons>

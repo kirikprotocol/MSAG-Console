@@ -106,4 +106,8 @@ public class MapLimitSettings implements Serializable {
     this.clevels = clevels;
   }
 
+  public MapLimitSettings cloneSettings() {
+    return new MapLimitSettings(this);
+  }
+
 }

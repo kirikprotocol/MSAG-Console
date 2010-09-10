@@ -23,7 +23,7 @@
     <tr:commandLink text="#{msg['submit.button']}" id="saveAll1" action="#{smscConfig.save}"/>
   </eye:button>
   <eye:button>
-    <tr:commandLink text="#{msg['reset.button']}" immediate="true" action="SMSC_CONFIG"/>
+    <tr:commandLink text="#{msg['reset.button']}" action="#{smscConfig.reset}"/>
   </eye:button>
   <eye:space/>
 </eye:buttons>
@@ -33,8 +33,7 @@
   <t:saveState value="#{smscConfig.instanceConfigs}"/>
 </tr:panelGroupLayout>
 
-<tr:inputHidden id="initialized" value="#{smscConfig.initialized}"/>
-<tr:inputHidden id="lastUpdate" value="#{smscConfig.lastUpdate}"/>
+<tr:inputHidden id="revision" value="#{smscConfig.revision}"/>
 
 <table width="100%" cellpadding="10px">
 <tr>
@@ -758,7 +757,7 @@
     <tr:commandLink text="#{msg['submit.button']}" id="saveAll2" action="#{smscConfig.save}"/>
   </eye:button>
   <eye:button>
-    <tr:commandLink text="#{msg['reset.button']}" immediate="true" action="SMSC_CONFIG"/>
+    <tr:commandLink text="#{msg['reset.button']}"  action="#{smscConfig.reset}"/>
   </eye:button>
   <eye:space/>
 </eye:buttons>

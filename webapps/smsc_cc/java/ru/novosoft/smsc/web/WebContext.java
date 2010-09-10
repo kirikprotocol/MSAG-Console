@@ -4,7 +4,7 @@ import ru.novosoft.smsc.admin.AdminContext;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.util.xml.WebXml;
 import ru.novosoft.smsc.web.auth.Authenticator;
-import ru.novosoft.smsc.web.config.AppliableConfiguration;
+import ru.novosoft.smsc.web.config.Configuration;
 import ru.novosoft.smsc.web.config.SmscStatusManager;
 import ru.novosoft.smsc.web.journal.Journal;
 
@@ -23,7 +23,8 @@ public class WebContext {
 
   private AdminContext adminContext;
 
-  private AppliableConfiguration appliableConfiguration;
+
+  private Configuration configuration;
 
   private SmscStatusManager smscStatusManager;
 
@@ -52,11 +53,8 @@ public class WebContext {
     this.webXml = webXml;
     this.adminContext = adminContext;
     this.journal = new Journal();
-    try {
-      this.appliableConfiguration = new AppliableConfiguration(adminContext, journal);
-    } catch (AdminException e) {
-      throw new InitException(e);
-    }
+
+    configuration = new Configuration(adminContext, journal);    
 
     smscStatusManager = new SmscStatusManager(adminContext);
   }
@@ -77,11 +75,11 @@ public class WebContext {
     return adminContext;
   }
 
-  public AppliableConfiguration getAppliableConfiguration() {
-    return appliableConfiguration;
-  }
-
   public Journal getJournal() {
     return journal;
+  }
+
+  public Configuration getConfiguration() {
+    return configuration;
   }
 }

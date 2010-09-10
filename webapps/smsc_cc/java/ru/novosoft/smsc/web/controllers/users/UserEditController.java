@@ -2,6 +2,7 @@ package ru.novosoft.smsc.web.controllers.users;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.users.User;
+import ru.novosoft.smsc.admin.users.UsersSettings;
 import ru.novosoft.smsc.web.WebContext;
 
 import javax.faces.application.FacesMessage;
@@ -14,13 +15,9 @@ import java.util.*;
 @SuppressWarnings({"unchecked"})
 public class UserEditController extends UsersController{
 
-  private boolean edit_initialized;
-
   private String oldLogin;
 
   private User user;
-
-  private Map<String, User> users;
 
   private List<Role> roles;
 
@@ -30,7 +27,7 @@ public class UserEditController extends UsersController{
 
   public UserEditController() {
 
-    users = getUsersFromSession(true);
+    Map<String, User> users = getSettings().getUsersMap();
 
     if(getRequestParameter("edit_initialized") == null) {
       oldLogin = getRequestParameter("login");
@@ -38,22 +35,12 @@ public class UserEditController extends UsersController{
 
       lang = user.getPrefs().getLocale() == null ? "en" : user.getPrefs().getLocale().getLanguage();
       confirm = user.getPassword();
-      
+
       Set<String> allRoles = WebContext.getInstance().getWebXml().getRoles();
       roles = new ArrayList<Role>(allRoles.size());
-      for(String r : allRoles) {
+      for(String r : allRoles)
         roles.add(new Role(r, user.hasRole(r)));
-      }
-      edit_initialized = true;
     }
-  }
-
-  public boolean isEdit_initialized() {
-    return edit_initialized;
-  }
-
-  public void setEdit_initialized(boolean edit_initialized) {
-    this.edit_initialized = edit_initialized;
   }
 
   public String getOldLogin() {
@@ -67,10 +54,12 @@ public class UserEditController extends UsersController{
   public String done() {
 
     if(!user.getPassword().equals(confirm)) {
-      System.out.println("Confirm: "+confirm);
       addLocalizedMessage(FacesMessage.SEVERITY_WARN, "smsc.user.edit.not.confirm");
       return null;      
     }
+
+    UsersSettings settings = getSettings();
+    Map<String, User> users = settings.getUsersMap();
 
     if(users.get(user.getLogin()) != null && (oldLogin == null || oldLogin.length() == 0)) {
       addLocalizedMessage(FacesMessage.SEVERITY_WARN, "smsc.users.duplicate");
@@ -90,7 +79,7 @@ public class UserEditController extends UsersController{
     try{
       user.getPrefs().setLocale(new Locale(lang));
     }catch (AdminException e) {
-      addMessage(FacesMessage.SEVERITY_WARN, e.getMessage(getLocale()));
+      addError(e);
     }
 
     if(oldLogin != null && oldLogin.length() != 0) {
@@ -98,7 +87,13 @@ public class UserEditController extends UsersController{
     }
     users.put(user.getLogin(), user);
 
-    setChanged(true);
+    try {
+      settings.setUsers(users.values());
+      setSettings(settings);
+    } catch (AdminException e) {
+      addError(e);
+    }
+
     return "USERS";
   }
 

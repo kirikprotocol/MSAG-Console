@@ -14,11 +14,7 @@
 
     <tr:form id="reschedule_list">
 
-      <tr:inputHidden value="#{reschedule.index_initialized}" id="index_initialized"/>
-
-      <t:saveState value="#{reschedule.defaultReschedule}"/>
-      <t:saveState value="#{reschedule.reschedules}"/>
-
+      <tr:inputHidden value="#{reschedule.revision}" id="revision"/>
 
       <eye:buttons>
         <eye:button>
@@ -43,7 +39,7 @@
 
       <tr:panelFormLayout inlineStyle="padding:20px">
         <tr:panelLabelAndMessage label="#{msg['smsc.reschedule.default']}">
-          <tr:inputText value="#{reschedule.defaultReschedule.intervals}" required="true" simple="true">
+          <tr:inputText value="#{reschedule.defaultReschedule}" required="true" simple="true">
             <tr:validateRegExp pattern="#{reschedule.reschedulePattern}"
                                messageDetailNoMatch="#{msg['smsc.field.incorrect']}"/>
           </tr:inputText>

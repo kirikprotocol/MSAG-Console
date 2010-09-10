@@ -5,7 +5,6 @@ import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.web.WebContext;
 import ru.novosoft.smsc.web.components.data_table.model.DataTableModel;
 import ru.novosoft.smsc.web.components.data_table.model.DataTableSortOrder;
-import ru.novosoft.smsc.web.config.AppliableConfiguration;
 import ru.novosoft.smsc.web.config.SmscStatusManager;
 
 import javax.faces.application.FacesMessage;
@@ -23,13 +22,11 @@ import java.util.List;
 public class SmscStatusController extends SmscController {
 
   private final SmscStatusManager smscStatusManager;
-  private final AppliableConfiguration appliableConfiguration;
 
   private String switchToHost;
 
   public SmscStatusController() {
     smscStatusManager = WebContext.getInstance().getSmscStatusManager();
-    appliableConfiguration = WebContext.getInstance().getAppliableConfiguration();
   }
 
   public void switchToHost(ValueChangeEvent e) {
