@@ -14,8 +14,9 @@ namespace libsccp {
 
 struct MessageInfo
 {
-  enum MsgSize_e { DFLT_MSG_SIZE = 8*1024 };
-  typedef smsc::core::buffers::ExtendingBuffer<uint8_t, MessageInfo::DFLT_MSG_SIZE>
+  static const uint16_t DFLT_MSG_SIZE = 2*4096; //size of two LUDT_96 messages
+
+  typedef smsc::core::buffers::ExtendingBuffer_T<uint8_t, uint16_t, MessageInfo::DFLT_MSG_SIZE>
     msg_buffer_t;
 
   message_type_t  messageType;
