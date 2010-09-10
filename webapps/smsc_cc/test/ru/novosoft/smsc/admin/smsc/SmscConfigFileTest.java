@@ -65,7 +65,6 @@ public class SmscConfigFileTest {
     assertEquals("inman.host",cs.getInmanHost());
     assertEquals(399,cs.getInmanPort());
     assertEquals("en_en",cs.getLocales()[0].trim());
-    assertEquals("ru_ru",cs.getLocales()[1].trim());
     assertEquals(12345,cs.getLsMaxStoreSize());
     assertEquals(5321,cs.getLsMinRollTime());
     assertEquals(1,cs.getMainLoopsCount());
