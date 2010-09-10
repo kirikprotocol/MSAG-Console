@@ -123,6 +123,23 @@ void AmericaTestFixture::updateLocation_arg_encoding()
   CPPUNIT_ASSERT(etalon_buf == ulmsg);
 //  CPPUNIT_ASSERT_ASSERTION_FAIL( CPPUNIT_ASSERT( bad_buf == ulmsg ) );
   CPPUNIT_ASSERT( bad_buf != ulmsg );
+
+  using smsc::mtsmsme::comp::UpdateLocationReq;
+  using smsc::mtsmsme::processor::net_loc_upd_v2;
+  using smsc::mtsmsme::processor::BeginMsg;
+  UpdateLocationReq ulreq;
+  ulreq.setParameters("250130124323100","79139860001","79139860001");
+  vector<unsigned char> temp_arg;
+  ulreq.encode(temp_arg);
+
+  TrId otid; otid.size=4; otid.buf[0] = 0x29; otid.buf[1] = 0x00; otid.buf[2] = 0x01; otid.buf[3] = 0xB3;
+  BeginMsg begin;
+  begin.setOTID(otid);
+  begin.setDialog(net_loc_upd_v2);
+  begin.setInvokeReq(1 /* invokeId */, 2 /* updateLocation operation */, temp_arg);
+  vector<unsigned char> data;
+  begin.encode(data);
+  CPPUNIT_ASSERT(etalon_buf == data);
 }
 void AmericaTestFixture::reportSMDeliveryStatus_arg_decoding(void)
 {
