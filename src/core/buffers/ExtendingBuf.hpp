@@ -20,185 +20,241 @@ namespace buffers {
 //               |
 //             Write()/Append()
 // 
-template <typename T, unsigned SZ /*stackBufSZ*/> class ExtendingBuffer {
-protected:
-    union {
-      T         buf[SZ];
-      uint64_t  aligner;
-    } _stack;
 
-    T *       heapBuf;
-    unsigned  heapBufSz;  //actual size of allocated buffer
-    T *       dataBuf;
-    unsigned  pos;        //current position within buffer for reading/writing data
-    unsigned  dataSz;     //effective size of data in buffer (stack or heap), starting from pos = 0
+template <
+  class _TArg                       //must have default & copying constructors
+, typename _SizeTypeArg = unsigned  //must be an integer type
+>
+class BufferExtension_T {
+protected:
+  const _SizeTypeArg _orgSz;
+  //
+  _TArg *       _dataBuf;
+  _TArg *       _heapBuf;
+  _SizeTypeArg  _heapBufSz;  //actual size of allocated heap buffer
+  _SizeTypeArg  _pos;        //current position within buffer for reading/writing data
+  _SizeTypeArg  _dataSz;     //effective size of data in buffer (stack or heap), starting from pos = 0
 
 public:
-    explicit ExtendingBuffer(unsigned size = SZ)
-      : heapBuf(0), heapBufSz(0), dataBuf(_stack.buf), pos(0), dataSz(0)
-    {
-        _stack.aligner = 0;
-        if (size > SZ) {
-            dataBuf = heapBuf = new T[size];
-            heapBufSz = size;
-        }
+  BufferExtension_T(_TArg * org_buf, _SizeTypeArg org_max_sz, _SizeTypeArg initial_sz = 0)
+    : _orgSz(org_max_sz), _dataBuf(org_buf)
+    , _heapBuf(0), _heapBufSz(0), _pos(0), _dataSz(0)
+  {
+    if (initial_sz > org_max_sz) {
+      _dataBuf = _heapBuf = new _TArg[_heapBufSz = initial_sz];
     }
+  }
+  ~BufferExtension_T()
+  {
+    if (_heapBuf)
+      delete [] _heapBuf;
+  }
 
-    ~ExtendingBuffer()
-    { 
-        if (heapBuf)
-            delete [] heapBuf; 
+  _TArg *   get(void)         const { return _dataBuf; }
+  _TArg *   getCurPtr(void)   const { return _dataBuf + _pos; }
+
+  _SizeTypeArg  getPos(void)      const { return _pos; }
+  _SizeTypeArg  getDataSize(void) const { return _dataSz; }
+  _SizeTypeArg  getMaxSize(void)  const { return _heapBufSz ? _heapBufSz : _orgSz; }
+
+  //resets buffer, destroys all previously set data
+  _TArg * reset(void)
+  {
+    _pos = _dataSz = 0;
+    return _dataBuf;
+  }
+  //resets buffer, resizing it if needed, destroys all previously set data
+  _TArg * reset(_SizeTypeArg size)
+  {
+    if (_heapBuf) {
+      if (size > _heapBufSz) { //reallocate heap buffer
+        delete [] _heapBuf;
+        _dataBuf = _heapBuf = new _TArg[_heapBufSz = size];
+      }
+    } else if (size > _orgSz) { //switch to heap buffer
+      _dataBuf = _heapBuf = new _TArg[_heapBufSz = size];
     }
+    _pos = _dataSz = 0;
+    return _dataBuf;
+  }
 
-    T*   get()                  const { return dataBuf; }
-    T*   getCurPtr()            const { return dataBuf + pos; }
-    unsigned  getPos(void)      const { return pos; }
-    unsigned  getDataSize(void) const { return dataSz; }
-    unsigned  getMaxSize(void)  const { return heapBufSz ? heapBufSz : SZ; }
-
-    //resets buffer, destroys all previously set data
-    T * reset(void)
-    {
-        pos = dataSz = 0;
-        return dataBuf;
+  //Extends buffer size to hold at least the given number of elements
+  //Returns true on buffer resizing
+  bool extend(_SizeTypeArg new_size)
+  {
+    if (_heapBuf) {
+      if (new_size > _heapBufSz) { //reallocate heap buffer
+        _heapBuf = new _TArg[_heapBufSz = new_size];
+        std::copy(_dataBuf, _dataBuf + _dataSz, _heapBuf);
+        delete [] _dataBuf;
+        _dataBuf = _heapBuf;
+        return true;
+      }
+    } else if (new_size > _orgSz) { //switch to heap buffer
+      _heapBuf = new _TArg[_heapBufSz = new_size];
+      std::copy(_dataBuf, _dataBuf + _dataSz, _heapBuf);
+      _dataBuf = _heapBuf;
+      return true;
     }
-    //resets buffer, resizing it if needed, destroys all previously set data
-    T* reset(unsigned size)
-    {
-        if (heapBuf) {
-            if (size > heapBufSz) { //reallocate heap buffer
-                delete [] heapBuf;
-                dataBuf = heapBuf = new T[heapBufSz = size];
-            }
-        } else if (size > SZ) { //switch to heap buffer
-            dataBuf = heapBuf = new T[heapBufSz = size];
-        }
-        pos = dataSz = 0;
-        return dataBuf;
-    }
+    return false;
+  }
 
-    //Extends buffer size to hold at least the given number of elements
-    //Returns true on buffer resizing
-    bool extend(unsigned size)
-    {
-        if (heapBuf) {
-            if (size > heapBufSz) { //reallocate heap buffer
-                heapBuf = new T[heapBufSz = size];
-                std::copy(dataBuf, dataBuf + dataSz, heapBuf);
-                delete [] dataBuf;
-                dataBuf = heapBuf;
-                return true;
-            }
-        } else if (size > SZ) { //switch to heap buffer
-            heapBuf = new T[heapBufSz = size];
-            std::copy(dataBuf, dataBuf + dataSz, heapBuf);
-            dataBuf = heapBuf;
-            return true;
-        }
-        return false;
-    }
+  //resizes buffer preserving current data, truncates data in buffer if needed
+  _TArg * resize(_SizeTypeArg new_size)
+  {
+    if (_dataSz > new_size) { //truncate effective data size and position
+      _dataSz = new_size;
+      if (_pos > new_size)
+          _pos = new_size;
+    } else 
+      extend(new_size);
+    return _dataBuf;
+  }
 
-    //resizes buffer preserving current data, truncates data in buffer if needed
-    T* resize(unsigned size)
-    {
-        if (dataSz > size) { //truncate effective data size and position
-            dataSz = size;
-            if (pos > size)
-                pos = size;
-        } else 
-            extend(size);
-        return dataBuf;
-    }
+  //Sets current position for Read/Append operations, extending buffer
+  //and effective data size if necessary
+  void setPos(_SizeTypeArg new_pos)
+  { 
+    if (new_pos > getMaxSize())
+      extend(new_pos + 1);
+    if (_dataSz < new_pos)
+      _dataSz = new_pos;
+    _pos = new_pos;
+  }
+  //Sets effective buffer data size, extending buffer if necessary
+  void setDataSize(_SizeTypeArg new_dsz)
+  { 
+    if (new_dsz > getMaxSize())
+      extend(new_dsz);
+    _dataSz = new_dsz;
+  }
 
-    //Sets current position for Read/Append operations, extending buffer
-    //and effective data size if necessary
-    void setPos(unsigned newpos)
-    { 
-        if (newpos > getMaxSize())
-            extend(newpos + 1);
-        if (dataSz < newpos)
-            dataSz = newpos;
-        pos = newpos;
+  //Reads requested number of elements at current position
+  //and adjusts it if requested.
+  //Checks for ABR, returns number of objects have been read.
+  _SizeTypeArg Read(_TArg * dst_buf, _SizeTypeArg use_count, bool adjust_pos = true)
+  {
+    if ((_pos + use_count) >= _dataSz)
+      use_count = _dataSz - _pos;
+    if (use_count) {
+      std::copy(_dataBuf + _pos, _dataBuf + _pos + use_count, dst_buf);
+      if (adjust_pos)
+        _pos += use_count;
     }
-    //Sets effective buffer data size, extending buffer if necessary
-    void setDataSize(unsigned new_dsz)
-    { 
-        if (new_dsz > getMaxSize())
-            extend(new_dsz);
-        dataSz = new_dsz;
+    return use_count;
+  }
+
+  //Copies requested number of elements at specified position.
+  //Checks for ABR, returns number of objects have been read.
+  _SizeTypeArg Copy(_TArg * dst, _SizeTypeArg pos_at, _SizeTypeArg use_count) const
+  {
+    if (pos_at >= _dataSz)
+      return 0;
+
+    unsigned pos_end = pos_at + use_count;
+    if (pos_end >= _dataSz)
+      use_count = _dataSz - pos_at;
+    if (use_count)
+      std::copy(_dataBuf + pos_at, _dataBuf + pos_at + use_count, dst);
+    return use_count;
+  }
+
+  //Writes data to buffer at given position, extending buffer and 
+  //effective data size if necessary. Doesn't change current position!!!
+  void Write(_SizeTypeArg use_pos, const _TArg * data, _SizeTypeArg use_count)
+  {
+    if (!use_count)
+      return;
+
+    _SizeTypeArg newSz = use_pos + use_count;
+    if (newSz > getMaxSize()) {
+      extend(newSz);
+      _dataSz = newSz;
+    } else if (newSz > _dataSz)
+      _dataSz = newSz;
+    std::copy(data, data + use_count, _dataBuf + use_pos);
+  }
+
+  //Writes/Appends data to buffer starting from current position and adjusts it.
+  //NOTE: if position is set within existing data, it's overwritten.
+  //Returns adjusted position.
+  _SizeTypeArg Append(const _TArg * data, _SizeTypeArg use_count)
+  {
+    Write(_pos, data, use_count);
+    return (_pos += use_count);
+  }
+
+  operator _TArg * () { return _dataBuf; }
+
+  BufferExtension_T & operator=(const BufferExtension_T & _Right)
+  {
+    if (this != &_Right) {
+      this->reset(_Right.getMaxSize()); //pos = 0
+      this->Append(_Right.get(), _Right.getDataSize());
+      this->setPos(_Right.getPos());
     }
-
-    //Reads requested number of elements at current position
-    //and adjusts it if requested.
-    //Checks for ABR, returns number of objects have been read.
-    unsigned Read(T* dst, unsigned count, bool adjust_pos = true)
-    {
-        if ((pos + count) >= dataSz)
-            count = dataSz - pos;
-        if (count) {
-            std::copy(dataBuf + pos, dataBuf + pos + count, dst);
-            if (adjust_pos)
-                pos += count;
-        }
-        return count;
-    }
-
-    //Copies requested number of elements at specified position.
-    //Checks for ABR, returns number of objects have been read.
-    unsigned Copy(T* dst, unsigned pos_at, unsigned count) const
-    {
-      if (pos_at >= dataSz)
-        return 0;
-
-      unsigned pos_end = pos_at + count;
-      if (pos_end >= dataSz)
-          count = dataSz - pos_at;
-      if (count)
-          std::copy(dataBuf + pos_at, dataBuf + pos_at + count, dst);
-      return count;
-    }
+    return (*this);
+  }
+  BufferExtension_T & operator+=(const BufferExtension_T & _Right)
+  {
+    this->Append(_Right.get(), _Right.getDataSize());
+    return (*this);
+  }
+};
 
 
-    //Writes data to buffer at given position, extending buffer and 
-    //effective data size if necessary. Doesn't change current position!!!
-    void Write(unsigned use_pos, const T* data, unsigned count)
-    {
-        if (!count)
-            return;
-        unsigned newSz = use_pos + count;
-        if (newSz > getMaxSize()) {
-            extend(newSz);
-            dataSz = newSz;
-        } else if (newSz > dataSz)
-            dataSz = newSz;
-        std::copy(data, data + count, dataBuf + use_pos);
-    }
+template <
+  class _TArg           //must have default & copying constructors
+, typename _SizeTypeArg //must be an integer type
+, _SizeTypeArg _STACK_SZ  //max stack buffer size
+>
+class ExtendingBuffer_T : public BufferExtension_T<_TArg, _SizeTypeArg> {
+protected:
+  union {
+    _TArg     buf[_STACK_SZ];
+    uint64_t  alignerInt;
+    void *    alignerPtr;
+  } _stack;
 
-    //Writes/Appends data to buffer starting from current position and adjusts it.
-    //NOTE: if position is set within existing data, it's overwritten.
-    //Returns adjusted position.
-    unsigned Append(const T* data, unsigned count)
-    {
-        Write(pos, data, count);
-        return (pos += count);
-    }
+public:
+  typedef BufferExtension_T<_TArg, _SizeTypeArg>  BaseT;
 
-    operator T* () { return dataBuf; }
+  explicit ExtendingBuffer_T(_SizeTypeArg initial_size = _STACK_SZ)
+    : BufferExtension_T<_TArg, _SizeTypeArg>(_stack.buf, _STACK_SZ, initial_size)
+  {
+    _stack.alignerPtr = 0;
+  }
+  ~ExtendingBuffer_T()
+  { }
 
-    ExtendingBuffer<T, SZ>& operator=(const ExtendingBuffer<T, SZ>& _Right)
-    {
-        if (this != &_Right) {
-            this->reset(_Right.getMaxSize()); //pos = 0
-            this->Append(_Right.get(), _Right.getDataSize());
-            this->setPos(_Right.getPos());
-        }
-        return (*this);
-    }
-    ExtendingBuffer<T, SZ>& operator+=(const ExtendingBuffer<T, SZ>& _Right)
-    {
-        this->Append(_Right.get(), _Right.getDataSize());
-        return (*this);
-    }
+  ExtendingBuffer_T & operator=(const ExtendingBuffer_T & _Right)
+  {
+    if (this != &_Right)
+      BufferExtension_T<_TArg, _SizeTypeArg>::operator=(_Right);
+    return (*this);
+  }
+
+  ExtendingBuffer_T & operator+=(const ExtendingBuffer_T & _Right)
+  {
+    this->Append(_Right.get(), _Right.getDataSize());
+    return (*this);
+  }
+
+  template <_SizeTypeArg _SZ_Arg>
+  ExtendingBuffer_T & 
+    operator=(const ExtendingBuffer_T<_TArg, _SizeTypeArg, _SZ_Arg> & _Right)
+  {
+    BufferExtension_T<_TArg, _SizeTypeArg>::operator=(_Right);
+    return (*this);
+  }
+   
+  template <_SizeTypeArg _SZ_Arg>
+  ExtendingBuffer_T & 
+    operator+=(const ExtendingBuffer_T<_TArg, _SizeTypeArg, _SZ_Arg> & _Right)
+  {
+    this->Append(_Right.get(), _Right.getDataSize());
+    return (*this);
+  }
 };
 
 }//namespace buffers
