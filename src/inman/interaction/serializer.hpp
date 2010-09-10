@@ -38,7 +38,7 @@ public:
 };
 
 
-typedef smsc::core::buffers::ExtendingBuffer<unsigned char,1024> ObjectBuffer;
+typedef smsc::core::buffers::ExtendingBuffer_T<unsigned char, unsigned, 1024> ObjectBuffer;
 /*
  * BYTE ORDER:   network << host   - sending
  *               network >> host   - recieving

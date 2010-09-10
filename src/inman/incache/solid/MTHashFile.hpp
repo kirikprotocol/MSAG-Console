@@ -24,7 +24,6 @@ using smsc::util::crc32;
 using smsc::core::buffers::File;
 
 #include "core/buffers/ExtendingBuf.hpp"
-using smsc::core::buffers::ExtendingBuffer;
 
 #include "core/synchronization/Mutex.hpp"
 using smsc::core::synchronization::Mutex;
@@ -672,7 +671,7 @@ public:
         using Thread::Start; //hide it to avoid annoying CC warnings
 
     protected:
-        typedef ExtendingBuffer<char, 256> FNameBuffer;
+        typedef smsc::core::buffers::ExtendingBuffer_T<char, unsigned, 256> FNameBuffer;
 
         volatile bool   _running;
         Mutex           _sync;
