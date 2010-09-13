@@ -1,6 +1,9 @@
 History in reverse order
 ----------------------------------------------------
 
+----------------------------------------------------
+infosme-build-20100913 13:40 bukind (v1,v2)
+
 2010-09-13 12:15 bukind
   bugfix (v1,v2): when adding messages in CsvStore::AppendRecord,
   there was a change to mis-set the pointer to current new message
