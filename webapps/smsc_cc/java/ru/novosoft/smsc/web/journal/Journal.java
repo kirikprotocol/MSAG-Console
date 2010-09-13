@@ -1,5 +1,6 @@
 package ru.novosoft.smsc.web.journal;
 
+import ru.novosoft.smsc.admin.logging.LoggerSettings;
 import ru.novosoft.smsc.admin.map_limit.MapLimitSettings;
 import ru.novosoft.smsc.admin.reschedule.RescheduleSettings;
 import ru.novosoft.smsc.admin.smsc.SmscSettings;
@@ -24,6 +25,7 @@ public class Journal {
   private final RescheduleSettingsDiffHelper reschedule = new RescheduleSettingsDiffHelper(RESCHEDULE);
   private final UserSettingsDiffHelper users = new UserSettingsDiffHelper(USERS);
   private final MapLimitSettingsDiffHelper mapLimit = new MapLimitSettingsDiffHelper(MAP_LIMIT);
+  private final LoggerSettingsDiffHelper logger = new LoggerSettingsDiffHelper(MAP_LIMIT);
 
   /**
    * Возвращает список всех возможных сабжектов в указанной локали
@@ -190,5 +192,15 @@ public class Journal {
    */
   public void logChanges(MapLimitSettings oldSettings, MapLimitSettings newSettings, String user) {
     mapLimit.logChanges(this, oldSettings, newSettings, user);
+  }
+
+  /**
+   * Ищет различия между настройками Logger и записывает их в журнал
+   * @param oldSettings старые настройки Logger
+   * @param newSettings новые настройки Logger
+   * @param user пользователь, от имени которого надо формировать записи
+   */
+  public void logChanges(LoggerSettings oldSettings, LoggerSettings newSettings, String user) {
+    logger.logChanges(this, oldSettings, newSettings, user);
   }
 }

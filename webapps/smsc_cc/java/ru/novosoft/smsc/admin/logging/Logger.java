@@ -11,7 +11,7 @@ public class Logger {
   public Logger() {
   }
 
-  Logger(Logger copy) {
+  public Logger(Logger copy) {
     this.level = copy.level;
   }
 

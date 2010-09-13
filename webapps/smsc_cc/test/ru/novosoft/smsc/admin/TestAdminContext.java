@@ -12,10 +12,10 @@ import ru.novosoft.smsc.admin.closed_groups.TestClosedGroupManager;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterControllerConfigTest;
 import ru.novosoft.smsc.admin.cluster_controller.TestClusterController;
 import ru.novosoft.smsc.admin.cluster_controller.TestClusterControllerManager;
-import ru.novosoft.smsc.admin.cluster_controller.TestProfilesHelper;
 import ru.novosoft.smsc.admin.filesystem.TestFileSystem;
 import ru.novosoft.smsc.admin.fraud.FraudManagerTest;
 import ru.novosoft.smsc.admin.fraud.TestFraudManager;
+import ru.novosoft.smsc.admin.logging.TestLoggerManager;
 import ru.novosoft.smsc.admin.map_limit.MapLimitManagerTest;
 import ru.novosoft.smsc.admin.map_limit.TestMapLimitManager;
 import ru.novosoft.smsc.admin.msc.MscManagerTest;
@@ -162,6 +162,8 @@ public class TestAdminContext extends AdminContext {
     regionManager = new TestRegionManager(new File(smscConfigDir, "regions.xml"), smscConfigBackupDir, fileSystem);
 
     profileManager = new TestProfileManager(AdminMode.smsx, new File(smscConfigDir, "profiles.bin"), fileSystem, clusterController);
+
+    loggerManager = new TestLoggerManager(clusterController);
   }
 
   public TestAdminContext() throws AdminException {

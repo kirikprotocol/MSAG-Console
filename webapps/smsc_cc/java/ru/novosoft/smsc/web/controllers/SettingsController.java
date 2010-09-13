@@ -1,8 +1,6 @@
 package ru.novosoft.smsc.web.controllers;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.web.WebContext;
-import ru.novosoft.smsc.web.journal.Journal;
 
 import javax.servlet.http.HttpSession;
 import java.util.EnumMap;
@@ -168,7 +166,7 @@ public abstract class SettingsController<T> extends SmscController {
 
 
   protected enum ConfigType {
-    Main, Reschedule, User, MapLimit
+    Main, Reschedule, User, MapLimit, Logger
   }
 
 

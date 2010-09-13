@@ -1,7 +1,6 @@
 package ru.novosoft.smsc.admin.logging;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.cluster_controller.CCLoggingInfo;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -15,7 +14,7 @@ public class LoggerSettings {
 
   private final Map<String, Logger> loggers;
 
-  LoggerSettings(Map<String, Logger> loggers) {
+  public LoggerSettings(Map<String, Logger> loggers) {
     this.loggers = loggers;
   }
 
@@ -54,5 +53,17 @@ public class LoggerSettings {
       throw new LoggerException("category.not.found", name);
 
     loggers.put(name, new Logger(logger));
+  }
+
+  /**
+   * Копирует настройки логирования
+   * @return настройки логирования
+   */
+  public LoggerSettings cloneSettings() {
+    Map<String, Logger> newM = new HashMap<String, Logger>(loggers.size());
+    for(Map.Entry<String, Logger> e : loggers.entrySet()) {
+      newM.put(e.getKey(), new Logger(e.getValue()));
+    }
+    return new LoggerSettings(newM);
   }
 }

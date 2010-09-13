@@ -177,6 +177,12 @@
     <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
 
+  <managed-bean>
+    <managed-bean-name>logging</managed-bean-name>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.logging.LoggingController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
 
 
 

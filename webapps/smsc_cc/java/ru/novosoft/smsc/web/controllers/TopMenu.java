@@ -21,6 +21,7 @@ public class TopMenu {
       add(new MenuBarItem("smsc.smsc", 133).
           add(new MenuItem("smsc.smsc.config", "/smsc/smsc_service/smsc_config.faces")).
           add(new MenuItem("smsc.smsc.map_limit", "/smsc/smsc_service/maplimits.faces")).
+          add(new MenuItem("smsc.smsc.logging", "/smsc/smsc_service/logging.faces")).
           add(new MenuItem("smsc.smsc.reschedule", "/smsc/reschedule/index.faces")).
           add(new MenuItem("smsc.smsc.status", "/smsc/smsc_service/status.faces")).
           add(new MenuItem("smsc.smsc.users", "/smsc/users/index.faces")).

@@ -63,25 +63,22 @@ public class LoggerManager {
     Collection<CCLoggingInfo> infos = new ArrayList<CCLoggingInfo>();
 
     for (Map.Entry<String, Logger> e : loggers.entrySet()) {
-      CCLoggingInfo.Level l = null;
-      if (e.getValue().getLevel() != null) {
-        switch (e.getValue().getLevel()) {
-          case DEBUG: l = CCLoggingInfo.Level.DEBUG; break;
-          case INFO: l = CCLoggingInfo.Level.INFO; break;
-          case WARN: l = CCLoggingInfo.Level.WARN; break;
-          case ERROR: l = CCLoggingInfo.Level.ERROR; break;
-          default : l = CCLoggingInfo.Level.FATAL;
-        }
-
         CCLoggingInfo info = new CCLoggingInfo();
         info.setName(e.getKey());
-        info.setLevel(l);
-
+        if(e.getValue().getLevel() != null) {
+          CCLoggingInfo.Level l;
+          switch (e.getValue().getLevel()) {
+            case DEBUG: l = CCLoggingInfo.Level.DEBUG; break;
+            case INFO: l = CCLoggingInfo.Level.INFO; break;
+            case WARN: l = CCLoggingInfo.Level.WARN; break;
+            case ERROR: l = CCLoggingInfo.Level.ERROR; break;
+            default: l = CCLoggingInfo.Level.FATAL;
+          }
+          info.setLevel(l);
+        }
         infos.add(info);
-      }
     }
-
     cc.setLoggers(infos);
   }
-  
+
 }

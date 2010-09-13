@@ -141,6 +141,18 @@ div.query_result {
 .column50Width {
   width:50px;
 }
+.column70Width {
+  width:70px;
+}
+
+.column100Width {
+  width:100px;
+}
+.column100WidthTopLeft {
+  width:100px;
+  vertical-align:top;
+  text-align:left;
+}
 
 .column400Width {
   width:400px;

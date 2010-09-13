@@ -2,6 +2,7 @@ package ru.novosoft.smsc.web.config;
 
 import ru.novosoft.smsc.admin.AdminContext;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.logging.LoggerSettings;
 import ru.novosoft.smsc.admin.map_limit.MapLimitSettings;
 import ru.novosoft.smsc.admin.reschedule.RescheduleSettings;
 import ru.novosoft.smsc.admin.smsc.SmscSettings;
@@ -20,6 +21,16 @@ public class Configuration {
     this.adminContext = adminContext;
     this.journal = journal;
   } 
+
+  public LoggerSettings getLoggerSettings() throws AdminException {
+    return adminContext.getLoggerManager().getSettings();
+  }
+
+  public void updateLoggerSettings(LoggerSettings loggerSettings, String user) throws AdminException {
+    LoggerSettings oldSettings = getLoggerSettings();
+    adminContext.getLoggerManager().updateSettings(loggerSettings);
+    journal.logChanges(oldSettings, loggerSettings, user);
+  }
 
   public SmscSettings getSmscSettings() throws AdminException {
     return adminContext.getSmscManager().getSettings();

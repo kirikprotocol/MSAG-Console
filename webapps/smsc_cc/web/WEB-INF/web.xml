@@ -175,10 +175,11 @@
 
   <security-constraint>
     <web-resource-collection>
-      <web-resource-name>Страницы для редактирования map limits, конфига СМСЦ и его перезапуска</web-resource-name>
+      <web-resource-name>Страницы для редактирования map limits, логирования, конфига СМСЦ и его перезапуска</web-resource-name>
       <url-pattern>/smsc/index.faces</url-pattern>
       <url-pattern>/smsc/smsc_service/smsc_config.faces</url-pattern>
       <url-pattern>/smsc/smsc_service/maplimits.faces</url-pattern>
+      <url-pattern>/smsc/smsc_service/logging.faces</url-pattern>
       <url-pattern>/smsc/reschedule/*</url-pattern>
     </web-resource-collection>
     <auth-constraint>
@@ -217,7 +218,7 @@
 
 
   <security-role>
-    <description>Может редактировать главный конфиг СМСЦ, map limits, запускать и останавливать центры</description>
+    <description>Может редактировать главный конфиг СМСЦ, map limits, логирование, запускать и останавливать центры</description>
     <role-name>smsc_service</role-name>
   </security-role>
 

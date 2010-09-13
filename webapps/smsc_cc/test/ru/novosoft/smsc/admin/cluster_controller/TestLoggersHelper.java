@@ -14,7 +14,7 @@ public class TestLoggersHelper {
   public TestLoggersHelper() {
     loggers = new ArrayList<CCLoggingInfo>();
     Collections.addAll(loggers,
-        new CCLoggingInfo("AgentLst", null),
+        new CCLoggingInfo("AgentLst", CCLoggingInfo.Level.WARN),
         new CCLoggingInfo("aliasman", null),
         new CCLoggingInfo("eventqueue", null),
         new CCLoggingInfo("inmancom", null),
@@ -24,7 +24,8 @@ public class TestLoggersHelper {
         new CCLoggingInfo("sched", null),
         new CCLoggingInfo("smeman", null),
         new CCLoggingInfo("dpf.cmpct", null),
-        new CCLoggingInfo("dpf.track", null),
+        new CCLoggingInfo("dpf.track", CCLoggingInfo.Level.DEBUG),
+        new CCLoggingInfo("dpf.track.fsd", null),
         new CCLoggingInfo("map.dialog", null),
         new CCLoggingInfo("map.msg", null),
         new CCLoggingInfo("map.proxy", null)
