@@ -135,20 +135,20 @@ public class SmscConfigFileTest {
     for (int i=0; i<3; i++) {
       InstanceSettings s = settings.getInstanceSettings(i);
 
-      assertEquals(i + "", s.getAdminHost());
-      assertEquals(i+1, s.getAdminPort());
-      assertEquals(i + "", s.getAgentHost());
-      assertEquals(i+1, s.getAgentPort());
-      assertEquals(i + "", s.getCacheDir());
-      assertEquals(i + "", s.getCorePerfHost());
-      assertEquals(i+1, s.getCorePerfPort());
-      assertEquals(i+ "", s.getLocalStoreFilename());
-      assertEquals(i + "", s.getLocalStoreMessIdFile());
-      assertEquals(i + "", s.getMessageStoreArchDir());
-      assertEquals(i + "", s.getSmePerfHost());
-      assertEquals(i+1, s.getSmePerfPort());
-      assertEquals(i+ "", s.getSmppHost());
-      assertEquals(i+1, s.getSmppPort());
+      assertEquals((i+1) + "", s.getAdminHost());
+      assertEquals(i+2, s.getAdminPort());
+      assertEquals((i + 1) + "", s.getAgentHost());
+      assertEquals(i+2, s.getAgentPort());
+      assertEquals((i+1) + "", s.getCacheDir());
+      assertEquals((i+1) + "", s.getCorePerfHost());
+      assertEquals(i+2, s.getCorePerfPort());
+      assertEquals((i+1)+ "", s.getLocalStoreFilename());
+      assertEquals((i+1) + "", s.getLocalStoreMessIdFile());
+      assertEquals((i+1) + "", s.getMessageStoreArchDir());
+      assertEquals((i+1) + "", s.getSmePerfHost());
+      assertEquals(i+2, s.getSmePerfPort());
+      assertEquals((i+1)+ "", s.getSmppHost());
+      assertEquals(i+2, s.getSmppPort());
     }
   }
 

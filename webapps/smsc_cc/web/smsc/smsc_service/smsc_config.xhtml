@@ -625,7 +625,7 @@
     <tr:outputText value="#{msg['instances.settings.title']}"/>
   </t:div>
 
-  <c:set var="i" value="-1"/>
+  <c:set var="i" value="0"/>
   <c:forEach var="var" items="#{smscConfig.instanceConfigs}">
     <c:set var="i" value="#{i+1}"/>
     <eye:collapsingGroup  label="#{msg['instance.number.label']}: #{i}">

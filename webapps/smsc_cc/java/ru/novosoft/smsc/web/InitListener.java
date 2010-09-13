@@ -41,6 +41,7 @@ public class InitListener implements ServletContextListener {
       WebContext.init(authenticator, webXml, adminContext);
 
     } catch (Exception e) {
+      e.printStackTrace();
       logger.error(e, e);
       throw new RuntimeException(e);
     }

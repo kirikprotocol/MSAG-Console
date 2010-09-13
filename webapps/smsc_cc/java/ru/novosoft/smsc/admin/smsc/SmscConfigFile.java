@@ -27,7 +27,7 @@ class SmscConfigFile implements ManagedConfigFile<SmscSettings> {
     int instancesCount = config.getSection("cluster").getInt("nodesCount");
     InstanceSettings[] instanceSettings = new InstanceSettings[instancesCount];
     for (int i = 0; i < instancesCount; i++) {
-      instanceSettings[i] = new InstanceSettings(i, config);
+      instanceSettings[i] = new InstanceSettings(i + 1, config);
     }
     s.setInstancesSettings(instanceSettings);
 
@@ -42,7 +42,7 @@ class SmscConfigFile implements ManagedConfigFile<SmscSettings> {
   protected void save(XmlConfig config, SmscSettings settings) throws XmlConfigException {
     settings.getCommonSettings().save(config);
     for (int i = 0; i < settings.getSmscInstancesCount(); i++) {
-      settings.getInstanceSettings(i).save(i, config);
+      settings.getInstanceSettings(i).save(i + 1, config);
     }
   }
 

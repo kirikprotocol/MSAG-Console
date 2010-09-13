@@ -30,7 +30,7 @@ public class SmscManager implements SmscConfiguration {
   public SmscManager(ServiceManager serviceManager, ClusterController cc, FileSystem fileSystem) throws AdminException {
     this.cc = cc;
     this.serviceManager = serviceManager;
-    ServiceInfo info = getInfo(0);
+    ServiceInfo info = getInfo(1);
 
     File configDir = new File(info.getBaseDir(), "conf");
 
@@ -86,23 +86,23 @@ public class SmscManager implements SmscConfiguration {
   }
 
   public void startSmsc(int instanceNumber) throws AdminException {
-    serviceManager.startService(SERVICE_ID + instanceNumber);
+    serviceManager.startService(SERVICE_ID + (instanceNumber + 1));
   }
 
   public void stopSmsc(int instanceNumber) throws AdminException {
-    serviceManager.stopService(SERVICE_ID + instanceNumber);
+    serviceManager.stopService(SERVICE_ID + (instanceNumber + 1));
   }
 
   public void switchSmsc(int instanceNumber, String toHost) throws AdminException {
-    serviceManager.swichService(SERVICE_ID + instanceNumber, toHost);
+    serviceManager.swichService(SERVICE_ID + (instanceNumber + 1), toHost);
   }
 
   public String getSmscOnlineHost(int instanceNumber) throws AdminException {
-    return getInfo(instanceNumber).getOnlineHost();
+    return getInfo((instanceNumber + 1)).getOnlineHost();
   }
 
   public List<String> getSmscHosts(int instanceNumber) throws AdminException {
-    return getInfo(instanceNumber).getHosts();
+    return getInfo((instanceNumber + 1)).getHosts();
   }
 
   public Map<Integer, SmscConfigurationStatus> getStatusForSmscs() throws AdminException {

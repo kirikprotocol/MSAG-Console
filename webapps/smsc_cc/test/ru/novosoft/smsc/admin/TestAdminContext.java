@@ -64,7 +64,7 @@ public class TestAdminContext extends AdminContext {
     adDir.mkdirs();
     TestUtils.exportResource(ArchiveDaemonConfigTest.class.getResourceAsStream("config.xml"), new File(adDir, "config.xml"), false);
 
-    File smscDir = new File(servicesDir, "SMSC0/conf");
+    File smscDir = new File(servicesDir, "SMSC1/conf");
     smscDir.mkdirs();
     TestUtils.exportResource(SmscManagerTest.class.getResourceAsStream("config.xml"), new File(smscDir, "config.xml"), false);
     TestUtils.exportResource(AliasManagerTest.class.getResourceAsStream("aliases.bin"), new File(smscDir, "aliases.bin"), false);
@@ -100,7 +100,7 @@ public class TestAdminContext extends AdminContext {
       throw new AdminContextException("Can't create services dir!");
     }
 
-    File smscDir = new File(servicesDir, "SMSC0/conf");
+    File smscDir = new File(servicesDir, "SMSC1/conf");
 
     if (instType == InstallationType.SINGLE)
       serviceManager = new TestServiceManagerSingle(servicesDir, smscInstancesNumber);

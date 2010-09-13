@@ -4,10 +4,10 @@
 <config>
 
   <section name="admin">
-    <param name="host0" type="string">0</param>
+    <param name="host3" type="string">3</param>
     <param name="host1" type="string">1</param>
     <param name="host2" type="string">2</param>
-    <param name="port0" type="int">1</param>
+    <param name="port3" type="int">4</param>
     <param name="port1" type="int">2</param>
     <param name="port2" type="int">3</param>
   </section>
@@ -35,18 +35,18 @@
     <param name="speedLogFlushPeriodMin" type="int">60</param>
     <param name="noDivertSmes" type="string"></param>
     <section name="performance">
-      <param name="host0" type="string">0</param>
+      <param name="host3" type="string">3</param>
       <param name="host1" type="string">1</param>
       <param name="host2" type="string">2</param>
-      <param name="port0" type="int">1</param>
+      <param name="port3" type="int">4</param>
       <param name="port1" type="int">2</param>
       <param name="port2" type="int">3</param>
     </section>
     <section name="smeperformance">
-      <param name="host0" type="string">0</param>
+      <param name="host3" type="string">3</param>
       <param name="host1" type="string">1</param>
       <param name="host2" type="string">2</param>
-      <param name="port0" type="int">1</param>
+      <param name="port3" type="int">4</param>
       <param name="port1" type="int">2</param>
       <param name="port2" type="int">3</param>
     </section>
@@ -85,22 +85,22 @@
   </section>
   
   <section name="MessageStore">
-    <param name="archiveDir0" type="string">0</param>
+    <param name="archiveDir3" type="string">3</param>
     <param name="archiveDir1" type="string">1</param>
     <param name="archiveDir2" type="string">2</param>
     <param name="archiveInterval" type="int">60</param>
-    <param name="statisticsDir0" type="string">0</param>
+    <param name="statisticsDir3" type="string">0</param>
     <param name="statisticsDir1" type="string">1</param>
     <param name="statisticsDir2" type="string">2</param>
 
     <section name="LocalStore">
-      <param name="filename0" type="string">0</param>
+      <param name="filename3" type="string">3</param>
       <param name="filename1" type="string">1</param>
       <param name="filename2" type="string">2</param>
       <param name="maxStoreSize" type="int">12345</param>
       <!--param name="maxStoreSize" type="string">3Gb</param-->
       <param name="minRollTime" type="int">5321</param>
-      <param name="msgidfile0" type="string">0</param>
+      <param name="msgidfile3" type="string">3</param>
       <param name="msgidfile1" type="string">1</param>
       <param name="msgidfile2" type="string">2</param>
     </section>
@@ -108,10 +108,10 @@
   </section>
 
   <section name="smpp">
-    <param name="host0" type="string">0</param>
+    <param name="host3" type="string">3</param>
     <param name="host1" type="string">1</param>
     <param name="host2" type="string">2</param>
-    <param name="port0" type="int">1</param>
+    <param name="port3" type="int">4</param>
     <param name="port1" type="int">2</param>
     <param name="port2" type="int">3</param>
     <param name="readTimeout" type="int">60</param>
@@ -127,13 +127,13 @@
   <section name="profiler">
 
     <section name="notify">
-      <param name="host0" type="string">0</param>
+      <param name="host3" type="string">3</param>
       <param name="host1" type="string">1</param>
       <param name="host2" type="string">2</param>
-      <param name="port0" type="int">1</param>
+      <param name="port3" type="int">4</param>
       <param name="port1" type="int">2</param>
       <param name="port2" type="int">3</param>
-      <param name="dir0" type="string">0</param>
+      <param name="dir3" type="string">3</param>
       <param name="dir1" type="string">1</param>
       <param name="dir2" type="string">2</param>
     </section>

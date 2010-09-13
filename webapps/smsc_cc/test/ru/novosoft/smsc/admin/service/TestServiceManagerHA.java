@@ -23,7 +23,7 @@ public class TestServiceManagerHA extends ServiceManager {
     services.put("ArchiveDaemon", getInfo("ArchiveDaemon", true));
     services.put("ClusterController", getInfo("ClusterController", true));
     for (int i=0; i<smscInstancesCount; i++)
-      services.put("SMSC"+i, getInfo("SMSC" + i, true));
+      services.put("SMSC"+(i+1), getInfo("SMSC" + (i+1), true));
   }
 
   private ServiceInfo getInfo(String serviceId, boolean online) {
