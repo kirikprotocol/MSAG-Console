@@ -251,6 +251,7 @@ bool CsvStore::getNextMessage(Message &message)
         }
 
         CsvFile::Record rec;
+        const bool wasReadAll = curFile->second->readAll;
         CsvFile::GetRecordResult res=curFile->second->getNextRecord(rec,now);
         if (res!=CsvFile::grrNoMoreMessages)
         {
@@ -264,11 +265,17 @@ bool CsvStore::getNextMessage(Message &message)
             return true;
         }
 
-        if (curFile->second->readAll && curFile->second->openMessages==0) {
-            // all messages are read and processed
-            canClose(*curFile->second);
+        if (curFile->second->readAll) {
+            if (curFile->second->openMessages==0) {
+                // all messages are read and processed
+                canClose(*curFile->second);
+            } else if ( !wasReadAll ) {
+                smsc_log_debug(log,"the file '%s' has just been read, but has %u non-finals",
+                               curFile->second->fullPath().c_str(), unsigned(curFile->second->openMessages));
+            }
         }
-        smsc_log_debug(log,"finished reading current file '%s' (%s,%d)",curFile->second->fullPath().c_str(),curFile->second->readAll?"readall":"not readall",curFile->second->openMessages);
+        smsc_log_debug(log,"finished reading current file '%s' (%s,%d)",
+                       curFile->second->fullPath().c_str(),curFile->second->readAll?"readall":"not readall",curFile->second->openMessages);
         curFile++;
 
     } // the main loop over dirs/files
@@ -622,7 +629,7 @@ CsvStore::CsvFile::MessageMap::iterator CsvStore::CsvFile::findRecord(uint64_t m
           if ( off < f.Size() ) {
               const buf::File::offset_type curpos = f.Pos();
               try {
-                  // ... so we don't need to update the openMessages and readAll fields.
+                  // ... so we don't need to update the openMessages, readAll and curMsg fields.
                   f.Seek(off);
                   CsvFile::Record rec;
                   ReadRecord(rec);
@@ -830,11 +837,23 @@ uint64_t CsvStore::CsvFile::AppendRecord(uint8_t state,time_t fdate,const Messag
   rec.msg=message;
   rec.msg.date=fdate;
   rec.msg.id=msgId;
-  TimeMap::iterator tmIt=timeMap.insert(TimeMap::value_type(rec.msg.date,rec));
+  TimeMap::iterator tmIt=timeMap.insert(TimeMap::value_type(fdate,rec));
   MessageMap::iterator it=msgMap.insert(MessageMap::value_type(msgId,tmIt)).first;
-  if(curMsg==timeMap.end() || curMsg->second.msg.date>fdate)
+  if(curMsg==timeMap.end() || curMsg->first >= fdate)
   {
-    curMsg=tmIt;
+    // we have to move the iterator backward until the date differ,
+    // NOTE: we don't use lower_bound for performance reason.
+    do {
+        if ( tmIt == timeMap.begin() ) {
+            curMsg = tmIt;
+            break;
+        }
+        --tmIt;
+        if ( tmIt->first != fdate ) {
+            curMsg = ++tmIt;
+            break;
+        }
+    } while ( true );
   }
   char timestamp[16];// YYMMDDhhmmss
   struct tm t;

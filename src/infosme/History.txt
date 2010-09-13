@@ -1,6 +1,12 @@
 History in reverse order
 ----------------------------------------------------
 
+2010-09-13 12:15 bukind
+  bugfix (v1,v2): when adding messages in CsvStore::AppendRecord,
+  there was a change to mis-set the pointer to current new message
+  'curMsg'.  Then, when the pointer reachs the end of timeMap,
+  there were still new messages that left behind.
+
 2010-08-06 16:00 bukind
   feature: fast start of admin iface (v1,v2)
 
