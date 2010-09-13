@@ -47,7 +47,7 @@ public class Daemon extends Proxy {
 
       Map<String, ControlledService> services = new HashMap<String, ControlledService>();
 
-      final NodeList list = r.getData().getElementsByTagName("callable");
+      final NodeList list = r.getData().getElementsByTagName("service");
       for (int i = 0; i < list.getLength(); i++) {
         final Element serviceElement = (Element) list.item(i);
         String id = serviceElement.getAttribute("id");
@@ -128,34 +128,10 @@ public class Daemon extends Proxy {
     return services.keySet();
   }
 
-//  public boolean isContainsSmsc() {
-//    return isContainsService(Constants.SMSC_SME_ID);
-//  }
-
   public boolean isContainsService(final String serviceId) throws AdminException {
     Map<String, ControlledService> services = refreshServices();
     return services.containsKey(serviceId);
   }
-
-//  public int getCountRunningServices() {
-//    int result = 0;
-//    for (Iterator i = services.values().iterator(); i.hasNext();) {
-//      final ServiceInterface info = (ServiceInterface) i.next();
-//      if (info.isOnline() && !info.getId().equals(Constants.SMSC_SME_ID))
-//        result++;
-//    }
-//    return result;
-//  }
-//
-//  public int getCountServices() {
-//    final Set serviceIds = new HashSet(services.keySet());
-//    serviceIds.remove(Constants.SMSC_SME_ID);
-//    return serviceIds.size();
-//  }
-
-//  public Map getServices() {
-//    return services;
-//  }
 
   public void removeAllServices() throws AdminException {
     Map<String, ControlledService> services = refreshServices();
@@ -163,6 +139,5 @@ public class Daemon extends Proxy {
     for (String serviceId : serviceIds)
       removeService(serviceId);    
   }
-
 
 }

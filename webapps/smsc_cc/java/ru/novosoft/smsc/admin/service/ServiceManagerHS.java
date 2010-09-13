@@ -27,6 +27,8 @@ class ServiceManagerHS extends ServiceManager {
   @Override
   public ServiceInfo getService(String service) throws AdminException {
     ControlledService serv = daemon.getService(service);
+    if (serv == null)
+      return null;
     return new ServiceInfo(serv.getId(), daemon.getHosts(), serv.getHost(), serv.getBaseDir());
   }
 
