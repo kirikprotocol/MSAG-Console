@@ -1101,7 +1101,7 @@ If you have it somewhere, you may specify it on command line via -DPROTOGEN=full
     </target>
 
     <target name="install"
-            depends="-setup.update, -install.clean, make, -install.tree, -install.extralibs, -install.scag, -install.msag, -install.pers, -install.pvss, -install.pvss.flooder, -install.admin, -install.webapp">
+            depends="-setup.update, -install.clean, make, -install.tree, -install.extralibs, -install.scag, -install.msag, -install.pers, -install.pvss, -install.pvss.flooder, -install.admin, -install.webapp, -update.jedit">
         <!-- description="Action: install previously selected targets" -->
     </target>
 
