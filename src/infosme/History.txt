@@ -2,6 +2,13 @@ History in reverse order
 ----------------------------------------------------
 
 ----------------------------------------------------
+infosme-build-20100915 16:00 bukind (v2)
+
+2010-09-15 15:50 bukind
+  bugfix: v2 only, curFile was modified when the future unnecessary
+  files were attempted to be closed.
+
+----------------------------------------------------
 infosme-build-20100913 13:40 bukind (v1,v2)
 
 2010-09-13 12:15 bukind

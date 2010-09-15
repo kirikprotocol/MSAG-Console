@@ -472,7 +472,8 @@ uint64_t CsvStore::createMessage(time_t date,const Message& message,uint8_t stat
           if ( di == curDir ) {
               smsc_log_debug(log,"di is curdir, %x",di->first);
               if ( curFile == dd->files.end() ) continue;
-              fi = ++curFile;
+              fi = curFile;
+              ++fi;
           } else {
               smsc_log_debug(log,"di is not a curdir, %x",di->first);
               fi = dd->files.begin();
