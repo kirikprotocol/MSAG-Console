@@ -14,5 +14,6 @@
             xmlns:smpp     ="http://www.sibinco.com/SCAG/SMPP"
             xmlns:datetime ="http://www.sibinco.com/SCAG/DATETIME"
             xmlns:stat     ="http://www.sibinco.com/SCAG/STAT"
+            xmlns:counter  ="http://www.sibinco.com/SCAG/COUNTER"
             transport="{1}">
 
