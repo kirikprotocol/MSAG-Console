@@ -359,25 +359,6 @@ public class Buffer
     return vfs.insert(view,this,path);
   } //}}}
 
-  //{{{ autosave() method
-  /**
-   * Autosaves this buffer.
-   */
-  public void autosave()
-  {
-    if(autosaveFile == null || !getFlag(AUTOSAVE_DIRTY)
-            || !getFlag(DIRTY)
-            || getFlag(LOADING)
-            || getFlag(IO))
-      return;
-
-    setFlag(AUTOSAVE_DIRTY,false);
-
-    VFSManager.runInWorkThread(new BufferAutosaveRequest(
-            null,this,null,VFSManager.getUrlVFS(),
-            autosaveName));
-  } //}}}
-
   //{{{ saveAs() method
   /**
    * Prompts the user for a file to save this buffer to.

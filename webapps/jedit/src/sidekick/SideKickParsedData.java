@@ -49,7 +49,7 @@ public class SideKickParsedData
   */
  public static SideKickParsedData getParsedData(View view)
  {
-   System.out.println("SideKickParsedData.getParsedData()");
+   //System.out.println("SideKickParsedData.getParsedData()");
      return (SideKickParsedData)view.getRootPane().getClientProperty(
    SideKickPlugin.PARSED_DATA_PROPERTY);
  } //}}}

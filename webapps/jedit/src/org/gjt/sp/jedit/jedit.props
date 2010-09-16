@@ -35,7 +35,7 @@ debug=true
 firstTime=true
 
 # Autosave interval in seconds, 0=off
-autosave=30
+autosave=0
 
 # Maximum number of elements in a history list
 history=20

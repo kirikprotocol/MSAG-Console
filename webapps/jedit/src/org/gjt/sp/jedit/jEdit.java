@@ -946,7 +946,7 @@ public class jEdit extends Applet
       System.out.println("jEdit:propertiesChanged()");
       initKeyBindings();
 
-   if (!jEdit.getBooleanProperty("bufferWorkWithId"))  Autosave.setInterval(getIntegerProperty("autosave", 30));
+
 
     saveCaret = getBooleanProperty("saveCaret");
 
@@ -2526,7 +2526,7 @@ public class jEdit extends Applet
 
       removeViewFromList( view);
        if (view != null) view.close();
-      Autosave.stop();// Stop autosave timer
+
       if (server != null) server.stopServer();// Stop server
       // Stop all plugins
       PluginJAR[] plugins = getPluginJARs();
@@ -2603,7 +2603,7 @@ public class jEdit extends Applet
        }
        EditBus.send(new ViewUpdate(view,ViewUpdate.CLOSED, path));// Send EditorExiting
        if (view != null) view.close();
-      Autosave.stop();// Stop autosave timer
+
       // Stop all plugins
    /*   PluginJAR[] plugins = getPluginJARs();
       for (int i = 0; i < plugins.length; i++) {
