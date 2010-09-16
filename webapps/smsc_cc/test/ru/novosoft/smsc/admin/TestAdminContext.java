@@ -112,7 +112,7 @@ public class TestAdminContext extends AdminContext {
     clusterController = new TestClusterController(
         new File(smscDir, "aliases.bin"),
         new File(smscDir, "msc.bin"),
-        new File(smscDir, "aliases.bin"), AdminMode.smsx, PROFILES_VERSION,
+        new File(smscDir, "profiles.bin"), AdminMode.smsx, PROFILES_VERSION,
         fileSystem, smscInstancesNumber);
 
     clusterControllerManager = new TestClusterControllerManager(serviceManager, fileSystem);
