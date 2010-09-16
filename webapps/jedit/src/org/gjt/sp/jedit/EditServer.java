@@ -82,6 +82,8 @@ public class EditServer extends Thread
    // connection attempts before rejecting connections
    socket = new ServerSocket(0, 2,
     InetAddress.getByName("127.0.0.1"));
+   System.out.println("EditServer create server socket.");
+
    authKey = Math.abs(new Random().nextInt());
    int port = socket.getLocalPort();
 

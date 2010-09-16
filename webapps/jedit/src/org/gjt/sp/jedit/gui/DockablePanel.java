@@ -73,9 +73,9 @@ class DockablePanel extends JPanel
     public Dimension getPreferredSize(){
         final String position = panel.getPosition();
         final int dimension = panel.getDimension();
-        System.out.println("DockablePanel.getPreferredSize() position="+position + " dimention="+dimension);
+        //System.out.println("DockablePanel.getPreferredSize() position="+position + " dimention="+dimension);
         if(panel.getCurrent() == null){
-            System.out.println("DockablePanel.getPrefferedSize() current=null");
+            //System.out.println("DockablePanel.getPrefferedSize() current=null");
             return new Dimension(0,0);
         } else {
             // TODO Set width.
@@ -109,7 +109,7 @@ class DockablePanel extends JPanel
  {
   final String position = panel.getPosition();
   final int dimension = panel.getDimension();
-  System.out.println("DockablePanel.setBounds() position="+position + " dimention="+dimension);
+  //System.out.println("DockablePanel.setBounds() position="+position + " dimention="+dimension);
 
   if(position.equals(DockableWindowManager.TOP) ||
    position.equals(DockableWindowManager.BOTTOM))
@@ -117,7 +117,7 @@ class DockablePanel extends JPanel
    if(dimension != 0 && height <= PanelWindowContainer.SPLITTER_WIDTH)
     panel.show(null);
    else
-    System.out.println("DockablePanel.setBounds() set dimension " + height);
+    //System.out.println("DockablePanel.setBounds() set dimension " + height);
     panel.setDimension(height);
   }
   else
@@ -125,7 +125,7 @@ class DockablePanel extends JPanel
    if(dimension != 0 && width <= PanelWindowContainer.SPLITTER_WIDTH)
     panel.show(null);
    else
-    System.out.println("DockablePanel.setBounds() set dimension " + width);
+    //System.out.println("DockablePanel.setBounds() set dimension " + width);
     panel.setDimension(width);
   }
 

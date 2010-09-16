@@ -3319,6 +3319,7 @@ public class Buffer
       try
       {
         waitSocket.getOutputStream().write('\0');
+        System.out.println("Buffer waitSocket write '\0' ");    
         waitSocket.getOutputStream().flush();
         waitSocket.getInputStream().close();
         waitSocket.getOutputStream().close();

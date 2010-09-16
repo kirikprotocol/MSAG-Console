@@ -220,7 +220,7 @@ class SideKick implements EBComponent
   {
       System.out.println("errorsource=null of SideKick " + SideKickPlugin.getSideKickNumber(this.view));*/
   ErrorSource.unregisterErrorSource(this.view);
-  System.out.println("!!!Trying to get SideKick for view = " + this.view + "!!!");
+  //System.out.println("!!!Trying to get SideKick for view = " + this.view + "!!!");
   if (SideKickPlugin.getSideKickNumber(this.view)==-1)
   {
     System.out.println("!!!This SideKick is removed!!!");

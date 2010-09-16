@@ -105,6 +105,7 @@ public class Remote {
    System.out.println("Connecting to host : " 
     + host + " at port : " + port);
    Socket s = new Socket(host, Integer.parseInt(port) + 1);
+   System.out.println("Remote create socket: host="+host+" port="+Integer.parseInt(port) + 1);      
    
    out = s.getOutputStream();
    in = s.getInputStream();
@@ -136,6 +137,7 @@ public class Remote {
 
  static String doHttp( String postURL, String text ) 
  {
+
   String returnValue = null;
   StringBuffer sb = new StringBuffer();
   sb.append( "bsh.client=Remote" );
@@ -147,6 +149,7 @@ public class Remote {
     URL url = new URL( postURL );
     HttpURLConnection urlcon =
      (HttpURLConnection) url.openConnection(  );
+    System.out.println("bsh.Remote Open url connection: url="+postURL);  
     urlcon.setRequestMethod("POST");
     urlcon.setRequestProperty("Content-type",
      "application/x-www-form-urlencoded");
@@ -165,10 +168,17 @@ public class Remote {
     returnValue = urlcon.getHeaderField("Bsh-Return");
 
     BufferedReader bin = new BufferedReader( 
-   new InputStreamReader( urlcon.getInputStream() ) );
+    new InputStreamReader( urlcon.getInputStream() ) );
     String line;
+
+    long startTime = System.currentTimeMillis();
+
     while ( (line=bin.readLine()) != null )
-   System.out.println( line );
+    System.out.println("Remote read line: " + line );
+
+    int currentTime=(int)(System.currentTimeMillis()-startTime);
+    System.out.println("Remote read time:"+currentTime+" ms");
+
 
     System.out.println( "Return Value: "+returnValue );
 

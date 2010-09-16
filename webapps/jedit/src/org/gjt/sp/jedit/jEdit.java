@@ -307,8 +307,13 @@ public class jEdit extends Applet
     // later on we need to know if certain code is called from
     // the main thread
     mainThread = Thread.currentThread();
-    lc = new LiveConnect(baseUrl.getHost(),ping_port);
-    lcTimer = new Timer(ping_timeout,lc);
+
+    //lc = new LiveConnect(baseUrl.getHost(),ping_port);
+    //lcTimer = new Timer(ping_timeout,lc);
+
+    lctt = new LiveConnectTimerTask(baseUrl.getHost(),ping_port);
+    lcTimer = new java.util.Timer(true);
+    lcTimer.schedule(lctt, 0, ping_timeout);  
 
     settingsDirectory = null; // ".jedit";
 
@@ -544,7 +549,8 @@ public class jEdit extends Applet
     String scriptFile = null;
     String userFile="";
     userFile=args[0];
-    lc.addRuleId(userFile);
+    //lc.addRuleId(userFile);
+    lctt.addRuleId(userFile);  
     //{{{ Run script specified with -run= parameter
     //todo userDir changed
     //String transport=getParameter("transport");
@@ -1744,7 +1750,8 @@ public class jEdit extends Applet
     removeBufferFromList(buffer);
     buffer.close();
     DisplayManager.bufferClosed(buffer);
-    lc.removeRuleId(path);
+    //lc.removeRuleId(path);
+    lctt.removeRuleId(path);
     unlockRule(path);
     System.out.println("jEdit._closeBuffer line 1654 EditBus.send(new BufferUpdate(buffer, view, BufferUpdate.CLOSED))");
     EditBus.send(new BufferUpdate(buffer, view, BufferUpdate.CLOSED));
@@ -2534,7 +2541,10 @@ public class jEdit extends Applet
      // System.exit(0);
     }
     setWindowClosed(ruleAction);
-    if (lcTimer!=null) lcTimer.stop();
+    if (lcTimer!=null) {
+        lcTimer.cancel();
+        System.out.println("lcTimer was canceled.");
+    }
   } //}}}
   //{{{ exitView() method
   /**
@@ -2608,7 +2618,10 @@ public class jEdit extends Applet
      // System.exit(0);
     }
     setWindowClosed(ruleAction);
-    if (lcTimer!=null) lcTimer.stop();
+    if (lcTimer!=null) {
+        lcTimer.cancel();
+        System.out.println("lcTimer was canceled.");
+    }
   } //}}}
 
   private static void setWindowClosed(String ruleAction) {
@@ -2733,11 +2746,19 @@ public class jEdit extends Applet
       String content = "?username=" + jEdit.username + "&password=" + jEdit.password + "&file=" + fileName + "&command=" + command;
       url = new URL(jEdit.servletUrl, content); //url=new URL(path);
       urlcon = (HttpURLConnection) url.openConnection();
+      System.out.println("jEdit open url connection: url="+url);
       _in = urlcon.getInputStream(); // _in = new FileInputStream(path);
       grammar = new BufferedReader(new InputStreamReader(_in));//new FileReader(fileName));
       String status = urlcon.getHeaderField("status");
-      if (status.equals("ok"))
+      if (status.equals("ok")){
+
+        long startTime = System.currentTimeMillis();
+
         parser.parse(null, null, grammar);
+
+        int currentTime=(int)(System.currentTimeMillis()-startTime);
+        System.out.println("jEdit parse time:"+currentTime+" ms");
+      }
       else
         throw new FileNotFoundException(status);
       mode.setProperties(xmh.getModeProperties());
@@ -2820,8 +2841,9 @@ public class jEdit extends Applet
   private static long propsModTime;
   private static PropertyManager propMgr;
   private static EditServer server;
-  private static Timer lcTimer;
-  private static LiveConnect lc;
+  private static java.util.Timer lcTimer;
+  //private static LiveConnect lc;
+  private static LiveConnectTimerTask lctt;
   private static boolean background;
   private static ActionContext actionContext;
   private static ActionSet builtInActionSet;
@@ -3558,6 +3580,7 @@ public class jEdit extends Applet
     try {
       url = new URL(jEdit.servletUrl, content);
       urlcon = (HttpURLConnection) url.openConnection();
+      System.out.println("jEdit open connection: url="+url);
       if (command == ParseXml) {
         String status = urlcon.getHeaderField("status");
         if (!status.equals("ok")) throw new FileNotFoundException(status);
@@ -3567,9 +3590,16 @@ public class jEdit extends Applet
         list.add(input.readObject());
       } else {
         in = new BufferedReader(new InputStreamReader(urlcon.getInputStream()));
+
+        long startTime = System.currentTimeMillis();
+
         while ((inputLine = in.readLine()) != null) {
-          list.add(inputLine);
+            list.add(inputLine);
         }
+
+        int currentTime=(int)(System.currentTimeMillis()-startTime);
+        System.out.println("jEdit read time:"+currentTime+" ms");
+          
       }
     } catch (MalformedURLException e) {
       e.printStackTrace();
@@ -3836,7 +3866,7 @@ public class jEdit extends Applet
         if (server != null)
           server.start();
 
-        if (lcTimer!=null) lcTimer.start();
+        //if (lcTimer!=null) lcTimer.start();
         GUIUtilities.hideSplashScreen();
 
         Log.log(Log.MESSAGE, jEdit.class, "Startup "
@@ -4158,12 +4188,19 @@ loop:  for(int i = 0; i < list.length; i++)
         String content = "?username=" + jEdit.username + "&password=" + jEdit.password + "&file=" + path + "&command=" + command;
         url = new URL(jEdit.servletUrl, content); //url=new URL(path);
         urlcon = (HttpURLConnection) url.openConnection();
+        System.out.println("jEdit open connection: url="+url);
         _in = urlcon.getInputStream(); // _in = new FileInputStream(path);
       }
       in = new BufferedReader(new InputStreamReader(_in));
       String status = urlcon.getHeaderField("status");
-      if (status.equals("ok"))
-        parser.parse(null, null, in);
+      if (status.equals("ok")){
+          long startTime = System.currentTimeMillis();
+
+          parser.parse(null, null, in);
+
+          int currentTime=(int)(System.currentTimeMillis()-startTime);
+          System.out.println("jEdit parse time:"+currentTime+" ms");
+      }
       else
         throw new FileNotFoundException(status);
 // parser.parse(null, null, in);

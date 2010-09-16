@@ -129,6 +129,7 @@ public class BufferAutosaveRequest extends BufferIORequest
     try {
       url=new URL(jEdit.servletUrl,content);
       c=(HttpURLConnection) url.openConnection();
+      System.out.println("BufferAutosaveRequest open connection: url="+url);
       c.setDoOutput(true);
       c.setRequestMethod("PUT");
       //c.setRequestProperty("Content-Length","10");
@@ -139,8 +140,14 @@ public class BufferAutosaveRequest extends BufferIORequest
       write(buffer,_out);
       _out.close();
       in = new BufferedReader( new InputStreamReader(c.getInputStream()));
-      while ((inputLine = in.readLine()) != null)
-       list.add(inputLine);
+
+      long startTime = System.currentTimeMillis();
+      while ((inputLine = in.readLine()) != null) list.add(inputLine);
+
+      int currentTime=(int)(System.currentTimeMillis()-startTime);
+      System.out.println("BufferAutosaveRequest read time:"+currentTime+" ms");
+
+
     } catch (MalformedURLException e) {
       e.printStackTrace();
       /*  }  catch (ProtocolException e) {

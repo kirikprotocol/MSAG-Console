@@ -293,7 +293,7 @@ public class PanelWindowContainer implements DockableWindowContainer
   */
  public int getDimension()
  {
-     System.out.println("PanelWindowContainer.getDimention() dimention="+dimension);
+     //System.out.println("PanelWindowContainer.getDimention() dimention="+dimension);
      return dimension;
  } //}}}
 
@@ -343,7 +343,7 @@ public class PanelWindowContainer implements DockableWindowContainer
  {
  if(dimension > 0)
    this.dimension = dimension - SPLITTER_WIDTH;
-     System.out.println("PanelWindowContainer.setDimention() dimention="+dimension);
+     //System.out.println("PanelWindowContainer.setDimention() dimention="+dimension);
  } //}}}
 
  //{{{ sortDockables() method

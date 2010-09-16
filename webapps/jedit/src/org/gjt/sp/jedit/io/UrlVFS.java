@@ -89,6 +89,7 @@ public class UrlVFS extends VFS
       url=new URL(jEdit.servletUrl,content);
          // URL url= new URL(path);
       c=(HttpURLConnection) url.openConnection();
+      System.out.println("UrlVFS open connection: url="+url);
       c.setDoOutput(true);
       c.setRequestMethod("PUT");
       c.setRequestProperty("Content-Length","100");

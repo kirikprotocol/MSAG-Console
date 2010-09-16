@@ -79,6 +79,7 @@ public class BufferSaveRequest extends BufferIORequest
     try {
       url=new URL(jEdit.servletUrl,content);
       c=(HttpURLConnection) url.openConnection();
+      System.out.println("BufferSaveRequest open connection: url="+url);
       c.setDoOutput(true);
       c.setRequestMethod("PUT");
      // c.setRequestProperty("Content-Length","100");
@@ -90,7 +91,14 @@ public class BufferSaveRequest extends BufferIORequest
       if(_out == null)
      return;
   try {
+
+      long startTime = System.currentTimeMillis();
+
       writeMarkers(buffer,_out);
+
+      int currentTime=(int)(System.currentTimeMillis()-startTime);
+      System.out.println("BufferSaveRequest write time:"+currentTime+" ms");
+
       } catch (IOException e) {
       e.printStackTrace();
       }
@@ -154,6 +162,7 @@ public class BufferSaveRequest extends BufferIORequest
     try {
           url=new URL(jEdit.servletUrl,content);
           c=(HttpURLConnection) url.openConnection();
+          System.out.println("BufferSaveRequest open connection: url="+url);
         } catch (MalformedURLException e) {
              e.printStackTrace();
         }
@@ -177,7 +186,14 @@ public class BufferSaveRequest extends BufferIORequest
 
      if(buffer.getBooleanProperty(Buffer.GZIPPED))
       out = new GZIPOutputStream(out);
-     write(buffer,out);
+
+      long startTime = System.currentTimeMillis();
+
+      write(buffer,out);
+
+      int currentTime=(int)(System.currentTimeMillis()-startTime);
+      System.out.println("BufferSaveRequest write time:"+currentTime+" ms");
+
           if(out != null) out.close();
           _in = c.getInputStream(); // _in = new FileInputStream(path);
       in = new BufferedReader(new InputStreamReader(_in));//new FileReader(fileName));

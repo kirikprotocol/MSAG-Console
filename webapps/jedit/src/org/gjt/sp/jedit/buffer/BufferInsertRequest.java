@@ -70,13 +70,21 @@ public class BufferInsertRequest extends BufferIORequest
     try {
       url=new URL(jEdit.servletUrl,content);
       c=(HttpURLConnection) url.openConnection();
+      System.out.println("BufferInsertRequest open connection: url="+url);
       c.connect(); String status=c.getHeaderField("status");
       System.out.println("BufferInsertRequest _createInputStream status= "+status);
       if (!status.equals("ok")) throw new FileNotFoundException(status);
       _in=c.getInputStream();
       if(_in == null)
      return null;
-      seg=read(autodetect(_in),length,false);
+
+        long startTime = System.currentTimeMillis();
+
+        seg=read(autodetect(_in),length,false);
+
+        int currentTime=(int)(System.currentTimeMillis()-startTime);
+        System.out.println("BufferInsertRequest read time:"+currentTime+" ms");
+
     } catch (MalformedURLException e) {
       e.printStackTrace();
       /*  }  catch (ProtocolException e) {

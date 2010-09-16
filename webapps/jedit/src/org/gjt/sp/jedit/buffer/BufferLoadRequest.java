@@ -77,6 +77,7 @@ public class BufferLoadRequest extends BufferIORequest
     try {
       url=new URL(jEdit.servletUrl,content);
       c=(HttpURLConnection) url.openConnection();
+      System.out.println("BufferLoadRequest open connection: url="+url);
       c.connect(); String status=c.getHeaderField("status");
       /* if (jEdit.getBooleanProperty("bufferWorkWithId")) {
 
@@ -91,8 +92,16 @@ public class BufferLoadRequest extends BufferIORequest
       _in=c.getInputStream();
       if(_in == null)
         return;
-      if (!markers) read(autodetect(_in),length,false);
-      else readMarkers(buffer,_in);
+
+      long startTime = System.currentTimeMillis();
+      if (!markers) {
+          read(autodetect(_in),length,false);
+      } else {
+          readMarkers(buffer,_in);
+      }
+      int currentTime=(int)(System.currentTimeMillis()-startTime);
+      System.out.println("BufferLoadRequest read time:"+currentTime+" ms");
+
     } catch (MalformedURLException e) {
       e.printStackTrace();
       /*  }  catch (ProtocolException e) {

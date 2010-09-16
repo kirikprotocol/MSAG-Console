@@ -63,19 +63,27 @@ public final class HighlightManagerTableModel extends AbstractTableModel impleme
       String content = "?username=" + jEdit.getJEditHome() + "&password=" + jEdit.password + "&file=" + PROJECT_DIRECTORY+"highlights.ser" + "&command=" + command;
       url = new URL(jEdit.servletUrl, content); //url=new URL(path);
       urlcon = (HttpURLConnection) url.openConnection();
+      System.out.println("gatchan.highlight.HighlightManagerTableModel Open url connection: url="+url);  
       _in = urlcon.getInputStream(); // _in = new FileInputStream(path);
       reader = new BufferedReader(new InputStreamReader(_in));//new FileReader(highlights));
       String status = urlcon.getHeaderField("status");
       if (!status.equals("ok"))  throw new FileNotFoundException(status);
+
+      long startTime = System.currentTimeMillis();
+
       String line = reader.readLine();
-        while (line != null) {
+      while (line != null) {
           try {
             addElement(Highlight.unserialize(line));
           } catch (InvalidHighlightException e) {
             Log.log(Log.WARNING, this, "Unable to read this highlight, please report it : " + line);
           }
           line = reader.readLine();
-        }
+      }
+        
+      int currentTime=(int)(System.currentTimeMillis()-startTime);
+      System.out.println("HighlightManagerTableModel read time:"+currentTime+" ms");
+
       } catch (FileNotFoundException e) {
        e.printStackTrace(); Log.log(Log.ERROR, this, e);
       } catch (IOException e) {
@@ -219,6 +227,7 @@ public final class HighlightManagerTableModel extends AbstractTableModel impleme
     try {
       url=new URL(jEdit.servletUrl,content);
       c=(HttpURLConnection) url.openConnection();
+      System.out.println("gatchan.highlight.HighlightManagerTableModel Open url connection: url="+url);
       c.setDoOutput(true);
       c.setRequestMethod("PUT");
       //c.setRequestProperty("Content-Length","10");
@@ -226,11 +235,18 @@ public final class HighlightManagerTableModel extends AbstractTableModel impleme
       OutputStream _out=c.getOutputStream();
       if(_out == null) throw new IOException("OutputStream _out is null");
        writer = new BufferedWriter(new OutputStreamWriter(_out));//new FileWriter(highlights));
-     for (int i = 0; i < datas.size(); i++) {
+
+       long startTime = System.currentTimeMillis();
+
+       for (int i = 0; i < datas.size(); i++) {
           Highlight highlight = (Highlight) datas.get(i);
           writer.write(highlight.serialize());
           writer.write('\n');
-        }
+       }
+
+       int currentTime=(int)(System.currentTimeMillis()-startTime);
+       System.out.println("HighlightManagerTableModel write time:"+currentTime+" ms");
+
       _out.close();
      } catch (MalformedURLException e) {
       e.printStackTrace();
