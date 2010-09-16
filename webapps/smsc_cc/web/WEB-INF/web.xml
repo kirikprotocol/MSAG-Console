@@ -85,6 +85,11 @@
     <param-value>false</param-value>
   </context-param>
 
+  <context-param>
+    <param-name>facelets.SKIP_COMMENTS</param-name>
+    <param-value>true</param-value>
+  </context-param>
+
   <!-- If this parameter is enabled, Trinidad will automatically
        check the modification date of your JSPs, and discard saved
        state when they change;  this makes development easier,
@@ -181,6 +186,7 @@
       <url-pattern>/smsc/smsc_service/maplimits.faces</url-pattern>
       <url-pattern>/smsc/smsc_service/logging.faces</url-pattern>
       <url-pattern>/smsc/reschedule/*</url-pattern>
+      <url-pattern>/smsc/fraud/*</url-pattern>
     </web-resource-collection>
     <auth-constraint>
       <role-name>smsc_service</role-name>

@@ -1,5 +1,6 @@
 package ru.novosoft.smsc.web.journal;
 
+import ru.novosoft.smsc.admin.fraud.FraudSettings;
 import ru.novosoft.smsc.admin.logging.LoggerSettings;
 import ru.novosoft.smsc.admin.map_limit.MapLimitSettings;
 import ru.novosoft.smsc.admin.reschedule.RescheduleSettings;
@@ -18,6 +19,7 @@ public class Journal {
   public static final String RESCHEDULE = "subject.reschedule";
   public static final String USERS = "subject.user";
   public static final String MAP_LIMIT = "subject.maplimit";
+  public static final String FRAUD = "subject.fraud";
 
   private final List<JournalRecord> records = new ArrayList<JournalRecord>();
 
@@ -26,6 +28,7 @@ public class Journal {
   private final UserSettingsDiffHelper users = new UserSettingsDiffHelper(USERS);
   private final MapLimitSettingsDiffHelper mapLimit = new MapLimitSettingsDiffHelper(MAP_LIMIT);
   private final LoggerSettingsDiffHelper logger = new LoggerSettingsDiffHelper(MAP_LIMIT);
+  private final FraudSettingsDiffHelper fraud = new FraudSettingsDiffHelper(FRAUD);
 
   /**
    * Возвращает список всех возможных сабжектов в указанной локали
@@ -203,4 +206,10 @@ public class Journal {
   public void logChanges(LoggerSettings oldSettings, LoggerSettings newSettings, String user) {
     logger.logChanges(this, oldSettings, newSettings, user);
   }
+
+
+  public void logChanges(FraudSettings oldSettings, FraudSettings newSettings, String user) {
+    fraud.logChanges(this, oldSettings, newSettings, user);
+  }
+
 }

@@ -2,6 +2,7 @@ package ru.novosoft.smsc.web.config;
 
 import ru.novosoft.smsc.admin.AdminContext;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.fraud.FraudSettings;
 import ru.novosoft.smsc.admin.logging.LoggerSettings;
 import ru.novosoft.smsc.admin.map_limit.MapLimitSettings;
 import ru.novosoft.smsc.admin.reschedule.RescheduleSettings;
@@ -73,4 +74,14 @@ public class Configuration {
     journal.logChanges(oldSettings, settings, user);
   }
 
+
+  public FraudSettings getFraudSettings() throws AdminException {
+    return adminContext.getFraudManager().getSettings();
+  }
+
+  public void updateFraudSettings(FraudSettings settings, String user) throws AdminException{
+    FraudSettings oldSettings = getFraudSettings();
+    adminContext.getFraudManager().updateSettings(settings);
+    journal.logChanges(oldSettings, settings, user);
+  }
 }

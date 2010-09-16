@@ -61,4 +61,8 @@ public class FraudSettings {
     vh.checkNoNulls("whiteList", whiteList);
     this.whiteList = whiteList;
   }
+
+  public FraudSettings cloneSettings() {
+    return new FraudSettings(this);
+  }
 }

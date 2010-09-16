@@ -183,7 +183,11 @@
     <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
 
-
+  <managed-bean>
+    <managed-bean-name>fraud</managed-bean-name>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.FraudController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
 
 
   <navigation-rule>
@@ -225,6 +229,12 @@
       <from-outcome>USER_EDIT</from-outcome>
       <to-view-id>/smsc/users/edit.faces</to-view-id>
     </navigation-case>
+    <navigation-case>
+        <from-outcome>FRAUD</from-outcome>
+        <to-view-id>/smsc/fraud/fraud.faces</to-view-id>
+        <redirect/>
+    </navigation-case>
+
   </navigation-rule>
 
 

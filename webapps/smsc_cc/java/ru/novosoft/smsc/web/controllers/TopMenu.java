@@ -26,7 +26,8 @@ public class TopMenu {
           add(new MenuItem("smsc.smsc.status", "/smsc/smsc_service/status.faces")).
           add(new MenuItem("smsc.smsc.users", "/smsc/users/index.faces")).
           add(new MenuItem("smsc.smsc.journal", "/smsc/journal/index.faces")).
-          add(new MenuItem("smsc.smsc.regions", "/smsc/regions/regions.faces"))
+          add(new MenuItem("smsc.smsc.regions", "/smsc/regions/regions.faces")).
+          add(new MenuItem("smsc.smsc.fraud", "/smsc/fraud/fraud.faces"))
       );
       add(new MenuBarItem("smsc.routes", 154).
           add(new MenuItem("smsc.routes.subjects", "/smsc/subjects/index.faces"))
