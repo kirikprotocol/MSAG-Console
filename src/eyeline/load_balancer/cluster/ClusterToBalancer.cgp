@@ -1,17 +1,23 @@
 source=ControllerLoadBalancerProtocol.def
 
-search.path=../../clustercontroller/protocol/tmpl/
+search.path=/Users/skv/Documents/cpp/protogen/tmpl
 search.path=../../clustercontroller/protocol/def/
 
 out.dir=messages
 
 debugMode=false
 
-message.template=message-cpp.tmpl
-protocol.template=proto-hpp.tmpl
-protocol.template=proto-cpp.tmpl
+message.template=cpp-message-hpp.tmpl
+protocol.template=cpp-proto-hpp.tmpl
+protocol.template=cpp-proto-cpp.tmpl
+enum.template=cpp-enum-hpp.tmpl
+enum.template=cpp-enum-cpp.tmpl
 #protocol.template=handler-hpp.tmpl
 #protocol.template=handler-cpp.tmpl
+out.extension=hpp
+out.extension=cpp
+out.extension=hpp
+out.extension=cpp
 out.protocol.prefix=../
 out.protocol.suffix=Clnt
 out.protocol.prefix=../
@@ -20,10 +26,6 @@ out.protocol.prefix=../
 out.protocol.suffix=MsgHndlr
 out.protocol.prefix=../
 out.protocol.suffix=MsgHndlr
-out.extension=hpp
-out.extension=cpp
-out.extension=hpp
-out.extension=cpp
 
 option:ccmode=false
 
@@ -33,6 +35,12 @@ data:namespacemsg:1=eyeline
 data:namespacemsg:2=load_balancer
 data:namespacemsg:3=cluster
 data:namespacemsg:4=messages
+
+data:namespaceenum:1=eyeline
+data:namespaceenum:2=load_balancer
+data:namespaceenum:3=cluster
+data:namespaceenum:4=messages
+
 
 data:namespaceprt:1=eyeline
 data:namespaceprt:2=load_balancer

@@ -11,6 +11,7 @@
 #include "eyeline/load_balancer/io_subsystem/IOProcessorMgrRegistry.hpp"
 
 #include "ClusterControllerMgr.hpp"
+#include "eyeline/load_balancer/cluster/messages/SmeBindMode.hpp"
 
 namespace eyeline {
 namespace load_balancer {
@@ -68,10 +69,26 @@ ClusterControllerMsgsHndlr::getAllSmeStatus(std::vector<messages::ServiceStatus>
   for (protocols::smpp::active_sme_list_t::iterator iter = activeSmeList.begin(), end_iter = activeSmeList.end();
        iter != end_iter; ++iter) {
     messages::ServiceStatus serviceStatus;
-    serviceStatus.setBindMode((*iter).bindMode); // "TRX" | "TX" | "RX"
-    serviceStatus.setPeerAddress((*iter).peerAddr); // e.g. "192.168.1.200.3333"
+    if((*iter).bindMode=="TRX")
+    {
+      serviceStatus.setBindMode(messages::SmeBindMode::modeTrx); // "TRX" | "TX" | "RX"
+    }else if((*iter).bindMode=="TX")
+    {
+      serviceStatus.setBindMode(messages::SmeBindMode::modeTx); // "TRX" | "TX" | "RX"
+    }else if((*iter).bindMode=="RX")
+    {
+      serviceStatus.setBindMode(messages::SmeBindMode::modeRx); // "TRX" | "TX" | "RX"
+    }
+    serviceStatus.getPeerAddressRef().push_back((*iter).peerAddr); // e.g. "192.168.1.200.3333"
     serviceStatus.setServiceName((*iter).systemId);
-    serviceStatus.setBoundSmsc(io_subsystem::IOProcessorMgrRegistry::getInstance().getIOProcessorMgr((*iter).ioProcMgrId)->getIOProcessor((*iter).ioProcId)->getLinkSet((*iter).dstLinksetId)->getActivityIndicators());
+    std::vector<bool> bnd=io_subsystem::IOProcessorMgrRegistry::getInstance().getIOProcessorMgr((*iter).ioProcMgrId)->getIOProcessor((*iter).ioProcId)->getLinkSet((*iter).dstLinksetId)->getActivityIndicators();
+    for(size_t i=0;i<bnd.size();i++)
+    {
+      if(bnd[i])
+      {
+        serviceStatus.getBoundSmscRef().push_back(i+1);
+      }
+    }
 
     //(*iter).dstLinksetId;
 //    std::vector<bool> boundSmsc;

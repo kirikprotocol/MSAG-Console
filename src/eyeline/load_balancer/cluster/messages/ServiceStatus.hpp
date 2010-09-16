@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include "eyeline/protogen/framework/Exceptions.hpp"
+#include "SmeBindMode.hpp"
 
 
 #ident "@(#) ServiceStatus version 1.0"
@@ -16,7 +17,6 @@ namespace load_balancer{
 namespace cluster{
 namespace messages{
 
-typedef std::vector<std::string> string_list;
 
 class ServiceStatus{
 public:
@@ -26,16 +26,19 @@ public:
   }
   void Clear()
   {
- 
     serviceNameFlag=false;
     peerAddressFlag=false;
+    peerAddress.clear();
     bindModeFlag=false;
     boundSmscFlag=false;
+    boundSmsc.clear();
   }
+ 
 
   std::string toString()const
   {
     std::string rv;
+    char buf[32];
     if(serviceNameFlag)
     {
       if(rv.length()>0)
@@ -52,7 +55,20 @@ public:
         rv+=";";
       }
       rv+="peerAddress=";
-      rv+=peerAddress;
+      rv+="[";
+      bool first=true;
+      for(std::vector<std::string>::const_iterator it=peerAddress.begin(),end=peerAddress.end();it!=end;it++)
+      {
+        if(first)
+        {
+          first=false;
+        }else
+        {
+          rv+=",";
+        }
+        rv+=*it;
+      }
+      rv+="]";
     }
     if(bindModeFlag)
     {
@@ -61,7 +77,7 @@ public:
         rv+=";";
       }
       rv+="bindMode=";
-      rv+=bindMode;
+      rv+=SmeBindMode::getNameByValue(bindMode);
     }
     if(boundSmscFlag)
     {
@@ -72,7 +88,7 @@ public:
       rv+="boundSmsc=";
       rv+="[";
       bool first=true;
-      for(std::vector<bool>::const_iterator it=boundSmsc.begin(),end=boundSmsc.end();it!=end;it++)
+      for(std::vector<int8_t>::const_iterator it=boundSmsc.begin(),end=boundSmsc.end();it!=end;it++)
       {
         if(first)
         {
@@ -81,7 +97,8 @@ public:
         {
           rv+=",";
         }
-        rv+=*it?"true":"false";
+        sprintf(buf,"%d",(int)*it);
+        rv+=buf;
       }
       rv+="]";
     }
@@ -89,9 +106,9 @@ public:
   }
 
   template <class DataStream>
-  uint32_t length()const
+  int32_t length()const
   {
-    uint32_t rv=0;
+    int32_t rv=0;
     if(serviceNameFlag)
     {
       rv+=DataStream::tagTypeSize;
@@ -123,65 +140,89 @@ public:
   {
     if(!serviceNameFlag)
     {
-      throw protogen::framework::FieldIsNullException("serviceName");
+      throw eyeline::protogen::framework::FieldIsNullException("serviceName");
     }
     return serviceName;
   }
-  void setServiceName(const std::string& value)
+  void setServiceName(const std::string& argValue)
   {
-    serviceName=value;
+    serviceName=argValue;
     serviceNameFlag=true;
+  }
+  std::string& getServiceNameRef()
+  {
+    serviceNameFlag=true;
+    return serviceName;
   }
   bool hasServiceName()const
   {
     return serviceNameFlag;
   }
-  const std::string& getPeerAddress()const
+  const std::vector<std::string>& getPeerAddress()const
   {
     if(!peerAddressFlag)
     {
-      throw protogen::framework::FieldIsNullException("peerAddress");
+      throw eyeline::protogen::framework::FieldIsNullException("peerAddress");
     }
     return peerAddress;
   }
-  void setPeerAddress(const std::string& value)
+  void setPeerAddress(const std::vector<std::string>& argValue)
   {
-    peerAddress=value;
+    peerAddress=argValue;
     peerAddressFlag=true;
+  }
+  std::vector<std::string>& getPeerAddressRef()
+  {
+    peerAddressFlag=true;
+    return peerAddress;
   }
   bool hasPeerAddress()const
   {
     return peerAddressFlag;
   }
-  const std::string& getBindMode()const
+  const SmeBindMode::type& getBindMode()const
   {
     if(!bindModeFlag)
     {
-      throw protogen::framework::FieldIsNullException("bindMode");
+      throw eyeline::protogen::framework::FieldIsNullException("bindMode");
     }
     return bindMode;
   }
-  void setBindMode(const std::string& value)
+  void setBindMode(const SmeBindMode::type& argValue)
   {
-    bindMode=value;
+    if(!SmeBindMode::isValidValue(argValue))
+    {
+      throw eyeline::protogen::framework::InvalidEnumValue("SmeBindMode",argValue);
+    }
+    bindMode=argValue;
     bindModeFlag=true;
+  }
+  SmeBindMode::type& getBindModeRef()
+  {
+    bindModeFlag=true;
+    return bindMode;
   }
   bool hasBindMode()const
   {
     return bindModeFlag;
   }
-  const std::vector<bool>& getBoundSmsc()const
+  const std::vector<int8_t>& getBoundSmsc()const
   {
     if(!boundSmscFlag)
     {
-      throw protogen::framework::FieldIsNullException("boundSmsc");
+      throw eyeline::protogen::framework::FieldIsNullException("boundSmsc");
     }
     return boundSmsc;
   }
-  void setBoundSmsc(const std::vector<bool>& value)
+  void setBoundSmsc(const std::vector<int8_t>& argValue)
   {
-    boundSmsc=value;
+    boundSmsc=argValue;
     boundSmscFlag=true;
+  }
+  std::vector<int8_t>& getBoundSmscRef()
+  {
+    boundSmscFlag=true;
+    return boundSmsc;
   }
   bool hasBoundSmsc()const
   {
@@ -192,19 +233,19 @@ public:
   {
     if(!serviceNameFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("serviceName");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("serviceName");
     }
     if(!peerAddressFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("peerAddress");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("peerAddress");
     }
     if(!bindModeFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("bindMode");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("bindMode");
     }
     if(!boundSmscFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("boundSmsc");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("boundSmsc");
     }
     //ds.writeByte(versionMajor);
     //ds.writeByte(versionMinor);
@@ -212,14 +253,19 @@ public:
     ds.writeTag(serviceNameTag);
     ds.writeStrLV(serviceName);
     ds.writeTag(peerAddressTag);
-    ds.writeStrLV(peerAddress);
+    ds.writeLength(DataStream::fieldSize(peerAddress));
+    for(std::vector<std::string>::const_iterator it=peerAddress.begin(),end=peerAddress.end();it!=end;it++)
+    {
+      ds.writeStr(*it);
+    }
     ds.writeTag(bindModeTag);
-    ds.writeStrLV(bindMode);
+    ds.writeByteLV(bindMode);
+ 
     ds.writeTag(boundSmscTag);
     ds.writeLength(DataStream::fieldSize(boundSmsc));
-    for(std::vector<bool>::const_iterator it=boundSmsc.begin(),end=boundSmsc.end();it!=end;it++)
+    for(std::vector<int8_t>::const_iterator it=boundSmsc.begin(),end=boundSmsc.end();it!=end;it++)
     {
-      ds.writeBool(*it);
+      ds.writeByte(*it);
     }
     ds.writeTag(DataStream::endOfMessage_tag);
   }
@@ -229,8 +275,8 @@ public:
   {
     Clear();
     bool endOfMessage=false;
-    //uint8_t rdVersionMajor=ds.readByte();
-    //uint8_t rdVersionMinor=ds.readByte();
+    //int8_t rdVersionMajor=ds.readByte();
+    //int8_t rdVersionMinor=ds.readByte();
     //if(rdVersionMajor!=versionMajor)
     //{
     //  throw protogen::framework::IncompatibleVersionException("ServiceStatus");
@@ -238,14 +284,14 @@ public:
     //seqNum=ds.readInt32();
     while(!endOfMessage)
     {
-      uint32_t tag=ds.readTag();
+      DataStream::TagType tag=ds.readTag();
       switch(tag)
       {
         case serviceNameTag:
         {
           if(serviceNameFlag)
           {
-            throw protogen::framework::DuplicateFieldException("serviceName");
+            throw eyeline::protogen::framework::DuplicateFieldException("serviceName");
           }
           serviceName=ds.readStrLV();
           serviceNameFlag=true;
@@ -254,30 +300,35 @@ public:
         {
           if(peerAddressFlag)
           {
-            throw protogen::framework::DuplicateFieldException("peerAddress");
+            throw eyeline::protogen::framework::DuplicateFieldException("peerAddress");
           }
-          peerAddress=ds.readStrLV();
+          typename DataStream::LengthType len=ds.readLength(),rd=0;
+          while(rd<len)
+          {
+            peerAddress.push_back(ds.readStr());
+            rd+=DataStream::fieldSize(peerAddress.back());
+          }
           peerAddressFlag=true;
         }break;
         case bindModeTag:
         {
           if(bindModeFlag)
           {
-            throw protogen::framework::DuplicateFieldException("bindMode");
+            throw eyeline::protogen::framework::DuplicateFieldException("bindMode");
           }
-          bindMode=ds.readStrLV();
+          bindMode=ds.readByteLV();
           bindModeFlag=true;
         }break;
         case boundSmscTag:
         {
           if(boundSmscFlag)
           {
-            throw protogen::framework::DuplicateFieldException("boundSmsc");
+            throw eyeline::protogen::framework::DuplicateFieldException("boundSmsc");
           }
           typename DataStream::LengthType len=ds.readLength(),rd=0;
           while(rd<len)
           {
-            boundSmsc.push_back(ds.readBool());
+            boundSmsc.push_back(ds.readByte());
             rd+=DataStream::fieldSize(boundSmsc.back());
           }
           boundSmscFlag=true;
@@ -295,39 +346,40 @@ public:
     }
     if(!serviceNameFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("serviceName");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("serviceName");
     }
     if(!peerAddressFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("peerAddress");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("peerAddress");
     }
     if(!bindModeFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("bindMode");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("bindMode");
     }
     if(!boundSmscFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("boundSmsc");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("boundSmsc");
     }
 
   }
 
 
-protected:
-  //static const uint8_t versionMajor=1;
-  //static const uint8_t versionMinor=0;
-
-  static const uint32_t serviceNameTag=1;
-  static const uint32_t peerAddressTag=2;
-  static const uint32_t bindModeTag=3;
-  static const uint32_t boundSmscTag=4;
-
  
 
+protected:
+  //static const int8_t versionMajor=1;
+  //static const int8_t versionMinor=0;
+
+  static const int32_t serviceNameTag=1;
+  static const int32_t peerAddressTag=2;
+  static const int32_t bindModeTag=3;
+  static const int32_t boundSmscTag=4;
+
+
   std::string serviceName;
-  std::string peerAddress;
-  std::string bindMode;
-  std::vector<bool> boundSmsc;
+  std::vector<std::string> peerAddress;
+  SmeBindMode::type bindMode;
+  std::vector<int8_t> boundSmsc;
 
   bool serviceNameFlag;
   bool peerAddressFlag;

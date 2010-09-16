@@ -16,7 +16,6 @@ namespace load_balancer{
 namespace cluster{
 namespace messages{
 
-typedef std::vector<std::string> string_list;
 
 class RegisterAsLoadBalancer{
 public:
@@ -26,10 +25,13 @@ public:
   }
   void Clear()
   {
- 
     seqNum=0;
- 
     magicFlag=false;
+  }
+ 
+  static int32_t getTag()
+  {
+    return 301;
   }
 
   std::string toString()const
@@ -45,16 +47,16 @@ public:
         rv+=";";
       }
       rv+="magic=";
-      sprintf(buf,"%u",(unsigned int)magic);
+      sprintf(buf,"%d",magic);
       rv+=buf;
     }
     return rv;
   }
 
   template <class DataStream>
-  uint32_t length()const
+  int32_t length()const
   {
-    uint32_t rv=0;
+    int32_t rv=0;
     if(magicFlag)
     {
       rv+=DataStream::tagTypeSize;
@@ -64,18 +66,23 @@ public:
     rv+=DataStream::tagTypeSize;
     return rv;
   }
-  uint32_t getMagic()const
+  int32_t getMagic()const
   {
     if(!magicFlag)
     {
-      throw protogen::framework::FieldIsNullException("magic");
+      throw eyeline::protogen::framework::FieldIsNullException("magic");
     }
     return magic;
   }
-  void setMagic(uint32_t value)
+  void setMagic(int32_t argValue)
   {
-    magic=value;
+    magic=argValue;
     magicFlag=true;
+  }
+  int32_t& getMagicRef()
+  {
+    magicFlag=true;
+    return magic;
   }
   bool hasMagic()const
   {
@@ -86,7 +93,7 @@ public:
   {
     if(!magicFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("magic");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("magic");
     }
     //ds.writeByte(versionMajor);
     //ds.writeByte(versionMinor);
@@ -101,8 +108,8 @@ public:
   {
     Clear();
     bool endOfMessage=false;
-    //uint8_t rdVersionMajor=ds.readByte();
-    //uint8_t rdVersionMinor=ds.readByte();
+    //int8_t rdVersionMajor=ds.readByte();
+    //int8_t rdVersionMinor=ds.readByte();
     //if(rdVersionMajor!=versionMajor)
     //{
     //  throw protogen::framework::IncompatibleVersionException("RegisterAsLoadBalancer");
@@ -110,14 +117,14 @@ public:
     //seqNum=ds.readInt32();
     while(!endOfMessage)
     {
-      uint32_t tag=ds.readTag();
+      DataStream::TagType tag=ds.readTag();
       switch(tag)
       {
         case magicTag:
         {
           if(magicFlag)
           {
-            throw protogen::framework::DuplicateFieldException("magic");
+            throw eyeline::protogen::framework::DuplicateFieldException("magic");
           }
           magic=ds.readInt32LV();
           magicFlag=true;
@@ -135,31 +142,32 @@ public:
     }
     if(!magicFlag)
     {
-      throw protogen::framework::MandatoryFieldMissingException("magic");
+      throw eyeline::protogen::framework::MandatoryFieldMissingException("magic");
     }
 
   }
 
-  uint32_t getSeqNum()const
+  int32_t getSeqNum()const
   {
     return seqNum;
   }
- 
-  void setSeqNum(uint32_t value)
+
+  void setSeqNum(int32_t argValue)
   {
-    seqNum=value;
+    seqNum=argValue;
   }
 
-protected:
-  //static const uint8_t versionMajor=1;
-  //static const uint8_t versionMinor=0;
-
-  static const uint32_t magicTag=1;
-
-  uint32_t seqNum;
  
 
-  uint32_t magic;
+protected:
+  //static const int8_t versionMajor=1;
+  //static const int8_t versionMinor=0;
+
+  static const int32_t magicTag=1;
+
+  int32_t seqNum;
+
+  int32_t magic;
 
   bool magicFlag;
 };

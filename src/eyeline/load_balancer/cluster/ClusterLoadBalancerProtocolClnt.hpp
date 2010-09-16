@@ -27,11 +27,17 @@ public:
 
   void assignHandler(ClusterControllerMsgsHndlr* newHandler);
   void decodeAndHandleMessage(const char* buf,size_t sz);
-  void decodeAndHandleMessage(protogen::framework::SerializerBuffer& ss);
+  void decodeAndHandleMessage(eyeline::protogen::framework::SerializerBuffer& ss);
 
-  void encodeMessage(const messages::RegisterAsLoadBalancer& msg,protogen::framework::SerializerBuffer* ss);
-  void encodeMessage(const messages::GetServicesStatusResp& msg,protogen::framework::SerializerBuffer* ss);
-  void encodeMessage(const messages::DisconnectServiceResp& msg,protogen::framework::SerializerBuffer* ss);
+  template <class MsgType>
+  void encodeMessage(const MsgType& msg,eyeline::protogen::framework::SerializerBuffer* ss)
+  {
+    ss->writeInt32(4+4+msg.template length<eyeline::protogen::framework::SerializerBuffer>());
+    ss->writeInt32(msg.getTag());
+    ss->writeInt32(msg.getSeqNum());
+    msg.serialize(*ss);
+  }
+
 protected:
   ClusterControllerMsgsHndlr* handler;
 };
