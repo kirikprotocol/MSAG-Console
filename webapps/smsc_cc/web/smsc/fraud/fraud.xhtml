@@ -25,11 +25,34 @@
         <eye:space/>
       </eye:buttons>
 
-    <eye:collapsingGroup label="#{msg['fraud.whitelist.label']}" opened="#{fraud.whitelistopened}">  
-      <eye:dynamicTable value="#{fraud.whiteList}">          
-        <eye:textColumn name="address" allowEditAfterAdd="true" maxLength="20"/>
-      </eye:dynamicTable>
-    </eye:collapsingGroup>
+
+
+    <h:panelGrid style="align:left; width:35%" columns="1" columnClasses="column0Width">
+        <eye:pageSubtitle value="#{msg['smsc.fraud.subtitle.policy']}"/>
+        <tr:panelFormLayout>
+          <tr:panelLabelAndMessage label="#{fraudSettingsBundle['enableCheck']}">
+            <h:selectBooleanCheckbox style="margin-left:15px" value="#{fraud.enableCheck}"/>
+          </tr:panelLabelAndMessage>
+          <tr:panelLabelAndMessage label="#{fraudSettingsBundle['enableReject']}">
+            <h:selectBooleanCheckbox style="margin-left:15px" value="#{fraud.enableReject}"/>
+          </tr:panelLabelAndMessage>
+          <tr:panelLabelAndMessage label="#{fraudSettingsBundle['tail']}">
+            <tr:inputText value="#{fraud.tail}"  required="true" simple="true" contentStyle="width:70px;" >
+              <eye:validatePositive/>
+            </tr:inputText>
+          </tr:panelLabelAndMessage>
+        </tr:panelFormLayout>
+    </h:panelGrid>
+        
+    <h:panelGrid style="align:left; width:35%" columns="1" columnClasses="column0Width">
+        <eye:pageSubtitle value="#{fraudSettingsBundle['whiteList']}"/>
+        <eye:dynamicTable value="#{fraud.whiteList}">
+          <eye:textColumn name="address" allowEditAfterAdd="false" maxLength="20">
+              <!--eye:validatePhone/-->
+          </eye:textColumn>
+        </eye:dynamicTable>
+    </h:panelGrid>
+
 
     <eye:buttons>
         <eye:button>

@@ -54,6 +54,11 @@
     </resource-bundle>
 
     <resource-bundle>
+      <base-name>ru.novosoft.smsc.admin.fraud.FraudSettings</base-name>
+      <var>fraudSettingsBundle</var>
+    </resource-bundle>
+
+    <resource-bundle>
       <base-name>ru.novosoft.smsc.web.resources.Smsc</base-name>
       <var>msg</var>
     </resource-bundle>

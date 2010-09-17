@@ -22,14 +22,16 @@ public class FraudController extends SettingsController<FraudSettings> {
 
   private DynamicTableModel whiteList = new DynamicTableModel();
   private FraudSettings frSettings;
-  private boolean whitelistopened=false;
+  private Object enableCheck;
+  private String tile;
+
 
   public FraudController() {
     super(ConfigType.Fraud);
     frSettings = getSettings();
     for(Address addr : frSettings.getWhiteList()) {
       DynamicTableRow row = new DynamicTableRow();
-      row.setValue("address",addr);
+      row.setValue("address",addr.getSimpleAddress());
       whiteList.addRow(row);
     }
   }
@@ -44,13 +46,6 @@ public class FraudController extends SettingsController<FraudSettings> {
     return whiteList;
   }
 
-  public boolean isWhitelistopened() {
-    return whitelistopened;
-  }
-
-  public void setWhitelistopened(boolean whitelistOpened) {
-    this.whitelistopened = whitelistOpened;
-  }
 
   public String save() {
 
@@ -66,7 +61,7 @@ public class FraudController extends SettingsController<FraudSettings> {
         Address addr = new Address(value);
         wl.add(addr);
       } catch (Exception e) {
-        addLocalizedMessage(FacesMessage.SEVERITY_WARN, "smsc.fraud.invalid.address");
+        addLocalizedMessage(FacesMessage.SEVERITY_WARN, "smsc.fraud.invalid.address",value);
         return null;
       }
     }
@@ -109,5 +104,29 @@ public class FraudController extends SettingsController<FraudSettings> {
   @Override
   protected FraudSettings cloneSettings(FraudSettings settings) {
     return settings.cloneSettings();
+  }
+
+  public void setEnableCheck(boolean enableCheck) {
+    frSettings.setEnableCheck(enableCheck);
+  }
+
+  public boolean isEnableCheck() {
+    return frSettings.isEnableCheck();
+  }
+
+  public void setEnableReject(boolean enableReject) {
+    frSettings.setEnableReject(enableReject);
+  }
+
+  public boolean isEnableReject() {
+    return frSettings.isEnableReject();
+  }
+
+  public void setTail(int tile) throws AdminException {
+    frSettings.setTail(tile);
+  }
+
+  public int getTail() {
+    return frSettings.getTail();
   }
 }
