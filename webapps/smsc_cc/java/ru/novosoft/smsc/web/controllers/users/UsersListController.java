@@ -86,7 +86,8 @@ public class UsersListController extends UsersController {
   }
 
   public DataTableModel getUsersModel() {
-    final Collection<User> users = getSettings().getUsers();
+    final List<User> users = new ArrayList<User>(getSettings().getUsers());
+
     if (filterByLogin != null && (filterByLogin = filterByLogin.trim()).length() > 0) {
       for (Iterator<User> iter = users.iterator(); iter.hasNext();) {
         if (!iter.next().getLogin().startsWith(filterByLogin))
@@ -96,18 +97,10 @@ public class UsersListController extends UsersController {
 
     return new DataTableModel() {
       public List getRows(int startPos, int count, final DataTableSortOrder sortOrder) {
-        List<User> result = new ArrayList<User>(count);
-        if (count <= 0) {
-          return result;
-        }
-        for (Iterator<User> i = users.iterator(); i.hasNext() && count > 0;) {
-          User r = i.next();
-          if (--startPos < 0) {
-            result.add(r);
-            count--;
-          }
-        }
-        Collections.sort(result, new Comparator<User>() {
+
+        List<User> tmp = new LinkedList<User>(users);
+
+        Collections.sort(tmp, new Comparator<User>() {
           public int compare(User o1, User o2) {
             if (sortOrder != null) {
               int mul = sortOrder.isAsc() ? 1 : -1;
@@ -124,6 +117,16 @@ public class UsersListController extends UsersController {
             return o1.getLogin().compareTo(o2.getLogin());
           }
         });
+
+        List<User> result = new LinkedList<User>();
+        for (Iterator<User> i = tmp.iterator(); i.hasNext() && count > 0;) {
+          User r = i.next();
+          if (--startPos < 0) {
+            result.add(r);
+            count--;
+          }
+        }
+
         return result;
       }
 
