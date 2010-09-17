@@ -215,7 +215,7 @@
 
   <managed-bean>
     <managed-bean-name>fraud</managed-bean-name>
-    <managed-bean-class>ru.novosoft.smsc.web.controllers.FraudController</managed-bean-class>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.fraud.FraudController</managed-bean-class>
     <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
 
