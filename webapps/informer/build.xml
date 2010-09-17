@@ -1,0 +1,107 @@
+<project name="informer" default="distr">
+
+  <property file="build.properties"/>
+  <property name="informer.source.classes" value="${informer.build.dir}/classes"/>
+
+  <property name="informer.test.classes" value="${informer.build.dir}/test_classes"/>
+
+  <property name="informer.exploded.dir" value="${informer.build.dir}/exploded"/>
+
+  <taskdef name="protogen" classname="mobi.eyeline.protogen.ant.Protogen" classpath="lib/protogen.jar"/>
+
+  <path id="lib">
+    <fileset dir="lib" includes="*.jar"/>
+  </path>
+
+  <target name="gen_cc_protocol">
+    <!--<protogen language="java" msgPackage="mobi.eyeline.informer.admin.cluster_controller.protocol" defFile="java/ru/novosoft/smsc/admin/cluster_controller/ControllerWebappProtocol.def" outDir="java"-->
+              <!--tempDir="java/ru/novosoft/smsc/admin/cluster_controller/tmp">-->
+      <!--<cgp name="search.path" value="java/ru/novosoft/smsc/admin/cluster_controller/"/>-->
+    <!--</protogen>-->
+  </target>
+
+  <target name="mode">
+    <echo file="java/mobi/eyeline/informer/web/Mode.java">
+package mobi.eyeline.informer.web;${line.separator}${line.separator}
+public class Mode {${line.separator}
+  public final static boolean testMode = ${informer.devMode};${line.separator}
+}
+    </echo>
+  </target>
+   
+  <target name="prebuild" depends="gen_cc_protocol, mode"/>
+
+  <target name="compile.sources" depends="prebuild">
+    <delete dir="${informer.source.classes}" failonerror="false"/>
+    <mkdir dir="${informer.source.classes}"/>
+    <javac srcdir="java" destdir="${informer.source.classes}" classpathref="lib" debug="true" source="1.5"/>
+  </target>
+
+
+  <target name="compile.tests" depends="compile.sources">
+    <delete dir="${informer.test.classes}" failonerror="false"/>
+    <mkdir dir="${informer.test.classes}"/>
+    <copy todir="${informer.test.classes}">
+      <fileset dir="${informer.source.classes}"/>
+    </copy>
+    <javac srcdir="test" destdir="${informer.test.classes}" classpathref="lib" debug="true" source="1.5"/>
+  </target>
+
+  <target name="test" depends="compile.tests">
+    <delete dir="${informer.tests.dir}" failonerror="false"/>
+    <mkdir dir="${informer.tests.dir}"/>
+
+    <junit showoutput="true" printsummary="yes">
+      <classpath path="${informer.test.classes}"/>
+      <classpath refid="lib"/>
+      <formatter type="xml" usefile="true"/>
+      <batchtest todir="${informer.tests.dir}">
+        <fileset dir="${informer.test.classes}" includes="**/*Test.class"/>
+      </batchtest>
+    </junit>
+  </target>
+
+  <target name="exploded">
+    <delete dir="${informer.exploded.dir}" failonerror="false"/>
+    <mkdir dir="${informer.exploded.dir}"/>
+    <copy todir="${informer.exploded.dir}">
+      <fileset dir="web" includes="**/*"/>
+    </copy>
+
+    <mkdir dir="${informer.exploded.dir}/WEB-INF/lib"/>
+    <copy todir="${informer.exploded.dir}/WEB-INF/lib" >
+      <fileset dir="lib" excludes="javaee*.jar"/>
+    </copy>
+    <mkdir dir="${informer.exploded.dir}/WEB-INF/classes/dtds"/>
+    <copy todir="${informer.exploded.dir}/WEB-INF/classes/dtds">
+      <fileset dir="." includes="*.dtd"/>
+    </copy>
+  </target>
+
+  <condition property="is.dev">
+    <equals arg1="${informer.devMode}" arg2="true"/>
+  </condition>
+
+  <target name="predistr.dev" if="is.dev">
+    <echo>DEVELOPERS MODE</echo>
+    <jar destfile="${informer.exploded.dir}/WEB-INF/lib/informer.jar" basedir="${informer.test.classes}"/>
+  </target>
+
+
+  <target name="predistr.prod" unless="is.dev">
+    <echo>PRODUCTION</echo>         
+    <jar destfile="${informer.exploded.dir}/WEB-INF/lib/informer.jar" basedir="${informer.source.classes}"/>
+  </target>
+
+  <target name="distr" depends="compile.tests, exploded, predistr.dev,predistr.prod">
+    <delete dir="${informer.distr.dir}" failonerror="false"/>
+    <mkdir dir="${informer.distr.dir}"/>
+    <war destfile="${informer.distr.dir}/informer.war" basedir="${informer.exploded.dir}">
+      <manifest>
+        <attribute name="Implementation-Version" value="${informer.implementation.version}"/>
+      </manifest>
+    </war>
+  </target>
+
+
+</project>
