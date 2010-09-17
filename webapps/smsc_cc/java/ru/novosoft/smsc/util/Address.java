@@ -5,6 +5,7 @@
  */
 package ru.novosoft.smsc.util;
 
+import java.io.Serializable;
 import java.util.regex.Pattern;
 
 /**
@@ -13,7 +14,7 @@ import java.util.regex.Pattern;
  * @author Aleksandr Khalitov
  */
 
-public class Address {
+public class Address implements Serializable  {
 
   private static final String pattern_header = "^((\\.[0-6]\\.(0|1|3|4|6|8|9|10|14|18)\\.)|(\\+))?";
   private static final Pattern pattern1 = Pattern.compile(pattern_header + "\\d{0,20}\\?{0,20}$");
