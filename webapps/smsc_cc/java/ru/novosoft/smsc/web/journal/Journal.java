@@ -17,6 +17,7 @@ public class Journal {
 
   public static final String SMSC = "subject.smsc";
   public static final String RESCHEDULE = "subject.reschedule";
+  public static final String CLOSED_GROUPS = "subject.closed_groups";
   public static final String USERS = "subject.user";
   public static final String MAP_LIMIT = "subject.maplimit";
   public static final String FRAUD = "subject.fraud";
@@ -42,6 +43,7 @@ public class Journal {
     l.add(rb.getString(RESCHEDULE));
     l.add(rb.getString(USERS));
     l.add(rb.getString(MAP_LIMIT));
+    l.add(rb.getString(CLOSED_GROUPS));
     return l;
   }
 
@@ -206,10 +208,61 @@ public class Journal {
   public void logChanges(LoggerSettings oldSettings, LoggerSettings newSettings, String user) {
     logger.logChanges(this, oldSettings, newSettings, user);
   }
-
-
+  
   public void logChanges(FraudSettings oldSettings, FraudSettings newSettings, String user) {
     fraud.logChanges(this, oldSettings, newSettings, user);
   }
+  /**
+   * Добавляет в журнал запись об изменении описания закрытой группы
+   * @param name имя группы
+   * @param oldDescription старое описание
+   * @param newDescription новое описание
+   * @param user пользователь, от имени которого надо формировать записи
+   */
+  public void logClosedGroupDescription(String name, String oldDescription, String newDescription, String user) {
+    JournalRecord r = addRecord(JournalRecord.Type.CHANGE, CLOSED_GROUPS, user);
+    r.setDescription("closed_group_change_description", oldDescription, newDescription, name);
+  }
 
+  /**
+   * Добавляет в журнал запись о создании маски закрытой группы
+   * @param name имя группы
+   * @param mask маска
+   * @param user пользователь, от имени которого надо формировать записи
+   */
+  public void logClosedGroupAddMask(String name, String mask, String user) {
+    JournalRecord r = addRecord(JournalRecord.Type.CHANGE, CLOSED_GROUPS, user);
+    r.setDescription("closed_group_add_mask", mask, name);
+  }
+
+  /**
+   * Добавляет в журнал запись об удалении маски закрытой группы
+   * @param name имя группы
+   * @param mask маска
+   * @param user пользователь, от имени которого надо формировать записи
+   */
+  public void logClosedGroupRemoveMask(String name, String mask, String user) {
+    JournalRecord r = addRecord(JournalRecord.Type.CHANGE, CLOSED_GROUPS, user);
+    r.setDescription("closed_group_remove_mask", mask, name);
+  }
+
+  /**
+   * Добавляет в журнал запись о создании закрытой группы
+   * @param name имя группы
+   * @param user пользователь, от имени которого надо формировать записи
+   */
+  public void logClosedGroupAdd(String name, String user) {
+    JournalRecord r = addRecord(JournalRecord.Type.ADD, CLOSED_GROUPS, user);
+    r.setDescription("closed_group_added", name);
+  }
+
+  /**
+   * Добавляет в журнал запись об удалении закрытой группы 
+   * @param name имя группы
+   * @param user пользователь, от имени которого надо формировать записи
+   */
+  public void logClosedGroupRemove(String name, String user) {
+    JournalRecord r = addRecord(JournalRecord.Type.REMOVE, CLOSED_GROUPS, user);
+    r.setDescription("closed_group_removed", name);
+  }
 }

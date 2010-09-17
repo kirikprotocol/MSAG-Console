@@ -20,10 +20,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -43,7 +40,7 @@ public class ClosedGroupManager implements SmscConfiguration {
   private final File backupDir;
   private final ClusterController cc;
   private final FileSystem fs;
-  protected Collection<ClosedGroup> groups;
+  protected Map<Integer, ClosedGroup> groups;
 
   private boolean configBroken;
   private AtomicInteger lastGroupId;
@@ -65,20 +62,26 @@ public class ClosedGroupManager implements SmscConfiguration {
       throw new ClosedGroupException("config_broken");
   }
 
-  public Collection<ClosedGroup> groups() throws AdminException {
+  public List<ClosedGroup> groups() throws AdminException {
     checkBroken();
-    return new ArrayList<ClosedGroup>(groups);
+    return new ArrayList<ClosedGroup>(groups.values());
+  }
+
+  public ClosedGroup getGroup(int groupId) throws AdminException {
+    checkBroken();
+    ClosedGroup cg = groups.get(groupId);
+    if(cg == null) {
+      throw new ClosedGroupException("closed_group_not_exist");
+    }
+    return cg;
   }
 
   public boolean containsGroup(int groupId) throws AdminException {
-    for (ClosedGroup g : groups)
-      if (g.getId() == groupId)
-        return true;
-    return false;
+    return groups.containsKey(groupId);
   }
 
-  long getLastGroupId() {
-    return lastGroupId.longValue();
+  int getLastGroupId() {
+    return lastGroupId.intValue();
   }
 
   protected int getNextId() {
@@ -91,35 +94,34 @@ public class ClosedGroupManager implements SmscConfiguration {
     checkBroken();
 
     int groupId = getNextId();
-    ClosedGroup newGroup = new ClosedGroup(groupId, name, description, new ArrayList<Address>(), cc, this);
+    ClosedGroup newGroup = new ClosedGroupImpl(groupId, name, description, new ArrayList<Address>(), cc, this);
 
     if (cc.isOnline())
       cc.addClosedGroup(groupId, name);
 
-    groups.add(newGroup);
+    groups.put(groupId, newGroup);
     try {
       save();
     } catch (AdminException e) {
-      groups.remove(newGroup);
+      groups.remove(groupId);
       throw e;
     }
 
     return newGroup;
   }
 
-  public boolean removeGroup(int groupId) throws AdminException {
+  public ClosedGroup removeGroup(int groupId) throws AdminException {
     checkBroken();
 
-    ClosedGroup group2remove = null;
-    for (ClosedGroup g : groups) {
-      if (g.getId() == groupId) {
-        group2remove = g;
-        break;
-      }
-    }
+    ClosedGroup group2remove = groups.get(groupId);
 
     if (group2remove == null)
-      return false;
+      return null;
+
+
+    final String name = group2remove.getName();
+    final String descr = group2remove.getDescription();
+    final Collection<Address> masks = group2remove.getMasks();
 
     //todo Проверить, что группа не используется ни в одном профиле при помощи вызова команды CgmListAbonents. Она возвращает список абонентов, которые могут
     //todo отправлять сообщения в данную группу
@@ -127,15 +129,36 @@ public class ClosedGroupManager implements SmscConfiguration {
     if (cc.isOnline())
       cc.removeClosedGroup(groupId);
 
-    groups.remove(group2remove);
+    groups.remove(groupId);
+
+
+    ClosedGroup result = new ClosedGroup() {
+      public int getId() throws AdminException {
+        return 0;
+      }
+      public String getName() throws AdminException {
+        return name;
+      }
+      public String getDescription() throws AdminException {
+        return descr;
+      }
+      public void setDescription(String description) throws AdminException {
+      }
+      public Collection<Address> getMasks() throws AdminException {
+        return masks;
+      }
+      public void removeMask(Address mask) throws AdminException {}
+      public void addMask(Address mask) throws AdminException {}
+    };
+    
     try {
       save();
     } catch (AdminException e) {
-      groups.add(group2remove);
+      groups.put(groupId, group2remove);
       throw e;
     }
 
-    return true;
+    return result;
   }
 
   private ClosedGroup parseClosedGroup(Element closedGroupElem) {
@@ -160,11 +183,11 @@ public class ClosedGroupManager implements SmscConfiguration {
       masks.add(new Address(maskElem.getAttribute("value").trim()));
     }
 
-    return new ClosedGroup(id, name, def, masks, cc, this);
+    return new ClosedGroupImpl(id, name, def, masks, cc, this);
   }
 
   protected void load(InputStream is) throws AdminException {
-    Collection<ClosedGroup> newGroups = new ArrayList<ClosedGroup>();
+    Map<Integer, ClosedGroup> newGroups = new LinkedHashMap<Integer,ClosedGroup>();
     try {
       if (cc.isOnline())
         cc.lockClosedGroups(false);
@@ -176,7 +199,8 @@ public class ClosedGroupManager implements SmscConfiguration {
       NodeList closedGroupsList = closedGroupDoc.getDocumentElement().getElementsByTagName(ClosedGroupManager.SECTION_NAME_group);
       for (int i = 0; i < closedGroupsList.getLength(); i++) {
         Element closedGroupElem = (Element) closedGroupsList.item(i);
-        newGroups.add(parseClosedGroup(closedGroupElem));
+        ClosedGroup cg = parseClosedGroup(closedGroupElem);
+        newGroups.put(cg.getId(), cg);
       }
 
     } catch (Exception e) {
@@ -207,9 +231,9 @@ public class ClosedGroupManager implements SmscConfiguration {
 
       out = new PrintWriter(new OutputStreamWriter(fs.getOutputStream(tmpConfigFile), Functions.getLocaleEncoding()));
       XmlUtils.storeConfigHeader(out, ROOT_ELEMENT, "ClosedGroups.dtd", Functions.getLocaleEncoding());
-      out.println("   <" + PARAM_NAME_last_used_id + " value=\"" + lastGroupId.longValue() + "\"/>");
+      out.println("   <" + PARAM_NAME_last_used_id + " value=\"" + lastGroupId.intValue() + "\"/>");
 
-      for (ClosedGroup g : groups) {
+      for (ClosedGroup g : groups.values()) {
         out.print("   <group id=\"");
         out.print(g.getId());
         out.print("\" name=\"");

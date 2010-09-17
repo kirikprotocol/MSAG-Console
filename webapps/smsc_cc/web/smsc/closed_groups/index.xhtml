@@ -1,0 +1,105 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:eye="http://taglib.eyeline.mobi">
+
+<ui:composition template="/templates/main.xhtml">
+
+  <ui:param name="pageTitle" value="#{msg['smsc.smsc.closed_groups']}"/>
+
+  <ui:define name="content">
+
+    <tr:form id="closed_groups" rendered="#{!closed_groups.outOfDate}">
+
+      <eye:buttons>
+        <eye:button>
+          <tr:commandLink text="#{msg['add.button']}" id="add1" action="CLOSED_GROUP_EDIT"/>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['delete.button']}" id="delete1" actionListener="#{closed_groups.removeSelected}"
+                          onclick="if (!confirm('#{msg['smsc.delete.records']}')) return false">
+            <f:param name="delete" value=""/>
+          </tr:commandLink>
+        </eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+
+      <eye:dataTableFilter bean="#{closed_groups}" clearAction="clearFilter">
+        <h:panelGrid columns="3">
+          <tr:panelLabelAndMessage label="#{closedGroupsBundle.id}">
+            <tr:inputText value="#{closed_groups.filterById}" simple="true">
+              <eye:validatePositive/>
+            </tr:inputText>
+          </tr:panelLabelAndMessage>
+          <tr:panelLabelAndMessage label="#{closedGroupsBundle.name}">
+            <tr:inputText value="#{closed_groups.filterByName}" simple="true"/>
+          </tr:panelLabelAndMessage>
+          <tr:panelLabelAndMessage label="#{closedGroupsBundle.mask}">
+            <tr:inputText value="#{closed_groups.filterByAddress}" simple="true"/>
+          </tr:panelLabelAndMessage>
+        </h:panelGrid>
+
+      </eye:dataTableFilter>
+
+      <eye:dataTable value="#{closed_groups.closedGroupsModel}" selectedRows="#{closed_groups.selectedRows}" var="g">
+
+        <eye:row rowId="#{g.id}" innerData="#{!empty g.masks}" opened="true">
+
+          <eye:column name="id" title="#{closedGroupsBundle.id}" width="25%" sortable="true">
+            <h:outputText value="#{g.id}"/>
+          </eye:column>
+
+          <eye:column name="name" title="#{closedGroupsBundle.name}" width="25%" sortable="true">
+            <h:commandLink value="#{g.name}" action="CLOSED_GROUP_EDIT">
+              <f:param name="closed_group" value="#{g.id}"/>
+            </h:commandLink>
+          </eye:column>
+
+          <eye:column name="description" title="#{closedGroupsBundle.description}" width="25%">
+            <h:outputText value="#{g.description}"/>
+          </eye:column>
+
+
+          <f:facet name="innerData">
+            <h:panelGroup >
+              <h:dataTable value="#{g.masks}" var="m" columnClasses="column50Width, columnTopLeftAlign">
+                <h:column>
+                  <tr:outputText/>
+                </h:column>
+                <h:column>
+                  <tr:outputText value="#{m}" converter="addressesConverter"/>
+                </h:column>
+              </h:dataTable>
+            </h:panelGroup>
+          </f:facet>
+
+        </eye:row>
+
+
+      </eye:dataTable>
+
+      <eye:buttons>
+        <eye:button>
+          <tr:commandLink text="#{msg['add.button']}" id="add2" action="CLOSED_GROUP_EDIT"/>
+        </eye:button>
+        <eye:button>
+          <tr:commandLink text="#{msg['delete.button']}" id="delete2" actionListener="#{closed_groups.removeSelected}"
+                          onclick="if (!confirm('#{msg['smsc.delete.records']}')) return false">
+            <f:param name="delete" value=""/>
+          </tr:commandLink>
+        </eye:button>
+        <eye:space/>
+      </eye:buttons>
+
+    </tr:form>
+
+  </ui:define>
+
+</ui:composition>
+
+
+</html>

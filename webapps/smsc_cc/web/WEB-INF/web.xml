@@ -222,6 +222,18 @@
     </user-data-constraint>
   </security-constraint>
 
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name>Редактор закрытых групп</web-resource-name>
+      <url-pattern>/smsc/closed_groups/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>closed_groups</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
 
   <security-role>
     <description>Может редактировать главный конфиг СМСЦ, map limits, логирование, запускать и останавливать центры</description>
@@ -241,6 +253,11 @@
   <security-role>
     <description>Может редактировать политики передоставки</description>
     <role-name>reschedule</role-name>
+  </security-role>
+
+  <security-role>
+    <description>Может редактировать закрытые группы</description>
+    <role-name>closed_groups</role-name>
   </security-role>
 
 </web-app>

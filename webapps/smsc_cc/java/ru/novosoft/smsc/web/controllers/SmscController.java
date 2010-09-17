@@ -5,7 +5,6 @@ import ru.novosoft.smsc.web.LocaleFilter;
 import ru.novosoft.smsc.web.WebContext;
 import ru.novosoft.smsc.web.config.Configuration;
 import ru.novosoft.smsc.web.config.SmscStatusManager;
-import ru.novosoft.smsc.web.journal.Journal;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
@@ -72,6 +71,11 @@ public abstract class SmscController implements Serializable {
 
   protected Principal getUserPrincipal() {
     return FacesContext.getCurrentInstance().getExternalContext().getUserPrincipal();
+  }
+
+  protected String getUserName() {
+    Principal p = FacesContext.getCurrentInstance().getExternalContext().getUserPrincipal();
+    return p == null ? null : p.getName();
   }
 
   public boolean isAccessToUsers() {

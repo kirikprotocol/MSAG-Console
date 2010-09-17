@@ -18,6 +18,12 @@
     </locale-config>
 
     <resource-bundle>
+      <base-name>ru.novosoft.smsc.admin.closed_groups.ClosedGroup</base-name>
+      <var>closedGroupsBundle</var>
+    </resource-bundle>
+
+
+    <resource-bundle>
       <base-name>ru.novosoft.smsc.admin.smsc.CommonSettings</base-name>
       <var>commonSettings</var>
     </resource-bundle>
@@ -57,6 +63,11 @@
   <converter>
     <converter-id>smpp_status_converter</converter-id>
     <converter-class>ru.novosoft.smsc.web.controllers.reschedule.SmppStatusConverter</converter-class>
+  </converter>
+
+  <converter>
+    <converter-id>addressesConverter</converter-id>
+    <converter-class>ru.novosoft.smsc.web.controllers.closed_groups.AdressesConverter</converter-class>
   </converter>
 
   <converter>
@@ -112,6 +123,20 @@
   <managed-bean>
     <managed-bean-name>smscStatus</managed-bean-name>
     <managed-bean-class>ru.novosoft.smsc.web.controllers.SmscStatusController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+
+  <managed-bean>
+    <managed-bean-name>closed_groups</managed-bean-name>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.closed_groups.ClosedGroupsListController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+
+  <managed-bean>
+    <managed-bean-name>closed_group_edit</managed-bean-name>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.closed_groups.ClosedGroupEditController</managed-bean-class>
     <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
 
@@ -189,7 +214,6 @@
     <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
 
-
   <navigation-rule>
     <navigation-case>
       <from-outcome>INDEX</from-outcome>
@@ -230,11 +254,20 @@
       <to-view-id>/smsc/users/edit.faces</to-view-id>
     </navigation-case>
     <navigation-case>
+      <from-outcome>CLOSED_GROUP_EDIT</from-outcome>
+      <to-view-id>/smsc/closed_groups/edit.faces</to-view-id>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>CLOSED_GROUPS</from-outcome>
+      <to-view-id>/smsc/closed_groups/index.faces</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
         <from-outcome>FRAUD</from-outcome>
         <to-view-id>/smsc/fraud/fraud.faces</to-view-id>
         <redirect/>
     </navigation-case>
-
+    
   </navigation-rule>
 
 

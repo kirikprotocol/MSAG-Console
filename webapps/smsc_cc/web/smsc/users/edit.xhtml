@@ -47,12 +47,12 @@
         </tr:panelLabelAndMessage>
 
         <eye:collapsingGroup label="#{userBundle.roles}">
-          <h:dataTable value="#{userEdit.roles}" var="r">
+          <h:dataTable value="#{userEdit.roles}" var="g">
             <h:column>
-              <h:outputText value="#{r.name}" converter="roles_converter"/>
+              <h:outputText value="#{g.name}" converter="roles_converter"/>
             </h:column>
             <h:column>
-              <h:selectBooleanCheckbox value="#{r.checked}"/>
+              <h:selectBooleanCheckbox value="#{g.checked}"/>
             </h:column>
           </h:dataTable>
         </eye:collapsingGroup>

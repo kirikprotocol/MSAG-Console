@@ -105,9 +105,9 @@ public class ClosedGroupManagerTest {
   @Test
   public void removeGroupTest() throws AdminException {
     ClosedGroupManager cgm = new ClosedGroupManager(configFile, backupDir, new TestClusterControllerStub(), FileSystem.getFSForSingleInst());
-    assertFalse(cgm.removeGroup(100));
+    assertNull(cgm.removeGroup(100));
 
-    assertTrue(cgm.removeGroup(1));
+    assertNotNull(cgm.removeGroup(1) );
     assertEquals(1, cgm.groups().size());
 
     ClosedGroupManager cgm1 = new ClosedGroupManager(configFile, backupDir, new TestClusterControllerStub(), FileSystem.getFSForSingleInst());
