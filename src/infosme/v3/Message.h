@@ -18,7 +18,7 @@ struct Message
     uint64_t         subscriber; // not changed (constant)
     msgid_type       msgId;      // unique message id (constant)
     msgtime_type     lastTime;   // lasttime / filenumber (for new messages)
-    int32_t          timeLeft;   // ttl / filepos (for new messages)
+    timediff_type    timeLeft;   // ttl / filepos (for new messages)
     uint32_t         textId;
     smsc::core::buffers::FixedLengthString<USERDATA_LENGTH> userData; // (constant)
     uint8_t          state;
