@@ -1,9 +1,8 @@
 td.collapsing_group_opened,
 td.collapsing_group_closed {
   background-repeat: no-repeat;
-  /*padding-left: 18px;*/
+  padding-left: 5px;
   height: 17px;
-  width: 280px;
 }
 
 td.collapsing_group_opened {
@@ -14,7 +13,6 @@ td.collapsing_group_opened {
 
 td.collapsing_group_closed {
   background-color: #F3F0E3;
-  width: 280px;
 }
 
 
