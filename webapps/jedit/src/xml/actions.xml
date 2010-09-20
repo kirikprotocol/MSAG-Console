@@ -4,11 +4,11 @@
 
 <ACTIONS>
  <!-- commands invoked by user input -->
- <ACTION NAME="xml-insert-closing-tag">
+ <!--ACTION NAME="xml-insert-closing-tag">
   <CODE>
    xml.XmlActions.insertClosingTagKeyTyped(view);
   </CODE>
- </ACTION>
+ </ACTION-->
 
  <!-- normal actions -->
  <ACTION NAME="xml-chars-to-entities">

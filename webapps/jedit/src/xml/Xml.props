@@ -95,7 +95,7 @@ xml.network=true
 xml.cache=true
 
 # Insert closing tag automatically after '</' typed
-xml.close-complete=true
+xml.close-complete=false
 
 # Insert closing tag automatically after '>' typed
 xml.close-complete-open=false

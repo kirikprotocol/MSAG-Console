@@ -133,6 +133,7 @@ public class jEdit extends Applet
     }
     ping_port = Integer.parseInt(getParameter("ping_port"));
     ping_timeout = Integer.parseInt(getParameter("ping_timeout"));
+    System.out.println("jEdit version=1");
     System.out.println("baseUrl= " + baseUrl.toString());
     System.out.println("servletUrl= " + servletUrl.toString());
     System.out.println("ping_port= " + ping_port);

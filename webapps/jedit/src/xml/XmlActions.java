@@ -77,7 +77,7 @@ public class XmlActions
 
    public static boolean checkRootTag(View view)
      {
-       System.out.println("XmlAction.checkRootTag()");
+       //System.out.println("XmlAction.checkRootTag()");
        JEditTextArea textArea = view.getTextArea();
        if(XmlPlugin.isDelegated(textArea))
        {
