@@ -26,13 +26,25 @@ public class AdminContextConfigTest {
     }finally {
       if(is != null) {
         try{
-        is.close();
+          is.close();
         }catch (IOException e){}
       }
     }
   }
 
-  @Test  
+  @Test(expected = IllegalArgumentException.class)
+  public void testNull1() throws AdminException{
+    InputStream is = null;
+    new AdminContextConfig(is);
+  }
+  
+  @Test(expected = IllegalArgumentException.class)
+  public void testNull2() throws AdminException{
+    File f = null;
+    new AdminContextConfig(f);
+  }
+
+  @Test
   public void testData() throws Exception{
     assertEquals(config.getUsersFile(), "test/ru/novosoft/smsc/admin/users/users.xml");
     assertEquals(config.getInstallationType(), InstallationType.HA);

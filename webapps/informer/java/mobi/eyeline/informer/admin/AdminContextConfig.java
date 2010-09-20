@@ -24,6 +24,9 @@ class AdminContextConfig {
   }
 
   public AdminContextConfig(File file) throws AdminException {
+    if(file == null) {
+      throw new IllegalArgumentException("Some arguments are null");      
+    }
     InputStream is = null;
     try{
       is = new FileInputStream(file);
@@ -42,6 +45,9 @@ class AdminContextConfig {
   }
 
   private void load(InputStream is) throws AdminException{
+    if(is == null) {
+      throw new IllegalArgumentException("Some arguments are null");
+    }
     try {
       this.webconfig.load(is);
     } catch (XmlConfigException e) {
