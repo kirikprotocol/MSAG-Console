@@ -35,6 +35,7 @@ public class Mode {${line.separator}
     <delete dir="${informer.source.classes}" failonerror="false"/>
     <mkdir dir="${informer.source.classes}"/>
     <javac srcdir="java" destdir="${informer.source.classes}" classpathref="lib" debug="true" source="1.5"/>
+    <native2ascii src="java" dest="${informer.source.classes}" ext=".properties" includes="**/*.properties"/>
   </target>
 
 
@@ -45,6 +46,10 @@ public class Mode {${line.separator}
       <fileset dir="${informer.source.classes}"/>
     </copy>
     <javac srcdir="test" destdir="${informer.test.classes}" classpathref="lib" debug="true" source="1.5"/>
+    <copy todir="${informer.test.classes}">
+      <fileset dir="test" includes="**/*.properties,**/*.bin,**/*.xml"/>
+    </copy>
+    <native2ascii src="java" dest="${informer.source.classes}" ext=".properties" includes="**/*.properties"/>
   </target>
 
   <target name="test" depends="compile.tests">
