@@ -162,9 +162,9 @@
             <td>
               <select name="trafficMode" id="trafficMode">
                 <option value="0" <%=bean.getTrafficMode() == 0 ? "selected" : ""%>><%=getLocString("routes.tm.prohibited")%></option>
-                <option value="0" <%=bean.getTrafficMode() == 1 ? "selected" : ""%>><%=getLocString("routes.tm.smsOnly")%></option>
-                <option value="0" <%=bean.getTrafficMode() == 2 ? "selected" : ""%>><%=getLocString("routes.tm.ussdOnly")%></option>
-                <option value="0" <%=bean.getTrafficMode() == 3 ? "selected" : ""%>><%=getLocString("routes.tm.all")%></option>
+                <option value="1" <%=bean.getTrafficMode() == 1 ? "selected" : ""%>><%=getLocString("routes.tm.smsOnly")%></option>
+                <option value="2" <%=bean.getTrafficMode() == 2 ? "selected" : ""%>><%=getLocString("routes.tm.ussdOnly")%></option>
+                <option value="3" <%=bean.getTrafficMode() == 3 ? "selected" : ""%>><%=getLocString("routes.tm.all")%></option>
               </select>
             </td>
             <td><label for=permissible style="padding-left:4px;"><%=getLocString("routes.tm")%></label></td>
