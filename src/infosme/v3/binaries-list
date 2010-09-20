@@ -1,0 +1,17 @@
+infosme/infosme3  infosme3 \
+ -linfosme-v3 \
+ -linfosme-v3-io \
+ -ladmin-service \
+ -ladmin-protocol \
+ -ladmin-util \
+ -lcore-network \
+ -lcore-threads \
+ -lutil-regexp \
+ -lutil-xml \
+ -lutil-config \
+ @liblogger.so -L$(SMSC_BUILDDIR)/bin -llogger \
+ -lutil \
+ $(XERCES_LIB) \
+ $(SOCKETLIB) -lnsl \
+ $(SSL_LIB) \
+ -lpthread -lrt -ldl
