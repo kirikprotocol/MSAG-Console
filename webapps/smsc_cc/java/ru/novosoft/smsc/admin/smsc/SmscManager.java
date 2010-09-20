@@ -21,7 +21,7 @@ import java.util.Map;
 @SuppressWarnings({"EmptyCatchBlock"})
 public class SmscManager implements SmscConfiguration {
 
-  private static final String SERVICE_ID="SMSC";
+  private static final String SERVICE_ID = "SMSC";
 
   private final ClusterController cc;
   private final ConfigFileManager<SmscSettings> cfgFileManager;
@@ -106,12 +106,17 @@ public class SmscManager implements SmscConfiguration {
   }
 
   public Map<Integer, SmscConfigurationStatus> getStatusForSmscs() throws AdminException {
-    ConfigState state = cc.getMainConfigState();
-    long lastUpdate = cfgFileManager.getLastModified();
+    if (!cc.isOnline())
+      return null;
+    
+    ConfigState state = cc.getMainConfigState();    
     Map<Integer, SmscConfigurationStatus> result = new HashMap<Integer, SmscConfigurationStatus>();
-    for (Map.Entry<Integer, Long> e : state.getInstancesUpdateTimes().entrySet()) {
-      SmscConfigurationStatus s = e.getValue() >= lastUpdate ? SmscConfigurationStatus.UP_TO_DATE : SmscConfigurationStatus.OUT_OF_DATE;      
-      result.put(e.getKey(), s);
+    if (state != null) {
+      long lastUpdate = cfgFileManager.getLastModified();
+      for (Map.Entry<Integer, Long> e : state.getInstancesUpdateTimes().entrySet()) {
+        SmscConfigurationStatus s = e.getValue() >= lastUpdate ? SmscConfigurationStatus.UP_TO_DATE : SmscConfigurationStatus.OUT_OF_DATE;
+        result.put(e.getKey(), s);
+      }
     }
     return result;
   }

@@ -4,16 +4,22 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.cluster_controller.ClusterController;
+import ru.novosoft.smsc.admin.cluster_controller.ConfigState;
 import ru.novosoft.smsc.admin.cluster_controller.TestClusterController;
 import ru.novosoft.smsc.admin.cluster_controller.TestClusterControllerStub;
+import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.filesystem.FileSystem;
 import testutils.TestUtils;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Artem Snopkov
@@ -72,5 +78,42 @@ public class ResourceManagerTest {
     assertFalse(new File(configDir, "resources_en_en.xml").exists());
 
     assertFalse(m.getLocales().contains("en_en"));
-  }  
+  }
+
+  @Test
+  public void testGetStatusForSmscs() throws AdminException {
+    ResourceManager manager = getManager(new ClusterControllerImpl());
+
+    Map<Integer, SmscConfigurationStatus> states = manager.getStatusForSmscs();
+
+    assertNotNull(states);
+    assertEquals(2, states.size());
+    assertEquals(SmscConfigurationStatus.OUT_OF_DATE, states.get(0));
+    assertEquals(SmscConfigurationStatus.UP_TO_DATE, states.get(1));
+  }
+
+  @Test
+  public void nullGetStatusForSmscs() throws AdminException {
+    ResourceManager manager = getManager(new ClusterControllerImpl1());
+
+    Map<Integer, SmscConfigurationStatus> states = manager.getStatusForSmscs();
+
+    assertTrue(states.isEmpty());
+  }
+
+  public class ClusterControllerImpl extends TestClusterControllerStub {
+    public ConfigState getResourcesState() throws AdminException {
+      long now = System.currentTimeMillis();
+      Map<Integer, Long> map = new HashMap<Integer, Long>();
+      map.put(0, now - 1);
+      map.put(1, now);
+      return new ConfigState(now, map);
+    }
+  }
+
+  public class ClusterControllerImpl1 extends TestClusterControllerStub {
+    public ConfigState getResourcesState() throws AdminException {
+      return null;
+    }
+  }
 }

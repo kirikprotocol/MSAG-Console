@@ -19,6 +19,7 @@ import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Artem Snopkov
@@ -57,6 +58,15 @@ public class ProfileManagerTest {
     assertEquals(SmscConfigurationStatus.UP_TO_DATE, states.get(1));
   }
 
+  @Test
+  public void nullGetStatusForSmscs() throws AdminException {
+    ProfileManager manager = getManager(new ClusterControllerImpl1());
+
+    Map<Integer, SmscConfigurationStatus> states = manager.getStatusForSmscs();
+
+    assertTrue(states.isEmpty());
+  }
+
   public class ClusterControllerImpl extends TestClusterControllerStub {
     public ConfigState getProfilesState() throws AdminException {
       long now = configFile.lastModified();
@@ -64,6 +74,12 @@ public class ProfileManagerTest {
       map.put(0, now - 1);
       map.put(1, now);
       return new ConfigState(now, map);
+    }
+  }
+
+  public class ClusterControllerImpl1 extends TestClusterControllerStub {
+    public ConfigState getProfilesState() throws AdminException {
+      return null;
     }
   }
 }

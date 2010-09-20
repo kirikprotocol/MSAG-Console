@@ -105,9 +105,14 @@ public class SmscStatusController extends SmscController {
 
         SmscStatus status = new SmscStatus(i, onlineHost, smscStatusManager.getSmscHosts(i));
         if (onlineHost != null) {
-          status.setMainConfigUpToDate(smscStatusManager.getMainConfigState(i) == SmscConfigurationStatus.UP_TO_DATE);
-          status.setRescheduleConfigUpToDate(smscStatusManager.getRescheduleState(i) == SmscConfigurationStatus.UP_TO_DATE);
-          status.setFraudConfigUpToDate(smscStatusManager.getFraudConfigState(i) == SmscConfigurationStatus.UP_TO_DATE);
+          SmscConfigurationStatus mainConfigState = smscStatusManager.getMainConfigState(i);
+          status.setMainConfigUpToDate(mainConfigState == null || mainConfigState == SmscConfigurationStatus.UP_TO_DATE);
+
+          SmscConfigurationStatus rescheduleConfigState = smscStatusManager.getRescheduleState(i);
+          status.setRescheduleConfigUpToDate(rescheduleConfigState == null || rescheduleConfigState == SmscConfigurationStatus.UP_TO_DATE);
+
+          SmscConfigurationStatus fraudConfigState = smscStatusManager.getFraudConfigState(i);
+          status.setFraudConfigUpToDate(fraudConfigState == null || fraudConfigState == SmscConfigurationStatus.UP_TO_DATE);
         }
 
         result.add(status);

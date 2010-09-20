@@ -21,6 +21,7 @@ import java.util.Map;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Artem Snopkov
@@ -62,6 +63,15 @@ public class RouteSubjectManagerTest {
     assertNull(getManager(new ClusterControllerImpl(false)).getStatusForSmscs());
   }
 
+  @Test
+  public void nullGetStatusForSmscs() throws AdminException {
+    RouteSubjectManager manager = getManager(new ClusterControllerImpl1());
+
+    Map<Integer, SmscConfigurationStatus> states = manager.getStatusForSmscs();
+
+    assertTrue(states.isEmpty());
+  }
+
 
   
   public class ClusterControllerImpl extends TestClusterControllerStub {
@@ -81,6 +91,12 @@ public class RouteSubjectManagerTest {
       map.put(0, now - 100);
       map.put(1, now);
       return new ConfigState(now, map);
+    }
+  }
+
+  public class ClusterControllerImpl1 extends TestClusterControllerStub {
+    public ConfigState getRoutesState() throws AdminException {
+      return null;
     }
   }
 }

@@ -155,16 +155,19 @@ public class AliasManager implements SmscConfiguration {
 
 
   public Map<Integer, SmscConfigurationStatus> getStatusForSmscs() throws AdminException {
+    if (!cc.isOnline())
+      return null;
+
     ConfigState configState = cc.getAliasesConfigState();
 
     Map<Integer, SmscConfigurationStatus> result = new HashMap<Integer, SmscConfigurationStatus>();
-
-    long ccLastUpdateTime = configState.getCcLastUpdateTime();
-    for (Map.Entry<Integer, Long> e : configState.getInstancesUpdateTimes().entrySet()) {
-      SmscConfigurationStatus s = (e.getValue() >= ccLastUpdateTime) ? SmscConfigurationStatus.UP_TO_DATE : SmscConfigurationStatus.OUT_OF_DATE;
-      result.put(e.getKey(), s);
+    if (configState != null) {
+      long ccLastUpdateTime = configState.getCcLastUpdateTime();
+      for (Map.Entry<Integer, Long> e : configState.getInstancesUpdateTimes().entrySet()) {
+        SmscConfigurationStatus s = (e.getValue() >= ccLastUpdateTime) ? SmscConfigurationStatus.UP_TO_DATE : SmscConfigurationStatus.OUT_OF_DATE;
+        result.put(e.getKey(), s);
+      }
     }
-
     return result;
   }
 

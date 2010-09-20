@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * todo сделать более умную проверку на isBroken. Если configBroken == true, то проверить статус во всех центрах (вдруг уже починили)
+ *
  * @author Artem Snopkov
  */
 public class ClosedGroupManager implements SmscConfiguration {
@@ -70,7 +71,7 @@ public class ClosedGroupManager implements SmscConfiguration {
   public ClosedGroup getGroup(int groupId) throws AdminException {
     checkBroken();
     ClosedGroup cg = groups.get(groupId);
-    if(cg == null) {
+    if (cg == null) {
       throw new ClosedGroupException("closed_group_not_exist");
     }
     return cg;
@@ -136,21 +137,29 @@ public class ClosedGroupManager implements SmscConfiguration {
       public int getId() throws AdminException {
         return 0;
       }
+
       public String getName() throws AdminException {
         return name;
       }
+
       public String getDescription() throws AdminException {
         return descr;
       }
+
       public void setDescription(String description) throws AdminException {
       }
+
       public Collection<Address> getMasks() throws AdminException {
         return masks;
       }
-      public void removeMask(Address mask) throws AdminException {}
-      public void addMask(Address mask) throws AdminException {}
+
+      public void removeMask(Address mask) throws AdminException {
+      }
+
+      public void addMask(Address mask) throws AdminException {
+      }
     };
-    
+
     try {
       save();
     } catch (AdminException e) {
@@ -187,7 +196,7 @@ public class ClosedGroupManager implements SmscConfiguration {
   }
 
   protected void load(InputStream is) throws AdminException {
-    Map<Integer, ClosedGroup> newGroups = new LinkedHashMap<Integer,ClosedGroup>();
+    Map<Integer, ClosedGroup> newGroups = new LinkedHashMap<Integer, ClosedGroup>();
     try {
       if (cc.isOnline())
         cc.lockClosedGroups(false);
@@ -281,16 +290,20 @@ public class ClosedGroupManager implements SmscConfiguration {
 
 
   public Map<Integer, SmscConfigurationStatus> getStatusForSmscs() throws AdminException {
+    if (!cc.isOnline())
+      return null;
+
     ConfigState configState = cc.getClosedGroupConfigState();
 
     Map<Integer, SmscConfigurationStatus> result = new HashMap<Integer, SmscConfigurationStatus>();
 
-    long ccLastUpdateTime = configState.getCcLastUpdateTime();
-    for (Map.Entry<Integer, Long> e : configState.getInstancesUpdateTimes().entrySet()) {
-      SmscConfigurationStatus s = (e.getValue() >= ccLastUpdateTime) ? SmscConfigurationStatus.UP_TO_DATE : SmscConfigurationStatus.OUT_OF_DATE;
-      result.put(e.getKey(), s);
+    if (configState != null) {
+      long ccLastUpdateTime = configState.getCcLastUpdateTime();
+      for (Map.Entry<Integer, Long> e : configState.getInstancesUpdateTimes().entrySet()) {
+        SmscConfigurationStatus s = (e.getValue() >= ccLastUpdateTime) ? SmscConfigurationStatus.UP_TO_DATE : SmscConfigurationStatus.OUT_OF_DATE;
+        result.put(e.getKey(), s);
+      }
     }
-
     return result;
   }
 }

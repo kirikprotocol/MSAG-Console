@@ -113,13 +113,29 @@ public class AliasManagerTest {
     assertEquals(SmscConfigurationStatus.UP_TO_DATE, states.get(1));
   }
 
-  public class ClusterControllerImpl extends ClusterController {
+  @Test
+  public void nullGetStatusForSmscs() throws AdminException {
+    ClusterController cc = new ClusterControllerImpl1();
+    AliasManager manager = new AliasManager(aliasesFile, cc, FileSystem.getFSForSingleInst());
+
+    Map<Integer, SmscConfigurationStatus> states = manager.getStatusForSmscs();
+
+    assertTrue(states.isEmpty());
+  }
+
+  public class ClusterControllerImpl extends TestClusterControllerStub {
     public ConfigState getAliasesConfigState() throws AdminException {
       long now = System.currentTimeMillis();
       Map<Integer, Long> map = new HashMap<Integer, Long>();
       map.put(0, now - 1);
       map.put(1, now);
       return new ConfigState(now, map);
+    }
+  }
+
+  public class ClusterControllerImpl1 extends TestClusterControllerStub {
+    public ConfigState getAliasesConfigState() throws AdminException {
+      return null;
     }
   }
 

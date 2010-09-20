@@ -26,14 +26,15 @@ public class AclManager implements SmscConfiguration {
     int maxAclId = -1;
     for (CCAclInfo acl : cc.getAcls())
       maxAclId = Math.max(maxAclId, acl.getId());
-    return maxAclId+1;
+    return maxAclId + 1;
   }
 
   /**
    * Создает и возвращает новый ACL
-   * @param name имя нового ACL
+   *
+   * @param name        имя нового ACL
    * @param description описание нового ACL
-   * @param addresses список адресов, содержащихся в новом ACL, или null, если таких нет
+   * @param addresses   список адресов, содержащихся в новом ACL, или null, если таких нет
    * @throws AdminException если произошла ошибка
    */
   public Acl createAcl(String name, String description, List<Address> addresses) throws AdminException {
@@ -53,6 +54,7 @@ public class AclManager implements SmscConfiguration {
 
   /**
    * Удаляет ACL с заданным идентификатором из списка
+   *
    * @param aclId идентификатор ACL, который надо удалить
    * @throws AdminException если произошла ошибка
    */
@@ -64,6 +66,7 @@ public class AclManager implements SmscConfiguration {
 
   /**
    * Возвращает ACL по его идентификатору
+   *
    * @param id идентификатор ACL
    * @return ACL с заданным идентификатором
    * @throws AdminException если произошла ошибка
@@ -72,12 +75,13 @@ public class AclManager implements SmscConfiguration {
     if (!cc.isOnline())
       throw new AclException("acls.not.available");
 
-    CCAclInfo acl =  cc.getAcl(id);
+    CCAclInfo acl = cc.getAcl(id);
     return new Acl(this, acl.getId(), acl.getName(), acl.getDescription());
   }
 
   /**
    * Возвращает список всех ACL
+   *
    * @return список всех ACL
    * @throws AdminException если произошла ошибка
    */
@@ -94,6 +98,7 @@ public class AclManager implements SmscConfiguration {
 
   /**
    * Проверяет статус ACL во всех инстанцах СМСЦ
+   *
    * @return статус ACL во всех инстанцах СМСЦ или null, если информация недоступна
    * @throws AdminException если произошла ошибка при выполнении операции
    */
@@ -102,11 +107,13 @@ public class AclManager implements SmscConfiguration {
       return null;
 
     ConfigState state = cc.getAclState();
-    long lastUpdate = state.getCcLastUpdateTime();
     Map<Integer, SmscConfigurationStatus> result = new HashMap<Integer, SmscConfigurationStatus>();
-    for (Map.Entry<Integer, Long> e : state.getInstancesUpdateTimes().entrySet()) {
-      SmscConfigurationStatus s = (e.getValue() >= lastUpdate) ? SmscConfigurationStatus.UP_TO_DATE : SmscConfigurationStatus.OUT_OF_DATE;
-      result.put(e.getKey(), s);
+    if (state != null) {
+      long lastUpdate = state.getCcLastUpdateTime();
+      for (Map.Entry<Integer, Long> e : state.getInstancesUpdateTimes().entrySet()) {
+        SmscConfigurationStatus s = (e.getValue() >= lastUpdate) ? SmscConfigurationStatus.UP_TO_DATE : SmscConfigurationStatus.OUT_OF_DATE;
+        result.put(e.getKey(), s);
+      }
     }
     return result;
   }

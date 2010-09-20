@@ -72,6 +72,7 @@ public class ResourceManager implements SmscConfiguration {
 
   /**
    * Проверяет. есть ли ресурсы для указанной локали
+   *
    * @param locale локаль
    * @return true, если в менеджере есть ресурсы для локали
    * @throws AdminException если произошла ошибка
@@ -141,7 +142,7 @@ public class ResourceManager implements SmscConfiguration {
    */
   public ResourceSettings getResourceSettings(String locale) throws AdminException {
     reset();
-    
+
     ConfigFileManager<ResourceSettings> mngr = resourceFilesManagers.get(locale);
     if (mngr == null)
       return null;
@@ -157,21 +158,21 @@ public class ResourceManager implements SmscConfiguration {
     }
   }
 
-  /**
-   * Возвращает состояние конфигурации ресурсов
-   *
-   * @return состояние конфигурации ресурсов
-   * @throws AdminException если произошла ошибка
-   */
+ 
   public Map<Integer, SmscConfigurationStatus> getStatusForSmscs() throws AdminException {
+    if (!cc.isOnline())
+      return null;
+
     ConfigState configState = cc.getResourcesState();
 
     Map<Integer, SmscConfigurationStatus> result = new HashMap<Integer, SmscConfigurationStatus>();
 
-    long ccLastUpdateTime = configState.getCcLastUpdateTime();
-    for (Map.Entry<Integer, Long> e : configState.getInstancesUpdateTimes().entrySet()) {
-      SmscConfigurationStatus s = (e.getValue() >= ccLastUpdateTime) ? SmscConfigurationStatus.UP_TO_DATE : SmscConfigurationStatus.OUT_OF_DATE;
-      result.put(e.getKey(), s);
+    if (configState != null) {
+      long ccLastUpdateTime = configState.getCcLastUpdateTime();
+      for (Map.Entry<Integer, Long> e : configState.getInstancesUpdateTimes().entrySet()) {
+        SmscConfigurationStatus s = (e.getValue() >= ccLastUpdateTime) ? SmscConfigurationStatus.UP_TO_DATE : SmscConfigurationStatus.OUT_OF_DATE;
+        result.put(e.getKey(), s);
+      }
     }
 
     return result;

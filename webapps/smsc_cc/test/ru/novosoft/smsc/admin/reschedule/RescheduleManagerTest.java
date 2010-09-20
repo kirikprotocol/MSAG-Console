@@ -60,6 +60,15 @@ public class RescheduleManagerTest {
     assertEquals(SmscConfigurationStatus.UP_TO_DATE, states.get(1));
   }
 
+  @Test
+  public void nullGetStatusForSmscs() throws AdminException {
+    RescheduleManager manager = getManager(new ClusterControllerImpl1());
+
+    Map<Integer, SmscConfigurationStatus> states = manager.getStatusForSmscs();
+
+    assertTrue(states.isEmpty());
+  }
+
   public class ClusterControllerImpl extends TestClusterControllerStub {
     public ConfigState getRescheduleConfigState() throws AdminException {
       long now = configFile.lastModified();
@@ -67,6 +76,12 @@ public class RescheduleManagerTest {
       map.put(0, now - 1);
       map.put(1, now);
       return new ConfigState(now, map);
+    }
+  }
+
+  public class ClusterControllerImpl1 extends TestClusterControllerStub {
+    public ConfigState getRescheduleConfigState() throws AdminException {
+      return null;
     }
   }
 }

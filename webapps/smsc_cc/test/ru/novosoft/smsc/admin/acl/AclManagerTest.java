@@ -83,6 +83,14 @@ public class AclManagerTest {
     assertNull(new AclManager(new ClusterControllerImpl(false)).getStatusForSmscs());
   }
 
+   @Test
+  public void nullGetStatusForSmscs() throws AdminException {
+    AclManager manager = new AclManager(new ClusterControllerImpl1());
+
+    Map<Integer, SmscConfigurationStatus> states = manager.getStatusForSmscs();
+    assertTrue(states.isEmpty());
+  }
+
   public class ClusterControllerImpl extends TestClusterControllerStub {
     private boolean online;
 
@@ -100,6 +108,15 @@ public class AclManagerTest {
       map.put(0, now - 100);
       map.put(1, now);
       return new ConfigState(now, map);
+    }
+  }
+
+  public class ClusterControllerImpl1 extends TestClusterControllerStub {
+    public boolean isOnline() {
+      return true;
+    }
+    public ConfigState getAclState() throws AdminException {
+      return null;
     }
   }
 }

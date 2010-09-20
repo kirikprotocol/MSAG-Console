@@ -74,6 +74,15 @@ public class MscManagerTest {
     assertEquals(SmscConfigurationStatus.UP_TO_DATE, states.get(1));
   }
 
+  @Test
+  public void nullGetStatusForSmscs() throws AdminException {
+    MscManager m = new MscManager(configFile, new ClusterControllerImpl1(), FileSystem.getFSForSingleInst());
+
+    Map<Integer, SmscConfigurationStatus> states = m.getStatusForSmscs();
+
+    assertTrue(states.isEmpty());
+  }
+
   public class ClusterControllerImpl extends TestClusterControllerStub {
     public ConfigState getMscConfigState() throws AdminException {
       long now = System.currentTimeMillis();
@@ -81,6 +90,12 @@ public class MscManagerTest {
       map.put(0, now - 1);
       map.put(1, now);
       return new ConfigState(now, map);
+    }
+  }
+
+  public class ClusterControllerImpl1 extends TestClusterControllerStub {
+    public ConfigState getMscConfigState() throws AdminException {
+      return null;
     }
   }
 }

@@ -285,6 +285,15 @@ public class ClosedGroupManagerTest {
     assertEquals(SmscConfigurationStatus.UP_TO_DATE, states.get(1));
   }
 
+  @Test
+  public void nullGetStatusForSmscs() throws AdminException {
+    ClosedGroupManager cgm = new ClosedGroupManager(configFile, backupDir, new ClusterControllerImpl1(), FileSystem.getFSForSingleInst());
+
+    Map<Integer, SmscConfigurationStatus> states = cgm.getStatusForSmscs();
+
+    assertTrue(states.isEmpty());
+  }
+
   public class ClusterControllerImpl extends TestClusterControllerStub {
     public ConfigState getClosedGroupConfigState() throws AdminException {
       long now = System.currentTimeMillis();
@@ -292,6 +301,12 @@ public class ClosedGroupManagerTest {
       map.put(0, now - 1);
       map.put(1, now);
       return new ConfigState(now, map);
+    }
+  }
+
+  public class ClusterControllerImpl1 extends TestClusterControllerStub {
+    public ConfigState getClosedGroupConfigState() throws AdminException {
+      return null;
     }
   }
 

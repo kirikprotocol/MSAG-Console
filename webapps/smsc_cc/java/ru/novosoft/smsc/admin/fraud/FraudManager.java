@@ -54,11 +54,13 @@ public class FraudManager implements SmscConfiguration {
 
   public Map<Integer, SmscConfigurationStatus> getStatusForSmscs() throws AdminException {
     ConfigState state = cc.getFraudConfigState();
-    long lastUpdate = cfgFileManager.getLastModified();
     Map<Integer, SmscConfigurationStatus> result = new HashMap<Integer, SmscConfigurationStatus>();
-    for (Map.Entry<Integer, Long> e : state.getInstancesUpdateTimes().entrySet()) {
-      SmscConfigurationStatus s = e.getValue() >= lastUpdate ? SmscConfigurationStatus.UP_TO_DATE : SmscConfigurationStatus.OUT_OF_DATE;
-      result.put(e.getKey(), s);
+    if (state != null) {
+      long lastUpdate = cfgFileManager.getLastModified();
+      for (Map.Entry<Integer, Long> e : state.getInstancesUpdateTimes().entrySet()) {
+        SmscConfigurationStatus s = e.getValue() >= lastUpdate ? SmscConfigurationStatus.UP_TO_DATE : SmscConfigurationStatus.OUT_OF_DATE;
+        result.put(e.getKey(), s);
+      }
     }
     return result;
   }

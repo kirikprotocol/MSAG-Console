@@ -72,8 +72,9 @@ public class RouteSubjectManager implements SmscConfiguration {
    * 1. Конфигурация маршрутов сохраняется во временный файл. Он должен находиться в той же директории, что и основной файл с маршрутами.
    * 2. В Cluster Controller отправляется команда на трассировку маршрута. В параметрах команды указывается имя файла с маршрутами
    * 3. После окончания трассировки временный файл с маршрутами удаляется.
-   * @param settings настройки маршрутов
-   * @param source адрес отправителя
+   *
+   * @param settings    настройки маршрутов
+   * @param source      адрес отправителя
    * @param destination адрес получателя
    * @param sourceSmeId smeId отправителя
    * @return объект RouteTrace с результатами
@@ -98,11 +99,13 @@ public class RouteSubjectManager implements SmscConfiguration {
         if (is != null)
           try {
             is.close();
-          } catch (IOException ignored) {}
+          } catch (IOException ignored) {
+          }
         if (os != null)
           try {
             os.close();
-          } catch (IOException ignored) {}
+          } catch (IOException ignored) {
+          }
       }
 
       CCRouteTrace trace = cc.traceRoute(routesTracingConfig.getName(), source, destination, sourceSmeId);
@@ -117,11 +120,13 @@ public class RouteSubjectManager implements SmscConfiguration {
     if (!cc.isOnline())
       return null;
     ConfigState state = cc.getRoutesState();
-    long lastUpdate = cfgFileManager.getLastModified();
     Map<Integer, SmscConfigurationStatus> result = new HashMap<Integer, SmscConfigurationStatus>();
-    for (Map.Entry<Integer, Long> e : state.getInstancesUpdateTimes().entrySet()) {
-      SmscConfigurationStatus s = e.getValue() >= lastUpdate ? SmscConfigurationStatus.UP_TO_DATE : SmscConfigurationStatus.OUT_OF_DATE;
-      result.put(e.getKey(), s);
+    if (state != null) {
+      long lastUpdate = cfgFileManager.getLastModified();
+      for (Map.Entry<Integer, Long> e : state.getInstancesUpdateTimes().entrySet()) {
+        SmscConfigurationStatus s = e.getValue() >= lastUpdate ? SmscConfigurationStatus.UP_TO_DATE : SmscConfigurationStatus.OUT_OF_DATE;
+        result.put(e.getKey(), s);
+      }
     }
     return result;
   }

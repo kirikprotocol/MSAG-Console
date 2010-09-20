@@ -60,8 +60,12 @@ public class SmscManagerTest {
   }
 
   @Test
-  public void nullTest() {
+  public void nullTest() throws AdminException {
+    SmscManager manager = getManager(new ClusterControllerImpl1());
 
+    Map<Integer, SmscConfigurationStatus> states = manager.getStatusForSmscs();
+
+    assertTrue(states.isEmpty());
   }
 
   public class ClusterControllerImpl extends TestClusterControllerStub {
@@ -71,6 +75,12 @@ public class SmscManagerTest {
       map.put(0, now - 1);
       map.put(1, now);
       return new ConfigState(now, map);
+    }
+  }
+
+  public class ClusterControllerImpl1 extends TestClusterControllerStub {
+    public ConfigState getMainConfigState() throws AdminException {
+      return null;
     }
   }
 
