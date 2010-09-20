@@ -32,10 +32,11 @@ public abstract class SettingsController<T> extends SmscController {
     this.revisionAttr = configType.name() + "_viewStartTime";
     this.configType = configType;
 
-    if (getRequestParameter("revision") == null) {
+    if (getRequestParameter(revisionAttr) == null) {
       try {
         resetRevision();
       } catch (AdminException e) {
+        e.printStackTrace();
         addError(e);
       }
     }
