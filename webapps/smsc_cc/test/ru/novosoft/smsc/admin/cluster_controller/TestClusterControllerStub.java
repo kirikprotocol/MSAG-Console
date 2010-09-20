@@ -110,8 +110,11 @@ public class TestClusterControllerStub extends ClusterController {
     }
 
     Map<Integer, Long> map = new HashMap<Integer, Long>();
-    for (int i = 0; i < smscInstancesNumber; i++)
+    for (int i = 0; i < smscInstancesNumber; i++) {
       map.put(i, time);
+      if (i == 2 && configType == ConfigType.Fraud)
+        map.put(i,0L);
+    }
     return new ConfigState(time, map);
   }
 

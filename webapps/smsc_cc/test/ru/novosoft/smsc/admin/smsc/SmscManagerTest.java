@@ -59,6 +59,11 @@ public class SmscManagerTest {
     assertEquals(SmscConfigurationStatus.UP_TO_DATE, states.get(1));
   }
 
+  @Test
+  public void nullTest() {
+
+  }
+
   public class ClusterControllerImpl extends TestClusterControllerStub {
     public ConfigState getMainConfigState() throws AdminException {
       long now = configFile.lastModified();

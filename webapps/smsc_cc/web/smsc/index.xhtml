@@ -84,6 +84,10 @@
               <h:outputText value="#{msg['status.page.reschedule.config']}:"/>
               <h:outputText value="#{msg['status.page.status.up_to_date']}" style="color:GREEN" rendered="#{data.rescheduleConfigUpToDate}"/>
               <h:outputText value="#{msg['status.page.status.out_of_date']}" style="color:RED" rendered="#{!data.rescheduleConfigUpToDate}"/>
+
+              <h:outputText value="#{msg['status.page.fraud.config']}:"/>
+              <h:outputText value="#{msg['status.page.status.up_to_date']}" style="color:GREEN" rendered="#{data.fraudConfigUpToDate}"/>
+              <h:outputText value="#{msg['status.page.status.out_of_date']}" style="color:RED" rendered="#{!data.fraudConfigUpToDate}"/>
             </h:panelGrid>
 
           </f:facet>

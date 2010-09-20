@@ -46,6 +46,10 @@ public class SmscStatusManager {
     return adminContext.getMapLimitManager().getStatusForSmscs().get(instanceNumber);
   }
 
+  public SmscConfigurationStatus getFraudConfigState(int instanceNumber) throws AdminException {
+    return adminContext.getFraudManager().getStatusForSmscs().get(instanceNumber);
+  }
+
 
   public void stopSmsc(int instanceNumber) throws AdminException {
     adminContext.getSmscManager().stopSmsc(instanceNumber);

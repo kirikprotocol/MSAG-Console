@@ -107,6 +107,7 @@ public class SmscStatusController extends SmscController {
         if (onlineHost != null) {
           status.setMainConfigUpToDate(smscStatusManager.getMainConfigState(i) == SmscConfigurationStatus.UP_TO_DATE);
           status.setRescheduleConfigUpToDate(smscStatusManager.getRescheduleState(i) == SmscConfigurationStatus.UP_TO_DATE);
+          status.setFraudConfigUpToDate(smscStatusManager.getFraudConfigState(i) == SmscConfigurationStatus.UP_TO_DATE);
         }
 
         result.add(status);
@@ -128,6 +129,7 @@ public class SmscStatusController extends SmscController {
     private final List<String> hosts;
     private boolean mainConfigUpToDate;
     private boolean rescheduleConfigUpToDate;
+    private boolean fraudConfigUpToDate;
 
     public SmscStatus(int instanceNumber, String onlineHost, List<String> hosts) {
       this.instanceNumber = instanceNumber;
@@ -172,9 +174,17 @@ public class SmscStatusController extends SmscController {
       this.rescheduleConfigUpToDate = rescheduleConfigUpToDate;
     }
 
+    public boolean isFraudConfigUpToDate() {
+      return fraudConfigUpToDate;
+    }
+
+    public void setFraudConfigUpToDate(boolean fraudConfigUpToDate) {
+      this.fraudConfigUpToDate = fraudConfigUpToDate;
+    }
+
     public boolean isHasErrors() {
       return onlineHost != null &&
-          (!rescheduleConfigUpToDate || !mainConfigUpToDate);
+          (!rescheduleConfigUpToDate || !mainConfigUpToDate || !fraudConfigUpToDate);
     }
   }
 

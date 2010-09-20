@@ -58,7 +58,7 @@
         <eye:pageSubtitle value="#{fraudSettingsBundle['whiteList']}"/>
         <eye:dataTable value="#{fraud.addressTableModel}" selectedRows="#{fraud.selectedRows}" var="aaa">
           <eye:row rowId="#{aaa.address}" opened="true">
-          <eye:column name="address" title="#{msg['smsc.fraud.address.label']}" width="20%" sortable="true">
+          <eye:column name="address" title="#{msg['smsc.fraud.address.label']}" width="95%" sortable="true">
             <h:outputText value="#{aaa.simpleAddress}"/>
           </eye:column>
           </eye:row>
