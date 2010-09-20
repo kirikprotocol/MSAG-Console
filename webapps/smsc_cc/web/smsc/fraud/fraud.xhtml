@@ -31,13 +31,13 @@
         <eye:pageSubtitle value="#{msg['smsc.fraud.subtitle.policy']}"/>
         <tr:panelFormLayout>
           <tr:panelLabelAndMessage label="#{fraudSettingsBundle['enableCheck']}">
-            <h:selectBooleanCheckbox style="margin-left:15px" value="#{fraud.enableCheck}"/>
+            <h:selectBooleanCheckbox  value="#{fraud.enableCheck}"/>
           </tr:panelLabelAndMessage>
           <tr:panelLabelAndMessage label="#{fraudSettingsBundle['enableReject']}">
-            <h:selectBooleanCheckbox style="margin-left:15px" value="#{fraud.enableReject}"/>
+            <h:selectBooleanCheckbox  value="#{fraud.enableReject}"/>
           </tr:panelLabelAndMessage>
           <tr:panelLabelAndMessage label="#{fraudSettingsBundle['tail']}">
-            <tr:inputText value="#{fraud.tail}"  required="true" simple="true" contentStyle="width:70px;" >
+            <tr:inputText value="#{fraud.tail}"  required="true" simple="true" contentStyle="width:70px; margin-left:5px;" >
               <eye:validatePositive/>
             </tr:inputText>
           </tr:panelLabelAndMessage>
@@ -58,22 +58,17 @@
         <eye:pageSubtitle value="#{fraudSettingsBundle['whiteList']}"/>
         <eye:dataTable value="#{fraud.addressTableModel}" selectedRows="#{fraud.selectedRows}" var="aaa">
           <eye:row rowId="#{aaa.address}" opened="true">
-          <eye:column name="address" title="#{msg['smsc.fraud.address.label']}" width="95%" sortable="true">
+          <eye:column name="address" title="#{msg['smsc.fraud.address.label']}" width="99%" sortable="true">
             <h:outputText value="#{aaa.simpleAddress}"/>
           </eye:column>
           </eye:row>
         </eye:dataTable>
     </h:panelGrid>
 
-    <tr:inputText value="#{fraud.newAddr}"  required="false" simple="true" contentStyle="width:150px;" >
-              <eye:validatePhone/>
-    </tr:inputText>
+
 
     <eye:buttons>
-        <eye:button>
-          <tr:commandLink text="#{msg['add.button']}" id="add2" actionListener="#{fraud.addLine}"/>
-        </eye:button>
-
+        
         <eye:button>
           <tr:commandLink text="#{msg['delete.button']}" id="delete2" actionListener="#{fraud.removeSelected}"
                           onclick="if (!confirm('#{msg['smsc.delete.records']}')) return false"/>
@@ -90,6 +85,18 @@
         </eye:button>
 
     </eye:buttons>
+    <p/>
+    <eye:pageSubtitle value="#{msg['smsc.fraud.subtitle.addWhiteList']}" />
+    <h:panelGrid style="align:left;" columns="2" columnClasses="column0Width,columnTopLeftAlign" >    
+        <tr:inputText value="#{fraud.newAddr}"  required="false" simple="true" contentStyle="width:150px;" >
+            <eye:validatePhone/>
+        </tr:inputText>
+        <tr:commandLink id="add2" actionListener="#{fraud.addLine}" >
+            <tr:image source="/images/but_add.gif" inlineStyle=" margin-top:1px;"/>
+        </tr:commandLink>
+    </h:panelGrid>
+
+             
 <!--
       <eye:buttons>
         <eye:button><h:commandLink value="myButton" actionListener="#{index1.myButton}" /></eye:button>
