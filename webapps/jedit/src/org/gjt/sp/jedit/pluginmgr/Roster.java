@@ -419,6 +419,7 @@ class Roster
   {
    try
    {
+    System.out.println("Roster 422 url: "+url); 
     URLConnection conn = new URL(url).openConnection();
 
     String path = MiscUtilities.constructPath(getDownloadDir(),fileName);

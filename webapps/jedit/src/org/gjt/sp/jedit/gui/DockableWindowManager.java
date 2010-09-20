@@ -249,7 +249,7 @@ public class DockableWindowManager extends JPanel implements EBComponent
   */
  public void showDockableWindow(String name)
  {
-  System.out.println("DockableWindowManager.showDockableWindow()");
+  //System.out.println("DockableWindowManager.showDockableWindow()");
   Entry entry = (Entry)windows.get(name);
   if(entry == null)
   {
@@ -706,7 +706,7 @@ public class DockableWindowManager extends JPanel implements EBComponent
  //{{{ setResizePos() method
  void setResizePos(int resizePos, PanelWindowContainer resizing)
  {
-  System.out.println("DockableWindowManager.setResizePos() resizePos="+resizePos);
+  //System.out.println("DockableWindowManager.setResizePos() resizePos="+resizePos);
   this.resizePos = resizePos;
 
   if(resizePos < 0)

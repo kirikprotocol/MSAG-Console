@@ -246,18 +246,22 @@ public class PluginManagerOptionPane extends AbstractOptionPane
    {
     public void run()
     {
-     miraModel.setList(mirrors);
+         long startTime = System.currentTimeMillis();
+         miraModel.setList(mirrors);
 
-     String id = jEdit.getProperty("plugin-manager.mirror.id");
-     int size = miraModel.getSize();
-     for (int i=0; i < size; i++)
-     {
-      if (size == 1 || miraModel.getID(i).equals(id))
-      {
-       miraList.setSelectedIndex(i);
-       break;
-      }
-     }
+         String id = jEdit.getProperty("plugin-manager.mirror.id");
+         int size = miraModel.getSize();
+         for (int i=0; i < size; i++)
+         {
+          if (size == 1 || miraModel.getID(i).equals(id))
+          {
+           miraList.setSelectedIndex(i);
+           break;
+          }
+         }
+
+         int currentTime=(int)(System.currentTimeMillis()-startTime);
+         System.out.println("PluginManagerOptionPane.DownloadMirrorThread time:"+currentTime+" ms");  
     }
    });
 

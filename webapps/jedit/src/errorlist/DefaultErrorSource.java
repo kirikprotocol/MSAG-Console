@@ -255,10 +255,15 @@ public class DefaultErrorSource extends ErrorSource implements EBComponent
    {
     public void run()
     {
-      System.out.println("errorSource.clear() EditBus.send(ERRORS_CLEARED)");
+     long startTime = System.currentTimeMillis();
+
+     System.out.println("errorSource.clear() EditBus.send(ERRORS_CLEARED)");
      ErrorSourceUpdate message = new ErrorSourceUpdate(DefaultErrorSource.this,
-      ErrorSourceUpdate.ERRORS_CLEARED,null);
+     ErrorSourceUpdate.ERRORS_CLEARED,null);
      EditBus.send(message);
+
+     int currentTime=(int)(System.currentTimeMillis()-startTime);
+     System.out.println("DefaultErrorSource edit bus send message time:"+currentTime+" ms");
     }
    });
   }
@@ -285,6 +290,8 @@ public class DefaultErrorSource extends ErrorSource implements EBComponent
    {
     public void run()
     {
+     long startTime = System.currentTimeMillis();
+
      for(int i = 0; i < list.size(); i++)
      {
       DefaultError error = (DefaultError)list.get(i);
@@ -292,6 +299,9 @@ public class DefaultErrorSource extends ErrorSource implements EBComponent
        ErrorSourceUpdate.ERROR_REMOVED,error);
       EditBus.send(message);
      }
+
+     int currentTime=(int)(System.currentTimeMillis()-startTime);
+     System.out.println("DefaultErrorSource edit bus send messages time:"+currentTime+" ms");
     }
    });
   }
@@ -337,9 +347,14 @@ public class DefaultErrorSource extends ErrorSource implements EBComponent
    {
     public void run()
     {
+     long startTime = System.currentTimeMillis();
+
      ErrorSourceUpdate message = new ErrorSourceUpdate(DefaultErrorSource.this,
       ErrorSourceUpdate.ERROR_ADDED,error);
      EditBus.send(message);
+
+     int currentTime=(int)(System.currentTimeMillis()-startTime);
+     System.out.println("DefaultErrorSource edit bus send message time:"+currentTime+" ms");   
     }
    });
   }
@@ -408,6 +423,8 @@ public class DefaultErrorSource extends ErrorSource implements EBComponent
          {
           public void run()
           {
+           long startTime = System.currentTimeMillis();
+
            for(int i = 0; i < list.size(); i++)
            {
             DefaultError error = (DefaultError)list.get(i);
@@ -415,6 +432,9 @@ public class DefaultErrorSource extends ErrorSource implements EBComponent
              ErrorSourceUpdate.ERROR_REMOVED,error);
             EditBus.send(message);
            }
+
+           int currentTime=(int)(System.currentTimeMillis()-startTime);
+           System.out.println("DefaultErrorSource edit bus send messages time:"+currentTime+" ms");    
           }
          });
        }

@@ -953,6 +953,31 @@ jarCacheDir,file.getName() + ".summary");
     cache.dockablesURI = dockablesURI;
     servicesURI = clas.getResource("services.xml");
     cache.servicesURI = servicesURI;
+
+    // todo debug -comment
+    /*System.out.println("shortName="+shortName);
+    InputStream in = null;
+    if (shortName.equals("ErrorList")){
+        String loc = "/home/stepanov/work/smsc/webapps/jedit/src/errorlist/";
+        in = new FileInputStream(loc+shortName+".props");
+    } 
+    if (shortName.equals("SideKick")){
+        String loc = "/home/stepanov/work/smsc/webapps/jedit/src/sidekick/";      
+        in = new FileInputStream(loc+shortName+".props");
+    }
+    if (shortName.equals("Highlight")){
+        String loc = "/home/stepanov/work/smsc/webapps/jedit/src/gatchan/highlight/";      
+        in = new FileInputStream(loc+shortName+".props");
+    }
+    if (shortName.equals("Xml")){
+        String loc = "/home/stepanov/work/smsc/webapps/jedit/src/xml/";      
+        in = new FileInputStream(loc+shortName+".props");
+    }*/
+
+
+
+    // End debug
+
     InputStream in = clas.getResourceAsStream(shortName+".props");
     properties.load(in);
     in.close();
@@ -1131,10 +1156,15 @@ jarCacheDir,file.getName() + ".summary");
     {
       public void run()
       {
+        long startTime = System.currentTimeMillis();
+
         if(!activated)
           return;
 
         startPlugin();
+
+        int currentTime=(int)(System.currentTimeMillis()-startTime);
+        System.out.println("PluginJar start plugin time:"+currentTime+" ms");  
       }
     });
   } //}}}
@@ -1315,8 +1345,11 @@ jarCacheDir,file.getName() + ".summary");
       String str = readString(din);
       if(str == null)
         return null;
-      else
-        return new URL(str);
+      else {
+          URL url = new URL(str);
+          System.out.println("PluginJAR 1350 url="+url);
+          return url;
+      }
     } //}}}
 
     //{{{ readStringArray() method

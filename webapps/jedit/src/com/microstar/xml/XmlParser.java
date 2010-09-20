@@ -3243,9 +3243,11 @@ public class XmlParser {
     // Make the URL absolute.
     if (systemId != null && externalEntity != null) {
       systemId = new URL(externalEntity.getURL(), systemId).toString();
+      System.out.println("XmlParser url: "+systemId);  
     } else if (baseURI != null) {
       try {
- systemId = new URL(new URL(baseURI), systemId).toString();
+        systemId = new URL(new URL(baseURI), systemId).toString();
+        System.out.println("XmlParser url: "+systemId);
       } catch (Exception e) {}
     }
 

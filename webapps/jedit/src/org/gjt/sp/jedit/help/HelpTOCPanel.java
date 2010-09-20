@@ -207,7 +207,9 @@ class HelpTOCPanel extends JPanel
  String content="?username="+jEdit.username+"&password="+jEdit.password+"&command="+command+"&file="+fullPath;
   try
   {
-   in = new InputStreamReader(new URL(jEdit.servletUrl,content).openStream());
+   URL url = new URL(jEdit.servletUrl,content);
+   System.out.println("HelpTOCPanel 211 url: "+url);   
+   in = new InputStreamReader(url.openStream());
    //in = new InputStreamReader(new URL(helpViewer.getBaseURL() + '/' + path).openStream());
    parser.parse(null, null, in);
   }

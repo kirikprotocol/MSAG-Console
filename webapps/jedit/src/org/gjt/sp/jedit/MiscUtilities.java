@@ -477,6 +477,7 @@ public class MiscUtilities
 
   try
   {
+   //System.out.println("MiscUtilities 480 url:" + new URL(str));
    new URL(str);
    return true;
   }

@@ -23,6 +23,7 @@
 package sidekick;
 
 //{{{ Imports
+import javax.swing.*;
 import javax.swing.tree.*;
 import java.util.*;
 import org.gjt.sp.jedit.View;
@@ -50,8 +51,8 @@ public class SideKickParsedData
  public static SideKickParsedData getParsedData(View view)
  {
    //System.out.println("SideKickParsedData.getParsedData()");
-     return (SideKickParsedData)view.getRootPane().getClientProperty(
-   SideKickPlugin.PARSED_DATA_PROPERTY);
+     JRootPane jRootPane = view.getRootPane();          
+     return (SideKickParsedData)jRootPane.getClientProperty(SideKickPlugin.PARSED_DATA_PROPERTY);
  } //}}}
 
  //{{{ setParsedData() method

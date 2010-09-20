@@ -135,17 +135,20 @@ public class TextCatalogReader implements CatalogReader {
    */
   public void readCatalog(Catalog catalog, String fileUrl)
     throws MalformedURLException, IOException {
+    System.out.println("TextCatalogReader.readCatalog() ... "+fileUrl);
     URL catURL = null;
 
     try {
       catURL = new URL(fileUrl);
+      System.out.println("TextCatalogReader 143 url: "+catURL);
     } catch (MalformedURLException e) {
       catURL = new URL("file:///" + fileUrl);
+      System.out.println("TextCatalogReader 146 url: "+catURL);    
     }
 
     URLConnection urlCon = catURL.openConnection();
     try {
-      readCatalog(catalog, urlCon.getInputStream());
+        readCatalog(catalog, urlCon.getInputStream());
     } catch (FileNotFoundException e) {
       Debug.message(1, "Failed to load catalog, file not found",
 		    catURL.toString());

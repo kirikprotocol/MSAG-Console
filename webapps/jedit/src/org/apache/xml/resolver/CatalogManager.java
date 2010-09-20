@@ -42,7 +42,7 @@ public class CatalogManager {
             java.io.InputStream inputstream = (org.apache.xml.resolver.CatalogManager.class).getResourceAsStream("/" + propertyFile);
             if(inputstream == null) {
                 if(!ignoreMissingProperties)
-                    System.err.println("Cannot find " + propertyFile);
+                    System.err.println("Catalog manager Cannot find " + propertyFile);
                 return;
             }
             resources = new PropertyResourceBundle(inputstream);
@@ -126,6 +126,7 @@ public class CatalogManager {
             if(flag && !relativeCatalogs())
                 try {
                     url = new URL(propertyFileURI, s1);
+                    System.out.println("CatalogManager 129 url: "+url);
                     s1 = url.toString();
                 }
                 catch(MalformedURLException malformedurlexception) {

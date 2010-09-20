@@ -47,6 +47,7 @@ public class MirrorList
   XmlParser parser = new XmlParser();
   parser.setHandler(handler);
 
+  System.out.println("MirrorList 50 url: "+path);    
   Reader in = new BufferedReader(new InputStreamReader(
    new URL(path).openStream()));
   try

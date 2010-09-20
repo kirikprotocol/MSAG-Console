@@ -272,6 +272,7 @@ public class CatalogResolver implements EntityResolver, URIResolver {
 	// do little harm.
 	//
 	URL url = new URL(resolved);
+    System.out.println("CatalogResolver 275 url: "+url);
 	InputStream iStream = url.openStream();
 	iSource.setByteStream(iStream);
 
@@ -311,9 +312,11 @@ public class CatalogResolver implements EntityResolver, URIResolver {
 
 	if (base==null) {
 	  url = new URL(uri);
+      System.out.println("CatalogResolver 315 url: "+url);
 	  result = url.toString();
 	} else {
 	  URL baseURL = new URL(base);
+      System.out.println("CatalogResolver 319 url: "+baseURL);
 	  url = (href.length()==0 ? baseURL : new URL(baseURL, uri));
 	  result = url.toString();
 	}
@@ -348,6 +351,7 @@ public class CatalogResolver implements EntityResolver, URIResolver {
 
     try {
       URL url = new URL(uri);
+      System.out.println("CatalogResolver 354 url: "+url);
       return url.toString();
     } catch (MalformedURLException mue) {
       String dir = System.getProperty("user.dir");
@@ -361,6 +365,7 @@ public class CatalogResolver implements EntityResolver, URIResolver {
 
       try {
 	URL fileURL = new URL(file);
+      System.out.println("CatalogResolver 368 url: "+fileURL);    
 	return fileURL.toString();
       } catch (MalformedURLException mue2) {
 	// bail

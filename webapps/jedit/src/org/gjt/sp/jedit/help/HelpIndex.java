@@ -169,9 +169,10 @@ class HelpIndex
  {
   InputStream _in;
 
-  if(MiscUtilities.isURL(url))
+  if(MiscUtilities.isURL(url)){
    _in =  new URL(url).openStream();
-  else
+   System.out.println("HelpIndex 174 url: "+_in);
+  }else
   {
    _in = new FileInputStream(url);
    // hack since HelpViewer needs a URL...

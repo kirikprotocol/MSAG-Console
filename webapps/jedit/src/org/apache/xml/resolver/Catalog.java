@@ -155,7 +155,13 @@ public class Catalog {
     public synchronized void parseCatalog(String s) throws MalformedURLException, IOException {
         //Debug.message(4, "Parse catalog: " + s);
         catalogFiles.addElement(s);
+
+        long startTime = System.currentTimeMillis();
+
         parsePendingCatalogs();
+
+        int currentTime=(int)(System.currentTimeMillis()-startTime);
+        System.out.println("Catalog 164 parse pending catalog time:"+currentTime+" ms");
     }
 
   public synchronized void parseCatalog(String s, InputStream inputstream) throws IOException, CatalogException {
@@ -171,12 +177,18 @@ public class Catalog {
             throw new CatalogException(6, s1);
         } else {
             catalogreader.readCatalog(this, inputstream);
+
+            long startTime = System.currentTimeMillis();
             parsePendingCatalogs();
+
+            int currentTime=(int)(System.currentTimeMillis()-startTime);
+            System.out.println("Catalog 185 parse pending catalog time:"+currentTime+" ms");
             return;
         }
     }
 
     protected synchronized void parsePendingCatalogs() throws MalformedURLException, IOException {
+
         if(!localCatalogFiles.isEmpty()) {
             Vector vector = new Vector();
             for(Enumeration enumeration1 = localCatalogFiles.elements(); enumeration1.hasMoreElements(); vector.addElement(enumeration1.nextElement()));
@@ -200,7 +212,13 @@ public class Catalog {
             catch(ArrayIndexOutOfBoundsException arrayindexoutofboundsexception) { }
             if(catalogEntries.size() == 0 && catalogs.size() == 0)
                 try {
+                    System.out.println("Catalog Start parse catalog file ... "+s);
+                    long startTime = System.currentTimeMillis();
+
                     parseCatalogFile(s);
+
+                    int currentTime=(int)(System.currentTimeMillis()-startTime);                    
+                    System.out.println("Catalog Catalog file parsed. Time:"+currentTime+" ms");
                 }
                 catch(CatalogException catalogexception) {
                     System.out.println("FIXME: " + catalogexception.toString());
@@ -238,11 +256,16 @@ public class Catalog {
         } */
 
         try {
+            // todo debug -commnet
+            //base= new URL("jar:http://localhost:20801/msag/rules/rules/jedit.jar!/xml/dtds/catalog");
+
             base = new URL(catalogCwd, fixSlashes(s));
+            System.out.println("Catalog 251 url: "+base);
         }
         catch(MalformedURLException malformedurlexception1) {
             try {
                 base = new URL("file:" + fixSlashes(s));
+                System.out.println("Catalog 256 url: "+base);
             }
             catch(MalformedURLException malformedurlexception2) {
                // Debug.message(1, "Malformed URL on catalog filename", fixSlashes(s));
@@ -260,6 +283,7 @@ public class Catalog {
             DataInputStream datainputstream;
             try {
                 flag1 = false;
+                System.out.println("Catalog open input stream: base="+base);
                 datainputstream = new DataInputStream(base.openStream());
             }
             catch(FileNotFoundException filenotfoundexception) {
@@ -267,7 +291,11 @@ public class Catalog {
                 break;
             }
             try {
+                System.out.println("Catalog Read catalog .. base="+base);
+                long startTime = System.currentTimeMillis();
                 catalogreader.readCatalog(this, datainputstream);
+                int currentTime=(int)(System.currentTimeMillis()-startTime);              
+                System.out.println("Catalog Catalog was read time:"+currentTime+" ms");
                 flag = true;
             }
             catch(CatalogException catalogexception) {
@@ -294,10 +322,12 @@ public class Catalog {
             try {
                 s = fixSlashes(s);
                 url = new URL(base, s);
+                System.out.println("Catalog url: "+url);
             }
             catch(MalformedURLException malformedurlexception) {
                 try {
                     url = new URL("file:" + s);
+                    System.out.println("Catalog 311 url: "+url);
                 }
                 catch(MalformedURLException malformedurlexception1) {
                   malformedurlexception1.printStackTrace();//  Debug.message(1, "Malformed URL on base", s);
@@ -862,6 +892,7 @@ public class Catalog {
         s = fixSlashes(s);
         try {
             url = new URL(base, s);
+            System.out.println("Catalog 876 url: "+url);
         }
         catch(MalformedURLException malformedurlexception) {
            malformedurlexception.printStackTrace();// Debug.message(1, "Malformed URL on system identifier", s);

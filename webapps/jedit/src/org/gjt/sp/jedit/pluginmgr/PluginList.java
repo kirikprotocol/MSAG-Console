@@ -64,6 +64,7 @@ class PluginList
   XmlParser parser = new XmlParser();
   parser.setHandler(handler);
 
+  System.out.println("PluginList 37 path: "+path);    
   InputStream in = new BufferedInputStream(new URL(path).openStream());
   try
   {

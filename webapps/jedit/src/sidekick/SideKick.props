@@ -51,7 +51,7 @@ buffer.sidekick.buffer-change-parse=false
 buffer.sidekick.keystroke-parse=false
 
 # Global auto parse
-buffer.sidekick.auto-parse=true
+buffer.sidekick.auto-parse=false
 
 # Delay after typing ends before auto parse, in milliseconds
 sidekick.auto-parse-delay=6000
@@ -60,8 +60,8 @@ sidekick.auto-parse-delay=6000
 sidekick-tree.follows-caret=false
 
 # Enable completion
-sidekick.complete-delay.toggle=true
-sidekick.complete-instant.toggle=true
+sidekick.complete-delay.toggle=false
+sidekick.complete-instant.toggle=false
 
 # Delay after complete trigger before showing completion popup
 sidekick.complete-delay=500

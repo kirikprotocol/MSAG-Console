@@ -254,6 +254,7 @@ public class resolver
         String userdir = System.getProperty("user.dir");
         userdir.replace('\\', '/');
         base = new URL("file:///" + userdir + "/basename");
+        System.out.println("resolver url: "+base);  
       } catch (MalformedURLException e) {
         String userdir = System.getProperty("user.dir");
         userdir.replace('\\', '/');
@@ -263,10 +264,12 @@ public class resolver
 
       try {
         sysid = new URL(base, systemId);
+        System.out.println("resolver 267 url: "+sysid);
         systemId = sysid.toString();
       } catch (MalformedURLException e) {
         try {
           sysid = new URL("file:///" + systemId);
+          System.out.println("resolver 272 url: "+sysid);
         } catch (MalformedURLException e2) {
           Debug.message(1, "Malformed URL on system id", systemId);
         }

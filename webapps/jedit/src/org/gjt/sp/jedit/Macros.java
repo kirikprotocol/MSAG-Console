@@ -636,7 +636,7 @@ file_loop:   for(int i = 0; i < paths.length; i++)
   protected static int IsHidden=8;
  //{{{ loadMacros() method
  private static void loadMacros(Vector vector, String path, String directoryName)
- {
+ {  
   lastMacro = null;
     HashMap args=new HashMap();args.put("file",directoryName);
   List listFiles=jEdit.HttpGet(args,ListFiles);

@@ -92,14 +92,18 @@ public class SAXCatalogReader
     }
 
     public void readCatalog(Catalog catalog1, String s) throws MalformedURLException, IOException, CatalogException {
+        System.out.println("SAXCatalogReader.readCatalog() ... "+s);
         URL url = null;
         try {
             url = new URL(s);
+            System.out.println("SAXCatalogReader 99 url: "+url);
         }
         catch(MalformedURLException malformedurlexception) {
             url = new URL("file:///" + s);
+             System.out.println("SAXCatalogReader 103 url: "+url);
         }
         try {
+
             URLConnection urlconnection = url.openConnection();
             readCatalog(catalog1, urlconnection.getInputStream());
         }

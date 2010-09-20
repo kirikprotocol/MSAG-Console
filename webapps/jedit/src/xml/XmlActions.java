@@ -47,7 +47,7 @@ public class XmlActions
        Buffer buffer = view.getBuffer();
        SideKickParsedData _data = SideKickParsedData.getParsedData(view);
        if(!(_data instanceof XmlParsedData))
-       { System.out.println("XMLActions EditTagBackCompletion oshibka : Not an XML file");
+       { System.out.println("XMLActions 50 EditTagBackCompletion oshibka : Not an XML file");
          // GUIUtilities.error(view,"xml-no-data",null);
          return;
        }
@@ -77,6 +77,7 @@ public class XmlActions
 
    public static boolean checkRootTag(View view)
      {
+       System.out.println("XmlAction.checkRootTag()");
        JEditTextArea textArea = view.getTextArea();
        if(XmlPlugin.isDelegated(textArea))
        {
@@ -86,7 +87,7 @@ public class XmlActions
        Buffer buffer = view.getBuffer();
        SideKickParsedData _data = SideKickParsedData.getParsedData(view);
        if(!(_data instanceof XmlParsedData))
-       { System.out.println("XMLActions EditTagBackCompletion oshibka : Not an XML file");
+       { //System.out.println("XMLActions 89 EditTagBackCompletion oshibka : Not an XML file");
          // GUIUtilities.error(view,"xml-no-data",null);
          return false;
        }
@@ -106,7 +107,8 @@ public class XmlActions
       return false;
      }
    public static void completeAttrubite(String text,TagParser.Tag tag,XmlParsedData data,View view) {
-   HashMap attributes = new HashMap();
+    System.out.println("XmlAction.completeAttribute()");
+    HashMap attributes = new HashMap();
     // use a StringTokenizer to parse the tag
     String attributeName = null;
     boolean seenEquals = false;
@@ -247,6 +249,7 @@ public class XmlActions
   //{{{ showEditTagDialog() method
  public static void showEditTagDialog(View view)
  {
+  System.out.println("XmlActions.showEditTagDialog()");
   JEditTextArea textArea = view.getTextArea();
   if(XmlPlugin.isDelegated(textArea))
   {
@@ -489,7 +492,7 @@ loop:   for(;;)
 
    if(!(_data instanceof XmlParsedData))
    {
-     System.out.println("XMLActions EditTagBackCompletion oshibka : Not an XML file");
+     System.out.println("XMLActions 492 EditTagBackCompletion oshibka : Not an XML file");
    // GUIUtilities.error(view,"xml-no-data",null);
     return;
    }
@@ -672,6 +675,7 @@ loop:   for(;;)
  //{{{ showEditTagDialog() method
  public static void showEditTagDialog(View view, ElementDecl elementDecl)
  {
+  System.out.println("XmlActions.showEditTagDialog() 678");
   Buffer buffer = view.getBuffer();
 
   SideKickParsedData _data = SideKickParsedData.getParsedData(view);
@@ -794,6 +798,7 @@ loop:   for(;;)
   */
  public static void split(View view)
  {
+  System.out.println("XmlActions.split() 801");
   JEditTextArea textArea = view.getTextArea();
   Buffer buffer = view.getBuffer();
 
@@ -925,6 +930,7 @@ loop:   for(;;)
  //{{{ insertClosingTagKeyTyped() method
  public static void insertClosingTagKeyTyped(View view)
  {
+  System.out.println("XmlActios.insertClosingTagTyped()");
   JEditTextArea textArea = view.getTextArea();
 
   Macros.Recorder recorder = view.getMacroRecorder();
@@ -979,6 +985,7 @@ loop:   for(;;)
  //{{{ completeClosingTag() method
  public static void completeClosingTag(View view, boolean insertSlash)
  {
+  System.out.println("XmlActions.completeClosingTag 988");
   JEditTextArea textArea = view.getTextArea();
 
   Macros.Recorder recorder = view.getMacroRecorder();

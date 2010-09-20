@@ -211,6 +211,7 @@ public class ResolvingXMLFilter extends XMLFilterImpl {
 	// do little harm.
 	//
 	URL url = new URL(resolved);
+    System.out.println("ResolvingXMLFilter 214 url: "+url);
 	InputStream iStream = url.openStream();
 	iSource.setByteStream(iStream);
 
@@ -286,8 +287,10 @@ public class ResolvingXMLFilter extends XMLFilterImpl {
 	    try {
 	      if (baseURL != null) {
 		catalog = new URL(baseURL, data);
+        System.out.println("ResolvingXMLFilter 290 url: "+catalog);      
 	      } else {
 		catalog = new URL(data);
+        System.out.println("ResolvingXMLFilter 293 url: "+catalog);      
 	      }
 	    } catch (MalformedURLException mue) {
 	      // nevermind
@@ -337,16 +340,19 @@ public class ResolvingXMLFilter extends XMLFilterImpl {
     userdir.replace('\\', '/');
     try {
       cwd = new URL("file:///" + userdir + "/basename");
+      System.out.println("ResolvingXMLFilter 343 url: "+cwd);
     } catch (MalformedURLException mue) {
       cwd = null;
     }
 
     try {
       baseURL = new URL(systemId);
+      System.out.println("ResolvingXMLFilter 350 url: "+baseURL);
     } catch (MalformedURLException mue) {
       if (cwd != null) {
 	try {
 	  baseURL = new URL(cwd, systemId);
+      System.out.println("ResolvingXMLFilter 355 url: "+baseURL);  
 	} catch (MalformedURLException mue2) {
 	  // give up
 	  baseURL = null;

@@ -60,6 +60,7 @@ public class Resolver extends Catalog
     public String resolveURI(String s)
         throws MalformedURLException, IOException
     {
+        System.out.println("Resolver.resolveURI 63 uri="+s);
         String s1 = super.resolveURI(s);
         if(s1 != null)
             return s1;
@@ -140,6 +141,7 @@ public class Resolver extends Catalog
     protected String resolveExternalSystem(String s, String s1)
         throws MalformedURLException, IOException
     {
+        System.out.println("Resolver.resolveExternalSystem 144 s="+s);
         Resolver resolver = queryResolver(s1, "i2l", s, null);
         if(resolver != null)
             return resolver.resolveSystem(s);
@@ -165,6 +167,7 @@ public class Resolver extends Catalog
         try
         {
             URL url = new URL(s4);
+            System.out.println("Resolver 168 url: "+url);
             URLConnection urlconnection = url.openConnection();
             urlconnection.setUseCaches(false);
             Resolver resolver = (Resolver)newCatalog();

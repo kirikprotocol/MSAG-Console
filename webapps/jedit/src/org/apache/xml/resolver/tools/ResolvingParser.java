@@ -282,8 +282,10 @@ public class ResolvingParser
 	    try {
 	      if (baseURL != null) {
 		catalog = new URL(baseURL, data);
+        System.out.println("ResolvingParser 285 url: "+catalog);      
 	      } else {
 		catalog = new URL(data);
+        System.out.println("ResolvingParser 285 url: "+catalog); 
 	      }
 	    } catch (MalformedURLException mue) {
 	      // nevermind
@@ -401,6 +403,7 @@ public class ResolvingParser
 	// do little harm.
 	//
 	URL url = new URL(resolved);
+    System.out.println("ResolvingParser 406 url: "+url);
 	InputStream iStream = url.openStream();
 	iSource.setByteStream(iStream);
 
@@ -427,16 +430,19 @@ public class ResolvingParser
     userdir.replace('\\', '/');
     try {
       cwd = new URL("file:///" + userdir + "/basename");
+      System.out.println("ResolvingParser 433 url: "+cwd);
     } catch (MalformedURLException mue) {
       cwd = null;
     }
 
     try {
       baseURL = new URL(systemId);
+      System.out.println("ResolvingParser 440 url: "+baseURL);
     } catch (MalformedURLException mue) {
       if (cwd != null) {
 	try {
 	  baseURL = new URL(cwd, systemId);
+      System.out.println("ResolvingParser 445 url: "+baseURL);   
 	} catch (MalformedURLException mue2) {
 	  // give up
 	  baseURL = null;

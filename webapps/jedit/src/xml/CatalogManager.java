@@ -130,7 +130,17 @@ public class CatalogManager
       || newSystemId.endsWith(".xsd"))
   {
    InputSource source = new PermanentInputSource(systemId);
-   source.setByteStream(new URL(newSystemId).openStream());
+   try{
+       source.setByteStream(new URL(newSystemId).openStream());
+       System.out.println("CatalogManager.resolve() 134 open stream to newSystemId: "+newSystemId);
+   } catch (MalformedURLException e1){
+       e1.printStackTrace();
+       System.out.println("CatalogManager.resolve() 138 Could not create url from newSystemId="+newSystemId);
+   } catch (IOException e2){
+       e2.printStackTrace();
+       System.out.println("CatalogManager.resolve() 141 Could not open stream to newSystemId="+newSystemId);
+   }
+
    return source;
   }
   else if(!network)
@@ -138,6 +148,7 @@ public class CatalogManager
   else
   {
    final String _newSystemId = newSystemId;
+   System.out.println("CatalogManager.resolve() 151 create VFS for _newSystemId="+_newSystemId);
    final VFS vfs = VFSManager.getVFSForPath(_newSystemId);
    // use a final array to pass a mutable value from the
    // invokeAndWait() call
@@ -162,7 +173,13 @@ public class CatalogManager
    {
     try
     {
-     SwingUtilities.invokeAndWait(run);
+        System.out.println("CatalogManager.resolve() SwingUtilities.invokeAndWait() ...");
+        long startTime = System.currentTimeMillis();
+
+        SwingUtilities.invokeAndWait(run);
+
+        int currentTime=(int)(System.currentTimeMillis()-startTime);
+        System.out.println("CatalogManager.resolve() SwingUtilities.invokeAndWait() time:"+currentTime+" ms");
     }
     catch(Exception e)
     {
@@ -331,6 +348,7 @@ public class CatalogManager
  //{{{ reloadCatalogs() method
  public static void reloadCatalogs()
  {
+  System.out.println("CatalogManager.reloadCatalogs() 344");   
   loadedCatalogs = false;
  } //}}}
 
@@ -524,11 +542,19 @@ public class CatalogManager
 
         URL url1=jEdit.baseUrl;
         URL url=new URL(jEdit.baseUrl.toString()+"catalog/catalog");
+        System.out.println("CatalogManager 528 url: "+url); 
         if (jEdit.BoolGet(url.toString(),jEdit.getExists())) {
           System.out.println("CatalogManager resolve  catalog in jar directory Exist !!!");
           catalog.parseCatalog(url.toString());
         }
+
+        // todo debug - comment
+        //String cat = "http://localhost:20801/msag/rules/rules/catalog/catalog";
+        //catalog.parseCatalog(Class.forName("xml.CatalogManager").getResource(cat).toString());
+        // debug end
+       
         catalog.parseCatalog(Class.forName("xml.CatalogManager").getResource("dtds/catalog").toString());
+
         //catalog.parseCatalogA("jeditresource:XML.jar!/xml/dtds/catalog");
         int i = 0;
     String prop, uri;

@@ -146,7 +146,7 @@ public class Remote {
   String formData = sb.toString(  );
 
   try {
-    URL url = new URL( postURL );
+    URL url = new URL( postURL );      
     HttpURLConnection urlcon =
      (HttpURLConnection) url.openConnection(  );
     System.out.println("bsh.Remote Open url connection: url="+postURL);  

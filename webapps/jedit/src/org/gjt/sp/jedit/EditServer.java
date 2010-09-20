@@ -336,29 +336,32 @@ public class EditServer extends Thread
    {
     public void run()
     {
-     try
-     {
-      NameSpace ns = new NameSpace(
-       BeanShell.getNameSpace(),
-       "EditServer namespace");
-      ns.setVariable("socket",client);
-      BeanShell.eval(null,ns,script);
-     }
-     catch(bsh.UtilEvalError e)
-     {
-      Log.log(Log.ERROR,this,e);
-     }
-     finally
-     {
-      try
-      {
-       BeanShell.getNameSpace().setVariable("socket",null);
-      }
-      catch(bsh.UtilEvalError e)
-      {
-       Log.log(Log.ERROR,this,e);
-      }
-     }
+     long startTime = System.currentTimeMillis();
+         try
+             {
+              NameSpace ns = new NameSpace(
+               BeanShell.getNameSpace(),
+               "EditServer namespace");
+              ns.setVariable("socket",client);
+              BeanShell.eval(null,ns,script);
+             }
+         catch(bsh.UtilEvalError e)
+         {
+          Log.log(Log.ERROR,this,e);
+         }
+         finally
+         {
+              try
+              {
+               BeanShell.getNameSpace().setVariable("socket",null);
+              }
+              catch(bsh.UtilEvalError e)
+              {
+               Log.log(Log.ERROR,this,e);
+              }
+         }
+     int currentTime=(int)(System.currentTimeMillis()-startTime);
+     System.out.println("EditServer add namespace to bean shell time:"+currentTime+" ms");   
     }
    });
 

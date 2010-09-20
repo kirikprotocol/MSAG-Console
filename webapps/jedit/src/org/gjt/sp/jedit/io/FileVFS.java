@@ -365,6 +365,7 @@ public class FileVFS extends VFS
   else
   {
    jEdit.BoolGet(parent.getPath(),jEdit.getMkDirs());//parent.mkdirs();
+
    if(!jEdit.BoolGet(parent.getPath(),jEdit.getExists()))//parent.exists())
     return false;
   }

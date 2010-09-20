@@ -950,6 +950,7 @@ public class XMLEntityManager
             stream = xmlInputSource.getByteStream();
             if (stream == null) {
                 stream = new URL(expandedSystemId).openStream();
+                System.out.println("XmlEntityManager url: "+stream);
             }
             // wrap this stream in RewindableInputStream
             stream = new RewindableInputStream(stream);

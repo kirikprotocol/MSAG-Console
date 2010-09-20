@@ -105,8 +105,13 @@ public class IOProgressMonitor extends JPanel
    {
     public void run()
     {
+     long startTime = System.currentTimeMillis();
+
      updateCaption();
      threads[index].update();
+
+     int currentTime=(int)(System.currentTimeMillis()-startTime);
+     System.out.println("IOProgressMonitor status update time:"+currentTime+" ms");    
     }
    });
   }
@@ -117,8 +122,11 @@ public class IOProgressMonitor extends JPanel
    {
     public void run()
     {
+     long startTime = System.currentTimeMillis();
      updateCaption();
      threads[index].update();
+     int currentTime=(int)(System.currentTimeMillis()-startTime);
+     System.out.println("IOProgressMonitor progress update time:"+currentTime+" ms");    
     }
    });
   }

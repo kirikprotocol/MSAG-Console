@@ -418,7 +418,7 @@ public abstract class OptionsDialog extends EnhancedDialog
  //{{{ save() method
  private void save(Object obj)
  {
-  System.out.println("OptionDialog.save()");
+  //System.out.println("OptionDialog.save()");
   if(obj instanceof OptionGroup)
   {
    OptionGroup grp = (OptionGroup)obj;
@@ -442,7 +442,7 @@ public abstract class OptionsDialog extends EnhancedDialog
   }
   else if(obj instanceof String)
   {
-    System.out.println("OptionDialog.save() string " + obj);
+    //System.out.println("OptionDialog.save() string " + obj);
     save(deferredOptionPanes.get(obj));
   }
  } //}}}

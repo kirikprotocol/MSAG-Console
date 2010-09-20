@@ -213,7 +213,7 @@ public class HelpViewer extends JFrame implements EBComponent
   {
   // _url = new URL(url);
    _url=new URL(jEdit.servletUrl,content);
-
+    System.out.println("HelpViewer 216 url: "+_url);
     if(!_url.equals(viewer.getPage()))
     title.setText(jEdit.getProperty("helpviewer.loading"));
    else

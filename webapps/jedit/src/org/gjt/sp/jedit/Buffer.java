@@ -3400,6 +3400,7 @@ public class Buffer
   //{{{ setPath() method
   private void setPath(String path)
   {
+
     this.path = path;
     VFS vfs = VFSManager.getVFSForPath(path);
     if((vfs.getCapabilities() & VFS.WRITE_CAP) == 0)

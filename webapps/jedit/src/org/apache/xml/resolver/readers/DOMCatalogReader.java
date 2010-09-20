@@ -281,6 +281,7 @@ public class DOMCatalogReader implements CatalogReader {
    */
   public void readCatalog(Catalog catalog, String fileUrl)
     throws MalformedURLException, IOException, CatalogException {
+    System.out.println("DOMCatalogReader.readCatalog() ... "+fileUrl);
     URL url = new URL(fileUrl);
     URLConnection urlCon = url.openConnection();
     readCatalog(catalog, urlCon.getInputStream());

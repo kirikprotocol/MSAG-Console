@@ -1866,13 +1866,17 @@ loop:  for(;;)
    // People have reported hangs with JDK 1.4; might be
    // caused by modal dialogs being displayed from
    // windowActivated()
-   SwingUtilities.invokeLater(new Runnable()
+   /*SwingUtilities.invokeLater(new Runnable()
    {
     public void run()
     {
+     long startTime = System.currentTimeMillis();
      jEdit.checkBufferStatus(View.this);
+
+     int currentTime=(int)(System.currentTimeMillis()-startTime);
+     System.out.println("View.WindowHandler check buffer status time:"+currentTime+" ms");   
     }
-   });
+   }); */
   }
 
   public void windowClosing(WindowEvent evt)

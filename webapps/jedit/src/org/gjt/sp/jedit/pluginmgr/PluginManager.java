@@ -84,8 +84,12 @@ public class PluginManager extends JFrame implements EBComponent
     {
      public void run()
      {
+      long startTime = System.currentTimeMillis();
       queuedUpdate = false;
       manager.update();
+
+      int currentTime=(int)(System.currentTimeMillis()-startTime);
+      System.out.println("PluginManager update time:"+currentTime+" ms");   
      }
     });
     queuedUpdate = true;

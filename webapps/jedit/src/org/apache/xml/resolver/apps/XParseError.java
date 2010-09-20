@@ -133,6 +133,7 @@ public class XParseError implements ErrorHandler
 
     try {
       URL url = new URL(file);
+      System.out.println("XParserError url: "+url);  
       baseURI = url.toString();
     } catch (MalformedURLException mue) {
       // nop;

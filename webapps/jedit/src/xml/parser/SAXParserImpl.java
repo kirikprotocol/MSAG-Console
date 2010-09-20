@@ -396,11 +396,19 @@ public class SAXParserImpl extends XmlParser
    throws SAXException
   {
    InputSource source = null;
-   if (sourceCash.containsKey(systemId)) return (InputSource)sourceCash.get(systemId);
-     //System.out.println(",,,,,,,,,,,,,,,,,SAXParserImpl resolveEntity systemId= "+systemId + "publicId = " +publicId+",,,,,");
+   if (sourceCash.containsKey(systemId)) {
+       System.out.println("SAXParserImpl source cash contains "+systemId);
+       return (InputSource) sourceCash.get(systemId);
+   }
+
+   System.out.println("SAXParserImpl 404 resolveEntity systemId = "+systemId + " publicId = " +publicId);
    try
    {
-    source = CatalogManager.resolve(loc.getSystemId(),publicId,systemId);
+       long startTime = System.currentTimeMillis();
+       source = CatalogManager.resolve(loc.getSystemId(),publicId,systemId);
+
+       int currentTime=(int)(System.currentTimeMillis()-startTime);
+       System.out.println("CatalogManager.resolve() time:"+currentTime+" ms");
    }
    catch(SAXException s)
    {

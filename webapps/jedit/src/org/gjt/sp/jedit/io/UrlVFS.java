@@ -61,7 +61,9 @@ public class UrlVFS extends VFS
  {
   try
   {
-   return new URL(path).openStream();
+      URL url = new URL(path);
+      System.out.println("UrlVFS 216 url: "+url);
+      return url.openStream();
   }
   catch(MalformedURLException mu)
   {
@@ -87,6 +89,7 @@ public class UrlVFS extends VFS
   {
       System.out.println("UrlVFS createOutputStream");
       url=new URL(jEdit.servletUrl,content);
+      System.out.println("UrlVFS 92 url: "+url);
          // URL url= new URL(path);
       c=(HttpURLConnection) url.openConnection();
       System.out.println("UrlVFS open connection: url="+url);

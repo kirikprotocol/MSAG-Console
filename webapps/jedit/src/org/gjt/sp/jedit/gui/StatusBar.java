@@ -259,6 +259,7 @@ public class StatusBar extends JPanel implements WorkThreadProgressListener
   {
    public void run()
    {
+
     // don't obscure existing message
     if(message != null && !"".equals(message.getText().trim())
      && !currentMessageIsIO)

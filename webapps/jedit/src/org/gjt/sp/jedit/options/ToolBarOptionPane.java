@@ -518,8 +518,9 @@ class ToolBarEditDialog extends EnhancedDialog
      fileIcon = current.iconName;
      try
      {
-      fileButton.setIcon(new ImageIcon(new URL(
-       fileIcon)));
+      URL url = new URL(fileIcon);
+      System.out.println("ToolbarOptionPane 522 url: "+url);   
+      fileButton.setIcon(new ImageIcon(url));
      }
      catch(MalformedURLException mf)
      {
@@ -695,8 +696,9 @@ class ToolBarEditDialog extends EnhancedDialog
 
     try
     {
-     fileButton.setIcon(new ImageIcon(new URL(
-      fileIcon)));
+     URL url = new URL(fileIcon);
+     System.out.println("ToolbarOptionPane 700 url: "+url);    
+     fileButton.setIcon(new ImageIcon(url));
     }
     catch(MalformedURLException mf)
     {

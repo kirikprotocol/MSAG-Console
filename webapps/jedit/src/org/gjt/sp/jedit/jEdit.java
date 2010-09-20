@@ -106,7 +106,15 @@ public class jEdit extends Applet
     GridBagConstraints gbc = new GridBagConstraints();
     gbc.fill = GridBagConstraints.BOTH;
     //String[] args = new String[5];
+
     baseUrl = getCodeBase();
+
+//    try{
+//    baseUrl = new URL("http://localhost:20801/msag/rules/rules/"); //todo only for degub - comment
+//    }catch (MalformedURLException e){
+//
+//    }
+      
     username = getParameter("username");
     password = getParameter("password");
     jEditHome =getParameter("homedir");
@@ -120,6 +128,7 @@ public class jEdit extends Applet
     String path = baseUrl.getPath();
     try {
       servletUrl = new URL(baseUrl, getParameter("servleturl"));
+      System.out.println("jEdit 131 servletUrl: "+servletUrl);
     } catch (MalformedURLException e) { e.printStackTrace();
     }
     ping_port = Integer.parseInt(getParameter("ping_port"));
@@ -150,8 +159,12 @@ public class jEdit extends Applet
     super.start();
     String[] args = new String[5];
     args[0]=getParameter("file");
+    System.out.println("Parameter file="+args[0]);
 
+    // Debug todo debug -comment
+    //openRule("1////SMPP");
   }
+    
   public String openRule(final String userFile)
    {
      stopped = false;
@@ -163,7 +176,7 @@ public class jEdit extends Applet
      if(!initialized) {
        initialize();
        initialized = true;
-     };
+     }
      System.out.println("openRule... "+userFile);
      super.start();
      String[] args = new String[5];
@@ -186,7 +199,7 @@ public class jEdit extends Applet
       if(!initialized) {
         initialize();
         initialized = true;
-      };
+      }
       System.out.println("newRule... ");
       super.start();
       String[] args = new String[5];
@@ -2816,7 +2829,12 @@ public class jEdit extends Applet
         {
           public void run()
           {
+            long startTime = System.currentTimeMillis();
+
             showPluginErrorDialog();
+
+            int currentTime=(int)(System.currentTimeMillis()-startTime);
+            System.out.println("jEdit show plugin error dialog time:"+currentTime+" ms");
           }
         });
       }
@@ -3031,6 +3049,13 @@ public class jEdit extends Applet
     systemProperties.put("file.encoding", StringGet("file",FileEncoding));   
     systemProperties.put("line.separator",StringGet("file",LineSeparator));  //"\n"
     try {
+      //////////Debug  todo debug - commect
+//      String loc = "/home/stepanov/work/smsc/webapps/jedit/src";
+//      propMgr.loadSystemProps(new FileInputStream(loc+"/org/gjt/sp/jedit/jedit.props"));
+//      propMgr.loadSystemProps(new FileInputStream(loc+"/org/gjt/sp/jedit/jedit_gui.props"));
+//      propMgr.loadSystemProps(new FileInputStream(loc+"/org/gjt/sp/jedit/jedit_keys.props"));
+      //////////End Debug
+
       propMgr.loadSystemProps(jEdit.class.getResourceAsStream("/org/gjt/sp/jedit/jedit.props"));
       propMgr.loadSystemProps(jEdit.class.getResourceAsStream("/org/gjt/sp/jedit/jedit_gui.props"));
       propMgr.loadSystemProps(jEdit.class.getResourceAsStream("/org/gjt/sp/jedit/jedit_keys.props"));
@@ -3069,7 +3094,7 @@ public class jEdit extends Applet
 
        String path = MiscUtilities.constructPath(siteSettingsDirectory, snippet);
        HashMap args=new HashMap();args.put("file",path);
-       LinkedList list=(LinkedList) HttpGet(args,ParseXml);
+        LinkedList list=(LinkedList) HttpGet(args,ParseXml);
         propMgr.loadSitePropsA(list);
         //propMgr.loadSiteProps(new FileInputStream(new File(path)));
     }
@@ -3385,6 +3410,7 @@ public class jEdit extends Applet
                                       String backupPrefix, String backupSuffix,
                                       String backupDirectory, int backupTimeDistance)
   {
+    System.out.println("jEdit save backup ...");
     HashMap args = new HashMap();
     args.put("bs", String.valueOf(backups));
     args.put("bPrx", backupPrefix);
@@ -3392,11 +3418,15 @@ public class jEdit extends Applet
     args.put("bDir", backupDirectory);
     args.put("bTmDst", String.valueOf(backupTimeDistance));
     args.put("file", file);
+
     LinkedList list = (LinkedList) HttpGet(args, SaveBackup);
+    System.out.println("jEdit backup was saved. ");  
     boolean result = false;
     String inputLine;
     inputLine = (String) list.get(0);
     if (inputLine.equals("true")) result = true;
+
+    System.out.println("jEdit save backup result=" + result);
     return result;
   }
   //{{{ SetPermissionsGet() method
@@ -3443,6 +3473,7 @@ public class jEdit extends Applet
    */
   public static boolean BoolGet(final String file, final int command)
   {
+    System.out.println("jEdit.BoolGet() ... file="+file+" command="+command);
     HashMap args = new HashMap();
     args.put("file", file);
     LinkedList list = (LinkedList) HttpGet(args, command);
@@ -3459,6 +3490,7 @@ public class jEdit extends Applet
    */
   public static long LongGet(final String file, final int command)
   {
+    System.out.println("jEdit.LongGet() ... file="+file+" command="+command);
     HashMap args = new HashMap();
     args.put("file", file);
     LinkedList list = (LinkedList) HttpGet(args, command);
@@ -3475,6 +3507,7 @@ public class jEdit extends Applet
    */
   public static String StringGet(final String file, final int command)
   {
+    System.out.println("jEdit.StringGet() ... file="+file+" command="+command);
     HashMap args = new HashMap();
     args.put("file", file);
     return (String) HttpGet(args, command).get(0);
@@ -3486,6 +3519,7 @@ public class jEdit extends Applet
    */
   public static String LongStringGet(final String file, final int command)
   {
+    System.out.println("jEdit.StringGet() ... file="+file+" command="+command);
     HashMap args = new HashMap();
     args.put("file", file);
     LinkedList list = (LinkedList) HttpGet(args, command);
@@ -3504,6 +3538,7 @@ public class jEdit extends Applet
    */
   public static String[] StringsGet(final String file, final int command)
   {
+    System.out.println("jEdit.StringsGet() ... file="+file+" command="+command);
     HashMap args = new HashMap();
     args.put("file", file);
     LinkedList list = (LinkedList) HttpGet(args, command);
@@ -3521,6 +3556,7 @@ public class jEdit extends Applet
    */
   public static File[] FilesGet(final String file, final int command)
   {
+    System.out.println("jEdit.FilesGet() ... file="+file+" command="+command);
     HashMap args = new HashMap();
     args.put("file", file);
     LinkedList list = (LinkedList) HttpGet(args, command);
@@ -3538,6 +3574,7 @@ public class jEdit extends Applet
    */
   public static LinkedList GetNewRuleInfo(final String file, final int command)
   {
+    System.out.println("jEdit.GetNewRuleInfo() ... file="+file+" command="+command);
     HashMap args = new HashMap();
     args.put("file", file);
     LinkedList list = (LinkedList) HttpGet(args, command);
@@ -3546,6 +3583,7 @@ public class jEdit extends Applet
 
   public static Object getObject(final String file,  final int command)
   {
+    System.out.println("jEdit.getObject() ... file="+file+" command="+command);
     HashMap args = new HashMap();
     args.put("file", file);
     LinkedList list = (LinkedList) HttpGet(args, command);
@@ -3558,7 +3596,7 @@ public class jEdit extends Applet
    */
   public static List HttpGet(Map args, final int command)
   {
-    //System.out.println("jEdit.HttpGet()");
+    System.out.println("jEdit.HttpGet() command="+command);
     URL url = null;
     HttpURLConnection urlcon = null;
     BufferedReader in = null;
@@ -3744,6 +3782,7 @@ public class jEdit extends Applet
     {
       public void run()
       {
+        long startTime = System.currentTimeMillis();
 
         Buffer buffer = openFiles(null, userDir, args);
         int count = getBufferCount();
@@ -3796,6 +3835,9 @@ public class jEdit extends Applet
         // -nogui -nobackground switches on command
         // line)
         Toolkit.getDefaultToolkit();
+
+        int currentTime=(int)(System.currentTimeMillis()-startTime);
+        System.out.println("jEdit finish startup time:"+currentTime+" ms");   
       }
     });
   } //}}}
@@ -3807,6 +3849,7 @@ public class jEdit extends Applet
     {
       public void run()
       {
+       long startTime = System.currentTimeMillis();
 
        // Buffer buffer = openFiles(null, userDir, args);
         int count = getBufferCount();
@@ -3884,6 +3927,9 @@ public class jEdit extends Applet
         // -nogui -nobackground switches on command
         // line)
         Toolkit.getDefaultToolkit();
+
+        int currentTime=(int)(System.currentTimeMillis()-startTime);
+        System.out.println("jEdit finish startup next time:"+currentTime+" ms");   
       }
     });
   } //}}}
