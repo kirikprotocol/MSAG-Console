@@ -22,19 +22,7 @@ public class  CollapsingGroupRenderer extends Renderer {
 
     CollapsingGroup cg = (CollapsingGroup)component;
     ResponseWriter writer = context.getResponseWriter();
-    writer.
-        append("\n<div class=\"");
-    if (!cg.isOpened())
-      writer.append("collapsing_group_closed");
-    else
-      writer.append("collapsing_group_opened");
 
-    writer.append("\" id=\"sectionHeader_").
-        append(cg.getId()).
-        append("\" onclick=\"collasping_group_showhide_section('").
-        append(cg.getId()).
-        append("')\">");
-    writer.append(cg.getLabel());
     writer.
         append("\n<input type=\"hidden\" id=\"sectionOpened_").
         append(cg.getId()).
@@ -43,19 +31,48 @@ public class  CollapsingGroupRenderer extends Renderer {
         append("\" value=\"").
         append(cg.isOpened() ? "true" : "false").
         append("\"/>");
-    writer.append("\n</div>");
+    writer.append("");
 
-    writer.
-        append("\n<table cellspacing=\"0\" cellpadding=\"0\" id=\"sectionValue_").
+    writer.append("\n <table cellspacing=\"0\" cellpadding=\"0\"><tr><td id=\"sectionHeaderFlag_");
+    writer.append(cg.getId());
+    writer.append("\" class=\"");
+    if (!cg.isOpened())
+      writer.append("collapsing_group_flag_closed");
+    else
+      writer.append("collapsing_group_flag_opened");
+
+    writer.append("\" onclick=\"collasping_group_showhide_section('");
+    writer.append(cg.getId());
+    writer.append("')\">");
+
+    writer.append("</td><td class=\"");
+    
+    if (!cg.isOpened())
+      writer.append("collapsing_group_closed");
+    else
+      writer.append("collapsing_group_opened");
+
+    writer.append("\" id=\"sectionHeader_").
         append(cg.getId()).
-        append("\"");
+        append("\">");
+
+    UIComponent headerFacet = cg.getFacet("header");
+    if (headerFacet != null) {
+      headerFacet.encodeBegin(context);
+      headerFacet.encodeEnd(context);
+    } else {
+      writer.append(cg.getLabel());
+    }
+
+    writer.append("</td></tr>");
+    writer.append("<tr id=\"sectionValue_");
+    writer.append(cg.getId());
+    writer.append("\" ");
+
     if (!cg.isOpened())
       writer.append("style=\"display:none\"");
-    writer.append(">");
-
-    writer.append("\n<tr>");
-    writer.append("\n<th width=\"30px\"/>");
-    writer.append("\n<td>");
+    writer.append(">");    
+    writer.append("\n<td></td><td>");
   }
 
   public void encodeEnd(FacesContext context, UIComponent component) throws IOException {

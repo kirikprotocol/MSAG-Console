@@ -17,6 +17,15 @@
     <h:form>
 
       <eye:collapsingGroup label="#{index1.label}" opened="#{index1.opened}">
+        <f:facet name="header">
+          <h:panelGroup>
+            <h:outputText value="Label  "/>
+            <tr:commandLink >
+              <tr:image source="/images/but_add.gif"/>
+            </tr:commandLink>
+          </h:panelGroup>
+        </f:facet>
+
         <eye:dynamicTable value="#{index1.model}">
           <eye:textColumn name="column1" maxLength="20" allowEditAfterAdd="false"/>
           <eye:textColumn name="column2" maxLength="20"/>
