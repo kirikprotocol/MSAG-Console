@@ -1,6 +1,7 @@
 infosme/infosme3  infosme3 \
  -linfosme-v3 \
  -linfosme-v3-io \
+ -llicense-check \
  -ladmin-service \
  -ladmin-protocol \
  -ladmin-util \

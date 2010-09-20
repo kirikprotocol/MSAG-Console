@@ -4,7 +4,7 @@
 namespace smsc {
 namespace util {
 namespace config {
-class Config;
+class ConfigView;
 }
 }
 namespace infosme {
@@ -19,7 +19,7 @@ public:
 
     /// configuration
     /// NOTE: do not keep a ref on cfg!
-    virtual void configure( const smsc::util::config::Config& cfg ) = 0;
+    virtual void configure( const smsc::util::config::ConfigView& cfg ) = 0;
 
     /// enter main loop, exit via 'stop()'
     virtual int Execute() = 0;
