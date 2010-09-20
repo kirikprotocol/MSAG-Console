@@ -10,17 +10,19 @@
 #include "util/regexp/RegExp.hpp"
 #include "util/xml/init.h"
 #include "version.inc"
+#include "InfosmeCoreV1.h"
+#include "InfosmeException.h"
 
 smsc::logger::Logger* mainlog = 0;
 
 static sigset_t original_signal_mask;
+std::auto_ptr< smsc::infosme::InfosmeCore > core;
 
 extern "C" void appSignalHandler(int sig)
 {
     smsc_log_info(mainlog,"signal handler invoked, sig=%d",sig);
     if ( sig == smsc::system::SHUTDOWN_SIGNAL || sig == SIGINT ) {
-        // FIXME: notify to stop
-        smsc_log_info(mainlog,"FIXME: stop notification");
+        if ( core.get() ) core->stop();
     }
 }
 
@@ -63,7 +65,11 @@ int main( int argc, char** argv )
 
         // infrastructure
         smsc::util::regexp::RegExp::InitLocale();
-        smsc::logger::Logger::Init();
+
+        // FIXME
+        // smsc::logger::Logger::Init();
+        smsc::logger::Logger::initForTest( smsc::logger::Logger::LEVEL_DEBUG );
+
         mainlog = smsc::logger::Logger::getInstance("infosme.main");
         smsc_log_info(mainlog,"Starting up %s",getStrVersion());
 
@@ -86,12 +92,22 @@ int main( int argc, char** argv )
             // license
             checkLicenseFile();
 
-            smsc::util::config::Manager::init("config.xml");
-            {
-                // FIXME: remove it
-                struct timespec ts = {5,0};
-                nanosleep(&ts,0);
+            // read the config
+            std::auto_ptr<smsc::util::config::Config> cfg
+                ( smsc::util::config::Config::createFromFile("config.xml") );
+            if ( !cfg.get() ) {
+                throw smsc::infosme::InfosmeException("cannot create config");
             }
+
+            core.reset( new smsc::infosme::InfosmeCoreV1 );
+            if ( !core.get() ) {
+                throw smsc::infosme::InfosmeException("cannot create InfosmeCore");
+            }
+
+            core->configure( * cfg.get() );
+
+            /// enter main loop
+            core->Execute();
 
         } catch ( std::exception& e ) {
 
