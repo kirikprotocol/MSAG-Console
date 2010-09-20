@@ -31,8 +31,8 @@ class CommandDispatcherTempl : public ThreadedTask {
 public:
   CommandDispatcherTempl(Socket * admSocket, const char * const loggerCatname = "smsc.admin.util.CommandDispatcher")
     : logger(smsc::logger::Logger::getInstance(loggerCatname)),
-      reader(admSocket), writer(admSocket),
-      task_name("CommandDispatcher")
+      task_name("CommandDispatcher"),
+      reader(admSocket), writer(admSocket)
   {
     sock = admSocket;
     //memcpy(cl_addr, client_addr, 15);
@@ -138,7 +138,7 @@ protected:
   void init()
   {
     char thr[11];
-    snprintf(thr, sizeof(thr), "[%.8X]", pthread_self());
+    snprintf(thr, sizeof(thr), "[%.8X]", unsigned(pthread_self()));
     std::string ndc;
     ndc += thr;
     //ndc += cl_addr;

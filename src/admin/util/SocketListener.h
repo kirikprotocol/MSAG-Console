@@ -66,8 +66,9 @@ public:
         }
         else
         {
-          if (isShutdownSignaled)
+          if (isShutdownSignaled) {
             smsc_log_info(logger, "ServiceSocketListener shutdown");
+          }
         }
       }
 
