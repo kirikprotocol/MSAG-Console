@@ -11,6 +11,6 @@ abstract class CommandForService extends Command {
   protected CommandForService(String commandName, String serviceId) {
     super(commandName);
 
-    document.getDocumentElement().setAttribute("callable", StringEncoderDecoder.encode(serviceId));
+    document.getDocumentElement().setAttribute("service", StringEncoderDecoder.encode(serviceId));
   }
 }

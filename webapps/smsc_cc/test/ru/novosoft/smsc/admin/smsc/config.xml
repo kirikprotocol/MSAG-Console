@@ -212,8 +212,12 @@
   </section>
 
   <section name="inman">
-    <param name="host" type="string">inman.host</param>
-    <param name="port" type="int">399</param>
+    <param name="host1" type="string">1</param>
+    <param name="port1" type="int">1</param>
+    <param name="host2" type="string">2</param>
+    <param name="port2" type="int">2</param>
+    <param name="host3" type="string">3</param>
+    <param name="port3" type="int">3</param>
     <section name="chargingPolicy">
       <param name="peer2peer" type="string">deliver</param>
       <param name="other" type="string">deliver</param>

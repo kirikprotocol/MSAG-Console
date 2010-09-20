@@ -2,183 +2,122 @@ package ru.novosoft.smsc.admin.cluster_controller;
 
 import mobi.eyeline.protogen.framework.BufferReader;
 import mobi.eyeline.protogen.framework.BufferWriter;
+import mobi.eyeline.protogen.framework.ClientConnection;
 import mobi.eyeline.protogen.framework.PDU;
 import org.apache.log4j.Logger;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.cluster_controller.protocol.*;
-import ru.novosoft.smsc.util.IOUtils;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 /**
  * @author Artem Snopkov
  */
-final class ClusterControllerClient {
+final class ClusterControllerClient extends ClientConnection {
 
   private static final Logger log = Logger.getLogger(ClusterControllerClient.class);
 
   private static final int RESPONSE_TIMEOUT = 5000;
 
-  private final ClusterControllerManager manager;
   private final Map<Integer, ResponseListener> listeners = new HashMap<Integer, ResponseListener>();
-  private final ReceiverTask receiverThread;
-
-  private String onlineHost;
-  private Socket socket;
   private boolean connected;
 
-  ClusterControllerClient(ClusterControllerManager manager) {
-    this.manager = manager;
-    this.receiverThread = new ReceiverTask();
-    receiverThread.start();
+  ClusterControllerClient(ClusterControllerManager manager) throws AdminException {
+    Properties initProps = new Properties();
+    ClusterControllerSettings s = manager.getSettings();
+    initProps.setProperty("cc.host", s.getListenerHost());
+    initProps.setProperty("cc.port", s.getListenerPort() + "");
+    init("cc", initProps);
   }
 
-  private synchronized Socket connect() throws AdminException {
-
-    for (int i = 0; i < 2; i++) {
-
-      if (log.isDebugEnabled())
-        log.debug("Connecting to Cluster Controller...");
-
-      if (onlineHost == null) { // Определяем хост, на котором запущен СС
-        String host = manager.getControllerOnlineHost();
-        if (host == null)
-          throw new ClusterControllerException("cluster_controller_offline");
-        onlineHost = host;
-      }
-
-      int port = manager.getSettings().getListenerPort();
-
-      if (log.isDebugEnabled())
-        log.debug("Cluster controller address is " + onlineHost + ':' + port);
-
-      if (socket == null) { // Коннектимся к указанному хосту
-        try {
-          socket = new Socket(onlineHost, port);
-        } catch (IOException e) {
-          onlineHost = null;
-          if (i == 1) {
-            connected = false;
-            throw new ClusterControllerException("cluster_controller_offline", e);
-          }
-
-          log.error("Connection to Cluster controlled failed. One more try...");
-          continue;
-        }
-
-        if (log.isDebugEnabled())
-          log.debug("Connected to Cluster Controller on " + onlineHost + ':' + port + '.');
-      }
-    }
-
+  @Override
+  protected void onConnect() throws IOException {
+    if (log.isDebugEnabled())
+      log.debug("Connected to Cluster controller. Sending register request.");
+    RegisterAsWebapp registerReq = new RegisterAsWebapp();
+    registerReq.setMagic(0x57424150);
+    send(registerReq);
+    if (log.isDebugEnabled())
+      log.debug("Register request has been sent.");
     connected = true;
-    return socket;
   }
 
-  private synchronized void disconnect() {
-    if (socket != null) {
-      try {
-        socket.close();
-      } catch (IOException e) {
+  @Override
+  protected void onSend(BufferWriter writer, PDU pdu) throws IOException {
+    int pos = writer.getLength();
+    writer.writeInt(0); // write 4 bytes for future length
+    writer.writeInt(pdu.getTag());
+    writer.writeInt(pdu.getSeqNum());
+    pdu.encode(writer);
+    writer.replaceInt(pos, writer.getLength() - pos - 4);
+  }
+
+  @Override
+  protected PDU onReceive(BufferReader bufferReader) throws IOException {
+    int tag = bufferReader.readInt();
+    int seqNum = bufferReader.readInt();
+
+    if (log.isDebugEnabled())
+      log.debug("PDU received: tag=" + tag + ", seqNum=" + seqNum);
+
+    ResponseListener l;
+    synchronized(listeners) {
+      l = listeners.get(seqNum);
+    }
+    if (l != null) {
+      if (l.getExpectedResponseTag() != tag) {
+        log.error("Unexpected tag: " + tag + " for seqNum: " + seqNum);
+        throw new IOException("Unexpected tag: " + tag + " for seqNum: " + seqNum);
       }
-      socket = null;
-      connected = false;
 
-      if (log.isDebugEnabled())
-        log.debug("Disconnected from Cluster Controller.");
+      return l.receive(bufferReader);
+    } else {
+      log.error("Unexpected seqNum=" + seqNum);
+      throw new IOException("Unexpected seqNum=" + seqNum);
     }
   }
 
-  private static byte[] encodeRequest(PDU request) {
-    BufferWriter buffer = new BufferWriter();
-    try {
-      request.encode(buffer);
-    } catch (IOException e) {
-      log.error(e, e);
-      return null;
-    }
-    return buffer.getData();
+  @Override
+  protected void handle(PDU pdu) {
   }
 
-  private synchronized <T extends PDU> T sendPdu(PDU request, T response) throws AdminException {
-    request.assignSeqNum();
-
-    byte[] bytes = encodeRequest(request);
-
-    ResponseListener listener = new ResponseListener(response);
-
+  private <T extends PDU> T sendPdu(PDU request, T response) throws AdminException {
+    ResponseListener l = new ResponseListener(response);
+    int seq = request.assignSeqNum();
     if (response != null) {
       synchronized (listeners) {
-        listeners.put(request.getSeqNum(), listener);
+        listeners.put(seq, l);
       }
     }
-
-    if (log.isDebugEnabled())
-      log.debug("Sending PDU: " + request);
-
     try {
-      for (int i = 0; i < 2; i++) {
-        connect();
-        OutputStream os = socket.getOutputStream();
-        try {
-          IOUtils.writeUInt32(os, bytes.length);
-          IOUtils.writeUInt32(os, request.getTag());
-          IOUtils.writeUInt32(os, request.getSeqNum());
-          os.write(bytes);
-        } catch (IOException e) {
-          disconnect();
-          if (i == 1) {
-            if (response != null) {
-              synchronized (listeners) {
-                listeners.remove(request.getSeqNum());
-              }
-            }
-            throw e;
-          }
-          log.error("PDU send error: seq=" + request.getSeqNum());
-        }
-      }
-    } catch (IOException e) {
-      throw new ClusterControllerException("connection_refused", e);
-    }
+      send(request);
+      if (log.isDebugEnabled())
+        log.debug("Request sent: " + request);
 
-    if (log.isDebugEnabled())
-      log.debug("PDU was sent: seq= " + request.getSeqNum());
+      if (response != null) {
+        PDU resp = l.getResponse(RESPONSE_TIMEOUT);
+        if (resp != null) {
+          if (log.isDebugEnabled())
+            log.debug("Response received: " + response);
+          return (T) resp;
+        } else
+          throw new ClusterControllerException("response_timeout");
+      }
 
-    if (response != null) {
-      T resp;
-      try {
-        resp = (T) listener.getResponse(RESPONSE_TIMEOUT);
-      } catch (InterruptedException e) {
-        throw new ClusterControllerException("request_interrupted");
-      }
-      if (resp == null) {
-        throw new ClusterControllerException("connection_refused");
-      }
-      return resp;
-    } else
       return null;
-  }
-
-  void shutdown() {
-    log.warn("ClusterControllerClient shutdowning...");
-
-    receiverThread.started = false;
-    receiverThread.interrupt();
-    try {
-      receiverThread.join();
     } catch (InterruptedException e) {
+      throw new ClusterControllerException("request_interrupted");
+    } catch (IOException e) {
+      connected = false;
+      throw new ClusterControllerException("interaction_error", e);
     }
-
-    log.warn("ClusterControllerClient shutdowned.");
   }
+
 
   public boolean isConnected() {
     return connected;
@@ -393,75 +332,16 @@ final class ClusterControllerClient {
       return response;
     }
 
-    public void ioerror() {
-      respLatch.countDown();
-    }
-
     public int getExpectedResponseTag() {
-      return response.getTag();
+      return responseEx.getTag();
     }
 
-    public void receive(BufferReader buffer, int seq) throws IOException {
+    public PDU receive(BufferReader buffer) throws IOException {
       responseEx.decode(buffer);
-      if (log.isDebugEnabled())
-        log.debug("PDU received: seq=" + seq + ", " + responseEx);
       response = responseEx;
       respLatch.countDown();
-    }
-  }
-
-  private class ReceiverTask extends Thread {
-
-    private boolean started;
-
-    private ReceiverTask() {
-      super("ClusterControllerClient-Receiver");
-      started = true;
+      return response;
     }
 
-    public void run() {
-      while (started) {
-        try {
-          Socket s = connect();
-          InputStream is = s.getInputStream();
-
-          while (!isInterrupted()) {
-            int len = IOUtils.readInt32(is);
-            int tag = IOUtils.readInt32(is);
-            int seq = IOUtils.readInt32(is);
-            byte[] body = new byte[len - 8];
-            IOUtils.readFully(is, body);
-
-            ResponseListener listener;
-            synchronized (listeners) {
-              listener = listeners.get(seq);
-            }
-
-            if (listener != null && listener.getExpectedResponseTag() == tag) {
-              listener.receive(new BufferReader(body), seq);
-            } else {
-              log.error("No listener found for PDU: tag=" + tag + ", seq=" + seq);
-            }
-          }
-        } catch (Exception e) {
-          disconnect();
-          log.error(e, e);
-        }
-
-        synchronized (listeners) {
-          for (ResponseListener l : listeners.values())
-            l.ioerror();
-
-          listeners.clear();
-        }
-
-        if (!isInterrupted()) {
-          try {
-            Thread.sleep(1000);
-          } catch (InterruptedException ignored) {
-          }
-        }
-      }
-    }
   }
 }

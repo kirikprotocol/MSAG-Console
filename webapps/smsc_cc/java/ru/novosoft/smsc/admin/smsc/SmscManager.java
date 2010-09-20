@@ -110,7 +110,7 @@ public class SmscManager implements SmscConfiguration {
     long lastUpdate = cfgFileManager.getLastModified();
     Map<Integer, SmscConfigurationStatus> result = new HashMap<Integer, SmscConfigurationStatus>();
     for (Map.Entry<Integer, Long> e : state.getInstancesUpdateTimes().entrySet()) {
-      SmscConfigurationStatus s = e.getValue() >= lastUpdate ? SmscConfigurationStatus.UP_TO_DATE : SmscConfigurationStatus.OUT_OF_DATE;
+      SmscConfigurationStatus s = e.getValue() >= lastUpdate ? SmscConfigurationStatus.UP_TO_DATE : SmscConfigurationStatus.OUT_OF_DATE;      
       result.put(e.getKey(), s);
     }
     return result;

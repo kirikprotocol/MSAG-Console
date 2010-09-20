@@ -132,10 +132,7 @@ public class CommonSettings implements Cloneable {
   private String aclStoreDir;
   private int aclPreCreateSize;
 
-  // inman
-
-  private String inmanHost;
-  private int inmanPort;
+  
 
   // inman.chargingPolicy
 
@@ -282,11 +279,6 @@ public class CommonSettings implements Cloneable {
     this.aclStoreDir = s.aclStoreDir;
     this.aclPreCreateSize = s.aclPreCreateSize;
 
-    // inman
-
-    this.inmanHost = s.inmanHost;
-    this.inmanPort = s.inmanPort;
-
     // inman.chargingPolicy
 
     this.inmanChargingPeer2peer = s.inmanChargingPeer2peer;
@@ -425,14 +417,8 @@ public class CommonSettings implements Cloneable {
     s.setString("storeDir", aclStoreDir);
     s.setInt("preCreateSize", aclPreCreateSize);
 
-    //inman
-    s = c.getOrCreateSection("inman");
-    s.setString("host", inmanHost);
-    s.setInt("port", inmanPort);
-
-
     //inman.chargingPolicy
-    s = s.getOrCreateSection("chargingPolicy");
+    s = c.getOrCreateSection("inman").getOrCreateSection("chargingPolicy");
     s.setString("peer2peer", inmanChargingPeer2peer);
     s.setString("other", inmanChargingOther);
 
@@ -570,14 +556,8 @@ public class CommonSettings implements Cloneable {
     aclStoreDir = s.getString("storeDir");
     aclPreCreateSize = s.getInt("preCreateSize");
 
-    //inman
-    s = c.getSection("inman");
-    inmanHost = s.getString("host");
-    inmanPort = s.getInt("port");
-
-
     //inman.chargingPolicy
-    s = s.getSection("chargingPolicy");
+    s = c.getSection("inman").getSection("chargingPolicy");
     inmanChargingPeer2peer = s.getString("peer2peer");
     inmanChargingOther = s.getString("other");
 
@@ -1298,24 +1278,6 @@ public class CommonSettings implements Cloneable {
     this.aclPreCreateSize = aclPreCreateSize;
   }
 
-  public String getInmanHost() {
-    return inmanHost;
-  }
-
-  public void setInmanHost(String inmanHost) throws AdminException {
-    vh.checkNotEmpty("inmanHost", inmanHost);
-    this.inmanHost = inmanHost;
-  }
-
-  public int getInmanPort() {
-    return inmanPort;
-  }
-
-  public void setInmanPort(int inmanPort) throws AdminException {
-    vh.checkPort("inmanPort", inmanPort);
-    this.inmanPort = inmanPort;
-  }
-
   public String getInmanChargingPeer2peer() {
     return inmanChargingPeer2peer;
   }
@@ -1498,11 +1460,6 @@ public class CommonSettings implements Cloneable {
 
     cs.aclStoreDir = aclStoreDir;
     cs.aclPreCreateSize = aclPreCreateSize;
-
-    // inman
-
-    cs.inmanHost = inmanHost;
-    cs.inmanPort = inmanPort;
 
     // inman.chargingPolicy
 

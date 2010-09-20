@@ -45,6 +45,10 @@ public class InstanceSettings implements Cloneable, Serializable {
 
   private String cacheDir;
 
+  private String inmanHost;
+
+  private int inmanPort;
+
   transient private final ValidationHelper vh = new ValidationHelper(InstanceSettings.class);
 
   public InstanceSettings() {
@@ -97,8 +101,9 @@ public class InstanceSettings implements Cloneable, Serializable {
     agentHost = s.getString("host" + instanceN);
     agentPort = s.getInt("port" + instanceN);
     cacheDir = s.getString("dir" + instanceN);
-
-
+    s = c.getSection("inman");
+    inmanHost = s.getString("host" + instanceN);
+    inmanPort = s.getInt("port" + instanceN);
   }
 
   protected void save(int instanceN, XmlConfig c) throws XmlConfigException {
@@ -131,6 +136,9 @@ public class InstanceSettings implements Cloneable, Serializable {
     s.setInt("port" + instanceN, agentPort);
     s.setString("dir" + instanceN, cacheDir);
 
+    s = c.getOrCreateSection("inman");
+    s.setString("host" + instanceN, inmanHost);
+    s.setInt("port" + instanceN, inmanPort);
   }
 
   public String getAdminHost() {
@@ -268,6 +276,24 @@ public class InstanceSettings implements Cloneable, Serializable {
     this.cacheDir = cacheDir;
   }
 
+  public String getInmanHost() {
+    return inmanHost;
+  }
+
+  public void setInmanHost(String inmanHost) throws AdminException {
+    vh.checkNotEmpty("inmanHost", inmanHost);
+    this.inmanHost = inmanHost;
+  }
+
+  public int getInmanPort() {
+    return inmanPort;
+  }
+
+  public void setInmanPort(int inmanPort) throws AdminException {
+    vh.checkPort("inmanPort", inmanPort);
+    this.inmanPort = inmanPort;
+  }
+
   public Object clone() throws CloneNotSupportedException {
     InstanceSettings s = (InstanceSettings) super.clone();
     s.adminHost = adminHost;
@@ -285,6 +311,8 @@ public class InstanceSettings implements Cloneable, Serializable {
     s.agentHost = agentHost;
     s.agentPort = agentPort;
     s.cacheDir = cacheDir;
+    s.inmanHost = inmanHost;
+    s.inmanPort = inmanPort;
     return s;
   }
 

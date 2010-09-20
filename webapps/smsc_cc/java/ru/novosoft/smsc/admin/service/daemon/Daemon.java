@@ -55,7 +55,7 @@ public class Daemon extends Proxy {
         String args = serviceElement.getAttribute("args");
         String status = serviceElement.getAttribute("status");
 
-        String host = status.equals("online") ? this.host : null;
+        String host = status.equals("running") ? this.host : null;
 
         final ControlledService newInfo = new ControlledService(id, host, autostart, new File(daemonServicesFolder, id), args);
         services.put(newInfo.getId(), newInfo);

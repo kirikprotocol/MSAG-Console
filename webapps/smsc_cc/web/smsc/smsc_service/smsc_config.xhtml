@@ -551,21 +551,7 @@
 </eye:collapsingGroup>
 
 
-<eye:collapsingGroup label="#{msg['inman.label']}">
-  <tr:panelFormLayout id="inman_props">
-
-    <tr:panelLabelAndMessage label="#{commonSettings.inmanHost}">
-      <tr:inputText value="#{smscConfig.commonConfig.inmanHost}" required="true" simple="true"/>
-    </tr:panelLabelAndMessage>
-
-
-    <tr:panelLabelAndMessage label="#{commonSettings.inmanPort}">
-      <tr:inputText value="#{smscConfig.commonConfig.inmanPort}" required="true" simple="true">
-        <eye:validatePort/>
-      </tr:inputText>
-    </tr:panelLabelAndMessage>
-
-  </tr:panelFormLayout>
+<eye:collapsingGroup label="#{msg['inman.label']}">  
 
   <eye:collapsingGroup label="#{msg['inman.chargingPolicy.label']}">
     <tr:panelFormLayout>

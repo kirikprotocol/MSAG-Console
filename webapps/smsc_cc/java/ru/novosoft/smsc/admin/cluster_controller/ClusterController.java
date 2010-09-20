@@ -14,8 +14,6 @@ import java.util.*;
 public class ClusterController {
 
 
-
-
   private ClusterControllerClient cc;
   private long lastConfigsStatusCheckTime;
   private EnumMap<ConfigType, ConfigState> configsStates;
@@ -79,14 +77,16 @@ public class ClusterController {
       for (ConfigType type : ConfigType.values()) {
         long ccUpdateTime = resp.getCcConfigUpdateTime()[type.getValue()];
 
-        SmscConfigsState[] states = resp.getSmscConfigs();
-        Map<Integer, Long> instancesUpdateTimes = new HashMap<Integer, Long>();
-        for (SmscConfigsState state : states)
-          instancesUpdateTimes.put((int)state.getNodeIdex(), state.getUpdateTime()[type.getValue()]);
+        if (resp.hasSmscConfigs()) {
+          SmscConfigsState[] states = resp.getSmscConfigs();
+          Map<Integer, Long> instancesUpdateTimes = new HashMap<Integer, Long>();
+          for (SmscConfigsState state : states)
+            instancesUpdateTimes.put((int) state.getNodeIdex()-1, state.getUpdateTime()[type.getValue()]*1000);
 
-        ConfigState state = new ConfigState(ccUpdateTime, instancesUpdateTimes);
+          ConfigState state = new ConfigState(ccUpdateTime, instancesUpdateTimes);
 
-        configsStates.put(type, state);
+          configsStates.put(type, state);
+        }
       }
       lastConfigsStatusCheckTime = now;
     }
@@ -117,6 +117,7 @@ public class ClusterController {
 
   /**
    * Возвращает статус главного конфига
+   *
    * @return статус главного конфига
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
@@ -177,6 +178,7 @@ public class ClusterController {
 
   /**
    * Возвращает статус конфига алиасов
+   *
    * @return статус конфига алиасов
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
@@ -265,6 +267,7 @@ public class ClusterController {
 
   /**
    * Возвращает статус конфигу закрытых групп
+   *
    * @return статус конфигу закрытых групп
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
@@ -321,6 +324,7 @@ public class ClusterController {
 
   /**
    * Возвращает статус конфига Msc
+   *
    * @return статус конфига Msc
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
@@ -361,6 +365,7 @@ public class ClusterController {
 
   /**
    * Возвращает статус конфига политик передоставки
+   *
    * @return статус конфига политик передоставки
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
@@ -401,6 +406,7 @@ public class ClusterController {
 
   /**
    * Возвращает статус конфига Fraud
+   *
    * @return статус конфига Fraud
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
@@ -441,6 +447,7 @@ public class ClusterController {
 
   /**
    * Возвращает статус конфига Map Limits
+   *
    * @return статус конфига Map Limits
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
@@ -481,6 +488,7 @@ public class ClusterController {
 
   /**
    * Возвращает статус конфигурации SNMP
+   *
    * @return статус конфигурации SNMP
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
@@ -511,6 +519,7 @@ public class ClusterController {
 
   /**
    * Возвращает статус конфигурации SME
+   *
    * @return статус конфигурации SME
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
@@ -520,6 +529,7 @@ public class ClusterController {
 
   /**
    * Отправляет команду на добавление SME
+   *
    * @param sme информация об SME
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
@@ -532,6 +542,7 @@ public class ClusterController {
 
   /**
    * Отправляет команду на обновление настроек SME
+   *
    * @param sme новый настройки SME
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
@@ -544,6 +555,7 @@ public class ClusterController {
 
   /**
    * Отправляет команду на удаление SME
+   *
    * @param smeId идентификатор SME
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
@@ -556,6 +568,7 @@ public class ClusterController {
 
   /**
    * Отправляет команду на отключение одной или нескольких SME от центра
+   *
    * @param smeIds идентификаторы SME-х. которых надо отключить
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
@@ -575,7 +588,7 @@ public class ClusterController {
 
     CCSmeSmscStatuses res[] = new CCSmeSmscStatuses[resp.getStatus().length];
     SmeStatusInfo[] statusInfo = resp.getStatus();
-    for (int i=0; i<statusInfo.length; i++) {
+    for (int i = 0; i < statusInfo.length; i++) {
       SmeStatusInfo smeStatusInfo = statusInfo[i];
       CCSmeSmscStatuses stateInfo = new CCSmeSmscStatuses(smeStatusInfo.getSystemId(), smeStatusInfo.getConnType().getValue());
       for (SmeConnectStatus smeConnectStatus : smeStatusInfo.getStatus()) {
@@ -617,12 +630,13 @@ public class ClusterController {
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
   public void applyResources() throws AdminException {
-    lastConfigsStatusCheckTime=0;
+    lastConfigsStatusCheckTime = 0;
     checkResponse(cc.send(new ApplyLocaleResource()).getResp());
   }
 
   /**
    * Возвращает статус конфигурации ресурсов
+   *
    * @return статус конфигурации ресурсов
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
@@ -634,6 +648,7 @@ public class ClusterController {
 
   /**
    * Возвращает информацию обо всех ACL
+   *
    * @return список CCAclList, каждый из которых содержит данные об одном ACL
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
@@ -656,6 +671,7 @@ public class ClusterController {
 
   /**
    * Возвращает информацию об ACL по его идентификатору
+   *
    * @param aclId идентификатор ACL
    * @return информацию об ACL
    * @throws AdminException если произошла ошибка при взаимодействии с СС
@@ -673,6 +689,7 @@ public class ClusterController {
 
   /**
    * Возвращает список адресов, содержащихся в конкретном ALC по его идентификатору
+   *
    * @param aclId идентификатор ACL
    * @return список адресов, содержащихся в ALC
    * @throws AdminException если произошла ошибка при взаимодействии с СС
@@ -694,15 +711,16 @@ public class ClusterController {
 
   /**
    * Отправляет команду на создание нового ACL
-   * @param aclId идентификатор
-   * @param name имя
+   *
+   * @param aclId       идентификатор
+   * @param name        имя
    * @param description описание
-   * @param addresses список адресов
+   * @param addresses   список адресов
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
   public void createAlc(int aclId, String name, String description, List<Address> addresses) throws AdminException {
     String[] addr = new String[addresses.size()];
-    for (int i=0; i<addresses.size(); i++)
+    for (int i = 0; i < addresses.size(); i++)
       addr[i] = addresses.get(i).getSimpleAddress();
 
     AclCreate req = new AclCreate();
@@ -716,6 +734,7 @@ public class ClusterController {
 
   /**
    * Обновляет информацию об ACL
+   *
    * @param acl новые данные об ACL
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
@@ -727,6 +746,7 @@ public class ClusterController {
 
   /**
    * Удаляет ACL
+   *
    * @param aclId идентификатор ACL
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
@@ -738,13 +758,14 @@ public class ClusterController {
 
   /**
    * Добавляет адреса в ACL
-   * @param aclId идентификатор ACL
+   *
+   * @param aclId     идентификатор ACL
    * @param addresses список адресов
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
   public void addAddressesToAcl(int aclId, List<Address> addresses) throws AdminException {
     String[] addr = new String[addresses.size()];
-    for (int i=0; i<addresses.size(); i++)
+    for (int i = 0; i < addresses.size(); i++)
       addr[i] = addresses.get(i).getSimpleAddress();
 
     AclAddAddresses req = new AclAddAddresses();
@@ -756,13 +777,14 @@ public class ClusterController {
 
   /**
    * Удаляет адреса из ACL
-   * @param aclId идентификатор ACL
+   *
+   * @param aclId     идентификатор ACL
    * @param addresses список адресов, которые надо удалить
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
   public void removeAddressesFromAcl(int aclId, List<Address> addresses) throws AdminException {
     String[] addr = new String[addresses.size()];
-    for (int i=0; i<addresses.size(); i++)
+    for (int i = 0; i < addresses.size(); i++)
       addr[i] = addresses.get(i).getSimpleAddress();
 
     AclRemoveAddresses req = new AclRemoveAddresses();
@@ -774,6 +796,7 @@ public class ClusterController {
 
   /**
    * Возвращает статус конфигурации ACL
+   *
    * @return статус конфигурации ACL
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
@@ -785,6 +808,7 @@ public class ClusterController {
 
   /**
    * Блокирует конфигурацию маршрутов для чтения/записи
+   *
    * @param write блокировать бля записи
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
@@ -794,6 +818,7 @@ public class ClusterController {
 
   /**
    * Разблокирует конфигураию маршрутов
+   *
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
   public void unlockRoutes() throws AdminException {
@@ -802,6 +827,7 @@ public class ClusterController {
 
   /**
    * Применяет конфигурацию маршрутов
+   *
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
   public void applyRoutes() throws AdminException {
@@ -810,6 +836,7 @@ public class ClusterController {
 
   /**
    * Возвращает статус конфигурации маршрутов
+   *
    * @return статус конфигурации маршрутов
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
@@ -819,9 +846,10 @@ public class ClusterController {
 
   /**
    * Отправляет запрос на трассировку маршрута
-   * @param fileName название файла (только имя, файл должен находиться в той же директории, что и routes.xml)
-   * с тестовой конфигурацией маршрутов
-   * @param source адрес отправителя
+   *
+   * @param fileName    название файла (только имя, файл должен находиться в той же директории, что и routes.xml)
+   *                    с тестовой конфигурацией маршрутов
+   * @param source      адрес отправителя
    * @param destination адрес получателя
    * @param sourceSmeId Sme Id отправителя
    * @return Экземпляр CCTraceRouteResult
@@ -845,6 +873,7 @@ public class ClusterController {
 
   /**
    * Блокирует конфигурацию таймзон для чтения/записи
+   *
    * @param write блокировать бля записи
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
@@ -854,6 +883,7 @@ public class ClusterController {
 
   /**
    * Разблокирует конфигурацию таймзон
+   *
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
   public void unlockTimezones() throws AdminException {
@@ -862,6 +892,7 @@ public class ClusterController {
 
   /**
    * Применяет конфигурацию таймзон
+   *
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
   public void applyTimezones() throws AdminException {
@@ -870,6 +901,7 @@ public class ClusterController {
 
   /**
    * Возвращает статус конфигурации таймзон
+   *
    * @return статус конфигурации таймзон
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
@@ -881,6 +913,7 @@ public class ClusterController {
 
   /**
    * Блокирует конфигурацию профилей для чтения/записи
+   *
    * @param write блокировать бля записи
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
@@ -890,6 +923,7 @@ public class ClusterController {
 
   /**
    * Разблокирует конфигурацию профилей
+   *
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
   public void unlockProfiles() throws AdminException {
@@ -898,6 +932,7 @@ public class ClusterController {
 
   /**
    * Ищет профиль по адресу абонента
+   *
    * @param address адрес абонента
    * @return экземпляр CCLookupProfileResult
    * @throws AdminException если произошла ошибка при взаимодействии с СС
@@ -913,6 +948,7 @@ public class ClusterController {
 
   /**
    * Обновляет данные профиля
+   *
    * @param address адрес или маска
    * @param profile новые данные профиля
    * @throws AdminException если произошла ошибка при взаимодействии с СС
@@ -926,8 +962,9 @@ public class ClusterController {
 
   /**
    * Удаляет профиль по адресу или маске
+   *
    * @param address адрес или маска
-   * @throws AdminException  если произошла ошибка при взаимодействии с СС
+   * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
   public void deleteProfile(Address address) throws AdminException {
     DeleteProfile req = new DeleteProfile();
@@ -937,6 +974,7 @@ public class ClusterController {
 
   /**
    * Возвращает статус конфигурации профилей
+   *
    * @return статус конфигурации профилей
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
@@ -948,6 +986,7 @@ public class ClusterController {
 
   /**
    * Возвращает настройки логирования в виде списка логгеров
+   *
    * @return список доступных логгеров
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
@@ -957,19 +996,20 @@ public class ClusterController {
     checkResponse(resp.getResp());
 
     Collection<CCLoggingInfo> result = new ArrayList<CCLoggingInfo>(resp.getCategories().length);
-    for (CategoryInfo i: resp.getCategories())
+    for (CategoryInfo i : resp.getCategories())
       result.add(new CCLoggingInfo(i));
     return result;
   }
 
   /**
    * Обновляет настройки логирования
+   *
    * @param loggers новые настройки логирования
    * @throws AdminException если произошла ошибка при взаимодействии с СС
    */
   public void setLoggers(Collection<CCLoggingInfo> loggers) throws AdminException {
     CategoryInfo[] infos = new CategoryInfo[loggers.size()];
-    int i=0;
+    int i = 0;
     for (CCLoggingInfo logger : loggers)
       infos[i++] = logger.toCategoryInfo();
 
@@ -978,5 +1018,5 @@ public class ClusterController {
 
     checkResponse(cc.send(req).getResp());
   }
- 
+
 }

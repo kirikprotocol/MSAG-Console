@@ -56,7 +56,7 @@ public class RescheduleManager implements SmscConfiguration {
     Map<Integer, SmscConfigurationStatus> result = new HashMap<Integer, SmscConfigurationStatus>();
     for (Map.Entry<Integer, Long> e : state.getInstancesUpdateTimes().entrySet()) {
       SmscConfigurationStatus s = e.getValue() >= lastUpdate ? SmscConfigurationStatus.UP_TO_DATE : SmscConfigurationStatus.OUT_OF_DATE;
-      result.put(e.getKey(), s);
+      result.put(e.getKey() , s);
     }
     return result;
   }

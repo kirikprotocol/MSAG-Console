@@ -14,6 +14,7 @@ class ClusterControllerConfig implements ManagedConfigFile<ClusterControllerSett
   public void save(InputStream oldFile, OutputStream newFile, ClusterControllerSettings settings) throws Exception {
     XmlConfig config = new XmlConfig(oldFile);
     config.getSection("listener").setInt("port", settings.getListenerPort());
+    config.getSection("listener").setString("host", settings.getListenerHost());
     config.save(newFile);
   }
 
@@ -21,6 +22,7 @@ class ClusterControllerConfig implements ManagedConfigFile<ClusterControllerSett
     ClusterControllerSettings s = new ClusterControllerSettings();
     XmlConfig config = new XmlConfig(is);
     s.setListenerPort(config.getSection("listener").getInt("port"));
+    s.setListenerHost(config.getSection("listener").getString("host"));
     return s;
   }
 }

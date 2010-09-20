@@ -62,8 +62,6 @@ public class SmscConfigFileTest {
     assertEquals(1000,cs.getEventQueueLimit());
     assertEquals("deliver",cs.getInmanChargingOther());
     assertEquals("deliver",cs.getInmanChargingPeer2peer());
-    assertEquals("inman.host",cs.getInmanHost());
-    assertEquals(399,cs.getInmanPort());
     assertEquals("en_en",cs.getLocales()[0].trim());
     assertEquals(12345,cs.getLsMaxStoreSize());
     assertEquals(5321,cs.getLsMinRollTime());
@@ -149,6 +147,8 @@ public class SmscConfigFileTest {
       assertEquals(i+2, s.getSmePerfPort());
       assertEquals((i+1)+ "", s.getSmppHost());
       assertEquals(i+2, s.getSmppPort());
+      assertEquals(i+1 + "", s.getInmanHost());
+      assertEquals(i+1, s.getInmanPort());
     }
   }
 
