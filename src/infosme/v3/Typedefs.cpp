@@ -1,3 +1,5 @@
+#include <ctime>
+#include <sys/types.h> // for damn sunos
 #include "Typedefs.h"
 #include "InfosmeException.h"
 

@@ -52,13 +52,13 @@ char* Message::printToBuf( size_t bufsize, char* buf )
         formatMsgTime(lbuf,lastTime);
         formatMsgTime(tbuf,timeLeft);
     }
-    register int printed = std::snprintf( buf, bufsize,
-                                          "%llu,%u,%s,%s,%u,%s,%s",
-                                          static_cast<unsigned long long>(subscriber),
-                                          unsigned(msgId),
-                                          lbuf, tbuf,
-                                          unsigned(textId),userData.c_str(),
-                                          MsgState::toString(state));
+    register int printed = snprintf( buf, bufsize,
+                                     "%llu,%u,%s,%s,%u,%s,%s",
+                                     static_cast<unsigned long long>(subscriber),
+                                     unsigned(msgId),
+                                     lbuf, tbuf,
+                                     unsigned(textId),userData.c_str(),
+                                     MsgState::toString(state));
     if ( printed < 0 ) {
         throw InfosmeException("snprintf failed: %d",printed);
     }

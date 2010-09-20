@@ -201,7 +201,7 @@ void RegionalStorage::retryMessage( msgid_type   msgId,
     MsgLock ml(iter,this);
     Message& m = iter->msg;
     // fixing time left according
-    m.timeLeft -= time_t(currentTime) - time_t(m.lastTime);
+    m.timeLeft -= timediff_type(time_t(currentTime)-time_t(m.lastTime));
     if ( m.timeLeft > int(dlvInfo_->getMinRetryTime()) ) {
         // there is enough validity time to try the next time
         if ( m.timeLeft < int(retryDelay) ) retryDelay = m.timeLeft;
