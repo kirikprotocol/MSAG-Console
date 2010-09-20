@@ -215,11 +215,11 @@ If you have it somewhere, you may specify it on command line via -DPROTOGEN=full
         <property name="SETUP_MAKE_JEDIT" value="true"/>
     </target>
 
-    <!--target name="jedit"
+    <target name="jedit"
             description="Target specification: web iface rule editor">
         <fail if="SETUP_DONE" message="You should specify 'jedit' before any actions"/>
         <property name="SETUP_MAKE_JEDIT" value="true"/>
-    </target-->
+    </target>
     
     <target name="-checksetup" unless="SETUP_MAKE_DONE">
         <condition property="SETUP_MAKE_DONE">
@@ -789,9 +789,21 @@ If you have it somewhere, you may specify it on command line via -DPROTOGEN=full
     <target name="-update.jedit" if="SETUP_MAKE_JEDIT">
         <mkdir dir="${WEBDISTR_DIR}/applet"/>
         <mkdir dir="${WEBDISTR_DIR}/webapps"/>
+
+
         <copy todir="${WEBDISTR_DIR}/applet">
             <fileset dir="${WEBSRC_DIR}/jedit/dirs" includes="**/*"/>
         </copy>
+
+        <mkdir dir="${WEBDISTR_DIR}/webapps/msag/rules/rules/xsd"/>
+        <copy todir="${WEBDISTR_DIR}/webapps/msag/rules/rules/xsd"
+              preservelastmodified="yes"
+              flatten="yes">
+            <fileset dir="${TEMPL_DIR}">
+                <include name="scag2/rules/xsd/*"/>
+            </fileset>
+        </copy>        
+
         <copy todir="${WEBDISTR_DIR}/webapps/msag/rules/rules" preservelastmodified="yes">
             <fileset dir="${WEBBUILD_DIR}/jedit" includes="jedit.jar" />
         </copy>
