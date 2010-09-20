@@ -32,11 +32,17 @@ public class Route
   public static final byte BILLING_ON_SUBMIT = 4;
   public static final byte BILLING_CDR = 5;
 
+  public static final int TRAFFIC_MODE_PROHIBITED = 0;
+  public static final int TRAFFIC_MODE_SMS = 1;
+  public static final int TRAFFIC_MODE_USSD = 2;
+  public static final int TRAFFIC_MODE_ALL = 3;
+
   private String name = null;
   private SourceList src = null;
   private DestinationList dst = null;
   private int priority = 0;
-  private boolean enabling = true;
+//  private boolean enabling = true;
+  private int trafficMode;
   private boolean archiving = true;
   private byte billing = 0;
   private boolean transit = false;
@@ -56,7 +62,7 @@ public class Route
   private long categoryId;
   private String backupSmeId;
 
-  public Route(final String routeName, final int priority, final boolean isEnabling, final byte billing,final boolean isTransit, final boolean isArchiving,
+  public Route(final String routeName, final int priority, final int trafficMode, final byte billing,final boolean isTransit, final boolean isArchiving,
                final boolean isSuppressDeliveryReports, final boolean active, final int serviceId, final SourceList sources,
                final DestinationList destinations, final String srcSmeId, final String deliveryMode, final String forwardTo, final boolean hide,
                final byte replayPath, final String notes, final boolean forceDelivery, final long aclId, final boolean allowBlocked, final long providerId, final long categoryId)
@@ -74,7 +80,7 @@ public class Route
     this.priority = priority;
     this.src = sources;
     this.dst = destinations;
-    this.enabling = isEnabling;
+    this.trafficMode = trafficMode;
     this.archiving = isArchiving;
     this.billing = billing;
     this.transit = isTransit;
@@ -105,7 +111,8 @@ public class Route
     src = new SourceList();
     dst = new DestinationList();
     priority = 0;
-    enabling = false;
+    trafficMode = TRAFFIC_MODE_PROHIBITED;
+//    enabling = false;
     archiving = false;
     billing = BILLING_FALSE;
     transit=false;
@@ -135,7 +142,23 @@ public class Route
     src = new SourceList(routeElem, subjects);
     dst = new DestinationList(routeElem, subjects, smeManager);
     priority = Integer.decode(routeElem.getAttribute("priority")).intValue();
-    enabling = routeElem.getAttribute("enabling").equalsIgnoreCase("true");
+//    enabling = routeElem.getAttribute("enabling").equalsIgnoreCase("true");
+    String enablingAttr = routeElem.getAttribute("enabling");
+    if (enablingAttr != null) {
+      trafficMode = enablingAttr.equals("true") ? TRAFFIC_MODE_ALL : TRAFFIC_MODE_PROHIBITED;
+    } else {
+      String trafficModeAttr = routeElem.getAttribute("trafficMode");
+      if (trafficModeAttr != null) {
+        if (trafficModeAttr.equals("none"))
+          trafficMode = TRAFFIC_MODE_PROHIBITED;
+        else if (trafficModeAttr.equals("smsOnly"))
+          trafficMode = TRAFFIC_MODE_SMS;
+        else if (trafficModeAttr.equals("ussdOnly"))
+          trafficMode = TRAFFIC_MODE_USSD;
+        else if (trafficModeAttr.equals("all"))
+          trafficMode = TRAFFIC_MODE_ALL;
+      }
+    }
     archiving = routeElem.getAttribute("archiving").equalsIgnoreCase("true");
     final String billingAttr = routeElem.getAttribute("billing");
     if (billingAttr.equalsIgnoreCase("true"))
@@ -289,14 +312,12 @@ public class Route
     dst.addAll(list);
   }
 
-  public boolean isEnabling()
-  {
-    return enabling;
+  public int getTrafficMode() {
+    return trafficMode;
   }
 
-  public void setEnabling(final boolean enabling)
-  {
-    this.enabling = enabling;
+  public void setTrafficMode(int trafficMode) {
+    this.trafficMode = trafficMode;
   }
 
   public String getBillingString()
@@ -344,11 +365,19 @@ public class Route
 
   public PrintWriter store(final PrintWriter out)
   {
+    String trafficModeStr = "none";
+    switch (trafficMode) {
+      case TRAFFIC_MODE_ALL: trafficModeStr="all"; break;
+      case TRAFFIC_MODE_USSD: trafficModeStr="ussdOnly"; break;
+      case TRAFFIC_MODE_SMS: trafficModeStr="smsOnly"; break;
+      default: trafficModeStr = "none";
+    }
+
     out.print("  <route id=\"" + StringEncoderDecoder.encode(getName())
             + "\" billing=\"" + getBillingString()
             + "\" transit=\"" + isTransit()
             + "\" archiving=\"" + isArchiving()
-            + "\" enabling=\"" + isEnabling()
+            + "\" trafficMode=\"" + trafficModeStr
             + "\" priority=\"" + getPriority()
             + "\" serviceId=\"" + getServiceId()
             + "\" suppressDeliveryReports=\"" + isSuppressDeliveryReports()

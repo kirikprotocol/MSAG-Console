@@ -15,7 +15,7 @@ import java.util.Map;
 /**
  * Created by igork Date: Jan 20, 2003 Time: 6:23:33 PM
  */
-public interface HostsManager {
+public interface  HostsManager {
     //only single
     public List getHostNames();
 

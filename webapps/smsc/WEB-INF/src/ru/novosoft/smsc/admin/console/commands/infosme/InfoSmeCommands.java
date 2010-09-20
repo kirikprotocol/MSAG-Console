@@ -10,8 +10,6 @@ import java.util.Date;
  */
 
 public interface InfoSmeCommands {
-  public void importFile(CommandContext ctx, String file, boolean splitByRegions);
-
   public void exportStat(CommandContext ctx, String taskName, String file, Date startDate);
 
   public void createTask(CommandContext ctx, Distribution distibution);

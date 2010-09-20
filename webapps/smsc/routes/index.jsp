@@ -250,8 +250,8 @@
                title="<%= getLocString("common.sortmodes.activeHint") %>"><%= getLocString("common.sortmodes.active") %></a>
         </th>
         <th>
-            <a href="javascript:setSort('isEnabling')" <%= bean.getSort().endsWith("isEnabling") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : "" %>
-               title="<%= getLocString("common.sortmodes.allowHint") %>"><%= getLocString("common.sortmodes.allow") %></a>
+            <a href="javascript:setSort('trafficMode')" <%= bean.getSort().endsWith("trafficMode") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : "" %>
+               title="<%= getLocString("common.sortmodes.trafficModeHint") %>"><%= getLocString("routes.tm") %></a>
         </th>
         <th>
             <a href="javascript:setSort('billing')" <%= bean.getSort().endsWith("billing") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : "" %>
@@ -282,7 +282,15 @@
             SourceList sources = (SourceList) item.getValue("sources");
             DestinationList destinations = (DestinationList) item.getValue("destinations");
             boolean isActive = ((Boolean) item.getValue("active")).booleanValue();
-            boolean isEnabling = ((Boolean) item.getValue("isEnabling")).booleanValue();
+            int trafficMode = ((Integer)item.getValue("trafficMode")).intValue();
+            String trafficModeStr;
+            switch (trafficMode) {
+              case Route.TRAFFIC_MODE_ALL: trafficModeStr = getLocString("routes.tm.all"); break;
+              case Route.TRAFFIC_MODE_SMS: trafficModeStr = getLocString("routes.tm.smsOnly"); break;
+              case Route.TRAFFIC_MODE_USSD: trafficModeStr = getLocString("routes.tm.ussdOnly"); break;
+              default:
+                trafficModeStr = getLocString("routes.tm.prohibited");
+            }
             byte billing = ((Byte) item.getValue("billing")).byteValue();
             boolean isArchiving = ((Boolean) item.getValue("isArchiving")).booleanValue();
             boolean isSuppressDeliveryReports = ((Boolean) item.getValue("suppressDeliveryReports")).booleanValue();
@@ -324,16 +332,7 @@
         %>
     </td>
     <td <%= onClick %>>
-        <%
-            if (isEnabling) {
-        %>
-        <img src="/images/ic_checked.gif"><%
-    } else {
-    %>
-        &nbsp;
-        <%
-            }
-        %>
+      <%=trafficModeStr%>
     </td>
     <td <%= onClick %>>
         <%if (billing == Route.BILLING_TRUE) {%>

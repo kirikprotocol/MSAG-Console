@@ -17,7 +17,7 @@ public class RouteDataItem extends AbstractDataItem {
         values.put("categoryId", new Long(r.getCategoryId()));
         values.put("sources", r.getSources());
         values.put("destinations", r.getDestinations());
-        values.put("isEnabling", new Boolean(r.isEnabling()));
+        values.put("trafficMode", new Integer(r.getTrafficMode()));
         values.put("billing", new Byte(r.getBilling()));
         values.put("isArchiving", new Boolean(r.isArchiving()));
         values.put("active", new Boolean(r.isActive()));

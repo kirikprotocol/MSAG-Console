@@ -19,7 +19,8 @@ public class RouteBody extends SmscBean
   protected String mbCancel = null;
   protected String routeId = null;
   protected int priority = 0;
-  protected boolean permissible = false;
+//  protected boolean permissible = false;
+  protected int trafficMode = Route.TRAFFIC_MODE_PROHIBITED;
   protected byte billing = Route.BILLING_FALSE;
   protected boolean transit = false;
   protected boolean archiving = false;
@@ -147,15 +148,23 @@ public class RouteBody extends SmscBean
     this.routeId = routeId;
   }
 
-  public boolean isPermissible()
-  {
-    return permissible;
+  public int getTrafficMode() {
+    return trafficMode;
   }
 
-  public void setPermissible(final boolean permissible)
-  {
-    this.permissible = permissible;
+  public void setTrafficMode(int trafficMode) {
+    this.trafficMode = trafficMode;
   }
+
+  //  public boolean isPermissible()
+//  {
+//    return permissible;
+//  }
+//
+//  public void setPermissible(final boolean permissible)
+//  {
+//    this.permissible = permissible;
+//  }
 
   public byte getBilling()
   {

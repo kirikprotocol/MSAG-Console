@@ -104,7 +104,7 @@ public class RouteAddCommand extends RouteGenCommand
             }
           }
 
-          smscRoute = new Route(route, priority, allow, bill, transit, arc, !receipt,
+          smscRoute = new Route(route, priority, allow ? Route.TRAFFIC_MODE_ALL : Route.TRAFFIC_MODE_PROHIBITED, bill, transit, arc, !receipt,
                                 active, serviceid, srcList, dstList, srcSmeId, deliveryMode, forwardTo,
                                 hide, (isReplayPath) ? replayPath : REPLAY_PATH_PASS,
                                 notes, forceDelivery, ((isAclId) ? aclId : -1),

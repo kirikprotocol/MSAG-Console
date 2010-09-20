@@ -36,6 +36,16 @@ public class RouteViewCommand extends CommandClass
              str.indexOf('\f') != -1)) ? "'" + str + "'" : str;
   }
 
+  private String trafficModeToString(int trafficMode) {
+    switch (trafficMode) {
+      case Route.TRAFFIC_MODE_ALL: return "any traffic";
+      case Route.TRAFFIC_MODE_SMS: return "sms only traffic";
+      case Route.TRAFFIC_MODE_USSD: return "ussd only traffic";
+      default:
+        return "traffic prohibited";
+    }
+  }
+
   private void viewRoute(Route smscRoute, CommandContext ctx)
   {
     ctx.setMessage("Route info");
@@ -59,7 +69,7 @@ public class RouteViewCommand extends CommandClass
                   "blocked "+(smscRoute.isAllowBlocked() ? "allowed, ":"denied, ") +
                   "billing "+smscRoute.getBillingString()+", " +
                   (smscRoute.isArchiving() ? "archiving, " : "no archiving, ") +
-                  (smscRoute.isEnabling() ? "allowed, " : "denied, ") +
+                  trafficModeToString(smscRoute.getTrafficMode()) +
                   (smscRoute.isSuppressDeliveryReports() ? "no receipt" : "receipt"));
     Provider provider = ctx.getProviderManager().getProvider(new Long(smscRoute.getProviderId()));
     ctx.addResult("provider: " + (provider != null ? provider.getName():"-") +

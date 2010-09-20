@@ -87,7 +87,7 @@ public class RouteAlterCommand extends RouteGenCommand
       }
 
       Route newRoute = new Route(route,
-                                 oldRoute.getPriority(), oldRoute.isEnabling(), oldRoute.getBilling(),
+                                 oldRoute.getPriority(), oldRoute.getTrafficMode(), oldRoute.getBilling(),
                                  oldRoute.isTransit(), oldRoute.isArchiving(),
                                  oldRoute.isSuppressDeliveryReports(),
                                  oldRoute.isActive(), oldRoute.getServiceId(),
@@ -178,7 +178,7 @@ public class RouteAlterCommand extends RouteGenCommand
       if (setBill) newRoute.setBilling(bill);
       if (setTransit) newRoute.setTransit(transit);
       if (setArc) newRoute.setArchiving(arc);
-      if (setAllow) newRoute.setEnabling(allow);
+      if (setAllow) newRoute.setTrafficMode(Route.TRAFFIC_MODE_ALL);
       if (setReceipt) newRoute.setSuppressDeliveryReports(!receipt);
       if (setActive) newRoute.setActive(active);
       if (setId) newRoute.setServiceId(serviceid);

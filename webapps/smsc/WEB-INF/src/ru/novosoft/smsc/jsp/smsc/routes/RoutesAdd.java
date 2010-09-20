@@ -142,9 +142,10 @@ public class RoutesAdd extends RouteBody
       if ((categoryIdStr != null && categoryIdStr.length() > 0))
         categoryId = Long.parseLong(categoryIdStr);
 
-      Route r = new Route(routeId, priority, permissible, billing,transit, archiving, suppressDeliveryReports, active, serviceId, sources, destinations, srcSmeId,
+      Route r = new Route(routeId, priority, trafficMode, billing,transit, archiving, suppressDeliveryReports, active, serviceId, sources, destinations, srcSmeId,
               deliveryMode, forwardTo, hide, replayPath, notes, forceDelivery, aclId, allowBlocked, providerId, categoryId);
       r.setBackupSmeId(backupSmeId);
+
       routeSubjectManager.getRoutes().put(r);
         request.getSession().setAttribute("ROUT_ID", routeId);
       journalAppend(SubjectTypes.TYPE_route, routeId, Actions.ACTION_ADD);

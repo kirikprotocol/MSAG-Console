@@ -159,9 +159,15 @@
             <td><label for=active style="padding-left:4px;"><%=getLocString("routes.active")%></label></td>
         </tr>
         <tr>
-            <td><input id=permissible class=check type=checkbox
-                       name=permissible <%=bean.isPermissible() ? "checked" : ""%>></td>
-            <td><label for=permissible style="padding-left:4px;"><%=getLocString("routes.allowed")%></label></td>
+            <td>
+              <select name="trafficMode" id="trafficMode">
+                <option value="0" <%=bean.getTrafficMode() == 0 ? "selected" : ""%>><%=getLocString("routes.tm.prohibited")%></option>
+                <option value="0" <%=bean.getTrafficMode() == 1 ? "selected" : ""%>><%=getLocString("routes.tm.smsOnly")%></option>
+                <option value="0" <%=bean.getTrafficMode() == 2 ? "selected" : ""%>><%=getLocString("routes.tm.ussdOnly")%></option>
+                <option value="0" <%=bean.getTrafficMode() == 3 ? "selected" : ""%>><%=getLocString("routes.tm.all")%></option>
+              </select>
+            </td>
+            <td><label for=permissible style="padding-left:4px;"><%=getLocString("routes.tm")%></label></td>
         </tr>
         <tr>
             <td><input id=archiving class=check type=checkbox name=archiving <%=bean.isArchiving() ? "checked" : ""%>>

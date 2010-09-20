@@ -46,7 +46,7 @@ public class RoutesEdit extends RouteBody {
                 result = error(SMSCErrors.error.routes.nameNotSpecified);
             else {
                 priority = r.getPriority();
-                permissible = r.isEnabling();
+                trafficMode = r.getTrafficMode();
                 billing = r.getBilling();
                 archiving = r.isArchiving();
                 serviceId = r.getServiceId();
@@ -185,7 +185,7 @@ public class RoutesEdit extends RouteBody {
             if ((categoryIdStr != null && categoryIdStr.length() > 0))
                 categoryId = Long.parseLong(categoryIdStr);
             oldRoute = routeSubjectManager.getRoutes().remove(oldRouteId);
-            Route r = new Route(routeId, priority, permissible, billing, transit, archiving, suppressDeliveryReports, active, serviceId, sources, destinations, srcSmeId,
+            Route r = new Route(routeId, priority, trafficMode, billing, transit, archiving, suppressDeliveryReports, active, serviceId, sources, destinations, srcSmeId,
                     deliveryMode, forwardTo, hide, replayPath, notes, forceDelivery, aclId, allowBlocked, providerId, categoryId);
             r.setBackupSmeId(backupSmeId);
             routeSubjectManager.getRoutes().put(r);
