@@ -1,0 +1,52 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:t="http://myfaces.apache.org/tomahawk"
+      xmlns:tr="http://myfaces.apache.org/trinidad"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:eye="http://taglib.eyeline.mobi">
+
+<ui:composition template="/templates/main.xhtml">
+
+  <ui:param name="pageTitle" value="#{msg['informer.title']}"/>
+
+  <ui:define name="content">
+    <form name="opForm" id="opForm" action="j_security_check" method="post" enctype="application/x-www-form-urlencoded">
+      <div class="content">
+        <table cellspacing="10px">
+          <tr>
+            <td>
+              <h:outputText style="color:red" rendered="#{param['loginError'] != null}" value="Login error"/>
+              <table class="properties_list">
+                <col width="1%"/>
+                <col width="99%"/>
+                <tr class="row0">
+                  <th>#{msg['login.label']}</th>
+                  <td><input class="txt" name="j_username" onKeyPress="return submitFormOnEnter(event)"/></td>
+                </tr>
+                <tr class="row0">
+                  <th>#{msg['pass.label']}</th>
+                  <td><input class="txt" type="password" name="j_password"
+                             onKeyPress="return submitFormOnEnter(event)"/></td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+
+      </div>
+      <eye:buttons>
+        <eye:button>
+          <h:commandLink id="jsubmit" onclick="opForm.submit()" value="#{msg['login.button']}"/>
+        </eye:button>
+        <eye:space/>
+      </eye:buttons>
+    </form>
+
+
+  </ui:define>
+
+</ui:composition>
+
+
+</html>

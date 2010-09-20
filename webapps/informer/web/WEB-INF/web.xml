@@ -17,24 +17,24 @@
 
   <error-page>
     <error-code>403</error-code>
-    <location>/redirect?url=/smsc/error403.faces</location>
+    <location>/redirect?url=/error403.faces</location>
   </error-page>
 
   <error-page>
     <error-code>404</error-code>
-    <location>/redirect?url=/smsc/error404.faces</location>
+    <location>/redirect?url=/error404.faces</location>
   </error-page>
 
   <error-page>
     <error-code>500</error-code>
-    <location>/redirect?url=/smsc/error500.faces</location>
+    <location>/redirect?url=/error500.faces</location>
   </error-page>
 
 
   <!-- FaceletViewHandler configuration -->
   <context-param>
     <param-name>org.apache.myfaces.trinidad.ALTERNATE_VIEW_HANDLER</param-name>
-    <param-value>mobi.eyeline.informer.web.SmscViewHandler</param-value>
+    <param-value>mobi.eyeline.informer.web.InformerViewHandler</param-value>
   </context-param>
 
   <!-- Use documents saved as *.xhtml for Facelets -->
@@ -163,28 +163,29 @@
     <url-pattern>/faces/myFacesExtensionResource/*</url-pattern>
   </filter-mapping>
 
-  <!--todo<listener>-->
-    <!--<listener-class>mobi.eyeline.informer.web.InitListener</listener-class>-->
-  <!--</listener>-->
+  <listener>
+    <listener-class>mobi.eyeline.informer.web.InitListener</listener-class>
+  </listener>
 
 
-  <!--todo<login-config>-->
-    <!--<auth-method>FORM</auth-method>-->
-    <!--<form-login-config>-->
-      <!--<form-login-page>/smsc/login.faces</form-login-page>-->
-      <!--<form-error-page>/smsc/login.faces?loginError=true</form-error-page>-->
-    <!--</form-login-config>-->
-  <!--</login-config>-->
+  <login-config>
+    <auth-method>FORM</auth-method>
+    <form-login-config>
+      <form-login-page>/login.faces</form-login-page>
+      <form-error-page>/login.faces?loginError=true</form-error-page>
+    </form-login-config>
+  </login-config>
 
  <!-- security constraints -->
 
   <security-constraint>
     <web-resource-collection>
-      <web-resource-name>Редактор пользователей</web-resource-name>
-      <url-pattern>/smsc/users/*</url-pattern>
+      <web-resource-name></web-resource-name>
+      <url-pattern>/index.faces</url-pattern>
     </web-resource-collection>
     <auth-constraint>
-      <role-name>users</role-name>
+      <role-name>informer-admin</role-name>
+      <role-name>informer-user</role-name>
     </auth-constraint>
     <user-data-constraint>
       <transport-guarantee>NONE</transport-guarantee>
@@ -193,8 +194,13 @@
 
 
   <security-role>
-    <description>Может редактировать пользователей</description>
-    <role-name>users</role-name>
+    <description>Администратор Informer</description>
+    <role-name>informer-admin</role-name>
+  </security-role>
+
+  <security-role>
+    <description>Пользователь Informer</description>
+    <role-name>informer-user</role-name>
   </security-role>
 
 

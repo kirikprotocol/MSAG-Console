@@ -8,10 +8,10 @@
 
 <ui:composition template="/templates/main.xhtml">
 
-  <ui:param name="pageTitle" value="Title"/>
+  <ui:param name="pageTitle" value="#{msg['informer.error.403.title']}"/>
 
   <ui:define name="content">
-      Content
+    <h3>#{msg['informer.error.403.message']}</h3>
   </ui:define>
 
 </ui:composition>
