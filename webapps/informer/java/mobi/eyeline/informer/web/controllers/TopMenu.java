@@ -49,7 +49,7 @@ public class TopMenu {
 
   private Collection<MenuBarItem> menuBarItems = new ArrayList<MenuBarItem>(3) {
     {
-      add(new MenuBarItem("informer.admin", 155).
+      add(new MenuBarItem("informer.admin", "informer.admin.width").
           add(new MenuItem("informer.admin.status", "/status.faces")).
           add(new MenuItem("informer.admin.config", "/config.faces")).
           add(new MenuItem("informer.admin.users", "/users/index.faces")).
@@ -64,12 +64,12 @@ public class TopMenu {
           add(new MenuItem("informer.admin.cdr", "/cdr/index.faces")).
           add(new MenuItem("informer.admin.journal", "/journal/index.faces"))
       );
-      add(new MenuBarItem("informer.deliveries", 175).
+      add(new MenuBarItem("informer.deliveries", "informer.deliveries.width").
           add(new MenuItem("informer.deliveries.list", "/deliveries/index.faces")).
           add(new MenuItem("informer.deliveries.scheduling", "/deliveries/scheduling.faces")).
           add(new MenuItem("informer.deliveries.create", "/deliveries/create.faces"))
       );
-      add(new MenuBarItem("informer.stats", 150).
+      add(new MenuBarItem("informer.stats", "informer.stats.width").
           add(new MenuItem("informer.stats.common", "/stats/common.faces")).
           add(new MenuItem("informer.stats.messages", "/stats/messages.faces")).
           add(new MenuItem("informer.stats.deliveries", "/stats/deliveries.faces")).
@@ -129,9 +129,9 @@ public class TopMenu {
 
     private String name;
 
-    private int width;
+    private String width;
 
-    public MenuBarItem(String name, int width) {
+    public MenuBarItem(String name, String width) {
       this.name = name;
       this.width = width;
     }
@@ -153,7 +153,7 @@ public class TopMenu {
       return name;
     }
 
-    public int getWidth() {
+    public String getWidth() {
       return width;
     }
   }
