@@ -74,6 +74,8 @@ public class InstanceSettings implements Cloneable, Serializable {
     agentHost = s.agentHost;
     agentPort = s.agentPort;
     cacheDir = s.cacheDir;
+    inmanHost = s.getInmanHost();
+    inmanPort = s.getInmanPort();
   }
 
   protected void load(int instanceN, XmlConfig c) throws XmlConfigException {
