@@ -103,7 +103,14 @@ try {
 
 def dir = new File(args[0]);
 
-def websmsDailyReport = new File("websms-daily-${dir.getName()}.csv")
+def dateStr = args[1]
+Date reportDate = new SimpleDateFormat("yyyy-MM").parse(dateStr);
+
+def outputDirStr = args[2]
+File outputDir = new File(outputDirStr)
+outputDir.mkdirs();
+
+def websmsDailyReport = new File(outputDir, "websms-daily-${dir.getName()}.csv")
 websmsDailyReport.write("Дата; Макро Регион; id сервиса; Сервис; Количество отправленных смс\r\n")
 
 def sdf = new SimpleDateFormat('yyyy-MMM-dd', Locale.ENGLISH)
@@ -118,11 +125,11 @@ dir.eachDir {dateDir ->
   websmsDailyCounters.clear()
 }
 
-def year = new SimpleDateFormat("yyyy").format(new Date())
-def month = new SimpleDateFormat("MM").format(new Date())
+def year = new SimpleDateFormat("yyyy").format(reportDate)
+def month = new SimpleDateFormat("MM").format(reportDate)
 
 // Generate services report
-def servicesFile = new File("services-${dir.getName()}.csv")
+def servicesFile = new File(outputDir, "services-${dir.getName()}.csv")
 servicesFile.write("Год; Месяц; Макро Регион; id сервиса; Сервис; Количество исходящих SMS\r\n")
 counters.entrySet().each {e->
   e.value.services.entrySet().each {
@@ -131,7 +138,7 @@ counters.entrySet().each {e->
 }
 
 // Generate extraUsers report
-def usersFile = new File("users-${dir.getName()}.csv")
+def usersFile = new File(outputDir, "users-${dir.getName()}.csv")
 usersFile.write("Год; Месяц; Макро Регион; id сервиса; Сервис; Количество уникальных пользователей\r\n")
 counters.entrySet().each {e->
   e.value.extraUsers.entrySet().each {
@@ -151,7 +158,7 @@ counters.entrySet().each {e->
 }
 
 // Generate Websms monthly report
-def websmsMonthlyFile = new File("websms-monthly-${dir.getName()}.csv")
+def websmsMonthlyFile = new File(outputDir, "websms-monthly-${dir.getName()}.csv")
 websmsMonthlyFile.write("Год; Месяц; Макро Регион; id сервиса; Сервис; Количество уникальных получателей\r\n")
 counters.entrySet().each {e->
   websmsMonthlyFile.append("$year; $month; ${e.key}; 999; SMS с сайта; ${e.value.websmsUsers.size()}\r\n")  
