@@ -12,18 +12,27 @@
 
 <ui:composition>
 
-  <h:panelGrid columns="2" rendered="#{logger.hasChilds}" columnClasses="columnTopLeftAlign, columnTopLeftAlign">
+  <h:panelGroup rendered="#{logger.hasChilds}">
     <eye:collapsingGroup label="#{logger.name}" opened="#{logger.root}">
-        <c:forEach items="#{logger.childList}" var="l">
-          <ui:include src="print_logger.xhtml">
-            <ui:param name="logger" value="#{l}"/>
-          </ui:include>
-        </c:forEach>
+      <f:facet name="header">
+        <h:panelGroup>
+          <h:panelGrid columns="2" columnClasses="column100Width, column0WidthRight">
+            <h:outputText value="#{logger.name}" rendered="#{!logger.root}"/>
+            <h:outputText value="ROOT" rendered="#{logger.root}"/>
+            <h:selectOneMenu value="#{logger.level}">
+              <ui:include src="print_logger_sitems.xhtml"/>
+            </h:selectOneMenu>
+          </h:panelGrid>
+        </h:panelGroup>
+      </f:facet>
+      <c:forEach items="#{logger.childList}" var="l">
+        <ui:include src="print_logger.xhtml">
+          <ui:param name="logger" value="#{l}"/>
+        </ui:include>
+      </c:forEach>
     </eye:collapsingGroup>
-    <h:selectOneMenu value="#{logger.level}">
-      <ui:include src="print_logger_sitems.xhtml"/>
-    </h:selectOneMenu>
-  </h:panelGrid>
+  </h:panelGroup>
+
 
   <h:panelGrid columns="2" rendered="#{!logger.hasChilds}" columnClasses="column100Width, columnTopLeftAlign">
     <h:outputText value="#{logger.name}"/>
