@@ -182,10 +182,6 @@
     <welcome-file>/index.html</welcome-file>
   </welcome-file-list>
 
-  <session-config>
-    <session-timeout>1</session-timeout>
-  </session-config>
-
 
   <login-config>
     <auth-method>FORM</auth-method>
