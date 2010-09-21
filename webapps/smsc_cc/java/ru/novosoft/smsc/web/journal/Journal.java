@@ -5,6 +5,7 @@ import ru.novosoft.smsc.admin.logging.LoggerSettings;
 import ru.novosoft.smsc.admin.map_limit.MapLimitSettings;
 import ru.novosoft.smsc.admin.reschedule.RescheduleSettings;
 import ru.novosoft.smsc.admin.smsc.SmscSettings;
+import ru.novosoft.smsc.admin.snmp.SnmpSettings;
 import ru.novosoft.smsc.admin.users.UsersSettings;
 
 import java.util.*;
@@ -21,6 +22,7 @@ public class Journal {
   public static final String USERS = "subject.user";
   public static final String MAP_LIMIT = "subject.maplimit";
   public static final String FRAUD = "subject.fraud";
+  public static final String SNMP="subject.snmp";
 
   private final List<JournalRecord> records = new ArrayList<JournalRecord>();
 
@@ -30,6 +32,7 @@ public class Journal {
   private final MapLimitSettingsDiffHelper mapLimit = new MapLimitSettingsDiffHelper(MAP_LIMIT);
   private final LoggerSettingsDiffHelper logger = new LoggerSettingsDiffHelper(MAP_LIMIT);
   private final FraudSettingsDiffHelper fraud = new FraudSettingsDiffHelper(FRAUD);
+  private final SnmpSettingsDiffHelper snmp = new SnmpSettingsDiffHelper(SNMP);
 
   /**
    * Возвращает список всех возможных сабжектов в указанной локали
@@ -44,6 +47,8 @@ public class Journal {
     l.add(rb.getString(USERS));
     l.add(rb.getString(MAP_LIMIT));
     l.add(rb.getString(CLOSED_GROUPS));
+    l.add(rb.getString(FRAUD));
+    l.add(rb.getString(SNMP));
     return l;
   }
 
@@ -264,5 +269,9 @@ public class Journal {
   public void logClosedGroupRemove(String name, String user) {
     JournalRecord r = addRecord(JournalRecord.Type.REMOVE, CLOSED_GROUPS, user);
     r.setDescription("closed_group_removed", name);
+  }
+
+  public void logChanges(SnmpSettings oldSettings, SnmpSettings newSettings, String user) {
+    snmp.logChanges(this, oldSettings, newSettings, user);
   }
 }
