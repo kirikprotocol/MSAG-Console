@@ -64,12 +64,12 @@ public class TopMenu {
           add(new MenuItem("informer.admin.cdr", "/cdr/index.faces")).
           add(new MenuItem("informer.admin.journal", "/journal/index.faces"))
       );
-      add(new MenuBarItem("informer.deliveries", 140).
+      add(new MenuBarItem("informer.deliveries", 160).
           add(new MenuItem("informer.deliveries.list", "/deliveries/index.faces")).
           add(new MenuItem("informer.deliveries.scheduling", "/deliveries/scheduling.faces")).
           add(new MenuItem("informer.deliveries.create", "/deliveries/create.faces"))
       );
-      add(new MenuBarItem("informer.stats", 140).
+      add(new MenuBarItem("informer.stats", 145).
           add(new MenuItem("informer.stats.common", "/stats/common.faces")).
           add(new MenuItem("informer.stats.messages", "/stats/messages.faces")).
           add(new MenuItem("informer.stats.deliveries", "/stats/deliveries.faces")).
