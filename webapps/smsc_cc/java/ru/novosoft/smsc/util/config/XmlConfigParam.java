@@ -34,9 +34,10 @@ public class XmlConfigParam implements Cloneable{
    * @param name param name
    * @param value param value
    */
-  public XmlConfigParam(String name, String value) {
+  public XmlConfigParam(String name, String value, Type type) {
     this.name = name;
     this.value = value;
+    this.type = type;
   }
   /**
    * Returns parameter type
@@ -186,7 +187,7 @@ public class XmlConfigParam implements Cloneable{
    */
   public void setLong(long value) {
     this.value = String.valueOf(value);
-    type = Type.STRING;
+    type = Type.INT;
   }
 
   /**
