@@ -53,6 +53,7 @@ static const int MISSINGOPTPARAM=195; //Expected Optional Parameter missing
 static const int INVOPTPARAMVAL=196; //Invalid Optional Parameter Value
 static const int DELIVERYFAILURE=254; //Delivery Failure (used for data_sm_resp)
 static const int UNKNOWNERR=255; //Unknown Error
+static const int PROHIBITED=257; //Prohibited
 static const int INVDCS=260; //Invalid Data Coding Scheme Specified DCS is invalid or MC does not support it.
 
 static const int SMSC_ERR_BASE=1024;
@@ -410,7 +411,7 @@ static const bool errorStatus[1280] = {
 1, //Delivery Failure (used for data_sm_resp)
 1, //Unknown Error
 1, //reserved
-1, //reserved
+1, //Prohibited
 1, //reserved
 1, //reserved
 1, //Invalid Data Coding Scheme Specified DCS is invalid or MC does not support it.

@@ -829,7 +829,7 @@ __synchronized__
   rr.found=true;
   rr.destSmeIdx = rec->proxyIdx;
   rr.rp=rec->rp;
-  if (!rec->info->enabling)
+  if (!rec->info->trafMode==tmNone)
   {
     if(trace_enabled_)
     {

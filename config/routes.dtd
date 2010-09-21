@@ -6,6 +6,7 @@
 	billing (true | false | mt | fr | onsubmit | cdr) #REQUIRED
 	archiving (true | false) #REQUIRED
 	enabling (true | false) "true"
+	trafficMode ( none | smsOnly | ussdOnly | all ) "all"
 	priority CDATA #REQUIRED
 	serviceId CDATA #REQUIRED
 	suppressDeliveryReports (true|false) "false"

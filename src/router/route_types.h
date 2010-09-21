@@ -24,6 +24,13 @@ static const RoutePriority RoutePriorityMin = 0;
 
 typedef enum {ReplyPathPass, ReplyPathForce, ReplyPathSuppress} ReplyPath;
 
+enum TrafficMode{
+  tmNone,
+  tmSmsOnly,
+  tmUssdOnly,
+  tmAll
+};
+
 typedef std::string RouteId;
 typedef std::string BillingId;
 
@@ -35,9 +42,9 @@ struct RoutePoint{
 struct RouteInfo
 {
   RoutePriority priority;
+  TrafficMode trafMode;
   uint8_t billing;
   bool archived;
-  bool enabling;
   bool suppressDeliveryReports;
   bool hide;
   bool forceDelivery;

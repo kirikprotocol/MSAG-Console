@@ -1271,6 +1271,12 @@ StateType StateMachine::submit(Tuple& t)
       warn2(smsLog,"routing failed during divert check:%s",e.what());
       goto divert_failed;
     }
+    if(rr2.info.trafMode==smsc::router::tmUssdOnly)
+    {
+      smsc_log_info(smsLog,"attempt to divert sms to ussd only route(%s->%s)",
+          sms->getOriginatingAddress().toString().c_str(),divDst.toString().c_str());
+      goto divert_failed;
+    }
     sms->setStrProperty(Tag::SMSC_DIVERTED_TO,divDst.toString().c_str());
     if(divertFlags&DF_UNCOND)
     {
@@ -1327,6 +1333,31 @@ StateType StateMachine::submit(Tuple& t)
     );
     return ERROR_STATE;
   }
+
+  if(c.rr.info.trafMode==smsc::router::tmSmsOnly && sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
+  {
+    submitResp(t,sms,Status::PROHIBITED);
+    warn2(smsLog, "SBM: sms only route Id=%lld;seq=%d;oa=%s;%s;srcprx=%s",
+      t.msgId,c.dialogId,
+      sms->getOriginatingAddress().toString().c_str(),
+      AddrPair("da",sms->getDestinationAddress(),"dda",c.dst).c_str(),
+      c.src_proxy->getSystemId()
+    );
+    return ERROR_STATE;
+  }
+
+  if(c.rr.info.trafMode==smsc::router::tmUssdOnly && !sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
+  {
+    submitResp(t,sms,Status::PROHIBITED);
+    warn2(smsLog, "SBM: ussd only route Id=%lld;seq=%d;oa=%s;%s;srcprx=%s",
+      t.msgId,c.dialogId,
+      sms->getOriginatingAddress().toString().c_str(),
+      AddrPair("da",sms->getDestinationAddress(),"dda",c.dst).c_str(),
+      c.src_proxy->getSystemId()
+    );
+    return ERROR_STATE;
+  }
+
 
   if(!c.rr.info.backupSme.empty())
   {

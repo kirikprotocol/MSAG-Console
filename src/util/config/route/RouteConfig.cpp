@@ -199,10 +199,12 @@ uint8_t StrToBill(const char* str)
 Route * RouteConfig::createRoute(const DOMElement &elem, const SubjectPHash &subjects)
 throw (SubjectNotFoundException)
 {
+  XMLCh null=0;
   XmlStr id(elem.getAttribute(XmlStr("id")));
   XmlStr billing(elem.getAttribute(XmlStr("billing")));
   XmlStr archiving(elem.getAttribute(XmlStr("archiving")));
-  XmlStr enabling(elem.getAttribute(XmlStr("enabling")));
+  XmlStr enabling(elem.hasAttribute(XmlStr("enabling"))?(elem.getAttribute(XmlStr("enabling"))):&null);
+  XmlStr trafMode(elem.hasAttribute(XmlStr("trafficMode"))?(elem.getAttribute(XmlStr("trafficMode"))):&null);
   XmlStr suppressDeliveryReports(elem.getAttribute(XmlStr("suppressDeliveryReports")));
   XmlStr active(elem.getAttribute(XmlStr("active")));
   XmlStr hide(elem.getAttribute(XmlStr("hide")));
@@ -222,7 +224,6 @@ throw (SubjectNotFoundException)
   const signed long categoryId = atol(XmlStr(elem.getAttribute(XmlStr("categoryId"))));
   XmlStr transit(elem.getAttribute(XmlStr("transit")));
   const XMLCh* backupSmeAttr=elem.getAttribute(XmlStr("backupSme"));
-  XMLCh null=0;
   if(backupSmeAttr==0)
   {
     backupSmeAttr=&null;
@@ -237,11 +238,39 @@ throw (SubjectNotFoundException)
     routeid.erase(32);
   }
 
+  smsc::router::TrafficMode tm;
+
+  if(*enabling.c_str()!=0)
+  {
+    if(strcmp("true", enabling) == 0)
+    {
+      tm=smsc::router::tmAll;
+    }else
+    {
+      tm=smsc::router::tmNone;
+    }
+  }else
+  {
+    if(strcmp("none", trafMode) == 0)
+    {
+      tm=smsc::router::tmNone;
+    }else if(strcmp("smsOnly", trafMode) == 0)
+    {
+      tm=smsc::router::tmSmsOnly;
+    }else if(strcmp("ussdOnly", trafMode) == 0)
+    {
+      tm=smsc::router::tmUssdOnly;
+    }else if(strcmp("all", trafMode) == 0)
+    {
+      tm=smsc::router::tmAll;
+    }
+  }
+
   std::auto_ptr<Route> r(new Route(routeid,
                                    priority,
                                    StrToBill(billing),
                                    strcmp("true", archiving) == 0,
-                                   strcmp("true", enabling) == 0,
+                                   tm,
                                    strcmp("true", suppressDeliveryReports) == 0,
                                    strcmp("true", active) == 0,
                                    strcmp("false", hide) != 0,
@@ -416,7 +445,7 @@ RouteConfig::status RouteConfig::store(const char * const filename) const
       out << "  <route id=\""  << encode(r->getId())
       << "\" billing=\""       << (r->getBilling() ? "true" : "false")
       << "\" archiving=\""     << (r->isArchiving() ? "true" : "false")
-      << "\" enabling=\""      << (r->isEnabled() ? "true" : "false")
+      //<< "\" enabling=\""      << (r->isEnabled() ? "true" : "false")
       << "\" priority=\""      << r->getPriority()
       << "\" serviceId=\""     << r->getServiceId()
       << "\" deliveryMode=\""  << deliveryModeToStr(r->getDeliveryMode())

@@ -25,6 +25,7 @@ static inline void makeAddress(Address& addr,const string& mask)
 
 void loadRoutes(RouteManager* rm,const RouteConfig& rc,bool traceit)
 {
+  static smsc::logger::Logger* log=smsc::logger::Logger::getInstance("loadroutes");
   try
   {
     Route *route;
@@ -37,6 +38,7 @@ void loadRoutes(RouteManager* rm,const RouteConfig& rc,bool traceit)
       Destination dest;
       RouteInfo* rinfo;
       RoutePoint rp;
+      int pairsCount=0;
       FixedLengthString<64> srcSubj,dstSubj;
       for (DestinationHash::Iterator dest_it = route->getDestinations().getIterator();
            dest_it.Next(dest_key, dest);)
@@ -51,7 +53,7 @@ void loadRoutes(RouteManager* rm,const RouteConfig& rc,bool traceit)
           rinfo->billing = route->getBilling();
           //rinfo.paid =
           rinfo->archived=route->isArchiving();
-          rinfo->enabling = route->isEnabled();
+          rinfo->trafMode= route->getTrafficMode();
           rinfo->routeId=route->getId();
           rinfo->serviceId=route->getServiceId();
           rinfo->priority=route->getPriority();
@@ -68,6 +70,8 @@ void loadRoutes(RouteManager* rm,const RouteConfig& rc,bool traceit)
           rinfo->categoryId=(int32_t)route->getCategoryId();
           rinfo->transit=route->isTransit();
           rinfo->backupSme=route->getBackupSme();
+
+          pairsCount=0;
           // masks
           if(dest.isSubject())
           {
@@ -98,6 +102,7 @@ void loadRoutes(RouteManager* rm,const RouteConfig& rc,bool traceit)
               try{
                 makeAddress(rp.source,*src_mask_it);
                 rm->addRoute(rinfo,rp);
+                pairsCount++;
               }
               catch(exception& e)
               {
@@ -106,6 +111,7 @@ void loadRoutes(RouteManager* rm,const RouteConfig& rc,bool traceit)
               }
             }
           }
+          smsc_log_info(log,"Route %s:%d pairs",rinfo->routeId.c_str(),pairsCount);
         }
       }
     }

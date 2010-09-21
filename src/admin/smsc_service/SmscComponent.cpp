@@ -1207,6 +1207,15 @@ Variant SmscComponent::traceRoute(const Arguments &args)
               default:bill="none";break;
             }
 
+            std::string tm;
+            switch(rr.info.trafMode)
+            {
+              case smsc::router::tmNone:tm="none";break;
+              case smsc::router::tmSmsOnly:tm="smsOnly";break;
+              case smsc::router::tmUssdOnly:tm="ussdOnly";break;
+              case smsc::router::tmAll:tm="all";break;
+            }
+
             sprintf(routeText, "route id:%s;source address:%s;destination address:%s;"
                                "sme system id:%s;source sme system id:%s;"
                                "priority:%u;service id:%d;delivery mode:%u;forward to:%s;"
@@ -1215,7 +1224,7 @@ Variant SmscComponent::traceRoute(const Arguments &args)
                     encSmeSystemId.get(), encSrcSmeSystemId.get(),
                     rr.info.priority, rr.info.serviceId, rr.info.deliveryMode, encForwardTo.get(),
                     bill , (rr.info.archived) ? "yes":"no",
-                    (rr.info.enabling) ? "yes":"no", (rr.info.suppressDeliveryReports) ? "yes":"no");
+                    tm.c_str(), (rr.info.suppressDeliveryReports) ? "yes":"no");
 
             result.appendValueToStringList(routeText);
         }
