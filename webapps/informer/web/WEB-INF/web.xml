@@ -29,6 +29,17 @@
     <error-code>500</error-code>
     <location>/redirect?url=/error500.faces</location>
   </error-page>
+  
+  <error-page>
+    <error-code>503</error-code>
+    <location>/redirect?url=/error500.faces</location>
+  </error-page>
+
+  <context-param>
+    <param-name>org.apache.myfaces.ERROR_HANDLER</param-name>
+    <param-value>mobi.eyeline.informer.web.ErrorHandler</param-value>
+  </context-param>
+
 
 
   <!-- FaceletViewHandler configuration -->
@@ -167,6 +178,14 @@
     <listener-class>mobi.eyeline.informer.web.InitListener</listener-class>
   </listener>
 
+  <welcome-file-list>
+    <welcome-file>/index.html</welcome-file>
+  </welcome-file-list>
+
+  <session-config>
+    <session-timeout>1</session-timeout>
+  </session-config>
+
 
   <login-config>
     <auth-method>FORM</auth-method>
@@ -180,8 +199,10 @@
 
   <security-constraint>
     <web-resource-collection>
-      <web-resource-name></web-resource-name>
+      <web-resource-name>Создание/просмотр рассылок, просмотр статистики</web-resource-name>
       <url-pattern>/index.faces</url-pattern>
+      <url-pattern>/deliveries/*</url-pattern>
+      <url-pattern>/stats/*</url-pattern>
     </web-resource-collection>
     <auth-constraint>
       <role-name>informer-admin</role-name>
@@ -192,6 +213,30 @@
     </user-data-constraint>
   </security-constraint>
 
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name>Администрирование Informer</web-resource-name>
+      <url-pattern>/status.faces</url-pattern>
+      <url-pattern>/config.faces</url-pattern>
+      <url-pattern>/users/*</url-pattern>
+      <url-pattern>/regions/*</url-pattern>
+      <url-pattern>/smsc/*</url-pattern>
+      <url-pattern>/blacklist/*</url-pattern>
+      <url-pattern>/reschedule/*</url-pattern>
+      <url-pattern>/prohibitions/*</url-pattern>
+      <url-pattern>/siebel/*</url-pattern>
+      <url-pattern>/import/*</url-pattern>
+      <url-pattern>/archieve/*</url-pattern>
+      <url-pattern>/cdr/*</url-pattern>
+      <url-pattern>/journal/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>informer-admin</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
 
   <security-role>
     <description>Администратор Informer</description>

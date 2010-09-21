@@ -28,8 +28,11 @@ public class XmlConfigTest {
 
   private void checkSection(XmlConfigSection sec) throws XmlConfigException, ParseException {
     assertEquals("1", sec.getString("1"));
+    assertEquals(XmlConfigParam.Type.STRING, sec.getParam("1").getType());
     assertEquals(2, sec.getInt("2"));
+    assertEquals(XmlConfigParam.Type.INT, sec.getParam("2").getType());
     assertEquals(true, sec.getBool("3"));
+    assertEquals(XmlConfigParam.Type.BOOL, sec.getParam("3").getType());
     assertEquals(date, sec.getDate("4", "yyyy-MM-dd"));
   }
 

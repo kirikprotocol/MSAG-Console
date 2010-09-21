@@ -157,9 +157,5 @@ public class UserPreferencesTest {
       }
       assertTrue(foundR);
     }
-
-
-
-
   }
 }

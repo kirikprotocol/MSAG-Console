@@ -36,13 +36,13 @@ public abstract class InformerController implements Serializable {
     FacesContext fc = FacesContext.getCurrentInstance();
 
     FacesMessage facesMessage = new FacesMessage(severity,
-        ResourceBundle.getBundle("ru.novosoft.smsc.web.resources.Smsc", getLocale()).getString(bundleKey), "");
+        ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Smsc", getLocale()).getString(bundleKey), "");
     fc.addMessage("smsc_errors", facesMessage);        
   }
 
   protected void addLocalizedMessage(FacesMessage.Severity severity, String bundleKey, Object... args) {
     String message = MessageFormat.format(
-        ResourceBundle.getBundle("ru.novosoft.smsc.web.resources.Smsc", getLocale()).getString(bundleKey),
+        ResourceBundle.getBundle("mobi.eyeline.informer.web.resources.Smsc", getLocale()).getString(bundleKey),
         args);
     addMessage(severity, message);
   }

@@ -63,7 +63,20 @@ class XmlConfigReader {
       
       if (childNode.getNodeName().equals("param")) {
         childEl = (Element)childNode;
-        confParam = new XmlConfigParam(getAttributeValue(encoding, childEl.getAttribute("name")), StringEncoderDecoder.unicodeToString(getNodeText(childEl)));
+        String name = getAttributeValue(encoding, childEl.getAttribute("name"));
+        String value = StringEncoderDecoder.unicodeToString(getNodeText(childEl));
+        String typeStr = getAttributeValue(encoding, childEl.getAttribute("type"));
+        XmlConfigParam.Type type = XmlConfigParam.Type.STRING;
+        if (typeStr != null) {
+          if (typeStr.equals("string"))
+            type = XmlConfigParam.Type.STRING;
+          else if (typeStr.equals("int"))
+            type = XmlConfigParam.Type.INT;
+          else
+            type = XmlConfigParam.Type.BOOL;
+        }
+
+        confParam = new XmlConfigParam(name, value, type);
         // Fill param attributes
         final NamedNodeMap atts =childEl.getAttributes();
         for (int j=0; j<atts.getLength();j++) {

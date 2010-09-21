@@ -11,7 +11,7 @@ public class LogoutController extends InformerController{
     HttpSession session = getSession(false);
     if (session != null) {
       session.invalidate();
-    }
+    }  
     return "INDEX";
   }
 }
