@@ -49,7 +49,7 @@ public class TopMenu {
 
   private Collection<MenuBarItem> menuBarItems = new ArrayList<MenuBarItem>(3) {
     {
-      add(new MenuBarItem("informer.admin", 150).
+      add(new MenuBarItem("informer.admin", 155).
           add(new MenuItem("informer.admin.status", "/status.faces")).
           add(new MenuItem("informer.admin.config", "/config.faces")).
           add(new MenuItem("informer.admin.users", "/users/index.faces")).
@@ -64,12 +64,12 @@ public class TopMenu {
           add(new MenuItem("informer.admin.cdr", "/cdr/index.faces")).
           add(new MenuItem("informer.admin.journal", "/journal/index.faces"))
       );
-      add(new MenuBarItem("informer.deliveries", 160).
+      add(new MenuBarItem("informer.deliveries", 170).
           add(new MenuItem("informer.deliveries.list", "/deliveries/index.faces")).
           add(new MenuItem("informer.deliveries.scheduling", "/deliveries/scheduling.faces")).
           add(new MenuItem("informer.deliveries.create", "/deliveries/create.faces"))
       );
-      add(new MenuBarItem("informer.stats", 145).
+      add(new MenuBarItem("informer.stats", 150).
           add(new MenuItem("informer.stats.common", "/stats/common.faces")).
           add(new MenuItem("informer.stats.messages", "/stats/messages.faces")).
           add(new MenuItem("informer.stats.deliveries", "/stats/deliveries.faces")).
