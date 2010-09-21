@@ -64,7 +64,7 @@ public class TopMenu {
           add(new MenuItem("informer.admin.cdr", "/cdr/index.faces")).
           add(new MenuItem("informer.admin.journal", "/journal/index.faces"))
       );
-      add(new MenuBarItem("informer.deliveries", 170).
+      add(new MenuBarItem("informer.deliveries", 175).
           add(new MenuItem("informer.deliveries.list", "/deliveries/index.faces")).
           add(new MenuItem("informer.deliveries.scheduling", "/deliveries/scheduling.faces")).
           add(new MenuItem("informer.deliveries.create", "/deliveries/create.faces"))
