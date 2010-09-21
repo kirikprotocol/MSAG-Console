@@ -9,6 +9,11 @@ import org.apache.log4j.Logger;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.jar.Attributes;
+import java.util.jar.Manifest;
 
 /**
  * author: alkhal
@@ -40,6 +45,8 @@ public class InitListener implements ServletContextListener {
 
       WebContext.init(authenticator, webXml, adminContext);
 
+      servletContextEvent.getServletContext().setAttribute("informer-version", readVersion(servletContextEvent.getServletContext().getRealPath("META-INF")));
+      
     } catch (Exception e) {
       e.printStackTrace();
       logger.error(e, e);
@@ -49,6 +56,34 @@ public class InitListener implements ServletContextListener {
 
   public void contextDestroyed(ServletContextEvent servletContextEvent) {
 
-
   }
+
+  @SuppressWarnings({"EmptyCatchBlock"})
+  private static String readVersion(String manifestDir) {
+    File f = new File(manifestDir + File.separator + "MANIFEST.MF");
+    if (!f.exists()) {
+      f = new File(manifestDir + File.separator + "manifest.mf");
+    }
+    if (!f.exists()) {
+      return null;
+    }
+    Manifest mf = new Manifest();
+    InputStream is = null;
+    try {
+      is = new FileInputStream(f);
+      mf.read(is);
+    } catch (IOException e) {
+      e.printStackTrace();
+    } finally {
+      if (is != null) {
+        try {
+          is.close();
+        } catch (IOException e) {
+        }
+      }
+    }
+    Attributes a = mf.getMainAttributes();
+    return a != null ? a.getValue("Implementation-Version") : null;
+  }
+
 }
