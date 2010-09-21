@@ -88,6 +88,14 @@
               <h:outputText value="#{msg['status.page.fraud.config']}:"/>
               <h:outputText value="#{msg['status.page.status.up_to_date']}" style="color:GREEN" rendered="#{data.fraudConfigUpToDate}"/>
               <h:outputText value="#{msg['status.page.status.out_of_date']}" style="color:RED" rendered="#{!data.fraudConfigUpToDate}"/>
+
+              <h:outputText value="#{msg['status.page.map.limit.config']}:"/>
+              <h:outputText value="#{msg['status.page.status.up_to_date']}" style="color:GREEN" rendered="#{data.mapLimitsUpToDate}"/>
+              <h:outputText value="#{msg['status.page.status.out_of_date']}" style="color:RED" rendered="#{!data.mapLimitsUpToDate}"/>
+
+              <h:outputText value="#{msg['status.page.closed.group.config']}:"/>
+              <h:outputText value="#{msg['status.page.status.up_to_date']}" style="color:GREEN" rendered="#{data.closedGroupsUpToDate}"/>
+              <h:outputText value="#{msg['status.page.status.out_of_date']}" style="color:RED" rendered="#{!data.closedGroupsUpToDate}"/>
             </h:panelGrid>
 
           </f:facet>

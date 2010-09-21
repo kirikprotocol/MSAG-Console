@@ -113,6 +113,12 @@ public class SmscStatusController extends SmscController {
 
           SmscConfigurationStatus fraudConfigState = smscStatusManager.getFraudConfigState(i);
           status.setFraudConfigUpToDate(fraudConfigState == null || fraudConfigState == SmscConfigurationStatus.UP_TO_DATE);
+
+          SmscConfigurationStatus mapLimitsState = smscStatusManager.getMapLimitState(i);
+          status.setMapLimitsUpToDate(mapLimitsState == null || mapLimitsState == SmscConfigurationStatus.UP_TO_DATE);
+
+          SmscConfigurationStatus cgState = smscStatusManager.getClosedGroupsState(i);
+          status.setClosedGroupsUpToDate(cgState == null || cgState == SmscConfigurationStatus.UP_TO_DATE);
         }
 
         result.add(status);
@@ -132,9 +138,12 @@ public class SmscStatusController extends SmscController {
     private final int instanceNumber;
     private final String onlineHost;
     private final List<String> hosts;
+
     private boolean mainConfigUpToDate;
     private boolean rescheduleConfigUpToDate;
     private boolean fraudConfigUpToDate;
+    private boolean mapLimitsUpToDate;
+    private boolean closedGroupsUpToDate;
 
     public SmscStatus(int instanceNumber, String onlineHost, List<String> hosts) {
       this.instanceNumber = instanceNumber;
@@ -187,9 +196,31 @@ public class SmscStatusController extends SmscController {
       this.fraudConfigUpToDate = fraudConfigUpToDate;
     }
 
+    public boolean isMapLimitsUpToDate() {
+      return mapLimitsUpToDate;
+    }
+
+    public void setMapLimitsUpToDate(boolean mapLimitsUpToDate) {
+      this.mapLimitsUpToDate = mapLimitsUpToDate;
+    }
+
+    public boolean isClosedGroupsUpToDate() {
+      return closedGroupsUpToDate;
+    }
+
+    public void setClosedGroupsUpToDate(boolean closedGroupsUpToDate) {
+      this.closedGroupsUpToDate = closedGroupsUpToDate;
+    }
+
     public boolean isHasErrors() {
       return onlineHost != null &&
-          (!rescheduleConfigUpToDate || !mainConfigUpToDate || !fraudConfigUpToDate);
+          (
+              !rescheduleConfigUpToDate ||
+              !mainConfigUpToDate ||
+              !fraudConfigUpToDate ||
+              !mapLimitsUpToDate ||
+              !closedGroupsUpToDate
+          );
     }
   }
 
