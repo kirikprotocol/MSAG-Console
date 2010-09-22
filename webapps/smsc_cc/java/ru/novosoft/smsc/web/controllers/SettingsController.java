@@ -167,7 +167,7 @@ public abstract class SettingsController<T> extends SmscController {
 
 
   protected enum ConfigType {
-    Main, Reschedule, User, MapLimit, Logger, Fraud
+    Main, Reschedule, User, MapLimit, Logger, Fraud, Snmp
   }
 
 

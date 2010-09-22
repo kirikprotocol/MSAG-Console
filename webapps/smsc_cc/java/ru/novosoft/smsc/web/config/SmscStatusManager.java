@@ -50,6 +50,9 @@ public class SmscStatusManager {
     return adminContext.getFraudManager().getStatusForSmscs().get(instanceNumber);
   }
 
+  public SmscConfigurationStatus getSnmpConfigState(int instanceNumber) throws AdminException {
+    return adminContext.getSnmpManager().getStatusForSmscs().get(instanceNumber);
+  }
 
   public void stopSmsc(int instanceNumber) throws AdminException {
     adminContext.getSmscManager().stopSmsc(instanceNumber);
@@ -62,5 +65,6 @@ public class SmscStatusManager {
   public void switchSmsc(int instanceNumber, String toHost) throws AdminException {
     adminContext.getSmscManager().switchSmsc(instanceNumber, toHost);
   }
+
 
 }

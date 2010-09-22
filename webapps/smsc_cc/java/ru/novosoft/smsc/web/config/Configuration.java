@@ -8,6 +8,7 @@ import ru.novosoft.smsc.admin.logging.LoggerSettings;
 import ru.novosoft.smsc.admin.map_limit.MapLimitSettings;
 import ru.novosoft.smsc.admin.reschedule.RescheduleSettings;
 import ru.novosoft.smsc.admin.smsc.SmscSettings;
+import ru.novosoft.smsc.admin.snmp.SnmpSettings;
 import ru.novosoft.smsc.admin.users.UsersSettings;
 import ru.novosoft.smsc.web.journal.Journal;
 
@@ -113,6 +114,18 @@ public class Configuration {
   public void updateFraudSettings(FraudSettings settings, String user) throws AdminException{
     FraudSettings oldSettings = getFraudSettings();
     adminContext.getFraudManager().updateSettings(settings);
+    journal.logChanges(oldSettings, settings, user);
+  }
+
+
+  public SnmpSettings getSnmpSettings() throws AdminException {
+    return adminContext.getSnmpManager().getSettings();
+  }
+
+
+  public void updateSnmpSettings(SnmpSettings settings, String user) throws AdminException {
+    SnmpSettings oldSettings = getSnmpSettings();
+    adminContext.getSnmpManager().updateSettings(settings);
     journal.logChanges(oldSettings, settings, user);
   }
 }

@@ -2,12 +2,10 @@ package ru.novosoft.smsc.web.controllers.fraud;
 
 import org.apache.log4j.Logger;
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.config.SmscConfigurationStatus;
 import ru.novosoft.smsc.admin.fraud.FraudSettings;
 import ru.novosoft.smsc.util.Address;
 import ru.novosoft.smsc.web.components.data_table.model.DataTableModel;
 import ru.novosoft.smsc.web.components.data_table.model.DataTableSortOrder;
-import ru.novosoft.smsc.web.config.SmscStatusManager;
 import ru.novosoft.smsc.web.controllers.SettingsController;
 
 import javax.faces.application.FacesMessage;
@@ -29,10 +27,10 @@ public class FraudController extends SettingsController<FraudSettings> {
   FraudSettings frSettings;
   List<Address> addresses;
 
+
   public FraudController() {
     super(ConfigType.Fraud);
     frSettings = getSettings();
-    checkOutOfDate();
     addresses= new ArrayList(frSettings.getWhiteList());
   }
 
@@ -202,19 +200,4 @@ public class FraudController extends SettingsController<FraudSettings> {
 
   }
 
-  private void checkOutOfDate() {
-    try {
-      List<Integer> result = new ArrayList<Integer>();
-      SmscStatusManager ssm = getSmscStatusManager();
-      for (int i = 0; i < ssm.getSmscInstancesNumber(); i++) {
-        if (ssm.getFraudConfigState(i) == SmscConfigurationStatus.OUT_OF_DATE)
-          result.add(i);
-      }
-      if (!result.isEmpty())
-        addLocalizedMessage(FacesMessage.SEVERITY_WARN, "smsc.config.instance.out_of_date", result.toString());
-    } catch (AdminException e) {
-      logger.error(e, e);
-      addError(e);
-    }
-  }
 }

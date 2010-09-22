@@ -5,7 +5,7 @@
       xmlns:tr="http://myfaces.apache.org/trinidad"
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:eye="http://taglib.eyeline.mobi"
-      xmlns:jstl="http://java.sun.com/jsp/jstl/core">
+      xmlns:jstl="http://java.sun.com/jstl/core">
 
 
 <ui:composition template="/templates/main.xhtml">
@@ -15,6 +15,7 @@
   <ui:define name="content">
 
     <h:form>
+      <tr:inputHidden value="#{fraud.revision}" id="revision"/>  
       <eye:buttons>
         <eye:button>
           <tr:commandLink text="#{msg['submit.button']}" action="#{fraud.save}"/>
@@ -91,7 +92,7 @@
         <tr:inputText value="#{fraud.newAddr}"  required="false" simple="true" contentStyle="width:150px;" >
             <eye:validatePhone/>
         </tr:inputText>
-        <tr:commandLink id="add2" actionListener="#{fraud.addLine}" >
+        <tr:commandLink id="add2" actionListener="#{fraud.addObject}" >
             <tr:image source="/images/but_add.gif" inlineStyle=" margin-top:1px;"/>
         </tr:commandLink>
     </h:panelGrid>

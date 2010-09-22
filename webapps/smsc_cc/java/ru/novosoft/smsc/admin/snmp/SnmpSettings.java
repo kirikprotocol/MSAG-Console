@@ -47,11 +47,15 @@ public class SnmpSettings {
   }
 
   public Map<String, SnmpObject> getSnmpObjects() {
-    return snmpObjects;
+    return snmpObjects; // todo
   }
 
   public void setSnmpObjects(Map<String, SnmpObject> snmpObjects) throws AdminException {
     vh.checkNoNulls("snmpObjects", snmpObjects);
     this.snmpObjects = snmpObjects;
+  }
+
+  public SnmpSettings cloneSettings() {
+    return new SnmpSettings(this);
   }
 }

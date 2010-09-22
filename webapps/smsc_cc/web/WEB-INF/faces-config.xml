@@ -59,6 +59,11 @@
     </resource-bundle>
 
     <resource-bundle>
+      <base-name>ru.novosoft.smsc.admin.snmp.SnmpSettings</base-name>
+      <var>snmpSettingsBundle</var>
+    </resource-bundle>
+
+    <resource-bundle>
       <base-name>ru.novosoft.smsc.web.resources.Smsc</base-name>
       <var>msg</var>
     </resource-bundle>
@@ -79,6 +84,8 @@
     <converter-id>roles_converter</converter-id>
     <converter-class>ru.novosoft.smsc.web.controllers.users.RolesConverter</converter-class>
   </converter>
+
+  
 
   <render-kit>    
     <renderer>
@@ -219,6 +226,12 @@
     <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
 
+  <managed-bean>
+    <managed-bean-name>snmp</managed-bean-name>
+    <managed-bean-class>ru.novosoft.smsc.web.controllers.snmp.SnmpController</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
   <navigation-rule>
     <navigation-case>
       <from-outcome>INDEX</from-outcome>
@@ -272,7 +285,12 @@
         <to-view-id>/smsc/fraud/fraud.faces</to-view-id>
         <redirect/>
     </navigation-case>
-    
+    <navigation-case>
+        <from-outcome>SNMP</from-outcome>
+        <to-view-id>/smsc/snmp/index.faces</to-view-id>
+        <redirect/>
+    </navigation-case>
+
   </navigation-rule>
 
 
